@@ -597,12 +597,6 @@ class wallet_api
 
       bool import_account_keys( string filename, string password, string src_account_name, string dest_account_name );
 
-      /**
-       * This call will construct transaction(s) that will claim all balances controled
-       * by wif_keys and deposit them into the given account.
-       */
-      vector< signed_transaction > import_balance( string account_name_or_id, const vector<string>& wif_keys, bool broadcast );
-
       /** Transforms a brain key to reduce the chance of errors when re-entering the key from memory.
        *
        * This takes a user-supplied brain key and normalizes it into the form used
@@ -1514,7 +1508,6 @@ FC_API( graphene::wallet::wallet_api,
         (import_key)
         (import_accounts)
         (import_account_keys)
-        (import_balance)
         (suggest_brain_key)
         (register_account)
         (upgrade_account)

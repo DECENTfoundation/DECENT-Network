@@ -88,8 +88,6 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       // Balances
       vector<asset> get_account_balances(account_id_type id, const flat_set<asset_id_type>& assets)const;
       vector<asset> get_named_account_balances(const std::string& name, const flat_set<asset_id_type>& assets)const;
-      vector<balance_object> get_balance_objects( const vector<address>& addrs )const;
-      vector<asset> get_vested_balances( const vector<balance_id_type>& objs )const;
       vector<vesting_balance_object> get_vesting_balances( account_id_type account_id )const;
 
       // Assets
@@ -739,53 +737,6 @@ vector<asset> database_api_impl::get_named_account_balances(const std::string& n
    auto itr = accounts_by_name.find(name);
    FC_ASSERT( itr != accounts_by_name.end() );
    return get_account_balances(itr->get_id(), assets);
-}
-
-vector<balance_object> database_api::get_balance_objects( const vector<address>& addrs )const
-{
-   return my->get_balance_objects( addrs );
-}
-
-vector<balance_object> database_api_impl::get_balance_objects( const vector<address>& addrs )const
-{
-   try
-   {
-      const auto& bal_idx = _db.get_index_type<balance_index>();
-      const auto& by_owner_idx = bal_idx.indices().get<by_owner>();
-
-      vector<balance_object> result;
-
-      for( const auto& owner : addrs )
-      {
-         subscribe_to_item( owner );
-         auto itr = by_owner_idx.lower_bound( boost::make_tuple( owner, asset_id_type(0) ) );
-         while( itr != by_owner_idx.end() && itr->owner == owner )
-         {
-            result.push_back( *itr );
-            ++itr;
-         }
-      }
-      return result;
-   }
-   FC_CAPTURE_AND_RETHROW( (addrs) )
-}
-
-vector<asset> database_api::get_vested_balances( const vector<balance_id_type>& objs )const
-{
-   return my->get_vested_balances( objs );
-}
-
-vector<asset> database_api_impl::get_vested_balances( const vector<balance_id_type>& objs )const
-{
-   try
-   {
-      vector<asset> result;
-      result.reserve( objs.size() );
-      auto now = _db.head_block_time();
-      for( auto obj : objs )
-         result.push_back( obj(_db).available( now ) );
-      return result;
-   } FC_CAPTURE_AND_RETHROW( (objs) )
 }
 
 vector<vesting_balance_object> database_api::get_vesting_balances( account_id_type account_id )const

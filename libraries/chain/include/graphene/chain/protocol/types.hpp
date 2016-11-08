@@ -132,7 +132,6 @@ namespace graphene { namespace chain {
       operation_history_object_type,
       withdraw_permission_object_type,
       vesting_balance_object_type,
-      balance_object_type,
       OBJECT_TYPE_COUNT ///< Sentry value which contains the number of different object types
    };
 
@@ -171,7 +170,6 @@ namespace graphene { namespace chain {
    class operation_history_object;
    class withdraw_permission_object;
    class vesting_balance_object;
-   class balance_object;
    class blinded_balance_object;
 
    typedef object_id< protocol_ids, account_object_type,            account_object>               account_id_type;
@@ -186,7 +184,6 @@ namespace graphene { namespace chain {
    typedef object_id< protocol_ids, operation_history_object_type,  operation_history_object>     operation_history_id_type;
    typedef object_id< protocol_ids, withdraw_permission_object_type,withdraw_permission_object>   withdraw_permission_id_type;
    typedef object_id< protocol_ids, vesting_balance_object_type,    vesting_balance_object>       vesting_balance_id_type;
-   typedef object_id< protocol_ids, balance_object_type,            balance_object>               balance_id_type;
 
    // implementation types
    class global_property_object;
@@ -334,7 +331,6 @@ FC_REFLECT_ENUM( graphene::chain::object_type,
                  (operation_history_object_type)
                  (withdraw_permission_object_type)
                  (vesting_balance_object_type)
-                 (balance_object_type)
                  (OBJECT_TYPE_COUNT)
                )
 FC_REFLECT_ENUM( graphene::chain::impl_object_type,
@@ -371,7 +367,6 @@ FC_REFLECT_TYPENAME( graphene::chain::proposal_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::operation_history_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::withdraw_permission_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::vesting_balance_id_type )
-FC_REFLECT_TYPENAME( graphene::chain::balance_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::global_property_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::dynamic_global_property_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::asset_dynamic_data_id_type )

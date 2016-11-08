@@ -197,11 +197,6 @@ BOOST_AUTO_TEST_CASE( memo_test )
    BOOST_CHECK_EQUAL(m.get_message(receiver, sender.get_public_key()), "Hello, world!");
 } FC_LOG_AND_RETHROW() }
 
-BOOST_AUTO_TEST_CASE( exceptions )
-{
-   GRAPHENE_CHECK_THROW(FC_THROW_EXCEPTION(balance_claim_invalid_claim_amount, "Etc"), balance_claim_invalid_claim_amount);
-}
-
 BOOST_AUTO_TEST_CASE( scaled_precision )
 {
    const int64_t _k = 1000;

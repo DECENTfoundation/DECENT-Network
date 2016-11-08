@@ -27,7 +27,6 @@
 
 #include <graphene/chain/account_object.hpp>
 #include <graphene/chain/asset_object.hpp>
-#include <graphene/chain/balance_object.hpp>
 #include <graphene/chain/block_summary_object.hpp>
 #include <graphene/chain/budget_record_object.hpp>
 #include <graphene/chain/buyback_object.hpp>
@@ -49,7 +48,6 @@
 #include <graphene/chain/account_evaluator.hpp>
 #include <graphene/chain/asset_evaluator.hpp>
 #include <graphene/chain/assert_evaluator.hpp>
-#include <graphene/chain/balance_evaluator.hpp>
 #include <graphene/chain/committee_member_evaluator.hpp>
 #include <graphene/chain/confidential_evaluator.hpp>
 #include <graphene/chain/custom_evaluator.hpp>
@@ -160,7 +158,6 @@ void database::initialize_evaluators()
    register_evaluator<withdraw_permission_claim_evaluator>();
    register_evaluator<withdraw_permission_update_evaluator>();
    register_evaluator<withdraw_permission_delete_evaluator>();
-   register_evaluator<balance_claim_evaluator>();
    register_evaluator<transfer_to_blind_evaluator>();
    register_evaluator<transfer_from_blind_evaluator>();
    register_evaluator<blind_transfer_evaluator>();
@@ -190,7 +187,6 @@ void database::initialize_indexes()
 
    add_index< primary_index<withdraw_permission_index > >();
    add_index< primary_index<vesting_balance_index> >();
-   add_index< primary_index<balance_index> >();
    add_index< primary_index<blinded_balance_index> >();
 
    //Implementation object indexes
@@ -519,39 +515,6 @@ void database::init_genesis(const genesis_state_type& genesis_state)
          a.dynamic_asset_data_id = dynamic_data_id;
          a.bitasset_data_id = bitasset_data_id;
       });
-   }
-
-   // Create initial balances
-   share_type total_allocation;
-   for( const auto& handout : genesis_state.initial_balances )
-   {
-      const auto asset_id = get_asset_id(handout.asset_symbol);
-      create<balance_object>([&handout,&get_asset_id,total_allocation,asset_id](balance_object& b) {
-         b.balance = asset(handout.amount, asset_id);
-         b.owner = handout.owner;
-      });
-
-      total_supplies[ asset_id ] += handout.amount;
-   }
-
-   // Create initial vesting balances
-   for( const genesis_state_type::initial_vesting_balance_type& vest : genesis_state.initial_vesting_balances )
-   {
-      const auto asset_id = get_asset_id(vest.asset_symbol);
-      create<balance_object>([&](balance_object& b) {
-         b.owner = vest.owner;
-         b.balance = asset(vest.amount, asset_id);
-
-         linear_vesting_policy policy;
-         policy.begin_timestamp = vest.begin_timestamp;
-         policy.vesting_cliff_seconds = 0;
-         policy.vesting_duration_seconds = vest.vesting_duration_seconds;
-         policy.begin_balance = vest.begin_balance;
-
-         b.vesting_policy = std::move(policy);
-      });
-
-      total_supplies[ asset_id ] += vest.amount;
    }
 
    if( total_supplies[ asset_id_type(0) ] > 0 )

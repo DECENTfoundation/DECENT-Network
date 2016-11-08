@@ -295,9 +295,6 @@ namespace graphene { namespace app {
                assert( aobj != nullptr );
                result.push_back( aobj->owner );
                break;
-           } case balance_object_type:{
-               /** these are free from any accounts */
-               break;
             }
           }
        }

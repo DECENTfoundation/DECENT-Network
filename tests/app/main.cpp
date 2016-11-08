@@ -24,7 +24,6 @@
 #include <graphene/app/application.hpp>
 #include <graphene/app/plugin.hpp>
 
-#include <graphene/chain/balance_object.hpp>
 
 #include <graphene/time/time.hpp>
 
@@ -93,16 +92,6 @@ BOOST_AUTO_TEST_CASE( two_node_network )
       {
          account_id_type nathan_id = db2->get_index_type<account_index>().indices().get<by_name>().find( "nathan" )->id;
          fc::ecc::private_key nathan_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("nathan")));
-
-         balance_claim_operation claim_op;
-         balance_id_type bid = balance_id_type();
-         claim_op.deposit_to_account = nathan_id;
-         claim_op.balance_to_claim = bid;
-         claim_op.balance_owner_key = nathan_key.get_public_key();
-         claim_op.total_claimed = bid(*db1).balance;
-         trx.operations.push_back( claim_op );
-         db1->current_fee_schedule().set_fee( trx.operations.back() );
-
          transfer_operation xfer_op;
          xfer_op.from = nathan_id;
          xfer_op.to = GRAPHENE_NULL_ACCOUNT;

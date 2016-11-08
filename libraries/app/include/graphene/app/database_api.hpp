@@ -31,7 +31,6 @@
 
 #include <graphene/chain/account_object.hpp>
 #include <graphene/chain/asset_object.hpp>
-#include <graphene/chain/balance_object.hpp>
 #include <graphene/chain/chain_property_object.hpp>
 #include <graphene/chain/committee_member_object.hpp>
 #include <graphene/chain/confidential_object.hpp>
@@ -275,11 +274,6 @@ class database_api
 
       /// Semantically equivalent to @ref get_account_balances, but takes a name instead of an ID.
       vector<asset> get_named_account_balances(const std::string& name, const flat_set<asset_id_type>& assets)const;
-
-      /** @return all unclaimed balance objects for a set of addresses */
-      vector<balance_object> get_balance_objects( const vector<address>& addrs )const;
-
-      vector<asset> get_vested_balances( const vector<balance_id_type>& objs )const;
 
       vector<vesting_balance_object> get_vesting_balances( account_id_type account_id )const;
 
@@ -596,8 +590,6 @@ FC_API(graphene::app::database_api,
    // Balances
    (get_account_balances)
    (get_named_account_balances)
-   (get_balance_objects)
-   (get_vested_balances)
    (get_vesting_balances)
 
    // Assets

@@ -62,7 +62,6 @@ add_library( graphene_chain
              pts_address.cpp
 
              evaluator.cpp
-             balance_evaluator.cpp
              account_evaluator.cpp
              assert_evaluator.cpp
              witness_evaluator.cpp

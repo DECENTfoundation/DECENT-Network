@@ -68,8 +68,6 @@ int main( int argc, char** argv )
             ("dev-account-prefix", bpo::value<std::string>()->default_value("devacct"), "Prefix for dev accounts")
             ("dev-key-prefix", bpo::value<std::string>()->default_value("devkey-"), "Prefix for dev key")
             ("dev-account-count", bpo::value<uint32_t>()->default_value(0), "Prefix for dev accounts")
-            ("dev-balance-count", bpo::value<uint32_t>()->default_value(0), "Prefix for dev balances")
-            ("dev-balance-amount", bpo::value<uint64_t>()->default_value(uint64_t(1000)*uint64_t(1000)*uint64_t(100000)), "Amount in each dev balance")
             ;
 
       bpo::variables_map options;
@@ -134,17 +132,6 @@ int main( int argc, char** argv )
             false );
 
          genesis.initial_accounts.push_back( acct );
-      }
-
-      uint32_t dev_balance_count = options["dev-balance-count"].as<uint32_t>();
-      uint64_t dev_balance_amount = options["dev-balance-amount"].as<uint64_t>();
-      for(uint32_t i=0;i<dev_balance_count;i++)
-      {
-         genesis_state_type::initial_balance_type bal;
-         bal.owner = address( get_dev_key( "balance-", i ) );
-         bal.asset_symbol = "CORE";
-         bal.amount = dev_balance_amount;
-         genesis.initial_balances.push_back( bal );
       }
 
       std::map< std::string, size_t > name2index;
