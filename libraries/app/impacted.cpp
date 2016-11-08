@@ -159,7 +159,6 @@ struct get_impacted_account_visitor
    }
 
    void operator()( const vesting_balance_withdraw_operation& op ) {}
-   void operator()( const worker_create_operation& op ) {}
    void operator()( const custom_operation& op ) {}
    void operator()( const assert_operation& op ) {}
    void operator()( const balance_claim_operation& op ) {}

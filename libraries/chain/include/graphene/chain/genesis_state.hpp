@@ -93,11 +93,6 @@ struct genesis_state_type {
       /// Must correspond to one of the initial accounts
       string owner_name;
    };
-   struct initial_worker_type {
-      /// Must correspond to one of the initial accounts
-      string owner_name;
-      share_type daily_pay;
-   };
 
    time_point_sec                           initial_timestamp;
    share_type                               max_core_supply = GRAPHENE_MAX_SHARE_SUPPLY;
@@ -110,7 +105,6 @@ struct genesis_state_type {
    uint64_t                                 initial_active_witnesses = GRAPHENE_DEFAULT_MIN_WITNESS_COUNT;
    vector<initial_witness_type>             initial_witness_candidates;
    vector<initial_committee_member_type>    initial_committee_candidates;
-   vector<initial_worker_type>              initial_worker_candidates;
 
    /**
     * Temporary, will be moved elsewhere.
@@ -145,11 +139,10 @@ FC_REFLECT(graphene::chain::genesis_state_type::initial_witness_type, (owner_nam
 
 FC_REFLECT(graphene::chain::genesis_state_type::initial_committee_member_type, (owner_name))
 
-FC_REFLECT(graphene::chain::genesis_state_type::initial_worker_type, (owner_name)(daily_pay))
 
 FC_REFLECT(graphene::chain::genesis_state_type,
            (initial_timestamp)(max_core_supply)(initial_parameters)(initial_accounts)(initial_assets)(initial_balances)
            (initial_vesting_balances)(initial_active_witnesses)(initial_witness_candidates)
-           (initial_committee_candidates)(initial_worker_candidates)
+           (initial_committee_candidates)
            (initial_chain_id)
            (immutable_parameters))

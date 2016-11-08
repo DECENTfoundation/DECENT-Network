@@ -1251,21 +1251,6 @@ vector<optional<witness_object>> database_api::get_witnesses(const vector<witnes
    return my->get_witnesses( witness_ids );
 }
 
-vector<worker_object> database_api::get_workers_by_account(account_id_type account)const
-{
-    const auto& idx = my->_db.get_index_type<worker_index>().indices().get<by_account>();
-    auto itr = idx.find(account);
-    vector<worker_object> result;
-
-    if( itr != idx.end() && itr->worker_account == account )
-    {
-       result.emplace_back( *itr );
-       ++itr;
-    }
-
-    return result;
-}
-
 
 vector<optional<witness_object>> database_api_impl::get_witnesses(const vector<witness_id_type>& witness_ids)const
 {
@@ -1413,8 +1398,6 @@ vector<variant> database_api_impl::lookup_vote_ids( const vector<vote_id_type>& 
 
    const auto& witness_idx = _db.get_index_type<witness_index>().indices().get<by_vote_id>();
    const auto& committee_idx = _db.get_index_type<committee_member_index>().indices().get<by_vote_id>();
-   const auto& for_worker_idx = _db.get_index_type<worker_index>().indices().get<by_vote_for>();
-   const auto& against_worker_idx = _db.get_index_type<worker_index>().indices().get<by_vote_against>();
 
    vector<variant> result;
    result.reserve( votes.size() );
@@ -1440,23 +1423,7 @@ vector<variant> database_api_impl::lookup_vote_ids( const vector<vote_id_type>& 
                result.emplace_back( variant() );
             break;
          }
-         case vote_id_type::worker:
-         {
-            auto itr = for_worker_idx.find( id );
-            if( itr != for_worker_idx.end() ) {
-               result.emplace_back( variant( *itr ) );
-            }
-            else {
-               auto itr = against_worker_idx.find( id );
-               if( itr != against_worker_idx.end() ) {
-                  result.emplace_back( variant( *itr ) );
-               }
-               else {
-                  result.emplace_back( variant() );
-               }
-            }
-            break;
-         }
+        
          case vote_id_type::VOTE_TYPE_COUNT: break; // supress unused enum value warnings
       }
    }

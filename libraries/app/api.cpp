@@ -35,7 +35,6 @@
 #include <graphene/chain/market_object.hpp>
 #include <graphene/chain/transaction_object.hpp>
 #include <graphene/chain/withdraw_permission_object.hpp>
-#include <graphene/chain/worker_object.hpp>
 
 #include <fc/crypto/hex.hpp>
 #include <fc/smart_ref_impl.hpp>
@@ -296,12 +295,7 @@ namespace graphene { namespace app {
                assert( aobj != nullptr );
                result.push_back( aobj->owner );
                break;
-            } case worker_object_type:{
-               const auto& aobj = dynamic_cast<const worker_object*>(obj);
-               assert( aobj != nullptr );
-               result.push_back( aobj->worker_account );
-               break;
-            } case balance_object_type:{
+           } case balance_object_type:{
                /** these are free from any accounts */
                break;
             }

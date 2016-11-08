@@ -145,7 +145,6 @@ namespace graphene { namespace chain {
    //GRAPHENE_DECLARE_OP_BASE_EXCEPTIONS( global_parameters_update );
    //GRAPHENE_DECLARE_OP_BASE_EXCEPTIONS( vesting_balance_create );
    //GRAPHENE_DECLARE_OP_BASE_EXCEPTIONS( vesting_balance_withdraw );
-   //GRAPHENE_DECLARE_OP_BASE_EXCEPTIONS( worker_create );
    //GRAPHENE_DECLARE_OP_BASE_EXCEPTIONS( custom );
    //GRAPHENE_DECLARE_OP_BASE_EXCEPTIONS( assert );
 

@@ -37,7 +37,6 @@
 #include <graphene/chain/protocol/vesting.hpp>
 #include <graphene/chain/protocol/withdraw_permission.hpp>
 #include <graphene/chain/protocol/witness.hpp>
-#include <graphene/chain/protocol/worker.hpp>
 
 namespace graphene { namespace chain {
 
@@ -81,7 +80,6 @@ namespace graphene { namespace chain {
             committee_member_update_global_parameters_operation,
             vesting_balance_create_operation,
             vesting_balance_withdraw_operation,
-            worker_create_operation,
             custom_operation,
             assert_operation,
             balance_claim_operation,

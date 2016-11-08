@@ -38,7 +38,6 @@
 #include <graphene/chain/market_object.hpp>
 #include <graphene/chain/operation_history_object.hpp>
 #include <graphene/chain/proposal_object.hpp>
-#include <graphene/chain/worker_object.hpp>
 #include <graphene/chain/witness_object.hpp>
 
 #include <graphene/market_history/market_history_plugin.hpp>
@@ -473,14 +472,6 @@ class database_api
       map<string, committee_member_id_type> lookup_committee_member_accounts(const string& lower_bound_name, uint32_t limit)const;
 
 
-      /// WORKERS
-
-      /**
-       * Return the worker objects associated with this account.
-       */
-      vector<worker_object> get_workers_by_account(account_id_type account)const;
-
-
       ///////////
       // Votes //
       ///////////
@@ -488,7 +479,7 @@ class database_api
       /**
        *  @brief Given a set of votes, return the objects they are voting for.
        *
-       *  This will be a mixture of committee_member_object, witness_objects, and worker_objects
+       *  This will be a mixture of committee_member_object, witness_objects
        *
        *  The results will be in the same order as the votes.  Null will be returned for
        *  any vote ids that are not found.
@@ -637,8 +628,6 @@ FC_API(graphene::app::database_api,
    (get_committee_member_by_account)
    (lookup_committee_member_accounts)
 
-   // workers
-   (get_workers_by_account)
    // Votes
    (lookup_vote_ids)
 
