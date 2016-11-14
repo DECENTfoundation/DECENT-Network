@@ -141,24 +141,6 @@ optional<T> maybe_id( const string& name_or_id )
    return optional<T>();
 }
 
-string address_to_shorthash( const address& addr )
-{
-   uint32_t x = addr.addr._hash[0];
-   static const char hd[] = "0123456789abcdef";
-   string result;
-
-   result += hd[(x >> 0x1c) & 0x0f];
-   result += hd[(x >> 0x18) & 0x0f];
-   result += hd[(x >> 0x14) & 0x0f];
-   result += hd[(x >> 0x10) & 0x0f];
-   result += hd[(x >> 0x0c) & 0x0f];
-   result += hd[(x >> 0x08) & 0x0f];
-   result += hd[(x >> 0x04) & 0x0f];
-   result += hd[(x        ) & 0x0f];
-
-   return result;
-}
-
 fc::ecc::private_key derive_private_key( const std::string& prefix_string,
                                          int sequence_number )
 {
@@ -2834,13 +2816,13 @@ bool wallet_api::import_key(string account_name_or_id, string wif_key)
    fc::optional<fc::ecc::private_key> optional_private_key = wif_to_key(wif_key);
    if (!optional_private_key)
       FC_THROW("Invalid private key");
-   string shorthash = detail::address_to_shorthash(optional_private_key->get_public_key());
-   copy_wallet_file( "before-import-key-" + shorthash );
+   string base58_public_key = optional_private_key->get_public_key().to_base58();
+   copy_wallet_file( "before-import-key-" + base58_public_key );
 
    if( my->import_key(account_name_or_id, wif_key) )
    {
       save_wallet_file();
-      copy_wallet_file( "after-import-key-" + shorthash );
+      copy_wallet_file( "after-import-key-" + base58_public_key );
       return true;
    }
    return false;

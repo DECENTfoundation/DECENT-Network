@@ -125,7 +125,6 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       std::string get_transaction_hex(const signed_transaction& trx)const;
       set<public_key_type> get_required_signatures( const signed_transaction& trx, const flat_set<public_key_type>& available_keys )const;
       set<public_key_type> get_potential_signatures( const signed_transaction& trx )const;
-      set<address> get_potential_address_signatures( const signed_transaction& trx )const;
       bool verify_authority( const signed_transaction& trx )const;
       bool verify_account_authority( const string& name_or_id, const flat_set<public_key_type>& signers )const;
       processed_transaction validate_transaction( const signed_transaction& trx )const;
@@ -439,39 +438,13 @@ vector<vector<account_id_type>> database_api_impl::get_key_references( vector<pu
 
    for( auto& key : keys )
    {
-
-      address a1( pts_address(key, false, 56) );
-      address a2( pts_address(key, true, 56) );
-      address a3( pts_address(key, false, 0)  );
-      address a4( pts_address(key, true, 0)  );
-      address a5( key );
-
       subscribe_to_item( key );
-      subscribe_to_item( a1 );
-      subscribe_to_item( a2 );
-      subscribe_to_item( a3 );
-      subscribe_to_item( a4 );
-      subscribe_to_item( a5 );
 
       const auto& idx = _db.get_index_type<account_index>();
       const auto& aidx = dynamic_cast<const primary_index<account_index>&>(idx);
       const auto& refs = aidx.get_secondary_index<graphene::chain::account_member_index>();
       auto itr = refs.account_to_key_memberships.find(key);
       vector<account_id_type> result;
-
-      for( auto& a : {a1,a2,a3,a4,a5} )
-      {
-          auto itr = refs.account_to_address_memberships.find(a);
-          if( itr != refs.account_to_address_memberships.end() )
-          {
-             result.reserve( itr->second.size() );
-             for( auto item : itr->second )
-             {
-                wdump((a)(item)(item(_db).name));
-                result.push_back(item);
-             }
-          }
-      }
 
       if( itr != refs.account_to_key_memberships.end() )
       {
@@ -1418,10 +1391,6 @@ set<public_key_type> database_api::get_potential_signatures( const signed_transa
 {
    return my->get_potential_signatures( trx );
 }
-set<address> database_api::get_potential_address_signatures( const signed_transaction& trx )const
-{
-   return my->get_potential_address_signatures( trx );
-}
 
 set<public_key_type> database_api_impl::get_potential_signatures( const signed_transaction& trx )const
 {
@@ -1448,31 +1417,6 @@ set<public_key_type> database_api_impl::get_potential_signatures( const signed_t
    );
 
    wdump((result));
-   return result;
-}
-
-set<address> database_api_impl::get_potential_address_signatures( const signed_transaction& trx )const
-{
-   set<address> result;
-   trx.get_required_signatures(
-      _db.get_chain_id(),
-      flat_set<public_key_type>(),
-      [&]( account_id_type id )
-      {
-         const auto& auth = id(_db).active;
-         for( const auto& k : auth.get_addresses() )
-            result.insert(k);
-         return &auth;
-      },
-      [&]( account_id_type id )
-      {
-         const auto& auth = id(_db).owner;
-         for( const auto& k : auth.get_addresses() )
-            result.insert(k);
-         return &auth;
-      },
-      _db.get_global_properties().parameters.max_authority_depth
-   );
    return result;
 }
 

@@ -54,7 +54,7 @@ struct genesis_state_type {
    };
    struct initial_asset_type {
       struct initial_collateral_position {
-         address owner;
+         account_id_type owner;
          share_type collateral;
          share_type debt;
       };

@@ -35,7 +35,6 @@ add_library( graphene_chain
              fork_database.cpp
 
              protocol/types.cpp
-             protocol/address.cpp
              protocol/authority.cpp
              protocol/asset.cpp
              protocol/assert.cpp
