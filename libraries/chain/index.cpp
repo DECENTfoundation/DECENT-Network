@@ -21,6 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+
 #include <fc/io/raw.hpp>
 #include <graphene/chain/index.hpp>
 #include <graphene/chain/database.hpp>
