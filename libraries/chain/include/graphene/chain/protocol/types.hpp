@@ -37,12 +37,12 @@
 #include <fc/uint128.hpp>
 #include <fc/static_variant.hpp>
 #include <fc/smart_ref_fwd.hpp>
+#include <fc/crypto/ripemd160.hpp>
 
 #include <memory>
 #include <vector>
 #include <deque>
 #include <cstdint>
-#include <graphene/chain/protocol/address.hpp>
 #include <graphene/db/object_id.hpp>
 #include <graphene/chain/protocol/config.hpp>
 
@@ -253,6 +253,20 @@ namespace graphene { namespace chain {
        // TODO: This is temporary for testing
        bool is_valid_v1( const std::string& base58str );
    };
+   inline bool operator < ( const public_key_type& a, const public_key_type& b )
+   {
+        int i=0;
+        while (i<33 )
+        {
+            if(a.key_data.at(i) < b.key_data.at(i) )
+                return true;
+            if(a.key_data.at(i) > b.key_data.at(i) )
+                return false;
+            i++;
+        }
+        return false;
+        
+   }
 
    struct extended_public_key_type
    {

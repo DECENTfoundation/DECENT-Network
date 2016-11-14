@@ -99,11 +99,9 @@ BOOST_FIXTURE_TEST_CASE( update_account_keys, database_fixture )
          private_key_type privkey = generate_private_key(
             std::string("key_") + std::to_string(i));
          public_key_type pubkey = privkey.get_public_key();
-         address addr( pubkey );
 
          numbered_private_keys.push_back( privkey );
          numbered_key_id[0].push_back( pubkey );
-         //numbered_key_id[1].push_back( addr );
       }
 
       // each element of possible_key_sched is a list of exactly num_keys

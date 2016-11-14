@@ -28,7 +28,6 @@
 #include <fc/crypto/elliptic.hpp>
 #include <fc/io/json.hpp>
 
-#include <graphene/chain/protocol/address.hpp>
 #include <graphene/chain/protocol/types.hpp>
 #include <graphene/utilities/key_conversion.hpp>
 
@@ -76,7 +75,6 @@ int main( int argc, char** argv )
          graphene::chain::public_key_type pub_key = priv_key.get_public_key();
          mvo( "private_key", graphene::utilities::key_to_wif( priv_key ) )
             ( "public_key", std::string( pub_key ) )
-            ( "address", graphene::chain::address( pub_key ) )
             ;
          if( comma )
             std::cout << ",\n";
