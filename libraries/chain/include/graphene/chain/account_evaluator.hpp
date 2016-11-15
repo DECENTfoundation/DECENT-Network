@@ -47,17 +47,6 @@ public:
    const account_object* acnt;
 };
 
-class account_upgrade_evaluator : public evaluator<account_upgrade_evaluator>
-{
-public:
-   typedef account_upgrade_operation operation_type;
-
-   void_result do_evaluate(const operation_type& o);
-   void_result do_apply(const operation_type& o);
-
-   const account_object* account;
-};
-
 class account_whitelist_evaluator : public evaluator<account_whitelist_evaluator>
 {
 public:

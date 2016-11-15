@@ -269,10 +269,6 @@ struct database_fixture {
    void fund_fee_pool( const account_object& from, const asset_object& asset_to_fund, const share_type amount );
    void enable_fees();
    void change_fees( const flat_set< fee_parameters >& new_params, uint32_t new_scale = 0 );
-   void upgrade_to_lifetime_member( account_id_type account );
-   void upgrade_to_lifetime_member( const account_object& account );
-   void upgrade_to_annual_member( account_id_type account );
-   void upgrade_to_annual_member( const account_object& account );
    void print_market( const string& syma, const string& symb )const;
    string pretty( const asset& a )const;
    void print_limit_order( const limit_order_object& cur )const;

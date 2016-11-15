@@ -912,7 +912,6 @@ public:
 
       account_object registrar_account_object =
             this->get_account( registrar_account );
-      FC_ASSERT( registrar_account_object.is_lifetime_member() );
 
       account_id_type registrar_account_id = registrar_account_object.id;
 

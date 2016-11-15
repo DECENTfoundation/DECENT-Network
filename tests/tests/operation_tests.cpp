@@ -521,7 +521,6 @@ BOOST_AUTO_TEST_CASE( update_account )
          PUSH_TX( db, trx, ~0 );
       }
 
-      BOOST_CHECK( nathan.is_lifetime_member() );
    } catch (fc::exception& e) {
       edump((e.to_detail_string()));
       throw;

@@ -82,8 +82,6 @@ void_result account_create_evaluator::do_evaluate( const account_create_operatio
    database& d = db();
 
    FC_ASSERT( d.find_object(op.options.voting_account), "Invalid proxy account specified." );
-   FC_ASSERT( fee_paying_account->is_lifetime_member(), "Only Lifetime members may register an account." );
-   FC_ASSERT( op.referrer(d).is_member(d.head_block_time()), "The referrer must be either a lifetime or annual subscriber." );
 
    try
    {
@@ -260,8 +258,6 @@ void_result account_whitelist_evaluator::do_evaluate(const account_whitelist_ope
    database& d = db();
 
    listed_account = &o.account_to_list(d);
-   if( !d.get_global_properties().parameters.allow_non_member_whitelists )
-      FC_ASSERT(o.authorizing_account(d).is_lifetime_member());
 
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (o) ) }
@@ -298,33 +294,5 @@ void_result account_whitelist_evaluator::do_apply(const account_whitelist_operat
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (o) ) }
 
-void_result account_upgrade_evaluator::do_evaluate(const account_upgrade_evaluator::operation_type& o)
-{ try {
-   database& d = db();
-
-   account = &d.get(o.account_to_upgrade);
-   FC_ASSERT(!account->is_lifetime_member());
-
-   return {};
-//} FC_CAPTURE_AND_RETHROW( (o) ) }
-} FC_RETHROW_EXCEPTIONS( error, "Unable to upgrade account '${a}'", ("a",o.account_to_upgrade(db()).name) ) }
-
-void_result account_upgrade_evaluator::do_apply(const account_upgrade_evaluator::operation_type& o)
-{ try {
-   database& d = db();
-
-   d.modify(*account, [&](account_object& a) {
-      if( o.upgrade_to_lifetime_member )
-      {
-         // Upgrade to lifetime member. I don't care what the account was before.
-         a.statistics(d).process_fees(a, d);
-         a.membership_expiration_date = time_point_sec::maximum();
-         a.referrer = a.registrar = a.lifetime_referrer = a.get_id();
-         a.lifetime_referrer_fee_percentage = GRAPHENE_100_PERCENT - a.network_fee_percentage;
-      } 
-   });
-
-   return {};
-} FC_RETHROW_EXCEPTIONS( error, "Unable to upgrade account '${a}'", ("a",o.account_to_upgrade(db()).name) ) }
 
 } } // graphene::chain

@@ -124,16 +124,6 @@ namespace graphene { namespace chain {
          static const uint8_t space_id = protocol_ids;
          static const uint8_t type_id  = account_object_type;
 
-         /**
-          * The time at which this account's membership expires.
-          * If set to any time in the past, the account is a basic account.
-          * If set to time_point_sec::maximum(), the account is a lifetime member.
-          * If set to any time not in the past less than time_point_sec::maximum(), the account is an annual member.
-          *
-          * See @ref is_lifetime_member, @ref is_basic_account, @ref is_annual_member, and @ref is_member
-          */
-         time_point_sec membership_expiration_date;
-
          ///The account that paid the fee to register this account. Receives a percentage of referral rewards.
          account_id_type registrar;
          /// The account credited as referring this account. Receives a percentage of referral rewards.
@@ -235,28 +225,6 @@ namespace graphene { namespace chain {
          {
             FC_ASSERT(cashback_vb);
             return db.get(*cashback_vb);
-         }
-
-         /// @return true if this is a lifetime member account; false otherwise.
-         bool is_lifetime_member()const
-         {
-            return membership_expiration_date == time_point_sec::maximum();
-         }
-         /// @return true if this is a basic account; false otherwise.
-         bool is_basic_account(time_point_sec now)const
-         {
-            return now > membership_expiration_date;
-         }
-         /// @return true if the account is an unexpired annual member; false otherwise.
-         /// @note This method will return false for lifetime members.
-         bool is_annual_member(time_point_sec now)const
-         {
-            return !is_lifetime_member() && !is_basic_account(now);
-         }
-         /// @return true if the account is an annual or lifetime member; false otherwise.
-         bool is_member(time_point_sec now)const
-         {
-            return !is_basic_account(now);
          }
 
          account_id_type get_id()const { return id; }
