@@ -249,19 +249,6 @@ void account_update_operation::validate()const
       validate_special_authority( *extensions.value.active_special_authority );
 }
 
-share_type account_upgrade_operation::calculate_fee(const fee_parameters_type& k) const
-{
-   if( upgrade_to_lifetime_member )
-      return k.membership_lifetime_fee;
-   return k.membership_annual_fee;
-}
-
-
-void account_upgrade_operation::validate() const
-{
-   FC_ASSERT( fee.amount >= 0 );
-}
-
 void account_transfer_operation::validate()const
 {
    FC_ASSERT( fee.amount >= 0 );

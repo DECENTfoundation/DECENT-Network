@@ -527,36 +527,6 @@ void create_buyback_orders( database& db )
    return;
 }
 
-void deprecate_annual_members( database& db )
-{
-   const auto& account_idx = db.get_index_type<account_index>().indices().get<by_id>();
-   fc::time_point_sec now = db.head_block_time();
-   for( const account_object& acct : account_idx )
-   {
-      try
-      {
-         transaction_evaluation_state upgrade_context(&db);
-         upgrade_context.skip_fee_schedule_check = true;
-
-         if( acct.is_annual_member( now ) )
-         {
-            account_upgrade_operation upgrade_vop;
-            upgrade_vop.fee = asset( 0, asset_id_type() );
-            upgrade_vop.account_to_upgrade = acct.id;
-            upgrade_vop.upgrade_to_lifetime_member = true;
-            db.apply_operation( upgrade_context, upgrade_vop );
-         }
-      }
-      catch( const fc::exception& e )
-      {
-         // we can in fact get here, e.g. if asset issuer of buy/sell asset blacklists/whitelists the buyback account
-         wlog( "Skipping annual member deprecate processing for account ${a} (${an}) at block ${n}; exception was ${e}",
-               ("a", acct.id)("an", acct.name)("n", db.head_block_num())("e", e.to_detail_string()) );
-         continue;
-      }
-   }
-   return;
-}
 
 void database::perform_chain_maintenance(const signed_block& next_block, const global_property_object& global_props)
 {
@@ -579,55 +549,53 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
       }
 
       void operator()(const account_object& stake_account) {
-         if( props.parameters.count_non_member_votes || stake_account.is_member(d.head_block_time()) )
+         // There may be a difference between the account whose stake is voting and the one specifying opinions.
+         // Usually they're the same, but if the stake account has specified a voting_account, that account is the one
+         // specifying the opinions.
+         const account_object& opinion_account =
+         (stake_account.options.voting_account ==
+          GRAPHENE_PROXY_TO_SELF_ACCOUNT)? stake_account
+         : d.get(stake_account.options.voting_account);
+         
+         const auto& stats = stake_account.statistics(d);
+         uint64_t voting_stake = stats.total_core_in_orders.value
+         + (stake_account.cashback_vb.valid() ? (*stake_account.cashback_vb)(d).balance.amount.value: 0)
+         + d.get_balance(stake_account.get_id(), asset_id_type()).amount.value;
+         
+         for( vote_id_type id : opinion_account.options.votes )
          {
-            // There may be a difference between the account whose stake is voting and the one specifying opinions.
-            // Usually they're the same, but if the stake account has specified a voting_account, that account is the one
-            // specifying the opinions.
-            const account_object& opinion_account =
-                  (stake_account.options.voting_account ==
-                   GRAPHENE_PROXY_TO_SELF_ACCOUNT)? stake_account
-                                     : d.get(stake_account.options.voting_account);
-
-            const auto& stats = stake_account.statistics(d);
-            uint64_t voting_stake = stats.total_core_in_orders.value
-                  + (stake_account.cashback_vb.valid() ? (*stake_account.cashback_vb)(d).balance.amount.value: 0)
-                  + d.get_balance(stake_account.get_id(), asset_id_type()).amount.value;
-
-            for( vote_id_type id : opinion_account.options.votes )
-            {
-               uint32_t offset = id.instance();
-               // if they somehow managed to specify an illegal offset, ignore it.
-               if( offset < d._vote_tally_buffer.size() )
-                  d._vote_tally_buffer[offset] += voting_stake;
-            }
-
-            if( opinion_account.options.num_witness <= props.parameters.maximum_witness_count )
-            {
-               uint16_t offset = std::min(size_t(opinion_account.options.num_witness/2),
-                                          d._witness_count_histogram_buffer.size() - 1);
-               // votes for a number greater than maximum_witness_count
-               // are turned into votes for maximum_witness_count.
-               //
-               // in particular, this takes care of the case where a
-               // member was voting for a high number, then the
-               // parameter was lowered.
-               d._witness_count_histogram_buffer[offset] += voting_stake;
-            }
-            if( opinion_account.options.num_committee <= props.parameters.maximum_committee_count )
-            {
-               uint16_t offset = std::min(size_t(opinion_account.options.num_committee/2),
-                                          d._committee_count_histogram_buffer.size() - 1);
-               // votes for a number greater than maximum_committee_count
-               // are turned into votes for maximum_committee_count.
-               //
-               // same rationale as for witnesses
-               d._committee_count_histogram_buffer[offset] += voting_stake;
-            }
-
-            d._total_voting_stake += voting_stake;
+            uint32_t offset = id.instance();
+            // if they somehow managed to specify an illegal offset, ignore it.
+            if( offset < d._vote_tally_buffer.size() )
+               d._vote_tally_buffer[offset] += voting_stake;
          }
+         
+         if( opinion_account.options.num_witness <= props.parameters.maximum_witness_count )
+         {
+            uint16_t offset = std::min(size_t(opinion_account.options.num_witness/2),
+                                       d._witness_count_histogram_buffer.size() - 1);
+            // votes for a number greater than maximum_witness_count
+            // are turned into votes for maximum_witness_count.
+            //
+            // in particular, this takes care of the case where a
+            // member was voting for a high number, then the
+            // parameter was lowered.
+            d._witness_count_histogram_buffer[offset] += voting_stake;
+         }
+         if( opinion_account.options.num_committee <= props.parameters.maximum_committee_count )
+         {
+            uint16_t offset = std::min(size_t(opinion_account.options.num_committee/2),
+                                       d._committee_count_histogram_buffer.size() - 1);
+            // votes for a number greater than maximum_committee_count
+            // are turned into votes for maximum_committee_count.
+            //
+            // same rationale as for witnesses
+            d._committee_count_histogram_buffer[offset] += voting_stake;
+         }
+         
+         d._total_voting_stake += voting_stake;
       }
+      
    } tally_helper(*this, gpo);
    struct process_fees_helper {
       database& d;

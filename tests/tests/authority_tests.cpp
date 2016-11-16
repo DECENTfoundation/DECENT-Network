@@ -504,7 +504,6 @@ BOOST_FIXTURE_TEST_CASE( fired_committee_members, database_fixture )
    for( int i = 0; i < 15; ++i )
    {
       const auto& account = create_account("committee-member" + fc::to_string(i+1), committee_member_key.get_public_key());
-      upgrade_to_lifetime_member(account);
       committee_members.insert(create_committee_member(account).vote_id);
    }
    BOOST_REQUIRE_EQUAL(get_balance(*nathan, asset_id_type()(db)), 5000);
@@ -901,7 +900,6 @@ BOOST_FIXTURE_TEST_CASE( max_authority_membership, database_fixture )
       private_key_type sam_key = generate_private_key("sam");
 
       account_object sam_account_object = create_account( "sam", sam_key );
-      upgrade_to_lifetime_member(sam_account_object);
       account_object committee_account_object = committee_account(db);
 
       const asset_object& core = asset_id_type()(db);
@@ -1044,8 +1042,6 @@ BOOST_FIXTURE_TEST_CASE( bogus_signature, database_fixture )
 BOOST_FIXTURE_TEST_CASE( voting_account, database_fixture )
 { try {
    ACTORS((nathan)(vikram));
-   upgrade_to_lifetime_member(nathan_id);
-   upgrade_to_lifetime_member(vikram_id);
    committee_member_id_type nathan_committee_member = create_committee_member(nathan_id(db)).id;
    committee_member_id_type vikram_committee_member = create_committee_member(vikram_id(db)).id;
 

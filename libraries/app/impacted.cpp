@@ -76,7 +76,6 @@ struct get_impacted_account_visitor
       _impacted.insert( op.account_to_list );
    }
 
-   void operator()( const account_upgrade_operation& op ) {}
    void operator()( const account_transfer_operation& op )
    {
       _impacted.insert( op.new_owner );

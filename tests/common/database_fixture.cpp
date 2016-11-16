@@ -85,8 +85,7 @@ database_fixture::database_fixture()
       auto name = "init"+fc::to_string(i);
       genesis_state.initial_accounts.emplace_back(name,
                                                   init_account_priv_key.get_public_key(),
-                                                  init_account_priv_key.get_public_key(),
-                                                  true);
+                                                  init_account_priv_key.get_public_key());
       genesis_state.initial_committee_candidates.push_back({name});
       genesis_state.initial_witness_candidates.push_back({name, init_account_priv_key.get_public_key()});
    }
@@ -814,27 +813,6 @@ void database_fixture::enable_fees()
    {
       gpo.parameters.current_fees = fee_schedule::get_default();
    });
-}
-
-void database_fixture::upgrade_to_lifetime_member(account_id_type account)
-{
-   upgrade_to_lifetime_member(account(db));
-}
-
-void database_fixture::upgrade_to_lifetime_member( const account_object& account )
-{
-   try
-   {
-      account_upgrade_operation op;
-      op.account_to_upgrade = account.get_id();
-      op.upgrade_to_lifetime_member = true;
-      op.fee = db.get_global_properties().parameters.current_fees->calculate_fee(op);
-      trx.operations = {op};
-      db.push_transaction(trx, ~0);
-      trx.clear();
-      verify_asset_supplies(db);
-   }
-   FC_CAPTURE_AND_RETHROW((account))
 }
 
 void database_fixture::print_market( const string& syma, const string& symb )const

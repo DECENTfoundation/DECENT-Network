@@ -183,7 +183,6 @@ BOOST_AUTO_TEST_CASE( issue_whitelist_uia )
       trx.operations.back() = wop;
       // Fail because whitelist function is restricted to members only
       GRAPHENE_REQUIRE_THROW( PUSH_TX( db, trx, ~0 ), fc::exception );
-      upgrade_to_lifetime_member( izzy_id );
       trx.operations.clear();
       trx.operations.push_back( wop );
       PUSH_TX( db, trx, ~0 );
@@ -215,7 +214,6 @@ BOOST_AUTO_TEST_CASE( transfer_whitelist_uia )
       const account_object& nathan = get_account("nathan");
       const account_object& dan = create_account("dan");
       account_id_type izzy_id = get_account("izzy").id;
-      upgrade_to_lifetime_member(dan);
       trx.clear();
 
       BOOST_TEST_MESSAGE( "Atempting to transfer asset ADVANCED from nathan to dan when dan is not whitelisted, should fail" );

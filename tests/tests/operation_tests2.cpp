@@ -421,7 +421,6 @@ BOOST_AUTO_TEST_CASE( feed_limit_test )
 BOOST_AUTO_TEST_CASE( witness_create )
 { try {
    ACTOR(nathan);
-   upgrade_to_lifetime_member(nathan_id);
    trx.clear();
    witness_id_type nathan_witness_id = create_witness(nathan_id, nathan_private_key).id;
    // Give nathan some voting stake
@@ -810,7 +809,6 @@ BOOST_AUTO_TEST_CASE(zero_second_vbo)
          db.push_transaction( tx, database::skip_authority_check | database::skip_tapos_check | database::skip_transaction_signatures );
       }
       enable_fees();
-      upgrade_to_lifetime_member(alice_id);
       generate_block();
 
       // Wait for a maintenance interval to ensure we have a full day's budget to work with.
@@ -940,7 +938,6 @@ BOOST_AUTO_TEST_CASE( top_n_special )
          BOOST_CHECK( stan_id(db).active == stan_active_auth );
 
          set_expiration( db, trx );  // #11
-         upgrade_to_lifetime_member(stan_id);
          generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
          */
 
@@ -1020,7 +1017,6 @@ BOOST_AUTO_TEST_CASE( top_n_special )
 BOOST_AUTO_TEST_CASE( buyback )
 {
    ACTORS( (alice)(bob)(chloe)(dan)(izzy)(philbin) );
-   upgrade_to_lifetime_member(philbin_id);
 
 
    try

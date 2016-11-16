@@ -54,8 +54,7 @@ genesis_state_type make_genesis() {
       auto name = "init"+fc::to_string(i);
       genesis_state.initial_accounts.emplace_back(name,
                                                   init_account_priv_key.get_public_key(),
-                                                  init_account_priv_key.get_public_key(),
-                                                  true);
+                                                  init_account_priv_key.get_public_key());
       genesis_state.initial_committee_candidates.push_back({name});
       genesis_state.initial_witness_candidates.push_back({name, init_account_priv_key.get_public_key()});
    }
@@ -673,7 +672,6 @@ BOOST_FIXTURE_TEST_CASE( maintenance_interval, database_fixture )
       BOOST_CHECK_GT(maintenence_time.sec_since_epoch(), db.head_block_time().sec_since_epoch());
       auto initial_properties = db.get_global_properties();
       const account_object& nathan = create_account("nathan");
-      upgrade_to_lifetime_member(nathan);
       const committee_member_object nathans_committee_member = create_committee_member(nathan);
       {
          account_update_operation op;

@@ -512,14 +512,6 @@ BOOST_AUTO_TEST_CASE( update_account )
       BOOST_CHECK(nathan.options.votes.size() == 2);
 
       enable_fees();
-      {
-         account_upgrade_operation op;
-         op.account_to_upgrade = nathan.id;
-         op.upgrade_to_lifetime_member = true;
-         op.fee = db.get_global_properties().parameters.current_fees->calculate_fee(op);
-         trx.operations = {op};
-         PUSH_TX( db, trx, ~0 );
-      }
 
    } catch (fc::exception& e) {
       edump((e.to_detail_string()));
@@ -1246,122 +1238,6 @@ BOOST_AUTO_TEST_CASE( fill_order )
    //o.calculate_fee(db.current_fee_schedule());
 } FC_LOG_AND_RETHROW() }
 
-BOOST_AUTO_TEST_CASE( witness_pay_test )
-{ try {
-
-   const share_type prec = asset::scaled_precision( asset_id_type()(db).precision );
-
-   // there is an immediate maintenance interval in the first block
-   //   which will initialize last_budget_time
-   generate_block();
-
-   // Make an account and upgrade it to prime, so that witnesses get some pay
-   create_account("nathan", init_account_pub_key);
-   transfer(account_id_type()(db), get_account("nathan"), asset(20000*prec));
-   transfer(account_id_type()(db), get_account("init3"), asset(20*prec));
-   generate_block();
-
-   auto last_witness_vbo_balance = [&]() -> share_type
-   {
-      const witness_object& wit = db.fetch_block_by_number(db.head_block_num())->witness(db);
-      if( !wit.pay_vb.valid() )
-         return 0;
-      return (*wit.pay_vb)(db).balance.amount;
-   };
-
-   const auto block_interval = db.get_global_properties().parameters.block_interval;
-   const asset_object* core = &asset_id_type()(db);
-   const account_object* nathan = &get_account("nathan");
-   enable_fees();
-   BOOST_CHECK_GT(db.current_fee_schedule().get<account_upgrade_operation>().membership_lifetime_fee, 0);
-   // Based on the size of the reserve fund later in the test, the witness budget will be set to this value
-   const uint64_t ref_budget =
-      ((uint64_t( db.current_fee_schedule().get<account_upgrade_operation>().membership_lifetime_fee )
-         * GRAPHENE_CORE_ASSET_CYCLE_RATE * 30
-         * block_interval
-       ) + ((uint64_t(1) << GRAPHENE_CORE_ASSET_CYCLE_RATE_BITS)-1)
-      ) >> GRAPHENE_CORE_ASSET_CYCLE_RATE_BITS
-      ;
-   // change this if ref_budget changes
-   BOOST_CHECK_EQUAL( ref_budget, 594 );
-   const uint64_t witness_ppb = ref_budget * 10 / 23 + 1;
-   // change this if ref_budget changes
-   BOOST_CHECK_EQUAL( witness_ppb, 259 );
-   // following two inequalities need to hold for maximal code coverage
-   BOOST_CHECK_LT( witness_ppb * 2, ref_budget );
-   BOOST_CHECK_GT( witness_ppb * 3, ref_budget );
-
-   db.modify( db.get_global_properties(), [&]( global_property_object& _gpo )
-   {
-      _gpo.parameters.witness_pay_per_block = witness_ppb;
-   } );
-
-   BOOST_CHECK_EQUAL(core->dynamic_asset_data_id(db).accumulated_fees.value, 0);
-   BOOST_TEST_MESSAGE( "Upgrading account" );
-   account_upgrade_operation uop;
-   uop.account_to_upgrade = nathan->get_id();
-   uop.upgrade_to_lifetime_member = true;
-   set_expiration( db, trx );
-   trx.operations.push_back(uop);
-   for( auto& op : trx.operations ) db.current_fee_schedule().set_fee(op);
-   trx.validate();
-   sign( trx, init_account_priv_key );
-   PUSH_TX( db, trx );
-   auto pay_fee_time = db.head_block_time().sec_since_epoch();
-   trx.clear();
-   BOOST_CHECK( get_balance(*nathan, *core) == 20000*prec - account_upgrade_operation::fee_parameters_type().membership_lifetime_fee );;
-
-   generate_block();
-   nathan = &get_account("nathan");
-   core = &asset_id_type()(db);
-   BOOST_CHECK_EQUAL( last_witness_vbo_balance().value, 0 );
-
-   auto schedule_maint = [&]()
-   {
-      // now we do maintenance
-      db.modify( db.get_dynamic_global_properties(), [&]( dynamic_global_property_object& _dpo )
-      {
-         _dpo.next_maintenance_time = db.head_block_time() + 1;
-      } );
-   };
-   BOOST_TEST_MESSAGE( "Generating some blocks" );
-
-   // generate some blocks
-   while( db.head_block_time().sec_since_epoch() - pay_fee_time < 24 * block_interval )
-   {
-      generate_block();
-      BOOST_CHECK_EQUAL( last_witness_vbo_balance().value, 0 );
-   }
-   BOOST_CHECK_EQUAL( db.head_block_time().sec_since_epoch() - pay_fee_time, 24 * block_interval );
-
-   schedule_maint();
-   // The 80% lifetime referral fee went to the committee account, which burned it. Check that it's here.
-   BOOST_CHECK( core->reserved(db).value == 8000*prec );
-   generate_block();
-   BOOST_CHECK_EQUAL( core->reserved(db).value, 999999406 );
-   BOOST_CHECK_EQUAL( db.get_dynamic_global_properties().witness_budget.value, ref_budget );
-   // first witness paid from old budget (so no pay)
-   BOOST_CHECK_EQUAL( last_witness_vbo_balance().value, 0 );
-   // second witness finally gets paid!
-   generate_block();
-   BOOST_CHECK_EQUAL( last_witness_vbo_balance().value, witness_ppb );
-   BOOST_CHECK_EQUAL( db.get_dynamic_global_properties().witness_budget.value, ref_budget - witness_ppb );
-
-   generate_block();
-   BOOST_CHECK_EQUAL( last_witness_vbo_balance().value, witness_ppb );
-   BOOST_CHECK_EQUAL( db.get_dynamic_global_properties().witness_budget.value, ref_budget - 2 * witness_ppb );
-
-   generate_block();
-   BOOST_CHECK_LT( last_witness_vbo_balance().value, witness_ppb );
-   BOOST_CHECK_EQUAL( last_witness_vbo_balance().value, ref_budget - 2 * witness_ppb );
-   BOOST_CHECK_EQUAL( db.get_dynamic_global_properties().witness_budget.value, 0 );
-
-   generate_block();
-   BOOST_CHECK_EQUAL( last_witness_vbo_balance().value, 0 );
-   BOOST_CHECK_EQUAL( db.get_dynamic_global_properties().witness_budget.value, 0 );
-   BOOST_CHECK_EQUAL(core->reserved(db).value, 999999406 );
-
-} FC_LOG_AND_RETHROW() }
 
 /**
  *  Reserve asset test should make sure that all assets except bitassets

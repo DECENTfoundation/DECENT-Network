@@ -203,37 +203,6 @@ namespace graphene { namespace chain {
       void validate()const { FC_ASSERT( fee.amount >= 0 ); FC_ASSERT(new_listing < 0x4); }
    };
 
-   /**
-    * @brief Manage an account's membership status
-    * @ingroup operations
-    *
-    * This operation is used to upgrade an account to a member, or renew its subscription. If an account which is an
-    * unexpired annual subscription member publishes this operation with @ref upgrade_to_lifetime_member set to false,
-    * the account's membership expiration date will be pushed backward one year. If a basic account publishes it with
-    * @ref upgrade_to_lifetime_member set to false, the account will be upgraded to a subscription member with an
-    * expiration date one year after the processing time of this operation.
-    *
-    * Any account may use this operation to become a lifetime member by setting @ref upgrade_to_lifetime_member to
-    * true. Once an account has become a lifetime member, it may not use this operation anymore.
-    */
-   struct account_upgrade_operation : public base_operation
-   {
-      struct fee_parameters_type { 
-         uint64_t membership_annual_fee   =  2000 * GRAPHENE_BLOCKCHAIN_PRECISION;
-         uint64_t membership_lifetime_fee = 10000 * GRAPHENE_BLOCKCHAIN_PRECISION; ///< the cost to upgrade to a lifetime member
-      };
-
-      asset             fee;
-      /// The account to upgrade; must not already be a lifetime member
-      account_id_type   account_to_upgrade;
-      /// If true, the account will be upgraded to a lifetime member; otherwise, it will add a year to the subscription
-      bool              upgrade_to_lifetime_member = false;
-      extensions_type   extensions;
-
-      account_id_type fee_payer()const { return account_to_upgrade; }
-      void       validate()const;
-      share_type calculate_fee( const fee_parameters_type& k )const;
-   };
 
    /**
     * @brief transfers the account to another account while clearing the white list
@@ -280,15 +249,11 @@ FC_REFLECT( graphene::chain::account_update_operation,
             (fee)(account)(owner)(active)(new_options)(extensions)
           )
 
-FC_REFLECT( graphene::chain::account_upgrade_operation,
-            (fee)(account_to_upgrade)(upgrade_to_lifetime_member)(extensions) )
-
 FC_REFLECT( graphene::chain::account_whitelist_operation, (fee)(authorizing_account)(account_to_list)(new_listing)(extensions))
 
 FC_REFLECT( graphene::chain::account_create_operation::fee_parameters_type, (basic_fee)(premium_fee)(price_per_kbyte) )
 FC_REFLECT( graphene::chain::account_whitelist_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::account_update_operation::fee_parameters_type, (fee)(price_per_kbyte) )
-FC_REFLECT( graphene::chain::account_upgrade_operation::fee_parameters_type, (membership_annual_fee)(membership_lifetime_fee) )
 FC_REFLECT( graphene::chain::account_transfer_operation::fee_parameters_type, (fee) )
 
 FC_REFLECT( graphene::chain::account_transfer_operation, (fee)(account_id)(new_owner)(extensions) )
