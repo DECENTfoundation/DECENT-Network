@@ -184,14 +184,8 @@ void account_create_operation::validate()const
    FC_ASSERT( !owner.is_impossible(), "cannot create an account with an imposible owner authority threshold" );
    FC_ASSERT( !active.is_impossible(), "cannot create an account with an imposible active authority threshold" );
    options.validate();
-   if( extensions.value.owner_special_authority.valid() )
-      validate_special_authority( *extensions.value.owner_special_authority );
-   if( extensions.value.active_special_authority.valid() )
-      validate_special_authority( *extensions.value.active_special_authority );
    if( extensions.value.buyback_options.valid() )
    {
-      FC_ASSERT( !(extensions.value.owner_special_authority.valid()) );
-      FC_ASSERT( !(extensions.value.active_special_authority.valid()) );
       FC_ASSERT( owner == authority::null_authority() );
       FC_ASSERT( active == authority::null_authority() );
       size_t n_markets = extensions.value.buyback_options->markets.size();
@@ -224,8 +218,6 @@ void account_update_operation::validate()const
          owner.valid()
       || active.valid()
       || new_options.valid()
-      || extensions.value.owner_special_authority.valid()
-      || extensions.value.active_special_authority.valid()
       );
 
    FC_ASSERT( has_action );
@@ -243,10 +235,6 @@ void account_update_operation::validate()const
 
    if( new_options )
       new_options->validate();
-   if( extensions.value.owner_special_authority.valid() )
-      validate_special_authority( *extensions.value.owner_special_authority );
-   if( extensions.value.active_special_authority.valid() )
-      validate_special_authority( *extensions.value.active_special_authority );
 }
 
 void account_transfer_operation::validate()const

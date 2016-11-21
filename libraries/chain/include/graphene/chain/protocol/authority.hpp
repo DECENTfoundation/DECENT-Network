@@ -88,7 +88,6 @@ namespace graphene { namespace chain {
          return result;
       }
 
-
       friend bool operator == ( const authority& a, const authority& b )
       {
          return (a.weight_threshold == b.weight_threshold) &&

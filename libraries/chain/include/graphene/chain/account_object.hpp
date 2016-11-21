@@ -196,12 +196,9 @@ namespace graphene { namespace chain {
           */
          optional<vesting_balance_id_type> cashback_vb;
 
-         special_authority owner_special_authority = no_special_authority();
-         special_authority active_special_authority = no_special_authority();
-
          /**
           * This flag is set when the top_n logic sets both authorities,
-          * and gets reset when authority or special_authority is set.
+          * and gets reset when authority is set.
           */
          uint8_t top_n_control_flags = 0;
          static const uint8_t top_n_control_owner  = 1;
@@ -213,12 +210,6 @@ namespace graphene { namespace chain {
           * In the future we may expand this to allow accounts to e.g. voluntarily restrict incoming transfers.
           */
          optional< flat_set<asset_id_type> > allowed_assets;
-
-         bool has_special_authority()const
-         {
-            return (owner_special_authority.which() != special_authority::tag< no_special_authority >::value)
-                || (active_special_authority.which() != special_authority::tag< no_special_authority >::value);
-         }
 
          template<typename DB>
          const vesting_balance_object& cashback_balance(const DB& db)const
@@ -339,7 +330,6 @@ FC_REFLECT_DERIVED( graphene::chain::account_object,
                     (name)(owner)(active)(options)(statistics)(whitelisting_accounts)(blacklisting_accounts)
                     (whitelisted_accounts)(blacklisted_accounts)
                     (cashback_vb)
-                    (owner_special_authority)(active_special_authority)
                     (top_n_control_flags)
                     (allowed_assets)
                     )

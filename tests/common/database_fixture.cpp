@@ -32,7 +32,6 @@
 #include <graphene/chain/account_object.hpp>
 #include <graphene/chain/asset_object.hpp>
 #include <graphene/chain/committee_member_object.hpp>
-#include <graphene/chain/fba_object.hpp>
 #include <graphene/chain/market_object.hpp>
 #include <graphene/chain/vesting_balance_object.hpp>
 #include <graphene/chain/witness_object.hpp>
@@ -195,8 +194,6 @@ void database_fixture::verify_asset_supplies( const database& db )
    }
    for( const vesting_balance_object& vbo : db.get_index_type< vesting_balance_index >().indices() )
       total_balances[ vbo.balance.asset_id ] += vbo.balance.amount;
-   for( const fba_accumulator_object& fba : db.get_index_type< simple_index< fba_accumulator_object > >() )
-      total_balances[ asset_id_type() ] += fba.accumulated_fba_fees;
 
    total_balances[asset_id_type()] += db.get_dynamic_global_properties().witness_budget;
 

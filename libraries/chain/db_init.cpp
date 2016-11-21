@@ -23,8 +23,6 @@
  */
 
 #include <graphene/chain/database.hpp>
-#include <graphene/chain/fba_accumulator_id.hpp>
-
 #include <graphene/chain/account_object.hpp>
 #include <graphene/chain/asset_object.hpp>
 #include <graphene/chain/block_summary_object.hpp>
@@ -33,12 +31,10 @@
 #include <graphene/chain/chain_property_object.hpp>
 #include <graphene/chain/committee_member_object.hpp>
 #include <graphene/chain/confidential_object.hpp>
-#include <graphene/chain/fba_object.hpp>
 #include <graphene/chain/global_property_object.hpp>
 #include <graphene/chain/market_object.hpp>
 #include <graphene/chain/operation_history_object.hpp>
 #include <graphene/chain/proposal_object.hpp>
-#include <graphene/chain/special_authority_object.hpp>
 #include <graphene/chain/transaction_object.hpp>
 #include <graphene/chain/vesting_balance_object.hpp>
 #include <graphene/chain/withdraw_permission_object.hpp>
@@ -200,10 +196,7 @@ void database::initialize_indexes()
    add_index< primary_index<simple_index<chain_property_object          > > >();
    add_index< primary_index<simple_index<witness_schedule_object        > > >();
    add_index< primary_index<simple_index<budget_record_object           > > >();
-   add_index< primary_index< special_authority_index                      > >();
    add_index< primary_index< buyback_index                                > >();
-
-   add_index< primary_index< simple_index< fba_accumulator_object       > > >();
 }
 
 void database::init_genesis(const genesis_state_type& genesis_state)
@@ -592,35 +585,6 @@ void database::init_genesis(const genesis_state_type& genesis_state)
          wso.current_shuffled_witnesses.push_back( wid );
    });
 
-   // Create FBA counters
-   create<fba_accumulator_object>([&]( fba_accumulator_object& acc )
-   {
-      FC_ASSERT( acc.id == fba_accumulator_id_type( fba_accumulator_id_transfer_to_blind ) );
-      acc.accumulated_fba_fees = 0;
-#ifdef GRAPHENE_FBA_STEALTH_DESIGNATED_ASSET
-      acc.designated_asset = GRAPHENE_FBA_STEALTH_DESIGNATED_ASSET;
-#endif
-   });
-
-   create<fba_accumulator_object>([&]( fba_accumulator_object& acc )
-   {
-      FC_ASSERT( acc.id == fba_accumulator_id_type( fba_accumulator_id_blind_transfer ) );
-      acc.accumulated_fba_fees = 0;
-#ifdef GRAPHENE_FBA_STEALTH_DESIGNATED_ASSET
-      acc.designated_asset = GRAPHENE_FBA_STEALTH_DESIGNATED_ASSET;
-#endif
-   });
-
-   create<fba_accumulator_object>([&]( fba_accumulator_object& acc )
-   {
-      FC_ASSERT( acc.id == fba_accumulator_id_type( fba_accumulator_id_transfer_from_blind ) );
-      acc.accumulated_fba_fees = 0;
-#ifdef GRAPHENE_FBA_STEALTH_DESIGNATED_ASSET
-      acc.designated_asset = GRAPHENE_FBA_STEALTH_DESIGNATED_ASSET;
-#endif
-   });
-
-   FC_ASSERT( get_index<fba_accumulator_object>().get_next_id() == fba_accumulator_id_type( fba_accumulator_id_count ) );
 
    debug_dump();
 

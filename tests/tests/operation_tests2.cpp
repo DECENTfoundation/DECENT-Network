@@ -884,36 +884,6 @@ BOOST_AUTO_TEST_CASE( top_n_special )
          authority stan_owner_auth = stan_id(db).owner;
          authority stan_active_auth = stan_id(db).active;
 
-         // set SA, wait for maint interval
-         // TODO:  account_create_operation
-         // TODO:  multiple accounts with different n for same asset
-
-         {
-            top_holders_special_authority top2, top3;
-
-            top2.num_top_holders = 2;
-            top2.asset = topn_id;
-
-            top3.num_top_holders = 3;
-            top3.asset = topn_id;
-
-            account_update_operation op;
-            op.account = stan_id;
-            op.extensions.value.active_special_authority = top3;
-            op.extensions.value.owner_special_authority = top2;
-
-            signed_transaction tx;
-            tx.operations.push_back( op );
-
-            set_expiration( db, tx );
-            sign( tx, stan_private_key );
-
-            PUSH_TX( db, tx );
-
-            // TODO:  Check special_authority is properly set
-            // TODO:  Do it in steps
-         }
-
          // wait for maint interval
          // make sure we don't have any authority as account hasn't gotten distributed yet
          generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);

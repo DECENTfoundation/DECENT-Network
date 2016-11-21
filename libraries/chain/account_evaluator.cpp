@@ -31,8 +31,6 @@
 #include <graphene/chain/exceptions.hpp>
 #include <graphene/chain/hardfork.hpp>
 #include <graphene/chain/internal_exceptions.hpp>
-#include <graphene/chain/special_authority.hpp>
-#include <graphene/chain/special_authority_object.hpp>
 
 #include <algorithm>
 
@@ -91,10 +89,6 @@ void_result account_create_evaluator::do_evaluate( const account_create_operatio
    GRAPHENE_RECODE_EXC( internal_verify_auth_max_auth_exceeded, account_create_max_auth_exceeded )
    GRAPHENE_RECODE_EXC( internal_verify_auth_account_not_found, account_create_auth_account_not_found )
 
-   if( op.extensions.value.owner_special_authority.valid() )
-      evaluate_special_authority( d, *op.extensions.value.owner_special_authority );
-   if( op.extensions.value.active_special_authority.valid() )
-      evaluate_special_authority( d, *op.extensions.value.active_special_authority );
    if( op.extensions.value.buyback_options.valid() )
       evaluate_buyback_account_options( d, *op.extensions.value.buyback_options );
    verify_account_votes( d, op.options );
@@ -130,10 +124,6 @@ object_id_type account_create_evaluator::do_apply( const account_create_operatio
          obj.options          = o.options;
          obj.statistics = db().create<account_statistics_object>([&](account_statistics_object& s){s.owner = obj.id;}).id;
 
-         if( o.extensions.value.owner_special_authority.valid() )
-            obj.owner_special_authority = *(o.extensions.value.owner_special_authority);
-         if( o.extensions.value.active_special_authority.valid() )
-            obj.active_special_authority = *(o.extensions.value.active_special_authority);
          if( o.extensions.value.buyback_options.valid() )
          {
             obj.allowed_assets = o.extensions.value.buyback_options->markets;
@@ -152,15 +142,6 @@ object_id_type account_create_evaluator::do_apply( const account_create_operatio
       db().modify(global_properties, [&dynamic_properties](global_property_object& p) {
          p.parameters.current_fees->get<account_create_operation>().basic_fee <<= p.parameters.account_fee_scale_bitshifts;
       });
-
-   if(    o.extensions.value.owner_special_authority.valid()
-       || o.extensions.value.active_special_authority.valid() )
-   {
-      db().create< special_authority_object >( [&]( special_authority_object& sa )
-      {
-         sa.account = new_acnt_object.id;
-      } );
-   }
 
    if( o.extensions.value.buyback_options.valid() )
    {
@@ -192,11 +173,6 @@ void_result account_update_evaluator::do_evaluate( const account_update_operatio
    GRAPHENE_RECODE_EXC( internal_verify_auth_max_auth_exceeded, account_update_max_auth_exceeded )
    GRAPHENE_RECODE_EXC( internal_verify_auth_account_not_found, account_update_auth_account_not_found )
 
-   if( o.extensions.value.owner_special_authority.valid() )
-      evaluate_special_authority( d, *o.extensions.value.owner_special_authority );
-   if( o.extensions.value.active_special_authority.valid() )
-      evaluate_special_authority( d, *o.extensions.value.active_special_authority );
-
    acnt = &o.account(d);
 
    if( o.new_options.valid() )
@@ -221,34 +197,7 @@ void_result account_update_evaluator::do_apply( const account_update_operation& 
          a.top_n_control_flags = 0;
       }
       if( o.new_options ) a.options = *o.new_options;
-      sa_before = a.has_special_authority();
-      if( o.extensions.value.owner_special_authority.valid() )
-      {
-         a.owner_special_authority = *(o.extensions.value.owner_special_authority);
-         a.top_n_control_flags = 0;
-      }
-      if( o.extensions.value.active_special_authority.valid() )
-      {
-         a.active_special_authority = *(o.extensions.value.active_special_authority);
-         a.top_n_control_flags = 0;
-      }
-      sa_after = a.has_special_authority();
    });
-
-   if( sa_before & (!sa_after) )
-   {
-      const auto& sa_idx = d.get_index_type< special_authority_index >().indices().get<by_account>();
-      auto sa_it = sa_idx.find( o.account );
-      assert( sa_it != sa_idx.end() );
-      d.remove( *sa_it );
-   }
-   else if( (!sa_before) & sa_after )
-   {
-      d.create< special_authority_object >( [&]( special_authority_object& sa )
-      {
-         sa.account = o.account;
-      } );
-   }
 
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (o) ) }

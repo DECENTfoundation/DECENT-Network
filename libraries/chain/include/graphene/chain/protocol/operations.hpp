@@ -29,7 +29,6 @@
 #include <graphene/chain/protocol/custom.hpp>
 #include <graphene/chain/protocol/committee_member.hpp>
 #include <graphene/chain/protocol/confidential.hpp>
-#include <graphene/chain/protocol/fba.hpp>
 #include <graphene/chain/protocol/market.hpp>
 #include <graphene/chain/protocol/proposal.hpp>
 #include <graphene/chain/protocol/transfer.hpp>
@@ -85,8 +84,7 @@ namespace graphene { namespace chain {
             blind_transfer_operation,
             transfer_from_blind_operation,
             asset_settle_cancel_operation,  // VIRTUAL
-            asset_claim_fees_operation,
-            fba_distribute_operation        // VIRTUAL
+            asset_claim_fees_operation
          > operation;
 
    /// @} // operations group

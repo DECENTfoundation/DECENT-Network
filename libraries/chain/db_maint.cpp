@@ -28,19 +28,15 @@
 #include <fc/uint128.hpp>
 
 #include <graphene/chain/database.hpp>
-#include <graphene/chain/fba_accumulator_id.hpp>
 #include <graphene/chain/hardfork.hpp>
-
 #include <graphene/chain/account_object.hpp>
 #include <graphene/chain/asset_object.hpp>
 #include <graphene/chain/budget_record_object.hpp>
 #include <graphene/chain/buyback_object.hpp>
 #include <graphene/chain/chain_property_object.hpp>
 #include <graphene/chain/committee_member_object.hpp>
-#include <graphene/chain/fba_object.hpp>
 #include <graphene/chain/global_property_object.hpp>
 #include <graphene/chain/market_object.hpp>
-#include <graphene/chain/special_authority_object.hpp>
 #include <graphene/chain/vesting_balance_object.hpp>
 #include <graphene/chain/vote_count.hpp>
 #include <graphene/chain/witness_object.hpp>
@@ -306,151 +302,6 @@ void database::process_budget()
    FC_CAPTURE_AND_RETHROW()
 }
 
-template< typename Visitor >
-void visit_special_authorities( const database& db, Visitor visit )
-{
-   const auto& sa_idx = db.get_index_type< special_authority_index >().indices().get<by_id>();
-
-   for( const special_authority_object& sao : sa_idx )
-   {
-      const account_object& acct = sao.account(db);
-      if( acct.owner_special_authority.which() != special_authority::tag< no_special_authority >::value )
-      {
-         visit( acct, true, acct.owner_special_authority );
-      }
-      if( acct.active_special_authority.which() != special_authority::tag< no_special_authority >::value )
-      {
-         visit( acct, false, acct.active_special_authority );
-      }
-   }
-}
-
-void update_top_n_authorities( database& db )
-{
-   visit_special_authorities( db,
-   [&]( const account_object& acct, bool is_owner, const special_authority& auth )
-   {
-      if( auth.which() == special_authority::tag< top_holders_special_authority >::value )
-      {
-         // use index to grab the top N holders of the asset and vote_counter to obtain the weights
-
-         const top_holders_special_authority& tha = auth.get< top_holders_special_authority >();
-         vote_counter vc;
-         const auto& bal_idx = db.get_index_type< account_balance_index >().indices().get< by_asset_balance >();
-         uint8_t num_needed = tha.num_top_holders;
-         if( num_needed == 0 )
-            return;
-
-         // find accounts
-         const auto range = bal_idx.equal_range( boost::make_tuple( tha.asset ) );
-         for( const account_balance_object& bal : boost::make_iterator_range( range.first, range.second ) )
-         {
-             assert( bal.asset_type == tha.asset );
-             if( bal.owner == acct.id )
-                continue;
-             vc.add( bal.owner, bal.balance.value );
-             --num_needed;
-             if( num_needed == 0 )
-                break;
-         }
-
-         db.modify( acct, [&]( account_object& a )
-         {
-            vc.finish( is_owner ? a.owner : a.active );
-            if( !vc.is_empty() )
-               a.top_n_control_flags |= (is_owner ? account_object::top_n_control_owner : account_object::top_n_control_active);
-         } );
-      }
-   } );
-}
-
-void split_fba_balance(
-   database& db,
-   uint64_t fba_id,
-   uint16_t network_pct,
-   uint16_t designated_asset_buyback_pct,
-   uint16_t designated_asset_issuer_pct
-)
-{
-   FC_ASSERT( uint32_t(network_pct) + uint32_t(designated_asset_buyback_pct) + uint32_t(designated_asset_issuer_pct) == GRAPHENE_100_PERCENT );
-   const fba_accumulator_object& fba = fba_accumulator_id_type( fba_id )(db);
-   if( fba.accumulated_fba_fees == 0 )
-      return;
-
-   const asset_object& core = asset_id_type(0)(db);
-   const asset_dynamic_data_object& core_dd = core.dynamic_asset_data_id(db);
-
-   if( !fba.is_configured(db) )
-   {
-      ilog( "${n} core given to network at block ${b} due to non-configured FBA", ("n", fba.accumulated_fba_fees)("b", db.head_block_time()) );
-      db.modify( core_dd, [&]( asset_dynamic_data_object& _core_dd )
-      {
-         _core_dd.current_supply -= fba.accumulated_fba_fees;
-      } );
-      db.modify( fba, [&]( fba_accumulator_object& _fba )
-      {
-         _fba.accumulated_fba_fees = 0;
-      } );
-      return;
-   }
-
-   fc::uint128_t buyback_amount_128 = fba.accumulated_fba_fees.value;
-   buyback_amount_128 *= designated_asset_buyback_pct;
-   buyback_amount_128 /= GRAPHENE_100_PERCENT;
-   share_type buyback_amount = buyback_amount_128.to_uint64();
-
-   fc::uint128_t issuer_amount_128 = fba.accumulated_fba_fees.value;
-   issuer_amount_128 *= designated_asset_issuer_pct;
-   issuer_amount_128 /= GRAPHENE_100_PERCENT;
-   share_type issuer_amount = issuer_amount_128.to_uint64();
-
-   // this assert should never fail
-   FC_ASSERT( buyback_amount + issuer_amount <= fba.accumulated_fba_fees );
-
-   share_type network_amount = fba.accumulated_fba_fees - (buyback_amount + issuer_amount);
-
-   const asset_object& designated_asset = (*fba.designated_asset)(db);
-
-   if( network_amount != 0 )
-   {
-      db.modify( core_dd, [&]( asset_dynamic_data_object& _core_dd )
-      {
-         _core_dd.current_supply -= network_amount;
-      } );
-   }
-
-   fba_distribute_operation vop;
-   vop.account_id = *designated_asset.buyback_account;
-   vop.fba_id = fba.id;
-   vop.amount = buyback_amount;
-   if( vop.amount != 0 )
-   {
-      db.adjust_balance( *designated_asset.buyback_account, asset(buyback_amount) );
-      db.push_applied_operation(vop);
-   }
-
-   vop.account_id = designated_asset.issuer;
-   vop.fba_id = fba.id;
-   vop.amount = issuer_amount;
-   if( vop.amount != 0 )
-   {
-      db.adjust_balance( designated_asset.issuer, asset(issuer_amount) );
-      db.push_applied_operation(vop);
-   }
-
-   db.modify( fba, [&]( fba_accumulator_object& _fba )
-   {
-      _fba.accumulated_fba_fees = 0;
-   } );
-}
-
-void distribute_fba_balances( database& db )
-{
-   split_fba_balance( db, fba_accumulator_id_transfer_to_blind  , 20*GRAPHENE_1_PERCENT, 60*GRAPHENE_1_PERCENT, 20*GRAPHENE_1_PERCENT );
-   split_fba_balance( db, fba_accumulator_id_blind_transfer     , 20*GRAPHENE_1_PERCENT, 60*GRAPHENE_1_PERCENT, 20*GRAPHENE_1_PERCENT );
-   split_fba_balance( db, fba_accumulator_id_transfer_from_blind, 20*GRAPHENE_1_PERCENT, 60*GRAPHENE_1_PERCENT, 20*GRAPHENE_1_PERCENT );
-}
-
 void create_buyback_orders( database& db )
 {
    const auto& bbo_idx = db.get_index_type< buyback_index >().indices().get<by_id>();
@@ -532,7 +383,6 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
 {
    const auto& gpo = get_global_properties();
 
-   distribute_fba_balances(*this);
    create_buyback_orders(*this);
 
    struct vote_tally_helper {
@@ -552,15 +402,12 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
          // There may be a difference between the account whose stake is voting and the one specifying opinions.
          // Usually they're the same, but if the stake account has specified a voting_account, that account is the one
          // specifying the opinions.
-         const account_object& opinion_account =
-         (stake_account.options.voting_account ==
-          GRAPHENE_PROXY_TO_SELF_ACCOUNT)? stake_account
-         : d.get(stake_account.options.voting_account);
+         const account_object& opinion_account = (stake_account.options.voting_account == GRAPHENE_PROXY_TO_SELF_ACCOUNT) ? stake_account : d.get(stake_account.options.voting_account);
          
          const auto& stats = stake_account.statistics(d);
          uint64_t voting_stake = stats.total_core_in_orders.value
-         + (stake_account.cashback_vb.valid() ? (*stake_account.cashback_vb)(d).balance.amount.value: 0)
-         + d.get_balance(stake_account.get_id(), asset_id_type()).amount.value;
+            + (stake_account.cashback_vb.valid() ? (*stake_account.cashback_vb)(d).balance.amount.value: 0)
+            + d.get_balance(stake_account.get_id(), asset_id_type()).amount.value;
          
          for( vote_id_type id : opinion_account.options.votes )
          {
@@ -624,7 +471,6 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
                 b(_committee_count_histogram_buffer),
                 c(_vote_tally_buffer);
 
-   update_top_n_authorities(*this);
    update_active_witnesses();
    update_active_committee_members();
 
