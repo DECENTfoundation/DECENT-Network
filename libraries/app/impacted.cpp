@@ -195,6 +195,12 @@ struct get_impacted_account_visitor
       _impacted.insert( op.account );
    }
 
+   void operator()( const content_submit_operation& op) {}
+   void operator()( const request_to_buy_operation& op) {}
+   void operator()( const leave_rating_operation& op) {}
+   void operator()( const ready_to_publish_operation& op) {}
+   void operator()( const proof_of_custody_operation& op) {}
+   void operator()( const deliver_keys_operation& op) {}
 };
 
 void operation_get_impacted_accounts( const operation& op, flat_set<account_id_type>& result )

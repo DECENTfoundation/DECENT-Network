@@ -99,7 +99,7 @@ namespace graphene { namespace chain {
          //std::pair<account_id_type,uint32_t>                   account_seq()const { return std::tie( account, sequence );     }
    };
    
-   struct by_id;
+struct by_id;
 struct by_seq;
 struct by_op;
 typedef multi_index_container<
