@@ -39,7 +39,7 @@ namespace graphene { namespace chain {
                   member<buying_object, account_id_type, &buying_object::consumer>
                >
             >,
-            ordered_non_unique< tag< by_consumer_URI>,
+            ordered_unique< tag< by_consumer_URI>,
                composite_key< buying_object,
                   member<buying_object, account_id_type, &buying_object::consumer>,
                   member<buying_object, string, &buying_object::URI>

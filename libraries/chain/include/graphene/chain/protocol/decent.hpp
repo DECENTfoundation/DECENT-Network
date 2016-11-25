@@ -82,19 +82,19 @@ namespace graphene { namespace chain {
 
       asset fee;
       account_id_type seeder;
-      public_key_type key;
+      public_key_type key; // TODO DECENT
       
       account_id_type fee_payer()const { return seeder; }
    };
    
 } } // graphene::chain
 
-FC_REFLECT(graphene::chain::content_submit_operation,(author)(URI)(price)(hash)(seeders)(expiration)(publishing_fee)(synopsis))
-FC_REFLECT(graphene::chain::request_to_buy_operation,(URI)(consumer))
-FC_REFLECT(graphene::chain::leave_rating_operation,(URI)(consumer)(rating))
-FC_REFLECT(graphene::chain::ready_to_publish_operation,(seeder)(space)(price_per_MByte))
-FC_REFLECT(graphene::chain::proof_of_custody_operation,(seeder)(URI)(proof))
-FC_REFLECT(graphene::chain::deliver_keys_operation,(seeder)(key))
+FC_REFLECT(graphene::chain::content_submit_operation,(fee)(author)(URI)(price)(hash)(seeders)(expiration)(publishing_fee)(synopsis))
+FC_REFLECT(graphene::chain::request_to_buy_operation,(fee)(URI)(consumer))
+FC_REFLECT(graphene::chain::leave_rating_operation,(fee)(URI)(consumer)(rating))
+FC_REFLECT(graphene::chain::ready_to_publish_operation,(fee)(seeder)(space)(price_per_MByte))
+FC_REFLECT(graphene::chain::proof_of_custody_operation,(fee)(seeder)(URI)(proof))
+FC_REFLECT(graphene::chain::deliver_keys_operation,(fee)(seeder)(key))
 
 FC_REFLECT( graphene::chain::content_submit_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::request_to_buy_operation::fee_parameters_type, (fee) )

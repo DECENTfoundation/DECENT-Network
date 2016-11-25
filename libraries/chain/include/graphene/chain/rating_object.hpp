@@ -38,7 +38,7 @@ namespace graphene { namespace chain {
                   member<rating_object, account_id_type, &rating_object::consumer>
                >
             >,
-            ordered_non_unique< tag< by_consumer_URI>,
+            ordered_unique< tag< by_consumer_URI>,
                composite_key< rating_object,
                   member<rating_object, account_id_type, &rating_object::consumer>,
                   member<rating_object, string, &rating_object::URI>
