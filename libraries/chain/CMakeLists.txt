@@ -92,6 +92,31 @@ target_link_libraries( graphene_chain fc graphene_db )
 target_include_directories( graphene_chain
                             PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" "${CMAKE_CURRENT_BINARY_DIR}/include" )
 
+# PBC Library
+set (LIBPBC_PATH ${PROJECT_SOURCE_DIR}/libraries/contrib/pbc)
+
+if ( WIN32 )
+else ( WIN32 )
+    include(ExternalProject)
+    ExternalProject_Add( project_pbc
+            SOURCE_DIR ${LIBPBC_PATH}
+            BUILD_IN_SOURCE 1
+            CONFIGURE_COMMAND ${LIBPBC_PATH}/configure --prefix=${LIBPBC_PATH}
+            BUILD_COMMAND make
+            INSTALL_COMMAND true
+            BUILD_BYPRODUCTS ${LIBPBC_PATH}/.libs/libpbc.a
+            )
+endif( WIN32 )
+
+add_library(pbc STATIC IMPORTED)
+set_property(TARGET pbc PROPERTY IMPORTED_LOCATION ${LIBPBC_PATH}/.libs/libpbc.a)
+target_link_libraries(graphene_chain pbc)
+target_link_libraries(graphene_chain gmp)
+
+include_directories ( "${LIBPBC_PATH}/include" )
+# end adding PBC
+
+
 if(MSVC)
   set_source_files_properties( db_init.cpp db_block.cpp database.cpp block_database.cpp PROPERTIES COMPILE_FLAGS "/bigobj" )
 endif(MSVC)

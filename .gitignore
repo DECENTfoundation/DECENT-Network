@@ -39,3 +39,6 @@ object_database/*
 
 *.pyc
 *.pyo
+
+
+.idea/
