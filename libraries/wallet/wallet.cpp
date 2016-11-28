@@ -1085,7 +1085,7 @@ public:
    } FC_CAPTURE_AND_RETHROW( (account_name)(registrar_account)(referrer_account) ) }
 
 
-   signed_transaction create_asset(string issuer,
+   signed_transaction create_asset(string issuer,// rrr
                                    string symbol,
                                    uint8_t precision,
                                    asset_options common,
@@ -2249,6 +2249,132 @@ public:
       return sign_transaction(tx, broadcast);
    }
 
+   signed_transaction submit_content(string author,
+                                     string URI,
+                                     asset price,
+                                     fc::ripemd160 hash,
+                                     vector<account_id_type> seeders,
+                                     fc::time_point_sec expiration,
+                                     asset publishing_fee,
+                                     string synopsis,
+                                     bool broadcast/* = false */)//rrr
+      { try {
+         account_object author_account = get_account( author );
+         
+         content_submit_operation submit_op;
+         submit_op.author = author_account.id;
+         submit_op.URI = URI;
+         submit_op.price = price;
+         submit_op.hash = hash;
+         submit_op.seeders = seeders;
+         submit_op.expiration = expiration;
+         submit_op.publishing_fee = publishing_fee;
+         submit_op.synopsis = synopsis;
+         
+         signed_transaction tx;
+         tx.operations.push_back( submit_op );
+         set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
+         tx.validate();
+         
+         return sign_transaction( tx, broadcast );
+      } FC_CAPTURE_AND_RETHROW( (author)(URI)(price)(hash)(seeders)(expiration)(publishing_fee)(synopsis)(broadcast) ) }
+   
+   signed_transaction request_to_buy(string consumer,
+                                     string URI,
+                                     bool broadcast/* = false */)
+   { try {
+      account_object consumer_account = get_account( consumer );
+      
+      request_to_buy_operation request_op;
+      request_op.consumer = consumer_account.id;
+      request_op.URI = URI;
+      
+      signed_transaction tx;
+      tx.operations.push_back( request_op );
+      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
+      tx.validate();
+      
+      return sign_transaction( tx, broadcast );
+   } FC_CAPTURE_AND_RETHROW( (consumer)(URI)(broadcast) ) }
+   
+   signed_transaction leave_rating(string consumer,
+                                   string URI,
+                                   uint64_t rating,
+                                   bool broadcast/* = false */)
+   { try {
+      account_object consumer_account = get_account( consumer );
+      
+      leave_rating_operation leave_rating_op;
+      leave_rating_op.consumer = consumer_account.id;
+      leave_rating_op.URI = URI;
+      leave_rating_op.rating = rating;
+      
+      signed_transaction tx;
+      tx.operations.push_back( leave_rating_op );
+      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
+      tx.validate();
+      
+      return sign_transaction( tx, broadcast );
+   } FC_CAPTURE_AND_RETHROW( (consumer)(URI)(rating)(broadcast) ) }
+   
+   signed_transaction ready_to_publish(string seeder,
+                                       uint64_t space,
+                                       uint32_t price_per_MByte,
+                                       bool broadcast/* = false */)
+   { try {
+      account_object seeder_account = get_account( seeder );
+      
+      ready_to_publish_operation op;
+      op.seeder = seeder_account.id;
+      op.space = space;
+      op.price_per_MByte = price_per_MByte;
+      
+      signed_transaction tx;
+      tx.operations.push_back( op );
+      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
+      tx.validate();
+      
+      return sign_transaction( tx, broadcast );
+   } FC_CAPTURE_AND_RETHROW( (seeder)(space)(price_per_MByte)(broadcast) ) }
+   
+   signed_transaction proof_of_custody(string seeder,
+                                       string URI,
+                                       vector<char> proof,
+                                       bool broadcast/* = false */)
+   { try {
+      account_object seeder_account = get_account( seeder );
+      
+      proof_of_custody_operation op;
+      op.seeder = seeder_account.id;
+      op.URI = URI;
+      op.proof = proof;
+      
+      signed_transaction tx;
+      tx.operations.push_back( op );
+      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
+      tx.validate();
+      
+      return sign_transaction( tx, broadcast );
+   } FC_CAPTURE_AND_RETHROW( (seeder)(URI)(proof)(broadcast) ) }
+   
+   signed_transaction deliver_keys(string seeder,
+                                   public_key_type key,
+                                   bool broadcast/* = false */)
+   { try {
+      account_object seeder_account = get_account( seeder );
+      
+      deliver_keys_operation op;
+      op.seeder = seeder_account.id;
+      op.key = key;
+      
+      signed_transaction tx;
+      tx.operations.push_back( op );
+      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
+      tx.validate();
+      
+      return sign_transaction( tx, broadcast );
+   } FC_CAPTURE_AND_RETHROW( (seeder)(key)(broadcast) ) }
+   
    void dbg_make_uia(string creator, string symbol)
    {
       asset_options opts;
@@ -2976,6 +3102,7 @@ signed_transaction wallet_api::transfer(string from, string to, string amount,
 {
    return my->transfer(from, to, amount, asset_symbol, memo, broadcast);
 }
+   
 signed_transaction wallet_api::create_asset(string issuer,
                                             string symbol,
                                             uint8_t precision,
@@ -2984,7 +3111,7 @@ signed_transaction wallet_api::create_asset(string issuer,
                                             bool broadcast)
 
 {
-   return my->create_asset(issuer, symbol, precision, common, bitasset_opts, broadcast);
+   return my->create_asset(issuer, symbol, precision, common, bitasset_opts, broadcast); // rrr
 }
 
 signed_transaction wallet_api::update_asset(string symbol,
@@ -3986,6 +4113,57 @@ vesting_balance_object_with_info::vesting_balance_object_with_info( const vestin
    allowed_withdraw_time = now;
 }
 
+   //rrr
+   signed_transaction wallet_api::submit_content(string author,
+                                                 string URI,
+                                                 asset price,
+                                                 fc::ripemd160 hash,
+                                                 vector<account_id_type> seeders,
+                                                 fc::time_point_sec expiration,
+                                                 asset publishing_fee,
+                                                 string synopsis,
+                                                 bool broadcast)
+   {
+      return my->submit_content(author, URI, price, hash, seeders, expiration, publishing_fee, synopsis, broadcast);
+   }
+   
+   signed_transaction wallet_api::request_to_buy(string consumer,
+                                                 string URI,
+                                                 bool broadcast)
+   {
+      return my->request_to_buy(consumer, URI, broadcast);
+   }
+   
+   signed_transaction wallet_api::leave_rating(string consumer,
+                                               string URI,
+                                               uint64_t rating,
+                                               bool broadcast)
+   {
+      return my->leave_rating(consumer, URI, rating, broadcast);
+   }
+   
+   signed_transaction wallet_api::ready_to_publish(string seeder,
+                                                   uint64_t space,
+                                                   uint32_t price_per_MByte,
+                                                   bool broadcast)   {
+      return my->ready_to_publish(seeder, space, price_per_MByte, broadcast);
+   }
+   
+   signed_transaction wallet_api::proof_of_custody(string seeder,
+                                                   string URI,
+                                                   vector<char> proof,
+                                                   bool broadcast)
+   {
+      return my->proof_of_custody(seeder, URI, proof, broadcast);
+   }
+   
+   signed_transaction wallet_api::deliver_keys(string seeder,
+                                               public_key_type key,
+                                               bool broadcast)
+   {
+      return my->deliver_keys(seeder, key, broadcast);
+   }
+   
 } } // graphene::wallet
 
 void fc::to_variant(const account_multi_index_type& accts, fc::variant& vo)

@@ -918,7 +918,7 @@ class wallet_api
        * @param broadcast true to broadcast the transaction on the network
        * @returns the signed transaction creating a new asset
        */
-      signed_transaction create_asset(string issuer,
+      signed_transaction create_asset(string issuer,// rrr
                                       string symbol,
                                       uint8_t precision,
                                       asset_options common,
@@ -1417,8 +1417,43 @@ class wallet_api
       fc::signal<void(bool)> lock_changed;
       std::shared_ptr<detail::wallet_api_impl> my;
       void encrypt_keys();
-};
 
+   //rrr
+   signed_transaction submit_content(string author,
+                                     string URI,
+                                     asset price,
+                                     fc::ripemd160 hash,
+                                     vector<account_id_type> seeders,
+                                     fc::time_point_sec expiration,
+                                     asset publishing_fee,
+                                     string synopsis,
+                                     bool broadcast = false);
+   
+      signed_transaction request_to_buy(string consumer,
+                                        string URI,
+                                        bool broadcast = false);
+   
+      signed_transaction leave_rating(string consumer,
+                                      string URI,
+                                      uint64_t rating,
+                                      bool broadcast = false);
+   
+      signed_transaction ready_to_publish(string seeder,
+                                          uint64_t space,
+                                          uint32_t price_per_MByte,
+                                          bool broadcast = false);
+   
+      signed_transaction proof_of_custody(string seeder,
+                                          string URI,
+                                          vector<char> proof,
+                                          bool broadcast = false);
+   
+      signed_transaction deliver_keys(string seeder,
+                                      public_key_type key,
+                                      bool broadcast = false);
+
+};
+   
 } }
 
 FC_REFLECT( graphene::wallet::key_label, (label)(key) )
@@ -1445,7 +1480,7 @@ FC_REFLECT( graphene::wallet::brain_key_info,
             (brain_priv_key)
             (wif_priv_key)
             (pub_key)
-          );
+          )
 
 FC_REFLECT( graphene::wallet::exported_account_keys, (account_name)(encrypted_private_keys)(public_keys) )
 
@@ -1578,4 +1613,10 @@ FC_API( graphene::wallet::wallet_api,
         (blind_history)
         (receive_blind_transfer)
         (get_order_book)
+        (submit_content)
+        (request_to_buy)
+        (leave_rating)
+        (ready_to_publish)
+        (proof_of_custody)
+        (deliver_keys)
       )
