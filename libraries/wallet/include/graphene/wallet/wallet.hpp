@@ -918,7 +918,7 @@ class wallet_api
        * @param broadcast true to broadcast the transaction on the network
        * @returns the signed transaction creating a new asset
        */
-      signed_transaction create_asset(string issuer,// rrr
+      signed_transaction create_asset(string issuer,
                                       string symbol,
                                       uint8_t precision,
                                       asset_options common,
@@ -1418,7 +1418,6 @@ class wallet_api
       std::shared_ptr<detail::wallet_api_impl> my;
       void encrypt_keys();
 
-   //rrr
    signed_transaction submit_content(string author,
                                      string URI,
                                      asset price,

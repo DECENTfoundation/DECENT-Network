@@ -1085,7 +1085,7 @@ public:
    } FC_CAPTURE_AND_RETHROW( (account_name)(registrar_account)(referrer_account) ) }
 
 
-   signed_transaction create_asset(string issuer,// rrr
+   signed_transaction create_asset(string issuer,
                                    string symbol,
                                    uint8_t precision,
                                    asset_options common,
@@ -2257,7 +2257,7 @@ public:
                                      fc::time_point_sec expiration,
                                      asset publishing_fee,
                                      string synopsis,
-                                     bool broadcast/* = false */)//rrr
+                                     bool broadcast/* = false */)
       { try {
          account_object author_account = get_account( author );
          
@@ -3111,7 +3111,7 @@ signed_transaction wallet_api::create_asset(string issuer,
                                             bool broadcast)
 
 {
-   return my->create_asset(issuer, symbol, precision, common, bitasset_opts, broadcast); // rrr
+   return my->create_asset(issuer, symbol, precision, common, bitasset_opts, broadcast);
 }
 
 signed_transaction wallet_api::update_asset(string symbol,
@@ -4113,7 +4113,6 @@ vesting_balance_object_with_info::vesting_balance_object_with_info( const vestin
    allowed_withdraw_time = now;
 }
 
-   //rrr
    signed_transaction wallet_api::submit_content(string author,
                                                  string URI,
                                                  asset price,
