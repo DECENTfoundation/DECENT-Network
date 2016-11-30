@@ -52,8 +52,8 @@ namespace graphene { namespace chain {
                member<content_object, uint64_t, &content_object::AVG_rating>
             >,
             ordered_non_unique<tag<by_times_bought>,
-               member<content_object, uint32_t, &content_object::times_bought>
-            >
+               member<content_object, uint32_t, &content_object::times_bought>,
+            std::greater<uint32_t>>
          >
    > content_object_multi_index_type;
    
