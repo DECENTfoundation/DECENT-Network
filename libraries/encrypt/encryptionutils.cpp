@@ -9,11 +9,12 @@
 #include <cryptopp/ccm.h>
 
 #include <string>
+#include <sstream>
 #include <fstream>
 #include <streambuf>
 #include <fc/log/logger.hpp>
 #include <fc/exception/exception.hpp>
-
+#include <iostream>
 
 
 namespace decent{ namespace crypto{
@@ -21,15 +22,17 @@ AutoSeededRandomPool rng;
 
 std::string d_integer::to_string() const
 {
-
-
+   std::ostringstream oss;
+   oss<<*this;
+   std::string tmp(oss.str());
+   return tmp;
 }
 
 
 d_integer d_integer::from_string(std::string from)const
 {
-
-
+   CryptoPP::Integer tmp(from.c_str());
+   return tmp;
 }
 
 encryption_results AES_encrypt_file(const std::string &fileIn, const std::string &fileOut, const aes_key &key) {
@@ -166,6 +169,8 @@ encryption_results el_gamal_decrypt(const ciphertext &input, d_integer &privateK
 
 d_integer hash_elements(ciphertext t1, ciphertext t2, d_integer key1, d_integer key2, d_integer G1, d_integer G2, d_integer G3)
 {
+   //std::cout <<"hash params: "<<t1.C1.to_string()<<t1.D1.to_string()<< t2.C1.to_string()<<t2.D1.to_string()<< key1.to_string()<<key2.to_string()<<G1.to_string()<<G2.to_string()<<G3.to_string() <<"\n";
+
    CryptoPP::SHA256 hashier;
    size_t hashSpace =9*(EL_GAMAL_GROUP_ELEMENT_SIZE);
    hashier.CreateUpdateSpace(hashSpace);
@@ -217,17 +222,20 @@ verify_delivery_proof(const delivery_proof &proof, const ciphertext &first, cons
    key2.AccessGroupParameters().Initialize(EL_GAMAL_MODULUS_512, EL_GAMAL_GROUP_GENERATOR);
    key2.SetPublicElement(secondPublicKey);
 
-   CryptoPP::Integer x = hash_elements(first, second, firstPulicKey, secondPublicKey, proof.G1, proof.G2, proof.G3);
+   d_integer x = hash_elements(first, second, firstPulicKey, secondPublicKey, proof.G1, proof.G2, proof.G3);
+   //std::cout <<"hash inside verify proof is: "<<x.to_string()<<"\n";
 
    ElGamal::GroupParameters groupParams;
    groupParams.Initialize(EL_GAMAL_MODULUS_512, EL_GAMAL_GROUP_GENERATOR);
    ModularArithmetic mr(EL_GAMAL_MODULUS_512);
 
-   CryptoPP::Integer subgroupOrder = groupParams.GetSubgroupOrder();
-   CryptoPP::Integer subGroupGenerator = groupParams.GetSubgroupGenerator();
+   d_integer subgroupOrder = groupParams.GetSubgroupOrder();
+   d_integer subGroupGenerator = groupParams.GetSubgroupGenerator();
 
-   CryptoPP::Integer t1 = mr.Exponentiate(subGroupGenerator, proof.s);
-   CryptoPP::Integer t2 = mr.Multiply(mr.Exponentiate(key1.GetPublicElement(), x), proof.G1);
+   d_integer t1 = mr.Exponentiate(subGroupGenerator, proof.s);
+   d_integer t2 = mr.Multiply(mr.Exponentiate(key1.GetPublicElement(), x), proof.G1);
+
+   //std::cout << "T1: "<<t1.to_string()<<"\nT2: "<<t2.to_string()<<"\n";
 
    if(t1 != t2)
       return false;
@@ -295,8 +303,9 @@ encrypt_with_proof(const valtype &message, const d_integer &privateKey, const d_
 
       FC_ASSERT(public_key == public_key2);*/
 
-      CryptoPP::Integer x = hash_elements(incoming, outgoing, public_key.GetPublicElement(), myPublicElement, proof.G1, proof.G2, proof.G3);
+      d_integer x = hash_elements(incoming, outgoing, myPublicElement, public_key.GetPublicElement(), proof.G1, proof.G2, proof.G3);
 
+      //std::cout <<"hash inside encrypt with proof is: "<<x.to_string()<<"\n";
       proof.s = privateExponent * x + b1;
       proof.r = randomizer * x + b2;
 
