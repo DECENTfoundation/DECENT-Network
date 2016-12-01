@@ -6,6 +6,8 @@
 
 #include <cstdlib>
 #include <string>
+#include <vector>
+
 #include <fc/reflect/variant.hpp>
 #include <cryptopp/osrng.h>
 
@@ -41,6 +43,7 @@ using CryptoPP::ModularArithmetic;
 const CryptoPP::Integer EL_GAMAL_MODULUS_512(
       "11760620558671662461946567396662025495126946227619472274601251081547302009186313201119191293557856181195016058359990840577430081932807832465057884143546419.");
 const CryptoPP::Integer EL_GAMAL_GROUP_GENERATOR(3);
+const CryptoPP::Integer SHAMIR_ORDER("115792089237316195423570985008687907852837564279074904382605163141518161494337" );
 
 namespace decent {
 namespace crypto {
@@ -79,8 +82,31 @@ struct delivery_proof {
 struct ciphertext {
    d_integer C1 = decent::crypto::d_integer(CryptoPP::Integer::One());
    d_integer D1 = decent::crypto::d_integer(CryptoPP::Integer::One());
-
 };
+
+
+typedef std::pair<d_integer, d_integer> point;
+class shamir_secret{
+public:
+
+   d_integer secret=d_integer::Zero();
+   std::vector<point> split;
+
+
+   shamir_secret(uint16_t _quorum, uint16_t _shares, d_integer _secret):quorum(_quorum),shares(_shares),secret(_secret){
+      calculate_split();
+   };
+   shamir_secret(uint16_t _quorum, uint16_t _shares):quorum(_quorum), shares(_shares){};
+   void add_point(point X){split.push_back(X);};
+   bool resolvable(){return split.size()>=quorum;}
+   void calculate_secret();
+   void calculate_split();
+private:
+
+   uint16_t quorum;
+   uint16_t shares;
+};
+
 
 
 /*********************************************************
@@ -108,6 +134,11 @@ encrypt_with_proof(const valtype &message, const d_integer &privateKey, const d_
 bool
 verify_delivery_proof(const delivery_proof &proof, const ciphertext &first, const ciphertext &second,
                       const d_integer &firstPulicKey, const d_integer &secondPublicKey);
+
+
+
+
+
 
 }
 }//namespace

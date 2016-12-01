@@ -70,6 +70,26 @@ void test_el_gamal(decent::crypto::aes_key k)
 
 }
 
+void test_shamir(decent::crypto::d_integer secret)
+{
+   decent::crypto::shamir_secret ss(5,9,secret);
+   decent::crypto::point x0 = ss.split[0];
+   decent::crypto::point x1 = ss.split[1];
+   decent::crypto::point x2 = ss.split[2];
+   decent::crypto::point x3 = ss.split[3];
+   decent::crypto::point x4 = ss.split[4];
+
+   decent::crypto::shamir_secret rs(5,9);
+   rs.add_point(x0);
+   rs.add_point(x1);
+   rs.add_point(x2);
+   rs.add_point(x3);
+   rs.add_point(x4);
+   if(rs.resolvable())
+      rs.calculate_secret();
+   cout << "Original secret: "<< secret.to_string() <<"\nReconstructed_secret: "<<rs.secret.to_string() <<"\n";
+}
+
 int main(int argc, char**argv)
 {
    decent::crypto::aes_key k;
@@ -78,4 +98,6 @@ int main(int argc, char**argv)
    test_aes(k);
    cout<<"AES finished \n";
    test_el_gamal(k);
+   const CryptoPP::Integer secret("12354678979464");
+   test_shamir(secret);
 }

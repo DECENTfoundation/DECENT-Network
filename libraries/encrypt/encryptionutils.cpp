@@ -321,6 +321,51 @@ encrypt_with_proof(const valtype &message, const d_integer &privateKey, const d_
    return ok;
 }
 
+void shamir_secret::calculate_split()
+{
+   split.clear();
+   std::vector<d_integer> coef;
+   coef.reserve(quorum);
+   coef.push_back(secret);
+
+   ModularArithmetic mr(SHAMIR_ORDER);
+   for(int i=1; i<quorum; i++)
+   {
+      CryptoPP::Integer a(rng, CryptoPP::Integer::One(), SHAMIR_ORDER);
+      coef.push_back(a);
+   }
+
+   for(int x=1; x<=shares; x++)
+   {
+      d_integer y = coef[0];
+      for (int i=1; i<quorum; i++)
+         y = mr.Add(y, mr.Multiply(coef[i],mr.Exponentiate(x,i)));
+      split.push_back(std::make_pair(d_integer(x),y));
+   }
+}
+
+void shamir_secret::calculate_secret()
+{
+   d_integer res = d_integer::Zero();
+   ModularArithmetic mr(SHAMIR_ORDER);
+
+   for( const auto& s: split )
+   {
+      d_integer numerator = d_integer::One();
+      d_integer denominator = d_integer::One();
+      for (const auto& p: split)
+      {
+         if ( p == s )
+            continue;
+         d_integer startposition = s.first;
+         d_integer nextposition = mr.Inverse(p.first);
+         numerator = mr.Multiply(nextposition, numerator);
+         denominator = mr.Multiply(mr.Add(startposition, nextposition), denominator);
+      }
+      res = mr.Add(mr.Multiply(mr.Multiply(mr.MultiplicativeInverse(denominator), numerator), s.second), res);
+   }
+   secret = res;
+}
 
 
 }}//namespace
