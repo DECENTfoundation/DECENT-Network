@@ -2358,13 +2358,15 @@ public:
    } FC_CAPTURE_AND_RETHROW( (seeder)(URI)(proof)(broadcast) ) }
    
    signed_transaction deliver_keys(string seeder,
-                                   public_key_type key,
+                                   delivery_proof proof,
+                                   ciphertext key,
                                    bool broadcast/* = false */)
    { try {
       account_object seeder_account = get_account( seeder );
       
       deliver_keys_operation op;
       op.seeder = seeder_account.id;
+      op.proof = proof;
       op.key = key;
       
       signed_transaction tx;
@@ -4161,7 +4163,7 @@ vesting_balance_object_with_info::vesting_balance_object_with_info( const vestin
                                                public_key_type key,
                                                bool broadcast)
    {
-      return my->deliver_keys(seeder, key, broadcast);
+      return my->deliver_keys(seeder, proof, key, broadcast);
    }
 
 

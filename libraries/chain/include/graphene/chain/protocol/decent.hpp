@@ -10,7 +10,12 @@
 #include <stdint.h>
 #include <vector>
 
+#include <decent/encrypt/crypto_types.hpp>
+
 namespace graphene { namespace chain {
+
+using decent::crypto::delivery_proof;
+using decent::crypto::ciphertext;
 
    struct content_submit_operation : public base_operation
    {
@@ -82,7 +87,8 @@ namespace graphene { namespace chain {
 
       asset fee;
       account_id_type seeder;
-      public_key_type key; // TODO DECENT
+      delivery_proof proof;
+      ciphertext key;
       
       account_id_type fee_payer()const { return seeder; }
    };
@@ -94,7 +100,7 @@ FC_REFLECT(graphene::chain::request_to_buy_operation,(fee)(URI)(consumer))
 FC_REFLECT(graphene::chain::leave_rating_operation,(fee)(URI)(consumer)(rating))
 FC_REFLECT(graphene::chain::ready_to_publish_operation,(fee)(seeder)(space)(price_per_MByte))
 FC_REFLECT(graphene::chain::proof_of_custody_operation,(fee)(seeder)(URI)(proof))
-FC_REFLECT(graphene::chain::deliver_keys_operation,(fee)(seeder)(key))
+FC_REFLECT(graphene::chain::deliver_keys_operation,(fee)(seeder)(proof)(key))
 
 FC_REFLECT( graphene::chain::content_submit_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::request_to_buy_operation::fee_parameters_type, (fee) )
