@@ -64,9 +64,10 @@ void test_el_gamal(decent::crypto::aes_key k)
    }
    cout <<"\n";
 
-   bool ret_val = decent::crypto::verify_delivery_proof(proof, ct1,ct2,pubk1,pubk2);
-   if(ret_val)
-      cout<< "everything OK!\n";
+   for (int i=0; i<100000; i++)
+      bool ret_val = decent::crypto::verify_delivery_proof(proof, ct1,ct2,pubk1,pubk2);
+   /*if(ret_val)
+      cout<< "everything OK!\n";*/
 
 }
 
@@ -77,7 +78,7 @@ void test_shamir(decent::crypto::d_integer secret)
    decent::crypto::point x1 = ss.split[1];
    decent::crypto::point x2 = ss.split[2];
    decent::crypto::point x3 = ss.split[3];
-   decent::crypto::point x4 = ss.split[4];
+   decent::crypto::point x4 = ss.split[6];
 
    decent::crypto::shamir_secret rs(5,9);
    rs.add_point(x0);

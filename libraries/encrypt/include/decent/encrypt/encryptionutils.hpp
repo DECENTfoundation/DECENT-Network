@@ -8,6 +8,8 @@
 #include <string>
 #include <vector>
 
+#include <decent/encrypt/crypto_types.hpp>
+
 #include <fc/reflect/variant.hpp>
 #include <cryptopp/osrng.h>
 
@@ -33,7 +35,7 @@ using CryptoPP::PublicKey;
 using CryptoPP::ModularArithmetic;
 
 #include <cryptopp/pubkey.h>
-#include <cryptopp/sha.h>
+
 
 #define EL_GAMAL_GROUP_ELEMENT_SIZE 64 //bytes
 #define EL_GAMAL_CIPHERTEXT_SIZE (2 * EL_GAMAL_GROUP_ELEMENT_SIZE) //bytes
@@ -47,9 +49,6 @@ const CryptoPP::Integer SHAMIR_ORDER("115792089237316195423570985008687907852837
 
 namespace decent {
 namespace crypto {
-struct aes_key {
-   unsigned char key_byte[CryptoPP::AES::MAX_KEYLENGTH];
-};
 
 enum encryption_results {
    ok,
@@ -57,35 +56,7 @@ enum encryption_results {
    other_error,
 };
 
-class d_integer : public CryptoPP::Integer {
-public:
-   std::string to_string() const;
 
-   d_integer from_string(std::string from) const;
-
-   d_integer(CryptoPP::Integer integer) : CryptoPP::Integer(integer) {}
-};
-
-typedef std::vector<unsigned char> valtype;
-
-struct delivery_proof {
-   d_integer G1;
-   d_integer G2;
-   d_integer G3;
-   d_integer s;
-   d_integer r;
-
-   delivery_proof(d_integer g1, d_integer g2, d_integer g3, d_integer s,
-                  d_integer r) : G1(g1), G2(g2), G3(g3), s(s), r(r) {}
-};
-
-struct ciphertext {
-   d_integer C1 = decent::crypto::d_integer(CryptoPP::Integer::One());
-   d_integer D1 = decent::crypto::d_integer(CryptoPP::Integer::One());
-};
-
-
-typedef std::pair<d_integer, d_integer> point;
 class shamir_secret{
 public:
 

@@ -38,6 +38,7 @@
 #include <fc/static_variant.hpp>
 #include <fc/smart_ref_fwd.hpp>
 #include <fc/crypto/ripemd160.hpp>
+#include <decent/encrypt/crypto_types.hpp>
 
 #include <memory>
 #include <vector>
