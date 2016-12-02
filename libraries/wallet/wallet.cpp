@@ -2303,7 +2303,7 @@ public:
                                    bool broadcast/* = false */)
    { try {
       account_object consumer_account = get_account( consumer );
-      
+
       leave_rating_operation leave_rating_op;
       leave_rating_op.consumer = consumer_account.id;
       leave_rating_op.URI = URI;
@@ -4144,7 +4144,8 @@ vesting_balance_object_with_info::vesting_balance_object_with_info( const vestin
    signed_transaction wallet_api::ready_to_publish(string seeder,
                                                    uint64_t space,
                                                    uint32_t price_per_MByte,
-                                                   bool broadcast)   {
+                                                   bool broadcast)
+   {
       return my->ready_to_publish(seeder, space, price_per_MByte, broadcast);
    }
    
@@ -4162,7 +4163,53 @@ vesting_balance_object_with_info::vesting_balance_object_with_info( const vestin
    {
       return my->deliver_keys(seeder, key, broadcast);
    }
-   
+
+
+   vector<buying_object> wallet_api::get_open_buyings()const
+   {
+      return my->_remote_db->get_open_buyings();
+   }
+
+   vector<buying_object> wallet_api::get_open_buyings_by_URI( const string& URI )const
+   {
+      return my->_remote_db->get_open_buyings_by_URI( URI );
+   }
+
+   vector<buying_object> wallet_api::get_open_buyings_by_consumer( const account_id_type& consumer )const
+   {
+      return my->_remote_db->get_open_buyings_by_consumer( consumer );
+   }
+
+   optional<content_object> wallet_api::get_content( const string& URI )const
+   {
+      return my->_remote_db->get_content( URI );
+   }
+
+   vector<content_object> wallet_api::list_content_by_author( const account_id_type& author )const
+   {
+      return my->_remote_db->list_content_by_author( author );
+   }
+
+   vector<content_object> wallet_api::list_content( const string& URI, uint32_t count)const
+   {
+      return my->_remote_db->list_content( URI, count );
+   }
+
+   vector<content_object> wallet_api::list_content_by_bought( uint32_t count)const
+   {
+      return my->_remote_db->list_content_by_bought( count );
+   }
+
+   vector<publisher_object> wallet_api::list_publishers_by_price( uint32_t count )const
+   {
+      return my->_remote_db->list_publishers_by_price( count );
+   }
+
+   vector<uint64_t> wallet_api::get_content_ratings( const string& URI )const
+   {
+      return my->_remote_db->get_content_ratings( URI );
+   }
+
 } } // graphene::wallet
 
 void fc::to_variant(const account_multi_index_type& accts, fc::variant& vo)

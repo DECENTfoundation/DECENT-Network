@@ -5,7 +5,7 @@ set_source_files_properties( "${CMAKE_CURRENT_BINARY_DIR}/include/graphene/chain
 
 add_dependencies( build_hardfork_hpp cat-parts )
 
-file(GLOB HEADERS "include/graphene/chain/*.hpp" "include/graphene/chain/protocol/*hpp")
+file(GLOB HEADERS "include/graphene/chain/*.hpp" "include/graphene/chain/protocol/*.hpp")
 
 if( GRAPHENE_DISABLE_UNITY_BUILD )
    set( GRAPHENE_DB_FILES
