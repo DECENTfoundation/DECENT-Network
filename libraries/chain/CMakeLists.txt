@@ -100,20 +100,6 @@ target_include_directories( graphene_chain
 
 # PBC Library
 set (LIBPBC_PATH ${PROJECT_SOURCE_DIR}/libraries/contrib/pbc)
-
-if ( WIN32 )
-else ( WIN32 )
-    include(ExternalProject)
-    ExternalProject_Add( project_pbc
-            SOURCE_DIR ${LIBPBC_PATH}
-            BUILD_IN_SOURCE 1
-            CONFIGURE_COMMAND ${LIBPBC_PATH}/setup && ${LIBPBC_PATH}/configure --prefix=${LIBPBC_PATH}
-            BUILD_COMMAND make
-            INSTALL_COMMAND true
-            BUILD_BYPRODUCTS ${LIBPBC_PATH}/.libs/libpbc.a
-            )
-endif( WIN32 )
-
 add_library(pbc STATIC IMPORTED)
 set_property(TARGET pbc PROPERTY IMPORTED_LOCATION ${LIBPBC_PATH}/.libs/libpbc.a)
 target_link_libraries(graphene_chain pbc)
