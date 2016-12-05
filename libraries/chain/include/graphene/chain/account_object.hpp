@@ -95,7 +95,7 @@ namespace graphene { namespace chain {
     * This object is indexed on owner and asset_type so that black swan
     * events in asset_type can be processed quickly.
     */
-   class account_balance_object : public abstract_object<account_balance_object>
+   class account_balance_object : public graphene::db::abstract_object<account_balance_object>
    {
       public:
          static const uint8_t space_id = implementation_ids;
@@ -339,7 +339,7 @@ FC_REFLECT_DERIVED( graphene::chain::account_balance_object,
                     (owner)(asset_type)(balance) )
 
 FC_REFLECT_DERIVED( graphene::chain::account_statistics_object,
-                    (graphene::chain::object),
+                    (graphene::db::object),
                     (owner)
                     (most_recent_op)
                     (total_ops)

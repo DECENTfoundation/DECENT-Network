@@ -987,6 +987,7 @@ class wallet_api
        * @param broadcast true to broadcast the transaction on the network
        * @returns the signed transaction updating the bitasset's feed producers
        */
+
       signed_transaction update_asset_feed_producers(string symbol,
                                                      flat_set<string> new_feed_producers,
                                                      bool broadcast = false);
@@ -1417,8 +1418,106 @@ class wallet_api
       fc::signal<void(bool)> lock_changed;
       std::shared_ptr<detail::wallet_api_impl> my;
       void encrypt_keys();
-};
 
+      signed_transaction submit_content(string author,
+                                       string URI,
+                                       asset price,
+                                       fc::ripemd160 hash,
+                                       vector<account_id_type> seeders,
+                                       fc::time_point_sec expiration,
+                                       asset publishing_fee,
+                                       string synopsis,
+                                       bool broadcast = false);
+   
+      signed_transaction request_to_buy(string consumer,
+                                        string URI,
+                                        bool broadcast = false);
+   
+      signed_transaction leave_rating(string consumer,
+                                      string URI,
+                                      uint64_t rating,
+                                      bool broadcast = false);
+   
+      signed_transaction ready_to_publish(string seeder,
+                                          uint64_t space,
+                                          uint32_t price_per_MByte,
+                                          bool broadcast = false);
+   
+      signed_transaction proof_of_custody(string seeder,
+                                          string URI,
+                                          vector<char> proof,
+                                          bool broadcast = false);
+   
+      signed_transaction deliver_keys(string seeder,
+                                      public_key_type key,
+                                      bool broadcast = false);
+
+
+      /**
+       * @brief Get a list of open buyings
+       * @return The buying_objects
+       */
+      vector<buying_object> get_open_buyings()const;
+
+      /**
+       * @brief Get a list of open buyings by URI
+       * @param URI URI of the buyings to retrieve
+       * @return The buyings corresponding to the provided URI
+       */
+      vector<buying_object> get_open_buyings_by_URI( const string& URI )const;
+
+      /**
+       * @brief Get a list of open buyings by consumer
+       * @param consumer Consumer of the buyings to retrieve
+       * @return The buyings corresponding to the provided consumer
+       */
+      vector<buying_object> get_open_buyings_by_consumer( const account_id_type& consumer )const;
+
+      /**
+       * @brief Get a content by URI
+       * @param URI URI of the content to retrieve
+       * @return The content corresponding to the provided URI, or null if no matching content was found
+       */
+      optional<content_object> get_content( const string& URI )const;
+
+      /**
+       * @brief Get a list of contents by author
+       * @param author Author of the contents to retrieve
+       * @return The contents corresponding to the provided author
+       */
+      vector<content_object> list_content_by_author( const account_id_type& author )const;
+
+      /**
+       * @brief Get a list of contents ordered alphabetically by URI strings
+       * @param URI_begin Lower bound of URI strings to retrieve
+       * @param count Maximum number of contents to fetch (must not exceed 100)
+       * @return The contents found
+       */
+      vector<content_object> list_content( const string& URI_begin, uint32_t count )const;
+
+
+      /**
+       * @brief Get a list of contents by times bought, in decreasing order
+       * @param count Maximum number of contents to retrieve
+       * @return The contents found
+       */
+      vector<content_object> list_content_by_bought( uint32_t count )const;
+
+      /**
+       * @brief Get a list of contents by price, in increasing order
+       * @param count Maximum number of contents to retrieve
+       * @return The contents found
+       */
+      vector<publisher_object> list_publishers_by_price( uint32_t count )const;
+
+      /**
+       * @brief Get a list of content ratings corresponding to the provided URI
+       * @param URI URI of the content ratings to retrieve
+       * @return The ratings of the content
+       */
+      vector<uint64_t> get_content_ratings( const string& URI )const;
+};
+   
 } }
 
 FC_REFLECT( graphene::wallet::key_label, (label)(key) )
@@ -1445,7 +1544,7 @@ FC_REFLECT( graphene::wallet::brain_key_info,
             (brain_priv_key)
             (wif_priv_key)
             (pub_key)
-          );
+          )
 
 FC_REFLECT( graphene::wallet::exported_account_keys, (account_name)(encrypted_private_keys)(public_keys) )
 
@@ -1578,4 +1677,10 @@ FC_API( graphene::wallet::wallet_api,
         (blind_history)
         (receive_blind_transfer)
         (get_order_book)
+        (submit_content)
+        (request_to_buy)
+        (leave_rating)
+        (ready_to_publish)
+        (proof_of_custody)
+        (deliver_keys)
       )
