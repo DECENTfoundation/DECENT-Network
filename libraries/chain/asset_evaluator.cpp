@@ -355,7 +355,7 @@ void_result asset_update_feed_producers_evaluator::do_evaluate(const asset_updat
 void_result asset_update_feed_producers_evaluator::do_apply(const asset_update_feed_producers_evaluator::operation_type& o)
 { try {
    db().modify(*bitasset_to_update, [&](asset_bitasset_data_object& a) {
-      //This is tricky because I have a set of publishers coming in, but a map of publisher to feed is stored.
+      //This is tricky because I have a set of publishers coming in, but a map of seeder to feed is stored.
       //I need to update the map such that the keys match the new publishers, but not munge the old price feeds from
       //publishers who are being kept.
       //First, remove any old publishers who are no longer publishers
@@ -471,7 +471,7 @@ void_result asset_publish_feeds_evaluator::do_evaluate(const asset_publish_feed_
    {
       FC_ASSERT( o.feed.core_exchange_rate.quote.asset_id == asset_id_type() );
    }
-   //Verify that the publisher is authoritative to publish a feed
+   //Verify that the seeder is authoritative to publish a feed
    if( base.options.flags & witness_fed_asset )
    {
       FC_ASSERT( d.get(GRAPHENE_WITNESS_ACCOUNT).active.account_auths.count(o.publisher) );

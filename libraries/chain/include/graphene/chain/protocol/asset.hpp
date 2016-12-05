@@ -88,7 +88,10 @@ namespace graphene { namespace chain {
          FC_ASSERT( a.asset_id == b.asset_id );
          return asset( a.amount + b.amount, a.asset_id );
       }
-
+      friend asset operator * ( const uint32_t a, const asset& b )
+      {
+         return asset( b.amount * a, b.asset_id );
+      }
       static share_type scaled_precision( uint8_t precision )
       {
          FC_ASSERT( precision < 19 );

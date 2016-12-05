@@ -4203,7 +4203,7 @@ vesting_balance_object_with_info::vesting_balance_object_with_info( const vestin
       return my->_remote_db->list_content_by_bought( count );
    }
 
-   vector<publisher_object> wallet_api::list_publishers_by_price( uint32_t count )const
+   vector<seeder_object> wallet_api::list_publishers_by_price( uint32_t count )const
    {
       return my->_remote_db->list_publishers_by_price( count );
    }

@@ -144,7 +144,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       vector<content_object> list_content_by_author( const account_id_type& author )const;
       vector<content_object> list_content( const string& URI_begin, uint32_t count)const;
       vector<content_object> list_content_by_bought( const uint32_t count )const;
-      vector<publisher_object> list_publishers_by_price( const uint32_t count )const;
+      vector<seeder_object> list_publishers_by_price( const uint32_t count )const;
       vector<uint64_t> get_content_ratings( const string& URI)const;
 
    //private:
@@ -1768,16 +1768,16 @@ vector<content_object> database_api_impl::list_content_by_bought( uint32_t count
    return result;
 }
 
-vector<publisher_object> database_api::list_publishers_by_price( uint32_t count )const
+vector<seeder_object> database_api::list_publishers_by_price( uint32_t count )const
 {
    return my->list_publishers_by_price( count );
 }
 
-vector<publisher_object> database_api_impl::list_publishers_by_price( uint32_t count )const
+vector<seeder_object> database_api_impl::list_publishers_by_price( uint32_t count )const
 {
    FC_ASSERT( count <= 100 );
-   const auto& idx = _db.get_index_type<publisher_index>().indices().get<by_price>();
-   vector<publisher_object> result;
+   const auto& idx = _db.get_index_type<seeder_index>().indices().get<by_price>();
+   vector<seeder_object> result;
    result.reserve(count);
 
    auto itr = idx.begin();

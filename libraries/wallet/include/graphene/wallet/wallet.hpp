@@ -1509,7 +1509,7 @@ class wallet_api
        * @param count Maximum number of contents to retrieve
        * @return The contents found
        */
-      vector<publisher_object> list_publishers_by_price( uint32_t count )const;
+      vector<seeder_object> list_publishers_by_price( uint32_t count )const;
 
       /**
        * @brief Get a list of content ratings corresponding to the provided URI
