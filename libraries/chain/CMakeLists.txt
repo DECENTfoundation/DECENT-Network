@@ -82,7 +82,7 @@ add_library( graphene_chain
              vesting_balance_object.cpp
              buying_object.cpp
              content_object.cpp
-             publisher_object.cpp
+        seeder_object.cpp
              rating_object.cpp
 
              block_database.cpp

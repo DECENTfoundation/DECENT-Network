@@ -11,6 +11,7 @@
 #include <vector>
 
 namespace graphene { namespace chain {
+using namespace decent::crypto;
    
    class content_object : public graphene::db::abstract_object<content_object>
    {
@@ -19,10 +20,13 @@ namespace graphene { namespace chain {
       static const uint8_t type_id  = impl_content_object_type;
       
       account_id_type author;
+      time_point_sec expiration;
+      time_point_sec created;
       asset price;
       string synopsis;
       string URI;
       vector<account_id_type> seeders;
+      vector<ciphertext> key_parts;
       fc::ripemd160 hash;
       uint64_t AVG_rating;
       uint32_t total_rating;

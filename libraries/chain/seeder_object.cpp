@@ -1,4 +1,4 @@
-#include <graphene/chain/publisher_object.hpp>
+#include <graphene/chain/seeder_object.hpp>
 
 namespace graphene { namespace chain {
    

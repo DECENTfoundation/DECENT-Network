@@ -206,7 +206,7 @@ namespace graphene { namespace chain {
    class buying_object;
    class buying_history_object;
    class content_object;
-   class publisher_object;
+   class seeder_object;
    class rating_object;
 
    typedef object_id< implementation_ids, impl_global_property_object_type,  global_property_object>                    global_property_id_type;
@@ -229,7 +229,7 @@ namespace graphene { namespace chain {
    typedef object_id< implementation_ids, impl_buying_object_type, buying_object >                                      buying_id_type;
    typedef object_id< implementation_ids, impl_buying_history_object_type, buying_history_object >                      buying_history_id_type;
    typedef object_id< implementation_ids, impl_content_object_type, content_object >                                    content_id_type;
-   typedef object_id< implementation_ids, impl_publisher_object_type, publisher_object >                                publisher_id_type;
+   typedef object_id< implementation_ids, impl_publisher_object_type, seeder_object >                                publisher_id_type;
    typedef object_id< implementation_ids, impl_rating_object_type, rating_object >                                      rating_id_type;
 
    typedef fc::array<char, GRAPHENE_MAX_ASSET_SYMBOL_LENGTH>    symbol_type;
