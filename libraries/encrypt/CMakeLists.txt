@@ -9,12 +9,12 @@ add_library( decent_encrypt
 target_link_libraries( decent_encrypt fc )
 target_link_libraries( test_encrypt fc decent_encrypt ${CRYPTOPP_LIBRARIES} )
 target_include_directories( decent_encrypt
-                            PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" )
+        PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" "${CMAKE_CURRENT_BINARY_DIR}/include" )
 target_include_directories( test_encrypt
-        PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" )
+        PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" "${CMAKE_CURRENT_BINARY_DIR}/include" )
 INSTALL( TARGETS
    decent_encrypt
-        test_encrypt
+   test_encrypt
 
    RUNTIME DESTINATION bin
    LIBRARY DESTINATION lib
