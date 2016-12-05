@@ -136,6 +136,17 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       // Blinded balances
       vector<blinded_balance_object> get_blinded_balances( const flat_set<commitment_type>& commitments )const;
 
+      // Decent
+      vector<buying_object> get_open_buyings()const;
+      vector<buying_object> get_open_buyings_by_URI(const string& URI)const;
+      vector<buying_object> get_open_buyings_by_consumer(const account_id_type& consumer)const;
+      optional<content_object> get_content( const string& URI )const;
+      vector<content_object> list_content_by_author( const account_id_type& author )const;
+      vector<content_object> list_content( const string& URI_begin, uint32_t count)const;
+      vector<content_object> list_content_by_bought( const uint32_t count )const;
+      vector<publisher_object> list_publishers_by_price( const uint32_t count )const;
+      vector<uint64_t> get_content_ratings( const string& URI)const;
+
    //private:
       template<typename T>
       void subscribe_to_item( const T& i )const
@@ -1609,6 +1620,193 @@ vector<blinded_balance_object> database_api_impl::get_blinded_balances( const fl
          result.push_back( *itr );
    }
    return result;
+}
+
+//////////////////////////////////////////////////////////////////////
+//                                                                  //
+// Decent                                                           //
+//                                                                  //
+//////////////////////////////////////////////////////////////////////
+
+vector<buying_object> database_api::get_open_buyings()const
+{
+   return my->get_open_buyings();
+}
+
+vector<buying_object> database_api_impl::get_open_buyings()const
+{
+   const auto& idx = _db.get_index_type<buying_index>().indices().get<by_expiration_time>();
+   auto itr = idx.begin();
+
+   vector<buying_object> result;
+   result.reserve(distance(idx.begin(), idx.end()));
+
+   while( itr != idx.end() )
+      result.emplace_back( *itr++ );
+
+   return result;
+}
+
+vector<buying_object> database_api::get_open_buyings_by_URI( const string& URI )const
+{
+   return my->get_open_buyings_by_URI( URI );
+}
+
+vector<buying_object> database_api_impl::get_open_buyings_by_URI( const string& URI )const
+{
+   try
+   {
+      auto range = _db.get_index_type<buying_index>().indices().get<by_URI_consumer>().equal_range(URI);
+      vector<buying_object> result;
+      result.reserve(distance(range.first, range.second));
+      std::for_each(range.first, range.second,
+                    [&result](const buying_object& element) {
+                       result.emplace_back(element);
+                    });
+      return result;
+   }
+   FC_CAPTURE_AND_RETHROW( (URI) );
+}
+
+vector<buying_object> database_api::get_open_buyings_by_consumer( const account_id_type& consumer )const
+{
+   return my->get_open_buyings_by_consumer( consumer );
+}
+
+vector<buying_object> database_api_impl::get_open_buyings_by_consumer( const account_id_type& consumer )const
+{
+   try
+   {
+      auto range = _db.get_index_type<buying_index>().indices().get<by_consumer_URI>().equal_range(consumer);
+      vector<buying_object> result;
+      result.reserve(distance(range.first, range.second));
+
+      std::for_each(range.first, range.second,
+         [&result](const buying_object& element) {
+            result.emplace_back(element);
+          });
+      return result;
+   }
+   FC_CAPTURE_AND_RETHROW( (consumer) );
+}
+
+optional<content_object> database_api::get_content(const string& URI)const
+{
+   return my->get_content( URI );
+}
+
+optional<content_object> database_api_impl::get_content( const string& URI )const
+{
+   const auto& idx = _db.get_index_type<content_index>().indices().get<by_URI>();
+   auto itr = idx.find(URI);
+   if (itr != idx.end())
+      return *itr;
+   return optional<content_object>();
+}
+
+vector<content_object> database_api::list_content_by_author( const account_id_type& author )const
+{
+   return my->list_content_by_author( author );
+}
+
+vector<content_object> database_api_impl::list_content_by_author( const account_id_type& author )const
+{
+   try
+   {
+      vector<content_object> result;
+      auto range = _db.get_index_type<content_index>().indices().get<by_author>().equal_range(author);
+      std::for_each(range.first, range.second,
+         [&result](const content_object& element) {
+            result.emplace_back(element);
+         });
+      return result;
+   }
+   FC_CAPTURE_AND_RETHROW( (author) );
+}
+
+vector<content_object> database_api::list_content( const string& URI_begin, uint32_t count)const
+{
+   return my->list_content( URI_begin, count);
+}
+
+vector<content_object> database_api_impl::list_content( const string& URI_begin, uint32_t count)const
+{
+   FC_ASSERT( count <= 100 );
+   const auto& idx = _db.get_index_type<content_index>().indices().get<by_URI>();
+
+   vector<content_object> result;
+   result.reserve( count );
+
+   auto itr = idx.lower_bound( URI_begin );
+
+   if(URI_begin == "")
+      itr = idx.begin();
+
+   while(count-- && itr != idx.end())
+      result.emplace_back(*itr++);
+
+   return result;
+}
+
+vector<content_object> database_api::list_content_by_bought( uint32_t count )const
+{
+   return my->list_content_by_bought( count );
+}
+
+vector<content_object> database_api_impl::list_content_by_bought( uint32_t count )const
+{
+   FC_ASSERT( count <= 100 );
+   const auto& idx = _db.get_index_type<content_index>().indices().get<by_times_bought>();
+   vector<content_object> result;
+   result.reserve(count);
+
+   auto itr = idx.begin();
+
+   while(count-- && itr != idx.end())
+      result.emplace_back(*itr++);
+
+   return result;
+}
+
+vector<publisher_object> database_api::list_publishers_by_price( uint32_t count )const
+{
+   return my->list_publishers_by_price( count );
+}
+
+vector<publisher_object> database_api_impl::list_publishers_by_price( uint32_t count )const
+{
+   FC_ASSERT( count <= 100 );
+   const auto& idx = _db.get_index_type<publisher_index>().indices().get<by_price>();
+   vector<publisher_object> result;
+   result.reserve(count);
+
+   auto itr = idx.begin();
+
+   while(count-- && itr != idx.end())
+      result.emplace_back(*itr++);
+
+   return result;
+}
+
+vector<uint64_t> database_api::get_content_ratings( const string& URI)const
+{
+   return my->get_content_ratings( URI );
+}
+
+vector<uint64_t> database_api_impl::get_content_ratings( const string& URI)const
+{
+   try
+   {
+      auto range = _db.get_index_type<rating_index>().indices().get<by_URI_consumer>().equal_range(URI);
+      vector<uint64_t> result;
+      result.reserve(distance(range.first, range.second));
+      std::for_each(range.first, range.second,
+         [&result](const rating_object& element) {
+            result.emplace_back(element.rating);
+         });
+      return result;
+   }
+   FC_CAPTURE_AND_RETHROW( (URI) );
 }
 
 //////////////////////////////////////////////////////////////////////

@@ -153,6 +153,11 @@ namespace graphene { namespace chain {
       impl_witness_schedule_object_type,
       impl_budget_record_object_type,
       impl_buyback_object_type,
+      impl_buying_object_type,
+      impl_buying_history_object_type,
+      impl_content_object_type,
+      impl_publisher_object_type,
+      impl_rating_object_type
    };
 
    //typedef fc::unsigned_int            object_id_type;
@@ -198,6 +203,11 @@ namespace graphene { namespace chain {
    class witness_schedule_object;
    class budget_record_object;
    class buyback_object;
+   class buying_object;
+   class buying_history_object;
+   class content_object;
+   class publisher_object;
+   class rating_object;
 
    typedef object_id< implementation_ids, impl_global_property_object_type,  global_property_object>                    global_property_id_type;
    typedef object_id< implementation_ids, impl_dynamic_global_property_object_type,  dynamic_global_property_object>    dynamic_global_property_id_type;
@@ -216,6 +226,11 @@ namespace graphene { namespace chain {
    typedef object_id< implementation_ids, impl_budget_record_object_type, budget_record_object >                        budget_record_id_type;
    typedef object_id< implementation_ids, impl_blinded_balance_object_type, blinded_balance_object >                    blinded_balance_id_type;
    typedef object_id< implementation_ids, impl_buyback_object_type, buyback_object >                                    buyback_id_type;
+   typedef object_id< implementation_ids, impl_buying_object_type, buying_object >                                      buying_id_type;
+   typedef object_id< implementation_ids, impl_buying_history_object_type, buying_history_object >                      buying_history_id_type;
+   typedef object_id< implementation_ids, impl_content_object_type, content_object >                                    content_id_type;
+   typedef object_id< implementation_ids, impl_publisher_object_type, publisher_object >                                publisher_id_type;
+   typedef object_id< implementation_ids, impl_rating_object_type, rating_object >                                      rating_id_type;
 
    typedef fc::array<char, GRAPHENE_MAX_ASSET_SYMBOL_LENGTH>    symbol_type;
    typedef fc::ripemd160                                        block_id_type;
@@ -358,6 +373,11 @@ FC_REFLECT_ENUM( graphene::chain::impl_object_type,
                  (impl_witness_schedule_object_type)
                  (impl_budget_record_object_type)
                  (impl_buyback_object_type)
+                 (impl_buying_object_type)
+                 (impl_buying_history_object_type)
+                 (impl_content_object_type)
+                 (impl_publisher_object_type)
+                 (impl_rating_object_type)
                )
 
 FC_REFLECT_TYPENAME( graphene::chain::share_type )
@@ -385,6 +405,11 @@ FC_REFLECT_TYPENAME( graphene::chain::block_summary_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::account_transaction_history_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::budget_record_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::buyback_id_type )
+FC_REFLECT_TYPENAME( graphene::chain::buying_id_type )
+FC_REFLECT_TYPENAME( graphene::chain::buying_history_id_type )
+FC_REFLECT_TYPENAME( graphene::chain::content_id_type )
+FC_REFLECT_TYPENAME( graphene::chain::publisher_id_type )
+FC_REFLECT_TYPENAME( graphene::chain::rating_id_type )
 
 FC_REFLECT( graphene::chain::void_t, )
 

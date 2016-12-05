@@ -38,6 +38,10 @@
 #include <graphene/chain/operation_history_object.hpp>
 #include <graphene/chain/proposal_object.hpp>
 #include <graphene/chain/witness_object.hpp>
+#include <graphene/chain/buying_object.hpp>
+#include <graphene/chain/content_object.hpp>
+#include <graphene/chain/publisher_object.hpp>
+#include <graphene/chain/rating_object.hpp>
 
 #include <graphene/market_history/market_history_plugin.hpp>
 
@@ -539,6 +543,74 @@ class database_api
        */
       vector<blinded_balance_object> get_blinded_balances( const flat_set<commitment_type>& commitments )const;
 
+      ////////////
+      // Decent //
+      ////////////
+
+      /**
+       * @brief Get a list of open buyings
+       * @return The buying_objects
+       */
+       vector<buying_object> get_open_buyings()const;
+
+      /**
+       * @brief Get a list of open buyings by URI
+       * @param URI URI of the buyings to retrieve
+       * @return The buyings corresponding to the provided URI
+       */
+       vector<buying_object> get_open_buyings_by_URI( const string& URI )const;
+
+      /**
+       * @brief Get a list of open buyings by consumer
+       * @param consumer Consumer of the buyings to retrieve
+       * @return The buyings corresponding to the provided consumer
+       */
+      vector<buying_object> get_open_buyings_by_consumer( const account_id_type& consumer )const;
+
+      /**
+       * @brief Get a content by URI
+       * @param URI URI of the content to retrieve
+       * @return The content corresponding to the provided URI, or null if no matching content was found
+       */
+      optional<content_object> get_content( const string& URI )const;
+
+      /**
+       * @brief Get a list of contents by author
+       * @param author Author of the contents to retrieve
+       * @return The contents corresponding to the provided author
+       */
+      vector<content_object> list_content_by_author( const account_id_type& author )const;
+
+      /**
+       * @brief Get a list of contents ordered alphabetically by URI strings
+       * @param URI_begin Lower bound of URI strings to retrieve
+       * @param count Maximum number of contents to fetch (must not exceed 100)
+       * @return The contents found
+       */
+      vector<content_object> list_content( const string& URI_begin, uint32_t count )const;
+
+
+      /**
+       * @brief Get a list of contents by times bought, in decreasing order
+       * @param count Maximum number of contents to retrieve
+       * @return The contents found
+       */
+      vector<content_object> list_content_by_bought( uint32_t count )const;
+
+      /**
+       * @brief Get a list of contents by price, in increasing order
+       * @param count Maximum number of contents to retrieve
+       * @return The contents found
+       */
+      vector<publisher_object> list_publishers_by_price( uint32_t count )const;
+
+      /**
+       * @brief Get a list of content ratings corresponding to the provided URI
+       * @param URI URI of the content ratings to retrieve
+       * @return The ratings of the content
+       */
+      vector<uint64_t> get_content_ratings( const string& URI )const;
+
    private:
       std::shared_ptr< database_api_impl > my;
 };
@@ -636,4 +708,15 @@ FC_API(graphene::app::database_api,
 
    // Blinded balances
    (get_blinded_balances)
+
+   // Decent
+   (get_open_buyings)
+   (get_open_buyings_by_URI)
+   (get_open_buyings_by_consumer)
+   (get_content)
+   (list_content_by_author)
+   (list_content)
+   (list_content_by_bought)
+   (list_publishers_by_price)
+   (get_content_ratings)
 )

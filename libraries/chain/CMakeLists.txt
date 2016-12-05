@@ -5,7 +5,7 @@ set_source_files_properties( "${CMAKE_CURRENT_BINARY_DIR}/include/graphene/chain
 
 add_dependencies( build_hardfork_hpp cat-parts )
 
-file(GLOB HEADERS "include/graphene/chain/*.hpp" "include/graphene/chain/protocol/*hpp")
+file(GLOB HEADERS "include/graphene/chain/*.hpp" "include/graphene/chain/protocol/*.hpp")
 
 if( GRAPHENE_DISABLE_UNITY_BUILD )
    set( GRAPHENE_DB_FILES
@@ -54,6 +54,7 @@ add_library( graphene_chain
              protocol/fee_schedule.cpp
              protocol/confidential.cpp
              protocol/vote.cpp
+             protocol/decent.cpp
 
              genesis_state.cpp
              get_config.cpp
@@ -73,11 +74,16 @@ add_library( graphene_chain
              withdraw_permission_evaluator.cpp
              confidential_evaluator.cpp
              buyback.cpp
+             decent_evaluator.cpp
 
              account_object.cpp
              asset_object.cpp
              proposal_object.cpp
              vesting_balance_object.cpp
+             buying_object.cpp
+             content_object.cpp
+             publisher_object.cpp
+             rating_object.cpp
 
              block_database.cpp
 

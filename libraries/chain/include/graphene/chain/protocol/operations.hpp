@@ -35,6 +35,7 @@
 #include <graphene/chain/protocol/vesting.hpp>
 #include <graphene/chain/protocol/withdraw_permission.hpp>
 #include <graphene/chain/protocol/witness.hpp>
+#include <graphene/chain/protocol/decent.hpp>
 
 namespace graphene { namespace chain {
 
@@ -84,7 +85,13 @@ namespace graphene { namespace chain {
             blind_transfer_operation,
             transfer_from_blind_operation,
             asset_settle_cancel_operation,  // VIRTUAL
-            asset_claim_fees_operation
+            asset_claim_fees_operation,
+            content_submit_operation,
+            request_to_buy_operation,
+            leave_rating_operation,
+            ready_to_publish_operation,
+            proof_of_custody_operation,
+            deliver_keys_operation
          > operation;
 
    /// @} // operations group

@@ -10,7 +10,7 @@
 
 #include <decent/encrypt/crypto_types.hpp>
 
-#include <fc/reflect/variant.hpp>
+
 #include <cryptopp/osrng.h>
 
 
@@ -114,8 +114,4 @@ verify_delivery_proof(const delivery_proof &proof, const ciphertext &first, cons
 }
 }//namespace
 
-FC_REFLECT_EMPTY(decent::crypto::d_integer)
 
-FC_REFLECT(decent::crypto::aes_key, (key_byte))
-FC_REFLECT(decent::crypto::delivery_proof, (G1)(G2)(G3)(s)(r))
-FC_REFLECT(decent::crypto::ciphertext, (C1)(D1))
