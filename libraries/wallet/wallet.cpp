@@ -4158,9 +4158,10 @@ vesting_balance_object_with_info::vesting_balance_object_with_info( const vestin
    {
       return my->proof_of_custody(seeder, URI, proof, broadcast);
    }
-   
+
    signed_transaction wallet_api::deliver_keys(string seeder,
-                                               public_key_type key,
+                                               delivery_proof proof,
+                                               ciphertext key,
                                                bool broadcast)
    {
       return my->deliver_keys(seeder, proof, key, broadcast);

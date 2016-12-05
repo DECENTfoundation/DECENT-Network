@@ -1449,7 +1449,8 @@ class wallet_api
                                           bool broadcast = false);
    
       signed_transaction deliver_keys(string seeder,
-                                      public_key_type key,
+                                      delivery_proof proof,
+                                      ciphertext key,
                                       bool broadcast = false);
 
 

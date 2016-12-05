@@ -24,6 +24,7 @@
 #pragma once
 #include <cryptopp/integer.h>
 #include <cryptopp/aes.h>
+#include <fc/reflect/variant.hpp>
 
 namespace decent{
 namespace crypto{
@@ -34,7 +35,8 @@ public:
 
    d_integer from_string(std::string from) const;
 
-   d_integer(CryptoPP::Integer integer) : CryptoPP::Integer(integer) {}
+   d_integer(CryptoPP::Integer integer) : CryptoPP::Integer(integer) {};
+   d_integer() : CryptoPP::Integer(){};
 };
 
 typedef std::vector<unsigned char> valtype;
@@ -47,7 +49,9 @@ struct delivery_proof {
    d_integer r;
 
    delivery_proof(d_integer g1, d_integer g2, d_integer g3, d_integer s,
-                  d_integer r) : G1(g1), G2(g2), G3(g3), s(s), r(r) {}
+                  d_integer r) : G1(g1), G2(g2), G3(g3), s(s), r(r) {};
+   delivery_proof(){};
+
 };
 
 struct ciphertext {
@@ -62,3 +66,9 @@ struct aes_key {
    unsigned char key_byte[CryptoPP::AES::MAX_KEYLENGTH];
 };
 }}
+
+FC_REFLECT_EMPTY(decent::crypto::d_integer)
+
+FC_REFLECT(decent::crypto::aes_key, (key_byte))
+FC_REFLECT(decent::crypto::delivery_proof, (G1)(G2)(G3)(s)(r))
+FC_REFLECT(decent::crypto::ciphertext, (C1)(D1))
