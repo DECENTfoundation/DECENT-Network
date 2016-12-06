@@ -106,8 +106,9 @@ else ( WIN32 )
     include(ExternalProject)
     ExternalProject_Add( project_pbc
             SOURCE_DIR ${LIBPBC_PATH}
-            PREFIX ${CMAKE_CURRENT_BINARY_DIR}/vendor/pbc
-            CONFIGURE_COMMAND ${LIBPBC_PATH}/setup && ${LIBPBC_PATH}/configure --prefix=${CMAKE_CURRENT_BINARY_DIR}/vendor/pbc
+            PREFIX ${LIBPBC_PATH}
+            BUILD_IN_SOURCE 1
+            CONFIGURE_COMMAND ${LIBPBC_PATH}/setup && ${LIBPBC_PATH}/configure --prefix=${LIBPBC_PATH}
             BUILD_COMMAND make
             INSTALL_COMMAND true
             BUILD_BYPRODUCTS ${LIBPBC_PATH}/.libs/libpbc.a

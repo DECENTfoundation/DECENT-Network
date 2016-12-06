@@ -56,3 +56,5 @@ compile
 m4/
 *.exe
 *.exe.stackdump
+src
+tmp

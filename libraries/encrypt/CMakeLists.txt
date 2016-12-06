@@ -1,4 +1,9 @@
+# PBC Library
+set (LIBPBC_PATH ${PROJECT_SOURCE_DIR}/libraries/contrib/pbc)
+
 file(GLOB HEADERS "include/decent/encrypt/*.hpp")
+file(GLOB HEADERS "${LIBPBC_PATH}/include/*.h")
+
 add_executable( test_encrypt test_encryption_utils.cpp ${HEADERS} )
 add_library( decent_encrypt
              encryptionutils.cpp
