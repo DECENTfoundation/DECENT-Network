@@ -106,11 +106,6 @@ bool
 verify_delivery_proof(const delivery_proof &proof, const ciphertext &first, const ciphertext &second,
                       const d_integer &firstPulicKey, const d_integer &secondPublicKey);
 
-
-
-
-
-
 }
 }//namespace
 

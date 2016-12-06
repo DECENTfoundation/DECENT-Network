@@ -6,6 +6,9 @@
 #include <cmath>
 #include <openssl/rand.h>
 
+namespace decent{
+namespace crypto{
+
 
 void GetRandBytes(unsigned char* buf, int num)
 {
@@ -575,3 +578,6 @@ int CustodyUtils::CreateProofOfCustody(std::string path, valtype data, valtype &
     delete[] indices;
     return res;
 }
+
+
+}}

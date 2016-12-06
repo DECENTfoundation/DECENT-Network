@@ -7,6 +7,7 @@ file(GLOB HEADERS "${LIBPBC_PATH}/include/*.h")
 add_executable( test_encrypt test_encryption_utils.cpp ${HEADERS} )
 add_library( decent_encrypt
              encryptionutils.cpp
+             custodyutils.cpp
              ${HEADERS}
         )
 
@@ -14,7 +15,8 @@ add_library( decent_encrypt
 target_link_libraries( decent_encrypt fc ${CRYPTOPP_LIBRARIES} )
 target_link_libraries( test_encrypt fc decent_encrypt ${CRYPTOPP_LIBRARIES} )
 target_include_directories( decent_encrypt
-        PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" "${CMAKE_CURRENT_BINARY_DIR}/include" )
+        PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" "${CMAKE_CURRENT_BINARY_DIR}/include"
+        PRIVATE ${LIBPBC_PATH}/include )
 target_include_directories( test_encrypt
         PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" "${CMAKE_CURRENT_BINARY_DIR}/include" )
 INSTALL( TARGETS

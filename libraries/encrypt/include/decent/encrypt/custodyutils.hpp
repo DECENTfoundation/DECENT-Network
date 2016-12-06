@@ -2,9 +2,7 @@
 // Created by Vazgen Manukyan on 12/5/16.
 //
 
-#ifndef GRAPHENE_CUSTODYUTILS_HPP_H
-#define GRAPHENE_CUSTODYUTILS_HPP_H
-
+#pragma once
 #define _PAIRING_PARAM_ "type a\n\
 q 1729714013306464005330608405552380509755064820985046187891780198054445447554836677119858851399910513692414145560893075795183191121682380376026907533385851\n\
 h 29876203542046996426175609850525021550250184148929105350006475655637240127612\n\
@@ -19,14 +17,17 @@ sign0 1"
 
 #include <pbc.h>
 #include <fstream>
-//#include "script.h"
+
 #include <vector>
+#include <decent/encrypt/crypto_types.hpp>
 
 #define SIZE_OF_NUMBER_IN_THE_FIELD 32
 #define SIZE_OF_POINT_ON_CURVE_COMPRESSED 65
 #define SECTORS 8
 
-typedef std::vector<unsigned char> valtype;
+namespace decent{
+namespace crypto{
+
 
 class CustodyUtils
 {
@@ -56,4 +57,5 @@ private:
     pairing_t pairing;
 };
 
-#endif //GRAPHENE_CUSTODYUTILS_HPP_H
+
+}}
