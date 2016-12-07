@@ -79,7 +79,7 @@ elseif(CRYPTOPP_LIBRARIES)
 
                    yum install cryptopp cryptopp-devel
                 ")
-    endif()
+    endif(APPLE)
 
 
 endif(CRYPTOPP_LIBRARIES)
