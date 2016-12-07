@@ -72,14 +72,15 @@ elseif(CRYPTOPP_LIBRARIES)
 
     if(APPLE)
         message( "brew install cryptopp")
-    elseif(UNIX)
-        message( "apt-get install libcrypto++8 libcrypto++8-dbg libcrypto++-dev
-
-                  OR
-
-                   yum install cryptopp cryptopp-devel
-                ")
     endif(APPLE)
+
+    if(UNIX)
+    message( "apt-get install libcrypto++8 libcrypto++8-dbg libcrypto++-dev
+
+              OR
+
+              yum install cryptopp cryptopp-devel")
+    endif(UNIX)
 
 
 endif(CRYPTOPP_LIBRARIES)
