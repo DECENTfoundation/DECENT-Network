@@ -65,7 +65,27 @@ IF(NOT "${Boost_VERSION}" MATCHES "1.53(.*)")
    SET(Boost_LIBRARIES ${BOOST_LIBRARIES_TEMP} ${Boost_LIBRARIES})
 ENDIF()
 
-FIND_LIBRARY(CRYPTOPP_LIBRARIES NAMES cryptopp)
+if(DEFINED CRYPTOPP_LIBRARIES)
+    FIND_LIBRARY(CRYPTOPP_LIBRARIES NAMES cryptopp)
+elseif(CRYPTOPP_LIBRARIES)
+    message(FATAL_ERROR "CRYPTOPP_LIBRARIES variable has not been found. Please check that 'cryptopp' is probably installed.")
+
+    if(APPLE)
+        message( "brew install cryptopp")
+    elseif(UNIX)
+        message( "apt-get install libcrypto++8 libcrypto++8-dbg libcrypto++-dev
+
+                  OR
+
+                   yum install cryptopp cryptopp-devel
+                ")
+    endif()
+
+
+endif(CRYPTOPP_LIBRARIES)
+
+
+
 if( WIN32 )
 
     message( STATUS "Configuring Graphene on WIN32")
