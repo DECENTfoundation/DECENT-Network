@@ -99,6 +99,12 @@ target_include_directories( graphene_chain
                             PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" "${CMAKE_CURRENT_BINARY_DIR}/include" )
 
 # PBC Library
+
+FIND_LIBRARY(GMP_LIBRARIES NAMES gmp )
+if(NOT GMP_LIBRARIES)
+    message(FATAL_ERROR "gmp library not found")
+endif()
+
 set (LIBPBC_PATH ${PROJECT_SOURCE_DIR}/libraries/contrib/pbc)
 
 if ( WIN32 )
