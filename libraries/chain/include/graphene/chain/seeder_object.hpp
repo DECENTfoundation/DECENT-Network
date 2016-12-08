@@ -19,6 +19,7 @@ namespace graphene { namespace chain {
       account_id_type seeder;
       uint64_t free_space;
       asset price;
+      decent::crypto::d_integer pubKey;
    };
    
    struct by_seeder;
@@ -49,4 +50,4 @@ namespace graphene { namespace chain {
 
 FC_REFLECT_DERIVED(graphene::chain::seeder_object,
                    (graphene::db::object),
-                   (seeder)(free_space)(price) )
+                   (seeder)(free_space)(price)(pubKey) )

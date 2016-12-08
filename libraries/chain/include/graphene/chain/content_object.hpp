@@ -25,8 +25,8 @@ using namespace decent::crypto;
       asset price;
       string synopsis;
       string URI;
-      vector<account_id_type> seeders;
-      vector<ciphertext> key_parts;
+      map<account_id_type, ciphertext> key_parts;
+
       fc::ripemd160 hash;
       uint64_t AVG_rating;
       uint32_t total_rating;
@@ -68,4 +68,4 @@ using namespace decent::crypto;
 
 FC_REFLECT_DERIVED(graphene::chain::content_object,
                    (graphene::db::object),
-                   (author)(price)(synopsis)(URI)(seeders)(hash)(AVG_rating)(total_rating)(times_bought)(publishing_fee_escrow) )
+                   (author)(expiration)(created)(price)(synopsis)(URI)(key_parts)(hash)(AVG_rating)(total_rating)(times_bought)(publishing_fee_escrow) )

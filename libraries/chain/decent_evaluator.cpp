@@ -7,7 +7,11 @@
 #include <graphene/chain/hardfork.hpp>
 #include <graphene/chain/account_object.hpp>
 #include <graphene/chain/asset_object.hpp>
+#include <graphene/chain/buying_object.hpp>
+#include <graphene/chain/seeder_object.hpp>
+
 #include <graphene/chain/content_object.hpp>
+#include <decent/encrypt/encryptionutils.hpp>
 
 namespace graphene { namespace chain {
   
@@ -20,6 +24,7 @@ namespace graphene { namespace chain {
          FC_ASSERT(itr != idx.end(), "seeder does not exist" );
          total_price_per_day += itr-> price;
       }
+      FC_ASSERT( o.seeders.size() == o.key_parts.size() );
       FC_ASSERT( db().head_block_time() <= o.expiration);
       fc::microseconds duration = (db().head_block_time() - o.expiration);
       uint64_t days = duration.to_seconds() / 3600 / 24;
@@ -36,8 +41,15 @@ namespace graphene { namespace chain {
          co.synopsis = o.synopsis;
          co.URI = o.URI;
          co.publishing_fee_escrow = o.publishing_fee;
-         co.seeders = o.seeders;
-         co.key_parts = o.key_parts;
+         auto itr1 = o.seeders.begin();
+         auto itr2 = o.key_parts.begin();
+         while ( itr1 != o.seeders.end() && itr2 != o.key_parts.end() )
+         {
+            co.key_parts.emplace(std::make_pair( *itr1, *itr2 ));
+            itr1++;
+            itr2++;
+         }
+
          co.hash = o. hash;
          co.expiration = o.expiration;
          co.created = db().head_block_time();
@@ -50,14 +62,47 @@ namespace graphene { namespace chain {
    
    void_result request_to_buy_evaluator::do_evaluate(const request_to_buy_operation& o )
    {
+      auto& idx = db().get_index_type<content_index>().indices().get<by_URI>();
+      const auto& content = idx.find( o.URI );
+      FC_ASSERT( content!= idx.end() );
+      FC_ASSERT( o.price >= content->price );
+      FC_ASSERT( content->expiration > db().head_block_time() );
       //check if the content exist, has not expired and the price is higher as expected
    }
    
    void_result request_to_buy_evaluator::do_apply(const request_to_buy_operation& o )
    {
-      //create buying object
+      db().create<buying_object>([&](buying_object& bo){
+           bo.consumer = o.consumer;
+           bo.URI = o.URI;
+           bo.expiration_time = db().head_block_time() + 24*3600;
+           bo.pubKey = o.pubKey;
+      });
    }
-   
+
+   void_result deliver_keys_evaluator::do_evaluate(const deliver_keys_operation& o )
+   {
+      const auto& buying = db().get<buying_object>(o.buying);
+      auto& idx = db().get_index_type<content_index>().indices().get<by_URI>();
+      const auto& content = idx.find( buying.URI );
+      const auto& seeder = db().get<seeder_object>( o.seeder );
+      const auto& seeder_pubKey = seeder.pubKey;
+      const auto& buyer_pubKey = buying.pubKey;
+      const auto& firstK = content->key_parts.at( o.seeder );
+      const auto& secondK = o.key;
+      const auto& proof = o.proof;
+      FC_ASSERT( decent::crypto::verify_delivery_proof( proof, firstK, secondK, seeder_pubKey, buyer_pubKey) );
+   }
+
+   void_result deliver_keys_evaluator::do_apply(const deliver_keys_operation& o )
+   {
+      const auto& buying = db().get<buying_object>(o.buying);
+      db().modify<buying_object>(buying, [&](buying_object& bo){
+           bo.seeders_answered.push_back( o.seeder );
+           //check if we have enough answers already
+      });
+   }
+
    void_result leave_rating_evaluator::do_evaluate(const leave_rating_operation& o )
    {
       //check in buying history if the object exists
@@ -88,15 +133,6 @@ namespace graphene { namespace chain {
       //pay the seeder
    }
    
-   void_result deliver_keys_evaluator::do_evaluate(const deliver_keys_operation& o )
-   {
-      //validate the keys
-   }
-   
-   void_result deliver_keys_evaluator::do_apply(const deliver_keys_operation& o )
-   {
-      //empty - check how steem deals with private messages, so we can pass this data to the wallet
 
-   }
    
 }} // graphene::chain

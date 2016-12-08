@@ -17,6 +17,7 @@ namespace graphene { namespace chain {
 
 using decent::crypto::delivery_proof;
 using decent::crypto::ciphertext;
+using decent::crypto::d_integer;
 
    struct content_submit_operation : public base_operation
    {
@@ -44,6 +45,7 @@ using decent::crypto::ciphertext;
       string URI;
       account_id_type consumer;
       asset price;
+      d_integer pubKey;
       
       account_id_type fee_payer()const { return consumer; }
    };
@@ -66,6 +68,7 @@ using decent::crypto::ciphertext;
       
       asset fee;
       account_id_type seeder;
+      d_integer pubKey;
       uint64_t space;
       uint32_t price_per_MByte;
       
@@ -90,6 +93,7 @@ using decent::crypto::ciphertext;
 
       asset fee;
       account_id_type seeder;
+      buying_id_type buying;
       delivery_proof proof;
       ciphertext key;
       
@@ -99,11 +103,11 @@ using decent::crypto::ciphertext;
 } } // graphene::chain
 
 FC_REFLECT(graphene::chain::content_submit_operation,(fee)(author)(URI)(price)(hash)(seeders)(key_parts)(expiration)(publishing_fee)(synopsis))
-FC_REFLECT(graphene::chain::request_to_buy_operation,(fee)(URI)(consumer)(price))
+FC_REFLECT(graphene::chain::request_to_buy_operation,(fee)(URI)(consumer)(price)(pubKey))
 FC_REFLECT(graphene::chain::leave_rating_operation,(fee)(URI)(consumer)(rating))
-FC_REFLECT(graphene::chain::ready_to_publish_operation,(fee)(seeder)(space)(price_per_MByte))
+FC_REFLECT(graphene::chain::ready_to_publish_operation,(fee)(seeder)(space)(price_per_MByte)(pubKey))
 FC_REFLECT(graphene::chain::proof_of_custody_operation,(fee)(seeder)(URI)(proof))
-FC_REFLECT(graphene::chain::deliver_keys_operation,(fee)(seeder)(proof)(key))
+FC_REFLECT(graphene::chain::deliver_keys_operation,(fee)(seeder)(proof)(key)(buying))
 
 FC_REFLECT( graphene::chain::content_submit_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::request_to_buy_operation::fee_parameters_type, (fee) )
