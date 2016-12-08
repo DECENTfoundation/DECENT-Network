@@ -5,6 +5,8 @@ set_source_files_properties( "${CMAKE_CURRENT_BINARY_DIR}/include/graphene/chain
 
 add_dependencies( build_hardfork_hpp cat-parts )
 
+list( APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules" )
+
 file(GLOB HEADERS "include/graphene/chain/*.hpp" "include/graphene/chain/protocol/*.hpp")
 
 if( GRAPHENE_DISABLE_UNITY_BUILD )
@@ -99,30 +101,8 @@ target_include_directories( graphene_chain
                             PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" "${CMAKE_CURRENT_BINARY_DIR}/include" )
 
 # PBC Library
+find_package(PBC)
 
-FIND_LIBRARY(GMP_LIBRARIES NAMES gmp )
-if(NOT GMP_LIBRARIES)
-    message(FATAL_ERROR "gmp library not found")
-endif()
-
-set (LIBPBC_PATH ${PROJECT_SOURCE_DIR}/libraries/contrib/pbc)
-
-if ( WIN32 )
-else ( WIN32 )
-    include(ExternalProject)
-    ExternalProject_Add( project_pbc
-            SOURCE_DIR ${LIBPBC_PATH}
-            PREFIX ${LIBPBC_PATH}
-            BUILD_IN_SOURCE 1
-            CONFIGURE_COMMAND ${LIBPBC_PATH}/setup && ${LIBPBC_PATH}/configure --prefix=${LIBPBC_PATH}
-            BUILD_COMMAND make
-            INSTALL_COMMAND true
-            BUILD_BYPRODUCTS ${LIBPBC_PATH}/.libs/libpbc.a
-            )
-endif( WIN32 )
-
-add_library(pbc STATIC IMPORTED)
-set_property(TARGET pbc PROPERTY IMPORTED_LOCATION ${LIBPBC_PATH}/.libs/libpbc.a)
 target_link_libraries(graphene_chain pbc)
 target_link_libraries(graphene_chain gmp)
 
