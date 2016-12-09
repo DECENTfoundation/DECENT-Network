@@ -26,7 +26,7 @@ else ( WIN32 )
             PREFIX ${LIBPBC_PATH}
             BUILD_IN_SOURCE 1
             CONFIGURE_COMMAND ${LIBPBC_PATH}/setup && ${LIBPBC_PATH}/configure --prefix=${LIBPBC_PATH}
-            BUILD_COMMAND make
+            BUILD_COMMAND make libpbc.la
             INSTALL_COMMAND true
             BUILD_BYPRODUCTS ${LIBPBC_PATH}/.libs/libpbc.a
             )
