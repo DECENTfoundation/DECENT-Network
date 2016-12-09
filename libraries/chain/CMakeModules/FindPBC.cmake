@@ -5,6 +5,17 @@ if(NOT GMP_LIBRARIES)
     message(FATAL_ERROR "gmp library not found")
 endif()
 
+find_program(FLEX_IBRARIES NAMES flex)
+if(NOT FLEX_IBRARIES)
+    message(FATAL_ERROR "FLEX progamm not found")
+endif()
+
+find_program(BISON_IBRARIES NAMES bison)
+if(NOT BISON_IBRARIES)
+    message(FATAL_ERROR "bison progamm not found")
+endif()
+
+
 set (LIBPBC_PATH ${PROJECT_SOURCE_DIR}/libraries/contrib/pbc)
 
 if ( WIN32 )
