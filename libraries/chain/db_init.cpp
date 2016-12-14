@@ -400,6 +400,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       account_id_type account_id(apply_operation(genesis_eval_state, cop).get<object_id_type>());
    }
 
+
    // Helper function to get account ID by name
    const auto& accounts_by_name = get_index_type<account_index>().indices().get<by_name>();
    auto get_account_id = [&accounts_by_name](const string& name) {
@@ -416,7 +417,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       auto itr = assets_by_symbol.find(symbol);
 
       // TODO: This is temporary for handling BTS snapshot
-      if( symbol == "BTS" )
+      if( symbol == "DCT" )
           itr = assets_by_symbol.find(GRAPHENE_SYMBOL);
 
       FC_ASSERT(itr != assets_by_symbol.end(),
@@ -424,6 +425,18 @@ void database::init_genesis(const genesis_state_type& genesis_state)
                 ("sym", symbol));
       return itr->get_id();
    };
+
+      //create initial balance
+   for( const auto& balance: genesis_state.initial_balances )
+   {
+      transfer_operation top;
+      top.from = GRAPHENE_COMMITTEE_ACCOUNT;
+      top.to = get_account_id( balance.owner );
+      asset amount( balance.amount, get_asset_id( balance.asset_symbol ) );
+      top.amount = asset();
+
+      apply_operation(genesis_eval_state, top);
+   }
 
    map<asset_id_type, share_type> total_supplies;
    map<asset_id_type, share_type> total_debts;

@@ -69,6 +69,11 @@ struct genesis_state_type {
       bool is_bitasset = false;
       vector<initial_collateral_position> collateral_records;
    };
+   struct initial_balance_type {
+      string owner;
+      string asset_symbol;
+      share_type amount;
+   };
    struct initial_witness_type {
       /// Must correspond to one of the initial accounts
       string owner_name;
@@ -85,6 +90,7 @@ struct genesis_state_type {
    immutable_chain_parameters               immutable_parameters;
    vector<initial_account_type>             initial_accounts;
    vector<initial_asset_type>               initial_assets;
+   vector<initial_balance_type>             initial_balances;
    uint64_t                                 initial_active_witnesses = GRAPHENE_DEFAULT_MIN_WITNESS_COUNT;
    vector<initial_witness_type>             initial_witness_candidates;
    vector<initial_committee_member_type>    initial_committee_candidates;
