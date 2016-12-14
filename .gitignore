@@ -62,3 +62,4 @@ object_database/*
 .idea/
 # vendors mut not be in repository
 */**/vendor/
+CMakeLists.txt.user

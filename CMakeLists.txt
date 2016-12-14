@@ -65,7 +65,8 @@ IF(NOT "${Boost_VERSION}" MATCHES "1.53(.*)")
    SET(Boost_LIBRARIES ${BOOST_LIBRARIES_TEMP} ${Boost_LIBRARIES})
 ENDIF()
 
-FIND_LIBRARY(CRYPTOPP_LIBRARIES NAMES cryptopp)
+find_package( CryptoPP REQUIRED)
+
 if( WIN32 )
 
     message( STATUS "Configuring Graphene on WIN32")
