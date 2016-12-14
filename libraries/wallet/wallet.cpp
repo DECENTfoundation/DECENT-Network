@@ -2269,8 +2269,8 @@ public:
 
          fc::optional<asset_object> price_asset_obj = get_asset(price_asset_symbol);
          fc::optional<asset_object> fee_asset_obj = get_asset(publishing_fee_symbol_name);
-          FC_ASSERT(price_asset_obj, "Could not find asset matching ${asset}", ("asset", price_asset_symbol)); 
-         FC_ASSERT(fee_asset_obj, "Could not find asset matching ${asset}", ("asset", publishing_fee_symbol_name)); 
+         FC_ASSERT(price_asset_obj, "Could not find asset matching ${asset}", ("asset", price_asset_symbol));
+         FC_ASSERT(fee_asset_obj, "Could not find asset matching ${asset}", ("asset", publishing_fee_symbol_name));
          shamir_secret ss(quorum, seeders.size(), secret);
          vector<ciphertext> key_parts;
          ss.calculate_split();
@@ -2312,8 +2312,8 @@ public:
                                      bool broadcast/* = false */)
    { try {
       account_object consumer_account = get_account( consumer );
-      fc::optional<asset_object> asset_obj = get_asset(price_asset_symbol); 
-      FC_ASSERT(asset_obj, "Could not find asset matching ${asset}", ("asset", price_asset_symbol)); 
+      fc::optional<asset_object> asset_obj = get_asset(price_asset_symbol);
+      FC_ASSERT(asset_obj, "Could not find asset matching ${asset}", ("asset", price_asset_symbol));
       
       request_to_buy_operation request_op;
       request_op.consumer = consumer_account.id;
