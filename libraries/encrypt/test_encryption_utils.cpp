@@ -24,45 +24,32 @@ void test_el_gamal(decent::crypto::aes_key k)
    d_integer pubk2 = decent::crypto::get_public_el_gamal_key(pk2);
 
    cout<<"Catchpoint 1 \n";
-   decent::crypto::valtype secret;
-   for(int i=0;i<CryptoPP::AES::MAX_KEYLENGTH; i++)
-      secret.push_back( k.key_byte [i] );
+   decent::crypto::point secret;
+   secret.first = d_integer(10000);
+   secret.second = d_integer(1000000000);
 
    cout<<"Catchpoint 2 \n";
    decent::crypto::ciphertext ct1, ct2;
    decent::crypto::el_gamal_encrypt(secret, pubk1, ct1);
 
-   decent::crypto::valtype received_secret;
+   decent::crypto::point received_secret;
    decent::crypto::el_gamal_decrypt(ct1,pk1,received_secret);
    cout<<"Catchpoint 3 \n";
 
-   cout <<"size of secret is "<<secret.size()<<"\n";
-   for(int i=0; i<secret.size(); i++) {
-      cout << (int)secret[i]<< " ";
-   }
+   cout <<"Secret is: "<<secret.first.to_string()<<" "<<secret.second.to_string();
+
    cout <<"\n";
 
-   cout <<"size of recovered secret is "<<received_secret.size()<<"\n";
-   for(int i=0; i<received_secret.size(); i++)
-   {
-      cout << (int)received_secret[i] << " ";
-   }
-   cout <<"\n";
-
+   cout <<"recovered secret is "<<received_secret.first.to_string()<<" "<<received_secret.second.to_string() <<"\n";
 
    decent::crypto::delivery_proof proof(CryptoPP::Integer::One(),CryptoPP::Integer::One(),CryptoPP::Integer::One(),CryptoPP::Integer::One(),CryptoPP::Integer::One());
    cout<<"Catchpoint 4 \n";
    decent::crypto::encrypt_with_proof(received_secret, pk1, pubk2, ct1, ct2, proof);
    cout<<"Catchpoint 5 \n";
-   decent::crypto::valtype received_secret2;
+   decent::crypto::point received_secret2;
    decent::crypto::el_gamal_decrypt(ct2,pk2,received_secret2);
 
-   cout <<"size of recovered secret is "<<received_secret2.size()<<"\n";
-   for(int i=0; i<received_secret2.size(); i++)
-   {
-      cout << (int)received_secret2[i] << " ";
-   }
-   cout <<"\n";
+   cout <<"recovered secret is "<<received_secret.first.to_string()<<" "<<received_secret.second.to_string() <<"\n";
 
    for (int i=0; i<100000; i++)
       bool ret_val = decent::crypto::verify_delivery_proof(proof, ct1,ct2,pubk1,pubk2);
@@ -96,7 +83,7 @@ int main(int argc, char**argv)
    decent::crypto::aes_key k;
    for (int i=0; i<CryptoPP::AES::MAX_KEYLENGTH; i++)
       k.key_byte[i]=i;
-   test_aes(k);
+ //  test_aes(k);
    cout<<"AES finished \n";
    test_el_gamal(k);
    const CryptoPP::Integer secret("12354678979464");

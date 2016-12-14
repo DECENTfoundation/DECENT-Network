@@ -567,6 +567,7 @@ class database_api
        */
       vector<buying_object> get_open_buyings_by_consumer( const account_id_type& consumer )const;
 
+
       /**
        * @brief Get a content by URI
        * @param URI URI of the content to retrieve
@@ -604,6 +605,7 @@ class database_api
        */
       vector<seeder_object> list_publishers_by_price( uint32_t count )const;
 
+      optional<seeder_object> get_seeder(account_id_type aid) const;
       /**
        * @brief Get a list of content ratings corresponding to the provided URI
        * @param URI URI of the content ratings to retrieve
@@ -719,4 +721,5 @@ FC_API(graphene::app::database_api,
    (list_content_by_bought)
    (list_publishers_by_price)
    (get_content_ratings)
+   (get_seeder)
 )

@@ -27,6 +27,7 @@
 #include <iostream>
 #include <iterator>
 #include <sstream>
+#include <utility>
 #include <string>
 #include <list>
 
@@ -2251,24 +2252,48 @@ public:
 
    signed_transaction submit_content(string author,
                                      string URI,
-                                     asset price,
+                                     string price_asset_symbol,
+                                     string price_amount,
                                      fc::ripemd160 hash,
+                                     uint64_t size,
                                      vector<account_id_type> seeders,
+                                     uint32_t quorum,
                                      fc::time_point_sec expiration,
-                                     asset publishing_fee,
+                                     string publishing_fee_symbol_name,
+                                     string publishing_fee_amount,
                                      string synopsis,
+                                     d_integer secret,
                                      bool broadcast/* = false */)
       { try {
          account_object author_account = get_account( author );
-         
+
+         fc::optional<asset_object> price_asset_obj = get_asset(price_asset_symbol);
+         fc::optional<asset_object> fee_asset_obj = get_asset(publishing_fee_symbol_name);
+          FC_ASSERT(price_asset_obj, "Could not find asset matching ${asset}", ("asset", price_asset_symbol)); 
+         FC_ASSERT(fee_asset_obj, "Could not find asset matching ${asset}", ("asset", publishing_fee_symbol_name)); 
+         shamir_secret ss(quorum, seeders.size(), secret);
+         vector<ciphertext> key_parts;
+         ss.calculate_split();
+         for( int i =0; i<seeders.size(); i++ ){
+            const auto& s = _remote_db->get_seeder( seeders[i] );
+            ciphertext cp;
+            point p = ss.split[i];
+            decent::crypto::el_gamal_encrypt( p ,s->pubKey ,cp );
+            key_parts.push_back(cp);
+         }
+
+
          content_submit_operation submit_op;
          submit_op.author = author_account.id;
          submit_op.URI = URI;
-         submit_op.price = price;
+         submit_op.price = price_asset_obj->amount_from_string(price_amount);
          submit_op.hash = hash;
+         submit_op.size = size;
          submit_op.seeders = seeders;
+         submit_op.quorum = quorum;
+         submit_op.key_parts = key_parts;
          submit_op.expiration = expiration;
-         submit_op.publishing_fee = publishing_fee;
+         submit_op.publishing_fee = fee_asset_obj->amount_from_string(publishing_fee_amount);
          submit_op.synopsis = synopsis;
          
          signed_transaction tx;
@@ -2277,25 +2302,32 @@ public:
          tx.validate();
          
          return sign_transaction( tx, broadcast );
-      } FC_CAPTURE_AND_RETHROW( (author)(URI)(price)(hash)(seeders)(expiration)(publishing_fee)(synopsis)(broadcast) ) }
+      } FC_CAPTURE_AND_RETHROW( (author)(URI)(price_asset_symbol)(price_amount)(hash)(seeders)(quorum)(expiration)(publishing_fee_symbol_name)(publishing_fee_amount)(synopsis)(secret)(broadcast) ) }
    
    signed_transaction request_to_buy(string consumer,
                                      string URI,
+                                     string price_asset_symbol,
+                                     string price_amount,
+                                     string pubKey,
                                      bool broadcast/* = false */)
    { try {
       account_object consumer_account = get_account( consumer );
+      fc::optional<asset_object> asset_obj = get_asset(price_asset_symbol); 
+      FC_ASSERT(asset_obj, "Could not find asset matching ${asset}", ("asset", price_asset_symbol)); 
       
       request_to_buy_operation request_op;
       request_op.consumer = consumer_account.id;
       request_op.URI = URI;
-      
+      request_op.pubKey = d_integer( pubKey );
+      request_op.price = asset_obj->amount_from_string(price_amount);
+
       signed_transaction tx;
       tx.operations.push_back( request_op );
       set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
       tx.validate();
       
       return sign_transaction( tx, broadcast );
-   } FC_CAPTURE_AND_RETHROW( (consumer)(URI)(broadcast) ) }
+   } FC_CAPTURE_AND_RETHROW( (consumer)(URI)(price_asset_symbol)(price_amount)(pubKey)(broadcast) ) }
    
    signed_transaction leave_rating(string consumer,
                                    string URI,
@@ -2320,6 +2352,7 @@ public:
    signed_transaction ready_to_publish(string seeder,
                                        uint64_t space,
                                        uint32_t price_per_MByte,
+                                       d_integer pubKey,
                                        bool broadcast/* = false */)
    { try {
       account_object seeder_account = get_account( seeder );
@@ -2328,6 +2361,7 @@ public:
       op.seeder = seeder_account.id;
       op.space = space;
       op.price_per_MByte = price_per_MByte;
+      op.pubKey = pubKey;
       
       signed_transaction tx;
       tx.operations.push_back( op );
@@ -2335,7 +2369,7 @@ public:
       tx.validate();
       
       return sign_transaction( tx, broadcast );
-   } FC_CAPTURE_AND_RETHROW( (seeder)(space)(price_per_MByte)(broadcast) ) }
+   } FC_CAPTURE_AND_RETHROW( (seeder)(space)(price_per_MByte)(pubKey)(broadcast) ) }
    
    signed_transaction proof_of_custody(string seeder,
                                        string URI,
@@ -2348,7 +2382,7 @@ public:
       op.seeder = seeder_account.id;
       op.URI = URI;
       op.proof = proof;
-      
+      //TODO_DECENT rework
       signed_transaction tx;
       tx.operations.push_back( op );
       set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
@@ -2358,24 +2392,30 @@ public:
    } FC_CAPTURE_AND_RETHROW( (seeder)(URI)(proof)(broadcast) ) }
    
    signed_transaction deliver_keys(string seeder,
-                                   delivery_proof proof,
-                                   ciphertext key,
+                                   d_integer privKey,
+                                   buying_id_type buying,
                                    bool broadcast/* = false */)
    { try {
       account_object seeder_account = get_account( seeder );
-      
+      const buying_object bo = get_object<buying_object>(buying);
+      const content_object co = *(_remote_db->get_content(bo.URI));
+      d_integer destPubKey = bo.pubKey;
+      decent::crypto::ciphertext orig = co.key_parts.at(seeder_account.id);
+      decent::crypto::point message;
+      auto result = decent::crypto::el_gamal_decrypt(orig, privKey, message);
+      FC_ASSERT(result == decent::crypto::ok);
       deliver_keys_operation op;
+      result = decent::crypto::encrypt_with_proof( message, privKey, destPubKey, orig, op.key, op.proof );
+
       op.seeder = seeder_account.id;
-      op.proof = proof;
-      op.key = key;
-      
+
       signed_transaction tx;
       tx.operations.push_back( op );
       set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
       tx.validate();
       
       return sign_transaction( tx, broadcast );
-   } FC_CAPTURE_AND_RETHROW( (seeder)(key)(broadcast) ) }
+   } FC_CAPTURE_AND_RETHROW( (seeder)(privKey)(buying)(broadcast) ) }
    
    void dbg_make_uia(string creator, string symbol)
    {
@@ -2818,6 +2858,13 @@ brain_key_info wallet_api::suggest_brain_key()const
    result.wif_priv_key = key_to_wif( priv_key );
    result.pub_key = priv_key.get_public_key();
    return result;
+}
+
+std::pair<d_integer, d_integer> wallet_api::generate_el_gamal_keys()
+{
+   d_integer priv = decent::crypto::generate_private_el_gamal_key();
+   d_integer pub = decent::crypto::get_public_el_gamal_key( priv );
+   return std::make_pair(priv, pub);
 }
 
 string wallet_api::serialize_transaction( signed_transaction tx )const
@@ -4115,24 +4162,19 @@ vesting_balance_object_with_info::vesting_balance_object_with_info( const vestin
    allowed_withdraw_time = now;
 }
 
-   signed_transaction wallet_api::submit_content(string author,
-                                                 string URI,
-                                                 asset price,
-                                                 fc::ripemd160 hash,
-                                                 vector<account_id_type> seeders,
-                                                 fc::time_point_sec expiration,
-                                                 asset publishing_fee,
-                                                 string synopsis,
-                                                 bool broadcast)
+   signed_transaction
+   wallet_api::submit_content(string author, string URI, string price_asset_name, string price_amount, uint64_t size,
+                                 fc::ripemd160 hash, vector<account_id_type> seeders, uint32_t quorum, fc::time_point_sec expiration,
+                                 string publishing_fee_asset, string publishing_fee_amount, string synopsis, d_integer secret,
+                                 bool broadcast)
    {
-      return my->submit_content(author, URI, price, hash, seeders, expiration, publishing_fee, synopsis, broadcast);
+      return my->submit_content(author, URI, price_asset_name, price_amount, hash, size, seeders, quorum, expiration, publishing_fee_asset, publishing_fee_amount, synopsis, secret, broadcast);
    }
    
-   signed_transaction wallet_api::request_to_buy(string consumer,
-                                                 string URI,
-                                                 bool broadcast)
+   signed_transaction
+   wallet_api::request_to_buy(string consumer, string URI, string price_asset_name, string price_amount, string pubKey, bool broadcast)
    {
-      return my->request_to_buy(consumer, URI, broadcast);
+      return my->request_to_buy(consumer, URI, price_asset_name, price_amount, pubKey, broadcast);
    }
    
    signed_transaction wallet_api::leave_rating(string consumer,
@@ -4146,9 +4188,10 @@ vesting_balance_object_with_info::vesting_balance_object_with_info( const vestin
    signed_transaction wallet_api::ready_to_publish(string seeder,
                                                    uint64_t space,
                                                    uint32_t price_per_MByte,
+                                                   d_integer pubKey,
                                                    bool broadcast)
    {
-      return my->ready_to_publish(seeder, space, price_per_MByte, broadcast);
+      return my->ready_to_publish(seeder, space, price_per_MByte, pubKey, broadcast);
    }
    
    signed_transaction wallet_api::proof_of_custody(string seeder,
@@ -4160,11 +4203,11 @@ vesting_balance_object_with_info::vesting_balance_object_with_info( const vestin
    }
 
    signed_transaction wallet_api::deliver_keys(string seeder,
-                                               delivery_proof proof,
-                                               ciphertext key,
+                                               d_integer privKey,
+                                               buying_id_type buying,
                                                bool broadcast)
    {
-      return my->deliver_keys(seeder, proof, key, broadcast);
+      return my->deliver_keys(seeder, privKey, buying, broadcast);
    }
 
 

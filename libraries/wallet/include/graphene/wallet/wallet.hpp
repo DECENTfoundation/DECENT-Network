@@ -25,6 +25,8 @@
 
 #include <graphene/app/api.hpp>
 #include <graphene/utilities/key_conversion.hpp>
+#include <decent/encrypt/encryptionutils.hpp>
+
 
 using namespace graphene::app;
 using namespace graphene::chain;
@@ -1419,20 +1421,14 @@ class wallet_api
       std::shared_ptr<detail::wallet_api_impl> my;
       void encrypt_keys();
 
-      signed_transaction submit_content(string author,
-                                       string URI,
-                                       asset price,
-                                       fc::ripemd160 hash,
-                                       vector<account_id_type> seeders,
-                                       fc::time_point_sec expiration,
-                                       asset publishing_fee,
-                                       string synopsis,
-                                       bool broadcast = false);
+      signed_transaction
+      submit_content(string author, string URI, string price_asset_name, string price_amount, uint64_t size,
+                           fc::ripemd160 hash, vector<account_id_type> seeders, uint32_t quorum, fc::time_point_sec expiration,
+                           string publishing_fee_asset, string publishing_fee_amount, string synopsis, d_integer secret,
+                           bool broadcast);
    
-      signed_transaction request_to_buy(string consumer,
-                                        string URI,
-                                        bool broadcast = false);
-   
+      signed_transaction request_to_buy(string consumer, string URI, string price_asset_name, string price_amount, string pubKey, bool broadcast);
+
       signed_transaction leave_rating(string consumer,
                                       string URI,
                                       uint64_t rating,
@@ -1441,6 +1437,7 @@ class wallet_api
       signed_transaction ready_to_publish(string seeder,
                                           uint64_t space,
                                           uint32_t price_per_MByte,
+                                          d_integer pubKey,
                                           bool broadcast = false);
    
       signed_transaction proof_of_custody(string seeder,
@@ -1449,10 +1446,11 @@ class wallet_api
                                           bool broadcast = false);
    
       signed_transaction deliver_keys(string seeder,
-                                      delivery_proof proof,
-                                      ciphertext key,
+                                      d_integer privKey,
+                                      buying_id_type buying,
                                       bool broadcast = false);
 
+      std::pair<d_integer, d_integer> generate_el_gamal_keys();
 
       /**
        * @brief Get a list of open buyings

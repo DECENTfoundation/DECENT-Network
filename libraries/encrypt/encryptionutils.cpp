@@ -96,7 +96,7 @@ d_integer get_public_el_gamal_key(const d_integer &privateKey)
     return publicKey;
 }
 
-encryption_results el_gamal_encrypt(const valtype &message, d_integer &publicKey, ciphertext &result)
+encryption_results el_gamal_encrypt(const point &message, const d_integer &publicKey, ciphertext &result)
 {
     ElGamalKeys::PublicKey key;
     key.AccessGroupParameters().Initialize(DECENT_EL_GAMAL_MODULUS_512, DECENT_EL_GAMAL_GROUP_GENERATOR);
@@ -105,21 +105,20 @@ encryption_results el_gamal_encrypt(const valtype &message, d_integer &publicKey
     CryptoPP::Integer randomizer(rng, CryptoPP::Integer::One(), DECENT_EL_GAMAL_MODULUS_512 - 1);
 
     try{
-        byte buffer[DECENT_MESSAGE_SIZE];
-        FC_ASSERT(message.size() <= DECENT_MESSAGE_SIZE);
-        copy(message.begin(), message.end(), buffer);
-        SecByteBlock messageBytes(buffer, DECENT_MESSAGE_SIZE);
+        byte buffer[DECENT_EL_GAMAL_GROUP_ELEMENT_SIZE];
+        message.first.Encode(buffer, DECENT_MESSAGE_SIZE );
+        message.second.Encode( buffer+DECENT_MESSAGE_SIZE, DECENT_MESSAGE_SIZE );
+        SecByteBlock messageBytes(buffer, DECENT_EL_GAMAL_GROUP_ELEMENT_SIZE);
 
         ElGamal::GroupParameters groupParams;
         groupParams.Initialize(DECENT_EL_GAMAL_MODULUS_512, DECENT_EL_GAMAL_GROUP_GENERATOR);
         ModularArithmetic mr(DECENT_EL_GAMAL_MODULUS_512);
 
         CryptoPP::Integer m;
-        m.Decode(messageBytes, DECENT_MESSAGE_SIZE);
+        m.Decode(messageBytes, DECENT_EL_GAMAL_GROUP_ELEMENT_SIZE);
 
         result.D1 = groupParams.ExponentiateBase(randomizer);
         result.C1 = mr.Multiply(m, mr.Exponentiate(publicKey, randomizer));
-
     }catch(const CryptoPP::Exception &e) {
         elog(e.GetWhat());
         switch (e.GetErrorType()) {
@@ -132,14 +131,14 @@ encryption_results el_gamal_encrypt(const valtype &message, d_integer &publicKey
     return ok;
 }
 
-encryption_results el_gamal_decrypt(const ciphertext &input, d_integer &privateKey, valtype &plaintext)
+encryption_results el_gamal_decrypt(const ciphertext &input, const d_integer &privateKey, point &plaintext)
 {
     ElGamalKeys::PrivateKey key;
     key.AccessGroupParameters().Initialize(DECENT_EL_GAMAL_MODULUS_512, DECENT_EL_GAMAL_GROUP_GENERATOR);
     key.SetPrivateExponent(privateKey);
     try{
 
-        byte recovered[DECENT_MESSAGE_SIZE];
+        byte recovered[DECENT_EL_GAMAL_GROUP_ELEMENT_SIZE];
         ElGamal::GroupParameters groupParams;
         groupParams.Initialize(DECENT_EL_GAMAL_MODULUS_512, DECENT_EL_GAMAL_GROUP_GENERATOR);
 
@@ -149,10 +148,10 @@ encryption_results el_gamal_decrypt(const ciphertext &input, d_integer &privateK
         CryptoPP::Integer m = mr.Multiply(input.C1, mr.MultiplicativeInverse(s));
         size_t size = m.MinEncodedSize();
 
-        m.Encode(recovered, DECENT_MESSAGE_SIZE);
+        m.Encode(recovered, DECENT_EL_GAMAL_GROUP_ELEMENT_SIZE);
 
-        plaintext.reserve(DECENT_MESSAGE_SIZE);
-        std::copy(recovered, recovered+DECENT_MESSAGE_SIZE, std::back_inserter(plaintext));
+        plaintext.first.Decode( recovered, DECENT_MESSAGE_SIZE );
+        plaintext.second.Decode( recovered+DECENT_MESSAGE_SIZE, DECENT_MESSAGE_SIZE  );
     }catch (const CryptoPP::Exception &e) {
         elog(e.GetWhat());
         switch (e.GetErrorType()) {
@@ -249,10 +248,10 @@ verify_delivery_proof(const delivery_proof &proof, const ciphertext &first, cons
 
 
 encryption_results
-encrypt_with_proof(const valtype &message, const d_integer &privateKey, const d_integer &destinationPublicKey,
+encrypt_with_proof(const point &message, const d_integer &privateKey, const d_integer &destinationPublicKey,
                    const ciphertext &incoming, ciphertext &outgoing, delivery_proof &proof)
 {
-   FC_ASSERT(message.size() == DECENT_MESSAGE_SIZE);
+
    try{
       ElGamalKeys::PrivateKey private_key;
       private_key.AccessGroupParameters().Initialize(DECENT_EL_GAMAL_MODULUS_512, DECENT_EL_GAMAL_GROUP_GENERATOR);
@@ -265,8 +264,9 @@ encrypt_with_proof(const valtype &message, const d_integer &privateKey, const d_
 
       CryptoPP::Integer randomizer(rng, CryptoPP::Integer::One(), DECENT_EL_GAMAL_MODULUS_512 - 1);
 
-      byte messageBytes[DECENT_MESSAGE_SIZE];
-      copy(message.begin(), message.end(), messageBytes);
+      byte messageBytes[DECENT_EL_GAMAL_GROUP_ELEMENT_SIZE];
+      message.first.Encode(messageBytes, DECENT_MESSAGE_SIZE );
+      message.second.Encode( messageBytes+DECENT_MESSAGE_SIZE, DECENT_MESSAGE_SIZE );
 
       //encrypt message to outgoing
       ElGamal::GroupParameters groupParams;
@@ -275,7 +275,7 @@ encrypt_with_proof(const valtype &message, const d_integer &privateKey, const d_
 
 
       CryptoPP::Integer m;
-      m.Decode(messageBytes, DECENT_MESSAGE_SIZE);
+      m.Decode(messageBytes, DECENT_EL_GAMAL_GROUP_ELEMENT_SIZE);
       outgoing.D1 = groupParams.ExponentiateBase(randomizer);
       outgoing.C1 = mr.Multiply(m, mr.Exponentiate(destinationPublicKey, randomizer));
       //create delivery proof to proofOfDelivery

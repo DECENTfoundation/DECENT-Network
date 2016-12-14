@@ -24,6 +24,7 @@
 #pragma once
 #include <cryptopp/integer.h>
 #include <cryptopp/aes.h>
+#include <string>
 #include <fc/reflect/variant.hpp>
 
 namespace decent{
@@ -37,6 +38,7 @@ public:
 
    d_integer(CryptoPP::Integer integer) : CryptoPP::Integer(integer) {};
    d_integer() : CryptoPP::Integer(){};
+   d_integer(std::string s): CryptoPP::Integer(s.c_str()){};
 };
 
 typedef std::vector<unsigned char> valtype;

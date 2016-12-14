@@ -94,12 +94,12 @@ d_integer generate_private_el_gamal_key();
 
 d_integer get_public_el_gamal_key(const d_integer &privateKey);
 
-encryption_results el_gamal_encrypt(const valtype &message, d_integer &publicKey, ciphertext &result);
+encryption_results el_gamal_encrypt(const point &message, const d_integer &publicKey, ciphertext &result);
 
-encryption_results el_gamal_decrypt(const ciphertext &input, d_integer &privateKey, valtype &plaintext);
+encryption_results el_gamal_decrypt(const ciphertext &input, const d_integer &privateKey, point &plaintext);
 
 encryption_results
-encrypt_with_proof(const valtype &message, const d_integer &privateKey, const d_integer &destinationPublicKey,
+encrypt_with_proof(const point &message, const d_integer &privateKey, const d_integer &destinationPublicKey,
                    const ciphertext &incoming, ciphertext &outgoing, delivery_proof &proof);
 
 bool

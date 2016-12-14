@@ -32,7 +32,10 @@ using decent::crypto::d_integer;
       static const uint8_t type_id  = impl_buying_history_object_type;
       account_id_type consumer;
       string URI;
+      vector<account_id_type> seeders_answered;
+      bool delivered;
       time_point_sec time;
+      bool rated = false;
    };
 
    struct by_URI_consumer;
@@ -104,4 +107,4 @@ FC_REFLECT_DERIVED(graphene::chain::buying_object,
 
 FC_REFLECT_DERIVED(graphene::chain::buying_history_object,
                    (graphene::db::object),
-                   (consumer)(URI)(time) )
+                   (consumer)(URI)(time)(delivered)(seeders_answered)(rated) )

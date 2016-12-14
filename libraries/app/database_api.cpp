@@ -146,6 +146,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       vector<content_object> list_content_by_bought( const uint32_t count )const;
       vector<seeder_object> list_publishers_by_price( const uint32_t count )const;
       vector<uint64_t> get_content_ratings( const string& URI)const;
+      optional<seeder_object> get_seeder(account_id_type) const;
 
    //private:
       template<typename T>
@@ -1695,6 +1696,11 @@ optional<content_object> database_api::get_content(const string& URI)const
    return my->get_content( URI );
 }
 
+optional<seeder_object> database_api::get_seeder(account_id_type aid) const
+{
+   return my->get_seeder(aid);
+}
+
 optional<content_object> database_api_impl::get_content( const string& URI )const
 {
    const auto& idx = _db.get_index_type<content_index>().indices().get<by_URI>();
@@ -1702,6 +1708,16 @@ optional<content_object> database_api_impl::get_content( const string& URI )cons
    if (itr != idx.end())
       return *itr;
    return optional<content_object>();
+}
+
+
+optional<seeder_object> database_api_impl::get_seeder(account_id_type aid) const
+{
+   const auto& idx = _db.get_index_type<seeder_index>().indices().get<by_seeder>();
+   auto itr = idx.find(aid);
+   if (itr != idx.end())
+      return *itr;
+   return optional<seeder_object>();
 }
 
 vector<content_object> database_api::list_content_by_author( const account_id_type& author )const
