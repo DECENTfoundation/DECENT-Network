@@ -354,7 +354,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
    }
 
    chain_id_type chain_id = genesis_state.compute_chain_id();
-
+   idump((chain_id));
    // Create global properties
    create<global_property_object>([&](global_property_object& p) {
        p.parameters = genesis_state.initial_parameters;
