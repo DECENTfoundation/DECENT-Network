@@ -433,8 +433,10 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       top.from = GRAPHENE_COMMITTEE_ACCOUNT;
       top.to = get_account_id( balance.owner );
       asset amount( balance.amount, get_asset_id( balance.asset_symbol ) );
-      top.amount = asset();
-
+      top.amount = amount;
+      ilog("creating balance");
+      idump((top));
+      idump((balance));
       apply_operation(genesis_eval_state, top);
    }
 
