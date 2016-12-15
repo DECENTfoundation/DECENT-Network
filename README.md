@@ -3,7 +3,7 @@ Intro for new developers
 
 This is a quick introduction to get new developers up to speed on Graphene.
 
-Starting Graphene
+Starting Decent
 -----------------
 
 For Ubuntu 14.04 LTS users, see this link first:
@@ -11,18 +11,20 @@ For Ubuntu 14.04 LTS users, see this link first:
 
 and then proceed with:
 
-    git clone https://github.com/cryptonomex/graphene.git
-    cd graphene
+    git clone ...
+    cd decent-core
     git submodule update --init --recursive
     cmake -DCMAKE_BUILD_TYPE=Debug .
     make
-    ./programs/witness_node/witness_node
-
-This will launch the witness node. If you would like to launch the command-line wallet, you must first specify a port
-for communication with the witness node. To do this, add text to `witness_node_data_dir/config.ini` as follows, then
-restart the node:
-
+    
+Then edit witness_node_data_dir to contain these lines:
+    seed-node = 185.8.165.21:33142
     rpc-endpoint = 127.0.0.1:8090
+    
+And run the witness node
+    ./programs/witness_node/witness_node --genesis-json genesis.json
+
+This will launch the witness node with the default genesis. 
 
 Then, in a separate terminal window, start the command-line wallet `cli_wallet`:
 
@@ -33,11 +35,37 @@ To set your iniital password to 'password' use:
     >>> set_password password
     >>> unlock password
 
-To import your initial balance:
+To import your account keys:
 
-    >>> import_balance nathan [5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3] true
+    >>> import_key [name] [private_wif_key]
+    
+The list of the test accounts is here:
 
-If you send private keys over this connection, `rpc-endpoint` should be bound to localhost for security.
+    suggest_brain_key 
+    {
+      "brain_priv_key": "BACCAE CARDOON BENI RIPSACK SORRA ARDUOUS WEEDERY UPCHOKE APERT ENZYME ARTISAN JAPERY RAFFIA MIJL PLEROME CONCHY",
+      "wif_priv_key": "5Kgs83SJvdTVmeRYBAE1WNyp8FLWpxYf1hsX5oejpqNvC7RLuwU",
+      "pub_key": "DCT7MQp1bzYqHEBifH2YuTy35ZYiNkP8eJJsVBVRG585xChJDc25F"
+    }
+    vazgen2
+
+
+    suggest_brain_key 
+    {
+      "brain_priv_key": "HUGSOME SHELLED COADAPT CYCAD SLINE BIFARA BEAD FIPPLE NUDITY EPOPTIC LABROSE SHINDIG OWL EGGHEAD VALLAR RESNUB",
+      "wif_priv_key": "5K1LBKuR77tJLfAwNRWrJ5okCD4xfkUR7JABTVBhaxZoE9tqsPD",
+      "pub_key": "DCT6vuWZiVB5w6LWhRhoVLjvvrDpxw5CwuWQNu1oSeeDCybRAtDQT"
+    }
+    artazor
+
+
+    suggest_brain_key 
+    {
+      "brain_priv_key": "ASTEISM DOGWOOD CUMBRE HERBIST INULASE SQUOZE SILEX PARAPH PIGGING SHIPLAP ENCRISP MYCELIA LEISURE ENDEVIL LATROBE DUCKERY",
+      "wif_priv_key": "5KZC42A8XHSSLE26xqAymkZiyqjfvhK9wNbQnrWQfyzfMeXceUV",
+      "pub_key": "DCT8KvRax7aDCdsdFLmdQrJ8BxdoK8hduQQyudC33Zf1pu4q67db2"
+    }
+    davit
 
 A list of CLI wallet commands is available
 [here](https://github.com/cryptonomex/graphene/blob/master/libraries/wallet/include/graphene/wallet/wallet.hpp).
