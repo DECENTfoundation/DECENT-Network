@@ -18,10 +18,12 @@ and then proceed with:
     make
     
 Then edit witness_node_data_dir to contain these lines:
+
     seed-node = 185.8.165.21:33142
     rpc-endpoint = 127.0.0.1:8090
     
 And run the witness node
+
     ./programs/witness_node/witness_node --genesis-json genesis.json
 
 This will launch the witness node with the default genesis. 
