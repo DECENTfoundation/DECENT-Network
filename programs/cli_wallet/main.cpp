@@ -155,8 +155,8 @@ int main( int argc, char** argv )
          }
          else
          {
-            wdata.chain_id = graphene::egenesis::get_egenesis_chain_id();
-            std::cout << "Starting a new wallet with chain ID " << wdata.chain_id.str() << " (from egenesis)\n";
+            wdata.chain_id = chain_id_type ("0000000000000000000000000000000000000000000000000000000000000000"); //graphene::egenesis::get_egenesis_chain_id();
+            std::cout << "Starting a new wallet with chain ID " << wdata.chain_id.str() << " (empty one)\n";
          }
       }
 
