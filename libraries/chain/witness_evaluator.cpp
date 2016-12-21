@@ -72,4 +72,20 @@ void_result witness_update_evaluator::do_apply( const witness_update_operation& 
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
+void_result witness_update_global_parameters_evaluator::do_evaluate(const witness_update_global_parameters_operation& o)
+{ try {
+      FC_ASSERT(trx_state->_is_proposed_trx);
+
+      return void_result();
+   } FC_CAPTURE_AND_RETHROW( (o) ) }
+
+void_result witness_update_global_parameters_evaluator::do_apply(const witness_update_global_parameters_operation& o)
+{ try {
+      db().modify(db().get_global_properties(), [&o](global_property_object& p) {
+         p.pending_parameters = o.new_parameters;
+      });
+
+      return void_result();
+   } FC_CAPTURE_AND_RETHROW( (o) ) }
+
 } } // graphene::chain
