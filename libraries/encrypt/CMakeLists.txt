@@ -1,25 +1,26 @@
-# PBC Library
-set (LIBPBC_PATH ${PROJECT_SOURCE_DIR}/libraries/contrib/pbc)
+find_package( PBC REQUIRED )
+find_package( CryptoPP REQUIRED )
 
-file(GLOB HEADERS "include/decent/encrypt/*.hpp")
-file(GLOB HEADERS "${LIBPBC_PATH}/include/*.h")
+file( GLOB HEADERS
+    "include/decent/encrypt/*.hpp"
+    "${PBC_INCLUDE_DIR}/pbc/*.h" )
 
 add_executable( test_encrypt test_encryption_utils.cpp ${HEADERS} )
 add_library( decent_encrypt
              encryptionutils.cpp
              custodyutils.cpp
-             ${HEADERS}
-        )
+             ${HEADERS} )
 
 # need to link graphene_debug_witness because plugins aren't sufficiently isolated #246
-target_link_libraries( decent_encrypt fc cryptopp)
-target_link_libraries( test_encrypt fc decent_encrypt cryptopp)
+target_link_libraries( decent_encrypt
+    PUBLIC fc pbc cryptopp )
+target_link_libraries( test_encrypt decent_encrypt )
 target_include_directories( decent_encrypt
-        PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" "${CMAKE_CURRENT_BINARY_DIR}/include"
-        PRIVATE ${LIBPBC_PATH}/include )
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" "${CMAKE_CURRENT_BINARY_DIR}/include" )
 target_include_directories( test_encrypt
-        PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" "${CMAKE_CURRENT_BINARY_DIR}/include" )
-INSTALL( TARGETS
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" "${CMAKE_CURRENT_BINARY_DIR}/include" )
+
+install( TARGETS
    decent_encrypt
    test_encrypt
 
