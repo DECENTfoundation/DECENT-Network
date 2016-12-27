@@ -63,3 +63,5 @@ object_database/*
 # vendors mut not be in repository
 */**/vendor/
 CMakeLists.txt.user
+
+xcode/***

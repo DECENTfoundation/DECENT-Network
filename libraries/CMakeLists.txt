@@ -10,5 +10,6 @@ add_subdirectory( time )
 add_subdirectory( utilities )
 add_subdirectory( app )
 add_subdirectory( plugins )
+add_subdirectory( package )
 add_subdirectory( wallet )
 
