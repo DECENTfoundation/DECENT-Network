@@ -22,41 +22,251 @@
  * THE SOFTWARE.
  */
 
+#include <boost/iostreams/device/file_descriptor.hpp>
+#include <boost/iostreams/filtering_stream.hpp>
+#include <boost/iostreams/filter/gzip.hpp>
+#include <boost/iostreams/device/file.hpp>
+#include <boost/uuid/uuid_generators.hpp>
+#include <boost/uuid/uuid.hpp>
+#include <boost/iostreams/copy.hpp>
+
+
+
 #include <graphene/package/package.hpp>
 
 #include <fc/exception/exception.hpp>
 #include <fc/network/ntp.hpp>
 #include <fc/thread/mutex.hpp>
 #include <fc/thread/scoped_lock.hpp>
-
+#include <iostream>
 #include <atomic>
 
 using namespace graphene::package;
+using namespace std;
+using namespace boost;
 using namespace boost::filesystem;
+using namespace boost::iostreams;
 
 
-PackageManager::PackageManager(const Path& contentPath, const Path& samples, const fc::sha512& key) 
-	: _contentPath(contentPath), _samples(samples), _packageKey(key) {
+namespace {
+
+struct arc_header {
+	char name[255];
+	char size[12];
+};
+
+class archiver {
+	filtering_ostream&   _out;
+public:
+	archiver(filtering_ostream& out): _out(out) {
+
+	}
+
+	void put(const std::string& file_name, file_source& in, int file_size) {
+		arc_header header;
+
+		std::memset((void*)&header, 0, sizeof(arc_header));
+
+	    std::snprintf(header.name, 255, "%s", file_name.c_str());
+	    std::sprintf(header.size, "%011llo", (long long unsigned int)file_size);
+
+
+		_out.write((const char*)&header,sizeof(arc_header));
+        
+        char buffer[4096];
+        int bytes_read = 0;
+        while (bytes_read > 0) {
+            bytes_read = in.read(buffer, 4096);
+            if (bytes_read > 0)
+                _out.write(buffer, bytes_read);
+        }
+		cout << file_name << endl;
+	}
+
+	void finalize() {
+		arc_header header;
+
+		std::memset((void*)&header, 0, sizeof(arc_header));
+		_out.write((const char*)&header,sizeof(arc_header));
+		_out.flush();        
+	}
+
+};
+
+
+
+
+class dearchiver {
+	filtering_istream&       _in;
+
+public:
+	dearchiver(filtering_istream& in): _in(in) {
+
+	}
+
+	void extract(const std::string& output_path) {
+		arc_header header;
+
+		std::memset((void*)&header, 0, sizeof(arc_header));
+
+	    std::snprintf(header.name, 255, "%s", file_name.c_str());
+	    std::sprintf(header.size, "%011llo", (long long unsigned int)file_size);
+
+
+		_out.write((const char*)&header,sizeof(arc_header));
+        
+        char buffer[4096];
+        int bytes_read = 0;
+        while (bytes_read > 0) {
+            bytes_read = in.read(buffer, 4096);
+            if (bytes_read > 0)
+                _out.write(buffer, bytes_read);
+        }
+		cout << file_name << endl;
+	}
+
+	void finalize() {
+		arc_header header;
+
+		std::memset((void*)&header, 0, sizeof(arc_header));
+		_out.write((const char*)&header,sizeof(arc_header));
+		_out.flush();        
+	}
+
+};
+
+
+
+
+string make_uuid() {
+	const int length = 32;
+
+    static string charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
+    string result;
+    result.resize(length);
+
+    srand(time(NULL));
+    for (int i = 0; i < length; i++)
+        result[i] = charset[rand() % charset.length()];
+
+    return result;
+}
+
+void get_files_recursive(boost::filesystem::path path, std::vector<boost::filesystem::path>& all_files) {
+ 
+    boost::filesystem::recursive_directory_iterator it = recursive_directory_iterator(path);
+    boost::filesystem::recursive_directory_iterator end;
+ 
+    while(it != end) // 2.
+    {
+    	if (is_regular_file(*it)) {
+    		all_files.push_back(*it);
+    	}
+
+        if(is_directory(*it) && is_symlink(*it))
+            it.no_push();
+ 
+        try
+        {
+            ++it;
+        }
+        catch(std::exception& ex)
+        {
+            std::cout << ex.what() << std::endl;
+            it.no_push();
+            try { ++it; } catch(...) { std::cout << "!!" << std::endl; return; }
+        }
+    }
+}
+
+
+boost::filesystem::path relative_path( const boost::filesystem::path &path, const boost::filesystem::path &relative_to )
+{
+    // create absolute paths
+    boost::filesystem::path p = absolute(path);
+    boost::filesystem::path r = absolute(relative_to);
+
+    // if root paths are different, return absolute path
+    if( p.root_path() != r.root_path() )
+        return p;
+
+    // initialize relative path
+    boost::filesystem::path result;
+
+    // find out where the two paths diverge
+    boost::filesystem::path::const_iterator itr_path = p.begin();
+    boost::filesystem::path::const_iterator itr_relative_to = r.begin();
+    while( *itr_path == *itr_relative_to && itr_path != p.end() && itr_relative_to != r.end() ) {
+        ++itr_path;
+        ++itr_relative_to;
+    }
+
+    // add "../" for each remaining token in relative_to
+    if( itr_relative_to != r.end() ) {
+        ++itr_relative_to;
+        while( itr_relative_to != r.end() ) {
+            result /= "..";
+            ++itr_relative_to;
+        }
+    }
+
+    // add remaining path
+    while( itr_path != p.end() ) {
+        result /= *itr_path;
+        ++itr_path;
+    }
+
+    return result;
+}
+
+
 
 }
 
-PackageManager::PackageManager(const Path& packagePath) : _packagePath(packagePath) {
+
+
+package_manager::package_manager(const path& content_path, const path& samples, const fc::sha512& key) 
+	: _content_path(content_path), _samples(samples), _package_key(key) {
+
+}
+
+package_manager::package_manager(const path& package_path) : _package_path(package_path) {
 
 }
 
 	
-bool PackageManager::unpackPackage(const Path& destinationDirectory, const fc::sha512& key, std::string* error) {
-	return false;
-}
-
-bool PackageManager::createPackage(const Path& destinationDirectory, std::string* error) {
-	if (!is_directory(destinationDirectory)) {
+bool package_manager::unpack_package(const path& destination_directory, const fc::sha512& key, std::string* error) {
+	if (!is_directory(destination_directory)) {
 		if (error)
 			*error = "Destination directory not found";
 		
 		return false;
 	}
-	if (!is_directory(_contentPath) && !is_regular_file(_contentPath)) {
+	if (!is_directory(_package_path)) {
+		if (error)
+			*error = "Package path is not directory";
+		
+		return false;
+	}
+	
+	path archive_file = _package_path / "content.zip.aes";
+    
+    file_source source(all_files[i].string(), std::ifstream::binary);
+    dearchiver dearc(source);
+    dearc.extract(destination_directory);
+
+
+	return false;
+}
+
+bool package_manager::create_package(const path& destination_directory, std::string* error) {
+	if (!is_directory(destination_directory)) {
+		if (error)
+			*error = "Destination directory not found";
+		
+		return false;
+	}
+	if (!is_directory(_content_path) && !is_regular_file(_content_path)) {
 		if (error)
 			*error = "Content path is not directory or file";
 		
@@ -69,35 +279,61 @@ bool PackageManager::createPackage(const Path& destinationDirectory, std::string
 		return false;
 	}
 
-	path tempPath = temp_directory_path();
+	path tempPath = destination_directory / make_uuid();
+	if (!create_directory(tempPath)) {
+		if (error)
+			*error = "Failed to create temporary directory";
+		
+		return false;
+	}
+
+
+	path content_zip = tempPath / "content.zip.aes";
+	cout << tempPath << "\n";
+
+	filtering_ostream out;
+    //out.push(gzip_compressor());
+    out.push(file_sink(content_zip.string(), std::ofstream::binary));
+	archiver arc(out);
+
+	vector<path> all_files;
+	get_files_recursive(_content_path, all_files);
+	for (int i = 0; i < all_files.size(); ++i) {
+        file_source source(all_files[i].string(), std::ifstream::binary);
+        
+		arc.put(relative_path(all_files[i], _content_path).string(), source, file_size(all_files[i]));
+	}
+
+	arc.finalize();
+
 
 
 	return false;
 }
 	
-const PackageManager::Path& PackageManager::getPackagePath() const {
-	return _packagePath;
+const package_manager::path& package_manager::get_package_path() const {
+	return _package_path;
 }
 
-const PackageManager::Path& PackageManager::getCustodyFile() {
-	return _custodyFile;
+const package_manager::path& package_manager::get_custody_file() {
+	return _custody_file;
 }
 
-const PackageManager::Path& PackageManager::getContentFile() {
-	return _contentFile;
+const package_manager::path& package_manager::get_content_file() {
+	return _content_file;
 }
 
-const PackageManager::Path& PackageManager::getSamplesPath() {
-    return PackageManager::Path();
+const package_manager::path& package_manager::get_samples_path() {
+    return package_manager::path();
 }
 
 
-bool PackageManager::verifyHash() const {
+bool package_manager::verify_hash() const {
 	return true;
 }
 
 fc::ripemd160 
-PackageManager::getHash() const {
+package_manager::get_hash() const {
 	return fc::ripemd160();
 }
 

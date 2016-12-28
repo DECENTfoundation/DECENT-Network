@@ -16,40 +16,39 @@ namespace package {
 
 
 
-class PackageManager {
+class package_manager {
 public:
-	typedef std::vector<boost::filesystem::path>		PathList;
-	typedef boost::filesystem::path 					Path;
+	typedef boost::filesystem::path 					path;
 
 
 public:
 
-	PackageManager(const Path& contentPath, const Path& samples, const fc::sha512& key); //creates the package out of submitted files; encrypts the content and generates hash, generate custody file 
-	PackageManager(const Path& packagePath); //creates the package object out of downloaded package 
+	package_manager(const path& content_path, const path& samples, const fc::sha512& key); //creates the package out of submitted files; encrypts the content and generates hash, generate custody file 
+	package_manager(const path& package_path); //creates the package object out of downloaded package 
 
 	
-	bool unpackPackage(const Path& destinationDirectory, const fc::sha512& key, std::string* error); 
-	bool createPackage(const Path& destinationDirectory, std::string* error); 
+	bool unpack_package(const path& destination_directory, const fc::sha512& key, std::string* error); 
+	bool create_package(const path& destination_directory, std::string* error); 
 	
-	const Path& getPackagePath() const; 
+	const path& get_package_path() const; 
 
-	const Path& getCustodyFile();  // content.cus 
-	const Path& getContentFile();  // content.zip.aes
-	const Path& getSamplesPath(); 	   // Samples/
+	const path& get_custody_file();  // content.cus 
+	const path& get_content_file();  // content.zip.aes
+	const path& get_samples_path(); 	   // Samples/
 
-	bool verifyHash() const;
-	fc::ripemd160 getHash() const;
+	bool verify_hash() const;
+	fc::ripemd160 get_hash() const;
 
 private:
 	fc::ripemd160 	_hash; 
 
-	Path 			_contentPath;
-	Path 			_samples;
-	fc::sha512		_packageKey;
+	path 			_content_path;
+	path 			_samples;
+	fc::sha512		_package_key;
 
-	Path 			_custodyFile;
-	Path 			_contentFile;
-	Path 			_packagePath;
+	path 			_custody_file;
+	path 			_content_file;
+	path 			_package_path;
 };
 
 

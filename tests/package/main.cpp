@@ -102,10 +102,10 @@ int main( int argc, char** argv )
 		} else {
 			cout << "Creating package..." << endl;
 
-			PackageManager pacman(contentPath, samplesPath, fc::sha512(key));
+			package_manager pacman(contentPath, samplesPath, fc::sha512(key));
 			string error;
-			if (pacman.createPackage(packagePath, &error)) {
-				cout << "Package created " << pacman.getHash() << endl;
+			if (pacman.create_package(packagePath, &error)) {
+				cout << "Package created " << pacman.get_hash() << endl;
 			} else {
 				cout << "Failed to create package: " << error << endl;
 			}
