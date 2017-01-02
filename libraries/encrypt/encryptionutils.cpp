@@ -30,10 +30,11 @@ std::string d_integer::to_string() const
 }
 
 
-d_integer d_integer::from_string(std::string from)const
+d_integer d_integer::from_string(std::string from)
 {
    CryptoPP::Integer tmp(from.c_str());
-   return tmp;
+   d_integer tmp2(tmp);
+   return tmp2;
 }
 
 encryption_results AES_encrypt_file(const std::string &fileIn, const std::string &fileOut, const aes_key &key) {

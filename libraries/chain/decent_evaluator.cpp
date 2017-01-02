@@ -54,7 +54,7 @@ namespace graphene { namespace chain {
             itr1++;
             itr2++;
          }
-         co.hash = o. hash;
+         co._hash = o.hash;
          co.quorum = o.quorum;
          co.expiration = o.expiration;
          co.created = db().head_block_time();
@@ -96,23 +96,30 @@ namespace graphene { namespace chain {
    }
 
    void_result deliver_keys_evaluator::do_evaluate(const deliver_keys_operation& o )
-   {
+   {try{
       const auto& buying = db().get<buying_object>(o.buying);
       auto& idx = db().get_index_type<content_index>().indices().get<by_URI>();
 
       const auto& content = idx.find( buying.URI );
       FC_ASSERT( content != idx.end() );
-      const auto& seeder = db().get<seeder_object>( o.seeder );
-      const auto& seeder_pubKey = seeder.pubKey;
+
+      auto& sidx = db().get_index_type<seeder_index>().indices().get<by_seeder>();
+      const auto& seeder = sidx.find(o.seeder);
+
+      const auto& seeder_pubKey = seeder->pubKey;
       const auto& buyer_pubKey = buying.pubKey;
       const auto& firstK = content->key_parts.at( o.seeder );
       const auto& secondK = o.key;
       const auto& proof = o.proof;
       FC_ASSERT( decent::crypto::verify_delivery_proof( proof, firstK, secondK, seeder_pubKey, buyer_pubKey) );
-   }
+   }catch( ... )
+   {
+      fc::unhandled_exception e( FC_LOG_MESSAGE( warn, "throw"), std::current_exception() );
+      wlog( "${details}", ("details",e.to_detail_string()) ); 
+   }}
 
    void_result deliver_keys_evaluator::do_apply(const deliver_keys_operation& o )
-   {
+   {try{
       const auto& buying = db().get<buying_object>(o.buying);
       bool expired = ( buying.expiration_time > db().head_block_time() );
       auto& idx = db().get_index_type<content_index>().indices().get<by_URI>();
@@ -121,6 +128,7 @@ namespace graphene { namespace chain {
       db().modify<buying_object>(buying, [&](buying_object& bo){
            bo.seeders_answered.push_back( o.seeder );
            delivered = ( bo.seeders_answered.size() >= content->quorum );
+           bo.key_particles.push_back( o.key );
       });
       if( delivered || expired )
       {
@@ -128,6 +136,7 @@ namespace graphene { namespace chain {
               bho.consumer = buying.consumer;
               bho.delivered = delivered;
               bho.seeders_answered = buying.seeders_answered;
+              bho.key_particles = buying.key_particles;
               bho.URI = buying.URI;
               bho.time = db().head_block_time();
          });
@@ -137,6 +146,11 @@ namespace graphene { namespace chain {
       {
          db().modify<content_object>( *content, []( content_object& co ){ co.times_bought++; });
       }
+   }catch( ... )
+   {
+      fc::unhandled_exception e( FC_LOG_MESSAGE( warn, "throw"), std::current_exception() ); 
+      wlog( "${details}", ("details",e.to_detail_string()) ); 
+   }
    }
 
    void_result leave_rating_evaluator::do_evaluate(const leave_rating_operation& o )

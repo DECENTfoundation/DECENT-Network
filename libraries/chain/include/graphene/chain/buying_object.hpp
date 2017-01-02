@@ -21,6 +21,7 @@ using decent::crypto::d_integer;
       account_id_type consumer;
       string URI;
       vector<account_id_type> seeders_answered;
+      vector<decent::crypto::ciphertext> key_particles;
       d_integer pubKey;
       time_point_sec expiration_time;
    };
@@ -30,9 +31,11 @@ using decent::crypto::d_integer;
    public:
       static const uint8_t space_id = implementation_ids;
       static const uint8_t type_id  = impl_buying_history_object_type;
+      buying_id_type buying;
       account_id_type consumer;
       string URI;
       vector<account_id_type> seeders_answered;
+      vector<decent::crypto::ciphertext> key_particles;
       bool delivered;
       time_point_sec time;
       bool rated = false;
@@ -69,6 +72,7 @@ using decent::crypto::d_integer;
    typedef generic_index< buying_object, buying_object_multi_index_type > buying_index;
 
    struct by_consumer_time;
+   struct by_buying;
 
    typedef multi_index_container<
       buying_history_object,
@@ -76,6 +80,9 @@ using decent::crypto::d_integer;
              ordered_unique< tag<by_id>,
                 member< object, object_id_type, &object::id >
              >,
+             ordered_unique< tag<by_buying>,
+                member< buying_history_object, buying_id_type, &buying_history_object::buying >
+             >,  
              ordered_unique< tag< by_URI_consumer>,
                 composite_key< buying_history_object,
                    member<buying_history_object, string, &buying_history_object::URI>,
@@ -103,8 +110,8 @@ typedef generic_index< buying_history_object, buying_history_object_multi_index_
 
 FC_REFLECT_DERIVED(graphene::chain::buying_object,
                    (graphene::db::object),
-                   (consumer)(URI)(seeders_answered)(expiration_time)(pubKey) )
+                   (consumer)(URI)(seeders_answered)(expiration_time)(pubKey)(key_particles) )
 
 FC_REFLECT_DERIVED(graphene::chain::buying_history_object,
                    (graphene::db::object),
-                   (consumer)(URI)(time)(delivered)(seeders_answered)(rated) )
+                   (consumer)(URI)(time)(delivered)(seeders_answered)(rated)(key_particles)(buying) )

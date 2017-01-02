@@ -2383,7 +2383,7 @@ public:
       op.space = space;
       op.price_per_MByte = price_per_MByte;
       op.pubKey = pubKey;
-      
+
       signed_transaction tx;
       tx.operations.push_back( op );
       set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);

@@ -34,7 +34,7 @@ class d_integer : public CryptoPP::Integer {
 public:
    std::string to_string() const;
 
-   d_integer from_string(std::string from) const;
+   static d_integer from_string(std::string from) ;
 
    d_integer(CryptoPP::Integer integer) : CryptoPP::Integer(integer) {};
    d_integer() : CryptoPP::Integer(){};
@@ -68,6 +68,17 @@ struct aes_key {
    unsigned char key_byte[CryptoPP::AES::MAX_KEYLENGTH];
 };
 }}
+
+
+
+namespace fc {
+   inline void to_variant( const decent::crypto::d_integer& var,  fc::variant& vo ) { 
+      vo = var.to_string();
+   }
+   inline void from_variant( const fc::variant& var, decent::crypto::d_integer& vo ) {
+      vo = decent::crypto::d_integer::from_string( var.as_string() );
+   }
+}
 
 FC_REFLECT_EMPTY(decent::crypto::d_integer)
 
