@@ -89,11 +89,9 @@
 #define GRAPHENE_DEFAULT_MARGIN_PERIOD_SEC              (30*60*60*24)
 
 #define GRAPHENE_DEFAULT_MIN_WITNESS_COUNT                    (11)
-#define GRAPHENE_DEFAULT_MIN_COMMITTEE_MEMBER_COUNT           (11)
 #define GRAPHENE_DEFAULT_MAX_WITNESSES                        (1001) // SHOULD BE ODD
-#define GRAPHENE_DEFAULT_MAX_COMMITTEE                        (1001) // SHOULD BE ODD
 #define GRAPHENE_DEFAULT_MAX_PROPOSAL_LIFETIME_SEC            (60*60*24*7*4) // Four weeks
-#define GRAPHENE_DEFAULT_COMMITTEE_PROPOSAL_REVIEW_PERIOD_SEC (60*60*24*7*2) // Two weeks
+#define GRAPHENE_DEFAULT_WITNESS_PROPOSAL_REVIEW_PERIOD_SEC   (60*60*24*7*2) // Two weeks
 #define GRAPHENE_DEFAULT_NETWORK_PERCENT_OF_FEE               (20*GRAPHENE_1_PERCENT)
 #define GRAPHENE_DEFAULT_LIFETIME_REFERRER_PERCENT_OF_FEE     (30*GRAPHENE_1_PERCENT)
 #define GRAPHENE_DEFAULT_MAX_BULK_DISCOUNT_PERCENT            (50*GRAPHENE_1_PERCENT)
@@ -152,18 +150,14 @@
  *  Reserved Account IDs with special meaning
  */
 ///@{
-/// Represents the current committee members, two-week review period
-#define GRAPHENE_COMMITTEE_ACCOUNT (graphene::chain::account_id_type(0))
 /// Represents the current witnesses
-#define GRAPHENE_WITNESS_ACCOUNT (graphene::chain::account_id_type(1))
-/// Represents the current committee members
-#define GRAPHENE_RELAXED_COMMITTEE_ACCOUNT (graphene::chain::account_id_type(2))
+#define GRAPHENE_WITNESS_ACCOUNT (graphene::chain::account_id_type(0))
 /// Represents the canonical account with NO authority (nobody can access funds in null account)
-#define GRAPHENE_NULL_ACCOUNT (graphene::chain::account_id_type(3))
+#define GRAPHENE_NULL_ACCOUNT (graphene::chain::account_id_type(1))
 /// Represents the canonical account with WILDCARD authority (anybody can access funds in temp account)
-#define GRAPHENE_TEMP_ACCOUNT (graphene::chain::account_id_type(4))
+#define GRAPHENE_TEMP_ACCOUNT (graphene::chain::account_id_type(2))
 /// Represents the canonical account for specifying you will vote directly (as opposed to a proxy)
-#define GRAPHENE_PROXY_TO_SELF_ACCOUNT (graphene::chain::account_id_type(5))
+#define GRAPHENE_PROXY_TO_SELF_ACCOUNT (graphene::chain::account_id_type(3))
 /// Sentinel value used in the scheduler.
 #define GRAPHENE_NULL_WITNESS (graphene::chain::witness_id_type(0))
 ///@}

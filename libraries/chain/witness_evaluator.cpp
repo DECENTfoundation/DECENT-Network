@@ -23,7 +23,6 @@
  */
 #include <graphene/chain/witness_evaluator.hpp>
 #include <graphene/chain/witness_object.hpp>
-#include <graphene/chain/committee_member_object.hpp>
 #include <graphene/chain/account_object.hpp>
 #include <graphene/chain/database.hpp>
 #include <graphene/chain/protocol/vote.hpp>

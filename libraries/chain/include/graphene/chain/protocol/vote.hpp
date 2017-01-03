@@ -61,7 +61,6 @@ struct vote_id_type
    friend size_t hash_value( vote_id_type v ) { return std::hash<uint32_t>()(v.content); }
    enum vote_type
    {
-      committee,
       witness,
       VOTE_TYPE_COUNT
    };

@@ -72,6 +72,18 @@ namespace graphene { namespace chain {
       void            validate()const;
    };
 
+
+   /**
+    * @brief Used by witnesses to update the global parameters of the blockchain.
+    * @ingroup operations
+    *
+    * This operation allows the witnesses to update the global parameters on the blockchain. These control various
+    * tunable aspects of the chain, including block and maintenance intervals, maximum data sizes, the fees charged by
+    * the network, etc.
+    *
+    * This operation may only be used in a proposed transaction, and a proposed transaction which contains this
+    * operation must have a review period specified in the current global parameters before it may be accepted.
+    */
    struct witness_update_global_parameters_operation : public base_operation
    {
       struct fee_parameters_type { uint64_t fee = GRAPHENE_BLOCKCHAIN_PRECISION; };

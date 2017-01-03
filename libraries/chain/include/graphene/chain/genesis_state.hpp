@@ -79,10 +79,6 @@ struct genesis_state_type {
       string owner_name;
       public_key_type block_signing_key;
    };
-   struct initial_committee_member_type {
-      /// Must correspond to one of the initial accounts
-      string owner_name;
-   };
 
    time_point_sec                           initial_timestamp;
    share_type                               max_core_supply = GRAPHENE_MAX_SHARE_SUPPLY;
@@ -93,7 +89,6 @@ struct genesis_state_type {
    vector<initial_balance_type>             initial_balances;
    uint64_t                                 initial_active_witnesses = GRAPHENE_DEFAULT_MIN_WITNESS_COUNT;
    vector<initial_witness_type>             initial_witness_candidates;
-   vector<initial_committee_member_type>    initial_committee_candidates;
 
    /**
     * Temporary, will be moved elsewhere.

@@ -496,7 +496,6 @@ public:
       result["chain_id"] = chain_props.chain_id;
       result["participation"] = (100*dynamic_props.recent_slots_filled.popcount()) / 128.0;
       result["active_witnesses"] = global_props.active_witnesses;
-      result["active_committee_members"] = global_props.active_committee_members;
       return result;
    }
 
@@ -1334,24 +1333,6 @@ public:
       return sign_transaction( tx, broadcast );
    } FC_CAPTURE_AND_RETHROW( (authorizing_account)(account_to_list)(new_listing_status)(broadcast) ) }
 
-   signed_transaction create_committee_member(string owner_account, string url,
-                                      bool broadcast /* = false */)
-   { try {
-
-      committee_member_create_operation committee_member_create_op;
-      committee_member_create_op.committee_member_account = get_account_id(owner_account);
-      committee_member_create_op.url = url;
-      if (_remote_db->get_committee_member_by_account(committee_member_create_op.committee_member_account))
-         FC_THROW("Account ${owner_account} is already a committee_member", ("owner_account", owner_account));
-
-      signed_transaction tx;
-      tx.operations.push_back( committee_member_create_op );
-      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
-      tx.validate();
-
-      return sign_transaction( tx, broadcast );
-   } FC_CAPTURE_AND_RETHROW( (owner_account)(broadcast) ) }
-
    witness_object get_witness(string owner_account)
    {
       try
@@ -1381,41 +1362,6 @@ public:
             catch (const fc::exception&)
             {
                FC_THROW("No account or witness named ${account}", ("account", owner_account));
-            }
-         }
-      }
-      FC_CAPTURE_AND_RETHROW( (owner_account) )
-   }
-
-   committee_member_object get_committee_member(string owner_account)
-   {
-      try
-      {
-         fc::optional<committee_member_id_type> committee_member_id = maybe_id<committee_member_id_type>(owner_account);
-         if (committee_member_id)
-         {
-            std::vector<committee_member_id_type> ids_to_get;
-            ids_to_get.push_back(*committee_member_id);
-            std::vector<fc::optional<committee_member_object>> committee_member_objects = _remote_db->get_committee_members(ids_to_get);
-            if (committee_member_objects.front())
-               return *committee_member_objects.front();
-            FC_THROW("No committee_member is registered for id ${id}", ("id", owner_account));
-         }
-         else
-         {
-            // then maybe it's the owner account
-            try
-            {
-               account_id_type owner_account_id = get_account_id(owner_account);
-               fc::optional<committee_member_object> committee_member = _remote_db->get_committee_member_by_account(owner_account_id);
-               if (committee_member)
-                  return *committee_member;
-               else
-                  FC_THROW("No committee_member is registered for account ${account}", ("account", owner_account));
-            }
-            catch (const fc::exception&)
-            {
-               FC_THROW("No account or committee_member named ${account}", ("account", owner_account));
             }
          }
       }
@@ -1534,40 +1480,6 @@ public:
    } FC_CAPTURE_AND_RETHROW( (witness_name)(amount) )
    }
 
-   signed_transaction vote_for_committee_member(string voting_account,
-                                        string committee_member,
-                                        bool approve,
-                                        bool broadcast /* = false */)
-   { try {
-      account_object voting_account_object = get_account(voting_account);
-      account_id_type committee_member_owner_account_id = get_account_id(committee_member);
-      fc::optional<committee_member_object> committee_member_obj = _remote_db->get_committee_member_by_account(committee_member_owner_account_id);
-      if (!committee_member_obj)
-         FC_THROW("Account ${committee_member} is not registered as a committee_member", ("committee_member", committee_member));
-      if (approve)
-      {
-         auto insert_result = voting_account_object.options.votes.insert(committee_member_obj->vote_id);
-         if (!insert_result.second)
-            FC_THROW("Account ${account} was already voting for committee_member ${committee_member}", ("account", voting_account)("committee_member", committee_member));
-      }
-      else
-      {
-         unsigned votes_removed = voting_account_object.options.votes.erase(committee_member_obj->vote_id);
-         if (!votes_removed)
-            FC_THROW("Account ${account} is already not voting for committee_member ${committee_member}", ("account", voting_account)("committee_member", committee_member));
-      }
-      account_update_operation account_update_op;
-      account_update_op.account = voting_account_object.id;
-      account_update_op.new_options = voting_account_object.options;
-
-      signed_transaction tx;
-      tx.operations.push_back( account_update_op );
-      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
-      tx.validate();
-
-      return sign_transaction( tx, broadcast );
-   } FC_CAPTURE_AND_RETHROW( (voting_account)(committee_member)(approve)(broadcast) ) }
-
    signed_transaction vote_for_witness(string voting_account,
                                         string witness,
                                         bool approve,
@@ -1633,19 +1545,16 @@ public:
       return sign_transaction( tx, broadcast );
    } FC_CAPTURE_AND_RETHROW( (account_to_modify)(voting_account)(broadcast) ) }
 
-   signed_transaction set_desired_witness_and_committee_member_count(string account_to_modify,
+   signed_transaction set_desired_witness_member_count(string account_to_modify,
                                                              uint16_t desired_number_of_witnesses,
-                                                             uint16_t desired_number_of_committee_members,
                                                              bool broadcast /* = false */)
    { try {
       account_object account_object_to_modify = get_account(account_to_modify);
 
-      if (account_object_to_modify.options.num_witness == desired_number_of_witnesses &&
-          account_object_to_modify.options.num_committee == desired_number_of_committee_members)
-         FC_THROW("Account ${account} is already voting for ${witnesses} witnesses and ${committee_members} committee_members",
-                  ("account", account_to_modify)("witnesses", desired_number_of_witnesses)("committee_members",desired_number_of_witnesses));
+      if (account_object_to_modify.options.num_witness == desired_number_of_witnesses)
+         FC_THROW("Account ${account} is already voting for ${witnesses} witnesses",
+                  ("account", account_to_modify)("witnesses", desired_number_of_witnesses));
       account_object_to_modify.options.num_witness = desired_number_of_witnesses;
-      account_object_to_modify.options.num_committee = desired_number_of_committee_members;
 
       account_update_operation account_update_op;
       account_update_op.account = account_object_to_modify.id;
@@ -1657,7 +1566,7 @@ public:
       tx.validate();
 
       return sign_transaction( tx, broadcast );
-   } FC_CAPTURE_AND_RETHROW( (account_to_modify)(desired_number_of_witnesses)(desired_number_of_committee_members)(broadcast) ) }
+   } FC_CAPTURE_AND_RETHROW( (account_to_modify)(desired_number_of_witnesses)(broadcast) ) }
 
    signed_transaction sign_transaction(signed_transaction tx, bool broadcast = false)
    {
@@ -2136,13 +2045,13 @@ public:
          fc::from_variant_visitor<chain_parameters>( changed_values, new_params )
          );
 
-      committee_member_update_global_parameters_operation update_op;
+      witness_update_global_parameters_operation update_op;
       update_op.new_parameters = new_params;
 
       proposal_create_operation prop_op;
 
       prop_op.expiration_time = expiration_time;
-      prop_op.review_period_seconds = current_params.committee_proposal_review_period;
+      prop_op.review_period_seconds = current_params.witness_proposal_review_period;
       prop_op.fee_paying_account = get_account(proposing_account).id;
 
       prop_op.proposed_ops.emplace_back( update_op );
@@ -2218,13 +2127,13 @@ public:
       chain_parameters new_params = current_params;
       new_params.current_fees = new_fees;
 
-      committee_member_update_global_parameters_operation update_op;
+      witness_update_global_parameters_operation update_op;
       update_op.new_parameters = new_params;
 
       proposal_create_operation prop_op;
 
       prop_op.expiration_time = expiration_time;
-      prop_op.review_period_seconds = current_params.committee_proposal_review_period;
+      prop_op.review_period_seconds = current_params.witness_proposal_review_period;
       prop_op.fee_paying_account = get_account(proposing_account).id;
 
       prop_op.proposed_ops.emplace_back( update_op );
@@ -3253,30 +3162,14 @@ signed_transaction wallet_api::whitelist_account(string authorizing_account,
    return my->whitelist_account(authorizing_account, account_to_list, new_listing_status, broadcast);
 }
 
-signed_transaction wallet_api::create_committee_member(string owner_account, string url,
-                                               bool broadcast /* = false */)
-{
-   return my->create_committee_member(owner_account, url, broadcast);
-}
-
 map<string,witness_id_type> wallet_api::list_witnesses(const string& lowerbound, uint32_t limit)
 {
    return my->_remote_db->lookup_witness_accounts(lowerbound, limit);
 }
 
-map<string,committee_member_id_type> wallet_api::list_committee_members(const string& lowerbound, uint32_t limit)
-{
-   return my->_remote_db->lookup_committee_member_accounts(lowerbound, limit);
-}
-
 witness_object wallet_api::get_witness(string owner_account)
 {
    return my->get_witness(owner_account);
-}
-
-committee_member_object wallet_api::get_committee_member(string owner_account)
-{
-   return my->get_committee_member(owner_account);
 }
 
 signed_transaction wallet_api::create_witness(string owner_account,
@@ -3309,14 +3202,6 @@ signed_transaction wallet_api::withdraw_vesting(
    return my->withdraw_vesting( witness_name, amount, asset_symbol, broadcast );
 }
 
-signed_transaction wallet_api::vote_for_committee_member(string voting_account,
-                                                 string witness,
-                                                 bool approve,
-                                                 bool broadcast /* = false */)
-{
-   return my->vote_for_committee_member(voting_account, witness, approve, broadcast);
-}
-
 signed_transaction wallet_api::vote_for_witness(string voting_account,
                                                 string witness,
                                                 bool approve,
@@ -3332,13 +3217,11 @@ signed_transaction wallet_api::set_voting_proxy(string account_to_modify,
    return my->set_voting_proxy(account_to_modify, voting_account, broadcast);
 }
 
-signed_transaction wallet_api::set_desired_witness_and_committee_member_count(string account_to_modify,
+signed_transaction wallet_api::set_desired_witness_count(string account_to_modify,
                                                                       uint16_t desired_number_of_witnesses,
-                                                                      uint16_t desired_number_of_committee_members,
                                                                       bool broadcast /* = false */)
 {
-   return my->set_desired_witness_and_committee_member_count(account_to_modify, desired_number_of_witnesses,
-                                                     desired_number_of_committee_members, broadcast);
+   return my->set_desired_witness_count(account_to_modify, desired_number_of_witnesses, broadcast);
 }
 
 void wallet_api::set_wallet_filename(string wallet_filename)

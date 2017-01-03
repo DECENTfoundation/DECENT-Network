@@ -95,7 +95,6 @@ namespace graphene { namespace chain {
       global_settle        = 0x20, /**< allow the bitasset issuer to force a global settling -- this may be set in permissions, but not flags */
       disable_confidential = 0x40, /**< allow the asset to be used with confidential transactions */
       witness_fed_asset    = 0x80, /**< allow the asset to be fed by witnesses */
-      committee_fed_asset  = 0x100 /**< allow the asset to be fed by the committee */
    };
    const static uint32_t ASSET_ISSUER_PERMISSION_MASK = charge_market_fee|white_list|override_authority|transfer_restricted|disable_force_settle|global_settle|disable_confidential
       |witness_fed_asset|committee_fed_asset;
@@ -124,7 +123,6 @@ namespace graphene { namespace chain {
       account_object_type,
       asset_object_type,
       force_settlement_object_type,
-      committee_member_object_type,
       witness_object_type,
       limit_order_object_type,
       call_order_object_type,
@@ -179,7 +177,6 @@ namespace graphene { namespace chain {
    typedef object_id< protocol_ids, account_object_type,            account_object>               account_id_type;
    typedef object_id< protocol_ids, asset_object_type,              asset_object>                 asset_id_type;
    typedef object_id< protocol_ids, force_settlement_object_type,   force_settlement_object>      force_settlement_id_type;
-   typedef object_id< protocol_ids, committee_member_object_type,           committee_member_object>              committee_member_id_type;
    typedef object_id< protocol_ids, witness_object_type,            witness_object>               witness_id_type;
    typedef object_id< protocol_ids, limit_order_object_type,        limit_order_object>           limit_order_id_type;
    typedef object_id< protocol_ids, call_order_object_type,         call_order_object>            call_order_id_type;
@@ -346,7 +343,6 @@ FC_REFLECT_ENUM( graphene::chain::object_type,
                  (account_object_type)
                  (force_settlement_object_type)
                  (asset_object_type)
-                 (committee_member_object_type)
                  (witness_object_type)
                  (limit_order_object_type)
                  (call_order_object_type)
@@ -385,7 +381,6 @@ FC_REFLECT_TYPENAME( graphene::chain::share_type )
 FC_REFLECT_TYPENAME( graphene::chain::account_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::asset_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::force_settlement_id_type )
-FC_REFLECT_TYPENAME( graphene::chain::committee_member_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::witness_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::limit_order_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::call_order_id_type )

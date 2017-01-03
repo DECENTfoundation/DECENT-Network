@@ -34,7 +34,6 @@
 #include <graphene/chain/budget_record_object.hpp>
 #include <graphene/chain/buyback_object.hpp>
 #include <graphene/chain/chain_property_object.hpp>
-#include <graphene/chain/committee_member_object.hpp>
 #include <graphene/chain/global_property_object.hpp>
 #include <graphene/chain/market_object.hpp>
 #include <graphene/chain/vesting_balance_object.hpp>
@@ -394,7 +393,6 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
       {
          d._vote_tally_buffer.resize(props.next_available_vote_id);
          d._witness_count_histogram_buffer.resize(props.parameters.maximum_witness_count / 2 + 1);
-         d._committee_count_histogram_buffer.resize(props.parameters.maximum_committee_count / 2 + 1);
          d._total_voting_stake = 0;
       }
 
@@ -429,16 +427,6 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
             // parameter was lowered.
             d._witness_count_histogram_buffer[offset] += voting_stake;
          }
-         if( opinion_account.options.num_committee <= props.parameters.maximum_committee_count )
-         {
-            uint16_t offset = std::min(size_t(opinion_account.options.num_committee/2),
-                                       d._committee_count_histogram_buffer.size() - 1);
-            // votes for a number greater than maximum_committee_count
-            // are turned into votes for maximum_committee_count.
-            //
-            // same rationale as for witnesses
-            d._committee_count_histogram_buffer[offset] += voting_stake;
-         }
          
          d._total_voting_stake += voting_stake;
       }
@@ -472,7 +460,6 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
                 c(_vote_tally_buffer);
 
    update_active_witnesses();
-   update_active_committee_members();
 
    modify(gpo, [this](global_property_object& p) {
       // Remove scaling of account registration fee

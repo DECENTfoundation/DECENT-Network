@@ -30,7 +30,6 @@
 
 #include <graphene/chain/account_object.hpp>
 #include <graphene/chain/asset_object.hpp>
-#include <graphene/chain/committee_member_object.hpp>
 #include <graphene/chain/market_object.hpp>
 #include <graphene/chain/vesting_balance_object.hpp>
 #include <graphene/chain/withdraw_permission_object.hpp>
@@ -82,7 +81,7 @@ BOOST_AUTO_TEST_CASE( call_order_update_test )
       const auto& bitusd = create_bitasset("USDBIT", sam.id);
       const auto& core   = asset_id_type()(db);
 
-      transfer(committee_account, dan_id, asset(10000000));
+      transfer(witness_account, dan_id, asset(10000000));
       update_feed_producers( bitusd, {sam.id} );
 
       price_feed current_feed; current_feed.settlement_price = bitusd.amount( 100 ) / core.amount(100);
@@ -172,9 +171,9 @@ BOOST_AUTO_TEST_CASE( margin_call_limit_test )
 
       int64_t init_balance(1000000);
 
-      transfer(committee_account, buyer_id, asset(init_balance));
-      transfer(committee_account, borrower_id, asset(init_balance));
-      transfer(committee_account, borrower2_id, asset(init_balance));
+      transfer(witness_account, buyer_id, asset(init_balance));
+      transfer(witness_account, borrower_id, asset(init_balance));
+      transfer(witness_account, borrower2_id, asset(init_balance));
       update_feed_producers( bitusd, {feedproducer.id} );
 
       price_feed current_feed;
@@ -229,9 +228,9 @@ BOOST_AUTO_TEST_CASE( black_swan )
 
       int64_t init_balance(1000000);
 
-      transfer(committee_account, buyer_id, asset(init_balance));
-      transfer(committee_account, borrower_id, asset(init_balance));
-      transfer(committee_account, borrower2_id, asset(init_balance));
+      transfer(witness_account, buyer_id, asset(init_balance));
+      transfer(witness_account, borrower_id, asset(init_balance));
+      transfer(witness_account, borrower2_id, asset(init_balance));
       update_feed_producers(bitusd, {feedproducer.id});
 
       price_feed current_feed;
@@ -288,9 +287,9 @@ BOOST_AUTO_TEST_CASE( black_swan_issue_346 )
          {
             int64_t bal = get_balance( *actor, core );
             if( bal < init_balance )
-               transfer( committee_account, actor->id, asset(init_balance - bal) );
+               transfer( witness_account, actor->id, asset(init_balance - bal) );
             else if( bal > init_balance )
-               transfer( actor->id, committee_account, asset(bal - init_balance) );
+               transfer( actor->id, witness_account, asset(bal - init_balance) );
          }
       };
 
@@ -391,9 +390,9 @@ BOOST_AUTO_TEST_CASE( prediction_market )
       const auto& core  = asset_id_type()(db);
 
       int64_t init_balance(1000000);
-      transfer(committee_account, judge_id, asset(init_balance));
-      transfer(committee_account, dan_id, asset(init_balance));
-      transfer(committee_account, nathan_id, asset(init_balance));
+      transfer(witness_account, judge_id, asset(init_balance));
+      transfer(witness_account, dan_id, asset(init_balance));
+      transfer(witness_account, nathan_id, asset(init_balance));
 
       BOOST_TEST_MESSAGE( "Require throw for mismatch collateral amounts" );
       GRAPHENE_REQUIRE_THROW( borrow( dan, pmark.amount(1000), asset(2000) ), fc::exception );
