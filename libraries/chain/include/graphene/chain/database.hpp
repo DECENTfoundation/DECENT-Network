@@ -174,6 +174,11 @@ namespace graphene { namespace chain {
          string to_pretty_string( const asset& a )const;
 
          /**
+          * This signal is emitted for plugins to process every operation
+          */
+         fc::signal<void(const operation_history_object&)> on_applied_operation;
+
+         /**
           *  This signal is emitted after all operations and virtual operation for a
           *  block have been applied but before the get_applied_operations() are cleared.
           *
