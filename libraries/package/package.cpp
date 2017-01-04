@@ -54,6 +54,8 @@ using namespace boost::iostreams;
 
 namespace {
 
+const int ARC_BUFFER_SIZE  = 4*1024; // 4kb
+
 struct arc_header {
     char type; // 0 = EOF, 1 = REGULAR FILE
 	char name[255];
@@ -80,12 +82,12 @@ public:
 
 		_out.write((const char*)&header,sizeof(arc_header));
         
-        char buffer[4096];
-        int bytes_read = in.read(buffer, 4096);
+        char buffer[ARC_BUFFER_SIZE];
+        int bytes_read = in.read(buffer, ARC_BUFFER_SIZE);
         
         while (bytes_read > 0) {
             _out.write(buffer, bytes_read);
-            bytes_read = in.read(buffer, 4096);
+            bytes_read = in.read(buffer, ARC_BUFFER_SIZE);
         }
         
         return true;
@@ -96,7 +98,8 @@ public:
 
 		std::memset((void*)&header, 0, sizeof(arc_header));
 		_out.write((const char*)&header,sizeof(arc_header));
-		_out.flush();        
+		_out.flush();
+        _out.reset();      
 	}
 
 };
@@ -125,11 +128,6 @@ public:
             path file_path(header.name);
             path file_location = output_path / file_path.parent_path();
 
-            cout << "Location: " << file_location << endl;
-            
-            cout << "File name: " << header.name << endl;
-            cout << "File size: " << *(int*)header.size << endl;
-            
             if (!is_directory(file_location) && !create_directories(file_location)) {
                 if (error) *error = "Unable to create directory";
                 return false;
@@ -138,9 +136,9 @@ public:
             std::fstream sink((output_path / file_path).string(), ios::out | ios::binary);
             
             int bytes_to_read = *(int*)header.size;
-            char buffer[4096];
+            char buffer[ARC_BUFFER_SIZE];
             
-            int bytes_read = boost::iostreams::read(_in, buffer, std::min(4096, bytes_to_read));
+            int bytes_read = boost::iostreams::read(_in, buffer, std::min(ARC_BUFFER_SIZE, bytes_to_read));
             
             while (bytes_read > 0 && bytes_to_read > 0) {
 
@@ -149,7 +147,7 @@ public:
                 if (bytes_to_read == 0) {
                     break;
                 }
-                bytes_read = boost::iostreams::read(_in, buffer, std::min(4096, bytes_to_read));
+                bytes_read = boost::iostreams::read(_in, buffer, std::min(ARC_BUFFER_SIZE, bytes_to_read));
             }
             
             if (bytes_read < 0 && bytes_to_read > 0) {
@@ -282,13 +280,20 @@ bool package_manager::unpack_package(const path& destination_directory, const fc
 	}
 	
 	path archive_file = _package_path / "content.zip.aes";
+    path zip_file = temp_directory_path() / "content.zip";
     
+
+    decent::crypto::aes_key k;
+    for (int i = 0; i < CryptoPP::AES::MAX_KEYLENGTH; i++)
+      k.key_byte[i] = i;
+
+
+    AES_decrypt_file(archive_file.string(), zip_file.string(), k);
+
     
     filtering_istream istr;
     istr.push(gzip_decompressor());
-    //istr.push(aes_decrypter(key));
-    
-    istr.push(file_source(archive_file.string(), std::ifstream::binary));
+    istr.push(file_source(zip_file.string(), std::ifstream::binary));
     
     dearchiver dearc(istr);
     if (!dearc.extract(destination_directory.string(), error)) {
@@ -329,11 +334,9 @@ bool package_manager::create_package(const path& destination_directory, std::str
 
 
 	path content_zip = tempPath / "content.zip";
-	cout << tempPath << "\n";
 
 	filtering_ostream out;
     out.push(gzip_compressor());
-    //out.push(aes_encryptor(_package_key));
     out.push(file_sink(content_zip.string(), std::ofstream::binary));
 	archiver arc(out);
 
@@ -356,7 +359,7 @@ bool package_manager::create_package(const path& destination_directory, std::str
 
 
     AES_encrypt_file(content_zip.string(), aes_file_path.string(), k);
-    //remove(content_zip);
+    remove(content_zip);
 
 
 	return true;
