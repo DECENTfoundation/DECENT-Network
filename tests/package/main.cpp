@@ -14,6 +14,8 @@
 
 #include <graphene/package/package.hpp>
 #include <boost/filesystem.hpp>
+#include <fc/crypto/aes.hpp>
+
 
 #ifndef WIN32
 #include <csignal>
@@ -93,17 +95,26 @@ int main( int argc, char** argv )
 		}
 
 		bool extract = false;
+		string error;
+			
 		if( options.count("extract") ) {
 			extract = options["extract"].as<bool>();
 		}
 
 		if (extract) {
 			cout << "Extracting package..." << endl;
+			package_manager pacman(packagePath);
+			if (pacman.unpack_package(outputPath, fc::sha512(key), &error)) {
+				cout << "Package was extracted " << pacman.get_hash() << endl;
+			} else {
+				cout << "Failed to extract package: " << error << endl;
+			}
+
 		} else {
 			cout << "Creating package..." << endl;
 
 			package_manager pacman(contentPath, samplesPath, fc::sha512(key));
-			string error;
+			
 			if (pacman.create_package(packagePath, &error)) {
 				cout << "Package created " << pacman.get_hash() << endl;
 			} else {
@@ -115,7 +126,19 @@ int main( int argc, char** argv )
 		cout << samplesPath << endl;
 		cout << key << endl;
 		cout << extract << endl;
+		/*
+		const char* data = "Something";
+		string testkey = "A0123122";
 
+		std::vector<char> plain_data(data, data + 9);
+
+		const std::vector<char>& result = aes_decrypt(fc::sha512(testkey), aes_encrypt(fc::sha512(testkey), plain_data));
+		cout << "*********************" << endl;
+		for (int i = 0; i < result.size(); ++i) {
+			cout << result[i];
+		}
+		cout << endl;
+		*/
 	}
 	catch ( const fc::exception& e )
 	{

@@ -1,10 +1,10 @@
-file(GLOB HEADERS "include/graphene/time/*.hpp")
+
 
 add_library( package_manipulation
              package.cpp
            )
 
-target_link_libraries( package_manipulation fc )
+target_link_libraries( package_manipulation fc decent_encrypt )
 target_include_directories( package_manipulation
                             PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" )
 

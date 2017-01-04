@@ -65,8 +65,8 @@ IF(NOT "${Boost_VERSION}" MATCHES "1.53(.*)")
    SET(Boost_LIBRARIES ${BOOST_LIBRARIES_TEMP} ${Boost_LIBRARIES})
 ENDIF()
 
+FIND_LIBRARY(CRYPTOPP_LIBRARIES NAMES cryptopp)
 if(CRYPTOPP_LIBRARIES)
-    FIND_LIBRARY(CRYPTOPP_LIBRARIES NAMES cryptopp)
 elseif(CRYPTOPP_LIBRARIES)
     message(FATAL_ERROR "CRYPTOPP_LIBRARIES variable has not been found. Please check that 'cryptopp' is probably installed.")
 
