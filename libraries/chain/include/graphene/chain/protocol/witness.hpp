@@ -23,6 +23,7 @@
  */
 #pragma once
 #include <graphene/chain/protocol/base.hpp>
+#include <graphene/chain/protocol/chain_parameters.hpp>
 
 namespace graphene { namespace chain { 
 

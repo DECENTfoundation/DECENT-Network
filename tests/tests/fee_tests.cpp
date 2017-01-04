@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE( nonzero_fee_test )
       auto _core = [&]( int64_t x ) -> asset
       {  return asset( x*prec );    };
 
-      transfer( committee_account, alice_id, _core(1000000) );
+      transfer( witness_account, alice_id, _core(1000000) );
 
       // make sure the database requires our fee to be nonzero
       enable_fees();
@@ -90,10 +90,10 @@ BOOST_AUTO_TEST_CASE(asset_claim_fees_test)
       auto _core = [&]( int64_t x ) -> asset
       {  return asset( x*core_prec );    };
 
-      transfer( committee_account, alice_id, _core(1000000) );
-      transfer( committee_account,   bob_id, _core(1000000) );
-      transfer( committee_account,  izzy_id, _core(1000000) );
-      transfer( committee_account,  jill_id, _core(1000000) );
+      transfer( witness_account, alice_id, _core(1000000) );
+      transfer( witness_account,   bob_id, _core(1000000) );
+      transfer( witness_account,  izzy_id, _core(1000000) );
+      transfer( witness_account,  jill_id, _core(1000000) );
 
       asset_id_type izzycoin_id = create_bitasset( "IZZYCOIN", izzy_id,   GRAPHENE_1_PERCENT, charge_market_fee ).id;
       asset_id_type jillcoin_id = create_bitasset( "JILLCOIN", jill_id, 2*GRAPHENE_1_PERCENT, charge_market_fee ).id;

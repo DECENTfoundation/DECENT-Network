@@ -209,7 +209,7 @@ void asset_options::validate()const
    // The global_settle flag may never be set (this is a permission only)
    FC_ASSERT( !(flags & global_settle) );
    // the witness_fed and committee_fed flags cannot be set simultaneously
-   FC_ASSERT( (flags & (witness_fed_asset | committee_fed_asset)) != (witness_fed_asset | committee_fed_asset) );
+   FC_ASSERT( (flags & witness_fed_asset ) != witness_fed_asset );
    core_exchange_rate.validate();
    FC_ASSERT( core_exchange_rate.base.asset_id.instance.value == 0 ||
               core_exchange_rate.quote.asset_id.instance.value == 0 );

@@ -322,7 +322,7 @@ account_create_operation database_fixture::make_account(
          votes.insert(active_witnesses[rand() % active_witnesses.size()](db).vote_id);
          create_account.options.votes = flat_set<vote_id_type>(votes.begin(), votes.end());
       }
-      create_account.options.num_witnesses = create_account.options.votes.size();
+      create_account.options.num_witness = create_account.options.votes.size();
 
       create_account.fee = db.current_fee_schedule().calculate_fee( create_account );
       return create_account;

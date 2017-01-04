@@ -147,5 +147,5 @@ void from_variant( const fc::variant& var, graphene::chain::vote_id_type& vo );
 FC_REFLECT_TYPENAME( graphene::chain::vote_id_type::vote_type )
 FC_REFLECT_TYPENAME( fc::flat_set<graphene::chain::vote_id_type> )
 
-FC_REFLECT_ENUM( graphene::chain::vote_id_type::vote_type, (witness)(committee)(VOTE_TYPE_COUNT) )
+FC_REFLECT_ENUM( graphene::chain::vote_id_type::vote_type, (witness)(VOTE_TYPE_COUNT) )
 FC_REFLECT( graphene::chain::vote_id_type, (content) )

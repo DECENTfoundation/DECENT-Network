@@ -49,7 +49,7 @@ namespace graphene { namespace chain {
          optional<chain_parameters> pending_parameters;
 
          uint32_t                           next_available_vote_id = 0;
-         flat_set<witness_id_type>          active_witnesses; // updated once per maintenance interval
+         vector<witness_id_type>          active_witnesses; // updated once per maintenance interval
          // n.b. witness scheduling is done by witness_schedule object
    };
 

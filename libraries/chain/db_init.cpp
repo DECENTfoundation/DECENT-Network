@@ -552,7 +552,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
    modify(get_global_properties(), [&](global_property_object& p) {
       for( uint32_t i = 1; i <= genesis_state.initial_active_witnesses; ++i )
       {
-         p.active_witnesses.insert(witness_id_type(i));
+         p.active_witnesses.emplace_back(witness_id_type(i));
       }
    });
 

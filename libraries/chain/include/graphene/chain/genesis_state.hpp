@@ -116,11 +116,9 @@ FC_REFLECT(graphene::chain::genesis_state_type::initial_asset_type::initial_coll
 FC_REFLECT(graphene::chain::genesis_state_type::initial_witness_type, (owner_name)(block_signing_key))
 FC_REFLECT(graphene::chain::genesis_state_type::initial_balance_type, (owner)(asset_symbol)(amount))
 
-FC_REFLECT(graphene::chain::genesis_state_type::initial_committee_member_type, (owner_name))
-
 
 FC_REFLECT(graphene::chain::genesis_state_type,
            (initial_timestamp)(max_core_supply)(initial_parameters)(initial_accounts)(initial_assets)
-           (initial_active_witnesses)(initial_witness_candidates)(initial_committee_candidates)
+           (initial_active_witnesses)(initial_witness_candidates)
            (initial_chain_id)(initial_balances)
            (immutable_parameters))

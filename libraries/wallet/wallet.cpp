@@ -1545,7 +1545,7 @@ public:
       return sign_transaction( tx, broadcast );
    } FC_CAPTURE_AND_RETHROW( (account_to_modify)(voting_account)(broadcast) ) }
 
-   signed_transaction set_desired_witness_member_count(string account_to_modify,
+   signed_transaction set_desired_witness_count(string account_to_modify,
                                                              uint16_t desired_number_of_witnesses,
                                                              bool broadcast /* = false */)
    { try {

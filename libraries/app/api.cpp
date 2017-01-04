@@ -246,11 +246,6 @@ namespace graphene { namespace app {
                assert( aobj != nullptr );
                result.push_back( aobj->owner );
                break;
-            } case committee_member_object_type:{
-               const auto& aobj = dynamic_cast<const committee_member_object*>(obj);
-               assert( aobj != nullptr );
-               result.push_back( aobj->committee_member_account );
-               break;
             } case witness_object_type:{
                const auto& aobj = dynamic_cast<const witness_object*>(obj);
                assert( aobj != nullptr );

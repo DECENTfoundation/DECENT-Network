@@ -29,7 +29,7 @@
 
 #include <graphene/chain/account_object.hpp>
 #include <graphene/chain/asset_object.hpp>
-#include <graphene/chain/committee_member_object.hpp>
+#include <graphene/chain/witness_object.hpp>
 #include <graphene/chain/proposal_object.hpp>
 #include <graphene/chain/market_object.hpp>
 
@@ -671,12 +671,12 @@ BOOST_FIXTURE_TEST_CASE( maintenance_interval, database_fixture )
       BOOST_CHECK_GT(maintenence_time.sec_since_epoch(), db.head_block_time().sec_since_epoch());
       auto initial_properties = db.get_global_properties();
       const account_object& nathan = create_account("nathan");
-      const committee_member_object nathans_committee_member = create_committee_member(nathan);
+      const witness_object nathans_witness_member = create_witness(nathan);
       {
          account_update_operation op;
          op.account = nathan.id;
          op.new_options = nathan.options;
-         op.new_options->votes.insert(nathans_committee_member.vote_id);
+         op.new_options->votes.insert(nathans_witness_member.vote_id);
          trx.operations.push_back(op);
          PUSH_TX( db, trx, ~0 );
          trx.operations.clear();
@@ -689,15 +689,15 @@ BOOST_FIXTURE_TEST_CASE( maintenance_interval, database_fixture )
       BOOST_CHECK_EQUAL(db.get_dynamic_global_properties().next_maintenance_time.sec_since_epoch(),
                         db.head_block_time().sec_since_epoch() + db.get_global_properties().parameters.block_interval);
       BOOST_CHECK(db.get_global_properties().active_witnesses == initial_properties.active_witnesses);
-      BOOST_CHECK(db.get_global_properties().active_committee_members == initial_properties.active_committee_members);
+      BOOST_CHECK(db.get_global_properties().active_witnesses == initial_properties.active_witnesses);
 
       generate_block();
 
       auto new_properties = db.get_global_properties();
-      BOOST_CHECK(new_properties.active_committee_members != initial_properties.active_committee_members);
-      BOOST_CHECK(std::find(new_properties.active_committee_members.begin(),
-                            new_properties.active_committee_members.end(), nathans_committee_member.id) !=
-                  new_properties.active_committee_members.end());
+      BOOST_CHECK(new_properties.active_witnesses != initial_properties.active_witnesses);
+      BOOST_CHECK(std::find(new_properties.active_witnesses.begin(),
+                            new_properties.active_witnesses.end(), nathans_witness_member.id) !=
+                  new_properties.active_witnesses.end());
       BOOST_CHECK_EQUAL(db.get_dynamic_global_properties().next_maintenance_time.sec_since_epoch(),
                         maintenence_time.sec_since_epoch() + new_properties.parameters.maintenance_interval);
       maintenence_time = db.get_dynamic_global_properties().next_maintenance_time;
@@ -718,9 +718,9 @@ BOOST_FIXTURE_TEST_CASE( limit_order_expiration, database_fixture )
    auto* test = &create_bitasset("TEST");
    auto* core = &asset_id_type()(db);
    auto* nathan = &create_account("nathan");
-   auto* committee = &account_id_type()(db);
+   auto* witness = &account_id_type()(db);
 
-   transfer(*committee, *nathan, core->amount(50000));
+   transfer(*witness, *nathan, core->amount(50000));
 
    BOOST_CHECK_EQUAL( get_balance(*nathan, *core), 50000 );
 
@@ -747,7 +747,7 @@ BOOST_FIXTURE_TEST_CASE( limit_order_expiration, database_fixture )
    test = &get_asset("TEST");
    core = &asset_id_type()(db);
    nathan = &get_account("nathan");
-   committee = &account_id_type()(db);
+   witness = &account_id_type()(db);
 
    BOOST_CHECK(db.find_object(id) == nullptr);
    BOOST_CHECK_EQUAL( get_balance(*nathan, *core), 50000 );
@@ -804,21 +804,21 @@ BOOST_FIXTURE_TEST_CASE( change_block_interval, database_fixture )
    generate_block();
 
    db.modify(db.get_global_properties(), [](global_property_object& p) {
-      p.parameters.committee_proposal_review_period = fc::hours(1).to_seconds();
+      p.parameters.witness_proposal_review_period = fc::hours(1).to_seconds();
    });
 
    BOOST_TEST_MESSAGE( "Creating a proposal to change the block_interval to 1 second" );
    {
-      proposal_create_operation cop = proposal_create_operation::committee_proposal(db.get_global_properties().parameters, db.head_block_time());
+      proposal_create_operation cop = proposal_create_operation::witness_proposal(db.get_global_properties().parameters, db.head_block_time());
       cop.fee_paying_account = GRAPHENE_TEMP_ACCOUNT;
       cop.expiration_time = db.head_block_time() + *cop.review_period_seconds + 10;
-      committee_member_update_global_parameters_operation uop;
+      witness_update_global_parameters_operation uop;
       uop.new_parameters.block_interval = 1;
       cop.proposed_ops.emplace_back(uop);
       trx.operations.push_back(cop);
       db.push_transaction(trx);
    }
-   BOOST_TEST_MESSAGE( "Updating proposal by signing with the committee_member private key" );
+   BOOST_TEST_MESSAGE( "Updating proposal by signing with the witness private key" );
    {
       proposal_update_operation uop;
       uop.fee_paying_account = GRAPHENE_TEMP_ACCOUNT;
@@ -880,7 +880,7 @@ BOOST_FIXTURE_TEST_CASE( pop_block_twice, database_fixture )
       const asset_object& core = asset_id_type()(db);
 
       // Sam is the creator of accounts
-      private_key_type committee_key = init_account_priv_key;
+      private_key_type witness_key = init_account_priv_key;
       private_key_type sam_key = generate_private_key("sam");
       account_object sam_account_object = create_account("sam", sam_key);
 
@@ -888,15 +888,15 @@ BOOST_FIXTURE_TEST_CASE( pop_block_twice, database_fixture )
       generate_block( skip_flags );
 
       db.modify(db.get_global_properties(), [](global_property_object& p) {
-         p.parameters.committee_proposal_review_period = fc::hours(1).to_seconds();
+         p.parameters.witness_proposal_review_period = fc::hours(1).to_seconds();
       });
 
       transaction tx;
       processed_transaction ptx;
 
-      account_object committee_account_object = committee_account(db);
-      // transfer from committee account to Sam account
-      transfer(committee_account_object, sam_account_object, core.amount(100000));
+      account_object witness_account_object = witness_account(db);
+      // transfer from witness account to Sam account
+      transfer(witness_account_object, sam_account_object, core.amount(100000));
 
       generate_block(skip_flags);
 

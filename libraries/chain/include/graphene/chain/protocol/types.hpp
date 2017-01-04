@@ -97,7 +97,7 @@ namespace graphene { namespace chain {
       witness_fed_asset    = 0x80, /**< allow the asset to be fed by witnesses */
    };
    const static uint32_t ASSET_ISSUER_PERMISSION_MASK = charge_market_fee|white_list|override_authority|transfer_restricted|disable_force_settle|global_settle|disable_confidential
-      |witness_fed_asset|committee_fed_asset;
+      |witness_fed_asset;
    const static uint32_t UIA_ASSET_ISSUER_PERMISSION_MASK = charge_market_fee|white_list|override_authority|transfer_restricted|disable_confidential;
 
    enum reserved_spaces
@@ -417,5 +417,4 @@ FC_REFLECT_ENUM( graphene::chain::asset_issuer_permission_flags,
    (global_settle)
    (disable_confidential)
    (witness_fed_asset)
-   (committee_fed_asset)
    )
