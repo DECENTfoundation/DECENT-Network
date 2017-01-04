@@ -4247,6 +4247,11 @@ vesting_balance_object_with_info::vesting_balance_object_with_info( const vestin
       return my->_remote_db->get_open_buyings_by_consumer( consumer );
    }
 
+   optional<buying_history_object> wallet_api::get_buying_history_object( const buying_id_type& buying )const
+   {
+      return my->_remote_db->get_buying_history_object( buying );
+   }
+
    optional<content_object> wallet_api::get_content( const string& URI )const
    {
       return my->_remote_db->get_content( URI );
