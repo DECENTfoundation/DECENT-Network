@@ -183,6 +183,8 @@ void account_create_operation::validate()const
    FC_ASSERT( active.num_auths() != 0 );
    FC_ASSERT( !owner.is_impossible(), "cannot create an account with an imposible owner authority threshold" );
    FC_ASSERT( !active.is_impossible(), "cannot create an account with an imposible active authority threshold" );
+   FC_ASSERT( price_per_subscribe.amount >= 0 );
+   FC_ASSERT( subscription_period >= 0 );
    options.validate();
    if( extensions.value.buyback_options.valid() )
    {
@@ -213,6 +215,8 @@ void account_update_operation::validate()const
    FC_ASSERT( account != GRAPHENE_TEMP_ACCOUNT );
    FC_ASSERT( fee.amount >= 0 );
    FC_ASSERT( account != account_id_type() );
+   FC_ASSERT( price_per_subscribe.amount >= 0 );
+   FC_ASSERT( subscription_period >= 0 );
 
    bool has_action = (
          owner.valid()

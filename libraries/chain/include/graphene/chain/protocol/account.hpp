@@ -94,6 +94,10 @@ namespace graphene { namespace chain {
       account_options options;
       extension< ext > extensions;
 
+      bool allow_subscription;
+      asset price_per_subscribe;
+      uint32_t subscription_period;
+
       account_id_type fee_payer()const { return registrar; }
       void            validate()const;
       share_type      calculate_fee(const fee_parameters_type& )const;
@@ -139,6 +143,10 @@ namespace graphene { namespace chain {
       /// New account options
       optional<account_options> new_options;
       extension< ext > extensions;
+
+      bool allow_subscription;
+      asset price_per_subscribe;
+      uint32_t subscription_period;
 
       account_id_type fee_payer()const { return account; }
       void       validate()const;
@@ -237,11 +245,13 @@ FC_REFLECT( graphene::chain::account_create_operation,
             (fee)(registrar)
             (referrer)(referrer_percent)
             (name)(owner)(active)(options)(extensions)
+            (allow_subscription)(price_per_subscribe)(subscription_period)
           )
 
 FC_REFLECT(graphene::chain::account_update_operation::ext, (null_ext))
 FC_REFLECT( graphene::chain::account_update_operation,
             (fee)(account)(owner)(active)(new_options)(extensions)
+            (allow_subscription)(price_per_subscribe)(subscription_period)
           )
 
 FC_REFLECT( graphene::chain::account_whitelist_operation, (fee)(authorizing_account)(account_to_list)(new_listing)(extensions))

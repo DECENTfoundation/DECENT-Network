@@ -91,7 +91,9 @@ namespace graphene { namespace chain {
             leave_rating_operation,
             ready_to_publish_operation,
             proof_of_custody_operation,
-            deliver_keys_operation
+            deliver_keys_operation,
+            subscribe_operation,
+            subscribe_by_author_operation
          > operation;
 
    /// @} // operations group

@@ -46,7 +46,7 @@ namespace graphene { namespace chain {
    
    typedef generic_index< seeder_object, seeder_object_multi_index_type > seeder_index;
    
-}}
+}} // graphene::chain
 
 FC_REFLECT_DERIVED(graphene::chain::seeder_object,
                    (graphene::db::object),
