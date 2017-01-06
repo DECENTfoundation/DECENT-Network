@@ -115,7 +115,7 @@ public:
 
 	}
 
-	bool extract(const std::string& output_path, string* error) {
+	bool extract(const std::string& output_path) {
 		arc_header header;
 
         while (true) {
@@ -129,8 +129,7 @@ public:
             path file_location = output_path / file_path.parent_path();
 
             if (!is_directory(file_location) && !create_directories(file_location)) {
-                if (error) *error = "Unable to create directory";
-                return false;
+                FC_THROW("Unable to create directory");    
             }
             
             std::fstream sink((output_path / file_path).string(), ios::out | ios::binary);
@@ -151,8 +150,7 @@ public:
             }
             
             if (bytes_read < 0 && bytes_to_read > 0) {
-                if (error) *error = "Unexpected end of file";
-                return false;
+                FC_THROW("Unexpected end of file");
             }
             
             sink.close();
@@ -265,28 +263,28 @@ package_manager::package_manager(const path& package_path) : _package_path(packa
 }
 
 	
-bool package_manager::unpack_package(const path& destination_directory, const fc::sha512& key, std::string* error) {
+bool package_manager::unpack_package(const path& destination_directory, const fc::sha512& key) {
 	if (!is_directory(destination_directory)) {
-		if (error) 
-			*error = "Destination directory not found";
-		
-		return false;
+        FC_THROW("Destination directory not found");
 	}
+
 	if (!is_directory(_package_path)) {
-		if (error)
-			*error = "Package path is not directory";
-		
-		return false;
+        FC_THROW("Package path is not directory");
 	}
 	
 	path archive_file = _package_path / "content.zip.aes";
-    path zip_file = temp_directory_path() / "content.zip";
+    path temp_dir = temp_directory_path();
+
+    path zip_file = temp_dir / "content.zip";
     
 
     decent::crypto::aes_key k;
     for (int i = 0; i < CryptoPP::AES::MAX_KEYLENGTH; i++)
       k.key_byte[i] = i;
 
+    if (space(temp_dir).available < file_size(archive_file) * 1.5) { // Safety margin
+        FC_THROW("Not enough storage space to create package");
+    }
 
     AES_decrypt_file(archive_file.string(), zip_file.string(), k);
 
@@ -296,40 +294,27 @@ bool package_manager::unpack_package(const path& destination_directory, const fc
     istr.push(file_source(zip_file.string(), std::ifstream::binary));
     
     dearchiver dearc(istr);
-    if (!dearc.extract(destination_directory.string(), error)) {
-        return false;
-    }
+    dearc.extract(destination_directory.string());
 
 
 	return true;
 }
 
-bool package_manager::create_package(const path& destination_directory, std::string* error) {
+bool package_manager::create_package(const path& destination_directory) {
 	if (!is_directory(destination_directory)) {
-		if (error)
-			*error = "Destination directory not found";
-		
-		return false;
+		FC_THROW("Destination directory not found");
 	}
 	if (!is_directory(_content_path) && !is_regular_file(_content_path)) {
-		if (error)
-			*error = "Content path is not directory or file";
-		
-		return false;
+        FC_THROW("Content path is not directory or file");
 	}
+
 	if (!is_directory(_samples) || _samples.size() == 0) {
-		if (error)
-			*error = "Samples path is not directory";
-		
-		return false;
+        FC_THROW("Samples path is not directory");
 	}
 
 	path tempPath = destination_directory / make_uuid();
 	if (!create_directory(tempPath)) {
-		if (error)
-			*error = "Failed to create temporary directory";
-		
-		return false;
+        FC_THROW("Failed to create temporary directory");
 	}
 
 
@@ -358,6 +343,10 @@ bool package_manager::create_package(const path& destination_directory, std::str
       k.key_byte[i] = i;
 
 
+    if (space(tempPath).available < file_size(content_zip) * 1.5) { // Safety margin
+        FC_THROW("Not enough storage space to create package");
+    }
+
     AES_encrypt_file(content_zip.string(), aes_file_path.string(), k);
     remove(content_zip);
 
@@ -378,7 +367,7 @@ const package_manager::path& package_manager::get_content_file() {
 }
 
 const package_manager::path& package_manager::get_samples_path() {
-    return package_manager::path();
+    return _samples;
 }
 
 

@@ -95,7 +95,6 @@ int main( int argc, char** argv )
 		}
 
 		bool extract = false;
-		string error;
 			
 		if( options.count("extract") ) {
 			extract = options["extract"].as<bool>();
@@ -104,22 +103,29 @@ int main( int argc, char** argv )
 		if (extract) {
 			cout << "Extracting package..." << endl;
 			package_manager pacman(packagePath);
-			if (pacman.unpack_package(outputPath, fc::sha512(key), &error)) {
+			try {
+
+				pacman.unpack_package(outputPath, fc::sha512(key));
 				cout << "Package was extracted " << pacman.get_hash() << endl;
-			} else {
-				cout << "Failed to extract package: " << error << endl;
+
+			} catch( fc::exception& er ) { 
+				cout << "Failed to extract package" << endl;
 			}
+			
 
 		} else {
 			cout << "Creating package..." << endl;
 
 			package_manager pacman(contentPath, samplesPath, fc::sha512(key));
 			
-			if (pacman.create_package(packagePath, &error)) {
+			try {
+				pacman.create_package(packagePath);
 				cout << "Package created " << pacman.get_hash() << endl;
-			} else {
-				cout << "Failed to create package: " << error << endl;
+
+			} catch( fc::exception& er ) { 
+				cout << "Failed to create package" << endl;
 			}
+			
 		}
 		
 		cout << contentPath << endl;
