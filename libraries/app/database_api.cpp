@@ -140,6 +140,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       vector<buying_object> get_open_buyings()const;
       vector<buying_object> get_open_buyings_by_URI(const string& URI)const;
       vector<buying_object> get_open_buyings_by_consumer(const account_id_type& consumer)const;
+      optional<buying_history_object> get_buying_history_object( const buying_id_type& buying )const;
       optional<content_object> get_content( const string& URI )const;
       vector<content_object> list_content_by_author( const account_id_type& author )const;
       vector<content_object> list_content( const string& URI_begin, uint32_t count)const;
@@ -1689,6 +1690,20 @@ vector<buying_object> database_api_impl::get_open_buyings_by_consumer( const acc
       return result;
    }
    FC_CAPTURE_AND_RETHROW( (consumer) );
+}
+
+optional<buying_history_object> database_api::get_buying_history_object( const buying_id_type& buying )const
+{
+   return my->get_buying_history_object( buying );
+}
+
+optional<buying_history_object> database_api_impl::get_buying_history_object ( const buying_id_type& buying )const
+{
+   const auto& idx = _db.get_index_type<buying_history_index>().indices().get<by_buying>();
+   auto itr = idx.find(buying);
+   if (itr != idx.end())
+      return *itr;
+   return optional<buying_history_object>();
 }
 
 optional<content_object> database_api::get_content(const string& URI)const
