@@ -4,21 +4,24 @@ project( Graphene )
 
 set( BLOCKCHAIN_NAME "Graphene" )
 
-set( CLI_CLIENT_EXECUTABLE_NAME graphene_client )
-set( GUI_CLIENT_EXECUTABLE_NAME Graphene )
+set( CLI_CLIENT_EXECUTABLE_NAME "graphene_client" )
+set( GUI_CLIENT_EXECUTABLE_NAME "Graphene" )
 set( CUSTOM_URL_SCHEME "gcs" )
 set( INSTALLER_APP_ID "68ad7005-8eee-49c9-95ce-9eed97e5b347" )
 
 # http://stackoverflow.com/a/18369825
 if( "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" )
-    if( CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.8 )
-        message( FATAL_ERROR "GCC version must be at least 4.8!" )
+    if( CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.8.1 )
+        message( FATAL_ERROR "GCC version must be at least 4.8.1!" )
     endif()
 elseif( "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" )
     if( CMAKE_CXX_COMPILER_VERSION VERSION_LESS 3.3 )
         message( FATAL_ERROR "Clang version must be at least 3.3!" )
     endif()
 endif()
+
+set( CMAKE_CXX_STANDARD 11 )
+set( CMAKE_CXX_STANDARD_REQUIRED YES )
 
 list( APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules" )
 
@@ -130,11 +133,11 @@ else() # Apple and Linux
     if( APPLE )
         # Apple Specific Options Here
         message( STATUS "Configuring Graphene on OS X" )
-        set( CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -std=c++11 -stdlib=libc++ -Wall" )
+        set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -stdlib=libc++ -Wall" )
     else()
         # Linux Specific Options Here
         message( STATUS "Configuring Graphene on Linux" )
-        set( CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -std=c++11 -Wall" )
+        set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall" )
         set( rt_library rt )
         set( pthread_library pthread )
         if( NOT DEFINED crypto_library )
@@ -149,6 +152,9 @@ else() # Apple and Linux
 
     if( "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" )
         set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-builtin-memcmp" )
+        if( NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 6 )
+            set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fpermissive" )
+        endif()
     endif()
 
     if( "${CMAKE_GENERATOR}" STREQUAL "Ninja" )

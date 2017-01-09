@@ -1,46 +1,116 @@
 Intro for new developers
 ------------------------
 
-This is a quick introduction to get new developers up to speed on Graphene.
+This is a quick introduction to get new developers up to speed on Decent.
+
+
+Building Decent
+---------------
+
+### Installing all prerequisites in Linux
+
+For Ubuntu 16.04 LTS or later, execute in console:
+
+    $ sudo apt-get update
+    $ sudo apt-get install build-essential autotools-dev automake autoconf libtool make cmake gcc g++ clang flex bison doxygen gettext git libreadline-dev libcrypto++-dev libgmp-dev libdb-dev libdb++-dev libssl-dev libncurses5-dev libboost-all-dev
+
+> Note, that the default version of Boost installed in Ubuntu 16.10 is not supported. In order to install a supported one, execute in console:
+> 
+>     $ sudo apt-get remove libboost-all-dev
+>     $ sudo apt-get autoremove
+>     $ sudo apt-get install libboost1.60-all-dev
+
+
+For Fedora 25 or later, execute in console:
+
+    sudo yum install automake autoconf libtool make cmake gcc clang flex bison doxygen gettext-devel git readline-devel cryptopp-devel gmp-devel libdb-devel libdb-cxx-devel openssl-devel ncurses-devel boost-devel boost-static
+
+
+
+### Installing all prerequisites in macOS
+
+* Install Xcode and Command Line Tools, see http://railsapps.github.io/xcode-command-line-tools.html
+* Install Homebrew, see http://brew.sh
+
+Then, execute in console:
+
+    $ brew tap homebrew/versions
+    $ brew update
+    $ brew install automake autoconf make libtool cmake berkeley-db boost160 cryptopp doxygen byacc flex gettext git pbc gmp ipfs openssl readline
+
+
+### Obtaining the sources, building, and installing Decent in Unix (macOS or Linux)
+
+After all the prerequisites are installed, execute the following commands in console, in order to clone the repo, build, and install/stage Decent:
+
+    # Clone the repo.
+    $ mkdir -p ~/dev/DECENTfoundation
+    $ cd ~/dev/DECENTfoundation
+    $ git clone git://github.com/DECENTfoundation/DECENT-Network.git
+    $ cd DECENT-Network
+    $ git submodule update --init --recursive
+
+    # Build and install Decent.
+    $ mkdir -p ~/dev/DECENTfoundation/build
+    $ cd ~/dev/DECENTfoundation/build
+    $ cmake -G "Unix Makefiles" -D CMAKE_BUILD_TYPE=Debug ~/dev/DECENTfoundation/DECENT-Network
+    $ cmake --build . --target all -- -j -l 3.0
+    $ cmake --build . --target install
+
+By this time you should have Decent files installed at `~/dev/DECENTfoundation/build/artifacts/prefix` directory.
+
+You can use any path instead of `~/dev/DECENTfoundation` directory in the steps above.
+
+> Note that, in case of "Unix Makefiles" CMake generator, the last two  commands are equivalent to:
+> 
+>     $ make -j -l 3.0
+>     $ make install
+
+
+You can use Xcode, or any other CMake generator, and then, if it is an IDE generator, instead of building and installing via `cmake` in terminal, open the generated project/solution file in the corresponding IDE and perform `ALL_BUILD` and `INSTALL` actions from there.
+
+### Installing all prerequisites, obtaining the sources, building, and installing Decent in Windows
+
+TODO
+
 
 Starting Decent
------------------
+---------------
 
-For Ubuntu 14.04 LTS users, see this link first:
-    https://github.com/cryptonomex/graphene/wiki/build-ubuntu
+On first run `witness_node` will create `witness_node_data_dir` in the current working directory, if doesn't exist already.
 
-and then proceed with:
+    $ mkdir -p ~/dev/DECENTfoundation/working_dir
+    $ cd ~/dev/DECENTfoundation/working_dir
+    $ ~/dev/DECENTfoundation/build/artifacts/prefix/bin/witness_node
 
-    git clone ...
-    cd decent-core
-    git submodule update --init --recursive
-    cmake -DCMAKE_BUILD_TYPE=Debug .
-    make
-    
-Then edit witness_node_data_dir to contain these lines:
+Now press Ctrl-C to stop `witness_node`.
+
+Edit `~/dev/DECENTfoundation/working_dir/witness_node_data_dir/config.ini` to contain the following lines:
 
     seed-node = 185.8.165.21:33142
     rpc-endpoint = 127.0.0.1:8090
-    
-And run the witness node
 
-    ./programs/witness_node/witness_node --genesis-json genesis.json
+Then, run the witness node again:
+
+    $ cd ~/dev/DECENTfoundation/working_dir
+    $ ~/dev/DECENTfoundation/build/artifacts/prefix/bin/witness_node --genesis-json ~/dev/DECENTfoundation/DECENT-Network/genesis.json
 
 This will launch the witness node with the default genesis. 
 
-Then, in a separate terminal window, start the command-line wallet `cli_wallet`:
+Then, in a separate console, start the command-line wallet by executing:
 
-    ./programs/cli_wallet/cli_wallet
+    $ cd ~/dev/DECENTfoundation/working_dir
+    $ ~/dev/DECENTfoundation/build/artifacts/prefix/bin/cli_wallet
 
-To set your iniital password to 'password' use:
+To set your initial password to `password`, execute:
 
     >>> set_password password
     >>> unlock password
 
-To import your account keys:
+To import your account keys, execute:
 
     >>> import_key [name] [private_wif_key]
-    
+
 The list of the test accounts is here:
 
     suggest_brain_key 
@@ -69,57 +139,66 @@ The list of the test accounts is here:
     }
     davit
 
-A list of CLI wallet commands is available
-[here](https://github.com/cryptonomex/graphene/blob/master/libraries/wallet/include/graphene/wallet/wallet.hpp).
+A list of CLI wallet commands is available [here](https://github.com/cryptonomex/graphene/blob/master/libraries/wallet/include/graphene/wallet/wallet.hpp).
 
-Code coverage testing
----------------------
-
-Check how much code is covered by unit tests, using gcov/lcov (see http://ltp.sourceforge.net/coverage/lcov.php ).
-
-    cmake -D ENABLE_COVERAGE_TESTING=true -D CMAKE_BUILD_TYPE=Debug .
-    make
-    lcov --capture --initial --directory . --output-file base.info --no-external
-    libraries/contrib/fc/bloom_test
-    libraries/contrib/fc/task_cancel_test
-    libraries/contrib/fc/api
-    libraries/contrib/fc/blind
-    libraries/contrib/fc/ecc_test test
-    libraries/contrib/fc/real128_test
-    libraries/contrib/fc/lzma_test README.md
-    libraries/contrib/fc/ntp_test
-    tests/intense_test
-    tests/app_test
-    tests/chain_bench
-    tests/chain_test
-    tests/performance_test
-    lcov --capture --directory . --output-file test.info --no-external
-    lcov --add-tracefile base.info --add-tracefile test.info --output-file total.info
-    lcov -o interesting.info -r total.info libraries/contrib/fc/vendor/\* libraries/contrib/fc/tests/\* tests/\*
-    mkdir -p lcov
-    genhtml interesting.info --output-directory lcov --prefix `pwd`
-
-Now open `lcov/index.html` in a browser.
-
-Unit testing
-------------
-
-We use the Boost unit test framework for unit testing.  Most unit
-tests reside in the `chain_test` build target.
 
 Witness node
 ------------
 
 The role of the witness node is to broadcast transactions, download blocks, and optionally sign them.
 
-```
-./witness_node --rpc-endpoint 127.0.0.1:8090 --enable-stale-production -w '"1.6.0"' '"1.6.1"' '"1.6.2"' '"1.6.3"' '"1.6.4"' '"1.6.5"' '"1.6.6"' '"1.6.7"' '"1.6.8"' '"1.6.9"' '"1.6.10"' '"1.6.11"' '"1.6.12"' '"1.6.13"' '"1.6.14"' '"1.6.15"' '"1.6.16"' '"1.6.17"' '"1.6.18"' '"1.6.19"' '"1.6.20"' '"1.6.21"' '"1.6.22"' '"1.6.23"' '"1.6.24"' '"1.6.25"' '"1.6.26"' '"1.6.27"' '"1.6.28"' '"1.6.29"' '"1.6.30"' '"1.6.31"' '"1.6.32"' '"1.6.33"' '"1.6.34"' '"1.6.35"' '"1.6.36"' '"1.6.37"' '"1.6.38"' '"1.6.39"' '"1.6.40"' '"1.6.41"' '"1.6.42"' '"1.6.43"' '"1.6.44"' '"1.6.45"' '"1.6.46"' '"1.6.47"' '"1.6.48"' '"1.6.49"' '"1.6.50"' '"1.6.51"' '"1.6.52"' '"1.6.53"' '"1.6.54"' '"1.6.55"' '"1.6.56"' '"1.6.57"' '"1.6.58"' '"1.6.59"' '"1.6.60"' '"1.6.61"' '"1.6.62"' '"1.6.63"' '"1.6.64"' '"1.6.65"' '"1.6.66"' '"1.6.67"' '"1.6.68"' '"1.6.69"' '"1.6.70"' '"1.6.71"' '"1.6.72"' '"1.6.73"' '"1.6.74"' '"1.6.75"' '"1.6.76"' '"1.6.77"' '"1.6.78"' '"1.6.79"' '"1.6.80"' '"1.6.81"' '"1.6.82"' '"1.6.83"' '"1.6.84"' '"1.6.85"' '"1.6.86"' '"1.6.87"' '"1.6.88"' '"1.6.89"' '"1.6.90"' '"1.6.91"' '"1.6.92"' '"1.6.93"' '"1.6.94"' '"1.6.95"' '"1.6.96"' '"1.6.97"' '"1.6.98"' '"1.6.99"' '"1.6.100"'
-```
+    $ ~/dev/DECENTfoundation/build/artifacts/prefix/bin/witness_node --rpc-endpoint 127.0.0.1:8090 --enable-stale-production -w '"1.6.0"' '"1.6.1"' '"1.6.2"' '"1.6.3"' '"1.6.4"' '"1.6.5"' '"1.6.6"' '"1.6.7"' '"1.6.8"' '"1.6.9"' '"1.6.10"' '"1.6.11"' '"1.6.12"' '"1.6.13"' '"1.6.14"' '"1.6.15"' '"1.6.16"' '"1.6.17"' '"1.6.18"' '"1.6.19"' '"1.6.20"' '"1.6.21"' '"1.6.22"' '"1.6.23"' '"1.6.24"' '"1.6.25"' '"1.6.26"' '"1.6.27"' '"1.6.28"' '"1.6.29"' '"1.6.30"' '"1.6.31"' '"1.6.32"' '"1.6.33"' '"1.6.34"' '"1.6.35"' '"1.6.36"' '"1.6.37"' '"1.6.38"' '"1.6.39"' '"1.6.40"' '"1.6.41"' '"1.6.42"' '"1.6.43"' '"1.6.44"' '"1.6.45"' '"1.6.46"' '"1.6.47"' '"1.6.48"' '"1.6.49"' '"1.6.50"' '"1.6.51"' '"1.6.52"' '"1.6.53"' '"1.6.54"' '"1.6.55"' '"1.6.56"' '"1.6.57"' '"1.6.58"' '"1.6.59"' '"1.6.60"' '"1.6.61"' '"1.6.62"' '"1.6.63"' '"1.6.64"' '"1.6.65"' '"1.6.66"' '"1.6.67"' '"1.6.68"' '"1.6.69"' '"1.6.70"' '"1.6.71"' '"1.6.72"' '"1.6.73"' '"1.6.74"' '"1.6.75"' '"1.6.76"' '"1.6.77"' '"1.6.78"' '"1.6.79"' '"1.6.80"' '"1.6.81"' '"1.6.82"' '"1.6.83"' '"1.6.84"' '"1.6.85"' '"1.6.86"' '"1.6.87"' '"1.6.88"' '"1.6.89"' '"1.6.90"' '"1.6.91"' '"1.6.92"' '"1.6.93"' '"1.6.94"' '"1.6.95"' '"1.6.96"' '"1.6.97"' '"1.6.98"' '"1.6.99"' '"1.6.100"'
 
-Running specific tests
-----------------------
 
-- `tests/chain_tests -t block_tests/name_of_test`
+Testing Decent
+--------------
+
+TODO
+
+
+### Coverage testing
+
+Check how much code is covered by unit tests, using gcov/lcov (see http://ltp.sourceforge.net/coverage/lcov.php ).
+
+    $ mkdir -p ~/dev/DECENTfoundation/build
+    $ cd ~/dev/DECENTfoundation/build
+    $ cmake -G "Unix Makefiles" -D CMAKE_BUILD_TYPE=Debug -D ENABLE_COVERAGE_TESTING=TRUE ~/dev/DECENTfoundation/DECENT-Network
+    $ cmake --build . --target all -- -j
+    $ cmake --build . --target install
+    
+    $ lcov --capture --initial --directory . --output-file base.info --no-external
+    $ libraries/contrib/fc/bloom_test
+    $ libraries/contrib/fc/task_cancel_test
+    $ libraries/contrib/fc/api
+    $ libraries/contrib/fc/blind
+    $ libraries/contrib/fc/ecc_test test
+    $ libraries/contrib/fc/real128_test
+    $ libraries/contrib/fc/lzma_test README.md
+    $ libraries/contrib/fc/ntp_test
+    $ tests/intense_test
+    $ tests/app_test
+    $ tests/chain_bench
+    $ tests/chain_test
+    $ tests/performance_test
+    $ lcov --capture --directory . --output-file test.info --no-external
+    $ lcov --add-tracefile base.info --add-tracefile test.info --output-file total.info
+    $ lcov -o interesting.info -r total.info libraries/contrib/fc/vendor/\* libraries/contrib/fc/tests/\* tests/\*
+    $ mkdir -p lcov
+    $ genhtml interesting.info --output-directory lcov --prefix `pwd`
+
+Now open `lcov/index.html` in a browser.
+
+
+### Unit testing
+
+We use the Boost.Test unit test framework for unit testing.  Most unit
+tests reside in the `chain_test` build target.
+
+
+### Running specific tests
+
+`$ tests/chain_tests -t block_tests/name_of_test`
+
 
 Using the API
 -------------
@@ -144,6 +223,7 @@ We can do the same thing using an HTTP client such as `curl` for API's which do 
 API 0 is accessible using regular JSON-RPC:
 
     $ curl --data '{"jsonrpc": "2.0", "method": "get_accounts", "params": [["1.2.0"]], "id": 1}' http://127.0.0.1:8090/rpc
+
 
 Accessing restricted API's
 --------------------------
@@ -174,7 +254,7 @@ necessary to use the wallet:
        ]
     }
 
-Passwords are stored in `base64` as as salted `sha256` hashes.  A simple Python script, `saltpass.py` is avaliable to obtain hash and salt values from a password.
+Passwords are stored in `base64` as salted `sha256` hashes.  A simple Python script, `saltpass.py` is avaliable to obtain hash and salt values from a password.
 A single asterisk `"*"` may be specified as username or password hash to accept any value.
 
 With the above configuration, here is an example of how to call `add_node` from the `network_node` API:
@@ -192,10 +272,12 @@ If you want information which is not available from an API, it might be availabl
 from the [database](https://bitshares.github.io/doxygen/classgraphene_1_1chain_1_1database.html);
 it is fairly simple to write API methods to expose database methods.
 
+
 Running private testnet
 -----------------------
 
 See the [documentation](https://github.com/cryptonomex/graphene/wiki/private-testnet) if you want to run a private testnet.
+
 
 Questions
 ---------
