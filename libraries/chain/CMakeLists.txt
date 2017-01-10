@@ -55,6 +55,7 @@ add_library( graphene_chain
              protocol/confidential.cpp
              protocol/vote.cpp
              protocol/decent.cpp
+             protocol/subscription.cpp
 
              genesis_state.cpp
              get_config.cpp
@@ -75,6 +76,7 @@ add_library( graphene_chain
              confidential_evaluator.cpp
              buyback.cpp
              decent_evaluator.cpp
+             subscription_evaluator.cpp
 
              account_object.cpp
              asset_object.cpp
@@ -82,7 +84,7 @@ add_library( graphene_chain
              vesting_balance_object.cpp
              buying_object.cpp
              content_object.cpp
-        seeder_object.cpp
+             seeder_object.cpp
              rating_object.cpp
 
              block_database.cpp

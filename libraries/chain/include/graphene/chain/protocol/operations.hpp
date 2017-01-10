@@ -36,6 +36,7 @@
 #include <graphene/chain/protocol/withdraw_permission.hpp>
 #include <graphene/chain/protocol/witness.hpp>
 #include <graphene/chain/protocol/decent.hpp>
+#include <graphene/chain/protocol/subscription.hpp>
 
 namespace graphene { namespace chain {
 

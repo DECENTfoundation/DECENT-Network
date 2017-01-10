@@ -158,7 +158,7 @@ namespace graphene { namespace chain {
       impl_content_object_type,
       impl_publisher_object_type,
       impl_rating_object_type,
-      impl_subscription_object
+      impl_subscription_object_type
    };
 
    //typedef fc::unsigned_int            object_id_type;
@@ -381,7 +381,7 @@ FC_REFLECT_ENUM( graphene::chain::impl_object_type,
                  (impl_content_object_type)
                  (impl_publisher_object_type)
                  (impl_rating_object_type)
-                 (impl_subscription_type)
+                 (impl_subscription_object_type)
                )
 
 FC_REFLECT_TYPENAME( graphene::chain::share_type )

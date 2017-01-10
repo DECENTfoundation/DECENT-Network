@@ -95,6 +95,7 @@ void_result override_transfer_evaluator::do_evaluate( const override_transfer_op
       ("asset", op.amount.asset_id)
       );
    FC_ASSERT( asset_type.issuer == op.issuer );
+   //TODO_DECENT - rewrite with find, potentially unsafe
 
    const account_object& from_account    = op.from(d);
    const account_object& to_account      = op.to(d);
