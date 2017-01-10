@@ -9,3 +9,6 @@
 [submodule "libraries/contrib/fc"]
 	path = libraries/contrib/fc
 	url = https://github.com/DECENTfoundation/fc.git
+[submodule "libraries/contrib/libtorrent"]
+	path = libraries/contrib/libtorrent
+	url = https://github.com/DECENTfoundation/libtorrent.git
