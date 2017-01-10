@@ -8,4 +8,4 @@
 	ignore = dirty
 [submodule "libraries/contrib/fc"]
 	path = libraries/contrib/fc
-	url = https://github.com/DECENTfoundation/fc
+	url = https://github.com/DECENTfoundation/fc.git
