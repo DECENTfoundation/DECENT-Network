@@ -143,51 +143,50 @@ void seeding_plugin::plugin_initialize( const boost::program_options::variables_
    d_integer content_key;
    account_id_type seeder;
    uint32_t free_space;
-
-   if( options.count("seeder-private-key") )
-   {
-      private_key = graphene::utilities::wif_to_key(options["seeder-private-key"].as<std::string>());
-      if( !private_key )
-         try
-         {
-            private_key = fc::variant(options["seeder-private-key"].as<string>()).as<fc::ecc::private_key>();
-         }
-         catch (const fc::exception&)
-         {
-            FC_THROW("Invalid WIF-format seeder private key ${key_string}", ("key_string", options["seeder-private-key"].as<string>()));
-         }
-   }else{
-      FC_THROW("missing seeder-private-key parameter");
-   }
-
-   if( options.count("content-private-key") )
-   {
-      try {
-         content_key = decent::crypto::d_integer::from_string(options["content-private-key"].as<string>());
-      }catch(...)
-      {
-         FC_THROW("Invalid content private key ${key_string}", ("key_string", options["content-private-key"].as<string>()));
+   if( options.count("seeder-private-key") || options.count("content-private-key") || options.count("seeder") || options.count("free-space") ) {
+      if( options.count("seeder-private-key")) {
+         private_key = graphene::utilities::wif_to_key(options["seeder-private-key"].as<std::string>());
+         if( !private_key )
+            try {
+               private_key = fc::variant(options["seeder-private-key"].as<string>()).as<fc::ecc::private_key>();
+            }
+            catch( const fc::exception & ) {
+               FC_THROW("Invalid WIF-format seeder private key ${key_string}",
+                        ("key_string", options["seeder-private-key"].as<string>()));
+            }
+      } else {
+         FC_THROW("missing seeder-private-key parameter");
       }
-   }else{
-      FC_THROW("missing content-private-key parameter");
+
+
+      if( options.count("content-private-key")) {
+         try {
+            content_key = decent::crypto::d_integer::from_string(options["content-private-key"].as<string>());
+         } catch( ... ) {
+            FC_THROW("Invalid content private key ${key_string}",
+                     ("key_string", options["content-private-key"].as<string>()));
+         }
+      } else {
+         FC_THROW("missing content-private-key parameter");
+      }
+
+      if( options.count("seeder"))
+         seeder = fc::variant(options["seeder"].as<string>()).as<account_id_type>();
+      else
+         FC_THROW("missing seeder parameter");
+
+      if( options.count("free-space"))
+         free_space = options["free-space"].as<int>();
+      else
+         FC_THROW("missing free-space parameter");
+
+      database().create<my_seeder_object>([&](my_seeder_object &mso) {
+           mso.seeder = seeder;
+           mso.free_space = free_space;
+           mso.content_privKey = content_key;
+           mso.privKey = *private_key;
+      });
    }
-
-   if( options.count("seeder") )
-      seeder = fc::variant(options["seeder"].as<string>()).as<account_id_type>();
-   else
-      FC_THROW("missing seeder parameter");
-
-   if( options.count("free-space") )
-      free_space = options["free-space"].as<int>();
-   else
-      FC_THROW("missing free-space parameter");
-
-   database().create<my_seeder_object>([&](my_seeder_object& mso){
-        mso.seeder = seeder;
-        mso.free_space = free_space;
-        mso.content_privKey = content_key;
-        mso.privKey = *private_key;
-   });
    ilog("seeding plugin:  plugin_initialize() end");
 }FC_LOG_AND_RETHROW() }
 
