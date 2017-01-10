@@ -76,12 +76,14 @@ void seeding_plugin_impl::on_operation(const operation_history_object &op_obj)
       ilog("seeding plugin:  on_operation() handling new content");
       const content_submit_operation& cs_op = op_obj.op.get< content_submit_operation >();
       const auto& idx = db.get_index_type<my_seeder_index>().indices().get<by_seeder>();
-      for( auto seeder : idx ){
-         if( std::find( cs_op.seeders.begin(), cs_op.seeders.end(), (seeder.seeder) ) != cs_op.seeders.end() )
+      auto seeder_itr = idx.begin();
+      while( seeder_itr!= idx.end() )
+      {
+         if( std::find( cs_op.seeders.begin(), cs_op.seeders.end(), (seeder_itr->seeder) ) != cs_op.seeders.end() )
          {
             auto s = cs_op.seeders.begin();
             auto k = cs_op.key_parts.begin();
-            while( *s != seeder.seeder && s !=cs_op.seeders.end()){
+            while( *s != seeder_itr->seeder && s !=cs_op.seeders.end()){
                ++s; 
                ++k;
             }
@@ -96,24 +98,25 @@ void seeding_plugin_impl::on_operation(const operation_history_object &op_obj)
                db.modify<my_seeding_object>(*sitr, [&](my_seeding_object& mso){
                   mso.space -= diff_space;
                });
-               db.modify<my_seeder_object>(seeder, [&](my_seeder_object &mso) {
+               db.modify<my_seeder_object>(*seeder_itr, [&](my_seeder_object &mso) {
                     mso.free_space -= diff_space;
                });
             } else {
 
                db.create<my_seeding_object>([&](my_seeding_object &so) {
                     so.URI = cs_op.URI;
-                    so.seeder = seeder.seeder;
+                    so.seeder = seeder_itr->seeder;
                     so.space = (cs_op.size + 1048575) / 1048576; //we allocate the whole megabytes per content
                     if( k != cs_op.key_parts.end())
                        so.key = *k;
                     so.expiration = cs_op.expiration;
                });
-               db.modify<my_seeder_object>(seeder, [&](my_seeder_object &mso) {
+               db.modify<my_seeder_object>(*seeder_itr, [&](my_seeder_object &mso) {
                     mso.free_space -= (cs_op.size + 1048575) / 1048576; //we allocate the whole megabytes per content
                });
             }
          }
+         ++seeder_itr;
       }
       //TODO_DECENT download the content and start scheduler to periodically send PoR
    }
