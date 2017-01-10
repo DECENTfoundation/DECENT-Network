@@ -13,25 +13,16 @@ namespace detail {
 
 
 
-class seeding_plugin_impl {
-public:
-   seeding_plugin_impl(seeding_plugin &_plugin) : _self(_plugin) {}
 
-   ~seeding_plugin_impl();
-
-   graphene::chain::database &database() {
-      return _self.database();
-   }
-
-   void on_operation(const operation_history_object &op_obj);
-
-   seeding_plugin& _self;
-};
 
 
 seeding_plugin_impl::~seeding_plugin_impl()
 {
    return;
+}
+
+graphene::chain::database& seeding_plugin_impl::database() {
+   return _self.database();
 }
 
 void seeding_plugin_impl::on_operation(const operation_history_object &op_obj)
@@ -82,6 +73,7 @@ void seeding_plugin_impl::on_operation(const operation_history_object &op_obj)
 
    if( op_obj.op.which() == operation::tag<content_submit_operation>::value )
    {
+      ilog("seeding plugin:  on_operation() handling new content");
       const content_submit_operation& cs_op = op_obj.op.get< content_submit_operation >();
       const auto& idx = db.get_index_type<my_seeder_index>().indices().get<by_seeder>();
       for( auto seeder : idx ){
@@ -132,10 +124,14 @@ void seeding_plugin_impl::on_operation(const operation_history_object &op_obj)
 
 
 seeding_plugin::seeding_plugin() : my( new detail::seeding_plugin_impl( *this )){}
+void seeding_plugin::plugin_startup()
+{
+   //we shall send ready_to_publish here....
+}
 
 void seeding_plugin::plugin_initialize( const boost::program_options::variables_map& options )
 {try{
-   ilog("seedong plugin:  plugin_initialize() start");
+   ilog("seeding plugin:  plugin_initialize() start");
    database().on_applied_operation.connect( [&]( const operation_history_object& b ){ my->on_operation(b); } );
    database().add_index< primary_index < my_seeding_index > >();
    database().add_index< primary_index < my_seeder_index > >();
@@ -189,7 +185,7 @@ void seeding_plugin::plugin_initialize( const boost::program_options::variables_
         mso.content_privKey = content_key;
         mso.privKey = *private_key;
    });
-   ilog("seedong plugin:  plugin_initialize() end");
+   ilog("seeding plugin:  plugin_initialize() end");
 }FC_LOG_AND_RETHROW() }
 
 std::string seeding_plugin::plugin_name()const

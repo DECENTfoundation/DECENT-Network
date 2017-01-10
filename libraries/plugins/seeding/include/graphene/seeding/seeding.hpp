@@ -20,8 +20,21 @@ enum seeding_object_type
    seeding_object_type = 1
 };
 
+class seeding_plugin;
+
 namespace detail {
-   class seeding_plugin_impl;
+class seeding_plugin_impl {
+public:
+   seeding_plugin_impl(seeding_plugin &_plugin) : _self(_plugin) {}
+
+   ~seeding_plugin_impl();
+
+   graphene::chain::database &database();
+
+   void on_operation(const operation_history_object &op_obj);
+
+   seeding_plugin& _self;
+};
 }
 
 class my_seeder_object : public graphene::db::abstract_object< my_seeder_object >
@@ -78,14 +91,14 @@ class seeding_plugin : public graphene::app::plugin
 {
    public:
       seeding_plugin();
-      virtual ~seeding_plugin(){}
+      ~seeding_plugin(){};
 
       virtual std::string plugin_name()const override;
       virtual void plugin_set_program_options(
               boost::program_options::options_description& cli,
               boost::program_options::options_description& cfg) override;
-      virtual void plugin_initialize(const boost::program_options::variables_map& options) override;
-      virtual void plugin_startup() override;
+      void plugin_initialize(const boost::program_options::variables_map& options) override;
+      void plugin_startup() override;
 
       friend class detail::seeding_plugin_impl;
       std::unique_ptr<detail::seeding_plugin_impl> my;
