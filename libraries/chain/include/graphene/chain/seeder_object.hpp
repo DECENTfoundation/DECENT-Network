@@ -20,6 +20,7 @@ namespace graphene { namespace chain {
       uint64_t free_space;
       asset price;
       decent::crypto::d_integer pubKey;
+
    };
    
    struct by_seeder;

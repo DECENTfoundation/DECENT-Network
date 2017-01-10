@@ -97,6 +97,7 @@ namespace graphene { namespace chain {
 
    void_result deliver_keys_evaluator::do_evaluate(const deliver_keys_operation& o )
    {try{
+      //TODO_DECENT rewrite the next statement!!!
       const auto& buying = db().get<buying_object>(o.buying);
       auto& idx = db().get_index_type<content_index>().indices().get<by_URI>();
 
@@ -231,6 +232,7 @@ namespace graphene { namespace chain {
       //pay the seeder
       auto& idx = db().get_index_type<content_index>().indices().get<by_URI>();
       const auto& content = idx.find( o.URI );
+      //TODO_DECENT rewrite the next statement
       const auto& seeder = db().get<seeder_object>(o.seeder);
       auto last_proof = content->last_proof.find( o.seeder );
       if( last_proof == content->last_proof.end() )
