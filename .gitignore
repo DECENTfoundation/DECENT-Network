@@ -41,6 +41,7 @@ tests/app_test
 tests/chain_bench
 tests/chain_test
 tests/intense_test
+tests/package_test
 tests/performance_test
 tests/generate_empty_blocks
 
@@ -63,3 +64,5 @@ object_database/*
 # vendors mut not be in repository
 */**/vendor/
 CMakeLists.txt.user
+
+xcode/***
