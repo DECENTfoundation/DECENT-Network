@@ -1473,6 +1473,13 @@ class wallet_api
       vector<buying_object> get_open_buyings_by_consumer( const account_id_type& consumer )const;
 
       /**
+       * @brief Get a buying_history_object by "buying"
+       * @param buying Buying to retrieve
+       * @return The buying_history_object corresponding to the provided "buying", or null if no matching object was found
+       */
+      optional<buying_history_object> get_buying_history_object( const buying_id_type& buying )const;
+
+      /**
        * @brief Get a content by URI
        * @param URI URI of the content to retrieve
        * @return The content corresponding to the provided URI, or null if no matching content was found
@@ -1682,4 +1689,15 @@ FC_API( graphene::wallet::wallet_api,
         (ready_to_publish)
         (proof_of_custody)
         (deliver_keys)
+        (generate_el_gamal_keys)
+        (get_open_buyings)
+        (get_open_buyings_by_URI)
+        (get_open_buyings_by_consumer)
+        (get_buying_history_object)
+        (get_content)
+        (list_content_by_author)
+        (list_content)
+        (list_content_by_bought)
+        (list_publishers_by_price)
+        (get_content_ratings)
       )

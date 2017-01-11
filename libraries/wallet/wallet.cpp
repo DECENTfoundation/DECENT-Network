@@ -2383,7 +2383,7 @@ public:
       op.space = space;
       op.price_per_MByte = price_per_MByte;
       op.pubKey = pubKey;
-      
+
       signed_transaction tx;
       tx.operations.push_back( op );
       set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
@@ -4245,6 +4245,11 @@ vesting_balance_object_with_info::vesting_balance_object_with_info( const vestin
    vector<buying_object> wallet_api::get_open_buyings_by_consumer( const account_id_type& consumer )const
    {
       return my->_remote_db->get_open_buyings_by_consumer( consumer );
+   }
+
+   optional<buying_history_object> wallet_api::get_buying_history_object( const buying_id_type& buying )const
+   {
+      return my->_remote_db->get_buying_history_object( buying );
    }
 
    optional<content_object> wallet_api::get_content( const string& URI )const

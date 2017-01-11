@@ -28,13 +28,17 @@
 #include <graphene/chain/block_summary_object.hpp>
 #include <graphene/chain/budget_record_object.hpp>
 #include <graphene/chain/buyback_object.hpp>
+#include <graphene/chain/buying_object.hpp>
 #include <graphene/chain/chain_property_object.hpp>
 #include <graphene/chain/committee_member_object.hpp>
 #include <graphene/chain/confidential_object.hpp>
+#include <graphene/chain/content_object.hpp>
 #include <graphene/chain/global_property_object.hpp>
 #include <graphene/chain/market_object.hpp>
 #include <graphene/chain/operation_history_object.hpp>
 #include <graphene/chain/proposal_object.hpp>
+#include <graphene/chain/rating_object.hpp>
+#include <graphene/chain/seeder_object.hpp>
 #include <graphene/chain/transaction_object.hpp>
 #include <graphene/chain/vesting_balance_object.hpp>
 #include <graphene/chain/withdraw_permission_object.hpp>
@@ -47,6 +51,7 @@
 #include <graphene/chain/committee_member_evaluator.hpp>
 #include <graphene/chain/confidential_evaluator.hpp>
 #include <graphene/chain/custom_evaluator.hpp>
+#include <graphene/chain/decent_evaluator.hpp>
 #include <graphene/chain/market_evaluator.hpp>
 #include <graphene/chain/proposal_evaluator.hpp>
 #include <graphene/chain/transfer_evaluator.hpp>
@@ -157,6 +162,12 @@ void database::initialize_evaluators()
    register_evaluator<transfer_from_blind_evaluator>();
    register_evaluator<blind_transfer_evaluator>();
    register_evaluator<asset_claim_fees_evaluator>();
+   register_evaluator<content_submit_evaluator>();
+   register_evaluator<request_to_buy_evaluator>();
+   register_evaluator<leave_rating_evaluator>();
+   register_evaluator<ready_to_publish_evaluator>();
+   register_evaluator<deliver_keys_evaluator>();
+   register_evaluator<proof_of_custody_evaluator>();
 }
 
 void database::initialize_indexes()
@@ -197,6 +208,12 @@ void database::initialize_indexes()
    add_index< primary_index<simple_index<witness_schedule_object        > > >();
    add_index< primary_index<simple_index<budget_record_object           > > >();
    add_index< primary_index< buyback_index                                > >();
+   add_index< primary_index< seeder_index                                 > >();
+   add_index< primary_index< rating_index                                 > >();
+   add_index< primary_index< content_index                                > >();
+   add_index< primary_index< buying_index                                 > >();
+   add_index< primary_index< buying_history_index                         > >();
+
 }
 
 void database::init_genesis(const genesis_state_type& genesis_state)

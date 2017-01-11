@@ -1,10 +1,12 @@
-add_executable( size_checker main.cpp )
+find_package(CryptoPP)
+
 if( UNIX AND NOT APPLE )
   set(rt_library rt )
 endif()
 
+add_executable( size_checker main.cpp )
 target_link_libraries( size_checker
-                       PRIVATE graphene_chain graphene_egenesis_none fc ${CMAKE_DL_LIBS} ${PLATFORM_SPECIFIC_LIBS} ${CRYPTOPP_LIBRARIES} )
+                       PRIVATE graphene_chain graphene_egenesis_none fc cryptopp ${CMAKE_DL_LIBS} ${PLATFORM_SPECIFIC_LIBS} )
 
 install( TARGETS
    size_checker

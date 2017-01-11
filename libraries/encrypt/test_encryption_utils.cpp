@@ -23,6 +23,8 @@ void test_el_gamal(decent::crypto::aes_key k)
    d_integer pubk1 = decent::crypto::get_public_el_gamal_key(pk1);
    d_integer pubk2 = decent::crypto::get_public_el_gamal_key(pk2);
 
+   cout <<"pk1 = " << pk1.to_string();
+   cout <<"pk2 = " << pk2.to_string();
    cout<<"Catchpoint 1 \n";
    decent::crypto::point secret;
    secret.first = d_integer(10000);
