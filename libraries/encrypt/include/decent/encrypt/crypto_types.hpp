@@ -26,6 +26,20 @@
 #include <cryptopp/aes.h>
 #include <string>
 #include <fc/reflect/variant.hpp>
+#include <fc/log/logger.hpp>
+#include <fc/io/raw_variant.hpp>
+#include <fc/reflect/reflect.hpp>
+#include <fc/io/datastream.hpp>
+#include <fc/io/varint.hpp>
+#include <fc/optional.hpp>
+#include <fc/fwd.hpp>
+#include <fc/smart_ref_fwd.hpp>
+#include <fc/array.hpp>
+#include <fc/time.hpp>
+#include <fc/filesystem.hpp>
+#include <fc/exception/exception.hpp>
+#include <fc/safe.hpp>
+#include <fc/io/raw_fwd.hpp>
 
 namespace decent{
 namespace crypto{
@@ -36,7 +50,10 @@ public:
 
    static d_integer from_string(std::string from) ;
 
-   d_integer(CryptoPP::Integer integer) : CryptoPP::Integer(integer) {};
+   d_integer(CryptoPP::Integer integer) : CryptoPP::Integer(integer) { };
+   d_integer( const d_integer& integer ) : CryptoPP::Integer(integer) { };
+   d_integer& operator=(const d_integer& integer){ CryptoPP::Integer::operator=(integer); return *this; }
+
    d_integer() : CryptoPP::Integer(){};
    d_integer(std::string s): CryptoPP::Integer(s.c_str()){};
 };
@@ -53,7 +70,6 @@ struct delivery_proof {
    delivery_proof(d_integer g1, d_integer g2, d_integer g3, d_integer s,
                   d_integer r) : G1(g1), G2(g2), G3(g3), s(s), r(r) {};
    delivery_proof(){};
-
 };
 
 struct ciphertext {
@@ -70,15 +86,32 @@ struct aes_key {
 }}
 
 
-
 namespace fc {
-   inline void to_variant( const decent::crypto::d_integer& var,  fc::variant& vo ) { 
-      vo = var.to_string();
-   }
-   inline void from_variant( const fc::variant& var, decent::crypto::d_integer& vo ) {
-      vo = decent::crypto::d_integer::from_string( var.as_string() );
-   }
+inline void to_variant( const decent::crypto::d_integer& var,  fc::variant& vo ) {
+   vo = var.to_string();
 }
+inline void from_variant( const fc::variant& var, decent::crypto::d_integer& vo ) {
+   vo = decent::crypto::d_integer::from_string( var.as_string() );
+}
+
+namespace raw {
+template<typename Stream>
+inline void pack( Stream& s, const decent::crypto::d_integer& tp )
+{
+   fc::raw::pack( s, tp.to_string() );
+}
+
+template<typename Stream>
+inline void unpack( Stream& s, decent::crypto::d_integer& tp )
+{
+   std::string p;
+   fc::raw::unpack( s, p );
+   tp = decent::crypto::d_integer::from_string(p);
+}
+
+}
+}
+
 
 FC_REFLECT_EMPTY(decent::crypto::d_integer)
 

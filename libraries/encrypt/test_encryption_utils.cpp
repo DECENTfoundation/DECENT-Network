@@ -1,9 +1,12 @@
 #include <decent/encrypt/encryptionutils.hpp>
 #include <fc/exception/exception.hpp>
+#include <fc/log/logger.hpp>
+#include <graphene/chain/protocol/decent.hpp>
 #include <cstdio>
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <fc/thread/thread.hpp>
 
 using namespace std;
 
@@ -53,7 +56,7 @@ void test_el_gamal(decent::crypto::aes_key k)
 
    cout <<"recovered secret is "<<received_secret.first.to_string()<<" "<<received_secret.second.to_string() <<"\n";
 
-   for (int i=0; i<100000; i++)
+   for (int i=0; i<100; i++)
       bool ret_val = decent::crypto::verify_delivery_proof(proof, ct1,ct2,pubk1,pubk2);
    /*if(ret_val)
       cout<< "everything OK!\n";*/
@@ -80,14 +83,46 @@ void test_shamir(decent::crypto::d_integer secret)
    cout << "Original secret: "<< secret.to_string() <<"\nReconstructed_secret: "<<rs.secret.to_string() <<"\n";
 }
 
+
+
+void test_passed_op(graphene::chain::ready_to_publish_operation& op){
+   std::vector<char> data = fc::raw::pack(op);
+   idump((op));
+
+   graphene::chain::ready_to_publish_operation tmp;
+   fc::datastream<const char*> ds( data.data(), data.size() );
+   fc::raw::unpack( ds, tmp );
+   idump((tmp));
+}
+
+void test_passing_add_level_reference(graphene::chain::ready_to_publish_operation& op){
+   std::shared_ptr<fc::thread> new_thread = std::make_shared<fc::thread>("p2p");
+   new_thread->async([&](){ return test_passed_op(op);}).wait();
+
+}
+
+
+void test_move(){
+
+
+   graphene::chain::ready_to_publish_operation op;
+   op.space = 1000;
+   decent::crypto::d_integer a = decent::crypto::d_integer::from_string("12132131.");
+   op.pubKey = a;
+   op.price_per_MByte = 1;
+   idump((op));
+   test_passing_add_level_reference(op);
+}
+
 int main(int argc, char**argv)
 {
-   decent::crypto::aes_key k;
-   for (int i=0; i<CryptoPP::AES::MAX_KEYLENGTH; i++)
-      k.key_byte[i]=i;
+//  decent::crypto::aes_key k;
+//   for (int i=0; i<CryptoPP::AES::MAX_KEYLENGTH; i++)
+//      k.key_byte[i]=i;
  //  test_aes(k);
    cout<<"AES finished \n";
-   test_el_gamal(k);
-   const CryptoPP::Integer secret("12354678979464");
-   test_shamir(secret);
+//   test_el_gamal(k);
+//   const CryptoPP::Integer secret("12354678979464");
+ //  test_shamir(secret);
+   test_move();
 }
