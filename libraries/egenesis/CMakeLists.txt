@@ -19,10 +19,11 @@ set( embed_genesis_args
    -t "${CMAKE_CURRENT_SOURCE_DIR}/egenesis_full.cpp.tmpl---${CMAKE_CURRENT_BINARY_DIR}/egenesis_full.cpp"
    )
 
-MESSAGE( STATUS "egenesis: " ${GRAPHENE_EGENESIS_JSON} )
-
 if( GRAPHENE_EGENESIS_JSON )
+   MESSAGE( STATUS "egenesis: " ${GRAPHENE_EGENESIS_JSON} )
    list( APPEND embed_genesis_args --genesis-json "${GRAPHENE_EGENESIS_JSON}" )
+else( GRAPHENE_EGENESIS_JSON )
+   MESSAGE( STATUS "egenesis: none" )
 endif( GRAPHENE_EGENESIS_JSON )
 
 MESSAGE( STATUS "embed_genesis_args: " ${embed_genesis_args} )
