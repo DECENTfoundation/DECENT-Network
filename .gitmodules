@@ -6,6 +6,3 @@
 	path = libraries/contrib/pbc
 	url = https://github.com/DECENTfoundation/pbc.git
 	ignore = dirty
-[submodule "libraries/contrib/fc"]
-	path = libraries/contrib/fc
-	url = https://github.com/DECENTfoundation/fc.git
