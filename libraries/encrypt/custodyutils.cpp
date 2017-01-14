@@ -146,9 +146,9 @@ int custody_utils::generate_query_from_seed(mpz_t seed, unsigned int q, unsigned
 
       unsigned char digest[256];
 
-      char seed_str[16];
-      mpz_get_str(seed_str, 16, seedForIteration);
-      SHA256((unsigned char *)seed_str, 16, digest);
+      char seed_str[64];
+      mpz_get_str(seed_str, 64, seedForIteration);
+      SHA256((unsigned char *)seed_str, 64, digest);
       if (q < 16) //TODO_DECENT
       {
          indices[i] = i;
@@ -159,7 +159,7 @@ int custody_utils::generate_query_from_seed(mpz_t seed, unsigned int q, unsigned
          indices[i] = indices[i] % n;
       }
       element_init_Zr(v[i], pairing);
-      element_from_hash(v[i], digest, 32);
+      element_from_hash(v[i], digest, 64);
       mpz_clear(seedForIteration);
    }
 
