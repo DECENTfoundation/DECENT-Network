@@ -161,7 +161,7 @@ int custody_utils::generate_query_from_seed(mpz_t seed, unsigned int q, unsigned
          indices[i] = indices[i] % n;
       }
       element_init_Zr(v[i], pairing);
-      element_from_hash(v[i], digest, 64);
+      element_from_hash(v[i], "abcd", 64);
       mpz_clear(seedForIteration);
    }
 
@@ -487,8 +487,8 @@ int custody_utils::create_proof_of_custody(path content, const uint32_t n, unsig
 
    //generate query
    unsigned int q = get_number_of_query(n);
-   int indices[q];
-   element_t v[q];
+   int indices[16];
+   element_t v[16];
    generate_query_from_seed(seed, q, n, indices, v);
 
    //calculate mu and sigma

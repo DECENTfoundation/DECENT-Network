@@ -88,6 +88,10 @@ void test_custody(){
    char u_seed[16];
    uint32_t n;
    decent::crypto::custody_utils c;
+   cout<< "zr lenght: "<<pairing_length_in_bytes_Zr(c.pairing)<<"\n";
+   element_t test;
+   element_init_Zr(test, c.pairing);
+   element_set_si(test, 398421377431);
    pbc_param_t par;
    pbc_param_init_a_gen( par, 320, 1024 );
    pbc_param_out_str(stdout,par);

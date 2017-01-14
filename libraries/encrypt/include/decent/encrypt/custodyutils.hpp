@@ -74,7 +74,6 @@ public:
    int create_proof_of_custody(path content, const uint32_t n, unsigned char pubKey[], const char u_seed[],
                                unsigned char sigma[],
                                std::vector<std::string>& mus, mpz_t seed);
-private:
    element_t generator;
    pairing_t pairing;
    /*
