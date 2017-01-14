@@ -100,6 +100,9 @@ void test_custody(){
    std::cout <<"done creating custody data, "<<n<<" signatures generated\n";
 
    c.create_proof_of_custody(boost::filesystem::path("/tmp/content.zip"),n, pubKey, u_seed, sigma, mus, seed);
+   std::cout <<"mus.size = "<<mus.size()<<"\n";
+   for(int i=0; i< DECENT_SECTORS; i++)
+      std::cout <<"mus[" << i<<"] = " << mus[i]<<"\n";
    if(c.verify_by_miner(n, u_seed, pubKey, sigma, mus, seed))
       std::cout <<"Something wrong during verification...\n";
 }
