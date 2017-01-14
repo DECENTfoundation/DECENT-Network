@@ -161,7 +161,7 @@ int custody_utils::generate_query_from_seed(mpz_t seed, unsigned int q, unsigned
          indices[i] = indices[i] % n;
       }
       element_init_Zr(v[i], pairing);
-      element_from_hash(v[i], "abcd", 64);
+      element_from_hash(v[i], digest, 32);
       mpz_clear(seedForIteration);
    }
 
