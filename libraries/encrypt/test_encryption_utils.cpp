@@ -1,9 +1,13 @@
 #include <decent/encrypt/encryptionutils.hpp>
+#include <decent/encrypt/custodyutils.hpp>
+
 #include <fc/exception/exception.hpp>
 #include <cstdio>
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <stdio.h>
+
 
 using namespace std;
 
@@ -53,7 +57,7 @@ void test_el_gamal(decent::crypto::aes_key k)
 
    cout <<"recovered secret is "<<received_secret.first.to_string()<<" "<<received_secret.second.to_string() <<"\n";
 
-   for (int i=0; i<100000; i++)
+   for (int i=0; i<1; i++)
       bool ret_val = decent::crypto::verify_delivery_proof(proof, ct1,ct2,pubk1,pubk2);
    /*if(ret_val)
       cout<< "everything OK!\n";*/
@@ -80,6 +84,26 @@ void test_shamir(decent::crypto::d_integer secret)
    cout << "Original secret: "<< secret.to_string() <<"\nReconstructed_secret: "<<rs.secret.to_string() <<"\n";
 }
 
+void test_custody(){
+   char u_seed[16];
+   uint32_t n;
+   decent::crypto::custody_utils c;
+   pbc_param_t par;
+   pbc_param_init_a_gen( par, 320, 1024 );
+   pbc_param_out_str(stdout,par);
+   unsigned char pubKey[DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED];
+   unsigned char sigma[DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED];
+   std::vector<std::string> mus;
+   mpz_t seed;
+   mpz_init_set_ui(seed, 12458342);
+   c.create_custody_data(boost::filesystem::path("/tmp/content.zip"),n, u_seed, pubKey );
+   std::cout <<"done creating custody data, "<<n<<" signatures generated\n";
+
+   c.create_proof_of_custody(boost::filesystem::path("/tmp/content.zip"),n, pubKey, u_seed, sigma, mus, seed);
+   if(c.verify_by_miner(n, u_seed, pubKey, sigma, mus, seed))
+      std::cout <<"Something wrong during verification...\n";
+}
+
 int main(int argc, char**argv)
 {
    decent::crypto::aes_key k;
@@ -87,7 +111,9 @@ int main(int argc, char**argv)
       k.key_byte[i]=i;
  //  test_aes(k);
    cout<<"AES finished \n";
-   test_el_gamal(k);
+ //  test_el_gamal(k);
    const CryptoPP::Integer secret("12354678979464");
-   test_shamir(secret);
+ //  test_shamir(secret);
+
+   test_custody();
 }
