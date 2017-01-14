@@ -132,7 +132,7 @@ int custody_utils::get_sigmas(element_t **m, const unsigned int n, element_t u[]
    *sigmas = ret;
    for( int k =0; k < DECENT_SECTORS; k++)
       element_pp_clear(u_pp[k]);
-   free(u_pp);
+   delete[] u_pp;
    return 0;
 }
 
@@ -141,6 +141,7 @@ int custody_utils::generate_query_from_seed(mpz_t seed, unsigned int q, unsigned
    for (int i = 0; i < q; i++)
    {
       mpz_t seedForIteration;
+      mpz_init(seedForIteration);
       mpz_add_ui(seedForIteration, seed, i);
 
       unsigned char digest[256];
@@ -159,6 +160,7 @@ int custody_utils::generate_query_from_seed(mpz_t seed, unsigned int q, unsigned
       }
       element_init_Zr(v[i], pairing);
       element_from_hash(v[i], digest, 32);
+      mpz_clear(seedForIteration);
    }
 
    return 0;
