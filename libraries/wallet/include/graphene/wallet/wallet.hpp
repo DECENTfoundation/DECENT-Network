@@ -1522,6 +1522,16 @@ class wallet_api
        * @return The ratings of the content
        */
       vector<uint64_t> get_content_ratings( const string& URI )const;
+
+
+      /**
+       * @brief Get a list of packages
+       * @return The list of packages
+       */
+      vector<string> list_packages( ) const;
+
+
+
 };
    
 } }
@@ -1700,4 +1710,5 @@ FC_API( graphene::wallet::wallet_api,
         (list_content_by_bought)
         (list_publishers_by_price)
         (get_content_ratings)
+        (list_packages)
       )

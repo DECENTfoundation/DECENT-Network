@@ -100,13 +100,14 @@ int main( int argc, char** argv )
 			extract = options["extract"].as<bool>();
 		}
 
+
+
 		if (extract) {
 			cout << "Extracting package..." << endl;
-			package_manager pacman(packagePath);
 			try {
-
-				pacman.unpack_package(outputPath, fc::sha512(key));
-				cout << "Package was extracted " << pacman.get_hash() << endl;
+				package_manager::instance().initialize(packagePath.parent_path());
+				package_manager::instance().unpack_package(outputPath, packagePath, fc::sha512(key));
+				cout << "Package was extracted " << endl;
 
 			} catch( fc::exception& er ) { 
 				cout << "Failed to extract package" << endl;
@@ -116,11 +117,11 @@ int main( int argc, char** argv )
 		} else {
 			cout << "Creating package..." << endl;
 
-			package_manager pacman(contentPath, samplesPath, fc::sha512(key));
 			
 			try {
-				pacman.create_package(packagePath);
-				cout << "Package created " << pacman.get_hash() << endl;
+ 				package_manager::instance().initialize(packagePath);
+				package_object pack = package_manager::instance().create_package(contentPath, samplesPath, fc::sha512(key));
+				cout << "Package created " << pack.get_hash() << endl;
 
 			} catch( fc::exception& er ) { 
 				cout << "Failed to create package" << endl;
