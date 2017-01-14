@@ -145,9 +145,11 @@ int custody_utils::generate_query_from_seed(mpz_t seed, unsigned int q, unsigned
       mpz_add_ui(seedForIteration, seed, i);
 
       unsigned char digest[256];
+      memset((char*) digest, 0, 256);
 
-      char seed_str[64];
-      mpz_get_str(seed_str, 64, seedForIteration);
+      char seed_str[mpz_sizeinbase(seedForIteration,16)+1];
+      memset((char*) seed_str, 0, mpz_sizeinbase(seedForIteration,16)+1);
+      mpz_get_str(seed_str, 16, seedForIteration);
       SHA256((unsigned char *)seed_str, 64, digest);
       if (q < 16) //TODO_DECENT
       {
