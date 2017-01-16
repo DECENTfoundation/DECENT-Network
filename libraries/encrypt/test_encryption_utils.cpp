@@ -89,26 +89,31 @@ void test_custody(){
    uint32_t n;
    decent::crypto::custody_utils c;
    cout<< "zr lenght: "<<pairing_length_in_bytes_Zr(c.pairing)<<"\n";
-   element_t test;
-   element_init_Zr(test, c.pairing);
-   element_set_si(test, 398421377431);
-   pbc_param_t par;
-   pbc_param_init_a_gen( par, 320, 1024 );
-   pbc_param_out_str(stdout,par);
+   element_t test, test2, test3;
+
+   element_init_G1(test, c.pairing);
+   element_init_G1(test2, c.pairing);
+   element_init_G1(test3, c.pairing);
+   element_set_si(test2, 398421377431);
+   element_set_si(test3, 398421377431);
+
+   element_mul(test, test2, test3);
+
+   //pbc_param_t par;
+   //pbc_param_init_a_gen( par, 320, 1024 );
+   //pbc_param_out_str(stdout,par);
    unsigned char pubKey[DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED];
    unsigned char sigma[DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED];
-   std::vector<std::string> mus;
+   std::vector<std::vector<unsigned char>> mus;
    mpz_t seed;
    mpz_init_set_ui(seed, 12458342);
    c.create_custody_data(boost::filesystem::path("/tmp/content.zip"),n, u_seed, pubKey );
    std::cout <<"done creating custody data, "<<n<<" signatures generated\n";
 
    c.create_proof_of_custody(boost::filesystem::path("/tmp/content.zip"),n, pubKey, u_seed, sigma, mus, seed);
-   std::cout <<"mus.size = "<<mus.size()<<"\n";
-   for(int i=0; i< DECENT_SECTORS; i++)
-      std::cout <<"mus[" << i<<"] = " << mus[i]<<"\n";
    if(c.verify_by_miner(n, u_seed, pubKey, sigma, mus, seed))
       std::cout <<"Something wrong during verification...\n";
+   mpz_clear (seed);
 }
 
 int main(int argc, char**argv)

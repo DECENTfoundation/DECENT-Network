@@ -6,6 +6,7 @@
 #include <cmath>
 #include <openssl/rand.h>
 #include <fc/exception/exception.hpp>
+#include <fc/crypto/sha256.hpp>
 
 namespace decent{
 namespace crypto{
@@ -18,12 +19,18 @@ custody_utils::custody_utils()
    element_t private_key, public_key;
 
    element_init_G1(generator, pairing);
-   element_init_Zr(private_key, pairing);
-   element_init_G1(public_key, pairing);
+   //element_init_Zr(private_key, pairing);
+   //element_init_G1(public_key, pairing);
 
    element_set_str(generator, _DECENT_GENERATOR_, 10);
-   element_random(private_key);
-   element_pow_zn(public_key, generator, private_key);
+   //element_random(private_key);
+   //element_pow_zn(public_key, generator, private_key);
+}
+
+custody_utils::~custody_utils()
+{
+   element_clear(generator);
+   pairing_clear(pairing);
 }
 
 
@@ -66,6 +73,7 @@ int custody_utils::split_file(std::fstream &file, unsigned int &n, element_t ***
    if (length % (DECENT_SIZE_OF_NUMBER_IN_THE_FIELD * DECENT_SECTORS))
       n += 1;
    element_t **m = new element_t*[n];
+   element_printf("Size of n is: %d\n",n);
    for(int i = 0; i < n; i++)
       m[i] = new element_t[DECENT_SECTORS];
 
@@ -136,21 +144,23 @@ int custody_utils::get_sigmas(element_t **m, const unsigned int n, element_t u[]
    return 0;
 }
 
-int custody_utils::generate_query_from_seed(mpz_t seed, unsigned int q, unsigned int n, int indices[], element_t v[])
+int custody_utils::generate_query_from_seed(mpz_t seed, unsigned int q, unsigned int n, int indices[], element_t* v[])
 {
+   element_t* ret = new element_t[q]; 
    for (int i = 0; i < q; i++)
    {
       mpz_t seedForIteration;
       mpz_init(seedForIteration);
       mpz_add_ui(seedForIteration, seed, i);
 
-      unsigned char digest[256];
-      memset((char*) digest, 0, 256);
+      unsigned char * digest = (unsigned char* ) calloc(32,1);
 
       char seed_str[mpz_sizeinbase(seedForIteration,16)+1];
       memset((char*) seed_str, 0, mpz_sizeinbase(seedForIteration,16)+1);
       mpz_get_str(seed_str, 16, seedForIteration);
-      SHA256((unsigned char *)seed_str, 64, digest);
+      fc::sha256 temp = fc::sha256::hash( seed_str, mpz_sizeinbase(seedForIteration,16));
+      memcpy(digest, temp._hash, (4*sizeof(uint64_t)));
+
       if (q < 16) //TODO_DECENT
       {
          indices[i] = i;
@@ -160,11 +170,12 @@ int custody_utils::generate_query_from_seed(mpz_t seed, unsigned int q, unsigned
          memcpy(&indices[i], digest, 8);
          indices[i] = indices[i] % n;
       }
-      element_init_Zr(v[i], pairing);
-      element_from_hash(v[i], digest, 32);
+      element_init_Zr(ret[i], pairing);
+      element_from_hash(ret[i], digest, 32);
       mpz_clear(seedForIteration);
+      free(digest);
    }
-
+   *v = ret;
    return 0;
 }
 
@@ -180,10 +191,11 @@ int custody_utils::compute_mu(element_t **m, unsigned int q, int indices[], elem
          element_t temp;
          element_init_Zr(temp, pairing);
          element_mul(temp, v[i], m[indices[i]][j]);
-         if (i)
+         if ( i > 0 )
             element_add(mu[j], mu[j], temp);
          else
             element_set(mu[j], temp);
+         element_clear(temp);
       }
    }
 
@@ -214,7 +226,7 @@ int custody_utils::verify(element_t sigma, unsigned int q, int *indices, element
       sprintf(index, "%d", indices[i]);
       SHA256((unsigned char *)index, 4, buf);
       element_from_hash(hash, buf, 256);
-      element_pow_zn(temp, hash, v[i]);
+      element_pow_zn(temp, hash, v[i]); //TODO_DECENT optimize
       if (i)
          element_mul(multi1, multi1, temp);
       else
@@ -243,6 +255,7 @@ int custody_utils::verify(element_t sigma, unsigned int q, int *indices, element
    element_pairing(res2, left2, pubk);
 
    int res = element_cmp(res1, res2);
+   element_clear(hash);
    element_clear(res1);
    element_clear(res2);
    element_clear(multi1);
@@ -293,6 +306,7 @@ int custody_utils::compute_sigma(element_t sigmas[], unsigned int q, int indices
          element_mul(sigma, sigma, temp);
       else
          element_set(sigma, temp);
+      element_clear(temp);
    }
    return 0;
 }
@@ -309,7 +323,7 @@ int custody_utils::get_number_of_query(int blocks)
 
 
 int custody_utils::verify_by_miner(const uint32_t &n, const char *u_seed, unsigned char *pubKey, unsigned char sigma[],
-                                   std::vector<std::string> &mus, mpz_t seed)
+                                   std::vector<std::vector<unsigned char>> mus, mpz_t seed)
 {
    //prepate public_key and u
    element_t public_key;
@@ -341,21 +355,25 @@ int custody_utils::verify_by_miner(const uint32_t &n, const char *u_seed, unsign
    for (int i = 0; i < DECENT_SECTORS; i++)
    {
       element_init_Zr(mu[i], pairing);
-      element_from_bytes(mu[i], (unsigned char*)mus[i].c_str());
+      element_from_bytes(mu[i], reinterpret_cast<unsigned char*>(mus[i].data())); 
    }
 
 
    unsigned int q = get_number_of_query( n );
    int indices[q];
-   element_t v[q];
+   element_t* v;
 
-   generate_query_from_seed(seed, q, n, indices, v);
+   generate_query_from_seed(seed, q, n, indices, &v);
 
    int res = verify(_sigma, q, indices, v, u, mu, public_key);
 
    clear_elements(u, DECENT_SECTORS);
    clear_elements(mu, DECENT_SECTORS);
    clear_elements(v, q);
+   element_clear(public_key);
+   mpz_clear(seedForU);
+   element_clear( _sigma );
+   delete(v);
 
    return res;
 }
@@ -391,12 +409,12 @@ int custody_utils::create_custody_data(path content, uint32_t& n, char u_seed[],
       buf_ptr += sprintf(buf_ptr, "%X", (unsigned char)u_seed[i]);
    }
    buf_str[32]=0;
-   //std::cout <<"seed string"<<buf_str<<"\n";
 
    mpz_init_set_str(seedForU, buf_str, 16);
    free(buf_str);
 
    get_u_from_seed(seedForU, u);
+
 
    element_random(private_key);
    element_pow_zn(public_key, generator, private_key);
@@ -419,16 +437,20 @@ int custody_utils::create_custody_data(path content, uint32_t& n, char u_seed[],
    }
 
    //Clean
+   element_printf("Size of n is: %d\n",n);
+
    for (int i = 0; i < n; i++)
    {
       clear_elements(m[i], DECENT_SECTORS);
+      delete[](m[i]);
    }
    delete[] m;
    clear_elements(u, DECENT_SECTORS);
    element_clear(private_key);
    element_clear(public_key);
    clear_elements(sigmas, n);
-
+   delete[](sigmas);
+   mpz_clear(seedForU);
    outfile.close();
    infile.close();
    return 0;
@@ -436,7 +458,7 @@ int custody_utils::create_custody_data(path content, uint32_t& n, char u_seed[],
 
 int custody_utils::create_proof_of_custody(path content, const uint32_t n, unsigned char pubKey[], const char u_seed[],
                                            unsigned char sigma[],
-                                           std::vector<std::string>& mus, mpz_t seed)
+                                           std::vector<std::vector<unsigned char>>& mus, mpz_t seed)
 {
    //open files
    std::fstream infile(content.c_str(), std::fstream::binary | std::fstream::in);
@@ -488,8 +510,8 @@ int custody_utils::create_proof_of_custody(path content, const uint32_t n, unsig
    //generate query
    unsigned int q = get_number_of_query(n);
    int indices[16];
-   element_t v[16];
-   generate_query_from_seed(seed, q, n, indices, v);
+   element_t * v;
+   generate_query_from_seed(seed, q, n, indices, &v);
 
    //calculate mu and sigma
    element_t mu[DECENT_SECTORS];
@@ -505,7 +527,7 @@ int custody_utils::create_proof_of_custody(path content, const uint32_t n, unsig
    for (int i = 0; i < DECENT_SECTORS; i++)
    {
       element_to_bytes(buffer_mu, mu[i]);
-      std::string tmp ((char*)buffer_mu);
+      std::vector<unsigned char> tmp(buffer_mu, buffer_mu + DECENT_SIZE_OF_NUMBER_IN_THE_FIELD);
       mus.push_back(tmp);
    }
 
@@ -516,6 +538,7 @@ int custody_utils::create_proof_of_custody(path content, const uint32_t n, unsig
    for (int i = 0; i < n; i++)
    {
       clear_elements(m[i], DECENT_SECTORS);
+      delete[](m[i]);
    }
    delete[] m;
 
@@ -523,10 +546,11 @@ int custody_utils::create_proof_of_custody(path content, const uint32_t n, unsig
    element_clear(_sigma);
 
    element_clear(public_key);
+   mpz_clear(seedForU);
    clear_elements(u, DECENT_SECTORS);
    clear_elements(mu, DECENT_SECTORS);
    clear_elements(v, q);
-
+   delete(v);
    return res;
 }
 

@@ -47,12 +47,12 @@ class custody_utils
 {
 public:
    custody_utils();
-
+   ~custody_utils();
    /*
     * Generates u from seed seedU. The array must be initalized to at least DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED elements
     */
    int get_u_from_seed(const mpz_t &seedU, element_t out[]);
-   int generate_query_from_seed(mpz_t seed, unsigned int q, unsigned int n, int indices[], element_t v[]);
+   int generate_query_from_seed(mpz_t seed, unsigned int q, unsigned int n, int indices[], element_t* v[]);
    int compute_mu(element_t **m, unsigned int q, int indices[], element_t v[], element_t mu[]);
    int compute_sigma(element_t *sigmas, unsigned int q, int *indices, element_t *v, element_t &sigma);
    int verify(element_t sigma, unsigned int q, int *indices, element_t *v, element_t *u, element_t *mu, element_t pubk);
@@ -60,7 +60,7 @@ public:
    int unpack_proof(valtype proof, element_t &sigma, element_t **mu);
    int get_number_of_query(int blocks);
    int verify_by_miner(const uint32_t &n, const char *u_seed, unsigned char *pubKey, unsigned char sigma[],
-                       std::vector<std::string> &mus, mpz_t seed);
+                       std::vector<std::vector<unsigned char>> mus, mpz_t seed);
 
    /**
     *
@@ -73,7 +73,7 @@ public:
    int create_custody_data(path content, uint32_t& n, char u_seed[], unsigned char pubKey[]);
    int create_proof_of_custody(path content, const uint32_t n, unsigned char pubKey[], const char u_seed[],
                                unsigned char sigma[],
-                               std::vector<std::string>& mus, mpz_t seed);
+                               std::vector<std::vector<unsigned char>>& mus, mpz_t seed);
    element_t generator;
    pairing_t pairing;
    /*
