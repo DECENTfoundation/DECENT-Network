@@ -86,7 +86,7 @@ namespace graphene { namespace chain {
          static bool is_valid_symbol( const string& symbol );
 
          /// @return true if this is a market-issued asset; false otherwise.
-         bool is_monitored_asset()const { return asset_options.is_monitored_asset; }
+         bool is_monitored_asset()const { return options.monitored_asset.valid(); }
 
          /// Helper function to get an asset object with the given amount in this asset's type
          asset amount(share_type a)const { return asset(a, id); }

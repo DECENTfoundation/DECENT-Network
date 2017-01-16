@@ -29,6 +29,19 @@ namespace graphene { namespace chain {
 
    bool is_valid_symbol( const string& symbol );
 
+   struct monitored_asset_options
+   {
+      /// Feeds published for this asset. If issuer is not committee, the keys in this map are the feed publishing
+      /// accounts; otherwise, the feed publishers are the currently active committee_members and witnesses and this map
+      /// should be treated as an implementation detail. The timestamp on each feed is the time it was published.
+      flat_map<account_id_type, pair<time_point_sec,price_feed>> feeds;
+      /// This is the currently active price feed, calculated as the median of values from the currently active
+      /// feeds.
+      price_feed current_feed;
+      /// This is the publication time of the oldest feed which was factored into current_feed.
+      time_point_sec current_feed_publication_time;
+   };
+
    /**
     * @brief The asset_options struct contains options available on all assets in the network
     *
@@ -50,7 +63,7 @@ namespace graphene { namespace chain {
        * size of description.
        */
 
-      bool is_monitored_asset;
+      optional<monitored_asset_options> monitored_asset;
 
       string description;
       extensions_type extensions;
@@ -274,10 +287,16 @@ FC_REFLECT( graphene::chain::asset_claim_fees_operation::fee_parameters_type, (f
 FC_REFLECT( graphene::chain::asset_options,
             (max_supply)
             (core_exchange_rate)
-            (is_monitored_asset)
+            (monitored_asset)
             (description)
             (extensions)
           )
+
+FC_REFLECT( graphene::chain::monitored_asset_options,
+            (feeds)
+            (current_feed)
+            (current_feed_publication_time)
+)
 
 FC_REFLECT( graphene::chain::asset_create_operation::fee_parameters_type, (symbol3)(symbol4)(long_symbol)(price_per_kbyte) )
 FC_REFLECT( graphene::chain::asset_fund_fee_pool_operation::fee_parameters_type, (fee) )

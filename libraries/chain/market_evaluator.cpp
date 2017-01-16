@@ -180,7 +180,6 @@ void_result call_order_update_evaluator::do_apply(const call_order_update_operat
          }
       }
 
-
       auto& call_idx = d.get_index_type<call_order_index>().indices().get<by_account>();
       auto itr = call_idx.find( boost::make_tuple(o.funding_account, o.delta_debt.asset_id) );
       const call_order_object* call_obj = nullptr;
