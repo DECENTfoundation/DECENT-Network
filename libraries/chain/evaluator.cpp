@@ -25,7 +25,6 @@
 #include <graphene/chain/evaluator.hpp>
 #include <graphene/chain/exceptions.hpp>
 #include <graphene/chain/hardfork.hpp>
-#include <graphene/chain/is_authorized_asset.hpp>
 #include <graphene/chain/transaction_evaluation_state.hpp>
 
 #include <graphene/chain/asset_object.hpp>
@@ -59,9 +58,6 @@ database& generic_evaluator::db()const { return trx_state->db(); }
 
       fee_asset = &fee.asset_id(d);
       fee_asset_dyn_data = &fee_asset->dynamic_asset_data_id(d);
-
-      FC_ASSERT( is_authorized_asset( d, *fee_paying_account, *fee_asset ), "Account ${acct} '${name}' attempted to pay fee by using asset ${a} '${sym}', which is unauthorized due to whitelist / blacklist",
-         ("acct", fee_paying_account->id)("name", fee_paying_account->name)("a", fee_asset->id)("sym", fee_asset->symbol) );
 
       if( fee_from_account.asset_id == asset_id_type() )
          core_fee_paid = fee_from_account.amount;

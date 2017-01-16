@@ -29,7 +29,6 @@ namespace graphene { namespace chain {
 
    class account_object;
    class asset_object;
-   class asset_bitasset_data_object;
    class call_order_object;
    struct call_order_update_operation;
    struct limit_order_cancel_operation;
@@ -66,21 +65,6 @@ namespace graphene { namespace chain {
          asset do_apply( const limit_order_cancel_operation& o );
 
          const limit_order_object* _order;
-   };
-
-   class call_order_update_evaluator : public evaluator<call_order_update_evaluator>
-   {
-      public:
-         typedef call_order_update_operation operation_type;
-
-         void_result do_evaluate( const call_order_update_operation& o );
-         void_result do_apply( const call_order_update_operation& o );
-
-         bool _closing_order = false;
-         const asset_object* _debt_asset = nullptr;
-         const account_object* _paying_account = nullptr;
-         const call_order_object* _order = nullptr;
-         const asset_bitasset_data_object* _bitasset_data = nullptr;
    };
 
 } } // graphene::chain

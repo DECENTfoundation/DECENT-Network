@@ -82,12 +82,10 @@ add_library( graphene_chain
              vesting_balance_object.cpp
              buying_object.cpp
              content_object.cpp
-        seeder_object.cpp
+             seeder_object.cpp
              rating_object.cpp
 
              block_database.cpp
-
-             is_authorized_asset.cpp
 
              ${HEADERS}
              "${CMAKE_CURRENT_BINARY_DIR}/include/graphene/chain/hardfork.hpp"

@@ -66,7 +66,7 @@ struct genesis_state_type {
       share_type max_supply;
       share_type accumulated_fees;
 
-      bool is_bitasset = false;
+      bool is_monitored_asset = false;
       vector<initial_collateral_position> collateral_records;
    };
    struct initial_balance_type {
@@ -113,7 +113,7 @@ struct genesis_state_type {
 FC_REFLECT(graphene::chain::genesis_state_type::initial_account_type, (name)(owner_key)(active_key))
 
 FC_REFLECT(graphene::chain::genesis_state_type::initial_asset_type,
-           (symbol)(issuer_name)(description)(precision)(max_supply)(accumulated_fees)(is_bitasset)(collateral_records))
+           (symbol)(issuer_name)(description)(precision)(max_supply)(accumulated_fees)(collateral_records))
 
 FC_REFLECT(graphene::chain::genesis_state_type::initial_asset_type::initial_collateral_position,
            (owner)(collateral)(debt))

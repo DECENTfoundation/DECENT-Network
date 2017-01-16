@@ -28,7 +28,6 @@
 #include <graphene/chain/database.hpp>
 #include <graphene/chain/exceptions.hpp>
 #include <graphene/chain/hardfork.hpp>
-#include <graphene/chain/is_authorized_asset.hpp>
 
 #include <functional>
 
@@ -40,14 +39,6 @@ void_result asset_create_evaluator::do_evaluate( const asset_create_operation& o
    database& d = db();
 
    const auto& chain_parameters = d.get_global_properties().parameters;
-   FC_ASSERT( op.common_options.whitelist_authorities.size() <= chain_parameters.maximum_asset_whitelist_authorities );
-   FC_ASSERT( op.common_options.blacklist_authorities.size() <= chain_parameters.maximum_asset_whitelist_authorities );
-
-   // Check that all authorities do exist
-   for( auto id : op.common_options.whitelist_authorities )
-      d.get_object(id);
-   for( auto id : op.common_options.blacklist_authorities )
-      d.get_object(id);
 
    auto& asset_indx = d.get_index_type<asset_index>().indices().get<by_symbol>();
    auto asset_symbol_itr = asset_indx.find( op.symbol );
@@ -66,29 +57,6 @@ void_result asset_create_evaluator::do_evaluate( const asset_create_operation& o
 
    core_fee_paid -= core_fee_paid.value/2;
 
-   if( op.bitasset_opts )
-   {
-      const asset_object& backing = op.bitasset_opts->short_backing_asset(d);
-      if( backing.is_market_issued() )
-      {
-         const asset_bitasset_data_object& backing_bitasset_data = backing.bitasset_data(d);
-         const asset_object& backing_backing = backing_bitasset_data.options.short_backing_asset(d);
-         FC_ASSERT( !backing_backing.is_market_issued(),
-                    "May not create a bitasset backed by a bitasset backed by a bitasset." );
-         FC_ASSERT( op.issuer != GRAPHENE_COMMITTEE_ACCOUNT || backing_backing.get_id() == asset_id_type(),
-                    "May not create a blockchain-controlled market asset which is not backed by CORE.");
-      } else
-         FC_ASSERT( op.issuer != GRAPHENE_COMMITTEE_ACCOUNT || backing.get_id() == asset_id_type(),
-                    "May not create a blockchain-controlled market asset which is not backed by CORE.");
-      FC_ASSERT( op.bitasset_opts->feed_lifetime_sec > chain_parameters.block_interval &&
-                 op.bitasset_opts->force_settlement_delay_sec > chain_parameters.block_interval );
-   }
-   if( op.is_prediction_market )
-   {
-      FC_ASSERT( op.bitasset_opts );
-      FC_ASSERT( op.precision == op.bitasset_opts->short_backing_asset(d).precision );
-   }
-
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
@@ -99,13 +67,6 @@ object_id_type asset_create_evaluator::do_apply( const asset_create_operation& o
          a.current_supply = 0;
          a.fee_pool = core_fee_paid; //op.calculate_fee(db().current_fee_schedule()).value / 2;
       });
-
-   asset_bitasset_data_id_type bit_asset_id;
-   if( op.bitasset_opts.valid() )
-      bit_asset_id = db().create<asset_bitasset_data_object>( [&]( asset_bitasset_data_object& a ) {
-            a.options = *op.bitasset_opts;
-            a.is_prediction_market = op.is_prediction_market;
-         }).id;
 
    auto next_asset_id = db().get_index_type<asset_index>().get_next_id();
 
@@ -120,8 +81,6 @@ object_id_type asset_create_evaluator::do_apply( const asset_create_operation& o
          else
             a.options.core_exchange_rate.base.asset_id = next_asset_id;
          a.dynamic_asset_data_id = dyn_asset.id;
-         if( op.bitasset_opts.valid() )
-            a.bitasset_data_id = bit_asset_id;
       });
    assert( new_asset.id == next_asset_id );
 
@@ -134,10 +93,7 @@ void_result asset_issue_evaluator::do_evaluate( const asset_issue_operation& o )
 
    const asset_object& a = o.asset_to_issue.asset_id(d);
    FC_ASSERT( o.issuer == a.issuer );
-   FC_ASSERT( !a.is_market_issued(), "Cannot manually issue a market-issued asset." );
-
-   to_account = &o.issue_to_account(d);
-   FC_ASSERT( is_authorized_asset( d, *to_account, a ) );
+   FC_ASSERT( !a.is_monitored_asset(), "Cannot manually issue a market-issued asset." );
 
    asset_dyn_data = &a.dynamic_asset_data_id(d);
    FC_ASSERT( (asset_dyn_data->current_supply + o.asset_to_issue.amount) <= a.options.max_supply );
@@ -162,14 +118,13 @@ void_result asset_reserve_evaluator::do_evaluate( const asset_reserve_operation&
 
    const asset_object& a = o.amount_to_reserve.asset_id(d);
    GRAPHENE_ASSERT(
-      !a.is_market_issued(),
+      !a.is_monitored_asset(),
       asset_reserve_invalid_on_mia,
       "Cannot reserve ${sym} because it is a market-issued asset",
       ("sym", a.symbol)
    );
 
    from_account = &o.payer(d);
-   FC_ASSERT( is_authorized_asset( d, *from_account, a ) );
 
    asset_dyn_data = &a.dynamic_asset_data_id(d);
    FC_ASSERT( (asset_dyn_data->current_supply - o.amount_to_reserve.amount) >= 0 );
@@ -220,37 +175,10 @@ void_result asset_update_evaluator::do_evaluate(const asset_update_operation& o)
    a_copy.validate();
 
    if( o.new_issuer )
-   {
       FC_ASSERT(d.find_object(*o.new_issuer));
-      if( a.is_market_issued() && *o.new_issuer == GRAPHENE_COMMITTEE_ACCOUNT )
-      {
-         const asset_object& backing = a.bitasset_data(d).options.short_backing_asset(d);
-         if( backing.is_market_issued() )
-         {
-            const asset_object& backing_backing = backing.bitasset_data(d).options.short_backing_asset(d);
-            FC_ASSERT( backing_backing.get_id() == asset_id_type(),
-                       "May not create a blockchain-controlled market asset which is not backed by CORE.");
-         } else
-            FC_ASSERT( backing.get_id() == asset_id_type(),
-                       "May not create a blockchain-controlled market asset which is not backed by CORE.");
-      }
-   }
-
-   // changed flags must be subset of old issuer permissions
-   FC_ASSERT(!((o.new_options.flags ^ a.options.flags) & ~a.options.issuer_permissions),
-             "Flag change is forbidden by issuer permissions");
 
    asset_to_update = &a;
    FC_ASSERT( o.issuer == a.issuer, "", ("o.issuer", o.issuer)("a.issuer", a.issuer) );
-
-   const auto& chain_parameters = d.get_global_properties().parameters;
-
-   FC_ASSERT( o.new_options.whitelist_authorities.size() <= chain_parameters.maximum_asset_whitelist_authorities );
-   for( auto id : o.new_options.whitelist_authorities )
-      d.get_object(id);
-   FC_ASSERT( o.new_options.blacklist_authorities.size() <= chain_parameters.maximum_asset_whitelist_authorities );
-   for( auto id : o.new_options.blacklist_authorities )
-      d.get_object(id);
 
    return void_result();
 } FC_CAPTURE_AND_RETHROW((o)) }
@@ -259,74 +187,10 @@ void_result asset_update_evaluator::do_apply(const asset_update_operation& o)
 { try {
    database& d = db();
 
-   // If we are now disabling force settlements, cancel all open force settlement orders
-   if( o.new_options.flags & disable_force_settle && asset_to_update->can_force_settle() )
-   {
-      const auto& idx = d.get_index_type<force_settlement_index>().indices().get<by_expiration>();
-      // Funky iteration code because we're removing objects as we go. We have to re-initialize itr every loop instead
-      // of simply incrementing it.
-      for( auto itr = idx.lower_bound(o.asset_to_update);
-           itr != idx.end() && itr->settlement_asset_id() == o.asset_to_update;
-           itr = idx.lower_bound(o.asset_to_update) )
-         d.cancel_order(*itr);
-   }
-
    d.modify(*asset_to_update, [&](asset_object& a) {
       if( o.new_issuer )
          a.issuer = *o.new_issuer;
       a.options = o.new_options;
-   });
-
-   return void_result();
-} FC_CAPTURE_AND_RETHROW( (o) ) }
-
-void_result asset_update_bitasset_evaluator::do_evaluate(const asset_update_bitasset_operation& o)
-{ try {
-   database& d = db();
-
-   const asset_object& a = o.asset_to_update(d);
-
-   FC_ASSERT(a.is_market_issued(), "Cannot update BitAsset-specific settings on a non-BitAsset.");
-
-   const asset_bitasset_data_object& b = a.bitasset_data(d);
-   FC_ASSERT( !b.has_settlement(), "Cannot update a bitasset after a settlement has executed" );
-   if( o.new_options.short_backing_asset != b.options.short_backing_asset )
-   {
-      FC_ASSERT(a.dynamic_asset_data_id(d).current_supply == 0);
-      FC_ASSERT(d.find_object(o.new_options.short_backing_asset));
-
-      if( a.issuer == GRAPHENE_COMMITTEE_ACCOUNT )
-      {
-         const asset_object& backing = a.bitasset_data(d).options.short_backing_asset(d);
-         if( backing.is_market_issued() )
-         {
-            const asset_object& backing_backing = backing.bitasset_data(d).options.short_backing_asset(d);
-            FC_ASSERT( backing_backing.get_id() == asset_id_type(),
-                       "May not create a blockchain-controlled market asset which is not backed by CORE.");
-         } else
-            FC_ASSERT( backing.get_id() == asset_id_type(),
-                       "May not create a blockchain-controlled market asset which is not backed by CORE.");
-      }
-   }
-
-   bitasset_to_update = &b;
-   FC_ASSERT( o.issuer == a.issuer, "", ("o.issuer", o.issuer)("a.issuer", a.issuer) );
-
-   return void_result();
-} FC_CAPTURE_AND_RETHROW( (o) ) }
-
-void_result asset_update_bitasset_evaluator::do_apply(const asset_update_bitasset_operation& o)
-{ try {
-   bool should_update_feeds = false;
-   // If the minimum number of feeds to calculate a median has changed, we need to recalculate the median
-   if( o.new_options.minimum_feeds != bitasset_to_update->options.minimum_feeds )
-      should_update_feeds = true;
-
-   db().modify(*bitasset_to_update, [&](asset_bitasset_data_object& b) {
-      b.options = o.new_options;
-
-      if( should_update_feeds )
-         b.update_median_feeds(db().head_block_time());
    });
 
    return void_result();
@@ -342,9 +206,7 @@ void_result asset_update_feed_producers_evaluator::do_evaluate(const asset_updat
 
    const asset_object& a = o.asset_to_update(d);
 
-   FC_ASSERT(a.is_market_issued(), "Cannot update feed producers on a non-BitAsset.");
-   FC_ASSERT(!(a.options.flags & committee_fed_asset), "Cannot set feed producers on a committee-fed asset.");
-   FC_ASSERT(!(a.options.flags & witness_fed_asset), "Cannot set feed producers on a witness-fed asset.");
+   FC_ASSERT(a.is_monitored_asset(), "Cannot update feed producers on a non-BitAsset.");
 
    const asset_bitasset_data_object& b = a.bitasset_data(d);
    bitasset_to_update = &b;
@@ -376,84 +238,6 @@ void_result asset_update_feed_producers_evaluator::do_apply(const asset_update_f
 
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (o) ) }
-
-void_result asset_global_settle_evaluator::do_evaluate(const asset_global_settle_evaluator::operation_type& op)
-{ try {
-   const database& d = db();
-   asset_to_settle = &op.asset_to_settle(d);
-   FC_ASSERT(asset_to_settle->is_market_issued());
-   FC_ASSERT(asset_to_settle->can_global_settle());
-   FC_ASSERT(asset_to_settle->issuer == op.issuer );
-   FC_ASSERT(asset_to_settle->dynamic_data(d).current_supply > 0);
-   const auto& idx = d.get_index_type<call_order_index>().indices().get<by_collateral>();
-   assert( !idx.empty() );
-   auto itr = idx.lower_bound(boost::make_tuple(price::min(asset_to_settle->bitasset_data(d).options.short_backing_asset,
-                                                           op.asset_to_settle)));
-   assert( itr != idx.end() && itr->debt_type() == op.asset_to_settle );
-   const call_order_object& least_collateralized_short = *itr;
-   FC_ASSERT(least_collateralized_short.get_debt() * op.settle_price <= least_collateralized_short.get_collateral(),
-             "Cannot force settle at supplied price: least collateralized short lacks sufficient collateral to settle.");
-
-   return void_result();
-} FC_CAPTURE_AND_RETHROW( (op) ) }
-
-void_result asset_global_settle_evaluator::do_apply(const asset_global_settle_evaluator::operation_type& op)
-{ try {
-   database& d = db();
-   d.globally_settle_asset( op.asset_to_settle(db()), op.settle_price );
-   return void_result();
-} FC_CAPTURE_AND_RETHROW( (op) ) }
-
-void_result asset_settle_evaluator::do_evaluate(const asset_settle_evaluator::operation_type& op)
-{ try {
-   const database& d = db();
-   asset_to_settle = &op.amount.asset_id(d);
-   FC_ASSERT(asset_to_settle->is_market_issued());
-   const auto& bitasset = asset_to_settle->bitasset_data(d);
-   FC_ASSERT(asset_to_settle->can_force_settle() || bitasset.has_settlement() );
-   if( bitasset.is_prediction_market )
-      FC_ASSERT( bitasset.has_settlement(), "global settlement must occur before force settling a prediction market"  );
-   else if( bitasset.current_feed.settlement_price.is_null() )
-      FC_THROW_EXCEPTION(insufficient_feeds, "Cannot force settle with no price feed.");
-   FC_ASSERT(d.get_balance(d.get(op.account), *asset_to_settle) >= op.amount);
-
-   return void_result();
-} FC_CAPTURE_AND_RETHROW( (op) ) }
-
-operation_result asset_settle_evaluator::do_apply(const asset_settle_evaluator::operation_type& op)
-{ try {
-   database& d = db();
-   d.adjust_balance(op.account, -op.amount);
-
-   const auto& bitasset = asset_to_settle->bitasset_data(d);
-   if( bitasset.has_settlement() )
-   {
-      auto settled_amount = op.amount * bitasset.settlement_price;
-      FC_ASSERT( settled_amount.amount <= bitasset.settlement_fund );
-
-      d.modify( bitasset, [&]( asset_bitasset_data_object& obj ){
-                obj.settlement_fund -= settled_amount.amount;
-                });
-
-      d.adjust_balance(op.account, settled_amount);
-
-      const auto& mia_dyn = asset_to_settle->dynamic_asset_data_id(d);
-
-      d.modify( mia_dyn, [&]( asset_dynamic_data_object& obj ){
-                obj.current_supply -= op.amount.amount;
-                });
-
-      return settled_amount;
-   }
-   else
-   {
-      return d.create<force_settlement_object>([&](force_settlement_object& s) {
-         s.owner = op.account;
-         s.balance = op.amount;
-         s.settlement_date = d.head_block_time() + asset_to_settle->bitasset_data(d).options.force_settlement_delay_sec;
-      }).id;
-   }
-} FC_CAPTURE_AND_RETHROW( (op) ) }
 
 void_result asset_publish_feeds_evaluator::do_evaluate(const asset_publish_feed_operation& o)
 { try {
@@ -508,8 +292,6 @@ void_result asset_publish_feeds_evaluator::do_apply(const asset_publish_feed_ope
 
    return void_result();
 } FC_CAPTURE_AND_RETHROW((o)) }
-
-
 
 void_result asset_claim_fees_evaluator::do_evaluate( const asset_claim_fees_operation& o )
 { try {

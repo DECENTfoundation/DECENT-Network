@@ -315,12 +315,6 @@ void create_buyback_orders( database& db )
       const account_object& buyback_account = (*(asset_to_buy.buyback_account))(db);
       asset_id_type next_asset = asset_id_type();
 
-      if( !buyback_account.allowed_assets.valid() )
-      {
-         wlog( "skipping buyback account ${b} at block ${n} because allowed_assets does not exist", ("b", buyback_account)("n", db.head_block_num()) );
-         continue;
-      }
-
       while( true )
       {
          auto it = bal_idx.lower_bound( boost::make_tuple( buyback_account.id, next_asset ) );
@@ -335,11 +329,6 @@ void create_buyback_orders( database& db )
             continue;
          if( amount_to_sell == 0 )
             continue;
-         if( buyback_account.allowed_assets->find( asset_to_sell ) == buyback_account.allowed_assets->end() )
-         {
-            wlog( "buyback account ${b} not selling disallowed holdings of asset ${a} at block ${n}", ("b", buyback_account)("a", asset_to_sell)("n", db.head_block_num()) );
-            continue;
-         }
 
          try
          {
@@ -523,10 +512,6 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
       d.next_maintenance_time = next_maintenance_time;
       d.accounts_registered_this_interval = 0;
    });
-
-   // Reset all BitAsset force settlement volumes to zero
-   for( const asset_bitasset_data_object* d : get_index_type<asset_bitasset_data_index>() )
-      modify(*d, [](asset_bitasset_data_object& d) { d.force_settled_volume = 0; });
 
    // process_budget needs to run at the bottom because
    //   it needs to know the next_maintenance_time
