@@ -260,6 +260,8 @@ struct operation_detail {
 /**
  * This wallet assumes it is connected to the database server with a high-bandwidth, low-latency connection and
  * performs minimal caching. This API could be provided locally to be used by a web interface.
+ *
+ * @defgroup WalletCLI
  */
 class wallet_api
 {
@@ -666,7 +668,7 @@ class wallet_api
        * @param wallet_filename the filename of the new wallet JSON file to create
        *                        or overwrite.  If \c wallet_filename is empty,
        *                        save to the current filename.
-       *                        @ingroup WalletCLI
+       * @ingroup WalletCLI
        */
       void    save_wallet_file(string wallet_filename = "");
 
