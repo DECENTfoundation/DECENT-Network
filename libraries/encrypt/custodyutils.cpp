@@ -128,10 +128,10 @@ int custody_utils::get_sigmas(element_t **m, const unsigned int n, element_t u[]
       element_t hash;
       element_init_G1(hash, pairing);
       unsigned char buf[256] = "";
-      char index[4];
-      memset(index,0,4);
+      char index[16];
+      memset(index,0,16);
       sprintf(index, "%d", i);
-      SHA256((unsigned char *)index, 4, buf);
+      SHA256((unsigned char *)index, 16, buf);
       element_from_hash(hash, buf, 256);
       element_mul(ret[i], ret[i], hash);
       element_pow_zn(ret[i], ret[i], pk);
@@ -221,10 +221,10 @@ int custody_utils::verify(element_t sigma, unsigned int q, int *indices, element
    for (int i = 0; i < q; i++)
    {
       unsigned char buf[256] = "";
-      char index[4];
-      memset(index,0,4);
+      char index[16];
+      memset(index,0,16);
       sprintf(index, "%d", indices[i]);
-      SHA256((unsigned char *)index, 4, buf);
+      SHA256((unsigned char *)index, 16, buf);
       element_from_hash(hash, buf, 256);
       element_pow_zn(temp, hash, v[i]); //TODO_DECENT optimize
       if (i)
