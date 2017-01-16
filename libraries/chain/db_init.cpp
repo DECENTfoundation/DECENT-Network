@@ -488,11 +488,6 @@ void database::init_genesis(const genesis_state_type& genesis_state)
             total_debts[ new_asset_id ] += collateral_rec.debt;
             ++collateral_holder_number;
          }
-
-         bitasset_data_id = create<asset_bitasset_data_object>([&](asset_bitasset_data_object& b) {
-            b.options.short_backing_asset = core_asset.id;
-            b.options.minimum_feeds = GRAPHENE_DEFAULT_MINIMUM_FEEDS;
-         }).id;
       }
 
       dynamic_data_id = create<asset_dynamic_data_object>([&](asset_dynamic_data_object& d) {

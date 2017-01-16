@@ -71,6 +71,28 @@ namespace graphene { namespace chain {
          const asset_object* asset_to_update = nullptr;
    };
 
+   class asset_update_feed_producers_evaluator : public evaluator<asset_update_feed_producers_evaluator>
+   {
+   public:
+      typedef asset_update_feed_producers_operation operation_type;
+
+      void_result do_evaluate( const operation_type& o );
+      void_result do_apply( const operation_type& o );
+
+      const asset_bitasset_data_object* bitasset_to_update = nullptr;
+   };
+
+   class asset_publish_feeds_evaluator : public evaluator<asset_publish_feeds_evaluator>
+   {
+   public:
+      typedef asset_publish_feed_operation operation_type;
+
+      void_result do_evaluate( const asset_publish_feed_operation& o );
+      void_result do_apply( const asset_publish_feed_operation& o );
+
+      std::map<std::pair<asset_id_type,asset_id_type>,price_feed> median_feed_values;
+   };
+
    class asset_fund_fee_pool_evaluator : public evaluator<asset_fund_fee_pool_evaluator>
    {
       public:
