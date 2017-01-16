@@ -9,3 +9,12 @@
 [submodule "libraries/contrib/fc"]
 	path = libraries/contrib/fc
 	url = https://github.com/DECENTfoundation/fc.git
+[submodule "libraries/contrib/libtorrent"]
+	path = libraries/contrib/libtorrent
+	url = https://github.com/DECENTfoundation/libtorrent.git
+[submodule "libraries/contrib/cpp-ipfs-api"]
+	path = libraries/contrib/cpp-ipfs-api
+	url = https://github.com/DECENTfoundation/cpp-ipfs-api.git
+[submodule "libraries/contrib/json"]
+	path = libraries/contrib/json
+	url = https://github.com/DECENTfoundation/json.git

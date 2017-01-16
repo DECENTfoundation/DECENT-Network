@@ -43,7 +43,9 @@ if( APPLE )
               "${HOMEBREW_PREFIX}/opt/pbc"
               "${HOMEBREW_PREFIX}/opt/gmp"
               "${HOMEBREW_PREFIX}/opt/cryptopp"
-              "${HOMEBREW_PREFIX}/opt/berkeley-db" )
+              "${HOMEBREW_PREFIX}/opt/berkeley-db"
+              "${HOMEBREW_PREFIX}/opt/libtorrent-rasterbar"
+            )
     endif()
 endif()
 
@@ -60,34 +62,27 @@ list( APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/libraries/contrib/fc
 include( GetGitRevisionDescription )
 get_git_head_revision( GIT_REFSPEC GIT_SHA2 )
 
-set( BOOST_COMPONENTS )
-list( APPEND BOOST_COMPONENTS thread
-                             date_time
-                             system
-                             filesystem
-                             program_options
-                             signals
-                             serialization
-                             chrono
-                             unit_test_framework
-                             context
-                             locale )
-set( Boost_USE_STATIC_LIBS ON CACHE STRING "ON or OFF" )
-
 if( WIN32 )
     set( BOOST_ROOT $ENV{BOOST_ROOT} )
     set( Boost_USE_MULTITHREADED ON )
     set( BOOST_ALL_DYN_LINK OFF ) # force dynamic linking for all libraries
 endif()
 
-find_package( Boost 1.57 REQUIRED COMPONENTS ${BOOST_COMPONENTS} )
-# For Boost 1.53 on windows, coroutine was not in BOOST_LIBRARYDIR and do not need it to build, but if boost versin >= 1.54, find coroutine otherwise will cause link errors
-if( NOT "${Boost_VERSION}" MATCHES "1.53(.*)" )
-    set( BOOST_LIBRARIES_TEMP ${Boost_LIBRARIES} )
-    find_package( Boost 1.54 REQUIRED COMPONENTS coroutine )
-    list( APPEND BOOST_COMPONENTS coroutine )
-    set( Boost_LIBRARIES ${BOOST_LIBRARIES_TEMP} ${Boost_LIBRARIES} )
-endif()
+set( Boost_USE_STATIC_LIBS ON CACHE STRING "ON or OFF" )
+
+find_package( Boost 1.60 REQUIRED
+    COMPONENTS thread
+               date_time
+               system
+               filesystem
+               program_options
+               signals
+               serialization
+               chrono
+               unit_test_framework
+               context
+               coroutine
+               locale )
 
 if( WIN32 )
 
@@ -185,9 +180,9 @@ add_subdirectory( tests )
 
 if( ENABLE_INSTALLER )
 
-    set(VERSION_MAJOR 0)
-    set(VERSION_MINOR 1)
-    set(VERSION_PATCH 0)
+    set( VERSION_MAJOR 0 )
+    set( VERSION_MINOR 1 )
+    set( VERSION_PATCH 0 )
 
     include( InstallRequiredSystemLibraries )
 
