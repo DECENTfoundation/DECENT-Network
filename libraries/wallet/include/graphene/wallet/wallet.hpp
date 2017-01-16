@@ -282,15 +282,23 @@ class wallet_api
        * @ingroup WalletCLI
        */
       variant_object                    about() const;
+    /**
+     *
+     * @param num id of the block
+     * @return
+     * @ingroup WalletCLI
+     */
       optional<signed_block_with_info>    get_block( uint32_t num );
       /** Returns the number of accounts registered on the blockchain
        * @returns the number of registered accounts
+       * @ingroup WalletCLI
        */
       uint64_t                          get_account_count()const;
       /** Lists all accounts controlled by this wallet.
        * This returns a list of the full account objects for all accounts whose private keys 
        * we possess.
        * @returns a list of account objects
+       * @ingroup WalletCLI
        */
       vector<account_object>            list_my_accounts();
       /** Lists all accounts registered in the blockchain.
@@ -304,6 +312,7 @@ class wallet_api
        *                   the list will start at the account that comes after \c lowerbound
        * @param limit the maximum number of accounts to return (max: 1000)
        * @returns a list of accounts mapping account names to account ids
+       * @ingroup WalletCLI
        */
       map<string,account_id_type>       list_accounts(const string& lowerbound, uint32_t limit);
       /** List the balances of an account.
@@ -312,6 +321,7 @@ class wallet_api
        * nonzero balance
        * @param id the name or id of the account whose balances you want
        * @returns a list of the given account's balances
+       * @ingroup WalletCLI
        */
       vector<asset>                     list_account_balances(const string& id);
       /** Lists all assets registered on the blockchain.
@@ -322,6 +332,7 @@ class wallet_api
        * @param lowerbound  the symbol of the first asset to include in the list.
        * @param limit the maximum number of assets to return (max: 100)
        * @returns the list of asset objects, ordered by symbol
+       * @ingroup WalletCLI
        */
       vector<asset_object>              list_assets(const string& lowerbound, uint32_t limit)const;
       
@@ -334,13 +345,45 @@ class wallet_api
        * @param name the name or id of the account
        * @param limit the number of entries to return (starting from the most recent) (max 100)
        * @returns a list of \c operation_history_objects
+       * @ingroup WalletCLI
        */
       vector<operation_detail>  get_account_history(string name, int limit)const;
 
 
+    /**
+     *
+     * @param symbol
+     * @param symbol2
+     * @param bucket
+     * @return
+     * @ingroup WalletCLI
+     */
       vector<bucket_object>             get_market_history(string symbol, string symbol2, uint32_t bucket)const;
+    /**
+     *
+     * @param a
+     * @param b
+     * @param limit
+     * @return
+     * @ingroup WalletCLI
+     */
       vector<limit_order_object>        get_limit_orders(string a, string b, uint32_t limit)const;
+    /**
+     *
+     * @param a
+     * @param limit
+     * @return
+     * @ingroup WalletCLI
+     */
       vector<call_order_object>         get_call_orders(string a, uint32_t limit)const;
+
+    /**
+     *
+     * @param a
+     * @param limit
+     * @return
+     * @ingroup WalletCLI
+     */
       vector<force_settlement_object>   get_settle_orders(string a, uint32_t limit)const;
       
       /** Returns the block chain's slowly-changing settings.
@@ -349,6 +392,7 @@ class wallet_api
        * current list of witnesses, committee_members, block interval, etc.
        * @see \c get_dynamic_global_properties() for frequently changing properties
        * @returns the global properties
+       * @ingroup WalletCLI
        */
       global_property_object            get_global_properties() const;
 
@@ -357,6 +401,7 @@ class wallet_api
        * such as the head block number, the next witness, etc.
        * @see \c get_global_properties() for less-frequently changing properties
        * @returns the dynamic global properties
+       * @ingroup WalletCLI
        */
       dynamic_global_property_object    get_dynamic_global_properties() const;
 
@@ -364,12 +409,14 @@ class wallet_api
        *
        * @param account_name_or_id the name or id of the account to provide information about
        * @returns the public account data stored in the blockchain
+       * @ingroup WalletCLI
        */
       account_object                    get_account(string account_name_or_id) const;
 
       /** Returns information about the given asset.
        * @param asset_name_or_id the symbol or id of the asset in question
        * @returns the information about the asset stored in the block chain
+       * @ingroup WalletCLI
        */
       asset_object                      get_asset(string asset_name_or_id) const;
 
@@ -378,12 +425,14 @@ class wallet_api
        * their basic asset data, as returned by \c get_asset().
        * @param asset_name_or_id the symbol or id of the BitAsset in question
        * @returns the BitAsset-specific data for this asset
+       * @ingroup WalletCLI
        */
       asset_bitasset_data_object        get_bitasset_data(string asset_name_or_id)const;
 
       /** Lookup the id of a named account.
        * @param account_name_or_id the name of the account to look up
        * @returns the id of the named account
+       * @ingroup WalletCLI
        */
       account_id_type                   get_account_id(string account_name_or_id) const;
 
@@ -391,6 +440,7 @@ class wallet_api
        * Lookup the id of a named asset.
        * @param asset_name_or_id the symbol of an asset to look up
        * @returns the id of the given asset
+       * @ingroup WalletCLI
        */
       asset_id_type                     get_asset_id(string asset_name_or_id) const;
 
@@ -404,6 +454,7 @@ class wallet_api
        *
        * @param id the id of the object to return
        * @returns the requested object
+       * @ingroup WalletCLI
        */
       variant                           get_object(object_id_type id) const;
 
@@ -416,10 +467,13 @@ class wallet_api
        */
       string                            get_wallet_filename() const;
 
-      /**
-       * Get the WIF private key corresponding to a public key.  The
-       * private key must already be in the wallet.
-       */
+       /**
+        * Get the WIF private key corresponding to a public key.  The
+        * private key must already be in the wallet.
+        * @param pubkey
+        * @return
+        * @ingroup WalletCLI
+        */
       string                            get_private_key( public_key_type pubkey )const;
 
       /**
@@ -427,37 +481,63 @@ class wallet_api
        * @ingroup WalletCLI
        */
       transaction_handle_type begin_builder_transaction();
-      /**
-       * @ingroup Transaction Builder API
-       * @ingroup WalletCLI
-       */
+
+       /**
+        *
+        * @param transaction_handle
+        * @param op
+        * @ingroup Transaction Builder API
+        * @ingroup WalletCLI
+        */
       void add_operation_to_builder_transaction(transaction_handle_type transaction_handle, const operation& op);
-      /**
-       * @ingroup Transaction Builder API
-       * @ingroup WalletCLI
-       */
+
+       /**
+        *
+        * @param handle
+        * @param operation_index
+        * @param new_op
+        * @ingroup Transaction Builder API
+        * @ingroup WalletCLI
+        */
       void replace_operation_in_builder_transaction(transaction_handle_type handle,
                                                     unsigned operation_index,
                                                     const operation& new_op);
-      /**
-       * @ingroup Transaction Builder API
-       * @ingroup WalletCLI
-       */
+       /**
+        *
+        * @param handle
+        * @param fee_asset
+        * @return
+        * @ingroup Transaction Builder API
+        * @ingroup WalletCLI
+        */
       asset set_fees_on_builder_transaction(transaction_handle_type handle, string fee_asset = GRAPHENE_SYMBOL);
       /**
+       * @param handle
        * @ingroup Transaction Builder API
        * @ingroup WalletCLI
        */
       transaction preview_builder_transaction(transaction_handle_type handle);
-      /**
-       * @ingroup Transaction Builder API
-       * @ingroup WalletCLI
-       */
+
+       /**
+        *
+        * @param transaction_handle
+        * @param broadcast true to broadcast the transaction on the network
+        * @return
+        * @ingroup Transaction Builder API
+        * @ingroup WalletCLI
+        */
       signed_transaction sign_builder_transaction(transaction_handle_type transaction_handle, bool broadcast = true);
-      /**
-       * @ingroup Transaction Builder API
-       * @ingroup WalletCLI
-       */
+
+       /**
+        *
+        * @param handle
+        * @param expiration
+        * @param review_period_seconds
+        * @param broadcast true to broadcast the transaction on the network
+        * @return
+        * @ingroup Transaction Builder API
+        * @ingroup WalletCLI
+        */
       signed_transaction propose_builder_transaction(
           transaction_handle_type handle,
           time_point_sec expiration = time_point::now() + fc::minutes(1),
@@ -471,7 +551,7 @@ class wallet_api
      * @param account_name_or_id
      * @param expiration
      * @param review_period_seconds
-     * @param broadcast
+     * @param broadcast true to broadcast the transaction on the network
      * @return
      * @ingroup WalletCLI
      */
@@ -483,10 +563,12 @@ class wallet_api
          bool broadcast = true
         );
 
-      /**
-       * @ingroup Transaction Builder API
-       * @ingroup WalletCLI
-       */
+       /**
+        *
+        * @param handle
+        * @ingroup Transaction Builder API
+        * @ingroup WalletCLI
+        */
       void remove_builder_transaction(transaction_handle_type handle);
 
       /** Checks whether the wallet has just been created and has not yet had a password set.
@@ -527,6 +609,7 @@ class wallet_api
        *
        * The wallet must be either 'new' or 'unlocked' to
        * execute this command.
+       * @param password
        * @ingroup Wallet Management
        * @ingroup WalletCLI
        */
@@ -758,10 +841,12 @@ class wallet_api
       }
 
 
-      /**
-       *  This method is used to convert a JSON transaction to its transactin ID.
-       *  @ingroup WalletCLI
-       */
+       /**
+        * This method is used to convert a JSON transaction to its transactin ID.
+        * @param trx
+        * @return
+        * @ingroup WalletCLI
+        */
       transaction_id_type get_transaction_id( const signed_transaction& trx )const { return trx.id(); }
 
 
@@ -769,7 +854,8 @@ class wallet_api
       ///@{
       /**
        *  This method can be used to set the label for a public key
-       *
+       *  @param public_key_type
+       *  @param label
        *  @note No two keys can have the same label.
        *
        *  @return true if the label was set, otherwise false
@@ -777,7 +863,7 @@ class wallet_api
        */
       bool                        set_key_label( public_key_type, string label );
       /**
-       *
+       * @param public_key_type
        * @return
        * @ingroup WalletCLI
        */
@@ -785,6 +871,9 @@ class wallet_api
 
       /**
        *  Generates a new blind account for the given brain key and assigns it the given label.
+       *  @param label
+       *  @param brain_key
+       *  @return
        *  @ingroup WalletCLI
        */
       public_key_type             create_blind_account( string label, string brain_key  );
@@ -792,6 +881,7 @@ class wallet_api
       /**
        * @return the total balance of all blinded commitments that can be claimed by the
        * given account key or label
+       * @param key_or_label
        * @ingroup WalletCLI
        */
       vector<asset>                get_blind_balances( string key_or_label );
@@ -806,6 +896,7 @@ class wallet_api
        */
       map<string,public_key_type> get_my_blind_accounts()const;
       /**
+       * @param label
        * @return the public key associated with the given label
        * @ingroup WalletCLI
        */
@@ -813,6 +904,7 @@ class wallet_api
       ///@}
 
       /**
+       * @param key_or_account
        * @return all blind receipts to/form a particular account
        * @ingroup WalletCLI
        */
@@ -823,27 +915,41 @@ class wallet_api
        *  that it exists in the blockchain.  If it exists then it will report the amount received and
        *  who sent it.
        *
-       *  @param opt_from - if not empty and the sender is a unknown public key, then the unknown public key will be given the label opt_from
        *  @param confirmation_receipt - a base58 encoded stealth confirmation
+       *  @param opt_from - if not empty and the sender is a unknown public key, then the unknown public key will be given the label opt_from
+       *  @param opt_memo
        *  @ingroup WalletCLI
        */
       blind_receipt receive_blind_transfer( string confirmation_receipt, string opt_from, string opt_memo );
 
-      /**
-       *  Transfers a public balance from @from to one or more blinded balances using a
-       *  stealth transfer.
-       *  @ingroup WalletCLI
-       */
+
+       /**
+        * Transfers a public balance from @from to one or more blinded balances using a
+        *  stealth transfer.
+        * @param from_account_id_or_name
+        * @param asset_symbol
+        * @param to_amounts
+        * @param broadcast true to broadcast the transaction on the network
+        * @return
+        * @ingroup WalletCLI
+        */
       blind_confirmation transfer_to_blind( string from_account_id_or_name, 
                                             string asset_symbol,
                                             /** map from key or label to amount */
                                             vector<pair<string, string>> to_amounts, 
                                             bool broadcast = false );
 
-       /**
-        * Transfers funds from a set of blinded balances to a public account balance.
-        * @ingroup WalletCLI
-        */
+
+        /**
+         * Transfers funds from a set of blinded balances to a public account balance.
+         * @param from_blind_account_key_or_label
+         * @param to_account_id_or_name
+         * @param amount
+         * @param asset_symbol
+         * @param broadcast true to broadcast the transaction on the network
+         * @return
+         * @ingroup WalletCLI
+         */
       blind_confirmation transfer_from_blind( 
                                             string from_blind_account_key_or_label,
                                             string to_account_id_or_name, 
@@ -851,10 +957,16 @@ class wallet_api
                                             string asset_symbol,
                                             bool broadcast = false );
 
-      /**
-       *  Used to transfer from one set of blinded balances to another
-       *  @ingroup WalletCLI
-       */
+       /**
+        * Used to transfer from one set of blinded balances to another
+        * @param from_key_or_label
+        * @param to_key_or_label
+        * @param amount
+        * @param symbol
+        * @param broadcast true to broadcast the transaction on the network
+        * @return
+        * @ingroup WalletCLI
+        */
       blind_confirmation blind_transfer( string from_key_or_label,
                                          string to_key_or_label,
                                          string amount,
@@ -1584,7 +1696,7 @@ class wallet_api
         * @param to_key_or_label
         * @param amount
         * @param symbol
-        * @param broadcast
+        * @param broadcast true to broadcast the transaction on the network
         * @param to_temp
         * @return
         * @ingroup WalletCLI
@@ -1618,7 +1730,7 @@ class wallet_api
      * @param publishing_fee_amount
      * @param synopsis
      * @param secret
-     * @param broadcast
+     * @param broadcast true to broadcast the transaction on the network
      * @return
      * @ingroup WalletCLI
      */
@@ -1635,7 +1747,7 @@ class wallet_api
      * @param price_asset_name
      * @param price_amount
      * @param pubKey
-     * @param broadcast
+     * @param broadcast true to broadcast the transaction on the network
      * @return
      * @ingroup WalletCLI
      */
@@ -1646,7 +1758,7 @@ class wallet_api
      * @param consumer
      * @param URI
      * @param rating
-     * @param broadcast
+     * @param broadcast true to broadcast the transaction on the network
      * @return
      * @ingroup WalletCLI
      */
@@ -1661,7 +1773,7 @@ class wallet_api
      * @param space
      * @param price_per_MByte
      * @param pubKey
-     * @param broadcast
+     * @param broadcast true to broadcast the transaction on the network
      * @return
      * @ingroup WalletCLI
      */
@@ -1676,7 +1788,7 @@ class wallet_api
      * @param seeder
      * @param URI
      * @param proof
-     * @param broadcast
+     * @param broadcast true to broadcast the transaction on the network
      * @return
      * @ingroup WalletCLI
      */
@@ -1690,7 +1802,7 @@ class wallet_api
      * @param seeder
      * @param privKey
      * @param buying
-     * @param broadcast
+     * @param broadcast true to broadcast the transaction on the network
      * @return
      * @ingroup WalletCLI
      */
