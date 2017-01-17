@@ -303,7 +303,7 @@ bool package_manager::unpack_package(const path& destination_directory, const pa
 	return true;
 }
 
-package_object package_manager::create_package(const path& content_path, const path& samples, const fc::sha512& key) {
+package_object package_manager::create_package( const boost::filesystem::path& content_path, const boost::filesystem::path& samples, const fc::sha512& key, decent::crypto::custody_data& cd) {
 
 	
 	if (!is_directory(content_path) && !is_regular_file(content_path)) {
@@ -355,6 +355,7 @@ package_object package_manager::create_package(const path& content_path, const p
 
     AES_encrypt_file(content_zip.string(), aes_file_path.string(), k);
     remove(content_zip);
+    c.create_custody_data(aes_file_path, cd);
 
 
 	return package_object(temp_path);
@@ -390,3 +391,6 @@ std::vector<std::string> package_manager::get_packages() {
     return all_packages;
 }
 
+uint32_t package_object::create_proof_of_custody(decent::crypto::custody_data cd, decent::crypto::custody_proof&proof) const {
+   return package_manager::instance().c.create_proof_of_custody(get_content_file(), cd, proof);
+}

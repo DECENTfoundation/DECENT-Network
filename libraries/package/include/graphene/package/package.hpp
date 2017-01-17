@@ -9,6 +9,8 @@
 #include <fc/crypto/sha512.hpp>
 
 #include <boost/filesystem.hpp>
+#include <decent/encrypt/crypto_types.hpp>
+#include <decent/encrypt/custodyutils.hpp>
 
 
 namespace graphene { 
@@ -27,6 +29,7 @@ public:
 	bool verify_hash() const { return false; } //TODO: Implement this
 	fc::ripemd160 get_hash() const { return fc::ripemd160(); } //TODO: Implement this
 
+	uint32_t create_proof_of_custody(decent::crypto::custody_data cd, decent::crypto::custody_proof&proof) const;
 private:
 	boost::filesystem::path   _package_path;
 };
@@ -81,7 +84,9 @@ public:
 
 	package_object create_package( const boost::filesystem::path& content_path, 
 								   const boost::filesystem::path& samples, 
-								   const fc::sha512& key);
+								   const fc::sha512& key,
+                           decent::crypto::custody_data& cd
+	);
 
 	bool unpack_package( const boost::filesystem::path& destination_directory, 
 						 const package_object& package,
@@ -99,6 +104,8 @@ public:
 	std::vector<std::string> get_packages();
 private:
 	boost::filesystem::path      _packages_directory;
+	decent::crypto::custody_utils c;
+	friend class package_object;
 };
 
 
