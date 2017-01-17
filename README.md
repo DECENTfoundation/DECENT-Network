@@ -23,8 +23,8 @@ For Ubuntu 16.04 LTS or later, execute in console:
 
 For Fedora 25 or later, execute in console:
 
-    sudo yum install automake autoconf libtool make cmake gcc clang flex bison doxygen gettext-devel git readline-devel cryptopp-devel gmp-devel libdb-devel libdb-cxx-devel openssl-devel ncurses-devel boost-devel boost-static
-
+    $ sudo yum makecache
+    $ sudo yum install automake autoconf libtool make cmake gcc clang flex bison doxygen gettext-devel git readline-devel cryptopp-devel gmp-devel libdb-devel libdb-cxx-devel openssl-devel ncurses-devel boost-devel boost-static
 
 
 ### Installing all prerequisites in macOS
@@ -36,7 +36,7 @@ Then, execute in console:
 
     $ brew tap homebrew/versions
     $ brew update
-    $ brew install automake autoconf make libtool cmake berkeley-db boost160 cryptopp doxygen byacc flex gettext git pbc gmp ipfs openssl readline
+    $ brew install automake autoconf libtool cmake berkeley-db boost160 cryptopp libtorrent-rasterbar doxygen byacc flex gettext git pbc gmp ipfs openssl readline
 
 
 ### Obtaining the sources, building, and installing Decent in Unix (macOS or Linux)
@@ -61,7 +61,7 @@ By this time you should have Decent files installed at `~/dev/DECENTfoundation/b
 
 You can use any path instead of `~/dev/DECENTfoundation` directory in the steps above.
 
-> Note that, in case of "Unix Makefiles" CMake generator, the last two  commands are equivalent to:
+> Note that, in case of "Unix Makefiles" CMake generator, the last two commands are equivalent to:
 > 
 >     $ make -j -l 3.0
 >     $ make install

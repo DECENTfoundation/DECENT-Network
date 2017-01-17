@@ -1,4 +1,4 @@
-add_subdirectory( contrib )
+add_subdirectory( contrib EXCLUDE_FROM_ALL )
 add_subdirectory( db )
 add_subdirectory( deterministic_openssl_rand )
 add_subdirectory( encrypt )
