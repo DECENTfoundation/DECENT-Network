@@ -373,7 +373,7 @@ int custody_utils::verify_by_miner(const uint32_t &n, const char *u_seed, unsign
    element_clear(public_key);
    mpz_clear(seedForU);
    element_clear( _sigma );
-   delete(v);
+   delete[](v);
 
    return res;
 }
@@ -399,7 +399,7 @@ int custody_utils::create_custody_data(path content, uint32_t& n, char u_seed[],
 
    //Set the elements
    if (RAND_bytes((unsigned char*) u_seed, 16) != 1) {
-      abort();
+      FC_THROW("Error creating random data");
    }
    char* buf_str = (char*) malloc (32 + 1);
    char* buf_ptr = buf_str;
@@ -437,8 +437,6 @@ int custody_utils::create_custody_data(path content, uint32_t& n, char u_seed[],
    }
 
    //Clean
-   element_printf("Size of n is: %d\n",n);
-
    for (int i = 0; i < n; i++)
    {
       clear_elements(m[i], DECENT_SECTORS);
@@ -456,9 +454,8 @@ int custody_utils::create_custody_data(path content, uint32_t& n, char u_seed[],
    return 0;
 }
 
-int custody_utils::create_proof_of_custody(path content, const uint32_t n, unsigned char pubKey[], const char u_seed[],
-                                           unsigned char sigma[],
-                                           std::vector<std::vector<unsigned char>>& mus, mpz_t seed)
+int custody_utils::create_proof_of_custody(path content, const uint32_t n, const char u_seed[], unsigned char pubKey[],
+                                           unsigned char sigma[], std::vector<std::vector<unsigned char>> &mus, mpz_t seed)
 {
    //open files
    std::fstream infile(content.c_str(), std::fstream::binary | std::fstream::in);
@@ -550,7 +547,7 @@ int custody_utils::create_proof_of_custody(path content, const uint32_t n, unsig
    clear_elements(u, DECENT_SECTORS);
    clear_elements(mu, DECENT_SECTORS);
    clear_elements(v, q);
-   delete(v);
+   delete[](v);
    return res;
 }
 

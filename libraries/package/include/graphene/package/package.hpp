@@ -28,7 +28,7 @@ public:
 
 	
 	bool unpack_package(const path& destination_directory, const fc::sha512& key); 
-	bool create_package(const path& destination_directory); 
+	bool create_package(const path& destination_directory);
 	
 	const path& get_package_path() const; 
 

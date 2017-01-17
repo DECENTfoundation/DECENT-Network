@@ -34,8 +34,7 @@ sign0 1"*/
 //#define DECENT_SIZE_OF_NUMBER_IN_THE_FIELD 128
 //#define DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED 129
 #define DECENT_SIZE_OF_NUMBER_IN_THE_FIELD 64
-#define DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED 65
-#define DECENT_SECTORS 128
+
 
 namespace decent{
 namespace crypto{
@@ -43,37 +42,71 @@ namespace crypto{
 using namespace boost::filesystem;
 
 
+
+
 class custody_utils
 {
 public:
    custody_utils();
    ~custody_utils();
-   /*
-    * Generates u from seed seedU. The array must be initalized to at least DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED elements
+
+   int verify_by_miner(custody_data cd, custody_proof proof){
+      mpz_t s;
+      mpz_init(s);
+      mpz_import(s, 5, 1, sizeof(uint32_t), 0, 0, proof.seed);
+      int ret=verify_by_miner(cd.n, cd.u_seed, cd.pubKey, proof.sigma, proof.mus, s);
+      mpz_clear(s);
+      return ret;
+   }
+
+   int create_custody_data(path content, custody_data & cd){
+      return create_custody_data(content, cd.n, cd.u_seed, cd.pubKey);
+   }
+
+   int create_proof_of_custody(path content, custody_data cd, custody_proof& proof){
+      mpz_t s;
+      mpz_init(s);
+      mpz_import(s, 5, 1, sizeof(uint32_t), 0, 0, proof.seed);
+      int ret = create_proof_of_custody(content, cd.n, cd.u_seed, cd.pubKey, proof.sigma, proof.mus, s);
+      mpz_clear(s);
+      return ret;
+   }
+   /**
+    * Verifies proof of delivery
+    * @param n number of signatures
+    * @param u_seed seed used to generate U's
+    * @param pubKey uploader's public key
+    * @param sigma calcuated sigma
+    * @param mus calculated mu's
+    * @param seed seed used for proof calculation - taken from latest block hash
+    * @return 0 if success
     */
-   int get_u_from_seed(const mpz_t &seedU, element_t out[]);
-   int generate_query_from_seed(mpz_t seed, unsigned int q, unsigned int n, int indices[], element_t* v[]);
-   int compute_mu(element_t **m, unsigned int q, int indices[], element_t v[], element_t mu[]);
-   int compute_sigma(element_t *sigmas, unsigned int q, int *indices, element_t *v, element_t &sigma);
-   int verify(element_t sigma, unsigned int q, int *indices, element_t *v, element_t *u, element_t *mu, element_t pubk);
-   int clear_elements(element_t *array, int size);
-   int unpack_proof(valtype proof, element_t &sigma, element_t **mu);
-   int get_number_of_query(int blocks);
    int verify_by_miner(const uint32_t &n, const char *u_seed, unsigned char *pubKey, unsigned char sigma[],
                        std::vector<std::vector<unsigned char>> mus, mpz_t seed);
-
    /**
-    *
     * Creates custody signatures in file content.cus;
-    * n is the number of elements,
-    * u_seed is the generator for u. There must be at least 16 bytes allocated in the u array
-    * pubKey is generated public key. There must be at least DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED bytes allocated in the pubKey array
-    *
-    **/
+    * @param content
+    * @param n the number of signatures
+    * @param u_seed is the generator for u. There must be at least 16 bytes allocated in the u array
+    * @param pubKey is generated public key. There must be at least DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED bytes allocated in the pubKey
+    * @return 0 if success
+    */
    int create_custody_data(path content, uint32_t& n, char u_seed[], unsigned char pubKey[]);
-   int create_proof_of_custody(path content, const uint32_t n, unsigned char pubKey[], const char u_seed[],
-                               unsigned char sigma[],
-                               std::vector<std::vector<unsigned char>>& mus, mpz_t seed);
+   /**
+    * Create proof of custody out of content.zip stored in path. content.cus must exist in the same directory
+    * @param content path to content.zip
+    * @param n number of signatures
+    * @param u_seed seed used to generate U's
+    * @param pubKey uploader's public key
+    * @param sigma calcuated sigma
+    * @param mus output - calculated mu's
+    * @param seed seed used for proof calculation - taken from latest block hash
+    * @return 0 if success
+    */
+   int create_proof_of_custody(path content, const uint32_t n, const char u_seed[], unsigned char pubKey[],
+                               unsigned char sigma[], std::vector<std::vector<unsigned char>> &mus, mpz_t seed);
+
+private:
    element_t generator;
    pairing_t pairing;
    /*
@@ -86,6 +119,17 @@ public:
     * TODO_DECENT rework to stram version
     */
    int get_sigmas(element_t **m, const unsigned int n, element_t u[], element_t& pk, element_t **sigmas);
+   /*
+    * Generates u from seed seedU. The array must be initalized to at least DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED elements
+    */
+   int get_u_from_seed(const mpz_t &seedU, element_t out[]);
+   int generate_query_from_seed(mpz_t seed, unsigned int q, unsigned int n, int indices[], element_t* v[]);
+   int compute_mu(element_t **m, unsigned int q, int indices[], element_t v[], element_t mu[]);
+   int compute_sigma(element_t *sigmas, unsigned int q, int *indices, element_t *v, element_t &sigma);
+   int verify(element_t sigma, unsigned int q, int *indices, element_t *v, element_t *u, element_t *mu, element_t pubk);
+   int clear_elements(element_t *array, int size);
+   int unpack_proof(valtype proof, element_t &sigma, element_t **mu);
+   int get_number_of_query(int blocks);
 };
 
 

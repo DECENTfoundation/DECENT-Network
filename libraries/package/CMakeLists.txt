@@ -1,4 +1,6 @@
 
+file( GLOB HEADERS
+        "include/graphene/package/*.hpp" )
 
 add_library( package_manipulation
              package.cpp

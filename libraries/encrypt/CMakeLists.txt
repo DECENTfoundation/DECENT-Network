@@ -11,7 +11,6 @@ add_library( decent_encrypt
              custodyutils.cpp
              ${HEADERS} )
 
-# need to link graphene_debug_witness because plugins aren't sufficiently isolated #246
 target_link_libraries( decent_encrypt
     PUBLIC fc pbc cryptopp )
 target_link_libraries( test_encrypt pbc decent_encrypt gmp )

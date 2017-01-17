@@ -1,11 +1,11 @@
-# Defines Graphene library target.
-project( Graphene )
+# Defines Decent library target.
+project( Decent )
 cmake_minimum_required( VERSION 2.8.12 )
 
-set( BLOCKCHAIN_NAME "Graphene" )
+set( BLOCKCHAIN_NAME "Decent" )
 
-set( CLI_CLIENT_EXECUTABLE_NAME graphene_client )
-set( GUI_CLIENT_EXECUTABLE_NAME Graphene )
+set( CLI_CLIENT_EXECUTABLE_NAME decent_client )
+set( GUI_CLIENT_EXECUTABLE_NAME decent )
 set( CUSTOM_URL_SCHEME "gcs" )
 set( INSTALLER_APP_ID "68ad7005-8eee-49c9-95ce-9eed97e5b347" )
 
@@ -88,7 +88,7 @@ endif(CRYPTOPP_LIBRARIES)
 
 if( WIN32 )
 
-    message( STATUS "Configuring Graphene on WIN32")
+    message( STATUS "Configuring Decent on WIN32")
     set( DB_VERSION 60 )
     set( BDB_STATIC_LIBS 1 )
 
@@ -129,11 +129,11 @@ else( WIN32 ) # Apple AND Linux
 
     if( APPLE )
         # Apple Specific Options Here
-        message( STATUS "Configuring Graphene on OS X" )
+        message( STATUS "Configuring Decent on OS X" )
         set( CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -std=c++11 -stdlib=libc++ -Wall" )
     else( APPLE )
         # Linux Specific Options Here
-        message( STATUS "Configuring Graphene on Linux" )
+        message( STATUS "Configuring Decent on Linux" )
         set( CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -std=c++11 -Wall" )
         set( rt_library rt )
         set( pthread_library pthread)
@@ -165,7 +165,7 @@ endif( WIN32 )
 
 find_package( BerkeleyDB )
 
-set(ENABLE_COVERAGE_TESTING FALSE CACHE BOOL "Build Graphene for code coverage analysis")
+set(ENABLE_COVERAGE_TESTING FALSE CACHE BOOL "Build Decent for code coverage analysis")
 
 if(ENABLE_COVERAGE_TESTING)
     SET(CMAKE_CXX_FLAGS "--coverage ${CMAKE_CXX_FLAGS}")
@@ -189,24 +189,24 @@ set(CPACK_OUTPUT_FILE_PREFIX ${CMAKE_BINARY_DIR}/packages)
 set(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/install)
 
 SET(CPACK_PACKAGE_DIRECTORY "${CMAKE_INSTALL_PREFIX}")
-set(CPACK_PACKAGE_NAME "graphene")
-set(CPACK_PACKAGE_VENDOR "Cryptonomex, Inc.")
+set(CPACK_PACKAGE_NAME "Decent")
+set(CPACK_PACKAGE_VENDOR "Decent Services")
 set(CPACK_PACKAGE_VERSION_MAJOR "${VERSION_MAJOR}")
 set(CPACK_PACKAGE_VERSION_MINOR "${VERSION_MINOR}")
 set(CPACK_PACKAGE_VERSION_PATCH "${VERSION_PATCH}")
 set(CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}")
-set(CPACK_PACKAGE_DESCRIPTION "A client for the Graphene network")
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "A client for the Graphene network")
+set(CPACK_PACKAGE_DESCRIPTION "A client for the Decent network")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "A client for the Decent network")
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.md")
-set(CPACK_PACKAGE_INSTALL_DIRECTORY "Graphene ${CPACK_PACKAGE_VERSION}")
+set(CPACK_PACKAGE_INSTALL_DIRECTORY "Decent ${CPACK_PACKAGE_VERSION}")
 
 if(WIN32)
  SET(CPACK_GENERATOR "ZIP;NSIS")
- set(CPACK_PACKAGE_NAME "Graphene") # override above
+ set(CPACK_PACKAGE_NAME "Decent") # override above
  set(CPACK_NSIS_EXECUTABLES_DIRECTORY .)
- set(CPACK_NSIS_PACKAGE_NAME "Graphene v${CPACK_PACKAGE_VERSION}")
+ set(CPACK_NSIS_PACKAGE_NAME "Decent v${CPACK_PACKAGE_VERSION}")
  set(CPACK_NSIS_DISPLAY_NAME "${CPACK_NSIS_PACKAGE_NAME}")
- set(CPACK_NSIS_DEFINES "  !define MUI_STARTMENUPAGE_DEFAULTFOLDER \\\"Graphene\\\"")
+ set(CPACK_NSIS_DEFINES "  !define MUI_STARTMENUPAGE_DEFAULTFOLDER \\\"Decent\\\"")
  # it seems like windows zip files usually don't have a single directory inside them, unix tgz frequently do
  SET(CPACK_INCLUDE_TOPLEVEL_DIRECTORY 0)
 
