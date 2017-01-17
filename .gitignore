@@ -66,3 +66,5 @@ object_database/*
 CMakeLists.txt.user
 
 xcode/***
+
+build/

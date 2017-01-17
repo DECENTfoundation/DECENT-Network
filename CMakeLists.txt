@@ -22,7 +22,29 @@ endif()
 
 list( APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules" )
 
-set(CMAKE_EXPORT_COMPILE_COMMANDS "ON")
+if( APPLE )
+    find_program( BREW_PROGRAM brew )
+    if( BREW_PROGRAM )
+        find_program( SED_PROGRAM sed )
+        find_program( BASH_PROGRAM bash )
+        if( BASH_PROGRAM AND SED_PROGRAM )
+            execute_process( COMMAND "${BASH_PROGRAM}" "-c" "${BREW_PROGRAM} config | ${SED_PROGRAM} -n -E 's/^HOMEBREW_PREFIX: (.+)$$/\\1/p'" OUTPUT_VARIABLE HOMEBREW_PREFIX )
+            string( STRIP "${HOMEBREW_PREFIX}" HOMEBREW_PREFIX )
+        else()
+            set( HOMEBREW_PREFIX "/usr/local" )
+        endif()
+
+        list( APPEND CMAKE_PREFIX_PATH
+              "${HOMEBREW_PREFIX}/opt/openssl"
+              "${HOMEBREW_PREFIX}/opt/boost160"
+              "${HOMEBREW_PREFIX}/opt/pbc"
+              "${HOMEBREW_PREFIX}/opt/gmp"
+              "${HOMEBREW_PREFIX}/opt/cryptopp"
+              "${HOMEBREW_PREFIX}/opt/berkeley-db"
+              "${HOMEBREW_PREFIX}/opt/libtorrent-rasterbar"
+            )
+    endif()
+endif()
 
 #set (ENABLE_INSTALLER 1)
 #set (USE_PCH 1)
@@ -35,35 +57,6 @@ list( APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/libraries/contrib/fc
 list( APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/libraries/contrib/fc/GitVersionGen" )
 include( GetGitRevisionDescription )
 get_git_head_revision( GIT_REFSPEC GIT_SHA2 )
-
-SET(BOOST_COMPONENTS)
-LIST(APPEND BOOST_COMPONENTS thread
-                             date_time
-                             system
-                             filesystem
-                             program_options
-                             signals
-                             serialization
-                             chrono
-                             unit_test_framework
-                             context
-                             locale)
-SET( Boost_USE_STATIC_LIBS ON CACHE STRING "ON or OFF" )
-
-IF( WIN32 )
-  SET(BOOST_ROOT $ENV{BOOST_ROOT})
-  set(Boost_USE_MULTITHREADED ON)
-  set(BOOST_ALL_DYN_LINK OFF) # force dynamic linking for all libraries
-ENDIF(WIN32)
-
-FIND_PACKAGE(Boost 1.57 REQUIRED COMPONENTS ${BOOST_COMPONENTS})
-# For Boost 1.53 on windows, coroutine was not in BOOST_LIBRARYDIR and do not need it to build,  but if boost versin >= 1.54, find coroutine otherwise will cause link errors
-IF(NOT "${Boost_VERSION}" MATCHES "1.53(.*)")
-   SET(BOOST_LIBRARIES_TEMP ${Boost_LIBRARIES})
-   FIND_PACKAGE(Boost 1.54 REQUIRED COMPONENTS coroutine)
-   LIST(APPEND BOOST_COMPONENTS coroutine)
-   SET(Boost_LIBRARIES ${BOOST_LIBRARIES_TEMP} ${Boost_LIBRARIES})
-ENDIF()
 
 FIND_LIBRARY(CRYPTOPP_LIBRARIES NAMES cryptopp)
 if(CRYPTOPP_LIBRARIES)
@@ -85,6 +78,27 @@ elseif(CRYPTOPP_LIBRARIES)
 
 endif(CRYPTOPP_LIBRARIES)
 
+if( WIN32 )
+    set( BOOST_ROOT $ENV{BOOST_ROOT} )
+    set( Boost_USE_MULTITHREADED ON )
+    set( BOOST_ALL_DYN_LINK OFF ) # force dynamic linking for all libraries
+endif()
+
+set( Boost_USE_STATIC_LIBS ON CACHE STRING "ON or OFF" )
+
+find_package( Boost 1.60 REQUIRED
+    COMPONENTS thread
+               date_time
+               system
+               filesystem
+               program_options
+               signals
+               serialization
+               chrono
+               unit_test_framework
+               context
+               coroutine
+               locale )
 
 if( WIN32 )
 
@@ -181,7 +195,6 @@ if (ENABLE_INSTALLER)
 set(VERSION_MAJOR 0)
 set(VERSION_MINOR 1)
 set(VERSION_PATCH 0)
-
 
 include(InstallRequiredSystemLibraries)
 

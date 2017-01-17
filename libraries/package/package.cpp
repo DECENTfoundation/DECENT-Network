@@ -248,31 +248,34 @@ boost::filesystem::path relative_path( const boost::filesystem::path &path, cons
 }
 
 
+} // Unnamed namespace
+
+
+void package_manager::initialize( const path& packages_directory) {
+   
+    if (!is_directory(packages_directory) && !create_directories(packages_directory)) {
+        FC_THROW("Unable to create directory");    
+    }
+    _packages_directory = packages_directory;
 
 }
 
 
+bool package_manager::unpack_package(const path& destination_directory, const package_object& package, const fc::sha512& key) {
 
-package_manager::package_manager(const path& content_path, const path& samples, const fc::sha512& key) 
-	: _content_path(content_path), _samples(samples), _package_key(key) {
-
-}
-
-package_manager::package_manager(const path& package_path) : _package_path(package_path) {
-
-}
-
-	
-bool package_manager::unpack_package(const path& destination_directory, const fc::sha512& key) {
 	if (!is_directory(destination_directory)) {
         FC_THROW("Destination directory not found");
 	}
 
-	if (!is_directory(_package_path)) {
+	if (!is_directory(package.get_path())) {
         FC_THROW("Package path is not directory");
 	}
+
+    if (CryptoPP::AES::MAX_KEYLENGTH > key.data_size()) {
+        FC_THROW("CryptoPP::AES::MAX_KEYLENGTH is bigger than key size");
+    }
 	
-	path archive_file = _package_path / "content.zip.aes";
+	path archive_file = package.get_content_file();
     path temp_dir = temp_directory_path();
 
     path zip_file = temp_dir / "content.zip";
@@ -280,7 +283,7 @@ bool package_manager::unpack_package(const path& destination_directory, const fc
 
     decent::crypto::aes_key k;
     for (int i = 0; i < CryptoPP::AES::MAX_KEYLENGTH; i++)
-      k.key_byte[i] = i;
+      k.key_byte[i] = key.data()[i];
 
     if (space(temp_dir).available < file_size(archive_file) * 1.5) { // Safety margin
         FC_THROW("Not enough storage space to create package");
@@ -300,25 +303,28 @@ bool package_manager::unpack_package(const path& destination_directory, const fc
 	return true;
 }
 
-bool package_manager::create_package(const path& destination_directory) {
-	if (!is_directory(destination_directory)) {
-		FC_THROW("Destination directory not found");
-	}
-	if (!is_directory(_content_path) && !is_regular_file(_content_path)) {
+package_object package_manager::create_package(const path& content_path, const path& samples, const fc::sha512& key) {
+
+	
+	if (!is_directory(content_path) && !is_regular_file(content_path)) {
         FC_THROW("Content path is not directory or file");
 	}
 
-	if (!is_directory(_samples) || _samples.size() == 0) {
+	if (!is_directory(samples) || samples.size() == 0) {
         FC_THROW("Samples path is not directory");
 	}
 
-	path tempPath = destination_directory / make_uuid();
-	if (!create_directory(tempPath)) {
+	path temp_path = _packages_directory / make_uuid();
+	if (!create_directory(temp_path)) {
         FC_THROW("Failed to create temporary directory");
 	}
 
+    if (CryptoPP::AES::MAX_KEYLENGTH > key.data_size()) {
+        FC_THROW("CryptoPP::AES::MAX_KEYLENGTH is bigger than key size");
+    }
 
-	path content_zip = tempPath / "content.zip";
+
+	path content_zip = temp_path / "content.zip";
 
 	filtering_ostream out;
     out.push(gzip_compressor());
@@ -326,24 +332,24 @@ bool package_manager::create_package(const path& destination_directory) {
 	archiver arc(out);
 
 	vector<path> all_files;
-	get_files_recursive(_content_path, all_files);
+	get_files_recursive(content_path, all_files);
 	for (int i = 0; i < all_files.size(); ++i) {
         file_source source(all_files[i].string(), std::ifstream::binary);
         
-		arc.put(relative_path(all_files[i], _content_path).string(), source, file_size(all_files[i]));
+		arc.put(relative_path(all_files[i], content_path).string(), source, file_size(all_files[i]));
 	}
 
 	arc.finalize();
 
 
-    path aes_file_path = tempPath / "content.zip.aes";
+    path aes_file_path = temp_path / "content.zip.aes";
 
     decent::crypto::aes_key k;
     for (int i = 0; i < CryptoPP::AES::MAX_KEYLENGTH; i++)
-      k.key_byte[i] = i;
+      k.key_byte[i] = key.data()[i];
 
 
-    if (space(tempPath).available < file_size(content_zip) * 1.5) { // Safety margin
+    if (space(temp_path).available < file_size(content_zip) * 1.5) { // Safety margin
         FC_THROW("Not enough storage space to create package");
     }
 
@@ -351,33 +357,36 @@ bool package_manager::create_package(const path& destination_directory) {
     remove(content_zip);
 
 
-	return true;
+	return package_object(temp_path);
 }
 	
-const package_manager::path& package_manager::get_package_path() const {
-	return _package_path;
+
+
+
+package_transfer_interface::transfer_id 
+package_manager::upload_package( const package_object& package, 
+                                       package_transfer_interface& protocol,
+                                       package_transfer_interface::transfer_listener& listener ) {
+    return protocol.upload_package(package, listener);
 }
 
-const package_manager::path& package_manager::get_custody_file() {
-	return _custody_file;
-}
-
-const package_manager::path& package_manager::get_content_file() {
-	return _content_file;
-}
-
-const package_manager::path& package_manager::get_samples_path() {
-    return _samples;
+package_transfer_interface::transfer_id 
+package_manager::download_package( const package_object& package, 
+                                         package_transfer_interface& protocol,
+                                         package_transfer_interface::transfer_listener& listener ) {
+    return protocol.download_package(package, listener);
 }
 
 
-bool package_manager::verify_hash() const {
-	return true;
-}
 
-fc::ripemd160 
-package_manager::get_hash() const {
-	return fc::ripemd160();
+std::vector<std::string> package_manager::get_packages() {
+    std::vector<string> all_packages;
+    directory_iterator it(_packages_directory), it_end;
+    for (; it != it_end; ++it) {
+        if (is_directory(*it)) {
+            all_packages.push_back(it->path().string());
+        }
+    }
+    return all_packages;
 }
-
 
