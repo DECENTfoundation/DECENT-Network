@@ -100,8 +100,6 @@ int main( int argc, char** argv )
 			extract = options["extract"].as<bool>();
 		}
 
-
-
 		if (extract) {
 			cout << "Extracting package..." << endl;
 			try {
@@ -117,7 +115,6 @@ int main( int argc, char** argv )
 		} else {
 			cout << "Creating package..." << endl;
 
-			
 			try {
  				package_manager::instance().initialize(packagePath);
 				package_object pack = package_manager::instance().create_package(contentPath, samplesPath, fc::sha512(key));

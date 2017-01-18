@@ -27,6 +27,10 @@
 #include <string>
 #include <fc/reflect/variant.hpp>
 
+#define DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED 65
+#define DECENT_SECTORS 32
+
+
 namespace decent{
 namespace crypto{
 
@@ -54,6 +58,20 @@ struct delivery_proof {
                   d_integer r) : G1(g1), G2(g2), G3(g3), s(s), r(r) {};
    delivery_proof(){};
 
+};
+
+struct custody_data{
+   uint32_t n; //number of signatures
+   char u_seed[16]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}; //generator for u's
+   unsigned char pubKey[DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED]; //uploaders public key
+};
+
+struct custody_proof{
+   uint32_t reference_block;
+   uint32_t seed[5]; //ripemd160 of the reference block
+
+   std::vector<std::vector<unsigned char>> mus;
+   uint8_t sigma[DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED];
 };
 
 struct ciphertext {

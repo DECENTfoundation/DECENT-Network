@@ -1,9 +1,14 @@
 #include <decent/encrypt/encryptionutils.hpp>
+#include <decent/encrypt/custodyutils.hpp>
+
 #include <fc/exception/exception.hpp>
+#include <fc/io/raw.hpp>
 #include <cstdio>
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <stdio.h>
+
 
 using namespace std;
 
@@ -53,7 +58,7 @@ void test_el_gamal(decent::crypto::aes_key k)
 
    cout <<"recovered secret is "<<received_secret.first.to_string()<<" "<<received_secret.second.to_string() <<"\n";
 
-   for (int i=0; i<100000; i++)
+   for (int i=0; i<1; i++)
       bool ret_val = decent::crypto::verify_delivery_proof(proof, ct1,ct2,pubk1,pubk2);
    /*if(ret_val)
       cout<< "everything OK!\n";*/
@@ -80,6 +85,30 @@ void test_shamir(decent::crypto::d_integer secret)
    cout << "Original secret: "<< secret.to_string() <<"\nReconstructed_secret: "<<rs.secret.to_string() <<"\n";
 }
 
+void test_custody(){
+
+   decent::crypto::custody_utils c;
+
+   //pbc_param_t par;
+   //pbc_param_init_a_gen( par, 320, 1024 );
+   //pbc_param_out_str(stdout,par);
+
+   decent::crypto::custody_data cd;
+   decent::crypto::custody_proof proof;
+   proof.seed[0]=21; proof.seed[1] =155; proof.seed[2] = 231; proof.seed[3] = 98; proof.seed[4] = 1;
+
+   c.create_custody_data(boost::filesystem::path("/tmp/content.zip"),cd );
+   std::cout <<"done creating custody data, "<<cd.n<<" signatures generated\n";
+
+   c.create_proof_of_custody(boost::filesystem::path("/tmp/content.zip"), cd,proof);
+ //  idump((proof.mus));
+
+  // cout<<"\n\n";
+  // fc::raw::pack(cout, mus);
+   if(c.verify_by_miner(cd, proof))
+      std::cout <<"Something wrong during verification...\n";
+}
+
 int main(int argc, char**argv)
 {
    decent::crypto::aes_key k;
@@ -87,7 +116,9 @@ int main(int argc, char**argv)
       k.key_byte[i]=i;
  //  test_aes(k);
    cout<<"AES finished \n";
-   test_el_gamal(k);
+ //  test_el_gamal(k);
    const CryptoPP::Integer secret("12354678979464");
-   test_shamir(secret);
+ //  test_shamir(secret);
+
+   test_custody();
 }
