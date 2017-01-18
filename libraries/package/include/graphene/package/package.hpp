@@ -54,6 +54,7 @@ public:
 	};
 
 	class transfer_listener {
+	public:
 		virtual void on_download_started(transfer_id id) = 0;
 		virtual void on_download_finished(transfer_id id, package_object downloaded_package) = 0;
 		virtual void on_download_progress(transfer_id id, transfer_progress progress) = 0;
