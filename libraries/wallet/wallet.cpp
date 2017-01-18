@@ -2399,7 +2399,7 @@ public:
    
    signed_transaction proof_of_custody(string seeder,
                                        string URI,
-                                       vector<char> proof,
+                                       //vector<char> proof,
                                        bool broadcast/* = false */)
    { try {
       account_object seeder_account = get_account( seeder );
@@ -2407,7 +2407,7 @@ public:
       proof_of_custody_operation op;
       op.seeder = seeder_account.id;
       op.URI = URI;
-      op.proof = proof;
+      //op.proof = proof;
       //TODO_DECENT rework
       signed_transaction tx;
       tx.operations.push_back( op );
@@ -2415,7 +2415,7 @@ public:
       tx.validate();
       
       return sign_transaction( tx, broadcast );
-   } FC_CAPTURE_AND_RETHROW( (seeder)(URI)(proof)(broadcast) ) }
+   } FC_CAPTURE_AND_RETHROW( (seeder)(URI)(broadcast) ) }
    
    signed_transaction deliver_keys(string seeder,
                                    d_integer privKey,
@@ -4227,7 +4227,7 @@ signed_transaction wallet_api::proof_of_custody(string seeder,
                                                 vector<char> proof,
                                                 bool broadcast)
 {
-   return my->proof_of_custody(seeder, URI, proof, broadcast);
+   return my->proof_of_custody(seeder, URI,  broadcast);
 }
 
 signed_transaction wallet_api::deliver_keys(string seeder,

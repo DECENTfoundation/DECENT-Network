@@ -57,6 +57,7 @@ namespace graphene { namespace chain {
             itr2++;
          }
          co._hash = o.hash;
+         co.cd = o.cd;
          co.quorum = o.quorum;
          co.expiration = o.expiration;
          co.created = db().head_block_time();
@@ -222,11 +223,16 @@ namespace graphene { namespace chain {
    
    void_result proof_of_custody_evaluator::do_evaluate(const proof_of_custody_operation& o )
    {
-      //validate the proof - TODO_DECENT
       auto& idx = db().get_index_type<content_index>().indices().get<by_URI>();
       const auto& content = idx.find( o.URI );
       FC_ASSERT( content != idx.end() );
       FC_ASSERT( content->expiration > db().head_block_time() );
+      //verify that the seed is not to old...
+      fc::ripemd160 bid = db().get_block_id_for_num(o.proof.reference_block);
+      for(int i = 0; i < 5; i++)
+         FC_ASSERT(bid._hash[i] == o.proof.seed.data[i],"Block ID does not match; wrong chain?");
+      FC_ASSERT(db().head_block_num() <= o.proof.reference_block - 6,"Block reference is too old");
+      FC_ASSERT( _custody_utils.verify_by_miner( content->cd, o.proof ) == 0, "Invalid proof of delivery" );
    }
    
    void_result proof_of_custody_evaluator::do_apply(const proof_of_custody_operation& o )
@@ -235,7 +241,7 @@ namespace graphene { namespace chain {
       auto& idx = db().get_index_type<content_index>().indices().get<by_URI>();
       const auto& content = idx.find( o.URI );
       //TODO_DECENT rewrite the next statement
-      const auto& seeder = db().get<seeder_object>(o.seeder);
+      const seeder_object& seeder = db().get<seeder_object>(o.seeder);
       auto last_proof = content->last_proof.find( o.seeder );
       if( last_proof == content->last_proof.end() )
       {

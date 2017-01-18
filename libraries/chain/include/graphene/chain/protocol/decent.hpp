@@ -35,6 +35,7 @@ using decent::crypto::d_integer;
       fc::time_point_sec expiration;
       asset publishing_fee;
       string synopsis;
+      decent::crypto::custody_data cd;
       
       account_id_type fee_payer()const { return author; }
    };
@@ -84,7 +85,7 @@ using decent::crypto::d_integer;
       asset fee;
       account_id_type seeder;
       string URI;
-      vector<char> proof;
+      decent::crypto::custody_proof proof;
       
       account_id_type fee_payer()const { return seeder; }
    };
@@ -104,7 +105,7 @@ using decent::crypto::d_integer;
    
 } } // graphene::chain
 
-FC_REFLECT(graphene::chain::content_submit_operation,(fee)(size)(author)(URI)(quorum)(price)(hash)(seeders)(key_parts)(expiration)(publishing_fee)(synopsis))
+FC_REFLECT(graphene::chain::content_submit_operation,(fee)(size)(author)(URI)(quorum)(price)(hash)(seeders)(key_parts)(expiration)(publishing_fee)(synopsis)(cd))
 FC_REFLECT(graphene::chain::request_to_buy_operation,(fee)(URI)(consumer)(price)(pubKey))
 FC_REFLECT(graphene::chain::leave_rating_operation,(fee)(URI)(consumer)(rating))
 FC_REFLECT(graphene::chain::ready_to_publish_operation,(fee)(seeder)(space)(price_per_MByte)(pubKey))

@@ -129,7 +129,7 @@ void test_custody(){
 
    decent::crypto::custody_data cd;
    decent::crypto::custody_proof proof;
-   proof.seed[0]=21; proof.seed[1] =155; proof.seed[2] = 231; proof.seed[3] = 98; proof.seed[4] = 1;
+   proof.seed.data[0]=21; proof.seed.data[1] =155; proof.seed.data[2] = 231; proof.seed.data[3] = 98; proof.seed.data[4] = 1;
 
    c.create_custody_data(boost::filesystem::path("/tmp/content.zip"),cd );
    std::cout <<"done creating custody data, "<<cd.n<<" signatures generated\n";
@@ -161,5 +161,5 @@ int main(int argc, char**argv)
  //  test_shamir(secret);
 
    test_custody();
-   develop
+
 }

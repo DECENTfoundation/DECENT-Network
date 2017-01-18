@@ -53,21 +53,21 @@ public:
    int verify_by_miner(custody_data cd, custody_proof proof){
       mpz_t s;
       mpz_init(s);
-      mpz_import(s, 5, 1, sizeof(uint32_t), 0, 0, proof.seed);
-      int ret=verify_by_miner(cd.n, cd.u_seed, cd.pubKey, proof.sigma, proof.mus, s);
+      mpz_import(s, 5, 1, sizeof(uint32_t), 0, 0, proof.seed.data);
+      int ret=verify_by_miner(cd.n, (char*)cd.u_seed.data, cd.pubKey.data, proof.sigma.data, proof.mus, s);
       mpz_clear(s);
       return ret;
    }
 
    int create_custody_data(boost::filesystem::path content, custody_data & cd){
-      return create_custody_data(content, cd.n, cd.u_seed, cd.pubKey);
+      return create_custody_data(content, cd.n, (char*)cd.u_seed.data, cd.pubKey.data);
    }
 
    int create_proof_of_custody(boost::filesystem::path content, custody_data cd, custody_proof& proof){
       mpz_t s;
       mpz_init(s);
-      mpz_import(s, 5, 1, sizeof(uint32_t), 0, 0, proof.seed);
-      int ret = create_proof_of_custody(content, cd.n, cd.u_seed, cd.pubKey, proof.sigma, proof.mus, s);
+      mpz_import(s, 5, 1, sizeof(uint32_t), 0, 0, proof.seed.data);
+      int ret = create_proof_of_custody(content, cd.n, (char*)cd.u_seed.data, cd.pubKey.data, proof.sigma.data, proof.mus, s);
       mpz_clear(s);
       return ret;
    }

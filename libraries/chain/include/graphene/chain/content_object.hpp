@@ -35,6 +35,7 @@ using namespace decent::crypto;
       uint32_t total_rating;
       uint32_t times_bought;
       asset publishing_fee_escrow;
+      decent::crypto::custody_data cd;
    };
    
    struct by_author;
@@ -71,4 +72,4 @@ using namespace decent::crypto;
 
 FC_REFLECT_DERIVED(graphene::chain::content_object,
                    (graphene::db::object),
-                   (author)(expiration)(created)(price)(size)(synopsis)(URI)(quorum)(key_parts)(_hash)(last_proof)(AVG_rating)(total_rating)(times_bought)(publishing_fee_escrow) )
+                   (author)(expiration)(created)(price)(size)(synopsis)(URI)(quorum)(key_parts)(_hash)(last_proof)(AVG_rating)(total_rating)(times_bought)(publishing_fee_escrow)(cd) )

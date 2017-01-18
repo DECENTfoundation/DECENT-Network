@@ -40,6 +40,7 @@
 #include <fc/exception/exception.hpp>
 #include <fc/safe.hpp>
 #include <fc/io/raw_fwd.hpp>
+#include <fc/array.hpp>
 
 #define DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED 65
 #define DECENT_SECTORS 32
@@ -78,16 +79,15 @@ struct delivery_proof {
 
 struct custody_data{
    uint32_t n; //number of signatures
-   char u_seed[16]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}; //generator for u's
-   unsigned char pubKey[DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED]; //uploaders public key
+   fc::array<int8_t,16> u_seed; //generator for u's
+   fc::array<uint8_t,DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED> pubKey; //uploaders public key
 };
 
 struct custody_proof{
    uint32_t reference_block;
-   uint32_t seed[5]; //ripemd160 of the reference block
-
+   fc::array<uint32_t,5> seed; //ripemd160._hash of the reference block
    std::vector<std::vector<unsigned char>> mus;
-   uint8_t sigma[DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED];
+   fc::array<uint8_t,DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED> sigma;
 };
 
 struct ciphertext {
@@ -105,9 +105,77 @@ struct aes_key {
 
 
 namespace fc {
+/*
+template<typename K, size_t S >
+inline void to_variant( const K (&var)[S], fc::variant& vo ) {
+   std::vector<variant> vars(S);
+   for(int i =0; i< S; i++ )
+      vars[i] = var[i];
+   vo = vars;
+}
+
+template<typename K, size_t S >
+inline void from_variant( fc::variant& var, const K (&vo)[S] ) {
+   const variants& vars = var.get_array();
+   memset((char*)vo,0,sizeof(K)*S);
+   int i = 0;
+   for( auto itr = vars.begin(); itr != vars.end(); ++itr, ++i )
+      vo[i]=itr->as<K>();
+}
+
+inline void to_variant( const decent::crypto::custody_data& cd, fc::variant& vo ){
+   std::vector<variant> vars(1+16+DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED);
+   vars[0] = cd.n;
+   for(int i = 0; i < 16; ++i )
+      vars[i+1] = cd.u_seed[i];
+   for(int i = 0; i < DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED; ++i )
+      vars[i+17] = cd.pubKey[i];
+   vo = vars;
+}
+
+inline void from_variant(const fc::variant& var, decent::crypto::custody_data& cd ){
+   const variants& vars = var.get_array();
+   int i = 0;
+   for( auto itr = vars.begin(); itr != vars.end(); ++itr, ++i ){
+      if( i == 0 )
+         cd.n = itr->as<uint32_t>();
+      if( i >=1 && i <= 16)
+         cd.u_seed[i-1] = itr->as<uint32_t>();
+      if( i > 16 )
+         cd.pubKey[i-17] = itr->as<uint8_t>();
+   }
+}
+
+inline void to_variant( const decent::crypto::custody_proof& proof, fc::variant& vo ){
+   std::vector<variant> vars(1+5+1+DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED);
+   vars[0] = proof.reference_block;
+   for(int i = 0; i < 5; ++i )
+      vars[i+1] = proof.seed[i];
+   for(int i = 0; i < DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED; ++i )
+      vars[i+6] = proof.sigma[i];
+   vars [6+DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED] = proof.mus;
+   vo = vars;
+}
+
+inline void from_variant(const fc::variant& var, decent::crypto::custody_proof& proof ){
+   const variants& vars = var.get_array();
+   int i = 0;
+   for( auto itr = vars.begin(); itr != vars.end(); ++itr, ++i ){
+      if( i == 0 )
+         proof.reference_block = itr->as<uint32_t>();
+      if( i >=1 && i <= 5 )
+         proof.seed[i-1] = itr->as<int8_t>();
+      if( i > 5 && i <= 5+DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED )
+         proof.sigma[i-6] = itr->as<uint8_t>();
+      if( i == 6+DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED )
+         proof.mus = itr->as<std::vector<std::vector<unsigned char>>>();
+   }
+}*/
+
 inline void to_variant( const decent::crypto::d_integer& var,  fc::variant& vo ) {
    vo = var.to_string();
 }
+
 inline void from_variant( const fc::variant& var, decent::crypto::d_integer& vo ) {
    vo = decent::crypto::d_integer::from_string( var.as_string() );
 }
@@ -136,3 +204,5 @@ FC_REFLECT_EMPTY(decent::crypto::d_integer)
 FC_REFLECT(decent::crypto::aes_key, (key_byte))
 FC_REFLECT(decent::crypto::delivery_proof, (G1)(G2)(G3)(s)(r))
 FC_REFLECT(decent::crypto::ciphertext, (C1)(D1))
+FC_REFLECT_EMPTY(decent::crypto::custody_data)
+FC_REFLECT_EMPTY(decent::crypto::custody_proof)

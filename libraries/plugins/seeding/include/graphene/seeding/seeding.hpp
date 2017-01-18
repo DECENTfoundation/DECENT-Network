@@ -5,10 +5,12 @@
 #include <graphene/db/object.hpp>
 #include <graphene/db/generic_index.hpp>
 #include <graphene/chain/protocol/types.hpp>
+#include <graphene/package/package.hpp>
 
 namespace graphene { namespace seeding {
 
 using namespace chain;
+using namespace graphene::package;
 
 #ifndef SEEDING_PLUGIN_SPACE_ID
 #define SEEDING_PLUGIN_SPACE_ID 123// ??? rrr
@@ -22,45 +24,64 @@ enum seeding_object_type
 
 class seeding_plugin;
 
+class my_seeder_object : public graphene::db::abstract_object< my_seeder_object >
+{
+public:
+   static const uint8_t space_id = SEEDING_PLUGIN_SPACE_ID;
+   static const uint8_t type_id  = seeder_object_type;
+
+   account_id_type seeder;
+   d_integer content_privKey;
+   fc::ecc::private_key privKey;
+   uint32_t free_space;
+};
+
+class my_seeding_object : public graphene::db::abstract_object< my_seeding_object >
+{
+public:
+   static const uint8_t space_id = SEEDING_PLUGIN_SPACE_ID;
+   static const uint8_t type_id  = seeding_object_type;
+
+   string URI;
+   fc::time_point_sec expiration;
+   decent::crypto::custody_data cd;
+   account_id_type seeder;
+   ciphertext key;
+   uint32_t space;
+};
+
+typedef graphene::chain::object_id< SEEDING_PLUGIN_SPACE_ID, seeding_object_type,  my_seeding_object>     my_seeding_id_type;
+typedef graphene::chain::object_id< SEEDING_PLUGIN_SPACE_ID, seeding_object_type,  my_seeder_object>     my_seeder_id_type;
+
+
 namespace detail {
-class seeding_plugin_impl {
+class seeding_plugin_impl : public package_transfer_interface::transfer_listener {
 public:
    seeding_plugin_impl(seeding_plugin &_plugin) : _self(_plugin) {}
 
    ~seeding_plugin_impl();
 
-   graphene::chain::database &database();
+   virtual void on_download_finished(package_transfer_interface::transfer_id id, package_object downloaded_package){
+      my_seeding_id_type so_id = active_downloads[id];
+      generate_por( so_id, downloaded_package   );
+   };
 
+   graphene::chain::database &database();
+   void generate_por( my_seeding_id_type so_id, graphene::package::package_object downloaded_package );
    void on_operation(const operation_history_object &op_obj);
 
+   virtual void on_download_started(package_transfer_interface::transfer_id id) {}
+   virtual void on_download_progress(package_transfer_interface::transfer_id id, package_transfer_interface::transfer_progress progress) {}
+   virtual void on_upload_started(package_transfer_interface::transfer_id id) {}
+   virtual void on_upload_finished(package_transfer_interface::transfer_id id) {}
+   virtual void on_upload_progress(package_transfer_interface::transfer_id id, package_transfer_interface::transfer_progress progress) {}
+
    seeding_plugin& _self;
+   std::map<package_transfer_interface::transfer_id, my_seeding_id_type> active_downloads;
 };
 }
 
-class my_seeder_object : public graphene::db::abstract_object< my_seeder_object >
-{
-   public:
-      static const uint8_t space_id = SEEDING_PLUGIN_SPACE_ID;
-      static const uint8_t type_id  = seeder_object_type;
 
-      account_id_type seeder;
-      d_integer content_privKey;
-      fc::ecc::private_key privKey;
-      uint32_t free_space;
-};
-
-class my_seeding_object : public graphene::db::abstract_object< my_seeding_object >
-{
-   public:
-      static const uint8_t space_id = SEEDING_PLUGIN_SPACE_ID;
-      static const uint8_t type_id  = seeding_object_type;
-
-      string URI;
-      fc::time_point_sec expiration;
-      account_id_type seeder;
-      ciphertext key;
-      uint32_t space;
-};
 
 struct by_id;
 struct by_URI;
