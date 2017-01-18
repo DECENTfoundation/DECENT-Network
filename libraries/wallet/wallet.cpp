@@ -71,6 +71,9 @@
 #include <graphene/wallet/api_documentation.hpp>
 #include <graphene/wallet/reflect_util.hpp>
 #include <graphene/debug_witness/debug_api.hpp>
+
+#include <graphene/package/package.hpp>
+
 #include <fc/smart_ref_impl.hpp>
 
 #ifndef WIN32
@@ -79,6 +82,8 @@
 #endif
 
 #define BRAIN_KEY_WORD_COUNT 16
+
+using namespace graphene::package;
 
 namespace graphene { namespace wallet {
 
@@ -4183,104 +4188,114 @@ vesting_balance_object_with_info::vesting_balance_object_with_info( const vestin
    allowed_withdraw_time = now;
 }
 
-   signed_transaction
-   wallet_api::submit_content(string author, string URI, string price_asset_name, string price_amount, uint64_t size,
-                                 fc::ripemd160 hash, vector<account_id_type> seeders, uint32_t quorum, fc::time_point_sec expiration,
-                                 string publishing_fee_asset, string publishing_fee_amount, string synopsis, d_integer secret,
-                                 bool broadcast)
-   {
-      return my->submit_content(author, URI, price_asset_name, price_amount, hash, size, seeders, quorum, expiration, publishing_fee_asset, publishing_fee_amount, synopsis, secret, broadcast);
-   }
-   
-   signed_transaction
-   wallet_api::request_to_buy(string consumer, string URI, string price_asset_name, string price_amount, string pubKey, bool broadcast)
-   {
-      return my->request_to_buy(consumer, URI, price_asset_name, price_amount, pubKey, broadcast);
-   }
-   
-   signed_transaction wallet_api::leave_rating(string consumer,
-                                               string URI,
-                                               uint64_t rating,
-                                               bool broadcast)
-   {
-      return my->leave_rating(consumer, URI, rating, broadcast);
-   }
-   
-   signed_transaction wallet_api::ready_to_publish(string seeder,
-                                                   uint64_t space,
-                                                   uint32_t price_per_MByte,
-                                                   d_integer pubKey,
-                                                   bool broadcast)
-   {
-      return my->ready_to_publish(seeder, space, price_per_MByte, pubKey, broadcast);
-   }
-   
-   signed_transaction wallet_api::proof_of_custody(string seeder,
-                                                   string URI,
-                                                   vector<char> proof,
-                                                   bool broadcast)
-   {
-      return my->proof_of_custody(seeder, URI, proof, broadcast);
-   }
-
-   signed_transaction wallet_api::deliver_keys(string seeder,
-                                               d_integer privKey,
-                                               buying_id_type buying,
-                                               bool broadcast)
-   {
-      return my->deliver_keys(seeder, privKey, buying, broadcast);
-   }
 
 
-   vector<buying_object> wallet_api::get_open_buyings()const
-   {
-      return my->_remote_db->get_open_buyings();
-   }
+signed_transaction
+wallet_api::submit_content(string author, string URI, string price_asset_name, string price_amount, uint64_t size,
+                              fc::ripemd160 hash, vector<account_id_type> seeders, uint32_t quorum, fc::time_point_sec expiration,
+                              string publishing_fee_asset, string publishing_fee_amount, string synopsis, d_integer secret,
+                              bool broadcast)
+{
+   return my->submit_content(author, URI, price_asset_name, price_amount, hash, size, seeders, quorum, expiration, publishing_fee_asset, publishing_fee_amount, synopsis, secret, broadcast);
+}
 
-   vector<buying_object> wallet_api::get_open_buyings_by_URI( const string& URI )const
-   {
-      return my->_remote_db->get_open_buyings_by_URI( URI );
-   }
+signed_transaction
+wallet_api::request_to_buy(string consumer, string URI, string price_asset_name, string price_amount, string pubKey, bool broadcast)
+{
+   return my->request_to_buy(consumer, URI, price_asset_name, price_amount, pubKey, broadcast);
+}
 
-   vector<buying_object> wallet_api::get_open_buyings_by_consumer( const account_id_type& consumer )const
-   {
-      return my->_remote_db->get_open_buyings_by_consumer( consumer );
-   }
+signed_transaction wallet_api::leave_rating(string consumer,
+                                            string URI,
+                                            uint64_t rating,
+                                            bool broadcast)
+{
+   return my->leave_rating(consumer, URI, rating, broadcast);
+}
 
-   optional<buying_history_object> wallet_api::get_buying_history_object( const buying_id_type& buying )const
-   {
-      return my->_remote_db->get_buying_history_object( buying );
-   }
+signed_transaction wallet_api::ready_to_publish(string seeder,
+                                                uint64_t space,
+                                                uint32_t price_per_MByte,
+                                                d_integer pubKey,
+                                                bool broadcast)
+{
+   return my->ready_to_publish(seeder, space, price_per_MByte, pubKey, broadcast);
+}
 
-   optional<content_object> wallet_api::get_content( const string& URI )const
-   {
-      return my->_remote_db->get_content( URI );
-   }
+signed_transaction wallet_api::proof_of_custody(string seeder,
+                                                string URI,
+                                                vector<char> proof,
+                                                bool broadcast)
+{
+   return my->proof_of_custody(seeder, URI, proof, broadcast);
+}
 
-   vector<content_object> wallet_api::list_content_by_author( const account_id_type& author )const
-   {
-      return my->_remote_db->list_content_by_author( author );
-   }
+signed_transaction wallet_api::deliver_keys(string seeder,
+                                            d_integer privKey,
+                                            buying_id_type buying,
+                                            bool broadcast)
+{
+   return my->deliver_keys(seeder, privKey, buying, broadcast);
+}
 
-   vector<content_object> wallet_api::list_content( const string& URI, uint32_t count)const
-   {
-      return my->_remote_db->list_content( URI, count );
-   }
 
-   vector<content_object> wallet_api::list_content_by_bought( uint32_t count)const
-   {
-      return my->_remote_db->list_content_by_bought( count );
-   }
+vector<buying_object> wallet_api::get_open_buyings()const
+{
+   return my->_remote_db->get_open_buyings();
+}
 
-   vector<seeder_object> wallet_api::list_publishers_by_price( uint32_t count )const
-   {
-      return my->_remote_db->list_publishers_by_price( count );
-   }
+vector<buying_object> wallet_api::get_open_buyings_by_URI( const string& URI )const
+{
+   return my->_remote_db->get_open_buyings_by_URI( URI );
+}
 
-   vector<uint64_t> wallet_api::get_content_ratings( const string& URI )const
-   {
-      return my->_remote_db->get_content_ratings( URI );
-   }
+vector<buying_object> wallet_api::get_open_buyings_by_consumer( const account_id_type& consumer )const
+{
+   return my->_remote_db->get_open_buyings_by_consumer( consumer );
+}
+
+optional<buying_history_object> wallet_api::get_buying_history_object( const buying_id_type& buying )const
+{
+   return my->_remote_db->get_buying_history_object( buying );
+}
+
+optional<content_object> wallet_api::get_content( const string& URI )const
+{
+   return my->_remote_db->get_content( URI );
+}
+
+vector<content_object> wallet_api::list_content_by_author( const account_id_type& author )const
+{
+   return my->_remote_db->list_content_by_author( author );
+}
+
+vector<content_object> wallet_api::list_content( const string& URI, uint32_t count)const
+{
+   return my->_remote_db->list_content( URI, count );
+}
+
+vector<content_object> wallet_api::list_content_by_bought( uint32_t count)const
+{
+   return my->_remote_db->list_content_by_bought( count );
+}
+
+vector<seeder_object> wallet_api::list_publishers_by_price( uint32_t count )const
+{
+   return my->_remote_db->list_publishers_by_price( count );
+}
+
+vector<uint64_t> wallet_api::get_content_ratings( const string& URI )const
+{
+   return my->_remote_db->get_content_ratings( URI );
+}
+
+
+vector<string> wallet_api::list_packages( ) const
+{
+   return package_manager::instance().get_packages();
+}
+
+
 
 } } // graphene::wallet
 

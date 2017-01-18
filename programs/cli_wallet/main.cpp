@@ -41,6 +41,7 @@
 #include <graphene/egenesis/egenesis.hpp>
 #include <graphene/utilities/key_conversion.hpp>
 #include <graphene/wallet/wallet.hpp>
+#include <graphene/package/package.hpp>
 
 #include <fc/interprocess/signals.hpp>
 #include <boost/program_options.hpp>
@@ -60,6 +61,7 @@ using namespace graphene::app;
 using namespace graphene::chain;
 using namespace graphene::utilities;
 using namespace graphene::wallet;
+using namespace graphene::package;
 using namespace std;
 namespace bpo = boost::program_options;
 
@@ -91,9 +93,13 @@ int main( int argc, char** argv )
          return 0;
       }
 
+
+
       fc::path data_dir;
       fc::logging_config cfg;
       fc::path log_dir = data_dir / "logs";
+
+      package_manager::instance().initialize(data_dir / "packages");
 
       fc::file_appender::config ac;
       ac.filename             = log_dir / "rpc" / "rpc.log";
