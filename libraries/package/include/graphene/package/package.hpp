@@ -125,6 +125,7 @@ public:
 						 const fc::sha512& key);
 
 
+
 	package_transfer_interface::transfer_id upload_package( const package_object& package, 
 															const std::string& protocol_name,
 															package_transfer_interface::transfer_listener& listener );
@@ -134,6 +135,7 @@ public:
 	
 	std::vector<package_object> get_packages();
 	package_object				get_package_object(fc::ripemd160 hash);
+	void                        delete_package(fc::ripemd160 hash);
 
 	std::string					get_transfer_url(package_transfer_interface::transfer_id id);
 	package_transfer_interface::transfer_progress	get_transfer_progress(package_transfer_interface::transfer_id id);

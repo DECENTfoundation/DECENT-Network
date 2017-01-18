@@ -514,6 +514,16 @@ package_object package_manager::get_package_object(fc::ripemd160 hash) {
     return package_object(_packages_directory / hash.str());
 }
 
+
+void package_manager::delete_package(fc::ripemd160 hash) {
+    package_object po(_packages_directory / hash.str());   
+    if (!po.is_valid()) {
+        FC_THROW("Invalid package: ${hash}", ("hash", hash.str()) );
+    }
+
+    remove_all(po.get_path());
+}
+
 uint32_t package_object::create_proof_of_custody(decent::crypto::custody_data cd, decent::crypto::custody_proof&proof) const {
    return package_manager::instance().get_custody_utils().create_proof_of_custody(get_content_file(), cd, proof);
 }
