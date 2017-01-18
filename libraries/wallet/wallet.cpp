@@ -1,4 +1,4 @@
-/*
+    /*
  * Copyright (c) 2015 Cryptonomex, Inc., and contributors.
  *
  * The MIT License
@@ -4292,9 +4292,27 @@ vector<uint64_t> wallet_api::get_content_ratings( const string& URI )const
 
 vector<string> wallet_api::list_packages( ) const
 {
-   return package_manager::instance().get_packages();
+   vector<string> str_packages;
+   vector<package_object> objects = package_manager::instance().get_packages();
+   for (int i = 0; i < objects.size(); ++i) {
+      str_packages.push_back(objects[i].get_hash().str());
+   }
+   return str_packages;
 }
 
+void wallet_api::packages_path(const std::string& packages_dir) const {
+   package_manager::instance().initialize(packages_dir);
+}
+
+string wallet_api::create_package(const std::string& content_dir, const std::string& samples_dir, const std::string& aes_key) const {
+   package_object pack = package_manager::instance().create_package(content_dir, samples_dir, fc::sha512(aes_key));
+   return pack.get_hash().str();
+}
+
+void wallet_api::extract_package(const std::string& package_hash, const std::string& output_dir, const std::string& aes_key) const {
+   package_object package = package_manager::instance().get_package_object(fc::ripemd160(package_hash));
+   package_manager::instance().unpack_package(output_dir, package, fc::sha512(aes_key));
+}
 
 
 } } // graphene::wallet

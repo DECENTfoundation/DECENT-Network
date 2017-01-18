@@ -17,7 +17,7 @@ namespace package {
 
 class package_object {
 public:
-	package_object(const boost::filesystem::path& package_path) : _package_path(package_path) {}
+	package_object(const boost::filesystem::path& package_path);
 
 	boost::filesystem::path get_custody_file() const { return _package_path / "content.cus"; }
 	boost::filesystem::path get_content_file() const { return _package_path / "content.zip.aes"; }
@@ -25,11 +25,14 @@ public:
 	const boost::filesystem::path& get_path() const { return _package_path; }
 
 
-	bool verify_hash() const { return false; } //TODO: Implement this
-	fc::ripemd160 get_hash() const { return fc::ripemd160(); } //TODO: Implement this
+	bool verify_hash() const;
 
+	fc::ripemd160 get_hash() const { return _hash; }
+
+	bool is_valid() const { return _hash != fc::ripemd160(); }
 private:
 	boost::filesystem::path   _package_path;
+	fc::ripemd160			  _hash;
 };
 
 
@@ -97,7 +100,10 @@ public:
 															  package_transfer_interface& protocol,
 															  package_transfer_interface::transfer_listener& listener );
 	
-	std::vector<std::string> get_packages();
+	std::vector<package_object> get_packages();
+	package_object				get_package_object(fc::ripemd160 hash);
+
+
 private:
 	boost::filesystem::path      _packages_directory;
 };

@@ -38,6 +38,7 @@
 #include <fc/network/ntp.hpp>
 #include <fc/thread/mutex.hpp>
 #include <fc/thread/scoped_lock.hpp>
+
 #include <iostream>
 #include <atomic>
 
@@ -54,7 +55,8 @@ using namespace boost::iostreams;
 
 namespace {
 
-const int ARC_BUFFER_SIZE  = 4*1024; // 4kb
+const int ARC_BUFFER_SIZE  = 1024 * 1024; // 4kb
+const int RIPEMD160_BUFFER_SIZE  = 1024 * 1024; // 4kb
 
 struct arc_header {
     char type; // 0 = EOF, 1 = REGULAR FILE
@@ -248,8 +250,58 @@ boost::filesystem::path relative_path( const boost::filesystem::path &path, cons
 }
 
 
+fc::ripemd160 calculate_hash(path file_path) {
+    file_source source(file_path.string(), std::ifstream::binary);
+
+    char buffer[RIPEMD160_BUFFER_SIZE];
+    int bytes_read = source.read(buffer, RIPEMD160_BUFFER_SIZE);
+    
+    fc::ripemd160::encoder ripe_calc;
+
+    while (bytes_read > 0) {
+        ripe_calc.write(buffer, bytes_read);
+        bytes_read = source.read(buffer, RIPEMD160_BUFFER_SIZE);
+    }
+
+    return ripe_calc.result();
+}
+
 
 } // Unnamed namespace
+
+
+
+
+package_object::package_object(const boost::filesystem::path& package_path) {
+    _package_path = package_path;
+
+    if (!is_directory(_package_path)) {
+        _package_path = path();
+        _hash = fc::ripemd160();
+        return;
+    }
+
+    try {
+        if (_package_path.filename() == ".") {
+            _package_path = _package_path.parent_path();
+        }
+        _hash = fc::ripemd160(_package_path.filename().string());
+    } catch (fc::exception& er) {
+        _package_path = path();
+        _hash = fc::ripemd160();
+    }
+}
+
+bool package_object::verify_hash() const {
+    if (!is_valid()) {
+        return false;
+    }
+
+    return _hash == calculate_hash(get_content_file());
+}
+
+
+
 
 
 void package_manager::initialize( const path& packages_directory) {
@@ -263,6 +315,11 @@ void package_manager::initialize( const path& packages_directory) {
 
 
 bool package_manager::unpack_package(const path& destination_directory, const package_object& package, const fc::sha512& key) {
+    
+
+    if (!package.is_valid()) {
+        FC_THROW("Invalid package");
+    }
 
 	if (!is_directory(destination_directory)) {
         FC_THROW("Destination directory not found");
@@ -357,8 +414,10 @@ package_object package_manager::create_package(const path& content_path, const p
     AES_encrypt_file(content_zip.string(), aes_file_path.string(), k);
     remove(content_zip);
 
+    fc::ripemd160 hash = calculate_hash(aes_file_path);
+    rename(temp_path, _packages_directory / hash.str());
 
-	return package_object(temp_path);
+	return package_object(_packages_directory / hash.str());
 }
 	
 
@@ -379,15 +438,18 @@ package_manager::download_package( const package_object& package,
 }
 
 
-
-std::vector<std::string> package_manager::get_packages() {
-    std::vector<string> all_packages;
+std::vector<package_object> package_manager::get_packages() {
+    std::vector<package_object> all_packages;
     directory_iterator it(_packages_directory), it_end;
     for (; it != it_end; ++it) {
         if (is_directory(*it)) {
-            all_packages.push_back(it->path().string());
+            all_packages.push_back(package_object(it->path().string()));
         }
     }
     return all_packages;
+}
+
+package_object package_manager::get_package_object(fc::ripemd160 hash) {
+    return package_object(_packages_directory / hash.str());
 }
 

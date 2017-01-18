@@ -1902,12 +1902,37 @@ class wallet_api
       vector<uint64_t> get_content_ratings( const string& URI )const;
 
 
+
+
       /**
        * @brief Get a list of packages
        * @return The list of packages
        */
       vector<string> list_packages( ) const;
+      /**
+       * @brief Set directory of package manager packages
+       * @param packages_dir Directory in which all packages are located
+       * @return Nothing
+       */
+      void packages_path(const std::string& packages_dir) const;
 
+      /**
+       * @brief Set directory of package manager packages
+       * @param content_dir Directory containing all content that should be packed
+       * @param samples_dir Directory containing samples of content
+       * @param aes_key AES enryption key
+       * @return package hash (ripemd160 hash of package content)
+       */
+      string create_package(const std::string& content_dir, const std::string& samples_dir, const std::string& aes_key) const;
+
+      /**
+       * @brief Set directory of package manager packages
+       * @param package_hash Hash of package that needs to be extracted
+       * @param output_dir Directory where extracted files will be created
+       * @param aes_key AES decryption key
+       * @return Nothing
+       */
+      void extract_package(const std::string& package_hash, const std::string& output_dir, const std::string& aes_key) const;
 
 
 };
@@ -2089,4 +2114,7 @@ FC_API( graphene::wallet::wallet_api,
         (list_publishers_by_price)
         (get_content_ratings)
         (list_packages)
+        (packages_path)
+        (create_package)
+        (extract_package)
       )

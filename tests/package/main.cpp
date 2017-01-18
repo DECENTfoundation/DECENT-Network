@@ -121,7 +121,7 @@ int main( int argc, char** argv )
 			try {
  				package_manager::instance().initialize(packagePath);
 				package_object pack = package_manager::instance().create_package(contentPath, samplesPath, fc::sha512(key));
-				cout << "Package created " << pack.get_hash() << endl;
+				cout << "Package created " << pack.get_hash().str() << endl;
 
 			} catch( fc::exception& er ) { 
 				cout << "Failed to create package" << endl;
