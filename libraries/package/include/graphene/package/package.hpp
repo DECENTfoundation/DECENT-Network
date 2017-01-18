@@ -50,6 +50,9 @@ public:
 public:
 
 	struct transfer_progress {
+		transfer_progress() {}
+		transfer_progress(int tb, int cb, int cs) : total_bytes(tb), current_bytes(cb), current_speed(cs) {}
+
 		int total_bytes;
 		int current_bytes;
 		int current_speed; // Bytes per second
@@ -70,6 +73,9 @@ public:
 public:
 	virtual void upload_package(transfer_id id, const package_object& package, transfer_listener* listener) = 0;
 	virtual void download_package(transfer_id id, const std::string& url, transfer_listener* listener) = 0;
+
+	virtual std::string       get_transfer_url(transfer_id id) = 0;
+	virtual transfer_progress get_transfer_progress(transfer_id id) = 0;
 
 	virtual package_transfer_interface* clone() = 0;
 };
@@ -128,6 +134,9 @@ public:
 	
 	std::vector<package_object> get_packages();
 	package_object				get_package_object(fc::ripemd160 hash);
+
+	std::string					get_transfer_url(package_transfer_interface::transfer_id id);
+	package_transfer_interface::transfer_progress	get_transfer_progress(package_transfer_interface::transfer_id id);
 
 
 	decent::crypto::custody_utils& get_custody_utils() { return _custody_utils; }

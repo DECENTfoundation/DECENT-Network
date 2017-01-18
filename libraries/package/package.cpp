@@ -477,6 +477,28 @@ package_manager::download_package( const string& url,
 }
 
 
+std::string package_manager::get_transfer_url(package_transfer_interface::transfer_id id) {
+    if (id >= _all_transfers.size()) {
+        FC_THROW("Invalid transfer id: ${id}", ("id", id) );
+    }
+
+    transfer_job& job = _all_transfers[id];
+    return job.transport->get_transfer_url(id);
+}
+
+package_transfer_interface::transfer_progress
+package_manager::get_transfer_progress(package_transfer_interface::transfer_id id) {
+    if (id >= _all_transfers.size()) {
+        FC_THROW("Invalid transfer id: ${id}", ("id", id) );
+    }
+
+    transfer_job& job = _all_transfers[id];
+    return job.transport->get_transfer_progress(id);
+}
+
+
+
+
 std::vector<package_object> package_manager::get_packages() {
     std::vector<package_object> all_packages;
     directory_iterator it(_packages_directory), it_end;

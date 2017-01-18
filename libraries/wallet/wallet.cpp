@@ -4316,6 +4316,58 @@ void wallet_api::extract_package(const std::string& package_hash, const std::str
 }
 
 
+
+namespace {
+   struct transfer_progress_printer: public package_transfer_interface::transfer_listener {
+
+      static transfer_progress_printer& instance() {
+         static transfer_progress_printer the_one;
+         return the_one;
+      }
+
+      virtual void on_download_started(package_transfer_interface::transfer_id id) {
+         cout << id << ": Download started..." << endl;
+      }
+
+      virtual void on_download_finished(package_transfer_interface::transfer_id id, package_object downloaded_package) {
+         cout << id << ": Download finished: " << downloaded_package.get_hash().str() <<  endl;
+
+      }
+
+      virtual void on_download_progress(package_transfer_interface::transfer_id id, package_transfer_interface::transfer_progress progress) {
+         cout << id << ": Downloading " << progress.current_bytes << "/" << progress.total_bytes << " @ " << progress.current_speed << "Bytes/sec" << endl;
+      }
+
+
+      virtual void on_upload_started(package_transfer_interface::transfer_id id, const std::string& url) {
+
+         cout << id << ": Upload started on URL: " << url << endl;
+      }
+
+      virtual void on_upload_finished(package_transfer_interface::transfer_id id) {
+         cout << id << ": Upload finished" <<  endl;
+      }
+
+      virtual void on_upload_progress(package_transfer_interface::transfer_id id, package_transfer_interface::transfer_progress progress) {
+         cout << id << ": Uploading " << progress.current_bytes << "/" << progress.total_bytes << " @ " << progress.current_speed << "Bytes/sec" << endl;
+      }
+
+   };
+
+}
+
+
+void wallet_api::download_package(const std::string& url) const {
+   package_manager::instance().download_package(url, transfer_progress_printer::instance());
+}
+
+void wallet_api::upload_package(const std::string& package_hash, const std::string& protocol) const {
+   package_object package = package_manager::instance().get_package_object(fc::ripemd160(package_hash));
+   package_manager::instance().upload_package(package, protocol, transfer_progress_printer::instance());
+}
+
+
+
 } } // graphene::wallet
 
 void fc::to_variant(const account_multi_index_type& accts, fc::variant& vo)

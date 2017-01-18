@@ -1917,7 +1917,7 @@ class wallet_api
       void packages_path(const std::string& packages_dir) const;
 
       /**
-       * @brief Set directory of package manager packages
+       * @brief Create package from selected files
        * @param content_dir Directory containing all content that should be packed
        * @param samples_dir Directory containing samples of content
        * @param aes_key AES enryption key
@@ -1926,13 +1926,28 @@ class wallet_api
       string create_package(const std::string& content_dir, const std::string& samples_dir, const std::string& aes_key) const;
 
       /**
-       * @brief Set directory of package manager packages
+       * @brief Extract selected package
        * @param package_hash Hash of package that needs to be extracted
        * @param output_dir Directory where extracted files will be created
        * @param aes_key AES decryption key
        * @return Nothing
        */
       void extract_package(const std::string& package_hash, const std::string& output_dir, const std::string& aes_key) const;
+
+      /**
+       * @brief Download package 
+       * @param url Magnet or IPFS URL of package
+       * @return nothing
+       */
+      void download_package(const std::string& url) const;
+
+      /**
+       * @brief Start uploading package
+       * @param package_hash Hash of package that needs to be extracted
+       * @param protocol protocol for uploading package magnet or ipfs
+       * @return nothing
+       */
+      void upload_package(const std::string& package_hash, const std::string& protocol) const;
 
 
 };
@@ -2117,4 +2132,6 @@ FC_API( graphene::wallet::wallet_api,
         (packages_path)
         (create_package)
         (extract_package)
+        (download_package)
+        (upload_package)
       )
