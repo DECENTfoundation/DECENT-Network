@@ -3,6 +3,7 @@ file( GLOB HEADERS "include/graphene/package/*.hpp" )
 
 add_library( package_manager
              package.cpp
+             torrent_transfer.cpp
            )
 
 target_link_libraries( package_manager fc decent_encrypt )

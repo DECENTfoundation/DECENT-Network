@@ -15,7 +15,7 @@ endif(MSVC)
 
 file(GLOB PACKAGE_TESTS "package/*.cpp")
 add_executable( package_test ${PACKAGE_TESTS} ${COMMON_SOURCES} )
-target_link_libraries( package_test package_manager graphene_app graphene_account_history graphene_egenesis_none fc ${PLATFORM_SPECIFIC_LIBS} )
+target_link_libraries( package_test package_manager graphene_app graphene_account_history graphene_egenesis_none decent_encrypt pbc gmp fc ${PLATFORM_SPECIFIC_LIBS} )
 
 file(GLOB PERFORMANCE_TESTS "performance/*.cpp")
 add_executable( performance_test ${PERFORMANCE_TESTS} ${COMMON_SOURCES} )

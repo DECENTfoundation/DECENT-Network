@@ -18,7 +18,7 @@ namespace package {
 
 class package_object {
 public:
-	package_object(const boost::filesystem::path& package_path) : _package_path(package_path) {}
+	package_object(const boost::filesystem::path& package_path);
 
 	boost::filesystem::path get_custody_file() const { return _package_path / "content.cus"; }
 	boost::filesystem::path get_content_file() const { return _package_path / "content.zip.aes"; }
@@ -26,12 +26,17 @@ public:
 	const boost::filesystem::path& get_path() const { return _package_path; }
 
 
-	bool verify_hash() const { return false; } //TODO: Implement this
-	fc::ripemd160 get_hash() const { return fc::ripemd160(); } //TODO: Implement this
+	bool verify_hash() const;
 
-	uint32_t create_proof_of_custody(decent::crypto::custody_data cd, decent::crypto::custody_proof&proof) const;
+	fc::ripemd160 get_hash() const { return _hash; }
+
+	bool is_valid() const { return _hash != fc::ripemd160(); }
+
+	uint32_t create_proof_of_custody(decent::crypto::custody_data cd, decent::crypto::custody_proof& proof) const;
+
 private:
 	boost::filesystem::path   _package_path;
+	fc::ripemd160			  _hash;
 };
 
 
@@ -49,6 +54,7 @@ public:
 	};
 
 	class transfer_listener {
+	public:
 		virtual void on_download_started(transfer_id id) = 0;
 		virtual void on_download_finished(transfer_id id, package_object downloaded_package) = 0;
 		virtual void on_download_progress(transfer_id id, transfer_progress progress) = 0;
@@ -85,8 +91,7 @@ public:
 	package_object create_package( const boost::filesystem::path& content_path, 
 								   const boost::filesystem::path& samples, 
 								   const fc::sha512& key,
-                           decent::crypto::custody_data& cd
-	);
+                          		   decent::crypto::custody_data& cd);
 
 	bool unpack_package( const boost::filesystem::path& destination_directory, 
 						 const package_object& package,
@@ -101,11 +106,15 @@ public:
 															  package_transfer_interface& protocol,
 															  package_transfer_interface::transfer_listener& listener );
 	
-	std::vector<std::string> get_packages();
+	std::vector<package_object> get_packages();
+	package_object				get_package_object(fc::ripemd160 hash);
+
+
+	decent::crypto::custody_utils& get_custody_utils() { return _custody_utils; }
+
 private:
-	boost::filesystem::path      _packages_directory;
-	decent::crypto::custody_utils c;
-	friend class package_object;
+	boost::filesystem::path       _packages_directory;
+	decent::crypto::custody_utils _custody_utils;
 };
 
 
