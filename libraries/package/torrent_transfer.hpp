@@ -18,41 +18,21 @@
 namespace graphene { 
 namespace package {
 
-class torrent_transfer_listener: public package_transfer_interface::transfer_listener {
-public:
-	virtual void on_download_started(package_transfer_interface::transfer_id id) {
-
-	}
-	virtual void on_download_finished(package_transfer_interface::transfer_id id, package_object downloaded_package) { 
-
-	}
-	virtual void on_download_progress(package_transfer_interface::transfer_id id, package_transfer_interface::transfer_progress progress) { 
-
-	}
-
-	virtual void on_upload_started(package_transfer_interface::transfer_id id) { 
-
-	}
-	virtual void on_upload_finished(package_transfer_interface::transfer_id id) { 
-
-	}
-	virtual void on_upload_progress(package_transfer_interface::transfer_id id, package_transfer_interface::transfer_progress progress) { 
-
-	}
-};
-
 
 
 class torrent_transfer: public package_transfer_interface {
 
 public:
-	virtual package_transfer_interface::transfer_id upload_package(const package_object& package, transfer_listener& listener) {
-		return 0;
+	virtual void upload_package(transfer_id id, const package_object& package, transfer_listener* listener);
+	virtual void download_package(transfer_id id, const std::string& url, transfer_listener* listener);
+
+	virtual package_transfer_interface* clone() {
+		return new torrent_transfer();
 	}
 
-	virtual package_transfer_interface::transfer_id download_package(const package_object& package, transfer_listener& listener) {
-		return 0;
-	}
+private:
+	transfer_id    		 _id;
+	transfer_listener*   _listener;
 };
 
 

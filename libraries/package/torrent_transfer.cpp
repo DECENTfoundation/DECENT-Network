@@ -56,6 +56,16 @@ using namespace boost::iostreams;
 
 
 
+virtual void torrent_transfer::upload_package(transfer_id id, const package_object& package, transfer_listener* listener) {
+	_id = id;
+	_listener = listener;
+}
+
+virtual void torrent_transfer::download_package(transfer_id id, const std::string& url, transfer_listener* listener) {
+	_id = id;
+	_listener = listener;
+}
+
 
 
 

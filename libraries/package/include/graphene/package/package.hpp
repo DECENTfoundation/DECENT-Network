@@ -8,6 +8,8 @@
 #include <fc/crypto/ripemd160.hpp>
 #include <fc/crypto/sha512.hpp>
 
+#include <fc/network/url.hpp>
+
 #include <boost/filesystem.hpp>
 #include <decent/encrypt/crypto_types.hpp>
 #include <decent/encrypt/custodyutils.hpp>
@@ -59,22 +61,41 @@ public:
 		virtual void on_download_finished(transfer_id id, package_object downloaded_package) = 0;
 		virtual void on_download_progress(transfer_id id, transfer_progress progress) = 0;
 
-		virtual void on_upload_started(transfer_id id) = 0;
+		virtual void on_upload_started(transfer_id id, const std::string& url) = 0;
 		virtual void on_upload_finished(transfer_id id) = 0;
 		virtual void on_upload_progress(transfer_id id, transfer_progress progress) = 0;
 	};
 
 
 public:
-	virtual transfer_id upload_package(const package_object& package, transfer_listener& listener) = 0;
-	virtual transfer_id download_package(const package_object& package, transfer_listener& listener) = 0;
+	virtual void upload_package(transfer_id id, const package_object& package, transfer_listener* listener) = 0;
+	virtual void download_package(transfer_id id, const std::string& url, transfer_listener* listener) = 0;
+
+	virtual package_transfer_interface* clone() = 0;
 };
 
 
 class package_manager {
+private:
+
+	struct transfer_job {
+		enum transfer_type {
+			DOWNLOAD,
+			UPLOAD
+		};
+
+		package_transfer_interface* 					transport;
+		package_transfer_interface::transfer_listener*  listener;	
+		package_transfer_interface::transfer_id			job_id;	
+		transfer_type									job_type;
+	};
 
 private:
-	package_manager() {}
+
+	typedef std::map<std::string, package_transfer_interface*> 		protocol_handler_map;
+	typedef std::vector<transfer_job> 								transfer_jobs;
+private:
+	package_manager();
 	package_manager(const package_manager&) {}
 
 public:
@@ -99,11 +120,10 @@ public:
 
 
 	package_transfer_interface::transfer_id upload_package( const package_object& package, 
-															package_transfer_interface& protocol,
+															const std::string& protocol_name,
 															package_transfer_interface::transfer_listener& listener );
 
-	package_transfer_interface::transfer_id download_package( const package_object& package, 
-															  package_transfer_interface& protocol,
+	package_transfer_interface::transfer_id download_package( const std::string& url,
 															  package_transfer_interface::transfer_listener& listener );
 	
 	std::vector<package_object> get_packages();
@@ -113,8 +133,10 @@ public:
 	decent::crypto::custody_utils& get_custody_utils() { return _custody_utils; }
 
 private:
-	boost::filesystem::path       _packages_directory;
-	decent::crypto::custody_utils _custody_utils;
+	boost::filesystem::path            _packages_directory;
+	decent::crypto::custody_utils      _custody_utils;
+	protocol_handler_map               _protocol_handlers;
+	transfer_jobs					   _all_transfers;
 };
 
 
