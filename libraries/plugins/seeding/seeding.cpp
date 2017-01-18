@@ -124,8 +124,8 @@ seeding_plugin_impl::generate_por(my_seeding_id_type so_id, graphene::package::p
    FC_ASSERT(sritr != sidx.end());
 
    if( db.head_block_time() > mso.expiration ) {
-      //graphene::package::package_manager::instance().delete_package();
-      //delete my_seeding_object
+      //TODO_DECENT: graphene::package::package_manager::instance().delete_package();
+      db.remove( mso );
       return;
    }
    decent::crypto::custody_proof proof;

@@ -63,6 +63,7 @@ public:
 
    virtual void on_download_finished(package_transfer_interface::transfer_id id, package_object downloaded_package){
       my_seeding_id_type so_id = active_downloads[id];
+      active_downloads.erase(id);
       generate_por( so_id, downloaded_package   );
    };
 
