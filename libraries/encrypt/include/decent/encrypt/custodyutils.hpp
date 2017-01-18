@@ -59,11 +59,11 @@ public:
       return ret;
    }
 
-   int create_custody_data(path content, custody_data & cd){
+   int create_custody_data(boost::filesystem::path content, custody_data & cd){
       return create_custody_data(content, cd.n, cd.u_seed, cd.pubKey);
    }
 
-   int create_proof_of_custody(path content, custody_data cd, custody_proof& proof){
+   int create_proof_of_custody(boost::filesystem::path content, custody_data cd, custody_proof& proof){
       mpz_t s;
       mpz_init(s);
       mpz_import(s, 5, 1, sizeof(uint32_t), 0, 0, proof.seed);
@@ -91,7 +91,7 @@ public:
     * @param pubKey is generated public key. There must be at least DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED bytes allocated in the pubKey
     * @return 0 if success
     */
-   int create_custody_data(path content, uint32_t& n, char u_seed[], unsigned char pubKey[]);
+   int create_custody_data(boost::filesystem::path content, uint32_t& n, char u_seed[], unsigned char pubKey[]);
    /**
     * Create proof of custody out of content.zip stored in path. content.cus must exist in the same directory
     * @param content path to content.zip
@@ -103,7 +103,7 @@ public:
     * @param seed seed used for proof calculation - taken from latest block hash
     * @return 0 if success
     */
-   int create_proof_of_custody(path content, const uint32_t n, const char u_seed[], unsigned char pubKey[],
+   int create_proof_of_custody(boost::filesystem::path content, const uint32_t n, const char u_seed[], unsigned char pubKey[],
                                unsigned char sigma[], std::vector<std::vector<unsigned char>> &mus, mpz_t seed);
 
 private:

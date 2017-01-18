@@ -412,7 +412,7 @@ package_object package_manager::create_package( const boost::filesystem::path& c
 
     AES_encrypt_file(content_zip.string(), aes_file_path.string(), k);
     remove(content_zip);
-    c.create_custody_data(aes_file_path, cd);
+    _custody_utils.create_custody_data(aes_file_path, cd);
 
     fc::ripemd160 hash = calculate_hash(aes_file_path);
     rename(temp_path, _packages_directory / hash.str());

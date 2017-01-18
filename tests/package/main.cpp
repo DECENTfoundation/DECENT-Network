@@ -117,7 +117,8 @@ int main( int argc, char** argv )
 
 			try {
  				package_manager::instance().initialize(packagePath);
-				package_object pack = package_manager::instance().create_package(contentPath, samplesPath, fc::sha512(key));
+ 				decent::crypto::custody_data cd;
+				package_object pack = package_manager::instance().create_package(contentPath, samplesPath, fc::sha512(key), cd);
 				cout << "Package created " << pack.get_hash().str() << endl;
 
 			} catch( fc::exception& er ) { 

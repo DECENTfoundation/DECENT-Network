@@ -90,8 +90,7 @@ public:
 	package_object create_package( const boost::filesystem::path& content_path, 
 								   const boost::filesystem::path& samples, 
 								   const fc::sha512& key,
-                           decent::crypto::custody_data& cd
-	);
+                          		   decent::crypto::custody_data& cd);
 
 	bool unpack_package( const boost::filesystem::path& destination_directory, 
 						 const package_object& package,
@@ -110,10 +109,10 @@ public:
 	package_object				get_package_object(fc::ripemd160 hash);
 
 
-	const decent::crypto::custody_utils& get_custody_utils() { return _custody_utils; }
+	decent::crypto::custody_utils& get_custody_utils() { return _custody_utils; }
 
 private:
-	boost::filesystem::path      _packages_directory;
+	boost::filesystem::path       _packages_directory;
 	decent::crypto::custody_utils _custody_utils;
 };
 
