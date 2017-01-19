@@ -18,3 +18,7 @@
 [submodule "libraries/contrib/json"]
 	path = libraries/contrib/json
 	url = https://github.com/DECENTfoundation/json.git
+[submodule "programs/gui_wallet"]
+	path = programs/gui_wallet
+	url = https://github.com/DECENTfoundation/DECENT-GUI.git
+	branch = next
