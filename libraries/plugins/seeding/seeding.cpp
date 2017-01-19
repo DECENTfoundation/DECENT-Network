@@ -106,12 +106,11 @@ void seeding_plugin_impl::on_operation(const operation_history_object &op_obj) {
                db.modify<my_seeder_object>(*seeder_itr, [&](my_seeder_object &mso) {
                     mso.free_space -= (cs_op.size + 1048575) / 1048576; //we allocate the whole megabytes per content
                });
+               package_manager::instance().download_package(cs_op.URI, *this );
             }
          }
          ++seeder_itr;
       }
-
-      //TODO_DECENT download the content and initialize callback
    }
 }
 
@@ -123,20 +122,16 @@ seeding_plugin_impl::generate_por(my_seeding_id_type so_id, graphene::package::p
    const auto &sritr = sidx.find(mso.seeder);
    FC_ASSERT(sritr != sidx.end());
 
-   if( db.head_block_time() > mso.expiration ) {
-      //TODO_DECENT: graphene::package::package_manager::instance().delete_package();
-      db.remove( mso );
-      return;
-   }
+
    decent::crypto::custody_proof proof;
    fc::ripemd160 b_id = db.head_block_id();
    uint32_t b_num = db.head_block_num();
    proof.reference_block = b_num;
-   for(int i =0; i<5; i++)
+   for( int i = 0; i < 5; i++ )
       proof.seed.data[i] = b_id._hash[i];
 
    downloaded_package.create_proof_of_custody(mso.cd, proof);
-   //TODO_DECENT - issue PoR and start periodic PoR generation
+   // - issue PoR and start periodic PoR generation
    proof_of_custody_operation op;
 
    op.seeder = mso.seeder;
@@ -156,13 +151,21 @@ seeding_plugin_impl::generate_por(my_seeding_id_type so_id, graphene::package::p
    tx.sign(sritr->privKey, _chain_id);
    fc::async([this, tx]() { _self.p2p_node().broadcast_transaction(tx); });
    fc::time_point fc_now = fc::time_point::now();
-   fc::time_point next_wakeup( fc_now + fc::microseconds( 1000000*(24*60*60 - 10 ) ) );
-   if( next_wakeup > fc::time_point(mso.expiration) )
-      next_wakeup = fc::time_point(mso.expiration) - fc::microseconds( 30 * 1000000 );
+   fc::time_point next_wakeup(fc_now + fc::microseconds(1000000 * (24 * 60 * 60 - 10)));
+   bool last_call = false;
+   if((fc::time_point(mso.expiration) - fc::microseconds(60 * 1000000)) <= fc_now )
+      last_call = true;
+   if( next_wakeup > fc::time_point(mso.expiration))
+      next_wakeup = fc::time_point(mso.expiration) - fc::microseconds(30 * 1000000);
 
-   fc::schedule([this, so_id, downloaded_package](){ generate_por(so_id, downloaded_package); }, next_wakeup, "Seeding plugin PoR generate");
+   if( last_call ) {
+      package_manager::instance().delete_package(downloaded_package.get_hash());
+      db.remove(mso);
+   } else {
+      fc::schedule([this, so_id, downloaded_package]() { generate_por(so_id, downloaded_package); }, next_wakeup,
+                   "Seeding plugin PoR generate");
+   }
 }
-
 }// end namespace detail
 
 

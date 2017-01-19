@@ -44,7 +44,7 @@
 
 #include <decent/encrypt/encryptionutils.hpp>
 
-#include "aes_filter.hpp"
+#include "torrent_transfer.hpp"
 
 using namespace graphene::package;
 using namespace std;
@@ -313,6 +313,12 @@ void package_manager::initialize( const path& packages_directory) {
 }
 
 
+package_manager::package_manager() {
+    static torrent_transfer dummy_torrent_transfer;
+
+    _protocol_handlers.insert(std::make_pair("magnet", &dummy_torrent_transfer));
+}
+
 bool package_manager::unpack_package(const path& destination_directory, const package_object& package, const fc::sha512& key) {
     
 
@@ -425,17 +431,72 @@ package_object package_manager::create_package( const boost::filesystem::path& c
 
 package_transfer_interface::transfer_id 
 package_manager::upload_package( const package_object& package, 
-                                       package_transfer_interface& protocol,
-                                       package_transfer_interface::transfer_listener& listener ) {
-    return protocol.upload_package(package, listener);
+                                 const string& protocol_name,
+                                 package_transfer_interface::transfer_listener& listener ) {
+
+    protocol_handler_map::iterator it = _protocol_handlers.find(protocol_name);
+    if (it == _protocol_handlers.end()) {
+        FC_THROW("Can not find protocol handler for : ${proto}", ("proto", protocol_name) );
+    }
+
+    _all_transfers.push_back(transfer_job());
+    transfer_job& t = _all_transfers.back();
+
+    t.job_id = _all_transfers.size() - 1;
+    t.transport = it->second->clone();
+    t.listener = &listener;
+    t.job_type = transfer_job::UPLOAD;
+
+    t.transport->upload_package(t.job_id, package, &listener);
+
+    return t.job_id;
 }
 
 package_transfer_interface::transfer_id 
-package_manager::download_package( const package_object& package, 
-                                         package_transfer_interface& protocol,
-                                         package_transfer_interface::transfer_listener& listener ) {
-    return protocol.download_package(package, listener);
+package_manager::download_package( const string& url,
+                                   package_transfer_interface::transfer_listener& listener ) {
+
+    fc::url download_url(url);
+
+    protocol_handler_map::iterator it = _protocol_handlers.find(download_url.proto());
+    if (it == _protocol_handlers.end()) {
+        FC_THROW("Can not find protocol handler for : ${proto}", ("proto", download_url.proto()) );
+    }
+
+    _all_transfers.push_back(transfer_job());
+    transfer_job& t = _all_transfers.back();
+
+    t.job_id = _all_transfers.size() - 1;
+    t.transport = it->second->clone();
+    t.listener = &listener;
+    t.job_type = transfer_job::DOWNLOAD;
+
+    t.transport->download_package(t.job_id, url, &listener);
+
+    return t.job_id;
 }
+
+
+std::string package_manager::get_transfer_url(package_transfer_interface::transfer_id id) {
+    if (id >= _all_transfers.size()) {
+        FC_THROW("Invalid transfer id: ${id}", ("id", id) );
+    }
+
+    transfer_job& job = _all_transfers[id];
+    return job.transport->get_transfer_url(id);
+}
+
+package_transfer_interface::transfer_progress
+package_manager::get_transfer_progress(package_transfer_interface::transfer_id id) {
+    if (id >= _all_transfers.size()) {
+        FC_THROW("Invalid transfer id: ${id}", ("id", id) );
+    }
+
+    transfer_job& job = _all_transfers[id];
+    return job.transport->get_transfer_progress(id);
+}
+
+
 
 
 std::vector<package_object> package_manager::get_packages() {
@@ -451,6 +512,16 @@ std::vector<package_object> package_manager::get_packages() {
 
 package_object package_manager::get_package_object(fc::ripemd160 hash) {
     return package_object(_packages_directory / hash.str());
+}
+
+
+void package_manager::delete_package(fc::ripemd160 hash) {
+    package_object po(_packages_directory / hash.str());   
+    if (!po.is_valid()) {
+        FC_THROW("Invalid package: ${hash}", ("hash", hash.str()) );
+    }
+
+    remove_all(po.get_path());
 }
 
 uint32_t package_object::create_proof_of_custody(decent::crypto::custody_data cd, decent::crypto::custody_proof&proof) const {

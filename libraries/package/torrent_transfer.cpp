@@ -56,8 +56,38 @@ using namespace boost::iostreams;
 
 
 
+void torrent_transfer::upload_package(transfer_id id, const package_object& package, transfer_listener* listener) {
+	_id = id;
+	_listener = listener;
+	_url = "magnet:?xt=blahblah";
+
+	listener->on_upload_started(id, _url);
+	listener->on_upload_progress(id, transfer_progress(1000, 200, 100));
+	listener->on_upload_progress(id, transfer_progress(1000, 800, 120));
+	listener->on_upload_finished(id);
+
+}
+
+void torrent_transfer::download_package(transfer_id id, const std::string& url, transfer_listener* listener) {
+	_id = id;
+	_listener = listener;
+	_url = url;
+
+	listener->on_download_started(id);
+	listener->on_download_progress(id, transfer_progress(1000, 200, 100));
+	listener->on_download_progress(id, transfer_progress(1000, 800, 120));
+	
+	listener->on_download_finished(id, package_manager::instance().get_package_object(fc::ripemd160("22ad84efeca3776a4e37b738eab728abcedc92d8")));
+}
 
 
+std::string torrent_transfer::get_transfer_url(transfer_id id) {
+	return _url;
+}
+
+torrent_transfer::transfer_progress torrent_transfer::get_transfer_progress(transfer_id id) {
+	return transfer_progress(1000, 800, 120);
+}
 
 
 
