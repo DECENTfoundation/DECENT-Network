@@ -2289,6 +2289,7 @@ public:
                                      string publishing_fee_amount,
                                      string synopsis,
                                      d_integer secret,
+                                     decent::crypto::custody_data cd,
                                      bool broadcast/* = false */)
       { try {
          account_object author_account = get_account( author );
@@ -2321,6 +2322,7 @@ public:
          submit_op.expiration = expiration;
          submit_op.publishing_fee = fee_asset_obj->amount_from_string(publishing_fee_amount);
          submit_op.synopsis = synopsis;
+         submit_op.cd = cd;
          
          signed_transaction tx;
          tx.operations.push_back( submit_op );
@@ -2399,23 +2401,36 @@ public:
    
    signed_transaction proof_of_custody(string seeder,
                                        string URI,
-                                       //vector<char> proof,
+                                       string package,
                                        bool broadcast/* = false */)
    { try {
       account_object seeder_account = get_account( seeder );
-      
+      fc::ripemd160 hash(package);
+      package_object po = package_manager::instance().get_package_object(hash);
+      decent::crypto::custody_proof proof;
+      auto dynamic_props = get_dynamic_global_properties();
+      proof.reference_block = dynamic_props.head_block_number;
+      block_id_type bl_id = dynamic_props.head_block_id;
+      for(int i=0;i<5;i++) proof.seed.data[i] = bl_id._hash[i];
+
+      auto co = _remote_db->get_content(URI);
+
+      FC_ASSERT(co, "content does not exist");
+
+      po.create_proof_of_custody(co->cd, proof);
+
       proof_of_custody_operation op;
       op.seeder = seeder_account.id;
       op.URI = URI;
-      //op.proof = proof;
-      //TODO_DECENT rework
+      op.proof = proof;
+
       signed_transaction tx;
       tx.operations.push_back( op );
       set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
       tx.validate();
       
       return sign_transaction( tx, broadcast );
-   } FC_CAPTURE_AND_RETHROW( (seeder)(URI)(broadcast) ) }
+   } FC_CAPTURE_AND_RETHROW( (seeder)(URI)(package)(broadcast) ) }
    
    signed_transaction deliver_keys(string seeder,
                                    d_integer privKey,
@@ -4192,11 +4207,11 @@ vesting_balance_object_with_info::vesting_balance_object_with_info( const vestin
 
 signed_transaction
 wallet_api::submit_content(string author, string URI, string price_asset_name, string price_amount, uint64_t size,
-                              fc::ripemd160 hash, vector<account_id_type> seeders, uint32_t quorum, fc::time_point_sec expiration,
-                              string publishing_fee_asset, string publishing_fee_amount, string synopsis, d_integer secret,
-                              bool broadcast)
+                           fc::ripemd160 hash, vector<account_id_type> seeders, uint32_t quorum, fc::time_point_sec expiration,
+                           string publishing_fee_asset, string publishing_fee_amount, string synopsis, d_integer secret,
+                           decent::crypto::custody_data cd, bool broadcast)
 {
-   return my->submit_content(author, URI, price_asset_name, price_amount, hash, size, seeders, quorum, expiration, publishing_fee_asset, publishing_fee_amount, synopsis, secret, broadcast);
+   return my->submit_content(author, URI, price_asset_name, price_amount, hash, size, seeders, quorum, expiration, publishing_fee_asset, publishing_fee_amount, synopsis, secret, cd, broadcast);
 }
 
 signed_transaction
@@ -4224,10 +4239,10 @@ signed_transaction wallet_api::ready_to_publish(string seeder,
 
 signed_transaction wallet_api::proof_of_custody(string seeder,
                                                 string URI,
-                                                vector<char> proof,
+                                                string package,
                                                 bool broadcast)
 {
-   return my->proof_of_custody(seeder, URI,  broadcast);
+   return my->proof_of_custody(seeder, URI, package, broadcast);
 }
 
 signed_transaction wallet_api::deliver_keys(string seeder,
@@ -4304,10 +4319,10 @@ void wallet_api::packages_path(const std::string& packages_dir) const {
    package_manager::instance().initialize(packages_dir);
 }
 
-string wallet_api::create_package(const std::string& content_dir, const std::string& samples_dir, const std::string& aes_key) const {
+std::pair<string, decent::crypto::custody_data>  wallet_api::create_package(const std::string& content_dir, const std::string& samples_dir, const std::string& aes_key) const {
    decent::crypto::custody_data cd;
    package_object pack = package_manager::instance().create_package(content_dir, samples_dir, fc::sha512(aes_key), cd);
-   return pack.get_hash().str();
+   return std::pair<string, decent::crypto::custody_data>(pack.get_hash().str(), cd);
 }
 
 void wallet_api::extract_package(const std::string& package_hash, const std::string& output_dir, const std::string& aes_key) const {

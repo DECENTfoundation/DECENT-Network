@@ -1732,15 +1732,16 @@ class wallet_api
      * @param publishing_fee_amount
      * @param synopsis
      * @param secret
+     * @param cd
      * @param broadcast true to broadcast the transaction on the network
      * @return
      * @ingroup WalletCLI
      */
-      signed_transaction
+    signed_transaction
       submit_content(string author, string URI, string price_asset_name, string price_amount, uint64_t size,
                            fc::ripemd160 hash, vector<account_id_type> seeders, uint32_t quorum, fc::time_point_sec expiration,
                            string publishing_fee_asset, string publishing_fee_amount, string synopsis, d_integer secret,
-                           bool broadcast);
+                           decent::crypto::custody_data cd, bool broadcast);
 
     /**
      *
@@ -1789,15 +1790,16 @@ class wallet_api
      *
      * @param seeder
      * @param URI
-     * @param proof
+     * @param package
      * @param broadcast true to broadcast the transaction on the network
      * @return
      * @ingroup WalletCLI
      */
       signed_transaction proof_of_custody(string seeder,
                                           string URI,
-                                          vector<char> proof,
+                                          string package,
                                           bool broadcast = false);
+
 
     /**
      *
@@ -1921,9 +1923,9 @@ class wallet_api
        * @param content_dir Directory containing all content that should be packed
        * @param samples_dir Directory containing samples of content
        * @param aes_key AES enryption key
-       * @return package hash (ripemd160 hash of package content)
+       * @return package hash (ripemd160 hash of package content) and content custody data
        */
-      string create_package(const std::string& content_dir, const std::string& samples_dir, const std::string& aes_key) const;
+      std::pair<string, decent::crypto::custody_data> create_package(const std::string& content_dir, const std::string& samples_dir, const std::string& aes_key) const;
 
       /**
        * @brief Extract selected package
