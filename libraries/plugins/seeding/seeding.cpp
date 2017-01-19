@@ -172,7 +172,6 @@ void seeding_plugin_impl::send_ready_to_publish()
    const auto &sidx = database().get_index_type<my_seeder_index>().indices().get<by_seeder>();
    const auto &sritr = sidx.begin();
 
-   FC_ASSERT(sritr != sidx.end(), "No seeders configured!" );
    while(sritr != sidx.end() ){
       ready_to_publish_operation op;
       op.seeder = sritr->seeder;
@@ -187,7 +186,7 @@ void seeding_plugin_impl::send_ready_to_publish()
       tx.set_expiration(dyn_props.time + fc::seconds(30));
       tx.validate();
    }
-   fc::time_point next_wakeup(fc::time_point::now() + fc::microseconds(1000000 * (24 * 60 * 60)));
+   fc::time_point next_wakeup(fc::time_point::now() + fc::microseconds(1000000 * (60 * 60)));
    fc::schedule([this](){ send_ready_to_publish();}, next_wakeup, "Seeding plugin RtP generate" );
 }
 }// end namespace detail
@@ -289,6 +288,8 @@ void seeding_plugin::plugin_set_program_options(
          ("content-private-key", bpo::value<string>(), "El Gamal content private key")
          ("seeder-private-key", bpo::value<string>(), "Private key of the account controlling this seeder")
          ("free-space", bpo::value<int>(), "Allocated disk space, in MegaBytes")
+         ("packages-path", bpo::value<string>(), "Packages storage path")
+         ("seeding-price", bpo::value<int>(), "price per MegaBytes")
          ;
 }
 
