@@ -33,7 +33,8 @@ public:
    account_id_type seeder;
    d_integer content_privKey;
    fc::ecc::private_key privKey;
-   uint32_t free_space;
+   uint64_t free_space;
+   uint32_t price;
 };
 
 class my_seeding_object : public graphene::db::abstract_object< my_seeding_object >
@@ -73,10 +74,11 @@ public:
 
    virtual void on_download_started(package_transfer_interface::transfer_id id) {}
    virtual void on_download_progress(package_transfer_interface::transfer_id id, package_transfer_interface::transfer_progress progress) {}
-   virtual void on_upload_started(package_transfer_interface::transfer_id id) {}
+   virtual void on_upload_started(package_transfer_interface::transfer_id id, const std::string& url) {}
    virtual void on_upload_finished(package_transfer_interface::transfer_id id) {}
    virtual void on_upload_progress(package_transfer_interface::transfer_id id, package_transfer_interface::transfer_progress progress) {}
 
+   void send_ready_to_publish();
    seeding_plugin& _self;
    std::map<package_transfer_interface::transfer_id, my_seeding_id_type> active_downloads;
 };
@@ -121,6 +123,7 @@ class seeding_plugin : public graphene::app::plugin
               boost::program_options::options_description& cfg) override;
       void plugin_initialize(const boost::program_options::variables_map& options) override;
       void plugin_startup() override;
+
 
       friend class detail::seeding_plugin_impl;
       std::unique_ptr<detail::seeding_plugin_impl> my;

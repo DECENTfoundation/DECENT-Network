@@ -166,13 +166,38 @@ seeding_plugin_impl::generate_por(my_seeding_id_type so_id, graphene::package::p
                    "Seeding plugin PoR generate");
    }
 }
+
+void seeding_plugin_impl::send_ready_to_publish()
+{
+   const auto &sidx = database().get_index_type<my_seeder_index>().indices().get<by_seeder>();
+   const auto &sritr = sidx.begin();
+
+   FC_ASSERT(sritr != sidx.end(), "No seeders configured!" );
+   while(sritr != sidx.end() ){
+      ready_to_publish_operation op;
+      op.seeder = sritr->seeder;
+      op.space = sritr->free_space;
+      op.price_per_MByte = sritr->price;
+      op.pubKey = get_public_el_gamal_key(sritr->content_privKey);
+      signed_transaction tx;
+      tx.operations.push_back(op);
+
+      auto dyn_props = database().get_dynamic_global_properties();
+      tx.set_reference_block(dyn_props.head_block_id);
+      tx.set_expiration(dyn_props.time + fc::seconds(30));
+      tx.validate();
+   }
+   fc::time_point next_wakeup(fc::time_point::now() + fc::microseconds(1000000 * (24 * 60 * 60)));
+   fc::schedule([this](){ send_ready_to_publish();}, next_wakeup, "Seeding plugin RtP generate" );
+}
 }// end namespace detail
 
 
 seeding_plugin::seeding_plugin() : my( new detail::seeding_plugin_impl( *this )){}
+
 void seeding_plugin::plugin_startup()
 {
-   //we shall send ready_to_publish here....
+   my->send_ready_to_publish();
 }
 
 void seeding_plugin::plugin_initialize( const boost::program_options::variables_map& options )
@@ -185,7 +210,8 @@ void seeding_plugin::plugin_initialize( const boost::program_options::variables_
    fc::optional<fc::ecc::private_key> private_key;
    d_integer content_key;
    account_id_type seeder;
-   uint32_t free_space;
+   uint64_t free_space;
+   uint32_t price;
    if( options.count("seeder-private-key") || options.count("content-private-key") || options.count("seeder") || options.count("free-space") ) {
       if( options.count("seeder-private-key")) {
          private_key = graphene::utilities::wif_to_key(options["seeder-private-key"].as<std::string>());
@@ -212,7 +238,22 @@ void seeding_plugin::plugin_initialize( const boost::program_options::variables_
       } else {
          FC_THROW("missing content-private-key parameter");
       }
-
+      if( options.count("packages-path")) {
+         try {
+            boost::filesystem::path master_path = boost::filesystem::path(options["packages-path"].as<string>());
+            package_manager::instance().initialize(master_path);
+         } catch( ... ) {
+            FC_THROW("Invalid packages path ${path_string}",
+                     ("path_string", options["packages-path"].as<string>()));
+         }
+      } else {
+         FC_THROW("missing packages-path parameter");
+      }
+      if( options.count("seeding-price")) {
+         price = options["seeding-price"].as<uint32_t>();
+      } else{
+         FC_THROW("missing seeding-price parameter");
+      }
       if( options.count("seeder"))
          seeder = fc::variant(options["seeder"].as<string>()).as<account_id_type>();
       else
@@ -228,6 +269,7 @@ void seeding_plugin::plugin_initialize( const boost::program_options::variables_
            mso.free_space = free_space;
            mso.content_privKey = content_key;
            mso.privKey = *private_key;
+           mso.price = price;
       });
    }
    ilog("seeding plugin:  plugin_initialize() end");
