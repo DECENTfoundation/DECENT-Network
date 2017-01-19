@@ -1949,6 +1949,13 @@ class wallet_api
        */
       void upload_package(const std::string& package_hash, const std::string& protocol) const;
 
+      /**
+       * @brief Remove package
+       * @param package_hash Hash of package that needs to be removed
+       * @return nothing
+       */
+      void remove_package(const std::string& package_hash) const;
+
 
 };
    
@@ -2134,4 +2141,5 @@ FC_API( graphene::wallet::wallet_api,
         (extract_package)
         (download_package)
         (upload_package)
+        (remove_package)
       )

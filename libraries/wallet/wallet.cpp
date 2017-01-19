@@ -4315,6 +4315,10 @@ void wallet_api::extract_package(const std::string& package_hash, const std::str
    package_manager::instance().unpack_package(output_dir, package, fc::sha512(aes_key));
 }
 
+void wallet_api::remove_package(const std::string& package_hash) const {
+   package_manager::instance().delete_package(fc::ripemd160(package_hash));
+}
+
 
 
 namespace {
