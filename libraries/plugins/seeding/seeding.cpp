@@ -191,6 +191,10 @@ void seeding_plugin_impl::send_ready_to_publish()
       tx.set_reference_block(dyn_props.head_block_id);
       tx.set_expiration(dyn_props.time + fc::seconds(30));
       tx.validate();
+      chain_id_type _chain_id = database().get_chain_id();
+
+      tx.sign(sritr->privKey, _chain_id);
+      idump((tx));
       _self.p2p_node().broadcast_transaction(tx); 
       sritr++;
    }
