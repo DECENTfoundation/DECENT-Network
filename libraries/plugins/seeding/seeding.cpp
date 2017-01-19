@@ -63,7 +63,7 @@ void seeding_plugin_impl::on_operation(const operation_history_object &op_obj) {
       chain_id_type _chain_id = db.get_chain_id();
 
       tx.sign(sritr->privKey, _chain_id);
-      fc::async([this, tx]() { _self.p2p_node().broadcast_transaction(tx); });
+      service_thread->async([this, tx]() { _self.p2p_node().broadcast_transaction(tx); });
    }
 
    if( op_obj.op.which() == operation::tag<content_submit_operation>::value ) {
@@ -116,6 +116,7 @@ void seeding_plugin_impl::on_operation(const operation_history_object &op_obj) {
 
 void
 seeding_plugin_impl::generate_por(my_seeding_id_type so_id, graphene::package::package_object downloaded_package) {
+   ilog("seeding plugin_impl:  generate_por() start");
    graphene::chain::database &db = database();
    const my_seeding_object &mso = db.get<my_seeding_object>(so_id);
    const auto &sidx = db.get_index_type<my_seeder_index>().indices().get<by_seeder>();
@@ -149,9 +150,10 @@ seeding_plugin_impl::generate_por(my_seeding_id_type so_id, graphene::package::p
    chain_id_type _chain_id = db.get_chain_id();
 
    tx.sign(sritr->privKey, _chain_id);
-   fc::async([this, tx]() { _self.p2p_node().broadcast_transaction(tx); });
+   idump((tx));
+   service_thread->async([this, tx]() { _self.p2p_node().broadcast_transaction(tx); });
    fc::time_point fc_now = fc::time_point::now();
-   fc::time_point next_wakeup(fc_now + fc::microseconds(1000000 * (24 * 60 * 60 - 10)));
+   fc::time_point next_wakeup(fc_now + fc::microseconds((uint64_t)1000000 * (24 * 60 * 60 - 10)));
    bool last_call = false;
    if((fc::time_point(mso.expiration) - fc::microseconds(60 * 1000000)) <= fc_now )
       last_call = true;
@@ -162,15 +164,17 @@ seeding_plugin_impl::generate_por(my_seeding_id_type so_id, graphene::package::p
       package_manager::instance().delete_package(downloaded_package.get_hash());
       db.remove(mso);
    } else {
-      fc::schedule([this, so_id, downloaded_package]() { generate_por(so_id, downloaded_package); }, next_wakeup,
+      service_thread->schedule([this, so_id, downloaded_package]() { generate_por(so_id, downloaded_package); }, next_wakeup,
                    "Seeding plugin PoR generate");
    }
+   ilog("seeding plugin_impl:  generate_por() end");
 }
 
 void seeding_plugin_impl::send_ready_to_publish()
 {
+   ilog("seeding plugin_impl: send_ready_to_publish() begin");
    const auto &sidx = database().get_index_type<my_seeder_index>().indices().get<by_seeder>();
-   const auto &sritr = sidx.begin();
+   auto sritr = sidx.begin();
 
    while(sritr != sidx.end() ){
       ready_to_publish_operation op;
@@ -181,13 +185,18 @@ void seeding_plugin_impl::send_ready_to_publish()
       signed_transaction tx;
       tx.operations.push_back(op);
 
+      idump((op));
+
       auto dyn_props = database().get_dynamic_global_properties();
       tx.set_reference_block(dyn_props.head_block_id);
       tx.set_expiration(dyn_props.time + fc::seconds(30));
       tx.validate();
+      _self.p2p_node().broadcast_transaction(tx); 
+      sritr++;
    }
-   fc::time_point next_wakeup(fc::time_point::now() + fc::microseconds(1000000 * (60 * 60)));
-   fc::schedule([this](){ send_ready_to_publish();}, next_wakeup, "Seeding plugin RtP generate" );
+   fc::time_point next_wakeup(fc::time_point::now() + fc::microseconds( (uint64_t) 1000000 * (60 * 60)));
+   service_thread->schedule([=](){ send_ready_to_publish();}, next_wakeup, "Seeding plugin RtP generate" );
+   ilog("seeding plugin_impl: send_ready_to_publish() end");
 }
 }// end namespace detail
 
@@ -196,7 +205,9 @@ seeding_plugin::seeding_plugin() : my( new detail::seeding_plugin_impl( *this ))
 
 void seeding_plugin::plugin_startup()
 {
-   my->send_ready_to_publish();
+   ilog("seeding plugin:  plugin_startup() start");
+   my->service_thread->schedule([this](){ilog("generating first ready to publish");my->send_ready_to_publish(); }, ( fc::time_point::now()  + fc::microseconds(15000000)), "Seeding plugin RtP generate");
+   ilog("seeding plugin:  plugin_startup() end");
 }
 
 void seeding_plugin::plugin_initialize( const boost::program_options::variables_map& options )
@@ -249,7 +260,7 @@ void seeding_plugin::plugin_initialize( const boost::program_options::variables_
          FC_THROW("missing packages-path parameter");
       }
       if( options.count("seeding-price")) {
-         price = options["seeding-price"].as<uint32_t>();
+         price = options["seeding-price"].as<int>();
       } else{
          FC_THROW("missing seeding-price parameter");
       }
@@ -262,7 +273,10 @@ void seeding_plugin::plugin_initialize( const boost::program_options::variables_
          free_space = options["free-space"].as<int>();
       else
          FC_THROW("missing free-space parameter");
-
+      
+      ilog("starting service thread");
+      my->service_thread = std::make_shared<fc::thread>();
+      
       database().create<my_seeder_object>([&](my_seeder_object &mso) {
            mso.seeder = seeder;
            mso.free_space = free_space;

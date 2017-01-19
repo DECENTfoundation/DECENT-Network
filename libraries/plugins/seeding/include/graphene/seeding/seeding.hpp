@@ -65,7 +65,7 @@ public:
    virtual void on_download_finished(package_transfer_interface::transfer_id id, package_object downloaded_package){
       my_seeding_id_type so_id = active_downloads[id];
       active_downloads.erase(id);
-      generate_por( so_id, downloaded_package   );
+      service_thread->async([this,so_id, downloaded_package](){generate_por( so_id, downloaded_package );});
    };
 
    graphene::chain::database &database();
@@ -81,6 +81,7 @@ public:
    void send_ready_to_publish();
    seeding_plugin& _self;
    std::map<package_transfer_interface::transfer_id, my_seeding_id_type> active_downloads;
+   std::shared_ptr<fc::thread> service_thread;
 };
 }
 
