@@ -371,7 +371,7 @@ class wallet_api
        * @param asset_name_or_id the symbol or id of the BitAsset in question
        * @returns the BitAsset-specific data for this asset
        */
-      monitored_asset_options        get_bitasset_data(string asset_name_or_id)const;
+      monitored_asset_options        get_monitored_asset_data(string asset_name_or_id)const;
 
       /** Lookup the id of a named account.
        * @param account_name_or_id the name of the account to look up
@@ -924,7 +924,8 @@ class wallet_api
        * enumerated in the asset_object::asset_options struct. This command is used to update 
        * these options for an existing asset.
        *
-       * @note This operation cannot be used to update BitAsset-specific options. For these options,
+       * @note This operation cannot be used to update
+       * et-specific options. For these options,
        * \c update_bitasset() instead.
        *
        * @param symbol the name or id of the asset to update
@@ -953,7 +954,7 @@ class wallet_api
        * @param broadcast true to broadcast the transaction on the network
        * @returns the signed transaction updating the bitasset
        */
-   signed_transaction update_bitasset(string symbol,
+   signed_transaction update_monitored_asset(string symbol,
                                       monitored_asset_options new_options,
                                       bool broadcast = false);
 
@@ -1511,12 +1512,12 @@ FC_API( graphene::wallet::wallet_api,
         (get_transaction_id)
         (create_asset)
         (update_asset)
-        (update_bitasset)
+        (update_monitored_asset)
         (update_asset_feed_producers)
         (publish_asset_feed)
         (issue_asset)
         (get_asset)
-        (get_bitasset_data)
+        (get_monitored_asset_data)
         (fund_asset_fee_pool)
         (create_committee_member)
         (get_witness)

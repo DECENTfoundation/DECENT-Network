@@ -57,6 +57,9 @@ void_result asset_create_evaluator::do_evaluate( const asset_create_operation& o
 
    core_fee_paid -= core_fee_paid.value/2;
 
+   if(op.common_options.monitored_asset_opts.valid())
+      op.common_options.monitored_asset_opts->validate();
+
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
@@ -164,6 +167,40 @@ void_result asset_update_evaluator::do_apply(const asset_update_operation& o)
 
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (o) ) }
+
+void_result asset_update_monitored_asset_evaluator::do_evaluate(const asset_update_monitored_asset_operation& o)
+{ try {
+      database& d = db();
+
+      const asset_object& a = o.asset_to_update(d);
+
+      FC_ASSERT(a.is_monitored_asset(), "Cannot update BitAsset-specific settings on a non-BitAsset.");
+
+      FC_ASSERT( o.issuer == a.issuer, "", ("o.issuer", o.issuer)("a.issuer", a.issuer) );
+
+      return void_result();
+   } FC_CAPTURE_AND_RETHROW( (o) ) }
+
+void_result asset_update_monitored_asset_evaluator::do_apply(const asset_update_monitored_asset_operation& o)
+{ try {
+      bool should_update_feeds = false;
+
+      auto &idx = db().get_index_type<asset_index>().indices().get<by_id>();
+      const auto &ao = idx.find(o.asset_to_update);
+
+      // If the minimum number of feeds to calculate a median has changed, we need to recalculate the median
+      if( o.new_options.minimum_feeds != ao->options.monitored_asset_opts->minimum_feeds )
+         should_update_feeds = true;
+
+      db().modify(*ao, [&](asset_object& b) {
+         b.options.monitored_asset_opts = o.new_options;
+
+         if( should_update_feeds )
+            b.options.monitored_asset_opts->update_median_feeds(db().head_block_time());
+      });
+
+      return void_result();
+   } FC_CAPTURE_AND_RETHROW( (o) ) }
 
 void_result asset_update_feed_producers_evaluator::do_evaluate(const asset_update_feed_producers_evaluator::operation_type& o)
 { try {

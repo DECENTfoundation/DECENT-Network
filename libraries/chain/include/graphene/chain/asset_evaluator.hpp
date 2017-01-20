@@ -59,6 +59,15 @@ namespace graphene { namespace chain {
          const asset_object* asset_to_update = nullptr;
    };
 
+      class asset_update_monitored_asset_evaluator : public evaluator<asset_update_monitored_asset_evaluator>
+      {
+      public:
+         typedef asset_update_monitored_asset_operation operation_type;
+
+         void_result do_evaluate( const asset_update_monitored_asset_operation& o );
+         void_result do_apply( const asset_update_monitored_asset_operation& o );
+      };
+
    class asset_update_feed_producers_evaluator : public evaluator<asset_update_feed_producers_evaluator>
    {
    public:

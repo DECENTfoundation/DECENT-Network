@@ -1159,7 +1159,7 @@ public:
       return sign_transaction( tx, broadcast );
    } FC_CAPTURE_AND_RETHROW( (symbol)(new_issuer)(new_options)(broadcast) ) }
 
-   signed_transaction update_bitasset(string symbol,
+   signed_transaction update_monitored_asset(string symbol,
                                       monitored_asset_options new_options,
                                       bool broadcast /* = false */)
    { try {
@@ -2848,7 +2848,7 @@ asset_object wallet_api::get_asset(string asset_name_or_id) const
    return *a;
 }
 
-monitored_asset_options wallet_api::get_bitasset_data(string asset_name_or_id) const
+monitored_asset_options wallet_api::get_monitored_asset_data(string asset_name_or_id) const
 {
    auto asset = get_asset(asset_name_or_id);
    FC_ASSERT(asset.is_monitored_asset() );
@@ -3070,11 +3070,11 @@ signed_transaction wallet_api::update_asset(string symbol,
    return my->update_asset(symbol, new_issuer, new_options, broadcast);
 }
 
-signed_transaction wallet_api::update_bitasset(string symbol,
+signed_transaction wallet_api::update_monitored_asset(string symbol,
                                                monitored_asset_options new_options,
                                                bool broadcast /* = false */)
 {
-   return my->update_bitasset(symbol, new_options, broadcast);
+   return my->update_monitored_asset(symbol, new_options, broadcast);
 }
 
 signed_transaction wallet_api::update_asset_feed_producers(string symbol,
