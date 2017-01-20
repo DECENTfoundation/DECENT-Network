@@ -95,8 +95,8 @@ BOOST_AUTO_TEST_CASE(asset_claim_fees_test)
       transfer( committee_account,  izzy_id, _core(1000000) );
       transfer( committee_account,  jill_id, _core(1000000) );
 
-      asset_id_type izzycoin_id = create_bitasset( "IZZYCOIN", izzy_id,   GRAPHENE_1_PERCENT, charge_market_fee ).id;
-      asset_id_type jillcoin_id = create_bitasset( "JILLCOIN", jill_id, 2*GRAPHENE_1_PERCENT, charge_market_fee ).id;
+      asset_id_type izzycoin_id = create_monitored_asset( "IZZYCOIN", izzy_id ).id;
+      asset_id_type jillcoin_id = create_monitored_asset( "JILLCOIN", jill_id ).id;
 
       const share_type izzy_prec = asset::scaled_precision( asset_id_type(izzycoin_id)(db).precision );
       const share_type jill_prec = asset::scaled_precision( asset_id_type(jillcoin_id)(db).precision );
@@ -114,22 +114,16 @@ BOOST_AUTO_TEST_CASE(asset_claim_fees_test)
 
       // Izzycoin is worth 100 BTS
       price_feed feed;
-      feed.settlement_price = price( _izzy(1), _core(100) );
-      feed.maintenance_collateral_ratio = 175 * GRAPHENE_COLLATERAL_RATIO_DENOM / 100;
-      feed.maximum_short_squeeze_ratio = 150 * GRAPHENE_COLLATERAL_RATIO_DENOM / 100;
       publish_feed( izzycoin_id(db), izzy, feed );
 
       // Jillcoin is worth 30 BTS
-      feed.settlement_price = price( _jill(1), _core(30) );
-      feed.maintenance_collateral_ratio = 175 * GRAPHENE_COLLATERAL_RATIO_DENOM / 100;
-      feed.maximum_short_squeeze_ratio = 150 * GRAPHENE_COLLATERAL_RATIO_DENOM / 100;
       publish_feed( jillcoin_id(db), jill, feed );
 
       enable_fees();
 
-      // Alice and Bob create some coins
-      borrow( alice_id, _izzy( 200), _core( 60000) );
-      borrow(   bob_id, _jill(2000), _core(180000) );
+      // Alice and Bob issue some coins
+      issue_uia( alice_id, asset( 200*izzy_prec, izzycoin_id ) );
+      issue_uia(   bob_id, asset( 2000*jill_prec, jillcoin_id ) );
 
       // Alice and Bob place orders which match
       create_sell_order( alice_id, _izzy(100), _jill(300) );   // Alice is willing to sell her Izzy's for 3 Jill
@@ -240,7 +234,7 @@ BOOST_AUTO_TEST_CASE( fee_refund_test )
       transfer( account_id_type(), bob_id, asset(bob_b0) );
 
       asset_id_type core_id = asset_id_type();
-      asset_id_type usd_id = create_user_issued_asset( "IZZYUSD", izzy_id(db), charge_market_fee ).id;
+      asset_id_type usd_id = create_user_issued_asset( "IZZYUSD", izzy_id(db) ).id;
       issue_uia( alice_id, asset( alice_b0, usd_id ) );
       issue_uia( bob_id, asset( bob_b0, usd_id ) );
 

@@ -139,13 +139,6 @@ namespace graphene { namespace chain {
          FC_ASSERT( base.asset_id != quote.asset_id );
       } FC_CAPTURE_AND_RETHROW( (base)(quote) ) }
 
-      void price_feed::validate() const
-      { try {
-         FC_ASSERT( maintenance_collateral_ratio >= GRAPHENE_MIN_COLLATERAL_RATIO );
-         FC_ASSERT( maintenance_collateral_ratio <= GRAPHENE_MAX_COLLATERAL_RATIO );
-
-      } FC_CAPTURE_AND_RETHROW( (*this) ) }
-
       bool price_feed::is_for( asset_id_type asset_id ) const
       {
          try

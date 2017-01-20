@@ -241,11 +241,6 @@ namespace graphene { namespace app {
                assert( aobj != nullptr );
                result.push_back( aobj->issuer );
                break;
-            } case force_settlement_object_type:{
-               const auto& aobj = dynamic_cast<const force_settlement_object*>(obj);
-               assert( aobj != nullptr );
-               result.push_back( aobj->owner );
-               break;
             } case committee_member_object_type:{
                const auto& aobj = dynamic_cast<const committee_member_object*>(obj);
                assert( aobj != nullptr );
@@ -260,11 +255,6 @@ namespace graphene { namespace app {
                const auto& aobj = dynamic_cast<const limit_order_object*>(obj);
                assert( aobj != nullptr );
                result.push_back( aobj->seller );
-               break;
-            } case call_order_object_type:{
-               const auto& aobj = dynamic_cast<const call_order_object*>(obj);
-               assert( aobj != nullptr );
-               result.push_back( aobj->borrower );
                break;
             } case custom_object_type:{
               break;
@@ -309,8 +299,6 @@ namespace graphene { namespace app {
                  case impl_reserved0_object_type:
                   break;
                  case impl_asset_dynamic_data_type:
-                  break;
-                 case impl_asset_bitasset_data_type:
                   break;
                  case impl_account_balance_object_type:{
                   const auto& aobj = dynamic_cast<const account_balance_object*>(obj);

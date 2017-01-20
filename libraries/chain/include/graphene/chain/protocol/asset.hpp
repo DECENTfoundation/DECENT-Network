@@ -174,10 +174,7 @@ namespace graphene { namespace chain {
       /// Price at which automatically exchanging this asset for CORE from fee pool occurs (used for paying fees)
       price core_exchange_rate;
 
-      /** Fixed point between 1.000 and 10.000, implied fixed point denominator is GRAPHENE_COLLATERAL_RATIO_DENOM */
-      uint16_t maintenance_collateral_ratio = GRAPHENE_DEFAULT_MAINTENANCE_COLLATERAL_RATIO;
-
-      void validate() const;
+      void validate() const {};
       bool is_for( asset_id_type asset_id ) const;
    };
 
@@ -186,7 +183,6 @@ namespace graphene { namespace chain {
 FC_REFLECT( graphene::chain::asset, (amount)(asset_id) )
 FC_REFLECT( graphene::chain::price, (base)(quote) )
 
-#define GRAPHENE_PRICE_FEED_FIELDS (maintenance_collateral_ratio) \
-   (core_exchange_rate)
+#define GRAPHENE_PRICE_FEED_FIELDS (core_exchange_rate)
 
 FC_REFLECT( graphene::chain::price_feed, GRAPHENE_PRICE_FEED_FIELDS )

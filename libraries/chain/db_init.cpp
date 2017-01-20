@@ -87,14 +87,8 @@ const uint8_t asset_object::type_id;
 const uint8_t block_summary_object::space_id;
 const uint8_t block_summary_object::type_id;
 
-const uint8_t call_order_object::space_id;
-const uint8_t call_order_object::type_id;
-
 const uint8_t committee_member_object::space_id;
 const uint8_t committee_member_object::type_id;
-
-const uint8_t force_settlement_object::space_id;
-const uint8_t force_settlement_object::type_id;
 
 const uint8_t global_property_object::space_id;
 const uint8_t global_property_object::type_id;
@@ -132,9 +126,7 @@ void database::initialize_evaluators()
    register_evaluator<custom_evaluator>();
    register_evaluator<asset_create_evaluator>();
    register_evaluator<asset_issue_evaluator>();
-   register_evaluator<asset_reserve_evaluator>();
    register_evaluator<asset_update_evaluator>();
-   register_evaluator<asset_update_bitasset_evaluator>();
    register_evaluator<asset_update_feed_producers_evaluator>();
    register_evaluator<assert_evaluator>();
    register_evaluator<limit_order_create_evaluator>();
@@ -171,7 +163,6 @@ void database::initialize_indexes()
 
    //Protocol object indexes
    add_index< primary_index<asset_index> >();
-   add_index< primary_index<force_settlement_index> >();
 
    auto acnt_index = add_index< primary_index<account_index> >();
    acnt_index->add_secondary_index<account_member_index>();
@@ -180,7 +171,6 @@ void database::initialize_indexes()
    add_index< primary_index<committee_member_index> >();
    add_index< primary_index<witness_index> >();
    add_index< primary_index<limit_order_index > >();
-   add_index< primary_index<call_order_index > >();
 
    auto prop_index = add_index< primary_index<proposal_index > >();
    prop_index->add_secondary_index<required_approval_index>();
@@ -456,39 +446,6 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       total_supplies[ new_asset_id ] = 0;
 
       asset_dynamic_data_id_type dynamic_data_id;
-      optional<asset_bitasset_data_id_type> bitasset_data_id;
-      if( asset.is_monitored_asset )
-      {
-         int collateral_holder_number = 0;
-         total_debts[ new_asset_id ] = 0;
-         for( const auto& collateral_rec : asset.collateral_records )
-         {
-            account_create_operation cop;
-            cop.name = asset.symbol + "-collateral-holder-" + std::to_string(collateral_holder_number);
-            boost::algorithm::to_lower(cop.name);
-            cop.registrar = GRAPHENE_TEMP_ACCOUNT;
-            cop.owner = authority(1, collateral_rec.owner, 1);
-            cop.active = cop.owner;
-            account_id_type owner_account_id = apply_operation(genesis_eval_state, cop).get<object_id_type>();
-
-            modify( owner_account_id(*this).statistics(*this), [&]( account_statistics_object& o ) {
-                    o.total_core_in_orders = collateral_rec.collateral;
-                    });
-
-            create<call_order_object>([&](call_order_object& c) {
-               c.borrower = owner_account_id;
-               c.collateral = collateral_rec.collateral;
-               c.debt = collateral_rec.debt;
-               c.call_price = price::call_price(chain::asset(c.debt, new_asset_id),
-                                                chain::asset(c.collateral, core_asset.id),
-                                                GRAPHENE_DEFAULT_MAINTENANCE_COLLATERAL_RATIO);
-            });
-
-            total_supplies[ asset_id_type(0) ] += collateral_rec.collateral;
-            total_debts[ new_asset_id ] += collateral_rec.debt;
-            ++collateral_holder_number;
-         }
-      }
 
       dynamic_data_id = create<asset_dynamic_data_object>([&](asset_dynamic_data_object& d) {
          d.accumulated_fees = asset.accumulated_fees;

@@ -101,6 +101,13 @@ void  asset_create_operation::validate()const
    FC_ASSERT(precision <= 12);
 }
 
+void monitored_asset_options::validate()const
+{
+   current_feed.validate();
+   FC_ASSERT( feed_lifetime_sec > 0 );
+   FC_ASSERT( minimum_feeds > 0 );
+}
+
 void asset_update_operation::validate()const
 {
    FC_ASSERT( fee.amount >= 0 );
@@ -112,16 +119,15 @@ void asset_update_operation::validate()const
    FC_ASSERT(dummy.asset_id == asset_id_type());
 }
 
+void asset_update_monitored_asset_operation::validate()const
+{
+   FC_ASSERT( fee.amount >= 0 );
+   new_options.validate();
+}
+
 share_type asset_update_operation::calculate_fee(const asset_update_operation::fee_parameters_type& k)const
 {
    return k.fee + calculate_data_fee( fc::raw::pack_size(*this), k.price_per_kbyte );
-}
-
-void asset_reserve_operation::validate()const
-{
-   FC_ASSERT( fee.amount >= 0 );
-   FC_ASSERT( amount_to_reserve.amount.value <= GRAPHENE_MAX_SHARE_SUPPLY );
-   FC_ASSERT( amount_to_reserve.amount.value > 0 );
 }
 
 void asset_issue_operation::validate()const

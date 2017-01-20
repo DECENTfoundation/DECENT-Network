@@ -112,37 +112,6 @@ void_result asset_issue_evaluator::do_apply( const asset_issue_operation& o )
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (o) ) }
 
-void_result asset_reserve_evaluator::do_evaluate( const asset_reserve_operation& o )
-{ try {
-   const database& d = db();
-
-   const asset_object& a = o.amount_to_reserve.asset_id(d);
-   GRAPHENE_ASSERT(
-      !a.is_monitored_asset(),
-      asset_reserve_invalid_on_mia,
-      "Cannot reserve ${sym} because it is a market-issued asset",
-      ("sym", a.symbol)
-   );
-
-   from_account = &o.payer(d);
-
-   asset_dyn_data = &a.dynamic_asset_data_id(d);
-   FC_ASSERT( (asset_dyn_data->current_supply - o.amount_to_reserve.amount) >= 0 );
-
-   return void_result();
-} FC_CAPTURE_AND_RETHROW( (o) ) }
-
-void_result asset_reserve_evaluator::do_apply( const asset_reserve_operation& o )
-{ try {
-   db().adjust_balance( o.payer, -o.amount_to_reserve );
-
-   db().modify( *asset_dyn_data, [&]( asset_dynamic_data_object& data ){
-        data.current_supply -= o.amount_to_reserve.amount;
-   });
-
-   return void_result();
-} FC_CAPTURE_AND_RETHROW( (o) ) }
-
 void_result asset_fund_fee_pool_evaluator::do_evaluate(const asset_fund_fee_pool_operation& o)
 { try {
    database& d = db();
@@ -213,25 +182,24 @@ void_result asset_update_feed_producers_evaluator::do_evaluate(const asset_updat
 
 void_result asset_update_feed_producers_evaluator::do_apply(const asset_update_feed_producers_evaluator::operation_type& o)
 { try {
-   db().modify(*bitasset_to_update, [&](asset_bitasset_data_object& a) {
+   db().modify(*asset_to_update, [&](asset_object& a) {
       //This is tricky because I have a set of publishers coming in, but a map of seeder to feed is stored.
       //I need to update the map such that the keys match the new publishers, but not munge the old price feeds from
       //publishers who are being kept.
       //First, remove any old publishers who are no longer publishers
-      for( auto itr = a.feeds.begin(); itr != a.feeds.end(); )
+      for( auto itr = a.options.monitored_asset_opts->feeds.begin(); itr != a.options.monitored_asset_opts->feeds.end(); )
       {
          if( !o.new_feed_producers.count(itr->first) )
-            itr = a.feeds.erase(itr);
+            itr = a.options.monitored_asset_opts->feeds.erase(itr);
          else
             ++itr;
       }
       //Now, add any new publishers
       for( auto itr = o.new_feed_producers.begin(); itr != o.new_feed_producers.end(); ++itr )
-         if( !a.feeds.count(*itr) )
-            a.feeds[*itr];
-      a.update_median_feeds(db().head_block_time());
+         if( !a.options.monitored_asset_opts->feeds.count(*itr) )
+            a.options.monitored_asset_opts->feeds[*itr];
+      a.options.monitored_asset_opts->update_median_feeds(db().head_block_time());
    });
-   db().check_call_orders( o.asset_to_update(db()) );
 
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (o) ) }
@@ -241,30 +209,9 @@ void_result asset_publish_feeds_evaluator::do_evaluate(const asset_publish_feed_
    database& d = db();
 
    const asset_object& base = o.asset_id(d);
-   //Verify that this feed is for a market-issued asset and that asset is backed by the base
-   FC_ASSERT(base.is_market_issued());
-
-   const asset_bitasset_data_object& bitasset = base.bitasset_data(d);
-   FC_ASSERT( !bitasset.has_settlement(), "No further feeds may be published after a settlement event" );
-
-   FC_ASSERT( o.feed.settlement_price.quote.asset_id == bitasset.options.short_backing_asset );
-   if( !o.feed.core_exchange_rate.is_null() )
-   {
-      FC_ASSERT( o.feed.core_exchange_rate.quote.asset_id == asset_id_type() );
-   }
-   //Verify that the seeder is authoritative to publish a feed
-   if( base.options.flags & witness_fed_asset )
-   {
-      FC_ASSERT( d.get(GRAPHENE_WITNESS_ACCOUNT).active.account_auths.count(o.publisher) );
-   }
-   else if( base.options.flags & committee_fed_asset )
-   {
-      FC_ASSERT( d.get(GRAPHENE_COMMITTEE_ACCOUNT).active.account_auths.count(o.publisher) );
-   }
-   else
-   {
-      FC_ASSERT(bitasset.feeds.count(o.publisher));
-   }
+   //Verify that this feed is for a monitored asset and that asset is backed by the base
+   FC_ASSERT(base.is_monitored_asset());
+   FC_ASSERT(base.options.monitored_asset_opts->feeds.count(o.publisher));
 
    return void_result();
 } FC_CAPTURE_AND_RETHROW((o)) }
@@ -275,17 +222,12 @@ void_result asset_publish_feeds_evaluator::do_apply(const asset_publish_feed_ope
    database& d = db();
 
    const asset_object& base = o.asset_id(d);
-   const asset_bitasset_data_object& bad = base.bitasset_data(d);
-
-   auto old_feed =  bad.current_feed;
+   auto old_feed =  base.options.monitored_asset_opts->current_feed;
    // Store medians for this asset
-   d.modify(bad , [&o,&d](asset_bitasset_data_object& a) {
-      a.feeds[o.publisher] = make_pair(d.head_block_time(), o.feed);
-      a.update_median_feeds(d.head_block_time());
+   d.modify(base , [&o,&d](asset_object& a) {
+      a.options.monitored_asset_opts->feeds[o.publisher] = make_pair(d.head_block_time(), o.feed);
+      a.options.monitored_asset_opts->update_median_feeds(d.head_block_time());
    });
-
-   if( !(old_feed == bad.current_feed) )
-      db().check_call_orders(base);
 
    return void_result();
 } FC_CAPTURE_AND_RETHROW((o)) }

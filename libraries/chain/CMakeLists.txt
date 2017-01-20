@@ -80,10 +80,6 @@ add_library( graphene_chain
              asset_object.cpp
              proposal_object.cpp
              vesting_balance_object.cpp
-             buying_object.cpp
-             content_object.cpp
-             seeder_object.cpp
-             rating_object.cpp
 
              block_database.cpp
 

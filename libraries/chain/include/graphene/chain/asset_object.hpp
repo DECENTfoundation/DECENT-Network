@@ -85,8 +85,8 @@ namespace graphene { namespace chain {
          /// @return true if symbol is a valid ticker symbol; false otherwise.
          static bool is_valid_symbol( const string& symbol );
 
-         /// @return true if this is a market-issued asset; false otherwise.
-         bool is_monitored_asset()const { return options.monitored_asset.valid(); }
+         /// @return true if this is monitored asset; false otherwise.
+         bool is_monitored_asset()const { return options.monitored_asset_opts.valid(); }
 
          /// Helper function to get an asset object with the given amount in this asset's type
          asset amount(share_type a)const { return asset(a, id); }
@@ -137,12 +137,19 @@ namespace graphene { namespace chain {
    };
 
    struct by_symbol;
+      struct by_type;
    typedef multi_index_container<
       asset_object,
       indexed_by<
          ordered_unique< tag<by_id>, member< object, object_id_type, &object::id > >,
-         ordered_unique< tag<by_symbol>, member<asset_object, string, &asset_object::symbol> >
-      >
+         ordered_unique< tag<by_symbol>, member<asset_object, string, &asset_object::symbol> >,
+            ordered_unique< tag<by_type>,
+               composite_key< asset_object,
+                  const_mem_fun<asset_object, bool, &asset_object::is_monitored_asset>,
+                  member< object, object_id_type, &object::id >
+               >
+            >
+        >
    > asset_object_multi_index_type;
    typedef generic_index<asset_object, asset_object_multi_index_type> asset_index;
 

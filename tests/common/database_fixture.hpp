@@ -198,37 +198,20 @@ struct database_fixture {
       public_key_type key = public_key_type()
       );
 
-   void force_global_settle(const asset_object& what, const price& p);
-   operation_result force_settle(account_id_type who, asset what)
-   { return force_settle(who(db), what); }
-   operation_result force_settle(const account_object& who, asset what);
    void update_feed_producers(asset_id_type mia, flat_set<account_id_type> producers)
    { update_feed_producers(mia(db), producers); }
    void update_feed_producers(const asset_object& mia, flat_set<account_id_type> producers);
    void publish_feed(asset_id_type mia, account_id_type by, const price_feed& f)
    { publish_feed(mia(db), by(db), f); }
    void publish_feed(const asset_object& mia, const account_object& by, const price_feed& f);
-   const call_order_object* borrow(account_id_type who, asset what, asset collateral)
-   { return borrow(who(db), what, collateral); }
-   const call_order_object* borrow(const account_object& who, asset what, asset collateral);
-   void cover(account_id_type who, asset what, asset collateral_freed)
-   { cover(who(db), what, collateral_freed); }
-   void cover(const account_object& who, asset what, asset collateral_freed);
 
    const asset_object& get_asset( const string& symbol )const;
    const account_object& get_account( const string& name )const;
-   const asset_object& create_bitasset(const string& name,
-                                       account_id_type issuer = GRAPHENE_WITNESS_ACCOUNT,
-                                       uint16_t market_fee_percent = 100 /*1%*/,
-                                       uint16_t flags = charge_market_fee);
-   const asset_object& create_prediction_market(const string& name,
-                                       account_id_type issuer = GRAPHENE_WITNESS_ACCOUNT,
-                                       uint16_t market_fee_percent = 100 /*1%*/,
-                                       uint16_t flags = charge_market_fee);
+   const asset_object& create_monitored_asset(const string& name,
+                                       account_id_type issuer = GRAPHENE_WITNESS_ACCOUNT );
    const asset_object& create_user_issued_asset( const string& name );
    const asset_object& create_user_issued_asset( const string& name,
-                                                 const account_object& issuer,
-                                                 uint16_t flags );
+                                                 const account_object& issuer );
    void issue_uia( const account_object& recipient, asset amount );
    void issue_uia( account_id_type recipient_id, asset amount );
 
@@ -272,7 +255,6 @@ struct database_fixture {
    void print_market( const string& syma, const string& symb )const;
    string pretty( const asset& a )const;
    void print_limit_order( const limit_order_object& cur )const;
-   void print_call_orders( )const;
    void print_joint_market( const string& syma, const string& symb )const;
    int64_t get_balance( account_id_type account, asset_id_type a )const;
    int64_t get_balance( const account_object& account, const asset_object& a )const;

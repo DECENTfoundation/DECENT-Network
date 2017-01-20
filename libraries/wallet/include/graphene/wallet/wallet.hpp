@@ -334,9 +334,7 @@ class wallet_api
 
       vector<bucket_object>             get_market_history(string symbol, string symbol2, uint32_t bucket)const;
       vector<limit_order_object>        get_limit_orders(string a, string b, uint32_t limit)const;
-      vector<call_order_object>         get_call_orders(string a, uint32_t limit)const;
-      vector<force_settlement_object>   get_settle_orders(string a, uint32_t limit)const;
-      
+
       /** Returns the block chain's slowly-changing settings.
        * This object contains all of the properties of the blockchain that are fixed
        * or that change only once per maintenance interval (daily) such as the
@@ -373,7 +371,7 @@ class wallet_api
        * @param asset_name_or_id the symbol or id of the BitAsset in question
        * @returns the BitAsset-specific data for this asset
        */
-      asset_bitasset_data_object        get_bitasset_data(string asset_name_or_id)const;
+      monitored_asset_options        get_bitasset_data(string asset_name_or_id)const;
 
       /** Lookup the id of a named account.
        * @param account_name_or_id the name of the account to look up
@@ -873,23 +871,6 @@ class wallet_api
                               double amount,
                               bool broadcast );
 
-      /** Borrow an asset or update the debt/collateral ratio for the loan.
-       *
-       * This is the first step in shorting an asset.  Call \c sell_asset() to complete the short.
-       *
-       * @param borrower_name the name or id of the account associated with the transaction.
-       * @param amount_to_borrow the amount of the asset being borrowed.  Make this value
-       *                         negative to pay back debt.
-       * @param asset_symbol the symbol or id of the asset being borrowed.
-       * @param amount_of_collateral the amount of the backing asset to add to your collateral
-       *        position.  Make this negative to claim back some of your collateral.
-       *        The backing asset is defined in the \c bitasset_options for the asset being borrowed.
-       * @param broadcast true to broadcast the transaction on the network
-       * @returns the signed transaction borrowing the asset
-       */
-      signed_transaction borrow_asset(string borrower_name, string amount_to_borrow, string asset_symbol,
-                                      string amount_of_collateral, bool broadcast = false);
-
       /** Cancel an existing order
        *
        * @param order_id the id of order to be cancelled
@@ -915,8 +896,6 @@ class wallet_api
        *               this new asset. Since this ID is not known at the time this operation is 
        *               created, create this price as though the new asset has instance ID 1, and
        *               the chain will overwrite it with the new asset's ID.
-       * @param bitasset_opts options specific to BitAssets.  This may be null unless the
-       *               \c market_issued flag is set in common.flags
        * @param broadcast true to broadcast the transaction on the network
        * @returns the signed transaction creating a new asset
        */
@@ -924,7 +903,6 @@ class wallet_api
                                       string symbol,
                                       uint8_t precision,
                                       asset_options common,
-                                      fc::optional<bitasset_options> bitasset_opts,
                                       bool broadcast = false);
 
       /** Issue new shares of an asset.
@@ -962,7 +940,7 @@ class wallet_api
                                       asset_options new_options,
                                       bool broadcast = false);
 
-      /** Update the options specific to a BitAsset.
+/** Update the options specific to a BitAsset.
        *
        * BitAssets have some options which are not relevant to other asset types. This operation is used to update those
        * options an an existing BitAsset.
@@ -975,9 +953,9 @@ class wallet_api
        * @param broadcast true to broadcast the transaction on the network
        * @returns the signed transaction updating the bitasset
        */
-      signed_transaction update_bitasset(string symbol,
-                                         bitasset_options new_options,
-                                         bool broadcast = false);
+   signed_transaction update_bitasset(string symbol,
+                                      monitored_asset_options new_options,
+                                      bool broadcast = false);
 
       /** Update the set of feed-producing accounts for a BitAsset.
        *
@@ -1037,87 +1015,6 @@ class wallet_api
                                              string symbol,
                                              string amount,
                                              bool broadcast = false);
-
-      /** Burns the given user-issued asset.
-       *
-       * This command burns the user-issued asset to reduce the amount in circulation.
-       * @note you cannot burn market-issued assets.
-       * @param from the account containing the asset you wish to burn
-       * @param amount the amount to burn, in nominal units
-       * @param symbol the name or id of the asset to burn
-       * @param broadcast true to broadcast the transaction on the network
-       * @returns the signed transaction burning the asset
-       */
-      signed_transaction reserve_asset(string from,
-                                    string amount,
-                                    string symbol,
-                                    bool broadcast = false);
-
-      /** Forces a global settling of the given asset (black swan or prediction markets).
-       *
-       * In order to use this operation, asset_to_settle must have the global_settle flag set
-       *
-       * When this operation is executed all balances are converted into the backing asset at the
-       * settle_price and all open margin positions are called at the settle price.  If this asset is
-       * used as backing for other bitassets, those bitassets will be force settled at their current
-       * feed price.
-       *
-       * @note this operation is used only by the asset issuer, \c settle_asset() may be used by 
-       *       any user owning the asset
-       *
-       * @param symbol the name or id of the asset to force settlement on
-       * @param settle_price the price at which to settle
-       * @param broadcast true to broadcast the transaction on the network
-       * @returns the signed transaction settling the named asset
-       */
-      signed_transaction global_settle_asset(string symbol,
-                                             price settle_price,
-                                             bool broadcast = false);
-
-      /** Schedules a market-issued asset for automatic settlement.
-       *
-       * Holders of market-issued assests may request a forced settlement for some amount of their asset. This means that
-       * the specified sum will be locked by the chain and held for the settlement period, after which time the chain will
-       * choose a margin posision holder and buy the settled asset using the margin's collateral. The price of this sale
-       * will be based on the feed price for the market-issued asset being settled. The exact settlement price will be the
-       * feed price at the time of settlement with an offset in favor of the margin position, where the offset is a
-       * blockchain parameter set in the global_property_object.
-       *
-       * @param account_to_settle the name or id of the account owning the asset
-       * @param amount_to_settle the amount of the named asset to schedule for settlement
-       * @param symbol the name or id of the asset to settlement on
-       * @param broadcast true to broadcast the transaction on the network
-       * @returns the signed transaction settling the named asset
-       */
-      signed_transaction settle_asset(string account_to_settle,
-                                      string amount_to_settle,
-                                      string symbol,
-                                      bool broadcast = false);
-
-      /** Whitelist and blacklist accounts, primarily for transacting in whitelisted assets.
-       *
-       * Accounts can freely specify opinions about other accounts, in the form of either whitelisting or blacklisting
-       * them. This information is used in chain validation only to determine whether an account is authorized to transact
-       * in an asset type which enforces a whitelist, but third parties can use this information for other uses as well,
-       * as long as it does not conflict with the use of whitelisted assets.
-       *
-       * An asset which enforces a whitelist specifies a list of accounts to maintain its whitelist, and a list of
-       * accounts to maintain its blacklist. In order for a given account A to hold and transact in a whitelisted asset S,
-       * A must be whitelisted by at least one of S's whitelist_authorities and blacklisted by none of S's
-       * blacklist_authorities. If A receives a balance of S, and is later removed from the whitelist(s) which allowed it
-       * to hold S, or added to any blacklist S specifies as authoritative, A's balance of S will be frozen until A's
-       * authorization is reinstated.
-       *
-       * @param authorizing_account the account who is doing the whitelisting
-       * @param account_to_list the account being whitelisted
-       * @param new_listing_status the new whitelisting status
-       * @param broadcast true to broadcast the transaction on the network
-       * @returns the signed transaction changing the whitelisting status
-       */
-      signed_transaction whitelist_account(string authorizing_account,
-                                           string account_to_list,
-                                           account_whitelist_operation::account_listing new_listing_status,
-                                           bool broadcast = false);
 
       /** Creates a committee_member object owned by the given account.
        *
@@ -1608,7 +1505,6 @@ FC_API( graphene::wallet::wallet_api,
         (sell_asset)
         (sell)
         (buy)
-        (borrow_asset)
         (cancel_order)
         (transfer)
         (transfer2)
@@ -1622,10 +1518,6 @@ FC_API( graphene::wallet::wallet_api,
         (get_asset)
         (get_bitasset_data)
         (fund_asset_fee_pool)
-        (reserve_asset)
-        (global_settle_asset)
-        (settle_asset)
-        (whitelist_account)
         (create_committee_member)
         (get_witness)
         (get_committee_member)
@@ -1652,8 +1544,6 @@ FC_API( graphene::wallet::wallet_api,
         (load_wallet_file)
         (normalize_brain_key)
         (get_limit_orders)
-        (get_call_orders)
-        (get_settle_orders)
         (save_wallet_file)
         (serialize_transaction)
         (sign_transaction)

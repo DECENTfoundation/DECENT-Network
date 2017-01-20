@@ -79,19 +79,11 @@ bool maybe_cull_small_order( database& db, const limit_order_object& order )
    return false;
 }
 
-bool database::apply_order(const limit_order_object& new_order_object, bool allow_black_swan)
+bool database::apply_order(const limit_order_object& new_order_object)
 {
    auto order_id = new_order_object.id;
    const asset_object& sell_asset = get(new_order_object.amount_for_sale().asset_id);
    const asset_object& receive_asset = get(new_order_object.amount_to_receive().asset_id);
-
-   // Possible optimization: We only need to check calls if both are true:
-   //  - The new order is at the front of the book
-   //  - The new order is below the call limit price
-   bool called_some = check_call_orders(sell_asset, allow_black_swan);
-   called_some |= check_call_orders(receive_asset, allow_black_swan);
-   if( called_some && !find_object(order_id) ) // then we were filled by call order
-      return true;
 
    const auto& limit_price_idx = get_index_type<limit_order_index>().indices().get<by_price>();
 
@@ -112,11 +104,6 @@ bool database::apply_order(const limit_order_object& new_order_object, bool allo
       // match returns 2 when only the old order was fully filled. In this case, we keep matching; otherwise, we stop.
       finished = (match(new_order_object, *old_limit_itr, old_limit_itr->sell_price) != 2);
    }
-
-   //Possible optimization: only check calls if the new order completely filled some old order
-   //Do I need to check both assets?
-   check_call_orders(sell_asset, allow_black_swan);
-   check_call_orders(receive_asset, allow_black_swan);
 
    const limit_order_object* updated_order_object = find< limit_order_object >( order_id );
    if( updated_order_object == nullptr )
@@ -179,40 +166,6 @@ int database::match( const limit_order_object& bid, const limit_order_object& as
    return match<limit_order_object>( bid, ask, match_price );
 }
 
-
-asset database::match( const call_order_object& call, 
-                       const force_settlement_object& settle, 
-                       const price& match_price,
-                       asset max_settlement )
-{ try {
-   FC_ASSERT(call.get_debt().asset_id == settle.balance.asset_id );
-   FC_ASSERT(call.debt > 0 && call.collateral > 0 && settle.balance.amount > 0);
-
-   auto settle_for_sale = std::min(settle.balance, max_settlement);
-   auto call_debt = call.get_debt();
-
-   asset call_receives   = std::min(settle_for_sale, call_debt);
-   asset call_pays       = call_receives * match_price;
-   asset settle_pays     = call_receives;
-   asset settle_receives = call_pays;
-
-   /**
-    *  If the least collateralized call position lacks sufficient
-    *  collateral to cover at the match price then this indicates a black 
-    *  swan event according to the price feed, but only the market 
-    *  can trigger a black swan.  So now we must cancel the forced settlement
-    *  object.
-    */
-   GRAPHENE_ASSERT( call_pays < call.get_collateral(), black_swan_exception, "" );
-
-   assert( settle_pays == settle_for_sale || call_receives == call.get_debt() );
-
-   fill_order(call, call_pays, call_receives);
-   fill_order(settle, settle_pays, settle_receives);
-
-   return call_receives;
-} FC_CAPTURE_AND_RETHROW( (call)(settle)(match_price)(max_settlement) ) }
-
 bool database::fill_order( const limit_order_object& order, const asset& pays, const asset& receives, bool cull_if_small )
 { try {
 
@@ -253,86 +206,6 @@ bool database::fill_order( const limit_order_object& order, const asset& pays, c
       return false;
    }
 } FC_CAPTURE_AND_RETHROW( (order)(pays)(receives) ) }
-
-
-bool database::fill_order( const call_order_object& order, const asset& pays, const asset& receives )
-{ try {
-   //idump((pays)(receives)(order));
-   FC_ASSERT( order.get_debt().asset_id == receives.asset_id );
-   FC_ASSERT( order.get_collateral().asset_id == pays.asset_id );
-   FC_ASSERT( order.get_collateral() >= pays );
-
-   optional<asset> collateral_freed;
-   modify( order, [&]( call_order_object& o ){
-            o.debt       -= receives.amount;
-            o.collateral -= pays.amount;
-            if( o.debt == 0 )
-            {
-              collateral_freed = o.get_collateral();
-              o.collateral = 0;
-            }
-       });
-   const asset_object& mia = receives.asset_id(*this);
-   assert( mia.is_market_issued() );
-
-   const asset_dynamic_data_object& mia_ddo = mia.dynamic_asset_data_id(*this);
-
-   modify( mia_ddo, [&]( asset_dynamic_data_object& ao ){
-       //idump((receives));
-        ao.current_supply -= receives.amount;
-      });
-
-   const account_object& borrower = order.borrower(*this);
-   if( collateral_freed || pays.asset_id == asset_id_type() )
-   {
-      const account_statistics_object& borrower_statistics = borrower.statistics(*this);
-      if( collateral_freed )
-         adjust_balance(borrower.get_id(), *collateral_freed);
-
-      modify( borrower_statistics, [&]( account_statistics_object& b ){
-              if( collateral_freed && collateral_freed->amount > 0 )
-                b.total_core_in_orders -= collateral_freed->amount;
-              if( pays.asset_id == asset_id_type() )
-                b.total_core_in_orders -= pays.amount;
-
-              assert( b.total_core_in_orders >= 0 );
-           });
-   }
-
-   assert( pays.asset_id != receives.asset_id );
-   push_applied_operation( fill_order_operation{ order.id, order.borrower, pays, receives, asset(0, pays.asset_id) } );
-
-   if( collateral_freed )
-      remove( order );
-
-   return collateral_freed.valid();
-} FC_CAPTURE_AND_RETHROW( (order)(pays)(receives) ) }
-
-bool database::fill_order(const force_settlement_object& settle, const asset& pays, const asset& receives)
-{ try {
-   bool filled = false;
-
-   auto issuer_fees = pay_market_fees(get(receives.asset_id), receives);
-
-   if( pays < settle.balance )
-   {
-      modify(settle, [&pays](force_settlement_object& s) {
-         s.balance -= pays;
-      });
-      filled = false;
-   } else {
-      filled = true;
-   }
-   adjust_balance(settle.owner, receives - issuer_fees);
-
-   assert( pays.asset_id != receives.asset_id );
-   push_applied_operation( fill_order_operation{ settle.id, settle.owner, pays, receives, issuer_fees } );
-
-   if (filled)
-      remove(settle);
-
-   return filled;
-} FC_CAPTURE_AND_RETHROW( (settle)(pays)(receives) ) }
 
 void database::pay_order( const account_object& receiver, const asset& receives, const asset& pays )
 {

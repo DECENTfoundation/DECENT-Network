@@ -217,145 +217,6 @@ void database::clear_expired_orders()
             apply_operation(cancel_context, canceler);
          }
      });
-
-   //Process expired force settlement orders
-   auto& settlement_index = get_index_type<force_settlement_index>().indices().get<by_expiration>();
-   if( !settlement_index.empty() )
-   {
-      asset_id_type current_asset = settlement_index.begin()->settlement_asset_id();
-      asset max_settlement_volume;
-      bool extra_dump = false;
-
-      auto next_asset = [&current_asset, &settlement_index, &extra_dump] {
-         auto bound = settlement_index.upper_bound(current_asset);
-         if( bound == settlement_index.end() )
-         {
-            if( extra_dump )
-            {
-               ilog( "next_asset() returning false" );
-            }
-            return false;
-         }
-         if( extra_dump )
-         {
-            ilog( "next_asset returning true, bound is ${b}", ("b", *bound) );
-         }
-         current_asset = bound->settlement_asset_id();
-         return true;
-      };
-
-      uint32_t count = 0;
-
-      // At each iteration, we either consume the current order and remove it, or we move to the next asset
-      for( auto itr = settlement_index.lower_bound(current_asset);
-           itr != settlement_index.end();
-           itr = settlement_index.lower_bound(current_asset) )
-      {
-         ++count;
-         const force_settlement_object& order = *itr;
-         auto order_id = order.id;
-         current_asset = order.settlement_asset_id();
-         const asset_object& mia_object = get(current_asset);
-         const asset_bitasset_data_object& mia = mia_object.bitasset_data(*this);
-
-         extra_dump = ((count >= 1000) && (count <= 1020));
-
-         if( extra_dump )
-         {
-            wlog( "clear_expired_orders() dumping extra data for iteration ${c}", ("c", count) );
-            ilog( "head_block_num is ${hb} current_asset is ${a}", ("hb", head_block_num())("a", current_asset) );
-         }
-
-         if( mia.has_settlement() )
-         {
-            ilog( "Canceling a force settlement because of black swan" );
-            cancel_order( order );
-            continue;
-         }
-
-         // Has this order not reached its settlement date?
-         if( order.settlement_date > head_block_time() )
-         {
-            if( next_asset() )
-            {
-               if( extra_dump )
-               {
-                  ilog( "next_asset() returned true when order.settlement_date > head_block_time()" );
-               }
-               continue;
-            }
-            break;
-         }
-         // Can we still settle in this asset?
-         if( mia.current_feed.settlement_price.is_null() )
-         {
-            ilog("Canceling a force settlement in ${asset} because settlement price is null",
-                 ("asset", mia_object.symbol));
-            cancel_order(order);
-            continue;
-         }
-         if( max_settlement_volume.asset_id != current_asset )
-            max_settlement_volume = mia_object.amount(mia.max_force_settlement_volume(mia_object.dynamic_data(*this).current_supply));
-         if( mia.force_settled_volume >= max_settlement_volume.amount )
-         {
-            /*
-            ilog("Skipping force settlement in ${asset}; settled ${settled_volume} / ${max_volume}",
-                 ("asset", mia_object.symbol)("settlement_price_null",mia.current_feed.settlement_price.is_null())
-                 ("settled_volume", mia.force_settled_volume)("max_volume", max_settlement_volume));
-                 */
-            if( next_asset() )
-            {
-               if( extra_dump )
-               {
-                  ilog( "next_asset() returned true when mia.force_settled_volume >= max_settlement_volume.amount" );
-               }
-               continue;
-            }
-            break;
-         }
-
-         auto& pays = order.balance;
-         auto receives = (order.balance * mia.current_feed.settlement_price);
-         receives.amount = (fc::uint128_t(receives.amount.value) *
-                            (GRAPHENE_100_PERCENT - mia.options.force_settlement_offset_percent) / GRAPHENE_100_PERCENT).to_uint64();
-         assert(receives <= order.balance * mia.current_feed.settlement_price);
-
-         price settlement_price = pays / receives;
-
-         auto& call_index = get_index_type<call_order_index>().indices().get<by_collateral>();
-         asset settled = mia_object.amount(mia.force_settled_volume);
-         // Match against the least collateralized short until the settlement is finished or we reach max settlements
-         while( settled < max_settlement_volume && find_object(order_id) )
-         {
-            auto itr = call_index.lower_bound(boost::make_tuple(price::min(mia_object.bitasset_data(*this).options.short_backing_asset,
-                                                                           mia_object.get_id())));
-            // There should always be a call order, since asset exists!
-            assert(itr != call_index.end() && itr->debt_type() == mia_object.get_id());
-            asset max_settlement = max_settlement_volume - settled;
-
-            if( order.balance.amount == 0 )
-            {
-               wlog( "0 settlement detected" );
-               cancel_order( order );
-               break;
-            }
-            try {
-               settled += match(*itr, order, settlement_price, max_settlement);
-            } 
-            catch ( const black_swan_exception& e ) { 
-               wlog( "black swan detected: ${e}", ("e", e.to_detail_string() ) );
-               cancel_order( order );
-               break;
-            }
-         }
-         if( mia.force_settled_volume != settled.amount )
-         {
-            modify(mia, [settled](asset_bitasset_data_object& b) {
-               b.force_settled_volume = settled.amount;
-            });
-         }
-      }
-   }
 } FC_CAPTURE_AND_RETHROW() }
 
 void database::update_expired_feeds()
@@ -366,22 +227,20 @@ void database::update_expired_feeds()
    {
       const asset_object& a = *itr;
       ++itr;
-      assert( a.is_market_issued() );
+      assert( a.is_monitored_asset() );
 
-      const asset_bitasset_data_object& b = a.bitasset_data(*this);
       bool feed_is_expired;
-      feed_is_expired = b.feed_is_expired( head_block_time() );
+      feed_is_expired = a.options.monitored_asset_opts->feed_is_expired( head_block_time() );
       if( feed_is_expired )
       {
-         modify(b, [this](asset_bitasset_data_object& a) {
-            a.update_median_feeds(head_block_time());
+         modify(a, [this](asset_object& ao) {
+            ao.options.monitored_asset_opts->update_median_feeds(head_block_time());
          });
-         check_call_orders(b.current_feed.settlement_price.base.asset_id(*this));
       }
-      if( !b.current_feed.core_exchange_rate.is_null() &&
-          a.options.core_exchange_rate != b.current_feed.core_exchange_rate )
-         modify(a, [&b](asset_object& a) {
-            a.options.core_exchange_rate = b.current_feed.core_exchange_rate;
+      if( !a.options.monitored_asset_opts->current_feed.core_exchange_rate.is_null() &&
+          a.options.core_exchange_rate != a.options.monitored_asset_opts->current_feed.core_exchange_rate )
+         modify(a, [](asset_object& a) {
+            a.options.core_exchange_rate = a.options.monitored_asset_opts->current_feed.core_exchange_rate;
          });
    }
 }

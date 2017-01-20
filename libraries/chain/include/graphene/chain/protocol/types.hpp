@@ -107,11 +107,9 @@ namespace graphene { namespace chain {
       base_object_type,
       account_object_type,
       asset_object_type,
-      force_settlement_object_type,
       committee_member_object_type,
       witness_object_type,
       limit_order_object_type,
-      call_order_object_type,
       custom_object_type,
       proposal_object_type,
       operation_history_object_type,
@@ -149,9 +147,7 @@ namespace graphene { namespace chain {
    class committee_member_object;
    class witness_object;
    class asset_object;
-   class force_settlement_object;
    class limit_order_object;
-   class call_order_object;
    class custom_object;
    class proposal_object;
    class operation_history_object;
@@ -161,11 +157,9 @@ namespace graphene { namespace chain {
 
    typedef object_id< protocol_ids, account_object_type,            account_object>               account_id_type;
    typedef object_id< protocol_ids, asset_object_type,              asset_object>                 asset_id_type;
-   typedef object_id< protocol_ids, force_settlement_object_type,   force_settlement_object>      force_settlement_id_type;
    typedef object_id< protocol_ids, committee_member_object_type,           committee_member_object>              committee_member_id_type;
    typedef object_id< protocol_ids, witness_object_type,            witness_object>               witness_id_type;
    typedef object_id< protocol_ids, limit_order_object_type,        limit_order_object>           limit_order_id_type;
-   typedef object_id< protocol_ids, call_order_object_type,         call_order_object>            call_order_id_type;
    typedef object_id< protocol_ids, custom_object_type,             custom_object>                custom_id_type;
    typedef object_id< protocol_ids, proposal_object_type,           proposal_object>              proposal_id_type;
    typedef object_id< protocol_ids, operation_history_object_type,  operation_history_object>     operation_history_id_type;
@@ -325,12 +319,10 @@ FC_REFLECT_ENUM( graphene::chain::object_type,
                  (null_object_type)
                  (base_object_type)
                  (account_object_type)
-                 (force_settlement_object_type)
                  (asset_object_type)
                  (committee_member_object_type)
                  (witness_object_type)
                  (limit_order_object_type)
-                 (call_order_object_type)
                  (custom_object_type)
                  (proposal_object_type)
                  (operation_history_object_type)
@@ -364,11 +356,9 @@ FC_REFLECT_TYPENAME( graphene::chain::share_type )
 
 FC_REFLECT_TYPENAME( graphene::chain::account_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::asset_id_type )
-FC_REFLECT_TYPENAME( graphene::chain::force_settlement_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::committee_member_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::witness_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::limit_order_id_type )
-FC_REFLECT_TYPENAME( graphene::chain::call_order_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::custom_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::proposal_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::operation_history_id_type )

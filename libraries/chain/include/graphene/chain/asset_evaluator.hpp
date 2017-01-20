@@ -48,18 +48,6 @@ namespace graphene { namespace chain {
          const account_object*            to_account = nullptr;
    };
 
-   class asset_reserve_evaluator : public evaluator<asset_reserve_evaluator>
-   {
-      public:
-         typedef asset_reserve_operation operation_type;
-         void_result do_evaluate( const asset_reserve_operation& o );
-         void_result do_apply( const asset_reserve_operation& o );
-
-         const asset_dynamic_data_object* asset_dyn_data = nullptr;
-         const account_object*            from_account = nullptr;
-   };
-
-
    class asset_update_evaluator : public evaluator<asset_update_evaluator>
    {
       public:
@@ -78,6 +66,8 @@ namespace graphene { namespace chain {
 
       void_result do_evaluate( const operation_type& o );
       void_result do_apply( const operation_type& o );
+
+      const asset_object* asset_to_update = nullptr;
    };
 
    class asset_publish_feeds_evaluator : public evaluator<asset_publish_feeds_evaluator>
