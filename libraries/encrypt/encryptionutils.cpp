@@ -21,6 +21,12 @@
 namespace decent{ namespace crypto{
 AutoSeededRandomPool rng;
 
+delivery_proof_string::delivery_proof_string( delivery_proof gf ):G1(gf.G1),G2(gf.G2),G3(gf.G3),s(gf.s),r(gf.r){};
+ciphertext_string::ciphertext_string(ciphertext ct) : C1(ct.C1), D1(ct.D1) {};
+d_integer_string::d_integer_string(const d_integer& d) { s = d.to_string(); };
+d_integer_string& d_integer_string::operator=(const d_integer& d) { s = d.to_string();return *this;};
+d_integer_string::d_integer_string() { d_integer a=CryptoPP::Integer::Zero();s = a.to_string(); };
+
 std::string d_integer::to_string() const
 {
    std::ostringstream oss;

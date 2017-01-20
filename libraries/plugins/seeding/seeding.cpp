@@ -42,13 +42,17 @@ void seeding_plugin_impl::on_operation(const operation_history_object &op_obj) {
       if( citr == cidx.end())
          FC_THROW("cannot find content by URI");
       const content_object &co = *citr;
-      d_integer destPubKey = rtb_op.pubKey;
+      d_integer destPubKey = decent::crypto::d_integer::from_string(rtb_op.pubKey);
       decent::crypto::ciphertext orig = co.key_parts.at(seeder_account.id);
       decent::crypto::point message;
       auto result = decent::crypto::el_gamal_decrypt(orig, sritr->content_privKey, message);
       FC_ASSERT(result == decent::crypto::ok);
       deliver_keys_operation op;
-      result = decent::crypto::encrypt_with_proof(message, sritr->content_privKey, destPubKey, orig, op.key, op.proof);
+      decent::crypto::ciphertext key;
+      decent::crypto::delivery_proof proof;
+      result = decent::crypto::encrypt_with_proof(message, sritr->content_privKey, destPubKey, orig, key, proof);
+      op.key = key;
+      op.proof = proof;
 
       op.seeder = seeder_account.id;
 

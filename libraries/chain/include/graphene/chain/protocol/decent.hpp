@@ -2,6 +2,7 @@
 #include <graphene/chain/protocol/base.hpp>
 #include <graphene/chain/protocol/types.hpp>
 #include <graphene/chain/protocol/asset.hpp>
+#include <boost/preprocessor/seq/seq.hpp>
 
 
 #include <fc/reflect/reflect.hpp>
@@ -15,9 +16,6 @@
 
 namespace graphene { namespace chain {
 
-using decent::crypto::delivery_proof;
-using decent::crypto::ciphertext;
-using decent::crypto::d_integer;
 
    struct content_submit_operation : public base_operation
    {
@@ -30,7 +28,7 @@ using decent::crypto::d_integer;
       uint64_t size;
       fc::ripemd160 hash;
       vector<account_id_type> seeders;
-      vector<ciphertext> key_parts;
+      vector<decent::crypto::ciphertext_string> key_parts;
       uint32_t quorum;
       fc::time_point_sec expiration;
       asset publishing_fee;
@@ -48,7 +46,7 @@ using decent::crypto::d_integer;
       string URI;
       account_id_type consumer;
       asset price;
-      d_integer pubKey;
+      decent::crypto::d_integer_string pubKey;
       
       account_id_type fee_payer()const { return consumer; }
    };
@@ -71,7 +69,7 @@ using decent::crypto::d_integer;
       
       asset fee;
       account_id_type seeder;
-      d_integer pubKey;
+      decent::crypto::d_integer_string pubKey;
       uint64_t space;
       uint32_t price_per_MByte;
       
@@ -97,8 +95,8 @@ using decent::crypto::d_integer;
       asset fee;
       account_id_type seeder;
       buying_id_type buying;
-      delivery_proof proof;
-      ciphertext key;
+      decent::crypto::delivery_proof_string proof;
+      decent::crypto::ciphertext_string key;
       
       account_id_type fee_payer()const { return seeder; }
    };
@@ -108,7 +106,7 @@ using decent::crypto::d_integer;
 FC_REFLECT(graphene::chain::content_submit_operation,(fee)(size)(author)(URI)(quorum)(price)(hash)(seeders)(key_parts)(expiration)(publishing_fee)(synopsis)(cd))
 FC_REFLECT(graphene::chain::request_to_buy_operation,(fee)(URI)(consumer)(price)(pubKey))
 FC_REFLECT(graphene::chain::leave_rating_operation,(fee)(URI)(consumer)(rating))
-FC_REFLECT(graphene::chain::ready_to_publish_operation,(fee)(seeder)(space)(price_per_MByte)(pubKey))
+FC_REFLECT(graphene::chain::ready_to_publish_operation,(fee)(seeder)(space)(pubKey)(price_per_MByte))
 FC_REFLECT(graphene::chain::proof_of_custody_operation,(fee)(seeder)(URI)(proof))
 FC_REFLECT(graphene::chain::deliver_keys_operation,(fee)(seeder)(proof)(key)(buying))
 

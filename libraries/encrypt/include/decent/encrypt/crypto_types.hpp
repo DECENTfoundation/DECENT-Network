@@ -49,21 +49,67 @@
 namespace decent{
 namespace crypto{
 
+class d_integer;
+
+
+class d_integer_string{
+public:
+   std::string s;
+   d_integer_string(const d_integer& d);
+   d_integer_string(const std::string& _s) { s = _s; };
+   d_integer_string(d_integer_string& _s) {s = _s.s; };
+   d_integer_string(const d_integer_string& _s) {s = _s.s; };
+   d_integer_string();
+   d_integer_string& operator=(const std::string& _s) { s=_s; return *this; };
+   d_integer_string& operator=(const d_integer& d);
+   d_integer_string& operator=(const d_integer_string& _s) { s = _s.s; return *this;};
+};
+
 class d_integer : public CryptoPP::Integer {
 public:
    std::string to_string() const;
+   //d_integer_string to_string() const{ d_integer_string tmp; tmp.s = to_string; return tmp; };
 
    static d_integer from_string(std::string from) ;
+   static d_integer from_string(d_integer_string from) {return from_string(from.s);};
+
 
    d_integer(CryptoPP::Integer integer) : CryptoPP::Integer(integer) { };
    d_integer( const d_integer& integer ) : CryptoPP::Integer(integer) { };
-   d_integer& operator=(const d_integer& integer){ CryptoPP::Integer::operator=(integer); return *this; }
+   d_integer( const std::string& s ) : CryptoPP::Integer(from_string(s)){ };
+   d_integer( const d_integer_string& s ) : CryptoPP::Integer(from_string(s.s)){ };
+
+   d_integer& operator=(const d_integer& integer){ CryptoPP::Integer::operator=(integer); return *this; };
 
    d_integer() : CryptoPP::Integer(){};
    d_integer(std::string s): CryptoPP::Integer(s.c_str()){};
+   friend class d_integer_string;
+   d_integer& operator=(const d_integer_string& s){ *this = d_integer::from_string(s.s); return *this; };
 };
 
+
 typedef std::vector<unsigned char> valtype;
+
+struct delivery_proof;
+struct delivery_proof_string {
+   d_integer_string G1;
+   d_integer_string G2;
+   d_integer_string G3;
+   d_integer_string s;
+   d_integer_string r;
+
+   delivery_proof_string(d_integer g1, d_integer g2, d_integer g3, d_integer s,
+         d_integer r) : G1(g1), G2(g2), G3(g3), s(s), r(r) {};
+   delivery_proof_string( delivery_proof df );
+   delivery_proof_string(){
+      d_integer a=CryptoPP::Integer::Zero();
+      G1=(a.to_string());
+      G2=(a.to_string());
+      G3=(a.to_string());
+      s=(a.to_string());
+      r=(a.to_string());
+   };
+};
 
 struct delivery_proof {
    d_integer G1;
@@ -74,7 +120,28 @@ struct delivery_proof {
 
    delivery_proof(d_integer g1, d_integer g2, d_integer g3, d_integer s,
                   d_integer r) : G1(g1), G2(g2), G3(g3), s(s), r(r) {};
-   delivery_proof(){};
+   delivery_proof(delivery_proof_string& ss){
+      G1=d_integer::from_string(ss.G1.s);
+      G2=d_integer::from_string(ss.G2.s);
+      G3=d_integer::from_string(ss.G3.s);
+      s=d_integer::from_string(ss.s.s);
+      r=d_integer::from_string(ss.r.s);
+   };
+   delivery_proof(const delivery_proof_string& ss){
+      G1=d_integer::from_string(ss.G1.s);
+      G2=d_integer::from_string(ss.G2.s);
+      G3=d_integer::from_string(ss.G3.s);
+      s=d_integer::from_string(ss.s.s);
+      r=d_integer::from_string(ss.r.s);
+   };
+   delivery_proof(){
+      G1=CryptoPP::Integer::Zero();
+      G2=CryptoPP::Integer::Zero();
+      G3=CryptoPP::Integer::Zero();
+      s=CryptoPP::Integer::Zero();
+      r=CryptoPP::Integer::Zero();
+   }
+
 };
 
 struct custody_data{
@@ -90,10 +157,27 @@ struct custody_proof{
    fc::array<uint8_t,DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED> sigma;
 };
 
+struct ciphertext;
+struct ciphertext_string {
+   d_integer_string C1;
+   d_integer_string D1;
+   ciphertext_string(ciphertext ct);
+   ciphertext_string(){
+      d_integer a=CryptoPP::Integer::Zero();
+      C1=(a.to_string());
+      D1=(a.to_string());
+   }
+};
+
 struct ciphertext {
    d_integer C1 = decent::crypto::d_integer(CryptoPP::Integer::One());
    d_integer D1 = decent::crypto::d_integer(CryptoPP::Integer::One());
+   ciphertext(ciphertext_string&s){C1=d_integer::from_string(s.C1.s);D1=d_integer::from_string(s.D1.s);};
+   ciphertext(const ciphertext_string&s){C1=d_integer::from_string(s.C1.s);D1=d_integer::from_string(s.D1.s);};
+
+   ciphertext(){};
 };
+
 
 
 typedef std::pair<d_integer, d_integer> point;
@@ -105,72 +189,6 @@ struct aes_key {
 
 
 namespace fc {
-/*
-template<typename K, size_t S >
-inline void to_variant( const K (&var)[S], fc::variant& vo ) {
-   std::vector<variant> vars(S);
-   for(int i =0; i< S; i++ )
-      vars[i] = var[i];
-   vo = vars;
-}
-
-template<typename K, size_t S >
-inline void from_variant( fc::variant& var, const K (&vo)[S] ) {
-   const variants& vars = var.get_array();
-   memset((char*)vo,0,sizeof(K)*S);
-   int i = 0;
-   for( auto itr = vars.begin(); itr != vars.end(); ++itr, ++i )
-      vo[i]=itr->as<K>();
-}
-
-inline void to_variant( const decent::crypto::custody_data& cd, fc::variant& vo ){
-   std::vector<variant> vars(1+16+DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED);
-   vars[0] = cd.n;
-   for(int i = 0; i < 16; ++i )
-      vars[i+1] = cd.u_seed[i];
-   for(int i = 0; i < DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED; ++i )
-      vars[i+17] = cd.pubKey[i];
-   vo = vars;
-}
-
-inline void from_variant(const fc::variant& var, decent::crypto::custody_data& cd ){
-   const variants& vars = var.get_array();
-   int i = 0;
-   for( auto itr = vars.begin(); itr != vars.end(); ++itr, ++i ){
-      if( i == 0 )
-         cd.n = itr->as<uint32_t>();
-      if( i >=1 && i <= 16)
-         cd.u_seed[i-1] = itr->as<uint32_t>();
-      if( i > 16 )
-         cd.pubKey[i-17] = itr->as<uint8_t>();
-   }
-}
-
-inline void to_variant( const decent::crypto::custody_proof& proof, fc::variant& vo ){
-   std::vector<variant> vars(1+5+1+DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED);
-   vars[0] = proof.reference_block;
-   for(int i = 0; i < 5; ++i )
-      vars[i+1] = proof.seed[i];
-   for(int i = 0; i < DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED; ++i )
-      vars[i+6] = proof.sigma[i];
-   vars [6+DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED] = proof.mus;
-   vo = vars;
-}
-
-inline void from_variant(const fc::variant& var, decent::crypto::custody_proof& proof ){
-   const variants& vars = var.get_array();
-   int i = 0;
-   for( auto itr = vars.begin(); itr != vars.end(); ++itr, ++i ){
-      if( i == 0 )
-         proof.reference_block = itr->as<uint32_t>();
-      if( i >=1 && i <= 5 )
-         proof.seed[i-1] = itr->as<int8_t>();
-      if( i > 5 && i <= 5+DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED )
-         proof.sigma[i-6] = itr->as<uint8_t>();
-      if( i == 6+DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED )
-         proof.mus = itr->as<std::vector<std::vector<unsigned char>>>();
-   }
-}*/
 
 inline void to_variant( const decent::crypto::d_integer& var,  fc::variant& vo ) {
    vo = var.to_string();
@@ -201,8 +219,12 @@ inline void unpack( Stream& s, decent::crypto::d_integer& tp )
 
 FC_REFLECT_EMPTY(decent::crypto::d_integer)
 
+FC_REFLECT(decent::crypto::d_integer_string, (s) )
+
 FC_REFLECT(decent::crypto::aes_key, (key_byte))
 FC_REFLECT(decent::crypto::delivery_proof, (G1)(G2)(G3)(s)(r))
 FC_REFLECT(decent::crypto::ciphertext, (C1)(D1))
-FC_REFLECT_EMPTY(decent::crypto::custody_data)
-FC_REFLECT_EMPTY(decent::crypto::custody_proof)
+FC_REFLECT(decent::crypto::custody_data, (n)(u_seed)(pubKey))
+FC_REFLECT(decent::crypto::custody_proof, (reference_block)(seed)(mus)(sigma))
+FC_REFLECT(decent::crypto::delivery_proof_string, (G1)(G2)(G3)(s)(r))
+FC_REFLECT(decent::crypto::ciphertext_string, (C1)(D1))

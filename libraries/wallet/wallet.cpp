@@ -2299,18 +2299,17 @@ public:
          FC_ASSERT(price_asset_obj, "Could not find asset matching ${asset}", ("asset", price_asset_symbol));
          FC_ASSERT(fee_asset_obj, "Could not find asset matching ${asset}", ("asset", publishing_fee_symbol_name));
          shamir_secret ss(quorum, seeders.size(), secret);
-         vector<ciphertext> key_parts;
          ss.calculate_split();
+         content_submit_operation submit_op;
          for( int i =0; i<seeders.size(); i++ ){
             const auto& s = _remote_db->get_seeder( seeders[i] );
             ciphertext cp;
             point p = ss.split[i];
             decent::crypto::el_gamal_encrypt( p ,s->pubKey ,cp );
-            key_parts.push_back(cp);
+            submit_op.key_parts.push_back(cp);
          }
 
 
-         content_submit_operation submit_op;
          submit_op.author = author_account.id;
          submit_op.URI = URI;
          submit_op.price = price_asset_obj->amount_from_string(price_amount);
@@ -2318,7 +2317,6 @@ public:
          submit_op.size = size;
          submit_op.seeders = seeders;
          submit_op.quorum = quorum;
-         submit_op.key_parts = key_parts;
          submit_op.expiration = expiration;
          submit_op.publishing_fee = fee_asset_obj->amount_from_string(publishing_fee_amount);
          submit_op.synopsis = synopsis;
@@ -2342,11 +2340,11 @@ public:
       account_object consumer_account = get_account( consumer );
       fc::optional<asset_object> asset_obj = get_asset(price_asset_symbol);
       FC_ASSERT(asset_obj, "Could not find asset matching ${asset}", ("asset", price_asset_symbol));
-      
+       
       request_to_buy_operation request_op;
       request_op.consumer = consumer_account.id;
       request_op.URI = URI;
-      request_op.pubKey = d_integer( pubKey );
+      request_op.pubKey = d_integer::from_string(pubKey).to_string();//normalize
       request_op.price = asset_obj->amount_from_string(price_amount);
 
       signed_transaction tx;
@@ -2446,8 +2444,11 @@ public:
       auto result = decent::crypto::el_gamal_decrypt(orig, privKey, message);
       FC_ASSERT(result == decent::crypto::ok);
       deliver_keys_operation op;
-      result = decent::crypto::encrypt_with_proof( message, privKey, destPubKey, orig, op.key, op.proof );
-
+      decent::crypto::ciphertext key;
+      decent::crypto::delivery_proof proof;
+      result = decent::crypto::encrypt_with_proof( message, privKey, destPubKey, orig, key, proof );
+      op.key = key;
+      op.proof = proof;
       op.seeder = seeder_account.id;
 
       signed_transaction tx;

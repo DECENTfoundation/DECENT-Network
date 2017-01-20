@@ -132,7 +132,7 @@ namespace graphene { namespace chain {
       db().modify<buying_object>(buying, [&](buying_object& bo){
            bo.seeders_answered.push_back( o.seeder );
            delivered = ( bo.seeders_answered.size() >= content->quorum );
-           bo.key_particles.push_back( o.key );
+           bo.key_particles.push_back( decent::crypto::ciphertext(o.key) );
       });
       if( delivered || expired )
       {
