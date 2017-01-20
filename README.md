@@ -34,9 +34,10 @@ For Fedora 25 or later, execute in console:
 
 Then, execute in console:
 
+    $ brew doctor
     $ brew tap homebrew/versions
     $ brew update
-    $ brew install automake autoconf libtool cmake berkeley-db boost160 cryptopp libtorrent-rasterbar doxygen byacc flex gettext git pbc gmp ipfs openssl readline
+    $ brew install automake autoconf libtool cmake berkeley-db boost160 qt5 cryptopp libtorrent-rasterbar doxygen byacc flex gettext git pbc gmp ipfs openssl readline
 
 
 ### Obtaining the sources, building, and installing Decent in Unix (macOS or Linux)
