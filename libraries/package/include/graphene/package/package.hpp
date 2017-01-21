@@ -67,6 +67,8 @@ public:
 		virtual void on_upload_started(transfer_id id, const std::string& url) = 0;
 		virtual void on_upload_finished(transfer_id id) = 0;
 		virtual void on_upload_progress(transfer_id id, transfer_progress progress) = 0;
+
+		virtual void on_error(transfer_id id, std::string error) = 0;
 	};
 
 

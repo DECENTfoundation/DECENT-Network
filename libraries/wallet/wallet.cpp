@@ -4356,6 +4356,9 @@ namespace {
          cout << id << ": Uploading " << progress.current_bytes << "/" << progress.total_bytes << " @ " << progress.current_speed << "Bytes/sec" << endl;
       }
 
+      virtual void on_error(package_transfer_interface::transfer_id id, std::string error) {
+         cout << id << ": ERROR -> " << error << endl;
+      }
    };
 
 }
