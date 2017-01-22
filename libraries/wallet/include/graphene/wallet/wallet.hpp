@@ -1956,7 +1956,11 @@ class wallet_api
        */
       void remove_package(const std::string& package_hash) const;
 
-
+      /**
+       * @brief Print statuses of all active transfers
+       * @return nothing
+       */
+      void print_all_transfers() const;
 };
    
 } }
@@ -2142,4 +2146,5 @@ FC_API( graphene::wallet::wallet_api,
         (download_package)
         (upload_package)
         (remove_package)
+        (print_all_transfers)
       )

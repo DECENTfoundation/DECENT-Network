@@ -75,6 +75,7 @@ public:
 public:
 	virtual void upload_package(transfer_id id, const package_object& package, transfer_listener* listener) = 0;
 	virtual void download_package(transfer_id id, const std::string& url, transfer_listener* listener) = 0;
+	virtual void print_status() = 0;
 
 	virtual std::string       get_transfer_url(transfer_id id) = 0;
 	virtual transfer_progress get_transfer_progress(transfer_id id) = 0;
@@ -144,6 +145,9 @@ public:
 
 
 	decent::crypto::custody_utils& get_custody_utils() { return _custody_utils; }
+
+
+	void print_all_transfers();
 
 private:
 	boost::filesystem::path            _packages_directory;

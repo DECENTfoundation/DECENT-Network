@@ -4374,6 +4374,11 @@ void wallet_api::upload_package(const std::string& package_hash, const std::stri
 }
 
 
+void wallet_api::print_all_transfers() const {
+   package_manager::instance().print_all_transfers();
+}
+
+
 
 } } // graphene::wallet
 

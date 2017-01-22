@@ -38,7 +38,7 @@ public:
 
 	virtual std::string       get_transfer_url(transfer_id id);
 	virtual transfer_progress get_transfer_progress(transfer_id id);
-
+	virtual void print_status();
 
 	virtual package_transfer_interface* clone() {
 		return new torrent_transfer(_my_thread);
