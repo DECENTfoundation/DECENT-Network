@@ -395,7 +395,12 @@ package_object package_manager::create_package( const boost::filesystem::path& c
 	archiver arc(out);
 
 	vector<path> all_files;
-	get_files_recursive(content_path, all_files);
+    if (is_regular_file(content_path)) {
+       all_files.push_back(content_path);
+    } else {
+	   get_files_recursive(content_path, all_files); 
+    }
+    
 	for (int i = 0; i < all_files.size(); ++i) {
         file_source source(all_files[i].string(), std::ifstream::binary);
         

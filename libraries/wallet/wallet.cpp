@@ -4378,6 +4378,9 @@ void wallet_api::print_all_transfers() const {
    package_manager::instance().print_all_transfers();
 }
 
+void wallet_api::set_transfer_logs(bool enable) const {
+   
+}
 
 
 } } // graphene::wallet
