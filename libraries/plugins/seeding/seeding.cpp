@@ -211,10 +211,11 @@ void seeding_plugin_impl::send_ready_to_publish()
 }// end namespace detail
 
 
-seeding_plugin::seeding_plugin() : my( new detail::seeding_plugin_impl( *this )){}
+seeding_plugin::seeding_plugin():my(nullptr) {}
 
 void seeding_plugin::plugin_startup()
 {
+   FC_ASSERT(my);
    ilog("seeding plugin:  plugin_startup() start");
    my->service_thread->schedule([this](){ilog("generating first ready to publish");my->send_ready_to_publish(); }, ( fc::time_point::now()  + fc::microseconds(15000000)), "Seeding plugin RtP generate");
    ilog("seeding plugin:  plugin_startup() end");
@@ -285,6 +286,7 @@ void seeding_plugin::plugin_initialize( const boost::program_options::variables_
          FC_THROW("missing free-space parameter");
       
       ilog("starting service thread");
+      my = unique_ptr<detail::seeding_plugin_impl>( new detail::seeding_plugin_impl( *this) );
       my->service_thread = std::make_shared<fc::thread>();
       
       database().create<my_seeder_object>([&](my_seeder_object &mso) {

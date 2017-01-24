@@ -476,6 +476,16 @@ package_manager::download_package( const string& url,
     return t.job_id;
 }
 
+void package_manager::print_all_transfers() {
+    for (int i = 0; i < _all_transfers.size(); ++i) {
+        const transfer_job& job = _all_transfers[i];
+        cout << "~~~ Status for job #" << job.job_id << " [" << ((job.job_type == transfer_job::UPLOAD) ? "Upload" : "Download") << "]\n";
+        job.transport->print_status();
+        cout << "~~~ End of status for #" << job.job_id << endl;
+    }
+}
+
+ 
 
 std::string package_manager::get_transfer_url(package_transfer_interface::transfer_id id) {
     if (id >= _all_transfers.size()) {

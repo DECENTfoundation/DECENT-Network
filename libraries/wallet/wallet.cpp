@@ -4331,6 +4331,10 @@ void wallet_api::extract_package(const std::string& package_hash, const std::str
    package_manager::instance().unpack_package(output_dir, package, fc::sha512(aes_key));
 }
 
+void wallet_api::remove_package(const std::string& package_hash) const {
+   package_manager::instance().delete_package(fc::ripemd160(package_hash));
+}
+
 
 
 namespace {
@@ -4368,6 +4372,9 @@ namespace {
          cout << id << ": Uploading " << progress.current_bytes << "/" << progress.total_bytes << " @ " << progress.current_speed << "Bytes/sec" << endl;
       }
 
+      virtual void on_error(package_transfer_interface::transfer_id id, std::string error) {
+         cout << id << ": ERROR -> " << error << endl;
+      }
    };
 
 }
@@ -4381,6 +4388,11 @@ void wallet_api::upload_package(const std::string& package_hash, const std::stri
    package_object package = package_manager::instance().get_package_object(fc::ripemd160(package_hash));
    package_manager::instance().upload_package(package, protocol, transfer_progress_printer::instance());
 }
+
+void wallet_api::print_all_transfers() const {
+   package_manager::instance().print_all_transfers();
+}
+
 
 } } // graphene::wallet
 
