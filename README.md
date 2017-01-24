@@ -12,7 +12,7 @@ Building Decent
 For Ubuntu 16.04 LTS or later, execute in console:
 
     $ sudo apt-get update
-    $ sudo apt-get install build-essential autotools-dev automake autoconf libtool make cmake gcc g++ clang flex bison doxygen gettext git libreadline-dev libcrypto++-dev libgmp-dev libdb-dev libdb++-dev libssl-dev libncurses5-dev libboost-all-dev
+    $ sudo apt-get install build-essential autotools-dev automake autoconf libtool make cmake gcc g++ clang flex bison doxygen gettext git google-perftools libgoogle-perftools-dev libreadline-dev libcrypto++-dev libgmp-dev libdb-dev libdb++-dev libssl-dev libncurses5-dev libboost-all-dev
 
 > Note, that the default version of Boost installed in Ubuntu 16.10 is not supported. In order to install a supported one, execute in console:
 > 
@@ -24,7 +24,7 @@ For Ubuntu 16.04 LTS or later, execute in console:
 For Fedora 25 or later, execute in console:
 
     $ sudo yum makecache
-    $ sudo yum install automake autoconf libtool make cmake gcc clang flex bison doxygen gettext-devel git readline-devel cryptopp-devel gmp-devel libdb-devel libdb-cxx-devel openssl-devel ncurses-devel boost-devel boost-static
+    $ sudo yum install automake autoconf libtool make cmake gcc clang flex bison doxygen gettext-devel git google-perftools google-perftools-devel readline-devel cryptopp-devel gmp-devel libdb-devel libdb-cxx-devel openssl-devel ncurses-devel boost-devel boost-static
 
 
 ### Installing all prerequisites in macOS
@@ -36,7 +36,7 @@ Then, execute in console:
 
     $ brew tap homebrew/versions
     $ brew update
-    $ brew install automake autoconf libtool cmake berkeley-db boost160 cryptopp libtorrent-rasterbar doxygen byacc flex gettext git pbc gmp ipfs openssl readline
+    $ brew install automake autoconf libtool cmake berkeley-db boost160 cryptopp libtorrent-rasterbar doxygen byacc flex gettext git pbc gmp ipfs openssl readline gperftools
 
 
 ### Obtaining the sources, building, and installing Decent in Unix (macOS or Linux)
@@ -51,13 +51,13 @@ After all the prerequisites are installed, execute the following commands in con
     $ git submodule update --init --recursive
 
     # Build and install Decent.
-    $ mkdir -p ~/dev/DECENTfoundation/build
-    $ cd ~/dev/DECENTfoundation/build
+    $ mkdir -p ~/dev/DECENTfoundation/build/DECENT-Network
+    $ cd ~/dev/DECENTfoundation/build/DECENT-Network
     $ cmake -G "Unix Makefiles" -D CMAKE_BUILD_TYPE=Debug ~/dev/DECENTfoundation/DECENT-Network
     $ cmake --build . --target all -- -j -l 3.0
     $ cmake --build . --target install
 
-By this time you should have Decent files installed at `~/dev/DECENTfoundation/build/artifacts/prefix` directory.
+By this time you should have Decent files installed at `~/dev/DECENTfoundation/build/DECENT-Network/artifacts/prefix` or `~/dev/DECENTfoundation/build/DECENT-Network/install` directory.
 
 You can use any path instead of `~/dev/DECENTfoundation` directory in the steps above.
 
@@ -67,7 +67,7 @@ You can use any path instead of `~/dev/DECENTfoundation` directory in the steps 
 >     $ make install
 
 
-You can use Xcode, or any other CMake generator, and then, if it is an IDE generator, instead of building and installing via `cmake` in terminal, open the generated project/solution file in the corresponding IDE and perform `ALL_BUILD` and `INSTALL` actions from there.
+You can use Xcode, or any other CMake generator, and then, if it is an IDE generator, instead of building and installing via `cmake` in terminal, open the generated project/solution file in the corresponding IDE and perform `ALL_BUILD` and `INSTALL` or `install` actions from there.
 
 ### Installing all prerequisites, obtaining the sources, building, and installing Decent in Windows
 
