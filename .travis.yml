@@ -1,0 +1,25 @@
+language: cpp
+
+sudo: required
+
+os:
+  - linux
+  - osx
+
+dist: xerus
+
+compiler:
+  - gcc
+  - clang
+
+install:
+  - if [ $TRAVIS_OS_NAME == linux ] ; then sudo apt-get update -qq && sudo apt-get install -qq build-essential autotools-dev automake autoconf libtool make cmake gcc g++ clang flex bison doxygen gettext git libreadline-dev libcrypto++-dev libgmp-dev libdb-dev libdb++-dev libssl-dev libncurses5-dev libboost-all-dev ; fi
+  - if [ $TRAVIS_OS_NAME == osx ] ; then brew tap homebrew/versions && brew update && brew install automake autoconf libtool cmake berkeley-db boost160 cryptopp libtorrent-rasterbar doxygen byacc flex gettext git pbc gmp ipfs openssl readline ; fi
+
+script:
+  - mkdir -p build && cd build && cmake -D CMAKE_BUILD_TYPE=Debug -G "Unix Makefiles" .. && cmake --build . --target all -- -j -l 3.0 && cmake --build . --target install
+
+notifications:
+  email: denis@blockchainrndhub.com
+  on_success: always
+  on_failure: always
