@@ -18,7 +18,7 @@ matrix:
       compiler: gcc
 
 install:
-  - if [ $TRAVIS_OS_NAME == linux ] ; then sudo apt-get update -qq && sudo apt-get install -qq install build-essential autotools-dev automake autoconf libtool make cmake gcc g++ clang flex bison doxygen gettext git google-perftools libgoogle-perftools-dev libreadline-dev libcrypto++-dev libgmp-dev libdb-dev libdb++-dev libssl-dev libncurses5-dev libboost-all-dev ; fi
+  - if [ $TRAVIS_OS_NAME == linux ] ; then sudo apt-get update -qq && sudo apt-get install -qq build-essential autotools-dev automake autoconf libtool make cmake gcc g++ clang flex bison doxygen gettext git google-perftools libgoogle-perftools-dev libreadline-dev libcrypto++-dev libgmp-dev libdb-dev libdb++-dev libssl-dev libncurses5-dev libboost-all-dev ; fi
   - if [ $TRAVIS_OS_NAME == osx ] ; then brew tap homebrew/versions && brew update && brew doctor && brew install automake autoconf libtool cmake berkeley-db boost160 cryptopp libtorrent-rasterbar doxygen byacc flex gettext git pbc gmp ipfs openssl readline gperftools ; fi
 
 script:
