@@ -64,6 +64,78 @@ using namespace boost::iostreams;
 using namespace libtorrent;
 
 
+namespace {
+
+	int load_file(std::string const& filename, std::vector<char>& v, libtorrent::error_code& ec, int limit = 8000000) {
+		ec.clear();
+		FILE* f = std::fopen(filename.c_str(), "rb");
+		if (f == nullptr) {
+			ec.assign(errno, boost::system::system_category());
+			return -1;
+		}
+
+		int r = fseek(f, 0, SEEK_END);
+		if (r != 0) {
+			ec.assign(errno, boost::system::system_category());
+			std::fclose(f);
+			return -1;
+		}
+
+		long s = ftell(f);
+		if (s < 0) {
+			ec.assign(errno, boost::system::system_category());
+			std::fclose(f);
+			return -1;
+		}
+
+		if (s > limit) {
+			std::fclose(f);
+			return -2;
+		}
+
+		r = fseek(f, 0, SEEK_SET);
+		if (r != 0) {
+			ec.assign(errno, boost::system::system_category());
+			std::fclose(f);
+			return -1;
+		}
+
+		v.resize(s);
+		if (s == 0) {
+			std::fclose(f);
+			return 0;
+		}
+
+		r = int(std::fread(&v[0], 1, v.size(), f));
+		if (r < 0) {
+			ec.assign(errno, boost::system::system_category());
+			std::fclose(f);
+			return -1;
+		}
+
+		std::fclose(f);
+
+		if (r != s) return -3;
+		return 0;
+	}
+
+	int save_file(std::string const& filename, std::vector<char>& v) {
+		FILE* f = std::fopen(filename.c_str(), "wb");
+		if (f == nullptr)
+			return -1;
+
+		int w = int(std::fwrite(&v[0], 1, v.size(), f));
+		std::fclose(f);
+
+		if (w < 0) return -1;
+		if (w != int(v.size())) return -3;
+		return 0;
+	}
+
+
+}
+
+
 torrent_transfer::torrent_transfer() {
 	_my_thread = new fc::thread("torrent_thread");
 	libtorrent::settings_pack p = _session.get_settings();
@@ -80,7 +152,15 @@ torrent_transfer::torrent_transfer() {
 	p.set_str(libtorrent::settings_pack::user_agent, "DECENT");
 	
 	_session.apply_settings(p);
-	_session.set_upload_rate_limit(0);
+
+	libtorrent::error_code ec;
+
+	std::vector<char> in;
+	if (load_file(".ses_state", in, ec) == 0) {
+		bdecode_node e;
+		if (bdecode(&in[0], &in[0] + in.size(), e, ec) == 0)
+			_session.load_state(e, session::save_dht_state);
+	}
 
 	_session.set_alert_notify([this]() {
 
@@ -93,6 +173,13 @@ torrent_transfer::torrent_transfer() {
 }
 
 torrent_transfer::~torrent_transfer() {
+	entry session_state;
+	_session.save_state(session_state, session::save_dht_state);
+
+	std::vector<char> out;
+	bencode(std::back_inserter(out), session_state);
+	save_file(".ses_state", out);
+
 	delete _my_thread;
 }
 
@@ -121,7 +208,9 @@ void torrent_transfer::print_status() {
 	cout << "Num seeds: " << st.num_seeds << endl;
 	cout << "Num peers: " << st.num_peers << endl;
 
-	cout << "Distributed full copies: " << st.distributed_full_copies << endl;
+	cout << "distributed_full_copies: " << st.distributed_full_copies << endl;
+	cout << "distributed_fraction: " << st.distributed_fraction << endl;
+	cout << "distributed_copies: " << st.distributed_copies << endl;
 
 	cout << "num_uploads: " << st.num_uploads << endl;
 	cout << "num_connections: " << st.num_connections << endl;
@@ -181,6 +270,9 @@ void torrent_transfer::print_status() {
 	cout << "announcing_to_dht: " << st.announcing_to_dht << endl;
 	cout << "stop_when_ready: " << st.stop_when_ready << endl;
 
+	cout << "block_size: " << st.block_size << endl;
+	cout << "num_pieces: " << st.num_pieces << endl;
+
 }
 
 
@@ -194,7 +286,7 @@ void torrent_transfer::upload_package(transfer_id id, const package_object& pack
 	// recursively adds files in directories
 	add_files(fs, package.get_path().string());
 
-	create_torrent t(fs);
+	create_torrent t(fs, 5 * 64 * 16 * 1024); // 5MB pieces
 	t.set_creator("DECENT");
     t.set_priv(false);
 
@@ -220,16 +312,28 @@ void torrent_transfer::upload_package(transfer_id id, const package_object& pack
 	std::shared_ptr<libtorrent::torrent_info> ptt = std::make_shared<libtorrent::torrent_info>(temp_file.string(), 0);
 
 	atp.ti = ptt;
-	atp.flags = libtorrent::add_torrent_params::flag_seed_mode;
-				//libtorrent::add_torrent_params::flag_upload_mode |
-				//libtorrent::add_torrent_params::flag_share_mode	|
-				//libtorrent::add_torrent_params::flag_super_seeding;
+	atp.flags = libtorrent::add_torrent_params::flag_seed_mode |
+				libtorrent::add_torrent_params::flag_upload_mode |
+				libtorrent::add_torrent_params::flag_share_mode	|
+				libtorrent::add_torrent_params::flag_super_seeding;
 
 	atp.save_path = package.get_path().parent_path().string();
+
+
+	atp.dht_nodes.push_back(std::make_pair("router.utorrent.com", 6881));
+	atp.dht_nodes.push_back(std::make_pair("router.bittorrent.com", 6881));
+	atp.dht_nodes.push_back(std::make_pair("dht.transmissionbt.com", 6881));
+	atp.dht_nodes.push_back(std::make_pair("router.bitcomet.com", 6881));
+	atp.dht_nodes.push_back(std::make_pair("dht.aelitis.com", 6881));
+
+	int num_pieces = atp.ti->num_pieces();
+
 
 	_torrent_handle = _session.add_torrent(atp);
     _torrent_handle.set_upload_mode(true);
     _torrent_handle.super_seeding(true);
+    _torrent_handle.force_dht_announce();
+
 
 	_url = make_magnet_uri(_torrent_handle);
 	cout << "Magnet URL: " << _url << endl;
@@ -247,6 +351,13 @@ void torrent_transfer::download_package(transfer_id id, const std::string& url, 
 	path temp_dir = temp_directory_path();
 
 	atp.save_path = temp_dir.string();
+
+	atp.dht_nodes.push_back(std::make_pair("router.utorrent.com", 6881));
+	atp.dht_nodes.push_back(std::make_pair("router.bittorrent.com", 6881));
+	atp.dht_nodes.push_back(std::make_pair("dht.transmissionbt.com", 6881));
+	atp.dht_nodes.push_back(std::make_pair("router.bitcomet.com", 6881));
+	atp.dht_nodes.push_back(std::make_pair("dht.aelitis.com", 6881));
+
 	cout << "Save path is: " << atp.save_path << endl;
 
 	_torrent_handle = _session.add_torrent(atp);
