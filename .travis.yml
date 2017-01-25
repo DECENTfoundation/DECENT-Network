@@ -28,6 +28,8 @@ before_install:
   - perl -pi -e 's/https\:\/\/github\.com\/DECENTfoundation\/DECENT-Network\.wiki\.git/git\@github\.com\:DECENTfoundation\/DECENT-Network\.wiki\.git/' .gitmodules
   - perl -pi -e 's/https\:\/\/github\.com\/DECENTfoundation\/pbc\.git/git\@github\.com\:DECENTfoundation\/pbc\.git/' .gitmodules
   - git submodule update --init --recursive
+  - xcode-select -p
+  - ls -l /Applications/Xcode.app/Contents/Developer
 
 
 
