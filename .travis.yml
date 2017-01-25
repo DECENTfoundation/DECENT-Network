@@ -26,7 +26,9 @@ git:
 # Use sed to replace the SSH URL with the public URL, then initialize submodules
 before_install:
   - cat .gitmodules
-  - sed -i 's/git@github.com:/https:\/\/traceon:a6769af912a7248e199e82c06d470208810562ae@github.com\//' .gitmodules
+  - perl -pi -e 's/https\:\/\/github\.com\/DECENTfoundation\/DECENT-Network\.wiki\.git/git\@github\.com\:DECENTfoundation\/DECENT-Network\.wiki\.git/' .gitmodules
+  - perl -pi -e 's/https\:\/\/github\.com\/DECENTfoundation\/pbc\.git/git\@github\.com\:DECENTfoundation\/pbc\.git/' .gitmodules
+  - cat .gitmodules
   - git submodule update --init --recursive
 
 
