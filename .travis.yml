@@ -40,14 +40,12 @@ before_install:
   - perl -pi -e 's/https\:\/\/github\.com\/DECENTfoundation\/DECENT-Network\.wiki\.git/git\@github\.com\:DECENTfoundation\/DECENT-Network\.wiki\.git/' .gitmodules
   - perl -pi -e 's/https\:\/\/github\.com\/DECENTfoundation\/pbc\.git/git\@github\.com\:DECENTfoundation\/pbc\.git/' .gitmodules
   - git submodule update --init --recursive
-  - xcode-select -p
-  - ls -l /Applications/Xcode.app/Contents/Developer
 
 
 
 install:
   - if [ "$TRAVIS_OS_NAME" == "linux" ] ; then sudo apt-get update -qq && sudo apt-get install -qq build-essential autotools-dev automake autoconf libtool make cmake gcc g++ clang flex bison doxygen gettext git google-perftools libgoogle-perftools-dev libreadline-dev libcrypto++-dev libgmp-dev libdb-dev libdb++-dev libssl-dev libncurses5-dev libboost-all-dev ; fi
-  - if [ "$TRAVIS_OS_NAME" == "osx" ] ; then /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/uninstall)" && rm -rf /usr/local/* && /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" && brew update && brew upgrade && brew cleanup && brew doctor && brew tap homebrew/versions && brew update && brew install automake autoconf libtool cmake berkeley-db boost160 cryptopp libtorrent-rasterbar doxygen byacc flex gettext git pbc gmp ipfs openssl readline gperftools && brew doctor ; fi
+  - if [ "$TRAVIS_OS_NAME" == "osx" ] ; then /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/uninstall)" - --force && rm -rf /usr/local/* && /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" && brew update && brew upgrade && brew cleanup && brew doctor && brew tap homebrew/versions && brew update && brew install automake autoconf libtool cmake berkeley-db boost160 cryptopp libtorrent-rasterbar doxygen byacc flex gettext git pbc gmp ipfs openssl readline gperftools && brew doctor ; fi
 
 script:
   - DECENT_CMAKE_TARGET_ALL="all"
