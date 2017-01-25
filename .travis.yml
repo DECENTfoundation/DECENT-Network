@@ -25,6 +25,7 @@ git:
 
 # Use sed to replace the SSH URL with the public URL, then initialize submodules
 before_install:
+  - cat .gitmodules
   - sed -i 's/git@github.com:/https:\/\/traceon:a6769af912a7248e199e82c06d470208810562ae@github.com\//' .gitmodules
   - git submodule update --init --recursive
 
