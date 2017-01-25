@@ -35,7 +35,7 @@ before_install:
 
 install:
   - if [ $TRAVIS_OS_NAME == linux ] ; then sudo apt-get update -qq && sudo apt-get install -qq build-essential autotools-dev automake autoconf libtool make cmake gcc g++ clang flex bison doxygen gettext git google-perftools libgoogle-perftools-dev libreadline-dev libcrypto++-dev libgmp-dev libdb-dev libdb++-dev libssl-dev libncurses5-dev libboost-all-dev ; fi
-  - if [ $TRAVIS_OS_NAME == osx ] ; then brew update && brew upgrade && brew cleanup && brew doctor && brew tap homebrew/versions && brew update && brew install automake autoconf libtool cmake berkeley-db boost160 cryptopp libtorrent-rasterbar doxygen byacc flex gettext git pbc gmp ipfs openssl readline gperftools ; fi
+  - if [ $TRAVIS_OS_NAME == osx ] ; then /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/uninstall)" && rm -rf /usr/local/* && /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" && brew update && brew upgrade && brew cleanup && brew doctor && brew tap homebrew/versions && brew update && brew install automake autoconf libtool cmake berkeley-db boost160 cryptopp libtorrent-rasterbar doxygen byacc flex gettext git pbc gmp ipfs openssl readline gperftools && brew doctor ; fi
 
 script:
   - mkdir -p build && cd build && cmake -D CMAKE_BUILD_TYPE=Debug -G "Unix Makefiles" .. && cmake --build . --target all -- -j -l 3.0 && cmake --build . --target install
