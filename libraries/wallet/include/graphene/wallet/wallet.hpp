@@ -1963,6 +1963,11 @@ class wallet_api
        * @return nothing
        */
       void print_all_transfers() const;
+      /**
+       * @brief Print statuses of all active transfers
+       * @return nothing
+       */
+      void set_transfer_logs(bool enable) const;
 };
    
 } }
@@ -2149,4 +2154,5 @@ FC_API( graphene::wallet::wallet_api,
         (upload_package)
         (remove_package)
         (print_all_transfers)
+        (set_transfer_logs)
       )

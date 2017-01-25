@@ -145,6 +145,7 @@ torrent_transfer::torrent_transfer() {
 	p.set_bool(libtorrent::settings_pack::enable_dht, true);
 	p.set_bool(libtorrent::settings_pack::allow_multiple_connections_per_ip, true);
 
+	p.set_int(libtorrent::settings_pack::dht_announce_interval, 15);
 	p.set_int(libtorrent::settings_pack::active_limit, 100);
 	p.set_int(libtorrent::settings_pack::active_seeds, 90);
 	p.set_int(libtorrent::settings_pack::active_downloads, 10);
@@ -185,44 +186,15 @@ torrent_transfer::~torrent_transfer() {
 
 void torrent_transfer::print_status() {
 	libtorrent::torrent_status st = _torrent_handle.status();
-	cout << "Error: " << st.errc.message() << endl;
-	cout << "Error string: " << st.error << endl;
-	cout << "Error file: " << st.error_file << endl;
+	cout << "Error Message/String/File: " << st.errc.message() << " / " << st.error << " / " << st.error_file << endl;
+	cout << "Save path/Name/Current Tracker: " << st.save_path << " / " << st.name << " / " << st.current_tracker << endl;
+	cout << "Total download/upload/payload download/payload upload: " << st.total_download << " / " << st.total_upload << " / " << st.total_payload_download << " / " << st.total_payload_upload << endl;
+	cout << "Download rate/Upload rate/Seeds/Peers: " << st.download_rate << " / " << st.upload_rate << " / " << st.num_seeds << " / " << st.num_peers << endl;
+	cout << "Distributed Full Copies/Distributed Fraction/Distributed Copies: " << st.distributed_full_copies << " / " << st.distributed_fraction << " / " << st.distributed_copies << endl;
+	cout << "Active Time/Finished Time/Seeding Time: " << st.active_time  << " / " << st.finished_time << " / " << st.seeding_time << endl;
+	cout << "Num Uploads/Num Connections/Uploads Limit/Connections Limit: " << st.num_uploads << " / " << st.num_connections << " / " << st.uploads_limit << " / " << st.connections_limit << endl;
+	cout << "Next announce/Progress/State: " << st.next_announce.count() << " / " << st.progress << "/";
 
-	cout << "Save path: " << st.save_path << endl;
-	cout << "Name: " << st.name << endl;
-	cout << "Next announce: " << st.next_announce.count() << endl;
-	cout << "Current Tracker: " << st.current_tracker << endl;
-
-	cout << "Total download: " << st.total_download << endl;
-	cout << "Total upload: " << st.total_upload << endl;
-	cout << "Total payload download: " << st.total_payload_download << endl;
-	cout << "Total payload upload: " << st.total_payload_upload << endl;
-
-	cout << "Progress: " << st.progress << endl;
-
-	cout << "Download rate: " << st.download_rate << endl;
-	cout << "Upload rate: " << st.upload_rate << endl;
-
-
-	cout << "Num seeds: " << st.num_seeds << endl;
-	cout << "Num peers: " << st.num_peers << endl;
-
-	cout << "distributed_full_copies: " << st.distributed_full_copies << endl;
-	cout << "distributed_fraction: " << st.distributed_fraction << endl;
-	cout << "distributed_copies: " << st.distributed_copies << endl;
-
-	cout << "num_uploads: " << st.num_uploads << endl;
-	cout << "num_connections: " << st.num_connections << endl;
-	cout << "uploads_limit: " << st.uploads_limit << endl;
-	cout << "connections_limit: " << st.connections_limit << endl;
-
-	cout << "active_time: " << st.active_time << endl;
-	cout << "finished_time: " << st.finished_time << endl;
-	cout << "seeding_time: " << st.seeding_time << endl;
-	cout << "seed_rank: " << st.seed_rank << endl;
-
-	cout << "state: ";
 	switch (st.state) {
 		case torrent_status::checking_files:
 			cout << "checking_files" << endl;
@@ -250,28 +222,12 @@ void torrent_transfer::print_status() {
 			break;
 	}
 
-	cout << "upload_mode: " << st.upload_mode << endl;
-	cout << "share_mode: " << st.share_mode << endl;
-	cout << "super_seeding: " << st.super_seeding << endl;
-	cout << "paused: " << st.paused << endl;
-	cout << "auto_managed: " << st.auto_managed << endl;
-
-	cout << "is_seeding: " << st.is_seeding << endl;
-	cout << "is_finished: " << st.is_finished << endl;
-
-	cout << "has_metadata: " << st.has_metadata << endl;
-	cout << "has_incoming: " << st.has_incoming << endl;
-
-	cout << "seed_mode: " << st.seed_mode << endl;
-
-	cout << "is_loaded: " << st.is_loaded << endl;
-	cout << "announcing_to_trackers: " << st.announcing_to_trackers << endl;
-	cout << "announcing_to_lsd: " << st.announcing_to_lsd << endl;
-	cout << "announcing_to_dht: " << st.announcing_to_dht << endl;
-	cout << "stop_when_ready: " << st.stop_when_ready << endl;
-
-	cout << "block_size: " << st.block_size << endl;
-	cout << "num_pieces: " << st.num_pieces << endl;
+	cout << "Upload Mode/Share Mode/Super Seeding/Auto Managed: " << st.upload_mode << " / " << st.share_mode << " / " << st.super_seeding << " / " << st.auto_managed << endl;
+	cout << "Paused/Seeding?/Finished?/Loaded?: " << st.paused << " / " << st.is_seeding << " / " << st.is_finished << " / " << st.is_loaded << endl;
+	cout << "Has Metadata/Has Incoming/Stop When Ready: " << st.has_metadata << " / " << st.has_incoming << " / " << st.stop_when_ready << endl;
+	cout << "Announcing To Trackers/LSD/DHT: " << st.announcing_to_trackers << " / " << st.announcing_to_lsd << " / " << st.announcing_to_dht << endl;
+	cout << "Seed Mode/Seed Rank: " << st.seed_mode << " / " << st.seed_rank << endl;
+	cout << "Block Size/Num Pieces: " << st.block_size << " / " << st.num_pieces<< endl;
 
 }
 
@@ -314,7 +270,7 @@ void torrent_transfer::upload_package(transfer_id id, const package_object& pack
 	atp.ti = ptt;
 	atp.flags = libtorrent::add_torrent_params::flag_seed_mode |
 				libtorrent::add_torrent_params::flag_upload_mode |
-				libtorrent::add_torrent_params::flag_share_mode	|
+				//libtorrent::add_torrent_params::flag_share_mode	|
 				libtorrent::add_torrent_params::flag_super_seeding;
 
 	atp.save_path = package.get_path().parent_path().string();
