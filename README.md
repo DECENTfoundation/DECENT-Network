@@ -4,7 +4,7 @@ Intro for new developers
 This is a quick introduction to get new developers up to speed on Decent.
 
 
-Building Decent
+Building Decent [![Build Status](https://travis-ci.com/DECENTfoundation/DECENT-Network.svg?token=xwFm8bxNLqiJV3NaNYgy&branch=develop)](https://travis-ci.com/DECENTfoundation/DECENT-Network)
 ---------------
 
 ### Installing all prerequisites in Linux
