@@ -215,7 +215,8 @@ seeding_plugin::seeding_plugin():my(nullptr) {}
 
 void seeding_plugin::plugin_startup()
 {
-   FC_ASSERT(my);
+   if(!my)
+      return;
    ilog("seeding plugin:  plugin_startup() start");
    my->service_thread->schedule([this](){ilog("generating first ready to publish");my->send_ready_to_publish(); }, ( fc::time_point::now()  + fc::microseconds(15000000)), "Seeding plugin RtP generate");
    ilog("seeding plugin:  plugin_startup() end");
