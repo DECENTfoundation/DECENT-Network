@@ -125,7 +125,7 @@ namespace graphene { namespace chain {
    void_result deliver_keys_evaluator::do_apply(const deliver_keys_operation& o )
    {try{
       const auto& buying = db().get<buying_object>(o.buying);
-      bool expired = ( buying.expiration_time > db().head_block_time() );
+      bool expired = ( buying.expiration_time < db().head_block_time() );
       auto& idx = db().get_index_type<content_index>().indices().get<by_URI>();
       const auto& content = idx.find( buying.URI );
       bool delivered;
