@@ -224,7 +224,6 @@ void seeding_plugin::plugin_startup()
 void seeding_plugin::plugin_initialize( const boost::program_options::variables_map& options )
 {try{
    ilog("seeding plugin:  plugin_initialize() start");
-   database().on_applied_operation.connect( [&]( const operation_history_object& b ){ my->on_operation(b); } );
    database().add_index< primary_index < my_seeding_index > >();
    database().add_index< primary_index < my_seeder_index > >();
 
@@ -288,6 +287,8 @@ void seeding_plugin::plugin_initialize( const boost::program_options::variables_
       ilog("starting service thread");
       my = unique_ptr<detail::seeding_plugin_impl>( new detail::seeding_plugin_impl( *this) );
       my->service_thread = std::make_shared<fc::thread>();
+      database().on_applied_operation.connect( [&]( const operation_history_object& b ){ my->on_operation(b); } );
+
       
       database().create<my_seeder_object>([&](my_seeder_object &mso) {
            mso.seeder = seeder;
