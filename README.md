@@ -7,18 +7,53 @@ This is a quick introduction to get new developers up to speed on Decent.
 Building Decent [![Build Status](https://travis-ci.com/DECENTfoundation/DECENT-Network.svg?token=xwFm8bxNLqiJV3NaNYgy&branch=develop)](https://travis-ci.com/DECENTfoundation/DECENT-Network)
 ---------------
 
-### Installing all prerequisites in Linux
+### Installing prerequisites in Linux
 
-For Ubuntu 16.04 LTS or later, execute in console:
+For Ubuntu 16.04 LTS (for 14.04 LTS, 14.10, or 16.10 see notes below), execute in console:
 
     $ sudo apt-get update
-    $ sudo apt-get install build-essential autotools-dev automake autoconf libtool make cmake gcc g++ clang flex bison doxygen gettext git google-perftools libgoogle-perftools-dev libreadline-dev libcrypto++-dev libgmp-dev libdb-dev libdb++-dev libssl-dev libncurses5-dev libboost-all-dev
+    $ sudo apt-get install build-essential autotools-dev automake autoconf libtool make cmake checkinstall gcc g++ clang flex bison doxygen gettext git google-perftools qt5-default libgoogle-perftools-dev libreadline-dev libcrypto++-dev libgmp-dev libdb-dev libdb++-dev libssl-dev libncurses5-dev libboost-all-dev libcurl4-openssl-dev python-dev libicu-dev libbz2-dev
 
-> Note, that the default version of Boost installed in Ubuntu 16.10 is not supported. In order to install a supported one, execute in console:
-> 
->     $ sudo apt-get remove libboost-all-dev
->     $ sudo apt-get autoremove
->     $ sudo apt-get install libboost1.60-all-dev
+(Ubuntu 16.10 only) Note, that the default version of Boost installed in Ubuntu 16.10 is too high and not supported. In order to install a supported one, in addition to the commands above, execute the following in console:
+
+    # Uninstall the default Boost and install Boost 1.60.0
+    $ sudo apt-get remove libboost-all-dev
+    $ sudo apt-get autoremove
+    $ sudo apt-get install libboost1.60-all-dev
+
+(Ubuntu 14.04 LTS and 14.10 only) Note, that the default version of Boost and CMake installed in Ubuntu 14.04 LTS or 14.10 is too old and not supported. In order to build and use the supported ones, in addition to the common commands above, execute the following in console (in the same shell session, where you are going to build DECENT itself):
+
+    # Download and build Boost 1.60.0
+    $ mkdir -p ~/dev/DECENTfoundation/third-party
+    $ cd ~/dev/DECENTfoundation/third-party
+    $ rm -rf boost*
+    $ wget https://sourceforge.net/projects/boost/files/boost/1.60.0/boost_1_60_0.tar.gz
+    $ tar xvf boost_1_60_0.tar.gz
+    $ mkdir boost-1.60.0_prefix
+    $ cd boost_1_60_0
+    $ export BOOST_ROOT=(realpath ../boost-1.60.0_prefix)
+    $ ./bootstrap.sh --prefix=$BOOST_ROOT
+    $ ./b2 install
+    $ cd ..
+    $ rm -rf boost_1_60_0
+
+    # Download and build CMake 3.7.2
+    $ mkdir -p ~/dev/DECENTfoundation/third-party
+    $ cd ~/dev/DECENTfoundation/third-party
+    $ rm -rf cmake*
+    $ wget https://cmake.org/files/v3.7/cmake-3.7.2.tar.gz
+    $ tar xvf cmake-3.7.2.tar.gz
+    $ mkdir cmake-3.7.2_prefix
+    $ cd cmake-3.7.2
+    $ export CMAKE_ROOT=$(realpath ../cmake-3.7.2_prefix)
+    $ ./configure --prefix=$CMAKE_ROOT
+    $ make
+    $ make install
+    $ cd ..
+    $ rm -rf cmake-3.7.2
+    $ export PATH=$CMAKE_ROOT/bin:$PATH
+
+At this point, `cmake` command should be picked up from `$CMAKE_ROOT/bin`, and CMake configure should found the Boost distribution in exported `$BOOST_ROOT`.
 
 
 For Fedora 25 or later, execute in console:
@@ -27,7 +62,7 @@ For Fedora 25 or later, execute in console:
     $ sudo yum install automake autoconf libtool make cmake gcc clang flex bison doxygen gettext-devel git google-perftools google-perftools-devel readline-devel cryptopp-devel gmp-devel libdb-devel libdb-cxx-devel openssl-devel ncurses-devel boost-devel boost-static
 
 
-### Installing all prerequisites in macOS
+### Installing prerequisites in macOS
 
 * Install Xcode and Command Line Tools, see http://railsapps.github.io/xcode-command-line-tools.html
 * Install Homebrew, see http://brew.sh
@@ -58,19 +93,18 @@ After all the prerequisites are installed, execute the following commands in con
     $ cmake --build . --target all -- -j -l 3.0
     $ cmake --build . --target install
 
-By this time you should have Decent files installed at `~/dev/DECENTfoundation/build/DECENT-Network/artifacts/prefix` or `~/dev/DECENTfoundation/build/DECENT-Network/install` directory.
-
-You can use any path instead of `~/dev/DECENTfoundation` directory in the steps above.
-
 > Note that, in case of "Unix Makefiles" CMake generator, the last two commands are equivalent to:
 > 
 >     $ make -j -l 3.0
 >     $ make install
 
+By this time you should have Decent files installed at `~/dev/DECENTfoundation/build/DECENT-Network/artifacts/prefix` or `~/dev/DECENTfoundation/build/DECENT-Network/install` directories.
 
-You can use Xcode, or any other CMake generator, and then, if it is an IDE generator, instead of building and installing via `cmake` in terminal, open the generated project/solution file in the corresponding IDE and perform `ALL_BUILD` and `INSTALL` or `install` actions from there.
+You can use any path instead of `~/dev/DECENTfoundation` in the steps above.
 
-### Installing all prerequisites, obtaining the sources, building, and installing Decent in Windows
+You can use Xcode, or any other CMake generator, and then, if it is an IDE generator, instead of building and installing via `cmake` in terminal, open the generated project/solution file in the corresponding IDE and perform `ALL_BUILD` and `INSTALL` (or `install`) actions from there.
+
+### Installing prerequisites, obtaining the sources, building, and installing Decent in Windows
 
 TODO
 
