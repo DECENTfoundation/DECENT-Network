@@ -39,6 +39,7 @@ git:
 before_install:
   - perl -pi -e 's/https\:\/\/github\.com\/DECENTfoundation\/DECENT-Network\.wiki\.git/git\@github\.com\:DECENTfoundation\/DECENT-Network\.wiki\.git/' .gitmodules
   - perl -pi -e 's/https\:\/\/github\.com\/DECENTfoundation\/pbc\.git/git\@github\.com\:DECENTfoundation\/pbc\.git/' .gitmodules
+  - perl -pi -e 's/https\:\/\/github\.com\/DECENTfoundation\/DECENT-GUI\.git/git\@github\.com\:DECENTfoundation\/DECENT-GUI\.git/' .gitmodules
   - git submodule update --init --recursive
 
 
