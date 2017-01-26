@@ -9,10 +9,10 @@ Building Decent [![Build Status](https://travis-ci.com/DECENTfoundation/DECENT-N
 
 ### Installing prerequisites in Linux
 
-For Ubuntu 16.04 LTS (for 14.04 LTS, 14.10, or 16.10 see notes below), execute in console:
+For Ubuntu 16.04 LTS (for extra actions needed for 14.04 LTS, 14.10, or 16.10 see notes below), execute in console:
 
     $ sudo apt-get update
-    $ sudo apt-get install build-essential autotools-dev automake autoconf libtool make cmake checkinstall gcc g++ clang flex bison doxygen gettext git google-perftools qt5-default libgoogle-perftools-dev libreadline-dev libcrypto++-dev libgmp-dev libdb-dev libdb++-dev libssl-dev libncurses5-dev libboost-all-dev libcurl4-openssl-dev python-dev libicu-dev libbz2-dev
+    $ sudo apt-get install build-essential autotools-dev automake autoconf libtool make cmake checkinstall realpath gcc g++ clang flex bison doxygen gettext git google-perftools qt5-default libgoogle-perftools-dev libreadline-dev libcrypto++-dev libgmp-dev libdb-dev libdb++-dev libssl-dev libncurses5-dev libboost-all-dev libcurl4-openssl-dev python-dev libicu-dev libbz2-dev
 
 (Ubuntu 16.10 only) Note, that the default version of Boost installed in Ubuntu 16.10 is too high and not supported. In order to install a supported one, in addition to the commands above, execute the following in console:
 
