@@ -19,7 +19,7 @@ namespace graphene { namespace chain {
       account_id_type seeder;
       uint64_t free_space;
       asset price;
-      decent::crypto::d_integer pubKey;
+      decent::crypto::d_integer_string pubKey;
 
    };
    

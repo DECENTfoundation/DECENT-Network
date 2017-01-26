@@ -4,6 +4,7 @@
 #include <decent/encrypt/encryptionutils.hpp>
 #include <graphene/chain/content_object.hpp>
 #include <graphene/chain/account_object.hpp>
+#include <graphene/chain/buying_object.hpp>
 #include <graphene/utilities/key_conversion.hpp>
 #include <graphene/package/package.hpp>
 #include <algorithm>
@@ -23,7 +24,10 @@ graphene::chain::database &seeding_plugin_impl::database() {
 
 void seeding_plugin_impl::on_operation(const operation_history_object &op_obj) {
    graphene::chain::database &db = database();
-
+   if(!db.is_undo_enabled()) {
+      ilog("not producing yet");
+      return;
+   }
    if( op_obj.op.which() == operation::tag<request_to_buy_operation>::value ) {
       const request_to_buy_operation &rtb_op = op_obj.op.get<request_to_buy_operation>();
       const auto &idx = db.get_index_type<my_seeding_index>().indices().get<by_URI>();
@@ -36,7 +40,7 @@ void seeding_plugin_impl::on_operation(const operation_history_object &op_obj) {
 
       //ok, this is our seeding... we shall generate deliver keys out of it...
       account_object seeder_account = db.get<account_object>(sitr->seeder);
-      //const buying_object bo = get_object<buying_object>(buying);
+
       const auto &cidx = db.get_index_type<content_index>().indices().get<graphene::chain::by_URI>();
       const auto &citr = cidx.find(rtb_op.URI);
       if( citr == cidx.end())
@@ -53,6 +57,14 @@ void seeding_plugin_impl::on_operation(const operation_history_object &op_obj) {
       result = decent::crypto::encrypt_with_proof(message, sritr->content_privKey, destPubKey, orig, key, proof);
       op.key = key;
       op.proof = proof;
+      const auto &bidx = db.get_index_type<graphene::chain::buying_index>().indices().get<graphene::chain::by_URI_consumer>();
+      const auto &bitr = bidx.find(std::make_tuple( rtb_op.URI, rtb_op.consumer ));
+      if(bitr == bidx.end()){
+         ilog("no such buying_object");
+         //TODO_DECENT very ugly hack, rework!
+         op.buying = db.get_index_type<graphene::chain::buying_index>().get_next_id();
+      }else
+         op.buying = bitr->id;
 
       op.seeder = seeder_account.id;
 
@@ -288,9 +300,10 @@ void seeding_plugin::plugin_initialize( const boost::program_options::variables_
       ilog("starting service thread");
       my = unique_ptr<detail::seeding_plugin_impl>( new detail::seeding_plugin_impl( *this) );
       my->service_thread = std::make_shared<fc::thread>();
+
       database().on_applied_operation.connect( [&]( const operation_history_object& b ){ my->on_operation(b); } );
 
-      
+      ilog("seeding plugin:  plugin_initialize() seeder prepared");
       database().create<my_seeder_object>([&](my_seeder_object &mso) {
            mso.seeder = seeder;
            mso.free_space = free_space;

@@ -61,6 +61,7 @@ namespace graphene { namespace chain {
 
          database();
          ~database();
+         bool is_undo_enabled(){ return _undo_db.enabled(); };
 
          enum validation_steps
          {

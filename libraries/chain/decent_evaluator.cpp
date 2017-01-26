@@ -90,12 +90,15 @@ namespace graphene { namespace chain {
    
    void_result request_to_buy_evaluator::do_apply(const request_to_buy_operation& o )
    {
-      db().create<buying_object>([&](buying_object& bo){
+      const auto& object = db().create<buying_object>([&](buying_object& bo){
            bo.consumer = o.consumer;
            bo.URI = o.URI;
            bo.expiration_time = db().head_block_time() + 24*3600;
            bo.pubKey = o.pubKey;
       });
+      elog("Created bying_object with id ${i}", ("i", object.id));
+
+      //TODO_DECENT block the price, save it to the buying object
    }
 
    void_result deliver_keys_evaluator::do_evaluate(const deliver_keys_operation& o )
@@ -116,7 +119,11 @@ namespace graphene { namespace chain {
       const auto& secondK = o.key;
       const auto& proof = o.proof;
       FC_ASSERT( decent::crypto::verify_delivery_proof( proof, firstK, secondK, seeder_pubKey, buyer_pubKey) );
-   }catch( ... )
+   }catch( const fc::exception& e )
+      {
+         wlog( "caught exception ${e} in do_evaluate()", ("e", e.to_detail_string()) );
+      }
+   catch( ... )
    {
       fc::unhandled_exception e( FC_LOG_MESSAGE( warn, "throw"), std::current_exception() );
       wlog( "${details}", ("details",e.to_detail_string()) ); 
@@ -131,9 +138,9 @@ namespace graphene { namespace chain {
       bool delivered;
       db().modify<buying_object>(buying, [&](buying_object& bo){
            bo.seeders_answered.push_back( o.seeder );
-           delivered = ( bo.seeders_answered.size() >= content->quorum );
            bo.key_particles.push_back( decent::crypto::ciphertext(o.key) );
       });
+      delivered = buying.seeders_answered.size() >= content->quorum;
       if( delivered || expired )
       {
          db().create<buying_history_object>([&](buying_history_object& bho){
@@ -145,12 +152,18 @@ namespace graphene { namespace chain {
               bho.time = db().head_block_time();
          });
          db().remove(buying);
+
       }
       if( delivered )
       {
          db().modify<content_object>( *content, []( content_object& co ){ co.times_bought++; });
+         //TODO_DECENT pay the price to the author
       }
-   }catch( ... )
+   }catch( const fc::exception& e )
+   {
+      wlog( "caught exception ${e} in do_apply()", ("e", e.to_detail_string()) );
+   }
+   catch( ... )
    {
       fc::unhandled_exception e( FC_LOG_MESSAGE( warn, "throw"), std::current_exception() ); 
       wlog( "${details}", ("details",e.to_detail_string()) ); 
@@ -217,6 +230,7 @@ namespace graphene { namespace chain {
          db().modify<seeder_object>(*sor,[&](seeder_object &so) {
             so.free_space = o.space;
             so.price = asset(o.price_per_MByte);
+            so.pubKey = o.pubKey;
          });
       }
    }
