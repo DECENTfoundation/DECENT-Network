@@ -59,6 +59,8 @@ script:
   - DECENT_CMAKE_TARGET_INSTALL="install"
   - DECENT_CMAKE_EXTRA_BUILD_PARAMS="-j 3 -l 3.0 VERBOSE=1"
   - if [ "$DECENT_CMAKE_GENERATOR" == "Xcode" ] ; then unset CC && unset CXX && DECENT_CMAKE_TARGET_ALL="ALL_BUILD" && DECENT_CMAKE_EXTRA_BUILD_PARAMS="-jobs 3 -verbose" ; fi
+  - env | sort
+  - ( set -o posix ; set ) | sort
   - mkdir -p $TRAVIS_BUILD_DIR/build && cd $TRAVIS_BUILD_DIR/build && cmake -D CMAKE_BUILD_TYPE="$DECENT_CMAKE_BUILD_TYPE" -G "$DECENT_CMAKE_GENERATOR" .. && cmake --build . --target "$DECENT_CMAKE_TARGET_ALL" -- $DECENT_CMAKE_EXTRA_BUILD_PARAMS && cmake --build . --target "$DECENT_CMAKE_TARGET_INSTALL"
 
 notifications:
