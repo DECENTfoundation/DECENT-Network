@@ -45,7 +45,7 @@ For Ubuntu 16.04 LTS (for extra actions needed for 14.04 LTS, 14.10, or 16.10 se
     $ tar xvf cmake-3.7.2.tar.gz
     $ mkdir cmake-3.7.2_prefix
     $ cd cmake-3.7.2
-    $ export CMAKE_ROOT=$(realpath ../cmake-3.7.2_prefix)
+    $ CMAKE_ROOT=$(realpath ../cmake-3.7.2_prefix)
     $ ./configure --prefix=$CMAKE_ROOT
     $ make
     $ make install
@@ -53,7 +53,7 @@ For Ubuntu 16.04 LTS (for extra actions needed for 14.04 LTS, 14.10, or 16.10 se
     $ rm -rf cmake-3.7.2
     $ export PATH=$CMAKE_ROOT/bin:$PATH
 
-At this point, `cmake` command should be picked up from `$CMAKE_ROOT/bin`, and CMake configure should found the Boost distribution in exported `$BOOST_ROOT`.
+At this point, `cmake` command should be picked up from `$CMAKE_ROOT/bin`, and CMake configure should find the Boost distribution in the exported `$BOOST_ROOT`.
 
 
 For Fedora 25 or later, execute in console:
