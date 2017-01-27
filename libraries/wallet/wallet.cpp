@@ -4320,9 +4320,12 @@ void wallet_api::packages_path(const std::string& packages_dir) const {
    package_manager::instance().initialize(packages_dir);
 }
 
-std::pair<string, decent::crypto::custody_data>  wallet_api::create_package(const std::string& content_dir, const std::string& samples_dir, const std::string& aes_key) const {
+std::pair<string, decent::crypto::custody_data>  wallet_api::create_package(const std::string& content_dir, const std::string& samples_dir, const d_integer& aes_key) const {
+   fc::sha512 key1; 
+   aes_key.Encode((byte*)key1._hash, 64);
+
    decent::crypto::custody_data cd;
-   package_object pack = package_manager::instance().create_package(content_dir, samples_dir, fc::sha512(aes_key), cd);
+   package_object pack = package_manager::instance().create_package(content_dir, samples_dir, key1, cd);
    return std::pair<string, decent::crypto::custody_data>(pack.get_hash().str(), cd);
 }
 
