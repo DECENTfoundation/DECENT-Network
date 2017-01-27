@@ -176,7 +176,7 @@ encryption_results el_gamal_decrypt(const ciphertext &input, const d_integer &pr
 
 d_integer hash_elements(ciphertext t1, ciphertext t2, d_integer key1, d_integer key2, d_integer G1, d_integer G2, d_integer G3)
 {
-   //std::cout <<"hash params: "<<t1.C1.to_string()<<t1.D1.to_string()<< t2.C1.to_string()<<t2.D1.to_string()<< key1.to_string()<<key2.to_string()<<G1.to_string()<<G2.to_string()<<G3.to_string() <<"\n";
+   std::cout <<"hash params: "<<t1.C1.to_string()<<t1.D1.to_string()<< t2.C1.to_string()<<t2.D1.to_string()<< key1.to_string()<<key2.to_string()<<G1.to_string()<<G2.to_string()<<G3.to_string() <<"\n";
 
    CryptoPP::Weak1::MD5 hashier;
    size_t hashSpace =9*(DECENT_EL_GAMAL_GROUP_ELEMENT_SIZE);
@@ -210,9 +210,9 @@ d_integer hash_elements(ciphertext t1, ciphertext t2, d_integer key1, d_integer 
    G3.Encode(tmp,DECENT_EL_GAMAL_GROUP_ELEMENT_SIZE);
    hashier.Update(tmp, DECENT_EL_GAMAL_GROUP_ELEMENT_SIZE);
 
-   byte digest[32];
+   byte digest[16];
    hashier.Final(digest);
-   CryptoPP::Integer x(digest, 32);
+   CryptoPP::Integer x(digest, 16);
 
    return x;
 }
