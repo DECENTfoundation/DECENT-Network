@@ -127,7 +127,7 @@ asset asset_object::amount_from_string(string amount_string) const
    {
       const size_t max_rhs_size = std::to_string( scaled_precision.value ).substr( 1 ).size();
 
-      string rhs = amount_string.substr( decimal_pos + 1 );
+      string rhs = amount_string.substr( decimal_pos + 1, precision );
       FC_ASSERT( rhs.size() <= max_rhs_size );
 
       while( rhs.size() < max_rhs_size )

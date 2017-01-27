@@ -142,6 +142,21 @@ void test_custody(){
    if(c.verify_by_miner(cd, proof))
       std::cout <<"Something wrong during verification...\n";
 }
+void test_key_manipulation()
+{
+   d_integer initial_key(123456789);
+   char* buffer = (char*)malloc(1000);
+   initial_key.Encode((byte*)buffer, 1000);
+   fc::sha512 key1;
+   for(int i=0; i<8; i++) key1._hash[i]=buffer[i];
+
+   decent::crypto::aes_key k;
+   for (int i = 0; i < CryptoPP::AES::MAX_KEYLENGTH; i++)
+      k.key_byte[i] = key1.data()[i];
+
+
+
+}
 
 int main(int argc, char**argv)
 {
@@ -150,7 +165,7 @@ int main(int argc, char**argv)
 //      k.key_byte[i]=i;
  //  test_aes(k);
    cout<<"AES finished \n";
-
+   test_key_manipulation();
 //   test_el_gamal(k);
 //   const CryptoPP::Integer secret("12354678979464");
  //  test_shamir(secret);

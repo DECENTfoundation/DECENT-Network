@@ -221,6 +221,8 @@ bool
 verify_delivery_proof(const delivery_proof &proof, const ciphertext &first, const ciphertext &second,
                       const d_integer &firstPulicKey, const d_integer &secondPublicKey)
 {
+   elog("verify_delivery_proof called with params ${p} ${f} ${s} ${pk1} ${pk2}",("p", proof)("f", first)("s", second)("pk1", firstPulicKey)("pk2", secondPublicKey));
+
    ElGamalKeys::PublicKey key1;
    key1.AccessGroupParameters().Initialize(DECENT_EL_GAMAL_MODULUS_512, DECENT_EL_GAMAL_GROUP_GENERATOR);
    key1.SetPublicElement(firstPulicKey);
@@ -230,7 +232,7 @@ verify_delivery_proof(const delivery_proof &proof, const ciphertext &first, cons
    key2.SetPublicElement(secondPublicKey);
 
    d_integer x = hash_elements(first, second, firstPulicKey, secondPublicKey, proof.G1, proof.G2, proof.G3);
-   //std::cout <<"hash inside verify proof is: "<<x.to_string()<<"\n";
+   std::cout <<"hash inside verify proof is: "<<x.to_string()<<"\n";
 
    ElGamal::GroupParameters groupParams;
    ModularArithmetic mr(DECENT_EL_GAMAL_MODULUS_512);
@@ -238,7 +240,7 @@ verify_delivery_proof(const delivery_proof &proof, const ciphertext &first, cons
    d_integer t1 = mr.Exponentiate(DECENT_EL_GAMAL_GROUP_GENERATOR, proof.s);
    d_integer t2 = mr.Multiply(mr.Exponentiate(key1.GetPublicElement(), x), proof.G1);
 
-   //std::cout << "T1: "<<t1.to_string()<<"\nT2: "<<t2.to_string()<<"\n";
+   std::cout << "T1: "<<t1.to_string()<<"\nT2: "<<t2.to_string()<<"\n";
 
    if(t1 != t2)
       return false;
@@ -306,7 +308,7 @@ encrypt_with_proof(const point &message, const d_integer &privateKey, const d_in
 
       d_integer x = hash_elements(incoming, outgoing, myPublicElement, public_key.GetPublicElement(), proof.G1, proof.G2, proof.G3);
 
-      //std::cout <<"hash inside encrypt with proof is: "<<x.to_string()<<"\n";
+      std::cout <<"hash inside encrypt with proof is: "<<x.to_string()<<"\n";
       proof.s = privateExponent * x + b1;
       proof.r = randomizer * x + b2;
       elog("encrypt_with_proof returns ${o} ${p}",("o", outgoing)("p", proof));
