@@ -37,7 +37,6 @@ public:
 	virtual void download_package(transfer_id id, const std::string& url, transfer_listener* listener);
 
 	virtual std::string       get_transfer_url(transfer_id id);
-	virtual transfer_progress get_transfer_progress(transfer_id id);
 	virtual void print_status();
 
 	virtual package_transfer_interface* clone() {
@@ -47,13 +46,15 @@ public:
 private:
 	void handle_torrent_alerts();
 	void update_torrent_status();
+	package::package_object check_and_install_package();
 	
 private:
 	fc::thread* 		 _my_thread;
 	std::string 		 _url;
 	transfer_id    		 _id;
 	transfer_listener*   _listener;
-
+	std::ofstream		 _transfer_log;
+	bool 				 _is_upload;
 	libtorrent::session         _session;
 	libtorrent::torrent_handle  _torrent_handle;
 };
