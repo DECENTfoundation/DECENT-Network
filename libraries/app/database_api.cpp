@@ -143,7 +143,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       optional<buying_history_object> get_buying_history_object( const buying_id_type& buying )const;
       optional<content_object> get_content( const string& URI )const;
       vector<content_object> list_content_by_author( const account_id_type& author )const;
-      vector<content_object> list_content( const string& URI_begin, uint32_t count)const;
+      vector<content_summary> list_content( const string& URI_begin, uint32_t count)const;
       vector<content_object> list_content_by_bought( const uint32_t count )const;
       vector<seeder_object> list_publishers_by_price( const uint32_t count )const;
       vector<uint64_t> get_content_ratings( const string& URI)const;
@@ -1755,17 +1755,17 @@ vector<content_object> database_api_impl::list_content_by_author( const account_
    FC_CAPTURE_AND_RETHROW( (author) );
 }
 
-vector<content_object> database_api::list_content( const string& URI_begin, uint32_t count)const
+vector<content_summary> database_api::list_content( const string& URI_begin, uint32_t count)const
 {
    return my->list_content( URI_begin, count);
 }
 
-vector<content_object> database_api_impl::list_content( const string& URI_begin, uint32_t count)const
+vector<content_summary> database_api_impl::list_content( const string& URI_begin, uint32_t count)const
 {
    FC_ASSERT( count <= 100 );
    const auto& idx = _db.get_index_type<content_index>().indices().get<by_URI>();
 
-   vector<content_object> result;
+   vector<content_summary> result;
    result.reserve( count );
 
    auto itr = idx.lower_bound( URI_begin );
@@ -1773,8 +1773,9 @@ vector<content_object> database_api_impl::list_content( const string& URI_begin,
    if(URI_begin == "")
       itr = idx.begin();
 
+   content_summary content;
    while(count-- && itr != idx.end())
-      result.emplace_back(*itr++);
+      result.emplace_back( content.set( *itr++ ) );
 
    return result;
 }

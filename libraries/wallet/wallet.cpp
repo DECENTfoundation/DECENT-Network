@@ -4285,7 +4285,7 @@ vector<content_object> wallet_api::list_content_by_author( const account_id_type
    return my->_remote_db->list_content_by_author( author );
 }
 
-vector<content_object> wallet_api::list_content( const string& URI, uint32_t count)const
+vector<content_summary> wallet_api::list_content( const string& URI, uint32_t count)const
 {
    return my->_remote_db->list_content( URI, count );
 }

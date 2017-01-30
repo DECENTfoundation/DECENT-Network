@@ -12,7 +12,20 @@
 
 namespace graphene { namespace chain {
 using namespace decent::crypto;
-   
+
+   class content_object;
+
+   struct content_summary
+   {
+      string author;
+      string price;
+      string synopsis;
+      string URI;
+      string AVG_rating;
+
+      content_summary& set( const content_object& obj );
+   };
+
    class content_object : public graphene::db::abstract_object<content_object>
    {
    public:
@@ -73,3 +86,5 @@ using namespace decent::crypto;
 FC_REFLECT_DERIVED(graphene::chain::content_object,
                    (graphene::db::object),
                    (author)(expiration)(created)(price)(size)(synopsis)(URI)(quorum)(key_parts)(_hash)(last_proof)(AVG_rating)(total_rating)(times_bought)(publishing_fee_escrow)(cd) )
+
+FC_REFLECT( graphene::chain::content_summary, (author)(price)(synopsis)(URI)(AVG_rating) )
