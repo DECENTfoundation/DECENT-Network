@@ -138,6 +138,9 @@ namespace {
 
 torrent_transfer::torrent_transfer() {
 	_my_thread = new fc::thread("torrent_thread");
+
+
+
 	libtorrent::settings_pack p = _session.get_settings();
 	p.set_bool(libtorrent::settings_pack::enable_lsd, true);
 	p.set_bool(libtorrent::settings_pack::enable_upnp, true);
@@ -176,6 +179,8 @@ torrent_transfer::torrent_transfer() {
 torrent_transfer::~torrent_transfer() {
 	entry session_state;
 	_session.save_state(session_state, session::save_dht_state);
+	
+	_transfer_log.close();
 
 	std::vector<char> out;
 	bencode(std::back_inserter(out), session_state);
@@ -235,6 +240,17 @@ void torrent_transfer::print_status() {
 void torrent_transfer::upload_package(transfer_id id, const package_object& package, transfer_listener* listener) {
 	_id = id;
 	_listener = listener;
+	_is_upload = true;
+
+	_my_thread->async([this, package] () {
+	
+		path log_path = package_manager::instance().get_packages_path() / "transfer.log";
+		this->_transfer_log.open(log_path.string(), std::ios::out | std::ios::app);
+		this->_transfer_log << "***** Torrent upload started for package: " << package.get_hash().str() << endl;
+    
+    });
+
+
 
 	file_storage fs;
 	libtorrent::error_code ec;
@@ -282,7 +298,7 @@ void torrent_transfer::upload_package(transfer_id id, const package_object& pack
 	atp.dht_nodes.push_back(std::make_pair("router.bitcomet.com", 6881));
 	atp.dht_nodes.push_back(std::make_pair("dht.aelitis.com", 6881));
 
-	int num_pieces = atp.ti->num_pieces();
+	//int num_pieces = atp.ti->num_pieces();
 
 
 	_torrent_handle = _session.add_torrent(atp);
@@ -292,7 +308,11 @@ void torrent_transfer::upload_package(transfer_id id, const package_object& pack
 
 
 	_url = make_magnet_uri(_torrent_handle);
-	cout << "Magnet URL: " << _url << endl;
+
+	_my_thread->async([this] () {
+		this->update_torrent_status();
+		_listener->on_upload_started(_id, _url);
+	});
 
 }
 
@@ -300,6 +320,16 @@ void torrent_transfer::download_package(transfer_id id, const std::string& url, 
 	_id = id;
 	_listener = listener;
 	_url = url;
+	_is_upload = false;
+
+	_my_thread->async([this, url] () {
+	
+		path log_path = package_manager::instance().get_packages_path() / "transfer.log";
+		this->_transfer_log.open(log_path.string(), std::ios::out | std::ios::app);
+		this->_transfer_log << "***** Torrent download started from url: " << url << endl;
+    
+    });
+
 
 	libtorrent::add_torrent_params atp;
 	atp.url = url.c_str();
@@ -317,26 +347,65 @@ void torrent_transfer::download_package(transfer_id id, const std::string& url, 
 	cout << "Save path is: " << atp.save_path << endl;
 
 	_torrent_handle = _session.add_torrent(atp);
+
+	_my_thread->async([this] () {
+		this->update_torrent_status(); 
+        _listener->on_download_started(_id);
+	});
 }
 
 
 
 void torrent_transfer::update_torrent_status() {
+
+	_session.post_torrent_updates();
+	_session.post_session_stats();
+	_session.post_dht_stats();
+	_session.post_torrent_updates();
+
 	libtorrent::torrent_status st = _torrent_handle.status();
 
 	bool is_finished = st.state == libtorrent::torrent_status::finished || st.state == libtorrent::torrent_status::seeding;
 	bool is_error = st.errc != 0;
 
-	if (!is_finished && !is_error) {
-		_my_thread->schedule([this] () {
-        	this->update_torrent_status();
-        }, fc::time_point::now() + fc::seconds(5));
-	}
+
 	if (is_error) {
 		_listener->on_error(_id, st.errc.message());
 	} else {
-		_listener->on_download_progress(_id, transfer_progress(st.total_wanted, st.total_wanted_done, st.download_rate));
+		if (!_is_upload && st.total_wanted != 0) {
+            
+			if (st.total_wanted_done < st.total_wanted) {
+				_listener->on_download_progress(_id, transfer_progress(st.total_wanted, st.total_wanted_done, st.download_rate));
+			} else {
+				package::package_object obj = check_and_install_package();
+				if (obj.verify_hash()) {
+					_listener->on_download_finished(_id, obj);
+				} else {
+					_listener->on_error(_id, "Can not verify package hash");
+				}
+			}
+
+		}
 	}
+    
+    if (!is_error) {
+        _my_thread->schedule([this] () {
+            this->update_torrent_status();
+        }, fc::time_point::now() + fc::seconds(5));
+    }
+}
+
+
+package_object torrent_transfer::check_and_install_package() {
+	torrent_status st = _torrent_handle.status(torrent_handle::query_save_path | torrent_handle::query_name);
+    package::package_object obj(path(st.save_path) / st.name);
+
+    if (!obj.verify_hash()) {
+    	FC_THROW("Unable to verify downloaded package");    
+    }
+
+    rename(path(st.save_path) / st.name, package_manager::instance().get_packages_path() / st.name);
+    return package::package_object(package_manager::instance().get_packages_path() / st.name);
 }
 
 
@@ -345,38 +414,41 @@ void torrent_transfer::handle_torrent_alerts() {
 	std::vector<libtorrent::alert*> alerts;
 	_session.pop_alerts(&alerts);
 
+
+	path log_path = package_manager::instance().get_packages_path() / "transfer.log";
+	_transfer_log.open(log_path.string(), std::ios::out | std::ios::app);
+
 	for (int i = 0; i < alerts.size(); ++i) {
 		libtorrent::alert* alert = alerts[i];
-
-		switch (alert->type()) {
-			case libtorrent::torrent_added_alert::alert_type:
-				_listener->on_download_started(_id);
-
-				_my_thread->schedule([this] () {
-		        	this->update_torrent_status();           
-		        }, fc::time_point::now() + fc::seconds(5));
-				break;
-
-			case libtorrent::torrent_finished_alert::alert_type:
-            	_listener->on_download_finished(_id, package_manager::instance().get_package_object(fc::ripemd160("22ad84efeca3776a4e37b738eab728abcedc92d8")));
-				break;
-
-			//case libtorrent::tracker_error_alert::alert_type:
-			//case libtorrent::peer_error_alert::alert_type:
-			case libtorrent::file_error_alert::alert_type:
-			//case libtorrent::udp_error_alert::alert_type:
-			//case libtorrent::portmap_error_alert::alert_type:
-			case libtorrent::torrent_error_alert::alert_type:
-			//case libtorrent::dht_error_alert::alert_type:
-			//case libtorrent::lsd_error_alert::alert_type:
-            	_listener->on_error(_id, alert->message()); 
-            	break;
-
-			
-		}
 		
-		//cout << "Torrent alert: " << alert->message() << endl;
+		_transfer_log << "[";
+
+		int cat = alert->category();
+
+		if (cat & libtorrent::alert::error_notification) _transfer_log << " ERROR";
+		if (cat & libtorrent::alert::peer_notification) _transfer_log << " PEER";
+		if (cat & libtorrent::alert::port_mapping_notification) _transfer_log << " PORT_MAP";
+		if (cat & libtorrent::alert::storage_notification) _transfer_log << " STORAGE";
+		if (cat & libtorrent::alert::tracker_notification) _transfer_log << " TRACKER";
+		if (cat & libtorrent::alert::debug_notification) _transfer_log << " DEBUG";
+		if (cat & libtorrent::alert::status_notification) _transfer_log << " STATUS";
+		if (cat & libtorrent::alert::progress_notification) _transfer_log << " PROGRESS";
+		if (cat & libtorrent::alert::ip_block_notification) _transfer_log << " IPBLOCK";
+		if (cat & libtorrent::alert::performance_warning) _transfer_log << " PERFORMANCE";
+		if (cat & libtorrent::alert::dht_notification) _transfer_log << " DHT";
+		if (cat & libtorrent::alert::stats_notification) _transfer_log << " STATS";
+		if (cat & libtorrent::alert::session_log_notification) _transfer_log << " SESSION";
+		if (cat & libtorrent::alert::torrent_log_notification) _transfer_log << " TORRENT";
+		if (cat & libtorrent::alert::peer_log_notification) _transfer_log << " PEERL";
+		if (cat & libtorrent::alert::incoming_request_notification) _transfer_log << " INREQ";
+		if (cat & libtorrent::alert::dht_log_notification) _transfer_log << " DHT_L";
+		if (cat & libtorrent::alert::dht_operation_notification) _transfer_log << " DHT_OP";
+		if (cat & libtorrent::alert::port_mapping_log_notification) _transfer_log << " PORM_MAPL";
+		if (cat & libtorrent::alert::picker_log_notification) _transfer_log << " PICKERL";
+
+		_transfer_log << "] ~> [" << alert->what() << "]: " << alert->message() << endl;
 	}
+	_transfer_log.close();
 }
 
 
@@ -385,9 +457,6 @@ std::string torrent_transfer::get_transfer_url(transfer_id id) {
 	return _url;
 }
 
-torrent_transfer::transfer_progress torrent_transfer::get_transfer_progress(transfer_id id) {
-	return transfer_progress(1000, 800, 120);
-}
 
 
 

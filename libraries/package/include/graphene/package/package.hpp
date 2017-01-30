@@ -65,8 +65,6 @@ public:
 		virtual void on_download_progress(transfer_id id, transfer_progress progress) = 0;
 
 		virtual void on_upload_started(transfer_id id, const std::string& url) = 0;
-		virtual void on_upload_finished(transfer_id id) = 0;
-		virtual void on_upload_progress(transfer_id id, transfer_progress progress) = 0;
 
 		virtual void on_error(transfer_id id, std::string error) = 0;
 	};
@@ -78,7 +76,6 @@ public:
 	virtual void print_status() = 0;
 
 	virtual std::string       get_transfer_url(transfer_id id) = 0;
-	virtual transfer_progress get_transfer_progress(transfer_id id) = 0;
 
 	virtual package_transfer_interface* clone() = 0;
 };
@@ -141,12 +138,11 @@ public:
 	void                        delete_package(fc::ripemd160 hash);
 
 	std::string					get_transfer_url(package_transfer_interface::transfer_id id);
-	package_transfer_interface::transfer_progress	get_transfer_progress(package_transfer_interface::transfer_id id);
 
 
 	decent::crypto::custody_utils& get_custody_utils() { return _custody_utils; }
-
-
+	boost::filesystem::path get_packages_path() const { return _packages_directory; }
+	
 	void print_all_transfers();
 
 private:
