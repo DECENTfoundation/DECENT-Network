@@ -4321,7 +4321,7 @@ void wallet_api::packages_path(const std::string& packages_dir) const {
 }
 
 std::pair<string, decent::crypto::custody_data>  wallet_api::create_package(const std::string& content_dir, const std::string& samples_dir, const d_integer& aes_key) const {
-   fc::sha512 key1; 
+   fc::sha512 key1;
    aes_key.Encode((byte*)key1._hash, 64);
 
    decent::crypto::custody_data cd;

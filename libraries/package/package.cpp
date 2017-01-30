@@ -452,7 +452,12 @@ package_manager::upload_package( const package_object& package,
     t.listener = &listener;
     t.job_type = transfer_job::UPLOAD;
 
-    t.transport->upload_package(t.job_id, package, &listener);
+    try {
+        t.transport->upload_package(t.job_id, package, &listener);
+    } catch(std::exception& ex) {
+        std::cout << "Upload error: " << ex.what() << std::endl;
+    }
+
 
     return t.job_id;
 }
@@ -476,7 +481,11 @@ package_manager::download_package( const string& url,
     t.listener = &listener;
     t.job_type = transfer_job::DOWNLOAD;
 
-    t.transport->download_package(t.job_id, url, &listener);
+    try {
+        t.transport->download_package(t.job_id, url, &listener);
+    } catch(std::exception& ex) {
+        std::cout << "Download error: " << ex.what() << std::endl;
+    }
 
     return t.job_id;
 }
@@ -500,18 +509,6 @@ std::string package_manager::get_transfer_url(package_transfer_interface::transf
     transfer_job& job = _all_transfers[id];
     return job.transport->get_transfer_url(id);
 }
-
-package_transfer_interface::transfer_progress
-package_manager::get_transfer_progress(package_transfer_interface::transfer_id id) {
-    if (id >= _all_transfers.size()) {
-        FC_THROW("Invalid transfer id: ${id}", ("id", id) );
-    }
-
-    transfer_job& job = _all_transfers[id];
-    return job.transport->get_transfer_progress(id);
-}
-
-
 
 
 std::vector<package_object> package_manager::get_packages() {
