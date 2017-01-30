@@ -1774,8 +1774,13 @@ vector<content_summary> database_api_impl::list_content( const string& URI_begin
       itr = idx.begin();
 
    content_summary content;
+   const auto& idx2 = _db.get_index_type<account_index>().indices().get<by_id>();
+
    while(count-- && itr != idx.end())
-      result.emplace_back( content.set( *itr++ ) );
+   {
+      const auto& account = idx2.find(itr->author);
+      result.emplace_back( content.set( *itr++ , *account ) );
+   }
 
    return result;
 }

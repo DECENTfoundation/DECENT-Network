@@ -1,14 +1,17 @@
 #include <graphene/chain/content_object.hpp>
+#include <graphene/chain/account_object.hpp>
+#include <graphene/chain/database.hpp>
 
 namespace graphene { namespace chain {
-   
-   content_summary& content_summary::set( const content_object& obj )
+
+
+   content_summary& content_summary::set( const content_object& co, const account_object& ao )
    {
-      this->author = string( object_id_type( obj.author ) );
-      this->price = std::to_string( obj.price.amount.value ) + " " + string( object_id_type( obj.price.asset_id ) );
-      this->synopsis = obj.synopsis;
-      this->URI = obj.URI;
-      this->AVG_rating = std::to_string(obj.AVG_rating);
+      this->author = ao.name;
+      this->price = co.price;
+      this->synopsis = co.synopsis;
+      this->URI = co.URI;
+      this->AVG_rating = co.AVG_rating;
       return *this;
    }
    

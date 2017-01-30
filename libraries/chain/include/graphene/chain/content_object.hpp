@@ -13,17 +13,15 @@
 namespace graphene { namespace chain {
 using namespace decent::crypto;
 
-   class content_object;
-
    struct content_summary
    {
       string author;
-      string price;
+      asset price;
       string synopsis;
       string URI;
-      string AVG_rating;
+      uint32_t AVG_rating;
 
-      content_summary& set( const content_object& obj );
+      content_summary& set( const content_object& co, const account_object& ao );
    };
 
    class content_object : public graphene::db::abstract_object<content_object>
