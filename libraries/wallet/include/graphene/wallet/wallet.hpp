@@ -1925,7 +1925,7 @@ class wallet_api
        * @param aes_key AES enryption key
        * @return package hash (ripemd160 hash of package content) and content custody data
        */
-      std::pair<string, decent::crypto::custody_data> create_package(const std::string& content_dir, const std::string& samples_dir, const std::string& aes_key) const;
+      std::pair<string, decent::crypto::custody_data> create_package(const std::string& content_dir, const std::string& samples_dir, const d_integer& aes_key) const;
 
       /**
        * @brief Extract selected package

@@ -225,6 +225,7 @@ namespace graphene { namespace chain {
               so.free_space = o.space;
               so.pubKey = o.pubKey;
               so.price = asset(o.price_per_MByte);
+              so.expiration = db().head_block_time() + 24 * 3600;
          });
       } else{
          db().modify<seeder_object>(*sor,[&](seeder_object &so) {

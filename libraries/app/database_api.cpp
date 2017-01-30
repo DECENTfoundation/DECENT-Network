@@ -1814,7 +1814,13 @@ vector<seeder_object> database_api_impl::list_publishers_by_price( uint32_t coun
    auto itr = idx.begin();
 
    while(count-- && itr != idx.end())
-      result.emplace_back(*itr++);
+   {
+      if( itr->expiration >= _db.head_block_time() ) 
+         result.emplace_back(*itr); 
+      else
+         ++count;
+       ++itr;
+   }
 
    return result;
 }
