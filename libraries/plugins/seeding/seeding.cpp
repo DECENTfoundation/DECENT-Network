@@ -24,20 +24,25 @@ graphene::chain::database &seeding_plugin_impl::database() {
 
 void seeding_plugin_impl::on_operation(const operation_history_object &op_obj) {
    graphene::chain::database &db = database();
-   if(!db.is_undo_enabled()) {
-      ilog("not producing yet");
-      return;
-   }
+
+   elog("seeding_plugin_impl::on_operation starting for operation ${o}", ("o",op_obj));
    if( op_obj.op.which() == operation::tag<request_to_buy_operation>::value ) {
+      if(!db.is_undo_enabled()) {
+         elog("seeding_plugin_impl::on_operation not producing yet");
+         return;
+      }
+      elog("seeding plugin:  on_operation() handling request_to_buy");
       const request_to_buy_operation &rtb_op = op_obj.op.get<request_to_buy_operation>();
       const auto &idx = db.get_index_type<my_seeding_index>().indices().get<by_URI>();
       const auto &sitr = idx.find(rtb_op.URI);
       if( sitr == idx.end())
          return;
+
       const auto &sidx = db.get_index_type<my_seeder_index>().indices().get<by_seeder>();
       const auto &sritr = sidx.find(sitr->seeder);
       FC_ASSERT(sritr != sidx.end());
 
+      elog("seeding plugin: this is my content...");
       //ok, this is our seeding... we shall generate deliver keys out of it...
       account_object seeder_account = db.get<account_object>(sitr->seeder);
 
@@ -83,7 +88,7 @@ void seeding_plugin_impl::on_operation(const operation_history_object &op_obj) {
    }
 
    if( op_obj.op.which() == operation::tag<content_submit_operation>::value ) {
-      ilog("seeding plugin:  on_operation() handling new content");
+      elog("seeding plugin:  on_operation() handling new content");
       const content_submit_operation &cs_op = op_obj.op.get<content_submit_operation>();
       const auto &idx = db.get_index_type<my_seeder_index>().indices().get<by_seeder>();
       auto seeder_itr = idx.begin();
@@ -229,6 +234,18 @@ void seeding_plugin::plugin_startup()
 {
    if(!my)
       return;
+   const auto& sidx = database().get_index_type<my_seeder_index>().indices().get<by_seeder>();
+   auto sitr = sidx.begin();
+   while(sitr!=sidx.end()){
+      idump((*sitr));
+      ++sitr;
+   }
+   const auto& cidx = database().get_index_type<my_seeding_index>().indices().get<by_URI>();
+   auto citr = cidx.begin();
+   while(citr!=cidx.end()){
+      idump((*citr));
+      ++citr;
+   }
    ilog("seeding plugin:  plugin_startup() start");
    my->service_thread->schedule([this](){ilog("generating first ready to publish");my->send_ready_to_publish(); }, ( fc::time_point::now()  + fc::microseconds(15000000)), "Seeding plugin RtP generate");
    ilog("seeding plugin:  plugin_startup() end");
@@ -304,13 +321,15 @@ void seeding_plugin::plugin_initialize( const boost::program_options::variables_
       database().on_applied_operation.connect( [&]( const operation_history_object& b ){ my->on_operation(b); } );
 
       ilog("seeding plugin:  plugin_initialize() seeder prepared");
-      database().create<my_seeder_object>([&](my_seeder_object &mso) {
-           mso.seeder = seeder;
-           mso.free_space = free_space;
-           mso.content_privKey = content_key;
-           mso.privKey = *private_key;
-           mso.price = price;
-      });
+      try {
+         database().create<my_seeder_object>([&](my_seeder_object &mso) {
+              mso.seeder = seeder;
+              mso.free_space = free_space;
+              mso.content_privKey = content_key;
+              mso.privKey = *private_key;
+              mso.price = price;
+         });
+      }catch(...){}
    }
    ilog("seeding plugin:  plugin_initialize() end");
 }FC_LOG_AND_RETHROW() }
