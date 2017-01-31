@@ -1876,7 +1876,7 @@ class wallet_api
        * @return The contents found
        * @ingroup WalletCLI
        */
-      vector<content_object> list_content( const string& URI_begin, uint32_t count )const;
+      vector<content_summary> list_content( const string& URI_begin, uint32_t count )const;
 
 
       /**

@@ -30,6 +30,20 @@
 
 using namespace graphene::chain;
 
+namespace {
+
+   void remove_trailing_zeros(std::string& str) { 
+      int offset = 1; 
+      if (str.find_last_not_of('0') == str.find('.')) { 
+         offset = 0; 
+      } 
+      str.erase(str.find_last_not_of('0') + offset, std::string::npos); 
+   } 
+
+}
+
+
+
 share_type asset_bitasset_data_object::max_force_settlement_volume(share_type current_supply) const
 {
    if( options.maximum_force_settlement_volume == 0 )
@@ -88,62 +102,66 @@ void graphene::chain::asset_bitasset_data_object::update_median_feeds(time_point
    current_feed = median_feed;
 }
 
-
-
 asset asset_object::amount_from_string(string amount_string) const
-{ try {
-   bool negative_found = false;
-   bool decimal_found = false;
-   for( const char c : amount_string )
-   {
-      if( isdigit( c ) )
-         continue;
+{ 
 
-      if( c == '-' && !negative_found )
+   try {
+      remove_trailing_zeros(amount_string);
+
+      bool negative_found = false;
+      bool decimal_found = false;
+      for( const char c : amount_string )
       {
-         negative_found = true;
-         continue;
+         if( isdigit( c ) )
+            continue;
+
+         if( c == '-' && !negative_found )
+         {
+            negative_found = true;
+            continue;
+         }
+
+         if( c == '.' && !decimal_found )
+         {
+            decimal_found = true;
+            continue;
+         }
+
+         FC_THROW( (amount_string) );
       }
 
-      if( c == '.' && !decimal_found )
+      share_type satoshis = 0;
+
+      share_type scaled_precision = asset::scaled_precision( precision );
+
+      const auto decimal_pos = amount_string.find( '.' );
+      const string lhs = amount_string.substr( negative_found, decimal_pos );
+      if( !lhs.empty() )
+         satoshis += fc::safe<int64_t>(std::stoll(lhs)) *= scaled_precision;
+
+      if( decimal_found )
       {
-         decimal_found = true;
-         continue;
+         const size_t max_rhs_size = std::to_string( scaled_precision.value ).substr( 1 ).size();
+
+         string rhs = amount_string.substr( decimal_pos + 1, precision );
+         FC_ASSERT( rhs.size() <= max_rhs_size );
+
+         while( rhs.size() < max_rhs_size )
+            rhs += '0';
+
+         if( !rhs.empty() )
+            satoshis += std::stoll( rhs );
       }
 
-      FC_THROW( (amount_string) );
-   }
+      FC_ASSERT( satoshis <= GRAPHENE_MAX_SHARE_SUPPLY );
 
-   share_type satoshis = 0;
+      if( negative_found )
+         satoshis *= -1;
 
-   share_type scaled_precision = asset::scaled_precision( precision );
+      return amount(satoshis);
+   } FC_CAPTURE_AND_RETHROW( (amount_string) ) 
 
-   const auto decimal_pos = amount_string.find( '.' );
-   const string lhs = amount_string.substr( negative_found, decimal_pos );
-   if( !lhs.empty() )
-      satoshis += fc::safe<int64_t>(std::stoll(lhs)) *= scaled_precision;
-
-   if( decimal_found )
-   {
-      const size_t max_rhs_size = std::to_string( scaled_precision.value ).substr( 1 ).size();
-
-      string rhs = amount_string.substr( decimal_pos + 1, precision );
-      FC_ASSERT( rhs.size() <= max_rhs_size );
-
-      while( rhs.size() < max_rhs_size )
-         rhs += '0';
-
-      if( !rhs.empty() )
-         satoshis += std::stoll( rhs );
-   }
-
-   FC_ASSERT( satoshis <= GRAPHENE_MAX_SHARE_SUPPLY );
-
-   if( negative_found )
-      satoshis *= -1;
-
-   return amount(satoshis);
-   } FC_CAPTURE_AND_RETHROW( (amount_string) ) }
+}
 
 string asset_object::amount_to_string(share_type amount) const
 {

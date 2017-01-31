@@ -21,7 +21,6 @@ namespace graphene { namespace chain {
       asset price;
       time_point_sec expiration;
       decent::crypto::d_integer_string pubKey;
-
    };
    
    struct by_seeder;
