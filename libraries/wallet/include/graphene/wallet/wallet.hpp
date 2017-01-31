@@ -1732,15 +1732,16 @@ class wallet_api
      * @param publishing_fee_amount
      * @param synopsis
      * @param secret
+     * @param cd
      * @param broadcast true to broadcast the transaction on the network
      * @return
      * @ingroup WalletCLI
      */
-      signed_transaction
+    signed_transaction
       submit_content(string author, string URI, string price_asset_name, string price_amount, uint64_t size,
                            fc::ripemd160 hash, vector<account_id_type> seeders, uint32_t quorum, fc::time_point_sec expiration,
                            string publishing_fee_asset, string publishing_fee_amount, string synopsis, d_integer secret,
-                           bool broadcast);
+                           decent::crypto::custody_data cd, bool broadcast);
 
     /**
      *
@@ -1789,15 +1790,16 @@ class wallet_api
      *
      * @param seeder
      * @param URI
-     * @param proof
+     * @param package
      * @param broadcast true to broadcast the transaction on the network
      * @return
      * @ingroup WalletCLI
      */
       signed_transaction proof_of_custody(string seeder,
                                           string URI,
-                                          vector<char> proof,
+                                          string package,
                                           bool broadcast = false);
+
 
     /**
      *
@@ -1874,7 +1876,7 @@ class wallet_api
        * @return The contents found
        * @ingroup WalletCLI
        */
-      vector<content_object> list_content( const string& URI_begin, uint32_t count )const;
+      vector<content_summary> list_content( const string& URI_begin, uint32_t count )const;
 
 
       /**
@@ -1900,6 +1902,72 @@ class wallet_api
        * @ingroup WalletCLI
        */
       vector<uint64_t> get_content_ratings( const string& URI )const;
+
+
+
+
+      /**
+       * @brief Get a list of packages
+       * @return The list of packages
+       */
+      vector<string> list_packages( ) const;
+      /**
+       * @brief Set directory of package manager packages
+       * @param packages_dir Directory in which all packages are located
+       * @return Nothing
+       */
+      void packages_path(const std::string& packages_dir) const;
+
+      /**
+       * @brief Create package from selected files
+       * @param content_dir Directory containing all content that should be packed
+       * @param samples_dir Directory containing samples of content
+       * @param aes_key AES enryption key
+       * @return package hash (ripemd160 hash of package content) and content custody data
+       */
+      std::pair<string, decent::crypto::custody_data> create_package(const std::string& content_dir, const std::string& samples_dir, const d_integer& aes_key) const;
+
+      /**
+       * @brief Extract selected package
+       * @param package_hash Hash of package that needs to be extracted
+       * @param output_dir Directory where extracted files will be created
+       * @param aes_key AES decryption key
+       * @return Nothing
+       */
+      void extract_package(const std::string& package_hash, const std::string& output_dir, const std::string& aes_key) const;
+
+      /**
+       * @brief Download package 
+       * @param url Magnet or IPFS URL of package
+       * @return nothing
+       */
+      void download_package(const std::string& url) const;
+
+      /**
+       * @brief Start uploading package
+       * @param package_hash Hash of package that needs to be extracted
+       * @param protocol protocol for uploading package magnet or ipfs
+       * @return nothing
+       */
+      void upload_package(const std::string& package_hash, const std::string& protocol) const;
+
+      /**
+       * @brief Remove package
+       * @param package_hash Hash of package that needs to be removed
+       * @return nothing
+       */
+      void remove_package(const std::string& package_hash) const;
+
+      /**
+       * @brief Print statuses of all active transfers
+       * @return nothing
+       */
+      void print_all_transfers() const;
+      /**
+       * @brief Print statuses of all active transfers
+       * @return nothing
+       */
+      void set_transfer_logs(bool enable) const;
 };
    
 } }
@@ -2078,4 +2146,13 @@ FC_API( graphene::wallet::wallet_api,
         (list_content_by_bought)
         (list_publishers_by_price)
         (get_content_ratings)
+        (list_packages)
+        (packages_path)
+        (create_package)
+        (extract_package)
+        (download_package)
+        (upload_package)
+        (remove_package)
+        (print_all_transfers)
+        (set_transfer_logs)
       )

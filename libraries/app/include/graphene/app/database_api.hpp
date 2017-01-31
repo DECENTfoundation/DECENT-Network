@@ -594,7 +594,7 @@ class database_api
        * @param count Maximum number of contents to fetch (must not exceed 100)
        * @return The contents found
        */
-      vector<content_object> list_content( const string& URI_begin, uint32_t count )const;
+      vector<content_summary> list_content( const string& URI_begin, uint32_t count )const;
 
 
       /**

@@ -29,8 +29,10 @@ namespace graphene { namespace chain {
       }
       FC_ASSERT( o.seeders.size() == o.key_parts.size() );
       FC_ASSERT( db().head_block_time() <= o.expiration);
-      fc::microseconds duration = (db().head_block_time() - o.expiration);
+      fc::microseconds duration = (o.expiration - db().head_block_time() );
       uint64_t days = duration.to_seconds() / 3600 / 24;
+      ilog("days: ${n}", ("n", days));
+      idump((total_price_per_day));
       FC_ASSERT( days*total_price_per_day <= o.publishing_fee );
       //TODO_DECENT - URI check, synopsis check
       //TODO_DECENT - what if it is resubmit? Drop 2
@@ -55,6 +57,7 @@ namespace graphene { namespace chain {
             itr2++;
          }
          co._hash = o.hash;
+         co.cd = o.cd;
          co.quorum = o.quorum;
          co.expiration = o.expiration;
          co.created = db().head_block_time();
@@ -87,16 +90,20 @@ namespace graphene { namespace chain {
    
    void_result request_to_buy_evaluator::do_apply(const request_to_buy_operation& o )
    {
-      db().create<buying_object>([&](buying_object& bo){
+      const auto& object = db().create<buying_object>([&](buying_object& bo){
            bo.consumer = o.consumer;
            bo.URI = o.URI;
            bo.expiration_time = db().head_block_time() + 24*3600;
            bo.pubKey = o.pubKey;
       });
+      elog("Created bying_object with id ${i}", ("i", object.id));
+
+      //TODO_DECENT block the price, save it to the buying object
    }
 
    void_result deliver_keys_evaluator::do_evaluate(const deliver_keys_operation& o )
    {try{
+      //TODO_DECENT rewrite the next statement!!!
       const auto& buying = db().get<buying_object>(o.buying);
       auto& idx = db().get_index_type<content_index>().indices().get<by_URI>();
 
@@ -112,7 +119,11 @@ namespace graphene { namespace chain {
       const auto& secondK = o.key;
       const auto& proof = o.proof;
       FC_ASSERT( decent::crypto::verify_delivery_proof( proof, firstK, secondK, seeder_pubKey, buyer_pubKey) );
-   }catch( ... )
+   }catch( const fc::exception& e )
+      {
+         wlog( "caught exception ${e} in do_evaluate()", ("e", e.to_detail_string()) );
+      }
+   catch( ... )
    {
       fc::unhandled_exception e( FC_LOG_MESSAGE( warn, "throw"), std::current_exception() );
       wlog( "${details}", ("details",e.to_detail_string()) ); 
@@ -121,15 +132,15 @@ namespace graphene { namespace chain {
    void_result deliver_keys_evaluator::do_apply(const deliver_keys_operation& o )
    {try{
       const auto& buying = db().get<buying_object>(o.buying);
-      bool expired = ( buying.expiration_time > db().head_block_time() );
+      bool expired = ( buying.expiration_time < db().head_block_time() );
       auto& idx = db().get_index_type<content_index>().indices().get<by_URI>();
       const auto& content = idx.find( buying.URI );
       bool delivered;
       db().modify<buying_object>(buying, [&](buying_object& bo){
            bo.seeders_answered.push_back( o.seeder );
-           delivered = ( bo.seeders_answered.size() >= content->quorum );
-           bo.key_particles.push_back( o.key );
+           bo.key_particles.push_back( decent::crypto::ciphertext(o.key) );
       });
+      delivered = buying.seeders_answered.size() >= content->quorum;
       if( delivered || expired )
       {
          db().create<buying_history_object>([&](buying_history_object& bho){
@@ -141,12 +152,18 @@ namespace graphene { namespace chain {
               bho.time = db().head_block_time();
          });
          db().remove(buying);
+
       }
       if( delivered )
       {
          db().modify<content_object>( *content, []( content_object& co ){ co.times_bought++; });
+         //TODO_DECENT pay the price to the author
       }
-   }catch( ... )
+   }catch( const fc::exception& e )
+   {
+      wlog( "caught exception ${e} in do_apply()", ("e", e.to_detail_string()) );
+   }
+   catch( ... )
    {
       fc::unhandled_exception e( FC_LOG_MESSAGE( warn, "throw"), std::current_exception() ); 
       wlog( "${details}", ("details",e.to_detail_string()) ); 
@@ -208,22 +225,29 @@ namespace graphene { namespace chain {
               so.free_space = o.space;
               so.pubKey = o.pubKey;
               so.price = asset(o.price_per_MByte);
+              so.expiration = db().head_block_time() + 24 * 3600;
          });
       } else{
          db().modify<seeder_object>(*sor,[&](seeder_object &so) {
             so.free_space = o.space;
             so.price = asset(o.price_per_MByte);
+            so.pubKey = o.pubKey;
          });
       }
    }
    
    void_result proof_of_custody_evaluator::do_evaluate(const proof_of_custody_operation& o )
    {
-      //validate the proof - TODO_DECENT
       auto& idx = db().get_index_type<content_index>().indices().get<by_URI>();
       const auto& content = idx.find( o.URI );
       FC_ASSERT( content != idx.end() );
       FC_ASSERT( content->expiration > db().head_block_time() );
+      //verify that the seed is not to old...
+      fc::ripemd160 bid = db().get_block_id_for_num(o.proof.reference_block);
+      for(int i = 0; i < 5; i++)
+         FC_ASSERT(bid._hash[i] == o.proof.seed.data[i],"Block ID does not match; wrong chain?");
+      FC_ASSERT(db().head_block_num() <= o.proof.reference_block - 6,"Block reference is too old");
+      FC_ASSERT( _custody_utils.verify_by_miner( content->cd, o.proof ) == 0, "Invalid proof of delivery" );
    }
    
    void_result proof_of_custody_evaluator::do_apply(const proof_of_custody_operation& o )
@@ -231,7 +255,8 @@ namespace graphene { namespace chain {
       //pay the seeder
       auto& idx = db().get_index_type<content_index>().indices().get<by_URI>();
       const auto& content = idx.find( o.URI );
-      const auto& seeder = db().get<seeder_object>(o.seeder);
+      //TODO_DECENT rewrite the next statement
+      const seeder_object& seeder = db().get<seeder_object>(o.seeder);
       auto last_proof = content->last_proof.find( o.seeder );
       if( last_proof == content->last_proof.end() )
       {

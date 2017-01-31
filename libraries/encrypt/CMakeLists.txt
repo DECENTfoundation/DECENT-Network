@@ -11,18 +11,17 @@ add_library( decent_encrypt
              custodyutils.cpp
              ${HEADERS} )
 
-# need to link graphene_debug_witness because plugins aren't sufficiently isolated #246
 target_link_libraries( decent_encrypt
     PUBLIC fc pbc cryptopp )
-target_link_libraries( test_encrypt decent_encrypt )
+
+target_link_libraries( test_encrypt pbc graphene_chain decent_encrypt gmp )
 target_include_directories( decent_encrypt
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" "${CMAKE_CURRENT_BINARY_DIR}/include" )
 target_include_directories( test_encrypt
-    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" "${CMAKE_CURRENT_BINARY_DIR}/include" )
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" "${CMAKE_CURRENT_BINARY_DIR}/include" "${CMAKE_CURRENT_SOURCE_DIR}/../chain/include" )
 
 install( TARGETS
    decent_encrypt
-   test_encrypt
 
    RUNTIME DESTINATION bin
    LIBRARY DESTINATION lib

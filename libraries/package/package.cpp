@@ -38,12 +38,13 @@
 #include <fc/network/ntp.hpp>
 #include <fc/thread/mutex.hpp>
 #include <fc/thread/scoped_lock.hpp>
+
 #include <iostream>
 #include <atomic>
 
 #include <decent/encrypt/encryptionutils.hpp>
 
-#include "aes_filter.hpp"
+#include "torrent_transfer.hpp"
 
 using namespace graphene::package;
 using namespace std;
@@ -54,7 +55,8 @@ using namespace boost::iostreams;
 
 namespace {
 
-const int ARC_BUFFER_SIZE  = 4*1024; // 4kb
+const int ARC_BUFFER_SIZE  = 1024 * 1024; // 4kb
+const int RIPEMD160_BUFFER_SIZE  = 1024 * 1024; // 4kb
 
 struct arc_header {
     char type; // 0 = EOF, 1 = REGULAR FILE
@@ -248,31 +250,95 @@ boost::filesystem::path relative_path( const boost::filesystem::path &path, cons
 }
 
 
+fc::ripemd160 calculate_hash(path file_path) {
+    file_source source(file_path.string(), std::ifstream::binary);
 
+    char buffer[RIPEMD160_BUFFER_SIZE];
+    int bytes_read = source.read(buffer, RIPEMD160_BUFFER_SIZE);
+    
+    fc::ripemd160::encoder ripe_calc;
+
+    while (bytes_read > 0) {
+        ripe_calc.write(buffer, bytes_read);
+        bytes_read = source.read(buffer, RIPEMD160_BUFFER_SIZE);
+    }
+
+    return ripe_calc.result();
+}
+
+} // Unnamed namespace
+
+
+
+
+package_object::package_object(const boost::filesystem::path& package_path) {
+    _package_path = package_path;
+
+    if (!is_directory(_package_path)) {
+        _package_path = path();
+        _hash = fc::ripemd160();
+        return;
+    }
+
+    try {
+        if (_package_path.filename() == ".") {
+            _package_path = _package_path.parent_path();
+        }
+        _hash = fc::ripemd160(_package_path.filename().string());
+    } catch (fc::exception& er) {
+        _package_path = path();
+        _hash = fc::ripemd160();
+    }
+}
+
+bool package_object::verify_hash() const {
+    if (!is_valid()) {
+        return false;
+    }
+
+    return _hash == calculate_hash(get_content_file());
 }
 
 
 
-package_manager::package_manager(const path& content_path, const path& samples, const fc::sha512& key) 
-	: _content_path(content_path), _samples(samples), _package_key(key) {
+
+
+void package_manager::initialize( const path& packages_directory) {
+   
+    if (!is_directory(packages_directory) && !create_directories(packages_directory)) {
+        FC_THROW("Unable to create directory");    
+    }
+    _packages_directory = packages_directory;
 
 }
 
-package_manager::package_manager(const path& package_path) : _package_path(package_path) {
 
+package_manager::package_manager() {
+    static torrent_transfer dummy_torrent_transfer;
+
+    _protocol_handlers.insert(std::make_pair("magnet", &dummy_torrent_transfer));
 }
 
-	
-bool package_manager::unpack_package(const path& destination_directory, const fc::sha512& key) {
+bool package_manager::unpack_package(const path& destination_directory, const package_object& package, const fc::sha512& key) {
+    
+
+    if (!package.is_valid()) {
+        FC_THROW("Invalid package");
+    }
+
 	if (!is_directory(destination_directory)) {
         FC_THROW("Destination directory not found");
 	}
 
-	if (!is_directory(_package_path)) {
+	if (!is_directory(package.get_path())) {
         FC_THROW("Package path is not directory");
 	}
+
+    if (CryptoPP::AES::MAX_KEYLENGTH > key.data_size()) {
+        FC_THROW("CryptoPP::AES::MAX_KEYLENGTH is bigger than key size");
+    }
 	
-	path archive_file = _package_path / "content.zip.aes";
+	path archive_file = package.get_content_file();
     path temp_dir = temp_directory_path();
 
     path zip_file = temp_dir / "content.zip";
@@ -280,7 +346,7 @@ bool package_manager::unpack_package(const path& destination_directory, const fc
 
     decent::crypto::aes_key k;
     for (int i = 0; i < CryptoPP::AES::MAX_KEYLENGTH; i++)
-      k.key_byte[i] = i;
+      k.key_byte[i] = key.data()[i];
 
     if (space(temp_dir).available < file_size(archive_file) * 1.5) { // Safety margin
         FC_THROW("Not enough storage space to create package");
@@ -300,25 +366,28 @@ bool package_manager::unpack_package(const path& destination_directory, const fc
 	return true;
 }
 
-bool package_manager::create_package(const path& destination_directory) {
-	if (!is_directory(destination_directory)) {
-		FC_THROW("Destination directory not found");
-	}
-	if (!is_directory(_content_path) && !is_regular_file(_content_path)) {
+package_object package_manager::create_package( const boost::filesystem::path& content_path, const boost::filesystem::path& samples, const fc::sha512& key, decent::crypto::custody_data& cd) {
+
+	
+	if (!is_directory(content_path) && !is_regular_file(content_path)) {
         FC_THROW("Content path is not directory or file");
 	}
 
-	if (!is_directory(_samples) || _samples.size() == 0) {
+	if (!is_directory(samples) || samples.size() == 0) {
         FC_THROW("Samples path is not directory");
 	}
 
-	path tempPath = destination_directory / make_uuid();
-	if (!create_directory(tempPath)) {
+	path temp_path = _packages_directory / make_uuid();
+	if (!create_directory(temp_path)) {
         FC_THROW("Failed to create temporary directory");
 	}
 
+    if (CryptoPP::AES::MAX_KEYLENGTH > key.data_size()) {
+        FC_THROW("CryptoPP::AES::MAX_KEYLENGTH is bigger than key size");
+    }
 
-	path content_zip = tempPath / "content.zip";
+
+	path content_zip = temp_path / "content.zip";
 
 	filtering_ostream out;
     out.push(gzip_compressor());
@@ -326,58 +395,147 @@ bool package_manager::create_package(const path& destination_directory) {
 	archiver arc(out);
 
 	vector<path> all_files;
-	get_files_recursive(_content_path, all_files);
+    if (is_regular_file(content_path)) {
+       all_files.push_back(content_path);
+    } else {
+	   get_files_recursive(content_path, all_files); 
+    }
+    
 	for (int i = 0; i < all_files.size(); ++i) {
         file_source source(all_files[i].string(), std::ifstream::binary);
         
-		arc.put(relative_path(all_files[i], _content_path).string(), source, file_size(all_files[i]));
+		arc.put(relative_path(all_files[i], content_path).string(), source, file_size(all_files[i]));
 	}
 
 	arc.finalize();
 
 
-    path aes_file_path = tempPath / "content.zip.aes";
+    path aes_file_path = temp_path / "content.zip.aes";
 
     decent::crypto::aes_key k;
     for (int i = 0; i < CryptoPP::AES::MAX_KEYLENGTH; i++)
-      k.key_byte[i] = i;
+      k.key_byte[i] = key.data()[i];
 
 
-    if (space(tempPath).available < file_size(content_zip) * 1.5) { // Safety margin
+    if (space(temp_path).available < file_size(content_zip) * 1.5) { // Safety margin
         FC_THROW("Not enough storage space to create package");
     }
 
     AES_encrypt_file(content_zip.string(), aes_file_path.string(), k);
     remove(content_zip);
+    _custody_utils.create_custody_data(aes_file_path, cd);
 
+    fc::ripemd160 hash = calculate_hash(aes_file_path);
+    rename(temp_path, _packages_directory / hash.str());
 
-	return true;
+	return package_object(_packages_directory / hash.str());
 }
 	
-const package_manager::path& package_manager::get_package_path() const {
-	return _package_path;
+
+
+
+package_transfer_interface::transfer_id 
+package_manager::upload_package( const package_object& package, 
+                                 const string& protocol_name,
+                                 package_transfer_interface::transfer_listener& listener ) {
+
+    protocol_handler_map::iterator it = _protocol_handlers.find(protocol_name);
+    if (it == _protocol_handlers.end()) {
+        FC_THROW("Can not find protocol handler for : ${proto}", ("proto", protocol_name) );
+    }
+
+    _all_transfers.push_back(transfer_job());
+    transfer_job& t = _all_transfers.back();
+
+    t.job_id = _all_transfers.size() - 1;
+    t.transport = it->second->clone();
+    t.listener = &listener;
+    t.job_type = transfer_job::UPLOAD;
+
+    try {
+        t.transport->upload_package(t.job_id, package, &listener);
+    } catch(std::exception& ex) {
+        std::cout << "Upload error: " << ex.what() << std::endl;
+    }
+
+
+    return t.job_id;
 }
 
-const package_manager::path& package_manager::get_custody_file() {
-	return _custody_file;
+package_transfer_interface::transfer_id 
+package_manager::download_package( const string& url,
+                                   package_transfer_interface::transfer_listener& listener ) {
+
+    fc::url download_url(url);
+
+    protocol_handler_map::iterator it = _protocol_handlers.find(download_url.proto());
+    if (it == _protocol_handlers.end()) {
+        FC_THROW("Can not find protocol handler for : ${proto}", ("proto", download_url.proto()) );
+    }
+
+    _all_transfers.push_back(transfer_job());
+    transfer_job& t = _all_transfers.back();
+
+    t.job_id = _all_transfers.size() - 1;
+    t.transport = it->second->clone();
+    t.listener = &listener;
+    t.job_type = transfer_job::DOWNLOAD;
+
+    try {
+        t.transport->download_package(t.job_id, url, &listener);
+    } catch(std::exception& ex) {
+        std::cout << "Download error: " << ex.what() << std::endl;
+    }
+
+    return t.job_id;
 }
 
-const package_manager::path& package_manager::get_content_file() {
-	return _content_file;
+void package_manager::print_all_transfers() {
+    for (int i = 0; i < _all_transfers.size(); ++i) {
+        const transfer_job& job = _all_transfers[i];
+        cout << "~~~ Status for job #" << job.job_id << " [" << ((job.job_type == transfer_job::UPLOAD) ? "Upload" : "Download") << "]\n";
+        job.transport->print_status();
+        cout << "~~~ End of status for #" << job.job_id << endl;
+    }
 }
 
-const package_manager::path& package_manager::get_samples_path() {
-    return _samples;
+ 
+
+std::string package_manager::get_transfer_url(package_transfer_interface::transfer_id id) {
+    if (id >= _all_transfers.size()) {
+        FC_THROW("Invalid transfer id: ${id}", ("id", id) );
+    }
+
+    transfer_job& job = _all_transfers[id];
+    return job.transport->get_transfer_url(id);
 }
 
 
-bool package_manager::verify_hash() const {
-	return true;
+std::vector<package_object> package_manager::get_packages() {
+    std::vector<package_object> all_packages;
+    directory_iterator it(_packages_directory), it_end;
+    for (; it != it_end; ++it) {
+        if (is_directory(*it)) {
+            all_packages.push_back(package_object(it->path().string()));
+        }
+    }
+    return all_packages;
 }
 
-fc::ripemd160 
-package_manager::get_hash() const {
-	return fc::ripemd160();
+package_object package_manager::get_package_object(fc::ripemd160 hash) {
+    return package_object(_packages_directory / hash.str());
 }
 
 
+void package_manager::delete_package(fc::ripemd160 hash) {
+    package_object po(_packages_directory / hash.str());   
+    if (!po.is_valid()) {
+        FC_THROW("Invalid package: ${hash}", ("hash", hash.str()) );
+    }
+
+    remove_all(po.get_path());
+}
+
+uint32_t package_object::create_proof_of_custody(decent::crypto::custody_data cd, decent::crypto::custody_proof&proof) const {
+   return package_manager::instance().get_custody_utils().create_proof_of_custody(get_content_file(), cd, proof);
+}

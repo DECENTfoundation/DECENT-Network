@@ -19,12 +19,14 @@ namespace graphene { namespace chain {
       account_id_type seeder;
       uint64_t free_space;
       asset price;
-      decent::crypto::d_integer pubKey;
+      time_point_sec expiration;
+      decent::crypto::d_integer_string pubKey;
    };
    
    struct by_seeder;
    struct by_free_space;
    struct by_price;
+   struct by_expiration;
    
    typedef multi_index_container<
       seeder_object,
@@ -40,6 +42,9 @@ namespace graphene { namespace chain {
             >,
             ordered_non_unique< tag<by_price>,
                member<seeder_object, asset, &seeder_object::price>
+            >,
+            ordered_non_unique< tag<by_expiration>,
+               member<seeder_object, time_point_sec, &seeder_object::expiration>
             >
          >
    >seeder_object_multi_index_type;
@@ -50,4 +55,4 @@ namespace graphene { namespace chain {
 
 FC_REFLECT_DERIVED(graphene::chain::seeder_object,
                    (graphene::db::object),
-                   (seeder)(free_space)(price)(pubKey) )
+                   (seeder)(free_space)(expiration)(price)(pubKey) )

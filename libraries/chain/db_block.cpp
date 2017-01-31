@@ -433,6 +433,9 @@ uint32_t database::push_applied_operation( const operation& op )
    oh.trx_in_block = _current_trx_in_block;
    oh.op_in_trx    = _current_op_in_trx;
    oh.virtual_op   = _current_virtual_op++;
+   oh.op = op;
+   elog("calling registered callbacks for operation ${o}", ("o",oh));
+   on_applied_operation (oh);
    return _applied_ops.size() - 1;
 }
 void database::set_applied_operation_result( uint32_t op_id, const operation_result& result )

@@ -1,9 +1,17 @@
 #include <decent/encrypt/encryptionutils.hpp>
+#include <decent/encrypt/custodyutils.hpp>
+
 #include <fc/exception/exception.hpp>
+#include <fc/log/logger.hpp>
+#include <graphene/chain/protocol/decent.hpp>
+#include <fc/io/raw.hpp>
 #include <cstdio>
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <fc/thread/thread.hpp>
+#include <stdio.h>
+
 
 using namespace std;
 
@@ -53,7 +61,7 @@ void test_el_gamal(decent::crypto::aes_key k)
 
    cout <<"recovered secret is "<<received_secret.first.to_string()<<" "<<received_secret.second.to_string() <<"\n";
 
-   for (int i=0; i<100000; i++)
+   for (int i=0; i<1; i++)
       bool ret_val = decent::crypto::verify_delivery_proof(proof, ct1,ct2,pubk1,pubk2);
    /*if(ret_val)
       cout<< "everything OK!\n";*/
@@ -80,14 +88,93 @@ void test_shamir(decent::crypto::d_integer secret)
    cout << "Original secret: "<< secret.to_string() <<"\nReconstructed_secret: "<<rs.secret.to_string() <<"\n";
 }
 
+
+
+void test_passed_op(graphene::chain::ready_to_publish_operation& op){
+   std::vector<char> data = fc::raw::pack(op);
+   idump((op));
+
+   graphene::chain::ready_to_publish_operation tmp;
+   fc::datastream<const char*> ds( data.data(), data.size() );
+   fc::raw::unpack( ds, tmp );
+   idump((tmp));
+}
+
+void test_passing_add_level_reference(graphene::chain::ready_to_publish_operation& op){
+   std::shared_ptr<fc::thread> new_thread = std::make_shared<fc::thread>("p2p");
+   new_thread->async([&](){ return test_passed_op(op);}).wait();
+
+}
+
+
+void test_move(){
+
+
+   graphene::chain::ready_to_publish_operation op;
+   op.space = 1000;
+   decent::crypto::d_integer a = decent::crypto::d_integer::from_string("12132131.");
+   op.pubKey = a;
+   op.price_per_MByte = 1;
+   idump((op));
+   test_passing_add_level_reference(op);
+}
+
+void test_custody(){
+
+   decent::crypto::custody_utils c;
+
+   //pbc_param_t par;
+   //pbc_param_init_a_gen( par, 320, 1024 );
+   //pbc_param_out_str(stdout,par);
+
+   decent::crypto::custody_data cd;
+   decent::crypto::custody_proof proof;
+   proof.seed.data[0]=21; proof.seed.data[1] =155; proof.seed.data[2] = 231; proof.seed.data[3] = 98; proof.seed.data[4] = 1;
+
+   c.create_custody_data(boost::filesystem::path("/tmp/content.zip"),cd );
+   std::cout <<"done creating custody data, "<<cd.n<<" signatures generated\n";
+
+   c.create_proof_of_custody(boost::filesystem::path("/tmp/content.zip"), cd,proof);
+ //  idump((proof.mus));
+
+  // cout<<"\n\n";
+  // fc::raw::pack(cout, mus);
+   if(c.verify_by_miner(cd, proof))
+      std::cout <<"Something wrong during verification...\n";
+}
+void test_key_manipulation()
+{
+   d_integer initial_key(123456789);
+   char* buffer = (char*)malloc(1000);
+   initial_key.Encode((byte*)buffer, 1000);
+   fc::sha512 key1;
+   for(int i=0; i<8; i++) key1._hash[i]=buffer[i];
+
+   decent::crypto::aes_key k;
+   for (int i = 0; i < CryptoPP::AES::MAX_KEYLENGTH; i++)
+      k.key_byte[i] = key1.data()[i];
+
+
+
+}
+
 int main(int argc, char**argv)
 {
-   decent::crypto::aes_key k;
-   for (int i=0; i<CryptoPP::AES::MAX_KEYLENGTH; i++)
-      k.key_byte[i]=i;
+//  decent::crypto::aes_key k;
+//   for (int i=0; i<CryptoPP::AES::MAX_KEYLENGTH; i++)
+//      k.key_byte[i]=i;
  //  test_aes(k);
    cout<<"AES finished \n";
-   test_el_gamal(k);
+   test_key_manipulation();
+//   test_el_gamal(k);
+//   const CryptoPP::Integer secret("12354678979464");
+ //  test_shamir(secret);
+   test_move();
+
+ //  test_el_gamal(k);
    const CryptoPP::Integer secret("12354678979464");
-   test_shamir(secret);
+ //  test_shamir(secret);
+
+   test_custody();
+
 }

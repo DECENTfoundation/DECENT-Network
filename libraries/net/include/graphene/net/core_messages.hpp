@@ -99,7 +99,7 @@ namespace graphene { namespace net {
       trx_message() {}
       trx_message(signed_transaction transaction) :
         trx(std::move(transaction))
-      {}
+      { }
    };
 
    struct block_message

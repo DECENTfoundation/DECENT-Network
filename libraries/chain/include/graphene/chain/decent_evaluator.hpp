@@ -1,10 +1,12 @@
 #pragma once
 #include <graphene/chain/evaluator.hpp>
-
+#include <decent/encrypt/custodyutils.hpp>
 // return type?
 
 namespace graphene { namespace chain {
- 
+
+   static decent::crypto::custody_utils _custody_utils;
+
    class content_submit_evaluator : public evaluator<content_submit_evaluator>
    {
    public:
@@ -43,6 +45,7 @@ namespace graphene { namespace chain {
    
    class proof_of_custody_evaluator : public evaluator<proof_of_custody_evaluator>
    {
+   private:
    public:
       typedef proof_of_custody_operation operation_type;
       

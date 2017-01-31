@@ -65,7 +65,7 @@ public:
 
 
    shamir_secret(uint16_t _quorum, uint16_t _shares, d_integer _secret):quorum(_quorum),shares(_shares),secret(_secret){
-      calculate_split();
+      //calculate_split();
    };
    shamir_secret(uint16_t _quorum, uint16_t _shares):quorum(_quorum), shares(_shares){};
    void add_point(point X){split.push_back(X);};

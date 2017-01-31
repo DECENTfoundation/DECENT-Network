@@ -61,6 +61,7 @@ namespace graphene { namespace chain {
 
          database();
          ~database();
+         bool is_undo_enabled(){ return _undo_db.enabled(); };
 
          enum validation_steps
          {
@@ -172,6 +173,11 @@ namespace graphene { namespace chain {
          const vector<optional< operation_history_object > >& get_applied_operations()const;
 
          string to_pretty_string( const asset& a )const;
+
+         /**
+          * This signal is emitted for plugins to process every operation
+          */
+         fc::signal<void(const operation_history_object&)> on_applied_operation;
 
          /**
           *  This signal is emitted after all operations and virtual operation for a
