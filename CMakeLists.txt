@@ -42,6 +42,7 @@ if( APPLE )
               "${HOMEBREW_PREFIX}/opt/cryptopp"
               "${HOMEBREW_PREFIX}/opt/berkeley-db"
               "${HOMEBREW_PREFIX}/opt/libtorrent-rasterbar"
+              "${HOMEBREW_PREFIX}/opt/qt5"
             )
     endif()
 endif()

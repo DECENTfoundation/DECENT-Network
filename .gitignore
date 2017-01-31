@@ -68,3 +68,4 @@ CMakeLists.txt.user
 xcode/***
 
 build/
+programs/.DS_Store
