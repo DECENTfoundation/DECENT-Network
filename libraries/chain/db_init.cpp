@@ -87,14 +87,8 @@ const uint8_t asset_object::type_id;
 const uint8_t block_summary_object::space_id;
 const uint8_t block_summary_object::type_id;
 
-const uint8_t call_order_object::space_id;
-const uint8_t call_order_object::type_id;
-
 const uint8_t committee_member_object::space_id;
 const uint8_t committee_member_object::type_id;
-
-const uint8_t force_settlement_object::space_id;
-const uint8_t force_settlement_object::type_id;
 
 const uint8_t global_property_object::space_id;
 const uint8_t global_property_object::type_id;
@@ -126,27 +120,19 @@ void database::initialize_evaluators()
    _operation_evaluators.resize(255);
    register_evaluator<account_create_evaluator>();
    register_evaluator<account_update_evaluator>();
-   register_evaluator<account_whitelist_evaluator>();
    register_evaluator<committee_member_create_evaluator>();
    register_evaluator<committee_member_update_evaluator>();
    register_evaluator<committee_member_update_global_parameters_evaluator>();
    register_evaluator<custom_evaluator>();
    register_evaluator<asset_create_evaluator>();
    register_evaluator<asset_issue_evaluator>();
-   register_evaluator<asset_reserve_evaluator>();
    register_evaluator<asset_update_evaluator>();
-   register_evaluator<asset_update_bitasset_evaluator>();
    register_evaluator<asset_update_feed_producers_evaluator>();
-   register_evaluator<asset_settle_evaluator>();
-   register_evaluator<asset_global_settle_evaluator>();
    register_evaluator<assert_evaluator>();
    register_evaluator<limit_order_create_evaluator>();
    register_evaluator<limit_order_cancel_evaluator>();
-   register_evaluator<call_order_update_evaluator>();
    register_evaluator<transfer_evaluator>();
-   register_evaluator<override_transfer_evaluator>();
    register_evaluator<asset_fund_fee_pool_evaluator>();
-   register_evaluator<asset_publish_feeds_evaluator>();
    register_evaluator<proposal_create_evaluator>();
    register_evaluator<proposal_update_evaluator>();
    register_evaluator<proposal_delete_evaluator>();
@@ -177,7 +163,6 @@ void database::initialize_indexes()
 
    //Protocol object indexes
    add_index< primary_index<asset_index> >();
-   add_index< primary_index<force_settlement_index> >();
 
    auto acnt_index = add_index< primary_index<account_index> >();
    acnt_index->add_secondary_index<account_member_index>();
@@ -186,7 +171,6 @@ void database::initialize_indexes()
    add_index< primary_index<committee_member_index> >();
    add_index< primary_index<witness_index> >();
    add_index< primary_index<limit_order_index > >();
-   add_index< primary_index<call_order_index > >();
 
    auto prop_index = add_index< primary_index<proposal_index > >();
    prop_index->add_secondary_index<required_approval_index>();
@@ -198,7 +182,6 @@ void database::initialize_indexes()
    //Implementation object indexes
    add_index< primary_index<transaction_index                             > >();
    add_index< primary_index<account_balance_index                         > >();
-   add_index< primary_index<asset_bitasset_data_index                     > >();
    add_index< primary_index<simple_index<global_property_object          >> >();
    add_index< primary_index<simple_index<dynamic_global_property_object  >> >();
    add_index< primary_index<simple_index<account_statistics_object       >> >();
@@ -332,8 +315,6 @@ void database::init_genesis(const genesis_state_type& genesis_state)
          a.symbol = GRAPHENE_SYMBOL;
          a.options.max_supply = genesis_state.max_core_supply;
          a.precision = GRAPHENE_BLOCKCHAIN_PRECISION_DIGITS;
-         a.options.flags = 0;
-         a.options.issuer_permissions = 0;
          a.issuer = GRAPHENE_NULL_ACCOUNT;
          a.options.core_exchange_rate.base.amount = 1;
          a.options.core_exchange_rate.base.asset_id = asset_id_type(0);
@@ -357,8 +338,6 @@ void database::init_genesis(const genesis_state_type& genesis_state)
          a.symbol = "SPECIAL" + std::to_string( id );
          a.options.max_supply = 0;
          a.precision = GRAPHENE_BLOCKCHAIN_PRECISION_DIGITS;
-         a.options.flags = 0;
-         a.options.issuer_permissions = 0;
          a.issuer = GRAPHENE_NULL_ACCOUNT;
          a.options.core_exchange_rate.base.amount = 1;
          a.options.core_exchange_rate.base.asset_id = asset_id_type(0);
@@ -467,44 +446,6 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       total_supplies[ new_asset_id ] = 0;
 
       asset_dynamic_data_id_type dynamic_data_id;
-      optional<asset_bitasset_data_id_type> bitasset_data_id;
-      if( asset.is_bitasset )
-      {
-         int collateral_holder_number = 0;
-         total_debts[ new_asset_id ] = 0;
-         for( const auto& collateral_rec : asset.collateral_records )
-         {
-            account_create_operation cop;
-            cop.name = asset.symbol + "-collateral-holder-" + std::to_string(collateral_holder_number);
-            boost::algorithm::to_lower(cop.name);
-            cop.registrar = GRAPHENE_TEMP_ACCOUNT;
-            cop.owner = authority(1, collateral_rec.owner, 1);
-            cop.active = cop.owner;
-            account_id_type owner_account_id = apply_operation(genesis_eval_state, cop).get<object_id_type>();
-
-            modify( owner_account_id(*this).statistics(*this), [&]( account_statistics_object& o ) {
-                    o.total_core_in_orders = collateral_rec.collateral;
-                    });
-
-            create<call_order_object>([&](call_order_object& c) {
-               c.borrower = owner_account_id;
-               c.collateral = collateral_rec.collateral;
-               c.debt = collateral_rec.debt;
-               c.call_price = price::call_price(chain::asset(c.debt, new_asset_id),
-                                                chain::asset(c.collateral, core_asset.id),
-                                                GRAPHENE_DEFAULT_MAINTENANCE_COLLATERAL_RATIO);
-            });
-
-            total_supplies[ asset_id_type(0) ] += collateral_rec.collateral;
-            total_debts[ new_asset_id ] += collateral_rec.debt;
-            ++collateral_holder_number;
-         }
-
-         bitasset_data_id = create<asset_bitasset_data_object>([&](asset_bitasset_data_object& b) {
-            b.options.short_backing_asset = core_asset.id;
-            b.options.minimum_feeds = GRAPHENE_DEFAULT_MINIMUM_FEEDS;
-         }).id;
-      }
 
       dynamic_data_id = create<asset_dynamic_data_object>([&](asset_dynamic_data_object& d) {
          d.accumulated_fees = asset.accumulated_fees;
@@ -519,10 +460,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
          string issuer_name = asset.issuer_name;
          a.issuer = get_account_id(issuer_name);
          a.options.max_supply = asset.max_supply;
-         a.options.flags = witness_fed_asset;
-         a.options.issuer_permissions = charge_market_fee | global_settle | witness_fed_asset | committee_fed_asset;
          a.dynamic_asset_data_id = dynamic_data_id;
-         a.bitasset_data_id = bitasset_data_id;
       });
    }
 
@@ -534,33 +472,6 @@ void database::init_genesis(const genesis_state_type& genesis_state)
    {
        total_supplies[ asset_id_type(0) ] = GRAPHENE_MAX_SHARE_SUPPLY;
    }
-
-   const auto& idx = get_index_type<asset_index>().indices().get<by_symbol>();
-   auto it = idx.begin();
-   bool has_imbalanced_assets = false;
-
-   while( it != idx.end() )
-   {
-      if( it->bitasset_data_id.valid() )
-      {
-         auto supply_itr = total_supplies.find( it->id );
-         auto debt_itr = total_debts.find( it->id );
-         FC_ASSERT( supply_itr != total_supplies.end() );
-         FC_ASSERT( debt_itr != total_debts.end() );
-         if( supply_itr->second != debt_itr->second )
-         {
-            has_imbalanced_assets = true;
-            elog( "Genesis for asset ${aname} is not balanced\n"
-                  "   Debt is ${debt}\n"
-                  "   Supply is ${supply}\n",
-                  ("debt", debt_itr->second)
-                  ("supply", supply_itr->second)
-                );
-         }
-      }
-      ++it;
-   }
-   FC_ASSERT( !has_imbalanced_assets );
 
    // Save tallied supplies
    for( const auto& item : total_supplies )

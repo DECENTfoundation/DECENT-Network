@@ -123,12 +123,6 @@ object_id_type account_create_evaluator::do_apply( const account_create_operatio
          obj.active           = o.active;
          obj.options          = o.options;
          obj.statistics = db().create<account_statistics_object>([&](account_statistics_object& s){s.owner = obj.id;}).id;
-
-         if( o.extensions.value.buyback_options.valid() )
-         {
-            obj.allowed_assets = o.extensions.value.buyback_options->markets;
-            obj.allowed_assets->emplace( o.extensions.value.buyback_options->asset_to_buy );
-         }
    });
 
    const auto& dynamic_properties = db().get_dynamic_global_properties();
@@ -201,47 +195,5 @@ void_result account_update_evaluator::do_apply( const account_update_operation& 
 
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (o) ) }
-
-void_result account_whitelist_evaluator::do_evaluate(const account_whitelist_operation& o)
-{ try {
-   database& d = db();
-
-   listed_account = &o.account_to_list(d);
-
-   return void_result();
-} FC_CAPTURE_AND_RETHROW( (o) ) }
-
-void_result account_whitelist_evaluator::do_apply(const account_whitelist_operation& o)
-{ try {
-   database& d = db();
-
-   d.modify(*listed_account, [&o](account_object& a) {
-      if( o.new_listing & o.white_listed )
-         a.whitelisting_accounts.insert(o.authorizing_account);
-      else
-         a.whitelisting_accounts.erase(o.authorizing_account);
-
-      if( o.new_listing & o.black_listed )
-         a.blacklisting_accounts.insert(o.authorizing_account);
-      else
-         a.blacklisting_accounts.erase(o.authorizing_account);
-   });
-
-   /** for tracking purposes only, this state is not needed to evaluate */
-   d.modify( o.authorizing_account(d), [&]( account_object& a ) {
-     if( o.new_listing & o.white_listed )
-        a.whitelisted_accounts.insert( o.account_to_list );
-     else
-        a.whitelisted_accounts.erase( o.account_to_list );
-
-     if( o.new_listing & o.black_listed )
-        a.blacklisted_accounts.insert( o.account_to_list );
-     else
-        a.blacklisted_accounts.erase( o.account_to_list );
-   });
-
-   return void_result();
-} FC_CAPTURE_AND_RETHROW( (o) ) }
-
 
 } } // graphene::chain

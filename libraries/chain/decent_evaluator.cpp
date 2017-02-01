@@ -144,6 +144,7 @@ namespace graphene { namespace chain {
       if( delivered || expired )
       {
          db().create<buying_history_object>([&](buying_history_object& bho){
+              bho.buying = o.buying;
               bho.consumer = buying.consumer;
               bho.delivered = delivered;
               bho.seeders_answered = buying.seeders_answered;

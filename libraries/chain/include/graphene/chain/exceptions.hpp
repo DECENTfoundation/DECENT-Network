@@ -98,10 +98,8 @@ namespace graphene { namespace chain {
 
    //GRAPHENE_DECLARE_OP_BASE_EXCEPTIONS( limit_order_create );
    //GRAPHENE_DECLARE_OP_BASE_EXCEPTIONS( limit_order_cancel );
-   GRAPHENE_DECLARE_OP_BASE_EXCEPTIONS( call_order_update );
-   GRAPHENE_DECLARE_OP_EVALUATE_EXCEPTION( unfilled_margin_call, call_order_update, 1, "Updating call order would trigger a margin call that cannot be fully filled" )
 
-   GRAPHENE_DECLARE_OP_BASE_EXCEPTIONS( account_create );
+      GRAPHENE_DECLARE_OP_BASE_EXCEPTIONS( account_create );
    GRAPHENE_DECLARE_OP_EVALUATE_EXCEPTION( max_auth_exceeded, account_create, 1, "Exceeds max authority fan-out" )
    GRAPHENE_DECLARE_OP_EVALUATE_EXCEPTION( auth_account_not_found, account_create, 2, "Auth account not found" )
    GRAPHENE_DECLARE_OP_EVALUATE_EXCEPTION( buyback_incorrect_issuer, account_create, 3, "Incorrect issuer specified for account" )
@@ -120,9 +118,6 @@ namespace graphene { namespace chain {
    //GRAPHENE_DECLARE_OP_BASE_EXCEPTIONS( asset_update_bitasset );
    //GRAPHENE_DECLARE_OP_BASE_EXCEPTIONS( asset_update_feed_producers );
    //GRAPHENE_DECLARE_OP_BASE_EXCEPTIONS( asset_issue );
-
-   GRAPHENE_DECLARE_OP_BASE_EXCEPTIONS( asset_reserve );
-   GRAPHENE_DECLARE_OP_EVALUATE_EXCEPTION( invalid_on_mia, asset_reserve, 1, "invalid on mia" )
 
    //GRAPHENE_DECLARE_OP_BASE_EXCEPTIONS( asset_fund_fee_pool );
    //GRAPHENE_DECLARE_OP_BASE_EXCEPTIONS( asset_settle );
@@ -147,9 +142,6 @@ namespace graphene { namespace chain {
    //GRAPHENE_DECLARE_OP_BASE_EXCEPTIONS( vesting_balance_withdraw );
    //GRAPHENE_DECLARE_OP_BASE_EXCEPTIONS( custom );
    //GRAPHENE_DECLARE_OP_BASE_EXCEPTIONS( assert );
-
-   GRAPHENE_DECLARE_OP_BASE_EXCEPTIONS( override_transfer );
-   GRAPHENE_DECLARE_OP_EVALUATE_EXCEPTION( not_permitted, override_transfer, 1, "not permitted" )
 
    GRAPHENE_DECLARE_OP_BASE_EXCEPTIONS( blind_transfer );
    GRAPHENE_DECLARE_OP_EVALUATE_EXCEPTION( unknown_commitment, blind_transfer, 1, "Attempting to claim an unknown prior commitment" );

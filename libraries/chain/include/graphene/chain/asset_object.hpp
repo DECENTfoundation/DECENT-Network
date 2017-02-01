@@ -85,18 +85,8 @@ namespace graphene { namespace chain {
          /// @return true if symbol is a valid ticker symbol; false otherwise.
          static bool is_valid_symbol( const string& symbol );
 
-         /// @return true if this is a market-issued asset; false otherwise.
-         bool is_market_issued()const { return bitasset_data_id.valid(); }
-         /// @return true if users may request force-settlement of this market-issued asset; false otherwise
-         bool can_force_settle()const { return !(options.flags & disable_force_settle); }
-         /// @return true if the issuer of this market-issued asset may globally settle the asset; false otherwise
-         bool can_global_settle()const { return options.issuer_permissions & global_settle; }
-         /// @return true if this asset charges a fee for the issuer on market operations; false otherwise
-         bool charges_market_fees()const { return options.flags & charge_market_fee; }
-         /// @return true if this asset may only be transferred to/from the issuer or market orders
-         bool is_transfer_restricted()const { return options.flags & transfer_restricted; }
-         bool can_override()const { return options.flags & override_authority; }
-         bool allow_confidential()const { return !(options.flags & asset_issuer_permission_flags::disable_confidential); }
+         /// @return true if this is monitored asset; false otherwise.
+         bool is_monitored_asset()const { return options.monitored_asset_opts.valid(); }
 
          /// Helper function to get an asset object with the given amount in this asset's type
          asset amount(share_type a)const { return asset(a, id); }
@@ -127,26 +117,12 @@ namespace graphene { namespace chain {
 
          /// Current supply, fee pool, and collected fees are stored in a separate object as they change frequently.
          asset_dynamic_data_id_type  dynamic_asset_data_id;
-         /// Extra data associated with BitAssets. This field is non-null if and only if is_market_issued() returns true
-         optional<asset_bitasset_data_id_type> bitasset_data_id;
 
          optional<account_id_type> buyback_account;
 
          asset_id_type get_id()const { return id; }
 
-         void validate()const
-         {
-            // UIAs may not be prediction markets, have force settlement, or global settlements
-            if( !is_market_issued() )
-            {
-               FC_ASSERT(!(options.flags & disable_force_settle || options.flags & global_settle));
-               FC_ASSERT(!(options.issuer_permissions & disable_force_settle || options.issuer_permissions & global_settle));
-            }
-         }
-
-         template<class DB>
-         const asset_bitasset_data_object& bitasset_data(const DB& db)const
-         { assert(bitasset_data_id); return db.get(*bitasset_data_id); }
+         void validate()const {}
 
          template<class DB>
          const asset_dynamic_data_object& dynamic_data(const DB& db)const
@@ -160,90 +136,20 @@ namespace graphene { namespace chain {
          { return options.max_supply - dynamic_data(db).current_supply; }
    };
 
-   /**
-    *  @brief contains properties that only apply to bitassets (market issued assets)
-    *
-    *  @ingroup object
-    *  @ingroup implementation
-    */
-   class asset_bitasset_data_object : public abstract_object<asset_bitasset_data_object>
-   {
-      public:
-         static const uint8_t space_id = implementation_ids;
-         static const uint8_t type_id  = impl_asset_bitasset_data_type;
-
-         /// The tunable options for BitAssets are stored in this field.
-         bitasset_options options;
-
-         /// Feeds published for this asset. If issuer is not committee, the keys in this map are the feed publishing
-         /// accounts; otherwise, the feed publishers are the currently active committee_members and witnesses and this map
-         /// should be treated as an implementation detail. The timestamp on each feed is the time it was published.
-         flat_map<account_id_type, pair<time_point_sec,price_feed>> feeds;
-         /// This is the currently active price feed, calculated as the median of values from the currently active
-         /// feeds.
-         price_feed current_feed;
-         /// This is the publication time of the oldest feed which was factored into current_feed.
-         time_point_sec current_feed_publication_time;
-
-         /// True if this asset implements a @ref prediction_market
-         bool is_prediction_market = false;
-
-         /// This is the volume of this asset which has been force-settled this maintanence interval
-         share_type force_settled_volume;
-         /// Calculate the maximum force settlement volume per maintenance interval, given the current share supply
-         share_type max_force_settlement_volume(share_type current_supply)const;
-
-         /** return true if there has been a black swan, false otherwise */
-         bool has_settlement()const { return !settlement_price.is_null(); }
-
-         /**
-          *  In the event of a black swan, the swan price is saved in the settlement price, and all margin positions
-          *  are settled at the same price with the siezed collateral being moved into the settlement fund. From this
-          *  point on no further updates to the asset are permitted (no feeds, etc) and forced settlement occurs
-          *  immediately when requested, using the settlement price and fund.
-          */
-         ///@{
-         /// Price at which force settlements of a black swanned asset will occur
-         price settlement_price;
-         /// Amount of collateral which is available for force settlement
-         share_type settlement_fund;
-         ///@}
-
-         time_point_sec feed_expiration_time()const
-         { return current_feed_publication_time + options.feed_lifetime_sec; }
-         bool feed_is_expired_before_hardfork_615(time_point_sec current_time)const
-         { return feed_expiration_time() >= current_time; }
-         bool feed_is_expired(time_point_sec current_time)const
-         { return feed_expiration_time() <= current_time; }
-         void update_median_feeds(time_point_sec current_time);
-   };
-
-   struct by_feed_expiration;
-   typedef multi_index_container<
-      asset_bitasset_data_object,
-      indexed_by<
-         ordered_unique< tag<by_id>, member< object, object_id_type, &object::id > >,
-         ordered_non_unique< tag<by_feed_expiration>,
-            const_mem_fun< asset_bitasset_data_object, time_point_sec, &asset_bitasset_data_object::feed_expiration_time >
-         >
-      >
-   > asset_bitasset_data_object_multi_index_type;
-   typedef flat_index<asset_bitasset_data_object> asset_bitasset_data_index;
-
    struct by_symbol;
-   struct by_type;
+      struct by_type;
    typedef multi_index_container<
       asset_object,
       indexed_by<
          ordered_unique< tag<by_id>, member< object, object_id_type, &object::id > >,
          ordered_unique< tag<by_symbol>, member<asset_object, string, &asset_object::symbol> >,
-         ordered_unique< tag<by_type>,
-            composite_key< asset_object,
-                const_mem_fun<asset_object, bool, &asset_object::is_market_issued>,
-                member< object, object_id_type, &object::id >
+            ordered_unique< tag<by_type>,
+               composite_key< asset_object,
+                  const_mem_fun<asset_object, bool, &asset_object::is_monitored_asset>,
+                  member< object, object_id_type, &object::id >
+               >
             >
-         >
-      >
+        >
    > asset_object_multi_index_type;
    typedef generic_index<asset_object, asset_object_multi_index_type> asset_index;
 
@@ -252,23 +158,11 @@ namespace graphene { namespace chain {
 FC_REFLECT_DERIVED( graphene::chain::asset_dynamic_data_object, (graphene::db::object),
                     (current_supply)(confidential_supply)(accumulated_fees)(fee_pool) )
 
-FC_REFLECT_DERIVED( graphene::chain::asset_bitasset_data_object, (graphene::db::object),
-                    (feeds)
-                    (current_feed)
-                    (current_feed_publication_time)
-                    (options)
-                    (force_settled_volume)
-                    (is_prediction_market)
-                    (settlement_price)
-                    (settlement_fund)
-                  )
-
 FC_REFLECT_DERIVED( graphene::chain::asset_object, (graphene::db::object),
                     (symbol)
                     (precision)
                     (issuer)
                     (options)
                     (dynamic_asset_data_id)
-                    (bitasset_data_id)
                     (buyback_account)
                   )

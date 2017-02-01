@@ -716,7 +716,7 @@ BOOST_FIXTURE_TEST_CASE( limit_order_expiration, database_fixture )
    //Get a sane head block time
    generate_block();
 
-   auto* test = &create_bitasset("TEST");
+   auto* test = &create_monitored_asset("TEST");
    auto* core = &asset_id_type()(db);
    auto* nathan = &create_account("nathan");
    auto* committee = &account_id_type()(db);
@@ -1209,7 +1209,7 @@ BOOST_AUTO_TEST_CASE( genesis_reserve_ids )
          usd.precision = 4;
          usd.max_supply = GRAPHENE_MAX_SHARE_SUPPLY;
          usd.accumulated_fees = 0;
-         usd.is_bitasset = true;
+         usd.is_monitored_asset = true;
          
          genesis_state.immutable_parameters.num_special_accounts = num_special_accounts;
          genesis_state.immutable_parameters.num_special_assets = num_special_assets;
