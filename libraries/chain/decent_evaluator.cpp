@@ -233,6 +233,7 @@ namespace graphene { namespace chain {
             so.free_space = o.space;
             so.price = asset(o.price_per_MByte);
             so.pubKey = o.pubKey;
+            so.expiration = db().head_block_time() + 24 * 3600;
          });
       }
    }
