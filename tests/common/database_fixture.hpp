@@ -151,8 +151,8 @@ struct database_fixture {
    genesis_state_type genesis_state;
    chain::database &db;
    signed_transaction trx;
-   public_key_type committee_key;
-   account_id_type committee_account;
+   public_key_type witness_key;
+   account_id_type witness_account;
    fc::ecc::private_key private_key = fc::ecc::private_key::generate();
    fc::ecc::private_key init_account_priv_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("null_key")) );
    public_key_type init_account_pub_key;
@@ -198,9 +198,6 @@ struct database_fixture {
       public_key_type key = public_key_type()
       );
 
-   void update_feed_producers(asset_id_type mia, flat_set<account_id_type> producers)
-   { update_feed_producers(mia(db), producers); }
-   void update_feed_producers(const asset_object& mia, flat_set<account_id_type> producers);
    void publish_feed(asset_id_type mia, account_id_type by, const price_feed& f)
    { publish_feed(mia(db), by(db), f); }
    void publish_feed(const asset_object& mia, const account_object& by, const price_feed& f);
@@ -236,7 +233,6 @@ struct database_fixture {
       uint8_t referrer_percent = 100
       );
 
-   const committee_member_object& create_committee_member( const account_object& owner );
    const witness_object& create_witness(account_id_type owner,
                                         const fc::ecc::private_key& signing_private_key = generate_private_key("null_key"));
    const witness_object& create_witness(const account_object& owner,

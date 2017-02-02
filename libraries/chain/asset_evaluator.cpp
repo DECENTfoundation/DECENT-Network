@@ -59,7 +59,6 @@ void_result asset_create_evaluator::do_evaluate( const asset_create_operation& o
 
    if(op.common_options.monitored_asset_opts.valid())
       op.common_options.monitored_asset_opts->validate();
-
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
@@ -148,7 +147,6 @@ void_result asset_update_evaluator::do_evaluate(const asset_update_operation& o)
 
    if( o.new_issuer )
       FC_ASSERT(d.find_object(*o.new_issuer));
-
    asset_to_update = &a;
    FC_ASSERT( o.issuer == a.issuer, "", ("o.issuer", o.issuer)("a.issuer", a.issuer) );
 
@@ -174,7 +172,7 @@ void_result asset_update_monitored_asset_evaluator::do_evaluate(const asset_upda
 
       const asset_object& a = o.asset_to_update(d);
 
-      FC_ASSERT(a.is_monitored_asset(), "Cannot update BitAsset-specific settings on a non-BitAsset.");
+      FC_ASSERT(a.is_monitored_asset(), "Cannot update MonitoredAsset-specific settings on a user issued asset.");
 
       FC_ASSERT( o.issuer == a.issuer, "", ("o.issuer", o.issuer)("a.issuer", a.issuer) );
 
@@ -202,44 +200,6 @@ void_result asset_update_monitored_asset_evaluator::do_apply(const asset_update_
       return void_result();
    } FC_CAPTURE_AND_RETHROW( (o) ) }
 
-void_result asset_update_feed_producers_evaluator::do_evaluate(const asset_update_feed_producers_evaluator::operation_type& o)
-{ try {
-   database& d = db();
-
-   FC_ASSERT( o.new_feed_producers.size() <= d.get_global_properties().parameters.maximum_asset_feed_publishers );
-   for( auto id : o.new_feed_producers )
-      d.get_object(id);
-
-   const asset_object& a = o.asset_to_update(d);
-
-   FC_ASSERT(a.is_monitored_asset(), "Cannot update feed producers on a non-BitAsset.");
-   FC_ASSERT( a.issuer == o.issuer );
-   return void_result();
-} FC_CAPTURE_AND_RETHROW( (o) ) }
-
-void_result asset_update_feed_producers_evaluator::do_apply(const asset_update_feed_producers_evaluator::operation_type& o)
-{ try {
-   db().modify(*asset_to_update, [&](asset_object& a) {
-      //This is tricky because I have a set of publishers coming in, but a map of seeder to feed is stored.
-      //I need to update the map such that the keys match the new publishers, but not munge the old price feeds from
-      //publishers who are being kept.
-      //First, remove any old publishers who are no longer publishers
-      for( auto itr = a.options.monitored_asset_opts->feeds.begin(); itr != a.options.monitored_asset_opts->feeds.end(); )
-      {
-         if( !o.new_feed_producers.count(itr->first) )
-            itr = a.options.monitored_asset_opts->feeds.erase(itr);
-         else
-            ++itr;
-      }
-      //Now, add any new publishers
-      for( auto itr = o.new_feed_producers.begin(); itr != o.new_feed_producers.end(); ++itr )
-         if( !a.options.monitored_asset_opts->feeds.count(*itr) )
-            a.options.monitored_asset_opts->feeds[*itr];
-      a.options.monitored_asset_opts->update_median_feeds(db().head_block_time());
-   });
-
-   return void_result();
-} FC_CAPTURE_AND_RETHROW( (o) ) }
 
 void_result asset_publish_feeds_evaluator::do_evaluate(const asset_publish_feed_operation& o)
 { try {
@@ -247,8 +207,10 @@ void_result asset_publish_feeds_evaluator::do_evaluate(const asset_publish_feed_
 
    const asset_object& base = o.asset_id(d);
    //Verify that this feed is for a monitored asset and that asset is backed by the base
-   FC_ASSERT(base.is_monitored_asset());
-   FC_ASSERT(base.options.monitored_asset_opts->feeds.count(o.publisher));
+   FC_ASSERT( base.is_monitored_asset());
+   FC_ASSERT( d.get(GRAPHENE_WITNESS_ACCOUNT).active.account_auths.count(o.publisher) );
+   FC_ASSERT( o.feed.core_exchange_rate.base.asset_id == asset_id_type() || o.feed.core_exchange_rate.quote.asset_id == asset_id_type() );
+   FC_ASSERT( o.feed.core_exchange_rate.base.asset_id == o.asset_id || o.feed.core_exchange_rate.quote.asset_id == o.asset_id );
 
    return void_result();
 } FC_CAPTURE_AND_RETHROW((o)) }

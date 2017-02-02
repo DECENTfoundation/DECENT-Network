@@ -27,7 +27,6 @@
 #include <graphene/chain/protocol/assert.hpp>
 #include <graphene/chain/protocol/asset_ops.hpp>
 #include <graphene/chain/protocol/custom.hpp>
-#include <graphene/chain/protocol/committee_member.hpp>
 #include <graphene/chain/protocol/confidential.hpp>
 #include <graphene/chain/protocol/market.hpp>
 #include <graphene/chain/protocol/proposal.hpp>
@@ -56,13 +55,13 @@ namespace graphene { namespace chain {
 
             asset_update_operation,
             asset_update_monitored_asset_operation,
-            asset_update_feed_producers_operation,
             asset_issue_operation,
             asset_fund_fee_pool_operation,
             asset_publish_feed_operation,
             witness_create_operation,
 
             witness_update_operation,
+            witness_update_global_parameters_operation,
             proposal_create_operation,
             proposal_update_operation,
             proposal_delete_operation,
@@ -70,10 +69,6 @@ namespace graphene { namespace chain {
             withdraw_permission_update_operation,
             withdraw_permission_claim_operation,
             withdraw_permission_delete_operation,
-            committee_member_create_operation,
-            committee_member_update_operation,
-
-            committee_member_update_global_parameters_operation,
             vesting_balance_create_operation,
             vesting_balance_withdraw_operation,
             custom_operation,

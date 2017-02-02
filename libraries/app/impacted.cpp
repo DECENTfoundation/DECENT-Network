@@ -83,7 +83,6 @@ struct get_impacted_account_visitor
    }
 
    void operator()( const asset_update_monitored_asset_operation& op ) {}
-   void operator()( const asset_update_feed_producers_operation& op ) {}
 
    void operator()( const asset_issue_operation& op )
    {
@@ -100,6 +99,7 @@ struct get_impacted_account_visitor
    {
       _impacted.insert( op.witness_account );
    }
+   void operator()( const witness_update_global_parameters_operation& op ){}
 
    void operator()( const proposal_create_operation& op )
    {
@@ -133,16 +133,6 @@ struct get_impacted_account_visitor
       _impacted.insert( op.authorized_account );
    }
 
-   void operator()( const committee_member_create_operation& op )
-   {
-      _impacted.insert( op.committee_member_account );
-   }
-   void operator()( const committee_member_update_operation& op )
-   {
-      _impacted.insert( op.committee_member_account );
-   }
-   void operator()( const committee_member_update_global_parameters_operation& op ) {}
-
    void operator()( const vesting_balance_create_operation& op )
    {
       _impacted.insert( op.owner );
@@ -174,12 +164,12 @@ struct get_impacted_account_visitor
          add_authority_accounts( _impacted, in.owner );
    }
 
-   void operator()( const content_submit_operation& op) {}
-   void operator()( const request_to_buy_operation& op) {}
-   void operator()( const leave_rating_operation& op) {}
-   void operator()( const ready_to_publish_operation& op) {}
-   void operator()( const proof_of_custody_operation& op) {}
-   void operator()( const deliver_keys_operation& op) {}
+   void operator()( const content_submit_operation& op) { _impacted.insert(op.author); }
+   void operator()( const request_to_buy_operation& op) { _impacted.insert(op.consumer); }
+   void operator()( const leave_rating_operation& op) { _impacted.insert(op.consumer);}
+   void operator()( const ready_to_publish_operation& op) { _impacted.insert(op.seeder); }
+   void operator()( const proof_of_custody_operation& op) { _impacted.insert(op.seeder);}
+   void operator()( const deliver_keys_operation& op) {  _impacted.insert(op.seeder);}
 };
 
 void operation_get_impacted_accounts( const operation& op, flat_set<account_id_type>& result )

@@ -163,7 +163,6 @@ void asset_publish_feed_operation::validate()const
 {
    FC_ASSERT( fee.amount >= 0 );
    feed.validate();
-
    // maybe some of these could be moved to feed.validate()
    if( !feed.core_exchange_rate.is_null() )
    {
@@ -174,9 +173,5 @@ void asset_publish_feed_operation::validate()const
    FC_ASSERT( feed.is_for( asset_id ) );
 }
 
-void asset_update_feed_producers_operation::validate() const
-{
-   FC_ASSERT( fee.amount >= 0 );
-}
 
 } } // namespace graphene::chain

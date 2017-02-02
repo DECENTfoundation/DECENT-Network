@@ -63,8 +63,6 @@ void verify_account_votes( const database& db, const account_options& options )
 
    FC_ASSERT( options.num_witness <= chain_params.maximum_witness_count,
               "Voted for more witnesses than currently allowed (${c})", ("c", chain_params.maximum_witness_count) );
-   FC_ASSERT( options.num_committee <= chain_params.maximum_committee_count,
-              "Voted for more committee members than currently allowed (${c})", ("c", chain_params.maximum_committee_count) );
 
    uint32_t max_vote_id = gpo.next_available_vote_id;
    for( auto id : options.votes )

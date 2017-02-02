@@ -30,7 +30,6 @@
 #include <graphene/chain/buyback_object.hpp>
 #include <graphene/chain/buying_object.hpp>
 #include <graphene/chain/chain_property_object.hpp>
-#include <graphene/chain/committee_member_object.hpp>
 #include <graphene/chain/confidential_object.hpp>
 #include <graphene/chain/content_object.hpp>
 #include <graphene/chain/global_property_object.hpp>
@@ -48,7 +47,6 @@
 #include <graphene/chain/account_evaluator.hpp>
 #include <graphene/chain/asset_evaluator.hpp>
 #include <graphene/chain/assert_evaluator.hpp>
-#include <graphene/chain/committee_member_evaluator.hpp>
 #include <graphene/chain/confidential_evaluator.hpp>
 #include <graphene/chain/custom_evaluator.hpp>
 #include <graphene/chain/decent_evaluator.hpp>
@@ -87,9 +85,6 @@ const uint8_t asset_object::type_id;
 const uint8_t block_summary_object::space_id;
 const uint8_t block_summary_object::type_id;
 
-const uint8_t committee_member_object::space_id;
-const uint8_t committee_member_object::type_id;
-
 const uint8_t global_property_object::space_id;
 const uint8_t global_property_object::type_id;
 
@@ -120,14 +115,10 @@ void database::initialize_evaluators()
    _operation_evaluators.resize(255);
    register_evaluator<account_create_evaluator>();
    register_evaluator<account_update_evaluator>();
-   register_evaluator<committee_member_create_evaluator>();
-   register_evaluator<committee_member_update_evaluator>();
-   register_evaluator<committee_member_update_global_parameters_evaluator>();
    register_evaluator<custom_evaluator>();
    register_evaluator<asset_create_evaluator>();
    register_evaluator<asset_issue_evaluator>();
    register_evaluator<asset_update_evaluator>();
-   register_evaluator<asset_update_feed_producers_evaluator>();
    register_evaluator<assert_evaluator>();
    register_evaluator<limit_order_create_evaluator>();
    register_evaluator<limit_order_cancel_evaluator>();
@@ -140,6 +131,7 @@ void database::initialize_evaluators()
    register_evaluator<vesting_balance_withdraw_evaluator>();
    register_evaluator<witness_create_evaluator>();
    register_evaluator<witness_update_evaluator>();
+   register_evaluator<witness_update_global_parameters_evaluator>();
    register_evaluator<withdraw_permission_create_evaluator>();
    register_evaluator<withdraw_permission_claim_evaluator>();
    register_evaluator<withdraw_permission_update_evaluator>();
@@ -168,7 +160,6 @@ void database::initialize_indexes()
    acnt_index->add_secondary_index<account_member_index>();
    acnt_index->add_secondary_index<account_referrer_index>();
 
-   add_index< primary_index<committee_member_index> >();
    add_index< primary_index<witness_index> >();
    add_index< primary_index<limit_order_index > >();
 
@@ -230,16 +221,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
    create<account_balance_object>([](account_balance_object& b) {
       b.balance = GRAPHENE_MAX_SHARE_SUPPLY;
    });
-   const account_object& committee_account =
-      create<account_object>( [&](account_object& n) {
-         n.network_fee_percentage = GRAPHENE_DEFAULT_NETWORK_PERCENT_OF_FEE;
-         n.lifetime_referrer_fee_percentage = GRAPHENE_100_PERCENT - GRAPHENE_DEFAULT_NETWORK_PERCENT_OF_FEE;
-         n.owner.weight_threshold = 1;
-         n.active.weight_threshold = 1;
-         n.name = "committee-account";
-         n.statistics = create<account_statistics_object>( [&](account_statistics_object& s){ s.owner = n.id; }).id;
-      });
-   FC_ASSERT(committee_account.get_id() == GRAPHENE_COMMITTEE_ACCOUNT);
+
    FC_ASSERT(create<account_object>([this](account_object& a) {
        a.name = "witness-account";
        a.statistics = create<account_statistics_object>([&](account_statistics_object& s){s.owner = a.id;}).id;
@@ -249,15 +231,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
        a.network_fee_percentage = GRAPHENE_DEFAULT_NETWORK_PERCENT_OF_FEE;
        a.lifetime_referrer_fee_percentage = GRAPHENE_100_PERCENT - GRAPHENE_DEFAULT_NETWORK_PERCENT_OF_FEE;
    }).get_id() == GRAPHENE_WITNESS_ACCOUNT);
-   FC_ASSERT(create<account_object>([this](account_object& a) {
-       a.name = "relaxed-committee-account";
-       a.statistics = create<account_statistics_object>([&](account_statistics_object& s){s.owner = a.id;}).id;
-       a.owner.weight_threshold = 1;
-       a.active.weight_threshold = 1;
-       a.registrar = a.lifetime_referrer = a.referrer = GRAPHENE_RELAXED_COMMITTEE_ACCOUNT;
-       a.network_fee_percentage = GRAPHENE_DEFAULT_NETWORK_PERCENT_OF_FEE;
-       a.lifetime_referrer_fee_percentage = GRAPHENE_100_PERCENT - GRAPHENE_DEFAULT_NETWORK_PERCENT_OF_FEE;
-   }).get_id() == GRAPHENE_RELAXED_COMMITTEE_ACCOUNT);
+
    FC_ASSERT(create<account_object>([this](account_object& a) {
        a.name = "null-account";
        a.statistics = create<account_statistics_object>([&](account_statistics_object& s){s.owner = a.id;}).id;
@@ -267,6 +241,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
        a.network_fee_percentage = 0;
        a.lifetime_referrer_fee_percentage = GRAPHENE_100_PERCENT;
    }).get_id() == GRAPHENE_NULL_ACCOUNT);
+
    FC_ASSERT(create<account_object>([this](account_object& a) {
        a.name = "temp-account";
        a.statistics = create<account_statistics_object>([&](account_statistics_object& s){s.owner = a.id;}).id;
@@ -276,6 +251,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
        a.network_fee_percentage = GRAPHENE_DEFAULT_NETWORK_PERCENT_OF_FEE;
        a.lifetime_referrer_fee_percentage = GRAPHENE_100_PERCENT - GRAPHENE_DEFAULT_NETWORK_PERCENT_OF_FEE;
    }).get_id() == GRAPHENE_TEMP_ACCOUNT);
+
    FC_ASSERT(create<account_object>([this](account_object& a) {
        a.name = "proxy-to-self";
        a.statistics = create<account_statistics_object>([&](account_statistics_object& s){s.owner = a.id;}).id;
@@ -367,7 +343,6 @@ void database::init_genesis(const genesis_state_type& genesis_state)
    });
 
    FC_ASSERT( (genesis_state.immutable_parameters.min_witness_count & 1) == 1, "min_witness_count must be odd" );
-   FC_ASSERT( (genesis_state.immutable_parameters.min_committee_member_count & 1) == 1, "min_committee_member_count must be odd" );
 
    create<chain_property_object>([&](chain_property_object& p)
    {
@@ -426,7 +401,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
    for( const auto& balance: genesis_state.initial_balances )
    {
       transfer_operation top;
-      top.from = GRAPHENE_COMMITTEE_ACCOUNT;
+      top.from = GRAPHENE_WITNESS_ACCOUNT;
       top.to = get_account_id( balance.owner );
       asset amount( balance.amount, get_asset_id( balance.asset_symbol ) );
       top.amount = amount;
@@ -460,13 +435,13 @@ void database::init_genesis(const genesis_state_type& genesis_state)
          string issuer_name = asset.issuer_name;
          a.issuer = get_account_id(issuer_name);
          a.options.max_supply = asset.max_supply;
-         a.dynamic_asset_data_id = dynamic_data_id;
+        a.dynamic_asset_data_id = dynamic_data_id;
       });
    }
 
    if( total_supplies[ asset_id_type(0) ] > 0 )
    {
-       adjust_balance(GRAPHENE_COMMITTEE_ACCOUNT, -get_balance(GRAPHENE_COMMITTEE_ACCOUNT,{}));
+       adjust_balance(GRAPHENE_WITNESS_ACCOUNT, -get_balance(GRAPHENE_WITNESS_ACCOUNT,{}));
    }
    else
    {
@@ -500,19 +475,11 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       apply_operation(genesis_eval_state, op);
    });
 
-   // Create initial committee members
-   std::for_each(genesis_state.initial_committee_candidates.begin(), genesis_state.initial_committee_candidates.end(),
-                 [&](const genesis_state_type::initial_committee_member_type& member) {
-      committee_member_create_operation op;
-      op.committee_member_account = get_account_id(member.owner_name);
-      apply_operation(genesis_eval_state, op);
-   });
-
    // Set active witnesses
    modify(get_global_properties(), [&](global_property_object& p) {
       for( uint32_t i = 1; i <= genesis_state.initial_active_witnesses; ++i )
       {
-         p.active_witnesses.insert(witness_id_type(i));
+         p.active_witnesses.emplace_back(witness_id_type(i));
       }
    });
 

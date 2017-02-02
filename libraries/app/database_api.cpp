@@ -110,11 +110,6 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       map<string, witness_id_type> lookup_witness_accounts(const string& lower_bound_name, uint32_t limit)const;
       uint64_t get_witness_count()const;
 
-      // Committee members
-      vector<optional<committee_member_object>> get_committee_members(const vector<committee_member_id_type>& committee_member_ids)const;
-      fc::optional<committee_member_object> get_committee_member_by_account(account_id_type account)const;
-      map<string, committee_member_id_type> lookup_committee_member_accounts(const string& lower_bound_name, uint32_t limit)const;
-
       // Votes
       vector<variant> lookup_vote_ids( const vector<vote_id_type>& votes )const;
 
@@ -1196,71 +1191,6 @@ uint64_t database_api_impl::get_witness_count()const
 
 //////////////////////////////////////////////////////////////////////
 //                                                                  //
-// Committee members                                                //
-//                                                                  //
-//////////////////////////////////////////////////////////////////////
-
-vector<optional<committee_member_object>> database_api::get_committee_members(const vector<committee_member_id_type>& committee_member_ids)const
-{
-   return my->get_committee_members( committee_member_ids );
-}
-
-vector<optional<committee_member_object>> database_api_impl::get_committee_members(const vector<committee_member_id_type>& committee_member_ids)const
-{
-   vector<optional<committee_member_object>> result; result.reserve(committee_member_ids.size());
-   std::transform(committee_member_ids.begin(), committee_member_ids.end(), std::back_inserter(result),
-                  [this](committee_member_id_type id) -> optional<committee_member_object> {
-      if(auto o = _db.find(id))
-         return *o;
-      return {};
-   });
-   return result;
-}
-
-fc::optional<committee_member_object> database_api::get_committee_member_by_account(account_id_type account)const
-{
-   return my->get_committee_member_by_account( account );
-}
-
-fc::optional<committee_member_object> database_api_impl::get_committee_member_by_account(account_id_type account) const
-{
-   const auto& idx = _db.get_index_type<committee_member_index>().indices().get<by_account>();
-   auto itr = idx.find(account);
-   if( itr != idx.end() )
-      return *itr;
-   return {};
-}
-
-map<string, committee_member_id_type> database_api::lookup_committee_member_accounts(const string& lower_bound_name, uint32_t limit)const
-{
-   return my->lookup_committee_member_accounts( lower_bound_name, limit );
-}
-
-map<string, committee_member_id_type> database_api_impl::lookup_committee_member_accounts(const string& lower_bound_name, uint32_t limit)const
-{
-   FC_ASSERT( limit <= 1000 );
-   const auto& committee_members_by_id = _db.get_index_type<committee_member_index>().indices().get<by_id>();
-
-   // we want to order committee_members by account name, but that name is in the account object
-   // so the committee_member_index doesn't have a quick way to access it.
-   // get all the names and look them all up, sort them, then figure out what
-   // records to return.  This could be optimized, but we expect the
-   // number of committee_members to be few and the frequency of calls to be rare
-   std::map<std::string, committee_member_id_type> committee_members_by_account_name;
-   for (const committee_member_object& committee_member : committee_members_by_id)
-       if (auto account_iter = _db.find(committee_member.committee_member_account))
-           if (account_iter->name >= lower_bound_name) // we can ignore anything below lower_bound_name
-               committee_members_by_account_name.insert(std::make_pair(account_iter->name, committee_member.id));
-
-   auto end_iter = committee_members_by_account_name.begin();
-   while (end_iter != committee_members_by_account_name.end() && limit--)
-       ++end_iter;
-   committee_members_by_account_name.erase(end_iter, committee_members_by_account_name.end());
-   return committee_members_by_account_name;
-}
-
-//////////////////////////////////////////////////////////////////////
-//                                                                  //
 // Votes                                                            //
 //                                                                  //
 //////////////////////////////////////////////////////////////////////
@@ -1275,7 +1205,6 @@ vector<variant> database_api_impl::lookup_vote_ids( const vector<vote_id_type>& 
    FC_ASSERT( votes.size() < 1000, "Only 1000 votes can be queried at a time" );
 
    const auto& witness_idx = _db.get_index_type<witness_index>().indices().get<by_vote_id>();
-   const auto& committee_idx = _db.get_index_type<committee_member_index>().indices().get<by_vote_id>();
 
    vector<variant> result;
    result.reserve( votes.size() );
@@ -1283,15 +1212,6 @@ vector<variant> database_api_impl::lookup_vote_ids( const vector<vote_id_type>& 
    {
       switch( id.type() )
       {
-         case vote_id_type::committee:
-         {
-            auto itr = committee_idx.find( id );
-            if( itr != committee_idx.end() )
-               result.emplace_back( variant( *itr ) );
-            else
-               result.emplace_back( variant() );
-            break;
-         }
          case vote_id_type::witness:
          {
             auto itr = witness_idx.find( id );

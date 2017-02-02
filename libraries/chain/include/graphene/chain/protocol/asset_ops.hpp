@@ -241,36 +241,6 @@ namespace graphene { namespace chain {
       void            validate()const;
    };
 
-   /**
-       * @brief Update the set of feed-producing accounts for a BitAsset
-       * @ingroup operations
-       *
-       * BitAssets have price feeds selected by taking the median values of recommendations from a set of feed producers.
-       * This operation is used to specify which accounts may produce feeds for a given BitAsset.
-       *
-       * @pre @ref issuer MUST be an existing account, and MUST match asset_object::issuer on @ref asset_to_update
-       * @pre @ref issuer MUST NOT be the committee account
-       * @pre @ref asset_to_update MUST be a BitAsset, i.e. @ref asset_object::is_market_issued() returns true
-       * @pre @ref fee MUST be nonnegative, and @ref issuer MUST have a sufficient balance to pay it
-       * @pre Cardinality of @ref new_feed_producers MUST NOT exceed @ref chain_parameters::maximum_asset_feed_publishers
-       * @post @ref asset_to_update will have a set of feed producers matching @ref new_feed_producers
-       * @post All valid feeds supplied by feed producers in @ref new_feed_producers, which were already feed producers
-       * prior to execution of this operation, will be preserved
-       */
-   struct asset_update_feed_producers_operation : public base_operation
-   {
-      struct fee_parameters_type { uint64_t fee = 500 * GRAPHENE_BLOCKCHAIN_PRECISION; };
-
-      asset           fee;
-      account_id_type issuer;
-      asset_id_type   asset_to_update;
-
-      flat_set<account_id_type> new_feed_producers;
-      extensions_type           extensions;
-
-      account_id_type fee_payer()const { return issuer; }
-      void            validate()const;
-   };
 
    /**
     * @brief Publish price feeds for market-issued assets
@@ -327,7 +297,6 @@ FC_REFLECT( graphene::chain::asset_create_operation::fee_parameters_type, (symbo
 FC_REFLECT( graphene::chain::asset_fund_fee_pool_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::asset_update_operation::fee_parameters_type, (fee)(price_per_kbyte) )
 FC_REFLECT( graphene::chain::asset_issue_operation::fee_parameters_type, (fee)(price_per_kbyte) )
-FC_REFLECT( graphene::chain::asset_update_feed_producers_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::asset_publish_feed_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::asset_update_monitored_asset_operation::fee_parameters_type, (fee) )
 
@@ -350,8 +319,6 @@ FC_REFLECT( graphene::chain::asset_update_operation,
 FC_REFLECT( graphene::chain::asset_issue_operation,
             (fee)(issuer)(asset_to_issue)(issue_to_account)(memo)(extensions) )
 FC_REFLECT( graphene::chain::asset_fund_fee_pool_operation, (fee)(from_account)(asset_id)(amount)(extensions) );
-FC_REFLECT( graphene::chain::asset_update_feed_producers_operation,
-            (fee)(issuer)(asset_to_update)(new_feed_producers)(extensions) )
 FC_REFLECT( graphene::chain::asset_publish_feed_operation,
             (fee)(publisher)(asset_id)(feed)(extensions) )
 FC_REFLECT( graphene::chain::asset_update_monitored_asset_operation, (fee)(issuer)(asset_to_update)(new_options)(extensions) )

@@ -31,7 +31,6 @@
 
 #include <graphene/chain/account_object.hpp>
 #include <graphene/chain/asset_object.hpp>
-#include <graphene/chain/committee_member_object.hpp>
 #include <graphene/chain/market_object.hpp>
 #include <graphene/chain/vesting_balance_object.hpp>
 #include <graphene/chain/witness_object.hpp>
@@ -85,7 +84,6 @@ database_fixture::database_fixture()
       genesis_state.initial_accounts.emplace_back(name,
                                                   init_account_priv_key.get_public_key(),
                                                   init_account_priv_key.get_public_key());
-      genesis_state.initial_committee_candidates.push_back({name});
       genesis_state.initial_witness_candidates.push_back({name, init_account_priv_key.get_public_key()});
    }
    genesis_state.initial_parameters.current_fees->zero_all_fees();
@@ -259,18 +257,18 @@ account_create_operation database_fixture::make_account(
    create_account.options.memo_key = key;
    create_account.options.voting_account = GRAPHENE_PROXY_TO_SELF_ACCOUNT;
 
-   auto& active_committee_members = db.get_global_properties().active_committee_members;
-   if( active_committee_members.size() > 0 )
+   auto& active_witnesses = db.get_global_properties().active_witnesses;
+   if( active_witnesses.size() > 0 )
    {
       set<vote_id_type> votes;
-      votes.insert(active_committee_members[rand() % active_committee_members.size()](db).vote_id);
-      votes.insert(active_committee_members[rand() % active_committee_members.size()](db).vote_id);
-      votes.insert(active_committee_members[rand() % active_committee_members.size()](db).vote_id);
-      votes.insert(active_committee_members[rand() % active_committee_members.size()](db).vote_id);
-      votes.insert(active_committee_members[rand() % active_committee_members.size()](db).vote_id);
+      votes.insert(active_witnesses[rand() % active_witnesses.size()](db).vote_id);
+      votes.insert(active_witnesses[rand() % active_witnesses.size()](db).vote_id);
+      votes.insert(active_witnesses[rand() % active_witnesses.size()](db).vote_id);
+      votes.insert(active_witnesses[rand() % active_witnesses.size()](db).vote_id);
+      votes.insert(active_witnesses[rand() % active_witnesses.size()](db).vote_id);
       create_account.options.votes = flat_set<vote_id_type>(votes.begin(), votes.end());
    }
-   create_account.options.num_committee = create_account.options.votes.size();
+   create_account.options.num_witness = create_account.options.votes.size();
 
    create_account.fee = db.current_fee_schedule().calculate_fee( create_account );
    return create_account;
@@ -298,18 +296,18 @@ account_create_operation database_fixture::make_account(
       create_account.options.memo_key = key;
       create_account.options.voting_account = GRAPHENE_PROXY_TO_SELF_ACCOUNT;
 
-      const vector<committee_member_id_type>& active_committee_members = db.get_global_properties().active_committee_members;
-      if( active_committee_members.size() > 0 )
+      const vector<witness_id_type>& active_witnesses = db.get_global_properties().active_witnesses;
+      if( active_witnesses.size() > 0 )
       {
          set<vote_id_type> votes;
-         votes.insert(active_committee_members[rand() % active_committee_members.size()](db).vote_id);
-         votes.insert(active_committee_members[rand() % active_committee_members.size()](db).vote_id);
-         votes.insert(active_committee_members[rand() % active_committee_members.size()](db).vote_id);
-         votes.insert(active_committee_members[rand() % active_committee_members.size()](db).vote_id);
-         votes.insert(active_committee_members[rand() % active_committee_members.size()](db).vote_id);
+         votes.insert(active_witnesses[rand() % active_witnesses.size()](db).vote_id);
+         votes.insert(active_witnesses[rand() % active_witnesses.size()](db).vote_id);
+         votes.insert(active_witnesses[rand() % active_witnesses.size()](db).vote_id);
+         votes.insert(active_witnesses[rand() % active_witnesses.size()](db).vote_id);
+         votes.insert(active_witnesses[rand() % active_witnesses.size()](db).vote_id);
          create_account.options.votes = flat_set<vote_id_type>(votes.begin(), votes.end());
       }
-      create_account.options.num_committee = create_account.options.votes.size();
+      create_account.options.num_witness = create_account.options.votes.size();
 
       create_account.fee = db.current_fee_schedule().calculate_fee( create_account );
       return create_account;
@@ -502,17 +500,6 @@ const account_object& database_fixture::create_account(
    FC_CAPTURE_AND_RETHROW( (name)(registrar_id)(referrer_id) )
 }
 
-const committee_member_object& database_fixture::create_committee_member( const account_object& owner )
-{
-   committee_member_create_operation op;
-   op.committee_member_account = owner.id;
-   trx.operations.push_back(op);
-   trx.validate();
-   processed_transaction ptx = db.push_transaction(trx, ~0);
-   trx.operations.clear();
-   return db.get<committee_member_object>(ptx.operation_results[0].get<object_id_type>());
-}
-
 const witness_object&database_fixture::create_witness(account_id_type owner, const fc::ecc::private_key& signing_private_key)
 {
    return create_witness(owner(db), signing_private_key);
@@ -623,23 +610,6 @@ void database_fixture::transfer(
       trx.operations.clear();
    } FC_CAPTURE_AND_RETHROW( (from.id)(to.id)(amount)(fee) )
 }
-
-void database_fixture::update_feed_producers( const asset_object& mia, flat_set<account_id_type> producers )
-{ try {
-   set_expiration( db, trx );
-   trx.operations.clear();
-   asset_update_feed_producers_operation op;
-   op.asset_to_update = mia.id;
-   op.issuer = mia.issuer;
-   op.new_feed_producers = std::move(producers);
-   trx.operations = {std::move(op)};
-
-   for( auto& op : trx.operations ) db.current_fee_schedule().set_fee(op);
-   trx.validate();
-   db.push_transaction(trx, ~0);
-   trx.operations.clear();
-   verify_asset_supplies(db);
-} FC_CAPTURE_AND_RETHROW( (mia)(producers) ) }
 
 void database_fixture::publish_feed( const asset_object& mia, const account_object& by, const price_feed& f )
 {

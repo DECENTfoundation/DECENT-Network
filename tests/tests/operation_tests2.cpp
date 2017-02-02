@@ -31,7 +31,7 @@
 #include <graphene/chain/asset_object.hpp>
 #include <graphene/chain/account_object.hpp>
 #include <graphene/chain/budget_record_object.hpp>
-#include <graphene/chain/committee_member_object.hpp>
+#include <graphene/chain/witness_object.hpp>
 #include <graphene/chain/market_object.hpp>
 #include <graphene/chain/vesting_balance_object.hpp>
 #include <graphene/chain/withdraw_permission_object.hpp>
@@ -331,16 +331,6 @@ BOOST_AUTO_TEST_CASE( mia_feeds )
       trx.clear();
    }
    {
-      asset_update_feed_producers_operation op;
-      op.asset_to_update = bit_usd_id;
-      op.issuer = nathan_id;
-      op.new_feed_producers = {dan_id, ben_id, vikram_id};
-      trx.operations.push_back(op);
-      sign( trx, nathan_private_key );
-      PUSH_TX( db, trx );
-      generate_block(database::skip_nothing);
-   }
-   {
       const asset_object& obj = bit_usd_id(db);
       BOOST_CHECK_EQUAL(obj.options.monitored_asset_opts->feeds.size(), 3);
    }
@@ -402,7 +392,7 @@ BOOST_AUTO_TEST_CASE( witness_create )
    trx.clear();
    witness_id_type nathan_witness_id = create_witness(nathan_id, nathan_private_key).id;
    // Give nathan some voting stake
-   transfer(committee_account, nathan_id, asset(10000000));
+   transfer(witness_account, nathan_id, asset(10000000));
    generate_block();
    set_expiration( db, trx );
 
@@ -413,8 +403,6 @@ BOOST_AUTO_TEST_CASE( witness_create )
       op.new_options->votes.insert(nathan_witness_id(db).vote_id);
       op.new_options->num_witness = std::count_if(op.new_options->votes.begin(), op.new_options->votes.end(),
                                                   [](vote_id_type id) { return id.type() == vote_id_type::witness; });
-      op.new_options->num_committee = std::count_if(op.new_options->votes.begin(), op.new_options->votes.end(),
-                                                    [](vote_id_type id) { return id.type() == vote_id_type::committee; });
       trx.operations.push_back(op);
       sign( trx, nathan_private_key );
       PUSH_TX( db, trx );
