@@ -33,6 +33,10 @@ using namespace graphene::chain;
 namespace {
 
    void remove_trailing_zeros(std::string& str) { 
+      if (str.find('.') == std::string::npos) {
+         return;
+      }
+      
       int offset = 1; 
       if (str.find_last_not_of('0') == str.find('.')) { 
          offset = 0; 
