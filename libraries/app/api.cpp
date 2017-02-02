@@ -337,6 +337,36 @@ namespace graphene { namespace app {
                   break;
                  case impl_buyback_object_type:
                   break;
+                 case impl_buying_object_type:{
+                  const auto& bobj = dynamic_cast<const buying_object*>(obj);
+                  assert( bobj != nullptr );
+                  result.push_back( bobj->consumer );
+                  break;
+                 }
+                 case impl_buying_history_object_type:{
+                  const auto& bobj = dynamic_cast<const buying_history_object*>(obj);
+                  assert( bobj != nullptr );
+                  result.push_back( bobj->consumer );
+                  break;
+                 }
+                 case impl_content_object_type:{
+                    const auto& cobj = dynamic_cast<const content_object*>(obj);
+                    assert( cobj != nullptr );
+                    result.push_back( cobj->author );
+                    break;
+                 }
+                 case impl_publisher_object_type:{
+                    const auto& sobj = dynamic_cast<const seeder_object*>(obj);
+                    assert( sobj != nullptr );
+                    result.push_back( sobj->seeder );
+                    break;
+                 }
+                 case impl_rating_object_type:{
+                    const auto& robj = dynamic_cast<const rating_object*>(obj);
+                    assert( robj != nullptr );
+                    result.push_back( robj->consumer );
+                    break;
+                 }
           }
        }
        return result;

@@ -465,6 +465,7 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
 
    modify(gpo, [this](global_property_object& p) {
       // Remove scaling of account registration fee
+        //TODO_DECENT rework
       const auto& dgpo = get_dynamic_global_properties();
       p.parameters.current_fees->get<account_create_operation>().basic_fee >>= p.parameters.account_fee_scale_bitshifts *
             (dgpo.accounts_registered_this_interval / p.parameters.accounts_per_fee_scale);
@@ -515,6 +516,7 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
 
    // process_budget needs to run at the bottom because
    //   it needs to know the next_maintenance_time
+   //TODO_DECENT rework
    process_budget();
 }
 
