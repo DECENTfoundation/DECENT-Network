@@ -4,21 +4,56 @@ Intro for new developers
 This is a quick introduction to get new developers up to speed on Decent.
 
 
-Building Decent
+Building Decent [![Build Status](https://travis-ci.com/DECENTfoundation/DECENT-Network.svg?token=xwFm8bxNLqiJV3NaNYgy&branch=develop)](https://travis-ci.com/DECENTfoundation/DECENT-Network)
 ---------------
 
-### Installing all prerequisites in Linux
+### Installing prerequisites in Linux
 
-For Ubuntu 16.04 LTS or later, execute in console:
+For Ubuntu 16.04 LTS (for extra actions needed for 14.04 LTS, 14.10, or 16.10 see notes below), execute in console:
 
     $ sudo apt-get update
-    $ sudo apt-get install build-essential autotools-dev automake autoconf libtool make cmake gcc g++ clang flex bison doxygen gettext git libreadline-dev libcrypto++-dev libgmp-dev libdb-dev libdb++-dev libssl-dev libncurses5-dev libboost-all-dev
+    $ sudo apt-get install build-essential autotools-dev automake autoconf libtool make cmake checkinstall realpath gcc g++ clang flex bison doxygen gettext git qt5-default libreadline-dev libcrypto++-dev libgmp-dev libdb-dev libdb++-dev libssl-dev libncurses5-dev libboost-all-dev libcurl4-openssl-dev python-dev libicu-dev libbz2-dev
 
-> Note, that the default version of Boost installed in Ubuntu 16.10 is not supported. In order to install a supported one, execute in console:
-> 
->     $ sudo apt-get remove libboost-all-dev
->     $ sudo apt-get autoremove
->     $ sudo apt-get install libboost1.60-all-dev
+(Ubuntu 16.10 only) Note, that the default version of Boost installed in Ubuntu 16.10 is too high and not supported. In order to install a supported one, in addition to the commands above, execute the following in console:
+
+    # Uninstall the default Boost and install Boost 1.60.0
+    $ sudo apt-get remove libboost-all-dev
+    $ sudo apt-get autoremove
+    $ sudo apt-get install libboost1.60-all-dev
+
+(Ubuntu 14.04 LTS and 14.10 only) Note, that the default version of Boost and CMake installed in Ubuntu 14.04 LTS or 14.10 is too old and not supported. In order to build and use the supported ones, in addition to the common commands above, execute the following in console (in the same shell session, where you are going to build DECENT itself):
+
+    # Download and build Boost 1.60.0
+    $ mkdir -p ~/dev/DECENTfoundation/third-party
+    $ cd ~/dev/DECENTfoundation/third-party
+    $ rm -rf boost_1_60_0* boost-1.60.0*
+    $ wget https://sourceforge.net/projects/boost/files/boost/1.60.0/boost_1_60_0.tar.gz
+    $ tar xvf boost_1_60_0.tar.gz
+    $ mkdir boost-1.60.0_prefix
+    $ cd boost_1_60_0
+    $ export BOOST_ROOT=$(realpath ../boost-1.60.0_prefix)
+    $ ./bootstrap.sh --prefix=$BOOST_ROOT
+    $ ./b2 install
+    $ cd ..
+    $ rm -rf boost_1_60_0 boost_1_60_0.tar.gz
+
+    # Download and build CMake 3.7.2
+    $ mkdir -p ~/dev/DECENTfoundation/third-party
+    $ cd ~/dev/DECENTfoundation/third-party
+    $ rm -rf cmake-3.7.2*
+    $ wget https://cmake.org/files/v3.7/cmake-3.7.2.tar.gz
+    $ tar xvf cmake-3.7.2.tar.gz
+    $ mkdir cmake-3.7.2_prefix
+    $ cd cmake-3.7.2
+    $ CMAKE_ROOT=$(realpath ../cmake-3.7.2_prefix)
+    $ ./configure --prefix=$CMAKE_ROOT
+    $ make
+    $ make install
+    $ cd ..
+    $ rm -rf cmake-3.7.2 cmake-3.7.2.tar.gz
+    $ export PATH=$CMAKE_ROOT/bin:$PATH
+
+At this point, `cmake` command should be picked up from `$CMAKE_ROOT/bin`, and CMake configure should find the Boost distribution in the exported `$BOOST_ROOT`.
 
 
 For Fedora 25 or later, execute in console:
@@ -27,9 +62,9 @@ For Fedora 25 or later, execute in console:
     $ sudo yum install automake autoconf libtool make cmake gcc clang flex bison doxygen gettext-devel git readline-devel cryptopp-devel gmp-devel libdb-devel libdb-cxx-devel openssl-devel ncurses-devel boost-devel boost-static
 
 
-### Installing all prerequisites in macOS
+### Installing prerequisites in macOS
 
-* Install Xcode and Command Line Tools, see http://railsapps.github.io/xcode-command-line-tools.html
+* Install Xcode and Command Line Tools as described in http://railsapps.github.io/xcode-command-line-tools.html
 * Install Homebrew, see http://brew.sh
 
 Then, execute in console:
@@ -37,7 +72,8 @@ Then, execute in console:
     $ brew doctor
     $ brew tap homebrew/versions
     $ brew update
-    $ brew install automake autoconf libtool cmake berkeley-db qt5 google-perftools boost160 cryptopp libtorrent-rasterbar doxygen byacc flex gettext git pbc gmp ipfs openssl readline
+    $ brew install automake autoconf libtool cmake berkeley-db boost160 qt5 cryptopp libtorrent-rasterbar doxygen byacc flex gettext git pbc gmp ipfs openssl readline
+
 
 
 ### Obtaining the sources, building, and installing Decent in Unix (macOS or Linux)
@@ -58,25 +94,26 @@ After all the prerequisites are installed, execute the following commands in con
     $ cmake --build . --target all -- -j -l 3.0
     $ cmake --build . --target install
 
-By this time you should have Decent files installed at `~/dev/DECENTfoundation/build/artifacts/prefix` directory.
-
-You can use any path instead of `~/dev/DECENTfoundation` directory in the steps above.
-
 > Note that, in case of "Unix Makefiles" CMake generator, the last two commands are equivalent to:
 > 
 >     $ make -j -l 3.0
 >     $ make install
 
+By this time you should have Decent files installed at `~/dev/DECENTfoundation/build/DECENT-Network/artifacts/prefix` or `~/dev/DECENTfoundation/build/DECENT-Network/install` directories.
 
-You can use Xcode, or any other CMake generator, and then, if it is an IDE generator, instead of building and installing via `cmake` in terminal, open the generated project/solution file in the corresponding IDE and perform `ALL_BUILD` and `INSTALL` actions from there.
+You can use any path instead of `~/dev/DECENTfoundation` in the steps above.
 
-### Installing all prerequisites, obtaining the sources, building, and installing Decent in Windows
+You can use Xcode, or any other CMake generator, and then, if it is an IDE generator, instead of building and installing via `cmake` in terminal, open the generated project/solution file in the corresponding IDE and perform `ALL_BUILD` and `INSTALL` (or `install`) actions from there.
+
+### Installing prerequisites, obtaining the sources, building, and installing Decent in Windows
 
 TODO
 
 
 Starting Decent
 ---------------
+
+> Change `~/dev/DECENTfoundation/build/DECENT-Network/artifacts/prefix` to `~/dev/DECENTfoundation/build/DECENT-Network/install` in the commands below, if it was the default install location in your configuration.
 
 On first run `witness_node` will create `witness_node_data_dir` in the current working directory, if doesn't exist already.
 
@@ -86,6 +123,7 @@ On first run `witness_node` will create `witness_node_data_dir` in the current w
 
 Now press Ctrl-C to stop `witness_node`.
 
+Remove `~/dev/DECENTfoundation/working_dir/witness_node_data_dir/blockchain` directory.
 Edit `~/dev/DECENTfoundation/working_dir/witness_node_data_dir/config.ini` to contain the following lines:
 
     seed-node = 185.8.165.21:33142
@@ -94,19 +132,19 @@ Edit `~/dev/DECENTfoundation/working_dir/witness_node_data_dir/config.ini` to co
 Then, run the witness node again:
 
     $ cd ~/dev/DECENTfoundation/working_dir
-    $ ~/dev/DECENTfoundation/build/artifacts/prefix/bin/witness_node --genesis-json ~/dev/DECENTfoundation/DECENT-Network/genesis.json
+    $ ~/dev/DECENTfoundation/build/artifacts/prefix/bin/witness_node --genesis-json ~/dev/DECENTfoundation/DECENT-Network/genesis.json --replay-blockchain
 
-This will launch the witness node with the default genesis. 
+This will launch the witness node with the default genesis. Replay blockchain is a workaround, there is currently a bug than not all saved objects are restored correctly after restart. 
 
 Then, in a separate console, start the command-line wallet by executing:
 
     $ cd ~/dev/DECENTfoundation/working_dir
     $ ~/dev/DECENTfoundation/build/artifacts/prefix/bin/cli_wallet
 
-To set your initial password to `password`, execute:
+To set your initial password to `mypassword`, execute:
 
-    >>> set_password password
-    >>> unlock password
+    >>> set_password mypassword
+    >>> unlock mypassword
 
 To import your account keys, execute:
 
@@ -114,31 +152,38 @@ To import your account keys, execute:
 
 The list of the test accounts is here:
 
-    suggest_brain_key 
+    ejossev
     {
-      "brain_priv_key": "BACCAE CARDOON BENI RIPSACK SORRA ARDUOUS WEEDERY UPCHOKE APERT ENZYME ARTISAN JAPERY RAFFIA MIJL PLEROME CONCHY",
-      "wif_priv_key": "5Kgs83SJvdTVmeRYBAE1WNyp8FLWpxYf1hsX5oejpqNvC7RLuwU",
-      "pub_key": "DCT7MQp1bzYqHEBifH2YuTy35ZYiNkP8eJJsVBVRG585xChJDc25F"
+      "wif_priv_key": "5JntqhEuzub2DV6sD2VDLgmMCzqPxbznzBhWh2e9275PZjxPxfG",
+      "pub_key": "DCT7YJyCq2VSza6BA78dzFepK3SBjW6PHBZutSRsPeddHwahTu4cy"
     }
-    vazgen2
-
-
-    suggest_brain_key 
+    richard
     {
-      "brain_priv_key": "HUGSOME SHELLED COADAPT CYCAD SLINE BIFARA BEAD FIPPLE NUDITY EPOPTIC LABROSE SHINDIG OWL EGGHEAD VALLAR RESNUB",
-      "wif_priv_key": "5K1LBKuR77tJLfAwNRWrJ5okCD4xfkUR7JABTVBhaxZoE9tqsPD",
-      "pub_key": "DCT6vuWZiVB5w6LWhRhoVLjvvrDpxw5CwuWQNu1oSeeDCybRAtDQT"
+      "wif_priv_key": "5KaqD3V3tamUUq1sM68K4hBQSJjJHqBBHTJonNJ5TXrsSepWPoH",
+      "pub_key": "DCT556r9dwc98LF3EjSTH3GXtUSQorcbgkKaYvND7RRfKPqCKG7dv"
     }
-    artazor
-
-
-    suggest_brain_key 
+    vazgen
     {
-      "brain_priv_key": "ASTEISM DOGWOOD CUMBRE HERBIST INULASE SQUOZE SILEX PARAPH PIGGING SHIPLAP ENCRISP MYCELIA LEISURE ENDEVIL LATROBE DUCKERY",
-      "wif_priv_key": "5KZC42A8XHSSLE26xqAymkZiyqjfvhK9wNbQnrWQfyzfMeXceUV",
-      "pub_key": "DCT8KvRax7aDCdsdFLmdQrJ8BxdoK8hduQQyudC33Zf1pu4q67db2"
+      "wif_priv_key": "5JtYrTZfPBWGyfnezUJigid5FxohxWibjGihJuPEz1TKVzruYKM",
+      "pub_key": "DCT5qbepojx4qATs12JT1e42Auhq457gaHSrZX2AJrmw3zBu9TUvy"
     }
     davit
+    {
+      "wif_priv_key": "5JFu59eMF4AQdx11QhrPchBTdF3WEp7HyMgUxRhmTEW491ofwMT",
+      "pub_key": "DCT5iY4Hdj9oaJY6vGqRSMc2vqyKzrocN4o5ze8BrYBsaQC3CeAjw"
+    }
+    denis
+    {
+      "wif_priv_key": "5KbpFoPWgcsA1MMgnSzxq61GyRoGxCxwXr922HPj7L2Xev7RCob",
+      "pub_key": "DCT6Ria6ZVFHNfFVrh8wBUcDubjRQ2k3UEe4bMnrPsrsaGyKPKkiF"
+    }
+    hayk
+    {
+      "wif_priv_key": "5JRPoVy5ZUX4ZxDyec78Hb7GV1424XnoD3yDKEYTWMqS4JBMB9q",
+      "pub_key": "DCT5w8Hrt92G7hZmZJgMSeZGtW3tQQj8fqsJmrtffnrHyWNY7To7y"
+    }
+
+After importing the respective key(s), restart cli_wallet. There is currently a bug in the wallet and the keys are not imported to the internal structures right after import.
 
 A list of CLI wallet commands is available [here](https://github.com/cryptonomex/graphene/blob/master/libraries/wallet/include/graphene/wallet/wallet.hpp).
 
@@ -148,23 +193,31 @@ Witness node
 
 The role of the witness node is to broadcast transactions, download blocks, and optionally sign them.
 
-    $ ~/dev/DECENTfoundation/build/artifacts/prefix/bin/witness_node --rpc-endpoint 127.0.0.1:8090 --enable-stale-production -w '"1.6.0"' '"1.6.1"' '"1.6.2"' '"1.6.3"' '"1.6.4"' '"1.6.5"' '"1.6.6"' '"1.6.7"' '"1.6.8"' '"1.6.9"' '"1.6.10"' '"1.6.11"' '"1.6.12"' '"1.6.13"' '"1.6.14"' '"1.6.15"' '"1.6.16"' '"1.6.17"' '"1.6.18"' '"1.6.19"' '"1.6.20"' '"1.6.21"' '"1.6.22"' '"1.6.23"' '"1.6.24"' '"1.6.25"' '"1.6.26"' '"1.6.27"' '"1.6.28"' '"1.6.29"' '"1.6.30"' '"1.6.31"' '"1.6.32"' '"1.6.33"' '"1.6.34"' '"1.6.35"' '"1.6.36"' '"1.6.37"' '"1.6.38"' '"1.6.39"' '"1.6.40"' '"1.6.41"' '"1.6.42"' '"1.6.43"' '"1.6.44"' '"1.6.45"' '"1.6.46"' '"1.6.47"' '"1.6.48"' '"1.6.49"' '"1.6.50"' '"1.6.51"' '"1.6.52"' '"1.6.53"' '"1.6.54"' '"1.6.55"' '"1.6.56"' '"1.6.57"' '"1.6.58"' '"1.6.59"' '"1.6.60"' '"1.6.61"' '"1.6.62"' '"1.6.63"' '"1.6.64"' '"1.6.65"' '"1.6.66"' '"1.6.67"' '"1.6.68"' '"1.6.69"' '"1.6.70"' '"1.6.71"' '"1.6.72"' '"1.6.73"' '"1.6.74"' '"1.6.75"' '"1.6.76"' '"1.6.77"' '"1.6.78"' '"1.6.79"' '"1.6.80"' '"1.6.81"' '"1.6.82"' '"1.6.83"' '"1.6.84"' '"1.6.85"' '"1.6.86"' '"1.6.87"' '"1.6.88"' '"1.6.89"' '"1.6.90"' '"1.6.91"' '"1.6.92"' '"1.6.93"' '"1.6.94"' '"1.6.95"' '"1.6.96"' '"1.6.97"' '"1.6.98"' '"1.6.99"' '"1.6.100"'
-
+    $ ~/dev/DECENTfoundation/build/artifacts/prefix/bin/witness_node --rpc-endpoint 127.0.0.1:8090 --enable-stale-production -w '"1.6.0"' '"1.6.1"' '"1.6.2"' '"1.6.3"' '"1.6.4"' '"1.6.5"' '"1.6.6"' '"1.6.7"' '"1.6.8"' '"1.6.9"' '"1.6.10"' 
 
 Testing Decent
 --------------
 
-TODO
+Seeder plugin is responsible for automatically announce seeder's capablity, downloading content, seeding it and distributing keys. In order to enable it follow these steps:
+1. Generarate El-Gamal keys using cli_wallet command (first one is private, second one is public)
+
+        generate_el_gamal_keys
+
+2. Add parameters to the witness_node
+
+        --seeder [account-id] --seeder-private-key [private_wif_key] --content-private-key [el_gamal_private_key] --packages-path [path] --seeding-price [price] --free-space [free-space]
+    
+    where [account-id] is one of your accounts, [private_wif_key] corresponding active key, [el_gamal_private_key] is the generated El-Gamal key, [path] is a filesystem location with at least [space] Megabytes available, and [price] is publishing price per MB per day, in satoshis.
 
 
 ### Coverage testing
-
+    
 Check how much code is covered by unit tests, using gcov/lcov (see http://ltp.sourceforge.net/coverage/lcov.php ).
 
     $ mkdir -p ~/dev/DECENTfoundation/build
     $ cd ~/dev/DECENTfoundation/build
     $ cmake -G "Unix Makefiles" -D CMAKE_BUILD_TYPE=Debug -D ENABLE_COVERAGE_TESTING=TRUE ~/dev/DECENTfoundation/DECENT-Network
-    $ cmake --build . --target all -- -j
+    $ cmake --build . --target all -- -j -l 3.0
     $ cmake --build . --target install
     
     $ lcov --capture --initial --directory . --output-file base.info --no-external

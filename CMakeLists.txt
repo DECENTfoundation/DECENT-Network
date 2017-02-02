@@ -1,24 +1,27 @@
-# Defines Decent library target.
+cmake_minimum_required( VERSION 2.8.12 FATAL_ERROR )
+
 project( Decent )
-cmake_minimum_required( VERSION 2.8.12 )
 
 set( BLOCKCHAIN_NAME "Decent" )
 
-set( CLI_CLIENT_EXECUTABLE_NAME decent_client )
-set( GUI_CLIENT_EXECUTABLE_NAME decent )
+set( CLI_CLIENT_EXECUTABLE_NAME "decent_client" )
+set( GUI_CLIENT_EXECUTABLE_NAME "decent" )
 set( CUSTOM_URL_SCHEME "gcs" )
 set( INSTALLER_APP_ID "68ad7005-8eee-49c9-95ce-9eed97e5b347" )
 
 # http://stackoverflow.com/a/18369825
-if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-    if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.8)
-        message(FATAL_ERROR "GCC version must be at least 4.8!")
+if( "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" )
+    if( CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.8.1 )
+        message( FATAL_ERROR "GCC version must be at least 4.8.1!" )
     endif()
-elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-    if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 3.3)
-        message(FATAL_ERROR "Clang version must be at least 3.3!")
+elseif( "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" )
+    if( CMAKE_CXX_COMPILER_VERSION VERSION_LESS 3.3 )
+        message( FATAL_ERROR "Clang version must be at least 3.3!" )
     endif()
 endif()
+
+set( CMAKE_CXX_STANDARD 11 )
+set( CMAKE_CXX_STANDARD_REQUIRED YES )
 
 list( APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules" )
 
@@ -47,37 +50,18 @@ if( APPLE )
     endif()
 endif()
 
-#set (ENABLE_INSTALLER 1)
-#set (USE_PCH 1)
+set( CMAKE_EXPORT_COMPILE_COMMANDS YES )
+set( ENABLE_INSTALLER YES )
+#set( USE_PCH YES )
 
-if (USE_PCH)
-  include (cotire)
-endif(USE_PCH)
+if( USE_PCH )
+    include( cotire )
+endif()
 
 list( APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/libraries/contrib/fc/CMakeModules" )
 list( APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/libraries/contrib/fc/GitVersionGen" )
 include( GetGitRevisionDescription )
 get_git_head_revision( GIT_REFSPEC GIT_SHA2 )
-
-FIND_LIBRARY(CRYPTOPP_LIBRARIES NAMES cryptopp)
-if(CRYPTOPP_LIBRARIES)
-elseif(CRYPTOPP_LIBRARIES)
-    message(FATAL_ERROR "CRYPTOPP_LIBRARIES variable has not been found. Please check that 'cryptopp' is probably installed.")
-
-    if(APPLE)
-        message( "brew install cryptopp")
-    endif(APPLE)
-
-    if(UNIX)
-    message( "apt-get install libcrypto++8 libcrypto++8-dbg libcrypto++-dev
-
-              OR
-
-              yum install cryptopp cryptopp-devel")
-    endif(UNIX)
-
-
-endif(CRYPTOPP_LIBRARIES)
 
 if( WIN32 )
     set( BOOST_ROOT $ENV{BOOST_ROOT} )
@@ -103,67 +87,70 @@ find_package( Boost 1.60 REQUIRED
 
 if( WIN32 )
 
-    message( STATUS "Configuring Decent on WIN32")
+    message( STATUS "Configuring Decent on WIN32" )
     set( DB_VERSION 60 )
     set( BDB_STATIC_LIBS 1 )
 
     set( ZLIB_LIBRARIES "" )
-    SET( DEFAULT_EXECUTABLE_INSTALL_DIR bin/ )
+    set( DEFAULT_EXECUTABLE_INSTALL_DIR "bin/" )
 
-    set(CRYPTO_LIB)
+    set( CRYPTO_LIB )
 
-    #looks like this flag can have different default on some machines.
-    SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /SAFESEH:NO")
-    SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SAFESEH:NO")
+    # Looks like this flag can have different default on some machines.
+    set( CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /SAFESEH:NO" )
+    set( CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SAFESEH:NO" )
 
     # Probably cmake has a bug and vcxproj generated for executable in Debug conf. has disabled debug info
-    set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} /DEBUG")
+    set( CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} /DEBUG" )
 
     # On windows tcl should be installed to the directory pointed by setenv.bat script
-    SET(TCL_INCLUDE_PATH $ENV{TCL_ROOT}/include)
-    MESSAGE(STATUS "tcl INCLUDE PATH: ${TCL_INCLUDE_PATH}")
+    set( TCL_INCLUDE_PATH "$ENV{TCL_ROOT}/include" )
+    message( STATUS "tcl INCLUDE PATH: ${TCL_INCLUDE_PATH}" )
 
-    FIND_PACKAGE(TCL)
-    MESSAGE(STATUS "tcl_library: ${TCL_LIBRARY}")
+    find_package( TCL )
+    message( STATUS "tcl_library: ${TCL_LIBRARY}" )
 
-    SET(TCL_LIBS "optimized;${TCL_LIBRARY};debug;")
-    get_filename_component(TCL_LIB_PATH "${TCL_LIBRARY}" PATH)
-    get_filename_component(TCL_LIB_NAME "${TCL_LIBRARY}" NAME_WE)
-    get_filename_component(TCL_LIB_EXT "${TCL_LIBRARY}" EXT)
+    set( TCL_LIBS "optimized;${TCL_LIBRARY};debug;" )
+    get_filename_component( TCL_LIB_PATH "${TCL_LIBRARY}" PATH )
+    get_filename_component( TCL_LIB_NAME "${TCL_LIBRARY}" NAME_WE )
+    get_filename_component( TCL_LIB_EXT "${TCL_LIBRARY}" EXT )
 
-    SET(TCL_LIBS "${TCL_LIBS}${TCL_LIB_PATH}/${TCL_LIB_NAME}g${TCL_LIB_EXT}")
-    SET(TCL_LIBRARY ${TCL_LIBS})
+    set( TCL_LIBS "${TCL_LIBS}${TCL_LIB_PATH}/${TCL_LIB_NAME}g${TCL_LIB_EXT}" )
+    set( TCL_LIBRARY ${TCL_LIBS} )
 
-else( WIN32 ) # Apple AND Linux
+else() # Apple and Linux
 
-    find_library(READLINE_LIBRARIES NAMES readline)
-    find_path(READLINE_INCLUDE_DIR readline/readline.h)
-    #if(NOT READLINE_INCLUDE_DIR OR NOT READLINE_LIBRARIES)
-    #  MESSAGE(FATAL_ERROR "Could not find lib readline.")
-    #endif()
+    find_library( READLINE_LIBRARIES NAMES readline )
+    find_path( READLINE_INCLUDE_DIR "readline/readline.h" )
+#    if( NOT READLINE_INCLUDE_DIR OR NOT READLINE_LIBRARIES )
+#        message(FATAL_ERROR "Readline not found")
+#    endif()
 
     if( APPLE )
         # Apple Specific Options Here
         message( STATUS "Configuring Decent on OS X" )
-        set( CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -std=c++11 -stdlib=libc++ -Wall" )
-    else( APPLE )
+        set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -stdlib=libc++ -Wall" )
+    else()
         # Linux Specific Options Here
         message( STATUS "Configuring Decent on Linux" )
-        set( CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -std=c++11 -Wall" )
+        set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall" )
         set( rt_library rt )
-        set( pthread_library pthread)
-        if ( NOT DEFINED crypto_library )
-          # I'm not sure why this is here, I guess someone has openssl and can't detect it with find_package()?
-          # if you have a normal install, you can define crypto_library to the empty string to avoid a build error
-          set( crypto_library crypto)
-        endif ()
-        if ( FULL_STATIC_BUILD )
-          set( CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libstdc++ -static-libgcc")
-        endif ( FULL_STATIC_BUILD )
-    endif( APPLE )
+        set( pthread_library pthread )
+        if( NOT DEFINED crypto_library )
+            # I'm not sure why this is here, I guess someone has openssl and can't detect it with find_package()?
+            # if you have a normal install, you can define crypto_library to the empty string to avoid a build error
+            set( crypto_library crypto )
+        endif()
+        if( FULL_STATIC_BUILD )
+            set( CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libstdc++ -static-libgcc" )
+        endif()
+    endif()
 
     if( "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" )
         set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-builtin-memcmp" )
+        if( NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 6 )
+            set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fpermissive" )
+        endif()
     endif()
 
     if( "${CMAKE_GENERATOR}" STREQUAL "Ninja" )
@@ -172,69 +159,69 @@ else( WIN32 ) # Apple AND Linux
         endif()
     endif()
 
-    # based on http://www.delorie.com/gnu/docs/gdb/gdb_70.html
+    # Based on http://www.delorie.com/gnu/docs/gdb/gdb_70.html
     # uncomment this line to tell GDB about macros (slows compile times)
-    # set( CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -gdwarf-2 -g3" )
+#    set( CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -gdwarf-2 -g3" )
 
-endif( WIN32 )
+endif()
 
 find_package( BerkeleyDB )
 
-set(ENABLE_COVERAGE_TESTING FALSE CACHE BOOL "Build Decent for code coverage analysis")
+set( ENABLE_COVERAGE_TESTING FALSE CACHE BOOL "Build Decent for code coverage analysis" )
 
-if(ENABLE_COVERAGE_TESTING)
-    SET(CMAKE_CXX_FLAGS "--coverage ${CMAKE_CXX_FLAGS}")
+if( ENABLE_COVERAGE_TESTING )
+    set( CMAKE_CXX_FLAGS "--coverage ${CMAKE_CXX_FLAGS}" )
 endif()
+
 
 add_subdirectory( libraries )
 add_subdirectory( programs )
 add_subdirectory( tests )
 
 
-if (ENABLE_INSTALLER)
+if( ENABLE_INSTALLER )
 
-set(VERSION_MAJOR 0)
-set(VERSION_MINOR 1)
-set(VERSION_PATCH 0)
+    set( VERSION_MAJOR 0 )
+    set( VERSION_MINOR 1 )
+    set( VERSION_PATCH 0 )
 
-include(InstallRequiredSystemLibraries)
+    include( InstallRequiredSystemLibraries )
 
-set(CPACK_OUTPUT_FILE_PREFIX ${CMAKE_BINARY_DIR}/packages)
-set(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/install)
+    set( CPACK_OUTPUT_FILE_PREFIX "${CMAKE_BINARY_DIR}/packages" )
+    if( CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT )
+        set( CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/artifacts/prefix" CACHE PATH "..." FORCE )
+    else()
+    	set( CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install" )
+    endif()
 
-SET(CPACK_PACKAGE_DIRECTORY "${CMAKE_INSTALL_PREFIX}")
-set(CPACK_PACKAGE_NAME "Decent")
-set(CPACK_PACKAGE_VENDOR "Decent Services")
-set(CPACK_PACKAGE_VERSION_MAJOR "${VERSION_MAJOR}")
-set(CPACK_PACKAGE_VERSION_MINOR "${VERSION_MINOR}")
-set(CPACK_PACKAGE_VERSION_PATCH "${VERSION_PATCH}")
-set(CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}")
-set(CPACK_PACKAGE_DESCRIPTION "A client for the Decent network")
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "A client for the Decent network")
-set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.md")
-set(CPACK_PACKAGE_INSTALL_DIRECTORY "Decent ${CPACK_PACKAGE_VERSION}")
+    set( CPACK_PACKAGE_DIRECTORY "${CMAKE_BINARY_DIR}/artifacts" )
+    set( CPACK_PACKAGE_NAME "Decent" )
+    set( CPACK_PACKAGE_VENDOR "Decent Services" )
+    set( CPACK_PACKAGE_VERSION_MAJOR "${VERSION_MAJOR}" )
+    set( CPACK_PACKAGE_VERSION_MINOR "${VERSION_MINOR}" )
+    set( CPACK_PACKAGE_VERSION_PATCH "${VERSION_PATCH}" )
+    set( CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}" )
+    set( CPACK_PACKAGE_DESCRIPTION "A client for the Decent network" )
+    set( CPACK_PACKAGE_DESCRIPTION_SUMMARY "A client for the Decent network" )
+    set( CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.md" )
+    set( CPACK_PACKAGE_INSTALL_DIRECTORY "Decent ${CPACK_PACKAGE_VERSION}" )
 
-if(WIN32)
- SET(CPACK_GENERATOR "ZIP;NSIS")
- set(CPACK_PACKAGE_NAME "Decent") # override above
- set(CPACK_NSIS_EXECUTABLES_DIRECTORY .)
- set(CPACK_NSIS_PACKAGE_NAME "Decent v${CPACK_PACKAGE_VERSION}")
- set(CPACK_NSIS_DISPLAY_NAME "${CPACK_NSIS_PACKAGE_NAME}")
- set(CPACK_NSIS_DEFINES "  !define MUI_STARTMENUPAGE_DEFAULTFOLDER \\\"Decent\\\"")
- # it seems like windows zip files usually don't have a single directory inside them, unix tgz frequently do
- SET(CPACK_INCLUDE_TOPLEVEL_DIRECTORY 0)
+    if( WIN32 )
+        set( CPACK_GENERATOR "ZIP;NSIS" )
+        set( CPACK_PACKAGE_NAME "Decent" ) # override above
+        set( CPACK_NSIS_EXECUTABLES_DIRECTORY "." )
+        set( CPACK_NSIS_PACKAGE_NAME "Decent v${CPACK_PACKAGE_VERSION}" )
+        set( CPACK_NSIS_DISPLAY_NAME "${CPACK_NSIS_PACKAGE_NAME}" )
+        set( CPACK_NSIS_DEFINES "  !define MUI_STARTMENUPAGE_DEFAULTFOLDER \\\"Decent\\\"" )
+        # It seems like windows zip files usually don't have a single directory inside them, unix tgz frequently do.
+        set( CPACK_INCLUDE_TOPLEVEL_DIRECTORY 0 )
+    elseif( APPLE )
+        set( CPACK_GENERATOR "DragNDrop" )
+    elseif( LINUX )
+        # Linux gets a .tgz
+        set( CPACK_GENERATOR "TGZ" )
+        set( CPACK_INCLUDE_TOPLEVEL_DIRECTORY 1 )
+    endif()
 
-endif(WIN32)
-
-if(APPLE)
-  set(CPACK_GENERATOR "DragNDrop")
+    include( CPack )
 endif()
-
-if(LINUX)
-  # Linux gets a .tgz
-  SET(CPACK_GENERATOR "TGZ")
-  SET(CPACK_INCLUDE_TOPLEVEL_DIRECTORY 1)
-endif(LINUX)
-
- include(CPack)
-endif(ENABLE_INSTALLER)
