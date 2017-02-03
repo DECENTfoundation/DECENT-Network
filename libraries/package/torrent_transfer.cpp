@@ -281,9 +281,7 @@ void torrent_transfer::upload_package(transfer_id id, const package_object& pack
 
 	libtorrent::add_torrent_params atp;
 
-	std::shared_ptr<libtorrent::torrent_info> ptt = std::make_shared<libtorrent::torrent_info>(temp_file.string(), 0);
-
-	atp.ti = ptt;
+	atp.ti = boost::make_shared<libtorrent::torrent_info>(temp_file.string(), 0);
 	atp.flags = libtorrent::add_torrent_params::flag_seed_mode |
 				libtorrent::add_torrent_params::flag_upload_mode |
 				//libtorrent::add_torrent_params::flag_share_mode	|
