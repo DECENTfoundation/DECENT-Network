@@ -12,12 +12,12 @@
 [submodule "libraries/contrib/libtorrent"]
 	path = libraries/contrib/libtorrent
 	url = https://github.com/DECENTfoundation/libtorrent.git
-[submodule "libraries/contrib/cpp-ipfs-api"]
-	path = libraries/contrib/cpp-ipfs-api
-	url = https://github.com/DECENTfoundation/cpp-ipfs-api.git
 [submodule "libraries/contrib/json"]
 	path = libraries/contrib/json
 	url = https://github.com/DECENTfoundation/json.git
+[submodule "libraries/contrib/cpp-ipfs-api"]
+	path = libraries/contrib/cpp-ipfs-api
+	url = https://github.com/DECENTfoundation/cpp-ipfs-api.git
 [submodule "programs/gui_wallet"]
 	path = programs/gui_wallet
 	url = https://github.com/DECENTfoundation/DECENT-GUI.git
