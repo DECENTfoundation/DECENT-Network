@@ -4317,6 +4317,7 @@ vector<string> wallet_api::list_packages( ) const
 }
 
 void wallet_api::packages_path(const std::string& packages_dir) const {
+   my->_wallet.packages_path = packages_dir;
    package_manager::instance().initialize(packages_dir);
 }
 

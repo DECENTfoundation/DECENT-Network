@@ -196,6 +196,7 @@ struct wallet_data
    string                    ws_server = "ws://localhost:8090";
    string                    ws_user;
    string                    ws_password;
+   string                    packages_path = "./packages/";
 };
 
 struct exported_account_keys
@@ -1990,6 +1991,7 @@ FC_REFLECT( graphene::wallet::wallet_data,
             (ws_server)
             (ws_user)
             (ws_password)
+            (packages_path)
           )
 
 FC_REFLECT( graphene::wallet::brain_key_info,

@@ -45,6 +45,7 @@
 #include <decent/encrypt/encryptionutils.hpp>
 
 #include "torrent_transfer.hpp"
+#include "ipfs_transfer.hpp"
 
 using namespace graphene::package;
 using namespace std;
@@ -315,8 +316,10 @@ void package_manager::initialize( const path& packages_directory) {
 
 package_manager::package_manager() {
     static torrent_transfer dummy_torrent_transfer;
+    static ipfs_transfer dummy_ipfs_transfer;
 
     _protocol_handlers.insert(std::make_pair("magnet", &dummy_torrent_transfer));
+    _protocol_handlers.insert(std::make_pair("ipfs", &dummy_ipfs_transfer));
 }
 
 bool package_manager::unpack_package(const path& destination_directory, const package_object& package, const fc::sha512& key) {

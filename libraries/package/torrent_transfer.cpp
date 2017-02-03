@@ -167,7 +167,9 @@ torrent_transfer::torrent_transfer() {
 	}
 
 	_session.set_alert_notify([this]() {
-
+		if (!_my_thread) {
+			return;
+		}
 		_my_thread->async([this] () {
         	this->handle_torrent_alerts();           
         });
@@ -186,7 +188,10 @@ torrent_transfer::~torrent_transfer() {
 	bencode(std::back_inserter(out), session_state);
 	save_file(".ses_state", out);
 
+	_my_thread->quit();
+	
 	delete _my_thread;
+	_my_thread = NULL;
 }
 
 void torrent_transfer::print_status() {
