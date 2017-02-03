@@ -1934,7 +1934,7 @@ class wallet_api
        * @param aes_key AES decryption key
        * @return Nothing
        */
-      void extract_package(const std::string& package_hash, const std::string& output_dir, const std::string& aes_key) const;
+      void extract_package(const std::string& package_hash, const std::string& output_dir, const d_integer& aes_key) const;
 
       /**
        * @brief Download package 

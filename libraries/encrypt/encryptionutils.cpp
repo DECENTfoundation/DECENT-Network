@@ -73,9 +73,9 @@ encryption_results AES_decrypt_file(const std::string &fileIn, const std::string
        CryptoPP::CBC_Mode<CryptoPP::AES>::Decryption d;
        d.SetKeyWithIV(key.key_byte, CryptoPP::AES::MAX_KEYLENGTH, iv);
        const char* file_name = fileIn.c_str();
-       CryptoPP::FileSink fs(fileOut.c_str(), true);
-       CryptoPP::StreamTransformationFilter* filter = new CryptoPP::StreamTransformationFilter(d, &fs);
-       CryptoPP::FileSource* fsource = new CryptoPP::FileSource(file_name, true, filter);
+       CryptoPP::FileSink * fs = new CryptoPP::FileSink (fileOut.c_str(), true);
+       CryptoPP::StreamTransformationFilter* filter = new CryptoPP::StreamTransformationFilter(d, fs);
+       CryptoPP::FileSource fsource (file_name, true, filter);
     } catch (const CryptoPP::Exception &e) {
         elog(e.GetWhat());
         switch (e.GetErrorType()) {
