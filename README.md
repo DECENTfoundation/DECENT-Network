@@ -12,7 +12,7 @@ Building Decent [![Build Status](https://travis-ci.com/DECENTfoundation/DECENT-N
 For Ubuntu 16.04 LTS (for extra actions needed for 14.04 LTS, 14.10, or 16.10 see notes below), execute in console:
 
     $ sudo apt-get update
-    $ sudo apt-get install build-essential autotools-dev automake autoconf libtool make cmake checkinstall realpath gcc g++ clang flex bison doxygen gettext git qt5-default libreadline-dev libcrypto++-dev libgmp-dev libdb-dev libdb++-dev libssl-dev libncurses5-dev libboost-all-dev libcurl4-openssl-dev python-dev libicu-dev libbz2-dev
+    $ sudo apt-get install build-essential autotools-dev automake autoconf libtool make cmake checkinstall realpath gcc g++ clang flex bison doxygen gettext git google-perftools qt5-default libgoogle-perftools-dev libreadline-dev libcrypto++-dev libgmp-dev libdb-dev libdb++-dev libssl-dev libncurses5-dev libboost-all-dev libcurl4-openssl-dev python-dev libicu-dev libbz2-dev
 
 (Ubuntu 16.10 only) Note, that the default version of Boost installed in Ubuntu 16.10 is too high and not supported. In order to install a supported one, in addition to the commands above, execute the following in console:
 
@@ -26,21 +26,21 @@ For Ubuntu 16.04 LTS (for extra actions needed for 14.04 LTS, 14.10, or 16.10 se
     # Download and build Boost 1.60.0
     $ mkdir -p ~/dev/DECENTfoundation/third-party
     $ cd ~/dev/DECENTfoundation/third-party
-    $ rm -rf boost_1_60_0* boost-1.60.0*
+    $ rm -rf boost*
     $ wget https://sourceforge.net/projects/boost/files/boost/1.60.0/boost_1_60_0.tar.gz
     $ tar xvf boost_1_60_0.tar.gz
     $ mkdir boost-1.60.0_prefix
     $ cd boost_1_60_0
-    $ export BOOST_ROOT=$(realpath ../boost-1.60.0_prefix)
+    $ export BOOST_ROOT=(realpath ../boost-1.60.0_prefix)
     $ ./bootstrap.sh --prefix=$BOOST_ROOT
     $ ./b2 install
     $ cd ..
-    $ rm -rf boost_1_60_0 boost_1_60_0.tar.gz
+    $ rm -rf boost_1_60_0
 
     # Download and build CMake 3.7.2
     $ mkdir -p ~/dev/DECENTfoundation/third-party
     $ cd ~/dev/DECENTfoundation/third-party
-    $ rm -rf cmake-3.7.2*
+    $ rm -rf cmake*
     $ wget https://cmake.org/files/v3.7/cmake-3.7.2.tar.gz
     $ tar xvf cmake-3.7.2.tar.gz
     $ mkdir cmake-3.7.2_prefix
@@ -50,7 +50,7 @@ For Ubuntu 16.04 LTS (for extra actions needed for 14.04 LTS, 14.10, or 16.10 se
     $ make
     $ make install
     $ cd ..
-    $ rm -rf cmake-3.7.2 cmake-3.7.2.tar.gz
+    $ rm -rf cmake-3.7.2
     $ export PATH=$CMAKE_ROOT/bin:$PATH
 
 At this point, `cmake` command should be picked up from `$CMAKE_ROOT/bin`, and CMake configure should find the Boost distribution in the exported `$BOOST_ROOT`.
@@ -59,12 +59,12 @@ At this point, `cmake` command should be picked up from `$CMAKE_ROOT/bin`, and C
 For Fedora 25 or later, execute in console:
 
     $ sudo yum makecache
-    $ sudo yum install automake autoconf libtool make cmake gcc clang flex bison doxygen gettext-devel git readline-devel cryptopp-devel gmp-devel libdb-devel libdb-cxx-devel openssl-devel ncurses-devel boost-devel boost-static
+    $ sudo yum install automake autoconf libtool make cmake gcc clang flex bison doxygen gettext-devel git google-perftools google-perftools-devel readline-devel cryptopp-devel gmp-devel libdb-devel libdb-cxx-devel openssl-devel ncurses-devel boost-devel boost-static
 
 
 ### Installing prerequisites in macOS
 
-* Install Xcode and Command Line Tools as described in http://railsapps.github.io/xcode-command-line-tools.html
+* Install Xcode and Command Line Tools, see http://railsapps.github.io/xcode-command-line-tools.html
 * Install Homebrew, see http://brew.sh
 
 Then, execute in console:
@@ -72,7 +72,8 @@ Then, execute in console:
     $ brew doctor
     $ brew tap homebrew/versions
     $ brew update
-    $ brew install automake autoconf libtool cmake berkeley-db boost160 qt5 cryptopp libtorrent-rasterbar doxygen byacc flex gettext git pbc gmp ipfs openssl readline
+
+    $ brew install automake autoconf libtool cmake berkeley-db boost160 qt5 cryptopp libtorrent-rasterbar doxygen byacc flex gettext git pbc gmp ipfs openssl readline gperftools
 
 
 
@@ -113,8 +114,6 @@ TODO
 Starting Decent
 ---------------
 
-> Change `~/dev/DECENTfoundation/build/DECENT-Network/artifacts/prefix` to `~/dev/DECENTfoundation/build/DECENT-Network/install` in the commands below, if it was the default install location in your configuration.
-
 On first run `witness_node` will create `witness_node_data_dir` in the current working directory, if doesn't exist already.
 
     $ mkdir -p ~/dev/DECENTfoundation/working_dir
@@ -123,7 +122,6 @@ On first run `witness_node` will create `witness_node_data_dir` in the current w
 
 Now press Ctrl-C to stop `witness_node`.
 
-Remove `~/dev/DECENTfoundation/working_dir/witness_node_data_dir/blockchain` directory.
 Edit `~/dev/DECENTfoundation/working_dir/witness_node_data_dir/config.ini` to contain the following lines:
 
     seed-node = 185.8.165.21:33142
@@ -141,10 +139,10 @@ Then, in a separate console, start the command-line wallet by executing:
     $ cd ~/dev/DECENTfoundation/working_dir
     $ ~/dev/DECENTfoundation/build/artifacts/prefix/bin/cli_wallet
 
-To set your initial password to `mypassword`, execute:
+To set your initial password to `password`, execute:
 
-    >>> set_password mypassword
-    >>> unlock mypassword
+    >>> set_password password
+    >>> unlock password
 
 To import your account keys, execute:
 
@@ -217,7 +215,7 @@ Check how much code is covered by unit tests, using gcov/lcov (see http://ltp.so
     $ mkdir -p ~/dev/DECENTfoundation/build
     $ cd ~/dev/DECENTfoundation/build
     $ cmake -G "Unix Makefiles" -D CMAKE_BUILD_TYPE=Debug -D ENABLE_COVERAGE_TESTING=TRUE ~/dev/DECENTfoundation/DECENT-Network
-    $ cmake --build . --target all -- -j -l 3.0
+    $ cmake --build . --target all -- -j
     $ cmake --build . --target install
     
     $ lcov --capture --initial --directory . --output-file base.info --no-external
