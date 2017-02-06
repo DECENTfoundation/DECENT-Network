@@ -20,6 +20,7 @@ using decent::crypto::d_integer;
 
       account_id_type consumer;
       string URI;
+      asset price;
       vector<account_id_type> seeders_answered;
       vector<decent::crypto::ciphertext_string> key_particles;
       d_integer pubKey;
@@ -73,6 +74,7 @@ using decent::crypto::d_integer;
 
    struct by_consumer_time;
    struct by_buying;
+
 
    typedef multi_index_container<
       buying_history_object,

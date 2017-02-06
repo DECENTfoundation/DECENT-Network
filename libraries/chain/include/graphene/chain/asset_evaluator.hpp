@@ -80,24 +80,4 @@ namespace graphene { namespace chain {
       std::map<std::pair<asset_id_type,asset_id_type>,price_feed> median_feed_values;
    };
 
-   class asset_fund_fee_pool_evaluator : public evaluator<asset_fund_fee_pool_evaluator>
-   {
-      public:
-         typedef asset_fund_fee_pool_operation operation_type;
-
-         void_result do_evaluate(const asset_fund_fee_pool_operation& op);
-         void_result do_apply(const asset_fund_fee_pool_operation& op);
-
-         const asset_dynamic_data_object* asset_dyn_data = nullptr;
-   };
-
-   class asset_claim_fees_evaluator : public evaluator<asset_claim_fees_evaluator>
-   {
-      public:
-         typedef asset_claim_fees_operation operation_type;
-
-         void_result do_evaluate( const asset_claim_fees_operation& o );
-         void_result do_apply( const asset_claim_fees_operation& o );
-   };
-
 } } // graphene::chain

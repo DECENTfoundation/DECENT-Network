@@ -123,7 +123,6 @@ void database::initialize_evaluators()
    register_evaluator<limit_order_create_evaluator>();
    register_evaluator<limit_order_cancel_evaluator>();
    register_evaluator<transfer_evaluator>();
-   register_evaluator<asset_fund_fee_pool_evaluator>();
    register_evaluator<proposal_create_evaluator>();
    register_evaluator<proposal_update_evaluator>();
    register_evaluator<proposal_delete_evaluator>();
@@ -139,7 +138,6 @@ void database::initialize_evaluators()
    register_evaluator<transfer_to_blind_evaluator>();
    register_evaluator<transfer_from_blind_evaluator>();
    register_evaluator<blind_transfer_evaluator>();
-   register_evaluator<asset_claim_fees_evaluator>();
    register_evaluator<content_submit_evaluator>();
    register_evaluator<request_to_buy_evaluator>();
    register_evaluator<leave_rating_evaluator>();

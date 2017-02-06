@@ -83,9 +83,10 @@ namespace graphene { namespace chain {
       auto& idx = db().get_index_type<content_index>().indices().get<by_URI>();
       const auto& content = idx.find( o.URI );
       FC_ASSERT( content!= idx.end() );
+      FC_ASSERT( o.price >= db().get_balance( o.consumer, o.price.asset_id ) );
       FC_ASSERT( o.price >= content->price );
       FC_ASSERT( content->expiration > db().head_block_time() );
-      //check if the content exist, has not expired and the price is higher as expected
+      FC_ASSERT( o.price.asset_id == content->price.asset_id );
    }
    
    void_result request_to_buy_evaluator::do_apply(const request_to_buy_operation& o )
@@ -95,10 +96,10 @@ namespace graphene { namespace chain {
            bo.URI = o.URI;
            bo.expiration_time = db().head_block_time() + 24*3600;
            bo.pubKey = o.pubKey;
+           bo.price = o.price;
       });
       elog("Created bying_object with id ${i}", ("i", object.id));
-
-      //TODO_DECENT block the price, save it to the buying object
+      db().adjust_balance( o.consumer, -o.price );
    }
 
    void_result deliver_keys_evaluator::do_evaluate(const deliver_keys_operation& o )
@@ -141,6 +142,15 @@ namespace graphene { namespace chain {
            bo.key_particles.push_back( decent::crypto::ciphertext(o.key) );
       });
       delivered = buying.seeders_answered.size() >= content->quorum;
+      if( delivered )
+      {
+         db().modify<content_object>( *content, []( content_object& co ){ co.times_bought++; });
+         db().adjust_balance( content->author, buying.price );
+         db().modify<buying_object>(buying, [&](buying_object& bo){
+              bo.price.amount = 0;
+              bo.delivered = true;
+         });
+      }
       if( delivered || expired )
       {
          db().create<buying_history_object>([&](buying_history_object& bho){
@@ -153,12 +163,10 @@ namespace graphene { namespace chain {
               bho.time = db().head_block_time();
          });
          db().remove(buying);
-
       }
-      if( delivered )
+      if( !delivered && expired )
       {
-         db().modify<content_object>( *content, []( content_object& co ){ co.times_bought++; });
-         //TODO_DECENT pay the price to the author
+         db().buying_expire(buying);
       }
    }catch( const fc::exception& e )
    {

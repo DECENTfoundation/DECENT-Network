@@ -67,7 +67,6 @@ object_id_type asset_create_evaluator::do_apply( const asset_create_operation& o
    const asset_dynamic_data_object& dyn_asset =
       db().create<asset_dynamic_data_object>( [&]( asset_dynamic_data_object& a ) {
          a.current_supply = 0;
-         a.fee_pool = core_fee_paid; //op.calculate_fee(db().current_fee_schedule()).value / 2;
       });
 
    auto next_asset_id = db().get_index_type<asset_index>().get_next_id();
@@ -114,27 +113,7 @@ void_result asset_issue_evaluator::do_apply( const asset_issue_operation& o )
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (o) ) }
 
-void_result asset_fund_fee_pool_evaluator::do_evaluate(const asset_fund_fee_pool_operation& o)
-{ try {
-   database& d = db();
 
-   const asset_object& a = o.asset_id(d);
-
-   asset_dyn_data = &a.dynamic_asset_data_id(d);
-
-   return void_result();
-} FC_CAPTURE_AND_RETHROW( (o) ) }
-
-void_result asset_fund_fee_pool_evaluator::do_apply(const asset_fund_fee_pool_operation& o)
-{ try {
-   db().adjust_balance(o.from_account, -o.amount);
-
-   db().modify( *asset_dyn_data, [&]( asset_dynamic_data_object& data ) {
-      data.fee_pool += o.amount;
-   });
-
-   return void_result();
-} FC_CAPTURE_AND_RETHROW( (o) ) }
 
 void_result asset_update_evaluator::do_evaluate(const asset_update_operation& o)
 { try {
@@ -230,30 +209,6 @@ void_result asset_publish_feeds_evaluator::do_apply(const asset_publish_feed_ope
 
    return void_result();
 } FC_CAPTURE_AND_RETHROW((o)) }
-
-void_result asset_claim_fees_evaluator::do_evaluate( const asset_claim_fees_operation& o )
-{ try {
-   FC_ASSERT( o.amount_to_claim.asset_id(db()).issuer == o.issuer, "Asset fees may only be claimed by the issuer" );
-   return void_result();
-} FC_CAPTURE_AND_RETHROW( (o) ) }
-
-
-void_result asset_claim_fees_evaluator::do_apply( const asset_claim_fees_operation& o )
-{ try {
-   database& d = db();
-
-   const asset_object& a = o.amount_to_claim.asset_id(d);
-   const asset_dynamic_data_object& addo = a.dynamic_asset_data_id(d);
-   FC_ASSERT( o.amount_to_claim.amount <= addo.accumulated_fees, "Attempt to claim more fees than have accumulated", ("addo",addo) );
-
-   d.modify( addo, [&]( asset_dynamic_data_object& _addo  ) {
-     _addo.accumulated_fees -= o.amount_to_claim.amount;
-   });
-
-   d.adjust_balance( o.issuer, o.amount_to_claim );
-
-   return void_result();
-} FC_CAPTURE_AND_RETHROW( (o) ) }
 
 
 } } // graphene::chain

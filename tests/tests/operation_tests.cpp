@@ -307,7 +307,6 @@ BOOST_AUTO_TEST_CASE( create_uia )
       const asset_dynamic_data_object& test_asset_dynamic_data = test_asset.dynamic_asset_data_id(db);
       BOOST_CHECK(test_asset_dynamic_data.current_supply == 0);
       BOOST_CHECK(test_asset_dynamic_data.accumulated_fees == 0);
-      BOOST_CHECK(test_asset_dynamic_data.fee_pool == 0);
 
       auto op = trx.operations.back().get<asset_create_operation>();
       op.symbol = "TESTFAIL";
@@ -397,14 +396,14 @@ BOOST_AUTO_TEST_CASE( issue_uia )
       BOOST_CHECK_EQUAL(get_balance(nathan_account, test_asset), 5000000);
       BOOST_CHECK(test_dynamic_data.current_supply == 5000000);
       BOOST_CHECK(test_dynamic_data.accumulated_fees == 0);
-      BOOST_CHECK(test_dynamic_data.fee_pool == 0);
+
 
       PUSH_TX( db, trx, ~0 );
 
       BOOST_CHECK_EQUAL(get_balance(nathan_account, test_asset), 10000000);
       BOOST_CHECK(test_dynamic_data.current_supply == 10000000);
       BOOST_CHECK(test_dynamic_data.accumulated_fees == 0);
-      BOOST_CHECK(test_dynamic_data.fee_pool == 0);
+
    } catch(fc::exception& e) {
       edump((e.to_detail_string()));
       throw;
@@ -619,9 +618,6 @@ BOOST_AUTO_TEST_CASE( uia_fees )
       const account_object& witness_account = account_id_type()(db);
       const share_type prec = asset::scaled_precision( asset_id_type()(db).precision );
 
-      fund_fee_pool(witness_account, test_asset, 1000*prec);
-      BOOST_CHECK(asset_dynamic.fee_pool == 1000*prec);
-
       transfer_operation op;
       op.fee = test_asset.amount(0);
       op.from = nathan_account.id;
@@ -639,16 +635,11 @@ BOOST_AUTO_TEST_CASE( uia_fees )
       BOOST_CHECK_EQUAL(get_balance(nathan_account, test_asset),
                         (old_balance - fee - test_asset.amount(100)).amount.value);
       BOOST_CHECK_EQUAL(get_balance(witness_account, test_asset), 100);
-      BOOST_CHECK(asset_dynamic.accumulated_fees == fee.amount);
-      BOOST_CHECK(asset_dynamic.fee_pool == 1000*prec - core_fee.amount);
-
       //Do it again, for good measure.
       PUSH_TX( db, trx, ~0 );
       BOOST_CHECK_EQUAL(get_balance(nathan_account, test_asset),
                         (old_balance - fee - fee - test_asset.amount(200)).amount.value);
       BOOST_CHECK_EQUAL(get_balance(witness_account, test_asset), 200);
-      BOOST_CHECK(asset_dynamic.accumulated_fees == fee.amount + fee.amount);
-      BOOST_CHECK(asset_dynamic.fee_pool == 1000*prec - core_fee.amount - core_fee.amount);
 
       op = std::move(trx.operations.back().get<transfer_operation>());
       trx.operations.clear();
@@ -665,8 +656,7 @@ BOOST_AUTO_TEST_CASE( uia_fees )
       BOOST_CHECK_EQUAL(get_balance(nathan_account, test_asset),
                         (old_balance - fee - fee - fee - test_asset.amount(200)).amount.value);
       BOOST_CHECK_EQUAL(get_balance(witness_account, test_asset), 200);
-      BOOST_CHECK(asset_dynamic.accumulated_fees == fee.amount.value * 3);
-      BOOST_CHECK(asset_dynamic.fee_pool == 1000*prec - core_fee.amount.value * 3);
+
    } catch (fc::exception& e) {
       edump((e.to_detail_string()));
       throw;

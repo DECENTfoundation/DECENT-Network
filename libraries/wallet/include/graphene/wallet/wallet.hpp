@@ -1175,25 +1175,6 @@ class wallet_api
                                             price_feed feed,
                                             bool broadcast = false);
 
-      /** Pay into the fee pool for the given asset.
-       *
-       * User-issued assets can optionally have a pool of the core asset which is 
-       * automatically used to pay transaction fees for any transaction using that
-       * asset (using the asset's core exchange rate).
-       *
-       * This command allows anyone to deposit the core asset into this fee pool.
-       *
-       * @param from the name or id of the account sending the core asset
-       * @param symbol the name or id of the asset whose fee pool you wish to fund
-       * @param amount the amount of the core asset to deposit
-       * @param broadcast true to broadcast the transaction on the network
-       * @returns the signed transaction funding the fee pool
-       * @ingroup WalletCLI
-       */
-      signed_transaction fund_asset_fee_pool(string from,
-                                             string symbol,
-                                             string amount,
-                                             bool broadcast = false);
 
       /** Lists all witnesses registered in the blockchain.
        * This returns a list of all account names that own witnesses, and the associated witness id,
@@ -1866,7 +1847,6 @@ FC_API( graphene::wallet::wallet_api,
         (issue_asset)
         (get_asset)
         (get_monitored_asset_data)
-        (fund_asset_fee_pool)
         (get_witness)
         (list_witnesses)
         (create_witness)

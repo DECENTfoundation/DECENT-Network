@@ -138,13 +138,6 @@ void asset_issue_operation::validate()const
    FC_ASSERT( asset_to_issue.asset_id != asset_id_type(0) );
 }
 
-void asset_fund_fee_pool_operation::validate() const
-{
-   FC_ASSERT( fee.amount >= 0 );
-   FC_ASSERT( fee.asset_id == asset_id_type() );
-   FC_ASSERT( amount > 0 );
-}
-
 void asset_options::validate()const
 {
    FC_ASSERT( max_supply > 0 );
@@ -152,11 +145,6 @@ void asset_options::validate()const
    core_exchange_rate.validate();
    FC_ASSERT( core_exchange_rate.base.asset_id.instance.value == 0 ||
               core_exchange_rate.quote.asset_id.instance.value == 0 );
-}
-
-void asset_claim_fees_operation::validate()const {
-   FC_ASSERT( fee.amount >= 0 );
-   FC_ASSERT( amount_to_claim.amount > 0 );
 }
 
 void asset_publish_feed_operation::validate()const

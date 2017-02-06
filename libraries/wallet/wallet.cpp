@@ -840,6 +840,7 @@ public:
    asset set_fees_on_builder_transaction(transaction_handle_type handle, string fee_asset = GRAPHENE_SYMBOL)
    {
       FC_ASSERT(_builder_transactions.count(handle));
+      FC_ASSERT( fee_asset == GRAPHENE_SYMBOL, "fees can be paid in core asset");
 
       auto fee_asset_obj = get_asset(fee_asset);
       asset total_fee = fee_asset_obj.amount(0);
@@ -850,10 +851,6 @@ public:
          for( auto& op : _builder_transactions[handle].operations )
             total_fee += gprops.current_fees->set_fee( op, fee_asset_obj.options.core_exchange_rate );
 
-         FC_ASSERT((total_fee * fee_asset_obj.options.core_exchange_rate).amount <=
-                   get_object<asset_dynamic_data_object>(fee_asset_obj.dynamic_asset_data_id).fee_pool,
-                   "Cannot pay fees in ${asset}, as this asset's fee pool is insufficiently funded.",
-                   ("asset", fee_asset_obj.symbol));
       } else {
          for( auto& op : _builder_transactions[handle].operations )
             total_fee += gprops.current_fees->set_fee( op );
@@ -1206,29 +1203,6 @@ public:
       return sign_transaction( tx, broadcast );
    } FC_CAPTURE_AND_RETHROW( (publishing_account)(symbol)(feed)(broadcast) ) }
 
-   signed_transaction fund_asset_fee_pool(string from,
-                                          string symbol,
-                                          string amount,
-                                          bool broadcast /* = false */)
-   { try {
-      account_object from_account = get_account(from);
-      optional<asset_object> asset_to_fund = find_asset(symbol);
-      if (!asset_to_fund)
-        FC_THROW("No asset with that symbol exists!");
-      asset_object core_asset = get_asset(asset_id_type());
-
-      asset_fund_fee_pool_operation fund_op;
-      fund_op.from_account = from_account.id;
-      fund_op.asset_id = asset_to_fund->id;
-      fund_op.amount = core_asset.amount_from_string(amount).amount;
-
-      signed_transaction tx;
-      tx.operations.push_back( fund_op );
-      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
-      tx.validate();
-
-      return sign_transaction( tx, broadcast );
-   } FC_CAPTURE_AND_RETHROW( (from)(symbol)(amount)(broadcast) ) }
 
    witness_object get_witness(string owner_account)
    {
@@ -2989,14 +2963,6 @@ signed_transaction wallet_api::publish_asset_feed(string publishing_account,
                                                   bool broadcast /* = false */)
 {
    return my->publish_asset_feed(publishing_account, symbol, feed, broadcast);
-}
-
-signed_transaction wallet_api::fund_asset_fee_pool(string from,
-                                                   string symbol,
-                                                   string amount,
-                                                   bool broadcast /* = false */)
-{
-   return my->fund_asset_fee_pool(from, symbol, amount, broadcast);
 }
 
 map<string,witness_id_type> wallet_api::list_witnesses(const string& lowerbound, uint32_t limit)

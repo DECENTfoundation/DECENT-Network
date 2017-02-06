@@ -42,7 +42,6 @@ struct get_impacted_account_visitor
       _impacted.insert( op.to );
    }
 
-   void operator()( const asset_claim_fees_operation& op ){}
    void operator()( const limit_order_create_operation& op ) {}
    void operator()( const limit_order_cancel_operation& op )
    {
@@ -89,7 +88,6 @@ struct get_impacted_account_visitor
       _impacted.insert( op.issue_to_account );
    }
 
-   void operator()( const asset_fund_fee_pool_operation& op ) {}
    void operator()( const asset_publish_feed_operation& op ) {}
    void operator()( const witness_create_operation& op )
    {

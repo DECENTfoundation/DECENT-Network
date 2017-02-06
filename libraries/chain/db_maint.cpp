@@ -402,6 +402,7 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
                 b(_vote_tally_buffer);
 
    update_active_witnesses();
+   decent_housekeeping();
 
    modify(gpo, [this](global_property_object& p) {
       // Remove scaling of account registration fee

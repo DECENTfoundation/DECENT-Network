@@ -331,6 +331,13 @@ namespace graphene { namespace chain {
          void apply_debug_updates();
          void debug_update( const fc::variant_object& update );
 
+
+         //////////////////// db_decent.cpp ////////////////////
+
+         void buying_expire(const buying_object& buying);
+         void content_expire(const content_object& content);
+         void decent_housekeeping();
+
          //////////////////// db_market.cpp ////////////////////
 
          /// @{ @group Market Helpers
