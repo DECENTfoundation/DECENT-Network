@@ -37,6 +37,8 @@ void database::buying_expire(const buying_object& buying){
    adjust_balance( buying.consumer, buying.price );
    modify<buying_object>(buying, [&](buying_object& bo){
         bo.price.amount = 0;
+        bo.expired = true;
+        bo.expiration_or_delivery_time = head_block_time();
    });
 }
 

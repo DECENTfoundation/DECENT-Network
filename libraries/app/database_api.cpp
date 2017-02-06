@@ -132,7 +132,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       vector<buying_object> get_open_buyings()const;
       vector<buying_object> get_open_buyings_by_URI(const string& URI)const;
       vector<buying_object> get_open_buyings_by_consumer(const account_id_type& consumer)const;
-      optional<buying_history_object> get_buying_history_object( const buying_id_type& buying )const;
+      vector<buying_object> get_buying_history_objects_by_consumer( const account_id_type& consumer )const;
       optional<content_object> get_content( const string& URI )const;
       vector<content_object> list_content_by_author( const account_id_type& author )const;
       vector<content_summary> list_content( const string& URI_begin, uint32_t count)const;
@@ -1498,15 +1498,14 @@ vector<buying_object> database_api::get_open_buyings()const
 
 vector<buying_object> database_api_impl::get_open_buyings()const
 {
-   const auto& idx = _db.get_index_type<buying_index>().indices().get<by_expiration_time>();
-   auto itr = idx.begin();
-
+   const auto& range = _db.get_index_type<buying_index>().indices().get<by_open_expiration>().equal_range( true );
    vector<buying_object> result;
-   result.reserve(distance(idx.begin(), idx.end()));
+   result.reserve(distance(range.first, range.second));
 
-   while( itr != idx.end() )
-      result.emplace_back( *itr++ );
-
+   std::for_each(range.first, range.second, [&](const buying_object &element) {
+      if( element.expiration_time >= _db.head_block_time() )
+         result.emplace_back(element);
+   });
    return result;
 }
 
@@ -1519,13 +1518,13 @@ vector<buying_object> database_api_impl::get_open_buyings_by_URI( const string& 
 {
    try
    {
-      auto range = _db.get_index_type<buying_index>().indices().get<by_URI_consumer>().equal_range(URI);
+      auto range = _db.get_index_type<buying_index>().indices().get<by_URI_open>().equal_range( std::make_tuple( URI, true ) );
       vector<buying_object> result;
       result.reserve(distance(range.first, range.second));
-      std::for_each(range.first, range.second,
-                    [&result](const buying_object& element) {
-                       result.emplace_back(element);
-                    });
+      std::for_each(range.first, range.second, [&](const buying_object& element) {
+         if( element.expiration_time >= _db.head_block_time() )
+            result.emplace_back(element);
+      });
       return result;
    }
    FC_CAPTURE_AND_RETHROW( (URI) );
@@ -1540,31 +1539,38 @@ vector<buying_object> database_api_impl::get_open_buyings_by_consumer( const acc
 {
    try
    {
-      auto range = _db.get_index_type<buying_index>().indices().get<by_consumer_URI>().equal_range(consumer);
+      auto range = _db.get_index_type<buying_index>().indices().get<by_consumer_open>().equal_range( std::make_tuple( consumer, true ));
       vector<buying_object> result;
       result.reserve(distance(range.first, range.second));
 
-      std::for_each(range.first, range.second,
-         [&result](const buying_object& element) {
+      std::for_each(range.first, range.second, [&](const buying_object& element) {
+         if( element.expiration_time >= _db.head_block_time() )
             result.emplace_back(element);
-          });
+      });
       return result;
    }
    FC_CAPTURE_AND_RETHROW( (consumer) );
 }
 
-optional<buying_history_object> database_api::get_buying_history_object( const buying_id_type& buying )const
+vector<buying_object> database_api::get_buying_history_objects_by_consumer( const account_id_type& consumer )const
 {
-   return my->get_buying_history_object( buying );
+   return my->get_buying_history_objects_by_consumer( consumer );
 }
 
-optional<buying_history_object> database_api_impl::get_buying_history_object ( const buying_id_type& buying )const
+vector<buying_object> database_api_impl::get_buying_history_objects_by_consumer ( const account_id_type& consumer )const
 {
-   const auto& idx = _db.get_index_type<buying_history_index>().indices().get<by_buying>();
-   auto itr = idx.find(buying);
-   if (itr != idx.end())
-      return *itr;
-   return optional<buying_history_object>();
+   try {
+      const auto &range = _db.get_index_type<buying_index>().indices().get<by_consumer_open>().equal_range( std::make_tuple(consumer, false));
+      vector<buying_object> result;
+      result.reserve(distance(range.first, range.second));
+
+      std::for_each(range.first, range.second, [&](const buying_object &element) {
+         if( element.expiration_time < _db.head_block_time() )
+            result.emplace_back(element);
+      });
+      return result;
+   }
+   FC_CAPTURE_AND_RETHROW( (consumer) );
 }
 
 optional<content_object> database_api::get_content(const string& URI)const

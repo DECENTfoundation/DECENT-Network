@@ -3928,9 +3928,9 @@ vector<buying_object> wallet_api::get_open_buyings_by_consumer( const account_id
    return my->_remote_db->get_open_buyings_by_consumer( consumer );
 }
 
-optional<buying_history_object> wallet_api::get_buying_history_object( const buying_id_type& buying )const
+vector<buying_object> wallet_api::get_buying_history_objects_by_consumer( const account_id_type& consumer )const
 {
-   return my->_remote_db->get_buying_history_object( buying );
+   return my->_remote_db->get_buying_history_objects_by_consumer( consumer );
 }
 
 optional<content_object> wallet_api::get_content( const string& URI )const
@@ -3987,9 +3987,12 @@ std::pair<string, decent::crypto::custody_data>  wallet_api::create_package(cons
    return std::pair<string, decent::crypto::custody_data>(pack.get_hash().str(), cd);
 }
 
-void wallet_api::extract_package(const std::string& package_hash, const std::string& output_dir, const std::string& aes_key) const {
+void wallet_api::extract_package(const std::string& package_hash, const std::string& output_dir, const d_integer& aes_key) const {
+   fc::sha512 key1;
+   aes_key.Encode((byte*)key1._hash, 64);
+
    package_object package = package_manager::instance().get_package_object(fc::ripemd160(package_hash));
-   package_manager::instance().unpack_package(output_dir, package, fc::sha512(aes_key));
+   package_manager::instance().unpack_package(output_dir, package, key1);
 }
 
 void wallet_api::remove_package(const std::string& package_hash) const {
