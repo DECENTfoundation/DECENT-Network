@@ -1,0 +1,62 @@
+<a><font size="9"><div align="center">Problems and solutions during building DECENT project on MAC OS</div></font></a><br><br><br>
+
+<a><font size="6"><div align="center">Problems during generation of Makefile</div></font></a><br><br>
+
+1. crypto++ library not found.  During compilation DECENT core. This should be added to the README. <br>
+&nbsp &nbsp Solution: (This I fixed with ‘brew install cryptopp’)<br>
+<br>
+2. Could NOT find OpenSSL. Again should be documented in the README of core DECENT<br>
+&nbsp &nbsp A) brew install openssl<br>
+&nbsp &nbsp B) export OPENSSL_ROOT_DIR=/usr/local/opt/openssl<br>
+<br>
+3. ‘gmp library not found’<br>
+&nbsp &nbsp A) brew install gmp<br>
+<br>
+<br>
+<a><font size="6"><div align="center">Problems during the compilation and linking</div></font></a><br>
+<br>
+1. secp256k1-zkp/autogen.sh: line 3: autoreconf: command not found<br>
+&nbsp &nbsp brew install automake<br>
+<br>
+2. Libtool library used but 'LIBTOOL' is undefined<br>
+&nbsp &nbsp brew install libtool<br>
+<br>
+3. A lot of boost errors (for example ‘error: no type named 'fcontext_t' in namespace 'boost::context’)<br>
+&nbsp &nbsp Using boost version 1.62<br>
+&nbsp &nbsp problem resolved by compiling and using boost 1.57 version ???<br>
+<br>
+<br>
+<a><font size="6"><div align="center">Now the problems and the hints connected to building GUI wallet (again on MAC OS)</div></font></a><br>
+<br>
+<br>
+<a><font size="6"><div align="center">Problems during generation Makefile using qmake</div></font></a><br>
+<br>
+1. Project ERROR: Xcode not set up properly. You may need to confirm the license agreement by running /usr/bin/xcodebuild.<br>
+&nbsp &nbsp Solution to this I found at “http://stackoverflow.com/questions/33728905/qt-creator-project-error-xcode-not-set-up-properly-you-may-need-to-confirm-t”<br>
+&nbsp &nbsp As a summary<br>
+&nbsp &nbsp &nbsp A) sudo xcode-select -switch /Applications/Xcode.app/Contents/Developer<br>
+&nbsp &nbsp &nbsp B) xcodebuild -license<br>
+&nbsp &nbsp &nbsp C) #. Finally type ‘agree’<br>
+<br>
+2. DECENT root folder should be known. For that set up ‘DECENT_ROOT’ environmental variable, otherwise DECENT root will be assumed as a parallel directory to the DECENT_GUI directory<br>
+<br>
+3. Boost root folder should be known. It can be provided by the environmental variable ‘BOOST_ROOT’<br>
+<br>
+And finally after there is a Makefile generated the problems to compile and link<br>
+Using this Makefile<br>
+<br>
+1. fatal error: 'openssl/ec.h' file not found<br>
+&nbsp &nbsp Solution of this is done on qt project file, in the case of MAC OS<br>
+&nbsp &nbsp Following include path added: ‘/usr/local/Cellar/openssl/1.0.2j/include’<br>
+2. fatal error: 'cryptopp/integer.h' file not found<br>
+&nbsp &nbsp To solve it following line is added to the qt project file<br>
+&nbsp &nbsp INCLUDEPATH += /usr/local/Cellar/cryptopp/5.6.5/include. (In the case of MAC OS)<br>
+3. ld: library not found for -lssl<br>
+&nbsp &nbsp Solved<br>
+4. ld: library not found for -lcrypto++<br>
+&nbsp &nbsp For Mac OS the name of library is ‘libcryptopp.dylib’ and I found it here<br>
+&nbsp &nbsp ‘/usr/local/Cellar/cryptopp/5.6.5/lib’<br>
+5. dyld: Library not loaded: libboost_thread.dylib<br>
+<br>
+
+</font>
