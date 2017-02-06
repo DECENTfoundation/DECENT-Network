@@ -129,11 +129,11 @@ else() # Apple and Linux
     if( APPLE )
         # Apple Specific Options Here
         message( STATUS "Configuring Decent on OS X" )
-        set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -stdlib=libc++ -Wall" )
+        set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++ -Wall" )
     else()
         # Linux Specific Options Here
         message( STATUS "Configuring Decent on Linux" )
-        set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall" )
+        set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall" )
         set( rt_library rt )
         set( pthread_library pthread )
         if( NOT DEFINED crypto_library )
