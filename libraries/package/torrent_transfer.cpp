@@ -32,7 +32,6 @@
 #include <boost/make_shared.hpp>
 
 
-
 #include <graphene/package/package.hpp>
 
 #include <fc/exception/exception.hpp>
@@ -286,7 +285,7 @@ void torrent_transfer::upload_package(transfer_id id, const package_object& pack
 
 	libtorrent::add_torrent_params atp;
 
-	atp.ti = boost::make_shared<libtorrent::torrent_info>(temp_file.string(), 0);
+	atp.ti = std::make_shared<libtorrent::torrent_info>(temp_file.string(), 0);
 	atp.flags = libtorrent::add_torrent_params::flag_seed_mode |
 				libtorrent::add_torrent_params::flag_upload_mode |
 				//libtorrent::add_torrent_params::flag_share_mode	|
@@ -384,7 +383,7 @@ void torrent_transfer::update_torrent_status() {
 				if (obj.verify_hash()) {
 					_listener->on_download_finished(_id, obj);
 				} else {
-					_listener->on_error(_id, "Can not verify package hash");
+					_listener->on_error(_id, "Unable to verify package hash");
 				}
 			}
 
