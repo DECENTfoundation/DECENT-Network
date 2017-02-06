@@ -12,8 +12,10 @@
 #                           # dot (.) on shell shoulb be typed
 #
 
+CURRENT_DIR=`pwd`
+
 # cd to the project directory
-cd projects/gui_wallet/gui_wallet_qt
+cd prj/gui_wallet/gui_wallet_qt
 
 # prepare Makefile using qt (better to use qt5)
 qmake gui_wallet.pro
@@ -22,11 +24,17 @@ qmake gui_wallet.pro
 make
 
 # cd to the directory where binaries created
+cd $CURRENT_DIR
+
+BINARY_DIR=.
 
 if [[ "$OSTYPE" == "linux-gnu" ]]; then
-        cd ../../../sys/`lsb_release -c | cut -f 2`/bin
+	BINARY_DIR=./sys/`lsb_release -c | cut -f 2`/bin
+        #cd ../../../sys/`lsb_release -c | cut -f 2`/bin
 elif [[ "$OSTYPE" == "darwin"* ]]; then
-        cd ../../../sys/mac/bin
+	BINARY_DIR=./sys/mac/bin/gui_wallet.app/Contents/MacOS
+	#BINARY_DIR=$BINARY_DIR ../../../sys/mac/bin
+        #cd ../../../sys/mac/bin
 elif [[ "$OSTYPE" == "cygwin" ]]; then
         echo "POSIX compatibility layer and Linux environment emulation for Windows"
 elif [[ "$OSTYPE" == "msys" ]]; then
@@ -38,3 +46,6 @@ elif [[ "$OSTYPE" == "freebsd"* ]]; then
 else
         echo "Unknown."
 fi
+
+echo “run following command to launch the GUI: ” $BINARY_DIR/gui_wallet
+$BINARY_DIR/gui_wallet

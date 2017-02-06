@@ -24,7 +24,8 @@ SOURCES += ../../../src/dgui/main_gui_wallet.cpp
 }else{
 
 
-DECENT_ROOT_DEFAULT = ../../../../DECENT-Network
+#DECENT_ROOT_DEFAULT = ../../../../DECENT-Network
+DECENT_ROOT_DEFAULT = ../../../../..
 USE_LIB_OR_NOT = not_use_lib
 
 DECENT_ROOT_DEV = $$(DECENT_ROOT)
@@ -136,6 +137,8 @@ LIBS += $$DECENT_LIB/contrib/fc/vendor/secp256k1-zkp/src/project_secp256k1-build
 LIBS += $$DECENT_LIB/package/libpackage_manager.a
 LIBS += $$DECENT_LIB/contrib/libtorrent/libtorrent-rasterbar.a
 
+LIBS += $$DECENT_LIB/encrypt/libdecent_encrypt.a
+
 
 #LIBS += ../../../../DECENT-Network/libraries/app/libgraphene_app.a
 #LIBS += ../../../../DECENT-Network/libraries/chain/libgraphene_chain.a
@@ -148,7 +151,7 @@ LIBS += $$DECENT_LIB/contrib/libtorrent/libtorrent-rasterbar.a
 #LIBS += ../../../../DECENT-Network/libraries/egenesis/libgraphene_egenesis_brief.a
 #LIBS += ../../../../DECENT-Network/libraries/egenesis/libgraphene_egenesis_full.a
 #LIBS += ../../../../DECENT-Network/libraries/egenesis/libgraphene_egenesis_none.a
-LIBS += ../../../../DECENT-Network/libraries/encrypt/libdecent_encrypt.a
+#LIBS += ../../../../DECENT-Network/libraries/encrypt/libdecent_encrypt.a
 #LIBS += ../../../../DECENT-Network/libraries/net/libgraphene_net.a
 #LIBS += ../../../../DECENT-Network/libraries/package/libpackage_manager.a
 #LIBS += ../../../../DECENT-Network/libraries/plugins/account_history/libgraphene_account_history.a
