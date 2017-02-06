@@ -96,6 +96,8 @@ void gui_wallet::ConnectDlg::ConnectErrorFncGui(const std::string& a_err, const 
                             QMessageBox::Ok,this);
     aMessageBox.setDetailedText(QObject::tr(a_details.c_str()));
     aMessageBox.exec();
+
+    m_main_table.cellWidget(CONNECT_BUTTON_FIELD,1)->setEnabled(true);
 }
 
 
@@ -177,6 +179,7 @@ void gui_wallet::ConnectDlg::ConnectPushedSlot()
     m_wdata.action = WAT::CONNECT;
     m_wdata.fpWarnFunc = &SetPassword;
     m_wdata.fpErr = &ErrorMsgBoxFnc;
+    m_main_table.cellWidget(CONNECT_BUTTON_FIELD,1)->setDisabled(true);
     StartConnectionProcedure(m_wdata,this,&m_wdata,&gui_wallet::ConnectDlg::SaveAndConnectDoneFncGUI);
 
 }
@@ -186,6 +189,7 @@ void gui_wallet::ConnectDlg::SaveAndConnectDoneFncGUI(void* /*clbkArg*/,int64_t 
 {
     if(a_err)
     {
+        m_main_table.cellWidget(CONNECT_BUTTON_FIELD,1)->setEnabled(true);
         ConnectErrorFncGui(a_task,a_result);
         return ;
     }
@@ -204,6 +208,7 @@ void gui_wallet::ConnectDlg::SaveAndConnectDoneFncGUI(void* /*clbkArg*/,int64_t 
     aMessageBox.setDetailedText(QObject::tr("Connected"));
     aMessageBox.exec();
     emit ConnectDoneSig();
+    close();
 }
 
 

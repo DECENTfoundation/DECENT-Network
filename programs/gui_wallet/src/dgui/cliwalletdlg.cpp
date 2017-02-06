@@ -144,8 +144,8 @@ void gui_wallet::CliTextEdit::keyPressEvent( QKeyEvent * a_event )
             {
                 append(tr(">>>"));
                 moveCursor(QTextCursor::End);
-                return;
             }
+            return;
         }
         QByteArray cbaBlock = cqsLastLine.toLatin1();
         std::string csLastBlockStr = cbaBlock.data();
