@@ -191,6 +191,7 @@ void InGuiThreatCaller::MakeShowMessageBoxSlot(const QString& a_str,WarnYesOrNoF
     m_nRes = aMessageBox.exec();
 
     //if(QMessageBox::Yes){}
+    __DEBUG_APP2__(_DEF_LOG_LEVEL_,"a_fpYesOrNo=%p",a_fpYesOrNo);
     (*a_fpYesOrNo)(m_pParent2,m_nRes,a_pDataForYesOrNo);
 
     m_sema.post();

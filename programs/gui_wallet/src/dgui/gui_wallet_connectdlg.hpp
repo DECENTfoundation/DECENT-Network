@@ -78,8 +78,9 @@ public:
 
 protected:
     static void SetPassword(void* a_owner,int a_answer,/*string**/void* a_str_ptr);
+    static void ErrorMsgBoxFnc(void*owner, void* clbData,const std::string& err,const std::string& details);
     void SaveAndConnectDoneFncGUI(void* clbkArg,int64_t err,const std::string& task,const std::string& result);
-    void ConnectErrorFncGui(const std::string a_err, const std::string a_details);
+    void ConnectErrorFncGui(const std::string& a_err, const std::string& a_details);
     void resizeEvent ( QResizeEvent * event );
 
 protected slots:

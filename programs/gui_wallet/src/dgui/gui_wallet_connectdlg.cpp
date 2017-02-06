@@ -83,7 +83,13 @@ void gui_wallet::ConnectDlg::resizeEvent ( QResizeEvent * event )
 }
 
 
-void gui_wallet::ConnectDlg::ConnectErrorFncGui(const std::string a_err, const std::string a_details)
+void gui_wallet::ConnectDlg::ErrorMsgBoxFnc(void* a_owner, void* /*a_clbData*/,const std::string& a_err,const std::string& a_details)
+{
+    ((gui_wallet::ConnectDlg*)a_owner)->ConnectErrorFncGui(a_err,a_details);
+}
+
+
+void gui_wallet::ConnectDlg::ConnectErrorFncGui(const std::string& a_err, const std::string& a_details)
 {
     //ConnectDlg* pParent = (ConnectDlg*)a_pOwner;
     QMessageBox aMessageBox(QMessageBox::Critical,QObject::tr("error"),QObject::tr(a_err.c_str()),
@@ -169,6 +175,8 @@ void gui_wallet::ConnectDlg::ConnectPushedSlot()
     }
 
     m_wdata.action = WAT::CONNECT;
+    m_wdata.fpWarnFunc = &SetPassword;
+    m_wdata.fpErr = &ErrorMsgBoxFnc;
     StartConnectionProcedure(m_wdata,this,&m_wdata,&gui_wallet::ConnectDlg::SaveAndConnectDoneFncGUI);
 
 }

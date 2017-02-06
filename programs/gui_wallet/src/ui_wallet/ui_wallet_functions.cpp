@@ -313,7 +313,7 @@ static void ConnectionThreadFunction(void)
 
 static void SetCurrentApis(const StructApi* a_pApis)
 {
-    s_pMutex_for_cur_api->lock();
+    s_pMutex_for_cur_api->write_lock();
     memcpy(&s_CurrentApi,a_pApis,sizeof(StructApi));
     s_pMutex_for_cur_api->unlock();
 }
