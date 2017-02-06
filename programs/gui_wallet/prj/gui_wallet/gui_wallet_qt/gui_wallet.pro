@@ -40,7 +40,8 @@ equals(BOOST_ROOT_QT, ""){
     exists( /usr/local/opt/boost/libboost_thread* ){
         BOOST_ROOT_QT = /usr/local/opt/boost
     }else{
-        BOOST_ROOT_QT = ../../../../../opt/boost_1_57_0_unix
+        #BOOST_ROOT_QT = ../../../../../opt/boost_1_57_0_unix
+        BOOST_ROOT_QT   = /usr/local/Cellar/boost160/1.60.0
     }
 }
 message("!!!!!! BOOST_ROOT is '"$$BOOST_ROOT_QT"'")

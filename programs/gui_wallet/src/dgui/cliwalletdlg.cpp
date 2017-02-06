@@ -139,12 +139,15 @@ void gui_wallet::CliTextEdit::keyPressEvent( QKeyEvent * a_event )
             {
                 cLastBlock = pTextDoc->findBlockByLineNumber(nNumOfLines-2);
                 cqsLastLine = cLastBlock.text();
+                //append(tr(">>>"));
+                //moveCursor(QTextCursor::End);
             }
             else
             {
-                append(tr(">>>"));
-                moveCursor(QTextCursor::End);
+                //
             }
+            append(tr(">>>"));
+            moveCursor(QTextCursor::End);
             return;
         }
         QByteArray cbaBlock = cqsLastLine.toLatin1();
