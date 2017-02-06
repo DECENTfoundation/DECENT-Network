@@ -15,10 +15,18 @@
 CURRENT_DIR=`pwd`
 
 # cd to the project directory
-cd prj/gui_wallet/gui_wallet_qt
+cd prj/gui_wallet/lib_gui_wallet_qt
 
 # prepare Makefile using qt (better to use qt5)
-qmake gui_wallet.pro
+qmake lib_gui_wallet.pro
+
+# make project
+make
+
+cd ../gui_wallet_qt
+
+# prepare Makefile using qt (better to use qt5)
+qmake “CONFIG+=USE_LIB” gui_wallet.pro
 
 # make project
 make
@@ -29,10 +37,12 @@ cd $CURRENT_DIR
 BINARY_DIR=.
 
 if [[ "$OSTYPE" == "linux-gnu" ]]; then
-	BINARY_DIR=./sys/`lsb_release -c | cut -f 2`/bin
+	BINARY_DIR0=$CURRENT_DIR/sys/`lsb_release -c | cut -f 2`/bin
+	BINARY_DIR=$CURRENT_DIR/sys/`lsb_release -c | cut -f 2`/bin
         #cd ../../../sys/`lsb_release -c | cut -f 2`/bin
 elif [[ "$OSTYPE" == "darwin"* ]]; then
-	BINARY_DIR=./sys/mac/bin/gui_wallet.app/Contents/MacOS
+	BINARY_DIR0=$CURRENT_DIR/sys/mac/bin
+	BINARY_DIR=$CURRENT_DIR/sys/mac/bin/gui_wallet.app/Contents/MacOS
 	#BINARY_DIR=$BINARY_DIR ../../../sys/mac/bin
         #cd ../../../sys/mac/bin
 elif [[ "$OSTYPE" == "cygwin" ]]; then
@@ -47,5 +57,6 @@ else
         echo "Unknown."
 fi
 
+export DYLD_LIBRARY_PATH=$BINARY_DIR0
 echo “run following command to launch the GUI: ” $BINARY_DIR/gui_wallet
 $BINARY_DIR/gui_wallet
