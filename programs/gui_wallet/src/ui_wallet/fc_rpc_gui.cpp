@@ -19,6 +19,8 @@ using namespace fc::rpc;
 using namespace fc;
 extern int g_nDebugApplication ;
 
+int CallFunctionInGuiLoop(SetNewTask_last_args,void* a_owner,TypeCallbackSetNewTaskGlb a_fpFnc);
+
 #if 0
 std::map<string,std::function<string(variant,const variants&)> > _result_formatters;
 fc::future<void> _run_complete;

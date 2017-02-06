@@ -67,11 +67,6 @@ void decent::gui::InGuiLoopCaller::NextFunctionToCallSlot(void* a_clbData,int64_
 
 
 /*///////////////////////////////////////////////////////////////////////////////////////////////////////*/
-int CallFunctionInGuiLoop(SetNewTask_last_args,void* a_owner,TypeCallbackSetNewTaskGlb a_fpFunc){
-    return CallFunctionInGuiLoop_base(a_clbData,a_err,a_inp,a_result,a_owner,a_fpFunc);
-}
-
-
 int CallFunctionInGuiLoop_base(SetNewTask_last_args,void* a_owner,...)
 {
     if(!s_pInGuiThreadCaller){return -1;}
@@ -85,4 +80,9 @@ int CallFunctionInGuiLoop_base(SetNewTask_last_args,void* a_owner,...)
     s_pInGuiThreadCaller->CallFunctionInGuiLoop(a_clbData,a_err,a_inp,a_result,a_owner,fpClbkFnc);
 
     return 0;
+}
+
+
+int CallFunctionInGuiLoop(SetNewTask_last_args,void* a_owner,TypeCallbackSetNewTaskGlb a_fpFunc){
+    return CallFunctionInGuiLoop_base(a_clbData,a_err,a_inp,a_result,a_owner,a_fpFunc);
 }

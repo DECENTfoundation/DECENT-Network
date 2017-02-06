@@ -30,18 +30,22 @@ typedef struct SConnectionStruct{
     std::string  chain_id;
 }SConnectionStruct;
 
+void InitializeUiInterfaceOfWallet_base(TypeWarnAndWaitFunc a_fpWarnAndWait,TypeCallFunctionInGuiLoop a_fpCorrectUiCaller,
+                                        void* a_pMngOwner,void* a_pMngClb,...);
+void InitializeUiInterfaceOfWallet(TypeWarnAndWaitFunc a_fpWarnAndWait,TypeCallFunctionInGuiLoop a_fpCorrectUiCaller,
+                                   void* a_pMngOwner,void* a_pMngClb,TypeCallbackSetNewTaskGlb a_fpMngClbk);
+template <typename Type>
+static void InitializeUiInterfaceOfWallet(TypeWarnAndWaitFunc a_fpWarnAndWait,TypeCallFunctionInGuiLoop a_fpCorrectUiCaller,
+                                          Type* a_pMngOwner,void* a_pMngClb,void (Type::*a_clbkFunction)(SetNewTask_last_args))
+{
+    InitializeUiInterfaceOfWallet_base(a_fpWarnAndWait,a_fpCorrectUiCaller,a_pMngOwner,a_pMngClb,a_clbkFunction);
+}
+
+void DestroyUiInterfaceOfWallet(void);
+
 
 int LoadWalletFile(SConnectionStruct* a_pWalletData);
 int SaveWalletFile2(const SConnectionStruct& a_pWalletData);
-
-
-void SetManagementCallback_base(void* a_pOwner,void* a_pClbData,...);
-void SetManagementCallback(void* a_pOwner,void* a_pClbData,TypeCallbackSetNewTaskGlb a_fpClbk);
-template <typename Type>
-static void SetManagementCallback(Type* a_memb,void* a_pClbData,void (Type::*a_clbkFunction)(SetNewTask_last_args))
-{
-    SetManagementCallback_base(a_memb,a_pClbData,a_clbkFunction);
-}
 
 
 

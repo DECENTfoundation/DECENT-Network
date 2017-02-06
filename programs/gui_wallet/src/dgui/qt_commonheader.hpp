@@ -20,8 +20,6 @@ namespace gui_wallet{
 
 #if 1
 
-void ConnectToStateChangeUpdate(QObject* object,const char* method);
-
 #else  // #if 1
 
 static const int s_cnGuiStatesEvent = QEvent::User + 1;

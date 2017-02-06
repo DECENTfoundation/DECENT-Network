@@ -23,7 +23,7 @@
 #define LAST_SYS_CHAR   '/'
 #endif
 
-int g_nDebugApplication = 0;
+extern int g_nDebugApplication;
 std::string g_cApplicationPath ;
 
 int main(int argc, char* argv[])

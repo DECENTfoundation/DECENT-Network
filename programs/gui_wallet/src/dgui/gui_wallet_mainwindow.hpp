@@ -47,6 +47,8 @@ namespace gui_wallet
 
         void ShowDigitalContextesGUI(QString filter);
 
+        void DisplayWalletContentGUI();
+
     protected slots:/* Instead of these one line slots
                      *, probably should be used lambda functions?
                      * Is it possible to do?
@@ -56,12 +58,10 @@ namespace gui_wallet
         void InfoSlot();
 
         void ShowWalletContentSlot();
-        void WalletContentReadySlot(int a_nDetailed);
 
         void ConnectSlot();
         void ImportKeySlot();
         void UnlockSlot();
-        void ConnectDoneSlot();
         void OpenCliWalletDlgSlot();
         void OpenInfoDlgSlot();
 
@@ -121,6 +121,7 @@ namespace gui_wallet
         CliWalletDlg*                        m_pcInfoDlg;
         //std::string                         m_URI;
         std::vector<gui_wallet::SDigitalContent> m_vcDigContent;
+        int                     m_nConnected;
     };
 
 }

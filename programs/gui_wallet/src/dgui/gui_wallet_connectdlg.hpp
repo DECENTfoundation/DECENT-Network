@@ -86,10 +86,6 @@ protected:
 protected slots:
     void ConnectPushedSlot();
 
-protected:
-signals:
-    void ConnectDoneSig();
-
 private:
     SConnectionStruct   m_wdata;
     QHBoxLayout                     m_main_layout;

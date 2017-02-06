@@ -35,6 +35,10 @@
 typedef void (*ConnErrFuncType)(void*owner, void* clbData,const std::string& err,const std::string& details);
 typedef void (__THISCALL__ *TypeCallbackSetNewTaskGlb)(void* owner,SetNewTask_last_args);
 typedef void (*WarnYesOrNoFuncType)(void*owner,int answer,/*string**/void* str_ptr);
+typedef int (__THISCALL__ *TypeWarnAndWaitFunc)(void* owner,
+                                                WarnYesOrNoFuncType fpYesOrNo,
+                                                void* a_pDataForYesOrNo,const char* a_form,...);
+typedef int (__THISCALL__ *TypeCallFunctionInGuiLoop)(SetNewTask_last_args,void* owner,TypeCallbackSetNewTaskGlb fpFnc);
 
 #include "debug_decent_application.h"
 

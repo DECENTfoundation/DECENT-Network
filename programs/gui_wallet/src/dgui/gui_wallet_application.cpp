@@ -35,35 +35,23 @@ extern int g_nDebugApplication ;
 static InGuiThreatCaller* s_pWarner = NULL;
 
 
-namespace gui_wallet{
-
-static gui_wallet::application* s_pcqoManagerSignalingObject = NULL;
-
-void ConnectToStateChangeUpdate(QObject* a_pObject,const char* a_method)
-{
-    s_pcqoManagerSignalingObject->ConnectToSigFnc(a_pObject,a_method);
-}
-
-}
-
-
 int WarnAndWaitFunc(void* a_pOwner,WarnYesOrNoFuncType a_fpYesOrNo,
-                    void* a_pDataForYesOrNo,const char* a_form,...)
+                           void* a_pDataForYesOrNo,const char* a_form,...)
 {
-    QString aString;
+   QString aString;
 
-    va_list args;
+   va_list args;
 
-    va_start( args, a_form );
-    aString.vsprintf(a_form,args);
-    va_end( args );
+   va_start( args, a_form );
+   aString.vsprintf(a_form,args);
+   va_end( args );
 
-    s_pWarner->m_nRes = -1;
-    s_pWarner->m_pParent2 = (QWidget*)a_pOwner;
-    s_pWarner->EmitShowMessageBox(aString,a_fpYesOrNo,a_pDataForYesOrNo);
-    s_pWarner->m_sema.wait();
+   s_pWarner->m_nRes = -1;
+   s_pWarner->m_pParent2 = (QWidget*)a_pOwner;
+   s_pWarner->EmitShowMessageBox(aString,a_fpYesOrNo,a_pDataForYesOrNo);
+   s_pWarner->m_sema.wait();
 
-    return s_pWarner->m_nRes;
+   return s_pWarner->m_nRes;
 }
 
 
@@ -71,8 +59,6 @@ gui_wallet::application::application(int& argc, char** argv)
     :
       QApplication(argc,argv)
 {
-    s_pcqoManagerSignalingObject = this;
-
     qRegisterMetaType<std::string>( "std::string" );
     qRegisterMetaType<WarnYesOrNoFuncType>( "WarnYesOrNoFuncType" );
     qRegisterMetaType<int64_t>( "int64_t" );
@@ -90,12 +76,6 @@ gui_wallet::application::application(int& argc, char** argv)
 gui_wallet::application::~application()
 {
     delete s_pWarner;
-}
-
-
-void gui_wallet::application::ConnectToSigFnc(QObject* a_pObject,const char* a_method)
-{
-    connect(this,SIGNAL(UpdateGuiStateSig(int)),a_pObject,a_method);
 }
 
 

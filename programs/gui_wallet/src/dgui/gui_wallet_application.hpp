@@ -28,12 +28,6 @@ public:
     application(int& argc, char** argv);
     virtual ~application();
 
-    void ConnectToSigFnc(QObject* a_pObject,const char* method);
-
-protected:
-signals:
-    void UpdateGuiStateSig(int state);
-
 };
 
 }

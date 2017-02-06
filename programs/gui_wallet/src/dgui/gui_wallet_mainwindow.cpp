@@ -26,6 +26,9 @@
 using namespace gui_wallet;
 extern int g_nDebugApplication;
 
+int WarnAndWaitFunc(void* a_pOwner,WarnYesOrNoFuncType a_fpYesOrNo,
+                           void* a_pDataForYesOrNo,const char* a_form,...);
+int CallFunctionInGuiLoop(SetNewTask_last_args,void* a_owner,TypeCallbackSetNewTaskGlb a_fpFunc);
 
 
 /*//////////////////////////////////////////////////////////////////////////////////*/
@@ -77,9 +80,9 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
         m_ConnectDlg(this),
         m_info_dialog(),
         m_import_key_dlg(2),
-        m_cqsPreviousFilter(tr("nf"))
+        m_cqsPreviousFilter(tr("nf")),
+        m_nConnected(0)
 {
-    SetManagementCallback(this,NULL,&Mainwindow_gui_wallet::ManagementNewFuncGUI);
     m_pInfoTextEdit = new QTextEdit;
     if(!m_pInfoTextEdit){throw "Low memory";}
     m_pInfoTextEdit->setReadOnly(true);
@@ -125,13 +128,18 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
 
     QComboBox* pUsersCombo = &(m_pCentralWidget->usersCombo());
 
-    connect(this, SIGNAL(WalletContentReadySig(int)), this, SLOT(WalletContentReadySlot(int)) );
-    connect(&m_ConnectDlg, SIGNAL(ConnectDoneSig()), this, SLOT(ConnectDoneSlot()) );
+    //connect(this, SIGNAL(WalletContentReadySig(int)), this, SLOT(WalletContentReadySlot(int)) );
+    //connect(&m_ConnectDlg, SIGNAL(ConnectDoneSig()), this, SLOT(ConnectDoneSlot()) );
     //connect(pUsersCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(CurrentUserBalanceSlot(int)) );
     //void GuiWalletInfoWarnErrSlot(std::string);
     connect(m_pCentralWidget->GetBrowseContentTab(),SIGNAL(ShowDetailsOnDigContentSig(std::string)),this,SLOT(ShowDetailsOnDigContentSlot(std::string)));
 
-    ConnectToStateChangeUpdate(this,SLOT(StateUpdateSlot(int)));
+    //static void InitializeUiInterfaceOfWallet(TypeWarnAndWaitFunc a_fpWarnAndWait,
+    //     TypeCallFunctionInGuiLoop a_fpCorrectUiCaller,
+    //     Type* a_pMngOwner,void* a_pMngClb,void (Type::*a_clbkFunction)(SetNewTask_last_args))
+
+    InitializeUiInterfaceOfWallet(&WarnAndWaitFunc,&CallFunctionInGuiLoop,
+                                  this,NULL,&Mainwindow_gui_wallet::ManagementNewFuncGUI);
 
 }
 
@@ -376,15 +384,6 @@ int Mainwindow_gui_wallet::GetDigitalContentsFromString(std::vector<gui_wallet::
 }
 
 
-void Mainwindow_gui_wallet::ConnectDoneSlot()
-{
-    WalletContentReadySlot(0);
-    m_ActionWalletContent.setEnabled(true);
-    m_ActionUnlock.setEnabled(true);
-    m_ActionImportKey.setEnabled(true);
-}
-
-
 void Mainwindow_gui_wallet::UnlockSlot()
 {
     //int SetNewTask(const std::string& a_inp_line, Type* a_memb, void* a_clbData,
@@ -411,8 +410,11 @@ void Mainwindow_gui_wallet::moveEvent(QMoveEvent * a_event)
 
 
 
-void Mainwindow_gui_wallet::WalletContentReadySlot(int a_nDetailed)
+void Mainwindow_gui_wallet::DisplayWalletContentGUI()
 {
+
+    SetNewTask("list_my_accounts",this,NULL,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
+
 #if 0
     if(_LIKELY_(!m_nError))
     {
@@ -602,6 +604,10 @@ void Mainwindow_gui_wallet::TaskDoneFuncGUI(void* a_clbkArg,int64_t a_err,const 
         m_info_dialog->setText(tr(a_result.c_str()));
         m_info_dialog.exec();
     }
+    else if(strstr(a_task.c_str(),"list_my_accounts"))
+    {
+        __DEBUG_APP2__(0,"res=\n%s\n",a_result.c_str());
+    }
     else if(strstr(a_task.c_str(),"list_account_balances"))
     {
         int nCurUserIndex, nUpdate;
@@ -684,7 +690,7 @@ void Mainwindow_gui_wallet::TaskDoneFuncGUI(void* a_clbkArg,int64_t a_err,const 
     {
         //std::thread aListAccountThread(&Mainwindow_gui_wallet::ListAccountThreadFunc,this,0);
         //aListAccountThread.detach();
-        emit WalletContentReadySig(0);
+        DisplayWalletContentGUI();
     }
     else if(strstr(a_task.c_str(),"unlock "))
     {
@@ -713,6 +719,13 @@ void Mainwindow_gui_wallet::ManagementNewFuncGUI(void* a_clbkArg,int64_t a_err,c
     {
     case WAS::CONNECTED_ST:
     {
+        if(m_nConnected==0)
+        {
+            m_nConnected = 1;
+            m_ActionWalletContent.setEnabled(true);
+            m_ActionUnlock.setEnabled(true);
+            m_ActionImportKey.setEnabled(true);
+        }
         __DEBUG_APP2__(2,"WAS::CONNECTED_ST");
         QString cqsNewFilter = m_pCentralWidget->getFilterText();
         if(cqsNewFilter==m_cqsPreviousFilter){return;}
