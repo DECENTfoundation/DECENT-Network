@@ -163,7 +163,8 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
 
     //connect(this, SIGNAL(WalletContentReadySig(int)), this, SLOT(WalletContentReadySlot(int)) );
     //connect(&m_ConnectDlg, SIGNAL(ConnectDoneSig()), this, SLOT(ConnectDoneSlot()) );
-    //connect(pUsersCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(CurrentUserBalanceSlot(int)) );
+    connect(pUsersCombo, SIGNAL(currentIndexChanged(const QString&)), this, SLOT(CurrentUserChangedSlot(const QString&)) );
+    m_nUserComboTriggeredInGui = 0;
     //void GuiWalletInfoWarnErrSlot(std::string);
     connect(m_pCentralWidget->GetBrowseContentTab(),SIGNAL(ShowDetailsOnDigContentSig(std::string)),this,SLOT(ShowDetailsOnDigContentSlot(std::string)));
 
@@ -270,6 +271,19 @@ void Mainwindow_gui_wallet::CreateMenues()
 }
 
 
+void Mainwindow_gui_wallet::CurrentUserChangedSlot(const QString& a_new_user)
+{
+    if(m_nUserComboTriggeredInGui)
+    {
+        m_nUserComboTriggeredInGui = 0;
+        return;
+    }
+    std::string csUserName = StringFromQString(a_new_user);
+    std::string csLineToRun = "list_account_balances " + csUserName;
+    SetNewTask(csLineToRun,this,NULL,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
+}
+
+
 // static int SetNewTask(const std::string& a_inp_line, Type* a_memb, void* a_clbData,
 //                      void (Type::*a_clbkFunction)(SetNewTask_last_args))
 
@@ -303,18 +317,20 @@ void Mainwindow_gui_wallet::ShowDetailsOnDigContentSlot(std::string a_get_cont_s
 //int SetNewTask(const std::string& a_inp_line, Type* a_memb, void* a_clbData, void (Type::*a_clbkFunction)(SetNewTask_last_args))
 void Mainwindow_gui_wallet::ShowDigitalContextesGUI(QString a_filter)
 {
-    //m_cqsCurrentFilter = a_filter;
-    //UseConnectedApiInstance(this,NULL,&Mainwindow_gui_wallet::ShowDigitalContextesFunction);
+    std::string csTaskLine;
+    std::string csFilterStr = StringFromQString(a_filter);
 
-    int nNumber;
-    QByteArray cqbaFilter = a_filter.toLatin1();
-    std::string csFilterStr = cqbaFilter.data();
-    const char* cpcNumberPtr = strchr(csFilterStr.c_str(),' ');
-    if( !cpcNumberPtr || ((nNumber=atoi(cpcNumberPtr+1))=0))
+    if(strstr(csFilterStr.c_str(),"author:"))
     {
-        csFilterStr += " 10";
+        csTaskLine = std::string("list_content_by_author ") + (csFilterStr.c_str() + strlen("author:"));
+        //__DEBUG_APP2__(0,"taskLine=%s",csTaskLine.c_str());
     }
-    std::string csTaskLine = std::string("list_content ") + csFilterStr;
+    else
+    {
+        const char* cpcNumberPtr = strchr(csFilterStr.c_str(),' ');
+        if( !cpcNumberPtr || (atoi(cpcNumberPtr+1)==0)){csFilterStr += " 10";}
+        csTaskLine = std::string("list_content ") + csFilterStr;
+    }
 
     SetNewTask(csTaskLine,this,NULL,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
 }
@@ -686,12 +702,18 @@ void Mainwindow_gui_wallet::TaskDoneFuncGUI(void* a_clbkArg,int64_t a_err,const 
         m_pCentralWidget->SetAccountBalancesFromStrGUI(cvAccountBalances);
         cpcOccur += strlen("list_account_balances ");
         for(;*cpcOccur && *cpcOccur==' ';++cpcOccur);
+        int nIndexBefore = userCombo.currentIndex();
         int nIndex = userCombo.findText(tr(cpcOccur));
         __DEBUG_APP2__(2,"cpcOccur=%s, index=%d",cpcOccur,nIndex);
-        userCombo.setCurrentIndex(nIndex);
+        if(nIndexBefore != nIndex)
+        {
+            m_nUserComboTriggeredInGui = 1;
+            userCombo.setCurrentIndex(nIndex);
+        }
 
     }
-    else if(strstr(a_task.c_str(),"list_content "))
+    //else if(strstr(a_task.c_str(),"list_content "))
+    else if(strstr(a_task.c_str(),"list_content"))
     {
         //QTableWidget& cContents = m_pCentralWidget->getDigitalContentsTable();
         std::string csGetContStr;

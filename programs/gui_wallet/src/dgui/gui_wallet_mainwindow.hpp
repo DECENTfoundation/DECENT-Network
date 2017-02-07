@@ -49,6 +49,9 @@ namespace gui_wallet
 
         void DisplayWalletContentGUI();
 
+    protected slots:
+        void CurrentUserChangedSlot(const QString&);
+
     protected slots:/* Instead of these one line slots
                      *, probably should be used lambda functions?
                      * Is it possible to do?
@@ -66,10 +69,6 @@ namespace gui_wallet
         void OpenInfoDlgSlot();
 
         void ShowDetailsOnDigContentSlot(std::string get_cont_str);
-
-    protected:
-    signals:
-        void WalletContentReadySig(int a_nDetailed);
 
     protected:
         virtual void moveEvent(QMoveEvent *) _OVERRIDE_ ;
@@ -122,6 +121,7 @@ namespace gui_wallet
         //std::string                         m_URI;
         std::vector<gui_wallet::SDigitalContent> m_vcDigContent;
         int                     m_nConnected;
+        int                     m_nUserComboTriggeredInGui;
     };
 
 }
