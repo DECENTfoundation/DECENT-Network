@@ -45,10 +45,8 @@ namespace gui_wallet
         virtual ~CentralWigdet(); /* virtual because may be this class will be */
                                   /* used by inheritance */
 
-        void SetAccountBalanceGUI(double ballance=-1., const std::string& balance_name="DECENT"); /* arg_in <0 means only update on GUI*/
-        void SetAccountBalanceFromStrGUI(const std::string& balance_and_name);
+        void SetAccountBalancesFromStrGUI(const std::vector<std::string>& a_balances_and_names);
 
-        const double& GetAccountBalance()const;
         QComboBox&  GetUsersList(){return m_users_list;}
         void AddNewUserGUI(const std::string& user_name);
 
@@ -85,9 +83,10 @@ namespace gui_wallet
         QString             m_DelayedWaringText;
         QString             m_DelayedWaringDetails;
         class QLabel*       m_imageLabel;
-        QLabel              m_balanceLabel;
+        //QLabel              m_balanceLabel;
+        QComboBox           m_balanceCombo;
         /* 'm_nBalance' to have this filed in order to skip parsing the text each time balance is needed*/
-        double              m_lfBalance;
+        //double              m_lfBalance;
         QComboBox           m_users_list;
 
     };

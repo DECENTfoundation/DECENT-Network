@@ -598,6 +598,7 @@ static void ParseDigitalContentFromGetContentString(gui_wallet::SDigitalContent*
 void Mainwindow_gui_wallet::TaskDoneFuncGUI(void* a_clbkArg,int64_t a_err,const std::string& a_task,const std::string& a_result)
 {
     //emit TaskDoneSig(a_callbackArg,a_err,a_task,a_result);
+    const char* cpcOccur;
 
     if(g_nDebugApplication){printf("fnc:%s, a_clbkArg=%p, task=%s, result=%s\n",
                                    __FUNCTION__,a_clbkArg,a_task.c_str(),a_result.c_str());
@@ -663,18 +664,31 @@ void Mainwindow_gui_wallet::TaskDoneFuncGUI(void* a_clbkArg,int64_t a_err,const 
             SetNewTask(newLine,this,NULL,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
         }
     }
-    else if(strstr(a_task.c_str(),"list_account_balances "))
+    else if((cpcOccur=strstr(a_task.c_str(),"list_account_balances ")))
     {
+        __DEBUG_APP2__(2,"%s",a_result.c_str());
+        QComboBox& userCombo = m_pCentralWidget->usersCombo();
+        std::vector<std::string> cvAccountBalances;
         std::string aAcoountBalanceStr;
         const char* cpcFirstStart = a_result.c_str();
-        const char* cpcFirstEnd = strchr(cpcFirstStart,'\n');
+        const char* cpcFirstEnd;
 
-        __DEBUG_APP2__(2,"%s",a_result.c_str());
+        do
+        {
+            cpcFirstEnd = strchr(cpcFirstStart,'\n');
+            if(cpcFirstEnd){aAcoountBalanceStr = std::string(cpcFirstStart,((size_t)cpcFirstEnd)-((size_t)cpcFirstStart));}
+            else{aAcoountBalanceStr = std::string(cpcFirstStart);}
+            if(aAcoountBalanceStr.length()){cvAccountBalances.push_back(aAcoountBalanceStr);}
+            cpcFirstStart = cpcFirstEnd+1;
+        }
+        while(cpcFirstEnd);
 
-        if(cpcFirstEnd){aAcoountBalanceStr = std::string(cpcFirstStart,((size_t)cpcFirstEnd)-((size_t)cpcFirstStart));}
-        else{aAcoountBalanceStr = std::string(cpcFirstStart);}
-
-        m_pCentralWidget->SetAccountBalanceFromStrGUI(aAcoountBalanceStr);
+        m_pCentralWidget->SetAccountBalancesFromStrGUI(cvAccountBalances);
+        cpcOccur += strlen("list_account_balances ");
+        for(;*cpcOccur && *cpcOccur==' ';++cpcOccur);
+        int nIndex = userCombo.findText(tr(cpcOccur));
+        __DEBUG_APP2__(2,"cpcOccur=%s, index=%d",cpcOccur,nIndex);
+        userCombo.setCurrentIndex(nIndex);
 
     }
     else if(strstr(a_task.c_str(),"list_content "))

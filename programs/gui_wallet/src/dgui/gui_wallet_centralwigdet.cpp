@@ -33,8 +33,6 @@ extern int g_nDebugApplication;
 using namespace gui_wallet;
 
 CentralWigdet::CentralWigdet(class QBoxLayout* a_pAllLayout)
-    :
-      m_lfBalance(0.)
 {
     m_imageLabel = new QLabel;
     PrepareGUIprivate(a_pAllLayout);
@@ -47,27 +45,26 @@ CentralWigdet::~CentralWigdet()
 }
 
 
-void CentralWigdet::SetAccountBalanceGUI(double a_lfBallance,const std::string& a_balance_name)
+void CentralWigdet::SetAccountBalancesFromStrGUI(const std::vector<std::string>& a_balances_and_names)
 {
-    if(a_lfBallance>=0.){m_lfBalance = a_lfBallance;}
-    QString aBalanceAmount = QString::number(m_lfBalance,'f');
-    aBalanceAmount.remove( QRegExp("0+$") ); // Remove any number of trailing 0's
-    aBalanceAmount.remove( QRegExp("\\.$") ); // If the last character is just a '.' then remove it
+    //m_balanceLabel.setText(tr(a_balance_and_name.c_str()));
+    m_balanceCombo.clear();
+    const int cnBalances(a_balances_and_names.size());
 
-    QString aBalance = aBalanceAmount + tr(" ") + tr(a_balance_name.c_str());
-    m_balanceLabel.setText(aBalance);
-}
+    if(cnBalances)
+    {
+        for(int i(0); i<cnBalances; ++i)
+        {
+            m_balanceCombo.addItem(tr(a_balances_and_names[i].c_str()));
+        }
+    }
+    else
+    {
+        m_balanceCombo.addItem(tr("0 DECENT"));
+    }
 
-
-void CentralWigdet::SetAccountBalanceFromStrGUI(const std::string& a_balance_and_name)
-{
-    m_balanceLabel.setText(tr(a_balance_and_name.c_str()));
-}
-
-
-const double& CentralWigdet::GetAccountBalance()const
-{
-    return m_lfBalance;
+    m_balanceCombo.setCurrentIndex(0);
+    //m_balanceCombo.lineEdit()->setAlignment(Qt::AlignRight);
 }
 
 
@@ -250,12 +247,15 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     /* /// End Probably should be Modified, to skip new ...! */
 
     //m_balanceLabel.setText(tr("0 DTC"));
-    SetAccountBalanceGUI();
-    aPal = m_balanceLabel.palette();
-    aPal.setColor(QPalette::Window, Qt::black);
-    aPal.setColor(QPalette::WindowText, Qt::white);
-    m_balanceLabel.setPalette(aPal);
-    m_first_line_layout.addWidget(&m_balanceLabel);
+    SetAccountBalancesFromStrGUI(std::vector<std::string>());
+    //aPal = m_balanceLabel.palette();
+    //aPal.setColor(QPalette::Window, Qt::black);
+    //aPal.setColor(QPalette::WindowText, Qt::white);
+    //m_balanceLabel.setPalette(aPal);
+    m_balanceCombo.setStyleSheet("color: white;""background-color:black;");
+    m_balanceCombo.setFixedWidth(190);
+    //m_first_line_layout.addWidget(&m_balanceLabel);
+    m_first_line_layout.addWidget(&m_balanceCombo);
 
     /*/////////////// pManLabel ////////////////////////*/
     QLabel* pManLabel = new QLabel;
@@ -294,6 +294,12 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     m_main_layout.addWidget(&m_main_tabs);
     //setLayout(&m_main_layout);
     a_pAllLayout->addLayout(&m_main_layout);
+
+    m_balanceCombo.setEditable(true);
+    // Second : Put the lineEdit in read-only mode
+    m_balanceCombo.lineEdit()->setReadOnly(true);
+    // Third  : Align the lineEdit to right
+    m_balanceCombo.lineEdit()->setAlignment(Qt::AlignRight);
 }
 
 
