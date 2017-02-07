@@ -60,27 +60,14 @@ using namespace boost::iostreams;
 
 
 ipfs_transfer::ipfs_transfer() {
-	//_my_thread = new fc::thread("torrent_thread");
-
-	// _session.set_alert_notify([this]() {
-	// 	if (!_my_thread) {
-	// 		return;
-	// 	}
-	// 	_my_thread->async([this] () {
- //        	this->handle_torrent_alerts();           
- //        });
-
- //    });
+	_client = new ipfs::Client("localhost", 5001);
 
 }
 
 ipfs_transfer::~ipfs_transfer() {
+	delete _client;
+	//_transfer_log.close();
 
-	_transfer_log.close();
-
-	//_my_thread->quit();
-	//delete _my_thread;
-	//_my_thread = NULL;
 }
 
 void ipfs_transfer::print_status() {
@@ -92,6 +79,19 @@ void ipfs_transfer::upload_package(transfer_id id, const package_object& package
 	_id = id;
 	_listener = listener;
 	_is_upload = true;
+    
+
+    vector<boost::filesystem::path> all_files;
+    package.get_all_files(all_files);
+
+    std::vector<ipfs::http::FileUpload> files_to_add;
+    for (int i = 0; i < all_files.size(); ++i) {
+    	files_to_add.push_back({ all_files[i].string(), ipfs::http::FileUpload::Type::kFileName, all_files[i].string() });
+    }
+
+	ipfs::Json added_files;
+	_client->FilesAdd(files_to_add, &added_files);
+
 
 //	_my_thread->async([this, package] () {
 //	

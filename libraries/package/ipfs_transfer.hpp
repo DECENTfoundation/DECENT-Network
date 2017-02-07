@@ -26,8 +26,6 @@ namespace package {
 
 class ipfs_transfer: public package_transfer_interface {
 
-	ipfs_transfer(fc::thread* tthread) : _my_thread(tthread) { }
-
 public:
 	ipfs_transfer();
 	~ipfs_transfer();
@@ -40,7 +38,7 @@ public:
 	virtual void print_status();
 
 	virtual package_transfer_interface* clone() {
-		return new ipfs_transfer(_my_thread);
+		return new ipfs_transfer();
 	}
 
 private:
@@ -48,12 +46,12 @@ private:
 	package::package_object check_and_install_package();
 	
 private:
-	fc::thread* 		 _my_thread;
 	std::string 		 _url;
 	transfer_id    		 _id;
 	transfer_listener*   _listener;
 	std::ofstream		 _transfer_log;
 	bool 				 _is_upload;
+	ipfs::Client* 		 _client;
 };
 
 

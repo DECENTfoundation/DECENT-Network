@@ -292,6 +292,10 @@ package_object::package_object(const boost::filesystem::path& package_path) {
     }
 }
 
+void package_object::get_all_files(std::vector<boost::filesystem::path>& all_files) const {
+    get_files_recursive(get_path(), all_files);
+}
+
 bool package_object::verify_hash() const {
     if (!is_valid()) {
         return false;
