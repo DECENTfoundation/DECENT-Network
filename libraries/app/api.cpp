@@ -338,12 +338,7 @@ namespace graphene { namespace app {
                   result.push_back( bobj->consumer );
                   break;
                  }
-                 case impl_buying_history_object_type:{
-                  const auto& bobj = dynamic_cast<const buying_history_object*>(obj);
-                  assert( bobj != nullptr );
-                  result.push_back( bobj->consumer );
-                  break;
-                 }
+
                  case impl_content_object_type:{
                     const auto& cobj = dynamic_cast<const content_object*>(obj);
                     assert( cobj != nullptr );

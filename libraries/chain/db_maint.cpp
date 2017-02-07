@@ -159,19 +159,13 @@ void database::initialize_budget_record( fc::time_point_sec now, budget_record& 
    // at the BEGINNING of the maintenance interval.
    reserve += dpo.witness_budget;
 
+   //we allocate at most 5% of the reserve per year to witness budget. This is used if and only if we don't generate new coins anymore...
+
    fc::uint128_t budget_u128 = reserve.value;
-   budget_u128 *= uint64_t(dt);
-   budget_u128 *= GRAPHENE_CORE_ASSET_CYCLE_RATE;
-   //round up to the nearest satoshi -- this is necessary to ensure
-   //   there isn't an "untouchable" reserve, and we will eventually
-   //   be able to use the entire reserve
-   budget_u128 += ((uint64_t(1) << GRAPHENE_CORE_ASSET_CYCLE_RATE_BITS) - 1);
-   budget_u128 >>= GRAPHENE_CORE_ASSET_CYCLE_RATE_BITS;
-   share_type budget;
-   if( budget_u128 < reserve.value )
-      rec.total_budget = share_type(budget_u128.to_uint64());
-   else
-      rec.total_budget = reserve;
+   budget_u128 *= 5;
+   budget_u128 /= 100 * 365;
+
+   rec.total_budget = share_type(budget_u128.to_uint64());
 
    return;
 }
@@ -209,14 +203,12 @@ void database::process_budget()
 
       budget_record rec;
       initialize_budget_record( now, rec );
-      share_type available_funds = rec.total_budget;
 
-      share_type witness_budget = gpo.parameters.witness_pay_per_block.value * blocks_to_maint;
+      share_type witness_budget = get_witness_budget();
       rec.requested_witness_budget = witness_budget;
-      witness_budget = std::min(witness_budget, available_funds);
+      if( witness_budget == 0 )
+         witness_budget = rec.total_budget;
       rec.witness_budget = witness_budget;
-      available_funds -= witness_budget;
-
 
       rec.supply_delta = rec.witness_budget
          - rec.from_accumulated_fees

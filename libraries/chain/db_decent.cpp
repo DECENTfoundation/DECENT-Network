@@ -67,5 +67,22 @@ void database::decent_housekeeping()
    }
 }
 
+share_type database::get_witness_budget()
+{
+   //get age in years
+   auto now = head_block_time();
+   auto start_time = fetch_block_by_number(1)->timestamp;
+   uint32_t age = fc::microseconds(now - start_time).to_seconds() / 3600 / 24 / 365;
+   if ( age <=5 )
+      return DECENT_REWARDS_YEAR_1 / 365;
+   if ( age <=10 )
+      return DECENT_REWARDS_YEAR_6 / 365;
+   if ( age <=15 )
+      return DECENT_REWARDS_YEAR_11 / 365;
+   if ( age <=20 )
+      return DECENT_REWARDS_YEAR_16 / 365;
+   return 0;
+}
+
 }
 }

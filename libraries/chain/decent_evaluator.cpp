@@ -137,14 +137,16 @@ namespace graphene { namespace chain {
       auto& idx = db().get_index_type<content_index>().indices().get<by_URI>();
       const auto& content = idx.find( buying.URI );
       bool delivered;
-      db().modify<buying_object>(buying, [&](buying_object& bo){
-           bo.seeders_answered.push_back( o.seeder );
-           bo.key_particles.push_back( decent::crypto::ciphertext(o.key) );
-      });
+
+      if( std::find(buying.seeders_answered.begin(), buying.seeders_answered.end(), o.seeder) == buying.seeders_answered.end() )
+         db().modify<buying_object>(buying, [&](buying_object& bo){
+              bo.seeders_answered.push_back( o.seeder );
+              bo.key_particles.push_back( decent::crypto::ciphertext(o.key) );
+         });
       delivered = buying.seeders_answered.size() >= content->quorum;
       //if the content has already been delivered or expired, just note the key particles and go on
       if( buying.delivered || buying.expired )
-         return;
+         return void_result();
 
       if( delivered )
       {

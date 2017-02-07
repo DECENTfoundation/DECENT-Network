@@ -337,6 +337,7 @@ namespace graphene { namespace chain {
          void buying_expire(const buying_object& buying);
          void content_expire(const content_object& content);
          void decent_housekeeping();
+         share_type get_witness_budget();
 
          //////////////////// db_market.cpp ////////////////////
 

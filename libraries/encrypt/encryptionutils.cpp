@@ -105,7 +105,7 @@ d_integer get_public_el_gamal_key(const d_integer &privateKey)
 
 encryption_results el_gamal_encrypt(const point &message, const d_integer &publicKey, ciphertext &result)
 {
-    elog("el_gamal_encrypt called ${m} ${pk} ",("m", message)("pk", publicKey));
+    //elog("el_gamal_encrypt called ${m} ${pk} ",("m", message)("pk", publicKey));
     ElGamalKeys::PublicKey key;
     key.AccessGroupParameters().Initialize(DECENT_EL_GAMAL_MODULUS_512, DECENT_EL_GAMAL_GROUP_GENERATOR);
     key.SetPublicElement(publicKey);
@@ -144,7 +144,7 @@ encryption_results el_gamal_decrypt(const ciphertext &input, const d_integer &pr
     ElGamalKeys::PrivateKey key;
     key.AccessGroupParameters().Initialize(DECENT_EL_GAMAL_MODULUS_512, DECENT_EL_GAMAL_GROUP_GENERATOR);
     key.SetPrivateExponent(privateKey);
-    elog("el_gamal_decrypt called ${i} ${pk} ",("i", input)("pk", privateKey));
+    //elog("el_gamal_decrypt called ${i} ${pk} ",("i", input)("pk", privateKey));
     try{
 
         byte recovered[DECENT_EL_GAMAL_GROUP_ELEMENT_SIZE];
