@@ -19,7 +19,7 @@ using namespace fc::rpc;
 using namespace fc;
 extern int g_nDebugApplication ;
 
-int CallFunctionInGuiLoop(SetNewTask_last_args,void* a_owner,TypeCallbackSetNewTaskGlb a_fpFnc);
+int CallFunctionInUiLoop(SetNewTask_last_args,void* a_owner,TypeCallbackSetNewTaskGlb a_fpFnc);
 
 #if 0
 std::map<string,std::function<string(variant,const variants&)> > _result_formatters;
@@ -132,17 +132,17 @@ void gui::run()
              auto itr = _result_formatters.find( method );
              if( itr == _result_formatters.end() )
              {
-                 // int CallFunctionInGuiLoop(SetNewTask_last_args,void* owner,TypeCallbackSetNewTaskGlb fpFnc);
+                 // int CallFunctionInUiLoop(SetNewTask_last_args,void* owner,TypeCallbackSetNewTaskGlb fpFnc);
                 //std::cout << "!!!!!!!if\n"<<fc::json::to_pretty_string( result ) << "\n";
                 //(*aTaskItem.fn_tsk_dn)(aTaskItem.owner,aTaskItem.callbackArg,0,aTaskItem.input, fc::json::to_pretty_string( result ));
-                CallFunctionInGuiLoop(aTaskItem.callbackArg,0,aTaskItem.input,fc::json::to_pretty_string( result ),
+                CallFunctionInUiLoop(aTaskItem.callbackArg,0,aTaskItem.input,fc::json::to_pretty_string( result ),
                                       aTaskItem.owner,aTaskItem.fn_tsk_dn2);
              }
              else
              {
                 //std::cout << "!!!!!!!!else\n"<<itr->second( result, args ) << "\n";
                 //(*aTaskItem.fn_tsk_dn)(aTaskItem.owner,aTaskItem.callbackArg,0,aTaskItem.input, itr->second( result, args ));
-                CallFunctionInGuiLoop(aTaskItem.callbackArg,0,aTaskItem.input,itr->second( result, args ),
+                CallFunctionInUiLoop(aTaskItem.callbackArg,0,aTaskItem.input,itr->second( result, args ),
                                        aTaskItem.owner,aTaskItem.fn_tsk_dn2);
              }
 
@@ -155,7 +155,7 @@ void gui::run()
          if(g_nDebugApplication){printf("file:\"" __FILE__ "\",line:%d\n",__LINE__);}
          if(g_nDebugApplication){std::cout << e.to_detail_string() << "\n";}
          //(*aTaskItem.fn_tsk_dn)(aTaskItem.owner,aTaskItem.callbackArg,e.code(),aTaskItem.input,e.to_detail_string());
-         CallFunctionInGuiLoop(aTaskItem.callbackArg,e.code(),aTaskItem.input,e.to_detail_string(),
+         CallFunctionInUiLoop(aTaskItem.callbackArg,e.code(),aTaskItem.input,e.to_detail_string(),
                                 aTaskItem.owner,aTaskItem.fn_tsk_dn2);
       }
       catch(...)
@@ -163,7 +163,7 @@ void gui::run()
           if(g_nDebugApplication){printf("file:\"" __FILE__ "\",line:%d\n",__LINE__);}
           if(g_nDebugApplication){std::cout << "Unknown exception!\n";}
           //(*aTaskItem.fn_tsk_dn)(aTaskItem.owner,aTaskItem.callbackArg,-1,aTaskItem.input,"Unknown exception!\n");
-          CallFunctionInGuiLoop(aTaskItem.callbackArg,UNKNOWN_EXCEPTION,aTaskItem.input,
+          CallFunctionInUiLoop(aTaskItem.callbackArg,UNKNOWN_EXCEPTION,aTaskItem.input,
                                 __FILE__ "\nUnknown exception!",
                                  aTaskItem.owner,aTaskItem.fn_tsk_dn2);
       }

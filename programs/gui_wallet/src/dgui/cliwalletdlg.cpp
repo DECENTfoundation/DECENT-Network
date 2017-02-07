@@ -14,6 +14,7 @@
 #include <QKeyEvent>
 #include <stdarg.h>
 #include <QTextBlock>
+#include "debug_decent_application.h"
 
 extern int g_nDebugApplication;
 
@@ -71,8 +72,7 @@ void gui_wallet::CliTextEdit::keyPressEvent( QKeyEvent * a_event )
     int nNumOfLines = pTextDoc->lineCount();
     int nKey = a_event->key();
 
-    /*if(g_nDebugApplication){printf("CliTextEdit::keyPressEvent: key=0x%x, col_num=%d, line_num=%d\n",
-                                   nKey,nCurrentColumn,nCurrentLine);}*/
+    __DEBUG_APP2__(2,"");
 
     if(nKey==Qt::Key_Up /*&& (nCurrentColumn==3)*/)
     {
@@ -116,9 +116,14 @@ void gui_wallet::CliTextEdit::keyPressEvent( QKeyEvent * a_event )
 
     }
 
-    if((nCurrentColumn<3) || (nCurrentLine<(nNumOfLines-1)))
+    if((nCurrentColumn==3) && ( (nKey==Qt::Key_Enter)||(nKey==Qt::Key_Return) ))
     {
-        if((nKey==Qt::Key_Right)||(nKey==Qt::Key_Down))
+        return;
+    }
+
+    else if((nCurrentColumn<3) || (nCurrentLine<(nNumOfLines-1)))
+    {
+        if((nKey==Qt::Key_Right)||(nKey==Qt::Key_Down)/*||(nKey==Qt::Key_Enter)||(nKey==Qt::Key_Return)*/)
         {
             QTextEdit::keyPressEvent(a_event);
         }

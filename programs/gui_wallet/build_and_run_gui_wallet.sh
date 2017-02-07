@@ -26,7 +26,8 @@ make
 cd ../gui_wallet_qt
 
 # prepare Makefile using qt (better to use qt5)
-qmake “CONFIG+=USE_LIB” gui_wallet.pro
+#qmake “CONFIG+=USE_LIB” gui_wallet.pro
+qmake gui_wallet.pro CONFIG+=USE_LIB
 
 # make project
 make
