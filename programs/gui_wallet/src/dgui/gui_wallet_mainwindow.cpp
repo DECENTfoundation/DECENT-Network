@@ -62,6 +62,39 @@ static bool FindStringByKey(const char* a_cpcInput, const char* a_key, std::stri
 
 }
 
+typedef const char* TypeConstChar;
+
+static bool GetJsonVectorNextElem(const char* a_cpcJsonStr,TypeConstChar* a_beg, TypeConstChar* a_end)
+{
+    const char* cpcNext = *a_beg = strchr(a_cpcJsonStr,'{');
+
+    if(!(*a_beg)){return false;}
+
+    int nOpen(1), nClose(0);
+
+    while(nOpen>nClose)
+    {
+        cpcNext = strpbrk(++cpcNext,"{}");
+        if(!cpcNext){break;}
+        switch(cpcNext[0])
+        {
+        case '{':++nOpen;break;
+        default:++nClose;break;
+        }
+    }
+
+    *a_end = cpcNext;
+
+    return (nOpen<=nClose);
+}
+
+
+static const char* StringFromQString(const QString& a_cqsString)
+{
+    QByteArray cLatin = a_cqsString.toLatin1();
+    return cLatin.data();
+}
+
 
 /*//////////////////////////////////////////////////////////////////////////////////*/
 
@@ -606,58 +639,43 @@ void Mainwindow_gui_wallet::TaskDoneFuncGUI(void* a_clbkArg,int64_t a_err,const 
     }
     else if(strstr(a_task.c_str(),"list_my_accounts"))
     {
-        __DEBUG_APP2__(0,"res=\n%s\n",a_result.c_str());
+        int nNumbOfUsers(0);
+        std::string csUserName;
+        QComboBox& userCombo = m_pCentralWidget->usersCombo();
+        const char *cpcBegin, *cpcEnd, *cpcNextUser(a_result.c_str());
+
+        __DEBUG_APP2__(1,"res=\n%s\n",a_result.c_str());
+        userCombo.clear();
+
+        while(GetJsonVectorNextElem(cpcNextUser,&cpcBegin,&cpcEnd))
+        {
+            if(FindStringByKey(++cpcBegin,"name",&csUserName))
+            {
+                ++nNumbOfUsers;
+                userCombo.addItem(tr(csUserName.c_str()));
+            }
+            cpcNextUser = cpcEnd+1;
+        }
+        if(nNumbOfUsers)
+        {
+            std::string newLine = std::string("list_account_balances ") + StringFromQString(userCombo.itemText(0));
+            userCombo.setCurrentIndex(0);
+            SetNewTask(newLine,this,NULL,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
+        }
     }
-    else if(strstr(a_task.c_str(),"list_account_balances"))
+    else if(strstr(a_task.c_str(),"list_account_balances "))
     {
-        int nCurUserIndex, nUpdate;
+        std::string aAcoountBalanceStr;
+        const char* cpcFirstStart = a_result.c_str();
+        const char* cpcFirstEnd = strchr(cpcFirstStart,'\n');
 
-        if(a_clbkArg == CLI_WALLET_CODE)
-        {
-            goto donePoint;
-            if(g_nDebugApplication){printf("line:%d\n",__LINE__);}
-            QComboBox& aCombo = m_pCentralWidget->usersCombo() ;
-            if(g_nDebugApplication){printf("line:%d\n",__LINE__);}
-            nCurUserIndex = aCombo.currentIndex();
-            if(g_nDebugApplication){printf("line:%d\n",__LINE__);}
-            nUpdate = 1;
-            if(g_nDebugApplication){printf("line:%d\n",__LINE__);}
-        }
-        else
-        {
-            uint64_t ullnUserAndUpdate = (uint64_t)a_clbkArg;
-            nCurUserIndex = (int)((ullnUserAndUpdate>>32) & 0xffffffff);
-            nUpdate = (int)(ullnUserAndUpdate & 0xffffffff);
-        }
+        __DEBUG_APP2__(2,"%s",a_result.c_str());
 
-        if(g_nDebugApplication){printf("cur_index=%d\n",nCurUserIndex);}
-        if(nCurUserIndex<0){return;}
+        if(cpcFirstEnd){aAcoountBalanceStr = std::string(cpcFirstStart,((size_t)cpcFirstEnd)-((size_t)cpcFirstStart));}
+        else{aAcoountBalanceStr = std::string(cpcFirstStart);}
 
+        m_pCentralWidget->SetAccountBalanceFromStrGUI(aAcoountBalanceStr);
 
-#ifdef API_SHOULD_BE_DEFINED2
-        if((((int)m_vAccountsBalances.size()) -1) < nCurUserIndex)
-        {
-            m_vAccountsBalances.resize(nCurUserIndex+1);
-        }
-
-        if(g_nDebugApplication){printf("line:%d\n",__LINE__);}
-        double lfDecents = strtod(a_result.c_str(),NULL);
-
-        if(g_nDebugApplication){printf("line:%d\n",__LINE__);}
-        std::vector<asset> vAssets;
-        if(g_nDebugApplication){printf("line:%d\n",__LINE__);}
-
-        if(lfDecents>0){vAssets.push_back(asset(lfDecents)); m_vAccountsBalances[nCurUserIndex]=vAssets;}
-        if(g_nDebugApplication){printf("line:%d\n",__LINE__);}
-
-        if(g_nDebugApplication){printf("lfDecents=%lf, nCurUserIndex=%d, string=\"%s\"\n", lfDecents,nCurUserIndex,a_result.c_str());}
-        if(g_nDebugApplication){printf("line:%d\n",__LINE__);}
-
-        if(g_nDebugApplication){printf("nCurUserIndex=%d, nUpdate=%d\n",nCurUserIndex,nUpdate);}
-        if(g_nDebugApplication){printf("line:%d\n",__LINE__);}
-        if(nUpdate){emit WalletContentReadySig(0);}
-        if(g_nDebugApplication){printf("line:%d\n",__LINE__);}
-#endif // #ifdef API_SHOULD_BE_DEFINED
     }
     else if(strstr(a_task.c_str(),"list_content "))
     {
@@ -697,7 +715,7 @@ void Mainwindow_gui_wallet::TaskDoneFuncGUI(void* a_clbkArg,int64_t a_err,const 
         //
     }
 
-donePoint:
+//donePoint:
     if(a_clbkArg == CLI_WALLET_CODE)
     {
         m_cCliWalletDlg.appentText(a_result);

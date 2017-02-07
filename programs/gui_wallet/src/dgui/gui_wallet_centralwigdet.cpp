@@ -59,6 +59,12 @@ void CentralWigdet::SetAccountBalanceGUI(double a_lfBallance,const std::string& 
 }
 
 
+void CentralWigdet::SetAccountBalanceFromStrGUI(const std::string& a_balance_and_name)
+{
+    m_balanceLabel.setText(tr(a_balance_and_name.c_str()));
+}
+
+
 const double& CentralWigdet::GetAccountBalance()const
 {
     return m_lfBalance;

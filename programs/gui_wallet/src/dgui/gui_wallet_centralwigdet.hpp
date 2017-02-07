@@ -46,6 +46,7 @@ namespace gui_wallet
                                   /* used by inheritance */
 
         void SetAccountBalanceGUI(double ballance=-1., const std::string& balance_name="DECENT"); /* arg_in <0 means only update on GUI*/
+        void SetAccountBalanceFromStrGUI(const std::string& balance_and_name);
 
         const double& GetAccountBalance()const;
         QComboBox&  GetUsersList(){return m_users_list;}
