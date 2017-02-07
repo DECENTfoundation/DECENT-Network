@@ -1,8 +1,3 @@
-find_package(CryptoPP)
-
-if( UNIX AND NOT APPLE )
-  set(rt_library rt )
-endif()
 
 add_executable( size_checker main.cpp )
 target_link_libraries( size_checker

@@ -59,21 +59,17 @@ enum encryption_results {
 
 class shamir_secret{
 public:
-
    d_integer secret=d_integer::Zero();
    std::vector<point> split;
 
-
-   shamir_secret(uint16_t _quorum, uint16_t _shares, d_integer _secret):quorum(_quorum),shares(_shares),secret(_secret){
-      //calculate_split();
-   };
-   shamir_secret(uint16_t _quorum, uint16_t _shares):quorum(_quorum), shares(_shares){};
-   void add_point(point X){split.push_back(X);};
+   shamir_secret(uint16_t _quorum, uint16_t _shares, d_integer _secret) : secret(_secret), quorum(_quorum), shares(_shares){/*calculate_split();*/}
+   shamir_secret(uint16_t _quorum, uint16_t _shares) : quorum(_quorum), shares(_shares){}
+   void add_point(point X){split.push_back(X);}
    bool resolvable(){return split.size()>=quorum;}
    void calculate_secret();
    void calculate_split();
-private:
 
+private:
    uint16_t quorum;
    uint16_t shares;
 };

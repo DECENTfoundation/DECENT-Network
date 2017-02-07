@@ -21,14 +21,15 @@ For Ubuntu 16.04 LTS (for extra actions needed for 14.04 LTS, 14.10, or 16.10 se
     $ sudo apt-get autoremove
     $ sudo apt-get install libboost1.60-all-dev
 
-(Ubuntu 14.04 LTS and 14.10 only) Note, that the default versions of GCC, CMake, and Boost installed in Ubuntu 14.04 LTS or 14.10 are too old and not supported. In order to install and use the supported ones, in addition to the common commands above, execute the following in console (in the same shell session, where you are going to build DECENT itself):
+(Ubuntu 14.04 LTS and 14.10 only) Note, that the default versions of GCC, CMake, and Boost installed in Ubuntu 14.04 LTS or 14.10 are too old and not supported. In order to install and use the supported ones, in addition to the common commands above, execute the following in console (in the same shell session, where you are going to build Decent itself):
 
-    # Install GCC 5
-    # sudo add-apt-repository ppa:ubuntu-toolchain-r/test
-    # sudo apt-get update
-    # sudo apt-get install gcc-5 g++-5
-    # export CC=gcc-5
-    # export CXX=g++-5
+    # Install GCC 5 and Clang 3.5
+    $ sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+    $ sudo apt-get update
+    $ sudo apt-get install gcc-5 g++-5 clang-3.5
+    # Now use either gcc-5 and g++-5, or clang-3.5 and clang++-3.5 as C and C++ compilers.
+    $ export CC=gcc-5
+    $ export CXX=g++-5
 
     # Download and build CMake 3.7.2
     $ mkdir -p ~/dev/DECENTfoundation/third-party
@@ -60,7 +61,7 @@ For Ubuntu 16.04 LTS (for extra actions needed for 14.04 LTS, 14.10, or 16.10 se
     $ cd ..
     $ rm -rf boost_1_60_0 boost_1_60_0.tar.gz
 
-At this point, `cmake` command should be picked up from `$CMAKE_ROOT/bin`, and CMake configure should find the Boost distribution in the exported `$BOOST_ROOT`.
+At this point, `$CC` and `$CXX` should be set to your compilers, `cmake` command should be picked up from `$CMAKE_ROOT/bin`, and CMake configure should find the Boost distribution in the exported `$BOOST_ROOT`.
 
 
 For Fedora 25 or later, execute in console:

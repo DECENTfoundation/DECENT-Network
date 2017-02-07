@@ -1,8 +1,5 @@
 
 add_executable( genesis_update genesis_update.cpp )
-if( UNIX AND NOT APPLE )
-  set(rt_library rt )
-endif()
 
 target_link_libraries( genesis_update
                        PRIVATE graphene_app graphene_chain graphene_egenesis_none fc ${CMAKE_DL_LIBS} ${PLATFORM_SPECIFIC_LIBS} )

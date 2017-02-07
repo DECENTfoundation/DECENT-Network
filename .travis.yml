@@ -45,13 +45,21 @@ before_install:
 
 
 install:
+  - env
   # FIXME: hardcoded assumption that we run on Ubuntu.
   - if [ "$TRAVIS_OS_NAME" == "linux" ] ; then sudo apt-get update -qq && sudo apt-get install -qq build-essential autotools-dev automake autoconf libtool make cmake checkinstall realpath gcc g++ clang flex bison doxygen gettext git qt5-default libreadline-dev libcrypto++-dev libgmp-dev libdb-dev libdb++-dev libssl-dev libncurses5-dev libboost-all-dev libcurl4-openssl-dev python-dev libicu-dev libbz2-dev ; fi
   # FIXME: hardcoded assumption that we run on Ubuntu 14 so we build Boost and CMake.
-  # Build Boost.
-  - if [ "$TRAVIS_OS_NAME" == "linux" ] ; then mkdir -p $TRAVIS_BUILD_DIR/../third-party && cd $TRAVIS_BUILD_DIR/../third-party && wget https://sourceforge.net/projects/boost/files/boost/1.60.0/boost_1_60_0.tar.gz && tar xf boost_1_60_0.tar.gz && mkdir boost-1.60.0_prefix && cd boost_1_60_0 && export BOOST_ROOT=$(realpath ../boost-1.60.0_prefix) && ./bootstrap.sh --prefix=$BOOST_ROOT && ( ./b2 install | sed -u -n '1~50{p}' | sed -u -e 's/^.*$//' | nl -ba ) && cd .. && rm -rf boost_1_60_0 ; fi
+  # Install and enable newer compilers, in Linux.
+  - if [ "$TRAVIS_OS_NAME" == "linux" ] ; then sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test && sudo apt-get update -qq && sudo apt-get remove -qq 'clang*' && sudo apt-get autoremove -qq && sudo apt-get install -qq gcc-5 g++-5 clang-3.5 ; fi
+  - if [ "$TRAVIS_OS_NAME" == "linux" ] && [ "$CC" == "gcc" ] ; then export CC=gcc-5 ; fi
+  - if [ "$TRAVIS_OS_NAME" == "linux" ] && [ "$CXX" == "g++" ] ; then export CXX=g++-5 ; fi
+  - if [ "$TRAVIS_OS_NAME" == "linux" ] && [ "$CC" == "gcc" ] ; then export CC=clang-3.5 ; fi
+  - if [ "$TRAVIS_OS_NAME" == "linux" ] && [ "$CXX" == "clang++" ] ; then export CXX=clang++-3.5 ; fi
   # Build CMake.
-  - if [ "$TRAVIS_OS_NAME" == "linux" ] ; then mkdir -p $TRAVIS_BUILD_DIR/../third-party && cd $TRAVIS_BUILD_DIR/../third-party && wget https://cmake.org/files/v3.7/cmake-3.7.2.tar.gz && tar xf cmake-3.7.2.tar.gz && mkdir cmake-3.7.2_prefix && cd cmake-3.7.2 && CMAKE_ROOT=$(realpath ../cmake-3.7.2_prefix) && ( ./configure --prefix=$CMAKE_ROOT | sed -u -n '1~50{p}' | sed -u -e 's/^.*$//' | nl -ba ) && ( make | sed -u -n '1~50{p}' | sed -u -e 's/^.*$//' | nl -ba ) && make install && cd .. && rm -rf cmake-3.7.2 && export PATH=$CMAKE_ROOT/bin:$PATH ; fi
+  - if [ "$TRAVIS_OS_NAME" == "linux" ] ; then mkdir -p $TRAVIS_BUILD_DIR/../third-party && cd $TRAVIS_BUILD_DIR/../third-party && wget https://cmake.org/files/v3.7/cmake-3.7.2.tar.gz && tar xf cmake-3.7.2.tar.gz && mkdir cmake-3.7.2_prefix && cd cmake-3.7.2 && CMAKE_ROOT=$(realpath ../cmake-3.7.2_prefix) && ( ./configure --prefix=$CMAKE_ROOT | sed -u -n '1~50{p}' | sed -u -e 's/^.*$//' | nl -ba ) && ( make | sed -u -n '1~50{p}' | sed -u -e 's/^.*$//' | nl -ba ) && make install && cd .. && rm -rf cmake-3.7.2 cmake-3.7.2.tar.gz && export PATH=$CMAKE_ROOT/bin:$PATH ; fi
+  # Build Boost.
+  - if [ "$TRAVIS_OS_NAME" == "linux" ] ; then mkdir -p $TRAVIS_BUILD_DIR/../third-party && cd $TRAVIS_BUILD_DIR/../third-party && wget https://sourceforge.net/projects/boost/files/boost/1.60.0/boost_1_60_0.tar.gz && tar xf boost_1_60_0.tar.gz && mkdir boost-1.60.0_prefix && cd boost_1_60_0 && export BOOST_ROOT=$(realpath ../boost-1.60.0_prefix) && ./bootstrap.sh --prefix=$BOOST_ROOT && ( ./b2 install | sed -u -n '1~50{p}' | sed -u -e 's/^.*$//' | nl -ba ) && cd .. && rm -rf boost_1_60_0 boost_1_60_0.tar.gz ; fi
+  # Install macOS prerequisites.
   - if [ "$TRAVIS_OS_NAME" == "osx" ] ; then brew update && brew install doxygen && brew upgrade && brew cleanup && brew doctor && brew tap homebrew/versions && brew update && brew install automake autoconf libtool cmake berkeley-db boost160 qt5 cryptopp doxygen byacc flex gettext git pbc gmp ipfs openssl readline && brew doctor ; fi
 
 script:
@@ -59,6 +67,7 @@ script:
   - DECENT_CMAKE_TARGET_INSTALL="install"
   - DECENT_CMAKE_EXTRA_BUILD_PARAMS="-j 3 -l 3.0 VERBOSE=1"
   - if [ "$DECENT_CMAKE_GENERATOR" == "Xcode" ] ; then unset CC && unset CXX && DECENT_CMAKE_TARGET_ALL="ALL_BUILD" && DECENT_CMAKE_EXTRA_BUILD_PARAMS="-jobs 3 -verbose" ; fi
+  - env
   - mkdir -p $TRAVIS_BUILD_DIR/build && cd $TRAVIS_BUILD_DIR/build && cmake -D CMAKE_BUILD_TYPE="$DECENT_CMAKE_BUILD_TYPE" -G "$DECENT_CMAKE_GENERATOR" .. && cmake --build . --target "$DECENT_CMAKE_TARGET_ALL" -- $DECENT_CMAKE_EXTRA_BUILD_PARAMS && cmake --build . --target "$DECENT_CMAKE_TARGET_INSTALL"
 
 notifications:
