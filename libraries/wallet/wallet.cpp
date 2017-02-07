@@ -2458,7 +2458,28 @@ public:
       
       return sign_transaction( tx, broadcast );
    } FC_CAPTURE_AND_RETHROW( (seeder)(privKey)(buying)(broadcast) ) }
-   
+
+   d_integer restore_encryption_key(buying_id_type buying,
+                                     d_integer privKey)
+   {
+      const buying_object bo = get_object<buying_object>(buying);
+      const content_object co = *(_remote_db->get_content(bo.URI));
+
+      decent::crypto::shamir_secret ss( co.quorum, co.key_parts.size() );
+      decent::crypto::point message;
+
+      for( const auto key_particle : bo.key_particles )
+      {
+         auto result = decent::crypto::el_gamal_decrypt(key_particle, privKey, message);
+         FC_ASSERT(result == decent::crypto::ok);
+         ss.add_point( message );
+      }
+
+      FC_ASSERT( ss.resolvable() );
+      ss.calculate_secret();
+      return ss.secret;
+   }
+
    void dbg_make_uia(string creator, string symbol)
    {
       asset_options opts;
@@ -4254,6 +4275,11 @@ signed_transaction wallet_api::deliver_keys(string seeder,
    return my->deliver_keys(seeder, privKey, buying, broadcast);
 }
 
+d_integer wallet_api::restore_encryption_key(buying_id_type buying,
+                                 d_integer privKey)
+{
+   return my->restore_encryption_key(buying, privKey);
+}
 
 vector<buying_object> wallet_api::get_open_buyings()const
 {

@@ -1817,6 +1817,15 @@ class wallet_api
 
     /**
      *
+     * @param buying
+     * @return restored encryption key from particles
+     * @ingroup WalletCLI
+     */
+      d_integer restore_encryption_key(buying_id_type buying,
+                                       d_integer privKey);
+
+    /**
+     *
      * @return
      * @ingroup WalletCLI
      */
@@ -2135,6 +2144,7 @@ FC_API( graphene::wallet::wallet_api,
         (ready_to_publish)
         (proof_of_custody)
         (deliver_keys)
+        (restore_encryption_key)
         (generate_el_gamal_keys)
         (get_open_buyings)
         (get_open_buyings_by_URI)
