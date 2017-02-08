@@ -325,7 +325,7 @@ void Mainwindow_gui_wallet::ShowDigitalContextesGUI(QString a_filter)
         csTaskLine = std::string("list_content_by_author ") + (csFilterStr.c_str() + strlen("author:"));
         //__DEBUG_APP2__(0,"taskLine=%s",csTaskLine.c_str());
     }
-    else if(strstr(csFilterStr.c_str(),"baught:"))
+    else if(strstr(csFilterStr.c_str(),"bought:"))
     {
         __DEBUG_APP2__(1,"taskLine=%s",csTaskLine.c_str());
         std::string csNumber;
