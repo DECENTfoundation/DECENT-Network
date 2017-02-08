@@ -32,8 +32,8 @@ For Ubuntu 16.04 LTS (for extra actions needed for 14.04 LTS, 14.10, or 16.10 se
     $ export CXX=g++-5
 
     # Download and build CMake 3.7.2
-    $ mkdir -p ~/dev/DECENTfoundation/third-party
-    $ cd ~/dev/DECENTfoundation/third-party
+    $ mkdir -p ~/dev/DECENTfoundation/DECENT-Network-third-party
+    $ cd ~/dev/DECENTfoundation/DECENT-Network-third-party
     $ rm -rf cmake-3.7.2*
     $ wget https://cmake.org/files/v3.7/cmake-3.7.2.tar.gz
     $ tar xvf cmake-3.7.2.tar.gz
@@ -48,8 +48,8 @@ For Ubuntu 16.04 LTS (for extra actions needed for 14.04 LTS, 14.10, or 16.10 se
     $ export PATH=$CMAKE_ROOT/bin:$PATH
 
     # Download and build Boost 1.60.0
-    $ mkdir -p ~/dev/DECENTfoundation/third-party
-    $ cd ~/dev/DECENTfoundation/third-party
+    $ mkdir -p ~/dev/DECENTfoundation/DECENT-Network-third-party
+    $ cd ~/dev/DECENTfoundation/DECENT-Network-third-party
     $ rm -rf boost_1_60_0* boost-1.60.0*
     $ wget https://sourceforge.net/projects/boost/files/boost/1.60.0/boost_1_60_0.tar.gz
     $ tar xvf boost_1_60_0.tar.gz
@@ -96,8 +96,8 @@ After all the prerequisites are installed, execute the following commands in con
     $ git submodule update --init --recursive
 
     # Build and install Decent.
-    $ mkdir -p ~/dev/DECENTfoundation/build/DECENT-Network
-    $ cd ~/dev/DECENTfoundation/build/DECENT-Network
+    $ mkdir -p ~/dev/DECENTfoundation/DECENT-Network-build
+    $ cd ~/dev/DECENTfoundation/DECENT-Network-build
     $ cmake -G "Unix Makefiles" -D CMAKE_BUILD_TYPE=Debug ~/dev/DECENTfoundation/DECENT-Network
     $ cmake --build . --target all -- -j -l 3.0
     $ cmake --build . --target install
@@ -107,7 +107,7 @@ After all the prerequisites are installed, execute the following commands in con
 >     $ make -j -l 3.0
 >     $ make install
 
-By this time you should have Decent files installed at `~/dev/DECENTfoundation/build/DECENT-Network/artifacts/prefix` or `~/dev/DECENTfoundation/build/DECENT-Network/install` directories.
+By this time you should have Decent files installed at `~/dev/DECENTfoundation/DECENT-Network-build/artifacts/prefix` or `~/dev/DECENTfoundation/DECENT-Network-build/artifacts/install` directories.
 
 You can use any path instead of `~/dev/DECENTfoundation` in the steps above.
 
@@ -121,33 +121,33 @@ TODO
 Starting Decent
 ---------------
 
-> Change `~/dev/DECENTfoundation/build/DECENT-Network/artifacts/prefix` to `~/dev/DECENTfoundation/build/DECENT-Network/install` in the commands below, if it was the default install location in your configuration.
+> Change `~/dev/DECENTfoundation/DECENT-Network-build/artifacts/prefix` to `~/dev/DECENTfoundation/DECENT-Network-build/artifacts/install` in the commands below, if it was the default install location in your configuration.
 
 On first run `witness_node` will create `witness_node_data_dir` in the current working directory, if doesn't exist already.
 
-    $ mkdir -p ~/dev/DECENTfoundation/working_dir
-    $ cd ~/dev/DECENTfoundation/working_dir
-    $ ~/dev/DECENTfoundation/build/artifacts/prefix/bin/witness_node
+    $ mkdir -p ~/dev/DECENTfoundation/DECENT-Network-working_dir
+    $ cd ~/dev/DECENTfoundation/DECENT-Network-working_dir
+    $ ~/dev/DECENTfoundation/DECENT-Network-build/artifacts/prefix/bin/witness_node
 
 Now press Ctrl-C to stop `witness_node`.
 
-Remove `~/dev/DECENTfoundation/working_dir/witness_node_data_dir/blockchain` directory.
-Edit `~/dev/DECENTfoundation/working_dir/witness_node_data_dir/config.ini` to contain the following lines:
+Remove `~/dev/DECENTfoundation/DECENT-Network-working_dir/witness_node_data_dir/blockchain` directory.
+Edit `~/dev/DECENTfoundation/DECENT-Network-working_dir/witness_node_data_dir/config.ini` to contain the following lines:
 
     seed-node = 185.8.165.21:33142
     rpc-endpoint = 127.0.0.1:8090
 
 Then, run the witness node again:
 
-    $ cd ~/dev/DECENTfoundation/working_dir
-    $ ~/dev/DECENTfoundation/build/artifacts/prefix/bin/witness_node --genesis-json ~/dev/DECENTfoundation/DECENT-Network/genesis.json --replay-blockchain
+    $ cd ~/dev/DECENTfoundation/DECENT-Network-working_dir
+    $ ~/dev/DECENTfoundation/DECENT-Network-build/artifacts/prefix/bin/witness_node --genesis-json ~/dev/DECENTfoundation/DECENT-Network/genesis.json --replay-blockchain
 
 This will launch the witness node with the default genesis. Replay blockchain is a workaround, there is currently a bug than not all saved objects are restored correctly after restart. 
 
 Then, in a separate console, start the command-line wallet by executing:
 
-    $ cd ~/dev/DECENTfoundation/working_dir
-    $ ~/dev/DECENTfoundation/build/artifacts/prefix/bin/cli_wallet
+    $ cd ~/dev/DECENTfoundation/DECENT-Network-working_dir
+    $ ~/dev/DECENTfoundation/DECENT-Network-build/artifacts/prefix/bin/cli_wallet
 
 To set your initial password to `mypassword`, execute:
 
@@ -201,7 +201,7 @@ Witness node
 
 The role of the witness node is to broadcast transactions, download blocks, and optionally sign them.
 
-    $ ~/dev/DECENTfoundation/build/artifacts/prefix/bin/witness_node --rpc-endpoint 127.0.0.1:8090 --enable-stale-production -w '"1.6.0"' '"1.6.1"' '"1.6.2"' '"1.6.3"' '"1.6.4"' '"1.6.5"' '"1.6.6"' '"1.6.7"' '"1.6.8"' '"1.6.9"' '"1.6.10"' 
+    $ ~/dev/DECENTfoundation/DECENT-Network-build/artifacts/prefix/bin/witness_node --rpc-endpoint 127.0.0.1:8090 --enable-stale-production -w '"1.6.0"' '"1.6.1"' '"1.6.2"' '"1.6.3"' '"1.6.4"' '"1.6.5"' '"1.6.6"' '"1.6.7"' '"1.6.8"' '"1.6.9"' '"1.6.10"' 
 
 Testing Decent
 --------------
@@ -222,8 +222,8 @@ Seeder plugin is responsible for automatically announce seeder's capablity, down
     
 Check how much code is covered by unit tests, using gcov/lcov (see http://ltp.sourceforge.net/coverage/lcov.php ).
 
-    $ mkdir -p ~/dev/DECENTfoundation/build
-    $ cd ~/dev/DECENTfoundation/build
+    $ mkdir -p ~/dev/DECENTfoundation/DECENT-Network-build
+    $ cd ~/dev/DECENTfoundation/DECENT-Network-build
     $ cmake -G "Unix Makefiles" -D CMAKE_BUILD_TYPE=Debug -D ENABLE_COVERAGE_TESTING=TRUE ~/dev/DECENTfoundation/DECENT-Network
     $ cmake --build . --target all -- -j -l 3.0
     $ cmake --build . --target install
