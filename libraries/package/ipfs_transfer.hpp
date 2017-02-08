@@ -25,6 +25,9 @@ namespace package {
 
 
 class ipfs_transfer: public package_transfer_interface {
+	ipfs_transfer(fc::thread* tthread) : _my_thread(tthread) {
+		_client = new ipfs::Client("localhost", 5001);
+	}
 
 public:
 	ipfs_transfer();
@@ -52,6 +55,7 @@ private:
 	std::ofstream		 _transfer_log;
 	bool 				 _is_upload;
 	ipfs::Client* 		 _client;
+	fc::thread* 		 _my_thread;
 };
 
 
