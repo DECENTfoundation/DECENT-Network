@@ -179,6 +179,9 @@ struct wallet_data
       }
    }
 
+   /* private el gamal key */
+   d_integer priv_el_gamal_key;
+
    /** encrypted keys */
    vector<char>              cipher_keys;
 
@@ -717,6 +720,16 @@ class wallet_api
        * @ingroup WalletCLI
        */
       bool import_key(string account_name_or_id, string wif_key);
+
+      /** Imports the private el gamal key into cli_wallet configuration file (wallet.json).
+       *
+       * @see generate_el_gamal_keys()
+       *
+       * @param d_integer Private el gamal key
+       * @returns true if the key was imported
+       * @ingroup WalletCLI
+       */
+      void import_el_gamal_key(d_integer privKey );
 
     /**
      *
@@ -1749,12 +1762,11 @@ class wallet_api
      * @param URI
      * @param price_asset_name
      * @param price_amount
-     * @param pubKey
      * @param broadcast true to broadcast the transaction on the network
      * @return
      * @ingroup WalletCLI
      */
-      signed_transaction request_to_buy(string consumer, string URI, string price_asset_name, string price_amount, string pubKey, bool broadcast);
+      signed_transaction request_to_buy(string consumer, string URI, string price_asset_name, string price_amount, bool broadcast);
 
     /**
      *
@@ -1775,7 +1787,6 @@ class wallet_api
      * @param seeder
      * @param space
      * @param price_per_MByte
-     * @param pubKey
      * @param broadcast true to broadcast the transaction on the network
      * @return
      * @ingroup WalletCLI
@@ -1783,7 +1794,6 @@ class wallet_api
       signed_transaction ready_to_publish(string seeder,
                                           uint64_t space,
                                           uint32_t price_per_MByte,
-                                          d_integer pubKey,
                                           bool broadcast = false);
 
     /**
@@ -1821,8 +1831,7 @@ class wallet_api
      * @return restored encryption key from particles
      * @ingroup WalletCLI
      */
-      d_integer restore_encryption_key(buying_id_type buying,
-                                       d_integer privKey);
+      d_integer restore_encryption_key(buying_id_type buying);
 
     /**
      *
@@ -1991,6 +2000,7 @@ FC_REFLECT( graphene::wallet::plain_keys, (keys)(checksum) )
 FC_REFLECT( graphene::wallet::wallet_data,
             (chain_id)
             (my_accounts)
+            (priv_el_gamal_key)
             (cipher_keys)
             (extra_keys)
             (pending_account_registrations)(pending_witness_registrations)
@@ -2055,6 +2065,7 @@ FC_API( graphene::wallet::wallet_api,
         (list_account_balances)
         (list_assets)
         (import_key)
+        (import_el_gamal_key)
         (import_accounts)
         (import_account_keys)
         (suggest_brain_key)

@@ -716,6 +716,12 @@ public:
       return all_keys_for_account.find(wif_pub_key) != all_keys_for_account.end();
    }
 
+   void import_el_gamal_key( d_integer privKey )
+   {
+      _wallet.priv_el_gamal_key = privKey;
+      save_wallet_file();
+   }
+
    bool load_wallet_file(string wallet_filename = "")
    {
       // TODO:  Merge imported wallet with existing wallet,
@@ -2334,7 +2340,6 @@ public:
                                      string URI,
                                      string price_asset_symbol,
                                      string price_amount,
-                                     string pubKey,
                                      bool broadcast/* = false */)
    { try {
       account_object consumer_account = get_account( consumer );
@@ -2344,7 +2349,8 @@ public:
       request_to_buy_operation request_op;
       request_op.consumer = consumer_account.id;
       request_op.URI = URI;
-      request_op.pubKey = d_integer::from_string(pubKey).to_string();//normalize
+      FC_ASSERT( _wallet.priv_el_gamal_key != decent::crypto::d_integer::Zero(), "Private ElGamal key is not imported. " );
+      request_op.pubKey = decent::crypto::get_public_el_gamal_key( _wallet.priv_el_gamal_key );
       request_op.price = asset_obj->amount_from_string(price_amount);
 
       signed_transaction tx;
@@ -2353,7 +2359,7 @@ public:
       tx.validate();
       
       return sign_transaction( tx, broadcast );
-   } FC_CAPTURE_AND_RETHROW( (consumer)(URI)(price_asset_symbol)(price_amount)(pubKey)(broadcast) ) }
+   } FC_CAPTURE_AND_RETHROW( (consumer)(URI)(price_asset_symbol)(price_amount)(broadcast) ) }
    
    signed_transaction leave_rating(string consumer,
                                    string URI,
@@ -2378,7 +2384,6 @@ public:
    signed_transaction ready_to_publish(string seeder,
                                        uint64_t space,
                                        uint32_t price_per_MByte,
-                                       d_integer pubKey,
                                        bool broadcast/* = false */)
    { try {
       account_object seeder_account = get_account( seeder );
@@ -2387,7 +2392,8 @@ public:
       op.seeder = seeder_account.id;
       op.space = space;
       op.price_per_MByte = price_per_MByte;
-      op.pubKey = pubKey;
+      FC_ASSERT( _wallet.priv_el_gamal_key != decent::crypto::d_integer::Zero(), "Private ElGamal key is not imported. " );
+      op.pubKey = decent::crypto::get_public_el_gamal_key( _wallet.priv_el_gamal_key );
 
       signed_transaction tx;
       tx.operations.push_back( op );
@@ -2395,7 +2401,7 @@ public:
       tx.validate();
       
       return sign_transaction( tx, broadcast );
-   } FC_CAPTURE_AND_RETHROW( (seeder)(space)(price_per_MByte)(pubKey)(broadcast) ) }
+   } FC_CAPTURE_AND_RETHROW( (seeder)(space)(price_per_MByte)(broadcast) ) }
    
    signed_transaction proof_of_custody(string seeder,
                                        string URI,
@@ -2459,18 +2465,18 @@ public:
       return sign_transaction( tx, broadcast );
    } FC_CAPTURE_AND_RETHROW( (seeder)(privKey)(buying)(broadcast) ) }
 
-   d_integer restore_encryption_key(buying_id_type buying,
-                                     d_integer privKey)
+   d_integer restore_encryption_key(buying_id_type buying )
    {
       const buying_object bo = get_object<buying_object>(buying);
       const content_object co = *(_remote_db->get_content(bo.URI));
 
       decent::crypto::shamir_secret ss( co.quorum, co.key_parts.size() );
       decent::crypto::point message;
+      FC_ASSERT( _wallet.priv_el_gamal_key != decent::crypto::d_integer::Zero(), "Private ElGamal key is not imported. " );
 
       for( const auto key_particle : bo.key_particles )
       {
-         auto result = decent::crypto::el_gamal_decrypt(key_particle, privKey, message);
+         auto result = decent::crypto::el_gamal_decrypt( decent::crypto::ciphertext( key_particle ), _wallet.priv_el_gamal_key, message );
          FC_ASSERT(result == decent::crypto::ok);
          ss.add_point( message );
       }
@@ -3047,6 +3053,12 @@ bool wallet_api::import_key(string account_name_or_id, string wif_key)
    return false;
 }
 
+void wallet_api::import_el_gamal_key( d_integer privKey )
+   {
+      FC_ASSERT( !is_locked() );
+      my->import_el_gamal_key( privKey );
+   }
+
 map<string, bool> wallet_api::import_accounts( string filename, string password )
 {
    FC_ASSERT( !is_locked() );
@@ -3596,7 +3608,7 @@ void wallet_api::lock()
 { try {
    FC_ASSERT( !is_locked() );
    encrypt_keys();
-   for( auto key : my->_keys )
+   for( auto & key : my->_keys )
       key.second = key_to_wif(fc::ecc::private_key());
    my->_keys.clear();
    my->_checksum = fc::sha512();
@@ -4237,9 +4249,9 @@ wallet_api::submit_content(string author, string URI, string price_asset_name, s
 }
 
 signed_transaction
-wallet_api::request_to_buy(string consumer, string URI, string price_asset_name, string price_amount, string pubKey, bool broadcast)
+wallet_api::request_to_buy(string consumer, string URI, string price_asset_name, string price_amount, bool broadcast)
 {
-   return my->request_to_buy(consumer, URI, price_asset_name, price_amount, pubKey, broadcast);
+   return my->request_to_buy(consumer, URI, price_asset_name, price_amount, broadcast);
 }
 
 signed_transaction wallet_api::leave_rating(string consumer,
@@ -4253,10 +4265,9 @@ signed_transaction wallet_api::leave_rating(string consumer,
 signed_transaction wallet_api::ready_to_publish(string seeder,
                                                 uint64_t space,
                                                 uint32_t price_per_MByte,
-                                                d_integer pubKey,
                                                 bool broadcast)
 {
-   return my->ready_to_publish(seeder, space, price_per_MByte, pubKey, broadcast);
+   return my->ready_to_publish(seeder, space, price_per_MByte, broadcast);
 }
 
 signed_transaction wallet_api::proof_of_custody(string seeder,
@@ -4275,10 +4286,9 @@ signed_transaction wallet_api::deliver_keys(string seeder,
    return my->deliver_keys(seeder, privKey, buying, broadcast);
 }
 
-d_integer wallet_api::restore_encryption_key(buying_id_type buying,
-                                 d_integer privKey)
+d_integer wallet_api::restore_encryption_key(buying_id_type buying)
 {
-   return my->restore_encryption_key(buying, privKey);
+   return my->restore_encryption_key(buying);
 }
 
 vector<buying_object> wallet_api::get_open_buyings()const
