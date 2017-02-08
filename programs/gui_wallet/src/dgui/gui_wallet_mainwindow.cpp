@@ -325,6 +325,15 @@ void Mainwindow_gui_wallet::ShowDigitalContextesGUI(QString a_filter)
         csTaskLine = std::string("list_content_by_author ") + (csFilterStr.c_str() + strlen("author:"));
         //__DEBUG_APP2__(0,"taskLine=%s",csTaskLine.c_str());
     }
+    else if(strstr(csFilterStr.c_str(),"baught:"))
+    {
+        __DEBUG_APP2__(1,"taskLine=%s",csTaskLine.c_str());
+        std::string csNumber;
+        const char* cpcNumberPtr = strchr(csFilterStr.c_str(),':');
+        if( !cpcNumberPtr || (atoi(cpcNumberPtr+1)==0)){csNumber += " 10";}
+        else {csNumber = cpcNumberPtr+1;}
+        csTaskLine = std::string("list_content_by_bought ") + csNumber;
+    }
     else
     {
         const char* cpcNumberPtr = strchr(csFilterStr.c_str(),' ');
