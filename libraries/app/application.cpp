@@ -91,7 +91,6 @@ namespace detail {
          initial_state.initial_accounts.emplace_back(name,
                                                      nathan_key.get_public_key(),
                                                      nathan_key.get_public_key());
-         initial_state.initial_committee_candidates.push_back({name});
          initial_state.initial_witness_candidates.push_back({name, nathan_key.get_public_key()});
       }
 

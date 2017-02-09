@@ -33,11 +33,11 @@ namespace graphene { namespace chain {
 
    /**
     * @class global_property_object
-    * @brief Maintains global state information (committee_member list, current fees)
+    * @brief Maintains global state information (current fees)
     * @ingroup object
     * @ingroup implementation
     *
-    * This is an implementation detail. The values here are set by committee_members to tune the blockchain parameters.
+    * This is an implementation detail. The values here are set by witnesses to tune the blockchain parameters.
     */
    class global_property_object : public graphene::db::abstract_object<global_property_object>
    {
@@ -49,14 +49,13 @@ namespace graphene { namespace chain {
          optional<chain_parameters> pending_parameters;
 
          uint32_t                           next_available_vote_id = 0;
-         vector<committee_member_id_type>   active_committee_members; // updated once per maintenance interval
-         flat_set<witness_id_type>          active_witnesses; // updated once per maintenance interval
+         vector<witness_id_type>          active_witnesses; // updated once per maintenance interval
          // n.b. witness scheduling is done by witness_schedule object
    };
 
    /**
     * @class dynamic_global_property_object
-    * @brief Maintains global state information (committee_member list, current fees)
+    * @brief Maintains global state information (current fees)
     * @ingroup object
     * @ingroup implementation
     *
@@ -144,6 +143,5 @@ FC_REFLECT_DERIVED( graphene::chain::global_property_object, (graphene::db::obje
                     (parameters)
                     (pending_parameters)
                     (next_available_vote_id)
-                    (active_committee_members)
                     (active_witnesses)
                   )

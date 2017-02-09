@@ -332,11 +332,17 @@ namespace graphene { namespace chain {
          void apply_debug_updates();
          void debug_update( const fc::variant_object& update );
 
+
+         //////////////////// db_decent.cpp ////////////////////
+
+         void buying_expire(const buying_object& buying);
+         void content_expire(const content_object& content);
+         void decent_housekeeping();
+         share_type get_witness_budget();
+
          //////////////////// db_market.cpp ////////////////////
 
          /// @{ @group Market Helpers
-         void globally_settle_asset( const asset_object& bitasset, const price& settle_price );
-         void cancel_order(const force_settlement_object& order, bool create_virtual_op = true);
          void cancel_order(const limit_order_object& order, bool create_virtual_op = true);
 
          /**
@@ -347,7 +353,7 @@ namespace graphene { namespace chain {
           * This function takes a new limit order, and runs the markets attempting to match it with existing orders
           * already on the books.
           */
-         bool apply_order(const limit_order_object& new_order_object, bool allow_black_swan = true);
+         bool apply_order(const limit_order_object& new_order_object );
 
          /**
           * Matches the two orders,
@@ -363,21 +369,12 @@ namespace graphene { namespace chain {
          template<typename OrderType>
          int match( const limit_order_object& bid, const OrderType& ask, const price& match_price );
          int match( const limit_order_object& bid, const limit_order_object& ask, const price& trade_price );
-         /// @return the amount of asset settled
-         asset match(const call_order_object& call,
-                   const force_settlement_object& settle,
-                   const price& match_price,
-                   asset max_settlement);
          ///@}
 
          /**
           * @return true if the order was completely filled and thus freed.
           */
          bool fill_order( const limit_order_object& order, const asset& pays, const asset& receives, bool cull_if_small );
-         bool fill_order( const call_order_object& order, const asset& pays, const asset& receives );
-         bool fill_order( const force_settlement_object& settle, const asset& pays, const asset& receives );
-
-         bool check_call_orders( const asset_object& mia, bool enable_black_swan = true );
 
          // helpers to fill_order
          void pay_order( const account_object& receiver, const asset& receives, const asset& pays );
@@ -452,7 +449,6 @@ namespace graphene { namespace chain {
          void process_budget();
          void perform_chain_maintenance(const signed_block& next_block, const global_property_object& global_props);
          void update_active_witnesses();
-         void update_active_committee_members();
 
          template<class... Types>
          void perform_account_maintenance(std::tuple<Types...> helpers);
@@ -488,7 +484,6 @@ namespace graphene { namespace chain {
 
          vector<uint64_t>                  _vote_tally_buffer;
          vector<uint64_t>                  _witness_count_histogram_buffer;
-         vector<uint64_t>                  _committee_count_histogram_buffer;
          uint64_t                          _total_voting_stake;
 
          flat_map<uint32_t,block_id_type>  _checkpoints;

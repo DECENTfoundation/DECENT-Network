@@ -83,11 +83,13 @@ namespace graphene { namespace chain {
       auto& idx = db().get_index_type<content_index>().indices().get<by_URI>();
       const auto& content = idx.find( o.URI );
       FC_ASSERT( content!= idx.end() );
+      FC_ASSERT( o.price >= db().get_balance( o.consumer, o.price.asset_id ) );
       FC_ASSERT( o.price >= content->price );
       FC_ASSERT( content->expiration > db().head_block_time() );
-      //check if the content exist, has not expired and the price is higher as expected
+      FC_ASSERT( o.price.asset_id == content->price.asset_id );
+
    }FC_CAPTURE_AND_RETHROW( (o) ) }
-   
+
    void_result request_to_buy_evaluator::do_apply(const request_to_buy_operation& o )
    {try{
       const auto& object = db().create<buying_object>([&](buying_object& bo){
@@ -95,7 +97,9 @@ namespace graphene { namespace chain {
            bo.URI = o.URI;
            bo.expiration_time = db().head_block_time() + 24*3600;
            bo.pubKey = o.pubKey;
+           bo.price = o.price;
       });
+      db().adjust_balance( o.consumer, -o.price );
       elog("Created bying_object with id ${i}", ("i", object.id));
       edump((object));
    }FC_CAPTURE_AND_RETHROW( (o) ) }
@@ -127,29 +131,29 @@ namespace graphene { namespace chain {
       auto& idx = db().get_index_type<content_index>().indices().get<by_URI>();
       const auto& content = idx.find( buying.URI );
       bool delivered;
-      db().modify<buying_object>(buying, [&](buying_object& bo){
-           bo.seeders_answered.push_back( o.seeder );
-           bo.key_particles.push_back( decent::crypto::ciphertext(o.key) );
-      });
-      delivered = buying.seeders_answered.size() >= content->quorum;
-      if( delivered || expired )
-      {
-         db().create<buying_history_object>([&](buying_history_object& bho){
-              bho.buying = o.buying;
-              bho.consumer = buying.consumer;
-              bho.delivered = delivered;
-              bho.seeders_answered = buying.seeders_answered;
-              bho.key_particles = buying.key_particles;
-              bho.URI = buying.URI;
-              bho.time = db().head_block_time();
-         });
-         db().remove(buying);
 
-      }
+      if( std::find(buying.seeders_answered.begin(), buying.seeders_answered.end(), o.seeder) == buying.seeders_answered.end() )
+         db().modify<buying_object>(buying, [&](buying_object& bo){
+              bo.seeders_answered.push_back( o.seeder );
+              bo.key_particles.push_back( decent::crypto::ciphertext(o.key) );
+         });
+      delivered = buying.seeders_answered.size() >= content->quorum;
+      //if the content has already been delivered or expired, just note the key particles and go on
+      if( buying.delivered || buying.expired )
+         return void_result();
+
       if( delivered )
       {
          db().modify<content_object>( *content, []( content_object& co ){ co.times_bought++; });
-         //TODO_DECENT pay the price to the author
+         db().adjust_balance( content->author, buying.price );
+         db().modify<buying_object>(buying, [&](buying_object& bo){
+              bo.price.amount = 0;
+              bo.delivered = true;
+              bo.expiration_or_delivery_time = db().head_block_time();
+         });
+      } else if (expired)
+      {
+         db().buying_expire(buying);
       }
    }FC_CAPTURE_AND_RETHROW( (o) ) }
 
@@ -158,30 +162,30 @@ namespace graphene { namespace chain {
       //check in buying history if the object exists
       auto& idx = db().get_index_type<content_index>().indices().get<by_URI>();
       const auto& content = idx.find( o.URI );
-      auto& bidx = db().get_index_type<buying_history_index>().indices().get<by_consumer_URI>();
-      const auto& bho = bidx.find( std::make_tuple(o.consumer, o.URI) );
-      FC_ASSERT( content != idx.end() && bho != bidx.end() );
-      FC_ASSERT( bho->delivered, "not delivered" );
-      FC_ASSERT( !bho->rated, "already rated" );
+      auto& bidx = db().get_index_type<buying_index>().indices().get<by_consumer_URI>();
+      const auto& bo = bidx.find( std::make_tuple(o.consumer, o.URI) );
+      FC_ASSERT( content != idx.end() && bo != bidx.end() );
+      FC_ASSERT( bo->delivered, "not delivered" );
+      FC_ASSERT( !bo->rated, "already rated" );
       FC_ASSERT( o.rating >= 0 && o.rating <=10 );
    }FC_CAPTURE_AND_RETHROW( (o) ) }
    
    void_result leave_rating_evaluator::do_apply(const leave_rating_operation& o )
    {try{
       //create rating object and adjust content statistics
-      auto& bidx = db().get_index_type<buying_history_index>().indices().get<by_consumer_URI>();
-      const auto& bho = bidx.find( std::make_tuple(o.consumer, o.URI) );
+      auto& bidx = db().get_index_type<buying_index>().indices().get<by_consumer_URI>();
+      const auto& bo = bidx.find( std::make_tuple(o.consumer, o.URI) );
       auto& idx = db().get_index_type<content_index>().indices().get<by_URI>();
       const auto& content = idx.find( o.URI );
 
       db().create<rating_object>([&]( rating_object& ro ){
-           ro.buying = bho->id;
+           ro.buying = bo->id;
            ro.consumer = o.consumer;
            ro.URI = o.URI;
            ro.rating = o.rating;
       });
 
-      db().modify<buying_history_object>( *bho, [&]( buying_history_object& b ){ b.rated = true; });
+      db().modify<buying_object>( *bo, [&]( buying_object& b ){ b.rated = true; });
       db().modify<content_object> ( *content, [&](content_object& co){
            if(co.total_rating == 1)
               co.AVG_rating = o.rating * 1000;
