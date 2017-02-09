@@ -133,5 +133,5 @@ class seeding_plugin : public graphene::app::plugin
 }}
 
 FC_REFLECT_DERIVED( graphene::seeding::my_seeder_object, (graphene::db::object), (seeder)(content_privKey)(privKey)(free_space) );
-FC_REFLECT_DERIVED( graphene::seeding::my_seeding_object, (graphene::db::object), (URI)(expiration)(seeder)(key)(space) );
+FC_REFLECT_DERIVED( graphene::seeding::my_seeding_object, (graphene::db::object), (URI)(expiration)(cd)(seeder)(key)(space) );
 
