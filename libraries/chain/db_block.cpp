@@ -197,6 +197,24 @@ bool database::_push_block(const signed_block& new_block)
       apply_block(new_block, skip);
       _block_id_to_block.store(new_block.id(), new_block);
       session.commit();
+      //we will notify after session commit, since we wan't to be sure that seeding plugin works and generated tx will refer to commited block_objects
+      uint32_t _current_trx_in_block = 0;
+      for( const auto& trx : new_block.transactions )
+      {
+         uint32_t _current_op_in_trx = 0;
+         for( const auto& op : trx.operations )
+         {
+            operation_history_object oh(op);
+            oh.block_num    = _current_block_num;
+            oh.trx_in_block = _current_trx_in_block;
+            oh.op_in_trx    = _current_op_in_trx;
+            //oh.virtual_op   = _current_virtual_op++;
+            oh.op = op;
+            on_applied_operation (oh);
+            ++_current_op_in_trx;
+         }
+         ++_current_trx_in_block;
+      }
    } catch ( const fc::exception& e ) {
       elog("Failed to push new block:\n${e}", ("e", e.to_detail_string()));
       _fork_db.remove(new_block.id());
@@ -427,15 +445,17 @@ void database::clear_pending()
 
 uint32_t database::push_applied_operation( const operation& op )
 {
+   elog("storing operation ${p} in the _applied_ops array",("p", op));
    _applied_ops.emplace_back(op);
+   elog("stored, _applied_ops.size = ${n}", ("n",_applied_ops.size()));
    operation_history_object& oh = *(_applied_ops.back());
    oh.block_num    = _current_block_num;
    oh.trx_in_block = _current_trx_in_block;
    oh.op_in_trx    = _current_op_in_trx;
    oh.virtual_op   = _current_virtual_op++;
    oh.op = op;
-   elog("calling registered callbacks for operation ${o}", ("o",oh));
-   on_applied_operation (oh);
+//   elog("calling registered callbacks for operation ${o}", ("o",oh));
+//   on_applied_operation (oh);
    return _applied_ops.size() - 1;
 }
 void database::set_applied_operation_result( uint32_t op_id, const operation_result& result )
@@ -531,6 +551,7 @@ void database::_apply_block( const signed_block& next_block )
 
    // notify observers that the block has been applied
    applied_block( next_block ); //emit
+
    _applied_ops.clear();
 
    notify_changed_objects();

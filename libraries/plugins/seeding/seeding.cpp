@@ -65,7 +65,7 @@ void seeding_plugin_impl::on_operation(const operation_history_object &op_obj) {
       const auto &bidx = db.get_index_type<graphene::chain::buying_index>().indices().get<graphene::chain::by_URI_consumer>();
       const auto &bitr = bidx.find(std::make_tuple( rtb_op.URI, rtb_op.consumer ));
       if(bitr == bidx.end()){
-         ilog("no such buying_object");
+         ilog("no such buying_object for ${u}, ${c}",("u", rtb_op.URI )("c", rtb_op.consumer ));
          //TODO_DECENT very ugly hack, rework!
          op.buying = db.get_index_type<graphene::chain::buying_index>().get_next_id();
       }else
@@ -84,7 +84,8 @@ void seeding_plugin_impl::on_operation(const operation_history_object &op_obj) {
       chain_id_type _chain_id = db.get_chain_id();
 
       tx.sign(sritr->privKey, _chain_id);
-      service_thread->async([this, tx]() { _self.p2p_node().broadcast_transaction(tx); });
+      database().push_transaction(tx);
+      service_thread->async([this, tx]() {  _self.p2p_node().broadcast_transaction(tx); });
    }
 
    if( op_obj.op.which() == operation::tag<content_submit_operation>::value ) {
@@ -172,7 +173,8 @@ seeding_plugin_impl::generate_por(my_seeding_id_type so_id, graphene::package::p
 
    tx.sign(sritr->privKey, _chain_id);
    idump((tx));
-   service_thread->async([this, tx]() { _self.p2p_node().broadcast_transaction(tx); });
+   database().push_transaction(tx);
+   service_thread->async([this, tx]() {  _self.p2p_node().broadcast_transaction(tx); });
    fc::time_point fc_now = fc::time_point::now();
    fc::time_point next_wakeup(fc_now + fc::microseconds((uint64_t)1000000 * (24 * 60 * 60 - 10)));
    bool last_call = false;

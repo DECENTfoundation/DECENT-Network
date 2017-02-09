@@ -105,7 +105,7 @@ d_integer get_public_el_gamal_key(const d_integer &privateKey)
 
 encryption_results el_gamal_encrypt(const point &message, const d_integer &publicKey, ciphertext &result)
 {
-    elog("el_gamal_encrypt called ${m} ${pk} ",("m", message)("pk", publicKey));
+    //elog("el_gamal_encrypt called ${m} ${pk} ",("m", message)("pk", publicKey));
     ElGamalKeys::PublicKey key;
     key.AccessGroupParameters().Initialize(DECENT_EL_GAMAL_MODULUS_512, DECENT_EL_GAMAL_GROUP_GENERATOR);
     key.SetPublicElement(publicKey);
@@ -144,7 +144,7 @@ encryption_results el_gamal_decrypt(const ciphertext &input, const d_integer &pr
     ElGamalKeys::PrivateKey key;
     key.AccessGroupParameters().Initialize(DECENT_EL_GAMAL_MODULUS_512, DECENT_EL_GAMAL_GROUP_GENERATOR);
     key.SetPrivateExponent(privateKey);
-    elog("el_gamal_decrypt called ${i} ${pk} ",("i", input)("pk", privateKey));
+    //elog("el_gamal_decrypt called ${i} ${pk} ",("i", input)("pk", privateKey));
     try{
 
         byte recovered[DECENT_EL_GAMAL_GROUP_ELEMENT_SIZE];
@@ -161,7 +161,7 @@ encryption_results el_gamal_decrypt(const ciphertext &input, const d_integer &pr
 
         plaintext.first.Decode( recovered, DECENT_MESSAGE_SIZE );
         plaintext.second.Decode( recovered+DECENT_MESSAGE_SIZE, DECENT_MESSAGE_SIZE  );
-        elog("el_gamal_decrypt returns ${m}",("m",plaintext));
+        //elog("el_gamal_decrypt returns ${m}",("m",plaintext));
     }catch (const CryptoPP::Exception &e) {
         elog(e.GetWhat());
         switch (e.GetErrorType()) {
@@ -176,7 +176,6 @@ encryption_results el_gamal_decrypt(const ciphertext &input, const d_integer &pr
 
 d_integer hash_elements(ciphertext t1, ciphertext t2, d_integer key1, d_integer key2, d_integer G1, d_integer G2, d_integer G3)
 {
-   std::cout <<"hash params: "<<t1.C1.to_string()<<t1.D1.to_string()<< t2.C1.to_string()<<t2.D1.to_string()<< key1.to_string()<<key2.to_string()<<G1.to_string()<<G2.to_string()<<G3.to_string() <<"\n";
 
    CryptoPP::Weak1::MD5 hashier;
    size_t hashSpace =9*(DECENT_EL_GAMAL_GROUP_ELEMENT_SIZE);
@@ -221,7 +220,7 @@ bool
 verify_delivery_proof(const delivery_proof &proof, const ciphertext &first, const ciphertext &second,
                       const d_integer &firstPulicKey, const d_integer &secondPublicKey)
 {
-   elog("verify_delivery_proof called with params ${p} ${f} ${s} ${pk1} ${pk2}",("p", proof)("f", first)("s", second)("pk1", firstPulicKey)("pk2", secondPublicKey));
+   //elog("verify_delivery_proof called with params ${p} ${f} ${s} ${pk1} ${pk2}",("p", proof)("f", first)("s", second)("pk1", firstPulicKey)("pk2", secondPublicKey));
 
    ElGamalKeys::PublicKey key1;
    key1.AccessGroupParameters().Initialize(DECENT_EL_GAMAL_MODULUS_512, DECENT_EL_GAMAL_GROUP_GENERATOR);
@@ -232,7 +231,6 @@ verify_delivery_proof(const delivery_proof &proof, const ciphertext &first, cons
    key2.SetPublicElement(secondPublicKey);
 
    d_integer x = hash_elements(first, second, firstPulicKey, secondPublicKey, proof.G1, proof.G2, proof.G3);
-   std::cout <<"hash inside verify proof is: "<<x.to_string()<<"\n";
 
    ElGamal::GroupParameters groupParams;
    ModularArithmetic mr(DECENT_EL_GAMAL_MODULUS_512);
@@ -240,7 +238,6 @@ verify_delivery_proof(const delivery_proof &proof, const ciphertext &first, cons
    d_integer t1 = mr.Exponentiate(DECENT_EL_GAMAL_GROUP_GENERATOR, proof.s);
    d_integer t2 = mr.Multiply(mr.Exponentiate(key1.GetPublicElement(), x), proof.G1);
 
-   std::cout << "T1: "<<t1.to_string()<<"\nT2: "<<t2.to_string()<<"\n";
 
    if(t1 != t2)
       return false;
@@ -255,7 +252,7 @@ verify_delivery_proof(const delivery_proof &proof, const ciphertext &first, cons
    CryptoPP::Integer c2vc1vd1v = mr.Multiply(c2vc1v, d1v);
 
    bool ret = mr.Multiply(c2vc1vd1v, mr.MultiplicativeInverse(r2v)) == proof.G3;
-   elog("verify_delivery_proof returns ${r}",("r", ret));
+   //elog("verify_delivery_proof returns ${r}",("r", ret));
    return ret;
 }
 
@@ -267,7 +264,7 @@ encrypt_with_proof(const point &message, const d_integer &privateKey, const d_in
 {
 
    try{
-      elog("encrypt_with_proof called ${m} ${pk} ${dpk} ${i}",("m", message)("pk", privateKey)("dpk",destinationPublicKey)("i",incoming));
+      //elog("encrypt_with_proof called ${m} ${pk} ${dpk} ${i}",("m", message)("pk", privateKey)("dpk",destinationPublicKey)("i",incoming));
       ElGamalKeys::PrivateKey private_key;
       private_key.AccessGroupParameters().Initialize(DECENT_EL_GAMAL_MODULUS_512, DECENT_EL_GAMAL_GROUP_GENERATOR);
       private_key.SetPrivateExponent(privateKey);
@@ -308,10 +305,9 @@ encrypt_with_proof(const point &message, const d_integer &privateKey, const d_in
 
       d_integer x = hash_elements(incoming, outgoing, myPublicElement, public_key.GetPublicElement(), proof.G1, proof.G2, proof.G3);
 
-      std::cout <<"hash inside encrypt with proof is: "<<x.to_string()<<"\n";
       proof.s = privateExponent * x + b1;
       proof.r = randomizer * x + b2;
-      elog("encrypt_with_proof returns ${o} ${p}",("o", outgoing)("p", proof));
+      //elog("encrypt_with_proof returns ${o} ${p}",("o", outgoing)("p", proof));
 
    }catch(const CryptoPP::Exception &e) {
       elog(e.GetWhat());
