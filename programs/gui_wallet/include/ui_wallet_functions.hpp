@@ -18,7 +18,11 @@ namespace WAT {enum _WAT_TP{CONNECT,SAVE2,LOAD2,EXIT};}
 // WAS stands for wallet Api State
 namespace WAS{enum _API_STATE{DEFAULT_ST=0,CONNECTED_ST,_API_STATE_SIZE};}
 
+static void WarnYesOrNoFunc_static(void*,int,void*){}
+static void ConnErrFunc_static(void*, void*,const std::string&,const std::string&){}
+
 typedef struct SConnectionStruct{
+    SConnectionStruct():fpErr(&ConnErrFunc_static),fpWarnFunc(&WarnYesOrNoFunc_static){}
     ~SConnectionStruct(){__DEBUG_APP2__(1,"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! ");}
     WAT::_WAT_TP   action;
     std::string   wallet_file_name;

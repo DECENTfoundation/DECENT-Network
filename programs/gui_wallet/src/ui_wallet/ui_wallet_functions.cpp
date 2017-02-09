@@ -158,7 +158,8 @@ int SetNewTask(const std::string& a_inp_line, void* a_owner, void* a_clbData, Ty
 
 int SetNewTask_base(const std::string& a_inp_line, void* a_owner, void* a_clbData, ...)
 {
-
+    int nReturn = 0;
+    std::string errStr("error accured!");
     TypeCallbackSetNewTaskGlb fpTaskDone;
     va_list aFunc;
 
@@ -169,16 +170,39 @@ int SetNewTask_base(const std::string& a_inp_line, void* a_owner, void* a_clbDat
     std::lock_guard<NewTestMutex> lock(*s_pMutex_for_cur_api);
     if(s_CurrentApi.gui_api)
     {
+        nReturn = 0;
         (s_CurrentApi.gui_api)->SetNewTask(a_inp_line,a_owner,a_clbData,fpTaskDone);
+    }
+    else if(strstr(a_inp_line.c_str(),"load_wallet_file "))
+    {
+        SConnectionStruct aConStr;
+        const char* cpcWlFlName = a_inp_line.c_str() + strlen("load_wallet_file ");
+        for(;*cpcWlFlName == ' ' && *cpcWlFlName != 0;++cpcWlFlName);
+
+        if(*cpcWlFlName)
+        {
+            aConStr.wallet_file_name = cpcWlFlName;
+            nReturn = LoadWalletFile(&aConStr);
+
+            if(!nReturn)
+            {
+                aConStr.action = WAT::CONNECT;
+                s_pConnectionRequestFifo->AddNewTask(aConStr,a_owner,a_clbData,fpTaskDone);
+                s_pSema_for_connection_thread->post();
+            }
+
+        }
+        else{nReturn = WRONG_ARGUMENT;}
     }
     else
     {
-        (*fpTaskDone)(a_owner,a_clbData,NO_API_INITED, a_inp_line, "First connet to witness node");
-        return NO_API_INITED;
+        nReturn = NO_API_INITED;
+        errStr = "First connet to witness node";
     }
 
-    return 0;
+    if(nReturn){(*fpTaskDone)(a_owner,a_clbData,NO_API_INITED, a_inp_line, errStr);}
 
+    return nReturn;
 }
 
 
@@ -426,6 +450,13 @@ static int ConnectToNewWitness(const decent::tools::taskListItem<SConnectionStru
            (*s_fpCorrectUiCaller)(a_con_data.callbackArg,0, __CONNECTION_CLB_,
                                  __FILE__ "\nConnection is ok",
                                  a_con_data.owner,a_con_data.fn_tsk_dn2);
+           if(aStrct.wallet_file_name != "" )
+           {
+               std::string possible_input = "load_wallet_file " + aStrct.wallet_file_name;
+               (*s_fpCorrectUiCaller)(a_con_data.callbackArg,0, possible_input,
+                                     "true",
+                                     a_con_data.owner,a_con_data.fn_tsk_dn2);
+           }
            wallet_gui->wait();
         }
         else
