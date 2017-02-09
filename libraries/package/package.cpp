@@ -28,6 +28,7 @@
 #include <boost/iostreams/device/file.hpp>
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/uuid/uuid.hpp>
+#include <boost/uuid/uuid_io.hpp>
 #include <boost/iostreams/copy.hpp>
 
 
@@ -170,17 +171,8 @@ public:
 
 
 string make_uuid() {
-	const int length = 32;
-
-    static string charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
-    string result;
-    result.resize(length);
-
-    srand(time(NULL));
-    for (int i = 0; i < length; i++)
-        result[i] = charset[rand() % charset.length()];
-
-    return result;
+    boost::uuids::random_generator generator;
+    return boost::uuids::to_string(generator());
 }
 
 void get_files_recursive(boost::filesystem::path path, std::vector<boost::filesystem::path>& all_files) {
@@ -290,6 +282,10 @@ package_object::package_object(const boost::filesystem::path& package_path) {
         _package_path = path();
         _hash = fc::ripemd160();
     }
+}
+
+void package_object::get_all_files(std::vector<boost::filesystem::path>& all_files) const {
+    get_files_recursive(get_path(), all_files);
 }
 
 bool package_object::verify_hash() const {

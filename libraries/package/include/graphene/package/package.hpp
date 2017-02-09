@@ -27,6 +27,7 @@ public:
 	boost::filesystem::path get_samples_path() const { return _package_path / "samples"; }
 	const boost::filesystem::path& get_path() const { return _package_path; }
 
+	void get_all_files(std::vector<boost::filesystem::path>& all_files) const;
 
 	bool verify_hash() const;
 
