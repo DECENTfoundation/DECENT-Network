@@ -178,6 +178,7 @@ namespace graphene { namespace chain {
           * This signal is emitted for plugins to process every operation
           */
          fc::signal<void(const operation_history_object&)> on_applied_operation;
+         fc::signal<void(const operation_history_object&)> on_new_commited_operation;
 
          /**
           *  This signal is emitted after all operations and virtual operation for a

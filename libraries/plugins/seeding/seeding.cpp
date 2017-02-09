@@ -26,6 +26,59 @@ void seeding_plugin_impl::on_operation(const operation_history_object &op_obj) {
    graphene::chain::database &db = database();
 
    elog("seeding_plugin_impl::on_operation starting for operation ${o}", ("o",op_obj));
+
+   if( op_obj.op.which() == operation::tag<content_submit_operation>::value ) {
+      elog("seeding plugin:  on_operation() handling new content");
+      const content_submit_operation &cs_op = op_obj.op.get<content_submit_operation>();
+      const auto &idx = db.get_index_type<my_seeder_index>().indices().get<by_seeder>();
+      auto seeder_itr = idx.begin();
+      while( seeder_itr != idx.end()) {
+         if( std::find(cs_op.seeders.begin(), cs_op.seeders.end(), (seeder_itr->seeder)) != cs_op.seeders.end()) {
+            auto s = cs_op.seeders.begin();
+            auto k = cs_op.key_parts.begin();
+            while( *s != seeder_itr->seeder && s != cs_op.seeders.end()) {
+               ++s;
+               ++k;
+            }
+
+            const auto &sidx = db.get_index_type<my_seeding_index>().indices().get<by_URI>();
+            const auto &sitr = sidx.find(cs_op.URI);
+            if( sitr != sidx.end()) {
+               //TODO_DECENT - resubmit is not handled yet properly, planned in drop 2
+               uint32_t new_space = (cs_op.size + 1048575) / 1048576; //we allocate the whole megabytes per content
+               uint32_t diff_space = sitr->space - new_space;
+               db.modify<my_seeding_object>(*sitr, [&](my_seeding_object &mso) {
+                    mso.space -= diff_space;
+               });
+               db.modify<my_seeder_object>(*seeder_itr, [&](my_seeder_object &mso) {
+                    mso.free_space -= diff_space;
+               });
+            } else {
+               db.create<my_seeding_object>([&](my_seeding_object &so) {
+                    so.URI = cs_op.URI;
+                    so.seeder = seeder_itr->seeder;
+                    so.space = (cs_op.size + 1048575) / 1048576; //we allocate the whole megabytes per content
+                    if( k != cs_op.key_parts.end())
+                       so.key = *k;
+                    so.expiration = cs_op.expiration;
+                    so.cd = cs_op.cd;
+               });
+               db.modify<my_seeder_object>(*seeder_itr, [&](my_seeder_object &mso) {
+                    mso.free_space -= (cs_op.size + 1048575) / 1048576; //we allocate the whole megabytes per content
+               });
+               package_manager::instance().download_package(cs_op.URI, *this );
+            }
+         }
+         ++seeder_itr;
+      }
+   }
+}
+
+
+void seeding_plugin_impl::on_operation2(const operation_history_object &op_obj) {
+   graphene::chain::database &db = database();
+
+   elog("seeding_plugin_impl::on_operation2 starting for operation ${o}", ("o",op_obj));
    if( op_obj.op.which() == operation::tag<request_to_buy_operation>::value ) {
       if(!db.is_undo_enabled()) {
          elog("seeding_plugin_impl::on_operation not producing yet");
@@ -89,50 +142,8 @@ void seeding_plugin_impl::on_operation(const operation_history_object &op_obj) {
    }
 
    if( op_obj.op.which() == operation::tag<content_submit_operation>::value ) {
-      elog("seeding plugin:  on_operation() handling new content");
-      const content_submit_operation &cs_op = op_obj.op.get<content_submit_operation>();
-      const auto &idx = db.get_index_type<my_seeder_index>().indices().get<by_seeder>();
-      auto seeder_itr = idx.begin();
-      while( seeder_itr != idx.end()) {
-         if( std::find(cs_op.seeders.begin(), cs_op.seeders.end(), (seeder_itr->seeder)) != cs_op.seeders.end()) {
-            auto s = cs_op.seeders.begin();
-            auto k = cs_op.key_parts.begin();
-            while( *s != seeder_itr->seeder && s != cs_op.seeders.end()) {
-               ++s;
-               ++k;
-            }
-
-            const auto &sidx = db.get_index_type<my_seeding_index>().indices().get<by_URI>();
-            const auto &sitr = sidx.find(cs_op.URI);
-            if( sitr != sidx.end()) {
-               //TODO_DECENT - resubmit is not handled yet properly, planned in drop 2
-               uint32_t new_space = (cs_op.size + 1048575) / 1048576; //we allocate the whole megabytes per content
-               uint32_t diff_space = sitr->space - new_space;
-               db.modify<my_seeding_object>(*sitr, [&](my_seeding_object &mso) {
-                    mso.space -= diff_space;
-               });
-               db.modify<my_seeder_object>(*seeder_itr, [&](my_seeder_object &mso) {
-                    mso.free_space -= diff_space;
-               });
-            } else {
-
-               db.create<my_seeding_object>([&](my_seeding_object &so) {
-                    so.URI = cs_op.URI;
-                    so.seeder = seeder_itr->seeder;
-                    so.space = (cs_op.size + 1048575) / 1048576; //we allocate the whole megabytes per content
-                    if( k != cs_op.key_parts.end())
-                       so.key = *k;
-                    so.expiration = cs_op.expiration;
-                    so.cd = cs_op.cd;
-               });
-               db.modify<my_seeder_object>(*seeder_itr, [&](my_seeder_object &mso) {
-                    mso.free_space -= (cs_op.size + 1048575) / 1048576; //we allocate the whole megabytes per content
-               });
-               package_manager::instance().download_package(cs_op.URI, *this );
-            }
-         }
-         ++seeder_itr;
-      }
+      //ensure that we still handle new content
+      on_operation(op_obj);
    }
 }
 
@@ -321,6 +332,7 @@ void seeding_plugin::plugin_initialize( const boost::program_options::variables_
       my->service_thread = std::make_shared<fc::thread>();
 
       database().on_applied_operation.connect( [&]( const operation_history_object& b ){ my->on_operation(b); } );
+      database().on_new_commited_operation.connect( [&]( const operation_history_object& b ){ my->on_operation2(b); } );
 
       ilog("seeding plugin:  plugin_initialize() seeder prepared");
       try {

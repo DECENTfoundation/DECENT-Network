@@ -210,7 +210,7 @@ bool database::_push_block(const signed_block& new_block)
             oh.op_in_trx    = _current_op_in_trx;
             //oh.virtual_op   = _current_virtual_op++;
             oh.op = op;
-            on_applied_operation (oh);
+            on_new_commited_operation (oh);
             ++_current_op_in_trx;
          }
          ++_current_trx_in_block;
@@ -445,9 +445,7 @@ void database::clear_pending()
 
 uint32_t database::push_applied_operation( const operation& op )
 {
-   elog("storing operation ${p} in the _applied_ops array",("p", op));
    _applied_ops.emplace_back(op);
-   elog("stored, _applied_ops.size = ${n}", ("n",_applied_ops.size()));
    operation_history_object& oh = *(_applied_ops.back());
    oh.block_num    = _current_block_num;
    oh.trx_in_block = _current_trx_in_block;
@@ -455,7 +453,7 @@ uint32_t database::push_applied_operation( const operation& op )
    oh.virtual_op   = _current_virtual_op++;
    oh.op = op;
 //   elog("calling registered callbacks for operation ${o}", ("o",oh));
-//   on_applied_operation (oh);
+   on_applied_operation (oh);
    return _applied_ops.size() - 1;
 }
 void database::set_applied_operation_result( uint32_t op_id, const operation_result& result )
