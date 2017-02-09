@@ -129,6 +129,10 @@ public:
    std::string operator()(const account_create_operation& op)const;
    std::string operator()(const account_update_operation& op)const;
    std::string operator()(const asset_create_operation& op)const;
+   std::string operator()(const content_submit_operation& op)const;
+   std::string operator()(const request_to_buy_operation& op)const;
+   std::string operator()(const leave_rating_operation& op)const;
+   std::string operator()(const ready_to_publish_operation& op)const;
 };
 
 template<class T>
@@ -2779,6 +2783,30 @@ std::string operation_printer::operator()(const asset_create_operation& op) cons
    else
       out << "User-Issue Asset ";
    out << "'" << op.symbol << "' with issuer " << wallet.get_account(op.issuer).name;
+   return fee(op.fee);
+}
+
+std::string operation_printer::operator()(const content_submit_operation& op) const
+{
+   out << "Submit content by " << wallet.get_account(op.author).name << " -- URI: " << op.URI << " -- Price: " << op.price.amount.value;
+   return fee(op.fee);
+}
+
+std::string operation_printer::operator()(const request_to_buy_operation& op) const
+{
+   out << "Request to buy by " << wallet.get_account(op.consumer).name << " -- URI: " << op.URI << " -- Price: " << op.price.amount.value;
+   return fee(op.fee);
+}
+
+std::string operation_printer::operator()(const leave_rating_operation& op) const
+{
+   out << wallet.get_account(op.consumer).name << " rated " << op.URI << " -- Rating: " << op.rating;
+   return fee(op.fee);
+}
+
+std::string operation_printer::operator()(const ready_to_publish_operation& op) const
+{
+   out << "Ready to publish -- Seeder: " << wallet.get_account(op.seeder).name << " -- space: " << op.space << " -- Price per MB: " << op.price_per_MByte;
    return fee(op.fee);
 }
 
