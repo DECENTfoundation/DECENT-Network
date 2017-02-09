@@ -12,6 +12,7 @@
 
 #include <stdint.h>
 #include <string>
+#include "debug_decent_application.h"
 
 #define __CONNECTION_CLB_ "__CONNECTION_CLB_"
 #define __MANAGER_CLB_ "__MANAGER_CLB_"
@@ -30,16 +31,22 @@
 #define WRONG_ARGUMENT      -4
 #define FILE_DOES_NOT_EXIST      -5
 
+#ifdef __cplusplus
+//extern "C"{
+#endif
+
 #define SetNewTask_last_args    void* a_clbData,int64_t a_err, const std::string& a_inp, const std::string& a_result
 
-typedef void (*ConnErrFuncType)(void*owner, void* clbData,const std::string& err,const std::string& details);
+//typedef void (*ConnErrFuncType)(void*owner, void* clbData,const std::string& err,const std::string& details);
 typedef void (__THISCALL__ *TypeCallbackSetNewTaskGlb)(void* owner,SetNewTask_last_args);
-typedef void (*WarnYesOrNoFuncType)(void*owner,int answer,/*string**/void* str_ptr);
+typedef void (__THISCALL__ *WarnYesOrNoFuncType)(void*owner,int answer,/*string**/void* str_ptr);
 typedef int (__THISCALL__ *TypeWarnAndWaitFunc)(void* owner,
                                                 WarnYesOrNoFuncType fpYesOrNo,
                                                 void* a_pDataForYesOrNo,const char* a_form,...);
 typedef int (__THISCALL__ *TypeCallFunctionInGuiLoop)(SetNewTask_last_args,void* owner,TypeCallbackSetNewTaskGlb fpFnc);
 
-#include "debug_decent_application.h"
+#ifdef __cplusplus
+//}
+#endif
 
 #endif // UI_WALLET_FUNCTIONS_BASE_HPP

@@ -21,13 +21,20 @@
 #include <fc/rpc/websocket_api.hpp>
 #include "decent_gui_inguiloopcaller_glb.hpp"
 #include "decent_tools_rwlock.hpp"
-
 #ifdef WIN32
 #include <windows.h>
 #else  // #ifdef WIN32
 #include <unistd.h>
 #define Sleep(__x__) usleep(1000*(__x__))
 #endif  // #ifdef WIN32
+
+#ifndef __DLL_EXPORT__
+#ifdef __MSC_VER
+#define __DLL_EXPORT__ _declspec(dllexport)
+#else  // #ifdef __MSC_VER
+#define __DLL_EXPORT__
+#endif  // #ifdef __MSC_VER
+#endif  // #ifndef __DLL_EXPORT__
 
 #define CONN_FNC_TYPE   TypeCallbackSetNewTaskGlb
 #define NewTestMutex decent::tools::RWLock
@@ -46,7 +53,7 @@ static void*                        s_pManagerClbData;
 static TypeCallbackSetNewTaskGlb    s_fpMenegmentClbk;
 static TypeCallFunctionInGuiLoop    s_fpCorrectUiCaller;
 static NewTestMutex*                                            s_pMutex_for_cur_api; // It is better to use here rw mutex
-static decent::tools::FiFo<SConnectionStruct,CONN_FNC_TYPE>*    s_pConnectionRequestFifo;
+static decent::tools::FiFo<SConnectionStruct*,CONN_FNC_TYPE>*    s_pConnectionRequestFifo;
 static decent::tools::UnnamedSemaphoreLite*                     s_pSema_for_connection_thread;
 static graphene::wallet::wallet_data*                           s_wdata_ptr;
 static std::thread*                                             s_pConnectionThread ;
@@ -59,18 +66,32 @@ static StructApi      s_CurrentApi;
 static void ConnectionThreadFunction(void);
 static void gui_wallet_application_MenegerThreadFunc(void);
 static int SaveWalletFile_private(const SConnectionStruct& a_WalletData);
-static int ConnectToNewWitness(const decent::tools::taskListItem<SConnectionStruct,CONN_FNC_TYPE>&);
+static int ConnectToNewWitness(const decent::tools::taskListItem<SConnectionStruct*,CONN_FNC_TYPE>&);
+
+#ifdef __cplusplus
+//extern "C"{
+#endif
 
 
+__DLL_EXPORT__ void* GetFunctionPointerAsVoid(int a_first,...)
+{
+    va_list aFunc;
 
-void InitializeUiInterfaceOfWallet(TypeWarnAndWaitFunc a_fpWarnAndWait, TypeCallFunctionInGuiLoop a_fpCorrectUiCaller,
+    va_start( aFunc, a_first );
+    void* pReturn = va_arg( aFunc, void*);
+    va_end( aFunc );
+
+    return pReturn;
+}
+
+__DLL_EXPORT__ void InitializeUiInterfaceOfWallet(TypeWarnAndWaitFunc a_fpWarnAndWait, TypeCallFunctionInGuiLoop a_fpCorrectUiCaller,
                                    void* a_pMngOwner,void* a_pMngClb,TypeCallbackSetNewTaskGlb a_fpMngClbk)
 {
     InitializeUiInterfaceOfWallet_base(a_fpWarnAndWait,a_fpCorrectUiCaller,a_pMngOwner,a_pMngClb,a_fpMngClbk);
 }
 
 
-void InitializeUiInterfaceOfWallet_base(TypeWarnAndWaitFunc a_fpWarnAndWait,TypeCallFunctionInGuiLoop a_fpCorrectUiCaller,
+__DLL_EXPORT__ void InitializeUiInterfaceOfWallet_base(TypeWarnAndWaitFunc a_fpWarnAndWait,TypeCallFunctionInGuiLoop a_fpCorrectUiCaller,
                                         void* a_pMngOwner,void* a_pMngClb,...)
 {
     int nLibInited(s_nLibraryInited++);
@@ -91,7 +112,7 @@ void InitializeUiInterfaceOfWallet_base(TypeWarnAndWaitFunc a_fpWarnAndWait,Type
         s_fpCorrectUiCaller = a_fpCorrectUiCaller;
 
         s_pMutex_for_cur_api = new NewTestMutex;
-        s_pConnectionRequestFifo = new decent::tools::FiFo<SConnectionStruct,TypeCallbackSetNewTaskGlb>;
+        s_pConnectionRequestFifo = new decent::tools::FiFo<SConnectionStruct*,TypeCallbackSetNewTaskGlb>;
         if(!s_pConnectionRequestFifo){throw "Low memory!\n" __FILE__ ;}
         s_pSema_for_connection_thread = new decent::tools::UnnamedSemaphoreLite;
         if(!s_pSema_for_connection_thread){throw "Low memory!\n" __FILE__ ;}
@@ -108,7 +129,7 @@ void InitializeUiInterfaceOfWallet_base(TypeWarnAndWaitFunc a_fpWarnAndWait,Type
 }
 
 
-void DestroyUiInterfaceOfWallet(void)
+__DLL_EXPORT__ void DestroyUiInterfaceOfWallet(void)
 {
     int nLibInited(s_nLibraryInited--);
     s_nLibraryInited = 0;
@@ -129,34 +150,21 @@ void DestroyUiInterfaceOfWallet(void)
 }
 
 
-void StartConnectionProcedure(const SConnectionStruct& a_conn_str, void* a_owner, void* a_clbData,TypeCallbackSetNewTaskGlb a_clbkFunction)
+__DLL_EXPORT__ void StartConnectionProcedure(SConnectionStruct* a_conn_str_ptr,void *a_owner, void*a_clbData)
 {
-    StartConnectionProcedure_base(a_conn_str,a_owner,a_clbData,a_clbkFunction);
-}
-
-
-void StartConnectionProcedure_base(const SConnectionStruct& a_conn_str,void *a_owner, void*a_clbData,...)
-{
-    TypeCallbackSetNewTaskGlb fpTaskDone;
-    va_list aFunc;
-
-    va_start( aFunc, a_clbData );
-    fpTaskDone = va_arg( aFunc, TypeCallbackSetNewTaskGlb);
-    va_end( aFunc );
-
-    s_pConnectionRequestFifo->AddNewTask(a_conn_str,a_owner,a_clbData,fpTaskDone);
+    s_pConnectionRequestFifo->AddNewTask(a_conn_str_ptr,a_owner,a_clbData,a_conn_str_ptr->fpDone);
     s_pSema_for_connection_thread->post();
 
 }
 
 
-int SetNewTask(const std::string& a_inp_line, void* a_owner, void* a_clbData, TypeCallbackSetNewTaskGlb a_clbkFunction)
+__DLL_EXPORT__ int SetNewTask(const std::string& a_inp_line, void* a_owner, void* a_clbData, TypeCallbackSetNewTaskGlb a_clbkFunction)
 {
     return SetNewTask_base(a_inp_line, a_owner, a_clbData, a_clbkFunction);
 }
 
 
-int SetNewTask_base(const std::string& a_inp_line, void* a_owner, void* a_clbData, ...)
+__DLL_EXPORT__ int SetNewTask_base(const std::string& a_inp_line, void* a_owner, void* a_clbData, ...)
 {
     int nReturn = 0;
     std::string errStr("error accured!");
@@ -175,7 +183,7 @@ int SetNewTask_base(const std::string& a_inp_line, void* a_owner, void* a_clbDat
     }
     else if(strstr(a_inp_line.c_str(),"load_wallet_file "))
     {
-        SConnectionStruct aConStr;
+        static SConnectionStruct aConStr;
         const char* cpcWlFlName = a_inp_line.c_str() + strlen("load_wallet_file ");
         for(;*cpcWlFlName == ' ' && *cpcWlFlName != 0;++cpcWlFlName);
 
@@ -187,7 +195,8 @@ int SetNewTask_base(const std::string& a_inp_line, void* a_owner, void* a_clbDat
             if(!nReturn)
             {
                 aConStr.action = WAT::CONNECT;
-                s_pConnectionRequestFifo->AddNewTask(aConStr,a_owner,a_clbData,fpTaskDone);
+                aConStr.fpDone = fpTaskDone;
+                s_pConnectionRequestFifo->AddNewTask(&aConStr,a_owner,a_clbData,fpTaskDone);
                 s_pSema_for_connection_thread->post();
             }
 
@@ -206,7 +215,7 @@ int SetNewTask_base(const std::string& a_inp_line, void* a_owner, void* a_clbDat
 }
 
 
-int LoadWalletFile(SConnectionStruct* a_pWalletData)
+__DLL_EXPORT__ int LoadWalletFile(SConnectionStruct* a_pWalletData)
 {
     int nReturn(0);
 
@@ -238,7 +247,7 @@ int LoadWalletFile(SConnectionStruct* a_pWalletData)
 
 
 
-int SaveWalletFile2(const SConnectionStruct& a_WalletData)
+__DLL_EXPORT__ int SaveWalletFile2(const SConnectionStruct& a_WalletData)
 {
     int nReturn(0);
     s_pMutex_for_cur_api->lock();
@@ -247,6 +256,11 @@ int SaveWalletFile2(const SConnectionStruct& a_WalletData)
     s_pMutex_for_cur_api->unlock();
     return nReturn;
 }
+
+
+#ifdef __cplusplus
+//extern "C"{
+#endif
 
 
 
@@ -313,7 +327,7 @@ static void gui_wallet_application_MenegerThreadFunc(void)
 
 static void ConnectionThreadFunction(void)
 {
-    decent::tools::taskListItem<SConnectionStruct,CONN_FNC_TYPE> aTaskItem(NULL,SConnectionStruct());
+    decent::tools::taskListItem<SConnectionStruct*,CONN_FNC_TYPE> aTaskItem(NULL,NULL);
     //int nConnectReturn;
     s_nConThreadRun = 1;
     std::thread* pConnectionThread;
@@ -344,20 +358,20 @@ static void SetCurrentApis(const StructApi* a_pApis)
 }
 
 
-static int ConnectToNewWitness(const decent::tools::taskListItem<SConnectionStruct,CONN_FNC_TYPE>& a_con_data)
+static int ConnectToNewWitness(const decent::tools::taskListItem<SConnectionStruct*,CONN_FNC_TYPE>& a_con_data)
 {
     try
     {
-        const SConnectionStruct& aStrct = a_con_data.input;
+        SConnectionStruct* pStruct = a_con_data.input;
 
-        if(aStrct.action == WAT::SAVE2)
+        if(pStruct->action == WAT::SAVE2)
         {
-            int nReturn(SaveWalletFile2(aStrct));
+            int nReturn(SaveWalletFile2(*pStruct));
             (*s_fpCorrectUiCaller)(a_con_data.callbackArg,(int64_t)nReturn, __CONNECTION_CLB_,
                                   __FILE__ "\nSaving procedure",a_con_data.owner,a_con_data.fn_tsk_dn2);
             return nReturn;
         }
-        else if(aStrct.action == WAT::LOAD2)
+        else if(pStruct->action == WAT::LOAD2)
         {
             //m_wdata = fc::json::from_file( csWalletFileName ).as< graphene::wallet::wallet_data >();
             int nReturn(LoadWalletFile((SConnectionStruct*)a_con_data.callbackArg));
@@ -365,30 +379,29 @@ static int ConnectToNewWitness(const decent::tools::taskListItem<SConnectionStru
                                   __FILE__ "\nLoading procedure",a_con_data.owner,a_con_data.fn_tsk_dn2);
             return nReturn;
         }
-        else if(aStrct.action != WAT::CONNECT)
+        else if(pStruct->action != WAT::CONNECT)
         {
             (*s_fpCorrectUiCaller)(a_con_data.callbackArg,UNKNOWN_EXCEPTION, __CONNECTION_CLB_,
                                   __FILE__ "Unknown option",a_con_data.owner,a_con_data.fn_tsk_dn2);
             return UNKNOWN_EXCEPTION;
         }
 
-        void* pOwner = a_con_data.owner; // ???
         StructApi aApiToCreate;
         //const graphene::wallet::wallet_data wdata; wdata.ws_password;
-        s_wdata_ptr->ws_server = aStrct.ws_server;
-        s_wdata_ptr->ws_user = aStrct.ws_user;
-        s_wdata_ptr->ws_password = aStrct.ws_password;
-        fc::path wallet_file( aStrct.wallet_file_name );
+        s_wdata_ptr->ws_server = pStruct->ws_server;
+        s_wdata_ptr->ws_user = pStruct->ws_user;
+        s_wdata_ptr->ws_password = pStruct->ws_password;
+        fc::path wallet_file( pStruct->wallet_file_name );
 
         fc::http::websocket_client client;
         //idump((wdata.ws_server));
-        auto con  = client.connect( aStrct.ws_server );
+        auto con  = client.connect( pStruct->ws_server );
         auto apic = std::make_shared<fc::rpc::websocket_api_connection>(*con);
 
         auto remote_api = apic->get_remote_api< login_api >(1);
         //edump((wdata.ws_user)(wdata.ws_password) );
         // TODO:  Error message here
-        FC_ASSERT( remote_api->login( aStrct.ws_user, aStrct.ws_password ) );
+        FC_ASSERT( remote_api->login( pStruct->ws_user, pStruct->ws_password ) );
 
         auto wapiptr = std::make_shared<graphene::wallet::wallet_api>( *s_wdata_ptr, remote_api );
         wapiptr->set_wallet_filename( wallet_file.generic_string() );
@@ -421,7 +434,7 @@ static int ConnectToNewWitness(const decent::tools::taskListItem<SConnectionStru
            //std::cout << "Please use the set_password method to initialize a new wallet before continuing\n";
            //wallet_cli->set_prompt( "new >>> " );
            //(*(aStrct.fpWarnFunc))(a_con_data.owner,int answer,/*string**/void* str_ptr);
-           (*s_fpWarnAndWaitFunc)(a_con_data.owner,aStrct.fpWarnFunc,&aPassword,
+           (*s_fpWarnAndWaitFunc)(a_con_data.owner,pStruct->fpWarnFunc,&aPassword,
                            "Please use the set_password method to initialize a new wallet before continuing\n");
            if(aPassword != "")
            {
@@ -445,18 +458,14 @@ static int ConnectToNewWitness(const decent::tools::taskListItem<SConnectionStru
            //(*(a_con_data.fn_tsk_dn))(a_con_data.owner,a_con_data.callbackArg,0,
            //                          __CONNECTION_CLB_, __FILE__ "\nConnection is ok");
 
-           LoadWalletFile((SConnectionStruct*)a_con_data.callbackArg);
+           LoadWalletFile(pStruct);
 
-           (*s_fpCorrectUiCaller)(a_con_data.callbackArg,0, __CONNECTION_CLB_,
-                                 __FILE__ "\nConnection is ok",
+           std::string possible_input = __CONNECTION_CLB_;
+           if(pStruct->wallet_file_name != "" ){possible_input = "load_wallet_file " + pStruct->wallet_file_name;}
+
+           (*s_fpCorrectUiCaller)(a_con_data.callbackArg,0, possible_input,
+                                 "true",
                                  a_con_data.owner,a_con_data.fn_tsk_dn2);
-           if(aStrct.wallet_file_name != "" )
-           {
-               std::string possible_input = "load_wallet_file " + aStrct.wallet_file_name;
-               (*s_fpCorrectUiCaller)(a_con_data.callbackArg,0, possible_input,
-                                     "true",
-                                     a_con_data.owner,a_con_data.fn_tsk_dn2);
-           }
            wallet_gui->wait();
         }
         else
@@ -478,24 +487,19 @@ static int ConnectToNewWitness(const decent::tools::taskListItem<SConnectionStru
     }
     catch(const fc::exception& a_fc)
     {
-        if(g_nDebugApplication){printf("file:\"" __FILE__ "\",line:%d\n",__LINE__);}
-        //(*a_fpErr)(a_pOwner,a_fc.to_string(),a_fc.to_detail_string());
-        //(*(a_con_data.fn_tsk_dn))(a_con_data.owner,a_con_data.callbackArg,a_fc.code(),
-        //                          __CONNECTION_CLB_, a_fc.to_detail_string());
-        (*s_fpCorrectUiCaller)(a_con_data.callbackArg,a_fc.code(), __CONNECTION_CLB_,
+        int64_t llnErr = a_fc.code() ? a_fc.code() : -2;
+        (*s_fpCorrectUiCaller)(a_con_data.callbackArg,llnErr, a_fc.to_string(),
                               a_fc.to_detail_string(),
                               a_con_data.owner,a_con_data.fn_tsk_dn2);
-        if(g_nDebugApplication){printf("%s\n",(a_fc.to_detail_string()).c_str());}
+        __DEBUG_APP2__(1,"err=%d, err_str=%s, details=%s\n",
+                       (int)llnErr,a_fc.to_string().c_str(),(a_fc.to_detail_string()).c_str());
     }
     catch(...)
     {
-        if(g_nDebugApplication){printf("file:\"" __FILE__ "\",line:%d\n",__LINE__);}
-        //(*(a_con_data.fn_tsk_dn))(a_con_data.owner,a_con_data.callbackArg,UNKNOWN_EXCEPTION,
-        //                          __CONNECTION_CLB_, __FILE__ "\nUnknown exception!");
         (*s_fpCorrectUiCaller)(a_con_data.callbackArg,UNKNOWN_EXCEPTION, __CONNECTION_CLB_,
                               __FILE__ "\nUnknown exception!",
                               a_con_data.owner,a_con_data.fn_tsk_dn2);
-        if(g_nDebugApplication){printf("Unknown exception\n");}
+        __DEBUG_APP2__(1,"Unknown exception\n");
     }
 
     return 0;

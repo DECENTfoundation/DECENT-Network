@@ -27,6 +27,8 @@
 #include "richdialog.hpp"
 #include "ui_wallet_functions.hpp"
 
+const char* StringFromQString(const QString& a_cqsString);
+
 namespace gui_wallet
 {
 
@@ -65,37 +67,28 @@ public:
 class ConnectDlg : public QDialog
 {
     Q_OBJECT
-
+public:
     enum{RPC_ENDPOINT_FIELD,WALLET_FILE_FIELD,CHAIN_ID_FIELD,CONNECT_BUTTON_FIELD,NUM_OF_FIELDS};
 
-    //friend int CreateWallepApiInstance( void* dataContainer );
 public:
     ConnectDlg(QWidget* parent);
     virtual ~ConnectDlg();
 
-    std::string GetWalletFileName();
-    void SetWalletFileName(const std::string& wallet_file_name);
+    int execNew(SConnectionStruct* pData);
+
+    QWidget* GetTableWidget(int column, int row);
 
 protected:
-    static void SetPassword(void* a_owner,int a_answer,/*string**/void* a_str_ptr);
-    static void ErrorMsgBoxFnc(void*owner, void* clbData,const std::string& err,const std::string& details);
-    void SaveAndConnectDoneFncGUI(void* clbkArg,int64_t err,const std::string& task,const std::string& result);
-    void ConnectErrorFncGui(const std::string& a_err, const std::string& a_details);
     void resizeEvent ( QResizeEvent * event );
 
 protected slots:
     void ConnectPushedSlot();
 
 private:
-    SConnectionStruct   m_wdata;
+    SConnectionStruct*   m_wdata_ptr;
     QHBoxLayout                     m_main_layout;
     QTableWidget                    m_main_table;
-    //graphene::wallet::wallet_api*   m_pCurApi;
-    //fc::rpc::gui*                   m_pCurGuiApi;
-    //std::vector<graphene::wallet::wallet_api*>   m_vAllApis;
-
-private:
-    PasswordDialog m_PasswdDialog;
+    int                             m_ret_value;
 };
 
 }

@@ -9,7 +9,12 @@
  */
 
 
-#define     CLI_WALLET_CODE     ((void*)-1)
+#define     CLI_WALLET_CODE         ((void*)-1)
+#define     WALLET_CONNECT_CODE     ((void*)-2)
+
+#define __INFO__ 0
+#define __WARN__ 1
+#define __ERRR__ 2
 
 #include "gui_wallet_mainwindow.hpp"
 #include <QMenuBar>
@@ -18,13 +23,13 @@
 #include "qt_commonheader.hpp"
 #include <stdio.h>
 #include <stdlib.h>
+#include <QMessageBox>
 
-#define __INFO__ 0
-#define __WARN__ 1
-#define __ERRR__ 2
+#ifndef DEFAULT_WALLET_FILE_NAME
+#define DEFAULT_WALLET_FILE_NAME       "wallet.json"
+#endif
 
 using namespace gui_wallet;
-extern int g_nDebugApplication;
 
 int WarnAndWaitFunc(void* a_pOwner,WarnYesOrNoFuncType a_fpYesOrNo,
                            void* a_pDataForYesOrNo,const char* a_form,...);
@@ -89,13 +94,6 @@ static bool GetJsonVectorNextElem(const char* a_cpcJsonStr,TypeConstChar* a_beg,
 }
 
 
-static const char* StringFromQString(const QString& a_cqsString)
-{
-    QByteArray cLatin = a_cqsString.toLatin1();
-    return cLatin.data();
-}
-
-
 /*//////////////////////////////////////////////////////////////////////////////////*/
 
 Mainwindow_gui_wallet::Mainwindow_gui_wallet()
@@ -130,6 +128,10 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
 
     m_pCentralAllLayout = new QVBoxLayout;
     m_pMenuLayout = new QHBoxLayout;
+
+    m_wdata2.wallet_file_name = DEFAULT_WALLET_FILE_NAME;
+    m_wdata2.ws_server = "ws://127.0.0.1:8090";
+    m_wdata2.chain_id = "0000000000000000000000000000000000000000000000000000000000000000";
 
     m_pMenuLayout->addWidget(m_barLeft);
     m_pMenuLayout->addWidget(m_barRight);
@@ -174,12 +176,16 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
 
     InitializeUiInterfaceOfWallet(&WarnAndWaitFunc,&CallFunctionInGuiLoop,
                                   this,NULL,&Mainwindow_gui_wallet::ManagementNewFuncGUI);
+    m_nJustConnecting = 1;
+    ConnectSlot();
 
 }
 
 
 Mainwindow_gui_wallet::~Mainwindow_gui_wallet()
 {
+    SaveWalletFile2(m_wdata2);
+    DestroyUiInterfaceOfWallet();
     delete m_pInfoTextEdit;
     delete m_pcInfoDlg;
 }
@@ -212,7 +218,7 @@ void Mainwindow_gui_wallet::CreateActions()
     m_ActionConnect.setStatusTip( tr("Connect to witness node") );
     connect( &m_ActionConnect, SIGNAL(triggered()), this, SLOT(ConnectSlot()) );
 
-    m_ActionWalletContent.setDisabled(true);
+    //m_ActionWalletContent.setDisabled(true);
     m_ActionWalletContent.setStatusTip( tr("Wallet content") );
     connect( &m_ActionWalletContent, SIGNAL(triggered()), this, SLOT(ShowWalletContentSlot()) );
 
@@ -450,7 +456,7 @@ void Mainwindow_gui_wallet::UnlockSlot()
     //wapiptr->unlock(aPassword);
     QPoint thisPos = pos();
     std::vector<std::string> cvsPassword(1);
-    decent::gui::tools::RET_TYPE rtRet = m_PasswdDialog2.execRD(&thisPos,cvsPassword);
+    decent::gui::tools::RET_TYPE rtRet = m_PasswdDialog.execRD(&thisPos,cvsPassword);
     if(rtRet == decent::gui::tools::RDB_OK)
     {
         std::string csPassLine = std::string("unlock ") + cvsPassword[0];
@@ -625,9 +631,10 @@ void Mainwindow_gui_wallet::TaskDoneFuncGUI(void* a_clbkArg,int64_t a_err,const 
     //emit TaskDoneSig(a_callbackArg,a_err,a_task,a_result);
     const char* cpcOccur;
 
-    if(g_nDebugApplication){printf("fnc:%s, a_clbkArg=%p, task=%s, result=%s\n",
-                                   __FUNCTION__,a_clbkArg,a_task.c_str(),a_result.c_str());
-    }
+    __DEBUG_APP2__(1,"just_conn=%d, err=%d, a_clbkArg=%p, task=%s, result=%s\n",
+                   m_nJustConnecting,(int)a_err,a_clbkArg,a_task.c_str(),a_result.c_str());
+
+    //m_nJustConnecting = 0;
 
     if(a_clbkArg == CLI_WALLET_CODE)
     {
@@ -635,9 +642,47 @@ void Mainwindow_gui_wallet::TaskDoneFuncGUI(void* a_clbkArg,int64_t a_err,const 
         {
             m_cCliWalletDlg->setTextColor(Qt::red);
         }
+        else
+        {
+            //
+        }
+    }
+    else if(a_clbkArg == WALLET_CONNECT_CODE)
+    {
+        if(a_err)
+        {
+            QMessageBox aMessageBox(QMessageBox::Critical,
+                                    QObject::tr("error"),QObject::tr(a_task.c_str()),
+                                    QMessageBox::Ok,this);
+            aMessageBox.setDetailedText(QObject::tr(a_result.c_str()));
+            aMessageBox.exec();
+            m_ConnectDlg.GetTableWidget(ConnectDlg::CONNECT_BUTTON_FIELD, 1)->setEnabled(true);
+        }
+        else
+        {
+            std::string aInfo, aDetails;
+
+            LoadWalletFile(&m_wdata2);
+            __DEBUG_APP2__(1,"chain_id=%s\n",m_wdata2.chain_id.c_str());
+            aInfo = "Connected!\nserver: " + m_wdata2.ws_server;
+            aDetails = aInfo + "\nchain_id: " + m_wdata2.chain_id;
+
+            //ConnectDlg* pParent = (ConnectDlg*)a_pOwner;
+            QMessageBox aMessageBox(QMessageBox::Information,
+                                    QObject::tr("connected"),QObject::tr(aInfo.c_str()),
+                                    QMessageBox::Ok,this);
+            aMessageBox.setDetailedText(QObject::tr(aDetails.c_str()));
+            aMessageBox.exec();
+            DisplayWalletContentGUI();
+        }
+        return;
     }
 
-    if( strstr(a_task.c_str(),"info"))
+    if(strstr(a_task.c_str(),__CONNECTION_CLB_))
+    {
+        __DEBUG_APP2__(0,"this should not work!");
+    }
+    else if( strstr(a_task.c_str(),"info"))
     {
         QString aStrToDisplay(tr(a_task.c_str()));
 
@@ -784,6 +829,7 @@ void Mainwindow_gui_wallet::ManagementNewFuncGUI(void* a_clbkArg,int64_t a_err,c
     {
         if(m_nConnected==0)
         {
+            __DEBUG_APP2__(1," ");
             m_nConnected = 1;
             m_ActionWalletContent.setEnabled(true);
             m_ActionUnlock.setEnabled(true);
@@ -815,32 +861,57 @@ void Mainwindow_gui_wallet::ManagementNewFuncGUI(void* a_clbkArg,int64_t a_err,c
 
 void Mainwindow_gui_wallet::ConnectSlot()
 {
+    int nRet(decent::gui::tools::RDB_OK);
     m_nError = 0;
     m_error_string = "";
-    m_ConnectDlg.exec();
-}
 
-
-
-/*///////////////////////////////////////////////////////*/
-#if 0
-void Mainwindow_gui_wallet::CurrentUserBalanceFunction(void*,struct StructApi* a_pApi)
-{
-    int nCurUserIndex ( m_pCentralWidget->usersCombo().currentIndex() );
-    const int cnSize ( m_pCentralWidget->usersCombo().count() );
-    if((nCurUserIndex>=0) && cnSize)
+    LoadWalletFile(&m_wdata2);
+    if(m_nJustConnecting==1)
     {
-
-        m_vAccountsBalances.resize(cnSize);
-        QString cqsUserName = m_pCentralWidget->usersCombo().currentText();
-        QByteArray cLatin = cqsUserName.toLatin1();
-        std::string csAccName = cLatin.data();
-
-        __ulli64 ullnCurUserAndUpdate = (((__ulli64)nCurUserIndex)<<32 ) | 1;
-
-        std::string csTaskString = "list_account_balances " + csAccName;
-        if(a_pApi && a_pApi->gui_api){(a_pApi->gui_api)->SetNewTask(
-                        this,(void*)ullnCurUserAndUpdate,csTaskString,&Mainwindow_gui_wallet::TaskDoneFunc);}
+        m_nJustConnecting = 0;
     }
+    else
+    {
+        nRet = m_ConnectDlg.execNew(&m_wdata2);
+    }
+
+    __DEBUG_APP2__(1,"nRet = %d, wallet_fl=%s",nRet, m_wdata2.wallet_file_name.c_str());
+
+    if(nRet == decent::gui::tools::RDB_CANCEL){return;}
+
+    m_ActionConnect.setEnabled(false);
+    m_wdata2.action = WAT::CONNECT;
+    m_wdata2.fpWarnFunc = &SetPassword;
+    m_wdata2.fpDone = (TypeCallbackSetNewTaskGlb)GetFunctionPointerAsVoid(1,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
+    StartConnectionProcedure(&m_wdata2,this,WALLET_CONNECT_CODE);
 }
-#endif  // #if 0
+
+
+void Mainwindow_gui_wallet::SetPassword(void* a_owner,int a_answer,/*string**/void* a_str_ptr)
+{
+    std::string* pcsPassword = (std::string*)a_str_ptr;
+    *pcsPassword = "";
+
+    switch(a_answer)
+    {
+    case QMessageBox::Yes: case QMessageBox::Ok:
+    {
+        Mainwindow_gui_wallet* pThisCon = (Mainwindow_gui_wallet*)a_owner;
+        PasswordDialog* pThis = &pThisCon->m_PasswdDialog;
+        /*pThis->move(pThisCon->pos());
+        pThis->exec();
+        QString cqsPassword = pThis->m_password.text();
+        QByteArray cLatin = cqsPassword.toLatin1();
+        *pcsPassword = cLatin.data();*/
+        std::vector<std::string> vsPassword(1);
+        QPoint thisPos = pThisCon->pos();
+        decent::gui::tools::RET_TYPE rtRet = pThis->execRD(&thisPos,vsPassword);
+        if(rtRet != decent::gui::tools::RDB_CANCEL){*pcsPassword = vsPassword[0];}
+        break;
+    }
+
+    default:
+        break;
+    }
+
+}

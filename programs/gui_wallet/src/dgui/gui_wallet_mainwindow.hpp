@@ -49,6 +49,8 @@ namespace gui_wallet
 
         void DisplayWalletContentGUI();
 
+        static void SetPassword(void* a_owner,int a_answer,/*string**/void* a_str_ptr);
+
     protected slots:
         void CurrentUserChangedSlot(const QString&);
 
@@ -108,7 +110,6 @@ namespace gui_wallet
         QLabel                  m_num_acc_or_error_label;
         int                     m_nError;
         std::string             m_error_string;
-        PasswordDialog          m_PasswdDialog2;
 
         decent::gui::tools::RichDialog m_import_key_dlg;
 
@@ -122,6 +123,9 @@ namespace gui_wallet
         std::vector<gui_wallet::SDigitalContent> m_vcDigContent;
         int                     m_nConnected;
         int                     m_nUserComboTriggeredInGui;
+        SConnectionStruct   m_wdata2;
+        PasswordDialog      m_PasswdDialog;
+        int                 m_nJustConnecting;
     };
 
 }

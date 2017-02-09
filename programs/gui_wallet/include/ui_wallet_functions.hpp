@@ -18,15 +18,15 @@ namespace WAT {enum _WAT_TP{CONNECT,SAVE2,LOAD2,EXIT};}
 // WAS stands for wallet Api State
 namespace WAS{enum _API_STATE{DEFAULT_ST=0,CONNECTED_ST,_API_STATE_SIZE};}
 
-static void WarnYesOrNoFunc_static(void*,int,void*){}
-static void ConnErrFunc_static(void*, void*,const std::string&,const std::string&){}
+static void __THISCALL__ WarnYesOrNoFunc_static(void*,int,void*){}
+static void __THISCALL__ CallbackSetNewTaskGlb_static(void* owner,SetNewTask_last_args){}
 
 typedef struct SConnectionStruct{
-    SConnectionStruct():fpErr(&ConnErrFunc_static),fpWarnFunc(&WarnYesOrNoFunc_static){}
+    SConnectionStruct():fpDone(&CallbackSetNewTaskGlb_static),fpWarnFunc(&WarnYesOrNoFunc_static){}
     ~SConnectionStruct(){__DEBUG_APP2__(1,"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! ");}
     WAT::_WAT_TP   action;
     std::string   wallet_file_name;
-    ConnErrFuncType fpErr; WarnYesOrNoFuncType fpWarnFunc;
+    TypeCallbackSetNewTaskGlb fpDone; WarnYesOrNoFuncType fpWarnFunc;
     //std::string  ws_server = "ws://localhost:8090";
     std::string  ws_server;
     std::string  ws_user;
@@ -53,14 +53,7 @@ int SaveWalletFile2(const SConnectionStruct& a_pWalletData);
 
 
 
-void StartConnectionProcedure_base(const SConnectionStruct& a_conn_str,void *owner, void*clbData,...);
-void StartConnectionProcedure(const SConnectionStruct& a_conn_str,void *owner, void*clbData,TypeCallbackSetNewTaskGlb connectionDone);
-template <typename Type>
-static void StartConnectionProcedure(const SConnectionStruct& a_conn_str, Type* a_memb, void* a_clbData,
-                             void (Type::*a_clbkFunction)(SetNewTask_last_args))
-{
-    StartConnectionProcedure_base(a_conn_str,a_memb,a_clbData,a_clbkFunction);
-}
+void StartConnectionProcedure(SConnectionStruct* a_conn_str,void *owner, void*clbData);
 
 int SetNewTask_base(const std::string& inp_line, void* ownr, void* clbData, ...);
 int SetNewTask(const std::string& inp_line, void* ownr, void* clbData, TypeCallbackSetNewTaskGlb clbkFunction);
@@ -69,6 +62,9 @@ static int SetNewTask(const std::string& a_inp_line, Type* a_memb, void* a_clbDa
 {
     return SetNewTask_base(a_inp_line, a_memb, a_clbData, a_clbkFunction);
 }
+
+
+void* GetFunctionPointerAsVoid(int,...);
 
 
 #endif // UI_WALLET_FUNCTIONS_HPP
