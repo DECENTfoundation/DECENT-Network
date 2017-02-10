@@ -402,6 +402,7 @@ public:
       } );
 
       _wallet.chain_id = remote_chain_id;
+      _chain_id = _wallet.chain_id;
       _wallet.ws_server = initial_data.ws_server;
       _wallet.ws_user = initial_data.ws_user;
       _wallet.ws_password = initial_data.ws_password;
