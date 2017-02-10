@@ -28,6 +28,7 @@
 #include <boost/iostreams/device/file.hpp>
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/uuid/uuid.hpp>
+#include <boost/uuid/uuid_io.hpp>
 #include <boost/iostreams/copy.hpp>
 
 
@@ -45,6 +46,7 @@
 #include <decent/encrypt/encryptionutils.hpp>
 
 #include "torrent_transfer.hpp"
+#include "ipfs_transfer.hpp"
 
 using namespace graphene::package;
 using namespace std;
@@ -169,17 +171,8 @@ public:
 
 
 string make_uuid() {
-	const int length = 32;
-
-    static string charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
-    string result;
-    result.resize(length);
-
-    srand(time(NULL));
-    for (int i = 0; i < length; i++)
-        result[i] = charset[rand() % charset.length()];
-
-    return result;
+    boost::uuids::random_generator generator;
+    return boost::uuids::to_string(generator());
 }
 
 void get_files_recursive(boost::filesystem::path path, std::vector<boost::filesystem::path>& all_files) {
@@ -291,6 +284,10 @@ package_object::package_object(const boost::filesystem::path& package_path) {
     }
 }
 
+void package_object::get_all_files(std::vector<boost::filesystem::path>& all_files) const {
+    get_files_recursive(get_path(), all_files);
+}
+
 bool package_object::verify_hash() const {
     if (!is_valid()) {
         return false;
@@ -315,8 +312,10 @@ void package_manager::initialize( const path& packages_directory) {
 
 package_manager::package_manager() {
     static torrent_transfer dummy_torrent_transfer;
+    static ipfs_transfer dummy_ipfs_transfer;
 
     _protocol_handlers.insert(std::make_pair("magnet", &dummy_torrent_transfer));
+    _protocol_handlers.insert(std::make_pair("ipfs", &dummy_ipfs_transfer));
 }
 
 bool package_manager::unpack_package(const path& destination_directory, const package_object& package, const fc::sha512& key) {

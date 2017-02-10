@@ -32,7 +32,6 @@
 #include <boost/make_shared.hpp>
 
 
-
 #include <graphene/package/package.hpp>
 
 #include <fc/exception/exception.hpp>
@@ -167,7 +166,9 @@ torrent_transfer::torrent_transfer() {
 	}
 
 	_session.set_alert_notify([this]() {
-
+		if (!_my_thread) {
+			return;
+		}
 		_my_thread->async([this] () {
         	this->handle_torrent_alerts();           
         });
@@ -186,7 +187,10 @@ torrent_transfer::~torrent_transfer() {
 	bencode(std::back_inserter(out), session_state);
 	save_file(".ses_state", out);
 
+	_my_thread->quit();
+	
 	delete _my_thread;
+	_my_thread = NULL;
 }
 
 void torrent_transfer::print_status() {
@@ -281,9 +285,7 @@ void torrent_transfer::upload_package(transfer_id id, const package_object& pack
 
 	libtorrent::add_torrent_params atp;
 
-	std::shared_ptr<libtorrent::torrent_info> ptt = std::make_shared<libtorrent::torrent_info>(temp_file.string(), 0);
-
-	atp.ti = ptt;
+	atp.ti = std::make_shared<libtorrent::torrent_info>(temp_file.string(), 0);
 	atp.flags = libtorrent::add_torrent_params::flag_seed_mode |
 				libtorrent::add_torrent_params::flag_upload_mode |
 				//libtorrent::add_torrent_params::flag_share_mode	|
@@ -381,7 +383,7 @@ void torrent_transfer::update_torrent_status() {
 				if (obj.verify_hash()) {
 					_listener->on_download_finished(_id, obj);
 				} else {
-					_listener->on_error(_id, "Can not verify package hash");
+					_listener->on_error(_id, "Unable to verify package hash");
 				}
 			}
 

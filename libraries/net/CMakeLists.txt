@@ -1,4 +1,3 @@
-find_package(CryptoPP REQUIRED)
 
 file(GLOB HEADERS "include/graphene/net/*.hpp")
 

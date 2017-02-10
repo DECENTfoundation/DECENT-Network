@@ -9,14 +9,13 @@ set( GUI_CLIENT_EXECUTABLE_NAME "decent" )
 set( CUSTOM_URL_SCHEME "gcs" )
 set( INSTALLER_APP_ID "68ad7005-8eee-49c9-95ce-9eed97e5b347" )
 
-# http://stackoverflow.com/a/18369825
 if( "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" )
-    if( CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.8.1 )
-        message( FATAL_ERROR "GCC version must be at least 4.8.1!" )
+    if( CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5 )
+        message( FATAL_ERROR "GCC version must be at least 5!" )
     endif()
 elseif( "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" )
-    if( CMAKE_CXX_COMPILER_VERSION VERSION_LESS 3.3 )
-        message( FATAL_ERROR "Clang version must be at least 3.3!" )
+    if( CMAKE_CXX_COMPILER_VERSION VERSION_LESS 3.5 )
+        message( FATAL_ERROR "Clang version must be at least 3.5!" )
     endif()
 endif()
 
@@ -44,7 +43,7 @@ if( APPLE )
               "${HOMEBREW_PREFIX}/opt/gmp"
               "${HOMEBREW_PREFIX}/opt/cryptopp"
               "${HOMEBREW_PREFIX}/opt/berkeley-db"
-              "${HOMEBREW_PREFIX}/opt/libtorrent-rasterbar"
+#              "${HOMEBREW_PREFIX}/opt/libtorrent-rasterbar"
               "${HOMEBREW_PREFIX}/opt/qt5"
             )
     endif()
@@ -84,6 +83,9 @@ find_package( Boost 1.60 REQUIRED
                context
                coroutine
                locale )
+
+find_package( CryptoPP REQUIRED )
+find_package( PBC REQUIRED )
 
 if( WIN32 )
 
@@ -129,11 +131,11 @@ else() # Apple and Linux
     if( APPLE )
         # Apple Specific Options Here
         message( STATUS "Configuring Decent on OS X" )
-        set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -stdlib=libc++ -Wall" )
+        set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++ -Wall" )
     else()
         # Linux Specific Options Here
         message( STATUS "Configuring Decent on Linux" )
-        set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall" )
+        set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall" )
         set( rt_library rt )
         set( pthread_library pthread )
         if( NOT DEFINED crypto_library )
@@ -191,10 +193,10 @@ if( ENABLE_INSTALLER )
     if( CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT )
         set( CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/artifacts/prefix" CACHE PATH "..." FORCE )
     else()
-    	set( CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install" )
+    	set( CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/artifacts/install" )
     endif()
 
-    set( CPACK_PACKAGE_DIRECTORY "${CMAKE_BINARY_DIR}/artifacts" )
+    set( CPACK_PACKAGE_DIRECTORY "${CMAKE_BINARY_DIR}/artifacts/package" )
     set( CPACK_PACKAGE_NAME "Decent" )
     set( CPACK_PACKAGE_VENDOR "Decent Services" )
     set( CPACK_PACKAGE_VERSION_MAJOR "${VERSION_MAJOR}" )
