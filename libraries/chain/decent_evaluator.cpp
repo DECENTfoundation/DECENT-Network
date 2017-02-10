@@ -83,7 +83,7 @@ namespace graphene { namespace chain {
       auto& idx = db().get_index_type<content_index>().indices().get<by_URI>();
       const auto& content = idx.find( o.URI );
       FC_ASSERT( content!= idx.end() );
-      FC_ASSERT( o.price >= db().get_balance( o.consumer, o.price.asset_id ) );
+      FC_ASSERT( o.price <= db().get_balance( o.consumer, o.price.asset_id ) );
       FC_ASSERT( o.price >= content->price );
       FC_ASSERT( content->expiration > db().head_block_time() );
       FC_ASSERT( o.price.asset_id == content->price.asset_id );
