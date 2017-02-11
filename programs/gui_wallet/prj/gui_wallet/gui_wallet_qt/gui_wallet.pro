@@ -19,7 +19,8 @@ greaterThan(QT_MAJOR_VERSION, 4):QT += widgets
 #QT -= gui
 
 SOURCES += ../../../src/dgui/main_gui_wallet.cpp \
-    ../../../src/dgui/decent_gui_contentdlg.cpp
+    ../../../src/dgui/decent_gui_contentdlg.cpp \
+    ../../../src/dgui/decent_wallet_ui_gui_purchasedtab.cpp
 
 options1 = $$find(CONFIG, "TEST")
 
@@ -82,4 +83,6 @@ HEADERS += ../../../src/dgui/gui_wallet_mainwindow.hpp \
 } #else of count(options1, 1)
 
 HEADERS += \
-    ../../../src/dgui/decent_gui_contentdlg.hpp
+    ../../../src/dgui/decent_gui_contentdlg.hpp \
+    ../../../src/dgui/decent_wallet_ui_gui_purchasedtab.hpp \
+    ../../../src/dgui/decent_wallet_ui_gui_common.tos
