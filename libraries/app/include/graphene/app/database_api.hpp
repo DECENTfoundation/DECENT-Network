@@ -568,11 +568,11 @@ class database_api
       vector<buying_object> get_open_buyings_by_consumer( const account_id_type& consumer )const;
 
       /**
-       * @brief Get a buying_history_object by "buying"
-       * @param buying Buying to retrieve
-       * @return The buying_history_object corresponding to the provided "buying", or null if no matching object was found
+       * @brief Get history buying_objects by consumer
+       * @param consumer Consumer of the buyings to retrieve
+       * @return History buying_objects corresponding to the provided consumer
        */
-      optional<buying_history_object> get_buying_history_object( const buying_id_type& buying )const;
+      vector<buying_object> get_buying_history_objects_by_consumer( const account_id_type& consumer )const;
 
       /**
        * @brief Get a content by URI
@@ -721,7 +721,7 @@ FC_API(graphene::app::database_api,
    (get_open_buyings)
    (get_open_buyings_by_URI)
    (get_open_buyings_by_consumer)
-   (get_buying_history_object)
+   (get_buying_history_objects_by_consumer)
    (get_content)
    (list_content_by_author)
    (list_content)

@@ -212,7 +212,6 @@ void database::initialize_indexes()
    add_index< primary_index< rating_index                                 > >();
    add_index< primary_index< content_index                                > >();
    add_index< primary_index< buying_index                                 > >();
-   add_index< primary_index< buying_history_index                         > >();
 
 }
 
