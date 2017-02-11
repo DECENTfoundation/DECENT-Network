@@ -12,6 +12,7 @@
 
 //#define USE_TABLE_FOR_FIRST_LINE
 #define API_SHOULD_BE_DEFINED
+#define __TRY_LABEL_INSTEAD_OF_TABLE__
 
 #include <QWidget>
 #include <QVBoxLayout>
@@ -68,7 +69,11 @@ enum MAIN_TABS_ENM{BROWSE_CONTENT,TRANSACTIONS,UPLOAD,OVERVIEW,PURCHASED};
     private:
         QVBoxLayout         m_main_layout;
 
+#ifdef __TRY_LABEL_INSTEAD_OF_TABLE__
+        QHBoxLayout         m_first_line_lbl;
+#else
         QTableWidget        m_first_line_widget2;
+#endif
         //QHBoxLayout         m_first_line_layout;
 
         QTabWidget          m_main_tabs;

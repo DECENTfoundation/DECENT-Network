@@ -88,11 +88,13 @@ void Browse_content_tab::PrepareTableWidgetHeaderGUI()
         //m_TableWidget.setCellWidget(0,i,pLabel);
         m_TableWidget.setItem(0,i,new QTableWidgetItem(tr(s_vccpItemNames[i])));
         m_TableWidget.item(0,i)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+
+        m_TableWidget.item(0, i)->setBackground(Qt::lightGray);
     }
 
-    QPalette plt_tbl = m_TableWidget.palette();
-    plt_tbl.setColor(QPalette::Base, palette().color(QPalette::Window));
-    m_TableWidget.setPalette(plt_tbl);
+    //QPalette plt_tbl = m_TableWidget.palette();
+    //plt_tbl.setColor(QPalette::Base, palette().color(QPalette::Window));
+    //m_TableWidget.setPalette(plt_tbl);
 }
 
 
@@ -168,6 +170,8 @@ void Browse_content_tab::SetDigitalContentsGUI(const std::vector<decent::wallet:
     __DEBUG_APP2__(3," ");
     m_main_layout.addWidget(&m_TableWidget);
     m_pTableWidget->resize(nWidth,m_pTableWidget->height());
+    m_pTableWidget->horizontalHeader()->setStretchLastSection(true);
+    m_pTableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     ArrangeSize();
 }
 

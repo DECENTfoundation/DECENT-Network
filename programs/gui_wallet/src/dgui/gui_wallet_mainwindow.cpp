@@ -114,6 +114,8 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
         m_cqsPreviousFilter(tr("nf")),
         m_nConnected(0)
 {
+    m_default_stylesheet = styleSheet();
+    setStyleSheet("color:black;""background-color:white;");
     m_pInfoTextEdit = new QTextEdit;
     if(!m_pInfoTextEdit){throw "Low memory";}
     m_pInfoTextEdit->setReadOnly(true);
@@ -178,6 +180,11 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
                                   this,NULL,&Mainwindow_gui_wallet::ManagementNewFuncGUI);
     m_nJustConnecting = 1;
     ConnectSlot();
+    setWindowTitle(tr("Decent - Blockchain Content Distributor"));
+
+    centralWidget()->layout()->setContentsMargins(0, 0, 0, 0);
+    //statusBar()->hide();
+    //mainToolBar->hide();
 
 }
 
@@ -671,6 +678,7 @@ void Mainwindow_gui_wallet::TaskDoneFuncGUI(void* a_clbkArg,int64_t a_err,const 
             QMessageBox aMessageBox(QMessageBox::Critical,
                                     QObject::tr("error"),QObject::tr(a_task.c_str()),
                                     QMessageBox::Ok,this);
+            aMessageBox.setStyleSheet(m_default_stylesheet);
             aMessageBox.setDetailedText(QObject::tr(a_result.c_str()));
             aMessageBox.exec();
             m_ConnectDlg.GetTableWidget(ConnectDlg::CONNECT_BUTTON_FIELD, 1)->setEnabled(true);
@@ -688,6 +696,7 @@ void Mainwindow_gui_wallet::TaskDoneFuncGUI(void* a_clbkArg,int64_t a_err,const 
             QMessageBox aMessageBox(QMessageBox::Information,
                                     QObject::tr("connected"),QObject::tr(aInfo.c_str()),
                                     QMessageBox::Ok,this);
+            aMessageBox.setStyleSheet(m_default_stylesheet);
             aMessageBox.setDetailedText(QObject::tr(aDetails.c_str()));
             aMessageBox.exec();
             DisplayWalletContentGUI();

@@ -127,6 +127,8 @@ namespace gui_wallet
         SConnectionStruct   m_wdata2;
         PasswordDialog      m_PasswdDialog;
         int                 m_nJustConnecting;
+
+        QString             m_default_stylesheet;
     };
 
 }

@@ -35,8 +35,14 @@ using namespace gui_wallet;
 
 CentralWigdet::CentralWigdet(class QBoxLayout* a_pAllLayout)
     :
+#ifdef __TRY_LABEL_INSTEAD_OF_TABLE__
+      m_first_line_lbl()
+#else
       m_first_line_widget2(1,NUMBER_OF_FRST_LINE_ELEMS)
+#endif
 {
+    setStyleSheet("color:black;""background-color:white;");
+    m_main_tabs.setStyleSheet("color:black;""background-color:white;");
     PrepareGUIprivate(a_pAllLayout);
 }
 
@@ -162,11 +168,23 @@ QComboBox* CentralWigdet::usersCombo()
 
 QWidget* CentralWigdet::GetWidgetFromTable2(int a_nColumn, int a_nWidget)
 {
+#ifdef __TRY_LABEL_INSTEAD_OF_TABLE__
+
+    a_nColumn = 2*a_nColumn;
+    //if(a_nColumn>1){++a_nColumn;}
+    __DEBUG_APP2__(0," ");
+    return m_first_line_lbl.itemAt(a_nColumn)->layout()->itemAt(a_nWidget)->widget();
+
+#else  // #ifdef __TRY_LABEL_INSTEAD_OF_TABLE__
     QWidget* pWidget = m_first_line_widget2.cellWidget(0, a_nColumn);
     QHBoxLayout* pHLayout = (QHBoxLayout*)pWidget->layout();
     return pHLayout->itemAt(a_nWidget)->widget();
+#endif  // #ifdef __TRY_LABEL_INSTEAD_OF_TABLE__
 }
 
+
+#define __SIZE_FOR_IMGS__   50
+#define __HEIGHT__  100
 
 void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
 {
@@ -186,6 +204,113 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
      "}");
     //pTabBar->setStyleSheet("QTabBar{disabled{width:100px;color:transparent;background:transparent;}}");
 
+#ifdef __TRY_LABEL_INSTEAD_OF_TABLE__
+    //
+    //m_first_line_lbl
+    //QWidget* pWidgetTmp;
+    QPixmap image;
+    QLabel* pLabelTmp;
+    QHBoxLayout* pHBoxLayoutTmp;
+    QComboBox* pComboTmp;
+    QFrame *line;
+    /*////////////////////////////////////////////////////////////////////////////////////*/
+
+    pLabelTmp = new QLabel(tr(""));
+    if(!pLabelTmp){throw __FILE__ "Low memory";}
+    pLabelTmp->setScaledContents(true);
+    SetImageToLabelStatic(bImageFound,image,DECENT_LOGO_FILE_NAME2);
+    if(bImageFound){pLabelTmp->setPixmap(image);}
+    else {pLabelTmp->setText("DC");MakeWarning("no file", "");}
+    m_first_line_lbl.addWidget(pLabelTmp);
+    pLabelTmp->setFixedSize(__SIZE_FOR_IMGS__,__SIZE_FOR_IMGS__);
+
+    line = new QFrame(this);
+    line->setFrameShape(QFrame::VLine); // Horizontal line
+    line->setFrameShadow(QFrame::Sunken);
+    line->setLineWidth(1);
+    m_first_line_lbl.addWidget(line);
+
+    //pWidgetTmp = new QWidget;
+    //if(!pWidgetTmp){throw __FILE__ "Low memory";}
+    pHBoxLayoutTmp = new QHBoxLayout;
+    if(!pHBoxLayoutTmp){throw __FILE__ "Low memory";}
+    pLabelTmp = new QLabel(tr(""));
+    if(!pLabelTmp){throw __FILE__ "Low memory";}
+    pLabelTmp->setScaledContents(true);
+    SetImageToLabelStatic(bImageFound,image,USER_FILE_NAME2);
+    if(bImageFound){pLabelTmp->setPixmap(image);}
+    else {MakeWarning("no file", "");}
+    pHBoxLayoutTmp->addWidget(pLabelTmp);
+    pLabelTmp->setFixedSize(__SIZE_FOR_IMGS__,__SIZE_FOR_IMGS__);
+    pComboTmp = new QComboBox;
+    if(!pComboTmp){throw __FILE__ "Low memory";}
+    pComboTmp->setStyleSheet("color: black;""background-color:white;");
+    pHBoxLayoutTmp->addWidget(pComboTmp);
+    //pWidgetTmp->setLayout(pHBoxLayoutTmp);
+    //m_first_line_widget2.setCellWidget(0,USERNAME,pWidgetTmp);
+    m_first_line_lbl.addLayout(pHBoxLayoutTmp);
+
+    line = new QFrame(this);
+    line->setFrameShape(QFrame::VLine); // Horizontal line
+    line->setFrameShadow(QFrame::Sunken);
+    line->setLineWidth(1);
+    m_first_line_lbl.addWidget(line);
+
+    //pWidgetTmp = new QWidget;
+    //if(!pWidgetTmp){throw __FILE__ "Low memory";}
+    pHBoxLayoutTmp = new QHBoxLayout;
+    if(!pHBoxLayoutTmp){throw __FILE__ "Low memory";}
+    pLabelTmp = new QLabel(tr(""));
+    if(!pLabelTmp){throw __FILE__ "Low memory";}
+    pLabelTmp->setScaledContents(true);
+    SetImageToLabelStatic(bImageFound,image,BALANCE_FILE_NAME2);
+    if(bImageFound){pLabelTmp->setPixmap(image);}
+    else {MakeWarning("no file", "");}
+    pHBoxLayoutTmp->addWidget(pLabelTmp);
+    pLabelTmp->setFixedSize(__SIZE_FOR_IMGS__,__SIZE_FOR_IMGS__);
+    pComboTmp = new QComboBox;
+    if(!pComboTmp){throw __FILE__ "Low memory";}
+    pComboTmp->setStyleSheet("color:black;""background-color:white;");
+    //pComboTmp->setFixedWidth(190);
+    pComboTmp->setEditable(true);
+    // Second : Put the lineEdit in read-only mode
+    pComboTmp->lineEdit()->setReadOnly(true);
+    // Third  : Align the lineEdit to right
+    pComboTmp->lineEdit()->setAlignment(Qt::AlignRight);
+    pHBoxLayoutTmp->addWidget(pComboTmp);
+    //pWidgetTmp->setLayout(pHBoxLayoutTmp);
+    //m_first_line_widget2.setCellWidget(0,BALANCE,pWidgetTmp);
+    m_first_line_lbl.addLayout(pHBoxLayoutTmp);
+
+    line = new QFrame(this);
+    line->setFrameShape(QFrame::VLine); // Horizontal line
+    line->setFrameShadow(QFrame::Sunken);
+    line->setLineWidth(1);
+    m_first_line_lbl.addWidget(line);
+
+    //pWidgetTmp = new QWidget;
+    //if(!pWidgetTmp){throw __FILE__ "Low memory";}
+    pHBoxLayoutTmp = new QHBoxLayout;
+    if(!pHBoxLayoutTmp){throw __FILE__ "Low memory";}
+    pLabelTmp = new QLabel(tr(""));
+    if(!pLabelTmp){throw __FILE__ "Low memory";}
+    pLabelTmp->setScaledContents(true);
+    SetImageToLabelStatic(bImageFound,image,SEND_FILE_NAME2);
+    if(bImageFound){pLabelTmp->setPixmap(image);}
+    else {MakeWarning("no file", "");}
+    pHBoxLayoutTmp->addWidget(pLabelTmp);
+    pLabelTmp->setFixedSize(__SIZE_FOR_IMGS__,__SIZE_FOR_IMGS__);
+    pLabelTmp = new QLabel(tr("Send"));
+    if(!pLabelTmp){throw __FILE__ "Low memory";}
+    pHBoxLayoutTmp->addWidget(pLabelTmp);
+    //pWidgetTmp->setLayout(pHBoxLayoutTmp);
+    //m_first_line_widget2.setCellWidget(0,SEND_,pWidgetTmp);
+    m_first_line_lbl.addLayout(pHBoxLayoutTmp);
+
+    //m_first_line_widget2.setStyleSheet("background-color:white;");
+
+
+#else  // #ifdef __TRY_LABEL_INSTEAD_OF_TABLE__
     QWidget* pWidgetTmp;
     QPixmap image;
     QLabel* pLabelTmp;
@@ -264,13 +389,18 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
 
     m_first_line_widget2.setStyleSheet("background-color:white;");
     /*////////////////////////////////////////////////////////////////////////////////////*/
+#endif  // #ifdef __TRY_LABEL_INSTEAD_OF_TABLE__
 
     m_main_tabs.setStyleSheet("color: green;""background-color:white;");
     m_browse_cont_tab.setStyleSheet("color: black;""background-color:white;");
 
     SetAccountBalancesFromStrGUI(std::vector<std::string>());
 
+#ifdef __TRY_LABEL_INSTEAD_OF_TABLE__
+    m_main_layout.addLayout(&m_first_line_lbl);
+#else  // #ifdef __TRY_LABEL_INSTEAD_OF_TABLE__
     m_main_layout.addWidget(&m_first_line_widget2);
+#endif  // #ifdef __TRY_LABEL_INSTEAD_OF_TABLE__
     m_main_layout.addWidget(&m_main_tabs);
 
     a_pAllLayout->addLayout(&m_main_layout);
@@ -318,12 +448,16 @@ void CentralWigdet::make_deleyed_warning()
 }
 
 
-#define __SIZE_FOR_IMGS__   50
-#define __HEIGHT__  100
-
 void CentralWigdet::resizeEvent ( QResizeEvent * a_event )
 {
     QWidget::resizeEvent(a_event);
+
+#ifdef __TRY_LABEL_INSTEAD_OF_TABLE__
+
+    m_main_tabs.resize(a_event->size().width(),m_main_tabs.size().height());
+    m_browse_cont_tab.resize(a_event->size().width(),m_browse_cont_tab.size().height());
+
+#else // #ifdef __TRY_LABEL_INSTEAD_OF_TABLE__
 
     //m_first_line_widget2.setFixedSize(a_event->size().width(),100);
     QWidget* pWidgetToResize;
@@ -352,5 +486,7 @@ void CentralWigdet::resizeEvent ( QResizeEvent * a_event )
     //m_first_line_widget2.verticalScrollBar()->hide();
     m_first_line_widget2.setRowHeight(0,__HEIGHT__);
     m_first_line_widget2.setFixedHeight(__HEIGHT__+5);
+
+#endif // #ifdef __TRY_LABEL_INSTEAD_OF_TABLE__
 
 }
