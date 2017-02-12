@@ -68,15 +68,10 @@ enum MAIN_TABS_ENM{BROWSE_CONTENT,TRANSACTIONS,UPLOAD,OVERVIEW,PURCHASED};
 
     private:
         QVBoxLayout         m_main_layout;
-
-#ifdef __TRY_LABEL_INSTEAD_OF_TABLE__
         QHBoxLayout         m_first_line_lbl;
-#else
-        QTableWidget        m_first_line_widget2;
-#endif
         //QHBoxLayout         m_first_line_layout;
 
-        QTabWidget          m_main_tabs;
+        QTabWidget          m_main_tabs2;
         Browse_content_tab  m_browse_cont_tab;
         Transactions_tab    m_trans_tab;
         Upload_tab          m_Upload_tab;
@@ -86,12 +81,10 @@ enum MAIN_TABS_ENM{BROWSE_CONTENT,TRANSACTIONS,UPLOAD,OVERVIEW,PURCHASED};
         QString             m_DelayedWaringTitle;
         QString             m_DelayedWaringText;
         QString             m_DelayedWaringDetails;
-        //class QLabel*       m_imageLabel;
-        //QLabel              m_balanceLabel;
-        //QComboBox           m_balanceCombo;
-        /* 'm_nBalance' to have this filed in order to skip parsing the text each time balance is needed*/
-        //double              m_lfBalance;
-        //QComboBox           m_users_list;
+
+        QWidget*            m_pDcLogoWgt;
+        QWidget*            m_pUsernameWgt;
+        QWidget*            m_pBalanceWgt;
 
     };
 }

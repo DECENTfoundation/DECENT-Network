@@ -115,7 +115,7 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
         m_nConnected(0)
 {
     m_default_stylesheet = styleSheet();
-    setStyleSheet("color:black;""background-color:white;");
+    //setStyleSheet("color:black;""background-color:white;");
     m_pInfoTextEdit = new QTextEdit;
     if(!m_pInfoTextEdit){throw "Low memory";}
     m_pInfoTextEdit->setReadOnly(true);
@@ -148,6 +148,7 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
     central->setLayout(mainMenuLayout0);*/
 
     m_pCentralWidget = new CentralWigdet(m_pCentralAllLayout);
+    //m_pCentralWidget->setStyleSheet("color:black;""background-color:white;");
     m_pCentralWidget->setLayout(m_pCentralAllLayout);
     setCentralWidget(m_pCentralWidget);
     CreateActions();
@@ -185,6 +186,7 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
     centralWidget()->layout()->setContentsMargins(0, 0, 0, 0);
     //statusBar()->hide();
     //mainToolBar->hide();
+    setStyleSheet("QMainWindow{color:black;""background-color:white;}");
 
 }
 
@@ -678,7 +680,7 @@ void Mainwindow_gui_wallet::TaskDoneFuncGUI(void* a_clbkArg,int64_t a_err,const 
             QMessageBox aMessageBox(QMessageBox::Critical,
                                     QObject::tr("error"),QObject::tr(a_task.c_str()),
                                     QMessageBox::Ok,this);
-            aMessageBox.setStyleSheet(m_default_stylesheet);
+            //aMessageBox.setStyleSheet(QMessageBox::);
             aMessageBox.setDetailedText(QObject::tr(a_result.c_str()));
             aMessageBox.exec();
             m_ConnectDlg.GetTableWidget(ConnectDlg::CONNECT_BUTTON_FIELD, 1)->setEnabled(true);
@@ -696,7 +698,7 @@ void Mainwindow_gui_wallet::TaskDoneFuncGUI(void* a_clbkArg,int64_t a_err,const 
             QMessageBox aMessageBox(QMessageBox::Information,
                                     QObject::tr("connected"),QObject::tr(aInfo.c_str()),
                                     QMessageBox::Ok,this);
-            aMessageBox.setStyleSheet(m_default_stylesheet);
+            //aMessageBox.setStyleSheet(m_default_stylesheet);
             aMessageBox.setDetailedText(QObject::tr(aDetails.c_str()));
             aMessageBox.exec();
             DisplayWalletContentGUI();
