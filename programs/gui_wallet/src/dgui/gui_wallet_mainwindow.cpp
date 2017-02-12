@@ -569,7 +569,7 @@ void Mainwindow_gui_wallet::ImportKeySlot()
     if(aRet == decent::gui::tools::RDB_CANCEL){return ;}
 
     std::string csTaskStr = "import_key " + cvsUsKey[0] + " " + cvsUsKey[1];
-    if(g_nDebugApplication){printf("!!!task: %s\n",csTaskStr.c_str());}
+    __DEBUG_APP2__(0,"!!!task: %s\n",csTaskStr.c_str());
     SetNewTask(csTaskStr,this,NULL,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
 }
 
