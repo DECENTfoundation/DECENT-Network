@@ -35,17 +35,20 @@ using namespace gui_wallet;
 
 decent::wallet::ui::gui::AccountBalanceWidget::AccountBalanceWidget()
     :   decent::wallet::ui::gui::TableWidgetItemW_base<QWidget,int>(1,this,NULL,
-                                                                     &AccountBalanceWidget::ClbFunction)
+                                                                     &AccountBalanceWidget::ClbFunction),
+      m_nCurrentIndex(-1)
 {
     m_amount_label.setStyleSheet("color:green;""background-color:white;");
     m_asset_type_label.setStyleSheet("color:black;""background-color:white;");
+    m_amount_label.setAlignment(Qt::AlignRight);
+    m_asset_type_label.setAlignment(Qt::AlignRight);
     m_main_layout.addWidget(&m_amount_label);
     m_main_layout.addWidget(&m_asset_type_label);
     setLayout(&m_main_layout);
 }
 
 
-void decent::wallet::ui::gui::AccountBalanceWidget::SetAccountBalanceFromString(const std::string& a_balance)
+void decent::wallet::ui::gui::AccountBalanceWidget::SetAccountBalanceFromStringGUIprivate(const std::string& a_balance)
 {
     const char* cpcAssetTypeStarts;
     const char* cpcInpStr = a_balance.c_str();
@@ -56,6 +59,38 @@ void decent::wallet::ui::gui::AccountBalanceWidget::SetAccountBalanceFromString(
     QString tqsAssetType = tr(cpcAssetTypeStarts);
     m_amount_label.setText(tqsAmount);
     m_asset_type_label.setText(tqsAssetType);
+}
+
+
+void decent::wallet::ui::gui::AccountBalanceWidget::clear()
+{
+    m_nCurrentIndex = -1;
+    m_vBalances.clear();
+    m_amount_label.setText(tr(""));
+    m_asset_type_label.setText(tr(""));
+}
+
+
+void decent::wallet::ui::gui::AccountBalanceWidget::addItem(const std::string& a_balance)
+{
+    m_vBalances.push_back(a_balance);
+
+    if(m_nCurrentIndex<0)
+    {
+        SetAccountBalanceFromStringGUIprivate(a_balance);
+        m_nCurrentIndex = ((int)m_vBalances.size())-1;
+    }
+}
+
+
+void decent::wallet::ui::gui::AccountBalanceWidget::setCurrentIndex(int a_nIndex)
+{
+    //__DEBUG_APP2__(0," ");
+    if((a_nIndex<((int)m_vBalances.size())) && (a_nIndex!=m_nCurrentIndex))
+    {
+        SetAccountBalanceFromStringGUIprivate(m_vBalances[a_nIndex]);
+        m_nCurrentIndex = a_nIndex;
+    }
 }
 
 
@@ -93,7 +128,9 @@ CentralWigdet::~CentralWigdet()
 void CentralWigdet::SetAccountBalancesFromStrGUI(const std::vector<std::string>& a_balances_and_names)
 {
     //m_balanceLabel.setText(tr(a_balance_and_name.c_str()));
-    decent::wallet::ui::gui::AccountBalanceWidget* pBalanceCombo = (QComboBox*)GetWidgetFromTable2(BALANCE,1);
+    decent::wallet::ui::gui::AccountBalanceWidget* pBalanceCombo =
+            (decent::wallet::ui::gui::AccountBalanceWidget*)GetWidgetFromTable5(BALANCE,1);
+    //decent::wallet::ui::gui::AccountBalanceWidget* pBalanceCombo = m_pBalanceWgt2;
     pBalanceCombo->clear();
     const int cnBalances(a_balances_and_names.size());
 
@@ -199,11 +236,11 @@ static void SetImageToLabelStatic(bool& _bRet_,QPixmap& _image_,const char* _ima
 
 QComboBox* CentralWigdet::usersCombo()
 {
-    return (QComboBox*)GetWidgetFromTable2(USERNAME,1);
+    return (QComboBox*)GetWidgetFromTable5(USERNAME,1);
 }
 
 
-QWidget* CentralWigdet::GetWidgetFromTable2(int a_nColumn, int a_nWidget)
+QWidget* CentralWigdet::GetWidgetFromTable5(int a_nColumn, int a_nWidget)
 {
 #ifdef __TRY_LABEL_INSTEAD_OF_TABLE__
 
@@ -248,11 +285,11 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
 
     QWidget* pWidgetTmp2;
     QPixmap image;
-    QLabel* pLabelTmp2;
+    QLabel* pLabelTmp;
     QHBoxLayout *pHBoxLayoutTmp;
-    QComboBox* pComboTmp;
+    QComboBox* pComboTmp1;
     QFrame *line;
-    decent::wallet::ui::gui::AccountBalanceWidget* plabelTmp3;
+    decent::wallet::ui::gui::AccountBalanceWidget* pCombo2;
     /*////////////////////////////////////////////////////////////////////////////////////*/
 
     /*//////////////////////////////////////////*/
@@ -292,10 +329,10 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     else {MakeWarning("no file", "");}
     pHBoxLayoutTmp->addWidget(pLabelTmp);
     pLabelTmp->setFixedSize(__SIZE_FOR_IMGS__,__SIZE_FOR_IMGS__);
-    pComboTmp = new QComboBox;
-    if(!pComboTmp){throw __FILE__ "Low memory";}
-    pComboTmp->setStyleSheet("color: black;""background-color:white;");
-    pHBoxLayoutTmp->addWidget(pComboTmp);
+    pComboTmp1 = new QComboBox;
+    if(!pComboTmp1){throw __FILE__ "Low memory";}
+    pComboTmp1->setStyleSheet("color: black;""background-color:white;");
+    pHBoxLayoutTmp->addWidget(pComboTmp1);
     m_pUsernameWgt->setLayout(pHBoxLayoutTmp);
     m_first_line_lbl.addWidget(m_pUsernameWgt);
     m_pUsernameWgt->setFixedHeight(__HEIGHT__);
@@ -308,8 +345,8 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     m_first_line_lbl.addWidget(line);
 
     /*//////////////////////////////////////////*/
-    m_pBalanceWgt = new QWidget;
-    if(!m_pBalanceWgt){throw __FILE__ "Low memory";}
+    m_pBalanceWgt1 = new QWidget;
+    if(!m_pBalanceWgt1){throw __FILE__ "Low memory";}
     pHBoxLayoutTmp = new QHBoxLayout;
     if(!pHBoxLayoutTmp){throw __FILE__ "Low memory";}
     pLabelTmp = new QLabel(tr(""));
@@ -320,23 +357,12 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     else {MakeWarning("no file", "");}
     pHBoxLayoutTmp->addWidget(pLabelTmp);
     pLabelTmp->setFixedSize(__SIZE_FOR_IMGS__,__SIZE_FOR_IMGS__);
-    pComboTmp = new QComboBox;
-    if(!pComboTmp){throw __FILE__ "Low memory";}
-    pComboTmp->setStyleSheet("color:black;""background-color:white;");
-    //pComboTmp->setFixedWidth(190);
-    pComboTmp->setEditable(true);
-    // Second : Put the lineEdit in read-only mode
-    pComboTmp->lineEdit()->setReadOnly(true);
-    // Third  : Align the lineEdit to right
-    pComboTmp->lineEdit()->setAlignment(Qt::AlignRight);
-    pHBoxLayoutTmp->addWidget(pComboTmp);
-    pComboTmp->setFixedWidth(200);
-    //pWidgetTmp->setLayout(pHBoxLayoutTmp);
-    //m_first_line_widget2.setCellWidget(0,BALANCE,pWidgetTmp);
-    //m_first_line_lbl.addLayout(pHBoxLayoutTmp);
-    m_pBalanceWgt->setLayout(pHBoxLayoutTmp);
-    m_first_line_lbl.addWidget(m_pBalanceWgt);
-    m_pBalanceWgt->setFixedHeight(__HEIGHT__);
+    pCombo2 = new decent::wallet::ui::gui::AccountBalanceWidget;
+    if(!pCombo2){throw __FILE__ "Low memory";}
+    pHBoxLayoutTmp->addWidget(pCombo2);
+    m_pBalanceWgt1->setLayout(pHBoxLayoutTmp);
+    m_first_line_lbl.addWidget(m_pBalanceWgt1);
+    m_pBalanceWgt1->setFixedHeight(__HEIGHT__);
 
     /*//////////////////////////////////////////*/
     line = new QFrame(this);
@@ -433,6 +459,6 @@ void CentralWigdet::resizeEvent ( QResizeEvent * a_event )
     int nWidth_big (size().width()*35/100);
     m_pDcLogoWgt->resize(nWidth_small,m_pDcLogoWgt->height());
     m_pUsernameWgt->resize(nWidth_big,m_pUsernameWgt->height());
-    m_pBalanceWgt->resize(nWidth_big,m_pBalanceWgt->height());
+    m_pBalanceWgt1->resize(nWidth_big,m_pBalanceWgt1->height());
 
 }

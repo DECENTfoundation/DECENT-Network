@@ -40,13 +40,18 @@ class AccountBalanceWidget : public decent::wallet::ui::gui::TableWidgetItemW_ba
 {
 public:
     AccountBalanceWidget();
-    void SetAccountBalanceFromString(const std::string& a_balance);
+    void addItem(const std::string& a_balance);
+    void clear();
+    void setCurrentIndex(int index);
 private:
     void ClbFunction(_NEEDED_ARGS1_(int));
+    void SetAccountBalanceFromStringGUIprivate(const std::string& a_balance);
 private:
     QHBoxLayout m_main_layout;
     QLabel      m_amount_label;
     QLabel      m_asset_type_label;
+    std::vector<std::string> m_vBalances;
+    int                 m_nCurrentIndex;
 };
 
 }}}}
@@ -78,7 +83,7 @@ enum MAIN_TABS_ENM{BROWSE_CONTENT,TRANSACTIONS,UPLOAD,OVERVIEW,PURCHASED};
 
     private:
         void PrepareGUIprivate(class QBoxLayout* pAllLayout);
-        QWidget* GetWidgetFromTable3(int column, int widget);
+        QWidget* GetWidgetFromTable5(int column, int widget);
 
     private slots:
         void make_deleyed_warning();
@@ -101,7 +106,8 @@ enum MAIN_TABS_ENM{BROWSE_CONTENT,TRANSACTIONS,UPLOAD,OVERVIEW,PURCHASED};
 
         QWidget*            m_pDcLogoWgt;
         QWidget*            m_pUsernameWgt;
-        QWidget*            m_pBalanceWgt;
+        QWidget*            m_pBalanceWgt1;
+        //decent::wallet::ui::gui::AccountBalanceWidget* m_pBalanceWgt2;
 
     };
 }
