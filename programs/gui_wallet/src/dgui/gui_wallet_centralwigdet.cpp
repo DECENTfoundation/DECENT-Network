@@ -40,8 +40,8 @@ decent::wallet::ui::gui::AccountBalanceWidget::AccountBalanceWidget()
 {
     m_amount_label.setStyleSheet("color:green;""background-color:white;");
     m_asset_type_label.setStyleSheet("color:black;""background-color:white;");
-    m_amount_label.setAlignment(Qt::AlignRight);
-    m_asset_type_label.setAlignment(Qt::AlignRight);
+    m_amount_label.setAlignment(Qt::AlignRight|Qt::AlignVCenter);
+    m_asset_type_label.setAlignment(Qt::AlignRight|Qt::AlignVCenter);
     m_main_layout.addWidget(&m_amount_label);
     m_main_layout.addWidget(&m_asset_type_label);
     setLayout(&m_main_layout);
