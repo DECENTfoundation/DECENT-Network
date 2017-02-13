@@ -114,6 +114,8 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
         m_cqsPreviousFilter(tr("nf")),
         m_nConnected(0)
 {
+    m_default_stylesheet = styleSheet();
+    //setStyleSheet("color:black;""background-color:white;");
     m_pInfoTextEdit = new QTextEdit;
     if(!m_pInfoTextEdit){throw "Low memory";}
     m_pInfoTextEdit->setReadOnly(true);
@@ -146,6 +148,7 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
     central->setLayout(mainMenuLayout0);*/
 
     m_pCentralWidget = new CentralWigdet(m_pCentralAllLayout);
+    //m_pCentralWidget->setStyleSheet("color:black;""background-color:white;");
     m_pCentralWidget->setLayout(m_pCentralAllLayout);
     setCentralWidget(m_pCentralWidget);
     CreateActions();
@@ -161,7 +164,7 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
 
     setUnifiedTitleAndToolBarOnMac(false);
 
-    QComboBox* pUsersCombo = &(m_pCentralWidget->usersCombo());
+    QComboBox* pUsersCombo = m_pCentralWidget->usersCombo();
 
     //connect(this, SIGNAL(WalletContentReadySig(int)), this, SLOT(WalletContentReadySlot(int)) );
     //connect(&m_ConnectDlg, SIGNAL(ConnectDoneSig()), this, SLOT(ConnectDoneSlot()) );
@@ -178,6 +181,12 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
                                   this,NULL,&Mainwindow_gui_wallet::ManagementNewFuncGUI);
     m_nJustConnecting = 1;
     ConnectSlot();
+    setWindowTitle(tr("Decent - Blockchain Content Distributor"));
+
+    centralWidget()->layout()->setContentsMargins(0, 0, 0, 0);
+    //statusBar()->hide();
+    //mainToolBar->hide();
+    setStyleSheet("QMainWindow{color:black;""background-color:white;}");
 
 }
 
@@ -323,29 +332,46 @@ void Mainwindow_gui_wallet::ShowDetailsOnDigContentSlot(std::string a_get_cont_s
 //int SetNewTask(const std::string& a_inp_line, Type* a_memb, void* a_clbData, void (Type::*a_clbkFunction)(SetNewTask_last_args))
 void Mainwindow_gui_wallet::ShowDigitalContextesGUI(QString a_filter)
 {
-    std::string csTaskLine;
+    //const char* cpcCoinside;
+    const char* cpcNumberPtr;
+    std::string csTaskLine("");
     std::string csFilterStr = StringFromQString(a_filter);
 
-    if(strstr(csFilterStr.c_str(),"author:"))
+    if(strstr(csFilterStr.c_str(),ST::s_vcpcSearchTypeStrs[ST::author]))
     {
-        csTaskLine = std::string("list_content_by_author ") + (csFilterStr.c_str() + strlen("author:"));
-        //__DEBUG_APP2__(0,"taskLine=%s",csTaskLine.c_str());
+        csTaskLine = std::string("list_content_by_author ") +
+                (csFilterStr.c_str() + strlen(ST::s_vcpcSearchTypeStrs[ST::author]) + 1);
     }
-    else if(strstr(csFilterStr.c_str(),"bought:"))
+    else if(strstr(csFilterStr.c_str(),ST::s_vcpcSearchTypeStrs[ST::bought]))
     {
-        __DEBUG_APP2__(1,"taskLine=%s",csTaskLine.c_str());
+
         std::string csNumber;
-        const char* cpcNumberPtr = strchr(csFilterStr.c_str(),':');
+        cpcNumberPtr = strchr(csFilterStr.c_str(),':');
         if( !cpcNumberPtr || (atoi(cpcNumberPtr+1)==0)){csNumber += " 10";}
         else {csNumber = cpcNumberPtr+1;}
         csTaskLine = std::string("list_content_by_bought ") + csNumber;
     }
-    else
+    else if(strstr(csFilterStr.c_str(),ST::s_vcpcSearchTypeStrs[ST::URI_start]))
     {
-        const char* cpcNumberPtr = strchr(csFilterStr.c_str(),' ');
-        if( !cpcNumberPtr || (atoi(cpcNumberPtr+1)==0)){csFilterStr += " 10";}
-        csTaskLine = std::string("list_content ") + csFilterStr;
+        const char* cpcURIstart;
+        std::string csNumber;
+
+        cpcNumberPtr = strchr(csFilterStr.c_str(),':');
+        if(!cpcNumberPtr++){return;}
+        for(;*cpcNumberPtr != 0 && *cpcNumberPtr==' ';++cpcNumberPtr);
+        cpcURIstart = cpcNumberPtr;
+        for(;*cpcNumberPtr != 0 && *cpcNumberPtr!=' ';++cpcNumberPtr);
+        if( (*cpcNumberPtr==0) || (atoi(cpcNumberPtr+1)==0)){csNumber += " 10";}
+        else {csNumber = cpcNumberPtr+1;}
+        csTaskLine = std::string("list_content ") + cpcURIstart + std::string(" ") + csNumber;
+
     }
+    else if(strstr(csFilterStr.c_str(),ST::s_vcpcSearchTypeStrs[ST::content]))
+    {
+        __DEBUG_APP2__(1,"Displaying contents by content is not implemented yet");
+    }
+
+    __DEBUG_APP2__(3,"taskLine=%s",csTaskLine.c_str());
 
     SetNewTask(csTaskLine,this,NULL,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
 }
@@ -354,9 +380,9 @@ void Mainwindow_gui_wallet::ShowDigitalContextesGUI(QString a_filter)
 /*
  * return != 0 means parsing error
  */
-int Mainwindow_gui_wallet::GetDigitalContentsFromString(std::vector<gui_wallet::SDigitalContent>& a_vcContents, const char* a_contents_str)
+int Mainwindow_gui_wallet::GetDigitalContentsFromString(std::vector<decent::wallet::ui::gui::SDigitalContent>& a_vcContents, const char* a_contents_str)
 {
-    SDigitalContent aDigContent;
+    decent::wallet::ui::gui::SDigitalContent aDigContent;
     const char *cpcSearchStart= a_contents_str,
             *cpcAuthorFld, *cpcAutorBeg, *cpcAutorEnd,
             *cpcAmountFld, *cpcAmountBeg,*cpcAmountEnd,
@@ -526,12 +552,12 @@ void Mainwindow_gui_wallet::ImportKeySlot()
     m_error_string = "";
 
     std::vector<std::string> cvsUsKey(2);
-    QComboBox& cUsersCombo = m_pCentralWidget->GetUsersList();
+    QComboBox& cUsersCombo = *m_pCentralWidget->usersCombo();
 
     cvsUsKey[0] = "nathan";
     cvsUsKey[1] = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3";
 
-    if(cUsersCombo.count())
+    if(cUsersCombo.count()&&(cUsersCombo.currentIndex()>0))
     {
         QString cqsUserName = cUsersCombo.currentText();
         QByteArray cbaResult = cqsUserName.toLatin1();
@@ -609,7 +635,7 @@ void Mainwindow_gui_wallet::HelpSlot()
 }
 
 
-static void ParseDigitalContentFromGetContentString(gui_wallet::SDigitalContent* a_pContent, const std::string& a_str)
+static void ParseDigitalContentFromGetContentString(decent::wallet::ui::gui::SDigitalContent* a_pContent, const std::string& a_str)
 {
     __DEBUG_APP2__(3,"str_to_parse is: \"\n%s\n\"",a_str.c_str());
     //std::string created;
@@ -654,6 +680,7 @@ void Mainwindow_gui_wallet::TaskDoneFuncGUI(void* a_clbkArg,int64_t a_err,const 
             QMessageBox aMessageBox(QMessageBox::Critical,
                                     QObject::tr("error"),QObject::tr(a_task.c_str()),
                                     QMessageBox::Ok,this);
+            //aMessageBox.setStyleSheet(QMessageBox::);
             aMessageBox.setDetailedText(QObject::tr(a_result.c_str()));
             aMessageBox.exec();
             m_ConnectDlg.GetTableWidget(ConnectDlg::CONNECT_BUTTON_FIELD, 1)->setEnabled(true);
@@ -671,6 +698,7 @@ void Mainwindow_gui_wallet::TaskDoneFuncGUI(void* a_clbkArg,int64_t a_err,const 
             QMessageBox aMessageBox(QMessageBox::Information,
                                     QObject::tr("connected"),QObject::tr(aInfo.c_str()),
                                     QMessageBox::Ok,this);
+            //aMessageBox.setStyleSheet(m_default_stylesheet);
             aMessageBox.setDetailedText(QObject::tr(aDetails.c_str()));
             aMessageBox.exec();
             DisplayWalletContentGUI();
@@ -712,7 +740,7 @@ void Mainwindow_gui_wallet::TaskDoneFuncGUI(void* a_clbkArg,int64_t a_err,const 
     {
         int nNumbOfUsers(0);
         std::string csUserName;
-        QComboBox& userCombo = m_pCentralWidget->usersCombo();
+        QComboBox& userCombo = *m_pCentralWidget->usersCombo();
         const char *cpcBegin, *cpcEnd, *cpcNextUser(a_result.c_str());
 
         __DEBUG_APP2__(1,"res=\n%s\n",a_result.c_str());
@@ -737,7 +765,7 @@ void Mainwindow_gui_wallet::TaskDoneFuncGUI(void* a_clbkArg,int64_t a_err,const 
     else if((cpcOccur=strstr(a_task.c_str(),"list_account_balances ")))
     {
         __DEBUG_APP2__(2,"%s",a_result.c_str());
-        QComboBox& userCombo = m_pCentralWidget->usersCombo();
+        QComboBox& userCombo = *m_pCentralWidget->usersCombo();
         std::vector<std::string> cvAccountBalances;
         std::string aAcoountBalanceStr;
         const char* cpcFirstStart = a_result.c_str();
