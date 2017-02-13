@@ -20,10 +20,9 @@ custody_utils::custody_utils()
    element_t private_key, public_key;
 
    element_init_G1(generator, pairing);
-   //element_init_Zr(private_key, pairing);
-   //element_init_G1(public_key, pairing);
 
    element_set_str(generator, _DECENT_GENERATOR_, 10);
+   element_printf("size of element: %i\n", element_length_in_bytes(generator));
    //element_random(private_key);
    //element_pow_zn(public_key, generator, private_key);
 }

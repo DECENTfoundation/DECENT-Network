@@ -33,6 +33,8 @@ extern int g_nDebugApplication;
 using namespace gui_wallet;
 
 CentralWigdet::CentralWigdet(class QBoxLayout* a_pAllLayout)
+    :
+      m_llnBalance(0)
 {
     m_imageLabel = new QLabel;
     PrepareGUIprivate(a_pAllLayout);
@@ -45,26 +47,17 @@ CentralWigdet::~CentralWigdet()
 }
 
 
-void CentralWigdet::SetAccountBalancesFromStrGUI(const std::vector<std::string>& a_balances_and_names)
+void CentralWigdet::SetAccountBalanceGUI(long long int a_llnBallance,const std::string& a_balance_name)
 {
-    //m_balanceLabel.setText(tr(a_balance_and_name.c_str()));
-    m_balanceCombo.clear();
-    const int cnBalances(a_balances_and_names.size());
+    if(a_llnBallance>=0){m_llnBalance = a_llnBallance;}
+    QString aBalance = QString::number(m_llnBalance,10) + tr(" ") + tr(a_balance_name.c_str());
+    m_balanceLabel.setText(aBalance);
+}
 
-    if(cnBalances)
-    {
-        for(int i(0); i<cnBalances; ++i)
-        {
-            m_balanceCombo.addItem(tr(a_balances_and_names[i].c_str()));
-        }
-    }
-    else
-    {
-        m_balanceCombo.addItem(tr("0 DECENT"));
-    }
 
-    m_balanceCombo.setCurrentIndex(0);
-    //m_balanceCombo.lineEdit()->setAlignment(Qt::AlignRight);
+const long long int& CentralWigdet::GetAccountBalance()const
+{
+    return m_llnBalance;
 }
 
 
@@ -147,6 +140,7 @@ static void SetImageToLabelStatic(bool& _bRet_,QPixmap& _image_,const char* _ima
 #endif // #if 1/0
 
 
+
 void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
 {
     bool bImageFound(true);
@@ -186,26 +180,18 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     SetImageToLabelStatic(bImageFound,image,DECENT_LOGO_FILE_NAME);
     if(bImageFound){m_imageLabel->setPixmap(image);}
     else
-    {
-        std::string csWarningDetails(
-                    "file '" DECENT_LOGO_FILE_NAME "' could not be found\n"
-                    "The search paths are the following:\n"
-                    "1. the current directory \n"
-                    "2. the 'image'' folder in the current directory\n"
-                    "3. the folder" DECENT_IMGS_INITIAL_PATH "\n"
-                    "To see the logo, please put the logo file to the directories\n"
-                    "mentioned above and then rerun the application");
+    {   
         m_DelayedWaringTitle = tr("no logo file");
         m_DelayedWaringText = tr(DECENT_LOGO_FILE_NAME " file can not be found!");
-        m_DelayedWaringDetails = tr(csWarningDetails.c_str());
-#if 1
-        if(g_nDebugApplication){fprintf(stdout,"%s\n",csWarningDetails.c_str());}
-#ifdef API_SHOULD_BE_DEFINED2
-        GuiWalletInfoWarnErrGlobal(1,csWarningDetails.c_str());
-#endif  //  #ifdef API_SHOULD_BE_DEFINED2
-#else // #if 1
+        m_DelayedWaringDetails = tr(
+                "file '" DECENT_LOGO_FILE_NAME "' could not be found\n"
+                "The search paths are the following:\n"
+                "1. the current directory \n"
+                "2. the 'image'' folder in the current directory\n"
+                "3. the folder" DECENT_IMGS_INITIAL_PATH "\n"
+                "To see the logo, please put the logo file to the directories\n"
+                "mentioned above and then rerun the application");
         QTimer::singleShot(100, this, SLOT(make_deleyed_warning()));
-#endif // #if 1
         m_imageLabel->setText("DC");
     }
 
@@ -247,15 +233,12 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     /* /// End Probably should be Modified, to skip new ...! */
 
     //m_balanceLabel.setText(tr("0 DTC"));
-    SetAccountBalancesFromStrGUI(std::vector<std::string>());
-    //aPal = m_balanceLabel.palette();
-    //aPal.setColor(QPalette::Window, Qt::black);
-    //aPal.setColor(QPalette::WindowText, Qt::white);
-    //m_balanceLabel.setPalette(aPal);
-    m_balanceCombo.setStyleSheet("color: white;""background-color:black;");
-    m_balanceCombo.setFixedWidth(190);
-    //m_first_line_layout.addWidget(&m_balanceLabel);
-    m_first_line_layout.addWidget(&m_balanceCombo);
+    SetAccountBalanceGUI();
+    aPal = m_balanceLabel.palette();
+    aPal.setColor(QPalette::Window, Qt::black);
+    aPal.setColor(QPalette::WindowText, Qt::white);
+    m_balanceLabel.setPalette(aPal);
+    m_first_line_layout.addWidget(&m_balanceLabel);
 
     /*/////////////// pManLabel ////////////////////////*/
     QLabel* pManLabel = new QLabel;
@@ -294,30 +277,12 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     m_main_layout.addWidget(&m_main_tabs);
     //setLayout(&m_main_layout);
     a_pAllLayout->addLayout(&m_main_layout);
-
-    m_balanceCombo.setEditable(true);
-    // Second : Put the lineEdit in read-only mode
-    m_balanceCombo.lineEdit()->setReadOnly(true);
-    // Third  : Align the lineEdit to right
-    m_balanceCombo.lineEdit()->setAlignment(Qt::AlignRight);
-}
-
-
-void CentralWigdet::SetDigitalContentsGUI(const std::vector<gui_wallet::SDigitalContent>& a_vContents)
-{
-    m_browse_cont_tab.SetDigitalContentsGUI(a_vContents);
 }
 
 
 void CentralWigdet::AddNewUserGUI(const std::string& a_user_name)
 {
     m_users_list.addItem(tr(a_user_name.c_str()));
-}
-
-
-QString CentralWigdet::getFilterText()const
-{
-    return m_search_box.text();
 }
 
 

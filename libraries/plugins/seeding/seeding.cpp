@@ -239,6 +239,15 @@ void seeding_plugin_impl::send_ready_to_publish()
    service_thread->schedule([=](){ send_ready_to_publish();}, next_wakeup, "Seeding plugin RtP generate" );
    ilog("seeding plugin_impl: send_ready_to_publish() end");
 }
+
+void seeding_plugin_impl::restart_downloads(){
+   const auto& cidx = database().get_index_type<my_seeding_index>().indices().get<by_URI>();
+   auto citr = cidx.begin();
+   while(citr!=cidx.end()){
+      package_manager::instance().download_package(citr->URI, *this );
+      ++citr;
+   }
+}
 }// end namespace detail
 
 
@@ -259,8 +268,10 @@ void seeding_plugin::plugin_startup()
    while(citr!=cidx.end()){
       idump((*citr));
       ++citr;
+
    }
    ilog("seeding plugin:  plugin_startup() start");
+   my->restart_downloads();
    my->service_thread->schedule([this](){ilog("generating first ready to publish");my->send_ready_to_publish(); }, ( fc::time_point::now()  + fc::microseconds(15000000)), "Seeding plugin RtP generate");
    ilog("seeding plugin:  plugin_startup() end");
 }

@@ -12,10 +12,8 @@
 #define GUI_WALLET_APPLICATION_HPP
 
 #include <QApplication>
-//#include "connected_api_instance.hpp"
-#include "qt_commonheader.hpp"
-#include "unnamedsemaphorelite.hpp"
-#include "ui_wallet_functions.hpp"
+#include "fc_rpc_gui.hpp"
+#include "connected_api_instance.hpp"
 
 
 namespace gui_wallet
@@ -23,11 +21,12 @@ namespace gui_wallet
 
 class application : public QApplication
 {
-    Q_OBJECT
 public:
     application(int& argc, char** argv);
     virtual ~application();
 
+private:
+    fc::rpc::gui    m_gui_app;
 };
 
 }
@@ -51,7 +50,7 @@ public:
     int                                 m_nRes;
     std::string                         m_csRes;
     };
-    decent::tools::UnnamedSemaphoreLite  m_sema;
+    decent_tools::UnnamedSemaphoreLite  m_sema;
 public:
     InGuiThreatCaller();
     ~InGuiThreatCaller();

@@ -20,7 +20,8 @@
 #define SHARING_TYPE	0/* 0 means semaphores is shared between threads in same process */
 #endif
 
-namespace decent{ namespace tools{
+namespace decent_tools
+{
 
 #ifndef TYPE_SEMA_defined
 #define TYPE_SEMA_defined
@@ -84,6 +85,6 @@ private:
     TYPE_SEMA m_Semaphore;
 };
 
-}}
+}
 
 #endif // UNNAMEDSEMAPHORELITE_HPP

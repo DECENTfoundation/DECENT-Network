@@ -26,6 +26,7 @@
 #include <graphene/chain/account_object.hpp>
 #include <graphene/chain/database.hpp>
 #include <graphene/chain/protocol/vote.hpp>
+#include <fc/smart_ref_impl.hpp>
 
 namespace graphene { namespace chain {
 
