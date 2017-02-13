@@ -136,33 +136,39 @@ void Browse_content_tab::SetDigitalContentsGUI(const std::vector<decent::wallet:
         // namespace DGF {enum DIG_CONT_FIELDS{IS_SELECTED,TIME,SYNOPSIS,RATING,LEFT,SIZE,PRICE};}
         //const SDigitalContent& clbData,ClbType* own,void*clbDt,void (ClbType::*a_fpFunction)(_NEEDED_ARGS_)
 
-        pLabel = new decent::wallet::ui::gui::TableWidgetItemW<QLabel>(tr(aTemporar.created.c_str()),
-                                              aTemporar,this,NULL,&Browse_content_tab::DigContCallback);
+        pLabel = new decent::wallet::ui::gui::TableWidgetItemW<QLabel>(
+                                              aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
+                                              tr(aTemporar.created.c_str()));
         if(!pLabel){throw "Low memory!";}
         m_TableWidget.setCellWidget(i,DCF::TIME,pLabel);
 
-        pLabel = new decent::wallet::ui::gui::TableWidgetItemW<QLabel>(tr(aTemporar.synopsis.c_str()),
-                                              aTemporar,this,NULL,&Browse_content_tab::DigContCallback);
+        pLabel = new decent::wallet::ui::gui::TableWidgetItemW<QLabel>(
+                                              aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
+                                              tr(aTemporar.synopsis.c_str()));
         if(!pLabel){throw "Low memory!";}
         m_TableWidget.setCellWidget(i,DCF::SYNOPSIS,pLabel);
 
-        pLabel = new decent::wallet::ui::gui::TableWidgetItemW<QLabel>( QString::number(aTemporar.AVG_rating,'f').remove( QRegExp("0+$") ).remove( QRegExp("\\.$") ),
-                                               aTemporar,this,NULL,&Browse_content_tab::DigContCallback );
+        pLabel = new decent::wallet::ui::gui::TableWidgetItemW<QLabel>(
+                                               aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
+                                               QString::number(aTemporar.AVG_rating,'f').remove( QRegExp("0+$") ).remove( QRegExp("\\.$") ));
         if(!pLabel){throw "Low memory!";}
         m_TableWidget.setCellWidget(i,DCF::RATING,pLabel);
 
-        pLabel = new decent::wallet::ui::gui::TableWidgetItemW<QLabel>(tr(aTemporar.expiration.c_str()),
-                                              aTemporar,this,NULL,&Browse_content_tab::DigContCallback);
+        pLabel = new decent::wallet::ui::gui::TableWidgetItemW<QLabel>(
+                                              aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
+                                              tr(aTemporar.expiration.c_str()));
         if(!pLabel){throw "Low memory!";}
         m_TableWidget.setCellWidget(i,DCF::LEFT,pLabel);
 
-        pLabel = new decent::wallet::ui::gui::TableWidgetItemW<QLabel>(QString::number(aTemporar.size,'f').remove( QRegExp("0+$") ).remove( QRegExp("\\.$") ),
-                                              aTemporar,this,NULL,&Browse_content_tab::DigContCallback);
+        pLabel = new decent::wallet::ui::gui::TableWidgetItemW<QLabel>(
+                                              aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
+                                              QString::number(aTemporar.size,'f').remove( QRegExp("0+$") ).remove( QRegExp("\\.$") ));
         if(!pLabel){throw "Low memory!";}
         m_TableWidget.setCellWidget(i,DCF::SIZE,pLabel);
 
-        pLabel = new decent::wallet::ui::gui::TableWidgetItemW<QLabel>( QString::number(aTemporar.price.amount,'f').remove( QRegExp("0+$") ).remove( QRegExp("\\.$") ),
-                                               aTemporar,this,NULL,&Browse_content_tab::DigContCallback);
+        pLabel = new decent::wallet::ui::gui::TableWidgetItemW<QLabel>(
+                                               aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
+                                               QString::number(aTemporar.price.amount,'f').remove( QRegExp("0+$") ).remove( QRegExp("\\.$") ));
         if(!pLabel){throw "Low memory!";}
         m_TableWidget.setCellWidget(i,DCF::PRICE,pLabel);
     }

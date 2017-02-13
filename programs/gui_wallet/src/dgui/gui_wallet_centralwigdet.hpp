@@ -34,6 +34,23 @@
 
 extern int g_nDebugApplication;
 
+namespace decent{namespace wallet{namespace ui{namespace gui{
+
+class AccountBalanceWidget : public decent::wallet::ui::gui::TableWidgetItemW_base<QWidget,int>
+{
+public:
+    AccountBalanceWidget();
+    void SetAccountBalanceFromString(const std::string& a_balance);
+private:
+    void ClbFunction(_NEEDED_ARGS1_(int));
+private:
+    QHBoxLayout m_main_layout;
+    QLabel      m_amount_label;
+    QLabel      m_asset_type_label;
+};
+
+}}}}
+
 namespace gui_wallet
 {
 
@@ -61,7 +78,7 @@ enum MAIN_TABS_ENM{BROWSE_CONTENT,TRANSACTIONS,UPLOAD,OVERVIEW,PURCHASED};
 
     private:
         void PrepareGUIprivate(class QBoxLayout* pAllLayout);
-        QWidget* GetWidgetFromTable2(int column, int widget);
+        QWidget* GetWidgetFromTable3(int column, int widget);
 
     private slots:
         void make_deleyed_warning();

@@ -16,8 +16,12 @@
 #include <QMouseEvent>
 #include "ui_wallet_functions_base.hpp"
 
+#ifndef _NEEDED_ARGS1_
+#define _NEEDED_ARGS1_(__type__)    void* a_clb_data,int a_act, const __type__* a_pDigContent
+#endif
+
 #ifndef _NEEDED_ARGS2_
-#define _NEEDED_ARGS2_ void* a_clb_data,int a_act,const decent::wallet::ui::gui::SDigitalContent* a_pDigContent
+#define _NEEDED_ARGS2_ _NEEDED_ARGS1_(decent::wallet::ui::gui::SDigitalContent)
 #endif
 
 // ST stands for search type
@@ -55,30 +59,42 @@ typedef void (__THISCALL__ *TypeDigContCallback)(void* owner, _NEEDED_ARGS2_);
 
 namespace decent{namespace wallet{namespace ui{namespace gui{
 
-template <typename QtType>
-class TableWidgetItemW : public QtType
+template <typename QtType,typename ClbkDataType>
+class TableWidgetItemW_base : public QtType
 {
 public:
-    template <typename ConstrArgType, typename ClbType>
-    TableWidgetItemW(ConstrArgType a_cons_arg,
-                     const SDigitalContent& clbData,ClbType* own,void*clbDt,void (ClbType::*a_fpFunction)(_NEEDED_ARGS2_));
-    template <typename ClbType>
-    TableWidgetItemW(const SDigitalContent& clbData, ClbType* own,void*clbDt,void (ClbType::*a_fpFunction)(_NEEDED_ARGS2_));
-    virtual ~TableWidgetItemW();
+    template <typename ClbType,typename ...ConstrArgTypes>
+    TableWidgetItemW_base(const ClbkDataType& clbCont,ClbType* own,void*clbData,
+                          void (ClbType::*a_fpFunction)(_NEEDED_ARGS1_(ClbkDataType)),
+                          ConstrArgTypes... a_cons_args);
+    virtual ~TableWidgetItemW_base();
 protected:
     void prepare_constructor(int,...);
-    virtual void mouseDoubleClickEvent(QMouseEvent* event);
 protected:
     void*               m_pOwner;
     void*               m_pCallbackData;
-    SDigitalContent     m_callback_data;
+    ClbkDataType        m_callback_content;
     TypeDigContCallback m_fpCallback;
+};
+
+
+template <typename QtType>
+class TableWidgetItemW : public TableWidgetItemW_base<QtType,SDigitalContent>
+{
+public:
+    template <typename ClbType,typename ...ConstrArgTypes>
+    TableWidgetItemW(const SDigitalContent& clbCont,ClbType* owner,void*clbData,
+                     void (ClbType::*fpFunction)(_NEEDED_ARGS2_),
+                     ConstrArgTypes... cons_args);
+    virtual ~TableWidgetItemW();
+protected:
+    virtual void mouseDoubleClickEvent(QMouseEvent* event);
+protected:
+    // no members
 };
 
 }}}}
 
-
-typedef void (__THISCALL__ *TypeDigContCallback)(void* owner, _NEEDED_ARGS2_);
 
 #include "decent_wallet_ui_gui_common.tos"
 

@@ -30,8 +30,42 @@
 extern std::string g_cApplicationPath ;
 extern int g_nDebugApplication;
 
-
 using namespace gui_wallet;
+
+
+decent::wallet::ui::gui::AccountBalanceWidget::AccountBalanceWidget()
+    :   decent::wallet::ui::gui::TableWidgetItemW_base<QWidget,int>(1,this,NULL,
+                                                                     &AccountBalanceWidget::ClbFunction)
+{
+    m_amount_label.setStyleSheet("color:green;""background-color:white;");
+    m_asset_type_label.setStyleSheet("color:black;""background-color:white;");
+    m_main_layout.addWidget(&m_amount_label);
+    m_main_layout.addWidget(&m_asset_type_label);
+    setLayout(&m_main_layout);
+}
+
+
+void decent::wallet::ui::gui::AccountBalanceWidget::SetAccountBalanceFromString(const std::string& a_balance)
+{
+    const char* cpcAssetTypeStarts;
+    const char* cpcInpStr = a_balance.c_str();
+    double lfAmount = strtod(cpcInpStr,const_cast<char**>(&cpcAssetTypeStarts));
+    if(!cpcAssetTypeStarts){return;}
+    QString tqsAmount = QString::number(lfAmount,'f').remove( QRegExp("0+$") ).remove( QRegExp("\\.$") );
+    for(;*cpcAssetTypeStarts!=' ' && *cpcAssetTypeStarts != 0;++cpcAssetTypeStarts);
+    QString tqsAssetType = tr(cpcAssetTypeStarts);
+    m_amount_label.setText(tqsAmount);
+    m_asset_type_label.setText(tqsAssetType);
+}
+
+
+void decent::wallet::ui::gui::AccountBalanceWidget::ClbFunction(_NEEDED_ARGS1_(int))
+{
+    //
+}
+
+
+/*//////////////////////////////////////////////////*/
 
 CentralWigdet::CentralWigdet(class QBoxLayout* a_pAllLayout)
     :
@@ -59,7 +93,7 @@ CentralWigdet::~CentralWigdet()
 void CentralWigdet::SetAccountBalancesFromStrGUI(const std::vector<std::string>& a_balances_and_names)
 {
     //m_balanceLabel.setText(tr(a_balance_and_name.c_str()));
-    QComboBox* pBalanceCombo = (QComboBox*)GetWidgetFromTable2(BALANCE,1);
+    decent::wallet::ui::gui::AccountBalanceWidget* pBalanceCombo = (QComboBox*)GetWidgetFromTable2(BALANCE,1);
     pBalanceCombo->clear();
     const int cnBalances(a_balances_and_names.size());
 
@@ -67,12 +101,12 @@ void CentralWigdet::SetAccountBalancesFromStrGUI(const std::vector<std::string>&
     {
         for(int i(0); i<cnBalances; ++i)
         {
-            pBalanceCombo->addItem(tr(a_balances_and_names[i].c_str()));
+            pBalanceCombo->addItem(a_balances_and_names[i]);
         }
     }
     else
     {
-        pBalanceCombo->addItem(tr("0 DECENT"));
+        pBalanceCombo->addItem("0 DECENT");
     }
 
     pBalanceCombo->setCurrentIndex(0);
@@ -214,10 +248,11 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
 
     QWidget* pWidgetTmp2;
     QPixmap image;
-    QLabel* pLabelTmp;
+    QLabel* pLabelTmp2;
     QHBoxLayout *pHBoxLayoutTmp;
     QComboBox* pComboTmp;
     QFrame *line;
+    decent::wallet::ui::gui::AccountBalanceWidget* plabelTmp3;
     /*////////////////////////////////////////////////////////////////////////////////////*/
 
     /*//////////////////////////////////////////*/
