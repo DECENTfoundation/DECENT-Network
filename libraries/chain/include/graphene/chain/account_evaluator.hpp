@@ -47,15 +47,4 @@ public:
    const account_object* acnt;
 };
 
-class account_whitelist_evaluator : public evaluator<account_whitelist_evaluator>
-{
-public:
-   typedef account_whitelist_operation operation_type;
-
-   void_result do_evaluate( const account_whitelist_operation& o);
-   void_result do_apply( const account_whitelist_operation& o);
-
-   const account_object* listed_account;
-};
-
 } } // graphene::chain

@@ -1,5 +1,6 @@
 // Copyright (c) 2015-2015 Decent developers
 
+#include <cstddef>
 #include <iostream>
 #include "decent/encrypt/custodyutils.hpp"
 #include "openssl/sha.h"

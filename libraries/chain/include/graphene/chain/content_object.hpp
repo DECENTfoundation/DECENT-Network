@@ -53,6 +53,7 @@ using namespace decent::crypto;
    struct by_URI;
    struct by_AVG_rating;
    struct by_times_bought;
+   struct by_expiration;
    
    
    typedef multi_index_container<
@@ -72,7 +73,10 @@ using namespace decent::crypto;
             >,
             ordered_non_unique<tag<by_times_bought>,
                member<content_object, uint32_t, &content_object::times_bought>,
-            std::greater<uint32_t>>
+               std::greater<uint32_t>>,
+            ordered_non_unique<tag<by_expiration>,
+               member<content_object, time_point_sec, &content_object::expiration>
+            >
          >
    > content_object_multi_index_type;
    

@@ -32,7 +32,6 @@
 #include <graphene/chain/account_object.hpp>
 #include <graphene/chain/asset_object.hpp>
 #include <graphene/chain/chain_property_object.hpp>
-#include <graphene/chain/committee_member_object.hpp>
 #include <graphene/chain/confidential_object.hpp>
 #include <graphene/chain/market_object.hpp>
 #include <graphene/chain/operation_history_object.hpp>
@@ -329,36 +328,6 @@ class database_api
        */
       vector<limit_order_object> get_limit_orders(asset_id_type a, asset_id_type b, uint32_t limit)const;
 
-      /**
-       * @brief Get call orders in a given asset
-       * @param a ID of asset being called
-       * @param limit Maximum number of orders to retrieve
-       * @return The call orders, ordered from earliest to be called to latest
-       */
-      vector<call_order_object> get_call_orders(asset_id_type a, uint32_t limit)const;
-
-      /**
-       * @brief Get forced settlement orders in a given asset
-       * @param a ID of asset being settled
-       * @param limit Maximum number of orders to retrieve
-       * @return The settle orders, ordered from earliest settlement date to latest
-       */
-      vector<force_settlement_object> get_settle_orders(asset_id_type a, uint32_t limit)const;
-
-      /**
-       *  @return all open margin positions for a given account id.
-       */
-      vector<call_order_object> get_margin_positions( const account_id_type& id )const;
-
-      /**
-       * @brief Request notification when the active orders in the market between two assets changes
-       * @param callback Callback method which is called when the market changes
-       * @param a First asset ID
-       * @param b Second asset ID
-       *
-       * Callback will be passed a variant containing a vector<pair<operation, operation_result>>. The vector will
-       * contain, in order, the operations which changed the market, and their results.
-       */
       void subscribe_to_market(std::function<void(const variant&)> callback,
                    asset_id_type a, asset_id_type b);
 
@@ -441,43 +410,12 @@ class database_api
        */
       uint64_t get_witness_count()const;
 
-      ///////////////////////
-      // Committee members //
-      ///////////////////////
-
-      /**
-       * @brief Get a list of committee_members by ID
-       * @param committee_member_ids IDs of the committee_members to retrieve
-       * @return The committee_members corresponding to the provided IDs
-       *
-       * This function has semantics identical to @ref get_objects
-       */
-      vector<optional<committee_member_object>> get_committee_members(const vector<committee_member_id_type>& committee_member_ids)const;
-
-      /**
-       * @brief Get the committee_member owned by a given account
-       * @param account The ID of the account whose committee_member should be retrieved
-       * @return The committee_member object, or null if the account does not have a committee_member
-       */
-      fc::optional<committee_member_object> get_committee_member_by_account(account_id_type account)const;
-
-      /**
-       * @brief Get names and IDs for registered committee_members
-       * @param lower_bound_name Lower bound of the first name to return
-       * @param limit Maximum number of results to return -- must not exceed 1000
-       * @return Map of committee_member names to corresponding IDs
-       */
-      map<string, committee_member_id_type> lookup_committee_member_accounts(const string& lower_bound_name, uint32_t limit)const;
-
-
       ///////////
       // Votes //
       ///////////
 
       /**
        *  @brief Given a set of votes, return the objects they are voting for.
-       *
-       *  This will be a mixture of committee_member_object, witness_objects
        *
        *  The results will be in the same order as the votes.  Null will be returned for
        *  any vote ids that are not found.
@@ -568,11 +506,11 @@ class database_api
       vector<buying_object> get_open_buyings_by_consumer( const account_id_type& consumer )const;
 
       /**
-       * @brief Get a buying_history_object by "buying"
-       * @param buying Buying to retrieve
-       * @return The buying_history_object corresponding to the provided "buying", or null if no matching object was found
+       * @brief Get history buying_objects by consumer
+       * @param consumer Consumer of the buyings to retrieve
+       * @return History buying_objects corresponding to the provided consumer
        */
-      optional<buying_history_object> get_buying_history_object( const buying_id_type& buying )const;
+      vector<buying_object> get_buying_history_objects_by_consumer( const account_id_type& consumer )const;
 
       /**
        * @brief Get a content by URI
@@ -679,9 +617,6 @@ FC_API(graphene::app::database_api,
    // Markets / feeds
    (get_order_book)
    (get_limit_orders)
-   (get_call_orders)
-   (get_settle_orders)
-   (get_margin_positions)
    (subscribe_to_market)
    (unsubscribe_from_market)
    (get_ticker)
@@ -693,11 +628,6 @@ FC_API(graphene::app::database_api,
    (get_witness_by_account)
    (lookup_witness_accounts)
    (get_witness_count)
-
-   // Committee members
-   (get_committee_members)
-   (get_committee_member_by_account)
-   (lookup_committee_member_accounts)
 
    // Votes
    (lookup_vote_ids)
@@ -721,7 +651,7 @@ FC_API(graphene::app::database_api,
    (get_open_buyings)
    (get_open_buyings_by_URI)
    (get_open_buyings_by_consumer)
-   (get_buying_history_object)
+   (get_buying_history_objects_by_consumer)
    (get_content)
    (list_content_by_author)
    (list_content)

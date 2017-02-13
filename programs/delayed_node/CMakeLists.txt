@@ -1,7 +1,5 @@
+
 add_executable( delayed_node main.cpp )
-if( UNIX AND NOT APPLE )
-  set(rt_library rt )
-endif()
 
 find_package( Gperftools QUIET )
 if( GPERFTOOLS_FOUND )

@@ -54,7 +54,7 @@ BOOST_FIXTURE_TEST_CASE( update_account_keys, database_fixture )
         ;
 
       // Sam is the creator of accounts
-      private_key_type committee_key = init_account_priv_key;
+      private_key_type witness_key = init_account_priv_key;
       private_key_type sam_key = generate_private_key("sam");
 
       //
@@ -77,15 +77,15 @@ BOOST_FIXTURE_TEST_CASE( update_account_keys, database_fixture )
       generate_block( skip_flags );
 
       db.modify(db.get_global_properties(), [](global_property_object& p) {
-         p.parameters.committee_proposal_review_period = fc::hours(1).to_seconds();
+         p.parameters.witness_proposal_review_period = fc::hours(1).to_seconds();
       });
 
       transaction tx;
       processed_transaction ptx;
 
-      account_object committee_account_object = committee_account(db);
-      // transfer from committee account to Sam account
-      transfer(committee_account_object, sam_account_object, core.amount(100000));
+      account_object witness_account_object = witness_account(db);
+      // transfer from witness account to Sam account
+      transfer(witness_account_object, sam_account_object, core.amount(100000));
 
       const int num_keys = 5;
       vector< private_key_type > numbered_private_keys;
@@ -325,7 +325,7 @@ BOOST_FIXTURE_TEST_CASE( tapos_rollover, database_fixture )
       ACTORS((alice)(bob));
 
       BOOST_TEST_MESSAGE( "Give Alice some money" );
-      transfer(committee_account, alice_id, asset(10000));
+      transfer(witness_account, alice_id, asset(10000));
       generate_block();
 
       BOOST_TEST_MESSAGE( "Generate up to block 0xFF00" );
@@ -370,19 +370,19 @@ BOOST_FIXTURE_TEST_CASE(bulk_discount, database_fixture)
 { try {
    ACTOR(nathan);
    // Give nathan ALLLLLL the money!
-   transfer(GRAPHENE_COMMITTEE_ACCOUNT, nathan_id, db.get_balance(GRAPHENE_COMMITTEE_ACCOUNT, asset_id_type()));
+   transfer(GRAPHENE_WITNESS_ACCOUNT, nathan_id, db.get_balance(GRAPHENE_WITNESS_ACCOUNT, asset_id_type()));
    enable_fees();//GRAPHENE_BLOCKCHAIN_PRECISION*10);
    share_type new_fees;
    while( nathan_id(db).statistics(db).lifetime_fees_paid + new_fees < GRAPHENE_DEFAULT_BULK_DISCOUNT_THRESHOLD_MIN )
    {
-      transfer(nathan_id, GRAPHENE_COMMITTEE_ACCOUNT, asset(1));
+      transfer(nathan_id, GRAPHENE_WITNESS_ACCOUNT, asset(1));
       new_fees += db.current_fee_schedule().calculate_fee(transfer_operation()).amount;
    }
    generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
    enable_fees();//GRAPHENE_BLOCKCHAIN_PRECISION*10);
    auto old_cashback = nathan_id(db).cashback_balance(db).balance;
 
-   transfer(nathan_id, GRAPHENE_COMMITTEE_ACCOUNT, asset(1));
+   transfer(nathan_id, GRAPHENE_WITNESS_ACCOUNT, asset(1));
    generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
    enable_fees();//GRAPHENE_BLOCKCHAIN_PRECISION*10);
 
@@ -392,14 +392,14 @@ BOOST_FIXTURE_TEST_CASE(bulk_discount, database_fixture)
    new_fees = 0;
    while( nathan_id(db).statistics(db).lifetime_fees_paid + new_fees < GRAPHENE_DEFAULT_BULK_DISCOUNT_THRESHOLD_MAX )
    {
-      transfer(nathan_id, GRAPHENE_COMMITTEE_ACCOUNT, asset(1));
+      transfer(nathan_id, GRAPHENE_WITNESS_ACCOUNT, asset(1));
       new_fees += db.current_fee_schedule().calculate_fee(transfer_operation()).amount;
    }
    generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
    enable_fees();//GRAPHENE_BLOCKCHAIN_PRECISION*10);
    old_cashback = nathan_id(db).cashback_balance(db).balance;
 
-   transfer(nathan_id, GRAPHENE_COMMITTEE_ACCOUNT, asset(1));
+   transfer(nathan_id, GRAPHENE_WITNESS_ACCOUNT, asset(1));
    generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
 
    BOOST_CHECK_EQUAL(nathan_id(db).cashback_balance(db).balance.amount.value,

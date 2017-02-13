@@ -1,5 +1,3 @@
-find_package( PBC REQUIRED )
-find_package( CryptoPP REQUIRED )
 
 file( GLOB HEADERS
     "include/decent/encrypt/*.hpp"

@@ -73,8 +73,8 @@ if( NOT PBC_LIBRARIES OR NOT PBC_INCLUDE_DIR )
 #            INSTALL_COMMAND   make install
 #        )
 
-		# Build the PBC submodule in-source.
-		set( PBC_DIR "${PROJECT_BINARY_DIR}/libraries/contrib/pbc/artifacts/prefix" )
+        # Build the PBC submodule in-source.
+        set( PBC_DIR "${PROJECT_BINARY_DIR}/libraries/contrib/pbc/artifacts/prefix" )
         ExternalProject_Add( build_pbc
             PREFIX            "${PROJECT_SOURCE_DIR}/libraries/contrib/pbc"
             SOURCE_DIR        "${PROJECT_SOURCE_DIR}/libraries/contrib/pbc"

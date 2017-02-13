@@ -241,17 +241,7 @@ namespace graphene { namespace app {
                assert( aobj != nullptr );
                result.push_back( aobj->issuer );
                break;
-            } case force_settlement_object_type:{
-               const auto& aobj = dynamic_cast<const force_settlement_object*>(obj);
-               assert( aobj != nullptr );
-               result.push_back( aobj->owner );
-               break;
-            } case committee_member_object_type:{
-               const auto& aobj = dynamic_cast<const committee_member_object*>(obj);
-               assert( aobj != nullptr );
-               result.push_back( aobj->committee_member_account );
-               break;
-            } case witness_object_type:{
+           } case witness_object_type:{
                const auto& aobj = dynamic_cast<const witness_object*>(obj);
                assert( aobj != nullptr );
                result.push_back( aobj->witness_account );
@@ -260,11 +250,6 @@ namespace graphene { namespace app {
                const auto& aobj = dynamic_cast<const limit_order_object*>(obj);
                assert( aobj != nullptr );
                result.push_back( aobj->seller );
-               break;
-            } case call_order_object_type:{
-               const auto& aobj = dynamic_cast<const call_order_object*>(obj);
-               assert( aobj != nullptr );
-               result.push_back( aobj->borrower );
                break;
             } case custom_object_type:{
               break;
@@ -310,8 +295,6 @@ namespace graphene { namespace app {
                   break;
                  case impl_asset_dynamic_data_type:
                   break;
-                 case impl_asset_bitasset_data_type:
-                  break;
                  case impl_account_balance_object_type:{
                   const auto& aobj = dynamic_cast<const account_balance_object*>(obj);
                   assert( aobj != nullptr );
@@ -349,6 +332,31 @@ namespace graphene { namespace app {
                   break;
                  case impl_buyback_object_type:
                   break;
+                 case impl_buying_object_type:{
+                  const auto& bobj = dynamic_cast<const buying_object*>(obj);
+                  assert( bobj != nullptr );
+                  result.push_back( bobj->consumer );
+                  break;
+                 }
+
+                 case impl_content_object_type:{
+                    const auto& cobj = dynamic_cast<const content_object*>(obj);
+                    assert( cobj != nullptr );
+                    result.push_back( cobj->author );
+                    break;
+                 }
+                 case impl_publisher_object_type:{
+                    const auto& sobj = dynamic_cast<const seeder_object*>(obj);
+                    assert( sobj != nullptr );
+                    result.push_back( sobj->seeder );
+                    break;
+                 }
+                 case impl_rating_object_type:{
+                    const auto& robj = dynamic_cast<const rating_object*>(obj);
+                    assert( robj != nullptr );
+                    result.push_back( robj->consumer );
+                    break;
+                 }
           }
        }
        return result;

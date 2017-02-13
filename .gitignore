@@ -99,3 +99,5 @@ gui_wallet.app
 *after-import-key-*.wallet
 *.wallet
 programs/gui_wallet/prj/gui_wallet/build-gui_wallet-Qt_5_7_1_clang_64-Debug
+
+programs/.DS_Store
