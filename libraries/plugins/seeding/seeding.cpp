@@ -268,7 +268,6 @@ void seeding_plugin::plugin_startup()
    while(citr!=cidx.end()){
       idump((*citr));
       ++citr;
-
    }
    ilog("seeding plugin:  plugin_startup() start");
    my->restart_downloads();

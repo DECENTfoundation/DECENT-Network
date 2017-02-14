@@ -11,6 +11,7 @@
 #define CENTRALWIGDET_GUI_WALLET_H
 
 //#define USE_TABLE_FOR_FIRST_LINE
+#define API_SHOULD_BE_DEFINED
 
 #include <QWidget>
 #include <QVBoxLayout>
@@ -24,6 +25,7 @@
 #include <stdio.h>
 #include <QLabel>
 #include <QComboBox>
+#include <vector>
 
 #define __TEMPORARY__
 
@@ -34,6 +36,7 @@ struct qtWidget_test : public QWidget{~qtWidget_test(){if(g_nDebugApplication){p
 
 namespace gui_wallet
 {
+
     class CentralWigdet : public QWidget
     {
         Q_OBJECT
@@ -42,13 +45,19 @@ namespace gui_wallet
         virtual ~CentralWigdet(); /* virtual because may be this class will be */
                                   /* used by inheritance */
 
-        void SetAccountBalanceGUI(long long int ballance=-1, const std::string& balance_name="DECENT"); /* arg_in <0 means only update on GUI*/
+        void SetAccountBalancesFromStrGUI(const std::vector<std::string>& a_balances_and_names);
 
-        const long long int& GetAccountBalance()const;
         QComboBox&  GetUsersList(){return m_users_list;}
         void AddNewUserGUI(const std::string& user_name);
 
         __TEMPORARY__ QComboBox& usersCombo(){return m_users_list;}
+
+        QString getFilterText()const;
+
+        QWidget* GetBrowseContentTab(){return &m_browse_cont_tab;}
+
+        //QTableWidget& getDigitalContentsTable();
+        void SetDigitalContentsGUI(const std::vector<gui_wallet::SDigitalContent>& contents);
 
     protected:
         virtual void showEvent ( QShowEvent * event ) ;
@@ -74,9 +83,10 @@ namespace gui_wallet
         QString             m_DelayedWaringText;
         QString             m_DelayedWaringDetails;
         class QLabel*       m_imageLabel;
-        QLabel              m_balanceLabel;
+        //QLabel              m_balanceLabel;
+        QComboBox           m_balanceCombo;
         /* 'm_nBalance' to have this filed in order to skip parsing the text each time balance is needed*/
-        long long int       m_llnBalance;
+        //double              m_lfBalance;
         QComboBox           m_users_list;
 
     };

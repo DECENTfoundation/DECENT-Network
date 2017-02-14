@@ -12,6 +12,8 @@
 #include <thread>
 #include <iostream>
 
+#ifndef WALLETCONTENTDLG_UNDERSTAND
+
 extern int g_nDebugApplication;
 
 gui_wallet::WalletContentDlg::WalletContentDlg()
@@ -25,7 +27,7 @@ gui_wallet::WalletContentDlg::~WalletContentDlg()
 }
 
 
-int gui_wallet::WalletContentDlg::exec(vector<account_object>& a_pAcc, vector<vector<asset>>& a_pBl, int& a_nError, std::string& a_error_string)
+int gui_wallet::WalletContentDlg::execWCt(std::vector<account_object_str>& a_pAcc, std::vector<std::vector<asset_str>>& a_pBl, int& a_nError, std::string& a_error_string)
 {
     if(_LIKELY_(!a_nError))
     {
@@ -43,3 +45,5 @@ int gui_wallet::WalletContentDlg::exec(vector<account_object>& a_pAcc, vector<ve
 
     return QDialog::exec();
 }
+
+#endif  //  #ifndef WALLETCONTENTDLG_UNDERSTAND

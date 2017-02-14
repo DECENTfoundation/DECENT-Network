@@ -23,7 +23,7 @@
 #define LAST_SYS_CHAR   '/'
 #endif
 
-int g_nDebugApplication = 0;
+extern int g_nDebugApplication;
 std::string g_cApplicationPath ;
 
 int main(int argc, char* argv[])
@@ -78,6 +78,8 @@ int main(int argc, char* argv[])
 
     freopen( "/dev/null", "w", stderr);
 
+    try{
+
     gui_wallet::application aApp(argc,argv);
 
 #if 0
@@ -97,6 +99,16 @@ int main(int argc, char* argv[])
     //delete g_pApplicationPath;
 #endif
 #endif
+
+    }
+    catch(const char* a_ext_str)
+    {
+        printf("%s\n",a_ext_str);
+    }
+    catch(...)
+    {
+        printf("Unknown exception!\n");
+    }
 
     return 0;
 }

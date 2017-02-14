@@ -19,6 +19,10 @@
 #include "gui_wallet_connectdlg.hpp"
 #include "text_display_dialog.hpp"
 #include "walletcontentdlg.hpp"
+#include "richdialog.hpp"
+#include "cliwalletdlg.hpp"
+#include <unnamedsemaphorelite.hpp>
+#include <stdarg.h>
 
 namespace gui_wallet
 {
@@ -30,31 +34,25 @@ namespace gui_wallet
     public:
         Mainwindow_gui_wallet();
         virtual ~Mainwindow_gui_wallet();   // virtual because may be this class will be
-                                            // used by inheritance
+                                            // used by inheritanc
+    protected:
         void CreateActions();
         void CreateMenues();
 
-        void task_done_function(int err,const std::string& task, const std::string& result);
+        void TaskDoneFuncGUI(void* clbkArg,int64_t err,const std::string& task,const std::string& result);
+        void ManagementNewFuncGUI(void* clbkArg,int64_t err,const std::string& task,const std::string& result);
 
-#ifndef LIST_ACCOUNT_BALANCES_DIRECT_CALL
-        void __EmitWalletcontentReadyFnc(int det);
-#endif
+        void CliCallbackFnc(void*arg,const std::string& task);
+        int GetDigitalContentsFromString(std::vector<gui_wallet::SDigitalContent>& acContents, const char* contents_str);
 
-    private:
-        void TaskDoneFunc(int err,const std::string& task,const std::string& result);
-        static void TaskDoneFunc(void* owner,int err,const std::string& task,const std::string& result);
+        void ShowDigitalContextesGUI(QString filter);
 
-    private:
-        void CallInfoFunction(struct StructApi* pApi);
-        void CallAboutFunction(struct StructApi* a_pApi);
-        void CallHelpFunction(struct StructApi* a_pApi);
-        void CallImportKeyFunction(struct StructApi* a_pApi);
-        void CallShowWalletContentFunction(struct StructApi* a_pApi);
-        void UnlockFunction(struct StructApi* a_pApi);
+        void DisplayWalletContentGUI();
 
-        void ListAccountThreadFunc(int a_nDetailed);
+        static void SetPassword(void* a_owner,int a_answer,/*string**/void* a_str_ptr);
 
-        void CurrentUserBalanceFunction(struct StructApi* a_pApi);
+    protected slots:
+        void CurrentUserChangedSlot(const QString&);
 
     protected slots:/* Instead of these one line slots
                      *, probably should be used lambda functions?
@@ -65,25 +63,19 @@ namespace gui_wallet
         void InfoSlot();
 
         void ShowWalletContentSlot();
-        void WalletContentReadySlot(int a_nDetailed);
-        void CurrentUserBalanceSlot(int index );
 
-    protected slots:
         void ConnectSlot();
         void ImportKeySlot();
         void UnlockSlot();
-        void TaskDoneSlot(int err,std::string task, std::string result);
-        void ConnectDoneSlot();
+        void OpenCliWalletDlgSlot();
+        void OpenInfoDlgSlot();
 
-    private:
-    signals:
-        void TaskDoneSig(int err,std::string task, std::string result);
-        void WalletContentReadySig(int a_nDetailed);
+        void ShowDetailsOnDigContentSlot(std::string get_cont_str);
 
     protected:
         virtual void moveEvent(QMoveEvent *) _OVERRIDE_ ;
 
-    private:
+    protected:
         class QVBoxLayout*   m_pCentralAllLayout;
         class QHBoxLayout*   m_pMenuLayout;
         CentralWigdet*       m_pCentralWidget;
@@ -96,6 +88,8 @@ namespace gui_wallet
         QMenu*              m_pMenuContent;
         QMenu*              m_pMenuHelpR;
         QMenu*              m_pMenuCreateTicket;
+        QMenu*              m_pMenuDebug;
+        QMenu*              m_pMenuTempFunctions;
         QAction             m_ActionExit;
         QAction             m_ActionConnect;
         QAction             m_ActionAbout;
@@ -104,42 +98,34 @@ namespace gui_wallet
         QAction             m_ActionWalletContent;
         QAction             m_ActionUnlock;
         QAction             m_ActionImportKey;
+        QAction             m_ActionOpenCliWallet;
+        QAction             m_ActionOpenInfoDlg;
         ConnectDlg          m_ConnectDlg;
         TextDisplayDialog   m_info_dialog;
-        WalletContentDlg    m_wallet_content_dlg;
+        //WalletContentDlg    m_wallet_content_dlg;
 
-        vector<account_object>  m_vAccounts;
-    public:
-        vector<vector<asset>>   m_vAccountsBalances;
-    private:
+        //std::vector<account_object_str>  m_vAccounts;
+        //std::vector<std::vector<asset_str>>   m_vAccountsBalances;
         QVBoxLayout             m_main_layout;
         QLabel                  m_num_acc_or_error_label;
         int                     m_nError;
         std::string             m_error_string;
-        PasswordDialog          m_PasswdDialog2;
 
-    private:
-        class ImportKeyDialog : private QDialog
-        {
-        public:
-            ImportKeyDialog():m_us_name_lab(tr("Username")),m_pub_key_lab(tr("private_wif_key")){
-                m_us_name_lay.addWidget(&m_us_name_lab); m_us_name_lay.addWidget(&m_user_name);
-                m_pub_key_lay.addWidget(&m_pub_key_lab); m_pub_key_lay.addWidget(&m_pub_key);
-                m_layout.addLayout(&m_us_name_lay);m_layout.addLayout(&m_pub_key_lay);
-                setLayout(&m_layout);
-            }
+        decent::gui::tools::RichDialog m_import_key_dlg;
 
-            void exec(const QPoint& a_move,QString& a_us_nm, QString& a_pub_k)
-            {
-                m_user_name.setText(a_us_nm);m_pub_key.setText(a_pub_k);
-                QDialog::move(a_move); QDialog::exec();
-                a_us_nm = m_user_name.text();a_pub_k=m_pub_key.text();
-            }
-            QHBoxLayout m_layout;
-            QVBoxLayout m_us_name_lay, m_pub_key_lay;
-            QLabel m_us_name_lab,m_pub_key_lab;
-            QLineEdit m_user_name, m_pub_key;
-        }m_import_key_dlg;
+        CliWalletDlg                        m_cCliWalletDlg;
+        std::string                         m_cli_line;
+
+        QString                            m_cqsPreviousFilter;
+        QTextEdit*                          m_pInfoTextEdit;
+        CliWalletDlg*                        m_pcInfoDlg;
+        //std::string                         m_URI;
+        std::vector<gui_wallet::SDigitalContent> m_vcDigContent;
+        int                     m_nConnected;
+        int                     m_nUserComboTriggeredInGui;
+        SConnectionStruct   m_wdata2;
+        PasswordDialog      m_PasswdDialog;
+        int                 m_nJustConnecting;
     };
 
 }
