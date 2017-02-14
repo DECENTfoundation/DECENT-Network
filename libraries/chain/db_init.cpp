@@ -144,6 +144,7 @@ void database::initialize_evaluators()
    register_evaluator<ready_to_publish_evaluator>();
    register_evaluator<deliver_keys_evaluator>();
    register_evaluator<proof_of_custody_evaluator>();
+   register_evaluator<asset_publish_feeds_evaluator>();
 }
 
 void database::initialize_indexes()
