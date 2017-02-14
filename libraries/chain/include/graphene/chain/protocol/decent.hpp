@@ -36,6 +36,7 @@ namespace graphene { namespace chain {
       decent::crypto::custody_data cd;
       
       account_id_type fee_payer()const { return author; }
+      void validate()const;
    };
    
    struct request_to_buy_operation : public base_operation
@@ -49,6 +50,7 @@ namespace graphene { namespace chain {
       decent::crypto::d_integer_string pubKey;
       
       account_id_type fee_payer()const { return consumer; }
+      void validate()const;
    };
    
    struct leave_rating_operation : public base_operation
@@ -61,6 +63,7 @@ namespace graphene { namespace chain {
       uint64_t rating;
       
       account_id_type fee_payer()const { return consumer; }
+      void validate()const;
    };
    
    struct ready_to_publish_operation : public base_operation
@@ -74,6 +77,7 @@ namespace graphene { namespace chain {
       uint32_t price_per_MByte;
       
       account_id_type fee_payer()const { return seeder; }
+      void validate()const;
    };
    
    struct proof_of_custody_operation : public base_operation
@@ -86,6 +90,7 @@ namespace graphene { namespace chain {
       decent::crypto::custody_proof proof;
       
       account_id_type fee_payer()const { return seeder; }
+      void validate()const;
    };
    
    struct deliver_keys_operation : public base_operation
@@ -99,6 +104,7 @@ namespace graphene { namespace chain {
       decent::crypto::ciphertext_string key;
       
       account_id_type fee_payer()const { return seeder; }
+      void validate()const;
    };
    
 } } // graphene::chain
