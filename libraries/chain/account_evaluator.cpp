@@ -167,8 +167,10 @@ void_result account_update_evaluator::do_evaluate( const account_update_operatio
 
    acnt = &o.account(d);
 
-   if( o.new_options.valid() )
-      verify_account_votes( d, *o.new_options );
+   if( o.new_options.valid() ) {
+      elog("verifying up new options ${a} ${o}",("o", *o.new_options)("a", o.account ));
+      verify_account_votes(d, *o.new_options);
+   }
 
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (o) ) }
@@ -188,9 +190,14 @@ void_result account_update_evaluator::do_apply( const account_update_operation& 
          a.active = *o.active;
          a.top_n_control_flags = 0;
       }
-      if( o.new_options ) a.options = *o.new_options;
-   });
+      if( o.new_options ){
+         elog("setting up new options ${a} ${o}",("o", *o.new_options)("a", a ));
+         a.options = *o.new_options;
 
+      }
+
+   });
+   elog("a after update: ${a}",("a", *acnt ));
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (o) ) }
 

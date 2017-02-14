@@ -165,7 +165,7 @@ void test_key_manipulation()
 }
 
 void generate_params(){
-   int rbits = 80;
+   int rbits = 120;
    int qbits = 256;
 
    pbc_param_t par;
