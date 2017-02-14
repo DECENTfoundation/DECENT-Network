@@ -22,6 +22,23 @@
  * THE SOFTWARE.
  */
 
+#include "torrent_transfer.hpp"
+
+#include <decent/encrypt/encryptionutils.hpp>
+#include <graphene/package/package.hpp>
+
+#include <fc/exception/exception.hpp>
+#include <fc/network/ntp.hpp>
+#include <fc/thread/scoped_lock.hpp>
+
+#include <libtorrent/alert_types.hpp>
+#include <libtorrent/create_torrent.hpp>
+#include <libtorrent/magnet_uri.hpp>
+#include <libtorrent/torrent_info.hpp>
+//#include <libtorrent/extensions/metadata_transfer.hpp>
+#include <libtorrent/extensions/ut_metadata.hpp>
+#include <libtorrent/extensions/ut_pex.hpp>
+
 #include <boost/iostreams/device/file_descriptor.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
@@ -30,37 +47,19 @@
 #include <boost/uuid/uuid.hpp>
 #include <boost/iostreams/copy.hpp>
 #include <boost/make_shared.hpp>
-
-
-#include <graphene/package/package.hpp>
-
-#include <fc/exception/exception.hpp>
-#include <fc/network/ntp.hpp>
-#include <fc/thread/mutex.hpp>
-#include <fc/thread/scoped_lock.hpp>
+#include <boost/lexical_cast.hpp>
 
 #include <iostream>
 #include <fstream>
+#include <string>
 #include <atomic>
 
-#include <decent/encrypt/encryptionutils.hpp>
-
-
-#include <libtorrent/alert_types.hpp>
-#include <libtorrent/create_torrent.hpp>
-#include <libtorrent/magnet_uri.hpp>
-#include <libtorrent/torrent_info.hpp>
-
-
-#include "torrent_transfer.hpp"
-
-
-using namespace graphene::package;
 using namespace std;
 using namespace boost;
 using namespace boost::filesystem;
 using namespace boost::iostreams;
 using namespace libtorrent;
+using namespace graphene::package;
 
 
 namespace {
@@ -130,67 +129,115 @@ namespace {
 		if (w != int(v.size())) return -3;
 		return 0;
 	}
-
-
 }
 
+torrent_transfer::torrent_transfer(const torrent_transfer& orig)
+    : _thread(orig._thread)
+    , _session_mutex(orig._session_mutex)
+    , _session(orig._session)
+    , _default_dht_nodes(orig._default_dht_nodes)
+    , _default_trackers(orig._default_trackers)
+{
+    if (!_thread)         FC_THROW("Thread instance is not available");
+    if (!_session_mutex)  FC_THROW("Session mutex instance is not available");
+    if (!_session)        FC_THROW("Session instance is not available");
+}
 
 torrent_transfer::torrent_transfer() {
-	_my_thread = new fc::thread("torrent_thread");
+    _default_dht_nodes.push_back(std::make_pair("dht.transmissionbt.com", 6881));
+    _default_dht_nodes.push_back(std::make_pair("router.utorrent.com", 6881));
+    _default_dht_nodes.push_back(std::make_pair("router.bittorrent.com", 6881));
+    _default_dht_nodes.push_back(std::make_pair("router.bitcomet.com", 6881));
+    _default_dht_nodes.push_back(std::make_pair("dht.aelitis.com", 6881));
+    _default_dht_nodes.push_back(std::make_pair("dht.libtorrent.org", 25401));
+    _default_dht_nodes.push_back(std::make_pair("bootstrap.ring.cx", 4222));
 
+//  _default_trackers.push_back("http://9.rarbg.com:2710/announce");
+//  _default_trackers.push_back("udp://tracker.opentrackr.org:1337");
+//  _default_trackers.push_back("udp://tracker.coppersurfer.tk:6969");
+//  _default_trackers.push_back("udp://tracker.leechers-paradise.org:6969");
+//  _default_trackers.push_back("udp://zer0day.ch:1337");
+//  _default_trackers.push_back("udp://explodie.org:6969");
 
+    _thread = std::make_shared<fc::thread>("torrent_thread");
+    _session_mutex = std::make_shared<fc::mutex>();
 
-	libtorrent::settings_pack p = _session.get_settings();
-	p.set_bool(libtorrent::settings_pack::enable_lsd, true);
-	p.set_bool(libtorrent::settings_pack::enable_upnp, true);
-	p.set_bool(libtorrent::settings_pack::enable_natpmp, true);
-	p.set_bool(libtorrent::settings_pack::enable_dht, true);
-	p.set_bool(libtorrent::settings_pack::allow_multiple_connections_per_ip, true);
+    libtorrent::session_params p;
 
-	p.set_int(libtorrent::settings_pack::dht_announce_interval, 15);
-	p.set_int(libtorrent::settings_pack::active_limit, 100);
-	p.set_int(libtorrent::settings_pack::active_seeds, 90);
-	p.set_int(libtorrent::settings_pack::active_downloads, 10);
+    p.settings.set_str(libtorrent::settings_pack::user_agent, "Decent/0.1.0");
+    p.settings.set_str(libtorrent::settings_pack::peer_fingerprint, "-dst010-");
+    p.settings.set_bool(libtorrent::settings_pack::allow_multiple_connections_per_ip, true);
+    p.settings.set_bool(libtorrent::settings_pack::announce_to_all_tiers, true);
+    p.settings.set_bool(libtorrent::settings_pack::announce_to_all_trackers, true);
+    p.settings.set_bool(libtorrent::settings_pack::prefer_udp_trackers, false);
+    p.settings.set_bool(libtorrent::settings_pack::incoming_starts_queued_torrents, false);
+    p.settings.set_bool(libtorrent::settings_pack::lock_files, true);
+    p.settings.set_bool(libtorrent::settings_pack::enable_upnp, true);
+    p.settings.set_bool(libtorrent::settings_pack::enable_natpmp, true);
+    p.settings.set_bool(libtorrent::settings_pack::enable_lsd, true);
+    p.settings.set_bool(libtorrent::settings_pack::enable_dht, true);
+    p.settings.set_int(libtorrent::settings_pack::dht_announce_interval, 15);
+    p.settings.set_int(libtorrent::settings_pack::dht_upload_rate_limit, 10000);
+    p.settings.set_int(libtorrent::settings_pack::active_limit, 100);
+    p.settings.set_int(libtorrent::settings_pack::active_seeds, 90);
+    p.settings.set_int(libtorrent::settings_pack::active_downloads, 10);
 
-	p.set_str(libtorrent::settings_pack::user_agent, "DECENT");
-	
-	_session.apply_settings(p);
+    std::string orig_dht_bootstrap_nodes = p.settings.get_str(libtorrent::settings_pack::dht_bootstrap_nodes);
+    std::string dht_bootstrap_nodes;
+    for (auto dht_node : _default_dht_nodes) {
+        if (!dht_bootstrap_nodes.empty())
+            dht_bootstrap_nodes += ',';
+        dht_bootstrap_nodes += dht_node.first;
+        dht_bootstrap_nodes += ':';
+        dht_bootstrap_nodes += boost::lexical_cast<std::string>(dht_node.second);
+    }
+    if (!dht_bootstrap_nodes.empty())
+        dht_bootstrap_nodes += ',';
+    dht_bootstrap_nodes += orig_dht_bootstrap_nodes;
+    p.settings.set_str(libtorrent::settings_pack::dht_bootstrap_nodes, dht_bootstrap_nodes);
 
-	libtorrent::error_code ec;
+    p.dht_settings.search_branching = 10;
+    p.dht_settings.max_torrent_search_reply = 100;
+    p.dht_settings.restrict_routing_ips = false;
+    p.dht_settings.restrict_search_ips = false;
+    p.dht_settings.ignore_dark_internet = false;
 
-	std::vector<char> in;
-	if (load_file(".ses_state", in, ec) == 0) {
-		bdecode_node e;
-		if (bdecode(&in[0], &in[0] + in.size(), e, ec) == 0)
-			_session.load_state(e, session::save_dht_state);
-	}
+    fc::scoped_lock<fc::mutex> guard(*_session_mutex);
 
-	_session.set_alert_notify([this]() {
-		if (!_my_thread) {
-			return;
-		}
-		_my_thread->async([this] () {
-        	this->handle_torrent_alerts();           
+    _session = std::make_shared<libtorrent::session>(p);
+
+//  _session->add_extension(&libtorrent::create_metadata_plugin);
+    _session->add_extension(&libtorrent::create_ut_metadata_plugin);
+    _session->add_extension(&libtorrent::create_ut_pex_plugin);
+
+    libtorrent::error_code ec;
+
+    std::vector<char> in;
+    if (load_file(".ses_state", in, ec) == 0) {
+        bdecode_node e;
+        if (bdecode(&in[0], &in[0] + in.size(), e, ec) == 0)
+            _session->load_state(e, session::save_dht_state);
+    }
+
+    _session->set_alert_notify([this]() {
+
+        _thread->async([this] () {
+            this->handle_torrent_alerts();           
         });
-
+        
     });
-
 }
 
 torrent_transfer::~torrent_transfer() {
-	entry session_state;
-	_session.save_state(session_state, session::save_dht_state);
-	
-	_transfer_log.close();
+    if (_session.use_count() == 1)
+    {
+        entry session_state;
+        _session->save_state(session_state, session::save_dht_state);
 
-	std::vector<char> out;
-	bencode(std::back_inserter(out), session_state);
-	save_file(".ses_state", out);
-
-	_my_thread->quit();
-	
-	delete _my_thread;
-	_my_thread = NULL;
+        std::vector<char> out;
+        bencode(std::back_inserter(out), session_state);
+        save_file(".ses_state", out);
+    }
 }
 
 void torrent_transfer::print_status() {
@@ -237,133 +284,143 @@ void torrent_transfer::print_status() {
 	cout << "Announcing To Trackers/LSD/DHT: " << st.announcing_to_trackers << " / " << st.announcing_to_lsd << " / " << st.announcing_to_dht << endl;
 	cout << "Seed Mode/Seed Rank: " << st.seed_mode << " / " << st.seed_rank << endl;
 	cout << "Block Size/Num Pieces: " << st.block_size << " / " << st.num_pieces<< endl;
-
 }
 
-
 void torrent_transfer::upload_package(transfer_id id, const package_object& package, transfer_listener* listener) {
-	_id = id;
-	_listener = listener;
-	_is_upload = true;
+    _id = id;
+    _listener = listener;
+    _is_upload = true;
 
-	_my_thread->async([this, package] () {
-	
-		path log_path = package_manager::instance().get_packages_path() / "transfer.log";
-		this->_transfer_log.open(log_path.string(), std::ios::out | std::ios::app);
-		this->_transfer_log << "***** Torrent upload started for package: " << package.get_hash().str() << endl;
-    
+    _thread->async([this, package] () {
+
+        path log_path = package_manager::instance().get_packages_path() / "transfer.log";
+        this->_transfer_log.open(log_path.string(), std::ios::out | std::ios::app);
+        this->_transfer_log << "***** Torrent upload started for package: " << package.get_hash().str() << endl;
+
     });
 
+    file_storage fs;
+    libtorrent::error_code ec;
 
+    // recursively adds files in directories
+    add_files(fs, package.get_path().string());
 
-	file_storage fs;
-	libtorrent::error_code ec;
-
-	// recursively adds files in directories
-	add_files(fs, package.get_path().string());
-
-	create_torrent t(fs, 5 * 64 * 16 * 1024); // 5MB pieces
-	t.set_creator("DECENT");
+//  create_torrent t(fs, 5 * 64 * 16 * 1024); // 5MB pieces
+    create_torrent t(fs);
+    t.set_creator("Decent");
     t.set_priv(false);
 
-	// reads the files and calculates the hashes
-	set_piece_hashes(t, package.get_path().parent_path().string(), ec);
+    // reads the files and calculates the hashes
+    set_piece_hashes(t, package.get_path().parent_path().string(), ec);
 
-	if (ec) {
-		listener->on_error(_id, ec.message());
-		return;
-	}
+    if (ec) {
+        listener->on_error(_id, ec.message());
+        return;
+    }
 
-	path temp_file = temp_directory_path() / (package.get_hash().str() + ".torrent");
-	path temp_dir = temp_directory_path();
+    path temp_file = temp_directory_path() / (package.get_hash().str() + ".torrent");
+    path temp_dir = temp_directory_path();
 
-	cout << "Torrent file created: " << temp_file.string() << endl;
+    cout << "Torrent file created: " << temp_file.string() << endl;
 
-	std::ofstream out(temp_file.string(), std::ios_base::binary);
-	bencode(std::ostream_iterator<char>(out), t.generate());
-	out.close();
+    std::ofstream out(temp_file.string(), std::ios_base::binary);
+    bencode(std::ostream_iterator<char>(out), t.generate());
+    out.close();
 
-	libtorrent::add_torrent_params atp;
+    libtorrent::add_torrent_params atp;
 
-	atp.ti = std::make_shared<libtorrent::torrent_info>(temp_file.string(), 0);
-	atp.flags = libtorrent::add_torrent_params::flag_seed_mode |
-				libtorrent::add_torrent_params::flag_upload_mode |
-				//libtorrent::add_torrent_params::flag_share_mode	|
-				libtorrent::add_torrent_params::flag_super_seeding;
+    atp.ti = std::make_shared<libtorrent::torrent_info>(temp_file.string(), 0);
+    atp.flags = libtorrent::add_torrent_params::flag_seed_mode
+              | libtorrent::add_torrent_params::flag_upload_mode
+//            | libtorrent::add_torrent_params::flag_share_mode
+//            | libtorrent::add_torrent_params::flag_super_seeding
+              | libtorrent::add_torrent_params::flag_merge_resume_http_seeds
+              | libtorrent::add_torrent_params::flag_merge_resume_trackers
+              ;
+    atp.save_path = package.get_path().parent_path().string();
 
-	atp.save_path = package.get_path().parent_path().string();
+    for (auto dht_node : _default_dht_nodes) {
+        atp.dht_nodes.push_back(dht_node);
+        t.add_node(dht_node);
+    }
 
+    for (auto tracker : _default_trackers) {
+        atp.trackers.push_back(tracker);
+        t.add_tracker(tracker);
+    }
 
-	atp.dht_nodes.push_back(std::make_pair("router.utorrent.com", 6881));
-	atp.dht_nodes.push_back(std::make_pair("router.bittorrent.com", 6881));
-	atp.dht_nodes.push_back(std::make_pair("dht.transmissionbt.com", 6881));
-	atp.dht_nodes.push_back(std::make_pair("router.bitcomet.com", 6881));
-	atp.dht_nodes.push_back(std::make_pair("dht.aelitis.com", 6881));
+//  int num_pieces = atp.ti->num_pieces();
 
-	//int num_pieces = atp.ti->num_pieces();
+    {
+        fc::scoped_lock<fc::mutex> guard(*_session_mutex);
+        _torrent_handle = _session->add_torrent(atp);
+    }
 
-
-	_torrent_handle = _session.add_torrent(atp);
     _torrent_handle.set_upload_mode(true);
-    _torrent_handle.super_seeding(true);
+    _torrent_handle.super_seeding(false);
     _torrent_handle.force_dht_announce();
+    _url = make_magnet_uri(_torrent_handle);
 
+    _thread->async([this] () {
 
-	_url = make_magnet_uri(_torrent_handle);
+        this->update_torrent_status();
+        _listener->on_upload_started(_id, _url);
 
-	_my_thread->async([this] () {
-		this->update_torrent_status();
-		_listener->on_upload_started(_id, _url);
-	});
-
+    });
 }
 
 void torrent_transfer::download_package(transfer_id id, const std::string& url, transfer_listener* listener) {
-	_id = id;
-	_listener = listener;
-	_url = url;
-	_is_upload = false;
+    _id = id;
+    _listener = listener;
+    _url = url;
+    _is_upload = false;
 
-	_my_thread->async([this, url] () {
-	
-		path log_path = package_manager::instance().get_packages_path() / "transfer.log";
-		this->_transfer_log.open(log_path.string(), std::ios::out | std::ios::app);
-		this->_transfer_log << "***** Torrent download started from url: " << url << endl;
-    
+    _thread->async([this, url] () {
+
+        path log_path = package_manager::instance().get_packages_path() / "transfer.log";
+        this->_transfer_log.open(log_path.string(), std::ios::out | std::ios::app);
+        this->_transfer_log << "***** Torrent download started from url: " << url << endl;
+
     });
 
+    libtorrent::add_torrent_params atp;
 
-	libtorrent::add_torrent_params atp;
-	atp.url = url.c_str();
+    atp.url = url;
+    atp.flags = libtorrent::add_torrent_params::flag_merge_resume_http_seeds
+              | libtorrent::add_torrent_params::flag_merge_resume_trackers
+    ;
+    atp.save_path = temp_directory_path().string();
 
-	path temp_dir = temp_directory_path();
+    for (auto dht_node : _default_dht_nodes) {
+        atp.dht_nodes.push_back(dht_node);
+    }
 
-	atp.save_path = temp_dir.string();
+    for (auto tracker : _default_trackers) {
+        atp.trackers.push_back(tracker);
+    }
 
-	atp.dht_nodes.push_back(std::make_pair("router.utorrent.com", 6881));
-	atp.dht_nodes.push_back(std::make_pair("router.bittorrent.com", 6881));
-	atp.dht_nodes.push_back(std::make_pair("dht.transmissionbt.com", 6881));
-	atp.dht_nodes.push_back(std::make_pair("router.bitcomet.com", 6881));
-	atp.dht_nodes.push_back(std::make_pair("dht.aelitis.com", 6881));
+    cout << "Save path is: " << atp.save_path << endl;
 
-	cout << "Save path is: " << atp.save_path << endl;
+    {
+        fc::scoped_lock<fc::mutex> guard(*_session_mutex);
+        _torrent_handle = _session->add_torrent(atp);
+    }
 
-	_torrent_handle = _session.add_torrent(atp);
+    _thread->async([this] () {
 
-	_my_thread->async([this] () {
-		this->update_torrent_status(); 
+        this->update_torrent_status(); 
         _listener->on_download_started(_id);
-	});
+
+    });
 }
 
-
-
 void torrent_transfer::update_torrent_status() {
+    fc::scoped_lock<fc::mutex> guard(*_session_mutex);
 
-	_session.post_torrent_updates();
-	_session.post_session_stats();
-	_session.post_dht_stats();
-	_session.post_torrent_updates();
+	_session->post_torrent_updates();
+	_session->post_session_stats();
+	_session->post_dht_stats();
+	_session->post_torrent_updates();
 
 	libtorrent::torrent_status st = _torrent_handle.status();
 
@@ -391,7 +448,7 @@ void torrent_transfer::update_torrent_status() {
 	}
     
     if (!is_error) {
-        _my_thread->schedule([this] () {
+        _thread->schedule([this] () {
             this->update_torrent_status();
         }, fc::time_point::now() + fc::seconds(5));
     }
@@ -412,9 +469,10 @@ package_object torrent_transfer::check_and_install_package() {
 
 
 void torrent_transfer::handle_torrent_alerts() {
-	
+	fc::scoped_lock<fc::mutex> guard(*_session_mutex);
+
 	std::vector<libtorrent::alert*> alerts;
-	_session.pop_alerts(&alerts);
+	_session->pop_alerts(&alerts);
 
 
 	path log_path = package_manager::instance().get_packages_path() / "transfer.log";
@@ -453,12 +511,6 @@ void torrent_transfer::handle_torrent_alerts() {
 	_transfer_log.close();
 }
 
-
-
 std::string torrent_transfer::get_transfer_url(transfer_id id) {
 	return _url;
 }
-
-
-
-
