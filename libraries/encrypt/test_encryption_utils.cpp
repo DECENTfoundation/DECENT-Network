@@ -319,8 +319,8 @@ int main(int argc, char**argv)
  //  test_el_gamal(k);
    const CryptoPP::Integer secret("12354678979464");
  //  test_shamir(secret);
-   generate_params();
+//   generate_params();
 //   test_generator();
- //  test_custody();
+  test_custody();
 
 }
