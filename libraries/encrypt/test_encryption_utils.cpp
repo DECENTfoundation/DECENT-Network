@@ -11,9 +11,34 @@
 #include <string>
 #include <fc/thread/thread.hpp>
 #include <stdio.h>
-
+#include <sstream>
+#include <iomanip>
 
 using namespace std;
+
+decent::crypto::custody_utils c;
+
+namespace {
+
+std::string bytes_to_string(unsigned char *data, int len) {
+   std::stringstream ss;
+   ss << std::hex << std::setfill('0');;
+   for( int i=0; i < len; ++i )
+      ss << std::setw(2) << (int) data[i];
+   return ss.str();
+}
+
+void string_to_bytes(std::string& in, unsigned char *data, int len){
+   std::istringstream hex_chars_stream(in);
+   unsigned int c;
+   int i = 0;
+   while (hex_chars_stream >> std::hex >> c && i < len)
+   {
+      data[i] = c;
+      ++i;
+   }
+}
+}
 
 using decent::crypto::d_integer;
 void test_aes(decent::crypto::aes_key k)
@@ -121,7 +146,6 @@ void test_move(){
 
 void test_custody(){
 
-   decent::crypto::custody_utils c;
 
    //pbc_param_t par;
    //pbc_param_init_a_gen( par, 320, 1024 );
@@ -135,13 +159,17 @@ void test_custody(){
    std::cout <<"done creating custody data, "<<cd.n<<" signatures generated\n";
 
    c.create_proof_of_custody(boost::filesystem::path("/tmp/content.zip"), cd,proof);
- //  idump((proof.mus));
+   idump((proof.mus));
 
-  // cout<<"\n\n";
+   cout<<"\n\n";
   // fc::raw::pack(cout, mus);
    if(c.verify_by_miner(cd, proof))
       std::cout <<"Something wrong during verification...\n";
+   else
+      std::cout <<"Verify sucessful!\n";
+
 }
+
 void test_key_manipulation()
 {
    d_integer initial_key(123456789);
@@ -153,6 +181,142 @@ void test_key_manipulation()
    decent::crypto::aes_key k;
    for (int i = 0; i < CryptoPP::AES::MAX_KEYLENGTH; i++)
       k.key_byte[i] = key1.data()[i];
+}
+
+void generate_params(){
+   int rbits = 120;
+   int qbits = 256;
+
+   pbc_param_t par;
+   pairing_t pairing;
+   element_t generator;
+
+   pbc_param_init_a_gen(par, rbits, qbits);
+   pairing_init_pbc_param(pairing, par);
+   element_init_G1(generator, pairing);
+   element_random(generator);
+
+   pbc_param_out_str(stdout, par);
+   element_printf("generator: %B\n",generator);
+   element_printf("size of compressed: %i\n", element_length_in_bytes_compressed(generator));
+   element_printf("size of element: %i\n", element_length_in_bytes(generator));
+   pbc_param_clear(par);
+
+}
+
+void test_generator(){
+   pairing_t pairing;
+   pairing_init_set_str(pairing, _DECENT_PAIRING_PARAM_);
+
+   mpz_t d1, d2, d3, d4, d5, d6, d7;
+   mpz_init(d1);
+   mpz_init(d2);
+   mpz_init(d3);
+   mpz_init(d4);
+   mpz_init(d5);
+   mpz_init(d6);
+   mpz_init(d7);
+
+   mpz_set_str(d1,"2", 10);
+   mpz_set_str(d2,"521", 10);
+   mpz_set_str(d3,"1831", 10);
+   mpz_set_str(d4,"3067", 10);
+   mpz_set_str(d5,"1294097889777887", 10);
+   mpz_set_str(d6,"1838050274902939515372107", 10);
+   mpz_set_str(d7,"1384673317831887198890420341", 10);
+
+   gmp_printf("d 1: %Zd\n",d1);
+   gmp_printf("d 2: %Zd\n",d2);
+   gmp_printf("d 3: %Zd\n",d3);
+   gmp_printf("d 4: %Zd\n",d4);
+   gmp_printf("d 5: %Zd\n",d5);
+   gmp_printf("d 6: %Zd\n",d6);
+   gmp_printf("d 7: %Zd\n",d7);
+
+   mpz_t div1, div2, div3, div4, div5, div6, div7;
+   mpz_init(div1);
+   mpz_init(div2);
+   mpz_init(div3);
+   mpz_init(div4);
+   mpz_init(div5);
+   mpz_init(div6);
+   mpz_init(div7);
+
+
+   mpz_t generator, q_1, q;
+   mpz_init(generator);
+   mpz_set_str(generator, "7977292573950573139348745395838273061335633755132672699089713070964550373066", 10);
+   mpz_init(q_1);
+   mpz_init(q);
+   mpz_set_str(q_1, "19272660807011559256818799230684110654222222307969261359333503297662619279546", 10);
+   mpz_set_str(q, "19272660807011559256818799230684110654222222307969261359333503297662619279547", 10);
+
+   gmp_printf("generator: %Zd\n",generator);
+   gmp_printf("q: %Zd\n",q);
+   gmp_printf("q-1: %Zd\n",q_1);
+
+   mpz_cdiv_q(div1, q_1, d1 );
+   mpz_cdiv_q(div2, q_1, d2 );
+   mpz_cdiv_q(div3, q_1, d3 );
+   mpz_cdiv_q(div4, q_1, d4 );
+   mpz_cdiv_q(div5, q_1, d5 );
+   mpz_cdiv_q(div6, q_1, d6 );
+   mpz_cdiv_q(div7, q_1, d7 );
+
+   gmp_printf("exp 1: %Zd\n",div1);
+   gmp_printf("exp 2: %Zd\n",div2);
+   gmp_printf("exp 3: %Zd\n",div3);
+   gmp_printf("exp 4: %Zd\n",div4);
+   gmp_printf("exp 5: %Zd\n",div5);
+   gmp_printf("exp 6: %Zd\n",div6);
+   gmp_printf("exp 7: %Zd\n",div7);
+
+   mpz_powm(d1, generator, div1, q);
+   mpz_powm(d2, generator, div2, q);
+   mpz_powm(d3, generator, div3, q);
+   mpz_powm(d4, generator, div4, q);
+   mpz_powm(d5, generator, div5, q);
+   mpz_powm(d6, generator, div6, q);
+   mpz_powm(d7, generator, div7, q);
+
+   element_printf("result 1: %Zd\n",d1);
+   element_printf("result 2: %Zd\n",d2);
+   element_printf("result 3: %Zd\n",d3);
+   element_printf("result 4: %Zd\n",d4);
+   element_printf("result 5: %Zd\n",d5);
+   element_printf("result 6: %Zd\n",d6);
+   element_printf("result 7: %Zd\n",d7);
+
+
+   element_t gen, out;
+   element_init_G1(gen,pairing);
+   element_set_str(gen, _DECENT_GENERATOR_, 10);
+   element_init_G1(out, pairing);
+   mpz_t r;
+   mpz_init(r);
+   mpz_set_str(r, "1208925819614629174702078", 10);
+
+   mpz_set_str(d1,"2", 10);
+   mpz_set_str(d2,"17", 10);
+   mpz_set_str(d3,"5927", 10);
+   mpz_set_str(d4,"4614553", 10);
+   mpz_set_str(d5,"1300038369857", 10);
+/*   mpz_cdiv_q(div1, r, d1 );
+   mpz_cdiv_q(div2, r, d2 );
+   mpz_cdiv_q(div3, r, d3 );
+   mpz_cdiv_q(div4, r, d4 );
+   mpz_cdiv_q(div5, r, d5 ); */
+
+   element_pow_mpz(out, gen, div1);
+   element_printf("final result 1: %B", out);
+   element_pow_mpz(out, gen, div2);
+   element_printf("final result 2: %B", out);
+   element_pow_mpz(out, gen, div3);
+   element_printf("final result 3: %B", out);
+   element_pow_mpz(out, gen, div4);
+   element_printf("final result 4: %B", out);
+   element_pow_mpz(out, gen, div5);
+   element_printf("final result 5: %B", out);
 
 
 
@@ -165,7 +329,7 @@ int main(int argc, char**argv)
 //      k.key_byte[i]=i;
  //  test_aes(k);
    cout<<"AES finished \n";
-   test_key_manipulation();
+//   test_key_manipulation();
 //   test_el_gamal(k);
 //   const CryptoPP::Integer secret("12354678979464");
  //  test_shamir(secret);
@@ -174,7 +338,8 @@ int main(int argc, char**argv)
  //  test_el_gamal(k);
    const CryptoPP::Integer secret("12354678979464");
  //  test_shamir(secret);
-
-   test_custody();
+//   generate_params();
+//   test_generator();
+  test_custody();
 
 }

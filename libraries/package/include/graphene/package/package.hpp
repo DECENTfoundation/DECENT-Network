@@ -133,6 +133,8 @@ public:
 
 	package_transfer_interface::transfer_id download_package( const std::string& url,
 															  package_transfer_interface::transfer_listener& listener );
+
+
 	
 	std::vector<package_object> get_packages();
 	package_object				get_package_object(fc::ripemd160 hash);

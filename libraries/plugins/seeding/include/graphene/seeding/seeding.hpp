@@ -79,7 +79,9 @@ public:
    virtual void on_upload_started(package_transfer_interface::transfer_id id, const std::string& url) {}
    virtual void on_upload_finished(package_transfer_interface::transfer_id id) {}
    virtual void on_upload_progress(package_transfer_interface::transfer_id id, package_transfer_interface::transfer_progress progress) {}
-   virtual void on_error(package::package_transfer_interface::transfer_id, std::string error){} 
+   virtual void on_error(package::package_transfer_interface::transfer_id, std::string error){}
+
+   void restart_downloads();
    void send_ready_to_publish();
    seeding_plugin& _self;
    std::map<package_transfer_interface::transfer_id, my_seeding_id_type> active_downloads;

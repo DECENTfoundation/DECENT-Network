@@ -8,22 +8,42 @@
 #include <openssl/rand.h>
 #include <fc/exception/exception.hpp>
 #include <fc/crypto/sha256.hpp>
+#include <sstream>
+#include <iomanip>
+
 
 namespace decent{
 namespace crypto{
 
+namespace {
 
+std::string bytes_to_string(unsigned char *data, int len) {
+   std::stringstream ss;
+   ss << std::hex << std::setfill('0');;
+   for( int i=0; i < len; ++i )
+      ss << std::setw(2) << (int) data[i];
+   return ss.str();
+}
 
+void string_to_bytes(std::string& in, unsigned char data[], int len){
+
+   const char * s = in.c_str();
+   for(int i = 0; i < len && i*2 < in.size(); ++i){
+      char ch1 = s[i*2]; char ch2 = s[i*2+1];
+      unsigned char res = ((ch1 >= 'a')? (ch1 - 'a' + 10): (ch1 - '0'))*16+((ch2 >= 'a')? (ch2 - 'a' + 10): (ch2 - '0'));
+      data[i]=res;
+   }
+}
+}
 custody_utils::custody_utils()
 {
    pairing_init_set_str(pairing, _DECENT_PAIRING_PARAM_);
    element_t private_key, public_key;
 
    element_init_G1(generator, pairing);
-   //element_init_Zr(private_key, pairing);
-   //element_init_G1(public_key, pairing);
 
    element_set_str(generator, _DECENT_GENERATOR_, 10);
+   element_printf("size of element: %i\n", element_length_in_bytes(generator));
    //element_random(private_key);
    //element_pow_zn(public_key, generator, private_key);
 }
@@ -297,18 +317,17 @@ int custody_utils::unpack_proof(valtype proof, element_t &sigma, element_t **mu)
 int custody_utils::compute_sigma(element_t sigmas[], unsigned int q, int indices[], element_t v[], element_t &sigma)
 {
    element_init_G1(sigma, pairing);
+   element_set1(sigma);
+
+   element_t temp;
+   element_init_G1(temp ,pairing);
 
    for (int i = 0; i < q; i++)
    {
-      element_t temp;
-      element_init_G1(temp ,pairing);
       element_pow_zn(temp, sigmas[indices[i]], v[i]);
-      if (i)
-         element_mul(sigma, sigma, temp);
-      else
-         element_set(sigma, temp);
-      element_clear(temp);
+      element_mul(sigma, sigma, temp);
    }
+   element_clear(temp);
    return 0;
 }
 
@@ -324,7 +343,7 @@ int custody_utils::get_number_of_query(int blocks)
 
 
 int custody_utils::verify_by_miner(const uint32_t &n, const char *u_seed, unsigned char *pubKey, unsigned char sigma[],
-                                   std::vector<std::vector<unsigned char>> mus, mpz_t seed)
+                                   std::vector<std::string> mus, mpz_t seed)
 {
    //prepate public_key and u
    element_t public_key;
@@ -353,12 +372,14 @@ int custody_utils::verify_by_miner(const uint32_t &n, const char *u_seed, unsign
 
    element_init_G1(_sigma, pairing);
    element_from_bytes_compressed(_sigma, sigma);
+
    for (int i = 0; i < DECENT_SECTORS; i++)
    {
       element_init_Zr(mu[i], pairing);
-      element_from_bytes(mu[i], reinterpret_cast<unsigned char*>(mus[i].data())); 
+      unsigned char buffer[DECENT_SIZE_OF_MU];
+      string_to_bytes(mus[i], buffer, DECENT_SIZE_OF_MU );
+      element_from_bytes(mu[i], buffer);
    }
-
 
    unsigned int q = get_number_of_query( n );
    int indices[q];
@@ -387,7 +408,6 @@ int custody_utils::create_custody_data(path content, uint32_t& n, char u_seed[],
    infile.seekg(0, infile.beg);
    outfile.seekp(0);
 
-   //std:: cout<< "Pairing export lenght: "<<pairing_length_in_bytes_compressed_G1(pairing)<<"\n";
    //prepare elements _u, m, seedForU and keys
    element_t **m;
    element_t u[DECENT_SECTORS];
@@ -456,7 +476,7 @@ int custody_utils::create_custody_data(path content, uint32_t& n, char u_seed[],
 }
 
 int custody_utils::create_proof_of_custody(path content, const uint32_t n, const char u_seed[], unsigned char pubKey[],
-                                           unsigned char sigma[], std::vector<std::vector<unsigned char>> &mus, mpz_t seed)
+                                           unsigned char sigma[], std::vector<std::string> &mus, mpz_t seed)
 {
    //open files
    std::fstream infile(content.c_str(), std::fstream::binary | std::fstream::in);
@@ -521,12 +541,15 @@ int custody_utils::create_proof_of_custody(path content, const uint32_t n, const
    //pack the proof
    element_to_bytes_compressed(sigma, _sigma);
    mus.clear();
-   unsigned char buffer_mu [DECENT_SIZE_OF_NUMBER_IN_THE_FIELD];
+   //TODO_DECENT change the following code to store in hexadecimal string
+   unsigned char buffer_mu [DECENT_SIZE_OF_MU];
+
    for (int i = 0; i < DECENT_SECTORS; i++)
    {
+      memset(buffer_mu, 0, DECENT_SIZE_OF_MU);
       element_to_bytes(buffer_mu, mu[i]);
-      std::vector<unsigned char> tmp(buffer_mu, buffer_mu + DECENT_SIZE_OF_NUMBER_IN_THE_FIELD);
-      mus.push_back(tmp);
+      std::string s = bytes_to_string(buffer_mu, DECENT_SIZE_OF_MU);
+      mus.push_back(s);
    }
 
    //TODO_DECENT
