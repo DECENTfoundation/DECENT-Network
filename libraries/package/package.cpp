@@ -109,18 +109,14 @@ public:
 };
 
 
-
-
 class dearchiver {
-	filtering_istream&       _in;
+    filtering_istream& _in;
 
 public:
-	dearchiver(filtering_istream& in): _in(in) {
+    dearchiver(filtering_istream& in) : _in(in) { }
 
-	}
-
-	bool extract(const std::string& output_path) {
-		arc_header header;
+    bool extract(const std::string& output_dir) {
+        arc_header header;
 
         while (true) {
             std::memset((void*)&header, 0, sizeof(arc_header));
@@ -128,46 +124,60 @@ public:
             if (header.type == 0) {
                 break;
             }
-            
-            path file_path(header.name);
-            path file_location = output_path / file_path.parent_path();
 
-            if (!is_directory(file_location) && !create_directories(file_location)) {
-                FC_THROW("Unable to create directory");    
+            const path file_path = output_dir / header.name;
+            const path file_dir = file_path.parent_path();
+
+            if (!exists(file_dir)) {
+                try {
+                    if (!create_directories(file_dir) && !is_directory(file_dir)) {
+                        FC_THROW("Unable to create ${dir} directory", ("dir", file_dir.string()) );
+                    }
+                }
+                catch (const boost::filesystem::filesystem_error& ex) {
+                    if (!is_directory(file_dir)) {
+                        FC_THROW("Unable to create ${dir} directory: ${error}", ("dir", file_dir.string()) ("error", ex.what()) );
+                    }
+                }
             }
-            
-            std::fstream sink((output_path / file_path).string(), ios::out | ios::binary);
-            
-            int bytes_to_read = *(int*)header.size;
-            char buffer[ARC_BUFFER_SIZE];
-            
-            int bytes_read = boost::iostreams::read(_in, buffer, std::min(ARC_BUFFER_SIZE, bytes_to_read));
-            
-            while (bytes_read > 0 && bytes_to_read > 0) {
+            else if (!is_directory(file_dir)) {
+                FC_THROW("Unable to create ${dir} directory: file exists", ("dir", file_dir.string()) );
+            }
 
-                sink.write(buffer, bytes_read);
-                bytes_to_read -= bytes_read;
-                if (bytes_to_read == 0) {
+            std::fstream sink(file_path.string(), ios::out | ios::binary);
+            if (!sink.is_open()) {
+                FC_THROW("Unable to open file ${file} for writing", ("file", file_path.string()) );
+            }
+
+            char buffer[ARC_BUFFER_SIZE];
+            int bytes_to_read = *(int*)header.size;
+
+            if (bytes_to_read < 0) {
+                FC_THROW("Unexpected size in header");
+            }
+
+            while (bytes_to_read > 0) {
+                const int bytes_read = boost::iostreams::read(_in, buffer, std::min(ARC_BUFFER_SIZE, bytes_to_read));
+                if (bytes_read < 0) {
                     break;
                 }
-                bytes_read = boost::iostreams::read(_in, buffer, std::min(ARC_BUFFER_SIZE, bytes_to_read));
+
+                sink.write(buffer, bytes_read);
+                if (sink.bad()) {
+                    FC_THROW("Unable to write to file ${file}", ("file", file_path.string()) );
+                }
+
+                bytes_to_read -= bytes_read;
             }
-            
-            if (bytes_read < 0 && bytes_to_read > 0) {
+
+            if (bytes_to_read != 0) {
                 FC_THROW("Unexpected end of file");
             }
-            
-            sink.close();
         }
         
         return true;
-        
-	}
-
-
+    }
 };
-
-
 
 
 string make_uuid() {
@@ -319,29 +329,37 @@ package_manager::package_manager() {
 }
 
 bool package_manager::unpack_package(const path& destination_directory, const package_object& package, const fc::sha512& key) {
-    
-
     if (!package.is_valid()) {
         FC_THROW("Invalid package");
     }
 
-	if (!is_directory(destination_directory)) {
-        FC_THROW("Destination directory not found");
-	}
-
-	if (!is_directory(package.get_path())) {
+    if (!is_directory(package.get_path())) {
         FC_THROW("Package path is not directory");
-	}
+    }
 
     if (CryptoPP::AES::MAX_KEYLENGTH > key.data_size()) {
         FC_THROW("CryptoPP::AES::MAX_KEYLENGTH is bigger than key size");
     }
-	
-	path archive_file = package.get_content_file();
-    path temp_dir = temp_directory_path();
 
+    if (!exists(destination_directory)) {
+        try {
+            if (!create_directories(destination_directory) && !is_directory(destination_directory)) {
+                FC_THROW("Unable to create destination directory");
+            }
+        }
+        catch (const boost::filesystem::filesystem_error& ex) {
+            if (!is_directory(destination_directory)) {
+                FC_THROW("Unable to create destination directory: ${error}", ("error", ex.what()) );
+            }
+        }
+    }
+    else if (!is_directory(destination_directory)) {
+        FC_THROW("Unable to create destination directory: file exists");
+    }
+
+    path archive_file = package.get_content_file();
+    path temp_dir = temp_directory_path();
     path zip_file = temp_dir / "content.zip";
-    
 
     decent::crypto::aes_key k;
     for (int i = 0; i < CryptoPP::AES::MAX_KEYLENGTH; i++)
@@ -353,14 +371,12 @@ bool package_manager::unpack_package(const path& destination_directory, const pa
 
     AES_decrypt_file(archive_file.string(), zip_file.string(), k);
 
-    
     filtering_istream istr;
     istr.push(gzip_decompressor());
     istr.push(file_source(zip_file.string(), std::ifstream::binary));
-    
+
     dearchiver dearc(istr);
     dearc.extract(destination_directory.string());
-
 
 	return true;
 }
