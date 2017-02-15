@@ -82,7 +82,7 @@ public:
     * @return 0 if success
     */
    int verify_by_miner(const uint32_t &n, const char *u_seed, unsigned char *pubKey, unsigned char sigma[],
-                       std::vector<std::vector<unsigned char>> mus, mpz_t seed);
+                       std::vector<std::string> mus, mpz_t seed);
    /**
     * Creates custody signatures in file content.cus;
     * @param content
@@ -104,7 +104,7 @@ public:
     * @return 0 if success
     */
    int create_proof_of_custody(boost::filesystem::path content, const uint32_t n, const char u_seed[], unsigned char pubKey[],
-                               unsigned char sigma[], std::vector<std::vector<unsigned char>> &mus, mpz_t seed);
+                               unsigned char sigma[], std::vector<std::string> &mus, mpz_t seed);
 
 private:
    element_t generator;
