@@ -135,6 +135,8 @@ torrent_transfer::torrent_transfer(const torrent_transfer& orig)
     : _thread(orig._thread)
     , _session_mutex(orig._session_mutex)
     , _session(orig._session)
+    , _lifetime_info_mutex(std::make_shared<fc::mutex>())
+    , _instance_exists(std::make_shared<std::atomic<bool>>(true))
     , _default_dht_nodes(orig._default_dht_nodes)
     , _default_trackers(orig._default_trackers)
 {
@@ -143,7 +145,10 @@ torrent_transfer::torrent_transfer(const torrent_transfer& orig)
     if (!_session)        FC_THROW("Session instance is not available");
 }
 
-torrent_transfer::torrent_transfer() {
+torrent_transfer::torrent_transfer()
+    : _lifetime_info_mutex(std::make_shared<fc::mutex>())
+    , _instance_exists(std::make_shared<std::atomic<bool>>(true))
+{
     _default_dht_nodes.push_back(std::make_pair("dht.transmissionbt.com", 6881));
     _default_dht_nodes.push_back(std::make_pair("router.utorrent.com", 6881));
     _default_dht_nodes.push_back(std::make_pair("router.bittorrent.com", 6881));
@@ -219,16 +224,25 @@ torrent_transfer::torrent_transfer() {
             _session->load_state(e, session::save_dht_state);
     }
 
-    _session->set_alert_notify([this]() {
+    auto lifetime_info_mutex = _lifetime_info_mutex;
+    auto instance_exists = _instance_exists;
+    _session->set_alert_notify([this, lifetime_info_mutex, instance_exists]() {
 
-        _thread->async([this] () {
-            this->handle_torrent_alerts();           
+        _thread->async([this, lifetime_info_mutex, instance_exists] () {
+
+            fc::scoped_lock<fc::mutex> guard(*lifetime_info_mutex);
+            if (*instance_exists) {
+                this->handle_torrent_alerts();
+            }
+
         });
-        
+
     });
 }
 
 torrent_transfer::~torrent_transfer() {
+    fc::scoped_lock<fc::mutex> guard(*_lifetime_info_mutex);
+
     if (_session.use_count() == 1)
     {
         entry session_state;
@@ -238,6 +252,11 @@ torrent_transfer::~torrent_transfer() {
         bencode(std::back_inserter(out), session_state);
         save_file(".ses_state", out);
     }
+
+//  _lifetime_info_mutex->unlock();
+//  _lifetime_info_mutex->lock();
+
+    *_instance_exists = false;
 }
 
 void torrent_transfer::print_status() {
@@ -291,11 +310,16 @@ void torrent_transfer::upload_package(transfer_id id, const package_object& pack
     _listener = listener;
     _is_upload = true;
 
-    _thread->async([this, package] () {
+    auto lifetime_info_mutex = _lifetime_info_mutex;
+    auto instance_exists = _instance_exists;
+    _thread->async([this, package, lifetime_info_mutex, instance_exists] () {
 
-        path log_path = package_manager::instance().get_packages_path() / "transfer.log";
-        this->_transfer_log.open(log_path.string(), std::ios::out | std::ios::app);
-        this->_transfer_log << "***** Torrent upload started for package: " << package.get_hash().str() << endl;
+        fc::scoped_lock<fc::mutex> guard(*lifetime_info_mutex);
+        if (*instance_exists) {
+            path log_path = package_manager::instance().get_packages_path() / "transfer.log";
+            this->_transfer_log.open(log_path.string(), std::ios::out | std::ios::app);
+            this->_transfer_log << "***** Torrent upload started for package: " << package.get_hash().str() << endl;
+        }
 
     });
 
@@ -361,10 +385,13 @@ void torrent_transfer::upload_package(transfer_id id, const package_object& pack
     _torrent_handle.force_dht_announce();
     _url = make_magnet_uri(_torrent_handle);
 
-    _thread->async([this] () {
+    _thread->async([this, lifetime_info_mutex, instance_exists] () {
 
-        this->update_torrent_status();
-        _listener->on_upload_started(_id, _url);
+        fc::scoped_lock<fc::mutex> guard(*lifetime_info_mutex);
+        if (*instance_exists) {
+            this->update_torrent_status();
+            _listener->on_upload_started(_id, _url);
+        }
 
     });
 }
@@ -375,11 +402,16 @@ void torrent_transfer::download_package(transfer_id id, const std::string& url, 
     _url = url;
     _is_upload = false;
 
-    _thread->async([this, url] () {
+    auto lifetime_info_mutex = _lifetime_info_mutex;
+    auto instance_exists = _instance_exists;
+    _thread->async([this, url, lifetime_info_mutex, instance_exists] () {
 
-        path log_path = package_manager::instance().get_packages_path() / "transfer.log";
-        this->_transfer_log.open(log_path.string(), std::ios::out | std::ios::app);
-        this->_transfer_log << "***** Torrent download started from url: " << url << endl;
+        fc::scoped_lock<fc::mutex> guard(*lifetime_info_mutex);
+        if (*instance_exists) {
+            path log_path = package_manager::instance().get_packages_path() / "transfer.log";
+            this->_transfer_log.open(log_path.string(), std::ios::out | std::ios::app);
+            this->_transfer_log << "***** Torrent download started from url: " << url << endl;
+        }
 
     });
 
@@ -406,10 +438,13 @@ void torrent_transfer::download_package(transfer_id id, const std::string& url, 
         _torrent_handle = _session->add_torrent(atp);
     }
 
-    _thread->async([this] () {
+    _thread->async([this, lifetime_info_mutex, instance_exists] () {
 
-        this->update_torrent_status(); 
-        _listener->on_download_started(_id);
+        fc::scoped_lock<fc::mutex> guard(*lifetime_info_mutex);
+        if (*instance_exists) {
+            this->update_torrent_status();
+            _listener->on_download_started(_id);
+        }
 
     });
 }

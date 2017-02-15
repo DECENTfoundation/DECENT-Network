@@ -59,6 +59,10 @@ private: // These will be shared by all clones (via clone()) of the initial inst
     std::shared_ptr<fc::mutex>            _session_mutex;
     std::shared_ptr<libtorrent::session>  _session;
 
+private: // These are used to maintain instance lifetime info, and will be shared by all async callbacks that access this instance.
+    std::shared_ptr<fc::mutex>                 _lifetime_info_mutex;
+    std::shared_ptr<std::atomic<bool>>         _instance_exists;
+
 private:
     std::vector<std::pair<std::string, int> >  _default_dht_nodes;
     std::vector<std::string>                   _default_trackers;
