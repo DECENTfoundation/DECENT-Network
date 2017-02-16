@@ -11,12 +11,34 @@
 #include <string>
 #include <fc/thread/thread.hpp>
 #include <stdio.h>
-
+#include <sstream>
+#include <iomanip>
 
 using namespace std;
 
 decent::crypto::custody_utils c;
 
+namespace {
+
+std::string bytes_to_string(unsigned char *data, int len) {
+   std::stringstream ss;
+   ss << std::hex << std::setfill('0');;
+   for( int i=0; i < len; ++i )
+      ss << std::setw(2) << (int) data[i];
+   return ss.str();
+}
+
+void string_to_bytes(std::string& in, unsigned char *data, int len){
+   std::istringstream hex_chars_stream(in);
+   unsigned int c;
+   int i = 0;
+   while (hex_chars_stream >> std::hex >> c && i < len)
+   {
+      data[i] = c;
+      ++i;
+   }
+}
+}
 
 using decent::crypto::d_integer;
 void test_aes(decent::crypto::aes_key k)
@@ -137,9 +159,9 @@ void test_custody(){
    std::cout <<"done creating custody data, "<<cd.n<<" signatures generated\n";
 
    c.create_proof_of_custody(boost::filesystem::path("/tmp/content.zip"), cd,proof);
- //  idump((proof.mus));
+   idump((proof.mus));
 
-  // cout<<"\n\n";
+   cout<<"\n\n";
   // fc::raw::pack(cout, mus);
    if(c.verify_by_miner(cd, proof))
       std::cout <<"Something wrong during verification...\n";
@@ -159,9 +181,6 @@ void test_key_manipulation()
    decent::crypto::aes_key k;
    for (int i = 0; i < CryptoPP::AES::MAX_KEYLENGTH; i++)
       k.key_byte[i] = key1.data()[i];
-
-
-
 }
 
 void generate_params(){

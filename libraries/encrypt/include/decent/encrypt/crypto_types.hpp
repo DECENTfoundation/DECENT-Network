@@ -43,6 +43,7 @@
 #include <fc/array.hpp>
 
 #define DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED 65
+#define DECENT_SIZE_OF_MU 32
 #define DECENT_SECTORS 32
 
 
@@ -153,7 +154,7 @@ struct custody_data{
 struct custody_proof{
    uint32_t reference_block;
    fc::array<uint32_t,5> seed; //ripemd160._hash of the reference block
-   std::vector<std::vector<unsigned char>> mus;
+   std::vector<std::string> mus;
    fc::array<uint8_t,DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED> sigma;
 };
 
@@ -190,14 +191,14 @@ struct aes_key {
 
 namespace fc {
 
-inline void to_variant( const decent::crypto::d_integer& var,  fc::variant& vo ) {
+inline void to_variant(const decent::crypto::d_integer &var, fc::variant &vo) {
    vo = var.to_string();
 }
 
-inline void from_variant( const fc::variant& var, decent::crypto::d_integer& vo ) {
-   vo = decent::crypto::d_integer::from_string( var.as_string() );
+inline void from_variant(const fc::variant &var, decent::crypto::d_integer &vo) {
+   vo = decent::crypto::d_integer::from_string(var.as_string());
 }
-
+}
 namespace raw {
 template<typename Stream>
 inline void pack( Stream& s, const decent::crypto::d_integer& tp )
@@ -213,7 +214,6 @@ inline void unpack( Stream& s, decent::crypto::d_integer& tp )
    tp = decent::crypto::d_integer::from_string(p);
 }
 
-}
 }
 
 
