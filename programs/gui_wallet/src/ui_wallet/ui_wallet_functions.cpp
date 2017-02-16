@@ -209,7 +209,9 @@ __DLL_EXPORT__ int SetNewTask_base(const std::string& a_inp_line, void* a_owner,
         errStr = "First connet to witness node";
     }
 
-    if(nReturn){(*fpTaskDone)(a_owner,a_clbData,NO_API_INITED, a_inp_line, errStr);}
+    if (nReturn) {
+        (*fpTaskDone)(a_owner, a_clbData,NO_API_INITED, a_inp_line, errStr);
+    }
 
     return nReturn;
 }
