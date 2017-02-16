@@ -236,6 +236,7 @@ namespace graphene { namespace chain {
          FC_ASSERT(bid._hash[i] == o.proof.seed.data[i],"Block ID does not match; wrong chain?");
       FC_ASSERT(db().head_block_num() <= o.proof.reference_block - 6,"Block reference is too old");
       FC_ASSERT( _custody_utils.verify_by_miner( content->cd, o.proof ) == 0, "Invalid proof of delivery" );
+      elog("proof_of_custody OK");
    }FC_CAPTURE_AND_RETHROW( (o) ) }
    
    void_result proof_of_custody_evaluator::do_apply(const proof_of_custody_operation& o )

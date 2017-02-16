@@ -190,16 +190,19 @@ void generate_params(){
    pbc_param_t par;
    pairing_t pairing;
    element_t generator;
+   element_t zr;
 
    pbc_param_init_a_gen(par, rbits, qbits);
    pairing_init_pbc_param(pairing, par);
    element_init_G1(generator, pairing);
    element_random(generator);
+   element_init_Zr(zr, pairing);
 
    pbc_param_out_str(stdout, par);
    element_printf("generator: %B\n",generator);
    element_printf("size of compressed: %i\n", element_length_in_bytes_compressed(generator));
    element_printf("size of element: %i\n", element_length_in_bytes(generator));
+   element_printf("size of Zr element: %i\n", element_length_in_bytes(zr));
    pbc_param_clear(par);
 
 }
@@ -292,33 +295,40 @@ void test_generator(){
    element_init_G1(gen,pairing);
    element_set_str(gen, _DECENT_GENERATOR_, 10);
    element_init_G1(out, pairing);
-   mpz_t r;
-   mpz_init(r);
-   mpz_set_str(r, "1208925819614629174702078", 10);
+   mpz_t r_1, pow;
+   mpz_init(r_1);
+   mpz_init(pow);
+   mpz_set_str(r_1, "1287689620916637251875563089646583806", 10);
 
    mpz_set_str(d1,"2", 10);
-   mpz_set_str(d2,"17", 10);
-   mpz_set_str(d3,"5927", 10);
-   mpz_set_str(d4,"4614553", 10);
-   mpz_set_str(d5,"1300038369857", 10);
-/*   mpz_cdiv_q(div1, r, d1 );
-   mpz_cdiv_q(div2, r, d2 );
-   mpz_cdiv_q(div3, r, d3 );
-   mpz_cdiv_q(div4, r, d4 );
-   mpz_cdiv_q(div5, r, d5 ); */
+   mpz_set_str(d2,"3", 10);
+   mpz_set_str(d3,"11", 10);
+   mpz_set_str(d4,"1231", 10);
+   mpz_set_str(d5,"71333", 10);
+   mpz_set_str(d6,"55291858733", 10);
+   mpz_set_str(d7,"4018440366064049", 10);
 
-   element_pow_mpz(out, gen, div1);
+   mpz_div(pow,r_1,d1);
+   element_pow_mpz(out, gen, pow);
    element_printf("final result 1: %B", out);
-   element_pow_mpz(out, gen, div2);
+   mpz_div(pow,r_1,d2);
+   element_pow_mpz(out, gen, pow);
    element_printf("final result 2: %B", out);
-   element_pow_mpz(out, gen, div3);
+   mpz_div(pow,r_1,d3);
+   element_pow_mpz(out, gen, pow);
    element_printf("final result 3: %B", out);
-   element_pow_mpz(out, gen, div4);
+   mpz_div(pow,r_1,d4);
+   element_pow_mpz(out, gen, pow);
    element_printf("final result 4: %B", out);
-   element_pow_mpz(out, gen, div5);
+   mpz_div(pow,r_1,d5);
+   element_pow_mpz(out, gen, pow);
    element_printf("final result 5: %B", out);
-
-
+   mpz_div(pow,r_1,d6);
+   element_pow_mpz(out, gen, pow);
+   element_printf("final result 6: %B", out);
+   mpz_div(pow,r_1,d7);
+   element_pow_mpz(out, gen, pow);
+   element_printf("final result 7: %B", out);
 
 }
 
@@ -333,7 +343,7 @@ int main(int argc, char**argv)
 //   test_el_gamal(k);
 //   const CryptoPP::Integer secret("12354678979464");
  //  test_shamir(secret);
-   test_move();
+  // test_move();
 
  //  test_el_gamal(k);
    const CryptoPP::Integer secret("12354678979464");
