@@ -25,7 +25,7 @@ namespace graphene { namespace chain {
          const auto& itr = idx.find( p );
          FC_ASSERT( itr != idx.end(), "seeder does not exist" );
          FC_ASSERT( itr->free_space > o.size );
-         total_price_per_day += itr-> price;
+         total_price_per_day += itr-> price.amount * o.size;
       }
       FC_ASSERT( o.seeders.size() == o.key_parts.size() );
       FC_ASSERT( db().head_block_time() <= o.expiration);
