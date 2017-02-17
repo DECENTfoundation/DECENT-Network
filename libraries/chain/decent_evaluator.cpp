@@ -268,4 +268,24 @@ namespace graphene { namespace chain {
       }
    }FC_CAPTURE_AND_RETHROW( (o) ) }
 
+   void_result return_escrow_submission_evaluator::do_evaluate(const return_escrow_submission_operation& o )
+   {
+
+   }
+
+   void_result return_escrow_submission_evaluator::do_apply(const return_escrow_submission_operation& o )
+   {
+
+   }
+
+   void_result return_escrow_buying_evaluator::do_evaluate(const return_escrow_buying_operation& o )
+   {
+
+   }
+
+   void_result return_escrow_buying_evaluator::do_apply(const return_escrow_buying_operation& o )
+   {
+
+   }
+
 }} // graphene::chain

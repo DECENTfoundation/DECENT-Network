@@ -145,6 +145,8 @@ void database::initialize_evaluators()
    register_evaluator<deliver_keys_evaluator>();
    register_evaluator<proof_of_custody_evaluator>();
    register_evaluator<asset_publish_feeds_evaluator>();
+   register_evaluator<return_escrow_submission_evaluator>();
+   register_evaluator<return_escrow_buying_evaluator>();
 }
 
 void database::initialize_indexes()

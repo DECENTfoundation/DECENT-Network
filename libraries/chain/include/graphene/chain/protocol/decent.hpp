@@ -2,6 +2,7 @@
 #include <graphene/chain/protocol/base.hpp>
 #include <graphene/chain/protocol/types.hpp>
 #include <graphene/chain/protocol/asset.hpp>
+#include <graphene/chain/content_object.hpp>
 #include <boost/preprocessor/seq/seq.hpp>
 
 
@@ -106,7 +107,33 @@ namespace graphene { namespace chain {
       account_id_type fee_payer()const { return seeder; }
       void validate()const;
    };
-   
+
+   struct return_escrow_submission_operation : public base_operation
+   {
+      struct fee_parameters_type { uint64_t fee = 0; };
+
+      asset fee;
+      account_id_type author;
+      asset escrow;
+      content_id_type content;
+
+      account_id_type fee_payer()const { return author; }
+      void            validate()const { FC_ASSERT( !"virtual operation" ); }
+   };
+
+   struct return_escrow_buying_operation : public base_operation
+   {
+      struct fee_parameters_type { uint64_t fee = 0; };
+
+      asset fee;
+      account_id_type consumer;
+      asset escrow;
+      buying_id_type buying;
+
+      account_id_type fee_payer()const { return consumer; }
+      void            validate()const { FC_ASSERT( !"virtual operation" ); }
+   };
+
 } } // graphene::chain
 
 FC_REFLECT(graphene::chain::content_submit_operation,(fee)(size)(author)(URI)(quorum)(price)(hash)(seeders)(key_parts)(expiration)(publishing_fee)(synopsis)(cd))
@@ -115,6 +142,8 @@ FC_REFLECT(graphene::chain::leave_rating_operation,(fee)(URI)(consumer)(rating))
 FC_REFLECT(graphene::chain::ready_to_publish_operation,(fee)(seeder)(space)(pubKey)(price_per_MByte))
 FC_REFLECT(graphene::chain::proof_of_custody_operation,(fee)(seeder)(URI)(proof))
 FC_REFLECT(graphene::chain::deliver_keys_operation,(fee)(seeder)(proof)(key)(buying))
+FC_REFLECT(graphene::chain::return_escrow_submission_operation,(fee)(author)(escrow)(content))
+FC_REFLECT(graphene::chain::return_escrow_buying_operation,(fee)(consumer)(escrow)(buying))
 
 FC_REFLECT( graphene::chain::content_submit_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::request_to_buy_operation::fee_parameters_type, (fee) )
@@ -122,3 +151,5 @@ FC_REFLECT( graphene::chain::leave_rating_operation::fee_parameters_type, (fee) 
 FC_REFLECT( graphene::chain::ready_to_publish_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::proof_of_custody_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::deliver_keys_operation::fee_parameters_type, (fee) )
+FC_REFLECT( graphene::chain::return_escrow_submission_operation::fee_parameters_type, ( fee ) )
+FC_REFLECT( graphene::chain::return_escrow_buying_operation::fee_parameters_type, ( fee ) )
