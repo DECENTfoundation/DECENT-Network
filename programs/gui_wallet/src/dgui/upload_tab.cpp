@@ -9,6 +9,8 @@
  */
 #include "upload_tab.hpp"
 #include "ui_wallet_functions.hpp"
+#include "gui_wallet_global.hpp"
+
 #include <QHeaderView>
 #include <QMessageBox>
 #include <QFileDialog>
@@ -75,9 +77,9 @@ Upload_tab::Upload_tab()
 
     QDateEdit *de = new QDateEdit();
     de->setDate(QDate::currentDate());
+    de->setDisplayFormat("yyyy-MM-dd");
     de->setCalendarPopup(true);
-    de->calendarWidget()->setGridVisible(true);
-    de->calendarWidget()->setMinimumDate(QDate::currentDate());
+    de->setMinimumDate(QDate::currentDate());
 
     m_info_widget.setCellWidget(FieldsRows::LIFETIME, 1, de);
 
@@ -213,7 +215,6 @@ void Upload_tab::onGrabPublishers() {
 
                 std::string assetSymbol = it->second;
 
-                //TODO: add other assetid support
                 seeders->addItem(QString("%0 @%1 %2 [%3]").arg(QString::fromStdString(pubIdStr),
                                                                 QString::fromStdString(pubPrice), 
                                                                 QString::fromStdString(assetSymbol), 
@@ -266,6 +267,11 @@ void Upload_tab::uploadContent() {
         return;
     }
 
+    if (GlobalEvents::instance().getCurrentUser().empty()) {
+        ALERT("Please select user to upload");
+        return;   
+    }
+
 
 
     CryptoPP::Integer randomKey (rng, 512);
@@ -277,21 +283,21 @@ void Upload_tab::uploadContent() {
 
 
     std::string* submitCommand = new std::string("submit_content");
-    *submitCommand += " hayk";                             //author
-    *submitCommand += " \"%0\"";                           //URI
-    *submitCommand += " " + assetName;                     //price_asset_name
-    *submitCommand += " " + price;                         //price_amount
-    *submitCommand += " %1";                               //size
-    *submitCommand += " \"%2\"";                               //hash
-    *submitCommand += " [" + seeders + "]";                //seeders
-    *submitCommand += " 1";                                //quorum
-    *submitCommand += " \"2017-02-20T00:00:00\"";              //expiration
-    *submitCommand += " DECENT";                           //publishing_fee_asset
-    *submitCommand += " 300";                              //publishing_fee_amount
-    *submitCommand += " \"" + synopsis + "\"";             //synopsis
-    *submitCommand += " \"" + randomKeyString + "\"";      //secret
-    *submitCommand += " %3";                               //cd
-    *submitCommand += " true";                             //broadcast
+    *submitCommand += " " + GlobalEvents::instance().getCurrentUser();   //author
+    *submitCommand += " \"%0\"";                                         //URI
+    *submitCommand += " " + assetName;                                   //price_asset_name
+    *submitCommand += " " + price;                                       //price_amount
+    *submitCommand += " %1";                                             //size
+    *submitCommand += " \"%2\"";                                         //hash
+    *submitCommand += " [" + seeders + "]";                              //seeders
+    *submitCommand += " 1";                                              //quorum
+    *submitCommand += " \"" + lifetime + "T23:59:59\"";                  //expiration
+    *submitCommand += " DECENT";                                         //publishing_fee_asset
+    *submitCommand += " 300";                                            //publishing_fee_amount
+    *submitCommand += " \"" + synopsis + "\"";                           //synopsis
+    *submitCommand += " \"" + randomKeyString + "\"";                    //secret
+    *submitCommand += " %3";                                             //cd
+    *submitCommand += " true";                                           //broadcast
 
     
 
