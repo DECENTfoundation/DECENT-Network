@@ -22,6 +22,17 @@
  * THE SOFTWARE.
  */
 
+#include "torrent_transfer.hpp"
+#include "ipfs_transfer.hpp"
+
+#include <decent/encrypt/encryptionutils.hpp>
+#include <graphene/package/package.hpp>
+
+#include <fc/exception/exception.hpp>
+#include <fc/network/ntp.hpp>
+#include <fc/thread/mutex.hpp>
+#include <fc/thread/scoped_lock.hpp>
+
 #include <boost/iostreams/device/file_descriptor.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
@@ -31,28 +42,14 @@
 #include <boost/uuid/uuid_io.hpp>
 #include <boost/iostreams/copy.hpp>
 
-
-
-#include <graphene/package/package.hpp>
-
-#include <fc/exception/exception.hpp>
-#include <fc/network/ntp.hpp>
-#include <fc/thread/mutex.hpp>
-#include <fc/thread/scoped_lock.hpp>
-
 #include <iostream>
 #include <atomic>
 
-#include <decent/encrypt/encryptionutils.hpp>
-
-#include "torrent_transfer.hpp"
-#include "ipfs_transfer.hpp"
-
-using namespace graphene::package;
 using namespace std;
 using namespace boost;
 using namespace boost::filesystem;
 using namespace boost::iostreams;
+using namespace graphene::package;
 
 
 namespace {
@@ -128,7 +125,7 @@ public:
             const path file_path = output_dir / header.name;
             const path file_dir = file_path.parent_path();
 
-            if (!exists(file_dir)) {
+            if (!exists(file_dir) || !is_directory(file_dir)) {
                 try {
                     if (!create_directories(file_dir) && !is_directory(file_dir)) {
                         FC_THROW("Unable to create ${dir} directory", ("dir", file_dir.string()) );
@@ -139,9 +136,6 @@ public:
                         FC_THROW("Unable to create ${dir} directory: ${error}", ("dir", file_dir.string()) ("error", ex.what()) );
                     }
                 }
-            }
-            else if (!is_directory(file_dir)) {
-                FC_THROW("Unable to create ${dir} directory: file exists", ("dir", file_dir.string()) );
             }
 
             std::fstream sink(file_path.string(), ios::out | ios::binary);
@@ -306,26 +300,56 @@ bool package_object::verify_hash() const {
     return _hash == calculate_hash(get_content_file());
 }
 
-
-
-
-
-void package_manager::initialize( const path& packages_directory) {
-   
-    if (!is_directory(packages_directory) && !create_directories(packages_directory)) {
-        FC_THROW("Unable to create directory");    
-    }
-    _packages_directory = packages_directory;
-
+package_manager::package_manager() {
+    _protocol_handlers.insert(std::make_pair("magnet", std::make_shared<torrent_transfer>()));
+    _protocol_handlers.insert(std::make_pair("ipfs", std::make_shared<ipfs_transfer>()));
 }
 
+void package_manager::set_packages_path(const boost::filesystem::path& packages_path) {
+    if (!exists(packages_path) || !is_directory(packages_path)) {
+        try {
+            if (!create_directories(packages_path) && !is_directory(packages_path)) {
+                FC_THROW("Unable to create packages directory");
+            }
+        }
+        catch (const boost::filesystem::filesystem_error& ex) {
+            if (!is_directory(packages_path)) {
+                FC_THROW("Unable to create packages directory: ${error}", ("error", ex.what()) );
+            }
+        }
+    }
 
-package_manager::package_manager() {
-    static torrent_transfer dummy_torrent_transfer;
-    static ipfs_transfer dummy_ipfs_transfer;
+    fc::scoped_lock<fc::mutex> guard(_mutex);
+    _packages_path = packages_path;
+}
 
-    _protocol_handlers.insert(std::make_pair("magnet", &dummy_torrent_transfer));
-    _protocol_handlers.insert(std::make_pair("ipfs", &dummy_ipfs_transfer));
+boost::filesystem::path package_manager::get_packages_path() const {
+    fc::scoped_lock<fc::mutex> guard(_mutex);
+    return _packages_path;
+}
+
+void package_manager::set_libtorrent_config(const boost::filesystem::path& libtorrent_config_file) {
+    fc::scoped_lock<fc::mutex> guard(_mutex);
+
+    _libtorrent_config_file = libtorrent_config_file;
+
+    protocol_handler_map::iterator it = _protocol_handlers.find("magnet");
+    if (it != _protocol_handlers.end()) {
+        torrent_transfer* handler = dynamic_cast<torrent_transfer*>(it->second.get());
+        if (handler) {
+            if (boost::filesystem::exists(_libtorrent_config_file)) {
+                handler->reconfigure(_libtorrent_config_file);
+            }
+            else {
+                handler->dump_config(_libtorrent_config_file);
+            }
+        }
+    }
+}
+
+boost::filesystem::path package_manager::get_libtorrent_config() const {
+    fc::scoped_lock<fc::mutex> guard(_mutex);
+    return _libtorrent_config_file;
 }
 
 bool package_manager::unpack_package(const path& destination_directory, const package_object& package, const fc::sha512& key) {
@@ -341,7 +365,7 @@ bool package_manager::unpack_package(const path& destination_directory, const pa
         FC_THROW("CryptoPP::AES::MAX_KEYLENGTH is bigger than key size");
     }
 
-    if (!exists(destination_directory)) {
+    if (!exists(destination_directory) || !is_directory(destination_directory)) {
         try {
             if (!create_directories(destination_directory) && !is_directory(destination_directory)) {
                 FC_THROW("Unable to create destination directory");
@@ -352,9 +376,6 @@ bool package_manager::unpack_package(const path& destination_directory, const pa
                 FC_THROW("Unable to create destination directory: ${error}", ("error", ex.what()) );
             }
         }
-    }
-    else if (!is_directory(destination_directory)) {
-        FC_THROW("Unable to create destination directory: file exists");
     }
 
     path archive_file = package.get_content_file();
@@ -392,7 +413,9 @@ package_object package_manager::create_package( const boost::filesystem::path& c
         FC_THROW("Samples path is not directory");
 	}
 
-	path temp_path = _packages_directory / make_uuid();
+    const path packages_path = get_packages_path();
+
+	path temp_path = packages_path / make_uuid();
 	if (!create_directory(temp_path)) {
         FC_THROW("Failed to create temporary directory");
 	}
@@ -441,9 +464,9 @@ package_object package_manager::create_package( const boost::filesystem::path& c
     _custody_utils.create_custody_data(aes_file_path, cd);
 
     fc::ripemd160 hash = calculate_hash(aes_file_path);
-    rename(temp_path, _packages_directory / hash.str());
+    rename(temp_path, packages_path / hash.str());
 
-	return package_object(_packages_directory / hash.str());
+	return package_object(packages_path / hash.str());
 }
 	
 
@@ -527,8 +550,10 @@ std::string package_manager::get_transfer_url(package_transfer_interface::transf
 
 
 std::vector<package_object> package_manager::get_packages() {
+    const path packages_path = get_packages_path();
+
     std::vector<package_object> all_packages;
-    directory_iterator it(_packages_directory), it_end;
+    directory_iterator it(packages_path), it_end;
     for (; it != it_end; ++it) {
         if (is_directory(*it)) {
             all_packages.push_back(package_object(it->path().string()));
@@ -538,12 +563,14 @@ std::vector<package_object> package_manager::get_packages() {
 }
 
 package_object package_manager::get_package_object(fc::ripemd160 hash) {
-    return package_object(_packages_directory / hash.str());
+    const path packages_path = get_packages_path();
+    return package_object(packages_path / hash.str());
 }
 
 
 void package_manager::delete_package(fc::ripemd160 hash) {
-    package_object po(_packages_directory / hash.str());   
+    const path packages_path = get_packages_path();
+    package_object po(packages_path / hash.str());
     if (!po.is_valid()) {
         FC_THROW("Invalid package: ${hash}", ("hash", hash.str()) );
     }

@@ -45,9 +45,12 @@ public:
     virtual std::string get_transfer_url(transfer_id id);
     virtual void        print_status();
 
-    virtual package_transfer_interface* clone() {
-        return new torrent_transfer(*this);
+    virtual std::shared_ptr<package_transfer_interface> clone() {
+        return std::shared_ptr<torrent_transfer>(new torrent_transfer(*this));
     }
+
+    virtual void reconfigure(const boost::filesystem::path& config_file);
+    virtual void dump_config(const boost::filesystem::path& config_file);
 
 private:
     void handle_torrent_alerts();

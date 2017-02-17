@@ -30,6 +30,8 @@
 #include <fc/exception/exception.hpp>
 #include <fc/network/ntp.hpp>
 #include <fc/thread/scoped_lock.hpp>
+#include <fc/io/fstream.hpp>
+#include <fc/io/json.hpp>
 
 #include <libtorrent/alert_types.hpp>
 #include <libtorrent/create_torrent.hpp>
@@ -259,6 +261,160 @@ torrent_transfer::~torrent_transfer() {
     *_instance_exists = false;
 }
 
+
+
+struct upload_torrent_data {
+    std::string creator     = "Decent";
+    int piece_size          = 0;
+    bool priv               = false;
+    bool upload_mode        = true;
+    bool super_seeding_mode = false;
+    bool share_mode         = false;
+    bool auto_managed       = true;
+    bool announce_on_add    = true;
+    bool scrape_on_add      = true;
+    int max_uploads         = -1;
+    int max_connections     = -1;
+    int upload_limit        = -1;
+    int download_limit      = -1;
+    std::vector<std::string>                 url_seeds;
+    std::vector<std::string>                 http_seeds;
+    std::vector<std::pair<std::string, int>> dht_nodes{
+        {"dht.transmissionbt.com", 6881},
+        {"router.utorrent.com",    6881},
+        {"router.bittorrent.com",  6881},
+        {"router.bitcomet.com",    6881},
+        {"dht.aelitis.com",        6881},
+        {"dht.libtorrent.org",     25401}
+    };
+    std::vector<std::string>                 trackers{
+//      "udp://tracker.opentrackr.org:1337"
+    };
+};
+
+struct download_torrent_data {
+    bool upload_mode        = true;
+    bool share_mode         = false;
+    bool auto_managed       = true;
+    bool announce_on_add    = true;
+    bool scrape_on_add      = true;
+    int max_uploads         = -1;
+    int max_connections     = -1;
+    int upload_limit        = -1;
+    int download_limit      = -1;
+    std::vector<std::string>                 url_seeds;
+    std::vector<std::string>                 http_seeds;
+    std::vector<std::pair<std::string, int>> dht_nodes{
+        {"dht.transmissionbt.com", 6881},
+        {"router.utorrent.com",    6881},
+        {"router.bittorrent.com",  6881},
+        {"router.bitcomet.com",    6881},
+        {"dht.aelitis.com",        6881},
+        {"dht.libtorrent.org",     25401}
+    };
+    std::vector<std::string>                 trackers{
+//      "udp://tracker.opentrackr.org:1337"
+    };
+};
+
+struct libtorrent_config_data
+{
+    std::map<std::string, std::string> settings;
+    libtorrent::dht_settings dht_settings;
+    upload_torrent_data upload_torrent;
+    download_torrent_data download_torrent;
+};
+
+FC_REFLECT( upload_torrent_data,
+            (creator)
+            (piece_size)
+            (priv)
+            (upload_mode)
+            (super_seeding_mode)
+            (share_mode)
+            (auto_managed)
+            (announce_on_add)
+            (scrape_on_add)
+            (max_uploads)
+            (max_connections)
+            (upload_limit)
+            (download_limit)
+            (url_seeds)
+            (http_seeds)
+            (dht_nodes)
+            (trackers)
+          )
+
+FC_REFLECT( download_torrent_data,
+            (upload_mode)
+            (share_mode)
+            (auto_managed)
+            (announce_on_add)
+            (scrape_on_add)
+            (max_uploads)
+            (max_connections)
+            (upload_limit)
+            (download_limit)
+            (url_seeds)
+            (http_seeds)
+            (dht_nodes)
+            (trackers)
+          )
+
+FC_REFLECT( libtorrent::dht_settings,
+            (max_peers_reply)
+            (search_branching)
+            (max_fail_count)
+            (max_torrents)
+            (max_dht_items)
+            (max_peers)
+            (max_torrent_search_reply)
+            (restrict_routing_ips)
+            (restrict_search_ips)
+            (extended_routing_table)
+            (aggressive_lookups)
+            (privacy_lookups)
+            (enforce_node_id)
+            (ignore_dark_internet)
+            (block_timeout)
+            (block_ratelimit)
+            (read_only)
+            (item_lifetime)
+            (upload_rate_limit)
+          )
+
+FC_REFLECT( libtorrent_config_data,
+            (settings)
+            (dht_settings)
+            (upload_torrent)
+            (download_torrent)
+          )
+
+
+void torrent_transfer::reconfigure(const boost::filesystem::path& config_file) {
+    if (!boost::filesystem::exists(config_file)) {
+        FC_THROW("Unable to read libtorrent config file ${file}: file does not exists", ("file", config_file.string()) );
+    }
+
+
+
+    libtorrent_config_data lcdata = fc::json::from_file(config_file, fc::json::strict_parser).as<libtorrent_config_data>();
+
+
+
+    // TODO: actual reconfigure
+}
+
+void torrent_transfer::dump_config(const boost::filesystem::path& config_file) {
+    libtorrent_config_data lcdata;
+
+    wlog("saving current libtorrent config to file ${fn}", ("fn", config_file.string()) );
+
+    std::string data = fc::json::to_pretty_string(lcdata);
+    fc::ofstream outfile{config_file};
+    outfile.write(data.c_str(), data.length());
+}
+
 void torrent_transfer::print_status() {
 	libtorrent::torrent_status st = _torrent_handle.status();
 	cout << "Error Message/String/File: " << st.errc.message() << " / " << st.error << " / " << st.error_file << endl;
@@ -329,8 +485,7 @@ void torrent_transfer::upload_package(transfer_id id, const package_object& pack
     // recursively adds files in directories
     add_files(fs, package.get_path().string());
 
-//  create_torrent t(fs, 5 * 64 * 16 * 1024); // 5MB pieces
-    create_torrent t(fs);
+    create_torrent t(fs, 5 * 64 * 16 * 1024); // 5MB pieces
     t.set_creator("Decent");
     t.set_priv(false);
 

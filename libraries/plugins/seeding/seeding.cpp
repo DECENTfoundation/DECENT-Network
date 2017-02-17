@@ -315,7 +315,7 @@ void seeding_plugin::plugin_initialize( const boost::program_options::variables_
       if( options.count("packages-path")) {
          try {
             boost::filesystem::path master_path = boost::filesystem::path(options["packages-path"].as<string>());
-            package_manager::instance().initialize(master_path);
+            package_manager::instance().set_packages_path(master_path);
          } catch( ... ) {
             FC_THROW("Invalid packages path ${path_string}",
                      ("path_string", options["packages-path"].as<string>()));
