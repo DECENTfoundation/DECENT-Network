@@ -158,6 +158,19 @@ void gui::run()
          CallFunctionInUiLoop(aTaskItem.callbackArg,e.code(),aTaskItem.input,e.to_detail_string(),
                                 aTaskItem.owner,aTaskItem.fn_tsk_dn2);
       }
+        catch ( const std::exception& e )
+        {
+          if (g_nDebugApplication) {
+              printf("file:\"" __FILE__ "\",line:%d\n",__LINE__);
+          }
+
+          if (g_nDebugApplication) {
+              std::cout << e.what() << "\n";
+          }
+
+          CallFunctionInUiLoop(aTaskItem.callbackArg,UNKNOWN_EXCEPTION,aTaskItem.input,e.what(),
+                                 aTaskItem.owner,aTaskItem.fn_tsk_dn2);
+        }
       catch(...)
       {
           if(g_nDebugApplication){printf("file:\"" __FILE__ "\",line:%d\n",__LINE__);}

@@ -41,7 +41,14 @@
 //#define NewTestMutex std::mutex
 //#define NewTestMutex NewTestMutex2
 
-struct StructApi{StructApi():wal_api(NULL),gui_api(NULL){} graphene::wallet::wallet_api* wal_api; fc::rpc::gui* gui_api;};
+struct StructApi {
+    StructApi(): wal_api(NULL), gui_api(NULL) {
+
+    } 
+
+    graphene::wallet::wallet_api* wal_api; 
+    fc::rpc::gui* gui_api;
+};
 
 int g_nDebugApplication = 0;
 
@@ -53,13 +60,13 @@ static void*                        s_pManagerClbData;
 static TypeCallbackSetNewTaskGlb    s_fpMenegmentClbk;
 static TypeCallFunctionInGuiLoop    s_fpCorrectUiCaller;
 static NewTestMutex*                                            s_pMutex_for_cur_api; // It is better to use here rw mutex
-static decent::tools::FiFo<SConnectionStruct*,CONN_FNC_TYPE>*    s_pConnectionRequestFifo;
+static decent::tools::FiFo<SConnectionStruct*,CONN_FNC_TYPE>*   s_pConnectionRequestFifo;
 static decent::tools::UnnamedSemaphoreLite*                     s_pSema_for_connection_thread;
 static graphene::wallet::wallet_data*                           s_wdata_ptr;
 static std::thread*                                             s_pConnectionThread ;
 static std::thread*                                             s_pManagementThread ;
 /* /// Variables those do not need initialization */
-static volatile int s_nManagerThreadRun ;
+static volatile int s_nManagerThreadRun;
 static volatile int s_nConThreadRun;
 static StructApi      s_CurrentApi;
 
@@ -209,7 +216,9 @@ __DLL_EXPORT__ int SetNewTask_base(const std::string& a_inp_line, void* a_owner,
         errStr = "First connet to witness node";
     }
 
-    if(nReturn){(*fpTaskDone)(a_owner,a_clbData,NO_API_INITED, a_inp_line, errStr);}
+    if (nReturn) {
+        (*fpTaskDone)(a_owner, a_clbData,NO_API_INITED, a_inp_line, errStr);
+    }
 
     return nReturn;
 }

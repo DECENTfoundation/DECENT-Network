@@ -11,6 +11,7 @@
 # $. build_gui_wallet.bat  # before calling this script 
 #                           # dot (.) on shell shoulb be typed
 #
+set -e
 
 CURRENT_DIR=`pwd`
 
@@ -27,7 +28,8 @@ cd ../gui_wallet_qt
 
 # prepare Makefile using qt (better to use qt5)
 #qmake “CONFIG+=USE_LIB” gui_wallet.pro
-qmake gui_wallet.pro CONFIG+=USE_LIB
+#qmake gui_wallet.pro CONFIG+=USE_LIB
+qmake gui_wallet.pro 
 
 # make project
 make
