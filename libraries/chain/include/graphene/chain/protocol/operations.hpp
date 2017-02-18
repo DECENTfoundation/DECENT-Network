@@ -80,7 +80,9 @@ namespace graphene { namespace chain {
             leave_rating_operation,
             ready_to_publish_operation,
             proof_of_custody_operation,
-            deliver_keys_operation
+            deliver_keys_operation,
+            return_escrow_submission_operation,      // VIRTUAL
+            return_escrow_buying_operation           // VIRTUAL
          > operation;
 
    /// @} // operations group

@@ -55,14 +55,34 @@ void database::decent_housekeeping()
    auto citr = cidx.begin();
    while( citr != cidx.end() && citr->expiration <= head_block_time() )
    {
+      return_escrow_submission_operation resop;
+      resop.escrow = citr->publishing_fee_escrow;
+
       content_expire(*citr);
+
+      resop.author = citr->author;
+      resop.content = citr->id;
+      push_applied_operation( resop );
+
+      remove( *citr );
+
       ++citr;
    }
    const auto& bidx = get_index_type<buying_index>().indices().get<by_expiration_time>();
    auto bitr = bidx.begin();
    while( bitr != bidx.end() && bitr->expiration_time <= head_block_time() )
    {
+      return_escrow_buying_operation rebop;
+      rebop.escrow = bitr->price;
+
       buying_expire(*bitr);
+
+      rebop.consumer = bitr->consumer;
+      rebop.buying = bitr->id;
+      push_applied_operation( rebop );
+
+      remove( *bitr );
+
       ++bitr;
    }
 }

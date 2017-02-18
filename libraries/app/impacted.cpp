@@ -168,6 +168,8 @@ struct get_impacted_account_visitor
    void operator()( const ready_to_publish_operation& op) { _impacted.insert(op.seeder); }
    void operator()( const proof_of_custody_operation& op) { _impacted.insert(op.seeder);}
    void operator()( const deliver_keys_operation& op) {  _impacted.insert(op.seeder);}
+   void operator()( const return_escrow_submission_operation& op) {  _impacted.insert(op.author);}
+   void operator()( const return_escrow_buying_operation& op) {  _impacted.insert(op.consumer);}
 };
 
 void operation_get_impacted_accounts( const operation& op, flat_set<account_id_type>& result )
