@@ -14,6 +14,7 @@
 #include <sstream>
 #include <iomanip>
 #include "openssl/sha.h"
+#include <gmp.h>
 
 using namespace std;
 
@@ -256,6 +257,7 @@ void alt_get_sigmas(std::fstream &file, const unsigned int n, element_t *u, elem
 }
 */
 void test_custody(){
+   std::cout << GMP_NUMB_BITS <<"\n";
 
 
    //pbc_param_t par;
@@ -272,6 +274,7 @@ void test_custody(){
    c.create_proof_of_custody(boost::filesystem::path("/tmp/content.zip"), cd,proof);
    idump((proof.mus));
 
+   std::cout <<"done creating proof of custody \n";
    cout<<"\n\n";
   // fc::raw::pack(cout, mus);
    if(c.verify_by_miner(cd, proof))
@@ -445,7 +448,7 @@ int main(int argc, char**argv)
   // test_move();
 
  //  test_el_gamal(k);
-   const CryptoPP::Integer secret("12354678979464");
+//   const CryptoPP::Integer secret("12354678979464");
  //  test_shamir(secret);
 //   generate_params();
 //   test_generator();

@@ -37,7 +37,8 @@ sign0 -1"
 
 #define _DECENT_GENERATOR_ "[86840749517316137157891261963398293121077652946631672762188488864778675462754, \
 46298439815083954540948251518245740272972067256063234341481114422918560267725]"
-#define DECENT_SIZE_OF_NUMBER_IN_THE_FIELD 15
+//Make it 16 to better fit into mpz
+#define DECENT_SIZE_OF_NUMBER_IN_THE_FIELD 16
 #endif
 
 
@@ -139,7 +140,6 @@ public:
    int get_number_of_query(int blocks);
    int get_n(std::fstream &file);
    inline int get_m(std::fstream &file, uint32_t i, uint32_t j, mpz_t& out);
-   inline int get_ms(std::fstream &file, uint32_t i, element_t *out);
    inline int get_data(std::fstream &file, uint32_t i, char buffer[]);
 };
 

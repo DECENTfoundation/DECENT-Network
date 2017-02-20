@@ -12,6 +12,7 @@
 #include <iomanip>
 #include <algorithm>
 #include <fc/thread/thread.hpp>
+#include <gmp.h>
 
 #define DECENT_CUSTODY_THREADS 4
 
@@ -164,38 +165,11 @@ inline int custody_utils::get_data(std::fstream &file, uint32_t i, char buffer[]
 
 }
 
-inline int custody_utils::get_ms(std::fstream &file, uint32_t i, element_t ret[])
-{
-   uint64_t position = DECENT_SIZE_OF_NUMBER_IN_THE_FIELD * DECENT_SECTORS * i;
-   char buffer[DECENT_SIZE_OF_NUMBER_IN_THE_FIELD];
-   file.seekg (0, file.end);
-   uint64_t realLen = file.tellg();
-   file.seekg(std::min(position, realLen), file.beg);
-   for (int j = 0; j < DECENT_SECTORS; j++)
-   {
-
-      if (realLen > ((long long)(file.tellg()) + DECENT_SIZE_OF_NUMBER_IN_THE_FIELD))
-      {
-         file.read(buffer, DECENT_SIZE_OF_NUMBER_IN_THE_FIELD);
-      } else if (file.eof()) {
-         memset(buffer,0,DECENT_SIZE_OF_NUMBER_IN_THE_FIELD);
-      } else
-      {
-         int left = realLen - (long long)(file.tellg());
-         file.read(buffer, left);
-         memset(buffer+left,0, DECENT_SIZE_OF_NUMBER_IN_THE_FIELD-left );
-      }
-      //element_set1(ret[j]);
-      element_from_bytes(ret[j], (unsigned char *)buffer);
-
-   }
-
-}
 
 
 inline int custody_utils::get_m(std::fstream &file, uint32_t i, uint32_t j, mpz_t& out)
 {
-   mpz_init(out);
+   mpz_init2(out, DECENT_SIZE_OF_NUMBER_IN_THE_FIELD*8);
    uint64_t position = DECENT_SIZE_OF_NUMBER_IN_THE_FIELD * (j + DECENT_SECTORS*i);
    char buffer[DECENT_SIZE_OF_NUMBER_IN_THE_FIELD];
    file.seekg (0, file.end);
@@ -212,7 +186,10 @@ inline int custody_utils::get_m(std::fstream &file, uint32_t i, uint32_t j, mpz_
          file.read(buffer, DECENT_SIZE_OF_NUMBER_IN_THE_FIELD);
       }
    }
-   mpz_import( out, DECENT_SIZE_OF_NUMBER_IN_THE_FIELD, 1, 1, 1, 0, buffer );
+
+   //mpz_import is too slow for our purposes - since we don't care about the exact parameters as much as about the uniqueness of the import, let's replace it with memcpy
+   memcpy((char*)out->_mp_d, buffer, DECENT_SIZE_OF_NUMBER_IN_THE_FIELD );
+   //mpz_import( out, DECENT_SIZE_OF_NUMBER_IN_THE_FIELD, 1, 1, 1, 0, buffer );
    return 1;
 }
 
@@ -238,7 +215,7 @@ int custody_utils::get_sigma( uint64_t idx, mpz_t mi[], element_pp_t u_pp[], ele
    memset(buf, 0, 32);
    char index[16];
    memset(index,0,16);
-   sprintf(index, "%llu", idx);
+   sprintf(index, "%lu", idx);
    fc::sha256 stemp = fc::sha256::hash( index, 16);
    memcpy(buf, stemp._hash, (4*sizeof(uint64_t)));
    element_from_hash(hash, buf, 32);
@@ -275,8 +252,10 @@ int custody_utils::get_sigmas(std::fstream &file, const unsigned int n, element_
          fut[k] = t[k].async ( [=](){
               mpz_t m[DECENT_SECTORS];
               for( int i = 0; i < DECENT_SECTORS; ++i) {
-                 mpz_init(m[i]);
-                 mpz_import(m[i], DECENT_SIZE_OF_NUMBER_IN_THE_FIELD, 1, 1, 1, 0, buffer + i * DECENT_SIZE_OF_NUMBER_IN_THE_FIELD);
+                 mpz_init2(m[i], DECENT_SIZE_OF_NUMBER_IN_THE_FIELD * 8);
+                 //mpz_import is too slow for our purposes - since we don't care about the exact parameters as much as about the uniqueness of the import, let's replace it with memcpy
+                 memcpy((char*)m[i]->_mp_d, buffer + i * DECENT_SIZE_OF_NUMBER_IN_THE_FIELD, DECENT_SIZE_OF_NUMBER_IN_THE_FIELD );
+                 //mpz_import(m[i], DECENT_SIZE_OF_NUMBER_IN_THE_FIELD, 1, 1, 1, 0, buffer + i * DECENT_SIZE_OF_NUMBER_IN_THE_FIELD);
               }
               delete[] buffer;
               return get_sigma(idx, m, u_pp, pk, ret);
@@ -379,7 +358,7 @@ int custody_utils::verify(element_t sigma, unsigned int q, uint64_t *indices, el
       memset(buf, 0, 32);
       char index[16];
       memset(index,0,16);
-      sprintf(index, "%llu", indices[i]);
+      sprintf(index, "%lu", indices[i]);
       fc::sha256 stemp = fc::sha256::hash( index, 16);
       memcpy(buf, stemp._hash, (4*sizeof(uint64_t)));
       element_from_hash(hash, buf, 32);
