@@ -28,13 +28,10 @@ namespace gui_wallet
         Overview_tab();
         virtual ~Overview_tab();
     public:
-        QPushButton find;
         QLineEdit search;
         QTextBrowser text;
     protected:
        //virtual void resizeEvent(QResizeEvent *);
-    private slots:
-        void ClickFind();
     };
 }
 

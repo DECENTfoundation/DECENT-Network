@@ -20,25 +20,30 @@ greaterThan(QT_MAJOR_VERSION, 4):QT += widgets
 
 SOURCES += ../../../src/dgui/main_gui_wallet.cpp \
     ../../../src/dgui/decent_gui_contentdlg.cpp \
-    ../../../src/dgui/decent_wallet_ui_gui_purchasedtab.cpp
+    ../../../src/dgui/decent_wallet_ui_gui_purchasedtab.cpp \
+    ../../../src/dgui/main_window_browse_content.cpp \
+    ../../../src/dgui/main_window_transactions.cpp \
+    ../../../src/dgui/main_window_upload.cpp \
+    ../../../src/dgui/main_window_overview.cpp \
+    ../../../src/dgui/main_window_purchased.cpp
 
 options1 = $$find(CONFIG, "TEST")
 
 count(options1, 1):DEFINES += TEST_SIMPLE_APP
 else{
 
-options2 = $$find(CONFIG, "USE_LIB")
+options2 = $$find(CONFIG, "NOT_USE_LIB")
 count(options2, 1){
+
+    message( "Building with using sources..." )
+    include(../lib_gui_wallet_qt/lib_gui_wallet.pri)
+
+}else{
 
     message( "Building using lib... Use export DYLD_LIBRARY_PATH=../../../sys/mac/bin" )
     LIBS += -L$$SYSTEM_PATH/bin
     LIBS += -llib_gui_wallet
     #LIBS += -lcli_wallet
-
-}else{
-
-    message( "Building with using sources..." )
-    include(../lib_gui_wallet_qt/lib_gui_wallet.pri)
 
 } # else of count(options2, 1)
 

@@ -666,7 +666,7 @@ void Mainwindow_gui_wallet::TaskDoneFuncGUI(void* a_clbkArg,int64_t a_err,const 
     //emit TaskDoneSig(a_callbackArg,a_err,a_task,a_result);
     const char* cpcOccur;
 
-    __DEBUG_APP2__(1,"just_conn=%d, err=%d, a_clbkArg=%p, task=%s, result=%s\n",
+    __DEBUG_APP2__(0,"just_conn=%d, err=%d, a_clbkArg=%p, task=%s, result=%s\n",
                    m_nJustConnecting,(int)a_err,a_clbkArg,a_task.c_str(),a_result.c_str());
 
     //m_nJustConnecting = 0;
@@ -713,6 +713,42 @@ void Mainwindow_gui_wallet::TaskDoneFuncGUI(void* a_clbkArg,int64_t a_err,const 
             DisplayWalletContentGUI();
         }
         return;
+    }
+
+    //enum MAIN_TABS_ENM{BROWSE_CONTENT,TRANSACTIONS,UPLOAD,OVERVIEW,PURCHASED};
+    const int cnCurIndex(m_pCentralWidget->GetMyCurrentTabIndex());
+    switch(cnCurIndex)
+    {
+    case BROWSE_CONTENT:
+    {
+        //BrowseContentTaskDone(void* a_clbkArg,int64_t a_err,const std::string& a_task,const std::string& a_result);
+        TaskDoneBrowseContentGUI(a_clbkArg, a_err,a_task,a_result);
+        break;
+    }
+    case TRANSACTIONS:
+    {
+        TaskDoneTransactionsGUI(a_clbkArg, a_err,a_task,a_result);
+        break;
+    }
+    case UPLOAD:
+    {
+        TaskDoneUploadGUI(a_clbkArg, a_err,a_task,a_result);
+        break;
+    }
+    case OVERVIEW:
+    {
+        TaskDoneOverrviewGUI(a_clbkArg, a_err,a_task,a_result);
+        break;
+    }
+    case PURCHASED:
+    {
+        TaskDonePurchasedGUI(a_clbkArg, a_err,a_task,a_result);
+        break;
+    }
+    default:
+    {
+        break;
+    }
     }
 
     if(strstr(a_task.c_str(),__CONNECTION_CLB_))
@@ -850,10 +886,15 @@ void Mainwindow_gui_wallet::TaskDoneFuncGUI(void* a_clbkArg,int64_t a_err,const 
         int nCurTab(m_pCentralWidget->GetMyCurrentTabIndex());
         if(nCurTab != OVERVIEW){return;}
 
-        m_pCentralWidget->m_Overview_tab.text.setText(a_result.c_str());
+        QString qstr = QString::fromStdString(a_result);
+        m_pCentralWidget->m_Overview_tab.text.setText(qstr);
 
     }
 
+    else if(strstr(a_task.c_str(),"get_account_history"))
+    {
+        QTableWidget* tabel = new QTableWidget();
+    }
 //donePoint:
     if(a_clbkArg == CLI_WALLET_CODE)
     {
@@ -866,12 +907,13 @@ void Mainwindow_gui_wallet::TaskDoneFuncGUI(void* a_clbkArg,int64_t a_err,const 
 
 void Mainwindow_gui_wallet::ManagementNewFuncGUI(void* a_clbkArg,int64_t a_err,const std::string& a_task,const std::string& a_result)
 {
-    int nCode = (int)a_err;
-    int nError = 0;  // in 64 bit should be stored and error and message
+    //int nCode = (int)a_err;
+    int nError = (int)a_err;  // in 64 bit should be stored and error and message
 
     __DEBUG_APP2__(2,"clbArg=%p, task=\"%s\", res=\"%s\", err=%d",
                    a_clbkArg,a_task.c_str(),a_result.c_str(),nError);
 
+#if 0
     switch(nCode)
     {
     case WAS::CONNECTED_ST:
@@ -884,19 +926,6 @@ void Mainwindow_gui_wallet::ManagementNewFuncGUI(void* a_clbkArg,int64_t a_err,c
             m_ActionUnlock.setEnabled(true);
             m_ActionImportKey.setEnabled(true);
         }
-        __DEBUG_APP2__(2,"WAS::CONNECTED_ST");
-        QString cqsNewFilter = m_pCentralWidget->getFilterText();
-        if(cqsNewFilter==m_cqsPreviousFilter){return;}
-
-        else if(cqsNewFilter==tr(""))
-        {
-            // may be in the case of empty filter all contents should be displayed?
-            m_cqsPreviousFilter = cqsNewFilter;
-            return;
-        }
-
-        m_cqsPreviousFilter = cqsNewFilter;
-        ShowDigitalContextesGUI(cqsNewFilter);
 
         break;
     }
@@ -904,31 +933,32 @@ void Mainwindow_gui_wallet::ManagementNewFuncGUI(void* a_clbkArg,int64_t a_err,c
         __DEBUG_APP2__(2,"default");
         break;
     }
+#endif // #if 0
 
     int nCurentTab = m_pCentralWidget->GetMyCurrentTabIndex();
+    __DEBUG_APP2__(0," ");
     //enum MAIN_TABS_ENM{BROWSE_CONTENT,TRANSACTIONS,UPLOAD,OVERVIEW,PURCHASED};
     switch(nCurentTab)
     {
     case BROWSE_CONTENT:
-        //
+    {
+        ManagementBrowseContentGUI();
         break;
+    }
     case TRANSACTIONS:
-        SetNewTask("get_account_history hayq 4",this,NULL,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
+        ManagementTransactionsGUI();
+        //SetNewTask("get_account_history hayq 4",this,NULL,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
         break;
     case UPLOAD:
-        //
+        ManagementUploadGUI();
         break;
     case OVERVIEW:
     {
-        //QString tFilterStr = m_pCentralWidget->m_Overview_tab.search.text();
-        QString tFilterStr = m_pCentralWidget->FilterStr();
-        QString tNewTaskInp = tr("list_accounts ") + tFilterStr + tr(" 5"); // To do, number should be taken from gui
-        std::string tInpuString = StringFromQString(tNewTaskInp);
-        SetNewTask(tInpuString,this,NULL,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
+        ManagementOverviewGUI();
         break;
     }
     case PURCHASED:
-        //
+        ManagementPurchasedGUI();
         break;
     default:
         break;
