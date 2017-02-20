@@ -546,6 +546,6 @@ void torrent_transfer::handle_torrent_alerts() {
 	_transfer_log.close();
 }
 
-std::string torrent_transfer::get_transfer_url(transfer_id id) {
+std::string torrent_transfer::get_transfer_url() {
 	return _url;
 }

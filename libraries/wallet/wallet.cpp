@@ -4114,9 +4114,10 @@ void wallet_api::download_package(const std::string& url) const {
    package_manager::instance().download_package(url, transfer_progress_printer::instance());
 }
 
-void wallet_api::upload_package(const std::string& package_hash, const std::string& protocol) const {
+std::string wallet_api::upload_package(const std::string& package_hash, const std::string& protocol) const {
    package_object package = package_manager::instance().get_package_object(fc::ripemd160(package_hash));
-   package_manager::instance().upload_package(package, protocol, transfer_progress_printer::instance());
+   package_transfer_interface::transfer_id id = package_manager::instance().upload_package(package, protocol, transfer_progress_printer::instance());
+   return package_manager::instance().get_transfer_url(id);
 }
 
 void wallet_api::print_all_transfers() const {

@@ -10,6 +10,9 @@
 #ifndef UPLOAD_TAB_HPP
 #define UPLOAD_TAB_HPP
 
+#include <map>
+#include <string>
+
 #include <QWidget>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
@@ -18,33 +21,66 @@
 #include <QLineEdit>
 #include <QPushButton>
 #include <QTableWidget>
+#include <QComboBox>
+#include <QTimer>
 
 #define USE_TABLE_WIDGET
 
+
+#define INFO_LIFETIME   "Lifetime"
+#define INFO_SEEDERS    "Seeders"
+#define INFO_KEYPARTS   "Key particles"
+#define INFO_TAGS       "Tags"
+#define INFO_PRICE      "Price"
+
+
 namespace gui_wallet
 {
-    struct SStrPair{const char  *str1,*str2;};
-    static const SStrPair s_sStrPairs[] ={{"Lifetime",""},{"Seeders",""},{"Key particles",""},
-                                          {"Tags","Add tag"},{"Price","0.00"}};
-    static const int NUMBER_OF_INFO_LINES = sizeof(s_sStrPairs) / sizeof(struct SStrPair);
+                                            
+    enum FieldsRows {
+        LIFETIME = 0,
+        KEYPARTS,
+        TAGS,
+        PRICE,
+        ASSETID,
+        SEEDERS,
+        CONTENTPATH,
+        SELECTPATH,
+        NUM_FIELDS
+    };
+
 
     class Upload_tab : public QWidget
     {    
+    Q_OBJECT
+
+        typedef std::map<std::string, std::string> AssetMap;
+
     public:
         Upload_tab();
         virtual ~Upload_tab();
+    public slots:
+        void browseContent();
+        void uploadContent();
+        void onGrabPublishers();
+
+    public:
+        void uploadDone(void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result);
+        void onPublishersDone(void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result);
 
     protected:
         virtual void resizeEvent ( QResizeEvent * event );
-
     private:
-        QHBoxLayout m_main_layout;
-        QVBoxLayout m_synopsis_layout;
-        QVBoxLayout m_info_layout;
+        QHBoxLayout     m_main_layout;
+        QVBoxLayout     m_synopsis_layout;
+        QVBoxLayout     m_info_layout;
         QTableWidget    m_info_widget;
-        QLabel      m_synopsis_label;
-        QTextEdit   m_synopsis_text;
-        QLabel      m_infoLayoutHeader;
+        QLabel          m_synopsis_label;
+        QTextEdit       m_synopsis_text;
+        QLabel          m_infoLayoutHeader;
+        QTimer          m_getPublishersTimer;
+
+        AssetMap                    m_assetMap;
 
     };
 

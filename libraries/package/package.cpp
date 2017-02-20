@@ -388,9 +388,9 @@ package_object package_manager::create_package( const boost::filesystem::path& c
         FC_THROW("Content path is not directory or file");
 	}
 
-	if (!is_directory(samples) || samples.size() == 0) {
-        FC_THROW("Samples path is not directory");
-	}
+	//if (!is_directory(samples) || samples.size() == 0) {
+    //    FC_THROW("Samples path is not directory");
+	//}
 
 	path temp_path = _packages_directory / make_uuid();
 	if (!create_directory(temp_path)) {
@@ -522,7 +522,7 @@ std::string package_manager::get_transfer_url(package_transfer_interface::transf
     }
 
     transfer_job& job = _all_transfers[id];
-    return job.transport->get_transfer_url(id);
+    return job.transport->get_transfer_url();
 }
 
 
