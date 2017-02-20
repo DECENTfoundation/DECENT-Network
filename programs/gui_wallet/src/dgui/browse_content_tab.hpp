@@ -29,6 +29,7 @@ namespace gui_wallet
 
     class Browse_content_tab : public QWidget
     {
+        friend class CentralWigdet;
         Q_OBJECT
     public:
         Browse_content_tab();

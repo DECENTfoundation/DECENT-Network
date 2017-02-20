@@ -82,7 +82,8 @@ Then, execute in console:
     $ brew update
     $ brew install automake autoconf libtool cmake berkeley-db boost160 qt5 cryptopp doxygen byacc flex gettext git pbc gmp ipfs openssl readline
 
-
+./programs/witness_node/witness_node --rpc-endpoint 127.0.0.1:8090 -s 185.8.165.21:33142
+../../../sys/mac/bin/gui_wallet.app/Contents/MacOS/gui_wallet
 
 ### Obtaining the sources, building, and installing Decent in Unix (macOS or Linux)
 

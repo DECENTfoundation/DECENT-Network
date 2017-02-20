@@ -11,11 +11,30 @@
 #define OVERVIEW_TAB_HPP
 
 #include <QWidget>
+#include <QPushButton>
+#include <QTextBrowser>
+#include <QLabel>
+#include <QHBoxLayout>
+#include <QVBoxLayout>
+#include <QLineEdit>
 
 namespace gui_wallet
 {
     class Overview_tab : public QWidget
     {
+
+        Q_OBJECT
+    public:
+        Overview_tab();
+        virtual ~Overview_tab();
+    public:
+        QPushButton find;
+        QLineEdit search;
+        QTextBrowser text;
+    protected:
+       //virtual void resizeEvent(QResizeEvent *);
+    private slots:
+        void ClickFind();
     };
 }
 

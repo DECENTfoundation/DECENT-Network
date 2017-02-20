@@ -188,6 +188,9 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
     //mainToolBar->hide();
     setStyleSheet("QMainWindow{color:black;""background-color:white;}");
 
+    //change
+//    QString str = m_pCentralWidget->m_Overview_tab.search.text();
+//    connect(&m_pCentralWidget->m_Overview_tab.find,SIGNAL(clicked()),this,SLOT(listAccountsSlot(str)));
 }
 
 
@@ -321,6 +324,11 @@ void Mainwindow_gui_wallet::OpenInfoDlgSlot()
     m_pcInfoDlg->exec();
 }
 
+void Mainwindow_gui_wallet::listAccountsSlot(QString str)
+{
+    //change
+    //SetNewTask("list_accounts " + str + " 5",this,CLI_WALLET_CODE,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
+}
 
 void Mainwindow_gui_wallet::ShowDetailsOnDigContentSlot(std::string a_get_cont_str)
 {
@@ -569,7 +577,7 @@ void Mainwindow_gui_wallet::ImportKeySlot()
     if(aRet == decent::gui::tools::RDB_CANCEL){return ;}
 
     std::string csTaskStr = "import_key " + cvsUsKey[0] + " " + cvsUsKey[1];
-    __DEBUG_APP2__(0,"!!!task: %s\n",csTaskStr.c_str());
+    __DEBUG_APP2__(1,"!!!task: %s\n",csTaskStr.c_str());
     SetNewTask(csTaskStr,this,NULL,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
 }
 
@@ -611,6 +619,7 @@ void Mainwindow_gui_wallet::ShowWalletContentSlot()
 
 #endif // #ifdef API_SHOULD_BE_DEFINED
 }
+
 
 
 void Mainwindow_gui_wallet::InfoSlot()
@@ -832,6 +841,18 @@ void Mainwindow_gui_wallet::TaskDoneFuncGUI(void* a_clbkArg,int64_t a_err,const 
     {
         //
     }
+    else if(strstr(a_task.c_str(),"get_account_history "))
+    {
+
+    }
+    else if(strstr(a_task.c_str(),"list_accounts "))
+    {
+        int nCurTab(m_pCentralWidget->GetMyCurrentTabIndex());
+        if(nCurTab != OVERVIEW){return;}
+
+        m_pCentralWidget->m_Overview_tab.text.setText(a_result.c_str());
+
+    }
 
 //donePoint:
     if(a_clbkArg == CLI_WALLET_CODE)
@@ -884,6 +905,34 @@ void Mainwindow_gui_wallet::ManagementNewFuncGUI(void* a_clbkArg,int64_t a_err,c
         break;
     }
 
+    int nCurentTab = m_pCentralWidget->GetMyCurrentTabIndex();
+    //enum MAIN_TABS_ENM{BROWSE_CONTENT,TRANSACTIONS,UPLOAD,OVERVIEW,PURCHASED};
+    switch(nCurentTab)
+    {
+    case BROWSE_CONTENT:
+        //
+        break;
+    case TRANSACTIONS:
+        SetNewTask("get_account_history hayq 4",this,NULL,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
+        break;
+    case UPLOAD:
+        //
+        break;
+    case OVERVIEW:
+    {
+        //QString tFilterStr = m_pCentralWidget->m_Overview_tab.search.text();
+        QString tFilterStr = m_pCentralWidget->FilterStr();
+        QString tNewTaskInp = tr("list_accounts ") + tFilterStr + tr(" 5"); // To do, number should be taken from gui
+        std::string tInpuString = StringFromQString(tNewTaskInp);
+        SetNewTask(tInpuString,this,NULL,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
+        break;
+    }
+    case PURCHASED:
+        //
+        break;
+    default:
+        break;
+    }
 }
 
 

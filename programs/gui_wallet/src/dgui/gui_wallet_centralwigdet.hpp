@@ -29,6 +29,7 @@
 #include <vector>
 #include <QTableWidget>
 #include "decent_wallet_ui_gui_purchasedtab.hpp"
+#include <QString>
 
 #define __TEMPORARY__
 
@@ -64,6 +65,7 @@ enum MAIN_TABS_ENM{BROWSE_CONTENT,TRANSACTIONS,UPLOAD,OVERVIEW,PURCHASED};
 
     class CentralWigdet : public QWidget
     {
+        friend class Mainwindow_gui_wallet;
         Q_OBJECT
     public:
         CentralWigdet(class QBoxLayout* pAllLayout);
@@ -76,7 +78,8 @@ enum MAIN_TABS_ENM{BROWSE_CONTENT,TRANSACTIONS,UPLOAD,OVERVIEW,PURCHASED};
         void SetDigitalContentsGUI(const std::vector<decent::wallet::ui::gui::SDigitalContent>& vContents);
         QString getFilterText()const;
         __TEMPORARY__ QComboBox* usersCombo();
-
+        int GetMyCurrentTabIndex()const{return m_main_tabs2.currentIndex();}
+        QString FilterStr();
     protected:
         virtual void showEvent ( QShowEvent * event ) ;
         virtual void resizeEvent ( QResizeEvent * event );

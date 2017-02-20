@@ -30,6 +30,9 @@ namespace gui_wallet
     //class Mainwindow_gui_wallet : public QMainWindow
     class Mainwindow_gui_wallet : public QMainWindow
     {
+//        friend class Overview_tab;
+//        friend class Transactions_tab;
+//        friend class CentralWigdet;
         Q_OBJECT
     public:
         Mainwindow_gui_wallet();
@@ -72,6 +75,8 @@ namespace gui_wallet
         void OpenInfoDlgSlot();
 
         void ShowDetailsOnDigContentSlot(std::string get_cont_str);
+
+        void listAccountsSlot(QString);
 
     protected:
         virtual void moveEvent(QMoveEvent *) _OVERRIDE_ ;

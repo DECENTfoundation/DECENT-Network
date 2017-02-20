@@ -82,6 +82,34 @@ void decent::wallet::ui::gui::AccountBalanceWidget::addItem(const std::string& a
     }
 }
 
+QString CentralWigdet::FilterStr()
+{
+    int nCurTab(m_main_tabs2.currentIndex());
+    switch(nCurTab)
+    {
+    case BROWSE_CONTENT:
+        return m_browse_cont_tab.m_filterLineEdit.text();
+        break;
+    case TRANSACTIONS:
+        return 0;
+        break;
+    case UPLOAD:
+        return 0;
+        break;
+    case OVERVIEW:
+    {
+        return m_Overview_tab.search.text();
+        break;
+    }
+    case PURCHASED:
+        return 0;
+        break;
+    default:
+        break;
+    }
+    return tr("");
+}
+
 
 void decent::wallet::ui::gui::AccountBalanceWidget::setCurrentIndex(int a_nIndex)
 {
