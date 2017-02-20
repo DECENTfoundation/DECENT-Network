@@ -31,7 +31,7 @@ namespace graphene { namespace chain {
       FC_ASSERT( db().head_block_time() <= o.expiration);
       fc::microseconds duration = (o.expiration - db().head_block_time() );
       uint64_t days = duration.to_seconds() / 3600 / 24;
-      ilog("days: ${n}", ("n", days));
+      ilog("yo: ${n}", ("n", days));
       idump((total_price_per_day));
       FC_ASSERT( days*total_price_per_day <= o.publishing_fee );
       //TODO_DECENT - URI check, synopsis check
