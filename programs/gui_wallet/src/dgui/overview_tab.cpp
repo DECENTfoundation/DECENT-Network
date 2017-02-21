@@ -19,8 +19,16 @@ Overview_tab::Overview_tab()
     QVBoxLayout* main = new QVBoxLayout();
     main->addLayout(up);
     main->addWidget(&text);
+    //connect(&search, SIGNAL(valueChanged(static QString)), this, SLOT(isChanged()));
+    connect(&search,SIGNAL(textChanged(QString)),this,SLOT(isChanged()));
+
 
     setLayout(main);
+}
+
+void Overview_tab::isChanged()
+{
+    changed = true;
 }
 
 //void Overview_tab::resizeEvent(QResizeEvent *event)

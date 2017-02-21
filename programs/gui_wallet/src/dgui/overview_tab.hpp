@@ -17,6 +17,8 @@
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QLineEdit>
+#include <vector>
+#include <QTableWidget>
 
 namespace gui_wallet
 {
@@ -27,9 +29,13 @@ namespace gui_wallet
     public:
         Overview_tab();
         virtual ~Overview_tab();
+        void isChanged();
     public:
         QLineEdit search;
         QTextBrowser text;
+        //QTableWidget* table_widget;
+        std::vector<QString> accounts_names;
+        bool changed;
     protected:
        //virtual void resizeEvent(QResizeEvent *);
     };

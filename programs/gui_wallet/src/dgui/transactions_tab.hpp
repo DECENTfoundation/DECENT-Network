@@ -29,24 +29,17 @@ namespace gui_wallet
 {
     class Transactions_tab : public QWidget
     {
+
         Q_OBJECT
     public:
         Transactions_tab();
         ~Transactions_tab();
 
-    private:
         QVBoxLayout main_layout;
         QTableWidget* tablewidget;
         QTableWidgetItem* itm;
-        QPushButton* push;
-        QMessageBox mess;
         QString jstr;
-        bool loadFile();
-        void setOnGrids();
         void createNewRow();
-
-    private slots:
-        void aftherSignal();
 
     };
 }
