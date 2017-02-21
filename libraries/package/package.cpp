@@ -337,7 +337,7 @@ void package_manager::set_libtorrent_config(const boost::filesystem::path& libto
     if (it != _protocol_handlers.end()) {
         torrent_transfer* handler = dynamic_cast<torrent_transfer*>(it->second.get());
         if (handler) {
-            if (boost::filesystem::exists(_libtorrent_config_file)) {
+            if (_libtorrent_config_file.empty() || boost::filesystem::exists(_libtorrent_config_file)) {
                 handler->reconfigure(_libtorrent_config_file);
             }
             else {
