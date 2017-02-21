@@ -25,6 +25,9 @@
 
 namespace graphene { namespace package {
 
+namespace detail {
+        struct libtorrent_config_data;
+}
 
 class torrent_transfer : public package_transfer_interface {
 private:
@@ -58,18 +61,16 @@ private:
     package::package_object check_and_install_package();
 
 private: // These will be shared by all clones (via clone()) of the initial instance, which in its turn is constructed only by the default c-tor.
-    std::shared_ptr<fc::thread>           _thread;
-    std::shared_ptr<fc::mutex>            _session_mutex;
-    std::shared_ptr<libtorrent::session>  _session;
+    std::shared_ptr<fc::thread>                      _thread;
+    std::shared_ptr<fc::mutex>                       _session_mutex;
+    std::shared_ptr<libtorrent::session>             _session;
+    std::shared_ptr<detail::libtorrent_config_data>  _config_data;
 
 private: // These are used to maintain instance lifetime info, and will be shared by all async callbacks that access this instance.
     std::shared_ptr<fc::mutex>                 _lifetime_info_mutex;
     std::shared_ptr<std::atomic<bool>>         _instance_exists;
 
 private:
-    std::vector<std::pair<std::string, int> >  _default_dht_nodes;
-    std::vector<std::string>                   _default_trackers;
-
     std::string                 _url;
     transfer_id                 _id;
     transfer_listener*          _listener;
