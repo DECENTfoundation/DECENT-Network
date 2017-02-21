@@ -42,10 +42,16 @@
 #include <fc/io/raw_fwd.hpp>
 #include <fc/array.hpp>
 
+#define SHORT_CURVE 1
+#ifdef SHORT_CURVE
+#define DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED 33
+#define DECENT_SIZE_OF_MU 15
+#else
 #define DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED 65
 #define DECENT_SIZE_OF_MU 32
-#define DECENT_SECTORS 32
+#endif
 
+#define DECENT_SECTORS 32
 
 namespace decent{
 namespace crypto{

@@ -25,13 +25,13 @@ namespace graphene { namespace chain {
          const auto& itr = idx.find( p );
          FC_ASSERT( itr != idx.end(), "seeder does not exist" );
          FC_ASSERT( itr->free_space > o.size );
-         total_price_per_day += itr-> price;
+         total_price_per_day += itr-> price.amount * o.size;
       }
       FC_ASSERT( o.seeders.size() == o.key_parts.size() );
       FC_ASSERT( db().head_block_time() <= o.expiration);
       fc::microseconds duration = (o.expiration - db().head_block_time() );
       uint64_t days = duration.to_seconds() / 3600 / 24;
-      ilog("days: ${n}", ("n", days));
+      ilog("yo: ${n}", ("n", days));
       idump((total_price_per_day));
       FC_ASSERT( days*total_price_per_day <= o.publishing_fee );
       //TODO_DECENT - URI check, synopsis check
@@ -236,6 +236,7 @@ namespace graphene { namespace chain {
          FC_ASSERT(bid._hash[i] == o.proof.seed.data[i],"Block ID does not match; wrong chain?");
       FC_ASSERT(db().head_block_num() <= o.proof.reference_block - 6,"Block reference is too old");
       FC_ASSERT( _custody_utils.verify_by_miner( content->cd, o.proof ) == 0, "Invalid proof of delivery" );
+      elog("proof_of_custody OK");
    }FC_CAPTURE_AND_RETHROW( (o) ) }
    
    void_result proof_of_custody_evaluator::do_apply(const proof_of_custody_operation& o )
@@ -267,5 +268,25 @@ namespace graphene { namespace chain {
          db().adjust_balance(seeder.seeder, reward );
       }
    }FC_CAPTURE_AND_RETHROW( (o) ) }
+
+   void_result return_escrow_submission_evaluator::do_evaluate(const return_escrow_submission_operation& o )
+   {
+
+   }
+
+   void_result return_escrow_submission_evaluator::do_apply(const return_escrow_submission_operation& o )
+   {
+
+   }
+
+   void_result return_escrow_buying_evaluator::do_evaluate(const return_escrow_buying_operation& o )
+   {
+
+   }
+
+   void_result return_escrow_buying_evaluator::do_apply(const return_escrow_buying_operation& o )
+   {
+
+   }
 
 }} // graphene::chain

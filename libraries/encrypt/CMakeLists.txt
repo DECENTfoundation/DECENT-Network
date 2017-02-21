@@ -12,7 +12,7 @@ add_library( decent_encrypt
 target_link_libraries( decent_encrypt
     PUBLIC fc pbc cryptopp )
 
-target_link_libraries( test_encrypt pbc graphene_chain decent_encrypt gmp )
+target_link_libraries( test_encrypt pbc decent_encrypt gmp )
 target_include_directories( decent_encrypt
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" "${CMAKE_CURRENT_BINARY_DIR}/include" )
 target_include_directories( test_encrypt

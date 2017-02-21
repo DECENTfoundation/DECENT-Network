@@ -70,7 +70,7 @@ public:
 	virtual void upload_package(transfer_id id, const package_object& package, transfer_listener* listener) = 0;
 	virtual void download_package(transfer_id id, const std::string& url, transfer_listener* listener) = 0;
 	virtual void print_status() = 0;
-	virtual std::string get_transfer_url(transfer_id id) = 0;
+	virtual std::string get_transfer_url() = 0;
 	virtual std::shared_ptr<package_transfer_interface> clone() = 0;
 };
 

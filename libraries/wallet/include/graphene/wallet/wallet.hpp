@@ -1751,7 +1751,7 @@ class wallet_api
        * @param protocol protocol for uploading package magnet or ipfs
        * @return nothing
        */
-      void upload_package(const std::string& package_hash, const std::string& protocol) const;
+      std::string upload_package(const std::string& package_hash, const std::string& protocol) const;
 
       /**
        * @brief Remove package

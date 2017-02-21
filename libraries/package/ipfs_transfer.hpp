@@ -37,7 +37,7 @@ public:
 	virtual void upload_package(transfer_id id, const package_object& package, transfer_listener* listener);
 	virtual void download_package(transfer_id id, const std::string& url, transfer_listener* listener);
 
-	virtual std::string       get_transfer_url(transfer_id id);
+	virtual std::string       get_transfer_url();
 	virtual void print_status();
 
     virtual std::shared_ptr<package_transfer_interface> clone() {

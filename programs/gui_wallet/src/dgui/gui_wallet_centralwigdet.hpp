@@ -12,6 +12,7 @@
 
 //#define USE_TABLE_FOR_FIRST_LINE
 #define API_SHOULD_BE_DEFINED
+#define __TRY_LABEL_INSTEAD_OF_TABLE__
 
 #include <QWidget>
 #include <QVBoxLayout>
@@ -26,16 +27,18 @@
 #include <QLabel>
 #include <QComboBox>
 #include <vector>
+#include <QTableWidget>
+#include "decent_wallet_ui_gui_purchasedtab.hpp"
 
 #define __TEMPORARY__
 
 extern int g_nDebugApplication;
 
-struct qtWidget_test : public QWidget{~qtWidget_test(){if(g_nDebugApplication){printf("qtWidget_test::~qtWidget_test();\n");}}};
-#define tmpWidget  qtWidget_test
-
 namespace gui_wallet
 {
+
+enum FRST_LINE_ELEMS{DECENT_LOGO,USERNAME,BALANCE,SEND_,NUMBER_OF_FRST_LINE_ELEMS};
+enum MAIN_TABS_ENM{BROWSE_CONTENT,TRANSACTIONS,UPLOAD,OVERVIEW,PURCHASED};
 
     class CentralWigdet : public QWidget
     {
@@ -46,18 +49,11 @@ namespace gui_wallet
                                   /* used by inheritance */
 
         void SetAccountBalancesFromStrGUI(const std::vector<std::string>& a_balances_and_names);
-
-        QComboBox&  GetUsersList(){return m_users_list;}
         void AddNewUserGUI(const std::string& user_name);
-
-        __TEMPORARY__ QComboBox& usersCombo(){return m_users_list;}
-
-        QString getFilterText()const;
-
         QWidget* GetBrowseContentTab(){return &m_browse_cont_tab;}
-
-        //QTableWidget& getDigitalContentsTable();
-        void SetDigitalContentsGUI(const std::vector<gui_wallet::SDigitalContent>& contents);
+        void SetDigitalContentsGUI(const std::vector<decent::wallet::ui::gui::SDigitalContent>& vContents);
+        QString getFilterText()const;
+        __TEMPORARY__ QComboBox* usersCombo();
 
     protected:
         virtual void showEvent ( QShowEvent * event ) ;
@@ -65,29 +61,30 @@ namespace gui_wallet
 
     private:
         void PrepareGUIprivate(class QBoxLayout* pAllLayout);
+        QWidget* GetWidgetFromTable2(int column, int widget);
 
     private slots:
         void make_deleyed_warning();
 
     private:
         QVBoxLayout         m_main_layout;
-        tmpWidget           m_first_line_widget;
-        QHBoxLayout         m_first_line_layout;
-        QLineEdit           m_search_box;
-        QTabWidget          m_main_tabs;
+        QHBoxLayout         m_first_line_lbl;
+        //QHBoxLayout         m_first_line_layout;
+
+        QTabWidget          m_main_tabs2;
         Browse_content_tab  m_browse_cont_tab;
         Transactions_tab    m_trans_tab;
         Upload_tab          m_Upload_tab;
         Overview_tab        m_Overview_tab;
+        decent::wallet::ui::gui::PurchasedTab    m_Purchased_tab;
+
         QString             m_DelayedWaringTitle;
         QString             m_DelayedWaringText;
         QString             m_DelayedWaringDetails;
-        class QLabel*       m_imageLabel;
-        //QLabel              m_balanceLabel;
-        QComboBox           m_balanceCombo;
-        /* 'm_nBalance' to have this filed in order to skip parsing the text each time balance is needed*/
-        //double              m_lfBalance;
-        QComboBox           m_users_list;
+
+        QWidget*            m_pDcLogoWgt;
+        QWidget*            m_pUsernameWgt;
+        QWidget*            m_pBalanceWgt;
 
     };
 }

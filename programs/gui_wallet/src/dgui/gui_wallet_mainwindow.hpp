@@ -43,7 +43,8 @@ namespace gui_wallet
         void ManagementNewFuncGUI(void* clbkArg,int64_t err,const std::string& task,const std::string& result);
 
         void CliCallbackFnc(void*arg,const std::string& task);
-        int GetDigitalContentsFromString(std::vector<gui_wallet::SDigitalContent>& acContents, const char* contents_str);
+        int GetDigitalContentsFromString(std::vector<decent::wallet::ui::gui::SDigitalContent>& acContents,
+                                         const char* contents_str);
 
         void ShowDigitalContextesGUI(QString filter);
 
@@ -120,12 +121,14 @@ namespace gui_wallet
         QTextEdit*                          m_pInfoTextEdit;
         CliWalletDlg*                        m_pcInfoDlg;
         //std::string                         m_URI;
-        std::vector<gui_wallet::SDigitalContent> m_vcDigContent;
+        std::vector<decent::wallet::ui::gui::SDigitalContent> m_vcDigContent;
         int                     m_nConnected;
         int                     m_nUserComboTriggeredInGui;
         SConnectionStruct   m_wdata2;
         PasswordDialog      m_PasswdDialog;
         int                 m_nJustConnecting;
+
+        QString             m_default_stylesheet;
     };
 
 }

@@ -10,12 +10,18 @@
 #include <fc/crypto/sha256.hpp>
 #include <sstream>
 #include <iomanip>
+#include <algorithm>
+#include <fc/thread/thread.hpp>
+#include <gmp.h>
 
+#define DECENT_CUSTODY_THREADS 4
 
 namespace decent{
 namespace crypto{
 
 namespace {
+
+
 
 std::string bytes_to_string(unsigned char *data, int len) {
    std::stringstream ss;
@@ -38,12 +44,13 @@ void string_to_bytes(std::string& in, unsigned char data[], int len){
 custody_utils::custody_utils()
 {
    pairing_init_set_str(pairing, _DECENT_PAIRING_PARAM_);
-   element_t private_key, public_key;
 
    element_init_G1(generator, pairing);
 
    element_set_str(generator, _DECENT_GENERATOR_, 10);
    element_printf("size of element: %i\n", element_length_in_bytes(generator));
+
+
    //element_random(private_key);
    //element_pow_zn(public_key, generator, private_key);
 }
@@ -62,7 +69,8 @@ int custody_utils::get_u_from_seed( const mpz_t &seedU, element_t out[])
    mpz_init(seed_tmp);
    mpz_init_set(seed, seedU);
 
-   unsigned char digest[256];
+   unsigned char digest[32];
+   memset(digest, 0 ,32);
 
    for (int i = 0; i < DECENT_SECTORS; i++)
    {
@@ -71,7 +79,8 @@ int custody_utils::get_u_from_seed( const mpz_t &seedU, element_t out[])
       element_init_G1(out[i], pairing);
 
       char *seed_str=mpz_get_str(NULL, 16, seed);
-      SHA256((unsigned char *)seed_str, strlen(seed_str), digest);
+      fc::sha256 temp = fc::sha256::hash( seed_str, mpz_sizeinbase(seed,16));
+      memcpy(digest, temp._hash, (4*sizeof(uint64_t)));
       free(seed_str);
       element_from_hash(out[i], digest, 32);
    }
@@ -80,19 +89,25 @@ int custody_utils::get_u_from_seed( const mpz_t &seedU, element_t out[])
    return 0;
 }
 
-int custody_utils::split_file(std::fstream &file, unsigned int &n, element_t ***out)
+int custody_utils::get_n(std::fstream &file)
 {
    if(!file.is_open())
       return -1;
-   long long position = file.tellg();
    file.seekg (0, file.end);
-   long long length = (long long)file.tellg() - position;
-   long long realLen = file.tellg();
-   file.seekg (position, file.beg);
-
-   n = length / (DECENT_SIZE_OF_NUMBER_IN_THE_FIELD * DECENT_SECTORS);
+   long long length = (long long)file.tellg();
+   int n = length / (DECENT_SIZE_OF_NUMBER_IN_THE_FIELD * DECENT_SECTORS);
    if (length % (DECENT_SIZE_OF_NUMBER_IN_THE_FIELD * DECENT_SECTORS))
       n += 1;
+   return n;
+}
+
+int custody_utils::split_file(std::fstream &file, unsigned int &n, element_t ***out)
+{
+   n = get_n(file);
+   file.seekg (0, file.end);
+   long long realLen = file.tellg();
+   file.seekg (0);
+
    element_t **m = new element_t*[n];
    element_printf("Size of n is: %d\n",n);
    for(int i = 0; i < n; i++)
@@ -124,40 +139,131 @@ int custody_utils::split_file(std::fstream &file, unsigned int &n, element_t ***
    return 0;
 }
 
+inline int custody_utils::get_data(std::fstream &file, uint32_t i, char buffer[])
+{
+   uint64_t position = DECENT_SIZE_OF_NUMBER_IN_THE_FIELD * DECENT_SECTORS * i;
 
-int custody_utils::get_sigmas(element_t **m, const unsigned int n, element_t u[], element_t& pk, element_t **sigmas)
+   file.seekg (0, file.end);
+   uint64_t realLen = file.tellg();
+   file.seekg(std::min(position, realLen), file.beg);
+
+   if (realLen > ((long long)(file.tellg()) + DECENT_SIZE_OF_NUMBER_IN_THE_FIELD * DECENT_SECTORS))
+      file.read(buffer, DECENT_SIZE_OF_NUMBER_IN_THE_FIELD * DECENT_SECTORS);
+   else
+   {
+      if (file.eof())
+         memset(buffer,0,DECENT_SIZE_OF_NUMBER_IN_THE_FIELD * DECENT_SECTORS);
+      else{
+         int left = realLen - (long long)(file.tellg());
+         file.read(buffer, left);
+         memset(buffer+left,0, (DECENT_SIZE_OF_NUMBER_IN_THE_FIELD * DECENT_SECTORS) -left );
+      }
+   }
+
+}
+
+
+
+inline int custody_utils::get_m(std::fstream &file, uint32_t i, uint32_t j, mpz_t& out)
+{
+   mpz_init2(out, DECENT_SIZE_OF_NUMBER_IN_THE_FIELD*8);
+   uint64_t position = DECENT_SIZE_OF_NUMBER_IN_THE_FIELD * (j + DECENT_SECTORS*i);
+   char buffer[DECENT_SIZE_OF_NUMBER_IN_THE_FIELD];
+   file.seekg (0, file.end);
+   uint64_t realLen = file.tellg();
+   if( realLen < position ){ //we are either close or behinf EoF
+      memset(buffer,0,DECENT_SIZE_OF_NUMBER_IN_THE_FIELD);
+   }else{
+      file.seekg(position, file.beg);
+      if( realLen < position + DECENT_SIZE_OF_NUMBER_IN_THE_FIELD) { //we can't read the whole string
+         int left = realLen - (uint64_t)(file.tellg());
+         file.read(buffer, left);
+         memset(buffer+left,0, DECENT_SIZE_OF_NUMBER_IN_THE_FIELD-left );
+      }else{
+         file.read(buffer, DECENT_SIZE_OF_NUMBER_IN_THE_FIELD);
+      }
+   }
+
+   //mpz_import is too slow for our purposes - since we don't care about the exact parameters as much as about the uniqueness of the import, let's replace it with memcpy
+   memcpy((char*)out->_mp_d, buffer, DECENT_SIZE_OF_NUMBER_IN_THE_FIELD );  out->_mp_size = 2;
+   //mpz_import( out, DECENT_SIZE_OF_NUMBER_IN_THE_FIELD, 1, 1, 1, 0, buffer );
+   return 1;
+}
+
+int custody_utils::get_sigma( uint64_t idx, mpz_t mi[], element_pp_t u_pp[], element_t pk, element_t out[]){
+   element_t temp;
+   element_init_G1(temp, pairing);
+   element_init_G1(out[idx], pairing);
+   for(int j = 0; j < DECENT_SECTORS; j++)
+   {
+ //     std::cout<<"get_sigma i = "<<idx <<" j = "<<j<<"\n";
+      element_pp_pow(temp, mi[j], u_pp[j]);
+      mpz_clear(mi[j]);
+      if (j)
+         element_mul(out[idx], out[idx], temp);
+      else
+         element_set(out[idx], temp);
+   }
+   element_clear(temp);
+
+   element_t hash;
+   element_init_G1(hash, pairing);
+   unsigned char buf[32];
+   memset(buf, 0, 32);
+   char index[16];
+   memset(index,0,16);
+   sprintf(index, "%lu", idx);
+   fc::sha256 stemp = fc::sha256::hash( index, 16);
+   memcpy(buf, stemp._hash, (4*sizeof(uint64_t)));
+   element_from_hash(hash, buf, 32);
+   element_mul(out[idx], out[idx], hash);
+   element_pow_zn(out[idx], out[idx], pk);
+   element_clear(hash);
+   return 1;
+}
+
+int custody_utils::get_sigmas(std::fstream &file, const unsigned int n, element_t *u, element_t pk, element_t **sigmas)
 {
    element_t *ret = new element_t[n];
    element_pp_t * u_pp = new element_pp_t[DECENT_SECTORS];
    for( int k =0; k < DECENT_SECTORS; k++)
       element_pp_init(u_pp[k],u[k]);
-   for (int i = 0; i < n; i++)
-   {
-      element_init_G1(ret[i], pairing);
-      element_t temp;
-      element_init_G1(temp, pairing);
-      for(int j = 0; j < DECENT_SECTORS; j++)
-      {
-         element_pp_pow_zn(temp, m[i][j], u_pp[j]);
-         if (j)
-            element_mul(ret[i], ret[i], temp);
-         else
-            element_set(ret[i], temp);
-      }
-      element_clear(temp);
+   //start threads
+   fc::thread t[DECENT_CUSTODY_THREADS];
+   fc::future<int> fut[DECENT_CUSTODY_THREADS];
+   uint64_t cycles = (n + DECENT_CUSTODY_THREADS -1 ) / DECENT_CUSTODY_THREADS;
 
-      element_t hash;
-      element_init_G1(hash, pairing);
-      unsigned char buf[256] = "";
-      char index[16];
-      memset(index,0,16);
-      sprintf(index, "%d", i);
-      SHA256((unsigned char *)index, 16, buf);
-      element_from_hash(hash, buf, 256);
-      element_mul(ret[i], ret[i], hash);
-      element_pow_zn(ret[i], ret[i], pk);
-      element_clear(hash);
+//   std::cout<<"get_sigmas: n = "<<n<<" , cycles = " << cycles <<"\n";
+
+   for (uint64_t i = 0; i < cycles; ++i)
+   {
+      for ( int k = 0; k < DECENT_CUSTODY_THREADS; ++k ){
+         uint64_t idx = i * DECENT_CUSTODY_THREADS + k;
+
+         if(idx >= n)
+            break;
+         //we read the file in the main thread...
+         char* buffer = new char[ (DECENT_SIZE_OF_NUMBER_IN_THE_FIELD * DECENT_SECTORS) ];
+         get_data(file, idx, buffer);
+         //and distribute the tasks
+         fut[k] = t[k].async ( [=](){
+              mpz_t m[DECENT_SECTORS];
+              for( int i = 0; i < DECENT_SECTORS; ++i) {
+                 mpz_init2(m[i], DECENT_SIZE_OF_NUMBER_IN_THE_FIELD * 8);
+                 //mpz_import is too slow for our purposes - since we don't care about the exact parameters as much as about the uniqueness of the import, let's replace it with memcpy
+                 memcpy((char*)m[i]->_mp_d, buffer + i * DECENT_SIZE_OF_NUMBER_IN_THE_FIELD, DECENT_SIZE_OF_NUMBER_IN_THE_FIELD ); m[i]->_mp_size = 2;
+                 //mpz_import(m[i], DECENT_SIZE_OF_NUMBER_IN_THE_FIELD, 1, 1, 1, 0, buffer + i * DECENT_SIZE_OF_NUMBER_IN_THE_FIELD);
+              }
+              delete[] buffer;
+              return get_sigma(idx, m, u_pp, pk, ret);
+         } );
+      }
+      //wait for all tasks to finish
+      for ( int k = 0; k < DECENT_CUSTODY_THREADS; ++k ) {
+         fut[k].wait();
+      }
    }
+
    *sigmas = ret;
    for( int k =0; k < DECENT_SECTORS; k++)
       element_pp_clear(u_pp[k]);
@@ -165,9 +271,36 @@ int custody_utils::get_sigmas(element_t **m, const unsigned int n, element_t u[]
    return 0;
 }
 
-int custody_utils::generate_query_from_seed(mpz_t seed, unsigned int q, unsigned int n, int indices[], element_t* v[])
+
+
+int custody_utils::compute_mu(std::fstream& file, unsigned int q, uint64_t indices[], element_t v[], element_t mu[])
 {
-   element_t* ret = new element_t[q]; 
+
+   for (int j = 0; j < DECENT_SECTORS; j++)
+   {
+      element_init_Zr(mu[j], pairing);
+      for (int i = 0; i < q; i++)
+      {
+         element_t temp;
+         mpz_t m;
+         element_init_Zr(temp, pairing);
+         get_m(file, indices[i], j , m);
+         element_mul_mpz(temp, v[i], m);
+         if ( i > 0 )
+            element_add(mu[j], mu[j], temp);
+         else
+            element_set(mu[j], temp);
+         element_clear(temp);
+         mpz_clear(m);
+      }
+   }
+
+   return 0;
+}
+
+int custody_utils::generate_query_from_seed(mpz_t seed, unsigned int q, unsigned int n, uint64_t indices[], element_t* v[])
+{
+   element_t* ret = new element_t[q];
    for (int i = 0; i < q; i++)
    {
       mpz_t seedForIteration;
@@ -201,30 +334,7 @@ int custody_utils::generate_query_from_seed(mpz_t seed, unsigned int q, unsigned
 }
 
 
-int custody_utils::compute_mu(element_t **m, unsigned int q, int indices[], element_t v[], element_t mu[])
-{
-
-   for (int j = 0; j < DECENT_SECTORS; j++)
-   {
-      element_init_Zr(mu[j], pairing);
-      for (int i = 0; i < q; i++)
-      {
-         element_t temp;
-         element_init_Zr(temp, pairing);
-         element_mul(temp, v[i], m[indices[i]][j]);
-         if ( i > 0 )
-            element_add(mu[j], mu[j], temp);
-         else
-            element_set(mu[j], temp);
-         element_clear(temp);
-      }
-   }
-
-   return 0;
-}
-
-
-int custody_utils::verify(element_t sigma, unsigned int q, int *indices, element_t *v, element_t *u, element_t *mu,
+int custody_utils::verify(element_t sigma, unsigned int q, uint64_t *indices, element_t *v, element_t *u, element_t *mu,
                           element_t pubk)
 {
    element_t res1;
@@ -241,12 +351,14 @@ int custody_utils::verify(element_t sigma, unsigned int q, int *indices, element
    element_init_G1(hash, pairing);
    for (int i = 0; i < q; i++)
    {
-      unsigned char buf[256] = "";
+      unsigned char buf[32];
+      memset(buf, 0, 32);
       char index[16];
       memset(index,0,16);
-      sprintf(index, "%d", indices[i]);
-      SHA256((unsigned char *)index, 16, buf);
-      element_from_hash(hash, buf, 256);
+      sprintf(index, "%lu", indices[i]);
+      fc::sha256 stemp = fc::sha256::hash( index, 16);
+      memcpy(buf, stemp._hash, (4*sizeof(uint64_t)));
+      element_from_hash(hash, buf, 32);
       element_pow_zn(temp, hash, v[i]); //TODO_DECENT optimize
       if (i)
          element_mul(multi1, multi1, temp);
@@ -314,7 +426,7 @@ int custody_utils::unpack_proof(valtype proof, element_t &sigma, element_t **mu)
    return 0;
 }
 
-int custody_utils::compute_sigma(element_t sigmas[], unsigned int q, int indices[], element_t v[], element_t &sigma)
+int custody_utils::compute_sigma(element_t sigmas[], unsigned int q, uint64_t indices[], element_t v[], element_t &sigma)
 {
    element_init_G1(sigma, pairing);
    element_set1(sigma);
@@ -382,7 +494,7 @@ int custody_utils::verify_by_miner(const uint32_t &n, const char *u_seed, unsign
    }
 
    unsigned int q = get_number_of_query( n );
-   int indices[q];
+   uint64_t indices[q];
    element_t* v;
 
    generate_query_from_seed(seed, q, n, indices, &v);
@@ -442,9 +554,10 @@ int custody_utils::create_custody_data(path content, uint32_t& n, char u_seed[],
 
    //create the actual signatures in sigmas
 
-   split_file(infile, n, &m);
+   //split_file(infile, n, &m);
+   n = get_n(infile);
 
-   get_sigmas(m, n, u, private_key, &sigmas);
+   get_sigmas(infile, n, u, private_key, &sigmas);
 
    //save the values to u_seed and pubKey
    element_to_bytes_compressed(pubKey, public_key);
@@ -457,13 +570,6 @@ int custody_utils::create_custody_data(path content, uint32_t& n, char u_seed[],
       outfile.write(buffer, DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED);
    }
 
-   //Clean
-   for (int i = 0; i < n; i++)
-   {
-      clear_elements(m[i], DECENT_SECTORS);
-      delete[](m[i]);
-   }
-   delete[] m;
    clear_elements(u, DECENT_SECTORS);
    element_clear(private_key);
    element_clear(public_key);
@@ -521,19 +627,20 @@ int custody_utils::create_proof_of_custody(path content, const uint32_t n, const
    //read the file and get m's
    element_t **m;
    unsigned int nReal;
-   split_file(infile, nReal, &m);
+   nReal=get_n(infile);
+   //split_file(infile, nReal, &m);
    if(nReal!=n)
       return -1;
 
    //generate query
    unsigned int q = get_number_of_query(n);
-   int indices[16];
+   uint64_t indices[16];
    element_t * v;
    generate_query_from_seed(seed, q, n, indices, &v);
 
    //calculate mu and sigma
    element_t mu[DECENT_SECTORS];
-   compute_mu(m, q, indices, v, mu);
+   compute_mu(infile, q, indices, v, mu);
 
    element_t _sigma;
    compute_sigma(sigmas, q, indices, v, _sigma);
@@ -554,14 +661,6 @@ int custody_utils::create_proof_of_custody(path content, const uint32_t n, const
 
    //TODO_DECENT
    int res = verify_by_miner(n, u_seed, pubKey, sigma, mus, seed);
-
-   //clean the mess
-   for (int i = 0; i < n; i++)
-   {
-      clear_elements(m[i], DECENT_SECTORS);
-      delete[](m[i]);
-   }
-   delete[] m;
 
    clear_elements(sigmas, n);
    element_clear(_sigma);
