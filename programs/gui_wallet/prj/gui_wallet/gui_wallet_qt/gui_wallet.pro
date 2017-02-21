@@ -12,7 +12,6 @@
 # For making test: '$qmake "CONFIG+=TEST" gui_wallet.pro'  , then '$make'
 # For useing libs: '$qmake "CONFIG+=USE_LIB" gui_wallet.pro'  , then '$make'
 
-include(../lib_gui_wallet_qt/common_gui_wallet.pri)
 
 greaterThan(QT_MAJOR_VERSION, 4):QT += widgets
 #QT -= core
@@ -40,12 +39,14 @@ count(options2, 1){
 
 }else{
 
+    include(../lib_gui_wallet_qt/common_gui_wallet.pri)
     message( "Building using lib... Use export DYLD_LIBRARY_PATH=../../../sys/mac/bin" )
     LIBS += -L$$SYSTEM_PATH/bin
     LIBS += -llib_gui_wallet
-    #LIBS += -lcli_wallet
+
 
 } # else of count(options2, 1)
+
 
 SOURCES += ../../../src/dgui/gui_wallet_mainwindow.cpp \
     ../../../src/dgui/gui_wallet_centralwigdet.cpp \

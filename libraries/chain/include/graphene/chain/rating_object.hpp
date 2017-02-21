@@ -19,7 +19,7 @@ namespace graphene { namespace chain {
       account_id_type consumer;
       string URI;
       uint64_t rating;
-      buying_history_id_type buying;
+      buying_id_type buying;
    };
    
    struct by_URI_consumer;

@@ -179,6 +179,9 @@ struct wallet_data
       }
    }
 
+   /* private el gamal key */
+   d_integer priv_el_gamal_key;
+
    /** encrypted keys */
    vector<char>              cipher_keys;
 
@@ -371,28 +374,11 @@ class wallet_api
      * @ingroup WalletCLI
      */
       vector<limit_order_object>        get_limit_orders(string a, string b, uint32_t limit)const;
-    /**
-     *
-     * @param a
-     * @param limit
-     * @return
-     * @ingroup WalletCLI
-     */
-      vector<call_order_object>         get_call_orders(string a, uint32_t limit)const;
 
-    /**
-     *
-     * @param a
-     * @param limit
-     * @return
-     * @ingroup WalletCLI
-     */
-      vector<force_settlement_object>   get_settle_orders(string a, uint32_t limit)const;
-      
       /** Returns the block chain's slowly-changing settings.
        * This object contains all of the properties of the blockchain that are fixed
        * or that change only once per maintenance interval (daily) such as the
-       * current list of witnesses, committee_members, block interval, etc.
+       * current list of witnesses, block interval, etc.
        * @see \c get_dynamic_global_properties() for frequently changing properties
        * @returns the global properties
        * @ingroup WalletCLI
@@ -430,7 +416,7 @@ class wallet_api
        * @returns the BitAsset-specific data for this asset
        * @ingroup WalletCLI
        */
-      asset_bitasset_data_object        get_bitasset_data(string asset_name_or_id)const;
+      monitored_asset_options        get_monitored_asset_data(string asset_name_or_id)const;
 
       /** Lookup the id of a named account.
        * @param account_name_or_id the name of the account to look up
@@ -718,6 +704,16 @@ class wallet_api
        * @ingroup WalletCLI
        */
       bool import_key(string account_name_or_id, string wif_key);
+
+      /** Imports the private el gamal key into cli_wallet configuration file (wallet.json).
+       *
+       * @see generate_el_gamal_keys()
+       *
+       * @param d_integer Private el gamal key
+       * @returns true if the key was imported
+       * @ingroup WalletCLI
+       */
+      void import_el_gamal_key(d_integer privKey );
 
     /**
      *
@@ -1073,24 +1069,6 @@ class wallet_api
                               double amount,
                               bool broadcast );
 
-      /** Borrow an asset or update the debt/collateral ratio for the loan.
-       *
-       * This is the first step in shorting an asset.  Call \c sell_asset() to complete the short.
-       *
-       * @param borrower_name the name or id of the account associated with the transaction.
-       * @param amount_to_borrow the amount of the asset being borrowed.  Make this value
-       *                         negative to pay back debt.
-       * @param asset_symbol the symbol or id of the asset being borrowed.
-       * @param amount_of_collateral the amount of the backing asset to add to your collateral
-       *        position.  Make this negative to claim back some of your collateral.
-       *        The backing asset is defined in the \c bitasset_options for the asset being borrowed.
-       * @param broadcast true to broadcast the transaction on the network
-       * @returns the signed transaction borrowing the asset
-       * @ingroup WalletCLI
-       */
-      signed_transaction borrow_asset(string borrower_name, string amount_to_borrow, string asset_symbol,
-                                      string amount_of_collateral, bool broadcast = false);
-
       /** Cancel an existing order
        *
        * @param order_id the id of order to be cancelled
@@ -1117,8 +1095,6 @@ class wallet_api
        *               this new asset. Since this ID is not known at the time this operation is 
        *               created, create this price as though the new asset has instance ID 1, and
        *               the chain will overwrite it with the new asset's ID.
-       * @param bitasset_opts options specific to BitAssets.  This may be null unless the
-       *               \c market_issued flag is set in common.flags
        * @param broadcast true to broadcast the transaction on the network
        * @returns the signed transaction creating a new asset
        * @ingroup WalletCLI
@@ -1127,7 +1103,6 @@ class wallet_api
                                       string symbol,
                                       uint8_t precision,
                                       asset_options common,
-                                      fc::optional<bitasset_options> bitasset_opts,
                                       bool broadcast = false);
 
       /** Issue new shares of an asset.
@@ -1150,7 +1125,8 @@ class wallet_api
        * enumerated in the asset_object::asset_options struct. This command is used to update 
        * these options for an existing asset.
        *
-       * @note This operation cannot be used to update BitAsset-specific options. For these options,
+       * @note This operation cannot be used to update
+       * et-specific options. For these options,
        * \c update_bitasset() instead.
        *
        * @param symbol the name or id of the asset to update
@@ -1167,7 +1143,7 @@ class wallet_api
                                       asset_options new_options,
                                       bool broadcast = false);
 
-      /** Update the options specific to a BitAsset.
+/** Update the options specific to a BitAsset.
        *
        * BitAssets have some options which are not relevant to other asset types. This operation is used to update those
        * options an an existing BitAsset.
@@ -1181,31 +1157,17 @@ class wallet_api
        * @returns the signed transaction updating the bitasset
        * @ingroup WalletCLI
        */
-      signed_transaction update_bitasset(string symbol,
-                                         bitasset_options new_options,
-                                         bool broadcast = false);
+   signed_transaction update_monitored_asset(string symbol,
+                                      monitored_asset_options new_options,
+                                      bool broadcast = false);
 
-      /** Update the set of feed-producing accounts for a BitAsset.
-       *
-       * BitAssets have price feeds selected by taking the median values of recommendations from a set of feed producers.
-       * This command is used to specify which accounts may produce feeds for a given BitAsset.
-       * @param symbol the name or id of the asset to update
-       * @param new_feed_producers a list of account names or ids which are authorized to produce feeds for the asset.
-       *                           this list will completely replace the existing list
-       * @param broadcast true to broadcast the transaction on the network
-       * @returns the signed transaction updating the bitasset's feed producers
-       * @ingroup WalletCLI
-       */
 
-      signed_transaction update_asset_feed_producers(string symbol,
-                                                     flat_set<string> new_feed_producers,
-                                                     bool broadcast = false);
       
       /** Publishes a price feed for the named asset.
        *
        * Price feed providers use this command to publish their price feeds for market-issued assets. A price feed is
        * used to tune the market for a particular market-issued asset. For each value in the feed, the median across all
-       * committee_member feeds for that asset is calculated and the market for the asset is configured with the median of that
+       * witness feeds for that asset is calculated and the market for the asset is configured with the median of that
        * value.
        *
        * The feed object in this command contains three prices: a call price limit, a short price limit, and a settlement price.
@@ -1227,125 +1189,6 @@ class wallet_api
                                             price_feed feed,
                                             bool broadcast = false);
 
-      /** Pay into the fee pool for the given asset.
-       *
-       * User-issued assets can optionally have a pool of the core asset which is 
-       * automatically used to pay transaction fees for any transaction using that
-       * asset (using the asset's core exchange rate).
-       *
-       * This command allows anyone to deposit the core asset into this fee pool.
-       *
-       * @param from the name or id of the account sending the core asset
-       * @param symbol the name or id of the asset whose fee pool you wish to fund
-       * @param amount the amount of the core asset to deposit
-       * @param broadcast true to broadcast the transaction on the network
-       * @returns the signed transaction funding the fee pool
-       * @ingroup WalletCLI
-       */
-      signed_transaction fund_asset_fee_pool(string from,
-                                             string symbol,
-                                             string amount,
-                                             bool broadcast = false);
-
-      /** Burns the given user-issued asset.
-       *
-       * This command burns the user-issued asset to reduce the amount in circulation.
-       * @note you cannot burn market-issued assets.
-       * @param from the account containing the asset you wish to burn
-       * @param amount the amount to burn, in nominal units
-       * @param symbol the name or id of the asset to burn
-       * @param broadcast true to broadcast the transaction on the network
-       * @returns the signed transaction burning the asset
-       * @ingroup WalletCLI
-       */
-      signed_transaction reserve_asset(string from,
-                                    string amount,
-                                    string symbol,
-                                    bool broadcast = false);
-
-      /** Forces a global settling of the given asset (black swan or prediction markets).
-       *
-       * In order to use this operation, asset_to_settle must have the global_settle flag set
-       *
-       * When this operation is executed all balances are converted into the backing asset at the
-       * settle_price and all open margin positions are called at the settle price.  If this asset is
-       * used as backing for other bitassets, those bitassets will be force settled at their current
-       * feed price.
-       *
-       * @note this operation is used only by the asset issuer, \c settle_asset() may be used by 
-       *       any user owning the asset
-       *
-       * @param symbol the name or id of the asset to force settlement on
-       * @param settle_price the price at which to settle
-       * @param broadcast true to broadcast the transaction on the network
-       * @returns the signed transaction settling the named asset
-       * @ingroup WalletCLI
-       */
-      signed_transaction global_settle_asset(string symbol,
-                                             price settle_price,
-                                             bool broadcast = false);
-
-      /** Schedules a market-issued asset for automatic settlement.
-       *
-       * Holders of market-issued assests may request a forced settlement for some amount of their asset. This means that
-       * the specified sum will be locked by the chain and held for the settlement period, after which time the chain will
-       * choose a margin posision holder and buy the settled asset using the margin's collateral. The price of this sale
-       * will be based on the feed price for the market-issued asset being settled. The exact settlement price will be the
-       * feed price at the time of settlement with an offset in favor of the margin position, where the offset is a
-       * blockchain parameter set in the global_property_object.
-       *
-       * @param account_to_settle the name or id of the account owning the asset
-       * @param amount_to_settle the amount of the named asset to schedule for settlement
-       * @param symbol the name or id of the asset to settlement on
-       * @param broadcast true to broadcast the transaction on the network
-       * @returns the signed transaction settling the named asset
-       * @ingroup WalletCLI
-       */
-      signed_transaction settle_asset(string account_to_settle,
-                                      string amount_to_settle,
-                                      string symbol,
-                                      bool broadcast = false);
-
-      /** Whitelist and blacklist accounts, primarily for transacting in whitelisted assets.
-       *
-       * Accounts can freely specify opinions about other accounts, in the form of either whitelisting or blacklisting
-       * them. This information is used in chain validation only to determine whether an account is authorized to transact
-       * in an asset type which enforces a whitelist, but third parties can use this information for other uses as well,
-       * as long as it does not conflict with the use of whitelisted assets.
-       *
-       * An asset which enforces a whitelist specifies a list of accounts to maintain its whitelist, and a list of
-       * accounts to maintain its blacklist. In order for a given account A to hold and transact in a whitelisted asset S,
-       * A must be whitelisted by at least one of S's whitelist_authorities and blacklisted by none of S's
-       * blacklist_authorities. If A receives a balance of S, and is later removed from the whitelist(s) which allowed it
-       * to hold S, or added to any blacklist S specifies as authoritative, A's balance of S will be frozen until A's
-       * authorization is reinstated.
-       *
-       * @param authorizing_account the account who is doing the whitelisting
-       * @param account_to_list the account being whitelisted
-       * @param new_listing_status the new whitelisting status
-       * @param broadcast true to broadcast the transaction on the network
-       * @returns the signed transaction changing the whitelisting status
-       * @ingroup WalletCLI
-       */
-      signed_transaction whitelist_account(string authorizing_account,
-                                           string account_to_list,
-                                           account_whitelist_operation::account_listing new_listing_status,
-                                           bool broadcast = false);
-
-      /** Creates a committee_member object owned by the given account.
-       *
-       * An account can have at most one committee_member object.
-       *
-       * @param owner_account the name or id of the account which is creating the committee_member
-       * @param url a URL to include in the committee_member record in the blockchain.  Clients may
-       *            display this when showing a list of committee_members.  May be blank.
-       * @param broadcast true to broadcast the transaction on the network
-       * @returns the signed transaction registering a committee_member
-       * @ingroup WalletCLI
-       */
-      signed_transaction create_committee_member(string owner_account,
-                                         string url, 
-                                         bool broadcast = false);
 
       /** Lists all witnesses registered in the blockchain.
        * This returns a list of all account names that own witnesses, and the associated witness id,
@@ -1363,22 +1206,6 @@ class wallet_api
        */
       map<string,witness_id_type>       list_witnesses(const string& lowerbound, uint32_t limit);
 
-      /** Lists all committee_members registered in the blockchain.
-       * This returns a list of all account names that own committee_members, and the associated committee_member id,
-       * sorted by name.  This lists committee_members whether they are currently voted in or not.
-       *
-       * Use the \c lowerbound and limit parameters to page through the list.  To retrieve all committee_members,
-       * start by setting \c lowerbound to the empty string \c "", and then each iteration, pass
-       * the last committee_member name returned as the \c lowerbound for the next \c list_committee_members() call.
-       *
-       * @param lowerbound the name of the first committee_member to return.  If the named committee_member does not exist, 
-       *                   the list will start at the committee_member that comes after \c lowerbound
-       * @param limit the maximum number of committee_members to return (max: 1000)
-       * @returns a list of committee_members mapping committee_member names to committee_member ids
-       * @ingroup WalletCLI
-       */
-      map<string, committee_member_id_type>       list_committee_members(const string& lowerbound, uint32_t limit);
-
       /** Returns information about the given witness.
        * @param owner_account the name or id of the witness account owner, or the id of the witness
        * @returns the information about the witness stored in the block chain
@@ -1386,14 +1213,7 @@ class wallet_api
        */
       witness_object get_witness(string owner_account);
 
-      /** Returns information about the given committee_member.
-       * @param owner_account the name or id of the committee_member account owner, or the id of the committee_member
-       * @returns the information about the committee_member stored in the block chain
-       * @ingroup WalletCLI
-       */
-      committee_member_object get_committee_member(string owner_account);
-
-      /** Creates a witness object owned by the given account.
+     /** Creates a witness object owned by the given account.
        *
        * An account can have at most one witness object.
        *
@@ -1446,29 +1266,6 @@ class wallet_api
          string asset_symbol,
          bool broadcast = false);
 
-      /** Vote for a given committee_member.
-       *
-       * An account can publish a list of all committee_memberes they approve of.  This 
-       * command allows you to add or remove committee_memberes from this list.
-       * Each account's vote is weighted according to the number of shares of the
-       * core asset owned by that account at the time the votes are tallied.
-       *
-       * @note you cannot vote against a committee_member, you can only vote for the committee_member
-       *       or not vote for the committee_member.
-       *
-       * @param voting_account the name or id of the account who is voting with their shares
-       * @param committee_member the name or id of the committee_member' owner account
-       * @param approve true if you wish to vote in favor of that committee_member, false to 
-       *                remove your vote in favor of that committee_member
-       * @param broadcast true if you wish to broadcast the transaction
-       * @return the signed transaction changing your vote for the given committee_member
-       * @ingroup WalletCLI
-       */
-      signed_transaction vote_for_committee_member(string voting_account,
-                                           string committee_member,
-                                           bool approve,
-                                           bool broadcast = false);
-
       /** Vote for a given witness.
        *
        * An account can publish a list of all witnesses they approve of.  This 
@@ -1515,13 +1312,13 @@ class wallet_api
                                           optional<string> voting_account,
                                           bool broadcast = false);
       
-      /** Set your vote for the number of witnesses and committee_members in the system.
+      /** Set your vote for the number of witnesses in the system.
        *
-       * Each account can voice their opinion on how many committee_members and how many 
-       * witnesses there should be in the active committee_member/active witness list.  These
+       * Each account can voice their opinion on how many
+       * witnesses there should be in the active witness list.  These
        * are independent of each other.  You must vote your approval of at least as many
-       * committee_members or witnesses as you claim there should be (you can't say that there should
-       * be 20 committee_members but only vote for 10). 
+       * witnesses as you claim there should be (you can't say that there should
+       * be 20 witnesses but only vote for 10).
        *
        * There are maximum values for each set in the blockchain parameters (currently 
        * defaulting to 1001).
@@ -1530,15 +1327,13 @@ class wallet_api
        * set, your preferences will be ignored.
        *
        * @param account_to_modify the name or id of the account to update
-       * @param number_of_committee_members the number 
        *
        * @param broadcast true if you wish to broadcast the transaction
        * @return the signed transaction changing your vote proxy settings
        * @ingroup WalletCLI
        */
-      signed_transaction set_desired_witness_and_committee_member_count(string account_to_modify,
+      signed_transaction set_desired_witness_count(string account_to_modify,
                                                                 uint16_t desired_number_of_witnesses,
-                                                                uint16_t desired_number_of_committee_members,
                                                                 bool broadcast = false);
 
       /** Signs a transaction.
@@ -1750,12 +1545,11 @@ class wallet_api
      * @param URI
      * @param price_asset_name
      * @param price_amount
-     * @param pubKey
      * @param broadcast true to broadcast the transaction on the network
      * @return
      * @ingroup WalletCLI
      */
-      signed_transaction request_to_buy(string consumer, string URI, string price_asset_name, string price_amount, string pubKey, bool broadcast);
+      signed_transaction request_to_buy(string consumer, string URI, string price_asset_name, string price_amount, bool broadcast);
 
     /**
      *
@@ -1776,7 +1570,6 @@ class wallet_api
      * @param seeder
      * @param space
      * @param price_per_MByte
-     * @param pubKey
      * @param broadcast true to broadcast the transaction on the network
      * @return
      * @ingroup WalletCLI
@@ -1784,7 +1577,6 @@ class wallet_api
       signed_transaction ready_to_publish(string seeder,
                                           uint64_t space,
                                           uint32_t price_per_MByte,
-                                          d_integer pubKey,
                                           bool broadcast = false);
 
     /**
@@ -1818,6 +1610,14 @@ class wallet_api
 
     /**
      *
+     * @param buying
+     * @return restored encryption key from particles
+     * @ingroup WalletCLI
+     */
+      d_integer restore_encryption_key(buying_id_type buying);
+
+    /**
+     *
      * @return
      * @ingroup WalletCLI
      */
@@ -1847,12 +1647,12 @@ class wallet_api
       vector<buying_object> get_open_buyings_by_consumer( const account_id_type& consumer )const;
 
       /**
-       * @brief Get a buying_history_object by "buying"
-       * @param buying Buying to retrieve
-       * @return The buying_history_object corresponding to the provided "buying", or null if no matching object was found
+       * @brief Get history buying_objects by consumer
+       * @param consumer Consumer of the buyings to retrieve
+       * @return History buying_objects corresponding to the provided consumer
        * @ingroup WalletCLI
        */
-      optional<buying_history_object> get_buying_history_object( const buying_id_type& buying )const;
+      vector<buying_object> get_buying_history_objects_by_consumer( const account_id_type& consumer )const;
 
       /**
        * @brief Get a content by URI
@@ -1950,7 +1750,7 @@ class wallet_api
        * @param protocol protocol for uploading package magnet or ipfs
        * @return nothing
        */
-      void upload_package(const std::string& package_hash, const std::string& protocol) const;
+      std::string upload_package(const std::string& package_hash, const std::string& protocol) const;
 
       /**
        * @brief Remove package
@@ -1983,6 +1783,7 @@ FC_REFLECT( graphene::wallet::plain_keys, (keys)(checksum) )
 FC_REFLECT( graphene::wallet::wallet_data,
             (chain_id)
             (my_accounts)
+            (priv_el_gamal_key)
             (cipher_keys)
             (extra_keys)
             (pending_account_registrations)(pending_witness_registrations)
@@ -2048,6 +1849,7 @@ FC_API( graphene::wallet::wallet_api,
         (list_account_balances)
         (list_assets)
         (import_key)
+        (import_el_gamal_key)
         (import_accounts)
         (import_account_keys)
         (suggest_brain_key)
@@ -2056,37 +1858,26 @@ FC_API( graphene::wallet::wallet_api,
         (sell_asset)
         (sell)
         (buy)
-        (borrow_asset)
         (cancel_order)
         (transfer)
         (transfer2)
         (get_transaction_id)
         (create_asset)
         (update_asset)
-        (update_bitasset)
-        (update_asset_feed_producers)
+        (update_monitored_asset)
         (publish_asset_feed)
         (issue_asset)
         (get_asset)
-        (get_bitasset_data)
-        (fund_asset_fee_pool)
-        (reserve_asset)
-        (global_settle_asset)
-        (settle_asset)
-        (whitelist_account)
-        (create_committee_member)
+        (get_monitored_asset_data)
         (get_witness)
-        (get_committee_member)
         (list_witnesses)
-        (list_committee_members)
         (create_witness)
         (update_witness)
         (get_vesting_balances)
         (withdraw_vesting)
-        (vote_for_committee_member)
         (vote_for_witness)
         (set_voting_proxy)
-        (set_desired_witness_and_committee_member_count)
+        (set_desired_witness_count)
         (get_account)
         (get_account_id)
         (get_block)
@@ -2100,8 +1891,6 @@ FC_API( graphene::wallet::wallet_api,
         (load_wallet_file)
         (normalize_brain_key)
         (get_limit_orders)
-        (get_call_orders)
-        (get_settle_orders)
         (save_wallet_file)
         (serialize_transaction)
         (sign_transaction)
@@ -2137,11 +1926,12 @@ FC_API( graphene::wallet::wallet_api,
         (ready_to_publish)
         (proof_of_custody)
         (deliver_keys)
+        (restore_encryption_key)
         (generate_el_gamal_keys)
         (get_open_buyings)
         (get_open_buyings_by_URI)
         (get_open_buyings_by_consumer)
-        (get_buying_history_object)
+        (get_buying_history_objects_by_consumer)
         (get_content)
         (list_content_by_author)
         (list_content)

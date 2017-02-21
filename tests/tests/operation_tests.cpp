@@ -30,7 +30,6 @@
 
 #include <graphene/chain/account_object.hpp>
 #include <graphene/chain/asset_object.hpp>
-#include <graphene/chain/committee_member_object.hpp>
 #include <graphene/chain/market_object.hpp>
 #include <graphene/chain/vesting_balance_object.hpp>
 #include <graphene/chain/withdraw_permission_object.hpp>
@@ -51,7 +50,6 @@ BOOST_AUTO_TEST_CASE( feed_limit_logic_test )
       asset usd(1000,asset_id_type(1));
       asset core(1000,asset_id_type(0));
       price_feed feed;
-      feed.settlement_price = usd / core;
 
       // require 3x min collateral
       auto swanp = usd / core;
@@ -75,355 +73,6 @@ BOOST_AUTO_TEST_CASE( feed_limit_logic_test )
       throw;
    }
 }
-BOOST_AUTO_TEST_CASE( call_order_update_test )
-{
-   try {
-      ACTORS((dan)(sam));
-      const auto& bitusd = create_bitasset("USDBIT", sam.id);
-      const auto& core   = asset_id_type()(db);
-
-      transfer(committee_account, dan_id, asset(10000000));
-      update_feed_producers( bitusd, {sam.id} );
-
-      price_feed current_feed; current_feed.settlement_price = bitusd.amount( 100 ) / core.amount(100);
-      publish_feed( bitusd, sam, current_feed );
-
-      FC_ASSERT( bitusd.bitasset_data(db).current_feed.settlement_price == current_feed.settlement_price );
-
-      BOOST_TEST_MESSAGE( "attempting to borrow using 2x collateral at 1:1 price now that there is a valid order" );
-      borrow( dan, bitusd.amount(5000), asset(10000));
-      BOOST_REQUIRE_EQUAL( get_balance( dan, bitusd ), 5000 );
-      BOOST_REQUIRE_EQUAL( get_balance( dan, core ), 10000000 - 10000 );
-
-      BOOST_TEST_MESSAGE( "covering 2500 usd and freeing 5000 core..." );
-      cover( dan, bitusd.amount(2500), asset(5000));
-      BOOST_REQUIRE_EQUAL( get_balance( dan, bitusd ), 2500 );
-      BOOST_REQUIRE_EQUAL( get_balance( dan, core ), 10000000 - 10000 + 5000  );
-
-      BOOST_TEST_MESSAGE( "verifying that attempting to cover the full amount without claiming the collateral fails" );
-      GRAPHENE_REQUIRE_THROW( cover( dan, bitusd.amount(2500), core.amount(0)  ), fc::exception );
-
-      cover( dan, bitusd.amount(2500), core.amount(5000));
-
-      BOOST_REQUIRE_EQUAL( get_balance( dan, bitusd ), 0 );
-      BOOST_REQUIRE_EQUAL( get_balance( dan, core ), 10000000  );
-
-      borrow( dan, bitusd.amount(5000), asset(10000));
-      BOOST_REQUIRE_EQUAL( get_balance( dan, bitusd ), 5000 );
-      BOOST_REQUIRE_EQUAL( get_balance( dan, core ), 10000000 - 10000  );
-
-
-      // test just increasing collateral
-      BOOST_TEST_MESSAGE( "increasing collateral" );
-      borrow( dan, bitusd.amount(0), asset(10000));
-
-      BOOST_REQUIRE_EQUAL( get_balance( dan, bitusd ), 5000 );
-      BOOST_REQUIRE_EQUAL( get_balance( dan, core ), 10000000 - 20000  );
-
-      // test just decreasing debt
-      BOOST_TEST_MESSAGE( "decreasing debt" );
-      cover( dan, bitusd.amount(1000), asset(0));
-
-      BOOST_REQUIRE_EQUAL( get_balance( dan, bitusd ), 4000 );
-      BOOST_REQUIRE_EQUAL( get_balance( dan, core ), 10000000 - 20000  );
-
-      BOOST_TEST_MESSAGE( "increasing debt without increasing collateral" );
-      borrow( dan, bitusd.amount(1000), asset(0));
-
-      BOOST_REQUIRE_EQUAL( get_balance( dan, bitusd ), 5000 );
-      BOOST_REQUIRE_EQUAL( get_balance( dan, core ), 10000000 - 20000  );
-
-      BOOST_TEST_MESSAGE( "increasing debt without increasing collateral again" );
-      GRAPHENE_REQUIRE_THROW( borrow( dan, bitusd.amount(80000), asset(0)), fc::exception );
-      BOOST_TEST_MESSAGE( "attempting to claim all collateral without paying off debt" );
-      GRAPHENE_REQUIRE_THROW( cover( dan, bitusd.amount(0), asset(20000)), fc::exception );
-      BOOST_TEST_MESSAGE( "attempting reduce collateral without paying off any debt" );
-      cover( dan, bitusd.amount(0), asset(1000));
-
-      BOOST_TEST_MESSAGE( "attempting change call price to be below minimum for debt/collateral ratio" );
-      GRAPHENE_REQUIRE_THROW( cover( dan, bitusd.amount(0), asset(0)), fc::exception );
-
-   } catch (fc::exception& e) {
-      edump((e.to_detail_string()));
-      throw;
-   }
-}
-
-/**
- *  This test sets up a situation where a margin call will be executed and ensures that
- *  it is properly filled.
- *
- *  A margin call can happen in the following situation:
- *  0. there exists a bid above the mas short squeeze price
- *  1. highest bid is lower than the call price of an order
- *  2. the asset is not a prediction market
- *  3. there is a valid price feed
- *
- *  This test creates two scenarios:
- *  a) when the bids are above the short squeese limit (should execute)
- *  b) when the bids are below the short squeeze limit (should not execute)
- */
-BOOST_AUTO_TEST_CASE( margin_call_limit_test )
-{ try {
-      ACTORS((buyer)(seller)(borrower)(borrower2)(feedproducer));
-
-      const auto& bitusd = create_bitasset("USDBIT", feedproducer_id);
-      const auto& core   = asset_id_type()(db);
-
-      int64_t init_balance(1000000);
-
-      transfer(committee_account, buyer_id, asset(init_balance));
-      transfer(committee_account, borrower_id, asset(init_balance));
-      transfer(committee_account, borrower2_id, asset(init_balance));
-      update_feed_producers( bitusd, {feedproducer.id} );
-
-      price_feed current_feed;
-      current_feed.settlement_price = bitusd.amount( 100 ) / core.amount(100);
-
-      // starting out with price 1:1
-      publish_feed( bitusd, feedproducer, current_feed );
-
-      // start out with 2:1 collateral
-      borrow( borrower, bitusd.amount(1000), asset(2000));
-      borrow( borrower2, bitusd.amount(1000), asset(4000) );
-
-      BOOST_CHECK_EQUAL( get_balance( borrower, bitusd ), 1000 );
-      BOOST_CHECK_EQUAL( get_balance( borrower2, bitusd ), 1000 );
-      BOOST_CHECK_EQUAL( get_balance( borrower , core ), init_balance - 2000 );
-      BOOST_CHECK_EQUAL( get_balance( borrower2, core ), init_balance - 4000 );
-
-      // this should trigger margin call that is below the call limit, but above the
-      // protection threshold.
-      BOOST_TEST_MESSAGE( "Creating a margin call that is NOT protected by the max short squeeze price" );
-      auto order = create_sell_order( borrower2, bitusd.amount(1000), core.amount(1400) );
-      BOOST_CHECK( order != nullptr );
-
-      BOOST_CHECK_EQUAL( get_balance( borrower, bitusd ), 1000 );
-      BOOST_CHECK_EQUAL( get_balance( borrower2, bitusd ), 0 );
-      BOOST_CHECK_EQUAL( get_balance( borrower , core ), init_balance - 2000 );
-      BOOST_CHECK_EQUAL( get_balance( borrower2, core ), init_balance - 4000 );
-
-      BOOST_TEST_MESSAGE( "Creating a margin call that is protected by the max short squeeze price" );
-      borrow( borrower, bitusd.amount(1000), asset(2000) );
-      borrow( borrower2, bitusd.amount(1000), asset(4000) );
-
-      // this should trigger margin call without protection from the price feed.
-      order = create_sell_order( borrower2, bitusd.amount(1000), core.amount(1800) );
-      BOOST_CHECK( order != nullptr );
-   } catch( const fc::exception& e) {
-      edump((e.to_detail_string()));
-      throw;
-   }
-}
-
-/**
- *  This test sets up the minimum condition for a black swan to occur but does
- *  not test the full range of cases that may be possible during a black swan.
- */
-BOOST_AUTO_TEST_CASE( black_swan )
-{ try {
-      ACTORS((buyer)(seller)(borrower)(borrower2)(feedproducer));
-
-      const auto& bitusd = create_bitasset("USDBIT", feedproducer_id);
-      const auto& core   = asset_id_type()(db);
-
-      int64_t init_balance(1000000);
-
-      transfer(committee_account, buyer_id, asset(init_balance));
-      transfer(committee_account, borrower_id, asset(init_balance));
-      transfer(committee_account, borrower2_id, asset(init_balance));
-      update_feed_producers(bitusd, {feedproducer.id});
-
-      price_feed current_feed;
-      current_feed.settlement_price = bitusd.amount(100) / core.amount(100);
-
-      // starting out with price 1:1
-      publish_feed(bitusd, feedproducer, current_feed);
-
-      // start out with 2:1 collateral
-      borrow(borrower, bitusd.amount(1000), asset(2000));
-      borrow(borrower2, bitusd.amount(1000), asset(4000));
-
-      BOOST_REQUIRE_EQUAL( get_balance(borrower, bitusd), 1000 );
-      BOOST_REQUIRE_EQUAL( get_balance(borrower2, bitusd), 1000 );
-      BOOST_REQUIRE_EQUAL( get_balance(borrower , core), init_balance - 2000 );
-      BOOST_REQUIRE_EQUAL( get_balance(borrower2, core), init_balance - 4000 );
-
-      current_feed.settlement_price = bitusd.amount( 100 ) / core.amount(200);
-      publish_feed( bitusd, feedproducer, current_feed );
-
-      /// this sell order is designed to trigger a black swan
-      create_sell_order( borrower2, bitusd.amount(1000), core.amount(3000) );
-
-      FC_ASSERT( bitusd.bitasset_data(db).has_settlement() );
-
-      force_settle(borrower, bitusd.amount(100));
-
-      BOOST_TEST_MESSAGE( "Verify that we cannot borrow after black swan" );
-      GRAPHENE_REQUIRE_THROW( borrow(borrower, bitusd.amount(1000), asset(2000)), fc::exception );
-   } catch( const fc::exception& e) {
-      edump((e.to_detail_string()));
-      throw;
-   }
-}
-
-/**
- * Black swan occurs when price feed falls, triggered by settlement
- * order.
- */
-BOOST_AUTO_TEST_CASE( black_swan_issue_346 )
-{ try {
-      ACTORS((buyer)(seller)(borrower)(borrower2)(settler)(feeder));
-
-      const asset_object& core = asset_id_type()(db);
-
-      int trial = 0;
-      const int64_t init_balance(1000000);
-
-      vector< const account_object* > actors{ &buyer, &seller, &borrower, &borrower2, &settler, &feeder };
-
-      auto top_up = [&]()
-      {
-         for( const account_object* actor : actors )
-         {
-            int64_t bal = get_balance( *actor, core );
-            if( bal < init_balance )
-               transfer( committee_account, actor->id, asset(init_balance - bal) );
-            else if( bal > init_balance )
-               transfer( actor->id, committee_account, asset(bal - init_balance) );
-         }
-      };
-
-      auto setup_asset = [&]() -> const asset_object&
-      {
-         const asset_object& bitusd = create_bitasset("USDBIT"+fc::to_string(trial)+"X", feeder_id);
-         update_feed_producers( bitusd, {feeder.id} );
-         BOOST_CHECK( !bitusd.bitasset_data(db).has_settlement() );
-         trial++;
-         return bitusd;
-      };
-
-      /*
-       * GRAPHENE_COLLATERAL_RATIO_DENOM
-      uint16_t maintenance_collateral_ratio = GRAPHENE_DEFAULT_MAINTENANCE_COLLATERAL_RATIO;
-      uint16_t maximum_short_squeeze_ratio = GRAPHENE_DEFAULT_MAX_SHORT_SQUEEZE_RATIO;
-      */
-
-      // situations to test:
-      // 1. minus short squeeze protection would be black swan, otherwise no
-      // 2. issue 346 (price feed drops followed by force settle, drop should trigger BS)
-      // 3. feed price < D/C of least collateralized short < call price < highest bid
-
-      auto set_price = [&](
-         const asset_object& bitusd,
-         const price& settlement_price
-         )
-      {
-         price_feed feed;
-         feed.settlement_price = settlement_price;
-         feed.core_exchange_rate = settlement_price;
-         wdump( (feed.max_short_squeeze_price()) );
-         publish_feed( bitusd, feeder, feed );
-      };
-
-      auto wait_for_settlement = [&]()
-      {
-         const auto& idx = db.get_index_type<force_settlement_index>().indices().get<by_expiration>();
-         const auto& itr = idx.rbegin();
-         if( itr == idx.rend() )
-            return;
-         generate_blocks( itr->settlement_date );
-         BOOST_CHECK( !idx.empty() );
-         generate_block();
-         BOOST_CHECK( idx.empty() );
-      };
-
-      {
-         const asset_object& bitusd = setup_asset();
-         top_up();
-         set_price( bitusd, bitusd.amount(1) / core.amount(5) );  // $0.20
-         borrow(borrower, bitusd.amount(100), asset(1000));       // 2x collat
-         transfer( borrower, settler, bitusd.amount(100) );
-
-         // drop to $0.02 and settle
-         BOOST_CHECK( !bitusd.bitasset_data(db).has_settlement() );
-         set_price( bitusd, bitusd.amount(1) / core.amount(50) ); // $0.02
-         BOOST_CHECK( bitusd.bitasset_data(db).has_settlement() );
-         GRAPHENE_REQUIRE_THROW( borrow( borrower2, bitusd.amount(100), asset(10000) ), fc::exception );
-         force_settle( settler, bitusd.amount(100) );
-
-         // wait for forced settlement to execute
-         // this would throw on Sep.18 testnet, see #346
-         wait_for_settlement();
-      }
-
-      // issue 350
-      {
-         // ok, new asset
-         const asset_object& bitusd = setup_asset();
-         top_up();
-         set_price( bitusd, bitusd.amount(40) / core.amount(1000) ); // $0.04
-         borrow( borrower, bitusd.amount(100), asset(5000) );    // 2x collat
-         transfer( borrower, seller, bitusd.amount(100) );
-         limit_order_id_type oid_019 = create_sell_order( seller, bitusd.amount(39), core.amount(2000) )->id;   // this order is at $0.019, we should not be able to match against it
-         limit_order_id_type oid_020 = create_sell_order( seller, bitusd.amount(40), core.amount(2000) )->id;   // this order is at $0.020, we should be able to match against it
-         set_price( bitusd, bitusd.amount(21) / core.amount(1000) ); // $0.021
-         //
-         // We attempt to match against $0.019 order and black swan,
-         // and this is intended behavior.  See discussion in ticket.
-         //
-         BOOST_CHECK( bitusd.bitasset_data(db).has_settlement() );
-         BOOST_CHECK( db.find_object( oid_019 ) != nullptr );
-         BOOST_CHECK( db.find_object( oid_020 ) == nullptr );
-      }
-
-   } catch( const fc::exception& e) {
-      edump((e.to_detail_string()));
-      throw;
-   }
-}
-
-BOOST_AUTO_TEST_CASE( prediction_market )
-{ try {
-      ACTORS((judge)(dan)(nathan));
-
-      const auto& pmark = create_prediction_market("PMARK", judge_id);
-      const auto& core  = asset_id_type()(db);
-
-      int64_t init_balance(1000000);
-      transfer(committee_account, judge_id, asset(init_balance));
-      transfer(committee_account, dan_id, asset(init_balance));
-      transfer(committee_account, nathan_id, asset(init_balance));
-
-      BOOST_TEST_MESSAGE( "Require throw for mismatch collateral amounts" );
-      GRAPHENE_REQUIRE_THROW( borrow( dan, pmark.amount(1000), asset(2000) ), fc::exception );
-
-      BOOST_TEST_MESSAGE( "Open position with equal collateral" );
-      borrow( dan, pmark.amount(1000), asset(1000) );
-
-      BOOST_TEST_MESSAGE( "Cover position with unequal asset should fail." );
-      GRAPHENE_REQUIRE_THROW( cover( dan, pmark.amount(500), asset(1000) ), fc::exception );
-
-      BOOST_TEST_MESSAGE( "Cover half of position with equal ammounts" );
-      cover( dan, pmark.amount(500), asset(500) );
-
-      BOOST_TEST_MESSAGE( "Verify that forced settlment fails before global settlement" );
-      GRAPHENE_REQUIRE_THROW( force_settle( dan, pmark.amount(100) ), fc::exception );
-
-      BOOST_TEST_MESSAGE( "Shouldn't be allowed to force settle at more than 1 collateral per debt" );
-      GRAPHENE_REQUIRE_THROW( force_global_settle( pmark, pmark.amount(100) / core.amount(105) ), fc::exception );
-
-      force_global_settle( pmark, pmark.amount(100) / core.amount(95) );
-
-      BOOST_TEST_MESSAGE( "Verify that forced settlment succeedes after global settlement" );
-      force_settle( dan, pmark.amount(100) );
-
-   } catch( const fc::exception& e) {
-      edump((e.to_detail_string()));
-      throw;
-   }
-}
-
 
 BOOST_AUTO_TEST_CASE( create_account_test )
 {
@@ -463,11 +112,11 @@ BOOST_AUTO_TEST_CASE( create_account_test )
       BOOST_CHECK(nathan_account.name == "nathan");
 
       BOOST_REQUIRE(nathan_account.owner.num_auths() == 1);
-      BOOST_CHECK(nathan_account.owner.key_auths.at(committee_key) == 123);
+      BOOST_CHECK(nathan_account.owner.key_auths.at(witness_key) == 123);
       BOOST_REQUIRE(nathan_account.active.num_auths() == 1);
-      BOOST_CHECK(nathan_account.active.key_auths.at(committee_key) == 321);
+      BOOST_CHECK(nathan_account.active.key_auths.at(witness_key) == 321);
       BOOST_CHECK(nathan_account.options.voting_account == GRAPHENE_PROXY_TO_SELF_ACCOUNT);
-      BOOST_CHECK(nathan_account.options.memo_key == committee_key);
+      BOOST_CHECK(nathan_account.options.memo_key == witness_key);
 
       const account_statistics_object& statistics = nathan_account.statistics(db);
       BOOST_CHECK(statistics.id.space() == implementation_ids);
@@ -484,7 +133,7 @@ BOOST_AUTO_TEST_CASE( update_account )
       const account_object& nathan = create_account("nathan", init_account_pub_key);
       const fc::ecc::private_key nathan_new_key = fc::ecc::private_key::generate();
       const public_key_type key_id = nathan_new_key.get_public_key();
-      const auto& active_committee_members = db.get_global_properties().active_committee_members;
+      const auto& active_witnesses = db.get_global_properties().active_witnesses;
 
       transfer(account_id_type()(db), nathan, asset(1000000000));
 
@@ -494,8 +143,8 @@ BOOST_AUTO_TEST_CASE( update_account )
       op.owner = authority(2, key_id, 1, init_account_pub_key, 1);
       op.active = authority(2, key_id, 1, init_account_pub_key, 1);
       op.new_options = nathan.options;
-      op.new_options->votes = flat_set<vote_id_type>({active_committee_members[0](db).vote_id, active_committee_members[5](db).vote_id});
-      op.new_options->num_committee = 2;
+      op.new_options->votes = flat_set<vote_id_type>({active_witnesses[0](db).vote_id, active_witnesses[5](db).vote_id});
+      op.new_options->num_witness = 2;
       trx.operations.push_back(op);
       BOOST_TEST_MESSAGE( "Updating account" );
       PUSH_TX( db, trx, ~0 );
@@ -524,12 +173,12 @@ BOOST_AUTO_TEST_CASE( transfer_core_asset )
    try {
       INVOKE(create_account_test);
 
-      account_id_type committee_account;
-      asset committee_balance = db.get_balance(account_id_type(), asset_id_type());
+      account_id_type witness_account;
+      asset witness_balance = db.get_balance(account_id_type(), asset_id_type());
 
       const account_object& nathan_account = *db.get_index_type<account_index>().indices().get<by_name>().find("nathan");
       transfer_operation top;
-      top.from = committee_account;
+      top.from = witness_account;
       top.to = nathan_account.id;
       top.amount = asset( 10000);
       trx.operations.push_back(top);
@@ -540,14 +189,14 @@ BOOST_AUTO_TEST_CASE( transfer_core_asset )
       PUSH_TX( db, trx, ~0 );
 
       BOOST_CHECK_EQUAL(get_balance(account_id_type()(db), asset_id_type()(db)),
-                        (committee_balance.amount - 10000 - fee.amount).value);
-      committee_balance = db.get_balance(account_id_type(), asset_id_type());
+                        (witness_balance.amount - 10000 - fee.amount).value);
+      witness_balance = db.get_balance(account_id_type(), asset_id_type());
 
       BOOST_CHECK_EQUAL(get_balance(nathan_account, asset_id_type()(db)), 10000);
 
       trx = signed_transaction();
       top.from = nathan_account.id;
-      top.to = committee_account;
+      top.to = witness_account;
       top.amount = asset(2000);
       trx.operations.push_back(top);
 
@@ -559,31 +208,8 @@ BOOST_AUTO_TEST_CASE( transfer_core_asset )
       PUSH_TX( db, trx, ~0 );
 
       BOOST_CHECK_EQUAL(get_balance(nathan_account, asset_id_type()(db)), 8000 - fee.amount.value);
-      BOOST_CHECK_EQUAL(get_balance(account_id_type()(db), asset_id_type()(db)), committee_balance.amount.value + 2000);
+      BOOST_CHECK_EQUAL(get_balance(account_id_type()(db), asset_id_type()(db)), witness_balance.amount.value + 2000);
 
-   } catch (fc::exception& e) {
-      edump((e.to_detail_string()));
-      throw;
-   }
-}
-
-BOOST_AUTO_TEST_CASE( create_committee_member )
-{
-   try {
-      committee_member_create_operation op;
-      op.committee_member_account = account_id_type();
-      op.fee = asset();
-      trx.operations.push_back(op);
-
-      REQUIRE_THROW_WITH_VALUE(op, committee_member_account, account_id_type(99999999));
-      REQUIRE_THROW_WITH_VALUE(op, fee, asset(-600));
-      trx.operations.back() = op;
-
-      committee_member_id_type committee_member_id = db.get_index_type<primary_index<simple_index<committee_member_object>>>().get_next_id();
-      PUSH_TX( db, trx, ~0 );
-      const committee_member_object& d = committee_member_id(db);
-
-      BOOST_CHECK(d.committee_member_account == account_id_type());
    } catch (fc::exception& e) {
       edump((e.to_detail_string()));
       throw;
@@ -593,11 +219,10 @@ BOOST_AUTO_TEST_CASE( create_committee_member )
 BOOST_AUTO_TEST_CASE( create_mia )
 {
    try {
-      const asset_object& bitusd = create_bitasset( "USDBIT" );
+      const asset_object& bitusd = create_monitored_asset( "USDBIT" );
       BOOST_CHECK(bitusd.symbol == "USDBIT");
-      BOOST_CHECK(bitusd.bitasset_data(db).options.short_backing_asset == asset_id_type());
       BOOST_CHECK(bitusd.dynamic_asset_data_id(db).current_supply == 0);
-      GRAPHENE_REQUIRE_THROW( create_bitasset("USDBIT"), fc::exception);
+      GRAPHENE_REQUIRE_THROW( create_monitored_asset("USDBIT"), fc::exception);
    } catch ( const fc::exception& e ) {
       elog( "${e}", ("e", e.to_detail_string() ) );
       throw;
@@ -619,7 +244,6 @@ BOOST_AUTO_TEST_CASE( update_mia )
 
       trx.operations.back() = op;
       PUSH_TX( db, trx, ~0 );
-      std::swap(op.new_options.flags, op.new_options.issuer_permissions);
       op.new_issuer = account_id_type();
       trx.operations.back() = op;
       PUSH_TX( db, trx, ~0 );
@@ -629,13 +253,12 @@ BOOST_AUTO_TEST_CASE( update_mia )
          pop.asset_id = bit_usd.get_id();
          pop.publisher = get_account("init0").get_id();
          price_feed feed;
-         feed.settlement_price = feed.core_exchange_rate = price(bit_usd.amount(5), bit_usd.amount(5));
+         feed.core_exchange_rate = price(bit_usd.amount(5), bit_usd.amount(5));
          REQUIRE_THROW_WITH_VALUE(pop, feed, feed);
-         feed.settlement_price = feed.core_exchange_rate = ~price(bit_usd.amount(5), asset(5));
+         feed.core_exchange_rate = ~price(bit_usd.amount(5), asset(5));
          REQUIRE_THROW_WITH_VALUE(pop, feed, feed);
-         feed.settlement_price = feed.core_exchange_rate = price(bit_usd.amount(5), asset(5));
+         feed.core_exchange_rate = price(bit_usd.amount(5), asset(5));
          pop.feed = feed;
-         REQUIRE_THROW_WITH_VALUE(pop, feed.maintenance_collateral_ratio, 0);
          trx.operations.back() = pop;
          PUSH_TX( db, trx, ~0 );
       }
@@ -670,9 +293,6 @@ BOOST_AUTO_TEST_CASE( create_uia )
       creator.symbol = "TEST";
       creator.common_options.max_supply = 100000000;
       creator.precision = 2;
-      creator.common_options.market_fee_percent = GRAPHENE_MAX_MARKET_FEE_PERCENT/100; /*1%*/
-      creator.common_options.issuer_permissions = UIA_ASSET_ISSUER_PERMISSION_MASK;
-      creator.common_options.flags = charge_market_fee;
       creator.common_options.core_exchange_rate = price({asset(2),asset(1,asset_id_type(1))});
       trx.operations.push_back(std::move(creator));
       PUSH_TX( db, trx, ~0 );
@@ -680,16 +300,13 @@ BOOST_AUTO_TEST_CASE( create_uia )
       const asset_object& test_asset = test_asset_id(db);
       BOOST_CHECK(test_asset.symbol == "TEST");
       BOOST_CHECK(asset(1, test_asset_id) * test_asset.options.core_exchange_rate == asset(2));
-      BOOST_CHECK((test_asset.options.flags & white_list) == 0);
       BOOST_CHECK(test_asset.options.max_supply == 100000000);
-      BOOST_CHECK(!test_asset.bitasset_data_id.valid());
-      BOOST_CHECK(test_asset.options.market_fee_percent == GRAPHENE_MAX_MARKET_FEE_PERCENT/100);
+      BOOST_CHECK(!test_asset.options.monitored_asset_opts.valid());
       GRAPHENE_REQUIRE_THROW(PUSH_TX( db, trx, ~0 ), fc::exception);
 
       const asset_dynamic_data_object& test_asset_dynamic_data = test_asset.dynamic_asset_data_id(db);
       BOOST_CHECK(test_asset_dynamic_data.current_supply == 0);
       BOOST_CHECK(test_asset_dynamic_data.accumulated_fees == 0);
-      BOOST_CHECK(test_asset_dynamic_data.fee_pool == 0);
 
       auto op = trx.operations.back().get<asset_create_operation>();
       op.symbol = "TESTFAIL";
@@ -730,11 +347,6 @@ BOOST_AUTO_TEST_CASE( update_uia )
       BOOST_TEST_MESSAGE( "Make sure changing issuer to same as before is forbidden" );
       REQUIRE_THROW_WITH_VALUE(op, new_issuer, test.issuer);
 
-      //Cannot convert to an MIA
-      BOOST_TEST_MESSAGE( "Make sure we can't convert UIA to MIA" );
-      REQUIRE_THROW_WITH_VALUE(op, new_options.issuer_permissions, ASSET_ISSUER_PERMISSION_MASK);
-      REQUIRE_THROW_WITH_VALUE(op, new_options.core_exchange_rate, price(asset(5), asset(5)));
-
       BOOST_TEST_MESSAGE( "Test updating core_exchange_rate" );
       op.new_options.core_exchange_rate = price(asset(3), test.amount(5));
       trx.operations.back() = op;
@@ -744,35 +356,6 @@ BOOST_AUTO_TEST_CASE( update_uia )
       op.new_issuer = nathan.id;
       trx.operations.back() = op;
       PUSH_TX( db, trx, ~0 );
-
-      BOOST_TEST_MESSAGE( "Test setting flags" );
-      op.issuer = nathan.id;
-      op.new_issuer.reset();
-      op.new_options.flags = transfer_restricted | white_list;
-      trx.operations.back() = op;
-      PUSH_TX( db, trx, ~0 );
-
-      BOOST_TEST_MESSAGE( "Disable white_list permission" );
-      op.new_options.issuer_permissions = test.options.issuer_permissions & ~white_list;
-      trx.operations.back() = op;
-      PUSH_TX( db, trx, ~0 );
-
-      BOOST_TEST_MESSAGE( "Can't toggle white_list" );
-      REQUIRE_THROW_WITH_VALUE(op, new_options.flags, test.options.flags & ~white_list);
-
-      BOOST_TEST_MESSAGE( "Can toggle transfer_restricted" );
-      for( int i=0; i<2; i++ )
-      {
-         op.new_options.flags = test.options.flags ^ transfer_restricted;
-         trx.operations.back() = op;
-         PUSH_TX( db, trx, ~0 );
-      }
-
-      BOOST_TEST_MESSAGE( "Make sure white_list can't be re-enabled" );
-      op.new_options.issuer_permissions = test.options.issuer_permissions;
-      op.new_options.flags = test.options.flags;
-      BOOST_CHECK(!(test.options.issuer_permissions & white_list));
-      REQUIRE_THROW_WITH_VALUE(op, new_options.issuer_permissions, UIA_ASSET_ISSUER_PERMISSION_MASK);
 
       BOOST_TEST_MESSAGE( "We can change issuer to account_id_type(), but can't do it again" );
       op.new_issuer = account_id_type();
@@ -813,14 +396,14 @@ BOOST_AUTO_TEST_CASE( issue_uia )
       BOOST_CHECK_EQUAL(get_balance(nathan_account, test_asset), 5000000);
       BOOST_CHECK(test_dynamic_data.current_supply == 5000000);
       BOOST_CHECK(test_dynamic_data.accumulated_fees == 0);
-      BOOST_CHECK(test_dynamic_data.fee_pool == 0);
+
 
       PUSH_TX( db, trx, ~0 );
 
       BOOST_CHECK_EQUAL(get_balance(nathan_account, test_asset), 10000000);
       BOOST_CHECK(test_dynamic_data.current_supply == 10000000);
       BOOST_CHECK(test_dynamic_data.accumulated_fees == 0);
-      BOOST_CHECK(test_dynamic_data.fee_pool == 0);
+
    } catch(fc::exception& e) {
       edump((e.to_detail_string()));
       throw;
@@ -834,22 +417,22 @@ BOOST_AUTO_TEST_CASE( transfer_uia )
 
       const asset_object& uia = *db.get_index_type<asset_index>().indices().get<by_symbol>().find("TEST");
       const account_object& nathan = *db.get_index_type<account_index>().indices().get<by_name>().find("nathan");
-      const account_object& committee = account_id_type()(db);
+      const account_object& witness = account_id_type()(db);
 
       BOOST_CHECK_EQUAL(get_balance(nathan, uia), 10000000);
       transfer_operation top;
       top.from = nathan.id;
-      top.to = committee.id;
+      top.to = witness.id;
       top.amount = uia.amount(5000);
       trx.operations.push_back(top);
-      BOOST_TEST_MESSAGE( "Transfering 5000 TEST from nathan to committee" );
+      BOOST_TEST_MESSAGE( "Transfering 5000 TEST from nathan to witness" );
       PUSH_TX( db, trx, ~0 );
       BOOST_CHECK_EQUAL(get_balance(nathan, uia), 10000000 - 5000);
-      BOOST_CHECK_EQUAL(get_balance(committee, uia), 5000);
+      BOOST_CHECK_EQUAL(get_balance(witness, uia), 5000);
 
       PUSH_TX( db, trx, ~0 );
       BOOST_CHECK_EQUAL(get_balance(nathan, uia), 10000000 - 10000);
-      BOOST_CHECK_EQUAL(get_balance(committee, uia), 10000);
+      BOOST_CHECK_EQUAL(get_balance(witness, uia), 10000);
    } catch(fc::exception& e) {
       edump((e.to_detail_string()));
       throw;
@@ -866,7 +449,7 @@ BOOST_AUTO_TEST_CASE( create_buy_uia_multiple_match_new )
    const account_object& buyer_account  = create_account( "buyer" );
    const account_object& seller_account = create_account( "seller" );
 
-   transfer( committee_account(db), buyer_account, test_asset.amount( 10000 ) );
+   transfer( witness_account(db), buyer_account, test_asset.amount( 10000 ) );
    transfer( nathan_account, seller_account, core_asset.amount(10000) );
 
    BOOST_CHECK_EQUAL( get_balance( buyer_account, test_asset ), 10000 );
@@ -906,7 +489,7 @@ BOOST_AUTO_TEST_CASE( create_buy_exact_match_uia )
    const account_object& buyer_account  = create_account( "buyer" );
    const account_object& seller_account = create_account( "seller" );
 
-   transfer( committee_account(db), seller_account, asset( 10000 ) );
+   transfer( witness_account(db), seller_account, asset( 10000 ) );
    transfer( nathan_account, buyer_account, test_asset.amount(10000) );
 
    BOOST_CHECK_EQUAL( get_balance( buyer_account, test_asset ), 10000 );
@@ -947,7 +530,7 @@ BOOST_AUTO_TEST_CASE( create_buy_uia_multiple_match_new_reverse )
    const account_object& buyer_account  = create_account( "buyer" );
    const account_object& seller_account = create_account( "seller" );
 
-   transfer( committee_account(db), seller_account, asset( 10000 ) );
+   transfer( witness_account(db), seller_account, asset( 10000 ) );
    transfer( nathan_account, buyer_account, test_asset.amount(10000),test_asset.amount(0) );
 
    BOOST_CHECK_EQUAL( get_balance( buyer_account, test_asset ), 10000 );
@@ -987,7 +570,7 @@ BOOST_AUTO_TEST_CASE( create_buy_uia_multiple_match_new_reverse_fract )
    const account_object& buyer_account  = create_account( "buyer" );
    const account_object& seller_account = create_account( "seller" );
 
-   transfer( committee_account(db), seller_account, asset( 30 ) );
+   transfer( witness_account(db), seller_account, asset( 30 ) );
    transfer( nathan_account, buyer_account, test_asset.amount(10000),test_asset.amount(0) );
 
    BOOST_CHECK_EQUAL( get_balance( buyer_account, test_asset ), 10000 );
@@ -1032,16 +615,13 @@ BOOST_AUTO_TEST_CASE( uia_fees )
       const asset_object& test_asset = get_asset("TEST");
       const asset_dynamic_data_object& asset_dynamic = test_asset.dynamic_asset_data_id(db);
       const account_object& nathan_account = get_account("nathan");
-      const account_object& committee_account = account_id_type()(db);
+      const account_object& witness_account = account_id_type()(db);
       const share_type prec = asset::scaled_precision( asset_id_type()(db).precision );
-
-      fund_fee_pool(committee_account, test_asset, 1000*prec);
-      BOOST_CHECK(asset_dynamic.fee_pool == 1000*prec);
 
       transfer_operation op;
       op.fee = test_asset.amount(0);
       op.from = nathan_account.id;
-      op.to   = committee_account.id;
+      op.to   = witness_account.id;
       op.amount = test_asset.amount(100);
       op.fee = db.current_fee_schedule().calculate_fee( op, test_asset.options.core_exchange_rate );
       BOOST_CHECK(op.fee.asset_id == test_asset.id);
@@ -1054,24 +634,19 @@ BOOST_AUTO_TEST_CASE( uia_fees )
 
       BOOST_CHECK_EQUAL(get_balance(nathan_account, test_asset),
                         (old_balance - fee - test_asset.amount(100)).amount.value);
-      BOOST_CHECK_EQUAL(get_balance(committee_account, test_asset), 100);
-      BOOST_CHECK(asset_dynamic.accumulated_fees == fee.amount);
-      BOOST_CHECK(asset_dynamic.fee_pool == 1000*prec - core_fee.amount);
-
+      BOOST_CHECK_EQUAL(get_balance(witness_account, test_asset), 100);
       //Do it again, for good measure.
       PUSH_TX( db, trx, ~0 );
       BOOST_CHECK_EQUAL(get_balance(nathan_account, test_asset),
                         (old_balance - fee - fee - test_asset.amount(200)).amount.value);
-      BOOST_CHECK_EQUAL(get_balance(committee_account, test_asset), 200);
-      BOOST_CHECK(asset_dynamic.accumulated_fees == fee.amount + fee.amount);
-      BOOST_CHECK(asset_dynamic.fee_pool == 1000*prec - core_fee.amount - core_fee.amount);
+      BOOST_CHECK_EQUAL(get_balance(witness_account, test_asset), 200);
 
       op = std::move(trx.operations.back().get<transfer_operation>());
       trx.operations.clear();
       op.amount = asset(20);
 
       BOOST_CHECK_EQUAL(get_balance(nathan_account, asset_id_type()(db)), 0);
-      transfer(committee_account, nathan_account, asset(20));
+      transfer(witness_account, nathan_account, asset(20));
       BOOST_CHECK_EQUAL(get_balance(nathan_account, asset_id_type()(db)), 20);
 
       trx.operations.emplace_back(std::move(op));
@@ -1080,9 +655,8 @@ BOOST_AUTO_TEST_CASE( uia_fees )
       BOOST_CHECK_EQUAL(get_balance(nathan_account, asset_id_type()(db)), 0);
       BOOST_CHECK_EQUAL(get_balance(nathan_account, test_asset),
                         (old_balance - fee - fee - fee - test_asset.amount(200)).amount.value);
-      BOOST_CHECK_EQUAL(get_balance(committee_account, test_asset), 200);
-      BOOST_CHECK(asset_dynamic.accumulated_fees == fee.amount.value * 3);
-      BOOST_CHECK(asset_dynamic.fee_pool == 1000*prec - core_fee.amount.value * 3);
+      BOOST_CHECK_EQUAL(get_balance(witness_account, test_asset), 200);
+
    } catch (fc::exception& e) {
       edump((e.to_detail_string()));
       throw;
@@ -1095,7 +669,7 @@ BOOST_AUTO_TEST_CASE( cancel_limit_order_test )
    const asset_object&   test_asset     = get_asset( "TEST" );
    const account_object& buyer_account  = create_account( "buyer" );
 
-   transfer( committee_account(db), buyer_account, asset( 10000 ) );
+   transfer( witness_account(db), buyer_account, asset( 10000 ) );
 
    BOOST_CHECK_EQUAL( get_balance(buyer_account, asset_id_type()(db)), 10000 );
    auto sell_order = create_sell_order( buyer_account, asset(1000), test_asset.amount(100+450*1) );
@@ -1138,38 +712,27 @@ BOOST_AUTO_TEST_CASE( witness_feeds )
       asset_publish_feed_operation op;
       op.publisher = active_witnesses[0];
       op.asset_id = bit_usd.get_id();
-      op.feed.settlement_price = op.feed.core_exchange_rate = ~price(asset(GRAPHENE_BLOCKCHAIN_PRECISION),bit_usd.amount(30));
+      op.feed.core_exchange_rate = ~price(asset(GRAPHENE_BLOCKCHAIN_PRECISION),bit_usd.amount(30));
       // Accept defaults for required collateral
       trx.operations.emplace_back(op);
       PUSH_TX( db, trx, ~0 );
 
-      const asset_bitasset_data_object& bitasset = bit_usd.bitasset_data(db);
-      BOOST_CHECK(bitasset.current_feed.settlement_price.to_real() == 30.0 / GRAPHENE_BLOCKCHAIN_PRECISION);
-      BOOST_CHECK(bitasset.current_feed.maintenance_collateral_ratio == GRAPHENE_DEFAULT_MAINTENANCE_COLLATERAL_RATIO);
-
       op.publisher = active_witnesses[1];
-      op.feed.settlement_price = op.feed.core_exchange_rate = ~price(asset(GRAPHENE_BLOCKCHAIN_PRECISION),bit_usd.amount(25));
+      op.feed.core_exchange_rate = ~price(asset(GRAPHENE_BLOCKCHAIN_PRECISION),bit_usd.amount(25));
       trx.operations.back() = op;
       PUSH_TX( db, trx, ~0 );
-
-      BOOST_CHECK_EQUAL(bitasset.current_feed.settlement_price.to_real(), 30.0 / GRAPHENE_BLOCKCHAIN_PRECISION);
-      BOOST_CHECK(bitasset.current_feed.maintenance_collateral_ratio == GRAPHENE_DEFAULT_MAINTENANCE_COLLATERAL_RATIO);
 
       op.publisher = active_witnesses[2];
-      op.feed.settlement_price = op.feed.core_exchange_rate = ~price(asset(GRAPHENE_BLOCKCHAIN_PRECISION),bit_usd.amount(40));
+      op.feed.core_exchange_rate = ~price(asset(GRAPHENE_BLOCKCHAIN_PRECISION),bit_usd.amount(40));
       // But this witness is an idiot.
-      op.feed.maintenance_collateral_ratio = 1001;
       trx.operations.back() = op;
       PUSH_TX( db, trx, ~0 );
 
-      BOOST_CHECK_EQUAL(bitasset.current_feed.settlement_price.to_real(), 30.0 / GRAPHENE_BLOCKCHAIN_PRECISION);
-      BOOST_CHECK(bitasset.current_feed.maintenance_collateral_ratio == GRAPHENE_DEFAULT_MAINTENANCE_COLLATERAL_RATIO);
    } catch (const fc::exception& e) {
       edump((e.to_detail_string()));
       throw;
    }
 }
-
 
 /**
  *  Create an order such that when the trade executes at the
@@ -1187,7 +750,7 @@ BOOST_AUTO_TEST_CASE( trade_amount_equals_zero )
       const account_object& core_seller = create_account( "shorter1" );
       const account_object& core_buyer = get_account("nathan");
 
-      transfer( committee_account(db), core_seller, asset( 100000000 ) );
+      transfer( witness_account(db), core_seller, asset( 100000000 ) );
 
       BOOST_CHECK_EQUAL(get_balance(core_buyer, core), 0);
       BOOST_CHECK_EQUAL(get_balance(core_buyer, test), 10000000);
@@ -1238,175 +801,6 @@ BOOST_AUTO_TEST_CASE( fill_order )
    //o.calculate_fee(db.current_fee_schedule());
 } FC_LOG_AND_RETHROW() }
 
-
-/**
- *  Reserve asset test should make sure that all assets except bitassets
- *  can be burned, and all supplies add up.
- */
-BOOST_AUTO_TEST_CASE( reserve_asset_test )
-{
-   try
-   {
-      ACTORS((alice)(bob)(sam)(judge));
-      const auto& basset = create_bitasset("USDBIT", judge_id);
-      const auto& uasset = create_user_issued_asset("TEST");
-      const auto& passet = create_prediction_market("PMARK", judge_id);
-      const auto& casset = asset_id_type()(db);
-
-      auto reserve_asset = [&]( account_id_type payer, asset amount_to_reserve )
-      {
-         asset_reserve_operation op;
-         op.payer = payer;
-         op.amount_to_reserve = amount_to_reserve;
-         transaction tx;
-         tx.operations.push_back( op );
-         set_expiration( db, tx );
-         db.push_transaction( tx, database::skip_authority_check | database::skip_tapos_check | database::skip_transaction_signatures );
-      } ;
-
-      auto _issue_uia = [&]( const account_object& recipient, asset amount )
-      {
-         asset_issue_operation op;
-         op.issuer = amount.asset_id(db).issuer;
-         op.asset_to_issue = amount;
-         op.issue_to_account = recipient.id;
-         transaction tx;
-         tx.operations.push_back( op );
-         set_expiration( db, tx );
-         db.push_transaction( tx, database::skip_authority_check | database::skip_tapos_check | database::skip_transaction_signatures );
-      } ;
-
-      int64_t init_balance = 10000;
-      int64_t reserve_amount = 3000;
-      share_type initial_reserve;
-
-      BOOST_TEST_MESSAGE( "Test reserve operation on core asset" );
-      transfer( committee_account, alice_id, casset.amount( init_balance ) );
-
-      initial_reserve = casset.reserved( db );
-      reserve_asset( alice_id, casset.amount( reserve_amount  ) );
-      BOOST_CHECK_EQUAL( get_balance( alice, casset ), init_balance - reserve_amount );
-      BOOST_CHECK_EQUAL( (casset.reserved( db ) - initial_reserve).value, reserve_amount );
-      verify_asset_supplies(db);
-
-      BOOST_TEST_MESSAGE( "Test reserve operation on market issued asset" );
-      transfer( committee_account, alice_id, casset.amount( init_balance*100 ) );
-      update_feed_producers( basset, {sam.id} );
-      price_feed current_feed;
-      current_feed.settlement_price = basset.amount( 2 ) / casset.amount(100);
-      publish_feed( basset, sam, current_feed );
-      borrow( alice_id, basset.amount( init_balance ), casset.amount( 100*init_balance ) );
-      BOOST_CHECK_EQUAL( get_balance( alice, basset ), init_balance );
-
-      GRAPHENE_REQUIRE_THROW( reserve_asset( alice_id, basset.amount( reserve_amount ) ), asset_reserve_invalid_on_mia );
-
-      BOOST_TEST_MESSAGE( "Test reserve operation on prediction market asset" );
-      transfer( committee_account, alice_id, casset.amount( init_balance ) );
-      borrow( alice_id, passet.amount( init_balance ), casset.amount( init_balance ) );
-      GRAPHENE_REQUIRE_THROW( reserve_asset( alice_id, passet.amount( reserve_amount ) ), asset_reserve_invalid_on_mia );
-
-      BOOST_TEST_MESSAGE( "Test reserve operation on user issued asset" );
-      _issue_uia( alice, uasset.amount( init_balance ) );
-      BOOST_CHECK_EQUAL( get_balance( alice, uasset ), init_balance );
-      verify_asset_supplies(db);
-
-      BOOST_TEST_MESSAGE( "Reserving asset" );
-      initial_reserve = uasset.reserved( db );
-      reserve_asset( alice_id, uasset.amount( reserve_amount  ) );
-      BOOST_CHECK_EQUAL( get_balance( alice, uasset ), init_balance - reserve_amount );
-      BOOST_CHECK_EQUAL( (uasset.reserved( db ) - initial_reserve).value, reserve_amount );
-      verify_asset_supplies(db);
-   }
-   catch (fc::exception& e)
-   {
-      edump((e.to_detail_string()));
-      throw;
-   }
-}
-
-/**
- * This test demonstrates how using the call_order_update_operation to
- * trigger a margin call is legal if there is a matching order.
- */
-BOOST_AUTO_TEST_CASE( cover_with_collateral_test )
-{
-   try
-   {
-      ACTORS((alice)(bob)(sam));
-      const auto& bitusd = create_bitasset("USDBIT", sam_id);
-      const auto& core   = asset_id_type()(db);
-
-      BOOST_TEST_MESSAGE( "Setting price feed to $0.02 / 100" );
-      transfer(committee_account, alice_id, asset(10000000));
-      update_feed_producers( bitusd, {sam.id} );
-
-      price_feed current_feed;
-      current_feed.settlement_price = bitusd.amount( 2 ) / core.amount(100);
-      publish_feed( bitusd, sam, current_feed );
-
-      BOOST_REQUIRE( bitusd.bitasset_data(db).current_feed.settlement_price == current_feed.settlement_price );
-
-      BOOST_TEST_MESSAGE( "Alice borrows some BitUSD at 2x collateral and gives it to Bob" );
-      const call_order_object* call_order = borrow( alice, bitusd.amount(100), asset(10000) );
-      BOOST_REQUIRE( call_order != nullptr );
-
-      // wdump( (*call_order) );
-
-      transfer( alice_id, bob_id, bitusd.amount(100) );
-
-      auto update_call_order = [&]( account_id_type acct, asset delta_collateral, asset delta_debt )
-      {
-         call_order_update_operation op;
-         op.funding_account = acct;
-         op.delta_collateral = delta_collateral;
-         op.delta_debt = delta_debt;
-         transaction tx;
-         tx.operations.push_back( op );
-         set_expiration( db, tx );
-         db.push_transaction( tx, database::skip_authority_check | database::skip_tapos_check | database::skip_transaction_signatures );
-      } ;
-
-      // margin call requirement:  1.75x
-      BOOST_TEST_MESSAGE( "Alice decreases her collateral to maint level plus one satoshi" );
-      asset delta_collateral = asset(int64_t( current_feed.maintenance_collateral_ratio ) * 5000 / GRAPHENE_COLLATERAL_RATIO_DENOM - 10000 + 1 );
-      update_call_order( alice_id, delta_collateral, bitusd.amount(0) );
-      // wdump( (*call_order) );
-
-      BOOST_TEST_MESSAGE( "Alice cannot decrease her collateral by one satoshi, there is no buyer" );
-      GRAPHENE_REQUIRE_THROW( update_call_order( alice_id, asset(-1), bitusd.amount(0) ), call_order_update_unfilled_margin_call );
-      // wdump( (*call_order) );
-
-      BOOST_TEST_MESSAGE( "Bob offers to sell most of the BitUSD at the feed" );
-      const limit_order_object* order = create_sell_order( bob_id, bitusd.amount(99), asset(4950) );
-      BOOST_REQUIRE( order != nullptr );
-      limit_order_id_type order1_id = order->id;
-      BOOST_CHECK_EQUAL( order->for_sale.value, 99 );
-      // wdump( (*call_order) );
-
-      BOOST_TEST_MESSAGE( "Alice still cannot decrease her collateral to maint level" );
-      GRAPHENE_REQUIRE_THROW( update_call_order( alice_id, asset(-1), bitusd.amount(0) ), call_order_update_unfilled_margin_call );
-      // wdump( (*call_order) );
-
-      BOOST_TEST_MESSAGE( "Bob offers to sell the last of his BitUSD in another order" );
-      order = create_sell_order( bob_id, bitusd.amount(1), asset(50) );
-      BOOST_REQUIRE( order != nullptr );
-      limit_order_id_type order2_id = order->id;
-      BOOST_CHECK_EQUAL( order->for_sale.value, 1 );
-      // wdump( (*call_order) );
-
-      BOOST_TEST_MESSAGE( "Alice decreases her collateral to maint level and Bob's orders fill" );
-      update_call_order( alice_id, asset(-1), bitusd.amount(0) );
-
-      BOOST_CHECK( db.find( order1_id ) == nullptr );
-      BOOST_CHECK( db.find( order2_id ) == nullptr );
-   }
-   catch (fc::exception& e)
-   {
-      edump((e.to_detail_string()));
-      throw;
-   }
-}
-
 BOOST_AUTO_TEST_CASE( vesting_balance_create_test )
 { try {
    INVOKE( create_uia );
@@ -1436,7 +830,7 @@ BOOST_AUTO_TEST_CASE( vesting_balance_create_test )
    const account_object& alice_account = create_account("alice");
    const account_object& bob_account = create_account("bob");
 
-   transfer(committee_account(db), alice_account, core.amount(100000));
+   transfer(witness_account(db), alice_account, core.amount(100000));
 
    op.creator = alice_account.get_id();
    op.owner = alice_account.get_id();
@@ -1485,7 +879,7 @@ BOOST_AUTO_TEST_CASE( vesting_balance_withdraw_test )
    const account_object& alice_account = create_account( "alice" );
    const account_object& bob_account = create_account( "bob" );
 
-   transfer( committee_account(db), alice_account, core.amount( 1000000 ) );
+   transfer( witness_account(db), alice_account, core.amount( 1000000 ) );
 
    auto spin_vbo_clock = [&]( const vesting_balance_object& vbo, uint32_t dt_secs )
    {
@@ -1525,7 +919,7 @@ BOOST_AUTO_TEST_CASE( vesting_balance_withdraw_test )
    auto top_up = [&]()
    {
       trx.clear();
-      transfer( committee_account(db),
+      transfer( witness_account(db),
          alice_account,
          core.amount( 1000000 - db.get_balance( alice_account, core ).amount )
          );

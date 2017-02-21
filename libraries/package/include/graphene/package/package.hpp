@@ -76,7 +76,7 @@ public:
 	virtual void download_package(transfer_id id, const std::string& url, transfer_listener* listener) = 0;
 	virtual void print_status() = 0;
 
-	virtual std::string       get_transfer_url(transfer_id id) = 0;
+	virtual std::string       get_transfer_url() = 0;
 
 	virtual package_transfer_interface* clone() = 0;
 };
@@ -133,6 +133,8 @@ public:
 
 	package_transfer_interface::transfer_id download_package( const std::string& url,
 															  package_transfer_interface::transfer_listener& listener );
+
+
 	
 	std::vector<package_object> get_packages();
 	package_object				get_package_object(fc::ripemd160 hash);

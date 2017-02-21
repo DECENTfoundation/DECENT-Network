@@ -48,9 +48,6 @@ namespace graphene { namespace chain {
       /// The number of active witnesses this account votes the blockchain should appoint
       /// Must not exceed the actual number of witnesses voted for in @ref votes
       uint16_t num_witness = 0;
-      /// The number of active committee members this account votes the blockchain should appoint
-      /// Must not exceed the actual number of committee members voted for in @ref votes
-      uint16_t num_committee = 0;
       /// This is the list of vote IDs this account votes for. The weight of these votes is determined by this
       /// account's balance of core asset.
       flat_set<vote_id_type> votes;
@@ -155,51 +152,6 @@ namespace graphene { namespace chain {
    };
 
    /**
-    * @brief This operation is used to whitelist and blacklist accounts, primarily for transacting in whitelisted assets
-    * @ingroup operations
-    *
-    * Accounts can freely specify opinions about other accounts, in the form of either whitelisting or blacklisting
-    * them. This information is used in chain validation only to determine whether an account is authorized to transact
-    * in an asset type which enforces a whitelist, but third parties can use this information for other uses as well,
-    * as long as it does not conflict with the use of whitelisted assets.
-    *
-    * An asset which enforces a whitelist specifies a list of accounts to maintain its whitelist, and a list of
-    * accounts to maintain its blacklist. In order for a given account A to hold and transact in a whitelisted asset S,
-    * A must be whitelisted by at least one of S's whitelist_authorities and blacklisted by none of S's
-    * blacklist_authorities. If A receives a balance of S, and is later removed from the whitelist(s) which allowed it
-    * to hold S, or added to any blacklist S specifies as authoritative, A's balance of S will be frozen until A's
-    * authorization is reinstated.
-    *
-    * This operation requires authorizing_account's signature, but not account_to_list's. The fee is paid by
-    * authorizing_account.
-    */
-   struct account_whitelist_operation : public base_operation
-   {
-      struct fee_parameters_type { share_type fee = 300000; };
-      enum account_listing {
-         no_listing = 0x0, ///< No opinion is specified about this account
-         white_listed = 0x1, ///< This account is whitelisted, but not blacklisted
-         black_listed = 0x2, ///< This account is blacklisted, but not whitelisted
-         white_and_black_listed = white_listed | black_listed ///< This account is both whitelisted and blacklisted
-      };
-
-      /// Paid by authorizing_account
-      asset           fee;
-      /// The account which is specifying an opinion of another account
-      account_id_type authorizing_account;
-      /// The account being opined about
-      account_id_type account_to_list;
-      /// The new white and blacklist status of account_to_list, as determined by authorizing_account
-      /// This is a bitfield using values defined in the account_listing enum
-      uint8_t new_listing = no_listing;
-      extensions_type extensions;
-
-      account_id_type fee_payer()const { return authorizing_account; }
-      void validate()const { FC_ASSERT( fee.amount >= 0 ); FC_ASSERT(new_listing < 0x4); }
-   };
-
-
-   /**
     * @brief transfers the account to another account while clearing the white list
     * @ingroup operations
     *
@@ -227,10 +179,7 @@ namespace graphene { namespace chain {
 
 } } // graphene::chain
 
-FC_REFLECT(graphene::chain::account_options, (memo_key)(voting_account)(num_witness)(num_committee)(votes)(extensions))
-FC_REFLECT_TYPENAME( graphene::chain::account_whitelist_operation::account_listing)
-FC_REFLECT_ENUM( graphene::chain::account_whitelist_operation::account_listing,
-                (no_listing)(white_listed)(black_listed)(white_and_black_listed))
+FC_REFLECT(graphene::chain::account_options, (memo_key)(voting_account)(num_witness)(votes)(extensions))
 
 FC_REFLECT(graphene::chain::account_create_operation::ext, (null_ext)(buyback_options))
 FC_REFLECT( graphene::chain::account_create_operation,
@@ -244,10 +193,7 @@ FC_REFLECT( graphene::chain::account_update_operation,
             (fee)(account)(owner)(active)(new_options)(extensions)
           )
 
-FC_REFLECT( graphene::chain::account_whitelist_operation, (fee)(authorizing_account)(account_to_list)(new_listing)(extensions))
-
 FC_REFLECT( graphene::chain::account_create_operation::fee_parameters_type, (basic_fee)(premium_fee)(price_per_kbyte) )
-FC_REFLECT( graphene::chain::account_whitelist_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::account_update_operation::fee_parameters_type, (fee)(price_per_kbyte) )
 FC_REFLECT( graphene::chain::account_transfer_operation::fee_parameters_type, (fee) )
 

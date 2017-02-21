@@ -53,20 +53,20 @@ void_result proposal_create_evaluator::do_evaluate(const proposal_create_operati
 
       FC_ASSERT( other.size() == 0 ); // TODO: what about other??? 
 
-      if( auths.find(GRAPHENE_COMMITTEE_ACCOUNT) != auths.end() )
+      if( auths.find(GRAPHENE_WITNESS_ACCOUNT) != auths.end() )
       {
          GRAPHENE_ASSERT(
             o.review_period_seconds.valid(),
             proposal_create_review_period_required,
             "Review period not given, but at least ${min} required",
-            ("min", global_parameters.committee_proposal_review_period)
+            ("min", global_parameters.witness_proposal_review_period)
          );
          GRAPHENE_ASSERT(
-            *o.review_period_seconds >= global_parameters.committee_proposal_review_period,
+            *o.review_period_seconds >= global_parameters.witness_proposal_review_period,
             proposal_create_review_period_insufficient,
             "Review period of ${t} specified, but at least ${min} required",
             ("t", *o.review_period_seconds)
-            ("min", global_parameters.committee_proposal_review_period)
+            ("min", global_parameters.witness_proposal_review_period)
          );
       }
    }

@@ -21,7 +21,7 @@
 static const char* s_vccpItemNames[]={"Time","Title","Rating",
                                      "Size","Price","Left"};
 static const int   s_cnNumberOfRows = sizeof(s_vccpItemNames)/sizeof(const char*);
-static const int   s_cnNumberOfSearchFields(sizeof(ST::s_vcpcSearchTypeStrs)/sizeof(const char*));
+static const int   s_cnNumberOfSearchFields(sizeof(gui_wallet::ST::s_vcpcSearchTypeStrs)/sizeof(const char*));
 
 using namespace gui_wallet;
 extern int g_nDebugApplication;
@@ -109,7 +109,7 @@ void Browse_content_tab::DigContCallback(_NEEDED_ARGS2_)
 void Browse_content_tab::SetDigitalContentsGUI(const std::vector<decent::wallet::ui::gui::SDigitalContent>& a_vContents)
 {
     //
-    decent::wallet::ui::gui::TableWidgetItemW<QCheckBox>* pCheck;
+    //decent::wallet::ui::gui::TableWidgetItemW<QCheckBox>* pCheck;
     decent::wallet::ui::gui::TableWidgetItemW<QLabel>* pLabel;
     decent::wallet::ui::gui::SDigitalContent aTemporar;
     const int cnNumberOfContentsPlus1((int)a_vContents.size()+1);
