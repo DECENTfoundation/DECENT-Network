@@ -11,6 +11,14 @@
 #CONFIG += ALL_LIBS_FOUND
 # For making test: '$qmake "CONFIG+=TEST" gui_wallet.pro'  , then '$make'
 
+DECENT_ROOT_DEFAULT = ../../../../..
+
+DECENT_ROOT_DEV = $$(DECENT_ROOT)
+equals(DECENT_ROOT_DEV, ""): DECENT_ROOT_DEV = $$DECENT_ROOT_DEFAULT
+message("!!!!!! DECENT_ROOT is '"$$DECENT_ROOT_DEV"'")
+
+DECENT_LIB = $$DECENT_ROOT_DEV/libraries
+
 
 # calculation of BOOST_ROOT_DEFAULT
 win32{
@@ -65,6 +73,37 @@ CONFIG += c++11
 
 QMAKE_CXXFLAGS += -msse4.2
 QMAKE_CFLAGS += -msse4.2
+
+
+win32{
+    LIBS += -lcrypto++
+}else {
+    macx{
+        #QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.12
+        LIBS += -isysroot$(DEVELOPER_SDK_DIR)/MacOSX$(MACOSX_DEPLOYMENT_TARGET).sdk
+
+        OPEN_SSL_ROOT_PATH = $$(OPENSSL_ROOT_DIR)
+        equals(OPEN_SSL_ROOT_PATH, ""): OPEN_SSL_ROOT_PATH = /usr/local/opt/openssl
+
+        CRIPTOPP_ROOT_PATH = $$(CRIPTOPP_ROOT_DIR)
+        equals(CRIPTOPP_ROOT_PATH, ""): CRIPTOPP_ROOT_PATH = /usr/local/opt/cryptopp
+        #CRIPTOPP_ROOT_PATH = $$CALLER_PATH/cryptopp/$$CRIPTOPP_VERSION
+
+        #INCLUDEPATH += $$CALLER_PATH/openssl/1.0.2j/include
+        INCLUDEPATH += $$OPEN_SSL_ROOT_PATH/include
+        INCLUDEPATH += $$CRIPTOPP_ROOT_PATH/include
+        LIBS += -L$$CRIPTOPP_ROOT_PATH/lib
+        LIBS += -L$$OPEN_SSL_ROOT_PATH/lib
+        LIBS += -lcryptopp
+    }else{
+        LIBS += -lcrypto++
+    } # else of macx
+} # else of win32
+
+
+INCLUDEPATH += $$DECENT_LIB/contrib/json/src
+
+LIBS += -lcrypto
 
 
 

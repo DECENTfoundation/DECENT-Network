@@ -60,8 +60,8 @@ void decent::gui::InGuiLoopCaller::CallFunctionInGuiLoop(SetNewTask_last_args,vo
 
 void decent::gui::InGuiLoopCaller::NextFunctionToCallSlot(void* a_clbData,int64_t a_err, std::string a_inp, std::string a_result,void* a_owner,TypeCallbackSetNewTaskGlb a_fpFnc)
 {
-    std::cout << "Input: " << a_inp << std::endl;
-    std::cout << "Output: " << a_result << std::endl;
+    //std::cout << "Input: " << a_inp << std::endl;
+    //std::cout << "Output: " << a_result << std::endl;
     (*a_fpFnc)(a_owner,a_clbData,a_err,a_inp,a_result);
 }
 
