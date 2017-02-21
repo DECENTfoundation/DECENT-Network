@@ -446,7 +446,7 @@ QString CentralWigdet::getFilterText()const
     case BROWSE_CONTENT:
         return m_browse_cont_tab.getFilterText();
     case PURCHASED:
-        return tr("bought:") + m_Purchased_tab.getFilterText();
+        //return tr("bought:") + m_Purchased_tab.getFilterText();
     default:
         break;
     }

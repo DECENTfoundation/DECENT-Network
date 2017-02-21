@@ -46,6 +46,7 @@ Transactions_tab::Transactions_tab()
 
 void Transactions_tab::setOnGrids()
 {
+#if 0
     int count = 0;
     int row = 0; //tablewidget->rowCount();
     int col = 0; //tablewidget->columnCount();
@@ -85,6 +86,7 @@ void Transactions_tab::setOnGrids()
 
 //    std::cout << n << std::endl;
     }
+#endif // #if 0
 }
 
 void Transactions_tab::createNewRow()
@@ -94,6 +96,7 @@ void Transactions_tab::createNewRow()
 
 bool Transactions_tab::loadFile()
 {
+#if 0
     QFile json("/Users/vahe/Desktop/myfile.txt");
     if(!json.open(QIODevice::ReadOnly | QIODevice::Text))
     {
@@ -110,6 +113,8 @@ bool Transactions_tab::loadFile()
 
         return true;
     }
+#endif
+    return true;
 
 }
 

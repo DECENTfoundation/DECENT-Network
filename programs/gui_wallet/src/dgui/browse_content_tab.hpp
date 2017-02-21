@@ -27,6 +27,12 @@ namespace gui_wallet
     // DCF stands for Digital Contex Fields
     namespace DCF {enum DIG_CONT_FIELDS{TIME,SYNOPSIS,RATING,SIZE,PRICE,LEFT,NUM_OF_DIG_CONT_FIELDS};}
 
+    // ST stands for search type
+    namespace ST{
+    enum STtype{URI_start,author,content};
+    static const char* s_vcpcSearchTypeStrs[] = {"URI_start","author","content"};
+    }
+
     class Browse_content_tab : public QWidget
     {
         friend class CentralWigdet;

@@ -94,6 +94,23 @@ static bool GetJsonVectorNextElem(const char* a_cpcJsonStr,TypeConstChar* a_beg,
 }
 
 
+void ParseDigitalContentFromGetContentString(decent::wallet::ui::gui::SDigitalContent* a_pContent, const std::string& a_str)
+{
+    __DEBUG_APP2__(3,"str_to_parse is: \"\n%s\n\"",a_str.c_str());
+    //std::string created;
+    //std::string expiration;
+    FindStringByKey(a_str.c_str(),"created",&a_pContent->created);
+    FindStringByKey(a_str.c_str(),"expiration",&a_pContent->expiration);
+    const char* cpcStrToGet = FindValueStringByKey(a_str.c_str(),"size");
+    if(cpcStrToGet)
+    {
+        char* pcTerm;
+        a_pContent->size = strtod(cpcStrToGet,&pcTerm);
+    }
+    a_pContent->get_content_str = a_str;
+}
+
+
 /*//////////////////////////////////////////////////////////////////////////////////*/
 
 Mainwindow_gui_wallet::Mainwindow_gui_wallet()
@@ -349,15 +366,6 @@ void Mainwindow_gui_wallet::ShowDigitalContextesGUI(QString a_filter)
     {
         csTaskLine = std::string("list_content_by_author ") +
                 (csFilterStr.c_str() + strlen(ST::s_vcpcSearchTypeStrs[ST::author]) + 1);
-    }
-    else if(strstr(csFilterStr.c_str(),ST::s_vcpcSearchTypeStrs[ST::bought]))
-    {
-
-        std::string csNumber;
-        cpcNumberPtr = strchr(csFilterStr.c_str(),':');
-        if( !cpcNumberPtr || (atoi(cpcNumberPtr+1)==0)){csNumber += " 10";}
-        else {csNumber = cpcNumberPtr+1;}
-        csTaskLine = std::string("list_content_by_bought ") + csNumber;
     }
     else if(strstr(csFilterStr.c_str(),ST::s_vcpcSearchTypeStrs[ST::URI_start]))
     {
@@ -644,29 +652,12 @@ void Mainwindow_gui_wallet::HelpSlot()
 }
 
 
-static void ParseDigitalContentFromGetContentString(decent::wallet::ui::gui::SDigitalContent* a_pContent, const std::string& a_str)
-{
-    __DEBUG_APP2__(3,"str_to_parse is: \"\n%s\n\"",a_str.c_str());
-    //std::string created;
-    //std::string expiration;
-    FindStringByKey(a_str.c_str(),"created",&a_pContent->created);
-    FindStringByKey(a_str.c_str(),"expiration",&a_pContent->expiration);
-    const char* cpcStrToGet = FindValueStringByKey(a_str.c_str(),"size");
-    if(cpcStrToGet)
-    {
-        char* pcTerm;
-        a_pContent->size = strtod(cpcStrToGet,&pcTerm);
-    }
-    a_pContent->get_content_str = a_str;
-}
-
-
 void Mainwindow_gui_wallet::TaskDoneFuncGUI(void* a_clbkArg,int64_t a_err,const std::string& a_task,const std::string& a_result)
 {
     //emit TaskDoneSig(a_callbackArg,a_err,a_task,a_result);
     const char* cpcOccur;
 
-    __DEBUG_APP2__(0,"just_conn=%d, err=%d, a_clbkArg=%p, task=%s, result=%s\n",
+    __DEBUG_APP2__(2,"just_conn=%d, err=%d, a_clbkArg=%p, task=%s, result=%s\n",
                    m_nJustConnecting,(int)a_err,a_clbkArg,a_task.c_str(),a_result.c_str());
 
     //m_nJustConnecting = 0;
@@ -753,7 +744,7 @@ void Mainwindow_gui_wallet::TaskDoneFuncGUI(void* a_clbkArg,int64_t a_err,const 
 
     if(strstr(a_task.c_str(),__CONNECTION_CLB_))
     {
-        __DEBUG_APP2__(0,"this should not work!");
+        __DEBUG_APP2__(2,"this should not work!");
     }
     else if( strstr(a_task.c_str(),"info"))
     {
@@ -936,7 +927,7 @@ void Mainwindow_gui_wallet::ManagementNewFuncGUI(void* a_clbkArg,int64_t a_err,c
 #endif // #if 0
 
     int nCurentTab = m_pCentralWidget->GetMyCurrentTabIndex();
-    __DEBUG_APP2__(0," ");
+    __DEBUG_APP2__(2," ");
     //enum MAIN_TABS_ENM{BROWSE_CONTENT,TRANSACTIONS,UPLOAD,OVERVIEW,PURCHASED};
     switch(nCurentTab)
     {

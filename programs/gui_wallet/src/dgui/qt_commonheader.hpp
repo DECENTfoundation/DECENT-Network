@@ -24,12 +24,6 @@
 #define _NEEDED_ARGS2_ _NEEDED_ARGS1_(decent::wallet::ui::gui::SDigitalContent)
 #endif
 
-// ST stands for search type
-namespace ST{
-enum STtype{URI_start,author,content,bought};
-static const char* s_vcpcSearchTypeStrs[] = {"URI_start","author","content","bought"};
-}
-
 // DCA stands for Digital Contex Actions
 namespace DCA {enum DIG_CONT_ACTNS{CALL_GET_CONTENT};}
 
