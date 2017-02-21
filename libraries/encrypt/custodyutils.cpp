@@ -50,9 +50,6 @@ custody_utils::custody_utils()
    element_set_str(generator, _DECENT_GENERATOR_, 10);
    element_printf("size of element: %i\n", element_length_in_bytes(generator));
 
-   element_t test;
-   element_init_Zr(test, pairing);
-   element_printf("size of Zr element: %i, %i\n", element_length_in_bytes(test), test->field->fixed_length_in_bytes);
 
    //element_random(private_key);
    //element_pow_zn(public_key, generator, private_key);
