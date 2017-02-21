@@ -211,7 +211,7 @@ package_object ipfs_transfer::check_and_install_package() {
 
 
 
-std::string ipfs_transfer::get_transfer_url(transfer_id id) {
+std::string ipfs_transfer::get_transfer_url() {
 	return _url;
 }
 

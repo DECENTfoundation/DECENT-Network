@@ -61,5 +61,23 @@ namespace graphene { namespace chain {
       void_result do_evaluate( const deliver_keys_operation& o );
       void_result do_apply( const deliver_keys_operation& o );
    };
-   
+
+   class return_escrow_submission_evaluator : public evaluator<return_escrow_submission_evaluator>
+   {
+   public:
+      typedef return_escrow_submission_operation operation_type;
+
+      void_result do_evaluate( const return_escrow_submission_operation& o );
+      void_result do_apply( const return_escrow_submission_operation& o );
+   };
+
+   class return_escrow_buying_evaluator : public evaluator<return_escrow_buying_evaluator>
+   {
+   public:
+      typedef return_escrow_buying_operation operation_type;
+
+      void_result do_evaluate( const return_escrow_buying_operation& o );
+      void_result do_apply( const return_escrow_buying_operation& o );
+   };
+
 }}

@@ -134,8 +134,7 @@ void database::deposit_cashback(const account_object& acct, share_type amount, b
    if( amount == 0 )
       return;
 
-   if( acct.get_id() == GRAPHENE_COMMITTEE_ACCOUNT || acct.get_id() == GRAPHENE_WITNESS_ACCOUNT ||
-       acct.get_id() == GRAPHENE_RELAXED_COMMITTEE_ACCOUNT || acct.get_id() == GRAPHENE_NULL_ACCOUNT ||
+   if( acct.get_id() == GRAPHENE_WITNESS_ACCOUNT || acct.get_id() == GRAPHENE_NULL_ACCOUNT ||
        acct.get_id() == GRAPHENE_TEMP_ACCOUNT )
    {
       // The blockchain's accounts do not get cashback; it simply goes to the reserve pool.

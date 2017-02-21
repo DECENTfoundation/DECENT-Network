@@ -77,8 +77,9 @@ namespace bpo = boost::program_options;
 namespace detail {
 
    genesis_state_type create_example_genesis() {
-      auto nathan_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("nathan")));
-      dlog("Allocating all stake to ${key}", ("key", utilities::key_to_wif(nathan_key)));
+      //TODO_DECENT - replace with super trooper private key
+      auto decent_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("decent")));
+      dlog("Allocating all stake to ${key}", ("key", utilities::key_to_wif(decent_key)));
       genesis_state_type initial_state;
       initial_state.initial_parameters.current_fees = fee_schedule::get_default();//->set_all_fees(GRAPHENE_BLOCKCHAIN_PRECISION);
       initial_state.initial_active_witnesses = GRAPHENE_DEFAULT_MIN_WITNESS_COUNT;
@@ -89,14 +90,13 @@ namespace detail {
       {
          auto name = "init"+fc::to_string(i);
          initial_state.initial_accounts.emplace_back(name,
-                                                     nathan_key.get_public_key(),
-                                                     nathan_key.get_public_key());
-         initial_state.initial_committee_candidates.push_back({name});
-         initial_state.initial_witness_candidates.push_back({name, nathan_key.get_public_key()});
+                                                     decent_key.get_public_key(),
+                                                     decent_key.get_public_key());
+         initial_state.initial_witness_candidates.push_back({name, decent_key.get_public_key()});
       }
 
-      initial_state.initial_accounts.emplace_back("nathan", nathan_key.get_public_key());
-      initial_state.initial_balances.push_back({"nathan",
+      initial_state.initial_accounts.emplace_back("decent", decent_key.get_public_key());
+      initial_state.initial_balances.push_back({"decent",
                                                 GRAPHENE_SYMBOL,
                                                 GRAPHENE_MAX_SHARE_SUPPLY});
       initial_state.initial_chain_id = fc::sha256::hash( "BOGUS" );

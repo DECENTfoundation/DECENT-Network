@@ -17,6 +17,7 @@
 #define __ERRR__ 2
 
 #include "gui_wallet_mainwindow.hpp"
+#include "gui_wallet_global.hpp"
 #include <QMenuBar>
 //#include "connected_api_instance.hpp"
 #include <QMoveEvent>
@@ -313,6 +314,9 @@ void Mainwindow_gui_wallet::CurrentUserChangedSlot(const QString& a_new_user)
         m_nUserComboTriggeredInGui = 0;
         return;
     }
+    
+    GlobalEvents::instance().setCurrentUser(a_new_user.toStdString());
+
     std::string csUserName = StringFromQString(a_new_user);
     std::string csLineToRun = "list_account_balances " + csUserName;
     SetNewTask(csLineToRun,this,NULL,&Mainwindow_gui_wallet::TaskDoneFuncGUI);

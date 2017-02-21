@@ -52,6 +52,7 @@ INCLUDEPATH += $$BOOST_ROOT_QT/include
 INCLUDEPATH += /usr/local/include
 INCLUDEPATH += $$DECENT_LIB/contrib/pbc/include
 INCLUDEPATH += $$DECENT_LIB/contrib/pbc
+INCLUDEPATH += $$DECENT_LIB/contrib/json/src
 
 
 win32{
@@ -103,8 +104,9 @@ LIBS += $$DECENT_LIB/contrib/fc/libfc_debug.a
 LIBS += $$DECENT_LIB/contrib/fc/vendor/secp256k1-zkp/src/project_secp256k1-build/.libs/libsecp256k1.a
 LIBS += $$DECENT_LIB/package/libpackage_manager.a
 LIBS += $$DECENT_LIB/contrib/libtorrent/libtorrent-rasterbar.a
-LIBS += $$DECENT_LIB/encrypt/libdecent_encrypt.a
 LIBS += $$DECENT_LIB/contrib/cpp-ipfs-api/libipfs-api.a
+LIBS += $$DECENT_LIB/encrypt/libdecent_encrypt.a
+LIBS += -lcurl
 
 LIBS += -L$$BOOST_ROOT_QT/lib
 # http://askubuntu.com/questions/486006/cannot-find-boost-thread-mt-library
@@ -130,7 +132,6 @@ LIBS += -lgmp
 LIBS += -lssl
 LIBS += -lz
 LIBS += -lcrypto
-LIBS += -lcurl
 
 SOURCES += ../../../src/ui_wallet/fc_rpc_gui.cpp \
     ../../../src/ui_wallet/ui_wallet_functions.cpp \
