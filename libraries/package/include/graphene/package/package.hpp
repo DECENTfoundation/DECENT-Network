@@ -75,6 +75,7 @@ public:
 	virtual void upload_package(transfer_id id, const package_object& package, transfer_listener* listener) = 0;
 	virtual void download_package(transfer_id id, const std::string& url, transfer_listener* listener) = 0;
 	virtual void print_status() = 0;
+	virtual transfer_progress get_progress() = 0;
 
 	virtual std::string       get_transfer_url() = 0;
 
@@ -176,6 +177,9 @@ private:
 
 	void load_json_uploads();
 	void save_json_uploads();
+
+	void load_json_downloads();
+	void save_json_downloads();
 
 private:
 

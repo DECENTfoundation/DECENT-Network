@@ -62,6 +62,7 @@ using namespace nlohmann;
 ipfs_transfer::ipfs_transfer() {
 	_client = new ipfs::Client("localhost", 5001);
 	_my_thread = new fc::thread("ipfs_thread");
+	_last_progress = transfer_progress(0, 1, 0); 
 }
 
 ipfs_transfer::~ipfs_transfer() {
@@ -78,6 +79,10 @@ ipfs_transfer::~ipfs_transfer() {
 
 void ipfs_transfer::print_status() {
 	
+}
+
+package_transfer_interface::transfer_progress ipfs_transfer::get_progress() {
+	return _last_progress;
 }
 
 
@@ -184,9 +189,12 @@ void ipfs_transfer::download_package(transfer_id id, const std::string& url, tra
 	    	myfile << contents.rdbuf();
 	    	myfile.close();
 
-	    	_listener->on_download_progress(_id, transfer_progress(total_size, downloaded_size, 0));
+	    	_last_progress = transfer_progress(total_size, downloaded_size, 0);
+	    	
+	    	_listener->on_download_progress(_id, _last_progress);
 		}
-
+	    
+	    _last_progress = transfer_progress(total_size, total_size, 0);
 		_listener->on_download_finished(_id, package_object((package_manager::instance().get_packages_path() / package_name).string()));
     
     });

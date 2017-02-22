@@ -331,6 +331,8 @@ void package_manager::load_json_uploads() {
     }
 }
 
+
+
 void package_manager::save_json_uploads() {
 
     path uploads_json = _packages_directory / "uploads.json";
@@ -353,6 +355,53 @@ void package_manager::save_json_uploads() {
     output_file.close();
 }
 
+
+
+void package_manager::load_json_downloads() {
+
+    path downloads_json = _packages_directory / "downloads.json";
+    
+    _seeding_packages.clear();
+
+    if (is_regular_file(downloads_json)) {
+
+        std::ifstream input_file(downloads_json.string());
+        json downloads;
+        input_file >> downloads;
+        
+        for (json::iterator it = downloads.begin(); it != downloads.end(); ++it) {
+            string url = (*it)["url"].get<std::string>();
+            std::cout << "Resuming download " << url << std::endl;
+            download_package(url, empty_transfer_listener::get_one());
+        }
+    }
+}
+
+void package_manager::save_json_downloads() {
+
+    path downloads_json = _packages_directory / "downloads.json";
+    json downloads;
+
+    for (int i = 0; i < _all_transfers.size(); ++i) {
+        const transfer_job& job = _all_transfers[i];
+        if (job.job_type != transfer_job::DOWNLOAD) {
+            continue;
+        }
+
+        package_transfer_interface::transfer_progress progress = job.transport->get_progress();
+
+        if ((progress.current_bytes < progress.total_bytes) || (progress.total_bytes == 0)) {
+            json obj;
+            obj["url"] = job.transport->get_transfer_url();
+            downloads.push_back(obj);
+        }
+    }
+
+    std::ofstream output_file(downloads_json.string());
+    output_file << downloads;
+    output_file.close();
+}
+
 void package_manager::initialize( const path& packages_directory) {
    
     if (!is_directory(packages_directory) && !create_directories(packages_directory)) {
@@ -368,11 +417,14 @@ void package_manager::initialize( const path& packages_directory) {
         std::cout << "Uploading " << package_path.string() << " using " << it->second << std::endl;
     }
 
+    load_json_downloads();
 }
 
 
 package_manager::~package_manager() {
+    std::cout << "Saving current transfers..." << std::endl;
     save_json_uploads();
+    save_json_downloads();
 }
 
 package_manager::package_manager() {

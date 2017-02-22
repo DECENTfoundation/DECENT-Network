@@ -39,6 +39,7 @@ public:
 
 	virtual std::string       get_transfer_url();
 	virtual void print_status();
+	virtual transfer_progress get_progress();
 
 	virtual package_transfer_interface* clone() {
 		return new ipfs_transfer();
@@ -56,6 +57,7 @@ private:
 	bool 				 _is_upload;
 	ipfs::Client* 		 _client;
 	fc::thread* 		 _my_thread;
+	transfer_progress    _last_progress;
 };
 
 

@@ -259,6 +259,12 @@ torrent_transfer::~torrent_transfer() {
     *_instance_exists = false;
 }
 
+
+package_transfer_interface::transfer_progress torrent_transfer::get_progress() {
+    libtorrent::torrent_status st = _torrent_handle.status();
+    return transfer_progress(st.total_wanted, st.total_wanted_done, st.download_rate);
+}
+
 void torrent_transfer::print_status() {
 	libtorrent::torrent_status st = _torrent_handle.status();
 	cout << "Error Message/String/File: " << st.errc.message() << " / " << st.error << " / " << st.error_file << endl;
