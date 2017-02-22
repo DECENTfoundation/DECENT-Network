@@ -314,7 +314,7 @@ void Mainwindow_gui_wallet::CurrentUserChangedSlot(const QString& a_new_user)
         m_nUserComboTriggeredInGui = 0;
         return;
     }
-    
+
     GlobalEvents::instance().setCurrentUser(a_new_user.toStdString());
 
     std::string csUserName = StringFromQString(a_new_user);
@@ -932,7 +932,7 @@ void Mainwindow_gui_wallet::ManagementNewFuncGUI(void* a_clbkArg,int64_t a_err,c
 
     int nCurentTab = m_pCentralWidget->GetMyCurrentTabIndex();
     __DEBUG_APP2__(2," ");
-    //enum MAIN_TABS_ENM{BROWSE_CONTENT,TRANSACTIONS,UPLOAD,OVERVIEW,PURCHASED};
+
     switch(nCurentTab)
     {
     case BROWSE_CONTENT:

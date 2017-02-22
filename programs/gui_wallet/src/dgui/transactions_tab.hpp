@@ -40,6 +40,7 @@ namespace gui_wallet
         QTableWidgetItem* itm;
         QString jstr;
         void createNewRow();
+        void setOnGrids();
 
     };
 }

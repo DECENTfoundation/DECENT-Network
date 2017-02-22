@@ -25,46 +25,39 @@ void gui_wallet::Mainwindow_gui_wallet::TaskDoneTransactionsGUI(void* a_clbkArg,
     int col = 0; //tablewidget->columnCount();
     int n = 0;
 
-    QString loops = 0;
-    //loops = a_result;
-    loops = QString::fromStdString(a_result);
+    while(true)
+    {
+        n++;
+        col = 0;
+        QString loops = 0;
+        for (int i = 0; i < 20; ++i)
+        {
+            count++;
+            loops += a_result[i];
+        }
+        m_pCentralWidget->m_trans_tab.itm = new QTableWidgetItem(tr("%1").arg(loops));
+        m_pCentralWidget->m_trans_tab.tablewidget->setItem(row, col++,  m_pCentralWidget->m_trans_tab.itm);
 
-    m_pCentralWidget->m_trans_tab.itm = new QTableWidgetItem(tr("%1").arg(loops));
-    m_pCentralWidget->m_trans_tab.tablewidget->setItem(0, 0,  m_pCentralWidget->m_trans_tab.itm);
+        QString loops2 = 0;
+        for (int i = count; ; ++i)
+        {
+            if( (a_result[i + 4] >= '0' && a_result[i + 4] <= '9') && a_result[i + 5] == '-')
+            {
+                break;
+            }
+            count++;
+            loops2 += a_result[i];
+        }
 
-//    while(true)
-//    {
-//        n++;
-//        col = 0;
-//        QString loops = 0;
-//        for (int i = 0; i < 20; ++i)
-//        {
-//            count++;
-//            loops += a_result[i];
-//        }
-//        m_pCentralWidget->m_trans_tab.itm = new QTableWidgetItem(tr("%1").arg(loops));
-//        m_pCentralWidget->m_trans_tab.tablewidget->setItem(row, col++,  m_pCentralWidget->m_trans_tab.itm);
+        m_pCentralWidget->m_trans_tab.itm = new QTableWidgetItem(tr("%1").arg(loops2));
+        m_pCentralWidget->m_trans_tab.tablewidget->setItem(row, col,  m_pCentralWidget->m_trans_tab.itm);
 
-//        QString loops2 = 0;
-//        for (int i = count; ; ++i)
-//        {
-//            if( (a_result[i + 4] >= '0' && a_result[i + 4] <= '9') && a_result[i + 5] == '-')
-//            {
-//                break;
-//            }
-//            count++;
-//            loops2 += a_result[i];
-//        }
-
-//        m_pCentralWidget->m_trans_tab.itm = new QTableWidgetItem(tr("%1").arg(loops2));
-//        m_pCentralWidget->m_trans_tab.tablewidget->setItem(row, col,  m_pCentralWidget->m_trans_tab.itm);
-
-//        col = 0;
-//        ++row;
-//        if(n == 4)
-//            break;
-//        m_pCentralWidget->m_trans_tab.createNewRow();
-//    }
+        col = 0;
+        ++row;
+        if(n == 4)
+            break;
+        m_pCentralWidget->m_trans_tab.createNewRow();
+    }
 }
 
 

@@ -19,6 +19,9 @@
 #include <QLineEdit>
 #include <vector>
 #include <QTableWidget>
+#include <map>
+#include <QStringList>
+
 
 namespace gui_wallet
 {
@@ -29,15 +32,16 @@ namespace gui_wallet
     public:
         Overview_tab();
         virtual ~Overview_tab();
-        void isChanged();
+        void CreateTable();
+    public slots:
+        void func(int);
     public:
         QLineEdit search;
         QTextBrowser text;
-        //QTableWidget* table_widget;
+        QTableWidget table_widget;
         std::vector<QString> accounts_names;
-        bool changed;
+        std::map<std::string , std::string> info;
     protected:
-       //virtual void resizeEvent(QResizeEvent *);
     };
 }
 
