@@ -82,6 +82,28 @@ public:
 };
 
 
+
+
+class empty_transfer_listener : public package_transfer_interface::transfer_listener {
+
+public:
+
+	static empty_transfer_listener& get_one() {
+		static empty_transfer_listener one;
+		return one;
+	}
+
+	virtual void on_download_started(package_transfer_interface::transfer_id id) { }
+	virtual void on_download_finished(package_transfer_interface::transfer_id id, package_object downloaded_package) { }
+	virtual void on_download_progress(package_transfer_interface::transfer_id id, package_transfer_interface::transfer_progress progress) { }
+
+	virtual void on_upload_started(package_transfer_interface::transfer_id id, const std::string& url) { }
+
+	virtual void on_error(package_transfer_interface::transfer_id id, std::string error) { }
+};
+
+
+
 class package_manager {
 private:
 
@@ -100,10 +122,12 @@ private:
 private:
 
 	typedef std::map<std::string, package_transfer_interface*> 		protocol_handler_map;
+	typedef std::map<std::string, std::string> 						seeding_packages;
 	typedef std::vector<transfer_job> 								transfer_jobs;
 private:
 	package_manager();
 	package_manager(const package_manager&) {}
+	~package_manager();
 
 public:
 
@@ -149,10 +173,19 @@ public:
 	void print_all_transfers();
 
 private:
+
+	void load_json_uploads();
+	void save_json_uploads();
+
+private:
+
+
 	boost::filesystem::path            _packages_directory;
 	decent::crypto::custody_utils      _custody_utils;
 	protocol_handler_map               _protocol_handlers;
 	transfer_jobs					   _all_transfers;
+
+	seeding_packages				   _seeding_packages;
 };
 
 
