@@ -70,9 +70,31 @@ public:
 	virtual void upload_package(transfer_id id, const package_object& package, transfer_listener* listener) = 0;
 	virtual void download_package(transfer_id id, const std::string& url, transfer_listener* listener) = 0;
 	virtual void print_status() = 0;
+	virtual transfer_progress get_progress() = 0;
 	virtual std::string get_transfer_url() = 0;
 	virtual std::shared_ptr<package_transfer_interface> clone() = 0;
 };
+
+
+
+class empty_transfer_listener : public package_transfer_interface::transfer_listener {
+
+public:
+
+	static empty_transfer_listener& get_one() {
+		static empty_transfer_listener one;
+		return one;
+	}
+
+	virtual void on_download_started(package_transfer_interface::transfer_id id) { }
+	virtual void on_download_finished(package_transfer_interface::transfer_id id, package_object downloaded_package) { }
+	virtual void on_download_progress(package_transfer_interface::transfer_id id, package_transfer_interface::transfer_progress progress) { }
+
+	virtual void on_upload_started(package_transfer_interface::transfer_id id, const std::string& url) { }
+
+	virtual void on_error(package_transfer_interface::transfer_id id, std::string error) { }
+};
+
 
 
 class package_manager {
@@ -91,11 +113,13 @@ private:
 
 private:
 	typedef std::map<std::string, std::shared_ptr<package_transfer_interface>>  protocol_handler_map;
+	typedef std::map<std::string, std::string>                                  seeding_packages;
 	typedef std::vector<transfer_job>                                           transfer_jobs;
 
 private:
 	package_manager();
 	package_manager(const package_manager&) {}
+	~package_manager();
 
 public:
 	static package_manager& instance() {
@@ -136,6 +160,12 @@ public:
 
     void print_all_transfers();
 
+	void load_json_uploads();
+	void save_json_uploads();
+
+	void load_json_downloads();
+	void save_json_downloads();
+
 private:
     mutable fc::mutex                  _mutex;
 	boost::filesystem::path            _packages_path;
@@ -143,6 +173,7 @@ private:
     decent::crypto::custody_utils      _custody_utils;
 	protocol_handler_map               _protocol_handlers;
 	transfer_jobs                      _all_transfers;
+    seeding_packages                   _seeding_packages;
 };
 
 

@@ -47,6 +47,8 @@ public:
 
     virtual std::string get_transfer_url();
     virtual void        print_status();
+    virtual transfer_progress get_progress();
+
 
     virtual std::shared_ptr<package_transfer_interface> clone() {
         return std::shared_ptr<torrent_transfer>(new torrent_transfer(*this));

@@ -28,6 +28,8 @@
 #include <decent/encrypt/encryptionutils.hpp>
 #include <graphene/package/package.hpp>
 
+#include "json.hpp"
+
 #include <fc/exception/exception.hpp>
 #include <fc/network/ntp.hpp>
 #include <fc/thread/mutex.hpp>
@@ -46,6 +48,7 @@
 #include <atomic>
 
 using namespace std;
+using namespace nlohmann;
 using namespace boost;
 using namespace boost::filesystem;
 using namespace boost::iostreams;
@@ -305,6 +308,97 @@ package_manager::package_manager() {
     _protocol_handlers.insert(std::make_pair("ipfs", std::make_shared<ipfs_transfer>()));
 }
 
+package_manager::~package_manager() {
+    std::cout << "Saving current transfers..." << std::endl;
+    save_json_uploads();
+    save_json_downloads();
+}
+
+void package_manager::load_json_uploads() {
+    const path packages_path = get_packages_path();
+    path uploads_json = packages_path / "uploads.json";
+
+    _seeding_packages.clear();
+
+    if (is_regular_file(uploads_json)) {
+
+        std::ifstream input_file(uploads_json.string());
+        json uploads;
+        input_file >> uploads;
+
+        for (json::iterator it = uploads.begin(); it != uploads.end(); ++it) {
+            string hash = (*it)["hash"].get<std::string>();
+            string protocol = (*it)["protocol"].get<std::string>();
+            _seeding_packages.insert(make_pair(hash, protocol));
+        }
+    }
+}
+
+void package_manager::save_json_uploads() {
+    const path packages_path = get_packages_path();
+    path uploads_json = packages_path / "uploads.json";
+
+    json uploads;
+
+    seeding_packages::iterator it = _seeding_packages.begin();
+    for (; it != _seeding_packages.end(); ++it) {
+        json obj;
+        obj["hash"] = it->first;
+        obj["protocol"] = it->second;
+
+        uploads.push_back(obj);
+    }
+
+    std::ofstream output_file(uploads_json.string());
+    output_file << uploads;
+    output_file.close();
+}
+
+void package_manager::load_json_downloads() {
+    const path packages_path = get_packages_path();
+    path downloads_json = packages_path / "downloads.json";
+
+    _seeding_packages.clear();
+
+    if (is_regular_file(downloads_json)) {
+        std::ifstream input_file(downloads_json.string());
+        json downloads;
+        input_file >> downloads;
+
+        for (json::iterator it = downloads.begin(); it != downloads.end(); ++it) {
+            string url = (*it)["url"].get<std::string>();
+            std::cout << "Resuming download " << url << std::endl;
+            download_package(url, empty_transfer_listener::get_one());
+        }
+    }
+}
+
+void package_manager::save_json_downloads() {
+    const path packages_path = get_packages_path();
+    path downloads_json = packages_path / "downloads.json";
+
+    json downloads;
+
+    for (int i = 0; i < _all_transfers.size(); ++i) {
+        const transfer_job& job = _all_transfers[i];
+        if (job.job_type != transfer_job::DOWNLOAD) {
+            continue;
+        }
+
+        package_transfer_interface::transfer_progress progress = job.transport->get_progress();
+
+        if ((progress.current_bytes < progress.total_bytes) || (progress.total_bytes == 0)) {
+            json obj;
+            obj["url"] = job.transport->get_transfer_url();
+            downloads.push_back(obj);
+        }
+    }
+
+    std::ofstream output_file(downloads_json.string());
+    output_file << downloads;
+    output_file.close();
+}
+
 void package_manager::set_packages_path(const boost::filesystem::path& packages_path) {
     if (!exists(packages_path) || !is_directory(packages_path)) {
         try {
@@ -321,6 +415,17 @@ void package_manager::set_packages_path(const boost::filesystem::path& packages_
 
     fc::scoped_lock<fc::mutex> guard(_mutex);
     _packages_path = packages_path;
+
+    load_json_uploads();
+
+    seeding_packages::iterator it = _seeding_packages.begin();
+    for (; it != _seeding_packages.end(); ++it) {
+        const path package_path = _packages_path / it->first;
+        upload_package(package_path, it->second, empty_transfer_listener::get_one());
+        std::cout << "Uploading " << package_path.string() << " using " << it->second << std::endl;
+    }
+
+    load_json_downloads();
 }
 
 boost::filesystem::path package_manager::get_packages_path() const {
@@ -496,6 +601,10 @@ package_manager::upload_package( const package_object& package,
         std::cout << "Upload error: " << ex.what() << std::endl;
     }
 
+
+    _seeding_packages.insert(make_pair(package.get_hash().str(), protocol_name));
+
+    save_json_uploads();
 
     return t.job_id;
 }
