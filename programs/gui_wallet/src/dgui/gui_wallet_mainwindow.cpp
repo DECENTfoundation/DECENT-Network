@@ -190,7 +190,12 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
     connect(pUsersCombo, SIGNAL(currentIndexChanged(const QString&)), this, SLOT(CurrentUserChangedSlot(const QString&)) );
     m_nUserComboTriggeredInGui = 0;
     //void GuiWalletInfoWarnErrSlot(std::string);
-    connect(m_pCentralWidget->GetBrowseContentTab(),SIGNAL(ShowDetailsOnDigContentSig(decent::wallet::ui::gui::SDigitalContent)),
+    connect(m_pCentralWidget->GetBrowseContentTab(),
+            SIGNAL(ShowDetailsOnDigContentSig(decent::wallet::ui::gui::SDigitalContent)),
+            this,SLOT(ShowDetailsOnDigContentSlot(decent::wallet::ui::gui::SDigitalContent)));
+
+    connect(m_pCentralWidget->GetPurchasedTab(),
+            SIGNAL(ShowDetailsOnDigContentSig(decent::wallet::ui::gui::SDigitalContent)),
             this,SLOT(ShowDetailsOnDigContentSlot(decent::wallet::ui::gui::SDigitalContent)));
 
     //static void InitializeUiInterfaceOfWallet(TypeWarnAndWaitFunc a_fpWarnAndWait,
@@ -360,8 +365,9 @@ void Mainwindow_gui_wallet::listAccountsSlot(QString str)
     //SetNewTask("list_accounts " + str + " 5",this,CLI_WALLET_CODE,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
 }
 
-void Mainwindow_gui_wallet::ShowDetailsOnDigContentSlot(decent::wallet::ui::gui::SDigitalContent a_get_cont)
+void Mainwindow_gui_wallet::ShowDetailsOnDigContentSlot(decent::wallet::ui::gui::SDigitalContent a_dig_cont)
 {
+    m_dig_cont_detailsDlg.execCD(a_dig_cont);
     //m_pInfoTextEdit->setText(tr(a_get_cont_str.c_str()));
     //m_pcInfoDlg->exec();  // Shold be modified
 }
@@ -409,7 +415,9 @@ void Mainwindow_gui_wallet::ShowDigitalContextesGUI(QString a_filter)
 /*
  * return != 0 means parsing error
  */
-int Mainwindow_gui_wallet::GetDigitalContentsFromString(std::vector<decent::wallet::ui::gui::SDigitalContent>& a_vcContents, const char* a_contents_str)
+int Mainwindow_gui_wallet::GetDigitalContentsFromString(DCT::DIG_CONT_TYPES a_type,
+                                                        std::vector<decent::wallet::ui::gui::SDigitalContent>& a_vcContents,
+                                                        const char* a_contents_str)
 {
     decent::wallet::ui::gui::SDigitalContent aDigContent;
     const char *cpcSearchStart= a_contents_str,
@@ -431,6 +439,7 @@ int Mainwindow_gui_wallet::GetDigitalContentsFromString(std::vector<decent::wall
         cpcAutorEnd = strchr(++cpcAutorBeg,'\"');
         if(g_nDebugApplication){printf("cpcAutorEnd=\"%.10s\"\n",cpcAutorEnd ? cpcAutorEnd : "nill");}
         if(!cpcAutorEnd){return 1;}
+        aDigContent.type = a_type;
         aDigContent.author = std::string(cpcAutorBeg,((size_t)cpcAutorEnd)-((size_t)cpcAutorBeg));
         if(g_nDebugApplication){printf("Content.author=\"%s\"\n",aDigContent.author.c_str());}
 
@@ -895,7 +904,7 @@ void Mainwindow_gui_wallet::TaskDoneFuncGUI(void* a_clbkArg,int64_t a_err,const 
         //QTableWidget& cContents = m_pCentralWidget->getDigitalContentsTable();
         std::string csGetContStr;
         m_vcDigContent.clear();
-        GetDigitalContentsFromString(m_vcDigContent,a_result.c_str());
+        GetDigitalContentsFromString(DCT::GENERAL, m_vcDigContent,a_result.c_str());
         const int cnContsNumber(m_vcDigContent.size());
 
         for(int i(0); i<cnContsNumber; ++i)

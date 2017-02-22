@@ -16,18 +16,8 @@ void ParseDigitalContentFromGetContentString(decent::wallet::ui::gui::SDigitalCo
 
 void gui_wallet::Mainwindow_gui_wallet::ManagementPurchasedGUI()
 {
-#if 0
-    else if(strstr(csFilterStr.c_str(),ST::s_vcpcSearchTypeStrs[ST::bought]))
-    {
-
-        std::string csNumber;
-        cpcNumberPtr = strchr(csFilterStr.c_str(),':');
-        if( !cpcNumberPtr || (atoi(cpcNumberPtr+1)==0)){csNumber += " 10";}
-        else {csNumber = cpcNumberPtr+1;}
-        csTaskLine = std::string("list_content_by_bought ") + csNumber;
-    }
-#endif
     SetNewTask("list_content_by_bought 100",this,NULL,&gui_wallet::Mainwindow_gui_wallet::TaskDonePurchasedGUI);
+    SetNewTask3("list_content_by_bought 100",this,NULL,&gui_wallet::Mainwindow_gui_wallet::TaskDonePurchasedGUI3);
 }
 
 
@@ -43,7 +33,7 @@ void gui_wallet::Mainwindow_gui_wallet::TaskDonePurchasedGUI(void* a_clbkArg,int
         //QTableWidget& cContents = m_pCentralWidget->getDigitalContentsTable();
         std::string csGetContStr;
         m_vcDigContent.clear();
-        GetDigitalContentsFromString(m_vcDigContent,a_result.c_str());
+        GetDigitalContentsFromString(DCT::BOUGHT,m_vcDigContent,a_result.c_str());
         const int cnContsNumber(m_vcDigContent.size());
 
         for(int i(0); i<cnContsNumber; ++i)
@@ -68,4 +58,17 @@ void gui_wallet::Mainwindow_gui_wallet::TaskDonePurchasedGUI3(void* a_clbkArg,in
                                                               const std::string& a_task,const fc::variant& a_result)
 {
     __DEBUG_APP2__(0," ");
+
+    if(a_err)
+    {
+        //
+    }
+    else if(strstr(a_task.c_str(),"list_content_by_bought "))
+    {
+        __DEBUG_APP2__(0," ");
+    }
+    else if(strstr(a_task.c_str(),"get_content "))
+    {
+        __DEBUG_APP2__(0," ");
+    }
 }

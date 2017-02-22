@@ -23,6 +23,7 @@
 #include "cliwalletdlg.hpp"
 #include <unnamedsemaphorelite.hpp>
 #include <stdarg.h>
+#include "decent_wallet_ui_gui_contentdetails.hpp"
 
 namespace gui_wallet
 {
@@ -69,7 +70,8 @@ namespace gui_wallet
         void ManagementPurchasedGUI();
 
         void CliCallbackFnc(void*arg,const std::string& task);
-        int GetDigitalContentsFromString(std::vector<decent::wallet::ui::gui::SDigitalContent>& acContents,
+        int GetDigitalContentsFromString(DCT::DIG_CONT_TYPES a_type,
+                                         std::vector<decent::wallet::ui::gui::SDigitalContent>& acContents,
                                          const char* contents_str);
 
         void ShowDigitalContextesGUI(QString filter);
@@ -97,7 +99,7 @@ namespace gui_wallet
         void OpenCliWalletDlgSlot();
         void OpenInfoDlgSlot();
 
-        void ShowDetailsOnDigContentSlot(decent::wallet::ui::gui::SDigitalContent get_cont_str);
+        void ShowDetailsOnDigContentSlot(decent::wallet::ui::gui::SDigitalContent dig_cont);
 
         void listAccountsSlot(QString);
 
@@ -157,6 +159,8 @@ namespace gui_wallet
         int                 m_nJustConnecting;
 
         QString             m_default_stylesheet;
+
+        decent::wallet::ui::gui::ContentDetails m_dig_cont_detailsDlg;
     };
 
 }

@@ -66,7 +66,7 @@ void decent::wallet::ui::gui::PurchasedTab::PrepareTableWidgetHeaderGUI()
 void decent::wallet::ui::gui::PurchasedTab::DigContCallback(_NEEDED_ARGS2_)
 {
     __DEBUG_APP2__(3,"clbdata=%p, act=%d, pDigCont=%p\n",a_clb_data,a_act,a_pDigContent);
-    emit ShowDetailsOnDigContentSig(a_pDigContent->get_content_str);
+    emit ShowDetailsOnDigContentSig(*a_pDigContent);
 }
 
 

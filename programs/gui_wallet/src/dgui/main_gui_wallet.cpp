@@ -72,9 +72,9 @@ int main(int argc, char* argv[])
         }
     }
 
-    if(g_nDebugApplication){printf("argv[0]=\"%s\"\n"
+    __DEBUG_APP2__(1, "argv[0]=\"%s\"\n"
                                    "app dir. = \"%s\"\n",
-                                   scAppFullPath.c_str(),g_cApplicationPath.c_str());}
+                                   scAppFullPath.c_str(),g_cApplicationPath.c_str());
 
     freopen( "/dev/null", "w", stderr);
 
@@ -103,11 +103,11 @@ int main(int argc, char* argv[])
     }
     catch(const char* a_ext_str)
     {
-        printf("%s\n",a_ext_str);
+        __DEBUG_APP2__(0,"%s\n",a_ext_str);
     }
     catch(...)
     {
-        printf("Unknown exception!\n");
+        __DEBUG_APP2__(0,"Unknown exception!\n");
     }
 
     return 0;
