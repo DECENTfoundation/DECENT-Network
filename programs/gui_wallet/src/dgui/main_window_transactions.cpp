@@ -14,7 +14,7 @@
 
 void gui_wallet::Mainwindow_gui_wallet::ManagementTransactionsGUI()
 {
-    SetNewTask("get_account_history hayq 4",this,NULL,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
+    SetNewTask2("get_account_history hayq 4",this,NULL,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
 }
 
 

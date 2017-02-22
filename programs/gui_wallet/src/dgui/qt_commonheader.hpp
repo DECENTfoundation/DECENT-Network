@@ -26,11 +26,15 @@
 
 // DCA stands for Digital Contex Actions
 namespace DCA {enum DIG_CONT_ACTNS{CALL_GET_CONTENT};}
+// DCT stands for Digital Contex Actions
+namespace DCT {enum DIG_CONT_TYPES{GENERAL,BOUGHT};}
 
 
 namespace decent{namespace wallet{namespace ui{namespace gui{
 
 struct SDigitalContent{
+    SDigitalContent():type(DCT::GENERAL){}
+    DCT::DIG_CONT_TYPES type;
     std::string author;
     struct{
         double amount;

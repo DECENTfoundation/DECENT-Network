@@ -36,7 +36,7 @@
 #endif  // #ifdef __MSC_VER
 #endif  // #ifndef __DLL_EXPORT__
 
-#define CONN_FNC_TYPE   TypeCallbackSetNewTaskGlb
+#define CONN_FNC_TYPE   TypeCallbackSetNewTaskGlb2
 #define NewTestMutex decent::tools::RWLock
 //#define NewTestMutex std::mutex
 //#define NewTestMutex NewTestMutex2
@@ -57,8 +57,9 @@ static int                          s_nLibraryInited = 0;
 static TypeWarnAndWaitFunc          s_fpWarnAndWaitFunc;
 static void*                        s_pManagerOwner;
 static void*                        s_pManagerClbData;
-static TypeCallbackSetNewTaskGlb    s_fpMenegmentClbk;
-static TypeCallFunctionInGuiLoop    s_fpCorrectUiCaller;
+static TypeManagementClbk          s_fpMenegmentClbk;
+static TypeCallFunctionInGuiLoop2    s_fpCorrectUiCaller2;
+static TypeCallFunctionInGuiLoop3    s_fpCorrectUiCaller3;
 static NewTestMutex*                                            s_pMutex_for_cur_api; // It is better to use here rw mutex
 static decent::tools::FiFo<SConnectionStruct*,CONN_FNC_TYPE>*   s_pConnectionRequestFifo;
 static decent::tools::UnnamedSemaphoreLite*                     s_pSema_for_connection_thread;
@@ -91,15 +92,21 @@ __DLL_EXPORT__ void* GetFunctionPointerAsVoid(int a_first,...)
     return pReturn;
 }
 
-__DLL_EXPORT__ void InitializeUiInterfaceOfWallet(TypeWarnAndWaitFunc a_fpWarnAndWait, TypeCallFunctionInGuiLoop a_fpCorrectUiCaller,
-                                   void* a_pMngOwner,void* a_pMngClb,TypeCallbackSetNewTaskGlb a_fpMngClbk)
+__DLL_EXPORT__ void InitializeUiInterfaceOfWallet(TypeWarnAndWaitFunc a_fpWarnAndWait,
+                                                  TypeCallFunctionInGuiLoop2 a_fpCorrectUiCaller2,
+                                                  TypeCallFunctionInGuiLoop3 a_fpCorrectUiCaller3,
+                                                  void* a_pMngOwner,void* a_pMngClb,
+                                                  TypeManagementClbk a_fpMngClbk)
 {
-    InitializeUiInterfaceOfWallet_base(a_fpWarnAndWait,a_fpCorrectUiCaller,a_pMngOwner,a_pMngClb,a_fpMngClbk);
+    InitializeUiInterfaceOfWallet_base(a_fpWarnAndWait,a_fpCorrectUiCaller2,a_fpCorrectUiCaller3,
+                                       a_pMngOwner,a_pMngClb,a_fpMngClbk);
 }
 
 
-__DLL_EXPORT__ void InitializeUiInterfaceOfWallet_base(TypeWarnAndWaitFunc a_fpWarnAndWait,TypeCallFunctionInGuiLoop a_fpCorrectUiCaller,
-                                        void* a_pMngOwner,void* a_pMngClb,...)
+__DLL_EXPORT__ void InitializeUiInterfaceOfWallet_base(TypeWarnAndWaitFunc a_fpWarnAndWait,
+                                                       TypeCallFunctionInGuiLoop2 a_fpCorrectUiCaller2,
+                                                       TypeCallFunctionInGuiLoop3 a_fpCorrectUiCaller3,
+                                                       void* a_pMngOwner,void* a_pMngClb,...)
 {
     int nLibInited(s_nLibraryInited++);
     s_nLibraryInited = 1;
@@ -107,19 +114,25 @@ __DLL_EXPORT__ void InitializeUiInterfaceOfWallet_base(TypeWarnAndWaitFunc a_fpW
     va_list aFunc;
 
     va_start( aFunc, a_pMngClb );
-    TypeCallbackSetNewTaskGlb fpMenegmentClbk = va_arg( aFunc, TypeCallbackSetNewTaskGlb);
+    TypeManagementClbk fpMenegmentClbk2 = (TypeManagementClbk)va_arg( aFunc, void*);
     va_end( aFunc );
+
+    __DEBUG_APP2__(1,"fpWarn=%p, fpCaller2=%p, fpCaller3=%p, pMnOwner=%p, pMngrClb=%p, fpMngClb=%p",
+                   GetFunctionPointerAsVoid(0,a_fpWarnAndWait),GetFunctionPointerAsVoid(0,a_fpCorrectUiCaller2),
+                   GetFunctionPointerAsVoid(0,a_fpCorrectUiCaller3),a_pMngOwner,a_pMngClb,
+                   GetFunctionPointerAsVoid(0,fpMenegmentClbk2));
 
     if(!nLibInited)  // should be done in real atomic manner
     {
         s_fpWarnAndWaitFunc = a_fpWarnAndWait;
         s_pManagerOwner = a_pMngOwner;
         s_pManagerClbData = a_pMngClb;
-        s_fpMenegmentClbk = fpMenegmentClbk;
-        s_fpCorrectUiCaller = a_fpCorrectUiCaller;
+        s_fpMenegmentClbk = fpMenegmentClbk2;
+        s_fpCorrectUiCaller2 = a_fpCorrectUiCaller2;
+        s_fpCorrectUiCaller3 = a_fpCorrectUiCaller3;
 
         s_pMutex_for_cur_api = new NewTestMutex;
-        s_pConnectionRequestFifo = new decent::tools::FiFo<SConnectionStruct*,TypeCallbackSetNewTaskGlb>;
+        s_pConnectionRequestFifo = new decent::tools::FiFo<SConnectionStruct*,TypeCallbackSetNewTaskGlb2>;
         if(!s_pConnectionRequestFifo){throw "Low memory!\n" __FILE__ ;}
         s_pSema_for_connection_thread = new decent::tools::UnnamedSemaphoreLite;
         if(!s_pSema_for_connection_thread){throw "Low memory!\n" __FILE__ ;}
@@ -159,34 +172,38 @@ __DLL_EXPORT__ void DestroyUiInterfaceOfWallet(void)
 
 __DLL_EXPORT__ void StartConnectionProcedure(SConnectionStruct* a_conn_str_ptr,void *a_owner, void*a_clbData)
 {
-    s_pConnectionRequestFifo->AddNewTask(a_conn_str_ptr,a_owner,a_clbData,a_conn_str_ptr->fpDone);
+    s_pConnectionRequestFifo->AddNewTask(TIT::AS_STR, a_conn_str_ptr,a_owner,a_clbData,a_conn_str_ptr->fpDone);
     s_pSema_for_connection_thread->post();
 
 }
 
 
-__DLL_EXPORT__ int SetNewTask(const std::string& a_inp_line, void* a_owner, void* a_clbData, TypeCallbackSetNewTaskGlb a_clbkFunction)
+#if 1
+__DLL_EXPORT__ int SetNewTask2(const std::string& a_inp_line, void* a_owner, void* a_clbData,
+                               TypeCallbackSetNewTaskGlb2 a_clbkFunction)
 {
-    return SetNewTask_base(a_inp_line, a_owner, a_clbData, a_clbkFunction);
+    return SetNewTask_base(TIT::AS_STR,a_inp_line, a_owner, a_clbData, a_clbkFunction);
 }
+#endif
 
+typedef void*  void_ptr;
 
-__DLL_EXPORT__ int SetNewTask_base(const std::string& a_inp_line, void* a_owner, void* a_clbData, ...)
+__DLL_EXPORT__ int SetNewTask_base(int a_nType,const std::string& a_inp_line, void* a_owner, void* a_clbData, ...)
 {
     int nReturn = 0;
     std::string errStr("error accured!");
-    TypeCallbackSetNewTaskGlb fpTaskDone;
+    void_ptr fpTaskDone3;
     va_list aFunc;
 
     va_start( aFunc, a_clbData );
-    fpTaskDone = va_arg( aFunc, TypeCallbackSetNewTaskGlb);
+    fpTaskDone3 = va_arg( aFunc, void_ptr);
     va_end( aFunc );
 
     std::lock_guard<NewTestMutex> lock(*s_pMutex_for_cur_api);
     if(s_CurrentApi.gui_api)
     {
         nReturn = 0;
-        (s_CurrentApi.gui_api)->SetNewTask(a_inp_line,a_owner,a_clbData,fpTaskDone);
+        (s_CurrentApi.gui_api)->SetNewTask_base(a_nType, a_inp_line,a_owner,a_clbData,fpTaskDone3);
     }
     else if(strstr(a_inp_line.c_str(),"load_wallet_file "))
     {
@@ -202,8 +219,8 @@ __DLL_EXPORT__ int SetNewTask_base(const std::string& a_inp_line, void* a_owner,
             if(!nReturn)
             {
                 aConStr.action = WAT::CONNECT;
-                aConStr.fpDone = fpTaskDone;
-                s_pConnectionRequestFifo->AddNewTask(&aConStr,a_owner,a_clbData,fpTaskDone);
+                aConStr.fpDone = (TypeCallbackSetNewTaskGlb2)fpTaskDone3;
+                s_pConnectionRequestFifo->AddNewTask(a_nType,&aConStr,a_owner,a_clbData,fpTaskDone3);
                 s_pSema_for_connection_thread->post();
             }
 
@@ -217,7 +234,7 @@ __DLL_EXPORT__ int SetNewTask_base(const std::string& a_inp_line, void* a_owner,
     }
 
     if (nReturn) {
-        (*fpTaskDone)(a_owner, a_clbData,NO_API_INITED, a_inp_line, errStr);
+        //(*fpTaskDone)(a_owner, a_clbData,NO_API_INITED, a_inp_line, errStr);
     }
 
     return nReturn;
@@ -322,7 +339,7 @@ static void gui_wallet_application_MenegerThreadFunc(void)
             {
                 //if(g_nDebugApplication){printf("emit UpdateGuiStateSig(%d)\n",i);}
                 //emit UpdateGuiStateSig(i);
-                (*s_fpCorrectUiCaller)(s_pManagerClbData,(int64_t)i, __MANAGER_CLB_,
+                (*s_fpCorrectUiCaller2)(s_pManagerClbData,(int64_t)i, __MANAGER_CLB_,
                                       __FILE__ "\nManagement",s_pManagerOwner,s_fpMenegmentClbk);
                 vnOpt[i] = 0;
             }
@@ -376,7 +393,7 @@ static int ConnectToNewWitness(const decent::tools::taskListItem<SConnectionStru
         if(pStruct->action == WAT::SAVE2)
         {
             int nReturn(SaveWalletFile2(*pStruct));
-            (*s_fpCorrectUiCaller)(a_con_data.callbackArg,(int64_t)nReturn, __CONNECTION_CLB_,
+            (*s_fpCorrectUiCaller2)(a_con_data.callbackArg,(int64_t)nReturn, __CONNECTION_CLB_,
                                   __FILE__ "\nSaving procedure",a_con_data.owner,a_con_data.fn_tsk_dn2);
             return nReturn;
         }
@@ -384,13 +401,13 @@ static int ConnectToNewWitness(const decent::tools::taskListItem<SConnectionStru
         {
             //m_wdata = fc::json::from_file( csWalletFileName ).as< graphene::wallet::wallet_data >();
             int nReturn(LoadWalletFile((SConnectionStruct*)a_con_data.callbackArg));
-            (*s_fpCorrectUiCaller)(a_con_data.callbackArg,(int64_t)nReturn, __CONNECTION_CLB_,
+            (*s_fpCorrectUiCaller2)(a_con_data.callbackArg,(int64_t)nReturn, __CONNECTION_CLB_,
                                   __FILE__ "\nLoading procedure",a_con_data.owner,a_con_data.fn_tsk_dn2);
             return nReturn;
         }
         else if(pStruct->action != WAT::CONNECT)
         {
-            (*s_fpCorrectUiCaller)(a_con_data.callbackArg,UNKNOWN_EXCEPTION, __CONNECTION_CLB_,
+            (*s_fpCorrectUiCaller2)(a_con_data.callbackArg,UNKNOWN_EXCEPTION, __CONNECTION_CLB_,
                                   __FILE__ "Unknown option",a_con_data.owner,a_con_data.fn_tsk_dn2);
             return UNKNOWN_EXCEPTION;
         }
@@ -430,7 +447,7 @@ static int ConnectToNewWitness(const decent::tools::taskListItem<SConnectionStru
            // int CallFunctionInGuiLoop(SetNewTask_last_args,void* owner,TypeCallbackSetNewTaskGlb fpFnc);
            //(*(a_con_data.fn_tsk_dn))(a_con_data.owner,a_con_data.callbackArg,(int64_t)UNABLE_TO_CONNECT,
            //                          __CONNECTION_CLB_, __FILE__ "\nServer has disconnected us.");
-           (*s_fpCorrectUiCaller)(a_con_data.callbackArg,UNABLE_TO_CONNECT, __CONNECTION_CLB_,
+           (*s_fpCorrectUiCaller2)(a_con_data.callbackArg,UNABLE_TO_CONNECT, __CONNECTION_CLB_,
                                  __FILE__ "\nServer has disconnected us.",
                                  a_con_data.owner,a_con_data.fn_tsk_dn2);
            wallet_gui->stop();
@@ -472,7 +489,7 @@ static int ConnectToNewWitness(const decent::tools::taskListItem<SConnectionStru
            std::string possible_input = __CONNECTION_CLB_;
            if(pStruct->wallet_file_name != "" ){possible_input = "load_wallet_file " + pStruct->wallet_file_name;}
 
-           (*s_fpCorrectUiCaller)(a_con_data.callbackArg,0, possible_input,
+           (*s_fpCorrectUiCaller2)(a_con_data.callbackArg,0, possible_input,
                                  "true",
                                  a_con_data.owner,a_con_data.fn_tsk_dn2);
            wallet_gui->wait();
@@ -497,7 +514,7 @@ static int ConnectToNewWitness(const decent::tools::taskListItem<SConnectionStru
     catch(const fc::exception& a_fc)
     {
         int64_t llnErr = a_fc.code() ? a_fc.code() : -2;
-        (*s_fpCorrectUiCaller)(a_con_data.callbackArg,llnErr, a_fc.to_string(),
+        (*s_fpCorrectUiCaller2)(a_con_data.callbackArg,llnErr, a_fc.to_string(),
                               a_fc.to_detail_string(),
                               a_con_data.owner,a_con_data.fn_tsk_dn2);
         __DEBUG_APP2__(1,"err=%d, err_str=%s, details=%s\n",
@@ -505,7 +522,7 @@ static int ConnectToNewWitness(const decent::tools::taskListItem<SConnectionStru
     }
     catch(...)
     {
-        (*s_fpCorrectUiCaller)(a_con_data.callbackArg,UNKNOWN_EXCEPTION, __CONNECTION_CLB_,
+        (*s_fpCorrectUiCaller2)(a_con_data.callbackArg,UNKNOWN_EXCEPTION, __CONNECTION_CLB_,
                               __FILE__ "\nUnknown exception!",
                               a_con_data.owner,a_con_data.fn_tsk_dn2);
         __DEBUG_APP2__(1,"Unknown exception\n");
@@ -515,9 +532,41 @@ static int ConnectToNewWitness(const decent::tools::taskListItem<SConnectionStru
 }
 
 
-int CallFunctionInUiLoop(SetNewTask_last_args,void* a_owner,TypeCallbackSetNewTaskGlb a_fpFnc)
+static int CallFunctionInUiLoop_static(int a_nType,SetNewTask_last_args2,void* a_result,void* a_owner,void* a_fpFnc);
+
+
+int CallFunctionInUiLoop2(SetNewTask_last_args2,const std::string& a_result,void* a_owner,TypeCallbackSetNewTaskGlb2 a_fpFnc)
 {
-    // a_clbData,int64_t a_err, const std::string& a_inp, const std::string& a_result
-    return (*s_fpCorrectUiCaller)(a_clbData,a_err, a_inp, a_result,a_owner,a_fpFnc);
+    return CallFunctionInUiLoop_static(TIT::AS_STR,a_clbData,a_err,a_inp,(void*)&a_result,a_owner,GetFunctionPointerAsVoid(1,a_fpFnc));
+}
+
+
+
+int CallFunctionInUiLoop3(SetNewTask_last_args2,void* a_variant,void* a_owner,void* a_fpFnc)
+{
+    return CallFunctionInUiLoop_static(TIT::AS_STR,a_clbData,a_err,a_inp,a_variant,a_owner,a_fpFnc);
+}
+
+
+
+static int CallFunctionInUiLoop_static(int a_nType,SetNewTask_last_args2,void* a_result,void* a_owner,void* a_fpFnc)
+{
+
+    switch(a_nType)
+    {
+    case TIT::AS_VOID:
+    {
+        TypeCallbackSetNewTaskGlb3 fpFunc3 = (TypeCallbackSetNewTaskGlb3)a_fpFnc;
+        return (*s_fpCorrectUiCaller3)(a_clbData,a_err, a_inp, a_result,a_owner,fpFunc3);
+    }
+    default:
+    {
+        TypeCallbackSetNewTaskGlb2 fpFunc2 = (TypeCallbackSetNewTaskGlb2)a_fpFnc;
+        std::string& pStr = *((std::string*)a_result);
+        return (*s_fpCorrectUiCaller2)(a_clbData,a_err, a_inp, pStr,a_owner,fpFunc2);
+    }
+    }
+
+    return 0;
 }
 

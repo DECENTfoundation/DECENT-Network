@@ -62,7 +62,9 @@ gui_wallet::application::application(int& argc, char** argv)
     qRegisterMetaType<std::string>( "std::string" );
     qRegisterMetaType<WarnYesOrNoFuncType>( "WarnYesOrNoFuncType" );
     qRegisterMetaType<int64_t>( "int64_t" );
-    qRegisterMetaType<TypeCallbackSetNewTaskGlb>( "TypeCallbackSetNewTaskGlb" );//TypeCallbackSetNewTaskGlb
+    qRegisterMetaType<TypeCallbackSetNewTaskGlb2>( "TypeCallbackSetNewTaskGlb2" );//TypeCallbackSetNewTaskGlb
+    //decent::wallet::ui::gui::SDigitalContent
+    qRegisterMetaType<decent::wallet::ui::gui::SDigitalContent>( "decent::wallet::ui::gui::SDigitalContent" );
 
     s_pWarner = new InGuiThreatCaller;
     if(!s_pWarner)

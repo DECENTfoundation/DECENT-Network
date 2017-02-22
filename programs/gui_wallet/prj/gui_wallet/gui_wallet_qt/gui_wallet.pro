@@ -17,6 +17,8 @@ greaterThan(QT_MAJOR_VERSION, 4):QT += widgets
 #QT -= core
 #QT -= gui
 
+DEFINES += CRYPTOPP_ENABLE_NAMESPACE_WEAK=1
+
 SOURCES += ../../../src/dgui/main_gui_wallet.cpp \
     ../../../src/dgui/decent_gui_contentdlg.cpp \
     ../../../src/dgui/decent_wallet_ui_gui_purchasedtab.cpp \
@@ -24,7 +26,8 @@ SOURCES += ../../../src/dgui/main_gui_wallet.cpp \
     ../../../src/dgui/main_window_transactions.cpp \
     ../../../src/dgui/main_window_upload.cpp \
     ../../../src/dgui/main_window_overview.cpp \
-    ../../../src/dgui/main_window_purchased.cpp
+    ../../../src/dgui/main_window_purchased.cpp \
+    ../../../src/dgui/decent_wallet_ui_gui_contentdetails.cpp
 
 options1 = $$find(CONFIG, "TEST")
 
@@ -91,4 +94,5 @@ HEADERS += ../../../src/dgui/gui_wallet_mainwindow.hpp \
 HEADERS += \
     ../../../src/dgui/decent_gui_contentdlg.hpp \
     ../../../src/dgui/decent_wallet_ui_gui_purchasedtab.hpp \
-    ../../../src/dgui/decent_wallet_ui_gui_common.tos
+    ../../../src/dgui/decent_wallet_ui_gui_common.tos \
+    ../../../src/dgui/decent_wallet_ui_gui_contentdetails.hpp

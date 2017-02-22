@@ -87,7 +87,7 @@ namespace gui_wallet
         void OpenCliWalletDlgSlot();
         void OpenInfoDlgSlot();
 
-        void ShowDetailsOnDigContentSlot(std::string get_cont_str);
+        void ShowDetailsOnDigContentSlot(decent::wallet::ui::gui::SDigitalContent get_cont_str);
 
         void listAccountsSlot(QString);
 
