@@ -117,6 +117,7 @@ struct my_visitor : public fc::variant::visitor
    virtual void handle( const string& v )const        {__DEBUG_APP2__(1," ");}
    virtual void handle( const variant_object& v)const {__DEBUG_APP2__(1," ");}
    virtual void handle( const variants& v)const       {__DEBUG_APP2__(1," ");}
+
 };
 
 

@@ -38,7 +38,7 @@ namespace gui_wallet
         QVBoxLayout main_layout;
         QTableWidget* tablewidget;
         QTableWidgetItem* itm;
-        QString jstr;
+        QPushButton* more;
         void createNewRow();
         void setOnGrids();
 

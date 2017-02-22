@@ -30,18 +30,21 @@ namespace gui_wallet
 
         Q_OBJECT
     public:
-        Overview_tab();
+        Overview_tab(class Mainwindow_gui_wallet* pPar);
         virtual ~Overview_tab();
         void CreateTable();
+        void Connects();
     public slots:
-        void func(int);
+        void my_slot();
     public:
         QLineEdit search;
         QTextBrowser text;
         QTableWidget table_widget;
         std::vector<QString> accounts_names;
         std::map<std::string , std::string> info;
+        int button_number;
     protected:
+        class Mainwindow_gui_wallet* m_pPar;
     };
 }
 

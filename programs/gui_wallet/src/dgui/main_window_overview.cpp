@@ -14,14 +14,11 @@
 
 void gui_wallet::Mainwindow_gui_wallet::ManagementOverviewGUI()
 {
-    //QString tFilterStr = m_pCentralWidget->m_Overview_tab.search.text();
     QString tFilterStr = m_pCentralWidget->FilterStr();
     QString tNewTaskInp = tr("list_accounts ") + tFilterStr + tr(" 5"); // To do, number should be taken from gui
     std::string tInpuString = StringFromQString(tNewTaskInp);
     __DEBUG_APP2__(0,"task=%s",tInpuString.c_str());
     SetNewTask(tInpuString,this,NULL,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
-    //m_pCentralWidget->m_Overview_tab.func();
-
 }
 
 
@@ -32,7 +29,6 @@ void gui_wallet::Mainwindow_gui_wallet::TaskDoneOverrviewGUI(void* a_clbkArg,int
 
     if(a_task.find("list_accounts ") == 0)
     {
-        QString str = "";
         m_pCentralWidget->m_Overview_tab.accounts_names.clear();
         for(int i = 0 ; i < a_result.size() - 1 ; ++i)
         {
@@ -51,16 +47,12 @@ void gui_wallet::Mainwindow_gui_wallet::TaskDoneOverrviewGUI(void* a_clbkArg,int
                 }
             }
         }
-
-        m_pCentralWidget->m_Overview_tab.text.setText(str);
-
         m_pCentralWidget->m_Overview_tab.CreateTable();
     }
     else if(a_task.find("get_account ") == 0)
     {
         m_pCentralWidget->m_Overview_tab.text.setText(QString::fromStdString(a_result));
     }
-    //
 }
 
 

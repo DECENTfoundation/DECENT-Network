@@ -14,7 +14,8 @@ using namespace gui_wallet;
 
 
 
-Overview_tab::Overview_tab()
+Overview_tab::Overview_tab(class Mainwindow_gui_wallet* a_pPar)
+    : m_pPar(a_pPar)
 {
     QHBoxLayout* up = new QHBoxLayout();
     up->addWidget(&search);
@@ -26,20 +27,16 @@ Overview_tab::Overview_tab()
     table_widget.setColumnCount(2);
     table_widget.setRowCount(0);
     table_widget.setHorizontalHeaderLabels(QStringList() << "waiting for design" << " ");
-    for(int i = 0; i < accounts_names.size(); ++i)
-    {
-        connect(table_widget.cellWidget(i,1), SIGNAL(clicked()), this , SLOT(func(i)));
-    }
-
     main->addWidget(&table_widget);
+
     setLayout(main);
 }
 
-void Overview_tab::func(int i)
+void Overview_tab::my_slot()
 {
-    QString str = QString::fromStdString("get_account ") + accounts_names[i];
+    QString str = QString::fromStdString("get_account ") + accounts_names[0];
     std::string tInpuString = str.toStdString();
-    SetNewTask(tInpuString,this,NULL,&Mainwindow_gui_wallet::TaskDoneOverrviewGUI);
+    SetNewTask(tInpuString,m_pPar,NULL,&Mainwindow_gui_wallet::TaskDoneOverrviewGUI);
 }
 
 void Overview_tab::CreateTable()
@@ -50,7 +47,17 @@ void Overview_tab::CreateTable()
         table_widget.setItem(i,0,new QTableWidgetItem((accounts_names[i])));
         table_widget.setCellWidget(i,1,new QPushButton("info"));
     }
+    Connects();
 }
+
+void Overview_tab::Connects()
+{
+    for(int i = 0; i < accounts_names.size(); ++i)
+    {
+        connect(table_widget.cellWidget(i,1), SIGNAL(clicked()), this , SLOT(my_slot()));
+    }
+}
+
 
 Overview_tab::~Overview_tab()
 {

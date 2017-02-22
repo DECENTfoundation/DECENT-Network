@@ -166,7 +166,7 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
     QWidget *central = new QWidget;
     central->setLayout(mainMenuLayout0);*/
 
-    m_pCentralWidget = new CentralWigdet(m_pCentralAllLayout);
+    m_pCentralWidget = new CentralWigdet(m_pCentralAllLayout,this);
     //m_pCentralWidget->setStyleSheet("color:black;""background-color:white;");
     m_pCentralWidget->setLayout(m_pCentralAllLayout);
     setCentralWidget(m_pCentralWidget);
