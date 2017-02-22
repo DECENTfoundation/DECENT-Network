@@ -413,14 +413,16 @@ void package_manager::set_packages_path(const boost::filesystem::path& packages_
         }
     }
 
-    fc::scoped_lock<fc::mutex> guard(_mutex);
-    _packages_path = packages_path;
+    {
+        fc::scoped_lock<fc::mutex> guard(_mutex);
+        _packages_path = packages_path;
+    }
 
     load_json_uploads();
 
     seeding_packages::iterator it = _seeding_packages.begin();
     for (; it != _seeding_packages.end(); ++it) {
-        const path package_path = _packages_path / it->first;
+        const path package_path = packages_path / it->first;
         upload_package(package_path, it->second, empty_transfer_listener::get_one());
         std::cout << "Uploading " << package_path.string() << " using " << it->second << std::endl;
     }
