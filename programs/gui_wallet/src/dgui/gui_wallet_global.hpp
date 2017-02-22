@@ -38,7 +38,7 @@ namespace gui_wallet
 
 
 	    std::string getCurrentUser() const { return _currentUser; }
-	    void setCurrentUser(const std::string& user) { _currentUser = user; emit }
+        void setCurrentUser(const std::string& user) { _currentUser = user; emit currentUserChanged(_currentUser);}
 	
 	signals:
 	    void currentUserChanged(std::string user);

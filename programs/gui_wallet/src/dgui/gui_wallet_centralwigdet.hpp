@@ -75,6 +75,7 @@ enum MAIN_TABS_ENM{BROWSE_CONTENT,TRANSACTIONS,UPLOAD,OVERVIEW,PURCHASED};
         void SetAccountBalancesFromStrGUI(const std::vector<std::string>& a_balances_and_names);
         void AddNewUserGUI(const std::string& user_name);
         QWidget* GetBrowseContentTab(){return &m_browse_cont_tab;}
+        QWidget* GetPurchasedTab(){return &m_Purchased_tab;}
         void SetDigitalContentsGUI(const std::vector<decent::wallet::ui::gui::SDigitalContent>& vContents);
         QString getFilterText()const;
         __TEMPORARY__ QComboBox* usersCombo();

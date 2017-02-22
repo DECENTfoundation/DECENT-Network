@@ -231,6 +231,7 @@ void Upload_tab::onGrabPublishers() {
 
 void Upload_tab::browseContent() {
     QString contentDir = QFileDialog::getExistingDirectory(this, tr("Select content"), "~", QFileDialog::DontResolveSymlinks);
+    //QString contentDir = QFileDialog::getOpenFileName(this, tr("Select content"), "~");
     QLineEdit* contentPath = (QLineEdit*)m_info_widget.cellWidget(FieldsRows::CONTENTPATH, 1);
     contentPath->setText(contentDir);
 }

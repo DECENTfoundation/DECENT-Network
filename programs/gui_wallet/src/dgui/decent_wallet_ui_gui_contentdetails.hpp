@@ -23,6 +23,9 @@ class ContentDetails : public QDialog
 {
     Q_OBJECT
 public:
+    ContentDetails();
+    virtual ~ContentDetails();
+
     void execCD(const decent::wallet::ui::gui::SDigitalContent& a_cnt_details);
 
 private:

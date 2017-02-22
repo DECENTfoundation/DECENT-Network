@@ -135,4 +135,6 @@ programs/gui_wallet/prj/gui_wallet/gui_wallet_qt/Makefile
 Decent.cbp
 programs/cli_wallet/packages/
 programs/cli_wallet/transfer.log
+programs/gui_wallet/prj/gui_wallet/gui_wallet_qt/*
+!programs/gui_wallet/prj/gui_wallet/gui_wallet_qt/gui_wallet.pro
 

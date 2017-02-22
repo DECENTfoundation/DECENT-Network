@@ -287,6 +287,7 @@ QWidget* CentralWigdet::GetWidgetFromTable5(int a_nColumn, int a_nWidget)
 
 #define __SIZE_FOR_IMGS__   40
 #define __HEIGHT__  90
+#include "decent_wallet_ui_gui_newcheckbox.hpp"
 
 void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
 {
@@ -418,6 +419,8 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     pWidgetTmp2->setLayout(pHBoxLayoutTmp);
     m_first_line_lbl.addWidget(pWidgetTmp2);
     pWidgetTmp2->setFixedHeight(__HEIGHT__);
+
+    m_first_line_lbl.addWidget(new decent::wallet::ui::gui::NewCheckBox);
 
     m_browse_cont_tab.setStyleSheet("color: black;""background-color:white;");
     SetAccountBalancesFromStrGUI(std::vector<std::string>());

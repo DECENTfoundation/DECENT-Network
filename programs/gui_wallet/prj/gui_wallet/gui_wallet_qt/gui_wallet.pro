@@ -27,7 +27,8 @@ SOURCES += ../../../src/dgui/main_gui_wallet.cpp \
     ../../../src/dgui/main_window_upload.cpp \
     ../../../src/dgui/main_window_overview.cpp \
     ../../../src/dgui/main_window_purchased.cpp \
-    ../../../src/dgui/decent_wallet_ui_gui_contentdetails.cpp
+    ../../../src/dgui/decent_wallet_ui_gui_contentdetails.cpp \
+    ../../../src/dgui/decent_wallet_ui_gui_newcheckbox.cpp
 
 options1 = $$find(CONFIG, "TEST")
 
@@ -95,4 +96,5 @@ HEADERS += \
     ../../../src/dgui/decent_gui_contentdlg.hpp \
     ../../../src/dgui/decent_wallet_ui_gui_purchasedtab.hpp \
     ../../../src/dgui/decent_wallet_ui_gui_common.tos \
-    ../../../src/dgui/decent_wallet_ui_gui_contentdetails.hpp
+    ../../../src/dgui/decent_wallet_ui_gui_contentdetails.hpp \
+    ../../../src/dgui/decent_wallet_ui_gui_newcheckbox.hpp

@@ -39,7 +39,7 @@ public:
 
 public:
 signals:
-    void ShowDetailsOnDigContentSig(std::string get_cont_str);
+    void ShowDetailsOnDigContentSig(decent::wallet::ui::gui::SDigitalContent dig_cont);
 
 protected:
     void PrepareTableWidgetHeaderGUI();
