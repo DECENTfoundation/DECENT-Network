@@ -13,6 +13,7 @@
 #include <stdint.h>
 #include <string>
 #include "debug_decent_application.h"
+#include <fc/variant.hpp>
 
 #define __CONNECTION_CLB_ "__CONNECTION_CLB_"
 #define __MANAGER_CLB_ "__MANAGER_CLB_"
@@ -35,20 +36,20 @@
 //extern "C"{
 #endif
 
-namespace TIT{enum {AS_STR,AS_VOID};}
+namespace TIT{enum {AS_STR,AS_VARIANT};}
 
 #define SetNewTask_last_args2    void* a_clbData,int64_t a_err, const std::string& a_inp
 
 //typedef void (*ConnErrFuncType)(void*owner, void* clbData,const std::string& err,const std::string& details);
 typedef void (__THISCALL__ *TypeCallbackSetNewTaskGlb2)(void* owner,SetNewTask_last_args2,const std::string& a_result);
-typedef void (__THISCALL__ *TypeCallbackSetNewTaskGlb3)(void* owner,SetNewTask_last_args2,void* a_result);
+typedef void (__THISCALL__ *TypeCallbackSetNewTaskGlb3)(void* owner,SetNewTask_last_args2,const fc::variant& a_result);
 typedef void (__THISCALL__ *TypeManagementClbk)(void* owner,SetNewTask_last_args2,const std::string& a_result);
 typedef void (__THISCALL__ *WarnYesOrNoFuncType)(void*owner,int answer,/*string**/void* str_ptr);
 typedef int (__THISCALL__ *TypeWarnAndWaitFunc)(void* owner,
                                                 WarnYesOrNoFuncType fpYesOrNo,
                                                 void* a_pDataForYesOrNo,const char* a_form,...);
 typedef int (__THISCALL__ *TypeCallFunctionInGuiLoop2)(SetNewTask_last_args2,const std::string& a_result,void* owner,TypeCallbackSetNewTaskGlb2 fpFnc);
-typedef int (__THISCALL__ *TypeCallFunctionInGuiLoop3)(SetNewTask_last_args2,void* a_result,void* owner,TypeCallbackSetNewTaskGlb3 fpFnc);
+typedef int (__THISCALL__ *TypeCallFunctionInGuiLoop3)(SetNewTask_last_args2,const fc::variant& a_result,void* owner,TypeCallbackSetNewTaskGlb3 fpFnc);
 
 #ifdef __cplusplus
 //}

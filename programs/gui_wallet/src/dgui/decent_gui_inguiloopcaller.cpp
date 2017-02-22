@@ -39,27 +39,56 @@ static InGuiLoopCallerIniter   s_InGuiLoopCallerIniter;
 
 decent::gui::InGuiLoopCaller::InGuiLoopCaller()
 {
-    connect(this,SIGNAL(NewFunctionToCallSig(void*,int64_t, std::string, std::string,void*,TypeCallbackSetNewTaskGlb2)),
-            this,SLOT(NextFunctionToCallSlot(void*,int64_t, std::string, std::string,void*,TypeCallbackSetNewTaskGlb2)));
+    connect(this,SIGNAL(NewFunctionToCallSig2(void*,int64_t, std::string, std::string,void*,TypeCallbackSetNewTaskGlb2)),
+            this,SLOT(NextFunctionToCallSlot2(void*,int64_t, std::string, std::string,void*,TypeCallbackSetNewTaskGlb2)));
+
+    connect(this,SIGNAL(NewFunctionToCallSig3(void*,int64_t, std::string, fc::variant,void*,TypeCallbackSetNewTaskGlb3)),
+            this,SLOT(NextFunctionToCallSlot3(void*,int64_t, std::string, fc::variant,void*,TypeCallbackSetNewTaskGlb3)));
 }
 
 
 decent::gui::InGuiLoopCaller::~InGuiLoopCaller()
 {
-    disconnect(this,SIGNAL(NewFunctionToCallSig(void*,int64_t, std::string, std::string,void*,TypeCallbackSetNewTaskGlb2)),
-               this,SLOT(NextFunctionToCallSlot(void*,int64_t, std::string, std::string,void*,TypeCallbackSetNewTaskGlb2)));
+    disconnect(this,SIGNAL(NewFunctionToCallSig3(void*,int64_t, std::string, fc::variant,void*,TypeCallbackSetNewTaskGlb3)),
+               this,SLOT(NextFunctionToCallSlot3(void*,int64_t, std::string, fc::variant,void*,TypeCallbackSetNewTaskGlb3)));
+
+    disconnect(this,SIGNAL(NewFunctionToCallSig2(void*,int64_t, std::string, std::string,void*,TypeCallbackSetNewTaskGlb2)),
+               this,SLOT(NextFunctionToCallSlot2(void*,int64_t, std::string, std::string,void*,TypeCallbackSetNewTaskGlb2)));
 }
 
 
-void decent::gui::InGuiLoopCaller::CallFunctionInGuiLoop(SetNewTask_last_args2,const std::string& a_result,void* a_owner,TypeCallbackSetNewTaskGlb2 a_fpFnc)
+void decent::gui::InGuiLoopCaller::CallFunctionInGuiLoop2(SetNewTask_last_args2,const std::string& a_result,
+                                                          void* a_owner,TypeCallbackSetNewTaskGlb2 a_fpFnc)
 {
     //(*a_fpFnc)(a_owner,a_clbData,a_err,a_inp,a_result);
     __DEBUG_APP2__(2," ");
-    emit NewFunctionToCallSig(a_clbData,a_err,a_inp,a_result,a_owner,a_fpFnc);
+    emit NewFunctionToCallSig2(a_clbData,a_err,a_inp,a_result,a_owner,a_fpFnc);
 }
 
 
-void decent::gui::InGuiLoopCaller::NextFunctionToCallSlot(void* a_clbData,int64_t a_err, std::string a_inp, std::string a_result,void* a_owner,TypeCallbackSetNewTaskGlb2 a_fpFnc)
+void decent::gui::InGuiLoopCaller::CallFunctionInGuiLoop3(SetNewTask_last_args2,const fc::variant& a_result,
+                                                          void* a_owner,TypeCallbackSetNewTaskGlb3 a_fpFnc)
+{
+    //(*a_fpFnc)(a_owner,a_clbData,a_err,a_inp,a_result);
+    __DEBUG_APP2__(2," ");
+    emit NewFunctionToCallSig3(a_clbData,a_err,a_inp,a_result,a_owner,a_fpFnc);
+}
+
+
+void decent::gui::InGuiLoopCaller::NextFunctionToCallSlot2(void* a_clbData,int64_t a_err,
+                                                           std::string a_inp, std::string a_result,
+                                                           void* a_owner,TypeCallbackSetNewTaskGlb2 a_fpFnc)
+{
+    //std::cout << "Input: " << a_inp << std::endl;
+    //std::cout << "Output: " << a_result << std::endl;
+    __DEBUG_APP2__(2,"inp=\"%s\",a_fpFnc=%p",a_inp.c_str(),a_fpFnc);
+    (*a_fpFnc)(a_owner,a_clbData,a_err,a_inp,a_result);
+}
+
+
+void decent::gui::InGuiLoopCaller::NextFunctionToCallSlot3(void* a_clbData,int64_t a_err,
+                                                           std::string a_inp, fc::variant a_result,
+                                                           void* a_owner,TypeCallbackSetNewTaskGlb3 a_fpFnc)
 {
     //std::cout << "Input: " << a_inp << std::endl;
     //std::cout << "Output: " << a_result << std::endl;
@@ -72,28 +101,20 @@ void decent::gui::InGuiLoopCaller::NextFunctionToCallSlot(void* a_clbData,int64_
 
 
 /*///////////////////////////////////////////////////////////////////////////////////////////////////////*/
-int CallFunctionInGuiLoop_base(SetNewTask_last_args2,const std::string& a_result,void* a_owner,...)
+
+int CallFunctionInGuiLoop2(SetNewTask_last_args2,const std::string& a_result,void* a_owner,
+                           TypeCallbackSetNewTaskGlb2 a_fpFunc)
 {
     if(!s_pInGuiThreadCaller){return -1;}
-    TypeCallbackSetNewTaskGlb2 fpClbkFnc;
-    va_list aFunc;
-
-    va_start( aFunc,a_owner );
-    fpClbkFnc = va_arg( aFunc, TypeCallbackSetNewTaskGlb2);
-    va_end( aFunc );
-
-    s_pInGuiThreadCaller->CallFunctionInGuiLoop(a_clbData,a_err,a_inp,a_result,a_owner,fpClbkFnc);
-
+    s_pInGuiThreadCaller->CallFunctionInGuiLoop2(a_clbData,a_err,a_inp,a_result,a_owner,a_fpFunc);
     return 0;
 }
 
 
-int CallFunctionInGuiLoop2(SetNewTask_last_args2,const std::string& a_result,void* a_owner,TypeCallbackSetNewTaskGlb2 a_fpFunc){
-    return CallFunctionInGuiLoop_base(a_clbData,a_err,a_inp,a_result,a_owner,a_fpFunc);
-}
-
-
-int CallFunctionInGuiLoop3(SetNewTask_last_args2,void* a_result,void* owner,TypeCallbackSetNewTaskGlb3 fpFnc)
+int CallFunctionInGuiLoop3(SetNewTask_last_args2,const fc::variant& a_result,void* a_owner,
+                           TypeCallbackSetNewTaskGlb3 a_fpFunc)
 {
+    if(!s_pInGuiThreadCaller){return -1;}
+    s_pInGuiThreadCaller->CallFunctionInGuiLoop3(a_clbData,a_err,a_inp,a_result,a_owner,a_fpFunc);
     return 0;
 }

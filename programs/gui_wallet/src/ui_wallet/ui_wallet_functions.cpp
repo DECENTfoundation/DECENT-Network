@@ -532,38 +532,42 @@ static int ConnectToNewWitness(const decent::tools::taskListItem<SConnectionStru
 }
 
 
+#if 0
 static int CallFunctionInUiLoop_static(int a_nType,SetNewTask_last_args2,void* a_result,void* a_owner,void* a_fpFnc);
-
 
 int CallFunctionInUiLoop2(SetNewTask_last_args2,const std::string& a_result,void* a_owner,TypeCallbackSetNewTaskGlb2 a_fpFnc)
 {
     return CallFunctionInUiLoop_static(TIT::AS_STR,a_clbData,a_err,a_inp,(void*)&a_result,a_owner,GetFunctionPointerAsVoid(1,a_fpFnc));
 }
 
-
-
 int CallFunctionInUiLoop3(SetNewTask_last_args2,void* a_variant,void* a_owner,void* a_fpFnc)
 {
     return CallFunctionInUiLoop_static(TIT::AS_STR,a_clbData,a_err,a_inp,a_variant,a_owner,a_fpFnc);
 }
+#endif
 
 
 
-static int CallFunctionInUiLoop_static(int a_nType,SetNewTask_last_args2,void* a_result,void* a_owner,void* a_fpFnc)
+int CallFunctionInUiLoopGeneral(int a_nType,SetNewTask_last_args2,
+                                const fc::variant& a_resultVar,const std::string& a_resultStr,
+                                void* a_owner,void* a_fpFnc)
 {
 
     switch(a_nType)
     {
-    case TIT::AS_VOID:
+    case TIT::AS_VARIANT:
     {
         TypeCallbackSetNewTaskGlb3 fpFunc3 = (TypeCallbackSetNewTaskGlb3)a_fpFnc;
-        return (*s_fpCorrectUiCaller3)(a_clbData,a_err, a_inp, a_result,a_owner,fpFunc3);
+        return (*s_fpCorrectUiCaller3)(a_clbData,a_err, a_inp, a_resultVar,
+                                       a_owner,fpFunc3);
     }
     default:
     {
+
         TypeCallbackSetNewTaskGlb2 fpFunc2 = (TypeCallbackSetNewTaskGlb2)a_fpFnc;
-        std::string& pStr = *((std::string*)a_result);
-        return (*s_fpCorrectUiCaller2)(a_clbData,a_err, a_inp, pStr,a_owner,fpFunc2);
+
+        return (*s_fpCorrectUiCaller2)(a_clbData,a_err, a_inp, a_resultStr,
+                                       a_owner,fpFunc2);
     }
     }
 

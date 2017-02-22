@@ -34,8 +34,8 @@ using namespace gui_wallet;
 
 int WarnAndWaitFunc(void* a_pOwner,WarnYesOrNoFuncType a_fpYesOrNo,
                            void* a_pDataForYesOrNo,const char* a_form,...);
-int CallFunctionInGuiLoop2(SetNewTask_last_args2,const std::string&,void* a_owner,TypeCallbackSetNewTaskGlb2 a_fpFunc);
-int CallFunctionInGuiLoop3(SetNewTask_last_args2,void* a_result,void* owner,TypeCallbackSetNewTaskGlb3 fpFnc);
+int CallFunctionInGuiLoop2(SetNewTask_last_args2,const std::string& a_result,void* a_owner,TypeCallbackSetNewTaskGlb2 a_fpFunc);
+int CallFunctionInGuiLoop3(SetNewTask_last_args2,const fc::variant& a_result,void* owner,TypeCallbackSetNewTaskGlb3 fpFnc);
 
 
 /*//////////////////////////////////////////////////////////////////////////////////*/
@@ -664,6 +664,50 @@ void Mainwindow_gui_wallet::HelpSlot()
 {
     //UseConnectedApiInstance<Mainwindow_gui_wallet>(this,NULL,&Mainwindow_gui_wallet::CallHelpFunction);
     SetNewTask("help",this,NULL,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
+}
+
+
+void Mainwindow_gui_wallet::TaskDoneFuncGUI3(void* a_clbkArg,int64_t a_err,
+                                             const std::string& a_task,const fc::variant& a_result)
+{
+    __DEBUG_APP2__(0,"just_conn=%d, err=%d, a_clbkArg=%p, task=%s",
+                   m_nJustConnecting,(int)a_err,a_clbkArg,a_task.c_str());
+
+    //enum MAIN_TABS_ENM{BROWSE_CONTENT,TRANSACTIONS,UPLOAD,OVERVIEW,PURCHASED};
+    const int cnCurIndex(m_pCentralWidget->GetMyCurrentTabIndex());
+    switch(cnCurIndex)
+    {
+    case BROWSE_CONTENT:
+    {
+        //BrowseContentTaskDone(void* a_clbkArg,int64_t a_err,const std::string& a_task,const std::string& a_result);
+        TaskDoneBrowseContentGUI3(a_clbkArg, a_err,a_task,a_result);
+        break;
+    }
+    case TRANSACTIONS:
+    {
+        TaskDoneTransactionsGUI3(a_clbkArg, a_err,a_task,a_result);
+        break;
+    }
+    case UPLOAD:
+    {
+        TaskDoneUploadGUI3(a_clbkArg, a_err,a_task,a_result);
+        break;
+    }
+    case OVERVIEW:
+    {
+        TaskDoneOverrviewGUI3(a_clbkArg, a_err,a_task,a_result);
+        break;
+    }
+    case PURCHASED:
+    {
+        TaskDonePurchasedGUI3(a_clbkArg, a_err,a_task,a_result);
+        break;
+    }
+    default:
+    {
+        break;
+    }
+    }
 }
 
 

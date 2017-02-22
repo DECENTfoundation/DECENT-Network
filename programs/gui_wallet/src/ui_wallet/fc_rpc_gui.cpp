@@ -18,11 +18,10 @@
 
 using namespace fc::rpc;
 using namespace fc;
-extern int g_nDebugApplication ;
 
-int CallFunctionInUiLoop2(SetNewTask_last_args2,const std::string& a_result,void* a_owner,TypeCallbackSetNewTaskGlb2 a_fpFnc);
-int CallFunctionInUiLoop3(SetNewTask_last_args2,void* a_result,void* a_owner,void* a_fpFnc);
-//int CallFunctionInUiLoop4(SetNewTask_last_args2,void* a_result,void* a_owner,void* a_fpFnc);
+int CallFunctionInUiLoopGeneral(int a_nType,SetNewTask_last_args2,
+                                const fc::variant& a_resultVar,const std::string& a_resultStr,
+                                void* a_owner,void* a_fpFnc);
 
 #if 0
 std::map<string,std::function<string(variant,const variants&)> > _result_formatters;
@@ -147,23 +146,35 @@ void gui::run()
 
              auto result = receive_call( 0, method, variants( args.begin()+1,args.end() ) );
 
-             result.visit(my_visitor());
+             result.visit(my_visitor()); // ??
              auto itr = _result_formatters.find( method );
+             std::string tsResult;
              if( itr == _result_formatters.end() )
              {
+                 __DEBUG_APP2__(1,"inp=\"%s\"",aTaskItem.input.c_str());
+                 tsResult = fc::json::to_pretty_string( result );
                  // int CallFunctionInUiLoop(SetNewTask_last_args,void* owner,TypeCallbackSetNewTaskGlb fpFnc);
                 //std::cout << "!!!!!!!if\n"<<fc::json::to_pretty_string( result ) << "\n";
                 //(*aTaskItem.fn_tsk_dn)(aTaskItem.owner,aTaskItem.callbackArg,0,aTaskItem.input, fc::json::to_pretty_string( result ));
-                CallFunctionInUiLoop2(aTaskItem.callbackArg,0,aTaskItem.input,fc::json::to_pretty_string( result ),
-                                      aTaskItem.owner,aTaskItem.fn_tsk_dn2);
+                //CallFunctionInUiLoopGeneral(aTaskItem.type,
+                //                            aTaskItem.callbackArg,0,aTaskItem.input,result,
+                //                            aTaskItem.owner,aTaskItem.fn_tsk_ptr);
              }
              else
              {
+                 __DEBUG_APP2__(1,"inp=\"%s\"",aTaskItem.input.c_str());
+                 tsResult = itr->second( result, args );
                 //std::cout << "!!!!!!!!else\n"<<itr->second( result, args ) << "\n";
                 //(*aTaskItem.fn_tsk_dn)(aTaskItem.owner,aTaskItem.callbackArg,0,aTaskItem.input, itr->second( result, args ));
-                CallFunctionInUiLoop2(aTaskItem.callbackArg,0,aTaskItem.input,itr->second( result, args ),
-                                       aTaskItem.owner,aTaskItem.fn_tsk_dn2);
+                //CallFunctionInUiLoopGeneral(aTaskItem.type,
+                //                            aTaskItem.callbackArg,0,aTaskItem.input,itr->second( result, args ),
+                //                       aTaskItem.owner,aTaskItem.fn_tsk_dn2);
              }
+
+             CallFunctionInUiLoopGeneral(aTaskItem.type,
+                                         aTaskItem.callbackArg,0,aTaskItem.input,
+                                         result,tsResult,
+                                         aTaskItem.owner,aTaskItem.fn_tsk_ptr);
 
 
          } // while(GetFirstTask(&aTaskItem))
@@ -171,33 +182,37 @@ void gui::run()
       }  // try
       catch ( const fc::exception& e )
       {
-         if(g_nDebugApplication){printf("file:\"" __FILE__ "\",line:%d\n",__LINE__);}
-         if(g_nDebugApplication){std::cout << e.to_detail_string() << "\n";}
+         __DEBUG_APP2__(1,"%s",e.to_detail_string().c_str());
          //(*aTaskItem.fn_tsk_dn)(aTaskItem.owner,aTaskItem.callbackArg,e.code(),aTaskItem.input,e.to_detail_string());
-         CallFunctionInUiLoop2(aTaskItem.callbackArg,e.code(),aTaskItem.input,e.to_detail_string(),
-                                aTaskItem.owner,aTaskItem.fn_tsk_dn2);
+         //CallFunctionInUiLoop2(aTaskItem.callbackArg,e.code(),aTaskItem.input,e.to_detail_string(),
+         //                       aTaskItem.owner,aTaskItem.fn_tsk_dn2);
+         CallFunctionInUiLoopGeneral(aTaskItem.type,
+                                     aTaskItem.callbackArg,e.code(),aTaskItem.input,
+                                     /*e.to_detail_string()*/fc::variant(),e.to_detail_string(),
+                                     aTaskItem.owner,aTaskItem.fn_tsk_ptr);
       }
         catch ( const std::exception& e )
         {
-          if (g_nDebugApplication) {
-              printf("file:\"" __FILE__ "\",line:%d\n",__LINE__);
-          }
+           __DEBUG_APP2__(1,"%s",e.what());
 
-          if (g_nDebugApplication) {
-              std::cout << e.what() << "\n";
-          }
-
-          CallFunctionInUiLoop2(aTaskItem.callbackArg,UNKNOWN_EXCEPTION,aTaskItem.input,e.what(),
-                                 aTaskItem.owner,aTaskItem.fn_tsk_dn2);
+          //CallFunctionInUiLoop2(aTaskItem.callbackArg,UNKNOWN_EXCEPTION,aTaskItem.input,e.what(),
+          //                       aTaskItem.owner,aTaskItem.fn_tsk_dn2);
+           CallFunctionInUiLoopGeneral(aTaskItem.type,
+                                       aTaskItem.callbackArg,UNKNOWN_EXCEPTION,aTaskItem.input,
+                                       /*e.what()*/fc::variant(),e.what(),
+                                       aTaskItem.owner,aTaskItem.fn_tsk_ptr);
         }
       catch(...)
       {
-          if(g_nDebugApplication){printf("file:\"" __FILE__ "\",line:%d\n",__LINE__);}
-          if(g_nDebugApplication){std::cout << "Unknown exception!\n";}
+          __DEBUG_APP2__(1,"Unknown exception!");
           //(*aTaskItem.fn_tsk_dn)(aTaskItem.owner,aTaskItem.callbackArg,-1,aTaskItem.input,"Unknown exception!\n");
-          CallFunctionInUiLoop2(aTaskItem.callbackArg,UNKNOWN_EXCEPTION,aTaskItem.input,
-                                __FILE__ "\nUnknown exception!",
-                                 aTaskItem.owner,aTaskItem.fn_tsk_dn2);
+          //CallFunctionInUiLoop2(aTaskItem.callbackArg,UNKNOWN_EXCEPTION,aTaskItem.input,
+          //                      __FILE__ "\nUnknown exception!",
+          //                       aTaskItem.owner,aTaskItem.fn_tsk_dn2);
+          CallFunctionInUiLoopGeneral(aTaskItem.type,
+                                      aTaskItem.callbackArg,UNKNOWN_EXCEPTION,aTaskItem.input,
+                                      /*__FILE__ "\nUnknown exception!"*/fc::variant(),__FILE__ "\nUnknown exception!",
+                                      aTaskItem.owner,aTaskItem.fn_tsk_ptr);
       }
    } // while( !_run_complete.canceled() )
 }

@@ -31,7 +31,8 @@ void gui_wallet::Mainwindow_gui_wallet::ManagementPurchasedGUI()
 }
 
 
-void gui_wallet::Mainwindow_gui_wallet::TaskDonePurchasedGUI(void* a_clbkArg,int64_t a_err,const std::string& a_task,const std::string& a_result)
+void gui_wallet::Mainwindow_gui_wallet::TaskDonePurchasedGUI(void* a_clbkArg,int64_t a_err,
+                                                             const std::string& a_task,const std::string& a_result)
 {
     if(a_err)
     {
@@ -60,4 +61,11 @@ void gui_wallet::Mainwindow_gui_wallet::TaskDonePurchasedGUI(void* a_clbkArg,int
         ParseDigitalContentFromGetContentString(&m_vcDigContent[cnIndex],a_result);
         if(cnIndex==(cnContsNumber-1)){m_pCentralWidget->m_Purchased_tab.SetDigitalContentsGUI(m_vcDigContent);}
     }
+}
+
+
+void gui_wallet::Mainwindow_gui_wallet::TaskDonePurchasedGUI3(void* a_clbkArg,int64_t a_err,
+                                                              const std::string& a_task,const fc::variant& a_result)
+{
+    __DEBUG_APP2__(0," ");
 }

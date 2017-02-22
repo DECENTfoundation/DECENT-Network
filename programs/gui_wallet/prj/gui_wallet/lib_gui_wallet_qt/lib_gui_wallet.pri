@@ -18,7 +18,6 @@ INCLUDEPATH += $$DECENT_LIB/wallet/include
 INCLUDEPATH += $$DECENT_LIB/app/include
 INCLUDEPATH += $$DECENT_LIB/encrypt/include
 
-INCLUDEPATH += $$DECENT_LIB/contrib/fc/include
 INCLUDEPATH += $$DECENT_LIB/app/include
 INCLUDEPATH += $$DECENT_LIB/chain/include
 INCLUDEPATH += $$DECENT_LIB/db/include
@@ -32,7 +31,6 @@ INCLUDEPATH += $$DECENT_LIB/contrib/fc/vendor/secp256k1-zkp/include
 INCLUDEPATH += $$DECENT_LIB/contrib/fc/vendor/websocketpp
 INCLUDEPATH += $$DECENT_LIB/contrib/fc/vendor/secp256k1-zkp
 
-INCLUDEPATH += $$BOOST_ROOT_QT/include
 
 INCLUDEPATH += /usr/local/include
 INCLUDEPATH += $$DECENT_LIB/contrib/pbc/include

@@ -48,7 +48,10 @@ QMAKE_CXXFLAGS_WARN_ON += -Wno-sign-compare
 QMAKE_CXXFLAGS_WARN_ON += -Wno-unused-function
 QMAKE_CXXFLAGS_WARN_ON -= -Wunused-function
 
+INCLUDEPATH += $$DECENT_LIB/contrib/fc/include
 INCLUDEPATH += ../../../include
+INCLUDEPATH += $$BOOST_ROOT_QT/include
+
 DEFINES += USE_NUM_GMP
 
 win32{

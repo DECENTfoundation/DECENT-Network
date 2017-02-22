@@ -18,6 +18,16 @@ void gui_wallet::Mainwindow_gui_wallet::ManagementTransactionsGUI()
 }
 
 
-void gui_wallet::Mainwindow_gui_wallet::TaskDoneTransactionsGUI(void* a_clbkArg,int64_t a_err,const std::string& a_task,const std::string& a_result)
-{}
+void gui_wallet::Mainwindow_gui_wallet::TaskDoneTransactionsGUI(void* a_clbkArg,int64_t a_err,
+                                                                const std::string& a_task,const std::string& a_result)
+{
+    //
+}
+
+
+void gui_wallet::Mainwindow_gui_wallet::TaskDoneTransactionsGUI3(void* a_clbkArg,int64_t a_err,
+                                                                 const std::string& a_task,const fc::variant& a_result)
+{
+    __DEBUG_APP2__(0, " ");
+}
 

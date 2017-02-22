@@ -75,9 +75,9 @@ static int SetNewTask2(const std::string& a_inp_line, Type* a_memb, void* a_clbD
 
 template <typename Type>
 static int SetNewTask3(const std::string& a_inp_line, Type* a_memb, void* a_clbData,
-                       void (Type::*a_clbkFunction)(SetNewTask_last_args2,void*))
+                       void (Type::*a_clbkFunction)(SetNewTask_last_args2,const fc::variant&))
 {
-    return SetNewTask_base(TIT::AS_VOID,a_inp_line, a_memb, a_clbData, a_clbkFunction);
+    return SetNewTask_base(TIT::AS_VARIANT,a_inp_line, a_memb, a_clbData, a_clbkFunction);
 }
 
 

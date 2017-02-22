@@ -51,6 +51,14 @@ namespace gui_wallet
         void TaskDoneOverrviewGUI(void* a_clbkArg,int64_t a_err,const std::string& a_task,const std::string& a_result);
         void TaskDonePurchasedGUI(void* a_clbkArg,int64_t a_err,const std::string& a_task,const std::string& a_result);
 
+        void TaskDoneFuncGUI3(void* clbkArg,int64_t err,const std::string& task,const fc::variant& result);
+
+        void TaskDoneBrowseContentGUI3(void* a_clbkArg,int64_t a_err,const std::string& a_task,const fc::variant& a_result);
+        void TaskDoneTransactionsGUI3(void* a_clbkArg,int64_t a_err,const std::string& a_task,const fc::variant& a_result);
+        void TaskDoneUploadGUI3(void* a_clbkArg,int64_t a_err,const std::string& a_task,const fc::variant& a_result);
+        void TaskDoneOverrviewGUI3(void* a_clbkArg,int64_t a_err,const std::string& a_task,const fc::variant& a_result);
+        void TaskDonePurchasedGUI3(void* a_clbkArg,int64_t a_err,const std::string& a_task,const fc::variant& a_result);
+
         //void RedrawTransacionTabGUI();
         void ManagementBrowseContentGUI();
         void ManagementTransactionsGUI();
