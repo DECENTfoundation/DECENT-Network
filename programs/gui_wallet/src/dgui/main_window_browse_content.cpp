@@ -13,6 +13,9 @@
 
 void gui_wallet::Mainwindow_gui_wallet::ManagementBrowseContentGUI()
 {
+    __DEBUG_APP2__(0," ");
+    SetNewTask3("info",this,NULL,&gui_wallet::Mainwindow_gui_wallet::TaskDoneBrowseContentGUI3);
+
     __DEBUG_APP2__(2,"WAS::CONNECTED_ST");
     QString cqsNewFilter = m_pCentralWidget->getFilterText();
     if(cqsNewFilter==m_cqsPreviousFilter){return;}
@@ -29,5 +32,15 @@ void gui_wallet::Mainwindow_gui_wallet::ManagementBrowseContentGUI()
 }
 
 
-void gui_wallet::Mainwindow_gui_wallet::TaskDoneBrowseContentGUI(void* a_clbkArg,int64_t a_err,const std::string& a_task,const std::string& a_result)
-{}
+void gui_wallet::Mainwindow_gui_wallet::TaskDoneBrowseContentGUI(void* a_clbkArg,int64_t a_err,
+                                                                 const std::string& a_task,const std::string& a_result)
+{
+    //
+}
+
+
+void gui_wallet::Mainwindow_gui_wallet::TaskDoneBrowseContentGUI3(void* a_clbkArg,int64_t a_err,
+                                                                  const std::string& a_task,const fc::variant& a_result)
+{
+    __DEBUG_APP2__(0," ");
+}

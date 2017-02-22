@@ -198,7 +198,7 @@ bool decent::tools::FiFo<TypeInp,TypeTaskFnc>::GetFirstTask(decent::tools::taskL
 
 
 template <typename TypeInp, typename TypeTaskFnc>
-void decent::tools::FiFo<TypeInp,TypeTaskFnc>::AddNewTask(const TypeInp& a_inp, void* a_owner, void* a_clbData,...)
+void decent::tools::FiFo<TypeInp,TypeTaskFnc>::AddNewTask(int a_nType,const TypeInp& a_inp, void* a_owner, void* a_clbData,...)
 {
     TypeTaskFnc fpTaskDone;
     va_list aFunc;
@@ -224,6 +224,7 @@ void decent::tools::FiFo<TypeInp,TypeTaskFnc>::AddNewTask(const TypeInp& a_inp, 
         m_pLastTask->next = new taskListItem<TypeInp,TypeTaskFnc>(fpTaskDone,a_inp,a_owner,a_clbData);
         m_pLastTask = m_pLastTask->next;
     }
+    m_pLastTask->type = a_nType;
     m_task_mutex.unlock();
 
     __DEBUG_APP2__(_DEF_LOG_LEVEL_,"this=%p    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! ",this);

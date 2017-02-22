@@ -57,11 +57,31 @@ void gui_wallet::Mainwindow_gui_wallet::TaskDoneTransactionsGUI(void* a_clbkArg,
         if(n == 4)
             break;
         m_pCentralWidget->m_trans_tab.createNewRow();
-    }
+    } // while(true)
+
+    SetNewTask2("get_account_history hayq 4",this,NULL,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
 }
 
 
 
 
+
+//    SetNewTask2("get_account_history hayq 4",this,NULL,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
+//}
+
+#if 0
+void gui_wallet::Mainwindow_gui_wallet::TaskDoneTransactionsGUI(void* a_clbkArg,int64_t a_err,
+                                                                const std::string& a_task,const std::string& a_result)
+{
+    //
+}
+#endif
+
+
+void gui_wallet::Mainwindow_gui_wallet::TaskDoneTransactionsGUI3(void* a_clbkArg,int64_t a_err,
+                                                                 const std::string& a_task,const fc::variant& a_result)
+{
+    __DEBUG_APP2__(0, " ");
+}
 
 

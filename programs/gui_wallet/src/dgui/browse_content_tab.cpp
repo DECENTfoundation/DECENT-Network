@@ -102,7 +102,7 @@ void Browse_content_tab::PrepareTableWidgetHeaderGUI()
 void Browse_content_tab::DigContCallback(_NEEDED_ARGS2_)
 {
     __DEBUG_APP2__(3,"clbdata=%p, act=%d, pDigCont=%p\n",a_clb_data,a_act,a_pDigContent);
-    emit ShowDetailsOnDigContentSig(a_pDigContent->get_content_str);
+    emit ShowDetailsOnDigContentSig(*a_pDigContent);
 }
 
 

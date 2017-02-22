@@ -60,4 +60,11 @@ void gui_wallet::Mainwindow_gui_wallet::TaskDoneOverrviewGUI(void* a_clbkArg,int
     {
         m_pCentralWidget->m_Overview_tab.text.setText(QString::fromStdString(a_result));
     }
+    //
+}
+
+
+void gui_wallet::Mainwindow_gui_wallet::TaskDoneOverrviewGUI3(void* a_clbkArg,int64_t a_err,const std::string& a_task,const fc::variant& a_result)
+{
+    __DEBUG_APP2__(0, " ");
 }

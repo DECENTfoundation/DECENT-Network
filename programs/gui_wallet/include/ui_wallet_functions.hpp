@@ -19,14 +19,14 @@ namespace WAT {enum _WAT_TP{CONNECT,SAVE2,LOAD2,EXIT};}
 namespace WAS{enum _API_STATE{DEFAULT_ST=0,CONNECTED_ST,_API_STATE_SIZE};}
 
 static void __THISCALL__ WarnYesOrNoFunc_static(void*,int,void*){}
-static void __THISCALL__ CallbackSetNewTaskGlb_static(void* owner,SetNewTask_last_args){}
+static void __THISCALL__ CallbackSetNewTaskGlb_static(void* owner,SetNewTask_last_args2,const std::string&){}
 
 typedef struct SConnectionStruct{
     SConnectionStruct():fpDone(&CallbackSetNewTaskGlb_static),fpWarnFunc(&WarnYesOrNoFunc_static){}
     ~SConnectionStruct(){__DEBUG_APP2__(1,"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! ");}
     WAT::_WAT_TP   action;
     std::string   wallet_file_name;
-    TypeCallbackSetNewTaskGlb fpDone; WarnYesOrNoFuncType fpWarnFunc;
+    TypeCallbackSetNewTaskGlb2 fpDone; WarnYesOrNoFuncType fpWarnFunc;
     //std::string  ws_server = "ws://localhost:8090";
     std::string  ws_server;
     std::string  ws_user;
@@ -34,16 +34,23 @@ typedef struct SConnectionStruct{
     std::string  chain_id;
 }SConnectionStruct;
 
-void InitializeUiInterfaceOfWallet_base(TypeWarnAndWaitFunc a_fpWarnAndWait,TypeCallFunctionInGuiLoop a_fpCorrectUiCaller,
+void InitializeUiInterfaceOfWallet_base(TypeWarnAndWaitFunc a_fpWarnAndWait,
+                                        TypeCallFunctionInGuiLoop2 a_fpCorrectUiCaller2,TypeCallFunctionInGuiLoop3 a_fpCorrectUiCaller3,
                                         void* a_pMngOwner,void* a_pMngClb,...);
-void InitializeUiInterfaceOfWallet(TypeWarnAndWaitFunc a_fpWarnAndWait,TypeCallFunctionInGuiLoop a_fpCorrectUiCaller,
-                                   void* a_pMngOwner,void* a_pMngClb,TypeCallbackSetNewTaskGlb a_fpMngClbk);
+
+void InitializeUiInterfaceOfWallet(TypeWarnAndWaitFunc a_fpWarnAndWait,
+                                   TypeCallFunctionInGuiLoop2 a_fpCorrectUiCaller2,TypeCallFunctionInGuiLoop3 a_fpCorrectUiCaller3,
+                                   void* a_pMngOwner,void* a_pMngClb,
+                                   TypeManagementClbk a_fpMngClbk);
+
+#if 0
 template <typename Type>
 static void InitializeUiInterfaceOfWallet(TypeWarnAndWaitFunc a_fpWarnAndWait,TypeCallFunctionInGuiLoop a_fpCorrectUiCaller,
                                           Type* a_pMngOwner,void* a_pMngClb,void (Type::*a_clbkFunction)(SetNewTask_last_args))
 {
     InitializeUiInterfaceOfWallet_base(a_fpWarnAndWait,a_fpCorrectUiCaller,a_pMngOwner,a_pMngClb,a_clbkFunction);
 }
+#endif
 
 void DestroyUiInterfaceOfWallet(void);
 
@@ -55,12 +62,22 @@ int SaveWalletFile2(const SConnectionStruct& a_pWalletData);
 
 void StartConnectionProcedure(SConnectionStruct* a_conn_str,void *owner, void*clbData);
 
-int SetNewTask_base(const std::string& inp_line, void* ownr, void* clbData, ...);
-int SetNewTask(const std::string& inp_line, void* ownr, void* clbData, TypeCallbackSetNewTaskGlb clbkFunction);
+#define SetNewTask SetNewTask2
+
+int SetNewTask_base(int a_nType,const std::string& inp_line, void* ownr, void* clbData, ...);
+int SetNewTask2(const std::string& inp_line, void* ownr, void* clbData, TypeCallbackSetNewTaskGlb2 clbkFunction);
 template <typename Type>
-static int SetNewTask(const std::string& a_inp_line, Type* a_memb, void* a_clbData, void (Type::*a_clbkFunction)(SetNewTask_last_args))
+static int SetNewTask2(const std::string& a_inp_line, Type* a_memb, void* a_clbData,
+                       void (Type::*a_clbkFunction)(SetNewTask_last_args2,const std::string&))
 {
-    return SetNewTask_base(a_inp_line, a_memb, a_clbData, a_clbkFunction);
+    return SetNewTask_base(TIT::AS_STR,a_inp_line, a_memb, a_clbData, a_clbkFunction);
+}
+
+template <typename Type>
+static int SetNewTask3(const std::string& a_inp_line, Type* a_memb, void* a_clbData,
+                       void (Type::*a_clbkFunction)(SetNewTask_last_args2,const fc::variant&))
+{
+    return SetNewTask_base(TIT::AS_VARIANT,a_inp_line, a_memb, a_clbData, a_clbkFunction);
 }
 
 

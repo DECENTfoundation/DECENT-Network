@@ -134,4 +134,7 @@ programs/gui_wallet/prj/gui_wallet/build-gui_wallet-Qt_5_7_1_clang_64-Debug
 programs/gui_wallet/prj/gui_wallet/gui_wallet_qt/Makefile
 packages/
 transfer.log
+Decent.cbp
+programs/cli_wallet/packages/
+programs/cli_wallet/transfer.log
 

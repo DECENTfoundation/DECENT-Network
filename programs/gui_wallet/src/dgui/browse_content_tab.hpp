@@ -46,7 +46,7 @@ namespace gui_wallet
 
     public:
     signals:
-        void ShowDetailsOnDigContentSig(std::string get_cont_str);
+        void ShowDetailsOnDigContentSig(decent::wallet::ui::gui::SDigitalContent get_cont_str);
 
     protected:
         void PrepareTableWidgetHeaderGUI();

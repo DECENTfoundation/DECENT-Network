@@ -34,7 +34,8 @@ using namespace gui_wallet;
 
 int WarnAndWaitFunc(void* a_pOwner,WarnYesOrNoFuncType a_fpYesOrNo,
                            void* a_pDataForYesOrNo,const char* a_form,...);
-int CallFunctionInGuiLoop(SetNewTask_last_args,void* a_owner,TypeCallbackSetNewTaskGlb a_fpFunc);
+int CallFunctionInGuiLoop2(SetNewTask_last_args2,const std::string& a_result,void* a_owner,TypeCallbackSetNewTaskGlb2 a_fpFunc);
+int CallFunctionInGuiLoop3(SetNewTask_last_args2,const fc::variant& a_result,void* owner,TypeCallbackSetNewTaskGlb3 fpFnc);
 
 
 /*//////////////////////////////////////////////////////////////////////////////////*/
@@ -189,14 +190,22 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
     connect(pUsersCombo, SIGNAL(currentIndexChanged(const QString&)), this, SLOT(CurrentUserChangedSlot(const QString&)) );
     m_nUserComboTriggeredInGui = 0;
     //void GuiWalletInfoWarnErrSlot(std::string);
-    connect(m_pCentralWidget->GetBrowseContentTab(),SIGNAL(ShowDetailsOnDigContentSig(std::string)),this,SLOT(ShowDetailsOnDigContentSlot(std::string)));
+    connect(m_pCentralWidget->GetBrowseContentTab(),SIGNAL(ShowDetailsOnDigContentSig(decent::wallet::ui::gui::SDigitalContent)),
+            this,SLOT(ShowDetailsOnDigContentSlot(decent::wallet::ui::gui::SDigitalContent)));
 
     //static void InitializeUiInterfaceOfWallet(TypeWarnAndWaitFunc a_fpWarnAndWait,
     //     TypeCallFunctionInGuiLoop a_fpCorrectUiCaller,
     //     Type* a_pMngOwner,void* a_pMngClb,void (Type::*a_clbkFunction)(SetNewTask_last_args))
 
-    InitializeUiInterfaceOfWallet(&WarnAndWaitFunc,&CallFunctionInGuiLoop,
-                                  this,NULL,&Mainwindow_gui_wallet::ManagementNewFuncGUI);
+    //__DEBUG_APP2__(0,"fpMan=%p",&Mainwindow_gui_wallet::ManagementNewFuncGUI);
+    __DEBUG_APP2__(1,"fpWarn=%p, fpCaller2=%p, fpCaller3=%p, pMnOwner=%p, pMngrClb=%p, fpMngClb=%p",
+                   GetFunctionPointerAsVoid(0,&WarnAndWaitFunc),GetFunctionPointerAsVoid(0,&CallFunctionInGuiLoop2),
+                   GetFunctionPointerAsVoid(0,&CallFunctionInGuiLoop3),this,(void*)0,
+                   GetFunctionPointerAsVoid(0,&Mainwindow_gui_wallet::ManagementNewFuncGUI));
+
+    InitializeUiInterfaceOfWallet_base(&WarnAndWaitFunc,&CallFunctionInGuiLoop2,
+                                  &CallFunctionInGuiLoop3,this,NULL,
+                                  GetFunctionPointerAsVoid(0,&Mainwindow_gui_wallet::ManagementNewFuncGUI));
     m_nJustConnecting = 1;
     ConnectSlot();
     setWindowTitle(tr("Decent - Blockchain Content Distributor"));
@@ -351,10 +360,10 @@ void Mainwindow_gui_wallet::listAccountsSlot(QString str)
     //SetNewTask("list_accounts " + str + " 5",this,CLI_WALLET_CODE,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
 }
 
-void Mainwindow_gui_wallet::ShowDetailsOnDigContentSlot(std::string a_get_cont_str)
+void Mainwindow_gui_wallet::ShowDetailsOnDigContentSlot(decent::wallet::ui::gui::SDigitalContent a_get_cont)
 {
-    m_pInfoTextEdit->setText(tr(a_get_cont_str.c_str()));
-    m_pcInfoDlg->exec();  // Shold be modified
+    //m_pInfoTextEdit->setText(tr(a_get_cont_str.c_str()));
+    //m_pcInfoDlg->exec();  // Shold be modified
 }
 
 
@@ -488,7 +497,7 @@ int Mainwindow_gui_wallet::GetDigitalContentsFromString(std::vector<decent::wall
         cpcSearchStart = cpcAvgRatingEnd+1;
     }
 
-    if(g_nDebugApplication){printf("\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n\n");}
+    __DEBUG_APP2__(1,"\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n");
 
     return 0;
 }
@@ -523,6 +532,8 @@ void Mainwindow_gui_wallet::moveEvent(QMoveEvent * a_event)
 void Mainwindow_gui_wallet::DisplayWalletContentGUI()
 {
 
+    m_ActionUnlock.setEnabled(true);
+    m_ActionImportKey.setEnabled(true);
     SetNewTask("list_my_accounts",this,NULL,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
 
 #if 0
@@ -656,12 +667,56 @@ void Mainwindow_gui_wallet::HelpSlot()
 }
 
 
+void Mainwindow_gui_wallet::TaskDoneFuncGUI3(void* a_clbkArg,int64_t a_err,
+                                             const std::string& a_task,const fc::variant& a_result)
+{
+    __DEBUG_APP2__(0,"just_conn=%d, err=%d, a_clbkArg=%p, task=%s",
+                   m_nJustConnecting,(int)a_err,a_clbkArg,a_task.c_str());
+
+    //enum MAIN_TABS_ENM{BROWSE_CONTENT,TRANSACTIONS,UPLOAD,OVERVIEW,PURCHASED};
+    const int cnCurIndex(m_pCentralWidget->GetMyCurrentTabIndex());
+    switch(cnCurIndex)
+    {
+    case BROWSE_CONTENT:
+    {
+        //BrowseContentTaskDone(void* a_clbkArg,int64_t a_err,const std::string& a_task,const std::string& a_result);
+        TaskDoneBrowseContentGUI3(a_clbkArg, a_err,a_task,a_result);
+        break;
+    }
+    case TRANSACTIONS:
+    {
+        TaskDoneTransactionsGUI3(a_clbkArg, a_err,a_task,a_result);
+        break;
+    }
+    case UPLOAD:
+    {
+        TaskDoneUploadGUI3(a_clbkArg, a_err,a_task,a_result);
+        break;
+    }
+    case OVERVIEW:
+    {
+        TaskDoneOverrviewGUI3(a_clbkArg, a_err,a_task,a_result);
+        break;
+    }
+    case PURCHASED:
+    {
+        TaskDonePurchasedGUI3(a_clbkArg, a_err,a_task,a_result);
+        break;
+    }
+    default:
+    {
+        break;
+    }
+    }
+}
+
+
 void Mainwindow_gui_wallet::TaskDoneFuncGUI(void* a_clbkArg,int64_t a_err,const std::string& a_task,const std::string& a_result)
 {
     //emit TaskDoneSig(a_callbackArg,a_err,a_task,a_result);
     const char* cpcOccur;
 
-    __DEBUG_APP2__(2,"just_conn=%d, err=%d, a_clbkArg=%p, task=%s, result=%s\n",
+    __DEBUG_APP2__(1,"just_conn=%d, err=%d, a_clbkArg=%p, task=%s, result=%s\n",
                    m_nJustConnecting,(int)a_err,a_clbkArg,a_task.c_str(),a_result.c_str());
 
     //m_nJustConnecting = 0;
@@ -983,7 +1038,7 @@ void Mainwindow_gui_wallet::ConnectSlot()
     m_ActionConnect.setEnabled(false);
     m_wdata2.action = WAT::CONNECT;
     m_wdata2.fpWarnFunc = &SetPassword;
-    m_wdata2.fpDone = (TypeCallbackSetNewTaskGlb)GetFunctionPointerAsVoid(1,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
+    m_wdata2.fpDone = (TypeCallbackSetNewTaskGlb2)GetFunctionPointerAsVoid(1,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
     StartConnectionProcedure(&m_wdata2,this,WALLET_CONNECT_CODE);
 }
 
