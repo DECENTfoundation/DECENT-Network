@@ -12,17 +12,14 @@
 
 #include <QWidget>
 #include <iostream>
-#include <QIODevice>
 #include <QTableWidget>
 #include <QTableWidgetItem>
-#include <QApplication>
 #include <QVBoxLayout>
 #include <QString>
-#include <QMessageBox>
-#include <QFile>
 #include <QHeaderView>
 #include <QTextStream>
 #include <QLabel>
+#include <QLineEdit>
 #include <QPushButton>
 
 namespace gui_wallet
@@ -39,8 +36,8 @@ namespace gui_wallet
         QTableWidget* tablewidget;
         QTableWidgetItem* itm;
         QPushButton* more;
-        void createNewRow();
-        void setOnGrids();
+        QLineEdit user;
+        void createNewRow(const int);
 
     };
 }

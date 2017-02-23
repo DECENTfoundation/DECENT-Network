@@ -11,95 +11,144 @@
 
 
 #include "gui_wallet_mainwindow.hpp"
+#include <Qt>
 
 void gui_wallet::Mainwindow_gui_wallet::ManagementTransactionsGUI()
 {
-    SetNewTask("get_account_history vazgen 4",this,NULL,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
+    QString tFilterStr = m_pCentralWidget->FilterStr();
+    std::string usr = StringFromQString(tFilterStr);
+    SetNewTask("get_account_history " + usr +  " 100",this,NULL,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
 }
 
 
 void gui_wallet::Mainwindow_gui_wallet::TaskDoneTransactionsGUI(void* a_clbkArg,int64_t a_err,const std::string& a_task,const std::string& a_result)
 {
     int index = 0;
-    int row = 0; //tablewidget->rowCount();
-    int col = 0; //tablewidget->columnCount();
-    int n = 0;
-    int d = 0;
+    int row = 1;
+    int col = 0;
 
-//    QString s = QString::fromStdString(a_result);
-//    m_pCentralWidget->m_trans_tab.itm = new QTableWidgetItem(tr("%1").arg(s));
-//    m_pCentralWidget->m_trans_tab.tablewidget->setItem(row, col++,  m_pCentralWidget->m_trans_tab.itm);
+    m_pCentralWidget->m_trans_tab.createNewRow(a_result.size());
 
-    while(true)
+    //false username
+    if( a_result[3] == 'a' && a_result[4] == 's' && a_result[5] == 's')
     {
-        n++;
-        col = 0;
-
-        //date
-        QString date = 0;
-        for (int i = index; d < 20; ++i)
+        for(int i = row; i < m_pCentralWidget->m_trans_tab.tablewidget->rowCount(); ++i )
         {
-            d++;
+            for (int j = 0; j < 4; ++j)
+            {
+                QString aa = 0;
+                aa += '-';
+                m_pCentralWidget->m_trans_tab.itm = new QTableWidgetItem(tr("%1").arg(aa));
+                m_pCentralWidget->m_trans_tab.tablewidget->setItem(i, j,  m_pCentralWidget->m_trans_tab.itm);
+            }
+            return;
+        }
+    }
+
+    while(a_result.size() > index)
+    {
+
+    //TIME
+        QString date = 0;
+        for (int i = index; a_result[i] != 'T'; ++i)
+        {
             index++;
             date += a_result[i];
         }
-        m_pCentralWidget->m_trans_tab.itm = new QTableWidgetItem(tr("%1").arg(date));
-        m_pCentralWidget->m_trans_tab.tablewidget->setItem(row, col++,  m_pCentralWidget->m_trans_tab.itm);
-        //=======
+        //walking on TYPE section
+        for (int i = index; a_result[i - 1] != ' '; ++i){      index++;    }
+        QTableWidgetItem* Idate = new QTableWidgetItem(tr("%1").arg(date));
+        Idate->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+        m_pCentralWidget->m_trans_tab.tablewidget->setItem(row, col++, Idate);
 
-        //type
+    //TYPE
         QString type = 0;
+        if(a_result[index] >= 'A' && a_result[index] <= 'Z')
+        {
+            int word = 0;
+            for (int i = index; word < 3; ++i)
+            {
+                index++;
+                type += a_result[i];
+                if(a_result[i] == ' ')
+                {
+                    word ++;
+                    //index++;
+                if(a_result[i+1] < 'A' || a_result[i+1] > 'Z') {   break; }
+                }
+            }
+        }
+        else if(a_result[index] >= 'a' && a_result[index] <= 'z')
+        {
+            for(int i = index; a_result[i] != ' '; ++i)
+            {
+                index++;
+                type += a_result[i];
+            }
+        }
+        QTableWidgetItem* Itype = new QTableWidgetItem(tr("%1").arg(type));
+        Itype->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+        m_pCentralWidget->m_trans_tab.tablewidget->setItem(row, col++, Itype);
+
+    //INFO
+        QString info = 0;
+        for(int i = index; ; ++i)
+        {
+            if(a_result[i] == '(')
+            {
+                index += 5;
+                break;
+            }
+            else if( (a_result[i] == 'F' || a_result[i] == 'f') && a_result[i + 1] == 'e' && a_result[i + 2] == 'e')
+                 {
+                     index += 4;
+                     break;
+                 }
+            index++;
+            info += a_result[i];
+        }
+        QTableWidgetItem* Iinfo = new QTableWidgetItem(tr("%1").arg(info));
+        Iinfo->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+        m_pCentralWidget->m_trans_tab.tablewidget->setItem(row, col++, Iinfo);
+    //FEE
+        QString fee = 0;
         for (int i = index; ; ++i)
         {
-            if( ( (a_result[i + 1] == 'F' || a_result[i + 1] == 'f') )
-                    && a_result[i + 2] == 'e'
-                    && a_result[i + 3] == 'e'
-                    && a_result[i + 4] == ':')
+            if(a_result[i] >= 'A' && a_result[i] <= 'Z')
             {
                 break;
             }
-            index+=6;
-            type += a_result[i];
+            index++;
+            fee += a_result[i];
+        }
+        QTableWidgetItem* Ifee = new QTableWidgetItem(tr("%1").arg(fee));
+        Ifee->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+        m_pCentralWidget->m_trans_tab.tablewidget->setItem(row, col++, Ifee);
+        //=====
+        //walking to date
+        for(int i = index; ; ++i)
+        {
+            index++;
+            if(a_result[i+1] >= '0' && a_result[i+1] <= '9')
+            {
+                break;
+            }
         }
 
-        m_pCentralWidget->m_trans_tab.itm = new QTableWidgetItem(tr("%1").arg(type));
-        m_pCentralWidget->m_trans_tab.tablewidget->setItem(row, col++,  m_pCentralWidget->m_trans_tab.itm);
-        //======
-
-        //fee
-        QString fee = 0;
-           for (int i = index; ; ++i)
-           {
-               if( ((a_result[i + 5] >= '0' && a_result[i + 5] <= '9')
-                    && a_result[i + 6] == '-')   || a_result[i] == ')' )
-               {
-                   break;
-               }
-
-               index++;
-               fee += a_result[i];
-           }
-           m_pCentralWidget->m_trans_tab.itm = new QTableWidgetItem(tr("%1").arg(fee));
-           m_pCentralWidget->m_trans_tab.tablewidget->setItem(row, col,  m_pCentralWidget->m_trans_tab.itm);
-           index+=2;
-           //std::cout << jstr.size() << "index!!!!!!!!!-" << index << std::endl;
-           //==========
-
-        d = 0;
+        row++;
         col = 0;
-        ++row;
-        break;
-        m_pCentralWidget->m_trans_tab.createNewRow();
-
     }
-
-    //SetNewTask2("get_account_history hayq 4",this,NULL,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
 }
 
+//gui_wallet::Mainwindow_gui_wallet::~Mainwindow_gui_wallet()
+//{
+//    std::cout << "!!!!" << std::endl;
+//    //delete m_pCentralWidget->m_trans_tab.tablewidget;
+//}
 
 
 
-
+    //SetNewTask2("get_account_history hayq 4",this,NULL,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
 //    SetNewTask2("get_account_history hayq 4",this,NULL,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
 //}
 

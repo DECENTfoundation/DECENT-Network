@@ -92,7 +92,7 @@ QString CentralWigdet::FilterStr()
         return m_browse_cont_tab.m_filterLineEdit.text();
         break;
     case TRANSACTIONS:
-        return 0;
+        return m_trans_tab.user.text();
         break;
     case UPLOAD:
         return 0;
