@@ -18,7 +18,6 @@
 #include <QVBoxLayout>
 #include "gui_wallet_connectdlg.hpp"
 #include "text_display_dialog.hpp"
-#include "walletcontentdlg.hpp"
 #include "richdialog.hpp"
 #include "cliwalletdlg.hpp"
 #include <unnamedsemaphorelite.hpp>
@@ -106,7 +105,7 @@ namespace gui_wallet
         void listAccountsSlot(QString);
 
     protected:
-        virtual void moveEvent(QMoveEvent *) _OVERRIDE_ ;
+        virtual void moveEvent(QMoveEvent *) override ;
 
     protected:
         class QVBoxLayout*   m_pCentralAllLayout;
