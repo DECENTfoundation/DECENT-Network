@@ -27,8 +27,28 @@
 #include <QScrollBar>
 #include "gui_wallet_global.hpp"
 
+#ifndef _PATH_DELIMER_
+#ifdef WIN32
+#define _PATH_DELIMER_  '\\'
+#else
+#define _PATH_DELIMER_  '/'
+#endif
+#endif
+
+#ifdef WIN32
+#include <direct.h>
+#ifndef getcwd
+#define getcwd _getcwd
+#endif
+#else
+#include <unistd.h>
+#endif
+
 extern std::string g_cApplicationPath ;
-extern int g_nDebugApplication;
+std::string FindImagePath(bool& a_bRet,const char* a_image_name);
+
+static void SetImageToLabelStatic(bool& _bRet_,QPixmap& _image_,const char* _image_name_);
+static void MakeWarning(const char* /*warn*/, const char* /*warn_details*/){}
 
 using namespace gui_wallet;
 
@@ -180,86 +200,6 @@ void CentralWigdet::SetAccountBalancesFromStrGUI(const std::vector<std::string>&
 
 
 
-#if 1
-
-#ifndef _PATH_DELIMER_
-#ifdef WIN32
-#define _PATH_DELIMER_  '\\'
-#else
-#define _PATH_DELIMER_  '/'
-#endif
-#endif
-
-#ifdef WIN32
-#include <direct.h>
-#ifndef getcwd
-#define getcwd _getcwd
-#endif
-#else
-#include <unistd.h>
-#endif
-
-
-static void MakeWarning(const char* /*warn*/, const char* /*warn_details*/)
-{}
-
-
-static void SetImageToLabelStaticFixedPath(bool& _bRet_,QPixmap& _image_,const char* _image_name_, const std::string& a_csCurDir)
-{
-    std::string::size_type nPosFound;
-    std::string cFullPath;
-    std::string cCurDir(a_csCurDir);
-
-    //printf("g_nDebugApplication=%d\n",g_nDebugApplication);
-    if(g_nDebugApplication){printf("!!! dir_to_search=\"%s\"\n",cCurDir.c_str());}
-
-    for(;;)
-    {
-        // 1. Try to find image in the directory of executable
-        cFullPath = cCurDir + "/" + _image_name_;
-        if( (_image_).load(cFullPath.c_str()) ){_bRet_ = true;return;}
-
-        // 2. Try to find in the directory of executable + image folder
-        cFullPath = cCurDir + ("/" FOLDER_NAME_FOR_IMAGES2 "/") + _image_name_;
-        if( (_image_).load(cFullPath.c_str()) ){_bRet_ = true;return;}
-
-        // Go one up and try again
-        nPosFound = cCurDir.find_last_of(_PATH_DELIMER_);
-        if(nPosFound == std::string::npos){_bRet_ = false;return;} // Not found!
-        cCurDir.erase(nPosFound,std::string::npos);
-    }
-}
-
-
-static void SetImageToLabelStatic(bool& _bRet_,QPixmap& _image_,const char* _image_name_)
-{
-    char vcBuffer[512];
-    std::string csCurDir(std::string(getcwd(vcBuffer,511)));
-
-    _bRet_ = false;
-    SetImageToLabelStaticFixedPath(_bRet_,_image_,_image_name_,csCurDir);
-    if(_bRet_){return;}
-    SetImageToLabelStaticFixedPath(_bRet_,_image_,_image_name_,g_cApplicationPath);
-}
-
-
-#else  // #if 1/0
-
-#define SetImageToLabelStatic(_bRet_,_image_,_image_name_) \
-        do{ \
-            (_bRet_)=true; \
-            if( !(_image_).load(DECENT_IMGS_INITIAL_PATH _image_name_) ) {\
-                /* Search for couple of other places */ \
-                if( !(_image_).load("./" _image_name_) ) {\
-                    if( !(_image_).load((_image_name_)) ){\
-                        std::string cImageFlName = (*g_pApplicationPath) + (DECENT_IMGS_INITIAL_PATH _image_name_); \
-                        if( !(_image_).load(cImageFlName.c_str()) ){(_bRet_)=false;} \
-                    } \
-                }\
-             }\
-        }while(0)
-
-#endif // #if 1/0
 
 
 QComboBox* CentralWigdet::usersCombo()
@@ -420,7 +360,10 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     m_first_line_lbl.addWidget(pWidgetTmp2);
     pWidgetTmp2->setFixedHeight(__HEIGHT__);
 
-    m_first_line_lbl.addWidget(new decent::wallet::ui::gui::NewCheckBox);
+#if 0
+    bool bRet;
+    m_first_line_lbl.addWidget(new decent::wallet::ui::gui::NewCheckBox());
+#endif // #if 1
 
     m_browse_cont_tab.setStyleSheet("color: black;""background-color:white;");
     SetAccountBalancesFromStrGUI(std::vector<std::string>());
@@ -492,4 +435,58 @@ void CentralWigdet::resizeEvent ( QResizeEvent * a_event )
     m_pUsernameWgt->resize(nWidth_big,m_pUsernameWgt->height());
     m_pBalanceWgt1->resize(nWidth_big,m_pBalanceWgt1->height());
 
+}
+
+
+
+/*/////////////////////////////////////////////////////////////////////////////////////////////////////////*/
+
+static std::string FindImagePathFixedDir(bool& a_bRet,const char* a_image_name, const std::string& a_csCurDir)
+{
+    std::string::size_type nPosFound;
+    std::string cFullPath;
+    std::string cCurDir(a_csCurDir);
+    FILE* fpFile;
+
+    __DEBUG_APP2__(1,"!!! dir_to_search=\"%s\"\n",cCurDir.c_str());
+
+    for(;;)
+    {
+        // 1. Try to find image in the directory of executable
+        cFullPath = cCurDir + "/" + a_image_name;
+        fpFile = fopen(cFullPath.c_str(),"r");
+        if( fpFile ){fclose(fpFile);a_bRet = true;return cFullPath;}
+
+        // 2. Try to find in the directory of executable + image folder
+        cFullPath = cCurDir + ("/" FOLDER_NAME_FOR_IMAGES2 "/") + a_image_name;
+        //if( (_image_).load(cFullPath.c_str()) ){_bRet_ = true;return;}
+        fpFile = fopen(cFullPath.c_str(),"r");
+        if( fpFile ){fclose(fpFile);a_bRet = true;return cFullPath;}
+
+        // Go one up and try again
+        nPosFound = cCurDir.find_last_of(_PATH_DELIMER_);
+        if(nPosFound == std::string::npos){a_bRet = false;return "";} // Not found!
+        cCurDir.erase(nPosFound,std::string::npos);
+    }
+}
+
+
+std::string FindImagePath(bool& a_bRet,const char* a_image_name)
+{
+    std::string sReturn;
+    char vcBuffer[512];
+    std::string csCurDir(std::string(getcwd(vcBuffer,511)));
+
+    a_bRet = false;
+    sReturn = FindImagePathFixedDir(a_bRet,a_image_name,csCurDir);
+    if(a_bRet){return sReturn;}
+    sReturn = FindImagePathFixedDir(a_bRet,a_image_name,g_cApplicationPath);
+    return sReturn;
+}
+
+
+static void SetImageToLabelStatic(bool& _bRet_,QPixmap& _image_,const char* _image_name_)
+{
+    std::string sFullPath = FindImagePath(_bRet_,_image_name_);
+    if(_bRet_){(_image_).load(sFullPath.c_str());}
 }

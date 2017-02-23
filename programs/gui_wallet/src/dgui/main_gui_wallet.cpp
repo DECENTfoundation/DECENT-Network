@@ -26,12 +26,15 @@
 extern int g_nDebugApplication;
 std::string g_cApplicationPath ;
 
+
 int main(int argc, char* argv[])
 {
 
 #ifdef TEST_SIMPLE_APP
+
     printf("Hello world! argc=%d, argv=%p\n",argc,argv);
-#else
+
+#else  // #ifdef TEST_SIMPLE_APP
 
     const char* cpcPath = strrchr(argv[0],LAST_SYS_CHAR);
 
@@ -83,22 +86,21 @@ int main(int argc, char* argv[])
     gui_wallet::application aApp(argc,argv);
 
 #if 0
-    //QString testString;
-    wprintf(L"fwide=%d\n",fwide(stdout,1));
-    wprintf(L"Русский\n");
-    wchar_t i = 0x2192;
-    //for( i=4000; i<6000;++i)
-    {
-        //wprintf(L"chr=%c(code=%d)\n",i,(int)i);
-        wprintf(L"chr='%lc'(code=%d)\n",i,(int)i);
-    }
-#else
+    decent::wallet::ui::gui::ContentDetailsBougth aBouth;
+    decent::wallet::ui::gui::SDigitalContent    aContent;
+    aContent.author = "poxos";
+    aContent.AVG_rating = 0.;
+    aContent.created = "10.02.2017";
+    aContent.URI = "URI111";
+    aBouth.execCDD("davit",aContent);
+    return 0;
+#endif // #if 0
+
     gui_wallet::Mainwindow_gui_wallet aMainWindow;
     aMainWindow.show();
     aApp.exec();
-    //delete g_pApplicationPath;
-#endif
-#endif
+
+#endif  // #ifdef TEST_SIMPLE_APP
 
     }
     catch(const char* a_ext_str)

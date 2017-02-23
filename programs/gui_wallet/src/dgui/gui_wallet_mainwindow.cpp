@@ -32,6 +32,10 @@
 
 using namespace gui_wallet;
 
+static gui_wallet::Mainwindow_gui_wallet*  s_pMainWindowInstance = NULL;
+
+std::string FindImagePath(bool& a_bRet,const char* a_image_name);
+
 int WarnAndWaitFunc(void* a_pOwner,WarnYesOrNoFuncType a_fpYesOrNo,
                            void* a_pDataForYesOrNo,const char* a_form,...);
 int CallFunctionInGuiLoop2(SetNewTask_last_args2,const std::string& a_result,void* a_owner,TypeCallbackSetNewTaskGlb2 a_fpFunc);
@@ -113,6 +117,17 @@ void ParseDigitalContentFromGetContentString(decent::wallet::ui::gui::SDigitalCo
 }
 
 
+void SetNewTaskQtMainWnd2Glb(const std::string& a_inp_line, void* a_clbData)
+{
+    if(s_pMainWindowInstance)s_pMainWindowInstance->SetNewTaskQtMainWnd2(a_inp_line,a_clbData);
+}
+
+void SetNewTaskQtMainWnd3Glb(const std::string& a_inp_line, void* a_clbData)
+{
+    if(s_pMainWindowInstance)s_pMainWindowInstance->SetNewTaskQtMainWnd3(a_inp_line,a_clbData);
+}
+
+
 /*//////////////////////////////////////////////////////////////////////////////////*/
 
 Mainwindow_gui_wallet::Mainwindow_gui_wallet()
@@ -133,6 +148,7 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
         m_cqsPreviousFilter(tr("nf")),
         m_nConnected(0)
 {
+    s_pMainWindowInstance = this;
     m_default_stylesheet = styleSheet();
     //setStyleSheet("color:black;""background-color:white;");
     m_pInfoTextEdit = new QTextEdit;
@@ -232,6 +248,18 @@ Mainwindow_gui_wallet::~Mainwindow_gui_wallet()
     DestroyUiInterfaceOfWallet();
     delete m_pInfoTextEdit;
     delete m_pcInfoDlg;
+}
+
+
+void Mainwindow_gui_wallet::SetNewTaskQtMainWnd2(const std::string& a_inp_line, void* a_clbData)
+{
+    SetNewTask2(a_inp_line,this,a_clbData,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
+}
+
+
+void Mainwindow_gui_wallet::SetNewTaskQtMainWnd3(const std::string& a_inp_line, void* a_clbData)
+{
+    SetNewTask3(a_inp_line,this,a_clbData,&Mainwindow_gui_wallet::TaskDoneFuncGUI3);
 }
 
 
@@ -367,7 +395,18 @@ void Mainwindow_gui_wallet::listAccountsSlot(QString str)
 
 void Mainwindow_gui_wallet::ShowDetailsOnDigContentSlot(decent::wallet::ui::gui::SDigitalContent a_dig_cont)
 {
-    m_dig_cont_detailsDlg.execCD(a_dig_cont);
+    switch(a_dig_cont.type)
+    {
+    case DCT::GENERAL:
+        m_dig_cont_detailsGenDlg.execCDD(a_dig_cont);
+        break;
+    case DCT::BOUGHT:
+        m_dig_cont_detailsBougDlg.execCDD(m_pCentralWidget->usersCombo()->currentText(),a_dig_cont);
+        break;
+    default:
+        __DEBUG_APP2__(0,"error!!!!!!!!!");
+        break;
+    }
     //m_pInfoTextEdit->setText(tr(a_get_cont_str.c_str()));
     //m_pcInfoDlg->exec();  // Shold be modified
 }

@@ -42,6 +42,7 @@ struct my_visitor : public fc::variant::visitor
        for(size_t i(0); i<unSize;++i,++pItr)
        {
            pEntry = &(*pItr);
+           //pEntry->key();
            pEntry->value().visit(*this);
        }
    }
