@@ -17,6 +17,8 @@
 #include "unnamedsemaphorelite.hpp"
 #include "ui_wallet_functions.hpp"
 
+#define CREATE_NEW_APP
+
 
 namespace gui_wallet
 {

@@ -97,12 +97,12 @@ void decent::wallet::ui::gui::ContentDetailsBougth::RateContentSlot(int a_nSelec
 
     QString qsRatingStr =
             tr("leave_rating ") +
-            m_user_name + tr(" ") +
-            tr(m_pContentInfo->URI.c_str()) + tr(" ") +
-            QString::number(ullnRating,10);
+            m_user_name + tr(" \"") +
+            tr(m_pContentInfo->URI.c_str()) + tr("\" ") +
+            QString::number(ullnRating,10) + tr(" true");
 
     std::string inp_str = qsRatingStr.toStdString();
-#if 0
+#if 1
     if(!nContinue){return;}
     SetNewTaskQtMainWnd2Glb(inp_str,NULL);
 #endif

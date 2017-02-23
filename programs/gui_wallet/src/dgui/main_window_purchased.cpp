@@ -57,7 +57,7 @@ void gui_wallet::Mainwindow_gui_wallet::TaskDonePurchasedGUI(void* a_clbkArg,int
 void gui_wallet::Mainwindow_gui_wallet::TaskDonePurchasedGUI3(void* a_clbkArg,int64_t a_err,
                                                               const std::string& a_task,const fc::variant& a_result)
 {
-    __DEBUG_APP2__(0," ");
+    __DEBUG_APP2__(1," ");
 
     if(a_err)
     {
@@ -65,7 +65,7 @@ void gui_wallet::Mainwindow_gui_wallet::TaskDonePurchasedGUI3(void* a_clbkArg,in
     }
     else if(strstr(a_task.c_str(),"list_content_by_bought "))
     {
-        __DEBUG_APP2__(0," ");
+        __DEBUG_APP2__(1," ");
     }
     else if(strstr(a_task.c_str(),"get_content "))
     {
