@@ -25,6 +25,7 @@
 
 extern int g_nDebugApplication;
 std::string g_cApplicationPath ;
+extern InGuiThreatCaller* s_pWarner;
 
 
 int main(int argc, char* argv[])
@@ -83,7 +84,11 @@ int main(int argc, char* argv[])
 
     try{
 
+#ifdef CREATE_NEW_APP
     gui_wallet::application aApp(argc,argv);
+#else  // #ifndef CREATE_NEW_APP
+    QApplication aApp(argc,argv);
+#endif // #ifndef CREATE_NEW_APP
 
 #if 0
     decent::wallet::ui::gui::ContentDetailsBougth aBouth;
@@ -97,8 +102,29 @@ int main(int argc, char* argv[])
 #endif // #if 0
 
     gui_wallet::Mainwindow_gui_wallet aMainWindow;
+
+#ifndef CREATE_NEW_APP
+    qRegisterMetaType<std::string>( "std::string" );
+    qRegisterMetaType<WarnYesOrNoFuncType>( "WarnYesOrNoFuncType" );
+    qRegisterMetaType<int64_t>( "int64_t" );
+    qRegisterMetaType<TypeCallbackSetNewTaskGlb2>( "TypeCallbackSetNewTaskGlb2" );
+    qRegisterMetaType<TypeCallbackSetNewTaskGlb3>( "TypeCallbackSetNewTaskGlb3" );
+    qRegisterMetaType<fc::variant>( "fc::variant" );
+    qRegisterMetaType<decent::wallet::ui::gui::SDigitalContent>( "decent::wallet::ui::gui::SDigitalContent" );
+
+    s_pWarner = new InGuiThreatCaller;
+    if(!s_pWarner)
+    {
+        throw "No enough memory";
+    }
+#endif // #ifndef CREATE_NEW_APP
+
     aMainWindow.show();
     aApp.exec();
+
+#ifndef CREATE_NEW_APP
+    delete s_pWarner;
+#endif // #ifndef CREATE_NEW_APP
 
 #endif  // #ifdef TEST_SIMPLE_APP
 

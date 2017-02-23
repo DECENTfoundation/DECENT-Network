@@ -64,7 +64,6 @@ SOURCES += ../../../src/dgui/gui_wallet_mainwindow.cpp \
     ../../../src/dgui/gui_wallet_connectdlg.cpp \
     ../../../src/dgui/gui_wallet_application.cpp \
     ../../../src/dgui/text_display_dialog.cpp \
-    ../../../src/dgui/walletcontentdlg.cpp \
     ../../../src/utils/richdialog.cpp \
     ../../../src/dgui/cliwalletdlg.cpp \
     ../../../src/dgui/decent_gui_inguiloopcaller.cpp
@@ -80,7 +79,6 @@ HEADERS += ../../../src/dgui/gui_wallet_mainwindow.hpp \
     ../../../include/unnamedsemaphorelite.hpp \
     ../../../src/dgui/gui_wallet_application.hpp \
     ../../../src/dgui/text_display_dialog.hpp \
-    ../../../src/dgui/walletcontentdlg.hpp \
     ../../../include/richdialog.hpp \
     ../../../src/dgui/cliwalletdlg.hpp \
     ../../../src/dgui/qt_commonheader.hpp \
