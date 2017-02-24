@@ -191,7 +191,7 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
     QWidget *central = new QWidget;
     central->setLayout(mainMenuLayout0);*/
 
-    m_pCentralWidget = new CentralWigdet(m_pCentralAllLayout);
+    m_pCentralWidget = new CentralWigdet(m_pCentralAllLayout,this);
     //m_pCentralWidget->setStyleSheet("color:black;""background-color:white;");
     m_pCentralWidget->setLayout(m_pCentralAllLayout);
     setCentralWidget(m_pCentralWidget);
@@ -365,7 +365,7 @@ void Mainwindow_gui_wallet::CurrentUserChangedSlot(const QString& a_new_user)
         m_nUserComboTriggeredInGui = 0;
         return;
     }
-    
+
     GlobalEvents::instance().setCurrentUser(a_new_user.toStdString());
 
     std::string csUserName = StringFromQString(a_new_user);
@@ -995,15 +995,15 @@ void Mainwindow_gui_wallet::TaskDoneFuncGUI(void* a_clbkArg,int64_t a_err,const 
     {
 
     }
-    else if(strstr(a_task.c_str(),"list_accounts "))
-    {
-        int nCurTab(m_pCentralWidget->GetMyCurrentTabIndex());
-        if(nCurTab != OVERVIEW){return;}
+//    else if(strstr(a_task.c_str(),"list_accounts "))
+//    {
+//        int nCurTab(m_pCentralWidget->GetMyCurrentTabIndex());
+//        if(nCurTab != OVERVIEW){return;}
 
-        QString qstr = QString::fromStdString(a_result);
-        m_pCentralWidget->m_Overview_tab.text.setText(qstr);
+//        QString qstr = QString::fromStdString(a_result);
+//        m_pCentralWidget->m_Overview_tab.text.setText(qstr);
 
-    }
+//    }
 
     else if(strstr(a_task.c_str(),"get_account_history"))
     {
@@ -1051,7 +1051,7 @@ void Mainwindow_gui_wallet::ManagementNewFuncGUI(void* a_clbkArg,int64_t a_err,c
 
     int nCurentTab = m_pCentralWidget->GetMyCurrentTabIndex();
     __DEBUG_APP2__(2," ");
-    //enum MAIN_TABS_ENM{BROWSE_CONTENT,TRANSACTIONS,UPLOAD,OVERVIEW,PURCHASED};
+
     switch(nCurentTab)
     {
     case BROWSE_CONTENT:
@@ -1061,7 +1061,6 @@ void Mainwindow_gui_wallet::ManagementNewFuncGUI(void* a_clbkArg,int64_t a_err,c
     }
     case TRANSACTIONS:
         ManagementTransactionsGUI();
-        //SetNewTask("get_account_history hayq 4",this,NULL,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
         break;
     case UPLOAD:
         ManagementUploadGUI();

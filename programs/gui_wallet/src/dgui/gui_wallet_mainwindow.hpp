@@ -52,7 +52,9 @@ namespace gui_wallet
         void TaskDoneBrowseContentGUI(void* a_clbkArg,int64_t a_err,const std::string& a_task,const std::string& a_result);
         void TaskDoneTransactionsGUI(void* a_clbkArg,int64_t a_err,const std::string& a_task,const std::string& a_result);
         void TaskDoneUploadGUI(void* a_clbkArg,int64_t a_err,const std::string& a_task,const std::string& a_result);
+    public:
         void TaskDoneOverrviewGUI(void* a_clbkArg,int64_t a_err,const std::string& a_task,const std::string& a_result);
+    private:
         void TaskDonePurchasedGUI(void* a_clbkArg,int64_t a_err,const std::string& a_task,const std::string& a_result);
 
         void TaskDoneFuncGUI3(void* clbkArg,int64_t err,const std::string& task,const fc::variant& result);

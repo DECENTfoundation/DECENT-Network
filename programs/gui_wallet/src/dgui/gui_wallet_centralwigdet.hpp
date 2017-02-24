@@ -68,7 +68,7 @@ enum MAIN_TABS_ENM{BROWSE_CONTENT,TRANSACTIONS,UPLOAD,OVERVIEW,PURCHASED};
         friend class Mainwindow_gui_wallet;
         Q_OBJECT
     public:
-        CentralWigdet(class QBoxLayout* pAllLayout);
+        CentralWigdet(class QBoxLayout* pAllLayout, class Mainwindow_gui_wallet* a_pPar);
         virtual ~CentralWigdet(); /* virtual because may be this class will be */
                                   /* used by inheritance */
 

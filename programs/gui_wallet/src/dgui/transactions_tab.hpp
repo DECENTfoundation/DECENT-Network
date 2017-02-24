@@ -12,41 +12,35 @@
 
 #include <QWidget>
 #include <iostream>
-#include <QIODevice>
 #include <QTableWidget>
 #include <QTableWidgetItem>
-#include <QApplication>
 #include <QVBoxLayout>
 #include <QString>
-#include <QMessageBox>
-#include <QFile>
 #include <QHeaderView>
 #include <QTextStream>
 #include <QLabel>
+#include <QLineEdit>
 #include <QPushButton>
 
 namespace gui_wallet
 {
     class Transactions_tab : public QWidget
     {
+
         Q_OBJECT
     public:
         Transactions_tab();
         ~Transactions_tab();
 
-    private:
         QVBoxLayout main_layout;
         QTableWidget* tablewidget;
         QTableWidgetItem* itm;
-        QPushButton* push;
-        QMessageBox mess;
-        QString jstr;
-        bool loadFile();
-        void setOnGrids();
-        void createNewRow();
-
-    private slots:
-        void aftherSignal();
+        QPushButton* more;
+        QLineEdit user;
+        void createNewRow(const int);
+        void deleteEmptyRows();
+        void ArrangeSize();
+virtual void resizeEvent(QResizeEvent *a_event);
 
     };
 }

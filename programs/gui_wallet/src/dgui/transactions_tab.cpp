@@ -1,140 +1,79 @@
-/*
- *	File      : transactions_tab.cpp
- *
- *	Created on: 21 Nov 2016
- *	Created by: Davit Kalantaryan (Email: davit.kalantaryan@desy.de)
- *
- *  This file implements ...
- *
- */
+//*
+// *	File      : transactions_tab.cpp
+// *
+// *	Created on: 21 Nov 2016
+// *	Created by: Davit Kalantaryan (Email: davit.kalantaryan@desy.de)
+// *
+// *  This file implements ...
+// *
+// */
 #include "transactions_tab.hpp"
+#include <QFrame>
 
 using namespace gui_wallet;
 
+static const char* firsItemNames[]={"Time","Type","Info","Fee"};
+
 Transactions_tab::Transactions_tab()
 {
-#ifdef USE_TRANSACTION_TAB
     //create table (widget)
     tablewidget = new QTableWidget();
-    tablewidget->setRowCount(tablewidget->rowCount() + 1);//add first row in table
-    tablewidget->setColumnCount(2);
-    tablewidget->verticalHeader()->setDefaultSectionSize(30);
-    tablewidget->horizontalHeader()->setDefaultSectionSize(400);
-    tablewidget->setHorizontalHeaderLabels(QStringList() << "Date" << "Info");
+    tablewidget->setRowCount(1);//add first row in table
+    tablewidget->setColumnCount(4);
+    tablewidget->verticalHeader()->setDefaultSectionSize(34);
+    tablewidget->horizontalHeader()->setDefaultSectionSize(220);
+    tablewidget->horizontalHeader()->hide();
+    tablewidget->verticalHeader()->hide();
+    tablewidget->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    tablewidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    main_layout.setContentsMargins(0, 5, 0, 0);
 
-    //close button
-//    push = new QPushButton("signal");
-//    push->pos().setX(500);
-//    push->pos().setY(500);
-//    push->show();
+    user.setPlaceholderText("Search");
 
-    //signals
-//    QObject::connect(push, SIGNAL(clicked()), push, SLOT(close()));
-//    QObject::connect(push, SIGNAL(clicked()), this, SLOT(close()));
-//    QObject::connect(push, SIGNAL(clicked()), this, SLOT(aftherSignal()));
-
-        //copy file
-    if( loadFile() )
+    for (int i = 0; i < 4; ++i)
     {
-        //wallet return jstr, jstr -> on tables
-        setOnGrids();
+        tablewidget->setItem(0, i, new QTableWidgetItem(tr(firsItemNames[i])));
+        tablewidget->item(0, i)->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+        tablewidget->item(0, i)->setBackground(Qt::lightGray);
     }
 
-
+    main_layout.addWidget(&user);
     main_layout.addWidget(tablewidget);
     setLayout(&main_layout);
-#endif  // #ifdef USE_TRANSACTION_TAB
 }
 
-void Transactions_tab::setOnGrids()
+void Transactions_tab::createNewRow(const int str)
 {
-#ifdef USE_TRANSACTION_TAB
-    int count = 0;
-    int row = 0; //tablewidget->rowCount();
-    int col = 0; //tablewidget->columnCount();
-    int n = 0;
-    while(true)
-    {
-        n++;
-        col = 0;
-        QString loops = 0;
-        for (int i = 0; i < 20; ++i)
-        {
-            count++;
-            loops += jstr[i];
-        }
-        itm = new QTableWidgetItem(tr("%1").arg(loops));
-        tablewidget->setItem(row, col++, itm);
-
-        QString loops2 = 0;
-        for (int i = count; ; ++i)
-        {
-            if( (jstr[i + 4] >= '0' && jstr[i + 4] <= '9') && jstr[i + 5] == '-')
-            {
-                break;
-            }
-            count++;
-            loops2 += jstr[i];
-        }
-
-        itm = new QTableWidgetItem(tr("%1").arg(loops2));
-        tablewidget->setItem(row, col, itm);
-
-        col = 0;
-        ++row;
-        if(n == 4)
-            break;
-        createNewRow();
-
-//    std::cout << n << std::endl;
-    }
-#endif // #ifdef USE_TRANSACTION_TAB
+    int count = str/50;
+    tablewidget->setRowCount(count);
 }
 
-void Transactions_tab::createNewRow()
+void Transactions_tab::ArrangeSize()
 {
-#ifdef USE_TRANSACTION_TAB
-    tablewidget->setRowCount(tablewidget->rowCount() + 1);
-#endif // #ifdef USE_TRANSACTION_TAB
+  QSize tqsTableSize = tablewidget->size();
+  tablewidget->setColumnWidth(0,(tqsTableSize.width()*25)/100);
+  tablewidget->setColumnWidth(1,(tqsTableSize.width()*25)/100);
+  tablewidget->setColumnWidth(2,(tqsTableSize.width()*25)/100);
+  tablewidget->setColumnWidth(3,(tqsTableSize.width()*25)/100);
 }
 
-bool Transactions_tab::loadFile()
+void Transactions_tab::resizeEvent(QResizeEvent *a_event)
 {
-#ifdef USE_TRANSACTION_TAB
-    QFile json("/Users/vahe/Desktop/myfile.txt");
-    if(!json.open(QIODevice::ReadOnly | QIODevice::Text))
-    {
-        mess.setText("Error::Can't read file");
-        mess.exec();
-        return false;
-    }
-    else
-    {
-        QTextStream qts(&json);
-        jstr = qts.readAll();
-
-        json.close();
-
-        return true;
-    }
-#endif  // #ifdef USE_TRANSACTION_TAB
-    return true;
-
+  QWidget::resizeEvent(a_event);
+  ArrangeSize();
 }
 
-void Transactions_tab::aftherSignal()
+void Transactions_tab::deleteEmptyRows()
 {
-#ifdef USE_TRANSACTION_TAB
-    mess.setText("SIGNAL IS DONE");
-    mess.exec();
-#endif // #ifdef USE_TRANSACTION_TAB
+   for (int i = tablewidget->rowCount(); tablewidget->item(i, 0) == 0; --i)
+   {
+       tablewidget->removeRow(i);
+   }
 }
+
 
 Transactions_tab::~Transactions_tab()
 {
-#ifdef USE_TRANSACTION_TAB
+    main_layout.removeWidget(tablewidget);
     delete tablewidget;
-    delete push;
-    //delete itm; //deleting automaticly ???
-#endif  // #ifdef USE_TRANSACTION_TAB
 }
