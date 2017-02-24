@@ -18,12 +18,12 @@
 #include <QVBoxLayout>
 #include "gui_wallet_connectdlg.hpp"
 #include "text_display_dialog.hpp"
-#include "walletcontentdlg.hpp"
 #include "richdialog.hpp"
 #include "cliwalletdlg.hpp"
 #include <unnamedsemaphorelite.hpp>
 #include <stdarg.h>
-#include "decent_wallet_ui_gui_contentdetails.hpp"
+#include "decent_wallet_ui_gui_contentdetailsgeneral.hpp"
+#include "decent_wallet_ui_gui_contentdetailsbougth.hpp"
 
 namespace gui_wallet
 {
@@ -39,6 +39,9 @@ namespace gui_wallet
         Mainwindow_gui_wallet();
         virtual ~Mainwindow_gui_wallet();   // virtual because may be this class will be
                                             // used by inheritanc
+        void SetNewTaskQtMainWnd2(const std::string& a_inp_line, void* a_clbData);
+        void SetNewTaskQtMainWnd3(const std::string& a_inp_line, void* a_clbData);
+
     protected:
         void CreateActions();
         void CreateMenues();
@@ -104,7 +107,7 @@ namespace gui_wallet
         void listAccountsSlot(QString);
 
     protected:
-        virtual void moveEvent(QMoveEvent *) _OVERRIDE_ ;
+        virtual void moveEvent(QMoveEvent *) override ;
 
     protected:
         class QVBoxLayout*   m_pCentralAllLayout;
@@ -160,7 +163,10 @@ namespace gui_wallet
 
         QString             m_default_stylesheet;
 
-        decent::wallet::ui::gui::ContentDetails m_dig_cont_detailsDlg;
+        decent::wallet::ui::gui::ContentDetailsGeneral m_dig_cont_detailsGenDlg;
+        decent::wallet::ui::gui::ContentDetailsBougth m_dig_cont_detailsBougDlg;
+
+        std::vector<std::string>        m_user_ids;
     };
 
 }

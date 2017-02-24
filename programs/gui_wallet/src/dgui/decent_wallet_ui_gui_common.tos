@@ -16,6 +16,7 @@
 #endif
 
 #include <QMouseEvent>
+#include "ui_wallet_functions.hpp"
 
 
 template <typename QtType,typename ClbkDataType>
@@ -88,6 +89,39 @@ void decent::wallet::ui::gui::TableWidgetItemW<QtType>::mouseDoubleClickEvent(QM
                     DCA::CALL_GET_CONTENT,
                     &(TableWidgetItemW_base<QtType,SDigitalContent>::m_callback_content));
     }
+}
+
+
+
+/*/////////////////////////////////////////////////*/
+
+template <typename QtType>
+template <typename ClbType,typename ...ConstrArgTypes>
+decent::wallet::ui::gui::WidgetWithCallback<QtType>::WidgetWithCallback(
+        ClbType* a_owner,void*a_clbData,
+        void (ClbType::*a_fpFunction)(MOUSE_EVENT_LAST_ARGS),
+        ConstrArgTypes... a_cons_args)
+    :
+      QtType(a_cons_args...),
+      m_pOwner(a_owner),
+      m_pCallbackData(a_clbData)
+{
+    m_fpCallback = (TypeMouseEvntClbk)GetFunctionPointerAsVoid(0,a_fpFunction);
+}
+
+
+template <typename QtType>
+decent::wallet::ui::gui::WidgetWithCallback<QtType>::~WidgetWithCallback()
+{
+    //
+}
+
+
+template <typename QtType>
+void decent::wallet::ui::gui::WidgetWithCallback<QtType>::mousePressEvent(QMouseEvent* a_mouse_event)
+{
+    (*m_fpCallback)(m_pOwner,m_pCallbackData,a_mouse_event);
+    QtType::mousePressEvent(a_mouse_event);//mousePressEvent
 }
 
 #endif // DECENT_WALLET_UI_GUI_COMMON_TOS

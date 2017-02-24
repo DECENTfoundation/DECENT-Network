@@ -25,7 +25,6 @@ Transactions_tab::Transactions_tab()
     tablewidget->horizontalHeader()->setDefaultSectionSize(220);
     tablewidget->horizontalHeader()->hide();
     tablewidget->verticalHeader()->hide();
-   // tablewidget->setFrameStyle(0);
     tablewidget->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     tablewidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     main_layout.setContentsMargins(0, 5, 0, 0);
@@ -68,7 +67,7 @@ void Transactions_tab::resizeEvent(QResizeEvent *a_event)
 
 void Transactions_tab::deleteEmptyRows()
 {
-   for (int i = tablewidget->rowCount(); tablewidget->item(i, 0) == 0; --i) // !!!!!!!!!!!!!!!!!add
+   for (int i = tablewidget->rowCount(); tablewidget->item(i, 0) == 0; --i)
    {
        tablewidget->removeRow(i);
    }

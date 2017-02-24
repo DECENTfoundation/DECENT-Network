@@ -32,7 +32,7 @@
 //using namespace fc::http;
 extern int g_nDebugApplication ;
 
-static InGuiThreatCaller* s_pWarner = NULL;
+InGuiThreatCaller* s_pWarner = NULL;
 
 
 int WarnAndWaitFunc(void* a_pOwner,WarnYesOrNoFuncType a_fpYesOrNo,
@@ -54,6 +54,7 @@ int WarnAndWaitFunc(void* a_pOwner,WarnYesOrNoFuncType a_fpYesOrNo,
    return s_pWarner->m_nRes;
 }
 
+#ifdef CREATE_NEW_APP
 
 gui_wallet::application::application(int& argc, char** argv)
     :
@@ -80,6 +81,8 @@ gui_wallet::application::~application()
 {
     delete s_pWarner;
 }
+
+#endif // #ifdef CREATE_NEW_APP
 
 
 /* //////////////////////// */

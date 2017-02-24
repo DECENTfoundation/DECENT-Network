@@ -17,10 +17,13 @@
 #include "unnamedsemaphorelite.hpp"
 #include "ui_wallet_functions.hpp"
 
+#define CREATE_NEW_APP
+
 
 namespace gui_wallet
 {
 
+#ifdef CREATE_NEW_APP
 class application : public QApplication
 {
     Q_OBJECT
@@ -29,6 +32,7 @@ public:
     virtual ~application();
 
 };
+#endif // #ifdef CREATE_NEW_APP
 
 }
 

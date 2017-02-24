@@ -12,43 +12,77 @@
 #include "gui_wallet_mainwindow.hpp"
 #include <fc/variant_object.hpp>
 
-
-struct my_visitor : public fc::variant::visitor
-{
-#if 0
-   typedef void result_type;
-   template<typename Type>
-   result_type operator()( const Type& op )const {
-       std::cout<< "visited " <<std::endl;
-   }
+#ifndef DEFAULT_LOG_LEVEL
+#define DEFAULT_LOG_LEVEL 4
 #endif
 
-   virtual void handle()const                        {__DEBUG_APP2__(0,"task=%s",m_inp.c_str());}
-   virtual void handle( const int64_t& v )const        {__DEBUG_APP2__(0,"task=%s",m_inp.c_str());}
-   virtual void handle( const uint64_t& v )const       {__DEBUG_APP2__(0,"task=%s",m_inp.c_str());}
-   virtual void handle( const double& v )const         {__DEBUG_APP2__(0,"task=%s",m_inp.c_str());}
-   virtual void handle( const bool& v )const           {__DEBUG_APP2__(0,"task=%s",m_inp.c_str());}
+class FinalResult
+{
+public:
+    void Clear2();
+
+private:
+    struct SKeyValue{
+        //fc::variant::type_id type;
+        union{
+            std::string value;
+            union{
+                std::string key;
+                class FinalResult* pValue;
+            };
+        };
+    }; // struct SKeyValue{
+
+    std::vector<SKeyValue> m_values;
+};
+
+
+class my_visitor : public fc::variant::visitor
+{
+public:
+    my_visitor():m_IsStructField(0){}
+
+   virtual void handle()const                          {
+        __DEBUG_APP2__(DEFAULT_LOG_LEVEL,"task=%s",m_inp.c_str());}
+   virtual void handle( const int64_t& v )const        {
+       __DEBUG_APP2__(DEFAULT_LOG_LEVEL,"task=%s",m_inp.c_str());
+   }
+   virtual void handle( const uint64_t& v )const       {
+       __DEBUG_APP2__(DEFAULT_LOG_LEVEL,"task=%s",m_inp.c_str());
+   }
+   virtual void handle( const double& v )const         {
+       __DEBUG_APP2__(DEFAULT_LOG_LEVEL,"task=%s",m_inp.c_str());
+   }
+   virtual void handle( const bool& v )const           {
+       __DEBUG_APP2__(DEFAULT_LOG_LEVEL,"task=%s",m_inp.c_str());
+   }
    virtual void handle( const std::string& a_s )const
    {
-       m_str = a_s;
-       __DEBUG_APP2__(0,"task=%s, str=%s",m_inp.c_str(),a_s.c_str());
+       //m_str = a_s;
+       __DEBUG_APP2__(DEFAULT_LOG_LEVEL,"task=%s, str=%s",m_inp.c_str(),a_s.c_str());
    }
    virtual void handle( const fc::variant_object& a_vo)const {
        size_t unSize = a_vo.size();
-       __DEBUG_APP2__(0,"task=%s, unSize=%d",m_inp.c_str(),(int)unSize);
+       __DEBUG_APP2__(DEFAULT_LOG_LEVEL,"task=%s, unSize=%d",m_inp.c_str(),(int)unSize);
        const fc::variant_object::entry* pEntry;
        fc::variant_object::iterator pItr=a_vo.begin();
+
+       //printf("struct\n");
+       m_IsStructField = 1;
 
        for(size_t i(0); i<unSize;++i,++pItr)
        {
            pEntry = &(*pItr);
+           //printf("key=%s\n",pEntry->key().c_str());
            pEntry->value().visit(*this);
        }
+       m_IsStructField = 0;
+       //printf("end struct\n");
    }
    virtual void handle( const fc::variants& a_vs)const {
 
        size_t unSize = a_vs.size();
-       __DEBUG_APP2__(0,"task=%s, size=%d",m_inp.c_str(),(int)unSize);
+       __DEBUG_APP2__(DEFAULT_LOG_LEVEL,"task=%s, size=%d",m_inp.c_str(),(int)unSize);
        const fc::variant* pVariant;
 
        for(size_t i(0);i<unSize;++i)
@@ -59,27 +93,39 @@ struct my_visitor : public fc::variant::visitor
    }
 
    std::string m_inp;
-   mutable std::string m_str;
+   mutable int m_IsStructField;
+   FinalResult* m_pRes;
 };
 
 
 /*///////////////////////////////////////////////////////*/
 
+static int s_nActive = 0;
+
 void gui_wallet::Mainwindow_gui_wallet::ManagementBrowseContentGUI()
 {
-    __DEBUG_APP2__(2," ");
-    //SetNewTask3("info",this,NULL,&gui_wallet::Mainwindow_gui_wallet::TaskDoneBrowseContentGUI3);
-
     QString cqsNewFilter = m_pCentralWidget->getFilterText();
-    SetNewTask3("list_content a 10",this,NULL,&Mainwindow_gui_wallet::TaskDoneBrowseContentGUI3);
-#if 1
-    if(cqsNewFilter==m_cqsPreviousFilter){return;}
-    else if(cqsNewFilter==tr(""))
+
+    if(s_nActive==0)
     {
-        // may be in the case of empty filter all contents should be displayed?
-        m_cqsPreviousFilter = cqsNewFilter;
-        return;
+#if DEFAULT_LOG_LEVEL==0
+        SetNewTask3("list_content a 10",this,NULL,&Mainwindow_gui_wallet::TaskDoneBrowseContentGUI3);
+#endif
+        s_nActive = 1;
     }
+
+#if 1
+
+    if(cqsNewFilter==tr(""))
+    {
+        //char vcFilter[2] = {(char)1,'\0'};
+        char vcFilter[2] = {'a','\0'};
+        cqsNewFilter = tr("URI_start:") + tr(vcFilter);
+    }
+
+    __DEBUG_APP2__(DEFAULT_LOG_LEVEL,"filter=%s",cqsNewFilter.toStdString().c_str());
+
+    if(cqsNewFilter==m_cqsPreviousFilter){return;}
 
     m_cqsPreviousFilter = cqsNewFilter;
     ShowDigitalContextesGUI(cqsNewFilter);
@@ -102,4 +148,15 @@ void gui_wallet::Mainwindow_gui_wallet::TaskDoneBrowseContentGUI3(void* a_clbkAr
     __DEBUG_APP2__(2," ");
 
     a_result.visit(aVisitor);
+    s_nActive = 0;
+}
+
+
+
+/*////////////////////////////////////////////////////*/
+
+//void FinalResult::Clear2(){m_values.clear();}
+void FinalResult::Clear2()
+{
+    //m_values.clear();
 }

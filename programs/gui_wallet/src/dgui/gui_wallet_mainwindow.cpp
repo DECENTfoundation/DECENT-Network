@@ -32,6 +32,10 @@
 
 using namespace gui_wallet;
 
+static gui_wallet::Mainwindow_gui_wallet*  s_pMainWindowInstance = NULL;
+
+std::string FindImagePath(bool& a_bRet,const char* a_image_name);
+
 int WarnAndWaitFunc(void* a_pOwner,WarnYesOrNoFuncType a_fpYesOrNo,
                            void* a_pDataForYesOrNo,const char* a_form,...);
 int CallFunctionInGuiLoop2(SetNewTask_last_args2,const std::string& a_result,void* a_owner,TypeCallbackSetNewTaskGlb2 a_fpFunc);
@@ -96,20 +100,40 @@ static bool GetJsonVectorNextElem(const char* a_cpcJsonStr,TypeConstChar* a_beg,
 }
 
 
+#if 1
 void ParseDigitalContentFromGetContentString(decent::wallet::ui::gui::SDigitalContent* a_pContent, const std::string& a_str)
 {
+    const char* cpcStrToGet;
     __DEBUG_APP2__(3,"str_to_parse is: \"\n%s\n\"",a_str.c_str());
     //std::string created;
     //std::string expiration;
     FindStringByKey(a_str.c_str(),"created",&a_pContent->created);
     FindStringByKey(a_str.c_str(),"expiration",&a_pContent->expiration);
-    const char* cpcStrToGet = FindValueStringByKey(a_str.c_str(),"size");
+    cpcStrToGet = FindValueStringByKey(a_str.c_str(),"size");
     if(cpcStrToGet)
     {
         char* pcTerm;
         a_pContent->size = strtod(cpcStrToGet,&pcTerm);
     }
+    cpcStrToGet = FindValueStringByKey(a_str.c_str(),"times_bought");
+    if(cpcStrToGet)
+    {
+        char* pcTerm;
+        a_pContent->times_bougth = (int64_t)strtol(cpcStrToGet,&pcTerm,10);
+    }
     a_pContent->get_content_str = a_str;
+}
+#endif
+
+
+void SetNewTaskQtMainWnd2Glb(const std::string& a_inp_line, void* a_clbData)
+{
+    if(s_pMainWindowInstance)s_pMainWindowInstance->SetNewTaskQtMainWnd2(a_inp_line,a_clbData);
+}
+
+void SetNewTaskQtMainWnd3Glb(const std::string& a_inp_line, void* a_clbData)
+{
+    if(s_pMainWindowInstance)s_pMainWindowInstance->SetNewTaskQtMainWnd3(a_inp_line,a_clbData);
 }
 
 
@@ -133,6 +157,7 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
         m_cqsPreviousFilter(tr("nf")),
         m_nConnected(0)
 {
+    s_pMainWindowInstance = this;
     m_default_stylesheet = styleSheet();
     //setStyleSheet("color:black;""background-color:white;");
     m_pInfoTextEdit = new QTextEdit;
@@ -232,6 +257,18 @@ Mainwindow_gui_wallet::~Mainwindow_gui_wallet()
     DestroyUiInterfaceOfWallet();
     delete m_pInfoTextEdit;
     delete m_pcInfoDlg;
+}
+
+
+void Mainwindow_gui_wallet::SetNewTaskQtMainWnd2(const std::string& a_inp_line, void* a_clbData)
+{
+    SetNewTask2(a_inp_line,this,a_clbData,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
+}
+
+
+void Mainwindow_gui_wallet::SetNewTaskQtMainWnd3(const std::string& a_inp_line, void* a_clbData)
+{
+    SetNewTask3(a_inp_line,this,a_clbData,&Mainwindow_gui_wallet::TaskDoneFuncGUI3);
 }
 
 
@@ -367,7 +404,18 @@ void Mainwindow_gui_wallet::listAccountsSlot(QString str)
 
 void Mainwindow_gui_wallet::ShowDetailsOnDigContentSlot(decent::wallet::ui::gui::SDigitalContent a_dig_cont)
 {
-    m_dig_cont_detailsDlg.execCD(a_dig_cont);
+    switch(a_dig_cont.type)
+    {
+    case DCT::GENERAL:
+        m_dig_cont_detailsGenDlg.execCDD(a_dig_cont);
+        break;
+    case DCT::BOUGHT:
+        m_dig_cont_detailsBougDlg.execCDD(m_pCentralWidget->usersCombo()->currentText(),a_dig_cont);
+        break;
+    default:
+        __DEBUG_APP2__(0,"error!!!!!!!!!");
+        break;
+    }
     //m_pInfoTextEdit->setText(tr(a_get_cont_str.c_str()));
     //m_pcInfoDlg->exec();  // Shold be modified
 }
@@ -396,14 +444,14 @@ void Mainwindow_gui_wallet::ShowDigitalContextesGUI(QString a_filter)
         for(;*cpcNumberPtr != 0 && *cpcNumberPtr==' ';++cpcNumberPtr);
         cpcURIstart = cpcNumberPtr;
         for(;*cpcNumberPtr != 0 && *cpcNumberPtr!=' ';++cpcNumberPtr);
-        if( (*cpcNumberPtr==0) || (atoi(cpcNumberPtr+1)==0)){csNumber += " 10";}
+        if( (*cpcNumberPtr==0) || (atoi(cpcNumberPtr+1)==0)){csNumber += " 100";}
         else {csNumber = cpcNumberPtr+1;}
         csTaskLine = std::string("list_content ") + cpcURIstart + std::string(" ") + csNumber;
 
     }
     else if(strstr(csFilterStr.c_str(),ST::s_vcpcSearchTypeStrs[ST::content]))
     {
-        __DEBUG_APP2__(1,"Displaying contents by content is not implemented yet");
+        __DEBUG_APP2__(0,"Displaying contents by content is not implemented yet");
     }
 
     __DEBUG_APP2__(3,"taskLine=%s",csTaskLine.c_str());
@@ -433,6 +481,7 @@ int Mainwindow_gui_wallet::GetDigitalContentsFromString(DCT::DIG_CONT_TYPES a_ty
         cpcAuthorFld = strstr(cpcSearchStart,"\"author\"");
         if(g_nDebugApplication){printf("cpcAuthorFld=\"%.10s\"\n",cpcAuthorFld ? cpcAuthorFld : "nill");}
         if(!cpcAuthorFld){return 0;}
+        //
         cpcAutorBeg = strchr(cpcAuthorFld+strlen("\"author\""),'\"');
         if(g_nDebugApplication){printf("cpcAutorBeg=\"%.10s\"\n",cpcAutorBeg ? cpcAutorBeg : "nill");}
         if(!cpcAutorBeg){return 1;}
@@ -842,6 +891,8 @@ void Mainwindow_gui_wallet::TaskDoneFuncGUI(void* a_clbkArg,int64_t a_err,const 
     }
     else if(strstr(a_task.c_str(),"list_my_accounts"))
     {
+        m_user_ids.clear();
+        std::string sId;
         int nNumbOfUsers(0);
         std::string csUserName;
         QComboBox& userCombo = *m_pCentralWidget->usersCombo();
@@ -852,6 +903,10 @@ void Mainwindow_gui_wallet::TaskDoneFuncGUI(void* a_clbkArg,int64_t a_err,const 
 
         while(GetJsonVectorNextElem(cpcNextUser,&cpcBegin,&cpcEnd))
         {
+            if(FindStringByKey(++cpcBegin,"id",&sId))
+            {
+                m_user_ids.push_back(sId);
+            }
             if(FindStringByKey(++cpcBegin,"name",&csUserName))
             {
                 ++nNumbOfUsers;
