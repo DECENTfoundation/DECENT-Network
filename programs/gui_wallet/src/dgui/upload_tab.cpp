@@ -23,6 +23,7 @@
 
 
 
+#include <cryptopp/integer.h>
 #include <cryptopp/aes.h>
 #include <cryptopp/filters.h>
 #include <cryptopp/files.h>
