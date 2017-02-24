@@ -42,7 +42,7 @@ decent::wallet::ui::gui::ContentDetailsBase::ContentDetailsBase()
         else{m_vSub_Widgets[i].setStyleSheet("background-color:white;");}
         m_vLabels[nIndexZuyg].setStyleSheet("font-weight: bold");
         m_vSub_layouts[i].setSpacing(0);
-        m_vSub_layouts[i].setContentsMargins(30,3,0,3);
+        m_vSub_layouts[i].setContentsMargins(45,3,0,3);
         m_vSub_layouts[i].addWidget(&m_vLabels[nIndexZuyg]);
         m_vSub_layouts[i].addWidget(&m_vLabels[nIndexKent]);
         m_vSub_Widgets[i].setLayout(&m_vSub_layouts[i]);

@@ -163,6 +163,8 @@ namespace gui_wallet
 
         decent::wallet::ui::gui::ContentDetailsGeneral m_dig_cont_detailsGenDlg;
         decent::wallet::ui::gui::ContentDetailsBougth m_dig_cont_detailsBougDlg;
+
+        std::vector<std::string>        m_user_ids;
     };
 
 }

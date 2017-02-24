@@ -891,6 +891,8 @@ void Mainwindow_gui_wallet::TaskDoneFuncGUI(void* a_clbkArg,int64_t a_err,const 
     }
     else if(strstr(a_task.c_str(),"list_my_accounts"))
     {
+        m_user_ids.clear();
+        std::string sId;
         int nNumbOfUsers(0);
         std::string csUserName;
         QComboBox& userCombo = *m_pCentralWidget->usersCombo();
@@ -901,6 +903,10 @@ void Mainwindow_gui_wallet::TaskDoneFuncGUI(void* a_clbkArg,int64_t a_err,const 
 
         while(GetJsonVectorNextElem(cpcNextUser,&cpcBegin,&cpcEnd))
         {
+            if(FindStringByKey(++cpcBegin,"id",&sId))
+            {
+                m_user_ids.push_back(sId);
+            }
             if(FindStringByKey(++cpcBegin,"name",&csUserName))
             {
                 ++nNumbOfUsers;
