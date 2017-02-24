@@ -139,4 +139,7 @@ programs/cli_wallet/packages/
 programs/cli_wallet/transfer.log
 programs/gui_wallet/prj/gui_wallet/gui_wallet_qt/*
 !programs/gui_wallet/prj/gui_wallet/gui_wallet_qt/gui_wallet.pro
+programs/cli_wallet/.ses_state
+programs/cli_wallet/packages/transfer.log
+programs/cli_wallet/transfer.log
 

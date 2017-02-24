@@ -96,6 +96,7 @@ void Overview_tab::CreateTable()
         table_widget.setCellWidget(i + 1,0,new NewButton(i));
         table_widget.setItem(i + 1,1,new QTableWidgetItem((accounts_id[i])));
         table_widget.setItem(i + 1,2,new QTableWidgetItem((accounts_names[i])));
+        //table_widget.item(i + 1,0)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
         table_widget.item(i + 1,1)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
         table_widget.item(i + 1,2)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
 
