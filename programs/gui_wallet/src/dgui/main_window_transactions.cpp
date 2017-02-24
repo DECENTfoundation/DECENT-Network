@@ -59,6 +59,7 @@ void gui_wallet::Mainwindow_gui_wallet::TaskDoneTransactionsGUI(void* a_clbkArg,
         for (int i = index; a_result[i - 1] != ' '; ++i){      index++;    }
         QTableWidgetItem* Idate = new QTableWidgetItem(tr("%1").arg(date));
         Idate->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+        Idate->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
         m_pCentralWidget->m_trans_tab.tablewidget->setItem(row, col++, Idate);
 
     //TYPE
@@ -88,6 +89,7 @@ void gui_wallet::Mainwindow_gui_wallet::TaskDoneTransactionsGUI(void* a_clbkArg,
         }
         QTableWidgetItem* Itype = new QTableWidgetItem(tr("%1").arg(type));
         Itype->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+        Itype->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
         m_pCentralWidget->m_trans_tab.tablewidget->setItem(row, col++, Itype);
 
     //INFO
@@ -109,6 +111,7 @@ void gui_wallet::Mainwindow_gui_wallet::TaskDoneTransactionsGUI(void* a_clbkArg,
         }
         QTableWidgetItem* Iinfo = new QTableWidgetItem(tr("%1").arg(info));
         Iinfo->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+        Iinfo->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
         m_pCentralWidget->m_trans_tab.tablewidget->setItem(row, col++, Iinfo);
     //FEE
         QString fee = 0;
@@ -123,6 +126,7 @@ void gui_wallet::Mainwindow_gui_wallet::TaskDoneTransactionsGUI(void* a_clbkArg,
         }
         QTableWidgetItem* Ifee = new QTableWidgetItem(tr("%1").arg(fee));
         Ifee->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+        Ifee->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
         m_pCentralWidget->m_trans_tab.tablewidget->setItem(row, col++, Ifee);
         //=====
         //walking to date

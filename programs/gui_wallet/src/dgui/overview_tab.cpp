@@ -51,6 +51,10 @@ Overview_tab::Overview_tab(class Mainwindow_gui_wallet* a_pPar)
     table_widget.item(0,1)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
     table_widget.item(0,2)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
 
+    table_widget.item(0,0)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+    table_widget.item(0,1)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+    table_widget.item(0,2)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+
     table_widget.item(0,0)->setBackground(Qt::lightGray);
     table_widget.item(0,1)->setBackground(Qt::lightGray);
     table_widget.item(0,2)->setBackground(Qt::lightGray);
@@ -100,6 +104,8 @@ void Overview_tab::CreateTable()
         table_widget.item(i + 1,1)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
         table_widget.item(i + 1,2)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
 
+        table_widget.item(i + 1,1)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+        table_widget.item(i + 1,2)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
        // ((NewButton*)table_widget.cellWidget(i + 1,0))->setScaledContents(true);
         QPixmap image("/Users/vahe/Desktop/info_icon.png");
         QPixmap image1 = image.scaled(QSize(30,30),  Qt::KeepAspectRatio);

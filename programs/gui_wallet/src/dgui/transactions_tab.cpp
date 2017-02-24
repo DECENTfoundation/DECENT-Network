@@ -9,6 +9,7 @@
 // */
 #include "transactions_tab.hpp"
 #include <QFrame>
+#include <Qt>
 
 using namespace gui_wallet;
 
@@ -35,6 +36,7 @@ Transactions_tab::Transactions_tab()
         tablewidget->setItem(0, i, new QTableWidgetItem(tr(firsItemNames[i])));
         tablewidget->item(0, i)->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
         tablewidget->item(0, i)->setBackground(Qt::lightGray);
+        tablewidget->item(0, i)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
     }
 
     main_layout.addWidget(&user);
