@@ -214,16 +214,15 @@ custody_utils::get_sigmas(std::fstream &file, const unsigned int n, element_t *u
    //start threads
    fc::thread t[DECENT_CUSTODY_THREADS];
    fc::future<int> fut[DECENT_CUSTODY_THREADS];
-   uint64_t cycles = (n + DECENT_CUSTODY_THREADS - 1) / DECENT_CUSTODY_THREADS;
 
 //   std::cout<<"get_sigmas: n = "<<n<<" , cycles = " << cycles <<"\n";
+   int total_thread_to_wait_for = std::min( n, (const unsigned int) DECENT_CUSTODY_THREADS );
 
-   for( uint64_t i = 0; i < cycles; ++i ) {
-      for( int k = 0; k < DECENT_CUSTODY_THREADS; ++k ) {
-         uint64_t idx = i * DECENT_CUSTODY_THREADS + k;
+   for( uint64_t i = 0; i < n; i += DECENT_CUSTODY_THREADS ) {
+      int iterations = std::min ((uint64_t) DECENT_CUSTODY_THREADS, n - i ); 
+      for( int k = 0; k < iterations ; ++k ) {
+         uint64_t idx = i + k;
 
-         if( idx >= n )
-            break;
          //we read the file in the main thread...
          char *buffer = new char[(DECENT_SIZE_OF_NUMBER_IN_THE_FIELD * DECENT_SECTORS)];
          get_data(file, idx, buffer);
@@ -242,13 +241,11 @@ custody_utils::get_sigmas(std::fstream &file, const unsigned int n, element_t *u
               return get_sigma(idx, m, u_pp, pk, ret);
          });
       }
-      //wait for all tasks to finish
-      for( int k = 0; k < DECENT_CUSTODY_THREADS; ++k ) {
-         if( i * DECENT_CUSTODY_THREADS + k >= n )
-            break;
-         fut[k].wait();
-      }
    }
+
+   for( int k = 0; k < total_thread_to_wait_for; ++k )
+      fut[k].wait();
+
 
    *sigmas = ret;
    for( int k = 0; k < DECENT_SECTORS; k++ )

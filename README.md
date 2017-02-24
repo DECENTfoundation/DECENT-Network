@@ -125,28 +125,28 @@ Starting Decent
 
 On first run `witness_node` will create `witness_node_data_dir` in the current working directory, if doesn't exist already.
 
-    $ mkdir -p ~/dev/DECENTfoundation/DECENT-Network-working_dir
-    $ cd ~/dev/DECENTfoundation/DECENT-Network-working_dir
+    $ mkdir -p ~/dev/DECENTfoundation/DECENT-Network-working-dir
+    $ cd ~/dev/DECENTfoundation/DECENT-Network-working-dir
     $ ~/dev/DECENTfoundation/DECENT-Network-build/artifacts/prefix/bin/witness_node
 
 Now press Ctrl-C to stop `witness_node`.
 
-Remove `~/dev/DECENTfoundation/DECENT-Network-working_dir/witness_node_data_dir/blockchain` directory.
-Edit `~/dev/DECENTfoundation/DECENT-Network-working_dir/witness_node_data_dir/config.ini` to contain the following lines:
+Remove `~/dev/DECENTfoundation/DECENT-Network-working-dir/witness_node_data_dir/blockchain` directory.
+Edit `~/dev/DECENTfoundation/DECENT-Network-working-dir/witness_node_data_dir/config.ini` to contain the following lines:
 
     seed-node = 185.8.165.21:33142
     rpc-endpoint = 127.0.0.1:8090
 
 Then, run the witness node again:
 
-    $ cd ~/dev/DECENTfoundation/DECENT-Network-working_dir
+    $ cd ~/dev/DECENTfoundation/DECENT-Network-working-dir
     $ ~/dev/DECENTfoundation/DECENT-Network-build/artifacts/prefix/bin/witness_node --genesis-json ~/dev/DECENTfoundation/DECENT-Network/genesis.json --replay-blockchain
 
 This will launch the witness node with the default genesis. Replay blockchain is a workaround, there is currently a bug than not all saved objects are restored correctly after restart. 
 
 Then, in a separate console, start the command-line wallet by executing:
 
-    $ cd ~/dev/DECENTfoundation/DECENT-Network-working_dir
+    $ cd ~/dev/DECENTfoundation/DECENT-Network-working-dir
     $ ~/dev/DECENTfoundation/DECENT-Network-build/artifacts/prefix/bin/cli_wallet
 
 To set your initial password to `mypassword`, execute:
