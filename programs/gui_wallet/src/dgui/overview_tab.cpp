@@ -10,6 +10,8 @@
 #include "overview_tab.hpp"
 #include "gui_wallet_mainwindow.hpp"
 #include <QPixmap>
+#include <QStackedWidget>
+#include <QRect>
 
 using namespace gui_wallet;
 
@@ -20,9 +22,26 @@ Overview_tab::Overview_tab(class Mainwindow_gui_wallet* a_pPar)
 {
 
 
+//    QLabel * cl = new QLabel();
+//    int posx = ((NewButton*)table_widget.cellWidget(i + 1 , 0))->pos().x();
+//    int posy = ((NewButton*)table_widget.cellWidget(i + 1 , 0))->pos().y();
+//    int posrx = ((NewButton*)table_widget.cellWidget(i + 1 , 0))->pos().rx();
+//    int posry = ((NewButton*)table_widget.cellWidget(i + 1 , 0))->pos().ry();
+//    QPixmap image("/Users/vahe/Desktop/info_icon.png");
+//    cl->setGeometry(QRect(20 , 20 , 30 , 10));
+//    cl->setScaledContents(true);
+//    cl->setPixmap(image);
+
+
+
 
     table_widget.setColumnCount(3);
     table_widget.setRowCount(1);
+
+    QSize tqsTableSize = table_widget.size();
+    table_widget.setColumnWidth(0,(tqsTableSize.width()*10)/100);
+    table_widget.setColumnWidth(1,(tqsTableSize.width()*45)/100);
+    table_widget.setColumnWidth(2,(tqsTableSize.width()*45)/100);
 
     table_widget.setItem(0,0,new QTableWidgetItem(tr("Info")));
     table_widget.setItem(0,1,new QTableWidgetItem(tr("Asset ID")));
@@ -42,13 +61,17 @@ Overview_tab::Overview_tab(class Mainwindow_gui_wallet* a_pPar)
     table_widget.setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     table_widget.setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
-    table_widget.resize(table_widget.width(), table_widget.height());
-    table_widget.horizontalHeader()->setStretchLastSection(true);
-    table_widget.horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-
     QVBoxLayout* main = new QVBoxLayout();
     main->setContentsMargins(0, 5, 0, 0);
     search.setPlaceholderText(QString("Search"));
+
+
+
+
+//    QStackedWidget * s = new QStackedWidget();
+//    s->addWidget(&search);
+//    s->setSizeIncrement(search.size());
+//    s->setStyleSheet("background-image: url(/Users/vahe/Desktop/search.png)");
 
     main->addWidget(&search);
     main->addWidget(&table_widget);
@@ -71,14 +94,17 @@ void Overview_tab::CreateTable()
     for(int i = 0; i < accounts_names.size(); ++i)
     {
         table_widget.setCellWidget(i + 1,0,new NewButton(i));
-        table_widget.setItem(i + 1,1,new QTableWidgetItem((accounts_names[i])));
-        table_widget.setItem(i + 1,2,new QTableWidgetItem((accounts_id[i])));
+        table_widget.setItem(i + 1,1,new QTableWidgetItem((accounts_id[i])));
+        table_widget.setItem(i + 1,2,new QTableWidgetItem((accounts_names[i])));
         table_widget.item(i + 1,1)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
         table_widget.item(i + 1,2)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
 
-        ((NewButton*)table_widget.cellWidget(i + 1,0))->setScaledContents(true);
-        QPixmap image("/Users/vahe/Desktop/aaa.png");
-        ((NewButton*)table_widget.cellWidget(i + 1,0))->setPixmap(image);
+       // ((NewButton*)table_widget.cellWidget(i + 1,0))->setScaledContents(true);
+        QPixmap image("/Users/vahe/Desktop/info_icon.png");
+        QPixmap image1 = image.scaled(QSize(30,30),  Qt::KeepAspectRatio);
+
+        ((NewButton*)table_widget.cellWidget(i + 1,0))->setPixmap(image1);
+
     }
 
     Connects();
@@ -95,11 +121,9 @@ void Overview_tab::Connects()
 void Overview_tab::ArrangeSize()
 {
     QSize tqsTableSize = table_widget.size();
-    int nSizeForOne = tqsTableSize.width()/(DCF::NUM_OF_DIG_CONT_FIELDS)-1;
-    for(int i = 0; i < DCF::NUM_OF_DIG_CONT_FIELDS; ++i)
-    {
-        table_widget.setColumnWidth(i,nSizeForOne);
-    }
+    table_widget.setColumnWidth(0,(tqsTableSize.width()*6)/100);
+    table_widget.setColumnWidth(1,(tqsTableSize.width()*47)/100);
+    table_widget.setColumnWidth(2,(tqsTableSize.width()*47)/100);
 }
 
 void Overview_tab::resizeEvent(QResizeEvent *a_event)

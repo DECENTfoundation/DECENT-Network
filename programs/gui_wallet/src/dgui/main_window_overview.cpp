@@ -12,6 +12,7 @@
 
 #include "gui_wallet_mainwindow.hpp"
 #include <QMessageBox>
+#include <QPalette>
 
 void gui_wallet::Mainwindow_gui_wallet::ManagementOverviewGUI()
 {
@@ -58,29 +59,78 @@ void gui_wallet::Mainwindow_gui_wallet::TaskDoneOverrviewGUI(void* a_clbkArg,int
     }
     else if(a_task.find("get_account ") == 0)
     {
-        std::string id_s = "id    ";
+        std::string id_s = "id\n";
         int pos = a_result.find("id");
         std::cout<<pos<<std::endl;
         pos += 6;
         for(int i = pos; a_result[i] != '"'; ++i)
             id_s.push_back(a_result[i]);
 
+        std::string registrar_s = "\nregistrar\n  ";
+        pos = a_result.find("registrar");
+        std::cout<<pos<<std::endl;
+        pos += 13;
+        for(int i = pos; a_result[i] != '"'; ++i)
+            registrar_s.push_back(a_result[i]);
+
+        std::string referrer_s = "\nreferrer\n ";
+        pos = a_result.find("referrer");
+        std::cout<<pos<<std::endl;
+        pos += 12;
+        for(int i = pos; a_result[i] != '"'; ++i)
+            referrer_s.push_back(a_result[i]);
+
+        std::string lifetime_referrer_s = "\nlifetime_referrer\n";
+        pos = a_result.find("lifetime_referrer");
+        std::cout<<pos<<std::endl;
+        pos += 21;
+        for(int i = pos; a_result[i] != '"'; ++i)
+            lifetime_referrer_s.push_back(a_result[i]);
+
+        std::string network_fee_percentage_s = "\nnetwork_fee_percentage\n ";
+        pos = a_result.find("network_fee_percentage");
+        std::cout<<pos<<std::endl;
+        pos += 24;
+        for(int i = pos; a_result[i] != ','; ++i)
+            network_fee_percentage_s.push_back(a_result[i]);
+
+        std::string lifetime_referrer_fee_percentage_s = "\nlifetime_referrer_fee_percentage\n";
+        pos = a_result.find("lifetime_referrer_fee_percentage");
+        std::cout<<pos<<std::endl;
+        pos += 34;
+        for(int i = pos; a_result[i] != ','; ++i)
+            lifetime_referrer_fee_percentage_s.push_back(a_result[i]);
 
 
+        std::string name_s = "\nname\n  ";
+        pos = a_result.find("name");
+        std::cout<<pos<<std::endl;
+        pos += 8;
+        for(int i = pos; a_result[i] != '"'; ++i)
+            name_s.push_back(a_result[i]);
+
+        std::string referrer_rewards_percentage_s = "\nreferrer_rewards_percentage\n";
+        pos = a_result.find("referrer_rewards_percentage");
+        std::cout<<pos<<std::endl;
+        pos += 29;
+        for(int i = pos; a_result[i] != ','; ++i)
+            referrer_rewards_percentage_s.push_back(a_result[i]);
+
+        std::vector<std::string> infos;
+        infos.push_back(id_s);
+        infos.push_back(registrar_s);
+        infos.push_back(referrer_s);
+        infos.push_back(lifetime_referrer_s);
+        infos.push_back(network_fee_percentage_s);
+        infos.push_back(lifetime_referrer_fee_percentage_s);
+        infos.push_back(referrer_rewards_percentage_s);
+        infos.push_back(name_s);
 
 
-
-        QMessageBox messig_info;
-        messig_info.setWindowTitle("More Info about account");
-        messig_info.setText(QString::fromStdString(a_result));
-        messig_info.exec();
-        //m_pCentralWidget->m_Overview_tab.text.setText(QString::fromStdString(a_result));
+        QZebraWidget* info_window = new QZebraWidget(infos);
+        info_window->show();
     }
-    m_pCentralWidget->m_Overview_tab.table_widget.resize(m_pCentralWidget->m_Overview_tab.table_widget.width(), m_pCentralWidget->m_Overview_tab.table_widget.height());
-    m_pCentralWidget->m_Overview_tab.table_widget.horizontalHeader()->setStretchLastSection(true);
-    m_pCentralWidget->m_Overview_tab.table_widget.horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     m_pCentralWidget->m_Overview_tab.ArrangeSize();
-
 }
 
 

@@ -138,15 +138,8 @@ void gui_wallet::Mainwindow_gui_wallet::TaskDoneTransactionsGUI(void* a_clbkArg,
         row++;
         col = 0;
     }
+    m_pCentralWidget->m_trans_tab.deleteEmptyRows();
 }
-
-//gui_wallet::Mainwindow_gui_wallet::~Mainwindow_gui_wallet()
-//{
-//    std::cout << "!!!!" << std::endl;
-//    //delete m_pCentralWidget->m_trans_tab.tablewidget;
-//}
-
-
 
     //SetNewTask2("get_account_history hayq 4",this,NULL,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
 //    SetNewTask2("get_account_history hayq 4",this,NULL,&Mainwindow_gui_wallet::TaskDoneFuncGUI);

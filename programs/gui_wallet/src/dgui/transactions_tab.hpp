@@ -38,6 +38,9 @@ namespace gui_wallet
         QPushButton* more;
         QLineEdit user;
         void createNewRow(const int);
+        void deleteEmptyRows();
+        void ArrangeSize();
+virtual void resizeEvent(QResizeEvent *a_event);
 
     };
 }
