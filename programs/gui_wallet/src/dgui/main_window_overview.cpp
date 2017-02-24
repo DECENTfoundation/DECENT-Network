@@ -28,6 +28,19 @@ void gui_wallet::Mainwindow_gui_wallet::TaskDoneOverrviewGUI(void* a_clbkArg,int
 {
     int nCurTab(m_pCentralWidget->GetMyCurrentTabIndex());
     if(nCurTab != OVERVIEW){return;}
+
+
+
+    QPoint mouse_pos = QCursor::pos();
+    std::cout<<mouse_pos.x()<<mouse_pos.y()<<std::endl;
+    QTableWidgetItem *ite = m_pCentralWidget->m_Overview_tab.table_widget.itemAt(mouse_pos);
+    if(ite != NULL)
+    {
+        int a = ite->column();
+        std::cout<<"aaaaaaaaaaaaaaaaaaaaaaaaa"<<std::endl;
+    }
+
+
     if(a_task.find("list_accounts ") == 0)
     {
         m_pCentralWidget->m_Overview_tab.accounts_names.clear();
