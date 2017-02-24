@@ -57,7 +57,7 @@ decent::wallet::ui::gui::ContentDetailsBase::~ContentDetailsBase()
 }
 
 // DCF stands for Digital Content Fields
-namespace DCF{enum{ASSET_ID=11,TIMES_BOUGHT=17};}
+namespace DCF{enum{AMOUNT=9,ASSET_ID=11,TIMES_BOUGHT=17};}
 
 void decent::wallet::ui::gui::ContentDetailsBase::execCDB(const decent::wallet::ui::gui::SDigitalContent& a_cnt_details)
 {
@@ -75,7 +75,7 @@ void decent::wallet::ui::gui::ContentDetailsBase::execCDB(const decent::wallet::
     m_vLabels[3].setText(tr(m_pContentInfo->expiration.c_str()));
     m_vLabels[5].setText(tr(m_pContentInfo->created.c_str()));
     m_vLabels[7].setText(QString::number(m_pContentInfo->price.amount,'f').remove( QRegExp("0+$") ).remove( QRegExp("\\.$") ));
-    m_vLabels[9].setText(tr("???"));
+    m_vLabels[DCF::AMOUNT].setText(QString::number(m_pContentInfo->size,'f').remove( QRegExp("0+$") ).remove( QRegExp("\\.$") ));
     m_vLabels[DCF::ASSET_ID].setText(tr(a_cnt_details.price.asset_id.c_str()));
     m_vLabels[13].setText(QString::number(m_pContentInfo->AVG_rating,'f').remove( QRegExp("0+$") ).remove( QRegExp("\\.$") ));
     //QString::number(aTemporar.AVG_rating,'f').remove( QRegExp("0+$") ).remove( QRegExp("\\.$") )
