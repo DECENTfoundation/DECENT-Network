@@ -200,6 +200,7 @@ struct wallet_data
    string                    ws_user;
    string                    ws_password;
    string                    packages_path = "./packages/";
+   string                    libtorrent_config_path;
 };
 
 struct exported_account_keys
@@ -1793,6 +1794,7 @@ FC_REFLECT( graphene::wallet::wallet_data,
             (ws_user)
             (ws_password)
             (packages_path)
+            (libtorrent_config_path)
           )
 
 FC_REFLECT( graphene::wallet::brain_key_info,

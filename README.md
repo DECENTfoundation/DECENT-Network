@@ -64,11 +64,10 @@ For Ubuntu 16.04 LTS (for extra actions needed for 14.04 LTS, 14.10, or 16.10 se
 At this point, `$CC` and `$CXX` should be set to your compilers, `cmake` command should be picked up from `$CMAKE_ROOT/bin`, and CMake configure should find the Boost distribution in the exported `$BOOST_ROOT`.
 
 
-For Fedora 25 or later, execute in console:
+For Fedora 24 or later, execute in console:
 
-    $ sudo yum makecache
-    $ sudo yum install automake autoconf libtool make cmake gcc clang flex bison doxygen gettext-devel git readline-devel cryptopp-devel gmp-devel libdb-devel libdb-cxx-devel openssl-devel ncurses-devel boost-devel boost-static
-
+    $ sudo dnf clean metadata
+    $ sudo dnf install automake autoconf libtool make cmake gcc clang flex bison doxygen gettext-devel git qt5-qtbase-devel readline-devel cryptopp-devel gmp-devel libdb-devel libdb-cxx-devel openssl-devel libcurl-devel ncurses-devel boost-devel boost-static python-devel libicu-devel bzip2-devel
 
 ### Installing prerequisites in macOS
 
@@ -80,7 +79,7 @@ Then, execute in console:
     $ brew doctor
     $ brew tap homebrew/versions
     $ brew update
-    $ brew install automake autoconf libtool cmake berkeley-db boost160 qt5 cryptopp doxygen byacc flex gettext git pbc gmp ipfs openssl readline
+    $ brew install automake autoconf libtool cmake berkeley-db boost@1.60 qt5 cryptopp doxygen byacc flex gettext git pbc gmp ipfs openssl readline
 
 
 
@@ -191,9 +190,11 @@ The list of the test accounts is here:
       "pub_key": "DCT5w8Hrt92G7hZmZJgMSeZGtW3tQQj8fqsJmrtffnrHyWNY7To7y"
     }
 
-After importing the respective key(s), restart cli_wallet. There is currently a bug in the wallet and the keys are not imported to the internal structures right after import.
+After importing the respective key(s), you will need to restart cli_wallet: use Ctrl-D to cleanly exit from it, then start it again.
 
-A list of CLI wallet commands is available [here](https://github.com/cryptonomex/graphene/blob/master/libraries/wallet/include/graphene/wallet/wallet.hpp).
+There is currently a bug in cli_wallet when the keys are not imported to the internal structures right after import.
+
+The list of cli_wallet commands is available [here](https://github.com/cryptonomex/graphene/blob/master/libraries/wallet/include/graphene/wallet/wallet.hpp).
 
 
 Witness node
