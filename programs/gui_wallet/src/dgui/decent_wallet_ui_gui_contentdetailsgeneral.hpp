@@ -11,8 +11,10 @@
 #define DECENT_WALLET_UI_GUI_CONTENTDETAILSGENERAL_HPP
 
 #include "decent_wallet_ui_gui_contentdetailsbase.hpp"
+#include <QLabel>
 
 namespace decent{ namespace wallet{ namespace ui{ namespace gui{
+
 
 class ContentDetailsGeneral : public ContentDetailsBase
 {
@@ -22,6 +24,11 @@ public:
 
     virtual void execCDD(const decent::wallet::ui::gui::SDigitalContent& a_cnt_details);
 
+protected:
+    void LabelPushCallbackGUI(void* clbkData,QMouseEvent* mouse_event);
+
+protected:
+    decent::wallet::ui::gui::WidgetWithCallback<QLabel>   m_label;
 
 };
 

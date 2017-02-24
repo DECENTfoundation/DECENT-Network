@@ -27,6 +27,47 @@ extern int g_nDebugApplication;
 std::string g_cApplicationPath ;
 extern InGuiThreatCaller* s_pWarner;
 
+#if 0
+
+class QZebraWidget : public QWidget
+{
+public:
+    QZebraWidget()
+    {
+        m_main_layout.setMargin(0);
+        m_main_layout.setContentsMargins(0,0,0,0);
+        QWidget* pNextWidget;
+
+        pNextWidget = new QWidget;
+        pNextWidget->setStyleSheet("background-color:white;");
+        m_main_layout.addWidget(pNextWidget);
+
+
+        pNextWidget = new QWidget;
+        pNextWidget->setStyleSheet("background-color:black;");
+        m_main_layout.addWidget(pNextWidget);
+
+        pNextWidget = new QWidget;
+        pNextWidget->setStyleSheet("background-color:white;");
+        m_main_layout.addWidget(pNextWidget);
+
+
+        pNextWidget = new QWidget;
+        pNextWidget->setStyleSheet("background-color:black;");
+        m_main_layout.addWidget(pNextWidget);
+
+        setLayout(&m_main_layout);
+
+        resize(200,500);
+    }
+
+
+private:
+    QVBoxLayout m_main_layout;
+};
+
+#endif
+
 
 int main(int argc, char* argv[])
 {
@@ -99,6 +140,12 @@ int main(int argc, char* argv[])
     aContent.URI = "URI111";
     aBouth.execCDD("davit",aContent);
     return 0;
+
+    QZebraWidget aWidg;
+    aWidg.show();
+    aApp.exec();
+    return 0;
+
 #endif // #if 0
 
     gui_wallet::Mainwindow_gui_wallet aMainWindow;

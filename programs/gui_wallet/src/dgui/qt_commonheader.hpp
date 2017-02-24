@@ -24,6 +24,9 @@
 #define _NEEDED_ARGS2_ _NEEDED_ARGS1_(decent::wallet::ui::gui::SDigitalContent)
 #endif
 
+#define MOUSE_EVENT_LAST_ARGS void*a_clbData,QMouseEvent*a_mouse_event
+typedef void (__THISCALL__* TypeMouseEvntClbk)(void*owner,MOUSE_EVENT_LAST_ARGS);
+
 // DCA stands for Digital Contex Actions
 namespace DCA {enum DIG_CONT_ACTNS{CALL_GET_CONTENT};}
 // DCT stands for Digital Contex Actions
@@ -90,6 +93,26 @@ protected:
     virtual void mouseDoubleClickEvent(QMouseEvent* event);
 protected:
     // no members
+};
+
+
+template <typename QtType>
+class WidgetWithCallback : public QtType
+{
+public:
+    template <typename ClbType,typename ...ConstrArgTypes>
+    WidgetWithCallback(ClbType* owner,void*clbData,
+                       void (ClbType::*fpFunction)(MOUSE_EVENT_LAST_ARGS),
+                       ConstrArgTypes... cons_args);
+    virtual ~WidgetWithCallback();
+
+protected:
+    virtual void mousePressEvent(QMouseEvent* event);
+
+protected:
+    void*               m_pOwner;
+    void*               m_pCallbackData;
+    TypeMouseEvntClbk   m_fpCallback;
 };
 
 }}}}
