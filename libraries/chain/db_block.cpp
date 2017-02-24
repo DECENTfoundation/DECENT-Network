@@ -110,7 +110,7 @@ std::vector<block_id_type> database::get_block_ids_on_fork(block_id_type head_of
  *
  * @return true if we switched forks as a result of this push.
  */
-bool database::push_block(const signed_block& new_block, uint32_t skip)
+bool database::push_block(const signed_block &new_block, uint32_t skip, bool sync_mode)
 {
    //idump((new_block.block_num())(new_block.id())(new_block.timestamp)(new_block.previous));
    bool result;
@@ -119,13 +119,13 @@ bool database::push_block(const signed_block& new_block, uint32_t skip)
       detail::without_pending_transactions( *this, std::move(_pending_tx),
       [&]()
       {
-         result = _push_block(new_block);
+         result = _push_block( new_block, sync_mode );
       });
    });
    return result;
 }
 
-bool database::_push_block(const signed_block& new_block)
+bool database::_push_block(const signed_block &new_block, bool sync_mode)
 { try {
    uint32_t skip = get_node_properties().skip_flags;
    if( !(skip&skip_fork_db) )
@@ -197,29 +197,29 @@ bool database::_push_block(const signed_block& new_block)
       apply_block(new_block, skip);
       _block_id_to_block.store(new_block.id(), new_block);
       session.commit();
-      //we will notify after session commit, since we wan't to be sure that seeding plugin works and generated tx will refer to commited block_objects
+      //we will notify after session commit, since we want to be sure that seeding plugin works and generated tx will refer to commited block_objects
 
    } catch ( const fc::exception& e ) {
       elog("Failed to push new block:\n${e}", ("e", e.to_detail_string()));
       _fork_db.remove(new_block.id());
       throw;
    }
-   uint32_t _current_trx_in_block = 0;
-   for( const auto& trx : new_block.transactions )
-   {
-      uint32_t _current_op_in_trx = 0;
-      for( const auto& op : trx.operations )
-      {
-         operation_history_object oh(op);
-         oh.block_num    = _current_block_num;
-         oh.trx_in_block = _current_trx_in_block;
-         oh.op_in_trx    = _current_op_in_trx;
-         //oh.virtual_op   = _current_virtual_op++;
-         oh.op = op;
-         on_new_commited_operation (oh);
-         ++_current_op_in_trx;
+   try {
+      auto session = _undo_db.start_undo_session();
+      for( const auto &trx : new_block.transactions ) {
+         for( const auto &op : trx.operations ) {
+            operation_history_object oh(op);
+            oh.block_num = new_block.block_num();
+            oh.op = op;
+            if(sync_mode)
+               on_new_commited_operation_during_sync(oh);
+            else
+               on_new_commited_operation(oh);
+         }
       }
-      ++_current_trx_in_block;
+      session.commit();
+   } catch ( const fc::exception& e ){
+      elog("Failed to notify listeners on commited operation:\n${e}", ("e", e.to_detail_string()));
    }
    return false;
 } FC_CAPTURE_AND_RETHROW( (new_block) ) }

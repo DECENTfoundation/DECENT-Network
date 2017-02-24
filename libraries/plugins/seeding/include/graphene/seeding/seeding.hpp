@@ -58,7 +58,7 @@ typedef graphene::chain::object_id< SEEDING_PLUGIN_SPACE_ID, seeding_object_type
 namespace detail {
 class seeding_plugin_impl : public package_transfer_interface::transfer_listener {
 public:
-   seeding_plugin_impl(seeding_plugin &_plugin) : _self(_plugin) {}
+   seeding_plugin_impl(seeding_plugin &_plugin) : _self(_plugin) { }
 
    ~seeding_plugin_impl();
 
@@ -70,9 +70,10 @@ public:
 
    graphene::chain::database &database();
    void generate_por( my_seeding_id_type so_id, graphene::package::package_object downloaded_package );
-   void on_operation(const operation_history_object &op_obj);
+   void handle_content_submit(const operation_history_object &op_obj);
+   void handle_request_to_buy(const operation_history_object &op_obj);
    //this one is called only after the highest known block has been applied...
-   void on_operation2(const operation_history_object &op_obj);
+   void handle_commited_operation(const operation_history_object &op_obj, bool sync_mode);
 
    virtual void on_download_started(package_transfer_interface::transfer_id id) {}
    virtual void on_download_progress(package_transfer_interface::transfer_id id, package_transfer_interface::transfer_progress progress) {}
@@ -86,6 +87,7 @@ public:
    seeding_plugin& _self;
    std::map<package_transfer_interface::transfer_id, my_seeding_id_type> active_downloads;
    std::shared_ptr<fc::thread> service_thread;
+   fc::thread* main_thread;
 };
 }
 

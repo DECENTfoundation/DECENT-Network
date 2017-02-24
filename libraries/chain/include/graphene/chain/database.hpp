@@ -136,9 +136,10 @@ namespace graphene { namespace chain {
          const flat_map<uint32_t,block_id_type> get_checkpoints()const { return _checkpoints; }
          bool before_last_checkpoint()const;
 
-         bool push_block( const signed_block& b, uint32_t skip = skip_nothing );
+         bool push_block(const signed_block &b, uint32_t skip = skip_nothing, bool sync_mode = false );
+         //bool ( const signed_block& b, uint32_t skip = skip_nothing );
          processed_transaction push_transaction( const signed_transaction& trx, uint32_t skip = skip_nothing );
-         bool _push_block( const signed_block& b );
+         bool _push_block(const signed_block &b, bool sync_mode = false );
          processed_transaction _push_transaction( const signed_transaction& trx );
 
          ///@throws fc::exception if the proposed transaction fails to apply.
@@ -179,6 +180,7 @@ namespace graphene { namespace chain {
           */
          fc::signal<void(const operation_history_object&)> on_applied_operation;
          fc::signal<void(const operation_history_object&)> on_new_commited_operation;
+         fc::signal<void(const operation_history_object&)> on_new_commited_operation_during_sync;
 
          /**
           *  This signal is emitted after all operations and virtual operation for a
@@ -395,6 +397,12 @@ namespace graphene { namespace chain {
           * can be reapplied at the proper time */
          std::deque< signed_transaction >       _popped_tx;
 
+         uint32_t highest_know_block_number(){
+            auto fhd = _fork_db.head();
+            if(fhd)
+               return fhd->data.block_num();
+            return 0;
+         }
          /**
           * @}
           */

@@ -14,6 +14,7 @@ namespace graphene { namespace seeding {
 namespace bpo = boost::program_options;
 namespace detail {
 
+#define POR_WAKEUP_INTERVAL_SEC 300
 
 seeding_plugin_impl::~seeding_plugin_impl() {
    return;
@@ -23,14 +24,17 @@ graphene::chain::database &seeding_plugin_impl::database() {
    return _self.database();
 }
 
-void seeding_plugin_impl::on_operation(const operation_history_object &op_obj) {
+void seeding_plugin_impl::handle_content_submit(const operation_history_object &op_obj) {
    graphene::chain::database &db = database();
 
-   elog("seeding_plugin_impl::on_operation starting for operation ${o}", ("o",op_obj));
+   elog("seeding_plugin_impl::handle_content_submit starting for operation ${o} from block ${b}, highest known block is ${h}, head is ${i}",
+        ("o",op_obj)("b", op_obj.block_num)("h", db.highest_know_block_number())("i", db.head_block_num()) );
 
    if( op_obj.op.which() == operation::tag<content_submit_operation>::value ) {
-      elog("seeding plugin:  on_operation() handling new content");
+      elog("seeding plugin:  handle_content_submit() handling new content");
       const content_submit_operation &cs_op = op_obj.op.get<content_submit_operation>();
+      if(cs_op.expiration < fc::time_point::now())
+         return;
       const auto &idx = db.get_index_type<my_seeder_index>().indices().get<by_seeder>();
       auto seeder_itr = idx.begin();
       while( seeder_itr != idx.end()) {
@@ -46,7 +50,7 @@ void seeding_plugin_impl::on_operation(const operation_history_object &op_obj) {
             const auto &sitr = sidx.find(cs_op.URI);
             if( sitr != sidx.end()) {
                //TODO_DECENT - resubmit is not handled yet properly, planned in drop 2
-               uint32_t new_space = (cs_op.size + 1048575) / 1048576; //we allocate the whole megabytes per content
+               uint32_t new_space = cs_op.size; //we allocate the whole megabytes per content
                uint32_t diff_space = sitr->space - new_space;
                db.modify<my_seeding_object>(*sitr, [&](my_seeding_object &mso) {
                     mso.space -= diff_space;
@@ -58,16 +62,20 @@ void seeding_plugin_impl::on_operation(const operation_history_object &op_obj) {
                db.create<my_seeding_object>([&](my_seeding_object &so) {
                     so.URI = cs_op.URI;
                     so.seeder = seeder_itr->seeder;
-                    so.space = (cs_op.size + 1048575) / 1048576; //we allocate the whole megabytes per content
+                    so.space = cs_op.size; //we allocate the whole megabytes per content
                     if( k != cs_op.key_parts.end())
                        so.key = *k;
                     so.expiration = cs_op.expiration;
                     so.cd = cs_op.cd;
                });
                db.modify<my_seeder_object>(*seeder_itr, [&](my_seeder_object &mso) {
-                    mso.free_space -= (cs_op.size + 1048575) / 1048576; //we allocate the whole megabytes per content
+                    mso.free_space -= cs_op.size ; //we allocate the whole megabytes per content
                });
-               package_manager::instance().download_package(cs_op.URI, *this );
+               //if we run this in main thread it can crash _push_block
+               service_thread->async( [cs_op, this](){
+                    package_manager::instance().download_package(cs_op.URI, *this);
+               });
+
             }
          }
          ++seeder_itr;
@@ -75,103 +83,54 @@ void seeding_plugin_impl::on_operation(const operation_history_object &op_obj) {
    }
 }
 
-
-void seeding_plugin_impl::on_operation2(const operation_history_object &op_obj) {
+void seeding_plugin_impl::handle_request_to_buy(const operation_history_object &op_obj) {
    graphene::chain::database &db = database();
+   const request_to_buy_operation &rtb_op = op_obj.op.get<request_to_buy_operation>();
+   const auto &idx = db.get_index_type<my_seeding_index>().indices().get<by_URI>();
+   const auto &sitr = idx.find(rtb_op.URI);
+   if( sitr == idx.end())
+      return;
 
-   elog("seeding_plugin_impl::on_operation2 starting for operation ${o}", ("o",op_obj));
-   if( op_obj.op.which() == operation::tag<request_to_buy_operation>::value ) {
-      if(!db.is_undo_enabled()) {
-         elog("seeding_plugin_impl::on_operation not producing yet");
-         return;
-      }
-      elog("seeding plugin:  on_operation() handling request_to_buy");
-      const request_to_buy_operation &rtb_op = op_obj.op.get<request_to_buy_operation>();
-      const auto &idx = db.get_index_type<my_seeding_index>().indices().get<by_URI>();
-      const auto &sitr = idx.find(rtb_op.URI);
-      if( sitr == idx.end())
-         return;
-
-      const auto &sidx = db.get_index_type<my_seeder_index>().indices().get<by_seeder>();
-      const auto &sritr = sidx.find(sitr->seeder);
-      FC_ASSERT(sritr != sidx.end());
-
-      elog("seeding plugin: this is my content...");
-      //ok, this is our seeding... we shall generate deliver keys out of it...
-      account_object seeder_account = db.get<account_object>(sitr->seeder);
-
-      const auto &cidx = db.get_index_type<content_index>().indices().get<graphene::chain::by_URI>();
-      const auto &citr = cidx.find(rtb_op.URI);
-      if( citr == cidx.end())
-         FC_THROW("cannot find content by URI");
-      const content_object &co = *citr;
-      d_integer destPubKey = decent::crypto::d_integer::from_string(rtb_op.pubKey);
-      decent::crypto::ciphertext orig = co.key_parts.at(seeder_account.id);
-      decent::crypto::point message;
-      auto result = decent::crypto::el_gamal_decrypt(orig, sritr->content_privKey, message);
-      FC_ASSERT(result == decent::crypto::ok);
-      deliver_keys_operation op;
-      decent::crypto::ciphertext key;
-      decent::crypto::delivery_proof proof;
-      result = decent::crypto::encrypt_with_proof(message, sritr->content_privKey, destPubKey, orig, key, proof);
-      op.key = key;
-      op.proof = proof;
-      const auto &bidx = db.get_index_type<graphene::chain::buying_index>().indices().get<graphene::chain::by_URI_consumer>();
-      const auto &bitr = bidx.find(std::make_tuple( rtb_op.URI, rtb_op.consumer ));
-      if(bitr == bidx.end()){
-         ilog("no such buying_object for ${u}, ${c}",("u", rtb_op.URI )("c", rtb_op.consumer ));
-         //TODO_DECENT very ugly hack, rework!
-         op.buying = db.get_index_type<graphene::chain::buying_index>().get_next_id();
-      }else
-         op.buying = bitr->id;
-
-      op.seeder = seeder_account.id;
-
-      signed_transaction tx;
-      tx.operations.push_back(op);
-
-      auto dyn_props = db.get_dynamic_global_properties();
-      tx.set_reference_block(dyn_props.head_block_id);
-      tx.set_expiration(dyn_props.time + fc::seconds(30));
-      tx.validate();
-
-      chain_id_type _chain_id = db.get_chain_id();
-
-      tx.sign(sritr->privKey, _chain_id);
-      database().push_transaction(tx);
-      service_thread->async([this, tx]() {  _self.p2p_node().broadcast_transaction(tx); });
-   }
-
-   if( op_obj.op.which() == operation::tag<content_submit_operation>::value ) {
-      //ensure that we still handle new content
-      on_operation(op_obj);
-   }
-}
-
-void
-seeding_plugin_impl::generate_por(my_seeding_id_type so_id, graphene::package::package_object downloaded_package) {
-   ilog("seeding plugin_impl:  generate_por() start");
-   graphene::chain::database &db = database();
-   const my_seeding_object &mso = db.get<my_seeding_object>(so_id);
    const auto &sidx = db.get_index_type<my_seeder_index>().indices().get<by_seeder>();
-   const auto &sritr = sidx.find(mso.seeder);
+   const auto &sritr = sidx.find(sitr->seeder);
    FC_ASSERT(sritr != sidx.end());
 
+   elog("seeding plugin: this is my content...");
+   //ok, this is our seeding... we shall do some checks and generate deliver keys out of it...
+   account_object seeder_account = db.get<account_object>(sitr->seeder);
 
-   decent::crypto::custody_proof proof;
-   fc::ripemd160 b_id = db.head_block_id();
-   uint32_t b_num = db.head_block_num();
-   proof.reference_block = b_num;
-   for( int i = 0; i < 5; i++ )
-      proof.seed.data[i] = b_id._hash[i];
+   const auto &cidx = db.get_index_type<content_index>().indices().get<graphene::chain::by_URI>();
+   const auto &citr = cidx.find(rtb_op.URI);
+   if( citr == cidx.end())
+      FC_THROW("cannot find content by URI");
+   const content_object &co = *citr;
+   if(co.expiration < fc::time_point::now() ){
+      db.remove( *sitr );
+      return;
+   }
 
-   downloaded_package.create_proof_of_custody(mso.cd, proof);
-   // - issue PoR and start periodic PoR generation
-   proof_of_custody_operation op;
-
-   op.seeder = mso.seeder;
+   d_integer destPubKey = decent::crypto::d_integer::from_string(rtb_op.pubKey);
+   decent::crypto::ciphertext orig = co.key_parts.at(seeder_account.id);
+   decent::crypto::point message;
+   auto result = decent::crypto::el_gamal_decrypt(orig, sritr->content_privKey, message);
+   FC_ASSERT(result == decent::crypto::ok);
+   deliver_keys_operation op;
+   decent::crypto::ciphertext key;
+   decent::crypto::delivery_proof proof;
+   result = decent::crypto::encrypt_with_proof(message, sritr->content_privKey, destPubKey, orig, key, proof);
+   op.key = key;
    op.proof = proof;
-   op.URI = mso.URI;
+   const auto &bidx = db.get_index_type<graphene::chain::buying_index>().indices().get<graphene::chain::by_URI_consumer>();
+   const auto &bitr = bidx.find(std::make_tuple( rtb_op.URI, rtb_op.consumer ));
+   if(bitr == bidx.end()){
+      elog("no such buying_object for ${u}, ${c}",("u", rtb_op.URI )("c", rtb_op.consumer ));
+      return;
+      //TODO_DECENT very ugly hack, rework! - not needed anymore, but we shall keep the error message
+      //op.buying = db.get_index_type<graphene::chain::buying_index>().get_next_id();
+   }else
+      op.buying = bitr->id;
+
+   op.seeder = seeder_account.id;
 
    signed_transaction tx;
    tx.operations.push_back(op);
@@ -184,24 +143,112 @@ seeding_plugin_impl::generate_por(my_seeding_id_type so_id, graphene::package::p
    chain_id_type _chain_id = db.get_chain_id();
 
    tx.sign(sritr->privKey, _chain_id);
-   idump((tx));
    database().push_transaction(tx);
-   service_thread->async([this, tx]() {  _self.p2p_node().broadcast_transaction(tx); });
-   fc::time_point fc_now = fc::time_point::now();
-   fc::time_point next_wakeup(fc_now + fc::microseconds((uint64_t)1000000 * (24 * 60 * 60 - 10)));
-   bool last_call = false;
-   if((fc::time_point(mso.expiration) - fc::microseconds(60 * 1000000)) <= fc_now )
-      last_call = true;
-   if( next_wakeup > fc::time_point(mso.expiration))
-      next_wakeup = fc::time_point(mso.expiration) - fc::microseconds(30 * 1000000);
+   service_thread->async([this, tx]() { _self.p2p_node().broadcast_transaction(tx); });
+}
 
-   if( last_call ) {
+void seeding_plugin_impl::handle_commited_operation(const operation_history_object &op_obj, bool sync_mode) {
+   graphene::chain::database &db = database();
+
+   elog("seeding_plugin_impl::handle_commited_operation starting for operation ${o} from block ${b}, highest known block is ${h}, head is ${i}, syncing ${s}, sync_mode ${m}",
+        ("o",op_obj)("b", op_obj.block_num)("h", db.highest_know_block_number())("i", db.head_block_num())("s", !_self.app().is_finished_syncing())("m",sync_mode) );
+
+   if( op_obj.op.which() == operation::tag<request_to_buy_operation>::value ) {
+      //TODO_DECENT - does not work as expected...
+      if( sync_mode ) {
+         elog("seeding_plugin_impl::handle_commited_operation exiting, not producing yet");
+         return;
+      }
+      elog("seeding plugin:  handle_commited_operation() handling request_to_buy");
+      handle_request_to_buy(op_obj);
+   }
+
+   if( op_obj.op.which() == operation::tag<content_submit_operation>::value ) {
+      elog("seeding plugin:  handle_commited_operation() handling content_submit");
+      //in case of content submit we don't really care if the sync has been finished or not...
+      handle_content_submit(op_obj);
+   }
+}
+
+void
+seeding_plugin_impl::generate_por(my_seeding_id_type so_id, graphene::package::package_object downloaded_package)
+{
+
+   ilog("seeding plugin_impl:  generate_por() start");
+   graphene::chain::database &db = database();
+
+   const my_seeding_object &mso = db.get<my_seeding_object>(so_id);
+   const auto &sidx = db.get_index_type<my_seeder_index>().indices().get<by_seeder>();
+   const auto &sritr = sidx.find(mso.seeder);
+   FC_ASSERT(sritr != sidx.end());
+   const auto& cidx = db.get_index_type<content_index>().indices().get<graphene::chain::by_URI>();
+   const auto& citr = cidx.find(mso.URI);
+   FC_ASSERT(citr != cidx.end());
+   if( citr->expiration < fc::time_point::now() ){
+      ilog("seeding plugin_impl:  generate_por() - content expired, cleaning up");
       package_manager::instance().delete_package(downloaded_package.get_hash());
       db.remove(mso);
-   } else {
-      service_thread->schedule([this, so_id, downloaded_package]() { generate_por(so_id, downloaded_package); }, next_wakeup,
-                   "Seeding plugin PoR generate");
+      return;
    }
+
+   fc::time_point_sec generate_time;
+
+   try {
+      fc::time_point_sec last_proof_time = citr->last_proof.at(mso.seeder);
+      generate_time = last_proof_time + 24*60*60 - POR_WAKEUP_INTERVAL_SEC/2;
+      if( generate_time < citr->expiration )
+         generate_time = citr->expiration - POR_WAKEUP_INTERVAL_SEC;
+   }catch (std::out_of_range e){
+      //no proof has been delivered by us yet...
+      generate_time = fc::time_point::now();
+   }
+
+   fc::time_point next_wakeup( fc::time_point::now() + fc::microseconds(POR_WAKEUP_INTERVAL_SEC * 1000000 ));
+   if( fc::time_point(generate_time) <= ( fc::time_point::now() ) )
+   {
+      decent::crypto::custody_proof proof;
+      auto dyn_props = db.get_dynamic_global_properties();
+      fc::ripemd160 b_id = dyn_props.head_block_id;
+      uint32_t b_num = dyn_props.head_block_number;
+      proof.reference_block = b_num;
+      for( int i = 0; i < 5; i++ )
+         proof.seed.data[i] = b_id._hash[i];
+
+      downloaded_package.create_proof_of_custody(mso.cd, proof);
+      // - issue PoR and start periodic PoR generation
+      proof_of_custody_operation op;
+
+      op.seeder = mso.seeder;
+      op.proof = proof;
+      op.URI = mso.URI;
+
+      signed_transaction tx;
+      tx.operations.push_back(op);
+
+      tx.set_reference_block(dyn_props.head_block_id);
+      tx.set_expiration(dyn_props.time + fc::seconds(30));
+      tx.validate();
+
+      chain_id_type _chain_id = db.get_chain_id();
+
+      tx.sign(sritr->privKey, _chain_id);
+      idump((tx));
+
+      main_thread->async([this, tx]() { elog("seeding plugin_impl:  generate_por lambda - pushing transaction"); database().push_transaction(tx); });
+
+      elog("broadcasting out PoR");
+      _self.p2p_node().broadcast_transaction(tx);
+
+      if(  fc::time_point( mso.expiration ) + fc::microseconds( POR_WAKEUP_INTERVAL_SEC * 1000000 ) <= fc::time_point::now() ){
+         ilog("seeding plugin_impl:  generate_por() - content expired, cleaning up");
+         package_manager::instance().delete_package(downloaded_package.get_hash());
+         db.remove(mso);
+      }
+   }
+
+   service_thread->schedule([this, so_id, downloaded_package]() { generate_por(so_id, downloaded_package); }, next_wakeup,
+                   "Seeding plugin PoR generate");
+
    ilog("seeding plugin_impl:  generate_por() end");
 }
 
@@ -210,6 +257,7 @@ void seeding_plugin_impl::send_ready_to_publish()
    ilog("seeding plugin_impl: send_ready_to_publish() begin");
    const auto &sidx = database().get_index_type<my_seeder_index>().indices().get<by_seeder>();
    auto sritr = sidx.begin();
+   graphene::chain::database &db = database();
 
    while(sritr != sidx.end() ){
       ready_to_publish_operation op;
@@ -231,8 +279,8 @@ void seeding_plugin_impl::send_ready_to_publish()
       tx.sign(sritr->privKey, _chain_id);
       idump((tx));
       tx.validate();
-      database().push_transaction(tx);
-      _self.p2p_node().broadcast_transaction(tx); 
+      main_thread->async( [this, tx](){elog("seeding plugin_impl:  generate_por lambda - pushing transaction"); database().push_transaction(tx);} );
+      _self.p2p_node().broadcast_transaction(tx);
       sritr++;
    }
    fc::time_point next_wakeup(fc::time_point::now() + fc::microseconds( (uint64_t) 1000000 * (60 * 60)));
@@ -241,12 +289,14 @@ void seeding_plugin_impl::send_ready_to_publish()
 }
 
 void seeding_plugin_impl::restart_downloads(){
-   const auto& cidx = database().get_index_type<my_seeding_index>().indices().get<by_URI>();
-   auto citr = cidx.begin();
-   while(citr!=cidx.end()){
-      package_manager::instance().download_package(citr->URI, *this );
-      ++citr;
-   }
+   service_thread->async([this](){
+        const auto& cidx = database().get_index_type<my_seeding_index>().indices().get<by_URI>();
+        auto citr = cidx.begin();
+        while(citr!=cidx.end()){
+           package_manager::instance().download_package(citr->URI, *this );
+           ++citr;
+        }
+   });
 }
 }// end namespace detail
 
@@ -341,9 +391,11 @@ void seeding_plugin::plugin_initialize( const boost::program_options::variables_
       ilog("starting service thread");
       my = unique_ptr<detail::seeding_plugin_impl>( new detail::seeding_plugin_impl( *this) );
       my->service_thread = std::make_shared<fc::thread>();
+      my->main_thread = &fc::thread::current();
 
-      database().on_applied_operation.connect( [&]( const operation_history_object& b ){ my->on_operation(b); } );
-      database().on_new_commited_operation.connect( [&]( const operation_history_object& b ){ my->on_operation2(b); } );
+      database().on_new_commited_operation.connect( [&]( const operation_history_object& b ){ my->handle_commited_operation( b, false ); } );
+      database().on_new_commited_operation_during_sync.connect( [&]( const operation_history_object& b ){
+           my->handle_commited_operation(b, true); } );
 
       ilog("seeding plugin:  plugin_initialize() seeder prepared");
       try {

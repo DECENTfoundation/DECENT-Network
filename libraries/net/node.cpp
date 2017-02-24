@@ -5144,7 +5144,7 @@ namespace graphene { namespace net { namespace detail {
   void node::broadcast( const message& msg )
   {
     ilog("broadcast started");
-     idump((msg)); 
+     edump((msg));
     INVOKE_IN_IMPL(broadcast, msg);
   }
 

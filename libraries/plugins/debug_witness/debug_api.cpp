@@ -61,7 +61,7 @@ void debug_api_impl::debug_push_blocks( const std::string& src_filename, uint32_
          }
          try
          {
-            db->push_block( *block );
+            db->push_block(*block, 0, false);
          }
          catch( const fc::exception& e )
          {
