@@ -37,19 +37,18 @@ options1 = $$find(CONFIG, "TEST")
 count(options1, 1):DEFINES += TEST_SIMPLE_APP
 else{
 
-options2 = $$find(CONFIG, "NOT_USE_LIB")
+options2 = $$find(CONFIG, "USE_LIB")
 count(options2, 1){
 
-    message( "Building with using sources..." )
-    include(../lib_gui_wallet_qt/lib_gui_wallet.pri)
+    include(../lib_gui_wallet_qt/common_gui_wallet.pri)
+    message( "Building using lib... Use export DYLD_LIBRARY_PATH=$$SYSTEM_PATH/bin" )
+    LIBS += -llib_gui_wallet
+    LIBS += -L$$SYSTEM_PATH/bin
 
 }else{
 
-    include(../lib_gui_wallet_qt/common_gui_wallet.pri)
-    message( "Building using lib... Use export DYLD_LIBRARY_PATH=../../../sys/mac/bin" )
-    LIBS += -L$$SYSTEM_PATH/bin
-    LIBS += -llib_gui_wallet
-
+    message( "Building with using sources..." )
+    include(../lib_gui_wallet_qt/lib_gui_wallet.pri)
 
 } # else of count(options2, 1)
 

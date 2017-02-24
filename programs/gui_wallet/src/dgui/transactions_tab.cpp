@@ -13,6 +13,7 @@ using namespace gui_wallet;
 
 Transactions_tab::Transactions_tab()
 {
+#ifdef USE_TRANSACTION_TAB
     //create table (widget)
     tablewidget = new QTableWidget();
     tablewidget->setRowCount(tablewidget->rowCount() + 1);//add first row in table
@@ -42,11 +43,12 @@ Transactions_tab::Transactions_tab()
 
     main_layout.addWidget(tablewidget);
     setLayout(&main_layout);
+#endif  // #ifdef USE_TRANSACTION_TAB
 }
 
 void Transactions_tab::setOnGrids()
 {
-#if 0
+#ifdef USE_TRANSACTION_TAB
     int count = 0;
     int row = 0; //tablewidget->rowCount();
     int col = 0; //tablewidget->columnCount();
@@ -86,17 +88,19 @@ void Transactions_tab::setOnGrids()
 
 //    std::cout << n << std::endl;
     }
-#endif // #if 0
+#endif // #ifdef USE_TRANSACTION_TAB
 }
 
 void Transactions_tab::createNewRow()
 {
+#ifdef USE_TRANSACTION_TAB
     tablewidget->setRowCount(tablewidget->rowCount() + 1);
+#endif // #ifdef USE_TRANSACTION_TAB
 }
 
 bool Transactions_tab::loadFile()
 {
-#if 0
+#ifdef USE_TRANSACTION_TAB
     QFile json("/Users/vahe/Desktop/myfile.txt");
     if(!json.open(QIODevice::ReadOnly | QIODevice::Text))
     {
@@ -113,20 +117,24 @@ bool Transactions_tab::loadFile()
 
         return true;
     }
-#endif
+#endif  // #ifdef USE_TRANSACTION_TAB
     return true;
 
 }
 
 void Transactions_tab::aftherSignal()
 {
+#ifdef USE_TRANSACTION_TAB
     mess.setText("SIGNAL IS DONE");
     mess.exec();
+#endif // #ifdef USE_TRANSACTION_TAB
 }
 
 Transactions_tab::~Transactions_tab()
 {
+#ifdef USE_TRANSACTION_TAB
     delete tablewidget;
     delete push;
     //delete itm; //deleting automaticly ???
+#endif  // #ifdef USE_TRANSACTION_TAB
 }

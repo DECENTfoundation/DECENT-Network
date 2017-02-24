@@ -49,6 +49,7 @@ struct SDigitalContent{
     double  size;
 
     std::string  get_content_str;
+    int64_t  times_bougth;
 };
 
 }}}}

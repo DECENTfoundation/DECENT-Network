@@ -100,21 +100,30 @@ static bool GetJsonVectorNextElem(const char* a_cpcJsonStr,TypeConstChar* a_beg,
 }
 
 
+#if 1
 void ParseDigitalContentFromGetContentString(decent::wallet::ui::gui::SDigitalContent* a_pContent, const std::string& a_str)
 {
+    const char* cpcStrToGet;
     __DEBUG_APP2__(3,"str_to_parse is: \"\n%s\n\"",a_str.c_str());
     //std::string created;
     //std::string expiration;
     FindStringByKey(a_str.c_str(),"created",&a_pContent->created);
     FindStringByKey(a_str.c_str(),"expiration",&a_pContent->expiration);
-    const char* cpcStrToGet = FindValueStringByKey(a_str.c_str(),"size");
+    cpcStrToGet = FindValueStringByKey(a_str.c_str(),"size");
     if(cpcStrToGet)
     {
         char* pcTerm;
         a_pContent->size = strtod(cpcStrToGet,&pcTerm);
     }
+    cpcStrToGet = FindValueStringByKey(a_str.c_str(),"times_bought");
+    if(cpcStrToGet)
+    {
+        char* pcTerm;
+        a_pContent->times_bougth = (int64_t)strtol(cpcStrToGet,&pcTerm,10);
+    }
     a_pContent->get_content_str = a_str;
 }
+#endif
 
 
 void SetNewTaskQtMainWnd2Glb(const std::string& a_inp_line, void* a_clbData)
@@ -435,14 +444,14 @@ void Mainwindow_gui_wallet::ShowDigitalContextesGUI(QString a_filter)
         for(;*cpcNumberPtr != 0 && *cpcNumberPtr==' ';++cpcNumberPtr);
         cpcURIstart = cpcNumberPtr;
         for(;*cpcNumberPtr != 0 && *cpcNumberPtr!=' ';++cpcNumberPtr);
-        if( (*cpcNumberPtr==0) || (atoi(cpcNumberPtr+1)==0)){csNumber += " 10";}
+        if( (*cpcNumberPtr==0) || (atoi(cpcNumberPtr+1)==0)){csNumber += " 100";}
         else {csNumber = cpcNumberPtr+1;}
         csTaskLine = std::string("list_content ") + cpcURIstart + std::string(" ") + csNumber;
 
     }
     else if(strstr(csFilterStr.c_str(),ST::s_vcpcSearchTypeStrs[ST::content]))
     {
-        __DEBUG_APP2__(1,"Displaying contents by content is not implemented yet");
+        __DEBUG_APP2__(0,"Displaying contents by content is not implemented yet");
     }
 
     __DEBUG_APP2__(3,"taskLine=%s",csTaskLine.c_str());
@@ -472,6 +481,7 @@ int Mainwindow_gui_wallet::GetDigitalContentsFromString(DCT::DIG_CONT_TYPES a_ty
         cpcAuthorFld = strstr(cpcSearchStart,"\"author\"");
         if(g_nDebugApplication){printf("cpcAuthorFld=\"%.10s\"\n",cpcAuthorFld ? cpcAuthorFld : "nill");}
         if(!cpcAuthorFld){return 0;}
+        //
         cpcAutorBeg = strchr(cpcAuthorFld+strlen("\"author\""),'\"');
         if(g_nDebugApplication){printf("cpcAutorBeg=\"%.10s\"\n",cpcAutorBeg ? cpcAutorBeg : "nill");}
         if(!cpcAutorBeg){return 1;}

@@ -14,6 +14,7 @@
 
 decent::wallet::ui::gui::ContentDetailsGeneral::ContentDetailsGeneral()
 {
+    setFixedSize(397,381);
 }
 
 

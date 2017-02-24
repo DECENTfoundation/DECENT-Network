@@ -54,20 +54,10 @@ decent::wallet::ui::gui::ContentDetailsBase::ContentDetailsBase()
 
 decent::wallet::ui::gui::ContentDetailsBase::~ContentDetailsBase()
 {
-#if 0
-    for(i=0;i<NUMBER_OF_SUB_LAYOUTS;++i,nIndexZuyg+=2,nIndexKent+=2)
-    {
-        if(i%2==0){m_vSub_Widgets[i].setStyleSheet("background-color:gray;");}
-        else{m_vSub_Widgets[i].setStyleSheet("background-color:white;");}
-        m_vLabels[nIndexZuyg].setStyleSheet("font-weight: bold");
-        m_vSub_layouts[i].addWidget(&m_vLabels[nIndexZuyg]);
-        m_vSub_layouts[i].addWidget(&m_vLabels[nIndexKent]);
-        m_vSub_Widgets[i].rem(&m_vSub_layouts[i]);
-        m_main_layout.addLayout(&m_vSub_layouts[i]);
-    }
-#endif
 }
 
+// DCF stands for Digital Content Fields
+namespace DCF{enum{ASSET_ID=11,TIMES_BOUGHT=17};}
 
 void decent::wallet::ui::gui::ContentDetailsBase::execCDB(const decent::wallet::ui::gui::SDigitalContent& a_cnt_details)
 {
@@ -86,13 +76,13 @@ void decent::wallet::ui::gui::ContentDetailsBase::execCDB(const decent::wallet::
     m_vLabels[5].setText(tr(m_pContentInfo->created.c_str()));
     m_vLabels[7].setText(QString::number(m_pContentInfo->price.amount,'f').remove( QRegExp("0+$") ).remove( QRegExp("\\.$") ));
     m_vLabels[9].setText(tr("???"));
-    m_vLabels[11].setText(tr("???"));
+    m_vLabels[DCF::ASSET_ID].setText(tr(a_cnt_details.price.asset_id.c_str()));
     m_vLabels[13].setText(QString::number(m_pContentInfo->AVG_rating,'f').remove( QRegExp("0+$") ).remove( QRegExp("\\.$") ));
     //QString::number(aTemporar.AVG_rating,'f').remove( QRegExp("0+$") ).remove( QRegExp("\\.$") )
     QString qsSizeTxt = QString::number(m_pContentInfo->size,'f').remove( QRegExp("0+$") ).remove( QRegExp("\\.$") ) +
             tr(" MB");
     m_vLabels[15].setText(qsSizeTxt);
-    m_vLabels[17].setText(tr("???"));
+    m_vLabels[DCF::TIMES_BOUGHT].setText(QString::number(a_cnt_details.times_bougth,10));
 
     QDialog::exec();
 #endif
