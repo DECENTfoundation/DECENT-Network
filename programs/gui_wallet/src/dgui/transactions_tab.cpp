@@ -22,7 +22,7 @@ Transactions_tab::Transactions_tab()
     tablewidget->setRowCount(1);//add first row in table
     tablewidget->setColumnCount(4);
     tablewidget->verticalHeader()->setDefaultSectionSize(35);
-
+    tablewidget->horizontalHeader()->setDefaultSectionSize(230);
     tablewidget->horizontalHeader()->hide();
     tablewidget->verticalHeader()->hide();
     tablewidget->setStyleSheet("QTableView{border : 1px solid lightGray}");
@@ -31,8 +31,7 @@ Transactions_tab::Transactions_tab()
     tablewidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     main_layout.setContentsMargins(0, 5, -5, 0);
 
-    user.setStyleSheet("border: 1px solid lightGray");
-    user.size().rheight();
+//    user.setStyleSheet("QLineEdit{border: border-width: 2px; border-color: lightGray}");
     user.setPlaceholderText("Search");
 
     QFont font( "Arial", 14, QFont::Bold);
@@ -44,6 +43,9 @@ Transactions_tab::Transactions_tab()
         tablewidget->item(0, i)->setBackground(QColor(228,227,228));
         tablewidget->item(0, i)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
     }
+
+    user.setMaximumHeight(40);
+    user.setFixedHeight(40);
 
     main_layout.addWidget(&user);
     main_layout.addWidget(tablewidget);

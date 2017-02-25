@@ -206,6 +206,7 @@ private slots:
 private:
 signals:
    void LabelWosClicked();
+   void mouseWasMoved();
 public:
 signals:
    void ButtonPushedSignal(int);
@@ -213,6 +214,11 @@ private:
    virtual void mouseReleaseEvent(QMouseEvent * event)
    {
         LabelWosClicked();
+   }
+
+   virtual void mouseMoveEvent(QMouseEvent * event)
+   {
+        mouseWasMoved();
    }
 };
 

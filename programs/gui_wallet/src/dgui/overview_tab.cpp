@@ -22,27 +22,16 @@ Overview_tab::Overview_tab(class Mainwindow_gui_wallet* a_pPar)
     : m_pPar(a_pPar)
 {
 
-
-//    QLabel * cl = new QLabel();
-//    int posx = ((NewButton*)table_widget.cellWidget(i + 1 , 0))->pos().x();
-//    int posy = ((NewButton*)table_widget.cellWidget(i + 1 , 0))->pos().y();
-//    int posrx = ((NewButton*)table_widget.cellWidget(i + 1 , 0))->pos().rx();
-//    int posry = ((NewButton*)table_widget.cellWidget(i + 1 , 0))->pos().ry();
-//    QPixmap image("/Users/vahe/Desktop/info_icon.png");
-//    cl->setGeometry(QRect(20 , 20 , 30 , 10));
-//    cl->setScaledContents(true);
-//    cl->setPixmap(image);
-
-
-
+    //table_widget.setMaximumHeight(40);
+   // table_widget.setMinimumHeight(40);107 304 529     940
 
     table_widget.setColumnCount(3);
     table_widget.setRowCount(1);
 
     QSize tqsTableSize = table_widget.size();
-    table_widget.setColumnWidth(0,(tqsTableSize.width()*10)/100);
-    table_widget.setColumnWidth(1,(tqsTableSize.width()*45)/100);
-    table_widget.setColumnWidth(2,(tqsTableSize.width()*45)/100);
+    table_widget.setColumnWidth(0,(tqsTableSize.width()*12)/100);
+    table_widget.setColumnWidth(1,(tqsTableSize.width()*32)/100);
+    table_widget.setColumnWidth(2,(tqsTableSize.width()*56)/100);
 
     table_widget.setRowHeight(0,35);
 
@@ -81,17 +70,13 @@ Overview_tab::Overview_tab(class Mainwindow_gui_wallet* a_pPar)
     table_widget.setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     table_widget.setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
+
     QVBoxLayout* main = new QVBoxLayout();
     main->setContentsMargins(0, 5, 0, 0);
     search.setPlaceholderText(QString("Search"));
+    //search.setMaximumHeight(37);
+    search.setFixedHeight(40);
 
-
-
-
-//    QStackedWidget * s = new QStackedWidget();
-//    s->addWidget(&search);
-//    s->setSizeIncrement(search.size());
-//    s->setStyleSheet("background-image: url(/Users/vahe/Desktop/search.png)");
 
     main->addWidget(&search);
     main->addWidget(&table_widget);
@@ -117,8 +102,45 @@ void Overview_tab::CreateTable()
         table_widget.setItem(i + 1,1,new QTableWidgetItem((accounts_id[i])));
         table_widget.setItem(i + 1,2,new QTableWidgetItem((accounts_names[i])));
 
+
+
+        QHBoxLayout* lay = new QHBoxLayout();
+
+        QPixmap image("/Users/vahe/Desktop/info_icon.png");
+        QPixmap image1 = image.scaled(QSize(10,10),  Qt::KeepAspectRatio);
+
+        ((NewButton*)table_widget.cellWidget(i + 1,0))->setPixmap(image1);
+
+
+//        NewButton* new_ptr = new NewButton(i);
+
+//        lay->addWidget(new_ptr);
+//        new_ptr = new NewButton(i);
+//        new_ptr->setScaledContents(true);
+//        new_ptr->setPixmap(image1);
+
+//        lay->addWidget(new_ptr);
+
+//        new_ptr = new NewButton(i);
+
+//        lay->addWidget(new_ptr);
+
+//        table_widget.cellWidget(i + 1 , 0)->setLayout(lay);
+
+
+       // ((QHBoxLayout*)table_widget.item(i + 1 , 0))->addWidget(new_ptr);
+
+
+       // ((NewButton*)table_widget.cellWidget(i + 1,0))->setPixmap(image1);
+
+        //new_ptr->setPixmap(image1);
+
+       // new_ptr = new NewButton(i);
+       // ((QHBoxLayout*)table_widget.item(i + 1 , 0))->addWidget(new_ptr);
+
         table_widget.setRowHeight(0,35);
 
+        table_widget.cellWidget(i + 1 , 0)->setStyleSheet("* { background-color: rgb(255,255,255); }");
         table_widget.item(i + 1,1)->setBackground(Qt::white);
         table_widget.item(i + 1,2)->setBackground(Qt::white);
 
@@ -127,11 +149,10 @@ void Overview_tab::CreateTable()
 
         table_widget.item(i + 1,1)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
         table_widget.item(i + 1,2)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
-        table_widget.setMouseTracking(true);
-        QPixmap image("/Users/vahe/Desktop/info_icon.png");
-        QPixmap image1 = image.scaled(QSize(20,20),  Qt::KeepAspectRatio);
 
-        ((NewButton*)table_widget.cellWidget(i + 1,0))->setPixmap(image1);
+        table_widget.setMouseTracking(true);
+
+
 
     }
 
@@ -144,6 +165,8 @@ void Overview_tab::Connects()
     for(int i = 1; i < accounts_names.size() + 1; ++i)
     {
         connect(table_widget.cellWidget(i,0), SIGNAL(ButtonPushedSignal(int)), this , SLOT(my_slot(int)));
+
+        connect(table_widget.cellWidget(i,0),SIGNAL(mouseWasMoved()),this,SLOT(doRowColor()));
     }
     connect(&table_widget,SIGNAL(mouseMoveEventDid()),this,SLOT(doRowColor()));
 }
@@ -151,9 +174,9 @@ void Overview_tab::Connects()
 void Overview_tab::ArrangeSize()
 {
     QSize tqsTableSize = table_widget.size();
-    table_widget.setColumnWidth(0,(tqsTableSize.width()*6)/100);
-    table_widget.setColumnWidth(1,(tqsTableSize.width()*47)/100);
-    table_widget.setColumnWidth(2,(tqsTableSize.width()*47)/100);
+    table_widget.setColumnWidth(0,(tqsTableSize.width()*12)/100);
+    table_widget.setColumnWidth(1,(tqsTableSize.width()*32)/100);
+    table_widget.setColumnWidth(2,(tqsTableSize.width()*56)/100);
 }
 
 void Overview_tab::resizeEvent(QResizeEvent *a_event)
@@ -166,6 +189,7 @@ void Overview_tab::doRowColor()
 {
     for(int i = 0; i < accounts_names.size(); ++i)
     {
+        table_widget.cellWidget(i+1,0)->setStyleSheet("* { background-color: rgb(255,255,255); }");
         table_widget.item(i+1,1)->setBackground(QColor(255,255,255));
         table_widget.item(i+1,2)->setBackground(QColor(255,255,255));
     }
@@ -179,7 +203,7 @@ void Overview_tab::doRowColor()
         std::cout<<a<<std::endl;
         if(a != 0)
         {
-           // m_pCentralWidget->m_Overview_tab.table_widget.item(a,0)->setStyleSheet("QLabel { background-color: blue }");
+            table_widget.cellWidget(a , 0)->setStyleSheet("* { background-color: rgb(27,176,104); }");
             table_widget.item(a,1)->setBackgroundColor(QColor(27,176,104));
             table_widget.item(a,2)->setBackgroundColor(QColor(27,176,104));
         }
@@ -200,6 +224,5 @@ TableWidget::TableWidget() : QTableWidget()
 void TableWidget::mouseMoveEvent(QMouseEvent *event)
 {
     mouseMoveEventDid();
-    //mouseMoveEvent(event);
 }
 

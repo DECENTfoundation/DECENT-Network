@@ -29,6 +29,8 @@ void gui_wallet::Mainwindow_gui_wallet::TaskDoneOverrviewGUI(void* a_clbkArg,int
 {
     int nCurTab(m_pCentralWidget->GetMyCurrentTabIndex());
     if(nCurTab != OVERVIEW){return;}
+
+    int last_size = m_pCentralWidget->m_Overview_tab.accounts_names.size();
     if(a_task.find("list_accounts ") == 0)
     {
         m_pCentralWidget->m_Overview_tab.accounts_names.clear();
@@ -56,7 +58,10 @@ void gui_wallet::Mainwindow_gui_wallet::TaskDoneOverrviewGUI(void* a_clbkArg,int
                 }
             }
         }
-        m_pCentralWidget->m_Overview_tab.CreateTable();
+        if(m_pCentralWidget->m_Overview_tab.accounts_names.size() != last_size)
+        {
+            m_pCentralWidget->m_Overview_tab.CreateTable();
+        }
     }
     else if(a_task.find("get_account ") == 0)
     {
