@@ -82,9 +82,6 @@ Then, execute in console:
     $ brew update
     $ brew install automake autoconf libtool cmake berkeley-db boost160 qt5 cryptopp doxygen byacc flex gettext git pbc gmp ipfs openssl readline
 
-./programs/witness_node/witness_node --rpc-endpoint 127.0.0.1:8090 -s 185.8.165.21:33142
-../../../sys/mac/bin/gui_wallet.app/Contents/MacOS/gui_wallet
-
 ### Obtaining the sources, building, and installing Decent in Unix (macOS or Linux)
 
 After all the prerequisites are installed, execute the following commands in console, in order to clone the repo, build, and install/stage Decent:
@@ -108,7 +105,7 @@ After all the prerequisites are installed, execute the following commands in con
 >     $ make -j -l 3.0
 >     $ make install
 
-By this time you should have Decent files installed at `~/dev/DECENTfoundation/DECENT-Network-build/artifacts/prefix` or `~/dev/DECENTfoundation/DECENT-Network-build/artifacts/install` directories.
+By this time you should have Decent files installed at `~/dev/DECENTfoundation/DECENT-Network-build/artifacts/prefix` directory. You can specify any other custom install prefix for `cmake` during the initial configuration, for example, by adding `-D CMAKE_INSTALL_PREFIX=~/dev/DECENTfoundation/DECENT-Network-prefix` to the command line.
 
 You can use any path instead of `~/dev/DECENTfoundation` in the steps above.
 
@@ -122,7 +119,7 @@ TODO
 Starting Decent
 ---------------
 
-> Change `~/dev/DECENTfoundation/DECENT-Network-build/artifacts/prefix` to `~/dev/DECENTfoundation/DECENT-Network-build/artifacts/install` in the commands below, if it was the default install location in your configuration.
+> In the commands below, change `~/dev/DECENTfoundation/DECENT-Network-build/artifacts/prefix` to `~/dev/DECENTfoundation/DECENT-Network-prefix` or to any other install location, that you specified during initial configuration.
 
 On first run `witness_node` will create `witness_node_data_dir` in the current working directory, if doesn't exist already.
 

@@ -109,7 +109,7 @@ void gui_wallet::Mainwindow_gui_wallet::ManagementBrowseContentGUI()
     if(s_nActive==0)
     {
 #if DEFAULT_LOG_LEVEL==0
-        SetNewTask3("list_content a 10",this,NULL,&Mainwindow_gui_wallet::TaskDoneBrowseContentGUI3);
+        //SetNewTask3("list_content a 10",this,NULL,&Mainwindow_gui_wallet::TaskDoneBrowseContentGUI3);
 #endif
         s_nActive = 1;
     }
