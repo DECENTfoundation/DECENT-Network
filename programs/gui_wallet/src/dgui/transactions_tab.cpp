@@ -8,8 +8,8 @@
 // *
 // */
 #include "transactions_tab.hpp"
-#include <QFrame>
-#include <Qt>
+#include <QHeaderView>
+#include <QFont>
 
 using namespace gui_wallet;
 
@@ -21,21 +21,27 @@ Transactions_tab::Transactions_tab()
     tablewidget = new QTableWidget();
     tablewidget->setRowCount(1);//add first row in table
     tablewidget->setColumnCount(4);
-    tablewidget->verticalHeader()->setDefaultSectionSize(34);
-    tablewidget->horizontalHeader()->setDefaultSectionSize(220);
+    tablewidget->verticalHeader()->setDefaultSectionSize(35);
+
     tablewidget->horizontalHeader()->hide();
     tablewidget->verticalHeader()->hide();
+    tablewidget->setStyleSheet("QTableView{border : 1px solid lightGray}");
+
     tablewidget->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     tablewidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    main_layout.setContentsMargins(0, 5, 0, 0);
+    main_layout.setContentsMargins(0, 5, -5, 0);
 
+    user.setStyleSheet("border: 1px solid lightGray");
+    user.size().rheight();
     user.setPlaceholderText("Search");
 
+    QFont font( "Arial", 14, QFont::Bold);
     for (int i = 0; i < 4; ++i)
     {
         tablewidget->setItem(0, i, new QTableWidgetItem(tr(firsItemNames[i])));
+        tablewidget->item(0, i)->setFont(font);
         tablewidget->item(0, i)->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
-        tablewidget->item(0, i)->setBackground(Qt::lightGray);
+        tablewidget->item(0, i)->setBackground(QColor(228,227,228));
         tablewidget->item(0, i)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
     }
 

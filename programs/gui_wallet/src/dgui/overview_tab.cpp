@@ -12,6 +12,7 @@
 #include <QPixmap>
 #include <QStackedWidget>
 #include <QRect>
+#include <QFont>
 
 using namespace gui_wallet;
 
@@ -43,9 +44,22 @@ Overview_tab::Overview_tab(class Mainwindow_gui_wallet* a_pPar)
     table_widget.setColumnWidth(1,(tqsTableSize.width()*45)/100);
     table_widget.setColumnWidth(2,(tqsTableSize.width()*45)/100);
 
+    table_widget.setRowHeight(0,35);
+
+    table_widget.setStyleSheet("QTableView{border : 1px solid lightGray}");
+
     table_widget.setItem(0,0,new QTableWidgetItem(tr("Info")));
     table_widget.setItem(0,1,new QTableWidgetItem(tr("Asset ID")));
     table_widget.setItem(0,2,new QTableWidgetItem(tr("Author")));
+
+    QFont f( "Arial", 15, QFont::Bold);
+    //f.setPointSize(72);
+    //font.setBold(true);
+    table_widget.item(0,0)->setFont(f);
+    table_widget.item(0,1)->setFont(f);
+    table_widget.item(0,2)->setFont(f);
+
+    table_widget.item(0,0)->setText("Info");
 
     table_widget.item(0,0)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
     table_widget.item(0,1)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
@@ -55,9 +69,11 @@ Overview_tab::Overview_tab(class Mainwindow_gui_wallet* a_pPar)
     table_widget.item(0,1)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
     table_widget.item(0,2)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
 
-    table_widget.item(0,0)->setBackground(Qt::lightGray);
-    table_widget.item(0,1)->setBackground(Qt::lightGray);
-    table_widget.item(0,2)->setBackground(Qt::lightGray);
+    table_widget.item(0,0)->setBackground(QColor(228,227,228));
+    table_widget.item(0,1)->setBackground(QColor(228,227,228));
+    table_widget.item(0,2)->setBackground(QColor(228,227,228));
+
+
 
     table_widget.horizontalHeader()->hide();
     table_widget.verticalHeader()->hide();
@@ -100,21 +116,27 @@ void Overview_tab::CreateTable()
         table_widget.setCellWidget(i + 1,0,new NewButton(i));
         table_widget.setItem(i + 1,1,new QTableWidgetItem((accounts_id[i])));
         table_widget.setItem(i + 1,2,new QTableWidgetItem((accounts_names[i])));
-        //table_widget.item(i + 1,0)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+
+        table_widget.setRowHeight(0,35);
+
+        table_widget.item(i + 1,1)->setBackground(Qt::white);
+        table_widget.item(i + 1,2)->setBackground(Qt::white);
+
         table_widget.item(i + 1,1)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
         table_widget.item(i + 1,2)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
 
         table_widget.item(i + 1,1)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
         table_widget.item(i + 1,2)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
-       // ((NewButton*)table_widget.cellWidget(i + 1,0))->setScaledContents(true);
+        table_widget.setMouseTracking(true);
         QPixmap image("/Users/vahe/Desktop/info_icon.png");
-        QPixmap image1 = image.scaled(QSize(30,30),  Qt::KeepAspectRatio);
+        QPixmap image1 = image.scaled(QSize(20,20),  Qt::KeepAspectRatio);
 
         ((NewButton*)table_widget.cellWidget(i + 1,0))->setPixmap(image1);
 
     }
 
     Connects();
+    table_widget.setMouseTracking(true);
 }
 
 void Overview_tab::Connects()
@@ -123,6 +145,7 @@ void Overview_tab::Connects()
     {
         connect(table_widget.cellWidget(i,0), SIGNAL(ButtonPushedSignal(int)), this , SLOT(my_slot(int)));
     }
+    connect(&table_widget,SIGNAL(mouseMoveEventDid()),this,SLOT(doRowColor()));
 }
 
 void Overview_tab::ArrangeSize()
@@ -139,14 +162,44 @@ void Overview_tab::resizeEvent(QResizeEvent *a_event)
     ArrangeSize();
 }
 
-void Overview_tab::mouseMoveEvent(QMouseEvent *a_event)
+void Overview_tab::doRowColor()
 {
+    for(int i = 0; i < accounts_names.size(); ++i)
+    {
+        table_widget.item(i+1,1)->setBackground(QColor(255,255,255));
+        table_widget.item(i+1,2)->setBackground(QColor(255,255,255));
+    }
+    QPoint mouse_pos = table_widget.mapFromGlobal(QCursor::pos());
+    std::cout<<mouse_pos.x()<<mouse_pos.y()<<std::endl;
+    QTableWidgetItem *ite = table_widget.itemAt(mouse_pos);
 
+    if(ite != NULL)
+    {
+        int a = ite->row();
+        std::cout<<a<<std::endl;
+        if(a != 0)
+        {
+           // m_pCentralWidget->m_Overview_tab.table_widget.item(a,0)->setStyleSheet("QLabel { background-color: blue }");
+            table_widget.item(a,1)->setBackgroundColor(QColor(27,176,104));
+            table_widget.item(a,2)->setBackgroundColor(QColor(27,176,104));
+        }
+    }
 }
-
 
 Overview_tab::~Overview_tab()
 {
 
+}
+
+TableWidget::TableWidget() : QTableWidget()
+{
+    this->setMouseTracking(true);
+}
+
+
+void TableWidget::mouseMoveEvent(QMouseEvent *event)
+{
+    mouseMoveEventDid();
+    //mouseMoveEvent(event);
 }
 

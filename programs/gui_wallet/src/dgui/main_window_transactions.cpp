@@ -47,7 +47,6 @@ void gui_wallet::Mainwindow_gui_wallet::TaskDoneTransactionsGUI(void* a_clbkArg,
 
     while(a_result.size() > index)
     {
-
     //TIME
         QString date = 0;
         for (int i = index; a_result[i] != 'T'; ++i)
@@ -143,6 +142,20 @@ void gui_wallet::Mainwindow_gui_wallet::TaskDoneTransactionsGUI(void* a_clbkArg,
         col = 0;
     }
     m_pCentralWidget->m_trans_tab.deleteEmptyRows();
+
+    QPoint mouse_pos = m_pCentralWidget->m_trans_tab.tablewidget->mapFromGlobal(QCursor::pos());
+    QTableWidgetItem *ite = m_pCentralWidget->m_trans_tab.tablewidget->itemAt(mouse_pos);
+    if(ite != NULL)
+    {
+        int a = ite->row();
+        if(a != 0)
+        {
+            for(int i = 0; i < 4; ++i)
+            {
+                m_pCentralWidget->m_trans_tab.tablewidget->item(a,i)->setBackgroundColor(QColor(27,176,104));
+            }
+        }
+    }
 }
 
     //SetNewTask2("get_account_history hayq 4",this,NULL,&Mainwindow_gui_wallet::TaskDoneFuncGUI);

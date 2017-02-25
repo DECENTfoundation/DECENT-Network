@@ -21,6 +21,7 @@ void gui_wallet::Mainwindow_gui_wallet::ManagementOverviewGUI()
     std::string tInpuString = StringFromQString(tNewTaskInp);
     __DEBUG_APP2__(0,"task=%s",tInpuString.c_str());
     SetNewTask(tInpuString,this,NULL,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
+    m_pCentralWidget->m_Overview_tab.setMouseTracking(true);
 }
 
 
@@ -28,19 +29,6 @@ void gui_wallet::Mainwindow_gui_wallet::TaskDoneOverrviewGUI(void* a_clbkArg,int
 {
     int nCurTab(m_pCentralWidget->GetMyCurrentTabIndex());
     if(nCurTab != OVERVIEW){return;}
-
-
-
-    QPoint mouse_pos = QCursor::pos();
-    std::cout<<mouse_pos.x()<<mouse_pos.y()<<std::endl;
-    QTableWidgetItem *ite = m_pCentralWidget->m_Overview_tab.table_widget.itemAt(mouse_pos);
-    if(ite != NULL)
-    {
-        int a = ite->column();
-        std::cout<<"aaaaaaaaaaaaaaaaaaaaaaaaa"<<std::endl;
-    }
-
-
     if(a_task.find("list_accounts ") == 0)
     {
         m_pCentralWidget->m_Overview_tab.accounts_names.clear();
@@ -144,6 +132,7 @@ void gui_wallet::Mainwindow_gui_wallet::TaskDoneOverrviewGUI(void* a_clbkArg,int
         info_window->show();
     }
     m_pCentralWidget->m_Overview_tab.ArrangeSize();
+    m_pCentralWidget->m_Overview_tab.setMouseTracking(true);
 }
 
 

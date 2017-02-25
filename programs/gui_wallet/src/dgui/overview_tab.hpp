@@ -23,6 +23,7 @@
 #include <QStringList>
 #include <stdio.h>
 #include <stdarg.h>
+#include <iostream>
 
 
 //class NewButton : public QPushButton
@@ -215,6 +216,22 @@ private:
    }
 };
 
+
+
+class TableWidget : public QTableWidget
+{
+    Q_OBJECT
+public:
+    TableWidget();
+
+    virtual void mouseMoveEvent(QMouseEvent * event);
+public:
+signals:
+    void mouseMoveEventDid();
+};
+
+
+
 namespace gui_wallet
 {
     class Overview_tab : public QWidget
@@ -228,9 +245,10 @@ namespace gui_wallet
         void ArrangeSize();
     public slots:
         void my_slot(int);
+        void doRowColor();
     public:
         QLineEdit search;
-        QTableWidget table_widget;
+        TableWidget table_widget;
         QLabel search_label;
         std::vector<QString> accounts_names;
         std::vector<QString> accounts_id;
@@ -239,9 +257,10 @@ namespace gui_wallet
     protected:
         class Mainwindow_gui_wallet* m_pPar;
         virtual void resizeEvent ( QResizeEvent * a_event );
-        virtual void mouseMoveEvent(QMouseEvent *);
+       // virtual void mouseMoveEvent(QMouseEvent *);
     };
 }
+
 
 
 #endif // OVERVIEW_TAB_HPP

@@ -21,6 +21,10 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QPushButton>
+#include <QFrame>
+#include <Qt>
+#include <QColor>
+#include <QMouseEvent>
 
 namespace gui_wallet
 {
