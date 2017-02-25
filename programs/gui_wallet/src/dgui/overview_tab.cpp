@@ -70,16 +70,36 @@ Overview_tab::Overview_tab(class Mainwindow_gui_wallet* a_pPar)
     table_widget.setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     table_widget.setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
-
     QVBoxLayout* main = new QVBoxLayout();
-    main->setContentsMargins(0, 5, 0, 0);
+    QHBoxLayout* search_lay = new QHBoxLayout();
+
+    main->setContentsMargins(0, 0, 0, 0);
+    main->setMargin(0);
+
+    search_lay->setMargin(0);
+    search_lay->setContentsMargins(0,0,0,0);
+
+    QPixmap image("/Users/vahe/Desktop/search.png");
+    QPixmap image1 = image.scaled(QSize(15, 15),  Qt::KeepAspectRatio);
+
+    search_label.setSizeIncrement(100,40);
+    search_label.setPixmap(image1);
+    search.setStyleSheet("border: 1px solid white");
     search.setPlaceholderText(QString("Search"));
-    //search.setMaximumHeight(37);
     search.setFixedHeight(40);
 
 
-    main->addWidget(&search);
+    search_lay->addWidget(new QLabel());
+    search_lay->addWidget(&search_label);
+    search_lay->addWidget(&search);
+
+
+
+    main->addLayout(search_lay);
+    //main->addWidget(&search);
     main->addWidget(&table_widget);
+
+
 
 
     setLayout(main);
@@ -102,41 +122,12 @@ void Overview_tab::CreateTable()
         table_widget.setItem(i + 1,1,new QTableWidgetItem((accounts_id[i])));
         table_widget.setItem(i + 1,2,new QTableWidgetItem((accounts_names[i])));
 
-
-
         QHBoxLayout* lay = new QHBoxLayout();
 
         QPixmap image("/Users/vahe/Desktop/info_icon.png");
         QPixmap image1 = image.scaled(QSize(10,10),  Qt::KeepAspectRatio);
 
         ((NewButton*)table_widget.cellWidget(i + 1,0))->setPixmap(image1);
-
-
-//        NewButton* new_ptr = new NewButton(i);
-
-//        lay->addWidget(new_ptr);
-//        new_ptr = new NewButton(i);
-//        new_ptr->setScaledContents(true);
-//        new_ptr->setPixmap(image1);
-
-//        lay->addWidget(new_ptr);
-
-//        new_ptr = new NewButton(i);
-
-//        lay->addWidget(new_ptr);
-
-//        table_widget.cellWidget(i + 1 , 0)->setLayout(lay);
-
-
-       // ((QHBoxLayout*)table_widget.item(i + 1 , 0))->addWidget(new_ptr);
-
-
-       // ((NewButton*)table_widget.cellWidget(i + 1,0))->setPixmap(image1);
-
-        //new_ptr->setPixmap(image1);
-
-       // new_ptr = new NewButton(i);
-       // ((QHBoxLayout*)table_widget.item(i + 1 , 0))->addWidget(new_ptr);
 
         table_widget.setRowHeight(0,35);
 
@@ -151,9 +142,6 @@ void Overview_tab::CreateTable()
         table_widget.item(i + 1,2)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
 
         table_widget.setMouseTracking(true);
-
-
-
     }
 
     Connects();
@@ -164,9 +152,11 @@ void Overview_tab::Connects()
 {
     for(int i = 1; i < accounts_names.size() + 1; ++i)
     {
+        table_widget.cellWidget(i,0)->setMouseTracking(true);
         connect(table_widget.cellWidget(i,0), SIGNAL(ButtonPushedSignal(int)), this , SLOT(my_slot(int)));
 
-        connect(table_widget.cellWidget(i,0),SIGNAL(mouseWasMoved()),this,SLOT(doRowColor()));
+
+        connect((table_widget.cellWidget(i,0)),SIGNAL(mouseWasMoved()),this,SLOT(doRowColor()));
     }
     connect(&table_widget,SIGNAL(mouseMoveEventDid()),this,SLOT(doRowColor()));
 }
@@ -187,6 +177,7 @@ void Overview_tab::resizeEvent(QResizeEvent *a_event)
 
 void Overview_tab::doRowColor()
 {
+   // printf("%s\n",__FUNCTION__);
     for(int i = 0; i < accounts_names.size(); ++i)
     {
         table_widget.cellWidget(i+1,0)->setStyleSheet("* { background-color: rgb(255,255,255); }");
@@ -194,11 +185,14 @@ void Overview_tab::doRowColor()
         table_widget.item(i+1,2)->setBackground(QColor(255,255,255));
     }
     QPoint mouse_pos = table_widget.mapFromGlobal(QCursor::pos());
-    std::cout<<mouse_pos.x()<<mouse_pos.y()<<std::endl;
+    std::cout<<mouse_pos.x()<<"  "<<mouse_pos.y()<<std::endl;
+    mouse_pos.setX(mouse_pos.x() + 150);
+    //mouse_pos.setY(48);
     QTableWidgetItem *ite = table_widget.itemAt(mouse_pos);
 
     if(ite != NULL)
     {
+
         int a = ite->row();
         std::cout<<a<<std::endl;
         if(a != 0)

@@ -206,11 +206,11 @@ private slots:
 private:
 signals:
    void LabelWosClicked();
-   void mouseWasMoved();
 public:
 signals:
    void ButtonPushedSignal(int);
-private:
+   void mouseWasMoved();
+public:
    virtual void mouseReleaseEvent(QMouseEvent * event)
    {
         LabelWosClicked();
@@ -218,7 +218,9 @@ private:
 
    virtual void mouseMoveEvent(QMouseEvent * event)
    {
-        mouseWasMoved();
+       printf("%s\n",__FUNCTION__);
+        emit mouseWasMoved();
+        QLabel::mouseMoveEvent(event);
    }
 };
 
