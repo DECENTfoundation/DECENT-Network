@@ -309,56 +309,15 @@ bool package_object::verify_hash() const {
     return _hash == calculate_hash(get_content_file());
 }
 
-
-
-void package_manager::load_json_uploads() {
-
-    path uploads_json = _packages_directory / "uploads.json";
-    
-    _seeding_packages.clear();
-
-    if (is_regular_file(uploads_json)) {
-
-        std::ifstream input_file(uploads_json.string());
-        json uploads;
-        input_file >> uploads;
-        
-        for (json::iterator it = uploads.begin(); it != uploads.end(); ++it) {
-            string hash = (*it)["hash"].get<std::string>();
-            string protocol = (*it)["protocol"].get<std::string>();
-            _seeding_packages.insert(make_pair(hash, protocol));
-        }
-    }
+int package_object::get_size() const {
+    return file_size(get_content_file());
 }
 
 
 
-void package_manager::save_json_uploads() {
 
-    path uploads_json = _packages_directory / "uploads.json";
-    
-    json uploads;
-
-    
-    seeding_packages::iterator it = _seeding_packages.begin();
-    for (; it != _seeding_packages.end(); ++it) {
-
-        json obj;
-        obj["hash"] = it->first;
-        obj["protocol"] = it->second;
-
-        uploads.push_back(obj);
-    }
-
-    std::ofstream output_file(uploads_json.string());
-    output_file << uploads;
-    output_file.close();
-}
-
-
-
-void package_manager::load_json_downloads() {
-
+void package_manager::restore_json_state() {
+/*
     path downloads_json = _packages_directory / "downloads.json";
     
     _seeding_packages.clear();
@@ -375,10 +334,19 @@ void package_manager::load_json_downloads() {
             download_package(url, empty_transfer_listener::get_one());
         }
     }
+
+    seeding_packages::iterator it = _seeding_packages.begin();
+    for (; it != _seeding_packages.end(); ++it) {
+        path package_path = _packages_directory / it->first;
+        upload_package(package_path, it->second, empty_transfer_listener::get_one());
+        std::cout << "Uploading " << package_path.string() << " using " << it->second << std::endl;
 }
 
-void package_manager::save_json_downloads() {
+*/
+}
 
+void package_manager::save_json_state() {
+/*
     path downloads_json = _packages_directory / "downloads.json";
     json downloads;
 
@@ -400,6 +368,7 @@ void package_manager::save_json_downloads() {
     std::ofstream output_file(downloads_json.string());
     output_file << downloads;
     output_file.close();
+*/
 }
 
 void package_manager::initialize( const path& packages_directory) {
@@ -408,23 +377,14 @@ void package_manager::initialize( const path& packages_directory) {
         FC_THROW("Unable to create directory");    
     }
     _packages_directory = packages_directory;
-    load_json_uploads();
 
-    seeding_packages::iterator it = _seeding_packages.begin();
-    for (; it != _seeding_packages.end(); ++it) {
-        path package_path = _packages_directory / it->first;
-        upload_package(package_path, it->second, empty_transfer_listener::get_one());
-        std::cout << "Uploading " << package_path.string() << " using " << it->second << std::endl;
-    }
-
-    load_json_downloads();
+    restore_json_state();
 }
 
 
 package_manager::~package_manager() {
-    std::cout << "Saving current transfers..." << std::endl;
-    save_json_uploads();
-    save_json_downloads();
+    std::cout << "Saving package manager state..." << std::endl;
+    save_json_state();
 }
 
 package_manager::package_manager() {
@@ -580,10 +540,6 @@ package_manager::upload_package( const package_object& package,
         std::cout << "Upload error: " << ex.what() << std::endl;
     }
 
-
-    _seeding_packages.insert(make_pair(package.get_hash().str(), protocol_name));
-
-    save_json_uploads();
 
     return t.job_id;
 }

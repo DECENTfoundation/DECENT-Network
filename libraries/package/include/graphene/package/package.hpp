@@ -32,6 +32,7 @@ public:
 	bool verify_hash() const;
 
 	fc::ripemd160 get_hash() const { return _hash; }
+	int get_size() const;
 
 	bool is_valid() const { return _hash != fc::ripemd160(); }
 
@@ -174,12 +175,8 @@ public:
 	void print_all_transfers();
 
 private:
-
-	void load_json_uploads();
-	void save_json_uploads();
-
-	void load_json_downloads();
-	void save_json_downloads();
+	void restore_json_state();
+	void save_json_state();
 
 private:
 
@@ -189,7 +186,6 @@ private:
 	protocol_handler_map               _protocol_handlers;
 	transfer_jobs					   _all_transfers;
 
-	seeding_packages				   _seeding_packages;
 };
 
 

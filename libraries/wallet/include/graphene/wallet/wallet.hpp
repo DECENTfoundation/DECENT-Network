@@ -1538,6 +1538,26 @@ class wallet_api
                            fc::ripemd160 hash, vector<account_id_type> seeders, uint32_t quorum, fc::time_point_sec expiration,
                            string publishing_fee_asset, string publishing_fee_amount, string synopsis, d_integer secret,
                            decent::crypto::custody_data cd, bool broadcast);
+    /**
+     *
+     * @param author
+     * @param content_dir
+     * @param samples_dir
+     * @param protocol
+     * @param price_asset_symbol
+     * @param price_amount
+     * @param seeders
+     * @param expiration
+     * @param publishing_fee_asset
+     * @param publishing_fee_amount
+     * @param synopsis
+     * @param broadcast true to broadcast the transaction on the network
+     * @return
+     * @ingroup WalletCLI
+     */
+   signed_transaction submit_content_new(string author, string content_dir, string samples_dir, string protocol, string price_asset_symbol, string price_amount, vector<account_id_type> seeders, fc::time_point_sec expiration, string publishing_fee_symbol_name, string publishing_fee_amount, string synopsis, bool broadcast = false);
+
+ 
 
     /**
      *
@@ -1921,6 +1941,7 @@ FC_API( graphene::wallet::wallet_api,
         (receive_blind_transfer)
         (get_order_book)
         (submit_content)
+        (submit_content_new)
         (request_to_buy)
         (leave_rating)
         (ready_to_publish)
