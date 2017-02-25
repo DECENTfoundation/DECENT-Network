@@ -30,7 +30,8 @@ SOURCES += ../../../src/dgui/main_gui_wallet.cpp \
     ../../../src/dgui/decent_wallet_ui_gui_contentdetailsgeneral.cpp \
     ../../../src/dgui/decent_wallet_ui_gui_newcheckbox.cpp \
     ../../../src/dgui/decent_wallet_ui_gui_contentdetailsbougth.cpp \
-    ../../../src/dgui/decent_wallet_ui_gui_contentdetailsbase.cpp
+    ../../../src/dgui/decent_wallet_ui_gui_contentdetailsbase.cpp \
+    ../../../src/dgui/decent_wallet_ui_gui_jsonparserqt.cpp
 
 options1 = $$find(CONFIG, "TEST")
 
@@ -98,4 +99,5 @@ HEADERS += \
     ../../../src/dgui/decent_wallet_ui_gui_contentdetailsgeneral.hpp \
     ../../../src/dgui/decent_wallet_ui_gui_newcheckbox.hpp \
     ../../../src/dgui/decent_wallet_ui_gui_contentdetailsbougth.hpp \
-    ../../../src/dgui/decent_wallet_ui_gui_contentdetailsbase.hpp
+    ../../../src/dgui/decent_wallet_ui_gui_contentdetailsbase.hpp \
+    ../../../src/dgui/decent_wallet_ui_gui_jsonparserqt.hpp
