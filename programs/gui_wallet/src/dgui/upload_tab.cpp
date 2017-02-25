@@ -55,6 +55,152 @@ CryptoPP::AutoSeededRandomPool rng;
 
 
 
+
+namespace {
+    static std::size_t extra_space(const std::string& s) noexcept
+    {
+        return std::accumulate(s.begin(), s.end(), size_t{},
+                               [](size_t res, typename std::string::value_type c)
+        {
+            switch (c)
+            {
+                case '"':
+                case '\\':
+                case '\b':
+                case '\f':
+                case '\n':
+                case '\r':
+                case '\t':
+                {
+                    // from c (1 byte) to \x (2 bytes)
+                    return res + 1;
+                }
+
+                default:
+                {
+                    if (c >= 0x00 and c <= 0x1f)
+                    {
+                        // from c (1 byte) to \uxxxx (6 bytes)
+                        return res + 5;
+                    }
+
+                    return res;
+                }
+            }
+        });
+    }
+
+    std::string escape_string(const std::string& s)
+    {
+        const auto space = extra_space(s);
+        if (space == 0)
+        {
+            return s;
+        }
+
+        // create a result string of necessary size
+        std::string result(s.size() + space, '\\');
+        std::size_t pos = 0;
+
+        for (const auto& c : s)
+        {
+            switch (c)
+            {
+                // quotation mark (0x22)
+                case '"':
+                {
+                    result[pos + 1] = '"';
+                    pos += 2;
+                    break;
+                }
+
+                // reverse solidus (0x5c)
+                case '\\':
+                {
+                    // nothing to change
+                    pos += 2;
+                    break;
+                }
+
+                // backspace (0x08)
+                case '\b':
+                {
+                    result[pos + 1] = 'b';
+                    pos += 2;
+                    break;
+                }
+
+                // formfeed (0x0c)
+                case '\f':
+                {
+                    result[pos + 1] = 'f';
+                    pos += 2;
+                    break;
+                }
+
+                // newline (0x0a)
+                case '\n':
+                {
+                    result[pos + 1] = 'n';
+                    pos += 2;
+                    break;
+                }
+
+                // carriage return (0x0d)
+                case '\r':
+                {
+                    result[pos + 1] = 'r';
+                    pos += 2;
+                    break;
+                }
+
+                // horizontal tab (0x09)
+                case '\t':
+                {
+                    result[pos + 1] = 't';
+                    pos += 2;
+                    break;
+                }
+
+                default:
+                {
+                    if (c >= 0x00 and c <= 0x1f)
+                    {
+                        // convert a number 0..15 to its hex representation
+                        // (0..f)
+                        static const char hexify[16] =
+                        {
+                            '0', '1', '2', '3', '4', '5', '6', '7',
+                            '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'
+                        };
+
+                        // print character c as \uxxxx
+                        for (const char m :
+                    { 'u', '0', '0', hexify[c >> 4], hexify[c & 0x0f]
+                        })
+                        {
+                            result[++pos] = m;
+                        }
+
+                        ++pos;
+                    }
+                    else
+                    {
+                        // all other characters are added as-is
+                        result[pos++] = c;
+                    }
+                    break;
+                }
+            }
+        }
+
+        return result;
+    }
+
+}
+
+
+
 Upload_tab::Upload_tab()
         :
         m_info_widget(FieldsRows::NUM_FIELDS, 2),
@@ -483,7 +629,7 @@ void Upload_tab::uploadContent() {
     *submitCommand += " \"" + lifetime + "T23:59:59\"";                  //expiration
     *submitCommand += " DECENT";                                         //publishing_fee_asset
     *submitCommand += " 300";                                            //publishing_fee_amount
-    *submitCommand += " \"" + json::escape_string(synopsis) + "\"";                           //synopsis
+    *submitCommand += " \"" + escape_string(synopsis) + "\"";                           //synopsis
     *submitCommand += " true";                                           //broadcast
 
     
