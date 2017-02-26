@@ -2223,6 +2223,10 @@ public:
       }
 
 
+   optional<content_download_status> get_download_status(string consumer, string URI) {
+
+   }
+
 
 
     void download_content(string consumer, string URI, string content_dir, bool broadcast) {
@@ -2245,6 +2249,7 @@ public:
             tx.operations.push_back( request_op );
             set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
             tx.validate();
+            sign_transaction( tx, broadcast );
             
             package_manager::instance().download_package(URI, empty_transfer_listener::get_one());
             
@@ -4105,6 +4110,11 @@ void
 wallet_api::download_content(string consumer, string URI, string content_dir, bool broadcast)
 {
    return my->download_content(consumer, URI, content_dir, broadcast);
+}
+
+optional<content_download_status> wallet_api::get_download_status(string consumer, string URI)
+{
+   return my->get_download_status(consumer, URI);
 }
 
 signed_transaction

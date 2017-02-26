@@ -138,6 +138,17 @@ struct key_label
 };
 
 
+struct content_download_status
+{
+   int          total_key_parts;
+   int          received_key_parts;
+   int          total_download_bytes;
+   int          received_download_bytes;
+
+};
+
+
+
 struct by_label;
 struct by_key;
 typedef multi_index_container<
@@ -1574,6 +1585,15 @@ class wallet_api
      * @ingroup WalletCLI
      */
      void download_content(string consumer, string URI, string content_dir, bool broadcast = false);
+    
+    /**
+     *
+     * @param consumer
+     * @param URI
+     * @return
+     * @ingroup WalletCLI
+     */
+     optional<content_download_status> get_download_status(string consumer, string URI);
 
  
 
@@ -1849,6 +1869,13 @@ FC_REFLECT( graphene::wallet::brain_key_info,
             (pub_key)
           )
 
+FC_REFLECT (graphene::wallet::content_download_status, 
+              (total_key_parts)
+              (received_key_parts)
+              (total_download_bytes)
+              (received_download_bytes)
+            )
+
 FC_REFLECT( graphene::wallet::exported_account_keys, (account_name)(encrypted_private_keys)(public_keys) )
 
 FC_REFLECT( graphene::wallet::exported_keys, (password_checksum)(account_keys) )
@@ -1969,6 +1996,7 @@ FC_API( graphene::wallet::wallet_api,
         (receive_blind_transfer)
         (get_order_book)
         (download_content)
+        (get_download_status)
         (submit_content)
         (submit_content_new)
         (request_to_buy)

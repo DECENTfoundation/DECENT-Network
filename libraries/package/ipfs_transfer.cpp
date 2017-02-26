@@ -154,12 +154,14 @@ void ipfs_transfer::download_package(transfer_id id, const std::string& url, tra
 
 	create_directories(package_manager::instance().get_packages_path() / package_name);
 
-    ipfs::Json object;
-    _client->ObjectGet(hash, &object);
-
+    
     _listener->on_download_started(_id);
 
-	_my_thread->async([this, package_name, object] () {
+	_my_thread->async([this, package_name, hash] () {
+
+        ipfs::Json object;
+        _client->ObjectGet(hash, &object);
+
 		
 	    ipfs::Json links = object.at("Links");
 
