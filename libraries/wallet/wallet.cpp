@@ -2224,6 +2224,35 @@ public:
 
 
 
+
+    void download_content(string consumer, string URI, string content_dir, bool broadcast) {
+        try {
+            optional<content_object> content = _remote_db->get_content( URI );
+            account_object consumer_account = get_account( consumer );
+
+            if (!content) {
+                FC_THROW("Invalid content URI");
+            }
+            
+            request_to_buy_operation request_op;
+            request_op.consumer = consumer_account.id;
+            request_op.URI = URI;
+            FC_ASSERT( _wallet.priv_el_gamal_key != decent::crypto::d_integer::Zero(), "Private ElGamal key is not imported. " );
+            request_op.pubKey = decent::crypto::get_public_el_gamal_key( _wallet.priv_el_gamal_key );
+            request_op.price = content->price;
+            
+            signed_transaction tx;
+            tx.operations.push_back( request_op );
+            set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
+            tx.validate();
+            
+            package_manager::instance().download_package(URI, empty_transfer_listener::get_one());
+            
+        } FC_CAPTURE_AND_RETHROW( (consumer)(URI)(content_dir)(broadcast) );
+
+    }
+
+
    signed_transaction request_to_buy(string consumer,
                                      string URI,
                                      string price_asset_symbol,
@@ -4069,6 +4098,12 @@ signed_transaction
 wallet_api::submit_content_new(string author, string content_dir, string samples_dir, string protocol, string price_asset_symbol, string price_amount, vector<account_id_type> seeders, fc::time_point_sec expiration, string publishing_fee_symbol_name, string publishing_fee_amount, string synopsis, bool broadcast)
 {
    return my->submit_content_new(author, content_dir, samples_dir, protocol, price_asset_symbol, price_amount, seeders, expiration, publishing_fee_symbol_name, publishing_fee_amount, synopsis, broadcast);
+}
+
+void
+wallet_api::download_content(string consumer, string URI, string content_dir, bool broadcast)
+{
+   return my->download_content(consumer, URI, content_dir, broadcast);
 }
 
 signed_transaction

@@ -1557,6 +1557,17 @@ class wallet_api
      */
    signed_transaction submit_content_new(string author, string content_dir, string samples_dir, string protocol, string price_asset_symbol, string price_amount, vector<account_id_type> seeders, fc::time_point_sec expiration, string publishing_fee_symbol_name, string publishing_fee_amount, string synopsis, bool broadcast = false);
 
+    /**
+     *
+     * @param consumer
+     * @param URI
+     * @param content_dir
+     * @param broadcast true to broadcast the transaction on the network
+     * @return
+     * @ingroup WalletCLI
+     */
+     void download_content(string consumer, string URI, string content_dir, bool broadcast = false);
+
  
 
     /**
@@ -1940,6 +1951,7 @@ FC_API( graphene::wallet::wallet_api,
         (blind_history)
         (receive_blind_transfer)
         (get_order_book)
+        (download_content)
         (submit_content)
         (submit_content_new)
         (request_to_buy)
