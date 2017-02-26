@@ -27,11 +27,11 @@ graphene::chain::database &seeding_plugin_impl::database() {
 void seeding_plugin_impl::handle_content_submit(const operation_history_object &op_obj) {
    graphene::chain::database &db = database();
 
-   elog("seeding_plugin_impl::handle_content_submit starting for operation ${o} from block ${b}, highest known block is ${h}, head is ${i}",
+   ilog("seeding_plugin_impl::handle_content_submit starting for operation ${o} from block ${b}, highest known block is ${h}, head is ${i}",
         ("o",op_obj)("b", op_obj.block_num)("h", db.highest_know_block_number())("i", db.head_block_num()) );
 
    if( op_obj.op.which() == operation::tag<content_submit_operation>::value ) {
-      elog("seeding plugin:  handle_content_submit() handling new content");
+      ilog("seeding plugin:  handle_content_submit() handling new content");
       const content_submit_operation &cs_op = op_obj.op.get<content_submit_operation>();
       if(cs_op.expiration < fc::time_point::now())
          return;
@@ -95,7 +95,7 @@ void seeding_plugin_impl::handle_request_to_buy(const operation_history_object &
    const auto &sritr = sidx.find(sitr->seeder);
    FC_ASSERT(sritr != sidx.end());
 
-   elog("seeding plugin: this is my content...");
+   ilog("seeding plugin: this is my content...");
    //ok, this is our seeding... we shall do some checks and generate deliver keys out of it...
    account_object seeder_account = db.get<account_object>(sitr->seeder);
 
@@ -123,7 +123,7 @@ void seeding_plugin_impl::handle_request_to_buy(const operation_history_object &
    const auto &bidx = db.get_index_type<graphene::chain::buying_index>().indices().get<graphene::chain::by_URI_consumer>();
    const auto &bitr = bidx.find(std::make_tuple( rtb_op.URI, rtb_op.consumer ));
    if(bitr == bidx.end()){
-      elog("no such buying_object for ${u}, ${c}",("u", rtb_op.URI )("c", rtb_op.consumer ));
+      ilog("no such buying_object for ${u}, ${c}",("u", rtb_op.URI )("c", rtb_op.consumer ));
       return;
       //TODO_DECENT very ugly hack, rework! - not needed anymore, but we shall keep the error message
       //op.buying = db.get_index_type<graphene::chain::buying_index>().get_next_id();
@@ -150,21 +150,21 @@ void seeding_plugin_impl::handle_request_to_buy(const operation_history_object &
 void seeding_plugin_impl::handle_commited_operation(const operation_history_object &op_obj, bool sync_mode) {
    graphene::chain::database &db = database();
 
-   elog("seeding_plugin_impl::handle_commited_operation starting for operation ${o} from block ${b}, highest known block is ${h}, head is ${i}, syncing ${s}, sync_mode ${m}",
-        ("o",op_obj)("b", op_obj.block_num)("h", db.highest_know_block_number())("i", db.head_block_num())("s", !_self.app().is_finished_syncing())("m",sync_mode) );
+//   elog("seeding_plugin_impl::handle_commited_operation starting for operation ${o} from block ${b}, highest known block is ${h}, head is ${i}, syncing ${s}, sync_mode ${m}",
+//        ("o",op_obj)("b", op_obj.block_num)("h", db.highest_know_block_number())("i", db.head_block_num())("s", !_self.app().is_finished_syncing())("m",sync_mode) );
 
    if( op_obj.op.which() == operation::tag<request_to_buy_operation>::value ) {
       //TODO_DECENT - does not work as expected...
       if( sync_mode ) {
-         elog("seeding_plugin_impl::handle_commited_operation exiting, not producing yet");
+         ilog("seeding_plugin_impl::handle_commited_operation exiting, not producing yet");
          return;
       }
-      elog("seeding plugin:  handle_commited_operation() handling request_to_buy");
+      ilog("seeding plugin:  handle_commited_operation() handling request_to_buy");
       handle_request_to_buy(op_obj);
    }
 
    if( op_obj.op.which() == operation::tag<content_submit_operation>::value ) {
-      elog("seeding plugin:  handle_commited_operation() handling content_submit");
+      ilog("seeding plugin:  handle_commited_operation() handling content_submit");
       //in case of content submit we don't really care if the sync has been finished or not...
       handle_content_submit(op_obj);
    }
@@ -234,9 +234,9 @@ seeding_plugin_impl::generate_por(my_seeding_id_type so_id, graphene::package::p
       tx.sign(sritr->privKey, _chain_id);
       idump((tx));
 
-      main_thread->async([this, tx]() { elog("seeding plugin_impl:  generate_por lambda - pushing transaction"); database().push_transaction(tx); });
+      main_thread->async([this, tx]() { ilog("seeding plugin_impl:  generate_por lambda - pushing transaction"); database().push_transaction(tx); });
 
-      elog("broadcasting out PoR");
+      ilog("broadcasting out PoR");
       _self.p2p_node().broadcast_transaction(tx);
 
       if(  fc::time_point( mso.expiration ) + fc::microseconds( POR_WAKEUP_INTERVAL_SEC * 1000000 ) <= fc::time_point::now() ){
@@ -279,7 +279,7 @@ void seeding_plugin_impl::send_ready_to_publish()
       tx.sign(sritr->privKey, _chain_id);
       idump((tx));
       tx.validate();
-      main_thread->async( [this, tx](){elog("seeding plugin_impl:  generate_por lambda - pushing transaction"); database().push_transaction(tx);} );
+      main_thread->async( [this, tx](){ilog("seeding plugin_impl:  generate_por lambda - pushing transaction"); database().push_transaction(tx);} );
       _self.p2p_node().broadcast_transaction(tx);
       sritr++;
    }
@@ -321,7 +321,7 @@ void seeding_plugin::plugin_startup()
    }
    ilog("seeding plugin:  plugin_startup() start");
    my->restart_downloads();
-   my->service_thread->schedule([this](){ilog("generating first ready to publish");my->send_ready_to_publish(); }, ( fc::time_point::now()  + fc::microseconds(15000000)), "Seeding plugin RtP generate");
+   my->service_thread->schedule([this](){ilog("generating first ready to publish");my->send_ready_to_publish(); }, ( fc::time_point::now()  + fc::microseconds(300000000)), "Seeding plugin RtP generate");
    ilog("seeding plugin:  plugin_startup() end");
 }
 

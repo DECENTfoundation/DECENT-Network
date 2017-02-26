@@ -2696,11 +2696,12 @@ brain_key_info wallet_api::suggest_brain_key()const
    return result;
 }
 
-std::pair<d_integer, d_integer> wallet_api::generate_el_gamal_keys()
+el_gamal_key_pair wallet_api::generate_el_gamal_keys()
 {
-   d_integer priv = decent::crypto::generate_private_el_gamal_key();
-   d_integer pub = decent::crypto::get_public_el_gamal_key( priv );
-   return std::make_pair(priv, pub);
+   el_gamal_key_pair ret;
+   ret.private_key = decent::crypto::generate_private_el_gamal_key();
+   ret.public_key = decent::crypto::get_public_el_gamal_key( ret.private_key );
+   return ret;
 }
 
 string wallet_api::serialize_transaction( signed_transaction tx )const
@@ -3996,6 +3997,12 @@ vector<buying_object> wallet_api::get_open_buyings_by_consumer( const account_id
 vector<buying_object> wallet_api::get_buying_history_objects_by_consumer( const account_id_type& consumer )const
 {
    return my->_remote_db->get_buying_history_objects_by_consumer( consumer );
+}
+
+optional<buying_object> wallet_api::get_buying_by_consumer_URI( const string& account, const string & URI )const
+{
+   account_id_type acc = get_account( account ).id;
+   return my->_remote_db->get_buying_by_consumer_URI( acc, URI );
 }
 
 optional<content_object> wallet_api::get_content( const string& URI )const

@@ -215,6 +215,12 @@ struct exported_keys
     vector<exported_account_keys> account_keys;
 };
 
+struct el_gamal_key_pair
+{
+   d_integer private_key;
+   d_integer public_key;
+};
+
 struct approval_delta
 {
    vector<string> active_approvals_to_add;
@@ -1621,7 +1627,7 @@ class wallet_api
      * @return
      * @ingroup WalletCLI
      */
-      std::pair<d_integer, d_integer> generate_el_gamal_keys();
+      el_gamal_key_pair generate_el_gamal_keys();
 
       /**
        * @brief Get a list of open buyings
@@ -1653,6 +1659,15 @@ class wallet_api
        * @ingroup WalletCLI
        */
       vector<buying_object> get_buying_history_objects_by_consumer( const account_id_type& consumer )const;
+
+       /**
+       * @brief Get buying (open or history) by consumer and URI
+       * @param consumer Consumer of the buying to retrieve
+       * @param URI URI of the buying to retrieve
+       * @return buying_objects corresponding to the provided consumer
+       * @ingroup WalletCLI
+       */
+      optional<buying_object> get_buying_by_consumer_URI( const string& account, const string & URI )const;
 
       /**
        * @brief Get a content by URI
@@ -1779,7 +1794,7 @@ FC_REFLECT( graphene::wallet::blind_confirmation::output, (label)(pub_key)(decry
 FC_REFLECT( graphene::wallet::blind_confirmation, (trx)(outputs) )
 
 FC_REFLECT( graphene::wallet::plain_keys, (keys)(checksum) )
-
+FC_REFLECT( graphene::wallet::el_gamal_key_pair, (private_key)(public_key) )
 FC_REFLECT( graphene::wallet::wallet_data,
             (chain_id)
             (my_accounts)
@@ -1932,6 +1947,7 @@ FC_API( graphene::wallet::wallet_api,
         (get_open_buyings_by_URI)
         (get_open_buyings_by_consumer)
         (get_buying_history_objects_by_consumer)
+        (get_buying_by_consumer_URI)
         (get_content)
         (list_content_by_author)
         (list_content)

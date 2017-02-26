@@ -204,8 +204,9 @@ bool database::_push_block(const signed_block &new_block, bool sync_mode)
       _fork_db.remove(new_block.id());
       throw;
    }
+   auto session = _undo_db.start_undo_session();
    try {
-      auto session = _undo_db.start_undo_session();
+
       for( const auto &trx : new_block.transactions ) {
          for( const auto &op : trx.operations ) {
             operation_history_object oh(op);
@@ -217,8 +218,13 @@ bool database::_push_block(const signed_block &new_block, bool sync_mode)
                on_new_commited_operation(oh);
          }
       }
-      session.commit();
+      session.merge();
    } catch ( const fc::exception& e ){
+      // The plugin database might become inconsisten with the chain in case of exception.
+      // However, the recovery of previous state is not an option as the block was accepted ok and we would desync with the rest of the network.
+      // All we can do is to report and let the plugin get corrected.
+      // The pop_block expects two commits in the _push_block() in all cases. TODO_DECENT
+      session.merge();
       elog("Failed to notify listeners on commited operation:\n${e}", ("e", e.to_detail_string()));
    }
    return false;
@@ -423,6 +429,7 @@ signed_block database::_generate_block(
  */
 void database::pop_block()
 { try {
+   auto current_block_no = head_block_num();
    _pending_tx_session.reset();
    auto head_id = head_block_id();
    optional<signed_block> head_block = fetch_block_by_id( head_id );

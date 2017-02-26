@@ -23,7 +23,7 @@ using decent::crypto::d_integer;
       asset price;
       vector<account_id_type> seeders_answered;
       vector<decent::crypto::ciphertext_string> key_particles;
-      d_integer pubKey;
+      d_integer_string pubKey;
       time_point_sec expiration_time;
 
       bool expired = false;
