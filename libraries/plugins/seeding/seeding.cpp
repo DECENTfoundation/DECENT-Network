@@ -154,7 +154,6 @@ void seeding_plugin_impl::handle_commited_operation(const operation_history_obje
 //        ("o",op_obj)("b", op_obj.block_num)("h", db.highest_know_block_number())("i", db.head_block_num())("s", !_self.app().is_finished_syncing())("m",sync_mode) );
 
    if( op_obj.op.which() == operation::tag<request_to_buy_operation>::value ) {
-      //TODO_DECENT - does not work as expected...
       if( sync_mode ) {
          ilog("seeding_plugin_impl::handle_commited_operation exiting, not producing yet");
          return;
