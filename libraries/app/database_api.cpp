@@ -132,6 +132,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       vector<buying_object> get_open_buyings()const;
       vector<buying_object> get_open_buyings_by_URI(const string& URI)const;
       vector<buying_object> get_open_buyings_by_consumer(const account_id_type& consumer)const;
+      optional<buying_object> get_buying_by_consumer_URI( const account_id_type& consumer, const string& URI) const;
       vector<buying_object> get_buying_history_objects_by_consumer( const account_id_type& consumer )const;
       optional<content_object> get_content( const string& URI )const;
       vector<content_object> list_content_by_author( const account_id_type& author )const;
@@ -1565,12 +1566,30 @@ vector<buying_object> database_api_impl::get_buying_history_objects_by_consumer 
       result.reserve(distance(range.first, range.second));
 
       std::for_each(range.first, range.second, [&](const buying_object &element) {
-         if( element.expiration_time < _db.head_block_time() )
             result.emplace_back(element);
       });
       return result;
    }
    FC_CAPTURE_AND_RETHROW( (consumer) );
+}
+
+optional<buying_object> database_api::get_buying_by_consumer_URI( const account_id_type& consumer, const string& URI )const
+{
+   return my->get_buying_by_consumer_URI( consumer, URI );
+}
+
+optional <buying_object> database_api_impl::get_buying_by_consumer_URI( const account_id_type& consumer, const string& URI)const
+{
+   try{
+      const auto & idx = _db.get_index_type<buying_index>().indices().get<by_consumer_URI>();
+      auto itr = idx.find(std::make_tuple(consumer, URI));
+      vector<buying_object> result;
+      if(itr!=idx.end()){
+         return *itr;
+      }
+      return optional<buying_object>();
+
+   }FC_CAPTURE_AND_RETHROW( (consumer)(URI) );
 }
 
 optional<content_object> database_api::get_content(const string& URI)const
@@ -1646,7 +1665,8 @@ vector<content_summary> database_api_impl::list_content( const string& URI_begin
    while(count-- && itr != idx.end())
    {
       const auto& account = idx2.find(itr->author);
-      result.emplace_back( content.set( *itr++ , *account ) );
+      result.emplace_back( content.set( *itr , *account ) );
+      ++itr;
    }
 
    return result;

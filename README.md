@@ -64,11 +64,10 @@ For Ubuntu 16.04 LTS (for extra actions needed for 14.04 LTS, 14.10, or 16.10 se
 At this point, `$CC` and `$CXX` should be set to your compilers, `cmake` command should be picked up from `$CMAKE_ROOT/bin`, and CMake configure should find the Boost distribution in the exported `$BOOST_ROOT`.
 
 
-For Fedora 25 or later, execute in console:
+For Fedora 24 or later, execute in console:
 
-    $ sudo yum makecache
-    $ sudo yum install automake autoconf libtool make cmake gcc clang flex bison doxygen gettext-devel git readline-devel cryptopp-devel gmp-devel libdb-devel libdb-cxx-devel openssl-devel ncurses-devel boost-devel boost-static
-
+    $ sudo dnf clean metadata
+    $ sudo dnf install automake autoconf libtool make cmake gcc clang flex bison doxygen gettext-devel git qt5-qtbase-devel readline-devel cryptopp-devel gmp-devel libdb-devel libdb-cxx-devel openssl-devel libcurl-devel ncurses-devel boost-devel boost-static python-devel libicu-devel bzip2-devel
 
 ### Installing prerequisites in macOS
 
@@ -80,7 +79,7 @@ Then, execute in console:
     $ brew doctor
     $ brew tap homebrew/versions
     $ brew update
-    $ brew install automake autoconf libtool cmake berkeley-db boost160 qt5 cryptopp doxygen byacc flex gettext git pbc gmp ipfs openssl readline
+    $ brew install automake autoconf libtool cmake berkeley-db boost@1.60 qt5 cryptopp doxygen byacc flex gettext git pbc gmp ipfs openssl readline
 
 ### Obtaining the sources, building, and installing Decent in Unix (macOS or Linux)
 
@@ -123,28 +122,28 @@ Starting Decent
 
 On first run `witness_node` will create `witness_node_data_dir` in the current working directory, if doesn't exist already.
 
-    $ mkdir -p ~/dev/DECENTfoundation/DECENT-Network-working_dir
-    $ cd ~/dev/DECENTfoundation/DECENT-Network-working_dir
+    $ mkdir -p ~/dev/DECENTfoundation/DECENT-Network-working-dir
+    $ cd ~/dev/DECENTfoundation/DECENT-Network-working-dir
     $ ~/dev/DECENTfoundation/DECENT-Network-build/artifacts/prefix/bin/witness_node
 
 Now press Ctrl-C to stop `witness_node`.
 
-Remove `~/dev/DECENTfoundation/DECENT-Network-working_dir/witness_node_data_dir/blockchain` directory.
-Edit `~/dev/DECENTfoundation/DECENT-Network-working_dir/witness_node_data_dir/config.ini` to contain the following lines:
+Remove `~/dev/DECENTfoundation/DECENT-Network-working-dir/witness_node_data_dir/blockchain` directory.
+Edit `~/dev/DECENTfoundation/DECENT-Network-working-dir/witness_node_data_dir/config.ini` to contain the following lines:
 
     seed-node = 185.8.165.21:33142
     rpc-endpoint = 127.0.0.1:8090
 
 Then, run the witness node again:
 
-    $ cd ~/dev/DECENTfoundation/DECENT-Network-working_dir
+    $ cd ~/dev/DECENTfoundation/DECENT-Network-working-dir
     $ ~/dev/DECENTfoundation/DECENT-Network-build/artifacts/prefix/bin/witness_node --genesis-json ~/dev/DECENTfoundation/DECENT-Network/genesis.json --replay-blockchain
 
 This will launch the witness node with the default genesis. Replay blockchain is a workaround, there is currently a bug than not all saved objects are restored correctly after restart. 
 
 Then, in a separate console, start the command-line wallet by executing:
 
-    $ cd ~/dev/DECENTfoundation/DECENT-Network-working_dir
+    $ cd ~/dev/DECENTfoundation/DECENT-Network-working-dir
     $ ~/dev/DECENTfoundation/DECENT-Network-build/artifacts/prefix/bin/cli_wallet
 
 To set your initial password to `mypassword`, execute:
@@ -189,9 +188,11 @@ The list of the test accounts is here:
       "pub_key": "DCT5w8Hrt92G7hZmZJgMSeZGtW3tQQj8fqsJmrtffnrHyWNY7To7y"
     }
 
-After importing the respective key(s), restart cli_wallet. There is currently a bug in the wallet and the keys are not imported to the internal structures right after import.
+After importing the respective key(s), you will need to restart cli_wallet: use Ctrl-D to cleanly exit from it, then start it again.
 
-A list of CLI wallet commands is available [here](https://github.com/cryptonomex/graphene/blob/master/libraries/wallet/include/graphene/wallet/wallet.hpp).
+There is currently a bug in cli_wallet when the keys are not imported to the internal structures right after import.
+
+The list of cli_wallet commands is available [here](https://github.com/cryptonomex/graphene/blob/master/libraries/wallet/include/graphene/wallet/wallet.hpp).
 
 
 Witness node

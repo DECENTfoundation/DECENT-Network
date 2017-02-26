@@ -2855,11 +2855,12 @@ brain_key_info wallet_api::suggest_brain_key()const
    return result;
 }
 
-std::pair<d_integer, d_integer> wallet_api::generate_el_gamal_keys()
+el_gamal_key_pair wallet_api::generate_el_gamal_keys()
 {
-   d_integer priv = decent::crypto::generate_private_el_gamal_key();
-   d_integer pub = decent::crypto::get_public_el_gamal_key( priv );
-   return std::make_pair(priv, pub);
+   el_gamal_key_pair ret;
+   ret.private_key = decent::crypto::generate_private_el_gamal_key();
+   ret.public_key = decent::crypto::get_public_el_gamal_key( ret.private_key );
+   return ret;
 }
 
 string wallet_api::serialize_transaction( signed_transaction tx )const
@@ -4169,6 +4170,12 @@ vector<buying_object> wallet_api::get_buying_history_objects_by_consumer( const 
    return my->_remote_db->get_buying_history_objects_by_consumer( consumer );
 }
 
+optional<buying_object> wallet_api::get_buying_by_consumer_URI( const string& account, const string & URI )const
+{
+   account_id_type acc = get_account( account ).id;
+   return my->_remote_db->get_buying_by_consumer_URI( acc, URI );
+}
+
 optional<content_object> wallet_api::get_content( const string& URI )const
 {
    return my->_remote_db->get_content( URI );
@@ -4212,7 +4219,7 @@ vector<string> wallet_api::list_packages( ) const
 
 void wallet_api::packages_path(const std::string& packages_dir) const {
    my->_wallet.packages_path = packages_dir;
-   package_manager::instance().initialize(packages_dir);
+   package_manager::instance().set_packages_path(packages_dir);
 }
 
 std::pair<string, decent::crypto::custody_data>  wallet_api::create_package(const std::string& content_dir, const std::string& samples_dir, const d_integer& aes_key) const {

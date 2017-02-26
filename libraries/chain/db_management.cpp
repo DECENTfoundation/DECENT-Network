@@ -93,6 +93,7 @@ void database::reindex(fc::path data_dir, const genesis_state_type& initial_allo
                           skip_tapos_check |
                           skip_witness_schedule_check |
                           skip_authority_check);
+
    }
    _undo_db.enable();
    auto end = fc::time_point::now();
@@ -128,10 +129,14 @@ void database::open(
          idump((last_block->id())(last_block->block_num()));
          if( last_block->id() != head_block_id() )
          {
-              FC_ASSERT( head_block_num() == 0, "last block ID does not match current chain state" );
+            idump((last_block));
+            idump((get( dynamic_global_property_id_type() )));
+            idump((_fork_db.head()->data));
+            idump((_fork_db.head()->num));
+
+            FC_ASSERT( head_block_num() == 0, "last block ID does not match current chain state" );
          }
       }
-      //idump((head_block_id())(head_block_num()));
    }
    FC_CAPTURE_LOG_AND_RETHROW( (data_dir) )
 }
@@ -140,7 +145,6 @@ void database::close(bool rewind)
 {
    // TODO:  Save pending tx's on close()
    clear_pending();
-
    // pop all of the blocks that we can given our undo history, this should
    // throw when there is no more undo history to pop
    if( rewind )
@@ -148,10 +152,8 @@ void database::close(bool rewind)
       try
       {
          uint32_t cutoff = get_dynamic_global_properties().last_irreversible_block_num;
-
          while( head_block_num() > cutoff )
          {
-         //   elog("pop");
             block_id_type popped_block_id = head_block_id();
             pop_block();
             _fork_db.remove(popped_block_id); // doesn't throw on missing
@@ -163,9 +165,12 @@ void database::close(bool rewind)
             {
             }
          }
-      }
-      catch (...)
+      } catch (fc::exception er){
+         elog("database::close Exception caught");
+         elog( "${details}", ("details",er.to_detail_string()) );
+      } catch (...)
       {
+         elog("database::close Exception caught");
       }
    }
 

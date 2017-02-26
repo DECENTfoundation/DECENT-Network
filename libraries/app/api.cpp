@@ -138,7 +138,7 @@ namespace graphene { namespace app {
 
     void network_broadcast_api::broadcast_block( const signed_block& b )
     {
-       _app.chain_database()->push_block(b);
+       _app.chain_database()->push_block(b, 0, false);
        _app.p2p_node()->broadcast( net::block_message( b ));
     }
 

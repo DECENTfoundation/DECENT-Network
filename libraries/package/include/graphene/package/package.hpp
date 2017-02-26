@@ -1,22 +1,21 @@
 
 #pragma once
 
-#include <fc/optional.hpp>
-#include <fc/signals.hpp>
-#include <fc/time.hpp>
-
-#include <fc/crypto/ripemd160.hpp>
-#include <fc/crypto/sha512.hpp>
-
-#include <fc/network/url.hpp>
-
-#include <boost/filesystem.hpp>
 #include <decent/encrypt/crypto_types.hpp>
 #include <decent/encrypt/custodyutils.hpp>
 
+#include <fc/optional.hpp>
+#include <fc/signals.hpp>
+#include <fc/time.hpp>
+#include <fc/thread/mutex.hpp>
+#include <fc/crypto/ripemd160.hpp>
+#include <fc/crypto/sha512.hpp>
+#include <fc/network/url.hpp>
 
-namespace graphene { 
-namespace package {
+#include <boost/filesystem.hpp>
+
+
+namespace graphene { namespace package {
 
 class package_object {
 public:
@@ -50,7 +49,6 @@ public:
 	typedef int   transfer_id;
 
 public:
-
 	struct transfer_progress {
 		transfer_progress() {}
 		transfer_progress(int tb, int cb, int cs) : total_bytes(tb), current_bytes(cb), current_speed(cs) {}
@@ -65,24 +63,18 @@ public:
 		virtual void on_download_started(transfer_id id) = 0;
 		virtual void on_download_finished(transfer_id id, package_object downloaded_package) = 0;
 		virtual void on_download_progress(transfer_id id, transfer_progress progress) = 0;
-
 		virtual void on_upload_started(transfer_id id, const std::string& url) = 0;
-
 		virtual void on_error(transfer_id id, std::string error) = 0;
 	};
-
 
 public:
 	virtual void upload_package(transfer_id id, const package_object& package, transfer_listener* listener) = 0;
 	virtual void download_package(transfer_id id, const std::string& url, transfer_listener* listener) = 0;
 	virtual void print_status() = 0;
 	virtual transfer_progress get_progress() = 0;
-
-	virtual std::string       get_transfer_url() = 0;
-
-	virtual package_transfer_interface* clone() = 0;
+	virtual std::string get_transfer_url() = 0;
+	virtual std::shared_ptr<package_transfer_interface> clone() = 0;
 };
-
 
 
 
@@ -108,41 +100,36 @@ public:
 
 class package_manager {
 private:
-
 	struct transfer_job {
 		enum transfer_type {
 			DOWNLOAD,
 			UPLOAD
 		};
 
-		package_transfer_interface* 					transport;
-		package_transfer_interface::transfer_listener*  listener;	
-		package_transfer_interface::transfer_id			job_id;	
-		transfer_type									job_type;
+        std::shared_ptr<package_transfer_interface>     transport;
+		package_transfer_interface::transfer_listener*  listener;
+		package_transfer_interface::transfer_id         job_id;
+		transfer_type                                   job_type;
 	};
 
 private:
+	typedef std::map<std::string, std::shared_ptr<package_transfer_interface>>  protocol_handler_map;
+	typedef std::map<std::string, std::string>                                  seeding_packages;
+	typedef std::vector<transfer_job>                                           transfer_jobs;
 
-	typedef std::map<std::string, package_transfer_interface*> 		protocol_handler_map;
-	typedef std::map<std::string, std::string> 						seeding_packages;
-	typedef std::vector<transfer_job> 								transfer_jobs;
 private:
 	package_manager();
 	package_manager(const package_manager&) {}
 	~package_manager();
 
 public:
-
 	static package_manager& instance() {
 		static package_manager pac_man;
 		return pac_man;
 	}
 
 public:
-
-	void initialize( const boost::filesystem::path& packages_directory);
-
-	package_object create_package( const boost::filesystem::path& content_path, 
+	package_object create_package( const boost::filesystem::path& content_path,
 								   const boost::filesystem::path& samples, 
 								   const fc::sha512& key,
                           		   decent::crypto::custody_data& cd);
@@ -151,16 +138,12 @@ public:
 						 const package_object& package,
 						 const fc::sha512& key);
 
-
-
 	package_transfer_interface::transfer_id upload_package( const package_object& package, 
 															const std::string& protocol_name,
 															package_transfer_interface::transfer_listener& listener );
 
 	package_transfer_interface::transfer_id download_package( const std::string& url,
 															  package_transfer_interface::transfer_listener& listener );
-
-
 	
 	std::vector<package_object> get_packages();
 	package_object				get_package_object(fc::ripemd160 hash);
@@ -168,30 +151,32 @@ public:
 
 	std::string					get_transfer_url(package_transfer_interface::transfer_id id);
 
+    void set_packages_path(const boost::filesystem::path& packages_path);
+    boost::filesystem::path get_packages_path() const;
 
-	decent::crypto::custody_utils& get_custody_utils() { return _custody_utils; }
-	boost::filesystem::path get_packages_path() const { return _packages_directory; }
-	
-	void print_all_transfers();
+    void set_libtorrent_config(const boost::filesystem::path& libtorrent_config_file);
+    boost::filesystem::path get_libtorrent_config() const;
+
+    decent::crypto::custody_utils& get_custody_utils() { return _custody_utils; }
+    void print_all_transfers();
+
 
 private:
 	void restore_json_state();
 	void save_json_state();
 
+
 private:
-
-
-	boost::filesystem::path            _packages_directory;
-	decent::crypto::custody_utils      _custody_utils;
+    mutable fc::mutex                  _mutex;
+	boost::filesystem::path            _packages_path;
+    boost::filesystem::path            _libtorrent_config_file;
+    decent::crypto::custody_utils      _custody_utils;
 	protocol_handler_map               _protocol_handlers;
+
 	transfer_jobs					   _all_transfers;
 
+    
 };
 
 
-
-
-
-
-} 
-}
+} } // graphene::package

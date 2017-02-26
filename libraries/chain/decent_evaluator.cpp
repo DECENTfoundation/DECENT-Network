@@ -31,12 +31,10 @@ namespace graphene { namespace chain {
       FC_ASSERT( db().head_block_time() <= o.expiration);
       fc::microseconds duration = (o.expiration - db().head_block_time() );
       uint64_t days = duration.to_seconds() / 3600 / 24;
-      ilog("yo: ${n}", ("n", days));
-      idump((total_price_per_day));
+
       FC_ASSERT( days*total_price_per_day <= o.publishing_fee );
       //TODO_DECENT - URI check, synopsis check
       //TODO_DECENT - what if it is resubmit? Drop 2
-      //TODO_DECENT - return escrow after expiration
    }FC_CAPTURE_AND_RETHROW( (o) ) }
    
    void_result content_submit_evaluator::do_apply(const content_submit_operation& o )
@@ -100,8 +98,6 @@ namespace graphene { namespace chain {
            bo.price = o.price;
       });
       db().adjust_balance( o.consumer, -o.price );
-      elog("Created bying_object with id ${i}", ("i", object.id));
-      edump((object));
    }FC_CAPTURE_AND_RETHROW( (o) ) }
 
    void_result deliver_keys_evaluator::do_evaluate(const deliver_keys_operation& o )
@@ -228,15 +224,15 @@ namespace graphene { namespace chain {
    {try{
       auto& idx = db().get_index_type<content_index>().indices().get<by_URI>();
       const auto& content = idx.find( o.URI );
-      FC_ASSERT( content != idx.end() );
-      FC_ASSERT( content->expiration > db().head_block_time() );
+      FC_ASSERT( content != idx.end(), "content not found" );
+      FC_ASSERT( content->expiration > db().head_block_time(), "content expired" );
       //verify that the seed is not to old...
       fc::ripemd160 bid = db().get_block_id_for_num(o.proof.reference_block);
       for(int i = 0; i < 5; i++)
          FC_ASSERT(bid._hash[i] == o.proof.seed.data[i],"Block ID does not match; wrong chain?");
-      FC_ASSERT(db().head_block_num() <= o.proof.reference_block - 6,"Block reference is too old");
+      FC_ASSERT(db().head_block_num() <= o.proof.reference_block + 6,"Block reference is too old");
       FC_ASSERT( _custody_utils.verify_by_miner( content->cd, o.proof ) == 0, "Invalid proof of delivery" );
-      elog("proof_of_custody OK");
+      ilog("proof_of_custody OK");
    }FC_CAPTURE_AND_RETHROW( (o) ) }
    
    void_result proof_of_custody_evaluator::do_apply(const proof_of_custody_operation& o )
@@ -244,8 +240,10 @@ namespace graphene { namespace chain {
       //pay the seeder
       auto& idx = db().get_index_type<content_index>().indices().get<by_URI>();
       const auto& content = idx.find( o.URI );
-      //TODO_DECENT rewrite the next statement
-      const seeder_object& seeder = db().get<seeder_object>(o.seeder);
+      const auto& sidx = db().get_index_type<seeder_index>().indices().get<by_seeder>();
+      const auto& sitr = sidx.find(o.seeder);
+      FC_ASSERT(sitr!=sidx.end(), "seeder not found");
+      const seeder_object& seeder = *sitr;
       auto last_proof = content->last_proof.find( o.seeder );
       if( last_proof == content->last_proof.end() )
       {
@@ -266,6 +264,10 @@ namespace graphene { namespace chain {
               co.publishing_fee_escrow -= reward;
          });
          db().adjust_balance(seeder.seeder, reward );
+         pay_seeder_operation op;
+         op.author = content->author;
+         op.seeder = seeder.seeder;
+         op.payout = reward;
       }
    }FC_CAPTURE_AND_RETHROW( (o) ) }
 
@@ -288,5 +290,8 @@ namespace graphene { namespace chain {
    {
 
    }
+
+   void_result pay_seeder_evaluator::do_evaluate( const pay_seeder_operation& o ){}
+   void_result pay_seeder_evaluator::do_apply( const pay_seeder_operation& o ){}
 
 }} // graphene::chain
