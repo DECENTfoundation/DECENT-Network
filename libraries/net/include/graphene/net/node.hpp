@@ -263,7 +263,7 @@ namespace graphene { namespace net {
         virtual void  broadcast_transaction( const signed_transaction& trx )
         {
            ilog("broadcast_transaction: called");
-           edump((trx));
+           idump((trx));
            broadcast( trx_message(trx) );
         }
 

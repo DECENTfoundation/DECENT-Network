@@ -64,26 +64,24 @@ void database::decent_housekeeping()
       resop.content = citr->id;
       push_applied_operation( resop );
 
-      remove( *citr );
-
       ++citr;
    }
    const auto& bidx = get_index_type<buying_index>().indices().get<by_expiration_time>();
    auto bitr = bidx.begin();
    while( bitr != bidx.end() && bitr->expiration_time <= head_block_time() )
    {
-      return_escrow_buying_operation rebop;
-      rebop.escrow = bitr->price;
+      if(!bitr->delivered) {
+         return_escrow_buying_operation rebop;
+         rebop.escrow = bitr->price;
 
-      buying_expire(*bitr);
+         buying_expire(*bitr);
 
-      rebop.consumer = bitr->consumer;
-      rebop.buying = bitr->id;
-      push_applied_operation( rebop );
+         rebop.consumer = bitr->consumer;
+         rebop.buying = bitr->id;
+         push_applied_operation(rebop);
 
-      remove( *bitr );
-
-      ++bitr;
+         ++bitr;
+      }
    }
 }
 

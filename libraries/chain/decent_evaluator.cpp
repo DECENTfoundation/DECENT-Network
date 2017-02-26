@@ -238,7 +238,6 @@ namespace graphene { namespace chain {
    void_result proof_of_custody_evaluator::do_apply(const proof_of_custody_operation& o )
    {try{
       //pay the seeder
-      elog("proof_of_custody_evaluator::do_apply begin");
       auto& idx = db().get_index_type<content_index>().indices().get<by_URI>();
       const auto& content = idx.find( o.URI );
       const auto& sidx = db().get_index_type<seeder_index>().indices().get<by_seeder>();
@@ -266,7 +265,6 @@ namespace graphene { namespace chain {
          });
          db().adjust_balance(seeder.seeder, reward );
       }
-      elog("proof_of_custody_evaluator::do_apply end");
    }FC_CAPTURE_AND_RETHROW( (o) ) }
 
    void_result return_escrow_submission_evaluator::do_evaluate(const return_escrow_submission_operation& o )

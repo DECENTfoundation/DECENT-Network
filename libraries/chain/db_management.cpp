@@ -147,7 +147,6 @@ void database::close(bool rewind)
 {
    // TODO:  Save pending tx's on close()
    clear_pending();
-   elog("database::close begin");
    // pop all of the blocks that we can given our undo history, this should
    // throw when there is no more undo history to pop
    if( rewind )
