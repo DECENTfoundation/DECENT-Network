@@ -80,8 +80,9 @@ void database::decent_housekeeping()
          rebop.buying = bitr->id;
          push_applied_operation(rebop);
 
-         ++bitr;
+
       }
+      ++bitr;
    }
 }
 

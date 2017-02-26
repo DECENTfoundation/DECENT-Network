@@ -133,8 +133,6 @@ void database::open(
             idump((get( dynamic_global_property_id_type() )));
             idump((_fork_db.head()->data));
             idump((_fork_db.head()->num));
-            //_block_id_to_block.
-            //last_block =
 
             FC_ASSERT( head_block_num() == 0, "last block ID does not match current chain state" );
          }
