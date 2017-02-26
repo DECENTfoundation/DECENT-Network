@@ -264,6 +264,10 @@ namespace graphene { namespace chain {
               co.publishing_fee_escrow -= reward;
          });
          db().adjust_balance(seeder.seeder, reward );
+         pay_seeder_operation op;
+         op.author = content->author;
+         op.seeder = seeder.seeder;
+         op.payout = reward;
       }
    }FC_CAPTURE_AND_RETHROW( (o) ) }
 
@@ -286,5 +290,8 @@ namespace graphene { namespace chain {
    {
 
    }
+
+   void_result pay_seeder_evaluator::do_evaluate( const pay_seeder_operation& o ){}
+   void_result pay_seeder_evaluator::do_apply( const pay_seeder_operation& o ){}
 
 }} // graphene::chain
