@@ -41,12 +41,11 @@ public:
 	virtual void print_status();
 	virtual transfer_progress get_progress();
 
-	virtual package_transfer_interface* clone() {
-		return new ipfs_transfer();
-	}
+    virtual std::shared_ptr<package_transfer_interface> clone() {
+        return std::shared_ptr<ipfs_transfer>(new ipfs_transfer());
+    }
 
 private:
-	
 	package::package_object check_and_install_package();
 	
 private:
