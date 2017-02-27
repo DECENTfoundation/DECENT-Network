@@ -2225,6 +2225,9 @@ public:
 
    optional<content_download_status> get_download_status(string consumer, string URI) {
 
+      account_id_type acc = get_account(consumer).id;
+      optional<buying_object> bobj = _remote_db->get_buying_by_consumer_URI( acc, URI );
+
    }
 
 

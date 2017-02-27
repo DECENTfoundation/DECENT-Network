@@ -566,7 +566,19 @@ void package_manager::print_all_transfers() {
     }
 }
 
- 
+package_transfer_interface::transfer_progress 
+package_manager::get_progress(std::string URI) const {
+
+    for (int i = 0; i < _all_transfers.size(); ++i) {
+        const transfer_job& job = _all_transfers[i];
+        string transfer_url = job.transport->get_transfer_url();
+        if (transfer_url == URI) {
+            return job.transport->get_progress();
+        }
+    }
+
+    return package_transfer_interface::transfer_progress(0, 0, 0);
+}
 
 std::string package_manager::get_transfer_url(package_transfer_interface::transfer_id id) {
     if (id >= _all_transfers.size()) {

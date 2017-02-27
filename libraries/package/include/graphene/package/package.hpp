@@ -151,6 +151,8 @@ public:
 
 	std::string					get_transfer_url(package_transfer_interface::transfer_id id);
 
+	package_transfer_interface::transfer_progress get_progress(std::string URI) const;
+
     void set_packages_path(const boost::filesystem::path& packages_path);
     boost::filesystem::path get_packages_path() const;
 
