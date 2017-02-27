@@ -23,21 +23,7 @@
 #include <QStringList>
 #include <stdio.h>
 #include <stdarg.h>
-
-
-//class NewButton : public QPushButton
-//{
-//   Q_OBJECT
-//public:
-//   NewButton(int id) : m_id(id){connect(this,SIGNAL(clicked()),this,SLOT(ButtonPushedSlot()));}
-//private:
-//   int m_id;
-//private slots:
-//   void ButtonPushedSlot(){emit ButtonPushedSignal(m_id);}
-//public:
-//signals:
-//   void ButtonPushedSignal(int);
-//};
+#include <iostream>
 
 
 class QZebraWidget : public QWidget
@@ -208,12 +194,35 @@ signals:
 public:
 signals:
    void ButtonPushedSignal(int);
-private:
+   void mouseWasMoved();
+public:
    virtual void mouseReleaseEvent(QMouseEvent * event)
    {
         LabelWosClicked();
    }
+
+   virtual void mouseMoveEvent(QMouseEvent * event)
+   {
+        emit mouseWasMoved();
+        QLabel::mouseMoveEvent(event);
+   }
 };
+
+
+
+class TableWidget : public QTableWidget
+{
+    Q_OBJECT
+public:
+    TableWidget();
+
+    virtual void mouseMoveEvent(QMouseEvent * event);
+public:
+signals:
+    void mouseMoveEventDid();
+};
+
+
 
 namespace gui_wallet
 {
@@ -228,9 +237,10 @@ namespace gui_wallet
         void ArrangeSize();
     public slots:
         void my_slot(int);
+        void doRowColor();
     public:
         QLineEdit search;
-        QTableWidget table_widget;
+        TableWidget table_widget;
         QLabel search_label;
         std::vector<QString> accounts_names;
         std::vector<QString> accounts_id;
@@ -239,9 +249,10 @@ namespace gui_wallet
     protected:
         class Mainwindow_gui_wallet* m_pPar;
         virtual void resizeEvent ( QResizeEvent * a_event );
-        virtual void mouseMoveEvent(QMouseEvent *);
+       // virtual void mouseMoveEvent(QMouseEvent *);
     };
 }
+
 
 
 #endif // OVERVIEW_TAB_HPP

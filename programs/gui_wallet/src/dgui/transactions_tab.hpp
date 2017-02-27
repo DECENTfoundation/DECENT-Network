@@ -21,6 +21,12 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QPushButton>
+#include <QFrame>
+#include <Qt>
+#include <QColor>
+#include <QMouseEvent>
+
+
 
 namespace gui_wallet
 {
@@ -33,6 +39,7 @@ namespace gui_wallet
         ~Transactions_tab();
 
         QVBoxLayout main_layout;
+        QLabel search_label;
         QTableWidget* tablewidget;
         QTableWidgetItem* itm;
         QPushButton* more;
