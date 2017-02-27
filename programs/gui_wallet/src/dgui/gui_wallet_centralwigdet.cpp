@@ -279,12 +279,14 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     m_pDcLogoWgt->setLayout(pHBoxLayoutTmp);
     m_first_line_lbl.addWidget(m_pDcLogoWgt);
     m_pDcLogoWgt->setFixedHeight(__HEIGHT__);
+    m_pDcLogoWgt->setMaximumWidth(130);
 
     /*//////////////////////////////////////////*/
     line = new QFrame(this);
     line->setFrameShape(QFrame::VLine); // Horizontal line
     line->setFrameShadow(QFrame::Sunken);
-    line->setLineWidth(1);
+    line->setLineWidth(15);
+    //line->setFixedWidth(130);
     m_first_line_lbl.addWidget(line);
 
     /*//////////////////////////////////////////*/
@@ -307,12 +309,14 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     m_pUsernameWgt->setLayout(pHBoxLayoutTmp);
     m_first_line_lbl.addWidget(m_pUsernameWgt);
     m_pUsernameWgt->setFixedHeight(__HEIGHT__);
+    m_pUsernameWgt->setMaximumWidth(270);
 
     /*//////////////////////////////////////////*/
     line = new QFrame(this);
     line->setFrameShape(QFrame::VLine); // Horizontal line
     line->setFrameShadow(QFrame::Sunken);
     line->setLineWidth(1);
+    //line->setFixedWidth(270);
     m_first_line_lbl.addWidget(line);
 
     /*//////////////////////////////////////////*/
@@ -334,12 +338,14 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     m_pBalanceWgt1->setLayout(pHBoxLayoutTmp);
     m_first_line_lbl.addWidget(m_pBalanceWgt1);
     m_pBalanceWgt1->setFixedHeight(__HEIGHT__);
+    m_pBalanceWgt1->setMaximumWidth(354);
 
     /*//////////////////////////////////////////*/
     line = new QFrame(this);
     line->setFrameShape(QFrame::VLine); // Horizontal line
     line->setFrameShadow(QFrame::Sunken);
     line->setLineWidth(1);
+    //line->setFixedWidth(354);
     m_first_line_lbl.addWidget(line);
 
     /*//////////////////////////////////////////*/
@@ -361,6 +367,7 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     pWidgetTmp2->setLayout(pHBoxLayoutTmp);
     m_first_line_lbl.addWidget(pWidgetTmp2);
     pWidgetTmp2->setFixedHeight(__HEIGHT__);
+    pWidgetTmp2->setMaximumWidth(187);
 
 #if 0
     bool bRet;
@@ -431,11 +438,12 @@ void CentralWigdet::resizeEvent ( QResizeEvent * a_event )
     QTabBar* pTabBar = m_main_tabs2.tabBar();
     pTabBar->resize(size().width(),pTabBar->height());
 
-    int nWidth_small (size().width()*15/100);
-    int nWidth_big (size().width()*35/100);
+    int nWidth_small (size().width()*13/100);
+    int nWidth_big (size().width()*28/100);
+    int nWidth_medium (size().width()*38/100);
     m_pDcLogoWgt->resize(nWidth_small,m_pDcLogoWgt->height());
     m_pUsernameWgt->resize(nWidth_big,m_pUsernameWgt->height());
-    m_pBalanceWgt1->resize(nWidth_big,m_pBalanceWgt1->height());
+    m_pBalanceWgt1->resize(nWidth_medium,m_pBalanceWgt1->height());
 
 }
 
