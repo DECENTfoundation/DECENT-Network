@@ -49,10 +49,18 @@ Browse_content_tab::Browse_content_tab()
         "font-size: 12px;"
         "padding: 2 2 2 20; /* left padding (last number) must be more than the icon's width */"
     "}");
+ //   QHBoxLayout* searchlay = new QHBoxLayout();
+    QLabel lab;
+    QPixmap image("../../../../png_files/search.png");
+    lab.setSizeIncrement(100, 40);
+    lab.setPixmap(image);
 
+    m_filterLineEdit.setPlaceholderText("Search");
+    m_filterLineEdit.setFixedHeight(40);
+    m_filterLineEdit.setStyleSheet("border: 1px solid white");
+    m_search_layout.addWidget(&lab);
     m_search_layout.addWidget(&m_filterLineEdit);
     m_search_layout.addWidget(&m_searchTypeCombo);
-
     m_main_layout.addLayout(&m_search_layout);
     m_main_layout.addWidget(m_pTableWidget);
     setLayout(&m_main_layout);
@@ -78,8 +86,13 @@ void Browse_content_tab::PrepareTableWidgetHeaderGUI()
 {
     QTableWidget& m_TableWidget = *m_pTableWidget;
     //QLabel* pLabel;
+    m_TableWidget.horizontalHeader()->setDefaultSectionSize(300);
+    m_TableWidget.setRowHeight(0,35);
     m_TableWidget.horizontalHeader()->hide();
     m_TableWidget.verticalHeader()->hide();
+    m_main_layout.setContentsMargins(0, 0, 0, 0);
+
+    QFont f( "Arial", 15, QFont::Bold);
 
     for( int i(0); i<s_cnNumberOfRows; ++i )
     {
@@ -88,9 +101,12 @@ void Browse_content_tab::PrepareTableWidgetHeaderGUI()
         //m_TableWidget.setCellWidget(0,i,pLabel);
         m_TableWidget.setItem(0,i,new QTableWidgetItem(tr(s_vccpItemNames[i])));
         m_TableWidget.item(0,i)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
-
-        m_TableWidget.item(0, i)->setBackground(Qt::lightGray);
+        m_TableWidget.item(0,i)->setFont(f);
+        m_TableWidget.item(0,i)->setBackground(QColor(228,227,228));
     }
+
+    m_TableWidget.setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    m_TableWidget.setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
     //QPalette plt_tbl = m_TableWidget.palette();
     //plt_tbl.setColor(QPalette::Base, palette().color(QPalette::Window));
@@ -188,6 +204,17 @@ void Browse_content_tab::ArrangeSize()
     int nSizeForOne = tqsTableSize.width()/(DCF::NUM_OF_DIG_CONT_FIELDS)-1;
     for(int i(0); i<DCF::NUM_OF_DIG_CONT_FIELDS;++i){m_pTableWidget->setColumnWidth(i,nSizeForOne);}
     //printf("!!!!!!!!!!!!!!!!!!!!!!\n");
+    m_pTableWidget->setStyleSheet("QTableView{border : 1px solid lightGray}");
+    m_pTableWidget->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    m_pTableWidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+
+    QSize tqs_TableSize = m_pTableWidget->size();
+    m_pTableWidget->setColumnWidth(0,(tqs_TableSize.width()*16.7)/100);
+    m_pTableWidget->setColumnWidth(1,(tqs_TableSize.width()*16.7)/100);
+    m_pTableWidget->setColumnWidth(2,(tqs_TableSize.width()*16.7)/100);
+    m_pTableWidget->setColumnWidth(3,(tqs_TableSize.width()*16.7)/100);
+    m_pTableWidget->setColumnWidth(4,(tqs_TableSize.width()*16.7)/100);
+    m_pTableWidget->setColumnWidth(5,(tqs_TableSize.width()*16.7)/100);
 }
 
 
