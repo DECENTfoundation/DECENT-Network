@@ -26,21 +26,6 @@
 #include <iostream>
 
 
-//class NewButton : public QPushButton
-//{
-//   Q_OBJECT
-//public:
-//   NewButton(int id) : m_id(id){connect(this,SIGNAL(clicked()),this,SLOT(ButtonPushedSlot()));}
-//private:
-//   int m_id;
-//private slots:
-//   void ButtonPushedSlot(){emit ButtonPushedSignal(m_id);}
-//public:
-//signals:
-//   void ButtonPushedSignal(int);
-//};
-
-
 class QZebraWidget : public QWidget
 {
 public:
@@ -218,7 +203,6 @@ public:
 
    virtual void mouseMoveEvent(QMouseEvent * event)
    {
-       printf("%s\n",__FUNCTION__);
         emit mouseWasMoved();
         QLabel::mouseMoveEvent(event);
    }

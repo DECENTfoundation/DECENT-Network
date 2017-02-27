@@ -21,10 +21,6 @@ using namespace gui_wallet;
 Overview_tab::Overview_tab(class Mainwindow_gui_wallet* a_pPar)
     : m_pPar(a_pPar)
 {
-
-    //table_widget.setMaximumHeight(40);
-   // table_widget.setMinimumHeight(40);107 304 529     940
-
     table_widget.setColumnCount(3);
     table_widget.setRowCount(1);
 
@@ -42,8 +38,7 @@ Overview_tab::Overview_tab(class Mainwindow_gui_wallet* a_pPar)
     table_widget.setItem(0,2,new QTableWidgetItem(tr("Author")));
 
     QFont f( "Arial", 15, QFont::Bold);
-    //f.setPointSize(72);
-    //font.setBold(true);
+
     table_widget.item(0,0)->setFont(f);
     table_widget.item(0,1)->setFont(f);
     table_widget.item(0,2)->setFont(f);
@@ -79,8 +74,8 @@ Overview_tab::Overview_tab(class Mainwindow_gui_wallet* a_pPar)
     search_lay->setMargin(0);
     search_lay->setContentsMargins(0,0,0,0);
 
-    QPixmap image("/Users/vahe/Desktop/search.png");
-    QPixmap image1 = image.scaled(QSize(15, 15),  Qt::KeepAspectRatio);
+    QPixmap image("/Users/vahe/dev/DECENTfoundation/DECENT-Network/programs/png_files/search.png");
+    QPixmap image1 = image.scaled(QSize(17, 17),  Qt::KeepAspectRatio);
 
     search_label.setSizeIncrement(100,40);
     search_label.setPixmap(image1);
@@ -89,6 +84,8 @@ Overview_tab::Overview_tab(class Mainwindow_gui_wallet* a_pPar)
     search.setFixedHeight(40);
 
 
+    search_lay->addWidget(new QLabel());
+    search_lay->addWidget(new QLabel());
     search_lay->addWidget(new QLabel());
     search_lay->addWidget(&search_label);
     search_lay->addWidget(&search);
@@ -122,10 +119,12 @@ void Overview_tab::CreateTable()
         table_widget.setItem(i + 1,1,new QTableWidgetItem((accounts_id[i])));
         table_widget.setItem(i + 1,2,new QTableWidgetItem((accounts_names[i])));
 
+        table_widget.setRowHeight(i + 1,40);
+
         QHBoxLayout* lay = new QHBoxLayout();
 
-        QPixmap image("/Users/vahe/Desktop/info_icon.png");
-        QPixmap image1 = image.scaled(QSize(10,10),  Qt::KeepAspectRatio);
+        QPixmap image("/Users/vahe/dev/DECENTfoundation/DECENT-Network/programs/png_files/info_icon.png");
+        QPixmap image1 = image.scaled(QSize(100,100),  Qt::KeepAspectRatio);
 
         ((NewButton*)table_widget.cellWidget(i + 1,0))->setPixmap(image1);
 
@@ -177,7 +176,6 @@ void Overview_tab::resizeEvent(QResizeEvent *a_event)
 
 void Overview_tab::doRowColor()
 {
-   // printf("%s\n",__FUNCTION__);
     for(int i = 0; i < accounts_names.size(); ++i)
     {
         table_widget.cellWidget(i+1,0)->setStyleSheet("* { background-color: rgb(255,255,255); }");
@@ -185,16 +183,16 @@ void Overview_tab::doRowColor()
         table_widget.item(i+1,2)->setBackground(QColor(255,255,255));
     }
     QPoint mouse_pos = table_widget.mapFromGlobal(QCursor::pos());
-    std::cout<<mouse_pos.x()<<"  "<<mouse_pos.y()<<std::endl;
-    mouse_pos.setX(mouse_pos.x() + 150);
-    //mouse_pos.setY(48);
+    if(mouse_pos.x() > 0 && mouse_pos.x() < 110)
+    {
+        mouse_pos.setX(mouse_pos.x() + 300);
+    }
     QTableWidgetItem *ite = table_widget.itemAt(mouse_pos);
 
     if(ite != NULL)
     {
 
         int a = ite->row();
-        std::cout<<a<<std::endl;
         if(a != 0)
         {
             table_widget.cellWidget(a , 0)->setStyleSheet("* { background-color: rgb(27,176,104); }");

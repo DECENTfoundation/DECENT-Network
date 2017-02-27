@@ -29,21 +29,11 @@ Transactions_tab::Transactions_tab()
 
     tablewidget->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     tablewidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    main_layout.setContentsMargins(0, 5, -5, 0);
+    main_layout.setContentsMargins(0, 5, 0, 0);
 
-    QHBoxLayout* search_lay = new QHBoxLayout();
-
-    search_lay->setMargin(0);
-    search_lay->setContentsMargins(0,0,0,0);
-
-    QLabel label;
-    QPixmap image("/Users/vahe/Desktop/search.png");
-    QPixmap image1 = image.scaled(QSize(15, 15),  Qt::KeepAspectRatio);
-
-    label.setSizeIncrement(100,40);
-    label.setPixmap(image1);
     user.setStyleSheet("border: 1px solid white");
     user.setPlaceholderText("Search");
+    user.setMaximumHeight(40);
     user.setFixedHeight(40);
 
     QFont font( "Arial", 14, QFont::Bold);
@@ -56,22 +46,23 @@ Transactions_tab::Transactions_tab()
         tablewidget->item(0, i)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
     }
 
-    user.setMaximumHeight(40);
-    user.setFixedHeight(40);
+    QHBoxLayout* search_lay = new QHBoxLayout();
+
+
+    QPixmap image("/Users/vahe/dev/DECENTfoundation/DECENT-Network/programs/png_files/search.png");
+    QPixmap image1 = image.scaled(QSize(15, 15),  Qt::KeepAspectRatio);
+    search_label.setSizeIncrement(100,40);
+    search_label.setPixmap(image1);
 
     search_lay->addWidget(new QLabel());
-    search_lay->addWidget(&label);
+    search_lay->addWidget(new QLabel());
+    search_lay->addWidget(new QLabel());
+    search_lay->addWidget(&search_label);
     search_lay->addWidget(&user);
+
     main_layout.addLayout(search_lay);
-    //main_layout.addWidget(&user);
     main_layout.addWidget(tablewidget);
-
-
-    connect(&tablewidget,SIGNAL(mouseMoveEventDid()),this,SLOT(doRowColor()));
-
     setLayout(&main_layout);
-
-
 }
 
 void Transactions_tab::createNewRow(const int str)
@@ -103,23 +94,8 @@ void Transactions_tab::deleteEmptyRows()
    }
 }
 
-
 Transactions_tab::~Transactions_tab()
 {
     main_layout.removeWidget(tablewidget);
     delete tablewidget;
-}
-
-
-
-
-TableWidget::TableWidget() : QTableWidget()
-{
-    this->setMouseTracking(true);
-}
-
-
-void TableWidget::mouseMoveEvent(QMouseEvent *event)
-{
-    mouseMoveEventDid();
 }

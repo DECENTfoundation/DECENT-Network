@@ -28,22 +28,6 @@
 
 
 
-class TableWidget : public QTableWidget
-{
-    Q_OBJECT
-public:
-    TableWidget();
-
-    virtual void mouseMoveEvent(QMouseEvent * event);
-public:
-signals:
-    void mouseMoveEventDid();
-};
-
-
-
-
-
 namespace gui_wallet
 {
     class Transactions_tab : public QWidget
@@ -55,7 +39,8 @@ namespace gui_wallet
         ~Transactions_tab();
 
         QVBoxLayout main_layout;
-        TableWidget* tablewidget;
+        QLabel search_label;
+        QTableWidget* tablewidget;
         QTableWidgetItem* itm;
         QPushButton* more;
         QLineEdit user;
@@ -63,10 +48,6 @@ namespace gui_wallet
         void deleteEmptyRows();
         void ArrangeSize();
 virtual void resizeEvent(QResizeEvent *a_event);
-
-    public:
-        slots:
-        virtual void doRowColor();
 
     };
 }

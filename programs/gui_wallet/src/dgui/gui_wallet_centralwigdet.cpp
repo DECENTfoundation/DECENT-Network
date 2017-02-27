@@ -164,7 +164,7 @@ CentralWigdet::CentralWigdet(class QBoxLayout* a_pAllLayout, class Mainwindow_gu
     m_main_tabs2.setStyleSheet("QTabBar::tab{"
                                "color:green;background-color:white;}"
                                "QTabBar::tab:selected{"
-                               "color:white;background-color:green;}");
+                               "color:white;background-color:rgb(27,176,104);}");
     PrepareGUIprivate(a_pAllLayout);
 }
 
@@ -228,7 +228,7 @@ QWidget* CentralWigdet::GetWidgetFromTable5(int a_nColumn, int a_nWidget)
 
 
 #define __SIZE_FOR_IMGS__   40
-#define __HEIGHT__  90
+#define __HEIGHT__  67
 #include "decent_wallet_ui_gui_newcheckbox.hpp"
 
 void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)

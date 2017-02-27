@@ -67,42 +67,36 @@ void gui_wallet::Mainwindow_gui_wallet::TaskDoneOverrviewGUI(void* a_clbkArg,int
     {
         std::string id_s = "id\n";
         int pos = a_result.find("id");
-        std::cout<<pos<<std::endl;
         pos += 6;
         for(int i = pos; a_result[i] != '"'; ++i)
             id_s.push_back(a_result[i]);
 
         std::string registrar_s = "\nregistrar\n  ";
         pos = a_result.find("registrar");
-        std::cout<<pos<<std::endl;
         pos += 13;
         for(int i = pos; a_result[i] != '"'; ++i)
             registrar_s.push_back(a_result[i]);
 
         std::string referrer_s = "\nreferrer\n ";
         pos = a_result.find("referrer");
-        std::cout<<pos<<std::endl;
         pos += 12;
         for(int i = pos; a_result[i] != '"'; ++i)
             referrer_s.push_back(a_result[i]);
 
         std::string lifetime_referrer_s = "\nlifetime_referrer\n";
         pos = a_result.find("lifetime_referrer");
-        std::cout<<pos<<std::endl;
         pos += 21;
         for(int i = pos; a_result[i] != '"'; ++i)
             lifetime_referrer_s.push_back(a_result[i]);
 
         std::string network_fee_percentage_s = "\nnetwork_fee_percentage\n ";
         pos = a_result.find("network_fee_percentage");
-        std::cout<<pos<<std::endl;
         pos += 24;
         for(int i = pos; a_result[i] != ','; ++i)
             network_fee_percentage_s.push_back(a_result[i]);
 
         std::string lifetime_referrer_fee_percentage_s = "\nlifetime_referrer_fee_percentage\n";
         pos = a_result.find("lifetime_referrer_fee_percentage");
-        std::cout<<pos<<std::endl;
         pos += 34;
         for(int i = pos; a_result[i] != ','; ++i)
             lifetime_referrer_fee_percentage_s.push_back(a_result[i]);
@@ -110,14 +104,12 @@ void gui_wallet::Mainwindow_gui_wallet::TaskDoneOverrviewGUI(void* a_clbkArg,int
 
         std::string name_s = "\nname\n  ";
         pos = a_result.find("name");
-        std::cout<<pos<<std::endl;
         pos += 8;
         for(int i = pos; a_result[i] != '"'; ++i)
             name_s.push_back(a_result[i]);
 
         std::string referrer_rewards_percentage_s = "\nreferrer_rewards_percentage\n";
         pos = a_result.find("referrer_rewards_percentage");
-        std::cout<<pos<<std::endl;
         pos += 29;
         for(int i = pos; a_result[i] != ','; ++i)
             referrer_rewards_percentage_s.push_back(a_result[i]);
