@@ -49,7 +49,7 @@ Transactions_tab::Transactions_tab()
     QHBoxLayout* search_lay = new QHBoxLayout();
 
 
-    QPixmap image("/Users/vahe/dev/DECENTfoundation/DECENT-Network/programs/png_files/search.png");
+    QPixmap image("../../../../png_files/search.png");
     QPixmap image1 = image.scaled(QSize(15, 15),  Qt::KeepAspectRatio);
     search_label.setSizeIncrement(100,40);
     search_label.setPixmap(image1);

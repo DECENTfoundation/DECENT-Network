@@ -74,7 +74,7 @@ Overview_tab::Overview_tab(class Mainwindow_gui_wallet* a_pPar)
     search_lay->setMargin(0);
     search_lay->setContentsMargins(0,0,0,0);
 
-    QPixmap image("/Users/vahe/dev/DECENTfoundation/DECENT-Network/programs/png_files/search.png");
+    QPixmap image("../../../../png_files/search.png");
     QPixmap image1 = image.scaled(QSize(17, 17),  Qt::KeepAspectRatio);
 
     search_label.setSizeIncrement(100,40);
@@ -123,7 +123,7 @@ void Overview_tab::CreateTable()
 
         QHBoxLayout* lay = new QHBoxLayout();
 
-        QPixmap image("/Users/vahe/dev/DECENTfoundation/DECENT-Network/programs/png_files/info_icon.png");
+        QPixmap image("../../../../png_files/info_icon.png");
         QPixmap image1 = image.scaled(QSize(100,100),  Qt::KeepAspectRatio);
 
         ((NewButton*)table_widget.cellWidget(i + 1,0))->setPixmap(image1);
