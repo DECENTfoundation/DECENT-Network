@@ -12,6 +12,7 @@
 #include <QPixmap>
 #include <QStackedWidget>
 #include <QRect>
+#include <QFont>
 
 using namespace gui_wallet;
 
@@ -20,32 +21,29 @@ using namespace gui_wallet;
 Overview_tab::Overview_tab(class Mainwindow_gui_wallet* a_pPar)
     : m_pPar(a_pPar)
 {
-
-
-//    QLabel * cl = new QLabel();
-//    int posx = ((NewButton*)table_widget.cellWidget(i + 1 , 0))->pos().x();
-//    int posy = ((NewButton*)table_widget.cellWidget(i + 1 , 0))->pos().y();
-//    int posrx = ((NewButton*)table_widget.cellWidget(i + 1 , 0))->pos().rx();
-//    int posry = ((NewButton*)table_widget.cellWidget(i + 1 , 0))->pos().ry();
-//    QPixmap image("/Users/vahe/Desktop/info_icon.png");
-//    cl->setGeometry(QRect(20 , 20 , 30 , 10));
-//    cl->setScaledContents(true);
-//    cl->setPixmap(image);
-
-
-
-
     table_widget.setColumnCount(3);
     table_widget.setRowCount(1);
 
     QSize tqsTableSize = table_widget.size();
-    table_widget.setColumnWidth(0,(tqsTableSize.width()*10)/100);
-    table_widget.setColumnWidth(1,(tqsTableSize.width()*45)/100);
-    table_widget.setColumnWidth(2,(tqsTableSize.width()*45)/100);
+    table_widget.setColumnWidth(0,(tqsTableSize.width()*12)/100);
+    table_widget.setColumnWidth(1,(tqsTableSize.width()*32)/100);
+    table_widget.setColumnWidth(2,(tqsTableSize.width()*56)/100);
+
+    table_widget.setRowHeight(0,35);
+
+    table_widget.setStyleSheet("QTableView{border : 1px solid lightGray}");
 
     table_widget.setItem(0,0,new QTableWidgetItem(tr("Info")));
     table_widget.setItem(0,1,new QTableWidgetItem(tr("Asset ID")));
     table_widget.setItem(0,2,new QTableWidgetItem(tr("Author")));
+
+    QFont f( "Arial", 15, QFont::Bold);
+
+    table_widget.item(0,0)->setFont(f);
+    table_widget.item(0,1)->setFont(f);
+    table_widget.item(0,2)->setFont(f);
+
+    table_widget.item(0,0)->setText("Info");
 
     table_widget.item(0,0)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
     table_widget.item(0,1)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
@@ -55,9 +53,11 @@ Overview_tab::Overview_tab(class Mainwindow_gui_wallet* a_pPar)
     table_widget.item(0,1)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
     table_widget.item(0,2)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
 
-    table_widget.item(0,0)->setBackground(Qt::lightGray);
-    table_widget.item(0,1)->setBackground(Qt::lightGray);
-    table_widget.item(0,2)->setBackground(Qt::lightGray);
+    table_widget.item(0,0)->setBackground(QColor(228,227,228));
+    table_widget.item(0,1)->setBackground(QColor(228,227,228));
+    table_widget.item(0,2)->setBackground(QColor(228,227,228));
+
+
 
     table_widget.horizontalHeader()->hide();
     table_widget.verticalHeader()->hide();
@@ -66,19 +66,37 @@ Overview_tab::Overview_tab(class Mainwindow_gui_wallet* a_pPar)
     table_widget.setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
     QVBoxLayout* main = new QVBoxLayout();
-    main->setContentsMargins(0, 5, 0, 0);
+    QHBoxLayout* search_lay = new QHBoxLayout();
+
+    main->setContentsMargins(0, 0, 0, 0);
+    main->setMargin(0);
+
+    search_lay->setMargin(0);
+    search_lay->setContentsMargins(0,0,0,0);
+
+    QPixmap image("/Users/vahe/dev/DECENTfoundation/DECENT-Network/programs/png_files/search.png");
+    QPixmap image1 = image.scaled(QSize(17, 17),  Qt::KeepAspectRatio);
+
+    search_label.setSizeIncrement(100,40);
+    search_label.setPixmap(image1);
+    search.setStyleSheet("border: 1px solid white");
     search.setPlaceholderText(QString("Search"));
+    search.setFixedHeight(40);
+
+
+    search_lay->addWidget(new QLabel());
+    search_lay->addWidget(new QLabel());
+    search_lay->addWidget(new QLabel());
+    search_lay->addWidget(&search_label);
+    search_lay->addWidget(&search);
 
 
 
-
-//    QStackedWidget * s = new QStackedWidget();
-//    s->addWidget(&search);
-//    s->setSizeIncrement(search.size());
-//    s->setStyleSheet("background-image: url(/Users/vahe/Desktop/search.png)");
-
-    main->addWidget(&search);
+    main->addLayout(search_lay);
+    //main->addWidget(&search);
     main->addWidget(&table_widget);
+
+
 
 
     setLayout(main);
@@ -100,37 +118,54 @@ void Overview_tab::CreateTable()
         table_widget.setCellWidget(i + 1,0,new NewButton(i));
         table_widget.setItem(i + 1,1,new QTableWidgetItem((accounts_id[i])));
         table_widget.setItem(i + 1,2,new QTableWidgetItem((accounts_names[i])));
-        //table_widget.item(i + 1,0)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+
+        table_widget.setRowHeight(i + 1,40);
+
+        QHBoxLayout* lay = new QHBoxLayout();
+
+        QPixmap image("/Users/vahe/dev/DECENTfoundation/DECENT-Network/programs/png_files/info_icon.png");
+        QPixmap image1 = image.scaled(QSize(100,100),  Qt::KeepAspectRatio);
+
+        ((NewButton*)table_widget.cellWidget(i + 1,0))->setPixmap(image1);
+
+        table_widget.setRowHeight(0,35);
+
+        table_widget.cellWidget(i + 1 , 0)->setStyleSheet("* { background-color: rgb(255,255,255); }");
+        table_widget.item(i + 1,1)->setBackground(Qt::white);
+        table_widget.item(i + 1,2)->setBackground(Qt::white);
+
         table_widget.item(i + 1,1)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
         table_widget.item(i + 1,2)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
 
         table_widget.item(i + 1,1)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
         table_widget.item(i + 1,2)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
-       // ((NewButton*)table_widget.cellWidget(i + 1,0))->setScaledContents(true);
-        QPixmap image("/Users/vahe/Desktop/info_icon.png");
-        QPixmap image1 = image.scaled(QSize(30,30),  Qt::KeepAspectRatio);
 
-        ((NewButton*)table_widget.cellWidget(i + 1,0))->setPixmap(image1);
-
+        table_widget.setMouseTracking(true);
     }
 
     Connects();
+    table_widget.setMouseTracking(true);
 }
 
 void Overview_tab::Connects()
 {
     for(int i = 1; i < accounts_names.size() + 1; ++i)
     {
+        table_widget.cellWidget(i,0)->setMouseTracking(true);
         connect(table_widget.cellWidget(i,0), SIGNAL(ButtonPushedSignal(int)), this , SLOT(my_slot(int)));
+
+
+        connect((table_widget.cellWidget(i,0)),SIGNAL(mouseWasMoved()),this,SLOT(doRowColor()));
     }
+    connect(&table_widget,SIGNAL(mouseMoveEventDid()),this,SLOT(doRowColor()));
 }
 
 void Overview_tab::ArrangeSize()
 {
     QSize tqsTableSize = table_widget.size();
-    table_widget.setColumnWidth(0,(tqsTableSize.width()*6)/100);
-    table_widget.setColumnWidth(1,(tqsTableSize.width()*47)/100);
-    table_widget.setColumnWidth(2,(tqsTableSize.width()*47)/100);
+    table_widget.setColumnWidth(0,(tqsTableSize.width()*12)/100);
+    table_widget.setColumnWidth(1,(tqsTableSize.width()*32)/100);
+    table_widget.setColumnWidth(2,(tqsTableSize.width()*56)/100);
 }
 
 void Overview_tab::resizeEvent(QResizeEvent *a_event)
@@ -139,14 +174,47 @@ void Overview_tab::resizeEvent(QResizeEvent *a_event)
     ArrangeSize();
 }
 
-void Overview_tab::mouseMoveEvent(QMouseEvent *a_event)
+void Overview_tab::doRowColor()
 {
+    for(int i = 0; i < accounts_names.size(); ++i)
+    {
+        table_widget.cellWidget(i+1,0)->setStyleSheet("* { background-color: rgb(255,255,255); }");
+        table_widget.item(i+1,1)->setBackground(QColor(255,255,255));
+        table_widget.item(i+1,2)->setBackground(QColor(255,255,255));
+    }
+    QPoint mouse_pos = table_widget.mapFromGlobal(QCursor::pos());
+    if(mouse_pos.x() > 0 && mouse_pos.x() < 110)
+    {
+        mouse_pos.setX(mouse_pos.x() + 300);
+    }
+    QTableWidgetItem *ite = table_widget.itemAt(mouse_pos);
 
+    if(ite != NULL)
+    {
+
+        int a = ite->row();
+        if(a != 0)
+        {
+            table_widget.cellWidget(a , 0)->setStyleSheet("* { background-color: rgb(27,176,104); }");
+            table_widget.item(a,1)->setBackgroundColor(QColor(27,176,104));
+            table_widget.item(a,2)->setBackgroundColor(QColor(27,176,104));
+        }
+    }
 }
-
 
 Overview_tab::~Overview_tab()
 {
 
+}
+
+TableWidget::TableWidget() : QTableWidget()
+{
+    this->setMouseTracking(true);
+}
+
+
+void TableWidget::mouseMoveEvent(QMouseEvent *event)
+{
+    mouseMoveEventDid();
 }
 
