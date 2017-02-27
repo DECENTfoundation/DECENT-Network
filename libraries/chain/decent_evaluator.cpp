@@ -11,7 +11,7 @@
 #include <graphene/chain/seeder_object.hpp>
 #include <graphene/chain/content_object.hpp>
 #include <graphene/chain/rating_object.hpp>
-
+#include <graphene/chain/seeding_statistics_object.hpp>
 
 #include <decent/encrypt/encryptionutils.hpp>
 
@@ -198,8 +198,6 @@ namespace graphene { namespace chain {
    
    void_result ready_to_publish_evaluator::do_evaluate(const ready_to_publish_operation& o )
    {try{
-      //empty
-      FC_ASSERT( o.space > 0 );
    }FC_CAPTURE_AND_RETHROW( (o) ) }
    
    void_result ready_to_publish_evaluator::do_apply(const ready_to_publish_operation& o )
@@ -213,6 +211,11 @@ namespace graphene { namespace chain {
               so.pubKey = o.pubKey;
               so.price = asset(o.price_per_MByte);
               so.expiration = db().head_block_time() + 24 * 3600;
+              so.ipfs_IDs = o.ipfs_IDs;
+              so.stats = db().create<seeding_statistics_object>([&](seeding_statistics_object &sso) {
+                 sso.seeder = o.seeder;
+                 sso.total_upload = 0;
+              }).id;
          });
       } else{
          db().modify<seeder_object>(*sor,[&](seeder_object &so) {
@@ -220,6 +223,8 @@ namespace graphene { namespace chain {
             so.price = asset(o.price_per_MByte);
             so.pubKey = o.pubKey;
             so.expiration = db().head_block_time() + 24 * 3600;
+            so.ipfs_IDs.clear();
+            so.ipfs_IDs = o.ipfs_IDs;
          });
       }
    }FC_CAPTURE_AND_RETHROW( (o) ) }
@@ -269,24 +274,23 @@ namespace graphene { namespace chain {
       }
    }FC_CAPTURE_AND_RETHROW( (o) ) }
 
-   void_result return_escrow_submission_evaluator::do_evaluate(const return_escrow_submission_operation& o )
-   {
+   void_result return_escrow_submission_evaluator::do_evaluate(const return_escrow_submission_operation& o ) {}
+   void_result return_escrow_submission_evaluator::do_apply(const return_escrow_submission_operation& o ) {}
 
-   }
+   void_result return_escrow_buying_evaluator::do_evaluate(const return_escrow_buying_operation& o ) {}
+   void_result return_escrow_buying_evaluator::do_apply(const return_escrow_buying_operation& o ) {}
 
-   void_result return_escrow_submission_evaluator::do_apply(const return_escrow_submission_operation& o )
-   {
+   void_result report_stats_evaluator::do_evaluate(const report_stats_operation& o )
+   {try{
+      auto& idx = db().get_index_type<seeder_index>().indices().get<by_seeder>();
+      const auto& itr = idx.find( o.seeder );
+      FC_ASSERT( itr != idx.end(), "seeder does not exist" );
 
-   }
+      }FC_CAPTURE_AND_RETHROW( (o) ) }
 
-   void_result return_escrow_buying_evaluator::do_evaluate(const return_escrow_buying_operation& o )
-   {
+   void_result report_stats_evaluator::do_apply(const report_stats_operation& o )
+   {try{
 
-   }
-
-   void_result return_escrow_buying_evaluator::do_apply(const return_escrow_buying_operation& o )
-   {
-
-   }
+      }FC_CAPTURE_AND_RETHROW( (o) ) }
 
 }} // graphene::chain

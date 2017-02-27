@@ -80,4 +80,13 @@ namespace graphene { namespace chain {
       void_result do_apply( const return_escrow_buying_operation& o );
    };
 
+   class report_stats_evaluator : public evaluator<report_stats_evaluator>
+   {
+   public:
+      typedef report_stats_operation operation_type;
+
+      void_result do_evaluate( const report_stats_operation& o );
+      void_result do_apply( const report_stats_operation& o );
+   };
+
 }}

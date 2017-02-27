@@ -1706,6 +1706,11 @@ class wallet_api
 
 
 
+      string get_ipfs_ID();
+
+      vector<string> list_imported_ipfs_IDs( const string& seeder );
+
+
 
       /**
        * @brief Get a list of packages
@@ -1938,6 +1943,8 @@ FC_API( graphene::wallet::wallet_api,
         (list_content_by_bought)
         (list_publishers_by_price)
         (get_content_ratings)
+        (get_ipfs_ID)
+        (list_imported_ipfs_IDs)
         (list_packages)
         (packages_path)
         (create_package)

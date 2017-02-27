@@ -24,7 +24,7 @@ namespace graphene { namespace chain {
    
    struct by_URI_consumer;
    struct by_consumer_URI;
-   
+   struct by_rating;
    
    typedef multi_index_container<
       rating_object,

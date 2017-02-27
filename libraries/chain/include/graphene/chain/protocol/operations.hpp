@@ -82,7 +82,8 @@ namespace graphene { namespace chain {
             proof_of_custody_operation,
             deliver_keys_operation,
             return_escrow_submission_operation,      // VIRTUAL
-            return_escrow_buying_operation           // VIRTUAL
+            return_escrow_buying_operation,           // VIRTUAL
+            report_stats_operation
          > operation;
 
    /// @} // operations group

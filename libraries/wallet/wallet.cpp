@@ -76,6 +76,8 @@
 
 #include <fc/smart_ref_impl.hpp>
 
+#include <ipfs/client.h>
+
 #ifndef WIN32
 # include <sys/types.h>
 # include <sys/stat.h>
@@ -385,7 +387,8 @@ public:
         _remote_api(rapi),
         _remote_db(rapi->database()),
         _remote_net_broadcast(rapi->network_broadcast()),
-        _remote_hist(rapi->history())
+        _remote_hist(rapi->history()),
+        _ipfs_client("localhost", 5001)
    {
       chain_id_type remote_chain_id = _remote_db->get_chain_id();
       if( remote_chain_id != _chain_id && _chain_id != chain_id_type ("0000000000000000000000000000000000000000000000000000000000000000") )
@@ -722,6 +725,7 @@ public:
 
    void import_el_gamal_key( d_integer privKey )
    {
+      FC_ASSERT(!self.is_locked());
       _wallet.priv_el_gamal_key = privKey;
       save_wallet_file();
    }
@@ -2244,6 +2248,26 @@ public:
       return ss.secret;
    }
 
+   string get_ipfs_ID()
+   {
+      ipfs::Json id;
+      _ipfs_client.Id(&id);
+      return id["ID"];
+   }
+
+
+   vector<string> list_imported_ipfs_IDs( const string& seeder )
+   {
+      FC_ASSERT( !self.is_locked() );
+      account_id_type aid = get_account_id( seeder );
+      fc::optional<seeder_object> so = _remote_db->get_seeder( aid );
+      FC_ASSERT(so.valid(), "Seeder does not exist");
+      vector<string> result = so->ipfs_IDs;
+      return result;
+   }
+
+
+
    void dbg_make_uia(string creator, string symbol)
    {
       asset_options opts;
@@ -2429,6 +2453,8 @@ public:
    const string _wallet_filename_extension = ".wallet";
 
    mutable map<asset_id_type, asset_object> _asset_cache;
+
+   ipfs::Client _ipfs_client;
 };
 
 std::string operation_printer::fee(const asset& a)const {
@@ -4028,6 +4054,16 @@ vector<uint64_t> wallet_api::get_content_ratings( const string& URI )const
    return my->_remote_db->get_content_ratings( URI );
 }
 
+string wallet_api::get_ipfs_ID()
+{
+   return my->get_ipfs_ID();
+}
+
+vector<string> wallet_api::list_imported_ipfs_IDs( const string& seeder)
+{
+   return my->list_imported_ipfs_IDs( seeder );
+}
+
 
 vector<string> wallet_api::list_packages( ) const
 {
@@ -4082,6 +4118,7 @@ namespace {
       virtual void on_download_finished(package_transfer_interface::transfer_id id, package_object downloaded_package) {
          cout << id << ": Download finished: " << downloaded_package.get_hash().str() <<  endl;
 
+
       }
 
       virtual void on_download_progress(package_transfer_interface::transfer_id id, package_transfer_interface::transfer_progress progress) {
@@ -4111,6 +4148,21 @@ namespace {
 
 
 void wallet_api::download_package(const std::string& url) const {
+   fc::optional<content_object> co = my->_remote_db->get_content( url );
+   FC_ASSERT( co.valid(), "content does not exist");
+   multimap<string, uint64_t> stats;
+   for( const auto& seeder : co->key_parts )
+   {
+      fc::optional<seeder_object> so = my->_remote_db->get_seeder( seeder.first );
+      ipfs::Json json;
+      for ( const auto& id : so->ipfs_IDs )
+      {
+         my->_ipfs_client.BitswapLedger( id , &json );
+         stats.insert( pair<string, uint64_t>( id, json["Recv"] ));
+      }
+
+   }
+
    package_manager::instance().download_package(url, transfer_progress_printer::instance());
 }
 
