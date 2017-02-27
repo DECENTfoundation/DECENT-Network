@@ -45,15 +45,6 @@ extern int g_nDebugApplication;
 CryptoPP::AutoSeededRandomPool rng;
 
 
-#define ALERT(message)                                  \
-{                                                       \
-    QMessageBox msgBox;                                 \
-    msgBox.setWindowTitle("Error");                     \
-    msgBox.setText(QString::fromStdString(message));    \
-    msgBox.exec();                                      \
-}                                                       \
-
-
 
 
 namespace {
@@ -618,74 +609,29 @@ void Upload_tab::uploadContent() {
 
 
 
-    std::string* submitCommand = new std::string("submit_content_new");
-    *submitCommand += " " + GlobalEvents::instance().getCurrentUser();   //author
-    *submitCommand += " \"" + path + "\"";                               //URI
-    *submitCommand += " \"" + samples_path + "\"";                       //URI
-    *submitCommand += " \"ipfs\"";                                       //URI
-    *submitCommand += " " + assetName;                                   //price_asset_name
-    *submitCommand += " " + price;                                       //price_amount
-    *submitCommand += " [" + seeders + "]";                              //seeders
-    *submitCommand += " \"" + lifetime + "T23:59:59\"";                  //expiration
-    *submitCommand += " DECENT";                                         //publishing_fee_asset
-    *submitCommand += " 300";                                            //publishing_fee_amount
-    *submitCommand += " \"" + escape_string(synopsis) + "\"";                           //synopsis
-    *submitCommand += " true";                                           //broadcast
+    std::string submitCommand = "submit_content_new";
+    submitCommand += " " + GlobalEvents::instance().getCurrentUser();   //author
+    submitCommand += " \"" + path + "\"";                               //URI
+    submitCommand += " \"" + samples_path + "\"";                       //URI
+    submitCommand += " \"ipfs\"";                                       //URI
+    submitCommand += " " + assetName;                                   //price_asset_name
+    submitCommand += " " + price;                                       //price_amount
+    submitCommand += " [" + seeders + "]";                              //seeders
+    submitCommand += " \"" + lifetime + "T23:59:59\"";                  //expiration
+    submitCommand += " DECENT";                                         //publishing_fee_asset
+    submitCommand += " 300";                                            //publishing_fee_amount
+    submitCommand += " \"" + escape_string(synopsis) + "\"";            //synopsis
+    submitCommand += " true";                                           //broadcast
 
-    
 
-    QString createPackage = QString("create_package \"%0\" \"%1\" %2").arg(QString::fromStdString(path),
-                                                                           QString::fromStdString(samples_path),
-                                                                           QString::fromStdString(randomKeyString));
-
-    SetNewTask(createPackage.toStdString(), this, submitCommand, +[](void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
+    SetNewTask(submitCommand, this, NULL, +[](void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
         if (a_err != 0) {
-            ALERT("Failed to upload content");
+            ALERT("Failed to submit content");
             return;
         }
 
-        Upload_tab* obj = (Upload_tab*)owner;
-        std::string submitCommandTemplate = *(std::string*)a_clbkArg;
-
-        auto packageResult = json::parse(a_result);
-
-        std::string packageHash = packageResult[0].get<std::string>();
-        int n = packageResult[1]["n"].get<int>();
-        std::string u_seed = packageResult[1]["u_seed"].get<std::string>();
-        std::string pubKey = packageResult[1]["pubKey"].get<std::string>();
-
-        QString cdJson = QString("{ \"n\": %0, \"u_seed\": \"%1\",\"pubKey\": \"%2\" }").arg(QString::fromStdString(std::to_string(n)),
-                                                                                             QString::fromStdString(u_seed),
-                                                                                             QString::fromStdString(pubKey));
-
-        //TODO: fix package size
-        QString submitCmd = QString(QString::fromStdString(submitCommandTemplate)).arg("%0", "1", QString::fromStdString(packageHash), cdJson);
-
-        *(std::string*)a_clbkArg = submitCmd.toStdString();
-
-        QString uploadCommand = QString("upload_package %0 ipfs").arg(QString::fromStdString(packageHash));
-
-        SetNewTask(uploadCommand.toStdString(), obj, a_clbkArg, +[](void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
-            
-            Upload_tab* obj = (Upload_tab*)owner;
-            auto uploadResult = json::parse(a_result);
-
-
-            std::string submitCommandTemplate = *(std::string*)a_clbkArg;
-            QString submitCmd = QString(QString::fromStdString(submitCommandTemplate)).arg(QString::fromStdString(uploadResult.get<std::string>()));
-
-            SetNewTask(submitCmd.toStdString(), obj, NULL, +[](void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
-                if (a_err != 0) {
-                    ALERT("Failed to submit content");
-                    return;
-                }
-
-                ALERT("Content is submitted!");
-            });
-
-        });
-
-     });
+        ALERT("Content is submitted!");
+    });
 }
 
 
