@@ -60,7 +60,7 @@ Browse_content_tab::Browse_content_tab()
     m_filterLineEdit.setStyleSheet("border: 1px solid white");
     m_search_layout.addWidget(&lab);
     m_search_layout.addWidget(&m_filterLineEdit);
-    m_search_layout.addWidget(&m_searchTypeCombo);
+//    m_search_layout.addWidget(&m_searchTypeCombo);
     m_main_layout.addLayout(&m_search_layout);
     m_main_layout.addWidget(m_pTableWidget);
     setLayout(&m_main_layout);
@@ -103,6 +103,8 @@ void Browse_content_tab::PrepareTableWidgetHeaderGUI()
         m_TableWidget.item(0,i)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
         m_TableWidget.item(0,i)->setFont(f);
         m_TableWidget.item(0,i)->setBackground(QColor(228,227,228));
+        m_TableWidget.item(0,i)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+
     }
 
     m_TableWidget.setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
