@@ -49,18 +49,22 @@ Browse_content_tab::Browse_content_tab()
         "font-size: 12px;"
         "padding: 2 2 2 20; /* left padding (last number) must be more than the icon's width */"
     "}");
- //   QHBoxLayout* searchlay = new QHBoxLayout();
     QLabel lab;
-    QPixmap image("../../../../png_files/search.png");
-    lab.setSizeIncrement(100, 40);
+    QPixmap image("../../../../png_files/search.svg");
     lab.setPixmap(image);
+    //lab.setSizeIncrement(100, 40);
 
     m_filterLineEdit.setPlaceholderText("Search");
     m_filterLineEdit.setFixedHeight(40);
     m_filterLineEdit.setStyleSheet("border: 1px solid white");
+
+
+
     m_search_layout.addWidget(&lab);
     m_search_layout.addWidget(&m_filterLineEdit);
 //    m_search_layout.addWidget(&m_searchTypeCombo);
+    //m_main_layout.addLayout(searchlay);
+
     m_main_layout.addLayout(&m_search_layout);
     m_main_layout.addWidget(m_pTableWidget);
     setLayout(&m_main_layout);
@@ -86,6 +90,7 @@ void Browse_content_tab::PrepareTableWidgetHeaderGUI()
 {
     QTableWidget& m_TableWidget = *m_pTableWidget;
     //QLabel* pLabel;
+    m_TableWidget.setStyleSheet("QTableWidget{border : 1px solid red}");
     m_TableWidget.horizontalHeader()->setDefaultSectionSize(300);
     m_TableWidget.setRowHeight(0,35);
     m_TableWidget.horizontalHeader()->hide();

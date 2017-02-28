@@ -68,8 +68,9 @@ Overview_tab::Overview_tab(class Mainwindow_gui_wallet* a_pPar)
     table_widget.setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     table_widget.setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
-    table_widget.setStyleSheet(("gridline-color: rgb(228,227,228);font-size: 12pt;"));
-    table_widget.setStyleSheet("QTableView{border : 1px solid lightGray}");
+   // table_widget.setStyleSheet("QTableView{border : 0px}");
+    table_widget.setStyleSheet(("gridline-color: rgb(228,227,228));font-size: 12pt;"));
+    table_widget.setStyleSheet("QTableView{border : 0px}");
 
     QVBoxLayout* main = new QVBoxLayout();
     QHBoxLayout* search_lay = new QHBoxLayout();
@@ -80,12 +81,11 @@ Overview_tab::Overview_tab(class Mainwindow_gui_wallet* a_pPar)
     search_lay->setMargin(0);
     search_lay->setContentsMargins(0,0,0,0);
 
-    QPixmap image("../../../../png_files/search.svg");
-
+    QPixmap image(":/icon/search.svg");
 
     search_label.setSizeIncrement(100,40);
     search_label.setPixmap(image);
-    search.setPlaceholderText(QString("   Search"));
+    search.setPlaceholderText(QString("Search"));
     search.setStyleSheet("border: 0px solid white");
 
     search.setFixedHeight(40);
@@ -130,7 +130,7 @@ void Overview_tab::CreateTable()
 
         QHBoxLayout* lay = new QHBoxLayout();
 
-        QPixmap image1("../../../../png_files/info1_white.svg");
+        QPixmap image1(":/icon/info1_white.svg");
        // QPixmap image1 = image.scaled(QSize(50,50), 1 Qt::AA_Use96Dpi);
 
         ((NewButton*)table_widget.cellWidget(i+1,0))->setPixmap(image1);
@@ -198,7 +198,7 @@ void Overview_tab::doRowColor()
         table_widget.item(i+1,2)->setForeground(QColor::fromRgb(88,88,88));
 
 
-        QPixmap image("../../../../png_files/info1_white.svg");
+        QPixmap image(":/icon/info1_white.svg");
 
         ((NewButton*)table_widget.cellWidget(i+1,0))->setPixmap(image);
 
@@ -216,7 +216,7 @@ void Overview_tab::doRowColor()
         int a = ite->row();
         if(a != 0)
         {
-            QPixmap image("../../../../png_files/info1_white.svg");
+            QPixmap image(":/icon/info1_white.svg");
 
             ((NewButton*)table_widget.cellWidget(a,0))->setPixmap(image);
             table_widget.cellWidget(a , 0)->setStyleSheet("* { background-color: rgb(27,176,104); }");

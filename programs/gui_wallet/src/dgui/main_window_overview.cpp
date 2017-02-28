@@ -127,6 +127,7 @@ void gui_wallet::Mainwindow_gui_wallet::TaskDoneOverrviewGUI(void* a_clbkArg,int
 
 
         QZebraWidget* info_window = new QZebraWidget(infos);
+        //info_window->setStyleSheet();
         info_window->show();
 
 

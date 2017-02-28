@@ -10,6 +10,7 @@
 #include "transactions_tab.hpp"
 #include <QHeaderView>
 #include <QFont>
+#include <QTableWidgetItem>
 
 using namespace gui_wallet;
 
@@ -17,6 +18,8 @@ static const char* firsItemNames[]={"Time","Type","Info","Fee"};
 
 Transactions_tab::Transactions_tab() : green_row(0)
 {
+    connect(tablewidget,SIGNAL(mouseMoveEventDid()),this,SLOT(doRowColor()));
+
     //create table (widget)
     tablewidget = new HTableWidget();
     tablewidget->setRowCount(1);//add first row in table
@@ -26,12 +29,12 @@ Transactions_tab::Transactions_tab() : green_row(0)
     tablewidget->horizontalHeader()->hide();
     tablewidget->verticalHeader()->hide();
     tablewidget->setStyleSheet("QTableView{border : 1px solid lightGray}");
+    //tablewidget->setShowGrid(false);
 
     tablewidget->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     tablewidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    main_layout.setContentsMargins(0, 5, 0, 0);
 
-    user.setStyleSheet("border: 1px solid white");
+    user.setStyleSheet("border: 0px solid white");
     user.setPlaceholderText("Search");
     user.setMaximumHeight(40);
     user.setFixedHeight(40);
@@ -48,11 +51,9 @@ Transactions_tab::Transactions_tab() : green_row(0)
 
     QHBoxLayout* search_lay = new QHBoxLayout();
 
-
-    QPixmap image("../../../../png_files/search.png");
-    QPixmap image1 = image.scaled(QSize(15, 15),  Qt::KeepAspectRatio);
+    QPixmap image(":/icon/search.svg");
     search_label.setSizeIncrement(100,40);
-    search_label.setPixmap(image1);
+    search_label.setPixmap(image);
 
     search_lay->addWidget(new QLabel());
     search_lay->addWidget(new QLabel());
@@ -60,9 +61,7 @@ Transactions_tab::Transactions_tab() : green_row(0)
     search_lay->addWidget(&search_label);
     search_lay->addWidget(&user);
 
-    connect(tablewidget,SIGNAL(mouseMoveEventDid()),this,SLOT(doRowColor()));
-
-
+    main_layout.setContentsMargins(0, 0, 0, 0);
     main_layout.addLayout(search_lay);
     main_layout.addWidget(tablewidget);
     setLayout(&main_layout);

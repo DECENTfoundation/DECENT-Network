@@ -30,7 +30,7 @@ decent::wallet::ui::gui::PurchasedTab::PurchasedTab()
     m_filterLineEditer.setStyleSheet("border: 1px solid white");
     m_filterLineEditer.setFixedHeight(40);
 
-    m_main_layout.setContentsMargins(0, 5, 0, 0);
+    m_main_layout.setContentsMargins(0, 0, 0, 0);
     m_main_layout.addWidget(&m_filterLineEditer);
     m_main_layout.addWidget(m_pTableWidget);
     setLayout(&m_main_layout);

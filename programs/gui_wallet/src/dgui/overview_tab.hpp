@@ -41,10 +41,10 @@ public:
 
        for(i=0;i<NUMBER_OF_SUB_LAYOUTS;++i,nIndexZuyg+=2,nIndexKent+=2)
        {
-           if(i%2==0){m_vSub_Widgets[i].setStyleSheet("background-color:rgb(27,176,104);");}
+           if(i%2==0){m_vSub_Widgets[i].setStyleSheet("background-color:rgb(244,244,244);");}
            else{m_vSub_Widgets[i].setStyleSheet("background-color:white;");}
            m_vLabels[nIndexZuyg].setStyleSheet("font-weight: bold");
-           m_vLabels[nIndexZuyg].setText(QString::fromStdString(a_info[i]));
+           m_vLabels[nIndexZuyg].setText(QString::fromStdString(a_info[i] + " ")); //on progres
            m_vSub_layouts[i].setSpacing(0);
            m_vSub_layouts[i].setContentsMargins(45,3,0,3);
            m_vSub_layouts[i].addWidget(&m_vLabels[nIndexZuyg]);
