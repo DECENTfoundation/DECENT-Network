@@ -164,7 +164,7 @@ CentralWigdet::CentralWigdet(class QBoxLayout* a_pAllLayout, class Mainwindow_gu
 
     setStyleSheet("color:black;""background-color:white;");
     m_main_tabs2.setStyleSheet("QTabBar::tab{"
-                               "color:green;background-color:white;"
+                               "color:rgb(27,176,104);background-color:white;"
                                 "padding: 17px 55px;"
                                 "border: 1px solid rgb(240,240,240);}"
                                "QTabBar::tab:selected{"
@@ -243,7 +243,6 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
 {
     bool bImageFound(true);
 
-
     m_main_tabs2.addTab(&m_browse_cont_tab,tr("Browse Content"));
     m_main_tabs2.addTab(&m_trans_tab,tr("Transactions"));
     m_main_tabs2.addTab(&m_Upload_tab,tr("Upload"));
@@ -321,7 +320,7 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     m_pUsernameWgt->setLayout(pHBoxLayoutTmp);
     m_first_line_lbl.addWidget(m_pUsernameWgt);
     m_pUsernameWgt->setFixedHeight(__HEIGHT__);
-    m_pUsernameWgt->setMaximumWidth(270);
+    m_pUsernameWgt->setMaximumWidth(271);
 
     /*//////////////////////////////////////////*/
     line = new QFrame(this);
@@ -351,7 +350,7 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     m_pBalanceWgt1->setLayout(pHBoxLayoutTmp);
     m_first_line_lbl.addWidget(m_pBalanceWgt1);
     m_pBalanceWgt1->setFixedHeight(__HEIGHT__);
-    m_pBalanceWgt1->setMaximumWidth(354);
+    m_pBalanceWgt1->setMaximumWidth(353);
 
     /*//////////////////////////////////////////*/
     line = new QFrame(this);
@@ -391,11 +390,13 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     m_browse_cont_tab.setStyleSheet("color: black;""background-color:white;");
     SetAccountBalancesFromStrGUI(std::vector<std::string>());
 
+
+    m_main_layout.setContentsMargins(0, 0, 0, 0);
+    m_main_layout.setMargin(0);
+    m_main_layout.setSpacing(0);
+
+
     m_main_layout.addLayout(&m_first_line_lbl);
-
-
-
-
 
     m_main_layout.addWidget(&m_main_tabs2);
 
