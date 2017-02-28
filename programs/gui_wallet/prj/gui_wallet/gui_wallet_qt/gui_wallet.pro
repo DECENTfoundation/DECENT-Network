@@ -101,4 +101,4 @@ HEADERS += \
     ../../../src/dgui/decent_wallet_ui_gui_contentdetailsbase.hpp
 
 RESOURCES += \
-    resources.qrc
+    qrc_resources.cpp

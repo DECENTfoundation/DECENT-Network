@@ -166,8 +166,8 @@ CentralWigdet::CentralWigdet(class QBoxLayout* a_pAllLayout, class Mainwindow_gu
     //std::string style_str = "QTabBar::tab{color:rgb(27,176,104);background-color:white;padding: 17px " + lenght + "px;border: 1px solid rgb(240,240,240);}QTabBar::tab:selected{color:white;background-color:rgb(27,176,104);}";
     setStyleSheet("color:black;""background-color:white;");
     m_main_tabs2.setStyleSheet("QTabBar::tab{"
+                               " height: 40px; width: 186px; "
                                "color:rgb(27,176,104);background-color:white;"
-                                "padding: 17px 55px;"
                                 "border: 1px solid rgb(240,240,240);}"
                                "QTabBar::tab:selected{"
                                "color:white;background-color:rgb(27,176,104);}"
@@ -467,18 +467,16 @@ void CentralWigdet::resizeEvent ( QResizeEvent * a_event )
     m_pUsernameWgt->resize(nWidth_big,m_pUsernameWgt->height());
     m_pBalanceWgt1->resize(nWidth_medium,m_pBalanceWgt1->height());
 
-//    int lenght = a_event->size().width() / 5;
+    double lenght = a_event->size().width()/5;
+    std::cout<<lenght<<std::endl;
 
-//    std::string style_str = "QTabBar::tab{color:rgb(27,176,104);background-color:white;padding: 17px 80px;border: 1px solid rgb(240,240,240);}QTabBar::tab:selected{color:white;background-color:rgb(27,176,104);}";
-//    //m_main_tabs2.setStyleSheet(style_str);
 //    m_main_tabs2.setStyleSheet("QTabBar::tab{"
+//                               " height: 40px; width: " + QString::number(lenght) + "px; "
 //                               "color:rgb(27,176,104);background-color:white;"
-//                                "padding: 17px 80px;"
 //                                "border: 1px solid rgb(240,240,240);}"
 //                               "QTabBar::tab:selected{"
 //                               "color:white;background-color:rgb(27,176,104);}"
 //                               );
-
 
 }
 

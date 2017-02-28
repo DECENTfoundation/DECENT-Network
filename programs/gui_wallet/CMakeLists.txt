@@ -63,7 +63,6 @@ add_executable( gui_wallet MACOSX_BUNDLE
                 src/dgui/transactions_tab.hpp
                 src/dgui/upload_tab.hpp
                 src/ui_wallet/fc_rpc_gui.hpp
-		prj/gui_wallet/gui_wallet_qt/resources.qrc
               )
 
 target_include_directories( gui_wallet PUBLIC
