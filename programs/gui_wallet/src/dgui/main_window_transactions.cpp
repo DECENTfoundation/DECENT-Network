@@ -27,6 +27,8 @@ void gui_wallet::Mainwindow_gui_wallet::TaskDoneTransactionsGUI(void* a_clbkArg,
     int row = 1;
     int col = 0;
 
+
+
     m_pCentralWidget->m_trans_tab.createNewRow(a_result.size());
 
     //false username
@@ -143,32 +145,19 @@ void gui_wallet::Mainwindow_gui_wallet::TaskDoneTransactionsGUI(void* a_clbkArg,
     }
     m_pCentralWidget->m_trans_tab.deleteEmptyRows();
 
-    QPoint mouse_pos = m_pCentralWidget->m_trans_tab.tablewidget->mapFromGlobal(QCursor::pos());
-    QTableWidgetItem *ite = m_pCentralWidget->m_trans_tab.tablewidget->itemAt(mouse_pos);
-    if(ite != NULL)
+    if(m_pCentralWidget->m_trans_tab.green_row != 0)
     {
-        int a = ite->row();
-        if(a != 0)
-        {
-            for(int i = 0; i < 4; ++i)
-            {
-                m_pCentralWidget->m_trans_tab.tablewidget->item(a,i)->setBackgroundColor(QColor(27,176,104));
-            }
-        }
+        m_pCentralWidget->m_trans_tab.tablewidget->item(m_pCentralWidget->m_trans_tab.green_row,0)->setBackgroundColor(QColor(27,176,104));
+        m_pCentralWidget->m_trans_tab.tablewidget->item(m_pCentralWidget->m_trans_tab.green_row,1)->setBackgroundColor(QColor(27,176,104));
+        m_pCentralWidget->m_trans_tab.tablewidget->item(m_pCentralWidget->m_trans_tab.green_row,2)->setBackgroundColor(QColor(27,176,104));
+        m_pCentralWidget->m_trans_tab.tablewidget->item(m_pCentralWidget->m_trans_tab.green_row,3)->setBackgroundColor(QColor(27,176,104));
+
+        m_pCentralWidget->m_trans_tab.tablewidget->item(m_pCentralWidget->m_trans_tab.green_row,0)->setForeground(QColor::fromRgb(255,255,255));
+        m_pCentralWidget->m_trans_tab.tablewidget->item(m_pCentralWidget->m_trans_tab.green_row,1)->setForeground(QColor::fromRgb(255,255,255));
+        m_pCentralWidget->m_trans_tab.tablewidget->item(m_pCentralWidget->m_trans_tab.green_row,2)->setForeground(QColor::fromRgb(255,255,255));
+        m_pCentralWidget->m_trans_tab.tablewidget->item(m_pCentralWidget->m_trans_tab.green_row,3)->setForeground(QColor::fromRgb(255,255,255));
     }
 }
-
-    //SetNewTask2("get_account_history hayq 4",this,NULL,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
-//    SetNewTask2("get_account_history hayq 4",this,NULL,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
-//}
-
-//#if 0
-//void gui_wallet::Mainwindow_gui_wallet::TaskDoneTransactionsGUI(void* a_clbkArg,int64_t a_err,
-//                                                                const std::string& a_task,const std::string& a_result)
-//{
-//    //
-//}
-//#endif
 
 
 void gui_wallet::Mainwindow_gui_wallet::TaskDoneTransactionsGUI3(void* a_clbkArg,int64_t a_err,

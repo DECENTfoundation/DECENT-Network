@@ -160,11 +160,19 @@ CentralWigdet::CentralWigdet(class QBoxLayout* a_pAllLayout, class Mainwindow_gu
 #endif
     ,m_Overview_tab(a_pPar)
 {
+
+
     setStyleSheet("color:black;""background-color:white;");
     m_main_tabs2.setStyleSheet("QTabBar::tab{"
-                               "color:green;background-color:white;}"
+                               "color:green;background-color:white;"
+                                "padding: 17px 55px;"
+                                "border: 1px solid rgb(240,240,240);}"
                                "QTabBar::tab:selected{"
-                               "color:white;background-color:rgb(27,176,104);}");
+                               "color:white;background-color:rgb(27,176,104);}"
+                               );
+
+
+
     PrepareGUIprivate(a_pAllLayout);
 }
 
@@ -228,19 +236,19 @@ QWidget* CentralWigdet::GetWidgetFromTable5(int a_nColumn, int a_nWidget)
 
 
 #define __SIZE_FOR_IMGS__   40
-#define __HEIGHT__  67
+#define __HEIGHT__  60
 #include "decent_wallet_ui_gui_newcheckbox.hpp"
 
 void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
 {
     bool bImageFound(true);
 
+
     m_main_tabs2.addTab(&m_browse_cont_tab,tr("Browse Content"));
     m_main_tabs2.addTab(&m_trans_tab,tr("Transactions"));
     m_main_tabs2.addTab(&m_Upload_tab,tr("Upload"));
     m_main_tabs2.addTab(&m_Overview_tab,tr("Overview"));
     m_main_tabs2.addTab(&m_Purchased_tab,tr("Purchased"));
-
 #if 1
     QTabBar* pTabBar = m_main_tabs2.tabBar();
     pTabBar->setDocumentMode(true);
@@ -259,8 +267,10 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     QLabel* pLabelTmp;
     QHBoxLayout *pHBoxLayoutTmp;
     QComboBox* pComboTmp1;
-    QFrame *line;
+    QFrame* line;
+
     decent::wallet::ui::gui::AccountBalanceWidget* pCombo2;
+
     /*////////////////////////////////////////////////////////////////////////////////////*/
 
     /*//////////////////////////////////////////*/
@@ -277,16 +287,18 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     pHBoxLayoutTmp->addWidget(pLabelTmp);
     pLabelTmp->setFixedSize(__SIZE_FOR_IMGS__,__SIZE_FOR_IMGS__);
     m_pDcLogoWgt->setLayout(pHBoxLayoutTmp);
-    m_first_line_lbl.addWidget(m_pDcLogoWgt);
     m_pDcLogoWgt->setFixedHeight(__HEIGHT__);
-    m_pDcLogoWgt->setMaximumWidth(130);
+    m_pDcLogoWgt->setMaximumWidth(126);
+    m_first_line_lbl.addWidget(m_pDcLogoWgt);
+
 
     /*//////////////////////////////////////////*/
     line = new QFrame(this);
     line->setFrameShape(QFrame::VLine); // Horizontal line
-    line->setFrameShadow(QFrame::Sunken);
-    line->setLineWidth(15);
-    //line->setFixedWidth(130);
+    //line->setFrameShadow(QFrame::Sunken);
+    line->setLineWidth(1);
+    line->setStyleSheet("color: #f0f0f0");
+    line->setFixedHeight(68);
     m_first_line_lbl.addWidget(line);
 
     /*//////////////////////////////////////////*/
@@ -314,9 +326,10 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     /*//////////////////////////////////////////*/
     line = new QFrame(this);
     line->setFrameShape(QFrame::VLine); // Horizontal line
-    line->setFrameShadow(QFrame::Sunken);
+    //line->setFrameShadow(QFrame::Sunken);
     line->setLineWidth(1);
-    //line->setFixedWidth(270);
+    line->setStyleSheet("color: #f0f0f0");
+    line->setFixedHeight(68);
     m_first_line_lbl.addWidget(line);
 
     /*//////////////////////////////////////////*/
@@ -343,9 +356,10 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     /*//////////////////////////////////////////*/
     line = new QFrame(this);
     line->setFrameShape(QFrame::VLine); // Horizontal line
-    line->setFrameShadow(QFrame::Sunken);
+    //line->setFrameShadow(QFrame::Sunken);
     line->setLineWidth(1);
-    //line->setFixedWidth(354);
+    line->setStyleSheet("color: #f0f0f0");
+    line->setFixedHeight(68);
     m_first_line_lbl.addWidget(line);
 
     /*//////////////////////////////////////////*/
@@ -367,7 +381,7 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     pWidgetTmp2->setLayout(pHBoxLayoutTmp);
     m_first_line_lbl.addWidget(pWidgetTmp2);
     pWidgetTmp2->setFixedHeight(__HEIGHT__);
-    pWidgetTmp2->setMaximumWidth(187);
+    pWidgetTmp2->setMaximumWidth(190);
 
 #if 0
     bool bRet;
@@ -378,6 +392,11 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     SetAccountBalancesFromStrGUI(std::vector<std::string>());
 
     m_main_layout.addLayout(&m_first_line_lbl);
+
+
+
+
+
     m_main_layout.addWidget(&m_main_tabs2);
 
     a_pAllLayout->addLayout(&m_main_layout);

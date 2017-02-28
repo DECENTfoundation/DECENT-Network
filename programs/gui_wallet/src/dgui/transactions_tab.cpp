@@ -15,10 +15,10 @@ using namespace gui_wallet;
 
 static const char* firsItemNames[]={"Time","Type","Info","Fee"};
 
-Transactions_tab::Transactions_tab()
+Transactions_tab::Transactions_tab() : green_row(0)
 {
     //create table (widget)
-    tablewidget = new QTableWidget();
+    tablewidget = new HTableWidget();
     tablewidget->setRowCount(1);//add first row in table
     tablewidget->setColumnCount(4);
     tablewidget->verticalHeader()->setDefaultSectionSize(35);
@@ -60,6 +60,9 @@ Transactions_tab::Transactions_tab()
     search_lay->addWidget(&search_label);
     search_lay->addWidget(&user);
 
+    connect(tablewidget,SIGNAL(mouseMoveEventDid()),this,SLOT(doRowColor()));
+
+
     main_layout.addLayout(search_lay);
     main_layout.addWidget(tablewidget);
     setLayout(&main_layout);
@@ -98,4 +101,55 @@ Transactions_tab::~Transactions_tab()
 {
     main_layout.removeWidget(tablewidget);
     delete tablewidget;
+}
+
+void Transactions_tab::doRowColor()
+{
+    if(green_row != 0)
+    {
+        tablewidget->item(green_row,0)->setBackgroundColor(QColor(255,255,255));
+        tablewidget->item(green_row,1)->setBackgroundColor(QColor(255,255,255));
+        tablewidget->item(green_row,2)->setBackgroundColor(QColor(255,255,255));
+        tablewidget->item(green_row,3)->setBackgroundColor(QColor(255,255,255));
+
+        tablewidget->item(green_row,0)->setForeground(QColor::fromRgb(0,0,0));
+        tablewidget->item(green_row,1)->setForeground(QColor::fromRgb(0,0,0));
+        tablewidget->item(green_row,2)->setForeground(QColor::fromRgb(0,0,0));
+        tablewidget->item(green_row,3)->setForeground(QColor::fromRgb(0,0,0));
+    }
+    QPoint mouse_pos = tablewidget->mapFromGlobal(QCursor::pos());
+    QTableWidgetItem *ite = tablewidget->itemAt(mouse_pos);
+
+    if(ite != NULL)
+    {
+
+        int a = ite->row();
+        if(a != 0)
+        {
+            tablewidget->item(a,0)->setBackgroundColor(QColor(27,176,104));
+            tablewidget->item(a,1)->setBackgroundColor(QColor(27,176,104));
+            tablewidget->item(a,2)->setBackgroundColor(QColor(27,176,104));
+            tablewidget->item(a,3)->setBackgroundColor(QColor(27,176,104));
+
+            tablewidget->item(a,0)->setForeground(QColor::fromRgb(255,255,255));
+            tablewidget->item(a,1)->setForeground(QColor::fromRgb(255,255,255));
+            tablewidget->item(a,2)->setForeground(QColor::fromRgb(255,255,255));
+            tablewidget->item(a,3)->setForeground(QColor::fromRgb(255,255,255));
+            green_row = a;
+        }
+    }
+    else
+    {
+        green_row == 0;
+    }
+}
+
+void HTableWidget::mouseMoveEvent(QMouseEvent *event)
+{
+    mouseMoveEventDid();
+}
+
+HTableWidget::HTableWidget() : QTableWidget()
+{
+    this->setMouseTracking(true);
 }
