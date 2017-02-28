@@ -86,6 +86,8 @@ void Browse_content_tab::PrepareTableWidgetHeaderGUI()
 {
     QTableWidget& m_TableWidget = *m_pTableWidget;
     //QLabel* pLabel;
+    m_TableWidget.setStyleSheet("QTableView{border : 1px solid red}");
+    m_TableWidget.setShowGrid(false);
     m_TableWidget.horizontalHeader()->setDefaultSectionSize(300);
     m_TableWidget.setRowHeight(0,35);
     m_TableWidget.horizontalHeader()->hide();
