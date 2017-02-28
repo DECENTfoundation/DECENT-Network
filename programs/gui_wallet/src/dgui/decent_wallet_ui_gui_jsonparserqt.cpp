@@ -19,219 +19,250 @@ static const char* TypeToString(fc::variant::type_id a_type);
 
 
 decent::wallet::ui::gui::JsonParserQt::JsonParserQt()
-    :
-      m_pActual(&m_values),
-      m_pKeyActive(NULL)
 {
-    //
 }
+
+
+decent::wallet::ui::gui::JsonParserQt::JsonParserQt(const std::string& a_key)
+    :
+      m_type(fc::variant::null_type),
+      m_key(a_key)
+{
+}
+
+
+#if 0
+JsonParserQt*               m_pParent;
+fc::variant::type_id        m_type;
+std::string                 m_key;
+std::string                 m_value;
+std::vector<JsonParserQt*>  m_vValue;
+#endif
 
 
 decent::wallet::ui::gui::JsonParserQt::~JsonParserQt()
 {
-    //
+    this->clear();
 }
+
+
+bool decent::wallet::ui::gui::JsonParserQt::isVector()const
+{
+    return ((m_type==fc::variant::object_type)||(m_type==fc::variant::array_type));
+}
+
+
+int decent::wallet::ui::gui::JsonParserQt::size()const
+{
+    return m_vValue.size();
+}
+
 
 void decent::wallet::ui::gui::JsonParserQt::clear()
 {
-    m_values.clear();
+    const size_t cunSize(m_vValue.size());
+    for(size_t i(0); i<cunSize; ++i){delete m_vValue[i];}
+    m_vValue.clear();
 }
 
 
-bool decent::wallet::ui::gui::JsonParserQt::GetValueByKeyFirst(
-        const std::string& a_key, SKeyValue* a_value_ptr)
+const std::string& decent::wallet::ui::gui::JsonParserQt::value()const
 {
-    const size_t cunVectorSize(m_values.size());
+    return m_value;
+}
+
+
+const decent::wallet::ui::gui::JsonParserQt&
+decent::wallet::ui::gui::JsonParserQt::GetByKeyFirst(
+        const std::string& a_key, bool* a_bIsFound)const
+{
+    const JsonParserQt* pReturn;
+    bool bIsFoundTmp;
+    bool& bIsFound = a_bIsFound ? *a_bIsFound : bIsFoundTmp;
+    const size_t cunVectorSize(m_vValue.size());
+
+    bIsFound = false;
+
+    if(a_key == m_key)
+    {
+        bIsFound = true;
+        return *this;
+    }
+
     for(size_t i(0); i<cunVectorSize;++i)
     {
-        if((*m_values[i].key)==a_key)
+        if((m_vValue[i]->m_key)==a_key)
         {
-            if(a_value_ptr){*a_value_ptr=m_values[i];}
-            return true;
+            bIsFound = true;
+            return *m_vValue[i];
         }
 
-        if((m_values[i].type==fc::variant::object_type)||(m_values[i].type==fc::variant::array_type))
+        if(m_vValue[i]->isVector())
         {
-            if(m_values[i].pValue->GetValueByKeyFirst(a_key,a_value_ptr))
-            {
-                return true;
-            }
+            pReturn = &(m_vValue[i]->GetByKeyFirst(a_key,&bIsFound));
+            if(bIsFound){return *pReturn;}
         }
     }
-    return false;
+    return *this;
 }
 
 
-bool decent::wallet::ui::gui::JsonParserQt::GetValueByKey(
-        const std::string& a_key, SKeyValue* a_value_ptr)
+const decent::wallet::ui::gui::JsonParserQt&
+decent::wallet::ui::gui::JsonParserQt::GetByKey(
+        const std::string& a_key, bool* a_bIsFound)const
 {
-    const size_t cunVectorSize(m_values.size());
+    const size_t cunVectorSize(m_vValue.size());
     for(size_t i(0); i<cunVectorSize;++i)
     {
-        if((*m_values[i].key)==a_key)
+        if((m_vValue[i]->m_key)==a_key)
         {
-            if(a_value_ptr){*a_value_ptr=m_values[i];}
-            return true;
+            if(a_bIsFound){*a_bIsFound = true;}
+            return *m_vValue[i];
         }
     }
-    return false;
+    if(a_bIsFound){*a_bIsFound = false;}
+    return *this;
 }
 
 
-bool decent::wallet::ui::gui::JsonParserQt::GetValueByIndex(
-        int a_nIndex, SKeyValue* a_value_ptr)
+const decent::wallet::ui::gui::JsonParserQt&
+decent::wallet::ui::gui::JsonParserQt::GetByIndex(
+        int a_nIndex, bool* a_bIsFound)const
 {
-    if(a_nIndex<m_values.size()){if(a_value_ptr){*a_value_ptr=m_values[a_nIndex];}return true;}
-    return false;
+    if(a_nIndex<m_vValue.size())
+    {
+        if(a_bIsFound){*a_bIsFound=true;}
+        return *m_vValue[a_nIndex];
+    }
+    if(a_bIsFound){*a_bIsFound=false;}
+    return *this;
 }
 
 void decent::wallet::ui::gui::JsonParserQt::handle()const
 {
-    __DEBUG_APP2__(DEFAULT_LOG_LEVEL,"task=%s",m_inp.c_str());
-    SKeyValue aNewEntry;
-    aNewEntry.type = fc::variant::null_type;
-    aNewEntry.key = m_pKeyActive;
-    aNewEntry.value = new std::string("");
-    m_pActual->push_back(aNewEntry);
-    m_pKeyActive = NULL;
+    __DEBUG_APP2__(DEFAULT_LOG_LEVEL,"task=%s, key=%s",m_inp.c_str(),m_key.c_str());
+    m_type = fc::variant::null_type;
+    m_value = "";
 }
 
 
 void decent::wallet::ui::gui::JsonParserQt::handle( const int64_t& a_v )const
 {
-   __DEBUG_APP2__(DEFAULT_LOG_LEVEL,"task=%s",m_inp.c_str());
-   SKeyValue aNewEntry;
-   aNewEntry.type = fc::variant::int64_type;
-   aNewEntry.key = m_pKeyActive;
-   aNewEntry.value = new std::string(QString::number(a_v,10).toStdString());
-   m_pActual->push_back(aNewEntry);
-   m_pKeyActive = NULL;
+   m_type = fc::variant::int64_type;
+   m_value = QString::number(a_v,10).toStdString();
+   __DEBUG_APP2__(DEFAULT_LOG_LEVEL,"task=%s, key=%s, value=%s",
+                  m_inp.c_str(),m_key.c_str(),m_value.c_str());
 }
 
 
 void decent::wallet::ui::gui::JsonParserQt::handle( const uint64_t& a_v )const
 {
-   __DEBUG_APP2__(DEFAULT_LOG_LEVEL,"task=%s",m_inp.c_str());
-   SKeyValue aNewEntry;
-   aNewEntry.type = fc::variant::uint64_type;
-   aNewEntry.key = m_pKeyActive;
-   aNewEntry.value = new std::string(QString::number(a_v,10).toStdString());
-   m_pActual->push_back(aNewEntry);
-   m_pKeyActive = NULL;
+   m_type = fc::variant::uint64_type;
+   m_value = QString::number(a_v,10).toStdString();
+   __DEBUG_APP2__(DEFAULT_LOG_LEVEL,"task=%s, key=%s, value=%s",
+                  m_inp.c_str(),m_key.c_str(),m_value.c_str());
 }
 
 
 void decent::wallet::ui::gui::JsonParserQt::handle( const double& a_v )const
 {
-   __DEBUG_APP2__(DEFAULT_LOG_LEVEL,"task=%s",m_inp.c_str());
-   SKeyValue aNewEntry;
    QString qsValue = QString::number(a_v,'f').remove( QRegExp("0+$") ).remove( QRegExp("\\.$") );
-   aNewEntry.type = fc::variant::double_type;
-   aNewEntry.key = m_pKeyActive;
-   aNewEntry.value = new std::string(qsValue.toStdString());
-   m_pActual->push_back(aNewEntry);
-   m_pKeyActive = NULL;
+   m_type = fc::variant::double_type;
+   m_value = qsValue.toStdString();
+   __DEBUG_APP2__(DEFAULT_LOG_LEVEL,"task=%s, key=%s, value=%s",
+                  m_inp.c_str(),m_key.c_str(),m_value.c_str());
 }
 
 
 void decent::wallet::ui::gui::JsonParserQt::handle( const bool& a_v )const
 {
-   __DEBUG_APP2__(DEFAULT_LOG_LEVEL,"task=%s",m_inp.c_str());
-   SKeyValue aNewEntry;
-   aNewEntry.type = fc::variant::bool_type;
-   aNewEntry.key = m_pKeyActive;
-   aNewEntry.value = new std::string(a_v ? "true" : "false");
-   m_pActual->push_back(aNewEntry);
-   m_pKeyActive = NULL;
+   m_type = fc::variant::bool_type;
+   m_value = a_v ? "true" : "false";
+   __DEBUG_APP2__(DEFAULT_LOG_LEVEL,"task=%s, key=%s, value=%s",
+                  m_inp.c_str(),m_key.c_str(),m_value.c_str());
 }
 
 
 void decent::wallet::ui::gui::JsonParserQt::handle( const std::string& a_v )const
 {
-   __DEBUG_APP2__(DEFAULT_LOG_LEVEL,"task=%s, str=%s",m_inp.c_str(),a_v.c_str());
-   SKeyValue aNewEntry;
-   aNewEntry.type = fc::variant::string_type;
-   aNewEntry.key = m_pKeyActive;
-   aNewEntry.value = new std::string(a_v);
-   m_pActual->push_back(aNewEntry);
-   m_pKeyActive = NULL;
+   m_type = fc::variant::string_type;
+   m_value = a_v;
+   __DEBUG_APP2__(DEFAULT_LOG_LEVEL,"task=%s, key=%s, value=%s",
+                  m_inp.c_str(),m_key.c_str(),m_value.c_str());
 }
 
 
 void decent::wallet::ui::gui::JsonParserQt::handle( const fc::variant_object& a_vo)const
 {
-   size_t unSize = a_vo.size();
-   __DEBUG_APP2__(DEFAULT_LOG_LEVEL,"task=%s, unSize=%d",m_inp.c_str(),(int)unSize);
+   JsonParserQt* pMembersToAdd;
+   const size_t cunSize( a_vo.size());
+   __DEBUG_APP2__(DEFAULT_LOG_LEVEL,"task=%s, key=%s, size=%d",
+                  m_inp.c_str(),m_key.c_str(),(int)cunSize);
 
-   SKeyValue aNewEntry;
-   aNewEntry.type = fc::variant::object_type;
-   aNewEntry.key = m_pKeyActive;
-   aNewEntry.pValue = new JsonParserQt;
-   m_pActual->push_back(aNewEntry);
-   std::vector<SKeyValue>* pActual = m_pActual;
-   m_pActual = &(aNewEntry.pValue->m_values);
+   m_type = fc::variant::object_type;
 
    const fc::variant_object::entry* pEntry;
    fc::variant_object::iterator pItr=a_vo.begin();
 
-   for(size_t i(0); i<unSize;++i,++pItr)
+   for(size_t i(0); i<cunSize;++i,++pItr)
    {
        pEntry = &(*pItr);
-       m_pKeyActive = new std::string(pEntry->key());
-       pEntry->value().visit(*this);
+
+       pMembersToAdd = new JsonParserQt(pEntry->key());
+       if(!pMembersToAdd){break;}// Should be some error handling
+       pMembersToAdd->m_inp = m_inp;
+
+       pEntry->value().visit(*pMembersToAdd);
+       m_vValue.push_back(pMembersToAdd);
    }
-   m_pActual = pActual;
 }
 
 
 void decent::wallet::ui::gui::JsonParserQt::handle( const fc::variants& a_vs)const
 {
-   size_t unSize = a_vs.size();
-   __DEBUG_APP2__(DEFAULT_LOG_LEVEL,"task=%s, size=%d",m_inp.c_str(),(int)unSize);
+   JsonParserQt* pMembersToAdd;
+   const size_t cunSize ( a_vs.size() );
+   __DEBUG_APP2__(DEFAULT_LOG_LEVEL,"task=%s, key=%s, size=%d",
+                  m_inp.c_str(),m_key.c_str(),(int)cunSize);
    const fc::variant* pVariant;
 
+   m_type = fc::variant::array_type;
 
-   SKeyValue aNewEntry;
-   aNewEntry.type = fc::variant::array_type;
-   aNewEntry.key = m_pKeyActive;
-   aNewEntry.pValue = new JsonParserQt;
-   m_pActual->push_back(aNewEntry);
-   std::vector<SKeyValue>* pActual = m_pActual;
-   m_pActual = &(aNewEntry.pValue->m_values);
-   m_pKeyActive = NULL;
-
-   for(size_t i(0);i<unSize;++i)
+   for(size_t i(0);i<cunSize;++i)
    {
+       pMembersToAdd = new JsonParserQt("");
+       if(!pMembersToAdd){break;}// Should be some error handling
+       pMembersToAdd->m_inp = m_inp;
+
        pVariant = &(a_vs[i]);
-       pVariant->visit(*this);
+       pVariant->visit(*pMembersToAdd);
+       m_vValue.push_back(pMembersToAdd);
    }
-   m_pActual = pActual;
 }
 
 
-void decent::wallet::ui::gui::JsonParserQt::PrintValues(int a_nTabs)
+void decent::wallet::ui::gui::JsonParserQt::PrintValues(int a_nTabs)const
 {
     int nLoopIndex;
-    const size_t cunVectSize(m_values.size());
+    const size_t cunVectSize(m_vValue.size());
+
+    for(nLoopIndex=0;nLoopIndex<a_nTabs;++nLoopIndex){printf("\t");}
+
+    if(isVector()){printf("start of ");}
+
+    printf("type=%s, key=%s",TypeToString(m_type),m_key.c_str());
+
+    if(!isVector()){printf(", value=%s",m_value.c_str());}
 
     for(size_t i(0); i<cunVectSize;++i)
     {
-        if((m_values[i].type==fc::variant::object_type)||(m_values[i].type==fc::variant::array_type))
-        {
-            m_values[i].pValue->PrintValues(a_nTabs+1);
-        }
-        else
-        {
-            for(nLoopIndex=0;nLoopIndex<a_nTabs;++nLoopIndex){printf("\t");}
-            printf("type=%s, key=%s, value=%s",
-                   TypeToString(m_values[i].type),m_values[i].key->c_str(),m_values[i].value->c_str());
-        }
         printf("\n");
+        m_vValue[i]->PrintValues(a_nTabs+1);
     }
+
+    if(isVector()){printf("\nend of type=%s, key=%s\n",TypeToString(m_type),m_key.c_str());}
 }
 
-
-/*/////////////////////////////////////////////////////////////////////////////////*/
 
 #if 0
 enum type_id
@@ -248,7 +279,12 @@ enum type_id
 };
 #endif
 
-static const char* TypeToString(fc::variant::type_id a_type)
+const char* decent::wallet::ui::gui::JsonParserQt::TypeToString()const
+{
+    return decent::wallet::ui::gui::JsonParserQt::TypeToString(m_type);
+}
+
+const char* decent::wallet::ui::gui::JsonParserQt::TypeToString(fc::variant::type_id a_type)
 {
     switch(a_type)
     {

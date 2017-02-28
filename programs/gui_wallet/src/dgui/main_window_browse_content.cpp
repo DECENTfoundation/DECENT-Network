@@ -57,7 +57,8 @@ void gui_wallet::Mainwindow_gui_wallet::TaskDoneBrowseContentGUI(void* a_clbkArg
 
 
 void gui_wallet::Mainwindow_gui_wallet::TaskDoneBrowseContentGUI3(void* a_clbkArg,int64_t a_err,
-                                                                  const std::string& a_task,const fc::variant& a_result)
+                                                                  const std::string& a_task,
+                                                                  const fc::variant& a_result)
 {
     decent::wallet::ui::gui::JsonParserQt aVisitor;
     aVisitor.m_inp = a_task;
@@ -65,6 +66,10 @@ void gui_wallet::Mainwindow_gui_wallet::TaskDoneBrowseContentGUI3(void* a_clbkAr
 
     a_result.visit(aVisitor);
     aVisitor.PrintValues();
+    const decent::wallet::ui::gui::JsonParserQt& visRes = aVisitor.GetByIndex(0).GetByKey("author");
+    std::string aRes = visRes.value();
+    printf("!!!!!!!!!!!!!!!! type=%s, val=%s\n",visRes.TypeToString(), aRes.c_str());
+    //printf("!!!!!!!!!!!!!!!!!!!!!!!!!! g_nCreateAndDelete=%d\n",g_nCreateAndDelete);
     s_nActive = 0;
 }
 

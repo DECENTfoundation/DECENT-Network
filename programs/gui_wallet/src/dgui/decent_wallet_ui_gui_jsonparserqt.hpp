@@ -33,30 +33,28 @@ enum type_id
 };
 #endif
 
-struct SKeyValue{
-    SKeyValue():type(fc::variant::null_type){key=NULL;pValue=NULL;}
-    fc::variant::type_id type;
-    union{
-        std::string* value;
-        union{
-            std::string* key;
-            class JsonParserQt* pValue;
-        };
-    };
-}; // struct SKeyValue{
-
-
 class JsonParserQt : public fc::variant::visitor
 {
 public:
     JsonParserQt();
+protected:
+    JsonParserQt(const std::string& key);
+public:
     virtual ~JsonParserQt();
 
+    bool isVector()const;
+    int size()const;
+    const std::string& value()const;
     void clear();
-    bool GetValueByKeyFirst(const std::string& key, SKeyValue* value_ptr);  // recursiv
-    bool GetValueByKey(const std::string& key, SKeyValue* value_ptr);
-    bool GetValueByIndex(int index, SKeyValue* value_ptr);
-    void PrintValues(int tabs=0);
+
+    const JsonParserQt& GetByKeyFirst(const std::string& key, bool* isFound=NULL)const;  // recursiv
+    const JsonParserQt& GetByKey(const std::string& key, bool* isFound=NULL)const;
+    const JsonParserQt& GetByIndex(int index, bool* isFound=NULL)const;
+
+    const char* TypeToString()const;
+    static const char* TypeToString(fc::variant::type_id a_type);
+
+    void PrintValues(int tabs=0)const;
 
 private:
    virtual void handle()const;
@@ -69,9 +67,11 @@ private:
    virtual void handle( const fc::variants& a_vs)const ;
 
 private:
-    std::vector<SKeyValue>          m_values;
-    mutable std::vector<SKeyValue>* m_pActual;
-    mutable std::string*            m_pKeyActive;
+    //mutable const JsonParserQt*                 m_pParent;
+    mutable fc::variant::type_id                m_type;
+    mutable std::string                         m_key;
+    mutable std::string                         m_value;
+    mutable std::vector<const JsonParserQt*>    m_vValue;
 public:
     std::string m_inp;
 };
