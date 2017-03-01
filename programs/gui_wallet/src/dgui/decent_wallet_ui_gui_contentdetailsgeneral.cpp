@@ -21,8 +21,8 @@ decent::wallet::ui::gui::ContentDetailsGeneral::ContentDetailsGeneral()
       m_label(this,NULL,&decent::wallet::ui::gui::ContentDetailsGeneral::LabelPushCallbackGUI)
 {
     bool bRet;
-    std::string sImagePath = FindImagePath(bRet,"buy_button_image.png");
-    QPixmap aPixMap(tr(sImagePath.c_str()));
+ //   std::string sImagePath = FindImagePath(bRet,":/icon/images/buy_button_image.png");
+    QPixmap aPixMap(":/icon/images/buy_button_image.png");
     m_label.setScaledContents(true);
     m_label.setPixmap(aPixMap);
     m_free_for_child.addWidget(&m_label);

@@ -262,8 +262,8 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
 #endif
 
     QWidget* pWidgetTmp2 = nullptr;
-    QPixmap image;
     QLabel* pLabelTmp = nullptr;
+    QPixmap image;
     QHBoxLayout *pHBoxLayoutTmp = nullptr;
     QComboBox* pComboTmp1 = nullptr;
     QFrame* line = nullptr;
@@ -280,9 +280,11 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     pLabelTmp = new QLabel(tr(""));
     if(!pLabelTmp){throw __FILE__ "Low memory";}
     pLabelTmp->setScaledContents(true);
-    SetImageToLabelStatic(bImageFound,image,DECENT_LOGO_FILE_NAME2);
-    if(bImageFound){pLabelTmp->setPixmap(image);}
-    else {pLabelTmp->setText("DC");MakeWarning("no file", "");}
+//    SetImageToLabelStatic(bImageFound,image,DECENT_LOGO_FILE_NAME2);
+//    if(bImageFound){pLabelTmp->setPixmap(image);}
+//    else {pLabelTmp->setText("DC");MakeWarning("no file", "");}
+    QPixmap m_image1(":/icon/images/decent_logo.png");
+    pLabelTmp->setPixmap(m_image1);
     pHBoxLayoutTmp->addWidget(pLabelTmp);
     pLabelTmp->setFixedSize(__SIZE_FOR_IMGS__,__SIZE_FOR_IMGS__);
     m_pDcLogoWgt->setLayout(pHBoxLayoutTmp);
@@ -308,9 +310,11 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     pLabelTmp = new QLabel(tr(""));
     if(!pLabelTmp){throw __FILE__ "Low memory";}
     pLabelTmp->setScaledContents(true);
-    SetImageToLabelStatic(bImageFound,image,USER_FILE_NAME2);
-    if(bImageFound){pLabelTmp->setPixmap(image);}
-    else {MakeWarning("no file", "");}
+//    SetImageToLabelStatic(bImageFound,image,USER_FILE_NAME2);
+//    if(bImageFound){pLabelTmp->setPixmap(image);}
+//    else {MakeWarning("no file", "");}
+    QPixmap m_image2(":/icon/images/user.png");
+    pLabelTmp->setPixmap(m_image2);
     pHBoxLayoutTmp->addWidget(pLabelTmp);
     pLabelTmp->setFixedSize(__SIZE_FOR_IMGS__,__SIZE_FOR_IMGS__);
     pComboTmp1 = new QComboBox;
@@ -339,9 +343,11 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     pLabelTmp = new QLabel(tr(""));
     if(!pLabelTmp){throw __FILE__ "Low memory";}
     pLabelTmp->setScaledContents(true);
-    SetImageToLabelStatic(bImageFound,image,BALANCE_FILE_NAME2);
-    if(bImageFound){pLabelTmp->setPixmap(image);}
-    else {MakeWarning("no file", "");}
+//    SetImageToLabelStatic(bImageFound,image,BALANCE_FILE_NAME2);
+//    if(bImageFound){pLabelTmp->setPixmap(image);}
+//    else {MakeWarning("no file", "");}
+    QPixmap m_image3(":/icon/images/balance.png");
+    pLabelTmp->setPixmap(m_image3);
     pHBoxLayoutTmp->addWidget(pLabelTmp);
     pLabelTmp->setFixedSize(__SIZE_FOR_IMGS__,__SIZE_FOR_IMGS__);
     pCombo2 = new decent::wallet::ui::gui::AccountBalanceWidget;
@@ -369,9 +375,11 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     pLabelTmp = new QLabel(tr(""));
     if(!pLabelTmp){throw __FILE__ "Low memory";}
     pLabelTmp->setScaledContents(true);
-    SetImageToLabelStatic(bImageFound,image,SEND_FILE_NAME2);
-    if(bImageFound){pLabelTmp->setPixmap(image);}
-    else {MakeWarning("no file", "");}
+//    SetImageToLabelStatic(bImageFound,image,SEND_FILE_NAME2);
+//    if(bImageFound){pLabelTmp->setPixmap(image);}
+//    else {MakeWarning("no file", "");}
+    QPixmap m_image4(":/icon/images/send.png");
+    pLabelTmp->setPixmap(m_image4);
     pHBoxLayoutTmp->addWidget(pLabelTmp);
     pLabelTmp->setFixedSize(__SIZE_FOR_IMGS__,__SIZE_FOR_IMGS__);
     pLabelTmp = new QLabel(tr("Send"));
