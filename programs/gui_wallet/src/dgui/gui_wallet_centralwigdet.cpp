@@ -164,13 +164,13 @@ CentralWigdet::CentralWigdet(class QBoxLayout* a_pAllLayout, class Mainwindow_gu
 
     setStyleSheet("color:black;""background-color:white;");
     m_main_tabs2.setStyleSheet("QTabBar::tab{"
-                               " height: 40px; width: 180px; "
+                               " height: 40px; width: 179px; "
                                "color:rgb(27,176,104);background-color:white;"
                                 "border: 1px solid rgb(240,240,240);}"
                                "QTabBar::tab:selected{"
                                "color:white;background-color:rgb(27,176,104);}"
                                );
-
+std::cout<<size().width()/5<<std::endl;
 
 
     PrepareGUIprivate(a_pAllLayout);
@@ -261,12 +261,12 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
      "}");
 #endif
 
-    QWidget* pWidgetTmp2;
+    QWidget* pWidgetTmp2 = nullptr;
     QPixmap image;
-    QLabel* pLabelTmp;
-    QHBoxLayout *pHBoxLayoutTmp;
-    QComboBox* pComboTmp1;
-    QFrame* line;
+    QLabel* pLabelTmp = nullptr;
+    QHBoxLayout *pHBoxLayoutTmp = nullptr;
+    QComboBox* pComboTmp1 = nullptr;
+    QFrame* line = nullptr;
 
     decent::wallet::ui::gui::AccountBalanceWidget* pCombo2;
 
@@ -465,11 +465,13 @@ void CentralWigdet::resizeEvent ( QResizeEvent * a_event )
     m_pUsernameWgt->resize(nWidth_big,m_pUsernameWgt->height());
     m_pBalanceWgt1->resize(nWidth_medium,m_pBalanceWgt1->height());
 
-    int lenght = size().width()/5;
-//    if(lenght != 180)
+    int lenght = a_event->size().width() - 1;
+    std::cout<<lenght/5<<std::endl;
+    std::cout<<a_event->oldSize().width()/5<<std::endl;
+//    if(lenght != a_event->oldSize().width())
 //    {
 //        m_main_tabs2.setStyleSheet("QTabBar::tab{"
-//                                   " height: 40px; width: " + QString::number(lenght) + "px; "
+//                                   " height: 40px; width: " + QString::number(lenght/5) + "px; "
 //                                   "color:rgb(27,176,104);background-color:white;"
 //                                    "border: 1px solid rgb(240,240,240);}"
 //                                   "QTabBar::tab:selected{"

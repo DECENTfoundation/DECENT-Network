@@ -65,6 +65,7 @@ namespace gui_wallet
         void createNewRow(const int);
         void deleteEmptyRows();
         void ArrangeSize();
+        void Connects();
 virtual void resizeEvent(QResizeEvent *a_event);
     public slots:
         void doRowColor();

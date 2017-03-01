@@ -149,12 +149,21 @@ void Transactions_tab::doRowColor()
     }
 }
 
-void HTableWidget::mouseMoveEvent(QMouseEvent *event)
+void Transactions_tab::Connects()
 {
-    mouseMoveEventDid();
+    connect(tablewidget,SIGNAL(mouseMoveEventDid()),this,SLOT(doRowColor()));
 }
+
 
 HTableWidget::HTableWidget() : QTableWidget()
 {
     this->setMouseTracking(true);
 }
+
+
+void HTableWidget::mouseMoveEvent(QMouseEvent *event)
+{
+    mouseMoveEventDid();
+}
+
+

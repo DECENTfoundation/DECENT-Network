@@ -27,10 +27,10 @@ using namespace gui_wallet;
 extern int g_nDebugApplication;
 
 
-Browse_content_tab::Browse_content_tab()
-        :
+Browse_content_tab::Browse_content_tab() : green_row(0),
+
         //m_TableWidget(1,s_cnNumberOfRows)
-        m_pTableWidget(new QTableWidget(1,s_cnNumberOfRows))
+        m_pTableWidget(new BTableWidget(1,s_cnNumberOfRows))
 {
     if(!m_pTableWidget){throw "Low memory!";}
 
@@ -50,7 +50,7 @@ Browse_content_tab::Browse_content_tab()
         "padding: 2 2 2 20; /* left padding (last number) must be more than the icon's width */"
     "}");
     QLabel* lab = new QLabel();
-    QPixmap image("../../../../png_files/search.svg");
+    QPixmap image(":/icon/search.svg");
     lab->setPixmap(image);
     //lab.setSizeIncrement(100, 40);
 
@@ -94,7 +94,7 @@ void Browse_content_tab::PrepareTableWidgetHeaderGUI()
     //QLabel* pLabel;
 
 
-    m_TableWidget.setShowGrid(false);
+    //m_TableWidget.setShowGrid(false);
 
     m_TableWidget.setStyleSheet("QTableWidget{border : 1px solid red}");
 
@@ -152,7 +152,7 @@ void Browse_content_tab::SetDigitalContentsGUI(const std::vector<decent::wallet:
     int nWidth = m_pTableWidget->width();
     m_main_layout.removeWidget(m_pTableWidget);
     delete m_pTableWidget;
-    m_pTableWidget = new QTableWidget(cnNumberOfContentsPlus1,s_cnNumberOfRows);
+    m_pTableWidget = new BTableWidget(cnNumberOfContentsPlus1,s_cnNumberOfRows);
     if(!m_pTableWidget){throw "Low memory!";}
 
     QTableWidget& m_TableWidget = *m_pTableWidget;
@@ -238,3 +238,67 @@ void Browse_content_tab::resizeEvent ( QResizeEvent * a_event )
     QWidget::resizeEvent(a_event);
     ArrangeSize();
 }
+
+
+void Browse_content_tab::Connects()
+{
+    connect(m_pTableWidget,SIGNAL(mouseMoveEventDid()),this,SLOT(doRowColor()));
+}
+
+void Browse_content_tab::doRowColor()
+{
+    if(green_row != 0)
+    {
+        m_pTableWidget->item(green_row,0)->setBackgroundColor(QColor(255,255,255));
+        m_pTableWidget->item(green_row,1)->setBackgroundColor(QColor(255,255,255));
+        m_pTableWidget->item(green_row,2)->setBackgroundColor(QColor(255,255,255));
+        m_pTableWidget->item(green_row,3)->setBackgroundColor(QColor(255,255,255));
+
+        m_pTableWidget->item(green_row,0)->setForeground(QColor::fromRgb(0,0,0));
+        m_pTableWidget->item(green_row,1)->setForeground(QColor::fromRgb(0,0,0));
+        m_pTableWidget->item(green_row,2)->setForeground(QColor::fromRgb(0,0,0));
+        m_pTableWidget->item(green_row,3)->setForeground(QColor::fromRgb(0,0,0));
+    }
+    QPoint mouse_pos = m_pTableWidget->mapFromGlobal(QCursor::pos());
+    QTableWidgetItem *ite = m_pTableWidget->itemAt(mouse_pos);
+
+    if(ite != NULL)
+    {
+
+        int a = ite->row();
+        if(a != 0)
+        {
+            m_pTableWidget->item(a,0)->setBackgroundColor(QColor(27,176,104));
+            m_pTableWidget->item(a,1)->setBackgroundColor(QColor(27,176,104));
+            m_pTableWidget->item(a,2)->setBackgroundColor(QColor(27,176,104));
+            m_pTableWidget->item(a,3)->setBackgroundColor(QColor(27,176,104));
+            m_pTableWidget->item(a,4)->setBackgroundColor(QColor(27,176,104));
+            m_pTableWidget->item(a,5)->setBackgroundColor(QColor(27,176,104));
+
+            m_pTableWidget->item(a,0)->setForeground(QColor::fromRgb(255,255,255));
+            m_pTableWidget->item(a,1)->setForeground(QColor::fromRgb(255,255,255));
+            m_pTableWidget->item(a,2)->setForeground(QColor::fromRgb(255,255,255));
+            m_pTableWidget->item(a,3)->setForeground(QColor::fromRgb(255,255,255));
+            m_pTableWidget->item(a,4)->setForeground(QColor::fromRgb(255,255,255));
+            m_pTableWidget->item(a,5)->setForeground(QColor::fromRgb(255,255,255));
+            green_row = a;
+        }
+    }
+    else
+    {
+        green_row == 0;
+    }
+}
+
+//BTableWidget::BTableWidget(int a , int b) : QTableWidget(a,b)
+//{
+//    this->setMouseTracking(true);
+//}
+
+
+void BTableWidget::mouseMoveEvent(QMouseEvent *event)
+{
+    mouseMoveEventDid();
+}
+
+

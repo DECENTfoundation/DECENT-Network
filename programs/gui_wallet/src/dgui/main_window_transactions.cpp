@@ -26,7 +26,6 @@ void gui_wallet::Mainwindow_gui_wallet::TaskDoneTransactionsGUI(void* a_clbkArg,
     int row = 1;
     int col = 0;
 
-
     m_pCentralWidget->m_trans_tab.createNewRow(a_result.size());
 
     //false username
@@ -142,6 +141,8 @@ void gui_wallet::Mainwindow_gui_wallet::TaskDoneTransactionsGUI(void* a_clbkArg,
         col = 0;
     }
     m_pCentralWidget->m_trans_tab.deleteEmptyRows();
+
+    m_pCentralWidget->m_trans_tab.Connects();
 
     if(m_pCentralWidget->m_trans_tab.green_row != 0)
     {
