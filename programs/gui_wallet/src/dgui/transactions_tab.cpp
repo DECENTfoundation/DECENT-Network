@@ -145,7 +145,7 @@ void Transactions_tab::doRowColor()
     }
     else
     {
-        green_row == 0;
+        green_row = 0;
     }
 }
 

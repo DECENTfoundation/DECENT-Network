@@ -178,14 +178,19 @@ void Browse_content_tab::SetDigitalContentsGUI(const std::vector<decent::wallet:
         m_TableWidget.setCellWidget(i,DCF::TIME,pLabel);
 
         std::string synopsis = aTemporar.synopsis;
-        auto synopsis_parsed = json::parse(aTemporar.synopsis);
-        if (synopsis_parsed["title"]) {
-            synopsis = synopsis_parsed["title"];
+        /*
+        try {
+            auto synopsis_parsed = json::parse(aTemporar.synopsis);
+            if (synopsis_parsed["title"]) {
+                synopsis = synopsis_parsed["title"];
+            }
+        } catch (...) {
+            synopsis = "Invalid metadata";
         }
-
+        */
         pLabel = new decent::wallet::ui::gui::TableWidgetItemW<QLabel>(
                                               aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
-                                              tr(aTemporar.synopsis.c_str()));
+                                              tr(synopsis.c_str()));
         if(!pLabel){throw "Low memory!";}
         m_TableWidget.setCellWidget(i,DCF::SYNOPSIS,pLabel);
 
