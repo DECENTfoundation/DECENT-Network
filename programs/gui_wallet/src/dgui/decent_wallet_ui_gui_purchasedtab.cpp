@@ -33,7 +33,7 @@ decent::wallet::ui::gui::PurchasedTab::PurchasedTab()
     m_filterLineEditer.setStyleSheet("border: 1px solid white");
     m_filterLineEditer.setFixedHeight(40);
 
-    QPixmap image(":/icon/search.svg");
+    QPixmap image(":/icon/images/search.svg");
 
     QLabel* search_label = new QLabel();
     search_label->setSizeIncrement(100,40);
