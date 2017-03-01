@@ -68,7 +68,7 @@ void decent::wallet::ui::gui::PurchasedTab::PrepareTableWidgetHeaderGUI()
     m_pTableWidget->setRowHeight(0,35);
     m_pTableWidget->horizontalHeader()->hide();
     m_pTableWidget->verticalHeader()->hide();
-    QFont f( "Open Sans Bold", 10, QFont::Bold);
+    QFont f( "Open Sans Bold", 14, QFont::Bold);
     for( int i(0); i<s_cnNumberOfRows; ++i )
     {
         //pLabel = new QLabel(tr(s_vccpItemNames[i]));
