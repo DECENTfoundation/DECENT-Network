@@ -18,6 +18,8 @@
 #include <stdarg.h>
 #include "json.hpp"
 
+#include <iostream>
+
 //namespace DCF {enum DIG_CONT_FIELDS{TIME,SYNOPSIS,RATING,SIZE,PRICE,LEFT};}
 static const char* s_vccpItemNames[]={"Time","Title","Rating",
                                      "Size","Price","Left"};
@@ -106,7 +108,7 @@ void Browse_content_tab::PrepareTableWidgetHeaderGUI()
     m_TableWidget.verticalHeader()->hide();
     m_main_layout.setContentsMargins(0, 0, 0, 0);
 
-    QFont f( "Open Sans Bold", 10, QFont::Bold);
+    QFont f( "Open Sans Bold", 14, QFont::Bold);
 
     for( int i(0); i<s_cnNumberOfRows; ++i )
     {
@@ -250,23 +252,25 @@ void Browse_content_tab::resizeEvent ( QResizeEvent * a_event )
 
 void Browse_content_tab::Connects()
 {
+    //std::cout<<"----------------------------------------dorowcolor--"<<std::endl;
     connect(m_pTableWidget,SIGNAL(mouseMoveEventDid()),this,SLOT(doRowColor()));
 }
 
 void Browse_content_tab::doRowColor()
 {
-    if(green_row != 0)
-    {
-        m_pTableWidget->item(green_row,0)->setBackgroundColor(QColor(255,255,255));
-        m_pTableWidget->item(green_row,1)->setBackgroundColor(QColor(255,255,255));
-        m_pTableWidget->item(green_row,2)->setBackgroundColor(QColor(255,255,255));
-        m_pTableWidget->item(green_row,3)->setBackgroundColor(QColor(255,255,255));
+    std::cout<<"----------------------------------------dorowcolor--"<<std::endl;
+//    if(green_row != 0)
+//    {
+//        m_pTableWidget->item(green_row,0)->setBackgroundColor(QColor(255,255,255));
+//        m_pTableWidget->item(green_row,1)->setBackgroundColor(QColor(255,255,255));
+//        m_pTableWidget->item(green_row,2)->setBackgroundColor(QColor(255,255,255));
+//        m_pTableWidget->item(green_row,3)->setBackgroundColor(QColor(255,255,255));
 
-        m_pTableWidget->item(green_row,0)->setForeground(QColor::fromRgb(0,0,0));
-        m_pTableWidget->item(green_row,1)->setForeground(QColor::fromRgb(0,0,0));
-        m_pTableWidget->item(green_row,2)->setForeground(QColor::fromRgb(0,0,0));
-        m_pTableWidget->item(green_row,3)->setForeground(QColor::fromRgb(0,0,0));
-    }
+//        m_pTableWidget->item(green_row,0)->setForeground(QColor::fromRgb(0,0,0));
+//        m_pTableWidget->item(green_row,1)->setForeground(QColor::fromRgb(0,0,0));
+//        m_pTableWidget->item(green_row,2)->setForeground(QColor::fromRgb(0,0,0));
+//        m_pTableWidget->item(green_row,3)->setForeground(QColor::fromRgb(0,0,0));
+//    }
     QPoint mouse_pos = m_pTableWidget->mapFromGlobal(QCursor::pos());
     QTableWidgetItem *ite = m_pTableWidget->itemAt(mouse_pos);
 
@@ -289,7 +293,7 @@ void Browse_content_tab::doRowColor()
             m_pTableWidget->item(a,3)->setForeground(QColor::fromRgb(255,255,255));
             m_pTableWidget->item(a,4)->setForeground(QColor::fromRgb(255,255,255));
             m_pTableWidget->item(a,5)->setForeground(QColor::fromRgb(255,255,255));
-            green_row = a;
+            //green_row = a;
         }
     }
     else

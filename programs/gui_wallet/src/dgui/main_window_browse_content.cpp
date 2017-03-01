@@ -105,7 +105,8 @@ static int s_nActive = 0;
 void gui_wallet::Mainwindow_gui_wallet::ManagementBrowseContentGUI()
 {
     QString cqsNewFilter = m_pCentralWidget->getFilterText();
-
+    std::cout<<"brows"<<std::endl;
+    m_pCentralWidget->m_browse_cont_tab.Connects();
     if(s_nActive==0)
     {
 #if DEFAULT_LOG_LEVEL==0
@@ -130,6 +131,7 @@ void gui_wallet::Mainwindow_gui_wallet::ManagementBrowseContentGUI()
     m_cqsPreviousFilter = cqsNewFilter;
     ShowDigitalContextesGUI(cqsNewFilter);
 #endif
+
 }
 
 
@@ -149,6 +151,8 @@ void gui_wallet::Mainwindow_gui_wallet::TaskDoneBrowseContentGUI3(void* a_clbkAr
 
     a_result.visit(aVisitor);
     s_nActive = 0;
+    std::cout<<"brows"<<std::endl;
+    m_pCentralWidget->m_browse_cont_tab.Connects();
 }
 
 
