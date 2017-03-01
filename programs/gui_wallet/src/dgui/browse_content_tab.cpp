@@ -64,7 +64,7 @@ Browse_content_tab::Browse_content_tab()
     m_search_layout.addWidget(new QLabel());
     m_search_layout.addWidget(lab);
     m_search_layout.addWidget(&m_filterLineEdit);
-//    m_search_layout.addWidget(&m_searchTypeCombo);
+    //m_search_layout.addWidget(&m_searchTypeCombo);
     //m_main_layout.addLayout(searchlay);
 
     m_main_layout.addLayout(&m_search_layout);

@@ -12,6 +12,9 @@
 #include <QFont>
 #include <QTableWidgetItem>
 
+#include <iostream>
+#include <QResource>
+
 using namespace gui_wallet;
 
 static const char* firsItemNames[]={"Time","Type","Info","Fee"};
@@ -50,8 +53,10 @@ Transactions_tab::Transactions_tab() : green_row(0)
         tablewidget->item(0, i)->setForeground(QColor::fromRgb(51,51,51));
     }
 
-    QHBoxLayout* search_lay = new QHBoxLayout();
+    QResource icon;
+    icon.registerResource("/Users/vahe/dev/DECENTfoundation/DECENT-Network/programs/gui_wallet/resource.rcc");
 
+    QHBoxLayout* search_lay = new QHBoxLayout();
     QPixmap image(":/icon/search.svg");
     search_label.setSizeIncrement(100,40);
     search_label.setPixmap(image);

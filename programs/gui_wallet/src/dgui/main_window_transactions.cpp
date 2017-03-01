@@ -9,7 +9,6 @@
  *
  */
 
-
 #include "gui_wallet_mainwindow.hpp"
 #include <Qt>
 
@@ -26,7 +25,6 @@ void gui_wallet::Mainwindow_gui_wallet::TaskDoneTransactionsGUI(void* a_clbkArg,
     int index = 0;
     int row = 1;
     int col = 0;
-
 
 
     m_pCentralWidget->m_trans_tab.createNewRow(a_result.size());
