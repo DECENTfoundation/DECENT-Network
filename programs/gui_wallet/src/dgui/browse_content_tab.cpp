@@ -50,7 +50,7 @@ Browse_content_tab::Browse_content_tab() : green_row(0),
         "padding: 2 2 2 20; /* left padding (last number) must be more than the icon's width */"
     "}");
     QLabel* lab = new QLabel();
-    QPixmap image(":/icon/search.svg");
+    QPixmap image(":/icon/images/search.svg");
     lab->setPixmap(image);
     //lab.setSizeIncrement(100, 40);
 

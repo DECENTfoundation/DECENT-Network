@@ -57,7 +57,7 @@ Transactions_tab::Transactions_tab() : green_row(0)
     icon.registerResource("/Users/vahe/dev/DECENTfoundation/DECENT-Network/programs/gui_wallet/resource.rcc");
 
     QHBoxLayout* search_lay = new QHBoxLayout();
-    QPixmap image(":/icon/images/images/search.svg");
+    QPixmap image(":/icon/images/search.svg");
     search_label.setSizeIncrement(100,40);
     search_label.setPixmap(image);
 
