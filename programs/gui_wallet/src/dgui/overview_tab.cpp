@@ -198,7 +198,7 @@ void Overview_tab::doRowColor()
         table_widget.item(i+1,2)->setForeground(QColor::fromRgb(88,88,88));
 
 
-        QPixmap image(":/icon/info1_white.svg");
+        QPixmap image(":/icon/info1.svg");
 
         ((NewButton*)table_widget.cellWidget(i+1,0))->setPixmap(image);
 
@@ -212,14 +212,13 @@ void Overview_tab::doRowColor()
 
     if(ite != NULL)
     {
-
         int a = ite->row();
         if(a != 0)
         {
             QPixmap image(":/icon/info1_white.svg");
-
+            table_widget.cellWidget(a , 0)->setStyleSheet("* { background-color: rgb(27,176,104); color : white; }");
             ((NewButton*)table_widget.cellWidget(a,0))->setPixmap(image);
-            table_widget.cellWidget(a , 0)->setStyleSheet("* { background-color: rgb(27,176,104); }");
+
             table_widget.item(a,1)->setBackgroundColor(QColor(27,176,104));
             table_widget.item(a,2)->setBackgroundColor(QColor(27,176,104));
             table_widget.item(a,1)->setForeground(QColor::fromRgb(255,255,255));

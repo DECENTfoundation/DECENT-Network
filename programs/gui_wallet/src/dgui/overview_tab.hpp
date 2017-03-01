@@ -39,7 +39,14 @@ public:
        m_main_layout.addLayout(&m_free_for_child);
 
 
-       for(i=0;i<NUMBER_OF_SUB_LAYOUTS;++i,nIndexZuyg+=2,nIndexKent+=2)
+
+        m_vSub_Widgets[0].setStyleSheet("background-color:rgb(0,0,0);");
+        m_vSub_layouts[0].setSpacing(0);
+        m_vSub_layouts[0].setContentsMargins(45,3,0,3);
+        m_vSub_Widgets[0].setLayout(&m_vSub_layouts[0]);
+        m_main_layout.addWidget(&m_vSub_Widgets[0]);
+
+       for(i=1;i<=NUMBER_OF_SUB_LAYOUTS;++i,nIndexZuyg+=2,nIndexKent+=2)
        {
            if(i%2==0){m_vSub_Widgets[i].setStyleSheet("background-color:rgb(244,244,244);");}
            else{m_vSub_Widgets[i].setStyleSheet("background-color:white;");}
@@ -59,9 +66,9 @@ public:
 private:
    QVBoxLayout     m_main_layout;
    QHBoxLayout     m_free_for_child;
-   QWidget         m_vSub_Widgets[NUMBER_OF_SUB_LAYOUTS];
-   QVBoxLayout     m_vSub_layouts[NUMBER_OF_SUB_LAYOUTS];
-   QLabel          m_vLabels[NUMBER_OF_SUB_LAYOUTS*2];
+   QWidget         m_vSub_Widgets[NUMBER_OF_SUB_LAYOUTS + 1];
+   QVBoxLayout     m_vSub_layouts[NUMBER_OF_SUB_LAYOUTS + 1];
+   QLabel          m_vLabels[NUMBER_OF_SUB_LAYOUTS*2 + 1];
 };
 
 
