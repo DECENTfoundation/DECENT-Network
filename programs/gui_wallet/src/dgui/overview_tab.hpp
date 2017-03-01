@@ -25,156 +25,50 @@
 #include <stdarg.h>
 #include <iostream>
 
+#define NUMBER_OF_SUB_LAYOUTS   6
 
 class QZebraWidget : public QWidget
 {
 public:
    QZebraWidget(std::vector<std::string> a_info)
    {
-       m_main_layout.setMargin(0);
+       int i, nIndexKent(1), nIndexZuyg(0);
+
+       m_main_layout.setSpacing(0);
        m_main_layout.setContentsMargins(0,0,0,0);
-       QWidget* pNextWidget;
-
-       pNextWidget = new QWidget;
-       pNextWidget->setStyleSheet("background-color:white;");
-       QVBoxLayout* h_leyout = new QVBoxLayout();
-
-       QLabel* inf = new QLabel();
-
-       inf->setText(QString::fromStdString(a_info[0]));
-
-       h_leyout->addWidget(inf);
-
-       pNextWidget->setLayout(h_leyout);
-       m_main_layout.addWidget(pNextWidget);
-
-
-
-
-       pNextWidget = new QWidget;
-       pNextWidget->setStyleSheet("background-color:lightGray;");
-       QVBoxLayout* h_leyout1 = new QVBoxLayout();
-
-       QLabel* inf1 = new QLabel();
-
-       inf1->setText(QString::fromStdString(a_info[1]));
-
-       h_leyout1->addWidget(inf1);
-
-       pNextWidget->setLayout(h_leyout1);
-       m_main_layout.addWidget(pNextWidget);
-
-
-
-
-
-       pNextWidget = new QWidget;
-       pNextWidget->setStyleSheet("background-color:white;");
-       QVBoxLayout* h_leyout2 = new QVBoxLayout();
-
-       QLabel* inf2 = new QLabel();
-
-       inf2->setText(QString::fromStdString(a_info[2]));
-
-       h_leyout2->addWidget(inf2);
-
-       pNextWidget->setLayout(h_leyout2);
-       m_main_layout.addWidget(pNextWidget);
-
-
-
-
-
-       pNextWidget = new QWidget;
-       pNextWidget->setStyleSheet("background-color:lightGray;");
-       QVBoxLayout* h_leyout3 = new QVBoxLayout();
-
-       QLabel* inf3 = new QLabel();
-
-       inf3->setText(QString::fromStdString(a_info[3]));
-
-       h_leyout3->addWidget(inf3);
-
-       pNextWidget->setLayout(h_leyout3);
-       m_main_layout.addWidget(pNextWidget);
-
-
-
-
-
-       pNextWidget = new QWidget;
-       pNextWidget->setStyleSheet("background-color:white;");
-       QVBoxLayout* h_leyout4 = new QVBoxLayout();
-
-       QLabel* inf4 = new QLabel();
-
-       inf4->setText(QString::fromStdString(a_info[4]));
-
-       h_leyout4->addWidget(inf4);
-
-       pNextWidget->setLayout(h_leyout4);
-       m_main_layout.addWidget(pNextWidget);
-
-
-
-
-
-       pNextWidget = new QWidget;
-       pNextWidget->setStyleSheet("background-color:lightGray;");
-       QVBoxLayout* h_leyout5 = new QVBoxLayout();
-
-       QLabel* inf5 = new QLabel();
-
-       inf5->setText(QString::fromStdString(a_info[5]));
-
-       h_leyout5->addWidget(inf5);
-
-       pNextWidget->setLayout(h_leyout5);
-       m_main_layout.addWidget(pNextWidget);
-
-
-
-
-       pNextWidget = new QWidget;
-       pNextWidget->setStyleSheet("background-color:white;");
-       QVBoxLayout* h_leyout6 = new QVBoxLayout();
-
-       QLabel* inf6 = new QLabel();
-
-       inf6->setText(QString::fromStdString(a_info[6]));
-
-       h_leyout6->addWidget(inf6);
-
-       pNextWidget->setLayout(h_leyout6);
-       m_main_layout.addWidget(pNextWidget);
-
-
-
-
-
-       pNextWidget = new QWidget;
-       pNextWidget->setStyleSheet("background-color:lightGray;");
-       QVBoxLayout* h_leyout7 = new QVBoxLayout();
-
-       QLabel* inf7 = new QLabel();
-
-       inf7->setText(QString::fromStdString(a_info[7]));
-
-       h_leyout7->addWidget(inf7);
-
-       pNextWidget->setLayout(h_leyout7);
-       m_main_layout.addWidget(pNextWidget);
-
-
-
-        setLayout(&m_main_layout);
-
-       resize(300,300);
-   }
-
+       m_main_layout.addLayout(&m_free_for_child);
+
+
+
+        m_vSub_Widgets[0].setStyleSheet("background-color:rgb(0,0,0);");
+        m_vSub_layouts[0].setSpacing(0);
+        m_vSub_layouts[0].setContentsMargins(45,3,0,3);
+        m_vSub_Widgets[0].setLayout(&m_vSub_layouts[0]);
+        m_main_layout.addWidget(&m_vSub_Widgets[0]);
+
+       for(i=1;i<=NUMBER_OF_SUB_LAYOUTS;++i,nIndexZuyg+=2,nIndexKent+=2)
+       {
+           if(i%2==0){m_vSub_Widgets[i].setStyleSheet("background-color:rgb(244,244,244);");}
+           else{m_vSub_Widgets[i].setStyleSheet("background-color:white;");}
+           m_vLabels[nIndexZuyg].setStyleSheet("font-weight: bold");
+           m_vLabels[nIndexZuyg].setText(QString::fromStdString(a_info[i] + " ")); //on progres
+           m_vSub_layouts[i].setSpacing(0);
+           m_vSub_layouts[i].setContentsMargins(45,3,0,3);
+           m_vSub_layouts[i].addWidget(&m_vLabels[nIndexZuyg]);
+           m_vSub_layouts[i].addWidget(&m_vLabels[nIndexKent]);
+           m_vSub_Widgets[i].setLayout(&m_vSub_layouts[i]);
+           m_main_layout.addWidget(&m_vSub_Widgets[i]);
+       }
+       setLayout(&m_main_layout);
+       setStyleSheet("background-color:white;");
+    }
 
 private:
-   QVBoxLayout m_main_layout;
+   QVBoxLayout     m_main_layout;
+   QHBoxLayout     m_free_for_child;
+   QWidget         m_vSub_Widgets[NUMBER_OF_SUB_LAYOUTS + 1];
+   QVBoxLayout     m_vSub_layouts[NUMBER_OF_SUB_LAYOUTS + 1];
+   QLabel          m_vLabels[NUMBER_OF_SUB_LAYOUTS*2 + 1];
 };
 
 

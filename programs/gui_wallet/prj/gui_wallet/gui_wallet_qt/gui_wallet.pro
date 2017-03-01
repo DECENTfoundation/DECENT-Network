@@ -99,3 +99,6 @@ HEADERS += \
     ../../../src/dgui/decent_wallet_ui_gui_newcheckbox.hpp \
     ../../../src/dgui/decent_wallet_ui_gui_contentdetailsbougth.hpp \
     ../../../src/dgui/decent_wallet_ui_gui_contentdetailsbase.hpp
+
+RESOURCES += \
+    ../../../resources.qrc

@@ -13,6 +13,7 @@
 #include "gui_wallet_mainwindow.hpp"
 #include <QMessageBox>
 #include <QPalette>
+#include "decent_wallet_ui_gui_contentdetailsbase.hpp"
 
 void gui_wallet::Mainwindow_gui_wallet::ManagementOverviewGUI()
 {
@@ -126,7 +127,10 @@ void gui_wallet::Mainwindow_gui_wallet::TaskDoneOverrviewGUI(void* a_clbkArg,int
 
 
         QZebraWidget* info_window = new QZebraWidget(infos);
+        //info_window->setStyleSheet();
         info_window->show();
+
+
     }
     m_pCentralWidget->m_Overview_tab.ArrangeSize();
     m_pCentralWidget->m_Overview_tab.setMouseTracking(true);
