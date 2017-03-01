@@ -37,7 +37,7 @@ Overview_tab::Overview_tab(class Mainwindow_gui_wallet* a_pPar)
     table_widget.setItem(0,1,new QTableWidgetItem(tr("Asset ID")));
     table_widget.setItem(0,2,new QTableWidgetItem(tr("Author")));
 
-    QFont f( "Arial", 15, QFont::Bold);
+    QFont f( "Open Sans Bold", 10, QFont::Bold);
 
     table_widget.item(0,0)->setFont(f);
     table_widget.item(0,1)->setFont(f);
@@ -69,10 +69,11 @@ Overview_tab::Overview_tab(class Mainwindow_gui_wallet* a_pPar)
     table_widget.setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
    // table_widget.setStyleSheet("QTableView{border : 0px}");
-    table_widget.setStyleSheet(("gridline-color: rgb(228,227,228));font-size: 12pt;"));
+    table_widget.setStyleSheet(("gridline-color: rgb(228,227,228));"));
     table_widget.setStyleSheet("QTableView{border : 0px}");
 
-    QTableWidgetItem* item = new QTableWidgetItem(tr("%1").arg((0)*(0)))
+
+
 
     QVBoxLayout* main = new QVBoxLayout();
     QHBoxLayout* search_lay = new QHBoxLayout();

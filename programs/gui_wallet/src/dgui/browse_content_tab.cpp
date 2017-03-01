@@ -49,9 +49,9 @@ Browse_content_tab::Browse_content_tab()
         "font-size: 12px;"
         "padding: 2 2 2 20; /* left padding (last number) must be more than the icon's width */"
     "}");
-    QLabel lab;
+    QLabel* lab = new QLabel();
     QPixmap image("../../../../png_files/search.svg");
-    lab.setPixmap(image);
+    lab->setPixmap(image);
     //lab.setSizeIncrement(100, 40);
 
     m_filterLineEdit.setPlaceholderText("Search");
@@ -59,8 +59,10 @@ Browse_content_tab::Browse_content_tab()
     m_filterLineEdit.setStyleSheet("border: 1px solid white");
 
 
-
-    m_search_layout.addWidget(&lab);
+    m_search_layout.addWidget(new QLabel());
+    m_search_layout.addWidget(new QLabel());
+    m_search_layout.addWidget(new QLabel());
+    m_search_layout.addWidget(lab);
     m_search_layout.addWidget(&m_filterLineEdit);
 //    m_search_layout.addWidget(&m_searchTypeCombo);
     //m_main_layout.addLayout(searchlay);
@@ -102,7 +104,7 @@ void Browse_content_tab::PrepareTableWidgetHeaderGUI()
     m_TableWidget.verticalHeader()->hide();
     m_main_layout.setContentsMargins(0, 0, 0, 0);
 
-    QFont f( "Arial", 15, QFont::Bold);
+    QFont f( "Open Sans Bold", 10, QFont::Bold);
 
     for( int i(0); i<s_cnNumberOfRows; ++i )
     {
@@ -114,6 +116,7 @@ void Browse_content_tab::PrepareTableWidgetHeaderGUI()
         m_TableWidget.item(0,i)->setFont(f);
         m_TableWidget.item(0,i)->setBackground(QColor(228,227,228));
         m_TableWidget.item(0,i)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+        m_TableWidget.item(0,i)->setForeground(QColor::fromRgb(51,51,51));
 
     }
 

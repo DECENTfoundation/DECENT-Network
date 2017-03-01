@@ -39,14 +39,15 @@ Transactions_tab::Transactions_tab() : green_row(0)
     user.setMaximumHeight(40);
     user.setFixedHeight(40);
 
-    QFont font( "Arial", 14, QFont::Bold);
+    QFont f( "Open Sans Bold", 10, QFont::Bold);
     for (int i = 0; i < 4; ++i)
     {
         tablewidget->setItem(0, i, new QTableWidgetItem(tr(firsItemNames[i])));
-        tablewidget->item(0, i)->setFont(font);
+        tablewidget->item(0, i)->setFont(f);
         tablewidget->item(0, i)->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
         tablewidget->item(0, i)->setBackground(QColor(228,227,228));
         tablewidget->item(0, i)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+        tablewidget->item(0, i)->setForeground(QColor::fromRgb(51,51,51));
     }
 
     QHBoxLayout* search_lay = new QHBoxLayout();

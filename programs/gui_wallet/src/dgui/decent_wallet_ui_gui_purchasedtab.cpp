@@ -10,6 +10,7 @@
 
 #include "decent_wallet_ui_gui_purchasedtab.hpp"
 #include <QHeaderView>
+#include <iostream>
 
 //namespace DCF {enum DIG_CONT_FIELDS{TIME,SYNOPSIS,RATING,SIZE,PRICE,LEFT};}
 static const char* s_vccpItemNames[]={"Time","Title","Rating",
@@ -26,12 +27,28 @@ decent::wallet::ui::gui::PurchasedTab::PurchasedTab()
 
     PrepareTableWidgetHeaderGUI();
 
+    QHBoxLayout* search_lay = new QHBoxLayout();
+
     m_filterLineEditer.setPlaceholderText(QString("Search"));
     m_filterLineEditer.setStyleSheet("border: 1px solid white");
     m_filterLineEditer.setFixedHeight(40);
 
+    QPixmap image(":/icon/search.svg");
+
+    QLabel* search_label = new QLabel();
+    search_label->setSizeIncrement(100,40);
+    search_label->setPixmap(image);
+
+    search_lay->addWidget(new QLabel());
+    search_lay->addWidget(new QLabel());
+    search_lay->addWidget(new QLabel());
+    search_lay->addWidget(search_label);
+    search_lay->addWidget(&m_filterLineEditer);
+
     m_main_layout.setContentsMargins(0, 0, 0, 0);
-    m_main_layout.addWidget(&m_filterLineEditer);
+
+    m_main_layout.addLayout(search_lay);
+    //m_main_layout.addWidget(&m_filterLineEditer);
     m_main_layout.addWidget(m_pTableWidget);
     setLayout(&m_main_layout);
 
@@ -51,8 +68,7 @@ void decent::wallet::ui::gui::PurchasedTab::PrepareTableWidgetHeaderGUI()
     m_pTableWidget->setRowHeight(0,35);
     m_pTableWidget->horizontalHeader()->hide();
     m_pTableWidget->verticalHeader()->hide();
-    QFont f( "Arial", 15, QFont::Bold);
-
+    QFont f( "Open Sans Bold", 10, QFont::Bold);
     for( int i(0); i<s_cnNumberOfRows; ++i )
     {
         //pLabel = new QLabel(tr(s_vccpItemNames[i]));
@@ -63,6 +79,7 @@ void decent::wallet::ui::gui::PurchasedTab::PrepareTableWidgetHeaderGUI()
         m_pTableWidget->item(0,i)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
         m_pTableWidget->item(0,i)->setBackground(QColor(228,227,228));
         m_pTableWidget->item(0,i)->setFont(f);
+        m_pTableWidget->item(0,i)->setForeground(QColor::fromRgb(51,51,51));
 
     }
     m_pTableWidget->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
