@@ -33,7 +33,7 @@ add_executable( gui_wallet MACOSX_BUNDLE
                 src/ui_wallet/ui_wallet_functions.cpp
                 src/utils/decent_tools_rwlock.cpp
                 src/utils/richdialog.cpp
-		sec/dgui/qrc_resources.cpp
+		images/qrc_resources.cpp
 
                 include/debug_decent_application.h
                 include/decent_gui_inguiloopcaller_glb.hpp
