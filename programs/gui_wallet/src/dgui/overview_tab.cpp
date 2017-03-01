@@ -84,7 +84,7 @@ Overview_tab::Overview_tab(class Mainwindow_gui_wallet* a_pPar)
     search_lay->setMargin(0);
     search_lay->setContentsMargins(0,0,0,0);
 
-    QPixmap image(":/icon/search.svg");
+    QPixmap image(":/icon/images/search.svg");
 
     search_label.setSizeIncrement(100,40);
     search_label.setPixmap(image);
@@ -133,7 +133,7 @@ void Overview_tab::CreateTable()
 
         QHBoxLayout* lay = new QHBoxLayout();
 
-        QPixmap image1(":/icon/info1_white.svg");
+        QPixmap image1(":/icon/images/info1_white.svg");
        // QPixmap image1 = image.scaled(QSize(50,50), 1 Qt::AA_Use96Dpi);
 
         ((NewButton*)table_widget.cellWidget(i+1,0))->setPixmap(image1);
@@ -201,7 +201,7 @@ void Overview_tab::doRowColor()
         table_widget.item(i+1,2)->setForeground(QColor::fromRgb(88,88,88));
 
 
-        QPixmap image(":/icon/info1.svg");
+        QPixmap image(":/icon/images/info1.svg");
 
         ((NewButton*)table_widget.cellWidget(i+1,0))->setPixmap(image);
 
@@ -218,7 +218,7 @@ void Overview_tab::doRowColor()
         int a = ite->row();
         if(a != 0)
         {
-            QPixmap image(":/icon/info1_white.svg");
+            QPixmap image(":/icon/images/info1_white.svg");
             table_widget.cellWidget(a , 0)->setStyleSheet("* { background-color: rgb(27,176,104); color : white; }");
             ((NewButton*)table_widget.cellWidget(a,0))->setPixmap(image);
 
