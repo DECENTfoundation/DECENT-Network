@@ -21,8 +21,6 @@ static const char* firsItemNames[]={"Time","Type","Info","Fee"};
 
 Transactions_tab::Transactions_tab() : green_row(0)
 {
-    connect(tablewidget,SIGNAL(mouseMoveEventDid()),this,SLOT(doRowColor()));
-
     //create table (widget)
     tablewidget = new HTableWidget();
     tablewidget->setRowCount(1);//add first row in table
@@ -52,6 +50,8 @@ Transactions_tab::Transactions_tab() : green_row(0)
         tablewidget->item(0, i)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
         tablewidget->item(0, i)->setForeground(QColor::fromRgb(51,51,51));
     }
+
+    connect(tablewidget,SIGNAL(mouseMoveEventDid()),this,SLOT(doRowColor()));
 
     QResource icon;
     icon.registerResource("/Users/vahe/dev/DECENTfoundation/DECENT-Network/programs/gui_wallet/resource.rcc");
