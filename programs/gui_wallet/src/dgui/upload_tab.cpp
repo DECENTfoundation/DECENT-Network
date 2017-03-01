@@ -594,6 +594,7 @@ void Upload_tab::uploadContent() {
         return;   
     }
 
+    setEnabled(false);
 
     json synopsis_obj;
     synopsis_obj["title"] = title;
@@ -625,29 +626,32 @@ void Upload_tab::uploadContent() {
 
 
     SetNewTask(submitCommand, this, NULL, +[](void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
-        if (a_err != 0) {
-            ALERT("Failed to submit content");
-            return;
-        }
-
-        ALERT("Content is submitted!");
+        ((Upload_tab*)owner)->uploadDone(a_clbkArg, a_err, a_task, a_result);
     });
 }
-
-
-
-
-
-
 
 Upload_tab::~Upload_tab()
 {
 }
 
-
-
 void Upload_tab::uploadDone(void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
+    if (a_err != 0) {
+        ALERT("Failed to submit content");
+        setEnabled(true);
+        return;
+    }
 
+    // On success reset only these.
+    m_title_text.setText("");
+    m_description_text.setPlainText("");
+    ((QDateEdit*)m_info_widget.cellWidget(FieldsRows::LIFETIME, 1))->setDate(QDate::currentDate());
+    ((QLineEdit*)m_info_widget.cellWidget(FieldsRows::TAGS, 1))->setText("");
+    ((QLineEdit*)m_info_widget.cellWidget(FieldsRows::PRICE, 1))->setText("");
+    ((QLineEdit*)m_info_widget.cellWidget(FieldsRows::CONTENTPATH, 1))->setText("");
+    ((QLineEdit*)m_info_widget.cellWidget(FieldsRows::SAMPLESPATH, 1))->setText("");
+
+    ALERT("Content is submitted!");
+    setEnabled(true);
 }
 
 void Upload_tab::resizeEvent ( QResizeEvent * event )
