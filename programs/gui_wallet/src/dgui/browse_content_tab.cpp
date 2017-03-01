@@ -16,6 +16,8 @@
 #include <QMouseEvent>
 #include <stdio.h>
 #include <stdarg.h>
+#include "json.hpp"
+
 #include <iostream>
 
 //namespace DCF {enum DIG_CONT_FIELDS{TIME,SYNOPSIS,RATING,SIZE,PRICE,LEFT};}
@@ -25,6 +27,7 @@ static const int   s_cnNumberOfRows = sizeof(s_vccpItemNames)/sizeof(const char*
 static const int   s_cnNumberOfSearchFields(sizeof(gui_wallet::ST::s_vcpcSearchTypeStrs)/sizeof(const char*));
 
 using namespace gui_wallet;
+using namespace nlohmann;
 extern int g_nDebugApplication;
 
 
@@ -174,6 +177,12 @@ void Browse_content_tab::SetDigitalContentsGUI(const std::vector<decent::wallet:
         if(!pLabel){throw "Low memory!";}
         m_TableWidget.setCellWidget(i,DCF::TIME,pLabel);
 
+        std::string synopsis = aTemporar.synopsis;
+        auto synopsis_parsed = json::parse(aTemporar.synopsis);
+        if (synopsis_parsed["title"]) {
+            synopsis = synopsis_parsed["title"];
+        }
+
         pLabel = new decent::wallet::ui::gui::TableWidgetItemW<QLabel>(
                                               aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
                                               tr(aTemporar.synopsis.c_str()));
@@ -287,10 +296,10 @@ void Browse_content_tab::doRowColor()
             //green_row = a;
         }
     }
-//    else
-//    {
-//        green_row == 0;
-//    }
+    else
+    {
+        green_row = 0;
+    }
 }
 
 //BTableWidget::BTableWidget(int a , int b) : QTableWidget(a,b)

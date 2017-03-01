@@ -137,7 +137,7 @@ void gui::run()
          {
              //printf("!!!!!!!!!!!! %d, aItem.line=%s\n",++nIteration,aTaskItem.line.c_str());
              std::string line = aTaskItem.input;
-             //std::cout << line << "\n";
+             std::cout << line << "\n";
              line += char(EOF);
              fc::variants args = fc::json::variants_from_string(line);
              if( args.size() == 0 )continue;
