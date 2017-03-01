@@ -42,7 +42,7 @@ Transactions_tab::Transactions_tab() : green_row(0)
     user.setMaximumHeight(40);
     user.setFixedHeight(40);
 
-    QFont f( "Open Sans Bold", 10, QFont::Bold);
+    QFont f( "Open Sans Bold", 14, QFont::Bold);
     for (int i = 0; i < 4; ++i)
     {
         tablewidget->setItem(0, i, new QTableWidgetItem(tr(firsItemNames[i])));

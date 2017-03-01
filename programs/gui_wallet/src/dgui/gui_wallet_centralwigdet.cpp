@@ -170,7 +170,7 @@ CentralWigdet::CentralWigdet(class QBoxLayout* a_pAllLayout, class Mainwindow_gu
                                "QTabBar::tab:selected{"
                                "color:white;background-color:rgb(27,176,104);}"
                                );
-std::cout<<size().width()/5<<std::endl;
+    std::cout<<size().width()/5<<std::endl;
 
 
     PrepareGUIprivate(a_pAllLayout);
