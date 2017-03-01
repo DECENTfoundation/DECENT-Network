@@ -72,7 +72,8 @@ Overview_tab::Overview_tab(class Mainwindow_gui_wallet* a_pPar)
     table_widget.setStyleSheet(("gridline-color: rgb(228,227,228));font-size: 12pt;"));
     table_widget.setStyleSheet("QTableView{border : 0px}");
 
-    QTableWidgetItem* item = new QTableWidgetItem(tr("%1").arg((0)*(0)))
+    QTableWidgetItem* item = new QTableWidgetItem(tr("%1").arg((0)*(0)));
+    item->
 
     QVBoxLayout* main = new QVBoxLayout();
     QHBoxLayout* search_lay = new QHBoxLayout();
