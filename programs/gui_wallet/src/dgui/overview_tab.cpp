@@ -37,7 +37,7 @@ Overview_tab::Overview_tab(class Mainwindow_gui_wallet* a_pPar)
     table_widget.setItem(0,1,new QTableWidgetItem(tr("Asset ID")));
     table_widget.setItem(0,2,new QTableWidgetItem(tr("Author")));
 
-    QFont f( "Arial", 15, QFont::Bold);
+    QFont f( "Open Sans Bold", 10, QFont::Bold);
 
     table_widget.item(0,0)->setFont(f);
     table_widget.item(0,1)->setFont(f);
@@ -57,6 +57,9 @@ Overview_tab::Overview_tab(class Mainwindow_gui_wallet* a_pPar)
     table_widget.item(0,1)->setBackground(QColor(228,227,228));
     table_widget.item(0,2)->setBackground(QColor(228,227,228));
 
+    table_widget.item(0,0)->setForeground(QColor::fromRgb(51,51,51));
+    table_widget.item(0,1)->setForeground(QColor::fromRgb(51,51,51));
+    table_widget.item(0,2)->setForeground(QColor::fromRgb(51,51,51));
 
 
     table_widget.horizontalHeader()->hide();
@@ -65,22 +68,29 @@ Overview_tab::Overview_tab(class Mainwindow_gui_wallet* a_pPar)
     table_widget.setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     table_widget.setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
+   // table_widget.setStyleSheet("QTableView{border : 0px}");
+    table_widget.setStyleSheet(("gridline-color: rgb(228,227,228));"));
+    table_widget.setStyleSheet("QTableView{border : 0px}");
+
+
+
+
     QVBoxLayout* main = new QVBoxLayout();
     QHBoxLayout* search_lay = new QHBoxLayout();
 
-    main->setContentsMargins(0, 0, 0, 0);
+    main->setContentsMargins(0, 5, 0, 0);
     main->setMargin(0);
 
     search_lay->setMargin(0);
     search_lay->setContentsMargins(0,0,0,0);
 
-    QPixmap image("../../../../png_files/search.png");
-    QPixmap image1 = image.scaled(QSize(17, 17),  Qt::KeepAspectRatio);
+    QPixmap image(":/icon/images/search.svg");
 
     search_label.setSizeIncrement(100,40);
-    search_label.setPixmap(image1);
-    search.setStyleSheet("border: 1px solid white");
+    search_label.setPixmap(image);
     search.setPlaceholderText(QString("Search"));
+    search.setStyleSheet("border: 0px solid white");
+
     search.setFixedHeight(40);
 
 
@@ -116,29 +126,32 @@ void Overview_tab::CreateTable()
     for(int i = 0; i < accounts_names.size(); ++i)
     {
         table_widget.setCellWidget(i + 1,0,new NewButton(i));
-        table_widget.setItem(i + 1,1,new QTableWidgetItem((accounts_id[i])));
-        table_widget.setItem(i + 1,2,new QTableWidgetItem((accounts_names[i])));
+        table_widget.setItem(i+1,1,new QTableWidgetItem((accounts_id[i])));
+        table_widget.setItem(i+1,2,new QTableWidgetItem((accounts_names[i])));
 
         table_widget.setRowHeight(i + 1,40);
 
         QHBoxLayout* lay = new QHBoxLayout();
 
-        QPixmap image("../../../../png_files/info_icon.png");
-        QPixmap image1 = image.scaled(QSize(100,100),  Qt::KeepAspectRatio);
+        QPixmap image1(":/icon/images/info1_white.svg");
+       // QPixmap image1 = image.scaled(QSize(50,50), 1 Qt::AA_Use96Dpi);
 
-        ((NewButton*)table_widget.cellWidget(i + 1,0))->setPixmap(image1);
+        ((NewButton*)table_widget.cellWidget(i+1,0))->setPixmap(image1);
 
         table_widget.setRowHeight(0,35);
 
         table_widget.cellWidget(i + 1 , 0)->setStyleSheet("* { background-color: rgb(255,255,255); }");
-        table_widget.item(i + 1,1)->setBackground(Qt::white);
-        table_widget.item(i + 1,2)->setBackground(Qt::white);
+        table_widget.item(i+1,1)->setBackground(Qt::white);
+        table_widget.item(i+1,2)->setBackground(Qt::white);
 
-        table_widget.item(i + 1,1)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
-        table_widget.item(i + 1,2)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+        table_widget.item(i+1,1)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+        table_widget.item(i+1,2)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
 
-        table_widget.item(i + 1,1)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
-        table_widget.item(i + 1,2)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+        table_widget.item(i+1,1)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+        table_widget.item(i+1,2)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+
+        table_widget.item(i+1,1)->setForeground(QColor::fromRgb(88,88,88));
+        table_widget.item(i+1,2)->setForeground(QColor::fromRgb(88,88,88));
 
         table_widget.setMouseTracking(true);
     }
@@ -149,6 +162,7 @@ void Overview_tab::CreateTable()
 
 void Overview_tab::Connects()
 {
+    table_widget.setMouseTracking(true);
     for(int i = 1; i < accounts_names.size() + 1; ++i)
     {
         table_widget.cellWidget(i,0)->setMouseTracking(true);
@@ -181,6 +195,16 @@ void Overview_tab::doRowColor()
         table_widget.cellWidget(i+1,0)->setStyleSheet("* { background-color: rgb(255,255,255); }");
         table_widget.item(i+1,1)->setBackground(QColor(255,255,255));
         table_widget.item(i+1,2)->setBackground(QColor(255,255,255));
+
+        //table_widget.item(i+1,0)->setForeground(QColor::fromRgb(0,0,0));
+        table_widget.item(i+1,1)->setForeground(QColor::fromRgb(88,88,88));
+        table_widget.item(i+1,2)->setForeground(QColor::fromRgb(88,88,88));
+
+
+        QPixmap image(":/icon/images/info1.svg");
+
+        ((NewButton*)table_widget.cellWidget(i+1,0))->setPixmap(image);
+
     }
     QPoint mouse_pos = table_widget.mapFromGlobal(QCursor::pos());
     if(mouse_pos.x() > 0 && mouse_pos.x() < 110)
@@ -191,13 +215,20 @@ void Overview_tab::doRowColor()
 
     if(ite != NULL)
     {
-
         int a = ite->row();
         if(a != 0)
         {
-            table_widget.cellWidget(a , 0)->setStyleSheet("* { background-color: rgb(27,176,104); }");
+            QPixmap image(":/icon/images/info1_white.svg");
+            table_widget.cellWidget(a , 0)->setStyleSheet("* { background-color: rgb(27,176,104); color : white; }");
+            ((NewButton*)table_widget.cellWidget(a,0))->setPixmap(image);
+
             table_widget.item(a,1)->setBackgroundColor(QColor(27,176,104));
             table_widget.item(a,2)->setBackgroundColor(QColor(27,176,104));
+            table_widget.item(a,1)->setForeground(QColor::fromRgb(255,255,255));
+            table_widget.item(a,2)->setForeground(QColor::fromRgb(255,255,255));
+
+
+
         }
     }
 }
