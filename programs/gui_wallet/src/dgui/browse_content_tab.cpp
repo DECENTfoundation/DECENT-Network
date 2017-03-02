@@ -8,6 +8,7 @@
  *
  */
 #include "browse_content_tab.hpp"
+#include "gui_wallet_global.hpp"
 #include <QLayout>
 #include <QCheckBox>
 #include <stdio.h>
@@ -176,18 +177,16 @@ void Browse_content_tab::SetDigitalContentsGUI(const std::vector<decent::wallet:
                                               tr(aTemporar.created.c_str()));
         if(!pLabel){throw "Low memory!";}
         m_TableWidget.setCellWidget(i,DCF::TIME,pLabel);
+        
+        std::string synopsis = unescape_string(aTemporar.synopsis);
+        std::replace(synopsis.begin(), synopsis.end(), '\t', ' '); // JSON does not like tabs :(    
 
-        std::string synopsis = aTemporar.synopsis;
-        /*
         try {
-            auto synopsis_parsed = json::parse(aTemporar.synopsis);
-            if (synopsis_parsed["title"]) {
-                synopsis = synopsis_parsed["title"];
-            }
-        } catch (...) {
-            synopsis = "Invalid metadata";
-        }
-        */
+            auto synopsis_parsed = json::parse(synopsis);
+            synopsis = synopsis_parsed["title"].get<std::string>();
+            
+        } catch (...) {}
+        
         pLabel = new decent::wallet::ui::gui::TableWidgetItemW<QLabel>(
                                               aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
                                               tr(synopsis.c_str()));
