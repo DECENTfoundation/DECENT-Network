@@ -1722,6 +1722,15 @@ class wallet_api
       optional<buying_object> get_buying_by_consumer_URI( const string& account, const string & URI )const;
 
       /**
+       * @brief Get rating given by a consumer to a content
+       * @param consumer Consumer giving rating
+       * @param URI URI specifying the content
+       * @return Rating, if given, empty otherwise
+       * @ingroup WalletCLI
+       */
+      optional<uint64_t> get_rating( const string& consumer, const string & URI )const;
+
+      /**
        * @brief Get a content by URI
        * @param URI URI of the content to retrieve
        * @return The content corresponding to the provided URI, or null if no matching content was found
@@ -2011,6 +2020,7 @@ FC_API( graphene::wallet::wallet_api,
         (get_open_buyings_by_consumer)
         (get_buying_history_objects_by_consumer)
         (get_buying_by_consumer_URI)
+        (get_rating)
         (get_content)
         (list_content_by_author)
         (list_content)

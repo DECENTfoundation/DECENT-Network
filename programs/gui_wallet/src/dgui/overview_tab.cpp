@@ -37,6 +37,7 @@ Overview_tab::Overview_tab(class Mainwindow_gui_wallet* a_pPar)
     table_widget.setItem(0,1,new QTableWidgetItem(tr("Asset ID")));
     table_widget.setItem(0,2,new QTableWidgetItem(tr("Author")));
 
+
     QFont f( "Open Sans Bold", 14, QFont::Bold);
 
     table_widget.item(0,0)->setFont(f);

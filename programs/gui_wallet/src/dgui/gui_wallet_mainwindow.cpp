@@ -25,6 +25,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <QMessageBox>
+#include "decent_wallet_ui_gui_jsonparserqt.hpp"
 
 #ifndef DEFAULT_WALLET_FILE_NAME
 #define DEFAULT_WALLET_FILE_NAME       "wallet.json"
@@ -100,32 +101,6 @@ static bool GetJsonVectorNextElem(const char* a_cpcJsonStr,TypeConstChar* a_beg,
 }
 
 
-#if 1
-void ParseDigitalContentFromGetContentString(decent::wallet::ui::gui::SDigitalContent* a_pContent, const std::string& a_str)
-{
-    const char* cpcStrToGet;
-    __DEBUG_APP2__(3,"str_to_parse is: \"\n%s\n\"",a_str.c_str());
-    //std::string created;
-    //std::string expiration;
-    FindStringByKey(a_str.c_str(),"created",&a_pContent->created);
-    FindStringByKey(a_str.c_str(),"expiration",&a_pContent->expiration);
-    cpcStrToGet = FindValueStringByKey(a_str.c_str(),"size");
-    if(cpcStrToGet)
-    {
-        char* pcTerm;
-        a_pContent->size = strtod(cpcStrToGet,&pcTerm);
-    }
-    cpcStrToGet = FindValueStringByKey(a_str.c_str(),"times_bought");
-    if(cpcStrToGet)
-    {
-        char* pcTerm;
-        a_pContent->times_bougth = (int64_t)strtol(cpcStrToGet,&pcTerm,10);
-    }
-    a_pContent->get_content_str = a_str;
-}
-#endif
-
-
 void SetNewTaskQtMainWnd2Glb(const std::string& a_inp_line, void* a_clbData)
 {
     if(s_pMainWindowInstance)s_pMainWindowInstance->SetNewTaskQtMainWnd2(a_inp_line,a_clbData);
@@ -147,12 +122,14 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
         m_ActionInfo(tr("Info"),this),
         m_ActionHelp(tr("Help"),this),
         m_ActionWalletContent(tr("Wallet content"),this),
+        m_ActionLock(tr("Lock"),this),
         m_ActionUnlock(tr("Unlock"),this),
         m_ActionImportKey(tr("Import key"),this),
         m_ActionOpenCliWallet(tr("cli_wallet"),this),
         m_ActionOpenInfoDlg(tr("Open info dlg."),this),
         m_ConnectDlg(this),
         m_info_dialog(),
+        m_locked(true),
         m_import_key_dlg(2),
         m_cqsPreviousFilter(tr("nf")),
         m_nConnected(0)
@@ -247,7 +224,6 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
 
     //change
 //    QString str = m_pCentralWidget->m_Overview_tab.search.text();
-//    connect(&m_pCentralWidget->m_Overview_tab.find,SIGNAL(clicked()),this,SLOT(listAccountsSlot(str)));
 }
 
 
@@ -303,7 +279,11 @@ void Mainwindow_gui_wallet::CreateActions()
     m_ActionWalletContent.setStatusTip( tr("Wallet content") );
     connect( &m_ActionWalletContent, SIGNAL(triggered()), this, SLOT(ShowWalletContentSlot()) );
 
-    m_ActionUnlock.setDisabled(true);
+    m_ActionLock.setDisabled(m_locked);
+    m_ActionLock.setStatusTip( tr("Lock account") );
+    connect( &m_ActionLock, SIGNAL(triggered()), this, SLOT(LockSlot()) );
+
+    m_ActionUnlock.setEnabled(m_locked);
     m_ActionUnlock.setStatusTip( tr("Unlock account") );
     connect( &m_ActionUnlock, SIGNAL(triggered()), this, SLOT(UnlockSlot()) );
 
@@ -330,6 +310,7 @@ void Mainwindow_gui_wallet::CreateMenues()
     m_pMenuFile = pMenuBar->addMenu( tr("&File") );
     m_pMenuFile->addAction( &m_ActionExit );
     m_pMenuFile->addAction( &m_ActionConnect );
+    m_pMenuFile->addAction( &m_ActionLock );
     m_pMenuFile->addAction( &m_ActionUnlock );
     m_pMenuFile->addAction( &m_ActionImportKey );
 
@@ -396,11 +377,6 @@ void Mainwindow_gui_wallet::OpenInfoDlgSlot()
     m_pcInfoDlg->exec();
 }
 
-void Mainwindow_gui_wallet::listAccountsSlot(QString str)
-{
-    //change
-    //SetNewTask("list_accounts " + str + " 5",this,CLI_WALLET_CODE,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
-}
 
 void Mainwindow_gui_wallet::ShowDetailsOnDigContentSlot(decent::wallet::ui::gui::SDigitalContent a_dig_cont)
 {
@@ -421,143 +397,39 @@ void Mainwindow_gui_wallet::ShowDetailsOnDigContentSlot(decent::wallet::ui::gui:
 }
 
 
-//int SetNewTask(const std::string& a_inp_line, Type* a_memb, void* a_clbData, void (Type::*a_clbkFunction)(SetNewTask_last_args))
-void Mainwindow_gui_wallet::ShowDigitalContextesGUI(QString a_filter)
-{
-    //const char* cpcCoinside;
-    const char* cpcNumberPtr;
-    std::string csTaskLine("");
-    std::string csFilterStr = StringFromQString(a_filter);
-
-    if(strstr(csFilterStr.c_str(),ST::s_vcpcSearchTypeStrs[ST::author]))
-    {
-        csTaskLine = std::string("list_content_by_author ") +
-                (csFilterStr.c_str() + strlen(ST::s_vcpcSearchTypeStrs[ST::author]) + 1);
-    }
-    else if(strstr(csFilterStr.c_str(),ST::s_vcpcSearchTypeStrs[ST::URI_start]))
-    {
-        const char* cpcURIstart;
-        std::string csNumber;
-
-        cpcNumberPtr = strchr(csFilterStr.c_str(),':');
-        if(!cpcNumberPtr++){return;}
-        for(;*cpcNumberPtr != 0 && *cpcNumberPtr==' ';++cpcNumberPtr);
-        cpcURIstart = cpcNumberPtr;
-        for(;*cpcNumberPtr != 0 && *cpcNumberPtr!=' ';++cpcNumberPtr);
-        if( (*cpcNumberPtr==0) || (atoi(cpcNumberPtr+1)==0)){csNumber += " 100";}
-        else {csNumber = cpcNumberPtr+1;}
-        csTaskLine = std::string("list_content ") + cpcURIstart + std::string(" ") + csNumber;
-
-    }
-    else if(strstr(csFilterStr.c_str(),ST::s_vcpcSearchTypeStrs[ST::content]))
-    {
-        __DEBUG_APP2__(0,"Displaying contents by content is not implemented yet");
-    }
-
-    __DEBUG_APP2__(3,"taskLine=%s",csTaskLine.c_str());
-
-    SetNewTask(csTaskLine,this,NULL,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
-}
-
-
 /*
  * return != 0 means parsing error
  */
-int Mainwindow_gui_wallet::GetDigitalContentsFromString(DCT::DIG_CONT_TYPES a_type,
-                                                        std::vector<decent::wallet::ui::gui::SDigitalContent>& a_vcContents,
-                                                        const char* a_contents_str)
+int Mainwindow_gui_wallet::GetDigitalContentsFromVariant(DCT::DIG_CONT_TYPES a_type,
+                                                         std::vector<decent::wallet::ui::gui::SDigitalContent>& a_vcContents,
+                                                         const fc::variant& a_contents_var)
 {
     decent::wallet::ui::gui::SDigitalContent aDigContent;
-    const char *cpcSearchStart= a_contents_str,
-            *cpcAuthorFld, *cpcAutorBeg, *cpcAutorEnd,
-            *cpcAmountFld, *cpcAmountBeg,*cpcAmountEnd,
-            *cpcAssetIdFld, *cpcAssetIdBeg,*cpcAssetIdEnd,
-            *cpcSynopsisFld, *cpcSynopsisBeg, *cpcSynopsisEnd,
-            *cpcUriFld, *cpcUriBeg, *cpcUriEnd,
-            *cpcAvgRatingFld, *cpcAvgRatingBeg,*cpcAvgRatingEnd;
+    decent::wallet::ui::gui::JsonParserQt aParser;
+    const decent::wallet::ui::gui::JsonParserQt* pNext;
 
-    while(cpcSearchStart)
+    a_contents_var.visit(aParser);
+    const int cnSize(aParser.size());
+    aDigContent.type = a_type;
+
+    for(int i(0);i<cnSize;++i)
     {
-        cpcAuthorFld = strstr(cpcSearchStart,"\"author\"");
-        if(g_nDebugApplication){printf("cpcAuthorFld=\"%.10s\"\n",cpcAuthorFld ? cpcAuthorFld : "nill");}
-        if(!cpcAuthorFld){return 0;}
-        //
-        cpcAutorBeg = strchr(cpcAuthorFld+strlen("\"author\""),'\"');
-        if(g_nDebugApplication){printf("cpcAutorBeg=\"%.10s\"\n",cpcAutorBeg ? cpcAutorBeg : "nill");}
-        if(!cpcAutorBeg){return 1;}
-        cpcAutorEnd = strchr(++cpcAutorBeg,'\"');
-        if(g_nDebugApplication){printf("cpcAutorEnd=\"%.10s\"\n",cpcAutorEnd ? cpcAutorEnd : "nill");}
-        if(!cpcAutorEnd){return 1;}
-        aDigContent.type = a_type;
-        aDigContent.author = std::string(cpcAutorBeg,((size_t)cpcAutorEnd)-((size_t)cpcAutorBeg));
-        if(g_nDebugApplication){printf("Content.author=\"%s\"\n",aDigContent.author.c_str());}
-
-        cpcAmountFld = strstr(cpcAutorEnd+1,"\"amount\"");
-        if(g_nDebugApplication){printf("cpcAmountFld=\"%.10s\"\n",cpcAmountFld ? cpcAmountFld : "nill");}
-        if(!cpcAmountFld){return 1;}
-        cpcAmountBeg = strchr(cpcAmountFld+strlen("\"amount\""),':');
-        //cpcAmountBeg = cpcAmountFld+strlen("\"amount\"");
-        if(g_nDebugApplication){printf("cpcAmountBeg=\"%.10s\"\n",cpcAmountBeg ? cpcAmountBeg : "nill");}
-        if(!cpcAmountBeg){return 1;}
-        aDigContent.price.amount = strtod(++cpcAmountBeg,const_cast<char**>(&cpcAmountEnd));
-        if(g_nDebugApplication){printf("cpcAmountEnd=\"%.10s\", Content.price.amount=%lf\n",cpcAmountEnd ? cpcAmountEnd : "nill",aDigContent.price.amount);}
-        if(!cpcAmountEnd){return 1;}
-
-        cpcAssetIdFld = strstr(cpcAmountEnd,"\"asset_id\"");
-        if(g_nDebugApplication){printf("cpcAssetIdFld=\"%.10s\"\n",cpcAssetIdFld ? cpcAssetIdFld : "nill");}
-        if(!cpcAssetIdFld){return 1;}
-        cpcAssetIdBeg = strchr(cpcAssetIdFld+strlen("\"asset_id\""),'\"');
-        if(g_nDebugApplication){printf("cpcAssetIdBeg=\"%.10s\"\n",cpcAssetIdBeg ? cpcAssetIdBeg : "nill");}
-        if(!cpcAssetIdBeg){return 1;}
-        cpcAssetIdEnd = strchr(++cpcAssetIdBeg,'\"');
-        if(g_nDebugApplication){printf("cpcAssetIdEnd=\"%.10s\"\n",cpcAssetIdEnd ? cpcAssetIdEnd : "nill");}
-        if(!cpcAssetIdEnd){return 1;}
-        aDigContent.price.asset_id = std::string(cpcAssetIdBeg,((size_t)cpcAssetIdEnd)-((size_t)cpcAssetIdBeg));
-        if(g_nDebugApplication){printf("Content.price.asset_id=\"%s\"\n",aDigContent.price.asset_id.c_str());}
-
-        cpcSynopsisFld = strstr(cpcAssetIdEnd,"\"synopsis\"");
-        if(g_nDebugApplication){printf("cpcSynopsisFld=\"%.10s\"\n",cpcSynopsisFld ? cpcSynopsisFld : "nill");}
-        if(!cpcSynopsisFld){return 1;}
-        cpcSynopsisBeg = strchr(cpcSynopsisFld+strlen("\"synopsis\""),'\"');
-        if(g_nDebugApplication){printf("cpcSynopsisBeg=\"%.10s\"\n",cpcSynopsisBeg ? cpcSynopsisBeg : "nill");}
-        if(!cpcSynopsisBeg){return 1;}
-        cpcSynopsisEnd = strchr(++cpcSynopsisBeg,'\"');
-        if(g_nDebugApplication){printf("cpcSynopsisEnd=\"%.10s\"\n",cpcSynopsisEnd ? cpcSynopsisEnd : "nill");}
-        if(!cpcSynopsisEnd){return 1;}
-        aDigContent.synopsis = std::string(cpcSynopsisBeg,((size_t)cpcSynopsisEnd)-((size_t)cpcSynopsisBeg));
-        if(g_nDebugApplication){printf("Content.synopsis=\"%s\"\n",aDigContent.synopsis.c_str());}
-
-        cpcUriFld = strstr(cpcSynopsisEnd,"\"URI\"");
-        if(g_nDebugApplication){printf("cpcUriFld=\"%.10s\"\n",cpcUriFld ? cpcUriFld : "nill");}
-        if(!cpcSynopsisFld){return 1;}
-        cpcUriBeg = strchr(cpcUriFld+strlen("\"URI\""),'\"');
-        if(g_nDebugApplication){printf("cpcUriBeg=\"%.10s\"\n",cpcUriBeg ? cpcUriBeg : "nill");}
-        if(!cpcUriBeg){return 1;}
-        cpcUriEnd = strchr(++cpcUriBeg,'\"');
-        if(g_nDebugApplication){printf("cpcUriEnd=\"%.10s\"\n",cpcUriEnd ? cpcUriEnd : "nill");}
-        if(!cpcUriEnd){return 1;}
-        aDigContent.URI = std::string(cpcUriBeg,((size_t)cpcUriEnd)-((size_t)cpcUriBeg));
-        if(g_nDebugApplication){printf("Content.URI=\"%s\"\n",aDigContent.URI.c_str());}
-
-        cpcAvgRatingFld = strstr(cpcUriEnd+1,"\"AVG_rating\"");
-        if(g_nDebugApplication){printf("cpcAvgRatingFld=\"%.10s\"\n",cpcAvgRatingFld ? cpcAvgRatingFld : "nill");}
-        if(!cpcAvgRatingFld){return 1;}
-        cpcAvgRatingBeg = strchr(cpcAvgRatingFld+strlen("\"AVG_rating\""),':');
-        //cpcAvgRatingBeg = cpcAvgRatingFld+strlen("\"AVG_rating\"");
-        if(g_nDebugApplication){printf("cpcAvgRatingBeg=\"%.10s\"\n",cpcAvgRatingBeg ? cpcAvgRatingBeg : "nill");}
-        if(!cpcAvgRatingBeg){return 1;}
-        aDigContent.AVG_rating = strtod(++cpcAvgRatingBeg,const_cast<char**>(&cpcAvgRatingEnd));
-        if(g_nDebugApplication){printf("cpcAvgRatingEnd=\"%.10s\", Content.AVG_rating=%lf\n",cpcAvgRatingEnd ? cpcAvgRatingEnd : "nill",aDigContent.AVG_rating);}
-        if(!cpcAvgRatingEnd){return 1;}
-        if(g_nDebugApplication){printf("\n*****************************************************\n");}
-
+        pNext = &(aParser.GetByIndex(i));
+        aDigContent.URI = pNext->GetByKey("URI").value();
+        aDigContent.author = pNext->GetByKey("author").value();
         a_vcContents.push_back(aDigContent);
-        cpcSearchStart = cpcAvgRatingEnd+1;
     }
 
-    __DEBUG_APP2__(1,"\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n");
-
     return 0;
+}
+
+
+void Mainwindow_gui_wallet::LockSlot()
+{
+    m_ActionLock.setDisabled(true);
+    m_ActionUnlock.setDisabled(true);
+    const std::string csLine = "lock";
+    SetNewTask(csLine, this, NULL, &Mainwindow_gui_wallet::TaskDoneFuncGUI);
 }
 
 
@@ -570,12 +442,19 @@ void Mainwindow_gui_wallet::UnlockSlot()
     QPoint thisPos = pos();
     std::vector<std::string> cvsPassword(1);
     decent::gui::tools::RET_TYPE rtRet = m_PasswdDialog.execRD(&thisPos,cvsPassword);
-    if(rtRet == decent::gui::tools::RDB_OK)
-    {
-        std::string csPassLine = std::string("unlock ") + cvsPassword[0];
-        SetNewTask(csPassLine,this,NULL,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
+    if(rtRet == decent::gui::tools::RDB_OK) {
+        m_ActionLock.setDisabled(true);
+        m_ActionUnlock.setDisabled(true);
+        const std::string csPassLine = "unlock " + cvsPassword[0];
+        SetNewTask(csPassLine, this, NULL, &Mainwindow_gui_wallet::TaskDoneFuncGUI);
     }
+}
 
+
+void Mainwindow_gui_wallet::UpdateLockedStatus()
+{
+    const std::string csLine = "is_locked";
+    SetNewTask(csLine, this, NULL, &Mainwindow_gui_wallet::TaskDoneFuncGUI);
 }
 
 
@@ -586,11 +465,12 @@ void Mainwindow_gui_wallet::moveEvent(QMoveEvent * a_event)
 }
 
 
-
 void Mainwindow_gui_wallet::DisplayWalletContentGUI()
 {
+    m_ActionLock.setDisabled(true);
+    m_ActionUnlock.setDisabled(true);
+    UpdateLockedStatus();
 
-    m_ActionUnlock.setEnabled(true);
     m_ActionImportKey.setEnabled(true);
     SetNewTask("list_my_accounts",this,NULL,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
 
@@ -771,7 +651,6 @@ void Mainwindow_gui_wallet::TaskDoneFuncGUI3(void* a_clbkArg,int64_t a_err,
 
 void Mainwindow_gui_wallet::TaskDoneFuncGUI(void* a_clbkArg,int64_t a_err,const std::string& a_task,const std::string& a_result)
 {
-    //emit TaskDoneSig(a_callbackArg,a_err,a_task,a_result);
     const char* cpcOccur;
 
     __DEBUG_APP2__(1,"just_conn=%d, err=%d, a_clbkArg=%p, task=%s, result=%s\n",
@@ -859,11 +738,8 @@ void Mainwindow_gui_wallet::TaskDoneFuncGUI(void* a_clbkArg,int64_t a_err,const 
     }
     }
 
-    if(strstr(a_task.c_str(),__CONNECTION_CLB_))
-    {
-        __DEBUG_APP2__(2,"this should not work!");
-    }
-    else if( strstr(a_task.c_str(),"info"))
+    if(strstr(a_task.c_str(),__CONNECTION_CLB_) == a_task.c_str()){__DEBUG_APP2__(0,"this should not work!");}
+    else if( strstr(a_task.c_str(),"info") == a_task.c_str())
     {
         QString aStrToDisplay(tr(a_task.c_str()));
 
@@ -876,20 +752,20 @@ void Mainwindow_gui_wallet::TaskDoneFuncGUI(void* a_clbkArg,int64_t a_err,const 
         m_info_dialog->setText(aStrToDisplay);
         m_info_dialog.exec();
     }
-    else if(strstr(a_task.c_str(),"about"))
+    else if(strstr(a_task.c_str(),"about") == a_task.c_str())
     {
         m_info_dialog.setFixedSize(500,300);
         m_info_dialog->setText(tr(a_result.c_str()));
         m_info_dialog.exec();
     }
-    else if(strstr(a_task.c_str(),"help"))
+    else if(strstr(a_task.c_str(),"help") == a_task.c_str())
     {
         m_info_dialog.setMaximumSize(QSize(QWIDGETSIZE_MAX,QWIDGETSIZE_MAX));
         m_info_dialog.resize(500,500);
         m_info_dialog->setText(tr(a_result.c_str()));
         m_info_dialog.exec();
     }
-    else if(strstr(a_task.c_str(),"list_my_accounts"))
+    else if(strstr(a_task.c_str(),"list_my_accounts") == a_task.c_str())
     {
         m_user_ids.clear();
         std::string sId;
@@ -921,7 +797,7 @@ void Mainwindow_gui_wallet::TaskDoneFuncGUI(void* a_clbkArg,int64_t a_err,const 
             SetNewTask(newLine,this,NULL,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
         }
     }
-    else if((cpcOccur=strstr(a_task.c_str(),"list_account_balances ")))
+    else if((cpcOccur=strstr(a_task.c_str(),"list_account_balances ")) == a_task.c_str())
     {
         __DEBUG_APP2__(2,"%s",a_result.c_str());
         QComboBox& userCombo = *m_pCentralWidget->usersCombo();
@@ -953,63 +829,67 @@ void Mainwindow_gui_wallet::TaskDoneFuncGUI(void* a_clbkArg,int64_t a_err,const 
         }
 
     }
-    //else if(strstr(a_task.c_str(),"list_content "))
-    else if(strstr(a_task.c_str(),"list_content"))
+    else if(strstr(a_task.c_str(),"list_content ") == a_task.c_str())
     {
-        //QTableWidget& cContents = m_pCentralWidget->getDigitalContentsTable();
-        std::string csGetContStr;
-        m_vcDigContent.clear();
-        GetDigitalContentsFromString(DCT::GENERAL, m_vcDigContent,a_result.c_str());
-        const int cnContsNumber(m_vcDigContent.size());
-
-        for(int i(0); i<cnContsNumber; ++i)
-        {
-            csGetContStr = std::string("get_content \"") + m_vcDigContent[i].URI + "\"";
-            SetNewTask(csGetContStr,this,(void*)((size_t)i),&Mainwindow_gui_wallet::TaskDoneFuncGUI);
-        }
-
     }
-    else if(strstr(a_task.c_str(),"get_content "))
+    else if(strstr(a_task.c_str(),"get_content ") == a_task.c_str())
     {
-        const int cnIndex (  (int)(  (size_t)a_clbkArg  )     );
-        const int cnContsNumber(m_vcDigContent.size());
-        if(cnIndex>=cnContsNumber){return;}
-        ParseDigitalContentFromGetContentString(&m_vcDigContent[cnIndex],a_result);
-        if(cnIndex==(cnContsNumber-1)){m_pCentralWidget->SetDigitalContentsGUI(m_vcDigContent);}
     }
-    else if(strstr(a_task.c_str(),"info"))
+    else if(strstr(a_task.c_str(),"import_key ") == a_task.c_str())
     {
-        //
-    }
-    else if(strstr(a_task.c_str(),"import_key "))
-    {
-        //std::thread aListAccountThread(&Mainwindow_gui_wallet::ListAccountThreadFunc,this,0);
-        //aListAccountThread.detach();
         DisplayWalletContentGUI();
     }
-    else if(strstr(a_task.c_str(),"unlock "))
+    else if(strstr(a_task.c_str(),"unlock ") == a_task.c_str())
     {
-        //
+        if (a_err) {
+            QMessageBox aMessageBox(QMessageBox::Critical,
+                                    QObject::tr("error"),
+                                    QObject::tr("Unable to unlock the wallet!"),
+                                    QMessageBox::Ok,
+                                    this);
+            aMessageBox.setDetailedText(QObject::tr(a_result.c_str()));
+            aMessageBox.exec();
+        }
+        UpdateLockedStatus();
     }
-    else if(strstr(a_task.c_str(),"get_account_history "))
+    else if(strstr(a_task.c_str(),"lock") == a_task.c_str())
+    {
+        if (a_err) {
+            QMessageBox aMessageBox(QMessageBox::Critical,
+                                    QObject::tr("error"),
+                                    QObject::tr("Unable to lock the wallet!"),
+                                    QMessageBox::Ok,
+                                    this);
+            aMessageBox.setDetailedText(QObject::tr(a_result.c_str()));
+            aMessageBox.exec();
+        }
+        UpdateLockedStatus();
+    }
+    else if(strstr(a_task.c_str(),"is_locked") == a_task.c_str())
+    {
+        if (a_err) {
+            QMessageBox aMessageBox(QMessageBox::Critical,
+                                    QObject::tr("error"),
+                                    QObject::tr("Unable to get wallet lock status!"),
+                                    QMessageBox::Ok,
+                                    this);
+            aMessageBox.setDetailedText(QObject::tr(a_result.c_str()));
+            aMessageBox.exec();
+            m_locked = true; // Assume disabled.
+        }
+        else {
+            m_locked = (a_result == "true");
+        }
+
+        m_ActionLock.setDisabled(m_locked);
+        m_ActionUnlock.setEnabled(m_locked);
+    }
+    else if(strstr(a_task.c_str(),"get_account_history ") == a_task.c_str())
     {
 
     }
-//    else if(strstr(a_task.c_str(),"list_accounts "))
-//    {
-//        int nCurTab(m_pCentralWidget->GetMyCurrentTabIndex());
-//        if(nCurTab != OVERVIEW){return;}
 
-//        QString qstr = QString::fromStdString(a_result);
-//        m_pCentralWidget->m_Overview_tab.text.setText(qstr);
-
-//    }
-
-    else if(strstr(a_task.c_str(),"get_account_history"))
-    {
-        QTableWidget* tabel = new QTableWidget();
-    }
-//donePoint:
+    //donePoint:
     if(a_clbkArg == CLI_WALLET_CODE)
     {
         m_cCliWalletDlg.appentText(a_result);
@@ -1036,8 +916,10 @@ void Mainwindow_gui_wallet::ManagementNewFuncGUI(void* a_clbkArg,int64_t a_err,c
         {
             __DEBUG_APP2__(1," ");
             m_nConnected = 1;
+            m_locked = true;
+            m_ActionLock.setDisabled(m_locked);
+            m_ActionUnlock.setEnabled(m_locked);
             m_ActionWalletContent.setEnabled(true);
-            m_ActionUnlock.setEnabled(true);
             m_ActionImportKey.setEnabled(true);
         }
 
@@ -1134,4 +1016,46 @@ void Mainwindow_gui_wallet::SetPassword(void* a_owner,int a_answer,/*string**/vo
         break;
     }
 
+}
+
+
+/*////////////////////////////////////////////////////////////////*/
+void ParseDigitalContentFromVariant(decent::wallet::ui::gui::SDigitalContent* a_pContent,
+                                    const fc::variant& a_result)
+{
+    decent::wallet::ui::gui::JsonParserQt aParser;
+
+    a_result.visit(aParser);
+
+#if 0
+    struct SDigitalContent{
+        SDigitalContent():type(DCT::GENERAL){}
+        DCT::DIG_CONT_TYPES type;
+        std::string author;
+        struct{
+            std::string amount2;
+            std::string asset_id;
+        }price;
+        std::string synopsis;
+        std::string URI;
+        std::string AVG_rating2;
+        //
+        std::string created;
+        std::string expiration;
+        std::string  size2;
+
+        //std::string  get_content_str;
+        std::string  times_bougth2;
+    };
+#endif
+
+    a_pContent->price.amount2 = aParser.GetByKey("price").GetByKey("amount").value();
+    a_pContent->price.asset_id = aParser.GetByKey("price").GetByKey("asset_id").value();
+    a_pContent->synopsis = aParser.GetByKey("synopsis").value();
+    //a_pContent->URI = aParser.GetByKey("URI").value();
+    a_pContent->AVG_rating2 = aParser.GetByKey("AVG_rating").value();
+    a_pContent->created = aParser.GetByKey("created").value();
+    a_pContent->expiration = aParser.GetByKey("expiration").value();
+    a_pContent->size2 = aParser.GetByKey("size").value();
+    a_pContent->times_bougth2 = aParser.GetByKey("times_bougth").value();
 }

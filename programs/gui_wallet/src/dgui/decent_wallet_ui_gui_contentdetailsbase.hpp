@@ -10,7 +10,7 @@
 #ifndef DECENT_WALLET_UI_GUI_CONTENTDETAILSBASE_HPP
 #define DECENT_WALLET_UI_GUI_CONTENTDETAILSBASE_HPP
 
-#define NUMBER_OF_SUB_LAYOUTS   9
+#define NUMBER_OF_SUB_LAYOUTS2   9
 
 #include <QDialog>
 #include "qt_commonheader.hpp"
@@ -34,9 +34,9 @@ protected:
     const decent::wallet::ui::gui::SDigitalContent* m_pContentInfo;
     QVBoxLayout     m_main_layout;
     QHBoxLayout     m_free_for_child;
-    QWidget         m_vSub_Widgets[NUMBER_OF_SUB_LAYOUTS];
-    QVBoxLayout     m_vSub_layouts[NUMBER_OF_SUB_LAYOUTS];
-    QLabel          m_vLabels[NUMBER_OF_SUB_LAYOUTS*2];
+    QWidget         m_vSub_Widgets[NUMBER_OF_SUB_LAYOUTS2];
+    QVBoxLayout     m_vSub_layouts[NUMBER_OF_SUB_LAYOUTS2];
+    QLabel          m_vLabels[NUMBER_OF_SUB_LAYOUTS2*2];
 };
 
 }}}}

@@ -520,6 +520,15 @@ class database_api
        */
       optional<buying_object> get_buying_by_consumer_URI( const account_id_type& consumer, const string& URI )const;
 
+
+      /**
+       * @brief Get rating given by the consumer to the content specified by it's URI
+       * @param consumer Consumer giving the rating
+       * @param URI Rated content
+       * @return Rating, if given
+       */
+      optional<uint64_t> get_rating_by_consumer_URI( const account_id_type& consumer, const string& URI )const;
+
       /**
        * @brief Get a content by URI
        * @param URI URI of the content to retrieve
@@ -661,6 +670,7 @@ FC_API(graphene::app::database_api,
    (get_open_buyings_by_consumer)
    (get_buying_by_consumer_URI)
    (get_buying_history_objects_by_consumer)
+   (get_rating_by_consumer_URI)
    (get_content)
    (list_content_by_author)
    (list_content)

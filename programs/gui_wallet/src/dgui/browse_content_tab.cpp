@@ -16,6 +16,8 @@
 #include <QMouseEvent>
 #include <stdio.h>
 #include <stdarg.h>
+#include "json.hpp"
+
 #include <iostream>
 
 //namespace DCF {enum DIG_CONT_FIELDS{TIME,SYNOPSIS,RATING,SIZE,PRICE,LEFT};}
@@ -25,6 +27,7 @@ static const int   s_cnNumberOfRows = sizeof(s_vccpItemNames)/sizeof(const char*
 static const int   s_cnNumberOfSearchFields(sizeof(gui_wallet::ST::s_vcpcSearchTypeStrs)/sizeof(const char*));
 
 using namespace gui_wallet;
+using namespace nlohmann;
 extern int g_nDebugApplication;
 
 
@@ -174,15 +177,26 @@ void Browse_content_tab::SetDigitalContentsGUI(const std::vector<decent::wallet:
         if(!pLabel){throw "Low memory!";}
         m_TableWidget.setCellWidget(i,DCF::TIME,pLabel);
 
+        std::string synopsis = aTemporar.synopsis;
+        /*
+        try {
+            auto synopsis_parsed = json::parse(aTemporar.synopsis);
+            if (synopsis_parsed["title"]) {
+                synopsis = synopsis_parsed["title"];
+            }
+        } catch (...) {
+            synopsis = "Invalid metadata";
+        }
+        */
         pLabel = new decent::wallet::ui::gui::TableWidgetItemW<QLabel>(
                                               aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
-                                              tr(aTemporar.synopsis.c_str()));
+                                              tr(synopsis.c_str()));
         if(!pLabel){throw "Low memory!";}
         m_TableWidget.setCellWidget(i,DCF::SYNOPSIS,pLabel);
 
         pLabel = new decent::wallet::ui::gui::TableWidgetItemW<QLabel>(
                                                aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
-                                               QString::number(aTemporar.AVG_rating,'f').remove( QRegExp("0+$") ).remove( QRegExp("\\.$") ));
+                                               tr(aTemporar.AVG_rating2.c_str()));
         if(!pLabel){throw "Low memory!";}
         m_TableWidget.setCellWidget(i,DCF::RATING,pLabel);
 
@@ -194,13 +208,13 @@ void Browse_content_tab::SetDigitalContentsGUI(const std::vector<decent::wallet:
 
         pLabel = new decent::wallet::ui::gui::TableWidgetItemW<QLabel>(
                                               aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
-                                              QString::number(aTemporar.size,'f').remove( QRegExp("0+$") ).remove( QRegExp("\\.$") ));
+                                              tr(aTemporar.size2.c_str()));
         if(!pLabel){throw "Low memory!";}
         m_TableWidget.setCellWidget(i,DCF::SIZE,pLabel);
 
         pLabel = new decent::wallet::ui::gui::TableWidgetItemW<QLabel>(
                                                aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
-                                               QString::number(aTemporar.price.amount,'f').remove( QRegExp("0+$") ).remove( QRegExp("\\.$") ));
+                                               tr(aTemporar.price.amount2.c_str()));
         if(!pLabel){throw "Low memory!";}
         m_TableWidget.setCellWidget(i,DCF::PRICE,pLabel);
     }
@@ -248,7 +262,6 @@ void Browse_content_tab::Connects()
 
 void Browse_content_tab::doRowColor()
 {
-
     if(green_row != 0)
     {
         m_pTableWidget->item(green_row,0)->setBackgroundColor(QColor(255,255,255));
@@ -261,6 +274,7 @@ void Browse_content_tab::doRowColor()
         m_pTableWidget->item(green_row,2)->setForeground(QColor::fromRgb(0,0,0));
         m_pTableWidget->item(green_row,3)->setForeground(QColor::fromRgb(0,0,0));
     }
+
     QPoint mouse_pos = m_pTableWidget->mapFromGlobal(QCursor::pos());
     QTableWidgetItem *ite = m_pTableWidget->itemAt(mouse_pos);
 
@@ -288,10 +302,10 @@ std::cout<<"----------------------------------------dorowcolor--"<<std::endl;
             //green_row = a;
         }
     }
-//    else
-//    {
-//        green_row == 0;
-//    }
+    else
+    {
+        green_row = 0;
+    }
 }
 
 //BTableWidget::BTableWidget(int a , int b) : QTableWidget(a,b)

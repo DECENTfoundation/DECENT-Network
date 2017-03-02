@@ -318,8 +318,9 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     pHBoxLayoutTmp->addWidget(pLabelTmp);
     pLabelTmp->setFixedSize(__SIZE_FOR_IMGS__,__SIZE_FOR_IMGS__);
     pComboTmp1 = new QComboBox;
+    pComboTmp1->setStyleSheet("color: black;""background-color:white;"
+                              "border: 1px solid #D3D3D3 ");
     if(!pComboTmp1){throw __FILE__ "Low memory";}
-    pComboTmp1->setStyleSheet("color: black;""background-color:white;");
     pHBoxLayoutTmp->addWidget(pComboTmp1);
     m_pUsernameWgt->setLayout(pHBoxLayoutTmp);
     m_first_line_lbl.addWidget(m_pUsernameWgt);
@@ -458,25 +459,23 @@ void CentralWigdet::resizeEvent ( QResizeEvent * a_event )
     //return ;
     QWidget::resizeEvent(a_event);
 
+    /*QString tqsStyle = tr("QTabBar::tab {width: ") +
+            QString::number(a_event->size().width()/5-1,10) + tr("px;}");
+    QTabBar* pTabBar = m_main_tabs2.tabBar();
+    pTabBar->setStyleSheet(tqsStyle);*/
 
-//    /*QString tqsStyle = tr("QTabBar::tab {width: ") +
-//            QString::number(a_event->size().width()/5-1,10) + tr("px;}");
-//    QTabBar* pTabBar = m_main_tabs2.tabBar();
-//    pTabBar->setStyleSheet(tqsStyle);*/
+    QTabBar* pTabBar = m_main_tabs2.tabBar();
+    pTabBar->resize(size().width(),pTabBar->height());
 
-//    QTabBar* pTabBar = m_main_tabs2.tabBar();
-//    pTabBar->resize(size().width(),pTabBar->height());
-//std::cout<<"----------------------------------"<<size().width()<<"----"<<std::endl;
-//    int nWidth_small (size().width()*13/100);
-//    int nWidth_big (size().width()*28/100);
-//    int nWidth_medium (size().width()*38/100);
-//    m_pDcLogoWgt->resize(nWidth_small,m_pDcLogoWgt->height());
-//    m_pUsernameWgt->resize(nWidth_big,m_pUsernameWgt->height());
-//    m_pBalanceWgt1->resize(nWidth_medium,m_pBalanceWgt1->height());
+    int nWidth_small (size().width()*13/100);
+    int nWidth_big (size().width()*28/100);
+    int nWidth_medium (size().width()*38/100);
+    m_pDcLogoWgt->resize(nWidth_small,m_pDcLogoWgt->height());
+    m_pUsernameWgt->resize(nWidth_big,m_pUsernameWgt->height());
+    m_pBalanceWgt1->resize(nWidth_medium,m_pBalanceWgt1->height());
 
-//    int lenght =m_main_tabs2.size().width();
-//    std::cout<<lenght/5<<std::endl;
-//    if(lenght/5 != 183)
+    //int lenght = a_event->size().width() - 1;
+//    if(lenght != a_event->oldSize().width())
 //    {
 //        m_main_tabs2.setStyleSheet("QTabBar::tab{"
 //                                   " height: 40px; width: " + QString::number(lenght/5) + "px; "
