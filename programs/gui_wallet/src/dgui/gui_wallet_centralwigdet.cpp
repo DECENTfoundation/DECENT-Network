@@ -27,6 +27,7 @@
 #include <QScrollBar>
 #include "gui_wallet_global.hpp"
 #include "gui_wallet_mainwindow.hpp"
+#include <QSortFilterProxyModel>
 
 #ifndef _PATH_DELIMER_
 #ifdef WIN32
@@ -164,13 +165,12 @@ CentralWigdet::CentralWigdet(class QBoxLayout* a_pAllLayout, class Mainwindow_gu
 
     setStyleSheet("color:black;""background-color:white;");
     m_main_tabs2.setStyleSheet("QTabBar::tab{"
-                               " height: 40px; width: 179px; "
+                               " height: 40px; width: 175px; "
                                "color:rgb(27,176,104);background-color:white;"
                                 "border: 1px solid rgb(240,240,240);}"
                                "QTabBar::tab:selected{"
                                "color:white;background-color:rgb(27,176,104);}"
                                );
-    std::cout<<size().width()/5<<std::endl;
 
 
     PrepareGUIprivate(a_pAllLayout);
@@ -455,28 +455,28 @@ void CentralWigdet::make_deleyed_warning()
 
 void CentralWigdet::resizeEvent ( QResizeEvent * a_event )
 {
+    //return ;
     QWidget::resizeEvent(a_event);
 
 
-    /*QString tqsStyle = tr("QTabBar::tab {width: ") +
-            QString::number(a_event->size().width()/5-1,10) + tr("px;}");
-    QTabBar* pTabBar = m_main_tabs2.tabBar();
-    pTabBar->setStyleSheet(tqsStyle);*/
+//    /*QString tqsStyle = tr("QTabBar::tab {width: ") +
+//            QString::number(a_event->size().width()/5-1,10) + tr("px;}");
+//    QTabBar* pTabBar = m_main_tabs2.tabBar();
+//    pTabBar->setStyleSheet(tqsStyle);*/
 
-    QTabBar* pTabBar = m_main_tabs2.tabBar();
-    pTabBar->resize(size().width(),pTabBar->height());
+//    QTabBar* pTabBar = m_main_tabs2.tabBar();
+//    pTabBar->resize(size().width(),pTabBar->height());
+//std::cout<<"----------------------------------"<<size().width()<<"----"<<std::endl;
+//    int nWidth_small (size().width()*13/100);
+//    int nWidth_big (size().width()*28/100);
+//    int nWidth_medium (size().width()*38/100);
+//    m_pDcLogoWgt->resize(nWidth_small,m_pDcLogoWgt->height());
+//    m_pUsernameWgt->resize(nWidth_big,m_pUsernameWgt->height());
+//    m_pBalanceWgt1->resize(nWidth_medium,m_pBalanceWgt1->height());
 
-    int nWidth_small (size().width()*13/100);
-    int nWidth_big (size().width()*28/100);
-    int nWidth_medium (size().width()*38/100);
-    m_pDcLogoWgt->resize(nWidth_small,m_pDcLogoWgt->height());
-    m_pUsernameWgt->resize(nWidth_big,m_pUsernameWgt->height());
-    m_pBalanceWgt1->resize(nWidth_medium,m_pBalanceWgt1->height());
-
-    int lenght = a_event->size().width() - 1;
-    std::cout<<lenght/5<<std::endl;
-    std::cout<<a_event->oldSize().width()/5<<std::endl;
-//    if(lenght != a_event->oldSize().width())
+//    int lenght =m_main_tabs2.size().width();
+//    std::cout<<lenght/5<<std::endl;
+//    if(lenght/5 != 183)
 //    {
 //        m_main_tabs2.setStyleSheet("QTabBar::tab{"
 //                                   " height: 40px; width: " + QString::number(lenght/5) + "px; "
