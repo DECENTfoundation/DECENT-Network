@@ -25,11 +25,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <QMessageBox>
+#include "json.hpp"
 
 #ifndef DEFAULT_WALLET_FILE_NAME
 #define DEFAULT_WALLET_FILE_NAME       "wallet.json"
 #endif
 
+using namespace nlohmann;
 using namespace gui_wallet;
 
 static gui_wallet::Mainwindow_gui_wallet*  s_pMainWindowInstance = NULL;
@@ -100,7 +102,6 @@ static bool GetJsonVectorNextElem(const char* a_cpcJsonStr,TypeConstChar* a_beg,
 }
 
 
-#if 1
 void ParseDigitalContentFromGetContentString(decent::wallet::ui::gui::SDigitalContent* a_pContent, const std::string& a_str)
 {
     const char* cpcStrToGet;
@@ -123,7 +124,7 @@ void ParseDigitalContentFromGetContentString(decent::wallet::ui::gui::SDigitalCo
     }
     a_pContent->get_content_str = a_str;
 }
-#endif
+
 
 
 void SetNewTaskQtMainWnd2Glb(const std::string& a_inp_line, void* a_clbData)
@@ -468,95 +469,22 @@ int Mainwindow_gui_wallet::GetDigitalContentsFromString(DCT::DIG_CONT_TYPES a_ty
                                                         const char* a_contents_str)
 {
     decent::wallet::ui::gui::SDigitalContent aDigContent;
-    const char *cpcSearchStart= a_contents_str,
-            *cpcAuthorFld, *cpcAutorBeg, *cpcAutorEnd,
-            *cpcAmountFld, *cpcAmountBeg,*cpcAmountEnd,
-            *cpcAssetIdFld, *cpcAssetIdBeg,*cpcAssetIdEnd,
-            *cpcSynopsisFld, *cpcSynopsisBeg, *cpcSynopsisEnd,
-            *cpcUriFld, *cpcUriBeg, *cpcUriEnd,
-            *cpcAvgRatingFld, *cpcAvgRatingBeg,*cpcAvgRatingEnd;
-
-    while(cpcSearchStart)
-    {
-        cpcAuthorFld = strstr(cpcSearchStart,"\"author\"");
-        if(g_nDebugApplication){printf("cpcAuthorFld=\"%.10s\"\n",cpcAuthorFld ? cpcAuthorFld : "nill");}
-        if(!cpcAuthorFld){return 0;}
-        //
-        cpcAutorBeg = strchr(cpcAuthorFld+strlen("\"author\""),'\"');
-        if(g_nDebugApplication){printf("cpcAutorBeg=\"%.10s\"\n",cpcAutorBeg ? cpcAutorBeg : "nill");}
-        if(!cpcAutorBeg){return 1;}
-        cpcAutorEnd = strchr(++cpcAutorBeg,'\"');
-        if(g_nDebugApplication){printf("cpcAutorEnd=\"%.10s\"\n",cpcAutorEnd ? cpcAutorEnd : "nill");}
-        if(!cpcAutorEnd){return 1;}
-        aDigContent.type = a_type;
-        aDigContent.author = std::string(cpcAutorBeg,((size_t)cpcAutorEnd)-((size_t)cpcAutorBeg));
-        if(g_nDebugApplication){printf("Content.author=\"%s\"\n",aDigContent.author.c_str());}
-
-        cpcAmountFld = strstr(cpcAutorEnd+1,"\"amount\"");
-        if(g_nDebugApplication){printf("cpcAmountFld=\"%.10s\"\n",cpcAmountFld ? cpcAmountFld : "nill");}
-        if(!cpcAmountFld){return 1;}
-        cpcAmountBeg = strchr(cpcAmountFld+strlen("\"amount\""),':');
-        //cpcAmountBeg = cpcAmountFld+strlen("\"amount\"");
-        if(g_nDebugApplication){printf("cpcAmountBeg=\"%.10s\"\n",cpcAmountBeg ? cpcAmountBeg : "nill");}
-        if(!cpcAmountBeg){return 1;}
-        aDigContent.price.amount = strtod(++cpcAmountBeg,const_cast<char**>(&cpcAmountEnd));
-        if(g_nDebugApplication){printf("cpcAmountEnd=\"%.10s\", Content.price.amount=%lf\n",cpcAmountEnd ? cpcAmountEnd : "nill",aDigContent.price.amount);}
-        if(!cpcAmountEnd){return 1;}
-
-        cpcAssetIdFld = strstr(cpcAmountEnd,"\"asset_id\"");
-        if(g_nDebugApplication){printf("cpcAssetIdFld=\"%.10s\"\n",cpcAssetIdFld ? cpcAssetIdFld : "nill");}
-        if(!cpcAssetIdFld){return 1;}
-        cpcAssetIdBeg = strchr(cpcAssetIdFld+strlen("\"asset_id\""),'\"');
-        if(g_nDebugApplication){printf("cpcAssetIdBeg=\"%.10s\"\n",cpcAssetIdBeg ? cpcAssetIdBeg : "nill");}
-        if(!cpcAssetIdBeg){return 1;}
-        cpcAssetIdEnd = strchr(++cpcAssetIdBeg,'\"');
-        if(g_nDebugApplication){printf("cpcAssetIdEnd=\"%.10s\"\n",cpcAssetIdEnd ? cpcAssetIdEnd : "nill");}
-        if(!cpcAssetIdEnd){return 1;}
-        aDigContent.price.asset_id = std::string(cpcAssetIdBeg,((size_t)cpcAssetIdEnd)-((size_t)cpcAssetIdBeg));
-        if(g_nDebugApplication){printf("Content.price.asset_id=\"%s\"\n",aDigContent.price.asset_id.c_str());}
-
-        cpcSynopsisFld = strstr(cpcAssetIdEnd,"\"synopsis\"");
-        if(g_nDebugApplication){printf("cpcSynopsisFld=\"%.10s\"\n",cpcSynopsisFld ? cpcSynopsisFld : "nill");}
-        if(!cpcSynopsisFld){return 1;}
-        cpcSynopsisBeg = strchr(cpcSynopsisFld+strlen("\"synopsis\""),'\"');
-        if(g_nDebugApplication){printf("cpcSynopsisBeg=\"%.10s\"\n",cpcSynopsisBeg ? cpcSynopsisBeg : "nill");}
-        if(!cpcSynopsisBeg){return 1;}
-        cpcSynopsisEnd = strchr(++cpcSynopsisBeg,'\"');
-        if(g_nDebugApplication){printf("cpcSynopsisEnd=\"%.10s\"\n",cpcSynopsisEnd ? cpcSynopsisEnd : "nill");}
-        if(!cpcSynopsisEnd){return 1;}
-        aDigContent.synopsis = std::string(cpcSynopsisBeg,((size_t)cpcSynopsisEnd)-((size_t)cpcSynopsisBeg));
-        if(g_nDebugApplication){printf("Content.synopsis=\"%s\"\n",aDigContent.synopsis.c_str());}
-
-        cpcUriFld = strstr(cpcSynopsisEnd,"\"URI\"");
-        if(g_nDebugApplication){printf("cpcUriFld=\"%.10s\"\n",cpcUriFld ? cpcUriFld : "nill");}
-        if(!cpcSynopsisFld){return 1;}
-        cpcUriBeg = strchr(cpcUriFld+strlen("\"URI\""),'\"');
-        if(g_nDebugApplication){printf("cpcUriBeg=\"%.10s\"\n",cpcUriBeg ? cpcUriBeg : "nill");}
-        if(!cpcUriBeg){return 1;}
-        cpcUriEnd = strchr(++cpcUriBeg,'\"');
-        if(g_nDebugApplication){printf("cpcUriEnd=\"%.10s\"\n",cpcUriEnd ? cpcUriEnd : "nill");}
-        if(!cpcUriEnd){return 1;}
-        aDigContent.URI = std::string(cpcUriBeg,((size_t)cpcUriEnd)-((size_t)cpcUriBeg));
-        if(g_nDebugApplication){printf("Content.URI=\"%s\"\n",aDigContent.URI.c_str());}
-
-        cpcAvgRatingFld = strstr(cpcUriEnd+1,"\"AVG_rating\"");
-        if(g_nDebugApplication){printf("cpcAvgRatingFld=\"%.10s\"\n",cpcAvgRatingFld ? cpcAvgRatingFld : "nill");}
-        if(!cpcAvgRatingFld){return 1;}
-        cpcAvgRatingBeg = strchr(cpcAvgRatingFld+strlen("\"AVG_rating\""),':');
-        //cpcAvgRatingBeg = cpcAvgRatingFld+strlen("\"AVG_rating\"");
-        if(g_nDebugApplication){printf("cpcAvgRatingBeg=\"%.10s\"\n",cpcAvgRatingBeg ? cpcAvgRatingBeg : "nill");}
-        if(!cpcAvgRatingBeg){return 1;}
-        aDigContent.AVG_rating = strtod(++cpcAvgRatingBeg,const_cast<char**>(&cpcAvgRatingEnd));
-        if(g_nDebugApplication){printf("cpcAvgRatingEnd=\"%.10s\", Content.AVG_rating=%lf\n",cpcAvgRatingEnd ? cpcAvgRatingEnd : "nill",aDigContent.AVG_rating);}
-        if(!cpcAvgRatingEnd){return 1;}
-        if(g_nDebugApplication){printf("\n*****************************************************\n");}
-
-        a_vcContents.push_back(aDigContent);
-        cpcSearchStart = cpcAvgRatingEnd+1;
+    std::cout << a_contents_str << "\n";
+    auto contents = json::parse(a_contents_str);
+    for (auto content: contents) {
+        aDigContent.author = content["author"].get<std::string>();
+        if (content["price"]["amount"].is_number()) {
+            aDigContent.price.amount =  content["price"]["amount"].get<double>();
+        } else {
+            aDigContent.price.amount =  atof(content["price"]["amount"].get<std::string>().c_str());
+        }
+        aDigContent.price.asset_id = content["price"]["asset_id"].get<std::string>();
+        aDigContent.synopsis = content["synopsis"].get<std::string>();
+        aDigContent.URI = content["URI"].get<std::string>();
+        aDigContent.AVG_rating = content["AVG_rating"].get<double>();
+        
     }
-
-    __DEBUG_APP2__(1,"\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n");
-
+    
     return 0;
 }
 

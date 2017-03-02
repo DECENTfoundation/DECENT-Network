@@ -152,13 +152,7 @@ void decent::wallet::ui::gui::AccountBalanceWidget::ClbFunction(_NEEDED_ARGS1_(i
 /*//////////////////////////////////////////////////*/
 
 CentralWigdet::CentralWigdet(class QBoxLayout* a_pAllLayout, class Mainwindow_gui_wallet* a_pPar)
-    :
-#ifdef __TRY_LABEL_INSTEAD_OF_TABLE__
-      m_first_line_lbl()
-#else
-      m_first_line_widget2(1,NUMBER_OF_FRST_LINE_ELEMS)
-#endif
-    ,m_Overview_tab(a_pPar)
+    : m_first_line_lbl() ,m_Overview_tab(a_pPar)
 {
 
 
