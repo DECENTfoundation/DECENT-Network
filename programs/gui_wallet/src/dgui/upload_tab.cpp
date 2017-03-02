@@ -23,6 +23,7 @@
 
 
 
+#include <cryptopp/integer.h>
 #include <cryptopp/aes.h>
 #include <cryptopp/filters.h>
 #include <cryptopp/files.h>
@@ -44,27 +45,168 @@ extern int g_nDebugApplication;
 CryptoPP::AutoSeededRandomPool rng;
 
 
-#define ALERT(message)                                  \
-{                                                       \
-    QMessageBox msgBox;                                 \
-    msgBox.setWindowTitle("Error");                     \
-    msgBox.setText(QString::fromStdString(message));    \
-    msgBox.exec();                                      \
-}                                                       \
+
+
+namespace {
+    static std::size_t extra_space(const std::string& s) noexcept
+    {
+        return std::accumulate(s.begin(), s.end(), size_t{},
+                               [](size_t res, typename std::string::value_type c)
+        {
+            switch (c)
+            {
+                case '"':
+                case '\\':
+                case '\b':
+                case '\f':
+                case '\n':
+                case '\r':
+                case '\t':
+                {
+                    // from c (1 byte) to \x (2 bytes)
+                    return res + 1;
+                }
+
+                default:
+                {
+                    if (c >= 0x00 and c <= 0x1f)
+                    {
+                        // from c (1 byte) to \uxxxx (6 bytes)
+                        return res + 5;
+                    }
+
+                    return res;
+                }
+            }
+        });
+    }
+
+    std::string escape_string(const std::string& s)
+    {
+        const auto space = extra_space(s);
+        if (space == 0)
+        {
+            return s;
+        }
+
+        // create a result string of necessary size
+        std::string result(s.size() + space, '\\');
+        std::size_t pos = 0;
+
+        for (const auto& c : s)
+        {
+            switch (c)
+            {
+                // quotation mark (0x22)
+                case '"':
+                {
+                    result[pos + 1] = '"';
+                    pos += 2;
+                    break;
+                }
+
+                // reverse solidus (0x5c)
+                case '\\':
+                {
+                    // nothing to change
+                    pos += 2;
+                    break;
+                }
+
+                // backspace (0x08)
+                case '\b':
+                {
+                    result[pos + 1] = 'b';
+                    pos += 2;
+                    break;
+                }
+
+                // formfeed (0x0c)
+                case '\f':
+                {
+                    result[pos + 1] = 'f';
+                    pos += 2;
+                    break;
+                }
+
+                // newline (0x0a)
+                case '\n':
+                {
+                    result[pos + 1] = 'n';
+                    pos += 2;
+                    break;
+                }
+
+                // carriage return (0x0d)
+                case '\r':
+                {
+                    result[pos + 1] = 'r';
+                    pos += 2;
+                    break;
+                }
+
+                // horizontal tab (0x09)
+                case '\t':
+                {
+                    result[pos + 1] = 't';
+                    pos += 2;
+                    break;
+                }
+
+                default:
+                {
+                    if (c >= 0x00 and c <= 0x1f)
+                    {
+                        // convert a number 0..15 to its hex representation
+                        // (0..f)
+                        static const char hexify[16] =
+                        {
+                            '0', '1', '2', '3', '4', '5', '6', '7',
+                            '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'
+                        };
+
+                        // print character c as \uxxxx
+                        for (const char m :
+                    { 'u', '0', '0', hexify[c >> 4], hexify[c & 0x0f]
+                        })
+                        {
+                            result[++pos] = m;
+                        }
+
+                        ++pos;
+                    }
+                    else
+                    {
+                        // all other characters are added as-is
+                        result[pos++] = c;
+                    }
+                    break;
+                }
+            }
+        }
+
+        return result;
+    }
+
+}
 
 
 
 Upload_tab::Upload_tab()
         :
         m_info_widget(FieldsRows::NUM_FIELDS, 2),
-        m_synopsis_label(tr("Synopsis")),
+        m_title_label(tr("Title")),
+        m_description_label(tr("Description")),
         m_infoLayoutHeader(tr("Information about content")),
         m_getPublishersTimer(this)
 {
     QPalette pltEdit;
 
-    m_synopsis_layout.addWidget(&m_synopsis_label);
-    m_synopsis_layout.addWidget(&m_synopsis_text);
+    m_synopsis_layout.addWidget(&m_title_label);
+    m_synopsis_layout.addWidget(&m_title_text);
+
+    m_synopsis_layout.addWidget(&m_description_label);
+    m_synopsis_layout.addWidget(&m_description_text);
 
     m_main_layout.addLayout(&m_synopsis_layout);
     m_info_layout.addWidget(&m_infoLayoutHeader);
@@ -132,20 +274,42 @@ Upload_tab::Upload_tab()
 
 
     ////////////////////////////////////////////////////////////////////////////
-    /// Push button
+    /// content button
     ////////////////////////////////////////////////////////////////////////////
 
     QLineEdit* contentPath = new QLineEdit("", this);
     contentPath->setReadOnly(true);
 
-    m_info_widget.setCellWidget(FieldsRows::CONTENTPATH, 0, new QLabel("Path"));
+    m_info_widget.setCellWidget(FieldsRows::CONTENTPATH, 0, new QLabel("Content"));
     m_info_widget.setCellWidget(FieldsRows::CONTENTPATH, 1, contentPath);
 
 
-    QPushButton* pPushButton = new QPushButton("Browse...");
+    QPushButton* browse_content_button = new QPushButton("Browse...");
+    m_info_widget.setCellWidget(FieldsRows::SELECTSAMPLES, 0, new QLabel(""));
+    m_info_widget.setCellWidget(FieldsRows::SELECTSAMPLES, 1, browse_content_button);
+    connect(browse_content_button, SIGNAL(clicked()),this, SLOT(browseSamples()));
+
+
+
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// samples button
+    ////////////////////////////////////////////////////////////////////////////
+
+    QLineEdit* samplesPath = new QLineEdit("", this);
+    samplesPath->setReadOnly(true);
+
+    m_info_widget.setCellWidget(FieldsRows::SAMPLESPATH, 0, new QLabel("Samples"));
+    m_info_widget.setCellWidget(FieldsRows::SAMPLESPATH, 1, samplesPath);
+
+
+    QPushButton* browse_samples_button = new QPushButton("Browse...");
     m_info_widget.setCellWidget(FieldsRows::SELECTPATH, 0, new QLabel(""));
-    m_info_widget.setCellWidget(FieldsRows::SELECTPATH, 1, pPushButton);
-    connect(pPushButton, SIGNAL(clicked()),this, SLOT(browseContent()));
+    m_info_widget.setCellWidget(FieldsRows::SELECTPATH, 1, browse_samples_button);
+    connect(browse_samples_button, SIGNAL(clicked()),this, SLOT(browseContent()));
+
+
+
 
 
     m_info_widget.horizontalHeader()->hide();
@@ -236,6 +400,14 @@ void Upload_tab::browseContent() {
     contentPath->setText(contentDir);
 }
 
+void Upload_tab::browseSamples() {
+    QString sampleDir = QFileDialog::getExistingDirectory(this, tr("Select samples"), "~", QFileDialog::DontResolveSymlinks);
+    //QString sampleDir = QFileDialog::getOpenFileName(this, tr("Select content"), "~");
+    QLineEdit* samplePath = (QLineEdit*)m_info_widget.cellWidget(FieldsRows::SAMPLESPATH, 1);
+    samplePath->setText(sampleDir);
+}
+/*
+
 void Upload_tab::uploadContent() {
     std::string lifetime = ((QDateEdit*)m_info_widget.cellWidget(FieldsRows::LIFETIME, 1))->text().toStdString();
     std::string keyparts = ((QComboBox*)m_info_widget.cellWidget(FieldsRows::KEYPARTS, 1))->currentData().toString().toStdString();
@@ -245,8 +417,12 @@ void Upload_tab::uploadContent() {
     std::string assetName = ((QComboBox*)m_info_widget.cellWidget(FieldsRows::ASSETID, 1))->currentText().toStdString();
     std::string seeders = ((QComboBox*)m_info_widget.cellWidget(FieldsRows::SEEDERS, 1))->currentData().toString().toStdString();
     std::string path = ((QLineEdit*)m_info_widget.cellWidget(FieldsRows::CONTENTPATH, 1))->text().toStdString();
+    std::string samples_path = ((QLineEdit*)m_info_widget.cellWidget(FieldsRows::SAMPLESPATH, 1))->text().toStdString();
 
-    std::string synopsis = m_synopsis_text.toPlainText().toStdString();
+
+    std::string title = m_title_text.text().toStdString();
+    std::string desc = m_description_text.toPlainText().toStdString();
+
 
     if (tags.empty()) {
         ALERT("Please specify tags");
@@ -263,7 +439,12 @@ void Upload_tab::uploadContent() {
         return;
     }
 
-    if (synopsis.empty()) {
+    if (title.empty()) {
+        ALERT("Please specify synopsis");
+        return;
+    }
+    
+    if (desc.empty()) {
         ALERT("Please specify synopsis");
         return;
     }
@@ -274,6 +455,11 @@ void Upload_tab::uploadContent() {
     }
 
 
+    json synopsis_obj;
+    synopsis_obj["title"] = title;
+    synopsis_obj["description"] = desc;
+
+    std::string synopsis = synopsis_obj.dump(4);
 
     CryptoPP::Integer randomKey (rng, 512);
 
@@ -302,8 +488,9 @@ void Upload_tab::uploadContent() {
 
     
 
-    QString createPackage = QString("create_package \"%0\" \"\" %1").arg(QString::fromStdString(path),
-                                                                         QString::fromStdString(randomKeyString));
+    QString createPackage = QString("create_package \"%0\" \"%1\" %2").arg(QString::fromStdString(path),
+                                                                           QString::fromStdString(samples_path),
+                                                                           QString::fromStdString(randomKeyString));
 
     SetNewTask(createPackage.toStdString(), this, submitCommand, +[](void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
         if (a_err != 0) {
@@ -355,14 +542,116 @@ void Upload_tab::uploadContent() {
      });
 }
 
+*/
+
+
+
+
+
+void Upload_tab::uploadContent() {
+    std::string lifetime = ((QDateEdit*)m_info_widget.cellWidget(FieldsRows::LIFETIME, 1))->text().toStdString();
+    std::string keyparts = ((QComboBox*)m_info_widget.cellWidget(FieldsRows::KEYPARTS, 1))->currentData().toString().toStdString();
+    std::string tags = ((QLineEdit*)m_info_widget.cellWidget(FieldsRows::TAGS, 1))->text().toStdString();
+    std::string price = ((QLineEdit*)m_info_widget.cellWidget(FieldsRows::PRICE, 1))->text().toStdString();
+    std::string assetType = ((QComboBox*)m_info_widget.cellWidget(FieldsRows::ASSETID, 1))->currentData().toString().toStdString();
+    std::string assetName = ((QComboBox*)m_info_widget.cellWidget(FieldsRows::ASSETID, 1))->currentText().toStdString();
+    std::string seeders = ((QComboBox*)m_info_widget.cellWidget(FieldsRows::SEEDERS, 1))->currentData().toString().toStdString();
+    std::string path = ((QLineEdit*)m_info_widget.cellWidget(FieldsRows::CONTENTPATH, 1))->text().toStdString();
+    std::string samples_path = ((QLineEdit*)m_info_widget.cellWidget(FieldsRows::SAMPLESPATH, 1))->text().toStdString();
+
+
+    std::string title = m_title_text.text().toStdString();
+    std::string desc = m_description_text.toPlainText().toStdString();
+
+
+    if (tags.empty()) {
+        ALERT("Please specify tags");
+        return;
+    }
+
+    if (price.empty()) {
+        ALERT("Please specify price");
+        return;
+    }
+
+    if (path.empty()) {
+        ALERT("Please specify path");
+        return;
+    }
+
+    if (title.empty()) {
+        ALERT("Please specify synopsis");
+        return;
+    }
+    
+    if (desc.empty()) {
+        ALERT("Please specify synopsis");
+        return;
+    }
+
+    if (GlobalEvents::instance().getCurrentUser().empty()) {
+        ALERT("Please select user to upload");
+        return;   
+    }
+
+    setEnabled(false);
+
+    json synopsis_obj;
+    synopsis_obj["title"] = title;
+    synopsis_obj["description"] = desc;
+
+    std::string synopsis = synopsis_obj.dump(4);
+
+    CryptoPP::Integer randomKey (rng, 512);
+
+    std::ostringstream oss;
+    oss << randomKey;
+    std::string randomKeyString(oss.str());
+
+
+
+    std::string submitCommand = "submit_content_new";
+    submitCommand += " " + GlobalEvents::instance().getCurrentUser();   //author
+    submitCommand += " \"" + path + "\"";                               //URI
+    submitCommand += " \"" + samples_path + "\"";                       //URI
+    submitCommand += " \"ipfs\"";                                       //URI
+    submitCommand += " " + assetName;                                   //price_asset_name
+    submitCommand += " " + price;                                       //price_amount
+    submitCommand += " [" + seeders + "]";                              //seeders
+    submitCommand += " \"" + lifetime + "T23:59:59\"";                  //expiration
+    submitCommand += " DECENT";                                         //publishing_fee_asset
+    submitCommand += " 300";                                            //publishing_fee_amount
+    submitCommand += " \"" + escape_string(synopsis) + "\"";            //synopsis
+    submitCommand += " true";                                           //broadcast
+
+
+    SetNewTask(submitCommand, this, NULL, +[](void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
+        ((Upload_tab*)owner)->uploadDone(a_clbkArg, a_err, a_task, a_result);
+    });
+}
+
 Upload_tab::~Upload_tab()
 {
 }
 
-
-
 void Upload_tab::uploadDone(void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
+    if (a_err != 0) {
+        ALERT("Failed to submit content");
+        setEnabled(true);
+        return;
+    }
 
+    // On success reset only these.
+    m_title_text.setText("");
+    m_description_text.setPlainText("");
+    ((QDateEdit*)m_info_widget.cellWidget(FieldsRows::LIFETIME, 1))->setDate(QDate::currentDate());
+    ((QLineEdit*)m_info_widget.cellWidget(FieldsRows::TAGS, 1))->setText("");
+    ((QLineEdit*)m_info_widget.cellWidget(FieldsRows::PRICE, 1))->setText("");
+    ((QLineEdit*)m_info_widget.cellWidget(FieldsRows::CONTENTPATH, 1))->setText("");
+    ((QLineEdit*)m_info_widget.cellWidget(FieldsRows::SAMPLESPATH, 1))->setText("");
+
+    ALERT("Content is submitted!");
+    setEnabled(true);
 }
 
 void Upload_tab::resizeEvent ( QResizeEvent * event )

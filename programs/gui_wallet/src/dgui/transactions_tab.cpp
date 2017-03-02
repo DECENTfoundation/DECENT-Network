@@ -8,38 +8,67 @@
 // *
 // */
 #include "transactions_tab.hpp"
-#include <QFrame>
-#include <Qt>
+#include <QHeaderView>
+#include <QFont>
+#include <QTableWidgetItem>
+
+#include <iostream>
+#include <QResource>
 
 using namespace gui_wallet;
 
 static const char* firsItemNames[]={"Time","Type","Info","Fee"};
 
-Transactions_tab::Transactions_tab()
+Transactions_tab::Transactions_tab() : green_row(0)
 {
     //create table (widget)
-    tablewidget = new QTableWidget();
+    tablewidget = new HTableWidget();
     tablewidget->setRowCount(1);//add first row in table
     tablewidget->setColumnCount(4);
-    tablewidget->verticalHeader()->setDefaultSectionSize(34);
-    tablewidget->horizontalHeader()->setDefaultSectionSize(220);
+    tablewidget->verticalHeader()->setDefaultSectionSize(35);
+    tablewidget->horizontalHeader()->setDefaultSectionSize(230);
     tablewidget->horizontalHeader()->hide();
     tablewidget->verticalHeader()->hide();
+    tablewidget->setStyleSheet("QTableView{border : 1px solid lightGray}");
+    //tablewidget->setShowGrid(false);
+
     tablewidget->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     tablewidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    main_layout.setContentsMargins(0, 5, 0, 0);
 
+    user.setStyleSheet("border: 0px solid white");
     user.setPlaceholderText("Search");
+    user.setMaximumHeight(40);
+    user.setFixedHeight(40);
 
+    QFont f( "Open Sans Bold", 14, QFont::Bold);
     for (int i = 0; i < 4; ++i)
     {
         tablewidget->setItem(0, i, new QTableWidgetItem(tr(firsItemNames[i])));
+        tablewidget->item(0, i)->setFont(f);
         tablewidget->item(0, i)->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
-        tablewidget->item(0, i)->setBackground(Qt::lightGray);
+        tablewidget->item(0, i)->setBackground(QColor(228,227,228));
         tablewidget->item(0, i)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+        tablewidget->item(0, i)->setForeground(QColor::fromRgb(51,51,51));
     }
 
-    main_layout.addWidget(&user);
+    connect(tablewidget,SIGNAL(mouseMoveEventDid()),this,SLOT(doRowColor()));
+
+    QResource icon;
+    icon.registerResource("/Users/vahe/dev/DECENTfoundation/DECENT-Network/programs/gui_wallet/resource.rcc");
+
+    QHBoxLayout* search_lay = new QHBoxLayout();
+    QPixmap image(":/icon/images/search.svg");
+    search_label.setSizeIncrement(100,40);
+    search_label.setPixmap(image);
+
+    search_lay->addWidget(new QLabel());
+    search_lay->addWidget(new QLabel());
+    search_lay->addWidget(new QLabel());
+    search_lay->addWidget(&search_label);
+    search_lay->addWidget(&user);
+
+    main_layout.setContentsMargins(0, 0, 0, 0);
+    main_layout.addLayout(search_lay);
     main_layout.addWidget(tablewidget);
     setLayout(&main_layout);
 }
@@ -73,9 +102,68 @@ void Transactions_tab::deleteEmptyRows()
    }
 }
 
-
 Transactions_tab::~Transactions_tab()
 {
     main_layout.removeWidget(tablewidget);
     delete tablewidget;
 }
+
+void Transactions_tab::doRowColor()
+{
+    if(green_row != 0)
+    {
+        tablewidget->item(green_row,0)->setBackgroundColor(QColor(255,255,255));
+        tablewidget->item(green_row,1)->setBackgroundColor(QColor(255,255,255));
+        tablewidget->item(green_row,2)->setBackgroundColor(QColor(255,255,255));
+        tablewidget->item(green_row,3)->setBackgroundColor(QColor(255,255,255));
+
+        tablewidget->item(green_row,0)->setForeground(QColor::fromRgb(0,0,0));
+        tablewidget->item(green_row,1)->setForeground(QColor::fromRgb(0,0,0));
+        tablewidget->item(green_row,2)->setForeground(QColor::fromRgb(0,0,0));
+        tablewidget->item(green_row,3)->setForeground(QColor::fromRgb(0,0,0));
+    }
+    QPoint mouse_pos = tablewidget->mapFromGlobal(QCursor::pos());
+    QTableWidgetItem *ite = tablewidget->itemAt(mouse_pos);
+
+    if(ite != NULL)
+    {
+
+        int a = ite->row();
+        if(a != 0)
+        {
+            tablewidget->item(a,0)->setBackgroundColor(QColor(27,176,104));
+            tablewidget->item(a,1)->setBackgroundColor(QColor(27,176,104));
+            tablewidget->item(a,2)->setBackgroundColor(QColor(27,176,104));
+            tablewidget->item(a,3)->setBackgroundColor(QColor(27,176,104));
+
+            tablewidget->item(a,0)->setForeground(QColor::fromRgb(255,255,255));
+            tablewidget->item(a,1)->setForeground(QColor::fromRgb(255,255,255));
+            tablewidget->item(a,2)->setForeground(QColor::fromRgb(255,255,255));
+            tablewidget->item(a,3)->setForeground(QColor::fromRgb(255,255,255));
+            green_row = a;
+        }
+    }
+    else
+    {
+        green_row = 0;
+    }
+}
+
+void Transactions_tab::Connects()
+{
+    connect(tablewidget,SIGNAL(mouseMoveEventDid()),this,SLOT(doRowColor()));
+}
+
+
+HTableWidget::HTableWidget() : QTableWidget()
+{
+    this->setMouseTracking(true);
+}
+
+
+void HTableWidget::mouseMoveEvent(QMouseEvent *event)
+{
+    mouseMoveEventDid();
+}
+
+

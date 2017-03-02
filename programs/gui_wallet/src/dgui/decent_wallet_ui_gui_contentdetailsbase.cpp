@@ -11,13 +11,13 @@
 #include "decent_wallet_ui_gui_contentdetailsbase.hpp"
 
 
-static const char* s_vcpcFieldsGeneral[NUMBER_OF_SUB_LAYOUTS] = {
+static const char* s_vcpcFieldsGeneral[NUMBER_OF_SUB_LAYOUTS2] = {
     "Author", "Expiration","Created","Price", "Amount","Asset ID",
     "Averege Rating","Size","Times Bought"
 };
 
 
-static const char* s_vcpcFieldsBougth[NUMBER_OF_SUB_LAYOUTS] = {
+static const char* s_vcpcFieldsBougth[NUMBER_OF_SUB_LAYOUTS2] = {
     "Author", "Expiration","Created","Price", "Amount","Asset ID",
     "Averege Rating","Size","Times Bought"
 };
@@ -36,7 +36,7 @@ decent::wallet::ui::gui::ContentDetailsBase::ContentDetailsBase()
     m_main_layout.addLayout(&m_free_for_child);
 
 
-    for(i=0;i<NUMBER_OF_SUB_LAYOUTS;++i,nIndexZuyg+=2,nIndexKent+=2)
+    for(i=0;i<NUMBER_OF_SUB_LAYOUTS2;++i,nIndexZuyg+=2,nIndexKent+=2)
     {
         if(i%2==0){m_vSub_Widgets[i].setStyleSheet("background-color:lightGray;");}
         else{m_vSub_Widgets[i].setStyleSheet("background-color:white;");}
@@ -66,7 +66,7 @@ void decent::wallet::ui::gui::ContentDetailsBase::execCDB(const decent::wallet::
     NewType vNames = s_vFields[a_cnt_details.type];
     m_pContentInfo = &a_cnt_details;
 
-    for(i=0;i<NUMBER_OF_SUB_LAYOUTS;++i,nIndexZuyg+=2)
+    for(i=0;i<NUMBER_OF_SUB_LAYOUTS2;++i,nIndexZuyg+=2)
     {
         m_vLabels[nIndexZuyg].setText(tr(vNames[i]));
     }

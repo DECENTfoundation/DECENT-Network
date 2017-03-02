@@ -80,4 +80,12 @@ namespace graphene { namespace chain {
       void_result do_apply( const return_escrow_buying_operation& o );
    };
 
+   class pay_seeder_evaluator : public evaluator<pay_seeder_evaluator>
+   {
+   public:
+      typedef pay_seeder_operation operation_type;
+
+      void_result do_evaluate( const pay_seeder_operation& o );
+      void_result do_apply( const pay_seeder_operation& o );
+   };
 }}

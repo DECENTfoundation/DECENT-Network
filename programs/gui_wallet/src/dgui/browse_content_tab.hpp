@@ -21,6 +21,24 @@
 #include <QComboBox>
 
 
+
+class BTableWidget : public QTableWidget
+{
+    Q_OBJECT
+public:
+    BTableWidget(int a , int b) : QTableWidget(a,b)
+    {
+         this->setMouseTracking(true);
+    };
+
+    virtual void mouseMoveEvent(QMouseEvent * event);
+public:
+signals:
+    void mouseMoveEventDid();
+};
+
+
+
 namespace gui_wallet
 {
 
@@ -44,9 +62,15 @@ namespace gui_wallet
         void SetDigitalContentsGUI(const std::vector<decent::wallet::ui::gui::SDigitalContent>& contents);
         QString getFilterText()const;
 
+        void Connects();
+        int green_row;
+
     public:
     signals:
         void ShowDetailsOnDigContentSig(decent::wallet::ui::gui::SDigitalContent get_cont_str);
+
+    public slots:
+        void doRowColor();
 
     protected:
         void PrepareTableWidgetHeaderGUI();
@@ -58,7 +82,7 @@ namespace gui_wallet
         QVBoxLayout     m_main_layout;
         QHBoxLayout     m_search_layout;
         //QTableWidget    m_TableWidget; // Should be investigated
-        QTableWidget*    m_pTableWidget;
+        BTableWidget*    m_pTableWidget;
         //int              m_nNumberOfContentsPlus1;
         QLineEdit       m_filterLineEdit;
         QComboBox       m_searchTypeCombo;

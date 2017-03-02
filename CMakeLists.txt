@@ -38,12 +38,12 @@ if( APPLE )
 
         list( APPEND CMAKE_PREFIX_PATH
               "${HOMEBREW_PREFIX}/opt/openssl"
-              "${HOMEBREW_PREFIX}/opt/boost160"
+              "${HOMEBREW_PREFIX}/opt/boost@1.60"
               "${HOMEBREW_PREFIX}/opt/pbc"
               "${HOMEBREW_PREFIX}/opt/gmp"
               "${HOMEBREW_PREFIX}/opt/cryptopp"
               "${HOMEBREW_PREFIX}/opt/berkeley-db"
-#              "${HOMEBREW_PREFIX}/opt/libtorrent-rasterbar"
+#             "${HOMEBREW_PREFIX}/opt/libtorrent-rasterbar"
               "${HOMEBREW_PREFIX}/opt/qt5"
             )
     endif()
@@ -189,14 +189,13 @@ if( ENABLE_INSTALLER )
 
     include( InstallRequiredSystemLibraries )
 
-    set( CPACK_OUTPUT_FILE_PREFIX "${CMAKE_BINARY_DIR}/packages" )
     if( CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT )
-        set( CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/artifacts/prefix" CACHE PATH "..." FORCE )
+        set( CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/artifacts/prefix" CACHE PATH "..." FORCE )
     else()
-    	set( CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/artifacts/install" )
+    	set( CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/artifacts/prefix" )
     endif()
-
-    set( CPACK_PACKAGE_DIRECTORY "${CMAKE_BINARY_DIR}/artifacts/package" )
+    set( CPACK_OUTPUT_FILE_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/artifacts/packages" )
+    set( CPACK_PACKAGE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/artifacts/package" )
     set( CPACK_PACKAGE_NAME "Decent" )
     set( CPACK_PACKAGE_VENDOR "Decent Services" )
     set( CPACK_PACKAGE_VERSION_MAJOR "${VERSION_MAJOR}" )

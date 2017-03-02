@@ -56,22 +56,6 @@ void gui_wallet::Mainwindow_gui_wallet::ManagementBrowseContentGUI()
 //#endif
     }
 
-#if 0
-
-    if(cqsNewFilter==tr(""))
-    {
-        //char vcFilter[2] = {(char)1,'\0'};
-        char vcFilter[2] = {'a','\0'};
-        cqsNewFilter = tr("URI_start:") + tr(vcFilter);
-    }
-
-    __DEBUG_APP2__(DEFAULT_LOG_LEVEL,"filter=%s",cqsNewFilter.toStdString().c_str());
-
-    if(cqsNewFilter==m_cqsPreviousFilter){return;}
-
-    m_cqsPreviousFilter = cqsNewFilter;
-    ShowDigitalContextesGUI(cqsNewFilter);
-#endif
 }
 
 
@@ -138,6 +122,8 @@ void gui_wallet::Mainwindow_gui_wallet::TaskDoneBrowseContentGUI3(void* a_clbkAr
     }
 
     s_nActive = 0;
+    //std::cout<<"brows"<<std::endl;
+    //m_pCentralWidget->m_browse_cont_tab.Connects();
 }
 
 

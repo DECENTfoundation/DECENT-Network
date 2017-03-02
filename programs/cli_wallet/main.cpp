@@ -99,8 +99,6 @@ int main( int argc, char** argv )
       fc::logging_config cfg;
       fc::path log_dir = data_dir / "logs";
 
-      package_manager::instance().initialize(data_dir / "packages");
-
       fc::file_appender::config ac;
       ac.filename             = log_dir / "rpc" / "rpc.log";
       ac.flush                = true;
@@ -174,9 +172,8 @@ int main( int argc, char** argv )
       if( options.count("server-rpc-password") )
          wdata.ws_password = options.at("server-rpc-password").as<std::string>();
 
-
-      package_manager::instance().initialize(wdata.packages_path);
-      
+      package_manager::instance().set_packages_path(wdata.packages_path);
+      package_manager::instance().set_libtorrent_config(wdata.libtorrent_config_path);
 
       fc::http::websocket_client client;
       idump((wdata.ws_server));

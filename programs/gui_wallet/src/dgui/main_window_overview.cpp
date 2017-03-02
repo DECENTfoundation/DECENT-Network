@@ -13,6 +13,7 @@
 #include "gui_wallet_mainwindow.hpp"
 #include <QMessageBox>
 #include <QPalette>
+#include "decent_wallet_ui_gui_contentdetailsbase.hpp"
 
 void gui_wallet::Mainwindow_gui_wallet::ManagementOverviewGUI()
 {
@@ -21,6 +22,7 @@ void gui_wallet::Mainwindow_gui_wallet::ManagementOverviewGUI()
     std::string tInpuString = StringFromQString(tNewTaskInp);
     __DEBUG_APP2__(0,"task=%s",tInpuString.c_str());
     SetNewTask(tInpuString,this,NULL,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
+    m_pCentralWidget->m_Overview_tab.setMouseTracking(true);
 }
 
 
@@ -29,18 +31,7 @@ void gui_wallet::Mainwindow_gui_wallet::TaskDoneOverrviewGUI(void* a_clbkArg,int
     int nCurTab(m_pCentralWidget->GetMyCurrentTabIndex());
     if(nCurTab != OVERVIEW){return;}
 
-
-
-    QPoint mouse_pos = QCursor::pos();
-    std::cout<<mouse_pos.x()<<mouse_pos.y()<<std::endl;
-    QTableWidgetItem *ite = m_pCentralWidget->m_Overview_tab.table_widget.itemAt(mouse_pos);
-    if(ite != NULL)
-    {
-        int a = ite->column();
-        std::cout<<"aaaaaaaaaaaaaaaaaaaaaaaaa"<<std::endl;
-    }
-
-
+    int last_size = m_pCentralWidget->m_Overview_tab.accounts_names.size();
     if(a_task.find("list_accounts ") == 0)
     {
         m_pCentralWidget->m_Overview_tab.accounts_names.clear();
@@ -68,48 +59,45 @@ void gui_wallet::Mainwindow_gui_wallet::TaskDoneOverrviewGUI(void* a_clbkArg,int
                 }
             }
         }
-        m_pCentralWidget->m_Overview_tab.CreateTable();
+        if(m_pCentralWidget->m_Overview_tab.accounts_names.size() != last_size)
+        {
+            m_pCentralWidget->m_Overview_tab.CreateTable();
+        }
     }
     else if(a_task.find("get_account ") == 0)
     {
         std::string id_s = "id\n";
         int pos = a_result.find("id");
-        std::cout<<pos<<std::endl;
         pos += 6;
         for(int i = pos; a_result[i] != '"'; ++i)
             id_s.push_back(a_result[i]);
 
         std::string registrar_s = "\nregistrar\n  ";
         pos = a_result.find("registrar");
-        std::cout<<pos<<std::endl;
         pos += 13;
         for(int i = pos; a_result[i] != '"'; ++i)
             registrar_s.push_back(a_result[i]);
 
         std::string referrer_s = "\nreferrer\n ";
         pos = a_result.find("referrer");
-        std::cout<<pos<<std::endl;
         pos += 12;
         for(int i = pos; a_result[i] != '"'; ++i)
             referrer_s.push_back(a_result[i]);
 
         std::string lifetime_referrer_s = "\nlifetime_referrer\n";
         pos = a_result.find("lifetime_referrer");
-        std::cout<<pos<<std::endl;
         pos += 21;
         for(int i = pos; a_result[i] != '"'; ++i)
             lifetime_referrer_s.push_back(a_result[i]);
 
         std::string network_fee_percentage_s = "\nnetwork_fee_percentage\n ";
         pos = a_result.find("network_fee_percentage");
-        std::cout<<pos<<std::endl;
         pos += 24;
         for(int i = pos; a_result[i] != ','; ++i)
             network_fee_percentage_s.push_back(a_result[i]);
 
         std::string lifetime_referrer_fee_percentage_s = "\nlifetime_referrer_fee_percentage\n";
         pos = a_result.find("lifetime_referrer_fee_percentage");
-        std::cout<<pos<<std::endl;
         pos += 34;
         for(int i = pos; a_result[i] != ','; ++i)
             lifetime_referrer_fee_percentage_s.push_back(a_result[i]);
@@ -117,14 +105,12 @@ void gui_wallet::Mainwindow_gui_wallet::TaskDoneOverrviewGUI(void* a_clbkArg,int
 
         std::string name_s = "\nname\n  ";
         pos = a_result.find("name");
-        std::cout<<pos<<std::endl;
         pos += 8;
         for(int i = pos; a_result[i] != '"'; ++i)
             name_s.push_back(a_result[i]);
 
         std::string referrer_rewards_percentage_s = "\nreferrer_rewards_percentage\n";
         pos = a_result.find("referrer_rewards_percentage");
-        std::cout<<pos<<std::endl;
         pos += 29;
         for(int i = pos; a_result[i] != ','; ++i)
             referrer_rewards_percentage_s.push_back(a_result[i]);
@@ -141,9 +127,13 @@ void gui_wallet::Mainwindow_gui_wallet::TaskDoneOverrviewGUI(void* a_clbkArg,int
 
 
         QZebraWidget* info_window = new QZebraWidget(infos);
+        //info_window->setStyleSheet();
         info_window->show();
+
+
     }
     m_pCentralWidget->m_Overview_tab.ArrangeSize();
+    m_pCentralWidget->m_Overview_tab.setMouseTracking(true);
 }
 
 

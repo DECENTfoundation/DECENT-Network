@@ -160,11 +160,19 @@ CentralWigdet::CentralWigdet(class QBoxLayout* a_pAllLayout, class Mainwindow_gu
 #endif
     ,m_Overview_tab(a_pPar)
 {
+
+
     setStyleSheet("color:black;""background-color:white;");
     m_main_tabs2.setStyleSheet("QTabBar::tab{"
-                               "color:green;background-color:white;}"
+                               " height: 40px; width: 179px; "
+                               "color:rgb(27,176,104);background-color:white;"
+                                "border: 1px solid rgb(240,240,240);}"
                                "QTabBar::tab:selected{"
-                               "color:white;background-color:green;}");
+                               "color:white;background-color:rgb(27,176,104);}"
+                               );
+    std::cout<<size().width()/5<<std::endl;
+
+
     PrepareGUIprivate(a_pAllLayout);
 }
 
@@ -228,7 +236,7 @@ QWidget* CentralWigdet::GetWidgetFromTable5(int a_nColumn, int a_nWidget)
 
 
 #define __SIZE_FOR_IMGS__   40
-#define __HEIGHT__  90
+#define __HEIGHT__  60
 #include "decent_wallet_ui_gui_newcheckbox.hpp"
 
 void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
@@ -240,7 +248,6 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     m_main_tabs2.addTab(&m_Upload_tab,tr("Upload"));
     m_main_tabs2.addTab(&m_Overview_tab,tr("Overview"));
     m_main_tabs2.addTab(&m_Purchased_tab,tr("Purchased"));
-
 #if 1
     QTabBar* pTabBar = m_main_tabs2.tabBar();
     pTabBar->setDocumentMode(true);
@@ -254,13 +261,15 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
      "}");
 #endif
 
-    QWidget* pWidgetTmp2;
+    QWidget* pWidgetTmp2 = nullptr;
+    QLabel* pLabelTmp = nullptr;
     QPixmap image;
-    QLabel* pLabelTmp;
-    QHBoxLayout *pHBoxLayoutTmp;
-    QComboBox* pComboTmp1;
-    QFrame *line;
+    QHBoxLayout *pHBoxLayoutTmp = nullptr;
+    QComboBox* pComboTmp1 = nullptr;
+    QFrame* line = nullptr;
+
     decent::wallet::ui::gui::AccountBalanceWidget* pCombo2;
+
     /*////////////////////////////////////////////////////////////////////////////////////*/
 
     /*//////////////////////////////////////////*/
@@ -271,20 +280,26 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     pLabelTmp = new QLabel(tr(""));
     if(!pLabelTmp){throw __FILE__ "Low memory";}
     pLabelTmp->setScaledContents(true);
-    SetImageToLabelStatic(bImageFound,image,DECENT_LOGO_FILE_NAME2);
-    if(bImageFound){pLabelTmp->setPixmap(image);}
-    else {pLabelTmp->setText("DC");MakeWarning("no file", "");}
+//    SetImageToLabelStatic(bImageFound,image,DECENT_LOGO_FILE_NAME2);
+//    if(bImageFound){pLabelTmp->setPixmap(image);}
+//    else {pLabelTmp->setText("DC");MakeWarning("no file", "");}
+    QPixmap m_image1(":/icon/images/decent_logo.png");
+    pLabelTmp->setPixmap(m_image1);
     pHBoxLayoutTmp->addWidget(pLabelTmp);
     pLabelTmp->setFixedSize(__SIZE_FOR_IMGS__,__SIZE_FOR_IMGS__);
     m_pDcLogoWgt->setLayout(pHBoxLayoutTmp);
-    m_first_line_lbl.addWidget(m_pDcLogoWgt);
     m_pDcLogoWgt->setFixedHeight(__HEIGHT__);
+    m_pDcLogoWgt->setMaximumWidth(126);
+    m_first_line_lbl.addWidget(m_pDcLogoWgt);
+
 
     /*//////////////////////////////////////////*/
     line = new QFrame(this);
     line->setFrameShape(QFrame::VLine); // Horizontal line
-    line->setFrameShadow(QFrame::Sunken);
+    //line->setFrameShadow(QFrame::Sunken);
     line->setLineWidth(1);
+    line->setStyleSheet("color: #f0f0f0");
+    line->setFixedHeight(68);
     m_first_line_lbl.addWidget(line);
 
     /*//////////////////////////////////////////*/
@@ -295,9 +310,11 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     pLabelTmp = new QLabel(tr(""));
     if(!pLabelTmp){throw __FILE__ "Low memory";}
     pLabelTmp->setScaledContents(true);
-    SetImageToLabelStatic(bImageFound,image,USER_FILE_NAME2);
-    if(bImageFound){pLabelTmp->setPixmap(image);}
-    else {MakeWarning("no file", "");}
+//    SetImageToLabelStatic(bImageFound,image,USER_FILE_NAME2);
+//    if(bImageFound){pLabelTmp->setPixmap(image);}
+//    else {MakeWarning("no file", "");}
+    QPixmap m_image2(":/icon/images/user.png");
+    pLabelTmp->setPixmap(m_image2);
     pHBoxLayoutTmp->addWidget(pLabelTmp);
     pLabelTmp->setFixedSize(__SIZE_FOR_IMGS__,__SIZE_FOR_IMGS__);
     pComboTmp1 = new QComboBox;
@@ -307,12 +324,15 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     m_pUsernameWgt->setLayout(pHBoxLayoutTmp);
     m_first_line_lbl.addWidget(m_pUsernameWgt);
     m_pUsernameWgt->setFixedHeight(__HEIGHT__);
+    m_pUsernameWgt->setMaximumWidth(271);
 
     /*//////////////////////////////////////////*/
     line = new QFrame(this);
     line->setFrameShape(QFrame::VLine); // Horizontal line
-    line->setFrameShadow(QFrame::Sunken);
+    //line->setFrameShadow(QFrame::Sunken);
     line->setLineWidth(1);
+    line->setStyleSheet("color: #f0f0f0");
+    line->setFixedHeight(68);
     m_first_line_lbl.addWidget(line);
 
     /*//////////////////////////////////////////*/
@@ -323,9 +343,11 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     pLabelTmp = new QLabel(tr(""));
     if(!pLabelTmp){throw __FILE__ "Low memory";}
     pLabelTmp->setScaledContents(true);
-    SetImageToLabelStatic(bImageFound,image,BALANCE_FILE_NAME2);
-    if(bImageFound){pLabelTmp->setPixmap(image);}
-    else {MakeWarning("no file", "");}
+//    SetImageToLabelStatic(bImageFound,image,BALANCE_FILE_NAME2);
+//    if(bImageFound){pLabelTmp->setPixmap(image);}
+//    else {MakeWarning("no file", "");}
+    QPixmap m_image3(":/icon/images/balance.png");
+    pLabelTmp->setPixmap(m_image3);
     pHBoxLayoutTmp->addWidget(pLabelTmp);
     pLabelTmp->setFixedSize(__SIZE_FOR_IMGS__,__SIZE_FOR_IMGS__);
     pCombo2 = new decent::wallet::ui::gui::AccountBalanceWidget;
@@ -334,12 +356,15 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     m_pBalanceWgt1->setLayout(pHBoxLayoutTmp);
     m_first_line_lbl.addWidget(m_pBalanceWgt1);
     m_pBalanceWgt1->setFixedHeight(__HEIGHT__);
+    m_pBalanceWgt1->setMaximumWidth(353);
 
     /*//////////////////////////////////////////*/
     line = new QFrame(this);
     line->setFrameShape(QFrame::VLine); // Horizontal line
-    line->setFrameShadow(QFrame::Sunken);
+    //line->setFrameShadow(QFrame::Sunken);
     line->setLineWidth(1);
+    line->setStyleSheet("color: #f0f0f0");
+    line->setFixedHeight(68);
     m_first_line_lbl.addWidget(line);
 
     /*//////////////////////////////////////////*/
@@ -350,9 +375,11 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     pLabelTmp = new QLabel(tr(""));
     if(!pLabelTmp){throw __FILE__ "Low memory";}
     pLabelTmp->setScaledContents(true);
-    SetImageToLabelStatic(bImageFound,image,SEND_FILE_NAME2);
-    if(bImageFound){pLabelTmp->setPixmap(image);}
-    else {MakeWarning("no file", "");}
+//    SetImageToLabelStatic(bImageFound,image,SEND_FILE_NAME2);
+//    if(bImageFound){pLabelTmp->setPixmap(image);}
+//    else {MakeWarning("no file", "");}
+    QPixmap m_image4(":/icon/images/send.png");
+    pLabelTmp->setPixmap(m_image4);
     pHBoxLayoutTmp->addWidget(pLabelTmp);
     pLabelTmp->setFixedSize(__SIZE_FOR_IMGS__,__SIZE_FOR_IMGS__);
     pLabelTmp = new QLabel(tr("Send"));
@@ -361,6 +388,7 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     pWidgetTmp2->setLayout(pHBoxLayoutTmp);
     m_first_line_lbl.addWidget(pWidgetTmp2);
     pWidgetTmp2->setFixedHeight(__HEIGHT__);
+    pWidgetTmp2->setMaximumWidth(190);
 
 #if 0
     bool bRet;
@@ -370,7 +398,14 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     m_browse_cont_tab.setStyleSheet("color: black;""background-color:white;");
     SetAccountBalancesFromStrGUI(std::vector<std::string>());
 
+
+    m_main_layout.setContentsMargins(0, 0, 0, 0);
+    m_main_layout.setMargin(0);
+    m_main_layout.setSpacing(0);
+
+
     m_main_layout.addLayout(&m_first_line_lbl);
+
     m_main_layout.addWidget(&m_main_tabs2);
 
     a_pAllLayout->addLayout(&m_main_layout);
@@ -431,12 +466,26 @@ void CentralWigdet::resizeEvent ( QResizeEvent * a_event )
     QTabBar* pTabBar = m_main_tabs2.tabBar();
     pTabBar->resize(size().width(),pTabBar->height());
 
-    int nWidth_small (size().width()*15/100);
-    int nWidth_big (size().width()*35/100);
+    int nWidth_small (size().width()*13/100);
+    int nWidth_big (size().width()*28/100);
+    int nWidth_medium (size().width()*38/100);
     m_pDcLogoWgt->resize(nWidth_small,m_pDcLogoWgt->height());
     m_pUsernameWgt->resize(nWidth_big,m_pUsernameWgt->height());
-    m_pBalanceWgt1->resize(nWidth_big,m_pBalanceWgt1->height());
+    m_pBalanceWgt1->resize(nWidth_medium,m_pBalanceWgt1->height());
 
+    int lenght = a_event->size().width() - 1;
+    std::cout<<lenght/5<<std::endl;
+    std::cout<<a_event->oldSize().width()/5<<std::endl;
+//    if(lenght != a_event->oldSize().width())
+//    {
+//        m_main_tabs2.setStyleSheet("QTabBar::tab{"
+//                                   " height: 40px; width: " + QString::number(lenght/5) + "px; "
+//                                   "color:rgb(27,176,104);background-color:white;"
+//                                    "border: 1px solid rgb(240,240,240);}"
+//                                   "QTabBar::tab:selected{"
+//                                   "color:white;background-color:rgb(27,176,104);}"
+//                                   );
+//    }
 }
 
 

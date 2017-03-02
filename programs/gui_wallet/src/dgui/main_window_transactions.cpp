@@ -9,7 +9,6 @@
  *
  */
 
-
 #include "gui_wallet_mainwindow.hpp"
 #include <Qt>
 
@@ -47,7 +46,6 @@ void gui_wallet::Mainwindow_gui_wallet::TaskDoneTransactionsGUI(void* a_clbkArg,
 
     while(a_result.size() > index)
     {
-
     //TIME
         QString date = 0;
         for (int i = index; a_result[i] != 'T'; ++i)
@@ -143,19 +141,22 @@ void gui_wallet::Mainwindow_gui_wallet::TaskDoneTransactionsGUI(void* a_clbkArg,
         col = 0;
     }
     m_pCentralWidget->m_trans_tab.deleteEmptyRows();
+
+    m_pCentralWidget->m_trans_tab.Connects();
+
+    if(m_pCentralWidget->m_trans_tab.green_row != 0)
+    {
+        m_pCentralWidget->m_trans_tab.tablewidget->item(m_pCentralWidget->m_trans_tab.green_row,0)->setBackgroundColor(QColor(27,176,104));
+        m_pCentralWidget->m_trans_tab.tablewidget->item(m_pCentralWidget->m_trans_tab.green_row,1)->setBackgroundColor(QColor(27,176,104));
+        m_pCentralWidget->m_trans_tab.tablewidget->item(m_pCentralWidget->m_trans_tab.green_row,2)->setBackgroundColor(QColor(27,176,104));
+        m_pCentralWidget->m_trans_tab.tablewidget->item(m_pCentralWidget->m_trans_tab.green_row,3)->setBackgroundColor(QColor(27,176,104));
+
+        m_pCentralWidget->m_trans_tab.tablewidget->item(m_pCentralWidget->m_trans_tab.green_row,0)->setForeground(QColor::fromRgb(255,255,255));
+        m_pCentralWidget->m_trans_tab.tablewidget->item(m_pCentralWidget->m_trans_tab.green_row,1)->setForeground(QColor::fromRgb(255,255,255));
+        m_pCentralWidget->m_trans_tab.tablewidget->item(m_pCentralWidget->m_trans_tab.green_row,2)->setForeground(QColor::fromRgb(255,255,255));
+        m_pCentralWidget->m_trans_tab.tablewidget->item(m_pCentralWidget->m_trans_tab.green_row,3)->setForeground(QColor::fromRgb(255,255,255));
+    }
 }
-
-    //SetNewTask2("get_account_history hayq 4",this,NULL,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
-//    SetNewTask2("get_account_history hayq 4",this,NULL,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
-//}
-
-//#if 0
-//void gui_wallet::Mainwindow_gui_wallet::TaskDoneTransactionsGUI(void* a_clbkArg,int64_t a_err,
-//                                                                const std::string& a_task,const std::string& a_result)
-//{
-//    //
-//}
-//#endif
 
 
 void gui_wallet::Mainwindow_gui_wallet::TaskDoneTransactionsGUI3(void* a_clbkArg,int64_t a_err,

@@ -134,6 +134,19 @@ namespace graphene { namespace chain {
       void            validate()const { FC_ASSERT( !"virtual operation" ); }
    };
 
+   struct pay_seeder_operation : public base_operation
+   {
+      struct fee_parameters_type { uint64_t fee = 0; };
+
+      asset fee;
+      asset payout;
+      account_id_type author;
+      account_id_type seeder;
+
+      account_id_type fee_payer()const { return author; }
+      void            validate()const { FC_ASSERT( !"virtual operation" ); }
+   };
+
 } } // graphene::chain
 
 FC_REFLECT(graphene::chain::content_submit_operation,(fee)(size)(author)(URI)(quorum)(price)(hash)(seeders)(key_parts)(expiration)(publishing_fee)(synopsis)(cd))
@@ -144,6 +157,7 @@ FC_REFLECT(graphene::chain::proof_of_custody_operation,(fee)(seeder)(URI)(proof)
 FC_REFLECT(graphene::chain::deliver_keys_operation,(fee)(seeder)(proof)(key)(buying))
 FC_REFLECT(graphene::chain::return_escrow_submission_operation,(fee)(author)(escrow)(content))
 FC_REFLECT(graphene::chain::return_escrow_buying_operation,(fee)(consumer)(escrow)(buying))
+FC_REFLECT(graphene::chain::pay_seeder_operation,(fee)(payout)(author)(seeder));
 
 FC_REFLECT( graphene::chain::content_submit_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::request_to_buy_operation::fee_parameters_type, (fee) )
@@ -153,3 +167,4 @@ FC_REFLECT( graphene::chain::proof_of_custody_operation::fee_parameters_type, (f
 FC_REFLECT( graphene::chain::deliver_keys_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::return_escrow_submission_operation::fee_parameters_type, ( fee ) )
 FC_REFLECT( graphene::chain::return_escrow_buying_operation::fee_parameters_type, ( fee ) )
+FC_REFLECT( graphene::chain::pay_seeder_operation::fee_parameters_type, ( fee ) )

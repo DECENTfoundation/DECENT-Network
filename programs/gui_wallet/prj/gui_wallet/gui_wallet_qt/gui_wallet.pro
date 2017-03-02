@@ -101,3 +101,7 @@ HEADERS += \
     ../../../src/dgui/decent_wallet_ui_gui_contentdetailsbougth.hpp \
     ../../../src/dgui/decent_wallet_ui_gui_contentdetailsbase.hpp \
     ../../../src/dgui/decent_wallet_ui_gui_jsonparserqt.hpp
+    ../../../src/dgui/decent_wallet_ui_gui_contentdetailsbase.hpp
+
+RESOURCES += \
+    ../../../resources.qrc

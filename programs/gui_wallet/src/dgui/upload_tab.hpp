@@ -46,6 +46,8 @@ namespace gui_wallet
         SEEDERS,
         CONTENTPATH,
         SELECTPATH,
+        SAMPLESPATH,
+        SELECTSAMPLES,
         NUM_FIELDS
     };
 
@@ -61,6 +63,7 @@ namespace gui_wallet
         virtual ~Upload_tab();
     public slots:
         void browseContent();
+        void browseSamples();
         void uploadContent();
         void onGrabPublishers();
 
@@ -75,8 +78,13 @@ namespace gui_wallet
         QVBoxLayout     m_synopsis_layout;
         QVBoxLayout     m_info_layout;
         QTableWidget    m_info_widget;
-        QLabel          m_synopsis_label;
-        QTextEdit       m_synopsis_text;
+        
+        QLabel          m_title_label;
+        QLineEdit       m_title_text;
+
+        QLabel          m_description_label;
+        QTextEdit       m_description_text;
+
         QLabel          m_infoLayoutHeader;
         QTimer          m_getPublishersTimer;
 

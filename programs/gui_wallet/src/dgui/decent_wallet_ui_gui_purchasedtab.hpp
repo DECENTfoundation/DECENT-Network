@@ -18,6 +18,7 @@
 #include <QHBoxLayout>
 #include <QTableWidget>
 #include <QLabel>
+#include <QLineEdit>
 #include "qt_commonheader.hpp"
 
 namespace decent{ namespace wallet{ namespace ui{ namespace gui{
@@ -53,7 +54,7 @@ protected:
     //QTableWidget    m_TableWidget; // Should be investigated
     QTableWidget*    m_pTableWidget;
     //int              m_nNumberOfContentsPlus1;
-    //QLineEdit       m_filterLineEdit;
+    QLineEdit       m_filterLineEditer;
 };
 
 }}}}

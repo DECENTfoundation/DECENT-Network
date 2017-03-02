@@ -138,6 +138,17 @@ struct key_label
 };
 
 
+struct content_download_status
+{
+   int          total_key_parts;
+   int          received_key_parts;
+   int          total_download_bytes;
+   int          received_download_bytes;
+
+};
+
+
+
 struct by_label;
 struct by_key;
 typedef multi_index_container<
@@ -200,6 +211,7 @@ struct wallet_data
    string                    ws_user;
    string                    ws_password;
    string                    packages_path = "./packages/";
+   string                    libtorrent_config_path;
 };
 
 struct exported_account_keys
@@ -213,6 +225,12 @@ struct exported_keys
 {
     fc::sha512 password_checksum;
     vector<exported_account_keys> account_keys;
+};
+
+struct el_gamal_key_pair
+{
+   d_integer private_key;
+   d_integer public_key;
 };
 
 struct approval_delta
@@ -1538,6 +1556,46 @@ class wallet_api
                            fc::ripemd160 hash, vector<account_id_type> seeders, uint32_t quorum, fc::time_point_sec expiration,
                            string publishing_fee_asset, string publishing_fee_amount, string synopsis, d_integer secret,
                            decent::crypto::custody_data cd, bool broadcast);
+    /**
+     *
+     * @param author
+     * @param content_dir
+     * @param samples_dir
+     * @param protocol
+     * @param price_asset_symbol
+     * @param price_amount
+     * @param seeders
+     * @param expiration
+     * @param publishing_fee_asset
+     * @param publishing_fee_amount
+     * @param synopsis
+     * @param broadcast true to broadcast the transaction on the network
+     * @return
+     * @ingroup WalletCLI
+     */
+   signed_transaction submit_content_new(string author, string content_dir, string samples_dir, string protocol, string price_asset_symbol, string price_amount, vector<account_id_type> seeders, fc::time_point_sec expiration, string publishing_fee_symbol_name, string publishing_fee_amount, string synopsis, bool broadcast = false);
+
+    /**
+     *
+     * @param consumer
+     * @param URI
+     * @param content_dir
+     * @param broadcast true to broadcast the transaction on the network
+     * @return
+     * @ingroup WalletCLI
+     */
+     void download_content(string consumer, string URI, string content_dir, bool broadcast = false);
+    
+    /**
+     *
+     * @param consumer
+     * @param URI
+     * @return
+     * @ingroup WalletCLI
+     */
+     optional<content_download_status> get_download_status(string consumer, string URI);
+
+ 
 
     /**
      *
@@ -1621,7 +1679,7 @@ class wallet_api
      * @return
      * @ingroup WalletCLI
      */
-      std::pair<d_integer, d_integer> generate_el_gamal_keys();
+      el_gamal_key_pair generate_el_gamal_keys();
 
       /**
        * @brief Get a list of open buyings
@@ -1653,6 +1711,15 @@ class wallet_api
        * @ingroup WalletCLI
        */
       vector<buying_object> get_buying_history_objects_by_consumer( const account_id_type& consumer )const;
+
+       /**
+       * @brief Get buying (open or history) by consumer and URI
+       * @param consumer Consumer of the buying to retrieve
+       * @param URI URI of the buying to retrieve
+       * @return buying_objects corresponding to the provided consumer
+       * @ingroup WalletCLI
+       */
+      optional<buying_object> get_buying_by_consumer_URI( const string& account, const string & URI )const;
 
       /**
        * @brief Get a content by URI
@@ -1779,7 +1846,7 @@ FC_REFLECT( graphene::wallet::blind_confirmation::output, (label)(pub_key)(decry
 FC_REFLECT( graphene::wallet::blind_confirmation, (trx)(outputs) )
 
 FC_REFLECT( graphene::wallet::plain_keys, (keys)(checksum) )
-
+FC_REFLECT( graphene::wallet::el_gamal_key_pair, (private_key)(public_key) )
 FC_REFLECT( graphene::wallet::wallet_data,
             (chain_id)
             (my_accounts)
@@ -1793,6 +1860,7 @@ FC_REFLECT( graphene::wallet::wallet_data,
             (ws_user)
             (ws_password)
             (packages_path)
+            (libtorrent_config_path)
           )
 
 FC_REFLECT( graphene::wallet::brain_key_info,
@@ -1800,6 +1868,13 @@ FC_REFLECT( graphene::wallet::brain_key_info,
             (wif_priv_key)
             (pub_key)
           )
+
+FC_REFLECT (graphene::wallet::content_download_status, 
+              (total_key_parts)
+              (received_key_parts)
+              (total_download_bytes)
+              (received_download_bytes)
+            )
 
 FC_REFLECT( graphene::wallet::exported_account_keys, (account_name)(encrypted_private_keys)(public_keys) )
 
@@ -1920,7 +1995,10 @@ FC_API( graphene::wallet::wallet_api,
         (blind_history)
         (receive_blind_transfer)
         (get_order_book)
+        (download_content)
+        (get_download_status)
         (submit_content)
+        (submit_content_new)
         (request_to_buy)
         (leave_rating)
         (ready_to_publish)
@@ -1932,6 +2010,7 @@ FC_API( graphene::wallet::wallet_api,
         (get_open_buyings_by_URI)
         (get_open_buyings_by_consumer)
         (get_buying_history_objects_by_consumer)
+        (get_buying_by_consumer_URI)
         (get_content)
         (list_content_by_author)
         (list_content)

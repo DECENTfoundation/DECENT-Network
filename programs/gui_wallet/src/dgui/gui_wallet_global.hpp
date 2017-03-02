@@ -14,6 +14,17 @@
 
 #include <QObject>
 
+
+#define ALERT(message)                                  \
+{                                                       \
+    QMessageBox msgBox;                                 \
+    msgBox.setWindowTitle("Error");                     \
+    msgBox.setText(QString::fromStdString(message));    \
+    msgBox.exec();                                      \
+}                                                       \
+
+
+
 namespace gui_wallet
 {
 
