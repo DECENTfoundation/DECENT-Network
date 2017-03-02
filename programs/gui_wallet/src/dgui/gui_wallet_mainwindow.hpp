@@ -73,11 +73,9 @@ namespace gui_wallet
         void ManagementPurchasedGUI();
 
         void CliCallbackFnc(void*arg,const std::string& task);
-        int GetDigitalContentsFromString(DCT::DIG_CONT_TYPES a_type,
+        int GetDigitalContentsFromVariant(DCT::DIG_CONT_TYPES a_type,
                                          std::vector<decent::wallet::ui::gui::SDigitalContent>& acContents,
-                                         const char* contents_str);
-
-        void ShowDigitalContextesGUI(QString filter);
+                                         const fc::variant& contents_var);
 
         void DisplayWalletContentGUI();
 
@@ -155,6 +153,7 @@ namespace gui_wallet
         CliWalletDlg*                        m_pcInfoDlg;
         //std::string                         m_URI;
         std::vector<decent::wallet::ui::gui::SDigitalContent> m_vcDigContent;
+        std::vector<decent::wallet::ui::gui::SDigitalContent> m_vcDigContentOld;
         int                     m_nConnected;
         int                     m_nUserComboTriggeredInGui;
         SConnectionStruct   m_wdata2;

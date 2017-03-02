@@ -74,15 +74,15 @@ void decent::wallet::ui::gui::ContentDetailsBase::execCDB(const decent::wallet::
     m_vLabels[1].setText(tr(m_pContentInfo->author.c_str()));
     m_vLabels[3].setText(tr(m_pContentInfo->expiration.c_str()));
     m_vLabels[5].setText(tr(m_pContentInfo->created.c_str()));
-    m_vLabels[7].setText(QString::number(m_pContentInfo->price.amount,'f').remove( QRegExp("0+$") ).remove( QRegExp("\\.$") ));
-    m_vLabels[DCF::AMOUNT].setText(QString::number(m_pContentInfo->size,'f').remove( QRegExp("0+$") ).remove( QRegExp("\\.$") ));
+    //m_vLabels[7].setText(QString::number(m_pContentInfo->price.amount,'f').remove( QRegExp("0+$") ).remove( QRegExp("\\.$") ));
+    m_vLabels[7].setText(tr(m_pContentInfo->price.amount2.c_str()));
+    m_vLabels[DCF::AMOUNT].setText(tr(m_pContentInfo->size2.c_str()));
     m_vLabels[DCF::ASSET_ID].setText(tr(a_cnt_details.price.asset_id.c_str()));
-    m_vLabels[13].setText(QString::number(m_pContentInfo->AVG_rating,'f').remove( QRegExp("0+$") ).remove( QRegExp("\\.$") ));
+    m_vLabels[13].setText(tr(m_pContentInfo->AVG_rating2.c_str()));
     //QString::number(aTemporar.AVG_rating,'f').remove( QRegExp("0+$") ).remove( QRegExp("\\.$") )
-    QString qsSizeTxt = QString::number(m_pContentInfo->size,'f').remove( QRegExp("0+$") ).remove( QRegExp("\\.$") ) +
-            tr(" MB");
+    QString qsSizeTxt = tr(m_pContentInfo->size2.c_str()) + tr(" MB");
     m_vLabels[15].setText(qsSizeTxt);
-    m_vLabels[DCF::TIMES_BOUGHT].setText(QString::number(a_cnt_details.times_bougth,10));
+    m_vLabels[DCF::TIMES_BOUGHT].setText(tr(a_cnt_details.times_bougth2.c_str()));
 
     QDialog::exec();
 #endif
