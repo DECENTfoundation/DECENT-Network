@@ -72,6 +72,8 @@ namespace gui_wallet
         void ManagementOverviewGUI();
         void ManagementPurchasedGUI();
 
+        void UpdateLockedStatus();
+
         void CliCallbackFnc(void*arg,const std::string& task);
         int GetDigitalContentsFromString(DCT::DIG_CONT_TYPES a_type,
                                          std::vector<decent::wallet::ui::gui::SDigitalContent>& acContents,
@@ -98,6 +100,7 @@ namespace gui_wallet
 
         void ConnectSlot();
         void ImportKeySlot();
+        void LockSlot();
         void UnlockSlot();
         void OpenCliWalletDlgSlot();
         void OpenInfoDlgSlot();
@@ -130,6 +133,7 @@ namespace gui_wallet
         QAction             m_ActionInfo;
         QAction             m_ActionHelp;
         QAction             m_ActionWalletContent;
+        QAction             m_ActionLock;
         QAction             m_ActionUnlock;
         QAction             m_ActionImportKey;
         QAction             m_ActionOpenCliWallet;
@@ -144,6 +148,8 @@ namespace gui_wallet
         QLabel                  m_num_acc_or_error_label;
         int                     m_nError;
         std::string             m_error_string;
+
+        bool                m_locked;
 
         decent::gui::tools::RichDialog m_import_key_dlg;
 
