@@ -102,8 +102,6 @@ namespace gui_wallet
 
         void ShowDetailsOnDigContentSlot(decent::wallet::ui::gui::SDigitalContent dig_cont);
 
-        void listAccountsSlot(QString);
-
     protected:
         virtual void moveEvent(QMoveEvent *) override ;
 
