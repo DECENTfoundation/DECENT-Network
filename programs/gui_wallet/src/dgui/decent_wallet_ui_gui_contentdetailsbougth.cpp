@@ -104,7 +104,7 @@ void decent::wallet::ui::gui::ContentDetailsBougth::RateContentSlot(int a_nSelec
     std::string inp_str = qsRatingStr.toStdString();
 #if 1
     if(!nContinue){return;}
-    SetNewTaskQtMainWnd2Glb(inp_str,NULL);
+    SetNewTaskQtMainWnd3Glb(inp_str,NULL);
 #endif
 
     __DEBUG_APP2__(0,"selected=%d, index=%d, continue=%d, rating=%ld, str=\"%s\"",

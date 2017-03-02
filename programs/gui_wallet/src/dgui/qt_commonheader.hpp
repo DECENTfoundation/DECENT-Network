@@ -40,19 +40,19 @@ struct SDigitalContent{
     DCT::DIG_CONT_TYPES type;
     std::string author;
     struct{
-        double amount;
+        std::string amount2;
         std::string asset_id;
     }price;
     std::string synopsis;
     std::string URI;
-    double AVG_rating;
+    std::string AVG_rating2;
     //
     std::string created;
     std::string expiration;
-    double  size;
+    std::string  size2;
 
-    std::string  get_content_str;
-    int64_t  times_bougth;
+    //std::string  get_content_str;
+    std::string  times_bougth2;
 };
 
 }}}}
