@@ -11,126 +11,50 @@
 
 #include "gui_wallet_mainwindow.hpp"
 #include <fc/variant_object.hpp>
-
-#ifndef DEFAULT_LOG_LEVEL
-#define DEFAULT_LOG_LEVEL 4
-#endif
-
-class FinalResult
-{
-public:
-    void Clear2();
-
-private:
-    struct SKeyValue{
-        //fc::variant::type_id type;
-        union{
-            std::string value;
-            union{
-                std::string key;
-                class FinalResult* pValue;
-            };
-        };
-    }; // struct SKeyValue{
-
-    std::vector<SKeyValue> m_values;
-};
-
-
-class my_visitor : public fc::variant::visitor
-{
-public:
-    my_visitor():m_IsStructField(0){}
-
-   virtual void handle()const                          {
-        __DEBUG_APP2__(DEFAULT_LOG_LEVEL,"task=%s",m_inp.c_str());}
-   virtual void handle( const int64_t& v )const        {
-       __DEBUG_APP2__(DEFAULT_LOG_LEVEL,"task=%s",m_inp.c_str());
-   }
-   virtual void handle( const uint64_t& v )const       {
-       __DEBUG_APP2__(DEFAULT_LOG_LEVEL,"task=%s",m_inp.c_str());
-   }
-   virtual void handle( const double& v )const         {
-       __DEBUG_APP2__(DEFAULT_LOG_LEVEL,"task=%s",m_inp.c_str());
-   }
-   virtual void handle( const bool& v )const           {
-       __DEBUG_APP2__(DEFAULT_LOG_LEVEL,"task=%s",m_inp.c_str());
-   }
-   virtual void handle( const std::string& a_s )const
-   {
-       //m_str = a_s;
-       __DEBUG_APP2__(DEFAULT_LOG_LEVEL,"task=%s, str=%s",m_inp.c_str(),a_s.c_str());
-   }
-   virtual void handle( const fc::variant_object& a_vo)const {
-       size_t unSize = a_vo.size();
-       __DEBUG_APP2__(DEFAULT_LOG_LEVEL,"task=%s, unSize=%d",m_inp.c_str(),(int)unSize);
-       const fc::variant_object::entry* pEntry;
-       fc::variant_object::iterator pItr=a_vo.begin();
-
-       //printf("struct\n");
-       m_IsStructField = 1;
-
-       for(size_t i(0); i<unSize;++i,++pItr)
-       {
-           pEntry = &(*pItr);
-           //printf("key=%s\n",pEntry->key().c_str());
-           pEntry->value().visit(*this);
-       }
-       m_IsStructField = 0;
-       //printf("end struct\n");
-   }
-   virtual void handle( const fc::variants& a_vs)const {
-
-       size_t unSize = a_vs.size();
-       __DEBUG_APP2__(DEFAULT_LOG_LEVEL,"task=%s, size=%d",m_inp.c_str(),(int)unSize);
-       const fc::variant* pVariant;
-
-       for(size_t i(0);i<unSize;++i)
-       {
-           pVariant = &(a_vs[i]);
-           pVariant->visit(*this);
-       }
-   }
-
-   std::string m_inp;
-   mutable int m_IsStructField;
-   FinalResult* m_pRes;
-};
+#include "decent_wallet_ui_gui_jsonparserqt.hpp"
 
 
 /*///////////////////////////////////////////////////////*/
 
 static int s_nActive = 0;
+void ParseDigitalContentFromVariant(decent::wallet::ui::gui::SDigitalContent* a_pContent,
+                                    const fc::variant& a_result);
 
 void gui_wallet::Mainwindow_gui_wallet::ManagementBrowseContentGUI()
 {
+    std::string ssTask;
     QString cqsNewFilter = m_pCentralWidget->getFilterText();
-    std::cout<<"brows"<<std::endl;
-    m_pCentralWidget->m_browse_cont_tab.Connects();
+
+    const char* cpcFilter = strchr(cqsNewFilter.toStdString().c_str(),':');
+
+    if(!cpcFilter++){cpcFilter = "";}
+
+    if(strstr(cqsNewFilter.toStdString().c_str(),"author"))
+    {
+        ssTask = std::string("list_content_by_author ") + cpcFilter;
+    }
+    else
+    {
+        if(strlen(cpcFilter)==0)
+        {
+            ssTask = "list_content a 100";
+        }
+        else
+        {
+            const char* cpcFilter0(cpcFilter);
+            for(;(*cpcFilter)&&(*cpcFilter != ' ');++cpcFilter);
+            if(atoi(cpcFilter)){ssTask = std::string("list_content ") + cpcFilter0;}
+            else{ssTask = std::string("list_content ") + cpcFilter0 + " 100";}
+        }
+    }
+
     if(s_nActive==0)
     {
-#if DEFAULT_LOG_LEVEL==0
-        //SetNewTask3("list_content a 10",this,NULL,&Mainwindow_gui_wallet::TaskDoneBrowseContentGUI3);
-#endif
         s_nActive = 1;
+//#if DEFAULT_LOG_LEVEL==0
+        SetNewTask3(ssTask,this,NULL,&Mainwindow_gui_wallet::TaskDoneBrowseContentGUI3);
+//#endif
     }
-
-#if 1
-
-    if(cqsNewFilter==tr(""))
-    {
-        //char vcFilter[2] = {(char)1,'\0'};
-        char vcFilter[2] = {'a','\0'};
-        cqsNewFilter = tr("URI_start:") + tr(vcFilter);
-    }
-
-    __DEBUG_APP2__(DEFAULT_LOG_LEVEL,"filter=%s",cqsNewFilter.toStdString().c_str());
-
-    if(cqsNewFilter==m_cqsPreviousFilter){return;}
-
-    m_cqsPreviousFilter = cqsNewFilter;
-    ShowDigitalContextesGUI(cqsNewFilter);
-#endif
 
 }
 
@@ -143,16 +67,62 @@ void gui_wallet::Mainwindow_gui_wallet::TaskDoneBrowseContentGUI(void* a_clbkArg
 
 
 void gui_wallet::Mainwindow_gui_wallet::TaskDoneBrowseContentGUI3(void* a_clbkArg,int64_t a_err,
-                                                                  const std::string& a_task,const fc::variant& a_result)
+                                                                  const std::string& a_task,
+                                                                  const fc::variant& a_result)
 {
-    my_visitor aVisitor;
+    decent::wallet::ui::gui::JsonParserQt aVisitor;
     aVisitor.m_inp = a_task;
     __DEBUG_APP2__(2," ");
 
+    if(a_err){return;}
+
     a_result.visit(aVisitor);
+    //aVisitor.PrintValues();
+    //const decent::wallet::ui::gui::JsonParserQt& visRes = aVisitor.GetByIndex(0).GetByKey("author");
+    //std::string aRes = visRes.value();
+    //printf("!!!!!!!!!!!!!!!! type=%s, val=%s\n",visRes.TypeToString(), aRes.c_str());
+    //printf("!!!!!!!!!!!!!!!!!!!!!!!!!! g_nCreateAndDelete=%d\n",g_nCreateAndDelete);
+
+    if(strstr(a_task.c_str(),"list_content ") || strstr(a_task.c_str(),"list_content_by_author "))
+    {
+        std::string aNewTask;
+        m_vcDigContent.clear();
+        GetDigitalContentsFromVariant(DCT::GENERAL,m_vcDigContent,a_result);
+        int nSize(m_vcDigContent.size());
+        for(int i(0);i<nSize;++i)
+        {
+            aNewTask = "get_content \"" + m_vcDigContent[i].URI + "\"";
+            SetNewTask3(aNewTask,this,(void*)((size_t)i),&gui_wallet::Mainwindow_gui_wallet::TaskDoneBrowseContentGUI3);
+        }
+    }
+    else if(strstr(a_task.c_str(),"get_content "))
+    {
+        const int cnIndex (  (int)(  (size_t)a_clbkArg  )     );
+        const int cnContsNumber(m_vcDigContent.size());
+        if(cnIndex>=cnContsNumber){return;}
+        ParseDigitalContentFromVariant(&m_vcDigContent[cnIndex],a_result);
+        if(cnIndex==(cnContsNumber-1))
+        {
+            bool bToDraw(true);
+            if(cnContsNumber == m_vcDigContentOld.size())
+            {
+                bToDraw = false;
+                for(int i(0); i<cnContsNumber;++i)
+                {
+                    if(m_vcDigContentOld[i].URI != m_vcDigContent[i].URI)
+                    {
+                        bToDraw = true;
+                        break;
+                    }
+                }  // for(int i(0); i<cnContsNumber;++i)
+            }
+            if(bToDraw){m_pCentralWidget->SetDigitalContentsGUI(m_vcDigContent);m_vcDigContentOld = m_vcDigContent;}
+        }
+
+    }
+
     s_nActive = 0;
-    std::cout<<"brows"<<std::endl;
-    m_pCentralWidget->m_browse_cont_tab.Connects();
+    //m_pCentralWidget->m_browse_cont_tab.Connects();
 }
 
 
@@ -160,7 +130,3 @@ void gui_wallet::Mainwindow_gui_wallet::TaskDoneBrowseContentGUI3(void* a_clbkAr
 /*////////////////////////////////////////////////////*/
 
 //void FinalResult::Clear2(){m_values.clear();}
-void FinalResult::Clear2()
-{
-    //m_values.clear();
-}

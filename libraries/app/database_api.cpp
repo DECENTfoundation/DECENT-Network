@@ -134,6 +134,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       vector<buying_object> get_open_buyings_by_consumer(const account_id_type& consumer)const;
       optional<buying_object> get_buying_by_consumer_URI( const account_id_type& consumer, const string& URI) const;
       vector<buying_object> get_buying_history_objects_by_consumer( const account_id_type& consumer )const;
+      optional<uint64_t> get_rating_by_consumer_URI( const account_id_type& consumer, const string& URI )const;
       optional<content_object> get_content( const string& URI )const;
       vector<content_object> list_content_by_author( const account_id_type& author )const;
       vector<content_summary> list_content( const string& URI_begin, uint32_t count)const;
@@ -1571,6 +1572,24 @@ vector<buying_object> database_api_impl::get_buying_history_objects_by_consumer 
       return result;
    }
    FC_CAPTURE_AND_RETHROW( (consumer) );
+}
+
+optional<uint64_t> database_api::get_rating_by_consumer_URI( const account_id_type& consumer, const string& URI )const
+{
+   return my->get_rating_by_consumer_URI( consumer, URI );
+}
+
+optional<uint64_t> database_api_impl::get_rating_by_consumer_URI( const account_id_type& consumer, const string& URI )const
+{
+   try{
+      const auto & idx = _db.get_index_type<rating_index>().indices().get<by_consumer_URI>();
+      auto itr = idx.find(std::make_tuple(consumer, URI));
+      if(itr!=idx.end()){
+         return itr->rating;
+      }
+      return optional<uint64_t>();
+
+   }FC_CAPTURE_AND_RETHROW( (consumer)(URI) );
 }
 
 optional<buying_object> database_api::get_buying_by_consumer_URI( const account_id_type& consumer, const string& URI )const

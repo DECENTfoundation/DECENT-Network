@@ -23,12 +23,6 @@ int CallFunctionInUiLoopGeneral(int a_nType,SetNewTask_last_args2,
                                 const fc::variant& a_resultVar,const std::string& a_resultStr,
                                 void* a_owner,void* a_fpFnc);
 
-#if 0
-std::map<string,std::function<string(variant,const variants&)> > _result_formatters;
-fc::future<void> _run_complete;
-decent_tools::UnnamedSemaphoreLite m_semaphore;
-#endif
-
 gui::gui()
     :
       _result_formatters(),
@@ -100,27 +94,6 @@ void gui::SetNewTask_base(int a_nType, const std::string& a_inp_line, void* a_ow
 }
 
 
-struct my_visitor : public fc::variant::visitor
-{
-   typedef void result_type;
-
-   template<typename Type>
-   result_type operator()( const Type& op )const {
-       std::cout<< "visited " <<std::endl;
-   }
-
-   virtual void handle()const                        {__DEBUG_APP2__(1," ");}
-   virtual void handle( const int64_t& v )const        {__DEBUG_APP2__(1," ");}
-   virtual void handle( const uint64_t& v )const       {__DEBUG_APP2__(1," ");}
-   virtual void handle( const double& v )const         {__DEBUG_APP2__(1," ");}
-   virtual void handle( const bool& v )const           {__DEBUG_APP2__(1," ");}
-   virtual void handle( const string& v )const        {__DEBUG_APP2__(1," ");}
-   virtual void handle( const variant_object& v)const {__DEBUG_APP2__(1," ");}
-   virtual void handle( const variants& v)const       {__DEBUG_APP2__(1," ");}
-
-};
-
-
 void gui::run()
 {
    decent::tools::taskListItem<std::string,TypeCallbackSetNewTaskGlb2> aTaskItem(NULL,"");
@@ -137,7 +110,6 @@ void gui::run()
          {
              //printf("!!!!!!!!!!!! %d, aItem.line=%s\n",++nIteration,aTaskItem.line.c_str());
              std::string line = aTaskItem.input;
-             std::cout << line << "\n";
              line += char(EOF);
              fc::variants args = fc::json::variants_from_string(line);
              if( args.size() == 0 )continue;
@@ -146,8 +118,6 @@ void gui::run()
              //const string& method = m_method;
 
              auto result = receive_call( 0, method, variants( args.begin()+1,args.end() ) );
-
-             result.visit(my_visitor()); // ??
              auto itr = _result_formatters.find( method );
              std::string tsResult;
              if( itr == _result_formatters.end() )

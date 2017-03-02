@@ -72,12 +72,12 @@ namespace gui_wallet
         void ManagementOverviewGUI();
         void ManagementPurchasedGUI();
 
-        void CliCallbackFnc(void*arg,const std::string& task);
-        int GetDigitalContentsFromString(DCT::DIG_CONT_TYPES a_type,
-                                         std::vector<decent::wallet::ui::gui::SDigitalContent>& acContents,
-                                         const char* contents_str);
+        void UpdateLockedStatus();
 
-        void ShowDigitalContextesGUI(QString filter);
+        void CliCallbackFnc(void*arg,const std::string& task);
+        int GetDigitalContentsFromVariant(DCT::DIG_CONT_TYPES a_type,
+                                         std::vector<decent::wallet::ui::gui::SDigitalContent>& acContents,
+                                         const fc::variant& contents_var);
 
         void DisplayWalletContentGUI();
 
@@ -98,13 +98,12 @@ namespace gui_wallet
 
         void ConnectSlot();
         void ImportKeySlot();
+        void LockSlot();
         void UnlockSlot();
         void OpenCliWalletDlgSlot();
         void OpenInfoDlgSlot();
 
         void ShowDetailsOnDigContentSlot(decent::wallet::ui::gui::SDigitalContent dig_cont);
-
-        void listAccountsSlot(QString);
 
     protected:
         virtual void moveEvent(QMoveEvent *) override ;
@@ -130,6 +129,7 @@ namespace gui_wallet
         QAction             m_ActionInfo;
         QAction             m_ActionHelp;
         QAction             m_ActionWalletContent;
+        QAction             m_ActionLock;
         QAction             m_ActionUnlock;
         QAction             m_ActionImportKey;
         QAction             m_ActionOpenCliWallet;
@@ -145,6 +145,8 @@ namespace gui_wallet
         int                     m_nError;
         std::string             m_error_string;
 
+        bool                m_locked;
+
         decent::gui::tools::RichDialog m_import_key_dlg;
 
         CliWalletDlg                        m_cCliWalletDlg;
@@ -155,6 +157,7 @@ namespace gui_wallet
         CliWalletDlg*                        m_pcInfoDlg;
         //std::string                         m_URI;
         std::vector<decent::wallet::ui::gui::SDigitalContent> m_vcDigContent;
+        std::vector<decent::wallet::ui::gui::SDigitalContent> m_vcDigContentOld;
         int                     m_nConnected;
         int                     m_nUserComboTriggeredInGui;
         SConnectionStruct   m_wdata2;

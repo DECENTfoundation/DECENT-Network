@@ -196,7 +196,7 @@ void Browse_content_tab::SetDigitalContentsGUI(const std::vector<decent::wallet:
 
         pLabel = new decent::wallet::ui::gui::TableWidgetItemW<QLabel>(
                                                aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
-                                               QString::number(aTemporar.AVG_rating,'f').remove( QRegExp("0+$") ).remove( QRegExp("\\.$") ));
+                                               tr(aTemporar.AVG_rating.c_str()));
         if(!pLabel){throw "Low memory!";}
         m_TableWidget.setCellWidget(i,DCF::RATING,pLabel);
 
@@ -208,13 +208,13 @@ void Browse_content_tab::SetDigitalContentsGUI(const std::vector<decent::wallet:
 
         pLabel = new decent::wallet::ui::gui::TableWidgetItemW<QLabel>(
                                               aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
-                                              QString::number(aTemporar.size,'f').remove( QRegExp("0+$") ).remove( QRegExp("\\.$") ));
+                                              tr(aTemporar.size.c_str()));
         if(!pLabel){throw "Low memory!";}
         m_TableWidget.setCellWidget(i,DCF::SIZE,pLabel);
 
         pLabel = new decent::wallet::ui::gui::TableWidgetItemW<QLabel>(
                                                aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
-                                               QString::number(aTemporar.price.amount,'f').remove( QRegExp("0+$") ).remove( QRegExp("\\.$") ));
+                                               tr(aTemporar.price.amount.c_str()));
         if(!pLabel){throw "Low memory!";}
         m_TableWidget.setCellWidget(i,DCF::PRICE,pLabel);
     }
@@ -257,13 +257,11 @@ void Browse_content_tab::resizeEvent ( QResizeEvent * a_event )
 
 void Browse_content_tab::Connects()
 {
-    //std::cout<<"----------------------------------------dorowcolor--"<<std::endl;
     connect(m_pTableWidget,SIGNAL(mouseMoveEventDid()),this,SLOT(doRowColor()));
 }
 
 void Browse_content_tab::doRowColor()
 {
-    std::cout<<"----------------------------------------dorowcolor--"<<std::endl;
 //    if(green_row != 0)
 //    {
 //        m_pTableWidget->item(green_row,0)->setBackgroundColor(QColor(255,255,255));

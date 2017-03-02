@@ -164,8 +164,6 @@ CentralWigdet::CentralWigdet(class QBoxLayout* a_pAllLayout, class Mainwindow_gu
                                "QTabBar::tab:selected{"
                                "color:white;background-color:rgb(27,176,104);}"
                                );
-    std::cout<<size().width()/5<<std::endl;
-
 
     PrepareGUIprivate(a_pAllLayout);
 }
@@ -467,9 +465,7 @@ void CentralWigdet::resizeEvent ( QResizeEvent * a_event )
     m_pUsernameWgt->resize(nWidth_big,m_pUsernameWgt->height());
     m_pBalanceWgt1->resize(nWidth_medium,m_pBalanceWgt1->height());
 
-    int lenght = a_event->size().width() - 1;
-    std::cout<<lenght/5<<std::endl;
-    std::cout<<a_event->oldSize().width()/5<<std::endl;
+    //int lenght = a_event->size().width() - 1;
 //    if(lenght != a_event->oldSize().width())
 //    {
 //        m_main_tabs2.setStyleSheet("QTabBar::tab{"
