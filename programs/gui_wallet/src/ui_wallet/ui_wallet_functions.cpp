@@ -458,11 +458,8 @@ static int ConnectToNewWitness(const decent::tools::taskListItem<SConnectionStru
         if( wapiptr->is_new() )
         {
            std::string aPassword("");
-           //std::cout << "Please use the set_password method to initialize a new wallet before continuing\n";
-           //wallet_cli->set_prompt( "new >>> " );
-           //(*(aStrct.fpWarnFunc))(a_con_data.owner,int answer,/*string**/void* str_ptr);
-           (*s_fpWarnAndWaitFunc)(a_con_data.owner,pStruct->fpWarnFunc,&aPassword,
-                           "Please use the set_password method to initialize a new wallet before continuing\n");
+           
+           (*s_fpWarnAndWaitFunc)(a_con_data.owner,pStruct->setPasswordFn, &aPassword, "Please use the set_password method to initialize a new wallet before continuing\n");
            if(aPassword != "")
            {
                wapiptr->set_password(aPassword);

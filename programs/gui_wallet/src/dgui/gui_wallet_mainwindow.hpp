@@ -81,7 +81,7 @@ namespace gui_wallet
 
         void DisplayWalletContentGUI();
 
-        static void SetPassword(void* a_owner,int a_answer,/*string**/void* a_str_ptr);
+        void SetPassword(void* a_owner, void* a_str_ptr);
 
     protected slots:
         void CurrentUserChangedSlot(const QString&);
@@ -161,7 +161,10 @@ namespace gui_wallet
         int                     m_nConnected;
         int                     m_nUserComboTriggeredInGui;
         SConnectionStruct   m_wdata2;
-        PasswordDialog      m_PasswdDialog;
+
+        PasswordDialog      m_SetPasswordDialog;
+        PasswordDialog      m_UnlockDialog;
+
         int                 m_nJustConnecting;
 
         QString             m_default_stylesheet;
