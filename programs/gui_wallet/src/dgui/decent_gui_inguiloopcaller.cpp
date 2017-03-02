@@ -79,8 +79,6 @@ void decent::gui::InGuiLoopCaller::NextFunctionToCallSlot2(void* a_clbData,int64
                                                            std::string a_inp, std::string a_result,
                                                            void* a_owner,TypeCallbackSetNewTaskGlb2 a_fpFnc)
 {
-    std::cout << "Input: " << a_inp << std::endl;
-    std::cout << "Output: " << a_result << std::endl;
     __DEBUG_APP2__(2,"inp=\"%s\",a_fpFnc=%p",a_inp.c_str(),a_fpFnc);
     (*a_fpFnc)(a_owner,a_clbData,a_err,a_inp,a_result);
 }
@@ -90,8 +88,6 @@ void decent::gui::InGuiLoopCaller::NextFunctionToCallSlot3(void* a_clbData,int64
                                                            std::string a_inp, fc::variant a_result,
                                                            void* a_owner,TypeCallbackSetNewTaskGlb3 a_fpFnc)
 {
-    //std::cout << "Input: " << a_inp << std::endl;
-    //std::cout << "Output: " << a_result << std::endl;
     __DEBUG_APP2__(2,"inp=\"%s\",a_fpFnc=%p",a_inp.c_str(),a_fpFnc);
     (*a_fpFnc)(a_owner,a_clbData,a_err,a_inp,a_result);
 }

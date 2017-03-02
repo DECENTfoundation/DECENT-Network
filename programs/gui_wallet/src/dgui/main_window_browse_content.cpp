@@ -122,7 +122,6 @@ void gui_wallet::Mainwindow_gui_wallet::TaskDoneBrowseContentGUI3(void* a_clbkAr
     }
 
     s_nActive = 0;
-    //std::cout<<"brows"<<std::endl;
     //m_pCentralWidget->m_browse_cont_tab.Connects();
 }
 

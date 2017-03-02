@@ -257,13 +257,11 @@ void Browse_content_tab::resizeEvent ( QResizeEvent * a_event )
 
 void Browse_content_tab::Connects()
 {
-    //std::cout<<"----------------------------------------dorowcolor--"<<std::endl;
     connect(m_pTableWidget,SIGNAL(mouseMoveEventDid()),this,SLOT(doRowColor()));
 }
 
 void Browse_content_tab::doRowColor()
 {
-    std::cout<<"----------------------------------------dorowcolor--"<<std::endl;
 //    if(green_row != 0)
 //    {
 //        m_pTableWidget->item(green_row,0)->setBackgroundColor(QColor(255,255,255));
