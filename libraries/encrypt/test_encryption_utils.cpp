@@ -270,6 +270,7 @@ void test_custody(){
 
    c.create_custody_data(boost::filesystem::path("/tmp/content.zip"),cd );
    std::cout <<"done creating custody data, "<<cd.n<<" signatures generated\n";
+   idump((cd));
 
    c.create_proof_of_custody(boost::filesystem::path("/tmp/content.zip"), cd,proof);
    idump((proof.mus));

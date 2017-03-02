@@ -513,6 +513,23 @@ class database_api
       vector<buying_object> get_buying_history_objects_by_consumer( const account_id_type& consumer )const;
 
       /**
+       * @brief Get buying (open or history) by consumer and URI
+       * @param consumer Consumer of the buying to retrieve
+       * @param URI URI of the buying to retrieve
+       * @return buying_objects corresponding to the provided consumer
+       */
+      optional<buying_object> get_buying_by_consumer_URI( const account_id_type& consumer, const string& URI )const;
+
+
+      /**
+       * @brief Get rating given by the consumer to the content specified by it's URI
+       * @param consumer Consumer giving the rating
+       * @param URI Rated content
+       * @return Rating, if given
+       */
+      optional<uint64_t> get_rating_by_consumer_URI( const account_id_type& consumer, const string& URI )const;
+
+      /**
        * @brief Get a content by URI
        * @param URI URI of the content to retrieve
        * @return The content corresponding to the provided URI, or null if no matching content was found
@@ -651,7 +668,9 @@ FC_API(graphene::app::database_api,
    (get_open_buyings)
    (get_open_buyings_by_URI)
    (get_open_buyings_by_consumer)
+   (get_buying_by_consumer_URI)
    (get_buying_history_objects_by_consumer)
+   (get_rating_by_consumer_URI)
    (get_content)
    (list_content_by_author)
    (list_content)

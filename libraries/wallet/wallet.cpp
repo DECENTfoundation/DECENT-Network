@@ -2146,6 +2146,7 @@ public:
    signed_transaction ready_to_publish(string seeder,
                                        uint64_t space,
                                        uint32_t price_per_MByte,
+                                       vector<string> ipfs_IDs,
                                        bool broadcast/* = false */)
    { try {
       account_object seeder_account = get_account( seeder );
@@ -2154,6 +2155,7 @@ public:
       op.seeder = seeder_account.id;
       op.space = space;
       op.price_per_MByte = price_per_MByte;
+      op.ipfs_IDs = ipfs_IDs;
       FC_ASSERT( _wallet.priv_el_gamal_key != decent::crypto::d_integer::Zero(), "Private ElGamal key is not imported. " );
       op.pubKey = decent::crypto::get_public_el_gamal_key( _wallet.priv_el_gamal_key );
 
@@ -2163,7 +2165,7 @@ public:
       tx.validate();
       
       return sign_transaction( tx, broadcast );
-   } FC_CAPTURE_AND_RETHROW( (seeder)(space)(price_per_MByte)(broadcast) ) }
+   } FC_CAPTURE_AND_RETHROW( (seeder)(space)(price_per_MByte)(ipfs_IDs)(broadcast) ) }
    
    signed_transaction proof_of_custody(string seeder,
                                        string URI,
@@ -2722,11 +2724,12 @@ brain_key_info wallet_api::suggest_brain_key()const
    return result;
 }
 
-std::pair<d_integer, d_integer> wallet_api::generate_el_gamal_keys()
+el_gamal_key_pair wallet_api::generate_el_gamal_keys()
 {
-   d_integer priv = decent::crypto::generate_private_el_gamal_key();
-   d_integer pub = decent::crypto::get_public_el_gamal_key( priv );
-   return std::make_pair(priv, pub);
+   el_gamal_key_pair ret;
+   ret.private_key = decent::crypto::generate_private_el_gamal_key();
+   ret.public_key = decent::crypto::get_public_el_gamal_key( ret.private_key );
+   return ret;
 }
 
 string wallet_api::serialize_transaction( signed_transaction tx )const
@@ -3978,9 +3981,10 @@ signed_transaction wallet_api::leave_rating(string consumer,
 signed_transaction wallet_api::ready_to_publish(string seeder,
                                                 uint64_t space,
                                                 uint32_t price_per_MByte,
+                                                vector<string> ipfs_IDs,
                                                 bool broadcast)
 {
-   return my->ready_to_publish(seeder, space, price_per_MByte, broadcast);
+   return my->ready_to_publish(seeder, space, price_per_MByte, ipfs_IDs, broadcast);
 }
 
 signed_transaction wallet_api::proof_of_custody(string seeder,
@@ -4022,6 +4026,18 @@ vector<buying_object> wallet_api::get_open_buyings_by_consumer( const account_id
 vector<buying_object> wallet_api::get_buying_history_objects_by_consumer( const account_id_type& consumer )const
 {
    return my->_remote_db->get_buying_history_objects_by_consumer( consumer );
+}
+
+optional<buying_object> wallet_api::get_buying_by_consumer_URI( const string& account, const string & URI )const
+{
+   account_id_type acc = get_account( account ).id;
+   return my->_remote_db->get_buying_by_consumer_URI( acc, URI );
+}
+
+optional<uint64_t> wallet_api::get_rating( const string& consumer, const string & URI )const
+{
+   account_id_type acc = get_account( consumer ).id;
+   return my->_remote_db->get_rating_by_consumer_URI( acc, URI );
 }
 
 optional<content_object> wallet_api::get_content( const string& URI )const
@@ -4077,7 +4093,7 @@ vector<string> wallet_api::list_packages( ) const
 
 void wallet_api::packages_path(const std::string& packages_dir) const {
    my->_wallet.packages_path = packages_dir;
-   package_manager::instance().initialize(packages_dir);
+   package_manager::instance().set_packages_path(packages_dir);
 }
 
 std::pair<string, decent::crypto::custody_data>  wallet_api::create_package(const std::string& content_dir, const std::string& samples_dir, const d_integer& aes_key) const {
@@ -4151,16 +4167,16 @@ void wallet_api::download_package(const std::string& url) const {
    fc::optional<content_object> co = my->_remote_db->get_content( url );
    FC_ASSERT( co.valid(), "content does not exist");
    multimap<string, uint64_t> stats;
+   ipfs::Json json;
    for( const auto& seeder : co->key_parts )
    {
       fc::optional<seeder_object> so = my->_remote_db->get_seeder( seeder.first );
-      ipfs::Json json;
       for ( const auto& id : so->ipfs_IDs )
       {
          my->_ipfs_client.BitswapLedger( id , &json );
          stats.insert( pair<string, uint64_t>( id, json["Recv"] ));
+         cout<<endl<<" -------- "<<json.dump()<<endl;
       }
-
    }
 
    package_manager::instance().download_package(url, transfer_progress_printer::instance());

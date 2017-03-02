@@ -23,7 +23,6 @@ namespace graphene { namespace chain {
       time_point_sec expiration;
       decent::crypto::d_integer_string pubKey;
       vector<string> ipfs_IDs;
-      seeding_statistics_id_type stats;
    };
    
    struct by_seeder;
@@ -58,4 +57,4 @@ namespace graphene { namespace chain {
 
 FC_REFLECT_DERIVED(graphene::chain::seeder_object,
                    (graphene::db::object),
-                   (seeder)(free_space)(expiration)(price)(pubKey)(ipfs_IDs)(stats) )
+                   (seeder)(free_space)(expiration)(price)(pubKey)(ipfs_IDs) )

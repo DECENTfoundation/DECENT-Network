@@ -354,7 +354,6 @@ namespace detail {
             {
                ilog("Replaying blockchain due to ${reason}", ("reason", reindex_reason) );
 
-               fc::remove_all( _data_dir / "db_version" );
                _chain_db->reindex(_data_dir / "blockchain", initial_state());
 
                // doing this down here helps ensure that DB will be wiped
@@ -479,7 +478,10 @@ namespace detail {
             // you can help the network code out by throwing a block_older_than_undo_history exception.
             // when the net code sees that, it will stop trying to push blocks from that chain, but
             // leave that peer connected so that they can get sync blocks from us
-            bool result = _chain_db->push_block(blk_msg.block, (_is_block_producer | _force_validate) ? database::skip_nothing : database::skip_transaction_signatures);
+            bool result = _chain_db->push_block(blk_msg.block,
+                                                (_is_block_producer | _force_validate) ? database::skip_nothing
+                                                                                       : database::skip_transaction_signatures,
+                                                sync_mode);
 
             // the block was accepted, so we now know all of the transactions contained in the block
             if (!sync_mode)
@@ -777,12 +779,15 @@ namespace detail {
 
           // true_high_block_num is the ending block number after the network code appends any item ids it 
           // knows about that we don't
+          uint32_t orig_low_block_num =  low_block_num;
           uint32_t true_high_block_num = high_block_num + number_of_blocks_after_reference_point;
           do
           {
             // for each block in the synopsis, figure out where to pull the block id from.
             // if it's <= non_fork_high_block_num, we grab it from the main blockchain;
             // if it's not, we pull it from the fork history
+            if( !low_block_num )
+               ++low_block_num;
             if (low_block_num <= non_fork_high_block_num)
               synopsis.push_back(_chain_db->get_block_id_for_num(low_block_num));
             else
@@ -792,6 +797,7 @@ namespace detail {
           while (low_block_num <= high_block_num);
 
           idump((synopsis));
+          ilog("synopsis for blocks ${l} - ${h}",("l", orig_low_block_num)("h", high_block_num));
           return synopsis;
       } FC_CAPTURE_AND_RETHROW() }
 
