@@ -211,9 +211,13 @@ void Browse_content_tab::SetDigitalContentsGUI(const std::vector<decent::wallet:
         if(!pLabel){throw "Low memory!";}
         m_TableWidget.setCellWidget(i,DCF::SIZE,pLabel);
 
-        pLabel = new decent::wallet::ui::gui::TableWidgetItemW<QLabel>(
-                                               aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
-                                               tr(aTemporar.price.amount.c_str()));
+        double dPrice = std::stod(aTemporar.price.amount) / pow(10, std::stod(aTemporar.price.precision));
+        
+        pLabel = new decent::wallet::ui::gui::TableWidgetItemW<QLabel>(aTemporar,
+                                                                       this,
+                                                                       NULL,
+                                                                       &Browse_content_tab::DigContCallback,
+                                                                       tr(std::to_string(dPrice).c_str()));
         if(!pLabel){throw "Low memory!";}
         m_TableWidget.setCellWidget(i,DCF::PRICE,pLabel);
     }

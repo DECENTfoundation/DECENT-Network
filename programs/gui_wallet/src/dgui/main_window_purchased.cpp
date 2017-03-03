@@ -15,6 +15,8 @@
 
 void ParseDigitalContentFromVariant(decent::wallet::ui::gui::SDigitalContent* a_pContent,
                                     const fc::variant& a_result);
+void ParseDigitalContentAssetDetailsFromVariant(decent::wallet::ui::gui::SDigitalContent* a_pContent,
+                                                const fc::variant& a_result);
 
 void gui_wallet::Mainwindow_gui_wallet::ManagementPurchasedGUI()
 {

@@ -12,13 +12,13 @@
 
 
 static const char* s_vcpcFieldsGeneral[NUMBER_OF_SUB_LAYOUTS2] = {
-    "Author", "Expiration","Created","Price", "Amount","Asset ID",
+    "Author", "Expiration","Created","Price", "Amount",
     "Averege Rating","Size","Times Bought"
 };
 
 
 static const char* s_vcpcFieldsBougth[NUMBER_OF_SUB_LAYOUTS2] = {
-    "Author", "Expiration","Created","Price", "Amount","Asset ID",
+    "Author", "Expiration","Created","Price", "Amount",
     "Averege Rating","Size","Times Bought"
 };
 
@@ -57,7 +57,7 @@ decent::wallet::ui::gui::ContentDetailsBase::~ContentDetailsBase()
 }
 
 // DCF stands for Digital Content Fields
-namespace DCF{enum{AMOUNT=9,ASSET_ID=11,TIMES_BOUGHT=17};}
+namespace DCF{enum{AMOUNT=9, TIMES_BOUGHT=15};}
 
 void decent::wallet::ui::gui::ContentDetailsBase::execCDB(const decent::wallet::ui::gui::SDigitalContent& a_cnt_details)
 {
@@ -75,13 +75,18 @@ void decent::wallet::ui::gui::ContentDetailsBase::execCDB(const decent::wallet::
     m_vLabels[3].setText(tr(m_pContentInfo->expiration.c_str()));
     m_vLabels[5].setText(tr(m_pContentInfo->created.c_str()));
     //m_vLabels[7].setText(QString::number(m_pContentInfo->price.amount,'f').remove( QRegExp("0+$") ).remove( QRegExp("\\.$") ));
-    m_vLabels[7].setText(tr(m_pContentInfo->price.amount.c_str()));
+    
+    double dPrice = std::stod(a_cnt_details.price.amount) / pow(10, std::stod(a_cnt_details.price.precision));
+    std::string str_price = std::to_string(dPrice) + " " + a_cnt_details.price.symbol;
+    
+    m_vLabels[7].setText(tr(str_price.c_str()));
     m_vLabels[DCF::AMOUNT].setText(tr(m_pContentInfo->size.c_str()));
-    m_vLabels[DCF::ASSET_ID].setText(tr(a_cnt_details.price.asset_id.c_str()));
-    m_vLabels[13].setText(tr(m_pContentInfo->AVG_rating.c_str()));
+    
+    //m_vLabels[DCF::ASSET].setText(tr(a_cnt_details.price.symbol.c_str()));
+    m_vLabels[11].setText(tr(m_pContentInfo->AVG_rating.c_str()));
     //QString::number(aTemporar.AVG_rating,'f').remove( QRegExp("0+$") ).remove( QRegExp("\\.$") )
     QString qsSizeTxt = tr(m_pContentInfo->size.c_str()) + tr(" MB");
-    m_vLabels[15].setText(qsSizeTxt);
+    m_vLabels[13].setText(qsSizeTxt);
     m_vLabels[DCF::TIMES_BOUGHT].setText(tr(a_cnt_details.times_bougth.c_str()));
 
     QDialog::exec();

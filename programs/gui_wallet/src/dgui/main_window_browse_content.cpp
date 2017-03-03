@@ -15,9 +15,11 @@
 
 
 /*///////////////////////////////////////////////////////*/
-
+using string = std::string;
 static int s_nActive = 0;
 void ParseDigitalContentFromVariant(decent::wallet::ui::gui::SDigitalContent* a_pContent,
+                                    const fc::variant& a_result);
+void ParseDigitalContentAssetDetailsFromVariant(decent::wallet::ui::gui::SDigitalContent* a_pContent,
                                     const fc::variant& a_result);
 
 void gui_wallet::Mainwindow_gui_wallet::ManagementBrowseContentGUI()
@@ -66,10 +68,17 @@ void gui_wallet::Mainwindow_gui_wallet::TaskDoneBrowseContentGUI(void* a_clbkArg
 }
 
 
-void gui_wallet::Mainwindow_gui_wallet::TaskDoneBrowseContentGUI3(void* a_clbkArg,int64_t a_err,
+void gui_wallet::Mainwindow_gui_wallet::TaskDoneBrowseContentGUI3(void* a_clbkArg,
+                                                                  int64_t a_err,
                                                                   const std::string& a_task,
                                                                   const fc::variant& a_result)
 {
+    string const str_request_list_content = "list_content ";
+    string const str_request_list_content_by_author = "list_content_by_author ";
+    string const str_request_get_content = "get_content ";
+    string const str_request_get_asset = "get_asset ";
+    string const dblquote = "\"";
+    
     decent::wallet::ui::gui::JsonParserQt aVisitor;
     aVisitor.m_inp = a_task;
     __DEBUG_APP2__(2," ");
@@ -82,20 +91,47 @@ void gui_wallet::Mainwindow_gui_wallet::TaskDoneBrowseContentGUI3(void* a_clbkAr
     //std::string aRes = visRes.value();
     //printf("!!!!!!!!!!!!!!!! type=%s, val=%s\n",visRes.TypeToString(), aRes.c_str());
     //printf("!!!!!!!!!!!!!!!!!!!!!!!!!! g_nCreateAndDelete=%d\n",g_nCreateAndDelete);
+    
+    //
+    //  below a state machine is running - calling requests one after another
+    //  and for each request the callback function is this same function
+    //
 
-    if(strstr(a_task.c_str(),"list_content ") || strstr(a_task.c_str(),"list_content_by_author "))
+    if (0 == a_task.compare(0, str_request_list_content.length(), str_request_list_content) ||
+        0 == a_task.compare(0, str_request_list_content_by_author.length(), str_request_list_content_by_author))
     {
-        std::string aNewTask;
         m_vcDigContent.clear();
         GetDigitalContentsFromVariant(DCT::GENERAL,m_vcDigContent,a_result);
-        int nSize(m_vcDigContent.size());
-        for(int i(0);i<nSize;++i)
+        size_t nSize(m_vcDigContent.size());
+        //
+        //  get detailed information relating to contents one by one
+        //
+        for (size_t iIndex = 0; iIndex < nSize; ++iIndex)
         {
-            aNewTask = "get_content \"" + m_vcDigContent[i].URI + "\"";
-            SetNewTask3(aNewTask,this,(void*)((size_t)i),&gui_wallet::Mainwindow_gui_wallet::TaskDoneBrowseContentGUI3);
+            string strTask = str_request_get_asset +
+                dblquote + m_vcDigContent[iIndex].price.asset_id + dblquote;
+            SetNewTask3(strTask, this, reinterpret_cast<void*>(iIndex),
+                        &gui_wallet::Mainwindow_gui_wallet::TaskDoneBrowseContentGUI3);
+        }
+        for (size_t iIndex = 0; iIndex < nSize; ++iIndex)
+        {
+            string strTask = str_request_get_content +
+            dblquote + m_vcDigContent[iIndex].URI + dblquote;
+            SetNewTask3(strTask, this, reinterpret_cast<void*>(iIndex),
+                        &gui_wallet::Mainwindow_gui_wallet::TaskDoneBrowseContentGUI3);
         }
     }
-    else if(strstr(a_task.c_str(),"get_content "))
+    else if(0 == a_task.compare(0, str_request_get_asset.length(), str_request_get_asset))
+    {
+        size_t const iIndex = reinterpret_cast<size_t>(a_clbkArg);
+        size_t const iContentsCount = m_vcDigContent.size();
+        
+        if (iIndex >= iContentsCount)
+            return;
+        
+        ParseDigitalContentAssetDetailsFromVariant(&m_vcDigContent[iIndex],a_result);
+    }
+    else if(0 == a_task.compare(0, str_request_get_content.length(), str_request_get_content))
     {
         const int cnIndex (  (int)(  (size_t)a_clbkArg  )     );
         const int cnContsNumber(m_vcDigContent.size());
@@ -116,9 +152,12 @@ void gui_wallet::Mainwindow_gui_wallet::TaskDoneBrowseContentGUI3(void* a_clbkAr
                     }
                 }  // for(int i(0); i<cnContsNumber;++i)
             }
-            if(bToDraw){m_pCentralWidget->SetDigitalContentsGUI(m_vcDigContent);m_vcDigContentOld = m_vcDigContent;}
+            if(bToDraw)
+            {
+                m_pCentralWidget->SetDigitalContentsGUI(m_vcDigContent);
+                m_vcDigContentOld = m_vcDigContent;
+            }
         }
-
     }
 
     s_nActive = 0;
