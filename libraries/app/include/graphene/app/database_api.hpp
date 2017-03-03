@@ -32,7 +32,6 @@
 #include <graphene/chain/account_object.hpp>
 #include <graphene/chain/asset_object.hpp>
 #include <graphene/chain/chain_property_object.hpp>
-#include <graphene/chain/confidential_object.hpp>
 #include <graphene/chain/market_object.hpp>
 #include <graphene/chain/operation_history_object.hpp>
 #include <graphene/chain/proposal_object.hpp>
@@ -472,15 +471,6 @@ class database_api
        */
       vector<proposal_object> get_proposed_transactions( account_id_type id )const;
 
-      //////////////////////
-      // Blinded balances //
-      //////////////////////
-
-      /**
-       *  @return the set of blinded balance objects by commitment ID
-       */
-      vector<blinded_balance_object> get_blinded_balances( const flat_set<commitment_type>& commitments )const;
-
       ////////////
       // Decent //
       ////////////
@@ -660,9 +650,6 @@ FC_API(graphene::app::database_api,
 
    // Proposed transactions
    (get_proposed_transactions)
-
-   // Blinded balances
-   (get_blinded_balances)
 
    // Decent
    (get_open_buyings)

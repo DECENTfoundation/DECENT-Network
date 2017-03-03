@@ -151,7 +151,6 @@ namespace graphene { namespace chain {
    class operation_history_object;
    class withdraw_permission_object;
    class vesting_balance_object;
-   class blinded_balance_object;
 
    typedef object_id< protocol_ids, account_object_type,            account_object>               account_id_type;
    typedef object_id< protocol_ids, asset_object_type,              asset_object>                 asset_id_type;
@@ -195,7 +194,6 @@ namespace graphene { namespace chain {
    typedef object_id< implementation_ids, impl_chain_property_object_type,   chain_property_object>                     chain_property_id_type;
    typedef object_id< implementation_ids, impl_witness_schedule_object_type, witness_schedule_object>                   witness_schedule_id_type;
    typedef object_id< implementation_ids, impl_budget_record_object_type, budget_record_object >                        budget_record_id_type;
-   typedef object_id< implementation_ids, impl_blinded_balance_object_type, blinded_balance_object >                    blinded_balance_id_type;
    typedef object_id< implementation_ids, impl_buyback_object_type, buyback_object >                                    buyback_id_type;
    typedef object_id< implementation_ids, impl_buying_object_type, buying_object >                                      buying_id_type;
    typedef object_id< implementation_ids, impl_content_object_type, content_object >                                    content_id_type;

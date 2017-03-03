@@ -159,7 +159,8 @@ void database::initialize_budget_record( fc::time_point_sec now, budget_record& 
    // at the BEGINNING of the maintenance interval.
    reserve += dpo.witness_budget;
 
-   //we allocate at most 5% of the reserve per year to witness budget. This is used if and only if we don't generate new coins anymore...
+   //we allocate at most 5% of the reserve per year to witness budget.
+   // This is used iff we don't generate new coins anymore.
 
    fc::uint128_t budget_u128 = reserve.value;
    budget_u128 *= 5;

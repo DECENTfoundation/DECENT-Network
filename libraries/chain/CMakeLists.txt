@@ -51,7 +51,7 @@ add_library( graphene_chain
              protocol/transaction.cpp
              protocol/block.cpp
              protocol/fee_schedule.cpp
-             protocol/confidential.cpp
+
              protocol/vote.cpp
              protocol/decent.cpp
 
@@ -70,7 +70,6 @@ add_library( graphene_chain
              market_evaluator.cpp
              vesting_balance_evaluator.cpp
              withdraw_permission_evaluator.cpp
-             confidential_evaluator.cpp
              buyback.cpp
              decent_evaluator.cpp
 

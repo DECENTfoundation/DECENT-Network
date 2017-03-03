@@ -30,7 +30,6 @@
 #include <graphene/chain/buyback_object.hpp>
 #include <graphene/chain/buying_object.hpp>
 #include <graphene/chain/chain_property_object.hpp>
-#include <graphene/chain/confidential_object.hpp>
 #include <graphene/chain/content_object.hpp>
 #include <graphene/chain/global_property_object.hpp>
 #include <graphene/chain/market_object.hpp>
@@ -47,7 +46,6 @@
 #include <graphene/chain/account_evaluator.hpp>
 #include <graphene/chain/asset_evaluator.hpp>
 #include <graphene/chain/assert_evaluator.hpp>
-#include <graphene/chain/confidential_evaluator.hpp>
 #include <graphene/chain/custom_evaluator.hpp>
 #include <graphene/chain/decent_evaluator.hpp>
 #include <graphene/chain/market_evaluator.hpp>
@@ -135,9 +133,6 @@ void database::initialize_evaluators()
    register_evaluator<withdraw_permission_claim_evaluator>();
    register_evaluator<withdraw_permission_update_evaluator>();
    register_evaluator<withdraw_permission_delete_evaluator>();
-   register_evaluator<transfer_to_blind_evaluator>();
-   register_evaluator<transfer_from_blind_evaluator>();
-   register_evaluator<blind_transfer_evaluator>();
    register_evaluator<content_submit_evaluator>();
    register_evaluator<request_to_buy_evaluator>();
    register_evaluator<leave_rating_evaluator>();
@@ -169,7 +164,6 @@ void database::initialize_indexes()
 
    add_index< primary_index<withdraw_permission_index > >();
    add_index< primary_index<vesting_balance_index> >();
-   add_index< primary_index<blinded_balance_index> >();
 
    //Implementation object indexes
    add_index< primary_index<transaction_index                             > >();
@@ -219,7 +213,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
    // Create blockchain accounts
    fc::ecc::private_key null_private_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("null_key")));
    create<account_balance_object>([](account_balance_object& b) {
-      b.balance = GRAPHENE_MAX_SHARE_SUPPLY;
+      b.balance = GRAPHENE_INITIAL_SHARE_SUPPLY;
    });
 
    FC_ASSERT(create<account_object>([this](account_object& a) {
@@ -284,7 +278,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
    // Create core asset
    const asset_dynamic_data_object& dyn_asset =
       create<asset_dynamic_data_object>([&](asset_dynamic_data_object& a) {
-         a.current_supply = GRAPHENE_MAX_SHARE_SUPPLY;
+         a.current_supply = GRAPHENE_INITIAL_SHARE_SUPPLY;
       });
    const asset_object& core_asset =
      create<asset_object>( [&]( asset_object& a ) {

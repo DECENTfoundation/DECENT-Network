@@ -96,5 +96,5 @@ using decent::crypto::d_integer;
 
 FC_REFLECT_DERIVED(graphene::chain::buying_object,
                    (graphene::db::object),
-                   (consumer)(URI)(seeders_answered)(expiration_time)(pubKey)(key_particles)
+                   (consumer)(URI)(price)(seeders_answered)(expiration_time)(pubKey)(key_particles)
                    (expired)(delivered)(expiration_or_delivery_time)(rated) )

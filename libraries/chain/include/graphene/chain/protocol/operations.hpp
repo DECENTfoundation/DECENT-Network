@@ -27,7 +27,6 @@
 #include <graphene/chain/protocol/assert.hpp>
 #include <graphene/chain/protocol/asset_ops.hpp>
 #include <graphene/chain/protocol/custom.hpp>
-#include <graphene/chain/protocol/confidential.hpp>
 #include <graphene/chain/protocol/market.hpp>
 #include <graphene/chain/protocol/proposal.hpp>
 #include <graphene/chain/protocol/transfer.hpp>
@@ -72,9 +71,6 @@ namespace graphene { namespace chain {
             vesting_balance_withdraw_operation,
             custom_operation,
             assert_operation,
-            transfer_to_blind_operation,
-            blind_transfer_operation,
-            transfer_from_blind_operation,
             content_submit_operation,
             request_to_buy_operation,
             leave_rating_operation,

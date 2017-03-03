@@ -173,7 +173,7 @@ void
 seeding_plugin_impl::generate_por(my_seeding_id_type so_id, graphene::package::package_object downloaded_package)
 {
 
-   ilog("seeding plugin_impl:  generate_por() start");
+   elog("seeding plugin_impl:  generate_por() start");
    graphene::chain::database &db = database();
 
    const my_seeding_object &mso = db.get<my_seeding_object>(so_id);
@@ -233,9 +233,9 @@ seeding_plugin_impl::generate_por(my_seeding_id_type so_id, graphene::package::p
       tx.sign(sritr->privKey, _chain_id);
       idump((tx));
 
-      main_thread->async([this, tx]() { ilog("seeding plugin_impl:  generate_por lambda - pushing transaction"); database().push_transaction(tx); });
+      main_thread->async([this, tx]() { elog("seeding plugin_impl:  generate_por lambda - pushing transaction"); database().push_transaction(tx); });
 
-      ilog("broadcasting out PoR");
+      elog("broadcasting out PoR");
       _self.p2p_node().broadcast_transaction(tx);
 
       if(  fc::time_point( mso.expiration ) + fc::microseconds( POR_WAKEUP_INTERVAL_SEC * 1000000 ) <= fc::time_point::now() ){
@@ -288,13 +288,16 @@ void seeding_plugin_impl::send_ready_to_publish()
 }
 
 void seeding_plugin_impl::restart_downloads(){
+   elog("restarting downloads, main thread");
    service_thread->async([this](){
+        elog("restarting downloads, service thread");
         const auto& cidx = database().get_index_type<my_seeding_index>().indices().get<by_URI>();
         auto citr = cidx.begin();
         while(citr!=cidx.end()){
            package_manager::instance().download_package(citr->URI, *this );
            ++citr;
         }
+        elog("restarting downloads, service thread end");
    });
 }
 }// end namespace detail
@@ -320,7 +323,9 @@ void seeding_plugin::plugin_startup()
    }
    ilog("seeding plugin:  plugin_startup() start");
    my->restart_downloads();
-   my->service_thread->schedule([this](){ilog("generating first ready to publish");my->send_ready_to_publish(); }, ( fc::time_point::now()  + fc::microseconds(300000000)), "Seeding plugin RtP generate");
+   fc::time_point next_call = fc::time_point::now()  + fc::microseconds(300000000);
+   elog("RtP planned at ${t}", ("t",next_call) );
+   my->service_thread->schedule([this](){elog("generating first ready to publish");my->send_ready_to_publish(); }, next_call, "Seeding plugin RtP generate");
    ilog("seeding plugin:  plugin_startup() end");
 }
 
@@ -389,7 +394,7 @@ void seeding_plugin::plugin_initialize( const boost::program_options::variables_
       
       ilog("starting service thread");
       my = unique_ptr<detail::seeding_plugin_impl>( new detail::seeding_plugin_impl( *this) );
-      my->service_thread = std::make_shared<fc::thread>();
+      my->service_thread = std::make_shared<fc::thread>("seeding");
       my->main_thread = &fc::thread::current();
 
       database().on_new_commited_operation.connect( [&]( const operation_history_object& b ){ my->handle_commited_operation( b, false ); } );
