@@ -131,7 +131,6 @@ void Overview_tab::CreateTable()
 
         table_widget.setRowHeight(i + 1,40);
 
-        QHBoxLayout* lay = new QHBoxLayout();
 
         QPixmap image1(":/icon/images/info1_white.svg");
        // QPixmap image1 = image.scaled(QSize(50,50), 1 Qt::AA_Use96Dpi);

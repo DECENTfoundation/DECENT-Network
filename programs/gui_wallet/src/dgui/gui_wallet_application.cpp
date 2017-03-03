@@ -58,7 +58,6 @@ int WarnAndWaitFunc(void* a_pOwner,WarnYesOrNoFuncType a_fpYesOrNo,
     return 0;
 }
 
-#ifdef CREATE_NEW_APP
 
 gui_wallet::application::application(int& argc, char** argv)
     :
@@ -86,32 +85,9 @@ gui_wallet::application::~application()
     delete s_pWarner;
 }
 
-#endif // #ifdef CREATE_NEW_APP
 
 
 /* //////////////////////// */
-namespace gui_wallet
-{
-
-static int InfoFunc(void*,const char*, ...)
-{
-    return 0;
-}
-
-static int WarnFunc(void*,const char*, ...)
-{
-    return 0;
-}
-
-
-
-static int ErrorFunc(void*,const char*, ...)
-{
-    return 0;
-}
-
-
-} /* namespace gui_wallet */
 
 InGuiThreatCaller::InGuiThreatCaller()
 {

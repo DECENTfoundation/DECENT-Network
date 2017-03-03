@@ -12,7 +12,7 @@
 
 //#define USE_TABLE_FOR_FIRST_LINE
 #define API_SHOULD_BE_DEFINED
-#define __TRY_LABEL_INSTEAD_OF_TABLE__
+
 
 #include <QWidget>
 #include <QVBoxLayout>
@@ -31,7 +31,6 @@
 #include "decent_wallet_ui_gui_purchasedtab.hpp"
 #include <QString>
 
-#define __TEMPORARY__
 
 extern int g_nDebugApplication;
 
@@ -80,9 +79,18 @@ public:
     
     
     QString getFilterText()const;
-    __TEMPORARY__ QComboBox* usersCombo();
-    int GetMyCurrentTabIndex()const{return m_main_tabs2.currentIndex();}
+    QComboBox* usersCombo();
+    
+    
+    int GetMyCurrentTabIndex()const {
+        return m_main_tabs.currentIndex();
+    }
+    
     QString FilterStr();
+    
+public slots:
+    void tabChanged(int index);
+    
 protected:
     virtual void showEvent ( QShowEvent * event ) ;
     virtual void resizeEvent ( QResizeEvent * event );
@@ -97,14 +105,20 @@ private slots:
 private:
     QVBoxLayout         m_main_layout;
     QHBoxLayout         m_first_line_lbl;
-    //QHBoxLayout         m_first_line_layout;
 
-    QTabWidget          m_main_tabs2;
+    
+    
+    Mainwindow_gui_wallet* m_parent_main_window;
+    
+    QTabWidget          m_main_tabs;
+    
     Browse_content_tab  m_browse_cont_tab;
     Transactions_tab    m_trans_tab;
     Upload_tab          m_Upload_tab;
     Overview_tab        m_Overview_tab;
     PurchasedTab        m_Purchased_tab;
+    
+    
 
     QString             m_DelayedWaringTitle;
     QString             m_DelayedWaringText;
@@ -113,8 +127,8 @@ private:
     QWidget*            m_pDcLogoWgt;
     QWidget*            m_pUsernameWgt;
     QWidget*            m_pBalanceWgt1;
-    //AccountBalanceWidget* m_pBalanceWgt2;
 
+    
 };
 
 }

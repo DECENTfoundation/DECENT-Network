@@ -28,12 +28,9 @@
 namespace gui_wallet
 {
 
-    //class Mainwindow_gui_wallet : public QMainWindow
     class Mainwindow_gui_wallet : public QMainWindow
     {
-//        friend class Overview_tab;
-//        friend class Transactions_tab;
-//        friend class CentralWigdet;
+
         Q_OBJECT
     public:
         Mainwindow_gui_wallet();
@@ -65,13 +62,17 @@ namespace gui_wallet
         void TaskDoneOverrviewGUI3(void* a_clbkArg,int64_t a_err,const std::string& a_task,const fc::variant& a_result);
         void TaskDonePurchasedGUI3(void* a_clbkArg,int64_t a_err,const std::string& a_task,const fc::variant& a_result);
 
-        //void RedrawTransacionTabGUI();
+        
+        
+        
         void ManagementBrowseContentGUI();
         void ManagementTransactionsGUI();
         void ManagementUploadGUI();
         void ManagementOverviewGUI();
         void ManagementPurchasedGUI();
 
+        
+        
         void UpdateLockedStatus();
 
         void CliCallbackFnc(void*arg,const std::string& task);
@@ -82,7 +83,8 @@ namespace gui_wallet
         void DisplayWalletContentGUI();
 
         void SetPassword(void* a_owner, void* a_str_ptr);
-
+        
+        
     protected slots:
         void CurrentUserChangedSlot(const QString&);
 
@@ -136,10 +138,8 @@ namespace gui_wallet
         QAction             m_ActionOpenInfoDlg;
         ConnectDlg          m_ConnectDlg;
         TextDisplayDialog   m_info_dialog;
-        //WalletContentDlg    m_wallet_content_dlg;
-
-        //std::vector<account_object_str>  m_vAccounts;
-        //std::vector<std::vector<asset_str>>   m_vAccountsBalances;
+        
+        
         QVBoxLayout             m_main_layout;
         QLabel                  m_num_acc_or_error_label;
         int                     m_nError;
@@ -155,7 +155,7 @@ namespace gui_wallet
         QString                            m_cqsPreviousFilter;
         QTextEdit*                          m_pInfoTextEdit;
         CliWalletDlg*                        m_pcInfoDlg;
-        //std::string                         m_URI;
+
         std::vector<SDigitalContent> m_vcDigContent;
         std::vector<SDigitalContent> m_vcDigContentOld;
         int                     m_nConnected;

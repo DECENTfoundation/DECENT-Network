@@ -40,7 +40,6 @@ namespace gui_wallet
     enum FieldsRows {
         LIFETIME = 0,
         KEYPARTS,
-        TAGS,
         PRICE,
         ASSETID,
         SEEDERS,
