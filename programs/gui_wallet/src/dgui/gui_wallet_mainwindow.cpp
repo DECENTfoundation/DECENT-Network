@@ -36,6 +36,7 @@
 
 using namespace nlohmann;
 using namespace gui_wallet;
+using namespace std;
 
 static gui_wallet::Mainwindow_gui_wallet*  s_pMainWindowInstance = NULL;
 
@@ -441,7 +442,7 @@ int Mainwindow_gui_wallet::GetDigitalContentsFromVariant(DCT::DIG_CONT_TYPES a_t
         pNext = &(aParser.GetByIndex(i));
         aDigContent.URI = pNext->GetByKey("URI").value();
         aDigContent.author = pNext->GetByKey("author").value();
-        aDigContent.price.amount = pNext->GetByKey("price").GetByKey("amount").value();
+        aDigContent.price.amount = std::stod(pNext->GetByKey("price").GetByKey("amount").value());
         aDigContent.price.asset_id = pNext->GetByKey("price").GetByKey("asset_id").value();
         
         a_vcContents.push_back(aDigContent);
@@ -639,16 +640,10 @@ void Mainwindow_gui_wallet::TaskDoneFuncGUI3(void* a_clbkArg,int64_t a_err,
     __DEBUG_APP2__(0,"just_conn=%d, err=%d, a_clbkArg=%p, task=%s",
                    m_nJustConnecting,(int)a_err,a_clbkArg,a_task.c_str());
 
-    //enum MAIN_TABS_ENM{BROWSE_CONTENT,TRANSACTIONS,UPLOAD,OVERVIEW,PURCHASED};
+
     const int cnCurIndex(m_pCentralWidget->GetMyCurrentTabIndex());
     switch(cnCurIndex)
     {
-    case BROWSE_CONTENT:
-    {
-        //BrowseContentTaskDone(void* a_clbkArg,int64_t a_err,const std::string& a_task,const std::string& a_result);
-        TaskDoneBrowseContentGUI3(a_clbkArg, a_err,a_task,a_result);
-        break;
-    }
     case TRANSACTIONS:
     {
         TaskDoneTransactionsGUI3(a_clbkArg, a_err,a_task,a_result);
@@ -716,16 +711,9 @@ void Mainwindow_gui_wallet::TaskDoneFuncGUI(void* a_clbkArg,int64_t a_err,const 
         return;
     }
 
-    //enum MAIN_TABS_ENM{BROWSE_CONTENT,TRANSACTIONS,UPLOAD,OVERVIEW,PURCHASED};
     const int cnCurIndex(m_pCentralWidget->GetMyCurrentTabIndex());
     switch(cnCurIndex)
     {
-    case BROWSE_CONTENT:
-    {
-        //BrowseContentTaskDone(void* a_clbkArg,int64_t a_err,const std::string& a_task,const std::string& a_result);
-        TaskDoneBrowseContentGUI(a_clbkArg, a_err,a_task,a_result);
-        break;
-    }
     case TRANSACTIONS:
     {
         TaskDoneTransactionsGUI(a_clbkArg, a_err,a_task,a_result);
@@ -924,11 +912,6 @@ void Mainwindow_gui_wallet::ManagementNewFuncGUI(void* a_clbkArg,int64_t a_err,c
 
     switch(nCurentTab)
     {
-    case BROWSE_CONTENT:
-    {
-        ManagementBrowseContentGUI();
-        break;
-    }
     case TRANSACTIONS:
         ManagementTransactionsGUI();
         break;
@@ -1009,11 +992,11 @@ void ParseDigitalContentFromVariant(SDigitalContent* a_pContent,
 
     a_pContent->synopsis = aParser.GetByKey("synopsis").value();
     //a_pContent->URI = aParser.GetByKey("URI").value();
-    a_pContent->AVG_rating = aParser.GetByKey("AVG_rating").value();
+    a_pContent->AVG_rating = atof(aParser.GetByKey("AVG_rating").value().c_str());
     a_pContent->created = aParser.GetByKey("created").value();
     a_pContent->expiration = aParser.GetByKey("expiration").value();
-    a_pContent->size = aParser.GetByKey("size").value();
-    a_pContent->times_bougth = aParser.GetByKey("times_bougth").value();
+    a_pContent->size = atoi(aParser.GetByKey("size").value().c_str());
+    a_pContent->times_bougth = atoi(aParser.GetByKey("times_bougth").value().c_str());
 }
 
 void ParseDigitalContentAssetDetailsFromVariant(SDigitalContent* a_pContent,

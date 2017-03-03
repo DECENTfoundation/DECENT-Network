@@ -141,7 +141,14 @@ CentralWigdet::CentralWigdet(QBoxLayout* a_pAllLayout, Mainwindow_gui_wallet* a_
     : m_first_line_lbl(), m_parent_main_window(a_pPar), m_Overview_tab(a_pPar)
 {
 
+    m_allTabs.push_back(&m_browse_cont_tab);
+    m_allTabs.push_back(&m_trans_tab);
+    m_allTabs.push_back(&m_Upload_tab);
+    m_allTabs.push_back(&m_Overview_tab);
+    m_allTabs.push_back(&m_Purchased_tab);
+    m_currentTab = -1;
 
+    
     setStyleSheet("color:black;""background-color:white;");
     m_main_tabs.setStyleSheet("QTabBar::tab{"
                                " height: 40px; width: 179px; "
@@ -152,8 +159,14 @@ CentralWigdet::CentralWigdet(QBoxLayout* a_pAllLayout, Mainwindow_gui_wallet* a_
                                );
 
     PrepareGUIprivate(a_pAllLayout);
+    
+    QTimer::singleShot(200, this, &CentralWigdet::initTabChanged);
+
 }
 
+void  CentralWigdet::initTabChanged() {
+    tabChanged(0);
+}
 
 CentralWigdet::~CentralWigdet()
 {
@@ -355,14 +368,21 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
 }
 
 
-void CentralWigdet::SetDigitalContentsGUI(const std::vector<SDigitalContent>& a_vContents)
-{
-    m_browse_cont_tab.SetDigitalContentsGUI(a_vContents);
-}
-
 
 void CentralWigdet::tabChanged(int index) {
-    std::cout << "Blah blah blah " << index << "\n";
+    if (m_allTabs.size() == 0) {
+        return;
+    }
+    
+    if (index != m_currentTab) {
+        if (m_currentTab >= 0) {
+            m_allTabs[m_currentTab]->content_deactivated();
+        }
+    }
+
+    m_currentTab = index;
+    m_allTabs[m_currentTab]->content_activated();
+
 }
 
 

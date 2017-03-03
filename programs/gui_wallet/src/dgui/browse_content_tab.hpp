@@ -68,7 +68,7 @@ public:
     Browse_content_tab();
     virtual ~Browse_content_tab();
 
-    void SetDigitalContentsGUI(const std::vector<SDigitalContent>& contents);
+    void SetDigitalContentsGUI();
     QString getFilterText()const;
 
     void Connects();
@@ -76,8 +76,15 @@ public:
 
 public:
     
-    virtual void content_activated() {}
-    virtual void content_deactivated() {}
+    virtual void content_activated() {
+        updateContents();
+    }
+    
+    
+    virtual void content_deactivated() {
+    
+    
+    }
 
     
 public:
@@ -86,6 +93,7 @@ signals:
 
 public slots:
     void doRowColor();
+    void updateContents();
 
 protected:
     void PrepareTableWidgetHeaderGUI();
@@ -101,6 +109,10 @@ protected:
     //int              m_nNumberOfContentsPlus1;
     QLineEdit       m_filterLineEdit;
     QComboBox       m_searchTypeCombo;
+    
+    std::vector<SDigitalContent> m_dContents;
+    int m_waitingUpdates = 0;
+
 };
 
 

@@ -45,21 +45,21 @@ struct SDigitalContent{
     DCT::DIG_CONT_TYPES type;
     std::string author;
     struct{
-        std::string amount;
+        long long amount;
         std::string asset_id;
         std::string symbol;
         std::string precision;
     }price;
     std::string synopsis;
     std::string URI;
-    std::string AVG_rating;
+    double AVG_rating;
     //
     std::string created;
     std::string expiration;
-    std::string  size;
+    int  size;
 
     //std::string  get_content_str;
-    std::string  times_bougth;
+    int  times_bougth;
 };
 
 

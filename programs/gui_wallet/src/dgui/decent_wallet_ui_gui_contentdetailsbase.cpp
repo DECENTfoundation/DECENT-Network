@@ -74,20 +74,19 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details)
     m_vLabels[1].setText(tr(m_pContentInfo->author.c_str()));
     m_vLabels[3].setText(tr(m_pContentInfo->expiration.c_str()));
     m_vLabels[5].setText(tr(m_pContentInfo->created.c_str()));
+    
     //m_vLabels[7].setText(QString::number(m_pContentInfo->price.amount,'f').remove( QRegExp("0+$") ).remove( QRegExp("\\.$") ));
     
-    double dPrice = std::stod(a_cnt_details.price.amount) / pow(10, std::stod(a_cnt_details.price.precision));
-    std::string str_price = std::to_string(dPrice) + " " + a_cnt_details.price.symbol;
+    std::string str_price = std::to_string(a_cnt_details.price.amount) + " DECENT";
     
     m_vLabels[7].setText(tr(str_price.c_str()));
-    m_vLabels[DCF::AMOUNT].setText(tr(m_pContentInfo->size.c_str()));
+    m_vLabels[DCF::AMOUNT].setText(QString::number(m_pContentInfo->size));
     
-    //m_vLabels[DCF::ASSET].setText(tr(a_cnt_details.price.symbol.c_str()));
-    m_vLabels[11].setText(tr(m_pContentInfo->AVG_rating.c_str()));
+    m_vLabels[11].setText(QString::number(m_pContentInfo->AVG_rating));
     //QString::number(aTemporar.AVG_rating,'f').remove( QRegExp("0+$") ).remove( QRegExp("\\.$") )
-    QString qsSizeTxt = tr(m_pContentInfo->size.c_str()) + tr(" MB");
+    QString qsSizeTxt = QString::number(m_pContentInfo->size) + tr(" MB");
     m_vLabels[13].setText(qsSizeTxt);
-    m_vLabels[DCF::TIMES_BOUGHT].setText(tr(a_cnt_details.times_bougth.c_str()));
+    m_vLabels[DCF::TIMES_BOUGHT].setText(QString::number(a_cnt_details.times_bougth));
 
     QDialog::exec();
 }

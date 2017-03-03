@@ -42,6 +42,7 @@ namespace TIT{enum {AS_STR,AS_VARIANT};}
 
 //typedef void (*ConnErrFuncType)(void*owner, void* clbData,const std::string& err,const std::string& details);
 typedef void (__THISCALL__ *TypeCallbackSetNewTaskGlb2)(void* owner,SetNewTask_last_args2,const std::string& a_result);
+
 typedef void (__THISCALL__ *TypeCallbackSetNewTaskGlb3)(void* owner,SetNewTask_last_args2,const fc::variant& a_result);
 typedef void (__THISCALL__ *TypeManagementClbk)(void* owner,SetNewTask_last_args2,const std::string& a_result);
 typedef void (__THISCALL__ *WarnYesOrNoFuncType)(void*owner,int answer,/*string**/void* str_ptr);
