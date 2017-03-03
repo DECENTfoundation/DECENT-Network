@@ -28,8 +28,8 @@
 #define Sleep(__ms__) usleep(1000*(__ms__))
 #endif
 
-//using namespace graphene::wallet;
-//using namespace fc::http;
+using namespace gui_wallet;
+
 extern int g_nDebugApplication ;
 
 InGuiThreatCaller* s_pWarner = NULL;
@@ -58,7 +58,6 @@ int WarnAndWaitFunc(void* a_pOwner,WarnYesOrNoFuncType a_fpYesOrNo,
     return 0;
 }
 
-#ifdef CREATE_NEW_APP
 
 gui_wallet::application::application(int& argc, char** argv)
     :
@@ -70,7 +69,7 @@ gui_wallet::application::application(int& argc, char** argv)
     qRegisterMetaType<TypeCallbackSetNewTaskGlb2>( "TypeCallbackSetNewTaskGlb2" );
     qRegisterMetaType<TypeCallbackSetNewTaskGlb3>( "TypeCallbackSetNewTaskGlb3" );
     qRegisterMetaType<fc::variant>( "fc::variant" );
-    qRegisterMetaType<decent::wallet::ui::gui::SDigitalContent>( "decent::wallet::ui::gui::SDigitalContent" );
+    qRegisterMetaType<SDigitalContent>( "SDigitalContent" );
 
     s_pWarner = new InGuiThreatCaller;
     if(!s_pWarner)
@@ -86,32 +85,9 @@ gui_wallet::application::~application()
     delete s_pWarner;
 }
 
-#endif // #ifdef CREATE_NEW_APP
 
 
 /* //////////////////////// */
-namespace gui_wallet
-{
-
-static int InfoFunc(void*,const char*, ...)
-{
-    return 0;
-}
-
-static int WarnFunc(void*,const char*, ...)
-{
-    return 0;
-}
-
-
-
-static int ErrorFunc(void*,const char*, ...)
-{
-    return 0;
-}
-
-
-} /* namespace gui_wallet */
 
 InGuiThreatCaller::InGuiThreatCaller()
 {

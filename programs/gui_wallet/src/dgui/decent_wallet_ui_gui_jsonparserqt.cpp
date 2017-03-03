@@ -15,15 +15,17 @@
 #include <QString>
 #include <QRegExp>
 
+using namespace gui_wallet;
+
 static const char* TypeToString(fc::variant::type_id a_type);
 
 
-decent::wallet::ui::gui::JsonParserQt::JsonParserQt()
+JsonParserQt::JsonParserQt()
 {
 }
 
 
-decent::wallet::ui::gui::JsonParserQt::JsonParserQt(const std::string& a_key)
+JsonParserQt::JsonParserQt(const std::string& a_key)
     :
       m_type(fc::variant::null_type),
       m_key(a_key)
@@ -40,25 +42,25 @@ std::vector<JsonParserQt*>  m_vValue;
 #endif
 
 
-decent::wallet::ui::gui::JsonParserQt::~JsonParserQt()
+JsonParserQt::~JsonParserQt()
 {
     this->clear();
 }
 
 
-bool decent::wallet::ui::gui::JsonParserQt::isVector()const
+bool JsonParserQt::isVector()const
 {
     return ((m_type==fc::variant::object_type)||(m_type==fc::variant::array_type));
 }
 
 
-int decent::wallet::ui::gui::JsonParserQt::size()const
+int JsonParserQt::size()const
 {
     return m_vValue.size();
 }
 
 
-void decent::wallet::ui::gui::JsonParserQt::clear()
+void JsonParserQt::clear()
 {
     const size_t cunSize(m_vValue.size());
     for(size_t i(0); i<cunSize; ++i){delete m_vValue[i];}
@@ -66,14 +68,14 @@ void decent::wallet::ui::gui::JsonParserQt::clear()
 }
 
 
-const std::string& decent::wallet::ui::gui::JsonParserQt::value()const
+const std::string& JsonParserQt::value()const
 {
     return m_value;
 }
 
 
-const decent::wallet::ui::gui::JsonParserQt&
-decent::wallet::ui::gui::JsonParserQt::GetByKeyFirst(
+const JsonParserQt&
+JsonParserQt::GetByKeyFirst(
         const std::string& a_key, bool* a_bIsFound)const
 {
     const JsonParserQt* pReturn;
@@ -107,8 +109,8 @@ decent::wallet::ui::gui::JsonParserQt::GetByKeyFirst(
 }
 
 
-const decent::wallet::ui::gui::JsonParserQt&
-decent::wallet::ui::gui::JsonParserQt::GetByKey(
+const JsonParserQt&
+JsonParserQt::GetByKey(
         const std::string& a_key, bool* a_bIsFound)const
 {
     const size_t cunVectorSize(m_vValue.size());
@@ -125,8 +127,8 @@ decent::wallet::ui::gui::JsonParserQt::GetByKey(
 }
 
 
-const decent::wallet::ui::gui::JsonParserQt&
-decent::wallet::ui::gui::JsonParserQt::GetByIndex(
+const JsonParserQt&
+JsonParserQt::GetByIndex(
         int a_nIndex, bool* a_bIsFound)const
 {
     if(a_nIndex<m_vValue.size())
@@ -138,7 +140,7 @@ decent::wallet::ui::gui::JsonParserQt::GetByIndex(
     return *this;
 }
 
-void decent::wallet::ui::gui::JsonParserQt::handle()const
+void JsonParserQt::handle()const
 {
     __DEBUG_APP2__(DEFAULT_LOG_LEVEL,"task=%s, key=%s",m_inp.c_str(),m_key.c_str());
     m_type = fc::variant::null_type;
@@ -146,7 +148,7 @@ void decent::wallet::ui::gui::JsonParserQt::handle()const
 }
 
 
-void decent::wallet::ui::gui::JsonParserQt::handle( const int64_t& a_v )const
+void JsonParserQt::handle( const int64_t& a_v )const
 {
    m_type = fc::variant::int64_type;
    m_value = QString::number(a_v,10).toStdString();
@@ -155,7 +157,7 @@ void decent::wallet::ui::gui::JsonParserQt::handle( const int64_t& a_v )const
 }
 
 
-void decent::wallet::ui::gui::JsonParserQt::handle( const uint64_t& a_v )const
+void JsonParserQt::handle( const uint64_t& a_v )const
 {
    m_type = fc::variant::uint64_type;
    m_value = QString::number(a_v,10).toStdString();
@@ -164,7 +166,7 @@ void decent::wallet::ui::gui::JsonParserQt::handle( const uint64_t& a_v )const
 }
 
 
-void decent::wallet::ui::gui::JsonParserQt::handle( const double& a_v )const
+void JsonParserQt::handle( const double& a_v )const
 {
    QString qsValue = QString::number(a_v,'f').remove( QRegExp("0+$") ).remove( QRegExp("\\.$") );
    m_type = fc::variant::double_type;
@@ -174,7 +176,7 @@ void decent::wallet::ui::gui::JsonParserQt::handle( const double& a_v )const
 }
 
 
-void decent::wallet::ui::gui::JsonParserQt::handle( const bool& a_v )const
+void JsonParserQt::handle( const bool& a_v )const
 {
    m_type = fc::variant::bool_type;
    m_value = a_v ? "true" : "false";
@@ -183,7 +185,7 @@ void decent::wallet::ui::gui::JsonParserQt::handle( const bool& a_v )const
 }
 
 
-void decent::wallet::ui::gui::JsonParserQt::handle( const std::string& a_v )const
+void JsonParserQt::handle( const std::string& a_v )const
 {
    m_type = fc::variant::string_type;
    m_value = a_v;
@@ -192,7 +194,7 @@ void decent::wallet::ui::gui::JsonParserQt::handle( const std::string& a_v )cons
 }
 
 
-void decent::wallet::ui::gui::JsonParserQt::handle( const fc::variant_object& a_vo)const
+void JsonParserQt::handle( const fc::variant_object& a_vo)const
 {
    JsonParserQt* pMembersToAdd;
    const size_t cunSize( a_vo.size());
@@ -218,7 +220,7 @@ void decent::wallet::ui::gui::JsonParserQt::handle( const fc::variant_object& a_
 }
 
 
-void decent::wallet::ui::gui::JsonParserQt::handle( const fc::variants& a_vs)const
+void JsonParserQt::handle( const fc::variants& a_vs)const
 {
    JsonParserQt* pMembersToAdd;
    const size_t cunSize ( a_vs.size() );
@@ -241,7 +243,7 @@ void decent::wallet::ui::gui::JsonParserQt::handle( const fc::variants& a_vs)con
 }
 
 
-void decent::wallet::ui::gui::JsonParserQt::PrintValues(int a_nTabs)const
+void JsonParserQt::PrintValues(int a_nTabs)const
 {
     int nLoopIndex;
     const size_t cunVectSize(m_vValue.size());
@@ -279,12 +281,12 @@ enum type_id
 };
 #endif
 
-const char* decent::wallet::ui::gui::JsonParserQt::TypeToString()const
+const char* JsonParserQt::TypeToString()const
 {
-    return decent::wallet::ui::gui::JsonParserQt::TypeToString(m_type);
+    return JsonParserQt::TypeToString(m_type);
 }
 
-const char* decent::wallet::ui::gui::JsonParserQt::TypeToString(fc::variant::type_id a_type)
+const char* JsonParserQt::TypeToString(fc::variant::type_id a_type)
 {
     switch(a_type)
     {

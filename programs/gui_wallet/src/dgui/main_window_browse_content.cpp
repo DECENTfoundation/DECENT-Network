@@ -16,11 +16,13 @@
 
 /*///////////////////////////////////////////////////////*/
 using string = std::string;
+using namespace gui_wallet;
+
 static int s_nActive = 0;
-void ParseDigitalContentFromVariant(decent::wallet::ui::gui::SDigitalContent* a_pContent,
+void ParseDigitalContentFromVariant(SDigitalContent* a_pContent,
                                     const fc::variant& a_result);
-void ParseDigitalContentAssetDetailsFromVariant(decent::wallet::ui::gui::SDigitalContent* a_pContent,
-                                    const fc::variant& a_result);
+void ParseDigitalContentAssetDetailsFromVariant(SDigitalContent* a_pContent,
+                                                const fc::variant& a_result);
 
 void gui_wallet::Mainwindow_gui_wallet::ManagementBrowseContentGUI()
 {
@@ -79,7 +81,7 @@ void gui_wallet::Mainwindow_gui_wallet::TaskDoneBrowseContentGUI3(void* a_clbkAr
     string const str_request_get_asset = "get_asset ";
     string const dblquote = "\"";
     
-    decent::wallet::ui::gui::JsonParserQt aVisitor;
+    JsonParserQt aVisitor;
     aVisitor.m_inp = a_task;
     __DEBUG_APP2__(2," ");
 

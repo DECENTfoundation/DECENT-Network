@@ -21,7 +21,7 @@
 
 template <typename QtType,typename ClbkDataType>
 template <typename ClbType,typename ...ConstrArgTypes>
-decent::wallet::ui::gui::TableWidgetItemW_base<QtType,ClbkDataType>::TableWidgetItemW_base(
+gui_wallet::TableWidgetItemW_base<QtType,ClbkDataType>::TableWidgetItemW_base(
                                                     const ClbkDataType& a_clbCont,
                                                     ClbType* a_owner,void* a_clbData,
                                                     void (ClbType::*a_fpFunction)(_NEEDED_ARGS1_(ClbkDataType)),
@@ -39,13 +39,13 @@ decent::wallet::ui::gui::TableWidgetItemW_base<QtType,ClbkDataType>::TableWidget
 
 
 template <typename QtType,typename ClbkDataType>
-decent::wallet::ui::gui::TableWidgetItemW_base<QtType,ClbkDataType>::~TableWidgetItemW_base()
+gui_wallet::TableWidgetItemW_base<QtType,ClbkDataType>::~TableWidgetItemW_base()
 {
     __DEBUG_APP2__(4,"Table widget destucto called!!!!!!!!!!!!!!!!!");
 }
 
 template <typename QtType,typename ClbkDataType>
-void decent::wallet::ui::gui::TableWidgetItemW_base<QtType,ClbkDataType>::prepare_constructor(int a_val,...)
+void gui_wallet::TableWidgetItemW_base<QtType,ClbkDataType>::prepare_constructor(int a_val,...)
 {
     va_list aArgs;
     va_start( aArgs, a_val );
@@ -57,7 +57,7 @@ void decent::wallet::ui::gui::TableWidgetItemW_base<QtType,ClbkDataType>::prepar
 /*/////////////////////////////////////////////////////////////////////////////////////////////////*/
 template <typename QtType>
 template <typename ClbType,typename ...ConstrArgTypes>
-decent::wallet::ui::gui::TableWidgetItemW<QtType>::TableWidgetItemW(const SDigitalContent& a_clbCont,
+gui_wallet::TableWidgetItemW<QtType>::TableWidgetItemW(const SDigitalContent& a_clbCont,
                                                                     ClbType* a_owner,void*a_clbData,
                                                                     void (ClbType::*a_fpFunction)(_NEEDED_ARGS2_),
                                                                     ConstrArgTypes... a_cons_args)
@@ -68,14 +68,14 @@ decent::wallet::ui::gui::TableWidgetItemW<QtType>::TableWidgetItemW(const SDigit
 
 
 template <typename QtType>
-decent::wallet::ui::gui::TableWidgetItemW<QtType>::~TableWidgetItemW()
+gui_wallet::TableWidgetItemW<QtType>::~TableWidgetItemW()
 {
     __DEBUG_APP2__(4,"Table widget destucto called!!!!!!!!!!!!!!!!!");
 }
 
 
 template <typename QtType>
-void decent::wallet::ui::gui::TableWidgetItemW<QtType>::mouseDoubleClickEvent(QMouseEvent* a_event)
+void gui_wallet::TableWidgetItemW<QtType>::mouseDoubleClickEvent(QMouseEvent* a_event)
 {
     if(a_event->button()==Qt::LeftButton)
     {
@@ -97,7 +97,7 @@ void decent::wallet::ui::gui::TableWidgetItemW<QtType>::mouseDoubleClickEvent(QM
 
 template <typename QtType>
 template <typename ClbType,typename ...ConstrArgTypes>
-decent::wallet::ui::gui::WidgetWithCallback<QtType>::WidgetWithCallback(
+gui_wallet::WidgetWithCallback<QtType>::WidgetWithCallback(
         ClbType* a_owner,void*a_clbData,
         void (ClbType::*a_fpFunction)(MOUSE_EVENT_LAST_ARGS),
         ConstrArgTypes... a_cons_args)
@@ -111,14 +111,14 @@ decent::wallet::ui::gui::WidgetWithCallback<QtType>::WidgetWithCallback(
 
 
 template <typename QtType>
-decent::wallet::ui::gui::WidgetWithCallback<QtType>::~WidgetWithCallback()
+gui_wallet::WidgetWithCallback<QtType>::~WidgetWithCallback()
 {
     //
 }
 
 
 template <typename QtType>
-void decent::wallet::ui::gui::WidgetWithCallback<QtType>::mousePressEvent(QMouseEvent* a_mouse_event)
+void gui_wallet::WidgetWithCallback<QtType>::mousePressEvent(QMouseEvent* a_mouse_event)
 {
     (*m_fpCallback)(m_pOwner,m_pCallbackData,a_mouse_event);
     QtType::mousePressEvent(a_mouse_event);//mousePressEvent

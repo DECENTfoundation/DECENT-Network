@@ -21,19 +21,24 @@
 #endif
 
 #ifndef _NEEDED_ARGS2_
-#define _NEEDED_ARGS2_ _NEEDED_ARGS1_(decent::wallet::ui::gui::SDigitalContent)
+#define _NEEDED_ARGS2_ _NEEDED_ARGS1_(gui_wallet::SDigitalContent)
 #endif
 
 #define MOUSE_EVENT_LAST_ARGS void*a_clbData,QMouseEvent*a_mouse_event
-typedef void (__THISCALL__* TypeMouseEvntClbk)(void*owner,MOUSE_EVENT_LAST_ARGS);
+
 
 // DCA stands for Digital Contex Actions
-namespace DCA {enum DIG_CONT_ACTNS{CALL_GET_CONTENT};}
+namespace DCA {
+    enum DIG_CONT_ACTNS{CALL_GET_CONTENT};
+}
+
 // DCT stands for Digital Contex Actions
-namespace DCT {enum DIG_CONT_TYPES{GENERAL,BOUGHT};}
+namespace DCT {
+    enum DIG_CONT_TYPES{GENERAL,BOUGHT};
+}
 
 
-namespace decent{namespace wallet{namespace ui{namespace gui{
+namespace gui_wallet {
 
 struct SDigitalContent{
     SDigitalContent():type(DCT::GENERAL){}
@@ -57,11 +62,11 @@ struct SDigitalContent{
     std::string  times_bougth;
 };
 
-}}}}
 
+typedef void (__THISCALL__* TypeMouseEvntClbk)(void*owner,MOUSE_EVENT_LAST_ARGS);
 typedef void (__THISCALL__ *TypeDigContCallback)(void* owner, _NEEDED_ARGS2_);
 
-namespace decent{namespace wallet{namespace ui{namespace gui{
+
 
 template <typename QtType,typename ClbkDataType>
 class TableWidgetItemW_base : public QtType
@@ -117,7 +122,7 @@ protected:
     TypeMouseEvntClbk   m_fpCallback;
 };
 
-}}}}
+}
 
 
 #include "decent_wallet_ui_gui_common.tos"

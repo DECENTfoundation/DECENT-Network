@@ -18,7 +18,7 @@
 #include <QHBoxLayout>
 #include <QLabel>
 
-namespace decent{ namespace wallet{ namespace ui{ namespace gui{
+namespace gui_wallet {
 
 class ContentDetailsBase : public QDialog
 {
@@ -26,12 +26,12 @@ protected:
     ContentDetailsBase();
     virtual ~ContentDetailsBase();
 
-    void execCDB(const decent::wallet::ui::gui::SDigitalContent& a_cnt_details);
+    void execCDB(const SDigitalContent& a_cnt_details);
 
     //virtual void execCDD(const decent::wallet::ui::gui::SDigitalContent& a_cnt_details)=0;
 
 protected:
-    const decent::wallet::ui::gui::SDigitalContent* m_pContentInfo;
+    const SDigitalContent* m_pContentInfo;
     QVBoxLayout     m_main_layout;
     QHBoxLayout     m_free_for_child;
     QWidget         m_vSub_Widgets[NUMBER_OF_SUB_LAYOUTS2];
@@ -39,6 +39,6 @@ protected:
     QLabel          m_vLabels[NUMBER_OF_SUB_LAYOUTS2*2];
 };
 
-}}}}
+}
 
 #endif // DECENT_WALLET_UI_GUI_CONTENTDETAILSBASE_HPP

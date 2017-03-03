@@ -12,7 +12,7 @@
 
 #include "decent_wallet_ui_gui_contentdetailsbase.hpp"
 
-namespace decent{ namespace wallet{ namespace ui{ namespace gui{
+namespace gui_wallet {
 
 class ContentDetailsBougth : public ContentDetailsBase
 {
@@ -23,6 +23,6 @@ public:
 
 };
 
-}}}}
+}
 
 #endif // DECENT_WALLET_UI_GUI_CONTENTDETAILSBOUGTH_HPP

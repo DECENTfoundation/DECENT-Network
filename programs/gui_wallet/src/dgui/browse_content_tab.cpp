@@ -142,12 +142,12 @@ void Browse_content_tab::DigContCallback(_NEEDED_ARGS2_)
 }
 
 
-void Browse_content_tab::SetDigitalContentsGUI(const std::vector<decent::wallet::ui::gui::SDigitalContent>& a_vContents)
+void Browse_content_tab::SetDigitalContentsGUI(const std::vector<SDigitalContent>& a_vContents)
 {
     //
-    //decent::wallet::ui::gui::TableWidgetItemW<QCheckBox>* pCheck;
-    decent::wallet::ui::gui::TableWidgetItemW<QLabel>* pLabel;
-    decent::wallet::ui::gui::SDigitalContent aTemporar;
+    //TableWidgetItemW<QCheckBox>* pCheck;
+    TableWidgetItemW<QLabel>* pLabel;
+    SDigitalContent aTemporar;
     const int cnNumberOfContentsPlus1((int)a_vContents.size()+1);
 
     if(g_nDebugApplication){printf("cnNumberOfContentsPlus1=%d\n",cnNumberOfContentsPlus1);}
@@ -172,7 +172,7 @@ void Browse_content_tab::SetDigitalContentsGUI(const std::vector<decent::wallet:
         // namespace DGF {enum DIG_CONT_FIELDS{IS_SELECTED,TIME,SYNOPSIS,RATING,LEFT,SIZE,PRICE};}
         //const SDigitalContent& clbData,ClbType* own,void*clbDt,void (ClbType::*a_fpFunction)(_NEEDED_ARGS_)
 
-        pLabel = new decent::wallet::ui::gui::TableWidgetItemW<QLabel>(
+        pLabel = new TableWidgetItemW<QLabel>(
                                               aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
                                               tr(aTemporar.created.c_str()));
         if(!pLabel){throw "Low memory!";}
@@ -187,25 +187,25 @@ void Browse_content_tab::SetDigitalContentsGUI(const std::vector<decent::wallet:
             
         } catch (...) {}
         
-        pLabel = new decent::wallet::ui::gui::TableWidgetItemW<QLabel>(
+        pLabel = new TableWidgetItemW<QLabel>(
                                               aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
                                               tr(synopsis.c_str()));
         if(!pLabel){throw "Low memory!";}
         m_TableWidget.setCellWidget(i,DCF::SYNOPSIS,pLabel);
 
-        pLabel = new decent::wallet::ui::gui::TableWidgetItemW<QLabel>(
+        pLabel = new TableWidgetItemW<QLabel>(
                                                aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
                                                tr(aTemporar.AVG_rating.c_str()));
         if(!pLabel){throw "Low memory!";}
         m_TableWidget.setCellWidget(i,DCF::RATING,pLabel);
 
-        pLabel = new decent::wallet::ui::gui::TableWidgetItemW<QLabel>(
+        pLabel = new TableWidgetItemW<QLabel>(
                                               aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
                                               tr(aTemporar.expiration.c_str()));
         if(!pLabel){throw "Low memory!";}
         m_TableWidget.setCellWidget(i,DCF::LEFT,pLabel);
 
-        pLabel = new decent::wallet::ui::gui::TableWidgetItemW<QLabel>(
+        pLabel = new TableWidgetItemW<QLabel>(
                                               aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
                                               tr(aTemporar.size.c_str()));
         if(!pLabel){throw "Low memory!";}
@@ -213,11 +213,11 @@ void Browse_content_tab::SetDigitalContentsGUI(const std::vector<decent::wallet:
 
         double dPrice = std::stod(aTemporar.price.amount) / pow(10, std::stod(aTemporar.price.precision));
         
-        pLabel = new decent::wallet::ui::gui::TableWidgetItemW<QLabel>(aTemporar,
-                                                                       this,
-                                                                       NULL,
-                                                                       &Browse_content_tab::DigContCallback,
-                                                                       tr(std::to_string(dPrice).c_str()));
+        pLabel = new TableWidgetItemW<QLabel>(aTemporar,
+                                              this,
+                                              NULL,
+                                              &Browse_content_tab::DigContCallback,
+                                              tr(std::to_string(dPrice).c_str()));
         if(!pLabel){throw "Low memory!";}
         m_TableWidget.setCellWidget(i,DCF::PRICE,pLabel);
     }

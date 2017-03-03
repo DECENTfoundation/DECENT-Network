@@ -10,6 +10,7 @@
 
 #include "decent_wallet_ui_gui_contentdetailsbase.hpp"
 
+using namespace gui_wallet;
 
 static const char* s_vcpcFieldsGeneral[NUMBER_OF_SUB_LAYOUTS2] = {
     "Author", "Expiration","Created","Price", "Amount",
@@ -27,7 +28,7 @@ typedef TypeCpcChar* NewType;
 
 static NewType  s_vFields[]={s_vcpcFieldsGeneral,s_vcpcFieldsBougth};
 
-decent::wallet::ui::gui::ContentDetailsBase::ContentDetailsBase()
+ContentDetailsBase::ContentDetailsBase()
 {
     int i, nIndexKent(1), nIndexZuyg(0);
 
@@ -52,16 +53,15 @@ decent::wallet::ui::gui::ContentDetailsBase::ContentDetailsBase()
     setStyleSheet("background-color:white;");
 }
 
-decent::wallet::ui::gui::ContentDetailsBase::~ContentDetailsBase()
+ContentDetailsBase::~ContentDetailsBase()
 {
 }
 
 // DCF stands for Digital Content Fields
 namespace DCF{enum{AMOUNT=9, TIMES_BOUGHT=15};}
 
-void decent::wallet::ui::gui::ContentDetailsBase::execCDB(const decent::wallet::ui::gui::SDigitalContent& a_cnt_details)
+void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details)
 {
-#if 1
     int i,nIndexZuyg(0);
     NewType vNames = s_vFields[a_cnt_details.type];
     m_pContentInfo = &a_cnt_details;
@@ -90,5 +90,4 @@ void decent::wallet::ui::gui::ContentDetailsBase::execCDB(const decent::wallet::
     m_vLabels[DCF::TIMES_BOUGHT].setText(tr(a_cnt_details.times_bougth.c_str()));
 
     QDialog::exec();
-#endif
 }

@@ -8,18 +8,7 @@
  *
  */
 
-#define BALANCE_FILE_NAME2           "balance.png"
-#define DECENT_LOGO_FILE_NAME2       "decent_logo.png"
-#define SEND_FILE_NAME2              "send.png"
-#define USER_FILE_NAME2              "user.png"
-#define FOLDER_NAME_FOR_IMAGES2      "images"
-#ifdef __APPLE__
-#define DECENT_IMGS_INITIAL_PATH2    "../../../../../../" FOLDER_NAME_FOR_IMAGES2 "/"
-#else
-#define DECENT_IMGS_INITIAL_PATH2    "../../../" FOLDER_NAME_FOR_IMAGES2 "/"
-#endif
-
-#include "gui_wallet_centralwigdet.hpp"
+#include "gui_wallet_centralwidget.hpp"
 #include <QMessageBox>
 #include <QTimer>
 #include <QHeaderView>
@@ -46,16 +35,12 @@
 #endif
 
 extern std::string g_cApplicationPath ;
-std::string FindImagePath(bool& a_bRet,const char* a_image_name);
-
-static void SetImageToLabelStatic(bool& _bRet_,QPixmap& _image_,const char* _image_name_);
-static void MakeWarning(const char* /*warn*/, const char* /*warn_details*/){}
 
 using namespace gui_wallet;
 
 
-decent::wallet::ui::gui::AccountBalanceWidget::AccountBalanceWidget()
-    :   decent::wallet::ui::gui::TableWidgetItemW_base<QWidget,int>(1,this,NULL,
+AccountBalanceWidget::AccountBalanceWidget()
+    :   TableWidgetItemW_base<QWidget,int>(1,this,NULL,
                                                                      &AccountBalanceWidget::ClbFunction),
       m_nCurrentIndex(-1)
 {
@@ -69,7 +54,7 @@ decent::wallet::ui::gui::AccountBalanceWidget::AccountBalanceWidget()
 }
 
 
-void decent::wallet::ui::gui::AccountBalanceWidget::SetAccountBalanceFromStringGUIprivate(const std::string& a_balance)
+void AccountBalanceWidget::SetAccountBalanceFromStringGUIprivate(const std::string& a_balance)
 {
     const char* cpcAssetTypeStarts;
     const char* cpcInpStr = a_balance.c_str();
@@ -83,7 +68,7 @@ void decent::wallet::ui::gui::AccountBalanceWidget::SetAccountBalanceFromStringG
 }
 
 
-void decent::wallet::ui::gui::AccountBalanceWidget::clear()
+void AccountBalanceWidget::clear()
 {
     m_nCurrentIndex = -1;
     m_vBalances.clear();
@@ -92,7 +77,7 @@ void decent::wallet::ui::gui::AccountBalanceWidget::clear()
 }
 
 
-void decent::wallet::ui::gui::AccountBalanceWidget::addItem(const std::string& a_balance)
+void AccountBalanceWidget::addItem(const std::string& a_balance)
 {
     m_vBalances.push_back(a_balance);
 
@@ -105,7 +90,8 @@ void decent::wallet::ui::gui::AccountBalanceWidget::addItem(const std::string& a
 
 QString CentralWigdet::FilterStr()
 {
-    int nCurTab(m_main_tabs2.currentIndex());
+    int nCurTab(m_main_tabs.currentIndex());
+
     switch(nCurTab)
     {
     case BROWSE_CONTENT:
@@ -132,7 +118,7 @@ QString CentralWigdet::FilterStr()
 }
 
 
-void decent::wallet::ui::gui::AccountBalanceWidget::setCurrentIndex(int a_nIndex)
+void AccountBalanceWidget::setCurrentIndex(int a_nIndex)
 {
     //__DEBUG_APP2__(0," ");
     if((a_nIndex<((int)m_vBalances.size())) && (a_nIndex!=m_nCurrentIndex))
@@ -143,7 +129,7 @@ void decent::wallet::ui::gui::AccountBalanceWidget::setCurrentIndex(int a_nIndex
 }
 
 
-void decent::wallet::ui::gui::AccountBalanceWidget::ClbFunction(_NEEDED_ARGS1_(int))
+void AccountBalanceWidget::ClbFunction(_NEEDED_ARGS1_(int))
 {
     //
 }
@@ -151,13 +137,13 @@ void decent::wallet::ui::gui::AccountBalanceWidget::ClbFunction(_NEEDED_ARGS1_(i
 
 /*//////////////////////////////////////////////////*/
 
-CentralWigdet::CentralWigdet(class QBoxLayout* a_pAllLayout, class Mainwindow_gui_wallet* a_pPar)
-    : m_first_line_lbl() ,m_Overview_tab(a_pPar)
+CentralWigdet::CentralWigdet(QBoxLayout* a_pAllLayout, Mainwindow_gui_wallet* a_pPar)
+    : m_first_line_lbl(), m_parent_main_window(a_pPar), m_Overview_tab(a_pPar)
 {
 
 
     setStyleSheet("color:black;""background-color:white;");
-    m_main_tabs2.setStyleSheet("QTabBar::tab{"
+    m_main_tabs.setStyleSheet("QTabBar::tab{"
                                " height: 40px; width: 179px; "
                                "color:rgb(27,176,104);background-color:white;"
                                 "border: 1px solid rgb(240,240,240);}"
@@ -171,16 +157,15 @@ CentralWigdet::CentralWigdet(class QBoxLayout* a_pAllLayout, class Mainwindow_gu
 
 CentralWigdet::~CentralWigdet()
 {
-    //delete m_imageLabel;
 }
 
 
 void CentralWigdet::SetAccountBalancesFromStrGUI(const std::vector<std::string>& a_balances_and_names)
 {
     //m_balanceLabel.setText(tr(a_balance_and_name.c_str()));
-    decent::wallet::ui::gui::AccountBalanceWidget* pBalanceCombo =
-            (decent::wallet::ui::gui::AccountBalanceWidget*)GetWidgetFromTable5(BALANCE,1);
-    //decent::wallet::ui::gui::AccountBalanceWidget* pBalanceCombo = m_pBalanceWgt2;
+    AccountBalanceWidget* pBalanceCombo =
+            (AccountBalanceWidget*)GetWidgetFromTable5(BALANCE,1);
+    //AccountBalanceWidget* pBalanceCombo = m_pBalanceWgt2;
     pBalanceCombo->clear();
     const int cnBalances(a_balances_and_names.size());
 
@@ -212,18 +197,8 @@ QComboBox* CentralWigdet::usersCombo()
 
 QWidget* CentralWigdet::GetWidgetFromTable5(int a_nColumn, int a_nWidget)
 {
-#ifdef __TRY_LABEL_INSTEAD_OF_TABLE__
-
     a_nColumn = 2*a_nColumn;
-    //if(a_nColumn>1){++a_nColumn;}
-    __DEBUG_APP2__(4," ");
     return m_first_line_lbl.itemAt(a_nColumn)->widget()->layout()->itemAt(a_nWidget)->widget();
-
-#else  // #ifdef __TRY_LABEL_INSTEAD_OF_TABLE__
-    QWidget* pWidget = m_first_line_widget2.cellWidget(0, a_nColumn);
-    QHBoxLayout* pHLayout = (QHBoxLayout*)pWidget->layout();
-    return pHLayout->itemAt(a_nWidget)->widget();
-#endif  // #ifdef __TRY_LABEL_INSTEAD_OF_TABLE__
 }
 
 
@@ -233,25 +208,18 @@ QWidget* CentralWigdet::GetWidgetFromTable5(int a_nColumn, int a_nWidget)
 
 void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
 {
-    bool bImageFound(true);
 
-    m_main_tabs2.addTab(&m_browse_cont_tab,tr("Browse Content"));
-    m_main_tabs2.addTab(&m_trans_tab,tr("Transactions"));
-    m_main_tabs2.addTab(&m_Upload_tab,tr("Upload"));
-    m_main_tabs2.addTab(&m_Overview_tab,tr("Overview"));
-    m_main_tabs2.addTab(&m_Purchased_tab,tr("Purchased"));
-#if 1
-    QTabBar* pTabBar = m_main_tabs2.tabBar();
-    pTabBar->setDocumentMode(true);
-    pTabBar->setExpanding(true);
-#else
+    m_main_tabs.addTab(&m_browse_cont_tab,tr("Browse Content"));
+    m_main_tabs.addTab(&m_trans_tab,tr("Transactions"));
+    m_main_tabs.addTab(&m_Upload_tab,tr("Upload"));
+    m_main_tabs.addTab(&m_Overview_tab,tr("Overview"));
+    m_main_tabs.addTab(&m_Purchased_tab,tr("Purchased"));
+
+
     QTabBar* pTabBar = m_main_tabs.tabBar();
-    pTabBar->setStyleSheet("QTabBar::tab:disabled {"
-        "width: 200px;"
-        "color: transparent;"
-        "background: transparent;"
-     "}");
-#endif
+    pTabBar->setDocumentMode(true);
+    pTabBar->setExpanding(false);
+
 
     QWidget* pWidgetTmp2 = nullptr;
     QLabel* pLabelTmp = nullptr;
@@ -260,21 +228,17 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     QComboBox* pComboTmp1 = nullptr;
     QFrame* line = nullptr;
 
-    decent::wallet::ui::gui::AccountBalanceWidget* pCombo2;
+    AccountBalanceWidget* pCombo2;
 
     /*////////////////////////////////////////////////////////////////////////////////////*/
 
     /*//////////////////////////////////////////*/
     m_pDcLogoWgt = new QWidget;
-    if(!m_pDcLogoWgt){throw __FILE__ "Low memory";}
+
     pHBoxLayoutTmp = new QHBoxLayout;
-    if(!pHBoxLayoutTmp){throw __FILE__ "Low memory";}
     pLabelTmp = new QLabel(tr(""));
-    if(!pLabelTmp){throw __FILE__ "Low memory";}
     pLabelTmp->setScaledContents(true);
-//    SetImageToLabelStatic(bImageFound,image,DECENT_LOGO_FILE_NAME2);
-//    if(bImageFound){pLabelTmp->setPixmap(image);}
-//    else {pLabelTmp->setText("DC");MakeWarning("no file", "");}
+
     QPixmap m_image1(":/icon/images/decent_logo.png");
     pLabelTmp->setPixmap(m_image1);
     pHBoxLayoutTmp->addWidget(pLabelTmp);
@@ -288,29 +252,29 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     /*//////////////////////////////////////////*/
     line = new QFrame(this);
     line->setFrameShape(QFrame::VLine); // Horizontal line
-    //line->setFrameShadow(QFrame::Sunken);
     line->setLineWidth(1);
     line->setStyleSheet("color: #f0f0f0");
     line->setFixedHeight(68);
     m_first_line_lbl.addWidget(line);
 
-    /*//////////////////////////////////////////*/
+
+    
+    
     m_pUsernameWgt = new QWidget;
-    if(!m_pUsernameWgt){throw __FILE__ "Low memory";}
+    
     pHBoxLayoutTmp = new QHBoxLayout;
-    if(!pHBoxLayoutTmp){throw __FILE__ "Low memory";}
+    
     pLabelTmp = new QLabel(tr(""));
-    if(!pLabelTmp){throw __FILE__ "Low memory";}
+    
     pLabelTmp->setScaledContents(true);
-//    SetImageToLabelStatic(bImageFound,image,USER_FILE_NAME2);
-//    if(bImageFound){pLabelTmp->setPixmap(image);}
-//    else {MakeWarning("no file", "");}
+
     QPixmap m_image2(":/icon/images/user.png");
     pLabelTmp->setPixmap(m_image2);
     pHBoxLayoutTmp->addWidget(pLabelTmp);
     pLabelTmp->setFixedSize(__SIZE_FOR_IMGS__,__SIZE_FOR_IMGS__);
+    
     pComboTmp1 = new QComboBox;
-    if(!pComboTmp1){throw __FILE__ "Low memory";}
+    
     pComboTmp1->setStyleSheet("color: black;""background-color:white;");
     pHBoxLayoutTmp->addWidget(pComboTmp1);
     m_pUsernameWgt->setLayout(pHBoxLayoutTmp);
@@ -321,7 +285,7 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     /*//////////////////////////////////////////*/
     line = new QFrame(this);
     line->setFrameShape(QFrame::VLine); // Horizontal line
-    //line->setFrameShadow(QFrame::Sunken);
+
     line->setLineWidth(1);
     line->setStyleSheet("color: #f0f0f0");
     line->setFixedHeight(68);
@@ -329,21 +293,15 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
 
     /*//////////////////////////////////////////*/
     m_pBalanceWgt1 = new QWidget;
-    if(!m_pBalanceWgt1){throw __FILE__ "Low memory";}
     pHBoxLayoutTmp = new QHBoxLayout;
-    if(!pHBoxLayoutTmp){throw __FILE__ "Low memory";}
     pLabelTmp = new QLabel(tr(""));
-    if(!pLabelTmp){throw __FILE__ "Low memory";}
     pLabelTmp->setScaledContents(true);
-//    SetImageToLabelStatic(bImageFound,image,BALANCE_FILE_NAME2);
-//    if(bImageFound){pLabelTmp->setPixmap(image);}
-//    else {MakeWarning("no file", "");}
+
     QPixmap m_image3(":/icon/images/balance.png");
     pLabelTmp->setPixmap(m_image3);
     pHBoxLayoutTmp->addWidget(pLabelTmp);
     pLabelTmp->setFixedSize(__SIZE_FOR_IMGS__,__SIZE_FOR_IMGS__);
-    pCombo2 = new decent::wallet::ui::gui::AccountBalanceWidget;
-    if(!pCombo2){throw __FILE__ "Low memory";}
+    pCombo2 = new AccountBalanceWidget;
     pHBoxLayoutTmp->addWidget(pCombo2);
     m_pBalanceWgt1->setLayout(pHBoxLayoutTmp);
     m_first_line_lbl.addWidget(m_pBalanceWgt1);
@@ -353,7 +311,7 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     /*//////////////////////////////////////////*/
     line = new QFrame(this);
     line->setFrameShape(QFrame::VLine); // Horizontal line
-    //line->setFrameShadow(QFrame::Sunken);
+
     line->setLineWidth(1);
     line->setStyleSheet("color: #f0f0f0");
     line->setFixedHeight(68);
@@ -361,32 +319,23 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
 
     /*//////////////////////////////////////////*/
     pWidgetTmp2 = new QWidget;
-    if(!pWidgetTmp2){throw __FILE__ "Low memory";}
     pHBoxLayoutTmp = new QHBoxLayout;
-    if(!pHBoxLayoutTmp){throw __FILE__ "Low memory";}
     pLabelTmp = new QLabel(tr(""));
-    if(!pLabelTmp){throw __FILE__ "Low memory";}
     pLabelTmp->setScaledContents(true);
-//    SetImageToLabelStatic(bImageFound,image,SEND_FILE_NAME2);
-//    if(bImageFound){pLabelTmp->setPixmap(image);}
-//    else {MakeWarning("no file", "");}
+
     QPixmap m_image4(":/icon/images/send.png");
     pLabelTmp->setPixmap(m_image4);
     pHBoxLayoutTmp->addWidget(pLabelTmp);
     pLabelTmp->setFixedSize(__SIZE_FOR_IMGS__,__SIZE_FOR_IMGS__);
     pLabelTmp = new QLabel(tr("Send"));
-    if(!pLabelTmp){throw __FILE__ "Low memory";}
+
     pHBoxLayoutTmp->addWidget(pLabelTmp);
     pWidgetTmp2->setLayout(pHBoxLayoutTmp);
     m_first_line_lbl.addWidget(pWidgetTmp2);
     pWidgetTmp2->setFixedHeight(__HEIGHT__);
     pWidgetTmp2->setMaximumWidth(190);
 
-#if 0
-    bool bRet;
-    m_first_line_lbl.addWidget(new decent::wallet::ui::gui::NewCheckBox());
-#endif // #if 1
-
+    
     m_browse_cont_tab.setStyleSheet("color: black;""background-color:white;");
     SetAccountBalancesFromStrGUI(std::vector<std::string>());
 
@@ -398,23 +347,28 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
 
     m_main_layout.addLayout(&m_first_line_lbl);
 
-    m_main_layout.addWidget(&m_main_tabs2);
+    m_main_layout.addWidget(&m_main_tabs);
 
     a_pAllLayout->addLayout(&m_main_layout);
+    
+    connect(&m_main_tabs, SIGNAL(currentChanged(int)), this, SLOT(tabChanged(int)));
 }
 
 
-void CentralWigdet::SetDigitalContentsGUI(const std::vector<decent::wallet::ui::gui::SDigitalContent>& a_vContents)
+void CentralWigdet::SetDigitalContentsGUI(const std::vector<SDigitalContent>& a_vContents)
 {
     m_browse_cont_tab.SetDigitalContentsGUI(a_vContents);
 }
 
 
+void CentralWigdet::tabChanged(int index) {
+    std::cout << "Blah blah blah " << index << "\n";
+}
+
 
 QString CentralWigdet::getFilterText()const
 {
-    // enum MAIN_TABS_ENM{BROWSE_CONTENT,TRANSACTIONS,UPLOAD,OVERVIEW,PURCHASED};
-    int nActiveTab = m_main_tabs2.currentIndex();
+    int nActiveTab = m_main_tabs.currentIndex();
 
     switch(nActiveTab)
     {
@@ -433,7 +387,6 @@ QString CentralWigdet::getFilterText()const
 void CentralWigdet::showEvent ( QShowEvent * event )
 {
     QWidget::showEvent(event);
-    // PrepareGUIprivate();
 }
 
 
@@ -450,12 +403,7 @@ void CentralWigdet::resizeEvent ( QResizeEvent * a_event )
     QWidget::resizeEvent(a_event);
 
 
-    /*QString tqsStyle = tr("QTabBar::tab {width: ") +
-            QString::number(a_event->size().width()/5-1,10) + tr("px;}");
-    QTabBar* pTabBar = m_main_tabs2.tabBar();
-    pTabBar->setStyleSheet(tqsStyle);*/
-
-    QTabBar* pTabBar = m_main_tabs2.tabBar();
+    QTabBar* pTabBar = m_main_tabs.tabBar();
     pTabBar->resize(size().width(),pTabBar->height());
 
     int nWidth_small (size().width()*13/100);
@@ -465,69 +413,6 @@ void CentralWigdet::resizeEvent ( QResizeEvent * a_event )
     m_pUsernameWgt->resize(nWidth_big,m_pUsernameWgt->height());
     m_pBalanceWgt1->resize(nWidth_medium,m_pBalanceWgt1->height());
 
-    //int lenght = a_event->size().width() - 1;
-//    if(lenght != a_event->oldSize().width())
-//    {
-//        m_main_tabs2.setStyleSheet("QTabBar::tab{"
-//                                   " height: 40px; width: " + QString::number(lenght/5) + "px; "
-//                                   "color:rgb(27,176,104);background-color:white;"
-//                                    "border: 1px solid rgb(240,240,240);}"
-//                                   "QTabBar::tab:selected{"
-//                                   "color:white;background-color:rgb(27,176,104);}"
-//                                   );
-//    }
 }
 
 
-
-/*/////////////////////////////////////////////////////////////////////////////////////////////////////////*/
-
-static std::string FindImagePathFixedDir(bool& a_bRet,const char* a_image_name, const std::string& a_csCurDir)
-{
-    std::string::size_type nPosFound;
-    std::string cFullPath;
-    std::string cCurDir(a_csCurDir);
-    FILE* fpFile;
-
-    __DEBUG_APP2__(1,"!!! dir_to_search=\"%s\"\n",cCurDir.c_str());
-
-    for(;;)
-    {
-        // 1. Try to find image in the directory of executable
-        cFullPath = cCurDir + "/" + a_image_name;
-        fpFile = fopen(cFullPath.c_str(),"r");
-        if( fpFile ){fclose(fpFile);a_bRet = true;return cFullPath;}
-
-        // 2. Try to find in the directory of executable + image folder
-        cFullPath = cCurDir + ("/" FOLDER_NAME_FOR_IMAGES2 "/") + a_image_name;
-        //if( (_image_).load(cFullPath.c_str()) ){_bRet_ = true;return;}
-        fpFile = fopen(cFullPath.c_str(),"r");
-        if( fpFile ){fclose(fpFile);a_bRet = true;return cFullPath;}
-
-        // Go one up and try again
-        nPosFound = cCurDir.find_last_of(_PATH_DELIMER_);
-        if(nPosFound == std::string::npos){a_bRet = false;return "";} // Not found!
-        cCurDir.erase(nPosFound,std::string::npos);
-    }
-}
-
-
-std::string FindImagePath(bool& a_bRet,const char* a_image_name)
-{
-    std::string sReturn;
-    char vcBuffer[512];
-    std::string csCurDir(std::string(getcwd(vcBuffer,511)));
-
-    a_bRet = false;
-    sReturn = FindImagePathFixedDir(a_bRet,a_image_name,csCurDir);
-    if(a_bRet){return sReturn;}
-    sReturn = FindImagePathFixedDir(a_bRet,a_image_name,g_cApplicationPath);
-    return sReturn;
-}
-
-
-static void SetImageToLabelStatic(bool& _bRet_,QPixmap& _image_,const char* _image_name_)
-{
-    std::string sFullPath = FindImagePath(_bRet_,_image_name_);
-    if(_bRet_){(_image_).load(sFullPath.c_str());}
-}
