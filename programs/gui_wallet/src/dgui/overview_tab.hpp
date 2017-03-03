@@ -25,6 +25,8 @@
 #include <stdarg.h>
 #include <iostream>
 
+#include "gui_wallet_tabcontentmanager.hpp"
+
 #define NUMBER_OF_SUB_LAYOUTS   6
 
 class QZebraWidget : public QWidget
@@ -125,7 +127,7 @@ signals:
 
 namespace gui_wallet
 {
-    class Overview_tab : public QWidget
+    class Overview_tab : public TabContentManager
     {
         Q_OBJECT
     public:
@@ -134,6 +136,11 @@ namespace gui_wallet
         void CreateTable();
         void Connects();
         void ArrangeSize();
+        
+    public:
+        virtual void content_activated() {}
+        virtual void content_deactivated() {}
+
     public slots:
         void my_slot(int);
         void doRowColor();

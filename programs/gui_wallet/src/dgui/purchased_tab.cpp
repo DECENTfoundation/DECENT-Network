@@ -8,7 +8,7 @@
  *
  */
 
-#include "decent_wallet_ui_gui_purchasedtab.hpp"
+#include "purchased_tab.hpp"
 #include <QHeaderView>
 #include <iostream>
 

@@ -26,16 +26,10 @@ NewCheckBox::NewCheckBox(const char* a_checkedImg2, const char* a_uncheckedImg2,
     //setScaledContents();
     bool bRet;
     std::string csCheckedPath, csUnCheckedPath;
-    csCheckedPath = a_checkedImg2 ? a_checkedImg2 : FindImagePath(bRet,"green_asterix.png");
-    csUnCheckedPath = a_uncheckedImg2 ? a_uncheckedImg2 : FindImagePath(bRet,"white_asterix.png");
+    //csCheckedPath = a_checkedImg2 ? a_checkedImg2 : FindImagePath(bRet,"green_asterix.png");
+    //csUnCheckedPath = a_uncheckedImg2 ? a_uncheckedImg2 : FindImagePath(bRet,"white_asterix.png");
 
-#if 0
-    QCheckBox::indicator {
-        width: 13px;
-        height: 13px;
-    }
-#endif
-
+    
     //setStyleSheet("QMainWindow{color:black;""background-color:white;}");
     std::string qsStyleSheet =
             std::string("QCheckBox::indicator:checked {image: url(") +

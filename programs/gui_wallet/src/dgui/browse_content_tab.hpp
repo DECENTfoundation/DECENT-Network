@@ -10,6 +10,7 @@
 #ifndef BROWSE_CONTENT_TAB_H
 #define BROWSE_CONTENT_TAB_H
 
+
 #include <QWidget>
 #include <QTableWidget>
 #include <QVBoxLayout>
@@ -20,7 +21,7 @@
 #include <QHBoxLayout>
 #include <QComboBox>
 
-
+#include "gui_wallet_tabcontentmanager.hpp"
 
 
 
@@ -59,7 +60,7 @@ signals:
 
 
 
-class Browse_content_tab : public QWidget
+class Browse_content_tab : public TabContentManager
 {
     friend class CentralWigdet;
     Q_OBJECT
@@ -73,6 +74,12 @@ public:
     void Connects();
     int green_row;
 
+public:
+    
+    virtual void content_activated() {}
+    virtual void content_deactivated() {}
+
+    
 public:
 signals:
     void ShowDetailsOnDigContentSig(SDigitalContent get_cont_str);

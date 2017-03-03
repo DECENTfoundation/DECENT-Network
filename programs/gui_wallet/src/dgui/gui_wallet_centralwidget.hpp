@@ -23,12 +23,13 @@
 #include "transactions_tab.hpp"
 #include "upload_tab.hpp"
 #include "overview_tab.hpp"
+#include "purchased_tab.hpp"
 #include <stdio.h>
 #include <QLabel>
 #include <QComboBox>
 #include <vector>
 #include <QTableWidget>
-#include "decent_wallet_ui_gui_purchasedtab.hpp"
+#include "purchased_tab.hpp"
 #include <QString>
 
 
@@ -59,6 +60,8 @@ private:
     int                 m_nCurrentIndex;
 };
 
+
+    
 class CentralWigdet : public QWidget
 {
     friend class Mainwindow_gui_wallet;

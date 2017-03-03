@@ -15,9 +15,8 @@ add_executable( gui_wallet MACOSX_BUNDLE
                 src/dgui/decent_wallet_ui_gui_contentdetailsgeneral.cpp
                 src/dgui/decent_wallet_ui_gui_jsonparserqt.cpp
                 src/dgui/decent_wallet_ui_gui_newcheckbox.cpp
-                src/dgui/decent_wallet_ui_gui_purchasedtab.cpp
                 src/dgui/gui_wallet_application.cpp
-                src/dgui/gui_wallet_centralwigdet.cpp
+                src/dgui/gui_wallet_centralwidget.cpp
                 src/dgui/gui_wallet_connectdlg.cpp
                 src/dgui/gui_wallet_global.cpp
                 src/dgui/gui_wallet_mainwindow.cpp
@@ -30,6 +29,7 @@ add_executable( gui_wallet MACOSX_BUNDLE
                 src/dgui/overview_tab.cpp
                 src/dgui/text_display_dialog.cpp
                 src/dgui/transactions_tab.cpp
+                src/dgui/purchased_tab.cpp
                 src/dgui/upload_tab.cpp
                 src/ui_wallet/fc_rpc_gui.cpp
                 src/ui_wallet/ui_wallet_functions.cpp
@@ -54,9 +54,9 @@ add_executable( gui_wallet MACOSX_BUNDLE
                 src/dgui/decent_wallet_ui_gui_contentdetailsgeneral.hpp
                 src/dgui/decent_wallet_ui_gui_jsonparserqt.hpp
                 src/dgui/decent_wallet_ui_gui_newcheckbox.hpp
-                src/dgui/decent_wallet_ui_gui_purchasedtab.hpp
+                src/dgui/purchased_tab.hpp
                 src/dgui/gui_wallet_application.hpp
-                src/dgui/gui_wallet_centralwigdet.hpp
+                src/dgui/gui_wallet_centralwidget.hpp
                 src/dgui/gui_wallet_connectdlg.hpp
                 src/dgui/gui_wallet_global.hpp
                 src/dgui/gui_wallet_mainwindow.hpp

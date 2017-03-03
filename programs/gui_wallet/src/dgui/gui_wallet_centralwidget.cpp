@@ -8,18 +8,7 @@
  *
  */
 
-#define BALANCE_FILE_NAME2           "balance.png"
-#define DECENT_LOGO_FILE_NAME2       "decent_logo.png"
-#define SEND_FILE_NAME2              "send.png"
-#define USER_FILE_NAME2              "user.png"
-#define FOLDER_NAME_FOR_IMAGES2      "images"
-#ifdef __APPLE__
-#define DECENT_IMGS_INITIAL_PATH2    "../../../../../../" FOLDER_NAME_FOR_IMAGES2 "/"
-#else
-#define DECENT_IMGS_INITIAL_PATH2    "../../../" FOLDER_NAME_FOR_IMAGES2 "/"
-#endif
-
-#include "gui_wallet_centralwigdet.hpp"
+#include "gui_wallet_centralwidget.hpp"
 #include <QMessageBox>
 #include <QTimer>
 #include <QHeaderView>
@@ -46,7 +35,6 @@
 #endif
 
 extern std::string g_cApplicationPath ;
-std::string FindImagePath(bool& a_bRet,const char* a_image_name);
 
 using namespace gui_wallet;
 
@@ -425,53 +413,6 @@ void CentralWigdet::resizeEvent ( QResizeEvent * a_event )
     m_pUsernameWgt->resize(nWidth_big,m_pUsernameWgt->height());
     m_pBalanceWgt1->resize(nWidth_medium,m_pBalanceWgt1->height());
 
-}
-
-
-
-/*/////////////////////////////////////////////////////////////////////////////////////////////////////////*/
-
-static std::string FindImagePathFixedDir(bool& a_bRet,const char* a_image_name, const std::string& a_csCurDir)
-{
-    std::string::size_type nPosFound;
-    std::string cFullPath;
-    std::string cCurDir(a_csCurDir);
-    FILE* fpFile;
-
-    __DEBUG_APP2__(1,"!!! dir_to_search=\"%s\"\n",cCurDir.c_str());
-
-    for(;;)
-    {
-        // 1. Try to find image in the directory of executable
-        cFullPath = cCurDir + "/" + a_image_name;
-        fpFile = fopen(cFullPath.c_str(),"r");
-        if( fpFile ){fclose(fpFile);a_bRet = true;return cFullPath;}
-
-        // 2. Try to find in the directory of executable + image folder
-        cFullPath = cCurDir + ("/" FOLDER_NAME_FOR_IMAGES2 "/") + a_image_name;
-        //if( (_image_).load(cFullPath.c_str()) ){_bRet_ = true;return;}
-        fpFile = fopen(cFullPath.c_str(),"r");
-        if( fpFile ){fclose(fpFile);a_bRet = true;return cFullPath;}
-
-        // Go one up and try again
-        nPosFound = cCurDir.find_last_of(_PATH_DELIMER_);
-        if(nPosFound == std::string::npos){a_bRet = false;return "";} // Not found!
-        cCurDir.erase(nPosFound,std::string::npos);
-    }
-}
-
-
-std::string FindImagePath(bool& a_bRet,const char* a_image_name)
-{
-    std::string sReturn;
-    char vcBuffer[512];
-    std::string csCurDir(std::string(getcwd(vcBuffer,511)));
-
-    a_bRet = false;
-    sReturn = FindImagePathFixedDir(a_bRet,a_image_name,csCurDir);
-    if(a_bRet){return sReturn;}
-    sReturn = FindImagePathFixedDir(a_bRet,a_image_name,g_cApplicationPath);
-    return sReturn;
 }
 
 

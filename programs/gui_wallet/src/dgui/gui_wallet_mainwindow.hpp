@@ -11,7 +11,7 @@
 #define MAINWINDOW_GUI_WALLET_H
 
 #include <QMainWindow>
-#include "gui_wallet_centralwigdet.hpp"
+#include "gui_wallet_centralwidget.hpp"
 #include <QAction>
 #include <QLineEdit>
 #include <QHBoxLayout>
