@@ -142,40 +142,110 @@ void Browse_content_tab::DigContCallback(_NEEDED_ARGS2_)
 }
 
 
-void Browse_content_tab::SetDigitalContentsGUI(const std::vector<SDigitalContent>& a_vContents)
+void Browse_content_tab::updateContents() {
+    
+    SetNewTask("list_content \"\" 100", this, NULL, +[](void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
+        Browse_content_tab* obj = (Browse_content_tab*)owner;
+        
+        try {
+            auto contents = json::parse(a_result);
+            
+            std::vector<SDigitalContent>& dContents = obj->m_dContents;
+            dContents.clear();
+            dContents.resize(contents.size());
+            
+            obj->m_waitingUpdates = contents.size();
+
+
+            for (int i = 0; i < contents.size(); ++i) {
+                dContents[i].type = DCT::GENERAL;
+
+                dContents[i].author = contents[i]["author"].get<std::string>();
+                
+                
+                
+                dContents[i].price.asset_id = contents[i]["price"]["asset_id"].get<std::string>();
+                dContents[i].synopsis = contents[i]["synopsis"].get<std::string>();
+                dContents[i].URI = contents[i]["URI"].get<std::string>();
+                
+                // This part is ugly as hell, but will be rewritten (hopefully)
+                
+                SetNewTask("get_content \"" + dContents[i].URI + "\"", obj, (void*)i, +[](void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
+
+                    
+                    Browse_content_tab* obj = (Browse_content_tab*)owner;
+
+                    int myIndex = (long long)a_clbkArg;
+                    
+                    auto content = json::parse(a_result);
+
+                    
+                    obj->m_dContents[myIndex].created = content["created"].get<std::string>();
+                    obj->m_dContents[myIndex].expiration = content["expiration"].get<std::string>();
+                    obj->m_dContents[myIndex].size = content["size"].get<int>();
+                    if (content["times_bougth"].is_number()) {
+                        obj->m_dContents[myIndex].times_bougth = content["times_bougth"].get<int>();
+                    } else {
+                        obj->m_dContents[myIndex].times_bougth = 0;
+                    }
+                    
+                    
+                    
+                    if (content["price"]["amount"].is_number()){
+                        obj->m_dContents[myIndex].price.amount =  content["price"]["amount"].get<double>();
+                    } else {
+                        obj->m_dContents[myIndex].price.amount =  atof(content["price"]["amount"].get<std::string>().c_str());
+                    }
+                    
+                    obj->m_dContents[myIndex].AVG_rating = content["AVG_rating"].get<double>();
+
+                    
+                    --obj->m_waitingUpdates;
+                    if (obj->m_waitingUpdates == 0) {
+                        obj->SetDigitalContentsGUI();
+                    }
+                });
+
+          
+            }
+            
+        } catch (std::exception& ex) {
+            std::cout << ex.what() << std::endl;
+        }
+    });
+               
+               
+}
+
+
+
+
+void Browse_content_tab::SetDigitalContentsGUI()
 {
     //
     //TableWidgetItemW<QCheckBox>* pCheck;
     TableWidgetItemW<QLabel>* pLabel;
     SDigitalContent aTemporar;
-    const int cnNumberOfContentsPlus1((int)a_vContents.size()+1);
+    const int cnNumberOfContentsPlus1((int)m_dContents.size()+1);
 
-    if(g_nDebugApplication){printf("cnNumberOfContentsPlus1=%d\n",cnNumberOfContentsPlus1);}
-
-    //m_TableWidget.setColumnCount(cnNumberOfContentsPlus1);
-
+    
     int nWidth = m_pTableWidget->width();
     m_main_layout.removeWidget(m_pTableWidget);
     delete m_pTableWidget;
     m_pTableWidget = new BTableWidget(cnNumberOfContentsPlus1,s_cnNumberOfRows);
-    if(!m_pTableWidget){throw "Low memory!";}
 
+    
     QTableWidget& m_TableWidget = *m_pTableWidget;
 
     PrepareTableWidgetHeaderGUI();
 
     for(int i(1); i<cnNumberOfContentsPlus1; ++i)
     {
-        __DEBUG_APP2__(4,"i=%d",i);
-        aTemporar = a_vContents[i-1];
-        // To be continue
-        // namespace DGF {enum DIG_CONT_FIELDS{IS_SELECTED,TIME,SYNOPSIS,RATING,LEFT,SIZE,PRICE};}
-        //const SDigitalContent& clbData,ClbType* own,void*clbDt,void (ClbType::*a_fpFunction)(_NEEDED_ARGS_)
-
-        pLabel = new TableWidgetItemW<QLabel>(
-                                              aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
+        aTemporar = m_dContents[i-1];
+        
+        pLabel = new TableWidgetItemW<QLabel>(aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
                                               tr(aTemporar.created.c_str()));
-        if(!pLabel){throw "Low memory!";}
+        
         m_TableWidget.setCellWidget(i,DCF::TIME,pLabel);
         
         std::string synopsis = unescape_string(aTemporar.synopsis);
@@ -190,35 +260,35 @@ void Browse_content_tab::SetDigitalContentsGUI(const std::vector<SDigitalContent
         pLabel = new TableWidgetItemW<QLabel>(
                                               aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
                                               tr(synopsis.c_str()));
-        if(!pLabel){throw "Low memory!";}
+        
+        
         m_TableWidget.setCellWidget(i,DCF::SYNOPSIS,pLabel);
 
         pLabel = new TableWidgetItemW<QLabel>(
                                                aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
-                                               tr(aTemporar.AVG_rating.c_str()));
-        if(!pLabel){throw "Low memory!";}
+                                               QString::number(aTemporar.AVG_rating));
+        
         m_TableWidget.setCellWidget(i,DCF::RATING,pLabel);
 
         pLabel = new TableWidgetItemW<QLabel>(
                                               aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
                                               tr(aTemporar.expiration.c_str()));
-        if(!pLabel){throw "Low memory!";}
+        
         m_TableWidget.setCellWidget(i,DCF::LEFT,pLabel);
 
         pLabel = new TableWidgetItemW<QLabel>(
                                               aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
-                                              tr(aTemporar.size.c_str()));
-        if(!pLabel){throw "Low memory!";}
+                                              QString::number(aTemporar.size));
+        
         m_TableWidget.setCellWidget(i,DCF::SIZE,pLabel);
 
         pLabel = new TableWidgetItemW<QLabel>(
                                                aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
-                                               tr(aTemporar.price.amount.c_str()));
-        if(!pLabel){throw "Low memory!";}
+                                               QString::number(aTemporar.price.amount));
+        
         m_TableWidget.setCellWidget(i,DCF::PRICE,pLabel);
     }
 
-    __DEBUG_APP2__(3," ");
     m_main_layout.addWidget(&m_TableWidget);
     m_pTableWidget->resize(nWidth,m_pTableWidget->height());
     m_pTableWidget->horizontalHeader()->setStretchLastSection(true);
