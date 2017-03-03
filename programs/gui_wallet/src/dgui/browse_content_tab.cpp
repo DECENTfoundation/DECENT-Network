@@ -37,7 +37,6 @@ Browse_content_tab::Browse_content_tab() : green_row(0),
         //m_TableWidget(1,s_cnNumberOfRows)
         m_pTableWidget(new BTableWidget(1,s_cnNumberOfRows))
 {
-    if(!m_pTableWidget){throw "Low memory!";}
 
     PrepareTableWidgetHeaderGUI();
 
@@ -158,7 +157,6 @@ void Browse_content_tab::SetDigitalContentsGUI(const std::vector<decent::wallet:
     m_main_layout.removeWidget(m_pTableWidget);
     delete m_pTableWidget;
     m_pTableWidget = new BTableWidget(cnNumberOfContentsPlus1,s_cnNumberOfRows);
-    if(!m_pTableWidget){throw "Low memory!";}
 
     QTableWidget& m_TableWidget = *m_pTableWidget;
 
@@ -175,7 +173,6 @@ void Browse_content_tab::SetDigitalContentsGUI(const std::vector<decent::wallet:
         pLabel = new decent::wallet::ui::gui::TableWidgetItemW<QLabel>(
                                               aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
                                               tr(aTemporar.created.c_str()));
-        if(!pLabel){throw "Low memory!";}
         m_TableWidget.setCellWidget(i,DCF::TIME,pLabel);
         
         std::string synopsis = unescape_string(aTemporar.synopsis);
@@ -190,31 +187,26 @@ void Browse_content_tab::SetDigitalContentsGUI(const std::vector<decent::wallet:
         pLabel = new decent::wallet::ui::gui::TableWidgetItemW<QLabel>(
                                               aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
                                               tr(synopsis.c_str()));
-        if(!pLabel){throw "Low memory!";}
         m_TableWidget.setCellWidget(i,DCF::SYNOPSIS,pLabel);
 
         pLabel = new decent::wallet::ui::gui::TableWidgetItemW<QLabel>(
                                                aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
                                                tr(aTemporar.AVG_rating.c_str()));
-        if(!pLabel){throw "Low memory!";}
         m_TableWidget.setCellWidget(i,DCF::RATING,pLabel);
 
         pLabel = new decent::wallet::ui::gui::TableWidgetItemW<QLabel>(
                                               aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
                                               tr(aTemporar.expiration.c_str()));
-        if(!pLabel){throw "Low memory!";}
         m_TableWidget.setCellWidget(i,DCF::LEFT,pLabel);
 
         pLabel = new decent::wallet::ui::gui::TableWidgetItemW<QLabel>(
                                               aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
                                               tr(aTemporar.size.c_str()));
-        if(!pLabel){throw "Low memory!";}
         m_TableWidget.setCellWidget(i,DCF::SIZE,pLabel);
 
         pLabel = new decent::wallet::ui::gui::TableWidgetItemW<QLabel>(
                                                aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
                                                tr(aTemporar.price.amount.c_str()));
-        if(!pLabel){throw "Low memory!";}
         m_TableWidget.setCellWidget(i,DCF::PRICE,pLabel);
     }
 
@@ -273,15 +265,13 @@ void Browse_content_tab::doRowColor()
         m_pTableWidget->item(green_row,2)->setForeground(QColor::fromRgb(0,0,0));
         m_pTableWidget->item(green_row,3)->setForeground(QColor::fromRgb(0,0,0));
     }
-
+    std::cout<<"-----------------"<<m_pTableWidget->columnCount()<<std::endl;
+    std::cout<<"-----------------"<<m_pTableWidget->rowCount()<<std::endl;
     QPoint mouse_pos = m_pTableWidget->mapFromGlobal(QCursor::pos());
     QTableWidgetItem *ite = m_pTableWidget->itemAt(mouse_pos);
-
     if(ite != NULL)
     {
-
-
-std::cout<<"----------------------------------------dorowcolor--"<<std::endl;
+        std::cout<<"DO ROE COlor"<<std::endl;
         int a = ite->row();
         if(a != 0)
         {
@@ -298,7 +288,7 @@ std::cout<<"----------------------------------------dorowcolor--"<<std::endl;
             m_pTableWidget->item(a,3)->setForeground(QColor::fromRgb(255,255,255));
             m_pTableWidget->item(a,4)->setForeground(QColor::fromRgb(255,255,255));
             m_pTableWidget->item(a,5)->setForeground(QColor::fromRgb(255,255,255));
-            //green_row = a;
+            green_row = a;
         }
     }
     else
@@ -306,12 +296,6 @@ std::cout<<"----------------------------------------dorowcolor--"<<std::endl;
         green_row = 0;
     }
 }
-
-//BTableWidget::BTableWidget(int a , int b) : QTableWidget(a,b)
-//{
-//    this->setMouseTracking(true);
-//}
-
 
 void BTableWidget::mouseMoveEvent(QMouseEvent *event)
 {

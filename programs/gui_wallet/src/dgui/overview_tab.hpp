@@ -148,7 +148,6 @@ namespace gui_wallet
     protected:
         class Mainwindow_gui_wallet* m_pPar;
         virtual void resizeEvent ( QResizeEvent * a_event );
-       // virtual void mouseMoveEvent(QMouseEvent *);
     };
 }
 

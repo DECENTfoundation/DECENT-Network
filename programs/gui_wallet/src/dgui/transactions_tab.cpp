@@ -39,6 +39,7 @@ Transactions_tab::Transactions_tab() : green_row(0)
     user.setPlaceholderText("Search");
     user.setMaximumHeight(40);
     user.setFixedHeight(40);
+    user.setFrame(false);
 
     QFont f( "Open Sans Bold", 14, QFont::Bold);
     for (int i = 0; i < 4; ++i)
