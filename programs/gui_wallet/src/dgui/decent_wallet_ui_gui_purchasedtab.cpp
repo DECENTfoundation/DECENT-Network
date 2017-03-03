@@ -147,7 +147,7 @@ void decent::wallet::ui::gui::PurchasedTab::SetDigitalContentsGUI(const std::vec
         pLabel = new decent::wallet::ui::gui::TableWidgetItemW<QLabel>(
                                                aTemporar,this,NULL,
                                                &decent::wallet::ui::gui::PurchasedTab::DigContCallback,
-                                               tr(aTemporar.AVG_rating2.c_str()));
+                                               tr(aTemporar.AVG_rating.c_str()));
         if(!pLabel){throw "Low memory!";}
         m_TableWidget.setCellWidget(i,DCF::RATING,pLabel);
 
@@ -161,14 +161,14 @@ void decent::wallet::ui::gui::PurchasedTab::SetDigitalContentsGUI(const std::vec
         pLabel = new decent::wallet::ui::gui::TableWidgetItemW<QLabel>(
                                               aTemporar,this,NULL,
                                               &decent::wallet::ui::gui::PurchasedTab::DigContCallback,
-                                              tr(aTemporar.size2.c_str()));
+                                              tr(aTemporar.size.c_str()));
         if(!pLabel){throw "Low memory!";}
         m_TableWidget.setCellWidget(i,DCF::SIZE,pLabel);
 
         pLabel = new decent::wallet::ui::gui::TableWidgetItemW<QLabel>(
                                                aTemporar,this,NULL,
                                                &decent::wallet::ui::gui::PurchasedTab::DigContCallback,
-                                               tr(aTemporar.price.amount2.c_str()));
+                                               tr(aTemporar.price.amount.c_str()));
         if(!pLabel){throw "Low memory!";}
         m_TableWidget.setCellWidget(i,DCF::PRICE,pLabel);
     }

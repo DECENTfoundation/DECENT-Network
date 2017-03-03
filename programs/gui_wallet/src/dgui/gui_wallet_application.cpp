@@ -48,10 +48,14 @@ int WarnAndWaitFunc(void* a_pOwner,WarnYesOrNoFuncType a_fpYesOrNo,
 
    s_pWarner->m_nRes = -1;
    s_pWarner->m_pParent2 = (QWidget*)a_pOwner;
-   s_pWarner->EmitShowMessageBox(aString,a_fpYesOrNo,a_pDataForYesOrNo);
+   s_pWarner->EmitShowMessageBox(aString, a_fpYesOrNo, a_pDataForYesOrNo);
    s_pWarner->m_sema.wait();
+    
+   //(*a_fpYesOrNo)((QWidget*)a_pOwner, 0, a_pDataForYesOrNo);
 
-   return s_pWarner->m_nRes;
+
+   //return s_pWarner->m_nRes;
+    return 0;
 }
 
 #ifdef CREATE_NEW_APP
@@ -100,50 +104,11 @@ static int WarnFunc(void*,const char*, ...)
 }
 
 
-#if 0
-static std::string GetPasswordFromOwner(void* a_pOwner)
-{
-    s_pWarner->m_csRes = "";
-    s_pWarner->m_pParent2 = (QWidget*)a_pOwner;
-    s_pWarner->EmitShowMessageBox(aString);
-    s_pWarner->m_sema.wait();
-
-    return s_pWarner->m_nRes;
-}
-#endif
-
 
 static int ErrorFunc(void*,const char*, ...)
 {
     return 0;
 }
-
-
-
-#if 0
-
-void UseConnectedApiInstance(void* a_pUserData,void* a_callbackArg,WaletFncType a_fpFunction)
-{
-    UseConnectedApiInstance_base(a_pUserData,a_callbackArg,a_fpFunction);
-}
-
-
-void UseConnectedApiInstance_base(void* a_pUserData,void* a_callbackArg,...)
-{
-    WaletFncType fpFunction;
-    va_list aFunc;
-
-    va_start( aFunc, a_callbackArg );  /* Initialize variable arguments. */
-    fpFunction = va_arg( aFunc, WaletFncType);
-    va_end( aFunc );                /* Reset variable arguments.      */
-
-    std::lock_guard<NewTestMutex> lock(s_mutex_for_cur_api);
-    (*fpFunction)(a_pUserData,a_callbackArg,&s_CurrentApi);
-    //s_mutex_for_cur_api.unlock();
-
-}
-
-#endif  // #if 0
 
 
 } /* namespace gui_wallet */
@@ -162,24 +127,17 @@ InGuiThreatCaller::~InGuiThreatCaller()
 }
 
 void InGuiThreatCaller::EmitShowMessageBox(const QString& a_str,WarnYesOrNoFuncType a_fpYesOrNo,void* a_pDataForYesOrNo)
-{emit ShowMessageBoxSig(a_str,a_fpYesOrNo,a_pDataForYesOrNo);}
+{
+    emit ShowMessageBoxSig(a_str, a_fpYesOrNo, a_pDataForYesOrNo);
+}
 
-void InGuiThreatCaller::EmitCallFunc(SInGuiThreadCallInfo a_call_info)
-{emit CallFuncSig(a_call_info);}
+void InGuiThreatCaller::EmitCallFunc(SInGuiThreadCallInfo a_call_info) {
+    emit CallFuncSig(a_call_info);
+}
 
 void InGuiThreatCaller::MakeShowMessageBoxSlot(const QString& a_str,WarnYesOrNoFuncType a_fpYesOrNo,void* a_pDataForYesOrNo)
 {
-    QMessageBox aMessageBox(QMessageBox::Warning,QObject::tr("WARNING"),
-                            a_str,
-                            QMessageBox::Ok|QMessageBox::Cancel,
-                            m_pParent2);
-    aMessageBox.setDetailedText(QObject::tr("Should be implemented"));
-    m_nRes = aMessageBox.exec();
-
-    //if(QMessageBox::Yes){}
-    __DEBUG_APP2__(_DEF_LOG_LEVEL_,"a_fpYesOrNo=%p",a_fpYesOrNo);
     (*a_fpYesOrNo)(m_pParent2,m_nRes,a_pDataForYesOrNo);
-
     m_sema.post();
 }
 

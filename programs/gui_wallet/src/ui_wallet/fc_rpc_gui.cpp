@@ -124,22 +124,14 @@ void gui::run()
              {
                  __DEBUG_APP2__(1,"inp=\"%s\"",aTaskItem.input.c_str());
                  tsResult = fc::json::to_pretty_string( result );
-                 // int CallFunctionInUiLoop(SetNewTask_last_args,void* owner,TypeCallbackSetNewTaskGlb fpFnc);
-                //std::cout << "!!!!!!!if\n"<<fc::json::to_pretty_string( result ) << "\n";
-                //(*aTaskItem.fn_tsk_dn)(aTaskItem.owner,aTaskItem.callbackArg,0,aTaskItem.input, fc::json::to_pretty_string( result ));
-                //CallFunctionInUiLoopGeneral(aTaskItem.type,
-                //                            aTaskItem.callbackArg,0,aTaskItem.input,result,
-                //                            aTaskItem.owner,aTaskItem.fn_tsk_ptr);
+                 
              }
              else
              {
                  __DEBUG_APP2__(1,"inp=\"%s\"",aTaskItem.input.c_str());
                  tsResult = itr->second( result, args );
-                //std::cout << "!!!!!!!!else\n"<<itr->second( result, args ) << "\n";
-                //(*aTaskItem.fn_tsk_dn)(aTaskItem.owner,aTaskItem.callbackArg,0,aTaskItem.input, itr->second( result, args ));
-                //CallFunctionInUiLoopGeneral(aTaskItem.type,
-                //                            aTaskItem.callbackArg,0,aTaskItem.input,itr->second( result, args ),
-                //                       aTaskItem.owner,aTaskItem.fn_tsk_dn2);
+                
+                 
              }
 
              CallFunctionInUiLoopGeneral(aTaskItem.type,

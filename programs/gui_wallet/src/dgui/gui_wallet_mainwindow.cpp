@@ -25,20 +25,25 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <QMessageBox>
+
+#include "json.hpp"
+
 #include "decent_wallet_ui_gui_jsonparserqt.hpp"
 
 #ifndef DEFAULT_WALLET_FILE_NAME
 #define DEFAULT_WALLET_FILE_NAME       "wallet.json"
 #endif
 
+using namespace nlohmann;
 using namespace gui_wallet;
 
 static gui_wallet::Mainwindow_gui_wallet*  s_pMainWindowInstance = NULL;
 
 std::string FindImagePath(bool& a_bRet,const char* a_image_name);
 
-int WarnAndWaitFunc(void* a_pOwner,WarnYesOrNoFuncType a_fpYesOrNo,
-                           void* a_pDataForYesOrNo,const char* a_form,...);
+int WarnAndWaitFunc(void* a_pOwner,WarnYesOrNoFuncType a_fpYesOrNo, void* a_pDataForYesOrNo,const char* a_form,...);
+
+
 int CallFunctionInGuiLoop2(SetNewTask_last_args2,const std::string& a_result,void* a_owner,TypeCallbackSetNewTaskGlb2 a_fpFunc);
 int CallFunctionInGuiLoop3(SetNewTask_last_args2,const fc::variant& a_result,void* owner,TypeCallbackSetNewTaskGlb3 fpFnc);
 
@@ -101,6 +106,31 @@ static bool GetJsonVectorNextElem(const char* a_cpcJsonStr,TypeConstChar* a_beg,
 }
 
 
+void ParseDigitalContentFromGetContentString(decent::wallet::ui::gui::SDigitalContent* a_pContent, const std::string& a_str)
+{
+    const char* cpcStrToGet;
+    __DEBUG_APP2__(3,"str_to_parse is: \"\n%s\n\"",a_str.c_str());
+    //std::string created;
+    //std::string expiration;
+    FindStringByKey(a_str.c_str(),"created",&a_pContent->created);
+    FindStringByKey(a_str.c_str(),"expiration",&a_pContent->expiration);
+    cpcStrToGet = FindValueStringByKey(a_str.c_str(),"size");
+    if(cpcStrToGet)
+    {
+        char* pcTerm;
+        a_pContent->size = strtod(cpcStrToGet,&pcTerm);
+    }
+    cpcStrToGet = FindValueStringByKey(a_str.c_str(),"times_bought");
+    if(cpcStrToGet)
+    {
+        char* pcTerm;
+        a_pContent->times_bougth = (int64_t)strtol(cpcStrToGet,&pcTerm,10);
+    }
+    //a_pContent->get_content_str = a_str;
+}
+
+
+
 void SetNewTaskQtMainWnd2Glb(const std::string& a_inp_line, void* a_clbData)
 {
     if(s_pMainWindowInstance)s_pMainWindowInstance->SetNewTaskQtMainWnd2(a_inp_line,a_clbData);
@@ -132,7 +162,8 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
         m_locked(true),
         m_import_key_dlg(2),
         m_cqsPreviousFilter(tr("nf")),
-        m_nConnected(0)
+        m_nConnected(0),
+        m_SetPasswordDialog(true)
 {
     s_pMainWindowInstance = this;
     m_default_stylesheet = styleSheet();
@@ -187,11 +218,11 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
 
     QComboBox* pUsersCombo = m_pCentralWidget->usersCombo();
 
-    //connect(this, SIGNAL(WalletContentReadySig(int)), this, SLOT(WalletContentReadySlot(int)) );
-    //connect(&m_ConnectDlg, SIGNAL(ConnectDoneSig()), this, SLOT(ConnectDoneSlot()) );
+    
     connect(pUsersCombo, SIGNAL(currentIndexChanged(const QString&)), this, SLOT(CurrentUserChangedSlot(const QString&)) );
     m_nUserComboTriggeredInGui = 0;
-    //void GuiWalletInfoWarnErrSlot(std::string);
+
+    
     connect(m_pCentralWidget->GetBrowseContentTab(),
             SIGNAL(ShowDetailsOnDigContentSig(decent::wallet::ui::gui::SDigitalContent)),
             this,SLOT(ShowDetailsOnDigContentSlot(decent::wallet::ui::gui::SDigitalContent)));
@@ -200,19 +231,11 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
             SIGNAL(ShowDetailsOnDigContentSig(decent::wallet::ui::gui::SDigitalContent)),
             this,SLOT(ShowDetailsOnDigContentSlot(decent::wallet::ui::gui::SDigitalContent)));
 
-    //static void InitializeUiInterfaceOfWallet(TypeWarnAndWaitFunc a_fpWarnAndWait,
-    //     TypeCallFunctionInGuiLoop a_fpCorrectUiCaller,
-    //     Type* a_pMngOwner,void* a_pMngClb,void (Type::*a_clbkFunction)(SetNewTask_last_args))
 
-    //__DEBUG_APP2__(0,"fpMan=%p",&Mainwindow_gui_wallet::ManagementNewFuncGUI);
-    __DEBUG_APP2__(1,"fpWarn=%p, fpCaller2=%p, fpCaller3=%p, pMnOwner=%p, pMngrClb=%p, fpMngClb=%p",
-                   GetFunctionPointerAsVoid(0,&WarnAndWaitFunc),GetFunctionPointerAsVoid(0,&CallFunctionInGuiLoop2),
-                   GetFunctionPointerAsVoid(0,&CallFunctionInGuiLoop3),this,(void*)0,
-                   GetFunctionPointerAsVoid(0,&Mainwindow_gui_wallet::ManagementNewFuncGUI));
-
-    InitializeUiInterfaceOfWallet_base(&WarnAndWaitFunc,&CallFunctionInGuiLoop2,
-                                  &CallFunctionInGuiLoop3,this,NULL,
-                                  GetFunctionPointerAsVoid(0,&Mainwindow_gui_wallet::ManagementNewFuncGUI));
+    InitializeUiInterfaceOfWallet_base(&WarnAndWaitFunc,
+                                    &CallFunctionInGuiLoop2,
+                                       &CallFunctionInGuiLoop3, this, NULL,
+                                  GetFunctionPointerAsVoid(0, &Mainwindow_gui_wallet::ManagementNewFuncGUI));
     m_nJustConnecting = 1;
     ConnectSlot();
     setWindowTitle(tr("Decent - Blockchain Content Distributor"));
@@ -400,6 +423,7 @@ void Mainwindow_gui_wallet::ShowDetailsOnDigContentSlot(decent::wallet::ui::gui:
 /*
  * return != 0 means parsing error
  */
+
 int Mainwindow_gui_wallet::GetDigitalContentsFromVariant(DCT::DIG_CONT_TYPES a_type,
                                                          std::vector<decent::wallet::ui::gui::SDigitalContent>& a_vcContents,
                                                          const fc::variant& a_contents_var)
@@ -423,7 +447,6 @@ int Mainwindow_gui_wallet::GetDigitalContentsFromVariant(DCT::DIG_CONT_TYPES a_t
     return 0;
 }
 
-
 void Mainwindow_gui_wallet::LockSlot()
 {
     m_ActionLock.setDisabled(true);
@@ -435,17 +458,19 @@ void Mainwindow_gui_wallet::LockSlot()
 
 void Mainwindow_gui_wallet::UnlockSlot()
 {
-    //int SetNewTask(const std::string& a_inp_line, Type* a_memb, void* a_clbData,
-    //           void (Type::*a_clbkFunction)(SetNewTask_last_args))
-    //UseConnectedApiInstance(this,NULL,&Mainwindow_gui_wallet::UnlockFunction);
-    //wapiptr->unlock(aPassword);
+    
     QPoint thisPos = pos();
-    std::vector<std::string> cvsPassword(1);
-    decent::gui::tools::RET_TYPE rtRet = m_PasswdDialog.execRD(&thisPos,cvsPassword);
-    if(rtRet == decent::gui::tools::RDB_OK) {
+    thisPos.rx() += size().width() / 2;
+    thisPos.ry() += size().height() / 2;
+
+    
+    
+    std::string cvsPassword;
+    bool rtRet = m_UnlockDialog.execRD(thisPos, cvsPassword);
+    if(rtRet) {
         m_ActionLock.setDisabled(true);
         m_ActionUnlock.setDisabled(true);
-        const std::string csPassLine = "unlock " + cvsPassword[0];
+        const std::string csPassLine = "unlock " + cvsPassword;
         SetNewTask(csPassLine, this, NULL, &Mainwindow_gui_wallet::TaskDoneFuncGUI);
     }
 }
@@ -683,20 +708,6 @@ void Mainwindow_gui_wallet::TaskDoneFuncGUI(void* a_clbkArg,int64_t a_err,const 
         }
         else
         {
-            std::string aInfo, aDetails;
-
-            LoadWalletFile(&m_wdata2);
-            __DEBUG_APP2__(1,"chain_id=%s\n",m_wdata2.chain_id.c_str());
-            aInfo = "Connected!\nserver: " + m_wdata2.ws_server;
-            aDetails = aInfo + "\nchain_id: " + m_wdata2.chain_id;
-
-            //ConnectDlg* pParent = (ConnectDlg*)a_pOwner;
-            QMessageBox aMessageBox(QMessageBox::Information,
-                                    QObject::tr("connected"),QObject::tr(aInfo.c_str()),
-                                    QMessageBox::Ok,this);
-            //aMessageBox.setStyleSheet(m_default_stylesheet);
-            aMessageBox.setDetailedText(QObject::tr(aDetails.c_str()));
-            aMessageBox.exec();
             DisplayWalletContentGUI();
         }
         return;
@@ -883,6 +894,9 @@ void Mainwindow_gui_wallet::TaskDoneFuncGUI(void* a_clbkArg,int64_t a_err,const 
 
         m_ActionLock.setDisabled(m_locked);
         m_ActionUnlock.setEnabled(m_locked);
+        if (m_locked) {
+            UnlockSlot();
+        }
     }
     else if(strstr(a_task.c_str(),"get_account_history ") == a_task.c_str())
     {
@@ -901,35 +915,6 @@ void Mainwindow_gui_wallet::TaskDoneFuncGUI(void* a_clbkArg,int64_t a_err,const 
 
 void Mainwindow_gui_wallet::ManagementNewFuncGUI(void* a_clbkArg,int64_t a_err,const std::string& a_task,const std::string& a_result)
 {
-    //int nCode = (int)a_err;
-    int nError = (int)a_err;  // in 64 bit should be stored and error and message
-
-    __DEBUG_APP2__(2,"clbArg=%p, task=\"%s\", res=\"%s\", err=%d",
-                   a_clbkArg,a_task.c_str(),a_result.c_str(),nError);
-
-#if 0
-    switch(nCode)
-    {
-    case WAS::CONNECTED_ST:
-    {
-        if(m_nConnected==0)
-        {
-            __DEBUG_APP2__(1," ");
-            m_nConnected = 1;
-            m_locked = true;
-            m_ActionLock.setDisabled(m_locked);
-            m_ActionUnlock.setEnabled(m_locked);
-            m_ActionWalletContent.setEnabled(true);
-            m_ActionImportKey.setEnabled(true);
-        }
-
-        break;
-    }
-    default:
-        __DEBUG_APP2__(2,"default");
-        break;
-    }
-#endif // #if 0
 
     int nCurentTab = m_pCentralWidget->GetMyCurrentTabIndex();
     __DEBUG_APP2__(2," ");
@@ -983,39 +968,31 @@ void Mainwindow_gui_wallet::ConnectSlot()
 
     m_ActionConnect.setEnabled(false);
     m_wdata2.action = WAT::CONNECT;
-    m_wdata2.fpWarnFunc = &SetPassword;
+    
+    m_wdata2.setPasswordFn = +[](void*owner, int answer, void* str_ptr) {
+        ((Mainwindow_gui_wallet*)owner)->SetPassword(owner, str_ptr);
+    };
+    
     m_wdata2.fpDone = (TypeCallbackSetNewTaskGlb2)GetFunctionPointerAsVoid(1,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
     StartConnectionProcedure(&m_wdata2,this,WALLET_CONNECT_CODE);
 }
 
 
-void Mainwindow_gui_wallet::SetPassword(void* a_owner,int a_answer,/*string**/void* a_str_ptr)
+void Mainwindow_gui_wallet::SetPassword(void* a_owner, void* a_str_ptr)
 {
     std::string* pcsPassword = (std::string*)a_str_ptr;
     *pcsPassword = "";
 
-    switch(a_answer)
-    {
-    case QMessageBox::Yes: case QMessageBox::Ok:
-    {
-        Mainwindow_gui_wallet* pThisCon = (Mainwindow_gui_wallet*)a_owner;
-        PasswordDialog* pThis = &pThisCon->m_PasswdDialog;
-        /*pThis->move(pThisCon->pos());
-        pThis->exec();
-        QString cqsPassword = pThis->m_password.text();
-        QByteArray cLatin = cqsPassword.toLatin1();
-        *pcsPassword = cLatin.data();*/
-        std::vector<std::string> vsPassword(1);
-        QPoint thisPos = pThisCon->pos();
-        decent::gui::tools::RET_TYPE rtRet = pThis->execRD(&thisPos,vsPassword);
-        if(rtRet != decent::gui::tools::RDB_CANCEL){*pcsPassword = vsPassword[0];}
-        break;
-    }
 
-    default:
-        break;
-    }
+    Mainwindow_gui_wallet* pThisCon = (Mainwindow_gui_wallet*)a_owner;
+    PasswordDialog* pThis = &pThisCon->m_SetPasswordDialog;
+    
+    QPoint thisPos = pThisCon->pos();
+    thisPos.rx() += this->size().width() / 2;
+    thisPos.ry() += this->size().height() / 2;
 
+    pThis->execRD(thisPos, *pcsPassword);
+    
 }
 
 
@@ -1027,35 +1004,13 @@ void ParseDigitalContentFromVariant(decent::wallet::ui::gui::SDigitalContent* a_
 
     a_result.visit(aParser);
 
-#if 0
-    struct SDigitalContent{
-        SDigitalContent():type(DCT::GENERAL){}
-        DCT::DIG_CONT_TYPES type;
-        std::string author;
-        struct{
-            std::string amount2;
-            std::string asset_id;
-        }price;
-        std::string synopsis;
-        std::string URI;
-        std::string AVG_rating2;
-        //
-        std::string created;
-        std::string expiration;
-        std::string  size2;
-
-        //std::string  get_content_str;
-        std::string  times_bougth2;
-    };
-#endif
-
-    a_pContent->price.amount2 = aParser.GetByKey("price").GetByKey("amount").value();
+    a_pContent->price.amount = aParser.GetByKey("price").GetByKey("amount").value();
     a_pContent->price.asset_id = aParser.GetByKey("price").GetByKey("asset_id").value();
     a_pContent->synopsis = aParser.GetByKey("synopsis").value();
     //a_pContent->URI = aParser.GetByKey("URI").value();
-    a_pContent->AVG_rating2 = aParser.GetByKey("AVG_rating").value();
+    a_pContent->AVG_rating = aParser.GetByKey("AVG_rating").value();
     a_pContent->created = aParser.GetByKey("created").value();
     a_pContent->expiration = aParser.GetByKey("expiration").value();
-    a_pContent->size2 = aParser.GetByKey("size").value();
-    a_pContent->times_bougth2 = aParser.GetByKey("times_bougth").value();
+    a_pContent->size = aParser.GetByKey("size").value();
+    a_pContent->times_bougth = aParser.GetByKey("times_bougth").value();
 }

@@ -12,6 +12,7 @@
 #include <mutex>
 #include <stdio.h>
 #include <stdarg.h>
+#include <iostream>
 #include "fc_rpc_gui.hpp"
 #include <graphene/wallet/wallet.hpp>
 #include <thread>
@@ -457,11 +458,8 @@ static int ConnectToNewWitness(const decent::tools::taskListItem<SConnectionStru
         if( wapiptr->is_new() )
         {
            std::string aPassword("");
-           //std::cout << "Please use the set_password method to initialize a new wallet before continuing\n";
-           //wallet_cli->set_prompt( "new >>> " );
-           //(*(aStrct.fpWarnFunc))(a_con_data.owner,int answer,/*string**/void* str_ptr);
-           (*s_fpWarnAndWaitFunc)(a_con_data.owner,pStruct->fpWarnFunc,&aPassword,
-                           "Please use the set_password method to initialize a new wallet before continuing\n");
+           
+           (*s_fpWarnAndWaitFunc)(a_con_data.owner,pStruct->setPasswordFn, &aPassword, "Please use the set_password method to initialize a new wallet before continuing\n");
            if(aPassword != "")
            {
                wapiptr->set_password(aPassword);
@@ -552,6 +550,9 @@ int CallFunctionInUiLoopGeneral(int a_nType,SetNewTask_last_args2,
                                 const fc::variant& a_resultVar,const std::string& a_resultStr,
                                 void* a_owner,void* a_fpFnc)
 {
+    
+    std::cout << "Command: " << a_inp << "\n";
+    std::cout << "Output: " << a_resultStr << "\n";
 
     switch(a_nType)
     {
@@ -565,7 +566,6 @@ int CallFunctionInUiLoopGeneral(int a_nType,SetNewTask_last_args2,
     {
 
         TypeCallbackSetNewTaskGlb2 fpFunc2 = (TypeCallbackSetNewTaskGlb2)a_fpFnc;
-
         return (*s_fpCorrectUiCaller2)(a_clbData,a_err, a_inp, a_resultStr,
                                        a_owner,fpFunc2);
     }
