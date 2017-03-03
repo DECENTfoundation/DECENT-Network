@@ -1016,10 +1016,10 @@ void ParseDigitalContentFromVariant(SDigitalContent* a_pContent,
     a_pContent->times_bougth = aParser.GetByKey("times_bougth").value();
 }
 
-void ParseDigitalContentAssetDetailsFromVariant(decent::wallet::ui::gui::SDigitalContent* a_pContent,
+void ParseDigitalContentAssetDetailsFromVariant(SDigitalContent* a_pContent,
                                                 const fc::variant& a_result)
 {
-    decent::wallet::ui::gui::JsonParserQt aParser;
+    JsonParserQt aParser;
     
     a_result.visit(aParser);
     
