@@ -15,9 +15,10 @@
 
 
 /*///////////////////////////////////////////////////////*/
+using namespace gui_wallet;
 
 static int s_nActive = 0;
-void ParseDigitalContentFromVariant(decent::wallet::ui::gui::SDigitalContent* a_pContent,
+void ParseDigitalContentFromVariant(SDigitalContent* a_pContent,
                                     const fc::variant& a_result);
 
 void gui_wallet::Mainwindow_gui_wallet::ManagementBrowseContentGUI()
@@ -70,19 +71,15 @@ void gui_wallet::Mainwindow_gui_wallet::TaskDoneBrowseContentGUI3(void* a_clbkAr
                                                                   const std::string& a_task,
                                                                   const fc::variant& a_result)
 {
-    decent::wallet::ui::gui::JsonParserQt aVisitor;
+    JsonParserQt aVisitor;
     aVisitor.m_inp = a_task;
     __DEBUG_APP2__(2," ");
 
     if(a_err){return;}
 
     a_result.visit(aVisitor);
-    //aVisitor.PrintValues();
-    //const decent::wallet::ui::gui::JsonParserQt& visRes = aVisitor.GetByIndex(0).GetByKey("author");
-    //std::string aRes = visRes.value();
-    //printf("!!!!!!!!!!!!!!!! type=%s, val=%s\n",visRes.TypeToString(), aRes.c_str());
-    //printf("!!!!!!!!!!!!!!!!!!!!!!!!!! g_nCreateAndDelete=%d\n",g_nCreateAndDelete);
-
+    
+    
     if(strstr(a_task.c_str(),"list_content ") || strstr(a_task.c_str(),"list_content_by_author "))
     {
         std::string aNewTask;

@@ -106,7 +106,7 @@ static bool GetJsonVectorNextElem(const char* a_cpcJsonStr,TypeConstChar* a_beg,
 }
 
 
-void ParseDigitalContentFromGetContentString(decent::wallet::ui::gui::SDigitalContent* a_pContent, const std::string& a_str)
+void ParseDigitalContentFromGetContentString(SDigitalContent* a_pContent, const std::string& a_str)
 {
     const char* cpcStrToGet;
     __DEBUG_APP2__(3,"str_to_parse is: \"\n%s\n\"",a_str.c_str());
@@ -224,12 +224,12 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
 
     
     connect(m_pCentralWidget->GetBrowseContentTab(),
-            SIGNAL(ShowDetailsOnDigContentSig(decent::wallet::ui::gui::SDigitalContent)),
-            this,SLOT(ShowDetailsOnDigContentSlot(decent::wallet::ui::gui::SDigitalContent)));
+            SIGNAL(ShowDetailsOnDigContentSig(SDigitalContent)),
+            this,SLOT(ShowDetailsOnDigContentSlot(SDigitalContent)));
 
     connect(m_pCentralWidget->GetPurchasedTab(),
-            SIGNAL(ShowDetailsOnDigContentSig(decent::wallet::ui::gui::SDigitalContent)),
-            this,SLOT(ShowDetailsOnDigContentSlot(decent::wallet::ui::gui::SDigitalContent)));
+            SIGNAL(ShowDetailsOnDigContentSig(SDigitalContent)),
+            this,SLOT(ShowDetailsOnDigContentSlot(SDigitalContent)));
 
 
     InitializeUiInterfaceOfWallet_base(&WarnAndWaitFunc,
@@ -401,7 +401,7 @@ void Mainwindow_gui_wallet::OpenInfoDlgSlot()
 }
 
 
-void Mainwindow_gui_wallet::ShowDetailsOnDigContentSlot(decent::wallet::ui::gui::SDigitalContent a_dig_cont)
+void Mainwindow_gui_wallet::ShowDetailsOnDigContentSlot(SDigitalContent a_dig_cont)
 {
     switch(a_dig_cont.type)
     {
@@ -425,12 +425,12 @@ void Mainwindow_gui_wallet::ShowDetailsOnDigContentSlot(decent::wallet::ui::gui:
  */
 
 int Mainwindow_gui_wallet::GetDigitalContentsFromVariant(DCT::DIG_CONT_TYPES a_type,
-                                                         std::vector<decent::wallet::ui::gui::SDigitalContent>& a_vcContents,
+                                                         std::vector<SDigitalContent>& a_vcContents,
                                                          const fc::variant& a_contents_var)
 {
-    decent::wallet::ui::gui::SDigitalContent aDigContent;
-    decent::wallet::ui::gui::JsonParserQt aParser;
-    const decent::wallet::ui::gui::JsonParserQt* pNext;
+    SDigitalContent aDigContent;
+    JsonParserQt aParser;
+    const JsonParserQt* pNext;
 
     a_contents_var.visit(aParser);
     const int cnSize(aParser.size());
@@ -997,10 +997,10 @@ void Mainwindow_gui_wallet::SetPassword(void* a_owner, void* a_str_ptr)
 
 
 /*////////////////////////////////////////////////////////////////*/
-void ParseDigitalContentFromVariant(decent::wallet::ui::gui::SDigitalContent* a_pContent,
+void ParseDigitalContentFromVariant(SDigitalContent* a_pContent,
                                     const fc::variant& a_result)
 {
-    decent::wallet::ui::gui::JsonParserQt aParser;
+    JsonParserQt aParser;
 
     a_result.visit(aParser);
 

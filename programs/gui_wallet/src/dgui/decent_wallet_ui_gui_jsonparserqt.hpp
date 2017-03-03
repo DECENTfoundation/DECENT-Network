@@ -12,26 +12,12 @@
 
 #include <fc/variant_object.hpp>
 
-namespace decent{ namespace wallet{ namespace ui{ namespace gui{
+namespace gui_wallet {
 
 #ifndef DEFAULT_LOG_LEVEL
 #define DEFAULT_LOG_LEVEL 4
 #endif
 
-#if 0
-enum type_id
-{
-   null_type   = 0,
-   int64_type  = 1,
-   uint64_type = 2,
-   double_type = 3,
-   bool_type   = 4,
-   string_type = 5,
-   array_type  = 6,
-   object_type = 7,
-   blob_type   = 8
-};
-#endif
 
 class JsonParserQt : public fc::variant::visitor
 {
@@ -76,6 +62,6 @@ public:
     std::string m_inp;
 };
 
-}}}}
+}
 
 #endif // DECENT_WALLET_UI_GUI_JSONPARSERQT_HPP

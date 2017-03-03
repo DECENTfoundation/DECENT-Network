@@ -28,8 +28,8 @@
 #define Sleep(__ms__) usleep(1000*(__ms__))
 #endif
 
-//using namespace graphene::wallet;
-//using namespace fc::http;
+using namespace gui_wallet;
+
 extern int g_nDebugApplication ;
 
 InGuiThreatCaller* s_pWarner = NULL;
@@ -70,7 +70,7 @@ gui_wallet::application::application(int& argc, char** argv)
     qRegisterMetaType<TypeCallbackSetNewTaskGlb2>( "TypeCallbackSetNewTaskGlb2" );
     qRegisterMetaType<TypeCallbackSetNewTaskGlb3>( "TypeCallbackSetNewTaskGlb3" );
     qRegisterMetaType<fc::variant>( "fc::variant" );
-    qRegisterMetaType<decent::wallet::ui::gui::SDigitalContent>( "decent::wallet::ui::gui::SDigitalContent" );
+    qRegisterMetaType<SDigitalContent>( "SDigitalContent" );
 
     s_pWarner = new InGuiThreatCaller;
     if(!s_pWarner)

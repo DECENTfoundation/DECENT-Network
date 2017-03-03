@@ -21,9 +21,11 @@
 #include <QLineEdit>
 #include "qt_commonheader.hpp"
 
-namespace decent{ namespace wallet{ namespace ui{ namespace gui{
+namespace gui_wallet {
 
-namespace DCF {enum DIG_CONT_FIELDS{TIME,SYNOPSIS,RATING,SIZE,PRICE,PURCHASED,NUM_OF_DIG_CONT_FIELDS};}
+namespace DCF_PURCHASE {
+    enum DIG_CONT_FIELDS { TIME, SYNOPSIS, RATING,SIZE, PRICE, PURCHASED, NUM_OF_DIG_CONT_FIELDS };
+}
 
 class PurchasedTab : public QWidget
 {
@@ -35,12 +37,12 @@ public:
     PurchasedTab();
     virtual ~PurchasedTab();
 
-    void SetDigitalContentsGUI(const std::vector<decent::wallet::ui::gui::SDigitalContent>& contents);
+    void SetDigitalContentsGUI(const std::vector<SDigitalContent>& contents);
     //QString getFilterText()const;
 
 public:
 signals:
-    void ShowDetailsOnDigContentSig(decent::wallet::ui::gui::SDigitalContent dig_cont);
+    void ShowDetailsOnDigContentSig(SDigitalContent dig_cont);
 
 protected:
     void PrepareTableWidgetHeaderGUI();
@@ -57,7 +59,7 @@ protected:
     QLineEdit       m_filterLineEditer;
 };
 
-}}}}
+}
 
 
 #include "decent_wallet_ui_gui_common.tos"

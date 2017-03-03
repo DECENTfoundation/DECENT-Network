@@ -19,9 +19,9 @@ using namespace gui_wallet;
 std::string FindImagePath(bool& a_bRet,const char* a_image_name);
 
 
-decent::wallet::ui::gui::ContentDetailsGeneral::ContentDetailsGeneral()
+ContentDetailsGeneral::ContentDetailsGeneral()
     :
-      m_label(this,NULL,&decent::wallet::ui::gui::ContentDetailsGeneral::LabelPushCallbackGUI)
+      m_label(this,NULL,&ContentDetailsGeneral::LabelPushCallbackGUI)
 {
     bool bRet;
  //   std::string sImagePath = FindImagePath(bRet,":/icon/images/buy_button_image.png");
@@ -33,14 +33,14 @@ decent::wallet::ui::gui::ContentDetailsGeneral::ContentDetailsGeneral()
 }
 
 
-decent::wallet::ui::gui::ContentDetailsGeneral::~ContentDetailsGeneral()
+ContentDetailsGeneral::~ContentDetailsGeneral()
 {
     //
 }
 
 
-void decent::wallet::ui::gui::ContentDetailsGeneral::execCDD(
-        const decent::wallet::ui::gui::SDigitalContent& a_cnt_details)
+void ContentDetailsGeneral::execCDD(
+        const SDigitalContent& a_cnt_details)
 {
     execCDB(a_cnt_details);
 }
@@ -48,7 +48,7 @@ void decent::wallet::ui::gui::ContentDetailsGeneral::execCDD(
 #include <QMessageBox>
 #include <QFileDialog>
 
-void decent::wallet::ui::gui::ContentDetailsGeneral::LabelPushCallbackGUI(void*,QMouseEvent* a_mouse_event)
+void ContentDetailsGeneral::LabelPushCallbackGUI(void*,QMouseEvent* a_mouse_event)
 {
 
     QString saveDir = QFileDialog::getExistingDirectory(this, tr("Select download directory"), "~", QFileDialog::DontResolveSymlinks);

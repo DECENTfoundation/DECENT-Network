@@ -11,7 +11,7 @@
 #define DECENT_WALLET_UI_GUI_NEWCHECKBOX_HPP
 
 #include <QCheckBox>
-namespace decent{ namespace wallet{ namespace ui{ namespace gui{
+namespace gui_wallet {
 
 class NewCheckBox : public QCheckBox
 {
@@ -34,6 +34,6 @@ protected:
     int m_index;
 };
 
-}}}}
+}
 
 #endif // DECENT_WALLET_UI_GUI_NEWCHECKBOX_HPP

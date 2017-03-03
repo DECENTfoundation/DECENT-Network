@@ -76,7 +76,7 @@ namespace gui_wallet
 
         void CliCallbackFnc(void*arg,const std::string& task);
         int GetDigitalContentsFromVariant(DCT::DIG_CONT_TYPES a_type,
-                                         std::vector<decent::wallet::ui::gui::SDigitalContent>& acContents,
+                                         std::vector<SDigitalContent>& acContents,
                                          const fc::variant& contents_var);
 
         void DisplayWalletContentGUI();
@@ -103,7 +103,7 @@ namespace gui_wallet
         void OpenCliWalletDlgSlot();
         void OpenInfoDlgSlot();
 
-        void ShowDetailsOnDigContentSlot(decent::wallet::ui::gui::SDigitalContent dig_cont);
+        void ShowDetailsOnDigContentSlot(SDigitalContent dig_cont);
 
     protected:
         virtual void moveEvent(QMoveEvent *) override ;
@@ -156,8 +156,8 @@ namespace gui_wallet
         QTextEdit*                          m_pInfoTextEdit;
         CliWalletDlg*                        m_pcInfoDlg;
         //std::string                         m_URI;
-        std::vector<decent::wallet::ui::gui::SDigitalContent> m_vcDigContent;
-        std::vector<decent::wallet::ui::gui::SDigitalContent> m_vcDigContentOld;
+        std::vector<SDigitalContent> m_vcDigContent;
+        std::vector<SDigitalContent> m_vcDigContentOld;
         int                     m_nConnected;
         int                     m_nUserComboTriggeredInGui;
         SConnectionStruct   m_wdata2;
@@ -169,8 +169,8 @@ namespace gui_wallet
 
         QString             m_default_stylesheet;
 
-        decent::wallet::ui::gui::ContentDetailsGeneral m_dig_cont_detailsGenDlg;
-        decent::wallet::ui::gui::ContentDetailsBougth m_dig_cont_detailsBougDlg;
+        ContentDetailsGeneral m_dig_cont_detailsGenDlg;
+        ContentDetailsBougth m_dig_cont_detailsBougDlg;
 
         std::vector<std::string>        m_user_ids;
     };
