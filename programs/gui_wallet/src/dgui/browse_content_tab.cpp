@@ -18,13 +18,13 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include "json.hpp"
-
+#include <limits>
 #include <iostream>
 
 //namespace DCF {enum DIG_CONT_FIELDS{TIME,SYNOPSIS,RATING,SIZE,PRICE,LEFT};}
 static const char* s_vccpItemNames[]={"Time","Title","Rating",
                                      "Size","Price","Left"};
-static const int   s_cnNumberOfRows = sizeof(s_vccpItemNames)/sizeof(const char*);
+static const int   s_cnNumberOfCols = sizeof(s_vccpItemNames)/sizeof(const char*);
 static const int   s_cnNumberOfSearchFields(sizeof(gui_wallet::ST::s_vcpcSearchTypeStrs)/sizeof(const char*));
 
 using namespace gui_wallet;
@@ -32,10 +32,7 @@ using namespace nlohmann;
 extern int g_nDebugApplication;
 
 
-Browse_content_tab::Browse_content_tab() : green_row(0),
-
-        //m_TableWidget(1,s_cnNumberOfRows)
-        m_pTableWidget(new BTableWidget(1,s_cnNumberOfRows))
+Browse_content_tab::Browse_content_tab() : m_pTableWidget(new BTableWidget(1,s_cnNumberOfCols))
 {
     if(!m_pTableWidget){throw "Low memory!";}
 
@@ -69,13 +66,16 @@ Browse_content_tab::Browse_content_tab() : green_row(0),
     m_search_layout.addWidget(new QLabel());
     m_search_layout.addWidget(lab);
     m_search_layout.addWidget(&m_filterLineEdit);
-    //m_search_layout.addWidget(&m_searchTypeCombo);
-    //m_main_layout.addLayout(searchlay);
-
+    
     m_main_layout.addLayout(&m_search_layout);
     m_main_layout.addWidget(m_pTableWidget);
     setLayout(&m_main_layout);
-
+    
+    connect(&m_filterLineEdit, SIGNAL(textChanged(QString)), this, SLOT(onTextChanged(QString)));
+    
+    m_contentUpdateTimer.connect(&m_contentUpdateTimer, SIGNAL(timeout()), this, SLOT(maybeUpdateContent()));
+    m_contentUpdateTimer.setInterval(1000);
+    m_contentUpdateTimer.start();
 }
 
 
@@ -85,13 +85,24 @@ Browse_content_tab::~Browse_content_tab()
     delete m_pTableWidget;
 }
 
-
-QString Browse_content_tab::getFilterText()const
+void Browse_content_tab::DigContCallback(_NEEDED_ARGS2_)
 {
-    if(m_filterLineEdit.text() == tr("")){return tr("");}
-    return m_searchTypeCombo.currentText() + tr(":") + m_filterLineEdit.text();
+    emit ShowDetailsOnDigContentSig(*a_pDigContent);
 }
 
+void Browse_content_tab::maybeUpdateContent() {
+    if (!m_doUpdate) {
+        return;
+    }
+        
+    m_doUpdate = false;
+    updateContents();
+}
+
+void Browse_content_tab::onTextChanged(const QString& text) {
+    
+    m_doUpdate = true;
+}
 
 void Browse_content_tab::PrepareTableWidgetHeaderGUI()
 {
@@ -111,11 +122,8 @@ void Browse_content_tab::PrepareTableWidgetHeaderGUI()
 
     QFont f( "Open Sans Bold", 14, QFont::Bold);
 
-    for( int i(0); i<s_cnNumberOfRows; ++i )
+    for( int i(0); i<s_cnNumberOfCols; ++i )
     {
-        //pLabel = new QLabel(tr(s_vccpItemNames[i]));
-        //if(!pLabel){throw "Low memory\n" __FILE__ ;}
-        //m_TableWidget.setCellWidget(0,i,pLabel);
         m_TableWidget.setItem(0,i,new QTableWidgetItem(tr(s_vccpItemNames[i])));
         m_TableWidget.item(0,i)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
         m_TableWidget.item(0,i)->setFont(f);
@@ -128,18 +136,9 @@ void Browse_content_tab::PrepareTableWidgetHeaderGUI()
     m_TableWidget.setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     m_TableWidget.setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
-    //QPalette plt_tbl = m_TableWidget.palette();
-    //plt_tbl.setColor(QPalette::Base, palette().color(QPalette::Window));
-    //m_TableWidget.setPalette(plt_tbl);
 }
 
 
-// #define _NEEDED_ARGS_ void* a_clb_data,int a_act,const gui_wallet::SDigitalContent* a_pDigContent
-void Browse_content_tab::DigContCallback(_NEEDED_ARGS2_)
-{
-    __DEBUG_APP2__(3,"clbdata=%p, act=%d, pDigCont=%p\n",a_clb_data,a_act,a_pDigContent);
-    emit ShowDetailsOnDigContentSig(*a_pDigContent);
-}
 
 
 void Browse_content_tab::updateContents() {
@@ -150,12 +149,10 @@ void Browse_content_tab::updateContents() {
         try {
             auto contents = json::parse(a_result);
             
-            std::vector<SDigitalContent>& dContents = obj->m_dContents;
+            std::vector<SDigitalContent> dContents;
             dContents.clear();
             dContents.resize(contents.size());
             
-            obj->m_waitingUpdates = contents.size();
-
 
             for (int i = 0; i < contents.size(); ++i) {
                 dContents[i].type = DCT::GENERAL;
@@ -167,48 +164,29 @@ void Browse_content_tab::updateContents() {
                 dContents[i].price.asset_id = contents[i]["price"]["asset_id"].get<std::string>();
                 dContents[i].synopsis = contents[i]["synopsis"].get<std::string>();
                 dContents[i].URI = contents[i]["URI"].get<std::string>();
+                dContents[i].created = contents[i]["created"].get<std::string>();
+                dContents[i].expiration = contents[i]["expiration"].get<std::string>();
+                dContents[i].size = contents[i]["size"].get<int>();
                 
-                // This part is ugly as hell, but will be rewritten (hopefully)
+                if (contents[i]["times_bougth"].is_number()) {
+                    dContents[i].times_bougth = contents[i]["times_bougth"].get<int>();
+                } else {
+                    dContents[i].times_bougth = 0;
+                }
                 
-                SetNewTask("get_content \"" + dContents[i].URI + "\"", obj, (void*)i, +[](void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
+                
+                if (contents[i]["price"]["amount"].is_number()){
+                    dContents[i].price.amount =  contents[i]["price"]["amount"].get<double>();
+                } else {
+                    dContents[i].price.amount =  atof(contents[i]["price"]["amount"].get<std::string>().c_str());
+                }
+                
+                dContents[i].AVG_rating = contents[i]["AVG_rating"].get<double>();
 
-                    
-                    Browse_content_tab* obj = (Browse_content_tab*)owner;
-
-                    int myIndex = (long long)a_clbkArg;
-                    
-                    auto content = json::parse(a_result);
-
-                    
-                    obj->m_dContents[myIndex].created = content["created"].get<std::string>();
-                    obj->m_dContents[myIndex].expiration = content["expiration"].get<std::string>();
-                    obj->m_dContents[myIndex].size = content["size"].get<int>();
-                    if (content["times_bougth"].is_number()) {
-                        obj->m_dContents[myIndex].times_bougth = content["times_bougth"].get<int>();
-                    } else {
-                        obj->m_dContents[myIndex].times_bougth = 0;
-                    }
-                    
-                    
-                    
-                    if (content["price"]["amount"].is_number()){
-                        obj->m_dContents[myIndex].price.amount =  content["price"]["amount"].get<double>();
-                    } else {
-                        obj->m_dContents[myIndex].price.amount =  atof(content["price"]["amount"].get<std::string>().c_str());
-                    }
-                    
-                    obj->m_dContents[myIndex].AVG_rating = content["AVG_rating"].get<double>();
-
-                    
-                    --obj->m_waitingUpdates;
-                    if (obj->m_waitingUpdates == 0) {
-                        obj->SetDigitalContentsGUI();
-                    }
-                });
-
-          
             }
             
+            obj->ShowDigitalContentsGUI(dContents);
+
         } catch (std::exception& ex) {
             std::cout << ex.what() << std::endl;
         }
@@ -218,35 +196,66 @@ void Browse_content_tab::updateContents() {
 }
 
 
+bool Browse_content_tab::FilterContent(const SDigitalContent& content) {
+    std::string filterText = m_filterLineEdit.text().toStdString();
+    if (filterText.empty()) {
+        return true;
+    }
+    
+    if (content.author.find(filterText) != std::string::npos) {
+        return true;
+    }
+    
+    try {
+        auto synopsis_parsed = json::parse(content.synopsis);
+        std::string title = synopsis_parsed["title"].get<std::string>();
+        std::string desc = synopsis_parsed["description"].get<std::string>();
+        
+        if (title.find(filterText) != std::string::npos) {
+            return true;
+        }
+        
+        
+        if (desc.find(filterText) != std::string::npos) {
+            return true;
+        }
+        
+    } catch (...) {
+        return false;
+    }
+    
+    return false;
+}
 
-
-void Browse_content_tab::SetDigitalContentsGUI()
+void Browse_content_tab::ShowDigitalContentsGUI(std::vector<SDigitalContent>& contents)
 {
-    //
-    //TableWidgetItemW<QCheckBox>* pCheck;
-    TableWidgetItemW<QLabel>* pLabel;
-    SDigitalContent aTemporar;
-    const int cnNumberOfContentsPlus1((int)m_dContents.size()+1);
-
+    std::vector<SDigitalContent*> filteredContent;
+    
+    for (int i = 0; i < contents.size(); ++i) {
+        if (FilterContent(contents[i])) {
+            filteredContent.push_back(&contents[i]);
+        }
+    }
+    
     
     int nWidth = m_pTableWidget->width();
     m_main_layout.removeWidget(m_pTableWidget);
     delete m_pTableWidget;
-    m_pTableWidget = new BTableWidget(cnNumberOfContentsPlus1,s_cnNumberOfRows);
+    m_pTableWidget = new BTableWidget(filteredContent.size() + 1, s_cnNumberOfCols);
 
     
     QTableWidget& m_TableWidget = *m_pTableWidget;
 
     PrepareTableWidgetHeaderGUI();
-
-    for(int i(1); i<cnNumberOfContentsPlus1; ++i)
+    
+    int index = 1;
+    for(SDigitalContent* dContPtr: filteredContent)
     {
-        aTemporar = m_dContents[i-1];
+        const SDigitalContent& aTemporar = *dContPtr;
         
-        pLabel = new TableWidgetItemW<QLabel>(aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
-                                              tr(aTemporar.created.c_str()));
         
-        m_TableWidget.setCellWidget(i,DCF::TIME,pLabel);
+        m_TableWidget.setCellWidget(index, DCF::TIME, new TableWidgetItemW<QLabel>(aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
+                                                                                                tr(aTemporar.created.c_str())));
         
         std::string synopsis = unescape_string(aTemporar.synopsis);
         std::replace(synopsis.begin(), synopsis.end(), '\t', ' '); // JSON does not like tabs :(    
@@ -257,36 +266,27 @@ void Browse_content_tab::SetDigitalContentsGUI()
             
         } catch (...) {}
         
-        pLabel = new TableWidgetItemW<QLabel>(
-                                              aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
-                                              tr(synopsis.c_str()));
-        
-        
-        m_TableWidget.setCellWidget(i,DCF::SYNOPSIS,pLabel);
+        m_TableWidget.setCellWidget(index, DCF::SYNOPSIS, new TableWidgetItemW<QLabel>(aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
+                                                                                                        tr(synopsis.c_str())));
 
-        pLabel = new TableWidgetItemW<QLabel>(
-                                               aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
-                                               QString::number(aTemporar.AVG_rating));
         
-        m_TableWidget.setCellWidget(i,DCF::RATING,pLabel);
+        m_TableWidget.setCellWidget(index, DCF::RATING, new TableWidgetItemW<QLabel>(aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
+                                                                                                        QString::number(aTemporar.AVG_rating)));
 
-        pLabel = new TableWidgetItemW<QLabel>(
-                                              aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
-                                              tr(aTemporar.expiration.c_str()));
         
-        m_TableWidget.setCellWidget(i,DCF::LEFT,pLabel);
+        m_TableWidget.setCellWidget(index, DCF::LEFT, new TableWidgetItemW<QLabel>(aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
+                                                                                                        tr(aTemporar.expiration.c_str())));
 
-        pLabel = new TableWidgetItemW<QLabel>(
-                                              aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
-                                              QString::number(aTemporar.size));
         
-        m_TableWidget.setCellWidget(i,DCF::SIZE,pLabel);
+        m_TableWidget.setCellWidget(index, DCF::SIZE, new TableWidgetItemW<QLabel>(aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
+                                                                                                    QString::number(aTemporar.size)));
 
-        pLabel = new TableWidgetItemW<QLabel>(
-                                               aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
-                                               QString::number(aTemporar.price.amount));
         
-        m_TableWidget.setCellWidget(i,DCF::PRICE,pLabel);
+        m_TableWidget.setCellWidget(index, DCF::PRICE, new TableWidgetItemW<QLabel>(aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
+                                                                                        QString::number(aTemporar.price.amount)));
+        
+        
+        ++index;
     }
 
     m_main_layout.addWidget(&m_TableWidget);
@@ -331,53 +331,31 @@ void Browse_content_tab::Connects()
 
 void Browse_content_tab::doRowColor()
 {
-//    if(green_row != 0)
-//    {
-//        m_pTableWidget->item(green_row,0)->setBackgroundColor(QColor(255,255,255));
-//        m_pTableWidget->item(green_row,1)->setBackgroundColor(QColor(255,255,255));
-//        m_pTableWidget->item(green_row,2)->setBackgroundColor(QColor(255,255,255));
-//        m_pTableWidget->item(green_row,3)->setBackgroundColor(QColor(255,255,255));
 
-//        m_pTableWidget->item(green_row,0)->setForeground(QColor::fromRgb(0,0,0));
-//        m_pTableWidget->item(green_row,1)->setForeground(QColor::fromRgb(0,0,0));
-//        m_pTableWidget->item(green_row,2)->setForeground(QColor::fromRgb(0,0,0));
-//        m_pTableWidget->item(green_row,3)->setForeground(QColor::fromRgb(0,0,0));
-//    }
     QPoint mouse_pos = m_pTableWidget->mapFromGlobal(QCursor::pos());
     QTableWidgetItem *ite = m_pTableWidget->itemAt(mouse_pos);
 
-    if(ite != NULL)
-    {
+    if(ite == NULL) return;
+    
+    
+    int a = ite->row();
+    if(a == 0) return;
+    
+    m_pTableWidget->item(a,0)->setBackgroundColor(QColor(27,176,104));
+    m_pTableWidget->item(a,1)->setBackgroundColor(QColor(27,176,104));
+    m_pTableWidget->item(a,2)->setBackgroundColor(QColor(27,176,104));
+    m_pTableWidget->item(a,3)->setBackgroundColor(QColor(27,176,104));
+    m_pTableWidget->item(a,4)->setBackgroundColor(QColor(27,176,104));
+    m_pTableWidget->item(a,5)->setBackgroundColor(QColor(27,176,104));
 
-        int a = ite->row();
-        if(a != 0)
-        {
-            m_pTableWidget->item(a,0)->setBackgroundColor(QColor(27,176,104));
-            m_pTableWidget->item(a,1)->setBackgroundColor(QColor(27,176,104));
-            m_pTableWidget->item(a,2)->setBackgroundColor(QColor(27,176,104));
-            m_pTableWidget->item(a,3)->setBackgroundColor(QColor(27,176,104));
-            m_pTableWidget->item(a,4)->setBackgroundColor(QColor(27,176,104));
-            m_pTableWidget->item(a,5)->setBackgroundColor(QColor(27,176,104));
-
-            m_pTableWidget->item(a,0)->setForeground(QColor::fromRgb(255,255,255));
-            m_pTableWidget->item(a,1)->setForeground(QColor::fromRgb(255,255,255));
-            m_pTableWidget->item(a,2)->setForeground(QColor::fromRgb(255,255,255));
-            m_pTableWidget->item(a,3)->setForeground(QColor::fromRgb(255,255,255));
-            m_pTableWidget->item(a,4)->setForeground(QColor::fromRgb(255,255,255));
-            m_pTableWidget->item(a,5)->setForeground(QColor::fromRgb(255,255,255));
-            //green_row = a;
-        }
-    }
-    else
-    {
-        green_row = 0;
-    }
+    m_pTableWidget->item(a,0)->setForeground(QColor::fromRgb(255,255,255));
+    m_pTableWidget->item(a,1)->setForeground(QColor::fromRgb(255,255,255));
+    m_pTableWidget->item(a,2)->setForeground(QColor::fromRgb(255,255,255));
+    m_pTableWidget->item(a,3)->setForeground(QColor::fromRgb(255,255,255));
+    m_pTableWidget->item(a,4)->setForeground(QColor::fromRgb(255,255,255));
+    m_pTableWidget->item(a,5)->setForeground(QColor::fromRgb(255,255,255));
+    
 }
-
-//BTableWidget::BTableWidget(int a , int b) : QTableWidget(a,b)
-//{
-//    this->setMouseTracking(true);
-//}
 
 
 void BTableWidget::mouseMoveEvent(QMouseEvent *event)

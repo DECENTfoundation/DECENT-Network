@@ -393,7 +393,7 @@ QString CentralWigdet::getFilterText()const
     switch(nActiveTab)
     {
     case BROWSE_CONTENT:
-        return m_browse_cont_tab.getFilterText();
+        return "";
     case PURCHASED:
         //return tr("bought:") + m_Purchased_tab.getFilterText();
     default:
