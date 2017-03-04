@@ -13,6 +13,9 @@
 #define GUI_WALLET_GLOBAL_HPP
 
 #include <QObject>
+#include <QDateTime>
+#include <QDate>
+#include <QTime>
 
 
 #define ALERT(message)                                  \
@@ -27,6 +30,8 @@
 
 namespace gui_wallet
 {
+    
+        std::string CalculateRemainingTime(QDateTime now_time , QDateTime time);
     
     
         inline std::size_t extra_space(const std::string& s) noexcept

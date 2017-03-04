@@ -16,6 +16,7 @@
 #include <QScrollBar>
 #include "gui_wallet_global.hpp"
 #include "gui_wallet_mainwindow.hpp"
+#include <QSortFilterProxyModel>
 
 #ifndef _PATH_DELIMER_
 #ifdef WIN32
@@ -150,6 +151,8 @@ CentralWigdet::CentralWigdet(QBoxLayout* a_pAllLayout, Mainwindow_gui_wallet* a_
 
     
     setStyleSheet("color:black;""background-color:white;");
+//    m_main_tabs2.setStyleSheet("QTabBar::tab{"
+//                               " height: 40px; width: 175px; "
     m_main_tabs.setStyleSheet("QTabBar::tab{"
                                " height: 40px; width: 179px; "
                                "color:rgb(27,176,104);background-color:white;"
@@ -157,6 +160,7 @@ CentralWigdet::CentralWigdet(QBoxLayout* a_pAllLayout, Mainwindow_gui_wallet* a_
                                "QTabBar::tab:selected{"
                                "color:white;background-color:rgb(27,176,104);}"
                                );
+
 
     PrepareGUIprivate(a_pAllLayout);
     
@@ -287,8 +291,11 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     pLabelTmp->setFixedSize(__SIZE_FOR_IMGS__,__SIZE_FOR_IMGS__);
     
     pComboTmp1 = new QComboBox;
+    pComboTmp1->setStyleSheet("color: black;""background-color:white;"
+                              "border: 1px solid #D3D3D3 ");
+    if(!pComboTmp1){throw __FILE__ "Low memory";}
     
-    pComboTmp1->setStyleSheet("color: black;""background-color:white;");
+//    pComboTmp1->setStyleSheet("color: black;""background-color:white;");
     pHBoxLayoutTmp->addWidget(pComboTmp1);
     m_pUsernameWgt->setLayout(pHBoxLayoutTmp);
     m_first_line_lbl.addWidget(m_pUsernameWgt);
@@ -420,8 +427,15 @@ void CentralWigdet::make_deleyed_warning()
 
 void CentralWigdet::resizeEvent ( QResizeEvent * a_event )
 {
+    //return ;
     QWidget::resizeEvent(a_event);
 
+    /*QString tqsStyle = tr("QTabBar::tab {width: ") +
+            QString::number(a_event->size().width()/5-1,10) + tr("px;}");
+    QTabBar* pTabBar = m_main_tabs2.tabBar();
+    pTabBar->setStyleSheet(tqsStyle);*/
+
+//    QTabBar* pTabBar = m_main_tabs2.tabBar();
 
     QTabBar* pTabBar = m_main_tabs.tabBar();
     pTabBar->resize(size().width(),pTabBar->height());

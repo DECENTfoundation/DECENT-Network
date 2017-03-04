@@ -18,16 +18,22 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include "json.hpp"
+
+#include <ctime>
 #include <limits>
 #include <iostream>
 #include <graphene/chain/config.hpp>
 
 
+#include <QDateTime>
+#include <QDate>
+#include <QTime>
 
 //namespace DCF {enum DIG_CONT_FIELDS{TIME,SYNOPSIS,RATING,SIZE,PRICE,LEFT};}
-static const char* s_vccpItemNames[]={"Time","Title","Rating",
-                                     "Size","Price","Left"};
+static const char* s_vccpItemNames[]={"Title","Rating",
+                                     "Size","Price","Created","Expiration"};
 static const int   s_cnNumberOfCols = sizeof(s_vccpItemNames)/sizeof(const char*);
+
 static const int   s_cnNumberOfSearchFields(sizeof(gui_wallet::ST::s_vcpcSearchTypeStrs)/sizeof(const char*));
 
 using namespace gui_wallet;
@@ -37,7 +43,6 @@ extern int g_nDebugApplication;
 
 Browse_content_tab::Browse_content_tab() : m_pTableWidget(new BTableWidget(1,s_cnNumberOfCols))
 {
-    if(!m_pTableWidget){throw "Low memory!";}
 
     PrepareTableWidgetHeaderGUI();
 
@@ -246,7 +251,10 @@ void Browse_content_tab::ShowDigitalContentsGUI(std::vector<SDigitalContent>& co
     int nWidth = m_pTableWidget->width();
     m_main_layout.removeWidget(m_pTableWidget);
     delete m_pTableWidget;
+
+
     m_pTableWidget = new BTableWidget(filteredContent.size() + 1, s_cnNumberOfCols);
+
 
     
     QTableWidget& m_TableWidget = *m_pTableWidget;
@@ -256,12 +264,14 @@ void Browse_content_tab::ShowDigitalContentsGUI(std::vector<SDigitalContent>& co
     int index = 1;
     for(SDigitalContent* dContPtr: filteredContent)
     {
+
         const SDigitalContent& aTemporar = *dContPtr;
         
         
         m_TableWidget.setCellWidget(index, DCF::TIME, new TableWidgetItemW<QLabel>(aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
                                                                                                 tr(aTemporar.created.c_str())));
         
+
         std::string synopsis = unescape_string(aTemporar.synopsis);
         std::replace(synopsis.begin(), synopsis.end(), '\t', ' '); // JSON does not like tabs :(    
 
@@ -270,7 +280,7 @@ void Browse_content_tab::ShowDigitalContentsGUI(std::vector<SDigitalContent>& co
             synopsis = synopsis_parsed["title"].get<std::string>();
             
         } catch (...) {}
-        
+
         m_TableWidget.setCellWidget(index, DCF::SYNOPSIS, new TableWidgetItemW<QLabel>(aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
                                                                                                         tr(synopsis.c_str())));
 
@@ -279,9 +289,7 @@ void Browse_content_tab::ShowDigitalContentsGUI(std::vector<SDigitalContent>& co
                                                                                                         QString::number(aTemporar.AVG_rating)));
 
         
-        m_TableWidget.setCellWidget(index, DCF::LEFT, new TableWidgetItemW<QLabel>(aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
-                                                                                                        tr(aTemporar.expiration.c_str())));
-
+        
         
         m_TableWidget.setCellWidget(index, DCF::SIZE, new TableWidgetItemW<QLabel>(aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
                                                                                                     QString::number(aTemporar.size)));
@@ -290,7 +298,18 @@ void Browse_content_tab::ShowDigitalContentsGUI(std::vector<SDigitalContent>& co
                                                                                         QString::number(aTemporar.price.amount)));
         
         
+        QDateTime time = QDateTime::fromString(QString::fromStdString(aTemporar.expiration), "yyyy-MM-ddTHH:mm:ss");
+
+        std::string e_str = CalculateRemainingTime(QDateTime::currentDateTime(), time);
+
+        m_TableWidget.setCellWidget(index, DCF::LEFT, new TableWidgetItemW<QLabel>(aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
+                                                                                                        tr(e_str.c_str())));
+
+
+
+
         ++index;
+        
     }
 
     m_main_layout.addWidget(&m_TableWidget);
@@ -336,31 +355,49 @@ void Browse_content_tab::Connects()
 void Browse_content_tab::doRowColor()
 {
 
+    if(green_row != 0)
+    {
+        m_pTableWidget->item(green_row,0)->setBackgroundColor(QColor(255,255,255));
+        m_pTableWidget->item(green_row,1)->setBackgroundColor(QColor(255,255,255));
+        m_pTableWidget->item(green_row,2)->setBackgroundColor(QColor(255,255,255));
+        m_pTableWidget->item(green_row,3)->setBackgroundColor(QColor(255,255,255));
+
+        m_pTableWidget->item(green_row,0)->setForeground(QColor::fromRgb(0,0,0));
+        m_pTableWidget->item(green_row,1)->setForeground(QColor::fromRgb(0,0,0));
+        m_pTableWidget->item(green_row,2)->setForeground(QColor::fromRgb(0,0,0));
+        m_pTableWidget->item(green_row,3)->setForeground(QColor::fromRgb(0,0,0));
+    }
+    std::cout<<"-----------------"<<m_pTableWidget->columnCount()<<std::endl;
+    std::cout<<"-----------------"<<m_pTableWidget->rowCount()<<std::endl;
     QPoint mouse_pos = m_pTableWidget->mapFromGlobal(QCursor::pos());
     QTableWidgetItem *ite = m_pTableWidget->itemAt(mouse_pos);
+    if(ite != NULL)
+    {
+        std::cout<<"DO ROE COlor"<<std::endl;
+        int a = ite->row();
+        if(a != 0)
+        {
+            m_pTableWidget->item(a,0)->setBackgroundColor(QColor(27,176,104));
+            m_pTableWidget->item(a,1)->setBackgroundColor(QColor(27,176,104));
+            m_pTableWidget->item(a,2)->setBackgroundColor(QColor(27,176,104));
+            m_pTableWidget->item(a,3)->setBackgroundColor(QColor(27,176,104));
+            m_pTableWidget->item(a,4)->setBackgroundColor(QColor(27,176,104));
+            m_pTableWidget->item(a,5)->setBackgroundColor(QColor(27,176,104));
 
-    if(ite == NULL) return;
-    
-    
-    int a = ite->row();
-    if(a == 0) return;
-    
-    m_pTableWidget->item(a,0)->setBackgroundColor(QColor(27,176,104));
-    m_pTableWidget->item(a,1)->setBackgroundColor(QColor(27,176,104));
-    m_pTableWidget->item(a,2)->setBackgroundColor(QColor(27,176,104));
-    m_pTableWidget->item(a,3)->setBackgroundColor(QColor(27,176,104));
-    m_pTableWidget->item(a,4)->setBackgroundColor(QColor(27,176,104));
-    m_pTableWidget->item(a,5)->setBackgroundColor(QColor(27,176,104));
-
-    m_pTableWidget->item(a,0)->setForeground(QColor::fromRgb(255,255,255));
-    m_pTableWidget->item(a,1)->setForeground(QColor::fromRgb(255,255,255));
-    m_pTableWidget->item(a,2)->setForeground(QColor::fromRgb(255,255,255));
-    m_pTableWidget->item(a,3)->setForeground(QColor::fromRgb(255,255,255));
-    m_pTableWidget->item(a,4)->setForeground(QColor::fromRgb(255,255,255));
-    m_pTableWidget->item(a,5)->setForeground(QColor::fromRgb(255,255,255));
-    
+            m_pTableWidget->item(a,0)->setForeground(QColor::fromRgb(255,255,255));
+            m_pTableWidget->item(a,1)->setForeground(QColor::fromRgb(255,255,255));
+            m_pTableWidget->item(a,2)->setForeground(QColor::fromRgb(255,255,255));
+            m_pTableWidget->item(a,3)->setForeground(QColor::fromRgb(255,255,255));
+            m_pTableWidget->item(a,4)->setForeground(QColor::fromRgb(255,255,255));
+            m_pTableWidget->item(a,5)->setForeground(QColor::fromRgb(255,255,255));
+            green_row = a;
+        }
+    }
+    else
+    {
+        green_row = 0;
+    }
 }
-
 
 void BTableWidget::mouseMoveEvent(QMouseEvent *event)
 {

@@ -29,7 +29,7 @@ namespace gui_wallet
 {
 
     // DCF stands for Digital Contex Fields
-namespace DCF {enum DIG_CONT_FIELDS{TIME,SYNOPSIS,RATING,SIZE,PRICE,LEFT,NUM_OF_DIG_CONT_FIELDS};}
+namespace DCF {enum DIG_CONT_FIELDS{SYNOPSIS, RATING, SIZE, PRICE, TIME, LEFT, NUM_OF_DIG_CONT_FIELDS};}
 
 // ST stands for search type
 namespace ST{
@@ -107,7 +107,7 @@ protected:
     
     std::vector<SDigitalContent> m_dContents;
     bool m_doUpdate = true;
-    
+    int green_row;
     QTimer  m_contentUpdateTimer;
 };
 

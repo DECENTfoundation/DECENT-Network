@@ -38,6 +38,7 @@ Overview_tab::Overview_tab(class Mainwindow_gui_wallet* a_pPar)
     table_widget.setItem(0,1,new QTableWidgetItem(tr("Asset ID")));
     table_widget.setItem(0,2,new QTableWidgetItem(tr("Author")));
 
+
     QFont f( "Open Sans Bold", 14, QFont::Bold);
 
     table_widget.item(0,0)->setFont(f);
@@ -131,7 +132,6 @@ void Overview_tab::CreateTable()
         table_widget.setItem(i+1,2,new QTableWidgetItem((accounts_names[i])));
 
         table_widget.setRowHeight(i + 1,40);
-
 
         QPixmap image1(":/icon/images/info1_white.svg");
        // QPixmap image1 = image.scaled(QSize(50,50), 1 Qt::AA_Use96Dpi);
