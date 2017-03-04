@@ -144,4 +144,5 @@ programs/cli_wallet/test.txt
 programs/cli_wallet/packages/transfer.log
 programs/cli_wallet/transfer.log
 artifacts/*
+*moc*
 

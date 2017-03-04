@@ -74,7 +74,7 @@ namespace gui_wallet
     protected:
         virtual void resizeEvent ( QResizeEvent * event );
     private:
-        QHBoxLayout     m_main_layout;
+        QVBoxLayout     m_main_layout;
         QVBoxLayout     m_synopsis_layout;
         QVBoxLayout     m_info_layout;
         QTableWidget    m_info_widget;

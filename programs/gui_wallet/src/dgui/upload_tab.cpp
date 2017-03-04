@@ -211,13 +211,17 @@ Upload_tab::Upload_tab()
 {
     QPalette pltEdit;
 
-    m_synopsis_layout.addWidget(&m_title_label);
+    //m_synopsis_layout.addWidget(&m_title_label);
+    m_title_text.setPlaceholderText("Title");
+    m_title_text.setFixedHeight(40);
+    m_title_text.setFixedWidth(200);
     m_synopsis_layout.addWidget(&m_title_text);
 
+    //m_description_text.setFrameStyle(QFrame::NoFrame);
     m_synopsis_layout.addWidget(&m_description_label);
     m_synopsis_layout.addWidget(&m_description_text);
 
-    m_main_layout.addLayout(&m_synopsis_layout);
+    m_main_layout.addLayout(&m_synopsis_layout);// change m_main_layout QHBox... to QVBox...
     m_info_layout.addWidget(&m_infoLayoutHeader);
 
     ////////////////////////////////////////////////////////////////////////////
