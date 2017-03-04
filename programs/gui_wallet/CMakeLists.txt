@@ -5,7 +5,14 @@ set(CMAKE_AUTORCC ON)
 find_package( Qt5Core REQUIRED )
 find_package( Qt5Widgets REQUIRED )
 
+set(MACOSX_BUNDLE_ICON_FILE desktop)
+set(GUI_WALLET_ICON ${CMAKE_CURRENT_SOURCE_DIR}/desktop.icns)
+set_source_files_properties(${GUI_WALLET_ICON} PROPERTIES
+       MACOSX_PACKAGE_LOCATION "Resources")
+
+
 add_executable( gui_wallet MACOSX_BUNDLE
+                ${GUI_WALLET_ICON}
                 src/dgui/browse_content_tab.cpp
                 src/dgui/cliwalletdlg.cpp
                 src/dgui/decent_gui_contentdlg.cpp
@@ -64,6 +71,7 @@ add_executable( gui_wallet MACOSX_BUNDLE
                 src/ui_wallet/fc_rpc_gui.hpp
 
                 resources.qrc
+                desktop.icns
              )
 
 target_include_directories( gui_wallet PUBLIC
