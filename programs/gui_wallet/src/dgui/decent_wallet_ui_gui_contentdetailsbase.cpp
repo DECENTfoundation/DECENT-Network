@@ -10,15 +10,16 @@
 
 #include "decent_wallet_ui_gui_contentdetailsbase.hpp"
 
+using namespace gui_wallet;
 
-static const char* s_vcpcFieldsGeneral[NUMBER_OF_SUB_LAYOUTS] = {
-    "Author", "Expiration","Created","Price", "Amount","Asset ID",
+static const char* s_vcpcFieldsGeneral[NUMBER_OF_SUB_LAYOUTS2] = {
+    "Author", "Expiration","Created","Price", "Amount",
     "Averege Rating","Size","Times Bought"
 };
 
 
-static const char* s_vcpcFieldsBougth[NUMBER_OF_SUB_LAYOUTS] = {
-    "Author", "Expiration","Created","Price", "Amount","Asset ID",
+static const char* s_vcpcFieldsBougth[NUMBER_OF_SUB_LAYOUTS2] = {
+    "Author", "Expiration","Created","Price", "Amount",
     "Averege Rating","Size","Times Bought"
 };
 
@@ -27,7 +28,7 @@ typedef TypeCpcChar* NewType;
 
 static NewType  s_vFields[]={s_vcpcFieldsGeneral,s_vcpcFieldsBougth};
 
-decent::wallet::ui::gui::ContentDetailsBase::ContentDetailsBase()
+ContentDetailsBase::ContentDetailsBase()
 {
     int i, nIndexKent(1), nIndexZuyg(0);
 
@@ -36,7 +37,7 @@ decent::wallet::ui::gui::ContentDetailsBase::ContentDetailsBase()
     m_main_layout.addLayout(&m_free_for_child);
 
 
-    for(i=0;i<NUMBER_OF_SUB_LAYOUTS;++i,nIndexZuyg+=2,nIndexKent+=2)
+    for(i=0;i<NUMBER_OF_SUB_LAYOUTS2;++i,nIndexZuyg+=2,nIndexKent+=2)
     {
         if(i%2==0){m_vSub_Widgets[i].setStyleSheet("background-color:lightGray;");}
         else{m_vSub_Widgets[i].setStyleSheet("background-color:white;");}
@@ -52,21 +53,20 @@ decent::wallet::ui::gui::ContentDetailsBase::ContentDetailsBase()
     setStyleSheet("background-color:white;");
 }
 
-decent::wallet::ui::gui::ContentDetailsBase::~ContentDetailsBase()
+ContentDetailsBase::~ContentDetailsBase()
 {
 }
 
 // DCF stands for Digital Content Fields
-namespace DCF{enum{AMOUNT=9,ASSET_ID=11,TIMES_BOUGHT=17};}
+namespace DCF{enum{AMOUNT=9, TIMES_BOUGHT=15};}
 
-void decent::wallet::ui::gui::ContentDetailsBase::execCDB(const decent::wallet::ui::gui::SDigitalContent& a_cnt_details)
+void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details)
 {
-#if 1
     int i,nIndexZuyg(0);
     NewType vNames = s_vFields[a_cnt_details.type];
     m_pContentInfo = &a_cnt_details;
 
-    for(i=0;i<NUMBER_OF_SUB_LAYOUTS;++i,nIndexZuyg+=2)
+    for(i=0;i<NUMBER_OF_SUB_LAYOUTS2;++i,nIndexZuyg+=2)
     {
         m_vLabels[nIndexZuyg].setText(tr(vNames[i]));
     }
@@ -74,16 +74,19 @@ void decent::wallet::ui::gui::ContentDetailsBase::execCDB(const decent::wallet::
     m_vLabels[1].setText(tr(m_pContentInfo->author.c_str()));
     m_vLabels[3].setText(tr(m_pContentInfo->expiration.c_str()));
     m_vLabels[5].setText(tr(m_pContentInfo->created.c_str()));
-    m_vLabels[7].setText(QString::number(m_pContentInfo->price.amount,'f').remove( QRegExp("0+$") ).remove( QRegExp("\\.$") ));
-    m_vLabels[DCF::AMOUNT].setText(QString::number(m_pContentInfo->size,'f').remove( QRegExp("0+$") ).remove( QRegExp("\\.$") ));
-    m_vLabels[DCF::ASSET_ID].setText(tr(a_cnt_details.price.asset_id.c_str()));
-    m_vLabels[13].setText(QString::number(m_pContentInfo->AVG_rating,'f').remove( QRegExp("0+$") ).remove( QRegExp("\\.$") ));
+    
+    //m_vLabels[7].setText(QString::number(m_pContentInfo->price.amount,'f').remove( QRegExp("0+$") ).remove( QRegExp("\\.$") ));
+    
+    std::string str_price = std::to_string(a_cnt_details.price.amount) + " DECENT";
+    
+    m_vLabels[7].setText(tr(str_price.c_str()));
+    m_vLabels[DCF::AMOUNT].setText(QString::number(m_pContentInfo->size));
+    
+    m_vLabels[11].setText(QString::number(m_pContentInfo->AVG_rating));
     //QString::number(aTemporar.AVG_rating,'f').remove( QRegExp("0+$") ).remove( QRegExp("\\.$") )
-    QString qsSizeTxt = QString::number(m_pContentInfo->size,'f').remove( QRegExp("0+$") ).remove( QRegExp("\\.$") ) +
-            tr(" MB");
-    m_vLabels[15].setText(qsSizeTxt);
-    m_vLabels[DCF::TIMES_BOUGHT].setText(QString::number(a_cnt_details.times_bougth,10));
+    QString qsSizeTxt = QString::number(m_pContentInfo->size) + tr(" MB");
+    m_vLabels[13].setText(qsSizeTxt);
+    m_vLabels[DCF::TIMES_BOUGHT].setText(QString::number(a_cnt_details.times_bougth));
 
     QDialog::exec();
-#endif
 }

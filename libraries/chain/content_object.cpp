@@ -12,6 +12,12 @@ namespace graphene { namespace chain {
       this->synopsis = co.synopsis;
       this->URI = co.URI;
       this->AVG_rating = co.AVG_rating;
+      
+      this->size = co.size;
+      this->expiration = co.expiration;
+      this->created = co.created;
+      this->times_bought = co.times_bought;
+       
       return *this;
    }
    

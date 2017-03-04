@@ -10,11 +10,13 @@
 
 #include "decent_wallet_ui_gui_contentdetailsbougth.hpp"
 
+using namespace gui_wallet;
+
 
 void SetNewTaskQtMainWnd2Glb(const std::string& a_inp_line, void* a_clbData);
 void SetNewTaskQtMainWnd3Glb(const std::string& a_inp_line, void* a_clbData);
 
-decent::wallet::ui::gui::ContentDetailsBougth::ContentDetailsBougth()
+ContentDetailsBougth::ContentDetailsBougth()
 {
     m_rate_layout_right.setMargin(1);
     m_rate_layout_right.setContentsMargins(3,0,20,0);
@@ -45,21 +47,21 @@ decent::wallet::ui::gui::ContentDetailsBougth::ContentDetailsBougth()
 }
 
 
-decent::wallet::ui::gui::ContentDetailsBougth::~ContentDetailsBougth()
+ContentDetailsBougth::~ContentDetailsBougth()
 {
 }
 
 
-void decent::wallet::ui::gui::ContentDetailsBougth::execCDD(
+void ContentDetailsBougth::execCDD(
         const QString& a_user_name,
-        const decent::wallet::ui::gui::SDigitalContent& a_cnt_details)
+        const SDigitalContent& a_cnt_details)
 {
     m_user_name = a_user_name;
     execCDB(a_cnt_details);
 }
 
 
-void decent::wallet::ui::gui::ContentDetailsBougth::RateContentSlot(int a_nSelected, int a_nIndex)
+void ContentDetailsBougth::RateContentSlot(int a_nSelected, int a_nIndex)
 {
 
     int nContinue = 1;
@@ -104,7 +106,7 @@ void decent::wallet::ui::gui::ContentDetailsBougth::RateContentSlot(int a_nSelec
     std::string inp_str = qsRatingStr.toStdString();
 #if 1
     if(!nContinue){return;}
-    SetNewTaskQtMainWnd2Glb(inp_str,NULL);
+    SetNewTaskQtMainWnd3Glb(inp_str,NULL);
 #endif
 
     __DEBUG_APP2__(0,"selected=%d, index=%d, continue=%d, rating=%ld, str=\"%s\"",

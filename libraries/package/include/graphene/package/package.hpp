@@ -35,7 +35,7 @@ public:
 
 	bool is_valid() const { return _hash != fc::ripemd160(); }
 
-	uint32_t create_proof_of_custody(decent::crypto::custody_data cd, decent::crypto::custody_proof& proof) const;
+	uint32_t create_proof_of_custody(const decent::crypto::custody_data& cd, decent::crypto::custody_proof& proof) const;
 
 private:
 	boost::filesystem::path   _package_path;
@@ -159,14 +159,12 @@ public:
     void set_libtorrent_config(const boost::filesystem::path& libtorrent_config_file);
     boost::filesystem::path get_libtorrent_config() const;
 
-    decent::crypto::custody_utils& get_custody_utils() { return _custody_utils; }
+    uint32_t create_proof_of_custody(const boost::filesystem::path& content_file, const decent::crypto::custody_data& cd, decent::crypto::custody_proof& proof);
     void print_all_transfers();
-
 
 private:
 	void restore_json_state();
 	void save_json_state();
-
 
 private:
     mutable fc::mutex                  _mutex;
@@ -174,10 +172,7 @@ private:
     boost::filesystem::path            _libtorrent_config_file;
     decent::crypto::custody_utils      _custody_utils;
 	protocol_handler_map               _protocol_handlers;
-
 	transfer_jobs					   _all_transfers;
-
-    
 };
 
 

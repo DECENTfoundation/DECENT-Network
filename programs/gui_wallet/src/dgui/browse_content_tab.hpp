@@ -10,6 +10,7 @@
 #ifndef BROWSE_CONTENT_TAB_H
 #define BROWSE_CONTENT_TAB_H
 
+
 #include <QWidget>
 #include <QTableWidget>
 #include <QVBoxLayout>
@@ -19,50 +20,104 @@
 #include <QLineEdit>
 #include <QHBoxLayout>
 #include <QComboBox>
+#include <QTimer>
+#include "gui_wallet_tabcontentmanager.hpp"
+
 
 
 namespace gui_wallet
 {
 
     // DCF stands for Digital Contex Fields
-    namespace DCF {enum DIG_CONT_FIELDS{TIME,SYNOPSIS,RATING,SIZE,PRICE,LEFT,NUM_OF_DIG_CONT_FIELDS};}
+namespace DCF {enum DIG_CONT_FIELDS{TIME,SYNOPSIS,RATING,SIZE,PRICE,LEFT,NUM_OF_DIG_CONT_FIELDS};}
 
-    // ST stands for search type
-    namespace ST{
+// ST stands for search type
+namespace ST{
     enum STtype{URI_start,author,content};
     static const char* s_vcpcSearchTypeStrs[] = {"URI_start","author","content"};
+}
+
+
+
+class BTableWidget : public QTableWidget
+{
+    Q_OBJECT
+public:
+    BTableWidget(int a , int b) : QTableWidget(a,b)
+    {
+         this->setMouseTracking(true);
+    };
+
+    virtual void mouseMoveEvent(QMouseEvent * event);
+public:
+signals:
+    void mouseMoveEventDid();
+};
+
+
+
+
+
+
+
+class Browse_content_tab : public TabContentManager
+{
+    friend class CentralWigdet;
+    Q_OBJECT
+public:
+    Browse_content_tab();
+    virtual ~Browse_content_tab();
+
+    void ShowDigitalContentsGUI(std::vector<SDigitalContent>& contents);
+    void Connects();
+
+public:
+    
+    virtual void content_activated() {
+        updateContents();
+    }
+    
+    
+    virtual void content_deactivated() {
+    
     }
 
-    class Browse_content_tab : public QWidget
-    {
-        friend class CentralWigdet;
-        Q_OBJECT
-    public:
-        Browse_content_tab();
-        virtual ~Browse_content_tab();
+    
+public:
+signals:
+    void ShowDetailsOnDigContentSig(SDigitalContent get_cont_str);
 
-        void SetDigitalContentsGUI(const std::vector<decent::wallet::ui::gui::SDigitalContent>& contents);
-        QString getFilterText()const;
+public slots:
+    void onTextChanged(const QString& text);
+    void doRowColor();
+    void updateContents();
+    void maybeUpdateContent();
 
-    public:
-    signals:
-        void ShowDetailsOnDigContentSig(decent::wallet::ui::gui::SDigitalContent get_cont_str);
+protected:
+    void DigContCallback(_NEEDED_ARGS2_);
+    void PrepareTableWidgetHeaderGUI();
+    virtual void resizeEvent ( QResizeEvent * a_event );
+    void ArrangeSize();
+    
+private:
+    bool FilterContent(const SDigitalContent& content);
 
-    protected:
-        void PrepareTableWidgetHeaderGUI();
-        void DigContCallback(_NEEDED_ARGS2_);
-        virtual void resizeEvent ( QResizeEvent * a_event );
-        void ArrangeSize();
+protected:
+    QVBoxLayout     m_main_layout;
+    QHBoxLayout     m_search_layout;
 
-    protected:
-        QVBoxLayout     m_main_layout;
-        QHBoxLayout     m_search_layout;
-        //QTableWidget    m_TableWidget; // Should be investigated
-        QTableWidget*    m_pTableWidget;
-        //int              m_nNumberOfContentsPlus1;
-        QLineEdit       m_filterLineEdit;
-        QComboBox       m_searchTypeCombo;
-    };
+    BTableWidget*    m_pTableWidget;
+    
+    QLineEdit       m_filterLineEdit;
+    QComboBox       m_searchTypeCombo;
+    
+    std::vector<SDigitalContent> m_dContents;
+    bool m_doUpdate = false;
+    
+    QTimer  m_contentUpdateTimer;
+};
+
+
 }
 
 #endif // BROWSE_CONTENT_TAB_H

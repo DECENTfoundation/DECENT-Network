@@ -21,8 +21,6 @@ static const char* firsItemNames[]={"Time","Type","Info","Fee"};
 
 Transactions_tab::Transactions_tab() : green_row(0)
 {
-    connect(tablewidget,SIGNAL(mouseMoveEventDid()),this,SLOT(doRowColor()));
-
     //create table (widget)
     tablewidget = new HTableWidget();
     tablewidget->setRowCount(1);//add first row in table
@@ -42,7 +40,7 @@ Transactions_tab::Transactions_tab() : green_row(0)
     user.setMaximumHeight(40);
     user.setFixedHeight(40);
 
-    QFont f( "Open Sans Bold", 10, QFont::Bold);
+    QFont f( "Open Sans Bold", 14, QFont::Bold);
     for (int i = 0; i < 4; ++i)
     {
         tablewidget->setItem(0, i, new QTableWidgetItem(tr(firsItemNames[i])));
@@ -53,11 +51,13 @@ Transactions_tab::Transactions_tab() : green_row(0)
         tablewidget->item(0, i)->setForeground(QColor::fromRgb(51,51,51));
     }
 
+    connect(tablewidget,SIGNAL(mouseMoveEventDid()),this,SLOT(doRowColor()));
+
     QResource icon;
     icon.registerResource("/Users/vahe/dev/DECENTfoundation/DECENT-Network/programs/gui_wallet/resource.rcc");
 
     QHBoxLayout* search_lay = new QHBoxLayout();
-    QPixmap image(":/icon/images/images/search.svg");
+    QPixmap image(":/icon/images/search.svg");
     search_label.setSizeIncrement(100,40);
     search_label.setPixmap(image);
 
@@ -145,16 +145,25 @@ void Transactions_tab::doRowColor()
     }
     else
     {
-        green_row == 0;
+        green_row = 0;
     }
 }
+
+void Transactions_tab::Connects()
+{
+    connect(tablewidget,SIGNAL(mouseMoveEventDid()),this,SLOT(doRowColor()));
+}
+
+
+HTableWidget::HTableWidget() : QTableWidget()
+{
+    this->setMouseTracking(true);
+}
+
 
 void HTableWidget::mouseMoveEvent(QMouseEvent *event)
 {
     mouseMoveEventDid();
 }
 
-HTableWidget::HTableWidget() : QTableWidget()
-{
-    this->setMouseTracking(true);
-}
+

@@ -313,16 +313,12 @@ void package_manager::restore_json_state() {
 
 
 void package_manager::save_json_state() {
-
 }
 
 package_manager::package_manager() {
     _protocol_handlers.insert(std::make_pair("magnet", std::make_shared<torrent_transfer>()));
     _protocol_handlers.insert(std::make_pair("ipfs", std::make_shared<ipfs_transfer>()));
 }
-
-
-
 
 void package_manager::set_packages_path(const boost::filesystem::path& packages_path) {
     if (!exists(packages_path) || !is_directory(packages_path)) {
@@ -338,10 +334,8 @@ void package_manager::set_packages_path(const boost::filesystem::path& packages_
         }
     }
 
-    {
-        fc::scoped_lock<fc::mutex> guard(_mutex);
-        _packages_path = packages_path;
-    }
+    fc::scoped_lock<fc::mutex> guard(_mutex);
+    _packages_path = packages_path;
 
     restore_json_state();
 }
@@ -407,6 +401,8 @@ bool package_manager::unpack_package(const path& destination_directory, const pa
         }
     }
 
+    fc::scoped_lock<fc::mutex> guard(_mutex);
+
     path archive_file = package.get_content_file();
     path temp_dir = temp_directory_path();
     path zip_file = temp_dir / "content.zip";
@@ -432,8 +428,6 @@ bool package_manager::unpack_package(const path& destination_directory, const pa
 }
 
 package_object package_manager::create_package( const boost::filesystem::path& content_path, const boost::filesystem::path& samples, const fc::sha512& key, decent::crypto::custody_data& cd) {
-
-	
 	if (!is_directory(content_path) && !is_regular_file(content_path)) {
         FC_THROW("Content path is not directory or file");
 	}
@@ -490,7 +484,11 @@ package_object package_manager::create_package( const boost::filesystem::path& c
 
     AES_encrypt_file(content_zip.string(), aes_file_path.string(), k);
     remove(content_zip);
-    _custody_utils.create_custody_data(aes_file_path, cd);
+
+    {
+        fc::scoped_lock<fc::mutex> guard(_mutex);
+        _custody_utils.create_custody_data(aes_file_path, cd);
+    }
 
     fc::ripemd160 hash = calculate_hash(aes_file_path);
     rename(temp_path, packages_path / hash.str());
@@ -498,13 +496,12 @@ package_object package_manager::create_package( const boost::filesystem::path& c
 	return package_object(packages_path / hash.str());
 }
 	
-
-
-
-package_transfer_interface::transfer_id 
+package_transfer_interface::transfer_id
 package_manager::upload_package( const package_object& package, 
                                  const string& protocol_name,
                                  package_transfer_interface::transfer_listener& listener ) {
+
+    fc::scoped_lock<fc::mutex> guard(_mutex);
 
     protocol_handler_map::iterator it = _protocol_handlers.find(protocol_name);
     if (it == _protocol_handlers.end()) {
@@ -525,7 +522,6 @@ package_manager::upload_package( const package_object& package,
         std::cout << "Upload error: " << ex.what() << std::endl;
     }
 
-
     return t.job_id;
 }
 
@@ -533,6 +529,7 @@ package_transfer_interface::transfer_id
 package_manager::download_package( const string& url,
                                    package_transfer_interface::transfer_listener& listener ) {
 
+    fc::scoped_lock<fc::mutex> guard(_mutex);
     fc::url download_url(url);
 
     protocol_handler_map::iterator it = _protocol_handlers.find(download_url.proto());
@@ -558,6 +555,7 @@ package_manager::download_package( const string& url,
 }
 
 void package_manager::print_all_transfers() {
+    fc::scoped_lock<fc::mutex> guard(_mutex);
     for (int i = 0; i < _all_transfers.size(); ++i) {
         const transfer_job& job = _all_transfers[i];
         cout << "~~~ Status for job #" << job.job_id << " [" << ((job.job_type == transfer_job::UPLOAD) ? "Upload" : "Download") << "]\n";
@@ -568,7 +566,7 @@ void package_manager::print_all_transfers() {
 
 package_transfer_interface::transfer_progress 
 package_manager::get_progress(std::string URI) const {
-
+    fc::scoped_lock<fc::mutex> guard(_mutex);
     for (int i = 0; i < _all_transfers.size(); ++i) {
         const transfer_job& job = _all_transfers[i];
         string transfer_url = job.transport->get_transfer_url();
@@ -581,6 +579,7 @@ package_manager::get_progress(std::string URI) const {
 }
 
 std::string package_manager::get_transfer_url(package_transfer_interface::transfer_id id) {
+    fc::scoped_lock<fc::mutex> guard(_mutex);
     if (id >= _all_transfers.size()) {
         FC_THROW("Invalid transfer id: ${id}", ("id", id) );
     }
@@ -591,10 +590,10 @@ std::string package_manager::get_transfer_url(package_transfer_interface::transf
 
 
 std::vector<package_object> package_manager::get_packages() {
-    const path packages_path = get_packages_path();
+    fc::scoped_lock<fc::mutex> guard(_mutex);
 
     std::vector<package_object> all_packages;
-    directory_iterator it(packages_path), it_end;
+    directory_iterator it(_packages_path), it_end;
     for (; it != it_end; ++it) {
         if (is_directory(*it)) {
             all_packages.push_back(package_object(it->path().string()));
@@ -619,6 +618,11 @@ void package_manager::delete_package(fc::ripemd160 hash) {
     remove_all(po.get_path());
 }
 
-uint32_t package_object::create_proof_of_custody(decent::crypto::custody_data cd, decent::crypto::custody_proof&proof) const {
-   return package_manager::instance().get_custody_utils().create_proof_of_custody(get_content_file(), cd, proof);
+uint32_t package_manager::create_proof_of_custody(const boost::filesystem::path& content_file, const decent::crypto::custody_data& cd, decent::crypto::custody_proof&proof) {
+    fc::scoped_lock<fc::mutex> guard(_mutex);
+    return _custody_utils.create_proof_of_custody(content_file, cd, proof);
+}
+
+uint32_t package_object::create_proof_of_custody(const decent::crypto::custody_data& cd, decent::crypto::custody_proof& proof) const {
+   return package_manager::instance().create_proof_of_custody(get_content_file(), cd, proof);
 }

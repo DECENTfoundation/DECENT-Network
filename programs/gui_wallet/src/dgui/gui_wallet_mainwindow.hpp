@@ -11,7 +11,7 @@
 #define MAINWINDOW_GUI_WALLET_H
 
 #include <QMainWindow>
-#include "gui_wallet_centralwigdet.hpp"
+#include "gui_wallet_centralwidget.hpp"
 #include <QAction>
 #include <QLineEdit>
 #include <QHBoxLayout>
@@ -22,18 +22,17 @@
 #include "cliwalletdlg.hpp"
 #include <unnamedsemaphorelite.hpp>
 #include <stdarg.h>
+#include <string>
+#include <map>
 #include "decent_wallet_ui_gui_contentdetailsgeneral.hpp"
 #include "decent_wallet_ui_gui_contentdetailsbougth.hpp"
 
 namespace gui_wallet
 {
 
-    //class Mainwindow_gui_wallet : public QMainWindow
     class Mainwindow_gui_wallet : public QMainWindow
     {
-//        friend class Overview_tab;
-//        friend class Transactions_tab;
-//        friend class CentralWigdet;
+
         Q_OBJECT
     public:
         Mainwindow_gui_wallet();
@@ -49,7 +48,6 @@ namespace gui_wallet
         void TaskDoneFuncGUI(void* clbkArg,int64_t err,const std::string& task,const std::string& result);
         void ManagementNewFuncGUI(void* clbkArg,int64_t err,const std::string& task,const std::string& result);
 
-        void TaskDoneBrowseContentGUI(void* a_clbkArg,int64_t a_err,const std::string& a_task,const std::string& a_result);
         void TaskDoneTransactionsGUI(void* a_clbkArg,int64_t a_err,const std::string& a_task,const std::string& a_result);
         void TaskDoneUploadGUI(void* a_clbkArg,int64_t a_err,const std::string& a_task,const std::string& a_result);
     public:
@@ -59,30 +57,33 @@ namespace gui_wallet
 
         void TaskDoneFuncGUI3(void* clbkArg,int64_t err,const std::string& task,const fc::variant& result);
 
-        void TaskDoneBrowseContentGUI3(void* a_clbkArg,int64_t a_err,const std::string& a_task,const fc::variant& a_result);
         void TaskDoneTransactionsGUI3(void* a_clbkArg,int64_t a_err,const std::string& a_task,const fc::variant& a_result);
         void TaskDoneUploadGUI3(void* a_clbkArg,int64_t a_err,const std::string& a_task,const fc::variant& a_result);
         void TaskDoneOverrviewGUI3(void* a_clbkArg,int64_t a_err,const std::string& a_task,const fc::variant& a_result);
         void TaskDonePurchasedGUI3(void* a_clbkArg,int64_t a_err,const std::string& a_task,const fc::variant& a_result);
 
-        //void RedrawTransacionTabGUI();
-        void ManagementBrowseContentGUI();
+        
+        
+        
         void ManagementTransactionsGUI();
         void ManagementUploadGUI();
         void ManagementOverviewGUI();
         void ManagementPurchasedGUI();
 
-        void CliCallbackFnc(void*arg,const std::string& task);
-        int GetDigitalContentsFromString(DCT::DIG_CONT_TYPES a_type,
-                                         std::vector<decent::wallet::ui::gui::SDigitalContent>& acContents,
-                                         const char* contents_str);
+        
+        
+        void UpdateLockedStatus();
 
-        void ShowDigitalContextesGUI(QString filter);
+        void CliCallbackFnc(void*arg,const std::string& task);
+        int GetDigitalContentsFromVariant(DCT::DIG_CONT_TYPES a_type,
+                                         std::vector<SDigitalContent>& acContents,
+                                         const fc::variant& contents_var);
 
         void DisplayWalletContentGUI();
 
-        static void SetPassword(void* a_owner,int a_answer,/*string**/void* a_str_ptr);
-
+        void SetPassword(void* a_owner, void* a_str_ptr);
+        
+        
     protected slots:
         void CurrentUserChangedSlot(const QString&);
 
@@ -98,13 +99,12 @@ namespace gui_wallet
 
         void ConnectSlot();
         void ImportKeySlot();
+        void LockSlot();
         void UnlockSlot();
         void OpenCliWalletDlgSlot();
         void OpenInfoDlgSlot();
 
-        void ShowDetailsOnDigContentSlot(decent::wallet::ui::gui::SDigitalContent dig_cont);
-
-        void listAccountsSlot(QString);
+        void ShowDetailsOnDigContentSlot(SDigitalContent dig_cont);
 
     protected:
         virtual void moveEvent(QMoveEvent *) override ;
@@ -130,20 +130,21 @@ namespace gui_wallet
         QAction             m_ActionInfo;
         QAction             m_ActionHelp;
         QAction             m_ActionWalletContent;
+        QAction             m_ActionLock;
         QAction             m_ActionUnlock;
         QAction             m_ActionImportKey;
         QAction             m_ActionOpenCliWallet;
         QAction             m_ActionOpenInfoDlg;
         ConnectDlg          m_ConnectDlg;
         TextDisplayDialog   m_info_dialog;
-        //WalletContentDlg    m_wallet_content_dlg;
-
-        //std::vector<account_object_str>  m_vAccounts;
-        //std::vector<std::vector<asset_str>>   m_vAccountsBalances;
+        
+        
         QVBoxLayout             m_main_layout;
         QLabel                  m_num_acc_or_error_label;
         int                     m_nError;
         std::string             m_error_string;
+
+        bool                m_locked;
 
         decent::gui::tools::RichDialog m_import_key_dlg;
 
@@ -153,18 +154,22 @@ namespace gui_wallet
         QString                            m_cqsPreviousFilter;
         QTextEdit*                          m_pInfoTextEdit;
         CliWalletDlg*                        m_pcInfoDlg;
-        //std::string                         m_URI;
-        std::vector<decent::wallet::ui::gui::SDigitalContent> m_vcDigContent;
+
+        std::vector<SDigitalContent> m_vcDigContent;
+        std::vector<SDigitalContent> m_vcDigContentOld;
         int                     m_nConnected;
         int                     m_nUserComboTriggeredInGui;
         SConnectionStruct   m_wdata2;
-        PasswordDialog      m_PasswdDialog;
+
+        PasswordDialog      m_SetPasswordDialog;
+        PasswordDialog      m_UnlockDialog;
+
         int                 m_nJustConnecting;
 
         QString             m_default_stylesheet;
 
-        decent::wallet::ui::gui::ContentDetailsGeneral m_dig_cont_detailsGenDlg;
-        decent::wallet::ui::gui::ContentDetailsBougth m_dig_cont_detailsBougDlg;
+        ContentDetailsGeneral m_dig_cont_detailsGenDlg;
+        ContentDetailsBougth m_dig_cont_detailsBougDlg;
 
         std::vector<std::string>        m_user_ids;
     };

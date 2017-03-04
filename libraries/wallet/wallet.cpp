@@ -2224,10 +2224,30 @@ public:
 
 
    optional<content_download_status> get_download_status(string consumer, string URI) {
+      try {
+         account_id_type acc = get_account(consumer).id;
+         optional<buying_object> bobj = _remote_db->get_buying_by_consumer_URI( acc, URI );
+         if (!bobj) {
+            FC_THROW("Can not find download object");
+         }
+         
+         optional<content_object> content = _remote_db->get_content( URI );
+            
+         if (!content) {
+             FC_THROW("Invalid content URI");
+         }
 
-      account_id_type acc = get_account(consumer).id;
-      optional<buying_object> bobj = _remote_db->get_buying_by_consumer_URI( acc, URI );
+         content_download_status status;
+         status.received_key_parts = bobj->key_particles.size();
+         status.total_key_parts = content->key_parts.size();
 
+         package_transfer_interface::transfer_progress progress = package_manager::instance().get_progress(URI);
+
+         status.total_download_bytes = progress.total_bytes;
+         status.received_download_bytes = progress.current_bytes;
+
+         return status;
+      } FC_CAPTURE_AND_RETHROW( (consumer)(URI));
    }
 
 
@@ -4187,6 +4207,12 @@ optional<buying_object> wallet_api::get_buying_by_consumer_URI( const string& ac
 {
    account_id_type acc = get_account( account ).id;
    return my->_remote_db->get_buying_by_consumer_URI( acc, URI );
+}
+
+optional<uint64_t> wallet_api::get_rating( const string& consumer, const string & URI )const
+{
+   account_id_type acc = get_account( consumer ).id;
+   return my->_remote_db->get_rating_by_consumer_URI( acc, URI );
 }
 
 optional<content_object> wallet_api::get_content( const string& URI )const

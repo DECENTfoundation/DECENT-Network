@@ -144,5 +144,10 @@ programs/cli_wallet/test.txt
 programs/cli_wallet/packages/transfer.log
 programs/cli_wallet/transfer.log
 artifacts/*
+<<<<<<< HEAD
 *moc*
+=======
+programs/gui_wallet/gui_wallet_automoc.cpp
+programs/gui_wallet/gui_wallet_automoc.dir/
+>>>>>>> 7390a82bf12f303156cfe460da318c93d191dbc8
 
