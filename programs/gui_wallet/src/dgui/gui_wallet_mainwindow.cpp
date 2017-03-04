@@ -274,18 +274,8 @@ void Mainwindow_gui_wallet::SetNewTaskQtMainWnd3(const std::string& a_inp_line, 
 
 void Mainwindow_gui_wallet::CreateActions()
 {
-    //m_pActionLoadIniFile = new QAction( tr("&Load ini"), this );
-    //m_pActionLoadIniFile->setIcon( QIcon(":/images/open.png") );
-    //m_pActionLoadIniFile->setShortcut( QKeySequence::Open );
-    //m_pActionLoadIniFile->setStatusTip( tr("Load ini file") );
-    //connect( m_pActionLoadIniFile, SIGNAL(triggered()), this, SLOT(LoadIniFileSlot()) );
-
-    /**************************************************************************/
-
     m_ActionExit.setStatusTip( tr("Exit Program") );
     connect( &m_ActionExit, SIGNAL(triggered()), this, SLOT(close()) );
-
-    /**************************************************************************/
 
     m_ActionAbout.setStatusTip( tr("About") );
     connect( &m_ActionAbout, SIGNAL(triggered()), this, SLOT(AboutSlot()) );
@@ -644,16 +634,7 @@ void Mainwindow_gui_wallet::TaskDoneFuncGUI3(void* a_clbkArg,int64_t a_err,
     const int cnCurIndex(m_pCentralWidget->GetMyCurrentTabIndex());
     switch(cnCurIndex)
     {
-    case TRANSACTIONS:
-    {
-        TaskDoneTransactionsGUI3(a_clbkArg, a_err,a_task,a_result);
-        break;
-    }
-    case UPLOAD:
-    {
-        TaskDoneUploadGUI3(a_clbkArg, a_err,a_task,a_result);
-        break;
-    }
+    
     case OVERVIEW:
     {
         TaskDoneOverrviewGUI3(a_clbkArg, a_err,a_task,a_result);
@@ -714,16 +695,8 @@ void Mainwindow_gui_wallet::TaskDoneFuncGUI(void* a_clbkArg,int64_t a_err,const 
     const int cnCurIndex(m_pCentralWidget->GetMyCurrentTabIndex());
     switch(cnCurIndex)
     {
-    case TRANSACTIONS:
-    {
-        TaskDoneTransactionsGUI(a_clbkArg, a_err,a_task,a_result);
-        break;
-    }
-    case UPLOAD:
-    {
-        TaskDoneUploadGUI(a_clbkArg, a_err,a_task,a_result);
-        break;
-    }
+    
+    
     case OVERVIEW:
     {
         TaskDoneOverrviewGUI(a_clbkArg, a_err,a_task,a_result);
@@ -831,12 +804,7 @@ void Mainwindow_gui_wallet::TaskDoneFuncGUI(void* a_clbkArg,int64_t a_err,const 
         }
 
     }
-    else if(strstr(a_task.c_str(),"list_content ") == a_task.c_str())
-    {
-    }
-    else if(strstr(a_task.c_str(),"get_content ") == a_task.c_str())
-    {
-    }
+    
     else if(strstr(a_task.c_str(),"import_key ") == a_task.c_str())
     {
         DisplayWalletContentGUI();
@@ -912,12 +880,6 @@ void Mainwindow_gui_wallet::ManagementNewFuncGUI(void* a_clbkArg,int64_t a_err,c
 
     switch(nCurentTab)
     {
-    case TRANSACTIONS:
-        ManagementTransactionsGUI();
-        break;
-    case UPLOAD:
-        ManagementUploadGUI();
-        break;
     case OVERVIEW:
     {
         ManagementOverviewGUI();
@@ -981,31 +943,3 @@ void Mainwindow_gui_wallet::SetPassword(void* a_owner, void* a_str_ptr)
     
 }
 
-
-/*////////////////////////////////////////////////////////////////*/
-void ParseDigitalContentFromVariant(SDigitalContent* a_pContent,
-                                    const fc::variant& a_result)
-{
-    JsonParserQt aParser;
-
-    a_result.visit(aParser);
-
-    a_pContent->synopsis = aParser.GetByKey("synopsis").value();
-    //a_pContent->URI = aParser.GetByKey("URI").value();
-    a_pContent->AVG_rating = atof(aParser.GetByKey("AVG_rating").value().c_str());
-    a_pContent->created = aParser.GetByKey("created").value();
-    a_pContent->expiration = aParser.GetByKey("expiration").value();
-    a_pContent->size = atoi(aParser.GetByKey("size").value().c_str());
-    a_pContent->times_bougth = atoi(aParser.GetByKey("times_bougth").value().c_str());
-}
-
-void ParseDigitalContentAssetDetailsFromVariant(SDigitalContent* a_pContent,
-                                                const fc::variant& a_result)
-{
-    JsonParserQt aParser;
-    
-    a_result.visit(aParser);
-    
-    a_pContent->price.symbol = aParser.GetByKey("symbol").value();
-    a_pContent->price.precision = aParser.GetByKey("precision").value();
-}

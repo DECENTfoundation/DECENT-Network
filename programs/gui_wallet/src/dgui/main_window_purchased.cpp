@@ -15,10 +15,6 @@
 
 using namespace gui_wallet;
 
-void ParseDigitalContentFromVariant(SDigitalContent* a_pContent,
-                                    const fc::variant& a_result);
-void ParseDigitalContentAssetDetailsFromVariant(SDigitalContent* a_pContent,
-                                                const fc::variant& a_result);
 
 void gui_wallet::Mainwindow_gui_wallet::ManagementPurchasedGUI()
 {
@@ -42,28 +38,21 @@ void gui_wallet::Mainwindow_gui_wallet::TaskDonePurchasedGUI(void* a_clbkArg,int
 void gui_wallet::Mainwindow_gui_wallet::TaskDonePurchasedGUI3(void* a_clbkArg,int64_t a_err,
                                                               const std::string& a_task,const fc::variant& a_result)
 {
-    __DEBUG_APP2__(1," ");
+    if (a_err) return;
 
-    if(a_err)
-    {
-        //
-    }
-    else if(strstr(a_task.c_str(),"list_content_by_bought "))
-    {
-    }
-    else if(strstr(a_task.c_str(),"get_content "))
+    if(strstr(a_task.c_str(),"get_content "))
     {
         const int cnIndex (  (int)(  (size_t)a_clbkArg  )     );
         const int cnContsNumber(m_vcDigContent.size());
         if(cnIndex>=cnContsNumber){return;}
-        ParseDigitalContentFromVariant(&m_vcDigContent[cnIndex],a_result);
+
         if(cnIndex==(cnContsNumber-1)){m_pCentralWidget->m_Purchased_tab.SetDigitalContentsGUI(m_vcDigContent);}
     }
     else if(strstr(a_task.c_str(),"get_buying_history_objects_by_consumer "))
     {
         std::string csGetContStr;
         m_vcDigContent.clear();
-        GetDigitalContentsFromVariant(DCT::GENERAL, m_vcDigContent,a_result);
+
         const int cnContsNumber(m_vcDigContent.size());
 
         for(int i(0); i<cnContsNumber; ++i)

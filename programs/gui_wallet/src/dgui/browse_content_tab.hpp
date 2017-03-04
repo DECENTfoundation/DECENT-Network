@@ -73,14 +73,8 @@ public:
 
 public:
     
-    virtual void content_activated() {
-        updateContents();
-    }
-    
-    
-    virtual void content_deactivated() {
-    
-    }
+    virtual void content_activated() {}
+    virtual void content_deactivated() {}
 
     
 public:
@@ -112,7 +106,7 @@ protected:
     QComboBox       m_searchTypeCombo;
     
     std::vector<SDigitalContent> m_dContents;
-    bool m_doUpdate = false;
+    bool m_doUpdate = true;
     
     QTimer  m_contentUpdateTimer;
 };

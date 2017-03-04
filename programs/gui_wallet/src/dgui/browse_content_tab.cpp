@@ -20,6 +20,9 @@
 #include "json.hpp"
 #include <limits>
 #include <iostream>
+#include <graphene/chain/config.hpp>
+
+
 
 //namespace DCF {enum DIG_CONT_FIELDS{TIME,SYNOPSIS,RATING,SIZE,PRICE,LEFT};}
 static const char* s_vccpItemNames[]={"Time","Title","Rating",
@@ -56,7 +59,7 @@ Browse_content_tab::Browse_content_tab() : m_pTableWidget(new BTableWidget(1,s_c
     lab->setPixmap(image);
     //lab.setSizeIncrement(100, 40);
 
-    m_filterLineEdit.setPlaceholderText("Search");
+    m_filterLineEdit.setPlaceholderText("Enter search term");
     m_filterLineEdit.setFixedHeight(40);
     m_filterLineEdit.setStyleSheet("border: 1px solid white");
 
@@ -178,8 +181,10 @@ void Browse_content_tab::updateContents() {
                 if (contents[i]["price"]["amount"].is_number()){
                     dContents[i].price.amount =  contents[i]["price"]["amount"].get<double>();
                 } else {
-                    dContents[i].price.amount =  atof(contents[i]["price"]["amount"].get<std::string>().c_str());
+                    dContents[i].price.amount =  std::stod(contents[i]["price"]["amount"].get<std::string>());
                 }
+                
+                dContents[i].price.amount /= GRAPHENE_BLOCKCHAIN_PRECISION;
                 
                 dContents[i].AVG_rating = contents[i]["AVG_rating"].get<double>();
 

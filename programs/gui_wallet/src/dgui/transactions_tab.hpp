@@ -25,6 +25,7 @@
 #include <Qt>
 #include <QColor>
 #include <QMouseEvent>
+#include <QTimer>
 
 #include "gui_wallet_tabcontentmanager.hpp"
 
@@ -70,12 +71,18 @@ namespace gui_wallet
     public:
         virtual void content_activated() {}
         virtual void content_deactivated() {}
+        virtual void resizeEvent(QResizeEvent *a_event);
+        
 
-virtual void resizeEvent(QResizeEvent *a_event);
     public slots:
         void doRowColor();
-    protected:
+        void onTextChanged(const QString& text);
+        void updateContents();
+        void maybeUpdateContent();
 
+    private:
+        QTimer  m_contentUpdateTimer;
+        bool m_doUpdate = true;
     };
 }
 

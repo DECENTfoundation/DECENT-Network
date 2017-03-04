@@ -1758,7 +1758,7 @@ public:
       {
          return result.get_string();
       };
-
+/*
       m["get_account_history"] = [this](variant result, const fc::variants& a)
       {
          auto r = result.as<vector<operation_detail>>();
@@ -1776,7 +1776,7 @@ public:
 
          return ss.str();
       };
-
+*/
       m["list_account_balances"] = [this](variant result, const fc::variants& a)
       {
          auto r = result.as<vector<asset>>();

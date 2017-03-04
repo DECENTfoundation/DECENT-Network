@@ -11,20 +11,45 @@
 #include <QHeaderView>
 #include <QFont>
 #include <QTableWidgetItem>
-
 #include <iostream>
 #include <QResource>
 
-using namespace gui_wallet;
+#include <graphene/chain/config.hpp>
+#include "gui_wallet_global.hpp"
+#include "qt_commonheader.hpp"
+#include "ui_wallet_functions.hpp"
+#include "json.hpp"
 
-static const char* firsItemNames[]={"Time","Type","Info","Fee"};
+using namespace gui_wallet;
+using namespace nlohmann;
+
+static const char* firsItemNames[]={"ID", "Info", "Memo", "Fee"};
+const int numTransactionCols = sizeof(firsItemNames) / sizeof(const char*);
+
+
+
+HTableWidget::HTableWidget() : QTableWidget()
+{
+    this->setMouseTracking(true);
+}
+
+
+void HTableWidget::mouseMoveEvent(QMouseEvent *event)
+{
+    mouseMoveEventDid();
+}
+
+
+
+
 
 Transactions_tab::Transactions_tab() : green_row(0)
 {
     //create table (widget)
     tablewidget = new HTableWidget();
     tablewidget->setRowCount(1);//add first row in table
-    tablewidget->setColumnCount(4);
+    tablewidget->setColumnCount(numTransactionCols);
+    
     tablewidget->verticalHeader()->setDefaultSectionSize(35);
     tablewidget->horizontalHeader()->setDefaultSectionSize(230);
     tablewidget->horizontalHeader()->hide();
@@ -36,12 +61,12 @@ Transactions_tab::Transactions_tab() : green_row(0)
     tablewidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
     user.setStyleSheet("border: 0px solid white");
-    user.setPlaceholderText("Search");
+    user.setPlaceholderText("Enter user name to see transaction history");
     user.setMaximumHeight(40);
     user.setFixedHeight(40);
 
     QFont f( "Open Sans Bold", 14, QFont::Bold);
-    for (int i = 0; i < 4; ++i)
+    for (int i = 0; i < numTransactionCols; ++i)
     {
         tablewidget->setItem(0, i, new QTableWidgetItem(tr(firsItemNames[i])));
         tablewidget->item(0, i)->setFont(f);
@@ -52,9 +77,6 @@ Transactions_tab::Transactions_tab() : green_row(0)
     }
 
     connect(tablewidget,SIGNAL(mouseMoveEventDid()),this,SLOT(doRowColor()));
-
-    QResource icon;
-    icon.registerResource("/Users/vahe/dev/DECENTfoundation/DECENT-Network/programs/gui_wallet/resource.rcc");
 
     QHBoxLayout* search_lay = new QHBoxLayout();
     QPixmap image(":/icon/images/search.svg");
@@ -71,7 +93,34 @@ Transactions_tab::Transactions_tab() : green_row(0)
     main_layout.addLayout(search_lay);
     main_layout.addWidget(tablewidget);
     setLayout(&main_layout);
+    
+    
+    connect(&user, SIGNAL(textChanged(QString)), this, SLOT(onTextChanged(QString)));
+
+    m_contentUpdateTimer.connect(&m_contentUpdateTimer, SIGNAL(timeout()), this, SLOT(maybeUpdateContent()));
+    m_contentUpdateTimer.setInterval(1000);
+    m_contentUpdateTimer.start();
 }
+
+
+
+
+
+
+void Transactions_tab::maybeUpdateContent() {
+    if (!m_doUpdate) {
+        return;
+    }
+    
+    m_doUpdate = false;
+    updateContents();
+}
+
+void Transactions_tab::onTextChanged(const QString& text) {
+    
+    m_doUpdate = true;
+}
+
 
 void Transactions_tab::createNewRow(const int str)
 {
@@ -155,15 +204,60 @@ void Transactions_tab::Connects()
 }
 
 
-HTableWidget::HTableWidget() : QTableWidget()
-{
-    this->setMouseTracking(true);
-}
 
 
-void HTableWidget::mouseMoveEvent(QMouseEvent *event)
-{
-    mouseMoveEventDid();
+
+void Transactions_tab::updateContents() {
+    tablewidget->setRowCount(1); //Remove everything but header
+
+    
+    if (user.text().toStdString().empty()) {
+        return;
+    }
+    
+    SetNewTask("get_account_history \"" + user.text().toStdString() +"\" 100", this, NULL, +[](void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
+        
+        if (a_err != 0) {
+            return;
+        }
+        
+        Transactions_tab* obj = (Transactions_tab*)owner;
+        
+        try {
+            auto contents = json::parse(a_result);
+            
+            obj->tablewidget->setRowCount(contents.size() + 1);
+            
+            for (int i = 0; i < contents.size(); ++i) {
+                auto content = contents[i];
+                auto op = content["op"];
+                
+                
+                obj->tablewidget->setCellWidget(i + 1, 0, new QLabel(QString::fromStdString(op["id"].get<std::string>())));
+                obj->tablewidget->setCellWidget(i + 1, 1, new QLabel(QString::fromStdString(contents[i]["description"].get<std::string>())));
+                obj->tablewidget->setCellWidget(i + 1, 2, new QLabel(QString::fromStdString(contents[i]["memo"].get<std::string>())));
+                
+                auto amount = op["op"][1]["fee"]["amount"];
+                QString amountText = "";
+                
+                if (amount.is_number()){
+                    amountText = QString::number(amount.get<double>() / GRAPHENE_BLOCKCHAIN_PRECISION) + " DECENT";
+                } else {
+                    amountText = QString::number(std::stod(amount.get<std::string>()) / GRAPHENE_BLOCKCHAIN_PRECISION) + " DECENT";
+
+                }
+                obj->tablewidget->setCellWidget(i + 1, 3, new QLabel(amountText));
+                
+
+            }
+            
+            
+        } catch (std::exception& ex) {
+            std::cout << ex.what() << std::endl;
+        }
+    });
+    
+    
 }
 
 

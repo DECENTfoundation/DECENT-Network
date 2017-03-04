@@ -1908,7 +1908,10 @@ FC_REFLECT_DERIVED( graphene::wallet::vesting_balance_object_with_info, (graphen
    (allowed_withdraw)(allowed_withdraw_time) )
 
 FC_REFLECT( graphene::wallet::operation_detail, 
-            (memo)(description)(op) )
+                (memo)
+                (description)
+                (op)
+          )
 
 FC_API( graphene::wallet::wallet_api,
         (help)

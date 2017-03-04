@@ -104,34 +104,25 @@ void gui::run()
       try
       {
          m_semaphore.wait();
-         //nIteration = 0;
 
          while(m_Fifo.GetFirstTask(&aTaskItem))
          {
-             //printf("!!!!!!!!!!!! %d, aItem.line=%s\n",++nIteration,aTaskItem.line.c_str());
              std::string line = aTaskItem.input;
              line += char(EOF);
              fc::variants args = fc::json::variants_from_string(line);
              if( args.size() == 0 )continue;
              const string& method = args[0].get_string();
 
-             //const string& method = m_method;
 
              auto result = receive_call( 0, method, variants( args.begin()+1,args.end() ) );
              auto itr = _result_formatters.find( method );
+             
+             
              std::string tsResult;
-             if( itr == _result_formatters.end() )
-             {
-                 __DEBUG_APP2__(1,"inp=\"%s\"",aTaskItem.input.c_str());
+             if( itr == _result_formatters.end() ) {
                  tsResult = fc::json::to_pretty_string( result );
-                 
-             }
-             else
-             {
-                 __DEBUG_APP2__(1,"inp=\"%s\"",aTaskItem.input.c_str());
+             } else {
                  tsResult = itr->second( result, args );
-                
-                 
              }
 
              CallFunctionInUiLoopGeneral(aTaskItem.type,
@@ -140,42 +131,27 @@ void gui::run()
                                          aTaskItem.owner,aTaskItem.fn_tsk_ptr);
 
 
-         } // while(GetFirstTask(&aTaskItem))
+         }
 
-      }  // try
-      catch ( const fc::exception& e )
-      {
-         __DEBUG_APP2__(1,"%s",e.to_detail_string().c_str());
-         //(*aTaskItem.fn_tsk_dn)(aTaskItem.owner,aTaskItem.callbackArg,e.code(),aTaskItem.input,e.to_detail_string());
-         //CallFunctionInUiLoop2(aTaskItem.callbackArg,e.code(),aTaskItem.input,e.to_detail_string(),
-         //                       aTaskItem.owner,aTaskItem.fn_tsk_dn2);
-         CallFunctionInUiLoopGeneral(aTaskItem.type,
+      } catch ( const fc::exception& e ) {
+         
+          CallFunctionInUiLoopGeneral(aTaskItem.type,
                                      aTaskItem.callbackArg,e.code(),aTaskItem.input,
-                                     /*e.to_detail_string()*/fc::variant(),e.to_detail_string(),
+                                     fc::variant(),e.to_detail_string(),
                                      aTaskItem.owner,aTaskItem.fn_tsk_ptr);
-      }
-        catch ( const std::exception& e )
-        {
-           __DEBUG_APP2__(1,"%s",e.what());
-
-          //CallFunctionInUiLoop2(aTaskItem.callbackArg,UNKNOWN_EXCEPTION,aTaskItem.input,e.what(),
-          //                       aTaskItem.owner,aTaskItem.fn_tsk_dn2);
-           CallFunctionInUiLoopGeneral(aTaskItem.type,
+          
+      } catch ( const std::exception& e ) {
+           
+            CallFunctionInUiLoopGeneral(aTaskItem.type,
                                        aTaskItem.callbackArg,UNKNOWN_EXCEPTION,aTaskItem.input,
-                                       /*e.what()*/fc::variant(),e.what(),
+                                       fc::variant(),e.what(),
                                        aTaskItem.owner,aTaskItem.fn_tsk_ptr);
-        }
-      catch(...)
-      {
-          __DEBUG_APP2__(1,"Unknown exception!");
-          //(*aTaskItem.fn_tsk_dn)(aTaskItem.owner,aTaskItem.callbackArg,-1,aTaskItem.input,"Unknown exception!\n");
-          //CallFunctionInUiLoop2(aTaskItem.callbackArg,UNKNOWN_EXCEPTION,aTaskItem.input,
-          //                      __FILE__ "\nUnknown exception!",
-          //                       aTaskItem.owner,aTaskItem.fn_tsk_dn2);
+      } catch(...) {
+          
           CallFunctionInUiLoopGeneral(aTaskItem.type,
                                       aTaskItem.callbackArg,UNKNOWN_EXCEPTION,aTaskItem.input,
                                       /*__FILE__ "\nUnknown exception!"*/fc::variant(),__FILE__ "\nUnknown exception!",
                                       aTaskItem.owner,aTaskItem.fn_tsk_ptr);
       }
-   } // while( !_run_complete.canceled() )
+   }
 }
