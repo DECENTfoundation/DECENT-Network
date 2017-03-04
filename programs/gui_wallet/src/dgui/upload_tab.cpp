@@ -50,31 +50,39 @@ CryptoPP::AutoSeededRandomPool rng;
 Upload_tab::Upload_tab()
         :
         m_info_widget(FieldsRows::NUM_FIELDS, 2),
+        //m_info_widget(2, 3),
         m_title_label(tr("Title")),
         m_description_label(tr("Description")),
-        m_infoLayoutHeader(tr("Information about content")),
+        m_infoLayoutHeader(tr("Information About Content")),
         m_getPublishersTimer(this)
 {
+    QFont m_font( "Open Sans Bold", 14, QFont::Bold);
     QPalette pltEdit;
 
-    //m_synopsis_layout.addWidget(&m_title_label);
-    m_title_text.setPlaceholderText("Title");
+    m_infoLayoutHeader.setFont(m_font);
+    m_title_text.setPlaceholderText("  Title");
     m_title_text.setFixedHeight(40);
     m_title_text.setFixedWidth(200);
     m_synopsis_layout.addWidget(&m_title_text);
 
-    //m_synopsis_layout.addWidget(&m_description_label);
-    m_description_text.setPlaceholderText("Description");
+    m_description_text.setPlaceholderText("  Description");
+    m_description_text.resize(138, 822);
+    m_description_text.setFixedHeight(138);
+
     m_synopsis_layout.addWidget(&m_description_text);
 
-    m_main_layout.addLayout(&m_synopsis_layout);                // change m_main_layout QHBox... to QVBox...
+
+    m_main_layout.addLayout(&m_synopsis_layout);
     m_info_layout.addWidget(&m_infoLayoutHeader);
+
+    m_info_widget.setFrameStyle(QFrame::NoFrame);
 
     ////////////////////////////////////////////////////////////////////////////
     /// Lifetime
     ////////////////////////////////////////////////////////////////////////////
 
-    m_info_widget.setCellWidget(FieldsRows::LIFETIME, 0, new QLabel("Lifetime"));
+    //m_info_widget.setCellWidget(FieldsRows::LIFETIME, 0, new QLabel("Lifetime"));
+    m_info_widget.setCellWidget(0, 0, new QLabel("Lifetime"));
 
     QDateEdit *de = new QDateEdit();
     de->setDate(QDate::currentDate());
@@ -180,9 +188,12 @@ Upload_tab::Upload_tab()
     ////////////////////////////////////////////////////////////////////////////
     
     QPushButton* uploadButton = new QPushButton("Upload");
+    uploadButton->setFixedHeight(40);
+    //uploadButton->setFixedWidth(200);
+    //uploadButton->move(700, 50);
+
     connect(uploadButton, SIGNAL(clicked()),this, SLOT(uploadContent()));
     m_info_layout.addWidget(uploadButton);
-
     m_main_layout.addLayout(&m_info_layout);
 
     setLayout(&m_main_layout);
