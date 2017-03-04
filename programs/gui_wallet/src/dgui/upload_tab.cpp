@@ -217,11 +217,11 @@ Upload_tab::Upload_tab()
     m_title_text.setFixedWidth(200);
     m_synopsis_layout.addWidget(&m_title_text);
 
-    //m_description_text.setFrameStyle(QFrame::NoFrame);
-    m_synopsis_layout.addWidget(&m_description_label);
+    //m_synopsis_layout.addWidget(&m_description_label);
+    m_description_text.setPlaceholderText("Description");
     m_synopsis_layout.addWidget(&m_description_text);
 
-    m_main_layout.addLayout(&m_synopsis_layout);// change m_main_layout QHBox... to QVBox...
+    m_main_layout.addLayout(&m_synopsis_layout);                // change m_main_layout QHBox... to QVBox...
     m_info_layout.addWidget(&m_infoLayoutHeader);
 
     ////////////////////////////////////////////////////////////////////////////
