@@ -23,12 +23,13 @@
 #include "transactions_tab.hpp"
 #include "upload_tab.hpp"
 #include "overview_tab.hpp"
+#include "purchased_tab.hpp"
 #include <stdio.h>
 #include <QLabel>
 #include <QComboBox>
 #include <vector>
 #include <QTableWidget>
-#include "decent_wallet_ui_gui_purchasedtab.hpp"
+#include "purchased_tab.hpp"
 #include <QString>
 
 
@@ -59,6 +60,8 @@ private:
     int                 m_nCurrentIndex;
 };
 
+
+    
 class CentralWigdet : public QWidget
 {
     friend class Mainwindow_gui_wallet;
@@ -88,6 +91,8 @@ public:
     
     QString FilterStr();
     
+    void initTabChanged();
+
 public slots:
     void tabChanged(int index);
     
@@ -118,7 +123,8 @@ private:
     Overview_tab        m_Overview_tab;
     PurchasedTab        m_Purchased_tab;
     
-    
+    std::vector<TabContentManager*>  m_allTabs;
+    int                              m_currentTab = -1;
 
     QString             m_DelayedWaringTitle;
     QString             m_DelayedWaringText;

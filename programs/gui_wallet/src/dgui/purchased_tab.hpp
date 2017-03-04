@@ -20,6 +20,7 @@
 #include <QLabel>
 #include <QLineEdit>
 #include "qt_commonheader.hpp"
+#include "gui_wallet_tabcontentmanager.hpp"
 
 namespace gui_wallet {
 
@@ -27,7 +28,7 @@ namespace DCF_PURCHASE {
     enum DIG_CONT_FIELDS { TIME, SYNOPSIS, RATING,SIZE, PRICE, PURCHASED, NUM_OF_DIG_CONT_FIELDS };
 }
 
-class PurchasedTab : public QWidget
+class PurchasedTab : public TabContentManager
 {
 
     friend class CentralWigdet;
@@ -40,6 +41,10 @@ public:
     void SetDigitalContentsGUI(const std::vector<SDigitalContent>& contents);
     //QString getFilterText()const;
 
+public:
+    virtual void content_activated() {}
+    virtual void content_deactivated() {}
+    
 public:
 signals:
     void ShowDetailsOnDigContentSig(SDigitalContent dig_cont);

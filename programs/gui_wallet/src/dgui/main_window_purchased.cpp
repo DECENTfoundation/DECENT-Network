@@ -15,8 +15,10 @@
 
 using namespace gui_wallet;
 
-
-void ParseDigitalContentFromVariant(SDigitalContent* a_pContent, const fc::variant& a_result);
+void ParseDigitalContentFromVariant(SDigitalContent* a_pContent,
+                                    const fc::variant& a_result);
+void ParseDigitalContentAssetDetailsFromVariant(SDigitalContent* a_pContent,
+                                                const fc::variant& a_result);
 
 void gui_wallet::Mainwindow_gui_wallet::ManagementPurchasedGUI()
 {

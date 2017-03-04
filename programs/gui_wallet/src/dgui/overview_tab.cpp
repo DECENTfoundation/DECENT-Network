@@ -9,6 +9,7 @@
  */
 #include "overview_tab.hpp"
 #include "gui_wallet_mainwindow.hpp"
+#include "gui_wallet_centralwidget.hpp"
 #include <QPixmap>
 #include <QStackedWidget>
 #include <QRect>

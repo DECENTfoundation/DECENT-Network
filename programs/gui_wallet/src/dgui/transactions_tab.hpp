@@ -26,7 +26,7 @@
 #include <QColor>
 #include <QMouseEvent>
 
-
+#include "gui_wallet_tabcontentmanager.hpp"
 
 
 
@@ -47,7 +47,7 @@ signals:
 
 namespace gui_wallet
 {
-    class Transactions_tab : public QWidget
+    class Transactions_tab : public TabContentManager
     {
 
         Q_OBJECT
@@ -66,6 +66,11 @@ namespace gui_wallet
         void deleteEmptyRows();
         void ArrangeSize();
         void Connects();
+        
+    public:
+        virtual void content_activated() {}
+        virtual void content_deactivated() {}
+
 virtual void resizeEvent(QResizeEvent *a_event);
     public slots:
         void doRowColor();

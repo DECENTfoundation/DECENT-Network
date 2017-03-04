@@ -8,7 +8,7 @@
  *
  */
 
-#include "decent_wallet_ui_gui_purchasedtab.hpp"
+#include "purchased_tab.hpp"
 #include <QHeaderView>
 #include <iostream>
 
@@ -132,14 +132,14 @@ void PurchasedTab::SetDigitalContentsGUI(const std::vector<SDigitalContent>& a_v
                                     aTemporar,this,NULL,
                                     &PurchasedTab::DigContCallback,
                                     tr(aTemporar.created.c_str()));
-        if(!pLabel){throw "Low memory!";}
+        
         m_TableWidget.setCellWidget(i,DCF_PURCHASE::TIME,pLabel);
 
         pLabel = new TableWidgetItemW<QLabel>(
                                               aTemporar,this,NULL,
                                               &PurchasedTab::DigContCallback,
                                               tr(aTemporar.synopsis.c_str()));
-        if(!pLabel){throw "Low memory!";}
+        
         m_TableWidget.setCellWidget(i,DCF_PURCHASE::SYNOPSIS,pLabel);
 
         /*pLabel = new TableWidgetItemW<QLabel>(
@@ -149,29 +149,29 @@ void PurchasedTab::SetDigitalContentsGUI(const std::vector<SDigitalContent>& a_v
         pLabel = new TableWidgetItemW<QLabel>(
                                                aTemporar,this,NULL,
                                                &PurchasedTab::DigContCallback,
-                                               tr(aTemporar.AVG_rating.c_str()));
-        if(!pLabel){throw "Low memory!";}
+                                               QString::number(aTemporar.AVG_rating));
+        
         m_TableWidget.setCellWidget(i,DCF_PURCHASE::RATING,pLabel);
 
         pLabel = new TableWidgetItemW<QLabel>(
                                               aTemporar,this,NULL,
                                               &PurchasedTab::DigContCallback,
                                               tr(aTemporar.expiration.c_str()));
-        if(!pLabel){throw "Low memory!";}
+        
         m_TableWidget.setCellWidget(i,DCF_PURCHASE::PURCHASED,pLabel);
 
         pLabel = new TableWidgetItemW<QLabel>(
                                               aTemporar,this,NULL,
                                               &PurchasedTab::DigContCallback,
-                                              tr(aTemporar.size.c_str()));
-        if(!pLabel){throw "Low memory!";}
+                                              QString::number(aTemporar.size));
+        
         m_TableWidget.setCellWidget(i,DCF_PURCHASE::SIZE,pLabel);
 
         pLabel = new TableWidgetItemW<QLabel>(
                                                aTemporar,this,NULL,
                                                &PurchasedTab::DigContCallback,
-                                               tr(aTemporar.price.amount.c_str()));
-        if(!pLabel){throw "Low memory!";}
+                                               QString::number(aTemporar.price.amount));
+        
         m_TableWidget.setCellWidget(i,DCF_PURCHASE::PRICE,pLabel);
     }
 

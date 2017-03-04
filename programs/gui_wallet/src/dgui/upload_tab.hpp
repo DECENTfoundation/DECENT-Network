@@ -24,7 +24,8 @@
 #include <QComboBox>
 #include <QTimer>
 
-#define USE_TABLE_WIDGET
+#include "gui_wallet_tabcontentmanager.hpp"
+
 
 
 #define INFO_LIFETIME   "Lifetime"
@@ -51,7 +52,7 @@ namespace gui_wallet
     };
 
 
-    class Upload_tab : public QWidget
+    class Upload_tab : public TabContentManager
     {    
     Q_OBJECT
 
@@ -69,6 +70,9 @@ namespace gui_wallet
     public:
         void uploadDone(void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result);
         void onPublishersDone(void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result);
+
+        virtual void content_activated() {}
+        virtual void content_deactivated() {}
 
     protected:
         virtual void resizeEvent ( QResizeEvent * event );

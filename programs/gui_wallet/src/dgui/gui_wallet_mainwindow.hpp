@@ -11,7 +11,7 @@
 #define MAINWINDOW_GUI_WALLET_H
 
 #include <QMainWindow>
-#include "gui_wallet_centralwigdet.hpp"
+#include "gui_wallet_centralwidget.hpp"
 #include <QAction>
 #include <QLineEdit>
 #include <QHBoxLayout>
@@ -22,6 +22,8 @@
 #include "cliwalletdlg.hpp"
 #include <unnamedsemaphorelite.hpp>
 #include <stdarg.h>
+#include <string>
+#include <map>
 #include "decent_wallet_ui_gui_contentdetailsgeneral.hpp"
 #include "decent_wallet_ui_gui_contentdetailsbougth.hpp"
 
@@ -46,7 +48,6 @@ namespace gui_wallet
         void TaskDoneFuncGUI(void* clbkArg,int64_t err,const std::string& task,const std::string& result);
         void ManagementNewFuncGUI(void* clbkArg,int64_t err,const std::string& task,const std::string& result);
 
-        void TaskDoneBrowseContentGUI(void* a_clbkArg,int64_t a_err,const std::string& a_task,const std::string& a_result);
         void TaskDoneTransactionsGUI(void* a_clbkArg,int64_t a_err,const std::string& a_task,const std::string& a_result);
         void TaskDoneUploadGUI(void* a_clbkArg,int64_t a_err,const std::string& a_task,const std::string& a_result);
     public:
@@ -56,7 +57,6 @@ namespace gui_wallet
 
         void TaskDoneFuncGUI3(void* clbkArg,int64_t err,const std::string& task,const fc::variant& result);
 
-        void TaskDoneBrowseContentGUI3(void* a_clbkArg,int64_t a_err,const std::string& a_task,const fc::variant& a_result);
         void TaskDoneTransactionsGUI3(void* a_clbkArg,int64_t a_err,const std::string& a_task,const fc::variant& a_result);
         void TaskDoneUploadGUI3(void* a_clbkArg,int64_t a_err,const std::string& a_task,const fc::variant& a_result);
         void TaskDoneOverrviewGUI3(void* a_clbkArg,int64_t a_err,const std::string& a_task,const fc::variant& a_result);
@@ -65,7 +65,6 @@ namespace gui_wallet
         
         
         
-        void ManagementBrowseContentGUI();
         void ManagementTransactionsGUI();
         void ManagementUploadGUI();
         void ManagementOverviewGUI();
