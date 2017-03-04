@@ -22,7 +22,6 @@ add_executable( gui_wallet MACOSX_BUNDLE
                 src/dgui/gui_wallet_mainwindow.cpp
                 src/dgui/main_gui_wallet.cpp
                 src/dgui/main_window_overview.cpp
-                src/dgui/main_window_purchased.cpp
                 src/dgui/overview_tab.cpp
                 src/dgui/text_display_dialog.cpp
                 src/dgui/transactions_tab.cpp

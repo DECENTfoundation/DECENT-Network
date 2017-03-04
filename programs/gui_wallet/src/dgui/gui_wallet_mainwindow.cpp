@@ -51,15 +51,6 @@ int CallFunctionInGuiLoop3(SetNewTask_last_args2,const fc::variant& a_result,voi
 
 /*//////////////////////////////////////////////////////////////////////////////////*/
 
-static const char* FindValueStringByKey(const char* a_cpcInput, const char* a_key)
-{
-    const char* cpcValueFld = strstr(a_cpcInput,a_key);
-
-    if(!cpcValueFld){return NULL;}
-    cpcValueFld = strchr(cpcValueFld+1,':');
-    if(!cpcValueFld){return NULL;}
-    return cpcValueFld + 1;
-}
 
 
 static bool FindStringByKey(const char* a_cpcInput, const char* a_key, std::string* a_pToFind)
@@ -106,29 +97,6 @@ static bool GetJsonVectorNextElem(const char* a_cpcJsonStr,TypeConstChar* a_beg,
     return (nOpen<=nClose);
 }
 
-
-void ParseDigitalContentFromGetContentString(SDigitalContent* a_pContent, const std::string& a_str)
-{
-    const char* cpcStrToGet;
-    __DEBUG_APP2__(3,"str_to_parse is: \"\n%s\n\"",a_str.c_str());
-    //std::string created;
-    //std::string expiration;
-    FindStringByKey(a_str.c_str(),"created",&a_pContent->created);
-    FindStringByKey(a_str.c_str(),"expiration",&a_pContent->expiration);
-    cpcStrToGet = FindValueStringByKey(a_str.c_str(),"size");
-    if(cpcStrToGet)
-    {
-        char* pcTerm;
-        a_pContent->size = strtod(cpcStrToGet,&pcTerm);
-    }
-    cpcStrToGet = FindValueStringByKey(a_str.c_str(),"times_bought");
-    if(cpcStrToGet)
-    {
-        char* pcTerm;
-        a_pContent->times_bougth = (int64_t)strtol(cpcStrToGet,&pcTerm,10);
-    }
-    //a_pContent->get_content_str = a_str;
-}
 
 
 
@@ -640,15 +608,6 @@ void Mainwindow_gui_wallet::TaskDoneFuncGUI3(void* a_clbkArg,int64_t a_err,
         TaskDoneOverrviewGUI3(a_clbkArg, a_err,a_task,a_result);
         break;
     }
-    case PURCHASED:
-    {
-        TaskDonePurchasedGUI3(a_clbkArg, a_err,a_task,a_result);
-        break;
-    }
-    default:
-    {
-        break;
-    }
     }
 }
 
@@ -700,15 +659,6 @@ void Mainwindow_gui_wallet::TaskDoneFuncGUI(void* a_clbkArg,int64_t a_err,const 
     case OVERVIEW:
     {
         TaskDoneOverrviewGUI(a_clbkArg, a_err,a_task,a_result);
-        break;
-    }
-    case PURCHASED:
-    {
-        TaskDonePurchasedGUI(a_clbkArg, a_err,a_task,a_result);
-        break;
-    }
-    default:
-    {
         break;
     }
     }
@@ -885,11 +835,6 @@ void Mainwindow_gui_wallet::ManagementNewFuncGUI(void* a_clbkArg,int64_t a_err,c
         ManagementOverviewGUI();
         break;
     }
-    case PURCHASED:
-        ManagementPurchasedGUI();
-        break;
-    default:
-        break;
     }
 }
 
