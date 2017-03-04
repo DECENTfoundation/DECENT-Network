@@ -10,6 +10,7 @@
 #ifndef BROWSE_CONTENT_TAB_H
 #define BROWSE_CONTENT_TAB_H
 
+
 #include <QWidget>
 #include <QTableWidget>
 #include <QVBoxLayout>
@@ -20,42 +21,89 @@
 #include <QHBoxLayout>
 #include <QComboBox>
 
+#include "gui_wallet_tabcontentmanager.hpp"
+
+
 
 namespace gui_wallet
 {
 
     // DCF stands for Digital Contex Fields
-    namespace DCF {enum DIG_CONT_FIELDS{TIME,SYNOPSIS,RATING,SIZE,PRICE,LEFT,NUM_OF_DIG_CONT_FIELDS};}
+namespace DCF {enum DIG_CONT_FIELDS{TIME,SYNOPSIS,RATING,SIZE,PRICE,LEFT,NUM_OF_DIG_CONT_FIELDS};}
 
-    class Browse_content_tab : public QWidget
+// ST stands for search type
+namespace ST{
+    enum STtype{URI_start,author,content};
+    static const char* s_vcpcSearchTypeStrs[] = {"URI_start","author","content"};
+}
+
+
+
+class BTableWidget : public QTableWidget
+{
+    Q_OBJECT
+public:
+    BTableWidget(int a , int b) : QTableWidget(a,b)
     {
-        Q_OBJECT
-    public:
-        Browse_content_tab();
-        virtual ~Browse_content_tab();
-
-        void SetDigitalContentsGUI(const std::vector<decent::wallet::ui::gui::SDigitalContent>& contents);
-        QString getFilterText()const;
-
-    public:
-    signals:
-        void ShowDetailsOnDigContentSig(std::string get_cont_str);
-
-    protected:
-        void PrepareTableWidgetHeaderGUI();
-        void DigContCallback(_NEEDED_ARGS2_);
-        virtual void resizeEvent ( QResizeEvent * a_event );
-        void ArrangeSize();
-
-    protected:
-        QVBoxLayout     m_main_layout;
-        QHBoxLayout     m_search_layout;
-        //QTableWidget    m_TableWidget; // Should be investigated
-        QTableWidget*    m_pTableWidget;
-        //int              m_nNumberOfContentsPlus1;
-        QLineEdit       m_filterLineEdit;
-        QComboBox       m_searchTypeCombo;
+         this->setMouseTracking(true);
     };
+
+    virtual void mouseMoveEvent(QMouseEvent * event);
+public:
+signals:
+    void mouseMoveEventDid();
+};
+
+
+
+
+
+
+
+class Browse_content_tab : public TabContentManager
+{
+    friend class CentralWigdet;
+    Q_OBJECT
+public:
+    Browse_content_tab();
+    virtual ~Browse_content_tab();
+
+    void SetDigitalContentsGUI(const std::vector<SDigitalContent>& contents);
+    QString getFilterText()const;
+
+    void Connects();
+    int green_row;
+
+public:
+    
+    virtual void content_activated() {}
+    virtual void content_deactivated() {}
+
+    
+public:
+signals:
+    void ShowDetailsOnDigContentSig(SDigitalContent get_cont_str);
+
+public slots:
+    void doRowColor();
+
+protected:
+    void PrepareTableWidgetHeaderGUI();
+    void DigContCallback(_NEEDED_ARGS2_);
+    virtual void resizeEvent ( QResizeEvent * a_event );
+    void ArrangeSize();
+
+protected:
+    QVBoxLayout     m_main_layout;
+    QHBoxLayout     m_search_layout;
+    //QTableWidget    m_TableWidget; // Should be investigated
+    BTableWidget*    m_pTableWidget;
+    //int              m_nNumberOfContentsPlus1;
+    QLineEdit       m_filterLineEdit;
+    QComboBox       m_searchTypeCombo;
+};
+
+
 }
 
 #endif // BROWSE_CONTENT_TAB_H

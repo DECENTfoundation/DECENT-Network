@@ -128,7 +128,6 @@ namespace graphene { namespace chain {
       impl_transaction_object_type,
       impl_block_summary_object_type,
       impl_account_transaction_history_object_type,
-      impl_blinded_balance_object_type,
       impl_chain_property_object_type,
       impl_witness_schedule_object_type,
       impl_budget_record_object_type,
@@ -332,7 +331,6 @@ FC_REFLECT_ENUM( graphene::chain::impl_object_type,
                  (impl_transaction_object_type)
                  (impl_block_summary_object_type)
                  (impl_account_transaction_history_object_type)
-                 (impl_blinded_balance_object_type)
                  (impl_chain_property_object_type)
                  (impl_witness_schedule_object_type)
                  (impl_budget_record_object_type)

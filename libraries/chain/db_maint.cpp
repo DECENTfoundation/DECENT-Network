@@ -138,6 +138,8 @@ void database::initialize_budget_record( fc::time_point_sec now, budget_record& 
    rec.from_accumulated_fees = core_dd.accumulated_fees;
    rec.from_unused_witness_budget = dpo.witness_budget;
 
+   rec._real_supply = get_real_supply();
+
    if(    (dpo.last_budget_time == fc::time_point_sec())
        || (now <= dpo.last_budget_time) )
    {

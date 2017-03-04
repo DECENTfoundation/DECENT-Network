@@ -64,7 +64,6 @@ struct brain_key_info
 };
 
 
-
 struct wallet_data
 {
    /** Chain ID this wallet is used with */
@@ -145,6 +144,15 @@ struct approval_delta
    vector<string> key_approvals_to_add;
    vector<string> key_approvals_to_remove;
 };
+
+struct content_download_status
+{
+   int          total_key_parts;
+   int          received_key_parts;
+   int          total_download_bytes;
+   int          received_download_bytes;
+};
+
 
 struct signed_block_with_info : public signed_block
 {
@@ -1292,6 +1300,12 @@ class wallet_api
       std::shared_ptr<detail::wallet_api_impl> my;
       void encrypt_keys();
 
+      /**
+       * Get current supply of the core asset
+       * @ingroup WalletCLI
+       */
+      real_supply get_real_supply()const;
+
     /**
      *
      * @param author
@@ -1317,6 +1331,46 @@ class wallet_api
                            fc::ripemd160 hash, vector<account_id_type> seeders, uint32_t quorum, fc::time_point_sec expiration,
                            string publishing_fee_asset, string publishing_fee_amount, string synopsis, d_integer secret,
                            decent::crypto::custody_data cd, bool broadcast);
+    /**
+     *
+     * @param author
+     * @param content_dir
+     * @param samples_dir
+     * @param protocol
+     * @param price_asset_symbol
+     * @param price_amount
+     * @param seeders
+     * @param expiration
+     * @param publishing_fee_asset
+     * @param publishing_fee_amount
+     * @param synopsis
+     * @param broadcast true to broadcast the transaction on the network
+     * @return
+     * @ingroup WalletCLI
+     */
+   signed_transaction submit_content_new(string author, string content_dir, string samples_dir, string protocol, string price_asset_symbol, string price_amount, vector<account_id_type> seeders, fc::time_point_sec expiration, string publishing_fee_symbol_name, string publishing_fee_amount, string synopsis, bool broadcast = false);
+
+    /**
+     *
+     * @param consumer
+     * @param URI
+     * @param content_dir
+     * @param broadcast true to broadcast the transaction on the network
+     * @return
+     * @ingroup WalletCLI
+     */
+     void download_content(string consumer, string URI, string content_dir, bool broadcast = false);
+    
+    /**
+     *
+     * @param consumer
+     * @param URI
+     * @return
+     * @ingroup WalletCLI
+     */
+     optional<content_download_status> get_download_status(string consumer, string URI);
+
+ 
 
     /**
      *
@@ -1592,6 +1646,13 @@ FC_REFLECT( graphene::wallet::brain_key_info,
             (pub_key)
           )
 
+FC_REFLECT (graphene::wallet::content_download_status, 
+              (total_key_parts)
+              (received_key_parts)
+              (total_download_bytes)
+              (received_download_bytes)
+            )
+
 FC_REFLECT( graphene::wallet::exported_account_keys, (account_name)(encrypted_private_keys)(public_keys) )
 
 FC_REFLECT( graphene::wallet::exported_keys, (password_checksum)(account_keys) )
@@ -1696,7 +1757,10 @@ FC_API( graphene::wallet::wallet_api,
         (network_add_nodes)
         (network_get_connected_peers)
         (get_order_book)
+        (download_content)
+        (get_download_status)
         (submit_content)
+        (submit_content_new)
         (request_to_buy)
         (leave_rating)
         (ready_to_publish)
@@ -1711,6 +1775,7 @@ FC_API( graphene::wallet::wallet_api,
         (get_buying_by_consumer_URI)
         (get_rating)
         (get_content)
+        (get_real_supply)
         (list_content_by_author)
         (list_content)
         (list_content_by_bought)

@@ -70,7 +70,7 @@ namespace graphene { namespace chain {
       struct fee_parameters_type
       {
          uint64_t basic_fee      = 5*GRAPHENE_BLOCKCHAIN_PRECISION; ///< the cost to register the cheapest non-free account
-         uint64_t premium_fee    = 2000*GRAPHENE_BLOCKCHAIN_PRECISION; ///< the cost to register the cheapest non-free account
+         uint64_t premium_fee    = 20*GRAPHENE_BLOCKCHAIN_PRECISION; ///< the cost to register the cheapest non-free account
          uint32_t price_per_kbyte = GRAPHENE_BLOCKCHAIN_PRECISION;
       };
 
@@ -120,7 +120,7 @@ namespace graphene { namespace chain {
 
       struct fee_parameters_type
       {
-         share_type fee             = 20 * GRAPHENE_BLOCKCHAIN_PRECISION;
+         share_type fee             = 1 * GRAPHENE_BLOCKCHAIN_PRECISION;
          uint32_t   price_per_kbyte = GRAPHENE_BLOCKCHAIN_PRECISION;
       };
 
@@ -166,7 +166,7 @@ namespace graphene { namespace chain {
     */
    struct account_transfer_operation : public base_operation
    {
-      struct fee_parameters_type { uint64_t fee = 500 * GRAPHENE_BLOCKCHAIN_PRECISION; };
+      struct fee_parameters_type { uint64_t fee = 5 * GRAPHENE_BLOCKCHAIN_PRECISION; };
 
       asset           fee;
       account_id_type account_id;

@@ -83,7 +83,59 @@
 
 #define BRAIN_KEY_WORD_COUNT 16
 
+CryptoPP::AutoSeededRandomPool randomGenerator;
+
+
 using namespace graphene::package;
+
+
+
+
+namespace {
+   struct transfer_progress_printer: public package_transfer_interface::transfer_listener {
+
+      static transfer_progress_printer& instance() {
+         static transfer_progress_printer the_one;
+         return the_one;
+      }
+
+      virtual void on_download_started(package_transfer_interface::transfer_id id) {
+         cout << id << ": Download started..." << endl;
+      }
+
+      virtual void on_download_finished(package_transfer_interface::transfer_id id, package_object downloaded_package) {
+         cout << id << ": Download finished: " << downloaded_package.get_hash().str() <<  endl;
+
+      }
+
+      virtual void on_download_progress(package_transfer_interface::transfer_id id, package_transfer_interface::transfer_progress progress) {
+         cout << id << ": Downloading " << progress.current_bytes << "/" << progress.total_bytes << " @ " << progress.current_speed << "Bytes/sec" << endl;
+      }
+
+
+      virtual void on_upload_started(package_transfer_interface::transfer_id id, const std::string& url) {
+
+         cout << id << ": Upload started on URL: " << url << endl;
+      }
+
+      virtual void on_upload_finished(package_transfer_interface::transfer_id id) {
+         cout << id << ": Upload finished" <<  endl;
+      }
+
+      virtual void on_upload_progress(package_transfer_interface::transfer_id id, package_transfer_interface::transfer_progress progress) {
+         cout << id << ": Uploading " << progress.current_bytes << "/" << progress.total_bytes << " @ " << progress.current_speed << "Bytes/sec" << endl;
+      }
+
+      virtual void on_error(package_transfer_interface::transfer_id id, std::string error) {
+         cout << id << ": ERROR -> " << error << endl;
+      }
+   };
+
+}
+
+
+
+
 
 namespace graphene { namespace wallet {
 
@@ -2029,6 +2081,141 @@ public:
          return sign_transaction( tx, broadcast );
       } FC_CAPTURE_AND_RETHROW( (author)(URI)(price_asset_symbol)(price_amount)(hash)(seeders)(quorum)(expiration)(publishing_fee_symbol_name)(publishing_fee_amount)(synopsis)(secret)(broadcast) ) }
    
+
+
+      signed_transaction submit_content_new(string author,
+                                            string content_dir,
+                                            string samples_dir,
+                                            string protocol,
+                                            string price_asset_symbol,
+                                            string price_amount,
+                                            vector<account_id_type> seeders,
+                                            fc::time_point_sec expiration,
+                                            string publishing_fee_symbol_name,
+                                            string publishing_fee_amount,
+                                            string synopsis,
+                                            bool broadcast/* = false */)
+      { 
+
+         try {
+            account_object author_account = get_account( author );
+
+            fc::optional<asset_object> price_asset_obj = get_asset(price_asset_symbol);
+            fc::optional<asset_object> fee_asset_obj = get_asset(publishing_fee_symbol_name);
+
+            FC_ASSERT(price_asset_obj, "Could not find asset matching ${asset}", ("asset", price_asset_symbol));
+            FC_ASSERT(fee_asset_obj, "Could not find asset matching ${asset}", ("asset", publishing_fee_symbol_name));
+
+
+
+            CryptoPP::Integer secret(randomGenerator, 512);
+
+            fc::sha512 sha_key;
+            secret.Encode((byte*)sha_key._hash, 64);
+
+            decent::crypto::custody_data cd;
+            package_object pack = package_manager::instance().create_package(content_dir, samples_dir, sha_key, cd);
+            fc::ripemd160 hash = pack.get_hash();
+            
+            uint32_t quorum = 1;
+            uint64_t size = std::max(1, pack.get_size() / (1024 * 1024));
+
+
+            shamir_secret ss(quorum, seeders.size(), secret);
+            ss.calculate_split();
+            content_submit_operation submit_op;
+            for( int i =0; i < seeders.size(); i++ ){
+               const auto& s = _remote_db->get_seeder( seeders[i] );
+               ciphertext cp;
+               point p = ss.split[i];
+               decent::crypto::el_gamal_encrypt( p ,s->pubKey ,cp );
+               submit_op.key_parts.push_back(cp);
+            }
+
+            package_transfer_interface::transfer_id id = package_manager::instance().upload_package(pack, protocol, transfer_progress_printer::instance());
+   
+
+            submit_op.author = author_account.id;
+            submit_op.URI = package_manager::instance().get_transfer_url(id);
+            submit_op.price = price_asset_obj->amount_from_string(price_amount);
+            submit_op.hash = hash;
+            submit_op.size = size;
+            submit_op.seeders = seeders;
+            submit_op.quorum = quorum;
+            submit_op.expiration = expiration;
+            submit_op.publishing_fee = fee_asset_obj->amount_from_string(publishing_fee_amount);
+            submit_op.synopsis = synopsis;
+            submit_op.cd = cd;
+
+            signed_transaction tx;
+            tx.operations.push_back( submit_op );
+            set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
+            tx.validate();
+
+            return sign_transaction( tx, broadcast );
+         } 
+         FC_CAPTURE_AND_RETHROW( (author)(content_dir)(samples_dir)(protocol)(price_asset_symbol)(price_amount)(seeders)(expiration)(publishing_fee_symbol_name)(publishing_fee_amount)(synopsis)(broadcast) ) 
+      }
+
+
+   optional<content_download_status> get_download_status(string consumer, string URI) {
+      try {
+         account_id_type acc = get_account(consumer).id;
+         optional<buying_object> bobj = _remote_db->get_buying_by_consumer_URI( acc, URI );
+         if (!bobj) {
+            FC_THROW("Can not find download object");
+         }
+         
+         optional<content_object> content = _remote_db->get_content( URI );
+            
+         if (!content) {
+             FC_THROW("Invalid content URI");
+         }
+
+         content_download_status status;
+         status.received_key_parts = bobj->key_particles.size();
+         status.total_key_parts = content->key_parts.size();
+
+         package_transfer_interface::transfer_progress progress = package_manager::instance().get_progress(URI);
+
+         status.total_download_bytes = progress.total_bytes;
+         status.received_download_bytes = progress.current_bytes;
+
+         return status;
+      } FC_CAPTURE_AND_RETHROW( (consumer)(URI));
+   }
+
+
+
+    void download_content(string consumer, string URI, string content_dir, bool broadcast) {
+        try {
+            optional<content_object> content = _remote_db->get_content( URI );
+            account_object consumer_account = get_account( consumer );
+
+            if (!content) {
+                FC_THROW("Invalid content URI");
+            }
+            
+            request_to_buy_operation request_op;
+            request_op.consumer = consumer_account.id;
+            request_op.URI = URI;
+            FC_ASSERT( _wallet.priv_el_gamal_key != decent::crypto::d_integer::Zero(), "Private ElGamal key is not imported. " );
+            request_op.pubKey = decent::crypto::get_public_el_gamal_key( _wallet.priv_el_gamal_key );
+            request_op.price = content->price;
+            
+            signed_transaction tx;
+            tx.operations.push_back( request_op );
+            set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
+            tx.validate();
+            sign_transaction( tx, broadcast );
+            
+            package_manager::instance().download_package(URI, empty_transfer_listener::get_one());
+            
+        } FC_CAPTURE_AND_RETHROW( (consumer)(URI)(content_dir)(broadcast) );
+
+    }
+
+
    signed_transaction request_to_buy(string consumer,
                                      string URI,
                                      string price_asset_symbol,
@@ -3321,7 +3508,10 @@ vesting_balance_object_with_info::vesting_balance_object_with_info( const vestin
    allowed_withdraw_time = now;
 }
 
-
+real_supply wallet_api::get_real_supply()const
+{
+   return my->_remote_db->get_real_supply();
+}
 
 signed_transaction
 wallet_api::submit_content(string author, string URI, string price_asset_name, string price_amount, uint64_t size,
@@ -3330,6 +3520,23 @@ wallet_api::submit_content(string author, string URI, string price_asset_name, s
                            decent::crypto::custody_data cd, bool broadcast)
 {
    return my->submit_content(author, URI, price_asset_name, price_amount, hash, size, seeders, quorum, expiration, publishing_fee_asset, publishing_fee_amount, synopsis, secret, cd, broadcast);
+}
+
+signed_transaction
+wallet_api::submit_content_new(string author, string content_dir, string samples_dir, string protocol, string price_asset_symbol, string price_amount, vector<account_id_type> seeders, fc::time_point_sec expiration, string publishing_fee_symbol_name, string publishing_fee_amount, string synopsis, bool broadcast)
+{
+   return my->submit_content_new(author, content_dir, samples_dir, protocol, price_asset_symbol, price_amount, seeders, expiration, publishing_fee_symbol_name, publishing_fee_amount, synopsis, broadcast);
+}
+
+void
+wallet_api::download_content(string consumer, string URI, string content_dir, bool broadcast)
+{
+   return my->download_content(consumer, URI, content_dir, broadcast);
+}
+
+optional<content_download_status> wallet_api::get_download_status(string consumer, string URI)
+{
+   return my->get_download_status(consumer, URI);
 }
 
 signed_transaction
@@ -3475,48 +3682,6 @@ void wallet_api::remove_package(const std::string& package_hash) const {
 }
 
 
-
-namespace {
-   struct transfer_progress_printer: public package_transfer_interface::transfer_listener {
-
-      static transfer_progress_printer& instance() {
-         static transfer_progress_printer the_one;
-         return the_one;
-      }
-
-      virtual void on_download_started(package_transfer_interface::transfer_id id) {
-         cout << id << ": Download started..." << endl;
-      }
-
-      virtual void on_download_finished(package_transfer_interface::transfer_id id, package_object downloaded_package) {
-         cout << id << ": Download finished: " << downloaded_package.get_hash().str() <<  endl;
-
-      }
-
-      virtual void on_download_progress(package_transfer_interface::transfer_id id, package_transfer_interface::transfer_progress progress) {
-         cout << id << ": Downloading " << progress.current_bytes << "/" << progress.total_bytes << " @ " << progress.current_speed << "Bytes/sec" << endl;
-      }
-
-
-      virtual void on_upload_started(package_transfer_interface::transfer_id id, const std::string& url) {
-
-         cout << id << ": Upload started on URL: " << url << endl;
-      }
-
-      virtual void on_upload_finished(package_transfer_interface::transfer_id id) {
-         cout << id << ": Upload finished" <<  endl;
-      }
-
-      virtual void on_upload_progress(package_transfer_interface::transfer_id id, package_transfer_interface::transfer_progress progress) {
-         cout << id << ": Uploading " << progress.current_bytes << "/" << progress.total_bytes << " @ " << progress.current_speed << "Bytes/sec" << endl;
-      }
-
-      virtual void on_error(package_transfer_interface::transfer_id id, std::string error) {
-         cout << id << ": ERROR -> " << error << endl;
-      }
-   };
-
-}
 
 
 void wallet_api::download_package(const std::string& url) const {

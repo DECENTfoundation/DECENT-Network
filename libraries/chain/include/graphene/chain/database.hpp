@@ -49,6 +49,7 @@ namespace graphene { namespace chain {
    class transaction_evaluation_state;
 
    struct budget_record;
+   struct real_supply;
 
    /**
     *   @class database
@@ -341,7 +342,8 @@ namespace graphene { namespace chain {
          void content_expire(const content_object& content);
          void decent_housekeeping();
          share_type get_witness_budget();
-         share_type get_real_supply();
+
+         real_supply get_real_supply()const;
 
          //////////////////// db_market.cpp ////////////////////
 

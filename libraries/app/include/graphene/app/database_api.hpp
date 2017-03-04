@@ -40,6 +40,7 @@
 #include <graphene/chain/content_object.hpp>
 #include <graphene/chain/seeder_object.hpp>
 #include <graphene/chain/rating_object.hpp>
+#include <graphene/chain/budget_record_object.hpp>
 
 #include <graphene/market_history/market_history_plugin.hpp>
 
@@ -475,6 +476,13 @@ class database_api
       // Decent //
       ////////////
 
+
+      /**
+       * Return current core asset supply
+       * @return current supply
+       */
+      real_supply get_real_supply()const;
+
       /**
        * @brief Get a list of open buyings
        * @return The buying_objects
@@ -665,4 +673,5 @@ FC_API(graphene::app::database_api,
    (list_publishers_by_price)
    (get_content_ratings)
    (get_seeder)
+   (get_real_supply)
 )

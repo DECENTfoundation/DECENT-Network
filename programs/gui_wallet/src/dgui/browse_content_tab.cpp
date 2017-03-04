@@ -8,6 +8,7 @@
  *
  */
 #include "browse_content_tab.hpp"
+#include "gui_wallet_global.hpp"
 #include <QLayout>
 #include <QCheckBox>
 #include <stdio.h>
@@ -16,21 +17,25 @@
 #include <QMouseEvent>
 #include <stdio.h>
 #include <stdarg.h>
+#include "json.hpp"
+
+#include <iostream>
 
 //namespace DCF {enum DIG_CONT_FIELDS{TIME,SYNOPSIS,RATING,SIZE,PRICE,LEFT};}
 static const char* s_vccpItemNames[]={"Time","Title","Rating",
                                      "Size","Price","Left"};
 static const int   s_cnNumberOfRows = sizeof(s_vccpItemNames)/sizeof(const char*);
-static const int   s_cnNumberOfSearchFields(sizeof(ST::s_vcpcSearchTypeStrs)/sizeof(const char*));
+static const int   s_cnNumberOfSearchFields(sizeof(gui_wallet::ST::s_vcpcSearchTypeStrs)/sizeof(const char*));
 
 using namespace gui_wallet;
+using namespace nlohmann;
 extern int g_nDebugApplication;
 
 
-Browse_content_tab::Browse_content_tab()
-        :
+Browse_content_tab::Browse_content_tab() : green_row(0),
+
         //m_TableWidget(1,s_cnNumberOfRows)
-        m_pTableWidget(new QTableWidget(1,s_cnNumberOfRows))
+        m_pTableWidget(new BTableWidget(1,s_cnNumberOfRows))
 {
     if(!m_pTableWidget){throw "Low memory!";}
 
@@ -49,9 +54,23 @@ Browse_content_tab::Browse_content_tab()
         "font-size: 12px;"
         "padding: 2 2 2 20; /* left padding (last number) must be more than the icon's width */"
     "}");
+    QLabel* lab = new QLabel();
+    QPixmap image(":/icon/images/search.svg");
+    lab->setPixmap(image);
+    //lab.setSizeIncrement(100, 40);
 
+    m_filterLineEdit.setPlaceholderText("Search");
+    m_filterLineEdit.setFixedHeight(40);
+    m_filterLineEdit.setStyleSheet("border: 1px solid white");
+
+
+    m_search_layout.addWidget(new QLabel());
+    m_search_layout.addWidget(new QLabel());
+    m_search_layout.addWidget(new QLabel());
+    m_search_layout.addWidget(lab);
     m_search_layout.addWidget(&m_filterLineEdit);
-    m_search_layout.addWidget(&m_searchTypeCombo);
+    //m_search_layout.addWidget(&m_searchTypeCombo);
+    //m_main_layout.addLayout(searchlay);
 
     m_main_layout.addLayout(&m_search_layout);
     m_main_layout.addWidget(m_pTableWidget);
@@ -78,8 +97,19 @@ void Browse_content_tab::PrepareTableWidgetHeaderGUI()
 {
     QTableWidget& m_TableWidget = *m_pTableWidget;
     //QLabel* pLabel;
+
+
+    //m_TableWidget.setShowGrid(false);
+
+    m_TableWidget.setStyleSheet("QTableWidget{border : 1px solid red}");
+
+    m_TableWidget.horizontalHeader()->setDefaultSectionSize(300);
+    m_TableWidget.setRowHeight(0,35);
     m_TableWidget.horizontalHeader()->hide();
     m_TableWidget.verticalHeader()->hide();
+    m_main_layout.setContentsMargins(0, 0, 0, 0);
+
+    QFont f( "Open Sans Bold", 14, QFont::Bold);
 
     for( int i(0); i<s_cnNumberOfRows; ++i )
     {
@@ -88,9 +118,15 @@ void Browse_content_tab::PrepareTableWidgetHeaderGUI()
         //m_TableWidget.setCellWidget(0,i,pLabel);
         m_TableWidget.setItem(0,i,new QTableWidgetItem(tr(s_vccpItemNames[i])));
         m_TableWidget.item(0,i)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+        m_TableWidget.item(0,i)->setFont(f);
+        m_TableWidget.item(0,i)->setBackground(QColor(228,227,228));
+        m_TableWidget.item(0,i)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+        m_TableWidget.item(0,i)->setForeground(QColor::fromRgb(51,51,51));
 
-        m_TableWidget.item(0, i)->setBackground(Qt::lightGray);
     }
+
+    m_TableWidget.setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    m_TableWidget.setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
     //QPalette plt_tbl = m_TableWidget.palette();
     //plt_tbl.setColor(QPalette::Base, palette().color(QPalette::Window));
@@ -102,16 +138,16 @@ void Browse_content_tab::PrepareTableWidgetHeaderGUI()
 void Browse_content_tab::DigContCallback(_NEEDED_ARGS2_)
 {
     __DEBUG_APP2__(3,"clbdata=%p, act=%d, pDigCont=%p\n",a_clb_data,a_act,a_pDigContent);
-    emit ShowDetailsOnDigContentSig(a_pDigContent->get_content_str);
+    emit ShowDetailsOnDigContentSig(*a_pDigContent);
 }
 
 
-void Browse_content_tab::SetDigitalContentsGUI(const std::vector<decent::wallet::ui::gui::SDigitalContent>& a_vContents)
+void Browse_content_tab::SetDigitalContentsGUI(const std::vector<SDigitalContent>& a_vContents)
 {
     //
-    decent::wallet::ui::gui::TableWidgetItemW<QCheckBox>* pCheck;
-    decent::wallet::ui::gui::TableWidgetItemW<QLabel>* pLabel;
-    decent::wallet::ui::gui::SDigitalContent aTemporar;
+    //TableWidgetItemW<QCheckBox>* pCheck;
+    TableWidgetItemW<QLabel>* pLabel;
+    SDigitalContent aTemporar;
     const int cnNumberOfContentsPlus1((int)a_vContents.size()+1);
 
     if(g_nDebugApplication){printf("cnNumberOfContentsPlus1=%d\n",cnNumberOfContentsPlus1);}
@@ -121,7 +157,7 @@ void Browse_content_tab::SetDigitalContentsGUI(const std::vector<decent::wallet:
     int nWidth = m_pTableWidget->width();
     m_main_layout.removeWidget(m_pTableWidget);
     delete m_pTableWidget;
-    m_pTableWidget = new QTableWidget(cnNumberOfContentsPlus1,s_cnNumberOfRows);
+    m_pTableWidget = new BTableWidget(cnNumberOfContentsPlus1,s_cnNumberOfRows);
     if(!m_pTableWidget){throw "Low memory!";}
 
     QTableWidget& m_TableWidget = *m_pTableWidget;
@@ -136,33 +172,48 @@ void Browse_content_tab::SetDigitalContentsGUI(const std::vector<decent::wallet:
         // namespace DGF {enum DIG_CONT_FIELDS{IS_SELECTED,TIME,SYNOPSIS,RATING,LEFT,SIZE,PRICE};}
         //const SDigitalContent& clbData,ClbType* own,void*clbDt,void (ClbType::*a_fpFunction)(_NEEDED_ARGS_)
 
-        pLabel = new decent::wallet::ui::gui::TableWidgetItemW<QLabel>(tr(aTemporar.created.c_str()),
-                                              aTemporar,this,NULL,&Browse_content_tab::DigContCallback);
+        pLabel = new TableWidgetItemW<QLabel>(
+                                              aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
+                                              tr(aTemporar.created.c_str()));
         if(!pLabel){throw "Low memory!";}
         m_TableWidget.setCellWidget(i,DCF::TIME,pLabel);
+        
+        std::string synopsis = unescape_string(aTemporar.synopsis);
+        std::replace(synopsis.begin(), synopsis.end(), '\t', ' '); // JSON does not like tabs :(    
 
-        pLabel = new decent::wallet::ui::gui::TableWidgetItemW<QLabel>(tr(aTemporar.synopsis.c_str()),
-                                              aTemporar,this,NULL,&Browse_content_tab::DigContCallback);
+        try {
+            auto synopsis_parsed = json::parse(synopsis);
+            synopsis = synopsis_parsed["title"].get<std::string>();
+            
+        } catch (...) {}
+        
+        pLabel = new TableWidgetItemW<QLabel>(
+                                              aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
+                                              tr(synopsis.c_str()));
         if(!pLabel){throw "Low memory!";}
         m_TableWidget.setCellWidget(i,DCF::SYNOPSIS,pLabel);
 
-        pLabel = new decent::wallet::ui::gui::TableWidgetItemW<QLabel>( QString::number(aTemporar.AVG_rating,'f').remove( QRegExp("0+$") ).remove( QRegExp("\\.$") ),
-                                               aTemporar,this,NULL,&Browse_content_tab::DigContCallback );
+        pLabel = new TableWidgetItemW<QLabel>(
+                                               aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
+                                               tr(aTemporar.AVG_rating.c_str()));
         if(!pLabel){throw "Low memory!";}
         m_TableWidget.setCellWidget(i,DCF::RATING,pLabel);
 
-        pLabel = new decent::wallet::ui::gui::TableWidgetItemW<QLabel>(tr(aTemporar.expiration.c_str()),
-                                              aTemporar,this,NULL,&Browse_content_tab::DigContCallback);
+        pLabel = new TableWidgetItemW<QLabel>(
+                                              aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
+                                              tr(aTemporar.expiration.c_str()));
         if(!pLabel){throw "Low memory!";}
         m_TableWidget.setCellWidget(i,DCF::LEFT,pLabel);
 
-        pLabel = new decent::wallet::ui::gui::TableWidgetItemW<QLabel>(QString::number(aTemporar.size,'f').remove( QRegExp("0+$") ).remove( QRegExp("\\.$") ),
-                                              aTemporar,this,NULL,&Browse_content_tab::DigContCallback);
+        pLabel = new TableWidgetItemW<QLabel>(
+                                              aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
+                                              tr(aTemporar.size.c_str()));
         if(!pLabel){throw "Low memory!";}
         m_TableWidget.setCellWidget(i,DCF::SIZE,pLabel);
 
-        pLabel = new decent::wallet::ui::gui::TableWidgetItemW<QLabel>( QString::number(aTemporar.price.amount,'f').remove( QRegExp("0+$") ).remove( QRegExp("\\.$") ),
-                                               aTemporar,this,NULL,&Browse_content_tab::DigContCallback);
+        pLabel = new TableWidgetItemW<QLabel>(
+                                               aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
+                                               tr(aTemporar.price.amount.c_str()));
         if(!pLabel){throw "Low memory!";}
         m_TableWidget.setCellWidget(i,DCF::PRICE,pLabel);
     }
@@ -182,6 +233,17 @@ void Browse_content_tab::ArrangeSize()
     int nSizeForOne = tqsTableSize.width()/(DCF::NUM_OF_DIG_CONT_FIELDS)-1;
     for(int i(0); i<DCF::NUM_OF_DIG_CONT_FIELDS;++i){m_pTableWidget->setColumnWidth(i,nSizeForOne);}
     //printf("!!!!!!!!!!!!!!!!!!!!!!\n");
+    m_pTableWidget->setStyleSheet("QTableView{border : 1px solid lightGray}");
+    m_pTableWidget->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    m_pTableWidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+
+    QSize tqs_TableSize = m_pTableWidget->size();
+    m_pTableWidget->setColumnWidth(0,(tqs_TableSize.width()*16.7)/100);
+    m_pTableWidget->setColumnWidth(1,(tqs_TableSize.width()*16.7)/100);
+    m_pTableWidget->setColumnWidth(2,(tqs_TableSize.width()*16.7)/100);
+    m_pTableWidget->setColumnWidth(3,(tqs_TableSize.width()*16.7)/100);
+    m_pTableWidget->setColumnWidth(4,(tqs_TableSize.width()*16.7)/100);
+    m_pTableWidget->setColumnWidth(5,(tqs_TableSize.width()*16.7)/100);
 }
 
 
@@ -190,3 +252,67 @@ void Browse_content_tab::resizeEvent ( QResizeEvent * a_event )
     QWidget::resizeEvent(a_event);
     ArrangeSize();
 }
+
+
+void Browse_content_tab::Connects()
+{
+    connect(m_pTableWidget,SIGNAL(mouseMoveEventDid()),this,SLOT(doRowColor()));
+}
+
+void Browse_content_tab::doRowColor()
+{
+//    if(green_row != 0)
+//    {
+//        m_pTableWidget->item(green_row,0)->setBackgroundColor(QColor(255,255,255));
+//        m_pTableWidget->item(green_row,1)->setBackgroundColor(QColor(255,255,255));
+//        m_pTableWidget->item(green_row,2)->setBackgroundColor(QColor(255,255,255));
+//        m_pTableWidget->item(green_row,3)->setBackgroundColor(QColor(255,255,255));
+
+//        m_pTableWidget->item(green_row,0)->setForeground(QColor::fromRgb(0,0,0));
+//        m_pTableWidget->item(green_row,1)->setForeground(QColor::fromRgb(0,0,0));
+//        m_pTableWidget->item(green_row,2)->setForeground(QColor::fromRgb(0,0,0));
+//        m_pTableWidget->item(green_row,3)->setForeground(QColor::fromRgb(0,0,0));
+//    }
+    QPoint mouse_pos = m_pTableWidget->mapFromGlobal(QCursor::pos());
+    QTableWidgetItem *ite = m_pTableWidget->itemAt(mouse_pos);
+
+    if(ite != NULL)
+    {
+
+        int a = ite->row();
+        if(a != 0)
+        {
+            m_pTableWidget->item(a,0)->setBackgroundColor(QColor(27,176,104));
+            m_pTableWidget->item(a,1)->setBackgroundColor(QColor(27,176,104));
+            m_pTableWidget->item(a,2)->setBackgroundColor(QColor(27,176,104));
+            m_pTableWidget->item(a,3)->setBackgroundColor(QColor(27,176,104));
+            m_pTableWidget->item(a,4)->setBackgroundColor(QColor(27,176,104));
+            m_pTableWidget->item(a,5)->setBackgroundColor(QColor(27,176,104));
+
+            m_pTableWidget->item(a,0)->setForeground(QColor::fromRgb(255,255,255));
+            m_pTableWidget->item(a,1)->setForeground(QColor::fromRgb(255,255,255));
+            m_pTableWidget->item(a,2)->setForeground(QColor::fromRgb(255,255,255));
+            m_pTableWidget->item(a,3)->setForeground(QColor::fromRgb(255,255,255));
+            m_pTableWidget->item(a,4)->setForeground(QColor::fromRgb(255,255,255));
+            m_pTableWidget->item(a,5)->setForeground(QColor::fromRgb(255,255,255));
+            //green_row = a;
+        }
+    }
+    else
+    {
+        green_row = 0;
+    }
+}
+
+//BTableWidget::BTableWidget(int a , int b) : QTableWidget(a,b)
+//{
+//    this->setMouseTracking(true);
+//}
+
+
+void BTableWidget::mouseMoveEvent(QMouseEvent *event)
+{
+    mouseMoveEventDid();
+}
+
+

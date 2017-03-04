@@ -189,14 +189,13 @@ if( ENABLE_INSTALLER )
 
     include( InstallRequiredSystemLibraries )
 
-    set( CPACK_OUTPUT_FILE_PREFIX "${CMAKE_BINARY_DIR}/packages" )
     if( CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT )
-        set( CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/artifacts/prefix" CACHE PATH "..." FORCE )
+        set( CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/artifacts/prefix" CACHE PATH "..." FORCE )
     else()
-    	set( CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/artifacts/install" )
+    	set( CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/artifacts/prefix" )
     endif()
-
-    set( CPACK_PACKAGE_DIRECTORY "${CMAKE_BINARY_DIR}/artifacts/package" )
+    set( CPACK_OUTPUT_FILE_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/artifacts/packages" )
+    set( CPACK_PACKAGE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/artifacts/package" )
     set( CPACK_PACKAGE_NAME "Decent" )
     set( CPACK_PACKAGE_VENDOR "Decent Services" )
     set( CPACK_PACKAGE_VERSION_MAJOR "${VERSION_MAJOR}" )

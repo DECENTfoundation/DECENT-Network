@@ -439,7 +439,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
    }
    else
    {
-       total_supplies[ asset_id_type(0) ] = GRAPHENE_MAX_SHARE_SUPPLY;
+       total_supplies[ asset_id_type(0) ] = GRAPHENE_INITIAL_SHARE_SUPPLY;
    }
 
    // Save tallied supplies

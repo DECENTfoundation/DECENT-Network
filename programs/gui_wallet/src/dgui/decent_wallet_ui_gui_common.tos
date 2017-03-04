@@ -16,45 +16,36 @@
 #endif
 
 #include <QMouseEvent>
+#include "ui_wallet_functions.hpp"
 
 
-template <typename QtType>
-template <typename ConstrArgType,typename ClbType>
-decent::wallet::ui::gui::TableWidgetItemW<QtType>::TableWidgetItemW(ConstrArgType a_cons_arg,
-                                                                    const SDigitalContent& a_cDigCont,
-                                                                    ClbType* a_own,void* a_clbDt,
-                                                                    void (ClbType::*a_fpFunction)(_NEEDED_ARGS2_))
+template <typename QtType,typename ClbkDataType>
+template <typename ClbType,typename ...ConstrArgTypes>
+gui_wallet::TableWidgetItemW_base<QtType,ClbkDataType>::TableWidgetItemW_base(
+                                                    const ClbkDataType& a_clbCont,
+                                                    ClbType* a_owner,void* a_clbData,
+                                                    void (ClbType::*a_fpFunction)(_NEEDED_ARGS1_(ClbkDataType)),
+                                                    ConstrArgTypes... a_cons_args)
     :
-      QtType(a_cons_arg),
-      m_pOwner(a_own),
-      m_pCallbackData(a_clbDt),
-      m_callback_data(a_cDigCont)
+      QtType(a_cons_args...),
+      m_pOwner(a_owner),
+      m_pCallbackData(a_clbData),
+      m_callback_content(a_clbCont)
 {
     prepare_constructor(1,a_fpFunction);
 }
 
 
-template <typename QtType>
-template <typename ClbType>
-decent::wallet::ui::gui::TableWidgetItemW<QtType>::TableWidgetItemW(const SDigitalContent& a_cDigCont,
-                                                                    ClbType* a_own,void* a_clbDt,
-                                                                    void (ClbType::*a_fpFunction)(_NEEDED_ARGS2_))
-    :
-      m_pOwner(a_own),
-      m_pCallbackData(a_clbDt),
-      m_callback_data(a_cDigCont)
+
+
+template <typename QtType,typename ClbkDataType>
+gui_wallet::TableWidgetItemW_base<QtType,ClbkDataType>::~TableWidgetItemW_base()
 {
-    prepare_constructor(1,a_fpFunction);
+    __DEBUG_APP2__(4,"Table widget destucto called!!!!!!!!!!!!!!!!!");
 }
 
-template <typename QtType>
-decent::wallet::ui::gui::TableWidgetItemW<QtType>::~TableWidgetItemW()
-{
-    __DEBUG_APP2__(1,"Table widget destucto called!!!!!!!!!!!!!!!!!");
-}
-
-template <typename QtType>
-void decent::wallet::ui::gui::TableWidgetItemW<QtType>::prepare_constructor(int a_val,...)
+template <typename QtType,typename ClbkDataType>
+void gui_wallet::TableWidgetItemW_base<QtType,ClbkDataType>::prepare_constructor(int a_val,...)
 {
     va_list aArgs;
     va_start( aArgs, a_val );
@@ -63,14 +54,74 @@ void decent::wallet::ui::gui::TableWidgetItemW<QtType>::prepare_constructor(int 
 }
 
 
+/*/////////////////////////////////////////////////////////////////////////////////////////////////*/
 template <typename QtType>
-void decent::wallet::ui::gui::TableWidgetItemW<QtType>::mouseDoubleClickEvent(QMouseEvent* a_event)
+template <typename ClbType,typename ...ConstrArgTypes>
+gui_wallet::TableWidgetItemW<QtType>::TableWidgetItemW(const SDigitalContent& a_clbCont,
+                                                                    ClbType* a_owner,void*a_clbData,
+                                                                    void (ClbType::*a_fpFunction)(_NEEDED_ARGS2_),
+                                                                    ConstrArgTypes... a_cons_args)
+    :
+      TableWidgetItemW_base<QtType,SDigitalContent>(a_clbCont,a_owner,a_clbData,a_fpFunction,a_cons_args...)
+{
+}
+
+
+template <typename QtType>
+gui_wallet::TableWidgetItemW<QtType>::~TableWidgetItemW()
+{
+    __DEBUG_APP2__(4,"Table widget destucto called!!!!!!!!!!!!!!!!!");
+}
+
+
+template <typename QtType>
+void gui_wallet::TableWidgetItemW<QtType>::mouseDoubleClickEvent(QMouseEvent* a_event)
 {
     if(a_event->button()==Qt::LeftButton)
     {
-        __DEBUG_APP2__(1,"m_pOwner=%p, m_pCallbackData=%p, m_fpCallback=%p\n",m_pOwner,m_pCallbackData,m_fpCallback);
-        (*m_fpCallback)(m_pOwner,m_pCallbackData,DCA::CALL_GET_CONTENT, &m_callback_data);
+        __DEBUG_APP2__(2,"m_pOwner=%p, m_pCallbackData=%p, m_fpCallback=%p\n",
+                       TableWidgetItemW_base<QtType,SDigitalContent>::m_pOwner,
+                       TableWidgetItemW_base<QtType,SDigitalContent>::m_pCallbackData,
+                       TableWidgetItemW_base<QtType,SDigitalContent>::m_fpCallback);
+        (*TableWidgetItemW_base<QtType,SDigitalContent>::m_fpCallback)(
+                    TableWidgetItemW_base<QtType,SDigitalContent>::m_pOwner,
+                    TableWidgetItemW_base<QtType,SDigitalContent>::m_pCallbackData,
+                    DCA::CALL_GET_CONTENT,
+                    &(TableWidgetItemW_base<QtType,SDigitalContent>::m_callback_content));
     }
+}
+
+
+
+/*/////////////////////////////////////////////////*/
+
+template <typename QtType>
+template <typename ClbType,typename ...ConstrArgTypes>
+gui_wallet::WidgetWithCallback<QtType>::WidgetWithCallback(
+        ClbType* a_owner,void*a_clbData,
+        void (ClbType::*a_fpFunction)(MOUSE_EVENT_LAST_ARGS),
+        ConstrArgTypes... a_cons_args)
+    :
+      QtType(a_cons_args...),
+      m_pOwner(a_owner),
+      m_pCallbackData(a_clbData)
+{
+    m_fpCallback = (TypeMouseEvntClbk)GetFunctionPointerAsVoid(0,a_fpFunction);
+}
+
+
+template <typename QtType>
+gui_wallet::WidgetWithCallback<QtType>::~WidgetWithCallback()
+{
+    //
+}
+
+
+template <typename QtType>
+void gui_wallet::WidgetWithCallback<QtType>::mousePressEvent(QMouseEvent* a_mouse_event)
+{
+    (*m_fpCallback)(m_pOwner,m_pCallbackData,a_mouse_event);
+    QtType::mousePressEvent(a_mouse_event);//mousePressEvent
 }
 
 #endif // DECENT_WALLET_UI_GUI_COMMON_TOS

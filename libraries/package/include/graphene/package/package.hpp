@@ -31,10 +31,11 @@ public:
 	bool verify_hash() const;
 
 	fc::ripemd160 get_hash() const { return _hash; }
+	int get_size() const;
 
 	bool is_valid() const { return _hash != fc::ripemd160(); }
 
-	uint32_t create_proof_of_custody(decent::crypto::custody_data cd, decent::crypto::custody_proof& proof) const;
+	uint32_t create_proof_of_custody(const decent::crypto::custody_data& cd, decent::crypto::custody_proof& proof) const;
 
 private:
 	boost::filesystem::path   _package_path;
@@ -150,21 +151,20 @@ public:
 
 	std::string					get_transfer_url(package_transfer_interface::transfer_id id);
 
+	package_transfer_interface::transfer_progress get_progress(std::string URI) const;
+
     void set_packages_path(const boost::filesystem::path& packages_path);
     boost::filesystem::path get_packages_path() const;
 
     void set_libtorrent_config(const boost::filesystem::path& libtorrent_config_file);
     boost::filesystem::path get_libtorrent_config() const;
 
-    decent::crypto::custody_utils& get_custody_utils() { return _custody_utils; }
-
+    uint32_t create_proof_of_custody(const boost::filesystem::path& content_file, const decent::crypto::custody_data& cd, decent::crypto::custody_proof& proof);
     void print_all_transfers();
 
-	void load_json_uploads();
-	void save_json_uploads();
-
-	void load_json_downloads();
-	void save_json_downloads();
+private:
+	void restore_json_state();
+	void save_json_state();
 
 private:
     mutable fc::mutex                  _mutex;
@@ -172,8 +172,7 @@ private:
     boost::filesystem::path            _libtorrent_config_file;
     decent::crypto::custody_utils      _custody_utils;
 	protocol_handler_map               _protocol_handlers;
-	transfer_jobs                      _all_transfers;
-    seeding_packages                   _seeding_packages;
+	transfer_jobs					   _all_transfers;
 };
 
 

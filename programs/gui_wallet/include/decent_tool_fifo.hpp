@@ -14,6 +14,7 @@
 
 #include <mutex>
 #include <stddef.h>
+#include "ui_wallet_functions_base.hpp"
 
 namespace decent { namespace tools{
 
@@ -59,10 +60,15 @@ struct taskListItem{
     ~taskListItem();
 
     struct taskListItem*    next;
+    int                     type;
     void*                   owner;
     void*                   callbackArg;
     TypeInp                 input;
+    union{
     TypeTaskFnc             fn_tsk_dn2;
+    TypeCallbackSetNewTaskGlb3   fn_tsk_dn3;
+    void*                       fn_tsk_ptr;
+    };
 };
 
 template <typename TypeInp,typename TypeTaskFnc>
@@ -78,7 +84,7 @@ public:
      *      non NULL -> pointer to tast to fullfill
      */
     bool GetFirstTask(decent::tools::taskListItem<TypeInp,TypeTaskFnc>* firstTaskBuffer);
-    void AddNewTask(const TypeInp& a_inp, void* a_owner, void* a_clbData,...);
+    void AddNewTask(int a_nType,const TypeInp& a_inp, void* a_owner, void* a_clbData,...);
 
 protected:
     taskListItem<TypeInp,TypeTaskFnc>   m_InitialTaskBuffer;

@@ -23,6 +23,7 @@
 
 
 
+#include <cryptopp/integer.h>
 #include <cryptopp/aes.h>
 #include <cryptopp/filters.h>
 #include <cryptopp/files.h>
@@ -44,27 +45,23 @@ extern int g_nDebugApplication;
 CryptoPP::AutoSeededRandomPool rng;
 
 
-#define ALERT(message)                                  \
-{                                                       \
-    QMessageBox msgBox;                                 \
-    msgBox.setWindowTitle("Error");                     \
-    msgBox.setText(QString::fromStdString(message));    \
-    msgBox.exec();                                      \
-}                                                       \
-
 
 
 Upload_tab::Upload_tab()
         :
         m_info_widget(FieldsRows::NUM_FIELDS, 2),
-        m_synopsis_label(tr("Synopsis")),
+        m_title_label(tr("Title")),
+        m_description_label(tr("Description")),
         m_infoLayoutHeader(tr("Information about content")),
         m_getPublishersTimer(this)
 {
     QPalette pltEdit;
 
-    m_synopsis_layout.addWidget(&m_synopsis_label);
-    m_synopsis_layout.addWidget(&m_synopsis_text);
+    m_synopsis_layout.addWidget(&m_title_label);
+    m_synopsis_layout.addWidget(&m_title_text);
+
+    m_synopsis_layout.addWidget(&m_description_label);
+    m_synopsis_layout.addWidget(&m_description_text);
 
     m_main_layout.addLayout(&m_synopsis_layout);
     m_info_layout.addWidget(&m_infoLayoutHeader);
@@ -96,13 +93,7 @@ Upload_tab::Upload_tab()
     }
     m_info_widget.setCellWidget(FieldsRows::KEYPARTS, 1, keyParts);
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// Tags
-    ////////////////////////////////////////////////////////////////////////////
-    QLineEdit* tagsEdit = new QLineEdit("", this);
-    m_info_widget.setCellWidget(FieldsRows::TAGS, 0, new QLabel("Tags"));
-    m_info_widget.setCellWidget(FieldsRows::TAGS, 1, tagsEdit);
-
+    
     ////////////////////////////////////////////////////////////////////////////
     /// Price
     ////////////////////////////////////////////////////////////////////////////
@@ -132,20 +123,42 @@ Upload_tab::Upload_tab()
 
 
     ////////////////////////////////////////////////////////////////////////////
-    /// Push button
+    /// content button
     ////////////////////////////////////////////////////////////////////////////
 
     QLineEdit* contentPath = new QLineEdit("", this);
     contentPath->setReadOnly(true);
 
-    m_info_widget.setCellWidget(FieldsRows::CONTENTPATH, 0, new QLabel("Path"));
+    m_info_widget.setCellWidget(FieldsRows::CONTENTPATH, 0, new QLabel("Content"));
     m_info_widget.setCellWidget(FieldsRows::CONTENTPATH, 1, contentPath);
 
 
-    QPushButton* pPushButton = new QPushButton("Browse...");
+    QPushButton* browse_content_button = new QPushButton("Browse...");
+    m_info_widget.setCellWidget(FieldsRows::SELECTSAMPLES, 0, new QLabel(""));
+    m_info_widget.setCellWidget(FieldsRows::SELECTSAMPLES, 1, browse_content_button);
+    connect(browse_content_button, SIGNAL(clicked()),this, SLOT(browseSamples()));
+
+
+
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// samples button
+    ////////////////////////////////////////////////////////////////////////////
+
+    QLineEdit* samplesPath = new QLineEdit("", this);
+    samplesPath->setReadOnly(true);
+
+    m_info_widget.setCellWidget(FieldsRows::SAMPLESPATH, 0, new QLabel("Samples"));
+    m_info_widget.setCellWidget(FieldsRows::SAMPLESPATH, 1, samplesPath);
+
+
+    QPushButton* browse_samples_button = new QPushButton("Browse...");
     m_info_widget.setCellWidget(FieldsRows::SELECTPATH, 0, new QLabel(""));
-    m_info_widget.setCellWidget(FieldsRows::SELECTPATH, 1, pPushButton);
-    connect(pPushButton, SIGNAL(clicked()),this, SLOT(browseContent()));
+    m_info_widget.setCellWidget(FieldsRows::SELECTPATH, 1, browse_samples_button);
+    connect(browse_samples_button, SIGNAL(clicked()),this, SLOT(browseContent()));
+
+
+
 
 
     m_info_widget.horizontalHeader()->hide();
@@ -230,27 +243,34 @@ void Upload_tab::onGrabPublishers() {
 }
 
 void Upload_tab::browseContent() {
-    QString contentDir = QFileDialog::getExistingDirectory(this, tr("Select content"), "~", QFileDialog::DontResolveSymlinks);
+    QString contentPathSelected = QFileDialog::getOpenFileName(this, tr("Select content"), "~");
+    //QString contentDir = QFileDialog::getOpenFileName(this, tr("Select content"), "~");
     QLineEdit* contentPath = (QLineEdit*)m_info_widget.cellWidget(FieldsRows::CONTENTPATH, 1);
-    contentPath->setText(contentDir);
+    contentPath->setText(contentPathSelected);
 }
+
+void Upload_tab::browseSamples() {
+    QString sampleDir = QFileDialog::getExistingDirectory(this, tr("Select samples"), "~", QFileDialog::DontResolveSymlinks);
+    //QString sampleDir = QFileDialog::getOpenFileName(this, tr("Select content"), "~");
+    QLineEdit* samplePath = (QLineEdit*)m_info_widget.cellWidget(FieldsRows::SAMPLESPATH, 1);
+    samplePath->setText(sampleDir);
+}
+
 
 void Upload_tab::uploadContent() {
     std::string lifetime = ((QDateEdit*)m_info_widget.cellWidget(FieldsRows::LIFETIME, 1))->text().toStdString();
     std::string keyparts = ((QComboBox*)m_info_widget.cellWidget(FieldsRows::KEYPARTS, 1))->currentData().toString().toStdString();
-    std::string tags = ((QLineEdit*)m_info_widget.cellWidget(FieldsRows::TAGS, 1))->text().toStdString();
     std::string price = ((QLineEdit*)m_info_widget.cellWidget(FieldsRows::PRICE, 1))->text().toStdString();
     std::string assetType = ((QComboBox*)m_info_widget.cellWidget(FieldsRows::ASSETID, 1))->currentData().toString().toStdString();
     std::string assetName = ((QComboBox*)m_info_widget.cellWidget(FieldsRows::ASSETID, 1))->currentText().toStdString();
     std::string seeders = ((QComboBox*)m_info_widget.cellWidget(FieldsRows::SEEDERS, 1))->currentData().toString().toStdString();
     std::string path = ((QLineEdit*)m_info_widget.cellWidget(FieldsRows::CONTENTPATH, 1))->text().toStdString();
+    std::string samples_path = ((QLineEdit*)m_info_widget.cellWidget(FieldsRows::SAMPLESPATH, 1))->text().toStdString();
 
-    std::string synopsis = m_synopsis_text.toPlainText().toStdString();
 
-    if (tags.empty()) {
-        ALERT("Please specify tags");
-        return;
-    }
+    std::string title = m_title_text.text().toStdString();
+    std::string desc = m_description_text.toPlainText().toStdString();
+
 
     if (price.empty()) {
         ALERT("Please specify price");
@@ -262,7 +282,12 @@ void Upload_tab::uploadContent() {
         return;
     }
 
-    if (synopsis.empty()) {
+    if (title.empty()) {
+        ALERT("Please specify synopsis");
+        return;
+    }
+    
+    if (desc.empty()) {
         ALERT("Please specify synopsis");
         return;
     }
@@ -272,7 +297,13 @@ void Upload_tab::uploadContent() {
         return;   
     }
 
+    setEnabled(false);
 
+    json synopsis_obj;
+    synopsis_obj["title"] = title;
+    synopsis_obj["description"] = desc;
+
+    std::string synopsis = synopsis_obj.dump(4);
 
     CryptoPP::Integer randomKey (rng, 512);
 
@@ -282,86 +313,47 @@ void Upload_tab::uploadContent() {
 
 
 
-    std::string* submitCommand = new std::string("submit_content");
-    *submitCommand += " " + GlobalEvents::instance().getCurrentUser();   //author
-    *submitCommand += " \"%0\"";                                         //URI
-    *submitCommand += " " + assetName;                                   //price_asset_name
-    *submitCommand += " " + price;                                       //price_amount
-    *submitCommand += " %1";                                             //size
-    *submitCommand += " \"%2\"";                                         //hash
-    *submitCommand += " [" + seeders + "]";                              //seeders
-    *submitCommand += " 1";                                              //quorum
-    *submitCommand += " \"" + lifetime + "T23:59:59\"";                  //expiration
-    *submitCommand += " DECENT";                                         //publishing_fee_asset
-    *submitCommand += " 300";                                            //publishing_fee_amount
-    *submitCommand += " \"" + synopsis + "\"";                           //synopsis
-    *submitCommand += " \"" + randomKeyString + "\"";                    //secret
-    *submitCommand += " %3";                                             //cd
-    *submitCommand += " true";                                           //broadcast
-
-    
-
-    QString createPackage = QString("create_package \"%0\" \"\" %1").arg(QString::fromStdString(path),
-                                                                         QString::fromStdString(randomKeyString));
-
-    SetNewTask(createPackage.toStdString(), this, submitCommand, +[](void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
-        if (a_err != 0) {
-            ALERT("Failed to upload content");
-            return;
-        }
-
-        Upload_tab* obj = (Upload_tab*)owner;
-        std::string submitCommandTemplate = *(std::string*)a_clbkArg;
-
-        auto packageResult = json::parse(a_result);
-
-        std::string packageHash = packageResult[0].get<std::string>();
-        int n = packageResult[1]["n"].get<int>();
-        std::string u_seed = packageResult[1]["u_seed"].get<std::string>();
-        std::string pubKey = packageResult[1]["pubKey"].get<std::string>();
-
-        QString cdJson = QString("{ \"n\": %0, \"u_seed\": \"%1\",\"pubKey\": \"%2\" }").arg(QString::fromStdString(std::to_string(n)),
-                                                                                             QString::fromStdString(u_seed),
-                                                                                             QString::fromStdString(pubKey));
-
-        //TODO: fix package size
-        QString submitCmd = QString(QString::fromStdString(submitCommandTemplate)).arg("%0", "1", QString::fromStdString(packageHash), cdJson);
-
-        *(std::string*)a_clbkArg = submitCmd.toStdString();
-
-        QString uploadCommand = QString("upload_package %0 ipfs").arg(QString::fromStdString(packageHash));
-
-        SetNewTask(uploadCommand.toStdString(), obj, a_clbkArg, +[](void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
-            
-            Upload_tab* obj = (Upload_tab*)owner;
-            auto uploadResult = json::parse(a_result);
+    std::string submitCommand = "submit_content_new";
+    submitCommand += " " + GlobalEvents::instance().getCurrentUser();   //author
+    submitCommand += " \"" + path + "\"";                               //URI
+    submitCommand += " \"" + samples_path + "\"";                       //URI
+    submitCommand += " \"ipfs\"";                                       //URI
+    submitCommand += " " + assetName;                                   //price_asset_name
+    submitCommand += " " + price;                                       //price_amount
+    submitCommand += " [" + seeders + "]";                              //seeders
+    submitCommand += " \"" + lifetime + "T23:59:59\"";                  //expiration
+    submitCommand += " DECENT";                                         //publishing_fee_asset
+    submitCommand += " 300";                                            //publishing_fee_amount
+    submitCommand += " \"" + escape_string(synopsis) + "\"";            //synopsis
+    submitCommand += " true";                                           //broadcast
 
 
-            std::string submitCommandTemplate = *(std::string*)a_clbkArg;
-            QString submitCmd = QString(QString::fromStdString(submitCommandTemplate)).arg(QString::fromStdString(uploadResult.get<std::string>()));
-
-            SetNewTask(submitCmd.toStdString(), obj, NULL, +[](void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
-                if (a_err != 0) {
-                    ALERT("Failed to submit content");
-                    return;
-                }
-
-                ALERT("Content is submitted!");
-            });
-
-        });
-
-     });
+    SetNewTask(submitCommand, this, NULL, +[](void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
+        ((Upload_tab*)owner)->uploadDone(a_clbkArg, a_err, a_task, a_result);
+    });
 }
 
 Upload_tab::~Upload_tab()
 {
 }
 
-
-
 void Upload_tab::uploadDone(void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
+    if (a_err != 0) {
+        ALERT("Failed to submit content");
+        setEnabled(true);
+        return;
+    }
 
+    // On success reset only these.
+    m_title_text.setText("");
+    m_description_text.setPlainText("");
+    ((QDateEdit*)m_info_widget.cellWidget(FieldsRows::LIFETIME, 1))->setDate(QDate::currentDate());
+    ((QLineEdit*)m_info_widget.cellWidget(FieldsRows::PRICE, 1))->setText("");
+    ((QLineEdit*)m_info_widget.cellWidget(FieldsRows::CONTENTPATH, 1))->setText("");
+    ((QLineEdit*)m_info_widget.cellWidget(FieldsRows::SAMPLESPATH, 1))->setText("");
+
+    ALERT("Content is submitted!");
+    setEnabled(true);
 }
 
 void Upload_tab::resizeEvent ( QResizeEvent * event )

@@ -65,7 +65,7 @@ namespace graphene { namespace chain {
       });
       db().adjust_balance(o.author,-o.publishing_fee);
       auto& idx = db().get_index_type<seeder_index>().indices().get<by_seeder>();
-      //TODO_DECENT we should better remove the space after the first PoC
+      //TODO_DECENT we should better reserve the disk space after the first PoC
       for ( const auto &p : o.seeders ){
          const auto& itr = idx.find( p );
          FC_ASSERT( itr != idx.end(), "seeder does not exist" );

@@ -1467,6 +1467,11 @@ vector<proposal_object> database_api_impl::get_proposed_transactions( account_id
 //                                                                  //
 //////////////////////////////////////////////////////////////////////
 
+real_supply database_api::get_real_supply()const
+{
+   return my->_db.get_real_supply();
+}
+
 vector<buying_object> database_api::get_open_buyings()const
 {
    return my->get_open_buyings();

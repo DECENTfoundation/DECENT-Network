@@ -25,14 +25,11 @@
 
 extern int g_nDebugApplication;
 std::string g_cApplicationPath ;
+extern InGuiThreatCaller* s_pWarner;
+
 
 int main(int argc, char* argv[])
 {
-
-#ifdef TEST_SIMPLE_APP
-    printf("Hello world! argc=%d, argv=%p\n",argc,argv);
-#else
-
     const char* cpcPath = strrchr(argv[0],LAST_SYS_CHAR);
 
     if(cpcPath)
@@ -72,42 +69,19 @@ int main(int argc, char* argv[])
         }
     }
 
-    if(g_nDebugApplication){printf("argv[0]=\"%s\"\n"
-                                   "app dir. = \"%s\"\n",
-                                   scAppFullPath.c_str(),g_cApplicationPath.c_str());}
 
     freopen( "/dev/null", "w", stderr);
 
     try{
 
-    gui_wallet::application aApp(argc,argv);
-
-#if 0
-    //QString testString;
-    wprintf(L"fwide=%d\n",fwide(stdout,1));
-    wprintf(L"Русский\n");
-    wchar_t i = 0x2192;
-    //for( i=4000; i<6000;++i)
-    {
-        //wprintf(L"chr=%c(code=%d)\n",i,(int)i);
-        wprintf(L"chr='%lc'(code=%d)\n",i,(int)i);
-    }
-#else
-    gui_wallet::Mainwindow_gui_wallet aMainWindow;
-    aMainWindow.show();
-    aApp.exec();
-    //delete g_pApplicationPath;
-#endif
-#endif
-
-    }
-    catch(const char* a_ext_str)
-    {
-        printf("%s\n",a_ext_str);
-    }
-    catch(...)
-    {
-        printf("Unknown exception!\n");
+        gui_wallet::application aApp(argc,argv);
+        gui_wallet::Mainwindow_gui_wallet aMainWindow;
+        aMainWindow.show();
+        aApp.exec();
+    } catch(const char* a_ext_str) {
+        __DEBUG_APP2__(0,"%s\n",a_ext_str);
+    } catch(...) {
+        __DEBUG_APP2__(0,"Unknown exception!\n");
     }
 
     return 0;
