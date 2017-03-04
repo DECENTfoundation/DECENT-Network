@@ -47,6 +47,8 @@ struct SDigitalContent{
     struct{
         long long amount;
         std::string asset_id;
+        std::string symbol;
+        std::string precision;
     }price;
     std::string synopsis;
     std::string URI;

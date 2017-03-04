@@ -281,7 +281,6 @@ void Browse_content_tab::ShowDigitalContentsGUI(std::vector<SDigitalContent>& co
         m_TableWidget.setCellWidget(index, DCF::SIZE, new TableWidgetItemW<QLabel>(aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
                                                                                                     QString::number(aTemporar.size)));
 
-        
         m_TableWidget.setCellWidget(index, DCF::PRICE, new TableWidgetItemW<QLabel>(aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
                                                                                         QString::number(aTemporar.price.amount)));
         

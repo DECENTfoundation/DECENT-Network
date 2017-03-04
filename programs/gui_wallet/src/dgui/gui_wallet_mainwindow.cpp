@@ -442,6 +442,9 @@ int Mainwindow_gui_wallet::GetDigitalContentsFromVariant(DCT::DIG_CONT_TYPES a_t
         pNext = &(aParser.GetByIndex(i));
         aDigContent.URI = pNext->GetByKey("URI").value();
         aDigContent.author = pNext->GetByKey("author").value();
+        aDigContent.price.amount = std::stod(pNext->GetByKey("price").GetByKey("amount").value());
+        aDigContent.price.asset_id = pNext->GetByKey("price").GetByKey("asset_id").value();
+        
         a_vcContents.push_back(aDigContent);
     }
 
@@ -987,8 +990,6 @@ void ParseDigitalContentFromVariant(SDigitalContent* a_pContent,
 
     a_result.visit(aParser);
 
-    a_pContent->price.amount = atol(aParser.GetByKey("price").GetByKey("amount").value().c_str());
-    a_pContent->price.asset_id = aParser.GetByKey("price").GetByKey("asset_id").value();
     a_pContent->synopsis = aParser.GetByKey("synopsis").value();
     //a_pContent->URI = aParser.GetByKey("URI").value();
     a_pContent->AVG_rating = atof(aParser.GetByKey("AVG_rating").value().c_str());
@@ -996,4 +997,15 @@ void ParseDigitalContentFromVariant(SDigitalContent* a_pContent,
     a_pContent->expiration = aParser.GetByKey("expiration").value();
     a_pContent->size = atoi(aParser.GetByKey("size").value().c_str());
     a_pContent->times_bougth = atoi(aParser.GetByKey("times_bougth").value().c_str());
+}
+
+void ParseDigitalContentAssetDetailsFromVariant(SDigitalContent* a_pContent,
+                                                const fc::variant& a_result)
+{
+    JsonParserQt aParser;
+    
+    a_result.visit(aParser);
+    
+    a_pContent->price.symbol = aParser.GetByKey("symbol").value();
+    a_pContent->price.precision = aParser.GetByKey("precision").value();
 }

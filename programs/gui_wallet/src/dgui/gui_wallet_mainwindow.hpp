@@ -22,6 +22,8 @@
 #include "cliwalletdlg.hpp"
 #include <unnamedsemaphorelite.hpp>
 #include <stdarg.h>
+#include <string>
+#include <map>
 #include "decent_wallet_ui_gui_contentdetailsgeneral.hpp"
 #include "decent_wallet_ui_gui_contentdetailsbougth.hpp"
 
