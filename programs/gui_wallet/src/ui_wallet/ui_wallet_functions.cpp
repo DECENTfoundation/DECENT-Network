@@ -134,17 +134,17 @@ __DLL_EXPORT__ void InitializeUiInterfaceOfWallet_base(TypeWarnAndWaitFunc a_fpW
 
         s_pMutex_for_cur_api = new NewTestMutex;
         s_pConnectionRequestFifo = new decent::tools::FiFo<SConnectionStruct*,TypeCallbackSetNewTaskGlb2>;
-        if(!s_pConnectionRequestFifo){throw "Low memory!\n" __FILE__ ;}
-        s_pSema_for_connection_thread = new decent::tools::UnnamedSemaphoreLite;
-        if(!s_pSema_for_connection_thread){throw "Low memory!\n" __FILE__ ;}
-        s_wdata_ptr = new graphene::wallet::wallet_data;
-        if(!s_wdata_ptr){throw "Low memory!\n" __FILE__ ;}
 
+        s_pSema_for_connection_thread = new decent::tools::UnnamedSemaphoreLite;
+        
+        s_wdata_ptr = new graphene::wallet::wallet_data;
+        
+        
         /* after all data is inited we can create the threads */
         s_pConnectionThread = new std::thread(&ConnectionThreadFunction);
-        if(!s_pConnectionThread){throw "Low memory!\n" __FILE__ ;}
+        
         s_pManagementThread = new std::thread(&gui_wallet_application_MenegerThreadFunc);
-        if(!s_pManagementThread){throw "Low memory!\n" __FILE__ ;}
+        
     }
 
 }

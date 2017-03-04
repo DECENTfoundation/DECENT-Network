@@ -14,7 +14,9 @@
 
 std::string FindImagePath(bool& a_bRet,const char* a_image_name);
 
-decent::wallet::ui::gui::NewCheckBox::NewCheckBox(const char* a_checkedImg2, const char* a_uncheckedImg2,
+using namespace gui_wallet;
+
+NewCheckBox::NewCheckBox(const char* a_checkedImg2, const char* a_uncheckedImg2,
                                                   int a_index)
     :
       m_index(a_index)
@@ -50,25 +52,25 @@ decent::wallet::ui::gui::NewCheckBox::NewCheckBox(const char* a_checkedImg2, con
 }
 
 
-decent::wallet::ui::gui::NewCheckBox::~NewCheckBox()
+NewCheckBox::~NewCheckBox()
 {
     //
 }
 
 
-const int& decent::wallet::ui::gui::NewCheckBox::GetIndex()const
+const int& NewCheckBox::GetIndex()const
 {
     return m_index;
 }
 
 
-void decent::wallet::ui::gui::NewCheckBox::SetIndex(int a_index)
+void NewCheckBox::SetIndex(int a_index)
 {
     m_index = a_index;
 }
 
 
-void decent::wallet::ui::gui::NewCheckBox::StateChangedSlot(int a_nState)
+void NewCheckBox::StateChangedSlot(int a_nState)
 {
     emit StateChangedNewSignal(a_nState,m_index);
 }

@@ -28,12 +28,9 @@
 namespace gui_wallet
 {
 
-    //class Mainwindow_gui_wallet : public QMainWindow
     class Mainwindow_gui_wallet : public QMainWindow
     {
-//        friend class Overview_tab;
-//        friend class Transactions_tab;
-//        friend class CentralWigdet;
+
         Q_OBJECT
     public:
         Mainwindow_gui_wallet();
@@ -65,24 +62,29 @@ namespace gui_wallet
         void TaskDoneOverrviewGUI3(void* a_clbkArg,int64_t a_err,const std::string& a_task,const fc::variant& a_result);
         void TaskDonePurchasedGUI3(void* a_clbkArg,int64_t a_err,const std::string& a_task,const fc::variant& a_result);
 
-        //void RedrawTransacionTabGUI();
+        
+        
+        
         void ManagementBrowseContentGUI();
         void ManagementTransactionsGUI();
         void ManagementUploadGUI();
         void ManagementOverviewGUI();
         void ManagementPurchasedGUI();
 
+        
+        
         void UpdateLockedStatus();
 
         void CliCallbackFnc(void*arg,const std::string& task);
         int GetDigitalContentsFromVariant(DCT::DIG_CONT_TYPES a_type,
-                                         std::vector<decent::wallet::ui::gui::SDigitalContent>& acContents,
+                                         std::vector<SDigitalContent>& acContents,
                                          const fc::variant& contents_var);
 
         void DisplayWalletContentGUI();
 
         void SetPassword(void* a_owner, void* a_str_ptr);
-
+        
+        
     protected slots:
         void CurrentUserChangedSlot(const QString&);
 
@@ -103,7 +105,7 @@ namespace gui_wallet
         void OpenCliWalletDlgSlot();
         void OpenInfoDlgSlot();
 
-        void ShowDetailsOnDigContentSlot(decent::wallet::ui::gui::SDigitalContent dig_cont);
+        void ShowDetailsOnDigContentSlot(SDigitalContent dig_cont);
 
     protected:
         virtual void moveEvent(QMoveEvent *) override ;
@@ -136,10 +138,8 @@ namespace gui_wallet
         QAction             m_ActionOpenInfoDlg;
         ConnectDlg          m_ConnectDlg;
         TextDisplayDialog   m_info_dialog;
-        //WalletContentDlg    m_wallet_content_dlg;
-
-        //std::vector<account_object_str>  m_vAccounts;
-        //std::vector<std::vector<asset_str>>   m_vAccountsBalances;
+        
+        
         QVBoxLayout             m_main_layout;
         QLabel                  m_num_acc_or_error_label;
         int                     m_nError;
@@ -155,9 +155,9 @@ namespace gui_wallet
         QString                            m_cqsPreviousFilter;
         QTextEdit*                          m_pInfoTextEdit;
         CliWalletDlg*                        m_pcInfoDlg;
-        //std::string                         m_URI;
-        std::vector<decent::wallet::ui::gui::SDigitalContent> m_vcDigContent;
-        std::vector<decent::wallet::ui::gui::SDigitalContent> m_vcDigContentOld;
+
+        std::vector<SDigitalContent> m_vcDigContent;
+        std::vector<SDigitalContent> m_vcDigContentOld;
         int                     m_nConnected;
         int                     m_nUserComboTriggeredInGui;
         SConnectionStruct   m_wdata2;
@@ -169,8 +169,8 @@ namespace gui_wallet
 
         QString             m_default_stylesheet;
 
-        decent::wallet::ui::gui::ContentDetailsGeneral m_dig_cont_detailsGenDlg;
-        decent::wallet::ui::gui::ContentDetailsBougth m_dig_cont_detailsBougDlg;
+        ContentDetailsGeneral m_dig_cont_detailsGenDlg;
+        ContentDetailsBougth m_dig_cont_detailsBougDlg;
 
         std::vector<std::string>        m_user_ids;
     };

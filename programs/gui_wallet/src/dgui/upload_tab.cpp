@@ -93,13 +93,7 @@ Upload_tab::Upload_tab()
     }
     m_info_widget.setCellWidget(FieldsRows::KEYPARTS, 1, keyParts);
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// Tags
-    ////////////////////////////////////////////////////////////////////////////
-    QLineEdit* tagsEdit = new QLineEdit("", this);
-    m_info_widget.setCellWidget(FieldsRows::TAGS, 0, new QLabel("Tags"));
-    m_info_widget.setCellWidget(FieldsRows::TAGS, 1, tagsEdit);
-
+    
     ////////////////////////////////////////////////////////////////////////////
     /// Price
     ////////////////////////////////////////////////////////////////////////////
@@ -249,10 +243,10 @@ void Upload_tab::onGrabPublishers() {
 }
 
 void Upload_tab::browseContent() {
-    QString contentDir = QFileDialog::getExistingDirectory(this, tr("Select content"), "~", QFileDialog::DontResolveSymlinks);
+    QString contentPathSelected = QFileDialog::getOpenFileName(this, tr("Select content"), "~");
     //QString contentDir = QFileDialog::getOpenFileName(this, tr("Select content"), "~");
     QLineEdit* contentPath = (QLineEdit*)m_info_widget.cellWidget(FieldsRows::CONTENTPATH, 1);
-    contentPath->setText(contentDir);
+    contentPath->setText(contentPathSelected);
 }
 
 void Upload_tab::browseSamples() {
@@ -266,7 +260,6 @@ void Upload_tab::browseSamples() {
 void Upload_tab::uploadContent() {
     std::string lifetime = ((QDateEdit*)m_info_widget.cellWidget(FieldsRows::LIFETIME, 1))->text().toStdString();
     std::string keyparts = ((QComboBox*)m_info_widget.cellWidget(FieldsRows::KEYPARTS, 1))->currentData().toString().toStdString();
-    std::string tags = ((QLineEdit*)m_info_widget.cellWidget(FieldsRows::TAGS, 1))->text().toStdString();
     std::string price = ((QLineEdit*)m_info_widget.cellWidget(FieldsRows::PRICE, 1))->text().toStdString();
     std::string assetType = ((QComboBox*)m_info_widget.cellWidget(FieldsRows::ASSETID, 1))->currentData().toString().toStdString();
     std::string assetName = ((QComboBox*)m_info_widget.cellWidget(FieldsRows::ASSETID, 1))->currentText().toStdString();
@@ -278,11 +271,6 @@ void Upload_tab::uploadContent() {
     std::string title = m_title_text.text().toStdString();
     std::string desc = m_description_text.toPlainText().toStdString();
 
-
-    if (tags.empty()) {
-        ALERT("Please specify tags");
-        return;
-    }
 
     if (price.empty()) {
         ALERT("Please specify price");
@@ -360,7 +348,6 @@ void Upload_tab::uploadDone(void* a_clbkArg, int64_t a_err, const std::string& a
     m_title_text.setText("");
     m_description_text.setPlainText("");
     ((QDateEdit*)m_info_widget.cellWidget(FieldsRows::LIFETIME, 1))->setDate(QDate::currentDate());
-    ((QLineEdit*)m_info_widget.cellWidget(FieldsRows::TAGS, 1))->setText("");
     ((QLineEdit*)m_info_widget.cellWidget(FieldsRows::PRICE, 1))->setText("");
     ((QLineEdit*)m_info_widget.cellWidget(FieldsRows::CONTENTPATH, 1))->setText("");
     ((QLineEdit*)m_info_widget.cellWidget(FieldsRows::SAMPLESPATH, 1))->setText("");

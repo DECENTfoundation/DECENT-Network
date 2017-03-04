@@ -35,6 +35,7 @@ void gui_wallet::Mainwindow_gui_wallet::TaskDoneOverrviewGUI(void* a_clbkArg,int
     if(a_task.find("list_accounts ") == 0)
     {
         m_pCentralWidget->m_Overview_tab.accounts_names.clear();
+        m_pCentralWidget->m_Overview_tab.accounts_id.clear();
         for(int i = 1 ; i < a_result.size() - 1 ; ++i)
         {
             if(a_result[i] == '[')

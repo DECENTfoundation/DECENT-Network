@@ -17,22 +17,19 @@
 #include "unnamedsemaphorelite.hpp"
 #include "ui_wallet_functions.hpp"
 
-#define CREATE_NEW_APP
 
 
 namespace gui_wallet
 {
 
-#ifdef CREATE_NEW_APP
-class application : public QApplication
-{
-    Q_OBJECT
-public:
-    application(int& argc, char** argv);
-    virtual ~application();
+    class application : public QApplication
+    {
+        Q_OBJECT
+    public:
+        application(int& argc, char** argv);
+        virtual ~application();
 
-};
-#endif // #ifdef CREATE_NEW_APP
+    };
 
 }
 

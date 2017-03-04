@@ -18,12 +18,15 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include "json.hpp"
-
+#include <ctime>
 #include <iostream>
+#include <QDateTime>
+#include <QDate>
+#include <QTime>
 
 //namespace DCF {enum DIG_CONT_FIELDS{TIME,SYNOPSIS,RATING,SIZE,PRICE,LEFT};}
-static const char* s_vccpItemNames[]={"Time","Title","Rating",
-                                     "Size","Price","Left"};
+static const char* s_vccpItemNames[]={"Title","Rating",
+                                     "Size","Price","Created","Expiration"};
 static const int   s_cnNumberOfRows = sizeof(s_vccpItemNames)/sizeof(const char*);
 static const int   s_cnNumberOfSearchFields(sizeof(gui_wallet::ST::s_vcpcSearchTypeStrs)/sizeof(const char*));
 
@@ -141,12 +144,12 @@ void Browse_content_tab::DigContCallback(_NEEDED_ARGS2_)
 }
 
 
-void Browse_content_tab::SetDigitalContentsGUI(const std::vector<decent::wallet::ui::gui::SDigitalContent>& a_vContents)
+void Browse_content_tab::SetDigitalContentsGUI(const std::vector<SDigitalContent>& a_vContents)
 {
     //
-    //decent::wallet::ui::gui::TableWidgetItemW<QCheckBox>* pCheck;
-    decent::wallet::ui::gui::TableWidgetItemW<QLabel>* pLabel;
-    decent::wallet::ui::gui::SDigitalContent aTemporar;
+    //TableWidgetItemW<QCheckBox>* pCheck;
+    TableWidgetItemW<QLabel>* pLabel;
+    SDigitalContent aTemporar;
     const int cnNumberOfContentsPlus1((int)a_vContents.size()+1);
 
     if(g_nDebugApplication){printf("cnNumberOfContentsPlus1=%d\n",cnNumberOfContentsPlus1);}
@@ -170,11 +173,11 @@ void Browse_content_tab::SetDigitalContentsGUI(const std::vector<decent::wallet:
         // namespace DGF {enum DIG_CONT_FIELDS{IS_SELECTED,TIME,SYNOPSIS,RATING,LEFT,SIZE,PRICE};}
         //const SDigitalContent& clbData,ClbType* own,void*clbDt,void (ClbType::*a_fpFunction)(_NEEDED_ARGS_)
 
-        pLabel = new decent::wallet::ui::gui::TableWidgetItemW<QLabel>(
+        pLabel = new TableWidgetItemW<QLabel>(
                                               aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
                                               tr(aTemporar.created.c_str()));
-        m_TableWidget.setCellWidget(i,DCF::TIME,pLabel);
-        
+        //m_TableWidget.setCellWidget(i,DCF::TIME,pLabel);
+        m_TableWidget.setCellWidget(i,4,pLabel);
         std::string synopsis = unescape_string(aTemporar.synopsis);
         std::replace(synopsis.begin(), synopsis.end(), '\t', ' '); // JSON does not like tabs :(    
 
@@ -184,30 +187,97 @@ void Browse_content_tab::SetDigitalContentsGUI(const std::vector<decent::wallet:
             
         } catch (...) {}
         
-        pLabel = new decent::wallet::ui::gui::TableWidgetItemW<QLabel>(
+        pLabel = new TableWidgetItemW<QLabel>(
                                               aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
                                               tr(synopsis.c_str()));
-        m_TableWidget.setCellWidget(i,DCF::SYNOPSIS,pLabel);
-
-        pLabel = new decent::wallet::ui::gui::TableWidgetItemW<QLabel>(
+        //m_TableWidget.setCellWidget(i,DCF::SYNOPSIS,pLabel);
+        m_TableWidget.setCellWidget(i,0,pLabel);
+        pLabel = new TableWidgetItemW<QLabel>(
                                                aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
                                                tr(aTemporar.AVG_rating.c_str()));
-        m_TableWidget.setCellWidget(i,DCF::RATING,pLabel);
+        //m_TableWidget.setCellWidget(i,DCF::RATING,pLabel);
+        m_TableWidget.setCellWidget(i,1,pLabel);
 
-        pLabel = new decent::wallet::ui::gui::TableWidgetItemW<QLabel>(
+        
+        
+        std::string m_time = aTemporar.expiration.c_str();
+        int m_day    = 0;
+        int m_month  = 0;
+        int m_year   = 0;
+        int m_hour   = 0;
+        int m_min    = 0;
+        int m_sec    = 0;
+        
+        std::string s_year;
+        for(int i = 0 ; i < 4 ; ++i)
+        {
+            s_year.push_back(m_time[i]);
+        }
+        
+        
+        std::string s_month;
+        s_month.push_back(m_time[5]);
+        s_month.push_back(m_time[6]);
+        
+        std::string s_day;
+        s_day.push_back(m_time[8]);
+        s_day.push_back(m_time[9]);
+        
+        std::string s_hour;
+        s_hour.push_back(m_time[11]);
+        s_hour.push_back(m_time[12]);
+        
+        std::string s_min;
+        s_min.push_back(m_time[14]);
+        s_min.push_back(m_time[15]);
+        
+        std::string s_sec;
+        s_sec.push_back(m_time[17]);
+        s_sec.push_back(m_time[18]);
+        
+        m_day = std::stoi(s_day,nullptr,10);
+        m_month = std::stoi(s_month,nullptr,10);
+        m_year = std::stoi(s_year,nullptr,10);
+        m_hour = std::stoi(s_hour,nullptr,10);
+        m_min = std::stoi(s_min,nullptr,10);
+        m_sec = std::stoi(s_sec,nullptr,10);
+        
+        
+        
+        QDateTime now_time = QDateTime::currentDateTime();
+        
+        
+        QDate date(m_year , m_month , m_day);
+        QTime t(m_hour,m_min,m_sec);
+        QDateTime time(date,t);
+        
+        
+        std::string e_str = CalculateRemainingTime(now_time, time);
+        
+
+       
+        pLabel = new TableWidgetItemW<QLabel>(
                                               aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
-                                              tr(aTemporar.expiration.c_str()));
-        m_TableWidget.setCellWidget(i,DCF::LEFT,pLabel);
+                                              tr(e_str.c_str()));
+        m_TableWidget.setCellWidget(i,5,pLabel);
+        //m_TableWidget.setCellWidget(i,5,new QTableWidgetItem(QString::fromStdString(e_str)));
+        
+        
+        
+        
+        
 
-        pLabel = new decent::wallet::ui::gui::TableWidgetItemW<QLabel>(
+        pLabel = new TableWidgetItemW<QLabel>(
                                               aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
                                               tr(aTemporar.size.c_str()));
-        m_TableWidget.setCellWidget(i,DCF::SIZE,pLabel);
+        //m_TableWidget.setCellWidget(i,DCF::SIZE,pLabel);
+        m_TableWidget.setCellWidget(i,2,pLabel);
 
-        pLabel = new decent::wallet::ui::gui::TableWidgetItemW<QLabel>(
+        pLabel = new TableWidgetItemW<QLabel>(
                                                aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
                                                tr(aTemporar.price.amount.c_str()));
-        m_TableWidget.setCellWidget(i,DCF::PRICE,pLabel);
+        //m_TableWidget.setCellWidget(i,DCF::PRICE,pLabel);
+        m_TableWidget.setCellWidget(i,3,pLabel);
     }
 
     __DEBUG_APP2__(3," ");

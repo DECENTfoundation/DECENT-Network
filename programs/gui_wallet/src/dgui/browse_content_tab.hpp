@@ -22,6 +22,22 @@
 
 
 
+
+
+namespace gui_wallet
+{
+
+    // DCF stands for Digital Contex Fields
+namespace DCF {enum DIG_CONT_FIELDS{TIME,SYNOPSIS,RATING,SIZE,PRICE,LEFT,NUM_OF_DIG_CONT_FIELDS};}
+
+// ST stands for search type
+namespace ST{
+    enum STtype{URI_start,author,content};
+    static const char* s_vcpcSearchTypeStrs[] = {"URI_start","author","content"};
+}
+
+
+
 class BTableWidget : public QTableWidget
 {
     Q_OBJECT
@@ -39,54 +55,48 @@ signals:
 
 
 
-namespace gui_wallet
+
+
+
+
+class Browse_content_tab : public QWidget
 {
+    friend class CentralWigdet;
+    Q_OBJECT
+public:
+    Browse_content_tab();
+    virtual ~Browse_content_tab();
 
-    // DCF stands for Digital Contex Fields
-    namespace DCF {enum DIG_CONT_FIELDS{TIME,SYNOPSIS,RATING,SIZE,PRICE,LEFT,NUM_OF_DIG_CONT_FIELDS};}
+    void SetDigitalContentsGUI(const std::vector<SDigitalContent>& contents);
+    QString getFilterText()const;
 
-    // ST stands for search type
-    namespace ST{
-    enum STtype{URI_start,author,content};
-    static const char* s_vcpcSearchTypeStrs[] = {"URI_start","author","content"};
-    }
+    void Connects();
+    int green_row;
 
-    class Browse_content_tab : public QWidget
-    {
-        friend class CentralWigdet;
-        Q_OBJECT
-    public:
-        Browse_content_tab();
-        virtual ~Browse_content_tab();
+public:
+signals:
+    void ShowDetailsOnDigContentSig(SDigitalContent get_cont_str);
 
-        void SetDigitalContentsGUI(const std::vector<decent::wallet::ui::gui::SDigitalContent>& contents);
-        QString getFilterText()const;
+public slots:
+    void doRowColor();
 
-        void Connects();
-        int green_row;
+protected:
+    void PrepareTableWidgetHeaderGUI();
+    void DigContCallback(_NEEDED_ARGS2_);
+    virtual void resizeEvent ( QResizeEvent * a_event );
+    void ArrangeSize();
 
-    public:
-    signals:
-        void ShowDetailsOnDigContentSig(decent::wallet::ui::gui::SDigitalContent get_cont_str);
+protected:
+    QVBoxLayout     m_main_layout;
+    QHBoxLayout     m_search_layout;
+    //QTableWidget    m_TableWidget; // Should be investigated
+    BTableWidget*    m_pTableWidget;
+    //int              m_nNumberOfContentsPlus1;
+    QLineEdit       m_filterLineEdit;
+    QComboBox       m_searchTypeCombo;
+};
 
-    public slots:
-        void doRowColor();
 
-    protected:
-        void PrepareTableWidgetHeaderGUI();
-        void DigContCallback(_NEEDED_ARGS2_);
-        virtual void resizeEvent ( QResizeEvent * a_event );
-        void ArrangeSize();
-
-    protected:
-        QVBoxLayout     m_main_layout;
-        QHBoxLayout     m_search_layout;
-        //QTableWidget    m_TableWidget; // Should be investigated
-        BTableWidget*    m_pTableWidget;
-        //int              m_nNumberOfContentsPlus1;
-        QLineEdit       m_filterLineEdit;
-        QComboBox       m_searchTypeCombo;
-    };
 }
 
 #endif // BROWSE_CONTENT_TAB_H
