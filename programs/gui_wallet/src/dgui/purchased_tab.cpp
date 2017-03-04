@@ -11,9 +11,14 @@
 #include "purchased_tab.hpp"
 #include <QHeaderView>
 #include <iostream>
+#include <graphene/chain/config.hpp>
+#include "json.hpp"
+#include "gui_wallet_global.hpp"
 
 
 using namespace gui_wallet;
+using namespace nlohmann;
+
 
 static const char* s_vccpItemNames[]={"Time","Title","Rating",
                                      "Size","Price","Purchased"};
@@ -22,16 +27,14 @@ static const int   s_cnNumberOfRows = sizeof(s_vccpItemNames)/sizeof(const char*
 
 PurchasedTab::PurchasedTab()
         :
-        //m_TableWidget(1,s_cnNumberOfRows)
         m_pTableWidget(new QTableWidget(1,s_cnNumberOfRows))
 {
-    if(!m_pTableWidget){throw "Low memory!";}
 
     PrepareTableWidgetHeaderGUI();
 
     QHBoxLayout* search_lay = new QHBoxLayout();
 
-    m_filterLineEditer.setPlaceholderText(QString("Search"));
+    m_filterLineEditer.setPlaceholderText(QString("Enter user name to see purchases"));
     m_filterLineEditer.setStyleSheet("border: 1px solid white");
     m_filterLineEditer.setFixedHeight(40);
 
@@ -42,18 +45,118 @@ PurchasedTab::PurchasedTab()
     search_label->setPixmap(image);
 
     search_lay->addWidget(new QLabel());
-    search_lay->addWidget(new QLabel());
-    search_lay->addWidget(new QLabel());
     search_lay->addWidget(search_label);
+    search_lay->addWidget(new QLabel());
     search_lay->addWidget(&m_filterLineEditer);
 
     m_main_layout.setContentsMargins(0, 0, 0, 0);
 
     m_main_layout.addLayout(search_lay);
-    //m_main_layout.addWidget(&m_filterLineEditer);
     m_main_layout.addWidget(m_pTableWidget);
-    setLayout(&m_main_layout);
 
+    setLayout(&m_main_layout);
+    
+    
+    connect(&m_filterLineEditer, SIGNAL(textChanged(QString)), this, SLOT(onTextChanged(QString)));
+    
+    m_contentUpdateTimer.connect(&m_contentUpdateTimer, SIGNAL(timeout()), this, SLOT(maybeUpdateContent()));
+    m_contentUpdateTimer.setInterval(1000);
+    m_contentUpdateTimer.start();
+
+}
+
+
+
+
+
+
+
+void PurchasedTab::maybeUpdateContent() {
+    if (!m_doUpdate) {
+        return;
+    }
+    
+    m_doUpdate = false;
+    updateContents();
+}
+
+void PurchasedTab::onTextChanged(const QString& text) {
+    
+    m_doUpdate = true;
+}
+
+
+
+void PurchasedTab::updateContents() {
+    m_pTableWidget->setRowCount(1); //Remove everything but header
+    
+    
+    if (m_filterLineEditer.text().toStdString().empty()) {
+        return;
+    }
+    
+    SetNewTask("get_buying_history_objects_by_consumer \"" + m_filterLineEditer.text().toStdString() +"\"", this, NULL, +[](void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
+        
+        if (a_err != 0) {
+            return;
+        }
+        
+        PurchasedTab* obj = (PurchasedTab*)owner;
+        
+        try {
+            auto contents = json::parse(a_result);
+            
+            obj->m_pTableWidget->setRowCount(contents.size() + 1);
+            
+            for (int i = 0; i < contents.size(); ++i) {
+                
+                auto content = contents[i];
+                
+                
+                std::string time = contents[i]["expiration_time"].get<std::string>();
+                
+                std::string synopsis = unescape_string(contents[i]["synopsis"].get<std::string>());
+                std::replace(synopsis.begin(), synopsis.end(), '\t', ' '); // JSON does not like tabs :(
+                
+                try {
+                    auto synopsis_parsed = json::parse(synopsis);
+                    synopsis = synopsis_parsed["title"].get<std::string>();
+                } catch (...) {}
+                
+                double rating = contents[i]["rating"].get<double>();
+                uint64_t size = contents[i]["size"].get<int>();
+
+
+                double price = 0;
+                if (contents[i]["price"]["amount"].is_number()){
+                    price =  contents[i]["price"]["amount"].get<double>();
+                } else {
+                    price =  std::stod(contents[i]["price"]["amount"].get<std::string>());
+                }
+                price /= GRAPHENE_BLOCKCHAIN_PRECISION;
+                
+                std::string expiration_or_delivery_time = contents[i]["expiration_or_delivery_time"].get<std::string>();
+                
+                
+                
+                
+                
+                obj->m_pTableWidget->setCellWidget(i + 1, 0, new QLabel(QString::fromStdString(time)));
+                obj->m_pTableWidget->setCellWidget(i + 1, 1, new QLabel(QString::fromStdString(synopsis)));
+                obj->m_pTableWidget->setCellWidget(i + 1, 2, new QLabel(QString::number(rating)));
+                obj->m_pTableWidget->setCellWidget(i + 1, 3, new QLabel(QString::number(size) + tr(" MB")));
+                obj->m_pTableWidget->setCellWidget(i + 1, 4, new QLabel(QString::number(price) + tr(" DECENT")));
+                obj->m_pTableWidget->setCellWidget(i + 1, 5, new QLabel(QString::fromStdString(expiration_or_delivery_time)));
+
+            }
+            
+            
+        } catch (std::exception& ex) {
+            std::cout << ex.what() << std::endl;
+        }
+    });
+    
+    
 }
 
 
@@ -98,89 +201,6 @@ void PurchasedTab::DigContCallback(_NEEDED_ARGS2_)
 {
     __DEBUG_APP2__(3,"clbdata=%p, act=%d, pDigCont=%p\n",a_clb_data,a_act,a_pDigContent);
     emit ShowDetailsOnDigContentSig(*a_pDigContent);
-}
-
-
-void PurchasedTab::SetDigitalContentsGUI(const std::vector<SDigitalContent>& a_vContents)
-{
-    //
-    TableWidgetItemW<QLabel>* pLabel;
-    SDigitalContent aTemporar;
-    const int cnNumberOfContentsPlus1((int)a_vContents.size()+1);
-
-    __DEBUG_APP2__(1,"cnNumberOfContentsPlus1=%d\n",cnNumberOfContentsPlus1);
-
-    int nWidth = m_pTableWidget->width();
-    m_main_layout.removeWidget(m_pTableWidget);
-    delete m_pTableWidget;
-    m_pTableWidget = new QTableWidget(cnNumberOfContentsPlus1,s_cnNumberOfRows);
-    if(!m_pTableWidget){throw "Low memory!";}
-
-    QTableWidget& m_TableWidget = *m_pTableWidget;
-
-    PrepareTableWidgetHeaderGUI();
-
-    for(int i(1); i<cnNumberOfContentsPlus1; ++i)
-    {
-        __DEBUG_APP2__(4,"i=%d",i);
-        aTemporar = a_vContents[i-1];
-        // To be continue
-        // namespace DGF {enum DIG_CONT_FIELDS{IS_SELECTED,TIME,SYNOPSIS,RATING,LEFT,SIZE,PRICE};}
-        //const SDigitalContent& clbData,ClbType* own,void*clbDt,void (ClbType::*a_fpFunction)(_NEEDED_ARGS_)
-
-        pLabel = new TableWidgetItemW<QLabel>(
-                                    aTemporar,this,NULL,
-                                    &PurchasedTab::DigContCallback,
-                                    tr(aTemporar.created.c_str()));
-        
-        m_TableWidget.setCellWidget(i,DCF_PURCHASE::TIME,pLabel);
-
-        pLabel = new TableWidgetItemW<QLabel>(
-                                              aTemporar,this,NULL,
-                                              &PurchasedTab::DigContCallback,
-                                              tr(aTemporar.synopsis.c_str()));
-        
-        m_TableWidget.setCellWidget(i,DCF_PURCHASE::SYNOPSIS,pLabel);
-
-        /*pLabel = new TableWidgetItemW<QLabel>(
-                                               aTemporar,this,NULL,
-                                               &PurchasedTab::DigContCallback,
-                                               QString::number(aTemporar.AVG_rating,'f').remove( QRegExp("0+$") ).remove( QRegExp("\\.$") ));*/
-        pLabel = new TableWidgetItemW<QLabel>(
-                                               aTemporar,this,NULL,
-                                               &PurchasedTab::DigContCallback,
-                                               QString::number(aTemporar.AVG_rating));
-        
-        m_TableWidget.setCellWidget(i,DCF_PURCHASE::RATING,pLabel);
-
-        pLabel = new TableWidgetItemW<QLabel>(
-                                              aTemporar,this,NULL,
-                                              &PurchasedTab::DigContCallback,
-                                              tr(aTemporar.expiration.c_str()));
-        
-        m_TableWidget.setCellWidget(i,DCF_PURCHASE::PURCHASED,pLabel);
-
-        pLabel = new TableWidgetItemW<QLabel>(
-                                              aTemporar,this,NULL,
-                                              &PurchasedTab::DigContCallback,
-                                              QString::number(aTemporar.size));
-        
-        m_TableWidget.setCellWidget(i,DCF_PURCHASE::SIZE,pLabel);
-
-        pLabel = new TableWidgetItemW<QLabel>(
-                                               aTemporar,this,NULL,
-                                               &PurchasedTab::DigContCallback,
-                                               QString::number(aTemporar.price.amount));
-        
-        m_TableWidget.setCellWidget(i,DCF_PURCHASE::PRICE,pLabel);
-    }
-
-    __DEBUG_APP2__(3," ");
-    m_main_layout.addWidget(&m_TableWidget);
-    m_pTableWidget->resize(nWidth,m_pTableWidget->height());
-    m_pTableWidget->horizontalHeader()->setStretchLastSection(true);
-    m_pTableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-    ArrangeSize();
 }
 
 

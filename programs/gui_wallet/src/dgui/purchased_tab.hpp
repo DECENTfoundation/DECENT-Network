@@ -19,6 +19,7 @@
 #include <QTableWidget>
 #include <QLabel>
 #include <QLineEdit>
+#include <QTimer>
 #include "qt_commonheader.hpp"
 #include "gui_wallet_tabcontentmanager.hpp"
 
@@ -38,7 +39,6 @@ public:
     PurchasedTab();
     virtual ~PurchasedTab();
 
-    void SetDigitalContentsGUI(const std::vector<SDigitalContent>& contents);
     //QString getFilterText()const;
 
 public:
@@ -55,13 +55,21 @@ protected:
     virtual void resizeEvent ( QResizeEvent * a_event );
     void ArrangeSize();
 
+public slots:
+    void onTextChanged(const QString& text);
+    void updateContents();
+    void maybeUpdateContent();
+
 protected:
     QVBoxLayout     m_main_layout;
-    //QHBoxLayout     m_search_layout;
-    //QTableWidget    m_TableWidget; // Should be investigated
     QTableWidget*    m_pTableWidget;
-    //int              m_nNumberOfContentsPlus1;
     QLineEdit       m_filterLineEditer;
+    
+    
+private:
+    QTimer  m_contentUpdateTimer;
+    bool m_doUpdate = true;
+    
 };
 
 }
