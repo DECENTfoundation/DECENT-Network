@@ -23,13 +23,14 @@ ContentDetailsGeneral::ContentDetailsGeneral()
     :
       m_label(this,NULL,&ContentDetailsGeneral::LabelPushCallbackGUI)
 {
-    bool bRet;
- //   std::string sImagePath = FindImagePath(bRet,":/icon/images/buy_button_image.png");
-    QPixmap aPixMap(":/icon/images/buy_button_image.png");
+    QPixmap aPixMap(":/icon/images/buy.png");
     m_label.setScaledContents(true);
     m_label.setPixmap(aPixMap);
+    m_free_for_child.addWidget(new QLabel());
     m_free_for_child.addWidget(&m_label);
-    setFixedSize(397,381);
+    m_free_for_child.addWidget(new QLabel());
+
+    setFixedSize(620,480);
 }
 
 

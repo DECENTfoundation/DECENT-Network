@@ -22,6 +22,8 @@
 #include "cliwalletdlg.hpp"
 #include <unnamedsemaphorelite.hpp>
 #include <stdarg.h>
+#include <string>
+#include <map>
 #include "decent_wallet_ui_gui_contentdetailsgeneral.hpp"
 #include "decent_wallet_ui_gui_contentdetailsbougth.hpp"
 
@@ -46,30 +48,16 @@ namespace gui_wallet
         void TaskDoneFuncGUI(void* clbkArg,int64_t err,const std::string& task,const std::string& result);
         void ManagementNewFuncGUI(void* clbkArg,int64_t err,const std::string& task,const std::string& result);
 
-        void TaskDoneBrowseContentGUI(void* a_clbkArg,int64_t a_err,const std::string& a_task,const std::string& a_result);
-        void TaskDoneTransactionsGUI(void* a_clbkArg,int64_t a_err,const std::string& a_task,const std::string& a_result);
         void TaskDoneUploadGUI(void* a_clbkArg,int64_t a_err,const std::string& a_task,const std::string& a_result);
+
     public:
         void TaskDoneOverrviewGUI(void* a_clbkArg,int64_t a_err,const std::string& a_task,const std::string& a_result);
     private:
-        void TaskDonePurchasedGUI(void* a_clbkArg,int64_t a_err,const std::string& a_task,const std::string& a_result);
 
         void TaskDoneFuncGUI3(void* clbkArg,int64_t err,const std::string& task,const fc::variant& result);
 
-        void TaskDoneBrowseContentGUI3(void* a_clbkArg,int64_t a_err,const std::string& a_task,const fc::variant& a_result);
-        void TaskDoneTransactionsGUI3(void* a_clbkArg,int64_t a_err,const std::string& a_task,const fc::variant& a_result);
-        void TaskDoneUploadGUI3(void* a_clbkArg,int64_t a_err,const std::string& a_task,const fc::variant& a_result);
         void TaskDoneOverrviewGUI3(void* a_clbkArg,int64_t a_err,const std::string& a_task,const fc::variant& a_result);
-        void TaskDonePurchasedGUI3(void* a_clbkArg,int64_t a_err,const std::string& a_task,const fc::variant& a_result);
-
-        
-        
-        
-        void ManagementBrowseContentGUI();
-        void ManagementTransactionsGUI();
-        void ManagementUploadGUI();
         void ManagementOverviewGUI();
-        void ManagementPurchasedGUI();
 
         
         
@@ -95,8 +83,6 @@ namespace gui_wallet
         void AboutSlot();
         void HelpSlot();
         void InfoSlot();
-
-        void ShowWalletContentSlot();
 
         void ConnectSlot();
         void ImportKeySlot();

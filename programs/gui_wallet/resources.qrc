@@ -8,5 +8,8 @@
         <file>images/user.png</file>
         <file>images/balance.png</file>
         <file>images/buy_button_image.png</file>
+        <file>images/green_asterix.png</file>
+        <file>images/white_asterix.png</file>
+        <file>images/buy.png</file>
     </qresource>
 </RCC>

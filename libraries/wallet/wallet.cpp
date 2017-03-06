@@ -1775,7 +1775,7 @@ public:
       {
          return result.get_string();
       };
-
+/*
       m["get_account_history"] = [this](variant result, const fc::variants& a)
       {
          auto r = result.as<vector<operation_detail>>();
@@ -1793,7 +1793,7 @@ public:
 
          return ss.str();
       };
-
+*/
       m["list_account_balances"] = [this](variant result, const fc::variants& a)
       {
          auto r = result.as<vector<asset>>();
@@ -3660,14 +3660,32 @@ vector<buying_object> wallet_api::get_open_buyings_by_URI( const string& URI )co
    return my->_remote_db->get_open_buyings_by_URI( URI );
 }
 
-vector<buying_object> wallet_api::get_open_buyings_by_consumer( const account_id_type& consumer )const
+vector<buying_object> wallet_api::get_open_buyings_by_consumer( const string& account_id_or_name )const
 {
+   account_id_type consumer = get_account( account_id_or_name ).id;
    return my->_remote_db->get_open_buyings_by_consumer( consumer );
 }
 
-vector<buying_object> wallet_api::get_buying_history_objects_by_consumer( const account_id_type& consumer )const
+vector<buying_object> wallet_api::get_buying_history_objects_by_consumer( const string& account_id_or_name )const
 {
-   return my->_remote_db->get_buying_history_objects_by_consumer( consumer );
+    account_id_type consumer = get_account( account_id_or_name ).id;
+    vector<buying_object> result = my->_remote_db->get_buying_history_objects_by_consumer( consumer );
+    
+    for (int i = 0; i < result.size(); ++i) {
+        
+        buying_object& bobj = result[i];
+        
+        optional<content_object> content = my->_remote_db->get_content( bobj.URI );
+        if (!content) {
+            continue;
+        }
+        bobj.price = content->price;
+        bobj.size = content->size;
+        bobj.rating = content->AVG_rating;
+        bobj.synopsis = content->synopsis;
+        
+    }
+    return result;
 }
 
 optional<buying_object> wallet_api::get_buying_by_consumer_URI( const string& account, const string & URI )const

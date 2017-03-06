@@ -20,7 +20,13 @@ using decent::crypto::d_integer;
 
       account_id_type consumer;
       string URI;
+      
+      uint64_t size;
+      uint64_t rating;
+       
       asset price;
+      std::string synopsis;
+       
       vector<account_id_type> seeders_answered;
       vector<decent::crypto::ciphertext_string> key_particles;
       d_integer_string pubKey;
@@ -96,5 +102,5 @@ using decent::crypto::d_integer;
 
 FC_REFLECT_DERIVED(graphene::chain::buying_object,
                    (graphene::db::object),
-                   (consumer)(URI)(price)(seeders_answered)(expiration_time)(pubKey)(key_particles)
+                   (consumer)(URI)(synopsis)(price)(seeders_answered)(size)(rating)(expiration_time)(pubKey)(key_particles)
                    (expired)(delivered)(expiration_or_delivery_time)(rated) )

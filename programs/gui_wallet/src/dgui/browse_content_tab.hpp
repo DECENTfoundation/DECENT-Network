@@ -20,7 +20,8 @@
 #include <QLineEdit>
 #include <QHBoxLayout>
 #include <QComboBox>
-
+#include <QTimer>
+#include <QLabel>
 #include "gui_wallet_tabcontentmanager.hpp"
 
 
@@ -29,7 +30,7 @@ namespace gui_wallet
 {
 
     // DCF stands for Digital Contex Fields
-namespace DCF {enum DIG_CONT_FIELDS{TIME,SYNOPSIS,RATING,SIZE,PRICE,LEFT,NUM_OF_DIG_CONT_FIELDS};}
+namespace DCF {enum DIG_CONT_FIELDS{SYNOPSIS, RATING, SIZE, PRICE, TIME, LEFT, NUM_OF_DIG_CONT_FIELDS};}
 
 // ST stands for search type
 namespace ST{
@@ -55,7 +56,34 @@ signals:
 };
 
 
-
+    class CButton : public QLabel
+    {
+        Q_OBJECT
+    public:
+        CButton(int id) : m_id(id){connect(this,SIGNAL(LabelWosClicked()),this,SLOT(ButtonPushedSlot()));}
+    private:
+        int m_id;
+        private slots:
+        void ButtonPushedSlot(){emit ButtonPushedSignal(m_id);}
+    private:
+    signals:
+        void LabelWosClicked();
+    public:
+    signals:
+        void ButtonPushedSignal(int);
+        void mouseWasMoved();
+    public:
+        virtual void mouseReleaseEvent(QMouseEvent * event)
+        {
+            LabelWosClicked();
+        }
+        
+        virtual void mouseMoveEvent(QMouseEvent * event)
+        {
+            emit mouseWasMoved();
+            QLabel::mouseMoveEvent(event);
+        }
+    };
 
 
 
@@ -68,11 +96,8 @@ public:
     Browse_content_tab();
     virtual ~Browse_content_tab();
 
-    void SetDigitalContentsGUI(const std::vector<SDigitalContent>& contents);
-    QString getFilterText()const;
-
+    void ShowDigitalContentsGUI(std::vector<SDigitalContent>& contents);
     void Connects();
-    int green_row;
 
 public:
     
@@ -85,22 +110,33 @@ signals:
     void ShowDetailsOnDigContentSig(SDigitalContent get_cont_str);
 
 public slots:
+    void onTextChanged(const QString& text);
     void doRowColor();
+    void updateContents();
+    void maybeUpdateContent();
 
 protected:
-    void PrepareTableWidgetHeaderGUI();
     void DigContCallback(_NEEDED_ARGS2_);
+    void PrepareTableWidgetHeaderGUI();
     virtual void resizeEvent ( QResizeEvent * a_event );
     void ArrangeSize();
+    
+private:
+    bool FilterContent(const SDigitalContent& content);
 
 protected:
     QVBoxLayout     m_main_layout;
     QHBoxLayout     m_search_layout;
-    //QTableWidget    m_TableWidget; // Should be investigated
+
     BTableWidget*    m_pTableWidget;
-    //int              m_nNumberOfContentsPlus1;
+    
     QLineEdit       m_filterLineEdit;
     QComboBox       m_searchTypeCombo;
+    
+    std::vector<SDigitalContent> m_dContents;
+    bool m_doUpdate = true;
+    int green_row;
+    QTimer  m_contentUpdateTimer;
 };
 
 

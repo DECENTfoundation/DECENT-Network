@@ -16,6 +16,7 @@
 #include <QScrollBar>
 #include "gui_wallet_global.hpp"
 #include "gui_wallet_mainwindow.hpp"
+#include <QSortFilterProxyModel>
 
 #ifndef _PATH_DELIMER_
 #ifdef WIN32
@@ -34,7 +35,6 @@
 #include <unistd.h>
 #endif
 
-extern std::string g_cApplicationPath ;
 
 using namespace gui_wallet;
 
@@ -141,8 +141,17 @@ CentralWigdet::CentralWigdet(QBoxLayout* a_pAllLayout, Mainwindow_gui_wallet* a_
     : m_first_line_lbl(), m_parent_main_window(a_pPar), m_Overview_tab(a_pPar)
 {
 
+    m_allTabs.push_back(&m_browse_cont_tab);
+    m_allTabs.push_back(&m_trans_tab);
+    m_allTabs.push_back(&m_Upload_tab);
+    m_allTabs.push_back(&m_Overview_tab);
+    m_allTabs.push_back(&m_Purchased_tab);
+    m_currentTab = -1;
 
+    
     setStyleSheet("color:black;""background-color:white;");
+//    m_main_tabs2.setStyleSheet("QTabBar::tab{"
+//                               " height: 40px; width: 175px; "
     m_main_tabs.setStyleSheet("QTabBar::tab{"
                                " height: 40px; width: 179px; "
                                "color:rgb(27,176,104);background-color:white;"
@@ -151,9 +160,16 @@ CentralWigdet::CentralWigdet(QBoxLayout* a_pAllLayout, Mainwindow_gui_wallet* a_
                                "color:white;background-color:rgb(27,176,104);}"
                                );
 
+
     PrepareGUIprivate(a_pAllLayout);
+    
+    QTimer::singleShot(200, this, &CentralWigdet::initTabChanged);
+
 }
 
+void  CentralWigdet::initTabChanged() {
+    tabChanged(0);
+}
 
 CentralWigdet::~CentralWigdet()
 {
@@ -274,8 +290,11 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     pLabelTmp->setFixedSize(__SIZE_FOR_IMGS__,__SIZE_FOR_IMGS__);
     
     pComboTmp1 = new QComboBox;
+    pComboTmp1->setStyleSheet("color: black;""background-color:white;"
+                              "border: 1px solid #D3D3D3 ");
+    if(!pComboTmp1){throw __FILE__ "Low memory";}
     
-    pComboTmp1->setStyleSheet("color: black;""background-color:white;");
+//    pComboTmp1->setStyleSheet("color: black;""background-color:white;");
     pHBoxLayoutTmp->addWidget(pComboTmp1);
     m_pUsernameWgt->setLayout(pHBoxLayoutTmp);
     m_first_line_lbl.addWidget(m_pUsernameWgt);
@@ -355,14 +374,21 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
 }
 
 
-void CentralWigdet::SetDigitalContentsGUI(const std::vector<SDigitalContent>& a_vContents)
-{
-    m_browse_cont_tab.SetDigitalContentsGUI(a_vContents);
-}
-
 
 void CentralWigdet::tabChanged(int index) {
-    std::cout << "Blah blah blah " << index << "\n";
+    if (m_allTabs.size() == 0) {
+        return;
+    }
+    
+    if (index != m_currentTab) {
+        if (m_currentTab >= 0) {
+            m_allTabs[m_currentTab]->content_deactivated();
+        }
+    }
+
+    m_currentTab = index;
+    m_allTabs[m_currentTab]->content_activated();
+
 }
 
 
@@ -373,7 +399,7 @@ QString CentralWigdet::getFilterText()const
     switch(nActiveTab)
     {
     case BROWSE_CONTENT:
-        return m_browse_cont_tab.getFilterText();
+        return "";
     case PURCHASED:
         //return tr("bought:") + m_Purchased_tab.getFilterText();
     default:
@@ -400,8 +426,15 @@ void CentralWigdet::make_deleyed_warning()
 
 void CentralWigdet::resizeEvent ( QResizeEvent * a_event )
 {
+    //return ;
     QWidget::resizeEvent(a_event);
 
+    /*QString tqsStyle = tr("QTabBar::tab {width: ") +
+            QString::number(a_event->size().width()/5-1,10) + tr("px;}");
+    QTabBar* pTabBar = m_main_tabs2.tabBar();
+    pTabBar->setStyleSheet(tqsStyle);*/
+
+//    QTabBar* pTabBar = m_main_tabs2.tabBar();
 
     QTabBar* pTabBar = m_main_tabs.tabBar();
     pTabBar->resize(size().width(),pTabBar->height());

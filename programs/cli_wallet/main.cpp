@@ -42,6 +42,7 @@
 #include <graphene/utilities/key_conversion.hpp>
 #include <graphene/wallet/wallet.hpp>
 #include <graphene/package/package.hpp>
+#include <graphene/utilities/dirhelper.hpp>
 
 #include <fc/interprocess/signals.hpp>
 #include <boost/program_options.hpp>
@@ -67,6 +68,19 @@ namespace bpo = boost::program_options;
 
 int main( int argc, char** argv )
 {
+    fc::path decent_home;
+    try {
+        decent_home = decent_path_finder::instance().get_decent_home();
+    } catch (const std::exception& ex) {
+        std::cout << "Failed to initialize home directory." << std::endl;
+        std::cout << "Error: " << ex.what() << std::endl;
+        return 1;
+    } catch (const fc::exception& ex) {
+        std::cout << "Failed to initialize home directory." << std::endl;
+        std::cout << "Error: " << ex.what() << std::endl;
+        return 1;
+    }
+
    try {
 
       boost::program_options::options_description opts;
@@ -97,7 +111,7 @@ int main( int argc, char** argv )
 
       fc::path data_dir;
       fc::logging_config cfg;
-      fc::path log_dir = data_dir / "logs";
+      fc::path log_dir = decent_path_finder::instance().get_decent_logs();
 
       fc::file_appender::config ac;
       ac.filename             = log_dir / "rpc" / "rpc.log";
@@ -106,7 +120,7 @@ int main( int argc, char** argv )
       ac.rotation_interval    = fc::hours( 1 );
       ac.rotation_limit       = fc::days( 1 );
 
-      std::cout << "Logging RPC to file: " << (data_dir / ac.filename).preferred_string() << "\n";
+      std::cout << "Logging RPC to file: " << (decent_path_finder::instance().get_decent_data() / ac.filename).preferred_string() << "\n";
 
       cfg.appenders.push_back(fc::appender_config( "default", "console", fc::variant(fc::console_appender::config())));
       cfg.appenders.push_back(fc::appender_config( "rpc", "file", fc::variant(ac)));
@@ -136,7 +150,8 @@ int main( int argc, char** argv )
       //
       wallet_data wdata;
 
-      fc::path wallet_file( options.count("wallet-file") ? options.at("wallet-file").as<string>() : "wallet.json");
+      fc::path wallet_file( options.count("wallet-file") ? options.at("wallet-file").as<string>() : decent_path_finder::instance().get_decent_home() / "wallet.json");
+       
       if( fc::exists( wallet_file ) )
       {
          wdata = fc::json::from_file( wallet_file ).as<wallet_data>();
@@ -172,7 +187,7 @@ int main( int argc, char** argv )
       if( options.count("server-rpc-password") )
          wdata.ws_password = options.at("server-rpc-password").as<std::string>();
 
-      package_manager::instance().set_packages_path(wdata.packages_path);
+//      package_manager::instance().set_packages_path(wdata.packages_path);
       package_manager::instance().set_libtorrent_config(wdata.libtorrent_config_path);
 
       fc::http::websocket_client client;

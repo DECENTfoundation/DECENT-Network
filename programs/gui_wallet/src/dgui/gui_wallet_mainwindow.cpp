@@ -24,10 +24,9 @@
 #include "qt_commonheader.hpp"
 #include <stdio.h>
 #include <stdlib.h>
+#include <graphene/utilities/dirhelper.hpp>
 #include <QMessageBox>
-
 #include "json.hpp"
-
 #include "decent_wallet_ui_gui_jsonparserqt.hpp"
 
 #ifndef DEFAULT_WALLET_FILE_NAME
@@ -36,6 +35,9 @@
 
 using namespace nlohmann;
 using namespace gui_wallet;
+using namespace std;
+using namespace graphene;
+using namespace utilities;
 
 static gui_wallet::Mainwindow_gui_wallet*  s_pMainWindowInstance = NULL;
 
@@ -50,15 +52,6 @@ int CallFunctionInGuiLoop3(SetNewTask_last_args2,const fc::variant& a_result,voi
 
 /*//////////////////////////////////////////////////////////////////////////////////*/
 
-static const char* FindValueStringByKey(const char* a_cpcInput, const char* a_key)
-{
-    const char* cpcValueFld = strstr(a_cpcInput,a_key);
-
-    if(!cpcValueFld){return NULL;}
-    cpcValueFld = strchr(cpcValueFld+1,':');
-    if(!cpcValueFld){return NULL;}
-    return cpcValueFld + 1;
-}
 
 
 static bool FindStringByKey(const char* a_cpcInput, const char* a_key, std::string* a_pToFind)
@@ -106,29 +99,6 @@ static bool GetJsonVectorNextElem(const char* a_cpcJsonStr,TypeConstChar* a_beg,
 }
 
 
-void ParseDigitalContentFromGetContentString(SDigitalContent* a_pContent, const std::string& a_str)
-{
-    const char* cpcStrToGet;
-    __DEBUG_APP2__(3,"str_to_parse is: \"\n%s\n\"",a_str.c_str());
-    //std::string created;
-    //std::string expiration;
-    FindStringByKey(a_str.c_str(),"created",&a_pContent->created);
-    FindStringByKey(a_str.c_str(),"expiration",&a_pContent->expiration);
-    cpcStrToGet = FindValueStringByKey(a_str.c_str(),"size");
-    if(cpcStrToGet)
-    {
-        char* pcTerm;
-        a_pContent->size = strtod(cpcStrToGet,&pcTerm);
-    }
-    cpcStrToGet = FindValueStringByKey(a_str.c_str(),"times_bought");
-    if(cpcStrToGet)
-    {
-        char* pcTerm;
-        a_pContent->times_bougth = (int64_t)strtol(cpcStrToGet,&pcTerm,10);
-    }
-    //a_pContent->get_content_str = a_str;
-}
-
 
 
 void SetNewTaskQtMainWnd2Glb(const std::string& a_inp_line, void* a_clbData)
@@ -151,7 +121,6 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
         m_ActionAbout(tr("About"),this),
         m_ActionInfo(tr("Info"),this),
         m_ActionHelp(tr("Help"),this),
-        m_ActionWalletContent(tr("Wallet content"),this),
         m_ActionLock(tr("Lock"),this),
         m_ActionUnlock(tr("Unlock"),this),
         m_ActionImportKey(tr("Import key"),this),
@@ -169,11 +138,10 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
     m_default_stylesheet = styleSheet();
     //setStyleSheet("color:black;""background-color:white;");
     m_pInfoTextEdit = new QTextEdit;
-    if(!m_pInfoTextEdit){throw "Low memory";}
     m_pInfoTextEdit->setReadOnly(true);
     m_pcInfoDlg = new CliWalletDlg(m_pInfoTextEdit);
-    if(!m_pcInfoDlg){throw "Low memory";}
 
+    
     CliTextEdit* pCliTextEdit = (CliTextEdit*)m_cCliWalletDlg.operator ->();
     pCliTextEdit->SetCallbackStuff2(this,NULL,&Mainwindow_gui_wallet::CliCallbackFnc);
 
@@ -182,8 +150,10 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
 
     m_pCentralAllLayout = new QVBoxLayout;
     m_pMenuLayout = new QHBoxLayout;
-
-    m_wdata2.wallet_file_name = DEFAULT_WALLET_FILE_NAME;
+    
+    fc::path wallet_path = decent_path_finder::instance().get_decent_home() / DEFAULT_WALLET_FILE_NAME;
+    m_wdata2.wallet_file_name = wallet_path.string().c_str();
+    
     m_wdata2.ws_server = "ws://127.0.0.1:8090";
     m_wdata2.chain_id = "0000000000000000000000000000000000000000000000000000000000000000";
 
@@ -239,14 +209,8 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
     m_nJustConnecting = 1;
     ConnectSlot();
     setWindowTitle(tr("Decent - Blockchain Content Distributor"));
-
+    
     centralWidget()->layout()->setContentsMargins(0, 0, 0, 0);
-    //statusBar()->hide();
-    //mainToolBar->hide();
-    setStyleSheet("QMainWindow{color:black;""background-color:white;}");
-
-    //change
-//    QString str = m_pCentralWidget->m_Overview_tab.search.text();
 }
 
 
@@ -273,18 +237,8 @@ void Mainwindow_gui_wallet::SetNewTaskQtMainWnd3(const std::string& a_inp_line, 
 
 void Mainwindow_gui_wallet::CreateActions()
 {
-    //m_pActionLoadIniFile = new QAction( tr("&Load ini"), this );
-    //m_pActionLoadIniFile->setIcon( QIcon(":/images/open.png") );
-    //m_pActionLoadIniFile->setShortcut( QKeySequence::Open );
-    //m_pActionLoadIniFile->setStatusTip( tr("Load ini file") );
-    //connect( m_pActionLoadIniFile, SIGNAL(triggered()), this, SLOT(LoadIniFileSlot()) );
-
-    /**************************************************************************/
-
     m_ActionExit.setStatusTip( tr("Exit Program") );
     connect( &m_ActionExit, SIGNAL(triggered()), this, SLOT(close()) );
-
-    /**************************************************************************/
 
     m_ActionAbout.setStatusTip( tr("About") );
     connect( &m_ActionAbout, SIGNAL(triggered()), this, SLOT(AboutSlot()) );
@@ -298,10 +252,7 @@ void Mainwindow_gui_wallet::CreateActions()
     m_ActionConnect.setStatusTip( tr("Connect to witness node") );
     connect( &m_ActionConnect, SIGNAL(triggered()), this, SLOT(ConnectSlot()) );
 
-    //m_ActionWalletContent.setDisabled(true);
-    m_ActionWalletContent.setStatusTip( tr("Wallet content") );
-    connect( &m_ActionWalletContent, SIGNAL(triggered()), this, SLOT(ShowWalletContentSlot()) );
-
+   
     m_ActionLock.setDisabled(m_locked);
     m_ActionLock.setStatusTip( tr("Lock account") );
     connect( &m_ActionLock, SIGNAL(triggered()), this, SLOT(LockSlot()) );
@@ -329,7 +280,6 @@ void Mainwindow_gui_wallet::CreateMenues()
     do{m_pMenuHelpL->addAction( (__action_ptr__) );m_pMenuHelpR->addAction( (__action_ptr__) );}while(0)
 
     QMenuBar* pMenuBar = m_barLeft;
-
     m_pMenuFile = pMenuBar->addMenu( tr("&File") );
     m_pMenuFile->addAction( &m_ActionExit );
     m_pMenuFile->addAction( &m_ActionConnect );
@@ -340,14 +290,12 @@ void Mainwindow_gui_wallet::CreateMenues()
     m_pMenuSetting = pMenuBar->addMenu( tr("&Setting") );
     m_pMenuHelpL = pMenuBar->addMenu( tr("&Help") );
 
-    m_pMenuContent = pMenuBar->addMenu( tr("Content") );
-    m_pMenuContent->addAction( &m_ActionWalletContent );
 
     m_pMenuDebug = pMenuBar->addMenu( tr("Debug") );
     m_pMenuDebug->addAction(&m_ActionOpenCliWallet);
     m_pMenuDebug->addAction(&m_ActionOpenInfoDlg);
     m_pMenuTempFunctions = m_pMenuDebug->addMenu(tr("temp. functions start"));
-    //m_pMenuTempFunctions->addAction(&m_ActionShowDigitalContextes);
+
 
     /******************************************************/
     pMenuBar = m_barRight;
@@ -441,6 +389,9 @@ int Mainwindow_gui_wallet::GetDigitalContentsFromVariant(DCT::DIG_CONT_TYPES a_t
         pNext = &(aParser.GetByIndex(i));
         aDigContent.URI = pNext->GetByKey("URI").value();
         aDigContent.author = pNext->GetByKey("author").value();
+        aDigContent.price.amount = std::stod(pNext->GetByKey("price").GetByKey("amount").value());
+        aDigContent.price.asset_id = pNext->GetByKey("price").GetByKey("asset_id").value();
+        
         a_vcContents.push_back(aDigContent);
     }
 
@@ -485,8 +436,6 @@ void Mainwindow_gui_wallet::UpdateLockedStatus()
 
 void Mainwindow_gui_wallet::moveEvent(QMoveEvent * a_event)
 {
-    //m_wallet_content_dlg.move( mapToGlobal(a_event->pos()));
-    //m_wallet_content_dlg.move( /*mapToGlobal*/(a_event->pos()));
 }
 
 
@@ -498,45 +447,6 @@ void Mainwindow_gui_wallet::DisplayWalletContentGUI()
 
     m_ActionImportKey.setEnabled(true);
     SetNewTask("list_my_accounts",this,NULL,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
-
-#if 0
-    if(_LIKELY_(!m_nError))
-    {
-        std::string csBalanceName;
-        asset* pAccountBalance;
-        account_object* pAccount;
-        QComboBox& cAccountsCombo = m_pCentralWidget->usersCombo();
-        int nCount = cAccountsCombo.count();
-        const int cnNumOfAccounts(m_vAccounts.size());
-        int j,nNumbOfBalances;
-
-        while(nCount>0){cAccountsCombo.removeItem(0);--nCount;}
-
-        for(int i(0); i<cnNumOfAccounts;++i)
-        {
-            pAccount = &m_vAccounts[i];
-            cAccountsCombo.addItem(tr(pAccount->name.c_str()));
-            nNumbOfBalances = m_vAccountsBalances[i].size();
-            for(j=0;j<nNumbOfBalances;++j)
-            {
-                //
-            }
-
-            if(g_nDebugApplication){printf("nNumbOfBalances=%d\n",nNumbOfBalances);}
-            if(nNumbOfBalances>0)
-            {
-                int nIndexOfuser = m_pCentralWidget->usersCombo().currentIndex();
-                pAccountBalance = &((m_vAccountsBalances[i])[nIndexOfuser>0 ? nIndexOfuser : 0]);
-                //csBalanceName = (std::string)pAccountBalance->asset_id;
-                csBalanceName = "DECENT";
-                m_pCentralWidget->SetAccountBalanceGUI( pAccountBalance->amount.value,csBalanceName);
-            }
-        }
-    }
-
-    if(a_nDetailed){m_wallet_content_dlg.execWCt(m_vAccounts,m_vAccountsBalances,m_nError,m_error_string);}
-#endif
-
 }
 
 
@@ -560,72 +470,30 @@ void Mainwindow_gui_wallet::ImportKeySlot()
 
     QPoint thisPos = pos();
     decent::gui::tools::RET_TYPE aRet = m_import_key_dlg.execRD(&thisPos,cvsUsKey);
-    if(aRet == decent::gui::tools::RDB_CANCEL){return ;}
+    
+    if(aRet == decent::gui::tools::RDB_CANCEL){
+        return ;
+    }
 
     std::string csTaskStr = "import_key " + cvsUsKey[0] + " " + cvsUsKey[1];
-    __DEBUG_APP2__(1,"!!!task: %s\n",csTaskStr.c_str());
     SetNewTask(csTaskStr,this,NULL,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
 }
 
 
-void Mainwindow_gui_wallet::ShowWalletContentSlot()
-{
-    //m_wallet_content_dlg.exec();
-
-#ifdef API_SHOULD_BE_DEFINED2
-
-    m_nError = 0;
-    m_error_string = "";
-    //std::thread aListAccountThread(&Mainwindow_gui_wallet::ListAccountThreadFunc,this,1);
-    //aListAccountThread.detach();
-
-    //UseConnectedApiInstance(this,NULL,&Mainwindow_gui_wallet::CallShowWalletContentFunction);
-
-    account_object* pAcc;
-    m_vAccounts = pWapi->list_my_accounts();
-    const int cnNumOfAccounts(m_vAccounts.size());
-    //m_vAccountsBalances.reserve(cnNumOfAccounts);
-    m_vAccountsBalances.resize(cnNumOfAccounts);
-    for(int i(0); i<cnNumOfAccounts;++i)
-    {
-        pAcc = &(m_vAccounts[i]);
-#ifdef LIST_ACCOUNT_BALANCES_DIRECT_CALL
-        m_vAccountsBalances[i] = pWapi->list_account_balances(((std::string)(pAcc->id)));
-#else
-        m_vAccountsBalances[i].clear();
-        if(a_pApi->gui_api)
-        {
-            int nUpdate = (i==(cnNumOfAccounts-1)) ? 1 : 0;
-            __ulli64 ullnAccountAndUpdate = ((__ulli64)i)<<32 | nUpdate;
-            std::string csTaskString = "list_account_balances " + ((std::string)(pAcc->id));
-            (a_pApi->gui_api)->SetNewTask(this,(void*)ullnAccountAndUpdate,csTaskString,&Mainwindow_gui_wallet::TaskDoneFunc);
-        }
-#endif
-    }
-
-#endif // #ifdef API_SHOULD_BE_DEFINED
-}
-
-
-
 void Mainwindow_gui_wallet::InfoSlot()
 {
-    //UseConnectedApiInstance<Mainwindow_gui_wallet>(this,NULL,&Mainwindow_gui_wallet::CallInfoFunction);
-    //if(a_pApi && (a_pApi->gui_api)){(a_pApi->gui_api)->SetNewTask(this,NULL,"info",&Mainwindow_gui_wallet::TaskDoneFunc);}
     SetNewTask("info",this,NULL,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
 }
 
 
 void Mainwindow_gui_wallet::AboutSlot()
 {
-    //UseConnectedApiInstance<Mainwindow_gui_wallet>(this,NULL,&Mainwindow_gui_wallet::CallAboutFunction);
     SetNewTask("about",this,NULL,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
 }
 
 
 void Mainwindow_gui_wallet::HelpSlot()
 {
-    //UseConnectedApiInstance<Mainwindow_gui_wallet>(this,NULL,&Mainwindow_gui_wallet::CallHelpFunction);
     SetNewTask("help",this,NULL,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
 }
 
@@ -636,38 +504,14 @@ void Mainwindow_gui_wallet::TaskDoneFuncGUI3(void* a_clbkArg,int64_t a_err,
     __DEBUG_APP2__(0,"just_conn=%d, err=%d, a_clbkArg=%p, task=%s",
                    m_nJustConnecting,(int)a_err,a_clbkArg,a_task.c_str());
 
-    //enum MAIN_TABS_ENM{BROWSE_CONTENT,TRANSACTIONS,UPLOAD,OVERVIEW,PURCHASED};
+
     const int cnCurIndex(m_pCentralWidget->GetMyCurrentTabIndex());
     switch(cnCurIndex)
     {
-    case BROWSE_CONTENT:
-    {
-        //BrowseContentTaskDone(void* a_clbkArg,int64_t a_err,const std::string& a_task,const std::string& a_result);
-        TaskDoneBrowseContentGUI3(a_clbkArg, a_err,a_task,a_result);
-        break;
-    }
-    case TRANSACTIONS:
-    {
-        TaskDoneTransactionsGUI3(a_clbkArg, a_err,a_task,a_result);
-        break;
-    }
-    case UPLOAD:
-    {
-        TaskDoneUploadGUI3(a_clbkArg, a_err,a_task,a_result);
-        break;
-    }
+    
     case OVERVIEW:
     {
         TaskDoneOverrviewGUI3(a_clbkArg, a_err,a_task,a_result);
-        break;
-    }
-    case PURCHASED:
-    {
-        TaskDonePurchasedGUI3(a_clbkArg, a_err,a_task,a_result);
-        break;
-    }
-    default:
-    {
         break;
     }
     }
@@ -713,38 +557,14 @@ void Mainwindow_gui_wallet::TaskDoneFuncGUI(void* a_clbkArg,int64_t a_err,const 
         return;
     }
 
-    //enum MAIN_TABS_ENM{BROWSE_CONTENT,TRANSACTIONS,UPLOAD,OVERVIEW,PURCHASED};
     const int cnCurIndex(m_pCentralWidget->GetMyCurrentTabIndex());
     switch(cnCurIndex)
     {
-    case BROWSE_CONTENT:
-    {
-        //BrowseContentTaskDone(void* a_clbkArg,int64_t a_err,const std::string& a_task,const std::string& a_result);
-        TaskDoneBrowseContentGUI(a_clbkArg, a_err,a_task,a_result);
-        break;
-    }
-    case TRANSACTIONS:
-    {
-        TaskDoneTransactionsGUI(a_clbkArg, a_err,a_task,a_result);
-        break;
-    }
-    case UPLOAD:
-    {
-        TaskDoneUploadGUI(a_clbkArg, a_err,a_task,a_result);
-        break;
-    }
+    
+    
     case OVERVIEW:
     {
         TaskDoneOverrviewGUI(a_clbkArg, a_err,a_task,a_result);
-        break;
-    }
-    case PURCHASED:
-    {
-        TaskDonePurchasedGUI(a_clbkArg, a_err,a_task,a_result);
-        break;
-    }
-    default:
-    {
         break;
     }
     }
@@ -840,12 +660,7 @@ void Mainwindow_gui_wallet::TaskDoneFuncGUI(void* a_clbkArg,int64_t a_err,const 
         }
 
     }
-    else if(strstr(a_task.c_str(),"list_content ") == a_task.c_str())
-    {
-    }
-    else if(strstr(a_task.c_str(),"get_content ") == a_task.c_str())
-    {
-    }
+    
     else if(strstr(a_task.c_str(),"import_key ") == a_task.c_str())
     {
         DisplayWalletContentGUI();
@@ -917,31 +732,14 @@ void Mainwindow_gui_wallet::ManagementNewFuncGUI(void* a_clbkArg,int64_t a_err,c
 {
 
     int nCurentTab = m_pCentralWidget->GetMyCurrentTabIndex();
-    __DEBUG_APP2__(2," ");
 
     switch(nCurentTab)
     {
-    case BROWSE_CONTENT:
-    {
-        ManagementBrowseContentGUI();
-        break;
-    }
-    case TRANSACTIONS:
-        ManagementTransactionsGUI();
-        break;
-    case UPLOAD:
-        ManagementUploadGUI();
-        break;
     case OVERVIEW:
     {
         ManagementOverviewGUI();
         break;
     }
-    case PURCHASED:
-        ManagementPurchasedGUI();
-        break;
-    default:
-        break;
     }
 }
 
@@ -962,7 +760,6 @@ void Mainwindow_gui_wallet::ConnectSlot()
         nRet = m_ConnectDlg.execNew(&m_wdata2);
     }
 
-    __DEBUG_APP2__(1,"nRet = %d, wallet_fl=%s",nRet, m_wdata2.wallet_file_name.c_str());
 
     if(nRet == decent::gui::tools::RDB_CANCEL){return;}
 
@@ -995,22 +792,3 @@ void Mainwindow_gui_wallet::SetPassword(void* a_owner, void* a_str_ptr)
     
 }
 
-
-/*////////////////////////////////////////////////////////////////*/
-void ParseDigitalContentFromVariant(SDigitalContent* a_pContent,
-                                    const fc::variant& a_result)
-{
-    JsonParserQt aParser;
-
-    a_result.visit(aParser);
-
-    a_pContent->price.amount = aParser.GetByKey("price").GetByKey("amount").value();
-    a_pContent->price.asset_id = aParser.GetByKey("price").GetByKey("asset_id").value();
-    a_pContent->synopsis = aParser.GetByKey("synopsis").value();
-    //a_pContent->URI = aParser.GetByKey("URI").value();
-    a_pContent->AVG_rating = aParser.GetByKey("AVG_rating").value();
-    a_pContent->created = aParser.GetByKey("created").value();
-    a_pContent->expiration = aParser.GetByKey("expiration").value();
-    a_pContent->size = aParser.GetByKey("size").value();
-    a_pContent->times_bougth = aParser.GetByKey("times_bougth").value();
-}

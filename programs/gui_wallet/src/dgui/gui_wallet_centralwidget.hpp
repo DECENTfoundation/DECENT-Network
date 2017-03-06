@@ -33,7 +33,6 @@
 #include <QString>
 
 
-extern int g_nDebugApplication;
 
 namespace gui_wallet {
 
@@ -91,6 +90,8 @@ public:
     
     QString FilterStr();
     
+    void initTabChanged();
+
 public slots:
     void tabChanged(int index);
     
@@ -121,7 +122,8 @@ private:
     Overview_tab        m_Overview_tab;
     PurchasedTab        m_Purchased_tab;
     
-    
+    std::vector<TabContentManager*>  m_allTabs;
+    int                              m_currentTab = -1;
 
     QString             m_DelayedWaringTitle;
     QString             m_DelayedWaringText;

@@ -44,6 +44,8 @@
 #include <boost/uuid/uuid_io.hpp>
 #include <boost/iostreams/copy.hpp>
 
+#include <graphene/utilities/dirhelper.hpp>
+
 #include <iostream>
 #include <atomic>
 
@@ -53,6 +55,7 @@ using namespace boost;
 using namespace boost::filesystem;
 using namespace boost::iostreams;
 using namespace graphene::package;
+using namespace graphene::utilities;
 
 
 namespace {
@@ -318,6 +321,8 @@ void package_manager::save_json_state() {
 package_manager::package_manager() {
     _protocol_handlers.insert(std::make_pair("magnet", std::make_shared<torrent_transfer>()));
     _protocol_handlers.insert(std::make_pair("ipfs", std::make_shared<ipfs_transfer>()));
+
+    set_packages_path(decent_path_finder::instance().get_decent_data() / "packages");
 }
 
 void package_manager::set_packages_path(const boost::filesystem::path& packages_path) {

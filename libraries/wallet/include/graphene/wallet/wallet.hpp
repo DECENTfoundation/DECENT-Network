@@ -1492,7 +1492,7 @@ class wallet_api
        * @return The buyings corresponding to the provided consumer
        * @ingroup WalletCLI
        */
-      vector<buying_object> get_open_buyings_by_consumer( const account_id_type& consumer )const;
+      vector<buying_object> get_open_buyings_by_consumer( const string& account_id_or_name )const;
 
       /**
        * @brief Get history buying_objects by consumer
@@ -1500,7 +1500,7 @@ class wallet_api
        * @return History buying_objects corresponding to the provided consumer
        * @ingroup WalletCLI
        */
-      vector<buying_object> get_buying_history_objects_by_consumer( const account_id_type& consumer )const;
+      vector<buying_object> get_buying_history_objects_by_consumer( const string& account_id_or_name )const;
 
        /**
        * @brief Get buying (open or history) by consumer and URI
@@ -1691,7 +1691,10 @@ FC_REFLECT_DERIVED( graphene::wallet::vesting_balance_object_with_info, (graphen
    (allowed_withdraw)(allowed_withdraw_time) )
 
 FC_REFLECT( graphene::wallet::operation_detail, 
-            (memo)(description)(op) )
+                (memo)
+                (description)
+                (op)
+          )
 
 FC_API( graphene::wallet::wallet_api,
         (help)
