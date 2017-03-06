@@ -50,10 +50,12 @@ namespace graphene { namespace utilities {
         fc::path get_user_home() const { return _user_home; }
         fc::path get_decent_home() const { return _decent_home; }
         fc::path get_decent_logs() const { return _decent_temp; }
+        fc::path get_decent_data() const { return _decent_data; }
         
         
     private:
         fc::path  _user_home;
+        fc::path  _decent_data;
         fc::path  _decent_home;
         fc::path  _decent_logs;
         fc::path  _decent_temp;

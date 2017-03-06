@@ -54,7 +54,6 @@ struct StructApi {
     fc::rpc::gui* gui_api;
 };
 
-int g_nDebugApplication = 0;
 
 /*//// Variables those should be inited!///*/
 static int                          s_nLibraryInited = 0;
@@ -321,28 +320,26 @@ static void gui_wallet_application_MenegerThreadFunc(void)
     int i;
 
     s_nManagerThreadRun = 1;
-    if(g_nDebugApplication){printf("!!!!!!! fn:%s, ln:%d\n",__FUNCTION__,__LINE__);}
 
     memset(vnOpt,0,sizeof(vnOpt));
 
     while(s_nManagerThreadRun)
     {
         // make checks
-  //      s_pMutex_for_cur_api->lock();
+        s_pMutex_for_cur_api->lock();
 
         if(s_CurrentApi.wal_api )
         {
             vnOpt[WAS::CONNECTED_ST] = 1;
         }
 
-   //     s_pMutex_for_cur_api->unlock();
+        s_pMutex_for_cur_api->unlock();
 
         for(i=0;i<WAS::_API_STATE_SIZE;++i)
         {
             if(vnOpt[i])
             {
-                //if(g_nDebugApplication){printf("emit UpdateGuiStateSig(%d)\n",i);}
-                //emit UpdateGuiStateSig(i);
+                
                 (*s_fpCorrectUiCaller2)(s_pManagerClbData,(int64_t)i, __MANAGER_CLB_,
                                       __FILE__ "\nManagement",s_pManagerOwner,s_fpMenegmentClbk);
                 vnOpt[i] = 0;
@@ -350,7 +347,7 @@ static void gui_wallet_application_MenegerThreadFunc(void)
         }  // for(i=0;i<_API_STATE_SIZE;++i)
 
 
-       // Sleep(1000);
+       Sleep(100);
     } // while(s_nManagerThreadRun)
 }
 

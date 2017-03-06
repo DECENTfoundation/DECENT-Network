@@ -6,6 +6,8 @@ find_package( Qt5Core REQUIRED )
 find_package( Qt5Widgets REQUIRED )
 
 set(MACOSX_BUNDLE_ICON_FILE desktop)
+set(MACOSX_BUNDLE_BUNDLE_NAME Decent)
+
 set(GUI_WALLET_ICON ${CMAKE_CURRENT_SOURCE_DIR}/desktop.icns)
 set_source_files_properties(${GUI_WALLET_ICON} PROPERTIES
        MACOSX_PACKAGE_LOCATION "Resources")
