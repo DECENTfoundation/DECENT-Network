@@ -71,12 +71,10 @@ gui_wallet::application::application(int& argc, char** argv)
     qRegisterMetaType<fc::variant>( "fc::variant" );
     qRegisterMetaType<SDigitalContent>( "SDigitalContent" );
 
+    //setApplicationDisplayName("Vazgen");
+    
     s_pWarner = new InGuiThreatCaller;
-    if(!s_pWarner)
-    {
-        throw "No enough memory";
-    }
-
+    
 }
 
 
