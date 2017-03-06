@@ -83,6 +83,7 @@ namespace gui_wallet
         void AboutSlot();
         void HelpSlot();
         void InfoSlot();
+        void ViewAction();
 
         void ConnectSlot();
         void ImportKeySlot();
@@ -108,7 +109,7 @@ namespace gui_wallet
         QMenu*              m_pMenuHelpL;
         QMenu*              m_pMenuContent;
         QMenu*              m_pMenuHelpR;
-        QMenu*              m_pMenuCreateTicket;
+        QMenu*              m_pMenuView;
         QMenu*              m_pMenuDebug;
         QMenu*              m_pMenuTempFunctions;
         QAction             m_ActionExit;
