@@ -7,7 +7,7 @@ add_library( package_manager
              ipfs_transfer.cpp
              ${HEADERS} )
 
-target_link_libraries( package_manager fc decent_encrypt torrent-rasterbar nlohmann_json ipfs-api )
+target_link_libraries( package_manager fc decent_encrypt torrent-rasterbar nlohmann_json ipfs-api graphene_utilities )
 target_include_directories( package_manager
                             PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../contrib/cpp-ipfs-api/include")
 

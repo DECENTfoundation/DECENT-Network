@@ -22,6 +22,9 @@
 #include <fc/rpc/websocket_api.hpp>
 #include "decent_gui_inguiloopcaller_glb.hpp"
 #include "decent_tools_rwlock.hpp"
+#include <QCoreApplication>
+#include <chrono>
+#include <thread>
 #ifdef WIN32
 #include <windows.h>
 #else  // #ifdef WIN32
@@ -325,14 +328,14 @@ static void gui_wallet_application_MenegerThreadFunc(void)
     while(s_nManagerThreadRun)
     {
         // make checks
-        s_pMutex_for_cur_api->lock();
+  //      s_pMutex_for_cur_api->lock();
 
         if(s_CurrentApi.wal_api )
         {
             vnOpt[WAS::CONNECTED_ST] = 1;
         }
 
-        s_pMutex_for_cur_api->unlock();
+   //     s_pMutex_for_cur_api->unlock();
 
         for(i=0;i<WAS::_API_STATE_SIZE;++i)
         {
@@ -347,7 +350,7 @@ static void gui_wallet_application_MenegerThreadFunc(void)
         }  // for(i=0;i<_API_STATE_SIZE;++i)
 
 
-        Sleep(1000);
+       // Sleep(1000);
     } // while(s_nManagerThreadRun)
 }
 
@@ -572,5 +575,63 @@ int CallFunctionInUiLoopGeneral(int a_nType,SetNewTask_last_args2,
     }
 
     return 0;
+}
+
+class task_exception : public std::exception
+{
+public:
+    task_exception(std::string const& str_info) noexcept
+    : m_str_info(str_info) {}
+    virtual ~task_exception() {}
+    
+    char const* what() const noexcept override
+    {
+        return m_str_info.c_str();
+    }
+private:
+    std::string m_str_info;
+};
+
+struct task_result
+{
+    task_result()
+    : m_bDone(false)
+    , m_error(0)
+    , m_strResult() {}
+    
+    bool m_bDone;
+    int64_t m_error;
+    std::string m_strResult;
+};
+
+void RunTask(std::string const& str_command, std::string& str_result)
+{
+    task_result result;
+    SetNewTask(str_command,
+               nullptr,
+               static_cast<void*>(&result),
+               +[](void* /*owner*/,
+                   void* a_clbkArg,
+                   int64_t a_err,
+                   std::string const& /*a_task*/,
+                   std::string const& a_result)
+               {
+                   task_result& result = *static_cast<task_result*>(a_clbkArg);
+                   result.m_bDone = true;
+                   result.m_error = a_err;
+                   result.m_strResult = a_result;
+               });
+    
+    bool volatile& bDone = result.m_bDone;
+    while (false == bDone)
+    {
+        std::this_thread::sleep_for(chrono::milliseconds(0));
+        QCoreApplication::processEvents();
+    }
+    
+    if (0 == result.m_error)
+        str_result = result.m_strResult;
+    else
+        throw task_exception(result.m_strResult);
 }
 
