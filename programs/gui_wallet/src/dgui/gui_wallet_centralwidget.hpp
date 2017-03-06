@@ -33,7 +33,6 @@
 #include <QString>
 
 
-extern int g_nDebugApplication;
 
 namespace gui_wallet {
 

@@ -40,8 +40,6 @@
 using namespace gui_wallet;
 using namespace nlohmann;
 
-extern int g_nDebugApplication;
-
 CryptoPP::AutoSeededRandomPool rng;
 
 

@@ -38,7 +38,6 @@ static const int   s_cnNumberOfSearchFields(sizeof(gui_wallet::ST::s_vcpcSearchT
 
 using namespace gui_wallet;
 using namespace nlohmann;
-extern int g_nDebugApplication;
 
 
 Browse_content_tab::Browse_content_tab() : m_pTableWidget(new BTableWidget(1,s_cnNumberOfCols))

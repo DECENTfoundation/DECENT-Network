@@ -121,7 +121,6 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
         m_ActionAbout(tr("About"),this),
         m_ActionInfo(tr("Info"),this),
         m_ActionHelp(tr("Help"),this),
-        m_ActionWalletContent(tr("Wallet content"),this),
         m_ActionLock(tr("Lock"),this),
         m_ActionUnlock(tr("Unlock"),this),
         m_ActionImportKey(tr("Import key"),this),
@@ -253,10 +252,7 @@ void Mainwindow_gui_wallet::CreateActions()
     m_ActionConnect.setStatusTip( tr("Connect to witness node") );
     connect( &m_ActionConnect, SIGNAL(triggered()), this, SLOT(ConnectSlot()) );
 
-    //m_ActionWalletContent.setDisabled(true);
-    m_ActionWalletContent.setStatusTip( tr("Wallet content") );
-    connect( &m_ActionWalletContent, SIGNAL(triggered()), this, SLOT(ShowWalletContentSlot()) );
-
+   
     m_ActionLock.setDisabled(m_locked);
     m_ActionLock.setStatusTip( tr("Lock account") );
     connect( &m_ActionLock, SIGNAL(triggered()), this, SLOT(LockSlot()) );
@@ -284,7 +280,6 @@ void Mainwindow_gui_wallet::CreateMenues()
     do{m_pMenuHelpL->addAction( (__action_ptr__) );m_pMenuHelpR->addAction( (__action_ptr__) );}while(0)
 
     QMenuBar* pMenuBar = m_barLeft;
-
     m_pMenuFile = pMenuBar->addMenu( tr("&File") );
     m_pMenuFile->addAction( &m_ActionExit );
     m_pMenuFile->addAction( &m_ActionConnect );
@@ -295,14 +290,12 @@ void Mainwindow_gui_wallet::CreateMenues()
     m_pMenuSetting = pMenuBar->addMenu( tr("&Setting") );
     m_pMenuHelpL = pMenuBar->addMenu( tr("&Help") );
 
-    m_pMenuContent = pMenuBar->addMenu( tr("Content") );
-    m_pMenuContent->addAction( &m_ActionWalletContent );
 
     m_pMenuDebug = pMenuBar->addMenu( tr("Debug") );
     m_pMenuDebug->addAction(&m_ActionOpenCliWallet);
     m_pMenuDebug->addAction(&m_ActionOpenInfoDlg);
     m_pMenuTempFunctions = m_pMenuDebug->addMenu(tr("temp. functions start"));
-    //m_pMenuTempFunctions->addAction(&m_ActionShowDigitalContextes);
+
 
     /******************************************************/
     pMenuBar = m_barRight;
@@ -443,8 +436,6 @@ void Mainwindow_gui_wallet::UpdateLockedStatus()
 
 void Mainwindow_gui_wallet::moveEvent(QMoveEvent * a_event)
 {
-    //m_wallet_content_dlg.move( mapToGlobal(a_event->pos()));
-    //m_wallet_content_dlg.move( /*mapToGlobal*/(a_event->pos()));
 }
 
 
@@ -456,45 +447,6 @@ void Mainwindow_gui_wallet::DisplayWalletContentGUI()
 
     m_ActionImportKey.setEnabled(true);
     SetNewTask("list_my_accounts",this,NULL,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
-
-#if 0
-    if(_LIKELY_(!m_nError))
-    {
-        std::string csBalanceName;
-        asset* pAccountBalance;
-        account_object* pAccount;
-        QComboBox& cAccountsCombo = m_pCentralWidget->usersCombo();
-        int nCount = cAccountsCombo.count();
-        const int cnNumOfAccounts(m_vAccounts.size());
-        int j,nNumbOfBalances;
-
-        while(nCount>0){cAccountsCombo.removeItem(0);--nCount;}
-
-        for(int i(0); i<cnNumOfAccounts;++i)
-        {
-            pAccount = &m_vAccounts[i];
-            cAccountsCombo.addItem(tr(pAccount->name.c_str()));
-            nNumbOfBalances = m_vAccountsBalances[i].size();
-            for(j=0;j<nNumbOfBalances;++j)
-            {
-                //
-            }
-
-            if(g_nDebugApplication){printf("nNumbOfBalances=%d\n",nNumbOfBalances);}
-            if(nNumbOfBalances>0)
-            {
-                int nIndexOfuser = m_pCentralWidget->usersCombo().currentIndex();
-                pAccountBalance = &((m_vAccountsBalances[i])[nIndexOfuser>0 ? nIndexOfuser : 0]);
-                //csBalanceName = (std::string)pAccountBalance->asset_id;
-                csBalanceName = "DECENT";
-                m_pCentralWidget->SetAccountBalanceGUI( pAccountBalance->amount.value,csBalanceName);
-            }
-        }
-    }
-
-    if(a_nDetailed){m_wallet_content_dlg.execWCt(m_vAccounts,m_vAccountsBalances,m_nError,m_error_string);}
-#endif
-
 }
 
 
@@ -518,72 +470,30 @@ void Mainwindow_gui_wallet::ImportKeySlot()
 
     QPoint thisPos = pos();
     decent::gui::tools::RET_TYPE aRet = m_import_key_dlg.execRD(&thisPos,cvsUsKey);
-    if(aRet == decent::gui::tools::RDB_CANCEL){return ;}
+    
+    if(aRet == decent::gui::tools::RDB_CANCEL){
+        return ;
+    }
 
     std::string csTaskStr = "import_key " + cvsUsKey[0] + " " + cvsUsKey[1];
-    __DEBUG_APP2__(1,"!!!task: %s\n",csTaskStr.c_str());
     SetNewTask(csTaskStr,this,NULL,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
 }
 
 
-void Mainwindow_gui_wallet::ShowWalletContentSlot()
-{
-    //m_wallet_content_dlg.exec();
-
-#ifdef API_SHOULD_BE_DEFINED2
-
-    m_nError = 0;
-    m_error_string = "";
-    //std::thread aListAccountThread(&Mainwindow_gui_wallet::ListAccountThreadFunc,this,1);
-    //aListAccountThread.detach();
-
-    //UseConnectedApiInstance(this,NULL,&Mainwindow_gui_wallet::CallShowWalletContentFunction);
-
-    account_object* pAcc;
-    m_vAccounts = pWapi->list_my_accounts();
-    const int cnNumOfAccounts(m_vAccounts.size());
-    //m_vAccountsBalances.reserve(cnNumOfAccounts);
-    m_vAccountsBalances.resize(cnNumOfAccounts);
-    for(int i(0); i<cnNumOfAccounts;++i)
-    {
-        pAcc = &(m_vAccounts[i]);
-#ifdef LIST_ACCOUNT_BALANCES_DIRECT_CALL
-        m_vAccountsBalances[i] = pWapi->list_account_balances(((std::string)(pAcc->id)));
-#else
-        m_vAccountsBalances[i].clear();
-        if(a_pApi->gui_api)
-        {
-            int nUpdate = (i==(cnNumOfAccounts-1)) ? 1 : 0;
-            __ulli64 ullnAccountAndUpdate = ((__ulli64)i)<<32 | nUpdate;
-            std::string csTaskString = "list_account_balances " + ((std::string)(pAcc->id));
-            (a_pApi->gui_api)->SetNewTask(this,(void*)ullnAccountAndUpdate,csTaskString,&Mainwindow_gui_wallet::TaskDoneFunc);
-        }
-#endif
-    }
-
-#endif // #ifdef API_SHOULD_BE_DEFINED
-}
-
-
-
 void Mainwindow_gui_wallet::InfoSlot()
 {
-    //UseConnectedApiInstance<Mainwindow_gui_wallet>(this,NULL,&Mainwindow_gui_wallet::CallInfoFunction);
-    //if(a_pApi && (a_pApi->gui_api)){(a_pApi->gui_api)->SetNewTask(this,NULL,"info",&Mainwindow_gui_wallet::TaskDoneFunc);}
     SetNewTask("info",this,NULL,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
 }
 
 
 void Mainwindow_gui_wallet::AboutSlot()
 {
-    //UseConnectedApiInstance<Mainwindow_gui_wallet>(this,NULL,&Mainwindow_gui_wallet::CallAboutFunction);
     SetNewTask("about",this,NULL,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
 }
 
 
 void Mainwindow_gui_wallet::HelpSlot()
 {
-    //UseConnectedApiInstance<Mainwindow_gui_wallet>(this,NULL,&Mainwindow_gui_wallet::CallHelpFunction);
     SetNewTask("help",this,NULL,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
 }
 
@@ -822,7 +732,6 @@ void Mainwindow_gui_wallet::ManagementNewFuncGUI(void* a_clbkArg,int64_t a_err,c
 {
 
     int nCurentTab = m_pCentralWidget->GetMyCurrentTabIndex();
-    __DEBUG_APP2__(2," ");
 
     switch(nCurentTab)
     {
@@ -851,7 +760,6 @@ void Mainwindow_gui_wallet::ConnectSlot()
         nRet = m_ConnectDlg.execNew(&m_wdata2);
     }
 
-    __DEBUG_APP2__(1,"nRet = %d, wallet_fl=%s",nRet, m_wdata2.wallet_file_name.c_str());
 
     if(nRet == decent::gui::tools::RDB_CANCEL){return;}
 

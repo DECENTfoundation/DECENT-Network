@@ -35,7 +35,6 @@
 #include <unistd.h>
 #endif
 
-extern std::string g_cApplicationPath ;
 
 using namespace gui_wallet;
 

@@ -84,8 +84,6 @@ namespace gui_wallet
         void HelpSlot();
         void InfoSlot();
 
-        void ShowWalletContentSlot();
-
         void ConnectSlot();
         void ImportKeySlot();
         void LockSlot();
