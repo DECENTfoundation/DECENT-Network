@@ -30,7 +30,6 @@
 
 using namespace gui_wallet;
 
-extern int g_nDebugApplication ;
 
 InGuiThreatCaller* s_pWarner = NULL;
 

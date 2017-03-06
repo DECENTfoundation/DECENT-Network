@@ -17,8 +17,6 @@
 
 #define __LOG_LEVEL__   3
 
-extern int g_nDebugApplication;
-
 
 decent::tools::RWLock::RWLock()
 {

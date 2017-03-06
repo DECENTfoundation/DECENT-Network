@@ -16,10 +16,7 @@
 #include <QTextBlock>
 #include "debug_decent_application.h"
 
-extern int g_nDebugApplication;
 
-
-//gui_wallet::CliTextEdit::CliTextEdit(QWidget* a_pParent)
 gui_wallet::CliTextEdit::CliTextEdit()
     :
       //QTextEdit(a_pParent),
@@ -157,7 +154,7 @@ void gui_wallet::CliTextEdit::keyPressEvent( QKeyEvent * a_event )
         }
         QByteArray cbaBlock = cqsLastLine.toLatin1();
         std::string csLastBlockStr = cbaBlock.data();
-        if(g_nDebugApplication){printf("Qt::Key_Enter, nNumOfLines=%d\n",nNumOfLines);}
+
         QTextEdit::keyPressEvent(a_event);
         std::string csStrToCapture = csLastBlockStr.c_str()+3;
         if(csStrToCapture != m_vStrings[m_nIndex])
@@ -175,7 +172,6 @@ void gui_wallet::CliTextEdit::keyPressEvent( QKeyEvent * a_event )
     }
     case Qt::Key_Backspace:
     {
-        //if(g_nDebugApplication){printf("Qt::Key_Backspace:\n");}
         if(nCurrentColumn>3)
         {
             QTextEdit::keyPressEvent(a_event);
@@ -183,7 +179,6 @@ void gui_wallet::CliTextEdit::keyPressEvent( QKeyEvent * a_event )
     }
         break;
     default:
-        //if(g_nDebugApplication){printf("default\n");}
         QTextEdit::keyPressEvent(a_event);
         break;
     }
