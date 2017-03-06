@@ -22,18 +22,49 @@
  * THE SOFTWARE.
  */
 
-#include <graphene/utilities/tempdir.hpp>
-
+#include <graphene/utilities/dirhelper.hpp>
+#include <unistd.h>
+#include <sys/types.h>
+#include <pwd.h>
 #include <cstdlib>
+#include <boost/filesystem.hpp>
 
-namespace graphene { namespace utilities {
+using namespace graphene;
+using namespace utilities;
 
-fc::path temp_directory_path()
-{
-   const char* graphene_tempdir = getenv("GRAPHENE_TEMPDIR");
-   if( graphene_tempdir != nullptr )
-      return fc::path( graphene_tempdir );
-   return fc::temp_directory_path() / "graphene-tmp";
+
+
+decent_path_finder::decent_path_finder() {
+    struct passwd *pw = getpwuid(getuid());
+    const char *home_dir = pw->pw_dir;
+    
+    _user_home = home_dir;
+    
+    const char* decent_home = getenv("DECENT_HOME");
+    if (decent_home == NULL) {
+        _decent_home = _user_home / ".decent";
+        create_directories(_decent_home);
+    } else {
+        _decent_home = decent_home;
+    }
+    
+    const char* decent_logs = getenv("DECENT_LOGS");
+    if (decent_logs == NULL) {
+        _decent_logs = _decent_home / "logs";
+        create_directories(_decent_logs);
+    } else {
+        _decent_logs = _decent_logs;
+    }
+    
+    const char* decent_temp = getenv("DECENT_TEMP");
+    if (decent_temp == NULL) {
+        _decent_home = _decent_home / "temp";
+        create_directories(_decent_temp);
+    } else {
+        _decent_temp = decent_temp;
+    }
+    
 }
 
-} } // graphene::utilities
+
+

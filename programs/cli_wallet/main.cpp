@@ -42,6 +42,7 @@
 #include <graphene/utilities/key_conversion.hpp>
 #include <graphene/wallet/wallet.hpp>
 #include <graphene/package/package.hpp>
+#include <graphene/utilities/dirhelper.hpp>
 
 #include <fc/interprocess/signals.hpp>
 #include <boost/program_options.hpp>
@@ -67,6 +68,14 @@ namespace bpo = boost::program_options;
 
 int main( int argc, char** argv )
 {
+    
+    try {
+        
+        decent_path_finder::instance();
+    } catch (const std::exception& ex) {
+        std::cout << "Failed to initialize home directory." << std::endl;
+        std::cout << "Error: " << ex.what() << std::endl;
+    }
    try {
 
       boost::program_options::options_description opts;

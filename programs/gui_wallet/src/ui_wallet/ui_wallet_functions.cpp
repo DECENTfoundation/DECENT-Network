@@ -328,14 +328,14 @@ static void gui_wallet_application_MenegerThreadFunc(void)
     while(s_nManagerThreadRun)
     {
         // make checks
-        s_pMutex_for_cur_api->lock();
+  //      s_pMutex_for_cur_api->lock();
 
         if(s_CurrentApi.wal_api )
         {
             vnOpt[WAS::CONNECTED_ST] = 1;
         }
 
-        s_pMutex_for_cur_api->unlock();
+   //     s_pMutex_for_cur_api->unlock();
 
         for(i=0;i<WAS::_API_STATE_SIZE;++i)
         {
@@ -350,7 +350,7 @@ static void gui_wallet_application_MenegerThreadFunc(void)
         }  // for(i=0;i<_API_STATE_SIZE;++i)
 
 
-        Sleep(1000);
+       // Sleep(1000);
     } // while(s_nManagerThreadRun)
 }
 

@@ -212,7 +212,7 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
     centralWidget()->layout()->setContentsMargins(0, 0, 0, 0);
     //statusBar()->hide();
     //mainToolBar->hide();
-    setStyleSheet("QMainWindow{color:black;""background-color:white;}");
+    //setStyleSheet("QMainWindow{color:black;""background-color:white;}");
 
     //change
 //    QString str = m_pCentralWidget->m_Overview_tab.search.text();
