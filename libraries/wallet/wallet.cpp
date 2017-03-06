@@ -2478,7 +2478,7 @@ public:
       catch( const fc::exception& e )
       {
          std::cerr << "\nCouldn't get network node API.  You probably are not configured\n"
-         "to access the network API on the witness_node you are\n"
+         "to access the network API on the decentd you are\n"
          "connecting to.  Please follow the instructions in README.md to set up an apiaccess file.\n"
          "\n";
          throw(e);
@@ -2499,7 +2499,7 @@ public:
          "to access the debug API on the node you are connecting to.\n"
          "\n"
          "To fix this problem:\n"
-         "- Please ensure you are running debug_node, not witness_node.\n"
+         "- Please ensure you are running debug_node, not decentd.\n"
          "- Please follow the instructions in README.md to set up an apiaccess file.\n"
          "\n";
       }

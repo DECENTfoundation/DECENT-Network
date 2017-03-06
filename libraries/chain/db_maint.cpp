@@ -150,6 +150,12 @@ void database::initialize_budget_record( fc::time_point_sec now, budget_record& 
    int64_t dt = (now - dpo.last_budget_time).to_seconds();
    rec.time_since_last_budget = uint64_t( dt );
 
+   if( rec.from_initial_reserve < 0 ) //this should never happen but better check than sorry
+   {
+      elog("from_initial_reserve is negative!");
+      rec.total_budget = 0;
+      return;
+   }
    // We'll consider accumulated_fees to be reserved at the BEGINNING
    // of the maintenance interval.  However, for speed we only
    // call modify() on the asset_dynamic_data_object once at the
