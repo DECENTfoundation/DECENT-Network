@@ -150,7 +150,8 @@ void Browse_content_tab::PrepareTableWidgetHeaderGUI()
 
 
 void Browse_content_tab::updateContents() {
-    
+    /*
+     * sync task usage example
     std::string str_result;
     try
     {
@@ -162,7 +163,7 @@ void Browse_content_tab::updateContents() {
     catch (std::exception const& ex)
     {
         std::cout << ex.what() << std::endl;
-    }
+    }*/
     
     
     SetNewTask("list_content \"\" 100", this, NULL, +[](void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
