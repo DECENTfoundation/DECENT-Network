@@ -21,6 +21,7 @@
 #include <QHBoxLayout>
 #include <QComboBox>
 #include <QTimer>
+#include <QLabel>
 #include "gui_wallet_tabcontentmanager.hpp"
 
 
@@ -55,7 +56,34 @@ signals:
 };
 
 
-
+    class CButton : public QLabel
+    {
+        Q_OBJECT
+    public:
+        CButton(int id) : m_id(id){connect(this,SIGNAL(LabelWosClicked()),this,SLOT(ButtonPushedSlot()));}
+    private:
+        int m_id;
+        private slots:
+        void ButtonPushedSlot(){emit ButtonPushedSignal(m_id);}
+    private:
+    signals:
+        void LabelWosClicked();
+    public:
+    signals:
+        void ButtonPushedSignal(int);
+        void mouseWasMoved();
+    public:
+        virtual void mouseReleaseEvent(QMouseEvent * event)
+        {
+            LabelWosClicked();
+        }
+        
+        virtual void mouseMoveEvent(QMouseEvent * event)
+        {
+            emit mouseWasMoved();
+            QLabel::mouseMoveEvent(event);
+        }
+    };
 
 
 
