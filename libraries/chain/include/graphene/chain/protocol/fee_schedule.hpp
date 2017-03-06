@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2015 Cryptonomex, Inc., and contributors.
- *
+ *`
  * The MIT License
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -23,6 +23,7 @@
  */
 #pragma once
 #include <graphene/chain/protocol/operations.hpp>
+#include <fc/smart_ref_impl.hpp>
 
 namespace graphene { namespace chain {
 
