@@ -50,13 +50,8 @@ CryptoPP::AutoSeededRandomPool rng;
 
 Upload_tab::Upload_tab()
         :
-<<<<<<< HEAD
         //m_info_widget(FieldsRows::NUM_FIELDS, 2),
         m_info_widget(3, 6),
-=======
-        m_info_widget(FieldsRows::NUM_FIELDS, 2),
-        //m_info_widget(2, 3),
->>>>>>> f0e6013ad5705abd758a6e6775a4c902b404b938
         m_title_label(tr("Title")),
         m_description_label(tr("Description")),
         m_infoLayoutHeader(tr("Information About Content")),
@@ -65,26 +60,18 @@ Upload_tab::Upload_tab()
     QFont m_font( "Open Sans Bold", 14, QFont::Bold);
     QPalette pltEdit;
 
-<<<<<<< HEAD
     //m_synopsis_layout.addWidget(&m_title_label);
-=======
     m_infoLayoutHeader.setFont(m_font);
->>>>>>> f0e6013ad5705abd758a6e6775a4c902b404b938
     m_title_text.setPlaceholderText("  Title");
     m_title_text.setFixedHeight(40);
     m_title_text.setFixedWidth(200);
     m_synopsis_layout.addWidget(&m_title_text);
 
-<<<<<<< HEAD
     //m_synopsis_layout.addWidget(&m_description_label);
-    m_description_text.setPlaceholderText("  Description");
-    m_description_text.setFixedHeight(100);
-=======
     m_description_text.setPlaceholderText("  Description");
     m_description_text.resize(138, 822);
     m_description_text.setFixedHeight(138);
 
->>>>>>> f0e6013ad5705abd758a6e6775a4c902b404b938
     m_synopsis_layout.addWidget(&m_description_text);
     m_synopsis_layout.addWidget(new QLabel());
 
@@ -102,14 +89,9 @@ Upload_tab::Upload_tab()
     /// Lifetime
     ////////////////////////////////////////////////////////////////////////////
 
-<<<<<<< HEAD
 
 //    m_info_widget.setCellWidget(FieldsRows::LIFETIME, 0, new QLabel("Lifetime"));
     m_info_widget.setCellWidget(0, 0, new QLabel("        Lifetime"));
-=======
-    //m_info_widget.setCellWidget(FieldsRows::LIFETIME, 0, new QLabel("Lifetime"));
-    m_info_widget.setCellWidget(0, 0, new QLabel("Lifetime"));
->>>>>>> f0e6013ad5705abd758a6e6775a4c902b404b938
 
     QDateEdit *de = new QDateEdit();
     de->setDate(QDate::currentDate());

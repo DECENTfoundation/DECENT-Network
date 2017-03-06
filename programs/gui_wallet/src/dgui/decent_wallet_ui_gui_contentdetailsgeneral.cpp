@@ -30,7 +30,7 @@ ContentDetailsGeneral::ContentDetailsGeneral()
     m_free_for_child.addWidget(&m_label);
     m_free_for_child.addWidget(new QLabel());
 
-    setFixedSize(397,381);
+    setFixedSize(620,480);
 }
 
 
