@@ -37,6 +37,7 @@ protected:
     QWidget         m_vSub_Widgets[NUMBER_OF_SUB_LAYOUTS2];
     QVBoxLayout     m_vSub_layouts[NUMBER_OF_SUB_LAYOUTS2];
     QLabel          m_vLabels[NUMBER_OF_SUB_LAYOUTS2*2];
+    QLabel          m_stars[5];
 };
 
 }

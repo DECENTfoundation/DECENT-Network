@@ -35,7 +35,7 @@ Overview_tab::Overview_tab(class Mainwindow_gui_wallet* a_pPar)
     table_widget.setStyleSheet("QTableView{border : 1px solid lightGray}");
 
     table_widget.setItem(0,0,new QTableWidgetItem(tr("Info")));
-    table_widget.setItem(0,1,new QTableWidgetItem(tr("Asset ID")));
+    table_widget.setItem(0,1,new QTableWidgetItem(tr("Account ID")));
     table_widget.setItem(0,2,new QTableWidgetItem(tr("Author")));
 
 
@@ -134,7 +134,7 @@ void Overview_tab::CreateTable()
         table_widget.setRowHeight(i + 1,40);
 
         QPixmap image1(":/icon/images/info1_white.svg");
-       // QPixmap image1 = image.scaled(QSize(50,50), 1 Qt::AA_Use96Dpi);
+        //QPixmap image1 = image.scaled(QSize(50,50), 1 Qt::AA_Use96Dpi);
 
         ((NewButton*)table_widget.cellWidget(i+1,0))->setPixmap(image1);
 
@@ -152,8 +152,6 @@ void Overview_tab::CreateTable()
 
         table_widget.item(i+1,1)->setForeground(QColor::fromRgb(88,88,88));
         table_widget.item(i+1,2)->setForeground(QColor::fromRgb(88,88,88));
-
-        table_widget.setMouseTracking(true);
     }
 
     Connects();
