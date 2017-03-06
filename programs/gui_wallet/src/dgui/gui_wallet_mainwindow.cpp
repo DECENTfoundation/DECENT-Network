@@ -24,10 +24,9 @@
 #include "qt_commonheader.hpp"
 #include <stdio.h>
 #include <stdlib.h>
+#include <graphene/utilities/dirhelper.hpp>
 #include <QMessageBox>
-
 #include "json.hpp"
-
 #include "decent_wallet_ui_gui_jsonparserqt.hpp"
 
 #ifndef DEFAULT_WALLET_FILE_NAME
@@ -37,6 +36,8 @@
 using namespace nlohmann;
 using namespace gui_wallet;
 using namespace std;
+using namespace graphene;
+using namespace utilities;
 
 static gui_wallet::Mainwindow_gui_wallet*  s_pMainWindowInstance = NULL;
 
@@ -138,11 +139,10 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
     m_default_stylesheet = styleSheet();
     //setStyleSheet("color:black;""background-color:white;");
     m_pInfoTextEdit = new QTextEdit;
-    if(!m_pInfoTextEdit){throw "Low memory";}
     m_pInfoTextEdit->setReadOnly(true);
     m_pcInfoDlg = new CliWalletDlg(m_pInfoTextEdit);
-    if(!m_pcInfoDlg){throw "Low memory";}
 
+    
     CliTextEdit* pCliTextEdit = (CliTextEdit*)m_cCliWalletDlg.operator ->();
     pCliTextEdit->SetCallbackStuff2(this,NULL,&Mainwindow_gui_wallet::CliCallbackFnc);
 
@@ -151,8 +151,10 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
 
     m_pCentralAllLayout = new QVBoxLayout;
     m_pMenuLayout = new QHBoxLayout;
-
-    m_wdata2.wallet_file_name = DEFAULT_WALLET_FILE_NAME;
+    
+    fc::path wallet_path = decent_path_finder::instance().get_decent_home() / DEFAULT_WALLET_FILE_NAME;
+    m_wdata2.wallet_file_name = wallet_path.string().c_str();
+    
     m_wdata2.ws_server = "ws://127.0.0.1:8090";
     m_wdata2.chain_id = "0000000000000000000000000000000000000000000000000000000000000000";
 
@@ -208,14 +210,8 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
     m_nJustConnecting = 1;
     ConnectSlot();
     setWindowTitle(tr("Decent - Blockchain Content Distributor"));
-
+    
     centralWidget()->layout()->setContentsMargins(0, 0, 0, 0);
-    //statusBar()->hide();
-    //mainToolBar->hide();
-    //setStyleSheet("QMainWindow{color:black;""background-color:white;}");
-
-    //change
-//    QString str = m_pCentralWidget->m_Overview_tab.search.text();
 }
 
 

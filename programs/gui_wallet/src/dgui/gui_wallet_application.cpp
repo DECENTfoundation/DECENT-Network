@@ -71,7 +71,7 @@ gui_wallet::application::application(int& argc, char** argv)
     qRegisterMetaType<fc::variant>( "fc::variant" );
     qRegisterMetaType<SDigitalContent>( "SDigitalContent" );
 
-    //setApplicationDisplayName("Vazgen");
+    setApplicationDisplayName("Decent");
     
     s_pWarner = new InGuiThreatCaller;
     

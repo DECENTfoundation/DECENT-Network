@@ -58,10 +58,18 @@ decent_path_finder::decent_path_finder() {
     
     const char* decent_temp = getenv("DECENT_TEMP");
     if (decent_temp == NULL) {
-        _decent_home = _decent_home / "temp";
+        _decent_temp = _decent_home / "temp";
         create_directories(_decent_temp);
     } else {
         _decent_temp = decent_temp;
+    }
+    
+    const char* decent_data = getenv("DECENT_DATA");
+    if (decent_data == NULL) {
+        _decent_data = _decent_home / "data";
+        create_directories(_decent_data);
+    } else {
+        _decent_data = decent_data;
     }
     
 }
