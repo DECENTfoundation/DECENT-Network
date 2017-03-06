@@ -142,6 +142,7 @@ void database::initialize_evaluators()
    register_evaluator<asset_publish_feeds_evaluator>();
    register_evaluator<return_escrow_submission_evaluator>();
    register_evaluator<return_escrow_buying_evaluator>();
+   register_evaluator<report_stats_evaluator>();
 }
 
 void database::initialize_indexes()

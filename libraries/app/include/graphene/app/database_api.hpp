@@ -572,6 +572,8 @@ class database_api
        */
       vector<uint64_t> get_content_ratings( const string& URI )const;
 
+      optional<vector<seeder_object>> list_seeders_by_upload( const uint32_t count )const;
+
    private:
       std::shared_ptr< database_api_impl > my;
 };
@@ -672,6 +674,7 @@ FC_API(graphene::app::database_api,
    (list_content_by_bought)
    (list_publishers_by_price)
    (get_content_ratings)
+   (list_seeders_by_upload)
    (get_seeder)
    (get_real_supply)
 )

@@ -779,12 +779,15 @@ namespace detail {
 
           // true_high_block_num is the ending block number after the network code appends any item ids it 
           // knows about that we don't
+          uint32_t orig_low_block_num =  low_block_num;
           uint32_t true_high_block_num = high_block_num + number_of_blocks_after_reference_point;
           do
           {
             // for each block in the synopsis, figure out where to pull the block id from.
             // if it's <= non_fork_high_block_num, we grab it from the main blockchain;
             // if it's not, we pull it from the fork history
+            if( !low_block_num )
+               ++low_block_num;
             if (low_block_num <= non_fork_high_block_num)
               synopsis.push_back(_chain_db->get_block_id_for_num(low_block_num));
             else
@@ -794,6 +797,7 @@ namespace detail {
           while (low_block_num <= high_block_num);
 
           idump((synopsis));
+          ilog("synopsis for blocks ${l} - ${h}",("l", orig_low_block_num)("h", high_block_num));
           return synopsis;
       } FC_CAPTURE_AND_RETHROW() }
 

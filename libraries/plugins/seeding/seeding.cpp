@@ -73,7 +73,7 @@ void seeding_plugin_impl::handle_content_submit(const operation_history_object &
                });
                //if we run this in main thread it can crash _push_block
                service_thread->async( [cs_op, this](){
-                    package_manager::instance().download_package(cs_op.URI, *this);
+                    package_manager::instance().download_package(cs_op.URI, *this, empty_report_stats_listener::get_one());
                });
 
             }
@@ -294,7 +294,7 @@ void seeding_plugin_impl::restart_downloads(){
         const auto& cidx = database().get_index_type<my_seeding_index>().indices().get<by_URI>();
         auto citr = cidx.begin();
         while(citr!=cidx.end()){
-           package_manager::instance().download_package(citr->URI, *this );
+           package_manager::instance().download_package(citr->URI, *this, empty_report_stats_listener::get_one() );
            ++citr;
         }
         elog("restarting downloads, service thread end");

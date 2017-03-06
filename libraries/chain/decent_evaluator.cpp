@@ -11,7 +11,7 @@
 #include <graphene/chain/seeder_object.hpp>
 #include <graphene/chain/content_object.hpp>
 #include <graphene/chain/rating_object.hpp>
-
+#include <graphene/chain/seeding_statistics_object.hpp>
 
 #include <decent/encrypt/encryptionutils.hpp>
 
@@ -194,8 +194,6 @@ namespace graphene { namespace chain {
    
    void_result ready_to_publish_evaluator::do_evaluate(const ready_to_publish_operation& o )
    {try{
-      //empty
-      FC_ASSERT( o.space > 0 );
    }FC_CAPTURE_AND_RETHROW( (o) ) }
    
    void_result ready_to_publish_evaluator::do_apply(const ready_to_publish_operation& o )
@@ -203,12 +201,17 @@ namespace graphene { namespace chain {
       auto& idx = db().get_index_type<seeder_index>().indices().get<by_seeder>();
       const auto& sor = idx.find( o.seeder );
       if( sor == idx.end() ) {
-         db().create<seeder_object>([&](seeder_object &so) {
+         db().create<seeder_object>([&](seeder_object& so) {
               so.seeder = o.seeder;
               so.free_space = o.space;
               so.pubKey = o.pubKey;
               so.price = asset(o.price_per_MByte);
               so.expiration = db().head_block_time() + 24 * 3600;
+              so.ipfs_IDs = o.ipfs_IDs;
+              so.stats = db().create<seeding_statistics_object>([&](seeding_statistics_object &sso) {
+                 sso.seeder = o.seeder;
+                 sso.total_upload = 0;
+              }).id;
          });
       } else{
          db().modify<seeder_object>(*sor,[&](seeder_object &so) {
@@ -216,6 +219,8 @@ namespace graphene { namespace chain {
             so.price = asset(o.price_per_MByte);
             so.pubKey = o.pubKey;
             so.expiration = db().head_block_time() + 24 * 3600;
+            so.ipfs_IDs.clear();
+            so.ipfs_IDs = o.ipfs_IDs;
          });
       }
    }FC_CAPTURE_AND_RETHROW( (o) ) }
@@ -271,25 +276,28 @@ namespace graphene { namespace chain {
       }
    }FC_CAPTURE_AND_RETHROW( (o) ) }
 
-   void_result return_escrow_submission_evaluator::do_evaluate(const return_escrow_submission_operation& o )
-   {
+   void_result return_escrow_submission_evaluator::do_evaluate(const return_escrow_submission_operation& o ) {}
+   void_result return_escrow_submission_evaluator::do_apply(const return_escrow_submission_operation& o ) {}
 
-   }
+   void_result return_escrow_buying_evaluator::do_evaluate(const return_escrow_buying_operation& o ) {}
+   void_result return_escrow_buying_evaluator::do_apply(const return_escrow_buying_operation& o ) {}
 
-   void_result return_escrow_submission_evaluator::do_apply(const return_escrow_submission_operation& o )
-   {
+   void_result report_stats_evaluator::do_evaluate(const report_stats_operation& o )
+   {try{
 
-   }
+      }FC_CAPTURE_AND_RETHROW( (o) ) }
 
-   void_result return_escrow_buying_evaluator::do_evaluate(const return_escrow_buying_operation& o )
-   {
-
-   }
-
-   void_result return_escrow_buying_evaluator::do_apply(const return_escrow_buying_operation& o )
-   {
-
-   }
+   void_result report_stats_evaluator::do_apply(const report_stats_operation& o )
+   {try{
+         auto& idx = db().get_index_type<seeding_statistics_index>().indices().get<by_seeder>();
+         for( const auto& item : o.stats )
+         {
+            const auto &so = idx.find(item.first);
+            db().modify<seeding_statistics_object>(*so, [&](seeding_statistics_object &sso) {
+               sso.total_upload += sso.total_upload - item.second;
+            });
+         }
+      }FC_CAPTURE_AND_RETHROW( (o) ) }
 
    void_result pay_seeder_evaluator::do_evaluate( const pay_seeder_operation& o ){}
    void_result pay_seeder_evaluator::do_apply( const pay_seeder_operation& o ){}

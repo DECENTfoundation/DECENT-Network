@@ -1410,6 +1410,7 @@ class wallet_api
       signed_transaction ready_to_publish(string seeder,
                                           uint64_t space,
                                           uint32_t price_per_MByte,
+                                          vector<string> ipfs_IDs,
                                           bool broadcast = false);
 
     /**
@@ -1440,6 +1441,20 @@ class wallet_api
                                       d_integer privKey,
                                       buying_id_type buying,
                                       bool broadcast = false);
+
+   /**
+     *
+     * @param seeder
+     * @param privKey
+     * @param buying
+     * @param broadcast true to broadcast the transaction on the network
+     * @return
+     * @ingroup WalletCLI
+     */
+   signed_transaction report_stats(string consumer,
+                                   map<account_id_type,uint64_t> stats,
+                                   bool broadcast = false);
+
 
     /**
      *
@@ -1555,8 +1570,11 @@ class wallet_api
        */
       vector<uint64_t> get_content_ratings( const string& URI )const;
 
+      vector<string> list_imported_ipfs_IDs( const string& seeder )const;
 
+      map<string, vector<string>> list_seeders_ipfs_IDs( const string& URI )const;
 
+      optional<vector<seeder_object>> list_seeders_by_upload( const uint32_t count )const;
 
       /**
        * @brief Get a list of packages
@@ -1781,6 +1799,7 @@ FC_API( graphene::wallet::wallet_api,
         (list_content_by_bought)
         (list_publishers_by_price)
         (get_content_ratings)
+        (list_imported_ipfs_IDs)
         (list_packages)
         (packages_path)
         (create_package)
