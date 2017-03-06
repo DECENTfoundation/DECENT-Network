@@ -75,5 +75,6 @@ static int SetNewTask3(const std::string& a_inp_line, Type* a_memb, void* a_clbD
 
 void* GetFunctionPointerAsVoid(int,...);
 
+void RunTask(std::string const& str_command, std::string& str_result);
 
 #endif // UI_WALLET_FUNCTIONS_HPP
