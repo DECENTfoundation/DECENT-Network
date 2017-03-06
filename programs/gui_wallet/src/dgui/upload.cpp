@@ -7,7 +7,6 @@
  *  This file implements ...
  *
  */
-
 #include "upload_tab.hpp"
 #include "ui_wallet_functions.hpp"
 #include "gui_wallet_global.hpp"
@@ -51,7 +50,7 @@ CryptoPP::AutoSeededRandomPool rng;
 Upload_tab::Upload_tab()
         :
         //m_info_widget(FieldsRows::NUM_FIELDS, 2),
-        m_info_widget(3, 6),
+        m_info_widget(2, 6),
         m_title_label(tr("Title")),
         m_description_label(tr("Description")),
         m_infoLayoutHeader(tr("Information About Content")),
@@ -69,7 +68,6 @@ Upload_tab::Upload_tab()
     m_description_text.setPlaceholderText("  Description");
     m_description_text.setFixedHeight(100);
     m_synopsis_layout.addWidget(&m_description_text);
-    m_synopsis_layout.addWidget(new QLabel());
 
 
     QFont font( "Open Sans Bold", 14, QFont::Bold);
@@ -84,7 +82,7 @@ Upload_tab::Upload_tab()
 
 
 //    m_info_widget.setCellWidget(FieldsRows::LIFETIME, 0, new QLabel("Lifetime"));
-    m_info_widget.setCellWidget(0, 0, new QLabel("        Lifetime"));
+    m_info_widget.setCellWidget(0, 0, new QLabel("Lifetime"));
 
     QDateEdit *de = new QDateEdit();
     de->setDate(QDate::currentDate());
@@ -100,7 +98,7 @@ Upload_tab::Upload_tab()
     ////////////////////////////////////////////////////////////////////////////
 
 //    m_info_widget.setCellWidget(FieldsRows::SEEDERS, 0, new QLabel("Seeders"));
-    m_info_widget.setCellWidget(0, 2, new QLabel("        Seeders"));
+    m_info_widget.setCellWidget(0, 2, new QLabel("Seeders"));
     //Dropdown will be added later
 
 
@@ -109,7 +107,7 @@ Upload_tab::Upload_tab()
     ////////////////////////////////////////////////////////////////////////////
 
 //    m_info_widget.setCellWidget(FieldsRows::KEYPARTS, 0, new QLabel("Key particles"));
-    m_info_widget.setCellWidget(0, 4, new QLabel("        Key particles"));
+    m_info_widget.setCellWidget(0, 4, new QLabel("Key particles"));
 
     QComboBox* keyParts = new QComboBox(this);
     for (int r = 2; r <= 7; ++r) {
@@ -130,8 +128,8 @@ Upload_tab::Upload_tab()
 
 //    m_info_widget.setCellWidget(FieldsRows::PRICE, 0, new QLabel("Price"));
 //    m_info_widget.setCellWidget(FieldsRows::PRICE, 1, priceEdit);
-    m_info_widget.setCellWidget(2, 0, new QLabel("        Price"));
-    m_info_widget.setCellWidget(2, 1, priceEdit);
+    m_info_widget.setCellWidget(1, 0, new QLabel("Price"));
+    m_info_widget.setCellWidget(1, 1, priceEdit);
 
     ////////////////////////////////////////////////////////////////////////////
     /// Asset ID
@@ -148,13 +146,13 @@ Upload_tab::Upload_tab()
     QLineEdit* samplesPath = new QLineEdit("", this);
     samplesPath->setReadOnly(true);
 
-    m_info_widget.setCellWidget(2, 2, new QLabel("        Samples"));
+    m_info_widget.setCellWidget(1, 2, new QLabel("Samples"));
     //m_info_widget.setCellWidget(1, 3, samplesPath);
 
 
     QPushButton* browse_samples_button = new QPushButton("Browse...");
     //m_info_widget.setCellWidget(FieldsRows::SELECTPATH, 0, new QLabel(""));
-    m_info_widget.setCellWidget(2, 3, browse_samples_button);
+    m_info_widget.setCellWidget(1, 3, browse_samples_button);
     connect(browse_samples_button, SIGNAL(clicked()),this, SLOT(browseContent()));
 
 
@@ -166,13 +164,13 @@ Upload_tab::Upload_tab()
     QLineEdit* contentPath = new QLineEdit("", this);
     contentPath->setReadOnly(true);
 
-    m_info_widget.setCellWidget(2, 4, new QLabel("        Content"));
+    m_info_widget.setCellWidget(1, 4, new QLabel("Content"));
     //m_info_widget.setCellWidget(FieldsRows::CONTENTPATH, 1, contentPath);
 
 
     QPushButton* browse_content_button = new QPushButton("Browse...");
 //    m_info_widget.setCellWidget(FieldsRows::SELECTSAMPLES, 0, new QLabel(""));
-    m_info_widget.setCellWidget(2, 5, browse_content_button);
+    m_info_widget.setCellWidget(1, 5, browse_content_button);
     connect(browse_content_button, SIGNAL(clicked()),this, SLOT(browseSamples()));
 
 
@@ -288,8 +286,8 @@ void Upload_tab::uploadContent() {
     std::string lifetime = ((QDateEdit*)m_info_widget.cellWidget(0, 1))->text().toStdString();
     std::string seeders = ((QComboBox*)m_info_widget.cellWidget(0, 3))->currentData().toString().toStdString();
     std::string keyparts = ((QComboBox*)m_info_widget.cellWidget(0, 5))->currentData().toString().toStdString();
-    std::string price = ((QLineEdit*)m_info_widget.cellWidget(2, 1))->text().toStdString();
-//    std::string assetType = ((QComboBox*)m_info_widget.cellWidget(FieldsRows::ASSETID, 1))->currentData().toString().toStdString();
+    std::string price = ((QLineEdit*)m_info_widget.cellWidget(1, 1))->text().toStdString();
+    std::string assetType = ((QComboBox*)m_info_widget.cellWidget(FieldsRows::ASSETID, 1))->currentData().toString().toStdString();
     std::string assetName = ((QComboBox*)m_info_widget.cellWidget(FieldsRows::ASSETID, 1))->currentText().toStdString();
     std::string path = ((QLineEdit*)m_info_widget.cellWidget(FieldsRows::CONTENTPATH, 1))->text().toStdString();
     std::string samples_path = ((QLineEdit*)m_info_widget.cellWidget(FieldsRows::SAMPLESPATH, 1))->text().toStdString();
@@ -374,7 +372,7 @@ void Upload_tab::uploadDone(void* a_clbkArg, int64_t a_err, const std::string& a
     m_title_text.setText("");
     m_description_text.setPlainText("");
     ((QDateEdit*)m_info_widget.cellWidget(0, 1))->setDate(QDate::currentDate());
-    ((QLineEdit*)m_info_widget.cellWidget(2, 1))->setText("");
+    ((QLineEdit*)m_info_widget.cellWidget(1, 1))->setText("");
     //((QLineEdit*)m_info_widget.cellWidget(FieldsRows::CONTENTPATH, 1))->setText("");
     //((QLineEdit*)m_info_widget.cellWidget(FieldsRows::SAMPLESPATH, 1))->setText("");
 
@@ -388,10 +386,12 @@ void Upload_tab::resizeEvent ( QResizeEvent * event )
 
     QSize aInfWidgSize = m_info_widget.size();
 
-    m_info_widget.setColumnWidth(0,20*aInfWidgSize.width()/100);
-    m_info_widget.setColumnWidth(1,15*aInfWidgSize.width()/100);
-    m_info_widget.setColumnWidth(2,20*aInfWidgSize.width()/100);
-    m_info_widget.setColumnWidth(3,15*aInfWidgSize.width()/100);
-    m_info_widget.setColumnWidth(4,20*aInfWidgSize.width()/100);
-    m_info_widget.setColumnWidth(5,10*aInfWidgSize.width()/100);
+    m_info_widget.setColumnWidth(0,15*aInfWidgSize.width()/100);
+    m_info_widget.setColumnWidth(1,5*aInfWidgSize.width()/100);
+    m_info_widget.setColumnWidth(2,15*aInfWidgSize.width()/100);
+    m_info_widget.setColumnWidth(3,5*aInfWidgSize.width()/100);
+    m_info_widget.setColumnWidth(4,15*aInfWidgSize.width()/100);
+    m_info_widget.setColumnWidth(5,5*aInfWidgSize.width()/100);
+
+
 }
