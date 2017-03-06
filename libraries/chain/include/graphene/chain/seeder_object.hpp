@@ -23,6 +23,7 @@ namespace graphene { namespace chain {
       time_point_sec expiration;
       decent::crypto::d_integer_string pubKey;
       vector<string> ipfs_IDs;
+      seeding_statistics_id_type stats;
    };
    
    struct by_seeder;

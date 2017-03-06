@@ -48,6 +48,7 @@ void deliver_keys_operation::validate()const
 void report_stats_operation::validate()const
 {
    FC_ASSERT( fee.amount >= 0 );
+   FC_ASSERT( stats.size() != 0);
 }
 
 }}

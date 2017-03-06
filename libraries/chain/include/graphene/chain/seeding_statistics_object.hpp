@@ -16,11 +16,11 @@ namespace graphene { namespace chain {
          static const uint8_t type_id  = impl_publisher_object_type;
 
          account_id_type seeder;
-         share_type total_upload;
+         uint64_t total_upload;
       };
 
       struct by_seeder;
-      struct by_rating;
+      struct by_upload;
 
       typedef multi_index_container<
          seeding_statistics_object,
@@ -29,8 +29,11 @@ namespace graphene { namespace chain {
                member< object, object_id_type, &object::id >
             >,
             ordered_unique< tag<by_seeder>,
-               member<seeding_statistics_object, account_id_type, &seeding_statistics_object::seeder>,
-               std::greater<uint64_t>
+               member<seeding_statistics_object, account_id_type, &seeding_statistics_object::seeder>
+            >,
+            ordered_non_unique< tag<by_upload>,
+               member<seeding_statistics_object, uint64_t , &seeding_statistics_object::total_upload>,
+            std::greater<uint64_t>
             >
          >
       >seeding_statistics_object_multi_index_type;

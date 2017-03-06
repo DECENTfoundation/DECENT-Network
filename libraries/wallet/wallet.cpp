@@ -76,11 +76,10 @@
 
 #include <fc/smart_ref_impl.hpp>
 
-#include <ipfs/client.h>
-
 #ifndef WIN32
 # include <sys/types.h>
 # include <sys/stat.h>
+
 #endif
 
 #define BRAIN_KEY_WORD_COUNT 16
@@ -387,8 +386,7 @@ public:
         _remote_api(rapi),
         _remote_db(rapi->database()),
         _remote_net_broadcast(rapi->network_broadcast()),
-        _remote_hist(rapi->history()),
-        _ipfs_client("localhost", 5001)
+        _remote_hist(rapi->history())
    {
       chain_id_type remote_chain_id = _remote_db->get_chain_id();
       if( remote_chain_id != _chain_id && _chain_id != chain_id_type ("0000000000000000000000000000000000000000000000000000000000000000") )
@@ -2229,6 +2227,22 @@ public:
       return sign_transaction( tx, broadcast );
    } FC_CAPTURE_AND_RETHROW( (seeder)(privKey)(buying)(broadcast) ) }
 
+   signed_transaction report_stats(string consumer,
+                                   map<account_id_type,uint64_t> stats,
+                                   bool broadcast/* = false */)
+   { try {
+         report_stats_operation report_stats_op;
+         report_stats_op.consumer = get_account_id(consumer);
+         report_stats_op.stats = stats;
+
+         signed_transaction tx;
+         tx.operations.push_back( report_stats_op );
+         set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
+         tx.validate();
+
+         return sign_transaction( tx, broadcast );
+      } FC_CAPTURE_AND_RETHROW( (stats)(broadcast) ) }
+
    d_integer restore_encryption_key(buying_id_type buying )
    {
       const buying_object bo = get_object<buying_object>(buying);
@@ -2250,25 +2264,26 @@ public:
       return ss.secret;
    }
 
-   string get_ipfs_ID()
+   vector<string> list_imported_ipfs_IDs( const string& seeder )const
    {
-      ipfs::Json id;
-      _ipfs_client.Id(&id);
-      return id["ID"];
-   }
-
-
-   vector<string> list_imported_ipfs_IDs( const string& seeder )
-   {
-      FC_ASSERT( !self.is_locked() );
       account_id_type aid = get_account_id( seeder );
       fc::optional<seeder_object> so = _remote_db->get_seeder( aid );
       FC_ASSERT(so.valid(), "Seeder does not exist");
-      vector<string> result = so->ipfs_IDs;
-      return result;
+      return so->ipfs_IDs;
    }
 
-
+   map<string, vector<string>> list_seeders_ipfs_IDs( const string& URI )const
+   {
+      fc::optional<content_object> co = _remote_db->get_content( URI );
+      FC_ASSERT( co.valid(), "content does not exist");
+      map<string, vector<string>> mapped_IDs;
+      string account;
+      for( const auto& item : co->key_parts )
+      {
+         string account = static_cast<string>(static_cast<object_id_type>(item.first));
+         mapped_IDs[account] = list_imported_ipfs_IDs(account);
+      }
+   }
 
    void dbg_make_uia(string creator, string symbol)
    {
@@ -2455,8 +2470,6 @@ public:
    const string _wallet_filename_extension = ".wallet";
 
    mutable map<asset_id_type, asset_object> _asset_cache;
-
-   ipfs::Client _ipfs_client;
 };
 
 std::string operation_printer::fee(const asset& a)const {
@@ -4003,6 +4016,13 @@ signed_transaction wallet_api::deliver_keys(string seeder,
    return my->deliver_keys(seeder, privKey, buying, broadcast);
 }
 
+signed_transaction wallet_api::report_stats(string consumer,
+                                            map<account_id_type,uint64_t> stats,
+                                            bool broadcast)
+{
+   return my->report_stats(consumer, stats, broadcast);
+}
+
 d_integer wallet_api::restore_encryption_key(buying_id_type buying)
 {
    return my->restore_encryption_key(buying);
@@ -4070,16 +4090,20 @@ vector<uint64_t> wallet_api::get_content_ratings( const string& URI )const
    return my->_remote_db->get_content_ratings( URI );
 }
 
-string wallet_api::get_ipfs_ID()
-{
-   return my->get_ipfs_ID();
-}
-
-vector<string> wallet_api::list_imported_ipfs_IDs( const string& seeder)
+vector<string> wallet_api::list_imported_ipfs_IDs( const string& seeder)const
 {
    return my->list_imported_ipfs_IDs( seeder );
 }
 
+map<string, vector<string>> wallet_api::list_seeders_ipfs_IDs( const string& URI)const
+{
+   return my->list_seeders_ipfs_IDs( URI );
+}
+
+optional<vector<seeder_object>> wallet_api::list_seeders_by_upload( const uint32_t count )const
+{
+   return my->_remote_db->list_seeders_by_upload( count );
+}
 
 vector<string> wallet_api::list_packages( ) const
 {
@@ -4133,17 +4157,13 @@ namespace {
 
       virtual void on_download_finished(package_transfer_interface::transfer_id id, package_object downloaded_package) {
          cout << id << ": Download finished: " << downloaded_package.get_hash().str() <<  endl;
-
-
       }
 
       virtual void on_download_progress(package_transfer_interface::transfer_id id, package_transfer_interface::transfer_progress progress) {
          cout << id << ": Downloading " << progress.current_bytes << "/" << progress.total_bytes << " @ " << progress.current_speed << "Bytes/sec" << endl;
       }
 
-
       virtual void on_upload_started(package_transfer_interface::transfer_id id, const std::string& url) {
-
          cout << id << ": Upload started on URL: " << url << endl;
       }
 
@@ -4162,24 +4182,30 @@ namespace {
 
 }
 
+class report_stats_listener:public report_stats_listener_base{
+public:
+   string URI;
+   wallet_api& _wallet_api;
+   string consumer;
+
+   report_stats_listener(string URI, wallet_api& api):URI(URI), _wallet_api(api){}
+
+   virtual void report_stats( map<string,uint64_t> stats){
+      map<account_id_type,uint64_t> stats2;
+      account_id_type acc;
+      for( const auto& item : stats )
+      {
+         acc = _wallet_api.get_account_id( item.first );
+         stats2[ acc ] = item.second;
+      }
+      _wallet_api.report_stats( consumer, stats2, true);
+   }
+};
 
 void wallet_api::download_package(const std::string& url) const {
-   fc::optional<content_object> co = my->_remote_db->get_content( url );
-   FC_ASSERT( co.valid(), "content does not exist");
-   multimap<string, uint64_t> stats;
-   ipfs::Json json;
-   for( const auto& seeder : co->key_parts )
-   {
-      fc::optional<seeder_object> so = my->_remote_db->get_seeder( seeder.first );
-      for ( const auto& id : so->ipfs_IDs )
-      {
-         my->_ipfs_client.BitswapLedger( id , &json );
-         stats.insert( pair<string, uint64_t>( id, json["Recv"] ));
-         cout<<endl<<" -------- "<<json.dump()<<endl;
-      }
-   }
-
-   package_manager::instance().download_package(url, transfer_progress_printer::instance());
+   report_stats_listener stats_listener( url, my->self);
+   stats_listener.ipfs_IDs = list_seeders_ipfs_IDs( url);
+   package_manager::instance().download_package(url, transfer_progress_printer::instance(), stats_listener);
 }
 
 std::string wallet_api::upload_package(const std::string& package_hash, const std::string& protocol) const {

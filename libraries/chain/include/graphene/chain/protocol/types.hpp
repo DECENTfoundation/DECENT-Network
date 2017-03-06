@@ -203,7 +203,7 @@ namespace graphene { namespace chain {
    typedef object_id< implementation_ids, impl_content_object_type, content_object >                                    content_id_type;
    typedef object_id< implementation_ids, impl_publisher_object_type, seeder_object >                                   publisher_id_type;
    typedef object_id< implementation_ids, impl_rating_object_type, rating_object >                                      rating_id_type;
-   typedef object_id< implementation_ids, impl_seeding_statistics_object_type, seeding_statistics_object >                                      seeding_statistics_id_type;
+   typedef object_id< implementation_ids, impl_seeding_statistics_object_type, seeding_statistics_object >              seeding_statistics_id_type;
 
    typedef fc::array<char, GRAPHENE_MAX_ASSET_SYMBOL_LENGTH>    symbol_type;
    typedef fc::ripemd160                                        block_id_type;

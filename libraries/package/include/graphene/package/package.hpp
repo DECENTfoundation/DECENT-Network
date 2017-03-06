@@ -14,8 +14,27 @@
 
 #include <boost/filesystem.hpp>
 
+#include <vector>
+#include <map>
+
 
 namespace graphene { namespace package {
+
+class report_stats_listener_base{
+public:
+	std::map<std::string, std::vector<std::string>> ipfs_IDs;
+
+	virtual void report_stats( std::map<std::string,uint64_t> stats )=0;
+	};
+
+class empty_report_stats_listener:public  report_stats_listener_base{
+public:
+	static empty_report_stats_listener& get_one() {
+		static empty_report_stats_listener one;
+		return one;
+	}
+	virtual void report_stats( std::map<std::string,uint64_t> stats ){};
+};
 
 class package_object {
 public:
@@ -68,7 +87,7 @@ public:
 
 public:
 	virtual void upload_package(transfer_id id, const package_object& package, transfer_listener* listener) = 0;
-	virtual void download_package(transfer_id id, const std::string& url, transfer_listener* listener) = 0;
+	virtual void download_package(transfer_id id, const std::string& url, transfer_listener* listener, report_stats_listener_base& stats_listener) = 0;
 	virtual void print_status() = 0;
 	virtual transfer_progress get_progress() = 0;
 	virtual std::string get_transfer_url() = 0;
@@ -142,7 +161,8 @@ public:
 															package_transfer_interface::transfer_listener& listener );
 
 	package_transfer_interface::transfer_id download_package( const std::string& url,
-															  package_transfer_interface::transfer_listener& listener );
+															  package_transfer_interface::transfer_listener& listener,
+                                               report_stats_listener_base& stats_listener );
 	
 	std::vector<package_object> get_packages();
 	package_object				get_package_object(fc::ripemd160 hash);

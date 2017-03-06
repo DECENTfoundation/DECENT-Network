@@ -1221,7 +1221,7 @@ void torrent_transfer::upload_package(transfer_id id, const package_object& pack
     });
 }
 
-void torrent_transfer::download_package(transfer_id id, const std::string& url, transfer_listener* listener) {
+void torrent_transfer::download_package(transfer_id id, const std::string& url, transfer_listener* listener, report_stats_listener_base& stats_listener) {
     _id = id;
     _listener = listener;
     _url = url;

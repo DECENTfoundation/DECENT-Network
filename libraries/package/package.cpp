@@ -368,7 +368,7 @@ void package_manager::load_json_downloads() {
         for (json::iterator it = downloads.begin(); it != downloads.end(); ++it) {
             string url = (*it)["url"].get<std::string>();
             std::cout << "Resuming download " << url << std::endl;
-            download_package(url, empty_transfer_listener::get_one());
+            download_package(url, empty_transfer_listener::get_one(), empty_report_stats_listener::get_one());
         }
     }
 }
@@ -613,7 +613,8 @@ package_manager::upload_package( const package_object& package,
 
 package_transfer_interface::transfer_id 
 package_manager::download_package( const string& url,
-                                   package_transfer_interface::transfer_listener& listener ) {
+                                   package_transfer_interface::transfer_listener& listener,
+                                   report_stats_listener_base& stats_listener ) {
 
     fc::url download_url(url);
 
@@ -631,7 +632,7 @@ package_manager::download_package( const string& url,
     t.job_type = transfer_job::DOWNLOAD;
 
     try {
-        t.transport->download_package(t.job_id, url, &listener);
+        t.transport->download_package(t.job_id, url, &listener, stats_listener);
     } catch(std::exception& ex) {
         std::cout << "Download error: " << ex.what() << std::endl;
     }

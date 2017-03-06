@@ -141,9 +141,10 @@ namespace graphene { namespace chain {
 
       asset fee;
 
-      account_id_type seeder;
+      map<account_id_type,uint64_t> stats;
+      account_id_type consumer;
 
-      account_id_type fee_payer()const { return seeder; }
+      account_id_type fee_payer()const { return consumer; }
       void validate()const;
    };
 
@@ -171,7 +172,7 @@ FC_REFLECT(graphene::chain::proof_of_custody_operation,(fee)(seeder)(URI)(proof)
 FC_REFLECT(graphene::chain::deliver_keys_operation,(fee)(seeder)(proof)(key)(buying))
 FC_REFLECT(graphene::chain::return_escrow_submission_operation,(fee)(author)(escrow)(content))
 FC_REFLECT(graphene::chain::return_escrow_buying_operation,(fee)(consumer)(escrow)(buying))
-FC_REFLECT(graphene::chain::report_stats_operation,(fee)(seeder))
+FC_REFLECT(graphene::chain::report_stats_operation,(fee)(consumer)(stats))
 FC_REFLECT(graphene::chain::pay_seeder_operation,(fee)(payout)(author)(seeder));
 
 FC_REFLECT( graphene::chain::content_submit_operation::fee_parameters_type, (fee) )
