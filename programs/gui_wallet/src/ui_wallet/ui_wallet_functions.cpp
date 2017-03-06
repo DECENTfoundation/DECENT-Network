@@ -234,7 +234,7 @@ __DLL_EXPORT__ int SetNewTask_base(int a_nType,const std::string& a_inp_line, vo
     else
     {
         nReturn = NO_API_INITED;
-        errStr = "First connet to witness node";
+        errStr = "First connect to witness node";
     }
 
     if (nReturn) {
