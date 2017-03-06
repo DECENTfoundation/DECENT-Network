@@ -1976,6 +1976,7 @@ FC_API( graphene::wallet::wallet_api,
         (get_open_buyings_by_consumer)
         (get_buying_history_objects_by_consumer)
         (get_buying_by_consumer_URI)
+        (get_rating)
         (get_content)
         (list_content_by_author)
         (list_content)
