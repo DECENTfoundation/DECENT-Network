@@ -18,7 +18,7 @@ greaterThan(QT_MAJOR_VERSION, 4):QT += widgets
 #QT -= gui
 
 DEFINES += CRYPTOPP_ENABLE_NAMESPACE_WEAK=1
-
+ICON = desktop.icns
 SOURCES += ../../../src/dgui/main_gui_wallet.cpp \
     ../../../src/dgui/decent_gui_contentdlg.cpp \
     ../../../src/dgui/decent_wallet_ui_gui_purchasedtab.cpp \
