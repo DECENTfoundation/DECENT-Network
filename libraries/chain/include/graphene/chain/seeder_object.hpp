@@ -3,6 +3,7 @@
 #include <graphene/chain/protocol/asset.hpp>
 #include <graphene/db/object.hpp>
 #include <graphene/db/generic_index.hpp>
+#include <graphene/chain/seeding_statistics_object.hpp>
 
 #include <fc/reflect/reflect.hpp>
 
@@ -21,6 +22,8 @@ namespace graphene { namespace chain {
       asset price;
       time_point_sec expiration;
       decent::crypto::d_integer_string pubKey;
+      vector<string> ipfs_IDs;
+      seeding_statistics_id_type stats;
    };
    
    struct by_seeder;
@@ -55,4 +58,4 @@ namespace graphene { namespace chain {
 
 FC_REFLECT_DERIVED(graphene::chain::seeder_object,
                    (graphene::db::object),
-                   (seeder)(free_space)(expiration)(price)(pubKey) )
+                   (seeder)(free_space)(expiration)(price)(pubKey)(ipfs_IDs) )

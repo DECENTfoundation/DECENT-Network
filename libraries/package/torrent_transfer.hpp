@@ -9,9 +9,8 @@
 #include <fc/crypto/sha512.hpp>
 #include <fc/optional.hpp>
 #include <fc/signals.hpp>
-#include <fc/time.hpp>
 #include <fc/thread/thread.hpp>
-#include <fc/thread/mutex.hpp>
+#include <fc/time.hpp>
 
 #include <libtorrent/session.hpp>
 
@@ -43,7 +42,7 @@ public:
 
 public:
     virtual void upload_package(transfer_id id, const package_object& package, transfer_listener* listener);
-    virtual void download_package(transfer_id id, const std::string& url, transfer_listener* listener);
+    virtual void download_package(transfer_id id, const std::string& url, transfer_listener* listener, report_stats_listener_base& stats_listener);
 
     virtual std::string get_transfer_url();
     virtual void        print_status();
@@ -63,7 +62,6 @@ private:
 
 private: // These will be shared by all clones (via clone()) of the initial instance, which in its turn is constructed only by the default c-tor.
     std::shared_ptr<fc::thread>                      _thread;
-    std::shared_ptr<fc::mutex>                       _mutex;
     std::shared_ptr<libtorrent::session>             _session;
     std::shared_ptr<detail::libtorrent_config_data>  _config_data;
 

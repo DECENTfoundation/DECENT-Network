@@ -12,7 +12,7 @@ file(GLOB headers "include/graphene/utilities/*.hpp")
 set(sources
    key_conversion.cpp
    string_escape.cpp
-   tempdir.cpp
+   dirhelper.cpp
    words.cpp
    ${headers})
 

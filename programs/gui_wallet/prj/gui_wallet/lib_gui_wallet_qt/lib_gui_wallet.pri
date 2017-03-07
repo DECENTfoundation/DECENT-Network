@@ -11,29 +11,13 @@
 #CONFIG += ALL_LIBS_FOUND
 # For making test: '$qmake "CONFIG+=TEST" gui_wallet.pro'  , then '$make'
 
+include(../lib_gui_wallet_qt/common_gui_wallet.pri)
 
-
-DECENT_ROOT_DEFAULT = ../../../../..
-
-
-DECENT_ROOT_DEV = $$(DECENT_ROOT)
-equals(DECENT_ROOT_DEV, ""): DECENT_ROOT_DEV = $$DECENT_ROOT_DEFAULT
-message("!!!!!! DECENT_ROOT is '"$$DECENT_ROOT_DEV"'")
-
-DECENT_LIB = $$DECENT_ROOT_DEV/libraries
-
-# disabling some non important warnings
-QMAKE_CXXFLAGS_WARN_ON += -Wno-unused-parameter
-QMAKE_CXXFLAGS_WARN_ON += -Wno-unused-variable
-QMAKE_CXXFLAGS_WARN_ON += -Wno-sign-compare
-QMAKE_CXXFLAGS_WARN_ON += -Wno-unused-function
-QMAKE_CXXFLAGS_WARN_ON -= -Wunused-function
 
 INCLUDEPATH += $$DECENT_LIB/wallet/include
 INCLUDEPATH += $$DECENT_LIB/app/include
 INCLUDEPATH += $$DECENT_LIB/encrypt/include
 
-INCLUDEPATH += $$DECENT_LIB/contrib/fc/include
 INCLUDEPATH += $$DECENT_LIB/app/include
 INCLUDEPATH += $$DECENT_LIB/chain/include
 INCLUDEPATH += $$DECENT_LIB/db/include
@@ -47,38 +31,12 @@ INCLUDEPATH += $$DECENT_LIB/contrib/fc/vendor/secp256k1-zkp/include
 INCLUDEPATH += $$DECENT_LIB/contrib/fc/vendor/websocketpp
 INCLUDEPATH += $$DECENT_LIB/contrib/fc/vendor/secp256k1-zkp
 
-INCLUDEPATH += $$BOOST_ROOT_QT/include
 
 INCLUDEPATH += /usr/local/include
 INCLUDEPATH += $$DECENT_LIB/contrib/pbc/include
 INCLUDEPATH += $$DECENT_LIB/contrib/pbc
 INCLUDEPATH += $$DECENT_LIB/contrib/json/src
 
-
-win32{
-    LIBS += -lcrypto++
-}else {
-    macx{
-        #QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.12
-        LIBS += -isysroot$(DEVELOPER_SDK_DIR)/MacOSX$(MACOSX_DEPLOYMENT_TARGET).sdk
-
-        OPEN_SSL_ROOT_PATH = $$(OPENSSL_ROOT_DIR)
-        equals(OPEN_SSL_ROOT_PATH, ""): OPEN_SSL_ROOT_PATH = /usr/local/opt/openssl
-
-        CRIPTOPP_ROOT_PATH = $$(CRIPTOPP_ROOT_DIR)
-        equals(CRIPTOPP_ROOT_PATH, ""): CRIPTOPP_ROOT_PATH = /usr/local/opt/cryptopp
-        #CRIPTOPP_ROOT_PATH = $$CALLER_PATH/cryptopp/$$CRIPTOPP_VERSION
-
-        #INCLUDEPATH += $$CALLER_PATH/openssl/1.0.2j/include
-        INCLUDEPATH += $$OPEN_SSL_ROOT_PATH/include
-        INCLUDEPATH += $$CRIPTOPP_ROOT_PATH/include
-        LIBS += -L$$CRIPTOPP_ROOT_PATH/lib
-        LIBS += -L$$OPEN_SSL_ROOT_PATH/lib
-        LIBS += -lcryptopp
-    }else{
-        LIBS += -lcrypto++
-    } # else of macx
-} # else of win32
 
 # Debug:DESTDIR = debug1
 DESTDIR = $$SYSTEM_PATH/bin
@@ -131,7 +89,7 @@ LIBS += -lboost_iostreams
 LIBS += -lgmp
 LIBS += -lssl
 LIBS += -lz
-LIBS += -lcrypto
+#LIBS += -lcrypto
 
 SOURCES += ../../../src/ui_wallet/fc_rpc_gui.cpp \
     ../../../src/ui_wallet/ui_wallet_functions.cpp \

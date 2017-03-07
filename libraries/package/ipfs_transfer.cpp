@@ -118,7 +118,7 @@ void ipfs_transfer::upload_package(transfer_id id, const package_object& package
 
 }
 
-void ipfs_transfer::download_package(transfer_id id, const std::string& url, transfer_listener* listener) {
+void ipfs_transfer::download_package(transfer_id id, const std::string& url, transfer_listener* listener, report_stats_listener_base& stats_listener) {
 	_id = id;
 	_listener = listener;
 	_url = url;
@@ -151,12 +151,13 @@ void ipfs_transfer::download_package(transfer_id id, const std::string& url, tra
 
 	create_directories(package_manager::instance().get_packages_path() / package_name);
 
-    ipfs::Json object;
-    _client->ObjectGet(hash, &object);
+    _thread->async([this, package_name, hash, &stats_listener] () {
 
-    _listener->on_download_started(_id);
+		_listener->on_download_started(_id);
 
-	_thread->async([this, package_name, object] () {
+        ipfs::Json object;
+        _client->ObjectGet(hash, &object);
+
 
 	    ipfs::Json links = object.at("Links");
 
@@ -182,6 +183,23 @@ void ipfs_transfer::download_package(transfer_id id, const std::string& url, tra
 
         _last_progress = transfer_progress(total_size, total_size, 0);
 		_listener->on_download_finished(_id, package_object((package_manager::instance().get_packages_path() / package_name).string()));
+
+
+		std::map<std::string, uint64_t> stats;
+		uint64_t sum;
+		for(const auto& item : stats_listener.ipfs_IDs)
+		{
+			sum = 0;
+			for( const auto& id : item.second)
+			{
+				ipfs::Json json;
+				_client->BitswapLedger( id, &json);
+				sum += json["Recv"].get<uint64_t>();
+			}
+			stats[item.first] = sum;
+		}
+
+		stats_listener.report_stats( stats );
 
     });
 }

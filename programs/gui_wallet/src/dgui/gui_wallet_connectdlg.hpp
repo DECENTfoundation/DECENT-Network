@@ -16,14 +16,16 @@
 #include <QDialog>
 #include <QLineEdit>
 #include <QLabel>
+#include <QTimer>
 #include <string>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QTableWidget>
-//#include <graphene/wallet/wallet.hpp>
+#include <QHeaderView>
+
 #include <thread>
 #include <vector>
-//#include "connected_api_instance.hpp"
+
 #include "richdialog.hpp"
 #include "ui_wallet_functions.hpp"
 
@@ -32,36 +34,91 @@ const char* StringFromQString(const QString& a_cqsString);
 namespace gui_wallet
 {
 
-#if 0
-class PasswordDialog : private QDialog
-{
+    
+class PasswordDialog : public QDialog {
+    Q_OBJECT
+    
 public:
-    PasswordDialog(QWidget* a_pMove):m_pMove(a_pMove),m_password_lab(tr("password:")){
-        m_password.setEchoMode(QLineEdit::Password);
-        m_layout.addWidget(&m_password_lab);
-        m_layout.addWidget(&m_password);
-        setLayout(&m_layout);
-    }
+    PasswordDialog(bool isSet = false) : QDialog(Q_NULLPTR, Qt::Window | Qt::WindowTitleHint | Qt::CustomizeWindowHint | Qt::WindowCloseButtonHint), m_main_table(3, 1) {
+        resize(350, 150);
 
-    std::string execN(){
-        if(m_pMove){move(m_pMove->pos());}
+        m_main_table.horizontalHeader()->hide();
+        m_main_table.verticalHeader()->hide();
+        m_main_table.setShowGrid(false);
+        m_main_table.setFrameShape(QFrame::NoFrame);
+        
+        QPalette plt_tbl = m_main_table.palette();
+        plt_tbl.setColor(QPalette::Base, palette().color(QPalette::Window));
+        m_main_table.setPalette(plt_tbl);
+
+
+        QPushButton* unlockButton;
+        if (isSet) {
+            unlockButton = new QPushButton("Set password");
+        } else {
+            unlockButton = new QPushButton("Unlock");
+        }
+        
+        password_box.setEchoMode(QLineEdit::Password);
+        
+        if (isSet) {
+            m_main_table.setCellWidget(0, 0, new QLabel(tr("Choose password to encrypt your wallet.")));
+        } else {
+            m_main_table.setCellWidget(0, 0, new QLabel(tr("Please unlock your wallet to continue.")));
+        }
+        
+        m_main_table.setCellWidget(1, 0, &password_box);
+        m_main_table.setCellWidget(2, 0, unlockButton);
+        
+        connect(unlockButton, SIGNAL(clicked()),this, SLOT(unlock_slot()));
+        connect(&password_box, SIGNAL(returnPressed()), unlockButton, SIGNAL(clicked()));
+
+        m_main_layout.addWidget(&m_main_table);
+        setLayout(&m_main_layout);
+
+        QTimer::singleShot(0, &password_box, SLOT(setFocus()));
+
+    }
+    
+    bool execRD(QPoint centerPosition, std::string& pass)
+    {
+        ret_value = false;
+        
+        centerPosition.rx() -= size().width() / 2;
+        centerPosition.ry() -= size().height() / 2;
+
+        QDialog::move(centerPosition);
         QDialog::exec();
-        QString cqsPassword = m_password.text();
-        QByteArray cLatin = cqsPassword.toLatin1();
-        return cLatin.data();
-    }
-private:
-    QWidget*    m_pMove;
-    QLabel      m_password_lab;
-    QLineEdit   m_password;
-    QHBoxLayout m_layout;
-};
-#endif
+        pass = password_box.text().toStdString();
+        password_box.setText("");
 
-class PasswordDialog : public decent::gui::tools::RichDialog
-{
-public:
-    PasswordDialog() : decent::gui::tools::RichDialog(1){m_pTextBoxes[0].setEchoMode(QLineEdit::Password);}
+        return ret_value;
+    }
+    
+    
+protected:
+    virtual void resizeEvent ( QResizeEvent * event ) {
+        QSize tableSize = m_main_table.size();
+        m_main_table.setColumnWidth(0, tableSize.width() - 10);
+    }
+    
+    
+
+
+protected slots:
+    
+    void unlock_slot() {
+        ret_value = true;
+        close();
+    }
+    
+    
+private:
+    QHBoxLayout                     m_main_layout;
+    QTableWidget                    m_main_table;
+    QLineEdit                       password_box;
+    bool                            ret_value;
+    
 };
 
 class ConnectDlg : public QDialog
@@ -90,6 +147,8 @@ private:
     QTableWidget                    m_main_table;
     int                             m_ret_value;
 };
+    
+    
 
 }
 

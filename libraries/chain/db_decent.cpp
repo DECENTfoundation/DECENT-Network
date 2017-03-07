@@ -102,5 +102,39 @@ share_type database::get_witness_budget()
    return 0;
 }
 
+real_supply database::get_real_supply()const
+{
+   //walk through account_balances, vesting_balances and escrows in content and buying objects
+   real_supply total;
+   const auto& abidx = get_index_type<account_balance_index>().indices().get<by_id>();
+   auto abitr = abidx.begin();
+   while( abitr != abidx.end() ){
+      total.account_balances += abitr->balance;
+      ++abitr;
+   }
+
+   const auto& vbidx = get_index_type<vesting_balance_index>().indices().get<by_id>();
+   auto vbitr = vbidx.begin();
+   while( vbitr != vbidx.end() ){
+      total.vesting_balances += vbitr->balance.amount;
+      ++vbitr;
+   }
+
+   const auto& cidx = get_index_type<content_index>().indices().get<by_id>();
+   auto citr = cidx.begin();
+   while( citr != cidx.end() ){
+      total.escrows += citr->publishing_fee_escrow.amount;
+      ++citr;
+   }
+
+   const auto& bidx = get_index_type<buying_index>().indices().get<by_id>();
+   auto bitr = bidx.begin();
+   while( bitr != bidx.end() ){
+      total.escrows += bitr->price.amount;
+      ++bitr;
+   }
+   return total;
+}
+
 }
 }

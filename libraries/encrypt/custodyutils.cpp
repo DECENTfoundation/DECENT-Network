@@ -10,7 +10,7 @@
 #include <fc/thread/thread.hpp>
 
 #define DECENT_CUSTODY_THREADS 4
-
+//#define _CUSTODY_STATS
 namespace decent {
 namespace crypto {
 
@@ -36,6 +36,12 @@ void string_to_bytes(std::string &in, unsigned char data[], int len) {
       data[i] = res;
    }
 }
+#ifdef _CUSTODY_STATS
+int mul = 0;
+int pow = 0;
+int pow_pp = 0;
+int add = 0;
+#endif
 }
 
 custody_utils::custody_utils() {
@@ -44,16 +50,14 @@ custody_utils::custody_utils() {
    element_init_G1(generator, pairing);
 
    element_set_str(generator, _DECENT_GENERATOR_, 10);
-   element_printf("size of element: %i\n", element_length_in_bytes(generator));
-
-
-   //element_random(private_key);
-   //element_pow_zn(public_key, generator, private_key);
 }
 
 custody_utils::~custody_utils() {
    element_clear(generator);
    pairing_clear(pairing);
+#ifdef _CUSTODY_STATS
+   std::cout <<"Custodyuitls stats: mul: " << mul <<" pow: "<<pow<<" pow_pp: "<<pow_pp<< " add: "<<add<<"\n";
+#endif
 }
 
 
@@ -179,12 +183,17 @@ int custody_utils::get_sigma(uint64_t idx, mpz_t mi[], element_pp_t u_pp[], elem
    element_init_G1(temp, pairing);
    element_init_G1(out[idx], pairing);
    for( int j = 0; j < DECENT_SECTORS; j++ ) {
-      //     std::cout<<"get_sigma i = "<<idx <<" j = "<<j<<"\n";
       element_pp_pow(temp, mi[j], u_pp[j]);
+#ifdef _CUSTODY_STATS
+      pow_pp++;
+#endif
       mpz_clear(mi[j]);
-      if( j )
+      if( j ) {
          element_mul(out[idx], out[idx], temp);
-      else
+#ifdef _CUSTODY_STATS
+         mul++;
+#endif
+      }else
          element_set(out[idx], temp);
    }
    element_clear(temp);
@@ -201,6 +210,10 @@ int custody_utils::get_sigma(uint64_t idx, mpz_t mi[], element_pp_t u_pp[], elem
    element_from_hash(hash, buf, 32);
    element_mul(out[idx], out[idx], hash);
    element_pow_zn(out[idx], out[idx], pk);
+#ifdef _CUSTODY_STATS
+   pow++;
+   mul++;
+#endif
    element_clear(hash);
    return 1;
 }
@@ -265,9 +278,15 @@ int custody_utils::compute_mu(std::fstream &file, unsigned int q, uint64_t indic
          element_init_Zr(temp, pairing);
          get_m(file, indices[i], j, m);
          element_mul_mpz(temp, v[i], m);
-         if( i > 0 )
+#ifdef _CUSTODY_STATS
+         mul++;
+#endif
+         if( i > 0 ) {
             element_add(mu[j], mu[j], temp);
-         else
+#ifdef _CUSTODY_STATS
+            add++;
+#endif
+         }else
             element_set(mu[j], temp);
          element_clear(temp);
          mpz_clear(m);
@@ -334,9 +353,15 @@ int custody_utils::verify(element_t sigma, unsigned int q, uint64_t *indices, el
       memcpy(buf, stemp._hash, (4 * sizeof(uint64_t)));
       element_from_hash(hash, buf, 32);
       element_pow_zn(temp, hash, v[i]); //TODO_DECENT optimize
-      if( i )
+#ifdef _CUSTODY_STATS
+      pow++;
+#endif
+      if( i ) {
          element_mul(multi1, multi1, temp);
-      else
+#ifdef _CUSTODY_STATS
+         mul++;
+#endif
+      }else
          element_set(multi1, temp);
    }
 
@@ -345,9 +370,15 @@ int custody_utils::verify(element_t sigma, unsigned int q, uint64_t *indices, el
 
    for( int i = 0; i < DECENT_SECTORS; i++ ) {
       element_pow_zn(temp, u[i], mu[i]);
-      if( i )
+#ifdef _CUSTODY_STATS
+      pow++;
+#endif
+      if( i ) {
          element_mul(multi2, multi2, temp);
-      else
+#ifdef _CUSTODY_STATS
+         mul++;
+#endif
+      }else
          element_set(multi2, temp);
    }
    element_clear(temp);
@@ -358,6 +389,9 @@ int custody_utils::verify(element_t sigma, unsigned int q, uint64_t *indices, el
    element_init_G1(left2, pairing);
 
    element_mul(left2, multi1, multi2);
+#ifdef _CUSTODY_STATS
+   mul++;
+#endif
    element_pairing(res2, left2, pubk);
 
    int res = element_cmp(res1, res2);
@@ -405,6 +439,10 @@ custody_utils::compute_sigma(element_t sigmas[], unsigned int q, uint64_t indice
    for( int i = 0; i < q; i++ ) {
       element_pow_zn(temp, sigmas[indices[i]], v[i]);
       element_mul(sigma, sigma, temp);
+#ifdef _CUSTODY_STATS
+      pow++;
+      mul++;
+#endif
    }
    element_clear(temp);
    return 0;
@@ -512,6 +550,9 @@ int custody_utils::create_custody_data(path content, uint32_t &n, char u_seed[],
 
    element_random(private_key);
    element_pow_zn(public_key, generator, private_key);
+#ifdef _CUSTODY_STATS
+   pow++;
+#endif
 
    //create the actual signatures in sigmas
 

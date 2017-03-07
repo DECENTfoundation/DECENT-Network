@@ -14,8 +14,29 @@
 
 #include <boost/filesystem.hpp>
 
+#include <vector>
+#include <map>
+
 
 namespace graphene { namespace package {
+
+
+class report_stats_listener_base{
+public:
+	std::map<std::string, std::vector<std::string>> ipfs_IDs;
+
+	virtual void report_stats( std::map<std::string,uint64_t> stats )=0;
+};
+
+
+class empty_report_stats_listener:public  report_stats_listener_base{
+public:
+	static empty_report_stats_listener& get_one() {
+		static empty_report_stats_listener one;
+		return one;
+	}
+	virtual void report_stats( std::map<std::string,uint64_t> stats ){};
+};
 
 
 class package_object {
@@ -31,8 +52,9 @@ public:
 	void get_all_files(std::vector<boost::filesystem::path>& all_files) const;
 	bool verify_hash() const;
 	fc::ripemd160 get_hash() const { return _hash; }
+	int get_size() const;
 	bool is_valid() const { return _hash != fc::ripemd160(); }
-	uint32_t create_proof_of_custody(decent::crypto::custody_data cd, decent::crypto::custody_proof& proof) const;
+	uint32_t create_proof_of_custody(const decent::crypto::custody_data& cd, decent::crypto::custody_proof& proof) const;
 
 private:
 	boost::filesystem::path  _package_path;
@@ -65,7 +87,7 @@ public:
 
     virtual ~package_transfer_interface() = default;
 	virtual void upload_package(transfer_id id, const package_object& package, transfer_listener* listener) = 0;
-	virtual void download_package(transfer_id id, const std::string& url, transfer_listener* listener) = 0;
+	virtual void download_package(transfer_id id, const std::string& url, transfer_listener* listener, report_stats_listener_base& stats_listener) = 0;
 	virtual void print_status() = 0;
 	virtual transfer_progress get_progress() = 0;
 	virtual std::string get_transfer_url() = 0;
@@ -104,7 +126,6 @@ private:
 
 private:
 	typedef std::map<std::string, std::shared_ptr<package_transfer_interface>>  protocol_handler_map;
-	typedef std::map<std::string, std::string>                                  seeding_packages;
 	typedef std::vector<transfer_job>                                           transfer_jobs;
 
 private:
@@ -138,7 +159,8 @@ public:
 															package_transfer_interface::transfer_listener& listener );
 
 	package_transfer_interface::transfer_id download_package( const std::string& url,
-															  package_transfer_interface::transfer_listener& listener );
+															  package_transfer_interface::transfer_listener& listener,
+															  report_stats_listener_base& stats_listener );
 
 	std::vector<package_object> get_packages();
 	package_object				get_package_object(fc::ripemd160 hash);
@@ -146,21 +168,20 @@ public:
 
 	std::string					get_transfer_url(package_transfer_interface::transfer_id id);
 
+	package_transfer_interface::transfer_progress get_progress(std::string URI) const;
+
     void set_packages_path(const boost::filesystem::path& packages_path);
     boost::filesystem::path get_packages_path() const;
 
     void set_libtorrent_config(const boost::filesystem::path& libtorrent_config_file);
     boost::filesystem::path get_libtorrent_config() const;
 
-    decent::crypto::custody_utils& get_custody_utils() { return _custody_utils; }
-
+    uint32_t create_proof_of_custody(const boost::filesystem::path& content_file, const decent::crypto::custody_data& cd, decent::crypto::custody_proof& proof);
     void print_all_transfers();
 
-	void load_json_uploads();
-	void save_json_uploads();
-
-	void load_json_downloads();
-	void save_json_downloads();
+private:
+	void restore_json_state();
+	void save_json_state();
 
 private:
     mutable fc::mutex                  _mutex;
@@ -169,7 +190,6 @@ private:
     decent::crypto::custody_utils      _custody_utils;
 	protocol_handler_map               _protocol_handlers;
 	transfer_jobs                      _all_transfers;
-    seeding_packages                   _seeding_packages;
 };
 
 

@@ -64,91 +64,6 @@ struct brain_key_info
 };
 
 
-/**
- *  Contains the confirmation receipt the sender must give the receiver and
- *  the meta data about the receipt that helps the sender identify which receipt is
- *  for the receiver and which is for the change address.
- */
-struct blind_confirmation 
-{
-   struct output
-   {
-      string                          label;
-      public_key_type                 pub_key;
-      stealth_confirmation::memo_data decrypted_memo;
-      stealth_confirmation            confirmation;
-      authority                       auth;
-      string                          confirmation_receipt;
-   };
-
-   signed_transaction     trx;
-   vector<output>         outputs;
-};
-
-struct blind_balance
-{
-   asset                     amount;
-   public_key_type           from; ///< the account this balance came from
-   public_key_type           to; ///< the account this balance is logically associated with
-   public_key_type           one_time_key; ///< used to derive the authority key and blinding factor
-   fc::sha256                blinding_factor;
-   fc::ecc::commitment_type  commitment;
-   bool                      used = false;
-};
-
-struct blind_receipt
-{
-   std::pair<public_key_type,fc::time_point>        from_date()const { return std::make_pair(from_key,date); }
-   std::pair<public_key_type,fc::time_point>        to_date()const   { return std::make_pair(to_key,date);   }
-   std::tuple<public_key_type,asset_id_type,bool>   to_asset_used()const   { return std::make_tuple(to_key,amount.asset_id,used);   }
-   const commitment_type& commitment()const        { return data.commitment; }
-
-   fc::time_point                  date;
-   public_key_type                 from_key;
-   string                          from_label;
-   public_key_type                 to_key;
-   string                          to_label;
-   asset                           amount;
-   string                          memo;
-   authority                       control_authority;
-   stealth_confirmation::memo_data data;
-   bool                            used = false;
-   stealth_confirmation            conf;
-};
-
-struct by_from;
-struct by_to;
-struct by_to_asset_used;
-struct by_commitment;
-
-typedef multi_index_container< blind_receipt,
-   indexed_by<
-      ordered_unique< tag<by_commitment>, const_mem_fun< blind_receipt, const commitment_type&, &blind_receipt::commitment > >,
-      ordered_unique< tag<by_to>, const_mem_fun< blind_receipt, std::pair<public_key_type,fc::time_point>, &blind_receipt::to_date > >,
-      ordered_non_unique< tag<by_to_asset_used>, const_mem_fun< blind_receipt, std::tuple<public_key_type,asset_id_type,bool>, &blind_receipt::to_asset_used > >,
-      ordered_unique< tag<by_from>, const_mem_fun< blind_receipt, std::pair<public_key_type,fc::time_point>, &blind_receipt::from_date > >
-   >
-> blind_receipt_index_type;
-
-
-struct key_label
-{
-   string          label;
-   public_key_type key;
-};
-
-
-struct by_label;
-struct by_key;
-typedef multi_index_container<
-   key_label,
-   indexed_by<
-      ordered_unique< tag<by_label>, member< key_label, string, &key_label::label > >,
-      ordered_unique< tag<by_key>, member< key_label, public_key_type, &key_label::key > >
-   >
-> key_label_index_type;
-
-
 struct wallet_data
 {
    /** Chain ID this wallet is used with */
@@ -193,8 +108,6 @@ struct wallet_data
    map<string, vector<string> > pending_account_registrations;
    map<string, string> pending_witness_registrations;
 
-   key_label_index_type                                              labeled_keys;
-   blind_receipt_index_type                                          blind_receipts;
 
    string                    ws_server = "ws://localhost:8090";
    string                    ws_user;
@@ -231,6 +144,15 @@ struct approval_delta
    vector<string> key_approvals_to_add;
    vector<string> key_approvals_to_remove;
 };
+
+struct content_download_status
+{
+   int          total_key_parts;
+   int          received_key_parts;
+   int          total_download_bytes;
+   int          received_download_bytes;
+};
+
 
 struct signed_block_with_info : public signed_block
 {
@@ -856,129 +778,6 @@ class wallet_api
       transaction_id_type get_transaction_id( const signed_transaction& trx )const { return trx.id(); }
 
 
-      /** These methods are used for stealth transfers */
-      ///@{
-      /**
-       *  This method can be used to set the label for a public key
-       *  @param public_key_type
-       *  @param label
-       *  @note No two keys can have the same label.
-       *
-       *  @return true if the label was set, otherwise false
-       *  @ingroup WalletCLI
-       */
-      bool                        set_key_label( public_key_type, string label );
-      /**
-       * @param public_key_type
-       * @return
-       * @ingroup WalletCLI
-       */
-      string                      get_key_label( public_key_type )const;
-
-      /**
-       *  Generates a new blind account for the given brain key and assigns it the given label.
-       *  @param label
-       *  @param brain_key
-       *  @return
-       *  @ingroup WalletCLI
-       */
-      public_key_type             create_blind_account( string label, string brain_key  );
-
-      /**
-       * @return the total balance of all blinded commitments that can be claimed by the
-       * given account key or label
-       * @param key_or_label
-       * @ingroup WalletCLI
-       */
-      vector<asset>                get_blind_balances( string key_or_label );
-      /**
-       * @return all blind accounts
-       * @ingroup WalletCLI
-       */
-      map<string,public_key_type> get_blind_accounts()const;
-      /**
-       * @return all blind accounts for which this wallet has the private key
-       * @ingroup WalletCLI
-       */
-      map<string,public_key_type> get_my_blind_accounts()const;
-      /**
-       * @param label
-       * @return the public key associated with the given label
-       * @ingroup WalletCLI
-       */
-      public_key_type             get_public_key( string label )const;
-      ///@}
-
-      /**
-       * @param key_or_account
-       * @return all blind receipts to/form a particular account
-       * @ingroup WalletCLI
-       */
-      vector<blind_receipt> blind_history( string key_or_account );
-
-      /**
-       *  Given a confirmation receipt, this method will parse it for a blinded balance and confirm
-       *  that it exists in the blockchain.  If it exists then it will report the amount received and
-       *  who sent it.
-       *
-       *  @param confirmation_receipt - a base58 encoded stealth confirmation
-       *  @param opt_from - if not empty and the sender is a unknown public key, then the unknown public key will be given the label opt_from
-       *  @param opt_memo
-       *  @ingroup WalletCLI
-       */
-      blind_receipt receive_blind_transfer( string confirmation_receipt, string opt_from, string opt_memo );
-
-
-       /**
-        * Transfers a public balance from @from to one or more blinded balances using a
-        *  stealth transfer.
-        * @param from_account_id_or_name
-        * @param asset_symbol
-        * @param to_amounts
-        * @param broadcast true to broadcast the transaction on the network
-        * @return
-        * @ingroup WalletCLI
-        */
-      blind_confirmation transfer_to_blind( string from_account_id_or_name, 
-                                            string asset_symbol,
-                                            /** map from key or label to amount */
-                                            vector<pair<string, string>> to_amounts, 
-                                            bool broadcast = false );
-
-
-        /**
-         * Transfers funds from a set of blinded balances to a public account balance.
-         * @param from_blind_account_key_or_label
-         * @param to_account_id_or_name
-         * @param amount
-         * @param asset_symbol
-         * @param broadcast true to broadcast the transaction on the network
-         * @return
-         * @ingroup WalletCLI
-         */
-      blind_confirmation transfer_from_blind( 
-                                            string from_blind_account_key_or_label,
-                                            string to_account_id_or_name, 
-                                            string amount,
-                                            string asset_symbol,
-                                            bool broadcast = false );
-
-       /**
-        * Used to transfer from one set of blinded balances to another
-        * @param from_key_or_label
-        * @param to_key_or_label
-        * @param amount
-        * @param symbol
-        * @param broadcast true to broadcast the transaction on the network
-        * @return
-        * @ingroup WalletCLI
-        */
-      blind_confirmation blind_transfer( string from_key_or_label,
-                                         string to_key_or_label,
-                                         string amount,
-                                         string symbol,
-                                         bool broadcast = false );
-
       /** Place a limit order attempting to sell one asset for another.
        *
        * Buying and selling are the same operation on Graphene; if you want to buy BTS 
@@ -1495,30 +1294,17 @@ class wallet_api
       vector< variant > network_get_connected_peers();
 
 
-       /**
-        * Used to transfer from one set of blinded balances to another
-        * @param from_key_or_label
-        * @param to_key_or_label
-        * @param amount
-        * @param symbol
-        * @param broadcast true to broadcast the transaction on the network
-        * @param to_temp
-        * @return
-        * @ingroup WalletCLI
-        */
-      blind_confirmation blind_transfer_help( string from_key_or_label,
-                                         string to_key_or_label,
-                                         string amount,
-                                         string symbol,
-                                         bool broadcast = false,
-                                         bool to_temp = false );
-
-
       std::map<string,std::function<string(fc::variant,const fc::variants&)>> get_result_formatters() const;
 
       fc::signal<void(bool)> lock_changed;
       std::shared_ptr<detail::wallet_api_impl> my;
       void encrypt_keys();
+
+      /**
+       * Get current supply of the core asset
+       * @ingroup WalletCLI
+       */
+      real_supply get_real_supply()const;
 
     /**
      *
@@ -1545,6 +1331,46 @@ class wallet_api
                            fc::ripemd160 hash, vector<account_id_type> seeders, uint32_t quorum, fc::time_point_sec expiration,
                            string publishing_fee_asset, string publishing_fee_amount, string synopsis, d_integer secret,
                            decent::crypto::custody_data cd, bool broadcast);
+    /**
+     *
+     * @param author
+     * @param content_dir
+     * @param samples_dir
+     * @param protocol
+     * @param price_asset_symbol
+     * @param price_amount
+     * @param seeders
+     * @param expiration
+     * @param publishing_fee_asset
+     * @param publishing_fee_amount
+     * @param synopsis
+     * @param broadcast true to broadcast the transaction on the network
+     * @return
+     * @ingroup WalletCLI
+     */
+   signed_transaction submit_content_new(string author, string content_dir, string samples_dir, string protocol, string price_asset_symbol, string price_amount, vector<account_id_type> seeders, fc::time_point_sec expiration, string publishing_fee_symbol_name, string publishing_fee_amount, string synopsis, bool broadcast = false);
+
+    /**
+     *
+     * @param consumer
+     * @param URI
+     * @param content_dir
+     * @param broadcast true to broadcast the transaction on the network
+     * @return
+     * @ingroup WalletCLI
+     */
+     void download_content(string consumer, string URI, string content_dir, bool broadcast = false);
+    
+    /**
+     *
+     * @param consumer
+     * @param URI
+     * @return
+     * @ingroup WalletCLI
+     */
+     optional<content_download_status> get_download_status(string consumer, string URI);
+
+ 
 
     /**
      *
@@ -1584,6 +1410,7 @@ class wallet_api
       signed_transaction ready_to_publish(string seeder,
                                           uint64_t space,
                                           uint32_t price_per_MByte,
+                                          vector<string> ipfs_IDs,
                                           bool broadcast = false);
 
     /**
@@ -1614,6 +1441,20 @@ class wallet_api
                                       d_integer privKey,
                                       buying_id_type buying,
                                       bool broadcast = false);
+
+   /**
+     *
+     * @param seeder
+     * @param privKey
+     * @param buying
+     * @param broadcast true to broadcast the transaction on the network
+     * @return
+     * @ingroup WalletCLI
+     */
+   signed_transaction report_stats(string consumer,
+                                   map<account_id_type,uint64_t> stats,
+                                   bool broadcast = false);
+
 
     /**
      *
@@ -1651,7 +1492,7 @@ class wallet_api
        * @return The buyings corresponding to the provided consumer
        * @ingroup WalletCLI
        */
-      vector<buying_object> get_open_buyings_by_consumer( const account_id_type& consumer )const;
+      vector<buying_object> get_open_buyings_by_consumer( const string& account_id_or_name )const;
 
       /**
        * @brief Get history buying_objects by consumer
@@ -1659,7 +1500,7 @@ class wallet_api
        * @return History buying_objects corresponding to the provided consumer
        * @ingroup WalletCLI
        */
-      vector<buying_object> get_buying_history_objects_by_consumer( const account_id_type& consumer )const;
+      vector<buying_object> get_buying_history_objects_by_consumer( const string& account_id_or_name )const;
 
        /**
        * @brief Get buying (open or history) by consumer and URI
@@ -1729,8 +1570,11 @@ class wallet_api
        */
       vector<uint64_t> get_content_ratings( const string& URI )const;
 
+      vector<string> list_imported_ipfs_IDs( const string& seeder )const;
 
+      map<string, vector<string>> list_seeders_ipfs_IDs( const string& URI )const;
 
+      optional<vector<seeder_object>> list_seeders_by_upload( const uint32_t count )const;
 
       /**
        * @brief Get a list of packages
@@ -1798,11 +1642,6 @@ class wallet_api
    
 } }
 
-FC_REFLECT( graphene::wallet::key_label, (label)(key) )
-FC_REFLECT( graphene::wallet::blind_balance, (amount)(from)(to)(one_time_key)(blinding_factor)(commitment)(used) )
-FC_REFLECT( graphene::wallet::blind_confirmation::output, (label)(pub_key)(decrypted_memo)(confirmation)(auth)(confirmation_receipt) )
-FC_REFLECT( graphene::wallet::blind_confirmation, (trx)(outputs) )
-
 FC_REFLECT( graphene::wallet::plain_keys, (keys)(checksum) )
 FC_REFLECT( graphene::wallet::el_gamal_key_pair, (private_key)(public_key) )
 FC_REFLECT( graphene::wallet::wallet_data,
@@ -1812,8 +1651,6 @@ FC_REFLECT( graphene::wallet::wallet_data,
             (cipher_keys)
             (extra_keys)
             (pending_account_registrations)(pending_witness_registrations)
-            (labeled_keys)
-            (blind_receipts)
             (ws_server)
             (ws_user)
             (ws_password)
@@ -1827,12 +1664,16 @@ FC_REFLECT( graphene::wallet::brain_key_info,
             (pub_key)
           )
 
+FC_REFLECT (graphene::wallet::content_download_status, 
+              (total_key_parts)
+              (received_key_parts)
+              (total_download_bytes)
+              (received_download_bytes)
+            )
+
 FC_REFLECT( graphene::wallet::exported_account_keys, (account_name)(encrypted_private_keys)(public_keys) )
 
 FC_REFLECT( graphene::wallet::exported_keys, (password_checksum)(account_keys) )
-
-FC_REFLECT( graphene::wallet::blind_receipt,
-            (date)(from_key)(from_label)(to_key)(to_label)(amount)(memo)(control_authority)(data)(used)(conf) )
 
 FC_REFLECT( graphene::wallet::approval_delta,
    (active_approvals_to_add)
@@ -1850,7 +1691,10 @@ FC_REFLECT_DERIVED( graphene::wallet::vesting_balance_object_with_info, (graphen
    (allowed_withdraw)(allowed_withdraw_time) )
 
 FC_REFLECT( graphene::wallet::operation_detail, 
-            (memo)(description)(op) )
+                (memo)
+                (description)
+                (op)
+          )
 
 FC_API( graphene::wallet::wallet_api,
         (help)
@@ -1933,20 +1777,11 @@ FC_API( graphene::wallet::wallet_api,
         (flood_network)
         (network_add_nodes)
         (network_get_connected_peers)
-        (set_key_label)
-        (get_key_label)
-        (get_public_key)
-        (get_blind_accounts)
-        (get_my_blind_accounts)
-        (get_blind_balances)
-        (create_blind_account)
-        (transfer_to_blind)
-        (transfer_from_blind)
-        (blind_transfer)
-        (blind_history)
-        (receive_blind_transfer)
         (get_order_book)
+        (download_content)
+        (get_download_status)
         (submit_content)
+        (submit_content_new)
         (request_to_buy)
         (leave_rating)
         (ready_to_publish)
@@ -1961,11 +1796,13 @@ FC_API( graphene::wallet::wallet_api,
         (get_buying_by_consumer_URI)
         (get_rating)
         (get_content)
+        (get_real_supply)
         (list_content_by_author)
         (list_content)
         (list_content_by_bought)
         (list_publishers_by_price)
         (get_content_ratings)
+        (list_imported_ipfs_IDs)
         (list_packages)
         (packages_path)
         (create_package)

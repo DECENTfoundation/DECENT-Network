@@ -926,21 +926,18 @@ FC_REFLECT( graphene::package::detail::libtorrent_config_data,
 
 torrent_transfer::torrent_transfer(const torrent_transfer& orig)
     : _thread(orig._thread)
-    , _mutex(orig._mutex)
     , _session(orig._session)
     , _config_data(orig._config_data)
     , _lifetime_info_mutex(std::make_shared<fc::mutex>())
     , _instance_exists(std::make_shared<std::atomic<bool>>(true))
 {
     if (!_thread)       FC_THROW("Thread instance is not available");
-    if (!_mutex)        FC_THROW("Mutex instance is not available");
     if (!_session)      FC_THROW("Session instance is not available");
     if (!_config_data)  FC_THROW("Config data is not available");
 }
 
 torrent_transfer::torrent_transfer()
-    : _thread(std::make_shared<fc::thread>("torrent_transfer"))
-    , _mutex(std::make_shared<fc::mutex>())
+    : _thread(std::make_shared<fc::thread>("torrent_thread"))
     , _session(nullptr)
     , _config_data(std::make_shared<detail::libtorrent_config_data>())
     , _lifetime_info_mutex(std::make_shared<fc::mutex>())
@@ -1004,8 +1001,6 @@ void torrent_transfer::reconfigure(const boost::filesystem::path& config_file) {
     if (!config_file.empty() && !boost::filesystem::exists(config_file)) {
         FC_THROW("Unable to read libtorrent config file ${fn}: file does not exists", ("fn", config_file.string()) );
     }
-
-    fc::scoped_lock<fc::mutex> guard(*_mutex);
     *_config_data = (config_file.empty() ? detail::libtorrent_config_data() : fc::json::from_file(config_file).as<detail::libtorrent_config_data>());
 
     libtorrent::settings_pack sp;
@@ -1022,7 +1017,6 @@ void torrent_transfer::dump_config(const boost::filesystem::path& config_file) {
         FC_THROW("Unable to save current libtorrent config to file: file name is not specified");
     }
 
-    fc::scoped_lock<fc::mutex> guard(*_mutex);
     ilog("saving current libtorrent config to file ${fn}", ("fn", config_file.string()) );
     std::string data = fc::json::to_pretty_string(*_config_data);
     fc::ofstream outfile{config_file};
@@ -1104,9 +1098,7 @@ void torrent_transfer::upload_package(transfer_id id, const package_object& pack
     // recursively adds files in directories
     add_files(fs, package.get_path().string());
 
-    auto guard = std::make_shared<fc::scoped_lock<fc::mutex>>(*_mutex);
     auto tp = _config_data->upload_torrent;
-    guard.reset();
 
     create_torrent t(fs, tp.piece_size);
 
@@ -1155,10 +1147,7 @@ void torrent_transfer::upload_package(transfer_id id, const package_object& pack
         t.add_tracker(tracker);
     }
 
-    {
-        fc::scoped_lock<fc::mutex> guard(*_mutex);
-        _torrent_handle = _session->add_torrent(atp);
-    }
+    _torrent_handle = _session->add_torrent(atp);
 
     _url = make_magnet_uri(_torrent_handle);
 
@@ -1197,7 +1186,7 @@ void torrent_transfer::upload_package(transfer_id id, const package_object& pack
     });
 }
 
-void torrent_transfer::download_package(transfer_id id, const std::string& url, transfer_listener* listener) {
+void torrent_transfer::download_package(transfer_id id, const std::string& url, transfer_listener* listener, report_stats_listener_base& stats_listener) {
     _id = id;
     _listener = listener;
     _url = url;
@@ -1216,9 +1205,7 @@ void torrent_transfer::download_package(transfer_id id, const std::string& url, 
 
     });
 
-    auto guard = std::make_shared<fc::scoped_lock<fc::mutex>>(*_mutex);
     auto tp = _config_data->download_torrent;
-    guard.reset();
 
     libtorrent::add_torrent_params atp;
 
@@ -1237,10 +1224,7 @@ void torrent_transfer::download_package(transfer_id id, const std::string& url, 
     atp.dht_nodes = tp.dht_nodes;
     atp.trackers = tp.trackers;
 
-    {
-        fc::scoped_lock<fc::mutex> guard(*_mutex);
-        _torrent_handle = _session->add_torrent(atp);
-    }
+    _torrent_handle = _session->add_torrent(atp);
 
     _torrent_handle.set_max_uploads(tp.max_uploads);
     _torrent_handle.set_max_connections(tp.max_connections);
@@ -1278,8 +1262,6 @@ void torrent_transfer::download_package(transfer_id id, const std::string& url, 
 }
 
 void torrent_transfer::update_torrent_status() {
-    fc::scoped_lock<fc::mutex> guard(*_mutex);
-
 	_session->post_torrent_updates();
 	_session->post_session_stats();
 	_session->post_dht_stats();
@@ -1332,11 +1314,8 @@ package_object torrent_transfer::check_and_install_package() {
 
 
 void torrent_transfer::handle_torrent_alerts() {
-	fc::scoped_lock<fc::mutex> guard(*_mutex);
-
-	std::vector<libtorrent::alert*> alerts;
+    std::vector<libtorrent::alert*> alerts;
 	_session->pop_alerts(&alerts);
-
 
 	path log_path = package_manager::instance().get_packages_path() / "transfer.log";
 	_transfer_log.open(log_path.string(), std::ios::out | std::ios::app);

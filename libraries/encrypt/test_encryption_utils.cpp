@@ -13,7 +13,6 @@
 #include <stdio.h>
 #include <sstream>
 #include <iomanip>
-#include "openssl/sha.h"
 #include <gmp.h>
 
 using namespace std;

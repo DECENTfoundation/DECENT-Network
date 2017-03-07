@@ -36,7 +36,7 @@ namespace graphene { namespace chain {
     */
    struct witness_create_operation : public base_operation
    {
-      struct fee_parameters_type { uint64_t fee = 5000 * GRAPHENE_BLOCKCHAIN_PRECISION; };
+      struct fee_parameters_type { uint64_t fee = 50 * GRAPHENE_BLOCKCHAIN_PRECISION; };
 
       asset             fee;
       /// The account which owns the witness. This account pays the fee for this operation.
@@ -56,7 +56,7 @@ namespace graphene { namespace chain {
    {
       struct fee_parameters_type
       {
-         share_type fee = 20 * GRAPHENE_BLOCKCHAIN_PRECISION;
+         share_type fee = 2 * GRAPHENE_BLOCKCHAIN_PRECISION;
       };
 
       asset             fee;
@@ -87,7 +87,7 @@ namespace graphene { namespace chain {
     */
    struct witness_update_global_parameters_operation : public base_operation
    {
-      struct fee_parameters_type { uint64_t fee = GRAPHENE_BLOCKCHAIN_PRECISION; };
+      struct fee_parameters_type { uint64_t fee = 10; };
 
       asset             fee;
       chain_parameters  new_parameters;

@@ -88,13 +88,13 @@ QWidget* gui_wallet::ConnectDlg::GetTableWidget(int a_column, int a_row)
 int gui_wallet::ConnectDlg::execNew(SConnectionStruct* a_pData)
 {
     m_ret_value = decent::gui::tools::RDB_CANCEL;
-    //enum{RPC_ENDPOINT_FIELD,WALLET_FILE_FIELD,CHAIN_ID_FIELD,CONNECT_BUTTON_FIELD,NUM_OF_FIELDS};
+    
     QString tqsString;
     ((QLineEdit*)m_main_table.cellWidget(RPC_ENDPOINT_FIELD,1))->setText(tr(a_pData->ws_server.c_str()));
     ((QLineEdit*)(m_main_table.cellWidget(WALLET_FILE_FIELD,1)))->setText(tr(a_pData->wallet_file_name.c_str()));
     ((QLineEdit*)m_main_table.cellWidget(CHAIN_ID_FIELD,1))->setText(tr(a_pData->chain_id.c_str()));
-    //((QLineEdit*)(m_main_table.cellWidget(CONNECT_BUTTON_FIELD,1)))->setText(tr(a_pData->chain_id.c_str()));
-
+    
+    
     QDialog::exec();
 
     tqsString = ((QLineEdit*)m_main_table.cellWidget(RPC_ENDPOINT_FIELD,1))->text();

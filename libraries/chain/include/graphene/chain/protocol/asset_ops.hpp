@@ -91,9 +91,9 @@ namespace graphene { namespace chain {
    struct asset_create_operation : public base_operation
    {
       struct fee_parameters_type { 
-         uint64_t symbol3        = 500000 * GRAPHENE_BLOCKCHAIN_PRECISION;
-         uint64_t symbol4        = 300000 * GRAPHENE_BLOCKCHAIN_PRECISION;
-         uint64_t long_symbol    = 5000   * GRAPHENE_BLOCKCHAIN_PRECISION;
+         uint64_t symbol3        = 500 * GRAPHENE_BLOCKCHAIN_PRECISION;
+         uint64_t symbol4        = 200 * GRAPHENE_BLOCKCHAIN_PRECISION;
+         uint64_t long_symbol    = 5   * GRAPHENE_BLOCKCHAIN_PRECISION;
          uint32_t price_per_kbyte = 10; /// only required for large memos.
       };
 
@@ -133,7 +133,7 @@ namespace graphene { namespace chain {
    struct asset_update_operation : public base_operation
    {
       struct fee_parameters_type { 
-         uint64_t fee            = 500 * GRAPHENE_BLOCKCHAIN_PRECISION;
+         uint64_t fee            = 2 * GRAPHENE_BLOCKCHAIN_PRECISION;
          uint32_t price_per_kbyte = 10;
       };
 
@@ -168,7 +168,7 @@ namespace graphene { namespace chain {
        */
       struct asset_update_monitored_asset_operation : public base_operation
       {
-         struct fee_parameters_type { uint64_t fee = 500 * GRAPHENE_BLOCKCHAIN_PRECISION; };
+         struct fee_parameters_type { uint64_t fee = 1 * GRAPHENE_BLOCKCHAIN_PRECISION; };
 
          asset           fee;
          account_id_type issuer;
@@ -187,7 +187,7 @@ namespace graphene { namespace chain {
    struct asset_issue_operation : public base_operation
    {
       struct fee_parameters_type { 
-         uint64_t fee = 20 * GRAPHENE_BLOCKCHAIN_PRECISION; 
+         uint64_t fee = 2 * GRAPHENE_BLOCKCHAIN_PRECISION;
          uint32_t price_per_kbyte = GRAPHENE_BLOCKCHAIN_PRECISION;
       };
 
@@ -226,7 +226,7 @@ namespace graphene { namespace chain {
     */
    struct asset_publish_feed_operation : public base_operation
    {
-      struct fee_parameters_type { uint64_t fee = GRAPHENE_BLOCKCHAIN_PRECISION; };
+      struct fee_parameters_type { uint64_t fee = 1; };
 
       asset                  fee; ///< paid for by publisher
       account_id_type        publisher;

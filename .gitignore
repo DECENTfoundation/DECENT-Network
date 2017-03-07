@@ -132,4 +132,19 @@ gui_wallet.app
 *.wallet
 programs/gui_wallet/prj/gui_wallet/build-gui_wallet-Qt_5_7_1_clang_64-Debug
 programs/gui_wallet/prj/gui_wallet/gui_wallet_qt/Makefile
+packages/
+transfer.log
+Decent.cbp
+programs/cli_wallet/packages/
+programs/cli_wallet/transfer.log
+programs/gui_wallet/prj/gui_wallet/gui_wallet_qt/*
+!programs/gui_wallet/prj/gui_wallet/gui_wallet_qt/gui_wallet.pro
+programs/cli_wallet/.ses_state
+programs/cli_wallet/test.txt
+programs/cli_wallet/packages/transfer.log
+programs/cli_wallet/transfer.log
+artifacts/*
+*moc*
+programs/gui_wallet/gui_wallet_automoc.cpp
+programs/gui_wallet/gui_wallet_automoc.dir/
 
