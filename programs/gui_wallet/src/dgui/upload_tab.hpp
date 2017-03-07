@@ -92,7 +92,8 @@ namespace gui_wallet
         QTimer          m_getPublishersTimer;
 
         AssetMap                    m_assetMap;
-
+        QLineEdit*      m_contentPath;
+        QLineEdit*      m_samplesPath;
     };
 
 }
