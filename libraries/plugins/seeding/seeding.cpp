@@ -279,10 +279,12 @@ void seeding_plugin_impl::send_ready_to_publish()
       idump((tx));
       tx.validate();
       main_thread->async( [this, tx](){ilog("seeding plugin_impl:  generate_por lambda - pushing transaction"); database().push_transaction(tx);} );
+      ilog("seeding plugin_impl: send_ready_to_publish() broadcasting");
       _self.p2p_node().broadcast_transaction(tx);
       sritr++;
    }
    fc::time_point next_wakeup(fc::time_point::now() + fc::microseconds( (uint64_t) 1000000 * (60 * 60)));
+   ilog("seeding plugin_impl: planning next PoR at ${t}",("t",next_wakeup ));
    service_thread->schedule([=](){ send_ready_to_publish();}, next_wakeup, "Seeding plugin RtP generate" );
    ilog("seeding plugin_impl: send_ready_to_publish() end");
 }
@@ -323,7 +325,7 @@ void seeding_plugin::plugin_startup()
    }
    ilog("seeding plugin:  plugin_startup() start");
    my->restart_downloads();
-   fc::time_point next_call = fc::time_point::now()  + fc::microseconds(300000000);
+   fc::time_point next_call = fc::time_point::now()  + fc::microseconds(30000000);
    elog("RtP planned at ${t}", ("t",next_call) );
    my->service_thread->schedule([this](){elog("generating first ready to publish");my->send_ready_to_publish(); }, next_call, "Seeding plugin RtP generate");
    ilog("seeding plugin:  plugin_startup() end");
