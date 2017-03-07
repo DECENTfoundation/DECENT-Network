@@ -195,7 +195,7 @@ int custody_utils::get_sigma(uint64_t idx, mpz_t mi[], element_pp_t u_pp[], elem
    memset(buf, 0, 32);
    char index[16];
    memset(index, 0, 16);
-   sprintf(index, "%lu", idx);
+   sprintf(index, "%llu", idx);
    fc::sha256 stemp = fc::sha256::hash(index, 16);
    memcpy(buf, stemp._hash, (4 * sizeof(uint64_t)));
    element_from_hash(hash, buf, 32);
