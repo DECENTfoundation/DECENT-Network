@@ -2771,10 +2771,16 @@ vector<account_object> wallet_api::list_my_accounts()
 {
    return vector<account_object>(my->_wallet.my_accounts.begin(), my->_wallet.my_accounts.end());
 }
-
+    
 map<string,account_id_type> wallet_api::list_accounts(const string& lowerbound, uint32_t limit)
 {
-   return my->_remote_db->lookup_accounts(lowerbound, limit);
+    return my->_remote_db->lookup_accounts(lowerbound, limit);
+}
+
+    
+map<string,account_id_type> wallet_api::search_accounts(const string& term, uint32_t limit)
+{
+    return my->_remote_db->search_accounts(term, limit);
 }
 
 vector<asset> wallet_api::list_account_balances(const string& id)
