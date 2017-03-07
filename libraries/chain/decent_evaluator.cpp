@@ -201,6 +201,10 @@ namespace graphene { namespace chain {
       auto& idx = db().get_index_type<seeder_index>().indices().get<by_seeder>();
       const auto& sor = idx.find( o.seeder );
       if( sor == idx.end() ) {
+         /*auto stats = db().create<seeding_statistics_object>([&](seeding_statistics_object &sso) {
+              sso.seeder = o.seeder;
+              sso.total_upload = 0;
+         }).id;*/
          db().create<seeder_object>([&](seeder_object& so) {
               so.seeder = o.seeder;
               so.free_space = o.space;
@@ -208,10 +212,7 @@ namespace graphene { namespace chain {
               so.price = asset(o.price_per_MByte);
               so.expiration = db().head_block_time() + 24 * 3600;
               so.ipfs_IDs = o.ipfs_IDs;
-              so.stats = db().create<seeding_statistics_object>([&](seeding_statistics_object &sso) {
-                 sso.seeder = o.seeder;
-                 sso.total_upload = 0;
-              }).id;
+              //so.stats = stats;
          });
       } else{
          db().modify<seeder_object>(*sor,[&](seeder_object &so) {
