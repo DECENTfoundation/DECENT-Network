@@ -36,8 +36,6 @@
 
 #include "json.hpp"
 
-
-
 using namespace gui_wallet;
 using namespace nlohmann;
 
@@ -62,7 +60,7 @@ Upload_tab::Upload_tab()
     m_infoLayoutHeader.setFont(m_font);
     m_title_text.setPlaceholderText("  Title");
     m_title_text.setFixedHeight(40);
-    m_title_text.setFixedWidth(200);
+    //m_title_text.setFixedWidth(200);
     m_synopsis_layout.addWidget(&m_title_text);
 
     //m_synopsis_layout.addWidget(&m_description_label);
@@ -199,8 +197,8 @@ Upload_tab::Upload_tab()
 
     QPushButton* uploadButton = new QPushButton("Upload");
     uploadButton->setFixedHeight(40);
-    //uploadButton->setFixedWidth(200);
-    //uploadButton->move(700, 50);
+    uploadButton->setStyleSheet("background-color: rgb(27,176,104); color: rgb(255, 255, 255)");
+    uploadButton->setFixedHeight(30);
 
     connect(uploadButton, SIGNAL(clicked()),this, SLOT(uploadContent()));
     m_info_layout.addWidget(uploadButton);

@@ -73,31 +73,31 @@ void gui_wallet::Mainwindow_gui_wallet::TaskDoneOverrviewGUI(void* a_clbkArg,int
         for(int i = pos; a_result[i] != '"'; ++i)
             id_s.push_back(a_result[i]);
 
-        std::string registrar_s = "\nRegistrar\n";
+        std::string registrar_s = "Registrar\n";
         pos = a_result.find("registrar");
         pos += 13;
         for(int i = pos; a_result[i] != '"'; ++i)
             registrar_s.push_back(a_result[i]);
 
-        std::string referrer_s = "\nReferrer\n";
+        std::string referrer_s = "Referrer\n";
         pos = a_result.find("referrer");
         pos += 12;
         for(int i = pos; a_result[i] != '"'; ++i)
             referrer_s.push_back(a_result[i]);
 
-        std::string lifetime_referrer_s = "\nLifetime referrer\n";
+        std::string lifetime_referrer_s = "Lifetime referrer\n";
         pos = a_result.find("lifetime_referrer");
         pos += 21;
         for(int i = pos; a_result[i] != '"'; ++i)
             lifetime_referrer_s.push_back(a_result[i]);
 
-        std::string network_fee_percentage_s = "\nNetwork fee percentage\n";
+        std::string network_fee_percentage_s = "Network fee percentage\n";
         pos = a_result.find("network_fee_percentage");
         pos += 25;
         for(int i = pos; a_result[i] != ','; ++i)
             network_fee_percentage_s.push_back(a_result[i]);
 
-        std::string lifetime_referrer_fee_percentage_s = "\nLifetime referrer fee percentage\n";
+        std::string lifetime_referrer_fee_percentage_s = "Lifetime referrer fee percentage\n";
         pos = a_result.find("lifetime_referrer_fee_percentage");
         pos += 35;
         for(int i = pos; a_result[i] != ','; ++i)
@@ -110,7 +110,7 @@ void gui_wallet::Mainwindow_gui_wallet::TaskDoneOverrviewGUI(void* a_clbkArg,int
         for(int i = pos; a_result[i] != '"'; ++i)
             name_s.push_back(a_result[i]);
 
-        std::string referrer_rewards_percentage_s = "\nReferrer rewards percentage\n";
+        std::string referrer_rewards_percentage_s = "Referrer rewards percentage\n";
         pos = a_result.find("referrer_rewards_percentage");
         pos += 30;
         for(int i = pos; a_result[i] != ','; ++i)

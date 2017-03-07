@@ -1,7 +1,7 @@
 /*
  *	File: browse_content_tab.cpp
  *
- *	Created on: 11 Nov 2016
+ *	Cted on: 11 Nov 2016
  *	Created by: Davit Kalantaryan (Email: davit.kalantaryan@desy.de)
  *
  *  This file implements ...
@@ -66,7 +66,7 @@ Browse_content_tab::Browse_content_tab() : m_pTableWidget(new BTableWidget(1,s_c
     m_filterLineEdit.setPlaceholderText("Enter search term");
     m_filterLineEdit.setFixedHeight(40);
     m_filterLineEdit.setStyleSheet("border: 1px solid white");
-    
+    m_filterLineEdit.setAttribute(Qt::WA_MacShowFocusRect, 0);
     
     m_search_layout.addWidget(new QLabel());
     m_search_layout.addWidget(new QLabel());
@@ -115,14 +115,6 @@ void Browse_content_tab::onTextChanged(const QString& text) {
 void Browse_content_tab::PrepareTableWidgetHeaderGUI()
 {
     QTableWidget& m_TableWidget = *m_pTableWidget;
-    QSize tqs_TableSize = m_pTableWidget->size();
-    m_pTableWidget->setColumnWidth(0,(tqs_TableSize.width()*10)/100);
-    m_pTableWidget->setColumnWidth(1,(tqs_TableSize.width()*15)/100);
-    m_pTableWidget->setColumnWidth(2,(tqs_TableSize.width()*15)/100);
-    m_pTableWidget->setColumnWidth(3,(tqs_TableSize.width()*15)/100);
-    m_pTableWidget->setColumnWidth(4,(tqs_TableSize.width()*15)/100);
-    m_pTableWidget->setColumnWidth(5,(tqs_TableSize.width()*15)/100);
-    m_pTableWidget->setColumnWidth(6,(tqs_TableSize.width()*15)/100);
     //QLabel* pLabel;
     
     
@@ -152,6 +144,7 @@ void Browse_content_tab::PrepareTableWidgetHeaderGUI()
     m_TableWidget.setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     m_TableWidget.setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     
+    ArrangeSize();
 }
 
 
@@ -216,6 +209,9 @@ void Browse_content_tab::updateContents() {
                 
                 dContents[i].AVG_rating = contents[i]["AVG_rating"].get<double>();
                 
+                
+                obj->ArrangeSize();
+                //ArrangeSize();
             }
             
             obj->ShowDigitalContentsGUI(dContents);
@@ -225,7 +221,7 @@ void Browse_content_tab::updateContents() {
         }
     });
     
-    
+    ArrangeSize();
 }
 
 
@@ -327,7 +323,12 @@ void Browse_content_tab::ShowDigitalContentsGUI(std::vector<SDigitalContent>& co
         
 //        m_TableWidget.setCellWidget(index, DCF::RATING, new TableWidgetItemW<QLabel>(aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
 //                                                                                     QString::number(aTemporar.AVG_rating)));
-        m_TableWidget.setItem(index,2,new QTableWidgetItem(QString::fromStdString(std::to_string(aTemporar.AVG_rating))));
+        std::string rating;
+        for(int i = 0; i < std::to_string(aTemporar.AVG_rating).find(".") + 2; ++i)
+        {
+            rating.push_back(std::to_string(aTemporar.AVG_rating)[i]);
+        }
+        m_TableWidget.setItem(index,2,new QTableWidgetItem(QString::fromStdString(rating)));
         m_TableWidget.item(index, 2)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
         m_TableWidget.item(index, 2)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
         
@@ -336,7 +337,21 @@ void Browse_content_tab::ShowDigitalContentsGUI(std::vector<SDigitalContent>& co
         
 //        m_TableWidget.setCellWidget(index, DCF::SIZE, new TableWidgetItemW<QLabel>(aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
 //                                                                                   QString::number(aTemporar.size)));
-        m_TableWidget.setItem(index,3,new QTableWidgetItem(QString::fromStdString(std::to_string(aTemporar.size) + "GB")));
+        if(aTemporar.size < 1024)
+        {
+            m_TableWidget.setItem(index,3,new QTableWidgetItem(QString::fromStdString(std::to_string(aTemporar.size) + " MB")));
+        }
+        else
+        {
+            float size = (float)aTemporar.size/1024;
+            std::string size_s;
+            std::string s = std::to_string(size);
+            for(int i = 0; i < s.find(".") + 3; ++i)
+            {
+                size_s.push_back(s[i]);
+            }
+            m_TableWidget.setItem(index,3,new QTableWidgetItem(QString::fromStdString(size_s + " GB")));
+        }
         m_TableWidget.item(index, 3)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
         m_TableWidget.item(index, 3)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
 
@@ -350,7 +365,7 @@ void Browse_content_tab::ShowDigitalContentsGUI(std::vector<SDigitalContent>& co
         
         QDateTime time = QDateTime::fromString(QString::fromStdString(aTemporar.expiration), "yyyy-MM-ddTHH:mm:ss");
         
-        std::string e_str = CalculateRemainingTime(QDateTime::currentDateTime(), time);
+        e_str = CalculateRemainingTime(QDateTime::currentDateTime(), time);
         
 //        m_TableWidget.setCellWidget(index, DCF::LEFT, new TableWidgetItemW<QLabel>(aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
 //                                                                                   tr(e_str.c_str())));
@@ -358,17 +373,13 @@ void Browse_content_tab::ShowDigitalContentsGUI(std::vector<SDigitalContent>& co
         m_TableWidget.item(index, 6)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
         m_TableWidget.item(index, 6)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
         
-        
-        
-        
         ++index;
-        
     }
     
     m_main_layout.addWidget(&m_TableWidget);
-    m_pTableWidget->resize(nWidth,m_pTableWidget->height());
-    m_pTableWidget->horizontalHeader()->setStretchLastSection(true);
-    m_pTableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    //m_pTableWidget->resize(nWidth,m_pTableWidget->height());
+    //m_pTableWidget->horizontalHeader()->setStretchLastSection(true);
+    //m_pTableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     ArrangeSize();
 }
 
@@ -383,13 +394,13 @@ void Browse_content_tab::ArrangeSize()
     m_pTableWidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     
     QSize tqs_TableSize = m_pTableWidget->size();
-    m_pTableWidget->setColumnWidth(0,(tqs_TableSize.width()*40)/100);
-    m_pTableWidget->setColumnWidth(1,(tqs_TableSize.width()*10)/100);
-    m_pTableWidget->setColumnWidth(2,(tqs_TableSize.width()*10)/100);
-    m_pTableWidget->setColumnWidth(3,(tqs_TableSize.width()*10)/100);
-    m_pTableWidget->setColumnWidth(4,(tqs_TableSize.width()*10)/100);
-    m_pTableWidget->setColumnWidth(5,(tqs_TableSize.width()*10)/100);
-    m_pTableWidget->setColumnWidth(6,(tqs_TableSize.width()*10)/100);
+    m_pTableWidget->setColumnWidth(0,(tqs_TableSize.width()*10)/100);
+    m_pTableWidget->setColumnWidth(1,(tqs_TableSize.width()*20)/100);
+    m_pTableWidget->setColumnWidth(2,(tqs_TableSize.width()*14)/100);
+    m_pTableWidget->setColumnWidth(3,(tqs_TableSize.width()*14)/100);
+    m_pTableWidget->setColumnWidth(4,(tqs_TableSize.width()*14)/100);
+    m_pTableWidget->setColumnWidth(5,(tqs_TableSize.width()*14)/100);
+    m_pTableWidget->setColumnWidth(6,(tqs_TableSize.width()*14)/100);
 }
 
 

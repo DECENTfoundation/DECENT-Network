@@ -24,10 +24,16 @@ ContentDetailsGeneral::ContentDetailsGeneral()
       m_label(this,NULL,&ContentDetailsGeneral::LabelPushCallbackGUI)
 {
     QPixmap aPixMap(":/icon/images/buy.png");
+    QVBoxLayout* image_layout = new QVBoxLayout;
     m_label.setScaledContents(true);
     m_label.setPixmap(aPixMap);
+    image_layout->addWidget(new QLabel());
+    image_layout->addWidget(&m_label);
+    image_layout->addWidget(new QLabel());
     m_free_for_child.addWidget(new QLabel());
-    m_free_for_child.addWidget(&m_label);
+    m_free_for_child.addWidget(new QLabel());
+    m_free_for_child.addLayout(image_layout);
+    m_free_for_child.addWidget(new QLabel());
     m_free_for_child.addWidget(new QLabel());
 
     setFixedSize(620,480);

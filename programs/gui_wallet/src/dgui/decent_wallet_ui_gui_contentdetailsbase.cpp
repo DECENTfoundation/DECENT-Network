@@ -9,17 +9,18 @@
  */
 
 #include "decent_wallet_ui_gui_contentdetailsbase.hpp"
-
+#include <QDateTime>
+#include "gui_wallet_global.hpp"
 using namespace gui_wallet;
 
 static const char* s_vcpcFieldsGeneral[NUMBER_OF_SUB_LAYOUTS2] = {
-    "Author", "Expiration","Created","Price", "Amount",
+    "Author", "Expiration","Created","Price",
     "Averege Rating","Size","Times Bought"
 };
 
 
 static const char* s_vcpcFieldsBougth[NUMBER_OF_SUB_LAYOUTS2] = {
-    "Author", "Expiration","Created","Price", "Amount",
+    "Author", "Expiration","Created","Price",
     "Averege Rating","Size","Times Bought"
 };
 
@@ -45,20 +46,22 @@ ContentDetailsBase::ContentDetailsBase()
         m_vSub_layouts[i].setSpacing(0);
         m_vSub_layouts[i].setContentsMargins(45,3,0,3);
         
-        if(nIndexKent == 11)
+        if(nIndexKent == 9)
         {
             QVBoxLayout* text_layout = new  QVBoxLayout;
             QHBoxLayout* stars = new QHBoxLayout;
             QHBoxLayout* main_layout = new QHBoxLayout;
-            //text_layout->setContentsMargins(45,0,0,0);
-            text_layout->addWidget(&m_vLabels[nIndexKent]);
             text_layout->addWidget(&m_vLabels[nIndexZuyg]);
+            text_layout->addWidget(&m_vLabels[nIndexKent]);
             for(int i = 0; i <5; ++i)
             {
                 stars->addWidget(&m_stars[i]);
             }
             main_layout->addLayout(text_layout);
+            main_layout->addWidget(new QLabel());
+            main_layout->addWidget(new QLabel());
             main_layout->addLayout(stars);
+            main_layout->addWidget(new QLabel());
             m_vSub_layouts[i].addLayout(main_layout);
             m_vSub_Widgets[i].setLayout(&m_vSub_layouts[i]);
             m_main_layout.addWidget(&m_vSub_Widgets[i]);
@@ -72,6 +75,7 @@ ContentDetailsBase::ContentDetailsBase()
         }
     }
     m_main_layout.addLayout(&m_free_for_child);
+    
     setLayout(&m_main_layout);
     setStyleSheet("background-color:white;");
 }
@@ -94,23 +98,29 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details)
         m_vLabels[nIndexZuyg].setText(tr(vNames[i]));
     }
 
+    QDateTime time = QDateTime::fromString(QString::fromStdString(m_pContentInfo->expiration), "yyyy-MM-ddTHH:mm:ss");
+    std::string e_str = CalculateRemainingTime(QDateTime::currentDateTime(), time);
+    
     m_vLabels[1].setText(tr(m_pContentInfo->author.c_str()));
-    m_vLabels[3].setText(tr(m_pContentInfo->expiration.c_str()));
-    m_vLabels[5].setText(tr(m_pContentInfo->created.c_str()));
+    m_vLabels[3].setText(tr(e_str.c_str()));
+    std::string creat;
+    for(int i = 0; i < m_pContentInfo->created.find("T"); ++i)
+    {
+        creat.push_back(m_pContentInfo->created[i]);
+    }
+    m_vLabels[5].setText(tr(creat.c_str()));
     
     
-    //m_vLabels[7].setText(QString::number(m_pContentInfo->price.amount,'f').remove( QRegExp("0+$") ).remove( QRegExp("\\.$") ));
     
     std::string str_price = std::to_string(a_cnt_details.price.amount) + " DECENT";
     
     m_vLabels[7].setText(tr(str_price.c_str()));
-    m_vLabels[DCF::AMOUNT].setText(QString::number(m_pContentInfo->size));
     
     QPixmap green_star(":/icon/images/green_asterix.png");
     QPixmap white_star(":/icon/images/white_asterix.png");
     white_star = white_star.scaled(QSize(20,20));
     green_star = green_star.scaled(QSize(20,20));
-    m_vLabels[11].setText(QString::number(m_pContentInfo->AVG_rating));
+    m_vLabels[9].setText(QString::number(m_pContentInfo->AVG_rating));
     for(int i = 0; i < m_pContentInfo->AVG_rating; ++i)
     {
         m_stars[i].setPixmap(green_star);
@@ -119,10 +129,10 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details)
     {
         m_stars[i].setPixmap(white_star);
     }
-    
-    //QString::number(aTemporar.AVG_rating,'f').remove( QRegExp("0+$") ).remove( QRegExp("\\.$") )
+
     QString qsSizeTxt = QString::number(m_pContentInfo->size) + tr(" MB");
-    m_vLabels[13].setText(qsSizeTxt);
-    m_vLabels[DCF::TIMES_BOUGHT].setText(QString::number(a_cnt_details.times_bougth));
+    m_vLabels[11].setText(qsSizeTxt);
+    m_vLabels[13].setText(QString::number(a_cnt_details.times_bougth));
+    this->setWindowTitle(tr("Third Party Content"));
     QDialog::exec();
 }

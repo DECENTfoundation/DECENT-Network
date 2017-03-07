@@ -20,7 +20,7 @@ using namespace gui_wallet;
 using namespace nlohmann;
 
 
-static const char* s_vccpItemNames[]={"Time","Title","Rating",
+static const char* s_vccpItemNames[]={" ","Created","Title","Rating",
                                      "Size","Price","Purchased"};
 static const int   s_cnNumberOfRows = sizeof(s_vccpItemNames)/sizeof(const char*);
 
@@ -37,6 +37,7 @@ PurchasedTab::PurchasedTab()
     m_filterLineEditer.setPlaceholderText(QString("Enter user name to see purchases"));
     m_filterLineEditer.setStyleSheet("border: 1px solid white");
     m_filterLineEditer.setFixedHeight(40);
+    m_filterLineEditer.setAttribute(Qt::WA_MacShowFocusRect, 0);
 
     QPixmap image(":/icon/images/search.svg");
 
@@ -141,12 +142,12 @@ void PurchasedTab::updateContents() {
                 
                 
                 
-                obj->m_pTableWidget->setCellWidget(i + 1, 0, new QLabel(QString::fromStdString(time)));
-                obj->m_pTableWidget->setCellWidget(i + 1, 1, new QLabel(QString::fromStdString(synopsis)));
-                obj->m_pTableWidget->setCellWidget(i + 1, 2, new QLabel(QString::number(rating)));
-                obj->m_pTableWidget->setCellWidget(i + 1, 3, new QLabel(QString::number(size) + tr(" MB")));
-                obj->m_pTableWidget->setCellWidget(i + 1, 4, new QLabel(QString::number(price) + tr(" DECENT")));
-                obj->m_pTableWidget->setCellWidget(i + 1, 5, new QLabel(QString::fromStdString(expiration_or_delivery_time)));
+                obj->m_pTableWidget->setCellWidget(i + 1, 1, new QLabel(QString::fromStdString(time)));
+                obj->m_pTableWidget->setCellWidget(i + 1, 2, new QLabel(QString::fromStdString(synopsis)));
+                obj->m_pTableWidget->setCellWidget(i + 1, 3, new QLabel(QString::number(rating)));
+                obj->m_pTableWidget->setCellWidget(i + 1, 4, new QLabel(QString::number(size) + tr(" MB")));
+                obj->m_pTableWidget->setCellWidget(i + 1, 5, new QLabel(QString::number(price) + tr(" DECENT")));
+                obj->m_pTableWidget->setCellWidget(i + 1, 6, new QLabel(QString::fromStdString(expiration_or_delivery_time)));
 
             }
             
@@ -214,10 +215,11 @@ void PurchasedTab::ArrangeSize()
     m_pTableWidget->setStyleSheet("QTableView{border : 1px solid lightGray}");
     m_pTableWidget->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     m_pTableWidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-
-    for(int i = 0; i < 6; ++i)
+    
+    m_pTableWidget->setColumnWidth(0, (tqsTableSize.width()*10)/100);
+    for(int i = 1; i < 7; ++i)
     {
-        m_pTableWidget->setColumnWidth(i,(tqsTableSize.width()*16.7)/100);
+        m_pTableWidget->setColumnWidth(i,(tqsTableSize.width()*15)/100);
     }
 }
 

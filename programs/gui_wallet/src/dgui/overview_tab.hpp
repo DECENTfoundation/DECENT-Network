@@ -24,6 +24,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <iostream>
+#include <QFont>
 
 #include "gui_wallet_tabcontentmanager.hpp"
 
@@ -38,27 +39,28 @@ public:
 
        m_main_layout.setSpacing(0);
        m_main_layout.setContentsMargins(0,0,0,0);
-       m_main_layout.addLayout(&m_free_for_child);
 
-
-
-//        m_vSub_Widgets[0].setStyleSheet("background-color:rgb(27,176,104);");
-//        //m_vSub_Widgets[0].resize(m_vSub_Widgets[0].size().width(),40);
-//        m_vSub_layouts[0].setSpacing(0);
-//        m_vSub_layouts[0].setContentsMargins(45,3,0,3);
-//        m_vSub_layouts[0].addWidget(new QLabel());
-//        m_vSub_layouts[0].addWidget(new QLabel());
-//        m_vSub_layouts[0].addWidget(new QLabel());
-//        m_vSub_layouts[0].addWidget(new QLabel());
-//        m_vSub_Widgets[0].setLayout(&m_vSub_layouts[0]);
-//        m_main_layout.addWidget(&m_vSub_Widgets[0]);
 
        for(i=1;i<=NUMBER_OF_SUB_LAYOUTS;++i,nIndexZuyg+=2,nIndexKent+=2)
        {
+           std::string name;
+           std::string value;
            if(i%2==0){m_vSub_Widgets[i].setStyleSheet("background-color:rgb(244,244,244);");}
            else{m_vSub_Widgets[i].setStyleSheet("background-color:white;");}
            m_vLabels[nIndexZuyg].setStyleSheet("font-weight: bold");
-           m_vLabels[nIndexZuyg].setText(QString::fromStdString(a_info[i - 1] + "                                                                                                    "));           m_vSub_layouts[i].setSpacing(0);
+           int slash_position = a_info[i - 1].find("\n");
+           for(int j = 0; j < slash_position; ++j)
+           {
+               name.push_back(a_info[i - 1][j]);
+           }
+           for(int j = slash_position + 1; j < a_info[i - 1].size(); ++j)
+           {
+               value.push_back(a_info[i - 1][j]);
+           }
+           //value = std::to_string(slash_position);
+           m_vLabels[nIndexZuyg].setText(QString::fromStdString(name));
+           m_vLabels[nIndexKent].setText(QString::fromStdString(value));
+           m_vSub_layouts[i].setSpacing(0);
            m_vSub_layouts[i].setContentsMargins(45,3,0,3);
            m_vSub_layouts[i].addWidget(&m_vLabels[nIndexZuyg]);
            m_vSub_layouts[i].addWidget(&m_vLabels[nIndexKent]);
