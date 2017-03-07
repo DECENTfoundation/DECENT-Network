@@ -4081,44 +4081,44 @@ void wallet_api::remove_package(const std::string& package_hash) const {
 
 
 namespace {
-   struct transfer_progress_printer: public package_transfer_interface::transfer_listener {
 
-      static transfer_progress_printer& instance() {
-         static transfer_progress_printer the_one;
-         return the_one;
-      }
+    struct transfer_progress_printer: public package_transfer_interface::transfer_listener {
 
-      virtual void on_download_started(package_transfer_interface::transfer_id id) {
-         cout << id << ": Download started..." << endl;
-      }
+        static transfer_progress_printer& instance() {
+            static transfer_progress_printer the_one;
+            return the_one;
+        }
 
-      virtual void on_download_finished(package_transfer_interface::transfer_id id, package_object downloaded_package) {
-         cout << id << ": Download finished: " << downloaded_package.get_hash().str() <<  endl;
+        virtual void on_download_started(package_transfer_interface::transfer_id id) {
+            ilog("transfer ${id}: download started", ("id", id));
+        }
 
-      }
+        virtual void on_download_finished(package_transfer_interface::transfer_id id, package_object downloaded_package) {
+            ilog("transfer ${id}: download finished: ${hash}", ("id", id) ("hash", downloaded_package.get_hash().str()));
+        }
 
-      virtual void on_download_progress(package_transfer_interface::transfer_id id, package_transfer_interface::transfer_progress progress) {
-         cout << id << ": Downloading " << progress.current_bytes << "/" << progress.total_bytes << " @ " << progress.current_speed << "Bytes/sec" << endl;
-      }
+        virtual void on_download_progress(package_transfer_interface::transfer_id id, package_transfer_interface::transfer_progress progress) {
+            ilog("transfer ${id}: download progress: ${curr}/${total} @ ${speed} Bytes/sec",
+                 ("id", id) ("curr", progress.current_bytes) ("total", progress.total_bytes) ("speed", progress.current_speed));
+        }
 
+        virtual void on_upload_started(package_transfer_interface::transfer_id id, const std::string& url) {
+            ilog("transfer ${id}: upload started on URL: ${url}", ("id", id) ("url", url));
+        }
 
-      virtual void on_upload_started(package_transfer_interface::transfer_id id, const std::string& url) {
+        virtual void on_upload_finished(package_transfer_interface::transfer_id id) {
+            ilog("transfer ${id}: upload finished", ("id", id));
+        }
 
-         cout << id << ": Upload started on URL: " << url << endl;
-      }
+        virtual void on_upload_progress(package_transfer_interface::transfer_id id, package_transfer_interface::transfer_progress progress) {
+            ilog("transfer ${id}: upload progress: ${curr}/${total} @ ${speed} Bytes/sec",
+                 ("id", id) ("curr", progress.current_bytes) ("total", progress.total_bytes) ("speed", progress.current_speed));
+        }
 
-      virtual void on_upload_finished(package_transfer_interface::transfer_id id) {
-         cout << id << ": Upload finished" <<  endl;
-      }
-
-      virtual void on_upload_progress(package_transfer_interface::transfer_id id, package_transfer_interface::transfer_progress progress) {
-         cout << id << ": Uploading " << progress.current_bytes << "/" << progress.total_bytes << " @ " << progress.current_speed << "Bytes/sec" << endl;
-      }
-
-      virtual void on_error(package_transfer_interface::transfer_id id, std::string error) {
-         cout << id << ": ERROR -> " << error << endl;
-      }
-   };
+        virtual void on_error(package_transfer_interface::transfer_id id, std::string error) {
+            elog("transfer ${id}: error: ${error}", ("id", id) ("error", error));
+        }
+    };
 
 }
 
