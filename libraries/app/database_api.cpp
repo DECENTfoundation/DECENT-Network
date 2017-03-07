@@ -83,6 +83,8 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       vector<account_id_type> get_account_references( account_id_type account_id )const;
       vector<optional<account_object>> lookup_account_names(const vector<string>& account_names)const;
       map<string,account_id_type> lookup_accounts(const string& lower_bound_name, uint32_t limit)const;
+      map<string,account_id_type> search_accounts(const string& search_tearm, uint32_t limit)const;
+
       uint64_t get_account_count()const;
 
       // Balances
@@ -634,10 +636,36 @@ vector<optional<account_object>> database_api_impl::lookup_account_names(const v
    });
    return result;
 }
+    
+    
+map<string,account_id_type> database_api::search_accounts(const string& search_tearm, uint32_t limit) const {
+    return my->search_accounts( search_tearm, limit );
+}
+
 
 map<string,account_id_type> database_api::lookup_accounts(const string& lower_bound_name, uint32_t limit)const
 {
    return my->lookup_accounts( lower_bound_name, limit );
+}
+    
+    
+map<string,account_id_type> database_api_impl::search_accounts(const string& search_term, uint32_t limit)const
+{
+    FC_ASSERT( limit <= 1000 );
+    const auto& accounts_by_name = _db.get_index_type<account_index>().indices().get<by_name>();
+    map<string,account_id_type> result;
+    
+    for( auto itr = accounts_by_name.begin();
+        limit-- && itr != accounts_by_name.end();
+        ++itr )
+    {
+        std::string account_id_str = fc::variant(itr->get_id()).as<std::string>();
+        
+        if (itr->name.find(search_term) != std::string::npos || account_id_str.find(search_term) != std::string::npos)
+            result.insert(make_pair(itr->name, itr->get_id()));
+    }
+    
+    return result;
 }
 
 map<string,account_id_type> database_api_impl::lookup_accounts(const string& lower_bound_name, uint32_t limit)const

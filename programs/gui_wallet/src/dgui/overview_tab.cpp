@@ -154,7 +154,7 @@ void Overview_tab::updateContents() {
     }
     
     std::string result;
-    RunTask("list_accounts \"" + search.text().toStdString() +"\" 100", result);
+    RunTask("search_accounts \"" + search.text().toStdString() +"\" 100", result);
     
     auto contents = json::parse(result);
     

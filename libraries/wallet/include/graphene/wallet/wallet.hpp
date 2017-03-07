@@ -249,7 +249,12 @@ class wallet_api
        * @returns a list of accounts mapping account names to account ids
        * @ingroup WalletCLI
        */
-      map<string,account_id_type>       list_accounts(const string& lowerbound, uint32_t limit);
+     map<string,account_id_type>       list_accounts(const string& lowerbound, uint32_t limit);
+ 
+    
+     map<string,account_id_type>       search_accounts(const string& term, uint32_t limit);
+    
+    
       /** List the balances of an account.
        * Each account can have multiple balances, one for each type of asset owned by that 
        * account.  The returned list will only contain assets for which the account has a
@@ -1716,6 +1721,7 @@ FC_API( graphene::wallet::wallet_api,
         (dump_private_keys)
         (list_my_accounts)
         (list_accounts)
+        (search_accounts)
         (list_account_balances)
         (list_assets)
         (import_key)

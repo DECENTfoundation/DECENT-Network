@@ -263,6 +263,14 @@ class database_api
        */
       map<string,account_id_type> lookup_accounts(const string& lower_bound_name, uint32_t limit)const;
 
+    /**
+     * @brief Get names and IDs for registered accounts that match search term
+     * @param search_term will try to partially match account name or id
+     * @param limit Maximum number of results to return -- must not exceed 1000
+     * @return Map of account names to corresponding IDs
+     */
+      map<string,account_id_type> search_accounts(const string& search_tearm, uint32_t limit) const;
+
       //////////////
       // Balances //
       //////////////
@@ -619,6 +627,7 @@ FC_API(graphene::app::database_api,
    (get_account_references)
    (lookup_account_names)
    (lookup_accounts)
+   (search_accounts)
    (get_account_count)
 
    // Balances
