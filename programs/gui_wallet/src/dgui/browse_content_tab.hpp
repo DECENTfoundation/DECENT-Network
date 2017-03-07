@@ -101,7 +101,7 @@ public:
 
 public:
     
-    virtual void content_activated() {}
+    virtual void content_activated() { m_doUpdate = true; }
     virtual void content_deactivated() {}
 
     

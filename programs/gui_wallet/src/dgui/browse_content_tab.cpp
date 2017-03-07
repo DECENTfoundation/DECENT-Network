@@ -309,6 +309,8 @@ void Browse_content_tab::ShowDigitalContentsGUI(std::vector<SDigitalContent>& co
         
         std::string synopsis = unescape_string(aTemporar.synopsis);
         std::replace(synopsis.begin(), synopsis.end(), '\t', ' '); // JSON does not like tabs :(
+        std::replace(synopsis.begin(), synopsis.end(), '\n', ' '); // JSON does not like newlines either :(
+
         
         try {
             auto synopsis_parsed = json::parse(synopsis);
