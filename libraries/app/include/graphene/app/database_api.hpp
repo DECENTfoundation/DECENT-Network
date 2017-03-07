@@ -32,7 +32,6 @@
 #include <graphene/chain/account_object.hpp>
 #include <graphene/chain/asset_object.hpp>
 #include <graphene/chain/chain_property_object.hpp>
-#include <graphene/chain/confidential_object.hpp>
 #include <graphene/chain/market_object.hpp>
 #include <graphene/chain/operation_history_object.hpp>
 #include <graphene/chain/proposal_object.hpp>
@@ -41,6 +40,7 @@
 #include <graphene/chain/content_object.hpp>
 #include <graphene/chain/seeder_object.hpp>
 #include <graphene/chain/rating_object.hpp>
+#include <graphene/chain/budget_record_object.hpp>
 
 #include <graphene/market_history/market_history_plugin.hpp>
 
@@ -472,18 +472,16 @@ class database_api
        */
       vector<proposal_object> get_proposed_transactions( account_id_type id )const;
 
-      //////////////////////
-      // Blinded balances //
-      //////////////////////
-
-      /**
-       *  @return the set of blinded balance objects by commitment ID
-       */
-      vector<blinded_balance_object> get_blinded_balances( const flat_set<commitment_type>& commitments )const;
-
       ////////////
       // Decent //
       ////////////
+
+
+      /**
+       * Return current core asset supply
+       * @return current supply
+       */
+      real_supply get_real_supply()const;
 
       /**
        * @brief Get a list of open buyings
@@ -574,6 +572,8 @@ class database_api
        */
       vector<uint64_t> get_content_ratings( const string& URI )const;
 
+      optional<vector<seeder_object>> list_seeders_by_upload( const uint32_t count )const;
+
    private:
       std::shared_ptr< database_api_impl > my;
 };
@@ -661,9 +661,6 @@ FC_API(graphene::app::database_api,
    // Proposed transactions
    (get_proposed_transactions)
 
-   // Blinded balances
-   (get_blinded_balances)
-
    // Decent
    (get_open_buyings)
    (get_open_buyings_by_URI)
@@ -677,5 +674,7 @@ FC_API(graphene::app::database_api,
    (list_content_by_bought)
    (list_publishers_by_price)
    (get_content_ratings)
+   (list_seeders_by_upload)
    (get_seeder)
+   (get_real_supply)
 )

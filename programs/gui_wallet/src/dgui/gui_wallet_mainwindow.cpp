@@ -101,17 +101,6 @@ static bool GetJsonVectorNextElem(const char* a_cpcJsonStr,TypeConstChar* a_beg,
 
 
 
-void SetNewTaskQtMainWnd2Glb(const std::string& a_inp_line, void* a_clbData)
-{
-    if(s_pMainWindowInstance)s_pMainWindowInstance->SetNewTaskQtMainWnd2(a_inp_line,a_clbData);
-}
-
-void SetNewTaskQtMainWnd3Glb(const std::string& a_inp_line, void* a_clbData)
-{
-    if(s_pMainWindowInstance)s_pMainWindowInstance->SetNewTaskQtMainWnd3(a_inp_line,a_clbData);
-}
-
-
 /*//////////////////////////////////////////////////////////////////////////////////*/
 
 Mainwindow_gui_wallet::Mainwindow_gui_wallet()
@@ -211,6 +200,7 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
     setWindowTitle(tr("Decent - Blockchain Content Distributor"));
     
     centralWidget()->layout()->setContentsMargins(0, 0, 0, 0);
+    setStyleSheet("QMainWindow{color:black;""background-color:white;}");
 }
 
 
@@ -222,17 +212,6 @@ Mainwindow_gui_wallet::~Mainwindow_gui_wallet()
     delete m_pcInfoDlg;
 }
 
-
-void Mainwindow_gui_wallet::SetNewTaskQtMainWnd2(const std::string& a_inp_line, void* a_clbData)
-{
-    SetNewTask2(a_inp_line,this,a_clbData,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
-}
-
-
-void Mainwindow_gui_wallet::SetNewTaskQtMainWnd3(const std::string& a_inp_line, void* a_clbData)
-{
-    SetNewTask3(a_inp_line,this,a_clbData,&Mainwindow_gui_wallet::TaskDoneFuncGUI3);
-}
 
 
 void Mainwindow_gui_wallet::CreateActions()
@@ -276,8 +255,6 @@ void Mainwindow_gui_wallet::CreateActions()
 
 void Mainwindow_gui_wallet::CreateMenues()
 {
-#define ADD_ACTION_TO_MENU_HELP(__action_ptr__) \
-    do{m_pMenuHelpL->addAction( (__action_ptr__) );m_pMenuHelpR->addAction( (__action_ptr__) );}while(0)
 
     QMenuBar* pMenuBar = m_barLeft;
     m_pMenuFile = pMenuBar->addMenu( tr("&File") );
@@ -287,28 +264,63 @@ void Mainwindow_gui_wallet::CreateMenues()
     m_pMenuFile->addAction( &m_ActionUnlock );
     m_pMenuFile->addAction( &m_ActionImportKey );
 
-    m_pMenuSetting = pMenuBar->addMenu( tr("&Setting") );
+
+
+
+
+    m_pMenuView = pMenuBar->addMenu( tr("&View") );
+
+    QAction* browseAction = new QAction(tr("Browse Content"), this);
+    m_pMenuView->addAction(browseAction);
+    browseAction->setProperty("index", 0);
+
+    QAction* transactionsAction = new QAction(tr("Transactions"), this);
+    m_pMenuView->addAction(transactionsAction);
+    transactionsAction->setProperty("index", 1);
+
+    QAction* uploadAction = new QAction(tr("Upload"), this);
+    m_pMenuView->addAction(uploadAction);
+    uploadAction->setProperty("index", 2);
+
+    QAction* overviewAction = new QAction(tr("Overview"), this);
+    m_pMenuView->addAction(overviewAction);
+    overviewAction->setProperty("index", 3);
+
+    QAction* purchasedAction = new QAction(tr("Purchased"), this);
+    m_pMenuView->addAction(purchasedAction);
+    purchasedAction->setProperty("index", 4);
+
+    connect( browseAction, SIGNAL(triggered()), this, SLOT(ViewAction()) );
+    connect( transactionsAction, SIGNAL(triggered()), this, SLOT(ViewAction()) );
+    connect( uploadAction, SIGNAL(triggered()), this, SLOT(ViewAction()) );
+    connect( overviewAction, SIGNAL(triggered()), this, SLOT(ViewAction()) );
+    connect( purchasedAction, SIGNAL(triggered()), this, SLOT(ViewAction()) );
+
+
+
+
     m_pMenuHelpL = pMenuBar->addMenu( tr("&Help") );
 
-
+#ifndef NDEBUG
     m_pMenuDebug = pMenuBar->addMenu( tr("Debug") );
     m_pMenuDebug->addAction(&m_ActionOpenCliWallet);
     m_pMenuDebug->addAction(&m_ActionOpenInfoDlg);
     m_pMenuTempFunctions = m_pMenuDebug->addMenu(tr("temp. functions start"));
+#endif
 
 
     /******************************************************/
-    pMenuBar = m_barRight;
-    m_pMenuHelpR = pMenuBar->addMenu( tr("Help") );
-
-    m_pMenuCreateTicket = pMenuBar->addMenu( tr("Create ticket") );
-
-    /******************************************************/
-    ADD_ACTION_TO_MENU_HELP(&m_ActionAbout);
-    ADD_ACTION_TO_MENU_HELP(&m_ActionInfo);
-    ADD_ACTION_TO_MENU_HELP(&m_ActionHelp);
+    m_pMenuHelpL->addAction(&m_ActionAbout);
+    m_pMenuHelpL->addAction(&m_ActionInfo);
+    m_pMenuHelpL->addAction(&m_ActionHelp);
 }
 
+void Mainwindow_gui_wallet::ViewAction() {
+    QAction* act = dynamic_cast<QAction*>(sender());
+    int index = act->property("index").toInt();
+
+    m_pCentralWidget->SetMyCurrentTabIndex(index);
+}
 
 void Mainwindow_gui_wallet::CurrentUserChangedSlot(const QString& a_new_user)
 {
@@ -326,14 +338,11 @@ void Mainwindow_gui_wallet::CurrentUserChangedSlot(const QString& a_new_user)
 }
 
 
-// static int SetNewTask(const std::string& a_inp_line, Type* a_memb, void* a_clbData,
-//                      void (Type::*a_clbkFunction)(SetNewTask_last_args))
 
 void Mainwindow_gui_wallet::CliCallbackFnc(void*/*arg*/,const std::string& a_task)
 {
     m_cli_line = a_task;
     SetNewTask(a_task,this,CLI_WALLET_CODE,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
-    //UseConnectedApiInstance(this,NULL,&Mainwindow_gui_wallet::CliCallbackFunction);
 }
 
 
@@ -360,17 +369,9 @@ void Mainwindow_gui_wallet::ShowDetailsOnDigContentSlot(SDigitalContent a_dig_co
         m_dig_cont_detailsBougDlg.execCDD(m_pCentralWidget->usersCombo()->currentText(),a_dig_cont);
         break;
     default:
-        __DEBUG_APP2__(0,"error!!!!!!!!!");
         break;
     }
-    //m_pInfoTextEdit->setText(tr(a_get_cont_str.c_str()));
-    //m_pcInfoDlg->exec();  // Shold be modified
 }
-
-
-/*
- * return != 0 means parsing error
- */
 
 int Mainwindow_gui_wallet::GetDigitalContentsFromVariant(DCT::DIG_CONT_TYPES a_type,
                                                          std::vector<SDigitalContent>& a_vcContents,
@@ -498,24 +499,6 @@ void Mainwindow_gui_wallet::HelpSlot()
 }
 
 
-void Mainwindow_gui_wallet::TaskDoneFuncGUI3(void* a_clbkArg,int64_t a_err,
-                                             const std::string& a_task,const fc::variant& a_result)
-{
-    __DEBUG_APP2__(0,"just_conn=%d, err=%d, a_clbkArg=%p, task=%s",
-                   m_nJustConnecting,(int)a_err,a_clbkArg,a_task.c_str());
-
-
-    const int cnCurIndex(m_pCentralWidget->GetMyCurrentTabIndex());
-    switch(cnCurIndex)
-    {
-    
-    case OVERVIEW:
-    {
-        TaskDoneOverrviewGUI3(a_clbkArg, a_err,a_task,a_result);
-        break;
-    }
-    }
-}
 
 
 void Mainwindow_gui_wallet::TaskDoneFuncGUI(void* a_clbkArg,int64_t a_err,const std::string& a_task,const std::string& a_result)
@@ -557,17 +540,7 @@ void Mainwindow_gui_wallet::TaskDoneFuncGUI(void* a_clbkArg,int64_t a_err,const 
         return;
     }
 
-    const int cnCurIndex(m_pCentralWidget->GetMyCurrentTabIndex());
-    switch(cnCurIndex)
-    {
-    
-    
-    case OVERVIEW:
-    {
-        TaskDoneOverrviewGUI(a_clbkArg, a_err,a_task,a_result);
-        break;
-    }
-    }
+
 
     if(strstr(a_task.c_str(),__CONNECTION_CLB_) == a_task.c_str()){__DEBUG_APP2__(0,"this should not work!");}
     else if( strstr(a_task.c_str(),"info") == a_task.c_str())
@@ -731,16 +704,7 @@ void Mainwindow_gui_wallet::TaskDoneFuncGUI(void* a_clbkArg,int64_t a_err,const 
 void Mainwindow_gui_wallet::ManagementNewFuncGUI(void* a_clbkArg,int64_t a_err,const std::string& a_task,const std::string& a_result)
 {
 
-    int nCurentTab = m_pCentralWidget->GetMyCurrentTabIndex();
-
-    switch(nCurentTab)
-    {
-    case OVERVIEW:
-    {
-        ManagementOverviewGUI();
-        break;
-    }
-    }
+    
 }
 
 

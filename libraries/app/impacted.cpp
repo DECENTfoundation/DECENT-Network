@@ -140,28 +140,6 @@ struct get_impacted_account_visitor
    void operator()( const custom_operation& op ) {}
    void operator()( const assert_operation& op ) {}
 
-   void operator()( const transfer_to_blind_operation& op )
-   {
-      _impacted.insert( op.from );
-      for( const auto& out : op.outputs )
-         add_authority_accounts( _impacted, out.owner );
-   }
-
-   void operator()( const blind_transfer_operation& op )
-   {
-      for( const auto& in : op.inputs )
-         add_authority_accounts( _impacted, in.owner );
-      for( const auto& out : op.outputs )
-         add_authority_accounts( _impacted, out.owner );
-   }
-
-   void operator()( const transfer_from_blind_operation& op )
-   {
-      _impacted.insert( op.to );
-      for( const auto& in : op.inputs )
-         add_authority_accounts( _impacted, in.owner );
-   }
-
    void operator()( const content_submit_operation& op) { _impacted.insert(op.author); }
    void operator()( const request_to_buy_operation& op) { _impacted.insert(op.consumer); }
    void operator()( const leave_rating_operation& op) { _impacted.insert(op.consumer);}
@@ -170,6 +148,7 @@ struct get_impacted_account_visitor
    void operator()( const deliver_keys_operation& op) {  _impacted.insert(op.seeder);}
    void operator()( const return_escrow_submission_operation& op) {  _impacted.insert(op.author);}
    void operator()( const return_escrow_buying_operation& op) {  _impacted.insert(op.consumer);}
+   void operator()( const report_stats_operation& op) { _impacted.insert(op.consumer);}
    void operator()( const pay_seeder_operation& op) { _impacted.insert(op.author); _impacted.insert(op.seeder); };
 };
 

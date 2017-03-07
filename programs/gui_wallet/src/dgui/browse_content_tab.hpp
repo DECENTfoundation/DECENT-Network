@@ -60,14 +60,14 @@ signals:
     {
         Q_OBJECT
     public:
-        CButton(int id) : m_id(id){connect(this,SIGNAL(LabelWosClicked()),this,SLOT(ButtonPushedSlot()));}
+        CButton(int id) : m_id(id){connect(this,SIGNAL(LabelWasClicked()),this,SLOT(ButtonPushedSlot()));}
     private:
         int m_id;
         private slots:
         void ButtonPushedSlot(){emit ButtonPushedSignal(m_id);}
     private:
     signals:
-        void LabelWosClicked();
+        void LabelWasClicked();
     public:
     signals:
         void ButtonPushedSignal(int);
@@ -75,7 +75,7 @@ signals:
     public:
         virtual void mouseReleaseEvent(QMouseEvent * event)
         {
-            LabelWosClicked();
+            LabelWasClicked();
         }
         
         virtual void mouseMoveEvent(QMouseEvent * event)
@@ -101,7 +101,7 @@ public:
 
 public:
     
-    virtual void content_activated() {}
+    virtual void content_activated() { m_doUpdate = true; }
     virtual void content_deactivated() {}
     
     std::string e_str;

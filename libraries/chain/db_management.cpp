@@ -166,11 +166,11 @@ void database::close(bool rewind)
             }
          }
       } catch (fc::exception er){
-         elog("database::close Exception caught");
-         elog( "${details}", ("details",er.to_detail_string()) );
+         //elog("database::close Exception caught");
+         //elog( "${details}", ("details",er.to_detail_string()) );
       } catch (...)
       {
-         elog("database::close Exception caught");
+         //elog("database::close Exception caught");
       }
    }
 

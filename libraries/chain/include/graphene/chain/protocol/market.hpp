@@ -42,7 +42,7 @@ namespace graphene { namespace chain {
     */
    struct limit_order_create_operation : public base_operation
    {
-      struct fee_parameters_type { uint64_t fee = 5 * GRAPHENE_BLOCKCHAIN_PRECISION; };
+      struct fee_parameters_type { uint64_t fee =  GRAPHENE_BLOCKCHAIN_PRECISION/10; };
 
       asset           fee;
       account_id_type seller;

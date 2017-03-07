@@ -209,8 +209,9 @@ void PurchasedTab::ArrangeSize()
 {
     QSize tqsTableSize = m_pTableWidget->size();
     int nSizeForOne = tqsTableSize.width()/(DCF_PURCHASE::NUM_OF_DIG_CONT_FIELDS)-1;
-    for(int i(0); i<DCF_PURCHASE::NUM_OF_DIG_CONT_FIELDS;++i){m_pTableWidget->setColumnWidth(i,nSizeForOne);}
-    //printf("!!!!!!!!!!!!!!!!!!!!!!\n");
+    for(int i(0); i<DCF_PURCHASE::NUM_OF_DIG_CONT_FIELDS;++i){
+        m_pTableWidget->setColumnWidth(i,nSizeForOne);
+    }
 
     m_pTableWidget->setStyleSheet("QTableView{border : 1px solid lightGray}");
     m_pTableWidget->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);

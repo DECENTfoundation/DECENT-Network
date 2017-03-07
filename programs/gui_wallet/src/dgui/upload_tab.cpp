@@ -56,14 +56,13 @@ Upload_tab::Upload_tab()
     QFont m_font( "Open Sans Bold", 14, QFont::Bold);
     QPalette pltEdit;
 
-    //m_synopsis_layout.addWidget(&m_title_label);
+
     m_infoLayoutHeader.setFont(m_font);
     m_title_text.setPlaceholderText("  Title");
     m_title_text.setFixedHeight(40);
     //m_title_text.setFixedWidth(200);
     m_synopsis_layout.addWidget(&m_title_text);
 
-    //m_synopsis_layout.addWidget(&m_description_label);
     m_description_text.setPlaceholderText("  Description");
     m_description_text.resize(138, 822);
     m_description_text.setFixedHeight(138);
@@ -86,7 +85,6 @@ Upload_tab::Upload_tab()
     ////////////////////////////////////////////////////////////////////////////
 
 
-//    m_info_widget.setCellWidget(FieldsRows::LIFETIME, 0, new QLabel("Lifetime"));
     m_info_widget.setCellWidget(0, 0, new QLabel("        Lifetime"));
 
     QDateEdit *de = new QDateEdit();
@@ -95,14 +93,12 @@ Upload_tab::Upload_tab()
     de->setCalendarPopup(true);
     de->setMinimumDate(QDate::currentDate());
 
-//    m_info_widget.setCellWidget(FieldsRows::LIFETIME, 1, de);
     m_info_widget.setCellWidget(0, 1, de);
 
     ////////////////////////////////////////////////////////////////////////////
     /// Seeders
     ////////////////////////////////////////////////////////////////////////////
 
-//    m_info_widget.setCellWidget(FieldsRows::SEEDERS, 0, new QLabel("Seeders"));
     m_info_widget.setCellWidget(0, 2, new QLabel("        Seeders"));
     //Dropdown will be added later
 
@@ -111,7 +107,6 @@ Upload_tab::Upload_tab()
     /// Key particles
     ////////////////////////////////////////////////////////////////////////////
 
-//    m_info_widget.setCellWidget(FieldsRows::KEYPARTS, 0, new QLabel("Key particles"));
     m_info_widget.setCellWidget(0, 4, new QLabel("        Key particles"));
 
     QComboBox* keyParts = new QComboBox(this);
@@ -119,7 +114,7 @@ Upload_tab::Upload_tab()
         QString val = QString::fromStdString(std::to_string(r));
         keyParts->addItem(val, val);
     }
-//    m_info_widget.setCellWidget(FieldsRows::KEYPARTS, 1, keyParts);
+
     m_info_widget.setCellWidget(0, 5, keyParts);
 
 
@@ -131,33 +126,22 @@ Upload_tab::Upload_tab()
     QLineEdit* priceEdit = new QLineEdit("", this);
     priceEdit->setValidator( new QDoubleValidator(0.001, 100000, 3, this) );
 
-//    m_info_widget.setCellWidget(FieldsRows::PRICE, 0, new QLabel("Price"));
-//    m_info_widget.setCellWidget(FieldsRows::PRICE, 1, priceEdit);
     m_info_widget.setCellWidget(2, 0, new QLabel("        Price"));
     m_info_widget.setCellWidget(2, 1, priceEdit);
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// Asset ID
-    ////////////////////////////////////////////////////////////////////////////
-
-    //m_info_widget.setCellWidget(FieldsRows::ASSETID, 0, new QLabel("Asset Type"));
-    //Dropdown will be added later
 
 
     ////////////////////////////////////////////////////////////////////////////
     /// samples button
     ////////////////////////////////////////////////////////////////////////////
 
-    QLineEdit* samplesPath = new QLineEdit("", this);
-    samplesPath->setReadOnly(true);
-
+    m_samplesPath = new QLineEdit("", this);
+    m_samplesPath->setReadOnly(true);
+    m_samplesPath->setHidden(true);
+    
+    
     m_info_widget.setCellWidget(2, 2, new QLabel("        Samples"));
-    //m_info_widget.setCellWidget(1, 3, samplesPath);
-
-
     QPushButton* browse_samples_button = new QPushButton("Browse...");
-    //m_info_widget.setCellWidget(FieldsRows::SELECTPATH, 0, new QLabel(""));
-    m_info_widget.setCellWidget(2, 3, browse_samples_button);
+    m_info_widget.setCellWidget(2, 5, browse_samples_button);
     connect(browse_samples_button, SIGNAL(clicked()),this, SLOT(browseContent()));
 
 
@@ -166,16 +150,15 @@ Upload_tab::Upload_tab()
     /// content button
     ////////////////////////////////////////////////////////////////////////////
 
-    QLineEdit* contentPath = new QLineEdit("", this);
-    contentPath->setReadOnly(true);
+    m_contentPath = new QLineEdit("", this);
+    m_contentPath->setReadOnly(true);
+    m_contentPath->setHidden(true);
 
     m_info_widget.setCellWidget(2, 4, new QLabel("        Content"));
-    //m_info_widget.setCellWidget(FieldsRows::CONTENTPATH, 1, contentPath);
 
 
     QPushButton* browse_content_button = new QPushButton("Browse...");
-//    m_info_widget.setCellWidget(FieldsRows::SELECTSAMPLES, 0, new QLabel(""));
-    m_info_widget.setCellWidget(2, 5, browse_content_button);
+    m_info_widget.setCellWidget(2, 3, browse_content_button);
     connect(browse_content_button, SIGNAL(clicked()),this, SLOT(browseSamples()));
 
 
@@ -200,12 +183,14 @@ Upload_tab::Upload_tab()
     uploadButton->setStyleSheet("background-color: rgb(27,176,104); color: rgb(255, 255, 255)");
     uploadButton->setFixedHeight(30);
 
+
+    
+    
     connect(uploadButton, SIGNAL(clicked()),this, SLOT(uploadContent()));
     m_info_layout.addWidget(uploadButton);
     m_main_layout.addLayout(&m_info_layout);
 
     setLayout(&m_main_layout);
-
 
     m_getPublishersTimer.setSingleShot(true);
     connect(&m_getPublishersTimer, SIGNAL(timeout()), SLOT(onGrabPublishers()));
@@ -213,92 +198,49 @@ Upload_tab::Upload_tab()
 }
 
 void Upload_tab::onGrabPublishers() {
-
-    SetNewTask("list_assets \"\" 100", this, NULL, +[](void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
+    
+    SetNewTask("list_publishers_by_price 100", this, NULL, +[](void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
         Upload_tab* obj = (Upload_tab*)owner;
 
-        QComboBox* assetCombo = new QComboBox(obj);
+        auto publishers = json::parse(a_result);
+        QComboBox* seeders = new QComboBox(obj);
 
-        auto assets = json::parse(a_result);
-        for (int r = 0; r < assets.size(); ++r) {
-            const std::string& id = assets[r]["id"].get<std::string>();
-            const std::string& symbol = assets[r]["symbol"].get<std::string>();
+        for (int r = 0; r < publishers.size(); ++r) {
+            std::string pubIdStr = publishers[r]["seeder"].get<std::string>();
+            std::string pubPrice = std::to_string(publishers[r]["price"]["amount"].get<int>());
+            std::string pubAssetId = publishers[r]["price"]["asset_id"].get<std::string>();
+            std::string pubFreeSpace = std::to_string(publishers[r]["free_space"].get<int>()) + "MB free";
 
-            obj->m_assetMap.insert(std::make_pair(id, symbol));
-
-            assetCombo->addItem(QString::fromStdString(symbol), QString::fromStdString(id));
+            seeders->addItem(QString("%0 @%1 %2 [%3]").arg(QString::fromStdString(pubIdStr),
+                                                            QString::fromStdString(pubPrice),
+                                                            QString::fromStdString("DCT"),
+                                                            QString::fromStdString(pubFreeSpace)), QString::fromStdString(pubIdStr));
         }
 
-        //obj->m_info_widget.setCellWidget(FieldsRows::ASSETID, 1, assetCombo);
-
-        SetNewTask("list_publishers_by_price 100", obj, NULL, +[](void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
-            Upload_tab* obj = (Upload_tab*)owner;
-
-            auto publishers = json::parse(a_result);
-            QComboBox* seeders = new QComboBox(obj);
-
-            for (int r = 0; r < publishers.size(); ++r) {
-                std::string pubIdStr = publishers[r]["seeder"].get<std::string>();
-                std::string pubPrice = std::to_string(publishers[r]["price"]["amount"].get<int>());
-                std::string pubAssetId = publishers[r]["price"]["asset_id"].get<std::string>();
-                std::string pubFreeSpace = std::to_string(publishers[r]["free_space"].get<int>()) + "MB free";
-
-                AssetMap::iterator it = obj->m_assetMap.find(pubAssetId);
-                if (it == obj->m_assetMap.end()) {
-                    std::cout << "Invalid asset id " << pubAssetId << std::endl;
-                    continue;
-                }
-
-                std::string assetSymbol = it->second;
-
-                seeders->addItem(QString("%0 @%1 %2 [%3]").arg(QString::fromStdString(pubIdStr),
-                                                                QString::fromStdString(pubPrice),
-                                                                QString::fromStdString(assetSymbol),
-                                                                QString::fromStdString(pubFreeSpace)), QString::fromStdString(pubIdStr));
-            }
-
-//            obj->m_info_widget.setCellWidget(FieldsRows::SEEDERS, 1, seeders);
-            obj->m_info_widget.setCellWidget(0, 3, seeders);
-
-        });
-
+        obj->m_info_widget.setCellWidget(0, 3, seeders);
 
     });
 }
 
 void Upload_tab::browseContent() {
     QString contentPathSelected = QFileDialog::getOpenFileName(this, tr("Select content"), "~");
-    //QString contentDir = QFileDialog::getOpenFileName(this, tr("Select content"), "~");
-//    QLineEdit* contentPath = (QLineEdit*)m_info_widget.cellWidget(FieldsRows::CONTENTPATH, 1);
-//    contentPath->setText(contentPathSelected);
+    m_contentPath->setText(contentPathSelected);
 }
 
 void Upload_tab::browseSamples() {
     QString sampleDir = QFileDialog::getExistingDirectory(this, tr("Select samples"), "~", QFileDialog::DontResolveSymlinks);
-    //QString sampleDir = QFileDialog::getOpenFileName(this, tr("Select content"), "~");
-//    QLineEdit* samplePath = (QLineEdit*)m_info_widget.cellWidget(FieldsRows::SAMPLESPATH, 1);
-//    samplePath->setText(sampleDir);
+    m_samplesPath->setText(sampleDir);
 }
 
 
 void Upload_tab::uploadContent() {
-//    std::string lifetime = ((QDateEdit*)m_info_widget.cellWidget(FieldsRows::LIFETIME, 1))->text().toStdString();
-//    std::string keyparts = ((QComboBox*)m_info_widget.cellWidget(FieldsRows::KEYPARTS, 1))->currentData().toString().toStdString();
-//    std::string price = ((QLineEdit*)m_info_widget.cellWidget(FieldsRows::PRICE, 1))->text().toStdString();
-//    std::string assetType = ((QComboBox*)m_info_widget.cellWidget(FieldsRows::ASSETID, 1))->currentData().toString().toStdString();
-//    std::string assetName = ((QComboBox*)m_info_widget.cellWidget(FieldsRows::ASSETID, 1))->currentText().toStdString();
-//    std::string seeders = ((QComboBox*)m_info_widget.cellWidget(FieldsRows::SEEDERS, 1))->currentData().toString().toStdString();
-//    std::string path = ((QLineEdit*)m_info_widget.cellWidget(FieldsRows::CONTENTPATH, 1))->text().toStdString();
-//    std::string samples_path = ((QLineEdit*)m_info_widget.cellWidget(FieldsRows::SAMPLESPATH, 1))->text().toStdString();
-
     std::string lifetime = ((QDateEdit*)m_info_widget.cellWidget(0, 1))->text().toStdString();
     std::string seeders = ((QComboBox*)m_info_widget.cellWidget(0, 3))->currentData().toString().toStdString();
     std::string keyparts = ((QComboBox*)m_info_widget.cellWidget(0, 5))->currentData().toString().toStdString();
     std::string price = ((QLineEdit*)m_info_widget.cellWidget(2, 1))->text().toStdString();
-//    std::string assetType = ((QComboBox*)m_info_widget.cellWidget(FieldsRows::ASSETID, 1))->currentData().toString().toStdString();
-    std::string assetName = ((QComboBox*)m_info_widget.cellWidget(FieldsRows::ASSETID, 1))->currentText().toStdString();
-    std::string path = ((QLineEdit*)m_info_widget.cellWidget(FieldsRows::CONTENTPATH, 1))->text().toStdString();
-    std::string samples_path = ((QLineEdit*)m_info_widget.cellWidget(FieldsRows::SAMPLESPATH, 1))->text().toStdString();
+    std::string assetName = "DECENT";
+    std::string path = m_contentPath->text().toStdString();
+    std::string samples_path = m_samplesPath->text().toStdString();
 
     std::string title = m_title_text.text().toStdString();
     std::string desc = m_description_text.toPlainText().toStdString();
@@ -315,12 +257,12 @@ void Upload_tab::uploadContent() {
     }
 
     if (title.empty()) {
-        ALERT("Please specify synopsis");
+        ALERT("Please specify title");
         return;
     }
 
     if (desc.empty()) {
-        ALERT("Please specify synopsis");
+        ALERT("Please specify description");
         return;
     }
 
@@ -348,8 +290,8 @@ void Upload_tab::uploadContent() {
     std::string submitCommand = "submit_content_new";
     submitCommand += " " + GlobalEvents::instance().getCurrentUser();   //author
     submitCommand += " \"" + path + "\"";                               //URI
-    submitCommand += " \"" + samples_path + "\"";                       //URI
-    submitCommand += " \"ipfs\"";                                       //URI
+    submitCommand += " \"" + samples_path + "\"";                       //Samples
+    submitCommand += " \"magnet\"";                                    //Protocol
     submitCommand += " " + assetName;                                   //price_asset_name
     submitCommand += " " + price;                                       //price_amount
     submitCommand += " [" + seeders + "]";                              //seeders
@@ -381,8 +323,8 @@ void Upload_tab::uploadDone(void* a_clbkArg, int64_t a_err, const std::string& a
     m_description_text.setPlainText("");
     ((QDateEdit*)m_info_widget.cellWidget(0, 1))->setDate(QDate::currentDate());
     ((QLineEdit*)m_info_widget.cellWidget(2, 1))->setText("");
-    //((QLineEdit*)m_info_widget.cellWidget(FieldsRows::CONTENTPATH, 1))->setText("");
-    //((QLineEdit*)m_info_widget.cellWidget(FieldsRows::SAMPLESPATH, 1))->setText("");
+    m_contentPath->setText("");
+    m_samplesPath->setText("");
 
     ALERT("Content is submitted!");
     setEnabled(true);

@@ -30,7 +30,6 @@ add_executable( gui_wallet MACOSX_BUNDLE
                 src/dgui/gui_wallet_global.cpp
                 src/dgui/gui_wallet_mainwindow.cpp
                 src/dgui/main_gui_wallet.cpp
-                src/dgui/main_window_overview.cpp
                 src/dgui/overview_tab.cpp
                 src/dgui/text_display_dialog.cpp
                 src/dgui/transactions_tab.cpp
@@ -81,7 +80,7 @@ target_include_directories( gui_wallet PUBLIC
                           )
 
 target_link_libraries( gui_wallet PUBLIC
-                       Qt5::Core Qt5::Widgets graphene_app graphene_net graphene_chain graphene_egenesis_brief graphene_utilities graphene_wallet package_manager decent_encrypt pbc gmp fc ${CMAKE_DL_LIBS} ${PLATFORM_SPECIFIC_LIBS}
+                       Qt5::Core Qt5::Widgets graphene_app graphene_net graphene_chain graphene_egenesis_decent  graphene_utilities graphene_wallet package_manager decent_encrypt pbc gmp fc ${CMAKE_DL_LIBS} ${PLATFORM_SPECIFIC_LIBS}
                      )
 
 install( TARGETS
