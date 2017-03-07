@@ -63,6 +63,7 @@ public:
    ~seeding_plugin_impl();
 
    virtual void on_download_finished(package_transfer_interface::transfer_id id, package_object downloaded_package){
+      ilog("seeding plugin: on_download_finished() begin");
       my_seeding_id_type so_id = active_downloads[id];
       active_downloads.erase(id);
       service_thread->async([this,so_id, downloaded_package](){generate_por( so_id, downloaded_package );});
