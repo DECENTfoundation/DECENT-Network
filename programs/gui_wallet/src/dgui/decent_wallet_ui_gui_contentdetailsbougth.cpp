@@ -13,9 +13,6 @@
 using namespace gui_wallet;
 
 
-void SetNewTaskQtMainWnd2Glb(const std::string& a_inp_line, void* a_clbData);
-void SetNewTaskQtMainWnd3Glb(const std::string& a_inp_line, void* a_clbData);
-
 ContentDetailsBougth::ContentDetailsBougth()
 {
     m_rate_layout_right.setMargin(1);
@@ -104,12 +101,13 @@ void ContentDetailsBougth::RateContentSlot(int a_nSelected, int a_nIndex)
             QString::number(ullnRating,10) + tr(" true");
 
     std::string inp_str = qsRatingStr.toStdString();
-#if 1
-    if(!nContinue){return;}
-    SetNewTaskQtMainWnd3Glb(inp_str,NULL);
-#endif
 
-    __DEBUG_APP2__(0,"selected=%d, index=%d, continue=%d, rating=%ld, str=\"%s\"",
-                   a_nSelected,a_nIndex,nContinue,(long)ullnRating,inp_str.c_str());
+    if(!nContinue){
+        return;
+    }
+
+    std::string result;
+    RunTask(inp_str, result);
+
 
 }

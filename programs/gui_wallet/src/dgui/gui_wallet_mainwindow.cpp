@@ -101,17 +101,6 @@ static bool GetJsonVectorNextElem(const char* a_cpcJsonStr,TypeConstChar* a_beg,
 
 
 
-void SetNewTaskQtMainWnd2Glb(const std::string& a_inp_line, void* a_clbData)
-{
-    if(s_pMainWindowInstance)s_pMainWindowInstance->SetNewTaskQtMainWnd2(a_inp_line,a_clbData);
-}
-
-void SetNewTaskQtMainWnd3Glb(const std::string& a_inp_line, void* a_clbData)
-{
-    if(s_pMainWindowInstance)s_pMainWindowInstance->SetNewTaskQtMainWnd3(a_inp_line,a_clbData);
-}
-
-
 /*//////////////////////////////////////////////////////////////////////////////////*/
 
 Mainwindow_gui_wallet::Mainwindow_gui_wallet()
@@ -223,17 +212,6 @@ Mainwindow_gui_wallet::~Mainwindow_gui_wallet()
     delete m_pcInfoDlg;
 }
 
-
-void Mainwindow_gui_wallet::SetNewTaskQtMainWnd2(const std::string& a_inp_line, void* a_clbData)
-{
-    SetNewTask2(a_inp_line,this,a_clbData,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
-}
-
-
-void Mainwindow_gui_wallet::SetNewTaskQtMainWnd3(const std::string& a_inp_line, void* a_clbData)
-{
-    SetNewTask3(a_inp_line,this,a_clbData,&Mainwindow_gui_wallet::TaskDoneFuncGUI3);
-}
 
 
 void Mainwindow_gui_wallet::CreateActions()
@@ -521,21 +499,6 @@ void Mainwindow_gui_wallet::HelpSlot()
 }
 
 
-void Mainwindow_gui_wallet::TaskDoneFuncGUI3(void* a_clbkArg,int64_t a_err,
-                                             const std::string& a_task,const fc::variant& a_result)
-{
- 
-    const int cnCurIndex(m_pCentralWidget->GetMyCurrentTabIndex());
-    switch(cnCurIndex)
-    {
-    
-    case OVERVIEW:
-    {
-        TaskDoneOverrviewGUI3(a_clbkArg, a_err,a_task,a_result);
-        break;
-    }
-    }
-}
 
 
 void Mainwindow_gui_wallet::TaskDoneFuncGUI(void* a_clbkArg,int64_t a_err,const std::string& a_task,const std::string& a_result)
@@ -577,17 +540,7 @@ void Mainwindow_gui_wallet::TaskDoneFuncGUI(void* a_clbkArg,int64_t a_err,const 
         return;
     }
 
-    const int cnCurIndex(m_pCentralWidget->GetMyCurrentTabIndex());
-    switch(cnCurIndex)
-    {
-    
-    
-    case OVERVIEW:
-    {
-        TaskDoneOverrviewGUI(a_clbkArg, a_err,a_task,a_result);
-        break;
-    }
-    }
+
 
     if(strstr(a_task.c_str(),__CONNECTION_CLB_) == a_task.c_str()){__DEBUG_APP2__(0,"this should not work!");}
     else if( strstr(a_task.c_str(),"info") == a_task.c_str())
@@ -751,16 +704,7 @@ void Mainwindow_gui_wallet::TaskDoneFuncGUI(void* a_clbkArg,int64_t a_err,const 
 void Mainwindow_gui_wallet::ManagementNewFuncGUI(void* a_clbkArg,int64_t a_err,const std::string& a_task,const std::string& a_result)
 {
 
-    int nCurentTab = m_pCentralWidget->GetMyCurrentTabIndex();
-
-    switch(nCurentTab)
-    {
-    case OVERVIEW:
-    {
-        ManagementOverviewGUI();
-        break;
-    }
-    }
+    
 }
 
 

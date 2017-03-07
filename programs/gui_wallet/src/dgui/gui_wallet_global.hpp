@@ -16,7 +16,7 @@
 #include <QDateTime>
 #include <QDate>
 #include <QTime>
-
+#include <numeric>
 
 #define ALERT(message)                                  \
 {                                                       \
