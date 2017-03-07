@@ -322,29 +322,8 @@ package_manager::package_manager() {
 }
 
 package_manager::~package_manager() {
-    ilog("saving current transfers...");
-    save_json_uploads();
-    save_json_downloads();
-}
-
-void package_manager::load_json_uploads() {
-    const path packages_path = get_packages_path();
-    path uploads_json = packages_path / "uploads.json";
-
-    _seeding_packages.clear();
-
-    if (is_regular_file(uploads_json)) {
-
-        std::ifstream input_file(uploads_json.string());
-        json uploads;
-        input_file >> uploads;
-
-        for (json::iterator it = uploads.begin(); it != uploads.end(); ++it) {
-            string hash = (*it)["hash"].get<std::string>();
-            string protocol = (*it)["protocol"].get<std::string>();
-            _seeding_packages.insert(make_pair(hash, protocol));
-        }
-    }
+    ilog("saving package manager state...");
+    save_json_state();
 }
 
 void package_manager::restore_json_state() {
@@ -372,11 +351,6 @@ void package_manager::set_packages_path(const boost::filesystem::path& packages_
 
     ilog("restoring package manager state...");
     restore_json_state();
-}
-
-package_manager::~package_manager() {
-    ilog("saving package manager state...");
-    save_json_state();
 }
 
 boost::filesystem::path package_manager::get_packages_path() const {
