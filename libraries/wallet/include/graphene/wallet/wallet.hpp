@@ -1509,7 +1509,7 @@ class wallet_api
        * @return buying_objects corresponding to the provided consumer
        * @ingroup WalletCLI
        */
-      optional<buying_object> get_buying_by_consumer_URI( const string& account, const string & URI )const;
+      optional<buying_object> get_buying_by_consumer_URI( const string& account_id_or_name, const string & URI )const;
 
       /**
        * @brief Get rating given by a consumer to a content
@@ -1534,7 +1534,7 @@ class wallet_api
        * @return The contents corresponding to the provided author
        * @ingroup WalletCLI
        */
-      vector<content_object> list_content_by_author( const account_id_type& author )const;
+      vector<content_object> list_content_by_author( const string& account_id_or_name )const;
 
       /**
        * @brief Get a list of contents ordered alphabetically by URI strings
