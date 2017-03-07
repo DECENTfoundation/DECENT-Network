@@ -59,6 +59,7 @@ Upload_tab::Upload_tab()
 
     m_infoLayoutHeader.setFont(m_font);
     m_title_text.setPlaceholderText("  Title");
+    m_title_text.setAttribute(Qt::WA_MacShowFocusRect, 0);
     m_title_text.setFixedHeight(40);
     //m_title_text.setFixedWidth(200);
     m_synopsis_layout.addWidget(&m_title_text);

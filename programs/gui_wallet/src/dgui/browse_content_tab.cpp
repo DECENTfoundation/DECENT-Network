@@ -290,6 +290,7 @@ void Browse_content_tab::ShowDigitalContentsGUI(std::vector<SDigitalContent>& co
         m_TableWidget.setCellWidget(index, 0, new TableWidgetItemW<QLabel>(aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
                                                                                                             tr("")));
         ((QLabel*)m_TableWidget.cellWidget(index,0))->setPixmap(image1);
+        ((QLabel*)m_TableWidget.cellWidget(index,0))->setAlignment(Qt::AlignCenter);
         
         std::string created_str;
         for(int i = 0; i < 10; ++i)
@@ -380,8 +381,8 @@ void Browse_content_tab::ShowDigitalContentsGUI(std::vector<SDigitalContent>& co
     
     m_main_layout.addWidget(&m_TableWidget);
     //m_pTableWidget->resize(nWidth,m_pTableWidget->height());
-    //m_pTableWidget->horizontalHeader()->setStretchLastSection(true);
-    //m_pTableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    m_pTableWidget->horizontalHeader()->setStretchLastSection(true);
+    m_pTableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     ArrangeSize();
 }
 

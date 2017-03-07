@@ -164,6 +164,7 @@ void Overview_tab::updateContents() {
         auto content = contents[i];
         
         NewButton* btn = new NewButton(content[0].get<std::string>());
+        btn->setAlignment(Qt::AlignCenter);
         
         QPixmap image1(":/icon/images/info1_white.svg");
         btn->setPixmap(image1);
@@ -177,7 +178,6 @@ void Overview_tab::updateContents() {
         
         
         table_widget.setRowHeight(i + 1,40);
-        
         table_widget.cellWidget(i + 1 , 0)->setStyleSheet("* { background-color: rgb(255,255,255); }");
         table_widget.item(i+1,1)->setBackground(Qt::white);
         table_widget.item(i+1,2)->setBackground(Qt::white);
