@@ -207,7 +207,7 @@ seeding_plugin_impl::generate_por(my_seeding_id_type so_id, graphene::package::p
 
    ilog("seeding plugin_impl:  generate_por() - generate time for this content is planned at ${t}",("t", generate_time) );
    fc::time_point next_wakeup( fc::time_point::now() + fc::microseconds(POR_WAKEUP_INTERVAL_SEC * 1000000 ));
-   if( fc::time_point(generate_time) <= ( fc::time_point::now() +  fc::seconds(POR_WAKEUP_INTERVAL_SEC)) )
+   if( fc::time_point(generate_time) <= ( fc::time_point::now() -  fc::seconds(POR_WAKEUP_INTERVAL_SEC)) )
    {
       ilog("seeding plugin_impl: generate_por() - generating PoR");
       decent::crypto::custody_proof proof;
@@ -238,7 +238,7 @@ seeding_plugin_impl::generate_por(my_seeding_id_type so_id, graphene::package::p
       tx.sign(sritr->privKey, _chain_id);
       idump((tx));
 
-      main_thread->async([this, tx]() { elog("seeding plugin_impl:  generate_por lambda - pushing transaction"); database().push_transaction(tx); });
+      main_thread->async([this, tx]() { database().push_transaction(tx); });
 
       ilog("broadcasting out PoR");
       _self.p2p_node().broadcast_transaction(tx);
