@@ -309,7 +309,7 @@ package_manager::package_manager() {
 }
 
 package_manager::~package_manager() {
-    std::cout << "Saving current transfers..." << std::endl;
+    ilog("saving current transfers...");
     save_json_uploads();
     save_json_downloads();
 }
@@ -367,7 +367,7 @@ void package_manager::load_json_downloads() {
 
         for (json::iterator it = downloads.begin(); it != downloads.end(); ++it) {
             string url = (*it)["url"].get<std::string>();
-            std::cout << "Resuming download " << url << std::endl;
+            ilog("resuming download ${url}", ("url", url));
             download_package(url, empty_transfer_listener::get_one());
         }
     }
@@ -423,8 +423,9 @@ void package_manager::set_packages_path(const boost::filesystem::path& packages_
     seeding_packages::iterator it = _seeding_packages.begin();
     for (; it != _seeding_packages.end(); ++it) {
         const path package_path = packages_path / it->first;
-        upload_package(package_path, it->second, empty_transfer_listener::get_one());
-        std::cout << "Uploading " << package_path.string() << " using " << it->second << std::endl;
+        const package_object package(package_path);
+        upload_package(package, it->second, empty_transfer_listener::get_one());
+        ilog("uploading ${package} using ${protocol}", ("package", package.get_path().string()) ("protocol", it->second));
     }
 
     load_json_downloads();
@@ -575,9 +576,6 @@ package_object package_manager::create_package( const boost::filesystem::path& c
 
 	return package_object(packages_path / hash.str());
 }
-	
-
-
 
 package_transfer_interface::transfer_id 
 package_manager::upload_package( const package_object& package, 
@@ -600,9 +598,8 @@ package_manager::upload_package( const package_object& package,
     try {
         t.transport->upload_package(t.job_id, package, &listener);
     } catch(std::exception& ex) {
-        std::cout << "Upload error: " << ex.what() << std::endl;
+        elog("upload error: ${error}", ("error", ex.what()));
     }
-
 
     _seeding_packages.insert(make_pair(package.get_hash().str(), protocol_name));
 
@@ -633,7 +630,7 @@ package_manager::download_package( const string& url,
     try {
         t.transport->download_package(t.job_id, url, &listener);
     } catch(std::exception& ex) {
-        std::cout << "Download error: " << ex.what() << std::endl;
+        elog("download error: ${error}", ("error", ex.what()));
     }
 
     return t.job_id;
@@ -648,8 +645,6 @@ void package_manager::print_all_transfers() {
     }
 }
 
- 
-
 std::string package_manager::get_transfer_url(package_transfer_interface::transfer_id id) {
     if (id >= _all_transfers.size()) {
         FC_THROW("Invalid transfer id: ${id}", ("id", id) );
@@ -658,7 +653,6 @@ std::string package_manager::get_transfer_url(package_transfer_interface::transf
     transfer_job& job = _all_transfers[id];
     return job.transport->get_transfer_url();
 }
-
 
 std::vector<package_object> package_manager::get_packages() {
     const path packages_path = get_packages_path();
@@ -678,15 +672,15 @@ package_object package_manager::get_package_object(fc::ripemd160 hash) {
     return package_object(packages_path / hash.str());
 }
 
-
 void package_manager::delete_package(fc::ripemd160 hash) {
     const path packages_path = get_packages_path();
     package_object po(packages_path / hash.str());
     if (!po.is_valid()) {
-        FC_THROW("Invalid package: ${hash}", ("hash", hash.str()) );
+        remove_all(po.get_path());
     }
-
-    remove_all(po.get_path());
+    else {
+        elog("invalid package: ${hash}", ("hash", hash.str()) );
+    }
 }
 
 uint32_t package_object::create_proof_of_custody(decent::crypto::custody_data cd, decent::crypto::custody_proof&proof) const {

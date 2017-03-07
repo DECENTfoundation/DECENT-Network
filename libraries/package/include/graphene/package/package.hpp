@@ -17,9 +17,11 @@
 
 namespace graphene { namespace package {
 
+
 class package_object {
 public:
-	package_object(const boost::filesystem::path& package_path);
+    package_object() = delete;
+	explicit package_object(const boost::filesystem::path& package_path);
 
 	boost::filesystem::path get_custody_file() const { return _package_path / "content.cus"; }
 	boost::filesystem::path get_content_file() const { return _package_path / "content.zip.aes"; }
@@ -27,30 +29,24 @@ public:
 	const boost::filesystem::path& get_path() const { return _package_path; }
 
 	void get_all_files(std::vector<boost::filesystem::path>& all_files) const;
-
 	bool verify_hash() const;
-
 	fc::ripemd160 get_hash() const { return _hash; }
-
 	bool is_valid() const { return _hash != fc::ripemd160(); }
-
 	uint32_t create_proof_of_custody(decent::crypto::custody_data cd, decent::crypto::custody_proof& proof) const;
 
 private:
-	boost::filesystem::path   _package_path;
-	fc::ripemd160			  _hash;
+	boost::filesystem::path  _package_path;
+	fc::ripemd160            _hash;
 };
-
 
 
 class package_transfer_interface {
 public:
-	typedef int   transfer_id;
+    typedef int transfer_id;
 
-public:
-	struct transfer_progress {
-		transfer_progress() {}
-		transfer_progress(int tb, int cb, int cs) : total_bytes(tb), current_bytes(cb), current_speed(cs) {}
+    struct transfer_progress {
+        transfer_progress() : total_bytes(0), current_bytes(0), current_speed(0) { }
+		transfer_progress(int tb, int cb, int cs) : total_bytes(tb), current_bytes(cb), current_speed(cs) { }
 
 		int total_bytes;
 		int current_bytes;
@@ -59,6 +55,7 @@ public:
 
 	class transfer_listener {
 	public:
+        virtual ~transfer_listener() = default;
 		virtual void on_download_started(transfer_id id) = 0;
 		virtual void on_download_finished(transfer_id id, package_object downloaded_package) = 0;
 		virtual void on_download_progress(transfer_id id, transfer_progress progress) = 0;
@@ -66,7 +63,7 @@ public:
 		virtual void on_error(transfer_id id, std::string error) = 0;
 	};
 
-public:
+    virtual ~package_transfer_interface() = default;
 	virtual void upload_package(transfer_id id, const package_object& package, transfer_listener* listener) = 0;
 	virtual void download_package(transfer_id id, const std::string& url, transfer_listener* listener) = 0;
 	virtual void print_status() = 0;
@@ -76,11 +73,8 @@ public:
 };
 
 
-
 class empty_transfer_listener : public package_transfer_interface::transfer_listener {
-
 public:
-
 	static empty_transfer_listener& get_one() {
 		static empty_transfer_listener one;
 		return one;
@@ -89,12 +83,9 @@ public:
 	virtual void on_download_started(package_transfer_interface::transfer_id id) { }
 	virtual void on_download_finished(package_transfer_interface::transfer_id id, package_object downloaded_package) { }
 	virtual void on_download_progress(package_transfer_interface::transfer_id id, package_transfer_interface::transfer_progress progress) { }
-
 	virtual void on_upload_started(package_transfer_interface::transfer_id id, const std::string& url) { }
-
 	virtual void on_error(package_transfer_interface::transfer_id id, std::string error) { }
 };
-
 
 
 class package_manager {
@@ -118,13 +109,18 @@ private:
 
 private:
 	package_manager();
-	package_manager(const package_manager&) {}
-	~package_manager();
 
 public:
+    package_manager(const package_manager&)             = delete;
+    package_manager(package_manager&&)                  = delete;
+    package_manager& operator=(const package_manager&)  = delete;
+    package_manager& operator=(package_manager&&)       = delete;
+
+    ~package_manager();
+
 	static package_manager& instance() {
-		static package_manager pac_man;
-		return pac_man;
+		static package_manager the_package_manager;
+		return the_package_manager;
 	}
 
 public:
@@ -143,7 +139,7 @@ public:
 
 	package_transfer_interface::transfer_id download_package( const std::string& url,
 															  package_transfer_interface::transfer_listener& listener );
-	
+
 	std::vector<package_object> get_packages();
 	package_object				get_package_object(fc::ripemd160 hash);
 	void                        delete_package(fc::ripemd160 hash);
