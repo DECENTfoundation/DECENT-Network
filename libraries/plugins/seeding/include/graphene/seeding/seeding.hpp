@@ -66,6 +66,10 @@ public:
       my_seeding_id_type so_id = active_downloads[id];
       active_downloads.erase(id);
       service_thread->async([this,so_id, downloaded_package](){generate_por( so_id, downloaded_package );});
+      //hack to deal with ipfs until the package manager is finished
+      fc::url download_url(package_manager::instance().get_transfer_url(id));
+      if(download_url.proto() == "ipfs")
+         package_manager::instance().upload_package(downloaded_package, "ipfs", *this);
    };
 
    graphene::chain::database &database();

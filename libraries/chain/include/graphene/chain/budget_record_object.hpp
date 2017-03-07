@@ -28,6 +28,12 @@
 
 namespace graphene { namespace chain {
 
+struct real_supply{
+   share_type account_balances = 0;
+   share_type vesting_balances = 0;
+   share_type escrows = 0;
+};
+
 struct budget_record
 {
    uint64_t time_since_last_budget = 0;
@@ -49,6 +55,8 @@ struct budget_record
 
    // change in supply due to budget operations
    share_type supply_delta = 0;
+
+   real_supply _real_supply;
 };
 
 class budget_record_object;
@@ -75,8 +83,15 @@ FC_REFLECT(
    (total_budget)
    (witness_budget)
    (supply_delta)
+   (_real_supply)
 )
 
+FC_REFLECT(
+      graphene::chain::real_supply,
+      (account_balances)
+      (vesting_balances)
+      (escrows)
+)
 FC_REFLECT_DERIVED(
    graphene::chain::budget_record_object,
    (graphene::db::object),

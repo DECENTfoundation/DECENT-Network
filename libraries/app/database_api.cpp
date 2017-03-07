@@ -126,7 +126,6 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       vector<proposal_object> get_proposed_transactions( account_id_type id )const;
 
       // Blinded balances
-      vector<blinded_balance_object> get_blinded_balances( const flat_set<commitment_type>& commitments )const;
 
       // Decent
       vector<buying_object> get_open_buyings()const;
@@ -142,6 +141,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       vector<seeder_object> list_publishers_by_price( const uint32_t count )const;
       vector<uint64_t> get_content_ratings( const string& URI)const;
       optional<seeder_object> get_seeder(account_id_type) const;
+      optional<vector<seeder_object>> list_seeders_by_upload( const uint32_t count )const;
 
    //private:
       template<typename T>
@@ -1464,34 +1464,14 @@ vector<proposal_object> database_api_impl::get_proposed_transactions( account_id
 
 //////////////////////////////////////////////////////////////////////
 //                                                                  //
-// Blinded balances                                                 //
-//                                                                  //
-//////////////////////////////////////////////////////////////////////
-
-vector<blinded_balance_object> database_api::get_blinded_balances( const flat_set<commitment_type>& commitments )const
-{
-   return my->get_blinded_balances( commitments );
-}
-
-vector<blinded_balance_object> database_api_impl::get_blinded_balances( const flat_set<commitment_type>& commitments )const
-{
-   vector<blinded_balance_object> result; result.reserve(commitments.size());
-   const auto& bal_idx = _db.get_index_type<blinded_balance_index>();
-   const auto& by_commitment_idx = bal_idx.indices().get<by_commitment>();
-   for( const auto& c : commitments )
-   {
-      auto itr = by_commitment_idx.find( c );
-      if( itr != by_commitment_idx.end() )
-         result.push_back( *itr );
-   }
-   return result;
-}
-
-//////////////////////////////////////////////////////////////////////
-//                                                                  //
 // Decent                                                           //
 //                                                                  //
 //////////////////////////////////////////////////////////////////////
+
+real_supply database_api::get_real_supply()const
+{
+   return my->_db.get_real_supply();
+}
 
 vector<buying_object> database_api::get_open_buyings()const
 {
@@ -1756,6 +1736,31 @@ vector<uint64_t> database_api_impl::get_content_ratings( const string& URI)const
       return result;
    }
    FC_CAPTURE_AND_RETHROW( (URI) );
+}
+
+optional<vector<seeder_object>> database_api::list_seeders_by_upload( uint32_t count )const
+{
+   return my->list_seeders_by_upload( count );
+}
+
+optional<vector<seeder_object>> database_api_impl::list_seeders_by_upload( uint32_t count )const
+{
+   FC_ASSERT( count <= 100 );
+   const auto& idx = _db.get_index_type<seeding_statistics_index>().indices().get<by_upload>();
+   const auto& idx2 = _db.get_index_type<seeder_index>().indices().get<by_seeder>();
+   vector<seeder_object> result;
+   result.reserve(count);
+
+   auto itr = idx.begin();
+
+   while(count-- && itr != idx.end())
+   {
+      const auto& so_itr = idx2.find(itr->seeder);
+      result.emplace_back(*so_itr);
+      ++itr;
+   }
+
+   return result;
 }
 
 //////////////////////////////////////////////////////////////////////
