@@ -117,7 +117,6 @@ namespace gui_wallet
         QAction             m_ActionAbout;
         QAction             m_ActionInfo;
         QAction             m_ActionHelp;
-        QAction             m_ActionWalletContent;
         QAction             m_ActionLock;
         QAction             m_ActionUnlock;
         QAction             m_ActionImportKey;
