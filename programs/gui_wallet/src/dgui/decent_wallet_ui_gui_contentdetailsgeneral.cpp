@@ -23,18 +23,16 @@ ContentDetailsGeneral::ContentDetailsGeneral()
     :
       m_label(this,NULL,&ContentDetailsGeneral::LabelPushCallbackGUI)
 {
-    
-//    QGraphicsDropShadowEffect *effect = new QGraphicsDropShadowEffect(this);
-//    effect->setBlurRadius(0);
-//    effect->setColor(QColor("#EEEEEE"));
-//    effect->setOffset(1,1);
-//    //ui->userName->setGraphicsEffect(effect);
-    
     QPixmap aPixMap(":/icon/images/buy.png");
     QVBoxLayout* image_layout = new QVBoxLayout;
     m_label.setScaledContents(true);
     m_label.setPixmap(aPixMap);
-//    m_label.setGraphicsEffect(effect);
+    
+    QGraphicsDropShadowEffect *effect = new QGraphicsDropShadowEffect(this);
+    effect->setBlurRadius(0);
+    effect->setColor(QColor("#000000"));
+    effect->setOffset(1,1);
+    m_label.setGraphicsEffect(effect);
     
     image_layout->addWidget(new QLabel());
     image_layout->addWidget(&m_label);
@@ -44,6 +42,9 @@ ContentDetailsGeneral::ContentDetailsGeneral()
     m_free_for_child.addLayout(image_layout);
     m_free_for_child.addWidget(new QLabel());
     m_free_for_child.addWidget(new QLabel());
+    
+    
+
 
     setFixedSize(620,480);
 }

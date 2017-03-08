@@ -116,7 +116,7 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details)
     
     
     
-    std::string str_price = std::to_string(a_cnt_details.price.amount) + " DECENT";
+    std::string str_price = std::to_string(a_cnt_details.price.amount) + " DCT";
     
     m_vLabels[7].setText(tr(str_price.c_str()));
     

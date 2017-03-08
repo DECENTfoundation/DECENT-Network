@@ -32,7 +32,7 @@
 #include <cryptopp/md5.h>
 #include <cryptopp/osrng.h>
 
-
+#include <QIcon>
 
 #include "json.hpp"
 
@@ -139,9 +139,12 @@ Upload_tab::Upload_tab()
     m_samplesPath->setReadOnly(true);
     m_samplesPath->setHidden(true);
     
-    
+    QPixmap image(":/icon/images/browse.svg");
+    QIcon button_icon(image);
     m_info_widget.setCellWidget(2, 2, new QLabel("        Samples"));
-    QPushButton* browse_samples_button = new QPushButton("Browse...");
+    QPushButton* browse_samples_button = new QPushButton();
+    browse_samples_button->setIcon(button_icon);
+    
     m_info_widget.setCellWidget(2, 5, browse_samples_button);
     connect(browse_samples_button, SIGNAL(clicked()),this, SLOT(browseContent()));
 
@@ -157,8 +160,11 @@ Upload_tab::Upload_tab()
 
     m_info_widget.setCellWidget(2, 4, new QLabel("        Content"));
 
-
-    QPushButton* browse_content_button = new QPushButton("Browse...");
+    QPixmap image2(":/icon/images/browse.svg");
+    QIcon button_icon2(image2);
+    
+    QPushButton* browse_content_button = new QPushButton();
+    browse_content_button->setIcon(button_icon2);
     m_info_widget.setCellWidget(2, 3, browse_content_button);
     connect(browse_content_button, SIGNAL(clicked()),this, SLOT(browseSamples()));
 

@@ -152,7 +152,7 @@ void PurchasedTab::updateContents() {
                 obj->m_pTableWidget->setItem(i + 1, 1, new QTableWidgetItem(QString::fromStdString(synopsis)));
                 obj->m_pTableWidget->setItem(i + 1, 2, new QTableWidgetItem(QString::number(rating)));
                 obj->m_pTableWidget->setItem(i + 1, 3, new QTableWidgetItem(QString::number(size) + tr(" MB")));
-                obj->m_pTableWidget->setItem(i + 1, 4, new QTableWidgetItem(QString::number(price)));
+                obj->m_pTableWidget->setItem(i + 1, 4, new QTableWidgetItem(QString::number(price) + " DCT"));
                 
                 std::string s_time;
                 for(int i = 0; i < time.find("T"); ++i)
