@@ -20,8 +20,7 @@ using namespace gui_wallet;
 using namespace nlohmann;
 
 
-static const char* s_vccpItemNames[]={" ","Created","Title","Rating",
-                                     "Size","Price","Purchased"};
+static const char* s_vccpItemNames[]={" ","Title","Rating","Size","Price","Created","Purchased"};
 static const int   s_cnNumberOfRows = sizeof(s_vccpItemNames)/sizeof(const char*);
 
 
@@ -144,16 +143,35 @@ void PurchasedTab::updateContents() {
                 
                 std::string expiration_or_delivery_time = contents[i]["expiration_or_delivery_time"].get<std::string>();
                 
+                QLabel* imag_label = new QLabel();
+                imag_label->setAlignment(Qt::AlignCenter);
+
+                QPixmap image1(":/icon/images/info1.svg");
+                imag_label->setPixmap(image1);
+                obj->m_pTableWidget->setCellWidget(i + 1, 0, imag_label);
+                obj->m_pTableWidget->setItem(i + 1, 1, new QTableWidgetItem(QString::fromStdString(synopsis)));
+                obj->m_pTableWidget->setItem(i + 1, 2, new QTableWidgetItem(QString::number(rating)));
+                obj->m_pTableWidget->setItem(i + 1, 3, new QTableWidgetItem(QString::number(size) + tr(" MB")));
+                obj->m_pTableWidget->setItem(i + 1, 4, new QTableWidgetItem(QString::number(price)));
                 
+                std::string s_time;
+                for(int i = 0; i < time.find("T"); ++i)
+                {
+                    s_time.push_back(time[i]);
+                }
+                obj->m_pTableWidget->setItem(i + 1, 5, new QTableWidgetItem(QString::fromStdString(s_time)));
                 
+                s_time = "";
+                for(int i = 0; i < expiration_or_delivery_time.find("T"); ++i)
+                {
+                    s_time.push_back(expiration_or_delivery_time[i]);
+                }
+                obj->m_pTableWidget->setItem(i + 1, 6, new QTableWidgetItem(QString::fromStdString(s_time)));
                 
-                
-                obj->m_pTableWidget->setCellWidget(i + 1, 1, new QLabel(QString::fromStdString(time)));
-                obj->m_pTableWidget->setCellWidget(i + 1, 2, new QLabel(QString::fromStdString(synopsis)));
-                obj->m_pTableWidget->setCellWidget(i + 1, 3, new QLabel(QString::number(rating)));
-                obj->m_pTableWidget->setCellWidget(i + 1, 4, new QLabel(QString::number(size) + tr(" MB")));
-                obj->m_pTableWidget->setCellWidget(i + 1, 5, new QLabel(QString::number(price) + tr(" DECENT")));
-                obj->m_pTableWidget->setCellWidget(i + 1, 6, new QLabel(QString::fromStdString(expiration_or_delivery_time)));
+                for(int j = 1; j <= 6; ++j)
+                {
+                    obj->m_pTableWidget->item(i + 1, j)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+                }
 
             }
             
