@@ -10,7 +10,7 @@
 #ifndef DECENT_WALLET_UI_GUI_CONTENTDETAILSBASE_HPP
 #define DECENT_WALLET_UI_GUI_CONTENTDETAILSBASE_HPP
 
-#define NUMBER_OF_SUB_LAYOUTS2   7
+#define NUMBER_OF_SUB_LAYOUTS2   8
 
 #include <QDialog>
 #include "qt_commonheader.hpp"

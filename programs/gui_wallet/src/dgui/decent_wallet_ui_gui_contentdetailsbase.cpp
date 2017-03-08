@@ -18,13 +18,13 @@ using namespace gui_wallet;
 
 static const char* s_vcpcFieldsGeneral[NUMBER_OF_SUB_LAYOUTS2] = {
     "Author", "Expiration","Created","Price",
-    "Averege Rating","Size","Times Bought"
+    "Averege Rating","Size","Times Bought", "Description"
 };
 
 
 static const char* s_vcpcFieldsBougth[NUMBER_OF_SUB_LAYOUTS2] = {
     "Author", "Expiration","Created","Price",
-    "Averege Rating","Size","Times Bought"
+    "Averege Rating","Size","Times Bought", "Description"
 };
 
 typedef const char* TypeCpcChar;
@@ -36,11 +36,8 @@ ContentDetailsBase::ContentDetailsBase()
 {
     int i, nIndexKent(1), nIndexZuyg(0);
     
-    desc_text.setReadOnly(true);
-    desc_text.setFixedHeight(50);
     m_main_layout.setSpacing(0);
     m_main_layout.setContentsMargins(0,0,0,0);
-    m_main_layout.addWidget(&desc_text);
 
     for(i=0;i<NUMBER_OF_SUB_LAYOUTS2;++i,nIndexZuyg+=2,nIndexKent+=2)
     {
@@ -78,9 +75,12 @@ ContentDetailsBase::ContentDetailsBase()
             m_main_layout.addWidget(&m_vSub_Widgets[i]);
         }
     }
-    m_main_layout.addLayout(&m_free_for_child);
+//    m_main_layout.addLayout(&m_free_for_child);
+//    
+//    setLayout(&m_main_layout);
     
-    setLayout(&m_main_layout);
+    
+   
     setStyleSheet("background-color:white;");
 }
 
@@ -93,6 +93,42 @@ namespace DCF{enum{AMOUNT=9, TIMES_BOUGHT=15};}
 
 void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details)
 {
+    if(a_cnt_details.type == DCT::BOUGHT)
+    {
+        QHBoxLayout* stars = new QHBoxLayout;
+        QLabel* m_RateText = new QLabel;
+        m_RateText->setText( tr("Please Rate:"));
+        m_RateText->setStyleSheet("color:green;" "background-color:white;" "font-weight: bold");
+        QPixmap green_star(":/icon/images/green_asterix.png");
+        QPixmap white_star(":/icon/images/white_asterix.png");
+        
+        white_star = white_star.scaled(QSize(20,20));
+        green_star = green_star.scaled(QSize(20,20));
+        
+        std::vector<QLabel*> stars_labels;
+        stars_labels.resize(0);
+        stars->addWidget(new QLabel);
+        stars->addWidget(new QLabel);
+        stars->addWidget(new QLabel);
+        stars->addWidget(m_RateText);
+        QHBoxLayout* stars_lay = new QHBoxLayout;
+        for(int i = 0; i < 5; ++i)
+        {
+            
+            stars_labels.push_back(new QLabel());
+            stars_labels[i]->setPixmap(white_star);
+            
+            stars_lay->addWidget(stars_labels[i]);
+        }
+        stars->addLayout(stars_lay);
+        m_main_layout.addLayout(stars);
+    }
+    else
+    {
+        m_main_layout.addLayout(&m_free_for_child);
+    }
+    
+    setLayout(&m_main_layout);
     int i,nIndexZuyg(0);
     NewType vNames = s_vFields[a_cnt_details.type];
     m_pContentInfo = &a_cnt_details;
@@ -153,6 +189,7 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details)
     m_vLabels[11].setText(qsSizeTxt);
     m_vLabels[13].setText(QString::number(a_cnt_details.times_bougth));
     
+   // m_vLabels[]
     std::string synopsis = m_pContentInfo->synopsis;
     std::string desc = "";
     try {
@@ -162,8 +199,7 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details)
         
     } catch (...) {}
     this->setWindowTitle(QString::fromStdString(synopsis));
-    desc_text.setText(QString::fromStdString(desc));
-
+    m_vLabels[15].setText(QString::fromStdString(desc));
     
     QDialog::exec();
 }
