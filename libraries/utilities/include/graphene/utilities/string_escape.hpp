@@ -27,6 +27,8 @@
 
 namespace graphene { namespace utilities {
 
-  std::string escape_string_for_c_source_code(const std::string& input);
+    std::string escape_string_for_c_source_code(const std::string& input);
+    std::string json_unescape_string(const std::string& s);
+    std::string json_escape_string(const std::string& s);
 
 } } // end namespace graphene::utilities

@@ -548,14 +548,23 @@ class database_api
        * @return The contents corresponding to the provided author
        */
       vector<content_object> list_content_by_author( const account_id_type& author )const;
+    
+    /**
+     * @brief Get a list of contents ordered alphabetically by URI strings
+     * @param URI_begin Lower bound of URI strings to retrieve
+     * @param count Maximum number of contents to fetch (must not exceed 100)
+     * @return The contents found
+     */
+    vector<content_summary> list_content( const string& URI_begin, uint32_t count )const;
 
-      /**
-       * @brief Get a list of contents ordered alphabetically by URI strings
-       * @param URI_begin Lower bound of URI strings to retrieve
-       * @param count Maximum number of contents to fetch (must not exceed 100)
-       * @return The contents found
-       */
-      vector<content_summary> list_content( const string& URI_begin, uint32_t count )const;
+    
+    /**
+     * @brief Get a list of contents ordered alphabetically by URI strings
+     * @param term Search term
+     * @param count Maximum number of contents to fetch (must not exceed 100)
+     * @return The contents found
+     */
+    vector<content_summary> search_content( const string& term, uint32_t count )const;
 
 
       /**
@@ -680,6 +689,7 @@ FC_API(graphene::app::database_api,
    (get_content)
    (list_content_by_author)
    (list_content)
+   (search_content)
    (list_content_by_bought)
    (list_publishers_by_price)
    (get_content_ratings)

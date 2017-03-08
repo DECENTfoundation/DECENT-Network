@@ -1506,6 +1506,15 @@ class wallet_api
        * @ingroup WalletCLI
        */
       vector<buying_object> get_buying_history_objects_by_consumer( const string& account_id_or_name )const;
+    
+      /**
+       * @brief Get history buying_objects by consumer
+       * @param consumer Consumer of the buyings to retrieve
+       * @param title Title of the buyings to filter by
+       * @return History buying_objects corresponding to the provided consumer
+       * @ingroup WalletCLI
+       */
+      vector<buying_object> get_buying_history_objects_by_consumer_title( const string& account_id_or_name, const string& title )const;
 
        /**
        * @brief Get buying (open or history) by consumer and URI
@@ -1541,15 +1550,24 @@ class wallet_api
        */
       vector<content_object> list_content_by_author( const account_id_type& author )const;
 
-      /**
-       * @brief Get a list of contents ordered alphabetically by URI strings
-       * @param URI_begin Lower bound of URI strings to retrieve
-       * @param count Maximum number of contents to fetch (must not exceed 100)
-       * @return The contents found
-       * @ingroup WalletCLI
-       */
-      vector<content_summary> list_content( const string& URI_begin, uint32_t count )const;
-
+    /**
+     * @brief Get a list of contents ordered alphabetically by URI strings
+     * @param URI_begin Lower bound of URI strings to retrieve
+     * @param count Maximum number of contents to fetch (must not exceed 100)
+     * @return The contents found
+     * @ingroup WalletCLI
+     */
+    vector<content_summary> list_content( const string& URI_begin, uint32_t count )const;
+    
+    /**
+     * @brief Get a list of contents ordered alphabetically by search term
+     * @param term seach term
+     * @param count Maximum number of contents to fetch (must not exceed 100)
+     * @return The contents found
+     * @ingroup WalletCLI
+     */
+    vector<content_summary> search_content( const string& term, uint32_t count )const;
+    
 
       /**
        * @brief Get a list of contents by times bought, in decreasing order
@@ -1799,12 +1817,14 @@ FC_API( graphene::wallet::wallet_api,
         (get_open_buyings_by_URI)
         (get_open_buyings_by_consumer)
         (get_buying_history_objects_by_consumer)
+        (get_buying_history_objects_by_consumer_title)
         (get_buying_by_consumer_URI)
         (get_rating)
         (get_content)
         (get_real_supply)
         (list_content_by_author)
         (list_content)
+        (search_content)
         (list_content_by_bought)
         (list_publishers_by_price)
         (get_content_ratings)

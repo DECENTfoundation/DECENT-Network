@@ -166,8 +166,9 @@ void Browse_content_tab::updateContents() {
         std::cout << ex.what() << std::endl;
     }*/
     
-    
-    SetNewTask("list_content \"\" 100", this, NULL, +[](void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
+    std::string filterText = m_filterLineEdit.text().toStdString();
+
+    SetNewTask("search_content \"" + filterText + "\" 100", this, NULL, +[](void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
         Browse_content_tab* obj = (Browse_content_tab*)owner;
         
         try {
@@ -211,7 +212,6 @@ void Browse_content_tab::updateContents() {
                 
                 
                 obj->ArrangeSize();
-                //ArrangeSize();
             }
             
             obj->ShowDigitalContentsGUI(dContents);
@@ -225,54 +225,16 @@ void Browse_content_tab::updateContents() {
 }
 
 
-bool Browse_content_tab::FilterContent(const SDigitalContent& content) {
-    std::string filterText = m_filterLineEdit.text().toStdString();
-    if (filterText.empty()) {
-        return true;
-    }
-    
-    if (content.author.find(filterText) != std::string::npos) {
-        return true;
-    }
-    
-    try {
-        auto synopsis_parsed = json::parse(content.synopsis);
-        std::string title = synopsis_parsed["title"].get<std::string>();
-        std::string desc = synopsis_parsed["description"].get<std::string>();
-        
-        if (title.find(filterText) != std::string::npos) {
-            return true;
-        }
-        
-        
-        if (desc.find(filterText) != std::string::npos) {
-            return true;
-        }
-        
-    } catch (...) {
-        return false;
-    }
-    
-    return false;
-}
 
 void Browse_content_tab::ShowDigitalContentsGUI(std::vector<SDigitalContent>& contents)
 {
-    std::vector<SDigitalContent*> filteredContent;
-    
-    for (int i = 0; i < contents.size(); ++i) {
-        if (FilterContent(contents[i])) {
-            filteredContent.push_back(&contents[i]);
-        }
-    }
-    
     
     int nWidth = m_pTableWidget->width();
     m_main_layout.removeWidget(m_pTableWidget);
     delete m_pTableWidget;
     
     
-    m_pTableWidget = new BTableWidget(filteredContent.size() + 1, s_cnNumberOfCols);
+    m_pTableWidget = new BTableWidget(contents.size() + 1, s_cnNumberOfCols);
     
     
     
@@ -281,10 +243,8 @@ void Browse_content_tab::ShowDigitalContentsGUI(std::vector<SDigitalContent>& co
     PrepareTableWidgetHeaderGUI();
     
     int index = 1;
-    for(SDigitalContent* dContPtr: filteredContent)
+    for(SDigitalContent& aTemporar: contents)
     {
-        
-        const SDigitalContent& aTemporar = *dContPtr;
         
         QPixmap image1(":/icon/images/info1_white.svg");
         m_TableWidget.setCellWidget(index, 0, new TableWidgetItemW<QLabel>(aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
@@ -297,11 +257,10 @@ void Browse_content_tab::ShowDigitalContentsGUI(std::vector<SDigitalContent>& co
         {
             created_str.push_back(aTemporar.created[i]);
         }
-//         m_TableWidget.setCellWidget(index, DCF::TIME, new TableWidgetItemW<QLabel>(aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
-//                                                                                   tr(aTemporar.created.c_str())));
-                m_TableWidget.setItem(index,5,new QTableWidgetItem(QString::fromStdString(created_str)));
-                m_TableWidget.item(index, 5)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
-                m_TableWidget.item(index, 5)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+
+        m_TableWidget.setItem(index,5,new QTableWidgetItem(QString::fromStdString(created_str)));
+        m_TableWidget.item(index, 5)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+        m_TableWidget.item(index, 5)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
         
         
         std::string synopsis = unescape_string(aTemporar.synopsis);
@@ -317,15 +276,10 @@ void Browse_content_tab::ShowDigitalContentsGUI(std::vector<SDigitalContent>& co
         
 
         
-//        m_TableWidget.setCellWidget(index, DCF::SYNOPSIS, new TableWidgetItemW<QLabel>(aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
-//                                                                                       tr(synopsis.c_str())));
         m_TableWidget.setItem(index,1,new QTableWidgetItem(QString::fromStdString(synopsis)));
         m_TableWidget.item(index, 1)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
         m_TableWidget.item(index, 1)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
         
-        
-//        m_TableWidget.setCellWidget(index, DCF::RATING, new TableWidgetItemW<QLabel>(aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
-//                                                                                     QString::number(aTemporar.AVG_rating)));
         std::string rating;
         for(int i = 0; i < std::to_string(aTemporar.AVG_rating).find(".") + 2; ++i)
         {
@@ -337,9 +291,6 @@ void Browse_content_tab::ShowDigitalContentsGUI(std::vector<SDigitalContent>& co
         
         
         
-        
-//        m_TableWidget.setCellWidget(index, DCF::SIZE, new TableWidgetItemW<QLabel>(aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
-//                                                                                   QString::number(aTemporar.size)));
         if(aTemporar.size < 1024)
         {
             m_TableWidget.setItem(index,3,new QTableWidgetItem(QString::fromStdString(std::to_string(aTemporar.size) + " MB")));
@@ -358,9 +309,7 @@ void Browse_content_tab::ShowDigitalContentsGUI(std::vector<SDigitalContent>& co
         m_TableWidget.item(index, 3)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
         m_TableWidget.item(index, 3)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
 
-        
-//        m_TableWidget.setCellWidget(index, DCF::PRICE, new TableWidgetItemW<QLabel>(aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
-//                                                                                    QString::number(aTemporar.price.amount)));
+
         m_TableWidget.setItem(index,4,new QTableWidgetItem(QString::fromStdString(std::to_string(aTemporar.price.amount))));
         m_TableWidget.item(index, 4)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
         m_TableWidget.item(index, 4)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
@@ -369,9 +318,7 @@ void Browse_content_tab::ShowDigitalContentsGUI(std::vector<SDigitalContent>& co
         QDateTime time = QDateTime::fromString(QString::fromStdString(aTemporar.expiration), "yyyy-MM-ddTHH:mm:ss");
         
         e_str = CalculateRemainingTime(QDateTime::currentDateTime(), time);
-        
-//        m_TableWidget.setCellWidget(index, DCF::LEFT, new TableWidgetItemW<QLabel>(aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
-//                                                                                   tr(e_str.c_str())));
+
         m_TableWidget.setItem(index,6,new QTableWidgetItem(QString::fromStdString(e_str)));
         m_TableWidget.item(index, 6)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
         m_TableWidget.item(index, 6)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
@@ -380,7 +327,7 @@ void Browse_content_tab::ShowDigitalContentsGUI(std::vector<SDigitalContent>& co
     }
     
     m_main_layout.addWidget(&m_TableWidget);
-    //m_pTableWidget->resize(nWidth,m_pTableWidget->height());
+
     m_pTableWidget->horizontalHeader()->setStretchLastSection(true);
     m_pTableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     ArrangeSize();
