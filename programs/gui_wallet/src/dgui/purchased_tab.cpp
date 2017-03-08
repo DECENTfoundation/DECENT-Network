@@ -20,7 +20,7 @@ using namespace gui_wallet;
 using namespace nlohmann;
 
 
-static const char* s_vccpItemNames[]={" ", "Title", "Rating", "Size", "Price", "Created", "Status"};
+static const char* s_vccpItemNames[]={" ", "Title", "Rating", "Size", "Price", "Created", "Status", "Progress"};
 
 static const int   s_cnNumberOfRows = sizeof(s_vccpItemNames)/sizeof(const char*);
 
@@ -159,14 +159,14 @@ void PurchasedTab::updateContents() {
                 contentObject.expiration = dcontent_json["expiration"].get<std::string>();
                 contentObject.size = dcontent_json["size"].get<int>();
                 
-                if (contents[i]["times_bougth"].is_number()) {
+                if (dcontent_json["times_bougth"].is_number()) {
                     contentObject.times_bougth = dcontent_json["times_bougth"].get<int>();
                 } else {
                     contentObject.times_bougth = 0;
                 }
                 
                 
-                if (contents[i]["price"]["amount"].is_number()){
+                if (dcontent_json["price"]["amount"].is_number()){
                     contentObject.price.amount =  dcontent_json["price"]["amount"].get<double>();
                 } else {
                     contentObject.price.amount =  std::stod(dcontent_json["price"]["amount"].get<std::string>());
@@ -197,10 +197,35 @@ void PurchasedTab::updateContents() {
                     s_time.push_back(time[i]);
                 }
                 obj->m_pTableWidget->setItem(i + 1, 5, new QTableWidgetItem(QString::fromStdString(s_time)));
-                obj->m_pTableWidget->setItem(i + 1, 6, new QTableWidgetItem(QString::fromStdString("")));
                 
                 
+                std::string download_status_str;
+                RunTask("get_download_status \"" + gui_wallet::GlobalEvents::instance().getCurrentUser() + "\" \"" + URI + "\"", download_status_str);
                 
+                auto download_status = json::parse(download_status_str);
+
+                
+                int total_key_parts = download_status["total_key_parts"].get<int>();
+                int received_key_parts  = download_status["received_key_parts"].get<int>();
+                int total_download_bytes  = download_status["total_download_bytes"].get<int>();
+                int received_download_bytes  = download_status["received_download_bytes"].get<int>();
+                
+                obj->m_pTableWidget->setItem(i + 1, 6, new QTableWidgetItem(
+                    tr("Keys: ") + QString::number(received_key_parts) + "/" + QString::number(total_key_parts)
+                ));
+                
+                if (total_key_parts == 0) {
+                    total_key_parts = 1;
+                }
+                
+                if (total_download_bytes == 0) {
+                    total_download_bytes = 1;
+                }
+                
+                
+                double progress = (0.1 * received_key_parts) / total_key_parts + (0.9 * received_download_bytes) / total_download_bytes;
+                obj->m_pTableWidget->setItem(i + 1, 7, new QTableWidgetItem(QString::number(progress) + "%"));
+
                 
                 for(int j = 1; j < s_cnNumberOfRows; ++j)
                 {
