@@ -27,6 +27,7 @@
 
 #include <decent/encrypt/encryptionutils.hpp>
 #include <graphene/package/package.hpp>
+#include <graphene/utilities/dirhelper.hpp>
 
 #include "json.hpp"
 
@@ -44,8 +45,6 @@
 #include <boost/uuid/uuid_io.hpp>
 #include <boost/iostreams/copy.hpp>
 
-#include <graphene/utilities/dirhelper.hpp>
-
 #include <iostream>
 #include <atomic>
 
@@ -60,14 +59,17 @@ using namespace graphene::utilities;
 
 namespace {
 
+
 const int ARC_BUFFER_SIZE  = 1024 * 1024; // 4kb
 const int RIPEMD160_BUFFER_SIZE  = 1024 * 1024; // 4kb
 
+    
 struct arc_header {
     char type; // 0 = EOF, 1 = REGULAR FILE
 	char name[255];
 	char size[8];
 };
+
 
 class archiver {
 	filtering_ostream&   _out;
@@ -269,9 +271,8 @@ fc::ripemd160 calculate_hash(path file_path) {
     return ripe_calc.result();
 }
 
-} // Unnamed namespace
 
-
+} // namespace
 
 
 package_object::package_object(const boost::filesystem::path& package_path) {
@@ -319,6 +320,7 @@ package_manager::package_manager() {
     _protocol_handlers.insert(std::make_pair("ipfs", std::make_shared<ipfs_transfer>()));
 
     set_packages_path(decent_path_finder::instance().get_decent_data() / "packages");
+    set_libtorrent_config(decent_path_finder::instance().get_decent_home() / "libtorrent.json");
 }
 
 package_manager::~package_manager() {

@@ -3,6 +3,7 @@
 
 #include <decent/encrypt/encryptionutils.hpp>
 #include <graphene/package/package.hpp>
+#include <graphene/utilities/dirhelper.hpp>
 
 #include <fc/exception/exception.hpp>
 #include <fc/io/fstream.hpp>
@@ -42,13 +43,14 @@ using namespace boost::filesystem;
 using namespace boost::iostreams;
 using namespace libtorrent;
 using namespace graphene::package;
+using namespace graphene::utilities;
 
 
 namespace {
 
-	int load_file(std::string const& filename, std::vector<char>& v, libtorrent::error_code& ec, int limit = 8000000) {
+    int load_file(const fc::path& filename, std::vector<char>& v, libtorrent::error_code& ec, int limit = 8000000) {
 		ec.clear();
-		FILE* f = std::fopen(filename.c_str(), "rb");
+		FILE* f = std::fopen(filename.string().c_str(), "rb");
 		if (f == nullptr) {
 			ec.assign(errno, boost::system::system_category());
 			return -1;
@@ -99,8 +101,8 @@ namespace {
 		return 0;
 	}
 
-	int save_file(std::string const& filename, std::vector<char>& v) {
-		FILE* f = std::fopen(filename.c_str(), "wb");
+    int save_file(const fc::path& filename, std::vector<char>& v) {
+		FILE* f = std::fopen(filename.string().c_str(), "wb");
 		if (f == nullptr)
 			return -1;
 
@@ -955,8 +957,9 @@ torrent_transfer::torrent_transfer()
 
     libtorrent::error_code ec;
 
+    const path session_state_file = decent_path_finder::instance().get_decent_home() / ".ses_state";
     std::vector<char> in;
-    if (load_file(".ses_state", in, ec) == 0) {
+    if (load_file(session_state_file, in, ec) == 0) {
         bdecode_node e;
         if (bdecode(&in[0], &in[0] + in.size(), e, ec) == 0)
             _session->load_state(e, session::save_dht_state);
@@ -986,9 +989,10 @@ torrent_transfer::~torrent_transfer() {
         entry session_state;
         _session->save_state(session_state, session::save_dht_state);
 
+        const path session_state_file = decent_path_finder::instance().get_decent_home() / ".ses_state";
         std::vector<char> out;
         bencode(std::back_inserter(out), session_state);
-        save_file(".ses_state", out);
+        save_file(session_state_file, out);
     }
 
 //  _lifetime_info_mutex->unlock();
@@ -1085,7 +1089,7 @@ void torrent_transfer::upload_package(transfer_id id, const package_object& pack
 
         fc::scoped_lock<fc::mutex> guard(*lifetime_info_mutex);
         if (*instance_exists) {
-            path log_path = package_manager::instance().get_packages_path() / "transfer.log";
+            const path log_path = decent_path_finder::instance().get_decent_logs() / "transfer.log";
             this->_transfer_log.open(log_path.string(), std::ios::out | std::ios::app);
             this->_transfer_log << "***** Torrent upload started for package: " << package.get_hash().str() << endl;
         }
@@ -1198,7 +1202,7 @@ void torrent_transfer::download_package(transfer_id id, const std::string& url, 
 
         fc::scoped_lock<fc::mutex> guard(*lifetime_info_mutex);
         if (*instance_exists) {
-            path log_path = package_manager::instance().get_packages_path() / "transfer.log";
+            const path log_path = decent_path_finder::instance().get_decent_logs() / "transfer.log";
             this->_transfer_log.open(log_path.string(), std::ios::out | std::ios::app);
             this->_transfer_log << "***** Torrent download started from url: " << url << endl;
         }
@@ -1317,7 +1321,7 @@ void torrent_transfer::handle_torrent_alerts() {
     std::vector<libtorrent::alert*> alerts;
 	_session->pop_alerts(&alerts);
 
-	path log_path = package_manager::instance().get_packages_path() / "transfer.log";
+	const path log_path = decent_path_finder::instance().get_decent_logs() / "transfer.log";
 	_transfer_log.open(log_path.string(), std::ios::out | std::ios::app);
 
 	for (int i = 0; i < alerts.size(); ++i) {
