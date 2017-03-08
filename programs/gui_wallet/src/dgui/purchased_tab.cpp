@@ -20,7 +20,8 @@ using namespace gui_wallet;
 using namespace nlohmann;
 
 
-static const char* s_vccpItemNames[]={" ","Title","Rating","Size","Price","Created","Purchased"};
+static const char* s_vccpItemNames[]={" ","Title","Rating","Size","Price","Created","Purchased", "Status"};
+
 static const int   s_cnNumberOfRows = sizeof(s_vccpItemNames)/sizeof(const char*);
 
 
@@ -33,7 +34,7 @@ PurchasedTab::PurchasedTab()
 
     QHBoxLayout* search_lay = new QHBoxLayout();
 
-    m_filterLineEditer.setPlaceholderText(QString("Enter user name to see purchases"));
+    m_filterLineEditer.setPlaceholderText(QString("Enter the term to search in title and description"));
     m_filterLineEditer.setStyleSheet("border: 1px solid white");
     m_filterLineEditer.setFixedHeight(40);
     m_filterLineEditer.setAttribute(Qt::WA_MacShowFocusRect, 0);
@@ -91,13 +92,10 @@ void PurchasedTab::updateContents() {
     m_pTableWidget->setRowCount(1); //Remove everything but header
     
     
-    if (m_filterLineEditer.text().toStdString().empty()) {
-        return;
-    }
     auto& global_instance = gui_wallet::GlobalEvents::instance();
     std::string str_current_username = global_instance.getCurrentUser();
     
-    SetNewTask("get_buying_history_objects_by_consumer_title "
+    SetNewTask("get_buying_history_objects_by_consumer_term "
                "\"" + str_current_username +"\" "
                "\"" + m_filterLineEditer.text().toStdString() +"\"",
                this, NULL,
