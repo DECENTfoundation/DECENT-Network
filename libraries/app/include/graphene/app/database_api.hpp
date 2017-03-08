@@ -686,6 +686,7 @@ FC_API(graphene::app::database_api,
    (get_open_buyings_by_consumer)
    (get_buying_by_consumer_URI)
    (get_buying_history_objects_by_consumer)
+   (get_buying_history_objects_by_consumer_all)
    (get_rating_by_consumer_URI)
    (get_content)
    (list_content_by_author)

@@ -1593,6 +1593,13 @@ vector<buying_object> database_api_impl::get_buying_history_objects_by_consumer 
     }
     FC_CAPTURE_AND_RETHROW( (consumer) );
 }
+    
+    
+vector<buying_object> database_api::get_buying_history_objects_by_consumer_all( const account_id_type& consumer )const
+{
+    return my->get_buying_history_objects_by_consumer_all( consumer );
+}
+
 
 
 vector<buying_object> database_api_impl::get_buying_history_objects_by_consumer_all ( const account_id_type& consumer )const
