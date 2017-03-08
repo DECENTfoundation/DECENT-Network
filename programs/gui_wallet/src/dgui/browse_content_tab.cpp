@@ -208,7 +208,7 @@ void Browse_content_tab::updateContents() {
                 
                 dContents[i].price.amount /= GRAPHENE_BLOCKCHAIN_PRECISION;
                 
-                dContents[i].AVG_rating = contents[i]["AVG_rating"].get<double>();
+                dContents[i].AVG_rating = contents[i]["AVG_rating"].get<double>()  / 1000;
                 
                 
                 obj->ArrangeSize();

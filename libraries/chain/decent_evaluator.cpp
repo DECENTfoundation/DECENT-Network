@@ -186,7 +186,7 @@ namespace graphene { namespace chain {
            if(co.total_rating == 1)
               co.AVG_rating = o.rating * 1000;
            else
-              co.AVG_rating = (co.AVG_rating * co.total_rating + o.rating * 1000) / (co.total_rating++);
+              co.AVG_rating = (co.AVG_rating * co.total_rating + o.rating * 1000) / (co.total_rating+1);
 
            co.total_rating++;
       });

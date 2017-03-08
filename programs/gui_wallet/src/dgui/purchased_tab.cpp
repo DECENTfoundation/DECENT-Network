@@ -22,12 +22,12 @@ using namespace nlohmann;
 
 static const char* s_vccpItemNames[]={" ", "Title", "Rating", "Size", "Price", "Created", "Status", "Progress"};
 
-static const int   s_cnNumberOfRows = sizeof(s_vccpItemNames)/sizeof(const char*);
+static const int   s_cnNumberOfCols = sizeof(s_vccpItemNames)/sizeof(const char*);
 
 
 PurchasedTab::PurchasedTab()
         :
-        m_pTableWidget(new QTableWidget(1,s_cnNumberOfRows))
+        m_pTableWidget(new QTableWidget(1,s_cnNumberOfCols))
 {
 
     PrepareTableWidgetHeaderGUI();
@@ -123,7 +123,7 @@ void PurchasedTab::updateContents() {
                     synopsis = synopsis_parsed["title"].get<std::string>();
                 } catch (...) {}
                 
-                double rating = contents[i]["rating"].get<double>();
+                double rating = contents[i]["rating"].get<double>() / 1000;
                 uint64_t size = contents[i]["size"].get<int>();
 
 
@@ -173,7 +173,7 @@ void PurchasedTab::updateContents() {
                 }
                 
                 contentObject.price.amount /= GRAPHENE_BLOCKCHAIN_PRECISION;
-                contentObject.AVG_rating = dcontent_json["AVG_rating"].get<double>();
+                contentObject.AVG_rating = dcontent_json["AVG_rating"].get<double>() / 1000;
             
                 
                 obj->m_pTableWidget->setCellWidget(i + 1, 0, new TableWidgetItemW<QLabel>(contentObject, obj, NULL, &PurchasedTab::DigContCallback, tr("")));
@@ -186,10 +186,8 @@ void PurchasedTab::updateContents() {
                 obj->m_pTableWidget->setItem(i + 1, 2, new QTableWidgetItem(QString::number(rating)));
                 obj->m_pTableWidget->setItem(i + 1, 3, new QTableWidgetItem(QString::number(size) + tr(" MB")));
                 obj->m_pTableWidget->setItem(i + 1, 4, new QTableWidgetItem(QString::number(price) + " DCT"));
-                obj->m_pTableWidget->item(i + 1, 1)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
-                obj->m_pTableWidget->item(i + 1, 2)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
-                obj->m_pTableWidget->item(i + 1, 3)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
-                obj->m_pTableWidget->item(i + 1, 4)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+                
+               
 
                 std::string s_time;
                 for(int i = 0; i < time.find("T"); ++i)
@@ -227,10 +225,12 @@ void PurchasedTab::updateContents() {
                 obj->m_pTableWidget->setItem(i + 1, 7, new QTableWidgetItem(QString::number(progress) + "%"));
 
                 
-                for(int j = 1; j < s_cnNumberOfRows; ++j)
+                for(int j = 1; j < s_cnNumberOfCols; ++j)
                 {
                     obj->m_pTableWidget->item(i + 1, j)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+                    obj->m_pTableWidget->item(i + 1, j)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
                 }
+                
 
             }
             
@@ -263,7 +263,7 @@ void PurchasedTab::PrepareTableWidgetHeaderGUI()
     m_pTableWidget->horizontalHeader()->hide();
     m_pTableWidget->verticalHeader()->hide();
     QFont f( "Open Sans Bold", 14, QFont::Bold);
-    for( int i(0); i<s_cnNumberOfRows; ++i )
+    for( int i = 0; i<s_cnNumberOfCols; ++i )
     {
 
         m_pTableWidget->setItem(0,i,new QTableWidgetItem(tr(s_vccpItemNames[i])));
@@ -291,9 +291,9 @@ void PurchasedTab::ArrangeSize()
     
     m_pTableWidget->setColumnWidth(0, tqsTableSize.width() * 0.1);
     
-    for(int i = 1; i < s_cnNumberOfRows; ++i)
+    for(int i = 1; i < s_cnNumberOfCols; ++i)
     {
-        m_pTableWidget->setColumnWidth(i, (0.9 * tqsTableSize.width()) / (s_cnNumberOfRows - 1) );
+        m_pTableWidget->setColumnWidth(i, (0.9 * tqsTableSize.width()) / (s_cnNumberOfCols - 1) );
     }
 }
 

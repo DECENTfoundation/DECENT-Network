@@ -16,34 +16,25 @@ std::string FindImagePath(bool& a_bRet,const char* a_image_name);
 
 using namespace gui_wallet;
 
-NewCheckBox::NewCheckBox(const char* a_checkedImg2, const char* a_uncheckedImg2,
-                                                  int a_index)
+NewCheckBox::NewCheckBox(int a_index)
     :
       m_index(a_index)
 {
-    //FindImagePath(bRet,"green_asterix.png").c_str(),
-    //FindImagePath(bRet,"white_asterix.png").c_str())
-    //setScaledContents();
-    bool bRet;
-    std::string csCheckedPath, csUnCheckedPath;
-    //csCheckedPath = a_checkedImg2 ? a_checkedImg2 : FindImagePath(bRet,"green_asterix.png");
-    //csUnCheckedPath = a_uncheckedImg2 ? a_uncheckedImg2 : FindImagePath(bRet,"white_asterix.png");
-
     
-    //setStyleSheet("QMainWindow{color:black;""background-color:white;}");
-    std::string qsStyleSheet =
-            std::string("QCheckBox::indicator:checked {image: url(") +
-            csCheckedPath +
-            ");}QCheckBox::indicator:unchecked {image: url(" +
-            csUnCheckedPath +
-            ");}"
-            "QCheckBox::indicator{width: 13px; height: 13px;}";
-    setStyleSheet(qsStyleSheet.c_str());
+    std::string csCheckedPath = ":/icon/images/green_asterix.png";
+    std::string csUnCheckedPath = ":/icon/images/white_asterix.png";
+    
 
-    //StateChangedSlot(int state)
-    connect(this,SIGNAL(stateChanged(int)),this,SLOT(StateChangedSlot(int)));
-    __DEBUG_APP2__(1,"%s  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!",qsStyleSheet.c_str());
+    std::string qsStyleSheet =
+            std::string("QCheckBox::indicator:checked { image: url(") + csCheckedPath + "); }" +
+                        "QCheckBox::indicator:unchecked { image: url(" + csUnCheckedPath + "); }" +
+                        "QCheckBox::indicator { width: 13px; height: 13px; }";
+    setStyleSheet(qsStyleSheet.c_str());
+    //setEnabled(false);
+    
+    //connect(this,SIGNAL(stateChanged(int)),this,SLOT(StateChangedSlot(int)));
 }
+
 
 
 NewCheckBox::~NewCheckBox()

@@ -18,12 +18,17 @@
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QTextEdit>
+#include <iostream>
+#include "decent_wallet_ui_gui_newcheckbox.hpp"
+
 
 namespace gui_wallet {
 
 class ContentDetailsBase : public QDialog
 {
-protected:
+    Q_OBJECT
+    
+public:
     ContentDetailsBase();
     virtual ~ContentDetailsBase();
 
@@ -31,6 +36,36 @@ protected:
 
     //virtual void execCDD(const decent::wallet::ui::gui::SDigitalContent& a_cnt_details)=0;
 
+private slots:
+    void MouseEnteredStar(int index) {
+        for (int i = 0; i <= index; ++i) {
+            stars_labels[i]->setCheckState(Qt::Checked);
+        }
+        for (int i = index + 1; i < 5; ++i) {
+            stars_labels[i]->setCheckState(Qt::Unchecked);
+        }
+        
+    }
+    void MouseLeftStar(int index) {
+        
+        for (int i = 0; i < m_currentMyRating; ++i) {
+            stars_labels[i]->setCheckState(Qt::Checked);
+        }
+        
+        
+        for (int i = m_currentMyRating; i < 5; ++i) {
+            stars_labels[i]->setCheckState(Qt::Unchecked);
+        }
+        
+        
+    }
+    
+    
+    void MouseClickedStar(int index);
+    
+    
+    
+    
 protected:
     const SDigitalContent* m_pContentInfo;
     QVBoxLayout     m_main_layout;
@@ -40,6 +75,9 @@ protected:
     QLabel          m_vLabels[NUMBER_OF_SUB_LAYOUTS2*2];
     QLabel          m_stars[5];
     QTextEdit       desc_text;
+    int             m_currentMyRating = 0;
+    std::vector<NewCheckBox*> stars_labels;
+
 };
 
 }

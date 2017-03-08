@@ -75,9 +75,11 @@ ContentDetailsBase::ContentDetailsBase()
             m_main_layout.addWidget(&m_vSub_Widgets[i]);
         }
     }
-//    m_main_layout.addLayout(&m_free_for_child);
-//    
-//    setLayout(&m_main_layout);
+    
+    
+    
+    
+    
     
     
    
@@ -93,45 +95,67 @@ namespace DCF{enum{AMOUNT=9, TIMES_BOUGHT=15};}
 
 void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details)
 {
-    if(a_cnt_details.type == DCT::BOUGHT)
-    {
-        QHBoxLayout* stars = new QHBoxLayout;
-        QLabel* m_RateText = new QLabel;
-        m_RateText->setText( tr("Please Rate:"));
-        m_RateText->setStyleSheet("color:green;" "background-color:white;" "font-weight: bold");
-        QPixmap green_star(":/icon/images/green_asterix.png");
-        QPixmap white_star(":/icon/images/white_asterix.png");
+    
+    
+    m_pContentInfo = &a_cnt_details;
+    m_currentMyRating = 0;
+    
+    std::string result;
+    try {
+        RunTask("get_rating \"" + GlobalEvents::instance().getCurrentUser() + "\" \"" + m_pContentInfo->URI + "\"", result);
+        m_currentMyRating = QString::fromStdString(result).toInt(); // Returns 0 on fail so everything will work as intended
         
-        white_star = white_star.scaled(QSize(20,20));
-        green_star = green_star.scaled(QSize(20,20));
-        
-        std::vector<QLabel*> stars_labels;
-        stars_labels.resize(0);
-        stars->addWidget(new QLabel);
-        stars->addWidget(new QLabel);
-        stars->addWidget(new QLabel);
-        stars->addWidget(m_RateText);
-        QHBoxLayout* stars_lay = new QHBoxLayout;
-        for(int i = 0; i < 5; ++i)
-        {
+    } catch (...) {} // Ignore for now;
+
+
+    
+    if(a_cnt_details.type == DCT::BOUGHT) {
+        if (stars_labels.size() == 0) {
+            QLabel* m_RateText = new QLabel;
+            m_RateText->setText( tr("Please Rate:"));
+            m_RateText->setStyleSheet("color:green;" "background-color:white;" "font-weight: bold");
             
-            stars_labels.push_back(new QLabel());
-            stars_labels[i]->setPixmap(white_star);
+            QPixmap green_star(":/icon/images/green_asterix.png");
+            QPixmap white_star(":/icon/images/white_asterix.png");
             
-            stars_lay->addWidget(stars_labels[i]);
+            white_star = white_star.scaled(QSize(20,20));
+            green_star = green_star.scaled(QSize(20,20));
+            
+            
+            
+            
+            QHBoxLayout* stars = new QHBoxLayout;
+            stars->addWidget(m_RateText);
+            stars->setContentsMargins(250, 10, 20, 20);
+            
+
+            QHBoxLayout* stars_lay = new QHBoxLayout;
+            for(int i = 0; i < 5; ++i)
+            {
+
+                stars_labels.push_back(new NewCheckBox());
+                stars_labels.back()->SetIndex(i);
+                stars_lay->addWidget(stars_labels[i]);
+                
+                connect(stars_labels.back(), SIGNAL(MouseEnteredSignal(int)), this, SLOT(MouseEnteredStar(int)));
+                connect(stars_labels.back(), SIGNAL(MouseLeftSignal(int)), this, SLOT(MouseLeftStar(int)));
+                connect(stars_labels.back(), SIGNAL(MouseClickedSignal(int)), this, SLOT(MouseClickedStar(int)));
+
+            }
+            stars->addLayout(stars_lay);
+            m_main_layout.addLayout(stars);
+            
         }
-        stars->addLayout(stars_lay);
-        m_main_layout.addLayout(stars);
-    }
-    else
-    {
+        
+    } else {
         m_main_layout.addLayout(&m_free_for_child);
     }
     
     setLayout(&m_main_layout);
+    
     int i,nIndexZuyg(0);
+    
     NewType vNames = s_vFields[a_cnt_details.type];
-    m_pContentInfo = &a_cnt_details;
     
     for(i=0;i<NUMBER_OF_SUB_LAYOUTS2;++i,nIndexZuyg+=2)
     {
@@ -171,17 +195,24 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details)
     
     m_vLabels[7].setText(tr(str_price.c_str()));
     
+    
+    
+    
+    
+    
     QPixmap green_star(":/icon/images/green_asterix.png");
     QPixmap white_star(":/icon/images/white_asterix.png");
+    
     white_star = white_star.scaled(QSize(20,20));
     green_star = green_star.scaled(QSize(20,20));
+    
     m_vLabels[9].setText(QString::number(m_pContentInfo->AVG_rating));
-    for(int i = 0; i < m_pContentInfo->AVG_rating; ++i)
-    {
+    
+    for(int i = 0; i < m_pContentInfo->AVG_rating; ++i) {
         m_stars[i].setPixmap(green_star);
     }
-    for(int i = m_pContentInfo->AVG_rating; i < 5; ++i)
-    {
+    
+    for(int i = m_pContentInfo->AVG_rating; i < 5; ++i) {
         m_stars[i].setPixmap(white_star);
     }
 
@@ -189,7 +220,7 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details)
     m_vLabels[11].setText(qsSizeTxt);
     m_vLabels[13].setText(QString::number(a_cnt_details.times_bougth));
     
-   // m_vLabels[]
+   
     std::string synopsis = m_pContentInfo->synopsis;
     std::string desc = "";
     try {
@@ -200,6 +231,26 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details)
     } catch (...) {}
     this->setWindowTitle(QString::fromStdString(synopsis));
     m_vLabels[15].setText(QString::fromStdString(desc));
+
     
+    setFixedSize(620,400);
+
     QDialog::exec();
 }
+
+
+void ContentDetailsBase::MouseClickedStar(int index) {
+    std::cout << "Rate: " << index << std::endl;
+    std::string result;
+    try {
+        RunTask("leave_rating \"" + GlobalEvents::instance().getCurrentUser() + "\" \"" + m_pContentInfo->URI + "\" " + std::to_string(index + 1) + " true", result);
+        
+        m_currentMyRating = (index + 1);
+    } catch (...) {} // Ignore for now;
+    
+}
+
+
+
+
+

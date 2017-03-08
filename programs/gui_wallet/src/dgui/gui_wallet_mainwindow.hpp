@@ -25,7 +25,6 @@
 #include <string>
 #include <map>
 #include "decent_wallet_ui_gui_contentdetailsgeneral.hpp"
-#include "decent_wallet_ui_gui_contentdetailsbougth.hpp"
 
 namespace gui_wallet
 {
@@ -144,7 +143,7 @@ namespace gui_wallet
         QString             m_default_stylesheet;
 
         ContentDetailsGeneral m_dig_cont_detailsGenDlg;
-        ContentDetailsBougth m_dig_cont_detailsBougDlg;
+        ContentDetailsBase m_dig_cont_detailsBougDlg;
 
         std::vector<std::string>        m_user_ids;
     };
