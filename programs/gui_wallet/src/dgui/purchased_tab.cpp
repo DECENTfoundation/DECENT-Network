@@ -68,10 +68,6 @@ PurchasedTab::PurchasedTab()
 
 
 
-
-
-
-
 void PurchasedTab::maybeUpdateContent() {
     if (!m_doUpdate) {
         return;
@@ -140,18 +136,61 @@ void PurchasedTab::updateContents() {
                 price /= GRAPHENE_BLOCKCHAIN_PRECISION;
                 
                 std::string expiration_or_delivery_time = contents[i]["expiration_or_delivery_time"].get<std::string>();
+                std::string URI = contents[i]["URI"].get<std::string>();
                 
                 QLabel* imag_label = new QLabel();
                 imag_label->setAlignment(Qt::AlignCenter);
 
                 QPixmap image1(":/icon/images/info1.svg");
-                imag_label->setPixmap(image1);
-                obj->m_pTableWidget->setCellWidget(i + 1, 0, imag_label);
+                
+                
+                SDigitalContent contentObject;
+                std::string dcresult;
+                RunTask("get_content \"" + URI + "\"", dcresult);
+                
+                auto dcontent_json = json::parse(dcresult);
+                
+                contentObject.type = DCT::BOUGHT;
+                contentObject.author = dcontent_json["author"].get<std::string>();
+                contentObject.price.asset_id = dcontent_json["price"]["asset_id"].get<std::string>();
+                contentObject.synopsis = dcontent_json["synopsis"].get<std::string>();
+                contentObject.URI = dcontent_json["URI"].get<std::string>();
+                contentObject.created = dcontent_json["created"].get<std::string>();
+                contentObject.expiration = dcontent_json["expiration"].get<std::string>();
+                contentObject.size = dcontent_json["size"].get<int>();
+                
+                if (contents[i]["times_bougth"].is_number()) {
+                    contentObject.times_bougth = dcontent_json["times_bougth"].get<int>();
+                } else {
+                    contentObject.times_bougth = 0;
+                }
+                
+                
+                if (contents[i]["price"]["amount"].is_number()){
+                    contentObject.price.amount =  dcontent_json["price"]["amount"].get<double>();
+                } else {
+                    contentObject.price.amount =  std::stod(dcontent_json["price"]["amount"].get<std::string>());
+                }
+                
+                contentObject.price.amount /= GRAPHENE_BLOCKCHAIN_PRECISION;
+                contentObject.AVG_rating = dcontent_json["AVG_rating"].get<double>();
+            
+                
+                obj->m_pTableWidget->setCellWidget(i + 1, 0, new TableWidgetItemW<QLabel>(contentObject, obj, NULL, &PurchasedTab::DigContCallback, tr("")));
+                ((QLabel*)obj->m_pTableWidget->cellWidget(i+1,0))->setPixmap(image1);
+                ((QLabel*)obj->m_pTableWidget->cellWidget(i+1,0))->setAlignment(Qt::AlignCenter);
+   
+                
+                
                 obj->m_pTableWidget->setItem(i + 1, 1, new QTableWidgetItem(QString::fromStdString(synopsis)));
                 obj->m_pTableWidget->setItem(i + 1, 2, new QTableWidgetItem(QString::number(rating)));
                 obj->m_pTableWidget->setItem(i + 1, 3, new QTableWidgetItem(QString::number(size) + tr(" MB")));
                 obj->m_pTableWidget->setItem(i + 1, 4, new QTableWidgetItem(QString::number(price) + " DCT"));
-                
+                obj->m_pTableWidget->item(i + 1, 1)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+                obj->m_pTableWidget->item(i + 1, 2)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+                obj->m_pTableWidget->item(i + 1, 3)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+                obj->m_pTableWidget->item(i + 1, 4)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+
                 std::string s_time;
                 for(int i = 0; i < time.find("T"); ++i)
                 {
@@ -182,6 +221,11 @@ void PurchasedTab::updateContents() {
     
 }
 
+void PurchasedTab::DigContCallback(_NEEDED_ARGS2_)
+{
+    emit ShowDetailsOnDigContentSig(*a_pDigContent);
+}
+
 
 PurchasedTab::~PurchasedTab()
 {
@@ -199,9 +243,7 @@ void PurchasedTab::PrepareTableWidgetHeaderGUI()
     QFont f( "Open Sans Bold", 14, QFont::Bold);
     for( int i(0); i<s_cnNumberOfRows; ++i )
     {
-        //pLabel = new QLabel(tr(s_vccpItemNames[i]));
-        //if(!pLabel){throw "Low memory\n" __FILE__ ;}
-        //m_TableWidget.setCellWidget(0,i,pLabel);
+        
         m_pTableWidget->setItem(0,i,new QTableWidgetItem(tr(s_vccpItemNames[i])));
         m_pTableWidget->item(0,i)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
         m_pTableWidget->item(0,i)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
@@ -213,18 +255,8 @@ void PurchasedTab::PrepareTableWidgetHeaderGUI()
     m_pTableWidget->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     m_pTableWidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
-    //QPalette plt_tbl = m_TableWidget.palette();
-    //plt_tbl.setColor(QPalette::Base, palette().color(QPalette::Window));
-    //m_TableWidget.setPalette(plt_tbl);
 }
 
-
-// #define _NEEDED_ARGS_ void* a_clb_data,int a_act,const gui_wallet::SDigitalContent* a_pDigContent
-void PurchasedTab::DigContCallback(_NEEDED_ARGS2_)
-{
-    __DEBUG_APP2__(3,"clbdata=%p, act=%d, pDigCont=%p\n",a_clb_data,a_act,a_pDigContent);
-    emit ShowDetailsOnDigContentSig(*a_pDigContent);
-}
 
 
 void PurchasedTab::ArrangeSize()

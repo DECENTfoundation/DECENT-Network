@@ -28,15 +28,16 @@ ContentDetailsGeneral::ContentDetailsGeneral()
     m_label.setScaledContents(true);
     m_label.setPixmap(aPixMap);
     
-    QGraphicsDropShadowEffect *effect = new QGraphicsDropShadowEffect(this);
-    effect->setBlurRadius(0);
-    effect->setColor(QColor("#000000"));
-    effect->setOffset(1,1);
-    m_label.setGraphicsEffect(effect);
-    
     image_layout->addWidget(new QLabel());
     image_layout->addWidget(&m_label);
     image_layout->addWidget(new QLabel());
+    
+    QGraphicsDropShadowEffect *effect = new QGraphicsDropShadowEffect(this);
+    effect->setBlurRadius(5);
+    effect->setColor(QColor("d3d3d3"));
+    effect->setOffset(4,6);
+    m_label.setGraphicsEffect(effect);
+    
     m_free_for_child.addWidget(new QLabel());
     m_free_for_child.addWidget(new QLabel());
     m_free_for_child.addLayout(image_layout);

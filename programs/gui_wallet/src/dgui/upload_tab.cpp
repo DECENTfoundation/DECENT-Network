@@ -344,10 +344,10 @@ void Upload_tab::resizeEvent ( QResizeEvent * event )
 
     QSize aInfWidgSize = m_info_widget.size();
 
-    m_info_widget.setColumnWidth(0,20*aInfWidgSize.width()/100);
-    m_info_widget.setColumnWidth(1,15*aInfWidgSize.width()/100);
-    m_info_widget.setColumnWidth(2,20*aInfWidgSize.width()/100);
-    m_info_widget.setColumnWidth(3,15*aInfWidgSize.width()/100);
-    m_info_widget.setColumnWidth(4,20*aInfWidgSize.width()/100);
-    m_info_widget.setColumnWidth(5,10*aInfWidgSize.width()/100);
+    m_info_widget.setColumnWidth(0,15*aInfWidgSize.width()/100);
+    m_info_widget.setColumnWidth(1,20*aInfWidgSize.width()/100);
+    m_info_widget.setColumnWidth(2,15*aInfWidgSize.width()/100);
+    m_info_widget.setColumnWidth(3,20*aInfWidgSize.width()/100);
+    m_info_widget.setColumnWidth(4,15*aInfWidgSize.width()/100);
+    m_info_widget.setColumnWidth(5,15*aInfWidgSize.width()/100);
 }

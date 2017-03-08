@@ -99,12 +99,27 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details)
     
     for(i=0;i<NUMBER_OF_SUB_LAYOUTS2;++i,nIndexZuyg+=2)
     {
-        m_vLabels[nIndexZuyg].setText(tr(vNames[i]));
+        if((i == 1) && a_cnt_details.type == DCT::BOUGHT)
+        {
+            m_vLabels[nIndexZuyg].setText(tr("Purchased"));
+        }
+        else
+        {
+            m_vLabels[nIndexZuyg].setText(tr(vNames[i]));
+        }
     }
-
-    QDateTime time = QDateTime::fromString(QString::fromStdString(m_pContentInfo->expiration), "yyyy-MM-ddTHH:mm:ss");
-    std::string e_str = CalculateRemainingTime(QDateTime::currentDateTime(), time);
     
+    std::string e_str = "";
+    if(a_cnt_details.type == DCT::BOUGHT)
+    {
+        e_str = std::to_string(m_pContentInfo->times_bougth);
+    }
+    else
+    {
+        QDateTime time = QDateTime::fromString(QString::fromStdString(m_pContentInfo->expiration), "yyyy-MM-ddTHH:mm:ss");
+        e_str = CalculateRemainingTime(QDateTime::currentDateTime(), time);
+    }
+        
     m_vLabels[1].setText(tr(m_pContentInfo->author.c_str()));
     m_vLabels[3].setText(tr(e_str.c_str()));
     std::string creat;

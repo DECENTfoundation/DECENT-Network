@@ -229,7 +229,6 @@ void Browse_content_tab::updateContents() {
 void Browse_content_tab::ShowDigitalContentsGUI(std::vector<SDigitalContent>& contents)
 {
     
-    int nWidth = m_pTableWidget->width();
     m_main_layout.removeWidget(m_pTableWidget);
     delete m_pTableWidget;
     

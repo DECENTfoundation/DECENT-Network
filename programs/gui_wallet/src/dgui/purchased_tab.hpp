@@ -39,7 +39,7 @@ public:
     PurchasedTab();
     virtual ~PurchasedTab();
 
-    //QString getFilterText()const;
+    void ShowDigitalContentsGUI(std::vector<SDigitalContent>& contents);
 
 public:
     virtual void content_activated() {
