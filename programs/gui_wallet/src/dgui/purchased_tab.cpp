@@ -94,8 +94,14 @@ void PurchasedTab::updateContents() {
     if (m_filterLineEditer.text().toStdString().empty()) {
         return;
     }
+    auto& global_instance = gui_wallet::GlobalEvents::instance();
+    std::string str_current_username = global_instance.getCurrentUser();
     
-    SetNewTask("get_buying_history_objects_by_consumer \"" + m_filterLineEditer.text().toStdString() +"\"", this, NULL, +[](void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
+    SetNewTask("get_buying_history_objects_by_consumer_title "
+               "\"" + str_current_username +"\" "
+               "\"" + m_filterLineEditer.text().toStdString() +"\"",
+               this, NULL,
+               +[](void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
         
         if (a_err != 0) {
             return;
