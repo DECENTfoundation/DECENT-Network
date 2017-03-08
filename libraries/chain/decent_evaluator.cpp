@@ -183,12 +183,13 @@ namespace graphene { namespace chain {
 
       db().modify<buying_object>( *bo, [&]( buying_object& b ){ b.rated = true; });
       db().modify<content_object> ( *content, [&](content_object& co){
-           if(co.total_rating == 1)
-              co.AVG_rating = o.rating * 1000;
-           else
-              co.AVG_rating = (co.AVG_rating * co.total_rating + o.rating * 1000) / (co.total_rating++);
 
-           co.total_rating++;
+           if(co.total_rating == 0) {
+              co.AVG_rating = o.rating * 1000;
+              co.total_rating++;
+           }
+           else
+              co.AVG_rating = (co.AVG_rating * co.total_rating + o.rating * 1000) / (++co.total_rating);
       });
    }FC_CAPTURE_AND_RETHROW( (o) ) }
    
