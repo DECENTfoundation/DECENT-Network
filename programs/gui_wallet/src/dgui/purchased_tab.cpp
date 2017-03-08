@@ -20,7 +20,7 @@ using namespace gui_wallet;
 using namespace nlohmann;
 
 
-static const char* s_vccpItemNames[]={" ","Title","Rating","Size","Price","Created","Purchased", "Status"};
+static const char* s_vccpItemNames[]={" ", "Title", "Rating", "Size", "Price", "Created", "Status"};
 
 static const int   s_cnNumberOfRows = sizeof(s_vccpItemNames)/sizeof(const char*);
 
@@ -158,15 +158,12 @@ void PurchasedTab::updateContents() {
                     s_time.push_back(time[i]);
                 }
                 obj->m_pTableWidget->setItem(i + 1, 5, new QTableWidgetItem(QString::fromStdString(s_time)));
+                obj->m_pTableWidget->setItem(i + 1, 6, new QTableWidgetItem(QString::fromStdString("")));
                 
-                s_time = "";
-                for(int i = 0; i < expiration_or_delivery_time.find("T"); ++i)
-                {
-                    s_time.push_back(expiration_or_delivery_time[i]);
-                }
-                obj->m_pTableWidget->setItem(i + 1, 6, new QTableWidgetItem(QString::fromStdString(s_time)));
                 
-                for(int j = 1; j <= 6; ++j)
+                
+                
+                for(int j = 1; j < s_cnNumberOfRows; ++j)
                 {
                     obj->m_pTableWidget->item(i + 1, j)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
                 }
@@ -199,9 +196,6 @@ void PurchasedTab::PrepareTableWidgetHeaderGUI()
     QFont f( "Open Sans Bold", 14, QFont::Bold);
     for( int i(0); i<s_cnNumberOfRows; ++i )
     {
-        //pLabel = new QLabel(tr(s_vccpItemNames[i]));
-        //if(!pLabel){throw "Low memory\n" __FILE__ ;}
-        //m_TableWidget.setCellWidget(0,i,pLabel);
         m_pTableWidget->setItem(0,i,new QTableWidgetItem(tr(s_vccpItemNames[i])));
         m_pTableWidget->item(0,i)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
         m_pTableWidget->item(0,i)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
@@ -213,9 +207,6 @@ void PurchasedTab::PrepareTableWidgetHeaderGUI()
     m_pTableWidget->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     m_pTableWidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
-    //QPalette plt_tbl = m_TableWidget.palette();
-    //plt_tbl.setColor(QPalette::Base, palette().color(QPalette::Window));
-    //m_TableWidget.setPalette(plt_tbl);
 }
 
 
@@ -230,19 +221,16 @@ void PurchasedTab::DigContCallback(_NEEDED_ARGS2_)
 void PurchasedTab::ArrangeSize()
 {
     QSize tqsTableSize = m_pTableWidget->size();
-    int nSizeForOne = tqsTableSize.width()/(DCF_PURCHASE::NUM_OF_DIG_CONT_FIELDS)-1;
-    for(int i(0); i<DCF_PURCHASE::NUM_OF_DIG_CONT_FIELDS;++i){
-        m_pTableWidget->setColumnWidth(i,nSizeForOne);
-    }
 
     m_pTableWidget->setStyleSheet("QTableView{border : 1px solid lightGray}");
     m_pTableWidget->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     m_pTableWidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     
-    m_pTableWidget->setColumnWidth(0, (tqsTableSize.width()*10)/100);
-    for(int i = 1; i < 7; ++i)
+    m_pTableWidget->setColumnWidth(0, tqsTableSize.width() * 0.1);
+    
+    for(int i = 1; i < s_cnNumberOfRows; ++i)
     {
-        m_pTableWidget->setColumnWidth(i,(tqsTableSize.width()*15)/100);
+        m_pTableWidget->setColumnWidth(i, (0.9 * tqsTableSize.width()) / (s_cnNumberOfRows - 1) );
     }
 }
 
