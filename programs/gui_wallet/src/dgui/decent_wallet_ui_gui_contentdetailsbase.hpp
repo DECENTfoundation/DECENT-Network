@@ -17,6 +17,7 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QLabel>
+#include <QTextEdit>
 
 namespace gui_wallet {
 
@@ -38,6 +39,7 @@ protected:
     QVBoxLayout     m_vSub_layouts[NUMBER_OF_SUB_LAYOUTS2];
     QLabel          m_vLabels[NUMBER_OF_SUB_LAYOUTS2*2];
     QLabel          m_stars[5];
+    QTextEdit       desc_text;
 };
 
 }

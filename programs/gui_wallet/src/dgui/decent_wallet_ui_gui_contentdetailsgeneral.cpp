@@ -7,7 +7,7 @@
  *  This file implements ...
  *
  */
-
+#include <QGraphicsDropShadowEffect>
 
 #include "decent_wallet_ui_gui_contentdetailsgeneral.hpp"
 #include "gui_wallet_global.hpp"
@@ -23,10 +23,19 @@ ContentDetailsGeneral::ContentDetailsGeneral()
     :
       m_label(this,NULL,&ContentDetailsGeneral::LabelPushCallbackGUI)
 {
+    
+//    QGraphicsDropShadowEffect *effect = new QGraphicsDropShadowEffect(this);
+//    effect->setBlurRadius(0);
+//    effect->setColor(QColor("#EEEEEE"));
+//    effect->setOffset(1,1);
+//    //ui->userName->setGraphicsEffect(effect);
+    
     QPixmap aPixMap(":/icon/images/buy.png");
     QVBoxLayout* image_layout = new QVBoxLayout;
     m_label.setScaledContents(true);
     m_label.setPixmap(aPixMap);
+//    m_label.setGraphicsEffect(effect);
+    
     image_layout->addWidget(new QLabel());
     image_layout->addWidget(&m_label);
     image_layout->addWidget(new QLabel());

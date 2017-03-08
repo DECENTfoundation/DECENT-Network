@@ -53,7 +53,6 @@ struct SDigitalContent{
     std::string synopsis;
     std::string URI;
     double AVG_rating;
-    //
     std::string created;
     std::string expiration;
     int  size;

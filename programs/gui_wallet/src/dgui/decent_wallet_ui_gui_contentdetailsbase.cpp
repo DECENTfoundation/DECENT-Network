@@ -11,6 +11,9 @@
 #include "decent_wallet_ui_gui_contentdetailsbase.hpp"
 #include <QDateTime>
 #include "gui_wallet_global.hpp"
+#include "json.hpp"
+
+using namespace nlohmann;
 using namespace gui_wallet;
 
 static const char* s_vcpcFieldsGeneral[NUMBER_OF_SUB_LAYOUTS2] = {
@@ -32,11 +35,12 @@ static NewType  s_vFields[]={s_vcpcFieldsGeneral,s_vcpcFieldsBougth};
 ContentDetailsBase::ContentDetailsBase()
 {
     int i, nIndexKent(1), nIndexZuyg(0);
-
+    
+    desc_text.setReadOnly(true);
+    desc_text.setFixedHeight(50);
     m_main_layout.setSpacing(0);
     m_main_layout.setContentsMargins(0,0,0,0);
-    
-
+    m_main_layout.addWidget(&desc_text);
 
     for(i=0;i<NUMBER_OF_SUB_LAYOUTS2;++i,nIndexZuyg+=2,nIndexKent+=2)
     {
@@ -92,7 +96,7 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details)
     int i,nIndexZuyg(0);
     NewType vNames = s_vFields[a_cnt_details.type];
     m_pContentInfo = &a_cnt_details;
-
+    
     for(i=0;i<NUMBER_OF_SUB_LAYOUTS2;++i,nIndexZuyg+=2)
     {
         m_vLabels[nIndexZuyg].setText(tr(vNames[i]));
@@ -133,6 +137,18 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details)
     QString qsSizeTxt = QString::number(m_pContentInfo->size) + tr(" MB");
     m_vLabels[11].setText(qsSizeTxt);
     m_vLabels[13].setText(QString::number(a_cnt_details.times_bougth));
-    this->setWindowTitle(tr("Third Party Content"));
+    
+    std::string synopsis = m_pContentInfo->synopsis;
+    std::string desc = "";
+    try {
+        auto synopsis_parsed = json::parse(m_pContentInfo->synopsis);
+        synopsis = synopsis_parsed["title"].get<std::string>();
+        desc = synopsis_parsed["description"].get<std::string>();
+        
+    } catch (...) {}
+    this->setWindowTitle(QString::fromStdString(synopsis));
+    desc_text.setText(QString::fromStdString(desc));
+
+    
     QDialog::exec();
 }
