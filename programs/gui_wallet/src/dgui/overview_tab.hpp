@@ -25,6 +25,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <iostream>
+#include <QFont>
 
 #include "gui_wallet_tabcontentmanager.hpp"
 
@@ -38,6 +39,7 @@ public:
        m_main_layout.setContentsMargins(0, 0, 0, 0);
 
        setStyleSheet("background-color:white;");
+       setLayout(&m_main_layout);
     }
     
     void AddInfo(std::string title, std::string info) {
@@ -62,6 +64,7 @@ public:
         
         _subWidgets.back()->setLayout(_subLayouts.back());
         m_main_layout.addWidget(_subWidgets.back());
+        
         
     }
 private:

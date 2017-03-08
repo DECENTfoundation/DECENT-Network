@@ -36,8 +36,6 @@
 
 #include "json.hpp"
 
-
-
 using namespace gui_wallet;
 using namespace nlohmann;
 
@@ -61,8 +59,9 @@ Upload_tab::Upload_tab()
 
     m_infoLayoutHeader.setFont(m_font);
     m_title_text.setPlaceholderText("  Title");
+    m_title_text.setAttribute(Qt::WA_MacShowFocusRect, 0);
     m_title_text.setFixedHeight(40);
-    m_title_text.setFixedWidth(200);
+    //m_title_text.setFixedWidth(200);
     m_synopsis_layout.addWidget(&m_title_text);
 
     m_description_text.setPlaceholderText("  Description");
@@ -182,6 +181,9 @@ Upload_tab::Upload_tab()
 
     QPushButton* uploadButton = new QPushButton("Upload");
     uploadButton->setFixedHeight(40);
+    uploadButton->setStyleSheet("background-color: rgb(27,176,104); color: rgb(255, 255, 255)");
+    uploadButton->setFixedHeight(30);
+
 
     
     
@@ -210,17 +212,9 @@ void Upload_tab::onGrabPublishers() {
             std::string pubAssetId = publishers[r]["price"]["asset_id"].get<std::string>();
             std::string pubFreeSpace = std::to_string(publishers[r]["free_space"].get<int>()) + "MB free";
 
-            AssetMap::iterator it = obj->m_assetMap.find(pubAssetId);
-            if (it == obj->m_assetMap.end()) {
-                std::cout << "Invalid asset id " << pubAssetId << std::endl;
-                continue;
-            }
-
-            std::string assetSymbol = it->second;
-
             seeders->addItem(QString("%0 @%1 %2 [%3]").arg(QString::fromStdString(pubIdStr),
                                                             QString::fromStdString(pubPrice),
-                                                            QString::fromStdString(assetSymbol),
+                                                            QString::fromStdString("DCT"),
                                                             QString::fromStdString(pubFreeSpace)), QString::fromStdString(pubIdStr));
         }
 
@@ -297,8 +291,8 @@ void Upload_tab::uploadContent() {
     std::string submitCommand = "submit_content_new";
     submitCommand += " " + GlobalEvents::instance().getCurrentUser();   //author
     submitCommand += " \"" + path + "\"";                               //URI
-    submitCommand += " \"" + samples_path + "\"";                       //URI
-    submitCommand += " \"ipfs\"";                                       //URI
+    submitCommand += " \"" + samples_path + "\"";                       //Samples
+    submitCommand += " \"magnet\"";                                    //Protocol
     submitCommand += " " + assetName;                                   //price_asset_name
     submitCommand += " " + price;                                       //price_amount
     submitCommand += " [" + seeders + "]";                              //seeders

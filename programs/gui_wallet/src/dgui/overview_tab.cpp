@@ -72,7 +72,7 @@ Overview_tab::Overview_tab(class Mainwindow_gui_wallet* a_pPar)
     table_widget.setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     table_widget.setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
-   // table_widget.setStyleSheet("QTableView{border : 0px}");
+
     table_widget.setStyleSheet(("gridline-color: rgb(228,227,228));"));
     table_widget.setStyleSheet("QTableView{border : 0px}");
 
@@ -94,7 +94,7 @@ Overview_tab::Overview_tab(class Mainwindow_gui_wallet* a_pPar)
     search_label.setPixmap(image);
     search.setPlaceholderText(QString("Search"));
     search.setStyleSheet("border: 0px solid white");
-
+    search.setAttribute(Qt::WA_MacShowFocusRect, 0);
     search.setFixedHeight(40);
 
 
@@ -118,6 +118,9 @@ Overview_tab::Overview_tab(class Mainwindow_gui_wallet* a_pPar)
     m_contentUpdateTimer.connect(&m_contentUpdateTimer, SIGNAL(timeout()), this, SLOT(maybeUpdateContent()));
     m_contentUpdateTimer.setInterval(1000);
     m_contentUpdateTimer.start();
+    
+    table_widget.setMouseTracking(true);
+    connect(&table_widget, SIGNAL(mouseMoveEventDid()), this, SLOT(doRowColor()));
 }
 
 
@@ -151,7 +154,7 @@ void Overview_tab::updateContents() {
     }
     
     std::string result;
-    RunTask("list_accounts \"" + search.text().toStdString() +"\" 100", result);
+    RunTask("search_accounts \"" + search.text().toStdString() +"\" 100", result);
     
     auto contents = json::parse(result);
     
@@ -161,14 +164,13 @@ void Overview_tab::updateContents() {
         auto content = contents[i];
         
         NewButton* btn = new NewButton(content[0].get<std::string>());
+        btn->setAlignment(Qt::AlignCenter);
         
         QPixmap image1(":/icon/images/info1_white.svg");
         btn->setPixmap(image1);
-        btn->setMouseTracking(true);
+        //btn->setMouseTracking(true);
 
         connect(btn, SIGNAL(ButtonPushedSignal(std::string)), this , SLOT(buttonPressed(std::string)));
-        connect(btn, SIGNAL(mouseWasMoved()),this,SLOT(doRowColor()));
-        
         
         table_widget.setCellWidget(i + 1, 0, btn);
         table_widget.setItem(i+1, 1, new QTableWidgetItem(QString::fromStdString(content[0].get<std::string>())));
@@ -176,7 +178,6 @@ void Overview_tab::updateContents() {
         
         
         table_widget.setRowHeight(i + 1,40);
-        
         table_widget.cellWidget(i + 1 , 0)->setStyleSheet("* { background-color: rgb(255,255,255); }");
         table_widget.item(i+1,1)->setBackground(Qt::white);
         table_widget.item(i+1,2)->setBackground(Qt::white);
@@ -195,9 +196,7 @@ void Overview_tab::updateContents() {
     }
     
     
-    table_widget.setMouseTracking(true);
-    connect(&table_widget, SIGNAL(mouseMoveEventDid()), this, SLOT(doRowColor()));
-
+    
 }
 
 
@@ -222,12 +221,12 @@ void Overview_tab::buttonPressed(std::string accountName)
         
         QZebraWidget* info_window = new QZebraWidget();
         
-        info_window->AddInfo("registrar", registrar);
-        info_window->AddInfo("referrer", referrer);
-        info_window->AddInfo("lifetime_referrer", lifetime_referrer);
-        info_window->AddInfo("network_fee_percentage", network_fee_percentage);
-        info_window->AddInfo("lifetime_referrer_fee_percentage", lifetime_referrer_fee_percentage);
-        info_window->AddInfo("referrer_rewards_percentage", referrer_rewards_percentage);
+        info_window->AddInfo("Registrar", registrar);
+        info_window->AddInfo("Referrer", referrer);
+        info_window->AddInfo("Lifetime Referrer", lifetime_referrer);
+        info_window->AddInfo("Network Fee", network_fee_percentage);
+        info_window->AddInfo("Lifetime Referrer Fee", lifetime_referrer_fee_percentage);
+        info_window->AddInfo("Referrer Rewards Percentage", referrer_rewards_percentage);
         
         
         info_window->setWindowTitle(QString::fromStdString(name) + tr(" (") + QString::fromStdString(id) + tr(")"));
@@ -257,7 +256,8 @@ void Overview_tab::doRowColor()
 {
     for(int i = 1; i < table_widget.rowCount(); ++i)
     {
-        //table_widget.cellWidget(i,0)->setStyleSheet("* { background-color: rgb(255,255,255); }");
+        NewButton* btn = (NewButton*)table_widget.cellWidget(i,0);
+        btn->setStyleSheet("* { background-color: rgb(255,255,255); }");
         table_widget.item(i,1)->setBackground(QColor(255,255,255));
         table_widget.item(i,2)->setBackground(QColor(255,255,255));
 
@@ -268,7 +268,7 @@ void Overview_tab::doRowColor()
 
         QPixmap image(":/icon/images/info1.svg");
 
-        //((NewButton*)table_widget.cellWidget(i,0))->setPixmap(image);
+        btn->setPixmap(image);
 
     }
     QPoint mouse_pos = table_widget.mapFromGlobal(QCursor::pos());

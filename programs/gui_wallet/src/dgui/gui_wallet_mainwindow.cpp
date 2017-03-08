@@ -459,8 +459,8 @@ void Mainwindow_gui_wallet::ImportKeySlot()
     std::vector<std::string> cvsUsKey(2);
     QComboBox& cUsersCombo = *m_pCentralWidget->usersCombo();
 
-    cvsUsKey[0] = "nathan";
-    cvsUsKey[1] = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3";
+    cvsUsKey[0] = "";
+    cvsUsKey[1] = "";
 
     if(cUsersCombo.count()&&(cUsersCombo.currentIndex()>0))
     {

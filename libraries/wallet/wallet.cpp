@@ -2209,7 +2209,10 @@ public:
 
 
     void download_content(string consumer, string URI, string content_dir, bool broadcast) {
+        
         try {
+            FC_ASSERT( !is_locked() );
+            
             optional<content_object> content = _remote_db->get_content( URI );
             account_object consumer_account = get_account( consumer );
 
@@ -2220,7 +2223,12 @@ public:
             request_to_buy_operation request_op;
             request_op.consumer = consumer_account.id;
             request_op.URI = URI;
-            FC_ASSERT( _wallet.priv_el_gamal_key != decent::crypto::d_integer::Zero(), "Private ElGamal key is not imported. " );
+            
+            if (_wallet.priv_el_gamal_key == decent::crypto::d_integer::Zero()) { // Generate key if it does not exist
+                import_el_gamal_key(decent::crypto::generate_private_el_gamal_key());
+            }
+            
+            
             request_op.pubKey = decent::crypto::get_public_el_gamal_key( _wallet.priv_el_gamal_key );
             request_op.price = content->price;
             
@@ -2229,9 +2237,9 @@ public:
             set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
             tx.validate();
             sign_transaction( tx, broadcast );
-            detail::report_stats_listener stats_listener( URI, self);
-            stats_listener.ipfs_IDs = list_seeders_ipfs_IDs( URI);
-            package_manager::instance().download_package(URI, empty_transfer_listener::get_one(), stats_listener);
+            //detail::report_stats_listener stats_listener( URI, self);
+            //stats_listener.ipfs_IDs = list_seeders_ipfs_IDs( URI);
+            package_manager::instance().download_package(URI, empty_transfer_listener::get_one(), empty_report_stats_listener::get_one());
             
         } FC_CAPTURE_AND_RETHROW( (consumer)(URI)(content_dir)(broadcast) );
 
@@ -2773,10 +2781,16 @@ vector<account_object> wallet_api::list_my_accounts()
 {
    return vector<account_object>(my->_wallet.my_accounts.begin(), my->_wallet.my_accounts.end());
 }
-
+    
 map<string,account_id_type> wallet_api::list_accounts(const string& lowerbound, uint32_t limit)
 {
-   return my->_remote_db->lookup_accounts(lowerbound, limit);
+    return my->_remote_db->lookup_accounts(lowerbound, limit);
+}
+
+    
+map<string,account_id_type> wallet_api::search_accounts(const string& term, uint32_t limit)
+{
+    return my->_remote_db->search_accounts(term, limit);
 }
 
 vector<asset> wallet_api::list_account_balances(const string& id)
@@ -3749,7 +3763,12 @@ vector<content_object> wallet_api::list_content_by_author( const account_id_type
 
 vector<content_summary> wallet_api::list_content( const string& URI, uint32_t count)const
 {
-   return my->_remote_db->list_content( URI, count );
+    return my->_remote_db->list_content( URI, count );
+}
+
+vector<content_summary> wallet_api::search_content( const string& term, uint32_t count)const
+{
+    return my->_remote_db->search_content( term, count );
 }
 
 vector<content_object> wallet_api::list_content_by_bought( uint32_t count)const

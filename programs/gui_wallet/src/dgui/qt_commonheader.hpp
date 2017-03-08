@@ -97,7 +97,7 @@ public:
                      ConstrArgTypes... cons_args);
     virtual ~TableWidgetItemW();
 protected:
-    virtual void mouseDoubleClickEvent(QMouseEvent* event);
+    virtual void mouseReleaseEvent(QMouseEvent* event) override;
 protected:
     // no members
 };
