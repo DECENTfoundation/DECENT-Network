@@ -2235,9 +2235,9 @@ public:
             set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
             tx.validate();
             sign_transaction( tx, broadcast );
-            detail::report_stats_listener stats_listener( URI, self);
-            stats_listener.ipfs_IDs = list_seeders_ipfs_IDs( URI);
-            package_manager::instance().download_package(URI, empty_transfer_listener::get_one(), stats_listener);
+            //detail::report_stats_listener stats_listener( URI, self);
+            //stats_listener.ipfs_IDs = list_seeders_ipfs_IDs( URI);
+            package_manager::instance().download_package(URI, empty_transfer_listener::get_one(), empty_report_stats_listener::get_one());
             
         } FC_CAPTURE_AND_RETHROW( (consumer)(URI)(content_dir)(broadcast) );
 
