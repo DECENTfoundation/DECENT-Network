@@ -59,9 +59,11 @@ void ContentDetailsGeneral::LabelPushCallbackGUI(void*,QMouseEvent* a_mouse_even
 {
 
     QString saveDir = QFileDialog::getExistingDirectory(this, tr("Select download directory"), "~", QFileDialog::DontResolveSymlinks);
+    if (saveDir.isEmpty()) {
+        return;
+    }
 
-
-
+    
     std::string downloadCommand = "download_content";
     downloadCommand += " " + GlobalEvents::instance().getCurrentUser();   //consumer
     downloadCommand += " \"" + m_pContentInfo->URI + "\"";                 //URI
@@ -76,28 +78,8 @@ void ContentDetailsGeneral::LabelPushCallbackGUI(void*,QMouseEvent* a_mouse_even
         }
 
     });
-
-/*
-    QString aCont = tr("mouse clich on: [x=") + QString::number(a_mouse_event->pos().x()) + tr(";y=") +
-            QString::number(a_mouse_event->pos().y()) + tr("];");
-
-    QString aDetails = tr("Overload function ") + tr(__FUNCTION__) +
-            tr("\nFrom file \"") + tr(__SOURCE_FILE__) +
-            tr("\",line=") + QString::number(__LINE__,10);
-
-    QMessageBox aMessageBox(QMessageBox::Warning,
-                            QObject::tr("should be modified!"),aCont,
-                            QMessageBox::Ok,this);
-    //aMessageBox.setStyleSheet(QMessageBox::);
-    aMessageBox.setDetailedText(aDetails);
-
-    aMessageBox.setFixedSize(200,100);
-    //aMessageBox.setStyleSheet("");
-    aMessageBox.setStyleSheet("QLabel{min-width: 300px;}");
-
-    aMessageBox.exec();
-    */
-
+    
+    
 }
 
 
