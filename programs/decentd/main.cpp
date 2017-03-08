@@ -64,11 +64,11 @@ int main(int argc, char** argv) {
    app::application* node = new app::application();
    fc::oexception unhandled_exception;
    try {
-      bpo::options_description app_options("DECENT Witness Node");
-      bpo::options_description cfg_options("DECENT Witness Node");
+      bpo::options_description app_options("DECENT Daemon");
+      bpo::options_description cfg_options("DECENT Daemon");
       app_options.add_options()
             ("help,h", "Print this help message and exit.")
-       ("data-dir,d", bpo::value<boost::filesystem::path>()->default_value( utilities::decent_path_finder::instance().get_decent_data() / "witness"), "Directory containing databases, configuration file, etc.")
+       ("data-dir,d", bpo::value<boost::filesystem::path>()->default_value( utilities::decent_path_finder::instance().get_decent_data() / "decentd"), "Directory containing databases, configuration file, etc.")
             ;
 
       bpo::variables_map options;
