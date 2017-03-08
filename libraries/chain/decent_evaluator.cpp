@@ -244,6 +244,7 @@ namespace graphene { namespace chain {
    void_result proof_of_custody_evaluator::do_apply(const proof_of_custody_operation& o )
    {try{
       //pay the seeder
+      ilog("proof_of_custody_evaluator::do_apply begin" );
       auto& idx = db().get_index_type<content_index>().indices().get<by_URI>();
       const auto& content = idx.find( o.URI );
       const auto& sidx = db().get_index_type<seeder_index>().indices().get<by_seeder>();
@@ -254,17 +255,19 @@ namespace graphene { namespace chain {
       if( last_proof == content->last_proof.end() )
       {
          //the inital proof, no payments yet
+         ilog("proof_of_custody_evaluator::do_apply initial proof, no payment" );
          db().modify<content_object>(*content, [&](content_object& co){
               co.last_proof.emplace(std::make_pair(o.seeder, db().head_block_time()));
          });
       }else{
+         ilog("proof_of_custody_evaluator::do_apply payment proof" );
          fc::microseconds diff = db().head_block_time() - last_proof->second;
          if( diff > fc::days( 1 ) )
             diff = fc::days( 1 ) ;
          uint64_t ratio = 100 * diff.count() / fc::days( 1 ).count();
          uint64_t loss = ( 100 - ratio ) / 4;
          uint64_t total_reward_ratio = ( ratio * ( 100 - loss ) ) / 100;
-         asset reward ( seeder.price.amount * total_reward_ratio / 100 );
+         asset reward ( seeder.price.amount * total_reward_ratio * content->size / 100 );
          db().modify<content_object>( *content, [&] (content_object& co ){
               co.last_proof[o.seeder] = db().head_block_time();
               co.publishing_fee_escrow -= reward;
@@ -274,6 +277,8 @@ namespace graphene { namespace chain {
          op.author = content->author;
          op.seeder = seeder.seeder;
          op.payout = reward;
+         idump((op));
+         db().push_applied_operation(op);
       }
    }FC_CAPTURE_AND_RETHROW( (o) ) }
 
