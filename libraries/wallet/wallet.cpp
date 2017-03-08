@@ -94,8 +94,8 @@ namespace {
     struct transfer_progress_printer: public package_transfer_interface::transfer_listener {
 
         static transfer_progress_printer& instance() {
-            static transfer_progress_printer the_one;
-            return the_one;
+            static transfer_progress_printer the_transfer_progress_printer;
+            return the_transfer_progress_printer;
         }
 
         virtual void on_download_started(package_transfer_interface::transfer_id id) {
@@ -2224,7 +2224,7 @@ public:
             sign_transaction( tx, broadcast );
             detail::report_stats_listener stats_listener( URI, self);
             stats_listener.ipfs_IDs = list_seeders_ipfs_IDs( URI);
-            package_manager::instance().download_package(URI, empty_transfer_listener::get_one(), stats_listener);
+            package_manager::instance().download_package(URI, empty_transfer_listener::instance(), stats_listener);
             
         } FC_CAPTURE_AND_RETHROW( (consumer)(URI)(content_dir)(broadcast) );
 

@@ -21,7 +21,7 @@
 namespace graphene { namespace package {
 
 
-class report_stats_listener_base{
+class report_stats_listener_base {
 public:
 	std::map<std::string, std::vector<std::string>> ipfs_IDs;
 
@@ -29,12 +29,13 @@ public:
 };
 
 
-class empty_report_stats_listener:public  report_stats_listener_base{
+class empty_report_stats_listener : public report_stats_listener_base {
 public:
-	static empty_report_stats_listener& get_one() {
-		static empty_report_stats_listener one;
-		return one;
+	static empty_report_stats_listener& instance() {
+		static empty_report_stats_listener the_empty_report_stats_listener;
+		return the_empty_report_stats_listener;
 	}
+
 	virtual void report_stats( std::map<std::string,uint64_t> stats ){};
 };
 
@@ -97,9 +98,9 @@ public:
 
 class empty_transfer_listener : public package_transfer_interface::transfer_listener {
 public:
-	static empty_transfer_listener& get_one() {
-		static empty_transfer_listener one;
-		return one;
+	static empty_transfer_listener& instance() {
+		static empty_transfer_listener the_empty_transfer_listener;
+		return the_empty_transfer_listener;
 	}
 
 	virtual void on_download_started(package_transfer_interface::transfer_id id) { }
