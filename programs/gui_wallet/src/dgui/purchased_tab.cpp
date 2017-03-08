@@ -21,7 +21,7 @@ using namespace nlohmann;
 
 
 static const char* s_vccpItemNames[]={" ","Created","Title","Rating",
-                                     "Size","Price","Purchased"};
+                                     "Size","Price","Purchased", "Status"};
 static const int   s_cnNumberOfRows = sizeof(s_vccpItemNames)/sizeof(const char*);
 
 
@@ -92,9 +92,6 @@ void PurchasedTab::updateContents() {
     m_pTableWidget->setRowCount(1); //Remove everything but header
     
     
-    if (m_filterLineEditer.text().toStdString().empty()) {
-        return;
-    }
     auto& global_instance = gui_wallet::GlobalEvents::instance();
     std::string str_current_username = global_instance.getCurrentUser();
     

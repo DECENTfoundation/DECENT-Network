@@ -23,6 +23,7 @@
 #include <stdio.h>
 
 
+#include <graphene/chain/config.hpp>
 
 #include <cryptopp/integer.h>
 #include <cryptopp/aes.h>
@@ -208,7 +209,7 @@ void Upload_tab::onGrabPublishers() {
 
         for (int r = 0; r < publishers.size(); ++r) {
             std::string pubIdStr = publishers[r]["seeder"].get<std::string>();
-            std::string pubPrice = std::to_string(publishers[r]["price"]["amount"].get<int>());
+            std::string pubPrice = std::to_string(publishers[r]["price"]["amount"].get<int>() / GRAPHENE_BLOCKCHAIN_PRECISION);
             std::string pubAssetId = publishers[r]["price"]["asset_id"].get<std::string>();
             std::string pubFreeSpace = std::to_string(publishers[r]["free_space"].get<int>()) + "MB free";
 

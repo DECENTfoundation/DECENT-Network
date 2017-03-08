@@ -517,6 +517,7 @@ class database_api
        * @return History buying_objects corresponding to the provided consumer
        */
       vector<buying_object> get_buying_history_objects_by_consumer( const account_id_type& consumer )const;
+      vector<buying_object> get_buying_history_objects_by_consumer_all( const account_id_type& consumer )const;
 
       /**
        * @brief Get buying (open or history) by consumer and URI
