@@ -34,6 +34,7 @@
 #include <boost/version.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string/replace.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include <boost/range/adaptor/map.hpp>
 #include <boost/range/algorithm_ext/erase.hpp>
@@ -3704,7 +3705,7 @@ vector<buying_object> wallet_api::get_buying_history_objects_by_consumer( const 
     return result;
 }
     
-vector<buying_object> wallet_api::get_buying_history_objects_by_consumer_title( const string& account_id_or_name, const string& title )const
+vector<buying_object> wallet_api::get_buying_history_objects_by_consumer_term( const string& account_id_or_name, const string& term )const
 {
     account_id_type consumer = get_account( account_id_or_name ).id;
     vector<buying_object> result = my->_remote_db->get_buying_history_objects_by_consumer( consumer );
@@ -3724,18 +3725,30 @@ vector<buying_object> wallet_api::get_buying_history_objects_by_consumer_title( 
         bobj.synopsis = content->synopsis;
         
         std::string synopsis = json_unescape_string(content->synopsis);
-        /*
+        std::string title;
+        std::string description;
+        
         try {
-            auto synopsis_parsed = fc::json::parse(synopsis);
-            synopsis = synopsis_parsed["title"].get<std::string>();
+            auto synopsis_parsed = nlohmann::json::parse(synopsis);
+            title = synopsis_parsed["title"].get<std::string>();
+            description = synopsis_parsed["description"].get<std::string>();
         } catch (...) {}
         
-        if (false == synopsys.comtains(title))
+        std::string search_term = term;
+        boost::algorithm::to_lower(search_term);
+        boost::algorithm::to_lower(title);
+        boost::algorithm::to_lower(description);
+        
+        if (false == search_term.empty() &&
+            std::string::npos == title.find(search_term) &&
+            std::string::npos == description.find(search_term))
             continue;
-        */
+
         result[iWriteIndex] = bobj;
         ++iWriteIndex;
     }
+    result.resize(iWriteIndex);
+    
     return result;
 }
 

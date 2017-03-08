@@ -1510,11 +1510,11 @@ class wallet_api
       /**
        * @brief Get history buying_objects by consumer
        * @param consumer Consumer of the buyings to retrieve
-       * @param title Title of the buyings to filter by
+       * @param term Search term to look up in Title and Description by
        * @return History buying_objects corresponding to the provided consumer
        * @ingroup WalletCLI
        */
-      vector<buying_object> get_buying_history_objects_by_consumer_title( const string& account_id_or_name, const string& title )const;
+      vector<buying_object> get_buying_history_objects_by_consumer_term( const string& account_id_or_name, const string& term )const;
 
        /**
        * @brief Get buying (open or history) by consumer and URI
@@ -1817,7 +1817,7 @@ FC_API( graphene::wallet::wallet_api,
         (get_open_buyings_by_URI)
         (get_open_buyings_by_consumer)
         (get_buying_history_objects_by_consumer)
-        (get_buying_history_objects_by_consumer_title)
+        (get_buying_history_objects_by_consumer_term)
         (get_buying_by_consumer_URI)
         (get_rating)
         (get_content)
