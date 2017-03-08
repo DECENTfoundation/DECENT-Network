@@ -7,6 +7,7 @@
 
 #include <fc/crypto/ripemd160.hpp>
 #include <fc/crypto/sha512.hpp>
+#include <fc/log/logger.hpp>
 #include <fc/optional.hpp>
 #include <fc/signals.hpp>
 #include <fc/time.hpp>
@@ -59,10 +60,10 @@ private: // These will be shared by all clones (via clone()) of the initial inst
     std::shared_ptr<ipfs::Client>  _client;
 
 private:
+    fc::logger          _transfer_logger;
     std::string         _url;
     transfer_id         _id;
     transfer_listener*  _listener;
-    std::ofstream       _transfer_log;
     bool                _is_upload;
     transfer_progress   _last_progress;
 };

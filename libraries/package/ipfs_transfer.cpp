@@ -35,6 +35,7 @@ ipfs_transfer::ipfs_transfer(const ipfs_transfer& orig)
     : _thread(orig._thread)
     , _mutex(orig._mutex)
     , _client(orig._client)
+    , _transfer_logger(orig._transfer_logger)
 {
     if (!_thread)  FC_THROW("Thread instance is not available");
     if (!_mutex)   FC_THROW("Mutex instance is not available");
@@ -45,6 +46,7 @@ ipfs_transfer::ipfs_transfer()
     : _thread(std::make_shared<fc::thread>("ipfs_transfer"))
     , _mutex(std::make_shared<fc::mutex>())
     , _client(std::make_shared<ipfs::Client>("localhost", 5001))
+    , _transfer_logger(fc::logger::get("transfer"))
 {
 }
 

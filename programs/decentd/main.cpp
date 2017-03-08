@@ -218,6 +218,10 @@ void write_default_logging_config_to_stream(std::ostream& out)
           "[log.file_appender.p2p]\n"
           "filename=logs/p2p/p2p.log\n"
           "# filename can be absolute or relative to this config file\n\n"
+          "# declare an appender named \"transfer\" that writes messages to transfer.log\n"
+          "[log.file_appender.transfer]\n"
+          "filename=logs/transfer.log\n"
+          "# filename can be absolute or relative to this config file\n\n"
           "# route any messages logged to the default logger to the \"stderr\" logger we\n"
           "# declared above, if they are info level are higher\n"
           "[logger.default]\n"
@@ -226,7 +230,11 @@ void write_default_logging_config_to_stream(std::ostream& out)
           "# route messages sent to the \"p2p\" logger to the p2p appender declared above\n"
           "[logger.p2p]\n"
           "level=debug\n"
-          "appenders=p2p\n\n";
+          "appenders=p2p\n\n"
+          "# route messages sent to the \"transfer\" logger to the transfer appender declared above\n"
+          "[logger.transfer]\n"
+          "level=debug\n"
+          "appenders=transfer\n\n";
 }
 
 fc::optional<fc::logging_config> load_logging_config_from_ini_file(const fc::path& config_ini_filename)

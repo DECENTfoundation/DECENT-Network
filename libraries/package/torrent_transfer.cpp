@@ -932,6 +932,7 @@ torrent_transfer::torrent_transfer(const torrent_transfer& orig)
     , _config_data(orig._config_data)
     , _lifetime_info_mutex(std::make_shared<fc::mutex>())
     , _instance_exists(std::make_shared<std::atomic<bool>>(true))
+    , _transfer_logger(orig._transfer_logger)
 {
     if (!_thread)       FC_THROW("Thread instance is not available");
     if (!_session)      FC_THROW("Session instance is not available");
@@ -944,6 +945,7 @@ torrent_transfer::torrent_transfer()
     , _config_data(std::make_shared<detail::libtorrent_config_data>())
     , _lifetime_info_mutex(std::make_shared<fc::mutex>())
     , _instance_exists(std::make_shared<std::atomic<bool>>(true))
+    , _transfer_logger(fc::logger::get("transfer"))
 {
     libtorrent::session_params p;
     to_settings_pack(_config_data->settings, p.settings);
@@ -1089,9 +1091,7 @@ void torrent_transfer::upload_package(transfer_id id, const package_object& pack
 
         fc::scoped_lock<fc::mutex> guard(*lifetime_info_mutex);
         if (*instance_exists) {
-            const path log_path = decent_path_finder::instance().get_decent_logs() / "transfer.log";
-            this->_transfer_log.open(log_path.string(), std::ios::out | std::ios::app);
-            this->_transfer_log << "***** Torrent upload started for package: " << package.get_hash().str() << endl;
+            fc_ilog(_transfer_logger, "torrent upload started for package: %{hash}", ("hash", package.get_hash().str()) );
         }
 
     });
@@ -1202,9 +1202,7 @@ void torrent_transfer::download_package(transfer_id id, const std::string& url, 
 
         fc::scoped_lock<fc::mutex> guard(*lifetime_info_mutex);
         if (*instance_exists) {
-            const path log_path = decent_path_finder::instance().get_decent_logs() / "transfer.log";
-            this->_transfer_log.open(log_path.string(), std::ios::out | std::ios::app);
-            this->_transfer_log << "***** Torrent download started from url: " << url << endl;
+            fc_ilog(_transfer_logger, "torrent download started from url: %{url}", ("url", url) );
         }
 
     });
@@ -1321,40 +1319,35 @@ void torrent_transfer::handle_torrent_alerts() {
     std::vector<libtorrent::alert*> alerts;
 	_session->pop_alerts(&alerts);
 
-	const path log_path = decent_path_finder::instance().get_decent_logs() / "transfer.log";
-	_transfer_log.open(log_path.string(), std::ios::out | std::ios::app);
-
 	for (int i = 0; i < alerts.size(); ++i) {
 		libtorrent::alert* alert = alerts[i];
-		
-		_transfer_log << "[";
+        const int cat = alert->category();
 
-		int cat = alert->category();
-
-		if (cat & libtorrent::alert::error_notification) _transfer_log << " ERROR";
-		if (cat & libtorrent::alert::peer_notification) _transfer_log << " PEER";
-		if (cat & libtorrent::alert::port_mapping_notification) _transfer_log << " PORT_MAP";
-		if (cat & libtorrent::alert::storage_notification) _transfer_log << " STORAGE";
-		if (cat & libtorrent::alert::tracker_notification) _transfer_log << " TRACKER";
-		if (cat & libtorrent::alert::debug_notification) _transfer_log << " DEBUG";
-		if (cat & libtorrent::alert::status_notification) _transfer_log << " STATUS";
-		if (cat & libtorrent::alert::progress_notification) _transfer_log << " PROGRESS";
-		if (cat & libtorrent::alert::ip_block_notification) _transfer_log << " IPBLOCK";
-		if (cat & libtorrent::alert::performance_warning) _transfer_log << " PERFORMANCE";
-		if (cat & libtorrent::alert::dht_notification) _transfer_log << " DHT";
-		if (cat & libtorrent::alert::stats_notification) _transfer_log << " STATS";
-		if (cat & libtorrent::alert::session_log_notification) _transfer_log << " SESSION";
-		if (cat & libtorrent::alert::torrent_log_notification) _transfer_log << " TORRENT";
-		if (cat & libtorrent::alert::peer_log_notification) _transfer_log << " PEERL";
-		if (cat & libtorrent::alert::incoming_request_notification) _transfer_log << " INREQ";
-		if (cat & libtorrent::alert::dht_log_notification) _transfer_log << " DHT_L";
-		if (cat & libtorrent::alert::dht_operation_notification) _transfer_log << " DHT_OP";
-		if (cat & libtorrent::alert::port_mapping_log_notification) _transfer_log << " PORM_MAPL";
-		if (cat & libtorrent::alert::picker_log_notification) _transfer_log << " PICKERL";
-
-		_transfer_log << "] ~> [" << alert->what() << "]: " << alert->message() << endl;
+        fc_ilog(_transfer_logger, "[${ERROR}${PEER}${PORT_MAP}${STORAGE}${TRACKER}${DEBUG}${STATUS}${PROGRESS}${IPBLOCK}${PERFORMANCE}${DHT}${STATS}${SESSION}${TORRENT}${PEERL}${INREQ}${DHT_L}${DHT_OP}${PORM_MAPL}${PICKERL} ] ~> [ ${what} ]: ${message}",
+                ("ERROR", (cat & libtorrent::alert::error_notification ? " ERROR" : ""))
+                ("PEER", (cat & libtorrent::alert::peer_notification ? " PEER" : ""))
+                ("PORT_MAP", (cat & libtorrent::alert::port_mapping_notification ? " PORT_MAP" : ""))
+                ("STORAGE", (cat & libtorrent::alert::storage_notification ? " STORAGE" : ""))
+                ("TRACKER", (cat & libtorrent::alert::tracker_notification ? " TRACKER" : ""))
+                ("DEBUG", (cat & libtorrent::alert::debug_notification ? " DEBUG" : ""))
+                ("STATUS", (cat & libtorrent::alert::status_notification ? " STATUS" : ""))
+                ("PROGRESS", (cat & libtorrent::alert::progress_notification ? " PROGRESS" : ""))
+                ("IPBLOCK", (cat & libtorrent::alert::ip_block_notification ? " IPBLOCK" : ""))
+                ("PERFORMANCE", (cat & libtorrent::alert::performance_warning ? " PERFORMANCE" : ""))
+                ("DHT", (cat & libtorrent::alert::dht_notification ? " DHT" : ""))
+                ("STATS", (cat & libtorrent::alert::stats_notification ? " STATS" : ""))
+                ("SESSION", (cat & libtorrent::alert::session_log_notification ? " SESSION" : ""))
+                ("TORRENT", (cat & libtorrent::alert::torrent_log_notification ? " TORRENT" : ""))
+                ("PEERL", (cat & libtorrent::alert::peer_log_notification ? " PEERL" : ""))
+                ("INREQ", (cat & libtorrent::alert::incoming_request_notification ? " INREQ" : ""))
+                ("DHT_L", (cat & libtorrent::alert::dht_log_notification ? " DHT_L" : ""))
+                ("DHT_OP", (cat & libtorrent::alert::dht_operation_notification ? " DHT_OP" : ""))
+                ("PORM_MAPL", (cat & libtorrent::alert::port_mapping_log_notification ? " PORM_MAPL" : ""))
+                ("PICKERL", (cat & libtorrent::alert::picker_log_notification ? " PICKERL" : ""))
+                ("what", alert->what())
+                ("message", alert->message())
+        );
 	}
-	_transfer_log.close();
 }
 
 std::string torrent_transfer::get_transfer_url() {

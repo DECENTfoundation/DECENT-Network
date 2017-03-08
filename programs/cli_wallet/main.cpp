@@ -108,30 +108,51 @@ int main( int argc, char** argv )
       }
 
 
-
       fc::path data_dir;
       fc::logging_config cfg;
-      fc::path log_dir = decent_path_finder::instance().get_decent_logs();
+      const fc::path log_dir = decent_path_finder::instance().get_decent_logs();
 
-      fc::file_appender::config ac;
-      ac.filename             = log_dir / "rpc" / "rpc.log";
-      ac.flush                = true;
-      ac.rotate               = true;
-      ac.rotation_interval    = fc::hours( 1 );
-      ac.rotation_limit       = fc::days( 1 );
+      fc::file_appender::config ac_default;
 
-      std::cout << "Logging RPC to file: " << (decent_path_finder::instance().get_decent_data() / ac.filename).preferred_string() << "\n";
+      fc::file_appender::config ac_rpc;
+      ac_rpc.filename             = log_dir / "rpc" / "rpc.log";
+      ac_rpc.flush                = true;
+      ac_rpc.rotate               = true;
+      ac_rpc.rotation_interval    = fc::hours( 1 );
+      ac_rpc.rotation_limit       = fc::days( 1 );
 
-      cfg.appenders.push_back(fc::appender_config( "default", "console", fc::variant(fc::console_appender::config())));
-      cfg.appenders.push_back(fc::appender_config( "rpc", "file", fc::variant(ac)));
+      fc::file_appender::config ac_transfer;
+      ac_transfer.format               = "${timestamp} ${thread_name} ${context} ${level}]  ${message}";
+      ac_transfer.filename             = log_dir / "transfer.log";
+      ac_transfer.flush                = true;
+      ac_transfer.rotate               = true;
+      ac_transfer.rotation_interval    = fc::hours( 1 );
+      ac_transfer.rotation_limit       = fc::days( 1 );
 
-      cfg.loggers = { fc::logger_config("default"), fc::logger_config( "rpc") };
-      cfg.loggers.front().level = fc::log_level::info;
-      cfg.loggers.front().appenders = {"default"};
-      cfg.loggers.back().level = fc::log_level::debug;
-      cfg.loggers.back().appenders = {"rpc"};
+//    cfg.appenders.push_back(fc::appender_config( "default", "console", fc::variant(ac_default)));
+//    cfg.appenders.push_back(fc::appender_config( "rpc", "file", fc::variant(ac_rpc)));
+      cfg.appenders.push_back(fc::appender_config( "transfer", "file", fc::variant(ac_transfer)));
 
-      //fc::configure_logging( cfg );
+      fc::logger_config lc_default("default");
+      lc_default.level          = fc::log_level::info;
+      lc_default.appenders      = {"default"};
+
+      fc::logger_config lc_rpc("rpc");
+      lc_rpc.level              = fc::log_level::debug;
+      lc_rpc.appenders          = {"rpc"};
+
+      fc::logger_config lc_transfer("transfer");
+      lc_transfer.level         = fc::log_level::debug;
+      lc_transfer.appenders     = {"transfer"};
+
+//    cfg.loggers.push_back(lc_default);
+//    cfg.loggers.push_back(lc_rpc);
+      cfg.loggers.push_back(lc_transfer);
+
+      std::clog << "Logging RPC to file: " << ac_rpc.filename.preferred_string() << std::endl;
+      std::clog << "Logging transfers to file: " << ac_transfer.filename.preferred_string() << std::endl;
+
+      fc::configure_logging( cfg );
 
       fc::ecc::private_key committee_private_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("null_key")));
 

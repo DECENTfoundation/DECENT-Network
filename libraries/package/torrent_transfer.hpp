@@ -7,6 +7,7 @@
 
 #include <fc/crypto/ripemd160.hpp>
 #include <fc/crypto/sha512.hpp>
+#include <fc/log/logger.hpp>
 #include <fc/optional.hpp>
 #include <fc/signals.hpp>
 #include <fc/thread/thread.hpp>
@@ -70,10 +71,10 @@ private: // These are used to maintain instance lifetime info, and will be share
     std::shared_ptr<std::atomic<bool>>         _instance_exists;
 
 private:
+    fc::logger                  _transfer_logger;
     std::string                 _url;
     transfer_id                 _id;
     transfer_listener*          _listener;
-    std::ofstream               _transfer_log;
     bool                        _is_upload;
     libtorrent::torrent_handle  _torrent_handle;
 };
