@@ -39,6 +39,7 @@ void seeding_plugin_impl::handle_content_submit(const operation_history_object &
       auto seeder_itr = idx.begin();
       while( seeder_itr != idx.end()) {
          if( std::find(cs_op.seeders.begin(), cs_op.seeders.end(), (seeder_itr->seeder)) != cs_op.seeders.end()) {
+            ilog("seeding plugin:  handle_content_submit() handling new content by seeder ${s}",("s",seeder_itr->seeder));
             auto s = cs_op.seeders.begin();
             auto k = cs_op.key_parts.begin();
             while( *s != seeder_itr->seeder && s != cs_op.seeders.end()) {
@@ -59,7 +60,7 @@ void seeding_plugin_impl::handle_content_submit(const operation_history_object &
                     mso.free_space -= diff_space;
                });
             } else {
-               db.create<my_seeding_object>([&](my_seeding_object &so) {
+               my_seeding_id_type so_id = db.create<my_seeding_object>([&](my_seeding_object &so) {
                     so.URI = cs_op.URI;
                     so.seeder = seeder_itr->seeder;
                     so.space = cs_op.size; //we allocate the whole megabytes per content
@@ -67,13 +68,16 @@ void seeding_plugin_impl::handle_content_submit(const operation_history_object &
                        so.key = *k;
                     so.expiration = cs_op.expiration;
                     so.cd = cs_op.cd;
-               });
+               }).id;
+               ilog("seeding plugin:  handle_content_submit() created new content_object ${s}",("s",so_id));
                db.modify<my_seeder_object>(*seeder_itr, [&](my_seeder_object &mso) {
                     mso.free_space -= cs_op.size ; //we allocate the whole megabytes per content
                });
                //if we run this in main thread it can crash _push_block
-               service_thread->async( [cs_op, this](){
-                    package_manager::instance().download_package(cs_op.URI, *this, empty_report_stats_listener::get_one());
+               service_thread->async( [cs_op, this, so_id](){
+                    ilog("seeding plugin:  handle_content_submit() lambda called");
+                    auto id = package_manager::instance().download_package(cs_op.URI, *this, empty_report_stats_listener::instance());
+                    active_downloads[id] = so_id;
                });
 
             }
@@ -173,7 +177,7 @@ void
 seeding_plugin_impl::generate_por(my_seeding_id_type so_id, graphene::package::package_object downloaded_package)
 {
 
-   elog("seeding plugin_impl:  generate_por() start");
+   ilog("seeding plugin_impl:  generate_por() start");
    graphene::chain::database &db = database();
 
    const my_seeding_object &mso = db.get<my_seeding_object>(so_id);
@@ -182,6 +186,9 @@ seeding_plugin_impl::generate_por(my_seeding_id_type so_id, graphene::package::p
    FC_ASSERT(sritr != sidx.end());
    const auto& cidx = db.get_index_type<content_index>().indices().get<graphene::chain::by_URI>();
    const auto& citr = cidx.find(mso.URI);
+
+   ilog("seeding plugin_impl:  generate_por() processing content ${c}",("c", mso.URI));
+
    FC_ASSERT(citr != cidx.end());
    if( citr->expiration < fc::time_point::now() ){
       ilog("seeding plugin_impl:  generate_por() - content expired, cleaning up");
@@ -194,17 +201,19 @@ seeding_plugin_impl::generate_por(my_seeding_id_type so_id, graphene::package::p
 
    try {
       fc::time_point_sec last_proof_time = citr->last_proof.at(mso.seeder);
-      generate_time = last_proof_time + 24*60*60 - POR_WAKEUP_INTERVAL_SEC/2;
-      if( generate_time < citr->expiration )
-         generate_time = citr->expiration - POR_WAKEUP_INTERVAL_SEC;
+      generate_time = last_proof_time + fc::seconds(24*60*60) - fc::seconds(POR_WAKEUP_INTERVAL_SEC/2);
+      if( generate_time > citr->expiration )
+         generate_time = citr->expiration - fc::seconds(POR_WAKEUP_INTERVAL_SEC);
    }catch (std::out_of_range e){
       //no proof has been delivered by us yet...
       generate_time = fc::time_point::now();
    }
 
+   ilog("seeding plugin_impl:  generate_por() - generate time for this content is planned at ${t}",("t", generate_time) );
    fc::time_point next_wakeup( fc::time_point::now() + fc::microseconds(POR_WAKEUP_INTERVAL_SEC * 1000000 ));
-   if( fc::time_point(generate_time) <= ( fc::time_point::now() ) )
+   if( fc::time_point(generate_time) - fc::seconds(POR_WAKEUP_INTERVAL_SEC) <= ( fc::time_point::now() ) )
    {
+      ilog("seeding plugin_impl: generate_por() - generating PoR");
       decent::crypto::custody_proof proof;
       auto dyn_props = db.get_dynamic_global_properties();
       fc::ripemd160 b_id = dyn_props.head_block_id;
@@ -233,18 +242,19 @@ seeding_plugin_impl::generate_por(my_seeding_id_type so_id, graphene::package::p
       tx.sign(sritr->privKey, _chain_id);
       idump((tx));
 
-      main_thread->async([this, tx]() { elog("seeding plugin_impl:  generate_por lambda - pushing transaction"); database().push_transaction(tx); });
+      main_thread->async([this, tx]() { database().push_transaction(tx); });
 
-      elog("broadcasting out PoR");
+      ilog("broadcasting out PoR");
       _self.p2p_node().broadcast_transaction(tx);
 
-      if(  fc::time_point( mso.expiration ) + fc::microseconds( POR_WAKEUP_INTERVAL_SEC * 1000000 ) <= fc::time_point::now() ){
+      if(  fc::time_point( mso.expiration ) <=  fc::time_point::now() ){
          ilog("seeding plugin_impl:  generate_por() - content expired, cleaning up");
          package_manager::instance().delete_package(downloaded_package.get_hash());
          db.remove(mso);
       }
    }
 
+   ilog("seeding plugin_impl:  generate_por() - planning next wake-up at ${t}",("t", next_wakeup) );
    service_thread->schedule([this, so_id, downloaded_package]() { generate_por(so_id, downloaded_package); }, next_wakeup,
                    "Seeding plugin PoR generate");
 
@@ -278,7 +288,7 @@ void seeding_plugin_impl::send_ready_to_publish()
       tx.sign(sritr->privKey, _chain_id);
       idump((tx));
       tx.validate();
-      main_thread->async( [this, tx](){ilog("seeding plugin_impl:  generate_por lambda - pushing transaction"); database().push_transaction(tx);} );
+      main_thread->async( [this, tx](){ilog("seeding plugin_impl:  send_ready_to_publish lambda - pushing transaction"); database().push_transaction(tx);} );
       ilog("seeding plugin_impl: send_ready_to_publish() broadcasting");
       _self.p2p_node().broadcast_transaction(tx);
       sritr++;
@@ -296,7 +306,7 @@ void seeding_plugin_impl::restart_downloads(){
         const auto& cidx = database().get_index_type<my_seeding_index>().indices().get<by_URI>();
         auto citr = cidx.begin();
         while(citr!=cidx.end()){
-           package_manager::instance().download_package(citr->URI, *this, empty_report_stats_listener::get_one() );
+           active_downloads[package_manager::instance().download_package(citr->URI, *this, empty_report_stats_listener::instance() )] = citr->id;
            ++citr;
         }
         elog("restarting downloads, service thread end");

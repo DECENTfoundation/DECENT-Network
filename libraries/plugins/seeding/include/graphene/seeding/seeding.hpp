@@ -63,8 +63,17 @@ public:
    ~seeding_plugin_impl();
 
    virtual void on_download_finished(package_transfer_interface::transfer_id id, package_object downloaded_package){
+      ilog("seeding plugin: on_download_finished() begin");
       my_seeding_id_type so_id = active_downloads[id];
       active_downloads.erase(id);
+      const auto& so = database().get<my_seeding_object>(so_id);
+      size_t size = (downloaded_package.get_size() + 1024*1024 - 1) / (1024 * 1024);
+      if ( size > so.space ) {
+         ilog("seeding plugin: on_download_finished(): Fraud detected: real content size is greater than propagated in blockchain; deleting...");
+         package_manager::instance().delete_package(downloaded_package.get_hash());
+         main_thread->async([so_id, this](){ const auto& so = database().get<my_seeding_object>(so_id); database().remove(so); });
+         return;
+      }
       service_thread->async([this,so_id, downloaded_package](){generate_por( so_id, downloaded_package );});
       //hack to deal with ipfs until the package manager is finished
       fc::url download_url(package_manager::instance().get_transfer_url(id));

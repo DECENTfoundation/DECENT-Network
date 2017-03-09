@@ -82,63 +82,58 @@
 #ifndef WIN32
 # include <sys/types.h>
 # include <sys/stat.h>
-
 #endif
 
 #define BRAIN_KEY_WORD_COUNT 16
 
 CryptoPP::AutoSeededRandomPool randomGenerator;
 
-
 using namespace graphene::package;
 
 
-
-
 namespace {
-   struct transfer_progress_printer: public package_transfer_interface::transfer_listener {
-
-      static transfer_progress_printer& instance() {
-         static transfer_progress_printer the_one;
-         return the_one;
-      }
-
-      virtual void on_download_started(package_transfer_interface::transfer_id id) {
-         cout << id << ": Download started..." << endl;
-      }
-
-      virtual void on_download_finished(package_transfer_interface::transfer_id id, package_object downloaded_package) {
-         cout << id << ": Download finished: " << downloaded_package.get_hash().str() <<  endl;
-
-      }
-
-      virtual void on_download_progress(package_transfer_interface::transfer_id id, package_transfer_interface::transfer_progress progress) {
-         cout << id << ": Downloading " << progress.current_bytes << "/" << progress.total_bytes << " @ " << progress.current_speed << "Bytes/sec" << endl;
-      }
 
 
-      virtual void on_upload_started(package_transfer_interface::transfer_id id, const std::string& url) {
+    struct transfer_progress_printer: public package_transfer_interface::transfer_listener {
 
-         cout << id << ": Upload started on URL: " << url << endl;
-      }
+        static transfer_progress_printer& instance() {
+            static transfer_progress_printer the_transfer_progress_printer;
+            return the_transfer_progress_printer;
+        }
 
-      virtual void on_upload_finished(package_transfer_interface::transfer_id id) {
-         cout << id << ": Upload finished" <<  endl;
-      }
+        virtual void on_download_started(package_transfer_interface::transfer_id id) {
+            ilog("transfer ${id}: download started", ("id", id));
+        }
 
-      virtual void on_upload_progress(package_transfer_interface::transfer_id id, package_transfer_interface::transfer_progress progress) {
-         cout << id << ": Uploading " << progress.current_bytes << "/" << progress.total_bytes << " @ " << progress.current_speed << "Bytes/sec" << endl;
-      }
+        virtual void on_download_finished(package_transfer_interface::transfer_id id, package_object downloaded_package) {
+            ilog("transfer ${id}: download finished: ${hash}", ("id", id) ("hash", downloaded_package.get_hash().str()));
+        }
 
-      virtual void on_error(package_transfer_interface::transfer_id id, std::string error) {
-         cout << id << ": ERROR -> " << error << endl;
-      }
-   };
+        virtual void on_download_progress(package_transfer_interface::transfer_id id, package_transfer_interface::transfer_progress progress) {
+            ilog("transfer ${id}: download progress: ${curr}/${total} @ ${speed} Bytes/sec",
+                 ("id", id) ("curr", progress.current_bytes) ("total", progress.total_bytes) ("speed", progress.current_speed));
+        }
 
-}
+        virtual void on_upload_started(package_transfer_interface::transfer_id id, const std::string& url) {
+            ilog("transfer ${id}: upload started on URL: ${url}", ("id", id) ("url", url));
+        }
+
+        virtual void on_upload_finished(package_transfer_interface::transfer_id id) {
+            ilog("transfer ${id}: upload finished", ("id", id));
+        }
+
+        virtual void on_upload_progress(package_transfer_interface::transfer_id id, package_transfer_interface::transfer_progress progress) {
+            ilog("transfer ${id}: upload progress: ${curr}/${total} @ ${speed} Bytes/sec",
+                 ("id", id) ("curr", progress.current_bytes) ("total", progress.total_bytes) ("speed", progress.current_speed));
+        }
+
+        virtual void on_error(package_transfer_interface::transfer_id id, std::string error) {
+            elog("transfer ${id}: error: ${error}", ("id", id) ("error", error));
+        }
+    };
 
 
-
+} // namespace
 
 
 namespace graphene { namespace wallet {
@@ -2064,7 +2059,9 @@ public:
                                      d_integer secret,
                                      decent::crypto::custody_data cd,
                                      bool broadcast/* = false */)
-      { try {
+      {
+         try {
+         FC_ASSERT(!is_locked());
          account_object author_account = get_account( author );
 
          fc::optional<asset_object> price_asset_obj = get_asset(price_asset_symbol);
@@ -2117,9 +2114,9 @@ public:
                                             string publishing_fee_amount,
                                             string synopsis,
                                             bool broadcast/* = false */)
-      { 
-
+      {
          try {
+            FC_ASSERT(!is_locked());
             account_object author_account = get_account( author );
 
             fc::optional<asset_object> price_asset_obj = get_asset(price_asset_symbol);
@@ -2139,8 +2136,8 @@ public:
             package_object pack = package_manager::instance().create_package(content_dir, samples_dir, sha_key, cd);
             fc::ripemd160 hash = pack.get_hash();
             
-            uint32_t quorum = 1;
-            uint64_t size = std::max(1, pack.get_size() / (1024 * 1024));
+            uint32_t quorum = std::max((unsigned long)1, seeders.size()/3);
+            uint64_t size = std::max(1, ( pack.get_size() + (1024 * 1024) -1 ) / (1024 * 1024));
 
 
             shamir_secret ss(quorum, seeders.size(), secret);
@@ -2176,12 +2173,13 @@ public:
 
             return sign_transaction( tx, broadcast );
          } 
-         FC_CAPTURE_AND_RETHROW( (author)(content_dir)(samples_dir)(protocol)(price_asset_symbol)(price_amount)(seeders)(expiration)(publishing_fee_symbol_name)(publishing_fee_amount)(synopsis)(broadcast) ) 
+         FC_CAPTURE_AND_RETHROW( (author)(content_dir)(samples_dir)(protocol)(price_asset_symbol)(price_amount)(seeders)(expiration)(publishing_fee_symbol_name)(publishing_fee_amount)(synopsis)(broadcast) )
       }
 
 
    optional<content_download_status> get_download_status(string consumer, string URI) {
       try {
+         FC_ASSERT(!is_locked());
          account_id_type acc = get_account(consumer).id;
          optional<buying_object> bobj = _remote_db->get_buying_by_consumer_URI( acc, URI );
          if (!bobj) {
@@ -2204,7 +2202,7 @@ public:
          status.received_download_bytes = progress.current_bytes;
 
          return status;
-      } FC_CAPTURE_AND_RETHROW( (consumer)(URI));
+      } FC_CAPTURE_AND_RETHROW( (consumer)(URI) )
    }
 
 
@@ -2240,10 +2238,9 @@ public:
             sign_transaction( tx, broadcast );
             //detail::report_stats_listener stats_listener( URI, self);
             //stats_listener.ipfs_IDs = list_seeders_ipfs_IDs( URI);
-            package_manager::instance().download_package(URI, empty_transfer_listener::get_one(), empty_report_stats_listener::get_one());
+            package_manager::instance().download_package(URI, empty_transfer_listener::instance(), empty_report_stats_listener::instance());
             
-        } FC_CAPTURE_AND_RETHROW( (consumer)(URI)(content_dir)(broadcast) );
-
+        } FC_CAPTURE_AND_RETHROW( (consumer)(URI)(content_dir)(broadcast) )
     }
 
 
@@ -2434,6 +2431,7 @@ public:
          string account = static_cast<string>(static_cast<object_id_type>(item.first));
          mapped_IDs[account] = list_imported_ipfs_IDs(account);
       }
+      return mapped_IDs;
    }
 
    void dbg_make_uia(string creator, string symbol)
@@ -3752,16 +3750,16 @@ vector<buying_object> wallet_api::get_buying_history_objects_by_consumer_term( c
     return result;
 }
 
-optional<buying_object> wallet_api::get_buying_by_consumer_URI( const string& account, const string & URI )const
+optional<buying_object> wallet_api::get_buying_by_consumer_URI( const string& account_id_or_name, const string & URI )const
 {
-   account_id_type acc = get_account( account ).id;
-   return my->_remote_db->get_buying_by_consumer_URI( acc, URI );
+   account_id_type account = get_account( account_id_or_name ).id;
+   return my->_remote_db->get_buying_by_consumer_URI( account, URI );
 }
 
 optional<uint64_t> wallet_api::get_rating( const string& consumer, const string & URI )const
 {
-   account_id_type acc = get_account( consumer ).id;
-   return my->_remote_db->get_rating_by_consumer_URI( acc, URI );
+   account_id_type account = get_account( consumer ).id;
+   return my->_remote_db->get_rating_by_consumer_URI( account, URI );
 }
 
 optional<content_object> wallet_api::get_content( const string& URI )const
@@ -3769,9 +3767,10 @@ optional<content_object> wallet_api::get_content( const string& URI )const
    return my->_remote_db->get_content( URI );
 }
 
-vector<content_object> wallet_api::list_content_by_author( const account_id_type& author )const
+vector<content_object> wallet_api::list_content_by_author( const string& account_id_or_name )const
 {
-   return my->_remote_db->list_content_by_author( author );
+   account_id_type account = get_account( account_id_or_name ).id;
+   return my->_remote_db->list_content_by_author( account );
 }
 
 vector<content_summary> wallet_api::list_content( const string& URI, uint32_t count)const
@@ -3816,6 +3815,7 @@ optional<vector<seeder_object>> wallet_api::list_seeders_by_upload( const uint32
 
 vector<string> wallet_api::list_packages( ) const
 {
+   FC_ASSERT(!is_locked());
    vector<string> str_packages;
    vector<package_object> objects = package_manager::instance().get_packages();
    for (int i = 0; i < objects.size(); ++i) {
@@ -3825,11 +3825,13 @@ vector<string> wallet_api::list_packages( ) const
 }
 
 void wallet_api::packages_path(const std::string& packages_dir) const {
+// FC_ASSERT(!is_locked());
    my->_wallet.packages_path = packages_dir;
    package_manager::instance().set_packages_path(packages_dir);
 }
 
 std::pair<string, decent::crypto::custody_data>  wallet_api::create_package(const std::string& content_dir, const std::string& samples_dir, const d_integer& aes_key) const {
+   FC_ASSERT(!is_locked());
    fc::sha512 key1;
    aes_key.Encode((byte*)key1._hash, 64);
 
@@ -3839,6 +3841,7 @@ std::pair<string, decent::crypto::custody_data>  wallet_api::create_package(cons
 }
 
 void wallet_api::extract_package(const std::string& package_hash, const std::string& output_dir, const d_integer& aes_key) const {
+   FC_ASSERT(!is_locked());
    fc::sha512 key1;
    aes_key.Encode((byte*)key1._hash, 64);
 
@@ -3847,69 +3850,36 @@ void wallet_api::extract_package(const std::string& package_hash, const std::str
 }
 
 void wallet_api::remove_package(const std::string& package_hash) const {
+   FC_ASSERT(!is_locked());
    package_manager::instance().delete_package(fc::ripemd160(package_hash));
 }
 
-namespace {
-   struct transfer_progress_printer: public package_transfer_interface::transfer_listener {
-
-      static transfer_progress_printer& instance() {
-         static transfer_progress_printer the_one;
-         return the_one;
-      }
-
-      virtual void on_download_started(package_transfer_interface::transfer_id id) {
-         cout << id << ": Download started..." << endl;
-      }
-
-      virtual void on_download_finished(package_transfer_interface::transfer_id id, package_object downloaded_package) {
-         cout << id << ": Download finished: " << downloaded_package.get_hash().str() <<  endl;
-      }
-
-      virtual void on_download_progress(package_transfer_interface::transfer_id id, package_transfer_interface::transfer_progress progress) {
-         cout << id << ": Downloading " << progress.current_bytes << "/" << progress.total_bytes << " @ " << progress.current_speed << "Bytes/sec" << endl;
-      }
-
-      virtual void on_upload_started(package_transfer_interface::transfer_id id, const std::string& url) {
-         cout << id << ": Upload started on URL: " << url << endl;
-      }
-
-      virtual void on_upload_finished(package_transfer_interface::transfer_id id) {
-         cout << id << ": Upload finished" <<  endl;
-      }
-
-      virtual void on_upload_progress(package_transfer_interface::transfer_id id, package_transfer_interface::transfer_progress progress) {
-         cout << id << ": Uploading " << progress.current_bytes << "/" << progress.total_bytes << " @ " << progress.current_speed << "Bytes/sec" << endl;
-      }
-
-      virtual void on_error(package_transfer_interface::transfer_id id, std::string error) {
-         cout << id << ": ERROR -> " << error << endl;
-      }
-   };
-
-}
-
 void wallet_api::download_package(const std::string& url) const {
-   detail::report_stats_listener stats_listener( url, my->self);
-   stats_listener.ipfs_IDs = list_seeders_ipfs_IDs( url);
-   package_manager::instance().download_package(url, transfer_progress_printer::instance(), stats_listener);
+   FC_ASSERT(!is_locked());
+// detail::report_stats_listener stats_listener( url, my->self);
+// stats_listener.ipfs_IDs = list_seeders_ipfs_IDs( url);
+   package_manager::instance().download_package(url, transfer_progress_printer::instance(), empty_report_stats_listener::instance());
 }
 
 std::string wallet_api::upload_package(const std::string& package_hash, const std::string& protocol) const {
+   FC_ASSERT(!is_locked());
    package_object package = package_manager::instance().get_package_object(fc::ripemd160(package_hash));
    package_transfer_interface::transfer_id id = package_manager::instance().upload_package(package, protocol, transfer_progress_printer::instance());
    return package_manager::instance().get_transfer_url(id);
 }
 
 void wallet_api::print_all_transfers() const {
+// FC_ASSERT(!is_locked());
    package_manager::instance().print_all_transfers();
 }
 
 void wallet_api::set_transfer_logs(bool enable) const {
-   
+// FC_ASSERT(!is_locked());
 }
 
+
 } } // graphene::wallet
+
 
 void fc::to_variant(const account_multi_index_type& accts, fc::variant& vo)
 {

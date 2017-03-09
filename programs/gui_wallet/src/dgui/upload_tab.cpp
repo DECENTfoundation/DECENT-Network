@@ -417,12 +417,12 @@ void Upload_tab::uploadContent() {
     submitCommand += " " + GlobalEvents::instance().getCurrentUser();   //author
     submitCommand += " \"" + path + "\"";                               //URI
     submitCommand += " \"" + samples_path + "\"";                       //Samples
-    submitCommand += " \"magnet\"";                                    //Protocol
+    submitCommand += " \"magnet\"";                                     //Protocol
     submitCommand += " " + assetName;                                   //price_asset_name
-    submitCommand += " " + m_price;                                       //price_amount
-    submitCommand += " [" + m_seeders + "]";                              //seeders
-    submitCommand += " \"" + m_life_time + "T23:59:59\"";                  //expiration
-    submitCommand += " DCT";                                         //publishing_fee_asset
+    submitCommand += " " + price;                                       //price_amount
+    submitCommand += " [" + seeders + "]";                              //seeders
+    submitCommand += " \"" + lifetime + "T23:59:59\"";                  //expiration
+    submitCommand += " DCT";                                            //publishing_fee_asset
     submitCommand += " 300";                                            //publishing_fee_amount
     submitCommand += " \"" + escape_string(synopsis) + "\"";            //synopsis
     submitCommand += " true";                                           //broadcast

@@ -173,7 +173,7 @@ inline int custody_utils::get_m(std::fstream &file, uint32_t i, uint32_t j, mpz_
 
    //mpz_import is too slow for our purposes - since we don't care about the exact parameters as much as about the uniqueness of the import, let's replace it with memcpy
    memcpy((char *) out->_mp_d, buffer, DECENT_SIZE_OF_NUMBER_IN_THE_FIELD);
-   out->_mp_size = 2;
+   out->_mp_size = DECENT_MP_SIZE_OF_NUMBER_IN_THE_FIELD;
    //mpz_import( out, DECENT_SIZE_OF_NUMBER_IN_THE_FIELD, 1, 1, 1, 0, buffer );
    return 1;
 }
@@ -204,7 +204,7 @@ int custody_utils::get_sigma(uint64_t idx, mpz_t mi[], element_pp_t u_pp[], elem
    memset(buf, 0, 32);
    char index[16];
    memset(index, 0, 16);
-   sprintf(index, "%lu", idx);
+   sprintf(index, "%llu", idx);
    fc::sha256 stemp = fc::sha256::hash(index, 16);
    memcpy(buf, stemp._hash, (4 * sizeof(uint64_t)));
    element_from_hash(hash, buf, 32);
@@ -247,7 +247,7 @@ custody_utils::get_sigmas(std::fstream &file, const unsigned int n, element_t *u
                  //mpz_import is too slow for our purposes - since we don't care about the exact parameters as much as about the uniqueness of the import, let's replace it with memcpy
                  memcpy((char *) m[i]->_mp_d, buffer + i * DECENT_SIZE_OF_NUMBER_IN_THE_FIELD,
                         DECENT_SIZE_OF_NUMBER_IN_THE_FIELD);
-                 m[i]->_mp_size = 2;
+                 m[i]->_mp_size = DECENT_MP_SIZE_OF_NUMBER_IN_THE_FIELD;
                  //mpz_import(m[i], DECENT_SIZE_OF_NUMBER_IN_THE_FIELD, 1, 1, 1, 0, buffer + i * DECENT_SIZE_OF_NUMBER_IN_THE_FIELD);
               }
               delete[] buffer;

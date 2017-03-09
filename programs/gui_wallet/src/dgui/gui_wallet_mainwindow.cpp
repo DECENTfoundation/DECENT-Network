@@ -204,6 +204,7 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
                                        GetFunctionPointerAsVoid(0, &Mainwindow_gui_wallet::ManagementNewFuncGUI));
     m_nJustConnecting = 1;
     ConnectSlot();
+
 }
 
 
