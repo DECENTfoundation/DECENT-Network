@@ -375,28 +375,34 @@ int main( int argc, char** argv )
                    }
                    
                    string str_new_account_name = "accgen" + str_user_id;
-                   account_object account_try_create;
+                   account_object account_newly_created;
+                   
+                   bool b_user_already_exists = false;
                    
                    try
                    {
+                       account_newly_created = wapiptr->get_account(str_new_account_name);
                        ++i_users_already_exist;
-                       account_try_create = wapiptr->get_account(str_new_account_name);
                        cout << std::to_string(i_users_already_exist) << " : " << str_new_account_name << " user already exists\n";
-                       continue;
+                       b_user_already_exists = true;
                    }
                    catch (...)
                    {
                    }
                    
-                   wapiptr->create_account_with_brain_key(str_bki,
-                                                          str_new_account_name,
-                                                          account_id(account_referrer),
-                                                          account_id(account_registrar),
-                                                          true);
+                   if (false == b_user_already_exists)
+                   {
+                       wapiptr->create_account_with_brain_key(str_bki,
+                                                              str_new_account_name,
+                                                              account_id(account_referrer),
+                                                              account_id(account_registrar),
+                                                              true);
                    
-                   account_object account_newly_created = wapiptr->get_account(str_new_account_name);
+                       account_newly_created = wapiptr->get_account(str_new_account_name);
+                   }
                    
-                   if (b_post_back)
+                   if (b_post_back ||
+                       b_user_already_exists)
                    {
                        curl_test_func("https://api.decent.ch/v1.0/subscribers/" +
                                       str_user_id,
@@ -413,12 +419,15 @@ int main( int argc, char** argv )
                        }
                    }
                    
-                   wapiptr->transfer(account_id(account_registrar),
-                                     account_id(account_newly_created),
-                                     std::to_string(transfer_amount),
-                                     "DECENT",
-                                     "",
-                                     true);
+                   //if (false == b_user_already_exists)
+                   {
+                       wapiptr->transfer(account_id(account_registrar),
+                                         account_id(account_newly_created),
+                                         std::to_string(transfer_amount),
+                                         "DECENT",
+                                         "",
+                                         true); //  throws if not enough funds
+                   }
                }
                
                i_users_got += i_user_count;
