@@ -243,9 +243,9 @@ void Transactions_tab::updateContents() {
                 QString amountText = "";
                 
                 if (amount.is_number()){
-                    amountText = QString::number(amount.get<double>() / GRAPHENE_BLOCKCHAIN_PRECISION) + " DECENT";
+                    amountText = QString::number(amount.get<double>() / GRAPHENE_BLOCKCHAIN_PRECISION) + " DCT";
                 } else {
-                    amountText = QString::number(std::stod(amount.get<std::string>()) / GRAPHENE_BLOCKCHAIN_PRECISION) + " DECENT";
+                    amountText = QString::number(std::stod(amount.get<std::string>()) / GRAPHENE_BLOCKCHAIN_PRECISION) + " DCT";
 
                 }
                 obj->tablewidget->setCellWidget(i + 1, 3, new QLabel(amountText));
