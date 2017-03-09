@@ -424,7 +424,7 @@ int main( int argc, char** argv )
                        wapiptr->transfer(account_id(account_registrar),
                                          account_id(account_newly_created),
                                          std::to_string(transfer_amount),
-                                         "DECENT",
+                                         "DCT",
                                          "",
                                          true); //  throws if not enough funds
                    }
