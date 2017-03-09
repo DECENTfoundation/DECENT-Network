@@ -1,4 +1,5 @@
 #include <graphene/chain/protocol/decent.hpp>
+#include <fc/network/url.hpp>
 
 namespace graphene { namespace chain {
 

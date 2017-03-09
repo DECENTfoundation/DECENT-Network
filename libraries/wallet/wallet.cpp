@@ -2137,7 +2137,7 @@ public:
             fc::ripemd160 hash = pack.get_hash();
             
             uint32_t quorum = 1;
-            uint64_t size = std::max(1, pack.get_size() / (1024 * 1024));
+            uint64_t size = std::max(1, ( pack.get_size() + (1024 * 1024) -1 ) / (1024 * 1024));
 
 
             shamir_secret ss(quorum, seeders.size(), secret);
@@ -2238,7 +2238,7 @@ public:
             sign_transaction( tx, broadcast );
             //detail::report_stats_listener stats_listener( URI, self);
             //stats_listener.ipfs_IDs = list_seeders_ipfs_IDs( URI);
-            package_manager::instance().download_package(URI, empty_transfer_listener::get_one(), empty_report_stats_listener::get_one());
+            package_manager::instance().download_package(URI, empty_transfer_listener::instance(), empty_report_stats_listener::instance());
             
         } FC_CAPTURE_AND_RETHROW( (consumer)(URI)(content_dir)(broadcast) )
     }
@@ -2431,6 +2431,7 @@ public:
          string account = static_cast<string>(static_cast<object_id_type>(item.first));
          mapped_IDs[account] = list_imported_ipfs_IDs(account);
       }
+      return mapped_IDs;
    }
 
    void dbg_make_uia(string creator, string symbol)

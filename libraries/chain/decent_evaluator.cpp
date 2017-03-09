@@ -140,13 +140,23 @@ namespace graphene { namespace chain {
 
       if( delivered )
       {
+         asset price = buying.price;
          db().modify<content_object>( *content, []( content_object& co ){ co.times_bought++; });
-         db().adjust_balance( content->author, buying.price );
+         db().adjust_balance( content->author, price );
+
          db().modify<buying_object>(buying, [&](buying_object& bo){
               bo.price.amount = 0;
               bo.delivered = true;
               bo.expiration_or_delivery_time = db().head_block_time();
          });
+
+         finish_buying_operation op;
+         op.author = content->author;
+         op.payout = price;
+         op.buying = buying.id;
+         idump((op));
+
+         db().push_applied_operation(op);
       } else if (expired)
       {
          db().buying_expire(buying);
@@ -308,5 +318,8 @@ namespace graphene { namespace chain {
 
    void_result pay_seeder_evaluator::do_evaluate( const pay_seeder_operation& o ){}
    void_result pay_seeder_evaluator::do_apply( const pay_seeder_operation& o ){}
+
+   void_result finish_buying_evaluator::do_evaluate( const finish_buying_operation& o ){}
+   void_result finish_buying_evaluator::do_apply( const finish_buying_operation& o ){}
 
 }} // graphene::chain

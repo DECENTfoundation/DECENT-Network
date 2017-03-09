@@ -59,7 +59,7 @@ void seeding_plugin_impl::handle_content_submit(const operation_history_object &
                     mso.free_space -= diff_space;
                });
             } else {
-               db.create<my_seeding_object>([&](my_seeding_object &so) {
+               my_seeding_id_type so_id = db.create<my_seeding_object>([&](my_seeding_object &so) {
                     so.URI = cs_op.URI;
                     so.seeder = seeder_itr->seeder;
                     so.space = cs_op.size; //we allocate the whole megabytes per content
@@ -67,13 +67,13 @@ void seeding_plugin_impl::handle_content_submit(const operation_history_object &
                        so.key = *k;
                     so.expiration = cs_op.expiration;
                     so.cd = cs_op.cd;
-               });
+               }).id;
                db.modify<my_seeder_object>(*seeder_itr, [&](my_seeder_object &mso) {
                     mso.free_space -= cs_op.size ; //we allocate the whole megabytes per content
                });
                //if we run this in main thread it can crash _push_block
-               service_thread->async( [cs_op, this](){
-                    package_manager::instance().download_package(cs_op.URI, *this, empty_report_stats_listener::instance());
+               service_thread->async( [cs_op, this, so_id](){
+                    active_downloads[package_manager::instance().download_package(cs_op.URI, *this, empty_report_stats_listener::instance())] = so_id;
                });
 
             }
@@ -302,7 +302,7 @@ void seeding_plugin_impl::restart_downloads(){
         const auto& cidx = database().get_index_type<my_seeding_index>().indices().get<by_URI>();
         auto citr = cidx.begin();
         while(citr!=cidx.end()){
-           package_manager::instance().download_package(citr->URI, *this, empty_report_stats_listener::instance() );
+           active_downloads[package_manager::instance().download_package(citr->URI, *this, empty_report_stats_listener::instance() )] = citr->id;
            ++citr;
         }
         elog("restarting downloads, service thread end");

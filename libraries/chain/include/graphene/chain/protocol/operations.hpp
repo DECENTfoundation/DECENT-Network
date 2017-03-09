@@ -80,7 +80,8 @@ namespace graphene { namespace chain {
             report_stats_operation,
             return_escrow_submission_operation,      // VIRTUAL
             return_escrow_buying_operation,           // VIRTUAL
-            pay_seeder_operation                     // VIRTUAL 
+            pay_seeder_operation,                     // VIRTUAL
+            finish_buying_operation                   // VIRTUAL
          > operation;
 
    /// @} // operations group
