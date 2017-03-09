@@ -246,7 +246,7 @@ void Upload_tab::uploadContent() {
     std::string seeders = ((QComboBox*)m_info_widget.cellWidget(0, 3))->currentData().toString().toStdString();
     std::string keyparts = ((QComboBox*)m_info_widget.cellWidget(0, 5))->currentData().toString().toStdString();
     std::string price = ((QLineEdit*)m_info_widget.cellWidget(2, 1))->text().toStdString();
-    std::string assetName = "DECENT";
+    std::string assetName = "DCT";
     std::string path = m_contentPath->text().toStdString();
     std::string samples_path = m_samplesPath->text().toStdString();
 
@@ -299,12 +299,12 @@ void Upload_tab::uploadContent() {
     submitCommand += " " + GlobalEvents::instance().getCurrentUser();   //author
     submitCommand += " \"" + path + "\"";                               //URI
     submitCommand += " \"" + samples_path + "\"";                       //Samples
-    submitCommand += " \"magnet\"";                                    //Protocol
+    submitCommand += " \"magnet\"";                                     //Protocol
     submitCommand += " " + assetName;                                   //price_asset_name
     submitCommand += " " + price;                                       //price_amount
     submitCommand += " [" + seeders + "]";                              //seeders
     submitCommand += " \"" + lifetime + "T23:59:59\"";                  //expiration
-    submitCommand += " DECENT";                                         //publishing_fee_asset
+    submitCommand += " DCT";                                            //publishing_fee_asset
     submitCommand += " 300";                                            //publishing_fee_amount
     submitCommand += " \"" + escape_string(synopsis) + "\"";            //synopsis
     submitCommand += " true";                                           //broadcast

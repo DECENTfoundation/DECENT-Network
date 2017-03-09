@@ -194,7 +194,7 @@ void CentralWigdet::SetAccountBalancesFromStrGUI(const std::vector<std::string>&
     }
     else
     {
-        pBalanceCombo->addItem("0 DECENT");
+        pBalanceCombo->addItem("0 DCT");
     }
 
     pBalanceCombo->setCurrentIndex(0);

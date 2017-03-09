@@ -18,13 +18,13 @@ using namespace gui_wallet;
 
 static const char* s_vcpcFieldsGeneral[NUMBER_OF_SUB_LAYOUTS2] = {
     "Author", "Expiration","Created","Price",
-    "Averege Rating","Size","Times Bought", "Description"
+    "Average Rating","Size","Times Bought", "Description"
 };
 
 
 static const char* s_vcpcFieldsBougth[NUMBER_OF_SUB_LAYOUTS2] = {
     "Author", "Purchased","Created","Price",
-    "Averege Rating","Size","Times Bought", "Description"
+    "Average Rating","Size","Times Bought", "Description"
 };
 
 typedef const char* TypeCpcChar;

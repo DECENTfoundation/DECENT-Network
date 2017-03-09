@@ -572,7 +572,7 @@ package_manager::download_package( const string& url,
 
     fc::scoped_lock<fc::mutex> guard(_mutex);
     fc::url download_url(url);
-
+    ilog("package_manager:download_package called for ${u}",("u", url));
     protocol_handler_map::iterator it = _protocol_handlers.find(download_url.proto());
     if (it == _protocol_handlers.end()) {
         FC_THROW("Can not find protocol handler for : ${proto}", ("proto", download_url.proto()) );

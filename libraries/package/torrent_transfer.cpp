@@ -1111,6 +1111,7 @@ void torrent_transfer::upload_package(transfer_id id, const package_object& pack
     path temp_file = temp_directory_path() / (package.get_hash().str() + ".torrent");
     path temp_dir = temp_directory_path();
 
+
     std::ofstream out(temp_file.string(), std::ios_base::binary);
     bencode(std::ostream_iterator<char>(out), t.generate());
     out.close();

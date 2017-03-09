@@ -197,7 +197,7 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
                                   GetFunctionPointerAsVoid(0, &Mainwindow_gui_wallet::ManagementNewFuncGUI));
     m_nJustConnecting = 1;
     ConnectSlot();
-    setWindowTitle(tr("Decent - Blockchain Content Distributor"));
+    setWindowTitle(tr("DECENT - Blockchain Content Distribution"));
     
     centralWidget()->layout()->setContentsMargins(0, 0, 0, 0);
     setStyleSheet("QMainWindow{color:black;""background-color:white;}");
