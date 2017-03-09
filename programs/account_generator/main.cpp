@@ -46,11 +46,16 @@
 
 #include <fc/interprocess/signals.hpp>
 #include <boost/program_options.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include <fc/log/console_appender.hpp>
 #include <fc/log/file_appender.hpp>
 #include <fc/log/logger.hpp>
 #include <fc/log/logger_config.hpp>
+#include "json.hpp"
+
+#include <curl/curl.h>
+#include <cstdlib>
 
 #ifdef WIN32
 # include <signal.h>
@@ -66,8 +71,90 @@ using namespace graphene::package;
 using namespace std;
 namespace bpo = boost::program_options;
 
+class main_exception : public std::exception
+{
+public:
+    main_exception(std::string const& str_info) noexcept
+    : m_str_info(str_info) {}
+    virtual ~main_exception() {}
+    
+    char const* what() const noexcept override
+    {
+        return m_str_info.c_str();
+    }
+private:
+    std::string m_str_info;
+};
+
+static size_t WriteMemoryCallback(void* contents, size_t size, size_t nmemb, void* pcollect)
+{
+    size_t i_new_chunk_size = size * nmemb;
+    vector<char>& arr_collect_response = *static_cast< vector<char>* >(pcollect);
+    char* sz_new_chunk = static_cast<char*>(contents);
+    
+    for (size_t iIndex = 0; iIndex < i_new_chunk_size; ++iIndex)
+        arr_collect_response.push_back(sz_new_chunk[iIndex]);
+    
+    return i_new_chunk_size;
+}
+
+string curl_escape(string const& str)
+{
+    CURL* curl_handle = curl_easy_init();
+    char* sz_str = curl_easy_escape(curl_handle, str.c_str(), str.length());
+    
+    string str_res(sz_str);
+    
+    curl_free(static_cast<void*>(sz_str));
+    curl_easy_cleanup(curl_handle);
+    
+    return str_res;
+}
+
+void curl_test_func(string const& str_url,
+                    string const& str_post,
+                    string& str_response)
+{
+    CURL* curl_handle = nullptr;
+    CURLcode res;
+    
+    vector<char> arr_response;
+    
+    curl_handle = curl_easy_init();
+    
+    curl_easy_setopt(curl_handle, CURLOPT_URL, str_url.c_str());
+    curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
+    curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, static_cast<void*>(&arr_response));
+    curl_easy_setopt(curl_handle, CURLOPT_USERAGENT, "libcurl-agent/1.0");
+    if (false == str_post.empty())
+        curl_easy_setopt(curl_handle, CURLOPT_POSTFIELDS, str_post.c_str());
+    
+    res = curl_easy_perform(curl_handle);
+    
+    if (res != CURLE_OK)
+    {
+        throw main_exception("curl_easy_perform() failed: " +
+                             string(curl_easy_strerror(res)) +
+                             "\n");
+    }
+    
+    str_response = string(arr_response.begin(), arr_response.end());
+    
+    curl_easy_cleanup(curl_handle);
+}
+
+string account_id(account_object const& account)
+{
+    //   did not find a better way to get the user id
+    auto id = dynamic_cast<object const&>(account).id;
+    
+    return std::string(id);
+}
+
 int main( int argc, char** argv )
 {
+    curl_global_init(CURL_GLOBAL_ALL);
+    
     fc::path decent_home;
     try {
         decent_home = decent_path_finder::instance().get_decent_home();
@@ -85,7 +172,11 @@ int main( int argc, char** argv )
 
       boost::program_options::options_description opts;
          opts.add_options()
-         ("help,h", "Print this help message and exit.")
+       ("help,h", "Print this help message and exit.")
+       ("password", bpo::value<string>(), "The password to unlock the wallet.")
+       ("registrar", bpo::value<string>(), "The registrar account.")
+       ("referrer", bpo::value<string>(), "The referrer account.")
+       ("transfer-amount", bpo::value<double>(), "The amount to transfer to accounts.")
          ("server-rpc-endpoint,s", bpo::value<string>()->implicit_value("ws://127.0.0.1:8090"), "Server websocket RPC endpoint")
          ("server-rpc-user,u", bpo::value<string>(), "Server Username")
          ("server-rpc-password,p", bpo::value<string>(), "Server Password")
@@ -100,63 +191,69 @@ int main( int argc, char** argv )
       bpo::variables_map options;
 
       bpo::store( bpo::parse_command_line(argc, argv, opts), options );
-
-      if( options.count("help") )
+       
+       string str_password;
+       string str_registrar;
+       string str_referrer;
+       bool bool_override = false;
+       double transfer_amount = 0;
+       if (options.count("password") &&
+           options.count("registrar") &&
+           options.count("referrer") &&
+           options.count("transfer-amount"))
+       {
+           str_password = options.at("password").as<string>();
+           str_registrar = options.at("registrar").as<string>();
+           str_referrer = options.at("referrer").as<string>();
+           transfer_amount = options.at("transfer-amount").as<double>();
+           bool_override = true;
+       }
+       
+      if (options.count("help"))
       {
          std::cout << opts << "\n";
          return 0;
       }
 
 
+       if (false == bool_override)
+       {
+           cout << "look up the usage in \"help\"\n";
+           return 0;
+       }
+
       fc::path data_dir;
       fc::logging_config cfg;
-      const fc::path log_dir = decent_path_finder::instance().get_decent_logs();
+      fc::path log_dir = decent_path_finder::instance().get_decent_logs();
 
-      fc::file_appender::config ac_default;
+      fc::file_appender::config ac;
+      ac.filename             = log_dir / "rpc" / "rpc.log";
+      ac.flush                = true;
+      ac.rotate               = true;
+      ac.rotation_interval    = fc::hours( 1 );
+      ac.rotation_limit       = fc::days( 1 );
 
-      fc::file_appender::config ac_rpc;
-      ac_rpc.filename             = log_dir / "rpc" / "rpc.log";
-      ac_rpc.flush                = true;
-      ac_rpc.rotate               = true;
-      ac_rpc.rotation_interval    = fc::hours( 1 );
-      ac_rpc.rotation_limit       = fc::days( 1 );
+      std::cout << "Logging RPC to file: " << (decent_path_finder::instance().get_decent_data() / ac.filename).preferred_string() << "\n";
 
-      fc::file_appender::config ac_transfer;
-      ac_transfer.format               = "${timestamp} ${thread_name} ${context} ${level}]  ${message}";
-      ac_transfer.filename             = log_dir / "transfer.log";
-      ac_transfer.flush                = true;
-      ac_transfer.rotate               = true;
-      ac_transfer.rotation_interval    = fc::hours( 1 );
-      ac_transfer.rotation_limit       = fc::days( 1 );
+      cfg.appenders.push_back(fc::appender_config( "default", "console", fc::variant(fc::console_appender::config())));
+      cfg.appenders.push_back(fc::appender_config( "rpc", "file", fc::variant(ac)));
 
-//    cfg.appenders.push_back(fc::appender_config( "default", "console", fc::variant(ac_default)));
-//    cfg.appenders.push_back(fc::appender_config( "rpc", "file", fc::variant(ac_rpc)));
-      cfg.appenders.push_back(fc::appender_config( "transfer", "file", fc::variant(ac_transfer)));
+      cfg.loggers = { fc::logger_config("default"), fc::logger_config( "rpc") };
+      cfg.loggers.front().level = fc::log_level::info;
+      cfg.loggers.front().appenders = {"default"};
+      cfg.loggers.back().level = fc::log_level::debug;
+      cfg.loggers.back().appenders = {"rpc"};
 
-      fc::logger_config lc_default("default");
-      lc_default.level          = fc::log_level::info;
-      lc_default.appenders      = {"default"};
-
-      fc::logger_config lc_rpc("rpc");
-      lc_rpc.level              = fc::log_level::debug;
-      lc_rpc.appenders          = {"rpc"};
-
-      fc::logger_config lc_transfer("transfer");
-      lc_transfer.level         = fc::log_level::debug;
-      lc_transfer.appenders     = {"transfer"};
-
-//    cfg.loggers.push_back(lc_default);
-//    cfg.loggers.push_back(lc_rpc);
-      cfg.loggers.push_back(lc_transfer);
-
-      std::clog << "Logging RPC to file: " << ac_rpc.filename.preferred_string() << std::endl;
-      std::clog << "Logging transfers to file: " << ac_transfer.filename.preferred_string() << std::endl;
-
-      fc::configure_logging( cfg );
+      //fc::configure_logging( cfg );
 
       fc::ecc::private_key committee_private_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("null_key")));
 
       idump( (key_to_wif( committee_private_key ) ) );
+
+      fc::ecc::private_key nathan_private_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("nathan")));
+      public_key_type nathan_pub_key = nathan_private_key.get_public_key();
+      idump( (nathan_pub_key) );
+      idump( (key_to_wif( nathan_private_key ) ) );
 
       //
       // TODO:  We read wallet_data twice, once in main() to grab the
@@ -203,6 +300,9 @@ int main( int argc, char** argv )
       if( options.count("server-rpc-password") )
          wdata.ws_password = options.at("server-rpc-password").as<std::string>();
 
+//      package_manager::instance().set_packages_path(wdata.packages_path);
+      package_manager::instance().set_libtorrent_config(wdata.libtorrent_config_path);
+
       fc::http::websocket_client client;
       idump((wdata.ws_server));
       auto con  = client.connect( wdata.ws_server );
@@ -216,6 +316,135 @@ int main( int argc, char** argv )
       auto wapiptr = std::make_shared<wallet_api>( wdata, remote_api );
       wapiptr->set_wallet_filename( wallet_file.generic_string() );
       wapiptr->load_wallet_file();
+       
+       if (bool_override)
+       {
+           if (wapiptr->is_new())
+               wapiptr->set_password(str_password);
+           
+           wapiptr->unlock(str_password);   //  throws if the password is wrong
+           
+           account_object account_referrer = wapiptr->get_account(str_referrer);
+           account_object account_registrar = wapiptr->get_account(str_registrar);
+           
+           size_t i_users_get = 100;
+           size_t i_users_got = 0;
+           
+           size_t i_users_already_exist = 0, i_responses = 0;
+           
+           while (true)
+           {
+               string str_response;
+               curl_test_func("https://api.decent.ch/v1.0/subscribers/" +
+                              std::to_string(i_users_got) +
+                              "/" +
+                              std::to_string(i_users_get) +
+                              "?_format=json", string(), str_response);
+               
+               auto json_arr_user = nlohmann::json::parse(str_response);
+               size_t i_user_count = json_arr_user.size();
+               
+               for (size_t i_index = 0; i_index < i_user_count; ++i_index)
+               {
+                   auto json_user_info = json_arr_user[i_index];
+                   auto& json_bki = json_user_info["brainPrivKey"];
+                   auto& json_priv_key = json_user_info["wifPrivKey"];
+                   auto& json_pub_key = json_user_info["pubKey"];
+                   auto& json_id = json_user_info["id"];
+                   string str_bki;
+                   if (false == json_bki.empty())
+                       str_bki = json_bki.get<string>();
+                   string str_user_id = std::to_string(json_id.get<size_t>());
+                   
+                   string str_wif_priv_key, str_pub_key;
+                   if (false == json_priv_key.empty())
+                       str_wif_priv_key = json_priv_key.get<string>();
+                   if (false == json_pub_key.empty())
+                       str_pub_key = json_pub_key.get<string>();
+                   
+                   bool b_post_back = false;
+                   
+                   if (str_bki.empty())
+                   {
+                       brain_key_info bki = wapiptr->suggest_brain_key();
+                       str_bki = bki.brain_priv_key;
+                       str_wif_priv_key = bki.wif_priv_key;
+                       str_pub_key = string(bki.pub_key);
+                       
+                       b_post_back = true;
+                   }
+                   
+                   string str_new_account_name = "accgen" + str_user_id;
+                   account_object account_newly_created;
+                   
+                   bool b_user_already_exists = false;
+                   
+                   try
+                   {
+                       account_newly_created = wapiptr->get_account(str_new_account_name);
+                       ++i_users_already_exist;
+                       cout << std::to_string(i_users_already_exist) << " : " << str_new_account_name << " user already exists\n";
+                       b_user_already_exists = true;
+                   }
+                   catch (...)
+                   {
+                   }
+                   
+                   if (false == b_user_already_exists)
+                   {
+                       wapiptr->create_account_with_brain_key(str_bki,
+                                                              str_new_account_name,
+                                                              account_id(account_referrer),
+                                                              account_id(account_registrar),
+                                                              true);
+                   
+                       account_newly_created = wapiptr->get_account(str_new_account_name);
+                   }
+                   
+                   if (b_post_back ||
+                       b_user_already_exists)
+                   {
+                       curl_test_func("https://api.decent.ch/v1.0/subscribers/" +
+                                      str_user_id,
+                                      string("_format=json") +
+                                      "&appbundle_subscriber[brainPrivKey]=" + curl_escape(str_bki) +
+                                      "&appbundle_subscriber[wifPrivKey]=" + curl_escape(str_wif_priv_key) +
+                                      "&appbundle_subscriber[pubKey]=" + curl_escape(str_pub_key),
+                                      str_response);
+                       
+                       if (false == str_response.empty())
+                       {
+                           ++i_responses;
+                           cout << std::to_string(i_responses) << " : " << str_response << "\n";
+                       }
+                   }
+                   
+                   //if (false == b_user_already_exists)
+                   {
+                       wapiptr->transfer(account_id(account_registrar),
+                                         account_id(account_newly_created),
+                                         std::to_string(transfer_amount),
+                                         "DCT",
+                                         "",
+                                         true); //  throws if not enough funds
+                   }
+               }
+               
+               i_users_got += i_user_count;
+               
+               if (i_user_count < i_users_get)
+                   break;
+           }
+
+           cout << endl;
+           cout << "DONE!!!\n";
+       }
+#if 0
+       else
+       {
+       
+           //   don't care for what was in cli_wallet
+           //   what's below - does not run
 
       fc::api<wallet_api> wapi(wapiptr);
 
@@ -310,11 +539,20 @@ int main( int argc, char** argv )
       wapi->save_wallet_file(wallet_file.generic_string());
       locked_connection.disconnect();
       closed_connection.disconnect();
+       }
+#endif// 0
    }
    catch ( const fc::exception& e )
    {
       std::cout << e.to_detail_string() << "\n";
       return -1;
    }
-   return 0;
+    catch (std::exception const& e)
+    {
+        std::cout << e.what() << endl;
+    }
+    
+    curl_global_cleanup();
+    
+    return 0;
 }

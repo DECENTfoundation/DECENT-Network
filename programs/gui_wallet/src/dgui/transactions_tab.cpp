@@ -62,6 +62,7 @@ Transactions_tab::Transactions_tab() : green_row(0)
 
     user.setStyleSheet("border: 0px solid white");
     user.setPlaceholderText("Enter user name to see transaction history");
+    user.setAttribute(Qt::WA_MacShowFocusRect, 0);
     user.setMaximumHeight(40);
     user.setFixedHeight(40);
     user.setFrame(false);
@@ -251,14 +252,10 @@ void Transactions_tab::updateContents() {
                 
 
             }
-            
-            
         } catch (std::exception& ex) {
             std::cout << ex.what() << std::endl;
         }
     });
-    
-    
 }
 
 

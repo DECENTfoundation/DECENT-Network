@@ -20,17 +20,16 @@ add_executable( gui_wallet MACOSX_BUNDLE
                 src/dgui/decent_gui_contentdlg.cpp
                 src/dgui/decent_gui_inguiloopcaller.cpp
                 src/dgui/decent_wallet_ui_gui_contentdetailsbase.cpp
-                src/dgui/decent_wallet_ui_gui_contentdetailsbougth.cpp
                 src/dgui/decent_wallet_ui_gui_contentdetailsgeneral.cpp
                 src/dgui/decent_wallet_ui_gui_jsonparserqt.cpp
                 src/dgui/decent_wallet_ui_gui_newcheckbox.cpp
+                src/dgui/decent_button.cpp
                 src/dgui/gui_wallet_application.cpp
                 src/dgui/gui_wallet_centralwidget.cpp
                 src/dgui/gui_wallet_connectdlg.cpp
                 src/dgui/gui_wallet_global.cpp
                 src/dgui/gui_wallet_mainwindow.cpp
                 src/dgui/main_gui_wallet.cpp
-                src/dgui/main_window_overview.cpp
                 src/dgui/overview_tab.cpp
                 src/dgui/text_display_dialog.cpp
                 src/dgui/transactions_tab.cpp
@@ -55,10 +54,10 @@ add_executable( gui_wallet MACOSX_BUNDLE
                 src/dgui/decent_gui_inguiloopcaller.hpp
                 src/dgui/decent_wallet_ui_gui_common.tos
                 src/dgui/decent_wallet_ui_gui_contentdetailsbase.hpp
-                src/dgui/decent_wallet_ui_gui_contentdetailsbougth.hpp
                 src/dgui/decent_wallet_ui_gui_contentdetailsgeneral.hpp
                 src/dgui/decent_wallet_ui_gui_jsonparserqt.hpp
                 src/dgui/decent_wallet_ui_gui_newcheckbox.hpp
+                src/dgui/decent_button.hpp
                 src/dgui/purchased_tab.hpp
                 src/dgui/gui_wallet_application.hpp
                 src/dgui/gui_wallet_centralwidget.hpp

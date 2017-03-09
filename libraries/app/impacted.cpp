@@ -150,6 +150,7 @@ struct get_impacted_account_visitor
    void operator()( const return_escrow_buying_operation& op) {  _impacted.insert(op.consumer);}
    void operator()( const report_stats_operation& op) { _impacted.insert(op.consumer);}
    void operator()( const pay_seeder_operation& op) { _impacted.insert(op.author); _impacted.insert(op.seeder); };
+   void operator()( const finish_buying_operation& op) { _impacted.insert(op.author); };
 };
 
 void operation_get_impacted_accounts( const operation& op, flat_set<account_id_type>& result )

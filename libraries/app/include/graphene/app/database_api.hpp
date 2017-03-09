@@ -263,6 +263,14 @@ class database_api
        */
       map<string,account_id_type> lookup_accounts(const string& lower_bound_name, uint32_t limit)const;
 
+    /**
+     * @brief Get names and IDs for registered accounts that match search term
+     * @param search_term will try to partially match account name or id
+     * @param limit Maximum number of results to return -- must not exceed 1000
+     * @return Map of account names to corresponding IDs
+     */
+      map<string,account_id_type> search_accounts(const string& search_tearm, uint32_t limit) const;
+
       //////////////
       // Balances //
       //////////////
@@ -509,6 +517,7 @@ class database_api
        * @return History buying_objects corresponding to the provided consumer
        */
       vector<buying_object> get_buying_history_objects_by_consumer( const account_id_type& consumer )const;
+      vector<buying_object> get_buying_history_objects_by_consumer_all( const account_id_type& consumer )const;
 
       /**
        * @brief Get buying (open or history) by consumer and URI
@@ -540,14 +549,23 @@ class database_api
        * @return The contents corresponding to the provided author
        */
       vector<content_object> list_content_by_author( const account_id_type& author )const;
+    
+    /**
+     * @brief Get a list of contents ordered alphabetically by URI strings
+     * @param URI_begin Lower bound of URI strings to retrieve
+     * @param count Maximum number of contents to fetch (must not exceed 100)
+     * @return The contents found
+     */
+    vector<content_summary> list_content( const string& URI_begin, uint32_t count )const;
 
-      /**
-       * @brief Get a list of contents ordered alphabetically by URI strings
-       * @param URI_begin Lower bound of URI strings to retrieve
-       * @param count Maximum number of contents to fetch (must not exceed 100)
-       * @return The contents found
-       */
-      vector<content_summary> list_content( const string& URI_begin, uint32_t count )const;
+    
+    /**
+     * @brief Get a list of contents ordered alphabetically by URI strings
+     * @param term Search term
+     * @param count Maximum number of contents to fetch (must not exceed 100)
+     * @return The contents found
+     */
+    vector<content_summary> search_content( const string& term, uint32_t count )const;
 
 
       /**
@@ -619,6 +637,7 @@ FC_API(graphene::app::database_api,
    (get_account_references)
    (lookup_account_names)
    (lookup_accounts)
+   (search_accounts)
    (get_account_count)
 
    // Balances
@@ -667,10 +686,12 @@ FC_API(graphene::app::database_api,
    (get_open_buyings_by_consumer)
    (get_buying_by_consumer_URI)
    (get_buying_history_objects_by_consumer)
+   (get_buying_history_objects_by_consumer_all)
    (get_rating_by_consumer_URI)
    (get_content)
    (list_content_by_author)
    (list_content)
+   (search_content)
    (list_content_by_bought)
    (list_publishers_by_price)
    (get_content_ratings)

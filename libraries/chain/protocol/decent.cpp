@@ -1,18 +1,21 @@
 #include <graphene/chain/protocol/decent.hpp>
+#include <fc/network/url.hpp>
 
 namespace graphene { namespace chain {
 
 void content_submit_operation::validate()const
 {
-/*   FC_ASSERT( fee.amount >= 0 );
+   FC_ASSERT( fee.amount >= 0 );
    FC_ASSERT( price.amount >= 0 );
-   FC_ASSERT( size > 0 && size <= UINT64_MAX);
+   FC_ASSERT( size > 0 && size <= 100 ); //TODO_DECENT - increase in testnet
    FC_ASSERT( seeders.size() > 0 );
    FC_ASSERT( seeders.size() == key_parts.size() );
    FC_ASSERT( quorum >= 1 && quorum < UINT32_MAX);
    FC_ASSERT( seeders.size() >= quorum );
    FC_ASSERT( expiration <= fc::time_point_sec::maximum() );
-   FC_ASSERT( publishing_fee.amount >= 0);*/
+   FC_ASSERT( publishing_fee.amount >= 0);
+   fc::url _url( URI );
+   FC_ASSERT( _url.proto() == "ipfs" || _url.proto() == "magnet" );
 }
 
 void request_to_buy_operation::validate()const

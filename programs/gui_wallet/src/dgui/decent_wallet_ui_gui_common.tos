@@ -75,7 +75,7 @@ gui_wallet::TableWidgetItemW<QtType>::~TableWidgetItemW()
 
 
 template <typename QtType>
-void gui_wallet::TableWidgetItemW<QtType>::mouseDoubleClickEvent(QMouseEvent* a_event)
+void gui_wallet::TableWidgetItemW<QtType>::mouseReleaseEvent(QMouseEvent* a_event)
 {
     if(a_event->button()==Qt::LeftButton)
     {

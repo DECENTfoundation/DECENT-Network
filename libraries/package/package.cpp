@@ -315,7 +315,15 @@ bool package_object::verify_hash() const {
 }
 
 int package_object::get_size() const {
-    return file_size(get_content_file());
+   size_t size=0;
+   for(recursive_directory_iterator it( get_path() );
+       it!=recursive_directory_iterator();
+       ++it)
+   {
+      if(!is_directory(*it))
+         size+=file_size(*it);
+   }
+   return size;
 }
 
 uint32_t package_object::create_proof_of_custody(const decent::crypto::custody_data& cd, decent::crypto::custody_proof& proof) const {

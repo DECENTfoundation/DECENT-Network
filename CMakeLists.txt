@@ -19,6 +19,9 @@ elseif( "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" )
     endif()
 endif()
 
+set(CMAKE_C_FLAGS_DEBUG "-DDEBUG")
+
+
 set( CMAKE_CXX_STANDARD 11 )
 set( CMAKE_CXX_STANDARD_REQUIRED YES )
 

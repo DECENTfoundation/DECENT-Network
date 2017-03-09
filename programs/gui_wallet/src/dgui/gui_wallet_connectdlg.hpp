@@ -26,6 +26,7 @@
 #include <thread>
 #include <vector>
 
+#include "decent_button.hpp"
 #include "richdialog.hpp"
 #include "ui_wallet_functions.hpp"
 
@@ -39,7 +40,7 @@ class PasswordDialog : public QDialog {
     Q_OBJECT
     
 public:
-    PasswordDialog(bool isSet = false) : QDialog(Q_NULLPTR, Qt::Window | Qt::WindowTitleHint | Qt::CustomizeWindowHint | Qt::WindowCloseButtonHint), m_main_table(3, 1) {
+    PasswordDialog(bool isSet = false) : QDialog(Q_NULLPTR, Qt::Window | Qt::WindowTitleHint | Qt::CustomizeWindowHint | Qt::WindowCloseButtonHint), m_main_table(2, 1) {
         resize(350, 150);
 
         m_main_table.horizontalHeader()->hide();
@@ -52,11 +53,12 @@ public:
         m_main_table.setPalette(plt_tbl);
 
 
-        QPushButton* unlockButton;
+        DecentButton* unlockButton = new DecentButton();
+        
         if (isSet) {
-            unlockButton = new QPushButton("Set password");
+            unlockButton->setText("Set Password");
         } else {
-            unlockButton = new QPushButton("Unlock");
+            unlockButton->setText("Unlock");
         }
         
         password_box.setEchoMode(QLineEdit::Password);
@@ -68,12 +70,15 @@ public:
         }
         
         m_main_table.setCellWidget(1, 0, &password_box);
-        m_main_table.setCellWidget(2, 0, unlockButton);
+        //m_main_table.setCellWidget(2, 0, unlockButton);
+        QHBoxLayout* button_layout = new QHBoxLayout();
+        button_layout->addWidget(unlockButton);
+        connect(unlockButton, SIGNAL(LabelClicked()),this, SLOT(unlock_slot()));
+        connect(&password_box, SIGNAL(returnPressed()), unlockButton, SIGNAL(LabelClicked()));
         
-        connect(unlockButton, SIGNAL(clicked()),this, SLOT(unlock_slot()));
-        connect(&password_box, SIGNAL(returnPressed()), unlockButton, SIGNAL(clicked()));
-
         m_main_layout.addWidget(&m_main_table);
+        //button_layout->setContentsMargins(50, 0, 50, 0);
+        m_main_layout.addLayout(button_layout);
         setLayout(&m_main_layout);
 
         QTimer::singleShot(0, &password_box, SLOT(setFocus()));
@@ -114,7 +119,7 @@ protected slots:
     
     
 private:
-    QHBoxLayout                     m_main_layout;
+    QVBoxLayout                     m_main_layout;
     QTableWidget                    m_main_table;
     QLineEdit                       password_box;
     bool                            ret_value;

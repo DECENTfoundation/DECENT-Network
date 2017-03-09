@@ -7,7 +7,7 @@
  *  This file implements ...
  *
  */
-
+#include <QGraphicsDropShadowEffect>
 
 #include "decent_wallet_ui_gui_contentdetailsgeneral.hpp"
 #include "gui_wallet_global.hpp"
@@ -23,12 +23,17 @@ ContentDetailsGeneral::ContentDetailsGeneral()
     :
       m_label(this,NULL,&ContentDetailsGeneral::LabelPushCallbackGUI)
 {
-    QPixmap aPixMap(":/icon/images/buy.png");
-    m_label.setScaledContents(true);
-    m_label.setPixmap(aPixMap);
-    m_free_for_child.addWidget(new QLabel());
-    m_free_for_child.addWidget(&m_label);
-    m_free_for_child.addWidget(new QLabel());
+    QVBoxLayout* image_layout = new QVBoxLayout;
+    m_label.setText("BUY");
+    
+    image_layout->addWidget(&m_label);
+    image_layout->setContentsMargins(250, 5, 250, 10);
+    
+    m_free_for_child.addLayout(image_layout);
+
+    
+    
+
 
     setFixedSize(620,480);
 }
@@ -53,9 +58,11 @@ void ContentDetailsGeneral::LabelPushCallbackGUI(void*,QMouseEvent* a_mouse_even
 {
 
     QString saveDir = QFileDialog::getExistingDirectory(this, tr("Select download directory"), "~", QFileDialog::DontResolveSymlinks);
+    if (saveDir.isEmpty()) {
+        return;
+    }
 
-
-
+    
     std::string downloadCommand = "download_content";
     downloadCommand += " " + GlobalEvents::instance().getCurrentUser();   //consumer
     downloadCommand += " \"" + m_pContentInfo->URI + "\"";                 //URI
@@ -70,28 +77,8 @@ void ContentDetailsGeneral::LabelPushCallbackGUI(void*,QMouseEvent* a_mouse_even
         }
 
     });
-
-/*
-    QString aCont = tr("mouse clich on: [x=") + QString::number(a_mouse_event->pos().x()) + tr(";y=") +
-            QString::number(a_mouse_event->pos().y()) + tr("];");
-
-    QString aDetails = tr("Overload function ") + tr(__FUNCTION__) +
-            tr("\nFrom file \"") + tr(__SOURCE_FILE__) +
-            tr("\",line=") + QString::number(__LINE__,10);
-
-    QMessageBox aMessageBox(QMessageBox::Warning,
-                            QObject::tr("should be modified!"),aCont,
-                            QMessageBox::Ok,this);
-    //aMessageBox.setStyleSheet(QMessageBox::);
-    aMessageBox.setDetailedText(aDetails);
-
-    aMessageBox.setFixedSize(200,100);
-    //aMessageBox.setStyleSheet("");
-    aMessageBox.setStyleSheet("QLabel{min-width: 300px;}");
-
-    aMessageBox.exec();
-    */
-
+    
+    
 }
 
 

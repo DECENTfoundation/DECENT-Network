@@ -20,23 +20,24 @@ using namespace gui_wallet;
 using namespace nlohmann;
 
 
-static const char* s_vccpItemNames[]={"Time","Title","Rating",
-                                     "Size","Price","Purchased"};
-static const int   s_cnNumberOfRows = sizeof(s_vccpItemNames)/sizeof(const char*);
+static const char* s_vccpItemNames[]={" ", "Title", "Rating", "Size", "Price", "Created", "Status", "Progress"};
+
+static const int   s_cnNumberOfCols = sizeof(s_vccpItemNames)/sizeof(const char*);
 
 
 PurchasedTab::PurchasedTab()
         :
-        m_pTableWidget(new QTableWidget(1,s_cnNumberOfRows))
+        m_pTableWidget(new QTableWidget(1,s_cnNumberOfCols))
 {
 
     PrepareTableWidgetHeaderGUI();
 
     QHBoxLayout* search_lay = new QHBoxLayout();
 
-    m_filterLineEditer.setPlaceholderText(QString("Enter user name to see purchases"));
+    m_filterLineEditer.setPlaceholderText(QString("Enter the term to search in title and description"));
     m_filterLineEditer.setStyleSheet("border: 1px solid white");
     m_filterLineEditer.setFixedHeight(40);
+    m_filterLineEditer.setAttribute(Qt::WA_MacShowFocusRect, 0);
 
     QPixmap image(":/icon/images/search.svg");
 
@@ -67,10 +68,6 @@ PurchasedTab::PurchasedTab()
 
 
 
-
-
-
-
 void PurchasedTab::maybeUpdateContent() {
     if (!m_doUpdate) {
         return;
@@ -91,11 +88,14 @@ void PurchasedTab::updateContents() {
     m_pTableWidget->setRowCount(1); //Remove everything but header
     
     
-    if (m_filterLineEditer.text().toStdString().empty()) {
-        return;
-    }
+    auto& global_instance = gui_wallet::GlobalEvents::instance();
+    std::string str_current_username = global_instance.getCurrentUser();
     
-    SetNewTask("get_buying_history_objects_by_consumer \"" + m_filterLineEditer.text().toStdString() +"\"", this, NULL, +[](void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
+    SetNewTask("get_buying_history_objects_by_consumer_term "
+               "\"" + str_current_username +"\" "
+               "\"" + m_filterLineEditer.text().toStdString() +"\"",
+               this, NULL,
+               +[](void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
         
         if (a_err != 0) {
             return;
@@ -123,7 +123,7 @@ void PurchasedTab::updateContents() {
                     synopsis = synopsis_parsed["title"].get<std::string>();
                 } catch (...) {}
                 
-                double rating = contents[i]["rating"].get<double>();
+                double rating = contents[i]["rating"].get<double>() / 1000;
                 uint64_t size = contents[i]["size"].get<int>();
 
 
@@ -136,17 +136,111 @@ void PurchasedTab::updateContents() {
                 price /= GRAPHENE_BLOCKCHAIN_PRECISION;
                 
                 std::string expiration_or_delivery_time = contents[i]["expiration_or_delivery_time"].get<std::string>();
+                std::string URI = contents[i]["URI"].get<std::string>();
+                
+                QLabel* imag_label = new QLabel();
+                imag_label->setAlignment(Qt::AlignCenter);
+
+                QPixmap image1(":/icon/images/info1.svg");
                 
                 
+                SDigitalContent contentObject;
+                std::string dcresult;
+                RunTask("get_content \"" + URI + "\"", dcresult);
+                
+                auto dcontent_json = json::parse(dcresult);
+                
+                if (content["delivered"].get<bool>()) {
+                    contentObject.type = DCT::BOUGHT;
+                } else {
+                    contentObject.type = DCT::WAITING_DELIVERY;
+                }
+                
+                contentObject.author = dcontent_json["author"].get<std::string>();
+                contentObject.price.asset_id = dcontent_json["price"]["asset_id"].get<std::string>();
+                contentObject.synopsis = dcontent_json["synopsis"].get<std::string>();
+                contentObject.URI = dcontent_json["URI"].get<std::string>();
+                contentObject.created = dcontent_json["created"].get<std::string>();
+                contentObject.expiration = dcontent_json["expiration"].get<std::string>();
+                contentObject.size = dcontent_json["size"].get<int>();
+                
+                if (dcontent_json["times_bougth"].is_number()) {
+                    contentObject.times_bougth = dcontent_json["times_bougth"].get<int>();
+                } else {
+                    contentObject.times_bougth = 0;
+                }
                 
                 
+                if (dcontent_json["price"]["amount"].is_number()){
+                    contentObject.price.amount =  dcontent_json["price"]["amount"].get<double>();
+                } else {
+                    contentObject.price.amount =  std::stod(dcontent_json["price"]["amount"].get<std::string>());
+                }
                 
-                obj->m_pTableWidget->setCellWidget(i + 1, 0, new QLabel(QString::fromStdString(time)));
-                obj->m_pTableWidget->setCellWidget(i + 1, 1, new QLabel(QString::fromStdString(synopsis)));
-                obj->m_pTableWidget->setCellWidget(i + 1, 2, new QLabel(QString::number(rating)));
-                obj->m_pTableWidget->setCellWidget(i + 1, 3, new QLabel(QString::number(size) + tr(" MB")));
-                obj->m_pTableWidget->setCellWidget(i + 1, 4, new QLabel(QString::number(price) + tr(" DECENT")));
-                obj->m_pTableWidget->setCellWidget(i + 1, 5, new QLabel(QString::fromStdString(expiration_or_delivery_time)));
+                contentObject.price.amount /= GRAPHENE_BLOCKCHAIN_PRECISION;
+                contentObject.AVG_rating = dcontent_json["AVG_rating"].get<double>() / 1000;
+            
+                
+                obj->m_pTableWidget->setCellWidget(i + 1, 0, new TableWidgetItemW<QLabel>(contentObject, obj, NULL, &PurchasedTab::DigContCallback, tr("")));
+                ((QLabel*)obj->m_pTableWidget->cellWidget(i+1,0))->setPixmap(image1);
+                ((QLabel*)obj->m_pTableWidget->cellWidget(i+1,0))->setAlignment(Qt::AlignCenter);
+   
+                
+                
+                obj->m_pTableWidget->setItem(i + 1, 1, new QTableWidgetItem(QString::fromStdString(synopsis)));
+                obj->m_pTableWidget->setItem(i + 1, 2, new QTableWidgetItem(QString::number(rating)));
+                obj->m_pTableWidget->setItem(i + 1, 3, new QTableWidgetItem(QString::number(size) + tr(" MB")));
+                obj->m_pTableWidget->setItem(i + 1, 4, new QTableWidgetItem(QString::number(price) + " DCT"));
+                
+               
+
+                std::string s_time;
+                for(int i = 0; i < time.find("T"); ++i)
+                {
+                    s_time.push_back(time[i]);
+                }
+                obj->m_pTableWidget->setItem(i + 1, 5, new QTableWidgetItem(QString::fromStdString(s_time)));
+                
+                
+                std::string download_status_str;
+                RunTask("get_download_status \"" + gui_wallet::GlobalEvents::instance().getCurrentUser() + "\" \"" + URI + "\"", download_status_str);
+                
+                auto download_status = json::parse(download_status_str);
+
+                
+                int total_key_parts = download_status["total_key_parts"].get<int>();
+                int received_key_parts  = download_status["received_key_parts"].get<int>();
+                int total_download_bytes  = download_status["total_download_bytes"].get<int>();
+                int received_download_bytes  = download_status["received_download_bytes"].get<int>();
+                
+                
+                QString status_text = tr("Keys: ") + QString::number(received_key_parts) + "/" + QString::number(total_key_parts);
+                
+                if (!content["delivered"].get<bool>()) {
+                    status_text = "Waiting for delivery";
+                }
+
+                obj->m_pTableWidget->setItem(i + 1, 6, new QTableWidgetItem(status_text));
+                
+                if (total_key_parts == 0) {
+                    total_key_parts = 1;
+                }
+                
+                if (total_download_bytes == 0) {
+                    total_download_bytes = 1;
+                }
+                
+                
+                double progress = (0.1 * received_key_parts) / total_key_parts + (0.9 * received_download_bytes) / total_download_bytes;
+                obj->m_pTableWidget->setItem(i + 1, 7, new QTableWidgetItem(QString::number(progress) + "%"));
+
+                
+                for(int j = 1; j < s_cnNumberOfCols; ++j)
+                {
+                    obj->m_pTableWidget->item(i + 1, j)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+                    obj->m_pTableWidget->item(i + 1, j)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+                }
+                
 
             }
             
@@ -157,6 +251,11 @@ void PurchasedTab::updateContents() {
     });
     
     
+}
+
+void PurchasedTab::DigContCallback(_NEEDED_ARGS2_)
+{
+    emit ShowDetailsOnDigContentSig(*a_pDigContent);
 }
 
 
@@ -174,11 +273,9 @@ void PurchasedTab::PrepareTableWidgetHeaderGUI()
     m_pTableWidget->horizontalHeader()->hide();
     m_pTableWidget->verticalHeader()->hide();
     QFont f( "Open Sans Bold", 14, QFont::Bold);
-    for( int i(0); i<s_cnNumberOfRows; ++i )
+    for( int i = 0; i<s_cnNumberOfCols; ++i )
     {
-        //pLabel = new QLabel(tr(s_vccpItemNames[i]));
-        //if(!pLabel){throw "Low memory\n" __FILE__ ;}
-        //m_TableWidget.setCellWidget(0,i,pLabel);
+
         m_pTableWidget->setItem(0,i,new QTableWidgetItem(tr(s_vccpItemNames[i])));
         m_pTableWidget->item(0,i)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
         m_pTableWidget->item(0,i)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
@@ -190,34 +287,23 @@ void PurchasedTab::PrepareTableWidgetHeaderGUI()
     m_pTableWidget->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     m_pTableWidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
-    //QPalette plt_tbl = m_TableWidget.palette();
-    //plt_tbl.setColor(QPalette::Base, palette().color(QPalette::Window));
-    //m_TableWidget.setPalette(plt_tbl);
 }
 
-
-// #define _NEEDED_ARGS_ void* a_clb_data,int a_act,const gui_wallet::SDigitalContent* a_pDigContent
-void PurchasedTab::DigContCallback(_NEEDED_ARGS2_)
-{
-    __DEBUG_APP2__(3,"clbdata=%p, act=%d, pDigCont=%p\n",a_clb_data,a_act,a_pDigContent);
-    emit ShowDetailsOnDigContentSig(*a_pDigContent);
-}
 
 
 void PurchasedTab::ArrangeSize()
 {
     QSize tqsTableSize = m_pTableWidget->size();
-    int nSizeForOne = tqsTableSize.width()/(DCF_PURCHASE::NUM_OF_DIG_CONT_FIELDS)-1;
-    for(int i(0); i<DCF_PURCHASE::NUM_OF_DIG_CONT_FIELDS;++i){m_pTableWidget->setColumnWidth(i,nSizeForOne);}
-    //printf("!!!!!!!!!!!!!!!!!!!!!!\n");
 
     m_pTableWidget->setStyleSheet("QTableView{border : 1px solid lightGray}");
     m_pTableWidget->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     m_pTableWidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-
-    for(int i = 0; i < 6; ++i)
+    
+    m_pTableWidget->setColumnWidth(0, tqsTableSize.width() * 0.1);
+    
+    for(int i = 1; i < s_cnNumberOfCols; ++i)
     {
-        m_pTableWidget->setColumnWidth(i,(tqsTableSize.width()*16.7)/100);
+        m_pTableWidget->setColumnWidth(i, (0.9 * tqsTableSize.width()) / (s_cnNumberOfCols - 1) );
     }
 }
 

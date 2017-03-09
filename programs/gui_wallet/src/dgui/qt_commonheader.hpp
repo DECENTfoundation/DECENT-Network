@@ -34,7 +34,7 @@ namespace DCA {
 
 // DCT stands for Digital Contex Actions
 namespace DCT {
-    enum DIG_CONT_TYPES{GENERAL,BOUGHT};
+    enum DIG_CONT_TYPES {GENERAL, BOUGHT, WAITING_DELIVERY};
 }
 
 
@@ -49,15 +49,13 @@ struct SDigitalContent{
         std::string asset_id;
         std::string symbol;
         std::string precision;
-    }price;
+    } price;
     std::string synopsis;
     std::string URI;
     double AVG_rating;
-    //
     std::string created;
     std::string expiration;
     int  size;
-
     //std::string  get_content_str;
     int  times_bougth;
 };
@@ -97,7 +95,7 @@ public:
                      ConstrArgTypes... cons_args);
     virtual ~TableWidgetItemW();
 protected:
-    virtual void mouseDoubleClickEvent(QMouseEvent* event);
+    virtual void mouseReleaseEvent(QMouseEvent* event) override;
 protected:
     // no members
 };
