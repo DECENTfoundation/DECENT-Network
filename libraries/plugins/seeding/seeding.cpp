@@ -207,7 +207,7 @@ seeding_plugin_impl::generate_por(my_seeding_id_type so_id, graphene::package::p
 
    ilog("seeding plugin_impl:  generate_por() - generate time for this content is planned at ${t}",("t", generate_time) );
    fc::time_point next_wakeup( fc::time_point::now() + fc::microseconds(POR_WAKEUP_INTERVAL_SEC * 1000000 ));
-   if( fc::time_point(generate_time) <= ( fc::time_point::now() -  fc::seconds(POR_WAKEUP_INTERVAL_SEC)) )
+   if( fc::time_point(generate_time) - fc::seconds(POR_WAKEUP_INTERVAL_SEC) <= ( fc::time_point::now() ) )
    {
       ilog("seeding plugin_impl: generate_por() - generating PoR");
       decent::crypto::custody_proof proof;
@@ -243,7 +243,7 @@ seeding_plugin_impl::generate_por(my_seeding_id_type so_id, graphene::package::p
       ilog("broadcasting out PoR");
       _self.p2p_node().broadcast_transaction(tx);
 
-      if(  fc::time_point( mso.expiration ) <=  fc::time_point::now()+fc::seconds( POR_WAKEUP_INTERVAL_SEC ) ){
+      if(  fc::time_point( mso.expiration ) <=  fc::time_point::now() ){
          ilog("seeding plugin_impl:  generate_por() - content expired, cleaning up");
          package_manager::instance().delete_package(downloaded_package.get_hash());
          db.remove(mso);
