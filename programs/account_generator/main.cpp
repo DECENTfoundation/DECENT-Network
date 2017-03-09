@@ -395,12 +395,6 @@ int main( int argc, char** argv )
                                                           true);
                    
                    account_object account_newly_created = wapiptr->get_account(str_new_account_name);
-                   wapiptr->transfer(account_id(account_registrar),
-                                     account_id(account_newly_created),
-                                     std::to_string(transfer_amount),
-                                     "DECENT",
-                                     "",
-                                     true);
                    
                    if (b_post_back)
                    {
@@ -418,6 +412,13 @@ int main( int argc, char** argv )
                            cout << std::to_string(i_responses) << " : " << str_response << "\n";
                        }
                    }
+                   
+                   wapiptr->transfer(account_id(account_registrar),
+                                     account_id(account_newly_created),
+                                     std::to_string(transfer_amount),
+                                     "DECENT",
+                                     "",
+                                     true);
                }
                
                i_users_got += i_user_count;
