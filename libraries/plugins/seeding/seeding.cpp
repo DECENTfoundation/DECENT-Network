@@ -197,7 +197,7 @@ seeding_plugin_impl::generate_por(my_seeding_id_type so_id, graphene::package::p
 
    try {
       fc::time_point_sec last_proof_time = citr->last_proof.at(mso.seeder);
-      generate_time = last_proof_time + fc::seconds(1*60*60) - fc::seconds(POR_WAKEUP_INTERVAL_SEC/2);
+      generate_time = last_proof_time + fc::seconds(24*60*60) - fc::seconds(POR_WAKEUP_INTERVAL_SEC/2);
       if( generate_time > citr->expiration )
          generate_time = citr->expiration - fc::seconds(POR_WAKEUP_INTERVAL_SEC);
    }catch (std::out_of_range e){
