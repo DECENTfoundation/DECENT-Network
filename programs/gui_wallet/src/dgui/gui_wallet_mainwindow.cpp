@@ -366,6 +366,7 @@ void Mainwindow_gui_wallet::ShowDetailsOnDigContentSlot(SDigitalContent a_dig_co
         m_dig_cont_detailsGenDlg.execCDD(a_dig_cont);
         break;
     case DCT::BOUGHT:
+    case DCT::WAITING_DELIVERY:
         m_dig_cont_detailsBougDlg.execCDB(a_dig_cont);
         break;
     default:
