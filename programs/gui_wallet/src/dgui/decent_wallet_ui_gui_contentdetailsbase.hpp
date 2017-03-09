@@ -38,6 +38,9 @@ public:
 
 private slots:
     void MouseEnteredStar(int index) {
+        if (m_currentMyRating > 0)
+            return;
+        
         for (int i = 0; i <= index; ++i) {
             stars_labels[i]->setCheckState(Qt::Checked);
         }
@@ -47,6 +50,8 @@ private slots:
         
     }
     void MouseLeftStar(int index) {
+        if (m_currentMyRating > 0)
+            return;
         
         for (int i = 0; i < m_currentMyRating; ++i) {
             stars_labels[i]->setCheckState(Qt::Checked);
@@ -77,6 +82,7 @@ protected:
     QTextEdit       desc_text;
     int             m_currentMyRating = 0;
     std::vector<NewCheckBox*> stars_labels;
+    QLabel*         m_RateText;
 
 };
 

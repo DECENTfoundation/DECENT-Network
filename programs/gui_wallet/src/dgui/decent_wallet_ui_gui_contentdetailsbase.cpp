@@ -23,14 +23,14 @@ static const char* s_vcpcFieldsGeneral[NUMBER_OF_SUB_LAYOUTS2] = {
 
 
 static const char* s_vcpcFieldsBougth[NUMBER_OF_SUB_LAYOUTS2] = {
-    "Author", "Expiration","Created","Price",
+    "Author", "Purchased","Created","Price",
     "Averege Rating","Size","Times Bought", "Description"
 };
 
 typedef const char* TypeCpcChar;
 typedef TypeCpcChar* NewType;
 
-static NewType  s_vFields[]={s_vcpcFieldsGeneral,s_vcpcFieldsBougth};
+static NewType  s_vFields[]={ s_vcpcFieldsGeneral, s_vcpcFieldsBougth, s_vcpcFieldsBougth };
 
 ContentDetailsBase::ContentDetailsBase()
 {
@@ -110,9 +110,15 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details)
 
     
     if(a_cnt_details.type == DCT::BOUGHT) {
+        
         if (stars_labels.size() == 0) {
-            QLabel* m_RateText = new QLabel;
-            m_RateText->setText( tr("Please Rate:"));
+            m_RateText = new QLabel;
+            
+            if (m_currentMyRating > 0) {
+                m_RateText->setText( tr("You rated:"));
+            } else {
+                m_RateText->setText( tr("Please Rate:"));
+            }
             m_RateText->setStyleSheet("color:green;" "background-color:white;" "font-weight: bold");
             
             QPixmap green_star(":/icon/images/green_asterix.png");
@@ -140,14 +146,38 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details)
                 connect(stars_labels.back(), SIGNAL(MouseEnteredSignal(int)), this, SLOT(MouseEnteredStar(int)));
                 connect(stars_labels.back(), SIGNAL(MouseLeftSignal(int)), this, SLOT(MouseLeftStar(int)));
                 connect(stars_labels.back(), SIGNAL(MouseClickedSignal(int)), this, SLOT(MouseClickedStar(int)));
-
+                
             }
             stars->addLayout(stars_lay);
             m_main_layout.addLayout(stars);
             
+        } else {
+            
+            m_RateText->setVisible(true);
+            for(int i = 0; i < stars_labels.size(); ++i) {
+                
+                stars_labels[i]->setVisible(true);
+            }
         }
         
-    } else {
+        
+        
+        
+        if (m_currentMyRating > 0) // To show stars when opened
+            MouseLeftStar(1);
+    }
+    
+    if(a_cnt_details.type == DCT::WAITING_DELIVERY) {
+        if (stars_labels.size() != 0) {
+            m_RateText->setVisible(false);
+            for(int i = 0; i < stars_labels.size(); ++i) {
+                
+                stars_labels[i]->setVisible(false);
+            }
+        }
+    }
+    
+    if (a_cnt_details.type == DCT::GENERAL) {
         m_main_layout.addLayout(&m_free_for_child);
     }
     
@@ -157,21 +187,14 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details)
     
     NewType vNames = s_vFields[a_cnt_details.type];
     
-    for(i=0;i<NUMBER_OF_SUB_LAYOUTS2;++i,nIndexZuyg+=2)
+    for(i = 0; i < NUMBER_OF_SUB_LAYOUTS2;++i,nIndexZuyg+=2)
     {
-        if((i == 1) && a_cnt_details.type == DCT::BOUGHT)
-        {
-            m_vLabels[nIndexZuyg].setText(tr("Purchased"));
-        }
-        else
-        {
-            m_vLabels[nIndexZuyg].setText(tr(vNames[i]));
-        }
+       m_vLabels[nIndexZuyg].setText(tr(vNames[i]));
     }
     
     std::string e_str = "";
-    if(a_cnt_details.type == DCT::BOUGHT)
-    {
+    
+    if (a_cnt_details.type == DCT::BOUGHT || a_cnt_details.type == DCT::WAITING_DELIVERY) {
         e_str = std::to_string(m_pContentInfo->times_bougth);
     }
     else
@@ -194,9 +217,6 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details)
     std::string str_price = std::to_string(a_cnt_details.price.amount) + " DCT";
     
     m_vLabels[7].setText(tr(str_price.c_str()));
-    
-    
-    
     
     
     
@@ -240,7 +260,9 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details)
 
 
 void ContentDetailsBase::MouseClickedStar(int index) {
-    std::cout << "Rate: " << index << std::endl;
+    if (m_currentMyRating > 0)
+        return;
+    
     std::string result;
     try {
         RunTask("leave_rating \"" + GlobalEvents::instance().getCurrentUser() + "\" \"" + m_pContentInfo->URI + "\" " + std::to_string(index + 1) + " true", result);

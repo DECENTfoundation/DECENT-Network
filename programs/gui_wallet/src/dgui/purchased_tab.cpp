@@ -150,7 +150,12 @@ void PurchasedTab::updateContents() {
                 
                 auto dcontent_json = json::parse(dcresult);
                 
-                contentObject.type = DCT::BOUGHT;
+                if (content["delivered"].get<bool>()) {
+                    contentObject.type = DCT::BOUGHT;
+                } else {
+                    contentObject.type = DCT::WAITING_DELIVERY;
+                }
+                
                 contentObject.author = dcontent_json["author"].get<std::string>();
                 contentObject.price.asset_id = dcontent_json["price"]["asset_id"].get<std::string>();
                 contentObject.synopsis = dcontent_json["synopsis"].get<std::string>();
@@ -208,9 +213,14 @@ void PurchasedTab::updateContents() {
                 int total_download_bytes  = download_status["total_download_bytes"].get<int>();
                 int received_download_bytes  = download_status["received_download_bytes"].get<int>();
                 
-                obj->m_pTableWidget->setItem(i + 1, 6, new QTableWidgetItem(
-                    tr("Keys: ") + QString::number(received_key_parts) + "/" + QString::number(total_key_parts)
-                ));
+                
+                QString status_text = tr("Keys: ") + QString::number(received_key_parts) + "/" + QString::number(total_key_parts);
+                
+                if (!content["delivered"].get<bool>()) {
+                    status_text = "Waiting for delivery";
+                }
+
+                obj->m_pTableWidget->setItem(i + 1, 6, new QTableWidgetItem(status_text));
                 
                 if (total_key_parts == 0) {
                     total_key_parts = 1;
