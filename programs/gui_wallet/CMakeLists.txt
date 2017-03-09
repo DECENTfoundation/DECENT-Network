@@ -6,14 +6,14 @@ find_package( Qt5Core REQUIRED )
 find_package( Qt5Widgets REQUIRED )
 
 set(MACOSX_BUNDLE_ICON_FILE desktop)
-set(MACOSX_BUNDLE_BUNDLE_NAME Decent)
+set(MACOSX_BUNDLE_BUNDLE_NAME DECENT)
 
 set(GUI_WALLET_ICON ${CMAKE_CURRENT_SOURCE_DIR}/desktop.icns)
 set_source_files_properties(${GUI_WALLET_ICON} PROPERTIES
        MACOSX_PACKAGE_LOCATION "Resources")
 
 
-add_executable( gui_wallet MACOSX_BUNDLE
+add_executable( DECENT MACOSX_BUNDLE
                 ${GUI_WALLET_ICON}
                 src/dgui/browse_content_tab.cpp
                 src/dgui/cliwalletdlg.cpp
@@ -73,16 +73,22 @@ add_executable( gui_wallet MACOSX_BUNDLE
                 desktop.icns
              )
 
-target_include_directories( gui_wallet PUBLIC
+
+
+target_include_directories( DECENT PUBLIC
                             include
                           )
 
-target_link_libraries( gui_wallet PUBLIC
-                       Qt5::Core Qt5::Widgets graphene_app graphene_net graphene_chain graphene_egenesis_decent  graphene_utilities graphene_wallet package_manager decent_encrypt pbc gmp fc ${CMAKE_DL_LIBS} ${PLATFORM_SPECIFIC_LIBS}
+target_link_libraries( DECENT PUBLIC
+                       Qt5::Core Qt5::Widgets graphene_app graphene_net graphene_chain  graphene_utilities graphene_wallet package_manager decent_encrypt pbc gmp graphene_account_history graphene_market_history decent_seeding graphene_witness graphene_debug_witness graphene_egenesis_decent fc ${CMAKE_DL_LIBS} ${PLATFORM_SPECIFIC_LIBS}
                      )
 
+set_target_properties(DECENT PROPERTIES MACOSX_BUNDLE_BUNDLE_NAME "DECENT")
+
+
+
 install( TARGETS
-   gui_wallet
+   DECENT
 
    RUNTIME DESTINATION bin
    BUNDLE DESTINATION bin

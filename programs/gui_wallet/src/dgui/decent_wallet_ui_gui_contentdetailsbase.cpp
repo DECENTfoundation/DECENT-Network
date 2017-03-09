@@ -18,13 +18,13 @@ using namespace gui_wallet;
 
 static const char* s_vcpcFieldsGeneral[NUMBER_OF_SUB_LAYOUTS2] = {
     "Author", "Expiration","Created","Price",
-    "Averege Rating","Size","Times Bought", "Description"
+    "Average Rating","Size","Times Bought", "Description"
 };
 
 
 static const char* s_vcpcFieldsBougth[NUMBER_OF_SUB_LAYOUTS2] = {
     "Author", "Purchased","Created","Price",
-    "Averege Rating","Size","Times Bought", "Description"
+    "Average Rating","Size","Times Bought", "Description"
 };
 
 typedef const char* TypeCpcChar;
@@ -163,8 +163,16 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details)
         
         
         
-        if (m_currentMyRating > 0) // To show stars when opened
-            MouseLeftStar(1);
+        if (m_currentMyRating > 0) { // To show stars when opened
+            for (int i = 0; i < m_currentMyRating; ++i) {
+                stars_labels[i]->setCheckState(Qt::Checked);
+            }
+            for (int i = m_currentMyRating; i < 5; ++i) {
+                stars_labels[i]->setCheckState(Qt::Unchecked);
+            }
+        }
+        
+        
     }
     
     if(a_cnt_details.type == DCT::WAITING_DELIVERY) {

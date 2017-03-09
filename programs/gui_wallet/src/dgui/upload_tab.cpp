@@ -25,6 +25,8 @@
 
 #include <graphene/chain/config.hpp>
 
+#include <boost/filesystem.hpp>
+
 #include <cryptopp/integer.h>
 #include <cryptopp/aes.h>
 #include <cryptopp/filters.h>
@@ -261,6 +263,11 @@ void Upload_tab::uploadContent() {
 
     if (path.empty()) {
         ALERT("Please specify path");
+        return;
+    }
+    
+    if (boost::filesystem::file_size(path) > 100 * 1024 * 1024) {
+        ALERT("Content size is limited in Testnet 0.1 to 100MB");
         return;
     }
 
