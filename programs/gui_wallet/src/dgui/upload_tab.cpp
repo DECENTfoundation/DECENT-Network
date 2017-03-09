@@ -55,7 +55,7 @@ Upload_tab::Upload_tab()
 {
     QFont m_font( "Open Sans Bold", 14, QFont::Bold);
     QPalette pltEdit;
-
+    
 
     m_infoLayoutHeader.setFont(m_font);
     m_title_text.setPlaceholderText("  Title");
@@ -76,76 +76,79 @@ Upload_tab::Upload_tab()
 
 
     m_main_layout.addLayout(&m_synopsis_layout);
-    m_info_layout.addWidget(&m_infoLayoutHeader);
+    m_main_layout.addWidget(&m_infoLayoutHeader);
+    //m_info_layout.addWidget(&m_infoLayoutHeader);
 
-    m_info_widget.setFrameStyle(QFrame::NoFrame);
 
     ////////////////////////////////////////////////////////////////////////////
     /// Lifetime
     ////////////////////////////////////////////////////////////////////////////
 
-
-    m_info_widget.setCellWidget(0, 0, new QLabel("        Lifetime"));
-
-    QDateEdit *de = new QDateEdit();
-    de->setDate(QDate::currentDate());
-    de->setDisplayFormat("yyyy-MM-dd");
-    de->setCalendarPopup(true);
-    de->setMinimumDate(QDate::currentDate());
-
-    m_info_widget.setCellWidget(0, 1, de);
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// Seeders
-    ////////////////////////////////////////////////////////////////////////////
-
-    m_info_widget.setCellWidget(0, 2, new QLabel("        Seeders"));
-    //Dropdown will be added later
-
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// Key particles
-    ////////////////////////////////////////////////////////////////////////////
-
-    m_info_widget.setCellWidget(0, 4, new QLabel("        Key particles"));
-
-    QComboBox* keyParts = new QComboBox(this);
-    for (int r = 2; r <= 7; ++r) {
-        QString val = QString::fromStdString(std::to_string(r));
-        keyParts->addItem(val, val);
-    }
-
-    m_info_widget.setCellWidget(0, 5, keyParts);
-
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// Price
-    ////////////////////////////////////////////////////////////////////////////
-
-
-    QLineEdit* priceEdit = new QLineEdit("", this);
-    priceEdit->setValidator( new QDoubleValidator(0.001, 100000, 3, this) );
-
-    m_info_widget.setCellWidget(2, 0, new QLabel("        Price"));
-    m_info_widget.setCellWidget(2, 1, priceEdit);
-
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// samples button
-    ////////////////////////////////////////////////////////////////////////////
-
+    QLabel* lifetime = new QLabel("LifeTime");
+    lifetime->setStyleSheet("border:1px solid black");
+//    m_info_widget.setCellWidget(0, 0, lifetime);
+    
     m_samplesPath = new QLineEdit("", this);
     m_samplesPath->setReadOnly(true);
     m_samplesPath->setHidden(true);
     
-    QPixmap image(":/icon/images/browse.svg");
-    QIcon button_icon(image);
-    m_info_widget.setCellWidget(2, 2, new QLabel("        Samples"));
-    QPushButton* browse_samples_button = new QPushButton();
-    browse_samples_button->setIcon(button_icon);
+    de = new QDateEdit();
+    de->setDate(QDate::currentDate());
+    de->setDisplayFormat("yyyy-MM-dd");
+    de->setCalendarPopup(true);
+    de->setMinimumDate(QDate::currentDate());
     
-    m_info_widget.setCellWidget(2, 5, browse_samples_button);
-    connect(browse_samples_button, SIGNAL(clicked()),this, SLOT(browseContent()));
+//    //m_info_widget.setCellWidget(0, 1, de);
+//
+//    ////////////////////////////////////////////////////////////////////////////
+//    /// Seeders
+//    ////////////////////////////////////////////////////////////////////////////
+//
+//    m_info_widget.setCellWidget(0, 2, new QLabel("        Seeders"));
+//    //Dropdown will be added later
+//
+//
+//    ////////////////////////////////////////////////////////////////////////////
+//    /// Key particles
+//    ////////////////////////////////////////////////////////////////////////////
+//
+//    m_info_widget.setCellWidget(0, 4, new QLabel("        Key particles"));
+//
+//    QComboBox* keyParts = new QComboBox(this);
+//    for (int r = 2; r <= 7; ++r) {
+//        QString val = QString::fromStdString(std::to_string(r));
+//        keyParts->addItem(val, val);
+//    }
+//
+//    m_info_widget.setCellWidget(0, 5, keyParts);
+//
+//
+//    ////////////////////////////////////////////////////////////////////////////
+//    /// Price
+//    ////////////////////////////////////////////////////////////////////////////
+//
+//
+//    QLineEdit* priceEdit = new QLineEdit("", this);
+//    priceEdit->setValidator( new QDoubleValidator(0.001, 100000, 3, this) );
+//
+//    m_info_widget.setCellWidget(2, 0, new QLabel("        Price"));
+//    m_info_widget.setCellWidget(2, 1, priceEdit);
+//
+//
+//    ////////////////////////////////////////////////////////////////////////////
+//    /// samples button
+//    ////////////////////////////////////////////////////////////////////////////
+
+
+    
+//    QPixmap image(":/icon/images/browse.svg");
+//    QIcon button_icon(image);
+//    m_info_widget.setCellWidget(2, 2, new QLabel("        Samples"));
+//    QPushButton* browse_samples_button = new QPushButton();
+//    browse_samples_button->setIcon(button_icon);
+//    
+//    m_info_widget.setCellWidget(2, 5, browse_samples_button);
+//    connect(browse_samples_button, SIGNAL(clicked()),this, SLOT(browseContent()));
 
 
 
@@ -153,34 +156,137 @@ Upload_tab::Upload_tab()
     /// content button
     ////////////////////////////////////////////////////////////////////////////
 
+//    m_contentPath = new QLineEdit("", this);
+//    m_contentPath->setReadOnly(true);
+//    m_contentPath->setHidden(true);
+//
+//    m_info_widget.setCellWidget(2, 4, new QLabel("        Content"));
+//
+//    QPixmap image2(":/icon/images/browse.svg");
+//    QIcon button_icon2(image2);
+//    
+//    QPushButton* browse_content_button = new QPushButton();
+//    browse_content_button->setIcon(button_icon2);
+//    m_info_widget.setCellWidget(2, 3, browse_content_button);
+//    connect(browse_content_button, SIGNAL(clicked()),this, SLOT(browseSamples()));
+//
+//    m_info_widget.setFrameStyle(QFrame::NoFrame);
+//    m_info_widget.setShowGrid(false);
+//    m_info_widget.horizontalHeader()->hide();
+//    m_info_widget.verticalHeader()->hide();
+//    m_info_layout.addWidget(&m_info_widget);
+//    QPalette plt_tbl = m_info_widget.palette();
+//    plt_tbl.setColor(QPalette::Base, palette().color(QPalette::Window));
+//    m_info_widget.setPalette(plt_tbl);
+
+//    m_info_widget.setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+//    m_info_widget.setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    
+    
+    //////////////////////
+    //////                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    //////////////////////
+    seeders = new QComboBox(this);
+
+    QHBoxLayout* firstRow = new QHBoxLayout;
+    
+    //LIFETIME
+    QLabel* lab = new QLabel("LifeTime");
+    lab->setStyleSheet("border:1px solid lightGray; color: Gray");
+    lab->setContentsMargins(0, 0, -2, 0);
+    lab->setMinimumWidth(60);
+    lab->setFixedHeight(23);
+
+    firstRow->addWidget(lab);
+    firstRow->addWidget(de);
+    
+    //SEEDERS
+    QLabel* seed = new QLabel("Seeders");
+    seed->setStyleSheet("border:1px solid lightGray; color: Gray");
+    seed->setContentsMargins(15, 0, -2, 0);
+    seed->setMinimumWidth(70);
+    seed->setFixedHeight(18);
+
+    firstRow->addWidget(seed);
+    firstRow->addWidget(seeders);
+    
+    //KEYPARTICLES
+    QLabel* key = new QLabel("Key Particles");
+    key->setStyleSheet("border:1px solid lightGray; color: Gray");
+    key->setContentsMargins(15, 0, -2, 0);
+    key->setMinimumWidth(90);
+    key->setFixedHeight(18);
+
+    keyparts = new QComboBox(this);
+    for (int r = 2; r <= 7; ++r) {
+        QString val = QString::fromStdString(std::to_string(r));
+        keyparts->addItem(val, val);
+    }
+    
+    firstRow->addWidget(key);
+    firstRow->addWidget(keyparts);
+    
+    m_main_layout.addLayout(firstRow);
+    
+//\\//\\//\\\//\\\/SECOND ROW\//\\//\\//
+    
+    QHBoxLayout* secondrow = new QHBoxLayout;
+    
+    //PRICE
+    price = new QLineEdit;
+    price->setValidator( new QDoubleValidator(0.001, 100000, 3, this) );
+    price->setPlaceholderText("Price");
+    price->setStyleSheet("border:1px solid lightGray; color: Gray");
+    price->setFixedHeight(30);
+    price->setFixedWidth(130);
+    price->setContentsMargins(0, 0, 10, 0);
+
+    secondrow->addWidget(price);
+    
+    //SIMPLES
+    sim = new QLineEdit("Samples");
+    sim->setReadOnly(true);
+    sim->setStyleSheet("border:1px solid lightGray; color: Gray");
+    sim->setContentsMargins(10, 0, 0, 0);
+    sim->setFixedHeight(30);
+    
+    QPixmap image(":/icon/images/browse.svg");
+    QIcon button_icon(image);
+    
+    QPushButton* browse_samples_button = new QPushButton();
+    browse_samples_button->setIcon(button_icon);
+    browse_samples_button->setFixedWidth(50);
+    connect(browse_samples_button, SIGNAL(clicked()),this, SLOT(browseSamples()));
+
+    secondrow->addWidget(sim);
+    secondrow->addWidget(browse_samples_button);
+    
+    
+    //CONTENT
+    cont = new QLineEdit("Content");
+    cont->setReadOnly(true);
+    cont->setStyleSheet("border:1px solid lightGray; color: Gray");
+    cont->setContentsMargins(10, 0, 0, 0);
+    cont->setFixedHeight(30);
+
     m_contentPath = new QLineEdit("", this);
     m_contentPath->setReadOnly(true);
     m_contentPath->setHidden(true);
-
-    m_info_widget.setCellWidget(2, 4, new QLabel("        Content"));
 
     QPixmap image2(":/icon/images/browse.svg");
     QIcon button_icon2(image2);
     
     QPushButton* browse_content_button = new QPushButton();
     browse_content_button->setIcon(button_icon2);
-    m_info_widget.setCellWidget(2, 3, browse_content_button);
-    connect(browse_content_button, SIGNAL(clicked()),this, SLOT(browseSamples()));
-
-
-
-
-    m_info_widget.horizontalHeader()->hide();
-    m_info_widget.verticalHeader()->hide();
-    m_info_layout.addWidget(&m_info_widget);
-    m_info_widget.setShowGrid(false);
-    QPalette plt_tbl = m_info_widget.palette();
-    plt_tbl.setColor(QPalette::Base, palette().color(QPalette::Window));
-    m_info_widget.setPalette(plt_tbl);
-
-    m_info_widget.setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    m_info_widget.setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-
+    browse_content_button->setFixedWidth(50);
+    connect(browse_content_button, SIGNAL(clicked()),this, SLOT(browseContent()));
+    
+    secondrow->addWidget(cont);
+    secondrow->addWidget(browse_content_button);
+    
+    m_main_layout.addLayout(secondrow);
+    ////////////////////////////                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    
     ////////////////////////////////////////////////////////////////////////////
     /// Upload
     ////////////////////////////////////////////////////////////////////////////
@@ -195,7 +301,7 @@ Upload_tab::Upload_tab()
     button->setContentsMargins(250, 0, 250, 0);
     button->addWidget(upload_label);
 
-    m_main_layout.addLayout(&m_info_layout);
+    //m_main_layout.addLayout(&m_info_layout);
     m_main_layout.addLayout(button);
 
     setLayout(&m_main_layout);
@@ -211,7 +317,6 @@ void Upload_tab::onGrabPublishers() {
         Upload_tab* obj = (Upload_tab*)owner;
 
         auto publishers = json::parse(a_result);
-        QComboBox* seeders = new QComboBox(obj);
 
         for (int r = 0; r < publishers.size(); ++r) {
             std::string pubIdStr = publishers[r]["seeder"].get<std::string>();
@@ -219,13 +324,13 @@ void Upload_tab::onGrabPublishers() {
             std::string pubAssetId = publishers[r]["price"]["asset_id"].get<std::string>();
             std::string pubFreeSpace = std::to_string(publishers[r]["free_space"].get<int>()) + "MB free";
 
-            seeders->addItem(QString("%0 @%1 %2 [%3]").arg(QString::fromStdString(pubIdStr),
+            obj->seeders->addItem(QString("%0 @%1 %2 [%3]").arg(QString::fromStdString(pubIdStr),
                                                             QString::fromStdString(pubPrice),
                                                             QString::fromStdString("DCT"),
                                                             QString::fromStdString(pubFreeSpace)), QString::fromStdString(pubIdStr));
         }
-
-        obj->m_info_widget.setCellWidget(0, 3, seeders);
+        
+        //obj->m_info_widget.setCellWidget(0, 3, obj->seeders);
 
     });
 }
@@ -233,27 +338,33 @@ void Upload_tab::onGrabPublishers() {
 void Upload_tab::browseContent() {
     QString contentPathSelected = QFileDialog::getOpenFileName(this, tr("Select content"), "~");
     m_contentPath->setText(contentPathSelected);
+    cont->setText(contentPathSelected);
 }
 
 void Upload_tab::browseSamples() {
     QString sampleDir = QFileDialog::getExistingDirectory(this, tr("Select samples"), "~", QFileDialog::DontResolveSymlinks);
     m_samplesPath->setText(sampleDir);
+    sim->setText(sampleDir);
 }
 
 
 void Upload_tab::uploadContent() {
+    std::string m_life_time = de->date().toString().toStdString();
+    std::string m_seeders   = seeders->currentText().toStdString();
+    std::string m_keyparts  = keyparts->currentText().toStdString();
+    std::string m_price     = price->text().toStdString();
+    
     std::string lifetime = ((QDateEdit*)m_info_widget.cellWidget(0, 1))->text().toStdString();
     std::string seeders = ((QComboBox*)m_info_widget.cellWidget(0, 3))->currentData().toString().toStdString();
     std::string keyparts = ((QComboBox*)m_info_widget.cellWidget(0, 5))->currentData().toString().toStdString();
     std::string price = ((QLineEdit*)m_info_widget.cellWidget(2, 1))->text().toStdString();
-    std::string assetName = "DECENT";
+    std::string assetName = "DCT";
     std::string path = m_contentPath->text().toStdString();
     std::string samples_path = m_samplesPath->text().toStdString();
 
     std::string title = m_title_text.text().toStdString();
     std::string desc = m_description_text.toPlainText().toStdString();
-
-
+    
     if (price.empty()) {
         ALERT("Please specify price");
         return;
@@ -301,9 +412,9 @@ void Upload_tab::uploadContent() {
     submitCommand += " \"" + samples_path + "\"";                       //Samples
     submitCommand += " \"magnet\"";                                    //Protocol
     submitCommand += " " + assetName;                                   //price_asset_name
-    submitCommand += " " + price;                                       //price_amount
-    submitCommand += " [" + seeders + "]";                              //seeders
-    submitCommand += " \"" + lifetime + "T23:59:59\"";                  //expiration
+    submitCommand += " " + m_price;                                       //price_amount
+    submitCommand += " [" + m_seeders + "]";                              //seeders
+    submitCommand += " \"" + m_life_time + "T23:59:59\"";                  //expiration
     submitCommand += " DECENT";                                         //publishing_fee_asset
     submitCommand += " 300";                                            //publishing_fee_amount
     submitCommand += " \"" + escape_string(synopsis) + "\"";            //synopsis
