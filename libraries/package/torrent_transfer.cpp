@@ -1085,16 +1085,7 @@ void torrent_transfer::upload_package(transfer_id id, const package_object& pack
     _listener = listener;
     _is_upload = true;
 
-    auto lifetime_info_mutex = _lifetime_info_mutex;
-    auto instance_exists = _instance_exists;
-    _thread->async([this, package, lifetime_info_mutex, instance_exists] () {
-
-        fc::scoped_lock<fc::mutex> guard(*lifetime_info_mutex);
-        if (*instance_exists) {
-            fc_ilog(_transfer_logger, "torrent upload started for package: %{hash}", ("hash", package.get_hash().str()) );
-        }
-
-    });
+    fc_ilog(_transfer_logger, "torrent upload started for package: %{hash}", ("hash", package.get_hash().str()) );
 
     file_storage fs;
     libtorrent::error_code ec;
@@ -1120,11 +1111,11 @@ void torrent_transfer::upload_package(transfer_id id, const package_object& pack
     path temp_file = temp_directory_path() / (package.get_hash().str() + ".torrent");
     path temp_dir = temp_directory_path();
 
-    ilog("torrent file created: {fn}", ("fn", temp_file.string()) );
-
     std::ofstream out(temp_file.string(), std::ios_base::binary);
     bencode(std::ostream_iterator<char>(out), t.generate());
     out.close();
+
+    ilog("torrent file created: {fn}", ("fn", temp_file.string()) );
 
     libtorrent::add_torrent_params atp;
 
@@ -1139,6 +1130,8 @@ void torrent_transfer::upload_package(transfer_id id, const package_object& pack
     (tp.super_seeding_mode  ? atp.flags |= libtorrent::add_torrent_params::flag_super_seeding  : atp.flags &= ~libtorrent::add_torrent_params::flag_super_seeding);
     (tp.share_mode          ? atp.flags |= libtorrent::add_torrent_params::flag_share_mode     : atp.flags &= ~libtorrent::add_torrent_params::flag_share_mode);
     (tp.auto_managed        ? atp.flags |= libtorrent::add_torrent_params::flag_auto_managed   : atp.flags &= ~libtorrent::add_torrent_params::flag_auto_managed);
+
+    atp.flags &= ~libtorrent::add_torrent_params::flag_duplicate_is_error;
 
     atp.dht_nodes = tp.dht_nodes;
     atp.trackers = tp.trackers;
@@ -1168,6 +1161,7 @@ void torrent_transfer::upload_package(transfer_id id, const package_object& pack
         _torrent_handle.add_http_seed(http_seed);
     }
 
+    _session->resume();
     _torrent_handle.resume();
 
     if (tp.announce_on_add) {
@@ -1179,6 +1173,8 @@ void torrent_transfer::upload_package(transfer_id id, const package_object& pack
         _torrent_handle.scrape_tracker();
     }
 
+    auto lifetime_info_mutex = _lifetime_info_mutex;
+    auto instance_exists = _instance_exists;
     _thread->async([this, lifetime_info_mutex, instance_exists] () {
 
         fc::scoped_lock<fc::mutex> guard(*lifetime_info_mutex);
@@ -1196,16 +1192,7 @@ void torrent_transfer::download_package(transfer_id id, const std::string& url, 
     _url = url;
     _is_upload = false;
 
-    auto lifetime_info_mutex = _lifetime_info_mutex;
-    auto instance_exists = _instance_exists;
-    _thread->async([this, url, lifetime_info_mutex, instance_exists] () {
-
-        fc::scoped_lock<fc::mutex> guard(*lifetime_info_mutex);
-        if (*instance_exists) {
-            fc_ilog(_transfer_logger, "torrent download started from url: %{url}", ("url", url) );
-        }
-
-    });
+    fc_ilog(_transfer_logger, "torrent download started from url: %{url}", ("url", url) );
 
     auto tp = _config_data->download_torrent;
 
@@ -1222,6 +1209,8 @@ void torrent_transfer::download_package(transfer_id id, const std::string& url, 
     (tp.upload_mode         ? atp.flags |= libtorrent::add_torrent_params::flag_upload_mode    : atp.flags &= ~libtorrent::add_torrent_params::flag_upload_mode);
     (tp.share_mode          ? atp.flags |= libtorrent::add_torrent_params::flag_share_mode     : atp.flags &= ~libtorrent::add_torrent_params::flag_share_mode);
     (tp.auto_managed        ? atp.flags |= libtorrent::add_torrent_params::flag_auto_managed   : atp.flags &= ~libtorrent::add_torrent_params::flag_auto_managed);
+
+    atp.flags &= ~libtorrent::add_torrent_params::flag_duplicate_is_error;
 
     atp.dht_nodes = tp.dht_nodes;
     atp.trackers = tp.trackers;
@@ -1241,6 +1230,7 @@ void torrent_transfer::download_package(transfer_id id, const std::string& url, 
         _torrent_handle.add_http_seed(http_seed);
     }
 
+    _session->resume();
     _torrent_handle.resume();
 
     if (tp.announce_on_add) {
@@ -1252,6 +1242,8 @@ void torrent_transfer::download_package(transfer_id id, const std::string& url, 
         _torrent_handle.scrape_tracker();
     }
 
+    auto lifetime_info_mutex = _lifetime_info_mutex;
+    auto instance_exists = _instance_exists;
     _thread->async([this, lifetime_info_mutex, instance_exists] () {
 
         fc::scoped_lock<fc::mutex> guard(*lifetime_info_mutex);
