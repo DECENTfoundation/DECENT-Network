@@ -125,7 +125,7 @@ void ipfs_transfer::download_package(transfer_id id, const std::string& url, tra
 	_listener = listener;
 	_url = url;
 	_is_upload = false;
-
+	ilog("ipfs_transfer::download_package called for ${u}",("u", url));
     if (_url.empty()) {
         FC_THROW("Invalid download URL");
     }
