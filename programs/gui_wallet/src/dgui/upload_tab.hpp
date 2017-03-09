@@ -23,7 +23,10 @@
 #include <QTableWidget>
 #include <QComboBox>
 #include <QTimer>
+#include <QDateEdit>
+#include <QComboBox>
 
+#include "decent_button.hpp"
 #include "gui_wallet_tabcontentmanager.hpp"
 
 
@@ -93,6 +96,13 @@ namespace gui_wallet
 
         QLineEdit*      m_contentPath;
         QLineEdit*      m_samplesPath;
+        
+        QDateEdit*      de;
+        QComboBox*      seeders;
+        QComboBox*      keyparts;
+        QLineEdit*      price;
+        QLineEdit*      sim;
+        QLineEdit*      cont;
     };
 
 }

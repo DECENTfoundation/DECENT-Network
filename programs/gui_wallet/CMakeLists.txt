@@ -23,6 +23,7 @@ add_executable( DECENT MACOSX_BUNDLE
                 src/dgui/decent_wallet_ui_gui_contentdetailsgeneral.cpp
                 src/dgui/decent_wallet_ui_gui_jsonparserqt.cpp
                 src/dgui/decent_wallet_ui_gui_newcheckbox.cpp
+                src/dgui/decent_button.cpp
                 src/dgui/gui_wallet_application.cpp
                 src/dgui/gui_wallet_centralwidget.cpp
                 src/dgui/gui_wallet_connectdlg.cpp
@@ -56,6 +57,7 @@ add_executable( DECENT MACOSX_BUNDLE
                 src/dgui/decent_wallet_ui_gui_contentdetailsgeneral.hpp
                 src/dgui/decent_wallet_ui_gui_jsonparserqt.hpp
                 src/dgui/decent_wallet_ui_gui_newcheckbox.hpp
+                src/dgui/decent_button.hpp
                 src/dgui/purchased_tab.hpp
                 src/dgui/gui_wallet_application.hpp
                 src/dgui/gui_wallet_centralwidget.hpp
