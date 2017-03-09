@@ -47,7 +47,6 @@ CryptoPP::AutoSeededRandomPool rng;
 
 Upload_tab::Upload_tab()
         :
-        //m_info_widget(FieldsRows::NUM_FIELDS, 2),
         m_info_widget(3, 6),
         m_title_label(tr("Title")),
         m_description_label(tr("Description")),
@@ -62,7 +61,6 @@ Upload_tab::Upload_tab()
     m_title_text.setPlaceholderText("  Title");
     m_title_text.setAttribute(Qt::WA_MacShowFocusRect, 0);
     m_title_text.setFixedHeight(40);
-    //m_title_text.setFixedWidth(200);
     m_synopsis_layout.addWidget(&m_title_text);
 
     m_description_text.setPlaceholderText("  Description");
@@ -180,23 +178,25 @@ Upload_tab::Upload_tab()
     plt_tbl.setColor(QPalette::Base, palette().color(QPalette::Window));
     m_info_widget.setPalette(plt_tbl);
 
-
+    m_info_widget.setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    m_info_widget.setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
     ////////////////////////////////////////////////////////////////////////////
     /// Upload
     ////////////////////////////////////////////////////////////////////////////
-
-    QPushButton* uploadButton = new QPushButton("Upload");
-    uploadButton->setFixedHeight(40);
-    uploadButton->setStyleSheet("background-color: rgb(27,176,104); color: rgb(255, 255, 255)");
-    uploadButton->setFixedHeight(30);
-
-
     
+    QHBoxLayout* button = new QHBoxLayout;
     
-    connect(uploadButton, SIGNAL(clicked()),this, SLOT(uploadContent()));
-    m_info_layout.addWidget(uploadButton);
+    DecentButton* upload_label = new DecentButton();
+    upload_label->setText("UPLOAD");
+    upload_label->setMinimumHeight(26);
+    
+    connect(upload_label, SIGNAL(LabelClicked()),this, SLOT(uploadContent()));
+    button->setContentsMargins(250, 0, 250, 0);
+    button->addWidget(upload_label);
+
     m_main_layout.addLayout(&m_info_layout);
+    m_main_layout.addLayout(button);
 
     setLayout(&m_main_layout);
 
