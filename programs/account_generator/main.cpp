@@ -355,6 +355,12 @@ int main( int argc, char** argv )
                    if (false == json_bki.empty())
                        str_bki = json_bki.get<string>();
                    string str_user_id = std::to_string(json_id.get<size_t>());
+                   int i_length = str_user_id.length();
+                   int i_zero_count = 4 - i_length;
+                   for (int i = 0; i < i_zero_count; ++i)
+                   {
+                       str_user_id = "0" + str_user_id;
+                   }
                    
                    string str_wif_priv_key, str_pub_key;
                    if (false == json_priv_key.empty())
@@ -374,7 +380,7 @@ int main( int argc, char** argv )
                        b_post_back = true;
                    }
                    
-                   string str_new_account_name = "accgen" + str_user_id;
+                   string str_new_account_name = "decentuser" + str_user_id;
                    account_object account_newly_created;
                    
                    bool b_user_already_exists = false;
