@@ -75,6 +75,7 @@ void seeding_plugin_impl::handle_content_submit(const operation_history_object &
                });
                //if we run this in main thread it can crash _push_block
                service_thread->async( [cs_op, this, so_id](){
+                    ilog("seeding plugin:  handle_content_submit() lambda called");
                     auto id = package_manager::instance().download_package(cs_op.URI, *this, empty_report_stats_listener::instance());
                     active_downloads[id] = so_id;
                });
