@@ -27,6 +27,7 @@
 
 #include <decent/encrypt/encryptionutils.hpp>
 #include <graphene/package/package.hpp>
+#include <graphene/utilities/dirhelper.hpp>
 
 #include "json.hpp"
 
@@ -44,8 +45,6 @@
 #include <boost/uuid/uuid_io.hpp>
 #include <boost/iostreams/copy.hpp>
 
-#include <graphene/utilities/dirhelper.hpp>
-
 #include <iostream>
 #include <atomic>
 
@@ -60,14 +59,17 @@ using namespace graphene::utilities;
 
 namespace {
 
+
 const int ARC_BUFFER_SIZE  = 1024 * 1024; // 4kb
 const int RIPEMD160_BUFFER_SIZE  = 1024 * 1024; // 4kb
 
+    
 struct arc_header {
     char type; // 0 = EOF, 1 = REGULAR FILE
 	char name[255];
 	char size[8];
 };
+
 
 class archiver {
 	filtering_ostream&   _out;
@@ -269,9 +271,8 @@ fc::ripemd160 calculate_hash(path file_path) {
     return ripe_calc.result();
 }
 
-} // Unnamed namespace
 
-
+} // namespace
 
 
 package_object::package_object(const boost::filesystem::path& package_path) {
@@ -310,12 +311,8 @@ int package_object::get_size() const {
     return file_size(get_content_file());
 }
 
-
-void package_manager::restore_json_state() {
-}
-
-
-void package_manager::save_json_state() {
+uint32_t package_object::create_proof_of_custody(const decent::crypto::custody_data& cd, decent::crypto::custody_proof& proof) const {
+   return package_manager::instance().create_proof_of_custody(get_content_file(), cd, proof);
 }
 
 package_manager::package_manager() {
@@ -323,6 +320,18 @@ package_manager::package_manager() {
     _protocol_handlers.insert(std::make_pair("ipfs", std::make_shared<ipfs_transfer>()));
 
     set_packages_path(decent_path_finder::instance().get_decent_data() / "packages");
+    set_libtorrent_config(decent_path_finder::instance().get_decent_home() / "libtorrent.json");
+}
+
+package_manager::~package_manager() {
+    ilog("saving package manager state...");
+    save_json_state();
+}
+
+void package_manager::restore_json_state() {
+}
+
+void package_manager::save_json_state() {
 }
 
 void package_manager::set_packages_path(const boost::filesystem::path& packages_path) {
@@ -342,13 +351,8 @@ void package_manager::set_packages_path(const boost::filesystem::path& packages_
     fc::scoped_lock<fc::mutex> guard(_mutex);
     _packages_path = packages_path;
 
+    ilog("restoring package manager state...");
     restore_json_state();
-}
-
-
-package_manager::~package_manager() {
-    std::cout << "Saving package manager state..." << std::endl;
-    save_json_state();
 }
 
 boost::filesystem::path package_manager::get_packages_path() const {
@@ -500,7 +504,7 @@ package_object package_manager::create_package( const boost::filesystem::path& c
 
 	return package_object(packages_path / hash.str());
 }
-	
+
 package_transfer_interface::transfer_id
 package_manager::upload_package( const package_object& package, 
                                  const string& protocol_name,
@@ -524,7 +528,7 @@ package_manager::upload_package( const package_object& package,
     try {
         t.transport->upload_package(t.job_id, package, &listener);
     } catch(std::exception& ex) {
-        std::cout << "Upload error: " << ex.what() << std::endl;
+        elog("upload error: ${error}", ("error", ex.what()));
     }
 
     return t.job_id;
@@ -554,7 +558,7 @@ package_manager::download_package( const string& url,
     try {
         t.transport->download_package(t.job_id, url, &listener, stats_listener);
     } catch(std::exception& ex) {
-        std::cout << "Download error: " << ex.what() << std::endl;
+        elog("download error: ${error}", ("error", ex.what()));
     }
 
     return t.job_id;
@@ -581,7 +585,7 @@ package_manager::get_progress(std::string URI) const {
         }
     }
 
-    return package_transfer_interface::transfer_progress(0, 0, 0);
+    return package_transfer_interface::transfer_progress();
 }
 
 std::string package_manager::get_transfer_url(package_transfer_interface::transfer_id id) {
@@ -593,7 +597,6 @@ std::string package_manager::get_transfer_url(package_transfer_interface::transf
     transfer_job& job = _all_transfers[id];
     return job.transport->get_transfer_url();
 }
-
 
 std::vector<package_object> package_manager::get_packages() {
     fc::scoped_lock<fc::mutex> guard(_mutex);
@@ -613,22 +616,18 @@ package_object package_manager::get_package_object(fc::ripemd160 hash) {
     return package_object(packages_path / hash.str());
 }
 
-
 void package_manager::delete_package(fc::ripemd160 hash) {
     const path packages_path = get_packages_path();
     package_object po(packages_path / hash.str());
     if (!po.is_valid()) {
-        FC_THROW("Invalid package: ${hash}", ("hash", hash.str()) );
+        remove_all(po.get_path());
     }
-
-    remove_all(po.get_path());
+    else {
+        elog("invalid package: ${hash}", ("hash", hash.str()) );
+    }
 }
 
-uint32_t package_manager::create_proof_of_custody(const boost::filesystem::path& content_file, const decent::crypto::custody_data& cd, decent::crypto::custody_proof&proof) {
+uint32_t package_manager::create_proof_of_custody(const boost::filesystem::path& content_file, const decent::crypto::custody_data& cd, decent::crypto::custody_proof& proof) {
     fc::scoped_lock<fc::mutex> guard(_mutex);
     return _custody_utils.create_proof_of_custody(content_file, cd, proof);
-}
-
-uint32_t package_object::create_proof_of_custody(const decent::crypto::custody_data& cd, decent::crypto::custody_proof& proof) const {
-   return package_manager::instance().create_proof_of_custody(get_content_file(), cd, proof);
 }

@@ -1654,8 +1654,6 @@ FC_REFLECT( graphene::wallet::wallet_data,
             (ws_server)
             (ws_user)
             (ws_password)
-            (packages_path)
-            (libtorrent_config_path)
           )
 
 FC_REFLECT( graphene::wallet::brain_key_info,
