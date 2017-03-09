@@ -109,8 +109,8 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details)
 
 
     
+//    if(a_cnt_details.type == DCT::BOUGHT) {m_main_layout.removeWidget(&m_vSub_Widgets[4]);
     if(a_cnt_details.type == DCT::BOUGHT) {
-        
         if (stars_labels.size() == 0) {
             m_RateText = new QLabel;
             

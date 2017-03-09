@@ -23,26 +23,14 @@ ContentDetailsGeneral::ContentDetailsGeneral()
     :
       m_label(this,NULL,&ContentDetailsGeneral::LabelPushCallbackGUI)
 {
-    QPixmap aPixMap(":/icon/images/buy.png");
     QVBoxLayout* image_layout = new QVBoxLayout;
-    m_label.setScaledContents(true);
-    m_label.setPixmap(aPixMap);
+    m_label.setText("BUY");
     
-    image_layout->addWidget(new QLabel());
     image_layout->addWidget(&m_label);
-    image_layout->addWidget(new QLabel());
+    image_layout->setContentsMargins(250, 5, 250, 10);
     
-    QGraphicsDropShadowEffect *effect = new QGraphicsDropShadowEffect(this);
-    effect->setBlurRadius(5);
-    effect->setColor(QColor("d3d3d3"));
-    effect->setOffset(4,6);
-    m_label.setGraphicsEffect(effect);
-    
-    m_free_for_child.addWidget(new QLabel());
-    m_free_for_child.addWidget(new QLabel());
     m_free_for_child.addLayout(image_layout);
-    m_free_for_child.addWidget(new QLabel());
-    m_free_for_child.addWidget(new QLabel());
+
     
     
 

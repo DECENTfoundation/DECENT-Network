@@ -23,6 +23,7 @@
 #include <QTableWidget>
 #include <QComboBox>
 #include <QTimer>
+#include "decent_button.hpp"
 
 #include "gui_wallet_tabcontentmanager.hpp"
 
