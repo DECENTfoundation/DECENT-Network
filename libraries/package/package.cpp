@@ -1,3 +1,6 @@
+
+
+
 /*
  * Copyright (c) 2015 Cryptonomex, Inc., and contributors.
  *
@@ -258,6 +261,10 @@ boost::filesystem::path relative_path( const boost::filesystem::path &path, cons
 fc::ripemd160 calculate_hash(path file_path) {
     file_source source(file_path.string(), std::ifstream::binary);
 
+    if (!source.is_open()) {
+         FC_THROW("Unable to open file ${fn} for reading", ("fn", file_path.string()) );
+    }
+
     char buffer[RIPEMD160_BUFFER_SIZE];
     int bytes_read = source.read(buffer, RIPEMD160_BUFFER_SIZE);
     
@@ -323,7 +330,9 @@ uint32_t package_object::create_proof_of_custody(const decent::crypto::custody_d
    return package_manager::instance().create_proof_of_custody(get_content_file(), cd, proof);
 }
 
-package_manager::package_manager() {
+package_manager::package_manager()
+    : _next_transfer_id(0)
+{
     _protocol_handlers.insert(std::make_pair("magnet", std::make_shared<torrent_transfer>()));
     _protocol_handlers.insert(std::make_pair("ipfs", std::make_shared<ipfs_transfer>()));
 
@@ -332,14 +341,27 @@ package_manager::package_manager() {
 }
 
 package_manager::~package_manager() {
+    save_state();
+}
+
+package_manager::transfer_job& package_manager::create_transfer_object() {
+    FC_ASSERT( _transfers.find(_next_transfer_id) == _transfers.end() );
+    transfer_job& t = _transfers[_next_transfer_id];
+    t.job_id = _next_transfer_id;
+    ++_next_transfer_id;
+    return t;
+}
+
+void package_manager::save_state() {
     ilog("saving package manager state...");
-    save_json_state();
+
+    // TODO
 }
 
-void package_manager::restore_json_state() {
-}
+void package_manager::restore_state() {
+    ilog("restoring package manager state...");
 
-void package_manager::save_json_state() {
+    // TODO
 }
 
 void package_manager::set_packages_path(const boost::filesystem::path& packages_path) {
@@ -357,10 +379,14 @@ void package_manager::set_packages_path(const boost::filesystem::path& packages_
     }
 
     fc::scoped_lock<fc::mutex> guard(_mutex);
+
+    if (!_packages_path.empty()) {
+        save_state();
+    }
+
     _packages_path = packages_path;
 
-    ilog("restoring package manager state...");
-    restore_json_state();
+    restore_state();
 }
 
 boost::filesystem::path package_manager::get_packages_path() const {
@@ -525,10 +551,7 @@ package_manager::upload_package( const package_object& package,
         FC_THROW("Can not find protocol handler for : ${proto}", ("proto", protocol_name) );
     }
 
-    _all_transfers.push_back(transfer_job());
-    transfer_job& t = _all_transfers.back();
-
-    t.job_id = _all_transfers.size() - 1;
+    transfer_job& t = create_transfer_object();
     t.transport = it->second->clone();
     t.listener = &listener;
     t.job_type = transfer_job::UPLOAD;
@@ -556,10 +579,7 @@ package_manager::download_package( const string& url,
         FC_THROW("Can not find protocol handler for : ${proto}", ("proto", download_url.proto()) );
     }
 
-    _all_transfers.push_back(transfer_job());
-    transfer_job& t = _all_transfers.back();
-
-    t.job_id = _all_transfers.size() - 1;
+    transfer_job& t = create_transfer_object();
     t.transport = it->second->clone();
     t.listener = &listener;
     t.job_type = transfer_job::DOWNLOAD;
@@ -575,8 +595,8 @@ package_manager::download_package( const string& url,
 
 void package_manager::print_all_transfers() {
     fc::scoped_lock<fc::mutex> guard(_mutex);
-    for (int i = 0; i < _all_transfers.size(); ++i) {
-        const transfer_job& job = _all_transfers[i];
+    for (auto transfer : _transfers) {
+        auto job = transfer.second;
         cout << "~~~ Status for job #" << job.job_id << " [" << ((job.job_type == transfer_job::UPLOAD) ? "Upload" : "Download") << "]\n";
         job.transport->print_status();
         cout << "~~~ End of status for #" << job.job_id << endl;
@@ -586,8 +606,8 @@ void package_manager::print_all_transfers() {
 package_transfer_interface::transfer_progress 
 package_manager::get_progress(std::string URI) const {
     fc::scoped_lock<fc::mutex> guard(_mutex);
-    for (int i = 0; i < _all_transfers.size(); ++i) {
-        const transfer_job& job = _all_transfers[i];
+    for (auto transfer : _transfers) {
+        auto job = transfer.second;
         string transfer_url = job.transport->get_transfer_url();
         if (transfer_url == URI) {
             return job.transport->get_progress();
@@ -599,11 +619,12 @@ package_manager::get_progress(std::string URI) const {
 
 std::string package_manager::get_transfer_url(package_transfer_interface::transfer_id id) {
     fc::scoped_lock<fc::mutex> guard(_mutex);
-    if (id >= _all_transfers.size()) {
+
+    if (_transfers.find(id) == _transfers.end()) {
         FC_THROW("Invalid transfer id: ${id}", ("id", id) );
     }
 
-    transfer_job& job = _all_transfers[id];
+    transfer_job& job = _transfers[id];
     return job.transport->get_transfer_url();
 }
 

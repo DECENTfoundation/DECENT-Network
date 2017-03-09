@@ -127,7 +127,8 @@ private:
 
 private:
 	typedef std::map<std::string, std::shared_ptr<package_transfer_interface>>  protocol_handler_map;
-	typedef std::vector<transfer_job>                                           transfer_jobs;
+	typedef std::map<package_transfer_interface::transfer_id, transfer_job>     transfer_map;
+    typedef std::set<package_object>                                            package_set;
 
 private:
 	package_manager();
@@ -155,6 +156,8 @@ public:
 						 const package_object& package,
 						 const fc::sha512& key);
 
+    void delete_package(fc::ripemd160 hash);
+
 	package_transfer_interface::transfer_id upload_package( const package_object& package, 
 															const std::string& protocol_name,
 															package_transfer_interface::transfer_listener& listener );
@@ -163,12 +166,11 @@ public:
 															  package_transfer_interface::transfer_listener& listener,
 															  report_stats_listener_base& stats_listener );
 
+
 	std::vector<package_object> get_packages();
-	package_object				get_package_object(fc::ripemd160 hash);
-	void                        delete_package(fc::ripemd160 hash);
+	package_object              get_package_object(fc::ripemd160 hash);
 
-	std::string					get_transfer_url(package_transfer_interface::transfer_id id);
-
+	std::string                                   get_transfer_url(package_transfer_interface::transfer_id id);
 	package_transfer_interface::transfer_progress get_progress(std::string URI) const;
 
     void set_packages_path(const boost::filesystem::path& packages_path);
@@ -181,8 +183,10 @@ public:
     void print_all_transfers();
 
 private:
-	void restore_json_state();
-	void save_json_state();
+    transfer_job& create_transfer_object();
+
+    void save_state();
+	void restore_state();
 
 private:
     mutable fc::mutex                  _mutex;
@@ -190,7 +194,9 @@ private:
     boost::filesystem::path            _libtorrent_config_file;
     decent::crypto::custody_utils      _custody_utils;
 	protocol_handler_map               _protocol_handlers;
-	transfer_jobs                      _all_transfers;
+	transfer_map                       _transfers;
+    int                                _next_transfer_id;
+    package_set                        _packages;
 };
 
 
