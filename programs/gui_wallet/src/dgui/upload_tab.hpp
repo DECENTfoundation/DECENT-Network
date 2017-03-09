@@ -23,6 +23,7 @@
 #include <QTableWidget>
 #include <QComboBox>
 #include <QTimer>
+#include "decent_button.hpp"
 
 #include "gui_wallet_tabcontentmanager.hpp"
 
@@ -91,8 +92,8 @@ namespace gui_wallet
         QLabel          m_infoLayoutHeader;
         QTimer          m_getPublishersTimer;
 
-        AssetMap                    m_assetMap;
-
+        QLineEdit*      m_contentPath;
+        QLineEdit*      m_samplesPath;
     };
 
 }

@@ -86,6 +86,10 @@ public:
     
     int GetMyCurrentTabIndex()const {
         return m_main_tabs.currentIndex();
+    }   
+
+    void SetMyCurrentTabIndex(int index) {
+        m_main_tabs.setCurrentIndex(index);
     }
     
     QString FilterStr();

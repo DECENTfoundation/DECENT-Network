@@ -11,6 +11,7 @@
 #define DECENT_WALLET_UI_GUI_CONTENTDETAILSGENERAL_HPP
 
 #include "decent_wallet_ui_gui_contentdetailsbase.hpp"
+#include "decent_button.hpp"
 #include <QLabel>
 
 namespace gui_wallet {
@@ -28,8 +29,7 @@ protected:
     void LabelPushCallbackGUI(void* clbkData,QMouseEvent* mouse_event);
 
 protected:
-    WidgetWithCallback<QLabel>   m_label;
-
+    WidgetWithCallback<DecentButton>   m_label;
 };
 
 }

@@ -25,7 +25,6 @@
 #include <string>
 #include <map>
 #include "decent_wallet_ui_gui_contentdetailsgeneral.hpp"
-#include "decent_wallet_ui_gui_contentdetailsbougth.hpp"
 
 namespace gui_wallet
 {
@@ -39,7 +38,6 @@ namespace gui_wallet
         virtual ~Mainwindow_gui_wallet();   // virtual because may be this class will be
                                             // used by inheritanc
         void SetNewTaskQtMainWnd2(const std::string& a_inp_line, void* a_clbData);
-        void SetNewTaskQtMainWnd3(const std::string& a_inp_line, void* a_clbData);
 
     protected:
         void CreateActions();
@@ -48,18 +46,7 @@ namespace gui_wallet
         void TaskDoneFuncGUI(void* clbkArg,int64_t err,const std::string& task,const std::string& result);
         void ManagementNewFuncGUI(void* clbkArg,int64_t err,const std::string& task,const std::string& result);
 
-        void TaskDoneUploadGUI(void* a_clbkArg,int64_t a_err,const std::string& a_task,const std::string& a_result);
-
-    public:
-        void TaskDoneOverrviewGUI(void* a_clbkArg,int64_t a_err,const std::string& a_task,const std::string& a_result);
-    private:
-
-        void TaskDoneFuncGUI3(void* clbkArg,int64_t err,const std::string& task,const fc::variant& result);
-
-        void TaskDoneOverrviewGUI3(void* a_clbkArg,int64_t a_err,const std::string& a_task,const fc::variant& a_result);
-        void ManagementOverviewGUI();
-
-        
+    private:        
         
         void UpdateLockedStatus();
 
@@ -83,6 +70,7 @@ namespace gui_wallet
         void AboutSlot();
         void HelpSlot();
         void InfoSlot();
+        void ViewAction();
 
         void ConnectSlot();
         void ImportKeySlot();
@@ -108,7 +96,7 @@ namespace gui_wallet
         QMenu*              m_pMenuHelpL;
         QMenu*              m_pMenuContent;
         QMenu*              m_pMenuHelpR;
-        QMenu*              m_pMenuCreateTicket;
+        QMenu*              m_pMenuView;
         QMenu*              m_pMenuDebug;
         QMenu*              m_pMenuTempFunctions;
         QAction             m_ActionExit;
@@ -116,7 +104,6 @@ namespace gui_wallet
         QAction             m_ActionAbout;
         QAction             m_ActionInfo;
         QAction             m_ActionHelp;
-        QAction             m_ActionWalletContent;
         QAction             m_ActionLock;
         QAction             m_ActionUnlock;
         QAction             m_ActionImportKey;
@@ -156,7 +143,7 @@ namespace gui_wallet
         QString             m_default_stylesheet;
 
         ContentDetailsGeneral m_dig_cont_detailsGenDlg;
-        ContentDetailsBougth m_dig_cont_detailsBougDlg;
+        ContentDetailsBase m_dig_cont_detailsBougDlg;
 
         std::vector<std::string>        m_user_ids;
     };

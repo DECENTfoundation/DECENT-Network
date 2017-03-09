@@ -255,7 +255,7 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     pLabelTmp = new QLabel(tr(""));
     pLabelTmp->setScaledContents(true);
 
-    QPixmap m_image1(":/icon/images/decent_logo.png");
+    QPixmap m_image1(":/icon/images/decent_logo.svg");
     pLabelTmp->setPixmap(m_image1);
     pHBoxLayoutTmp->addWidget(pLabelTmp);
     pLabelTmp->setFixedSize(__SIZE_FOR_IMGS__,__SIZE_FOR_IMGS__);

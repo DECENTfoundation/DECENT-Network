@@ -249,7 +249,12 @@ class wallet_api
        * @returns a list of accounts mapping account names to account ids
        * @ingroup WalletCLI
        */
-      map<string,account_id_type>       list_accounts(const string& lowerbound, uint32_t limit);
+     map<string,account_id_type>       list_accounts(const string& lowerbound, uint32_t limit);
+ 
+    
+     map<string,account_id_type>       search_accounts(const string& term, uint32_t limit);
+    
+    
       /** List the balances of an account.
        * Each account can have multiple balances, one for each type of asset owned by that 
        * account.  The returned list will only contain assets for which the account has a
@@ -1501,6 +1506,15 @@ class wallet_api
        * @ingroup WalletCLI
        */
       vector<buying_object> get_buying_history_objects_by_consumer( const string& account_id_or_name )const;
+    
+      /**
+       * @brief Get history buying_objects by consumer
+       * @param consumer Consumer of the buyings to retrieve
+       * @param term Search term to look up in Title and Description by
+       * @return History buying_objects corresponding to the provided consumer
+       * @ingroup WalletCLI
+       */
+      vector<buying_object> get_buying_history_objects_by_consumer_term( const string& account_id_or_name, const string& term )const;
 
        /**
        * @brief Get buying (open or history) by consumer and URI
@@ -1536,15 +1550,24 @@ class wallet_api
        */
       vector<content_object> list_content_by_author( const string& account_id_or_name )const;
 
-      /**
-       * @brief Get a list of contents ordered alphabetically by URI strings
-       * @param URI_begin Lower bound of URI strings to retrieve
-       * @param count Maximum number of contents to fetch (must not exceed 100)
-       * @return The contents found
-       * @ingroup WalletCLI
-       */
-      vector<content_summary> list_content( const string& URI_begin, uint32_t count )const;
-
+    /**
+     * @brief Get a list of contents ordered alphabetically by URI strings
+     * @param URI_begin Lower bound of URI strings to retrieve
+     * @param count Maximum number of contents to fetch (must not exceed 100)
+     * @return The contents found
+     * @ingroup WalletCLI
+     */
+    vector<content_summary> list_content( const string& URI_begin, uint32_t count )const;
+    
+    /**
+     * @brief Get a list of contents ordered alphabetically by search term
+     * @param term seach term
+     * @param count Maximum number of contents to fetch (must not exceed 100)
+     * @return The contents found
+     * @ingroup WalletCLI
+     */
+    vector<content_summary> search_content( const string& term, uint32_t count )const;
+    
 
       /**
        * @brief Get a list of contents by times bought, in decreasing order
@@ -1714,6 +1737,7 @@ FC_API( graphene::wallet::wallet_api,
         (dump_private_keys)
         (list_my_accounts)
         (list_accounts)
+        (search_accounts)
         (list_account_balances)
         (list_assets)
         (import_key)
@@ -1791,12 +1815,14 @@ FC_API( graphene::wallet::wallet_api,
         (get_open_buyings_by_URI)
         (get_open_buyings_by_consumer)
         (get_buying_history_objects_by_consumer)
+        (get_buying_history_objects_by_consumer_term)
         (get_buying_by_consumer_URI)
         (get_rating)
         (get_content)
         (get_real_supply)
         (list_content_by_author)
         (list_content)
+        (search_content)
         (list_content_by_bought)
         (list_publishers_by_price)
         (get_content_ratings)
