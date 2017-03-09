@@ -3787,9 +3787,9 @@ void wallet_api::remove_package(const std::string& package_hash) const {
 
 void wallet_api::download_package(const std::string& url) const {
    FC_ASSERT(!is_locked());
-   detail::report_stats_listener stats_listener( url, my->self);
-   stats_listener.ipfs_IDs = list_seeders_ipfs_IDs( url);
-   package_manager::instance().download_package(url, transfer_progress_printer::instance(), stats_listener);
+// detail::report_stats_listener stats_listener( url, my->self);
+// stats_listener.ipfs_IDs = list_seeders_ipfs_IDs( url);
+   package_manager::instance().download_package(url, transfer_progress_printer::instance(), empty_report_stats_listener::instance());
 }
 
 std::string wallet_api::upload_package(const std::string& package_hash, const std::string& protocol) const {
