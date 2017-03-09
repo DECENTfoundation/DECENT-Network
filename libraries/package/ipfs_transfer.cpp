@@ -110,7 +110,7 @@ void ipfs_transfer::upload_package(transfer_id id, const package_object& package
 	}
 
 	if (it == itEnd) {
-		FC_THROW("Unable to find root hash");    
+		FC_THROW("Unable to find root hash");
 	}
 
 	const string hash = it->at("hash");
