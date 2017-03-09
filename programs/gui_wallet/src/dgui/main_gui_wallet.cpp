@@ -74,11 +74,11 @@ int runDecentD(int argc, char** argv) {
    app::application* node = new app::application();
    fc::oexception unhandled_exception;
    try {
-      bpo::options_description app_options("DECENT Witness Node");
-      bpo::options_description cfg_options("DECENT Witness Node");
+       bpo::options_description app_options("DECENT Daemon");
+       bpo::options_description cfg_options("DECENT Daemon");
       app_options.add_options()
             ("help,h", "Print this help message and exit.")
-            ("data-dir,d", bpo::value<boost::filesystem::path>()->default_value( utilities::decent_path_finder::instance().get_decent_data() / "witness"), "Directory containing databases, configuration file, etc.")
+            ("data-dir,d", bpo::value<boost::filesystem::path>()->default_value( utilities::decent_path_finder::instance().get_decent_data() / "decentd"), "Directory containing databases, configuration file, etc.")
             ;
        
 
@@ -219,39 +219,36 @@ int runDecentD(int argc, char** argv) {
 
 int main(int argc, char* argv[])
 {
-
-
-
-
-    try{
+    decent_d_ready = false;
+    
+    pid_t  pid;
+    pid = fork();
+    if (pid == 0) {
+        runDecentD(argc, argv);
+    } else {
         
-        decent_d_ready = false;
+        gui_wallet::application aApp(argc, argv);
+
+        usleep(3000);
         
-        fc::thread decent_d_thread("decent_d");
-        decent_d_thread.async([argc, argv] () {
-            runDecentD(argc, argv);
-        });
-        
-        while (!decent_d_ready) {
-            QThread::msleep(100);
+        try{
+            gui_wallet::Mainwindow_gui_wallet aMainWindow;
+            aMainWindow.show();
+            aApp.exec();
+        } catch(const char* a_ext_str) {
+            std::cout << "Exception: " << a_ext_str << std::endl;
+        } catch(const std::exception& ex) {
+            std::cout << "Exception: " << ex.what() << std::endl;
+        } catch(const fc::exception& ex) {
+            std::cout << "Exception: " << ex.what() << std::endl;
+        } catch (...) {
+            std::cout << "Unknown Exception " << std::endl;
         }
-
-        gui_wallet::application aApp(argc,argv);
-        gui_wallet::Mainwindow_gui_wallet aMainWindow;
-        aMainWindow.show();
-        aApp.exec();
         
-        
-    } catch(const char* a_ext_str) {
-        std::cout << "Exception: " << a_ext_str << std::endl;
-    } catch(const std::exception& ex) {
-        std::cout << "Exception: " << ex.what() << std::endl;
-    } catch(const fc::exception& ex) {
-        std::cout << "Exception: " << ex.what() << std::endl;
-    } catch (...) {
-        std::cout << "Unknown Exception " << std::endl;
+        kill(pid, SIGTERM); //Kill decentd
     }
-
+    
+  
     return 0;
 }
 
