@@ -39,6 +39,7 @@ void seeding_plugin_impl::handle_content_submit(const operation_history_object &
       auto seeder_itr = idx.begin();
       while( seeder_itr != idx.end()) {
          if( std::find(cs_op.seeders.begin(), cs_op.seeders.end(), (seeder_itr->seeder)) != cs_op.seeders.end()) {
+            ilog("seeding plugin:  handle_content_submit() handling new content by seeder ${s}",("s",seeder_itr->seeder));
             auto s = cs_op.seeders.begin();
             auto k = cs_op.key_parts.begin();
             while( *s != seeder_itr->seeder && s != cs_op.seeders.end()) {
@@ -68,6 +69,7 @@ void seeding_plugin_impl::handle_content_submit(const operation_history_object &
                     so.expiration = cs_op.expiration;
                     so.cd = cs_op.cd;
                }).id;
+               ilog("seeding plugin:  handle_content_submit() created new content_object ${s}",("s",so_id));
                db.modify<my_seeder_object>(*seeder_itr, [&](my_seeder_object &mso) {
                     mso.free_space -= cs_op.size ; //we allocate the whole megabytes per content
                });
