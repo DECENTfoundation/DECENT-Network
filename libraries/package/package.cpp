@@ -545,11 +545,12 @@ package_manager::upload_package( const package_object& package,
 package_transfer_interface::transfer_id 
 package_manager::download_package( const string& url,
                                    package_transfer_interface::transfer_listener& listener,
-                                   report_stats_listener_base& stats_listener ) {
+                                   report_stats_listener_base& stats_listener ) {try{
 
-    fc::scoped_lock<fc::mutex> guard(_mutex);
+   ilog("package_manager:download_package called for ${u}",("u", url));
+   fc::scoped_lock<fc::mutex> guard(_mutex);
     fc::url download_url(url);
-    ilog("package_manager:download_package called for ${u}",("u", url));
+
     protocol_handler_map::iterator it = _protocol_handlers.find(download_url.proto());
     if (it == _protocol_handlers.end()) {
         FC_THROW("Can not find protocol handler for : ${proto}", ("proto", download_url.proto()) );
@@ -570,7 +571,7 @@ package_manager::download_package( const string& url,
     }
 
     return t.job_id;
-}
+}catch(...){elog("package_manager:download_package unspecified error");} }
 
 void package_manager::print_all_transfers() {
     fc::scoped_lock<fc::mutex> guard(_mutex);
