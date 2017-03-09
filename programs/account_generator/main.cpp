@@ -46,11 +46,13 @@
 
 #include <fc/interprocess/signals.hpp>
 #include <boost/program_options.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include <fc/log/console_appender.hpp>
 #include <fc/log/file_appender.hpp>
 #include <fc/log/logger.hpp>
 #include <fc/log/logger_config.hpp>
+#include "json.hpp"
 
 #include <curl/curl.h>
 #include <cstdlib>
@@ -96,6 +98,19 @@ static size_t WriteMemoryCallback(void* contents, size_t size, size_t nmemb, voi
     return i_new_chunk_size;
 }
 
+string curl_escape(string const& str)
+{
+    CURL* curl_handle = curl_easy_init();
+    char* sz_str = curl_easy_escape(curl_handle, str.c_str(), str.length());
+    
+    string str_res(sz_str);
+    
+    curl_free(static_cast<void*>(sz_str));
+    curl_easy_cleanup(curl_handle);
+    
+    return str_res;
+}
+
 void curl_test_func(string const& str_url,
                     string const& str_post,
                     string& str_response)
@@ -105,8 +120,6 @@ void curl_test_func(string const& str_url,
     
     vector<char> arr_response;
     
-    char const* sz_post_message = str_post.c_str();
-    
     curl_handle = curl_easy_init();
     
     curl_easy_setopt(curl_handle, CURLOPT_URL, str_url.c_str());
@@ -114,7 +127,7 @@ void curl_test_func(string const& str_url,
     curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, static_cast<void*>(&arr_response));
     curl_easy_setopt(curl_handle, CURLOPT_USERAGENT, "libcurl-agent/1.0");
     if (false == str_post.empty())
-        curl_easy_setopt(curl_handle, CURLOPT_POSTFIELDS, sz_post_message);
+        curl_easy_setopt(curl_handle, CURLOPT_POSTFIELDS, str_post.c_str());
     
     res = curl_easy_perform(curl_handle);
     
@@ -311,31 +324,108 @@ int main( int argc, char** argv )
            
            wapiptr->unlock(str_password);   //  throws if the password is wrong
            
-           string str_responce;
-           curl_test_func("http://www.google.com", string(), str_responce);
-           
-           brain_key_info bki = wapiptr->suggest_brain_key();
-           
            account_object account_referrer = wapiptr->get_account(str_referrer);
            account_object account_registrar = wapiptr->get_account(str_registrar);
            
-           string str_new_account_name = "accountgen50";
-           wapiptr->create_account_with_brain_key(bki.brain_priv_key,
-                                                  str_new_account_name,
-                                                  account_id(account_referrer),
-                                                  account_id(account_registrar),
-                                                  true);
+           size_t i_users_get = 100;
+           size_t i_users_got = 0;
            
+           size_t i_users_already_exist = 0, i_responses = 0;
            
-           account_object account_newly_created = wapiptr->get_account(str_new_account_name);
-           
-           wapiptr->transfer(account_id(account_registrar),
-                             account_id(account_newly_created),
-                             std::to_string(transfer_amount),
-                             "DECENT",
-                             "",
-                             true);
-           
+           while (true)
+           {
+               string str_response;
+               curl_test_func("https://api.decent.ch/v1.0/subscribers/" +
+                              std::to_string(i_users_got) +
+                              "/" +
+                              std::to_string(i_users_get) +
+                              "?_format=json", string(), str_response);
+               
+               auto json_arr_user = nlohmann::json::parse(str_response);
+               size_t i_user_count = json_arr_user.size();
+               
+               for (size_t i_index = 0; i_index < i_user_count; ++i_index)
+               {
+                   auto json_user_info = json_arr_user[i_index];
+                   auto& json_bki = json_user_info["brainPrivKey"];
+                   auto& json_priv_key = json_user_info["wifPrivKey"];
+                   auto& json_pub_key = json_user_info["pubKey"];
+                   auto& json_id = json_user_info["id"];
+                   string str_bki;
+                   if (false == json_bki.empty())
+                       str_bki = json_bki.get<string>();
+                   string str_user_id = std::to_string(json_id.get<size_t>());
+                   
+                   string str_wif_priv_key, str_pub_key;
+                   if (false == json_priv_key.empty())
+                       str_wif_priv_key = json_priv_key.get<string>();
+                   if (false == json_pub_key.empty())
+                       str_pub_key = json_pub_key.get<string>();
+                   
+                   bool b_post_back = false;
+                   
+                   if (str_bki.empty())
+                   {
+                       brain_key_info bki = wapiptr->suggest_brain_key();
+                       str_bki = bki.brain_priv_key;
+                       str_wif_priv_key = bki.wif_priv_key;
+                       str_pub_key = string(bki.pub_key);
+                       
+                       b_post_back = true;
+                   }
+                   
+                   string str_new_account_name = "accgen" + str_user_id;
+                   account_object account_try_create;
+                   
+                   try
+                   {
+                       ++i_users_already_exist;
+                       account_try_create = wapiptr->get_account(str_new_account_name);
+                       cout << std::to_string(i_users_already_exist) << " : " << str_new_account_name << " user already exists\n";
+                       continue;
+                   }
+                   catch (...)
+                   {
+                   }
+                   
+                   wapiptr->create_account_with_brain_key(str_bki,
+                                                          str_new_account_name,
+                                                          account_id(account_referrer),
+                                                          account_id(account_registrar),
+                                                          true);
+                   
+                   account_object account_newly_created = wapiptr->get_account(str_new_account_name);
+                   wapiptr->transfer(account_id(account_registrar),
+                                     account_id(account_newly_created),
+                                     std::to_string(transfer_amount),
+                                     "DECENT",
+                                     "",
+                                     true);
+                   
+                   if (b_post_back)
+                   {
+                       curl_test_func("https://api.decent.ch/v1.0/subscribers/" +
+                                      str_user_id,
+                                      string("_format=json") +
+                                      "&appbundle_subscriber[brainPrivKey]=" + curl_escape(str_bki) +
+                                      "&appbundle_subscriber[wifPrivKey]=" + curl_escape(str_wif_priv_key) +
+                                      "&appbundle_subscriber[pubKey]=" + curl_escape(str_pub_key),
+                                      str_response);
+                       
+                       if (false == str_response.empty())
+                       {
+                           ++i_responses;
+                           cout << std::to_string(i_responses) << " : " << str_response << "\n";
+                       }
+                   }
+               }
+               
+               i_users_got += i_user_count;
+               
+               if (i_user_count < i_users_get)
+                   break;
+           }
+
            cout << endl;
            cout << "DONE!!!\n";
        }
