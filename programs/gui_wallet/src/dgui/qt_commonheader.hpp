@@ -45,7 +45,7 @@ struct SDigitalContent{
     DCT::DIG_CONT_TYPES type;
     std::string author;
     struct{
-        long long amount;
+        double amount;
         std::string asset_id;
         std::string symbol;
         std::string precision;
