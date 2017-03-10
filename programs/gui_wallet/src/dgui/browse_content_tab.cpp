@@ -84,6 +84,7 @@ Browse_content_tab::Browse_content_tab() : m_pTableWidget(new BTableWidget(1,s_c
     m_contentUpdateTimer.setInterval(1000);
     m_contentUpdateTimer.start();
     Connects();
+    ArrangeSize();
 }
 
 
@@ -96,6 +97,7 @@ Browse_content_tab::~Browse_content_tab()
 void Browse_content_tab::DigContCallback(_NEEDED_ARGS2_)
 {
     emit ShowDetailsOnDigContentSig(*a_pDigContent);
+    ArrangeSize();
 }
 
 void Browse_content_tab::maybeUpdateContent() {
@@ -105,11 +107,13 @@ void Browse_content_tab::maybeUpdateContent() {
     
     m_doUpdate = false;
     updateContents();
+    ArrangeSize();
 }
 
 void Browse_content_tab::onTextChanged(const QString& text) {
     
     m_doUpdate = true;
+    ArrangeSize();
 }
 
 void Browse_content_tab::PrepareTableWidgetHeaderGUI()
@@ -209,13 +213,10 @@ void Browse_content_tab::updateContents() {
                 dContents[i].price.amount /= GRAPHENE_BLOCKCHAIN_PRECISION;
                 
                 dContents[i].AVG_rating = contents[i]["AVG_rating"].get<double>()  / 1000;
-                
-                
-                obj->ArrangeSize();
             }
             
             obj->ShowDigitalContentsGUI(dContents);
-            
+            obj->ArrangeSize();
         } catch (std::exception& ex) {
             std::cout << ex.what() << std::endl;
         }
@@ -335,10 +336,7 @@ void Browse_content_tab::ShowDigitalContentsGUI(std::vector<SDigitalContent>& co
 
 void Browse_content_tab::ArrangeSize()
 {
-//    QSize tqsTableSize = m_pTableWidget->size();
-//    int nSizeForOne = tqsTableSize.width()/(DCF::NUM_OF_DIG_CONT_FIELDS)-1;
-//    for(int i(0); i<DCF::NUM_OF_DIG_CONT_FIELDS;++i){m_pTableWidget->setColumnWidth(i,nSizeForOne);}
-    m_pTableWidget->setStyleSheet("QTableView{border : 1px solid lightGray}");
+    m_pTableWidget->setStyleSheet("QTableView{border : 1px solid white}");
     m_pTableWidget->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     m_pTableWidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     

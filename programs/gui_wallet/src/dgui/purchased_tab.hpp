@@ -72,7 +72,7 @@ protected:
 private:
     QTimer  m_contentUpdateTimer;
     bool m_doUpdate = true;
-    
+    std::string last_contents;
 };
 
 }

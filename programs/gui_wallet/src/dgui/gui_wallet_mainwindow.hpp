@@ -142,8 +142,8 @@ namespace gui_wallet
 
         QString             m_default_stylesheet;
 
-        ContentDetailsGeneral m_dig_cont_detailsGenDlg;
-        ContentDetailsBase m_dig_cont_detailsBougDlg;
+        ContentDetailsGeneral* m_pdig_cont_detailsGenDlg;
+        ContentDetailsBase* m_pdig_cont_detailsBougDlg;
 
         std::vector<std::string>        m_user_ids;
     };

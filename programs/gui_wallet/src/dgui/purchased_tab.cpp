@@ -61,7 +61,7 @@ PurchasedTab::PurchasedTab()
     connect(&m_filterLineEditer, SIGNAL(textChanged(QString)), this, SLOT(onTextChanged(QString)));
     
     m_contentUpdateTimer.connect(&m_contentUpdateTimer, SIGNAL(timeout()), this, SLOT(maybeUpdateContent()));
-    m_contentUpdateTimer.setInterval(1000);
+    m_contentUpdateTimer.setInterval(3100);
     m_contentUpdateTimer.start();
 
 }
@@ -69,10 +69,6 @@ PurchasedTab::PurchasedTab()
 
 
 void PurchasedTab::maybeUpdateContent() {
-    if (!m_doUpdate) {
-        return;
-    }
-    
     m_doUpdate = false;
     updateContents();
 }
@@ -82,10 +78,7 @@ void PurchasedTab::onTextChanged(const QString& text) {
     m_doUpdate = true;
 }
 
-
-
 void PurchasedTab::updateContents() {
-    m_pTableWidget->setRowCount(1); //Remove everything but header
     
     
     auto& global_instance = gui_wallet::GlobalEvents::instance();
@@ -97,17 +90,29 @@ void PurchasedTab::updateContents() {
                this, NULL,
                +[](void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
         
+                   
+                   
+        PurchasedTab* obj = (PurchasedTab*)owner;
+  
         if (a_err != 0) {
             return;
         }
+                   
+        if(obj->last_contents == a_result)
+        {
+            return;
+        }
         
-        PurchasedTab* obj = (PurchasedTab*)owner;
         
         try {
             auto contents = json::parse(a_result);
-            
-            obj->m_pTableWidget->setRowCount(contents.size() + 1);
-            
+            obj->last_contents = a_result;
+            if (contents.size() + 1 != obj->m_pTableWidget->rowCount()) {
+              obj->m_pTableWidget->setRowCount(1); //Remove everything but header
+              obj->m_pTableWidget->setRowCount(contents.size() + 1);
+               
+            }
+           
             for (int i = 0; i < contents.size(); ++i) {
                 
                 auto content = contents[i];
