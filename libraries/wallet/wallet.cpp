@@ -2401,7 +2401,13 @@ public:
 
       decent::crypto::shamir_secret ss( co.quorum, co.key_parts.size() );
       decent::crypto::point message;
-      FC_ASSERT( _wallet.priv_el_gamal_key != decent::crypto::d_integer::Zero(), "Private ElGamal key is not imported. " );
+       
+       if (_wallet.priv_el_gamal_key == decent::crypto::d_integer::Zero()) { // Generate key if it does not exist
+           import_el_gamal_key(decent::crypto::generate_private_el_gamal_key());
+       }
+       
+
+//      FC_ASSERT( _wallet.priv_el_gamal_key != decent::crypto::d_integer::Zero(), "Private ElGamal key is not imported. " );
 
       for( const auto key_particle : bo.key_particles )
       {

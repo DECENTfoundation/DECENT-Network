@@ -738,5 +738,4 @@ GPLv3 and LGPLv3
  Public License Version 3.
 
 
-The PBC library is released under the GNU General Public License
-
+PBC, GMP and Libtool library is released under the GNU Lesser General Public License v3
