@@ -348,9 +348,9 @@ void Upload_tab::browseSamples() {
 
 
 void Upload_tab::uploadContent() {
-    std::string m_life_time = de->date().toString().toStdString();
-    std::string m_seeders   = seeders->currentText().toStdString();
-    std::string m_keyparts  = keyparts->currentText().toStdString();
+    std::string m_life_time = de->text().toStdString();
+    std::string m_seeders   = seeders->currentData().toString().toStdString();
+    std::string m_keyparts  = keyparts->currentData().toString().toStdString();
     std::string m_price     = price->text().toStdString();
     
 //    std::string lifetime = ((QDateEdit*)m_info_widget.cellWidget(0, 1))->text().toStdString();
@@ -444,8 +444,8 @@ void Upload_tab::uploadDone(void* a_clbkArg, int64_t a_err, const std::string& a
     // On success reset only these.
     m_title_text.setText("");
     m_description_text.setPlainText("");
-    ((QDateEdit*)m_info_widget.cellWidget(0, 1))->setDate(QDate::currentDate());
-    ((QLineEdit*)m_info_widget.cellWidget(2, 1))->setText("");
+    de->setDate(QDate::currentDate());
+    price->setText("");
     m_contentPath->setText("");
     m_samplesPath->setText("");
 
