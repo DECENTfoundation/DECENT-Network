@@ -464,6 +464,36 @@ void Mainwindow_gui_wallet::UpdateLockedStatus()
 }
 
 
+
+void Mainwindow_gui_wallet::ResumeDownloads()
+{
+    
+    auto& global_instance = gui_wallet::GlobalEvents::instance();
+    std::string str_current_username = global_instance.getCurrentUser();
+
+    std::string a_result;
+    RunTask("get_buying_history_objects_by_consumer_term \"" + str_current_username +"\" \"\" ", a_result);
+    
+    try {
+        auto contents = json::parse(a_result);
+        for (int i = 0; i < contents.size(); ++i) {
+            
+            auto content = contents[i];
+            std::string URI = contents[i]["URI"].get<std::string>();
+            std::string ignore_string;
+            RunTask("download_package \"" + URI +"\" ", ignore_string);            
+        }
+        
+        
+    } catch (std::exception& ex) {
+        std::cout << ex.what() << std::endl;
+    }
+    
+
+}
+
+
+
 void Mainwindow_gui_wallet::moveEvent(QMoveEvent * a_event)
 {
 }
@@ -687,6 +717,8 @@ void Mainwindow_gui_wallet::TaskDoneFuncGUI(void* a_clbkArg,int64_t a_err,const 
             aMessageBox.exec();
         }
         UpdateLockedStatus();
+        
+        ResumeDownloads();
     }
     else if(strstr(a_task.c_str(),"lock") == a_task.c_str())
     {
