@@ -204,6 +204,9 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
                                        GetFunctionPointerAsVoid(0, &Mainwindow_gui_wallet::ManagementNewFuncGUI));
     m_nJustConnecting = 1;
     ConnectSlot();
+    
+    m_pdig_cont_detailsGenDlg = nullptr;
+    m_pdig_cont_detailsBougDlg = nullptr;
 
 }
 
@@ -214,6 +217,11 @@ Mainwindow_gui_wallet::~Mainwindow_gui_wallet()
     DestroyUiInterfaceOfWallet();
     delete m_pInfoTextEdit;
     delete m_pcInfoDlg;
+    
+    if (m_pdig_cont_detailsGenDlg)
+        delete m_pdig_cont_detailsGenDlg;
+    if (m_pdig_cont_detailsBougDlg)
+        delete m_pdig_cont_detailsBougDlg;
 }
 
 
@@ -367,11 +375,17 @@ void Mainwindow_gui_wallet::ShowDetailsOnDigContentSlot(SDigitalContent a_dig_co
     switch(a_dig_cont.type)
     {
     case DCT::GENERAL:
-        m_dig_cont_detailsGenDlg.execCDD(a_dig_cont);
+        if (m_pdig_cont_detailsGenDlg)
+            delete m_pdig_cont_detailsGenDlg;
+        m_pdig_cont_detailsGenDlg = new ContentDetailsGeneral();
+        m_pdig_cont_detailsGenDlg->execCDD(a_dig_cont);
         break;
     case DCT::BOUGHT:
     case DCT::WAITING_DELIVERY:
-        m_dig_cont_detailsBougDlg.execCDB(a_dig_cont);
+        if (nullptr == m_pdig_cont_detailsBougDlg)
+            delete m_pdig_cont_detailsBougDlg;
+        m_pdig_cont_detailsBougDlg = new ContentDetailsBase();
+        m_pdig_cont_detailsBougDlg->execCDB(a_dig_cont);
         break;
     default:
         break;
