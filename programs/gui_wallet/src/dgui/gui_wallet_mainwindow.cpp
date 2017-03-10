@@ -191,7 +191,6 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
             this,SLOT(ShowDetailsOnDigContentSlot(SDigitalContent)));
 
     
-    connect(&m_dig_cont_detailsGenDlg, SIGNAL(ContentWasBought()), this, SLOT(ContentWasBoughtSlot()));
     
     
     setWindowTitle(tr("DECENT - Blockchain Content Distribution"));
@@ -386,6 +385,9 @@ void Mainwindow_gui_wallet::ShowDetailsOnDigContentSlot(SDigitalContent a_dig_co
         if (m_pdig_cont_detailsGenDlg)
             delete m_pdig_cont_detailsGenDlg;
         m_pdig_cont_detailsGenDlg = new ContentDetailsGeneral();
+        
+        connect(m_pdig_cont_detailsGenDlg, SIGNAL(ContentWasBought()), this, SLOT(ContentWasBoughtSlot()));
+
         m_pdig_cont_detailsGenDlg->execCDD(a_dig_cont);
         break;
     case DCT::BOUGHT:
