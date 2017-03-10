@@ -235,7 +235,9 @@ int main(int argc, char* argv[])
             kill(pid, SIGTERM); //Kill decentd
         }, SIGTERM);
         
-        
+        QDir dir(argv[0]);
+        QCoreApplication::setLibraryPaths(QStringList(dir.absolutePath()));
+
         gui_wallet::application aApp(argc, argv);
         
         

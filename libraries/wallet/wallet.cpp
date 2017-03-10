@@ -2997,12 +2997,12 @@ bool wallet_api::import_key(string account_name_or_id, string wif_key)
    if (!optional_private_key)
       FC_THROW("Invalid private key");
    string base58_public_key = optional_private_key->get_public_key().to_base58();
-   copy_wallet_file( "before-import-key-" + base58_public_key );
+//   copy_wallet_file( "before-import-key-" + base58_public_key );
 
    if( my->import_key(account_name_or_id, wif_key) )
    {
       save_wallet_file();
-      copy_wallet_file( "after-import-key-" + base58_public_key );
+//      copy_wallet_file( "after-import-key-" + base58_public_key );
       return true;
    }
    return false;
