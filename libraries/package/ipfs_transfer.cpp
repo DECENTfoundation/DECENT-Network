@@ -179,11 +179,11 @@ void ipfs_transfer::download_package(transfer_id id, const std::string& url, tra
 	    	myfile.close();
 
             downloaded_size += file_size;
-	    	_last_progress = transfer_progress(total_size, downloaded_size, 0);
+	    	_last_progress = transfer_progress(total_size, downloaded_size, 0, "Downloading...");
 	    	_listener->on_download_progress(_id, _last_progress);
 		}
 
-        _last_progress = transfer_progress(total_size, total_size, 0);
+        _last_progress = transfer_progress(total_size, total_size, 0, "Download Finished");
 		_listener->on_download_finished(_id, package_object((package_manager::instance().get_packages_path() / package_name).string()));
 
 

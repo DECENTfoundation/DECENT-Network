@@ -68,12 +68,13 @@ public:
     typedef int transfer_id;
 
     struct transfer_progress {
-        transfer_progress() : total_bytes(0), current_bytes(0), current_speed(0) { }
-		transfer_progress(int tb, int cb, int cs) : total_bytes(tb), current_bytes(cb), current_speed(cs) { }
+        transfer_progress() : total_bytes(0), current_bytes(0), current_speed(0), str_status("No Status") { }
+		transfer_progress(int tb, int cb, int cs, const std::string& status) : total_bytes(tb), current_bytes(cb), current_speed(cs), str_status(status) { }
 
 		int total_bytes;
 		int current_bytes;
 		int current_speed; // Bytes per second
+		std::string str_status;
 	};
 
 	class transfer_listener {

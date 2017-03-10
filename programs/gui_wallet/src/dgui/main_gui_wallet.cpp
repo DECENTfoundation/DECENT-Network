@@ -46,6 +46,9 @@
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
 
+#include <boost/interprocess/sync/interprocess_condition.hpp>
+#include <boost/interprocess/sync/scoped_lock.hpp>
+
 #include <iostream>
 #include <fstream>
 
@@ -60,9 +63,6 @@
 
 using namespace graphene;
 namespace bpo = boost::program_options;
-
-
-volatile bool decent_d_ready = false;
 
 extern InGuiThreatCaller* s_pWarner;
 
@@ -174,10 +174,10 @@ int runDecentD(int argc, char** argv) {
       bpo::notify(options);
       node->initialize(data_dir, options);
       node->initialize_plugins( options );
-
+       
       node->startup();
       node->startup_plugins();
-
+              
       fc::promise<int>::ptr exit_promise = new fc::promise<int>("UNIX Signal Handler");
 
       fc::set_signal_handler([&exit_promise](int signal) {
@@ -193,7 +193,6 @@ int runDecentD(int argc, char** argv) {
       ilog("Started witness node on a chain with ${h} blocks.", ("h", node->chain_database()->head_block_num()));
       ilog("Chain ID is ${id}", ("id", node->chain_database()->get_chain_id()) );
       
-       decent_d_ready = true;
        
       int signal = exit_promise->wait();
       ilog("Exiting from signal ${n}", ("n", signal));
@@ -219,7 +218,6 @@ int runDecentD(int argc, char** argv) {
 
 int main(int argc, char* argv[])
 {
-    decent_d_ready = false;
     
     pid_t  pid;
     pid = fork();
@@ -227,9 +225,20 @@ int main(int argc, char* argv[])
         runDecentD(argc, argv);
     } else {
         
-        gui_wallet::application aApp(argc, argv);
+        
+        fc::set_signal_handler([pid](int signal) {
+            kill(pid, SIGINT); //Kill decentd
 
-        usleep(3000);
+        }, SIGINT);
+        
+        fc::set_signal_handler([pid](int signal) {
+            kill(pid, SIGTERM); //Kill decentd
+        }, SIGTERM);
+        
+        
+        gui_wallet::application aApp(argc, argv);
+        
+        
         
         try{
             gui_wallet::Mainwindow_gui_wallet aMainWindow;

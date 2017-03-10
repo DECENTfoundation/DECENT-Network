@@ -62,7 +62,7 @@ namespace gui_wallet
         
     protected slots:
         void CurrentUserChangedSlot(const QString&);
-
+        void ContentWasBoughtSlot();
     protected slots:/* Instead of these one line slots
                      *, probably should be used lambda functions?
                      * Is it possible to do?

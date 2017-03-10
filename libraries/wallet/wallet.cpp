@@ -2200,6 +2200,7 @@ public:
 
          status.total_download_bytes = progress.total_bytes;
          status.received_download_bytes = progress.current_bytes;
+          status.status_text = progress.str_status;
 
          return status;
       } FC_CAPTURE_AND_RETHROW( (consumer)(URI) )
@@ -2207,7 +2208,7 @@ public:
 
 
 
-    void download_content(string consumer, string URI, string content_dir, bool broadcast) {
+    void download_content(string consumer, string URI, bool broadcast) {
         
         try {
             FC_ASSERT( !is_locked() );
@@ -2240,7 +2241,7 @@ public:
             //stats_listener.ipfs_IDs = list_seeders_ipfs_IDs( URI);
             package_manager::instance().download_package(URI, empty_transfer_listener::instance(), empty_report_stats_listener::instance());
             
-        } FC_CAPTURE_AND_RETHROW( (consumer)(URI)(content_dir)(broadcast) )
+        } FC_CAPTURE_AND_RETHROW( (consumer)(URI)(broadcast) )
     }
 
 
@@ -3604,9 +3605,9 @@ wallet_api::submit_content_new(string author, string content_dir, string samples
 }
 
 void
-wallet_api::download_content(string consumer, string URI, string content_dir, bool broadcast)
+wallet_api::download_content(string consumer, string URI, bool broadcast)
 {
-   return my->download_content(consumer, URI, content_dir, broadcast);
+   return my->download_content(consumer, URI, broadcast);
 }
 
 optional<content_download_status> wallet_api::get_download_status(string consumer, string URI)

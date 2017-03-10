@@ -218,6 +218,8 @@ void PurchasedTab::updateContents() {
                 
                 if (!content["delivered"].get<bool>()) {
                     status_text = "Waiting for delivery";
+                } else {
+                    status_text = status_text + tr(" ") + QString::fromStdString(download_status["status_text"].get<std::string>());
                 }
 
                 obj->m_pTableWidget->setItem(i + 1, 6, new QTableWidgetItem(status_text));

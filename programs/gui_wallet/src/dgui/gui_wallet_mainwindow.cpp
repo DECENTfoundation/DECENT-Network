@@ -190,7 +190,10 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
             SIGNAL(ShowDetailsOnDigContentSig(SDigitalContent)),
             this,SLOT(ShowDetailsOnDigContentSlot(SDigitalContent)));
 
-
+    
+    connect(&m_dig_cont_detailsGenDlg, SIGNAL(ContentWasBought()), this, SLOT(ContentWasBoughtSlot()));
+    
+    
     setWindowTitle(tr("DECENT - Blockchain Content Distribution"));
     
     centralWidget()->layout()->setContentsMargins(0, 0, 0, 0);
@@ -205,6 +208,11 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
     m_nJustConnecting = 1;
     ConnectSlot();
 
+}
+
+void Mainwindow_gui_wallet::ContentWasBoughtSlot() {
+    
+    m_pCentralWidget->SetMyCurrentTabIndex(4);
 }
 
 
@@ -533,7 +541,6 @@ void Mainwindow_gui_wallet::TaskDoneFuncGUI(void* a_clbkArg,int64_t a_err,const 
             QMessageBox aMessageBox(QMessageBox::Critical,
                                     QObject::tr("error"),QObject::tr(a_task.c_str()),
                                     QMessageBox::Ok,this);
-            //aMessageBox.setStyleSheet(QMessageBox::);
             aMessageBox.setDetailedText(QObject::tr(a_result.c_str()));
             aMessageBox.exec();
             m_ConnectDlg.GetTableWidget(ConnectDlg::CONNECT_BUTTON_FIELD, 1)->setEnabled(true);

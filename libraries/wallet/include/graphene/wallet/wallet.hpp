@@ -151,6 +151,7 @@ struct content_download_status
    int          received_key_parts;
    int          total_download_bytes;
    int          received_download_bytes;
+   std::string  status_text;
 };
 
 
@@ -1364,7 +1365,7 @@ class wallet_api
      * @return
      * @ingroup WalletCLI
      */
-     void download_content(string consumer, string URI, string content_dir, bool broadcast = false);
+     void download_content(string consumer, string URI, bool broadcast = false);
     
     /**
      *
@@ -1690,6 +1691,7 @@ FC_REFLECT (graphene::wallet::content_download_status,
               (received_key_parts)
               (total_download_bytes)
               (received_download_bytes)
+              (status_text)
             )
 
 FC_REFLECT( graphene::wallet::exported_account_keys, (account_name)(encrypted_private_keys)(public_keys) )
