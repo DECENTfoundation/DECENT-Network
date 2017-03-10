@@ -1,42 +1,29 @@
-/Users/richardroznovjak/decent/decent-core/DECENT-Network/artifacts/prefix/lib/libgraphene_db.a
-/Users/richardroznovjak/decent/decent-core/DECENT-Network/artifacts/prefix/lib/libdeterministic_openssl_rand.a
-/Users/richardroznovjak/decent/decent-core/DECENT-Network/artifacts/prefix/lib/libdecent_encrypt.a
-/Users/richardroznovjak/decent/decent-core/DECENT-Network/artifacts/prefix/lib/libgraphene_chain.a
-/Users/richardroznovjak/decent/decent-core/DECENT-Network/artifacts/prefix/lib/libgraphene_egenesis_decent.a
-/Users/richardroznovjak/decent/decent-core/DECENT-Network/artifacts/prefix/lib/libgraphene_net.a
-/Users/richardroznovjak/decent/decent-core/DECENT-Network/artifacts/prefix/lib/libgraphene_time.a
-/Users/richardroznovjak/decent/decent-core/DECENT-Network/artifacts/prefix/lib/libgraphene_utilities.a
-/Users/richardroznovjak/decent/decent-core/DECENT-Network/artifacts/prefix/lib/libgraphene_app.a
-/Users/richardroznovjak/decent/decent-core/DECENT-Network/artifacts/prefix/lib/libpackage_manager.a
-/Users/richardroznovjak/decent/decent-core/DECENT-Network/artifacts/prefix/lib/libgraphene_witness.a
-/Users/richardroznovjak/decent/decent-core/DECENT-Network/artifacts/prefix/lib/libgraphene_account_history.a
-/Users/richardroznovjak/decent/decent-core/DECENT-Network/artifacts/prefix/lib/libgraphene_market_history.a
-/Users/richardroznovjak/decent/decent-core/DECENT-Network/artifacts/prefix/lib/libgraphene_delayed_node.a
-/Users/richardroznovjak/decent/decent-core/DECENT-Network/artifacts/prefix/lib/libgraphene_debug_witness.a
-/Users/richardroznovjak/decent/decent-core/DECENT-Network/artifacts/prefix/lib/libdecent_seeding.a
-/Users/richardroznovjak/decent/decent-core/DECENT-Network/artifacts/prefix/lib/libgraphene_wallet.a
-/Users/richardroznovjak/decent/decent-core/DECENT-Network/artifacts/prefix/bin/cli_wallet
-/Users/richardroznovjak/decent/decent-core/DECENT-Network/artifacts/prefix/bin/account_generator
-/Users/richardroznovjak/decent/decent-core/DECENT-Network/artifacts/prefix/bin/gui_wallet.app/Contents/Info.plist
-/Users/richardroznovjak/decent/decent-core/DECENT-Network/artifacts/prefix/bin/gui_wallet.app/Contents/MacOS/gui_wallet
-/Users/richardroznovjak/decent/decent-core/DECENT-Network/artifacts/prefix/bin/gui_wallet.app/Contents/Resources/desktop.icns
-/Users/richardroznovjak/decent/decent-core/DECENT-Network/artifacts/prefix/./images/balance.png
-/Users/richardroznovjak/decent/decent-core/DECENT-Network/artifacts/prefix/./images/browse.svg
-/Users/richardroznovjak/decent/decent-core/DECENT-Network/artifacts/prefix/./images/buy.png
-/Users/richardroznovjak/decent/decent-core/DECENT-Network/artifacts/prefix/./images/buy_button_image.png
-/Users/richardroznovjak/decent/decent-core/DECENT-Network/artifacts/prefix/./images/dc_logo.jpg
-/Users/richardroznovjak/decent/decent-core/DECENT-Network/artifacts/prefix/./images/decent_logo.png
-/Users/richardroznovjak/decent/decent-core/DECENT-Network/artifacts/prefix/./images/decent_logo.svg
-/Users/richardroznovjak/decent/decent-core/DECENT-Network/artifacts/prefix/./images/desktop_icon.png
-/Users/richardroznovjak/decent/decent-core/DECENT-Network/artifacts/prefix/./images/globe.jpg
-/Users/richardroznovjak/decent/decent-core/DECENT-Network/artifacts/prefix/./images/green_asterix.png
-/Users/richardroznovjak/decent/decent-core/DECENT-Network/artifacts/prefix/./images/info1.svg
-/Users/richardroznovjak/decent/decent-core/DECENT-Network/artifacts/prefix/./images/info1_white.svg
-/Users/richardroznovjak/decent/decent-core/DECENT-Network/artifacts/prefix/./images/man_logo.jpg
-/Users/richardroznovjak/decent/decent-core/DECENT-Network/artifacts/prefix/./images/search.svg
-/Users/richardroznovjak/decent/decent-core/DECENT-Network/artifacts/prefix/./images/send.png
-/Users/richardroznovjak/decent/decent-core/DECENT-Network/artifacts/prefix/./images/user.png
-/Users/richardroznovjak/decent/decent-core/DECENT-Network/artifacts/prefix/./images/white_asterix.png
-/Users/richardroznovjak/decent/decent-core/DECENT-Network/artifacts/prefix/bin/decentd
-/Users/richardroznovjak/decent/decent-core/DECENT-Network/artifacts/prefix/bin/js_operation_serializer
-/Users/richardroznovjak/decent/decent-core/DECENT-Network/artifacts/prefix/bin/size_checker
+-/Users/vahe/dev/DECENTfoundation/DECENT-Network/artifacts/install/lib/libgraphene_db.a
+ -/Users/vahe/dev/DECENTfoundation/DECENT-Network/artifacts/install/lib/libdeterministic_openssl_rand.a
+ -/Users/vahe/dev/DECENTfoundation/DECENT-Network/artifacts/install/lib/libdecent_encrypt.a
+ -/Users/vahe/dev/DECENTfoundation/DECENT-Network/artifacts/install/lib/libgraphene_chain.a
+ -/Users/vahe/dev/DECENTfoundation/DECENT-Network/artifacts/install/bin/embed_genesis
+ -/Users/vahe/dev/DECENTfoundation/DECENT-Network/artifacts/install/lib/libgraphene_egenesis_none.a
+ -/Users/vahe/dev/DECENTfoundation/DECENT-Network/artifacts/install/lib/libgraphene_egenesis_brief.a
+ -/Users/vahe/dev/DECENTfoundation/DECENT-Network/artifacts/install/lib/libgraphene_egenesis_full.a
+ -/Users/vahe/dev/DECENTfoundation/DECENT-Network/artifacts/install/lib/libgraphene_net.a
+ -/Users/vahe/dev/DECENTfoundation/DECENT-Network/artifacts/install/lib/libgraphene_time.a
+ -/Users/vahe/dev/DECENTfoundation/DECENT-Network/artifacts/install/lib/libgraphene_utilities.a
+ -/Users/vahe/dev/DECENTfoundation/DECENT-Network/artifacts/install/lib/libgraphene_app.a
+ -/Users/vahe/dev/DECENTfoundation/DECENT-Network/artifacts/install/lib/libpackage_manager.a
+ -/Users/vahe/dev/DECENTfoundation/DECENT-Network/artifacts/install/lib/libgraphene_witness.a
+ -/Users/vahe/dev/DECENTfoundation/DECENT-Network/artifacts/install/lib/libgraphene_account_history.a
+ -/Users/vahe/dev/DECENTfoundation/DECENT-Network/artifacts/install/lib/libgraphene_market_history.a
+ -/Users/vahe/dev/DECENTfoundation/DECENT-Network/artifacts/install/lib/libgraphene_delayed_node.a
+ -/Users/vahe/dev/DECENTfoundation/DECENT-Network/artifacts/install/lib/libgraphene_debug_witness.a
+ -/Users/vahe/dev/DECENTfoundation/DECENT-Network/artifacts/install/lib/libdecent_seeding.a
+ -/Users/vahe/dev/DECENTfoundation/DECENT-Network/artifacts/install/lib/libgraphene_wallet.a
+ -/Users/vahe/dev/DECENTfoundation/DECENT-Network/artifacts/install/bin/cli_wallet
+ -/Users/vahe/dev/DECENTfoundation/DECENT-Network/artifacts/install/bin/genesis_update
+ -/Users/vahe/dev/DECENTfoundation/DECENT-Network/artifacts/install/bin/get_dev_key
+ -/Users/vahe/dev/DECENTfoundation/DECENT-Network/artifacts/install/bin/witness_node
+ -/Users/vahe/dev/DECENTfoundation/DECENT-Network/artifacts/install/bin/debug_node
+ -/Users/vahe/dev/DECENTfoundation/DECENT-Network/artifacts/install/bin/delayed_node
+ -/Users/vahe/dev/DECENTfoundation/DECENT-Network/artifacts/install/bin/js_operation_serializer
+ -/Users/vahe/dev/DECENTfoundation/DECENT-Network/artifacts/install/bin/size_checker
+ -/Users/vahe/dev/DECENTfoundation/DECENT-Network/artifacts/install/bin/generate_empty_blocks
