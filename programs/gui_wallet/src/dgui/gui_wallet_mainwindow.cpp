@@ -655,14 +655,23 @@ void Mainwindow_gui_wallet::TaskDoneFuncGUI(void* a_clbkArg,int64_t a_err,const 
     
     else if(strstr(a_task.c_str(),"import_key ") == a_task.c_str())
     {
+        if (a_result.find("exception") != std::string::npos) {
+            QMessageBox aMessageBox(QMessageBox::Critical,
+                                    QObject::tr("Error"),
+                                    QObject::tr("Can not import key."),
+                                    QMessageBox::Ok,
+                                    this);
+            aMessageBox.setDetailedText(QObject::tr(a_result.c_str()));
+            aMessageBox.exec();
+        }
         DisplayWalletContentGUI();
     }
     else if(strstr(a_task.c_str(),"unlock ") == a_task.c_str())
     {
         if (a_err) {
             QMessageBox aMessageBox(QMessageBox::Critical,
-                                    QObject::tr("error"),
-                                    QObject::tr("Unable to unlock the wallet!"),
+                                    QObject::tr("Error"),
+                                    QObject::tr("Unable to unlock the wallet."),
                                     QMessageBox::Ok,
                                     this);
             aMessageBox.setDetailedText(QObject::tr(a_result.c_str()));
@@ -674,8 +683,8 @@ void Mainwindow_gui_wallet::TaskDoneFuncGUI(void* a_clbkArg,int64_t a_err,const 
     {
         if (a_err) {
             QMessageBox aMessageBox(QMessageBox::Critical,
-                                    QObject::tr("error"),
-                                    QObject::tr("Unable to lock the wallet!"),
+                                    QObject::tr("Error"),
+                                    QObject::tr("Unable to lock the wallet."),
                                     QMessageBox::Ok,
                                     this);
             aMessageBox.setDetailedText(QObject::tr(a_result.c_str()));

@@ -356,10 +356,10 @@ void Upload_tab::uploadContent() {
     std::string m_keyparts  = keyparts->currentText().toStdString();
     std::string m_price     = price->text().toStdString();
     
-    std::string lifetime = ((QDateEdit*)m_info_widget.cellWidget(0, 1))->text().toStdString();
-    std::string seeders = ((QComboBox*)m_info_widget.cellWidget(0, 3))->currentData().toString().toStdString();
-    std::string keyparts = ((QComboBox*)m_info_widget.cellWidget(0, 5))->currentData().toString().toStdString();
-    std::string price = ((QLineEdit*)m_info_widget.cellWidget(2, 1))->text().toStdString();
+//    std::string lifetime = ((QDateEdit*)m_info_widget.cellWidget(0, 1))->text().toStdString();
+//    std::string seeders = ((QComboBox*)m_info_widget.cellWidget(0, 3))->currentData().toString().toStdString();
+//    std::string keyparts = ((QComboBox*)m_info_widget.cellWidget(0, 5))->currentData().toString().toStdString();
+//    std::string price = ((QLineEdit*)m_info_widget.cellWidget(2, 1))->text().toStdString();
     std::string assetName = "DCT";
     std::string path = m_contentPath->text().toStdString();
     std::string samples_path = m_samplesPath->text().toStdString();
@@ -367,7 +367,7 @@ void Upload_tab::uploadContent() {
     std::string title = m_title_text.text().toStdString();
     std::string desc = m_description_text.toPlainText().toStdString();
     
-    if (price.empty()) {
+    if (m_price.empty()) {
         ALERT("Please specify price");
         return;
     }
@@ -419,9 +419,9 @@ void Upload_tab::uploadContent() {
     submitCommand += " \"" + samples_path + "\"";                       //Samples
     submitCommand += " \"magnet\"";                                     //Protocol
     submitCommand += " " + assetName;                                   //price_asset_name
-    submitCommand += " " + price;                                       //price_amount
-    submitCommand += " [" + seeders + "]";                              //seeders
-    submitCommand += " \"" + lifetime + "T23:59:59\"";                  //expiration
+    submitCommand += " " + m_price;                                       //price_amount
+    submitCommand += " [" + m_seeders + "]";                              //seeders
+    submitCommand += " \"" + m_life_time + "T23:59:59\"";                  //expiration
     submitCommand += " DCT";                                            //publishing_fee_asset
     submitCommand += " 300";                                            //publishing_fee_amount
     submitCommand += " \"" + escape_string(synopsis) + "\"";            //synopsis
