@@ -49,7 +49,8 @@ namespace gui_wallet
     private:        
         
         void UpdateLockedStatus();
-
+        void ResumeDownloads();
+        
         void CliCallbackFnc(void*arg,const std::string& task);
         int GetDigitalContentsFromVariant(DCT::DIG_CONT_TYPES a_type,
                                          std::vector<SDigitalContent>& acContents,

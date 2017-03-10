@@ -63,6 +63,7 @@ public slots:
     void onTextChanged(const QString& text);
     void updateContents();
     void maybeUpdateContent();
+    void extractPackage();
 
 protected:
     QVBoxLayout     m_main_layout;

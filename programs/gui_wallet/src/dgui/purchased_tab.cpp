@@ -10,6 +10,8 @@
 
 #include "purchased_tab.hpp"
 #include <QHeaderView>
+#include <QPushButton>
+#include <QFileDialog>
 #include <iostream>
 #include <graphene/chain/config.hpp>
 #include "json.hpp"
@@ -231,10 +233,22 @@ void PurchasedTab::updateContents() {
             
             double progress = (0.1 * received_key_parts) / total_key_parts + (0.9 * received_download_bytes) / total_download_bytes;
             progress *= 100; // Percent
-            m_pTableWidget->setItem(i + 1, 7, new QTableWidgetItem(QString::number(progress) + "%"));
+            
+            if (progress != 100) {
+                m_pTableWidget->setItem(i + 1, 7, new QTableWidgetItem(QString::number(progress) + "%"));
+            } else {
+                QPushButton* btn = new QPushButton();
+                btn->setText("Extract");
+                btn->setProperty("id", QVariant::fromValue(QString::fromStdString(content["id"].get<std::string>())));
+                btn->setProperty("hash", QVariant::fromValue(QString::fromStdString(dcontent_json["_hash"].get<std::string>())));
+                btn->setProperty("URI", QVariant::fromValue(QString::fromStdString(content["URI"].get<std::string>())));
+                
+                connect(btn, SIGNAL(pressed()), this, SLOT(extractPackage()));
+                m_pTableWidget->setCellWidget(i+1, 7, btn);
+            }
 
             
-            for(int j = 1; j < s_cnNumberOfCols; ++j)
+            for(int j = 1; j < s_cnNumberOfCols - 1; ++j)
             {
                 m_pTableWidget->item(i + 1, j)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
                 m_pTableWidget->item(i + 1, j)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
@@ -251,6 +265,21 @@ void PurchasedTab::updateContents() {
     
     
 }
+
+void PurchasedTab::extractPackage() {
+    QPushButton* btn = (QPushButton*)sender();
+    std::string id = btn->property("id").toString().toStdString();
+    std::string URI = btn->property("URI").toString().toStdString();
+    std::string hash = btn->property("hash").toString().toStdString();
+    
+    QString sampleDir = QFileDialog::getExistingDirectory(this, tr("Select directory to extract"), "~", QFileDialog::DontResolveSymlinks);
+
+    std::string key, dummy;
+    RunTask("restore_encryption_key \"" + id + "\"", key);
+    
+    RunTask("extract_package \"" + hash + "\" \"" + sampleDir.toStdString() + "\" " + key, dummy);
+}
+
 
 void PurchasedTab::DigContCallback(_NEEDED_ARGS2_)
 {
