@@ -194,25 +194,26 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details)
     }
     
     std::string e_str = "";
-    
     if (a_cnt_details.type == DCT::BOUGHT || a_cnt_details.type == DCT::WAITING_DELIVERY) {
-        e_str = std::to_string(m_pContentInfo->times_bougth);
+        e_str = (m_pContentInfo->expiration);
     }
     else
     {
         QDateTime time = QDateTime::fromString(QString::fromStdString(m_pContentInfo->expiration), "yyyy-MM-ddTHH:mm:ss");
         e_str = CalculateRemainingTime(QDateTime::currentDateTime(), time);
     }
-        
+    
     m_vLabels[1].setText(tr(m_pContentInfo->author.c_str()));
-    m_vLabels[3].setText(tr(e_str.c_str()));
-    std::string creat;
+        std::string creat;
     for(int i = 0; i < m_pContentInfo->created.find("T"); ++i)
     {
         creat.push_back(m_pContentInfo->created[i]);
     }
     m_vLabels[5].setText(tr(creat.c_str()));
     
+   
+    m_vLabels[3].setText(tr(creat.c_str()));
+
     
     
     std::string str_price = std::to_string(a_cnt_details.price.amount) + " DCT";
