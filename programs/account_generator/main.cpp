@@ -407,7 +407,8 @@ int main( int argc, char** argv )
                        account_newly_created = wapiptr->get_account(str_new_account_name);
                    }
                    
-                   if (b_post_back)
+                   if (b_post_back &&
+                       false == b_user_already_exists)
                    {
                        curl_test_func("https://api.decent.ch/v1.0/subscribers/" +
                                       str_user_id,
