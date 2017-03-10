@@ -70,7 +70,7 @@ DESTDIR = $$SYSTEM_PATH/bin
 OBJECTS_DIR = $$SYSTEM_PATH/.objects
 CONFIG += debug
 CONFIG += c++11
-#greaterThan(QT_MAJOR_VERSION, 4):QT += widgets
+greaterThan(QT_MAJOR_VERSION, 4):QT += widgets
 #QT -= core
 #QT -= gui
 
