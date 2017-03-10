@@ -232,6 +232,7 @@ void PurchasedTab::updateContents() {
                 
                 
                 double progress = (0.1 * received_key_parts) / total_key_parts + (0.9 * received_download_bytes) / total_download_bytes;
+                progress *= 100; // Percent
                 obj->m_pTableWidget->setItem(i + 1, 7, new QTableWidgetItem(QString::number(progress) + "%"));
 
                 

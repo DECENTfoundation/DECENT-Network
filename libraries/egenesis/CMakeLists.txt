@@ -40,9 +40,9 @@ add_custom_command(
       "${CMAKE_CURRENT_SOURCE_DIR}/egenesis_full.cpp.tmpl"
       embed_genesis )
 
-add_library( graphene_egenesis_brief "egenesis_brief.cpp" include/graphene/egenesis/egenesis.hpp )
-add_library( graphene_egenesis_full  "egenesis_full.cpp" include/graphene/egenesis/egenesis.hpp )
-add_library( graphene_egenesis_decent "egenesis_decent.cpp" include/graphene/egenesis/egenesis.hpp )
+add_library( graphene_egenesis_brief "${CMAKE_CURRENT_BINARY_DIR}/egenesis_brief.cpp" include/graphene/egenesis/egenesis.hpp )
+add_library( graphene_egenesis_full  "${CMAKE_CURRENT_BINARY_DIR}/egenesis_full.cpp" include/graphene/egenesis/egenesis.hpp )
+add_library( graphene_egenesis_decent "${CMAKE_CURRENT_SOURCE_DIR}/egenesis_decent.cpp" include/graphene/egenesis/egenesis.hpp )
 
 target_link_libraries( graphene_egenesis_brief graphene_chain fc )
 target_link_libraries( graphene_egenesis_full graphene_chain fc )

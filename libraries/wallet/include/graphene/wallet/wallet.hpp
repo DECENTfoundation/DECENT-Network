@@ -1523,7 +1523,7 @@ class wallet_api
        * @return buying_objects corresponding to the provided consumer
        * @ingroup WalletCLI
        */
-      optional<buying_object> get_buying_by_consumer_URI( const string& account, const string & URI )const;
+      optional<buying_object> get_buying_by_consumer_URI( const string& account_id_or_name, const string & URI )const;
 
       /**
        * @brief Get rating given by a consumer to a content
@@ -1548,7 +1548,7 @@ class wallet_api
        * @return The contents corresponding to the provided author
        * @ingroup WalletCLI
        */
-      vector<content_object> list_content_by_author( const account_id_type& author )const;
+      vector<content_object> list_content_by_author( const string& account_id_or_name )const;
 
     /**
      * @brief Get a list of contents ordered alphabetically by URI strings
@@ -1677,8 +1677,6 @@ FC_REFLECT( graphene::wallet::wallet_data,
             (ws_server)
             (ws_user)
             (ws_password)
-            (packages_path)
-            (libtorrent_config_path)
           )
 
 FC_REFLECT( graphene::wallet::brain_key_info,
@@ -1756,11 +1754,11 @@ FC_API( graphene::wallet::wallet_api,
         (transfer)
         (transfer2)
         (get_transaction_id)
-        (create_asset)
-        (update_asset)
+        //(create_asset)
+        //(update_asset)
         (update_monitored_asset)
         (publish_asset_feed)
-        (issue_asset)
+        //(issue_asset)
         (get_asset)
         (get_monitored_asset_data)
         (get_witness)

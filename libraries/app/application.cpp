@@ -904,11 +904,15 @@ application::~application()
 void application::set_program_options(boost::program_options::options_description& command_line_options,
                                       boost::program_options::options_description& configuration_file_options) const
 {
+   vector<string> seed_nodes;
+   seed_nodes.push_back(string("185.8.165.21:33142"));
    configuration_file_options.add_options()
          ("p2p-endpoint", bpo::value<string>(), "Endpoint for P2P node to listen on")
-         ("seed-node,s", bpo::value<vector<string>>()->composing(), "P2P nodes to connect to on startup (may specify multiple times)")
+
+    ("seed-node,s", bpo::value<vector<string>>()->composing()->default_value(std::vector<std::string>(), "185.8.165.21:33142"), "P2P nodes to connect to on startup (may specify multiple times)")
+
          ("checkpoint,c", bpo::value<vector<string>>()->composing(), "Pairs of [BLOCK_NUM,BLOCK_ID] that should be enforced as checkpoints.")
-         ("rpc-endpoint", bpo::value<string>()->implicit_value("127.0.0.1:8090"), "Endpoint for websocket RPC to listen on")
+         ("rpc-endpoint", bpo::value<string>()->default_value("127.0.0.1:8090"), "Endpoint for websocket RPC to listen on")
          ("rpc-tls-endpoint", bpo::value<string>()->implicit_value("127.0.0.1:8089"), "Endpoint for TLS websocket RPC to listen on")
          ("enable-permessage-deflate", "Enable support for per-message deflate compression in the websocket servers "
                                        "(--rpc-endpoint and --rpc-tls-endpoint), disabled by default")

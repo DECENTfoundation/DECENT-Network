@@ -25,6 +25,8 @@
 
 #include <graphene/chain/config.hpp>
 
+#include <boost/filesystem.hpp>
+
 #include <cryptopp/integer.h>
 #include <cryptopp/aes.h>
 #include <cryptopp/filters.h>
@@ -374,6 +376,11 @@ void Upload_tab::uploadContent() {
         ALERT("Please specify path");
         return;
     }
+    
+    if (boost::filesystem::file_size(path) > 100 * 1024 * 1024) {
+        ALERT("Content size is limited in Testnet 0.1 to 100MB");
+        return;
+    }
 
     if (title.empty()) {
         ALERT("Please specify title");
@@ -410,12 +417,12 @@ void Upload_tab::uploadContent() {
     submitCommand += " " + GlobalEvents::instance().getCurrentUser();   //author
     submitCommand += " \"" + path + "\"";                               //URI
     submitCommand += " \"" + samples_path + "\"";                       //Samples
-    submitCommand += " \"magnet\"";                                    //Protocol
+    submitCommand += " \"magnet\"";                                     //Protocol
     submitCommand += " " + assetName;                                   //price_asset_name
-    submitCommand += " " + m_price;                                       //price_amount
-    submitCommand += " [" + m_seeders + "]";                              //seeders
-    submitCommand += " \"" + m_life_time + "T23:59:59\"";                  //expiration
-    submitCommand += " DECENT";                                         //publishing_fee_asset
+    submitCommand += " " + price;                                       //price_amount
+    submitCommand += " [" + seeders + "]";                              //seeders
+    submitCommand += " \"" + lifetime + "T23:59:59\"";                  //expiration
+    submitCommand += " DCT";                                            //publishing_fee_asset
     submitCommand += " 300";                                            //publishing_fee_amount
     submitCommand += " \"" + escape_string(synopsis) + "\"";            //synopsis
     submitCommand += " true";                                           //broadcast

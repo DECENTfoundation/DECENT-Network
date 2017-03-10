@@ -140,13 +140,23 @@ namespace graphene { namespace chain {
 
       if( delivered )
       {
+         asset price = buying.price;
          db().modify<content_object>( *content, []( content_object& co ){ co.times_bought++; });
-         db().adjust_balance( content->author, buying.price );
+         db().adjust_balance( content->author, price );
+
          db().modify<buying_object>(buying, [&](buying_object& bo){
               bo.price.amount = 0;
               bo.delivered = true;
               bo.expiration_or_delivery_time = db().head_block_time();
          });
+
+         finish_buying_operation op;
+         op.author = content->author;
+         op.payout = price;
+         op.buying = buying.id;
+         idump((op));
+
+         db().push_applied_operation(op);
       } else if (expired)
       {
          db().buying_expire(buying);
@@ -183,12 +193,13 @@ namespace graphene { namespace chain {
 
       db().modify<buying_object>( *bo, [&]( buying_object& b ){ b.rated = true; });
       db().modify<content_object> ( *content, [&](content_object& co){
-           if(co.total_rating == 1)
-              co.AVG_rating = o.rating * 1000;
-           else
-              co.AVG_rating = (co.AVG_rating * co.total_rating + o.rating * 1000) / (co.total_rating+1);
 
-           co.total_rating++;
+           if(co.total_rating == 0) {
+              co.AVG_rating = o.rating * 1000;
+              co.total_rating++;
+           }
+           else
+              co.AVG_rating = (co.AVG_rating * co.total_rating + o.rating * 1000) / (++co.total_rating);
       });
    }FC_CAPTURE_AND_RETHROW( (o) ) }
    
@@ -244,6 +255,7 @@ namespace graphene { namespace chain {
    void_result proof_of_custody_evaluator::do_apply(const proof_of_custody_operation& o )
    {try{
       //pay the seeder
+      ilog("proof_of_custody_evaluator::do_apply begin" );
       auto& idx = db().get_index_type<content_index>().indices().get<by_URI>();
       const auto& content = idx.find( o.URI );
       const auto& sidx = db().get_index_type<seeder_index>().indices().get<by_seeder>();
@@ -254,17 +266,19 @@ namespace graphene { namespace chain {
       if( last_proof == content->last_proof.end() )
       {
          //the inital proof, no payments yet
+         ilog("proof_of_custody_evaluator::do_apply initial proof, no payment" );
          db().modify<content_object>(*content, [&](content_object& co){
               co.last_proof.emplace(std::make_pair(o.seeder, db().head_block_time()));
          });
       }else{
+         ilog("proof_of_custody_evaluator::do_apply payment proof" );
          fc::microseconds diff = db().head_block_time() - last_proof->second;
          if( diff > fc::days( 1 ) )
             diff = fc::days( 1 ) ;
          uint64_t ratio = 100 * diff.count() / fc::days( 1 ).count();
          uint64_t loss = ( 100 - ratio ) / 4;
          uint64_t total_reward_ratio = ( ratio * ( 100 - loss ) ) / 100;
-         asset reward ( seeder.price.amount * total_reward_ratio / 100 );
+         asset reward ( seeder.price.amount * total_reward_ratio * content->size / 100 );
          db().modify<content_object>( *content, [&] (content_object& co ){
               co.last_proof[o.seeder] = db().head_block_time();
               co.publishing_fee_escrow -= reward;
@@ -274,6 +288,8 @@ namespace graphene { namespace chain {
          op.author = content->author;
          op.seeder = seeder.seeder;
          op.payout = reward;
+         idump((op));
+         db().push_applied_operation(op);
       }
    }FC_CAPTURE_AND_RETHROW( (o) ) }
 
@@ -302,5 +318,8 @@ namespace graphene { namespace chain {
 
    void_result pay_seeder_evaluator::do_evaluate( const pay_seeder_operation& o ){}
    void_result pay_seeder_evaluator::do_apply( const pay_seeder_operation& o ){}
+
+   void_result finish_buying_evaluator::do_evaluate( const finish_buying_operation& o ){}
+   void_result finish_buying_evaluator::do_apply( const finish_buying_operation& o ){}
 
 }} // graphene::chain

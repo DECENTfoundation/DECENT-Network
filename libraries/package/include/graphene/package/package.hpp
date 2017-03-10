@@ -20,25 +20,30 @@
 
 namespace graphene { namespace package {
 
-class report_stats_listener_base{
+
+class report_stats_listener_base {
 public:
 	std::map<std::string, std::vector<std::string>> ipfs_IDs;
 
 	virtual void report_stats( std::map<std::string,uint64_t> stats )=0;
-	};
+};
 
-class empty_report_stats_listener:public  report_stats_listener_base{
+
+class empty_report_stats_listener : public report_stats_listener_base {
 public:
-	static empty_report_stats_listener& get_one() {
-		static empty_report_stats_listener one;
-		return one;
+	static empty_report_stats_listener& instance() {
+		static empty_report_stats_listener the_empty_report_stats_listener;
+		return the_empty_report_stats_listener;
 	}
+
 	virtual void report_stats( std::map<std::string,uint64_t> stats ){};
 };
 
+
 class package_object {
 public:
-	package_object(const boost::filesystem::path& package_path);
+    package_object() = delete;
+	explicit package_object(const boost::filesystem::path& package_path);
 
 	boost::filesystem::path get_custody_file() const { return _package_path / "content.cus"; }
 	boost::filesystem::path get_content_file() const { return _package_path / "content.zip.aes"; }
@@ -46,31 +51,25 @@ public:
 	const boost::filesystem::path& get_path() const { return _package_path; }
 
 	void get_all_files(std::vector<boost::filesystem::path>& all_files) const;
-
 	bool verify_hash() const;
-
 	fc::ripemd160 get_hash() const { return _hash; }
 	int get_size() const;
-
 	bool is_valid() const { return _hash != fc::ripemd160(); }
-
 	uint32_t create_proof_of_custody(const decent::crypto::custody_data& cd, decent::crypto::custody_proof& proof) const;
 
 private:
-	boost::filesystem::path   _package_path;
-	fc::ripemd160			  _hash;
+	boost::filesystem::path  _package_path;
+	fc::ripemd160            _hash;
 };
-
 
 
 class package_transfer_interface {
 public:
-	typedef int   transfer_id;
+    typedef int transfer_id;
 
-public:
-	struct transfer_progress {
-		transfer_progress() {}
-		transfer_progress(int tb, int cb, int cs) : total_bytes(tb), current_bytes(cb), current_speed(cs) {}
+    struct transfer_progress {
+        transfer_progress() : total_bytes(0), current_bytes(0), current_speed(0) { }
+		transfer_progress(int tb, int cb, int cs) : total_bytes(tb), current_bytes(cb), current_speed(cs) { }
 
 		int total_bytes;
 		int current_bytes;
@@ -79,6 +78,7 @@ public:
 
 	class transfer_listener {
 	public:
+        virtual ~transfer_listener() = default;
 		virtual void on_download_started(transfer_id id) = 0;
 		virtual void on_download_finished(transfer_id id, package_object downloaded_package) = 0;
 		virtual void on_download_progress(transfer_id id, transfer_progress progress) = 0;
@@ -86,7 +86,7 @@ public:
 		virtual void on_error(transfer_id id, std::string error) = 0;
 	};
 
-public:
+    virtual ~package_transfer_interface() = default;
 	virtual void upload_package(transfer_id id, const package_object& package, transfer_listener* listener) = 0;
 	virtual void download_package(transfer_id id, const std::string& url, transfer_listener* listener, report_stats_listener_base& stats_listener) = 0;
 	virtual void print_status() = 0;
@@ -96,25 +96,19 @@ public:
 };
 
 
-
 class empty_transfer_listener : public package_transfer_interface::transfer_listener {
-
 public:
-
-	static empty_transfer_listener& get_one() {
-		static empty_transfer_listener one;
-		return one;
+	static empty_transfer_listener& instance() {
+		static empty_transfer_listener the_empty_transfer_listener;
+		return the_empty_transfer_listener;
 	}
 
 	virtual void on_download_started(package_transfer_interface::transfer_id id) { }
 	virtual void on_download_finished(package_transfer_interface::transfer_id id, package_object downloaded_package) { }
 	virtual void on_download_progress(package_transfer_interface::transfer_id id, package_transfer_interface::transfer_progress progress) { }
-
 	virtual void on_upload_started(package_transfer_interface::transfer_id id, const std::string& url) { }
-
 	virtual void on_error(package_transfer_interface::transfer_id id, std::string error) { }
 };
-
 
 
 class package_manager {
@@ -133,18 +127,23 @@ private:
 
 private:
 	typedef std::map<std::string, std::shared_ptr<package_transfer_interface>>  protocol_handler_map;
-	typedef std::map<std::string, std::string>                                  seeding_packages;
-	typedef std::vector<transfer_job>                                           transfer_jobs;
+	typedef std::map<package_transfer_interface::transfer_id, transfer_job>     transfer_map;
+    typedef std::set<package_object>                                            package_set;
 
 private:
 	package_manager();
-	package_manager(const package_manager&) {}
-	~package_manager();
 
 public:
+    package_manager(const package_manager&)             = delete;
+    package_manager(package_manager&&)                  = delete;
+    package_manager& operator=(const package_manager&)  = delete;
+    package_manager& operator=(package_manager&&)       = delete;
+
+    ~package_manager();
+
 	static package_manager& instance() {
-		static package_manager pac_man;
-		return pac_man;
+		static package_manager the_package_manager;
+		return the_package_manager;
 	}
 
 public:
@@ -157,20 +156,21 @@ public:
 						 const package_object& package,
 						 const fc::sha512& key);
 
+    void delete_package(fc::ripemd160 hash);
+
 	package_transfer_interface::transfer_id upload_package( const package_object& package, 
 															const std::string& protocol_name,
 															package_transfer_interface::transfer_listener& listener );
 
 	package_transfer_interface::transfer_id download_package( const std::string& url,
 															  package_transfer_interface::transfer_listener& listener,
-                                               report_stats_listener_base& stats_listener );
-	
+															  report_stats_listener_base& stats_listener );
+
+
 	std::vector<package_object> get_packages();
-	package_object				get_package_object(fc::ripemd160 hash);
-	void                        delete_package(fc::ripemd160 hash);
+	package_object              get_package_object(fc::ripemd160 hash);
 
-	std::string					get_transfer_url(package_transfer_interface::transfer_id id);
-
+	std::string                                   get_transfer_url(package_transfer_interface::transfer_id id);
 	package_transfer_interface::transfer_progress get_progress(std::string URI) const;
 
     void set_packages_path(const boost::filesystem::path& packages_path);
@@ -183,8 +183,10 @@ public:
     void print_all_transfers();
 
 private:
-	void restore_json_state();
-	void save_json_state();
+    transfer_job& create_transfer_object();
+
+    void save_state();
+	void restore_state();
 
 private:
     mutable fc::mutex                  _mutex;
@@ -192,7 +194,9 @@ private:
     boost::filesystem::path            _libtorrent_config_file;
     decent::crypto::custody_utils      _custody_utils;
 	protocol_handler_map               _protocol_handlers;
-	transfer_jobs					   _all_transfers;
+	transfer_map                       _transfers;
+    int                                _next_transfer_id;
+    package_set                        _packages;
 };
 
 

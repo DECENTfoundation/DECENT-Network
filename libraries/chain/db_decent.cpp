@@ -71,11 +71,10 @@ void database::decent_housekeeping()
    while( bitr != bidx.end() && bitr->expiration_time <= head_block_time() )
    {
       if(!bitr->delivered) {
-         return_escrow_buying_operation rebop;
-         rebop.escrow = bitr->price;
-
          buying_expire(*bitr);
 
+         return_escrow_buying_operation rebop;
+         rebop.escrow = bitr->price;
          rebop.consumer = bitr->consumer;
          rebop.buying = bitr->id;
          push_applied_operation(rebop);
