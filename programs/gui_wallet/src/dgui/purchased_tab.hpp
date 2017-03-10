@@ -43,10 +43,11 @@ public:
 
 public:
     virtual void content_activated() {
-        m_doUpdate = true;
-
+        m_contentUpdateTimer.start();
     }
-    virtual void content_deactivated() {}
+    virtual void content_deactivated() {
+        m_contentUpdateTimer.stop();
+    }
     
 public:
 signals:

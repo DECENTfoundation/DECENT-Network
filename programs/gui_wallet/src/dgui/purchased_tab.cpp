@@ -62,9 +62,6 @@ PurchasedTab::PurchasedTab()
     
     m_contentUpdateTimer.connect(&m_contentUpdateTimer, SIGNAL(timeout()), this, SLOT(maybeUpdateContent()));
     m_contentUpdateTimer.setInterval(1000);
-    m_contentUpdateTimer.start();
-    
-
 }
 
 
