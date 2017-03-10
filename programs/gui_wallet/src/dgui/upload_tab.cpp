@@ -70,17 +70,13 @@ Upload_tab::Upload_tab()
     m_description_text.setFixedHeight(138);
 
     m_synopsis_layout.addWidget(&m_description_text);
-    m_synopsis_layout.addWidget(new QLabel());
-
 
     QFont font( "Open Sans Bold", 14, QFont::Bold);
     m_infoLayoutHeader.setFont(font);
 
-
     m_main_layout.addLayout(&m_synopsis_layout);
     m_main_layout.addWidget(&m_infoLayoutHeader);
     //m_info_layout.addWidget(&m_infoLayoutHeader);
-
 
     ////////////////////////////////////////////////////////////////////////////
     /// Lifetime
@@ -238,6 +234,7 @@ Upload_tab::Upload_tab()
     price = new QLineEdit;
     price->setValidator( new QDoubleValidator(0.001, 100000, 3, this) );
     price->setPlaceholderText("Price");
+    price->setAttribute(Qt::WA_MacShowFocusRect, 0);
     price->setStyleSheet("border:1px solid lightGray; color: Gray");
     price->setFixedHeight(30);
     price->setFixedWidth(130);

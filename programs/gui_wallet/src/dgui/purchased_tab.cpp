@@ -61,7 +61,7 @@ PurchasedTab::PurchasedTab()
     connect(&m_filterLineEditer, SIGNAL(textChanged(QString)), this, SLOT(onTextChanged(QString)));
     
     m_contentUpdateTimer.connect(&m_contentUpdateTimer, SIGNAL(timeout()), this, SLOT(maybeUpdateContent()));
-    m_contentUpdateTimer.setInterval(3000);
+    m_contentUpdateTimer.setInterval(3100);
     m_contentUpdateTimer.start();
 
 }
@@ -77,8 +77,6 @@ void PurchasedTab::onTextChanged(const QString& text) {
     
     m_doUpdate = true;
 }
-
-
 
 void PurchasedTab::updateContents() {
     
