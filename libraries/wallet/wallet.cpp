@@ -2128,9 +2128,12 @@ public:
 
 
             CryptoPP::Integer secret(randomGenerator, 512);
-
             fc::sha512 sha_key;
             secret.Encode((byte*)sha_key._hash, 64);
+            sha_key._hash[0] = 0;
+            sha_key._hash[1] = 0;
+            sha_key._hash[2] = 0;
+            sha_key._hash[3] = 0;
 
             decent::crypto::custody_data cd;
             package_object pack = package_manager::instance().create_package(content_dir, samples_dir, sha_key, cd);
@@ -3844,6 +3847,10 @@ void wallet_api::extract_package(const std::string& package_hash, const std::str
    FC_ASSERT(!is_locked());
    fc::sha512 key1;
    aes_key.Encode((byte*)key1._hash, 64);
+   key1._hash[0] = 0;
+   key1._hash[1] = 0;
+   key1._hash[2] = 0;
+   key1._hash[3] = 0;
 
    package_object package = package_manager::instance().get_package_object(fc::ripemd160(package_hash));
    package_manager::instance().unpack_package(output_dir, package, key1);
