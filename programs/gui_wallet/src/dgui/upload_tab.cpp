@@ -269,10 +269,6 @@ void Upload_tab::uploadContent() {
     std::string m_keyparts  = keyparts->currentData().toString().toStdString();
     std::string m_price     = price->text().toStdString();
     
-//    std::string lifetime = ((QDateEdit*)m_info_widget.cellWidget(0, 1))->text().toStdString();
-//    std::string seeders = ((QComboBox*)m_info_widget.cellWidget(0, 3))->currentData().toString().toStdString();
-//    std::string keyparts = ((QComboBox*)m_info_widget.cellWidget(0, 5))->currentData().toString().toStdString();
-//    std::string price = ((QLineEdit*)m_info_widget.cellWidget(2, 1))->text().toStdString();
     std::string assetName = "DCT";
     std::string path = m_contentPath->text().toStdString();
     std::string samples_path = m_samplesPath->text().toStdString();
@@ -290,10 +286,18 @@ void Upload_tab::uploadContent() {
         return;
     }
     
-    if (boost::filesystem::file_size(path) > 100 * 1024 * 1024) {
+    
+    boost::system::error_code ec;
+    if (boost::filesystem::file_size(path, ec) > 100 * 1024 * 1024) {
         ALERT("Content size is limited in Testnet 0.1 to 100MB");
         return;
     }
+    
+    if (ec) {
+        ALERT("Please select valid file for upload.");
+        return;
+    }
+    
 
     if (title.empty()) {
         ALERT("Please specify title");
