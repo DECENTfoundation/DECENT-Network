@@ -39,7 +39,6 @@ namespace ST{
 }
 
 
-
 class BTableWidget : public QTableWidget
 {
     Q_OBJECT
@@ -54,6 +53,8 @@ public:
 signals:
     void mouseMoveEventDid();
 };
+    
+    
 
 
     class CButton : public QLabel
