@@ -46,10 +46,12 @@ PurchasedTab::PurchasedTab()
     QLabel* search_label = new QLabel();
     search_label->setSizeIncrement(100,40);
     search_label->setPixmap(image);
-
+    
+    
+    search_lay->addWidget(new QLabel());
+    search_lay->addWidget(new QLabel());
     search_lay->addWidget(new QLabel());
     search_lay->addWidget(search_label);
-    search_lay->addWidget(new QLabel());
     search_lay->addWidget(&m_filterLineEditer);
 
     m_main_layout.setContentsMargins(0, 0, 0, 0);
@@ -181,10 +183,10 @@ void PurchasedTab::updateContents() {
             contentObject.AVG_rating = dcontent_json["AVG_rating"].get<double>() / 1000;
         
             
+            m_pTableWidget->horizontalHeader()->setStretchLastSection(true);
             m_pTableWidget->setCellWidget(i + 1, 0, new TableWidgetItemW<QLabel>(contentObject, this, NULL, &PurchasedTab::DigContCallback, tr("")));
             ((QLabel*)m_pTableWidget->cellWidget(i+1,0))->setPixmap(image1);
             ((QLabel*)m_pTableWidget->cellWidget(i+1,0))->setAlignment(Qt::AlignCenter);
-
             
             
             m_pTableWidget->setItem(i + 1, 1, new QTableWidgetItem(QString::fromStdString(synopsis)));

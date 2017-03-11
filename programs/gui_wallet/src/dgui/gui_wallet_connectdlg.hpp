@@ -60,7 +60,8 @@ public:
         } else {
             unlockButton->setText("Unlock");
         }
-        
+        unlockButton->setFixedHeight(30);
+        unlockButton->setFixedWidth(120);
         password_box.setEchoMode(QLineEdit::Password);
         
         if (isSet) {
