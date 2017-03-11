@@ -242,9 +242,15 @@ void Upload_tab::onGrabPublishers() {
 
         for (int r = 0; r < publishers.size(); ++r) {
             std::string pubIdStr = publishers[r]["seeder"].get<std::string>();
-            std::string pubPrice = std::to_string(publishers[r]["price"]["amount"].get<int>() / GRAPHENE_BLOCKCHAIN_PRECISION);
+            std::string pubPrice = QString::number(publishers[r]["price"]["amount"].get<double>() / GRAPHENE_BLOCKCHAIN_PRECISION).toStdString();
             std::string pubAssetId = publishers[r]["price"]["asset_id"].get<std::string>();
-            std::string pubFreeSpace = std::to_string(publishers[r]["free_space"].get<int>()) + "MB free";
+            
+            int free_space = publishers[r]["free_space"].get<int>();
+            std::string pubFreeSpace = std::to_string(free_space) + "MB free";
+            
+            if (free_space > 800) {
+                pubFreeSpace = QString::number(1.0 * free_space / 1024, 'f', 2).toStdString() + "GB free";
+            }
 
             obj->seeders->addItem(QString("%0 @%1 %2 [%3]").arg(QString::fromStdString(pubIdStr),
                                                             QString::fromStdString(pubPrice),
