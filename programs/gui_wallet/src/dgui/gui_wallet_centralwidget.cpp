@@ -17,7 +17,6 @@
 #include "gui_wallet_global.hpp"
 #include "gui_wallet_mainwindow.hpp"
 #include <QSortFilterProxyModel>
-#include <QLine>
 
 #ifndef _PATH_DELIMER_
 #ifdef WIN32
