@@ -240,17 +240,19 @@ void PurchasedTab::updateContents() {
             
             if (progress != 100) {
                 m_pTableWidget->setItem(i + 1, 7, new QTableWidgetItem(QString::number(progress) + "%"));
+                m_pTableWidget->item(i + 1, 7)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
             } else {
                 QPushButton* btn = new QPushButton();
+                btn->setStyleSheet("background-color: rgb(27,176,104); color: white");
                 btn->setText("Extract");
                 btn->setProperty("id", QVariant::fromValue(QString::fromStdString(content["id"].get<std::string>())));
                 btn->setProperty("hash", QVariant::fromValue(QString::fromStdString(dcontent_json["_hash"].get<std::string>())));
                 btn->setProperty("URI", QVariant::fromValue(QString::fromStdString(content["URI"].get<std::string>())));
                 
-                connect(btn, SIGNAL(pressed()), this, SLOT(extractPackage()));
+                connect(btn, SIGNAL(clicked()), this, SLOT(extractPackage()));
                 m_pTableWidget->setCellWidget(i+1, 7, btn);
             }
-
+            
             
             for(int j = 1; j < s_cnNumberOfCols - 1; ++j)
             {
