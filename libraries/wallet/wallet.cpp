@@ -2110,8 +2110,6 @@ public:
                                             string price_amount,
                                             vector<account_id_type> seeders,
                                             fc::time_point_sec expiration,
-                                            string publishing_fee_symbol_name,
-                                            string publishing_fee_amount,
                                             string synopsis,
                                             bool broadcast/* = false */)
       {
@@ -2119,12 +2117,12 @@ public:
             FC_ASSERT(!is_locked());
             account_object author_account = get_account( author );
 
-            fc::optional<asset_object> price_asset_obj = get_asset(price_asset_symbol);
-            fc::optional<asset_object> fee_asset_obj = get_asset(publishing_fee_symbol_name);
+             fc::optional<asset_object> DTC_asset = get_asset("DCT");
+             fc::optional<asset_object> price_asset_obj = get_asset(price_asset_symbol);
+    
 
-            FC_ASSERT(price_asset_obj, "Could not find asset matching ${asset}", ("asset", price_asset_symbol));
-            FC_ASSERT(fee_asset_obj, "Could not find asset matching ${asset}", ("asset", publishing_fee_symbol_name));
-
+            FC_ASSERT(DTC_asset, "Could not find asset matching DCT");
+            FC_ASSERT(DTC_asset, "Could not find asset");
 
 
             CryptoPP::Integer secret(randomGenerator, 512);
@@ -2146,17 +2144,34 @@ public:
             shamir_secret ss(quorum, seeders.size(), secret);
             ss.calculate_split();
             content_submit_operation submit_op;
+             
+             
+             
+             asset total_price_per_day;
+             
             for( int i =0; i < seeders.size(); i++ ){
                const auto& s = _remote_db->get_seeder( seeders[i] );
                ciphertext cp;
                point p = ss.split[i];
                decent::crypto::el_gamal_encrypt( p ,s->pubKey ,cp );
                submit_op.key_parts.push_back(cp);
+            
+                total_price_per_day += s->price.amount * size;
+               total_price_per_day += s->price.amount;
+                
             }
+
+             FC_ASSERT( time_point_sec(fc::time_point::now()) <= expiration);
+
+             fc::microseconds duration = (expiration - fc::time_point::now());
+            uint64_t days = duration.to_seconds() / 3600 / 24;
+
+             
+            
 
             package_transfer_interface::transfer_id id = package_manager::instance().upload_package(pack, protocol, transfer_progress_printer::instance());
    
-
+          
             submit_op.author = author_account.id;
             submit_op.URI = package_manager::instance().get_transfer_url(id);
             submit_op.price = price_asset_obj->amount_from_string(price_amount);
@@ -2165,7 +2180,7 @@ public:
             submit_op.seeders = seeders;
             submit_op.quorum = quorum;
             submit_op.expiration = expiration;
-            submit_op.publishing_fee = fee_asset_obj->amount_from_string(publishing_fee_amount);
+            submit_op.publishing_fee = days * total_price_per_day;
             submit_op.synopsis = synopsis;
             submit_op.cd = cd;
 
@@ -2176,7 +2191,7 @@ public:
 
             return sign_transaction( tx, broadcast );
          } 
-         FC_CAPTURE_AND_RETHROW( (author)(content_dir)(samples_dir)(protocol)(price_asset_symbol)(price_amount)(seeders)(expiration)(publishing_fee_symbol_name)(publishing_fee_amount)(synopsis)(broadcast) )
+         FC_CAPTURE_AND_RETHROW( (author)(content_dir)(samples_dir)(protocol)(price_asset_symbol)(price_amount)(seeders)(expiration)(synopsis)(broadcast) )
       }
 
 
@@ -3607,9 +3622,9 @@ wallet_api::submit_content(string author, string URI, string price_asset_name, s
 }
 
 signed_transaction
-wallet_api::submit_content_new(string author, string content_dir, string samples_dir, string protocol, string price_asset_symbol, string price_amount, vector<account_id_type> seeders, fc::time_point_sec expiration, string publishing_fee_symbol_name, string publishing_fee_amount, string synopsis, bool broadcast)
+wallet_api::submit_content_new(string author, string content_dir, string samples_dir, string protocol, string price_asset_symbol, string price_amount, vector<account_id_type> seeders, fc::time_point_sec expiration, string synopsis, bool broadcast)
 {
-   return my->submit_content_new(author, content_dir, samples_dir, protocol, price_asset_symbol, price_amount, seeders, expiration, publishing_fee_symbol_name, publishing_fee_amount, synopsis, broadcast);
+   return my->submit_content_new(author, content_dir, samples_dir, protocol, price_asset_symbol, price_amount, seeders, expiration, synopsis, broadcast);
 }
 
 void
