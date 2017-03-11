@@ -21,7 +21,7 @@ For Ubuntu 16.04 LTS (for extra actions needed for 14.04 LTS, 14.10, or 16.10 se
     $ sudo apt-get autoremove
     $ sudo apt-get install libboost1.60-all-dev
 
-(Ubuntu 14.04 LTS and 14.10 only) Note, that the default versions of GCC, CMake, and Boost installed in Ubuntu 14.04 LTS or 14.10 are too old and not supported. In order to install and use the supported ones, in addition to the common commands above, execute the following in console (in the same shell session, where you are going to build Decent itself):
+(Ubuntu 14.04 LTS and 14.10 only; and only boost part for Ubuntu 16.04 LTS case) Note, that the default versions of GCC, CMake, and Boost installed in Ubuntu 14.04 LTS or 14.10 are too old and not supported. In order to install and use the supported ones, in addition to the common commands above, execute the following in console (in the same shell session, where you are going to build Decent itself):
 
     # Install GCC 5 and Clang 3.5
     $ sudo add-apt-repository ppa:ubuntu-toolchain-r/test

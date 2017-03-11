@@ -17,7 +17,7 @@ add_executable( DECENT MACOSX_BUNDLE
                 ${GUI_WALLET_ICON}
                 src/dgui/browse_content_tab.cpp
                 src/dgui/cliwalletdlg.cpp
-                src/dgui/decent_gui_contentdlg.cpp
+                src/dgui/decent_gui_contentdlg.cpp 
                 src/dgui/decent_gui_inguiloopcaller.cpp
                 src/dgui/decent_wallet_ui_gui_contentdetailsbase.cpp
                 src/dgui/decent_wallet_ui_gui_contentdetailsgeneral.cpp
@@ -98,5 +98,3 @@ install( TARGETS
    LIBRARY DESTINATION lib
    ARCHIVE DESTINATION lib
 )
-
-install(DIRECTORY images DESTINATION .)

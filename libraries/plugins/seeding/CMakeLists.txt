@@ -9,10 +9,10 @@ target_link_libraries( decent_seeding graphene_chain graphene_app graphene_time 
 target_include_directories( decent_seeding
                             PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" )
 
-install( TARGETS
-   decent_seeding
-
-   RUNTIME DESTINATION bin
-   LIBRARY DESTINATION lib
-   ARCHIVE DESTINATION lib
-)
+#install( TARGETS
+#   decent_seeding
+#
+#   RUNTIME DESTINATION bin
+#   LIBRARY DESTINATION lib
+#   ARCHIVE DESTINATION lib
+#)
