@@ -55,11 +55,11 @@ target_include_directories( graphene_egenesis_full
 target_include_directories( graphene_egenesis_decent
    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" )
 
-INSTALL( TARGETS
-   graphene_egenesis_decent
-   #   embed_genesis graphene_egenesis_none graphene_egenesis_brief graphene_egenesis_full
-   
-   RUNTIME DESTINATION bin
-   LIBRARY DESTINATION lib
-   ARCHIVE DESTINATION lib
-)
+#install( TARGETS
+#   graphene_egenesis_decent
+#   #   embed_genesis graphene_egenesis_none graphene_egenesis_brief graphene_egenesis_full
+#
+#   RUNTIME DESTINATION bin
+#   LIBRARY DESTINATION lib
+#   ARCHIVE DESTINATION lib
+#)
