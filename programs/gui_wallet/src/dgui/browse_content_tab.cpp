@@ -310,7 +310,7 @@ void Browse_content_tab::ShowDigitalContentsGUI(std::vector<SDigitalContent>& co
         m_TableWidget.item(index, 3)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
 
 
-        m_TableWidget.setItem(index,4,new QTableWidgetItem(QString::fromStdString(std::to_string(aTemporar.price.amount))));
+        m_TableWidget.setItem(index,4,new QTableWidgetItem(QString::number(aTemporar.price.amount) + " DCT"));
         m_TableWidget.item(index, 4)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
         m_TableWidget.item(index, 4)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
         

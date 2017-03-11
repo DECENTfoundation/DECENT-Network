@@ -21,10 +21,10 @@ if(MSVC)
   set_source_files_properties( application.cpp api.cpp database_api.cpp PROPERTIES COMPILE_FLAGS "/bigobj" )
 endif(MSVC)
 
-INSTALL( TARGETS
-   graphene_app
-
-   RUNTIME DESTINATION bin
-   LIBRARY DESTINATION lib
-   ARCHIVE DESTINATION lib
-)
+#install( TARGETS
+#   graphene_app
+#
+#   RUNTIME DESTINATION bin
+#   LIBRARY DESTINATION lib
+#   ARCHIVE DESTINATION lib
+#)

@@ -17,7 +17,7 @@ add_executable( DECENT MACOSX_BUNDLE
                 ${GUI_WALLET_ICON}
                 src/dgui/browse_content_tab.cpp
                 src/dgui/cliwalletdlg.cpp
-                src/dgui/decent_gui_contentdlg.cpp
+                src/dgui/decent_gui_contentdlg.cpp 
                 src/dgui/decent_gui_inguiloopcaller.cpp
                 src/dgui/decent_wallet_ui_gui_contentdetailsbase.cpp
                 src/dgui/decent_wallet_ui_gui_contentdetailsgeneral.cpp
@@ -86,6 +86,7 @@ target_link_libraries( DECENT PUBLIC
                      )
 
 set_target_properties(DECENT PROPERTIES MACOSX_BUNDLE_BUNDLE_NAME "DECENT")
+set_target_properties(DECENT PROPERTIES MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/Info.plist.in")
 
 
 
@@ -97,5 +98,3 @@ install( TARGETS
    LIBRARY DESTINATION lib
    ARCHIVE DESTINATION lib
 )
-
-install(DIRECTORY images DESTINATION .)

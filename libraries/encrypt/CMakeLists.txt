@@ -18,10 +18,10 @@ target_include_directories( decent_encrypt
 target_include_directories( test_encrypt
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" "${CMAKE_CURRENT_BINARY_DIR}/include" "${CMAKE_CURRENT_SOURCE_DIR}/../chain/include" )
 
-install( TARGETS
-   decent_encrypt
-
-   RUNTIME DESTINATION bin
-   LIBRARY DESTINATION lib
-   ARCHIVE DESTINATION lib
-)
+#install( TARGETS
+#   decent_encrypt
+#
+#   RUNTIME DESTINATION bin
+#   LIBRARY DESTINATION lib
+#   ARCHIVE DESTINATION lib
+#)
