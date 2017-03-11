@@ -21,6 +21,8 @@
 #include <QDate>
 #include <QDateEdit>
 #include <stdio.h>
+#include <QStyleFactory>
+#include "decent_button.hpp"
 
 
 #include <graphene/chain/config.hpp>
@@ -94,7 +96,8 @@ Upload_tab::Upload_tab()
     de->setDate(QDate::currentDate());
     de->setDisplayFormat("yyyy-MM-dd");
     de->setCalendarPopup(true);
-    de->setMinimumDate(QDate::currentDate());
+    //de->setMinimumDate(QDate::currentDate());
+    de->setStyle(QStyleFactory::create("fusion"));
     
     //////////////////////
     //////                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -108,7 +111,7 @@ Upload_tab::Upload_tab()
     lab->setStyleSheet("border:1px solid lightGray; color: Gray");
     lab->setContentsMargins(0, 0, -2, 0);
     lab->setMinimumWidth(60);
-    lab->setFixedHeight(23);
+    lab->setFixedHeight(25);
 
     firstRow->addWidget(lab);
     firstRow->addWidget(de);
@@ -116,21 +119,23 @@ Upload_tab::Upload_tab()
     //SEEDERS
     QLabel* seed = new QLabel("Seeders");
     seed->setStyleSheet("border:1px solid lightGray; color: Gray");
-    seed->setContentsMargins(15, 0, -2, 0);
+    
+    seed->setContentsMargins(20, 0, -2, 0);
     seed->setMinimumWidth(70);
-    seed->setFixedHeight(18);
-
+    seed->setFixedHeight(25);
+    seeders->setStyle(QStyleFactory::create("fusion"));
     firstRow->addWidget(seed);
     firstRow->addWidget(seeders);
     
     //KEYPARTICLES
     QLabel* key = new QLabel("Key Particles");
     key->setStyleSheet("border:1px solid lightGray; color: Gray");
-    key->setContentsMargins(15, 0, -2, 0);
+    key->setContentsMargins(20, 0, -2, 0);
     key->setMinimumWidth(90);
-    key->setFixedHeight(18);
+    key->setFixedHeight(25);
 
     keyparts = new QComboBox(this);
+    keyparts->setStyle(QStyleFactory::create("fusion"));
     for (int r = 2; r <= 7; ++r) {
         QString val = QString::fromStdString(std::to_string(r));
         keyparts->addItem(val, val);
@@ -152,9 +157,10 @@ Upload_tab::Upload_tab()
     price->setAttribute(Qt::WA_MacShowFocusRect, 0);
     price->setStyleSheet("border:1px solid lightGray; color: Gray");
     price->setFixedHeight(30);
-    price->setFixedWidth(130);
+    price->setFixedWidth(150);
     price->setContentsMargins(0, 0, 10, 0);
-
+    
+    secondrow->setContentsMargins(0, 2, 0, 0);
     secondrow->addWidget(price);
     
     //SIMPLES
@@ -162,15 +168,17 @@ Upload_tab::Upload_tab()
     sim->setReadOnly(true);
     sim->setStyleSheet("border:1px solid lightGray; color: Gray");
     sim->setContentsMargins(10, 0, 0, 0);
+    sim->setFixedWidth(270);
     sim->setFixedHeight(30);
     
-    QPixmap image(":/icon/images/browse.svg");
-    QIcon button_icon(image);
+//    QPixmap image(":/icon/images/browse.svg");
     
-    QPushButton* browse_samples_button = new QPushButton();
-    browse_samples_button->setIcon(button_icon);
-    browse_samples_button->setFixedWidth(50);
-    connect(browse_samples_button, SIGNAL(clicked()),this, SLOT(browseSamples()));
+    DecentButton* browse_samples_button = new DecentButton();
+//    browse_samples_button->setContentsMargins(-1, 0, 10, 0);
+    browse_samples_button->setText("Browse");
+    browse_samples_button->setFixedWidth(70);
+    browse_samples_button->setFixedHeight(30);
+    connect(browse_samples_button, SIGNAL(LabelClicked()),this, SLOT(browseSamples()));
 
     secondrow->addWidget(sim);
     secondrow->addWidget(browse_samples_button);
@@ -181,19 +189,18 @@ Upload_tab::Upload_tab()
     cont->setReadOnly(true);
     cont->setStyleSheet("border:1px solid lightGray; color: Gray");
     cont->setContentsMargins(10, 0, 0, 0);
+    cont->setFixedWidth(270);
     cont->setFixedHeight(30);
 
     m_contentPath = new QLineEdit("", this);
     m_contentPath->setReadOnly(true);
     m_contentPath->setHidden(true);
-
-    QPixmap image2(":/icon/images/browse.svg");
-    QIcon button_icon2(image2);
     
-    QPushButton* browse_content_button = new QPushButton();
-    browse_content_button->setIcon(button_icon2);
-    browse_content_button->setFixedWidth(50);
-    connect(browse_content_button, SIGNAL(clicked()),this, SLOT(browseContent()));
+    DecentButton* browse_content_button = new DecentButton();
+    browse_content_button->setText("Browse");
+    browse_content_button->setFixedWidth(70);
+    browse_content_button->setFixedHeight(30);
+    connect(browse_content_button, SIGNAL(LabelClicked()),this, SLOT(browseContent()));
     
     secondrow->addWidget(cont);
     secondrow->addWidget(browse_content_button);
@@ -268,11 +275,8 @@ void Upload_tab::uploadContent() {
     std::string m_seeders   = seeders->currentData().toString().toStdString();
     std::string m_keyparts  = keyparts->currentData().toString().toStdString();
     std::string m_price     = price->text().toStdString();
+
     
-//    std::string lifetime = ((QDateEdit*)m_info_widget.cellWidget(0, 1))->text().toStdString();
-//    std::string seeders = ((QComboBox*)m_info_widget.cellWidget(0, 3))->currentData().toString().toStdString();
-//    std::string keyparts = ((QComboBox*)m_info_widget.cellWidget(0, 5))->currentData().toString().toStdString();
-//    std::string price = ((QLineEdit*)m_info_widget.cellWidget(2, 1))->text().toStdString();
     std::string assetName = "DCT";
     std::string path = m_contentPath->text().toStdString();
     std::string samples_path = m_samplesPath->text().toStdString();
