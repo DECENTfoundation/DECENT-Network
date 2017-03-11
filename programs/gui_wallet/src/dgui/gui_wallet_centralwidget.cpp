@@ -150,17 +150,18 @@ CentralWigdet::CentralWigdet(QBoxLayout* a_pAllLayout, Mainwindow_gui_wallet* a_
 
     
     setStyleSheet("color:black;""background-color:white;");
-//    m_main_tabs2.setStyleSheet("QTabBar::tab{"
-//                               " height: 40px; width: 175px; "
+
     m_main_tabs.setStyleSheet("QTabBar::tab{"
-                               " height: 40px; width: 179px; "
-                               "color:rgb(27,176,104);background-color:white;"
-                                "border: 1px solid rgb(240,240,240);}"
-                               "QTabBar::tab:selected{"
-                               "color:white;background-color:rgb(27,176,104);}"
+                              " height: 40px; width: 179px; "
+                              "color:rgb(27,176,104);background-color:white;"
+                              "border-right: 1 solid rgb(240,240,240);"
+                              "border-top: 1 solid rgb(240,240,240);"
+                              "border-bottom: 1 solid rgb(240,240,240);}"
+                              "QTabBar::tab:selected{"
+                              "color:white;background-color:rgb(27,176,104);}"
                                );
 
-
+    
     PrepareGUIprivate(a_pAllLayout);
     
     QTimer::singleShot(200, this, &CentralWigdet::initTabChanged);
@@ -303,10 +304,11 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     m_pUsernameWgt->setFixedHeight(__HEIGHT__);
     m_pUsernameWgt->setMaximumWidth(271);
 
+    
     /*//////////////////////////////////////////*/
     line = new QFrame(this);
     line->setFrameShape(QFrame::VLine); // Horizontal line
-
+    
     line->setLineWidth(1);
     line->setStyleSheet("color: #f0f0f0");
     line->setFixedHeight(68);

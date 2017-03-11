@@ -60,12 +60,12 @@ Upload_tab::Upload_tab()
     
 
     m_infoLayoutHeader.setFont(m_font);
-    m_title_text.setPlaceholderText("  Title");
+    m_title_text.setPlaceholderText("  Title:");
     m_title_text.setAttribute(Qt::WA_MacShowFocusRect, 0);
     m_title_text.setFixedHeight(40);
     m_synopsis_layout.addWidget(&m_title_text);
 
-    m_description_text.setPlaceholderText("  Description");
+    m_description_text.setPlaceholderText("  Description:");
     m_description_text.resize(138, 822);
     m_description_text.setFixedHeight(138);
 
@@ -95,91 +95,6 @@ Upload_tab::Upload_tab()
     de->setDisplayFormat("yyyy-MM-dd");
     de->setCalendarPopup(true);
     de->setMinimumDate(QDate::currentDate());
-    
-//    //m_info_widget.setCellWidget(0, 1, de);
-//
-//    ////////////////////////////////////////////////////////////////////////////
-//    /// Seeders
-//    ////////////////////////////////////////////////////////////////////////////
-//
-//    m_info_widget.setCellWidget(0, 2, new QLabel("        Seeders"));
-//    //Dropdown will be added later
-//
-//
-//    ////////////////////////////////////////////////////////////////////////////
-//    /// Key particles
-//    ////////////////////////////////////////////////////////////////////////////
-//
-//    m_info_widget.setCellWidget(0, 4, new QLabel("        Key particles"));
-//
-//    QComboBox* keyParts = new QComboBox(this);
-//    for (int r = 2; r <= 7; ++r) {
-//        QString val = QString::fromStdString(std::to_string(r));
-//        keyParts->addItem(val, val);
-//    }
-//
-//    m_info_widget.setCellWidget(0, 5, keyParts);
-//
-//
-//    ////////////////////////////////////////////////////////////////////////////
-//    /// Price
-//    ////////////////////////////////////////////////////////////////////////////
-//
-//
-//    QLineEdit* priceEdit = new QLineEdit("", this);
-//    priceEdit->setValidator( new QDoubleValidator(0.001, 100000, 3, this) );
-//
-//    m_info_widget.setCellWidget(2, 0, new QLabel("        Price"));
-//    m_info_widget.setCellWidget(2, 1, priceEdit);
-//
-//
-//    ////////////////////////////////////////////////////////////////////////////
-//    /// samples button
-//    ////////////////////////////////////////////////////////////////////////////
-
-
-    
-//    QPixmap image(":/icon/images/browse.svg");
-//    QIcon button_icon(image);
-//    m_info_widget.setCellWidget(2, 2, new QLabel("        Samples"));
-//    QPushButton* browse_samples_button = new QPushButton();
-//    browse_samples_button->setIcon(button_icon);
-//    
-//    m_info_widget.setCellWidget(2, 5, browse_samples_button);
-//    connect(browse_samples_button, SIGNAL(clicked()),this, SLOT(browseContent()));
-
-
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// content button
-    ////////////////////////////////////////////////////////////////////////////
-
-//    m_contentPath = new QLineEdit("", this);
-//    m_contentPath->setReadOnly(true);
-//    m_contentPath->setHidden(true);
-//
-//    m_info_widget.setCellWidget(2, 4, new QLabel("        Content"));
-//
-//    QPixmap image2(":/icon/images/browse.svg");
-//    QIcon button_icon2(image2);
-//    
-//    QPushButton* browse_content_button = new QPushButton();
-//    browse_content_button->setIcon(button_icon2);
-//    m_info_widget.setCellWidget(2, 3, browse_content_button);
-//    connect(browse_content_button, SIGNAL(clicked()),this, SLOT(browseSamples()));
-//
-//    m_info_widget.setFrameStyle(QFrame::NoFrame);
-//    m_info_widget.setShowGrid(false);
-//    m_info_widget.horizontalHeader()->hide();
-//    m_info_widget.verticalHeader()->hide();
-//    m_info_layout.addWidget(&m_info_widget);
-//    QPalette plt_tbl = m_info_widget.palette();
-//    plt_tbl.setColor(QPalette::Base, palette().color(QPalette::Window));
-//    m_info_widget.setPalette(plt_tbl);
-
-//    m_info_widget.setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-//    m_info_widget.setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    
     
     //////////////////////
     //////                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -262,7 +177,7 @@ Upload_tab::Upload_tab()
     
     
     //CONTENT
-    cont = new QLineEdit("Content");
+    cont = new QLineEdit("Content Info:");
     cont->setReadOnly(true);
     cont->setStyleSheet("border:1px solid lightGray; color: Gray");
     cont->setContentsMargins(10, 0, 0, 0);
@@ -294,7 +209,8 @@ Upload_tab::Upload_tab()
     
     DecentButton* upload_label = new DecentButton();
     upload_label->setText("UPLOAD");
-    upload_label->setMinimumHeight(26);
+    upload_label->setFixedHeight(30);
+    upload_label->setFixedWidth(120);
     
     connect(upload_label, SIGNAL(LabelClicked()),this, SLOT(uploadContent()));
     button->setContentsMargins(250, 0, 250, 0);

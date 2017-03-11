@@ -64,7 +64,8 @@ public:
             unlockButton->setText("Unlock");
             unlockButton->setFixedWidth(100);
         }
-        
+        unlockButton->setFixedHeight(30);
+        unlockButton->setFixedWidth(120);
         password_box.setEchoMode(QLineEdit::Password);
         password_box.setAttribute(Qt::WA_MacShowFocusRect, 0);
         

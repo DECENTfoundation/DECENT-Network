@@ -25,6 +25,8 @@ ContentDetailsGeneral::ContentDetailsGeneral()
 {
     QVBoxLayout* image_layout = new QVBoxLayout;
     m_label.setText("BUY");
+    m_label.setFixedWidth(120);
+    m_label.setFixedHeight(30);
     
     image_layout->addWidget(&m_label);
     image_layout->setContentsMargins(250, 5, 250, 10);
