@@ -234,10 +234,18 @@ int main(int argc, char* argv[])
         fc::set_signal_handler([pid](int signal) {
             kill(pid, SIGTERM); //Kill decentd
         }, SIGTERM);
-        
+#if defined( Q_OS_MAC )
+
         QDir dir(argv[0]);
+        if(dir.dirName() == "MacOS" || dir.dirName() == "DECENT" )
+           dir.cdUp();
+        if(dir.dirName() == "MacOS" )
+           dir.cdUp();
+        dir.cd("lib");
+
         QCoreApplication::setLibraryPaths(QStringList(dir.absolutePath()));
 
+#endif
         gui_wallet::application aApp(argc, argv);
         
         
