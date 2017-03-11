@@ -125,8 +125,8 @@ if( WIN32 )
 
 else() # Apple and Linux
 
-    find_library( READLINE_LIBRARIES NAMES readline )
-    find_path( READLINE_INCLUDE_DIR "readline/readline.h" )
+    #find_library( READLINE_LIBRARIES NAMES readline )
+    #find_path( READLINE_INCLUDE_DIR "readline/readline.h" )
 #    if( NOT READLINE_INCLUDE_DIR OR NOT READLINE_LIBRARIES )
 #        message(FATAL_ERROR "Readline not found")
 #    endif()
