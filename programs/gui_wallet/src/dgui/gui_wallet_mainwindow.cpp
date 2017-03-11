@@ -215,6 +215,10 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
 void Mainwindow_gui_wallet::ContentWasBoughtSlot() {
     
     m_pCentralWidget->SetMyCurrentTabIndex(4);
+    
+    std::string csUserName = GlobalEvents::instance().getCurrentUser();
+    std::string csLineToRun = "list_account_balances " + csUserName;
+    SetNewTask(csLineToRun,this,NULL,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
 }
 
 
