@@ -78,7 +78,7 @@ Transactions_tab::Transactions_tab() : green_row(0)
         tablewidget->item(0, i)->setForeground(QColor::fromRgb(51,51,51));
     }
 
-    connect(tablewidget,SIGNAL(mouseMoveEventDid()),this,SLOT(doRowColor()));
+   // connect(tablewidget,SIGNAL(mouseMoveEventDid()),this,SLOT(doRowColor()));
 
     QHBoxLayout* search_lay = new QHBoxLayout();
     QPixmap image(":/icon/images/search.svg");
@@ -202,7 +202,7 @@ void Transactions_tab::doRowColor()
 
 void Transactions_tab::Connects()
 {
-    connect(tablewidget,SIGNAL(mouseMoveEventDid()),this,SLOT(doRowColor()));
+    //connect(tablewidget,SIGNAL(mouseMoveEventDid()),this,SLOT(doRowColor()));
 }
 
 
@@ -235,10 +235,15 @@ void Transactions_tab::updateContents() {
                 auto op = content["op"];
                 
                 
-                obj->tablewidget->setCellWidget(i + 1, 0, new QLabel(QString::fromStdString(op["id"].get<std::string>())));
+                obj->tablewidget->setItem(i + 1, 0, new QTableWidgetItem(QString::fromStdString(op["id"].get<std::string>())));
+                obj->tablewidget->item(i + 1, 0)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+                obj->tablewidget->item(i + 1, 0)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
                 obj->tablewidget->setCellWidget(i + 1, 1, new QLabel(QString::fromStdString(contents[i]["description"].get<std::string>())));
-                obj->tablewidget->setCellWidget(i + 1, 2, new QLabel(QString::fromStdString(contents[i]["memo"].get<std::string>())));
                 
+                obj->tablewidget->setItem(i + 1, 2, new QTableWidgetItem(QString::fromStdString(contents[i]["memo"].get<std::string>())));
+                obj->tablewidget->item(i + 1, 2)->setTextAlignment(Qt::AlignRight|Qt::AlignVCenter);
+                obj->tablewidget->item(i + 1, 2)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+
                 auto amount = op["op"][1]["fee"]["amount"];
                 QString amountText = "";
                 
@@ -248,8 +253,9 @@ void Transactions_tab::updateContents() {
                     amountText = QString::number(std::stod(amount.get<std::string>()) / GRAPHENE_BLOCKCHAIN_PRECISION) + " DCT";
 
                 }
-                obj->tablewidget->setCellWidget(i + 1, 3, new QLabel(amountText));
-                
+                obj->tablewidget->setItem(i + 1, 3, new QTableWidgetItem(amountText));
+                obj->tablewidget->item(i + 1, 3)->setTextAlignment(Qt::AlignRight|Qt::AlignVCenter);
+                obj->tablewidget->item(i + 1, 3)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
 
             }
         } catch (std::exception& ex) {

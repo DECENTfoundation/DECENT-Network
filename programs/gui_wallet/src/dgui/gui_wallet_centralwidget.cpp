@@ -17,7 +17,7 @@
 #include "gui_wallet_global.hpp"
 #include "gui_wallet_mainwindow.hpp"
 #include <QSortFilterProxyModel>
-#include <QLine>
+#include <QStyleFactory>
 
 #ifndef _PATH_DELIMER_
 #ifdef WIN32
@@ -294,8 +294,8 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     pLabelTmp->setFixedSize(__SIZE_FOR_IMGS__,__SIZE_FOR_IMGS__);
     
     pComboTmp1 = new QComboBox;
-    pComboTmp1->setStyleSheet("color: black;""background-color:white;"
-                              "border: 1px solid #D3D3D3 ");
+    pComboTmp1->setStyleSheet("color: black;""background-color:white;");
+    pComboTmp1->setStyle(QStyleFactory::create("fusion"));
     if(!pComboTmp1){throw __FILE__ "Low memory";}
     
 //    pComboTmp1->setStyleSheet("color: black;""background-color:white;");
@@ -304,7 +304,7 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     m_first_line_lbl.addWidget(m_pUsernameWgt);
     m_pUsernameWgt->setFixedHeight(__HEIGHT__);
     m_pUsernameWgt->setMaximumWidth(271);
-
+    
     
     /*//////////////////////////////////////////*/
     line = new QFrame(this);
