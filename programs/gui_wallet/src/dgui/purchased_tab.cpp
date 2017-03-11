@@ -85,6 +85,8 @@ void PurchasedTab::updateContents() {
     auto& global_instance = gui_wallet::GlobalEvents::instance();
     std::string str_current_username = global_instance.getCurrentUser();
     
+    if(str_current_username == "") {return;} // if key not imported
+    
     std::string a_result;
     RunTask("get_buying_history_objects_by_consumer_term "
                "\"" + str_current_username +"\" "
@@ -138,7 +140,7 @@ void PurchasedTab::updateContents() {
             
             QLabel* imag_label = new QLabel();
             imag_label->setAlignment(Qt::AlignCenter);
-
+            
             QPixmap image1(":/icon/images/info1.svg");
             
             
