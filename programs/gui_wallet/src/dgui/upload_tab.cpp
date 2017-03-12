@@ -54,7 +54,7 @@ Upload_tab::Upload_tab()
         m_info_widget(3, 6),
         m_title_label(tr("Title")),
         m_description_label(tr("Description")),
-        m_infoLayoutHeader(tr("Information About Content")),
+        m_infoLayoutHeader(tr("Content info:")),
         m_getPublishersTimer(this)
 {
     QFont m_font( "Open Sans Bold", 14, QFont::Bold);
@@ -185,7 +185,7 @@ Upload_tab::Upload_tab()
     
     
     //CONTENT
-    cont = new QLineEdit("Content Info:");
+    cont = new QLineEdit("Path");
     cont->setReadOnly(true);
     cont->setStyleSheet("border:1px solid lightGray; color: Gray");
     cont->setContentsMargins(10, 0, 0, 0);
