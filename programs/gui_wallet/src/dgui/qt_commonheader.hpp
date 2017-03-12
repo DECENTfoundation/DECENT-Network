@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include <QMouseEvent>
 #include "ui_wallet_functions_base.hpp"
+#include <QTime>
 
 #ifndef _NEEDED_ARGS1_
 #define _NEEDED_ARGS1_(__type__)    void* a_clb_data,int a_act, const __type__* a_pDigContent
@@ -39,7 +40,8 @@ namespace DCT {
 
 
 namespace gui_wallet {
-
+    
+    
 struct SDigitalContent{
     SDigitalContent():type(DCT::GENERAL){}
     DCT::DIG_CONT_TYPES type;

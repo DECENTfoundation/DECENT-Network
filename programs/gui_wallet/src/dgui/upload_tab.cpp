@@ -353,8 +353,6 @@ void Upload_tab::uploadContent() {
     submitCommand += " " + m_price;                                       //price_amount
     submitCommand += " [" + m_seeders + "]";                              //seeders
     submitCommand += " \"" + m_life_time + "T23:59:59\"";                  //expiration
-    submitCommand += " DCT";                                            //publishing_fee_asset
-    submitCommand += " 1";                                            //publishing_fee_amount
     submitCommand += " \"" + escape_string(synopsis) + "\"";            //synopsis
     submitCommand += " true";                                           //broadcast
 
