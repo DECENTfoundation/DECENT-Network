@@ -49,7 +49,6 @@ namespace gui_wallet
     private:        
         
         void UpdateLockedStatus();
-        void ResumeDownloads();
         
         void CliCallbackFnc(void*arg,const std::string& task);
         int GetDigitalContentsFromVariant(DCT::DIG_CONT_TYPES a_type,
@@ -61,13 +60,15 @@ namespace gui_wallet
         void SetPassword(void* a_owner, void* a_str_ptr);
         
         
+
     protected slots:
         void CurrentUserChangedSlot(const QString&);
         void ContentWasBoughtSlot();
-    protected slots:/* Instead of these one line slots
-                     *, probably should be used lambda functions?
-                     * Is it possible to do?
-                     */
+        void CheckDownloads();
+        
+        
+    protected slots:
+        
         void AboutSlot();
         void HelpSlot();
         void InfoSlot();
@@ -119,7 +120,7 @@ namespace gui_wallet
         int                     m_nError;
         std::string             m_error_string;
 
-        bool                m_locked;
+        bool                    m_locked;
 
         decent::gui::tools::RichDialog m_import_key_dlg;
 
@@ -147,6 +148,9 @@ namespace gui_wallet
         ContentDetailsBase* m_pdig_cont_detailsBougDlg;
 
         std::vector<std::string>        m_user_ids;
+        
+        QTimer                 _downloadChecker;
+        std::set<std::string>  _activeDownloads;
     };
 
 }

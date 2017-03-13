@@ -40,7 +40,7 @@ using namespace gui_wallet;
 using namespace nlohmann;
 
 
-Browse_content_tab::Browse_content_tab() : m_pTableWidget(new BTableWidget(1,s_cnNumberOfCols))
+Browse_content_tab::Browse_content_tab() : m_pTableWidget(new BTableWidget(1,s_cnNumberOfCols)), green_row(-1)
 {
     
     PrepareTableWidgetHeaderGUI();
@@ -366,7 +366,7 @@ void Browse_content_tab::Connects()
 void Browse_content_tab::doRowColor()
 {
     
-    if(green_row != 0)
+    if(green_row > 0)
     {
         m_pTableWidget->item(green_row,0)->setBackgroundColor(QColor(255,255,255));
         m_pTableWidget->item(green_row,1)->setBackgroundColor(QColor(255,255,255));
