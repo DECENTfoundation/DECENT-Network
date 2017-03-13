@@ -63,7 +63,7 @@ namespace gui_wallet
         QPushButton* more;
         QLineEdit user;
         int green_row;
-        void createNewRow(const int);
+        void createNewRow();
         void deleteEmptyRows();
         void ArrangeSize();
         void Connects();

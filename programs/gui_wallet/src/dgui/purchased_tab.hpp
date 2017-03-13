@@ -23,6 +23,22 @@
 #include "qt_commonheader.hpp"
 #include "gui_wallet_tabcontentmanager.hpp"
 
+class P_TableWidget : public QTableWidget
+{
+    Q_OBJECT
+public:
+    P_TableWidget(int row, int col) : QTableWidget(row,col)
+    {
+        this->setMouseTracking(true);
+    }
+    
+    virtual void mouseMoveEvent(QMouseEvent * event);
+public:
+signals:
+    void mouseMoveEventDid();
+};
+
+
 namespace gui_wallet {
 
 namespace DCF_PURCHASE {
@@ -60,6 +76,7 @@ protected:
     void ArrangeSize();
 
 public slots:
+    void doRowColor();
     void onTextChanged(const QString& text);
     void updateContents();
     void maybeUpdateContent();
@@ -67,7 +84,7 @@ public slots:
 
 protected:
     QVBoxLayout     m_main_layout;
-    QTableWidget*    m_pTableWidget;
+    P_TableWidget*    m_pTableWidget;
     QLineEdit       m_filterLineEditer;
     
     

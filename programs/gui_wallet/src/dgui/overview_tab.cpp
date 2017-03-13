@@ -272,6 +272,7 @@ void Overview_tab::doRowColor()
 
     }
     QPoint mouse_pos = table_widget.mapFromGlobal(QCursor::pos());
+    std::cout<<mouse_pos.x()<<"     "<<mouse_pos.y()<<std::endl;
     if(mouse_pos.x() > 0 && mouse_pos.x() < 110)
     {
         mouse_pos.setX(mouse_pos.x() + 300);
