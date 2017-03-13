@@ -17,6 +17,7 @@
 #include "gui_wallet_global.hpp"
 #include "gui_wallet_mainwindow.hpp"
 #include <QSortFilterProxyModel>
+#include <QStyleFactory>
 
 #ifndef _PATH_DELIMER_
 #ifdef WIN32
@@ -150,17 +151,18 @@ CentralWigdet::CentralWigdet(QBoxLayout* a_pAllLayout, Mainwindow_gui_wallet* a_
 
     
     setStyleSheet("color:black;""background-color:white;");
-//    m_main_tabs2.setStyleSheet("QTabBar::tab{"
-//                               " height: 40px; width: 175px; "
+
     m_main_tabs.setStyleSheet("QTabBar::tab{"
-                               " height: 40px; width: 179px; "
-                               "color:rgb(27,176,104);background-color:white;"
-                                "border: 1px solid rgb(240,240,240);}"
-                               "QTabBar::tab:selected{"
-                               "color:white;background-color:rgb(27,176,104);}"
+                              " height: 40px; width: 179px; "
+                              "color:rgb(27,176,104);background-color:white;"
+                              "border-right: 1 solid rgb(240,240,240);"
+                              "border-top: 1 solid rgb(240,240,240);"
+                              "border-bottom: 1 solid rgb(240,240,240);}"
+                              "QTabBar::tab:selected{"
+                              "color:white;background-color:rgb(27,176,104);}"
                                );
 
-
+    
     PrepareGUIprivate(a_pAllLayout);
     
     QTimer::singleShot(200, this, &CentralWigdet::initTabChanged);
@@ -256,8 +258,10 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     pLabelTmp->setScaledContents(true);
 
     QPixmap m_image1(":/icon/images/decent_logo.svg");
+    m_image1 = m_image1.scaled(200, 200, Qt::KeepAspectRatio);
     pLabelTmp->setPixmap(m_image1);
     pHBoxLayoutTmp->addWidget(pLabelTmp);
+    
     pLabelTmp->setFixedSize(__SIZE_FOR_IMGS__,__SIZE_FOR_IMGS__);
     m_pDcLogoWgt->setLayout(pHBoxLayoutTmp);
     m_pDcLogoWgt->setFixedHeight(__HEIGHT__);
@@ -290,8 +294,8 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     pLabelTmp->setFixedSize(__SIZE_FOR_IMGS__,__SIZE_FOR_IMGS__);
     
     pComboTmp1 = new QComboBox;
-    pComboTmp1->setStyleSheet("color: black;""background-color:white;"
-                              "border: 1px solid #D3D3D3 ");
+    pComboTmp1->setStyleSheet("color: black;""background-color:white;");
+    pComboTmp1->setStyle(QStyleFactory::create("fusion"));
     if(!pComboTmp1){throw __FILE__ "Low memory";}
     
 //    pComboTmp1->setStyleSheet("color: black;""background-color:white;");
@@ -300,11 +304,12 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     m_first_line_lbl.addWidget(m_pUsernameWgt);
     m_pUsernameWgt->setFixedHeight(__HEIGHT__);
     m_pUsernameWgt->setMaximumWidth(271);
-
+    
+    
     /*//////////////////////////////////////////*/
     line = new QFrame(this);
     line->setFrameShape(QFrame::VLine); // Horizontal line
-
+    
     line->setLineWidth(1);
     line->setStyleSheet("color: #f0f0f0");
     line->setFixedHeight(68);

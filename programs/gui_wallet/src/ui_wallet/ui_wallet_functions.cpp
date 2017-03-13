@@ -20,9 +20,16 @@
 #include "decent_tool_fifo.hpp"
 #include <fc/network/http/websocket.hpp>
 #include <fc/rpc/websocket_api.hpp>
+#include <fc/thread/thread.hpp>
+
 #include "decent_gui_inguiloopcaller_glb.hpp"
 #include "decent_tools_rwlock.hpp"
+
+
 #include <QCoreApplication>
+#include <QEventLoop>
+#include <QTime>
+
 #include <chrono>
 #include <thread>
 #ifdef WIN32
@@ -82,6 +89,23 @@ static int ConnectToNewWitness(const decent::tools::taskListItem<SConnectionStru
 #ifdef __cplusplus
 //extern "C"{
 #endif
+
+
+
+
+
+
+void QtDelay( int millisecondsToWait )
+{
+    QTime dieTime = QTime::currentTime().addMSecs( millisecondsToWait );
+    while( QTime::currentTime() < dieTime )
+    {
+        QCoreApplication::processEvents( QEventLoop::AllEvents, 100 );
+    }
+}
+
+
+
 
 
 __DLL_EXPORT__ void* GetFunctionPointerAsVoid(int a_first,...)
@@ -362,10 +386,9 @@ static void ConnectionThreadFunction(void)
     while(s_nConThreadRun)
     {
         s_pSema_for_connection_thread->wait();
-        __DEBUG_APP2__(1,"!!!!!!!!!!!!\n");
+
         while(s_pConnectionRequestFifo->GetFirstTask(&aTaskItem))
         {
-            //nConnectReturn = ConnectToNewWitness(aTaskItem);
             pConnectionThread = new std::thread(&ConnectToNewWitness,aTaskItem);
             if(pConnectionThread){
                 pConnectionThread->detach();
@@ -383,6 +406,8 @@ static void SetCurrentApis(const StructApi* a_pApis)
     memcpy(&s_CurrentApi,a_pApis,sizeof(StructApi));
     s_pMutex_for_cur_api->unlock();
 }
+
+
 
 
 static int ConnectToNewWitness(const decent::tools::taskListItem<SConnectionStruct*,CONN_FNC_TYPE>& a_con_data)
@@ -422,7 +447,20 @@ static int ConnectToNewWitness(const decent::tools::taskListItem<SConnectionStru
 
         fc::http::websocket_client client;
         //idump((wdata.ws_server));
-        auto con  = client.connect( pStruct->ws_server );
+        fc::http::websocket_connection_ptr con;
+        
+        
+        // Try to connect to server again and again and again and again and again and again and again and ...
+        bool connection_error = true;
+        while (connection_error) {
+            try {
+               con = client.connect( pStruct->ws_server );
+                connection_error = false;
+            } catch (...) {
+                connection_error = true;
+                QtDelay(1000);
+            }
+        }
         auto apic = std::make_shared<fc::rpc::websocket_api_connection>(*con);
 
         auto remote_api = apic->get_remote_api< login_api >(1);
@@ -444,11 +482,8 @@ static int ConnectToNewWitness(const decent::tools::taskListItem<SConnectionStru
            wallet_gui->format_result( name_formatter.first, name_formatter.second );
 
         boost::signals2::scoped_connection closed_connection(con->closed.connect([=]{
-           //cerr << "Server has disconnected us.\n";
-           // int CallFunctionInGuiLoop(SetNewTask_last_args,void* owner,TypeCallbackSetNewTaskGlb fpFnc);
-           //(*(a_con_data.fn_tsk_dn))(a_con_data.owner,a_con_data.callbackArg,(int64_t)UNABLE_TO_CONNECT,
-           //                          __CONNECTION_CLB_, __FILE__ "\nServer has disconnected us.");
-           (*s_fpCorrectUiCaller2)(a_con_data.callbackArg,UNABLE_TO_CONNECT, __CONNECTION_CLB_,
+
+            (*s_fpCorrectUiCaller2)(a_con_data.callbackArg,UNABLE_TO_CONNECT, __CONNECTION_CLB_,
                                  __FILE__ "\nServer has disconnected us.",
                                  a_con_data.owner,a_con_data.fn_tsk_dn2);
            wallet_gui->stop();
@@ -473,37 +508,22 @@ static int ConnectToNewWitness(const decent::tools::taskListItem<SConnectionStru
         }));
 
 
-        //if( !options.count( "daemon" ) )
-        if(1)
-        {
-           wallet_gui->register_api( wapi );
-           wallet_gui->start();
-           //(*a_fpDone)(a_pOwner);
-           //(*(a_con_data.fn_tsk_dn))(a_con_data.owner,a_con_data.callbackArg,0,
-           //                          __CONNECTION_CLB_, __FILE__ "\nConnection is ok");
 
-           LoadWalletFile(pStruct);
+       wallet_gui->register_api( wapi );
+       wallet_gui->start();
+       //(*a_fpDone)(a_pOwner);
+       //(*(a_con_data.fn_tsk_dn))(a_con_data.owner,a_con_data.callbackArg,0,
+       //                          __CONNECTION_CLB_, __FILE__ "\nConnection is ok");
 
-           std::string possible_input = __CONNECTION_CLB_;
-           if(pStruct->wallet_file_name != "" ){possible_input = "load_wallet_file " + pStruct->wallet_file_name;}
+       LoadWalletFile(pStruct);
 
-           (*s_fpCorrectUiCaller2)(a_con_data.callbackArg,0, possible_input,
-                                 "true",
-                                 a_con_data.owner,a_con_data.fn_tsk_dn2);
-           wallet_gui->wait();
-        }
-        else
-        {
-#if 0
-          fc::promise<int>::ptr exit_promise = new fc::promise<int>("UNIX Signal Handler");
-          fc::set_signal_handler([&exit_promise](int signal) {
-             exit_promise->set_value(signal);
-          }, SIGINT);
+       std::string possible_input = __CONNECTION_CLB_;
+       if(pStruct->wallet_file_name != "" ){possible_input = "load_wallet_file " + pStruct->wallet_file_name;}
 
-          ilog( "Entering Daemon Mode, ^C to exit" );
-          exit_promise->wait();
-#endif
-        }
+       (*s_fpCorrectUiCaller2)(a_con_data.callbackArg,0, possible_input,
+                             "true",
+                             a_con_data.owner,a_con_data.fn_tsk_dn2);
+       wallet_gui->wait();
 
         wapi->save_wallet_file(wallet_file.generic_string());
         locked_connection.disconnect();
@@ -551,8 +571,7 @@ int CallFunctionInUiLoopGeneral(int a_nType,SetNewTask_last_args2,
                                 void* a_owner,void* a_fpFnc)
 {
     
-    std::cout << "Command: " << a_inp << "\n";
-    std::cout << "Output: " << a_resultStr << "\n";
+
 
     switch(a_nType)
     {

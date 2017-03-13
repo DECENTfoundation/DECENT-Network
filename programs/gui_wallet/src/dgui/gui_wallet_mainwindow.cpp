@@ -190,17 +190,35 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
             SIGNAL(ShowDetailsOnDigContentSig(SDigitalContent)),
             this,SLOT(ShowDetailsOnDigContentSlot(SDigitalContent)));
 
-
-    InitializeUiInterfaceOfWallet_base(&WarnAndWaitFunc,
-                                    &CallFunctionInGuiLoop2,
-                                       &CallFunctionInGuiLoop3, this, NULL,
-                                  GetFunctionPointerAsVoid(0, &Mainwindow_gui_wallet::ManagementNewFuncGUI));
-    m_nJustConnecting = 1;
-    ConnectSlot();
+    
+    
+    
     setWindowTitle(tr("DECENT - Blockchain Content Distribution"));
     
     centralWidget()->layout()->setContentsMargins(0, 0, 0, 0);
     setStyleSheet("QMainWindow{color:black;""background-color:white;}");
+    
+    
+    
+    InitializeUiInterfaceOfWallet_base(&WarnAndWaitFunc,
+                                       &CallFunctionInGuiLoop2,
+                                       &CallFunctionInGuiLoop3, this, NULL,
+                                       GetFunctionPointerAsVoid(0, &Mainwindow_gui_wallet::ManagementNewFuncGUI));
+    m_nJustConnecting = 1;
+    ConnectSlot();
+    
+    m_pdig_cont_detailsGenDlg = nullptr;
+    m_pdig_cont_detailsBougDlg = nullptr;
+
+}
+
+void Mainwindow_gui_wallet::ContentWasBoughtSlot() {
+    
+    m_pCentralWidget->SetMyCurrentTabIndex(4);
+    
+    std::string csUserName = GlobalEvents::instance().getCurrentUser();
+    std::string csLineToRun = "list_account_balances " + csUserName;
+    SetNewTask(csLineToRun,this,NULL,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
 }
 
 
@@ -210,6 +228,11 @@ Mainwindow_gui_wallet::~Mainwindow_gui_wallet()
     DestroyUiInterfaceOfWallet();
     delete m_pInfoTextEdit;
     delete m_pcInfoDlg;
+    
+    if (m_pdig_cont_detailsGenDlg)
+        delete m_pdig_cont_detailsGenDlg;
+    if (m_pdig_cont_detailsBougDlg)
+        delete m_pdig_cont_detailsBougDlg;
 }
 
 
@@ -363,11 +386,20 @@ void Mainwindow_gui_wallet::ShowDetailsOnDigContentSlot(SDigitalContent a_dig_co
     switch(a_dig_cont.type)
     {
     case DCT::GENERAL:
-        m_dig_cont_detailsGenDlg.execCDD(a_dig_cont);
+        if (m_pdig_cont_detailsGenDlg)
+            delete m_pdig_cont_detailsGenDlg;
+        m_pdig_cont_detailsGenDlg = new ContentDetailsGeneral();
+        
+        connect(m_pdig_cont_detailsGenDlg, SIGNAL(ContentWasBought()), this, SLOT(ContentWasBoughtSlot()));
+
+        m_pdig_cont_detailsGenDlg->execCDD(a_dig_cont);
         break;
     case DCT::BOUGHT:
     case DCT::WAITING_DELIVERY:
-        m_dig_cont_detailsBougDlg.execCDB(a_dig_cont);
+        if (nullptr == m_pdig_cont_detailsBougDlg)
+            delete m_pdig_cont_detailsBougDlg;
+        m_pdig_cont_detailsBougDlg = new ContentDetailsBase();
+        m_pdig_cont_detailsBougDlg->execCDB(a_dig_cont);
         break;
     default:
         break;
@@ -434,6 +466,36 @@ void Mainwindow_gui_wallet::UpdateLockedStatus()
     const std::string csLine = "is_locked";
     SetNewTask(csLine, this, NULL, &Mainwindow_gui_wallet::TaskDoneFuncGUI);
 }
+
+
+
+void Mainwindow_gui_wallet::ResumeDownloads()
+{
+    
+    auto& global_instance = gui_wallet::GlobalEvents::instance();
+    std::string str_current_username = global_instance.getCurrentUser();
+
+    std::string a_result;
+    RunTask("get_buying_history_objects_by_consumer_term \"" + str_current_username +"\" \"\" ", a_result);
+    
+    try {
+        auto contents = json::parse(a_result);
+        for (int i = 0; i < contents.size(); ++i) {
+            
+            auto content = contents[i];
+            std::string URI = contents[i]["URI"].get<std::string>();
+            std::string ignore_string;
+            RunTask("download_package \"" + URI +"\" ", ignore_string);            
+        }
+        
+        
+    } catch (std::exception& ex) {
+        std::cout << ex.what() << std::endl;
+    }
+    
+
+}
+
 
 
 void Mainwindow_gui_wallet::moveEvent(QMoveEvent * a_event)
@@ -529,7 +591,6 @@ void Mainwindow_gui_wallet::TaskDoneFuncGUI(void* a_clbkArg,int64_t a_err,const 
             QMessageBox aMessageBox(QMessageBox::Critical,
                                     QObject::tr("error"),QObject::tr(a_task.c_str()),
                                     QMessageBox::Ok,this);
-            //aMessageBox.setStyleSheet(QMessageBox::);
             aMessageBox.setDetailedText(QObject::tr(a_result.c_str()));
             aMessageBox.exec();
             m_ConnectDlg.GetTableWidget(ConnectDlg::CONNECT_BUTTON_FIELD, 1)->setEnabled(true);
@@ -637,27 +698,38 @@ void Mainwindow_gui_wallet::TaskDoneFuncGUI(void* a_clbkArg,int64_t a_err,const 
     
     else if(strstr(a_task.c_str(),"import_key ") == a_task.c_str())
     {
+        if (a_result.find("exception") != std::string::npos) {
+            QMessageBox aMessageBox(QMessageBox::Critical,
+                                    QObject::tr("Error"),
+                                    QObject::tr("Can not import key."),
+                                    QMessageBox::Ok,
+                                    this);
+            aMessageBox.setDetailedText(QObject::tr(a_result.c_str()));
+            aMessageBox.exec();
+        }
         DisplayWalletContentGUI();
     }
     else if(strstr(a_task.c_str(),"unlock ") == a_task.c_str())
     {
         if (a_err) {
             QMessageBox aMessageBox(QMessageBox::Critical,
-                                    QObject::tr("error"),
-                                    QObject::tr("Unable to unlock the wallet!"),
+                                    QObject::tr("Error"),
+                                    QObject::tr("Unable to unlock the wallet."),
                                     QMessageBox::Ok,
                                     this);
             aMessageBox.setDetailedText(QObject::tr(a_result.c_str()));
             aMessageBox.exec();
         }
         UpdateLockedStatus();
+        
+        ResumeDownloads();
     }
     else if(strstr(a_task.c_str(),"lock") == a_task.c_str())
     {
         if (a_err) {
             QMessageBox aMessageBox(QMessageBox::Critical,
-                                    QObject::tr("error"),
-                                    QObject::tr("Unable to lock the wallet!"),
+                                    QObject::tr("Error"),
+                                    QObject::tr("Unable to lock the wallet."),
                                     QMessageBox::Ok,
                                     this);
             aMessageBox.setDetailedText(QObject::tr(a_result.c_str()));

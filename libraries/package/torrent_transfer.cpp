@@ -1031,7 +1031,37 @@ void torrent_transfer::dump_config(const boost::filesystem::path& config_file) {
 
 package_transfer_interface::transfer_progress torrent_transfer::get_progress() {
     libtorrent::torrent_status st = _torrent_handle.status();
-    return transfer_progress(st.total_wanted, st.total_wanted_done, st.download_rate);
+    
+    std::string str_status = "";
+    switch (st.state) {
+        case torrent_status::checking_files:
+            str_status = "Checking Files";
+            break;
+        case torrent_status::downloading_metadata:
+            str_status = "Downloading Metadata";
+            break;
+        case torrent_status::downloading:
+            str_status = "Downloading";
+            break;
+        case torrent_status::finished:
+            str_status = "Finished";
+            break;
+        case torrent_status::seeding:
+            str_status = "Seeding";
+            break;
+        case torrent_status::allocating:
+            str_status = "Allocating";
+            break;
+        case torrent_status::checking_resume_data:
+            str_status = "Checking Resume Data";
+            break;
+        case torrent_status::queued_for_checking:
+            str_status = "Queued For Checking";
+            break;
+    }
+
+    
+    return transfer_progress(st.total_wanted, st.total_wanted_done, st.download_rate, str_status);
 }
 
 void torrent_transfer::print_status() {
@@ -1274,7 +1304,7 @@ void torrent_transfer::update_torrent_status() {
 		if (!_is_upload && st.total_wanted != 0) {
             
 			if (st.total_wanted_done < st.total_wanted) {
-				_listener->on_download_progress(_id, transfer_progress(st.total_wanted, st.total_wanted_done, st.download_rate));
+				_listener->on_download_progress(_id, transfer_progress(st.total_wanted, st.total_wanted_done, st.download_rate, "Downloading..."));
 			} else {
 				package::package_object obj = check_and_install_package();
 				if (obj.verify_hash()) {

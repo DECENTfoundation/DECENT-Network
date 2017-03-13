@@ -2110,8 +2110,6 @@ public:
                                             string price_amount,
                                             vector<account_id_type> seeders,
                                             fc::time_point_sec expiration,
-                                            string publishing_fee_symbol_name,
-                                            string publishing_fee_amount,
                                             string synopsis,
                                             bool broadcast/* = false */)
       {
@@ -2119,18 +2117,21 @@ public:
             FC_ASSERT(!is_locked());
             account_object author_account = get_account( author );
 
-            fc::optional<asset_object> price_asset_obj = get_asset(price_asset_symbol);
-            fc::optional<asset_object> fee_asset_obj = get_asset(publishing_fee_symbol_name);
+             fc::optional<asset_object> DTC_asset = get_asset("DCT");
+             fc::optional<asset_object> price_asset_obj = get_asset(price_asset_symbol);
+    
 
-            FC_ASSERT(price_asset_obj, "Could not find asset matching ${asset}", ("asset", price_asset_symbol));
-            FC_ASSERT(fee_asset_obj, "Could not find asset matching ${asset}", ("asset", publishing_fee_symbol_name));
-
+            FC_ASSERT(DTC_asset, "Could not find asset matching DCT");
+            FC_ASSERT(DTC_asset, "Could not find asset");
 
 
             CryptoPP::Integer secret(randomGenerator, 512);
-
             fc::sha512 sha_key;
             secret.Encode((byte*)sha_key._hash, 64);
+            sha_key._hash[0] = 0;
+            sha_key._hash[1] = 0;
+            sha_key._hash[2] = 0;
+            sha_key._hash[3] = 0;
 
             decent::crypto::custody_data cd;
             package_object pack = package_manager::instance().create_package(content_dir, samples_dir, sha_key, cd);
@@ -2143,17 +2144,34 @@ public:
             shamir_secret ss(quorum, seeders.size(), secret);
             ss.calculate_split();
             content_submit_operation submit_op;
+             
+             
+             
+             asset total_price_per_day;
+             
             for( int i =0; i < seeders.size(); i++ ){
                const auto& s = _remote_db->get_seeder( seeders[i] );
                ciphertext cp;
                point p = ss.split[i];
                decent::crypto::el_gamal_encrypt( p ,s->pubKey ,cp );
                submit_op.key_parts.push_back(cp);
+            
+                total_price_per_day += s->price.amount * size;
+               total_price_per_day += s->price.amount;
+                
             }
+
+             FC_ASSERT( time_point_sec(fc::time_point::now()) <= expiration);
+
+             fc::microseconds duration = (expiration - fc::time_point::now());
+            uint64_t days = duration.to_seconds() / 3600 / 24;
+
+             
+            
 
             package_transfer_interface::transfer_id id = package_manager::instance().upload_package(pack, protocol, transfer_progress_printer::instance());
    
-
+          
             submit_op.author = author_account.id;
             submit_op.URI = package_manager::instance().get_transfer_url(id);
             submit_op.price = price_asset_obj->amount_from_string(price_amount);
@@ -2162,7 +2180,7 @@ public:
             submit_op.seeders = seeders;
             submit_op.quorum = quorum;
             submit_op.expiration = expiration;
-            submit_op.publishing_fee = fee_asset_obj->amount_from_string(publishing_fee_amount);
+            submit_op.publishing_fee = days * total_price_per_day;
             submit_op.synopsis = synopsis;
             submit_op.cd = cd;
 
@@ -2173,13 +2191,12 @@ public:
 
             return sign_transaction( tx, broadcast );
          } 
-         FC_CAPTURE_AND_RETHROW( (author)(content_dir)(samples_dir)(protocol)(price_asset_symbol)(price_amount)(seeders)(expiration)(publishing_fee_symbol_name)(publishing_fee_amount)(synopsis)(broadcast) )
+         FC_CAPTURE_AND_RETHROW( (author)(content_dir)(samples_dir)(protocol)(price_asset_symbol)(price_amount)(seeders)(expiration)(synopsis)(broadcast) )
       }
 
 
    optional<content_download_status> get_download_status(string consumer, string URI) {
       try {
-         FC_ASSERT(!is_locked());
          account_id_type acc = get_account(consumer).id;
          optional<buying_object> bobj = _remote_db->get_buying_by_consumer_URI( acc, URI );
          if (!bobj) {
@@ -2200,6 +2217,7 @@ public:
 
          status.total_download_bytes = progress.total_bytes;
          status.received_download_bytes = progress.current_bytes;
+          status.status_text = progress.str_status;
 
          return status;
       } FC_CAPTURE_AND_RETHROW( (consumer)(URI) )
@@ -2207,7 +2225,7 @@ public:
 
 
 
-    void download_content(string consumer, string URI, string content_dir, bool broadcast) {
+    void download_content(string consumer, string URI, bool broadcast) {
         
         try {
             FC_ASSERT( !is_locked() );
@@ -2240,7 +2258,7 @@ public:
             //stats_listener.ipfs_IDs = list_seeders_ipfs_IDs( URI);
             package_manager::instance().download_package(URI, empty_transfer_listener::instance(), empty_report_stats_listener::instance());
             
-        } FC_CAPTURE_AND_RETHROW( (consumer)(URI)(content_dir)(broadcast) )
+        } FC_CAPTURE_AND_RETHROW( (consumer)(URI)(broadcast) )
     }
 
 
@@ -2398,7 +2416,13 @@ public:
 
       decent::crypto::shamir_secret ss( co.quorum, co.key_parts.size() );
       decent::crypto::point message;
-      FC_ASSERT( _wallet.priv_el_gamal_key != decent::crypto::d_integer::Zero(), "Private ElGamal key is not imported. " );
+       
+       if (_wallet.priv_el_gamal_key == decent::crypto::d_integer::Zero()) { // Generate key if it does not exist
+           import_el_gamal_key(decent::crypto::generate_private_el_gamal_key());
+       }
+       
+
+//      FC_ASSERT( _wallet.priv_el_gamal_key != decent::crypto::d_integer::Zero(), "Private ElGamal key is not imported. " );
 
       for( const auto key_particle : bo.key_particles )
       {
@@ -2988,12 +3012,12 @@ bool wallet_api::import_key(string account_name_or_id, string wif_key)
    if (!optional_private_key)
       FC_THROW("Invalid private key");
    string base58_public_key = optional_private_key->get_public_key().to_base58();
-   copy_wallet_file( "before-import-key-" + base58_public_key );
+//   copy_wallet_file( "before-import-key-" + base58_public_key );
 
    if( my->import_key(account_name_or_id, wif_key) )
    {
       save_wallet_file();
-      copy_wallet_file( "after-import-key-" + base58_public_key );
+//      copy_wallet_file( "after-import-key-" + base58_public_key );
       return true;
    }
    return false;
@@ -3598,15 +3622,15 @@ wallet_api::submit_content(string author, string URI, string price_asset_name, s
 }
 
 signed_transaction
-wallet_api::submit_content_new(string author, string content_dir, string samples_dir, string protocol, string price_asset_symbol, string price_amount, vector<account_id_type> seeders, fc::time_point_sec expiration, string publishing_fee_symbol_name, string publishing_fee_amount, string synopsis, bool broadcast)
+wallet_api::submit_content_new(string author, string content_dir, string samples_dir, string protocol, string price_asset_symbol, string price_amount, vector<account_id_type> seeders, fc::time_point_sec expiration, string synopsis, bool broadcast)
 {
-   return my->submit_content_new(author, content_dir, samples_dir, protocol, price_asset_symbol, price_amount, seeders, expiration, publishing_fee_symbol_name, publishing_fee_amount, synopsis, broadcast);
+   return my->submit_content_new(author, content_dir, samples_dir, protocol, price_asset_symbol, price_amount, seeders, expiration, synopsis, broadcast);
 }
 
 void
-wallet_api::download_content(string consumer, string URI, string content_dir, bool broadcast)
+wallet_api::download_content(string consumer, string URI, bool broadcast)
 {
-   return my->download_content(consumer, URI, content_dir, broadcast);
+   return my->download_content(consumer, URI, broadcast);
 }
 
 optional<content_download_status> wallet_api::get_download_status(string consumer, string URI)
@@ -3844,6 +3868,10 @@ void wallet_api::extract_package(const std::string& package_hash, const std::str
    FC_ASSERT(!is_locked());
    fc::sha512 key1;
    aes_key.Encode((byte*)key1._hash, 64);
+   key1._hash[0] = 0;
+   key1._hash[1] = 0;
+   key1._hash[2] = 0;
+   key1._hash[3] = 0;
 
    package_object package = package_manager::instance().get_package_object(fc::ripemd160(package_hash));
    package_manager::instance().unpack_package(output_dir, package, key1);

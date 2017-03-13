@@ -44,7 +44,7 @@ Browse_content_tab::Browse_content_tab() : m_pTableWidget(new BTableWidget(1,s_c
 {
     
     PrepareTableWidgetHeaderGUI();
-    
+    green_row = 0;
     for(int i(0); i<s_cnNumberOfSearchFields;++i){m_searchTypeCombo.addItem(tr(ST::s_vcpcSearchTypeStrs[i]));}
     m_searchTypeCombo.setCurrentIndex(0);
     
@@ -79,11 +79,15 @@ Browse_content_tab::Browse_content_tab() : m_pTableWidget(new BTableWidget(1,s_c
     setLayout(&m_main_layout);
     
     connect(&m_filterLineEdit, SIGNAL(textChanged(QString)), this, SLOT(onTextChanged(QString)));
+    for(int i = 0; i < m_pTableWidget->rowCount(); ++i)
+        connect((CButton*)m_pTableWidget->cellWidget(i, 0),SIGNAL(mouseWasMoved()),this,SLOT(doRowColor()));
     
     m_contentUpdateTimer.connect(&m_contentUpdateTimer, SIGNAL(timeout()), this, SLOT(maybeUpdateContent()));
     m_contentUpdateTimer.setInterval(1000);
     m_contentUpdateTimer.start();
     Connects();
+    connect(m_pTableWidget,SIGNAL(mouseMoveEventDid()),this,SLOT(doRowColor()));
+    ArrangeSize();
 }
 
 
@@ -96,6 +100,7 @@ Browse_content_tab::~Browse_content_tab()
 void Browse_content_tab::DigContCallback(_NEEDED_ARGS2_)
 {
     emit ShowDetailsOnDigContentSig(*a_pDigContent);
+    ArrangeSize();
 }
 
 void Browse_content_tab::maybeUpdateContent() {
@@ -105,16 +110,18 @@ void Browse_content_tab::maybeUpdateContent() {
     
     m_doUpdate = false;
     updateContents();
+    ArrangeSize();
 }
 
 void Browse_content_tab::onTextChanged(const QString& text) {
     
     m_doUpdate = true;
+    ArrangeSize();
 }
 
 void Browse_content_tab::PrepareTableWidgetHeaderGUI()
 {
-    QTableWidget& m_TableWidget = *m_pTableWidget;
+    BTableWidget& m_TableWidget = *m_pTableWidget;
     //QLabel* pLabel;
     
     
@@ -140,10 +147,9 @@ void Browse_content_tab::PrepareTableWidgetHeaderGUI()
         m_TableWidget.item(0,i)->setForeground(QColor::fromRgb(51,51,51));
         
     }
-    
     m_TableWidget.setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     m_TableWidget.setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    
+    Connects();
     ArrangeSize();
 }
 
@@ -151,21 +157,6 @@ void Browse_content_tab::PrepareTableWidgetHeaderGUI()
 
 
 void Browse_content_tab::updateContents() {
-    /*
-     * sync task usage example
-    std::string str_result;
-    try
-    {
-        RunTask("lst_content \"tigran\" 100", str_result);
-        
-        int a = 0;
-        ++a;
-    }
-    catch (std::exception const& ex)
-    {
-        std::cout << ex.what() << std::endl;
-    }*/
-    
     std::string filterText = m_filterLineEdit.text().toStdString();
 
     SetNewTask("search_content \"" + filterText + "\" 100", this, NULL, +[](void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
@@ -209,18 +200,14 @@ void Browse_content_tab::updateContents() {
                 dContents[i].price.amount /= GRAPHENE_BLOCKCHAIN_PRECISION;
                 
                 dContents[i].AVG_rating = contents[i]["AVG_rating"].get<double>()  / 1000;
-                
-                
-                obj->ArrangeSize();
             }
             
             obj->ShowDigitalContentsGUI(dContents);
-            
+            obj->ArrangeSize();
         } catch (std::exception& ex) {
-            std::cout << ex.what() << std::endl;
         }
     });
-    
+    Connects();
     ArrangeSize();
 }
 
@@ -237,7 +224,7 @@ void Browse_content_tab::ShowDigitalContentsGUI(std::vector<SDigitalContent>& co
     
     
     
-    QTableWidget& m_TableWidget = *m_pTableWidget;
+    BTableWidget& m_TableWidget = *m_pTableWidget;
     
     PrepareTableWidgetHeaderGUI();
     
@@ -246,10 +233,10 @@ void Browse_content_tab::ShowDigitalContentsGUI(std::vector<SDigitalContent>& co
     {
         
         QPixmap image1(":/icon/images/info1_white.svg");
-        m_TableWidget.setCellWidget(index, 0, new TableWidgetItemW<QLabel>(aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
+        m_TableWidget.setCellWidget(index, 0, new TableWidgetItemW<CButton>(aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
                                                                                                             tr("")));
-        ((QLabel*)m_TableWidget.cellWidget(index,0))->setPixmap(image1);
-        ((QLabel*)m_TableWidget.cellWidget(index,0))->setAlignment(Qt::AlignCenter);
+        ((CButton*)m_TableWidget.cellWidget(index,0))->setPixmap(image1);
+        ((CButton*)m_TableWidget.cellWidget(index,0))->setAlignment(Qt::AlignCenter);
         
         std::string created_str;
         for(int i = 0; i < 10; ++i)
@@ -309,7 +296,7 @@ void Browse_content_tab::ShowDigitalContentsGUI(std::vector<SDigitalContent>& co
         m_TableWidget.item(index, 3)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
 
 
-        m_TableWidget.setItem(index,4,new QTableWidgetItem(QString::fromStdString(std::to_string(aTemporar.price.amount))));
+        m_TableWidget.setItem(index,4,new QTableWidgetItem(QString::number(aTemporar.price.amount) + " DCT"));
         m_TableWidget.item(index, 4)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
         m_TableWidget.item(index, 4)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
         
@@ -326,7 +313,9 @@ void Browse_content_tab::ShowDigitalContentsGUI(std::vector<SDigitalContent>& co
     }
     
     m_main_layout.addWidget(&m_TableWidget);
-
+    
+    Connects();
+    
     m_pTableWidget->horizontalHeader()->setStretchLastSection(true);
     m_pTableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     ArrangeSize();
@@ -335,10 +324,7 @@ void Browse_content_tab::ShowDigitalContentsGUI(std::vector<SDigitalContent>& co
 
 void Browse_content_tab::ArrangeSize()
 {
-//    QSize tqsTableSize = m_pTableWidget->size();
-//    int nSizeForOne = tqsTableSize.width()/(DCF::NUM_OF_DIG_CONT_FIELDS)-1;
-//    for(int i(0); i<DCF::NUM_OF_DIG_CONT_FIELDS;++i){m_pTableWidget->setColumnWidth(i,nSizeForOne);}
-    m_pTableWidget->setStyleSheet("QTableView{border : 1px solid lightGray}");
+    m_pTableWidget->setStyleSheet("QTableView{border : 1px solid white}");
     m_pTableWidget->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     m_pTableWidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     
@@ -363,6 +349,8 @@ void Browse_content_tab::resizeEvent ( QResizeEvent * a_event )
 void Browse_content_tab::Connects()
 {
     connect(m_pTableWidget,SIGNAL(mouseMoveEventDid()),this,SLOT(doRowColor()));
+    for(int i = 0; i < m_pTableWidget->rowCount(); ++i)
+        connect((CButton*)m_pTableWidget->cellWidget(i, 0),SIGNAL(mouseWasMoved()),this,SLOT(doRowColor()));
 }
 
 void Browse_content_tab::doRowColor()
@@ -370,36 +358,46 @@ void Browse_content_tab::doRowColor()
     
     if(green_row != 0)
     {
-        m_pTableWidget->item(green_row,0)->setBackgroundColor(QColor(255,255,255));
+        m_pTableWidget->cellWidget(green_row , 0)->setStyleSheet("* { background-color: rgb(255,255,255); color : white; }");
         m_pTableWidget->item(green_row,1)->setBackgroundColor(QColor(255,255,255));
         m_pTableWidget->item(green_row,2)->setBackgroundColor(QColor(255,255,255));
         m_pTableWidget->item(green_row,3)->setBackgroundColor(QColor(255,255,255));
+        m_pTableWidget->item(green_row,4)->setBackgroundColor(QColor(255,255,255));
+        m_pTableWidget->item(green_row,5)->setBackgroundColor(QColor(255,255,255));
+        m_pTableWidget->item(green_row,6)->setBackgroundColor(QColor(255,255,255));
         
-        m_pTableWidget->item(green_row,0)->setForeground(QColor::fromRgb(0,0,0));
         m_pTableWidget->item(green_row,1)->setForeground(QColor::fromRgb(0,0,0));
         m_pTableWidget->item(green_row,2)->setForeground(QColor::fromRgb(0,0,0));
         m_pTableWidget->item(green_row,3)->setForeground(QColor::fromRgb(0,0,0));
+        m_pTableWidget->item(green_row,4)->setForeground(QColor::fromRgb(0,0,0));
+        m_pTableWidget->item(green_row,5)->setForeground(QColor::fromRgb(0,0,0));
+        m_pTableWidget->item(green_row,6)->setForeground(QColor::fromRgb(0,0,0));
     }
     QPoint mouse_pos = m_pTableWidget->mapFromGlobal(QCursor::pos());
+    if(mouse_pos.x() > 0 && mouse_pos.x() < 400)
+    {
+        mouse_pos.setX(mouse_pos.x() + 300);
+    }
     QTableWidgetItem *ite = m_pTableWidget->itemAt(mouse_pos);
     if(ite != NULL)
     {
         int a = ite->row();
         if(a != 0)
         {
-            m_pTableWidget->item(a,0)->setBackgroundColor(QColor(27,176,104));
+            m_pTableWidget->cellWidget(a , 0)->setStyleSheet("* { background-color: rgb(27,176,104); color : white; }");
             m_pTableWidget->item(a,1)->setBackgroundColor(QColor(27,176,104));
             m_pTableWidget->item(a,2)->setBackgroundColor(QColor(27,176,104));
             m_pTableWidget->item(a,3)->setBackgroundColor(QColor(27,176,104));
             m_pTableWidget->item(a,4)->setBackgroundColor(QColor(27,176,104));
             m_pTableWidget->item(a,5)->setBackgroundColor(QColor(27,176,104));
+            m_pTableWidget->item(a,6)->setBackgroundColor(QColor(27,176,104));
             
-            m_pTableWidget->item(a,0)->setForeground(QColor::fromRgb(255,255,255));
             m_pTableWidget->item(a,1)->setForeground(QColor::fromRgb(255,255,255));
             m_pTableWidget->item(a,2)->setForeground(QColor::fromRgb(255,255,255));
             m_pTableWidget->item(a,3)->setForeground(QColor::fromRgb(255,255,255));
             m_pTableWidget->item(a,4)->setForeground(QColor::fromRgb(255,255,255));
             m_pTableWidget->item(a,5)->setForeground(QColor::fromRgb(255,255,255));
+            m_pTableWidget->item(a,6)->setForeground(QColor::fromRgb(255,255,255));
             green_row = a;
         }
     }

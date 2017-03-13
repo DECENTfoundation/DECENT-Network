@@ -26,7 +26,7 @@ namespace gui_wallet
     {
         Q_OBJECT
     public:
-        application(int& argc, char** argv);
+        application(int argc, char** argv);
         virtual ~application();
 
     };

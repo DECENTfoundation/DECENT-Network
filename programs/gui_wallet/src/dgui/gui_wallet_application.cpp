@@ -58,7 +58,7 @@ int WarnAndWaitFunc(void* a_pOwner,WarnYesOrNoFuncType a_fpYesOrNo,
 }
 
 
-gui_wallet::application::application(int& argc, char** argv)
+gui_wallet::application::application(int argc, char** argv)
     :
       QApplication(argc,argv)
 {

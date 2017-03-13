@@ -8,10 +8,10 @@ target_link_libraries( graphene_witness graphene_chain graphene_app graphene_tim
 target_include_directories( graphene_witness
                             PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" )
 
-install( TARGETS
-   graphene_witness
-
-   RUNTIME DESTINATION bin
-   LIBRARY DESTINATION lib
-   ARCHIVE DESTINATION lib
-)
+#install( TARGETS
+#   graphene_witness
+#
+#   RUNTIME DESTINATION bin
+#   LIBRARY DESTINATION lib
+#   ARCHIVE DESTINATION lib
+#)

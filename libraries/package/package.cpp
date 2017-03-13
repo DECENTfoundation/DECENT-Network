@@ -184,9 +184,9 @@ public:
     }
 };
 
-
+boost::uuids::random_generator generator;
+    
 string make_uuid() {
-    boost::uuids::random_generator generator;
     return boost::uuids::to_string(generator());
 }
 
@@ -500,16 +500,21 @@ package_object package_manager::create_package( const boost::filesystem::path& c
 
 	vector<path> all_files;
     if (is_regular_file(content_path)) {
-       all_files.push_back(content_path);
+        file_source source(content_path.string(), std::ifstream::binary);
+        
+        arc.put(content_path.filename().string(), source, file_size(content_path));
+
     } else {
-	   get_files_recursive(content_path, all_files); 
+	   get_files_recursive(content_path, all_files);
+        
+        for (int i = 0; i < all_files.size(); ++i) {
+            file_source source(all_files[i].string(), std::ifstream::binary);
+            
+            arc.put(relative_path(all_files[i], content_path).string(), source, file_size(all_files[i]));
+        }
     }
     
-	for (int i = 0; i < all_files.size(); ++i) {
-        file_source source(all_files[i].string(), std::ifstream::binary);
-        
-		arc.put(relative_path(all_files[i], content_path).string(), source, file_size(all_files[i]));
-	}
+	
 
 	arc.finalize();
 
@@ -534,6 +539,11 @@ package_object package_manager::create_package( const boost::filesystem::path& c
     }
 
     fc::ripemd160 hash = calculate_hash(aes_file_path);
+    if (is_directory(packages_path / hash.str())) {
+        ilog("package_manager:create_package replacing existing package ${hash}",("hash", hash.str()));
+        remove_all(packages_path / hash.str());
+    }
+        
     rename(temp_path, packages_path / hash.str());
 
 	return package_object(packages_path / hash.str());

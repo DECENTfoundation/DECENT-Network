@@ -102,6 +102,7 @@ Transactions_tab::Transactions_tab() : green_row(0)
     m_contentUpdateTimer.connect(&m_contentUpdateTimer, SIGNAL(timeout()), this, SLOT(maybeUpdateContent()));
     m_contentUpdateTimer.setInterval(1000);
     m_contentUpdateTimer.start();
+    Connects();
 }
 
 
@@ -124,19 +125,18 @@ void Transactions_tab::onTextChanged(const QString& text) {
 }
 
 
-void Transactions_tab::createNewRow(const int str)
+void Transactions_tab::createNewRow()
 {
-    int count = str/50;
-    tablewidget->setRowCount(count);
+    tablewidget->setRowCount(100);
 }
 
 void Transactions_tab::ArrangeSize()
 {
   QSize tqsTableSize = tablewidget->size();
-  tablewidget->setColumnWidth(0,(tqsTableSize.width()*25)/100);
-  tablewidget->setColumnWidth(1,(tqsTableSize.width()*25)/100);
-  tablewidget->setColumnWidth(2,(tqsTableSize.width()*25)/100);
-  tablewidget->setColumnWidth(3,(tqsTableSize.width()*25)/100);
+  tablewidget->setColumnWidth(0,(tqsTableSize.width()*10)/100);
+  tablewidget->setColumnWidth(1,(tqsTableSize.width()*40)/100);
+  tablewidget->setColumnWidth(2,(tqsTableSize.width()*40)/100);
+  tablewidget->setColumnWidth(3,(tqsTableSize.width()*10)/100);
 }
 
 void Transactions_tab::resizeEvent(QResizeEvent *a_event)
@@ -235,10 +235,18 @@ void Transactions_tab::updateContents() {
                 auto op = content["op"];
                 
                 
-                obj->tablewidget->setCellWidget(i + 1, 0, new QLabel(QString::fromStdString(op["id"].get<std::string>())));
-                obj->tablewidget->setCellWidget(i + 1, 1, new QLabel(QString::fromStdString(contents[i]["description"].get<std::string>())));
-                obj->tablewidget->setCellWidget(i + 1, 2, new QLabel(QString::fromStdString(contents[i]["memo"].get<std::string>())));
+                obj->tablewidget->setItem(i + 1, 0, new QTableWidgetItem(QString::fromStdString(op["id"].get<std::string>())));
+                obj->tablewidget->item(i + 1, 0)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+                obj->tablewidget->item(i + 1, 0)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
                 
+                obj->tablewidget->setItem(i + 1, 1, new QTableWidgetItem(QString::fromStdString(contents[i]["description"].get<std::string>())));
+                obj->tablewidget->item(i + 1, 1)->setTextAlignment(Qt::AlignLeft|Qt::AlignVCenter);
+                obj->tablewidget->item(i + 1, 1)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+                
+                obj->tablewidget->setItem(i + 1, 2, new QTableWidgetItem(QString::fromStdString(contents[i]["memo"].get<std::string>())));
+                obj->tablewidget->item(i + 1, 2)->setTextAlignment(Qt::AlignRight|Qt::AlignVCenter);
+                obj->tablewidget->item(i + 1, 2)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+
                 auto amount = op["op"][1]["fee"]["amount"];
                 QString amountText = "";
                 
@@ -248,14 +256,15 @@ void Transactions_tab::updateContents() {
                     amountText = QString::number(std::stod(amount.get<std::string>()) / GRAPHENE_BLOCKCHAIN_PRECISION) + " DCT";
 
                 }
-                obj->tablewidget->setCellWidget(i + 1, 3, new QLabel(amountText));
-                
+                obj->tablewidget->setItem(i + 1, 3, new QTableWidgetItem(amountText));
+                obj->tablewidget->item(i + 1, 3)->setTextAlignment(Qt::AlignRight|Qt::AlignVCenter);
+                obj->tablewidget->item(i + 1, 3)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
 
             }
         } catch (std::exception& ex) {
-            std::cout << ex.what() << std::endl;
         }
     });
+    Connects();
 }
 
 

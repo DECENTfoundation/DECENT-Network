@@ -49,7 +49,8 @@ namespace gui_wallet
     private:        
         
         void UpdateLockedStatus();
-
+        void ResumeDownloads();
+        
         void CliCallbackFnc(void*arg,const std::string& task);
         int GetDigitalContentsFromVariant(DCT::DIG_CONT_TYPES a_type,
                                          std::vector<SDigitalContent>& acContents,
@@ -62,7 +63,7 @@ namespace gui_wallet
         
     protected slots:
         void CurrentUserChangedSlot(const QString&);
-
+        void ContentWasBoughtSlot();
     protected slots:/* Instead of these one line slots
                      *, probably should be used lambda functions?
                      * Is it possible to do?
@@ -142,8 +143,8 @@ namespace gui_wallet
 
         QString             m_default_stylesheet;
 
-        ContentDetailsGeneral m_dig_cont_detailsGenDlg;
-        ContentDetailsBase m_dig_cont_detailsBougDlg;
+        ContentDetailsGeneral* m_pdig_cont_detailsGenDlg;
+        ContentDetailsBase* m_pdig_cont_detailsBougDlg;
 
         std::vector<std::string>        m_user_ids;
     };

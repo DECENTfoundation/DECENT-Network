@@ -125,8 +125,8 @@ if( WIN32 )
 
 else() # Apple and Linux
 
-    find_library( READLINE_LIBRARIES NAMES readline )
-    find_path( READLINE_INCLUDE_DIR "readline/readline.h" )
+    #find_library( READLINE_LIBRARIES NAMES readline )
+    #find_path( READLINE_INCLUDE_DIR "readline/readline.h" )
 #    if( NOT READLINE_INCLUDE_DIR OR NOT READLINE_LIBRARIES )
 #        message(FATAL_ERROR "Readline not found")
 #    endif()
@@ -178,6 +178,22 @@ if( ENABLE_COVERAGE_TESTING )
     set( CMAKE_CXX_FLAGS "--coverage ${CMAKE_CXX_FLAGS}" )
 endif()
 
+if(UNIX)
+    set(CMAKE_SKIP_RPATH FALSE CACHE INTERNAL "")
+    set(CMAKE_SKIP_BUILD_RPATH FALSE CACHE INTERNAL "")
+    set(CMAKE_SKIP_INSTALL_RPATH FALSE CACHE INTERNAL "")
+    set(CMAKE_INSTALL_RPATH_USE_LINK_PATH FALSE CACHE INTERNAL "")
+    set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE CACHE INTERNAL "")
+#   set(CMAKE_NO_BUILTIN_CHRPATH TRUE)
+    if(APPLE)
+        set(CMAKE_INSTALL_RPATH "@executable_path" CACHE INTERNAL "")
+        set(CMAKE_MACOSX_RPATH TRUE CACHE INTERNAL "")
+        set(CMAKE_OSX_DEPLOYMENT_TARGET 10.10 CACHE INTERNAL "")
+    else()
+        set(CMAKE_INSTALL_RPATH "\$ORIGIN" CACHE INTERNAL "")
+    endif()
+endif()
+
 
 add_subdirectory( libraries )
 add_subdirectory( programs )
@@ -220,7 +236,7 @@ if( ENABLE_INSTALLER )
         # It seems like windows zip files usually don't have a single directory inside them, unix tgz frequently do.
         set( CPACK_INCLUDE_TOPLEVEL_DIRECTORY 0 )
     elseif( APPLE )
-        set( CPACK_GENERATOR "DragNDrop" )
+        set( CPACK_GENERATOR "DragNDrop;TGZ" )
     elseif( LINUX )
         # Linux gets a .tgz
         set( CPACK_GENERATOR "TGZ" )
