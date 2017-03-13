@@ -60,7 +60,8 @@ class CButton : public QLabel
 {
     Q_OBJECT
 public:
-    CButton() : QLabel() {}
+    CButton() : QLabel() {this->setMouseTracking(true);}
+    CButton(QString str) : QLabel(str){this->setMouseTracking(true);}
 public:
 signals:
     void mouseWasMoved();
