@@ -236,8 +236,12 @@ int main(int argc, char* argv[])
         }, SIGTERM);
         
         QDir dir(argv[0]);
-        //QCoreApplication::setLibraryPaths(QStringList(dir.absolutePath()));
 
+        
+#if NDEBUG
+        QCoreApplication::setLibraryPaths(QStringList(dir.absolutePath()));
+#endif
+        
         gui_wallet::application aApp(argc, argv);
         
         

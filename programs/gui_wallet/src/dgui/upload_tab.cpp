@@ -54,7 +54,7 @@ Upload_tab::Upload_tab()
         m_info_widget(3, 6),
         m_title_label(tr("Title")),
         m_description_label(tr("Description")),
-        m_infoLayoutHeader(tr("Information About Content")),
+        m_infoLayoutHeader(tr("Content info:")),
         m_getPublishersTimer(this)
 {
     QFont m_font( "Open Sans Bold", 14, QFont::Bold);
@@ -86,6 +86,7 @@ Upload_tab::Upload_tab()
 
     QLabel* lifetime = new QLabel("LifeTime");
     lifetime->setStyleSheet("border:1px solid black");
+    lifetime->setStyleSheet("border:0px");
     
     m_samplesPath = new QLineEdit("", this);
     m_samplesPath->setReadOnly(true);
@@ -108,7 +109,7 @@ Upload_tab::Upload_tab()
     
     //LIFETIME
     QLabel* lab = new QLabel("LifeTime");
-    lab->setStyleSheet("border:1px solid lightGray; color: Gray");
+    lab->setStyleSheet("border:0; color: Gray");
     lab->setContentsMargins(0, 0, -2, 0);
     lab->setMinimumWidth(60);
     lab->setFixedHeight(25);
@@ -118,7 +119,7 @@ Upload_tab::Upload_tab()
     
     //SEEDERS
     QLabel* seed = new QLabel("Seeders");
-    seed->setStyleSheet("border:1px solid lightGray; color: Gray");
+    seed->setStyleSheet("border:0; color: Gray");
     
     seed->setContentsMargins(20, 0, -2, 0);
     seed->setMinimumWidth(70);
@@ -129,7 +130,7 @@ Upload_tab::Upload_tab()
     
     //KEYPARTICLES
     QLabel* key = new QLabel("Key Particles");
-    key->setStyleSheet("border:1px solid lightGray; color: Gray");
+    key->setStyleSheet("border:0; color: Gray");
     key->setContentsMargins(20, 0, -2, 0);
     key->setMinimumWidth(90);
     key->setFixedHeight(25);
@@ -183,7 +184,7 @@ Upload_tab::Upload_tab()
     secondrow->addWidget(browse_samples_button);
     
     //CONTENT
-    cont = new QLineEdit("Content Info:");
+    cont = new QLineEdit("Path");
     cont->setReadOnly(true);
     cont->setStyleSheet("border:1px solid lightGray; color: Gray");
     cont->setContentsMargins(10, 0, 0, 0);
@@ -238,9 +239,15 @@ void Upload_tab::onGrabPublishers() {
 
         for (int r = 0; r < publishers.size(); ++r) {
             std::string pubIdStr = publishers[r]["seeder"].get<std::string>();
-            std::string pubPrice = std::to_string(publishers[r]["price"]["amount"].get<int>() / GRAPHENE_BLOCKCHAIN_PRECISION);
+            std::string pubPrice = QString::number(publishers[r]["price"]["amount"].get<double>() / GRAPHENE_BLOCKCHAIN_PRECISION).toStdString();
             std::string pubAssetId = publishers[r]["price"]["asset_id"].get<std::string>();
-            std::string pubFreeSpace = std::to_string(publishers[r]["free_space"].get<int>()) + "MB free";
+            
+            int free_space = publishers[r]["free_space"].get<int>();
+            std::string pubFreeSpace = std::to_string(free_space) + "MB free";
+            
+            if (free_space > 800) {
+                pubFreeSpace = QString::number(1.0 * free_space / 1024, 'f', 2).toStdString() + "GB free";
+            }
 
             obj->seeders->addItem(QString("%0 @%1 %2 [%3]").arg(QString::fromStdString(pubIdStr),
                                                             QString::fromStdString(pubPrice),
@@ -290,10 +297,18 @@ void Upload_tab::uploadContent() {
         return;
     }
     
-    if (boost::filesystem::file_size(path) > 100 * 1024 * 1024) {
+    
+    boost::system::error_code ec;
+    if (boost::filesystem::file_size(path, ec) > 100 * 1024 * 1024) {
         ALERT("Content size is limited in Testnet 0.1 to 100MB");
         return;
     }
+    
+    if (ec) {
+        ALERT("Please select valid file for upload.");
+        return;
+    }
+    
 
     if (title.empty()) {
         ALERT("Please specify title");
@@ -335,8 +350,6 @@ void Upload_tab::uploadContent() {
     submitCommand += " " + m_price;                                       //price_amount
     submitCommand += " [" + m_seeders + "]";                              //seeders
     submitCommand += " \"" + m_life_time + "T23:59:59\"";                  //expiration
-    submitCommand += " DCT";                                            //publishing_fee_asset
-    submitCommand += " 1";                                            //publishing_fee_amount
     submitCommand += " \"" + escape_string(synopsis) + "\"";            //synopsis
     submitCommand += " true";                                           //broadcast
 

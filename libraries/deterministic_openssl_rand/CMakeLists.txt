@@ -18,10 +18,10 @@ if (USE_PCH)
   cotire(deterministic_openssl_rand)
 endif(USE_PCH)
 
-install( TARGETS
-   deterministic_openssl_rand
-
-   RUNTIME DESTINATION bin
-   LIBRARY DESTINATION lib
-   ARCHIVE DESTINATION lib
-)
+#install( TARGETS
+#   deterministic_openssl_rand
+#
+#   RUNTIME DESTINATION bin
+#   LIBRARY DESTINATION lib
+#   ARCHIVE DESTINATION lib
+#)

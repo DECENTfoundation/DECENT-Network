@@ -1232,7 +1232,7 @@ void torrent_transfer::download_package(transfer_id id, const std::string& url, 
     atp.url = url;
     atp.save_path = temp_directory_path().string();
 
-    ilog("downloading package to {fn}", ("fn", atp.save_path) );
+    ilog("downloading package to ${fn}", ("fn", atp.save_path) );
 
     atp.flags |= libtorrent::add_torrent_params::flag_merge_resume_http_seeds;
     atp.flags |= libtorrent::add_torrent_params::flag_merge_resume_trackers;

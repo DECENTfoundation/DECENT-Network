@@ -24,7 +24,12 @@
 
 #include "decent_gui_inguiloopcaller_glb.hpp"
 #include "decent_tools_rwlock.hpp"
+
+
 #include <QCoreApplication>
+#include <QEventLoop>
+#include <QTime>
+
 #include <chrono>
 #include <thread>
 #ifdef WIN32
@@ -84,6 +89,23 @@ static int ConnectToNewWitness(const decent::tools::taskListItem<SConnectionStru
 #ifdef __cplusplus
 //extern "C"{
 #endif
+
+
+
+
+
+
+void QtDelay( int millisecondsToWait )
+{
+    QTime dieTime = QTime::currentTime().addMSecs( millisecondsToWait );
+    while( QTime::currentTime() < dieTime )
+    {
+        QCoreApplication::processEvents( QEventLoop::AllEvents, 100 );
+    }
+}
+
+
+
 
 
 __DLL_EXPORT__ void* GetFunctionPointerAsVoid(int a_first,...)
@@ -386,6 +408,8 @@ static void SetCurrentApis(const StructApi* a_pApis)
 }
 
 
+
+
 static int ConnectToNewWitness(const decent::tools::taskListItem<SConnectionStruct*,CONN_FNC_TYPE>& a_con_data)
 {
     try
@@ -434,7 +458,7 @@ static int ConnectToNewWitness(const decent::tools::taskListItem<SConnectionStru
                 connection_error = false;
             } catch (...) {
                 connection_error = true;
-                fc::usleep(fc::microseconds(1000000));
+                QtDelay(1000);
             }
         }
         auto apic = std::make_shared<fc::rpc::websocket_api_connection>(*con);

@@ -52,17 +52,22 @@ public:
         plt_tbl.setColor(QPalette::Base, palette().color(QPalette::Window));
         m_main_table.setPalette(plt_tbl);
 
-
         DecentButton* unlockButton = new DecentButton();
+        
+        // set hight
+        unlockButton->setFixedHeight(30);
         
         if (isSet) {
             unlockButton->setText("Set Password");
+            unlockButton->setFixedWidth(150);
         } else {
             unlockButton->setText("Unlock");
+            unlockButton->setFixedWidth(100);
         }
         unlockButton->setFixedHeight(30);
         unlockButton->setFixedWidth(120);
         password_box.setEchoMode(QLineEdit::Password);
+        password_box.setAttribute(Qt::WA_MacShowFocusRect, 0);
         
         if (isSet) {
             m_main_table.setCellWidget(0, 0, new QLabel(tr("Choose password to encrypt your wallet.")));
