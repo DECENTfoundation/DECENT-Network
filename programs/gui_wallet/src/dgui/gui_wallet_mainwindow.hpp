@@ -56,9 +56,8 @@ namespace gui_wallet
                                          const fc::variant& contents_var);
 
         void DisplayWalletContentGUI();
-
         void SetPassword(void* a_owner, void* a_str_ptr);
-        
+        void UpdateAccountBalances(const std::string& username);
         
 
     protected slots:
@@ -146,8 +145,6 @@ namespace gui_wallet
 
         ContentDetailsGeneral* m_pdig_cont_detailsGenDlg;
         ContentDetailsBase* m_pdig_cont_detailsBougDlg;
-
-        std::vector<std::string>        m_user_ids;
         
         QTimer                 _downloadChecker;
         std::set<std::string>  _activeDownloads;
