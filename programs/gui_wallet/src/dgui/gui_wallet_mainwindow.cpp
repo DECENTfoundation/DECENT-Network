@@ -12,14 +12,10 @@
 #define     CLI_WALLET_CODE         ((void*)-1)
 #define     WALLET_CONNECT_CODE     ((void*)-2)
 
-#define __INFO__ 0
-#define __WARN__ 1
-#define __ERRR__ 2
 
 #include "gui_wallet_mainwindow.hpp"
 #include "gui_wallet_global.hpp"
 #include <QMenuBar>
-//#include "connected_api_instance.hpp"
 #include <QMoveEvent>
 #include "qt_commonheader.hpp"
 #include <stdio.h>
@@ -48,57 +44,6 @@ int WarnAndWaitFunc(void* a_pOwner,WarnYesOrNoFuncType a_fpYesOrNo, void* a_pDat
 
 int CallFunctionInGuiLoop2(SetNewTask_last_args2,const std::string& a_result,void* a_owner,TypeCallbackSetNewTaskGlb2 a_fpFunc);
 int CallFunctionInGuiLoop3(SetNewTask_last_args2,const fc::variant& a_result,void* owner,TypeCallbackSetNewTaskGlb3 fpFnc);
-
-
-/*//////////////////////////////////////////////////////////////////////////////////*/
-
-
-
-static bool FindStringByKey(const char* a_cpcInput, const char* a_key, std::string* a_pToFind)
-{
-    std::string& csToParse = *a_pToFind;
-    const char *cpcStrBegin, *cpcStrEnd, *cpcValueFld = strstr(a_cpcInput,a_key);
-
-    if(!cpcValueFld++){return false;}
-    cpcValueFld = strchr(cpcValueFld,':');
-    if(!cpcValueFld++){return false;}
-    cpcStrBegin = strchr(cpcValueFld,'\"');
-    if(!cpcStrBegin++){return false;}
-    cpcStrEnd = strchr(cpcStrBegin,'\"');
-    if(!cpcStrEnd){return false;}
-    csToParse = std::string(cpcStrBegin,((size_t)cpcStrEnd)-((size_t)cpcStrBegin));
-    return true;
-
-
-}
-
-typedef const char* TypeConstChar;
-
-static bool GetJsonVectorNextElem(const char* a_cpcJsonStr,TypeConstChar* a_beg, TypeConstChar* a_end)
-{
-    const char* cpcNext = *a_beg = strchr(a_cpcJsonStr,'{');
-
-    if(!(*a_beg)){return false;}
-
-    int nOpen(1), nClose(0);
-
-    while(nOpen>nClose)
-    {
-        cpcNext = strpbrk(++cpcNext,"{}");
-        if(!cpcNext){break;}
-        switch(cpcNext[0])
-        {
-        case '{':++nOpen;break;
-        default:++nClose;break;
-        }
-    }
-
-    *a_end = cpcNext;
-
-    return (nOpen<=nClose);
-}
-
-
 
 
 /*//////////////////////////////////////////////////////////////////////////////////*/
