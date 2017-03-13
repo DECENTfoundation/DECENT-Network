@@ -454,7 +454,6 @@ static int ConnectToNewWitness(const decent::tools::taskListItem<SConnectionStru
         bool connection_error = true;
         while (connection_error) {
             try {
-                std::cout << "Trying to connect to decentd..." << std::endl;
                con = client.connect( pStruct->ws_server );
                 connection_error = false;
             } catch (...) {
@@ -572,8 +571,7 @@ int CallFunctionInUiLoopGeneral(int a_nType,SetNewTask_last_args2,
                                 void* a_owner,void* a_fpFnc)
 {
     
-    std::cout << "Command: " << a_inp << "\n";
-    std::cout << "Output: " << a_resultStr << "\n";
+
 
     switch(a_nType)
     {

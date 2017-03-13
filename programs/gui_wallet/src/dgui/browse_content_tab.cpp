@@ -79,6 +79,8 @@ Browse_content_tab::Browse_content_tab() : m_pTableWidget(new BTableWidget(1,s_c
     setLayout(&m_main_layout);
     
     connect(&m_filterLineEdit, SIGNAL(textChanged(QString)), this, SLOT(onTextChanged(QString)));
+    for(int i = 0; i < m_pTableWidget->rowCount(); ++i)
+        connect((CButton*)m_pTableWidget->cellWidget(i, 0),SIGNAL(mouseWasMoved()),this,SLOT(doRowColor()));
     
     m_contentUpdateTimer.connect(&m_contentUpdateTimer, SIGNAL(timeout()), this, SLOT(maybeUpdateContent()));
     m_contentUpdateTimer.setInterval(1000);
@@ -145,10 +147,9 @@ void Browse_content_tab::PrepareTableWidgetHeaderGUI()
         m_TableWidget.item(0,i)->setForeground(QColor::fromRgb(51,51,51));
         
     }
-    
     m_TableWidget.setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     m_TableWidget.setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    connect(m_pTableWidget,SIGNAL(mouseMoveEventDid()),this,SLOT(doRowColor()));
+    Connects();
     ArrangeSize();
 }
 
@@ -156,21 +157,6 @@ void Browse_content_tab::PrepareTableWidgetHeaderGUI()
 
 
 void Browse_content_tab::updateContents() {
-    /*
-     * sync task usage example
-    std::string str_result;
-    try
-    {
-        RunTask("lst_content \"tigran\" 100", str_result);
-        
-        int a = 0;
-        ++a;
-    }
-    catch (std::exception const& ex)
-    {
-        std::cout << ex.what() << std::endl;
-    }*/
-    
     std::string filterText = m_filterLineEdit.text().toStdString();
 
     SetNewTask("search_content \"" + filterText + "\" 100", this, NULL, +[](void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
@@ -219,10 +205,9 @@ void Browse_content_tab::updateContents() {
             obj->ShowDigitalContentsGUI(dContents);
             obj->ArrangeSize();
         } catch (std::exception& ex) {
-            std::cout << ex.what() << std::endl;
         }
     });
-    connect(m_pTableWidget,SIGNAL(mouseMoveEventDid()),this,SLOT(doRowColor()));
+    Connects();
     ArrangeSize();
 }
 
@@ -248,10 +233,10 @@ void Browse_content_tab::ShowDigitalContentsGUI(std::vector<SDigitalContent>& co
     {
         
         QPixmap image1(":/icon/images/info1_white.svg");
-        m_TableWidget.setCellWidget(index, 0, new TableWidgetItemW<QLabel>(aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
+        m_TableWidget.setCellWidget(index, 0, new TableWidgetItemW<CButton>(aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
                                                                                                             tr("")));
-        ((QLabel*)m_TableWidget.cellWidget(index,0))->setPixmap(image1);
-        ((QLabel*)m_TableWidget.cellWidget(index,0))->setAlignment(Qt::AlignCenter);
+        ((CButton*)m_TableWidget.cellWidget(index,0))->setPixmap(image1);
+        ((CButton*)m_TableWidget.cellWidget(index,0))->setAlignment(Qt::AlignCenter);
         
         std::string created_str;
         for(int i = 0; i < 10; ++i)
@@ -328,7 +313,9 @@ void Browse_content_tab::ShowDigitalContentsGUI(std::vector<SDigitalContent>& co
     }
     
     m_main_layout.addWidget(&m_TableWidget);
-connect(m_pTableWidget,SIGNAL(mouseMoveEventDid()),this,SLOT(doRowColor()));
+    
+    Connects();
+    
     m_pTableWidget->horizontalHeader()->setStretchLastSection(true);
     m_pTableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     ArrangeSize();
@@ -362,6 +349,8 @@ void Browse_content_tab::resizeEvent ( QResizeEvent * a_event )
 void Browse_content_tab::Connects()
 {
     connect(m_pTableWidget,SIGNAL(mouseMoveEventDid()),this,SLOT(doRowColor()));
+    for(int i = 0; i < m_pTableWidget->rowCount(); ++i)
+        connect((CButton*)m_pTableWidget->cellWidget(i, 0),SIGNAL(mouseWasMoved()),this,SLOT(doRowColor()));
 }
 
 void Browse_content_tab::doRowColor()
@@ -385,7 +374,10 @@ void Browse_content_tab::doRowColor()
         m_pTableWidget->item(green_row,6)->setForeground(QColor::fromRgb(0,0,0));
     }
     QPoint mouse_pos = m_pTableWidget->mapFromGlobal(QCursor::pos());
-    std::cout<<mouse_pos.x()<<"     "<<mouse_pos.y()<<std::endl;
+    if(mouse_pos.x() > 0 && mouse_pos.x() < 400)
+    {
+        mouse_pos.setX(mouse_pos.x() + 300);
+    }
     QTableWidgetItem *ite = m_pTableWidget->itemAt(mouse_pos);
     if(ite != NULL)
     {

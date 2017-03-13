@@ -133,10 +133,10 @@ void Transactions_tab::createNewRow()
 void Transactions_tab::ArrangeSize()
 {
   QSize tqsTableSize = tablewidget->size();
-  tablewidget->setColumnWidth(0,(tqsTableSize.width()*25)/100);
-  tablewidget->setColumnWidth(1,(tqsTableSize.width()*25)/100);
-  tablewidget->setColumnWidth(2,(tqsTableSize.width()*25)/100);
-  tablewidget->setColumnWidth(3,(tqsTableSize.width()*25)/100);
+  tablewidget->setColumnWidth(0,(tqsTableSize.width()*10)/100);
+  tablewidget->setColumnWidth(1,(tqsTableSize.width()*40)/100);
+  tablewidget->setColumnWidth(2,(tqsTableSize.width()*40)/100);
+  tablewidget->setColumnWidth(3,(tqsTableSize.width()*10)/100);
 }
 
 void Transactions_tab::resizeEvent(QResizeEvent *a_event)
@@ -262,7 +262,6 @@ void Transactions_tab::updateContents() {
 
             }
         } catch (std::exception& ex) {
-            std::cout << ex.what() << std::endl;
         }
     });
     Connects();

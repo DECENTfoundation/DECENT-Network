@@ -20,6 +20,7 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QTimer>
+#include <QPushButton>
 #include "qt_commonheader.hpp"
 #include "gui_wallet_tabcontentmanager.hpp"
 
@@ -38,6 +39,38 @@ signals:
     void mouseMoveEventDid();
 };
 
+
+class PButton : public QLabel
+{
+    Q_OBJECT
+public:
+    PButton() : QLabel() {this->setMouseTracking(true);}
+    PButton(QString str) : QLabel(str){this->setMouseTracking(true);}
+public:
+signals:
+    void mouseWasMoved();
+public:
+    virtual void mouseMoveEvent(QMouseEvent * event)
+    {
+        emit mouseWasMoved();
+        QLabel::mouseMoveEvent(event);
+    }
+};
+
+class EButton : public QPushButton
+{
+    Q_OBJECT
+public:
+    EButton(){this->setMouseTracking(true);}
+public:
+signals:
+    void mouseMoved();
+public:
+    virtual void mouseMoveEvent(QMouseEvent * event)
+    {
+        emit mouseMoved();
+    }
+};
 
 namespace gui_wallet {
 

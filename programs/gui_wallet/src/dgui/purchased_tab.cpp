@@ -64,6 +64,10 @@ PurchasedTab::PurchasedTab()
     
     connect(&m_filterLineEditer, SIGNAL(textChanged(QString)), this, SLOT(onTextChanged(QString)));
     connect(m_pTableWidget, SIGNAL(mouseMoveEventDid), this, SLOT(doRowColor()));
+    for(int i = 0; i < m_pTableWidget->rowCount(); ++i)
+    {
+        connect((PButton*)m_pTableWidget->cellWidget(i,0),SIGNAL(mouseWasMoved()),this,SLOT(doRowColor()));
+    }
     
     m_contentUpdateTimer.connect(&m_contentUpdateTimer, SIGNAL(timeout()), this, SLOT(maybeUpdateContent()));
     m_contentUpdateTimer.setInterval(1000);
@@ -185,9 +189,9 @@ void PurchasedTab::updateContents() {
         
             
             m_pTableWidget->horizontalHeader()->setStretchLastSection(true);
-            m_pTableWidget->setCellWidget(i + 1, 0, new TableWidgetItemW<QLabel>(contentObject, this, NULL, &PurchasedTab::DigContCallback, tr("")));
-            ((QLabel*)m_pTableWidget->cellWidget(i+1,0))->setPixmap(image1);
-            ((QLabel*)m_pTableWidget->cellWidget(i+1,0))->setAlignment(Qt::AlignCenter);
+            m_pTableWidget->setCellWidget(i + 1, 0, new TableWidgetItemW<PButton>(contentObject, this, NULL, &PurchasedTab::DigContCallback, tr("")));
+            ((PButton*)m_pTableWidget->cellWidget(i+1,0))->setPixmap(image1);
+            ((PButton*)m_pTableWidget->cellWidget(i+1,0))->setAlignment(Qt::AlignCenter);
             
             
             m_pTableWidget->setItem(i + 1, 1, new QTableWidgetItem(QString::fromStdString(synopsis)));
@@ -243,7 +247,7 @@ void PurchasedTab::updateContents() {
                 m_pTableWidget->setItem(i + 1, 7, new QTableWidgetItem(QString::number(progress) + "%"));
                 m_pTableWidget->item(i + 1, 7)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
             } else {
-                QPushButton* btn = new QPushButton();
+                EButton* btn = new EButton();
                 btn->setStyleSheet("background-color: rgb(27,176,104); color: white");
                 btn->setText("Extract");
                 btn->setProperty("id", QVariant::fromValue(QString::fromStdString(content["id"].get<std::string>())));
@@ -252,6 +256,7 @@ void PurchasedTab::updateContents() {
                 
                 connect(btn, SIGNAL(clicked()), this, SLOT(extractPackage()));
                 m_pTableWidget->setCellWidget(i+1, 7, btn);
+                connect((EButton*)m_pTableWidget->cellWidget(i,7),SIGNAL(mouseMoved()),this,SLOT(doRowColor()));
             }
             
             
@@ -266,10 +271,12 @@ void PurchasedTab::updateContents() {
         
         
     } catch (std::exception& ex) {
-        std::cout << ex.what() << std::endl;
     }
     connect(m_pTableWidget, SIGNAL(mouseMoveEventDid), this, SLOT(doRowColor()));
-    
+    for(int i = 0; i < m_pTableWidget->rowCount(); ++i)
+    {
+        connect((PButton*)m_pTableWidget->cellWidget(i,0),SIGNAL(mouseWasMoved()),this,SLOT(doRowColor()));
+    }
     
 }
 
@@ -320,6 +327,10 @@ void PurchasedTab::PrepareTableWidgetHeaderGUI()
     m_pTableWidget->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     m_pTableWidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     connect(m_pTableWidget, SIGNAL(mouseMoveEventDid()), this, SLOT(doRowColor()));
+    for(int i = 0; i < m_pTableWidget->rowCount(); ++i)
+    {
+        connect((PButton*)m_pTableWidget->cellWidget(i,0),SIGNAL(mouseWasMoved()),this,SLOT(doRowColor()));
+    }
 }
 
 
@@ -368,8 +379,8 @@ void PurchasedTab::doRowColor()
         m_pTableWidget->item(i,6)->setForeground(QColor::fromRgb(88,88,88));
         
         
-        QPushButton* button_type = new QPushButton();
-        button_type = qobject_cast<QPushButton*>(m_pTableWidget->cellWidget(i, 7));
+        EButton* button_type = new EButton();
+        button_type = qobject_cast<EButton*>(m_pTableWidget->cellWidget(i, 7));
         
         if( NULL == button_type )
         {
@@ -383,10 +394,13 @@ void PurchasedTab::doRowColor()
         QPixmap image(":/icon/images/info1.svg");
     }
     QPoint mouse_pos = m_pTableWidget->mapFromGlobal(QCursor::pos());
-    std::cout<<mouse_pos.x()<<"     "<<mouse_pos.y()<<std::endl;
     if(mouse_pos.x() > 0 && mouse_pos.x() < 110)
     {
         mouse_pos.setX(mouse_pos.x() + 300);
+    }
+    if(mouse_pos.x() > 790 /*&& mouse_pos.x() < 110*/)
+    {
+        mouse_pos.setX(mouse_pos.x() - 500);
     }
     QTableWidgetItem *ite = m_pTableWidget->itemAt(mouse_pos);
     
