@@ -379,8 +379,8 @@ void PurchasedTab::doRowColor()
         m_pTableWidget->item(i,6)->setForeground(QColor::fromRgb(88,88,88));
         
         
-        QPushButton* button_type = new QPushButton();
-        button_type = qobject_cast<QPushButton*>(m_pTableWidget->cellWidget(i, 7));
+        EButton* button_type = new EButton();
+        button_type = qobject_cast<EButton*>(m_pTableWidget->cellWidget(i, 7));
         
         if( NULL == button_type )
         {
