@@ -85,7 +85,7 @@ Upload_tab::Upload_tab()
     ////////////////////////////////////////////////////////////////////////////
 
     QLabel* lifetime = new QLabel("LifeTime");
-    lifetime->setStyleSheet("border:1px solid black");
+    lifetime->setStyleSheet("border:0px");
 //    m_info_widget.setCellWidget(0, 0, lifetime);
     
     m_samplesPath = new QLineEdit("", this);
@@ -108,7 +108,7 @@ Upload_tab::Upload_tab()
     
     //LIFETIME
     QLabel* lab = new QLabel("LifeTime");
-    lab->setStyleSheet("border:1px solid lightGray; color: Gray");
+    lab->setStyleSheet("border:0; color: Gray");
     lab->setContentsMargins(0, 0, -2, 0);
     lab->setMinimumWidth(60);
     lab->setFixedHeight(25);
@@ -118,7 +118,7 @@ Upload_tab::Upload_tab()
     
     //SEEDERS
     QLabel* seed = new QLabel("Seeders");
-    seed->setStyleSheet("border:1px solid lightGray; color: Gray");
+    seed->setStyleSheet("border:0; color: Gray");
     
     seed->setContentsMargins(20, 0, -2, 0);
     seed->setMinimumWidth(70);
@@ -129,7 +129,7 @@ Upload_tab::Upload_tab()
     
     //KEYPARTICLES
     QLabel* key = new QLabel("Key Particles");
-    key->setStyleSheet("border:1px solid lightGray; color: Gray");
+    key->setStyleSheet("border:0; color: Gray");
     key->setContentsMargins(20, 0, -2, 0);
     key->setMinimumWidth(90);
     key->setFixedHeight(25);

@@ -20,8 +20,57 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QTimer>
+#include <QPushButton>
 #include "qt_commonheader.hpp"
 #include "gui_wallet_tabcontentmanager.hpp"
+
+class P_TableWidget : public QTableWidget
+{
+    Q_OBJECT
+public:
+    P_TableWidget(int row, int col) : QTableWidget(row,col)
+    {
+        this->setMouseTracking(true);
+    }
+    
+    virtual void mouseMoveEvent(QMouseEvent * event);
+public:
+signals:
+    void mouseMoveEventDid();
+};
+
+
+class PButton : public QLabel
+{
+    Q_OBJECT
+public:
+    PButton() : QLabel() {this->setMouseTracking(true);}
+    PButton(QString str) : QLabel(str){this->setMouseTracking(true);}
+public:
+signals:
+    void mouseWasMoved();
+public:
+    virtual void mouseMoveEvent(QMouseEvent * event)
+    {
+        emit mouseWasMoved();
+        QLabel::mouseMoveEvent(event);
+    }
+};
+
+class EButton : public QPushButton
+{
+    Q_OBJECT
+public:
+    EButton(){this->setMouseTracking(true);}
+public:
+signals:
+    void mouseMoved();
+public:
+    virtual void mouseMoveEvent(QMouseEvent * event)
+    {
+        emit mouseMoved();
+    }
+};
 
 namespace gui_wallet {
 
@@ -60,6 +109,7 @@ protected:
     void ArrangeSize();
 
 public slots:
+    void doRowColor();
     void onTextChanged(const QString& text);
     void updateContents();
     void maybeUpdateContent();
@@ -67,7 +117,7 @@ public slots:
 
 protected:
     QVBoxLayout     m_main_layout;
-    QTableWidget*    m_pTableWidget;
+    P_TableWidget*    m_pTableWidget;
     QLineEdit       m_filterLineEditer;
     
     

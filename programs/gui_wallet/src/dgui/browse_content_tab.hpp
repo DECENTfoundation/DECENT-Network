@@ -55,41 +55,29 @@ signals:
 };
     
     
-
-
-    class CButton : public QLabel
+    
+class CButton : public QLabel
+{
+    Q_OBJECT
+public:
+    CButton() : QLabel() {this->setMouseTracking(true);}
+    CButton(QString str) : QLabel(str){this->setMouseTracking(true);}
+public:
+signals:
+    void mouseWasMoved();
+public:
+    virtual void mouseMoveEvent(QMouseEvent * event)
     {
-        Q_OBJECT
-    public:
-        CButton(int id) : m_id(id){connect(this,SIGNAL(LabelWasClicked()),this,SLOT(ButtonPushedSlot()));}
-    private:
-        int m_id;
-        private slots:
-        void ButtonPushedSlot(){emit ButtonPushedSignal(m_id);}
-    private:
-    signals:
-        void LabelWasClicked();
-    public:
-    signals:
-        void ButtonPushedSignal(int);
-        void mouseWasMoved();
-    public:
-        virtual void mouseReleaseEvent(QMouseEvent * event)
-        {
-            LabelWasClicked();
-        }
-        
-        virtual void mouseMoveEvent(QMouseEvent * event)
-        {
-            emit mouseWasMoved();
-            QLabel::mouseMoveEvent(event);
-        }
-    };
-
-
-
-
-class Browse_content_tab : public TabContentManager
+        emit mouseWasMoved();
+        QLabel::mouseMoveEvent(event);
+    }
+};
+    
+    
+    
+    
+    
+    class Browse_content_tab : public TabContentManager
 {
     friend class CentralWigdet;
     Q_OBJECT

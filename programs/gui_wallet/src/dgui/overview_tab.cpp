@@ -171,6 +171,7 @@ void Overview_tab::updateContents() {
         //btn->setMouseTracking(true);
 
         connect(btn, SIGNAL(ButtonPushedSignal(std::string)), this , SLOT(buttonPressed(std::string)));
+        connect(btn, SIGNAL(mouseWasMoved()), this , SLOT(doRowColor()));
         
         table_widget.setCellWidget(i + 1, 0, btn);
         table_widget.setItem(i+1, 2, new QTableWidgetItem(QString::fromStdString(content[0].get<std::string>())));
@@ -256,8 +257,7 @@ void Overview_tab::doRowColor()
 {
     for(int i = 1; i < table_widget.rowCount(); ++i)
     {
-        NewButton* btn = (NewButton*)table_widget.cellWidget(i,0);
-        btn->setStyleSheet("* { background-color: rgb(255,255,255); }");
+        table_widget.cellWidget(i, 0)->setStyleSheet("* { background-color: rgb(255,255,255); color : white; }");
         table_widget.item(i,1)->setBackground(QColor(255,255,255));
         table_widget.item(i,2)->setBackground(QColor(255,255,255));
 
@@ -268,13 +268,13 @@ void Overview_tab::doRowColor()
 
         QPixmap image(":/icon/images/info1.svg");
 
-        btn->setPixmap(image);
+        //table_widget.cellWidget(i, 0)->setPixmap(image);
 
     }
     QPoint mouse_pos = table_widget.mapFromGlobal(QCursor::pos());
     if(mouse_pos.x() > 0 && mouse_pos.x() < 110)
     {
-        mouse_pos.setX(mouse_pos.x() + 300);
+        mouse_pos.setX(mouse_pos.x() + 600);
     }
     QTableWidgetItem *ite = table_widget.itemAt(mouse_pos);
 
