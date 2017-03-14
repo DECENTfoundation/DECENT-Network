@@ -46,7 +46,7 @@ Overview_tab::Overview_tab(class Mainwindow_gui_wallet* a_pPar)
     table_widget.setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     table_widget.setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     
-    table_widget.setHorizontalHeaderLabels(QStringList() << "Info" << "Account ID" << "Account");
+    table_widget.setHorizontalHeaderLabels(QStringList() << "Account ID" << "Author" << "" << "");
     table_widget.horizontalHeader()->setFixedHeight(35);
     table_widget.horizontalHeader()->setFont(font);
 
@@ -161,27 +161,27 @@ void Overview_tab::updateContents() {
         connect(transaction, SIGNAL(mouseWasMoved()), this , SLOT(doRowColor()));
         
         
-        table_widget.setItem(i+1, 1, new QTableWidgetItem(QString::fromStdString(content[0].get<std::string>())));
-        table_widget.setItem(i+1, 0, new QTableWidgetItem(QString::fromStdString(content[1].get<std::string>())));
-        table_widget.setCellWidget(i+1, 2, transaction);
-        table_widget.setCellWidget(i+1, 3, transfer);
+        table_widget.setItem(i, 1, new QTableWidgetItem(QString::fromStdString(content[0].get<std::string>())));
+        table_widget.setItem(i, 0, new QTableWidgetItem(QString::fromStdString(content[1].get<std::string>())));
+        table_widget.setCellWidget(i, 2, transaction);
+        table_widget.setCellWidget(i, 3, transfer);
         
-        table_widget.setRowHeight(i+1,40);
-        table_widget.cellWidget(i+1 , 2)->setStyleSheet("* { background-color: rgb(255,255,255); color : rgb(27,176,104); }");
-        table_widget.cellWidget(i+1 , 3)->setStyleSheet("* { background-color: rgb(255,255,255); color : rgb(27,176,104); }");
+        table_widget.setRowHeight(i,40);
+        table_widget.cellWidget(i, 2)->setStyleSheet("* { background-color: rgb(255,255,255); color : rgb(27,176,104); }");
+        table_widget.cellWidget(i, 3)->setStyleSheet("* { background-color: rgb(255,255,255); color : rgb(27,176,104); }");
         
 
-        table_widget.item(i+1,0)->setBackground(Qt::white);
-        table_widget.item(i+1,1)->setBackground(Qt::white);
+        table_widget.item(i,0)->setBackground(Qt::white);
+        table_widget.item(i,1)->setBackground(Qt::white);
         
-        table_widget.item(i+1,0)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
-        table_widget.item(i+1,1)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+        table_widget.item(i,0)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+        table_widget.item(i,1)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
         
-        table_widget.item(i+1,0)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
-        table_widget.item(i+1,1)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+        table_widget.item(i,0)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+        table_widget.item(i,1)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
         
-        table_widget.item(i+1,0)->setForeground(QColor::fromRgb(88,88,88));
-        table_widget.item(i+1,1)->setForeground(QColor::fromRgb(88,88,88));
+        table_widget.item(i,0)->setForeground(QColor::fromRgb(88,88,88));
+        table_widget.item(i,1)->setForeground(QColor::fromRgb(88,88,88));
         
         
         
@@ -275,19 +275,15 @@ void Overview_tab::doRowColor()
     if(ite != NULL)
     {
 
-        int a = ite->row();
-        if(a != 0)
-        {
-            table_widget.cellWidget(a , 2)->setStyleSheet("* { background-color: rgb(27,176,104); color : white; }");
-            table_widget.cellWidget(a , 3)->setStyleSheet("* { background-color: rgb(27,176,104); color : white; }");
+        int row = ite->row() - 1;
+        if(row < 0) {return;}
+            table_widget.cellWidget(row , 2)->setStyleSheet("* { background-color: rgb(27,176,104); color : white; }");
+            table_widget.cellWidget(row , 3)->setStyleSheet("* { background-color: rgb(27,176,104); color : white; }");
 
-            table_widget.item(a,0)->setBackgroundColor(QColor(27,176,104));
-            table_widget.item(a,1)->setBackgroundColor(QColor(27,176,104));
-            table_widget.item(a,0)->setForeground(QColor::fromRgb(255,255,255));
-            table_widget.item(a,1)->setForeground(QColor::fromRgb(255,255,255));
-
-
-        }
+            table_widget.item(row,0)->setBackgroundColor(QColor(27,176,104));
+            table_widget.item(row,1)->setBackgroundColor(QColor(27,176,104));
+            table_widget.item(row,0)->setForeground(QColor::fromRgb(255,255,255));
+            table_widget.item(row,1)->setForeground(QColor::fromRgb(255,255,255));
     }
 }
 
