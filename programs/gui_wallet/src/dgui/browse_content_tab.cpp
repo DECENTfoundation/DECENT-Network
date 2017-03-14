@@ -61,7 +61,6 @@ Browse_content_tab::Browse_content_tab() : m_pTableWidget(new BTableWidget(0,s_c
     QLabel* lab = new QLabel();
     QPixmap image(":/icon/images/search.svg");
     lab->setPixmap(image);
-    //lab.setSizeIncrement(100, 40);
     
     m_filterLineEdit.setPlaceholderText("Enter search term");
     m_filterLineEdit.setFixedHeight(40);
@@ -125,7 +124,7 @@ void Browse_content_tab::PrepareTableWidgetHeaderGUI()
     
     QFont font( "Open Sans Bold", 14, QFont::Bold);
     
-    m_TableWidget.setStyleSheet("QTableWidget{border : 1px solid red}");
+//    m_TableWidget.setStyleSheet("QTableWidget{border : 1px solid red}");
     
     m_TableWidget.horizontalHeader()->setDefaultSectionSize(300);
     m_TableWidget.setRowHeight(0,35);
@@ -318,7 +317,7 @@ void Browse_content_tab::ShowDigitalContentsGUI(std::vector<SDigitalContent>& co
     Connects();
     
     m_pTableWidget->horizontalHeader()->setStretchLastSection(true);
-    m_pTableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+//    m_pTableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     ArrangeSize();
 }
 
@@ -356,8 +355,7 @@ void Browse_content_tab::Connects()
 
 void Browse_content_tab::doRowColor()
 {
-    if(m_pTableWidget->rowCount() == 0)
-        return;
+    if(m_pTableWidget->item(0, 1) == 0)  { return; }
     
         m_pTableWidget->cellWidget(green_row , 0)->setStyleSheet("* { background-color: rgb(255,255,255); color : white; }");
         m_pTableWidget->item(green_row,1)->setBackgroundColor(QColor(255,255,255));
@@ -382,22 +380,23 @@ void Browse_content_tab::doRowColor()
     QTableWidgetItem *ite = m_pTableWidget->itemAt(mouse_pos);
     if(ite != NULL)
     {
-        int a = ite->row() - 1;
-            m_pTableWidget->cellWidget(a , 0)->setStyleSheet("* { background-color: rgb(27,176,104); color : white; }");
-            m_pTableWidget->item(a,1)->setBackgroundColor(QColor(27,176,104));
-            m_pTableWidget->item(a,2)->setBackgroundColor(QColor(27,176,104));
-            m_pTableWidget->item(a,3)->setBackgroundColor(QColor(27,176,104));
-            m_pTableWidget->item(a,4)->setBackgroundColor(QColor(27,176,104));
-            m_pTableWidget->item(a,5)->setBackgroundColor(QColor(27,176,104));
-            m_pTableWidget->item(a,6)->setBackgroundColor(QColor(27,176,104));
+        int row = ite->row() - 1;
+        if(row < 0) {return;}
+            m_pTableWidget->cellWidget(row , 0)->setStyleSheet("* { background-color: rgb(27,176,104); color : white; }");
+            m_pTableWidget->item(row,1)->setBackgroundColor(QColor(27,176,104));
+            m_pTableWidget->item(row,2)->setBackgroundColor(QColor(27,176,104));
+            m_pTableWidget->item(row,3)->setBackgroundColor(QColor(27,176,104));
+            m_pTableWidget->item(row,4)->setBackgroundColor(QColor(27,176,104));
+            m_pTableWidget->item(row,5)->setBackgroundColor(QColor(27,176,104));
+            m_pTableWidget->item(row,6)->setBackgroundColor(QColor(27,176,104));
             
-            m_pTableWidget->item(a,1)->setForeground(QColor::fromRgb(255,255,255));
-            m_pTableWidget->item(a,2)->setForeground(QColor::fromRgb(255,255,255));
-            m_pTableWidget->item(a,3)->setForeground(QColor::fromRgb(255,255,255));
-            m_pTableWidget->item(a,4)->setForeground(QColor::fromRgb(255,255,255));
-            m_pTableWidget->item(a,5)->setForeground(QColor::fromRgb(255,255,255));
-            m_pTableWidget->item(a,6)->setForeground(QColor::fromRgb(255,255,255));
-            green_row = a;
+            m_pTableWidget->item(row,1)->setForeground(QColor::fromRgb(255,255,255));
+            m_pTableWidget->item(row,2)->setForeground(QColor::fromRgb(255,255,255));
+            m_pTableWidget->item(row,3)->setForeground(QColor::fromRgb(255,255,255));
+            m_pTableWidget->item(row,4)->setForeground(QColor::fromRgb(255,255,255));
+            m_pTableWidget->item(row,5)->setForeground(QColor::fromRgb(255,255,255));
+            m_pTableWidget->item(row,6)->setForeground(QColor::fromRgb(255,255,255));
+            green_row = row;
     }
     else
     {

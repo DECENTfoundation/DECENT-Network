@@ -54,6 +54,7 @@ PurchasedTab::PurchasedTab()
     search_lay->addWidget(search_label);
     search_lay->addWidget(&m_filterLineEditer);
 
+    m_pTableWidget->horizontalHeader()->setStretchLastSection(true);
     m_pTableWidget->setSelectionMode(QAbstractItemView::NoSelection);
     m_main_layout.setContentsMargins(0, 0, 0, 0);
 
@@ -190,15 +191,15 @@ void PurchasedTab::updateContents() {
         
             
             m_pTableWidget->horizontalHeader()->setStretchLastSection(true);
-            m_pTableWidget->setCellWidget(i + 1, 0, new TableWidgetItemW<PButton>(contentObject, this, NULL, &PurchasedTab::DigContCallback, tr("")));
-            ((PButton*)m_pTableWidget->cellWidget(i+1,0))->setPixmap(image1);
-            ((PButton*)m_pTableWidget->cellWidget(i+1,0))->setAlignment(Qt::AlignCenter);
+            m_pTableWidget->setCellWidget(i, 0, new TableWidgetItemW<PButton>(contentObject, this, NULL, &PurchasedTab::DigContCallback, tr("")));
+            ((PButton*)m_pTableWidget->cellWidget(i,0))->setPixmap(image1);
+            ((PButton*)m_pTableWidget->cellWidget(i,0))->setAlignment(Qt::AlignCenter);
             
             
-            m_pTableWidget->setItem(i + 1, 1, new QTableWidgetItem(QString::fromStdString(synopsis)));
-            m_pTableWidget->setItem(i + 1, 2, new QTableWidgetItem(QString::number(rating)));
-            m_pTableWidget->setItem(i + 1, 3, new QTableWidgetItem(QString::number(size) + tr(" MB")));
-            m_pTableWidget->setItem(i + 1, 4, new QTableWidgetItem(QString::number(price) + " DCT"));
+            m_pTableWidget->setItem(i, 1, new QTableWidgetItem(QString::fromStdString(synopsis)));
+            m_pTableWidget->setItem(i, 2, new QTableWidgetItem(QString::number(rating)));
+            m_pTableWidget->setItem(i, 3, new QTableWidgetItem(QString::number(size) + tr(" MB")));
+            m_pTableWidget->setItem(i, 4, new QTableWidgetItem(QString::number(price) + " DCT"));
             
            
 
@@ -207,7 +208,7 @@ void PurchasedTab::updateContents() {
             {
                 s_time.push_back(time[i]);
             }
-            m_pTableWidget->setItem(i + 1, 5, new QTableWidgetItem(QString::fromStdString(s_time)));
+            m_pTableWidget->setItem(i, 5, new QTableWidgetItem(QString::fromStdString(s_time)));
             
             
             std::string download_status_str;
@@ -230,7 +231,7 @@ void PurchasedTab::updateContents() {
                 status_text = status_text + tr(" ") + QString::fromStdString(download_status["status_text"].get<std::string>());
             }
 
-            m_pTableWidget->setItem(i + 1, 6, new QTableWidgetItem(status_text));
+            m_pTableWidget->setItem(i, 6, new QTableWidgetItem(status_text));
             
             if (total_key_parts == 0) {
                 total_key_parts = 1;
@@ -245,8 +246,8 @@ void PurchasedTab::updateContents() {
             progress *= 100; // Percent
             
             if (progress != 100) {
-                m_pTableWidget->setItem(i + 1, 7, new QTableWidgetItem(QString::number(progress) + "%"));
-                m_pTableWidget->item(i + 1, 7)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+                m_pTableWidget->setItem(i, 7, new QTableWidgetItem(QString::number(progress) + "%"));
+                m_pTableWidget->item(i, 7)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
             } else {
                 EButton* btn = new EButton();
                 btn->setStyleSheet("background-color: rgb(27,176,104); color: white");
@@ -256,15 +257,15 @@ void PurchasedTab::updateContents() {
                 btn->setProperty("URI", QVariant::fromValue(QString::fromStdString(content["URI"].get<std::string>())));
                 
                 connect(btn, SIGNAL(clicked()), this, SLOT(extractPackage()));
-                m_pTableWidget->setCellWidget(i+1, 7, btn);
+                m_pTableWidget->setCellWidget(i, 7, btn);
                 connect((EButton*)m_pTableWidget->cellWidget(i,7),SIGNAL(mouseMoved()),this,SLOT(doRowColor()));
             }
             
             
             for(int j = 1; j < s_cnNumberOfCols - 1; ++j)
             {
-                m_pTableWidget->item(i + 1, j)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
-                m_pTableWidget->item(i + 1, j)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+                m_pTableWidget->item(i, j)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+                m_pTableWidget->item(i, j)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
             }
             
 
@@ -311,20 +312,23 @@ PurchasedTab::~PurchasedTab()
 
 void PurchasedTab::PrepareTableWidgetHeaderGUI()
 {
+    QFont font( "Open Sans Bold", 14, QFont::Bold);
+
     m_pTableWidget->horizontalHeader()->setDefaultSectionSize(300);
     m_pTableWidget->setRowHeight(0,35);
-    m_pTableWidget->horizontalHeader()->hide();
     m_pTableWidget->verticalHeader()->hide();
-    QFont f( "Open Sans Bold", 14, QFont::Bold);
-    for( int i = 0; i<s_cnNumberOfCols; ++i )
-    {
-        m_pTableWidget->setItem(0,i,new QTableWidgetItem(tr(s_vccpItemNames[i])));
-        m_pTableWidget->item(0,i)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
-        m_pTableWidget->item(0,i)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
-        m_pTableWidget->item(0,i)->setBackground(QColor(228,227,228));
-        m_pTableWidget->item(0,i)->setFont(f);
-        m_pTableWidget->item(0,i)->setForeground(QColor::fromRgb(51,51,51));
-    }
+    m_pTableWidget->setHorizontalHeaderLabels(QStringList()  <<" " << "Title" << "Rating" << "Size" <<  "Price" <<  "Created" <<  "Status" << "Progress");
+    m_pTableWidget->horizontalHeader()->setFixedHeight(35);
+    m_pTableWidget->horizontalHeader()->setFont(font);
+//    for( int i = 0; i<s_cnNumberOfCols; ++i )
+//    {
+//        m_pTableWidget->setItem(0,i,new QTableWidgetItem(tr(s_vccpItemNames[i])));
+//        m_pTableWidget->item(0,i)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+//        m_pTableWidget->item(0,i)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+//        m_pTableWidget->item(0,i)->setBackground(QColor(228,227,228));
+//        m_pTableWidget->item(0,i)->setFont(f);
+//        m_pTableWidget->item(0,i)->setForeground(QColor::fromRgb(51,51,51));
+//    }
     m_pTableWidget->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     m_pTableWidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     connect(m_pTableWidget, SIGNAL(mouseMoveEventDid()), this, SLOT(doRowColor()));
@@ -346,7 +350,7 @@ void PurchasedTab::ArrangeSize()
     
     m_pTableWidget->setColumnWidth(0, tqsTableSize.width() * 0.1);
     
-    for(int i = 1; i < s_cnNumberOfCols; ++i)
+    for(int i = 0; i < s_cnNumberOfCols; ++i)
     {
         m_pTableWidget->setColumnWidth(i, (0.9 * tqsTableSize.width()) / (s_cnNumberOfCols - 1) );
     }
@@ -363,8 +367,10 @@ void PurchasedTab::resizeEvent ( QResizeEvent * a_event )
 
 void PurchasedTab::doRowColor()
 {
-    for(int i = 1; i < m_pTableWidget->rowCount(); ++i)
+    for(int i = 0; i < m_pTableWidget->rowCount() - 1; ++i)
     {
+        if(m_pTableWidget->item(i, 1) == 0) {return;}
+
         m_pTableWidget->item(i,1)->setBackground(QColor(255,255,255));
         m_pTableWidget->item(i,2)->setBackground(QColor(255,255,255));
         m_pTableWidget->item(i,3)->setBackground(QColor(255,255,255));
@@ -407,37 +413,36 @@ void PurchasedTab::doRowColor()
     
     if(ite != NULL)
     {
-        int a = ite->row();
-        if(a != 0)
-        {
+        int row = ite->row() - 1;
+        if(row < 0)
+            if (m_pTableWidget->item(row, 1) == 0) {return;}
             QPixmap image(":/icon/images/info1_white.svg");
-            m_pTableWidget->cellWidget(a , 0)->setStyleSheet("* { background-color: rgb(27,176,104); color : white; }");
+            m_pTableWidget->cellWidget(row , 0)->setStyleSheet("* { background-color: rgb(27,176,104); color : white; }");
             
-            m_pTableWidget->item(a,1)->setBackgroundColor(QColor(27,176,104));
-            m_pTableWidget->item(a,2)->setBackgroundColor(QColor(27,176,104));
-            m_pTableWidget->item(a,3)->setBackgroundColor(QColor(27,176,104));
-            m_pTableWidget->item(a,4)->setBackgroundColor(QColor(27,176,104));
-            m_pTableWidget->item(a,5)->setBackgroundColor(QColor(27,176,104));
-            m_pTableWidget->item(a,6)->setBackgroundColor(QColor(27,176,104));
+            m_pTableWidget->item(row,1)->setBackgroundColor(QColor(27,176,104));
+            m_pTableWidget->item(row,2)->setBackgroundColor(QColor(27,176,104));
+            m_pTableWidget->item(row,3)->setBackgroundColor(QColor(27,176,104));
+            m_pTableWidget->item(row,4)->setBackgroundColor(QColor(27,176,104));
+            m_pTableWidget->item(row,5)->setBackgroundColor(QColor(27,176,104));
+            m_pTableWidget->item(row,6)->setBackgroundColor(QColor(27,176,104));
            
             QPushButton* button_type = new QPushButton();
-            button_type = qobject_cast<QPushButton*>(m_pTableWidget->cellWidget(a, 7));
+            button_type = qobject_cast<QPushButton*>(m_pTableWidget->cellWidget(row, 7));
             if( NULL == button_type )
             {
-                m_pTableWidget->item(a,7)->setBackgroundColor(QColor(27,176,104));
-                m_pTableWidget->item(a,7)->setForeground(QColor::fromRgb(255,255,255));
+                m_pTableWidget->item(row,7)->setBackgroundColor(QColor(27,176,104));
+                m_pTableWidget->item(row,7)->setForeground(QColor::fromRgb(255,255,255));
             }
 
             
-            m_pTableWidget->item(a,1)->setForeground(QColor::fromRgb(255,255,255));
-            m_pTableWidget->item(a,2)->setForeground(QColor::fromRgb(255,255,255));
-            m_pTableWidget->item(a,3)->setForeground(QColor::fromRgb(255,255,255));
-            m_pTableWidget->item(a,4)->setForeground(QColor::fromRgb(255,255,255));
-            m_pTableWidget->item(a,5)->setForeground(QColor::fromRgb(255,255,255));
-            m_pTableWidget->item(a,6)->setForeground(QColor::fromRgb(255,255,255));
+            m_pTableWidget->item(row,1)->setForeground(QColor::fromRgb(255,255,255));
+            m_pTableWidget->item(row,2)->setForeground(QColor::fromRgb(255,255,255));
+            m_pTableWidget->item(row,3)->setForeground(QColor::fromRgb(255,255,255));
+            m_pTableWidget->item(row,4)->setForeground(QColor::fromRgb(255,255,255));
+            m_pTableWidget->item(row,5)->setForeground(QColor::fromRgb(255,255,255));
+            m_pTableWidget->item(row,6)->setForeground(QColor::fromRgb(255,255,255));
             
             
-        }
     }
 }
 

@@ -50,7 +50,7 @@ Transactions_tab::Transactions_tab() : green_row(0)
 
     //create table (widget)
     tablewidget = new HTableWidget();
-    //tablewidget->setRowCount(1);//add first row in table
+    tablewidget->setRowCount(1);//add first row in table
     tablewidget->setColumnCount(numTransactionCols);
     
     tablewidget->verticalHeader()->setDefaultSectionSize(35);
@@ -96,6 +96,7 @@ Transactions_tab::Transactions_tab() : green_row(0)
     search_lay->addWidget(&search_label);
     search_lay->addWidget(&user);
 
+    tablewidget->horizontalHeader()->setStretchLastSection(true);
     main_layout.setContentsMargins(0, 0, 0, 0);
     main_layout.addLayout(search_lay);
     main_layout.addWidget(tablewidget);
@@ -166,8 +167,7 @@ Transactions_tab::~Transactions_tab()
 
 void Transactions_tab::doRowColor()
 {
-    if(tablewidget->rowCount() == 1)
-        return;
+    if(tablewidget->item(0, 1) == 0) {return;}
     
         tablewidget->item(green_row,0)->setBackgroundColor(QColor(255,255,255));
         tablewidget->item(green_row,1)->setBackgroundColor(QColor(255,255,255));
@@ -185,17 +185,18 @@ void Transactions_tab::doRowColor()
     if(ite != NULL)
     {
 
-        int a = ite->row() - 1;
-            tablewidget->item(a,0)->setBackgroundColor(QColor(27,176,104));
-            tablewidget->item(a,1)->setBackgroundColor(QColor(27,176,104));
-            tablewidget->item(a,2)->setBackgroundColor(QColor(27,176,104));
-            tablewidget->item(a,3)->setBackgroundColor(QColor(27,176,104));
+        int row = ite->row() - 1;
+        if(row < 0) {return;}
+            tablewidget->item(row,0)->setBackgroundColor(QColor(27,176,104));
+            tablewidget->item(row,1)->setBackgroundColor(QColor(27,176,104));
+            tablewidget->item(row,2)->setBackgroundColor(QColor(27,176,104));
+            tablewidget->item(row,3)->setBackgroundColor(QColor(27,176,104));
 
-            tablewidget->item(a,0)->setForeground(QColor::fromRgb(255,255,255));
-            tablewidget->item(a,1)->setForeground(QColor::fromRgb(255,255,255));
-            tablewidget->item(a,2)->setForeground(QColor::fromRgb(255,255,255));
-            tablewidget->item(a,3)->setForeground(QColor::fromRgb(255,255,255));
-            green_row = a;
+            tablewidget->item(row,0)->setForeground(QColor::fromRgb(255,255,255));
+            tablewidget->item(row,1)->setForeground(QColor::fromRgb(255,255,255));
+            tablewidget->item(row,2)->setForeground(QColor::fromRgb(255,255,255));
+            tablewidget->item(row,3)->setForeground(QColor::fromRgb(255,255,255));
+            green_row = row;
     }
     else
     {
@@ -213,12 +214,14 @@ void Transactions_tab::Connects()
 
 
 void Transactions_tab::updateContents() {
-    tablewidget->setRowCount(1); //Remove everything but header
-
-    
     if (user.text().toStdString().empty()) {
         return;
     }
+    
+    tablewidget->setRowCount(1); //Remove everything but header
+
+    
+
     
     SetNewTask("get_account_history \"" + user.text().toStdString() +"\" 100", this, NULL, +[](void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
         

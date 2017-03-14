@@ -35,49 +35,51 @@ Overview_tab::Overview_tab(class Mainwindow_gui_wallet* a_pPar)
     table_widget.setColumnWidth(2,(tqsTableSize.width()*56)/100);
 
     table_widget.setRowHeight(0,35);
-
     table_widget.setStyleSheet("QTableView{border : 1px solid lightGray}");
-
-    table_widget.setItem(0,0,new QTableWidgetItem(tr("Info")));
-    table_widget.setItem(0,1,new QTableWidgetItem(tr("Account ID")));
-    table_widget.setItem(0,2,new QTableWidgetItem(tr("Account")));
-
-
-    QFont f( "Open Sans Bold", 14, QFont::Bold);
-
-    table_widget.item(0,0)->setFont(f);
-    table_widget.item(0,1)->setFont(f);
-    table_widget.item(0,2)->setFont(f);
-
-    table_widget.item(0,0)->setText("Info");
-
-    table_widget.item(0,0)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
-    table_widget.item(0,1)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
-    table_widget.item(0,2)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
-
-    table_widget.item(0,0)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
-    table_widget.item(0,1)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
-    table_widget.item(0,2)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
-
-    table_widget.item(0,0)->setBackground(QColor(228,227,228));
-    table_widget.item(0,1)->setBackground(QColor(228,227,228));
-    table_widget.item(0,2)->setBackground(QColor(228,227,228));
-
-    table_widget.item(0,0)->setForeground(QColor::fromRgb(51,51,51));
-    table_widget.item(0,1)->setForeground(QColor::fromRgb(51,51,51));
-    table_widget.item(0,2)->setForeground(QColor::fromRgb(51,51,51));
+//
+//    table_widget.setItem(0,0,new QTableWidgetItem(tr("Info")));
+//    table_widget.setItem(0,1,new QTableWidgetItem(tr("Account ID")));
+//    table_widget.setItem(0,2,new QTableWidgetItem(tr("Account")));
 
 
-    table_widget.horizontalHeader()->hide();
+    QFont font( "Open Sans Bold", 14, QFont::Bold);
+
+//    table_widget.item(0,0)->setFont(f);
+//    table_widget.item(0,1)->setFont(f);
+//    table_widget.item(0,2)->setFont(f);
+//
+//    table_widget.item(0,0)->setText("Info");
+//
+//    table_widget.item(0,0)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+//    table_widget.item(0,1)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+//    table_widget.item(0,2)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+//
+//    table_widget.item(0,0)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+//    table_widget.item(0,1)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+//    table_widget.item(0,2)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+//
+//    table_widget.item(0,0)->setBackground(QColor(228,227,228));
+//    table_widget.item(0,1)->setBackground(QColor(228,227,228));
+//    table_widget.item(0,2)->setBackground(QColor(228,227,228));
+//
+//    table_widget.item(0,0)->setForeground(QColor::fromRgb(51,51,51));
+//    table_widget.item(0,1)->setForeground(QColor::fromRgb(51,51,51));
+//    table_widget.item(0,2)->setForeground(QColor::fromRgb(51,51,51));
+
+
+//    table_widget.horizontalHeader()->hide();
     table_widget.verticalHeader()->hide();
 
     table_widget.setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     table_widget.setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-
+    
+    table_widget.setHorizontalHeaderLabels(QStringList() << "Info" << "Account ID" << "Account");
+    table_widget.horizontalHeader()->setFixedHeight(35);
+    table_widget.horizontalHeader()->setFont(font);
 
     table_widget.setStyleSheet(("gridline-color: rgb(228,227,228));"));
     table_widget.setStyleSheet("QTableView{border : 0px}");
-
+    table_widget.horizontalHeader()->setStretchLastSection(true);
 
 
 
@@ -113,8 +115,7 @@ Overview_tab::Overview_tab(class Mainwindow_gui_wallet* a_pPar)
     main->addWidget(&table_widget);
 
     setLayout(main);
-    
-    
+
     connect(&search, SIGNAL(textChanged(QString)), this, SLOT(onTextChanged(QString)));
     
     m_contentUpdateTimer.connect(&m_contentUpdateTimer, SIGNAL(timeout()), this, SLOT(maybeUpdateContent()));
@@ -175,24 +176,24 @@ void Overview_tab::updateContents() {
         connect(btn, SIGNAL(ButtonPushedSignal(std::string)), this , SLOT(buttonPressed(std::string)));
         connect(btn, SIGNAL(mouseWasMoved()), this , SLOT(doRowColor()));
         
-        table_widget.setCellWidget(i + 1, 0, btn);
-        table_widget.setItem(i+1, 2, new QTableWidgetItem(QString::fromStdString(content[0].get<std::string>())));
-        table_widget.setItem(i+1, 1, new QTableWidgetItem(QString::fromStdString(content[1].get<std::string>())));
+        table_widget.setCellWidget(i, 0, btn);
+        table_widget.setItem(i, 2, new QTableWidgetItem(QString::fromStdString(content[0].get<std::string>())));
+        table_widget.setItem(i, 1, new QTableWidgetItem(QString::fromStdString(content[1].get<std::string>())));
         
         
-        table_widget.setRowHeight(i + 1,40);
-        table_widget.cellWidget(i + 1 , 0)->setStyleSheet("* { background-color: rgb(255,255,255); }");
-        table_widget.item(i+1,1)->setBackground(Qt::white);
-        table_widget.item(i+1,2)->setBackground(Qt::white);
+        table_widget.setRowHeight(i,40);
+        table_widget.cellWidget(i, 0)->setStyleSheet("* { background-color: rgb(255,255,255); }");
+        table_widget.item(i,1)->setBackground(Qt::white);
+        table_widget.item(i,2)->setBackground(Qt::white);
         
-        table_widget.item(i+1,1)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
-        table_widget.item(i+1,2)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+        table_widget.item(i,1)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+        table_widget.item(i,2)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
         
-        table_widget.item(i+1,1)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
-        table_widget.item(i+1,2)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+        table_widget.item(i,1)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+        table_widget.item(i,2)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
         
-        table_widget.item(i+1,1)->setForeground(QColor::fromRgb(88,88,88));
-        table_widget.item(i+1,2)->setForeground(QColor::fromRgb(88,88,88));
+        table_widget.item(i,1)->setForeground(QColor::fromRgb(88,88,88));
+        table_widget.item(i,2)->setForeground(QColor::fromRgb(88,88,88));
         
         
         
@@ -257,20 +258,20 @@ void Overview_tab::resizeEvent(QResizeEvent *a_event)
 
 void Overview_tab::doRowColor()
 {
-    for(int i = 1; i < table_widget.rowCount(); ++i)
+    if(table_widget.rowCount() < 1) {return;}
+    
+    for(int i = 0; i < table_widget.rowCount() - 1; ++i)
     {
         table_widget.cellWidget(i, 0)->setStyleSheet("* { background-color: rgb(255,255,255); color : white; }");
         table_widget.item(i,1)->setBackground(QColor(255,255,255));
         table_widget.item(i,2)->setBackground(QColor(255,255,255));
 
-        //table_widget.item(i+1,0)->setForeground(QColor::fromRgb(0,0,0));
         table_widget.item(i,1)->setForeground(QColor::fromRgb(88,88,88));
         table_widget.item(i,2)->setForeground(QColor::fromRgb(88,88,88));
 
 
         QPixmap image(":/icon/images/info1.svg");
 
-        //table_widget.cellWidget(i, 0)->setPixmap(image);
 
     }
     QPoint mouse_pos = table_widget.mapFromGlobal(QCursor::pos());
@@ -282,9 +283,8 @@ void Overview_tab::doRowColor()
 
     if(ite != NULL)
     {
-        int a = ite->row();
-        if(a != 0)
-        {
+        int a = ite->row() - 1;
+        if(a < 0) {return;}
             QPixmap image(":/icon/images/info1_white.svg");
             table_widget.cellWidget(a , 0)->setStyleSheet("* { background-color: rgb(27,176,104); color : white; }");
             ((NewButton*)table_widget.cellWidget(a,0))->setPixmap(image);
@@ -293,10 +293,6 @@ void Overview_tab::doRowColor()
             table_widget.item(a,2)->setBackgroundColor(QColor(27,176,104));
             table_widget.item(a,1)->setForeground(QColor::fromRgb(255,255,255));
             table_widget.item(a,2)->setForeground(QColor::fromRgb(255,255,255));
-
-
-
-        }
     }
 }
 
