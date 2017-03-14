@@ -85,8 +85,8 @@ Upload_tab::Upload_tab()
     ////////////////////////////////////////////////////////////////////////////
 
     QLabel* lifetime = new QLabel("LifeTime");
+    lifetime->setStyleSheet("border:1px solid black");
     lifetime->setStyleSheet("border:0px");
-//    m_info_widget.setCellWidget(0, 0, lifetime);
     
     m_samplesPath = new QLineEdit("", this);
     m_samplesPath->setReadOnly(true);
@@ -96,13 +96,14 @@ Upload_tab::Upload_tab()
     de->setDate(QDate::currentDate());
     de->setDisplayFormat("yyyy-MM-dd");
     de->setCalendarPopup(true);
-    //de->setMinimumDate(QDate::currentDate());
+    de->setMinimumDate(QDate::currentDate());
     de->setStyle(QStyleFactory::create("fusion"));
     
     //////////////////////
     //////                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     //////////////////////
     seeders = new QComboBox(this);
+    
 
     QHBoxLayout* firstRow = new QHBoxLayout;
     
@@ -170,11 +171,10 @@ Upload_tab::Upload_tab()
     sim->setContentsMargins(10, 0, 0, 0);
     sim->setFixedWidth(270);
     sim->setFixedHeight(30);
-    
+
 //    QPixmap image(":/icon/images/browse.svg");
-    
+
     DecentButton* browse_samples_button = new DecentButton();
-//    browse_samples_button->setContentsMargins(-1, 0, 10, 0);
     browse_samples_button->setText("Browse");
     browse_samples_button->setFixedWidth(70);
     browse_samples_button->setFixedHeight(30);
@@ -182,7 +182,6 @@ Upload_tab::Upload_tab()
 
     secondrow->addWidget(sim);
     secondrow->addWidget(browse_samples_button);
-    
     
     //CONTENT
     cont = new QLineEdit("Path");
@@ -207,7 +206,6 @@ Upload_tab::Upload_tab()
     
     m_main_layout.addLayout(secondrow);
     ////////////////////////////                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    
     ////////////////////////////////////////////////////////////////////////////
     /// Upload
     ////////////////////////////////////////////////////////////////////////////
@@ -223,7 +221,6 @@ Upload_tab::Upload_tab()
     button->setContentsMargins(250, 0, 250, 0);
     button->addWidget(upload_label);
 
-    //m_main_layout.addLayout(&m_info_layout);
     m_main_layout.addLayout(button);
 
     setLayout(&m_main_layout);

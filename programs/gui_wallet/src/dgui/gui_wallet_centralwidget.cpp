@@ -294,7 +294,8 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     pLabelTmp->setFixedSize(__SIZE_FOR_IMGS__,__SIZE_FOR_IMGS__);
     
     pComboTmp1 = new QComboBox;
-    pComboTmp1->setStyleSheet("color: black;""background-color:white;");
+    pComboTmp1->setStyleSheet("QWidget:item:selected{border: 0px solid #999900;background: rgb(27,176,104);}");
+    //pComboTmp1->setStyleSheet("color: black;""background-color:white;");
     pComboTmp1->setStyle(QStyleFactory::create("fusion"));
     if(!pComboTmp1){throw __FILE__ "Low memory";}
     
@@ -433,16 +434,6 @@ void CentralWigdet::resizeEvent ( QResizeEvent * a_event )
 {
     //return ;
     QWidget::resizeEvent(a_event);
-
-    /*QString tqsStyle = tr("QTabBar::tab {width: ") +
-            QString::number(a_event->size().width()/5-1,10) + tr("px;}");
-    QTabBar* pTabBar = m_main_tabs2.tabBar();
-    pTabBar->setStyleSheet(tqsStyle);*/
-
-//    QTabBar* pTabBar = m_main_tabs2.tabBar();
-
-    QTabBar* pTabBar = m_main_tabs.tabBar();
-    pTabBar->resize(size().width(),pTabBar->height());
 
     int nWidth_small (size().width()*13/100);
     int nWidth_big (size().width()*28/100);
