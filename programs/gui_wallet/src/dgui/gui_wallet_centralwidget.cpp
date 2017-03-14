@@ -150,19 +150,17 @@ CentralWigdet::CentralWigdet(QBoxLayout* a_pAllLayout, Mainwindow_gui_wallet* a_
     m_currentTab = -1;
 
     
-    setStyleSheet("color:black;""background-color:white;");
 
     m_main_tabs.setStyleSheet("QTabBar::tab{"
-                              " height: 40px; width: 179px; "
+                              " height: 40px; width: 181px;"
                               "color:rgb(27,176,104);background-color:white;"
-                              "border-right: 1 solid rgb(240,240,240);"
+                              "border-left: 1 solid rgb(240,240,240);"
                               "border-top: 1 solid rgb(240,240,240);"
                               "border-bottom: 1 solid rgb(240,240,240);}"
                               "QTabBar::tab:selected{"
                               "color:white;background-color:rgb(27,176,104);}"
                                );
 
-    
     PrepareGUIprivate(a_pAllLayout);
     
     QTimer::singleShot(200, this, &CentralWigdet::initTabChanged);
@@ -434,6 +432,19 @@ void CentralWigdet::resizeEvent ( QResizeEvent * a_event )
 {
     //return ;
     QWidget::resizeEvent(a_event);
+    
+    int each_width = m_parent_main_window->size().width()/5-3;
+    std::cout<<size().width()<<"   "<<each_width<<std::endl;
+    QString s = QString::number(each_width);
+    m_main_tabs.setStyleSheet("QTabBar::tab{"
+                              " height: 40px; min-width: " + s + "px;"
+                              "color:rgb(27,176,104);background-color:white;"
+                              "border-left: 1 solid rgb(240,240,240);"
+                              "border-top: 1 solid rgb(240,240,240);"
+                              "border-bottom: 1 solid rgb(240,240,240);}"
+                              "QTabBar::tab:selected{"
+                              "color:white;background-color:rgb(27,176,104);}"
+                              );
 
     int nWidth_small (size().width()*13/100);
     int nWidth_big (size().width()*28/100);
