@@ -1,4 +1,140 @@
 
+#include "torrent_transfer.hpp"
+#include "ipfs_transfer.hpp"
+
+#include <graphene/package/package.hpp>
+#include <graphene/utilities/dirhelper.hpp>
+
+#include <fc/log/logger.hpp>
+#include <fc/thread/scoped_lock.hpp>
+
+
+
+namespace decent { namespace package {
+
+    using namespace graphene;
+
+
+
+
+
+
+
+
+
+    package_manager::package_manager()
+    {
+        _proto_transfer_engines.insert(std::make_pair("magnet", std::make_shared<torrent_transfer>()));
+        _proto_transfer_engines.insert(std::make_pair("ipfs", std::make_shared<ipfs_transfer>()));
+
+        set_libtorrent_config(utilities::decent_path_finder::instance().get_decent_home() / "libtorrent.json");
+        set_packages_path(utilities::decent_path_finder::instance().get_decent_data() / "packages");
+    }
+
+    package_manager::~package_manager() {
+        save_state();
+    }
+
+    void package_manager::save_state() {
+        ilog("saving package manager state...");
+
+        // TODO
+    }
+
+    void package_manager::restore_state() {
+        ilog("restoring package manager state...");
+
+        // TODO
+    }
+
+    package_handle package_manager::create_package(const boost::filesystem::path& content_path,
+                                                   const boost::filesystem::path& samples_path,
+                                                   const fc::sha512& key,
+                                                   const decent::crypto::custody_data& custody_data,
+                                                   const event_listener_handle& event_listener) {
+    }
+
+    void package_manager::stop_creating_package(const package_handle& package) {
+    }
+
+    package_handle package_manager::consume_package(const std::string& url,
+                                                    const boost::filesystem::path& destination_dir,
+                                                    const fc::sha512& key,
+                                                    const event_listener_handle& event_listener) {
+    }
+
+    void package_manager::consume_package(const package_handle& package,
+                                          const boost::filesystem::path& destination_dir,
+                                          const fc::sha512& key) {
+    }
+
+    void package_manager::stop_consuming_package(const package_handle& package) {
+    }
+
+    package_handle package_manager::seed_package(const std::string& url,
+                                                 const event_listener_handle& event_listener) {
+    }
+
+    void package_manager::seed_package(const package_handle& package) {
+    }
+
+    void package_manager::stop_seeding_package(const package_handle& package) {
+    }
+
+    package_handle_set package_manager::get_all_known_packages() const {
+    }
+
+    package_handle package_manager::get_package_handle(const fc::ripemd160& hash,
+                                                       const bool full_check) {
+    }
+
+    void package_manager::set_packages_path(const boost::filesystem::path& packages_path) {
+        if (!exists(packages_path) || !is_directory(packages_path)) {
+            try {
+                if (!create_directories(packages_path) && !is_directory(packages_path)) {
+                    FC_THROW("Unable to create packages directory");
+                }
+            }
+            catch (const boost::filesystem::filesystem_error& ex) {
+                if (!is_directory(packages_path)) {
+                    FC_THROW("Unable to create packages directory: ${error}", ("error", ex.what()) );
+                }
+            }
+        }
+
+        fc::scoped_lock<fc::mutex> guard(_mutex);
+
+        save_state();
+        _packages_path = packages_path;
+        restore_state();
+    }
+
+    void package_manager::set_libtorrent_config(const boost::filesystem::path& libtorrent_config_file) {
+        fc::scoped_lock<fc::mutex> guard(_mutex);
+
+        for(auto& engine : _proto_transfer_engines) {
+            torrent_transfer* torrent_engine = dynamic_cast<torrent_transfer*>(engine.get());
+            if (torrent_engine) {
+                if (libtorrent_config_file.empty() || boost::filesystem::exists(libtorrent_config_file)) {
+                    torrent_engine->reconfigure(libtorrent_config_file);
+                }
+                else {
+                    torrent_engine->dump_config(libtorrent_config_file);
+                    break; // dump the config of first one found only
+                }
+            }
+        }
+    }
+
+
+} } // decent::package
+
+
+
+
+
+
+#if 0
 
 
 /*
@@ -37,7 +173,6 @@
 #include <fc/exception/exception.hpp>
 #include <fc/network/ntp.hpp>
 #include <fc/thread/mutex.hpp>
-#include <fc/thread/scoped_lock.hpp>
 
 #include <boost/iostreams/device/file_descriptor.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
@@ -69,30 +204,30 @@ const int RIPEMD160_BUFFER_SIZE  = 1024 * 1024; // 4kb
     
 struct arc_header {
     char type; // 0 = EOF, 1 = REGULAR FILE
-	char name[255];
-	char size[8];
+    char name[255];
+    char size[8];
 };
 
 
 class archiver {
-	filtering_ostream&   _out;
+    filtering_ostream&   _out;
 public:
-	archiver(filtering_ostream& out): _out(out) {
+    archiver(filtering_ostream& out): _out(out) {
 
-	}
+    }
 
-	bool put(const std::string& file_name, file_source& in, int file_size) {
-		arc_header header;
+    bool put(const std::string& file_name, file_source& in, int file_size) {
+        arc_header header;
 
-		std::memset((void*)&header, 0, sizeof(arc_header));
+        std::memset((void*)&header, 0, sizeof(arc_header));
         
-	    std::snprintf(header.name, 255, "%s", file_name.c_str());
+        std::snprintf(header.name, 255, "%s", file_name.c_str());
         
         header.type = 1;
         *(int*)header.size = file_size;
 
 
-		_out.write((const char*)&header,sizeof(arc_header));
+        _out.write((const char*)&header,sizeof(arc_header));
         
         char buffer[ARC_BUFFER_SIZE];
         int bytes_read = in.read(buffer, ARC_BUFFER_SIZE);
@@ -103,16 +238,16 @@ public:
         }
         
         return true;
-	}
+    }
 
-	void finalize() {
-		arc_header header;
+    void finalize() {
+        arc_header header;
 
-		std::memset((void*)&header, 0, sizeof(arc_header));
-		_out.write((const char*)&header,sizeof(arc_header));
-		_out.flush();
+        std::memset((void*)&header, 0, sizeof(arc_header));
+        _out.write((const char*)&header,sizeof(arc_header));
+        _out.flush();
         _out.reset();      
-	}
+    }
 
 };
 
@@ -197,9 +332,9 @@ void get_files_recursive(boost::filesystem::path path, std::vector<boost::filesy
  
     while(it != end) // 2.
     {
-    	if (is_regular_file(*it)) {
-    		all_files.push_back(*it);
-    	}
+        if (is_regular_file(*it)) {
+            all_files.push_back(*it);
+        }
 
         if(is_directory(*it) && is_symlink(*it))
             it.no_push();
@@ -467,45 +602,45 @@ bool package_manager::unpack_package(const path& destination_directory, const pa
     dearchiver dearc(istr);
     dearc.extract(destination_directory.string());
 
-	return true;
+    return true;
 }
 
 package_object package_manager::create_package( const boost::filesystem::path& content_path, const boost::filesystem::path& samples, const fc::sha512& key, decent::crypto::custody_data& cd) {
-	if (!is_directory(content_path) && !is_regular_file(content_path)) {
+    if (!is_directory(content_path) && !is_regular_file(content_path)) {
         FC_THROW("Content path is not directory or file");
-	}
+    }
 
-	//if (!is_directory(samples) || samples.size() == 0) {
+    //if (!is_directory(samples) || samples.size() == 0) {
     //    FC_THROW("Samples path is not directory");
-	//}
+    //}
 
     const path packages_path = get_packages_path();
 
-	path temp_path = packages_path / make_uuid();
-	if (!create_directory(temp_path)) {
+    path temp_path = packages_path / make_uuid();
+    if (!create_directory(temp_path)) {
         FC_THROW("Failed to create temporary directory");
-	}
+    }
 
     if (CryptoPP::AES::MAX_KEYLENGTH > key.data_size()) {
         FC_THROW("CryptoPP::AES::MAX_KEYLENGTH is bigger than key size");
     }
 
 
-	path content_zip = temp_path / "content.zip";
+    path content_zip = temp_path / "content.zip";
 
-	filtering_ostream out;
+    filtering_ostream out;
     out.push(gzip_compressor());
     out.push(file_sink(content_zip.string(), std::ofstream::binary));
-	archiver arc(out);
+    archiver arc(out);
 
-	vector<path> all_files;
+    vector<path> all_files;
     if (is_regular_file(content_path)) {
         file_source source(content_path.string(), std::ifstream::binary);
         
         arc.put(content_path.filename().string(), source, file_size(content_path));
 
     } else {
-	   get_files_recursive(content_path, all_files);
+       get_files_recursive(content_path, all_files);
         
         for (int i = 0; i < all_files.size(); ++i) {
             file_source source(all_files[i].string(), std::ifstream::binary);
@@ -514,9 +649,9 @@ package_object package_manager::create_package( const boost::filesystem::path& c
         }
     }
     
-	
+    
 
-	arc.finalize();
+    arc.finalize();
 
 
     path aes_file_path = temp_path / "content.zip.aes";
@@ -546,7 +681,7 @@ package_object package_manager::create_package( const boost::filesystem::path& c
         
     rename(temp_path, packages_path / hash.str());
 
-	return package_object(packages_path / hash.str());
+    return package_object(packages_path / hash.str());
 }
 
 package_transfer_interface::transfer_id
@@ -671,3 +806,5 @@ uint32_t package_manager::create_proof_of_custody(const boost::filesystem::path&
     fc::scoped_lock<fc::mutex> guard(_mutex);
     return _custody_utils.create_proof_of_custody(content_file, cd, proof);
 }
+
+#endif
