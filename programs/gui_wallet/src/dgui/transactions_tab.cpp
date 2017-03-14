@@ -50,7 +50,7 @@ Transactions_tab::Transactions_tab() : green_row(0)
 
     //create table (widget)
     tablewidget = new HTableWidget();
-    tablewidget->setRowCount(1);//add first row in table
+    //tablewidget->setRowCount(1);//add first row in table
     tablewidget->setColumnCount(numTransactionCols);
     
     tablewidget->verticalHeader()->setDefaultSectionSize(35);
@@ -166,6 +166,9 @@ Transactions_tab::~Transactions_tab()
 
 void Transactions_tab::doRowColor()
 {
+    if(tablewidget->rowCount() == 1)
+        return;
+    
         tablewidget->item(green_row,0)->setBackgroundColor(QColor(255,255,255));
         tablewidget->item(green_row,1)->setBackgroundColor(QColor(255,255,255));
         tablewidget->item(green_row,2)->setBackgroundColor(QColor(255,255,255));
