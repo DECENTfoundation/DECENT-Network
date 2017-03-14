@@ -122,26 +122,29 @@ void Browse_content_tab::onTextChanged(const QString& text) {
 void Browse_content_tab::PrepareTableWidgetHeaderGUI()
 {
     BTableWidget& m_TableWidget = *m_pTableWidget;
-    //QLabel* pLabel;
     
-    
-    //m_TableWidget.setShowGrid(false);
+    QFont font( "Open Sans Bold", 14, QFont::Bold);
     
     m_TableWidget.setStyleSheet("QTableWidget{border : 1px solid red}");
     
     m_TableWidget.horizontalHeader()->setDefaultSectionSize(300);
     m_TableWidget.setRowHeight(0,35);
-    m_TableWidget.horizontalHeader()->hide();
     m_TableWidget.verticalHeader()->hide();
+    m_TableWidget.horizontalHeader()->hide();
+    
+    m_TableWidget.setHorizontalHeaderLabels(QStringList() << "" << "Title" << "Rating" << "Size" << "Price" << "Created" << "Expiration" );
+    m_TableWidget.horizontalHeader()->setFixedHeight(35);
+    m_TableWidget.horizontalHeader()->setFont(font);
+    m_TableWidget.horizontalHeader()->setStyleSheet("color:rgb(228,227,228)");
+    
     m_main_layout.setContentsMargins(0, 0, 0, 0);
     
-    QFont f( "Open Sans Bold", 14, QFont::Bold);
     
     for( int i(0); i<s_cnNumberOfCols; ++i )
     {
         m_TableWidget.setItem(0,i,new QTableWidgetItem(tr(s_vccpItemNames[i])));
         m_TableWidget.item(0,i)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
-        m_TableWidget.item(0,i)->setFont(f);
+        m_TableWidget.item(0,i)->setFont(font);
         m_TableWidget.item(0,i)->setBackground(QColor(228,227,228));
         m_TableWidget.item(0,i)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
         m_TableWidget.item(0,i)->setForeground(QColor::fromRgb(51,51,51));
@@ -149,6 +152,8 @@ void Browse_content_tab::PrepareTableWidgetHeaderGUI()
     }
     m_TableWidget.setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     m_TableWidget.setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    m_TableWidget.setSelectionMode(QAbstractItemView::NoSelection);
+
     Connects();
     ArrangeSize();
 }

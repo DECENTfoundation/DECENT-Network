@@ -13,6 +13,7 @@
 #include <QTableWidgetItem>
 #include <iostream>
 #include <QResource>
+#include <QStringList>
 
 #include <graphene/chain/config.hpp>
 #include "gui_wallet_global.hpp"
@@ -45,6 +46,8 @@ void HTableWidget::mouseMoveEvent(QMouseEvent *event)
 
 Transactions_tab::Transactions_tab() : green_row(0)
 {
+    QFont f( "Open Sans Bold", 14, QFont::Bold);
+
     //create table (widget)
     tablewidget = new HTableWidget();
     tablewidget->setRowCount(1);//add first row in table
@@ -52,10 +55,15 @@ Transactions_tab::Transactions_tab() : green_row(0)
     
     tablewidget->verticalHeader()->setDefaultSectionSize(35);
     tablewidget->horizontalHeader()->setDefaultSectionSize(230);
-    tablewidget->horizontalHeader()->hide();
     tablewidget->verticalHeader()->hide();
+    tablewidget->horizontalHeader()->hide();
+
     tablewidget->setStyleSheet("QTableView{border : 1px solid lightGray}");
-    //tablewidget->setShowGrid(false);
+    tablewidget->setSelectionMode(QAbstractItemView::NoSelection);
+    
+    tablewidget->setHorizontalHeaderLabels(QStringList() << "ID" << "Info" << "Memo" << "Fee");
+    tablewidget->horizontalHeader()->setFixedHeight(35);
+    tablewidget->horizontalHeader()->setFont(f);
 
     tablewidget->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     tablewidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -67,7 +75,6 @@ Transactions_tab::Transactions_tab() : green_row(0)
     user.setFixedHeight(40);
     user.setFrame(false);
 
-    QFont f( "Open Sans Bold", 14, QFont::Bold);
     for (int i = 0; i < numTransactionCols; ++i)
     {
         tablewidget->setItem(0, i, new QTableWidgetItem(tr(firsItemNames[i])));
@@ -167,7 +174,7 @@ void Transactions_tab::doRowColor()
         tablewidget->item(green_row,1)->setBackgroundColor(QColor(255,255,255));
         tablewidget->item(green_row,2)->setBackgroundColor(QColor(255,255,255));
         tablewidget->item(green_row,3)->setBackgroundColor(QColor(255,255,255));
-
+        
         tablewidget->item(green_row,0)->setForeground(QColor::fromRgb(0,0,0));
         tablewidget->item(green_row,1)->setForeground(QColor::fromRgb(0,0,0));
         tablewidget->item(green_row,2)->setForeground(QColor::fromRgb(0,0,0));
@@ -175,10 +182,10 @@ void Transactions_tab::doRowColor()
     }
     QPoint mouse_pos = tablewidget->mapFromGlobal(QCursor::pos());
     QTableWidgetItem *ite = tablewidget->itemAt(mouse_pos);
-
+    
     if(ite != NULL)
     {
-
+        
         int a = ite->row();
         if(a != 0)
         {
@@ -186,7 +193,7 @@ void Transactions_tab::doRowColor()
             tablewidget->item(a,1)->setBackgroundColor(QColor(27,176,104));
             tablewidget->item(a,2)->setBackgroundColor(QColor(27,176,104));
             tablewidget->item(a,3)->setBackgroundColor(QColor(27,176,104));
-
+            
             tablewidget->item(a,0)->setForeground(QColor::fromRgb(255,255,255));
             tablewidget->item(a,1)->setForeground(QColor::fromRgb(255,255,255));
             tablewidget->item(a,2)->setForeground(QColor::fromRgb(255,255,255));
