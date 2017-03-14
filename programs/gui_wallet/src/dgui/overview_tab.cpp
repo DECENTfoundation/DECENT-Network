@@ -26,6 +26,8 @@ Overview_tab::Overview_tab(class Mainwindow_gui_wallet* a_pPar)
 {
     table_widget.setColumnCount(3);
     table_widget.setRowCount(1);
+    table_widget.setSelectionMode(QAbstractItemView::NoSelection);
+
 
     QSize tqsTableSize = table_widget.size();
     table_widget.setColumnWidth(0,(tqsTableSize.width()*12)/100);

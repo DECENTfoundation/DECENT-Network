@@ -54,6 +54,7 @@ PurchasedTab::PurchasedTab()
     search_lay->addWidget(search_label);
     search_lay->addWidget(&m_filterLineEditer);
 
+    m_pTableWidget->setSelectionMode(QAbstractItemView::NoSelection);
     m_main_layout.setContentsMargins(0, 0, 0, 0);
 
     m_main_layout.addLayout(search_lay);
