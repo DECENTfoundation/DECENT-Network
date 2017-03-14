@@ -26,6 +26,8 @@ Overview_tab::Overview_tab(class Mainwindow_gui_wallet* a_pPar)
 {
     table_widget.setColumnCount(4);
     table_widget.setRowCount(1);
+    table_widget.setSelectionMode(QAbstractItemView::NoSelection);
+
 
     QSize tqsTableSize = table_widget.size();
     table_widget.setColumnWidth(0,(tqsTableSize.width()*18)/100);
@@ -34,54 +36,23 @@ Overview_tab::Overview_tab(class Mainwindow_gui_wallet* a_pPar)
     table_widget.setColumnWidth(3,(tqsTableSize.width()*15)/100);
 
     table_widget.setRowHeight(0,35);
-
     table_widget.setStyleSheet("QTableView{border : 1px solid lightGray}");
 
-    table_widget.setItem(0,0,new QTableWidgetItem(tr("Account ID")));
-    table_widget.setItem(0,1,new QTableWidgetItem(tr("Author")));
-    table_widget.setItem(0,2,new QTableWidgetItem(tr("")));
-    table_widget.setItem(0,3,new QTableWidgetItem(tr("")));
+    QFont font( "Open Sans Bold", 14, QFont::Bold);
 
 
-    QFont f( "Open Sans Bold", 14, QFont::Bold);
-
-    table_widget.item(0,0)->setFont(f);
-    table_widget.item(0,1)->setFont(f);
-    table_widget.item(0,2)->setFont(f);
-    table_widget.item(0,3)->setFont(f);
-
-
-    table_widget.item(0,0)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
-    table_widget.item(0,1)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
-    table_widget.item(0,2)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
-    table_widget.item(0,3)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
-
-    table_widget.item(0,0)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
-    table_widget.item(0,1)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
-    table_widget.item(0,2)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
-    table_widget.item(0,3)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
-    
-    table_widget.item(0,0)->setBackground(QColor(228,227,228));
-    table_widget.item(0,1)->setBackground(QColor(228,227,228));
-    table_widget.item(0,2)->setBackground(QColor(228,227,228));
-    table_widget.item(0,3)->setBackground(QColor(228,227,228));
-
-    table_widget.item(0,0)->setForeground(QColor::fromRgb(51,51,51));
-    table_widget.item(0,1)->setForeground(QColor::fromRgb(51,51,51));
-    table_widget.item(0,2)->setForeground(QColor::fromRgb(51,51,51));
-    table_widget.item(0,3)->setForeground(QColor::fromRgb(51,51,51));
-
-
-    table_widget.horizontalHeader()->hide();
     table_widget.verticalHeader()->hide();
 
     table_widget.setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     table_widget.setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-
+    
+    table_widget.setHorizontalHeaderLabels(QStringList() << "Info" << "Account ID" << "Account");
+    table_widget.horizontalHeader()->setFixedHeight(35);
+    table_widget.horizontalHeader()->setFont(font);
 
     table_widget.setStyleSheet(("gridline-color: rgb(228,227,228));"));
     table_widget.setStyleSheet("QTableView{border : 0px}");
-
+    table_widget.horizontalHeader()->setStretchLastSection(true);
 
 
 
@@ -117,8 +88,7 @@ Overview_tab::Overview_tab(class Mainwindow_gui_wallet* a_pPar)
     main->addWidget(&table_widget);
 
     setLayout(main);
-    
-    
+
     connect(&search, SIGNAL(textChanged(QString)), this, SLOT(onTextChanged(QString)));
     
     
@@ -196,12 +166,11 @@ void Overview_tab::updateContents() {
         table_widget.setCellWidget(i+1, 2, transaction);
         table_widget.setCellWidget(i+1, 3, transfer);
         
-        
-        
         table_widget.setRowHeight(i+1,40);
         table_widget.cellWidget(i+1 , 2)->setStyleSheet("* { background-color: rgb(255,255,255); color : rgb(27,176,104); }");
         table_widget.cellWidget(i+1 , 3)->setStyleSheet("* { background-color: rgb(255,255,255); color : rgb(27,176,104); }");
         
+
         table_widget.item(i+1,0)->setBackground(Qt::white);
         table_widget.item(i+1,1)->setBackground(Qt::white);
         
@@ -284,14 +253,15 @@ void Overview_tab::resizeEvent(QResizeEvent *a_event)
 
 void Overview_tab::doRowColor()
 {
-    for(int i = 1; i < table_widget.rowCount(); ++i)
+    if(table_widget.rowCount() < 1) {return;}
+    
+    for(int i = 0; i < table_widget.rowCount() - 1; ++i)
     {
         table_widget.cellWidget(i, 2)->setStyleSheet("* { background-color: rgb(255,255,255); color : rgb(27,176,104); }");
         table_widget.cellWidget(i, 3)->setStyleSheet("* { background-color: rgb(255,255,255); color : rgb(27,176,104); }");
         table_widget.item(i,0)->setBackground(QColor(255,255,255));
         table_widget.item(i,1)->setBackground(QColor(255,255,255));
 
-        //table_widget.item(i+1,0)->setForeground(QColor::fromRgb(0,0,0));
         table_widget.item(i,0)->setForeground(QColor::fromRgb(88,88,88));
         table_widget.item(i,1)->setForeground(QColor::fromRgb(88,88,88));
     }
@@ -304,6 +274,7 @@ void Overview_tab::doRowColor()
 
     if(ite != NULL)
     {
+
         int a = ite->row();
         if(a != 0)
         {
@@ -314,7 +285,6 @@ void Overview_tab::doRowColor()
             table_widget.item(a,1)->setBackgroundColor(QColor(27,176,104));
             table_widget.item(a,0)->setForeground(QColor::fromRgb(255,255,255));
             table_widget.item(a,1)->setForeground(QColor::fromRgb(255,255,255));
-
 
 
         }

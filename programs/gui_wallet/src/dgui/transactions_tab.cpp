@@ -13,6 +13,7 @@
 #include <QTableWidgetItem>
 #include <iostream>
 #include <QResource>
+#include <QStringList>
 
 #include <graphene/chain/config.hpp>
 #include "gui_wallet_global.hpp"
@@ -45,6 +46,8 @@ void HTableWidget::mouseMoveEvent(QMouseEvent *event)
 
 Transactions_tab::Transactions_tab() : green_row(0)
 {
+    QFont font( "Open Sans Bold", 14, QFont::Bold);
+
     //create table (widget)
     tablewidget = new HTableWidget();
     tablewidget->setRowCount(1);//add first row in table
@@ -52,10 +55,13 @@ Transactions_tab::Transactions_tab() : green_row(0)
     
     tablewidget->verticalHeader()->setDefaultSectionSize(35);
     tablewidget->horizontalHeader()->setDefaultSectionSize(230);
-    tablewidget->horizontalHeader()->hide();
     tablewidget->verticalHeader()->hide();
     tablewidget->setStyleSheet("QTableView{border : 1px solid lightGray}");
-    //tablewidget->setShowGrid(false);
+    tablewidget->setSelectionMode(QAbstractItemView::NoSelection);
+    
+    tablewidget->setHorizontalHeaderLabels(QStringList() << "ID" << "Info" << "Memo" << "Fee");
+    tablewidget->horizontalHeader()->setFixedHeight(35);
+    tablewidget->horizontalHeader()->setFont(font);
 
     tablewidget->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     tablewidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -68,16 +74,15 @@ Transactions_tab::Transactions_tab() : green_row(0)
     user.setFrame(false);
     
 
-    QFont f( "Open Sans Bold", 14, QFont::Bold);
-    for (int i = 0; i < numTransactionCols; ++i)
-    {
-        tablewidget->setItem(0, i, new QTableWidgetItem(tr(firsItemNames[i])));
-        tablewidget->item(0, i)->setFont(f);
-        tablewidget->item(0, i)->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
-        tablewidget->item(0, i)->setBackground(QColor(228,227,228));
-        tablewidget->item(0, i)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
-        tablewidget->item(0, i)->setForeground(QColor::fromRgb(51,51,51));
-    }
+//    for (int i = 0; i < numTransactionCols; ++i)
+//    {
+//        tablewidget->setItem(0, i, new QTableWidgetItem(tr(firsItemNames[i])));
+//        tablewidget->item(0, i)->setFont(f);
+//        tablewidget->item(0, i)->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+//        tablewidget->item(0, i)->setBackground(QColor(228,227,228));
+//        tablewidget->item(0, i)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+//        tablewidget->item(0, i)->setForeground(QColor::fromRgb(51,51,51));
+//    }
 
     connect(tablewidget,SIGNAL(mouseMoveEventDid()),this,SLOT(doRowColor()));
 
@@ -92,6 +97,7 @@ Transactions_tab::Transactions_tab() : green_row(0)
     search_lay->addWidget(&search_label);
     search_lay->addWidget(&user);
 
+    tablewidget->horizontalHeader()->setStretchLastSection(true);
     main_layout.setContentsMargins(0, 0, 0, 0);
     main_layout.addLayout(search_lay);
     main_layout.addWidget(tablewidget);
@@ -162,8 +168,8 @@ Transactions_tab::~Transactions_tab()
 
 void Transactions_tab::doRowColor()
 {
-    if(green_row != 0)
-    {
+    if(tablewidget->item(0, 1) == 0) {return;}
+    
         tablewidget->item(green_row,0)->setBackgroundColor(QColor(255,255,255));
         tablewidget->item(green_row,1)->setBackgroundColor(QColor(255,255,255));
         tablewidget->item(green_row,2)->setBackgroundColor(QColor(255,255,255));
@@ -173,27 +179,25 @@ void Transactions_tab::doRowColor()
         tablewidget->item(green_row,1)->setForeground(QColor::fromRgb(0,0,0));
         tablewidget->item(green_row,2)->setForeground(QColor::fromRgb(0,0,0));
         tablewidget->item(green_row,3)->setForeground(QColor::fromRgb(0,0,0));
-    }
+
     QPoint mouse_pos = tablewidget->mapFromGlobal(QCursor::pos());
     QTableWidgetItem *ite = tablewidget->itemAt(mouse_pos);
 
     if(ite != NULL)
     {
 
-        int a = ite->row();
-        if(a != 0)
-        {
-            tablewidget->item(a,0)->setBackgroundColor(QColor(27,176,104));
-            tablewidget->item(a,1)->setBackgroundColor(QColor(27,176,104));
-            tablewidget->item(a,2)->setBackgroundColor(QColor(27,176,104));
-            tablewidget->item(a,3)->setBackgroundColor(QColor(27,176,104));
+        int row = ite->row() - 1;
+        if(row < 0) {return;}
+            tablewidget->item(row,0)->setBackgroundColor(QColor(27,176,104));
+            tablewidget->item(row,1)->setBackgroundColor(QColor(27,176,104));
+            tablewidget->item(row,2)->setBackgroundColor(QColor(27,176,104));
+            tablewidget->item(row,3)->setBackgroundColor(QColor(27,176,104));
 
-            tablewidget->item(a,0)->setForeground(QColor::fromRgb(255,255,255));
-            tablewidget->item(a,1)->setForeground(QColor::fromRgb(255,255,255));
-            tablewidget->item(a,2)->setForeground(QColor::fromRgb(255,255,255));
-            tablewidget->item(a,3)->setForeground(QColor::fromRgb(255,255,255));
-            green_row = a;
-        }
+            tablewidget->item(row,0)->setForeground(QColor::fromRgb(255,255,255));
+            tablewidget->item(row,1)->setForeground(QColor::fromRgb(255,255,255));
+            tablewidget->item(row,2)->setForeground(QColor::fromRgb(255,255,255));
+            tablewidget->item(row,3)->setForeground(QColor::fromRgb(255,255,255));
+            green_row = row;
     }
     else
     {
@@ -211,12 +215,14 @@ void Transactions_tab::Connects()
 
 
 void Transactions_tab::updateContents() {
-    tablewidget->setRowCount(1); //Remove everything but header
-
-    
     if (user.text().toStdString().empty()) {
         return;
     }
+    
+    tablewidget->setRowCount(1); //Remove everything but header
+
+    
+
     
     SetNewTask("get_account_history \"" + user.text().toStdString() +"\" 100", this, NULL, +[](void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
         
@@ -236,17 +242,17 @@ void Transactions_tab::updateContents() {
                 auto op = content["op"];
                 
                 
-                obj->tablewidget->setItem(i + 1, 0, new QTableWidgetItem(QString::fromStdString(op["id"].get<std::string>())));
-                obj->tablewidget->item(i + 1, 0)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
-                obj->tablewidget->item(i + 1, 0)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+                obj->tablewidget->setItem(i, 0, new QTableWidgetItem(QString::fromStdString(op["id"].get<std::string>())));
+                obj->tablewidget->item(i, 0)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+                obj->tablewidget->item(i, 0)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
                 
-                obj->tablewidget->setItem(i + 1, 1, new QTableWidgetItem(QString::fromStdString(contents[i]["description"].get<std::string>())));
-                obj->tablewidget->item(i + 1, 1)->setTextAlignment(Qt::AlignLeft|Qt::AlignVCenter);
-                obj->tablewidget->item(i + 1, 1)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+                obj->tablewidget->setItem(i, 1, new QTableWidgetItem(QString::fromStdString(contents[i]["description"].get<std::string>())));
+                obj->tablewidget->item(i, 1)->setTextAlignment(Qt::AlignLeft|Qt::AlignVCenter);
+                obj->tablewidget->item(i, 1)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
                 
-                obj->tablewidget->setItem(i + 1, 2, new QTableWidgetItem(QString::fromStdString(contents[i]["memo"].get<std::string>())));
-                obj->tablewidget->item(i + 1, 2)->setTextAlignment(Qt::AlignRight|Qt::AlignVCenter);
-                obj->tablewidget->item(i + 1, 2)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+                obj->tablewidget->setItem(i, 2, new QTableWidgetItem(QString::fromStdString(contents[i]["memo"].get<std::string>())));
+                obj->tablewidget->item(i, 2)->setTextAlignment(Qt::AlignRight|Qt::AlignVCenter);
+                obj->tablewidget->item(i, 2)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
 
                 auto amount = op["op"][1]["fee"]["amount"];
                 QString amountText = "";
@@ -257,9 +263,9 @@ void Transactions_tab::updateContents() {
                     amountText = QString::number(std::stod(amount.get<std::string>()) / GRAPHENE_BLOCKCHAIN_PRECISION) + " DCT";
 
                 }
-                obj->tablewidget->setItem(i + 1, 3, new QTableWidgetItem(amountText));
-                obj->tablewidget->item(i + 1, 3)->setTextAlignment(Qt::AlignRight|Qt::AlignVCenter);
-                obj->tablewidget->item(i + 1, 3)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+                obj->tablewidget->setItem(i, 3, new QTableWidgetItem(amountText));
+                obj->tablewidget->item(i, 3)->setTextAlignment(Qt::AlignRight|Qt::AlignVCenter);
+                obj->tablewidget->item(i, 3)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
 
             }
         } catch (std::exception& ex) {
