@@ -20,11 +20,35 @@
 
 #define ALERT(message)                                  \
 {                                                       \
-    QMessageBox msgBox;                                 \
-    msgBox.setWindowTitle("Error");                     \
-    msgBox.setText(QString::fromStdString(message));    \
-    msgBox.exec();                                      \
+QMessageBox msgBox;                                 \
+msgBox.setWindowTitle("Error");                     \
+msgBox.setText(QString::fromStdString(message));    \
+msgBox.exec();                                      \
 }                                                       \
+
+
+
+#define ALERT_DETAILS(message, details)                                  \
+{                                                       \
+QMessageBox msgBox;                                 \
+msgBox.setWindowTitle("Error");                     \
+msgBox.setText(QString::fromStdString(message));    \
+msgBox.setDetailedText(QObject::tr(details));    \
+msgBox.exec();                                      \
+}                                                       \
+
+
+
+
+
+#define MESSAGE(message)                                  \
+{                                                       \
+QMessageBox msgBox;                                 \
+msgBox.setWindowTitle("Message");                     \
+msgBox.setText(QString::fromStdString(message));    \
+msgBox.exec();                                      \
+}                                                   \
+
 
 
 

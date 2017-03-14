@@ -12,14 +12,10 @@
 #define     CLI_WALLET_CODE         ((void*)-1)
 #define     WALLET_CONNECT_CODE     ((void*)-2)
 
-#define __INFO__ 0
-#define __WARN__ 1
-#define __ERRR__ 2
 
 #include "gui_wallet_mainwindow.hpp"
 #include "gui_wallet_global.hpp"
 #include <QMenuBar>
-//#include "connected_api_instance.hpp"
 #include <QMoveEvent>
 #include "qt_commonheader.hpp"
 #include <stdio.h>
@@ -48,57 +44,6 @@ int WarnAndWaitFunc(void* a_pOwner,WarnYesOrNoFuncType a_fpYesOrNo, void* a_pDat
 
 int CallFunctionInGuiLoop2(SetNewTask_last_args2,const std::string& a_result,void* a_owner,TypeCallbackSetNewTaskGlb2 a_fpFunc);
 int CallFunctionInGuiLoop3(SetNewTask_last_args2,const fc::variant& a_result,void* owner,TypeCallbackSetNewTaskGlb3 fpFnc);
-
-
-/*//////////////////////////////////////////////////////////////////////////////////*/
-
-
-
-static bool FindStringByKey(const char* a_cpcInput, const char* a_key, std::string* a_pToFind)
-{
-    std::string& csToParse = *a_pToFind;
-    const char *cpcStrBegin, *cpcStrEnd, *cpcValueFld = strstr(a_cpcInput,a_key);
-
-    if(!cpcValueFld++){return false;}
-    cpcValueFld = strchr(cpcValueFld,':');
-    if(!cpcValueFld++){return false;}
-    cpcStrBegin = strchr(cpcValueFld,'\"');
-    if(!cpcStrBegin++){return false;}
-    cpcStrEnd = strchr(cpcStrBegin,'\"');
-    if(!cpcStrEnd){return false;}
-    csToParse = std::string(cpcStrBegin,((size_t)cpcStrEnd)-((size_t)cpcStrBegin));
-    return true;
-
-
-}
-
-typedef const char* TypeConstChar;
-
-static bool GetJsonVectorNextElem(const char* a_cpcJsonStr,TypeConstChar* a_beg, TypeConstChar* a_end)
-{
-    const char* cpcNext = *a_beg = strchr(a_cpcJsonStr,'{');
-
-    if(!(*a_beg)){return false;}
-
-    int nOpen(1), nClose(0);
-
-    while(nOpen>nClose)
-    {
-        cpcNext = strpbrk(++cpcNext,"{}");
-        if(!cpcNext){break;}
-        switch(cpcNext[0])
-        {
-        case '{':++nOpen;break;
-        default:++nClose;break;
-        }
-    }
-
-    *a_end = cpcNext;
-
-    return (nOpen<=nClose);
-}
-
-
 
 
 /*//////////////////////////////////////////////////////////////////////////////////*/
@@ -209,16 +154,18 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
     
     m_pdig_cont_detailsGenDlg = nullptr;
     m_pdig_cont_detailsBougDlg = nullptr;
-
+    
+    _downloadChecker.setSingleShot(false);
+    _downloadChecker.setInterval(5000);
+    connect(&_downloadChecker, SIGNAL(timeout()), this, SLOT(CheckDownloads()));
+    _downloadChecker.start();
+    
 }
 
 void Mainwindow_gui_wallet::ContentWasBoughtSlot() {
     
     m_pCentralWidget->SetMyCurrentTabIndex(4);
-    
-    std::string csUserName = GlobalEvents::instance().getCurrentUser();
-    std::string csLineToRun = "list_account_balances " + csUserName;
-    SetNewTask(csLineToRun,this,NULL,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
+    UpdateAccountBalances(GlobalEvents::instance().getCurrentUser());
 }
 
 
@@ -354,10 +301,7 @@ void Mainwindow_gui_wallet::CurrentUserChangedSlot(const QString& a_new_user)
     }
 
     GlobalEvents::instance().setCurrentUser(a_new_user.toStdString());
-
-    std::string csUserName = StringFromQString(a_new_user);
-    std::string csLineToRun = "list_account_balances " + csUserName;
-    SetNewTask(csLineToRun,this,NULL,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
+    UpdateAccountBalances(a_new_user.toStdString());
 }
 
 
@@ -432,12 +376,74 @@ int Mainwindow_gui_wallet::GetDigitalContentsFromVariant(DCT::DIG_CONT_TYPES a_t
     return 0;
 }
 
+void Mainwindow_gui_wallet::UpdateAccountBalances(const std::string& username) {
+
+    try {
+    
+        std::string assetsResult;
+        std::string getAssetsCommand = "list_assets \"\" 100";
+        RunTask(getAssetsCommand, assetsResult);
+        
+        
+        std::string csLineToRun = "list_account_balances " + username;
+        std::string result;
+        
+        RunTask(csLineToRun, result);
+        
+        
+        auto allAssets = json::parse(assetsResult);
+        auto allBalances = json::parse(result);
+        
+        std::vector<std::string> balances;
+        for (int i = 0; i < allBalances.size(); ++i) {
+            
+            std::string assetName = "Unknown";
+            int precision = 1;
+            
+            for (int assInd = 0; assInd < allAssets.size(); ++assInd) {
+                if (allAssets[assInd]["id"].get<std::string>() == allBalances[i]["asset_id"]) {
+                    assetName = allAssets[assInd]["symbol"].get<std::string>();
+                    precision = allAssets[assInd]["precision"].get<int>();
+                    break;
+                }
+            }
+            
+            double amount = 0;
+            if (allBalances[i]["amount"].is_number()) {
+                amount = allBalances[i]["amount"].get<double>();
+            } else {
+                amount = std::stod(allBalances[i]["amount"].get<std::string>());
+            }
+            amount = amount / pow(10, precision);
+            
+            QString str = QString::number(amount) + tr(" ") + QString::fromStdString(assetName);
+            
+            balances.push_back(str.toStdString());
+        }
+        m_pCentralWidget->SetAccountBalancesFromStrGUI(balances);
+        
+    } catch (const std::exception& ex) {
+        ALERT_DETAILS("Could not get account balances", ex.what());
+    }
+
+}
+
 void Mainwindow_gui_wallet::LockSlot()
 {
     m_ActionLock.setDisabled(true);
     m_ActionUnlock.setDisabled(true);
+    
     const std::string csLine = "lock";
-    SetNewTask(csLine, this, NULL, &Mainwindow_gui_wallet::TaskDoneFuncGUI);
+    std::string dummy;
+    
+    try {
+        RunTask(csLine, dummy);
+    } catch (std::exception& ex) {
+        ALERT_DETAILS("Unable to lock the wallet", ex.what());
+    }
+    
+    UpdateLockedStatus();
+    
 }
 
 
@@ -451,41 +457,91 @@ void Mainwindow_gui_wallet::UnlockSlot()
     
     
     std::string cvsPassword;
-    bool rtRet = m_UnlockDialog.execRD(thisPos, cvsPassword);
-    if(rtRet) {
-        m_ActionLock.setDisabled(true);
-        m_ActionUnlock.setDisabled(true);
-        const std::string csPassLine = "unlock " + cvsPassword;
-        SetNewTask(csPassLine, this, NULL, &Mainwindow_gui_wallet::TaskDoneFuncGUI);
+    
+    if(!m_UnlockDialog.execRD(thisPos, cvsPassword))
+        return;
+    
+    m_ActionLock.setDisabled(true);
+    m_ActionUnlock.setDisabled(true);
+    
+    const std::string csPassLine = "unlock " + cvsPassword;
+    std::string result;
+    
+    try {
+        RunTask(csPassLine, result);
+    } catch (const std::exception& ex) {
+        ALERT_DETAILS("Unable to unlock the wallet", ex.what());
     }
+    
+    UpdateLockedStatus();
+    
 }
 
 
 void Mainwindow_gui_wallet::UpdateLockedStatus()
 {
     const std::string csLine = "is_locked";
-    SetNewTask(csLine, this, NULL, &Mainwindow_gui_wallet::TaskDoneFuncGUI);
+    std::string a_result;
+    
+    try {
+        
+        RunTask(csLine, a_result);
+        m_locked = (a_result == "true");
+        
+    } catch (const std::exception& ex) {
+        ALERT_DETAILS("Unable to get wallet lock status", ex.what());
+        m_locked = true;
+    }
+    
+    
+    m_ActionLock.setDisabled(m_locked);
+    m_ActionUnlock.setEnabled(m_locked);
+    if (m_locked) {
+        UnlockSlot();
+    }
 }
 
 
 
-void Mainwindow_gui_wallet::ResumeDownloads()
+void Mainwindow_gui_wallet::CheckDownloads()
 {
     
     auto& global_instance = gui_wallet::GlobalEvents::instance();
     std::string str_current_username = global_instance.getCurrentUser();
 
-    std::string a_result;
-    RunTask("get_buying_history_objects_by_consumer_term \"" + str_current_username +"\" \"\" ", a_result);
+    if (str_current_username == "") {
+        _activeDownloads.clear();
+        return;
+    }
     
     try {
+        
+        std::string a_result;
+        RunTask("get_buying_history_objects_by_consumer_term \"" + str_current_username +"\" \"\" ", a_result);
+    
+        
         auto contents = json::parse(a_result);
         for (int i = 0; i < contents.size(); ++i) {
             
             auto content = contents[i];
             std::string URI = contents[i]["URI"].get<std::string>();
-            std::string ignore_string;
-            RunTask("download_package \"" + URI +"\" ", ignore_string);            
+            
+            if (URI == "") {
+                continue;
+            }
+            
+            if (_activeDownloads.find(URI) == _activeDownloads.end()) {
+                std::string ignore_string;
+                try {
+                    RunTask("download_package \"" + URI +"\" ", ignore_string);
+                    _activeDownloads.insert(URI);
+                } catch (const std::exception& ex) {
+                    std::cout << "Can not resume download: " << URI << std::endl;
+                    std::cout << "Error: " << ex.what() << std::endl;
+                }
+                
+            }
+            
         }
         
         
@@ -510,7 +566,30 @@ void Mainwindow_gui_wallet::DisplayWalletContentGUI()
     UpdateLockedStatus();
 
     m_ActionImportKey.setEnabled(true);
-    SetNewTask("list_my_accounts",this,NULL,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
+    QComboBox& userCombo = *m_pCentralWidget->usersCombo();
+
+    try {
+        std::string a_result;
+        RunTask("list_my_accounts", a_result);
+
+        
+        auto accs = json::parse(a_result);
+        
+        for (int i = 0; i < accs.size(); ++i) {
+            std::string id = accs[i]["id"].get<std::string>();
+            std::string name = accs[i]["name"].get<std::string>();
+            
+            userCombo.addItem(tr(name.c_str()));
+        }
+        
+        if (accs.size() > 0)
+        {
+            userCombo.setCurrentIndex(0);
+            UpdateAccountBalances(userCombo.itemText(0).toStdString());
+        }
+    } catch (const std::exception& ex) {
+        ALERT_DETAILS("Faild to get account information", ex.what());
+    }
 }
 
 
@@ -540,25 +619,76 @@ void Mainwindow_gui_wallet::ImportKeySlot()
     }
 
     std::string csTaskStr = "import_key " + cvsUsKey[0] + " " + cvsUsKey[1];
-    SetNewTask(csTaskStr,this,NULL,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
+    std::string result;
+    bool hasError = false;
+    
+    try {
+        RunTask(csTaskStr, result);
+        hasError = result.find("exception") != std::string::npos;
+    } catch (...) {
+        hasError = true;
+    }
+    
+    if (hasError) {
+        ALERT_DETAILS("Can not import key.", result.c_str());
+    } else {
+        DisplayWalletContentGUI();
+
+    }
+
+    
 }
 
 
 void Mainwindow_gui_wallet::InfoSlot()
 {
-    SetNewTask("info",this,NULL,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
+    try {
+        std::string a_result;
+        
+        RunTask("info", a_result);
+        QString aStrToDisplay(tr(a_result.c_str()));
+        
+        m_info_dialog.setFixedSize(600,500);
+        m_info_dialog->setText(aStrToDisplay);
+        m_info_dialog.exec();
+    } catch (...) {
+        
+    }
+
 }
 
 
 void Mainwindow_gui_wallet::AboutSlot()
 {
-    SetNewTask("about",this,NULL,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
+    try {
+        std::string a_result;
+        
+        RunTask("about", a_result);
+        
+        m_info_dialog.setFixedSize(500,300);
+        m_info_dialog->setText(tr(a_result.c_str()));
+        m_info_dialog.exec();
+    } catch (...) {
+        
+    }
+    
 }
 
 
 void Mainwindow_gui_wallet::HelpSlot()
 {
-    SetNewTask("help",this,NULL,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
+    
+    try {
+        std::string a_result;
+        
+        RunTask("help", a_result);
+        
+        m_info_dialog.setFixedSize(500,500);
+        m_info_dialog->setText(tr(a_result.c_str()));
+        m_info_dialog.exec();
+    } catch (...) {
+        
+    }
 }
 
 
@@ -566,209 +696,32 @@ void Mainwindow_gui_wallet::HelpSlot()
 
 void Mainwindow_gui_wallet::TaskDoneFuncGUI(void* a_clbkArg,int64_t a_err,const std::string& a_task,const std::string& a_result)
 {
-    const char* cpcOccur;
 
-    __DEBUG_APP2__(1,"just_conn=%d, err=%d, a_clbkArg=%p, task=%s, result=%s\n",
-                   m_nJustConnecting,(int)a_err,a_clbkArg,a_task.c_str(),a_result.c_str());
-
-    //m_nJustConnecting = 0;
-
-    if(a_clbkArg == CLI_WALLET_CODE)
-    {
+    
+    if(a_clbkArg == WALLET_CONNECT_CODE) {
         if(a_err)
         {
-            m_cCliWalletDlg->setTextColor(Qt::red);
-        }
-        else
-        {
-            //
-        }
-    }
-    else if(a_clbkArg == WALLET_CONNECT_CODE)
-    {
-        if(a_err)
-        {
-            QMessageBox aMessageBox(QMessageBox::Critical,
-                                    QObject::tr("error"),QObject::tr(a_task.c_str()),
-                                    QMessageBox::Ok,this);
-            aMessageBox.setDetailedText(QObject::tr(a_result.c_str()));
-            aMessageBox.exec();
+            ALERT_DETAILS("Could not connect to wallet", a_result.c_str());
             m_ConnectDlg.GetTableWidget(ConnectDlg::CONNECT_BUTTON_FIELD, 1)->setEnabled(true);
+            return;
         }
-        else
-        {
-            DisplayWalletContentGUI();
-        }
+        
+        DisplayWalletContentGUI();
         return;
     }
 
-
-
-    if(strstr(a_task.c_str(),__CONNECTION_CLB_) == a_task.c_str()){__DEBUG_APP2__(0,"this should not work!");}
-    else if( strstr(a_task.c_str(),"info") == a_task.c_str())
-    {
-        QString aStrToDisplay(tr(a_task.c_str()));
-
-        aStrToDisplay += tr("(err=");
-        aStrToDisplay += QString::number(a_err,10);
-        aStrToDisplay += tr(")\n");
-        aStrToDisplay += tr(a_result.c_str());
-
-        m_info_dialog.setFixedSize(600,500);
-        m_info_dialog->setText(aStrToDisplay);
-        m_info_dialog.exec();
-    }
-    else if(strstr(a_task.c_str(),"about") == a_task.c_str())
-    {
-        m_info_dialog.setFixedSize(500,300);
-        m_info_dialog->setText(tr(a_result.c_str()));
-        m_info_dialog.exec();
-    }
-    else if(strstr(a_task.c_str(),"help") == a_task.c_str())
-    {
-        m_info_dialog.setMaximumSize(QSize(QWIDGETSIZE_MAX,QWIDGETSIZE_MAX));
-        m_info_dialog.resize(500,500);
-        m_info_dialog->setText(tr(a_result.c_str()));
-        m_info_dialog.exec();
-    }
-    else if(strstr(a_task.c_str(),"list_my_accounts") == a_task.c_str())
-    {
-        m_user_ids.clear();
-        std::string sId;
-        int nNumbOfUsers(0);
-        std::string csUserName;
-        QComboBox& userCombo = *m_pCentralWidget->usersCombo();
-        const char *cpcBegin, *cpcEnd, *cpcNextUser(a_result.c_str());
-
-        __DEBUG_APP2__(1,"res=\n%s\n",a_result.c_str());
-        userCombo.clear();
-
-        while(GetJsonVectorNextElem(cpcNextUser,&cpcBegin,&cpcEnd))
-        {
-            if(FindStringByKey(++cpcBegin,"id",&sId))
-            {
-                m_user_ids.push_back(sId);
-            }
-            if(FindStringByKey(++cpcBegin,"name",&csUserName))
-            {
-                ++nNumbOfUsers;
-                userCombo.addItem(tr(csUserName.c_str()));
-            }
-            cpcNextUser = cpcEnd+1;
-        }
-        if(nNumbOfUsers)
-        {
-            std::string newLine = std::string("list_account_balances ") + StringFromQString(userCombo.itemText(0));
-            userCombo.setCurrentIndex(0);
-            SetNewTask(newLine,this,NULL,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
-        }
-    }
-    else if((cpcOccur=strstr(a_task.c_str(),"list_account_balances ")) == a_task.c_str())
-    {
-        __DEBUG_APP2__(2,"%s",a_result.c_str());
-        QComboBox& userCombo = *m_pCentralWidget->usersCombo();
-        std::vector<std::string> cvAccountBalances;
-        std::string aAcoountBalanceStr;
-        const char* cpcFirstStart = a_result.c_str();
-        const char* cpcFirstEnd;
-
-        do
-        {
-            cpcFirstEnd = strchr(cpcFirstStart,'\n');
-            if(cpcFirstEnd){aAcoountBalanceStr = std::string(cpcFirstStart,((size_t)cpcFirstEnd)-((size_t)cpcFirstStart));}
-            else{aAcoountBalanceStr = std::string(cpcFirstStart);}
-            if(aAcoountBalanceStr.length()){cvAccountBalances.push_back(aAcoountBalanceStr);}
-            cpcFirstStart = cpcFirstEnd+1;
-        }
-        while(cpcFirstEnd);
-
-        m_pCentralWidget->SetAccountBalancesFromStrGUI(cvAccountBalances);
-        cpcOccur += strlen("list_account_balances ");
-        for(;*cpcOccur && *cpcOccur==' ';++cpcOccur);
-        int nIndexBefore = userCombo.currentIndex();
-        int nIndex = userCombo.findText(tr(cpcOccur));
-        __DEBUG_APP2__(2,"cpcOccur=%s, index=%d",cpcOccur,nIndex);
-        if(nIndexBefore != nIndex)
-        {
-            m_nUserComboTriggeredInGui = 1;
-            userCombo.setCurrentIndex(nIndex);
-        }
-
-    }
-    
-    else if(strstr(a_task.c_str(),"import_key ") == a_task.c_str())
-    {
-        if (a_result.find("exception") != std::string::npos) {
-            QMessageBox aMessageBox(QMessageBox::Critical,
-                                    QObject::tr("Error"),
-                                    QObject::tr("Can not import key."),
-                                    QMessageBox::Ok,
-                                    this);
-            aMessageBox.setDetailedText(QObject::tr(a_result.c_str()));
-            aMessageBox.exec();
-        }
-        DisplayWalletContentGUI();
-    }
-    else if(strstr(a_task.c_str(),"unlock ") == a_task.c_str())
-    {
-        if (a_err) {
-            QMessageBox aMessageBox(QMessageBox::Critical,
-                                    QObject::tr("Error"),
-                                    QObject::tr("Unable to unlock the wallet."),
-                                    QMessageBox::Ok,
-                                    this);
-            aMessageBox.setDetailedText(QObject::tr(a_result.c_str()));
-            aMessageBox.exec();
-        }
-        UpdateLockedStatus();
+    if(a_clbkArg == CLI_WALLET_CODE) {
         
-        ResumeDownloads();
-    }
-    else if(strstr(a_task.c_str(),"lock") == a_task.c_str())
-    {
         if (a_err) {
-            QMessageBox aMessageBox(QMessageBox::Critical,
-                                    QObject::tr("Error"),
-                                    QObject::tr("Unable to lock the wallet."),
-                                    QMessageBox::Ok,
-                                    this);
-            aMessageBox.setDetailedText(QObject::tr(a_result.c_str()));
-            aMessageBox.exec();
+            m_cCliWalletDlg->setTextColor(Qt::red);
         }
-        UpdateLockedStatus();
-    }
-    else if(strstr(a_task.c_str(),"is_locked") == a_task.c_str())
-    {
-        if (a_err) {
-            QMessageBox aMessageBox(QMessageBox::Critical,
-                                    QObject::tr("error"),
-                                    QObject::tr("Unable to get wallet lock status!"),
-                                    QMessageBox::Ok,
-                                    this);
-            aMessageBox.setDetailedText(QObject::tr(a_result.c_str()));
-            aMessageBox.exec();
-            m_locked = true; // Assume disabled.
-        }
-        else {
-            m_locked = (a_result == "true");
-        }
-
-        m_ActionLock.setDisabled(m_locked);
-        m_ActionUnlock.setEnabled(m_locked);
-        if (m_locked) {
-            UnlockSlot();
-        }
-    }
-    else if(strstr(a_task.c_str(),"get_account_history ") == a_task.c_str())
-    {
-
-    }
-
-    //donePoint:
-    if(a_clbkArg == CLI_WALLET_CODE)
-    {
+        
         m_cCliWalletDlg.appentText(a_result);
-        if(a_err){ m_cCliWalletDlg->setTextColor(Qt::black);}
+        
+        if (a_err) {
+            m_cCliWalletDlg->setTextColor(Qt::black);
+        }
+        
         m_cCliWalletDlg.appentText(">>>");
     }
 }
@@ -825,7 +778,11 @@ void Mainwindow_gui_wallet::SetPassword(void* a_owner, void* a_str_ptr)
     thisPos.rx() += this->size().width() / 2;
     thisPos.ry() += this->size().height() / 2;
 
-    pThis->execRD(thisPos, *pcsPassword);
+    if (pThis->execRD(thisPos, *pcsPassword)) {
+        
+    }
+    
+    
     
 }
 

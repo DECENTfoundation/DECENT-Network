@@ -1791,7 +1791,7 @@ public:
 
          return ss.str();
       };
-*/
+
       m["list_account_balances"] = [this](variant result, const fc::variants& a)
       {
          auto r = result.as<vector<asset>>();
@@ -1806,7 +1806,7 @@ public:
 
          return ss.str();
       };
-
+*/
       m["get_order_book"] = [this](variant result, const fc::variants& a)
       {
          auto orders = result.as<order_book>();
