@@ -259,8 +259,8 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     pLabelTmp->setPixmap(m_image1);
     pHBoxLayoutTmp->addWidget(pLabelTmp);
     
-    pHBoxLayoutTmp->setContentsMargins(10, 0, 10, 0);
-    pLabelTmp->setFixedSize(40,40);
+    //pHBoxLayoutTmp->setContentsMargins(10, 0, 10, 0);
+    pLabelTmp->setFixedSize(45,45);
     m_pDcLogoWgt->setLayout(pHBoxLayoutTmp);
     m_pDcLogoWgt->setFixedHeight(__HEIGHT__);
     m_pDcLogoWgt->setMaximumWidth(50);
@@ -326,43 +326,17 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     pHBoxLayoutTmp->addWidget(pLabelTmp);
     
     pCombo2 = new AccountBalanceWidget;
-    QFont f( "Myriad Pro Regular", 24, QFont::Bold);
+    
+    QFont f( "Myriad Pro Regular", 12, QFont::Bold);
     pCombo2->setFont(f);
     pHBoxLayoutTmp->addWidget(pCombo2);
     
     m_pBalanceWgt1->setLayout(pHBoxLayoutTmp);
     m_first_line_lbl.addWidget(m_pBalanceWgt1);
-    pHBoxLayoutTmp->setContentsMargins(200, 0, 0, 0);
+    pHBoxLayoutTmp->setContentsMargins(400, 0, 0, 0);
     m_pBalanceWgt1->setFixedHeight(__HEIGHT__);
-    m_pBalanceWgt1->setMaximumWidth(353);
 
-    /*//////////////////////////////////////////*/
-    //line = new QFrame(this);
-    //line->setFrameShape(QFrame::VLine); // Horizontal line
-
-    //line->setLineWidth(1);
-    //line->setStyleSheet("color: #f0f0f0");
-    //line->setFixedHeight(68);
-    //m_first_line_lbl.addWidget(line);
-
-    /*//////////////////////////////////////////*/
-    //pWidgetTmp2 = new QWidget;
-    //pHBoxLayoutTmp = new QHBoxLayout;
-    //pLabelTmp = new QLabel(tr(""));
-    //pLabelTmp->setScaledContents(true);
-
-    //QPixmap m_image4(":/icon/images/send.png");
-    //pLabelTmp->setPixmap(m_image4);
-    //pHBoxLayoutTmp->addWidget(pLabelTmp);
-    //pLabelTmp->setFixedSize(__SIZE_FOR_IMGS__,__SIZE_FOR_IMGS__);
-    //pLabelTmp = new QLabel(tr("Send"));
-
-    //pHBoxLayoutTmp->addWidget(pLabelTmp);
-    //pWidgetTmp2->setLayout(pHBoxLayoutTmp);
-    //m_first_line_lbl.addWidget(pWidgetTmp2);
-    //pWidgetTmp2->setFixedHeight(__HEIGHT__);
-    //pWidgetTmp2->setMaximumWidth(190);
-
+ 
     
     m_browse_cont_tab.setStyleSheet("color: black;""background-color:white;");
     SetAccountBalancesFromStrGUI(std::vector<std::string>());
