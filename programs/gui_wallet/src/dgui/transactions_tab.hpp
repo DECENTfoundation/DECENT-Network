@@ -64,7 +64,7 @@ namespace gui_wallet
         QLineEdit user;
         int green_row;
         void createNewRow();
-        void deleteEmptyRows();
+
         void ArrangeSize();
         void Connects();
         
@@ -72,7 +72,8 @@ namespace gui_wallet
         virtual void content_activated() {}
         virtual void content_deactivated() {}
         virtual void resizeEvent(QResizeEvent *a_event);
-        
+    private:
+        std::string getAccountName(std::string accountId);
 
     public slots:
         void doRowColor();
@@ -83,6 +84,8 @@ namespace gui_wallet
     private:
         QTimer  m_contentUpdateTimer;
         bool m_doUpdate = true;
+        
+        std::map<std::string, std::string> _userIdCache;
     };
 }
 
