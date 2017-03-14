@@ -72,6 +72,7 @@ Transactions_tab::Transactions_tab() : green_row(0)
     user.setMaximumHeight(40);
     user.setFixedHeight(40);
     user.setFrame(false);
+    
 
 //    for (int i = 0; i < numTransactionCols; ++i)
 //    {
@@ -271,6 +272,11 @@ void Transactions_tab::updateContents() {
         }
     });
     Connects();
+}
+
+void Transactions_tab::SetInfo(std::string info_from_overview)
+{
+    user.setText(QString::fromStdString(info_from_overview));
 }
 
 

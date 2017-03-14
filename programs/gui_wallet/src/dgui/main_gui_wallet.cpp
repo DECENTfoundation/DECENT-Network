@@ -236,6 +236,7 @@ int main(int argc, char* argv[])
         }, SIGTERM);
         
         QDir dir(argv[0]);
+
         
 #if NDEBUG
         QCoreApplication::setLibraryPaths(QStringList(dir.absolutePath()));
