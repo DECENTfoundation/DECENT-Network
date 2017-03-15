@@ -412,7 +412,6 @@ void CentralWigdet::resizeEvent ( QResizeEvent * a_event )
     QWidget::resizeEvent(a_event);
     
     int each_width = m_parent_main_window->size().width()/5-3;
-    std::cout<<size().width()<<"   "<<each_width<<std::endl;
     QString s = QString::number(each_width);
     m_main_tabs.setStyleSheet("QTabBar::tab{"
                               " height: 40px; min-width: " + s + "px;"
