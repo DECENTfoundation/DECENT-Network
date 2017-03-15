@@ -236,17 +236,25 @@ void Transactions_tab::updateContents() {
             auto contents = json::parse(a_result);
             
             obj->tablewidget->setRowCount(contents.size());
-            
             for (int i = 0; i < contents.size(); ++i) {
                 auto content = contents[i];
                 auto op = content["op"];
-                
-                
+
+                //ID
                 obj->tablewidget->setItem(i, 0, new QTableWidgetItem(QString::fromStdString(op["id"].get<std::string>())));
                 obj->tablewidget->item(i, 0)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
                 obj->tablewidget->item(i, 0)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
                 
-                obj->tablewidget->setItem(i, 1, new QTableWidgetItem(QString::fromStdString(contents[i]["description"].get<std::string>())));
+                //description
+                std::string str = contents[i]["description"].get<std::string>();
+                std::string desc = "";
+                for(int i = 0; ; ++i)
+                {
+                    if((str[i + 2] == 'F' || str[i + 2] == 'f') && str[i + 3] == 'e' && str[i + 4] == 'e')   { break; }
+                    
+                    desc += str[i];
+                }
+                obj->tablewidget->setItem(i, 1, new QTableWidgetItem(QString::fromStdString(desc)));
                 obj->tablewidget->item(i, 1)->setTextAlignment(Qt::AlignLeft|Qt::AlignVCenter);
                 obj->tablewidget->item(i, 1)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
                 
