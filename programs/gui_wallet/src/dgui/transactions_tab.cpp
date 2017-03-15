@@ -246,18 +246,19 @@ void Transactions_tab::updateContents() {
                 obj->tablewidget->item(i, 0)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
                 
                 //description
-                std::string str = contents[i]["description"].get<std::string>();
+                std::string cont = contents[i]["description"].get<std::string>();
                 std::string desc = "";
-                for(int i = 0; ; ++i)
+                for(int i = 0; i < cont.size(); ++i)
                 {
-                    if((str[i + 2] == 'F' || str[i + 2] == 'f') && str[i + 3] == 'e' && str[i + 4] == 'e')   { break; }
+                    if((cont[i + 1] == 'F' || cont[i + 1] == 'f') && cont[i + 2] == 'e' && cont[i + 3] == 'e')   { break; }
                     
-                    desc += str[i];
+                    desc += cont[i];
                 }
                 obj->tablewidget->setItem(i, 1, new QTableWidgetItem(QString::fromStdString(desc)));
                 obj->tablewidget->item(i, 1)->setTextAlignment(Qt::AlignLeft|Qt::AlignVCenter);
                 obj->tablewidget->item(i, 1)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
                 
+                //memo
                 obj->tablewidget->setItem(i, 2, new QTableWidgetItem(QString::fromStdString(contents[i]["memo"].get<std::string>())));
                 obj->tablewidget->item(i, 2)->setTextAlignment(Qt::AlignRight|Qt::AlignVCenter);
                 obj->tablewidget->item(i, 2)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
