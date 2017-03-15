@@ -50,7 +50,7 @@ Transactions_tab::Transactions_tab() : green_row(0)
 
     //create table (widget)
     tablewidget = new HTableWidget();
-    tablewidget->setRowCount(1);//add first row in table
+    //tablewidget->setRowCount(0);//add first row in table
     tablewidget->setColumnCount(numTransactionCols);
     
     tablewidget->verticalHeader()->setDefaultSectionSize(35);
@@ -168,7 +168,7 @@ Transactions_tab::~Transactions_tab()
 
 void Transactions_tab::doRowColor()
 {
-    if(tablewidget->item(0, 1) == 0) {return;}
+    if(tablewidget->rowCount() < 1) {return;}
     
         tablewidget->item(green_row,0)->setBackgroundColor(QColor(255,255,255));
         tablewidget->item(green_row,1)->setBackgroundColor(QColor(255,255,255));
@@ -181,12 +181,12 @@ void Transactions_tab::doRowColor()
         tablewidget->item(green_row,3)->setForeground(QColor::fromRgb(0,0,0));
 
     QPoint mouse_pos = tablewidget->mapFromGlobal(QCursor::pos());
+    mouse_pos.setY(mouse_pos.y() - 41);
     QTableWidgetItem *ite = tablewidget->itemAt(mouse_pos);
-
     if(ite != NULL)
     {
 
-        int row = ite->row() - 1;
+        int row = ite->row();
         if(row < 0) {return;}
             tablewidget->item(row,0)->setBackgroundColor(QColor(27,176,104));
             tablewidget->item(row,1)->setBackgroundColor(QColor(27,176,104));
@@ -219,7 +219,7 @@ void Transactions_tab::updateContents() {
         return;
     }
     
-    tablewidget->setRowCount(1); //Remove everything but header
+    //tablewidget->setRowCount(1); //Remove everything but header
 
     
 
@@ -235,7 +235,7 @@ void Transactions_tab::updateContents() {
         try {
             auto contents = json::parse(a_result);
             
-            obj->tablewidget->setRowCount(contents.size() + 1);
+            obj->tablewidget->setRowCount(contents.size());
             
             for (int i = 0; i < contents.size(); ++i) {
                 auto content = contents[i];

@@ -25,17 +25,17 @@ Overview_tab::Overview_tab(class Mainwindow_gui_wallet* a_pPar)
     : m_pPar(a_pPar)
 {
     table_widget.setColumnCount(4);
-    table_widget.setRowCount(1);
+    //table_widget.setRowCount(0);
     table_widget.setSelectionMode(QAbstractItemView::NoSelection);
 
 
-    QSize tqsTableSize = table_widget.size();
-    table_widget.setColumnWidth(0,(tqsTableSize.width()*18)/100);
-    table_widget.setColumnWidth(1,(tqsTableSize.width()*50)/100);
-    table_widget.setColumnWidth(2,(tqsTableSize.width()*17)/100);
-    table_widget.setColumnWidth(3,(tqsTableSize.width()*15)/100);
+//    QSize tqsTableSize = table_widget.size();
+//    table_widget.setColumnWidth(0,(tqsTableSize.width()*18)/100);
+//    table_widget.setColumnWidth(1,(tqsTableSize.width()*50)/100);
+//    table_widget.setColumnWidth(2,(tqsTableSize.width()*17)/100);
+//    table_widget.setColumnWidth(3,(tqsTableSize.width()*15)/100);
 
-    table_widget.setRowHeight(0,35);
+    //table_widget.setRowHeight(0,35);
     table_widget.setStyleSheet("QTableView{border : 1px solid lightGray}");
 
     QFont font( "Open Sans Bold", 14, QFont::Bold);
@@ -122,7 +122,7 @@ void Overview_tab::onTextChanged(const QString& text) {
 
 
 void Overview_tab::updateContents() {
-    table_widget.setRowCount(1); //Remove everything but header
+    table_widget.setRowCount(0); //Remove everything but header
     
     
     if (search.text().toStdString().empty()) {
@@ -134,9 +134,9 @@ void Overview_tab::updateContents() {
     
     auto contents = json::parse(result);
     
-    table_widget.setRowCount(contents.size() + 1);
+    table_widget.setRowCount(contents.size());
     
-    for (int i = 0; i < contents.size(); ++i) {
+    for (int i = 0; i < contents.size() + 1; ++i) {
         auto content = contents[i];
         
         NewButton* transaction = new NewButton(content[0].get<std::string>());
@@ -183,12 +183,7 @@ void Overview_tab::updateContents() {
         table_widget.item(i,0)->setForeground(QColor::fromRgb(88,88,88));
         table_widget.item(i,1)->setForeground(QColor::fromRgb(88,88,88));
         
-        
-        
     }
-    
-    
-    
 }
 
 
@@ -253,9 +248,9 @@ void Overview_tab::resizeEvent(QResizeEvent *a_event)
 
 void Overview_tab::doRowColor()
 {
-    if(table_widget.rowCount() < 1) {return;}
+    if(table_widget.rowCount() < 0) {return;}
     
-    for(int i = 0; i < table_widget.rowCount() - 1; ++i)
+    for(int i = 0; i <= table_widget.rowCount() - 1; ++i)
     {
         table_widget.cellWidget(i, 2)->setStyleSheet("* { background-color: rgb(255,255,255); color : rgb(27,176,104); }");
         table_widget.cellWidget(i, 3)->setStyleSheet("* { background-color: rgb(255,255,255); color : rgb(27,176,104); }");
@@ -270,12 +265,12 @@ void Overview_tab::doRowColor()
     {
         mouse_pos.setX(mouse_pos.x() - mouse_pos.x() + 50);
     }
+    mouse_pos.setY(mouse_pos.y() - 41);
     QTableWidgetItem *ite = table_widget.itemAt(mouse_pos);
 
     if(ite != NULL)
     {
-
-        int row = ite->row() - 1;
+        int row = ite->row();
         if(row < 0) {return;}
             table_widget.cellWidget(row , 2)->setStyleSheet("* { background-color: rgb(27,176,104); color : white; }");
             table_widget.cellWidget(row , 3)->setStyleSheet("* { background-color: rgb(27,176,104); color : white; }");

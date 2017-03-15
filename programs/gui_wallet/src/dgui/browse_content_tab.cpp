@@ -220,7 +220,7 @@ void Browse_content_tab::ShowDigitalContentsGUI(std::vector<SDigitalContent>& co
     delete m_pTableWidget;
     
     
-    m_pTableWidget = new BTableWidget(contents.size() + 1, s_cnNumberOfCols);
+    m_pTableWidget = new BTableWidget(contents.size(), s_cnNumberOfCols);
     
     
     
@@ -355,7 +355,7 @@ void Browse_content_tab::Connects()
 
 void Browse_content_tab::doRowColor()
 {
-    if(m_pTableWidget->item(0, 1) == 0)  { return; }
+    if(m_pTableWidget->rowCount() < 1)  { return; }
     
         m_pTableWidget->cellWidget(green_row , 0)->setStyleSheet("* { background-color: rgb(255,255,255); color : white; }");
         m_pTableWidget->item(green_row,1)->setBackgroundColor(QColor(255,255,255));
@@ -377,10 +377,11 @@ void Browse_content_tab::doRowColor()
     {
         mouse_pos.setX(mouse_pos.x() + 300);
     }
+    mouse_pos.setY(mouse_pos.y() - 41);
     QTableWidgetItem *ite = m_pTableWidget->itemAt(mouse_pos);
     if(ite != NULL)
     {
-        int row = ite->row() - 1;
+        int row = ite->row();
         if(row < 0) {return;}
             m_pTableWidget->cellWidget(row , 0)->setStyleSheet("* { background-color: rgb(27,176,104); color : white; }");
             m_pTableWidget->item(row,1)->setBackgroundColor(QColor(27,176,104));

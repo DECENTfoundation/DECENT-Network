@@ -255,15 +255,14 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     pLabelTmp->setScaledContents(true);
 
     QPixmap m_image1(":/icon/images/decent_logo.svg");
-    m_image1 = m_image1.scaled(200, 200, Qt::KeepAspectRatio);
+    pHBoxLayoutTmp->setContentsMargins(0, 10, 0, 50);
     pLabelTmp->setPixmap(m_image1);
     pHBoxLayoutTmp->addWidget(pLabelTmp);
     
-    //pHBoxLayoutTmp->setContentsMargins(10, 0, 10, 0);
-    pLabelTmp->setFixedSize(45,45);
+    pLabelTmp->setFixedSize(55,55);
     m_pDcLogoWgt->setLayout(pHBoxLayoutTmp);
     m_pDcLogoWgt->setFixedHeight(__HEIGHT__);
-    m_pDcLogoWgt->setMaximumWidth(50);
+    m_pDcLogoWgt->setMaximumWidth(120);
     m_first_line_lbl.addWidget(m_pDcLogoWgt);
 
 

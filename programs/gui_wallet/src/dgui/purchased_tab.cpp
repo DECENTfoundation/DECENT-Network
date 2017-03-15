@@ -29,7 +29,7 @@ static const int   s_cnNumberOfCols = sizeof(s_vccpItemNames)/sizeof(const char*
 
 PurchasedTab::PurchasedTab()
         :
-        m_pTableWidget(new P_TableWidget(1,s_cnNumberOfCols))
+        m_pTableWidget(new P_TableWidget(0,s_cnNumberOfCols))
 {
 
     PrepareTableWidgetHeaderGUI();
@@ -113,7 +113,7 @@ void PurchasedTab::updateContents() {
         last_contents = a_result;
         if (contents.size() + 1 != m_pTableWidget->rowCount()) {
           m_pTableWidget->setRowCount(1); //Remove everything but header
-          m_pTableWidget->setRowCount(contents.size() + 1);
+          m_pTableWidget->setRowCount(contents.size());
            
         }
        
@@ -320,15 +320,6 @@ void PurchasedTab::PrepareTableWidgetHeaderGUI()
     m_pTableWidget->setHorizontalHeaderLabels(QStringList()  <<" " << "Title" << "Rating" << "Size" <<  "Price" <<  "Created" <<  "Status" << "Progress");
     m_pTableWidget->horizontalHeader()->setFixedHeight(35);
     m_pTableWidget->horizontalHeader()->setFont(font);
-//    for( int i = 0; i<s_cnNumberOfCols; ++i )
-//    {
-//        m_pTableWidget->setItem(0,i,new QTableWidgetItem(tr(s_vccpItemNames[i])));
-//        m_pTableWidget->item(0,i)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
-//        m_pTableWidget->item(0,i)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
-//        m_pTableWidget->item(0,i)->setBackground(QColor(228,227,228));
-//        m_pTableWidget->item(0,i)->setFont(f);
-//        m_pTableWidget->item(0,i)->setForeground(QColor::fromRgb(51,51,51));
-//    }
     m_pTableWidget->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     m_pTableWidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     connect(m_pTableWidget, SIGNAL(mouseMoveEventDid()), this, SLOT(doRowColor()));
@@ -367,9 +358,9 @@ void PurchasedTab::resizeEvent ( QResizeEvent * a_event )
 
 void PurchasedTab::doRowColor()
 {
-    for(int i = 0; i < m_pTableWidget->rowCount() - 1; ++i)
+    for(int i = 0; i < m_pTableWidget->rowCount(); ++i)
     {
-        if(m_pTableWidget->item(i, 1) == 0) {return;}
+        if(m_pTableWidget->rowCount() < 1) {return;}
 
         m_pTableWidget->item(i,1)->setBackground(QColor(255,255,255));
         m_pTableWidget->item(i,2)->setBackground(QColor(255,255,255));
@@ -409,11 +400,12 @@ void PurchasedTab::doRowColor()
     {
         mouse_pos.setX(mouse_pos.x() - 500);
     }
+    mouse_pos.setY(mouse_pos.y() - 41);
     QTableWidgetItem *ite = m_pTableWidget->itemAt(mouse_pos);
     
     if(ite != NULL)
     {
-        int row = ite->row() - 1;
+        int row = ite->row();
         if(row < 0)
             if (m_pTableWidget->item(row, 1) == 0) {return;}
             QPixmap image(":/icon/images/info1_white.svg");
