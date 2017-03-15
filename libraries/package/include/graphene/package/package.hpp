@@ -37,11 +37,28 @@ namespace decent { namespace package {
     typedef std::set<event_listener_handle>            event_listener_handle_list;
 
 
-    class package_info : private event_listener_interface {
+    class package_info {
+    public:
+        enum state {
+            UNINITIALIZED,
+            CHECKING,
+            READY,
+            SEEDING,
+            DOWNLOADING,
+            CONSUMING
+        };
+
     private:
         friend class package_manager;
 
-        package_info();
+        package_info(const boost::filesystem::path& content_path,
+                     const boost::filesystem::path& samples_path,
+                     const fc::sha512& key,
+                     const decent::crypto::custody_data& custody_data,
+                     const event_listener_handle& event_listener = event_listener_handle());
+
+        package_info(const boost::filesystem::path& package_path,
+                     const event_listener_handle& event_listener = event_listener_handle());
 
     public:
         package_info(const package_info&)             = delete;
@@ -56,7 +73,8 @@ namespace decent { namespace package {
         void remove_event_listener(const event_listener_handle& event_listener);
 
     private:
-        event_listener_handle_list _event_listeners;
+        state                       _state;
+        event_listener_handle_list  _event_listeners;
     };
 
 
@@ -128,12 +146,13 @@ namespace decent { namespace package {
         package_handle get_package_handle(const fc::ripemd160& hash,
                                           const bool full_check = false);
 
+        boost::filesystem::path get_packages_path() const;
         void set_packages_path(const boost::filesystem::path& packages_path);
 
         void set_libtorrent_config(const boost::filesystem::path& libtorrent_config_file);
 
     private:
-        fc::mutex                      _mutex;
+        mutable fc::mutex              _mutex;
         boost::filesystem::path        _packages_path;
         package_handle_set             _packages;
         proto_to_transfer_engine_map   _proto_transfer_engines;
@@ -145,82 +164,29 @@ namespace decent { namespace package {
 
 
 
-#if 0
 
 
 
+#pragma once
+
+#include <decent/encrypt/crypto_types.hpp>
+#include <decent/encrypt/custodyutils.hpp>
+
+#include <fc/optional.hpp>
+#include <fc/signals.hpp>
+#include <fc/time.hpp>
+#include <fc/thread/mutex.hpp>
+#include <fc/crypto/ripemd160.hpp>
+#include <fc/crypto/sha512.hpp>
+#include <fc/network/url.hpp>
+
+#include <boost/filesystem.hpp>
+
+#include <vector>
+#include <map>
 
 
-
-
-
-
-        package_object create_package( const boost::filesystem::path& content_path,
-                                   const boost::filesystem::path& samples,
-                                   const fc::sha512& key,
-                                      decent::crypto::custody_data& cd);
-
-        bool unpack_package( const boost::filesystem::path& destination_directory,
-                         const package_object& package,
-                         const fc::sha512& key);
-
-        void delete_package(fc::ripemd160 hash);
-
-        package_transfer_interface::transfer_id upload_package( const package_object& package,
-                                                               const std::string& protocol_name,
-                                                               package_transfer_interface::transfer_listener& listener );
-
-        package_transfer_interface::transfer_id download_package( const std::string& url,
-                                                              package_transfer_interface::transfer_listener& listener,
-                                                              report_stats_listener_base& stats_listener );
-
-
-        std::vector<package_object> get_packages();
-        package_object              get_package_object(fc::ripemd160 hash);
-
-        std::string                                   get_transfer_url(package_transfer_interface::transfer_id id);
-        package_transfer_interface::transfer_progress get_progress(std::string URI) const;
-
-        void set_packages_path(const boost::filesystem::path& packages_path);
-        boost::filesystem::path get_packages_path() const;
-
-        void set_libtorrent_config(const boost::filesystem::path& libtorrent_config_file);
-        boost::filesystem::path get_libtorrent_config() const;
-
-        uint32_t create_proof_of_custody(const boost::filesystem::path& content_file, const decent::crypto::custody_data& cd, decent::crypto::custody_proof& proof);
-        void print_all_transfers();
-
-    private:
-        transfer_job& create_transfer_object();
-
-
-    private:
-        fc::mutex                  _mutex;
-        boost::filesystem::path            _packages_path;
-        boost::filesystem::path            _libtorrent_config_file;
-        decent::crypto::custody_utils      _custody_utils;
-        protocol_handler_map               _protocol_handlers;
-        transfer_map                       _transfers;
-        int                                _next_transfer_id;
-        package_set                        _packages;
-    };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+namespace graphene { namespace package {
 
 
 class report_stats_listener_base {
@@ -265,7 +231,7 @@ private:
 };
 
 
-class package_transfer_interface {
+    class package_transfer_interface : public decent::package::transfer_engine_interface {
 public:
     typedef int transfer_id;
 
@@ -353,7 +319,7 @@ public:
     package_object create_package( const boost::filesystem::path& content_path,
                                    const boost::filesystem::path& samples, 
                                    const fc::sha512& key,
-                                     decent::crypto::custody_data& cd);
+                                   decent::crypto::custody_data& cd);
 
     bool unpack_package( const boost::filesystem::path& destination_directory, 
                          const package_object& package,
@@ -404,5 +370,3 @@ private:
 
 
 } } // graphene::package
-
-#endif

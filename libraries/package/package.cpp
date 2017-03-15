@@ -8,14 +8,133 @@
 #include <fc/log/logger.hpp>
 #include <fc/thread/scoped_lock.hpp>
 
+#include <boost/uuid/uuid_generators.hpp>
+#include <boost/uuid/uuid.hpp>
+#include <boost/uuid/uuid_io.hpp>
+
 
 
 namespace decent { namespace package {
 
-    using namespace graphene;
+
+    using graphene::package::torrent_transfer;
+    using graphene::package::ipfs_transfer;
+
+
+    namespace {
+
+
+        boost::uuids::random_generator generator;
+
+
+    }
+
+
+    namespace utilities {
+
+
+        inline std::string make_uuid() {
+            return boost::uuids::to_string(generator());
+        }
+
+
+    }
+
+
+    package_info::package_info(package_manager& manager,
+                               const boost::filesystem::path& content_path,
+                               const boost::filesystem::path& samples_path,
+                               const fc::sha512& key,
+                               const event_listener_handle& event_listener = event_listener_handle()) {
+        add_event_listener(event_listener);
+
+        using namespace boost::filesystem;
+
+        if (!is_directory(content_path) && !is_regular_file(content_path)) {
+            FC_THROW("Content path ${content_path} must point to either directory or file", ("path", content_path.string()) );
+        }
+
+        if (exists(samples_path) && !is_directory(samples_path)) {
+            FC_THROW("Samples path ${path} must point to directory", ("path", samples_path.string()));
+        }
+
+        const auto packages_path = manager.get_packages_path();
+
+        const auto temp_path = packages_path / utilities::make_uuid();
+
+        if (!create_directory(temp_path)) {
+            FC_THROW("Failed to create temporary directory ${path}", ("path", temp_path.string()) );
+        }
+
+        if (CryptoPP::AES::MAX_KEYLENGTH > key.data_size()) {
+            FC_THROW("CryptoPP::AES::MAX_KEYLENGTH is bigger than key size (${size})", ("size", key.data_size()) );
+        }
+
+        const auto content_zip = temp_path / "content.zip";
+
+        {
+            filtering_ostream out;
+            out.push(gzip_compressor());
+            out.push(file_sink(content_zip.string(), std::ofstream::binary));
+            archiver arc(out);
+
+            vector<path> all_files;
+            if (is_regular_file(content_path)) {
+                file_source source(content_path.string(), std::ifstream::binary);
+                arc.put(content_path.filename().string(), source, file_size(content_path));
+            } else {
+                get_files_recursive(content_path, all_files);
+                for (int i = 0; i < all_files.size(); ++i) {
+                    file_source source(all_files[i].string(), std::ifstream::binary);
+                    arc.put(relative_path(all_files[i], content_path).string(), source, file_size(all_files[i]));
+                }
+            }
+
+            arc.finalize();
+        }
+
+        if (space(temp_path).available < file_size(content_zip) * 1.5) { // Safety margin
+            FC_THROW("Not enough storage space in ${path} to create package", ("path", temp_path.string()) );
+        }
+
+        {
+            const auto aes_file_path = temp_path / "content.zip.aes";
+
+            decent::crypto::aes_key k;
+            for (int i = 0; i < CryptoPP::AES::MAX_KEYLENGTH; i++) {
+                k.key_byte[i] = key.data()[i];
+            }
+
+            AES_encrypt_file(content_zip.string(), aes_file_path.string(), k);
+
+            remove(content_zip);
+        }
+
+        const auto package_hash = calculate_hash(aes_file_path);
+        const auto package_path = packages_path / package_hash.str();
+
+        if (is_directory(package_path)) {
+            wlog("overwriting existing directory ${path}", ("path", package_path.str()) );
+            remove_all(package_path);
+        }
+        
+        rename(temp_path, package_path);
+    }
+
+    package_info::package_info(const boost::filesystem::path& package_path,
+                               const event_listener_handle& event_listener = event_listener_handle()) {
+        add_event_listener(event_listener);
 
 
 
+
+    }
+
+    void package_info::add_event_listener(const event_listener_handle& event_listener) {
+    }
+
+    void package_info::remove_event_listener(const event_listener_handle& event_listener) {
+    }
 
 
 
@@ -24,11 +143,11 @@ namespace decent { namespace package {
 
     package_manager::package_manager()
     {
-        _proto_transfer_engines.insert(std::make_pair("magnet", std::make_shared<torrent_transfer>()));
-        _proto_transfer_engines.insert(std::make_pair("ipfs", std::make_shared<ipfs_transfer>()));
+        _proto_transfer_engines["magnet"] = std::make_shared<torrent_transfer>();
+        _proto_transfer_engines["ipfs"] = std::make_shared<ipfs_transfer>();
 
-        set_libtorrent_config(utilities::decent_path_finder::instance().get_decent_home() / "libtorrent.json");
-        set_packages_path(utilities::decent_path_finder::instance().get_decent_data() / "packages");
+        set_libtorrent_config(graphene::utilities::decent_path_finder::instance().get_decent_home() / "libtorrent.json");
+        set_packages_path(graphene::utilities::decent_path_finder::instance().get_decent_data() / "packages");
     }
 
     package_manager::~package_manager() {
@@ -36,23 +155,40 @@ namespace decent { namespace package {
     }
 
     void package_manager::save_state() {
-        ilog("saving package manager state...");
+        if (!_packages_path.empty()) {
+            ilog("saving package manager state...");
 
-        // TODO
+            // TODO
+        }
     }
 
     void package_manager::restore_state() {
-        ilog("restoring package manager state...");
+        if (!_packages_path.empty()) {
+            ilog("restoring package manager state...");
 
-        // TODO
+            // TODO
+        }
     }
 
     package_handle package_manager::create_package(const boost::filesystem::path& content_path,
                                                    const boost::filesystem::path& samples_path,
                                                    const fc::sha512& key,
-                                                   const decent::crypto::custody_data& custody_data,
                                                    const event_listener_handle& event_listener) {
+        package_handle package = package_handle(*this, content_path, samples_path, key, event_listener);
+        return *_packages.insert(package).first;
     }
+
+
+
+
+
+
+    //package_object package_manager::create_package( const boost::filesystem::path& content_path, const boost::filesystem::path& samples, const fc::sha512& key, decent::crypto::custody_data& cd) {
+
+
+
+
+
 
     void package_manager::stop_creating_package(const package_handle& package) {
     }
@@ -88,6 +224,11 @@ namespace decent { namespace package {
                                                        const bool full_check) {
     }
 
+    boost::filesystem::path package_manager::get_packages_path() const {
+        fc::scoped_lock<fc::mutex> guard(_mutex);
+        return _packages_path;
+    }
+
     void package_manager::set_packages_path(const boost::filesystem::path& packages_path) {
         if (!exists(packages_path) || !is_directory(packages_path)) {
             try {
@@ -112,8 +253,8 @@ namespace decent { namespace package {
     void package_manager::set_libtorrent_config(const boost::filesystem::path& libtorrent_config_file) {
         fc::scoped_lock<fc::mutex> guard(_mutex);
 
-        for(auto& engine : _proto_transfer_engines) {
-            torrent_transfer* torrent_engine = dynamic_cast<torrent_transfer*>(engine.get());
+        for(auto& proto_transfer_engine : _proto_transfer_engines) {
+            torrent_transfer* torrent_engine = dynamic_cast<torrent_transfer*>(proto_transfer_engine.second.get());
             if (torrent_engine) {
                 if (libtorrent_config_file.empty() || boost::filesystem::exists(libtorrent_config_file)) {
                     torrent_engine->reconfigure(libtorrent_config_file);
@@ -132,9 +273,6 @@ namespace decent { namespace package {
 
 
 
-
-
-#if 0
 
 
 /*
@@ -173,6 +311,7 @@ namespace decent { namespace package {
 #include <fc/exception/exception.hpp>
 #include <fc/network/ntp.hpp>
 #include <fc/thread/mutex.hpp>
+#include <fc/thread/scoped_lock.hpp>
 
 #include <boost/iostreams/device/file_descriptor.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
@@ -468,7 +607,7 @@ uint32_t package_object::create_proof_of_custody(const decent::crypto::custody_d
 package_manager::package_manager()
     : _next_transfer_id(0)
 {
-    _protocol_handlers.insert(std::make_pair("magnet", std::make_shared<torrent_transfer>()));
+    //_protocol_handlers.insert(std::make_pair("magnet", std::make_shared<torrent_transfer>()));
     _protocol_handlers.insert(std::make_pair("ipfs", std::make_shared<ipfs_transfer>()));
 
     set_packages_path(decent_path_finder::instance().get_decent_data() / "packages");
@@ -806,5 +945,3 @@ uint32_t package_manager::create_proof_of_custody(const boost::filesystem::path&
     fc::scoped_lock<fc::mutex> guard(_mutex);
     return _custody_utils.create_proof_of_custody(content_file, cd, proof);
 }
-
-#endif

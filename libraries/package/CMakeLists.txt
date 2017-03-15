@@ -11,6 +11,11 @@ target_link_libraries( package_manager fc decent_encrypt torrent-rasterbar nlohm
 target_include_directories( package_manager
                             PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../contrib/cpp-ipfs-api/include")
 
+
+add_executable( package_manager_test package_manager_test.cpp ${HEADERS} )
+target_link_libraries( package_manager_test package_manager fc decent_encrypt torrent-rasterbar nlohmann_json ipfs-api graphene_utilities gmp )
+
+
 #install( TARGETS
 #   package_manager
 #
