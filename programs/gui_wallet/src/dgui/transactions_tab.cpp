@@ -169,16 +169,30 @@ Transactions_tab::~Transactions_tab()
 void Transactions_tab::doRowColor()
 {
     if(tablewidget->rowCount() < 1) {return;}
-    
+    if(tablewidget->item(green_row,0) != NULL)
+    {
         tablewidget->item(green_row,0)->setBackgroundColor(QColor(255,255,255));
-        tablewidget->item(green_row,1)->setBackgroundColor(QColor(255,255,255));
-        tablewidget->item(green_row,2)->setBackgroundColor(QColor(255,255,255));
-        tablewidget->item(green_row,3)->setBackgroundColor(QColor(255,255,255));
-
         tablewidget->item(green_row,0)->setForeground(QColor::fromRgb(0,0,0));
+
+    }
+    if(tablewidget->item(green_row,1) != NULL)
+    {
+        tablewidget->item(green_row,1)->setBackgroundColor(QColor(255,255,255));
         tablewidget->item(green_row,1)->setForeground(QColor::fromRgb(0,0,0));
+        
+    }
+    if(tablewidget->item(green_row,2) != NULL)
+    {
+        tablewidget->item(green_row,2)->setBackgroundColor(QColor(255,255,255));
         tablewidget->item(green_row,2)->setForeground(QColor::fromRgb(0,0,0));
+        
+    }
+    if(tablewidget->item(green_row,3) != NULL)
+    {
+        tablewidget->item(green_row,3)->setBackgroundColor(QColor(255,255,255));
         tablewidget->item(green_row,3)->setForeground(QColor::fromRgb(0,0,0));
+        
+    }
 
     QPoint mouse_pos = tablewidget->mapFromGlobal(QCursor::pos());
     mouse_pos.setY(mouse_pos.y() - 41);
@@ -188,15 +202,26 @@ void Transactions_tab::doRowColor()
 
         int row = ite->row();
         if(row < 0) {return;}
+        if(tablewidget->item(row,0) != NULL)
+        {
             tablewidget->item(row,0)->setBackgroundColor(QColor(27,176,104));
-            tablewidget->item(row,1)->setBackgroundColor(QColor(27,176,104));
-            tablewidget->item(row,2)->setBackgroundColor(QColor(27,176,104));
-            tablewidget->item(row,3)->setBackgroundColor(QColor(27,176,104));
-
             tablewidget->item(row,0)->setForeground(QColor::fromRgb(255,255,255));
+        }
+        if(tablewidget->item(row,1) != NULL)
+        {
+            tablewidget->item(row,1)->setBackgroundColor(QColor(27,176,104));
             tablewidget->item(row,1)->setForeground(QColor::fromRgb(255,255,255));
+        }
+        if(tablewidget->item(row,2) != NULL)
+        {
+            tablewidget->item(row,2)->setBackgroundColor(QColor(27,176,104));
             tablewidget->item(row,2)->setForeground(QColor::fromRgb(255,255,255));
+        }
+        if(tablewidget->item(row,3) != NULL)
+        {
+            tablewidget->item(row,3)->setBackgroundColor(QColor(27,176,104));
             tablewidget->item(row,3)->setForeground(QColor::fromRgb(255,255,255));
+        }
             green_row = row;
     }
     else
