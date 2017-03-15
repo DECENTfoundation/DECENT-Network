@@ -361,35 +361,54 @@ void PurchasedTab::doRowColor()
     for(int i = 0; i < m_pTableWidget->rowCount(); ++i)
     {
         if(m_pTableWidget->rowCount() < 1) {return;}
+        if(m_pTableWidget->item(i,1) != NULL)
+        {
+            m_pTableWidget->item(i,1)->setBackground(QColor(255,255,255));
+            m_pTableWidget->item(i,1)->setForeground(QColor::fromRgb(88,88,88));
+        }
+        if(m_pTableWidget->item(i,2) != NULL)
+        {
+            m_pTableWidget->item(i,2)->setBackground(QColor(255,255,255));
+            m_pTableWidget->item(i,2)->setForeground(QColor::fromRgb(88,88,88));
+        }
+        if(m_pTableWidget->item(i,3) != NULL)
+        {
+            m_pTableWidget->item(i,3)->setBackground(QColor(255,255,255));
+            m_pTableWidget->item(i,3)->setForeground(QColor::fromRgb(88,88,88));
+        }
+        if(m_pTableWidget->item(i,4) != NULL)
+        {
+            m_pTableWidget->item(i,4)->setBackground(QColor(255,255,255));
+            m_pTableWidget->item(i,4)->setForeground(QColor::fromRgb(88,88,88));
+        }
+        if(m_pTableWidget->item(i,5) != NULL)
+        {
+            m_pTableWidget->item(i,5)->setBackground(QColor(255,255,255));
+            m_pTableWidget->item(i,5)->setForeground(QColor::fromRgb(88,88,88));
+        }
+        if(m_pTableWidget->item(i,6) != NULL)
+        {
+            m_pTableWidget->item(i,6)->setBackground(QColor(255,255,255));
+            m_pTableWidget->item(i,6)->setForeground(QColor::fromRgb(88,88,88));
+        }
 
-        m_pTableWidget->item(i,1)->setBackground(QColor(255,255,255));
-        m_pTableWidget->item(i,2)->setBackground(QColor(255,255,255));
-        m_pTableWidget->item(i,3)->setBackground(QColor(255,255,255));
-        m_pTableWidget->item(i,4)->setBackground(QColor(255,255,255));
-        m_pTableWidget->item(i,5)->setBackground(QColor(255,255,255));
-        m_pTableWidget->item(i,6)->setBackground(QColor(255,255,255));
-
-        m_pTableWidget->item(i,1)->setForeground(QColor::fromRgb(88,88,88));
-        m_pTableWidget->item(i,2)->setForeground(QColor::fromRgb(88,88,88));
-        m_pTableWidget->item(i,3)->setForeground(QColor::fromRgb(88,88,88));
-        m_pTableWidget->item(i,4)->setForeground(QColor::fromRgb(88,88,88));
-        m_pTableWidget->item(i,5)->setForeground(QColor::fromRgb(88,88,88));
-        m_pTableWidget->item(i,6)->setForeground(QColor::fromRgb(88,88,88));
-        
         
         EButton* button_type = new EButton();
         button_type = qobject_cast<EButton*>(m_pTableWidget->cellWidget(i, 7));
         
         if( NULL == button_type )
         {
-            m_pTableWidget->item(i,7)->setBackground(QColor(255,255,255));
-            m_pTableWidget->item(i,7)->setForeground(QColor::fromRgb(88,88,88));
+            if(m_pTableWidget->item(i,7) != NULL)
+            {
+                m_pTableWidget->item(i,7)->setBackground(QColor(255,255,255));
+                m_pTableWidget->item(i,7)->setForeground(QColor::fromRgb(88,88,88));
+            }
         }
 
-        m_pTableWidget->cellWidget(i , 0)->setStyleSheet("* { background-color: rgb(255,255,255); color : white; }");
-
-        
-        QPixmap image(":/icon/images/info1.svg");
+        if(m_pTableWidget->cellWidget(i , 0) != NULL)
+        {
+            m_pTableWidget->cellWidget(i , 0)->setStyleSheet("* { background-color: rgb(255,255,255); color : white; }");
+        }
     }
     QPoint mouse_pos = m_pTableWidget->mapFromGlobal(QCursor::pos());
     if(mouse_pos.x() > 0 && mouse_pos.x() < 110)
@@ -407,34 +426,53 @@ void PurchasedTab::doRowColor()
     {
         int row = ite->row();
         if(row < 0)
-            if (m_pTableWidget->item(row, 1) == 0) {return;}
+            if (m_pTableWidget->item(row, 1) >= 0) {return;}
             QPixmap image(":/icon/images/info1_white.svg");
-            m_pTableWidget->cellWidget(row , 0)->setStyleSheet("* { background-color: rgb(27,176,104); color : white; }");
-            
-            m_pTableWidget->item(row,1)->setBackgroundColor(QColor(27,176,104));
-            m_pTableWidget->item(row,2)->setBackgroundColor(QColor(27,176,104));
-            m_pTableWidget->item(row,3)->setBackgroundColor(QColor(27,176,104));
-            m_pTableWidget->item(row,4)->setBackgroundColor(QColor(27,176,104));
-            m_pTableWidget->item(row,5)->setBackgroundColor(QColor(27,176,104));
-            m_pTableWidget->item(row,6)->setBackgroundColor(QColor(27,176,104));
-           
+            if(m_pTableWidget->cellWidget(row , 0) != NULL)
+            {
+                m_pTableWidget->cellWidget(row , 0)->setStyleSheet("* { background-color: rgb(27,176,104); color : white; }");
+            }
+        
+            if(m_pTableWidget->item(row,1) != NULL)
+            {
+                m_pTableWidget->item(row,1)->setBackgroundColor(QColor(27,176,104));
+                m_pTableWidget->item(row,1)->setForeground(QColor::fromRgb(255,255,255));
+            }
+            if(m_pTableWidget->item(row,2) != NULL)
+            {
+                m_pTableWidget->item(row,2)->setBackgroundColor(QColor(27,176,104));
+                m_pTableWidget->item(row,2)->setForeground(QColor::fromRgb(255,255,255));
+            }
+            if(m_pTableWidget->item(row,3) != NULL)
+            {
+                m_pTableWidget->item(row,3)->setBackgroundColor(QColor(27,176,104));
+                m_pTableWidget->item(row,3)->setForeground(QColor::fromRgb(255,255,255));
+            }
+            if(m_pTableWidget->item(row,4) != NULL)
+            {
+                m_pTableWidget->item(row,4)->setBackgroundColor(QColor(27,176,104));
+                m_pTableWidget->item(row,4)->setForeground(QColor::fromRgb(255,255,255));
+            }
+            if(m_pTableWidget->item(row,5) != NULL)
+            {
+                m_pTableWidget->item(row,5)->setBackgroundColor(QColor(27,176,104));
+                m_pTableWidget->item(row,5)->setForeground(QColor::fromRgb(255,255,255));
+            }
+            if(m_pTableWidget->item(row,6) != NULL)
+            {
+                m_pTableWidget->item(row,6)->setBackgroundColor(QColor(27,176,104));
+                m_pTableWidget->item(row,6)->setForeground(QColor::fromRgb(255,255,255));
+            }
             QPushButton* button_type = new QPushButton();
             button_type = qobject_cast<QPushButton*>(m_pTableWidget->cellWidget(row, 7));
             if( NULL == button_type )
             {
-                m_pTableWidget->item(row,7)->setBackgroundColor(QColor(27,176,104));
-                m_pTableWidget->item(row,7)->setForeground(QColor::fromRgb(255,255,255));
+                if(m_pTableWidget->item(row,7) != NULL)
+                {
+                    m_pTableWidget->item(row,7)->setBackgroundColor(QColor(27,176,104));
+                    m_pTableWidget->item(row,7)->setForeground(QColor::fromRgb(255,255,255));
+                }
             }
-
-            
-            m_pTableWidget->item(row,1)->setForeground(QColor::fromRgb(255,255,255));
-            m_pTableWidget->item(row,2)->setForeground(QColor::fromRgb(255,255,255));
-            m_pTableWidget->item(row,3)->setForeground(QColor::fromRgb(255,255,255));
-            m_pTableWidget->item(row,4)->setForeground(QColor::fromRgb(255,255,255));
-            m_pTableWidget->item(row,5)->setForeground(QColor::fromRgb(255,255,255));
-            m_pTableWidget->item(row,6)->setForeground(QColor::fromRgb(255,255,255));
-            
-            
     }
 }
 

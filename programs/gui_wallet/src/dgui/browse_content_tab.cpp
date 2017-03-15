@@ -78,13 +78,11 @@ Browse_content_tab::Browse_content_tab() : m_pTableWidget(new BTableWidget(0,s_c
     setLayout(&m_main_layout);
     
     connect(&m_filterLineEdit, SIGNAL(textChanged(QString)), this, SLOT(onTextChanged(QString)));
-    for(int i = 0; i < m_pTableWidget->rowCount(); ++i)
-        connect((CButton*)m_pTableWidget->cellWidget(i, 0),SIGNAL(mouseWasMoved()),this,SLOT(doRowColor()));
+
     
     m_contentUpdateTimer.connect(&m_contentUpdateTimer, SIGNAL(timeout()), this, SLOT(maybeUpdateContent()));
     m_contentUpdateTimer.setInterval(1000);
     m_contentUpdateTimer.start();
-    Connects();
     connect(m_pTableWidget,SIGNAL(mouseMoveEventDid()),this,SLOT(doRowColor()));
     ArrangeSize();
 }
