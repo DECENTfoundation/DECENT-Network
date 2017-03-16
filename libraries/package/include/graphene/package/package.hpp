@@ -8,6 +8,7 @@
 #include <fc/crypto/sha512.hpp>
 
 #include <boost/filesystem.hpp>
+#include <boost/interprocess/sync/file_lock.hpp>
 
 #include <list>
 #include <map>
@@ -34,7 +35,9 @@ namespace decent { namespace package {
 
 
     typedef std::shared_ptr<event_listener_interface>  event_listener_handle;
-    typedef std::set<event_listener_handle>            event_listener_handle_list;
+    typedef std::list<event_listener_handle>            event_listener_handle_list;
+
+    class package_manager;
 
 
     class package_info {
@@ -51,13 +54,18 @@ namespace decent { namespace package {
     private:
         friend class package_manager;
 
-        package_info(const boost::filesystem::path& content_path,
-                     const boost::filesystem::path& samples_path,
+        package_info(package_manager& manager,
+                     const boost::filesystem::path& content_dir_path,
+                     const boost::filesystem::path& samples_dir_path,
                      const fc::sha512& key,
-                     const decent::crypto::custody_data& custody_data,
                      const event_listener_handle& event_listener = event_listener_handle());
 
-        package_info(const boost::filesystem::path& package_path,
+        package_info(package_manager& manager,
+                     const boost::filesystem::path& package_dir_path,
+                     const event_listener_handle& event_listener = event_listener_handle());
+
+        package_info(package_manager& manager,
+                     const fc::ripemd160& package_hash,
                      const event_listener_handle& event_listener = event_listener_handle());
 
     public:
@@ -66,15 +74,30 @@ namespace decent { namespace package {
         package_info& operator=(const package_info&)  = delete;
         package_info& operator=(package_info&&)       = delete;
 
-        virtual ~package_info() {}
+        virtual ~package_info();
 
     public:
         void add_event_listener(const event_listener_handle& event_listener);
         void remove_event_listener(const event_listener_handle& event_listener);
 
     private:
-        state                       _state;
-        event_listener_handle_list  _event_listeners;
+        static boost::filesystem::path get_package_state_dir(const boost::filesystem::path& package_dir) { return package_dir / ".state" ; }
+        static boost::filesystem::path get_lock_file_path(const boost::filesystem::path& package_dir) { return get_package_state_dir(package_dir) / "lock"; }
+
+        boost::filesystem::path get_package_dir() const { return _parent_dir / _hash.str(); }
+        boost::filesystem::path get_package_state_dir() const { return get_package_state_dir(get_package_dir()); }
+        boost::filesystem::path get_lock_file_path() const { return get_lock_file_path(get_package_dir()); }
+
+        void lock_dir();
+        void unlock_dir();
+        bool is_dir_locked() const;
+
+    private:
+        state                                            _state;
+        fc::ripemd160                                    _hash;
+        boost::filesystem::path                          _parent_dir;
+        std::shared_ptr<boost::interprocess::file_lock>  _file_lock;
+        event_listener_handle_list                       _event_listeners;
     };
 
 
@@ -111,17 +134,19 @@ namespace decent { namespace package {
         }
 
     private:
-        void save_state();
-        void restore_state();
+        void release_all_packages();
+        void restore_all_packages();
 
     public:
-        package_handle create_package(const boost::filesystem::path& content_path,
-                                      const boost::filesystem::path& samples_path,
-                                      const fc::sha512& key,
-                                      const decent::crypto::custody_data& custody_data,
-                                      const event_listener_handle& event_listener = event_listener_handle());
+        void release_package(const std::string& hash)    { return release_package(fc::ripemd160::hash(hash)); }
+        void release_package(const fc::ripemd160& hash)  { return release_package(hash, get_packages_path()); }
+        void release_package(const fc::ripemd160& hash, const boost::filesystem::path& parent_dir);
 
-        void stop_creating_package(const package_handle& package);
+    public:
+        package_handle create_package(const boost::filesystem::path& content_dir_path,
+                                      const boost::filesystem::path& samples_dir_path,
+                                      const fc::sha512& key,
+                                      const event_listener_handle& event_listener = event_listener_handle());
 
         package_handle consume_package(const std::string& url,
                                        const boost::filesystem::path& destination_dir,
@@ -152,7 +177,7 @@ namespace decent { namespace package {
         void set_libtorrent_config(const boost::filesystem::path& libtorrent_config_file);
 
     private:
-        mutable fc::mutex              _mutex;
+        mutable std::mutex             _mutex;
         boost::filesystem::path        _packages_path;
         package_handle_set             _packages;
         proto_to_transfer_engine_map   _proto_transfer_engines;

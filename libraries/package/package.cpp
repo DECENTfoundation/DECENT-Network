@@ -2,16 +2,22 @@
 #include "torrent_transfer.hpp"
 #include "ipfs_transfer.hpp"
 
+#include <decent/encrypt/encryptionutils.hpp>
 #include <graphene/package/package.hpp>
 #include <graphene/utilities/dirhelper.hpp>
 
 #include <fc/log/logger.hpp>
 #include <fc/thread/scoped_lock.hpp>
 
+#include <boost/iostreams/device/file_descriptor.hpp>
+#include <boost/iostreams/filtering_stream.hpp>
+#include <boost/iostreams/filter/gzip.hpp>
+#include <boost/iostreams/device/file.hpp>
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_io.hpp>
 
+#include <vector>
 
 
 namespace decent { namespace package {
@@ -21,125 +27,425 @@ namespace decent { namespace package {
     using graphene::package::ipfs_transfer;
 
 
-    namespace {
-
-
-        boost::uuids::random_generator generator;
-
-
-    }
-
-
     namespace utilities {
+
+
+        const int ARC_BUFFER_SIZE        = 1024 * 1024; // 1kb
+        const int RIPEMD160_BUFFER_SIZE  = 1024 * 1024; // 1kb
+
+
+        struct arc_header {
+            char type; // 0 = EOF, 1 = REGULAR FILE
+            char name[255];
+            char size[8];
+        };
+
+
+        class archiver {
+        public:
+            explicit archiver(boost::iostreams::filtering_ostream& out)
+                : _out(out)
+            {
+            }
+
+            bool put(const std::string& file_name, boost::iostreams::file_source& in, int file_size) {
+                arc_header header;
+
+                std::memset((void*)&header, 0, sizeof(header));
+                std::snprintf(header.name, sizeof(header.name), "%s", file_name.c_str());
+
+                header.type = 1;
+                *(int*)header.size = file_size;
+
+                _out.write((const char*)&header, sizeof(header));
+
+                char buffer[ARC_BUFFER_SIZE];
+
+                while (true) {
+                    int bytes_read = in.read(buffer, ARC_BUFFER_SIZE);
+                    if (bytes_read <= 0) {
+                        break;
+                    }
+                    _out.write(buffer, bytes_read);
+                }
+
+                return true;
+            }
+            
+            ~archiver() {
+                arc_header header;
+                
+                std::memset((void*)&header, 0, sizeof(header));
+                _out.write((const char*)&header, sizeof(header));
+                _out.flush();
+                _out.reset();      
+            }
+
+        private:
+            boost::iostreams::filtering_ostream& _out;
+        };
+
+
+        class dearchiver {
+        public:
+            explicit dearchiver(boost::iostreams::filtering_istream& in)
+                : _in(in)
+            {
+            }
+
+            bool extract(const std::string& output_dir) {
+                arc_header header;
+
+                while (true) {
+                    std::memset((void*)&header, 0, sizeof(header));
+                    _in.read((char*)&header, sizeof(header));
+
+                    if (header.type == 0) {
+                        break;
+                    }
+
+                    using namespace boost::filesystem;
+
+                    const path file_path = output_dir / header.name;
+                    const path file_dir = file_path.parent_path();
+
+                    if (!exists(file_dir) || !is_directory(file_dir)) {
+                        try {
+                            if (!create_directories(file_dir) && !is_directory(file_dir)) {
+                                FC_THROW("Unable to create ${dir} directory", ("dir", file_dir.string()) );
+                            }
+                        }
+                        catch (const boost::filesystem::filesystem_error& ex) {
+                            if (!is_directory(file_dir)) {
+                                FC_THROW("Unable to create ${dir} directory: ${error}", ("dir", file_dir.string()) ("error", ex.what()) );
+                            }
+                        }
+                    }
+
+                    std::fstream sink(file_path.string(), std::ios::out | std::ios::binary);
+
+                    if (!sink.is_open()) {
+                        FC_THROW("Unable to open file ${file} for writing", ("file", file_path.string()) );
+                    }
+
+                    char buffer[ARC_BUFFER_SIZE];
+                    int bytes_to_read = *(int*)header.size;
+
+                    if (bytes_to_read < 0) {
+                        FC_THROW("Unexpected size in header");
+                    }
+
+                    while (bytes_to_read > 0) {
+                        const int bytes_read = boost::iostreams::read(_in, buffer, std::min(ARC_BUFFER_SIZE, bytes_to_read));
+
+                        if (bytes_read < 0) {
+                            break;
+                        }
+
+                        sink.write(buffer, bytes_read);
+
+                        if (sink.bad()) {
+                            FC_THROW("Unable to write to file ${file}", ("file", file_path.string()) );
+                        }
+
+                        bytes_to_read -= bytes_read;
+                    }
+
+                    if (bytes_to_read != 0) {
+                        FC_THROW("Unexpected end of file");
+                    }
+                }
+                
+                return true;
+            }
+
+        private:
+            boost::iostreams::filtering_istream& _in;
+        };
+
+
+        fc::ripemd160 calculate_hash(boost::filesystem::path file_path) {
+            boost::iostreams::file_source source(file_path.string(), std::ifstream::binary);
+
+            if (!source.is_open()) {
+                FC_THROW("Unable to open file ${fn} for reading", ("fn", file_path.string()) );
+            }
+
+            fc::ripemd160::encoder ripe_calc;
+            char buffer[RIPEMD160_BUFFER_SIZE];
+
+            while (true) {
+                int bytes_read = source.read(buffer, RIPEMD160_BUFFER_SIZE);
+                if (bytes_read <= 0) {
+                    break;
+                }
+                ripe_calc.write(buffer, bytes_read);
+            }
+
+            return ripe_calc.result();
+        }
+
+        namespace {
+            boost::uuids::random_generator generator;
+        }
 
 
         inline std::string make_uuid() {
             return boost::uuids::to_string(generator());
         }
 
+        inline boost::filesystem::path get_relative(const boost::filesystem::path& from, const boost::filesystem::path& to)
+        {
+            boost::filesystem::path::const_iterator from_it = from.begin();
+            boost::filesystem::path::const_iterator to_it = to.begin();
 
-    }
+            while (from_it != from.end() && to_it != to.end() && (*from_it) == (*to_it))
+            {
+                ++from_it;
+                ++to_it;
+            }
+
+            boost::filesystem::path relative;
+            while (from_it != from.end())
+            {
+                relative /= "..";
+                ++from_it;
+            }
+
+            while (to_it != to.end())
+            {
+                relative /= *to_it;
+                ++to_it;
+            }
+            
+            return relative;
+        }
+
+        void get_files_recursive(const boost::filesystem::path& folder, std::vector<boost::filesystem::path>& all_files) {
+            if (!is_directory(folder)) {
+                FC_THROW("${path} does not point to an existing diectory", ("path", folder.string()) );
+            }
+
+            using namespace boost::filesystem;
+
+            for (recursive_directory_iterator it(folder); it != recursive_directory_iterator(); ) {
+                if (is_regular_file(*it)) {
+                    all_files.push_back(*it);
+                }
+
+                if(is_directory(*it) && is_symlink(*it)) {
+                    it.no_push();
+                }
+
+                // TODO
+
+                try
+                {
+                    ++it;
+                }
+                catch(std::exception& ex)
+                {
+                    std::cout << ex.what() << std::endl;
+                    it.no_push();
+                    try {
+                        ++it;
+                    }
+                    catch(...)
+                    {
+                        std::cout << "!!" << std::endl;
+                        return;
+                    }
+                }
+            }
+        }
+
+        inline void remove_all_except(const boost::filesystem::path& dir, const std::set<boost::filesystem::path>& paths_to_skip) {
+
+
+            // TODO
+
+        }
+
+        inline void move_all_except(const boost::filesystem::path& from, const boost::filesystem::path& to, const std::set<boost::filesystem::path>& paths_to_skip) {
+
+            // TODO
+
+        }
+
+
+    } // namespace utilities
 
 
     package_info::package_info(package_manager& manager,
-                               const boost::filesystem::path& content_path,
-                               const boost::filesystem::path& samples_path,
+                               const boost::filesystem::path& content_dir_path,
+                               const boost::filesystem::path& samples_dir_path,
                                const fc::sha512& key,
-                               const event_listener_handle& event_listener = event_listener_handle()) {
+                               const event_listener_handle& event_listener) {
+        _parent_dir = manager.get_packages_path();
         add_event_listener(event_listener);
 
         using namespace boost::filesystem;
-
-        if (!is_directory(content_path) && !is_regular_file(content_path)) {
-            FC_THROW("Content path ${content_path} must point to either directory or file", ("path", content_path.string()) );
-        }
-
-        if (exists(samples_path) && !is_directory(samples_path)) {
-            FC_THROW("Samples path ${path} must point to directory", ("path", samples_path.string()));
-        }
-
-        const auto packages_path = manager.get_packages_path();
-
-        const auto temp_path = packages_path / utilities::make_uuid();
-
-        if (!create_directory(temp_path)) {
-            FC_THROW("Failed to create temporary directory ${path}", ("path", temp_path.string()) );
-        }
 
         if (CryptoPP::AES::MAX_KEYLENGTH > key.data_size()) {
             FC_THROW("CryptoPP::AES::MAX_KEYLENGTH is bigger than key size (${size})", ("size", key.data_size()) );
         }
 
-        const auto content_zip = temp_path / "content.zip";
+        if (!is_directory(content_dir_path) && !is_regular_file(content_dir_path)) {
+            FC_THROW("Content path ${path} must point to either directory or file", ("path", content_dir_path.string()) );
+        }
 
-        {
-            filtering_ostream out;
-            out.push(gzip_compressor());
-            out.push(file_sink(content_zip.string(), std::ofstream::binary));
-            archiver arc(out);
+        if (exists(samples_dir_path) && !is_directory(samples_dir_path)) {
+            FC_THROW("Samples path ${path} must point to directory", ("path", samples_dir_path.string()));
+        }
 
-            vector<path> all_files;
-            if (is_regular_file(content_path)) {
-                file_source source(content_path.string(), std::ifstream::binary);
-                arc.put(content_path.filename().string(), source, file_size(content_path));
-            } else {
-                get_files_recursive(content_path, all_files);
-                for (int i = 0; i < all_files.size(); ++i) {
-                    file_source source(all_files[i].string(), std::ifstream::binary);
-                    arc.put(relative_path(all_files[i], content_path).string(), source, file_size(all_files[i]));
+        const auto temp_dir_path = graphene::utilities::decent_path_finder::instance().get_decent_temp() / utilities::make_uuid();
+
+        if (exists(temp_dir_path) || !create_directory(temp_dir_path)) {
+            FC_THROW("Failed to create unique temporary directory ${path}", ("path", temp_dir_path.string()) );
+        }
+
+        try {
+            const auto zip_file_path = temp_dir_path / "content.zip";
+
+            {
+                using namespace boost::iostreams;
+
+                filtering_ostream out;
+                out.push(gzip_compressor());
+                out.push(file_sink(zip_file_path.string(), std::ofstream::binary));
+
+                utilities::archiver arc(out);
+
+                if (is_regular_file(content_dir_path)) {
+                    file_source source(content_dir_path.string(), std::ifstream::binary);
+                    arc.put(content_dir_path.filename().string(), source, file_size(content_dir_path));
+                } else {
+                    std::vector<path> all_files;
+                    utilities::get_files_recursive(content_dir_path, all_files);
+                    for (auto& file : all_files) {
+                        file_source source(file.string(), std::ifstream::binary);
+                        arc.put(utilities::get_relative(content_dir_path, file).string(), source, file_size(file));
+                    }
                 }
             }
 
-            arc.finalize();
-        }
-
-        if (space(temp_path).available < file_size(content_zip) * 1.5) { // Safety margin
-            FC_THROW("Not enough storage space in ${path} to create package", ("path", temp_path.string()) );
-        }
-
-        {
-            const auto aes_file_path = temp_path / "content.zip.aes";
-
-            decent::crypto::aes_key k;
-            for (int i = 0; i < CryptoPP::AES::MAX_KEYLENGTH; i++) {
-                k.key_byte[i] = key.data()[i];
+            if (space(temp_dir_path).available < file_size(zip_file_path) * 1.5) { // Safety margin
+                FC_THROW("Not enough storage space in ${path} to create package", ("path", temp_dir_path.string()) );
             }
 
-            AES_encrypt_file(content_zip.string(), aes_file_path.string(), k);
+            {
+                const auto aes_file_path = temp_dir_path / "content.zip.aes";
 
-            remove(content_zip);
+                decent::crypto::aes_key k;
+                for (int i = 0; i < CryptoPP::AES::MAX_KEYLENGTH; i++) {
+                    k.key_byte[i] = key.data()[i];
+                }
+
+                AES_encrypt_file(zip_file_path.string(), aes_file_path.string(), k);
+                _hash = utilities::calculate_hash(aes_file_path);
+            }
+
+            manager.release_package(_hash, _parent_dir);
+
+            const auto package_dir = get_package_dir();
+
+            if (exists(package_dir)) {
+                wlog("overwriting existing path ${path}", ("path", package_dir.string()) );
+
+                if (!is_directory(package_dir)) {
+                    remove_all(package_dir);
+                }
+            }
+
+            lock_dir();
+
+            std::set<boost::filesystem::path> paths_to_skip;
+            
+            paths_to_skip.clear();
+            paths_to_skip.insert(get_lock_file_path());
+            utilities::remove_all_except(package_dir, paths_to_skip);
+            
+            paths_to_skip.clear();
+            paths_to_skip.insert(get_package_state_dir(temp_dir_path));
+            paths_to_skip.insert(get_lock_file_path(temp_dir_path));
+            paths_to_skip.insert(zip_file_path);
+            utilities::move_all_except(temp_dir_path, package_dir, paths_to_skip);
+        }
+        catch (...) {
+            remove_all(temp_dir_path);
+            throw;
         }
 
-        const auto package_hash = calculate_hash(aes_file_path);
-        const auto package_path = packages_path / package_hash.str();
-
-        if (is_directory(package_path)) {
-            wlog("overwriting existing directory ${path}", ("path", package_path.str()) );
-            remove_all(package_path);
-        }
-        
-        rename(temp_path, package_path);
+        remove_all(temp_dir_path);
     }
 
-    package_info::package_info(const boost::filesystem::path& package_path,
-                               const event_listener_handle& event_listener = event_listener_handle()) {
+    package_info::package_info(package_manager& manager,
+                               const boost::filesystem::path& package_dir_path,
+                               const event_listener_handle& event_listener) {
         add_event_listener(event_listener);
 
 
+         // TODO
 
 
+    }
+
+    package_info::package_info(package_manager& manager,
+                               const fc::ripemd160& package_hash,
+                               const event_listener_handle& event_listener) {
+        add_event_listener(event_listener);
+
+
+        // TODO
+        
+        
+    }
+
+    package_info::~package_info() {
+
+        // TODO: cleanup
+
+        if (is_dir_locked()) {
+            // TODO: cleanup
+        }
+
+        // TODO: cleanup
+
+        unlock_dir();
     }
 
     void package_info::add_event_listener(const event_listener_handle& event_listener) {
+        if (event_listener) {
+            if (std::find(_event_listeners.begin(), _event_listeners.end(), event_listener) == _event_listeners.end()) {
+                _event_listeners.push_back(event_listener);
+            }
+        }
     }
 
     void package_info::remove_event_listener(const event_listener_handle& event_listener) {
+        _event_listeners.remove(event_listener);
     }
 
+    void package_info::lock_dir() {
+        if (!_file_lock) {
+            _file_lock = std::make_shared<boost::interprocess::file_lock>(get_lock_file_path());
+        }
 
+        if (!_file_lock->try_shared_lock()) { // TODO
+            FC_THROW("Unable to lock package directory ${path}", ("path", get_package_dir()) );
+        }
+    }
 
+    void package_info::unlock_dir() {
+        if (is_dir_locked()) {
+            _file_lock->shared_unlock(); // TODO
+            _file_lock.reset();
+        }
+    }
 
-
+    bool package_info::is_dir_locked() const {
+        return _file_lock && _file_lock->is_shared_locked(); // TODO
+    }
 
     package_manager::package_manager()
     {
@@ -151,77 +457,102 @@ namespace decent { namespace package {
     }
 
     package_manager::~package_manager() {
-        save_state();
+        release_all_packages();
     }
 
-    void package_manager::save_state() {
+    void package_manager::release_all_packages() {
         if (!_packages_path.empty()) {
-            ilog("saving package manager state...");
+            ilog("releasing ${size} packages...");
+            _packages.clear();
+        }
 
-            // TODO
+        // TODO: save anything else?
+    }
+
+    void package_manager::restore_all_packages() {
+        if (!_packages_path.empty()) {
+            ilog("reading packages from directory ${path}...", ("path", _packages_path) );
+            const size_t count_before = _packages.size();
+
+            using namespace boost::filesystem;
+
+            for (directory_iterator entry(_packages_path); entry != directory_iterator(); ++entry) {
+                try {
+                    package_handle package = std::make_shared<package_info>(*this, entry->path().filename());
+                    _packages.insert(package);
+                }
+                catch (const fc::exception& ex)
+                {
+                    elog("unable to read package at ${path}: ${error}...", ("path", entry->path()) ("error", ex.to_detail_string()) );
+                }
+            }
+
+            const size_t count_after = _packages.size();
+            ilog("successfully read ${size} packages", ("size", count_after - count_before) );
+        }
+
+        // TODO: restore anything else?
+    }
+
+    void package_manager::release_package(const fc::ripemd160& hash, const boost::filesystem::path& parent_dir) {
+        fc::scoped_lock<fc::mutex> guard(_mutex);
+
+        for (auto it = _packages.begin(); it != _packages.end(); ) {
+            if (!(*it) || ((*it)->_hash == hash && (parent_dir.empty() || (*it)->_parent_dir == parent_dir))) {
+                it = _packages.erase(it);
+            }
+            else {
+                ++it;
+            }
         }
     }
 
-    void package_manager::restore_state() {
-        if (!_packages_path.empty()) {
-            ilog("restoring package manager state...");
-
-            // TODO
-        }
-    }
-
-    package_handle package_manager::create_package(const boost::filesystem::path& content_path,
-                                                   const boost::filesystem::path& samples_path,
+    package_handle package_manager::create_package(const boost::filesystem::path& content_dir_path,
+                                                   const boost::filesystem::path& samples_dir_path,
                                                    const fc::sha512& key,
                                                    const event_listener_handle& event_listener) {
-        package_handle package = package_handle(*this, content_path, samples_path, key, event_listener);
+        package_handle package = std::make_shared<package_info>(*this, content_dir_path, samples_dir_path, key, event_listener);
+        fc::scoped_lock<fc::mutex> guard(_mutex);
         return *_packages.insert(package).first;
-    }
-
-
-
-
-
-
-    //package_object package_manager::create_package( const boost::filesystem::path& content_path, const boost::filesystem::path& samples, const fc::sha512& key, decent::crypto::custody_data& cd) {
-
-
-
-
-
-
-    void package_manager::stop_creating_package(const package_handle& package) {
     }
 
     package_handle package_manager::consume_package(const std::string& url,
                                                     const boost::filesystem::path& destination_dir,
                                                     const fc::sha512& key,
                                                     const event_listener_handle& event_listener) {
+        // TODO
     }
 
     void package_manager::consume_package(const package_handle& package,
                                           const boost::filesystem::path& destination_dir,
                                           const fc::sha512& key) {
+        // TODO
     }
 
     void package_manager::stop_consuming_package(const package_handle& package) {
+        // TODO
     }
 
     package_handle package_manager::seed_package(const std::string& url,
                                                  const event_listener_handle& event_listener) {
+        // TODO
     }
 
     void package_manager::seed_package(const package_handle& package) {
+        // TODO
     }
 
     void package_manager::stop_seeding_package(const package_handle& package) {
+        // TODO
     }
 
     package_handle_set package_manager::get_all_known_packages() const {
+        // TODO
     }
 
     package_handle package_manager::get_package_handle(const fc::ripemd160& hash,
                                                        const bool full_check) {
+        // TODO
     }
 
     boost::filesystem::path package_manager::get_packages_path() const {
@@ -233,21 +564,21 @@ namespace decent { namespace package {
         if (!exists(packages_path) || !is_directory(packages_path)) {
             try {
                 if (!create_directories(packages_path) && !is_directory(packages_path)) {
-                    FC_THROW("Unable to create packages directory");
+                    FC_THROW("Unable to create packages directory ${path}", ("path", packages_path.string()) );
                 }
             }
             catch (const boost::filesystem::filesystem_error& ex) {
                 if (!is_directory(packages_path)) {
-                    FC_THROW("Unable to create packages directory: ${error}", ("error", ex.what()) );
+                    FC_THROW("Unable to create packages directory ${path}: ${error}", ("path", packages_path.string()) ("error", ex.what()) );
                 }
             }
         }
 
         fc::scoped_lock<fc::mutex> guard(_mutex);
 
-        save_state();
+        release_all_packages();
         _packages_path = packages_path;
-        restore_state();
+        restore_all_packages();
     }
 
     void package_manager::set_libtorrent_config(const boost::filesystem::path& libtorrent_config_file) {
