@@ -333,7 +333,7 @@ uint32_t package_object::create_proof_of_custody(const decent::crypto::custody_d
 package_manager::package_manager()
     : _next_transfer_id(0)
 {
-    _protocol_handlers.insert(std::make_pair("magnet", std::make_shared<torrent_transfer>()));
+    //_protocol_handlers.insert(std::make_pair("magnet", std::make_shared<torrent_transfer>()));
     _protocol_handlers.insert(std::make_pair("ipfs", std::make_shared<ipfs_transfer>()));
 
     set_packages_path(decent_path_finder::instance().get_decent_data() / "packages");

@@ -40,7 +40,7 @@ using namespace gui_wallet;
 using namespace nlohmann;
 
 
-Browse_content_tab::Browse_content_tab() : m_pTableWidget(new BTableWidget(0,s_cnNumberOfCols))
+Browse_content_tab::Browse_content_tab() : m_pTableWidget(new BTableWidget(0,s_cnNumberOfCols)), green_row(-1)
 {
     
     PrepareTableWidgetHeaderGUI();
@@ -127,22 +127,14 @@ void Browse_content_tab::PrepareTableWidgetHeaderGUI()
     m_TableWidget.horizontalHeader()->setDefaultSectionSize(300);
     m_TableWidget.setRowHeight(0,35);
     m_TableWidget.verticalHeader()->hide();
+    
     m_TableWidget.setHorizontalHeaderLabels(QStringList() << "" << "Title" << "Rating" << "Size" << "Price" << "Created" << "Expiration" );
     m_TableWidget.horizontalHeader()->setFixedHeight(35);
     m_TableWidget.horizontalHeader()->setFont(font);
+//    m_TableWidget.horizontalHeader()->setStyleSheet("color:rgb(228,227,228)");
+    
     m_main_layout.setContentsMargins(0, 0, 0, 0);
-    
-    
-//    for( int i(0); i<s_cnNumberOfCols; ++i )
-//    {
-//        m_TableWidget.setItem(0,i,new QTableWidgetItem(tr(s_vccpItemNames[i])));
-//        m_TableWidget.item(0,i)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
-//        m_TableWidget.item(0,i)->setFont(f);
-//        m_TableWidget.item(0,i)->setBackground(QColor(228,227,228));
-//        m_TableWidget.item(0,i)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
-//        m_TableWidget.item(0,i)->setForeground(QColor::fromRgb(51,51,51));
-//        
-//    }
+
     m_TableWidget.setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     m_TableWidget.setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     m_TableWidget.setSelectionMode(QAbstractItemView::NoSelection);
@@ -354,7 +346,8 @@ void Browse_content_tab::Connects()
 void Browse_content_tab::doRowColor()
 {
     if(m_pTableWidget->rowCount() < 1)  { return; }
-    
+    if(green_row >= 0)
+    {
         m_pTableWidget->cellWidget(green_row , 0)->setStyleSheet("* { background-color: rgb(255,255,255); color : white; }");
         m_pTableWidget->item(green_row,1)->setBackgroundColor(QColor(255,255,255));
         m_pTableWidget->item(green_row,2)->setBackgroundColor(QColor(255,255,255));
@@ -369,7 +362,7 @@ void Browse_content_tab::doRowColor()
         m_pTableWidget->item(green_row,4)->setForeground(QColor::fromRgb(0,0,0));
         m_pTableWidget->item(green_row,5)->setForeground(QColor::fromRgb(0,0,0));
         m_pTableWidget->item(green_row,6)->setForeground(QColor::fromRgb(0,0,0));
-
+    }
     QPoint mouse_pos = m_pTableWidget->mapFromGlobal(QCursor::pos());
     if(mouse_pos.x() > 0 && mouse_pos.x() < 400)
     {

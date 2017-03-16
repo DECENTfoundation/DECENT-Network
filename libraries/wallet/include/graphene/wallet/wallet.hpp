@@ -186,9 +186,14 @@ class wallet_api_impl;
 }
 
 struct operation_detail {
-   string                   memo;
-   string                   description;
-   operation_history_object op;
+    account_id_type         from_account;
+    account_id_type         to_account;
+    string                  operation_type;
+    asset                   transaction_amount;
+    asset                   transaction_fee;
+    string                  description;
+    
+    operation_history_object op;
 };
 
 /**
@@ -1713,11 +1718,15 @@ FC_REFLECT_DERIVED( graphene::wallet::signed_block_with_info, (graphene::chain::
 FC_REFLECT_DERIVED( graphene::wallet::vesting_balance_object_with_info, (graphene::chain::vesting_balance_object),
    (allowed_withdraw)(allowed_withdraw_time) )
 
-FC_REFLECT( graphene::wallet::operation_detail, 
-                (memo)
-                (description)
-                (op)
-          )
+FC_REFLECT( graphene::wallet::operation_detail,
+           (from_account)
+           (to_account)
+           (operation_type)
+           (transaction_amount)
+           (transaction_fee)
+           (description)
+           (op)
+        )
 
 FC_API( graphene::wallet::wallet_api,
         (help)

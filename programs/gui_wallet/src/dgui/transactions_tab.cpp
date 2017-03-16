@@ -24,7 +24,7 @@
 using namespace gui_wallet;
 using namespace nlohmann;
 
-static const char* firsItemNames[]={"ID", "Info", "Memo", "Fee"};
+static const char* firsItemNames[]={"Type", "From", "To", "Amount", "Fee", "Description"};
 const int numTransactionCols = sizeof(firsItemNames) / sizeof(const char*);
 
 
@@ -46,22 +46,22 @@ void HTableWidget::mouseMoveEvent(QMouseEvent *event)
 
 Transactions_tab::Transactions_tab() : green_row(0)
 {
-    QFont font( "Open Sans Bold", 14, QFont::Bold);
+    QFont f( "Open Sans Bold", 14, QFont::Bold);
 
-    //create table (widget)
     tablewidget = new HTableWidget();
-    //tablewidget->setRowCount(0);//add first row in table
+
     tablewidget->setColumnCount(numTransactionCols);
     
     tablewidget->verticalHeader()->setDefaultSectionSize(35);
     tablewidget->horizontalHeader()->setDefaultSectionSize(230);
     tablewidget->verticalHeader()->hide();
+
     tablewidget->setStyleSheet("QTableView{border : 1px solid lightGray}");
     tablewidget->setSelectionMode(QAbstractItemView::NoSelection);
     
-    tablewidget->setHorizontalHeaderLabels(QStringList() << "ID" << "Info" << "Memo" << "Fee");
+    tablewidget->setHorizontalHeaderLabels(QStringList() << "Type" << "From" << "To" << "Amount" << "Fee" << "Description");
     tablewidget->horizontalHeader()->setFixedHeight(35);
-    tablewidget->horizontalHeader()->setFont(font);
+    tablewidget->horizontalHeader()->setFont(f);
 
     tablewidget->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     tablewidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -139,11 +139,12 @@ void Transactions_tab::createNewRow()
 
 void Transactions_tab::ArrangeSize()
 {
-  QSize tqsTableSize = tablewidget->size();
-  tablewidget->setColumnWidth(0,(tqsTableSize.width()*10)/100);
-  tablewidget->setColumnWidth(1,(tqsTableSize.width()*40)/100);
-  tablewidget->setColumnWidth(2,(tqsTableSize.width()*40)/100);
-  tablewidget->setColumnWidth(3,(tqsTableSize.width()*10)/100);
+    QSize tqsTableSize = tablewidget->size();
+    std::vector<int> sizes = {10, 20, 20, 10, 10, 30};
+    for (int i = 0; i < numTransactionCols; ++i) {
+        tablewidget->setColumnWidth(i,(tqsTableSize.width()* sizes[i])/100);
+    }
+    
 }
 
 void Transactions_tab::resizeEvent(QResizeEvent *a_event)
@@ -152,13 +153,6 @@ void Transactions_tab::resizeEvent(QResizeEvent *a_event)
   ArrangeSize();
 }
 
-void Transactions_tab::deleteEmptyRows()
-{
-   for (int i = tablewidget->rowCount(); tablewidget->item(i, 0) == 0; --i)
-   {
-       tablewidget->removeRow(i);
-   }
-}
 
 Transactions_tab::~Transactions_tab()
 {
@@ -168,61 +162,37 @@ Transactions_tab::~Transactions_tab()
 
 void Transactions_tab::doRowColor()
 {
-    if(tablewidget->rowCount() < 1) {return;}
-    if(tablewidget->item(green_row,0) != NULL)
-    {
-        tablewidget->item(green_row,0)->setBackgroundColor(QColor(255,255,255));
-        tablewidget->item(green_row,0)->setForeground(QColor::fromRgb(0,0,0));
+    if(tablewidget->rowCount() < 0) {return;}
 
-    }
-    if(tablewidget->item(green_row,1) != NULL)
+    for (int i = 0; i < numTransactionCols; ++i)
     {
-        tablewidget->item(green_row,1)->setBackgroundColor(QColor(255,255,255));
-        tablewidget->item(green_row,1)->setForeground(QColor::fromRgb(0,0,0));
-        
+        if(tablewidget->item(green_row,i) != NULL)
+        {
+            tablewidget->item(green_row,i)->setBackgroundColor(QColor(255,255,255));
+            tablewidget->item(green_row,i)->setForeground(QColor::fromRgb(0,0,0));
+        }
     }
-    if(tablewidget->item(green_row,2) != NULL)
-    {
-        tablewidget->item(green_row,2)->setBackgroundColor(QColor(255,255,255));
-        tablewidget->item(green_row,2)->setForeground(QColor::fromRgb(0,0,0));
-        
-    }
-    if(tablewidget->item(green_row,3) != NULL)
-    {
-        tablewidget->item(green_row,3)->setBackgroundColor(QColor(255,255,255));
-        tablewidget->item(green_row,3)->setForeground(QColor::fromRgb(0,0,0));
-        
-    }
-
+    
     QPoint mouse_pos = tablewidget->mapFromGlobal(QCursor::pos());
     mouse_pos.setY(mouse_pos.y() - 41);
     QTableWidgetItem *ite = tablewidget->itemAt(mouse_pos);
+    
     if(ite != NULL)
     {
-
+        
         int row = ite->row();
-        if(row < 0) {return;}
-        if(tablewidget->item(row,0) != NULL)
-        {
-            tablewidget->item(row,0)->setBackgroundColor(QColor(27,176,104));
-            tablewidget->item(row,0)->setForeground(QColor::fromRgb(255,255,255));
-        }
-        if(tablewidget->item(row,1) != NULL)
-        {
-            tablewidget->item(row,1)->setBackgroundColor(QColor(27,176,104));
-            tablewidget->item(row,1)->setForeground(QColor::fromRgb(255,255,255));
-        }
-        if(tablewidget->item(row,2) != NULL)
-        {
-            tablewidget->item(row,2)->setBackgroundColor(QColor(27,176,104));
-            tablewidget->item(row,2)->setForeground(QColor::fromRgb(255,255,255));
-        }
-        if(tablewidget->item(row,3) != NULL)
-        {
-            tablewidget->item(row,3)->setBackgroundColor(QColor(27,176,104));
-            tablewidget->item(row,3)->setForeground(QColor::fromRgb(255,255,255));
-        }
+        if(row >= 0) {
+            for (int i = 0; i < numTransactionCols; ++i)
+            {
+                if(tablewidget->item(row, i) != NULL)
+                {
+                    tablewidget->item(row, i)->setBackgroundColor(QColor(27,176,104));
+                    tablewidget->item(row, i)->setForeground(QColor::fromRgb(255,255,255));
+                }
+            }
+            
             green_row = row;
+        }
     }
     else
     {
@@ -237,74 +207,101 @@ void Transactions_tab::Connects()
 
 
 
-
+std::string Transactions_tab::getAccountName(std::string accountId) {
+    
+    auto seach = _userIdCache.find(accountId);
+    if (seach == _userIdCache.end()) {
+        std::string accountInfo, accountName = "Unknown";
+        RunTask("get_object \"" + accountId + "\"", accountInfo);
+        
+        auto accountInfoParsed = json::parse(accountInfo);
+        if (accountInfoParsed.size() != 0) {
+            accountName = accountInfoParsed[0]["name"].get<std::string>();
+        }
+        _userIdCache.insert(std::make_pair(accountId, accountName));
+    }
+    
+    return _userIdCache[accountId];
+}
 
 void Transactions_tab::updateContents() {
     if (user.text().toStdString().empty()) {
         return;
     }
     
-    //tablewidget->setRowCount(1); //Remove everything but header
-
+    std::string a_result;
+    try {
+        RunTask("get_account_history \"" + user.text().toStdString() +"\" 100", a_result);
+    } catch (const std::exception& ex) {
+        return;
+    }
     
-
     
-    SetNewTask("get_account_history \"" + user.text().toStdString() +"\" 100", this, NULL, +[](void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
+    try {
+        auto contents = json::parse(a_result);
         
-        if (a_err != 0) {
-            return;
-        }
+        tablewidget->setRowCount(contents.size());
         
-        Transactions_tab* obj = (Transactions_tab*)owner;
-        
-        try {
-            auto contents = json::parse(a_result);
+        for (int i = 0; i < contents.size(); ++i) {
+            auto content = contents[i];
+            std::string from_account = getAccountName(content["from_account"].get<std::string>());
+            std::string to_account = getAccountName(content["to_account"].get<std::string>());
+            std::string operation_type = content["operation_type"].get<std::string>();
+            std::string description = content["description"].get<std::string>();
             
-            obj->tablewidget->setRowCount(contents.size());
-            for (int i = 0; i < contents.size(); ++i) {
-                auto content = contents[i];
-                auto op = content["op"];
-
-                //ID
-                obj->tablewidget->setItem(i, 0, new QTableWidgetItem(QString::fromStdString(op["id"].get<std::string>())));
-                obj->tablewidget->item(i, 0)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
-                obj->tablewidget->item(i, 0)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+            if (operation_type == "Buy" || operation_type == "Content submit") {
+                std::string contentStr;
+                RunTask("get_content \"" + description + "\"", contentStr);
+                auto contentObject = json::parse(contentStr);
                 
-                //description
-                std::string cont = contents[i]["description"].get<std::string>();
-                std::string desc = "";
-                for(int i = 0; i < cont.size(); ++i)
-                {
-                    if((cont[i + 1] == 'F' || cont[i + 1] == 'f') && cont[i + 2] == 'e' && cont[i + 3] == 'e')   { break; }
-                    
-                    desc += cont[i];
-                }
-                obj->tablewidget->setItem(i, 1, new QTableWidgetItem(QString::fromStdString(desc)));
-                obj->tablewidget->item(i, 1)->setTextAlignment(Qt::AlignLeft|Qt::AlignVCenter);
-                obj->tablewidget->item(i, 1)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+                std::string synopsis = contentObject["synopsis"].get<std::string>();
+                from_account = getAccountName(contentObject["author"].get<std::string>());
+                try {
+                    auto synopsis_parsed = json::parse(synopsis);
+                    synopsis = synopsis_parsed["title"].get<std::string>();
+                } catch (...) {}
                 
-                //memo
-                obj->tablewidget->setItem(i, 2, new QTableWidgetItem(QString::fromStdString(contents[i]["memo"].get<std::string>())));
-                obj->tablewidget->item(i, 2)->setTextAlignment(Qt::AlignRight|Qt::AlignVCenter);
-                obj->tablewidget->item(i, 2)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
-
-                auto amount = op["op"][1]["fee"]["amount"];
-                QString amountText = "";
-                
-                if (amount.is_number()){
-                    amountText = QString::number(amount.get<double>() / GRAPHENE_BLOCKCHAIN_PRECISION) + " DCT";
-                } else {
-                    amountText = QString::number(std::stod(amount.get<std::string>()) / GRAPHENE_BLOCKCHAIN_PRECISION) + " DCT";
-
-                }
-                obj->tablewidget->setItem(i, 3, new QTableWidgetItem(amountText));
-                obj->tablewidget->item(i, 3)->setTextAlignment(Qt::AlignRight|Qt::AlignVCenter);
-                obj->tablewidget->item(i, 3)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
-
+                description = synopsis;
             }
-        } catch (std::exception& ex) {
+            
+            auto transaction_amount_js = content["transaction_amount"]["amount"];
+            auto transaction_fee_js = content["transaction_fee"]["amount"];
+            
+            QString transaction_amount, transaction_fee;
+            
+            if (transaction_fee_js.is_number()) {
+                transaction_fee = QString::number(transaction_fee_js.get<double>() / GRAPHENE_BLOCKCHAIN_PRECISION) + tr(" DCT");
+            } else {
+                transaction_fee = QString::number(std::stod(transaction_fee_js.get<std::string>()) / GRAPHENE_BLOCKCHAIN_PRECISION) + tr(" DCT");
+            }
+            
+            if (transaction_amount_js.is_number()) {
+                transaction_amount = QString::number(transaction_amount_js.get<double>() / GRAPHENE_BLOCKCHAIN_PRECISION) + tr(" DCT");
+            } else {
+                transaction_amount = QString::number(std::stod(transaction_amount_js.get<std::string>()) / GRAPHENE_BLOCKCHAIN_PRECISION) + tr(" DCT");
+            }
+            
+            std::vector<QString> values = { QString::fromStdString(operation_type),
+                                            QString::fromStdString(from_account),
+                                            QString::fromStdString(to_account),
+                                            transaction_amount,
+                                            transaction_fee,
+                                            QString::fromStdString(description) };
+            
+                
+            for (int col = 0; col < numTransactionCols; ++col) {
+                
+                tablewidget->setItem(i, col, new QTableWidgetItem(values[col]));
+                tablewidget->item(i, col)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+                tablewidget->item(i, col)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+                
+            }
+            
+
         }
-    });
+    } catch (std::exception& ex) {
+    }
+    
     Connects();
 }
 

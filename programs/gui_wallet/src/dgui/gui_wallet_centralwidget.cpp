@@ -178,27 +178,21 @@ CentralWigdet::~CentralWigdet()
 
 void CentralWigdet::SetAccountBalancesFromStrGUI(const std::vector<std::string>& a_balances_and_names)
 {
-    //m_balanceLabel.setText(tr(a_balance_and_name.c_str()));
-    AccountBalanceWidget* pBalanceCombo =
-            (AccountBalanceWidget*)GetWidgetFromTable5(BALANCE,1);
-    //AccountBalanceWidget* pBalanceCombo = m_pBalanceWgt2;
+    AccountBalanceWidget* pBalanceCombo = (AccountBalanceWidget*)GetWidgetFromTable5(BALANCE,1);
+    
     pBalanceCombo->clear();
-    const int cnBalances(a_balances_and_names.size());
+    
+    const int cnBalances = a_balances_and_names.size();
 
-    if(cnBalances)
-    {
-        for(int i(0); i<cnBalances; ++i)
-        {
+    if(cnBalances) {
+        for (int i = 0; i < cnBalances; ++i) {
             pBalanceCombo->addItem(a_balances_and_names[i]);
         }
-    }
-    else
-    {
+    } else {
         pBalanceCombo->addItem("0 DCT");
     }
 
     pBalanceCombo->setCurrentIndex(0);
-    //m_balanceCombo.lineEdit()->setAlignment(Qt::AlignRight);
 }
 
 

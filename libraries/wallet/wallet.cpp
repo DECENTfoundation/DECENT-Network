@@ -201,6 +201,78 @@ public:
    std::string operator()(const ready_to_publish_operation& op)const;
 };
 
+    
+struct operation_detail_extractor
+{
+private:
+    operation_detail&       detail;
+    const wallet_api_impl&  wallet;
+    operation_result        result;
+    
+    std::string fee(const asset& a) const;
+    
+public:
+    operation_detail_extractor(operation_detail& detail, const wallet_api_impl& wallet, const operation_result& r = operation_result() ) :
+        detail(detail),
+        wallet(wallet),
+        result(r) {}
+    
+    typedef void result_type;
+    
+    template<typename T>
+    void operator()(const T& op)const {
+        detail.operation_type = "";
+    }
+    
+    void operator()(const transfer_operation& op)const {
+        detail.operation_type = "Transfer";
+        detail.from_account = op.from;
+        detail.to_account = op.to;
+        detail.transaction_amount = op.amount;
+        detail.transaction_fee = op.fee;
+        detail.description = "";
+    }
+    
+    void operator()(const account_create_operation& op)const {
+        detail.operation_type = "Create account";
+        detail.from_account = op.registrar;
+        detail.to_account = account_id_type();
+        detail.transaction_amount = asset();
+        detail.transaction_fee = op.fee;
+        detail.description = "";
+    }
+    
+    void operator()(const content_submit_operation& op)const {
+        detail.operation_type = "Content submit";
+        detail.from_account = op.author;
+        detail.to_account = account_id_type();
+        detail.transaction_amount = op.publishing_fee;
+        detail.transaction_fee = op.fee;
+        detail.description = op.URI;
+    }
+    
+    void operator()(const request_to_buy_operation& op)const {
+        detail.operation_type = "Buy";
+        detail.from_account = account_id_type();
+        detail.to_account = op.consumer;
+        detail.transaction_amount = op.price;
+        detail.transaction_fee = op.fee;
+        detail.description = op.URI;
+    }
+    void operator()(const leave_rating_operation& op)const {
+        detail.operation_type = "Rate";
+        detail.from_account = op.consumer;
+        detail.to_account = op.consumer;
+        detail.transaction_amount = asset();
+        detail.transaction_fee = op.fee;
+        detail.description = std::to_string(op.rating);
+
+    }
+    
+};
+    
+    
+
 template<class T>
 optional<T> maybe_id( const string& name_or_id )
 {
@@ -1791,7 +1863,7 @@ public:
 
          return ss.str();
       };
-*/
+
       m["list_account_balances"] = [this](variant result, const fc::variants& a)
       {
          auto r = result.as<vector<asset>>();
@@ -1806,7 +1878,7 @@ public:
 
          return ss.str();
       };
-
+*/
       m["get_order_book"] = [this](variant result, const fc::variants& a)
       {
          auto orders = result.as<order_book>();
@@ -2846,8 +2918,12 @@ vector<operation_detail> wallet_api::get_account_history(string name, int limit)
       vector<operation_history_object> current = my->_remote_hist->get_account_history(account_id, operation_history_id_type(), std::min(100,limit), start);
       for( auto& o : current ) {
          std::stringstream ss;
-         auto memo = o.op.visit(detail::operation_printer(ss, *my, o.result));
-         result.push_back( operation_detail{ memo, ss.str(), o } );
+          operation_detail op_detail;
+          
+          o.op.visit(detail::operation_detail_extractor(op_detail, *my, o.result));
+          if (op_detail.operation_type != "")
+              result.push_back(op_detail);
+          
       }
       if( current.size() < std::min(100,limit) )
          break;

@@ -16,6 +16,7 @@
 #include <graphene/chain/config.hpp>
 #include "json.hpp"
 #include "gui_wallet_global.hpp"
+#include <QMessageBox>
 
 
 using namespace gui_wallet;
@@ -126,7 +127,8 @@ void PurchasedTab::updateContents() {
             
             std::string synopsis = unescape_string(contents[i]["synopsis"].get<std::string>());
             std::replace(synopsis.begin(), synopsis.end(), '\t', ' '); // JSON does not like tabs :(
-            
+            std::replace(synopsis.begin(), synopsis.end(), '\n', ' '); // JSON does not like tabs :(
+
             try {
                 auto synopsis_parsed = json::parse(synopsis);
                 synopsis = synopsis_parsed["title"].get<std::string>();
@@ -245,9 +247,10 @@ void PurchasedTab::updateContents() {
             double progress = (0.1 * received_key_parts) / total_key_parts + (0.9 * received_download_bytes) / total_download_bytes;
             progress *= 100; // Percent
             
-            if (progress != 100) {
+            if (received_download_bytes < total_download_bytes) {
                 m_pTableWidget->setItem(i, 7, new QTableWidgetItem(QString::number(progress) + "%"));
                 m_pTableWidget->item(i, 7)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+                m_pTableWidget->item(i, 7)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
             } else {
                 EButton* btn = new EButton();
                 btn->setStyleSheet("background-color: rgb(27,176,104); color: white");
@@ -291,9 +294,17 @@ void PurchasedTab::extractPackage() {
     QString sampleDir = QFileDialog::getExistingDirectory(this, tr("Select directory to extract"), "~", QFileDialog::DontResolveSymlinks);
 
     std::string key, dummy;
-    RunTask("restore_encryption_key \"" + id + "\"", key);
     
-    RunTask("extract_package \"" + hash + "\" \"" + sampleDir.toStdString() + "\" " + key, dummy);
+    try {
+        RunTask("restore_encryption_key \"" + id + "\"", key);
+    
+        RunTask("extract_package \"" + hash + "\" \"" + sampleDir.toStdString() + "\" " + key, dummy);
+        MESSAGE("Package was successfully extracted");
+        
+    } catch (const std::exception& ex) {
+        ALERT_DETAILS("Failed to extract package", ex.what());
+    }
+    
 }
 
 
