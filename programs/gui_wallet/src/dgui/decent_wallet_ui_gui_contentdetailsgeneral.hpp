@@ -19,11 +19,16 @@ namespace gui_wallet {
 
 class ContentDetailsGeneral : public ContentDetailsBase
 {
+    Q_OBJECT
 public:
     ContentDetailsGeneral();
     virtual ~ContentDetailsGeneral();
 
     virtual void execCDD(const SDigitalContent& a_cnt_details);
+
+public:
+signals:
+    void ContentWasBought();
 
 protected:
     void LabelPushCallbackGUI(void* clbkData,QMouseEvent* mouse_event);

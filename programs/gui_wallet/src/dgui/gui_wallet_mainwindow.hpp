@@ -24,6 +24,7 @@
 #include <stdarg.h>
 #include <string>
 #include <map>
+#include <decent/wallet_utility/wallet_utility.hpp>
 #include "decent_wallet_ui_gui_contentdetailsgeneral.hpp"
 
 namespace gui_wallet
@@ -49,24 +50,25 @@ namespace gui_wallet
     private:        
         
         void UpdateLockedStatus();
-
+        
         void CliCallbackFnc(void*arg,const std::string& task);
         int GetDigitalContentsFromVariant(DCT::DIG_CONT_TYPES a_type,
                                          std::vector<SDigitalContent>& acContents,
                                          const fc::variant& contents_var);
 
         void DisplayWalletContentGUI();
-
         void SetPassword(void* a_owner, void* a_str_ptr);
+        void UpdateAccountBalances(const std::string& username);
+        
+
+    protected slots:
+        void CurrentUserChangedSlot(const QString&);
+        void ContentWasBoughtSlot();
+        void CheckDownloads();
         
         
     protected slots:
-        void CurrentUserChangedSlot(const QString&);
-
-    protected slots:/* Instead of these one line slots
-                     *, probably should be used lambda functions?
-                     * Is it possible to do?
-                     */
+        
         void AboutSlot();
         void HelpSlot();
         void InfoSlot();
@@ -118,7 +120,7 @@ namespace gui_wallet
         int                     m_nError;
         std::string             m_error_string;
 
-        bool                m_locked;
+        bool                    m_locked;
 
         decent::gui::tools::RichDialog m_import_key_dlg;
 
@@ -142,10 +144,13 @@ namespace gui_wallet
 
         QString             m_default_stylesheet;
 
-        ContentDetailsGeneral m_dig_cont_detailsGenDlg;
-        ContentDetailsBase m_dig_cont_detailsBougDlg;
-
-        std::vector<std::string>        m_user_ids;
+        ContentDetailsGeneral* m_pdig_cont_detailsGenDlg;
+        ContentDetailsBase* m_pdig_cont_detailsBougDlg;
+        
+        QTimer                 _downloadChecker;
+        std::set<std::string>  _activeDownloads;
+    public:
+        decent::wallet_utility::wallet_api_ptr m_ptr_wallet_utility;
     };
 
 }

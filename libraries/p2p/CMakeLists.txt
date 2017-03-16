@@ -23,10 +23,10 @@ target_include_directories( graphene_p2p
 #  cotire(graphene_p2p )
 #endif(USE_PCH)
 
-install( TARGETS
-   graphene_p2p 
-
-   RUNTIME DESTINATION bin
-   LIBRARY DESTINATION lib
-   ARCHIVE DESTINATION lib
-)
+#install( TARGETS
+#   graphene_p2p
+#
+#   RUNTIME DESTINATION bin
+#   LIBRARY DESTINATION lib
+#   ARCHIVE DESTINATION lib
+#)

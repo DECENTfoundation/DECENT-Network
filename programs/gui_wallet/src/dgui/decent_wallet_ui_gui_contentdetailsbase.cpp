@@ -111,6 +111,7 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details)
     
 //    if(a_cnt_details.type == DCT::BOUGHT) {m_main_layout.removeWidget(&m_vSub_Widgets[4]);
     if(a_cnt_details.type == DCT::BOUGHT) {
+        
         if (stars_labels.size() == 0) {
             m_RateText = new QLabel;
             
@@ -163,8 +164,16 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details)
         
         
         
-        if (m_currentMyRating > 0) // To show stars when opened
-            MouseLeftStar(1);
+        if (m_currentMyRating > 0) { // To show stars when opened
+            for (int i = 0; i < m_currentMyRating; ++i) {
+                stars_labels[i]->setCheckState(Qt::Checked);
+            }
+            for (int i = m_currentMyRating; i < 5; ++i) {
+                stars_labels[i]->setCheckState(Qt::Unchecked);
+            }
+        }
+        
+        
     }
     
     if(a_cnt_details.type == DCT::WAITING_DELIVERY) {
@@ -193,30 +202,31 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details)
     }
     
     std::string e_str = "";
-    
     if (a_cnt_details.type == DCT::BOUGHT || a_cnt_details.type == DCT::WAITING_DELIVERY) {
-        e_str = std::to_string(m_pContentInfo->times_bougth);
+        e_str = (m_pContentInfo->expiration);
     }
     else
     {
         QDateTime time = QDateTime::fromString(QString::fromStdString(m_pContentInfo->expiration), "yyyy-MM-ddTHH:mm:ss");
         e_str = CalculateRemainingTime(QDateTime::currentDateTime(), time);
     }
-        
+    
     m_vLabels[1].setText(tr(m_pContentInfo->author.c_str()));
-    m_vLabels[3].setText(tr(e_str.c_str()));
-    std::string creat;
+        std::string creat;
     for(int i = 0; i < m_pContentInfo->created.find("T"); ++i)
     {
         creat.push_back(m_pContentInfo->created[i]);
     }
     m_vLabels[5].setText(tr(creat.c_str()));
     
+   
+    m_vLabels[3].setText(tr(creat.c_str()));
+
     
     
-    std::string str_price = std::to_string(a_cnt_details.price.amount) + " DCT";
+    QString str_price = QString::number(a_cnt_details.price.amount) + " DCT";
     
-    m_vLabels[7].setText(tr(str_price.c_str()));
+    m_vLabels[7].setText(str_price);
     
     
     

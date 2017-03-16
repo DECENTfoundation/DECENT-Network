@@ -82,6 +82,7 @@ class NewButton : public QLabel
    Q_OBJECT
 public:
     NewButton(std::string id) : m_id(id){
+        this->setMouseTracking(true);
        connect(this,SIGNAL(LabelWasClicked()),this,SLOT(ButtonPushedSlot()));
    }
 private:

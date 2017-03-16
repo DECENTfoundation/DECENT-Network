@@ -151,8 +151,8 @@ namespace graphene { namespace wallet {
          int          received_key_parts;
          int          total_download_bytes;
          int          received_download_bytes;
+         std::string  status_text;
       };
-
 
       struct signed_block_with_info : public signed_block
       {
@@ -185,9 +185,14 @@ namespace graphene { namespace wallet {
       }
 
       struct operation_detail {
-         string                   memo;
-         string                   description;
-         operation_history_object op;
+          account_id_type         from_account;
+          account_id_type         to_account;
+          string                  operation_type;
+          asset                   transaction_amount;
+          asset                   transaction_fee;
+          string                  description;
+
+          operation_history_object op;
       };
 
 /**
@@ -1430,24 +1435,21 @@ namespace graphene { namespace wallet {
           * @param price_amount The price of the content
           * @param seeders List of the seeders, which will publish the content
           * @param expiration The expiration time of the content. The content is available to buy till it's expiration time
-          * @param publishing_fee_asset Ticker symbol of the asset which will be used to publish content
-          * @param publishing_fee_amount Publishing price
           * @param synopsis The description of the content
           * @param broadcast true to broadcast the transaction on the network
           * @return The signed transaction submitting the content
           * @ingroup WalletCLI
           */
-         signed_transaction submit_content_new(string author, string content_dir, string samples_dir, string protocol, string price_asset_symbol, string price_amount, vector<account_id_type> seeders, fc::time_point_sec expiration, string publishing_fee_symbol_name, string publishing_fee_amount, string synopsis, bool broadcast = false);
+         signed_transaction submit_content_new(string author, string content_dir, string samples_dir, string protocol, string price_asset_symbol, string price_amount, vector<account_id_type> seeders, fc::time_point_sec expiration, string synopsis, bool broadcast = false);
 
          /**
           * @brief Downloads encrypted content specified by provided URI.
           * @param consumer Consumer of the content
           * @param URI The URI of the content
-          * @param content_dir Path to the directory, where downloaded content will be placed
           * @param broadcast true to broadcast the transaction on the network
           * @ingroup WalletCLI
           */
-         void download_content(string consumer, string URI, string content_dir, bool broadcast = false);
+         void download_content(string consumer, string URI, bool broadcast = false);
 
          /**
           * @brief Get status about particular download process specified by provided URI.
@@ -1771,6 +1773,7 @@ namespace graphene { namespace wallet {
 
    } }
 
+
 FC_REFLECT( graphene::wallet::plain_keys, (keys)(checksum) )
 FC_REFLECT( graphene::wallet::el_gamal_key_pair, (private_key)(public_key) )
 FC_REFLECT( graphene::wallet::wallet_data,
@@ -1791,12 +1794,13 @@ FC_REFLECT( graphene::wallet::brain_key_info,
                (pub_key)
 )
 
-FC_REFLECT (graphene::wallet::content_download_status,
-            (total_key_parts)
-               (received_key_parts)
-               (total_download_bytes)
-               (received_download_bytes)
-)
+FC_REFLECT (graphene::wallet::content_download_status, 
+              (total_key_parts)
+              (received_key_parts)
+              (total_download_bytes)
+              (received_download_bytes)
+              (status_text)
+            )
 
 FC_REFLECT( graphene::wallet::exported_account_keys, (account_name)(encrypted_private_keys)(public_keys) )
 
@@ -1818,10 +1822,14 @@ FC_REFLECT_DERIVED( graphene::wallet::vesting_balance_object_with_info, (graphen
                     (allowed_withdraw)(allowed_withdraw_time) )
 
 FC_REFLECT( graphene::wallet::operation_detail,
-            (memo)
-               (description)
-               (op)
-)
+           (from_account)
+           (to_account)
+           (operation_type)
+           (transaction_amount)
+           (transaction_fee)
+           (description)
+           (op)
+        )
 
 FC_API( graphene::wallet::wallet_api,
         (help)

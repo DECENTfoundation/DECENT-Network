@@ -25,6 +25,8 @@ ContentDetailsGeneral::ContentDetailsGeneral()
 {
     QVBoxLayout* image_layout = new QVBoxLayout;
     m_label.setText("BUY");
+    m_label.setFixedWidth(120);
+    m_label.setFixedHeight(30);
     
     image_layout->addWidget(&m_label);
     image_layout->setContentsMargins(250, 5, 250, 10);
@@ -45,9 +47,7 @@ ContentDetailsGeneral::~ContentDetailsGeneral()
 }
 
 
-void ContentDetailsGeneral::execCDD(
-        const SDigitalContent& a_cnt_details)
-{
+void ContentDetailsGeneral::execCDD(const SDigitalContent& a_cnt_details) {
     execCDB(a_cnt_details);
 }
 
@@ -57,28 +57,32 @@ void ContentDetailsGeneral::execCDD(
 void ContentDetailsGeneral::LabelPushCallbackGUI(void*,QMouseEvent* a_mouse_event)
 {
 
-    QString saveDir = QFileDialog::getExistingDirectory(this, tr("Select download directory"), "~", QFileDialog::DontResolveSymlinks);
-    if (saveDir.isEmpty()) {
+    QMessageBox::StandardButton reply;
+    reply = QMessageBox::question(this, "Please confirm", "Do you really want to buy this content?",
+                                  QMessageBox::Yes|QMessageBox::No);
+    if (reply != QMessageBox::Yes) {
         return;
     }
-
+    
     
     std::string downloadCommand = "download_content";
     downloadCommand += " " + GlobalEvents::instance().getCurrentUser();   //consumer
     downloadCommand += " \"" + m_pContentInfo->URI + "\"";                 //URI
-    downloadCommand += " \"" + saveDir.toStdString() + "\"";              //Save dir
     downloadCommand += " true";                                           //broadcast
-
-
+    
+    
     SetNewTask(downloadCommand, this, NULL, +[](void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
         if (a_err != 0) {
             ALERT("Failed to download content");
             return;
         }
-
+        
+        ContentDetailsGeneral* me = (ContentDetailsGeneral*)owner;
+        
+        me->close();
     });
     
-    
+    emit ContentWasBought();
 }
 
 

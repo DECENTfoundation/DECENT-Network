@@ -329,6 +329,7 @@ int main( int argc, char** argv )
            
            size_t i_users_get = 100;
            size_t i_users_got = 0;
+           bool b_all_accounts_have_right_amount = true;
            
            size_t i_users_already_exist = 0, i_responses = 0;
            
@@ -396,6 +397,7 @@ int main( int argc, char** argv )
                    {
                    }
                    
+                   int64_t decent_amount = 0;
                    if (false == b_user_already_exists)
                    {
                        wapiptr->create_account_with_brain_key(str_bki,
@@ -405,10 +407,32 @@ int main( int argc, char** argv )
                                                               true);
                    
                        account_newly_created = wapiptr->get_account(str_new_account_name);
+                       wapiptr->import_key(str_new_account_name, str_wif_priv_key);
+                   }
+                   else
+                   {
+                       bool b_imported = wapiptr->import_key(str_new_account_name, str_wif_priv_key);
+                       if (false == b_imported)
+                           throw main_exception("already existing user " + str_new_account_name + " does not match the private key stored in db");
+                       
+                       vector<asset> arr_balances = wapiptr->list_account_balances(str_new_account_name);
+                       for (asset const& it : arr_balances)
+                       {
+                           int64_t decents = it.amount.value;
+                           decent_amount += decents;
+                       }
+                       
+                       if (arr_balances.size() > 1)
+                           throw main_exception("already existing user " + str_new_account_name + " has many assets");
+                       
+                       decent_amount /= 100000000;
+                       
+                       if (decent_amount != transfer_amount)
+                           b_all_accounts_have_right_amount = false;
                    }
                    
-                   if (b_post_back ||
-                       b_user_already_exists)
+                   if (b_post_back &&
+                       false == b_user_already_exists)
                    {
                        curl_test_func("https://api.decent.ch/v1.0/subscribers/" +
                                       str_user_id,
@@ -425,7 +449,8 @@ int main( int argc, char** argv )
                        }
                    }
                    
-                   //if (false == b_user_already_exists)
+                   if (false == b_user_already_exists ||
+                       0 == decent_amount)
                    {
                        wapiptr->transfer(account_id(account_registrar),
                                          account_id(account_newly_created),
@@ -442,6 +467,8 @@ int main( int argc, char** argv )
                    break;
            }
 
+           if (b_all_accounts_have_right_amount)
+               cout << "all accounts have the right amount\n";
            cout << endl;
            cout << "DONE!!!\n";
        }

@@ -10,10 +10,10 @@ endif()
 target_link_libraries( debug_node
                        PRIVATE graphene_app graphene_account_history graphene_market_history graphene_witness graphene_debug_witness graphene_chain graphene_egenesis_full fc ${CMAKE_DL_LIBS} ${PLATFORM_SPECIFIC_LIBS} )
 
-install( TARGETS
-   debug_node
-
-   RUNTIME DESTINATION bin
-   LIBRARY DESTINATION lib
-   ARCHIVE DESTINATION lib
-)
+#install( TARGETS
+#   debug_node
+#
+#   RUNTIME DESTINATION bin
+#   LIBRARY DESTINATION lib
+#   ARCHIVE DESTINATION lib
+#)
