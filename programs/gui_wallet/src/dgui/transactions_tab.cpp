@@ -72,17 +72,7 @@ Transactions_tab::Transactions_tab() : green_row(0)
     user.setMaximumHeight(40);
     user.setFixedHeight(40);
     user.setFrame(false);
-    
 
-//    for (int i = 0; i < numTransactionCols; ++i)
-//    {
-//        tablewidget->setItem(0, i, new QTableWidgetItem(tr(firsItemNames[i])));
-//        tablewidget->item(0, i)->setFont(f);
-//        tablewidget->item(0, i)->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
-//        tablewidget->item(0, i)->setBackground(QColor(228,227,228));
-//        tablewidget->item(0, i)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
-//        tablewidget->item(0, i)->setForeground(QColor::fromRgb(51,51,51));
-//    }
 
     connect(tablewidget,SIGNAL(mouseMoveEventDid()),this,SLOT(doRowColor()));
 
@@ -91,9 +81,7 @@ Transactions_tab::Transactions_tab() : green_row(0)
     search_label.setSizeIncrement(100,40);
     search_label.setPixmap(image);
 
-    search_lay->addWidget(new QLabel());
-    search_lay->addWidget(new QLabel());
-    search_lay->addWidget(new QLabel());
+    search_lay->setContentsMargins(42, 0, 0, 0);
     search_lay->addWidget(&search_label);
     search_lay->addWidget(&user);
 

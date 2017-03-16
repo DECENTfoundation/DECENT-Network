@@ -67,9 +67,7 @@ Browse_content_tab::Browse_content_tab() : m_pTableWidget(new BTableWidget(0,s_c
     m_filterLineEdit.setStyleSheet("border: 1px solid white");
     m_filterLineEdit.setAttribute(Qt::WA_MacShowFocusRect, 0);
     
-    m_search_layout.addWidget(new QLabel());
-    m_search_layout.addWidget(new QLabel());
-    m_search_layout.addWidget(new QLabel());
+    m_search_layout.setContentsMargins(42, 0, 0, 0);
     m_search_layout.addWidget(lab);
     m_search_layout.addWidget(&m_filterLineEdit);
     
@@ -307,7 +305,6 @@ void Browse_content_tab::ShowDigitalContentsGUI(std::vector<SDigitalContent>& co
     Connects();
     
     m_pTableWidget->horizontalHeader()->setStretchLastSection(true);
-//    m_pTableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     ArrangeSize();
 }
 
@@ -321,11 +318,10 @@ void Browse_content_tab::ArrangeSize()
     QSize tqs_TableSize = m_pTableWidget->size();
     m_pTableWidget->setColumnWidth(0,(tqs_TableSize.width()*10)/100);
     m_pTableWidget->setColumnWidth(1,(tqs_TableSize.width()*20)/100);
-    m_pTableWidget->setColumnWidth(2,(tqs_TableSize.width()*14)/100);
-    m_pTableWidget->setColumnWidth(3,(tqs_TableSize.width()*14)/100);
-    m_pTableWidget->setColumnWidth(4,(tqs_TableSize.width()*14)/100);
-    m_pTableWidget->setColumnWidth(5,(tqs_TableSize.width()*14)/100);
-    m_pTableWidget->setColumnWidth(6,(tqs_TableSize.width()*14)/100);
+    for(int i = 2; i < 7; ++i)
+    {
+        m_pTableWidget->setColumnWidth(i,(tqs_TableSize.width()*14)/100);
+    }
 }
 
 
@@ -349,19 +345,11 @@ void Browse_content_tab::doRowColor()
     if(green_row >= 0)
     {
         m_pTableWidget->cellWidget(green_row , 0)->setStyleSheet("* { background-color: rgb(255,255,255); color : white; }");
-        m_pTableWidget->item(green_row,1)->setBackgroundColor(QColor(255,255,255));
-        m_pTableWidget->item(green_row,2)->setBackgroundColor(QColor(255,255,255));
-        m_pTableWidget->item(green_row,3)->setBackgroundColor(QColor(255,255,255));
-        m_pTableWidget->item(green_row,4)->setBackgroundColor(QColor(255,255,255));
-        m_pTableWidget->item(green_row,5)->setBackgroundColor(QColor(255,255,255));
-        m_pTableWidget->item(green_row,6)->setBackgroundColor(QColor(255,255,255));
-        
-        m_pTableWidget->item(green_row,1)->setForeground(QColor::fromRgb(0,0,0));
-        m_pTableWidget->item(green_row,2)->setForeground(QColor::fromRgb(0,0,0));
-        m_pTableWidget->item(green_row,3)->setForeground(QColor::fromRgb(0,0,0));
-        m_pTableWidget->item(green_row,4)->setForeground(QColor::fromRgb(0,0,0));
-        m_pTableWidget->item(green_row,5)->setForeground(QColor::fromRgb(0,0,0));
-        m_pTableWidget->item(green_row,6)->setForeground(QColor::fromRgb(0,0,0));
+        for(int i = 1; i < 7; ++i)
+        {
+            m_pTableWidget->item(green_row,i)->setBackgroundColor(QColor(255,255,255));
+            m_pTableWidget->item(green_row,i)->setForeground(QColor::fromRgb(0,0,0));
+        }
     }
     QPoint mouse_pos = m_pTableWidget->mapFromGlobal(QCursor::pos());
     if(mouse_pos.x() > 0 && mouse_pos.x() < 400)
@@ -374,20 +362,15 @@ void Browse_content_tab::doRowColor()
     {
         int row = ite->row();
         if(row < 0) {return;}
-            m_pTableWidget->cellWidget(row , 0)->setStyleSheet("* { background-color: rgb(27,176,104); color : white; }");
-            m_pTableWidget->item(row,1)->setBackgroundColor(QColor(27,176,104));
-            m_pTableWidget->item(row,2)->setBackgroundColor(QColor(27,176,104));
-            m_pTableWidget->item(row,3)->setBackgroundColor(QColor(27,176,104));
-            m_pTableWidget->item(row,4)->setBackgroundColor(QColor(27,176,104));
-            m_pTableWidget->item(row,5)->setBackgroundColor(QColor(27,176,104));
-            m_pTableWidget->item(row,6)->setBackgroundColor(QColor(27,176,104));
-            
-            m_pTableWidget->item(row,1)->setForeground(QColor::fromRgb(255,255,255));
-            m_pTableWidget->item(row,2)->setForeground(QColor::fromRgb(255,255,255));
-            m_pTableWidget->item(row,3)->setForeground(QColor::fromRgb(255,255,255));
-            m_pTableWidget->item(row,4)->setForeground(QColor::fromRgb(255,255,255));
-            m_pTableWidget->item(row,5)->setForeground(QColor::fromRgb(255,255,255));
-            m_pTableWidget->item(row,6)->setForeground(QColor::fromRgb(255,255,255));
+        
+        m_pTableWidget->cellWidget(row , 0)->setStyleSheet("* { background-color: rgb(27,176,104); color : white; }");
+        
+        for(int i = 1; i < 7; ++i)
+        {
+            m_pTableWidget->item(row,i)->setBackgroundColor(QColor(27,176,104));
+            m_pTableWidget->item(row,i)->setForeground(QColor::fromRgb(255,255,255));
+        }
+
             green_row = row;
     }
     else

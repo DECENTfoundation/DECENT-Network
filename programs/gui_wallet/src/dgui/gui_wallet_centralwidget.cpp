@@ -249,7 +249,7 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     pLabelTmp->setScaledContents(true);
 
     QPixmap m_image1(":/icon/images/decent_logo.svg");
-    pHBoxLayoutTmp->setContentsMargins(0, 0, 0, 100);
+    pHBoxLayoutTmp->setContentsMargins(0, 0, 0, 90);
     pLabelTmp->setPixmap(m_image1);
     pHBoxLayoutTmp->addWidget(pLabelTmp);
     
@@ -422,7 +422,8 @@ void CentralWigdet::resizeEvent ( QResizeEvent * a_event )
     int nWidth_medium (size().width()*38/100);
     m_pDcLogoWgt->resize(nWidth_small,m_pDcLogoWgt->height());
     m_pUsernameWgt->resize(nWidth_big,m_pUsernameWgt->height());
-    m_pBalanceWgt1->resize(nWidth_medium,m_pBalanceWgt1->height());
+    //m_pBalanceWgt1->resize(nWidth_medium,m_pBalanceWgt1->height());
+    m_pBalanceWgt1->setMinimumSize(nWidth_medium,m_pBalanceWgt1->size().height());
 
 }
 

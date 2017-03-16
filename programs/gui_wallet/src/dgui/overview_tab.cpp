@@ -25,17 +25,8 @@ Overview_tab::Overview_tab(class Mainwindow_gui_wallet* a_pPar)
     : m_pPar(a_pPar)
 {
     table_widget.setColumnCount(4);
-    //table_widget.setRowCount(0);
     table_widget.setSelectionMode(QAbstractItemView::NoSelection);
 
-
-//    QSize tqsTableSize = table_widget.size();
-//    table_widget.setColumnWidth(0,(tqsTableSize.width()*18)/100);
-//    table_widget.setColumnWidth(1,(tqsTableSize.width()*50)/100);
-//    table_widget.setColumnWidth(2,(tqsTableSize.width()*17)/100);
-//    table_widget.setColumnWidth(3,(tqsTableSize.width()*15)/100);
-
-    //table_widget.setRowHeight(0,35);
     table_widget.setStyleSheet("QTableView{border : 1px solid lightGray}");
 
     QFont font( "Open Sans Bold", 14, QFont::Bold);
@@ -75,16 +66,13 @@ Overview_tab::Overview_tab(class Mainwindow_gui_wallet* a_pPar)
     search.setFixedHeight(40);
 
 
-    search_lay->addWidget(new QLabel());
-    search_lay->addWidget(new QLabel());
-    search_lay->addWidget(new QLabel());
+    search_lay->setContentsMargins(42, 0, 0, 0);
     search_lay->addWidget(&search_label);
     search_lay->addWidget(&search);
 
 
 
     main->addLayout(search_lay);
-    //main->addWidget(&search);
     main->addWidget(&table_widget);
 
     setLayout(main);
