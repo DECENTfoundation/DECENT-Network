@@ -1421,7 +1421,7 @@ namespace graphene { namespace wallet {
          submit_content(string author, string URI, string price_asset_name, string price_amount, uint64_t size,
                         fc::ripemd160 hash, vector<account_id_type> seeders, uint32_t quorum, fc::time_point_sec expiration,
                         string publishing_fee_asset, string publishing_fee_amount, string synopsis, d_integer secret,
-                        decent::crypto::custody_data cd, bool broadcast);
+                        decent::encrypt::custody_data cd, bool broadcast);
          /**
           * @brief This function is used to create package, upload package and submit content in one step.
           * @see create_package()
@@ -1719,7 +1719,7 @@ namespace graphene { namespace wallet {
           * @return package hash (ripemd160 hash of package content) and content custody data
           * @ingroup WalletCLI
           */
-         std::pair<string, decent::crypto::custody_data> create_package(const std::string& content_dir, const std::string& samples_dir, const d_integer& aes_key) const;
+         std::pair<string, decent::encrypt::custody_data> create_package(const std::string& content_dir, const std::string& samples_dir, const d_integer& aes_key) const;
 
          /**
           * @brief Extract selected package
