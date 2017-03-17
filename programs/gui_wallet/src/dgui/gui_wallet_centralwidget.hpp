@@ -117,7 +117,6 @@ private:
     QHBoxLayout         m_first_line_lbl;
 
     
-    
     Mainwindow_gui_wallet* m_parent_main_window;
     
     QTabWidget          m_main_tabs;

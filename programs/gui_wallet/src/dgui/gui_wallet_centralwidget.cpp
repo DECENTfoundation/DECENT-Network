@@ -328,7 +328,7 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     m_first_line_lbl.addWidget(m_pBalanceWgt1);
     pHBoxLayoutTmp->setContentsMargins(400, 0, 0, 0);
     m_pBalanceWgt1->setFixedHeight(__HEIGHT__);
-
+    //m_pBalanceWgt1->setFixedWidth(m_pBalanceWgt1->size().width() - 30);
  
     
     m_browse_cont_tab.setStyleSheet("color: black;""background-color:white;");
@@ -341,8 +341,22 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
 
 
     m_main_layout.addLayout(&m_first_line_lbl);
+    
+    line = new QFrame(this);
+    line->setFrameShape(QFrame::HLine);
+    line->setLineWidth(500);
+    line->setStyleSheet("color: #f0f0f0");
+    line->setFixedHeight(1);
 
-    m_main_layout.addWidget(&m_main_tabs);
+    
+    m_main_layout.addWidget(line);
+    QHBoxLayout* tab_lay = new QHBoxLayout();
+    tab_lay->addWidget(&m_main_tabs);
+    tab_lay->activate();
+    tab_lay->setContentsMargins(0, 0, 0, 0);
+    m_main_layout.addLayout(tab_lay);
+    //m_main_layout.addWidget(&m_main_tabs);
+    
 
     a_pAllLayout->addLayout(&m_main_layout);
     
@@ -402,28 +416,44 @@ void CentralWigdet::make_deleyed_warning()
 
 void CentralWigdet::resizeEvent ( QResizeEvent * a_event )
 {
-    //return ;
     QWidget::resizeEvent(a_event);
     
     int each_width = m_parent_main_window->size().width()/5-3;
     QString s = QString::number(each_width);
-    m_main_tabs.setStyleSheet("QTabBar::tab{"
-                              " height: 40px; min-width: " + s + "px;"
-                              "color:rgb(27,176,104);background-color:white;"
-                              "border-left: 1 solid rgb(240,240,240);"
-                              "border-top: 1 solid rgb(240,240,240);"
-                              "border-bottom: 1 solid rgb(240,240,240);}"
-                              "QTabBar::tab:selected{"
-                              "color:white;background-color:rgb(27,176,104);}"
-                              );
+    if(a_event->oldSize().width() > a_event->size().width())
+    {
+        s = QString::number(each_width - 11);
+        m_main_tabs.setStyleSheet("QTabBar::tab{"
+                                  " height: 40px; width: " + s + "px;"
+                                  "color:rgb(27,176,104);background-color:white;"
+                                  "border-left: 1 solid rgb(240,240,240);"
+                                  "border-top: 1 solid rgb(240,240,240);"
+                                  "border-bottom: 1 solid rgb(240,240,240);}"
+                                  "QTabBar::tab:selected{"
+                                  "color:white;background-color:rgb(27,176,104);}"
+                                  );
+    }
+    else
+    {
+        m_main_tabs.setStyleSheet("QTabBar::tab{"
+                                  " height: 40px; width: " + s + "px;"
+                                  "color:rgb(27,176,104);background-color:white;"
+                                  "border-left: 1 solid rgb(240,240,240);"
+                                  "border-top: 1 solid rgb(240,240,240);"
+                                  "border-bottom: 1 solid rgb(240,240,240);}"
+                                  "QTabBar::tab:selected{"
+                                  "color:white;background-color:rgb(27,176,104);}"
+                                  );
+    }
 
-    int nWidth_small (size().width()*13/100);
-    int nWidth_big (size().width()*28/100);
-    int nWidth_medium (size().width()*38/100);
-    m_pDcLogoWgt->resize(nWidth_small,m_pDcLogoWgt->height());
-    m_pUsernameWgt->resize(nWidth_big,m_pUsernameWgt->height());
-    //m_pBalanceWgt1->resize(nWidth_medium,m_pBalanceWgt1->height());
-    m_pBalanceWgt1->setMinimumSize(nWidth_medium,m_pBalanceWgt1->size().height());
+
+
+    //int nWidth_small (size().width()*13/100);
+    //int nWidth_big (size().width()*28/100);
+    //int nWidth_medium (size().width()*38/100);
+    //m_pDcLogoWgt->resize(nWidth_small,m_pDcLogoWgt->height());
+    //m_pUsernameWgt->resize(nWidth_big,m_pUsernameWgt->height());
+    //m_pBalanceWgt1->setMaximumSize(m_pBalanceWgt1->size().width() - 30,m_pBalanceWgt1->size().height());
 
 }
 

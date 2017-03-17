@@ -136,7 +136,12 @@ void Browse_content_tab::PrepareTableWidgetHeaderGUI()
     m_TableWidget.setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     m_TableWidget.setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     m_TableWidget.setSelectionMode(QAbstractItemView::NoSelection);
-
+    
+    m_TableWidget.horizontalHeader()->setStyleSheet("QHeaderView::section {"
+                                                   "border-right: 1px solid rgb(193,192,193);"
+                                                   "border-bottom: 0px;"
+                                                   "border-top: 0px;}");
+    
     Connects();
     ArrangeSize();
 }

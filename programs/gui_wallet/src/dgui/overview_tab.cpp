@@ -44,6 +44,10 @@ Overview_tab::Overview_tab(class Mainwindow_gui_wallet* a_pPar)
     table_widget.setStyleSheet(("gridline-color: rgb(228,227,228));"));
     table_widget.setStyleSheet("QTableView{border : 0px}");
     table_widget.horizontalHeader()->setStretchLastSection(true);
+    table_widget.horizontalHeader()->setStyleSheet("QHeaderView::section {"
+                                                   "border-right: 1px solid rgb(193,192,193);"
+                                                   "border-bottom: 0px;"
+                                                   "border-top: 0px;}");
 
 
 
@@ -149,10 +153,15 @@ void Overview_tab::updateContents() {
         connect(transaction, SIGNAL(mouseWasMoved()), this , SLOT(doRowColor()));
         
         
+//        QHBoxLayout* buttons_layout = new QHBoxLayout();
+//        buttons_layout->addWidget(transaction);
+//        buttons_layout->addWidget(transfer);
+        
         table_widget.setItem(i, 1, new QTableWidgetItem(QString::fromStdString(content[0].get<std::string>())));
         table_widget.setItem(i, 0, new QTableWidgetItem(QString::fromStdString(content[1].get<std::string>())));
         table_widget.setCellWidget(i, 2, transaction);
         table_widget.setCellWidget(i, 3, transfer);
+        //table_widgetsetCellWidget(i, 2, buttons_layout);
         
         table_widget.setRowHeight(i,40);
         table_widget.cellWidget(i, 2)->setStyleSheet("* { background-color: rgb(255,255,255); color : rgb(27,176,104); }");
