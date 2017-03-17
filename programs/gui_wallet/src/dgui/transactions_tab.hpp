@@ -1,17 +1,7 @@
-/*
- *	File      : transactions_tab.hpp
- *
- *	Created on: 21 Nov 2016
- *	Created by: Davit Kalantaryan (Email: davit.kalantaryan@desy.de)
- *
- *  This file implements ...
- *
- */
-#ifndef TRANSACTIONS_TAB_HPP
-#define TRANSACTIONS_TAB_HPP
+
+#pragma once
 
 #include <QWidget>
-#include <iostream>
 #include <QTableWidget>
 #include <QTableWidgetItem>
 #include <QVBoxLayout>
@@ -27,20 +17,30 @@
 #include <QMouseEvent>
 #include <QTimer>
 
+#include <iostream>
+#include <vector>
+
 #include "gui_wallet_tabcontentmanager.hpp"
 
 
 
 class HTableWidget : public QTableWidget
 {
-    Q_OBJECT
+   Q_OBJECT
 public:
-    HTableWidget();
-
-    virtual void mouseMoveEvent(QMouseEvent * event);
+   HTableWidget() : QTableWidget() {
+      this->setMouseTracking(true);
+   }
+   
+   
+   virtual void mouseMoveEvent(QMouseEvent *event) {
+      mouseMoveEventDid();
+   }
+   
+   
 public:
 signals:
-    void mouseMoveEventDid();
+   void mouseMoveEventDid();
 };
 
 
@@ -48,48 +48,50 @@ signals:
 
 namespace gui_wallet
 {
-    class Transactions_tab : public TabContentManager
-    {
-
-        Q_OBJECT
-    public:
-        Transactions_tab();
-        ~Transactions_tab();
-
-        QVBoxLayout main_layout;
-        QLabel search_label;
-        HTableWidget* tablewidget;
-        QTableWidgetItem* itm;
-        QPushButton* more;
-        QLineEdit user;
-        int green_row;
-        void createNewRow();
-
-        void ArrangeSize();
-        void Connects();
-        
-        void SetInfo(std::string info_from_overview);
-        
-    public:
-        virtual void content_activated() {}
-        virtual void content_deactivated() {}
-        virtual void resizeEvent(QResizeEvent *a_event);
-    private:
-        std::string getAccountName(std::string accountId);
-
-    public slots:
-        void doRowColor();
-        void onTextChanged(const QString& text);
-        void updateContents();
-        void maybeUpdateContent();
-
-    private:
-        QTimer  m_contentUpdateTimer;
-        bool m_doUpdate = true;
-        
-        std::map<std::string, std::string> _userIdCache;
-    };
+   class TransactionsTab : public TabContentManager {
+      
+      Q_OBJECT
+   public:
+      TransactionsTab();
+      ~TransactionsTab();
+      
+      virtual void content_activated() {}
+      virtual void content_deactivated() {}
+      virtual void resizeEvent(QResizeEvent *a_event);
+      
+      void createNewRow();
+      void ArrangeSize();
+      void Connects();
+      
+      void SetInfo(std::string info_from_overview);
+      
+   public:
+      QVBoxLayout       main_layout;
+      QLabel            search_label;
+      HTableWidget*     tablewidget;
+      QTableWidgetItem* itm;
+      QPushButton*      more;
+      QLineEdit         user;
+      int               green_row;
+      
+   private:
+      std::string getAccountName(std::string accountId);
+      
+   public slots:
+      
+      void doRowColor();
+      void onTextChanged(const QString& text);
+      void updateContents();
+      void maybeUpdateContent();
+      void currentUserChanged(std::string user);
+      
+   private:
+      QTimer   m_contentUpdateTimer;
+      bool     m_doUpdate = true;
+      
+      std::map<std::string, std::string> _user_id_cache;
+      
+      const std::vector<std::string> _table_columns = { "Type", "From", "To", "Amount", "Fee", "Description" };
+   };
 }
 
-
-#endif // TRANSACTIONS_TAB_HPP
