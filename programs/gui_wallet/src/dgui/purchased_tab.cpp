@@ -337,6 +337,10 @@ void PurchasedTab::PrepareTableWidgetHeaderGUI()
     {
         connect((PButton*)m_pTableWidget->cellWidget(i,0),SIGNAL(mouseWasMoved()),this,SLOT(doRowColor()));
     }
+    m_pTableWidget->horizontalHeader()->setStyleSheet("QHeaderView::section {"
+                                                   "border-right: 1px solid rgb(193,192,193);"
+                                                   "border-bottom: 0px;"
+                                                   "border-top: 0px;}");
 }
 
 
@@ -345,7 +349,7 @@ void PurchasedTab::ArrangeSize()
 {
     QSize tqsTableSize = m_pTableWidget->size();
 
-    m_pTableWidget->setStyleSheet("QTableView{border : 1px solid lightGray}");
+    m_pTableWidget->setStyleSheet("QTableView{border : 0px}");
     m_pTableWidget->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     m_pTableWidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     
