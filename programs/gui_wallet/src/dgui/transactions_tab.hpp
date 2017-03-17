@@ -21,29 +21,7 @@
 #include <vector>
 
 #include "gui_wallet_tabcontentmanager.hpp"
-
-
-
-class HTableWidget : public QTableWidget
-{
-   Q_OBJECT
-public:
-   HTableWidget() : QTableWidget() {
-      this->setMouseTracking(true);
-   }
-   
-   
-   virtual void mouseMoveEvent(QMouseEvent *event) {
-      mouseMoveEventDid();
-   }
-   
-   
-public:
-signals:
-   void mouseMoveEventDid();
-};
-
-
+#include "gui_wallet_global.hpp"
 
 
 namespace gui_wallet
@@ -68,9 +46,7 @@ namespace gui_wallet
    public:
       QVBoxLayout       main_layout;
       QLabel            search_label;
-      HTableWidget*     tablewidget;
-      QTableWidgetItem* itm;
-      QPushButton*      more;
+      DecentTable*      tablewidget;
       QLineEdit         user;
       int               green_row;
       
@@ -79,7 +55,7 @@ namespace gui_wallet
       
    public slots:
       
-      void doRowColor();
+      void hightlight_row(QPoint point);
       void onTextChanged(const QString& text);
       void updateContents();
       void maybeUpdateContent();

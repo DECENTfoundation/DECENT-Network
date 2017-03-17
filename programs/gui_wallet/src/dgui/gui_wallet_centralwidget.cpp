@@ -89,36 +89,6 @@ void AccountBalanceWidget::addItem(const std::string& a_balance)
     }
 }
 
-QString CentralWigdet::FilterStr()
-{
-    int nCurTab(m_main_tabs.currentIndex());
-
-    switch(nCurTab)
-    {
-    case BROWSE_CONTENT:
-        return m_browse_cont_tab.m_filterLineEdit.text();
-        break;
-    case TRANSACTIONS:
-        return m_trans_tab.user.text();
-        break;
-    case UPLOAD:
-        return 0;
-        break;
-    case OVERVIEW:
-    {
-        return m_Overview_tab.search.text();
-        break;
-    }
-    case PURCHASED:
-        return 0;
-        break;
-    default:
-        break;
-    }
-    return tr("");
-}
-
-
 void AccountBalanceWidget::setCurrentIndex(int a_nIndex)
 {
     //__DEBUG_APP2__(0," ");

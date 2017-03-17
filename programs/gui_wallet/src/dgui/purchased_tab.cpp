@@ -15,7 +15,6 @@
 #include <iostream>
 #include <graphene/chain/config.hpp>
 #include "json.hpp"
-#include "gui_wallet_global.hpp"
 #include <QMessageBox>
 
 
@@ -109,6 +108,11 @@ void PurchasedTab::updateContents() {
          
       }
       
+      QPixmap info_image(":/icon/images/info1.svg");
+      
+      _current_content.clear();
+      _current_content.reserve(contents.size());
+      
       for (int i = 0; i < contents.size(); ++i) {
          
          auto content = contents[i];
@@ -140,8 +144,9 @@ void PurchasedTab::updateContents() {
          std::string expiration_or_delivery_time = contents[i]["expiration_or_delivery_time"].get<std::string>();
          std::string URI = contents[i]["URI"].get<std::string>();
          
+         _current_content.push_back(SDigitalContent());
+         SDigitalContent& contentObject = _current_content.back();
          
-         SDigitalContent contentObject;
          std::string dcresult;
          RunTask("get_content \"" + URI + "\"", dcresult);
          
@@ -179,11 +184,15 @@ void PurchasedTab::updateContents() {
          
          
          m_pTableWidget->horizontalHeader()->setStretchLastSection(true);
-         m_pTableWidget->setCellWidget(i, 0, new TableWidgetItemW<PButton>(contentObject, this, NULL, &PurchasedTab::DigContCallback, tr("")));
          
-         QPixmap image1(":/icon/images/info1.svg");
-         ((PButton*)m_pTableWidget->cellWidget(i,0))->setPixmap(image1);
-         ((PButton*)m_pTableWidget->cellWidget(i,0))->setAlignment(Qt::AlignCenter);
+         
+         EventPassthrough<ClickableLabel>* info_icon = new EventPassthrough<ClickableLabel>();
+         info_icon->setProperty("id", QVariant::fromValue(i));
+         info_icon->setPixmap(info_image);
+         info_icon->setAlignment(Qt::AlignCenter);
+         connect(info_icon, SIGNAL(clicked()), this, SLOT(show_content_popup()));
+         m_pTableWidget->setCellWidget(i, 0, info_icon);
+         
          
          m_pTableWidget->setItem(i, 1, new QTableWidgetItem(QString::fromStdString(synopsis)));
          m_pTableWidget->setItem(i, 2, new QTableWidgetItem(QString::number(rating)));
@@ -235,7 +244,8 @@ void PurchasedTab::updateContents() {
             m_pTableWidget->item(i, 7)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
             m_pTableWidget->item(i, 7)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
          } else {
-            EButton* btn = new EButton();
+            EventPassthrough<QPushButton>* btn = new EventPassthrough<QPushButton>();
+            
             btn->setStyleSheet("background-color: rgb(27,176,104); color: white");
             btn->setText("Extract");
             btn->setProperty("id", QVariant::fromValue(QString::fromStdString(content["id"].get<std::string>())));
@@ -271,14 +281,17 @@ void PurchasedTab::extractPackage() {
    std::string URI = btn->property("URI").toString().toStdString();
    std::string hash = btn->property("hash").toString().toStdString();
    
-   QString sampleDir = QFileDialog::getExistingDirectory(this, tr("Select directory to extract"), "~", QFileDialog::DontResolveSymlinks);
+   QString extract_dir = QFileDialog::getExistingDirectory(this, tr("Select directory to extract"), "~", QFileDialog::DontResolveSymlinks);
+   if (extract_dir.isEmpty()) {
+      return;
+   }
    
    std::string key, dummy;
    
    try {
       RunTask("restore_encryption_key \"" + id + "\"", key);
       
-      RunTask("extract_package \"" + hash + "\" \"" + sampleDir.toStdString() + "\" " + key, dummy);
+      RunTask("extract_package \"" + hash + "\" \"" + extract_dir.toStdString() + "\" " + key, dummy);
       MESSAGE("Package was successfully extracted");
       
    } catch (const std::exception& ex) {
@@ -288,10 +301,16 @@ void PurchasedTab::extractPackage() {
 }
 
 
-void PurchasedTab::DigContCallback(_NEEDED_ARGS2_)
-{
-   emit ShowDetailsOnDigContentSig(*a_pDigContent);
+void PurchasedTab::show_content_popup() {
+   QPushButton* btn = (QPushButton*)sender();
+   int id = btn->property("id").toInt();
+   if (id < 0 || id >= _current_content.size()) {
+      throw std::out_of_range("Content index is our of range");
+   }
+   
+   emit ShowDetailsOnDigContentSig(_current_content[id]);
 }
+
 
 
 PurchasedTab::~PurchasedTab()
@@ -363,7 +382,7 @@ void PurchasedTab::hightlight_row(QPoint point)
          }
       }
       
-      EButton* button_type = qobject_cast<EButton*>(m_pTableWidget->cellWidget(i, _column_names.size()));
+      QPushButton* button_type = qobject_cast<QPushButton*>(m_pTableWidget->cellWidget(i, _column_names.size()));
       
       if ( NULL == button_type ) {
          if(m_pTableWidget->item(i,_column_names.size()) != NULL) {

@@ -73,7 +73,7 @@ public:
     void SetAccountBalancesFromStrGUI(const std::vector<std::string>& a_balances_and_names);
     void AddNewUserGUI(const std::string& user_name);
     
-    Browse_content_tab* GetBrowseContentTab() { return &m_browse_cont_tab; }
+    BrowseContentTab* GetBrowseContentTab() { return &m_browse_cont_tab; }
     PurchasedTab* GetPurchasedTab() { return &m_Purchased_tab; }
     
     
@@ -91,9 +91,7 @@ public:
     void SetMyCurrentTabIndex(int index) {
         m_main_tabs.setCurrentIndex(index);
     }
-    
-    QString FilterStr();
-    
+   
     void initTabChanged();
     
     void SetTransactionInfo(std::string info_from_other_tab);
@@ -121,7 +119,7 @@ private:
     
     QTabWidget          m_main_tabs;
     
-    Browse_content_tab  m_browse_cont_tab;
+    BrowseContentTab    m_browse_cont_tab;
     TransactionsTab     m_trans_tab;
     Upload_tab          m_Upload_tab;
     Overview_tab        m_Overview_tab;

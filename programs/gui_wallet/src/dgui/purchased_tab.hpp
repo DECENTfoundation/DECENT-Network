@@ -13,7 +13,6 @@
 #define DECENT_WALLET_UI_GUI_PURCHASEDTAB_HPP
 
 #include <QWidget>
-#include <string>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QTableWidget>
@@ -21,8 +20,12 @@
 #include <QLineEdit>
 #include <QTimer>
 #include <QPushButton>
+
 #include "qt_commonheader.hpp"
 #include "gui_wallet_tabcontentmanager.hpp"
+#include "gui_wallet_global.hpp"
+
+#include <string>
 #include <iostream>
 
 class P_TableWidget : public QTableWidget
@@ -44,45 +47,6 @@ signals:
 
 
 
-class PButton : public QLabel
-{
-   Q_OBJECT
-public:
-   PButton() : QLabel() {
-      setMouseTracking(true);
-   }
-   
-   PButton(QString str) : QLabel(str) {
-      setMouseTracking(true);
-   }
-
-public:
-   bool event(QEvent *event){
-      if (event->type() == QEvent::MouseMove)
-         return false;
-      else
-         return QWidget::event(event);
-   }
-
-};
-
-class EButton : public QPushButton
-{
-   Q_OBJECT
-public:
-   EButton(){
-      this->setMouseTracking(true);
-   }
-   
-   bool event(QEvent *event){
-      if (event->type() == QEvent::MouseMove)
-         return false;
-      else
-         return QWidget::event(event);
-   }
-
-};
-
 namespace gui_wallet {
    
    
@@ -91,10 +55,8 @@ namespace gui_wallet {
    class PurchasedTab : public TabContentManager
    {
       
-      friend class CentralWigdet;
-      friend class Mainwindow_gui_wallet;
-      Q_OBJECT
-      
+      Q_OBJECT;
+            
    public:
       PurchasedTab();
       virtual ~PurchasedTab();
@@ -115,7 +77,6 @@ namespace gui_wallet {
       
    protected:
       void PrepareTableWidgetHeaderGUI();
-      void DigContCallback(_NEEDED_ARGS2_);
       virtual void resizeEvent ( QResizeEvent * a_event );
       void ArrangeSize();
       
@@ -126,12 +87,15 @@ namespace gui_wallet {
       void maybeUpdateContent();
       void extractPackage();
       
+      void show_content_popup();
+      
       
    private:
       QTimer        m_contentUpdateTimer;
       bool          m_doUpdate = true;
       std::string   last_contents;
       
+      std::vector<SDigitalContent>   _current_content;
       const std::vector<std::string> _column_names = {" ", "Title", "Rating", "Size", "Price", "Created", "Status", "Progress"};
       
       

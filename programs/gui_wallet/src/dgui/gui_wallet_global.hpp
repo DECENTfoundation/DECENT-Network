@@ -15,7 +15,14 @@
 #include <QObject>
 #include <QDateTime>
 #include <QDate>
+#include <QEvent>
 #include <QTime>
+#include <QWidget>
+#include <QLabel>
+#include <QTableWidget>
+#include <QMouseEvent>
+
+
 #include <numeric>
 
 #define ALERT(message)                                  \
@@ -310,6 +317,70 @@ namespace gui_wallet
 	    void currentUserChanged(std::string user);
 
 	};
+
+   
+   
+   // This is helper class that allows to passthrough mousemove events to parent widget.
+   // Useful when highlighting rows in tableview
+   template<class QTType>
+   class EventPassthrough : public QTType {
+      
+   public:
+      template<class... Args>
+      EventPassthrough(const Args&... args) : QTType(args...) {
+         this->setMouseTracking(true);
+      }
+      
+      bool event(QEvent *event){
+         if (event->type() == QEvent::MouseMove)
+            return false;
+         else
+            return QWidget::event(event);
+      }
+   };
+   
+   // QLabel with clicked() signal implemented
+   
+   class ClickableLabel : public QLabel {
+      Q_OBJECT;
+   public:
+      template<class... Args>
+      ClickableLabel(const Args&... args) : QLabel(args...) {
+      }
+      
+      
+   signals:
+      void clicked();
+      
+   protected:
+      void mousePressEvent(QMouseEvent* event) {
+         emit clicked();
+      }
+   };
+   
+   
+   // Table with additional functionality to use in our GUI
+   class DecentTable : public QTableWidget {
+      Q_OBJECT
+   public:
+      DecentTable() : QTableWidget() {
+         this->setMouseTracking(true);
+      }
+      
+      DecentTable(int rows, int cols) : QTableWidget(rows, cols) {
+         this->setMouseTracking(true);
+      }
+      
+      virtual void mouseMoveEvent(QMouseEvent * event) {
+         emit mouseMoveEventDid(event->pos());
+      }
+      
+   public:
+   signals:
+      void mouseMoveEventDid(QPoint position);
+      
+   };
+
 
 
 

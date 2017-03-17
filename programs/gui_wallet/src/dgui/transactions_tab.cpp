@@ -35,7 +35,7 @@ TransactionsTab::TransactionsTab() : green_row(0) {
    
    QFont f( "Open Sans Bold", 14, QFont::Bold);
    
-   tablewidget = new HTableWidget();
+   tablewidget = new DecentTable();
    
    tablewidget->setColumnCount(_table_columns.size());
    
@@ -70,8 +70,6 @@ TransactionsTab::TransactionsTab() : green_row(0) {
    user.setFrame(false);
    
    
-   connect(tablewidget,SIGNAL(mouseMoveEventDid()),this,SLOT(doRowColor()));
-   
    QHBoxLayout* search_lay = new QHBoxLayout();
    QPixmap image(":/icon/images/search.svg");
    search_label.setSizeIncrement(100,40);
@@ -94,7 +92,8 @@ TransactionsTab::TransactionsTab() : green_row(0) {
    m_contentUpdateTimer.connect(&m_contentUpdateTimer, SIGNAL(timeout()), this, SLOT(maybeUpdateContent()));
    m_contentUpdateTimer.setInterval(1000);
    m_contentUpdateTimer.start();
-   Connects();
+
+   connect(tablewidget, SIGNAL(mouseMoveEventDid(QPoint)), this, SLOT(hightlight_row(QPoint)));
 }
 
 
@@ -147,9 +146,11 @@ TransactionsTab::~TransactionsTab()
    delete tablewidget;
 }
 
-void TransactionsTab::doRowColor()
+void TransactionsTab::hightlight_row(QPoint point)
 {
-   if(tablewidget->rowCount() < 0) {return;}
+   if(tablewidget->rowCount() < 0) {
+      return;
+   }
    
    for (int i = 0; i < _table_columns.size(); ++i)
    {
@@ -160,36 +161,22 @@ void TransactionsTab::doRowColor()
       }
    }
    
-   QPoint mouse_pos = tablewidget->mapFromGlobal(QCursor::pos());
-   mouse_pos.setY(mouse_pos.y() - 41);
-   QTableWidgetItem *ite = tablewidget->itemAt(mouse_pos);
    
-   if(ite != NULL)
+   int row = tablewidget->rowAt(point.y());
+   if(row < 0)
+      return;
+   
+   for (int i = 0; i < _table_columns.size(); ++i)
    {
-      
-      int row = ite->row();
-      if(row >= 0) {
-         for (int i = 0; i < _table_columns.size(); ++i)
-         {
-            if(tablewidget->item(row, i) != NULL)
-            {
-               tablewidget->item(row, i)->setBackgroundColor(QColor(27,176,104));
-               tablewidget->item(row, i)->setForeground(QColor::fromRgb(255,255,255));
-            }
-         }
-         
-         green_row = row;
+      if(tablewidget->item(row, i) != NULL)
+      {
+         tablewidget->item(row, i)->setBackgroundColor(QColor(27,176,104));
+         tablewidget->item(row, i)->setForeground(QColor::fromRgb(255,255,255));
       }
    }
-   else
-   {
-      green_row = 0;
-   }
-}
-
-void TransactionsTab::Connects()
-{
-   connect(tablewidget,SIGNAL(mouseMoveEventDid()),this,SLOT(doRowColor()));
+   
+   green_row = row;
+   
 }
 
 
@@ -287,9 +274,9 @@ void TransactionsTab::updateContents() {
          
       }
    } catch (std::exception& ex) {
+      std::cout << ex.what() << std::endl;
    }
    
-   Connects();
 }
 
 void TransactionsTab::SetInfo(std::string info_from_overview)
