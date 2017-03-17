@@ -158,31 +158,31 @@ void makeWarningImediatly(const char* a_WaringTitle, const char* a_WaringText, c
         
         if(e_year != 0)
         {
-            e_str = std::to_string(e_year) + " year " + std::to_string(e_month) + " month";
+            e_str = std::to_string(e_year) + " y " + std::to_string(e_month) + " m";
         }
         else
         {
             if(e_month != 0)
             {
-                e_str = std::to_string(e_month) + " month " + std::to_string(e_day) + " day";
+                e_str = std::to_string(e_month) + " m " + std::to_string(e_day) + " d";
             }
             else
             {
                 if(e_day != 0)
                 {
-                    e_str = std::to_string(e_day) + " day " + std::to_string(e_hour) + " hour";
+                    e_str = std::to_string(e_day) + " d " + std::to_string(e_hour) + " h";
                 }
                 else
                 {
                     if(e_hour != 0)
                     {
-                        e_str = std::to_string(e_hour) + " hour " + std::to_string(e_min) + " minute";
+                        e_str = std::to_string(e_hour) + " h " + std::to_string(e_min) + " m";
                     }
                     else
                     {
                         if(e_min != 0)
                         {
-                            e_str = std::to_string(e_min) + " minute";
+                            e_str = std::to_string(e_min) + " m";
                         }
                     }
                 }
