@@ -1,12 +1,12 @@
-/*
- *	File      : overview_tab.cpp
- *
- *	Created on: 21 Nov 2016
- *	Created by: Davit Kalantaryan (Email: davit.kalantaryan@desy.de)
- *
- *  This file implements ...
- *
- */
+//*
+//*	File      : overview_tab.cpp
+//*
+//*	Created on: 21 Nov 2016
+//*	Created by: Davit Kalantaryan (Email: davit.kalantaryan@desy.de)
+//*
+//*  This file implements ...
+//*
+//*/
 #include "overview_tab.hpp"
 #include "gui_wallet_mainwindow.hpp"
 #include "gui_wallet_centralwidget.hpp"
@@ -22,25 +22,25 @@ using namespace nlohmann;
 
 
 Overview_tab::Overview_tab(class Mainwindow_gui_wallet* a_pPar)
-    : m_pPar(a_pPar)
+: m_pPar(a_pPar)
 {
     table_widget.setColumnCount(4);
     table_widget.setSelectionMode(QAbstractItemView::NoSelection);
-
+    
     table_widget.setStyleSheet("QTableView{border : 1px solid lightGray}");
-
+    
     QFont font( "Open Sans Bold", 14, QFont::Bold);
-
-
+    
+    
     table_widget.verticalHeader()->hide();
-
+    
     table_widget.setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     table_widget.setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     
     table_widget.setHorizontalHeaderLabels(QStringList() << "Account ID" << "Author" << "" << "");
     table_widget.horizontalHeader()->setFixedHeight(35);
     table_widget.horizontalHeader()->setFont(font);
-
+    
     table_widget.setStyleSheet(("gridline-color: rgb(228,227,228));"));
     table_widget.setStyleSheet("QTableView{border : 0px}");
     table_widget.horizontalHeader()->setStretchLastSection(true);
@@ -48,39 +48,39 @@ Overview_tab::Overview_tab(class Mainwindow_gui_wallet* a_pPar)
                                                    "border-right: 1px solid rgb(193,192,193);"
                                                    "border-bottom: 0px;"
                                                    "border-top: 0px;}");
-
-
-
+    
+    
+    
     QVBoxLayout* main = new QVBoxLayout();
     QHBoxLayout* search_lay = new QHBoxLayout();
-
+    
     main->setContentsMargins(0, 5, 0, 0);
     main->setMargin(0);
-
+    
     search_lay->setMargin(0);
     search_lay->setContentsMargins(0,0,0,0);
-
+    
     QPixmap image(":/icon/images/search.svg");
-
+    
     search_label.setSizeIncrement(100,40);
     search_label.setPixmap(image);
     search.setPlaceholderText(QString("Search"));
     search.setStyleSheet("border: 0px solid white");
     search.setAttribute(Qt::WA_MacShowFocusRect, 0);
     search.setFixedHeight(40);
-
-
+    
+    
     search_lay->setContentsMargins(42, 0, 0, 0);
     search_lay->addWidget(&search_label);
     search_lay->addWidget(&search);
-
-
-
+    
+    
+    
     main->addLayout(search_lay);
     main->addWidget(&table_widget);
-
+    
     setLayout(main);
-
+    
     connect(&search, SIGNAL(textChanged(QString)), this, SLOT(onTextChanged(QString)));
     
     
@@ -136,26 +136,32 @@ void Overview_tab::updateContents() {
         transaction->setAlignment(Qt::AlignCenter);
         transfer->setAlignment(Qt::AlignCenter);
         
-        transaction->setText("Transaction");
-        transfer->setText("Transfer");
-        QFont f( "Open Sans Bold", 14, QFont::Bold);
-        transaction->setFont(f);
+        QPixmap image1(":/icon/images/transaction.png");
+        QPixmap image(":/icon/images/transfer.png");
+        transaction->setPixmap(image1);
+        transfer->setPixmap(image);
+        
+        // transaction->setText("Transaction");
+        // transfer->setText("Transfer");
+        //QFont f( "Open Sans Bold", 14, QFont::Bold);
+        //transaction->setFont(f);
+        
         transaction->setStyleSheet("* { background-color: rgb(255,255,255); color : rgb(27,176,104); }");
-        transfer->setFont(f);
+        //transfer->setFont(f);
         transfer->setStyleSheet("* { background-color: rgb(255,255,255); color : rgb(27,176,104); }");
         
         transaction->setMouseTracking(true);
         transfer->setMouseTracking(true);
-
+        
         connect(transfer, SIGNAL(ButtonPushedSignal(std::string)), this , SLOT(buttonPressed(std::string)));
         connect(transaction, SIGNAL(ButtonPushedSignal(std::string)), this , SLOT(TransactionButtonPressed(std::string)));
         connect(transfer, SIGNAL(mouseWasMoved()), this , SLOT(doRowColor()));
         connect(transaction, SIGNAL(mouseWasMoved()), this , SLOT(doRowColor()));
         
         
-//        QHBoxLayout* buttons_layout = new QHBoxLayout();
-//        buttons_layout->addWidget(transaction);
-//        buttons_layout->addWidget(transfer);
+        //        QHBoxLayout* buttons_layout = new QHBoxLayout();
+        //        buttons_layout->addWidget(transaction);
+        //        buttons_layout->addWidget(transfer);
         
         table_widget.setItem(i, 1, new QTableWidgetItem(QString::fromStdString(content[0].get<std::string>())));
         table_widget.setItem(i, 0, new QTableWidgetItem(QString::fromStdString(content[1].get<std::string>())));
@@ -167,7 +173,7 @@ void Overview_tab::updateContents() {
         table_widget.cellWidget(i, 2)->setStyleSheet("* { background-color: rgb(255,255,255); color : rgb(27,176,104); }");
         table_widget.cellWidget(i, 3)->setStyleSheet("* { background-color: rgb(255,255,255); color : rgb(27,176,104); }");
         
-
+        
         table_widget.item(i,0)->setBackground(Qt::white);
         table_widget.item(i,1)->setBackground(Qt::white);
         
@@ -207,7 +213,7 @@ void Overview_tab::buttonPressed(std::string accountName)
         
         std::string name = accountInfo["name"].get<std::string>();
         
-
+        
         
         QZebraWidget* info_window = new QZebraWidget();
         
@@ -225,7 +231,7 @@ void Overview_tab::buttonPressed(std::string accountName)
     } catch(...) {
         // Ignore for now
     }
-
+    
 }
 
 void Overview_tab::ArrangeSize()
@@ -253,7 +259,7 @@ void Overview_tab::doRowColor()
         table_widget.cellWidget(i, 3)->setStyleSheet("* { background-color: rgb(255,255,255); color : rgb(27,176,104); }");
         table_widget.item(i,0)->setBackground(QColor(255,255,255));
         table_widget.item(i,1)->setBackground(QColor(255,255,255));
-
+        
         table_widget.item(i,0)->setForeground(QColor::fromRgb(88,88,88));
         table_widget.item(i,1)->setForeground(QColor::fromRgb(88,88,88));
     }
@@ -264,24 +270,24 @@ void Overview_tab::doRowColor()
     }
     mouse_pos.setY(mouse_pos.y() - 41);
     QTableWidgetItem *ite = table_widget.itemAt(mouse_pos);
-
+    
     if(ite != NULL)
     {
         int row = ite->row();
         if(row < 0) {return;}
-            table_widget.cellWidget(row , 2)->setStyleSheet("* { background-color: rgb(27,176,104); color : white; }");
-            table_widget.cellWidget(row , 3)->setStyleSheet("* { background-color: rgb(27,176,104); color : white; }");
-
-            table_widget.item(row,0)->setBackgroundColor(QColor(27,176,104));
-            table_widget.item(row,1)->setBackgroundColor(QColor(27,176,104));
-            table_widget.item(row,0)->setForeground(QColor::fromRgb(255,255,255));
-            table_widget.item(row,1)->setForeground(QColor::fromRgb(255,255,255));
+        table_widget.cellWidget(row , 2)->setStyleSheet("* { background-color: rgb(27,176,104); color : white; }");
+        table_widget.cellWidget(row , 3)->setStyleSheet("* { background-color: rgb(27,176,104); color : white; }");
+        
+        table_widget.item(row,0)->setBackgroundColor(QColor(27,176,104));
+        table_widget.item(row,1)->setBackgroundColor(QColor(27,176,104));
+        table_widget.item(row,0)->setForeground(QColor::fromRgb(255,255,255));
+        table_widget.item(row,1)->setForeground(QColor::fromRgb(255,255,255));
     }
 }
 
 Overview_tab::~Overview_tab()
 {
-
+    
 }
 
 TableWidget::TableWidget() : QTableWidget()

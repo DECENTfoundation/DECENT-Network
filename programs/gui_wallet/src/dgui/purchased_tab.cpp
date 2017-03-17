@@ -1,13 +1,3 @@
-/*
- *	File: decent_wallet_ui_gui_purchasedtab.hpp
- *
- *	Created on: 11 Feb 2017
- *	Created by: Davit Kalantaryan (Email: davit.kalantaryan@desy.de)
- *
- *  This file implements ...
- *
- */
-
 #include "purchased_tab.hpp"
 #include <QHeaderView>
 #include <QPushButton>
@@ -23,44 +13,44 @@ using namespace gui_wallet;
 using namespace nlohmann;
 
 
-static const char* s_vccpItemNames[]={" ", "Title", "Rating", "Size", "Price", "Created", "Status", "Progress"};
+static const char* s_vccpItemNames[]={"Title", "Rating", "Size", "Price", "Created", "Status", "Progress", " "};
 
 static const int   s_cnNumberOfCols = sizeof(s_vccpItemNames)/sizeof(const char*);
 
 
 PurchasedTab::PurchasedTab()
-        :
-        m_pTableWidget(new P_TableWidget(0,s_cnNumberOfCols))
+:
+m_pTableWidget(new P_TableWidget(0,s_cnNumberOfCols))
 {
-
+    
     PrepareTableWidgetHeaderGUI();
-
+    
     QHBoxLayout* search_lay = new QHBoxLayout();
-
+    
     m_filterLineEditer.setPlaceholderText(QString("Enter the term to search in title and description"));
     m_filterLineEditer.setStyleSheet("border: 1px solid white");
     m_filterLineEditer.setFixedHeight(40);
     m_filterLineEditer.setAttribute(Qt::WA_MacShowFocusRect, 0);
-
+    
     QPixmap image(":/icon/images/search.svg");
-
+    
     QLabel* search_label = new QLabel();
     search_label->setSizeIncrement(100,40);
     search_label->setPixmap(image);
     
     
-
+    
     search_lay->setContentsMargins(42, 0, 0, 0);
     search_lay->addWidget(search_label);
     search_lay->addWidget(&m_filterLineEditer);
-
+    
     m_pTableWidget->horizontalHeader()->setStretchLastSection(true);
     m_pTableWidget->setSelectionMode(QAbstractItemView::NoSelection);
     m_main_layout.setContentsMargins(0, 0, 0, 0);
-
+    
     m_main_layout.addLayout(search_lay);
     m_main_layout.addWidget(m_pTableWidget);
-
+    
     setLayout(&m_main_layout);
     
     
@@ -98,8 +88,8 @@ void PurchasedTab::updateContents() {
     
     std::string a_result;
     RunTask("get_buying_history_objects_by_consumer_term "
-               "\"" + str_current_username +"\" "
-               "\"" + m_filterLineEditer.text().toStdString() +"\"", a_result);
+            "\"" + str_current_username +"\" "
+            "\"" + m_filterLineEditer.text().toStdString() +"\"", a_result);
     
     
     if(last_contents == a_result)
@@ -112,11 +102,11 @@ void PurchasedTab::updateContents() {
         auto contents = json::parse(a_result);
         last_contents = a_result;
         if (contents.size() + 1 != m_pTableWidget->rowCount()) {
-          m_pTableWidget->setRowCount(0); //Remove everything but header
-          m_pTableWidget->setRowCount(contents.size());
-           
+            m_pTableWidget->setRowCount(0); //Remove everything but header
+            m_pTableWidget->setRowCount(contents.size());
+            
         }
-       
+        
         for (int i = 0; i < contents.size(); ++i) {
             
             auto content = contents[i];
@@ -125,9 +115,9 @@ void PurchasedTab::updateContents() {
             std::string time = contents[i]["expiration_time"].get<std::string>();
             
             std::string synopsis = unescape_string(contents[i]["synopsis"].get<std::string>());
-            std::replace(synopsis.begin(), synopsis.end(), '\t', ' '); // JSON does not like tabs :(
-            std::replace(synopsis.begin(), synopsis.end(), '\n', ' '); // JSON does not like tabs :(
-
+            std::replace(synopsis.begin(), synopsis.end(), '\t', ' '); // JSON does not like tabs
+            std::replace(synopsis.begin(), synopsis.end(), '\n', ' '); // JSON does not like tabs
+            
             try {
                 auto synopsis_parsed = json::parse(synopsis);
                 synopsis = synopsis_parsed["title"].get<std::string>();
@@ -135,8 +125,8 @@ void PurchasedTab::updateContents() {
             
             double rating = contents[i]["rating"].get<double>() / 1000;
             uint64_t size = contents[i]["size"].get<int>();
-
-
+            
+            
             double price = 0;
             if (contents[i]["price"]["amount"].is_number()){
                 price =  contents[i]["price"]["amount"].get<double>();
@@ -189,34 +179,34 @@ void PurchasedTab::updateContents() {
             
             contentObject.price.amount /= GRAPHENE_BLOCKCHAIN_PRECISION;
             contentObject.AVG_rating = dcontent_json["AVG_rating"].get<double>() / 1000;
-        
+            
             
             m_pTableWidget->horizontalHeader()->setStretchLastSection(true);
-            m_pTableWidget->setCellWidget(i, 0, new TableWidgetItemW<PButton>(contentObject, this, NULL, &PurchasedTab::DigContCallback, tr("")));
-            ((PButton*)m_pTableWidget->cellWidget(i,0))->setPixmap(image1);
-            ((PButton*)m_pTableWidget->cellWidget(i,0))->setAlignment(Qt::AlignCenter);
+            m_pTableWidget->setCellWidget(i, 7, new TableWidgetItemW<PButton>(contentObject, this, NULL, &PurchasedTab::DigContCallback, tr("")));
+            ((PButton*)m_pTableWidget->cellWidget(i,7))->setPixmap(image1);
+            ((PButton*)m_pTableWidget->cellWidget(i,7))->setAlignment(Qt::AlignCenter);
             
             
-            m_pTableWidget->setItem(i, 1, new QTableWidgetItem(QString::fromStdString(synopsis)));
-            m_pTableWidget->setItem(i, 2, new QTableWidgetItem(QString::number(rating)));
-            m_pTableWidget->setItem(i, 3, new QTableWidgetItem(QString::number(size) + tr(" MB")));
-            m_pTableWidget->setItem(i, 4, new QTableWidgetItem(QString::number(price) + " DCT"));
+            m_pTableWidget->setItem(i, 0, new QTableWidgetItem(QString::fromStdString(synopsis)));
+            m_pTableWidget->setItem(i, 1, new QTableWidgetItem(QString::number(rating)));
+            m_pTableWidget->setItem(i, 2, new QTableWidgetItem(QString::number(size) + tr(" MB")));
+            m_pTableWidget->setItem(i, 3, new QTableWidgetItem(QString::number(price) + " DCT"));
             
-           
-
+            
+            
             std::string s_time;
             for(int i = 0; i < time.find("T"); ++i)
             {
                 s_time.push_back(time[i]);
             }
-            m_pTableWidget->setItem(i, 5, new QTableWidgetItem(QString::fromStdString(s_time)));
+            m_pTableWidget->setItem(i, 4, new QTableWidgetItem(QString::fromStdString(s_time)));
             
             
             std::string download_status_str;
             RunTask("get_download_status \"" + gui_wallet::GlobalEvents::instance().getCurrentUser() + "\" \"" + URI + "\"", download_status_str);
             
             auto download_status = json::parse(download_status_str);
-
+            
             
             int total_key_parts = download_status["total_key_parts"].get<int>();
             int received_key_parts  = download_status["received_key_parts"].get<int>();
@@ -231,8 +221,8 @@ void PurchasedTab::updateContents() {
             } else {
                 status_text = status_text + tr(" ") + QString::fromStdString(download_status["status_text"].get<std::string>());
             }
-
-            m_pTableWidget->setItem(i, 6, new QTableWidgetItem(status_text));
+            
+            m_pTableWidget->setItem(i, 5, new QTableWidgetItem(status_text));
             
             if (total_key_parts == 0) {
                 total_key_parts = 1;
@@ -247,9 +237,9 @@ void PurchasedTab::updateContents() {
             progress *= 100; // Percent
             
             if (received_download_bytes < total_download_bytes) {
-                m_pTableWidget->setItem(i, 7, new QTableWidgetItem(QString::number(progress) + "%"));
-                m_pTableWidget->item(i, 7)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
-                m_pTableWidget->item(i, 7)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+                m_pTableWidget->setItem(i, 6, new QTableWidgetItem(QString::number(progress) + "%"));
+                m_pTableWidget->item(i, 6)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+                m_pTableWidget->item(i, 6)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
             } else {
                 EButton* btn = new EButton();
                 btn->setStyleSheet("background-color: rgb(27,176,104); color: white");
@@ -259,8 +249,8 @@ void PurchasedTab::updateContents() {
                 btn->setProperty("URI", QVariant::fromValue(QString::fromStdString(content["URI"].get<std::string>())));
                 
                 connect(btn, SIGNAL(clicked()), this, SLOT(extractPackage()));
-                m_pTableWidget->setCellWidget(i, 7, btn);
-                connect((EButton*)m_pTableWidget->cellWidget(i,7),SIGNAL(mouseMoved()),this,SLOT(doRowColor()));
+                m_pTableWidget->setCellWidget(i, 6, btn);
+                connect((EButton*)m_pTableWidget->cellWidget(i,6),SIGNAL(mouseMoved()),this,SLOT(doRowColor()));
             }
             
             
@@ -270,7 +260,7 @@ void PurchasedTab::updateContents() {
                 m_pTableWidget->item(i, j)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
             }
             
-
+            
         }
         
         
@@ -291,12 +281,12 @@ void PurchasedTab::extractPackage() {
     std::string hash = btn->property("hash").toString().toStdString();
     
     QString sampleDir = QFileDialog::getExistingDirectory(this, tr("Select directory to extract"), "~", QFileDialog::DontResolveSymlinks);
-
+    
     std::string key, dummy;
     
     try {
         RunTask("restore_encryption_key \"" + id + "\"", key);
-    
+        
         RunTask("extract_package \"" + hash + "\" \"" + sampleDir.toStdString() + "\" " + key, dummy);
         MESSAGE("Package was successfully extracted");
         
@@ -323,11 +313,11 @@ PurchasedTab::~PurchasedTab()
 void PurchasedTab::PrepareTableWidgetHeaderGUI()
 {
     QFont font( "Open Sans Bold", 14, QFont::Bold);
-
+    
     m_pTableWidget->horizontalHeader()->setDefaultSectionSize(300);
     m_pTableWidget->setRowHeight(0,35);
     m_pTableWidget->verticalHeader()->hide();
-    m_pTableWidget->setHorizontalHeaderLabels(QStringList()  <<" " << "Title" << "Rating" << "Size" <<  "Price" <<  "Created" <<  "Status" << "Progress");
+    m_pTableWidget->setHorizontalHeaderLabels(QStringList()  << "Title" << "Rating" << "Size" <<  "Price" <<  "Created" <<  "Status" << "" << "");
     m_pTableWidget->horizontalHeader()->setFixedHeight(35);
     m_pTableWidget->horizontalHeader()->setFont(font);
     m_pTableWidget->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -338,9 +328,9 @@ void PurchasedTab::PrepareTableWidgetHeaderGUI()
         connect((PButton*)m_pTableWidget->cellWidget(i,0),SIGNAL(mouseWasMoved()),this,SLOT(doRowColor()));
     }
     m_pTableWidget->horizontalHeader()->setStyleSheet("QHeaderView::section {"
-                                                   "border-right: 1px solid rgb(193,192,193);"
-                                                   "border-bottom: 0px;"
-                                                   "border-top: 0px;}");
+                                                      "border-right: 1px solid rgb(193,192,193);"
+                                                      "border-bottom: 0px;"
+                                                      "border-top: 0px;}");
 }
 
 
@@ -348,17 +338,18 @@ void PurchasedTab::PrepareTableWidgetHeaderGUI()
 void PurchasedTab::ArrangeSize()
 {
     QSize tqsTableSize = m_pTableWidget->size();
-
+    
     m_pTableWidget->setStyleSheet("QTableView{border : 0px}");
     m_pTableWidget->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     m_pTableWidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     
-    m_pTableWidget->setColumnWidth(0, tqsTableSize.width() * 0.1);
     
-    for(int i = 0; i < s_cnNumberOfCols; ++i)
+    for(int i = 0; i < s_cnNumberOfCols - 2; ++i)
     {
-        m_pTableWidget->setColumnWidth(i, (0.9 * tqsTableSize.width()) / (s_cnNumberOfCols - 1) );
+        m_pTableWidget->setColumnWidth(i, (0.15 * tqsTableSize.width()));
     }
+    m_pTableWidget->setColumnWidth(6, (0.05 * tqsTableSize.width()));
+    m_pTableWidget->setColumnWidth(7, (0.05 * tqsTableSize.width()));
 }
 
 
@@ -396,7 +387,7 @@ void PurchasedTab::doRowColor()
                 m_pTableWidget->item(i,7)->setForeground(QColor::fromRgb(88,88,88));
             }
         }
-
+        
         if(m_pTableWidget->cellWidget(i , 0) != NULL)
         {
             m_pTableWidget->cellWidget(i , 0)->setStyleSheet("* { background-color: rgb(255,255,255); color : white; }");
@@ -449,3 +440,4 @@ void P_TableWidget::mouseMoveEvent(QMouseEvent * event)
 {
     mouseMoveEventDid();
 }
+

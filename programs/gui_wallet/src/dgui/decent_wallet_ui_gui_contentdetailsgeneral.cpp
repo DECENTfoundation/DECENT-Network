@@ -24,7 +24,7 @@ ContentDetailsGeneral::ContentDetailsGeneral()
       m_label(this,NULL,&ContentDetailsGeneral::LabelPushCallbackGUI)
 {
     QVBoxLayout* image_layout = new QVBoxLayout;
-    m_label.setText("BUY");
+    m_label.setText("GET IT");
     m_label.setFixedWidth(120);
     m_label.setFixedHeight(30);
     
