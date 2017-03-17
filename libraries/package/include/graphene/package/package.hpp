@@ -3,16 +3,19 @@
 
 #include <decent/encrypt/custodyutils.hpp>
 
+#include <fc/thread/thread.hpp>
 #include <fc/thread/mutex.hpp>
 #include <fc/crypto/ripemd160.hpp>
 #include <fc/crypto/sha512.hpp>
 
 #include <boost/filesystem.hpp>
 #include <boost/interprocess/sync/file_lock.hpp>
+#include <boost/interprocess/sync/scoped_lock.hpp>
 
 #include <list>
 #include <map>
 #include <memory>
+#include <mutex>
 #include <set>
 #include <string>
 
@@ -35,20 +38,32 @@ namespace decent { namespace package {
 
 
     typedef std::shared_ptr<event_listener_interface>  event_listener_handle;
-    typedef std::list<event_listener_handle>            event_listener_handle_list;
+    typedef std::list<event_listener_handle>           event_listener_handle_list;
+
 
     class package_manager;
 
 
     class package_info {
     public:
-        enum state {
+        enum State {
             UNINITIALIZED,
-            CHECKING,
-            READY,
+            PARTIAL,
+            FULL_UNCHECKED,
+            FULL_CHECKED
+        };
+
+        enum Action {
+            NOOP,
+            PACKING,
+            ENCRYPTING,
+            STAGING,
             SEEDING,
             DOWNLOADING,
-            CONSUMING
+            CHECKING,
+            DECRYPTING,
+            UNPACKING,
+            DELETTING
         };
 
     private:
@@ -61,11 +76,11 @@ namespace decent { namespace package {
                      const event_listener_handle& event_listener = event_listener_handle());
 
         package_info(package_manager& manager,
-                     const boost::filesystem::path& package_dir_path,
+                     const fc::ripemd160& package_hash,
                      const event_listener_handle& event_listener = event_listener_handle());
 
         package_info(package_manager& manager,
-                     const fc::ripemd160& package_hash,
+                     const std::string& url,
                      const event_listener_handle& event_listener = event_listener_handle());
 
     public:
@@ -74,30 +89,32 @@ namespace decent { namespace package {
         package_info& operator=(const package_info&)  = delete;
         package_info& operator=(package_info&&)       = delete;
 
-        virtual ~package_info();
+        ~package_info();
 
     public:
         void add_event_listener(const event_listener_handle& event_listener);
         void remove_event_listener(const event_listener_handle& event_listener);
 
     private:
-        static boost::filesystem::path get_package_state_dir(const boost::filesystem::path& package_dir) { return package_dir / ".state" ; }
-        static boost::filesystem::path get_lock_file_path(const boost::filesystem::path& package_dir) { return get_package_state_dir(package_dir) / "lock"; }
+        static boost::filesystem::path get_package_state_dir(const boost::filesystem::path& package_dir)  { return package_dir / ".state" ; }
+        static boost::filesystem::path get_lock_file_path(const boost::filesystem::path& package_dir)     { return get_package_state_dir(package_dir) / "lock"; }
 
-        boost::filesystem::path get_package_dir() const { return _parent_dir / _hash.str(); }
-        boost::filesystem::path get_package_state_dir() const { return get_package_state_dir(get_package_dir()); }
-        boost::filesystem::path get_lock_file_path() const { return get_lock_file_path(get_package_dir()); }
+        boost::filesystem::path get_package_dir() const        { return _parent_dir / _hash.str(); }
+        boost::filesystem::path get_package_state_dir() const  { return get_package_state_dir(get_package_dir()); }
+        boost::filesystem::path get_lock_file_path() const     { return get_lock_file_path(get_package_dir()); }
 
         void lock_dir();
         void unlock_dir();
-        bool is_dir_locked() const;
 
     private:
-        state                                            _state;
-        fc::ripemd160                                    _hash;
-        boost::filesystem::path                          _parent_dir;
-        std::shared_ptr<boost::interprocess::file_lock>  _file_lock;
-        event_listener_handle_list                       _event_listeners;
+        State                                              _state;
+        Action                                             _action;
+        fc::ripemd160                                      _hash;
+        boost::filesystem::path                            _parent_dir;
+        std::shared_ptr<boost::interprocess::file_lock>    _file_lock;
+        std::shared_ptr<boost::interprocess::scoped_lock<
+            boost::interprocess::file_lock>>               _file_lock_guard;
+        event_listener_handle_list                         _event_listeners;
     };
 
 
@@ -133,51 +150,27 @@ namespace decent { namespace package {
             return the_package_manager;
         }
 
-    private:
-        void release_all_packages();
-        void restore_all_packages();
-
     public:
-        void release_package(const std::string& hash)    { return release_package(fc::ripemd160::hash(hash)); }
-        void release_package(const fc::ripemd160& hash)  { return release_package(hash, get_packages_path()); }
-        void release_package(const fc::ripemd160& hash, const boost::filesystem::path& parent_dir);
+        package_handle get_package(const boost::filesystem::path& content_dir_path,
+                                   const boost::filesystem::path& samples_dir_path,
+                                   const fc::sha512& key,
+                                   const event_listener_handle& event_listener = event_listener_handle());
 
-    public:
-        package_handle create_package(const boost::filesystem::path& content_dir_path,
-                                      const boost::filesystem::path& samples_dir_path,
-                                      const fc::sha512& key,
-                                      const event_listener_handle& event_listener = event_listener_handle());
+        package_handle get_package(const std::string& url,
+                                   const event_listener_handle& event_listener = event_listener_handle());
 
-        package_handle consume_package(const std::string& url,
-                                       const boost::filesystem::path& destination_dir,
-                                       const fc::sha512& key,
-                                       const event_listener_handle& event_listener = event_listener_handle());
+        package_handle get_package(const fc::ripemd160& hash);
 
-        void consume_package(const package_handle& package,
-                             const boost::filesystem::path& destination_dir,
-                             const fc::sha512& key);
-
-        void stop_consuming_package(const package_handle& package);
-
-        package_handle seed_package(const std::string& url,
-                                    const event_listener_handle& event_listener = event_listener_handle());
-
-        void seed_package(const package_handle& package);
-
-        void stop_seeding_package(const package_handle& package);
+        void release_package(const fc::ripemd160& hash);
+        void release_package(const package_handle& package);
 
         package_handle_set get_all_known_packages() const;
-
-        package_handle get_package_handle(const fc::ripemd160& hash,
-                                          const bool full_check = false);
-
         boost::filesystem::path get_packages_path() const;
-        void set_packages_path(const boost::filesystem::path& packages_path);
-
         void set_libtorrent_config(const boost::filesystem::path& libtorrent_config_file);
 
     private:
         mutable std::mutex             _mutex;
+        std::shared_ptr<fc::thread>    _thread;
         boost::filesystem::path        _packages_path;
         package_handle_set             _packages;
         proto_to_transfer_engine_map   _proto_transfer_engines;

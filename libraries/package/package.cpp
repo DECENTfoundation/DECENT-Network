@@ -164,7 +164,7 @@ namespace decent { namespace package {
         };
 
 
-        fc::ripemd160 calculate_hash(boost::filesystem::path file_path) {
+        fc::ripemd160 calculate_hash(const boost::filesystem::path& file_path) {
             boost::iostreams::file_source source(file_path.string(), std::ifstream::binary);
 
             if (!source.is_open()) {
@@ -185,17 +185,36 @@ namespace decent { namespace package {
             return ripe_calc.result();
         }
 
-        namespace {
-            boost::uuids::random_generator generator;
-        }
-
-
         inline std::string make_uuid() {
+
+            // TODO: make thread safe
+
+            static boost::uuids::random_generator generator;
             return boost::uuids::to_string(generator());
         }
 
-        inline boost::filesystem::path get_relative(const boost::filesystem::path& from, const boost::filesystem::path& to)
+        inline bool is_nested(boost::filesystem::path nested, boost::filesystem::path base)
         {
+            nested = nested.lexically_normal();
+            base = base.lexically_normal();
+
+            boost::filesystem::path::const_iterator base_it = base.begin();
+            boost::filesystem::path::const_iterator nested_it = nested.begin();
+
+            while (base_it != base.end() && nested_it != nested.end() && (*base_it) == (*nested_it))
+            {
+                ++base_it;
+                ++nested_it;
+            }
+
+            return base_it == base.end()/* && nested_it != nested.end()*/;
+        }
+
+        inline boost::filesystem::path get_relative(boost::filesystem::path from, boost::filesystem::path to)
+        {
+            from = from.lexically_normal();
+            to = to.lexically_normal();
+
             boost::filesystem::path::const_iterator from_it = from.begin();
             boost::filesystem::path::const_iterator to_it = to.begin();
 
@@ -206,6 +225,7 @@ namespace decent { namespace package {
             }
 
             boost::filesystem::path relative;
+
             while (from_it != from.end())
             {
                 relative /= "..";
@@ -221,55 +241,96 @@ namespace decent { namespace package {
             return relative;
         }
 
-        void get_files_recursive(const boost::filesystem::path& folder, std::vector<boost::filesystem::path>& all_files) {
-            if (!is_directory(folder)) {
-                FC_THROW("${path} does not point to an existing diectory", ("path", folder.string()) );
-            }
-
+        void get_files_recursive(const boost::filesystem::path& dir, std::vector<boost::filesystem::path>& all_files) {
             using namespace boost::filesystem;
 
-            for (recursive_directory_iterator it(folder); it != recursive_directory_iterator(); ) {
+            if (!is_directory(dir)) {
+                FC_THROW("${path} does not point to an existing diectory", ("path", dir.string()) );
+            }
+
+            for (recursive_directory_iterator it(dir); it != recursive_directory_iterator(); ++it) {
                 if (is_regular_file(*it)) {
                     all_files.push_back(*it);
                 }
-
-                if(is_directory(*it) && is_symlink(*it)) {
+                else if (is_directory(*it) && is_symlink(*it)) {
                     it.no_push();
-                }
-
-                // TODO
-
-                try
-                {
-                    ++it;
-                }
-                catch(std::exception& ex)
-                {
-                    std::cout << ex.what() << std::endl;
-                    it.no_push();
-                    try {
-                        ++it;
-                    }
-                    catch(...)
-                    {
-                        std::cout << "!!" << std::endl;
-                        return;
-                    }
                 }
             }
         }
 
-        inline void remove_all_except(const boost::filesystem::path& dir, const std::set<boost::filesystem::path>& paths_to_skip) {
+        inline void remove_all_except(boost::filesystem::path dir, const std::set<boost::filesystem::path>& paths_to_skip) {
+            using namespace boost::filesystem;
 
+            if (!is_directory(dir)) {
+                FC_THROW("${path} does not point to an existing diectory", ("path", dir.string()) );
+            }
 
-            // TODO
+            dir = dir.lexically_normal();
 
+            for (recursive_directory_iterator it(dir); it != recursive_directory_iterator(); ++it) {
+                if (is_directory(*it) && is_symlink(*it)) {
+                    it.no_push();
+                }
+
+                bool skip_this = false;
+
+                for (auto path_to_skip : paths_to_skip) {
+                    if (path_to_skip.is_relative()) {
+                        path_to_skip = dir / path_to_skip;
+                    }
+
+                    if (is_nested(path_to_skip, it->path())) {
+                        skip_this = true;
+                        break;
+                    }
+                }
+
+                if (!skip_this) {
+                    remove_all(it->path());
+                    it.no_push();
+                }
+            }
         }
 
-        inline void move_all_except(const boost::filesystem::path& from, const boost::filesystem::path& to, const std::set<boost::filesystem::path>& paths_to_skip) {
+        inline void move_all_except(boost::filesystem::path from_dir, boost::filesystem::path to_dir, const std::set<boost::filesystem::path>& paths_to_skip) {
+            using namespace boost::filesystem;
 
-            // TODO
+            if (!is_directory(from_dir)) {
+                FC_THROW("${path} does not point to an existing diectory", ("path", from_dir.string()) );
+            }
 
+            if (!is_directory(to_dir)) {
+                FC_THROW("${path} does not point to an existing diectory", ("path", to_dir.string()) );
+            }
+
+            from_dir = from_dir.lexically_normal();
+            to_dir = to_dir.lexically_normal();
+
+            for (recursive_directory_iterator it(from_dir); it != recursive_directory_iterator(); ++it) {
+                if (is_directory(*it) && is_symlink(*it)) {
+                    it.no_push();
+                }
+
+                bool skip_this = false;
+
+                for (auto path_to_skip : paths_to_skip) {
+                    if (path_to_skip.is_relative()) {
+                        path_to_skip = from_dir / path_to_skip;
+                    }
+
+                    path_to_skip = path_to_skip.lexically_normal();
+
+                    if (it->path().lexically_normal() == path_to_skip) {
+                        skip_this = true;
+                        break;
+                    }
+                }
+
+                if (!skip_this) {
+                    const auto relative = get_relative(from_dir, it->path());
+                    rename(it->path(), to_dir / relative);
+                }
+            }
         }
 
 
@@ -280,8 +341,9 @@ namespace decent { namespace package {
                                const boost::filesystem::path& content_dir_path,
                                const boost::filesystem::path& samples_dir_path,
                                const fc::sha512& key,
-                               const event_listener_handle& event_listener) {
-        _parent_dir = manager.get_packages_path();
+                               const event_listener_handle& event_listener)
+        : _parent_dir(manager.get_packages_path())
+    {
         add_event_listener(event_listener);
 
         using namespace boost::filesystem;
@@ -345,7 +407,7 @@ namespace decent { namespace package {
                 _hash = utilities::calculate_hash(aes_file_path);
             }
 
-            manager.release_package(_hash, _parent_dir);
+            manager.release_package(_hash);
 
             const auto package_dir = get_package_dir();
 
@@ -360,11 +422,11 @@ namespace decent { namespace package {
             lock_dir();
 
             std::set<boost::filesystem::path> paths_to_skip;
-            
+
             paths_to_skip.clear();
             paths_to_skip.insert(get_lock_file_path());
             utilities::remove_all_except(package_dir, paths_to_skip);
-            
+
             paths_to_skip.clear();
             paths_to_skip.insert(get_package_state_dir(temp_dir_path));
             paths_to_skip.insert(get_lock_file_path(temp_dir_path));
@@ -380,34 +442,36 @@ namespace decent { namespace package {
     }
 
     package_info::package_info(package_manager& manager,
-                               const boost::filesystem::path& package_dir_path,
-                               const event_listener_handle& event_listener) {
+                               const fc::ripemd160& package_hash,
+                               const event_listener_handle& event_listener)
+        : _hash(package_hash)
+        , _parent_dir(manager.get_packages_path())
+    {
         add_event_listener(event_listener);
 
+        using namespace boost::filesystem;
 
-         // TODO
+        if (!exists(get_package_dir()) || !is_directory(get_package_dir())) {
+            FC_THROW("Package directory ${path} does not exist", ("path", get_package_dir().string()) );
+        }
+
+        lock_dir();
 
 
+        // TODO : restore state
+        
+        
     }
 
     package_info::package_info(package_manager& manager,
-                               const fc::ripemd160& package_hash,
-                               const event_listener_handle& event_listener) {
-        add_event_listener(event_listener);
-
-
+                 const std::string& url,
+                 const event_listener_handle& event_listener)
+        : _parent_dir(manager.get_packages_path())
+    {
         // TODO
-        
-        
     }
 
     package_info::~package_info() {
-
-        // TODO: cleanup
-
-        if (is_dir_locked()) {
-            // TODO: cleanup
-        }
 
         // TODO: cleanup
 
@@ -427,78 +491,126 @@ namespace decent { namespace package {
     }
 
     void package_info::lock_dir() {
-        if (!_file_lock) {
-            _file_lock = std::make_shared<boost::interprocess::file_lock>(get_lock_file_path());
+
+        using namespace boost::interprocess;
+
+        _file_lock_guard.reset();
+        _file_lock.reset(new file_lock(get_lock_file_path().string().c_str()));
+
+        if (!_file_lock->try_lock()) {
+            _file_lock.reset();
+            FC_THROW("Unable to lock package directory ${path} (lock file ${file})", ("path", get_package_dir().string()) ("file", get_lock_file_path().string()) );
         }
 
-        if (!_file_lock->try_shared_lock()) { // TODO
-            FC_THROW("Unable to lock package directory ${path}", ("path", get_package_dir()) );
-        }
+        _file_lock_guard.reset(new scoped_lock<file_lock>(*_file_lock, accept_ownership_type()));
     }
 
     void package_info::unlock_dir() {
-        if (is_dir_locked()) {
-            _file_lock->shared_unlock(); // TODO
-            _file_lock.reset();
-        }
+        _file_lock_guard.reset();
+        _file_lock.reset();
     }
 
+/*
     bool package_info::is_dir_locked() const {
-        return _file_lock && _file_lock->is_shared_locked(); // TODO
+        return _file_lock_guard;
     }
+*/
 
     package_manager::package_manager()
+        : _packages_path(graphene::utilities::decent_path_finder::instance().get_decent_data() / "packages")
     {
+        if (!exists(_packages_path) || !is_directory(_packages_path)) {
+            try {
+                if (!create_directories(_packages_path) && !is_directory(_packages_path)) {
+                    FC_THROW("Unable to create packages directory ${path}", ("path", _packages_path.string()) );
+                }
+            }
+            catch (const boost::filesystem::filesystem_error& ex) {
+                if (!is_directory(_packages_path)) {
+                    FC_THROW("Unable to create packages directory ${path}: ${error}", ("path", _packages_path.string()) ("error", ex.what()) );
+                }
+            }
+        }
+
         _proto_transfer_engines["magnet"] = std::make_shared<torrent_transfer>();
         _proto_transfer_engines["ipfs"] = std::make_shared<ipfs_transfer>();
 
         set_libtorrent_config(graphene::utilities::decent_path_finder::instance().get_decent_home() / "libtorrent.json");
-        set_packages_path(graphene::utilities::decent_path_finder::instance().get_decent_data() / "packages");
+
+        ilog("reading packages from directory ${path}", ("path", _packages_path.string()) );
+
+        using namespace boost::filesystem;
+
+        for (directory_iterator entry(_packages_path); entry != directory_iterator(); ++entry) {
+            try {
+                const std::string hash_str = entry->path().filename().string();
+
+
+                // TODO: throw on wrong string size, etc.
+
+
+                package_handle package(new package_info(*this, fc::ripemd160(hash_str)));
+                _packages.insert(package);
+            }
+            catch (const fc::exception& ex)
+            {
+                elog("unable to read package at ${path}: ${error}", ("path", entry->path().string()) ("error", ex.to_detail_string()) );
+            }
+        }
+
+        ilog("read ${size} packages", ("size", _packages.size()) );
+
+        // TODO: restore anything else?
     }
 
     package_manager::~package_manager() {
-        release_all_packages();
-    }
-
-    void package_manager::release_all_packages() {
         if (!_packages_path.empty()) {
-            ilog("releasing ${size} packages...");
+            ilog("releasing ${size} packages", ("size", _packages.size()) );
             _packages.clear();
         }
 
         // TODO: save anything else?
     }
 
-    void package_manager::restore_all_packages() {
-        if (!_packages_path.empty()) {
-            ilog("reading packages from directory ${path}...", ("path", _packages_path) );
-            const size_t count_before = _packages.size();
-
-            using namespace boost::filesystem;
-
-            for (directory_iterator entry(_packages_path); entry != directory_iterator(); ++entry) {
-                try {
-                    package_handle package = std::make_shared<package_info>(*this, entry->path().filename());
-                    _packages.insert(package);
-                }
-                catch (const fc::exception& ex)
-                {
-                    elog("unable to read package at ${path}: ${error}...", ("path", entry->path()) ("error", ex.to_detail_string()) );
-                }
-            }
-
-            const size_t count_after = _packages.size();
-            ilog("successfully read ${size} packages", ("size", count_after - count_before) );
-        }
-
-        // TODO: restore anything else?
+    package_handle package_manager::get_package(const boost::filesystem::path& content_dir_path,
+                               const boost::filesystem::path& samples_dir_path,
+                               const fc::sha512& key,
+                               const event_listener_handle& event_listener)
+    {
+        package_handle package(new package_info(*this, content_dir_path, samples_dir_path, key, event_listener));
+        std::lock_guard<std::mutex> guard(_mutex);
+        return *_packages.insert(package).first;
     }
 
-    void package_manager::release_package(const fc::ripemd160& hash, const boost::filesystem::path& parent_dir) {
-        fc::scoped_lock<fc::mutex> guard(_mutex);
+    package_handle package_manager::get_package(const std::string& url,
+                               const event_listener_handle& event_listener)
+    {
+        package_handle package(new package_info(*this, url, event_listener));
+        std::lock_guard<std::mutex> guard(_mutex);
+        return *_packages.insert(package).first;
+    }
+
+    // TODO: do we need this?
+    package_handle package_manager::get_package(const fc::ripemd160& hash) {
+        std::lock_guard<std::mutex> guard(_mutex);
+
+        for (auto& package : _packages) {
+            if (package) {
+                if (package->_hash == hash) {
+                    return package;
+                }
+            }
+        }
+
+        return package_handle();
+    }
+
+    // TODO: do we need this?
+    void package_manager::release_package(const fc::ripemd160& hash) {
+        std::lock_guard<std::mutex> guard(_mutex);
 
         for (auto it = _packages.begin(); it != _packages.end(); ) {
-            if (!(*it) || ((*it)->_hash == hash && (parent_dir.empty() || (*it)->_parent_dir == parent_dir))) {
+            if (!(*it) || (*it)->_hash == hash) {
                 it = _packages.erase(it);
             }
             else {
@@ -507,82 +619,22 @@ namespace decent { namespace package {
         }
     }
 
-    package_handle package_manager::create_package(const boost::filesystem::path& content_dir_path,
-                                                   const boost::filesystem::path& samples_dir_path,
-                                                   const fc::sha512& key,
-                                                   const event_listener_handle& event_listener) {
-        package_handle package = std::make_shared<package_info>(*this, content_dir_path, samples_dir_path, key, event_listener);
-        fc::scoped_lock<fc::mutex> guard(_mutex);
-        return *_packages.insert(package).first;
-    }
-
-    package_handle package_manager::consume_package(const std::string& url,
-                                                    const boost::filesystem::path& destination_dir,
-                                                    const fc::sha512& key,
-                                                    const event_listener_handle& event_listener) {
-        // TODO
-    }
-
-    void package_manager::consume_package(const package_handle& package,
-                                          const boost::filesystem::path& destination_dir,
-                                          const fc::sha512& key) {
-        // TODO
-    }
-
-    void package_manager::stop_consuming_package(const package_handle& package) {
-        // TODO
-    }
-
-    package_handle package_manager::seed_package(const std::string& url,
-                                                 const event_listener_handle& event_listener) {
-        // TODO
-    }
-
-    void package_manager::seed_package(const package_handle& package) {
-        // TODO
-    }
-
-    void package_manager::stop_seeding_package(const package_handle& package) {
-        // TODO
+    void package_manager::release_package(const package_handle& package) {
+        std::lock_guard<std::mutex> guard(_mutex);
+        _packages.erase(package);
     }
 
     package_handle_set package_manager::get_all_known_packages() const {
-        // TODO
-    }
-
-    package_handle package_manager::get_package_handle(const fc::ripemd160& hash,
-                                                       const bool full_check) {
-        // TODO
+        std::lock_guard<std::mutex> guard(_mutex);
+        return _packages;
     }
 
     boost::filesystem::path package_manager::get_packages_path() const {
-        fc::scoped_lock<fc::mutex> guard(_mutex);
         return _packages_path;
     }
 
-    void package_manager::set_packages_path(const boost::filesystem::path& packages_path) {
-        if (!exists(packages_path) || !is_directory(packages_path)) {
-            try {
-                if (!create_directories(packages_path) && !is_directory(packages_path)) {
-                    FC_THROW("Unable to create packages directory ${path}", ("path", packages_path.string()) );
-                }
-            }
-            catch (const boost::filesystem::filesystem_error& ex) {
-                if (!is_directory(packages_path)) {
-                    FC_THROW("Unable to create packages directory ${path}: ${error}", ("path", packages_path.string()) ("error", ex.what()) );
-                }
-            }
-        }
-
-        fc::scoped_lock<fc::mutex> guard(_mutex);
-
-        release_all_packages();
-        _packages_path = packages_path;
-        restore_all_packages();
-    }
-
     void package_manager::set_libtorrent_config(const boost::filesystem::path& libtorrent_config_file) {
-        fc::scoped_lock<fc::mutex> guard(_mutex);
+        std::lock_guard<std::mutex> guard(_mutex);
 
         for(auto& proto_transfer_engine : _proto_transfer_engines) {
             torrent_transfer* torrent_engine = dynamic_cast<torrent_transfer*>(proto_transfer_engine.second.get());
