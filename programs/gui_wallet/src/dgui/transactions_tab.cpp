@@ -132,7 +132,7 @@ void Transactions_tab::createNewRow()
 void Transactions_tab::ArrangeSize()
 {
     QSize tqsTableSize = tablewidget->size();
-    std::vector<int> sizes = {10, 20, 20, 10, 10, 30};
+    std::vector<int> sizes = {12, 20, 16, 14, 13, 25};
     for (int i = 0; i < numTransactionCols; ++i) {
         tablewidget->setColumnWidth(i,(tqsTableSize.width()* sizes[i])/100);
     }
