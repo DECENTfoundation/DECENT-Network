@@ -56,7 +56,7 @@ Transactions_tab::Transactions_tab() : green_row(0)
     tablewidget->horizontalHeader()->setDefaultSectionSize(230);
     tablewidget->verticalHeader()->hide();
 
-    tablewidget->setStyleSheet("QTableView{border : 1px solid lightGray}");
+    tablewidget->setStyleSheet("QTableView{border : 0px}");
     tablewidget->setSelectionMode(QAbstractItemView::NoSelection);
     
     tablewidget->setHorizontalHeaderLabels(QStringList() << "Type" << "From" << "To" << "Amount" << "Fee" << "Description");
@@ -65,6 +65,10 @@ Transactions_tab::Transactions_tab() : green_row(0)
 
     tablewidget->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     tablewidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    tablewidget->horizontalHeader()->setStyleSheet("QHeaderView::section {"
+                                                      "border-right: 1px solid rgb(193,192,193);"
+                                                      "border-bottom: 0px;"
+                                                      "border-top: 0px;}");
 
     user.setStyleSheet("border: 0px solid white");
     user.setPlaceholderText("Enter user name to see transaction history");
