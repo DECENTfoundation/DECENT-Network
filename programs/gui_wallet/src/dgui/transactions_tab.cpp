@@ -17,6 +17,8 @@
 
 #include <iostream>
 
+#include <boost/algorithm/string/replace.hpp>
+
 #include <graphene/chain/config.hpp>
 
 #include "gui_wallet_global.hpp"
@@ -126,7 +128,7 @@ void TransactionsTab::createNewRow()
 void TransactionsTab::ArrangeSize()
 {
    QSize tqsTableSize = tablewidget->size();
-   std::vector<int> sizes = {10, 20, 20, 10, 10, 30};
+   std::vector<int> sizes = {18, 10, 17, 17, 8, 8, 22};
    for (int i = 0; i < _table_columns.size(); ++i) {
       tablewidget->setColumnWidth(i, (tqsTableSize.width() * sizes[i]) / 100);
    }
@@ -222,7 +224,9 @@ void TransactionsTab::updateContents() {
          std::string to_account = getAccountName(content["to_account"].get<std::string>());
          std::string operation_type = content["operation_type"].get<std::string>();
          std::string description = content["description"].get<std::string>();
+         std::string timestamp = boost::replace_all_copy(content["timestamp"].get<std::string>(), "T", " ");
          
+
          if (operation_type == "Buy" || operation_type == "Content submit") {
             std::string contentStr;
             RunTask("get_content \"" + description + "\"", contentStr);
@@ -255,7 +259,8 @@ void TransactionsTab::updateContents() {
             transaction_amount = QString::number(std::stod(transaction_amount_js.get<std::string>()) / GRAPHENE_BLOCKCHAIN_PRECISION) + tr(" DCT");
          }
          
-         std::vector<QString> values = {  QString::fromStdString(operation_type),
+         std::vector<QString> values = {  QString::fromStdString(timestamp),
+                                          QString::fromStdString(operation_type),
                                           QString::fromStdString(from_account),
                                           QString::fromStdString(to_account),
                                           transaction_amount,

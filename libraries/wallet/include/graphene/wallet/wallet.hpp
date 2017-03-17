@@ -183,17 +183,17 @@ namespace graphene { namespace wallet {
       namespace detail {
          class wallet_api_impl;
       }
-
-      struct operation_detail {
-          account_id_type         from_account;
-          account_id_type         to_account;
-          string                  operation_type;
-          asset                   transaction_amount;
-          asset                   transaction_fee;
-          string                  description;
-
-          operation_history_object op;
-      };
+   
+   struct operation_detail {
+      account_id_type             from_account;
+      account_id_type             to_account;
+      string                      operation_type;
+      asset                       transaction_amount;
+      asset                       transaction_fee;
+      string                      description;
+      fc::time_point_sec          timestamp;
+      operation_history_object    op;
+   };
 
 /**
  * This wallet assumes it is connected to the database server with a high-bandwidth, low-latency connection and
@@ -1828,6 +1828,7 @@ FC_REFLECT( graphene::wallet::operation_detail,
            (transaction_amount)
            (transaction_fee)
            (description)
+           (timestamp)
            (op)
         )
 

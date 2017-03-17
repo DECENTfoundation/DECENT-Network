@@ -67,7 +67,7 @@ namespace gui_wallet
       
       std::map<std::string, std::string> _user_id_cache;
       
-      const std::vector<std::string> _table_columns = { "Type", "From", "To", "Amount", "Fee", "Description" };
+      const std::vector<std::string> _table_columns = { "Time", "Type", "From", "To", "Amount", "Fee", "Description" };
    };
 }
 
