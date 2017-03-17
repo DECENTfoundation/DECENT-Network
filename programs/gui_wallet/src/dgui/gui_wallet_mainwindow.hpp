@@ -54,9 +54,6 @@ namespace gui_wallet
         void UpdateLockedStatus();
         
         void CliCallbackFnc(void*arg,const std::string& task);
-        int GetDigitalContentsFromVariant(DCT::DIG_CONT_TYPES a_type,
-                                         std::vector<SDigitalContent>& acContents,
-                                         const fc::variant& contents_var);
 
         void DisplayWalletContentGUI();
         void SetPassword(void* a_owner, void* a_str_ptr);

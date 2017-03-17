@@ -13,17 +13,19 @@
 #define     WALLET_CONNECT_CODE     ((void*)-2)
 
 
-#include "gui_wallet_mainwindow.hpp"
-#include "gui_wallet_global.hpp"
 #include <QMenuBar>
 #include <QMoveEvent>
+#include <QMessageBox>
+
 #include "qt_commonheader.hpp"
+#include "gui_wallet_mainwindow.hpp"
+#include "gui_wallet_global.hpp"
+
 #include <stdio.h>
 #include <stdlib.h>
+
 #include <graphene/utilities/dirhelper.hpp>
-#include <QMessageBox>
 #include "json.hpp"
-#include "decent_wallet_ui_gui_jsonparserqt.hpp"
 
 #ifndef DEFAULT_WALLET_FILE_NAME
 #define DEFAULT_WALLET_FILE_NAME       "wallet.json"
@@ -375,32 +377,6 @@ void Mainwindow_gui_wallet::ShowDetailsOnDigContentSlot(SDigitalContent a_dig_co
     default:
         break;
     }
-}
-
-int Mainwindow_gui_wallet::GetDigitalContentsFromVariant(DCT::DIG_CONT_TYPES a_type,
-                                                         std::vector<SDigitalContent>& a_vcContents,
-                                                         const fc::variant& a_contents_var)
-{
-    SDigitalContent aDigContent;
-    JsonParserQt aParser;
-    const JsonParserQt* pNext;
-
-    a_contents_var.visit(aParser);
-    const int cnSize(aParser.size());
-    aDigContent.type = a_type;
-
-    for(int i(0);i<cnSize;++i)
-    {
-        pNext = &(aParser.GetByIndex(i));
-        aDigContent.URI = pNext->GetByKey("URI").value();
-        aDigContent.author = pNext->GetByKey("author").value();
-        aDigContent.price.amount = std::stod(pNext->GetByKey("price").GetByKey("amount").value());
-        aDigContent.price.asset_id = pNext->GetByKey("price").GetByKey("asset_id").value();
-        
-        a_vcContents.push_back(aDigContent);
-    }
-
-    return 0;
 }
 
 void Mainwindow_gui_wallet::UpdateAccountBalances(const std::string& username) {
