@@ -1,4 +1,4 @@
-list( APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/libraries/fc/GitVersionGen" )
+list( APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/libraries/contrib/fc/GitVersionGen" )
 include( GetGitRevisionDescription )
 get_git_head_revision(GIT_REFSPEC GRAPHENE_GIT_REVISION_SHA)
 get_git_unix_timestamp(GRAPHENE_GIT_REVISION_UNIX_TIMESTAMP)
@@ -12,7 +12,7 @@ file(GLOB headers "include/graphene/utilities/*.hpp")
 set(sources
    key_conversion.cpp
    string_escape.cpp
-   tempdir.cpp
+   dirhelper.cpp
    words.cpp
    ${headers})
 
@@ -30,10 +30,10 @@ if (USE_PCH)
   cotire(graphene_utilities)
 endif(USE_PCH)
 
-install( TARGETS
-   graphene_utilities
-
-   RUNTIME DESTINATION bin
-   LIBRARY DESTINATION lib
-   ARCHIVE DESTINATION lib
-)
+#install( TARGETS
+#   graphene_utilities
+#
+#   RUNTIME DESTINATION bin
+#   LIBRARY DESTINATION lib
+#   ARCHIVE DESTINATION lib
+#)

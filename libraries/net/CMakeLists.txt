@@ -1,3 +1,4 @@
+
 file(GLOB HEADERS "include/graphene/net/*.hpp")
 
 set(SOURCES node.cpp
@@ -10,10 +11,11 @@ set(SOURCES node.cpp
 add_library( graphene_net ${SOURCES} ${HEADERS} )
 
 target_link_libraries( graphene_net 
-  PUBLIC fc graphene_db )
+  PUBLIC fc cryptopp graphene_db )
 target_include_directories( graphene_net 
   PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include"
   PRIVATE "${CMAKE_SOURCE_DIR}/libraries/chain/include"
+  PRIVATE "${CMAKE_SOURCE_DIR}/libraries/encrypt/include"
 )
 
 if(MSVC)
@@ -25,10 +27,10 @@ if (USE_PCH)
   cotire(graphene_net)
 endif(USE_PCH)
 
-install( TARGETS
-   graphene_net
-
-   RUNTIME DESTINATION bin
-   LIBRARY DESTINATION lib
-   ARCHIVE DESTINATION lib
-)
+#install( TARGETS
+#   graphene_net
+#
+#   RUNTIME DESTINATION bin
+#   LIBRARY DESTINATION lib
+#   ARCHIVE DESTINATION lib
+#)

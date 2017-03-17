@@ -1,95 +1,265 @@
 Intro for new developers
 ------------------------
 
-This is a quick introduction to get new developers up to speed on Graphene.
+This is a quick introduction to get new developers up to speed on Decent.
 
-Starting Graphene
------------------
 
-For Ubuntu 14.04 LTS users, see this link first:
-    https://github.com/cryptonomex/graphene/wiki/build-ubuntu
+Building Decent [![Build Status](https://travis-ci.com/DECENTfoundation/DECENT-Network.svg?token=xwFm8bxNLqiJV3NaNYgy&branch=develop)](https://travis-ci.com/DECENTfoundation/DECENT-Network)
+---------------
 
-and then proceed with:
+### Installing prerequisites in Linux
 
-    git clone https://github.com/cryptonomex/graphene.git
-    cd graphene
-    git submodule update --init --recursive
-    cmake -DCMAKE_BUILD_TYPE=Debug .
-    make
-    ./programs/witness_node/witness_node
+For Ubuntu 16.04 LTS (for extra actions needed for 14.04 LTS, 14.10, or 16.10 see notes below), execute in console:
 
-This will launch the witness node. If you would like to launch the command-line wallet, you must first specify a port
-for communication with the witness node. To do this, add text to `witness_node_data_dir/config.ini` as follows, then
-restart the node:
+    $ sudo apt-get update
+    $ sudo apt-get install build-essential autotools-dev automake autoconf libtool make cmake checkinstall realpath gcc g++ clang flex bison doxygen gettext git qt5-default libreadline-dev libcrypto++-dev libgmp-dev libdb-dev libdb++-dev libssl-dev libncurses5-dev libboost-all-dev libcurl4-openssl-dev python-dev libicu-dev libbz2-dev
 
+(Ubuntu 16.10 only) Note, that the default version of Boost installed in Ubuntu 16.10 is too high and not supported. In order to install a supported one, in addition to the common commands above, execute the following in console:
+
+    # Uninstall the default Boost and install Boost 1.60.0
+    $ sudo apt-get remove libboost-all-dev
+    $ sudo apt-get autoremove
+    $ sudo apt-get install libboost1.60-all-dev
+
+(Ubuntu 14.04 LTS and 14.10 only; and only boost part for Ubuntu 16.04 LTS case) Note, that the default versions of GCC, CMake, and Boost installed in Ubuntu 14.04 LTS or 14.10 are too old and not supported. In order to install and use the supported ones, in addition to the common commands above, execute the following in console (in the same shell session, where you are going to build Decent itself):
+
+    # Install GCC 5 and Clang 3.5
+    $ sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+    $ sudo apt-get update
+    $ sudo apt-get install gcc-5 g++-5 clang-3.5
+    # Now use either gcc-5 and g++-5, or clang-3.5 and clang++-3.5 as C and C++ compilers.
+    $ export CC=gcc-5
+    $ export CXX=g++-5
+
+    # Download and build CMake 3.7.2
+    $ mkdir -p ~/dev/DECENTfoundation/DECENT-Network-third-party
+    $ cd ~/dev/DECENTfoundation/DECENT-Network-third-party
+    $ rm -rf cmake-3.7.2*
+    $ wget https://cmake.org/files/v3.7/cmake-3.7.2.tar.gz
+    $ tar xvf cmake-3.7.2.tar.gz
+    $ mkdir cmake-3.7.2_prefix
+    $ cd cmake-3.7.2
+    $ CMAKE_ROOT=$(realpath ../cmake-3.7.2_prefix)
+    $ ./configure --prefix=$CMAKE_ROOT
+    $ make
+    $ make install
+    $ cd ..
+    $ rm -rf cmake-3.7.2 cmake-3.7.2.tar.gz
+    $ export PATH=$CMAKE_ROOT/bin:$PATH
+
+    # Download and build Boost 1.60.0
+    $ mkdir -p ~/dev/DECENTfoundation/DECENT-Network-third-party
+    $ cd ~/dev/DECENTfoundation/DECENT-Network-third-party
+    $ rm -rf boost_1_60_0* boost-1.60.0*
+    $ wget https://sourceforge.net/projects/boost/files/boost/1.60.0/boost_1_60_0.tar.gz
+    $ tar xvf boost_1_60_0.tar.gz
+    $ mkdir boost-1.60.0_prefix
+    $ cd boost_1_60_0
+    $ export BOOST_ROOT=$(realpath ../boost-1.60.0_prefix)
+    $ ./bootstrap.sh --prefix=$BOOST_ROOT
+    $ ./b2 install
+    $ cd ..
+    $ rm -rf boost_1_60_0 boost_1_60_0.tar.gz
+
+At this point, `$CC` and `$CXX` should be set to your compilers, `cmake` command should be picked up from `$CMAKE_ROOT/bin`, and CMake configure should find the Boost distribution in the exported `$BOOST_ROOT`.
+
+
+For Fedora 24 or later, execute in console:
+
+    $ sudo dnf clean metadata
+    $ sudo dnf install automake autoconf libtool make cmake gcc clang flex bison doxygen gettext-devel git qt5-qtbase-devel readline-devel cryptopp-devel gmp-devel libdb-devel libdb-cxx-devel openssl-devel libcurl-devel ncurses-devel boost-devel boost-static python-devel libicu-devel bzip2-devel
+
+### Installing prerequisites in macOS
+
+* Install Xcode and Command Line Tools as described in http://railsapps.github.io/xcode-command-line-tools.html
+* Install Homebrew, see http://brew.sh
+
+Then, execute in console:
+
+    $ brew doctor
+    $ brew tap homebrew/versions
+    $ brew update
+    $ brew install automake autoconf libtool cmake berkeley-db boost@1.60 qt5 cryptopp doxygen byacc flex gettext git pbc gmp ipfs openssl readline
+
+### Obtaining the sources, building, and installing Decent in Unix (macOS or Linux)
+
+After all the prerequisites are installed, execute the following commands in console, in order to clone the repo, build, and install/stage Decent:
+
+    # Clone the repo.
+    $ mkdir -p ~/dev/DECENTfoundation
+    $ cd ~/dev/DECENTfoundation
+    $ git clone git@github.com:DECENTfoundation/DECENT-Network.git
+    $ cd DECENT-Network
+    $ git submodule update --init --recursive
+
+    # Build and install Decent.
+    $ mkdir -p ~/dev/DECENTfoundation/DECENT-Network-build
+    $ cd ~/dev/DECENTfoundation/DECENT-Network-build
+    $ cmake -G "Unix Makefiles" -D CMAKE_BUILD_TYPE=Debug ~/dev/DECENTfoundation/DECENT-Network
+    $ cmake --build . --target all -- -j -l 3.0
+    $ cmake --build . --target install
+
+> Note that, in case of "Unix Makefiles" CMake generator, the last two commands are equivalent to:
+> 
+>     $ make -j -l 3.0
+>     $ make install
+
+By this time you should have Decent files installed at `~/dev/DECENTfoundation/DECENT-Network-build/artifacts/prefix` directory. You can specify any other custom install prefix for `cmake` during the initial configuration, for example, by adding `-D CMAKE_INSTALL_PREFIX=~/dev/DECENTfoundation/DECENT-Network-prefix` to the command line.
+
+You can use any path instead of `~/dev/DECENTfoundation` in the steps above.
+
+You can use Xcode, or any other CMake generator, and then, if it is an IDE generator, instead of building and installing via `cmake` in terminal, open the generated project/solution file in the corresponding IDE and perform `ALL_BUILD` and `INSTALL` (or `install`) actions from there.
+
+### Installing prerequisites, obtaining the sources, building, and installing Decent in Windows
+
+TODO
+
+
+Starting Decent
+---------------
+
+> In the commands below, change `~/dev/DECENTfoundation/DECENT-Network-build/artifacts/prefix` to `~/dev/DECENTfoundation/DECENT-Network-prefix` or to any other install location, that you specified during initial configuration.
+
+On first run `witness_node` will create `witness_node_data_dir` in the current working directory, if doesn't exist already.
+
+    $ mkdir -p ~/dev/DECENTfoundation/DECENT-Network-working-dir
+    $ cd ~/dev/DECENTfoundation/DECENT-Network-working-dir
+    $ ~/dev/DECENTfoundation/DECENT-Network-build/artifacts/prefix/bin/witness_node
+
+Now press Ctrl-C to stop `witness_node`.
+
+Remove `~/dev/DECENTfoundation/DECENT-Network-working-dir/witness_node_data_dir/blockchain` directory.
+Edit `~/dev/DECENTfoundation/DECENT-Network-working-dir/witness_node_data_dir/config.ini` to contain the following lines:
+
+    seed-node = 185.8.165.21:33142
     rpc-endpoint = 127.0.0.1:8090
 
-Then, in a separate terminal window, start the command-line wallet `cli_wallet`:
+Then, run the witness node again:
 
-    ./programs/cli_wallet/cli_wallet
+    $ cd ~/dev/DECENTfoundation/DECENT-Network-working-dir
+    $ ~/dev/DECENTfoundation/DECENT-Network-build/artifacts/prefix/bin/witness_node --genesis-json ~/dev/DECENTfoundation/DECENT-Network/genesis.json --replay-blockchain
 
-To set your iniital password to 'password' use:
+This will launch the witness node with the default genesis. Replay blockchain is a workaround, there is currently a bug than not all saved objects are restored correctly after restart. 
 
-    >>> set_password password
-    >>> unlock password
+Then, in a separate console, start the command-line wallet by executing:
 
-To import your initial balance:
+    $ cd ~/dev/DECENTfoundation/DECENT-Network-working-dir
+    $ ~/dev/DECENTfoundation/DECENT-Network-build/artifacts/prefix/bin/cli_wallet
 
-    >>> import_balance nathan [5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3] true
+To set your initial password to `mypassword`, execute:
 
-If you send private keys over this connection, `rpc-endpoint` should be bound to localhost for security.
+    >>> set_password mypassword
+    >>> unlock mypassword
 
-A list of CLI wallet commands is available
-[here](https://github.com/cryptonomex/graphene/blob/master/libraries/wallet/include/graphene/wallet/wallet.hpp).
+To import your account keys, execute:
 
-Code coverage testing
----------------------
+    >>> import_key [name] [private_wif_key]
 
-Check how much code is covered by unit tests, using gcov/lcov (see http://ltp.sourceforge.net/coverage/lcov.php ).
+The list of the test accounts is here:
 
-    cmake -D ENABLE_COVERAGE_TESTING=true -D CMAKE_BUILD_TYPE=Debug .
-    make
-    lcov --capture --initial --directory . --output-file base.info --no-external
-    libraries/fc/bloom_test
-    libraries/fc/task_cancel_test
-    libraries/fc/api
-    libraries/fc/blind
-    libraries/fc/ecc_test test
-    libraries/fc/real128_test
-    libraries/fc/lzma_test README.md
-    libraries/fc/ntp_test
-    tests/intense_test
-    tests/app_test
-    tests/chain_bench
-    tests/chain_test
-    tests/performance_test
-    lcov --capture --directory . --output-file test.info --no-external
-    lcov --add-tracefile base.info --add-tracefile test.info --output-file total.info
-    lcov -o interesting.info -r total.info libraries/fc/vendor/\* libraries/fc/tests/\* tests/\*
-    mkdir -p lcov
-    genhtml interesting.info --output-directory lcov --prefix `pwd`
+    ejossev
+    {
+      "wif_priv_key": "5JntqhEuzub2DV6sD2VDLgmMCzqPxbznzBhWh2e9275PZjxPxfG",
+      "pub_key": "DCT7YJyCq2VSza6BA78dzFepK3SBjW6PHBZutSRsPeddHwahTu4cy"
+    }
+    richard
+    {
+      "wif_priv_key": "5KaqD3V3tamUUq1sM68K4hBQSJjJHqBBHTJonNJ5TXrsSepWPoH",
+      "pub_key": "DCT556r9dwc98LF3EjSTH3GXtUSQorcbgkKaYvND7RRfKPqCKG7dv"
+    }
+    vazgen
+    {
+      "wif_priv_key": "5JtYrTZfPBWGyfnezUJigid5FxohxWibjGihJuPEz1TKVzruYKM",
+      "pub_key": "DCT5qbepojx4qATs12JT1e42Auhq457gaHSrZX2AJrmw3zBu9TUvy"
+    }
+    davit
+    {
+      "wif_priv_key": "5JFu59eMF4AQdx11QhrPchBTdF3WEp7HyMgUxRhmTEW491ofwMT",
+      "pub_key": "DCT5iY4Hdj9oaJY6vGqRSMc2vqyKzrocN4o5ze8BrYBsaQC3CeAjw"
+    }
+    denis
+    {
+      "wif_priv_key": "5KbpFoPWgcsA1MMgnSzxq61GyRoGxCxwXr922HPj7L2Xev7RCob",
+      "pub_key": "DCT6Ria6ZVFHNfFVrh8wBUcDubjRQ2k3UEe4bMnrPsrsaGyKPKkiF"
+    }
+    hayk
+    {
+      "wif_priv_key": "5JRPoVy5ZUX4ZxDyec78Hb7GV1424XnoD3yDKEYTWMqS4JBMB9q",
+      "pub_key": "DCT5w8Hrt92G7hZmZJgMSeZGtW3tQQj8fqsJmrtffnrHyWNY7To7y"
+    }
 
-Now open `lcov/index.html` in a browser.
+After importing the respective key(s), you will need to restart cli_wallet: use Ctrl-D to cleanly exit from it, then start it again.
 
-Unit testing
-------------
+There is currently a bug in cli_wallet when the keys are not imported to the internal structures right after import.
 
-We use the Boost unit test framework for unit testing.  Most unit
-tests reside in the `chain_test` build target.
+The list of cli_wallet commands is available [here](https://github.com/cryptonomex/graphene/blob/master/libraries/wallet/include/graphene/wallet/wallet.hpp).
+
 
 Witness node
 ------------
 
 The role of the witness node is to broadcast transactions, download blocks, and optionally sign them.
 
-```
-./witness_node --rpc-endpoint 127.0.0.1:8090 --enable-stale-production -w '"1.6.0"' '"1.6.1"' '"1.6.2"' '"1.6.3"' '"1.6.4"' '"1.6.5"' '"1.6.6"' '"1.6.7"' '"1.6.8"' '"1.6.9"' '"1.6.10"' '"1.6.11"' '"1.6.12"' '"1.6.13"' '"1.6.14"' '"1.6.15"' '"1.6.16"' '"1.6.17"' '"1.6.18"' '"1.6.19"' '"1.6.20"' '"1.6.21"' '"1.6.22"' '"1.6.23"' '"1.6.24"' '"1.6.25"' '"1.6.26"' '"1.6.27"' '"1.6.28"' '"1.6.29"' '"1.6.30"' '"1.6.31"' '"1.6.32"' '"1.6.33"' '"1.6.34"' '"1.6.35"' '"1.6.36"' '"1.6.37"' '"1.6.38"' '"1.6.39"' '"1.6.40"' '"1.6.41"' '"1.6.42"' '"1.6.43"' '"1.6.44"' '"1.6.45"' '"1.6.46"' '"1.6.47"' '"1.6.48"' '"1.6.49"' '"1.6.50"' '"1.6.51"' '"1.6.52"' '"1.6.53"' '"1.6.54"' '"1.6.55"' '"1.6.56"' '"1.6.57"' '"1.6.58"' '"1.6.59"' '"1.6.60"' '"1.6.61"' '"1.6.62"' '"1.6.63"' '"1.6.64"' '"1.6.65"' '"1.6.66"' '"1.6.67"' '"1.6.68"' '"1.6.69"' '"1.6.70"' '"1.6.71"' '"1.6.72"' '"1.6.73"' '"1.6.74"' '"1.6.75"' '"1.6.76"' '"1.6.77"' '"1.6.78"' '"1.6.79"' '"1.6.80"' '"1.6.81"' '"1.6.82"' '"1.6.83"' '"1.6.84"' '"1.6.85"' '"1.6.86"' '"1.6.87"' '"1.6.88"' '"1.6.89"' '"1.6.90"' '"1.6.91"' '"1.6.92"' '"1.6.93"' '"1.6.94"' '"1.6.95"' '"1.6.96"' '"1.6.97"' '"1.6.98"' '"1.6.99"' '"1.6.100"'
-```
+    $ ~/dev/DECENTfoundation/DECENT-Network-build/artifacts/prefix/bin/witness_node --rpc-endpoint 127.0.0.1:8090 --enable-stale-production -w '"1.6.0"' '"1.6.1"' '"1.6.2"' '"1.6.3"' '"1.6.4"' '"1.6.5"' '"1.6.6"' '"1.6.7"' '"1.6.8"' '"1.6.9"' '"1.6.10"' 
 
-Running specific tests
-----------------------
+Testing Decent
+--------------
 
-- `tests/chain_tests -t block_tests/name_of_test`
+Seeder plugin is responsible for automatically announce seeder's capablity, downloading content, seeding it and distributing keys. In order to enable it follow these steps:
+1. Generarate El-Gamal keys using cli_wallet command (first one is private, second one is public)
+
+        generate_el_gamal_keys
+
+2. Add parameters to the witness_node
+
+        --seeder [account-id] --seeder-private-key [private_wif_key] --content-private-key [el_gamal_private_key] --packages-path [path] --seeding-price [price] --free-space [free-space]
+    
+    where [account-id] is one of your accounts, [private_wif_key] corresponding active key, [el_gamal_private_key] is the generated El-Gamal key, [path] is a filesystem location with at least [space] Megabytes available, and [price] is publishing price per MB per day, in satoshis.
+
+
+### Coverage testing
+    
+Check how much code is covered by unit tests, using gcov/lcov (see http://ltp.sourceforge.net/coverage/lcov.php ).
+
+    $ mkdir -p ~/dev/DECENTfoundation/DECENT-Network-build
+    $ cd ~/dev/DECENTfoundation/DECENT-Network-build
+    $ cmake -G "Unix Makefiles" -D CMAKE_BUILD_TYPE=Debug -D ENABLE_COVERAGE_TESTING=TRUE ~/dev/DECENTfoundation/DECENT-Network
+    $ cmake --build . --target all -- -j -l 3.0
+    $ cmake --build . --target install
+    
+    $ lcov --capture --initial --directory . --output-file base.info --no-external
+    $ libraries/contrib/fc/bloom_test
+    $ libraries/contrib/fc/task_cancel_test
+    $ libraries/contrib/fc/api
+    $ libraries/contrib/fc/blind
+    $ libraries/contrib/fc/ecc_test test
+    $ libraries/contrib/fc/real128_test
+    $ libraries/contrib/fc/lzma_test README.md
+    $ libraries/contrib/fc/ntp_test
+    $ tests/intense_test
+    $ tests/app_test
+    $ tests/chain_bench
+    $ tests/chain_test
+    $ tests/performance_test
+    $ lcov --capture --directory . --output-file test.info --no-external
+    $ lcov --add-tracefile base.info --add-tracefile test.info --output-file total.info
+    $ lcov -o interesting.info -r total.info libraries/contrib/fc/vendor/\* libraries/contrib/fc/tests/\* tests/\*
+    $ mkdir -p lcov
+    $ genhtml interesting.info --output-directory lcov --prefix `pwd`
+
+Now open `lcov/index.html` in a browser.
+
+
+### Unit testing
+
+We use the Boost.Test unit test framework for unit testing.  Most unit
+tests reside in the `chain_test` build target.
+
+
+### Running specific tests
+
+`$ tests/chain_tests -t block_tests/name_of_test`
+
 
 Using the API
 -------------
@@ -114,6 +284,7 @@ We can do the same thing using an HTTP client such as `curl` for API's which do 
 API 0 is accessible using regular JSON-RPC:
 
     $ curl --data '{"jsonrpc": "2.0", "method": "get_accounts", "params": [["1.2.0"]], "id": 1}' http://127.0.0.1:8090/rpc
+
 
 Accessing restricted API's
 --------------------------
@@ -144,7 +315,7 @@ necessary to use the wallet:
        ]
     }
 
-Passwords are stored in `base64` as as salted `sha256` hashes.  A simple Python script, `saltpass.py` is avaliable to obtain hash and salt values from a password.
+Passwords are stored in `base64` as salted `sha256` hashes.  A simple Python script, `saltpass.py` is avaliable to obtain hash and salt values from a password.
 A single asterisk `"*"` may be specified as username or password hash to accept any value.
 
 With the above configuration, here is an example of how to call `add_node` from the `network_node` API:
@@ -162,10 +333,12 @@ If you want information which is not available from an API, it might be availabl
 from the [database](https://bitshares.github.io/doxygen/classgraphene_1_1chain_1_1database.html);
 it is fairly simple to write API methods to expose database methods.
 
+
 Running private testnet
 -----------------------
 
 See the [documentation](https://github.com/cryptonomex/graphene/wiki/private-testnet) if you want to run a private testnet.
+
 
 Questions
 ---------

@@ -88,7 +88,10 @@ namespace graphene { namespace chain {
          FC_ASSERT( a.asset_id == b.asset_id );
          return asset( a.amount + b.amount, a.asset_id );
       }
-
+      friend asset operator * ( const uint32_t a, const asset& b )
+      {
+         return asset( b.amount * a, b.asset_id );
+      }
       static share_type scaled_precision( uint8_t precision )
       {
          FC_ASSERT( precision < 19 );
@@ -167,45 +170,11 @@ namespace graphene { namespace chain {
        *  BlackSwan ---> SQR ---> MCR ----> SP
        */
       ///@{
-      /**
-       * Forced settlements will evaluate using this price, defined as BITASSET / COLLATERAL
-       */
-      price settlement_price;
 
       /// Price at which automatically exchanging this asset for CORE from fee pool occurs (used for paying fees)
       price core_exchange_rate;
 
-      /** Fixed point between 1.000 and 10.000, implied fixed point denominator is GRAPHENE_COLLATERAL_RATIO_DENOM */
-      uint16_t maintenance_collateral_ratio = GRAPHENE_DEFAULT_MAINTENANCE_COLLATERAL_RATIO;
-
-      /** Fixed point between 1.000 and 10.000, implied fixed point denominator is GRAPHENE_COLLATERAL_RATIO_DENOM */
-      uint16_t maximum_short_squeeze_ratio = GRAPHENE_DEFAULT_MAX_SHORT_SQUEEZE_RATIO;
-
-      /**
-       *  When updating a call order the following condition must be maintained:
-       *
-       *  debt * maintenance_price() < collateral
-       *  debt * settlement_price    < debt * maintenance
-       *  debt * maintenance_price() < debt * max_short_squeeze_price()
-      price maintenance_price()const;
-       */
-
-      /** When selling collateral to pay off debt, the least amount of debt to receive should be
-       *  min_usd = max_short_squeeze_price() * collateral
-       *
-       *  This is provided to ensure that a black swan cannot be trigged due to poor liquidity alone, it
-       *  must be confirmed by having the max_short_squeeze_price() move below the black swan price.
-       */
-      price max_short_squeeze_price()const;
-      ///@}
-
-      friend bool operator == ( const price_feed& a, const price_feed& b )
-      {
-         return std::tie( a.settlement_price, a.maintenance_collateral_ratio, a.maximum_short_squeeze_ratio ) ==
-                std::tie( b.settlement_price, b.maintenance_collateral_ratio, b.maximum_short_squeeze_ratio );
-      }
-
-      void validate() const;
+      void validate() const {};
       bool is_for( asset_id_type asset_id ) const;
    };
 
@@ -214,7 +183,6 @@ namespace graphene { namespace chain {
 FC_REFLECT( graphene::chain::asset, (amount)(asset_id) )
 FC_REFLECT( graphene::chain::price, (base)(quote) )
 
-#define GRAPHENE_PRICE_FEED_FIELDS (settlement_price)(maintenance_collateral_ratio)(maximum_short_squeeze_ratio) \
-   (core_exchange_rate)
+#define GRAPHENE_PRICE_FEED_FIELDS (core_exchange_rate)
 
 FC_REFLECT( graphene::chain::price_feed, GRAPHENE_PRICE_FEED_FIELDS )

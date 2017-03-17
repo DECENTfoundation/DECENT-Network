@@ -40,7 +40,6 @@ void_result vesting_balance_create_evaluator::do_evaluate( const vesting_balance
 
    FC_ASSERT( op.amount.amount > 0 );
    FC_ASSERT( d.get_balance( creator_account.id, op.amount.asset_id ) >= op.amount );
-   FC_ASSERT( !op.amount.asset_id(d).is_transfer_restricted() );
 
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }

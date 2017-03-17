@@ -1,0 +1,6 @@
+GUI wallet doc is GUI application, created by using QT library
+The view of gui have a loog in the "gui_wallet.jpg" file
+
+To do list
+1. fl:gui_wallet_mainwindow.cpp, ln:~222 -> change printf to make it correct also for visual studio
+2. fl:gui_wallet_mainwindow.cpp, line:~69 -> should be understood and uncommented

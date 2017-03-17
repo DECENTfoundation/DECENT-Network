@@ -98,10 +98,8 @@ namespace graphene { namespace chain {
 
    //GRAPHENE_DECLARE_OP_BASE_EXCEPTIONS( limit_order_create );
    //GRAPHENE_DECLARE_OP_BASE_EXCEPTIONS( limit_order_cancel );
-   GRAPHENE_DECLARE_OP_BASE_EXCEPTIONS( call_order_update );
-   GRAPHENE_DECLARE_OP_EVALUATE_EXCEPTION( unfilled_margin_call, call_order_update, 1, "Updating call order would trigger a margin call that cannot be fully filled" )
 
-   GRAPHENE_DECLARE_OP_BASE_EXCEPTIONS( account_create );
+      GRAPHENE_DECLARE_OP_BASE_EXCEPTIONS( account_create );
    GRAPHENE_DECLARE_OP_EVALUATE_EXCEPTION( max_auth_exceeded, account_create, 1, "Exceeds max authority fan-out" )
    GRAPHENE_DECLARE_OP_EVALUATE_EXCEPTION( auth_account_not_found, account_create, 2, "Auth account not found" )
    GRAPHENE_DECLARE_OP_EVALUATE_EXCEPTION( buyback_incorrect_issuer, account_create, 3, "Incorrect issuer specified for account" )
@@ -121,14 +119,10 @@ namespace graphene { namespace chain {
    //GRAPHENE_DECLARE_OP_BASE_EXCEPTIONS( asset_update_feed_producers );
    //GRAPHENE_DECLARE_OP_BASE_EXCEPTIONS( asset_issue );
 
-   GRAPHENE_DECLARE_OP_BASE_EXCEPTIONS( asset_reserve );
-   GRAPHENE_DECLARE_OP_EVALUATE_EXCEPTION( invalid_on_mia, asset_reserve, 1, "invalid on mia" )
-
    //GRAPHENE_DECLARE_OP_BASE_EXCEPTIONS( asset_fund_fee_pool );
    //GRAPHENE_DECLARE_OP_BASE_EXCEPTIONS( asset_settle );
    //GRAPHENE_DECLARE_OP_BASE_EXCEPTIONS( asset_global_settle );
    //GRAPHENE_DECLARE_OP_BASE_EXCEPTIONS( asset_publish_feed );
-   //GRAPHENE_DECLARE_OP_BASE_EXCEPTIONS( committee_member_create );
    //GRAPHENE_DECLARE_OP_BASE_EXCEPTIONS( witness_create );
 
    GRAPHENE_DECLARE_OP_BASE_EXCEPTIONS( proposal_create );
@@ -148,11 +142,6 @@ namespace graphene { namespace chain {
    //GRAPHENE_DECLARE_OP_BASE_EXCEPTIONS( custom );
    //GRAPHENE_DECLARE_OP_BASE_EXCEPTIONS( assert );
 
-   GRAPHENE_DECLARE_OP_BASE_EXCEPTIONS( override_transfer );
-   GRAPHENE_DECLARE_OP_EVALUATE_EXCEPTION( not_permitted, override_transfer, 1, "not permitted" )
-
-   GRAPHENE_DECLARE_OP_BASE_EXCEPTIONS( blind_transfer );
-   GRAPHENE_DECLARE_OP_EVALUATE_EXCEPTION( unknown_commitment, blind_transfer, 1, "Attempting to claim an unknown prior commitment" );
 
    /*
    FC_DECLARE_DERIVED_EXCEPTION( addition_overflow,                 graphene::chain::chain_exception, 30002, "addition overflow" )
@@ -175,7 +164,6 @@ namespace graphene { namespace chain {
    FC_DECLARE_DERIVED_EXCEPTION( time_in_past,                      graphene::chain::chain_exception, 30018, "time is in the past" )
    FC_DECLARE_DERIVED_EXCEPTION( time_in_future,                    graphene::chain::chain_exception, 30019, "time is in the future" )
    FC_DECLARE_DERIVED_EXCEPTION( invalid_block_digest,              graphene::chain::chain_exception, 30020, "invalid block digest" )
-   FC_DECLARE_DERIVED_EXCEPTION( invalid_committee_member_signee,           graphene::chain::chain_exception, 30021, "invalid committee_member signee" )
    FC_DECLARE_DERIVED_EXCEPTION( failed_checkpoint_verification,    graphene::chain::chain_exception, 30022, "failed checkpoint verification" )
    FC_DECLARE_DERIVED_EXCEPTION( wrong_chain_id,                    graphene::chain::chain_exception, 30023, "wrong chain id" )
    FC_DECLARE_DERIVED_EXCEPTION( unknown_block,                     graphene::chain::chain_exception, 30024, "unknown block" )
@@ -183,14 +171,12 @@ namespace graphene { namespace chain {
 
    FC_DECLARE_EXCEPTION( evaluation_error, 31000, "Evaluation Error" )
    FC_DECLARE_DERIVED_EXCEPTION( negative_deposit,                  graphene::chain::evaluation_error, 31001, "negative deposit" )
-   FC_DECLARE_DERIVED_EXCEPTION( not_a_committee_member,                    graphene::chain::evaluation_error, 31002, "not a committee_member" )
    FC_DECLARE_DERIVED_EXCEPTION( unknown_balance_record,            graphene::chain::evaluation_error, 31003, "unknown balance record" )
    FC_DECLARE_DERIVED_EXCEPTION( insufficient_funds,                graphene::chain::evaluation_error, 31004, "insufficient funds" )
    FC_DECLARE_DERIVED_EXCEPTION( missing_signature,                 graphene::chain::evaluation_error, 31005, "missing signature" )
    FC_DECLARE_DERIVED_EXCEPTION( invalid_claim_password,            graphene::chain::evaluation_error, 31006, "invalid claim password" )
    FC_DECLARE_DERIVED_EXCEPTION( invalid_withdraw_condition,        graphene::chain::evaluation_error, 31007, "invalid withdraw condition" )
    FC_DECLARE_DERIVED_EXCEPTION( negative_withdraw,                 graphene::chain::evaluation_error, 31008, "negative withdraw" )
-   FC_DECLARE_DERIVED_EXCEPTION( not_an_active_committee_member,            graphene::chain::evaluation_error, 31009, "not an active committee_member" )
    FC_DECLARE_DERIVED_EXCEPTION( expired_transaction,               graphene::chain::evaluation_error, 31010, "expired transaction" )
    FC_DECLARE_DERIVED_EXCEPTION( invalid_transaction_expiration,    graphene::chain::evaluation_error, 31011, "invalid transaction expiration" )
    FC_DECLARE_DERIVED_EXCEPTION( oversized_transaction,             graphene::chain::evaluation_error, 31012, "transaction exceeded the maximum transaction size" )
@@ -205,11 +191,8 @@ namespace graphene { namespace chain {
    FC_DECLARE_DERIVED_EXCEPTION( account_key_in_use,                graphene::chain::evaluation_error, 32008, "account key already in use" )
    FC_DECLARE_DERIVED_EXCEPTION( account_retracted,                 graphene::chain::evaluation_error, 32009, "account retracted" )
    FC_DECLARE_DERIVED_EXCEPTION( unknown_parent_account_name,       graphene::chain::evaluation_error, 32010, "unknown parent account name" )
-   FC_DECLARE_DERIVED_EXCEPTION( unknown_committee_member_slate,            graphene::chain::evaluation_error, 32011, "unknown committee_member slate" )
-   FC_DECLARE_DERIVED_EXCEPTION( too_may_committee_members_in_slate,        graphene::chain::evaluation_error, 32012, "too many committee_members in slate" )
    FC_DECLARE_DERIVED_EXCEPTION( pay_balance_remaining,             graphene::chain::evaluation_error, 32013, "pay balance remaining" )
 
-   FC_DECLARE_DERIVED_EXCEPTION( not_a_committee_member_signature,          graphene::chain::evaluation_error, 33002, "not committee_members signature" )
 
    FC_DECLARE_DERIVED_EXCEPTION( invalid_precision,                 graphene::chain::evaluation_error, 35001, "invalid precision" )
    FC_DECLARE_DERIVED_EXCEPTION( invalid_asset_symbol,              graphene::chain::evaluation_error, 35002, "invalid asset symbol" )
@@ -223,7 +206,6 @@ namespace graphene { namespace chain {
    FC_DECLARE_DERIVED_EXCEPTION( not_user_issued,                   graphene::chain::evaluation_error, 35010, "not user issued" )
    FC_DECLARE_DERIVED_EXCEPTION( invalid_asset_name,                graphene::chain::evaluation_error, 35011, "invalid asset name" )
 
-   FC_DECLARE_DERIVED_EXCEPTION( committee_member_vote_limit,               graphene::chain::evaluation_error, 36001, "committee_member_vote_limit" )
    FC_DECLARE_DERIVED_EXCEPTION( insufficient_fee,                  graphene::chain::evaluation_error, 36002, "insufficient fee" )
    FC_DECLARE_DERIVED_EXCEPTION( negative_fee,                      graphene::chain::evaluation_error, 36003, "negative fee" )
    FC_DECLARE_DERIVED_EXCEPTION( missing_deposit,                   graphene::chain::evaluation_error, 36004, "missing deposit" )

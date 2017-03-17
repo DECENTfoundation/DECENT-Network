@@ -33,11 +33,13 @@
 #include <boost/range/iterator_range.hpp>
 #include <boost/rational.hpp>
 #include <boost/multiprecision/cpp_int.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include <cctype>
 
 #include <cfenv>
 #include <iostream>
+#include "json.hpp"
 
 #define GET_REQUIRED_FEES_MAX_RECURSION 4
 
@@ -83,6 +85,8 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       vector<account_id_type> get_account_references( account_id_type account_id )const;
       vector<optional<account_object>> lookup_account_names(const vector<string>& account_names)const;
       map<string,account_id_type> lookup_accounts(const string& lower_bound_name, uint32_t limit)const;
+      map<string,account_id_type> search_accounts(const string& search_term, uint32_t limit)const;
+
       uint64_t get_account_count()const;
 
       // Balances
@@ -97,9 +101,6 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
 
       // Markets / feeds
       vector<limit_order_object>         get_limit_orders(asset_id_type a, asset_id_type b, uint32_t limit)const;
-      vector<call_order_object>          get_call_orders(asset_id_type a, uint32_t limit)const;
-      vector<force_settlement_object>    get_settle_orders(asset_id_type a, uint32_t limit)const;
-      vector<call_order_object>          get_margin_positions( const account_id_type& id )const;
       void subscribe_to_market(std::function<void(const variant&)> callback, asset_id_type a, asset_id_type b);
       void unsubscribe_from_market(asset_id_type a, asset_id_type b);
       market_ticker                      get_ticker( const string& base, const string& quote )const;
@@ -112,11 +113,6 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       fc::optional<witness_object> get_witness_by_account(account_id_type account)const;
       map<string, witness_id_type> lookup_witness_accounts(const string& lower_bound_name, uint32_t limit)const;
       uint64_t get_witness_count()const;
-
-      // Committee members
-      vector<optional<committee_member_object>> get_committee_members(const vector<committee_member_id_type>& committee_member_ids)const;
-      fc::optional<committee_member_object> get_committee_member_by_account(account_id_type account)const;
-      map<string, committee_member_id_type> lookup_committee_member_accounts(const string& lower_bound_name, uint32_t limit)const;
 
       // Votes
       vector<variant> lookup_vote_ids( const vector<vote_id_type>& votes )const;
@@ -134,7 +130,24 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       vector<proposal_object> get_proposed_transactions( account_id_type id )const;
 
       // Blinded balances
-      vector<blinded_balance_object> get_blinded_balances( const flat_set<commitment_type>& commitments )const;
+
+      // Decent
+      vector<buying_object> get_open_buyings()const;
+      vector<buying_object> get_open_buyings_by_URI(const string& URI)const;
+      vector<buying_object> get_open_buyings_by_consumer(const account_id_type& consumer)const;
+      optional<buying_object> get_buying_by_consumer_URI( const account_id_type& consumer, const string& URI) const;
+      vector<buying_object> get_buying_history_objects_by_consumer( const account_id_type& consumer )const;
+      vector<buying_object> get_buying_objects_by_consumer( const account_id_type& consumer )const;
+      optional<uint64_t> get_rating_by_consumer_URI( const account_id_type& consumer, const string& URI )const;
+      optional<content_object> get_content( const string& URI )const;
+      vector<content_object> list_content_by_author( const account_id_type& author )const;
+      vector<content_summary> list_content( const string& URI_begin, uint32_t count)const;
+      vector<content_summary> search_content( const string& term, uint32_t count)const;
+      vector<content_object> list_content_by_bought( const uint32_t count )const;
+      vector<seeder_object> list_publishers_by_price( const uint32_t count )const;
+      vector<uint64_t> get_content_ratings( const string& URI)const;
+      optional<seeder_object> get_seeder(account_id_type) const;
+      optional<vector<seeder_object>> list_seeders_by_upload( const uint32_t count )const;
 
    //private:
       template<typename T>
@@ -428,7 +441,7 @@ vector<vector<account_id_type>> database_api::get_key_references( vector<public_
 }
 
 /**
- *  @return all accounts that referr to the key or account id in their owner or active authorities.
+ *  @return all accounts that refer to the key or account id in their owner or active authorities.
  */
 vector<vector<account_id_type>> database_api_impl::get_key_references( vector<public_key_type> keys )const
 {
@@ -570,11 +583,6 @@ std::map<std::string, full_account> database_api_impl::get_full_accounts( const 
                     [&acnt] (const limit_order_object& order) {
                        acnt.limit_orders.emplace_back(order);
                     });
-      auto call_range = _db.get_index_type<call_order_index>().indices().get<by_account>().equal_range(account->id);
-      std::for_each(call_range.first, call_range.second,
-                    [&acnt] (const call_order_object& call) {
-                       acnt.call_orders.emplace_back(call);
-                    });
       results[account_name_or_id] = acnt;
    }
    return results;
@@ -632,10 +640,42 @@ vector<optional<account_object>> database_api_impl::lookup_account_names(const v
    });
    return result;
 }
+    
+    
+map<string,account_id_type> database_api::search_accounts(const string& search_term, uint32_t limit) const {
+    return my->search_accounts( search_term, limit );
+}
+
 
 map<string,account_id_type> database_api::lookup_accounts(const string& lower_bound_name, uint32_t limit)const
 {
    return my->lookup_accounts( lower_bound_name, limit );
+}
+    
+    
+map<string,account_id_type> database_api_impl::search_accounts(const string& term, uint32_t limit)const
+{
+    FC_ASSERT( limit <= 1000 );
+    const auto& accounts_by_name = _db.get_index_type<account_index>().indices().get<by_name>();
+    map<string,account_id_type> result;
+    
+    for( auto itr = accounts_by_name.begin(); itr != accounts_by_name.end() && limit > 0; ++itr ) {
+        
+        std::string account_id_str = fc::variant(itr->get_id()).as<std::string>();
+        std::string account_name = itr->name;
+        std::string search_term = term;
+        
+        boost::algorithm::to_lower(account_id_str);
+        boost::algorithm::to_lower(account_name);
+        boost::algorithm::to_lower(search_term);
+        
+        if (account_name.find(search_term) != std::string::npos || account_id_str.find(search_term) != std::string::npos) {
+            result.insert(make_pair(itr->name, itr->get_id()));
+            limit--;
+        }
+    }
+    
+    return result;
 }
 
 map<string,account_id_type> database_api_impl::lookup_accounts(const string& lower_bound_name, uint32_t limit)const
@@ -845,57 +885,6 @@ vector<limit_order_object> database_api_impl::get_limit_orders(asset_id_type a, 
    }
 
    return result;
-}
-
-vector<call_order_object> database_api::get_call_orders(asset_id_type a, uint32_t limit)const
-{
-   return my->get_call_orders( a, limit );
-}
-
-vector<call_order_object> database_api_impl::get_call_orders(asset_id_type a, uint32_t limit)const
-{
-   const auto& call_index = _db.get_index_type<call_order_index>().indices().get<by_price>();
-   const asset_object& mia = _db.get(a);
-   price index_price = price::min(mia.bitasset_data(_db).options.short_backing_asset, mia.get_id());
-
-   return vector<call_order_object>(call_index.lower_bound(index_price.min()),
-                                    call_index.lower_bound(index_price.max()));
-}
-
-vector<force_settlement_object> database_api::get_settle_orders(asset_id_type a, uint32_t limit)const
-{
-   return my->get_settle_orders( a, limit );
-}
-
-vector<force_settlement_object> database_api_impl::get_settle_orders(asset_id_type a, uint32_t limit)const
-{
-   const auto& settle_index = _db.get_index_type<force_settlement_index>().indices().get<by_expiration>();
-   const asset_object& mia = _db.get(a);
-   return vector<force_settlement_object>(settle_index.lower_bound(mia.get_id()),
-                                          settle_index.upper_bound(mia.get_id()));
-}
-
-vector<call_order_object> database_api::get_margin_positions( const account_id_type& id )const
-{
-   return my->get_margin_positions( id );
-}
-
-vector<call_order_object> database_api_impl::get_margin_positions( const account_id_type& id )const
-{
-   try
-   {
-      const auto& idx = _db.get_index_type<call_order_index>();
-      const auto& aidx = idx.indices().get<by_account>();
-      auto start = aidx.lower_bound( boost::make_tuple( id, asset_id_type(0) ) );
-      auto end = aidx.lower_bound( boost::make_tuple( id+1, asset_id_type(0) ) );
-      vector<call_order_object> result;
-      while( start != end )
-      {
-         result.push_back(*start);
-         ++start;
-      }
-      return result;
-   } FC_CAPTURE_AND_RETHROW( (id) )
 }
 
 void database_api::subscribe_to_market(std::function<void(const variant&)> callback, asset_id_type a, asset_id_type b)
@@ -1242,71 +1231,6 @@ uint64_t database_api_impl::get_witness_count()const
 
 //////////////////////////////////////////////////////////////////////
 //                                                                  //
-// Committee members                                                //
-//                                                                  //
-//////////////////////////////////////////////////////////////////////
-
-vector<optional<committee_member_object>> database_api::get_committee_members(const vector<committee_member_id_type>& committee_member_ids)const
-{
-   return my->get_committee_members( committee_member_ids );
-}
-
-vector<optional<committee_member_object>> database_api_impl::get_committee_members(const vector<committee_member_id_type>& committee_member_ids)const
-{
-   vector<optional<committee_member_object>> result; result.reserve(committee_member_ids.size());
-   std::transform(committee_member_ids.begin(), committee_member_ids.end(), std::back_inserter(result),
-                  [this](committee_member_id_type id) -> optional<committee_member_object> {
-      if(auto o = _db.find(id))
-         return *o;
-      return {};
-   });
-   return result;
-}
-
-fc::optional<committee_member_object> database_api::get_committee_member_by_account(account_id_type account)const
-{
-   return my->get_committee_member_by_account( account );
-}
-
-fc::optional<committee_member_object> database_api_impl::get_committee_member_by_account(account_id_type account) const
-{
-   const auto& idx = _db.get_index_type<committee_member_index>().indices().get<by_account>();
-   auto itr = idx.find(account);
-   if( itr != idx.end() )
-      return *itr;
-   return {};
-}
-
-map<string, committee_member_id_type> database_api::lookup_committee_member_accounts(const string& lower_bound_name, uint32_t limit)const
-{
-   return my->lookup_committee_member_accounts( lower_bound_name, limit );
-}
-
-map<string, committee_member_id_type> database_api_impl::lookup_committee_member_accounts(const string& lower_bound_name, uint32_t limit)const
-{
-   FC_ASSERT( limit <= 1000 );
-   const auto& committee_members_by_id = _db.get_index_type<committee_member_index>().indices().get<by_id>();
-
-   // we want to order committee_members by account name, but that name is in the account object
-   // so the committee_member_index doesn't have a quick way to access it.
-   // get all the names and look them all up, sort them, then figure out what
-   // records to return.  This could be optimized, but we expect the
-   // number of committee_members to be few and the frequency of calls to be rare
-   std::map<std::string, committee_member_id_type> committee_members_by_account_name;
-   for (const committee_member_object& committee_member : committee_members_by_id)
-       if (auto account_iter = _db.find(committee_member.committee_member_account))
-           if (account_iter->name >= lower_bound_name) // we can ignore anything below lower_bound_name
-               committee_members_by_account_name.insert(std::make_pair(account_iter->name, committee_member.id));
-
-   auto end_iter = committee_members_by_account_name.begin();
-   while (end_iter != committee_members_by_account_name.end() && limit--)
-       ++end_iter;
-   committee_members_by_account_name.erase(end_iter, committee_members_by_account_name.end());
-   return committee_members_by_account_name;
-}
-
-//////////////////////////////////////////////////////////////////////
-//                                                                  //
 // Votes                                                            //
 //                                                                  //
 //////////////////////////////////////////////////////////////////////
@@ -1321,7 +1245,6 @@ vector<variant> database_api_impl::lookup_vote_ids( const vector<vote_id_type>& 
    FC_ASSERT( votes.size() < 1000, "Only 1000 votes can be queried at a time" );
 
    const auto& witness_idx = _db.get_index_type<witness_index>().indices().get<by_vote_id>();
-   const auto& committee_idx = _db.get_index_type<committee_member_index>().indices().get<by_vote_id>();
 
    vector<variant> result;
    result.reserve( votes.size() );
@@ -1329,15 +1252,6 @@ vector<variant> database_api_impl::lookup_vote_ids( const vector<vote_id_type>& 
    {
       switch( id.type() )
       {
-         case vote_id_type::committee:
-         {
-            auto itr = committee_idx.find( id );
-            if( itr != committee_idx.end() )
-               result.emplace_back( variant( *itr ) );
-            else
-               result.emplace_back( variant() );
-            break;
-         }
          case vote_id_type::witness:
          {
             auto itr = witness_idx.find( id );
@@ -1588,26 +1502,403 @@ vector<proposal_object> database_api_impl::get_proposed_transactions( account_id
 
 //////////////////////////////////////////////////////////////////////
 //                                                                  //
-// Blinded balances                                                 //
+// Decent                                                           //
 //                                                                  //
 //////////////////////////////////////////////////////////////////////
 
-vector<blinded_balance_object> database_api::get_blinded_balances( const flat_set<commitment_type>& commitments )const
+real_supply database_api::get_real_supply()const
 {
-   return my->get_blinded_balances( commitments );
+   return my->_db.get_real_supply();
 }
 
-vector<blinded_balance_object> database_api_impl::get_blinded_balances( const flat_set<commitment_type>& commitments )const
+vector<buying_object> database_api::get_open_buyings()const
 {
-   vector<blinded_balance_object> result; result.reserve(commitments.size());
-   const auto& bal_idx = _db.get_index_type<blinded_balance_index>();
-   const auto& by_commitment_idx = bal_idx.indices().get<by_commitment>();
-   for( const auto& c : commitments )
+   return my->get_open_buyings();
+}
+
+vector<buying_object> database_api_impl::get_open_buyings()const
+{
+   const auto& range = _db.get_index_type<buying_index>().indices().get<by_open_expiration>().equal_range( true );
+   vector<buying_object> result;
+   result.reserve(distance(range.first, range.second));
+
+   std::for_each(range.first, range.second, [&](const buying_object &element) {
+      if( element.expiration_time >= _db.head_block_time() )
+         result.emplace_back(element);
+   });
+   return result;
+}
+
+vector<buying_object> database_api::get_open_buyings_by_URI( const string& URI )const
+{
+   return my->get_open_buyings_by_URI( URI );
+}
+
+vector<buying_object> database_api_impl::get_open_buyings_by_URI( const string& URI )const
+{
+   try
    {
-      auto itr = by_commitment_idx.find( c );
-      if( itr != by_commitment_idx.end() )
-         result.push_back( *itr );
+      auto range = _db.get_index_type<buying_index>().indices().get<by_URI_open>().equal_range( std::make_tuple( URI, true ) );
+      vector<buying_object> result;
+      result.reserve(distance(range.first, range.second));
+      std::for_each(range.first, range.second, [&](const buying_object& element) {
+         if( element.expiration_time >= _db.head_block_time() )
+            result.emplace_back(element);
+      });
+      return result;
    }
+   FC_CAPTURE_AND_RETHROW( (URI) );
+}
+
+vector<buying_object> database_api::get_open_buyings_by_consumer( const account_id_type& consumer )const
+{
+   return my->get_open_buyings_by_consumer( consumer );
+}
+
+vector<buying_object> database_api_impl::get_open_buyings_by_consumer( const account_id_type& consumer )const
+{
+   try
+   {
+      auto range = _db.get_index_type<buying_index>().indices().get<by_consumer_open>().equal_range( std::make_tuple( consumer, true ));
+      vector<buying_object> result;
+      result.reserve(distance(range.first, range.second));
+
+      std::for_each(range.first, range.second, [&](const buying_object& element) {
+         if( element.expiration_time >= _db.head_block_time() )
+            result.emplace_back(element);
+      });
+      return result;
+   }
+   FC_CAPTURE_AND_RETHROW( (consumer) );
+}
+
+vector<buying_object> database_api::get_buying_history_objects_by_consumer( const account_id_type& consumer )const
+{
+   return my->get_buying_history_objects_by_consumer( consumer );
+}
+
+
+vector<buying_object> database_api_impl::get_buying_history_objects_by_consumer ( const account_id_type& consumer )const
+{
+    try {
+        const auto &range = _db.get_index_type<buying_index>().indices().get<by_consumer_open>().equal_range( std::make_tuple(consumer, true));
+        vector<buying_object> result;
+        result.reserve(distance(range.first, range.second));
+
+        std::for_each(range.first, range.second, [&](const buying_object &element) {
+            result.emplace_back(element);
+        });
+        
+        return result;
+    }
+    FC_CAPTURE_AND_RETHROW( (consumer) );
+}
+    
+    
+vector<buying_object> database_api::get_buying_objects_by_consumer( const account_id_type& consumer )const
+{
+    return my->get_buying_objects_by_consumer( consumer );
+}
+
+
+
+vector<buying_object> database_api_impl::get_buying_objects_by_consumer( const account_id_type& consumer )const
+{
+   try {
+      vector<buying_object> result;
+      
+       
+       const auto &range = _db.get_index_type<buying_index>().indices().get<by_consumer_open>().equal_range( std::make_tuple(consumer, true));
+       const auto &range1 = _db.get_index_type<buying_index>().indices().get<by_consumer_open>().equal_range( std::make_tuple(consumer, false));
+       
+       result.reserve(distance(range.first, range.second) + distance(range1.first, range1.second));
+       
+       std::for_each(range.first, range.second, [&](const buying_object &element) {
+           result.emplace_back(element);
+       });
+       
+       
+       std::for_each(range1.first, range1.second, [&](const buying_object &element) {
+           result.emplace_back(element);
+       });
+       
+      return result;
+   }
+   FC_CAPTURE_AND_RETHROW( (consumer) );
+}
+
+optional<uint64_t> database_api::get_rating_by_consumer_URI( const account_id_type& consumer, const string& URI )const
+{
+   return my->get_rating_by_consumer_URI( consumer, URI );
+}
+
+optional<uint64_t> database_api_impl::get_rating_by_consumer_URI( const account_id_type& consumer, const string& URI )const
+{
+   try{
+      const auto & idx = _db.get_index_type<rating_index>().indices().get<by_consumer_URI>();
+      auto itr = idx.find(std::make_tuple(consumer, URI));
+      if(itr!=idx.end()){
+         return itr->rating;
+      }
+      return optional<uint64_t>();
+
+   }FC_CAPTURE_AND_RETHROW( (consumer)(URI) );
+}
+
+optional<buying_object> database_api::get_buying_by_consumer_URI( const account_id_type& consumer, const string& URI )const
+{
+   return my->get_buying_by_consumer_URI( consumer, URI );
+}
+
+optional <buying_object> database_api_impl::get_buying_by_consumer_URI( const account_id_type& consumer, const string& URI)const
+{
+   try{
+      const auto & idx = _db.get_index_type<buying_index>().indices().get<by_consumer_URI>();
+      auto itr = idx.find(std::make_tuple(consumer, URI));
+      vector<buying_object> result;
+      if(itr!=idx.end()){
+         return *itr;
+      }
+      return optional<buying_object>();
+
+   }FC_CAPTURE_AND_RETHROW( (consumer)(URI) );
+}
+
+optional<content_object> database_api::get_content(const string& URI)const
+{
+   return my->get_content( URI );
+}
+
+optional<seeder_object> database_api::get_seeder(account_id_type aid) const
+{
+   return my->get_seeder(aid);
+}
+
+optional<content_object> database_api_impl::get_content( const string& URI )const
+{
+   const auto& idx = _db.get_index_type<content_index>().indices().get<by_URI>();
+   auto itr = idx.find(URI);
+   if (itr != idx.end())
+      return *itr;
+   return optional<content_object>();
+}
+
+
+optional<seeder_object> database_api_impl::get_seeder(account_id_type aid) const
+{
+   const auto& idx = _db.get_index_type<seeder_index>().indices().get<by_seeder>();
+   auto itr = idx.find(aid);
+   if (itr != idx.end())
+      return *itr;
+   return optional<seeder_object>();
+}
+
+vector<content_object> database_api::list_content_by_author( const account_id_type& author )const
+{
+   return my->list_content_by_author( author );
+}
+
+vector<content_object> database_api_impl::list_content_by_author( const account_id_type& author )const
+{
+   try
+   {
+      vector<content_object> result;
+      auto range = _db.get_index_type<content_index>().indices().get<by_author>().equal_range(author);
+      std::for_each(range.first, range.second,
+         [&result](const content_object& element) {
+            result.emplace_back(element);
+         });
+      return result;
+   }
+   FC_CAPTURE_AND_RETHROW( (author) );
+}
+    
+vector<content_summary> database_api::list_content( const string& URI_begin, uint32_t count)const
+{
+    return my->list_content( URI_begin, count);
+}
+
+vector<content_summary> database_api::search_content( const string& term, uint32_t count)const
+{
+    return my->search_content( term, count);
+}
+
+    
+    
+vector<content_summary> database_api_impl::list_content( const string& URI_begin, uint32_t count)const
+{
+    FC_ASSERT( count <= 100 );
+    const auto& idx = _db.get_index_type<content_index>().indices().get<by_URI>();
+    
+    vector<content_summary> result;
+    result.reserve( count );
+    
+    auto itr = idx.lower_bound( URI_begin );
+    
+    if(URI_begin == "")
+        itr = idx.begin();
+    
+    content_summary content;
+    const auto& idx2 = _db.get_index_type<account_index>().indices().get<by_id>();
+    
+    while(count-- && itr != idx.end())
+    {
+        const auto& account = idx2.find(itr->author);
+        result.emplace_back( content.set( *itr , *account ) );
+        ++itr;
+    }
+    
+    return result;
+}
+
+
+vector<content_summary> database_api_impl::search_content( const string& search_term, uint32_t count)const
+{
+    FC_ASSERT( count <= 100 );
+    const auto& idx = _db.get_index_type<content_index>().indices().get<by_URI>();
+    
+    vector<content_summary> result;
+    result.reserve( count );
+    
+    auto itr = idx.begin();
+    
+    content_summary content;
+    const auto& idx2 = _db.get_index_type<account_index>().indices().get<by_id>();
+    
+    while(count && itr != idx.end())
+    {
+        const auto& account = idx2.find(itr->author);
+        
+        content.set( *itr , *account );
+        if (content.expiration > fc::time_point::now()) {
+            
+            std::string term = search_term;
+            std::string title = content.synopsis;
+            std::string desc = "";
+            std::string author = content.author;
+            
+            try {
+                auto synopsis_parsed = nlohmann::json::parse(content.synopsis);
+                title = synopsis_parsed["title"].get<std::string>();
+                desc = synopsis_parsed["description"].get<std::string>();
+            } catch (...) {}
+            
+            boost::algorithm::to_lower(term);
+            boost::algorithm::to_lower(title);
+            boost::algorithm::to_lower(desc);
+            boost::algorithm::to_lower(author);
+            
+            if (term.empty() ||
+                author.find(term) != std::string::npos ||
+                title.find(term) != std::string::npos ||
+                desc.find(term) != std::string::npos) {
+                
+                
+                count--;
+                result.push_back( content );
+            }
+            
+        }
+        
+        ++itr;
+    }
+    
+    return result;
+}
+
+vector<content_object> database_api::list_content_by_bought( uint32_t count )const
+{
+   return my->list_content_by_bought( count );
+}
+
+vector<content_object> database_api_impl::list_content_by_bought( uint32_t count )const
+{
+   FC_ASSERT( count <= 100 );
+   const auto& idx = _db.get_index_type<content_index>().indices().get<by_times_bought>();
+   vector<content_object> result;
+   result.reserve(count);
+
+   auto itr = idx.begin();
+
+   while(count-- && itr != idx.end())
+      if( itr->expiration >= _db.head_block_time() )
+         result.emplace_back(*itr);
+      else
+         ++count;
+   ++itr;
+
+   return result;
+}
+
+vector<seeder_object> database_api::list_publishers_by_price( uint32_t count )const
+{
+   return my->list_publishers_by_price( count );
+}
+
+vector<seeder_object> database_api_impl::list_publishers_by_price( uint32_t count )const
+{
+   FC_ASSERT( count <= 100 );
+   const auto& idx = _db.get_index_type<seeder_index>().indices().get<by_price>();
+   vector<seeder_object> result;
+   result.reserve(count);
+
+   auto itr = idx.begin();
+
+   while(count-- && itr != idx.end())
+   {
+      if( itr->expiration >= _db.head_block_time() )
+         result.emplace_back(*itr);
+      else
+        ++count;
+      ++itr;
+   }
+
+   return result;
+}
+
+vector<uint64_t> database_api::get_content_ratings( const string& URI)const
+{
+   return my->get_content_ratings( URI );
+}
+
+vector<uint64_t> database_api_impl::get_content_ratings( const string& URI)const
+{
+   try
+   {
+      auto range = _db.get_index_type<rating_index>().indices().get<by_URI_consumer>().equal_range(URI);
+      vector<uint64_t> result;
+      result.reserve(distance(range.first, range.second));
+      std::for_each(range.first, range.second,
+         [&result](const rating_object& element) {
+            result.emplace_back(element.rating);
+         });
+      return result;
+   }
+   FC_CAPTURE_AND_RETHROW( (URI) );
+}
+
+optional<vector<seeder_object>> database_api::list_seeders_by_upload( uint32_t count )const
+{
+   return my->list_seeders_by_upload( count );
+}
+
+optional<vector<seeder_object>> database_api_impl::list_seeders_by_upload( uint32_t count )const
+{
+   FC_ASSERT( count <= 100 );
+   const auto& idx = _db.get_index_type<seeding_statistics_index>().indices().get<by_upload>();
+   const auto& idx2 = _db.get_index_type<seeder_index>().indices().get<by_seeder>();
+   vector<seeder_object> result;
+   result.reserve(count);
+
+   auto itr = idx.begin();
+
+   while(count-- && itr != idx.end())
+   {
+      const auto& so_itr = idx2.find(itr->seeder);
+      result.emplace_back(*so_itr);
+      ++itr;
+   }
+
    return result;
 }
 

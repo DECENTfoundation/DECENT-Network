@@ -1,8 +1,20 @@
 [submodule "docs"]
 	path = docs
-	url = https://github.com/cryptonomex/graphene.wiki.git
-    ignore = dirty
-[submodule "libraries/fc"]
-    path = libraries/fc
-    url = https://github.com/cryptonomex/fc.git
-    ignore = dirty
+	url = https://github.com/DECENTfoundation/DECENT-Network.wiki.git
+	ignore = dirty
+[submodule "libraries/contrib/pbc"]
+	path = libraries/contrib/pbc
+	url = https://github.com/DECENTfoundation/pbc.git
+	ignore = dirty
+[submodule "libraries/contrib/fc"]
+	path = libraries/contrib/fc
+	url = https://github.com/DECENTfoundation/fc.git
+[submodule "libraries/contrib/libtorrent"]
+	path = libraries/contrib/libtorrent
+	url = https://github.com/DECENTfoundation/libtorrent.git
+[submodule "libraries/contrib/json"]
+	path = libraries/contrib/json
+	url = https://github.com/DECENTfoundation/json.git
+[submodule "libraries/contrib/cpp-ipfs-api"]
+	path = libraries/contrib/cpp-ipfs-api
+	url = https://github.com/DECENTfoundation/cpp-ipfs-api.git

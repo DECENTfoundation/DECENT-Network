@@ -49,6 +49,7 @@ namespace graphene { namespace chain {
    class transaction_evaluation_state;
 
    struct budget_record;
+   struct real_supply;
 
    /**
     *   @class database
@@ -61,6 +62,7 @@ namespace graphene { namespace chain {
 
          database();
          ~database();
+         bool is_undo_enabled(){ return _undo_db.enabled(); };
 
          enum validation_steps
          {
@@ -135,9 +137,10 @@ namespace graphene { namespace chain {
          const flat_map<uint32_t,block_id_type> get_checkpoints()const { return _checkpoints; }
          bool before_last_checkpoint()const;
 
-         bool push_block( const signed_block& b, uint32_t skip = skip_nothing );
+         bool push_block(const signed_block &b, uint32_t skip = skip_nothing, bool sync_mode = false );
+         //bool ( const signed_block& b, uint32_t skip = skip_nothing );
          processed_transaction push_transaction( const signed_transaction& trx, uint32_t skip = skip_nothing );
-         bool _push_block( const signed_block& b );
+         bool _push_block(const signed_block &b, bool sync_mode = false );
          processed_transaction _push_transaction( const signed_transaction& trx );
 
          ///@throws fc::exception if the proposed transaction fails to apply.
@@ -172,6 +175,13 @@ namespace graphene { namespace chain {
          const vector<optional< operation_history_object > >& get_applied_operations()const;
 
          string to_pretty_string( const asset& a )const;
+
+         /**
+          * This signal is emitted for plugins to process every operation
+          */
+         fc::signal<void(const operation_history_object&)> on_applied_operation;
+         fc::signal<void(const operation_history_object&)> on_new_commited_operation;
+         fc::signal<void(const operation_history_object&)> on_new_commited_operation_during_sync;
 
          /**
           *  This signal is emitted after all operations and virtual operation for a
@@ -325,11 +335,19 @@ namespace graphene { namespace chain {
          void apply_debug_updates();
          void debug_update( const fc::variant_object& update );
 
+
+         //////////////////// db_decent.cpp ////////////////////
+
+         void buying_expire(const buying_object& buying);
+         void content_expire(const content_object& content);
+         void decent_housekeeping();
+         share_type get_witness_budget();
+
+         real_supply get_real_supply()const;
+
          //////////////////// db_market.cpp ////////////////////
 
          /// @{ @group Market Helpers
-         void globally_settle_asset( const asset_object& bitasset, const price& settle_price );
-         void cancel_order(const force_settlement_object& order, bool create_virtual_op = true);
          void cancel_order(const limit_order_object& order, bool create_virtual_op = true);
 
          /**
@@ -340,7 +358,7 @@ namespace graphene { namespace chain {
           * This function takes a new limit order, and runs the markets attempting to match it with existing orders
           * already on the books.
           */
-         bool apply_order(const limit_order_object& new_order_object, bool allow_black_swan = true);
+         bool apply_order(const limit_order_object& new_order_object );
 
          /**
           * Matches the two orders,
@@ -356,21 +374,12 @@ namespace graphene { namespace chain {
          template<typename OrderType>
          int match( const limit_order_object& bid, const OrderType& ask, const price& match_price );
          int match( const limit_order_object& bid, const limit_order_object& ask, const price& trade_price );
-         /// @return the amount of asset settled
-         asset match(const call_order_object& call,
-                   const force_settlement_object& settle,
-                   const price& match_price,
-                   asset max_settlement);
          ///@}
 
          /**
           * @return true if the order was completely filled and thus freed.
           */
          bool fill_order( const limit_order_object& order, const asset& pays, const asset& receives, bool cull_if_small );
-         bool fill_order( const call_order_object& order, const asset& pays, const asset& receives );
-         bool fill_order( const force_settlement_object& settle, const asset& pays, const asset& receives );
-
-         bool check_call_orders( const asset_object& mia, bool enable_black_swan = true );
 
          // helpers to fill_order
          void pay_order( const account_object& receiver, const asset& receives, const asset& pays );
@@ -391,6 +400,12 @@ namespace graphene { namespace chain {
           * can be reapplied at the proper time */
          std::deque< signed_transaction >       _popped_tx;
 
+         uint32_t highest_know_block_number(){
+            auto fhd = _fork_db.head();
+            if(fhd)
+               return fhd->data.block_num();
+            return 0;
+         }
          /**
           * @}
           */
@@ -445,7 +460,6 @@ namespace graphene { namespace chain {
          void process_budget();
          void perform_chain_maintenance(const signed_block& next_block, const global_property_object& global_props);
          void update_active_witnesses();
-         void update_active_committee_members();
 
          template<class... Types>
          void perform_account_maintenance(std::tuple<Types...> helpers);
@@ -481,7 +495,6 @@ namespace graphene { namespace chain {
 
          vector<uint64_t>                  _vote_tally_buffer;
          vector<uint64_t>                  _witness_count_histogram_buffer;
-         vector<uint64_t>                  _committee_count_histogram_buffer;
          uint64_t                          _total_voting_stake;
 
          flat_map<uint32_t,block_id_type>  _checkpoints;

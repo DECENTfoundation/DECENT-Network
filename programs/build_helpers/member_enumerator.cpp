@@ -26,7 +26,6 @@
 #include <graphene/chain/witness_object.hpp>
 #include <graphene/chain/market_evaluator.hpp>
 #include <graphene/chain/account_object.hpp>
-#include <graphene/chain/committee_member_object.hpp>
 #include <fc/smart_ref_impl.hpp>
 #include <iostream>
 

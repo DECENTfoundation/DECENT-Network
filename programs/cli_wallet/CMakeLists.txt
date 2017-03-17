@@ -1,7 +1,5 @@
+
 add_executable( cli_wallet main.cpp )
-if( UNIX AND NOT APPLE )
-  set(rt_library rt )
-endif()
 
 find_package( Gperftools QUIET )
 if( GPERFTOOLS_FOUND )
@@ -10,7 +8,7 @@ if( GPERFTOOLS_FOUND )
 endif()
 
 target_link_libraries( cli_wallet
-                       PRIVATE graphene_app graphene_net graphene_chain graphene_egenesis_brief graphene_utilities graphene_wallet fc ${CMAKE_DL_LIBS} ${PLATFORM_SPECIFIC_LIBS} )
+                       PRIVATE graphene_app graphene_net graphene_chain graphene_egenesis_decent graphene_utilities graphene_wallet package_manager decent_encrypt pbc gmp fc ${CMAKE_DL_LIBS} ${PLATFORM_SPECIFIC_LIBS} )
 
 if(MSVC)
   set_source_files_properties( main.cpp PROPERTIES COMPILE_FLAGS "/bigobj" )

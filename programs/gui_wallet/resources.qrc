@@ -1,0 +1,16 @@
+<RCC>
+    <qresource prefix="/icon">
+        <file>images/search.svg</file>
+        <file>images/info1_white.svg</file>
+        <file>images/info1.svg</file>
+        <file>images/decent_logo.svg</file>
+        <file>images/send.png</file>
+        <file>images/user.png</file>
+        <file>images/balance.png</file>
+        <file>images/buy_button_image.png</file>
+        <file>images/green_asterix.png</file>
+        <file>images/white_asterix.png</file>
+        <file>images/buy.png</file>
+        <file>images/browse.svg</file>
+    </qresource>
+</RCC>

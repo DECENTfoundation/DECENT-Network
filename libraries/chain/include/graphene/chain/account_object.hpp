@@ -95,7 +95,7 @@ namespace graphene { namespace chain {
     * This object is indexed on owner and asset_type so that black swan
     * events in asset_type can be processed quickly.
     */
-   class account_balance_object : public abstract_object<account_balance_object>
+   class account_balance_object : public graphene::db::abstract_object<account_balance_object>
    {
       public:
          static const uint8_t space_id = implementation_ids;
@@ -161,37 +161,6 @@ namespace graphene { namespace chain {
          account_statistics_id_type statistics;
 
          /**
-          * This is a set of all accounts which have 'whitelisted' this account. Whitelisting is only used in core
-          * validation for the purpose of authorizing accounts to hold and transact in whitelisted assets. This
-          * account cannot update this set, except by transferring ownership of the account, which will clear it. Other
-          * accounts may add or remove their IDs from this set.
-          */
-         flat_set<account_id_type> whitelisting_accounts;
-
-         /**
-          * Optionally track all of the accounts this account has whitelisted or blacklisted, these should
-          * be made Immutable so that when the account object is cloned no deep copy is required.  This state is
-          * tracked for GUI display purposes.
-          *
-          * TODO: move white list tracking to its own multi-index container rather than having 4 fields on an
-          * account.   This will scale better because under the current design if you whitelist 2000 accounts,
-          * then every time someone fetches this account object they will get the full list of 2000 accounts.
-          */
-         ///@{
-         set<account_id_type> whitelisted_accounts;
-         set<account_id_type> blacklisted_accounts;
-         ///@}
-
-
-         /**
-          * This is a set of all accounts which have 'blacklisted' this account. Blacklisting is only used in core
-          * validation for the purpose of forbidding accounts from holding and transacting in whitelisted assets. This
-          * account cannot update this set, and it will be preserved even if the account is transferred. Other accounts
-          * may add or remove their IDs from this set.
-          */
-         flat_set<account_id_type> blacklisting_accounts;
-
-         /**
           * Vesting balance which receives cashback_reward deposits.
           */
          optional<vesting_balance_id_type> cashback_vb;
@@ -203,13 +172,6 @@ namespace graphene { namespace chain {
          uint8_t top_n_control_flags = 0;
          static const uint8_t top_n_control_owner  = 1;
          static const uint8_t top_n_control_active = 2;
-
-         /**
-          * This is a set of assets which the account is allowed to have.
-          * This is utilized to restrict buyback accounts to the assets that trade in their markets.
-          * In the future we may expand this to allow accounts to e.g. voluntarily restrict incoming transfers.
-          */
-         optional< flat_set<asset_id_type> > allowed_assets;
 
          template<typename DB>
          const vesting_balance_object& cashback_balance(const DB& db)const
@@ -327,11 +289,8 @@ FC_REFLECT_DERIVED( graphene::chain::account_object,
                     (graphene::db::object),
                     (registrar)(referrer)(lifetime_referrer)
                     (network_fee_percentage)(lifetime_referrer_fee_percentage)(referrer_rewards_percentage)
-                    (name)(owner)(active)(options)(statistics)(whitelisting_accounts)(blacklisting_accounts)
-                    (whitelisted_accounts)(blacklisted_accounts)
-                    (cashback_vb)
-                    (top_n_control_flags)
-                    (allowed_assets)
+                    (name)(owner)(active)(options)(statistics)
+                    (cashback_vb)(top_n_control_flags)
                     )
 
 FC_REFLECT_DERIVED( graphene::chain::account_balance_object,
@@ -339,7 +298,7 @@ FC_REFLECT_DERIVED( graphene::chain::account_balance_object,
                     (owner)(asset_type)(balance) )
 
 FC_REFLECT_DERIVED( graphene::chain::account_statistics_object,
-                    (graphene::chain::object),
+                    (graphene::db::object),
                     (owner)
                     (most_recent_op)
                     (total_ops)

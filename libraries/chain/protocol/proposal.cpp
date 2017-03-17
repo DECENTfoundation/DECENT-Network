@@ -27,12 +27,12 @@
 
 namespace graphene { namespace chain {
 
-proposal_create_operation proposal_create_operation::committee_proposal(const chain_parameters& global_params, fc::time_point_sec head_block_time )
+proposal_create_operation proposal_create_operation::witness_proposal(const chain_parameters& global_params, fc::time_point_sec head_block_time )
 {
    // TODO move this method to unit tests as it is not useful
    proposal_create_operation op;
    op.expiration_time = head_block_time + global_params.maximum_proposal_lifetime;
-   op.review_period_seconds = global_params.committee_proposal_review_period;
+   op.review_period_seconds = global_params.witness_proposal_review_period;
    return op;
 }
 
@@ -70,11 +70,6 @@ void proposal_update_operation::validate() const
    }
 }
 
-void proposal_delete_operation::validate() const
-{
-   FC_ASSERT( fee.amount >= 0 );
-}
-
 share_type proposal_update_operation::calculate_fee(const fee_parameters_type& k) const
 {
    return k.fee + calculate_data_fee( fc::raw::pack_size(*this), k.price_per_kbyte );
@@ -102,6 +97,11 @@ void proposal_update_operation::get_required_owner_authorities( flat_set<account
 {
    for( const auto& i : owner_approvals_to_add )    a.insert(i);
    for( const auto& i : owner_approvals_to_remove ) a.insert(i);
+}
+
+void proposal_delete_operation::validate() const
+{
+   FC_ASSERT( fee.amount >= 0 );
 }
 
 } } // graphene::chain

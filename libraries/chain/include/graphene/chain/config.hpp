@@ -23,8 +23,24 @@
  */
 #pragma once
 
-#define GRAPHENE_SYMBOL "CORE"
-#define GRAPHENE_ADDRESS_PREFIX "GPH"
+/**
+ * DECENT section
+ */
+#define GRAPHENE_DEFAULT_BLOCK_INTERVAL  5 /* seconds */
+#define GRAPHENE_BLOCKCHAIN_PRECISION                           uint64_t( 100000000 )
+#define GRAPHENE_BLOCKCHAIN_PRECISION_DIGITS                    8
+
+#define DECENT_REWARDS_YEAR_1 uint64_t(1300000 * GRAPHENE_BLOCKCHAIN_PRECISION )
+#define DECENT_REWARDS_YEAR_6 uint64_t(1100000 * GRAPHENE_BLOCKCHAIN_PRECISION )
+#define DECENT_REWARDS_YEAR_11 uint64_t(900000 * GRAPHENE_BLOCKCHAIN_PRECISION )
+#define DECENT_REWARDS_YEAR_16 uint64_t(700000 * GRAPHENE_BLOCKCHAIN_PRECISION )
+
+#define DECENT_TOTAL_COINS_GENERATED = ( 5 * DECENT_REWARDS_YEAR_1 + 5 * DECENT_REWARDS_YEAR_6 \
+            + 5 * DECENT_REWARDS_YEAR_11 + 5 * DECENT_REWARDS_YEAR_16 )
+
+
+#define GRAPHENE_SYMBOL "DCT"
+#define GRAPHENE_ADDRESS_PREFIX "DCT"
 
 #define GRAPHENE_MIN_ACCOUNT_NAME_LENGTH 3
 #define GRAPHENE_MAX_ACCOUNT_NAME_LENGTH 63
@@ -32,7 +48,9 @@
 #define GRAPHENE_MIN_ASSET_SYMBOL_LENGTH 3
 #define GRAPHENE_MAX_ASSET_SYMBOL_LENGTH 16
 
-#define GRAPHENE_MAX_SHARE_SUPPLY int64_t(1000000000000000ll)
+
+#define GRAPHENE_MAX_SHARE_SUPPLY int64_t(60000000ll * GRAPHENE_BLOCKCHAIN_PRECISION )
+#define GRAPHENE_INITIAL_SHARE_SUPPLY int64_t(40000000ll * GRAPHENE_BLOCKCHAIN_PRECISION )
 #define GRAPHENE_MAX_PAY_RATE 10000 /* 100% */
 #define GRAPHENE_MAX_SIG_CHECK_DEPTH 2
 /**
@@ -43,7 +61,6 @@
 #define GRAPHENE_MIN_BLOCK_INTERVAL   1 /* seconds */
 #define GRAPHENE_MAX_BLOCK_INTERVAL  30 /* seconds */
 
-#define GRAPHENE_DEFAULT_BLOCK_INTERVAL  5 /* seconds */
 #define GRAPHENE_DEFAULT_MAX_TRANSACTION_SIZE 2048
 #define GRAPHENE_DEFAULT_MAX_BLOCK_SIZE  (GRAPHENE_DEFAULT_MAX_TRANSACTION_SIZE*GRAPHENE_DEFAULT_BLOCK_INTERVAL*200000)
 #define GRAPHENE_DEFAULT_MAX_TIME_UNTIL_EXPIRATION (60*60*24) // seconds,  aka: 1 day
@@ -55,10 +72,8 @@
 
 #define GRAPHENE_MIN_BLOCK_SIZE_LIMIT (GRAPHENE_MIN_TRANSACTION_SIZE_LIMIT*5) // 5 transactions per block
 #define GRAPHENE_MIN_TRANSACTION_EXPIRATION_LIMIT (GRAPHENE_MAX_BLOCK_INTERVAL * 5) // 5 transactions per block
-#define GRAPHENE_BLOCKCHAIN_PRECISION                           uint64_t( 100000 )
 
-#define GRAPHENE_BLOCKCHAIN_PRECISION_DIGITS                    5
-#define GRAPHENE_DEFAULT_TRANSFER_FEE                           (1*GRAPHENE_BLOCKCHAIN_PRECISION)
+#define GRAPHENE_DEFAULT_TRANSFER_FEE                           (1*GRAPHENE_BLOCKCHAIN_PRECISION / 100)
 #define GRAPHENE_MAX_INSTANCE_ID                                (uint64_t(-1)>>16)
 /** percentage fields are fixed point with a denominator of 10,000 */
 #define GRAPHENE_100_PERCENT                                    10000
@@ -89,22 +104,20 @@
 #define GRAPHENE_DEFAULT_MARGIN_PERIOD_SEC              (30*60*60*24)
 
 #define GRAPHENE_DEFAULT_MIN_WITNESS_COUNT                    (11)
-#define GRAPHENE_DEFAULT_MIN_COMMITTEE_MEMBER_COUNT           (11)
 #define GRAPHENE_DEFAULT_MAX_WITNESSES                        (1001) // SHOULD BE ODD
-#define GRAPHENE_DEFAULT_MAX_COMMITTEE                        (1001) // SHOULD BE ODD
 #define GRAPHENE_DEFAULT_MAX_PROPOSAL_LIFETIME_SEC            (60*60*24*7*4) // Four weeks
-#define GRAPHENE_DEFAULT_COMMITTEE_PROPOSAL_REVIEW_PERIOD_SEC (60*60*24*7*2) // Two weeks
+#define GRAPHENE_DEFAULT_WITNESS_PROPOSAL_REVIEW_PERIOD_SEC   (60*60*24*7*2) // Two weeks
 #define GRAPHENE_DEFAULT_NETWORK_PERCENT_OF_FEE               (20*GRAPHENE_1_PERCENT)
 #define GRAPHENE_DEFAULT_LIFETIME_REFERRER_PERCENT_OF_FEE     (30*GRAPHENE_1_PERCENT)
 #define GRAPHENE_DEFAULT_MAX_BULK_DISCOUNT_PERCENT            (50*GRAPHENE_1_PERCENT)
-#define GRAPHENE_DEFAULT_BULK_DISCOUNT_THRESHOLD_MIN          ( GRAPHENE_BLOCKCHAIN_PRECISION*int64_t(1000) )
-#define GRAPHENE_DEFAULT_BULK_DISCOUNT_THRESHOLD_MAX          ( GRAPHENE_DEFAULT_BULK_DISCOUNT_THRESHOLD_MIN*int64_t(100) )
+#define GRAPHENE_DEFAULT_BULK_DISCOUNT_THRESHOLD_MIN          ( GRAPHENE_BLOCKCHAIN_PRECISION*int64_t(100) )
+#define GRAPHENE_DEFAULT_BULK_DISCOUNT_THRESHOLD_MAX          ( GRAPHENE_DEFAULT_BULK_DISCOUNT_THRESHOLD_MIN*int64_t(10) )
 #define GRAPHENE_DEFAULT_CASHBACK_VESTING_PERIOD_SEC          (60*60*24*365) ///< 1 year
 #define GRAPHENE_DEFAULT_CASHBACK_VESTING_THRESHOLD           (GRAPHENE_BLOCKCHAIN_PRECISION*int64_t(100))
 #define GRAPHENE_DEFAULT_BURN_PERCENT_OF_FEE                  (20*GRAPHENE_1_PERCENT)
 #define GRAPHENE_WITNESS_PAY_PERCENT_PRECISION                (1000000000)
 #define GRAPHENE_DEFAULT_MAX_ASSERT_OPCODE                    1
-#define GRAPHENE_DEFAULT_FEE_LIQUIDATION_THRESHOLD            GRAPHENE_BLOCKCHAIN_PRECISION * 100;
+#define GRAPHENE_DEFAULT_FEE_LIQUIDATION_THRESHOLD            GRAPHENE_BLOCKCHAIN_PRECISION * 1;
 #define GRAPHENE_DEFAULT_ACCOUNTS_PER_FEE_SCALE               1000
 #define GRAPHENE_DEFAULT_ACCOUNT_FEE_SCALE_BITSHIFTS          4
 #define GRAPHENE_DEFAULT_MAX_BUYBACK_MARKETS                  4
@@ -133,9 +146,8 @@
 #define GRAPHENE_CORE_ASSET_CYCLE_RATE                        17
 #define GRAPHENE_CORE_ASSET_CYCLE_RATE_BITS                   32
 
-#define GRAPHENE_DEFAULT_WITNESS_PAY_PER_BLOCK            (GRAPHENE_BLOCKCHAIN_PRECISION * int64_t( 10) )
+#define GRAPHENE_DEFAULT_WITNESS_PAY_PER_BLOCK            (GRAPHENE_BLOCKCHAIN_PRECISION / int64_t( 10) )
 #define GRAPHENE_DEFAULT_WITNESS_PAY_VESTING_SECONDS      (60*60*24)
-#define GRAPHENE_DEFAULT_WORKER_BUDGET_PER_DAY            (GRAPHENE_BLOCKCHAIN_PRECISION * int64_t(500) * 1000 )
 
 #define GRAPHENE_DEFAULT_MINIMUM_FEEDS                       7
 
@@ -144,7 +156,7 @@
 #define GRAPHENE_RECENTLY_MISSED_COUNT_INCREMENT             4
 #define GRAPHENE_RECENTLY_MISSED_COUNT_DECREMENT             3
 
-#define GRAPHENE_CURRENT_DB_VERSION                          "GPH2.5"
+#define GRAPHENE_CURRENT_DB_VERSION                          "DCT1.0"
 
 #define GRAPHENE_IRREVERSIBLE_THRESHOLD                      (70 * GRAPHENE_1_PERCENT)
 
@@ -152,18 +164,14 @@
  *  Reserved Account IDs with special meaning
  */
 ///@{
-/// Represents the current committee members, two-week review period
-#define GRAPHENE_COMMITTEE_ACCOUNT (graphene::chain::account_id_type(0))
 /// Represents the current witnesses
-#define GRAPHENE_WITNESS_ACCOUNT (graphene::chain::account_id_type(1))
-/// Represents the current committee members
-#define GRAPHENE_RELAXED_COMMITTEE_ACCOUNT (graphene::chain::account_id_type(2))
+#define GRAPHENE_WITNESS_ACCOUNT (graphene::chain::account_id_type(0))
 /// Represents the canonical account with NO authority (nobody can access funds in null account)
-#define GRAPHENE_NULL_ACCOUNT (graphene::chain::account_id_type(3))
+#define GRAPHENE_NULL_ACCOUNT (graphene::chain::account_id_type(1))
 /// Represents the canonical account with WILDCARD authority (anybody can access funds in temp account)
-#define GRAPHENE_TEMP_ACCOUNT (graphene::chain::account_id_type(4))
+#define GRAPHENE_TEMP_ACCOUNT (graphene::chain::account_id_type(2))
 /// Represents the canonical account for specifying you will vote directly (as opposed to a proxy)
-#define GRAPHENE_PROXY_TO_SELF_ACCOUNT (graphene::chain::account_id_type(5))
+#define GRAPHENE_PROXY_TO_SELF_ACCOUNT (graphene::chain::account_id_type(3))
 /// Sentinel value used in the scheduler.
 #define GRAPHENE_NULL_WITNESS (graphene::chain::witness_id_type(0))
 ///@}

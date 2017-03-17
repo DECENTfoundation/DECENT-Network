@@ -110,7 +110,7 @@ std::vector<block_id_type> database::get_block_ids_on_fork(block_id_type head_of
  *
  * @return true if we switched forks as a result of this push.
  */
-bool database::push_block(const signed_block& new_block, uint32_t skip)
+bool database::push_block(const signed_block &new_block, uint32_t skip, bool sync_mode)
 {
    //idump((new_block.block_num())(new_block.id())(new_block.timestamp)(new_block.previous));
    bool result;
@@ -119,13 +119,13 @@ bool database::push_block(const signed_block& new_block, uint32_t skip)
       detail::without_pending_transactions( *this, std::move(_pending_tx),
       [&]()
       {
-         result = _push_block(new_block);
+         result = _push_block( new_block, sync_mode );
       });
    });
    return result;
 }
 
-bool database::_push_block(const signed_block& new_block)
+bool database::_push_block(const signed_block &new_block, bool sync_mode)
 { try {
    uint32_t skip = get_node_properties().skip_flags;
    if( !(skip&skip_fork_db) )
@@ -197,12 +197,36 @@ bool database::_push_block(const signed_block& new_block)
       apply_block(new_block, skip);
       _block_id_to_block.store(new_block.id(), new_block);
       session.commit();
+      //we will notify after session commit, since we want to be sure that seeding plugin works and generated tx will refer to commited block_objects
+
    } catch ( const fc::exception& e ) {
       elog("Failed to push new block:\n${e}", ("e", e.to_detail_string()));
       _fork_db.remove(new_block.id());
       throw;
    }
+   auto session = _undo_db.start_undo_session();
+   try {
 
+      for( const auto &trx : new_block.transactions ) {
+         for( const auto &op : trx.operations ) {
+            operation_history_object oh(op);
+            oh.block_num = new_block.block_num();
+            oh.op = op;
+            if(sync_mode)
+               on_new_commited_operation_during_sync(oh);
+            else
+               on_new_commited_operation(oh);
+         }
+      }
+      session.merge();
+   } catch ( const fc::exception& e ){
+      // The plugin database might become inconsisten with the chain in case of exception.
+      // However, the recovery of previous state is not an option as the block was accepted ok and we would desync with the rest of the network.
+      // All we can do is to report and let the plugin get corrected.
+      // The pop_block expects two commits in the _push_block() in all cases. TODO_DECENT
+      session.merge();
+      elog("Failed to notify listeners on commited operation:\n${e}", ("e", e.to_detail_string()));
+   }
    return false;
 } FC_CAPTURE_AND_RETHROW( (new_block) ) }
 
@@ -405,6 +429,7 @@ signed_block database::_generate_block(
  */
 void database::pop_block()
 { try {
+   auto current_block_no = head_block_num();
    _pending_tx_session.reset();
    auto head_id = head_block_id();
    optional<signed_block> head_block = fetch_block_by_id( head_id );
@@ -433,6 +458,9 @@ uint32_t database::push_applied_operation( const operation& op )
    oh.trx_in_block = _current_trx_in_block;
    oh.op_in_trx    = _current_op_in_trx;
    oh.virtual_op   = _current_virtual_op++;
+   oh.op = op;
+//   elog("calling registered callbacks for operation ${o}", ("o",oh));
+   on_applied_operation (oh);
    return _applied_ops.size() - 1;
 }
 void database::set_applied_operation_result( uint32_t op_id, const operation_result& result )
@@ -528,6 +556,7 @@ void database::_apply_block( const signed_block& next_block )
 
    // notify observers that the block has been applied
    applied_block( next_block ); //emit
+
    _applied_ops.clear();
 
    notify_changed_objects();

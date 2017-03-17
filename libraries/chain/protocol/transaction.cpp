@@ -205,7 +205,7 @@ void verify_authority( const vector<operation>& ops, const flat_set<public_key_t
                        const std::function<const authority*(account_id_type)>& get_active,
                        const std::function<const authority*(account_id_type)>& get_owner,
                        uint32_t max_recursion_depth,
-                       bool  allow_committe,
+                       bool  allow_committee,
                        const flat_set<account_id_type>& active_aprovals,
                        const flat_set<account_id_type>& owner_approvals )
 { try {
@@ -216,8 +216,8 @@ void verify_authority( const vector<operation>& ops, const flat_set<public_key_t
    for( const auto& op : ops )
       operation_get_required_authorities( op, required_active, required_owner, other );
 
-   if( !allow_committe )
-      GRAPHENE_ASSERT( required_active.find(GRAPHENE_COMMITTEE_ACCOUNT) == required_active.end(),
+   if( !allow_committee )
+      GRAPHENE_ASSERT( required_active.find(GRAPHENE_WITNESS_ACCOUNT) == required_active.end(),
                        invalid_committee_approval, "Committee account may only propose transactions" );
 
    sign_state s(sigs,get_active);
