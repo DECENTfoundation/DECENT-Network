@@ -30,8 +30,8 @@
 #include <QTime>
 
 //namespace DCF {enum DIG_CONT_FIELDS{TIME,SYNOPSIS,RATING,SIZE,PRICE,LEFT};}
-static const char* s_vccpItemNames[]={"","Title","Rating",
-    "Size","Price","Created","Expiration"};
+static const char* s_vccpItemNames[]={"Title","Rating",
+    "Size","Price","Created","Expiration",""};
 static const int   s_cnNumberOfCols = sizeof(s_vccpItemNames)/sizeof(const char*);
 
 static const int   s_cnNumberOfSearchFields(sizeof(gui_wallet::ST::s_vcpcSearchTypeStrs)/sizeof(const char*));
@@ -126,7 +126,7 @@ void Browse_content_tab::PrepareTableWidgetHeaderGUI()
     m_TableWidget.setRowHeight(0,35);
     m_TableWidget.verticalHeader()->hide();
     
-    m_TableWidget.setHorizontalHeaderLabels(QStringList() << "" << "Title" << "Rating" << "Size" << "Price" << "Created" << "Expiration" );
+    m_TableWidget.setHorizontalHeaderLabels(QStringList() << "Title" << "Rating" << "Size" << "Price" << "Created" << "Expiration"  << "" );
     m_TableWidget.horizontalHeader()->setFixedHeight(35);
     m_TableWidget.horizontalHeader()->setFont(font);
 //    m_TableWidget.horizontalHeader()->setStyleSheet("color:rgb(228,227,228)");
@@ -219,22 +219,15 @@ void Browse_content_tab::ShowDigitalContentsGUI(std::vector<SDigitalContent>& co
     int index = 0;
     for(SDigitalContent& aTemporar: contents)
     {
-        
-        QPixmap image1(":/icon/images/info1_white.svg");
-        m_TableWidget.setCellWidget(index, 0, new TableWidgetItemW<CButton>(aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
-                                                                                                            tr("")));
-        ((CButton*)m_TableWidget.cellWidget(index,0))->setPixmap(image1);
-        ((CButton*)m_TableWidget.cellWidget(index,0))->setAlignment(Qt::AlignCenter);
-        
         std::string created_str;
         for(int i = 0; i < 10; ++i)
         {
             created_str.push_back(aTemporar.created[i]);
         }
 
-        m_TableWidget.setItem(index,5,new QTableWidgetItem(QString::fromStdString(created_str)));
-        m_TableWidget.item(index, 5)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
-        m_TableWidget.item(index, 5)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+        m_TableWidget.setItem(index,4,new QTableWidgetItem(QString::fromStdString(created_str)));
+        m_TableWidget.item(index, 4)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+        m_TableWidget.item(index, 4)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
         
         
         std::string synopsis = unescape_string(aTemporar.synopsis);
@@ -250,24 +243,24 @@ void Browse_content_tab::ShowDigitalContentsGUI(std::vector<SDigitalContent>& co
         
 
         
-        m_TableWidget.setItem(index,1,new QTableWidgetItem(QString::fromStdString(synopsis)));
-        m_TableWidget.item(index, 1)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
-        m_TableWidget.item(index, 1)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+        m_TableWidget.setItem(index, 0, new QTableWidgetItem(QString::fromStdString(synopsis)));
+        m_TableWidget.item(index, 0)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+        m_TableWidget.item(index, 0)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
         
         std::string rating;
         for(int i = 0; i < std::to_string(aTemporar.AVG_rating).find(".") + 2; ++i)
         {
             rating.push_back(std::to_string(aTemporar.AVG_rating)[i]);
         }
-        m_TableWidget.setItem(index,2,new QTableWidgetItem(QString::fromStdString(rating)));
-        m_TableWidget.item(index, 2)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
-        m_TableWidget.item(index, 2)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+        m_TableWidget.setItem(index,1,new QTableWidgetItem(QString::fromStdString(rating)));
+        m_TableWidget.item(index, 1)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+        m_TableWidget.item(index, 1)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
         
         
         
         if(aTemporar.size < 1024)
         {
-            m_TableWidget.setItem(index,3,new QTableWidgetItem(QString::fromStdString(std::to_string(aTemporar.size) + " MB")));
+            m_TableWidget.setItem(index, 2,new QTableWidgetItem(QString::fromStdString(std::to_string(aTemporar.size) + " MB")));
         }
         else
         {
@@ -278,25 +271,31 @@ void Browse_content_tab::ShowDigitalContentsGUI(std::vector<SDigitalContent>& co
             {
                 size_s.push_back(s[i]);
             }
-            m_TableWidget.setItem(index,3,new QTableWidgetItem(QString::fromStdString(size_s + " GB")));
+            m_TableWidget.setItem(index, 2,new QTableWidgetItem(QString::fromStdString(size_s + " GB")));
         }
+        m_TableWidget.item(index, 2)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+        m_TableWidget.item(index, 2)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+
+
+        m_TableWidget.setItem(index, 3, new QTableWidgetItem(QString::number(aTemporar.price.amount) + " DCT"));
         m_TableWidget.item(index, 3)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
         m_TableWidget.item(index, 3)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
-
-
-        m_TableWidget.setItem(index,4,new QTableWidgetItem(QString::number(aTemporar.price.amount) + " DCT"));
-        m_TableWidget.item(index, 4)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
-        m_TableWidget.item(index, 4)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
         
         
         QDateTime time = QDateTime::fromString(QString::fromStdString(aTemporar.expiration), "yyyy-MM-ddTHH:mm:ss");
         
         e_str = CalculateRemainingTime(QDateTime::currentDateTime(), time);
 
-        m_TableWidget.setItem(index,6,new QTableWidgetItem(QString::fromStdString(e_str)));
-        m_TableWidget.item(index, 6)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
-        m_TableWidget.item(index, 6)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+        m_TableWidget.setItem(index, 5,new QTableWidgetItem(QString::fromStdString(e_str)));
+        m_TableWidget.item(index, 5)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+        m_TableWidget.item(index, 5)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
         
+        QPixmap image1(":/icon/images/info1_white.svg");
+        m_TableWidget.setCellWidget(index, 6, new TableWidgetItemW<CButton>(aTemporar,this,NULL,&Browse_content_tab::DigContCallback,
+                                                                            tr("")));
+        ((CButton*)m_TableWidget.cellWidget(index, 6))->setPixmap(image1);
+        ((CButton*)m_TableWidget.cellWidget(index, 6))->setAlignment(Qt::AlignCenter);
+
         ++index;
     }
     
@@ -316,12 +315,14 @@ void Browse_content_tab::ArrangeSize()
     m_pTableWidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     
     QSize tqs_TableSize = m_pTableWidget->size();
-    m_pTableWidget->setColumnWidth(0,(tqs_TableSize.width()*10)/100);
-    m_pTableWidget->setColumnWidth(1,(tqs_TableSize.width()*20)/100);
-    for(int i = 2; i < 7; ++i)
+    
+    m_pTableWidget->setColumnWidth(0,(tqs_TableSize.width()*20)/100);
+
+    for(int i = 1; i < 6; ++i)
     {
         m_pTableWidget->setColumnWidth(i,(tqs_TableSize.width()*14)/100);
     }
+    m_pTableWidget->setColumnWidth(6,(tqs_TableSize.width()*10)/100);
 }
 
 
@@ -336,7 +337,7 @@ void Browse_content_tab::Connects()
 {
     connect(m_pTableWidget,SIGNAL(mouseMoveEventDid()),this,SLOT(doRowColor()));
     for(int i = 0; i < m_pTableWidget->rowCount(); ++i)
-        connect((CButton*)m_pTableWidget->cellWidget(i, 0),SIGNAL(mouseWasMoved()),this,SLOT(doRowColor()));
+        connect((CButton*)m_pTableWidget->cellWidget(i, 6),SIGNAL(mouseWasMoved()),this,SLOT(doRowColor()));
 }
 
 void Browse_content_tab::doRowColor()
@@ -344,13 +345,14 @@ void Browse_content_tab::doRowColor()
     if(m_pTableWidget->rowCount() < 1)  { return; }
     if(green_row >= 0)
     {
-        m_pTableWidget->cellWidget(green_row , 0)->setStyleSheet("* { background-color: rgb(255,255,255); color : white; }");
-        for(int i = 1; i < 7; ++i)
+        for(int i = 0; i < 6; ++i)
         {
             m_pTableWidget->item(green_row,i)->setBackgroundColor(QColor(255,255,255));
             m_pTableWidget->item(green_row,i)->setForeground(QColor::fromRgb(0,0,0));
         }
+        m_pTableWidget->cellWidget(green_row , 6)->setStyleSheet("* { background-color: rgb(255,255,255); color : white; }");
     }
+    
     QPoint mouse_pos = m_pTableWidget->mapFromGlobal(QCursor::pos());
     if(mouse_pos.x() > 0 && mouse_pos.x() < 400)
     {
@@ -363,14 +365,13 @@ void Browse_content_tab::doRowColor()
         int row = ite->row();
         if(row < 0) {return;}
         
-        m_pTableWidget->cellWidget(row , 0)->setStyleSheet("* { background-color: rgb(27,176,104); color : white; }");
-        
-        for(int i = 1; i < 7; ++i)
+        for(int i = 0; i < 6; ++i)
         {
             m_pTableWidget->item(row,i)->setBackgroundColor(QColor(27,176,104));
             m_pTableWidget->item(row,i)->setForeground(QColor::fromRgb(255,255,255));
         }
-
+        m_pTableWidget->cellWidget(row , 6)->setStyleSheet("* { background-color: rgb(27,176,104); color : white; }");
+        
             green_row = row;
     }
     else
