@@ -806,7 +806,10 @@ void Mainwindow_gui_wallet::SetPassword(void* a_owner, void* a_str_ptr)
     thisPos.ry() += this->size().height() / 2;
 
     if (pThis->execRD(thisPos, *pcsPassword)) {
-        
+        m_ActionImportKey.setEnabled(true);
+        m_ActionUnlock.setEnabled(false);
+        m_ActionLock.setEnabled(true);
+
     }
     
     
