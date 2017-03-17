@@ -24,6 +24,7 @@
 #include <stdarg.h>
 #include <string>
 #include <map>
+#include <decent/wallet_utility/wallet_utility.hpp>
 #include "decent_wallet_ui_gui_contentdetailsgeneral.hpp"
 
 namespace gui_wallet
@@ -150,6 +151,8 @@ namespace gui_wallet
         
         QTimer                 _downloadChecker;
         std::set<std::string>  _activeDownloads;
+    public:
+        decent::wallet_utility::wallet_api_ptr m_ptr_wallet_utility;
     };
 
 }

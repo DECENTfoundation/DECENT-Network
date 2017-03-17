@@ -342,12 +342,21 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
 
     m_main_layout.addLayout(&m_first_line_lbl);
     
+    line = new QFrame(this);
+    line->setFrameShape(QFrame::HLine);
+    line->setLineWidth(500);
+    line->setStyleSheet("color: #f0f0f0");
+    line->setFixedHeight(1);
+
+    
+    m_main_layout.addWidget(line);
     QHBoxLayout* tab_lay = new QHBoxLayout();
     tab_lay->addWidget(&m_main_tabs);
     tab_lay->activate();
     tab_lay->setContentsMargins(0, 0, 0, 0);
     m_main_layout.addLayout(tab_lay);
     //m_main_layout.addWidget(&m_main_tabs);
+    
 
     a_pAllLayout->addLayout(&m_main_layout);
     

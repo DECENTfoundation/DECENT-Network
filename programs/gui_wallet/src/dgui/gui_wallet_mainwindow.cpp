@@ -66,7 +66,8 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
         m_import_key_dlg(2),
         m_cqsPreviousFilter(tr("nf")),
         m_nConnected(0),
-        m_SetPasswordDialog(true)
+        m_SetPasswordDialog(this, true),
+        m_UnlockDialog(this, false)
 {
     s_pMainWindowInstance = this;
     m_default_stylesheet = styleSheet();
@@ -162,10 +163,36 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
     
 }
 
-void Mainwindow_gui_wallet::ContentWasBoughtSlot() {
-    
+void Mainwindow_gui_wallet::ContentWasBoughtSlot()
+{
     m_pCentralWidget->SetMyCurrentTabIndex(4);
     UpdateAccountBalances(GlobalEvents::instance().getCurrentUser());
+    //  this is a demonstration of wallet_api direct usage
+    try
+    {
+        //
+        //  just enable below lines - create wallet, set password and unlock
+        //  and everything gets messed up!
+        //
+        //m_ptr_wallet_utility = decent::wallet_utility::create_wallet_api();
+        //if (m_ptr_wallet_utility->is_new())
+        //    m_ptr_wallet_utility->set_password("hardcode the password");
+        //m_ptr_wallet_utility->unlock("hardcode the password");
+        
+        /*vector<asset> arr_asset = m_ptr_wallet_utility->list_account_balances(GlobalEvents::instance().getCurrentUser());
+        for (auto const& asset : arr_asset)
+        {
+            QMessageBox::information(this, "DCT-Satoshi", QString("%1").arg(asset.amount.value));
+        }*/
+    }
+    catch (std::exception const& e)
+    {
+        QMessageBox::critical(this, "Error", e.what());
+    }
+    catch(...)
+    {
+        QMessageBox::critical(this, "Error", "...");
+    }
 }
 
 
@@ -779,7 +806,10 @@ void Mainwindow_gui_wallet::SetPassword(void* a_owner, void* a_str_ptr)
     thisPos.ry() += this->size().height() / 2;
 
     if (pThis->execRD(thisPos, *pcsPassword)) {
-        
+        m_ActionImportKey.setEnabled(true);
+        m_ActionUnlock.setEnabled(false);
+        m_ActionLock.setEnabled(true);
+
     }
     
     

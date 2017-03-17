@@ -17,7 +17,10 @@
 
 namespace graphene { namespace chain {
 
-
+   /**
+    * @ingroup transactions
+    * @brief Submits content to the blockchain.
+    */
    struct content_submit_operation : public base_operation
    {
       struct fee_parameters_type { uint64_t fee = 0; };
@@ -28,8 +31,10 @@ namespace graphene { namespace chain {
       asset price;
       uint64_t size;
       fc::ripemd160 hash;
+      /// List of the seeders, which will publish the content
       vector<account_id_type> seeders;
       vector<decent::crypto::ciphertext_string> key_parts;
+      /// Defines number of seeders needed to restore the encryption key
       uint32_t quorum;
       fc::time_point_sec expiration;
       asset publishing_fee;
@@ -39,7 +44,11 @@ namespace graphene { namespace chain {
       account_id_type fee_payer()const { return author; }
       void validate()const;
    };
-   
+
+   /**
+    * @ingroup transactions
+    * @brief This operation is used to send a request to buy a content.
+    */
    struct request_to_buy_operation : public base_operation
    {
       struct fee_parameters_type { uint64_t fee = 0; };
@@ -48,12 +57,17 @@ namespace graphene { namespace chain {
       string URI;
       account_id_type consumer;
       asset price;
+      /// Consumer's public key
       decent::crypto::d_integer_string pubKey;
       
       account_id_type fee_payer()const { return consumer; }
       void validate()const;
    };
-   
+
+   /**
+    * @ingroup transactions
+    * @brief Rates a content.
+    */
    struct leave_rating_operation : public base_operation
    {
       struct fee_parameters_type { uint64_t fee = 0; };
@@ -66,7 +80,11 @@ namespace graphene { namespace chain {
       account_id_type fee_payer()const { return consumer; }
       void validate()const;
    };
-   
+
+   /**
+    * @ingroup transactions
+    * @brief This operation is used to register a new seeder, modify the existing seeder or to extend seeder's lifetime.
+    */
    struct ready_to_publish_operation : public base_operation
    {
       struct fee_parameters_type { uint64_t fee = 0; };
@@ -74,14 +92,20 @@ namespace graphene { namespace chain {
       asset fee;
       account_id_type seeder;
       decent::crypto::d_integer_string pubKey;
+      /// Available space on seeder's disc dedicated to contents
       uint64_t space;
+      /// The price charged to consumer for downloading 1 MB from seeder
       uint32_t price_per_MByte;
       vector<string> ipfs_IDs;
       
       account_id_type fee_payer()const { return seeder; }
       void validate()const;
    };
-   
+
+   /**
+    * @ingroup transactions
+    * @brief
+    */
    struct proof_of_custody_operation : public base_operation
    {
       struct fee_parameters_type { uint64_t fee = 0; };
@@ -94,7 +118,11 @@ namespace graphene { namespace chain {
       account_id_type fee_payer()const { return seeder; }
       void validate()const;
    };
-   
+
+   /**
+    * @ingroup transactions
+    * @brief This operation is used to send encrypted share of a content and proof of delivery to consumer.
+    */
    struct deliver_keys_operation : public base_operation
    {
       struct fee_parameters_type { uint64_t fee = 0; };
@@ -109,6 +137,10 @@ namespace graphene { namespace chain {
       void validate()const;
    };
 
+   /**
+    * @ingroup transactions
+    * @brief This is a virtual operation emitted for the purpose of returning escrow to author
+    */
    struct return_escrow_submission_operation : public base_operation
    {
       struct fee_parameters_type { uint64_t fee = 0; };
@@ -122,6 +154,10 @@ namespace graphene { namespace chain {
       void            validate()const { FC_ASSERT( !"virtual operation" ); }
    };
 
+   /**
+    * @ingroup transactions
+    * @brief This is a virtual operation emitted for the purpose of returning escrow to consumer
+    */
    struct return_escrow_buying_operation : public base_operation
    {
       struct fee_parameters_type { uint64_t fee = 0; };
@@ -135,12 +171,16 @@ namespace graphene { namespace chain {
       void            validate()const { FC_ASSERT( !"virtual operation" ); }
    };
 
+   /**
+    * @ingroup transactions
+    * @brief This operation is used to report stats. These stats are later used to rate seeders.
+    */
    struct report_stats_operation : public base_operation
    {
       struct fee_parameters_type { uint64_t fee = 0; };
 
       asset fee;
-
+      /// The final stats about single download process. Map of seeders to amount they uploaded
       map<account_id_type,uint64_t> stats;
       account_id_type consumer;
 
@@ -148,6 +188,10 @@ namespace graphene { namespace chain {
       void validate()const;
    };
 
+   /**
+    * @ingroup transactions
+    * @brief
+    */
    struct pay_seeder_operation : public base_operation
    {
       struct fee_parameters_type { uint64_t fee = 0; };
@@ -162,6 +206,10 @@ namespace graphene { namespace chain {
       void            validate()const { FC_ASSERT( !"virtual operation" ); }
    };
 
+   /**
+    * @ingroup transactions
+    * @brief
+    */
    struct finish_buying_operation : public base_operation
    {
       struct fee_parameters_type { uint64_t fee = 0; };
