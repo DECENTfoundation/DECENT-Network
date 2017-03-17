@@ -367,7 +367,7 @@ void PurchasedTab::doRowColor()
     {
         if(m_pTableWidget->rowCount() < 0) {return;}
         
-        for(int j = 1; j < 7; ++j)
+        for(int j = 0; j < 7; ++j)
         {
             if(m_pTableWidget->item(i,j) != NULL)
             {
@@ -381,16 +381,16 @@ void PurchasedTab::doRowColor()
         
         if( NULL == button_type )
         {
-            if(m_pTableWidget->item(i,7) != NULL)
+            if(m_pTableWidget->item(i,6) != NULL)
             {
-                m_pTableWidget->item(i,7)->setBackground(QColor(255,255,255));
-                m_pTableWidget->item(i,7)->setForeground(QColor::fromRgb(88,88,88));
+                m_pTableWidget->item(i,6)->setBackground(QColor(255,255,255));
+                m_pTableWidget->item(i,6)->setForeground(QColor::fromRgb(88,88,88));
             }
         }
         
-        if(m_pTableWidget->cellWidget(i , 0) != NULL)
+        if(m_pTableWidget->cellWidget(i , 7) != NULL)
         {
-            m_pTableWidget->cellWidget(i , 0)->setStyleSheet("* { background-color: rgb(255,255,255); color : white; }");
+            m_pTableWidget->cellWidget(i , 7)->setStyleSheet("* { background-color: rgb(255,255,255); color : white; }");
         }
     }
     QPoint mouse_pos = m_pTableWidget->mapFromGlobal(QCursor::pos());
@@ -410,12 +410,12 @@ void PurchasedTab::doRowColor()
         int row = ite->row();
         if(row < 0) {return;}
         QPixmap image(":/icon/images/info1_white.svg");
-        if(m_pTableWidget->cellWidget(row , 0) != NULL)
-        {
-            m_pTableWidget->cellWidget(row , 0)->setStyleSheet("* { background-color: rgb(27,176,104); color : white; }");
-        }
-        
-        for(int i = 1 ; i < 7; ++i)
+//        if(m_pTableWidget->cellWidget(row , 0) != NULL)
+//        {
+//            m_pTableWidget->cellWidget(row , 0)->setStyleSheet("* { background-color: rgb(27,176,104); color : white; }");
+//        }
+        m_pTableWidget->cellWidget(row , 7)->setStyleSheet("* { background-color: rgb(27,176,104); color : white; }");
+        for(int i = 0 ; i < 7; ++i)
         {
             if(m_pTableWidget->item(row,i) != NULL)
             {
@@ -427,10 +427,14 @@ void PurchasedTab::doRowColor()
         button_type = qobject_cast<QPushButton*>(m_pTableWidget->cellWidget(row, 7));
         if( NULL == button_type )
         {
-            if(m_pTableWidget->item(row,7) != NULL)
+            if(m_pTableWidget->item(row,6) != NULL)
             {
-                m_pTableWidget->item(row,7)->setBackgroundColor(QColor(27,176,104));
-                m_pTableWidget->item(row,7)->setForeground(QColor::fromRgb(255,255,255));
+                m_pTableWidget->item(row,6)->setBackgroundColor(QColor(27,176,104));
+                m_pTableWidget->item(row,6)->setForeground(QColor::fromRgb(255,255,255));
+            }
+            else
+            {
+                m_pTableWidget->cellWidget(row, 6)->setStyleSheet("* { background-color: rgb(27,176,104); color : white; }");
             }
         }
     }
