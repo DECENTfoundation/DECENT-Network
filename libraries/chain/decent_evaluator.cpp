@@ -117,7 +117,7 @@ namespace graphene { namespace chain {
       const auto& firstK = content->key_parts.at( o.seeder );
       const auto& secondK = o.key;
       const auto& proof = o.proof;
-      FC_ASSERT( decent::crypto::verify_delivery_proof( proof, firstK, secondK, seeder_pubKey, buyer_pubKey) );
+      FC_ASSERT( decent::encrypt::verify_delivery_proof( proof, firstK, secondK, seeder_pubKey, buyer_pubKey) );
    }FC_CAPTURE_AND_RETHROW( (o) ) }
 
    void_result deliver_keys_evaluator::do_apply(const deliver_keys_operation& o )
@@ -131,7 +131,7 @@ namespace graphene { namespace chain {
       if( std::find(buying.seeders_answered.begin(), buying.seeders_answered.end(), o.seeder) == buying.seeders_answered.end() )
          db().modify<buying_object>(buying, [&](buying_object& bo){
               bo.seeders_answered.push_back( o.seeder );
-              bo.key_particles.push_back( decent::crypto::ciphertext(o.key) );
+              bo.key_particles.push_back( decent::encrypt::ciphertext(o.key) );
          });
       delivered = buying.seeders_answered.size() >= content->quorum;
       //if the content has already been delivered or expired, just note the key particles and go on

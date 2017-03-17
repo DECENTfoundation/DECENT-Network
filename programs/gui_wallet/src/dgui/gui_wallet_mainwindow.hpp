@@ -39,6 +39,8 @@ namespace gui_wallet
         virtual ~Mainwindow_gui_wallet();   // virtual because may be this class will be
                                             // used by inheritanc
         void SetNewTaskQtMainWnd2(const std::string& a_inp_line, void* a_clbData);
+        
+        void GoToThisTab(int index , std::string info);
 
     protected:
         void CreateActions();
@@ -52,9 +54,6 @@ namespace gui_wallet
         void UpdateLockedStatus();
         
         void CliCallbackFnc(void*arg,const std::string& task);
-        int GetDigitalContentsFromVariant(DCT::DIG_CONT_TYPES a_type,
-                                         std::vector<SDigitalContent>& acContents,
-                                         const fc::variant& contents_var);
 
         void DisplayWalletContentGUI();
         void SetPassword(void* a_owner, void* a_str_ptr);

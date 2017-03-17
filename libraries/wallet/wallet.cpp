@@ -2129,7 +2129,7 @@ public:
                                      string publishing_fee_amount,
                                      string synopsis,
                                      d_integer secret,
-                                     decent::crypto::custody_data cd,
+                                     decent::encrypt::custody_data cd,
                                      bool broadcast/* = false */)
       {
          try {
@@ -2147,7 +2147,7 @@ public:
             const auto& s = _remote_db->get_seeder( seeders[i] );
             ciphertext cp;
             point p = ss.split[i];
-            decent::crypto::el_gamal_encrypt( p ,s->pubKey ,cp );
+            decent::encrypt::el_gamal_encrypt( p ,s->pubKey ,cp );
             submit_op.key_parts.push_back(cp);
          }
 
@@ -2205,7 +2205,7 @@ public:
             sha_key._hash[2] = 0;
             sha_key._hash[3] = 0;
 
-            decent::crypto::custody_data cd;
+            decent::encrypt::custody_data cd;
             package_object pack = package_manager::instance().create_package(content_dir, samples_dir, sha_key, cd);
             fc::ripemd160 hash = pack.get_hash();
             
@@ -2225,7 +2225,7 @@ public:
                const auto& s = _remote_db->get_seeder( seeders[i] );
                ciphertext cp;
                point p = ss.split[i];
-               decent::crypto::el_gamal_encrypt( p ,s->pubKey ,cp );
+               decent::encrypt::el_gamal_encrypt( p ,s->pubKey ,cp );
                submit_op.key_parts.push_back(cp);
             
                 total_price_per_day += s->price.amount * size;
@@ -2313,12 +2313,12 @@ public:
             request_op.consumer = consumer_account.id;
             request_op.URI = URI;
             
-            if (_wallet.priv_el_gamal_key == decent::crypto::d_integer::Zero()) { // Generate key if it does not exist
-                import_el_gamal_key(decent::crypto::generate_private_el_gamal_key());
+            if (_wallet.priv_el_gamal_key == decent::encrypt::d_integer::Zero()) { // Generate key if it does not exist
+                import_el_gamal_key(decent::encrypt::generate_private_el_gamal_key());
             }
             
             
-            request_op.pubKey = decent::crypto::get_public_el_gamal_key( _wallet.priv_el_gamal_key );
+            request_op.pubKey = decent::encrypt::get_public_el_gamal_key( _wallet.priv_el_gamal_key );
             request_op.price = content->price;
             
             signed_transaction tx;
@@ -2347,8 +2347,8 @@ public:
       request_to_buy_operation request_op;
       request_op.consumer = consumer_account.id;
       request_op.URI = URI;
-      FC_ASSERT( _wallet.priv_el_gamal_key != decent::crypto::d_integer::Zero(), "Private ElGamal key is not imported. " );
-      request_op.pubKey = decent::crypto::get_public_el_gamal_key( _wallet.priv_el_gamal_key );
+      FC_ASSERT( _wallet.priv_el_gamal_key != decent::encrypt::d_integer::Zero(), "Private ElGamal key is not imported. " );
+      request_op.pubKey = decent::encrypt::get_public_el_gamal_key( _wallet.priv_el_gamal_key );
       request_op.price = asset_obj->amount_from_string(price_amount);
 
       signed_transaction tx;
@@ -2392,8 +2392,8 @@ public:
       op.space = space;
       op.price_per_MByte = price_per_MByte;
       op.ipfs_IDs = ipfs_IDs;
-      FC_ASSERT( _wallet.priv_el_gamal_key != decent::crypto::d_integer::Zero(), "Private ElGamal key is not imported. " );
-      op.pubKey = decent::crypto::get_public_el_gamal_key( _wallet.priv_el_gamal_key );
+      FC_ASSERT( _wallet.priv_el_gamal_key != decent::encrypt::d_integer::Zero(), "Private ElGamal key is not imported. " );
+      op.pubKey = decent::encrypt::get_public_el_gamal_key( _wallet.priv_el_gamal_key );
 
       signed_transaction tx;
       tx.operations.push_back( op );
@@ -2411,7 +2411,7 @@ public:
       account_object seeder_account = get_account( seeder );
       fc::ripemd160 hash(package);
       package_object po = package_manager::instance().get_package_object(hash);
-      decent::crypto::custody_proof proof;
+      decent::encrypt::custody_proof proof;
       auto dynamic_props = get_dynamic_global_properties();
       proof.reference_block = dynamic_props.head_block_number;
       block_id_type bl_id = dynamic_props.head_block_id;
@@ -2445,14 +2445,14 @@ public:
       const buying_object bo = get_object<buying_object>(buying);
       const content_object co = *(_remote_db->get_content(bo.URI));
       d_integer destPubKey = bo.pubKey;
-      decent::crypto::ciphertext orig = co.key_parts.at(seeder_account.id);
-      decent::crypto::point message;
-      auto result = decent::crypto::el_gamal_decrypt(orig, privKey, message);
-      FC_ASSERT(result == decent::crypto::ok);
+      decent::encrypt::ciphertext orig = co.key_parts.at(seeder_account.id);
+      decent::encrypt::point message;
+      auto result = decent::encrypt::el_gamal_decrypt(orig, privKey, message);
+      FC_ASSERT(result == decent::encrypt::ok);
       deliver_keys_operation op;
-      decent::crypto::ciphertext key;
-      decent::crypto::delivery_proof proof;
-      result = decent::crypto::encrypt_with_proof( message, privKey, destPubKey, orig, key, proof );
+      decent::encrypt::ciphertext key;
+      decent::encrypt::delivery_proof proof;
+      result = decent::encrypt::encrypt_with_proof( message, privKey, destPubKey, orig, key, proof );
       op.key = key;
       op.proof = proof;
       op.seeder = seeder_account.id;
@@ -2486,20 +2486,20 @@ public:
       const buying_object bo = get_object<buying_object>(buying);
       const content_object co = *(_remote_db->get_content(bo.URI));
 
-      decent::crypto::shamir_secret ss( co.quorum, co.key_parts.size() );
-      decent::crypto::point message;
+      decent::encrypt::shamir_secret ss( co.quorum, co.key_parts.size() );
+      decent::encrypt::point message;
        
-       if (_wallet.priv_el_gamal_key == decent::crypto::d_integer::Zero()) { // Generate key if it does not exist
-           import_el_gamal_key(decent::crypto::generate_private_el_gamal_key());
+       if (_wallet.priv_el_gamal_key == decent::encrypt::d_integer::Zero()) { // Generate key if it does not exist
+           import_el_gamal_key(decent::encrypt::generate_private_el_gamal_key());
        }
        
 
-//      FC_ASSERT( _wallet.priv_el_gamal_key != decent::crypto::d_integer::Zero(), "Private ElGamal key is not imported. " );
+//      FC_ASSERT( _wallet.priv_el_gamal_key != decent::encrypt::d_integer::Zero(), "Private ElGamal key is not imported. " );
 
       for( const auto key_particle : bo.key_particles )
       {
-         auto result = decent::crypto::el_gamal_decrypt( decent::crypto::ciphertext( key_particle ), _wallet.priv_el_gamal_key, message );
-         FC_ASSERT(result == decent::crypto::ok);
+         auto result = decent::encrypt::el_gamal_decrypt( decent::encrypt::ciphertext( key_particle ), _wallet.priv_el_gamal_key, message );
+         FC_ASSERT(result == decent::encrypt::ok);
          ss.add_point( message );
       }
 
@@ -2977,8 +2977,8 @@ brain_key_info wallet_api::suggest_brain_key()const
 el_gamal_key_pair wallet_api::generate_el_gamal_keys()
 {
    el_gamal_key_pair ret;
-   ret.private_key = decent::crypto::generate_private_el_gamal_key();
-   ret.public_key = decent::crypto::get_public_el_gamal_key( ret.private_key );
+   ret.private_key = decent::encrypt::generate_private_el_gamal_key();
+   ret.public_key = decent::encrypt::get_public_el_gamal_key( ret.private_key );
    return ret;
 }
 
@@ -3692,7 +3692,7 @@ signed_transaction
 wallet_api::submit_content(string author, string URI, string price_asset_name, string price_amount, uint64_t size,
                            fc::ripemd160 hash, vector<account_id_type> seeders, uint32_t quorum, fc::time_point_sec expiration,
                            string publishing_fee_asset, string publishing_fee_amount, string synopsis, d_integer secret,
-                           decent::crypto::custody_data cd, bool broadcast)
+                           decent::encrypt::custody_data cd, bool broadcast)
 {
    return my->submit_content(author, URI, price_asset_name, price_amount, hash, size, seeders, quorum, expiration, publishing_fee_asset, publishing_fee_amount, synopsis, secret, cd, broadcast);
 }
@@ -3806,7 +3806,7 @@ vector<buying_object> wallet_api::get_buying_history_objects_by_consumer( const 
 vector<buying_object> wallet_api::get_buying_history_objects_by_consumer_term( const string& account_id_or_name, const string& term )const
 {
     account_id_type consumer = get_account( account_id_or_name ).id;
-    vector<buying_object> result = my->_remote_db->get_buying_history_objects_by_consumer_all( consumer );
+    vector<buying_object> result = my->_remote_db->get_buying_objects_by_consumer( consumer );
     
     size_t iWriteIndex = 0;
     for (size_t i = 0; i < result.size(); ++i) {
@@ -3930,14 +3930,14 @@ void wallet_api::packages_path(const std::string& packages_dir) const {
    package_manager::instance().set_packages_path(packages_dir);
 }
 
-std::pair<string, decent::crypto::custody_data>  wallet_api::create_package(const std::string& content_dir, const std::string& samples_dir, const d_integer& aes_key) const {
+std::pair<string, decent::encrypt::custody_data>  wallet_api::create_package(const std::string& content_dir, const std::string& samples_dir, const d_integer& aes_key) const {
    FC_ASSERT(!is_locked());
    fc::sha512 key1;
    aes_key.Encode((byte*)key1._hash, 64);
 
-   decent::crypto::custody_data cd;
+   decent::encrypt::custody_data cd;
    package_object pack = package_manager::instance().create_package(content_dir, samples_dir, key1, cd);
-   return std::pair<string, decent::crypto::custody_data>(pack.get_hash().str(), cd);
+   return std::pair<string, decent::encrypt::custody_data>(pack.get_hash().str(), cd);
 }
 
 void wallet_api::extract_package(const std::string& package_hash, const std::string& output_dir, const d_integer& aes_key) const {

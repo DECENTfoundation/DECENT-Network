@@ -95,9 +95,11 @@ public:
     QString FilterStr();
     
     void initTabChanged();
-
+    
+    void SetTransactionInfo(std::string info_from_other_tab);
 public slots:
     void tabChanged(int index);
+
     
 protected:
     virtual void showEvent ( QShowEvent * event ) ;
@@ -115,13 +117,12 @@ private:
     QHBoxLayout         m_first_line_lbl;
 
     
-    
     Mainwindow_gui_wallet* m_parent_main_window;
     
     QTabWidget          m_main_tabs;
     
     Browse_content_tab  m_browse_cont_tab;
-    Transactions_tab    m_trans_tab;
+    TransactionsTab     m_trans_tab;
     Upload_tab          m_Upload_tab;
     Overview_tab        m_Overview_tab;
     PurchasedTab        m_Purchased_tab;
