@@ -153,7 +153,9 @@ namespace gui_wallet
         void onTextChanged(const QString& text);
 
         void buttonPressed(std::string accountName);
+        void TransactionButtonPressed(std::string accountName);
         void doRowColor();
+        
     public:
         QLineEdit search;
         TableWidget table_widget;

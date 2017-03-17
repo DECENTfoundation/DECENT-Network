@@ -95,9 +95,11 @@ public:
     QString FilterStr();
     
     void initTabChanged();
-
+    
+    void SetTransactionInfo(std::string info_from_other_tab);
 public slots:
     void tabChanged(int index);
+
     
 protected:
     virtual void showEvent ( QShowEvent * event ) ;

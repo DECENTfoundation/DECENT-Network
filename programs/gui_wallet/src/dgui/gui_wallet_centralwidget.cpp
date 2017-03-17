@@ -150,19 +150,17 @@ CentralWigdet::CentralWigdet(QBoxLayout* a_pAllLayout, Mainwindow_gui_wallet* a_
     m_currentTab = -1;
 
     
-    setStyleSheet("color:black;""background-color:white;");
 
     m_main_tabs.setStyleSheet("QTabBar::tab{"
-                              " height: 40px; width: 179px; "
+                              " height: 40px; width: 181px;"
                               "color:rgb(27,176,104);background-color:white;"
-                              "border-right: 1 solid rgb(240,240,240);"
+                              "border-left: 1 solid rgb(240,240,240);"
                               "border-top: 1 solid rgb(240,240,240);"
                               "border-bottom: 1 solid rgb(240,240,240);}"
                               "QTabBar::tab:selected{"
                               "color:white;background-color:rgb(27,176,104);}"
                                );
 
-    
     PrepareGUIprivate(a_pAllLayout);
     
     QTimer::singleShot(200, this, &CentralWigdet::initTabChanged);
@@ -224,7 +222,7 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     m_main_tabs.addTab(&m_browse_cont_tab,tr("Browse Content"));
     m_main_tabs.addTab(&m_trans_tab,tr("Transactions"));
     m_main_tabs.addTab(&m_Upload_tab,tr("Upload"));
-    m_main_tabs.addTab(&m_Overview_tab,tr("Overview"));
+    m_main_tabs.addTab(&m_Overview_tab,tr("Users"));
     m_main_tabs.addTab(&m_Purchased_tab,tr("Purchased"));
 
 
@@ -233,7 +231,6 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     pTabBar->setExpanding(false);
 
 
-    QWidget* pWidgetTmp2 = nullptr;
     QLabel* pLabelTmp = nullptr;
     QPixmap image;
     QHBoxLayout *pHBoxLayoutTmp = nullptr;
@@ -252,14 +249,14 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     pLabelTmp->setScaledContents(true);
 
     QPixmap m_image1(":/icon/images/decent_logo.svg");
-    m_image1 = m_image1.scaled(200, 200, Qt::KeepAspectRatio);
+    pHBoxLayoutTmp->setContentsMargins(0, 0, 0, 90);
     pLabelTmp->setPixmap(m_image1);
     pHBoxLayoutTmp->addWidget(pLabelTmp);
     
-    pLabelTmp->setFixedSize(__SIZE_FOR_IMGS__,__SIZE_FOR_IMGS__);
+    pLabelTmp->setFixedSize(55,55);
     m_pDcLogoWgt->setLayout(pHBoxLayoutTmp);
     m_pDcLogoWgt->setFixedHeight(__HEIGHT__);
-    m_pDcLogoWgt->setMaximumWidth(126);
+    m_pDcLogoWgt->setMaximumWidth(120);
     m_first_line_lbl.addWidget(m_pDcLogoWgt);
 
 
@@ -285,7 +282,7 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     QPixmap m_image2(":/icon/images/user.png");
     pLabelTmp->setPixmap(m_image2);
     pHBoxLayoutTmp->addWidget(pLabelTmp);
-    pLabelTmp->setFixedSize(__SIZE_FOR_IMGS__,__SIZE_FOR_IMGS__);
+    pLabelTmp->setFixedSize(28,28);
     
     pComboTmp1 = new QComboBox;
     pComboTmp1->setStyleSheet("QWidget:item:selected{border: 0px solid #999900;background: rgb(27,176,104);}");
@@ -306,7 +303,7 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     line->setFrameShape(QFrame::VLine); // Horizontal line
     
     line->setLineWidth(1);
-    line->setStyleSheet("color: #f0f0f0");
+    line->setStyleSheet("color: #ffffff");
     line->setFixedHeight(68);
     m_first_line_lbl.addWidget(line);
 
@@ -318,42 +315,21 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
 
     QPixmap m_image3(":/icon/images/balance.png");
     pLabelTmp->setPixmap(m_image3);
+    pLabelTmp->setFixedSize(30,30);
     pHBoxLayoutTmp->addWidget(pLabelTmp);
-    pLabelTmp->setFixedSize(__SIZE_FOR_IMGS__,__SIZE_FOR_IMGS__);
+    
     pCombo2 = new AccountBalanceWidget;
+    
+    QFont f( "Myriad Pro Regular", 12, QFont::Bold);
+    pCombo2->setFont(f);
     pHBoxLayoutTmp->addWidget(pCombo2);
+    
     m_pBalanceWgt1->setLayout(pHBoxLayoutTmp);
     m_first_line_lbl.addWidget(m_pBalanceWgt1);
+    pHBoxLayoutTmp->setContentsMargins(400, 0, 0, 0);
     m_pBalanceWgt1->setFixedHeight(__HEIGHT__);
-    m_pBalanceWgt1->setMaximumWidth(353);
 
-    /*//////////////////////////////////////////*/
-    line = new QFrame(this);
-    line->setFrameShape(QFrame::VLine); // Horizontal line
-
-    line->setLineWidth(1);
-    line->setStyleSheet("color: #f0f0f0");
-    line->setFixedHeight(68);
-    m_first_line_lbl.addWidget(line);
-
-    /*//////////////////////////////////////////*/
-    pWidgetTmp2 = new QWidget;
-    pHBoxLayoutTmp = new QHBoxLayout;
-    pLabelTmp = new QLabel(tr(""));
-    pLabelTmp->setScaledContents(true);
-
-    QPixmap m_image4(":/icon/images/send.png");
-    pLabelTmp->setPixmap(m_image4);
-    pHBoxLayoutTmp->addWidget(pLabelTmp);
-    pLabelTmp->setFixedSize(__SIZE_FOR_IMGS__,__SIZE_FOR_IMGS__);
-    pLabelTmp = new QLabel(tr("Send"));
-
-    pHBoxLayoutTmp->addWidget(pLabelTmp);
-    pWidgetTmp2->setLayout(pHBoxLayoutTmp);
-    m_first_line_lbl.addWidget(pWidgetTmp2);
-    pWidgetTmp2->setFixedHeight(__HEIGHT__);
-    pWidgetTmp2->setMaximumWidth(190);
-
+ 
     
     m_browse_cont_tab.setStyleSheet("color: black;""background-color:white;");
     SetAccountBalancesFromStrGUI(std::vector<std::string>());
@@ -428,14 +404,33 @@ void CentralWigdet::resizeEvent ( QResizeEvent * a_event )
 {
     //return ;
     QWidget::resizeEvent(a_event);
+    
+    int each_width = m_parent_main_window->size().width()/5-3;
+    QString s = QString::number(each_width);
+    m_main_tabs.setStyleSheet("QTabBar::tab{"
+                              " height: 40px; min-width: " + s + "px;"
+                              "color:rgb(27,176,104);background-color:white;"
+                              "border-left: 1 solid rgb(240,240,240);"
+                              "border-top: 1 solid rgb(240,240,240);"
+                              "border-bottom: 1 solid rgb(240,240,240);}"
+                              "QTabBar::tab:selected{"
+                              "color:white;background-color:rgb(27,176,104);}"
+                              );
 
     int nWidth_small (size().width()*13/100);
     int nWidth_big (size().width()*28/100);
     int nWidth_medium (size().width()*38/100);
     m_pDcLogoWgt->resize(nWidth_small,m_pDcLogoWgt->height());
     m_pUsernameWgt->resize(nWidth_big,m_pUsernameWgt->height());
-    m_pBalanceWgt1->resize(nWidth_medium,m_pBalanceWgt1->height());
+    //m_pBalanceWgt1->resize(nWidth_medium,m_pBalanceWgt1->height());
+    m_pBalanceWgt1->setMinimumSize(nWidth_medium,m_pBalanceWgt1->size().height());
 
 }
+
+void CentralWigdet::SetTransactionInfo(std::string info_from_other_tab)
+{
+    m_trans_tab.SetInfo(info_from_other_tab);
+}
+
 
 

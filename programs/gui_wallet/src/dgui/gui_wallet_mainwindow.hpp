@@ -39,6 +39,8 @@ namespace gui_wallet
         virtual ~Mainwindow_gui_wallet();   // virtual because may be this class will be
                                             // used by inheritanc
         void SetNewTaskQtMainWnd2(const std::string& a_inp_line, void* a_clbData);
+        
+        void GoToThisTab(int index , std::string info);
 
     protected:
         void CreateActions();

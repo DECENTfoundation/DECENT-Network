@@ -813,3 +813,9 @@ void Mainwindow_gui_wallet::SetPassword(void* a_owner, void* a_str_ptr)
     
 }
 
+void Mainwindow_gui_wallet::GoToThisTab(int index , std::string info)
+{
+    m_pCentralWidget->SetTransactionInfo(info);
+    m_pCentralWidget->SetMyCurrentTabIndex(index);
+}
+

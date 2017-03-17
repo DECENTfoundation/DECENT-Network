@@ -68,6 +68,8 @@ namespace gui_wallet
         void ArrangeSize();
         void Connects();
         
+        void SetInfo(std::string info_from_overview);
+        
     public:
         virtual void content_activated() {}
         virtual void content_deactivated() {}
