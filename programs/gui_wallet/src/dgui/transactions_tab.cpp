@@ -37,29 +37,27 @@ TransactionsTab::TransactionsTab() : green_row(0) {
    
    QFont f( "Open Sans Bold", 14, QFont::Bold);
    
-   tablewidget = new DecentTable();
+   tablewidget.setColumnCount(_table_columns.size());
    
-   tablewidget->setColumnCount(_table_columns.size());
+   tablewidget.verticalHeader()->setDefaultSectionSize(35);
+   tablewidget.horizontalHeader()->setDefaultSectionSize(230);
+   tablewidget.verticalHeader()->hide();
    
-   tablewidget->verticalHeader()->setDefaultSectionSize(35);
-   tablewidget->horizontalHeader()->setDefaultSectionSize(230);
-   tablewidget->verticalHeader()->hide();
-   
-   tablewidget->setStyleSheet("QTableView{border : 0px}");
-   tablewidget->setSelectionMode(QAbstractItemView::NoSelection);
+   tablewidget.setStyleSheet("QTableView{border : 0px}");
+   tablewidget.setSelectionMode(QAbstractItemView::NoSelection);
    
    QStringList headerList;
    for (int i = 0; i < _table_columns.size(); i++) {
       headerList << QString::fromStdString(_table_columns[i]);
    }
-   tablewidget->setHorizontalHeaderLabels(headerList);
+   tablewidget.setHorizontalHeaderLabels(headerList);
    
-   tablewidget->horizontalHeader()->setFixedHeight(35);
-   tablewidget->horizontalHeader()->setFont(f);
+   tablewidget.horizontalHeader()->setFixedHeight(35);
+   tablewidget.horizontalHeader()->setFont(f);
    
-   tablewidget->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-   tablewidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-   tablewidget->horizontalHeader()->setStyleSheet("QHeaderView::section {"
+   tablewidget.setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+   tablewidget.setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+   tablewidget.horizontalHeader()->setStyleSheet("QHeaderView::section {"
                                                   "border-right: 1px solid rgb(193,192,193);"
                                                   "border-bottom: 0px;"
                                                   "border-top: 0px;}");
@@ -81,10 +79,10 @@ TransactionsTab::TransactionsTab() : green_row(0) {
    search_lay->addWidget(&search_label);
    search_lay->addWidget(&user);
    
-   tablewidget->horizontalHeader()->setStretchLastSection(true);
+   tablewidget.horizontalHeader()->setStretchLastSection(true);
    main_layout.setContentsMargins(0, 0, 0, 0);
    main_layout.addLayout(search_lay);
-   main_layout.addWidget(tablewidget);
+   main_layout.addWidget(&tablewidget);
    setLayout(&main_layout);
    
    
@@ -95,7 +93,6 @@ TransactionsTab::TransactionsTab() : green_row(0) {
    m_contentUpdateTimer.setInterval(1000);
    m_contentUpdateTimer.start();
 
-   connect(tablewidget, SIGNAL(mouseMoveEventDid(QPoint)), this, SLOT(hightlight_row(QPoint)));
 }
 
 
@@ -120,17 +117,13 @@ void TransactionsTab::onTextChanged(const QString& text) {
 }
 
 
-void TransactionsTab::createNewRow()
-{
-   tablewidget->setRowCount(100);
-}
 
 void TransactionsTab::ArrangeSize()
 {
-   QSize tqsTableSize = tablewidget->size();
+   QSize tqsTableSize = tablewidget.size();
    std::vector<int> sizes = {18, 10, 17, 17, 8, 8, 22};
    for (int i = 0; i < _table_columns.size(); ++i) {
-      tablewidget->setColumnWidth(i, (tqsTableSize.width() * sizes[i]) / 100);
+      tablewidget.setColumnWidth(i, (tqsTableSize.width() * sizes[i]) / 100);
    }
    
 }
@@ -139,46 +132,6 @@ void TransactionsTab::resizeEvent(QResizeEvent *a_event)
 {
    QWidget::resizeEvent(a_event);
    ArrangeSize();
-}
-
-
-TransactionsTab::~TransactionsTab()
-{
-   main_layout.removeWidget(tablewidget);
-   delete tablewidget;
-}
-
-void TransactionsTab::hightlight_row(QPoint point)
-{
-   if(tablewidget->rowCount() < 0) {
-      return;
-   }
-   
-   for (int i = 0; i < _table_columns.size(); ++i)
-   {
-      if(tablewidget->item(green_row,i) != NULL)
-      {
-         tablewidget->item(green_row,i)->setBackgroundColor(QColor(255,255,255));
-         tablewidget->item(green_row,i)->setForeground(QColor::fromRgb(0,0,0));
-      }
-   }
-   
-   
-   int row = tablewidget->rowAt(point.y());
-   if(row < 0)
-      return;
-   
-   for (int i = 0; i < _table_columns.size(); ++i)
-   {
-      if(tablewidget->item(row, i) != NULL)
-      {
-         tablewidget->item(row, i)->setBackgroundColor(QColor(27,176,104));
-         tablewidget->item(row, i)->setForeground(QColor::fromRgb(255,255,255));
-      }
-   }
-   
-   green_row = row;
-   
 }
 
 
@@ -216,7 +169,7 @@ void TransactionsTab::updateContents() {
    try {
       auto contents = json::parse(a_result);
       
-      tablewidget->setRowCount(contents.size());
+      tablewidget.setRowCount(contents.size());
       
       for (int i = 0; i < contents.size(); ++i) {
          auto content = contents[i];
@@ -270,9 +223,9 @@ void TransactionsTab::updateContents() {
          
          for (int col = 0; col < _table_columns.size(); ++col) {
             
-            tablewidget->setItem(i, col, new QTableWidgetItem(values[col]));
-            tablewidget->item(i, col)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
-            tablewidget->item(i, col)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+            tablewidget.setItem(i, col, new QTableWidgetItem(values[col]));
+            tablewidget.item(i, col)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+            tablewidget.item(i, col)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
             
          }
          

@@ -34,7 +34,6 @@ namespace gui_wallet
       Q_OBJECT;
    public:
       BrowseContentTab();
-      virtual ~BrowseContentTab();
       
       void ShowDigitalContentsGUI(std::vector<SDigitalContent>& contents);
       
@@ -52,7 +51,6 @@ namespace gui_wallet
    public slots:
       
       void onTextChanged(const QString& text);
-      void hightlight_row(QPoint point);
       void updateContents();
       void maybeUpdateContent();
       
@@ -71,7 +69,6 @@ namespace gui_wallet
       
       std::vector<SDigitalContent> m_dContents;
       bool m_doUpdate = true;
-      int green_row;
       QTimer  m_contentUpdateTimer;
    };
    

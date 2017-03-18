@@ -89,7 +89,6 @@ Overview_tab::Overview_tab(class Mainwindow_gui_wallet* a_pPar)
    m_contentUpdateTimer.start();
    
    table_widget.setMouseTracking(true);
-   connect(&table_widget, SIGNAL(mouseMoveEventDid(QPoint)), this, SLOT(highlight_row(QPoint)));
 }
 
 
@@ -149,19 +148,11 @@ void Overview_tab::updateContents() {
       
       connect(transfer, SIGNAL(ButtonPushedSignal(std::string)), this , SLOT(buttonPressed(std::string)));
       connect(transaction, SIGNAL(ButtonPushedSignal(std::string)), this , SLOT(TransactionButtonPressed(std::string)));
-      connect(transfer, SIGNAL(mouseWasMoved()), this , SLOT(doRowColor()));
-      connect(transaction, SIGNAL(mouseWasMoved()), this , SLOT(doRowColor()));
-      
-      
-      //        QHBoxLayout* buttons_layout = new QHBoxLayout();
-      //        buttons_layout->addWidget(transaction);
-      //        buttons_layout->addWidget(transfer);
       
       table_widget.setItem(i, 1, new QTableWidgetItem(QString::fromStdString(content[0].get<std::string>())));
       table_widget.setItem(i, 0, new QTableWidgetItem(QString::fromStdString(content[1].get<std::string>())));
       table_widget.setCellWidget(i, 2, transaction);
       table_widget.setCellWidget(i, 3, transfer);
-      //table_widgetsetCellWidget(i, 2, buttons_layout);
       
       table_widget.setRowHeight(i,40);
       table_widget.cellWidget(i, 2)->setStyleSheet("* { background-color: rgb(255,255,255); color : rgb(27,176,104); }");
@@ -241,38 +232,4 @@ void Overview_tab::resizeEvent(QResizeEvent *a_event)
 {
    QWidget::resizeEvent(a_event);
    ArrangeSize();
-}
-
-void Overview_tab::highlight_row(QPoint point)
-{
-   if(table_widget.rowCount() < 0) {return;}
-   
-   for(int i = 0; i <= table_widget.rowCount() - 1; ++i)
-   {
-      table_widget.cellWidget(i, 2)->setStyleSheet("* { background-color: rgb(255,255,255); color : rgb(27,176,104); }");
-      table_widget.cellWidget(i, 3)->setStyleSheet("* { background-color: rgb(255,255,255); color : rgb(27,176,104); }");
-      table_widget.item(i,0)->setBackground(QColor(255,255,255));
-      table_widget.item(i,1)->setBackground(QColor(255,255,255));
-      
-      table_widget.item(i,0)->setForeground(QColor::fromRgb(88,88,88));
-      table_widget.item(i,1)->setForeground(QColor::fromRgb(88,88,88));
-   }
-   
-   int row = table_widget.rowAt(point.y());
-   
-   if (row < 0) {
-      return;
-   }
-   
-   table_widget.cellWidget(row , 2)->setStyleSheet("* { background-color: rgb(27,176,104); color : white; }");
-   table_widget.cellWidget(row , 3)->setStyleSheet("* { background-color: rgb(27,176,104); color : white; }");
-   
-   table_widget.item(row,0)->setBackgroundColor(QColor(27,176,104));
-   table_widget.item(row,1)->setBackgroundColor(QColor(27,176,104));
-   table_widget.item(row,0)->setForeground(QColor::fromRgb(255,255,255));
-   table_widget.item(row,1)->setForeground(QColor::fromRgb(255,255,255));
-}
-
-Overview_tab::~Overview_tab() {
-   
 }

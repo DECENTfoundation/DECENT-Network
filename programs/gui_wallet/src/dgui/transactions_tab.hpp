@@ -31,22 +31,18 @@ namespace gui_wallet
       Q_OBJECT
    public:
       TransactionsTab();
-      ~TransactionsTab();
       
       virtual void content_activated() {}
       virtual void content_deactivated() {}
       virtual void resizeEvent(QResizeEvent *a_event);
       
-      void createNewRow();
       void ArrangeSize();
-      void Connects();
-      
       void SetInfo(std::string info_from_overview);
       
    public:
       QVBoxLayout       main_layout;
       QLabel            search_label;
-      DecentTable*      tablewidget;
+      DecentTable       tablewidget;
       QLineEdit         user;
       int               green_row;
       
@@ -54,8 +50,6 @@ namespace gui_wallet
       std::string getAccountName(std::string accountId);
       
    public slots:
-      
-      void hightlight_row(QPoint point);
       void onTextChanged(const QString& text);
       void updateContents();
       void maybeUpdateContent();

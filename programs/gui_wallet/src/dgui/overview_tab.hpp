@@ -124,9 +124,7 @@ namespace gui_wallet
       Q_OBJECT
    public:
       Overview_tab(class Mainwindow_gui_wallet* pPar);
-      virtual ~Overview_tab();
       void CreateTable();
-      void Connects();
       void ArrangeSize();
       
    public:
@@ -142,7 +140,6 @@ namespace gui_wallet
       
       void buttonPressed(std::string accountName);
       void TransactionButtonPressed(std::string accountName);
-      void highlight_row(QPoint point);
       
    public:
       QLineEdit      search;

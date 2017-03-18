@@ -345,8 +345,7 @@ namespace gui_wallet
       Q_OBJECT;
    public:
       template<class... Args>
-      ClickableLabel(const Args&... args) : QLabel(args...) {
-      }
+      ClickableLabel(const Args&... args) : QLabel(args...) {}
       
       
    signals:
@@ -359,26 +358,77 @@ namespace gui_wallet
    };
    
    
+   
+   
+   
    // Table with additional functionality to use in our GUI
    class DecentTable : public QTableWidget {
       Q_OBJECT
    public:
-      DecentTable() : QTableWidget() {
+      DecentTable() : QTableWidget(), _current_highlighted_row(-1) {
          this->setMouseTracking(true);
       }
       
-      DecentTable(int rows, int cols) : QTableWidget(rows, cols) {
+      DecentTable(int rows, int cols) : QTableWidget(rows, cols), _current_highlighted_row(-1) {
          this->setMouseTracking(true);
       }
       
       virtual void mouseMoveEvent(QMouseEvent * event) {
-         emit mouseMoveEventDid(event->pos());
+         
+         if (_current_highlighted_row != -1) {
+            for (int i = 0; i < this->columnCount(); ++i) {
+               QTableWidgetItem* cell = this->item(_current_highlighted_row, i);
+               QWidget* cell_widget = this->cellWidget(_current_highlighted_row, i);
+               
+               if(cell != NULL) {
+                  cell->setBackgroundColor(QColor(255,255,255));
+                  cell->setForeground(QColor::fromRgb(0,0,0));
+               }
+               
+               if(cell_widget != NULL) {
+                  QString old_style = cell_widget->property("old_style").toString();
+                  
+                  if (old_style.isEmpty())
+                     cell_widget->setStyleSheet("* { background-color: rgb(255,255,255); color : black; }");
+                  else
+                     cell_widget->setStyleSheet(old_style);
+                  
+                  
+               }
+            }
+         }
+         
+         
+         int row = this->rowAt(event->pos().y());
+         
+         
+         if(row < 0) {
+            _current_highlighted_row = -1;
+            return;
+         }
+         
+         
+         for (int i = 0; i < this->columnCount(); ++i) {
+            QTableWidgetItem* cell = this->item(row, i);
+            QWidget* cell_widget = this->cellWidget(row, i);
+
+            if (cell != NULL) {
+               cell->setBackgroundColor(QColor(27,176,104));
+               cell->setForeground(QColor::fromRgb(255,255,255));
+            }
+            
+            if(cell_widget != NULL) {
+               cell_widget->setProperty("old_style", cell_widget->styleSheet());
+               cell_widget->setStyleSheet("* { background-color: rgb(27,176,104); color : white; }");
+            }
+            
+         }
+         
+         _current_highlighted_row = row;
       }
       
-   public:
-   signals:
-      void mouseMoveEventDid(QPoint position);
-      
+   private:
+      int _current_highlighted_row;
    };
 
 

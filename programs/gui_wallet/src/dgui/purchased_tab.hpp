@@ -28,22 +28,6 @@
 #include <string>
 #include <iostream>
 
-class P_TableWidget : public QTableWidget
-{
-   Q_OBJECT
-public:
-   P_TableWidget(int row, int col) : QTableWidget(row,col) {
-      this->setMouseTracking(true);
-   }
-   
-   virtual void mouseMoveEvent(QMouseEvent * event) {
-      emit mouseMoveEventDid(event->pos());
-   }
-public:
-signals:
-   void mouseMoveEventDid(QPoint position);
-};
-
 
 
 
@@ -59,7 +43,6 @@ namespace gui_wallet {
             
    public:
       PurchasedTab();
-      virtual ~PurchasedTab();
       
       void ShowDigitalContentsGUI(std::vector<SDigitalContent>& contents);
       
@@ -81,7 +64,6 @@ namespace gui_wallet {
       void ArrangeSize();
       
    public slots:
-      void hightlight_row(QPoint point);
       void onTextChanged(const QString& text);
       void updateContents();
       void maybeUpdateContent();
@@ -102,7 +84,7 @@ namespace gui_wallet {
       
    protected:
       QVBoxLayout     m_main_layout;
-      P_TableWidget*  m_pTableWidget;
+      DecentTable     m_pTableWidget;
       QLineEdit       m_filterLineEditer;
       
    };

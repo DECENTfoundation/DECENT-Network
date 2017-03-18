@@ -36,11 +36,9 @@ using namespace gui_wallet;
 using namespace nlohmann;
 
 
-BrowseContentTab::BrowseContentTab() : m_pTableWidget(new DecentTable(0, s_cnNumberOfCols)), green_row(-1)
-{
+BrowseContentTab::BrowseContentTab() : m_pTableWidget(new DecentTable(0, s_cnNumberOfCols)) {
    
    PrepareTableWidgetHeaderGUI();
-   green_row = 0;
    
    m_filterLineEdit.setStyleSheet( "{"
                                   "background: #f3f3f3;"
@@ -76,13 +74,9 @@ BrowseContentTab::BrowseContentTab() : m_pTableWidget(new DecentTable(0, s_cnNum
    m_contentUpdateTimer.setInterval(1000);
    m_contentUpdateTimer.start();
    
-   connect(m_pTableWidget, SIGNAL(mouseMoveEventDid(QPoint)), this, SLOT(hightlight_row(QPoint)));
    ArrangeSize();
 }
 
-
-BrowseContentTab::~BrowseContentTab() {
-}
 
 void BrowseContentTab::DigContCallback(_NEEDED_ARGS2_)
 {
@@ -141,63 +135,63 @@ void BrowseContentTab::PrepareTableWidgetHeaderGUI()
 void BrowseContentTab::updateContents() {
    std::string filterText = m_filterLineEdit.text().toStdString();
    
-   SetNewTask("search_content \"" + filterText + "\" 100", this, NULL, +[](void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
-      BrowseContentTab* obj = (BrowseContentTab*)owner;
+   std::string a_result;
+   
       
-      try {
-         auto contents = json::parse(a_result);
+   try {
+      RunTask("search_content \"" + filterText + "\" 100", a_result);
+      
+      auto contents = json::parse(a_result);
+      
+      std::vector<SDigitalContent> dContents;
+      dContents.clear();
+      dContents.resize(contents.size());
+      
+      
+      for (int i = 0; i < contents.size(); ++i) {
+         dContents[i].type = DCT::GENERAL;
          
-         std::vector<SDigitalContent> dContents;
-         dContents.clear();
-         dContents.resize(contents.size());
+         dContents[i].author = contents[i]["author"].get<std::string>();
          
          
-         for (int i = 0; i < contents.size(); ++i) {
-            dContents[i].type = DCT::GENERAL;
-            
-            dContents[i].author = contents[i]["author"].get<std::string>();
-            
-            
-            
-            dContents[i].price.asset_id = contents[i]["price"]["asset_id"].get<std::string>();
-            dContents[i].synopsis = contents[i]["synopsis"].get<std::string>();
-            dContents[i].URI = contents[i]["URI"].get<std::string>();
-            dContents[i].created = contents[i]["created"].get<std::string>();
-            dContents[i].expiration = contents[i]["expiration"].get<std::string>();
-            dContents[i].size = contents[i]["size"].get<int>();
-            
-            if (contents[i]["times_bougth"].is_number()) {
-               dContents[i].times_bougth = contents[i]["times_bougth"].get<int>();
-            } else {
-               dContents[i].times_bougth = 0;
-            }
-            
-            
-            if (contents[i]["price"]["amount"].is_number()){
-               dContents[i].price.amount =  contents[i]["price"]["amount"].get<double>();
-            } else {
-               dContents[i].price.amount =  std::stod(contents[i]["price"]["amount"].get<std::string>());
-            }
-            
-            dContents[i].price.amount /= GRAPHENE_BLOCKCHAIN_PRECISION;
-            
-            dContents[i].AVG_rating = contents[i]["AVG_rating"].get<double>()  / 1000;
+         
+         dContents[i].price.asset_id = contents[i]["price"]["asset_id"].get<std::string>();
+         dContents[i].synopsis = contents[i]["synopsis"].get<std::string>();
+         dContents[i].URI = contents[i]["URI"].get<std::string>();
+         dContents[i].created = contents[i]["created"].get<std::string>();
+         dContents[i].expiration = contents[i]["expiration"].get<std::string>();
+         dContents[i].size = contents[i]["size"].get<int>();
+         
+         if (contents[i]["times_bougth"].is_number()) {
+            dContents[i].times_bougth = contents[i]["times_bougth"].get<int>();
+         } else {
+            dContents[i].times_bougth = 0;
          }
          
-         obj->ShowDigitalContentsGUI(dContents);
-         obj->ArrangeSize();
-      } catch (std::exception& ex) {
+         
+         if (contents[i]["price"]["amount"].is_number()){
+            dContents[i].price.amount =  contents[i]["price"]["amount"].get<double>();
+         } else {
+            dContents[i].price.amount =  std::stod(contents[i]["price"]["amount"].get<std::string>());
+         }
+         
+         dContents[i].price.amount /= GRAPHENE_BLOCKCHAIN_PRECISION;
+         
+         dContents[i].AVG_rating = contents[i]["AVG_rating"].get<double>()  / 1000;
       }
-   });
       
+      ShowDigitalContentsGUI(dContents);
+      ArrangeSize();
+   } catch (std::exception& ex) {
+      std::cout << ex.what() << std::endl;
+   }
+   
    ArrangeSize();
 }
 
 
 
-void BrowseContentTab::ShowDigitalContentsGUI(std::vector<SDigitalContent>& contents)
-{
-   
+void BrowseContentTab::ShowDigitalContentsGUI(std::vector<SDigitalContent>& contents) {
    
    m_pTableWidget->setRowCount(contents.size());
    DecentTable& m_TableWidget = *m_pTableWidget;
@@ -314,37 +308,4 @@ void BrowseContentTab::resizeEvent ( QResizeEvent * a_event )
    ArrangeSize();
 }
 
-
-void BrowseContentTab::hightlight_row(QPoint point) {
-   
-   if(m_pTableWidget->rowCount() < 0)  {
-      return;
-   }
-   
-   if (green_row >= 0) {
-      
-      m_pTableWidget->cellWidget(green_row , 0)->setStyleSheet("* { background-color: rgb(255,255,255); color : white; }");
-      for(int i = 1; i < 7; ++i)
-      {
-         m_pTableWidget->item(green_row,i)->setBackgroundColor(QColor(255,255,255));
-         m_pTableWidget->item(green_row,i)->setForeground(QColor::fromRgb(0,0,0));
-      }
-   }
-   
-   int row = m_pTableWidget->rowAt(point.y());
-   if(row < 0) {
-      return;
-   }
-   
-   m_pTableWidget->cellWidget(row , 0)->setStyleSheet("* { background-color: rgb(27,176,104); color : white; }");
-   
-   for(int i = 1; i < 7; ++i)
-   {
-      m_pTableWidget->item(row,i)->setBackgroundColor(QColor(27,176,104));
-      m_pTableWidget->item(row,i)->setForeground(QColor::fromRgb(255,255,255));
-   }
-   
-   green_row = row;
-
-}
 
