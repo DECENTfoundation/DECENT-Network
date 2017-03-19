@@ -19,13 +19,6 @@
 #include <QSortFilterProxyModel>
 #include <QStyleFactory>
 
-#ifndef _PATH_DELIMER_
-#ifdef WIN32
-#define _PATH_DELIMER_  '\\'
-#else
-#define _PATH_DELIMER_  '/'
-#endif
-#endif
 
 #ifdef WIN32
 #include <direct.h>
@@ -40,11 +33,8 @@
 using namespace gui_wallet;
 
 
-AccountBalanceWidget::AccountBalanceWidget()
-    :   TableWidgetItemW_base<QWidget,int>(1,this,NULL,
-                                                                     &AccountBalanceWidget::ClbFunction),
-      m_nCurrentIndex(-1)
-{
+AccountBalanceWidget::AccountBalanceWidget() : m_nCurrentIndex(-1) {
+   
     m_amount_label.setStyleSheet("color:green;""background-color:white;");
     m_asset_type_label.setStyleSheet("color:black;""background-color:white;");
     m_amount_label.setAlignment(Qt::AlignRight|Qt::AlignVCenter);
@@ -97,12 +87,6 @@ void AccountBalanceWidget::setCurrentIndex(int a_nIndex)
         SetAccountBalanceFromStringGUIprivate(m_vBalances[a_nIndex]);
         m_nCurrentIndex = a_nIndex;
     }
-}
-
-
-void AccountBalanceWidget::ClbFunction(_NEEDED_ARGS1_(int))
-{
-    //
 }
 
 
@@ -376,14 +360,6 @@ void CentralWigdet::showEvent ( QShowEvent * event )
 }
 
 
-void CentralWigdet::make_deleyed_warning()
-{
-    gui_wallet::makeWarningImediatly(m_DelayedWaringTitle.toLatin1().data(),
-                                     m_DelayedWaringText.toLatin1().data(),
-                                     m_DelayedWaringDetails.toLatin1().data(),this);
-}
-
-
 void CentralWigdet::resizeEvent ( QResizeEvent * a_event )
 {
     QWidget::resizeEvent(a_event);
@@ -429,7 +405,7 @@ void CentralWigdet::resizeEvent ( QResizeEvent * a_event )
 
 void CentralWigdet::SetTransactionInfo(std::string info_from_other_tab)
 {
-    m_trans_tab.SetInfo(info_from_other_tab);
+    m_trans_tab.set_user_filter(info_from_other_tab);
 }
 
 

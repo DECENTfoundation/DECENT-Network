@@ -33,35 +33,19 @@ using namespace nlohmann;
 
 
 
-TransactionsTab::TransactionsTab() : green_row(0) {
+TransactionsTab::TransactionsTab() {
+
+   tablewidget.set_columns({
+      {"Time", 20},
+      {"Type", 10},
+      {"From", 20},
+      {"To", 20},
+      {"Amount", 10},
+      {"Fee", 10},
+      {"Description", 25}
+   });
    
-   QFont f( "Open Sans Bold", 14, QFont::Bold);
    
-   tablewidget.setColumnCount(_table_columns.size());
-   
-   tablewidget.verticalHeader()->setDefaultSectionSize(35);
-   tablewidget.horizontalHeader()->setDefaultSectionSize(230);
-   tablewidget.verticalHeader()->hide();
-   
-   tablewidget.setStyleSheet("QTableView{border : 0px}");
-   tablewidget.setSelectionMode(QAbstractItemView::NoSelection);
-   
-   QStringList headerList;
-   for (int i = 0; i < _table_columns.size(); i++) {
-      headerList << QString::fromStdString(_table_columns[i]);
-   }
-   tablewidget.setHorizontalHeaderLabels(headerList);
-   
-   tablewidget.horizontalHeader()->setFixedHeight(35);
-   tablewidget.horizontalHeader()->setFont(f);
-   
-   tablewidget.setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-   tablewidget.setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-   tablewidget.horizontalHeader()->setStyleSheet("QHeaderView::section {"
-                                                  "border-right: 1px solid rgb(193,192,193);"
-                                                  "border-bottom: 0px;"
-                                                  "border-top: 0px;}");
-  
    user.setStyleSheet("border: 0px solid white");
    user.setPlaceholderText("Enter user name to see transaction history");
    user.setAttribute(Qt::WA_MacShowFocusRect, 0);
@@ -117,22 +101,6 @@ void TransactionsTab::onTextChanged(const QString& text) {
 }
 
 
-
-void TransactionsTab::ArrangeSize()
-{
-   QSize tqsTableSize = tablewidget.size();
-   std::vector<int> sizes = {18, 10, 17, 17, 8, 8, 22};
-   for (int i = 0; i < _table_columns.size(); ++i) {
-      tablewidget.setColumnWidth(i, (tqsTableSize.width() * sizes[i]) / 100);
-   }
-   
-}
-
-void TransactionsTab::resizeEvent(QResizeEvent *a_event)
-{
-   QWidget::resizeEvent(a_event);
-   ArrangeSize();
-}
 
 
 
@@ -221,7 +189,7 @@ void TransactionsTab::updateContents() {
                                           QString::fromStdString(description) };
          
          
-         for (int col = 0; col < _table_columns.size(); ++col) {
+         for (int col = 0; col < tablewidget.columnCount(); ++col) {
             
             tablewidget.setItem(i, col, new QTableWidgetItem(values[col]));
             tablewidget.item(i, col)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
@@ -237,9 +205,8 @@ void TransactionsTab::updateContents() {
    
 }
 
-void TransactionsTab::SetInfo(std::string info_from_overview)
-{
-   user.setText(QString::fromStdString(info_from_overview));
+void TransactionsTab::set_user_filter(const std::string& user_name) {
+   user.setText(QString::fromStdString(user_name));
 }
 
 

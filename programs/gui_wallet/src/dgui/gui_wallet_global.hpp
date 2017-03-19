@@ -21,6 +21,7 @@
 #include <QLabel>
 #include <QTableWidget>
 #include <QMouseEvent>
+#include <QHeaderView>
 
 
 #include <numeric>
@@ -362,17 +363,77 @@ namespace gui_wallet
    
    
    // Table with additional functionality to use in our GUI
+   struct DecentColumn {
+      std::string title;
+      int size; // Negative value of size means absolute value of width, positive is weighted value
+   };
+   
    class DecentTable : public QTableWidget {
       Q_OBJECT
    public:
-      DecentTable() : QTableWidget(), _current_highlighted_row(-1) {
+      DecentTable() {
+         this->horizontalHeader()->setStretchLastSection(true);
+         this->setSelectionMode(QAbstractItemView::NoSelection);
+         this->setStyleSheet("QTableView{border : 0px}");
+         this->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+         this->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+         
+         this->verticalHeader()->hide();
          this->setMouseTracking(true);
       }
       
-      DecentTable(int rows, int cols) : QTableWidget(rows, cols), _current_highlighted_row(-1) {
-         this->setMouseTracking(true);
+      
+      void set_columns(const std::vector<DecentColumn>& cols) {
+         _cols = cols;
+         
+         this->setColumnCount(cols.size());
+         
+         QFont font("Open Sans Bold", 14, QFont::Bold);
+         this->horizontalHeader()->setDefaultSectionSize(300);
+         this->setRowHeight(0,35);
+         
+         
+         QStringList columns;
+         for (const DecentColumn& col: cols) {
+            columns << QString::fromStdString(col.title);
+         }
+         this->setHorizontalHeaderLabels(columns);
+         
+         _sum_weights = std::accumulate(_cols.begin(), _cols.end(),
+                                         0, [](int sum, const DecentColumn& col) {
+                                            return (col.size > 0) ? sum + col.size : sum;
+                                         });
+         
+         _sum_absoulte = std::accumulate(_cols.begin(), _cols.end(),
+                                        0, [](int sum, const DecentColumn& col) {
+                                           return (col.size > 0) ? sum : sum - col.size;
+                                        });
+         
+         
+         this->horizontalHeader()->setFixedHeight(35);
+         this->horizontalHeader()->setFont(font);
+         
+         this->horizontalHeader()->setStyleSheet("QHeaderView::section {"
+                                                          "border-right: 1px solid rgb(193,192,193);"
+                                                          "border-bottom: 0px;"
+                                                          "border-top: 0px;}");
       }
       
+   private:
+      virtual void resizeEvent(QResizeEvent * a_event) {
+         QSize tableSize = this->size();
+         int width = tableSize.width() - _sum_absoulte;
+         
+         for(int i = 0; i < _cols.size(); ++i) {
+            if (_cols[i].size > 0) {
+               this->setColumnWidth(i, width * _cols[i].size / _sum_weights);
+            } else {
+               this->setColumnWidth(i, -_cols[i].size);
+            }
+         }
+
+      }
+
       virtual void mouseMoveEvent(QMouseEvent * event) {
          
          if (_current_highlighted_row != -1) {
@@ -428,7 +489,10 @@ namespace gui_wallet
       }
       
    private:
-      int _current_highlighted_row;
+      int                            _current_highlighted_row = -1;
+      int                            _sum_weights = 1;
+      int                            _sum_absoulte = 0;
+      std::vector<DecentColumn>      _cols;
    };
 
 

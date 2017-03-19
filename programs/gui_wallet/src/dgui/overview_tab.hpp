@@ -139,7 +139,7 @@ namespace gui_wallet
       void onTextChanged(const QString& text);
       
       void buttonPressed(std::string accountName);
-      void TransactionButtonPressed(std::string accountName);
+      void transaction_button_pressed(std::string accountName);
       
    public:
       QLineEdit      search;
@@ -147,10 +147,9 @@ namespace gui_wallet
       QLabel         search_label;
       
       std::map<std::string , std::string> info;
-      int button_number;
+      
    protected:
       class Mainwindow_gui_wallet* m_pPar;
-      virtual void resizeEvent ( QResizeEvent * a_event );
       
    private:
       QTimer  m_contentUpdateTimer;

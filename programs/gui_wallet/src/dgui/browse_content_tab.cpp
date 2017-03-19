@@ -9,6 +9,8 @@
  */
 #include "browse_content_tab.hpp"
 #include "gui_wallet_global.hpp"
+#include "ui_wallet_functions.hpp"
+
 #include <QLayout>
 #include <QCheckBox>
 #include <stdio.h>
@@ -29,16 +31,24 @@
 #include <QDate>
 #include <QTime>
 
-static const char* s_vccpItemNames[]={"","Title","Rating", "Size","Price","Created","Expiration"};
-static const int   s_cnNumberOfCols = sizeof(s_vccpItemNames)/sizeof(const char*);
-
 using namespace gui_wallet;
 using namespace nlohmann;
 
 
-BrowseContentTab::BrowseContentTab() : m_pTableWidget(new DecentTable(0, s_cnNumberOfCols)) {
+BrowseContentTab::BrowseContentTab() {
    
-   PrepareTableWidgetHeaderGUI();
+   m_pTableWidget.set_columns({
+      {" ", -50},
+      {"Title", 20},
+      {"Rating", 10},
+      {"Size", 10},
+      {"Price", 10},
+      {"Created", 10},
+      {"Expiration", 10}
+   });
+   
+   
+   
    
    m_filterLineEdit.setStyleSheet( "{"
                                   "background: #f3f3f3;"
@@ -64,7 +74,7 @@ BrowseContentTab::BrowseContentTab() : m_pTableWidget(new DecentTable(0, s_cnNum
    m_search_layout.addWidget(&m_filterLineEdit);
    
    m_main_layout.addLayout(&m_search_layout);
-   m_main_layout.addWidget(m_pTableWidget);
+   m_main_layout.addWidget(&m_pTableWidget);
    setLayout(&m_main_layout);
    
    connect(&m_filterLineEdit, SIGNAL(textChanged(QString)), this, SLOT(onTextChanged(QString)));
@@ -74,15 +84,8 @@ BrowseContentTab::BrowseContentTab() : m_pTableWidget(new DecentTable(0, s_cnNum
    m_contentUpdateTimer.setInterval(1000);
    m_contentUpdateTimer.start();
    
-   ArrangeSize();
 }
 
-
-void BrowseContentTab::DigContCallback(_NEEDED_ARGS2_)
-{
-   emit ShowDetailsOnDigContentSig(*a_pDigContent);
-   ArrangeSize();
-}
 
 void BrowseContentTab::maybeUpdateContent() {
    if (!m_doUpdate) {
@@ -91,44 +94,12 @@ void BrowseContentTab::maybeUpdateContent() {
    
    m_doUpdate = false;
    updateContents();
-   ArrangeSize();
 }
 
 void BrowseContentTab::onTextChanged(const QString& text) {
    
    m_doUpdate = true;
 }
-
-void BrowseContentTab::PrepareTableWidgetHeaderGUI()
-{
-   
-   QFont font( "Open Sans Bold", 14, QFont::Bold);
-   
-   //    m_pTableWidget->setStyleSheet("QTableWidget{border : 1px solid red}");
-   
-   m_pTableWidget->horizontalHeader()->setDefaultSectionSize(300);
-   m_pTableWidget->setRowHeight(0,35);
-   m_pTableWidget->verticalHeader()->hide();
-   
-   m_pTableWidget->setHorizontalHeaderLabels(QStringList() << "" << "Title" << "Rating" << "Size" << "Price" << "Created" << "Expiration" );
-   m_pTableWidget->horizontalHeader()->setFixedHeight(35);
-   m_pTableWidget->horizontalHeader()->setFont(font);
-   //    m_pTableWidget->horizontalHeader()->setStyleSheet("color:rgb(228,227,228)");
-   
-   m_main_layout.setContentsMargins(0, 0, 0, 0);
-   
-   m_pTableWidget->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-   m_pTableWidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-   m_pTableWidget->setSelectionMode(QAbstractItemView::NoSelection);
-   
-   m_pTableWidget->horizontalHeader()->setStyleSheet("QHeaderView::section {"
-                                                   "border-right: 1px solid rgb(193,192,193);"
-                                                   "border-bottom: 0px;"
-                                                   "border-top: 0px;}");
-   
-   ArrangeSize();
-}
-
 
 
 
@@ -143,77 +114,85 @@ void BrowseContentTab::updateContents() {
       
       auto contents = json::parse(a_result);
       
-      std::vector<SDigitalContent> dContents;
-      dContents.clear();
-      dContents.resize(contents.size());
+      _digital_contents.clear();
+      _digital_contents.resize(contents.size());
       
       
       for (int i = 0; i < contents.size(); ++i) {
-         dContents[i].type = DCT::GENERAL;
+         SDigitalContent& cont = _digital_contents[i];
          
-         dContents[i].author = contents[i]["author"].get<std::string>();
-         
-         
-         
-         dContents[i].price.asset_id = contents[i]["price"]["asset_id"].get<std::string>();
-         dContents[i].synopsis = contents[i]["synopsis"].get<std::string>();
-         dContents[i].URI = contents[i]["URI"].get<std::string>();
-         dContents[i].created = contents[i]["created"].get<std::string>();
-         dContents[i].expiration = contents[i]["expiration"].get<std::string>();
-         dContents[i].size = contents[i]["size"].get<int>();
+         cont.type = DCT::GENERAL;
+         cont.author = contents[i]["author"].get<std::string>();
+         cont.price.asset_id = contents[i]["price"]["asset_id"].get<std::string>();
+         cont.synopsis = contents[i]["synopsis"].get<std::string>();
+         cont.URI = contents[i]["URI"].get<std::string>();
+         cont.created = contents[i]["created"].get<std::string>();
+         cont.expiration = contents[i]["expiration"].get<std::string>();
+         cont.size = contents[i]["size"].get<int>();
          
          if (contents[i]["times_bougth"].is_number()) {
-            dContents[i].times_bougth = contents[i]["times_bougth"].get<int>();
+            cont.times_bougth = contents[i]["times_bougth"].get<int>();
          } else {
-            dContents[i].times_bougth = 0;
+            cont.times_bougth = 0;
          }
          
          
          if (contents[i]["price"]["amount"].is_number()){
-            dContents[i].price.amount =  contents[i]["price"]["amount"].get<double>();
+            cont.price.amount =  contents[i]["price"]["amount"].get<double>();
          } else {
-            dContents[i].price.amount =  std::stod(contents[i]["price"]["amount"].get<std::string>());
+            cont.price.amount =  std::stod(contents[i]["price"]["amount"].get<std::string>());
          }
          
-         dContents[i].price.amount /= GRAPHENE_BLOCKCHAIN_PRECISION;
-         
-         dContents[i].AVG_rating = contents[i]["AVG_rating"].get<double>()  / 1000;
+         cont.price.amount /= GRAPHENE_BLOCKCHAIN_PRECISION;
+         cont.AVG_rating = contents[i]["AVG_rating"].get<double>()  / 1000;
       }
       
-      ShowDigitalContentsGUI(dContents);
-      ArrangeSize();
+      ShowDigitalContentsGUI();
    } catch (std::exception& ex) {
       std::cout << ex.what() << std::endl;
    }
    
-   ArrangeSize();
 }
 
 
 
-void BrowseContentTab::ShowDigitalContentsGUI(std::vector<SDigitalContent>& contents) {
+void BrowseContentTab::show_content_popup() {
+   QLabel* btn = (QLabel*)sender();
+   int id = btn->property("id").toInt();
+   if (id < 0 || id >= _digital_contents.size()) {
+      throw std::out_of_range("Content index is our of range");
+   }
    
-   m_pTableWidget->setRowCount(contents.size());
-   DecentTable& m_TableWidget = *m_pTableWidget;
+   emit ShowDetailsOnDigContentSig(_digital_contents[id]);
+}
+
+
+
+void BrowseContentTab::ShowDigitalContentsGUI() {
    
-   PrepareTableWidgetHeaderGUI();
-   
+   m_pTableWidget.setRowCount(_digital_contents.size());
+   QPixmap info_image(":/icon/images/info1_white.svg");
+
    int index = 0;
-   for(SDigitalContent& aTemporar: contents)
-   {
+   for(SDigitalContent& aTemporar: _digital_contents) {
       
-      QPixmap image1(":/icon/images/info1_white.svg");
-      m_pTableWidget->setCellWidget(index, 0, new TableWidgetItemW<ClickableLabel>(aTemporar,this,NULL,&BrowseContentTab::DigContCallback,
-                                                                                 tr("")));
-      ((ClickableLabel*)m_pTableWidget->cellWidget(index,0))->setPixmap(image1);
-      ((ClickableLabel*)m_pTableWidget->cellWidget(index,0))->setAlignment(Qt::AlignCenter);
+      EventPassthrough<ClickableLabel>* info_icon = new EventPassthrough<ClickableLabel>();
+      info_icon->setProperty("id", QVariant::fromValue(index));
+      info_icon->setPixmap(info_image);
+      info_icon->setAlignment(Qt::AlignCenter);
+      connect(info_icon, SIGNAL(clicked()), this, SLOT(show_content_popup()));
+      m_pTableWidget.setCellWidget(index, 0, info_icon);
+      
+
+      
+      
       
       // Need to rewrite this
       std::string created_str = aTemporar.created.substr(0, 10);
       
-      m_pTableWidget->setItem(index,5,new QTableWidgetItem(QString::fromStdString(created_str)));
-      m_pTableWidget->item(index, 5)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
-      m_pTableWidget->item(index, 5)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+      m_pTableWidget.setItem(index,5,new QTableWidgetItem(QString::fromStdString(created_str)));
+      m_pTableWidget.item(index, 5)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+      m_pTableWidget.item(index, 5)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
       
       
       std::string synopsis = unescape_string(aTemporar.synopsis);
@@ -229,24 +208,24 @@ void BrowseContentTab::ShowDigitalContentsGUI(std::vector<SDigitalContent>& cont
       
       
       
-      m_pTableWidget->setItem(index,1,new QTableWidgetItem(QString::fromStdString(synopsis)));
-      m_pTableWidget->item(index, 1)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
-      m_pTableWidget->item(index, 1)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+      m_pTableWidget.setItem(index,1,new QTableWidgetItem(QString::fromStdString(synopsis)));
+      m_pTableWidget.item(index, 1)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+      m_pTableWidget.item(index, 1)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
       
       std::string rating;
       for(int i = 0; i < std::to_string(aTemporar.AVG_rating).find(".") + 2; ++i)
       {
          rating.push_back(std::to_string(aTemporar.AVG_rating)[i]);
       }
-      m_pTableWidget->setItem(index,2,new QTableWidgetItem(QString::fromStdString(rating)));
-      m_pTableWidget->item(index, 2)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
-      m_pTableWidget->item(index, 2)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+      m_pTableWidget.setItem(index,2,new QTableWidgetItem(QString::fromStdString(rating)));
+      m_pTableWidget.item(index, 2)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+      m_pTableWidget.item(index, 2)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
       
       
       
       if(aTemporar.size < 1024)
       {
-         m_pTableWidget->setItem(index,3,new QTableWidgetItem(QString::fromStdString(std::to_string(aTemporar.size) + " MB")));
+         m_pTableWidget.setItem(index,3,new QTableWidgetItem(QString::fromStdString(std::to_string(aTemporar.size) + " MB")));
       }
       else
       {
@@ -257,55 +236,30 @@ void BrowseContentTab::ShowDigitalContentsGUI(std::vector<SDigitalContent>& cont
          {
             size_s.push_back(s[i]);
          }
-         m_pTableWidget->setItem(index,3,new QTableWidgetItem(QString::fromStdString(size_s + " GB")));
+         m_pTableWidget.setItem(index,3,new QTableWidgetItem(QString::fromStdString(size_s + " GB")));
       }
-      m_pTableWidget->item(index, 3)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
-      m_pTableWidget->item(index, 3)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+      m_pTableWidget.item(index, 3)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+      m_pTableWidget.item(index, 3)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
       
       
-      m_pTableWidget->setItem(index,4,new QTableWidgetItem(QString::number(aTemporar.price.amount) + " DCT"));
-      m_pTableWidget->item(index, 4)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
-      m_pTableWidget->item(index, 4)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+      m_pTableWidget.setItem(index,4,new QTableWidgetItem(QString::number(aTemporar.price.amount) + " DCT"));
+      m_pTableWidget.item(index, 4)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+      m_pTableWidget.item(index, 4)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
       
       
       QDateTime time = QDateTime::fromString(QString::fromStdString(aTemporar.expiration), "yyyy-MM-ddTHH:mm:ss");
       
       std::string e_str = CalculateRemainingTime(QDateTime::currentDateTime(), time);
       
-      m_pTableWidget->setItem(index,6,new QTableWidgetItem(QString::fromStdString(e_str)));
-      m_pTableWidget->item(index, 6)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
-      m_pTableWidget->item(index, 6)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+      m_pTableWidget.setItem(index,6,new QTableWidgetItem(QString::fromStdString(e_str)));
+      m_pTableWidget.item(index, 6)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+      m_pTableWidget.item(index, 6)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
       
       ++index;
    }
    
-   m_main_layout.addWidget(&m_TableWidget);
-   
-   m_pTableWidget->horizontalHeader()->setStretchLastSection(true);
-   ArrangeSize();
 }
 
 
-void BrowseContentTab::ArrangeSize()
-{
-   m_pTableWidget->setStyleSheet("QTableView{border : 1px solid white}");
-   m_pTableWidget->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-   m_pTableWidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-   
-   QSize tqs_TableSize = m_pTableWidget->size();
-   m_pTableWidget->setColumnWidth(0,(tqs_TableSize.width()*10)/100);
-   m_pTableWidget->setColumnWidth(1,(tqs_TableSize.width()*20)/100);
-   for(int i = 2; i < 7; ++i)
-   {
-      m_pTableWidget->setColumnWidth(i,(tqs_TableSize.width()*14)/100);
-   }
-}
-
-
-void BrowseContentTab::resizeEvent ( QResizeEvent * a_event )
-{
-   QWidget::resizeEvent(a_event);
-   ArrangeSize();
-}
 
 

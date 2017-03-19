@@ -24,32 +24,13 @@ using namespace nlohmann;
 Overview_tab::Overview_tab(class Mainwindow_gui_wallet* a_pPar)
 : m_pPar(a_pPar)
 {
-   table_widget.setColumnCount(4);
-   table_widget.setSelectionMode(QAbstractItemView::NoSelection);
    
-   table_widget.setStyleSheet("QTableView{border : 1px solid lightGray}");
-   
-   QFont font( "Open Sans Bold", 14, QFont::Bold);
-   
-   
-   table_widget.verticalHeader()->hide();
-   
-   table_widget.setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-   table_widget.setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-   
-   table_widget.setHorizontalHeaderLabels(QStringList() << "Account ID" << "Author" << "" << "");
-   table_widget.horizontalHeader()->setFixedHeight(35);
-   table_widget.horizontalHeader()->setFont(font);
-   
-   table_widget.setStyleSheet(("gridline-color: rgb(228,227,228));"));
-   table_widget.setStyleSheet("QTableView{border : 0px}");
-   table_widget.horizontalHeader()->setStretchLastSection(true);
-   table_widget.horizontalHeader()->setStyleSheet("QHeaderView::section {"
-                                                  "border-right: 1px solid rgb(193,192,193);"
-                                                  "border-bottom: 0px;"
-                                                  "border-top: 0px;}");
-   
-   
+   table_widget.set_columns({
+      {"Account ID", 20},
+      {"Author", 50},
+      {"", 20},
+      {"", 20}
+   });
    
    QVBoxLayout* main = new QVBoxLayout();
    QHBoxLayout* search_lay = new QHBoxLayout();
@@ -147,7 +128,7 @@ void Overview_tab::updateContents() {
       transfer->setMouseTracking(true);
       
       connect(transfer, SIGNAL(ButtonPushedSignal(std::string)), this , SLOT(buttonPressed(std::string)));
-      connect(transaction, SIGNAL(ButtonPushedSignal(std::string)), this , SLOT(TransactionButtonPressed(std::string)));
+      connect(transaction, SIGNAL(ButtonPushedSignal(std::string)), this , SLOT(transaction_button_pressed(std::string)));
       
       table_widget.setItem(i, 1, new QTableWidgetItem(QString::fromStdString(content[0].get<std::string>())));
       table_widget.setItem(i, 0, new QTableWidgetItem(QString::fromStdString(content[1].get<std::string>())));
@@ -176,7 +157,7 @@ void Overview_tab::updateContents() {
 
 
 
-void Overview_tab::TransactionButtonPressed(std::string accountName)
+void Overview_tab::transaction_button_pressed(std::string accountName)
 {
    m_pPar->GoToThisTab(1 , accountName);
 }
@@ -217,19 +198,4 @@ void Overview_tab::buttonPressed(std::string accountName)
       // Ignore for now
    }
    
-}
-
-void Overview_tab::ArrangeSize()
-{
-   QSize tqsTableSize = table_widget.size();
-   table_widget.setColumnWidth(0,(tqsTableSize.width()*18)/100);
-   table_widget.setColumnWidth(1,(tqsTableSize.width()*50)/100);
-   table_widget.setColumnWidth(2,(tqsTableSize.width()*17)/100);
-   table_widget.setColumnWidth(3,(tqsTableSize.width()*15)/100);
-}
-
-void Overview_tab::resizeEvent(QResizeEvent *a_event)
-{
-   QWidget::resizeEvent(a_event);
-   ArrangeSize();
 }

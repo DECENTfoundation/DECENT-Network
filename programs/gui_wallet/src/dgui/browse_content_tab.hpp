@@ -35,13 +35,12 @@ namespace gui_wallet
    public:
       BrowseContentTab();
       
-      void ShowDigitalContentsGUI(std::vector<SDigitalContent>& contents);
+      void ShowDigitalContentsGUI();
       
    public:
       
       virtual void content_activated() { m_doUpdate = true; }
       virtual void content_deactivated() {}
-      virtual void resizeEvent(QResizeEvent * a_event);
       
       
    public:
@@ -53,23 +52,18 @@ namespace gui_wallet
       void onTextChanged(const QString& text);
       void updateContents();
       void maybeUpdateContent();
-      
-   protected:
-      void DigContCallback(_NEEDED_ARGS2_);
-      void PrepareTableWidgetHeaderGUI();
-      void ArrangeSize();
-      
+      void show_content_popup();
       
    protected:
       QVBoxLayout     m_main_layout;
       QHBoxLayout     m_search_layout;
-      DecentTable*    m_pTableWidget;
+      DecentTable     m_pTableWidget;
       QLineEdit       m_filterLineEdit;
       QComboBox       m_searchTypeCombo;
       
-      std::vector<SDigitalContent> m_dContents;
-      bool m_doUpdate = true;
-      QTimer  m_contentUpdateTimer;
+      std::vector<SDigitalContent> _digital_contents;
+      bool                         m_doUpdate = true;
+      QTimer                       m_contentUpdateTimer;
    };
    
    

@@ -34,17 +34,14 @@ namespace gui_wallet
       
       virtual void content_activated() {}
       virtual void content_deactivated() {}
-      virtual void resizeEvent(QResizeEvent *a_event);
-      
-      void ArrangeSize();
-      void SetInfo(std::string info_from_overview);
+
+      void set_user_filter(const std::string& user_name);
       
    public:
       QVBoxLayout       main_layout;
       QLabel            search_label;
       DecentTable       tablewidget;
       QLineEdit         user;
-      int               green_row;
       
    private:
       std::string getAccountName(std::string accountId);
@@ -61,7 +58,6 @@ namespace gui_wallet
       
       std::map<std::string, std::string> _user_id_cache;
       
-      const std::vector<std::string> _table_columns = { "Time", "Type", "From", "To", "Amount", "Fee", "Description" };
    };
 }
 

@@ -16,6 +16,7 @@
 #include <graphene/chain/config.hpp>
 #include "json.hpp"
 #include <QMessageBox>
+#include "ui_wallet_functions.hpp"
 
 
 using namespace gui_wallet;
@@ -24,9 +25,20 @@ using namespace nlohmann;
 
 
 
-PurchasedTab::PurchasedTab() : m_pTableWidget(0, _column_names.size()) {
+PurchasedTab::PurchasedTab() {
    
-   PrepareTableWidgetHeaderGUI();
+   m_pTableWidget.set_columns({
+      {" ", -50},
+      {"Title", 20},
+      {"Rating", 10},
+      {"Size", 10},
+      {"Price", 10},
+      {"Created", 10},
+      {"Status", 30},
+      {"Progress", 20}
+   });
+   
+   
    
    QHBoxLayout* search_lay = new QHBoxLayout();
    
@@ -47,10 +59,7 @@ PurchasedTab::PurchasedTab() : m_pTableWidget(0, _column_names.size()) {
    search_lay->addWidget(search_label);
    search_lay->addWidget(&m_filterLineEditer);
    
-   m_pTableWidget.horizontalHeader()->setStretchLastSection(true);
-   m_pTableWidget.setSelectionMode(QAbstractItemView::NoSelection);
    m_main_layout.setContentsMargins(0, 0, 0, 0);
-   
    m_main_layout.addLayout(search_lay);
    m_main_layout.addWidget(&m_pTableWidget);
    
@@ -261,7 +270,7 @@ void PurchasedTab::updateContents() {
          }
          
          
-         for(int j = 1; j < _column_names.size() - 1; ++j)
+         for(int j = 1; j < m_pTableWidget.columnCount() - 1; ++j)
          {
             m_pTableWidget.item(i, j)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
             m_pTableWidget.item(i, j)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
@@ -319,111 +328,4 @@ void PurchasedTab::show_content_popup() {
 
 
 
-void PurchasedTab::PrepareTableWidgetHeaderGUI()
-{
-   QFont font("Open Sans Bold", 14, QFont::Bold);
-   
-   m_pTableWidget.horizontalHeader()->setDefaultSectionSize(300);
-   m_pTableWidget.setRowHeight(0,35);
-   m_pTableWidget.verticalHeader()->hide();
-   
-   QStringList columns;
-   for (std::string title: _column_names) {
-      columns << QString::fromStdString(title);
-   }
-   m_pTableWidget.setHorizontalHeaderLabels(columns);
-   
-   m_pTableWidget.horizontalHeader()->setFixedHeight(35);
-   m_pTableWidget.horizontalHeader()->setFont(font);
-   m_pTableWidget.setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-   m_pTableWidget.setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-   
-   m_pTableWidget.horizontalHeader()->setStyleSheet("QHeaderView::section {"
-                                                     "border-right: 1px solid rgb(193,192,193);"
-                                                     "border-bottom: 0px;"
-                                                     "border-top: 0px;}");
-}
 
-
-
-void PurchasedTab::ArrangeSize()
-{
-   QSize tqsTableSize = m_pTableWidget.size();
-   
-   m_pTableWidget.setStyleSheet("QTableView{border : 0px}");
-   m_pTableWidget.setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-   m_pTableWidget.setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-   
-   m_pTableWidget.setColumnWidth(0, tqsTableSize.width() * 0.1);
-   
-   for(int i = 1; i < _column_names.size(); ++i) {
-      m_pTableWidget.setColumnWidth(i, (0.9 * tqsTableSize.width()) / (_column_names.size() - 1) );
-   }
-}
-
-
-void PurchasedTab::resizeEvent ( QResizeEvent * a_event )
-{
-   QWidget::resizeEvent(a_event);
-   ArrangeSize();
-}
-
-
-/*
-
-void PurchasedTab::hightlight_row(QPoint point)
-{
-   for(int i = 0; i < m_pTableWidget.rowCount(); ++i) {
-      for(int j = 1; j < _column_names.size(); ++j) {
-         
-         if (m_pTableWidget.item(i,j) != NULL) {
-            m_pTableWidget.item(i,j)->setBackground(QColor(255,255,255));
-            m_pTableWidget.item(i,j)->setForeground(QColor::fromRgb(88,88,88));
-         }
-      }
-      
-      QPushButton* button_type = qobject_cast<QPushButton*>(m_pTableWidget.cellWidget(i, _column_names.size()));
-      
-      if ( NULL == button_type ) {
-         if(m_pTableWidget.item(i,_column_names.size()) != NULL) {
-            m_pTableWidget.item(i,_column_names.size())->setBackground(QColor(255,255,255));
-            m_pTableWidget.item(i,_column_names.size())->setForeground(QColor::fromRgb(88,88,88));
-         }
-      }
-      
-      if(m_pTableWidget.cellWidget(i, 0) != NULL) {
-         m_pTableWidget.cellWidget(i, 0)->setStyleSheet("* { background-color: rgb(255,255,255); color : white; }");
-      }
-   }
-   
-   
-   int row = m_pTableWidget.rowAt(point.y());
-   
-   if (row < 0) {
-      return;
-   }
-   
-   if(m_pTableWidget.cellWidget(row , 0) != NULL) {
-      m_pTableWidget.cellWidget(row , 0)->setStyleSheet("* { background-color: rgb(27,176,104); color : white; }");
-   }
-   
-   for(int i = 1 ; i < _column_names.size(); ++i) {
-      
-      if(m_pTableWidget.item(row,i) != NULL) {
-         m_pTableWidget.item(row,i)->setBackgroundColor(QColor(27,176,104));
-         m_pTableWidget.item(row,i)->setForeground(QColor::fromRgb(255,255,255));
-      }
-   }
-   
-   
-   QPushButton* button_type = qobject_cast<QPushButton*>(m_pTableWidget.cellWidget(row, _column_names.size()));
-   if ( NULL == button_type ) {
-      
-      if(m_pTableWidget.item(row, _column_names.size()) != NULL)  {
-         m_pTableWidget.item(row, _column_names.size())->setBackgroundColor(QColor(27,176,104));
-         m_pTableWidget.item(row, _column_names.size())->setForeground(QColor::fromRgb(255,255,255));
-      }
-   }
-   
-}
-*/

@@ -60,8 +60,7 @@ namespace gui_wallet {
       
    protected:
       void PrepareTableWidgetHeaderGUI();
-      virtual void resizeEvent ( QResizeEvent * a_event );
-      void ArrangeSize();
+      
       
    public slots:
       void onTextChanged(const QString& text);
@@ -78,9 +77,6 @@ namespace gui_wallet {
       std::string   last_contents;
       
       std::vector<SDigitalContent>   _current_content;
-      const std::vector<std::string> _column_names = {" ", "Title", "Rating", "Size", "Price", "Created", "Status", "Progress"};
-      
-      
       
    protected:
       QVBoxLayout     m_main_layout;
@@ -92,6 +88,5 @@ namespace gui_wallet {
 }
 
 
-#include "decent_wallet_ui_gui_common.tos"
 
 #endif // DECENT_WALLET_UI_GUI_PURCHASEDTAB_HPP

@@ -51,7 +51,6 @@ add_executable( DECENT MACOSX_BUNDLE
                 src/dgui/cliwalletdlg.hpp
                 src/dgui/decent_gui_contentdlg.hpp
                 src/dgui/decent_gui_inguiloopcaller.hpp
-                src/dgui/decent_wallet_ui_gui_common.tos
                 src/dgui/decent_wallet_ui_gui_contentdetailsbase.hpp
                 src/dgui/decent_wallet_ui_gui_contentdetailsgeneral.hpp
                 src/dgui/decent_wallet_ui_gui_newcheckbox.hpp
