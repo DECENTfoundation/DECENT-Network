@@ -82,11 +82,16 @@ BrowseContentTab::BrowseContentTab() {
    
    
    m_contentUpdateTimer.connect(&m_contentUpdateTimer, SIGNAL(timeout()), this, SLOT(maybeUpdateContent()));
+   m_contentUpdateTimer.connect(&GlobalEvents::instance(), SIGNAL(walletUnlocked()), this, SLOT(requestContentUpdate()));
+   
    m_contentUpdateTimer.setInterval(1000);
    m_contentUpdateTimer.start();
    
 }
 
+void BrowseContentTab::requestContentUpdate() {
+   m_doUpdate = true;
+}
 
 void BrowseContentTab::maybeUpdateContent() {
    if (!m_doUpdate) {

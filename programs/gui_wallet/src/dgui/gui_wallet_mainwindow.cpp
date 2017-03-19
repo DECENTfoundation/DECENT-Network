@@ -471,7 +471,8 @@ void Mainwindow_gui_wallet::UnlockSlot()
     std::string result;
     
     try {
-        RunTask(csPassLine, result);
+       RunTask(csPassLine, result);
+       GlobalEvents::instance().setWalletUnlocked();
     } catch (const std::exception& ex) {
         ALERT_DETAILS("Unable to unlock the wallet", ex.what());
     }
@@ -785,7 +786,7 @@ void Mainwindow_gui_wallet::SetPassword(void* a_owner, void* a_str_ptr)
         m_ActionImportKey.setEnabled(true);
         m_ActionUnlock.setEnabled(false);
         m_ActionLock.setEnabled(true);
-
+       GlobalEvents::instance().setWalletUnlocked();
     }
     
     

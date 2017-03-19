@@ -490,7 +490,12 @@ static int ConnectToNewWitness(const decent::tools::taskListItem<SConnectionStru
         }));
         (void)(closed_connection);
 
-        if( wapiptr->is_new() )
+       
+
+         wallet_gui->register_api( wapi );
+         wallet_gui->start();
+
+       if( wapiptr->is_new() )
         {
            std::string aPassword("");
            
@@ -500,20 +505,13 @@ static int ConnectToNewWitness(const decent::tools::taskListItem<SConnectionStru
                wapiptr->set_password(aPassword);
                wapiptr->unlock(aPassword);
            }
-        } else
-           {/*wallet_cli->set_prompt( "locked >>> " );*/}
-
+        }
+       
         boost::signals2::scoped_connection locked_connection(wapiptr->lock_changed.connect([&](bool /*locked*/) {
            //wallet_cli->set_prompt(  locked ? "locked >>> " : "unlocked >>> " );
         }));
 
 
-
-       wallet_gui->register_api( wapi );
-       wallet_gui->start();
-       //(*a_fpDone)(a_pOwner);
-       //(*(a_con_data.fn_tsk_dn))(a_con_data.owner,a_con_data.callbackArg,0,
-       //                          __CONNECTION_CLB_, __FILE__ "\nConnection is ok");
 
        LoadWalletFile(pStruct);
 

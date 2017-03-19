@@ -39,7 +39,7 @@ namespace gui_wallet
       
    public:
       
-      virtual void content_activated() { m_doUpdate = true; }
+      virtual void content_activated() { }
       virtual void content_deactivated() {}
       
       
@@ -52,6 +52,7 @@ namespace gui_wallet
       void onTextChanged(const QString& text);
       void updateContents();
       void maybeUpdateContent();
+      void requestContentUpdate();
       void show_content_popup();
       
    protected:
@@ -62,7 +63,7 @@ namespace gui_wallet
       QComboBox       m_searchTypeCombo;
       
       std::vector<SDigitalContent> _digital_contents;
-      bool                         m_doUpdate = true;
+      bool                         m_doUpdate;
       QTimer                       m_contentUpdateTimer;
    };
    
