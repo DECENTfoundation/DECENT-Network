@@ -73,6 +73,7 @@ BrowseContentTab::BrowseContentTab() {
    m_search_layout.addWidget(lab);
    m_search_layout.addWidget(&m_filterLineEdit);
    
+   m_main_layout.setContentsMargins(0, 0, 0, 0);
    m_main_layout.addLayout(&m_search_layout);
    m_main_layout.addWidget(&m_pTableWidget);
    setLayout(&m_main_layout);

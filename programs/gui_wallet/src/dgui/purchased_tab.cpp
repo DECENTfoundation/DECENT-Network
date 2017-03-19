@@ -248,7 +248,7 @@ void PurchasedTab::updateContents() {
          double progress = (0.1 * received_key_parts) / total_key_parts + (0.9 * received_download_bytes) / total_download_bytes;
          progress *= 100; // Percent
          
-         if (received_download_bytes < total_download_bytes) {
+         if ((received_download_bytes < total_download_bytes) || (total_download_bytes == 0)) {
             m_pTableWidget.setItem(i, 7, new QTableWidgetItem(QString::number(progress) + "%"));
             m_pTableWidget.item(i, 7)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
             m_pTableWidget.item(i, 7)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
