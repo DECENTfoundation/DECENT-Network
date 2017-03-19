@@ -24,16 +24,20 @@
 #include <QLabel>
 #include "gui_wallet_tabcontentmanager.hpp"
 #include "gui_wallet_global.hpp"
+#include "decent_wallet_ui_gui_contentdetailsgeneral.hpp"
+
 
 
 namespace gui_wallet
 {
+   class Mainwindow_gui_wallet;
+   
    
    class BrowseContentTab : public TabContentManager
    {
       Q_OBJECT;
    public:
-      BrowseContentTab();
+      BrowseContentTab(Mainwindow_gui_wallet* parent);
       
       void ShowDigitalContentsGUI();
       
@@ -43,10 +47,6 @@ namespace gui_wallet
       virtual void content_deactivated() {}
       
       
-   public:
-   signals:
-      void ShowDetailsOnDigContentSig(SDigitalContent get_cont_str);
-      
    public slots:
       
       void onTextChanged(const QString& text);
@@ -54,6 +54,7 @@ namespace gui_wallet
       void maybeUpdateContent();
       void requestContentUpdate();
       void show_content_popup();
+      void content_was_bought();
       
    protected:
       QVBoxLayout     m_main_layout;
@@ -62,9 +63,11 @@ namespace gui_wallet
       QLineEdit       m_filterLineEdit;
       QComboBox       m_searchTypeCombo;
       
-      std::vector<SDigitalContent> _digital_contents;
-      bool                         m_doUpdate;
-      QTimer                       m_contentUpdateTimer;
+      std::vector<SDigitalContent>  _digital_contents;
+      ContentDetailsGeneral*        _content_popup;
+      Mainwindow_gui_wallet*        _parent;
+      bool                          m_doUpdate;
+      QTimer                        m_contentUpdateTimer;
    };
    
    

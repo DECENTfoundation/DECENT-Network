@@ -40,7 +40,8 @@ namespace gui_wallet
                                             // used by inheritanc
         void SetNewTaskQtMainWnd2(const std::string& a_inp_line, void* a_clbData);
         
-        void GoToThisTab(int index , std::string info);
+        void GoToThisTab(int index, std::string info);
+        void UpdateAccountBalances(const std::string& username);
 
     protected:
         void CreateActions();
@@ -57,12 +58,10 @@ namespace gui_wallet
 
         void DisplayWalletContentGUI();
         void SetPassword(void* a_owner, void* a_str_ptr);
-        void UpdateAccountBalances(const std::string& username);
-        
+       
 
     protected slots:
         void CurrentUserChangedSlot(const QString&);
-        void ContentWasBoughtSlot();
         void CheckDownloads();
         
         
@@ -110,7 +109,6 @@ namespace gui_wallet
         QAction             m_ActionImportKey;
         QAction             m_ActionOpenCliWallet;
         QAction             m_ActionOpenInfoDlg;
-        ConnectDlg          m_ConnectDlg;
         TextDisplayDialog   m_info_dialog;
         
         
@@ -130,21 +128,16 @@ namespace gui_wallet
         QTextEdit*                          m_pInfoTextEdit;
         CliWalletDlg*                        m_pcInfoDlg;
 
-        std::vector<SDigitalContent> m_vcDigContent;
-        std::vector<SDigitalContent> m_vcDigContentOld;
+
         int                     m_nConnected;
-        int                     m_nUserComboTriggeredInGui;
+       
         SConnectionStruct   m_wdata2;
 
         PasswordDialog      m_SetPasswordDialog;
         PasswordDialog      m_UnlockDialog;
 
-        int                 m_nJustConnecting;
 
         QString             m_default_stylesheet;
-
-        ContentDetailsGeneral* m_pdig_cont_detailsGenDlg;
-        ContentDetailsBase* m_pdig_cont_detailsBougDlg;
         
         QTimer                 _downloadChecker;
         std::set<std::string>  _activeDownloads;

@@ -17,7 +17,6 @@ add_executable( DECENT MACOSX_BUNDLE
                 ${GUI_WALLET_ICON}
                 src/dgui/browse_content_tab.cpp
                 src/dgui/cliwalletdlg.cpp
-                src/dgui/decent_gui_contentdlg.cpp 
                 src/dgui/decent_gui_inguiloopcaller.cpp
                 src/dgui/decent_wallet_ui_gui_contentdetailsbase.cpp
                 src/dgui/decent_wallet_ui_gui_contentdetailsgeneral.cpp
@@ -49,7 +48,6 @@ add_executable( DECENT MACOSX_BUNDLE
                 include/unnamedsemaphorelite.hpp
                 src/dgui/browse_content_tab.hpp
                 src/dgui/cliwalletdlg.hpp
-                src/dgui/decent_gui_contentdlg.hpp
                 src/dgui/decent_gui_inguiloopcaller.hpp
                 src/dgui/decent_wallet_ui_gui_contentdetailsbase.hpp
                 src/dgui/decent_wallet_ui_gui_contentdetailsgeneral.hpp

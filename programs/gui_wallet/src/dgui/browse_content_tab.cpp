@@ -10,6 +10,7 @@
 #include "browse_content_tab.hpp"
 #include "gui_wallet_global.hpp"
 #include "ui_wallet_functions.hpp"
+#include "gui_wallet_mainwindow.hpp"
 
 #include <QLayout>
 #include <QCheckBox>
@@ -35,7 +36,7 @@ using namespace gui_wallet;
 using namespace nlohmann;
 
 
-BrowseContentTab::BrowseContentTab() {
+BrowseContentTab::BrowseContentTab(Mainwindow_gui_wallet* parent) : _parent(parent) {
    
    m_pTableWidget.set_columns({
       {" ", -50},
@@ -169,10 +170,18 @@ void BrowseContentTab::show_content_popup() {
       throw std::out_of_range("Content index is our of range");
    }
    
-   emit ShowDetailsOnDigContentSig(_digital_contents[id]);
+   if (_content_popup)
+      delete _content_popup;
+   _content_popup = new ContentDetailsGeneral();
+   
+   connect(_content_popup, SIGNAL(ContentWasBought()), this, SLOT(content_was_bought()));
+   _content_popup->execCDD(_digital_contents[id]);
 }
 
-
+void BrowseContentTab::content_was_bought() {
+   _parent->GoToThisTab(4, "");
+   _parent->UpdateAccountBalances(GlobalEvents::instance().getCurrentUser());
+}
 
 void BrowseContentTab::ShowDigitalContentsGUI() {
    

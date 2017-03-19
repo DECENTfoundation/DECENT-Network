@@ -33,57 +33,57 @@
 
 namespace gui_wallet {
    
+
+class ContentDetailsBase;
+
+
+class PurchasedTab : public TabContentManager
+{
+   
+   Q_OBJECT;
+         
+public:
+   PurchasedTab();
+   
+   void ShowDigitalContentsGUI(std::vector<SDigitalContent>& contents);
+   
+public:
+   virtual void content_activated() {
+      m_contentUpdateTimer.start();
+   }
+   virtual void content_deactivated() {
+      m_contentUpdateTimer.stop();
+   }
+   
+protected:
+   void PrepareTableWidgetHeaderGUI();
    
    
+public slots:
+   void onTextChanged(const QString& text);
+   void updateContents();
+   void maybeUpdateContent();
+   void extractPackage();
    
-   class PurchasedTab : public TabContentManager
-   {
-      
-      Q_OBJECT;
-            
-   public:
-      PurchasedTab();
-      
-      void ShowDigitalContentsGUI(std::vector<SDigitalContent>& contents);
-      
-   public:
-      virtual void content_activated() {
-         m_contentUpdateTimer.start();
-      }
-      virtual void content_deactivated() {
-         m_contentUpdateTimer.stop();
-      }
-      
-   public:
-   signals:
-      void ShowDetailsOnDigContentSig(SDigitalContent dig_cont);
-      
-   protected:
-      void PrepareTableWidgetHeaderGUI();
-      
-      
-   public slots:
-      void onTextChanged(const QString& text);
-      void updateContents();
-      void maybeUpdateContent();
-      void extractPackage();
-      
-      void show_content_popup();
-      
-      
-   private:
-      QTimer        m_contentUpdateTimer;
-      bool          m_doUpdate = true;
-      std::string   last_contents;
-      
-      std::vector<SDigitalContent>   _current_content;
-      
-   protected:
-      QVBoxLayout     m_main_layout;
-      DecentTable     m_pTableWidget;
-      QLineEdit       m_filterLineEditer;
-      
-   };
+   void show_content_popup();
+   
+   
+private:
+   QTimer        m_contentUpdateTimer;
+   bool          m_doUpdate = true;
+   std::string   last_contents;
+   
+   std::vector<SDigitalContent>   _current_content;
+   
+protected:
+   QVBoxLayout             m_main_layout;
+   DecentTable             m_pTableWidget;
+   QLineEdit               m_filterLineEditer;
+   ContentDetailsBase*     _details_dialog = nullptr;
+
+};
+   
+   
    
 }
 

@@ -62,7 +62,6 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
         m_ActionImportKey(tr("Import key"),this),
         m_ActionOpenCliWallet(tr("cli_wallet"),this),
         m_ActionOpenInfoDlg(tr("Open info dlg."),this),
-        m_ConnectDlg(this),
         m_info_dialog(),
         m_locked(true),
         m_import_key_dlg(2),
@@ -127,18 +126,6 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
 
     
     connect(pUsersCombo, SIGNAL(currentIndexChanged(const QString&)), this, SLOT(CurrentUserChangedSlot(const QString&)) );
-    m_nUserComboTriggeredInGui = 0;
-
-    
-    connect(m_pCentralWidget->GetBrowseContentTab(),
-            SIGNAL(ShowDetailsOnDigContentSig(SDigitalContent)),
-            this,SLOT(ShowDetailsOnDigContentSlot(SDigitalContent)));
-
-    connect(m_pCentralWidget->GetPurchasedTab(),
-            SIGNAL(ShowDetailsOnDigContentSig(SDigitalContent)),
-            this,SLOT(ShowDetailsOnDigContentSlot(SDigitalContent)));
-
-    
     
     
     setWindowTitle(tr("DECENT - Blockchain Content Distribution"));
@@ -152,12 +139,8 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
                                        &CallFunctionInGuiLoop2,
                                        &CallFunctionInGuiLoop3, this, NULL,
                                        GetFunctionPointerAsVoid(0, &Mainwindow_gui_wallet::ManagementNewFuncGUI));
-    m_nJustConnecting = 1;
     ConnectSlot();
-    
-    m_pdig_cont_detailsGenDlg = nullptr;
-    m_pdig_cont_detailsBougDlg = nullptr;
-    
+   
     _downloadChecker.setSingleShot(false);
     _downloadChecker.setInterval(5000);
     connect(&_downloadChecker, SIGNAL(timeout()), this, SLOT(CheckDownloads()));
@@ -165,50 +148,13 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
     
 }
 
-void Mainwindow_gui_wallet::ContentWasBoughtSlot()
-{
-    m_pCentralWidget->SetMyCurrentTabIndex(4);
-    UpdateAccountBalances(GlobalEvents::instance().getCurrentUser());
-    //  this is a demonstration of wallet_api direct usage
-    try
-    {
-        //
-        //  just enable below lines - create wallet, set password and unlock
-        //  and everything gets messed up!
-        //
-        //m_ptr_wallet_utility = decent::wallet_utility::create_wallet_api();
-        //if (m_ptr_wallet_utility->is_new())
-        //    m_ptr_wallet_utility->set_password("hardcode the password");
-        //m_ptr_wallet_utility->unlock("hardcode the password");
-        
-        /*vector<asset> arr_asset = m_ptr_wallet_utility->list_account_balances(GlobalEvents::instance().getCurrentUser());
-        for (auto const& asset : arr_asset)
-        {
-            QMessageBox::information(this, "DCT-Satoshi", QString("%1").arg(asset.amount.value));
-        }*/
-    }
-    catch (std::exception const& e)
-    {
-        QMessageBox::critical(this, "Error", e.what());
-    }
-    catch(...)
-    {
-        QMessageBox::critical(this, "Error", "...");
-    }
-}
-
-
 Mainwindow_gui_wallet::~Mainwindow_gui_wallet()
 {
     SaveWalletFile2(m_wdata2);
     DestroyUiInterfaceOfWallet();
     delete m_pInfoTextEdit;
     delete m_pcInfoDlg;
-    
-    if (m_pdig_cont_detailsGenDlg)
-        delete m_pdig_cont_detailsGenDlg;
-    if (m_pdig_cont_detailsBougDlg)
-        delete m_pdig_cont_detailsBougDlg;
+   
 }
 
 
@@ -323,12 +269,6 @@ void Mainwindow_gui_wallet::ViewAction() {
 
 void Mainwindow_gui_wallet::CurrentUserChangedSlot(const QString& a_new_user)
 {
-    if(m_nUserComboTriggeredInGui)
-    {
-        m_nUserComboTriggeredInGui = 0;
-        return;
-    }
-
     GlobalEvents::instance().setCurrentUser(a_new_user.toStdString());
     UpdateAccountBalances(a_new_user.toStdString());
 }
@@ -356,27 +296,7 @@ void Mainwindow_gui_wallet::OpenInfoDlgSlot()
 
 void Mainwindow_gui_wallet::ShowDetailsOnDigContentSlot(SDigitalContent a_dig_cont)
 {
-    switch(a_dig_cont.type)
-    {
-    case DCT::GENERAL:
-        if (m_pdig_cont_detailsGenDlg)
-            delete m_pdig_cont_detailsGenDlg;
-        m_pdig_cont_detailsGenDlg = new ContentDetailsGeneral();
-        
-        connect(m_pdig_cont_detailsGenDlg, SIGNAL(ContentWasBought()), this, SLOT(ContentWasBoughtSlot()));
 
-        m_pdig_cont_detailsGenDlg->execCDD(a_dig_cont);
-        break;
-    case DCT::BOUGHT:
-    case DCT::WAITING_DELIVERY:
-        if (nullptr == m_pdig_cont_detailsBougDlg)
-            delete m_pdig_cont_detailsBougDlg;
-        m_pdig_cont_detailsBougDlg = new ContentDetailsBase();
-        m_pdig_cont_detailsBougDlg->execCDB(a_dig_cont);
-        break;
-    default:
-        break;
-    }
 }
 
 void Mainwindow_gui_wallet::UpdateAccountBalances(const std::string& username) {
@@ -706,7 +626,6 @@ void Mainwindow_gui_wallet::TaskDoneFuncGUI(void* a_clbkArg,int64_t a_err,const 
         if(a_err)
         {
             ALERT_DETAILS("Could not connect to wallet", a_result.c_str());
-            m_ConnectDlg.GetTableWidget(ConnectDlg::CONNECT_BUTTON_FIELD, 1)->setEnabled(true);
             return;
         }
         
@@ -745,15 +664,6 @@ void Mainwindow_gui_wallet::ConnectSlot()
     m_error_string = "";
 
     LoadWalletFile(&m_wdata2);
-    if(m_nJustConnecting==1)
-    {
-        m_nJustConnecting = 0;
-    }
-    else
-    {
-        nRet = m_ConnectDlg.execNew(&m_wdata2);
-    }
-
 
     if(nRet == decent::gui::tools::RDB_CANCEL){return;}
 

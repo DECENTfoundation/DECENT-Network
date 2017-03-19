@@ -17,7 +17,7 @@
 #include "json.hpp"
 #include <QMessageBox>
 #include "ui_wallet_functions.hpp"
-
+#include "decent_wallet_ui_gui_contentdetailsgeneral.hpp"
 
 using namespace gui_wallet;
 using namespace nlohmann;
@@ -228,8 +228,9 @@ void PurchasedTab::updateContents() {
          
          QString status_text = tr("Keys: ") + QString::number(received_key_parts) + "/" + QString::number(total_key_parts);
          
-         if (!content["delivered"].get<bool>()) {
-            status_text = "Waiting for delivery";
+         bool is_delivered = content["delivered"].get<bool>();
+         if (!is_delivered) {
+            status_text = "Waiting for key delivery";
          } else {
             status_text = status_text + tr(" ") + QString::fromStdString(download_status["status_text"].get<std::string>());
          }
@@ -248,7 +249,7 @@ void PurchasedTab::updateContents() {
          double progress = (0.1 * received_key_parts) / total_key_parts + (0.9 * received_download_bytes) / total_download_bytes;
          progress *= 100; // Percent
          
-         if ((received_download_bytes < total_download_bytes) || (total_download_bytes == 0)) {
+         if ((received_download_bytes < total_download_bytes) || !is_delivered) {
             m_pTableWidget.setItem(i, 7, new QTableWidgetItem(QString::number(progress) + "%"));
             m_pTableWidget.item(i, 7)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
             m_pTableWidget.item(i, 7)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
@@ -321,7 +322,10 @@ void PurchasedTab::show_content_popup() {
       throw std::out_of_range("Content index is our of range");
    }
    
-   emit ShowDetailsOnDigContentSig(_current_content[id]);
+   if (nullptr == _details_dialog)
+      delete _details_dialog;
+   _details_dialog = new ContentDetailsBase();
+   _details_dialog->execCDB(_current_content[id]);
 }
 
 
