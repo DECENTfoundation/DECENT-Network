@@ -12,5 +12,6 @@
         <file>images/white_asterix.png</file>
         <file>images/buy.png</file>
         <file>images/browse.svg</file>
+        <file>images/extract.svg</file>
     </qresource>
 </RCC>

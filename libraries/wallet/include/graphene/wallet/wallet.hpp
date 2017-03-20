@@ -183,17 +183,17 @@ namespace graphene { namespace wallet {
       namespace detail {
          class wallet_api_impl;
       }
-
-      struct operation_detail {
-          account_id_type         from_account;
-          account_id_type         to_account;
-          string                  operation_type;
-          asset                   transaction_amount;
-          asset                   transaction_fee;
-          string                  description;
-
-          operation_history_object op;
-      };
+   
+   struct operation_detail {
+      account_id_type             from_account;
+      account_id_type             to_account;
+      string                      operation_type;
+      asset                       transaction_amount;
+      asset                       transaction_fee;
+      string                      description;
+      fc::time_point_sec          timestamp;
+      operation_history_object    op;
+   };
 
 /**
  * This wallet assumes it is connected to the database server with a high-bandwidth, low-latency connection and
@@ -1421,7 +1421,8 @@ namespace graphene { namespace wallet {
          submit_content(string author, string URI, string price_asset_name, string price_amount, uint64_t size,
                         fc::ripemd160 hash, vector<account_id_type> seeders, uint32_t quorum, fc::time_point_sec expiration,
                         string publishing_fee_asset, string publishing_fee_amount, string synopsis, DInteger secret,
-                        decent::crypto::CustodyData cd, bool broadcast);
+                        decent::encrypt::CustodyData cd, bool broadcast);
+
          /**
           * @brief This function is used to create package, upload package and submit content in one step.
           * @see create_package()
@@ -1719,7 +1720,8 @@ namespace graphene { namespace wallet {
           * @return package hash (ripemd160 hash of package content) and content custody data
           * @ingroup WalletCLI
           */
-         std::pair<string, decent::crypto::CustodyData> create_package(const std::string& content_dir, const std::string& samples_dir, const DInteger& aes_key) const;
+         std::pair<string, decent::encrypt::CustodyData> create_package(const std::string& content_dir, const std::string& samples_dir, const DInteger& aes_key) const;
+
 
          /**
           * @brief Extract selected package
@@ -1828,6 +1830,7 @@ FC_REFLECT( graphene::wallet::operation_detail,
            (transaction_amount)
            (transaction_fee)
            (description)
+           (timestamp)
            (op)
         )
 

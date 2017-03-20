@@ -11,6 +11,7 @@
 #include "decent_wallet_ui_gui_contentdetailsbase.hpp"
 #include <QDateTime>
 #include "gui_wallet_global.hpp"
+#include "ui_wallet_functions.hpp"
 #include "json.hpp"
 
 using namespace nlohmann;

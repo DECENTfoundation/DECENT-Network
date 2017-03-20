@@ -54,7 +54,7 @@
 #define DECENT_SECTORS 32
 
 namespace decent{
-namespace crypto{
+namespace encrypt{
 
 class DInteger;
 
@@ -194,11 +194,10 @@ struct CiphertextString {
 };
 
 struct Ciphertext {
-   DInteger C1 = decent::crypto::DInteger(CryptoPP::Integer::One());
-   DInteger D1 = decent::crypto::DInteger(CryptoPP::Integer::One());
+   DInteger C1 = decent::encrypt::DInteger(CryptoPP::Integer::One());
+   DInteger D1 = decent::encrypt::DInteger(CryptoPP::Integer::One());
    Ciphertext(CiphertextString&s){C1=DInteger::from_string(s.C1.s);D1=DInteger::from_string(s.D1.s);};
    Ciphertext(const CiphertextString&s){C1=DInteger::from_string(s.C1.s);D1=DInteger::from_string(s.D1.s);};
-
    Ciphertext(){};
 };
 
@@ -214,40 +213,42 @@ struct AesKey {
 
 namespace fc {
 
-inline void to_variant(const decent::crypto::DInteger &var, fc::variant &vo) {
+inline void to_variant(const decent::encrypt::DInteger &var, fc::variant &vo) {
    vo = var.to_string();
 }
 
-inline void from_variant(const fc::variant &var, decent::crypto::DInteger &vo) {
-   vo = decent::crypto::DInteger::from_string(var.as_string());
+inline void from_variant(const fc::variant &var, decent::encrypt::DInteger &vo) {
+   vo = decent::encrypt::DInteger::from_string(var.as_string());
 }
 
 
 namespace raw {
 template<typename Stream>
-inline void pack(Stream &s, const decent::crypto::DInteger &tp) {
+
+inline void pack(Stream &s, const decent::encrypt::DInteger &tp) {
    fc::raw::pack(s, tp.to_string());
 }
 
 template<typename Stream>
-inline void unpack(Stream &s, decent::crypto::DInteger &tp) {
+inline void unpack(Stream &s, decent::encrypt::DInteger &tp) {
    std::string p;
    fc::raw::unpack(s, p);
-   tp = decent::crypto::DInteger::from_string(p);
+   tp = decent::encrypt::DInteger::from_string(p);
 }
 
 } //namespace raw
 } //namespace fc
 
-FC_REFLECT_EMPTY(decent::crypto::DInteger)
+FC_REFLECT_EMPTY(decent::encrypt::DInteger)
 
-FC_REFLECT(decent::crypto::DIntegerString, (s) )
+FC_REFLECT(decent::encrypt::DIntegerString, (s) )
 
-FC_REFLECT(decent::crypto::AesKey, (key_byte))
-FC_REFLECT(decent::crypto::DeliveryProof, (G1)(G2)(G3)(s)(r))
-FC_REFLECT(decent::crypto::DeliveryProofString, (G1)(G2)(G3)(s)(r))
-FC_REFLECT(decent::crypto::Ciphertext, (C1)(D1))
-FC_REFLECT(decent::crypto::CiphertextString, (C1)(D1))
-FC_REFLECT(decent::crypto::CustodyData, (n)(u_seed)(pubKey))
-FC_REFLECT(decent::crypto::CustodyProof, (reference_block)(seed)(mus)(sigma))
+FC_REFLECT(decent::encrypt::AesKey, (key_byte))
+FC_REFLECT(decent::encrypt::DeliveryProof, (G1)(G2)(G3)(s)(r))
+FC_REFLECT(decent::encrypt::DeliveryProofString, (G1)(G2)(G3)(s)(r))
+FC_REFLECT(decent::encrypt::Ciphertext, (C1)(D1))
+FC_REFLECT(decent::encrypt::CiphertextString, (C1)(D1))
+FC_REFLECT(decent::encrypt::CustodyData, (n)(u_seed)(pubKey))
+FC_REFLECT(decent::encrypt::CustodyProof, (reference_block)(seed)(mus)(sigma))
+
 

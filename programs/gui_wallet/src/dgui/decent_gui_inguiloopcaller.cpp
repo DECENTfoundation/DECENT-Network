@@ -111,7 +111,10 @@ void decent::gui::InGuiLoopCaller::NextFunctionToCallSlot3(void* a_clbData,int64
 int CallFunctionInGuiLoop2(SetNewTask_last_args2,const std::string& a_result,void* a_owner,
                            TypeCallbackSetNewTaskGlb2 a_fpFunc)
 {
-    if(!s_pInGuiThreadCaller){return -1;}
+    if(!s_pInGuiThreadCaller){
+       return -1;
+    }
+   
     s_pInGuiThreadCaller->CallFunctionInGuiLoop2(a_clbData,a_err,a_inp,a_result,a_owner,a_fpFunc);
     return 0;
 }

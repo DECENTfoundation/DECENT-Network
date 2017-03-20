@@ -12,7 +12,7 @@
 #define DECENT_CUSTODY_THREADS 4
 //#define _CUSTODY_STATS
 namespace decent {
-namespace crypto {
+namespace encrypt {
 
 namespace {
 

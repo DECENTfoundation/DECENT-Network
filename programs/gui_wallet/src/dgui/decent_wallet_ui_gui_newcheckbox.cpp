@@ -12,7 +12,6 @@
 #include "debug_decent_application.h"
 #include <string>
 
-std::string FindImagePath(bool& a_bRet,const char* a_image_name);
 
 using namespace gui_wallet;
 

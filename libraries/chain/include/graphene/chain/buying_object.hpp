@@ -10,7 +10,8 @@
 #include <boost/multi_index/composite_key.hpp>
 
 namespace graphene { namespace chain {
-using decent::crypto::DInteger;
+
+using decent::encrypt::DInteger;
 
    class buying_object : public graphene::db::abstract_object<buying_object>
    {
@@ -28,8 +29,10 @@ using decent::crypto::DInteger;
       std::string synopsis;
        
       vector<account_id_type> seeders_answered;
-      vector<decent::crypto::CiphertextString> key_particles;
+
+      vector<decent::encrypt::CiphertextString> key_particles;
       DIntegerString pubKey;
+
       time_point_sec expiration_time;
 
       bool expired = false;

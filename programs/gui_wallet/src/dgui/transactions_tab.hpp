@@ -21,29 +21,7 @@
 #include <vector>
 
 #include "gui_wallet_tabcontentmanager.hpp"
-
-
-
-class HTableWidget : public QTableWidget
-{
-   Q_OBJECT
-public:
-   HTableWidget() : QTableWidget() {
-      this->setMouseTracking(true);
-   }
-   
-   
-   virtual void mouseMoveEvent(QMouseEvent *event) {
-      mouseMoveEventDid();
-   }
-   
-   
-public:
-signals:
-   void mouseMoveEventDid();
-};
-
-
+#include "gui_wallet_global.hpp"
 
 
 namespace gui_wallet
@@ -53,33 +31,22 @@ namespace gui_wallet
       Q_OBJECT
    public:
       TransactionsTab();
-      ~TransactionsTab();
       
       virtual void content_activated() {}
       virtual void content_deactivated() {}
-      virtual void resizeEvent(QResizeEvent *a_event);
-      
-      void createNewRow();
-      void ArrangeSize();
-      void Connects();
-      
-      void SetInfo(std::string info_from_overview);
+
+      void set_user_filter(const std::string& user_name);
       
    public:
       QVBoxLayout       main_layout;
       QLabel            search_label;
-      HTableWidget*     tablewidget;
-      QTableWidgetItem* itm;
-      QPushButton*      more;
+      DecentTable       tablewidget;
       QLineEdit         user;
-      int               green_row;
       
    private:
       std::string getAccountName(std::string accountId);
       
    public slots:
-      
-      void doRowColor();
       void onTextChanged(const QString& text);
       void updateContents();
       void maybeUpdateContent();
@@ -91,7 +58,6 @@ namespace gui_wallet
       
       std::map<std::string, std::string> _user_id_cache;
       
-      const std::vector<std::string> _table_columns = { "Type", "From", "To", "Amount", "Fee", "Description" };
    };
 }
 

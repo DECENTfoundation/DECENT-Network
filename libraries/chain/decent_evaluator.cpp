@@ -117,7 +117,7 @@ namespace graphene { namespace chain {
       const auto& firstK = content->key_parts.at( o.seeder );
       const auto& secondK = o.key;
       const auto& proof = o.proof;
-      FC_ASSERT( decent::crypto::verify_delivery_proof( proof, firstK, secondK, seeder_pubKey, buyer_pubKey) );
+      FC_ASSERT( decent::encrypt::verify_delivery_proof( proof, firstK, secondK, seeder_pubKey, buyer_pubKey) );
    }FC_CAPTURE_AND_RETHROW( (o) ) }
 
    void_result deliver_keys_evaluator::do_apply(const deliver_keys_operation& o )
@@ -131,7 +131,7 @@ namespace graphene { namespace chain {
       if( std::find(buying.seeders_answered.begin(), buying.seeders_answered.end(), o.seeder) == buying.seeders_answered.end() )
          db().modify<buying_object>(buying, [&](buying_object& bo){
               bo.seeders_answered.push_back( o.seeder );
-              bo.key_particles.push_back( decent::crypto::Ciphertext(o.key) );
+              bo.key_particles.push_back( decent::encrypt::Ciphertext(o.key) );
          });
       delivered = buying.seeders_answered.size() >= content->quorum;
       //if the content has already been delivered or expired, just note the key particles and go on
@@ -249,13 +249,13 @@ namespace graphene { namespace chain {
          FC_ASSERT(bid._hash[i] == o.proof.seed.data[i],"Block ID does not match; wrong chain?");
       FC_ASSERT(db().head_block_num() <= o.proof.reference_block + 6,"Block reference is too old");
       FC_ASSERT( _custody_utils.verify_by_miner( content->cd, o.proof ) == 0, "Invalid proof of delivery" );
-      ilog("proof_of_custody OK");
+      //ilog("proof_of_custody OK");
    }FC_CAPTURE_AND_RETHROW( (o) ) }
    
    void_result proof_of_custody_evaluator::do_apply(const proof_of_custody_operation& o )
    {try{
       //pay the seeder
-      ilog("proof_of_custody_evaluator::do_apply begin" );
+      //ilog("proof_of_custody_evaluator::do_apply begin" );
       auto& idx = db().get_index_type<content_index>().indices().get<by_URI>();
       const auto& content = idx.find( o.URI );
       const auto& sidx = db().get_index_type<seeder_index>().indices().get<by_seeder>();
@@ -266,12 +266,12 @@ namespace graphene { namespace chain {
       if( last_proof == content->last_proof.end() )
       {
          //the inital proof, no payments yet
-         ilog("proof_of_custody_evaluator::do_apply initial proof, no payment" );
+         //ilog("proof_of_custody_evaluator::do_apply initial proof, no payment" );
          db().modify<content_object>(*content, [&](content_object& co){
               co.last_proof.emplace(std::make_pair(o.seeder, db().head_block_time()));
          });
       }else{
-         ilog("proof_of_custody_evaluator::do_apply payment proof" );
+         //ilog("proof_of_custody_evaluator::do_apply payment proof" );
          fc::microseconds diff = db().head_block_time() - last_proof->second;
          if( diff > fc::days( 1 ) )
             diff = fc::days( 1 ) ;

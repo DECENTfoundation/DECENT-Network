@@ -5,7 +5,7 @@
 
 namespace graphene { namespace chain {
 
-   static decent::crypto::CustodyUtils _custody_utils;
+   static decent::encrypt::CustodyUtils _custody_utils;
 
    class content_submit_evaluator : public evaluator<content_submit_evaluator>
    {

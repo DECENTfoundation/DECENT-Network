@@ -11,7 +11,7 @@
 #include <vector>
 
 namespace graphene { namespace chain {
-using namespace decent::crypto;
+using namespace decent::encrypt;
 
    struct content_summary
    {
@@ -51,7 +51,8 @@ using namespace decent::crypto;
       uint32_t total_rating;
       uint32_t times_bought;
       asset publishing_fee_escrow;
-      decent::crypto::CustodyData cd;
+      decent::encrypt::CustodyData cd;
+
    };
    
    struct by_author;

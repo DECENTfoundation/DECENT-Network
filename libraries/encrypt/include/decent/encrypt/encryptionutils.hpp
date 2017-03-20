@@ -50,7 +50,7 @@ const CryptoPP::Integer DECENT_SHAMIR_ORDER("11579208923731619542357098500868790
 
 
 namespace decent {
-namespace crypto {
+namespace encrypt {
 
 enum encryption_results {
    ok,

@@ -16,12 +16,9 @@ set_source_files_properties(${GUI_WALLET_ICON} PROPERTIES
 add_executable( DECENT MACOSX_BUNDLE
                 ${GUI_WALLET_ICON}
                 src/dgui/browse_content_tab.cpp
-                src/dgui/cliwalletdlg.cpp
-                src/dgui/decent_gui_contentdlg.cpp 
                 src/dgui/decent_gui_inguiloopcaller.cpp
                 src/dgui/decent_wallet_ui_gui_contentdetailsbase.cpp
                 src/dgui/decent_wallet_ui_gui_contentdetailsgeneral.cpp
-                src/dgui/decent_wallet_ui_gui_jsonparserqt.cpp
                 src/dgui/decent_wallet_ui_gui_newcheckbox.cpp
                 src/dgui/decent_button.cpp
                 src/dgui/gui_wallet_application.cpp
@@ -49,13 +46,9 @@ add_executable( DECENT MACOSX_BUNDLE
                 include/ui_wallet_functions_base.hpp
                 include/unnamedsemaphorelite.hpp
                 src/dgui/browse_content_tab.hpp
-                src/dgui/cliwalletdlg.hpp
-                src/dgui/decent_gui_contentdlg.hpp
                 src/dgui/decent_gui_inguiloopcaller.hpp
-                src/dgui/decent_wallet_ui_gui_common.tos
                 src/dgui/decent_wallet_ui_gui_contentdetailsbase.hpp
                 src/dgui/decent_wallet_ui_gui_contentdetailsgeneral.hpp
-                src/dgui/decent_wallet_ui_gui_jsonparserqt.hpp
                 src/dgui/decent_wallet_ui_gui_newcheckbox.hpp
                 src/dgui/decent_button.hpp
                 src/dgui/purchased_tab.hpp
