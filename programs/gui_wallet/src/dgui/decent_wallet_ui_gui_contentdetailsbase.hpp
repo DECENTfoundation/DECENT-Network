@@ -33,6 +33,8 @@ public:
     virtual ~ContentDetailsBase();
 
     void execCDB(const SDigitalContent& a_cnt_details);
+    
+    void popup_for_purchased(int);
 
     //virtual void execCDD(const decent::wallet::ui::gui::SDigitalContent& a_cnt_details)=0;
 

@@ -10,35 +10,9 @@
 #include <QFileDialog>
 
 using namespace gui_wallet;
-
-//<<<<<<< HEAD
-//// Implemented in 'gui_wallet_centralwigdet.cpp'
-//std::string FindImagePath(bool& a_bRet,const char* a_image_name);
-//
-//
-//ContentDetailsGeneral::ContentDetailsGeneral()
-//    :
-//      m_label(this,NULL,&ContentDetailsGeneral::LabelPushCallbackGUI)
-//{
-//    QVBoxLayout* image_layout = new QVBoxLayout;
-//    m_label.setText("GET IT");
-//    m_label.setFixedWidth(120);
-//    m_label.setFixedHeight(30);
-//    
-//    image_layout->addWidget(&m_label);
-//    image_layout->setContentsMargins(250, 5, 250, 10);
-//    
-//    m_free_for_child.addLayout(image_layout);
-//
-//    
-//    
-//=======
-//>>>>>>> b00b82b867e92361ad442a6ce8f2f8a7b452519d
-//
-
 ContentDetailsGeneral::ContentDetailsGeneral() {
    QVBoxLayout* image_layout = new QVBoxLayout;
-   m_label.setText("GET IT");
+   m_label.setText("Get it");
    m_label.setFixedWidth(120);
    m_label.setFixedHeight(30);
    
