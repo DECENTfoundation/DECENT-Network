@@ -16,6 +16,10 @@
 #include <QFont>
 #include <graphene/chain/config.hpp>
 #include "json.hpp"
+//#include <QtSvg/QSvgRenderer>
+//#include <QPainter>
+//#include <QSvgWidget>
+//#include <QSvgRenderer>
 
 using namespace gui_wallet;
 using namespace nlohmann;
@@ -136,8 +140,12 @@ void Overview_tab::updateContents() {
         transaction->setAlignment(Qt::AlignCenter);
         transfer->setAlignment(Qt::AlignCenter);
         
-        QPixmap image1(":/icon/images/transaction.png");
-        QPixmap image(":/icon/images/transfer.png");
+        QPixmap image1(":/icon/images/transaction.svg");
+        QPixmap image(":/icon/images/transaction5.svg");
+        //QSvgWidget* image = new QSvgWidget(this);
+        //image->load(QString(":/icons/transaction.svg"));
+        //pMainLayout->addWidget(pSvgWidget);
+        
         transaction->setPixmap(image1);
         transfer->setPixmap(image);
         

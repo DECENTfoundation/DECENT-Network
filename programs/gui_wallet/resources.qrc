@@ -14,7 +14,8 @@
         <file>images/browse.svg</file>
         <file>images/export.png</file>
         <file>images/pop_up.png</file>
-        <file>images/transaction.png</file>
+        <file>images/transaction.svg</file>
         <file>images/transfer.png</file>
+        <file>images/transaction5.svg</file>
     </qresource>
 </RCC>

@@ -242,8 +242,9 @@ void PurchasedTab::updateContents() {
                 m_pTableWidget->item(i, 6)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
             } else {
                 EButton* btn = new EButton();
-                btn->setStyleSheet("background-color: rgb(27,176,104); color: white");
-                btn->setText("Extract");
+                //btn->setStyleSheet("background-color: rgb(27,176,104); color: white");
+                
+                //btn->setText("Extract");
                 btn->setProperty("id", QVariant::fromValue(QString::fromStdString(content["id"].get<std::string>())));
                 btn->setProperty("hash", QVariant::fromValue(QString::fromStdString(dcontent_json["_hash"].get<std::string>())));
                 btn->setProperty("URI", QVariant::fromValue(QString::fromStdString(content["URI"].get<std::string>())));
@@ -386,6 +387,13 @@ void PurchasedTab::doRowColor()
                 m_pTableWidget->item(i,6)->setBackground(QColor(255,255,255));
                 m_pTableWidget->item(i,6)->setForeground(QColor::fromRgb(88,88,88));
             }
+            else
+            {
+                if(m_pTableWidget->cellWidget(i , 6) != NULL)
+                {
+                    m_pTableWidget->cellWidget(i , 6)->setStyleSheet("* { background-color: rgb(255,255,255); color : white; }");
+                }
+            }
         }
         
         if(m_pTableWidget->cellWidget(i , 7) != NULL)
@@ -410,10 +418,6 @@ void PurchasedTab::doRowColor()
         int row = ite->row();
         if(row < 0) {return;}
         QPixmap image(":/icon/images/info1_white.svg");
-//        if(m_pTableWidget->cellWidget(row , 0) != NULL)
-//        {
-//            m_pTableWidget->cellWidget(row , 0)->setStyleSheet("* { background-color: rgb(27,176,104); color : white; }");
-//        }
         m_pTableWidget->cellWidget(row , 7)->setStyleSheet("* { background-color: rgb(27,176,104); color : white; }");
         for(int i = 0 ; i < 7; ++i)
         {

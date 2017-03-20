@@ -239,7 +239,7 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details)
     }
     
     m_vLabels[1].setText(tr(m_pContentInfo->author.c_str()));
-        std::string creat;
+    std::string creat;
     for(int i = 0; i < m_pContentInfo->created.find("T"); ++i)
     {
         creat.push_back(m_pContentInfo->created[i]);
