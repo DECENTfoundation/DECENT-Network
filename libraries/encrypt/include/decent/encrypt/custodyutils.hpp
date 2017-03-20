@@ -45,7 +45,7 @@ sign0 -1"
 
 
 namespace decent{
-namespace crypto{
+namespace encrypt{
 
 using namespace boost::filesystem;
 

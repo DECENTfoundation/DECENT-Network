@@ -11,19 +11,20 @@
 #include "decent_wallet_ui_gui_contentdetailsbase.hpp"
 #include <QDateTime>
 #include "gui_wallet_global.hpp"
+#include "ui_wallet_functions.hpp"
 #include "json.hpp"
-
+#include <QFrame>
 using namespace nlohmann;
 using namespace gui_wallet;
 
 static const char* s_vcpcFieldsGeneral[NUMBER_OF_SUB_LAYOUTS2] = {
-    "Author", "Expiration","Created","Price",
-    "Average Rating","Size","Times Bought", "Description"
+    "Author", "Expiration","Created","Amount",
+    "Average Rating","Size","Times Bought" 
 };
 
 
 static const char* s_vcpcFieldsBougth[NUMBER_OF_SUB_LAYOUTS2] = {
-    "Author", "Purchased","Created","Price",
+    "Author","Created","Price",
     "Average Rating","Size","Times Bought", "Description"
 };
 
@@ -43,26 +44,28 @@ ContentDetailsBase::ContentDetailsBase()
     {
         if(i%2==0){m_vSub_Widgets[i].setStyleSheet("background-color:rgb(244,244,244);");}
         else{m_vSub_Widgets[i].setStyleSheet("background-color:white;");}
-        m_vLabels[nIndexZuyg].setStyleSheet("font-weight: bold");
+        m_vLabels[nIndexKent].setStyleSheet("font-weight: bold");
+        m_vLabels[nIndexKent].setContentsMargins(0, 10, 50, 10);
+        m_vLabels[nIndexKent].setAlignment(Qt::AlignRight);
+        //m_vLabels[nIndexKent].setAlignment(Qt::AlignCenter);
         m_vSub_layouts[i].setSpacing(0);
         m_vSub_layouts[i].setContentsMargins(45,3,0,3);
         
         if(nIndexKent == 9)
         {
-            QVBoxLayout* text_layout = new  QVBoxLayout;
+            QHBoxLayout* text_layout = new  QHBoxLayout;
             QHBoxLayout* stars = new QHBoxLayout;
             QHBoxLayout* main_layout = new QHBoxLayout;
+            
+            stars->setContentsMargins(30, 0, 30, 0);
             text_layout->addWidget(&m_vLabels[nIndexZuyg]);
-            text_layout->addWidget(&m_vLabels[nIndexKent]);
+            stars->addWidget(&m_vLabels[nIndexKent]);
             for(int i = 0; i <5; ++i)
             {
                 stars->addWidget(&m_stars[i]);
             }
             main_layout->addLayout(text_layout);
-            main_layout->addWidget(new QLabel());
-            main_layout->addWidget(new QLabel());
             main_layout->addLayout(stars);
-            main_layout->addWidget(new QLabel());
             m_vSub_layouts[i].addLayout(main_layout);
             m_vSub_Widgets[i].setLayout(&m_vSub_layouts[i]);
             m_main_layout.addWidget(&m_vSub_Widgets[i]);
@@ -75,13 +78,38 @@ ContentDetailsBase::ContentDetailsBase()
             m_main_layout.addWidget(&m_vSub_Widgets[i]);
         }
     }
+    QFrame* line;
     
+    line = new QFrame(this);
+    line->setFrameShape(QFrame::HLine); // Horizontal line
     
+    line->setLineWidth(300);
+    line->setStyleSheet("color: rgb(193,192,193)");
+    line->setFixedHeight(1);
+    m_main_layout.addWidget(line);
     
+    QHBoxLayout* desc_lay = new QHBoxLayout();
+    m_desc.setText("Description\n");
+    m_desc.setStyleSheet("border-top: 0px solid rgb(193,192,193); border-bottom: 0px solid rgb(193,192,193); border-left: 0px; border-right: 0px;");
+    m_desc.setReadOnly(true);
+    m_desc.setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    m_desc.setMinimumHeight(20);
+    m_desc.setMaximumHeight(50);
+    desc_lay->setContentsMargins(45, 3, 0, 3);
+    desc_lay->addWidget(&m_desc);
     
+
     
+    m_main_layout.addLayout(desc_lay);
     
+    line = new QFrame(this);
+    line->setFrameShape(QFrame::HLine); // Horizontal line
     
+    line->setLineWidth(300);
+    line->setStyleSheet("color: rgb(193,192,193)");
+    line->setFixedHeight(1);
+    m_main_layout.addWidget(line);
+    //m_main_layout.addWidget(&m_desc);
    
     setStyleSheet("background-color:white;");
 }
@@ -212,7 +240,7 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details)
     }
     
     m_vLabels[1].setText(tr(m_pContentInfo->author.c_str()));
-        std::string creat;
+    std::string creat;
     for(int i = 0; i < m_pContentInfo->created.find("T"); ++i)
     {
         creat.push_back(m_pContentInfo->created[i]);
@@ -220,7 +248,7 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details)
     m_vLabels[5].setText(tr(creat.c_str()));
     
    
-    m_vLabels[3].setText(tr(creat.c_str()));
+    m_vLabels[3].setText(QString::fromStdString(e_str));
 
     
     
@@ -260,8 +288,7 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details)
         
     } catch (...) {}
     this->setWindowTitle(QString::fromStdString(synopsis));
-    m_vLabels[15].setText(QString::fromStdString(desc));
-
+    m_desc.setText(m_desc.toPlainText() + QString::fromStdString(desc));
     
     setFixedSize(620,400);
 

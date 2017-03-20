@@ -10,7 +10,7 @@
 #include <boost/multi_index/composite_key.hpp>
 
 namespace graphene { namespace chain {
-using decent::crypto::d_integer;
+using decent::encrypt::d_integer;
 
    class buying_object : public graphene::db::abstract_object<buying_object>
    {
@@ -28,7 +28,7 @@ using decent::crypto::d_integer;
       std::string synopsis;
        
       vector<account_id_type> seeders_answered;
-      vector<decent::crypto::ciphertext_string> key_particles;
+      vector<decent::encrypt::ciphertext_string> key_particles;
       d_integer_string pubKey;
       time_point_sec expiration_time;
 

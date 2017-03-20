@@ -22,7 +22,10 @@ public:
     virtual ~DecentButton();
     
 protected:
-    void mousePressEvent(QMouseEvent *event){emit LabelClicked();};
+    void mousePressEvent(QMouseEvent *event) {
+       emit LabelClicked();
+    }
+   
 public:
 signals:
     void LabelClicked();

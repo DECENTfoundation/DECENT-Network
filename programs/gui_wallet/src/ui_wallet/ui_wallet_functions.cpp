@@ -119,16 +119,6 @@ __DLL_EXPORT__ void* GetFunctionPointerAsVoid(int a_first,...)
     return pReturn;
 }
 
-__DLL_EXPORT__ void InitializeUiInterfaceOfWallet(TypeWarnAndWaitFunc a_fpWarnAndWait,
-                                                  TypeCallFunctionInGuiLoop2 a_fpCorrectUiCaller2,
-                                                  TypeCallFunctionInGuiLoop3 a_fpCorrectUiCaller3,
-                                                  void* a_pMngOwner,void* a_pMngClb,
-                                                  TypeManagementClbk a_fpMngClbk)
-{
-    InitializeUiInterfaceOfWallet_base(a_fpWarnAndWait,a_fpCorrectUiCaller2,a_fpCorrectUiCaller3,
-                                       a_pMngOwner,a_pMngClb,a_fpMngClbk);
-}
-
 
 __DLL_EXPORT__ void InitializeUiInterfaceOfWallet_base(TypeWarnAndWaitFunc a_fpWarnAndWait,
                                                        TypeCallFunctionInGuiLoop2 a_fpCorrectUiCaller2,
@@ -490,7 +480,12 @@ static int ConnectToNewWitness(const decent::tools::taskListItem<SConnectionStru
         }));
         (void)(closed_connection);
 
-        if( wapiptr->is_new() )
+       
+
+         wallet_gui->register_api( wapi );
+         wallet_gui->start();
+
+       if( wapiptr->is_new() )
         {
            std::string aPassword("");
            
@@ -500,20 +495,13 @@ static int ConnectToNewWitness(const decent::tools::taskListItem<SConnectionStru
                wapiptr->set_password(aPassword);
                wapiptr->unlock(aPassword);
            }
-        } else
-           {/*wallet_cli->set_prompt( "locked >>> " );*/}
-
+        }
+       
         boost::signals2::scoped_connection locked_connection(wapiptr->lock_changed.connect([&](bool /*locked*/) {
            //wallet_cli->set_prompt(  locked ? "locked >>> " : "unlocked >>> " );
         }));
 
 
-
-       wallet_gui->register_api( wapi );
-       wallet_gui->start();
-       //(*a_fpDone)(a_pOwner);
-       //(*(a_con_data.fn_tsk_dn))(a_con_data.owner,a_con_data.callbackArg,0,
-       //                          __CONNECTION_CLB_, __FILE__ "\nConnection is ok");
 
        LoadWalletFile(pStruct);
 
@@ -535,15 +523,12 @@ static int ConnectToNewWitness(const decent::tools::taskListItem<SConnectionStru
         (*s_fpCorrectUiCaller2)(a_con_data.callbackArg,llnErr, a_fc.to_string(),
                               a_fc.to_detail_string(),
                               a_con_data.owner,a_con_data.fn_tsk_dn2);
-        __DEBUG_APP2__(1,"err=%d, err_str=%s, details=%s\n",
-                       (int)llnErr,a_fc.to_string().c_str(),(a_fc.to_detail_string()).c_str());
     }
     catch(...)
     {
         (*s_fpCorrectUiCaller2)(a_con_data.callbackArg,UNKNOWN_EXCEPTION, __CONNECTION_CLB_,
                               __FILE__ "\nUnknown exception!",
                               a_con_data.owner,a_con_data.fn_tsk_dn2);
-        __DEBUG_APP2__(1,"Unknown exception\n");
     }
 
     return 0;
