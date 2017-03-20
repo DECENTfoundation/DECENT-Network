@@ -105,25 +105,7 @@ namespace gui_wallet
         m_main_table.setColumnWidth(0, tableSize.width() - 10);
     }
     
-    void PasswordDialog::unlock_slot()
-    {
-        std::string str_password = password_box.text().toStdString();
-        auto& pwapi = m_pParent->m_ptr_wallet_utility;
-        try
-        {
-            //QMessageBox::information(this, "Info", str_password.c_str());
-            //  enable below lines and the GUI freezes
-            //pwapi = graphene::wallet_utility::create_wallet_api();
-            //if (pwapi->is_new())
-            //    pwapi->set_password(str_password);
-            //if (pwapi->is_locked())
-            //    pwapi->unlock(str_password);
-        }
-        catch(...)
-        {
-            QMessageBox::critical(this, "Error", "exception");
-        }
-        
+    void PasswordDialog::unlock_slot() {
         ret_value = true;
         close();
     }

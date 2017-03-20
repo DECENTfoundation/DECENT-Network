@@ -9,7 +9,6 @@
  */
 
 
-#define     CLI_WALLET_CODE         ((void*)-1)
 #define     WALLET_CONNECT_CODE     ((void*)-2)
 
 
@@ -60,27 +59,15 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
         m_ActionLock(tr("Lock"),this),
         m_ActionUnlock(tr("Unlock"),this),
         m_ActionImportKey(tr("Import key"),this),
-        m_ActionOpenCliWallet(tr("cli_wallet"),this),
-        m_ActionOpenInfoDlg(tr("Open info dlg."),this),
         m_info_dialog(),
         m_locked(true),
         m_import_key_dlg(2),
-        m_cqsPreviousFilter(tr("nf")),
         m_nConnected(0),
         m_SetPasswordDialog(this, true),
         m_UnlockDialog(this, false)
 {
     s_pMainWindowInstance = this;
-    m_default_stylesheet = styleSheet();
-    //setStyleSheet("color:black;""background-color:white;");
-    m_pInfoTextEdit = new QTextEdit;
-    m_pInfoTextEdit->setReadOnly(true);
-    m_pcInfoDlg = new CliWalletDlg(m_pInfoTextEdit);
-
-    
-    CliTextEdit* pCliTextEdit = (CliTextEdit*)m_cCliWalletDlg.operator ->();
-    pCliTextEdit->SetCallbackStuff2(this,NULL,&Mainwindow_gui_wallet::CliCallbackFnc);
-
+   
     m_barLeft = new QMenuBar;
     m_barRight = new QMenuBar;
 
@@ -117,9 +104,6 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
 
     m_info_dialog.resize(0,0);
 
-    m_nError = 0;
-    m_error_string = "";
-
     setUnifiedTitleAndToolBarOnMac(false);
 
     QComboBox* pUsersCombo = m_pCentralWidget->usersCombo();
@@ -151,10 +135,7 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
 Mainwindow_gui_wallet::~Mainwindow_gui_wallet()
 {
     SaveWalletFile2(m_wdata2);
-    DestroyUiInterfaceOfWallet();
-    delete m_pInfoTextEdit;
-    delete m_pcInfoDlg;
-   
+    DestroyUiInterfaceOfWallet();   
 }
 
 
@@ -189,11 +170,6 @@ void Mainwindow_gui_wallet::CreateActions()
     m_ActionImportKey.setStatusTip( tr("Import key") );
     connect( &m_ActionImportKey, SIGNAL(triggered()), this, SLOT(ImportKeySlot()) );
 
-    m_ActionOpenCliWallet.setStatusTip( tr("Open CLI wallet dialog") );
-    connect( &m_ActionOpenCliWallet, SIGNAL(triggered()), this, SLOT(OpenCliWalletDlgSlot()) );
-
-    m_ActionOpenInfoDlg.setStatusTip( tr("Open Info dialog") );
-    connect( &m_ActionOpenInfoDlg, SIGNAL(triggered()), this, SLOT(OpenInfoDlgSlot()) );
 
 }
 
@@ -246,13 +222,6 @@ void Mainwindow_gui_wallet::CreateMenues()
 
     m_pMenuHelpL = pMenuBar->addMenu( tr("&Help") );
 
-#ifndef NDEBUG
-    m_pMenuDebug = pMenuBar->addMenu( tr("Debug") );
-    m_pMenuDebug->addAction(&m_ActionOpenCliWallet);
-    m_pMenuDebug->addAction(&m_ActionOpenInfoDlg);
-    m_pMenuTempFunctions = m_pMenuDebug->addMenu(tr("temp. functions start"));
-#endif
-
 
     /******************************************************/
     m_pMenuHelpL->addAction(&m_ActionAbout);
@@ -273,31 +242,6 @@ void Mainwindow_gui_wallet::CurrentUserChangedSlot(const QString& a_new_user)
     UpdateAccountBalances(a_new_user.toStdString());
 }
 
-
-
-void Mainwindow_gui_wallet::CliCallbackFnc(void*/*arg*/,const std::string& a_task)
-{
-    m_cli_line = a_task;
-    SetNewTask(a_task,this,CLI_WALLET_CODE,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
-}
-
-
-void Mainwindow_gui_wallet::OpenCliWalletDlgSlot()
-{
-    m_cCliWalletDlg.exec();
-}
-
-
-void Mainwindow_gui_wallet::OpenInfoDlgSlot()
-{
-    m_pcInfoDlg->exec();
-}
-
-
-void Mainwindow_gui_wallet::ShowDetailsOnDigContentSlot(SDigitalContent a_dig_cont)
-{
-
-}
 
 void Mainwindow_gui_wallet::UpdateAccountBalances(const std::string& username) {
 
@@ -478,9 +422,6 @@ void Mainwindow_gui_wallet::CheckDownloads()
 
 
 
-void Mainwindow_gui_wallet::moveEvent(QMoveEvent * a_event)
-{
-}
 
 
 void Mainwindow_gui_wallet::DisplayWalletContentGUI()
@@ -519,8 +460,6 @@ void Mainwindow_gui_wallet::DisplayWalletContentGUI()
 
 void Mainwindow_gui_wallet::ImportKeySlot()
 {
-    m_nError = 0;
-    m_error_string = "";
 
     std::vector<std::string> cvsUsKey(2);
     QComboBox& cUsersCombo = *m_pCentralWidget->usersCombo();
@@ -633,20 +572,7 @@ void Mainwindow_gui_wallet::TaskDoneFuncGUI(void* a_clbkArg,int64_t a_err,const 
         return;
     }
 
-    if(a_clbkArg == CLI_WALLET_CODE) {
-        
-        if (a_err) {
-            m_cCliWalletDlg->setTextColor(Qt::red);
-        }
-        
-        m_cCliWalletDlg.appentText(a_result);
-        
-        if (a_err) {
-            m_cCliWalletDlg->setTextColor(Qt::black);
-        }
-        
-        m_cCliWalletDlg.appentText(">>>");
-    }
+   
 }
 
 
@@ -660,8 +586,6 @@ void Mainwindow_gui_wallet::ManagementNewFuncGUI(void* a_clbkArg,int64_t a_err,c
 void Mainwindow_gui_wallet::ConnectSlot()
 {
     int nRet(decent::gui::tools::RDB_OK);
-    m_nError = 0;
-    m_error_string = "";
 
     LoadWalletFile(&m_wdata2);
 
