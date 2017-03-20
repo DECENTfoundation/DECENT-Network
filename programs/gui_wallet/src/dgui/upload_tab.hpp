@@ -29,7 +29,10 @@
 #include "decent_button.hpp"
 #include "gui_wallet_tabcontentmanager.hpp"
 
-
+#include <vector>
+#include "qt_commonheader.hpp"
+#include <QDialog>
+#include "gui_wallet_tabcontentmanager.hpp"
 
 #define INFO_LIFETIME   "Lifetime"
 #define INFO_SEEDERS    "Seeders"
@@ -37,7 +40,7 @@
 #define INFO_TAGS       "Tags"
 #define INFO_PRICE      "Price"
 
-
+// =========================upload pop up
 namespace gui_wallet
 {
                                             
@@ -55,15 +58,15 @@ namespace gui_wallet
     };
 
 
-    class Upload_tab : public TabContentManager
+    class Upload_tab_pop_up : public TabContentManager
     {    
     Q_OBJECT
 
         typedef std::map<std::string, std::string> AssetMap;
 
     public:
-        Upload_tab();
-        virtual ~Upload_tab();
+        Upload_tab_pop_up();
+        virtual ~Upload_tab_pop_up();
     public slots:
         void browseContent();
         void browseSamples();
@@ -77,10 +80,11 @@ namespace gui_wallet
         virtual void content_activated() {}
         virtual void content_deactivated() {}
 
+        QVBoxLayout     u_main_layout;
+
     protected:
         virtual void resizeEvent ( QResizeEvent * event );
     private:
-        QVBoxLayout     m_main_layout;
         QVBoxLayout     m_synopsis_layout;
         QVBoxLayout     m_info_layout;
         QTableWidget    m_info_widget;
@@ -105,6 +109,128 @@ namespace gui_wallet
         QLineEdit*      cont;
     };
 
+}
+
+// Upload tab
+
+
+
+
+
+namespace gui_wallet
+{
+    // ST stands for search type
+    namespace S_T{
+        enum S_Ttype{URI_start,author,content};
+        static const char* s_vcpcSearchTypeStrs[] = {"URI_start","author","content"};
+    }
+    
+    
+    class UTableWidget : public QTableWidget
+    {
+        Q_OBJECT
+    public:
+        UTableWidget(int a , int b) : QTableWidget(a,b)
+        {
+            this->setMouseTracking(true);
+        };
+        
+        virtual void mouseMoveEvent(QMouseEvent * event);
+    public:
+    signals:
+        void mouseMoveEventDid();
+    };
+    
+    
+    
+    class UButton : public QLabel
+    {
+        Q_OBJECT
+    public:
+        UButton() : QLabel() {this->setMouseTracking(true);}
+        UButton(QString str) : QLabel(str){this->setMouseTracking(true);}
+    public:
+    signals:
+        void mouseWasMoved();
+    public:
+        virtual void mouseMoveEvent(QMouseEvent * event)
+        {
+            emit mouseWasMoved();
+            QLabel::mouseMoveEvent(event);
+        }
+    };
+    
+    
+    
+    
+    
+    class Upload_tab : public TabContentManager
+    {
+        friend class CentralWigdet;
+        Q_OBJECT
+    public:
+        Upload_tab();
+        virtual ~Upload_tab();
+        
+        void ShowDigitalContentsGUI(std::vector<SDigitalContent>& contents);
+        void Connects();
+        
+    public:
+        
+        virtual void content_activated() { m_doUpdate = true; }
+        virtual void content_deactivated() {}
+        
+        std::string e_str;
+        
+        
+    public:
+    signals:
+        void ShowDetailsOnDigContentSig(SDigitalContent get_cont_str);
+        
+        public slots:
+        void onTextChanged(const QString& text);
+        void doRowColor();
+        void updateContents();
+        void maybeUpdateContent();
+        void UploadPopUp();
+
+    protected:
+        void DigContCallback(_NEEDED_ARGS2_);
+        void PrepareTableWidgetHeaderGUI();
+        virtual void resizeEvent ( QResizeEvent * a_event );
+        void ArrangeSize();
+        
+    private:
+        bool FilterContent(const SDigitalContent& content);
+        
+    protected:
+        QVBoxLayout     m_main_layout;
+        QHBoxLayout     m_search_layout;
+        
+        UTableWidget*    m_pTableWidget;
+        
+        QLineEdit       m_filterLineEdit;
+        QComboBox       m_searchTypeCombo;
+        
+        std::vector<SDigitalContent> m_dContents;
+        bool m_doUpdate = true;
+        int green_row;
+        QTimer  m_contentUpdateTimer;
+    };
+    
+    class upload_up : public QDialog
+    {
+        Q_OBJECT
+    public:
+        upload_up(QWidget *parent = 0);
+        ~upload_up(){}
+        friend class Upload_tab;
+        
+//    public slots:
+//        void dialog();
+    };
+    
+    
 }
 
 #endif // UPLOAD_TAB_HPP

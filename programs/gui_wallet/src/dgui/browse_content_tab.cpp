@@ -31,7 +31,7 @@
 
 //namespace DCF {enum DIG_CONT_FIELDS{TIME,SYNOPSIS,RATING,SIZE,PRICE,LEFT};}
 static const char* s_vccpItemNames[]={"Title","Rating",
-    "Size","Price","Created","Expiration",""};
+    "Size","Price","Time","Left",""};
 static const int   s_cnNumberOfCols = sizeof(s_vccpItemNames)/sizeof(const char*);
 
 static const int   s_cnNumberOfSearchFields(sizeof(gui_wallet::ST::s_vcpcSearchTypeStrs)/sizeof(const char*));
@@ -76,7 +76,7 @@ Browse_content_tab::Browse_content_tab() : m_pTableWidget(new BTableWidget(0,s_c
     setLayout(&m_main_layout);
     
     connect(&m_filterLineEdit, SIGNAL(textChanged(QString)), this, SLOT(onTextChanged(QString)));
-
+    
     
     m_contentUpdateTimer.connect(&m_contentUpdateTimer, SIGNAL(timeout()), this, SLOT(maybeUpdateContent()));
     m_contentUpdateTimer.setInterval(1000);
@@ -94,8 +94,8 @@ Browse_content_tab::~Browse_content_tab()
 
 void Browse_content_tab::DigContCallback(_NEEDED_ARGS2_)
 {
+    
     emit ShowDetailsOnDigContentSig(*a_pDigContent);
-    ArrangeSize();
 }
 
 void Browse_content_tab::maybeUpdateContent() {
@@ -120,27 +120,27 @@ void Browse_content_tab::PrepareTableWidgetHeaderGUI()
     
     QFont font( "Open Sans Bold", 14, QFont::Bold);
     
-//    m_TableWidget.setStyleSheet("QTableWidget{border : 1px solid red}");
+    //    m_TableWidget.setStyleSheet("QTableWidget{border : 1px solid red}");
     
     m_TableWidget.horizontalHeader()->setDefaultSectionSize(300);
     m_TableWidget.setRowHeight(0,35);
     m_TableWidget.verticalHeader()->hide();
     
-    m_TableWidget.setHorizontalHeaderLabels(QStringList() << "Title" << "Rating" << "Size" << "Price" << "Created" << "Expiration"  << "" );
+    m_TableWidget.setHorizontalHeaderLabels(QStringList() << "Title" << "Rating" << "Size" << "Price" << "Time" << "Left"  << "" );
     m_TableWidget.horizontalHeader()->setFixedHeight(35);
     m_TableWidget.horizontalHeader()->setFont(font);
-//    m_TableWidget.horizontalHeader()->setStyleSheet("color:rgb(228,227,228)");
+    //    m_TableWidget.horizontalHeader()->setStyleSheet("color:rgb(228,227,228)");
     
     m_main_layout.setContentsMargins(0, 0, 0, 0);
-
+    
     m_TableWidget.setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     m_TableWidget.setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     m_TableWidget.setSelectionMode(QAbstractItemView::NoSelection);
     
     m_TableWidget.horizontalHeader()->setStyleSheet("QHeaderView::section {"
-                                                   "border-right: 1px solid rgb(193,192,193);"
-                                                   "border-bottom: 0px;"
-                                                   "border-top: 0px;}");
+                                                    "border-right: 1px solid rgb(193,192,193);"
+                                                    "border-bottom: 0px;"
+                                                    "border-top: 0px;}");
     
     Connects();
     ArrangeSize();
@@ -151,7 +151,7 @@ void Browse_content_tab::PrepareTableWidgetHeaderGUI()
 
 void Browse_content_tab::updateContents() {
     std::string filterText = m_filterLineEdit.text().toStdString();
-
+    
     SetNewTask("search_content \"" + filterText + "\" 100", this, NULL, +[](void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
         Browse_content_tab* obj = (Browse_content_tab*)owner;
         
@@ -195,6 +195,7 @@ void Browse_content_tab::updateContents() {
                 dContents[i].AVG_rating = contents[i]["AVG_rating"].get<double>()  / 1000;
             }
             
+            
             obj->ShowDigitalContentsGUI(dContents);
             obj->ArrangeSize();
         } catch (std::exception& ex) {
@@ -229,7 +230,7 @@ void Browse_content_tab::ShowDigitalContentsGUI(std::vector<SDigitalContent>& co
         {
             created_str.push_back(aTemporar.created[i]);
         }
-
+        
         m_TableWidget.setItem(index,4,new QTableWidgetItem(QString::fromStdString(created_str)));
         m_TableWidget.item(index, 4)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
         m_TableWidget.item(index, 4)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
@@ -246,7 +247,7 @@ void Browse_content_tab::ShowDigitalContentsGUI(std::vector<SDigitalContent>& co
             
         } catch (...) {}
         
-
+        
         
         m_TableWidget.setItem(index, 0, new QTableWidgetItem(QString::fromStdString(synopsis)));
         m_TableWidget.item(index, 0)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
@@ -280,8 +281,8 @@ void Browse_content_tab::ShowDigitalContentsGUI(std::vector<SDigitalContent>& co
         }
         m_TableWidget.item(index, 2)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
         m_TableWidget.item(index, 2)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
-
-
+        
+        
         m_TableWidget.setItem(index, 3, new QTableWidgetItem(QString::number(aTemporar.price.amount) + " DCT"));
         m_TableWidget.item(index, 3)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
         m_TableWidget.item(index, 3)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
@@ -290,7 +291,7 @@ void Browse_content_tab::ShowDigitalContentsGUI(std::vector<SDigitalContent>& co
         QDateTime time = QDateTime::fromString(QString::fromStdString(aTemporar.expiration), "yyyy-MM-ddTHH:mm:ss");
         
         e_str = CalculateRemainingTime(QDateTime::currentDateTime(), time);
-
+        
         m_TableWidget.setItem(index, 5,new QTableWidgetItem(QString::fromStdString(e_str)));
         m_TableWidget.item(index, 5)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
         m_TableWidget.item(index, 5)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
@@ -300,7 +301,7 @@ void Browse_content_tab::ShowDigitalContentsGUI(std::vector<SDigitalContent>& co
                                                                             tr("")));
         ((CButton*)m_TableWidget.cellWidget(index, 6))->setPixmap(image1);
         ((CButton*)m_TableWidget.cellWidget(index, 6))->setAlignment(Qt::AlignCenter);
-
+        
         ++index;
     }
     
@@ -308,26 +309,26 @@ void Browse_content_tab::ShowDigitalContentsGUI(std::vector<SDigitalContent>& co
     
     Connects();
     
+    m_pTableWidget->setStyleSheet("QTableView{border : 1px solid white}");
     m_pTableWidget->horizontalHeader()->setStretchLastSection(true);
+//    m_pTableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     ArrangeSize();
 }
 
 
 void Browse_content_tab::ArrangeSize()
 {
-    m_pTableWidget->setStyleSheet("QTableView{border : 1px solid white}");
-    m_pTableWidget->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    m_pTableWidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    
     QSize tqs_TableSize = m_pTableWidget->size();
     
-    m_pTableWidget->setColumnWidth(0,(tqs_TableSize.width()*20)/100);
-
-    for(int i = 1; i < 6; ++i)
+    m_pTableWidget->setColumnWidth(0,(tqs_TableSize.width()*24)/100);
+    m_pTableWidget->setColumnWidth(1,(tqs_TableSize.width()*8)/100);
+    
+    
+    for(int i = 2; i < 6; ++i)
     {
-        m_pTableWidget->setColumnWidth(i,(tqs_TableSize.width()*14)/100);
+        m_pTableWidget->setColumnWidth(i,(tqs_TableSize.width()*15)/100);
     }
-    m_pTableWidget->setColumnWidth(6,(tqs_TableSize.width()*10)/100);
+    m_pTableWidget->setColumnWidth(6,(tqs_TableSize.width()*8)/100);
 }
 
 
@@ -359,9 +360,9 @@ void Browse_content_tab::doRowColor()
     }
     
     QPoint mouse_pos = m_pTableWidget->mapFromGlobal(QCursor::pos());
-    if(mouse_pos.x() > 0 && mouse_pos.x() < 400)
+    if(mouse_pos.x() > m_pTableWidget->size().width() - 400 && mouse_pos.x() < m_pTableWidget->size().width())
     {
-        mouse_pos.setX(mouse_pos.x() + 300);
+        mouse_pos.setX(mouse_pos.x() - 300);
     }
     mouse_pos.setY(mouse_pos.y() - 41);
     QTableWidgetItem *ite = m_pTableWidget->itemAt(mouse_pos);
@@ -377,7 +378,7 @@ void Browse_content_tab::doRowColor()
         }
         m_pTableWidget->cellWidget(row , 6)->setStyleSheet("* { background-color: rgb(27,176,104); color : white; }");
         
-            green_row = row;
+        green_row = row;
     }
     else
     {
