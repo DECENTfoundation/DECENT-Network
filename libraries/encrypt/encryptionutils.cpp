@@ -17,8 +17,20 @@
 #include <fc/exception/exception.hpp>
 #include <iostream>
 
+#ifdef _MSC_VER
+class RunCryptoPPTest
+{
+public:
+	RunCryptoPPTest() 
+	{
+		CryptoPP::DoDllPowerUpSelfTest();
+	}
+};
+RunCryptoPPTest runtest;
+#endif
 
 namespace decent{ namespace encrypt{
+
 AutoSeededRandomPool rng;
 
 DeliveryProofString::DeliveryProofString( DeliveryProof gf ):G1(gf.G1),G2(gf.G2),G3(gf.G3),s(gf.s),r(gf.r){};
