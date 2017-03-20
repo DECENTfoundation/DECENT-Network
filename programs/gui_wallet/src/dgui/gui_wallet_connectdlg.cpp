@@ -22,11 +22,7 @@
 #include "richdialog.hpp"
 #include "gui_wallet_mainwindow.hpp"
 
-const char* StringFromQString(const QString& a_cqsString)
-{
-    QByteArray cLatin = a_cqsString.toLatin1();
-    return cLatin.data();
-}
+
 namespace gui_wallet
 {
     PasswordDialog::PasswordDialog(Mainwindow_gui_wallet* pParent, bool isSet)
@@ -182,11 +178,11 @@ int gui_wallet::ConnectDlg::execNew(SConnectionStruct* a_pData)
     QDialog::exec();
 
     tqsString = ((QLineEdit*)m_main_table.cellWidget(RPC_ENDPOINT_FIELD,1))->text();
-    a_pData->ws_server = StringFromQString(tqsString);
+    a_pData->ws_server = tqsString.toStdString();
     tqsString = ((QLineEdit*)m_main_table.cellWidget(WALLET_FILE_FIELD,1))->text();
-    a_pData->wallet_file_name = StringFromQString(tqsString);
+    a_pData->wallet_file_name = tqsString.toStdString();
     tqsString = ((QLineEdit*)m_main_table.cellWidget(CHAIN_ID_FIELD,1))->text();
-    a_pData->chain_id = StringFromQString(tqsString);
+    a_pData->chain_id = tqsString.toStdString();
 
     return m_ret_value;
 }

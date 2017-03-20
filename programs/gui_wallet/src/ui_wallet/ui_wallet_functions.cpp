@@ -119,16 +119,6 @@ __DLL_EXPORT__ void* GetFunctionPointerAsVoid(int a_first,...)
     return pReturn;
 }
 
-__DLL_EXPORT__ void InitializeUiInterfaceOfWallet(TypeWarnAndWaitFunc a_fpWarnAndWait,
-                                                  TypeCallFunctionInGuiLoop2 a_fpCorrectUiCaller2,
-                                                  TypeCallFunctionInGuiLoop3 a_fpCorrectUiCaller3,
-                                                  void* a_pMngOwner,void* a_pMngClb,
-                                                  TypeManagementClbk a_fpMngClbk)
-{
-    InitializeUiInterfaceOfWallet_base(a_fpWarnAndWait,a_fpCorrectUiCaller2,a_fpCorrectUiCaller3,
-                                       a_pMngOwner,a_pMngClb,a_fpMngClbk);
-}
-
 
 __DLL_EXPORT__ void InitializeUiInterfaceOfWallet_base(TypeWarnAndWaitFunc a_fpWarnAndWait,
                                                        TypeCallFunctionInGuiLoop2 a_fpCorrectUiCaller2,
@@ -533,15 +523,12 @@ static int ConnectToNewWitness(const decent::tools::taskListItem<SConnectionStru
         (*s_fpCorrectUiCaller2)(a_con_data.callbackArg,llnErr, a_fc.to_string(),
                               a_fc.to_detail_string(),
                               a_con_data.owner,a_con_data.fn_tsk_dn2);
-        __DEBUG_APP2__(1,"err=%d, err_str=%s, details=%s\n",
-                       (int)llnErr,a_fc.to_string().c_str(),(a_fc.to_detail_string()).c_str());
     }
     catch(...)
     {
         (*s_fpCorrectUiCaller2)(a_con_data.callbackArg,UNKNOWN_EXCEPTION, __CONNECTION_CLB_,
                               __FILE__ "\nUnknown exception!",
                               a_con_data.owner,a_con_data.fn_tsk_dn2);
-        __DEBUG_APP2__(1,"Unknown exception\n");
     }
 
     return 0;

@@ -87,13 +87,9 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
     m_pMenuLayout->setAlignment(m_barRight, Qt::AlignRight);
 
     m_pCentralAllLayout->addLayout(m_pMenuLayout);
-    /*mainMenuLayout0->addWidget(new QWidget);
 
-    QWidget *central = new QWidget;
-    central->setLayout(mainMenuLayout0);*/
 
     m_pCentralWidget = new CentralWigdet(m_pCentralAllLayout,this);
-    //m_pCentralWidget->setStyleSheet("color:black;""background-color:white;");
     m_pCentralWidget->setLayout(m_pCentralAllLayout);
     setCentralWidget(m_pCentralWidget);
     CreateActions();
