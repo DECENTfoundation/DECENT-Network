@@ -120,7 +120,7 @@ CentralWigdet::CentralWigdet(QBoxLayout* a_pAllLayout, Mainwindow_gui_wallet* a_
                               "QTabBar::tab:selected{"
                               "color:rgb(27,176,104);"
                               "border-bottom:3px solid rgb(27,176,104);"
-                              "border-top: 0px;"
+                              "border-top: 1px solid rgb(240,240,240);"
                               "border-left:0px;"
                               "border-right:0px;}"
                                );
@@ -389,7 +389,7 @@ void CentralWigdet::resizeEvent ( QResizeEvent * a_event )
                                   "QTabBar::tab:selected{"
                                   "color: rgb(27,176,104);"
                                   "border-bottom:3px solid rgb(27,176,104);"
-                                  "border-top: 0px;"
+                                  "border-top: 1px solid rgb(240,240,240);"
                                   "border-left:0px;"
                                   "border-right:0px;}"
                                   );
@@ -406,7 +406,7 @@ void CentralWigdet::resizeEvent ( QResizeEvent * a_event )
                                   "QTabBar::tab:selected{"
                                   "color: rgb(27,176,104);"
                                   "border-bottom:3px solid rgb(27,176,104);"
-                                  "border-top: 0px;"
+                                  "border-top: 1px solid rgb(240,240,240);"
                                   "border-left:0px;"
                                   "border-right:0px;}"
                                   );

@@ -576,7 +576,7 @@ void Upload_tab::content_was_bought() {
 void Upload_tab::ShowDigitalContentsGUI() {
     
     m_pTableWidget.setRowCount(_digital_contents.size());
-    QPixmap info_image(":/icon/images/info1_white.svg");
+    QPixmap info_image(":/icon/images/pop_up.png");
     
     int index = 0;
     for(SDigitalContent& aTemporar: _digital_contents) {

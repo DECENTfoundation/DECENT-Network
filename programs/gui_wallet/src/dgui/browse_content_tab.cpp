@@ -186,7 +186,7 @@ void BrowseContentTab::content_was_bought() {
 void BrowseContentTab::ShowDigitalContentsGUI() {
     
     m_pTableWidget.setRowCount(_digital_contents.size());
-    QPixmap info_image(":/icon/images/info1_white.svg");
+    QPixmap info_image(":/icon/images/pop_up.png");
     
     int index = 0;
     for(SDigitalContent& aTemporar: _digital_contents) {
