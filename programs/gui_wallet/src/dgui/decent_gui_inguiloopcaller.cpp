@@ -55,6 +55,9 @@ InGuiLoopCaller::~InGuiLoopCaller() {
                this,SLOT(NextFunctionToCallSlot2(void*,int64_t, std::string, std::string,void*,TypeCallbackSetNewTaskGlb2)));
 }
 
+InGuiLoopCaller* InGuiLoopCaller::instance() {
+   return s_pInGuiThreadCaller;
+}
 
 void InGuiLoopCaller::CallFunctionInGuiLoop2(SetNewTask_last_args2,const std::string& a_result,
                                                           void* a_owner,TypeCallbackSetNewTaskGlb2 a_fpFnc) {
@@ -77,20 +80,4 @@ void InGuiLoopCaller::NextFunctionToCallSlot2(void* a_clbData,int64_t a_err,
 }
 
 
-
-
-
-
-/*///////////////////////////////////////////////////////////////////////////////////////////////////////*/
-
-int CallFunctionInGuiLoop2(SetNewTask_last_args2,const std::string& a_result,void* a_owner,
-                           TypeCallbackSetNewTaskGlb2 a_fpFunc)
-{
-    if(!s_pInGuiThreadCaller){
-       return -1;
-    }
-   
-    s_pInGuiThreadCaller->CallFunctionInGuiLoop2(a_clbData,a_err,a_inp,a_result,a_owner,a_fpFunc);
-    return 0;
-}
 

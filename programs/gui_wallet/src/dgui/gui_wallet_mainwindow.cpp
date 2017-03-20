@@ -39,11 +39,6 @@ using namespace utilities;
 static gui_wallet::Mainwindow_gui_wallet*  s_pMainWindowInstance = NULL;
 
 
-int WarnAndWaitFunc(void* a_pOwner,WarnYesOrNoFuncType a_fpYesOrNo, void* a_pDataForYesOrNo,const char* a_form,...);
-int CallFunctionInGuiLoop2(SetNewTask_last_args2,const std::string& a_result,void* a_owner,TypeCallbackSetNewTaskGlb2 a_fpFunc);
-
-
-/*//////////////////////////////////////////////////////////////////////////////////*/
 
 Mainwindow_gui_wallet::Mainwindow_gui_wallet()
         :
@@ -111,8 +106,7 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
     
     
     
-    InitializeUiInterfaceOfWallet_base(&WarnAndWaitFunc,
-                                       &CallFunctionInGuiLoop2);
+    WalletInterface::initialize();
     ConnectSlot();
    
     _downloadChecker.setSingleShot(false);
@@ -122,10 +116,10 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
     
 }
 
-Mainwindow_gui_wallet::~Mainwindow_gui_wallet()
-{
-    SaveWalletFile2(m_wdata2);
-    DestroyUiInterfaceOfWallet();   
+Mainwindow_gui_wallet::~Mainwindow_gui_wallet() {
+   
+   WalletInterface::SaveWalletFile(m_wdata2);
+   WalletInterface::destroy();
 }
 
 
@@ -465,9 +459,9 @@ void Mainwindow_gui_wallet::ImportKeySlot()
     }
 
     QPoint thisPos = pos();
-    decent::gui::tools::RET_TYPE aRet = m_import_key_dlg.execRD(&thisPos,cvsUsKey);
+    RET_TYPE aRet = m_import_key_dlg.execRD(&thisPos,cvsUsKey);
     
-    if(aRet == decent::gui::tools::RDB_CANCEL){
+    if(aRet == RDB_CANCEL){
         return ;
     }
 
@@ -569,11 +563,11 @@ void Mainwindow_gui_wallet::TaskDoneFuncGUI(void* a_clbkArg,int64_t a_err,const 
 
 void Mainwindow_gui_wallet::ConnectSlot()
 {
-    int nRet(decent::gui::tools::RDB_OK);
+    int nRet = RDB_OK;
 
-    LoadWalletFile(&m_wdata2);
+    WalletInterface::LoadWalletFile(&m_wdata2);
 
-    if(nRet == decent::gui::tools::RDB_CANCEL) {
+    if(nRet == RDB_CANCEL) {
        return;
     }
 
@@ -588,7 +582,7 @@ void Mainwindow_gui_wallet::ConnectSlot()
    
     m_wdata2.fpDone = (TypeCallbackSetNewTaskGlb2)GetFunctionPointerAsVoid(0, &Mainwindow_gui_wallet::TaskDoneFuncGUI);
    
-    StartConnectionProcedure(&m_wdata2,this,WALLET_CONNECT_CODE);
+   WalletInterface::startConnecting(&m_wdata2, this, WALLET_CONNECT_CODE);
 }
 
 

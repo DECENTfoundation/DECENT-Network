@@ -2,6 +2,7 @@
 #pragma once
 
 #include "ui_wallet_functions_base.hpp"
+#include <thread>
 
 namespace gui_wallet {
    
@@ -20,6 +21,11 @@ namespace WAS{
 static void __THISCALL__ WarnYesOrNoFunc_static(void*,int,void*){}
 static void __THISCALL__ CallbackSetNewTaskGlb_static(void* owner,SetNewTask_last_args2,const std::string&){}
 
+   
+   
+   
+   
+   
 struct SConnectionStruct {
     SConnectionStruct() : fpDone(&CallbackSetNewTaskGlb_static), setPasswordFn(&WarnYesOrNoFunc_static) {
     }
@@ -35,17 +41,25 @@ struct SConnectionStruct {
    std::string  chain_id;
 };
 
-void InitializeUiInterfaceOfWallet_base(TypeWarnAndWaitFunc a_fpWarnAndWait,
-                                        TypeCallFunctionInGuiLoop2 a_fpCorrectUiCaller2);
+   
+   
+class WalletInterface {
+public:
+   static void initialize();
+   static void startConnecting(SConnectionStruct* a_conn_str, void *owner, void* clbData);
+   static void destroy();
+   static int callFunctionInGuiLoop(void* a_clbData, int64_t a_err, const std::string& a_inp, const std::string& a_result,void* a_owner,TypeCallbackSetNewTaskGlb2 a_fpFunc);
+
+public:
+   static int LoadWalletFile(SConnectionStruct* a_pWalletData);
+   static int SaveWalletFile(const SConnectionStruct& a_pWalletData);
+
+   
+};
+   
 
 
-void DestroyUiInterfaceOfWallet(void);
 
-
-int LoadWalletFile(SConnectionStruct* a_pWalletData);
-int SaveWalletFile2(const SConnectionStruct& a_pWalletData);
-
-void StartConnectionProcedure(SConnectionStruct* a_conn_str,void *owner, void*clbData);
 
 
 int SetNewTask_base(const std::string& inp_line, void* ownr, void* clbData, ...);

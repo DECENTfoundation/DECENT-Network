@@ -11,8 +11,11 @@ class InGuiLoopCaller : public QObject
 public:
     InGuiLoopCaller();
     ~InGuiLoopCaller();
-
-    void CallFunctionInGuiLoop2(SetNewTask_last_args2,const std::string& a_result,
+   
+public:
+   static InGuiLoopCaller* instance();
+   
+   void CallFunctionInGuiLoop2(SetNewTask_last_args2,const std::string& a_result,
                                 void* owner,TypeCallbackSetNewTaskGlb2 fpFnc);
 
 

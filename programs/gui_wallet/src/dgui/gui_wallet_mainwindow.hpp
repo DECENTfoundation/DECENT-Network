@@ -105,7 +105,7 @@ protected:
    
    QVBoxLayout                         m_main_layout;
    bool                                m_locked;
-   decent::gui::tools::RichDialog      m_import_key_dlg;
+   RichDialog                          m_import_key_dlg;
    int                                 m_nConnected;
    SConnectionStruct                   m_wdata2;
    PasswordDialog                      m_SetPasswordDialog;
