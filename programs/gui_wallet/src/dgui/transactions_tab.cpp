@@ -86,6 +86,47 @@ void TransactionsTab::currentUserChanged(std::string userName) {
    user.setText(QString::fromStdString(userName));
 }
 
+//<<<<<<< HEAD
+//
+//
+//
+//
+//
+//void Transactions_tab::maybeUpdateContent() {
+//    if (!m_doUpdate) {
+//        return;
+//    }
+//    
+//    m_doUpdate = false;
+//    updateContents();
+//}
+//
+//void Transactions_tab::onTextChanged(const QString& text) {
+//    
+//    m_doUpdate = true;
+//}
+//
+//
+//void Transactions_tab::createNewRow()
+//{
+//    tablewidget->setRowCount(100);
+//}
+//
+//void Transactions_tab::ArrangeSize()
+//{
+//    QSize tqsTableSize = tablewidget->size();
+//    std::vector<int> sizes = {12, 20, 16, 14, 13, 25};
+//    for (int i = 0; i < numTransactionCols; ++i) {
+//        tablewidget->setColumnWidth(i,(tqsTableSize.width()* sizes[i])/100);
+//    }
+//    
+//}
+//
+//void Transactions_tab::resizeEvent(QResizeEvent *a_event)
+//{
+//  QWidget::resizeEvent(a_event);
+//  ArrangeSize();
+//=======
 void TransactionsTab::maybeUpdateContent() {
    if (!m_doUpdate) {
       return;
@@ -93,6 +134,7 @@ void TransactionsTab::maybeUpdateContent() {
    
    m_doUpdate = false;
    updateContents();
+//>>>>>>> 6a33a1cc4b65f96d10b00a323ef41f74ee1af180
 }
 
 void TransactionsTab::onTextChanged(const QString& text) {
