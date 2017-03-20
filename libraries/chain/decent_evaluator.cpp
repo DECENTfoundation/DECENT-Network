@@ -293,33 +293,60 @@ namespace graphene { namespace chain {
       }
    }FC_CAPTURE_AND_RETHROW( (o) ) }
 
-   void_result return_escrow_submission_evaluator::do_evaluate(const return_escrow_submission_operation& o ) {}
-   void_result return_escrow_submission_evaluator::do_apply(const return_escrow_submission_operation& o ) {}
+   void_result return_escrow_submission_evaluator::do_evaluate(const return_escrow_submission_operation& o )
+   {
+	   void_result result;
+	   return result;
+   }
 
-   void_result return_escrow_buying_evaluator::do_evaluate(const return_escrow_buying_operation& o ) {}
-   void_result return_escrow_buying_evaluator::do_apply(const return_escrow_buying_operation& o ) {}
+   void_result return_escrow_submission_evaluator::do_apply(const return_escrow_submission_operation& o)
+   {
+      void_result result;
+      return result;
+   }
 
-   void_result report_stats_evaluator::do_evaluate(const report_stats_operation& o )
-   {try{
+   void_result report_stats_evaluator::do_evaluate(const report_stats_operation& o)
+   {
+	   try {   
+	   }FC_CAPTURE_AND_RETHROW((o))
 
-      }FC_CAPTURE_AND_RETHROW( (o) ) }
+      void_result result;
+      return result;
+   }
 
-   void_result report_stats_evaluator::do_apply(const report_stats_operation& o )
-   {try{
+   void_result report_stats_evaluator::do_apply(const report_stats_operation& o)
+   {
+      try {
          auto& idx = db().get_index_type<seeding_statistics_index>().indices().get<by_seeder>();
-         for( const auto& item : o.stats )
+         for (const auto& item : o.stats)
          {
             const auto &so = idx.find(item.first);
             db().modify<seeding_statistics_object>(*so, [&](seeding_statistics_object &sso) {
                sso.total_upload += sso.total_upload - item.second;
             });
          }
-      }FC_CAPTURE_AND_RETHROW( (o) ) }
+      }FC_CAPTURE_AND_RETHROW((o))
 
-   void_result pay_seeder_evaluator::do_evaluate( const pay_seeder_operation& o ){}
-   void_result pay_seeder_evaluator::do_apply( const pay_seeder_operation& o ){}
+	   void_result result;
+	   return result;
+   }
 
-   void_result finish_buying_evaluator::do_evaluate( const finish_buying_operation& o ){}
-   void_result finish_buying_evaluator::do_apply( const finish_buying_operation& o ){}
+   void_result return_escrow_buying_evaluator::do_evaluate(const return_escrow_buying_operation& o )
+   {
+	   void_result result;
+	   return result;
+   }
+
+   void_result return_escrow_buying_evaluator::do_apply(const return_escrow_buying_operation& o )
+   {
+	   void_result result;
+	   return result;
+   }
+
+   void_result pay_seeder_evaluator::do_evaluate(const pay_seeder_operation& o) { void_result result; return result; }
+   void_result pay_seeder_evaluator::do_apply( const pay_seeder_operation& o ){ void_result result; return result; }
+
+   void_result finish_buying_evaluator::do_evaluate( const finish_buying_operation& o ){ void_result result; return result; }
+   void_result finish_buying_evaluator::do_apply( const finish_buying_operation& o ){ void_result result; return result; }
 
 }} // graphene::chain
