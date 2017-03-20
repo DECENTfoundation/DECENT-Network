@@ -18,7 +18,7 @@
 #include <iostream>
 
 
-namespace decent{ namespace crypto{
+namespace decent{ namespace encrypt{
 AutoSeededRandomPool rng;
 
 delivery_proof_string::delivery_proof_string( delivery_proof gf ):G1(gf.G1),G2(gf.G2),G3(gf.G3),s(gf.s),r(gf.r){};

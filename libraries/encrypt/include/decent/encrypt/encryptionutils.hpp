@@ -48,7 +48,7 @@ const CryptoPP::Integer DECENT_EL_GAMAL_GROUP_GENERATOR(3);
 const CryptoPP::Integer DECENT_SHAMIR_ORDER("115792089237316195423570985008687907852837564279074904382605163141518161494337" );
 
 namespace decent {
-namespace crypto {
+namespace encrypt {
 
 enum encryption_results {
    ok,

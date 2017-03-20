@@ -33,13 +33,13 @@ namespace graphene { namespace chain {
       fc::ripemd160 hash;
       /// List of the seeders, which will publish the content
       vector<account_id_type> seeders;
-      vector<decent::crypto::ciphertext_string> key_parts;
+      vector<decent::encrypt::ciphertext_string> key_parts;
       /// Defines number of seeders needed to restore the encryption key
       uint32_t quorum;
       fc::time_point_sec expiration;
       asset publishing_fee;
       string synopsis;
-      decent::crypto::custody_data cd;
+      decent::encrypt::custody_data cd;
       
       account_id_type fee_payer()const { return author; }
       void validate()const;
@@ -58,7 +58,7 @@ namespace graphene { namespace chain {
       account_id_type consumer;
       asset price;
       /// Consumer's public key
-      decent::crypto::d_integer_string pubKey;
+      decent::encrypt::d_integer_string pubKey;
       
       account_id_type fee_payer()const { return consumer; }
       void validate()const;
@@ -91,7 +91,7 @@ namespace graphene { namespace chain {
       
       asset fee;
       account_id_type seeder;
-      decent::crypto::d_integer_string pubKey;
+      decent::encrypt::d_integer_string pubKey;
       /// Available space on seeder's disc dedicated to contents
       uint64_t space;
       /// The price charged to consumer for downloading 1 MB from seeder
@@ -113,7 +113,7 @@ namespace graphene { namespace chain {
       asset fee;
       account_id_type seeder;
       string URI;
-      decent::crypto::custody_proof proof;
+      decent::encrypt::custody_proof proof;
       
       account_id_type fee_payer()const { return seeder; }
       void validate()const;
@@ -130,8 +130,8 @@ namespace graphene { namespace chain {
       asset fee;
       account_id_type seeder;
       buying_id_type buying;
-      decent::crypto::delivery_proof_string proof;
-      decent::crypto::ciphertext_string key;
+      decent::encrypt::delivery_proof_string proof;
+      decent::encrypt::ciphertext_string key;
       
       account_id_type fee_payer()const { return seeder; }
       void validate()const;
