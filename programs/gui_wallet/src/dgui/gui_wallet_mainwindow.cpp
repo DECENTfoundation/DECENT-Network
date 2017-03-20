@@ -38,13 +38,9 @@ using namespace utilities;
 
 static gui_wallet::Mainwindow_gui_wallet*  s_pMainWindowInstance = NULL;
 
-std::string FindImagePath(bool& a_bRet,const char* a_image_name);
 
 int WarnAndWaitFunc(void* a_pOwner,WarnYesOrNoFuncType a_fpYesOrNo, void* a_pDataForYesOrNo,const char* a_form,...);
-
-
 int CallFunctionInGuiLoop2(SetNewTask_last_args2,const std::string& a_result,void* a_owner,TypeCallbackSetNewTaskGlb2 a_fpFunc);
-int CallFunctionInGuiLoop3(SetNewTask_last_args2,const fc::variant& a_result,void* owner,TypeCallbackSetNewTaskGlb3 fpFnc);
 
 
 /*//////////////////////////////////////////////////////////////////////////////////*/
@@ -116,9 +112,7 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
     
     
     InitializeUiInterfaceOfWallet_base(&WarnAndWaitFunc,
-                                       &CallFunctionInGuiLoop2,
-                                       &CallFunctionInGuiLoop3, this, NULL,
-                                       GetFunctionPointerAsVoid(0, &Mainwindow_gui_wallet::ManagementNewFuncGUI));
+                                       &CallFunctionInGuiLoop2);
     ConnectSlot();
    
     _downloadChecker.setSingleShot(false);
@@ -572,12 +566,6 @@ void Mainwindow_gui_wallet::TaskDoneFuncGUI(void* a_clbkArg,int64_t a_err,const 
 }
 
 
-void Mainwindow_gui_wallet::ManagementNewFuncGUI(void* a_clbkArg,int64_t a_err,const std::string& a_task,const std::string& a_result)
-{
-
-    
-}
-
 
 void Mainwindow_gui_wallet::ConnectSlot()
 {
@@ -585,7 +573,9 @@ void Mainwindow_gui_wallet::ConnectSlot()
 
     LoadWalletFile(&m_wdata2);
 
-    if(nRet == decent::gui::tools::RDB_CANCEL){return;}
+    if(nRet == decent::gui::tools::RDB_CANCEL) {
+       return;
+    }
 
     m_ActionConnect.setEnabled(false);
     m_wdata2.action = WAT::CONNECT;
@@ -593,8 +583,11 @@ void Mainwindow_gui_wallet::ConnectSlot()
     m_wdata2.setPasswordFn = +[](void*owner, int answer, void* str_ptr) {
         ((Mainwindow_gui_wallet*)owner)->SetPassword(owner, str_ptr);
     };
-    
-    m_wdata2.fpDone = (TypeCallbackSetNewTaskGlb2)GetFunctionPointerAsVoid(1,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
+   
+   // this is ugly and wrong in many ways.
+   
+    m_wdata2.fpDone = (TypeCallbackSetNewTaskGlb2)GetFunctionPointerAsVoid(0, &Mainwindow_gui_wallet::TaskDoneFuncGUI);
+   
     StartConnectionProcedure(&m_wdata2,this,WALLET_CONNECT_CODE);
 }
 

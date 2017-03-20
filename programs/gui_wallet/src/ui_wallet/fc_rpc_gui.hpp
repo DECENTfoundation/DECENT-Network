@@ -18,7 +18,6 @@
 #include <future>
 #include <atomic>
 
-typedef int (*TYPE_REPORTER)(void*owner,const char* form,...);
 
 namespace fc { namespace rpc {
 
@@ -40,7 +39,7 @@ namespace fc { namespace rpc {
       void wait();
       void format_result( const string& method, std::function<string(variant,const variants&)> formatter);
 
-      void SetNewTask_base(int a_nType,const std::string& inp_line, void* ownr, void* clbData, ...);
+      void SetNewTask_base(const std::string& inp_line, void* ownr, void* clbData, ...);
    private:
 
       void run();
@@ -50,8 +49,8 @@ namespace fc { namespace rpc {
       std::map<string,std::function<string(variant,const variants&)> > _result_formatters;
       std::future<void> _run_complete;
 
-      decent::tools::FiFo<std::string,TypeCallbackSetNewTaskGlb2>            m_Fifo;
-      decent::tools::UnnamedSemaphoreLite m_semaphore;
+      gui_wallet::FiFo<gui_wallet::TaskListItem>     m_Fifo;
+      gui_wallet::UnnamedSemaphoreLite               m_semaphore;
    };
 
 } }

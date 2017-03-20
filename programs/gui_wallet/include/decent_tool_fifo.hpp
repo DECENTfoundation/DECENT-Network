@@ -1,104 +1,135 @@
-/*
- *	File: decent_tool_fifo.hpp
- *
- *	Created on: 04 Feb 2017
- *	Created by: Davit Kalantaryan (Email: davit.kalantaryan@desy.de)
- *
- *  This file implements ...
- *
- */
-#ifndef DECENT_TOOL_FIFO_HPP
-#define DECENT_TOOL_FIFO_HPP
-
-//#define USE_FIFO_SIMPLE
+#pragma once
 
 #include <mutex>
 #include <stddef.h>
 #include "ui_wallet_functions_base.hpp"
 
-namespace decent { namespace tools{
+namespace gui_wallet {
+   
+   struct SConnectionStruct;
+   
+   struct TaskListItem {
+      typedef std::string            value_type;
+      
+      
+      TaskListItem() : callback(NULL) {}
+      TaskListItem(TypeCallbackSetNewTaskGlb2 callback_function, const std::string& a_inp, void* a_owner = NULL, void* a_clbArg=NULL)
+      : next(NULL), owner(a_owner), callbackArg(a_clbArg), input(a_inp), callback(callback_function) {
+         
+      }
+      
+      TaskListItem*                   next;
+      void*                           owner;
+      void*                           callbackArg;
+      std::string                     input;
+      TypeCallbackSetNewTaskGlb2      callback;
+   };
+   
+   
+   struct ConnectListItem {
+      typedef SConnectionStruct*     value_type;
+      
+      ConnectListItem() : input(NULL), callback(NULL) {}
+      
+      ConnectListItem(TypeCallbackSetNewTaskGlb2 callback_function, SConnectionStruct* a_inp, void* a_owner = NULL, void* a_clbArg=NULL)
+      : next(NULL), owner(a_owner), callbackArg(a_clbArg), input(a_inp), callback(callback_function) {
+         
+      }
+      
+      ConnectListItem*                next;
+      void*                           owner;
+      void*                           callbackArg;
+      SConnectionStruct*              input;
+      TypeCallbackSetNewTaskGlb2      callback;
+   };
+   
+   
+   
+   
+   template <class ListItemType>
+   class FiFo {
+   public:
+      FiFo() : m_pFirstTask(NULL), m_pLastTask(NULL) {
+      }
+      
+      virtual ~FiFo() {
+         
+         m_task_mutex.lock();
+         ListItemType* pItemTodelete = m_pFirstTask ? m_pFirstTask->next : NULL;
+         
+         while(pItemTodelete) {
+            ListItemType* pItemTemp = pItemTodelete->next;
+            
+            if (pItemTodelete != (&m_InitialTaskBuffer)) {
+               delete pItemTodelete;
+            }
+            
+            pItemTodelete = pItemTemp;
+         }
+         m_task_mutex.unlock();
+      }
+      
+      
+      bool GetFirstTask(ListItemType* firstTaskBuffer) {
+         bool bRet = false;
 
-#ifdef USE_FIFO_SIMPLE
+         m_task_mutex.lock();
+         if (m_pFirstTask) {
+            *firstTaskBuffer = *m_pFirstTask;
+            
+            if(m_pFirstTask->next) {
+               ListItemType* pTmp = m_pFirstTask->next;
 
-template <typename TypeFifoVrb>
-class FiFo
-{
-public:
-    FiFo();
-    virtual ~FiFo();
-
-    /*
-     *  return
-     *      NULL     -> there is no any task to handle
-     *      non NULL -> pointer to tast to fullfill
-     */
-    bool GetFirstTask(TypeFifoVrb* firstElementBuffer);
-    void AddNewTask(const TypeFifoVrb& a_new);
-
-protected:
-    template <typename TypeFifoVrb>
-    struct fifoListItem{
-        fifoListItem(const TypeFifoVrb& inp);
-        ~fifoListItem();
-
-        struct fifoListItem*    next;
-        TypeFifoVrb             elemnt;
-    };
-
-protected:
-    fifoListItem<TypeFifoVrb>*  m_pFirstTask;
-    fifoListItem<TypeFifoVrb>*  m_pLastTask;
-    std::mutex                          m_task_mutex;
-};
-
-
-#else  // #ifdef USE_FIFO_SIMPLE
-
-template <typename TypeInp, typename TypeTaskFnc>
-struct taskListItem{
-    taskListItem(TypeTaskFnc fn_tsk_dn,const TypeInp& inp,void* owner = NULL,void* clbArg=NULL);
-    ~taskListItem();
-
-    struct taskListItem*    next;
-    int                     type;
-    void*                   owner;
-    void*                   callbackArg;
-    TypeInp                 input;
-    union{
-    TypeTaskFnc             fn_tsk_dn2;
-    TypeCallbackSetNewTaskGlb3   fn_tsk_dn3;
-    void*                       fn_tsk_ptr;
-    };
-};
-
-template <typename TypeInp,typename TypeTaskFnc>
-class FiFo
-{
-public:
-    FiFo();
-    virtual ~FiFo();
-
-    /*
-     *  return
-     *      NULL     -> there is no any task to handle
-     *      non NULL -> pointer to tast to fullfill
-     */
-    bool GetFirstTask(decent::tools::taskListItem<TypeInp,TypeTaskFnc>* firstTaskBuffer);
-    void AddNewTask(int a_nType,const TypeInp& a_inp, void* a_owner, void* a_clbData,...);
-
-protected:
-    taskListItem<TypeInp,TypeTaskFnc>   m_InitialTaskBuffer;
-    taskListItem<TypeInp,TypeTaskFnc>*  m_pFirstTask;
-    taskListItem<TypeInp,TypeTaskFnc>*  m_pLastTask;
-    std::mutex                          m_task_mutex;
-};
+               *m_pFirstTask = *(m_pFirstTask->next);
+               if (pTmp != (&m_InitialTaskBuffer)) {
+                  delete pTmp;
+               }
+            } else {
+               m_pFirstTask = NULL;
+            }
+            bRet = true;
+         }
+         m_task_mutex.unlock();
+         return bRet;
+      }
+      
+      
+      void AddNewTask(typename ListItemType::value_type a_inp, void* a_owner, void* a_clbData,...) {
+         
+         TypeCallbackSetNewTaskGlb2 fpTaskDone;
+         va_list aFunc;
+         
+         va_start( aFunc, a_clbData );
+         fpTaskDone = va_arg( aFunc, TypeCallbackSetNewTaskGlb2);
+         va_end( aFunc );
+         
+         m_task_mutex.lock();
+         
+         if (!m_pFirstTask) {
+            m_pFirstTask = m_pLastTask = &m_InitialTaskBuffer;
+            m_pLastTask->next = NULL;
+            m_pLastTask->owner = a_owner;
+            m_pLastTask->callbackArg = a_clbData;
+            m_pLastTask->input = a_inp;
+            m_pLastTask->callback = fpTaskDone;
+            
+         } else {
+            
+            m_pLastTask->next = new ListItemType(fpTaskDone, a_inp, a_owner, a_clbData);
+            m_pLastTask = m_pLastTask->next;
+         }
+         m_task_mutex.unlock();
+      }
+      
+   protected:
+      ListItemType   m_InitialTaskBuffer;
+      ListItemType*  m_pFirstTask;
+      ListItemType*  m_pLastTask;
+      std::mutex     m_task_mutex;
+   };
+   
+   
+   
+}
 
 
-#endif  // #ifdef USE_FIFO_SIMPLE
-
-}}
-
-
-#include "decent_tool_fifo.tos"
-
-#endif // DECENT_TOOL_FIFO_HPP

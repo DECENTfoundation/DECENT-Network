@@ -40,7 +40,6 @@ add_executable( DECENT MACOSX_BUNDLE
                 include/debug_decent_application.h
                 include/decent_gui_inguiloopcaller_glb.hpp
                 include/decent_tool_fifo.hpp
-                include/decent_tool_fifo.tos
                 include/richdialog.hpp
                 include/ui_wallet_functions.hpp
                 include/ui_wallet_functions_base.hpp

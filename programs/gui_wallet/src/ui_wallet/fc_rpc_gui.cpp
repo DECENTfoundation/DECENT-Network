@@ -18,19 +18,12 @@
 
 using namespace fc::rpc;
 using namespace fc;
+using namespace gui_wallet;
 
-int CallFunctionInUiLoopGeneral(int a_nType,SetNewTask_last_args2,
-                                const fc::variant& a_resultVar,const std::string& a_resultStr,
-                                void* a_owner,void* a_fpFnc);
+int CallFunctionInUiLoopGeneral(SetNewTask_last_args2, const std::string& a_resultStr, void* a_owner, TypeCallbackSetNewTaskGlb2 a_fpFnc);
 
-gui::gui()
-   : _b_task_cancelled(false)
-   , _result_formatters()
-   , _run_complete()
-   , m_Fifo()
-   , m_semaphore()
-{
-    //m_pTaskInitial = new taskList;
+gui::gui() : _b_task_cancelled(false) {
+
 }
 
 
@@ -81,7 +74,7 @@ void gui::format_result( const string& method, std::function<string(variant,cons
 }
 
 
-void gui::SetNewTask_base(int a_nType, const std::string& a_inp_line, void* a_owner, void* a_clbData,...)
+void gui::SetNewTask_base(const std::string& a_inp_line, void* a_owner, void* a_clbData,...)
 {
     TypeCallbackSetNewTaskGlb2 fpTaskDone;
     va_list aFunc;
@@ -90,28 +83,31 @@ void gui::SetNewTask_base(int a_nType, const std::string& a_inp_line, void* a_ow
     fpTaskDone = va_arg( aFunc, TypeCallbackSetNewTaskGlb2);
     va_end( aFunc );
 
-    m_Fifo.AddNewTask(a_nType, a_inp_line,a_owner,a_clbData,fpTaskDone);
+    m_Fifo.AddNewTask(a_inp_line,a_owner,a_clbData,fpTaskDone);
     m_semaphore.post();
 }
 
 
 void gui::run()
 {
-   decent::tools::taskListItem<std::string,TypeCallbackSetNewTaskGlb2> aTaskItem(NULL,"");
-   //int nIteration;
+   TaskListItem aTaskItem(NULL,"");
 
-   while( false == _b_task_cancelled )
-   {
-      try
-      {
+
+   while( false == _b_task_cancelled ) {
+      
+      try {
+         
          m_semaphore.wait();
 
-         while(m_Fifo.GetFirstTask(&aTaskItem))
-         {
+         while(m_Fifo.GetFirstTask(&aTaskItem)) {
+            
              std::string line = aTaskItem.input;
              line += char(EOF);
              fc::variants args = fc::json::variants_from_string(line);
-             if( args.size() == 0 )continue;
+            
+             if (args.size() == 0)
+                continue;
+            
              const string& method = args[0].get_string();
 
 
@@ -126,31 +122,18 @@ void gui::run()
                  tsResult = itr->second( result, args );
              }
 
-             CallFunctionInUiLoopGeneral(aTaskItem.type,
-                                         aTaskItem.callbackArg,0,aTaskItem.input,
-                                         result,tsResult,
-                                         aTaskItem.owner,aTaskItem.fn_tsk_ptr);
+             CallFunctionInUiLoopGeneral(aTaskItem.callbackArg, 0, aTaskItem.input, tsResult, aTaskItem.owner, aTaskItem.callback);
          }
 
       } catch ( const fc::exception& e ) {
          
-          CallFunctionInUiLoopGeneral(aTaskItem.type,
-                                     aTaskItem.callbackArg,e.code(),aTaskItem.input,
-                                     fc::variant(),e.to_detail_string(),
-                                     aTaskItem.owner,aTaskItem.fn_tsk_ptr);
-          
+          CallFunctionInUiLoopGeneral(aTaskItem.callbackArg, e.code(), aTaskItem.input, e.to_detail_string(), aTaskItem.owner, aTaskItem.callback);
       } catch ( const std::exception& e ) {
            
-            CallFunctionInUiLoopGeneral(aTaskItem.type,
-                                       aTaskItem.callbackArg,UNKNOWN_EXCEPTION,aTaskItem.input,
-                                       fc::variant(),e.what(),
-                                       aTaskItem.owner,aTaskItem.fn_tsk_ptr);
+            CallFunctionInUiLoopGeneral(aTaskItem.callbackArg, UNKNOWN_EXCEPTION, aTaskItem.input, e.what(), aTaskItem.owner, aTaskItem.callback);
       } catch(...) {
           
-          CallFunctionInUiLoopGeneral(aTaskItem.type,
-                                      aTaskItem.callbackArg,UNKNOWN_EXCEPTION,aTaskItem.input,
-                                      /*__FILE__ "\nUnknown exception!"*/fc::variant(),__FILE__ "\nUnknown exception!",
-                                      aTaskItem.owner,aTaskItem.fn_tsk_ptr);
+          CallFunctionInUiLoopGeneral(aTaskItem.callbackArg,UNKNOWN_EXCEPTION,aTaskItem.input, "Unknown exception", aTaskItem.owner, aTaskItem.callback);
       }
    }
 }
