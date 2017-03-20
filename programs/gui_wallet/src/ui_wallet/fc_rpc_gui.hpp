@@ -39,7 +39,7 @@ namespace fc { namespace rpc {
       void wait();
       void format_result( const string& method, std::function<string(variant,const variants&)> formatter);
 
-      void SetNewTask_base(const std::string& inp_line, void* ownr, void* clbData, ...);
+      void SetNewTask(const std::string& inp_line, void* ownr, void* clbData, ...);
    private:
 
       void run();

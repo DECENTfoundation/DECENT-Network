@@ -22,7 +22,6 @@
 #include <fc/rpc/websocket_api.hpp>
 #include <fc/thread/thread.hpp>
 
-#include "decent_gui_inguiloopcaller_glb.hpp"
 #include "decent_tools_rwlock.hpp"
 
 
@@ -188,7 +187,7 @@ __DLL_EXPORT__ int gui_wallet::SetNewTask_base(const std::string& a_inp_line, vo
     if(s_CurrentApi.gui_api)
     {
         nReturn = 0;
-        (s_CurrentApi.gui_api)->SetNewTask_base(a_inp_line,a_owner,a_clbData,fpTaskDone3);
+        (s_CurrentApi.gui_api)->SetNewTask(a_inp_line,a_owner,a_clbData,fpTaskDone3);
     }
     else if(strstr(a_inp_line.c_str(),"load_wallet_file "))
     {

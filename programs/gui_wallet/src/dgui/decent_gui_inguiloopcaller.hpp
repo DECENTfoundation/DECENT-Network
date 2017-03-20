@@ -1,19 +1,9 @@
-/*
- *	File: decent_gui_inguiloopcaller.hpp
- *
- *	Created on: 04 Feb 2017
- *	Created by: Davit Kalantaryan (Email: davit.kalantaryan@desy.de)
- *
- *  This file implements ...
- *
- */
-#ifndef DECENT_GUI_INGUILOOPCALLER_HPP
-#define DECENT_GUI_INGUILOOPCALLER_HPP
+#pragma once
 
 #include "ui_wallet_functions_base.hpp"
 #include <QObject>
 
-namespace decent{ namespace gui{
+namespace gui_wallet {
 
 class InGuiLoopCaller : public QObject
 {
@@ -34,6 +24,4 @@ private slots:
     void NextFunctionToCallSlot2(void*,int64_t, std::string, std::string,void*,TypeCallbackSetNewTaskGlb2);
 };
 
-}}
-
-#endif // DECENT_GUI_INGUILOOPCALLER_HPP
+}

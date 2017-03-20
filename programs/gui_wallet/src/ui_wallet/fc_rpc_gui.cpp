@@ -14,7 +14,6 @@
 #include <iostream>
 #include <stdio.h>
 #include <stdarg.h>
-#include "decent_gui_inguiloopcaller_glb.hpp"
 
 using namespace fc::rpc;
 using namespace fc;
@@ -74,7 +73,7 @@ void gui::format_result( const string& method, std::function<string(variant,cons
 }
 
 
-void gui::SetNewTask_base(const std::string& a_inp_line, void* a_owner, void* a_clbData,...)
+void gui::SetNewTask(const std::string& a_inp_line, void* a_owner, void* a_clbData,...)
 {
     TypeCallbackSetNewTaskGlb2 fpTaskDone;
     va_list aFunc;
