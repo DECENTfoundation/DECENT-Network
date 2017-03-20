@@ -15,21 +15,38 @@ unset( PBC_INCLUDE_DIR )
 
 # Locate GMP.
 #message( STATUS "Looking for GMP" )
-find_library( GMP_LIBRARIES NAMES "gmp" )
-find_path( GMP_INCLUDE_DIR "gmp.h" )
-if( NOT GMP_LIBRARIES OR NOT GMP_INCLUDE_DIR )
-    message( FATAL_ERROR "GMP not found" )
+if( WIN32 )
+  set( GMP_INCLUDE_DIR $ENV{GENERATEDGMP})
+  set( GMP_LIBRARIES $ENV{GENERATEDGMP})
+else()
+   find_library( GMP_LIBRARIES NAMES "gmp" )
+   find_path( GMP_INCLUDE_DIR "gmp.h" )
 endif()
+
+if( NOT GMP_LIBRARIES )
+   message( FATAL_ERROR "GMP library not found" )
+endif()
+if( NOT GMP_INCLUDE_DIR )
+   message( FATAL_ERROR "GMP includes not found" )
+endif()
+
+
 get_filename_component( GMP_LIB_DIR "${GMP_LIBRARIES}" DIRECTORY )
 
 message( STATUS "Looking for PBC" )
-find_library( PBC_LIBRARIES NAMES "libpbc.a" )
-find_path( PBC_INCLUDE_DIR "pbc/pbc.h")
+if( WIN32 )
+   find_library( PBC_LIBRARIES NAMES "pbclib.lib" )
+   find_path( PBC_INCLUDE_DIR "pbc/include/pbc.h")
+else()
+   find_library( PBC_LIBRARIES NAMES "libpbc.a" )
+   find_path( PBC_INCLUDE_DIR "pbc/pbc.h")
+endif()
 
 if( NOT PBC_LIBRARIES OR NOT PBC_INCLUDE_DIR )
     if( WIN32 )
 
-        # TODO
+        set( PBC_INCLUDE_DIR $ENV{PBCROOT}include )
+        set( PBC_LIBRARIES $ENV{PBCROOT}pbcwin/lib/x64/Debug/pbclib.lib )
 
     else()
 
@@ -94,6 +111,9 @@ if( NOT PBC_LIBRARIES OR NOT PBC_INCLUDE_DIR )
         message( STATUS "PBC will be taken from ${PBC_LIBRARIES}" )
     endif()
 
+    if( NOT PBC_INCLUDE_DIR )
+        message( FATAL_ERROR "PBC includes not found" )
+    endif()
     if( NOT PBC_LIBRARIES OR NOT PBC_INCLUDE_DIR )
         message( FATAL_ERROR "PBC not found" )
     endif()
