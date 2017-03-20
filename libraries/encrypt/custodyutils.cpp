@@ -148,7 +148,7 @@ inline int CustodyUtils::get_data(std::fstream &file, uint32_t i, char buffer[])
          memset(buffer + left, 0, (DECENT_SIZE_OF_NUMBER_IN_THE_FIELD * DECENT_SECTORS) - left);
       }
    }
-
+   return 0;
 }
 
 
@@ -305,8 +305,12 @@ int CustodyUtils::generate_query_from_seed(mpz_t seed, unsigned int q, unsigned 
       mpz_add_ui(seedForIteration, seed, i);
 
       unsigned char *digest = (unsigned char *) calloc(32, 1);
-
+#ifdef _MSC_VER
+	  std::unique_ptr<char[]> seed_str_ptr( new char[mpz_sizeinbase(seedForIteration, 16) + 1]() ) ;
+	  char* seed_str = seed_str_ptr.get();
+#else
       char seed_str[mpz_sizeinbase(seedForIteration, 16) + 1];
+#endif
       memset((char *) seed_str, 0, mpz_sizeinbase(seedForIteration, 16) + 1);
       mpz_get_str(seed_str, 16, seedForIteration);
       fc::sha256 temp = fc::sha256::hash(seed_str, mpz_sizeinbase(seedForIteration, 16));
@@ -495,7 +499,12 @@ int CustodyUtils::verify_by_miner(const uint32_t &n, const char *u_seed, unsigne
    }
 
    unsigned int q = get_number_of_query(n);
+#ifdef _MSC_VER
+   std::unique_ptr<uint64_t[]> indices_ptr(new uint64_t[q]);
+   uint64_t* indices = indices_ptr.get();
+#else
    uint64_t indices[q];
+#endif
    element_t *v;
 
    generate_query_from_seed(seed, q, n, indices, &v);
@@ -614,7 +623,12 @@ int CustodyUtils::create_proof_of_custody(path content, const uint32_t n, const 
 
 
    //read sigmas
+#ifdef _MSC_VER
+   std::unique_ptr<element_t[]> sigmas_ptr(new element_t[n]());
+   element_t* sigmas = sigmas_ptr.get();
+#else
    element_t sigmas[n];
+#endif
    char buffer[DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED];
    for( int i = 0; i < n; i++ ) {
       cusfile.read(buffer, DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED);
