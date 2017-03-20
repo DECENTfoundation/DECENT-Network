@@ -43,7 +43,7 @@ BrowseContentTab::BrowseContentTab(Mainwindow_gui_wallet* parent) : _parent(pare
         {"Rating", 10},
         {"Size", 10},
         {"Price", 10},
-        {"Created", 10},
+        {"Uploaded", 10},
         {"Expiration", 10},
         {" ", -50},
     });

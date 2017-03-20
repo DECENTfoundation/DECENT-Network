@@ -95,7 +95,6 @@ m_getPublishersTimer(this)
     
     u_main_layout.addLayout(&m_synopsis_layout);
     u_main_layout.addWidget(&m_infoLayoutHeader);
-    //m_info_layout.addWidget(&m_infoLayoutHeader);
     
     ////////////////////////////////////////////////////////////////////////////
     /// Lifetime
@@ -189,8 +188,6 @@ m_getPublishersTimer(this)
     sim->setFixedWidth(270);
     sim->setFixedHeight(30);
     
-    //    QPixmap image(":/icon/images/browse.svg");
-    
     DecentButton* browse_samples_button = new DecentButton();
     browse_samples_button->setText("Browse");
     browse_samples_button->setFixedWidth(70);
@@ -240,8 +237,6 @@ m_getPublishersTimer(this)
     
     u_main_layout.addLayout(button);
     
-//    setLayout(&m_main_layout);
-    
     m_getPublishersTimer.setSingleShot(true);
     connect(&m_getPublishersTimer, SIGNAL(timeout()), SLOT(onGrabPublishers()));
     m_getPublishersTimer.start(1000);
@@ -272,7 +267,6 @@ void Upload_popup::onGrabPublishers() {
                                                                 QString::fromStdString(pubFreeSpace)), QString::fromStdString(pubIdStr));
         }
         
-        //obj->m_info_widget.setCellWidget(0, 3, obj->seeders);
         
     });
 }
@@ -427,7 +421,7 @@ Upload_tab::Upload_tab(Mainwindow_gui_wallet* parent) :  _content_popup(NULL), _
         {"Rating", 10},
         {"Size", 10},
         {"Price", 10},
-        {"Created", 10},
+        {"Uploaded", 10},
         {"Expiration", 10},
         {" ", -50}
 
@@ -448,7 +442,7 @@ Upload_tab::Upload_tab(Mainwindow_gui_wallet* parent) :  _content_popup(NULL), _
                                    "}");
     upload_button = new DecentButton();
     upload_button->setText("UPLOAD");
-    upload_button->setFixedWidth(100);
+    upload_button->setFixedWidth(150);
     QLabel* lab = new QLabel();
     QPixmap image(":/icon/images/search.svg");
     lab->setPixmap(image);
@@ -458,7 +452,7 @@ Upload_tab::Upload_tab(Mainwindow_gui_wallet* parent) :  _content_popup(NULL), _
     m_filterLineEdit.setStyleSheet("border: 1px solid white");
     m_filterLineEdit.setAttribute(Qt::WA_MacShowFocusRect, 0);
     
-    m_search_layout.setContentsMargins(42, 0, 0, 0);
+    m_search_layout.setContentsMargins(42, 0, 0, -50);
     m_search_layout.addWidget(lab);
     m_search_layout.addWidget(&m_filterLineEdit);
     m_search_layout.addWidget(upload_button);

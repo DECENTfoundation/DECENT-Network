@@ -29,6 +29,12 @@
 #include "decent_button.hpp"
 #include "gui_wallet_tabcontentmanager.hpp"
 
+#include <QDialog>
+#include <vector>
+#include "qt_commonheader.hpp"
+#include "gui_wallet_global.hpp"
+#include "decent_wallet_ui_gui_contentdetailsgeneral.hpp"
+
 
 
 #define INFO_LIFETIME   "Lifetime"
@@ -107,28 +113,6 @@ namespace gui_wallet
     
 }
 
-#endif // UPLOAD_TAB_HPP
-
-#ifndef UploadTab_H
-#define UploadTab_H
-
-
-#include <QWidget>
-#include <QDialog>
-#include <QTableWidget>
-#include <QVBoxLayout>
-#include <vector>
-#include <string>
-#include "qt_commonheader.hpp"
-#include <QLineEdit>
-#include <QHBoxLayout>
-#include <QComboBox>
-#include <QTimer>
-#include <QLabel>
-#include "gui_wallet_tabcontentmanager.hpp"
-#include "gui_wallet_global.hpp"
-#include "decent_wallet_ui_gui_contentdetailsgeneral.hpp"
-#include "decent_button.hpp"
 
 
 namespace gui_wallet
