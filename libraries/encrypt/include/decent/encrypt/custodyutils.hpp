@@ -3,8 +3,14 @@
 //
 
 #pragma once
-
+#if defined( MSC_VER )
+#include <include/pcb.h>
+#elif defined ( __GNUC__ )
 #include <pbc/pbc.h>
+#else
+#error "Undefined compiler platform"
+#endif
+
 #include <fstream>
 
 #include <vector>
