@@ -2,6 +2,7 @@
 #pragma once
 
 #include <decent/encrypt/custodyutils.hpp>
+#include <graphene/utilities/dirhelper.hpp>
 
 #include <fc/thread/thread.hpp>
 #include <fc/thread/mutex.hpp>
@@ -23,38 +24,31 @@
 namespace decent { namespace package {
 
 
-    class event_listener_interface {
-    public:
-        virtual ~event_listener_interface() {}
-
-    };
-
-
-    class default_event_listener : public event_listener_interface {
-    public:
-        virtual ~default_event_listener() {}
-
-    };
-
-
-    typedef std::shared_ptr<event_listener_interface>  event_listener_handle;
-    typedef std::list<event_listener_handle>           event_listener_handle_list;
-
-
     class package_manager;
+    class package_info;
+    class event_listener_interface;
+    class transfer_engine_interface;
+
+    typedef std::shared_ptr<package_info>               package_handle;
+    typedef std::set<package_handle>                    package_handle_set;
+    typedef std::shared_ptr<event_listener_interface>   event_listener_handle;
+    typedef std::list<event_listener_handle>            event_listener_handle_list;
+    typedef std::shared_ptr<transfer_engine_interface>  transfer_engine;
+    typedef std::map<std::string, transfer_engine>      proto_to_transfer_engine_map;
 
 
     class package_info {
     public:
         enum State {
             UNINITIALIZED,
+            INVALID,
             PARTIAL,
-            FULL_UNCHECKED,
-            FULL_CHECKED
+            UNCHECKED,
+            CHECKED
         };
 
         enum Action {
-            NOOP,
+            IDLE,
             PACKING,
             ENCRYPTING,
             STAGING,
@@ -95,6 +89,9 @@ namespace decent { namespace package {
         void add_event_listener(const event_listener_handle& event_listener);
         void remove_event_listener(const event_listener_handle& event_listener);
 
+        State get_state() const;
+        Action get_action() const;
+
     private:
         static boost::filesystem::path get_package_state_dir(const boost::filesystem::path& package_dir)  { return package_dir / ".state" ; }
         static boost::filesystem::path get_lock_file_path(const boost::filesystem::path& package_dir)     { return get_package_state_dir(package_dir) / "lock"; }
@@ -107,19 +104,41 @@ namespace decent { namespace package {
         void unlock_dir();
 
     private:
-        State                                              _state;
-        Action                                             _action;
-        fc::ripemd160                                      _hash;
-        boost::filesystem::path                            _parent_dir;
-        std::shared_ptr<boost::interprocess::file_lock>    _file_lock;
-        std::shared_ptr<boost::interprocess::scoped_lock<
-            boost::interprocess::file_lock>>               _file_lock_guard;
-        event_listener_handle_list                         _event_listeners;
+        mutable std::recursive_mutex  _mutex;
+        std::shared_ptr<fc::thread>   _thread;
+        State                         _state;
+        Action                        _action;
+        fc::ripemd160                 _hash;
+        boost::filesystem::path       _parent_dir;
+        std::shared_ptr<boost::interprocess::file_lock> _file_lock;
+        std::shared_ptr<boost::interprocess::scoped_lock<boost::interprocess::file_lock>> _file_lock_guard;
+        mutable std::recursive_mutex  _event_mutex;
+        event_listener_handle_list    _event_listeners;
     };
 
 
-    typedef std::shared_ptr<package_info>  package_handle;
-    typedef std::set<package_handle>       package_handle_set;
+    class event_listener_interface {
+    public:
+        virtual ~event_listener_interface() {}
+
+        virtual void package_state_change(package_info::State) {};
+        virtual void package_action_change(package_info::Action) {};
+
+        virtual void package_creation_start() {};
+        virtual void package_creation_progress(const std::string&) {};
+        virtual void package_creation_error(const std::string&) {};
+        virtual void package_creation_complete() {};
+
+        virtual void package_restoration_start() {};
+        virtual void package_restoration_progress() {};
+        virtual void package_restoration_error(const std::string&) {};
+        virtual void package_restoration_complete() {};
+
+        virtual void package_transfer_start() {};
+        virtual void package_transfer_progress() {};
+        virtual void package_transfer_error(const std::string&) {};
+        virtual void package_transfer_complete() {};
+    };
 
 
     class transfer_engine_interface {
@@ -129,15 +148,12 @@ namespace decent { namespace package {
     };
 
 
-    typedef std::shared_ptr<transfer_engine_interface>  transfer_engine;
-    typedef std::map<std::string, transfer_engine>      proto_to_transfer_engine_map;
-
-
     class package_manager {
     private:
-        package_manager();
+        explicit package_manager(const boost::filesystem::path& packages_path);
 
     public:
+        package_manager()                                   = delete;
         package_manager(const package_manager&)             = delete;
         package_manager(package_manager&&)                  = delete;
         package_manager& operator=(const package_manager&)  = delete;
@@ -146,7 +162,7 @@ namespace decent { namespace package {
         ~package_manager();
 
         static package_manager& instance() {
-            static package_manager the_package_manager;
+            static package_manager the_package_manager(graphene::utilities::decent_path_finder::instance().get_decent_data() / "packages");
             return the_package_manager;
         }
 
@@ -159,21 +175,22 @@ namespace decent { namespace package {
         package_handle get_package(const std::string& url,
                                    const event_listener_handle& event_listener = event_listener_handle());
 
-        package_handle get_package(const fc::ripemd160& hash);
+        package_handle get_package(const fc::ripemd160& hash); // TODO: do we need this?
 
         void release_package(const fc::ripemd160& hash);
         void release_package(const package_handle& package);
 
         package_handle_set get_all_known_packages() const;
         boost::filesystem::path get_packages_path() const;
+        std::shared_ptr<fc::thread> get_thread() const;
         void set_libtorrent_config(const boost::filesystem::path& libtorrent_config_file);
 
     private:
-        mutable std::mutex             _mutex;
-        std::shared_ptr<fc::thread>    _thread;
-        boost::filesystem::path        _packages_path;
-        package_handle_set             _packages;
-        proto_to_transfer_engine_map   _proto_transfer_engines;
+        mutable std::recursive_mutex  _mutex;
+        std::shared_ptr<fc::thread>   _thread;
+        boost::filesystem::path       _packages_path;
+        package_handle_set            _packages;
+        proto_to_transfer_engine_map  _proto_transfer_engines;
     };
 
 
