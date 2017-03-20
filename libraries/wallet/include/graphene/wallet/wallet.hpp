@@ -95,7 +95,7 @@ namespace graphene { namespace wallet {
          }
 
          /* private el gamal key */
-         d_integer priv_el_gamal_key;
+         DInteger priv_el_gamal_key;
 
          /** encrypted keys */
          vector<char>              cipher_keys;
@@ -131,8 +131,8 @@ namespace graphene { namespace wallet {
 
       struct el_gamal_key_pair
       {
-         d_integer private_key;
-         d_integer public_key;
+         DInteger private_key;
+         DInteger public_key;
       };
 
       struct approval_delta
@@ -706,7 +706,7 @@ namespace graphene { namespace wallet {
           * @returns true if the key was imported
           * @ingroup WalletCLI
           */
-         void import_el_gamal_key(d_integer privKey );
+         void import_el_gamal_key(DInteger privKey );
 
          /**
           * @brief Imports accounts from the other wallet file
@@ -1420,8 +1420,8 @@ namespace graphene { namespace wallet {
          signed_transaction
          submit_content(string author, string URI, string price_asset_name, string price_amount, uint64_t size,
                         fc::ripemd160 hash, vector<account_id_type> seeders, uint32_t quorum, fc::time_point_sec expiration,
-                        string publishing_fee_asset, string publishing_fee_amount, string synopsis, d_integer secret,
-                        decent::crypto::custody_data cd, bool broadcast);
+                        string publishing_fee_asset, string publishing_fee_amount, string synopsis, DInteger secret,
+                        decent::crypto::CustodyData cd, bool broadcast);
          /**
           * @brief This function is used to create package, upload package and submit content in one step.
           * @see create_package()
@@ -1525,7 +1525,7 @@ namespace graphene { namespace wallet {
           * @ingroup WalletCLI
           */
          signed_transaction deliver_keys(string seeder,
-                                         d_integer privKey,
+                                         DInteger privKey,
                                          buying_id_type buying,
                                          bool broadcast = false);
 
@@ -1547,7 +1547,7 @@ namespace graphene { namespace wallet {
           * @return restored AES key from particles
           * @ingroup WalletCLI
           */
-         d_integer restore_encryption_key(buying_id_type buying);
+         DInteger restore_encryption_key(buying_id_type buying);
 
          /**
           * @brief Generates private ElGamal key and corresponding public key.
@@ -1719,7 +1719,7 @@ namespace graphene { namespace wallet {
           * @return package hash (ripemd160 hash of package content) and content custody data
           * @ingroup WalletCLI
           */
-         std::pair<string, decent::crypto::custody_data> create_package(const std::string& content_dir, const std::string& samples_dir, const d_integer& aes_key) const;
+         std::pair<string, decent::crypto::CustodyData> create_package(const std::string& content_dir, const std::string& samples_dir, const DInteger& aes_key) const;
 
          /**
           * @brief Extract selected package
@@ -1729,7 +1729,7 @@ namespace graphene { namespace wallet {
           * @return Nothing
           * @ingroup WalletCLI
           */
-         void extract_package(const std::string& package_hash, const std::string& output_dir, const d_integer& aes_key) const;
+         void extract_package(const std::string& package_hash, const std::string& output_dir, const DInteger& aes_key) const;
 
          /**
           * @brief Download package

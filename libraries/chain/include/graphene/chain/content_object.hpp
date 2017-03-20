@@ -43,7 +43,7 @@ using namespace decent::crypto;
       uint64_t size;
       uint32_t quorum;
       string URI;
-      map<account_id_type, ciphertext_string> key_parts;
+      map<account_id_type, CiphertextString> key_parts;
       map<account_id_type, time_point_sec> last_proof;
 
       fc::ripemd160 _hash;
@@ -51,7 +51,7 @@ using namespace decent::crypto;
       uint32_t total_rating;
       uint32_t times_bought;
       asset publishing_fee_escrow;
-      decent::crypto::custody_data cd;
+      decent::crypto::CustodyData cd;
    };
    
    struct by_author;

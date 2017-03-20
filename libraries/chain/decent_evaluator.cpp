@@ -131,7 +131,7 @@ namespace graphene { namespace chain {
       if( std::find(buying.seeders_answered.begin(), buying.seeders_answered.end(), o.seeder) == buying.seeders_answered.end() )
          db().modify<buying_object>(buying, [&](buying_object& bo){
               bo.seeders_answered.push_back( o.seeder );
-              bo.key_particles.push_back( decent::crypto::ciphertext(o.key) );
+              bo.key_particles.push_back( decent::crypto::Ciphertext(o.key) );
          });
       delivered = buying.seeders_answered.size() >= content->quorum;
       //if the content has already been delivered or expired, just note the key particles and go on
