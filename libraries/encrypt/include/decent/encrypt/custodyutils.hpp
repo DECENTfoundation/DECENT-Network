@@ -52,13 +52,13 @@ using namespace boost::filesystem;
 
 
 
-class custody_utils
+class CustodyUtils
 {
 public:
-   custody_utils();
-   ~custody_utils();
+   CustodyUtils();
+   ~CustodyUtils();
 
-   int verify_by_miner(custody_data cd, custody_proof proof){
+   int verify_by_miner(CustodyData cd, CustodyProof proof){
       mpz_t s;
       mpz_init(s);
       mpz_import(s, 5, 1, sizeof(uint32_t), 0, 0, proof.seed.data);
@@ -67,11 +67,11 @@ public:
       return ret;
    }
 
-   int create_custody_data(boost::filesystem::path content, custody_data & cd){
+   int create_custody_data(boost::filesystem::path content, CustodyData & cd){
       return create_custody_data(content, cd.n, (char*)cd.u_seed.data, cd.pubKey.data);
    }
 
-   int create_proof_of_custody(boost::filesystem::path content, custody_data cd, custody_proof& proof){
+   int create_proof_of_custody(boost::filesystem::path content, CustodyData cd, CustodyProof& proof){
       mpz_t s;
       mpz_init(s);
       mpz_import(s, 5, 1, sizeof(uint32_t), 0, 0, proof.seed.data);

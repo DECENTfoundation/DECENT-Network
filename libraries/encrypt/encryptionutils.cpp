@@ -21,13 +21,13 @@
 namespace decent{ namespace encrypt{
 AutoSeededRandomPool rng;
 
-delivery_proof_string::delivery_proof_string( delivery_proof gf ):G1(gf.G1),G2(gf.G2),G3(gf.G3),s(gf.s),r(gf.r){};
-ciphertext_string::ciphertext_string(ciphertext ct) : C1(ct.C1), D1(ct.D1) {};
-d_integer_string::d_integer_string(const d_integer& d) { s = d.to_string(); };
-d_integer_string& d_integer_string::operator=(const d_integer& d) { s = d.to_string();return *this;};
-d_integer_string::d_integer_string() { d_integer a=CryptoPP::Integer::Zero();s = a.to_string(); };
+DeliveryProofString::DeliveryProofString( DeliveryProof gf ):G1(gf.G1),G2(gf.G2),G3(gf.G3),s(gf.s),r(gf.r){};
+CiphertextString::CiphertextString(Ciphertext ct) : C1(ct.C1), D1(ct.D1) {};
+DIntegerString::DIntegerString(const DInteger& d) { s = d.to_string(); };
+DIntegerString& DIntegerString::operator=(const DInteger& d) { s = d.to_string();return *this;};
+DIntegerString::DIntegerString() { DInteger a=CryptoPP::Integer::Zero();s = a.to_string(); };
 
-std::string d_integer::to_string() const
+std::string DInteger::to_string() const
 {
    std::ostringstream oss;
    oss<<*this;
@@ -36,14 +36,14 @@ std::string d_integer::to_string() const
 }
 
 
-d_integer d_integer::from_string(std::string from)
+DInteger DInteger::from_string(std::string from)
 {
    CryptoPP::Integer tmp(from.c_str());
-   d_integer tmp2(tmp);
+   DInteger tmp2(tmp);
    return tmp2;
 }
 
-encryption_results AES_encrypt_file(const std::string &fileIn, const std::string &fileOut, const aes_key &key) {
+encryption_results AES_encrypt_file(const std::string &fileIn, const std::string &fileOut, const AesKey &key) {
     try {
         byte iv[CryptoPP::AES::BLOCKSIZE];
         memset(iv, 0, sizeof(iv));
@@ -66,7 +66,7 @@ encryption_results AES_encrypt_file(const std::string &fileIn, const std::string
     return ok;
 }
 
-encryption_results AES_decrypt_file(const std::string &fileIn, const std::string &fileOut, const aes_key &key) {
+encryption_results AES_decrypt_file(const std::string &fileIn, const std::string &fileOut, const AesKey &key) {
     try {
        byte iv[CryptoPP::AES::BLOCKSIZE];
        memset(iv, 0, sizeof(iv));
@@ -88,22 +88,22 @@ encryption_results AES_decrypt_file(const std::string &fileIn, const std::string
     return ok;
 }
 
-d_integer generate_private_el_gamal_key()
+DInteger generate_private_el_gamal_key()
 {
     CryptoPP::Integer im (rng, CryptoPP::Integer::One(), DECENT_EL_GAMAL_MODULUS_512 -1);
-    d_integer key = im;
+    DInteger key = im;
     return key;
 }
 
-d_integer get_public_el_gamal_key(const d_integer &privateKey)
+DInteger get_public_el_gamal_key(const DInteger &privateKey)
 {
     ModularArithmetic ma(DECENT_EL_GAMAL_MODULUS_512);
-    d_integer publicKey = ma.Exponentiate(DECENT_EL_GAMAL_GROUP_GENERATOR, privateKey);
+    DInteger publicKey = ma.Exponentiate(DECENT_EL_GAMAL_GROUP_GENERATOR, privateKey);
 
     return publicKey;
 }
 
-encryption_results el_gamal_encrypt(const point &message, const d_integer &publicKey, ciphertext &result)
+encryption_results el_gamal_encrypt(const point &message, const DInteger &publicKey, Ciphertext &result)
 {
     //elog("el_gamal_encrypt called ${m} ${pk} ",("m", message)("pk", publicKey));
     ElGamalKeys::PublicKey key;
@@ -139,7 +139,7 @@ encryption_results el_gamal_encrypt(const point &message, const d_integer &publi
     return ok;
 }
 
-encryption_results el_gamal_decrypt(const ciphertext &input, const d_integer &privateKey, point &plaintext)
+encryption_results el_gamal_decrypt(const Ciphertext &input, const DInteger &privateKey, point &plaintext)
 {
     ElGamalKeys::PrivateKey key;
     key.AccessGroupParameters().Initialize(DECENT_EL_GAMAL_MODULUS_512, DECENT_EL_GAMAL_GROUP_GENERATOR);
@@ -174,7 +174,7 @@ encryption_results el_gamal_decrypt(const ciphertext &input, const d_integer &pr
     return ok;
 }
 
-d_integer hash_elements(ciphertext t1, ciphertext t2, d_integer key1, d_integer key2, d_integer G1, d_integer G2, d_integer G3)
+DInteger hash_elements(Ciphertext t1, Ciphertext t2, DInteger key1, DInteger key2, DInteger G1, DInteger G2, DInteger G3)
 {
 
    CryptoPP::Weak1::MD5 hashier;
@@ -217,8 +217,8 @@ d_integer hash_elements(ciphertext t1, ciphertext t2, d_integer key1, d_integer 
 }
 
 bool
-verify_delivery_proof(const delivery_proof &proof, const ciphertext &first, const ciphertext &second,
-                      const d_integer &firstPulicKey, const d_integer &secondPublicKey)
+verify_delivery_proof(const DeliveryProof &proof, const Ciphertext &first, const Ciphertext &second,
+                      const DInteger &firstPulicKey, const DInteger &secondPublicKey)
 {
    //elog("verify_delivery_proof called with params ${p} ${f} ${s} ${pk1} ${pk2}",("p", proof)("f", first)("s", second)("pk1", firstPulicKey)("pk2", secondPublicKey));
 
@@ -230,13 +230,13 @@ verify_delivery_proof(const delivery_proof &proof, const ciphertext &first, cons
    key2.AccessGroupParameters().Initialize(DECENT_EL_GAMAL_MODULUS_512, DECENT_EL_GAMAL_GROUP_GENERATOR);
    key2.SetPublicElement(secondPublicKey);
 
-   d_integer x = hash_elements(first, second, firstPulicKey, secondPublicKey, proof.G1, proof.G2, proof.G3);
+   DInteger x = hash_elements(first, second, firstPulicKey, secondPublicKey, proof.G1, proof.G2, proof.G3);
 
    ElGamal::GroupParameters groupParams;
    ModularArithmetic mr(DECENT_EL_GAMAL_MODULUS_512);
 
-   d_integer t1 = mr.Exponentiate(DECENT_EL_GAMAL_GROUP_GENERATOR, proof.s);
-   d_integer t2 = mr.Multiply(mr.Exponentiate(key1.GetPublicElement(), x), proof.G1);
+   DInteger t1 = mr.Exponentiate(DECENT_EL_GAMAL_GROUP_GENERATOR, proof.s);
+   DInteger t2 = mr.Multiply(mr.Exponentiate(key1.GetPublicElement(), x), proof.G1);
 
 
    if(t1 != t2)
@@ -259,8 +259,8 @@ verify_delivery_proof(const delivery_proof &proof, const ciphertext &first, cons
 
 
 encryption_results
-encrypt_with_proof(const point &message, const d_integer &privateKey, const d_integer &destinationPublicKey,
-                   const ciphertext &incoming, ciphertext &outgoing, delivery_proof &proof)
+encrypt_with_proof(const point &message, const DInteger &privateKey, const DInteger &destinationPublicKey,
+                   const Ciphertext &incoming, Ciphertext &outgoing, DeliveryProof &proof)
 {
 
    try{
@@ -303,7 +303,7 @@ encrypt_with_proof(const point &message, const d_integer &privateKey, const d_in
       proof.G2 = mr.Exponentiate(subGroupGenerator, b2);
       proof.G3 = mr.Multiply(mr.Exponentiate(incoming.D1, b1), mr.MultiplicativeInverse(mr.Exponentiate(destinationPublicKey, b2)));
 
-      d_integer x = hash_elements(incoming, outgoing, myPublicElement, public_key.GetPublicElement(), proof.G1, proof.G2, proof.G3);
+      DInteger x = hash_elements(incoming, outgoing, myPublicElement, public_key.GetPublicElement(), proof.G1, proof.G2, proof.G3);
 
       proof.s = privateExponent * x + b1;
       proof.r = randomizer * x + b2;
@@ -321,10 +321,10 @@ encrypt_with_proof(const point &message, const d_integer &privateKey, const d_in
    return ok;
 }
 
-void shamir_secret::calculate_split()
+void ShamirSecret::calculate_split()
 {
    split.clear();
-   std::vector<d_integer> coef;
+   std::vector<DInteger> coef;
    coef.reserve(quorum);
    coef.push_back(secret);
 
@@ -335,30 +335,30 @@ void shamir_secret::calculate_split()
       coef.push_back(a);
    }
 
-   for(d_integer x=d_integer::One(); x<=shares; x++)
+   for(DInteger x=DInteger::One(); x<=shares; x++)
    {
-      d_integer y = coef[0];
+      DInteger y = coef[0];
       for (int i=1; i<quorum; i++)
          y = mr.Add(y, mr.Multiply(coef[i],mr.Exponentiate(x,i)));
       split.push_back(std::make_pair(x,y));
    }
 }
 
-void shamir_secret::calculate_secret()
+void ShamirSecret::calculate_secret()
 {
-   d_integer res = d_integer::Zero();
+   DInteger res = DInteger::Zero();
    ModularArithmetic mr(DECENT_SHAMIR_ORDER);
 
    for( const auto& s: split )
    {
-      d_integer numerator = d_integer::One();
-      d_integer denominator = d_integer::One();
+      DInteger numerator = DInteger::One();
+      DInteger denominator = DInteger::One();
       for (const auto& p: split)
       {
          if ( p == s )
             continue;
-         d_integer startposition = s.first;
-         d_integer nextposition = mr.Inverse(p.first);
+         DInteger startposition = s.first;
+         DInteger nextposition = mr.Inverse(p.first);
          numerator = mr.Multiply(nextposition, numerator);
          denominator = mr.Multiply(mr.Add(startposition, nextposition), denominator);
       }
