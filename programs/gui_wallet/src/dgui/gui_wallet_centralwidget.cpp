@@ -109,13 +109,18 @@ CentralWigdet::CentralWigdet(QBoxLayout* a_pAllLayout, Mainwindow_gui_wallet* a_
     
 
     m_main_tabs.setStyleSheet("QTabBar::tab{"
+                              "font:bold;"
                               " height: 40px; width: 181px;"
-                              "color:rgb(27,176,104);background-color:white;"
-                              "border-left: 1 solid rgb(240,240,240);"
-                              "border-top: 1 solid rgb(240,240,240);"
-                              "border-bottom: 1 solid rgb(240,240,240);}"
+                              "color:rgb(0,0,0);background-color:white;"
+                              "border-left: 0px;"
+                              "border-top: 1px solid rgb(240,240,240);"
+                              "border-bottom: 1px solid rgb(240,240,240);}"
                               "QTabBar::tab:selected{"
-                              "color:white;background-color:rgb(27,176,104);}"
+                              "color:rgb(27,176,104);"
+                              "border-bottom:3px solid rgb(27,176,104);"
+                              "border-top: 0px;"
+                              "border-left:0px;"
+                              "border-right:0px;}"
                                );
 
     PrepareGUIprivate(a_pAllLayout);
@@ -373,25 +378,35 @@ void CentralWigdet::resizeEvent ( QResizeEvent * a_event )
     {
         s = QString::number(each_width - 11);
         m_main_tabs.setStyleSheet("QTabBar::tab{"
+                                  "font:bold;"
                                   " height: 40px; width: " + s + "px;"
-                                  "color:rgb(27,176,104);background-color:white;"
-                                  "border-left: 1 solid rgb(240,240,240);"
+                                  "color:rgb(0,0,0);background-color:white;"
+                                  "border-left:0;"
                                   "border-top: 1 solid rgb(240,240,240);"
                                   "border-bottom: 1 solid rgb(240,240,240);}"
                                   "QTabBar::tab:selected{"
-                                  "color:white;background-color:rgb(27,176,104);}"
+                                  "color: rgb(27,176,104);"
+                                  "border-bottom:3px solid rgb(27,176,104);"
+                                  "border-top: 0px;"
+                                  "border-left:0px;"
+                                  "border-right:0px;}"
                                   );
     }
     else
     {
         m_main_tabs.setStyleSheet("QTabBar::tab{"
+                                  "font:bold;"
                                   " height: 40px; width: " + s + "px;"
-                                  "color:rgb(27,176,104);background-color:white;"
-                                  "border-left: 1 solid rgb(240,240,240);"
+                                  "color:rgb(0,0,0);background-color:white;"
+                                  "border-left:0;"
                                   "border-top: 1 solid rgb(240,240,240);"
                                   "border-bottom: 1 solid rgb(240,240,240);}"
                                   "QTabBar::tab:selected{"
-                                  "color:white;background-color:rgb(27,176,104);}"
+                                  "color: rgb(27,176,104);"
+                                  "border-bottom:3px solid rgb(27,176,104);"
+                                  "border-top: 0px;"
+                                  "border-left:0px;"
+                                  "border-right:0px;}"
                                   );
     }
 

@@ -112,9 +112,14 @@ void Overview_tab::updateContents() {
       auto content = contents[i];
       
       NewButton* transaction = new NewButton(content[0].get<std::string>());
+       //transaction->load(QString(":/icons/transaction5.svg"));
       NewButton* transfer = new NewButton(content[0].get<std::string>());
+       //transfer->load(QString(":/icons/transaction5.svg"));
       transaction->setAlignment(Qt::AlignCenter);
       transfer->setAlignment(Qt::AlignCenter);
+       
+
+
       
       QPixmap image1(":/icon/images/transaction.png");
       QPixmap image(":/icon/images/transfer.png");
