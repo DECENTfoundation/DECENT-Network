@@ -496,11 +496,18 @@ void Upload_tab::onTextChanged(const QString& text) {
 
 void Upload_tab::updateContents() {
     std::string filterText = m_filterLineEdit.text().toStdString();
+
+    if( filterText.empty() )
+    {
+        filterText = GlobalEvents::instance().getCurrentUser();
+    }
     
     std::string a_result;
     
     
     try {
+        
+        
         RunTask("search_content \"" + filterText + "\" 100", a_result);
         
         auto contents = json::parse(a_result);
