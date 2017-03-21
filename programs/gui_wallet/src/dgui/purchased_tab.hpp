@@ -48,6 +48,7 @@ public:
    void ShowDigitalContentsGUI(std::vector<SDigitalContent>& contents);
    
 public:
+    
    virtual void content_activated() {
       m_contentUpdateTimer.start();
    }
@@ -66,7 +67,7 @@ public slots:
    void extractPackage();
    
    void show_content_popup();
-   
+   void paintRow();
    
 private:
    QTimer        m_contentUpdateTimer;

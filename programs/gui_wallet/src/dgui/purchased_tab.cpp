@@ -1,13 +1,3 @@
-/*
- *	File: decent_wallet_ui_gui_purchasedtab.hpp
- *
- *	Created on: 11 Feb 2017
- *	Created by: Davit Kalantaryan (Email: davit.kalantaryan@desy.de)
- *
- *  This file implements ...
- *
- */
-
 #include "purchased_tab.hpp"
 #include <QHeaderView>
 #include <QPushButton>
@@ -23,19 +13,17 @@ using namespace gui_wallet;
 using namespace nlohmann;
 
 
-
-
 PurchasedTab::PurchasedTab() {
    
    m_pTableWidget.set_columns({
-      {" ", -50},
-      {"Title", 20},
+      {"Title", 10},
       {"Rating", 10},
-      {"Size", 10},
-      {"Price", 10},
-      {"Created", 10},
-      {"Status", 30},
-      {"Progress", 20}
+      {"Size", 15},
+      {"Price", 15},
+      {"Created", 15},
+      {"Status", 15},
+      {"", 10},
+      {" ", 10}
    });
    
    
@@ -86,8 +74,6 @@ void PurchasedTab::onTextChanged(const QString& text) {
 }
 
 void PurchasedTab::updateContents() {
-   
-   
    auto& global_instance = gui_wallet::GlobalEvents::instance();
    std::string str_current_username = global_instance.getCurrentUser();
    
@@ -115,8 +101,8 @@ void PurchasedTab::updateContents() {
          
       }
       
-      QPixmap info_image(":/icon/images/info1.svg");
-      QPixmap extract_image(":/icon/images/extract.svg");
+      QPixmap info_image(":/icon/images/pop_up.png");
+      QPixmap extract_image(":/icon/images/export.png");
       QFont bold_font( "Open Sans Bold", 14, QFont::Bold);
       
       _current_content.clear();
@@ -200,18 +186,19 @@ void PurchasedTab::updateContents() {
          info_icon->setPixmap(info_image);
          info_icon->setAlignment(Qt::AlignCenter);
          connect(info_icon, SIGNAL(clicked()), this, SLOT(show_content_popup()));
-         m_pTableWidget.setCellWidget(i, 0, info_icon);
+         m_pTableWidget.setCellWidget(i, 7, info_icon);
+
          
          
-         m_pTableWidget.setItem(i, 1, new QTableWidgetItem(QString::fromStdString(synopsis)));
-         m_pTableWidget.setItem(i, 2, new QTableWidgetItem(QString::number(rating)));
-         m_pTableWidget.setItem(i, 3, new QTableWidgetItem(QString::number(size) + tr(" MB")));
-         m_pTableWidget.setItem(i, 4, new QTableWidgetItem(QString::number(price) + " DCT"));
+         m_pTableWidget.setItem(i, 0, new QTableWidgetItem(QString::fromStdString(synopsis)));
+         m_pTableWidget.setItem(i, 1, new QTableWidgetItem(QString::number(rating)));
+         m_pTableWidget.setItem(i, 2, new QTableWidgetItem(QString::number(size) + tr(" MB")));
+         m_pTableWidget.setItem(i, 3, new QTableWidgetItem(QString::number(price) + " DCT"));
          
          
          std::string s_time = time.substr(0, time.find("T"));
          
-         m_pTableWidget.setItem(i, 5, new QTableWidgetItem(QString::fromStdString(s_time)));
+         m_pTableWidget.setItem(i, 4, new QTableWidgetItem(QString::fromStdString(s_time)));
          
          
          std::string download_status_str;
@@ -235,7 +222,7 @@ void PurchasedTab::updateContents() {
             status_text = status_text + tr(" ") + QString::fromStdString(download_status["status_text"].get<std::string>());
          }
          
-         m_pTableWidget.setItem(i, 6, new QTableWidgetItem(status_text));
+         m_pTableWidget.setItem(i, 5, new QTableWidgetItem(status_text));
          
          if (total_key_parts == 0) {
             total_key_parts = 1;
@@ -250,9 +237,9 @@ void PurchasedTab::updateContents() {
          progress *= 100; // Percent
          
          if ((received_download_bytes < total_download_bytes) || !is_delivered) {
-            m_pTableWidget.setItem(i, 7, new QTableWidgetItem(QString::number(progress) + "%"));
-            m_pTableWidget.item(i, 7)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
-            m_pTableWidget.item(i, 7)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+            m_pTableWidget.setItem(i, 6, new QTableWidgetItem(QString::number(progress) + "%"));
+            m_pTableWidget.item(i, 6)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+            m_pTableWidget.item(i, 6)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
          } else {
             
             EventPassthrough<ClickableLabel>* extract_icon = new EventPassthrough<ClickableLabel>();
@@ -267,11 +254,11 @@ void PurchasedTab::updateContents() {
             extract_icon->setAlignment(Qt::AlignCenter);
 
             connect(extract_icon, SIGNAL(clicked()), this, SLOT(extractPackage()));
-            m_pTableWidget.setCellWidget(i, 7, extract_icon);
+            m_pTableWidget.setCellWidget(i, 6, extract_icon);
          }
          
          
-         for(int j = 1; j < m_pTableWidget.columnCount() - 1; ++j)
+         for(int j = 0; j < m_pTableWidget.columnCount() - 2; ++j)
          {
             m_pTableWidget.item(i, j)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
             m_pTableWidget.item(i, j)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
@@ -285,8 +272,34 @@ void PurchasedTab::updateContents() {
       std::cout << ex.what() << std::endl;
    }
    
+    connect(&m_pTableWidget , SIGNAL(MouseWasMoved()),this,SLOT(paintRow()));
+
    
-   
+}
+
+void PurchasedTab::paintRow()
+{
+    QPixmap info_image(":/icon/images/pop_up.png");
+    QPixmap extract_image(":/icon/images/export.png");
+    QPixmap info_image_white(":/icon/images/pop_up1.png");
+    QPixmap extract_image_white(":/icon/images/export1.png");
+    int row = m_pTableWidget.getCurrentHighlightedRow();
+    for(int i = 0; i < m_pTableWidget.rowCount(); ++i)
+    {
+        if(i == row)
+        {
+            if(((QLabel*)m_pTableWidget.cellWidget(i,6)) != NULL) {  ((QLabel*)m_pTableWidget.cellWidget(i,6))->setPixmap(extract_image_white);}
+            ((QLabel*)m_pTableWidget.cellWidget(i,7))->setPixmap(info_image_white);
+        }
+        else
+        {
+            if(((QLabel*)m_pTableWidget.cellWidget(i,6)) != NULL)
+            {
+                ((QLabel*)m_pTableWidget.cellWidget(i,6))->setPixmap(extract_image);
+            }
+            ((QLabel*)m_pTableWidget.cellWidget(i,7))->setPixmap(info_image);
+        }
+    }
 }
 
 void PurchasedTab::extractPackage() {
@@ -311,7 +324,6 @@ void PurchasedTab::extractPackage() {
    } catch (const std::exception& ex) {
       ALERT_DETAILS("Failed to extract package", ex.what());
    }
-   
 }
 
 
@@ -327,9 +339,4 @@ void PurchasedTab::show_content_popup() {
    _details_dialog = new ContentDetailsBase();
    _details_dialog->execCDB(_current_content[id]);
 }
-
-
-
-
-
 
