@@ -55,7 +55,7 @@ public:
 	fc::ripemd160 get_hash() const { return _hash; }
 	int get_size() const;
 	bool is_valid() const { return _hash != fc::ripemd160(); }
-	uint32_t create_proof_of_custody(const decent::encrypt::custody_data& cd, decent::encrypt::custody_proof& proof) const;
+	uint32_t create_proof_of_custody(const decent::encrypt::CustodyData& cd, decent::encrypt::CustodyProof& proof) const;
 
 private:
 	boost::filesystem::path  _package_path;
@@ -151,7 +151,7 @@ public:
 	package_object create_package( const boost::filesystem::path& content_path,
 								   const boost::filesystem::path& samples, 
 								   const fc::sha512& key,
-                          		   decent::encrypt::custody_data& cd);
+                          	decent::encrypt::CustodyData& cd);
 
 	bool unpack_package( const boost::filesystem::path& destination_directory, 
 						 const package_object& package,
@@ -180,7 +180,8 @@ public:
     void set_libtorrent_config(const boost::filesystem::path& libtorrent_config_file);
     boost::filesystem::path get_libtorrent_config() const;
 
-    uint32_t create_proof_of_custody(const boost::filesystem::path& content_file, const decent::encrypt::custody_data& cd, decent::encrypt::custody_proof& proof);
+    uint32_t create_proof_of_custody(const boost::filesystem::path& content_file, const decent::encrypt::CustodyData& cd, decent::encrypt::CustodyProof& proof);
+
     void print_all_transfers();
 
 private:
@@ -193,7 +194,7 @@ private:
     mutable fc::mutex                  _mutex;
 	boost::filesystem::path            _packages_path;
     boost::filesystem::path            _libtorrent_config_file;
-    decent::encrypt::custody_utils      _custody_utils;
+    decent::encrypt::CustodyUtils      _custody_utils;
 	protocol_handler_map               _protocol_handlers;
 	transfer_map                       _transfers;
     int                                _next_transfer_id;
