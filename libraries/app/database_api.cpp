@@ -1821,11 +1821,13 @@ vector<content_object> database_api_impl::list_content_by_bought( uint32_t count
    auto itr = idx.begin();
 
    while(count-- && itr != idx.end())
+   {
       if( itr->expiration >= _db.head_block_time() )
          result.emplace_back(*itr);
       else
          ++count;
-   ++itr;
+      ++itr;
+   }
 
    return result;
 }
