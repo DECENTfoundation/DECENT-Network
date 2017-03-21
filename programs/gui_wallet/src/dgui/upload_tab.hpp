@@ -156,7 +156,7 @@ namespace gui_wallet
         void show_content_popup();
         void content_was_bought();
         void upload_popup();
-        
+        void paintRow();
     protected:
         QVBoxLayout     m_main_layout;
         QHBoxLayout     m_search_layout;

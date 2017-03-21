@@ -662,7 +662,26 @@ void Upload_tab::ShowDigitalContentsGUI() {
         
         ++index;
     }
-    
+    connect(&m_pTableWidget , SIGNAL(MouseWasMoved()),this,SLOT(paintRow()));
+
+}
+
+void Upload_tab::paintRow()
+{
+    QPixmap info_image(":/icon/images/pop_up.png");
+    QPixmap info_image_white(":/icon/images/pop_up1.png");
+    int row = m_pTableWidget.getCurrentHighlightedRow();
+    for(int i = 0; i < m_pTableWidget.rowCount(); ++i)
+    {
+        if(i == row)
+        {
+            ((NewButton*)m_pTableWidget.cellWidget(i,6))->setPixmap(info_image_white);
+        }
+        else
+        {
+            ((NewButton*)m_pTableWidget.cellWidget(i,6))->setPixmap(info_image);
+        }
+    }
 }
 
 void Upload_tab::upload_popup()
