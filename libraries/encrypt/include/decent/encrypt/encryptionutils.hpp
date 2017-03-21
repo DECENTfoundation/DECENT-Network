@@ -35,6 +35,7 @@ using CryptoPP::PublicKey;
 using CryptoPP::ModularArithmetic;
 
 #include <cryptopp/pubkey.h>
+#include <fc/crypto/sha256.hpp>
 
 
 #define DECENT_EL_GAMAL_GROUP_ELEMENT_SIZE 64 //bytes
@@ -89,6 +90,7 @@ encryption_results AES_encrypt_file(const std::string &fileIn, const std::string
 encryption_results AES_decrypt_file(const std::string &fileIn, const std::string &fileOut, const AesKey &key);
 
 DInteger generate_private_el_gamal_key();
+DInteger generate_private_el_gamal_key_from_secret(fc::sha256 secret);
 
 DInteger get_public_el_gamal_key(const DInteger &privateKey);
 
