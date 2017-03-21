@@ -345,6 +345,20 @@ namespace decent { namespace package {
 }                                                               \
 
 
+#define PACKAGE_INFO_CHANGE_STATE(new_state)                         \
+{                                                                    \
+    _state = new_state;                                              \
+    PACKAGE_INFO_GENERATE_EVENT(package_state_change, ( _state ) );  \
+}                                                                    \
+
+
+#define PACKAGE_INFO_CHANGE_ACTION(new_action)                         \
+{                                                                      \
+    _action = new_action;                                              \
+    PACKAGE_INFO_GENERATE_EVENT(package_action_change, ( _action ) );  \
+}                                                                      \
+
+
     package_info::package_info(package_manager& manager,
                                const boost::filesystem::path& content_dir_path,
                                const boost::filesystem::path& samples_dir_path,
@@ -357,8 +371,7 @@ namespace decent { namespace package {
     {
         add_event_listener(event_listener);
 
-        _state = PARTIAL;
-        PACKAGE_INFO_GENERATE_EVENT(package_state_change, ( _state ) );
+        PACKAGE_INFO_CHANGE_STATE(PARTIAL);
         PACKAGE_INFO_GENERATE_EVENT(package_creation_start, ( ) );
 
         _thread->async([&] () {
@@ -388,8 +401,7 @@ namespace decent { namespace package {
 //              PACKAGE_INFO_GENERATE_EVENT(package_creation_progress, ( ) );
 
 
-                _action = PACKING;
-                PACKAGE_INFO_GENERATE_EVENT(package_action_change, ( _action ) );
+                PACKAGE_INFO_CHANGE_ACTION(PACKING);
 
                 const auto zip_file_path = temp_dir_path / "content.zip";
 
@@ -415,10 +427,9 @@ namespace decent { namespace package {
                     }
                 }
 
-                _action = ENCRYPTING;
-                PACKAGE_INFO_GENERATE_EVENT(package_action_change, ( _action ) );
+                PACKAGE_INFO_CHANGE_ACTION(ENCRYPTING);
 
-                if (space(temp_dir_path).available < file_size(zip_file_path) * 1.5) { // Safety margin
+                if (space(temp_dir_path).available < file_size(zip_file_path) * 1.5) { // Safety margin.
                     FC_THROW("Not enough storage space in ${path} to create package", ("path", temp_dir_path.string()) );
                 }
 
@@ -434,8 +445,7 @@ namespace decent { namespace package {
                     _hash = utilities::calculate_hash(aes_file_path);
                 }
 
-                _action = STAGING;
-                PACKAGE_INFO_GENERATE_EVENT(package_action_change, ( _action ) );
+                PACKAGE_INFO_CHANGE_ACTION(STAGING);
 
                 manager.release_package(_hash);
 
@@ -465,40 +475,32 @@ namespace decent { namespace package {
 
                 remove_all(temp_dir_path);
 
-                _state = CHECKED;
-                _action = IDLE;
-                PACKAGE_INFO_GENERATE_EVENT(package_state_change, ( _state ) );
-                PACKAGE_INFO_GENERATE_EVENT(package_action_change, ( _action ) );
+                PACKAGE_INFO_CHANGE_STATE(CHECKED);
+                PACKAGE_INFO_CHANGE_ACTION(IDLE);
                 PACKAGE_INFO_GENERATE_EVENT(package_creation_complete, ( ) );
             }
             catch ( const fc::exception& ex ) {
-                _state = INVALID;
-                _action = IDLE;
-                PACKAGE_INFO_GENERATE_EVENT(package_state_change, ( _state ) );
-                PACKAGE_INFO_GENERATE_EVENT(package_action_change, ( _action ) );
-                PACKAGE_INFO_GENERATE_EVENT(package_creation_error, ( ex.what() ) );
                 remove_all(temp_dir_path);
                 unlock_dir();
+                PACKAGE_INFO_CHANGE_STATE(INVALID);
+                PACKAGE_INFO_CHANGE_ACTION(IDLE);
+                PACKAGE_INFO_GENERATE_EVENT(package_creation_error, ( ex.what() ) );
                 throw;
             }
             catch ( const std::exception& ex ) {
-                _state = INVALID;
-                _action = IDLE;
-                PACKAGE_INFO_GENERATE_EVENT(package_state_change, ( _state ) );
-                PACKAGE_INFO_GENERATE_EVENT(package_action_change, ( _action ) );
-                PACKAGE_INFO_GENERATE_EVENT(package_creation_error, ( ex.what() ) );
                 remove_all(temp_dir_path);
                 unlock_dir();
+                PACKAGE_INFO_CHANGE_STATE(INVALID);
+                PACKAGE_INFO_CHANGE_ACTION(IDLE);
+                PACKAGE_INFO_GENERATE_EVENT(package_creation_error, ( ex.what() ) );
                 throw;
             }
             catch ( ... ) {
-                _state = INVALID;
-                _action = IDLE;
-                PACKAGE_INFO_GENERATE_EVENT(package_state_change, ( _state ) );
-                PACKAGE_INFO_GENERATE_EVENT(package_action_change, ( _action ) );
-                PACKAGE_INFO_GENERATE_EVENT(package_creation_error, ( "unknown" ) );
                 remove_all(temp_dir_path);
                 unlock_dir();
+                PACKAGE_INFO_CHANGE_STATE(INVALID);
+                PACKAGE_INFO_CHANGE_ACTION(IDLE);
+                PACKAGE_INFO_GENERATE_EVENT(package_creation_error, ( "unknown" ) );
                 throw;
             }
 
@@ -518,8 +520,7 @@ namespace decent { namespace package {
 
         manager.release_package(package_hash);
 
-        _state = PARTIAL;
-        PACKAGE_INFO_GENERATE_EVENT(package_state_change, ( _state ) );
+        PACKAGE_INFO_CHANGE_STATE(PARTIAL);
         PACKAGE_INFO_GENERATE_EVENT(package_restoration_start, ( ) );
         
         _thread->async([&] () {
@@ -535,45 +536,35 @@ namespace decent { namespace package {
 
                 lock_dir();
 
+                // TODO: recheck?
 
+                PACKAGE_INFO_CHANGE_STATE(UNCHECKED);
 
+                // TODO: restore the state
 
-                // TODO : restore (and recheck?) the state
+                PACKAGE_INFO_CHANGE_ACTION(IDLE);
 
-
-
-
-                _state = CHECKED;
-                _action = IDLE;
-                PACKAGE_INFO_GENERATE_EVENT(package_state_change, ( _state ) );
-                PACKAGE_INFO_GENERATE_EVENT(package_action_change, ( _action ) );
                 PACKAGE_INFO_GENERATE_EVENT(package_restoration_complete, ( ) );
             }
             catch ( const fc::exception& ex ) {
-                _state = INVALID;
-                _action = IDLE;
-                PACKAGE_INFO_GENERATE_EVENT(package_state_change, ( _state ) );
-                PACKAGE_INFO_GENERATE_EVENT(package_action_change, ( _action ) );
-                PACKAGE_INFO_GENERATE_EVENT(package_restoration_error, ( ex.what() ) );
                 unlock_dir();
+                PACKAGE_INFO_CHANGE_STATE(INVALID);
+                PACKAGE_INFO_CHANGE_ACTION(IDLE);
+                PACKAGE_INFO_GENERATE_EVENT(package_restoration_error, ( ex.what() ) );
                 throw;
             }
             catch ( const std::exception& ex ) {
-                _state = INVALID;
-                _action = IDLE;
-                PACKAGE_INFO_GENERATE_EVENT(package_state_change, ( _state ) );
-                PACKAGE_INFO_GENERATE_EVENT(package_action_change, ( _action ) );
-                PACKAGE_INFO_GENERATE_EVENT(package_restoration_error, ( ex.what() ) );
                 unlock_dir();
+                PACKAGE_INFO_CHANGE_STATE(INVALID);
+                PACKAGE_INFO_CHANGE_ACTION(IDLE);
+                PACKAGE_INFO_GENERATE_EVENT(package_restoration_error, ( ex.what() ) );
                 throw;
             }
             catch ( ... ) {
-                _state = INVALID;
-                _action = IDLE;
-                PACKAGE_INFO_GENERATE_EVENT(package_state_change, ( _state ) );
-                PACKAGE_INFO_GENERATE_EVENT(package_action_change, ( _action ) );
-                PACKAGE_INFO_GENERATE_EVENT(package_restoration_error, ( "unknown" ) );
                 unlock_dir();
+                PACKAGE_INFO_CHANGE_STATE(INVALID);
+                PACKAGE_INFO_CHANGE_ACTION(IDLE);
+                PACKAGE_INFO_GENERATE_EVENT(package_restoration_error, ( "unknown" ) );
                 throw;
             }
 
@@ -590,8 +581,7 @@ namespace decent { namespace package {
     {
         add_event_listener(event_listener);
 
-        _state = PARTIAL;
-        PACKAGE_INFO_GENERATE_EVENT(package_state_change, ( _state ) );
+        PACKAGE_INFO_CHANGE_STATE(PARTIAL);
         PACKAGE_INFO_GENERATE_EVENT(package_transfer_start, ( ) );
 
         _thread->async([&] () {
@@ -615,37 +605,29 @@ namespace decent { namespace package {
 
 
 
-                _state = CHECKED;
-                _action = IDLE;
-                PACKAGE_INFO_GENERATE_EVENT(package_state_change, ( _state ) );
-                PACKAGE_INFO_GENERATE_EVENT(package_action_change, ( _action ) );
+                PACKAGE_INFO_CHANGE_STATE(CHECKED);
+                PACKAGE_INFO_CHANGE_ACTION(IDLE);
                 PACKAGE_INFO_GENERATE_EVENT(package_transfer_complete, ( ) );
             }
             catch ( const fc::exception& ex ) {
-                _state = INVALID;
-                _action = IDLE;
-                PACKAGE_INFO_GENERATE_EVENT(package_state_change, ( _state ) );
-                PACKAGE_INFO_GENERATE_EVENT(package_action_change, ( _action ) );
-                PACKAGE_INFO_GENERATE_EVENT(package_transfer_error, ( ex.what() ) );
                 unlock_dir();
+                PACKAGE_INFO_CHANGE_STATE(INVALID);
+                PACKAGE_INFO_CHANGE_ACTION(IDLE);
+                PACKAGE_INFO_GENERATE_EVENT(package_transfer_error, ( ex.what() ) );
                 throw;
             }
             catch ( const std::exception& ex ) {
-                _state = INVALID;
-                _action = IDLE;
-                PACKAGE_INFO_GENERATE_EVENT(package_state_change, ( _state ) );
-                PACKAGE_INFO_GENERATE_EVENT(package_action_change, ( _action ) );
-                PACKAGE_INFO_GENERATE_EVENT(package_transfer_error, ( ex.what() ) );
                 unlock_dir();
+                PACKAGE_INFO_CHANGE_STATE(INVALID);
+                PACKAGE_INFO_CHANGE_ACTION(IDLE);
+                PACKAGE_INFO_GENERATE_EVENT(package_transfer_error, ( ex.what() ) );
                 throw;
             }
             catch ( ... ) {
-                _state = INVALID;
-                _action = IDLE;
-                PACKAGE_INFO_GENERATE_EVENT(package_state_change, ( _state ) );
-                PACKAGE_INFO_GENERATE_EVENT(package_action_change, ( _action ) );
-                PACKAGE_INFO_GENERATE_EVENT(package_transfer_error, ( "unknown" ) );
                 unlock_dir();
+                PACKAGE_INFO_CHANGE_STATE(INVALID);
+                PACKAGE_INFO_CHANGE_ACTION(IDLE);
+                PACKAGE_INFO_GENERATE_EVENT(package_transfer_error, ( "unknown" ) );
                 throw;
             }
 
@@ -657,6 +639,18 @@ namespace decent { namespace package {
         // TODO: cleanup
 
         unlock_dir();
+    }
+
+    void package_info::consume(const boost::filesystem::path& dir_path) {
+    }
+
+    void package_info::cancel_consuming() {
+    }
+
+    void package_info::seed() {
+    }
+
+    void package_info::cancel_seeding() {
     }
 
     void package_info::add_event_listener(const event_listener_handle& event_listener) {

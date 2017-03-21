@@ -86,6 +86,12 @@ namespace decent { namespace package {
         ~package_info();
 
     public:
+        void consume(const boost::filesystem::path& dir_path);
+        void cancel_consuming();
+
+        void seed();
+        void cancel_seeding();
+
         void add_event_listener(const event_listener_handle& event_listener);
         void remove_event_listener(const event_listener_handle& event_listener);
 
