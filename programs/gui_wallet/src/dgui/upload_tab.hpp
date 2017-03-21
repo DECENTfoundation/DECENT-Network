@@ -69,8 +69,8 @@ namespace gui_wallet
         
     public:
         Upload_popup();
-        virtual ~Upload_popup();
-        public slots:
+
+    public slots:
         void browseContent();
         void browseSamples();
         void uploadContent();

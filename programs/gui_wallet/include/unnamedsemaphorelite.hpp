@@ -1,15 +1,4 @@
-/*
- *	File: unnamedsemaphorelite.hpp
- *
- *	Created on: 14 Dec 2016
- *	Created by: Davit Kalantaryan (Email: davit.kalantaryan@desy.de)
- *
- *  This file semaphore for interprocess usage
- *  This semaphore implemets only 2 functions wait() and post()
- *
- */
-#ifndef UNNAMEDSEMAPHORELITE_HPP
-#define UNNAMEDSEMAPHORELITE_HPP
+#pragma once
 
 #if defined(WIN32)
 #include <windows.h>
@@ -17,22 +6,27 @@
 #include <dispatch/dispatch.h>
 #else
 #include <semaphore.h>
-#define SHARING_TYPE	0/* 0 means semaphores is shared between threads in same process */
+#define SHARING_TYPE	0 /* 0 means semaphores is shared between threads in same process */
 #endif
 
-namespace decent{ namespace tools{
+namespace gui_wallet {
 
-#ifndef TYPE_SEMA_defined
-#define TYPE_SEMA_defined
-#if defined(WIN32)
-typedef HANDLE TYPE_SEMA;
-#elif defined(__APPLE__)
-typedef dispatch_semaphore_t TYPE_SEMA;
-#else
-typedef sem_t TYPE_SEMA;
+   
+#ifndef SEMAPHORE_TYPE_DEFINED
+   
+   #define SEMAPHORE_TYPE_DEFINED
+   
+   #if defined(WIN32)
+      typedef HANDLE SemaphoreType;
+   #elif defined(__APPLE__)
+      typedef dispatch_semaphore_t SemaphoreType;
+   #else
+      typedef sem_t SemaphoreType;
+   #endif
+   
 #endif
-#endif  // #ifndef TYPE_SEMA_defined
 
+   
 class UnnamedSemaphoreLite
 {
 public:
@@ -81,9 +75,8 @@ public:
     }
 
 private:
-    TYPE_SEMA m_Semaphore;
+    SemaphoreType m_Semaphore;
 };
 
-}}
+}
 
-#endif // UNNAMEDSEMAPHORELITE_HPP
