@@ -113,15 +113,15 @@ void seeding_plugin_impl::handle_request_to_buy(const operation_history_object &
       return;
    }
 
-   d_integer destPubKey = decent::crypto::d_integer::from_string(rtb_op.pubKey);
-   decent::crypto::ciphertext orig = co.key_parts.at(seeder_account.id);
-   decent::crypto::point message;
-   auto result = decent::crypto::el_gamal_decrypt(orig, sritr->content_privKey, message);
-   FC_ASSERT(result == decent::crypto::ok);
+   DInteger destPubKey = decent::encrypt::DInteger::from_string(rtb_op.pubKey);
+   decent::encrypt::Ciphertext orig = co.key_parts.at(seeder_account.id);
+   decent::encrypt::point message;
+   auto result = decent::encrypt::el_gamal_decrypt(orig, sritr->content_privKey, message);
+   FC_ASSERT(result == decent::encrypt::ok);
    deliver_keys_operation op;
-   decent::crypto::ciphertext key;
-   decent::crypto::delivery_proof proof;
-   result = decent::crypto::encrypt_with_proof(message, sritr->content_privKey, destPubKey, orig, key, proof);
+   decent::encrypt::Ciphertext key;
+   decent::encrypt::DeliveryProof proof;
+   result = decent::encrypt::encrypt_with_proof(message, sritr->content_privKey, destPubKey, orig, key, proof);
    op.key = key;
    op.proof = proof;
    const auto &bidx = db.get_index_type<graphene::chain::buying_index>().indices().get<graphene::chain::by_URI_consumer>();
@@ -214,7 +214,9 @@ seeding_plugin_impl::generate_por(my_seeding_id_type so_id, graphene::package::p
    if( fc::time_point(generate_time) - fc::seconds(POR_WAKEUP_INTERVAL_SEC) <= ( fc::time_point::now() ) )
    {
       ilog("seeding plugin_impl: generate_por() - generating PoR");
-      decent::crypto::custody_proof proof;
+
+      decent::encrypt::CustodyProof proof;
+
       auto dyn_props = db.get_dynamic_global_properties();
       fc::ripemd160 b_id = dyn_props.head_block_id;
       uint32_t b_num = dyn_props.head_block_number;
@@ -348,7 +350,7 @@ void seeding_plugin::plugin_initialize( const boost::program_options::variables_
    database().add_index< primary_index < my_seeder_index > >();
 
    fc::optional<fc::ecc::private_key> private_key;
-   d_integer content_key;
+   DInteger content_key;
    account_id_type seeder;
    uint64_t free_space;
    uint32_t price;
@@ -370,7 +372,7 @@ void seeding_plugin::plugin_initialize( const boost::program_options::variables_
 
       if( options.count("content-private-key")) {
          try {
-            content_key = decent::crypto::d_integer::from_string(options["content-private-key"].as<string>());
+            content_key = decent::encrypt::DInteger::from_string(options["content-private-key"].as<string>());
          } catch( ... ) {
             FC_THROW("Invalid content private key ${key_string}",
                      ("key_string", options["content-private-key"].as<string>()));
