@@ -120,7 +120,7 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
 
 Mainwindow_gui_wallet::~Mainwindow_gui_wallet() {
    
-   WalletInterface::SaveWalletFile(m_wdata2);
+   WalletInterface::saveWalletFile(m_wdata2);
    WalletInterface::destroy();
 }
 
@@ -550,21 +550,17 @@ void Mainwindow_gui_wallet::ConnectSlot()
 {
     int nRet = RDB_OK;
 
-    WalletInterface::LoadWalletFile(&m_wdata2);
+    WalletInterface::loadWalletFile(&m_wdata2);
 
     if(nRet == RDB_CANCEL) {
        return;
     }
 
     m_ActionConnect.setEnabled(false);
-    m_wdata2.action = WAT::CONNECT;
     
     m_wdata2.setPasswordFn = +[](void*owner, int answer, void* str_ptr) {
         ((Mainwindow_gui_wallet*)owner)->SetPassword(owner, str_ptr);
     };
-   
-   
-   m_wdata2.fpDone = NULL;
    
    WalletInterface::startConnecting(&m_wdata2);
 }

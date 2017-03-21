@@ -232,7 +232,7 @@ Upload_tab::Upload_tab()
 
 void Upload_tab::onGrabPublishers() {
     
-    SetNewTask("list_publishers_by_price 100", this, NULL, +[](void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
+    AsyncTask("list_publishers_by_price 100", this, NULL, +[](void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
         Upload_tab* obj = (Upload_tab*)owner;
 
         auto publishers = json::parse(a_result);
@@ -354,13 +354,9 @@ void Upload_tab::uploadContent() {
     submitCommand += " true";                                           //broadcast
 
 
-    SetNewTask(submitCommand, this, NULL, +[](void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
+    AsyncTask(submitCommand, this, NULL, +[](void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
         ((Upload_tab*)owner)->uploadDone(a_clbkArg, a_err, a_task, a_result);
     });
-}
-
-Upload_tab::~Upload_tab()
-{
 }
 
 void Upload_tab::uploadDone(void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {

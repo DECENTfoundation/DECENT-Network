@@ -49,6 +49,33 @@
 using namespace gui_wallet;
 
 
+namespace {
+   
+class task_exception : public std::exception
+{
+public:
+   task_exception(std::string const& str_info) noexcept : m_str_info(str_info) {}
+   virtual ~task_exception() {}
+   
+   char const* what() const noexcept override
+   {
+      return m_str_info.c_str();
+   }
+private:
+   std::string m_str_info;
+};
+
+struct task_result {
+   bool        m_bDone = false;
+   int64_t     m_error = 0;
+   std::string m_strResult;
+};
+
+}
+
+
+
+
 struct StructApi {
     StructApi(): wal_api(NULL), gui_api(NULL) {
 
@@ -183,7 +210,7 @@ void WalletInterface::destroy() {
 
 
 
-int gui_wallet::SetNewTask(const std::string& a_inp_line, void* a_owner, void* a_clbData, TypeCallbackSetNewTaskGlb2 fpTaskDone) {
+int WalletInterface::SetNewTask(const std::string& a_inp_line, void* a_owner, void* a_clbData, TypeCallbackSetNewTaskGlb2 fpTaskDone) {
     int nReturn = 0;
    
     std::lock_guard<RWLock> lock(*s_pMutex_for_cur_api);
@@ -201,12 +228,10 @@ int gui_wallet::SetNewTask(const std::string& a_inp_line, void* a_owner, void* a
         if(*cpcWlFlName)
         {
             aConStr.wallet_file_name = cpcWlFlName;
-            nReturn = WalletInterface::LoadWalletFile(&aConStr);
+            nReturn = WalletInterface::loadWalletFile(&aConStr);
 
             if(!nReturn)
             {
-                aConStr.action = WAT::CONNECT;
-                aConStr.fpDone = fpTaskDone;
                 s_pConnectionRequestFifo->AddNewTask(&aConStr,a_owner,a_clbData, fpTaskDone);
                 s_pSema_for_connection_thread->post();
             }
@@ -222,7 +247,7 @@ int gui_wallet::SetNewTask(const std::string& a_inp_line, void* a_owner, void* a
 }
 
 
-int WalletInterface::LoadWalletFile(SConnectionStruct* a_pWalletData) {
+int WalletInterface::loadWalletFile(SConnectionStruct* a_pWalletData) {
     int nReturn = 0;
 
     if(!a_pWalletData) {
@@ -251,7 +276,7 @@ int WalletInterface::LoadWalletFile(SConnectionStruct* a_pWalletData) {
 
 
 
-int WalletInterface::SaveWalletFile(const SConnectionStruct& a_WalletData) {
+int WalletInterface::saveWalletFile(const SConnectionStruct& a_WalletData) {
     int nReturn = 0;
     s_pMutex_for_cur_api->lock();
    
@@ -287,26 +312,7 @@ static int ConnectToNewWitness(const ConnectListItem& a_con_data) {
    try {
       
       SConnectionStruct* pStruct = a_con_data.input;
-      
-      if(pStruct->action == WAT::SAVE2)
-      {
-         int nReturn = WalletInterface::SaveWalletFile(*pStruct);
-         WalletInterface::callFunctionInGuiLoop(a_con_data.callbackArg,(int64_t)nReturn, __CONNECTION_CLB_, "Saving procedure",a_con_data.owner,a_con_data.callback);
-         return nReturn;
-      }
-      else if(pStruct->action == WAT::LOAD2)
-      {
-         
-         int nReturn = WalletInterface::LoadWalletFile((SConnectionStruct*)a_con_data.callbackArg);
-         
-         WalletInterface::callFunctionInGuiLoop(a_con_data.callbackArg,(int64_t)nReturn, __CONNECTION_CLB_, "Loading procedure",a_con_data.owner,a_con_data.callback);
-         return nReturn;
-      }
-      else if(pStruct->action != WAT::CONNECT)
-      {
-         WalletInterface::callFunctionInGuiLoop(a_con_data.callbackArg,UNKNOWN_EXCEPTION, __CONNECTION_CLB_, "Unknown option",a_con_data.owner,a_con_data.callback);
-         return UNKNOWN_EXCEPTION;
-      }
+
       
       StructApi aApiToCreate;
       s_wdata_ptr->ws_server = pStruct->ws_server;
@@ -383,7 +389,7 @@ static int ConnectToNewWitness(const ConnectListItem& a_con_data) {
       
       
       
-      WalletInterface::LoadWalletFile(pStruct);
+      WalletInterface::loadWalletFile(pStruct);
       
       std::string possible_input = __CONNECTION_CLB_;
       if(pStruct->wallet_file_name != "" ){possible_input = "load_wallet_file " + pStruct->wallet_file_name;}
@@ -416,45 +422,7 @@ static int ConnectToNewWitness(const ConnectListItem& a_con_data) {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-class task_exception : public std::exception
-{
-public:
-    task_exception(std::string const& str_info) noexcept
-    : m_str_info(str_info) {}
-    virtual ~task_exception() {}
-    
-    char const* what() const noexcept override
-    {
-        return m_str_info.c_str();
-    }
-private:
-    std::string m_str_info;
-};
-
-struct task_result
-{
-    task_result()
-    : m_bDone(false)
-    , m_error(0)
-    , m_strResult() {}
-    
-    bool m_bDone;
-    int64_t m_error;
-    std::string m_strResult;
-};
-
-void gui_wallet::RunTask(std::string const& str_command, std::string& str_result)
+void WalletInterface::RunTask(std::string const& str_command, std::string& str_result)
 {
     task_result result;
     SetNewTask(str_command,

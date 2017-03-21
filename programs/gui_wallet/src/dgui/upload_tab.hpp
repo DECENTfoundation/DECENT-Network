@@ -63,7 +63,7 @@ namespace gui_wallet
 
     public:
         Upload_tab();
-        virtual ~Upload_tab();
+
     public slots:
         void browseContent();
         void browseSamples();
