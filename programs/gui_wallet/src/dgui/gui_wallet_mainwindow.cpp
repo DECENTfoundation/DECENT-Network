@@ -9,8 +9,6 @@
  */
 
 
-#define     WALLET_CONNECT_CODE     ((void*)-2)
-
 
 #include <QMenuBar>
 #include <QMoveEvent>
@@ -38,16 +36,7 @@ using namespace utilities;
 
 static gui_wallet::Mainwindow_gui_wallet*  s_pMainWindowInstance = NULL;
 
-std::string FindImagePath(bool& a_bRet,const char* a_image_name);
 
-int WarnAndWaitFunc(void* a_pOwner,WarnYesOrNoFuncType a_fpYesOrNo, void* a_pDataForYesOrNo,const char* a_form,...);
-
-
-int CallFunctionInGuiLoop2(SetNewTask_last_args2,const std::string& a_result,void* a_owner,TypeCallbackSetNewTaskGlb2 a_fpFunc);
-int CallFunctionInGuiLoop3(SetNewTask_last_args2,const fc::variant& a_result,void* owner,TypeCallbackSetNewTaskGlb3 fpFnc);
-
-
-/*//////////////////////////////////////////////////////////////////////////////////*/
 
 Mainwindow_gui_wallet::Mainwindow_gui_wallet()
         :
@@ -115,23 +104,24 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
     
     
     
-    InitializeUiInterfaceOfWallet_base(&WarnAndWaitFunc,
-                                       &CallFunctionInGuiLoop2,
-                                       &CallFunctionInGuiLoop3, this, NULL,
-                                       GetFunctionPointerAsVoid(0, &Mainwindow_gui_wallet::ManagementNewFuncGUI));
+    WalletInterface::initialize();
     ConnectSlot();
    
     _downloadChecker.setSingleShot(false);
     _downloadChecker.setInterval(5000);
     connect(&_downloadChecker, SIGNAL(timeout()), this, SLOT(CheckDownloads()));
     _downloadChecker.start();
-    
+   
+   
+   connect(&GlobalEvents::instance(), SIGNAL(walletConnected()), this, SLOT(DisplayWalletContentGUI()));
+   connect(&GlobalEvents::instance(), SIGNAL(walletConnectionError(std::string)), this, SLOT(DisplayConnectionError(std::string)));
+   
 }
 
-Mainwindow_gui_wallet::~Mainwindow_gui_wallet()
-{
-    SaveWalletFile2(m_wdata2);
-    DestroyUiInterfaceOfWallet();   
+Mainwindow_gui_wallet::~Mainwindow_gui_wallet() {
+   
+   WalletInterface::saveWalletFile(m_wdata2);
+   WalletInterface::destroy();
 }
 
 
@@ -420,7 +410,9 @@ void Mainwindow_gui_wallet::CheckDownloads()
 }
 
 
-
+void Mainwindow_gui_wallet::DisplayConnectionError(std::string errorMessage) {
+   ALERT_DETAILS("Could not connect to wallet", errorMessage.c_str());
+}
 
 
 void Mainwindow_gui_wallet::DisplayWalletContentGUI()
@@ -474,9 +466,9 @@ void Mainwindow_gui_wallet::ImportKeySlot()
     }
 
     QPoint thisPos = pos();
-    decent::gui::tools::RET_TYPE aRet = m_import_key_dlg.execRD(&thisPos,cvsUsKey);
+    RET_TYPE aRet = m_import_key_dlg.execRD(&thisPos,cvsUsKey);
     
-    if(aRet == decent::gui::tools::RDB_CANCEL){
+    if(aRet == RDB_CANCEL){
         return ;
     }
 
@@ -556,49 +548,24 @@ void Mainwindow_gui_wallet::HelpSlot()
 
 
 
-void Mainwindow_gui_wallet::TaskDoneFuncGUI(void* a_clbkArg,int64_t a_err,const std::string& a_task,const std::string& a_result)
-{
-
-    
-    if(a_clbkArg == WALLET_CONNECT_CODE) {
-        if(a_err)
-        {
-            ALERT_DETAILS("Could not connect to wallet", a_result.c_str());
-            return;
-        }
-        
-        DisplayWalletContentGUI();
-        return;
-    }
-
-   
-}
-
-
-void Mainwindow_gui_wallet::ManagementNewFuncGUI(void* a_clbkArg,int64_t a_err,const std::string& a_task,const std::string& a_result)
-{
-
-    
-}
-
 
 void Mainwindow_gui_wallet::ConnectSlot()
 {
-    int nRet(decent::gui::tools::RDB_OK);
+    int nRet = RDB_OK;
 
-    LoadWalletFile(&m_wdata2);
+    WalletInterface::loadWalletFile(&m_wdata2);
 
-    if(nRet == decent::gui::tools::RDB_CANCEL){return;}
+    if(nRet == RDB_CANCEL) {
+       return;
+    }
 
     m_ActionConnect.setEnabled(false);
-    m_wdata2.action = WAT::CONNECT;
-    
+   m_wdata2.owner = this;
     m_wdata2.setPasswordFn = +[](void*owner, int answer, void* str_ptr) {
         ((Mainwindow_gui_wallet*)owner)->SetPassword(owner, str_ptr);
     };
-    
-    m_wdata2.fpDone = (TypeCallbackSetNewTaskGlb2)GetFunctionPointerAsVoid(1,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
-    StartConnectionProcedure(&m_wdata2,this,WALLET_CONNECT_CODE);
+   
+   WalletInterface::startConnecting(&m_wdata2);
 }
 
 

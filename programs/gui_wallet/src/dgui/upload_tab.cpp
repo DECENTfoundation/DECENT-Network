@@ -243,11 +243,11 @@ m_getPublishersTimer(this)
 }
 
 void Upload_popup::onGrabPublishers() {
-    
-    SetNewTask("list_publishers_by_price 100", this, NULL, +[](void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
-        Upload_popup* obj = (Upload_popup*)owner;
-        
-        auto publishers = json::parse(a_result);
+   
+    AsyncTask("list_publishers_by_price 100", this, NULL, +[](void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
+       Upload_popup* obj = (Upload_popup*)owner;
+       
+       auto publishers = json::parse(a_result);
         
         for (int r = 0; r < publishers.size(); ++r) {
             std::string pubIdStr = publishers[r]["seeder"].get<std::string>();
@@ -363,18 +363,15 @@ void Upload_popup::uploadContent() {
     submitCommand += " \"" + m_life_time + "T23:59:59\"";                  //expiration
     submitCommand += " \"" + escape_string(synopsis) + "\"";            //synopsis
     submitCommand += " true";                                           //broadcast
-    
-    
-    SetNewTask(submitCommand, this, NULL, +[](void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
+
+
+    AsyncTask(submitCommand, this, NULL, +[](void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
         ((Upload_popup*)owner)->uploadDone(a_clbkArg, a_err, a_task, a_result);
     });
 }
 
-Upload_popup::~Upload_popup()
-{
-}
-
 void Upload_popup::uploadDone(void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
+
     if (a_err != 0) {
         ALERT("Failed to submit content");
         setEnabled(true);
