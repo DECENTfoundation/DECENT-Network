@@ -34,26 +34,6 @@ using namespace gui_wallet;
 InGuiThreatCaller* s_pWarner = NULL;
 
 
-int WarnAndWaitFunc(void* a_pOwner,WarnYesOrNoFuncType a_fpYesOrNo,
-                           void* a_pDataForYesOrNo,const char* a_form,...)
-{
-   QString aString;
-
-   va_list args;
-
-   va_start( args, a_form );
-   aString.vsprintf(a_form,args);
-   va_end( args );
-
-   s_pWarner->m_nRes = -1;
-   s_pWarner->m_pParent2 = (QWidget*)a_pOwner;
-   s_pWarner->EmitShowMessageBox(aString, a_fpYesOrNo, a_pDataForYesOrNo);
-   s_pWarner->m_sema.wait();
-    
-    return 0;
-}
-
-
 gui_wallet::application::application(int argc, char** argv)
     :
       QApplication(argc,argv)
@@ -71,8 +51,7 @@ gui_wallet::application::application(int argc, char** argv)
 }
 
 
-gui_wallet::application::~application()
-{
+gui_wallet::application::~application() {
     delete s_pWarner;
 }
 
@@ -88,9 +67,8 @@ InGuiThreatCaller::InGuiThreatCaller()
              this, SLOT(MakeCallFuncSlot(SInGuiThreadCallInfo)) );
 }
 
-InGuiThreatCaller::~InGuiThreatCaller()
-{
-    //
+InGuiThreatCaller* InGuiThreatCaller::instance() {
+   return s_pWarner;
 }
 
 void InGuiThreatCaller::EmitShowMessageBox(const QString& a_str,WarnYesOrNoFuncType a_fpYesOrNo,void* a_pDataForYesOrNo)

@@ -42,11 +42,14 @@ public:
    
     UnnamedSemaphoreLite                m_sema;
 public:
-    InGuiThreatCaller();
-    ~InGuiThreatCaller();
-    void EmitShowMessageBox(const QString& a_str,WarnYesOrNoFuncType a_fpYesOrNo,void* a_pDataForYesOrNo);
-    void EmitCallFunc(SInGuiThreadCallInfo a_call_info);
+   InGuiThreatCaller();
+   ~InGuiThreatCaller() {}
 
+   void EmitShowMessageBox(const QString& a_str,WarnYesOrNoFuncType a_fpYesOrNo,void* a_pDataForYesOrNo);
+   void EmitCallFunc(SInGuiThreadCallInfo a_call_info);
+
+   static InGuiThreatCaller* instance();
+   
 public slots:
     void MakeShowMessageBoxSlot(const QString& a_str,WarnYesOrNoFuncType a_fpYesOrNo,void* a_pDataForYesOrNo);
     void MakeCallFuncSlot(SInGuiThreadCallInfo a_call_info);

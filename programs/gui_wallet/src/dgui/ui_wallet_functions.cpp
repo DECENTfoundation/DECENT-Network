@@ -19,8 +19,8 @@
 #include "ui_wallet_functions.hpp"
 #include "fc_rpc_gui.hpp"
 #include "unnamedsemaphorelite.hpp"
-#include "decent_tool_fifo.hpp"
 #include "gui_wallet_global.hpp"
+#include "gui_wallet_application.hpp"
 
 #include <QCoreApplication>
 #include <QEventLoop>
@@ -34,16 +34,6 @@
    #include <unistd.h>
    #define Sleep(__x__) usleep(1000*(__x__))
 #endif
-
-#ifndef __DLL_EXPORT__
-   #ifdef __MSC_VER
-      #define __DLL_EXPORT__ _declspec(dllexport)
-   #else
-      #define __DLL_EXPORT__
-   #endif
-#endif
-
-
 
 
 using namespace gui_wallet;
@@ -98,12 +88,8 @@ static std::thread*                                             s_pConnectionThr
 static volatile int   s_nConThreadRun;
 static StructApi      s_CurrentApi;
 
-static int ConnectToNewWitness(const ConnectListItem& item);
 
 
-
-
-int WarnAndWaitFunc(void* a_pOwner,WarnYesOrNoFuncType a_fpYesOrNo, void* a_pDataForYesOrNo,const char* a_form,...);
 
 
 void QtDelay( int millisecondsToWait )
@@ -151,7 +137,7 @@ void WalletInterface::connectedCallback(void* owner, void* a_clbData, int64_t a_
 
 
 void WalletInterface::startConnecting(SConnectionStruct* connectionInfo) {
-   s_pConnectionRequestFifo->AddNewTask(connectionInfo, NULL, NULL, &WalletInterface::connectedCallback);
+   s_pConnectionRequestFifo->AddNewTask(connectionInfo, connectionInfo->owner, NULL, &WalletInterface::connectedCallback);
    s_pSema_for_connection_thread->post();
 }
 
@@ -168,7 +154,7 @@ void WalletInterface::connectionThreadFunction() {
       
       while(s_pConnectionRequestFifo->GetFirstTask(&aTaskItem))
       {
-         pConnectionThread = new std::thread(&ConnectToNewWitness, aTaskItem);
+         pConnectionThread = new std::thread(&WalletInterface::connectToNewWitness, aTaskItem);
          if(pConnectionThread){
             pConnectionThread->detach();
             delete pConnectionThread;
@@ -210,7 +196,7 @@ void WalletInterface::destroy() {
 
 
 
-int WalletInterface::SetNewTask(const std::string& a_inp_line, void* a_owner, void* a_clbData, TypeCallbackSetNewTaskGlb2 fpTaskDone) {
+int WalletInterface::setNewTask(const std::string& a_inp_line, void* a_owner, void* a_clbData, TypeCallbackSetNewTaskGlb2 fpTaskDone) {
     int nReturn = 0;
    
     std::lock_guard<RWLock> lock(*s_pMutex_for_cur_api);
@@ -245,6 +231,40 @@ int WalletInterface::SetNewTask(const std::string& a_inp_line, void* a_owner, vo
 
     return nReturn;
 }
+
+
+void WalletInterface::runTask(std::string const& str_command, std::string& str_result)
+{
+   task_result result;
+   setNewTask(str_command,
+              nullptr,
+              static_cast<void*>(&result),
+              +[](void* /*owner*/,
+                  void* a_clbkArg,
+                  int64_t a_err,
+                  std::string const& /*a_task*/,
+                  std::string const& a_result)
+              {
+                 task_result& result = *static_cast<task_result*>(a_clbkArg);
+                 result.m_bDone = true;
+                 result.m_error = a_err;
+                 result.m_strResult = a_result;
+              });
+   
+   bool volatile& bDone = result.m_bDone;
+   while (false == bDone)
+   {
+      std::this_thread::sleep_for(chrono::milliseconds(0));
+      QCoreApplication::processEvents();
+   }
+   
+   if (0 == result.m_error)
+      str_result = result.m_strResult;
+   else
+      throw task_exception(result.m_strResult);
+}
+
+
 
 
 int WalletInterface::loadWalletFile(SConnectionStruct* a_pWalletData) {
@@ -308,7 +328,7 @@ int WalletInterface::saveWalletFile(const SConnectionStruct& a_WalletData) {
 
 
 
-static int ConnectToNewWitness(const ConnectListItem& a_con_data) {
+int WalletInterface::connectToNewWitness(const ConnectListItem& a_con_data) {
    try {
       
       SConnectionStruct* pStruct = a_con_data.input;
@@ -373,20 +393,18 @@ static int ConnectToNewWitness(const ConnectListItem& a_con_data) {
       
       if( wapiptr->is_new() )
       {
-         std::string aPassword("");
+         std::string aPassword;
+         QString aString = "Please use the set_password method to initialize a new wallet before continuing";
          
-         WarnAndWaitFunc(a_con_data.owner,pStruct->setPasswordFn, &aPassword, "Please use the set_password method to initialize a new wallet before continuing\n");
-         if(aPassword != "")
-         {
+         InGuiThreatCaller::instance()->m_pParent2 = (QWidget*)a_con_data.owner;
+         InGuiThreatCaller::instance()->EmitShowMessageBox(aString, pStruct->setPasswordFn, &aPassword);
+         InGuiThreatCaller::instance()->m_sema.wait();
+         
+         if(aPassword != "") {
             wapiptr->set_password(aPassword);
             wapiptr->unlock(aPassword);
          }
       }
-      
-      boost::signals2::scoped_connection locked_connection(wapiptr->lock_changed.connect([&](bool /*locked*/) {
-         //wallet_cli->set_prompt(  locked ? "locked >>> " : "unlocked >>> " );
-      }));
-      
       
       
       WalletInterface::loadWalletFile(pStruct);
@@ -398,7 +416,6 @@ static int ConnectToNewWitness(const ConnectListItem& a_con_data) {
       wallet_gui->wait();
       
       wapi->save_wallet_file(wallet_file.generic_string());
-      locked_connection.disconnect();
       closed_connection.disconnect();
    }
    catch(const fc::exception& a_fc) {
@@ -420,36 +437,4 @@ static int ConnectToNewWitness(const ConnectListItem& a_con_data) {
 
 
 
-
-
-void WalletInterface::RunTask(std::string const& str_command, std::string& str_result)
-{
-    task_result result;
-    SetNewTask(str_command,
-               nullptr,
-               static_cast<void*>(&result),
-               +[](void* /*owner*/,
-                   void* a_clbkArg,
-                   int64_t a_err,
-                   std::string const& /*a_task*/,
-                   std::string const& a_result)
-               {
-                   task_result& result = *static_cast<task_result*>(a_clbkArg);
-                   result.m_bDone = true;
-                   result.m_error = a_err;
-                   result.m_strResult = a_result;
-               });
-    
-    bool volatile& bDone = result.m_bDone;
-    while (false == bDone)
-    {
-        std::this_thread::sleep_for(chrono::milliseconds(0));
-        QCoreApplication::processEvents();
-    }
-    
-    if (0 == result.m_error)
-        str_result = result.m_strResult;
-    else
-        throw task_exception(result.m_strResult);
-}
 

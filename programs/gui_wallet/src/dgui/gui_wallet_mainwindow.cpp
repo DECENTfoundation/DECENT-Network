@@ -557,7 +557,7 @@ void Mainwindow_gui_wallet::ConnectSlot()
     }
 
     m_ActionConnect.setEnabled(false);
-    
+   m_wdata2.owner = this;
     m_wdata2.setPasswordFn = +[](void*owner, int answer, void* str_ptr) {
         ((Mainwindow_gui_wallet*)owner)->SetPassword(owner, str_ptr);
     };
