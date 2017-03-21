@@ -65,15 +65,7 @@ void gui::format_result( const string& method, std::function<string(variant,cons
 }
 
 
-void gui::SetNewTask(const std::string& a_inp_line, void* a_owner, void* a_clbData,...)
-{
-    TypeCallbackSetNewTaskGlb2 fpTaskDone;
-    va_list aFunc;
-
-    va_start( aFunc, a_clbData );
-    fpTaskDone = va_arg( aFunc, TypeCallbackSetNewTaskGlb2);
-    va_end( aFunc );
-
+void gui::SetNewTask(const std::string& a_inp_line, void* a_owner, void* a_clbData, TypeCallbackSetNewTaskGlb2 fpTaskDone) {
     m_Fifo.AddNewTask(a_inp_line,a_owner,a_clbData,fpTaskDone);
     m_semaphore.post();
 }

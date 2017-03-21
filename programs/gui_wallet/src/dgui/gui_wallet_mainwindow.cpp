@@ -9,8 +9,6 @@
  */
 
 
-#define     WALLET_CONNECT_CODE     ((void*)-2)
-
 
 #include <QMenuBar>
 #include <QMoveEvent>
@@ -113,7 +111,11 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
     _downloadChecker.setInterval(5000);
     connect(&_downloadChecker, SIGNAL(timeout()), this, SLOT(CheckDownloads()));
     _downloadChecker.start();
-    
+   
+   
+   connect(&GlobalEvents::instance(), SIGNAL(walletConnected()), this, SLOT(DisplayWalletContentGUI()));
+   connect(&GlobalEvents::instance(), SIGNAL(walletConnectionError(std::string)), this, SLOT(DisplayConnectionError(std::string)));
+   
 }
 
 Mainwindow_gui_wallet::~Mainwindow_gui_wallet() {
@@ -405,7 +407,9 @@ void Mainwindow_gui_wallet::CheckDownloads()
 }
 
 
-
+void Mainwindow_gui_wallet::DisplayConnectionError(std::string errorMessage) {
+   ALERT_DETAILS("Could not connect to wallet", errorMessage.c_str());
+}
 
 
 void Mainwindow_gui_wallet::DisplayWalletContentGUI()
@@ -541,25 +545,6 @@ void Mainwindow_gui_wallet::HelpSlot()
 
 
 
-void Mainwindow_gui_wallet::TaskDoneFuncGUI(void* a_clbkArg,int64_t a_err,const std::string& a_task,const std::string& a_result)
-{
-
-    
-    if(a_clbkArg == WALLET_CONNECT_CODE) {
-        if(a_err)
-        {
-            ALERT_DETAILS("Could not connect to wallet", a_result.c_str());
-            return;
-        }
-        
-        DisplayWalletContentGUI();
-        return;
-    }
-
-   
-}
-
-
 
 void Mainwindow_gui_wallet::ConnectSlot()
 {
@@ -578,11 +563,10 @@ void Mainwindow_gui_wallet::ConnectSlot()
         ((Mainwindow_gui_wallet*)owner)->SetPassword(owner, str_ptr);
     };
    
-   // this is ugly and wrong in many ways.
    
-    m_wdata2.fpDone = (TypeCallbackSetNewTaskGlb2)GetFunctionPointerAsVoid(0, &Mainwindow_gui_wallet::TaskDoneFuncGUI);
+   m_wdata2.fpDone = NULL;
    
-   WalletInterface::startConnecting(&m_wdata2, this, WALLET_CONNECT_CODE);
+   WalletInterface::startConnecting(&m_wdata2);
 }
 
 

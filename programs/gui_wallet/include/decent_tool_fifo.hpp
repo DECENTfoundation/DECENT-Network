@@ -94,14 +94,7 @@ namespace gui_wallet {
       }
       
       
-      void AddNewTask(typename ListItemType::value_type a_inp, void* a_owner, void* a_clbData,...) {
-         
-         TypeCallbackSetNewTaskGlb2 fpTaskDone;
-         va_list aFunc;
-         
-         va_start( aFunc, a_clbData );
-         fpTaskDone = va_arg( aFunc, TypeCallbackSetNewTaskGlb2);
-         va_end( aFunc );
+      void AddNewTask(typename ListItemType::value_type a_inp, void* a_owner, void* a_clbData, TypeCallbackSetNewTaskGlb2 callback) {
          
          m_task_mutex.lock();
          
@@ -111,11 +104,11 @@ namespace gui_wallet {
             m_pLastTask->owner = a_owner;
             m_pLastTask->callbackArg = a_clbData;
             m_pLastTask->input = a_inp;
-            m_pLastTask->callback = fpTaskDone;
+            m_pLastTask->callback = callback;
             
          } else {
             
-            m_pLastTask->next = new ListItemType(fpTaskDone, a_inp, a_owner, a_clbData);
+            m_pLastTask->next = new ListItemType(callback, a_inp, a_owner, a_clbData);
             m_pLastTask = m_pLastTask->next;
          }
          m_task_mutex.unlock();

@@ -20,7 +20,7 @@
 #include "fc_rpc_gui.hpp"
 #include "unnamedsemaphorelite.hpp"
 #include "decent_tool_fifo.hpp"
-
+#include "gui_wallet_global.hpp"
 
 #include <QCoreApplication>
 #include <QEventLoop>
@@ -68,11 +68,9 @@ static graphene::wallet::wallet_data*                           s_wdata_ptr;
 static std::thread*                                             s_pConnectionThread ;
 
 
-static volatile int s_nConThreadRun;
+static volatile int   s_nConThreadRun;
 static StructApi      s_CurrentApi;
 
-static void ConnectionThreadFunction(void);
-static int SaveWalletFile_private(const SConnectionStruct& a_WalletData);
 static int ConnectToNewWitness(const ConnectListItem& item);
 
 
@@ -107,16 +105,50 @@ void WalletInterface::initialize() {
         
         s_wdata_ptr = new graphene::wallet::wallet_data;
        
-       s_pConnectionThread = new std::thread(&ConnectionThreadFunction);
+       s_pConnectionThread = new std::thread(&WalletInterface::connectionThreadFunction);
        
     }
 
 }
 
 
-void WalletInterface::startConnecting(SConnectionStruct* a_conn_str_ptr, void *a_owner, void*a_clbData) {
-   s_pConnectionRequestFifo->AddNewTask(a_conn_str_ptr,a_owner,a_clbData,a_conn_str_ptr->fpDone);
+void WalletInterface::connectedCallback(void* owner, void* a_clbData, int64_t a_err, const std::string& a_inp, const std::string& a_result) {
+   if(a_err) {
+      GlobalEvents::instance().setWalletError(a_result);
+      return;
+   }
+   
+   GlobalEvents::instance().setWalletConnected();
+}
+
+
+
+void WalletInterface::startConnecting(SConnectionStruct* connectionInfo) {
+   s_pConnectionRequestFifo->AddNewTask(connectionInfo, NULL, NULL, &WalletInterface::connectedCallback);
    s_pSema_for_connection_thread->post();
+}
+
+
+
+void WalletInterface::connectionThreadFunction() {
+   ConnectListItem aTaskItem(NULL,NULL);
+   s_nConThreadRun = 1;
+   std::thread* pConnectionThread;
+   
+   while(s_nConThreadRun)
+   {
+      s_pSema_for_connection_thread->wait();
+      
+      while(s_pConnectionRequestFifo->GetFirstTask(&aTaskItem))
+      {
+         pConnectionThread = new std::thread(&ConnectToNewWitness, aTaskItem);
+         if(pConnectionThread){
+            pConnectionThread->detach();
+            delete pConnectionThread;
+         }
+      }
+      
+   }
 }
 
 
@@ -134,8 +166,9 @@ int WalletInterface::callFunctionInGuiLoop(void* a_clbData, int64_t a_err, const
 void WalletInterface::destroy() {
     int nLibInited(s_nLibraryInited--);
     s_nLibraryInited = 0;
-    if(nLibInited>0)  // should be done in real atomic manner
-    {
+   
+    if(nLibInited > 0) {
+       
         s_nConThreadRun = 0;
         s_pSema_for_connection_thread->post();
         s_pConnectionThread->join();
@@ -149,30 +182,15 @@ void WalletInterface::destroy() {
 
 
 
-__DLL_EXPORT__ int gui_wallet::SetNewTask(const std::string& a_inp_line, void* a_owner, void* a_clbData,
-                               TypeCallbackSetNewTaskGlb2 a_clbkFunction)
-{
-    return SetNewTask_base(a_inp_line, a_owner, a_clbData, a_clbkFunction);
-}
 
-
-
-__DLL_EXPORT__ int gui_wallet::SetNewTask_base(const std::string& a_inp_line, void* a_owner, void* a_clbData, ...)
-{
+int gui_wallet::SetNewTask(const std::string& a_inp_line, void* a_owner, void* a_clbData, TypeCallbackSetNewTaskGlb2 fpTaskDone) {
     int nReturn = 0;
-    std::string errStr("error accured!");
-    void* fpTaskDone3;
-    va_list aFunc;
-
-    va_start( aFunc, a_clbData );
-    fpTaskDone3 = va_arg( aFunc, void*);
-    va_end( aFunc );
-
+   
     std::lock_guard<RWLock> lock(*s_pMutex_for_cur_api);
     if(s_CurrentApi.gui_api)
     {
         nReturn = 0;
-        (s_CurrentApi.gui_api)->SetNewTask(a_inp_line,a_owner,a_clbData,fpTaskDone3);
+        (s_CurrentApi.gui_api)->SetNewTask(a_inp_line,a_owner,a_clbData,fpTaskDone);
     }
     else if(strstr(a_inp_line.c_str(),"load_wallet_file "))
     {
@@ -188,18 +206,16 @@ __DLL_EXPORT__ int gui_wallet::SetNewTask_base(const std::string& a_inp_line, vo
             if(!nReturn)
             {
                 aConStr.action = WAT::CONNECT;
-                aConStr.fpDone = (TypeCallbackSetNewTaskGlb2)fpTaskDone3;
-                s_pConnectionRequestFifo->AddNewTask(&aConStr,a_owner,a_clbData,fpTaskDone3);
+                aConStr.fpDone = fpTaskDone;
+                s_pConnectionRequestFifo->AddNewTask(&aConStr,a_owner,a_clbData, fpTaskDone);
                 s_pSema_for_connection_thread->post();
             }
 
+        } else {
+           nReturn = WRONG_ARGUMENT;
         }
-        else{nReturn = WRONG_ARGUMENT;}
-    }
-    else
-    {
+    } else {
         nReturn = NO_API_INITED;
-        errStr = "First connect to witness node";
     }
 
     return nReturn;
@@ -262,162 +278,138 @@ int WalletInterface::SaveWalletFile(const SConnectionStruct& a_WalletData) {
 
 
 
-static void ConnectionThreadFunction(void)
-{
-    ConnectListItem aTaskItem(NULL,NULL);
-    s_nConThreadRun = 1;
-    std::thread* pConnectionThread;
 
-    while(s_nConThreadRun)
-    {
-        s_pSema_for_connection_thread->wait();
-
-        while(s_pConnectionRequestFifo->GetFirstTask(&aTaskItem))
-        {
-            pConnectionThread = new std::thread(&ConnectToNewWitness, aTaskItem);
-            if(pConnectionThread){
-                pConnectionThread->detach();
-                delete pConnectionThread;
-            }
-        }
-
-    }
-}
-
-
-static void SetCurrentApis(const StructApi* a_pApis)
-{
-    s_pMutex_for_cur_api->write_lock();
-    memcpy(&s_CurrentApi,a_pApis,sizeof(StructApi));
-    s_pMutex_for_cur_api->unlock();
-}
 
 
 
 
 static int ConnectToNewWitness(const ConnectListItem& a_con_data) {
-    try {
-       
-        SConnectionStruct* pStruct = a_con_data.input;
+   try {
+      
+      SConnectionStruct* pStruct = a_con_data.input;
+      
+      if(pStruct->action == WAT::SAVE2)
+      {
+         int nReturn = WalletInterface::SaveWalletFile(*pStruct);
+         WalletInterface::callFunctionInGuiLoop(a_con_data.callbackArg,(int64_t)nReturn, __CONNECTION_CLB_, "Saving procedure",a_con_data.owner,a_con_data.callback);
+         return nReturn;
+      }
+      else if(pStruct->action == WAT::LOAD2)
+      {
+         
+         int nReturn = WalletInterface::LoadWalletFile((SConnectionStruct*)a_con_data.callbackArg);
+         
+         WalletInterface::callFunctionInGuiLoop(a_con_data.callbackArg,(int64_t)nReturn, __CONNECTION_CLB_, "Loading procedure",a_con_data.owner,a_con_data.callback);
+         return nReturn;
+      }
+      else if(pStruct->action != WAT::CONNECT)
+      {
+         WalletInterface::callFunctionInGuiLoop(a_con_data.callbackArg,UNKNOWN_EXCEPTION, __CONNECTION_CLB_, "Unknown option",a_con_data.owner,a_con_data.callback);
+         return UNKNOWN_EXCEPTION;
+      }
+      
+      StructApi aApiToCreate;
+      s_wdata_ptr->ws_server = pStruct->ws_server;
+      s_wdata_ptr->ws_user = pStruct->ws_user;
+      s_wdata_ptr->ws_password = pStruct->ws_password;
+      fc::path wallet_file( pStruct->wallet_file_name );
+      
+      fc::http::websocket_client client;
+      fc::http::websocket_connection_ptr con;
+      
+      
+      // Try to connect to server again and again and again and again and again and again and again and ...
+      bool connection_error = true;
+      while (connection_error) {
+         try {
+            con = client.connect( pStruct->ws_server );
+            connection_error = false;
+         } catch (...) {
+            connection_error = true;
+            QtDelay(1000);
+         }
+      }
+      auto apic = std::make_shared<fc::rpc::websocket_api_connection>(*con);
+      
+      auto remote_api = apic->get_remote_api< login_api >(1);
 
-        if(pStruct->action == WAT::SAVE2)
-        {
-           int nReturn = WalletInterface::SaveWalletFile(*pStruct);
-            WalletInterface::callFunctionInGuiLoop(a_con_data.callbackArg,(int64_t)nReturn, __CONNECTION_CLB_, "Saving procedure",a_con_data.owner,a_con_data.callback);
-            return nReturn;
-        }
-        else if(pStruct->action == WAT::LOAD2)
-        {
-           
-            int nReturn = WalletInterface::LoadWalletFile((SConnectionStruct*)a_con_data.callbackArg);
-           
-           WalletInterface::callFunctionInGuiLoop(a_con_data.callbackArg,(int64_t)nReturn, __CONNECTION_CLB_, "Loading procedure",a_con_data.owner,a_con_data.callback);
-            return nReturn;
-        }
-        else if(pStruct->action != WAT::CONNECT)
-        {
-            WalletInterface::callFunctionInGuiLoop(a_con_data.callbackArg,UNKNOWN_EXCEPTION, __CONNECTION_CLB_, "Unknown option",a_con_data.owner,a_con_data.callback);
-            return UNKNOWN_EXCEPTION;
-        }
-
-        StructApi aApiToCreate;
-        s_wdata_ptr->ws_server = pStruct->ws_server;
-        s_wdata_ptr->ws_user = pStruct->ws_user;
-        s_wdata_ptr->ws_password = pStruct->ws_password;
-        fc::path wallet_file( pStruct->wallet_file_name );
-
-        fc::http::websocket_client client;
-        fc::http::websocket_connection_ptr con;
-        
-        
-        // Try to connect to server again and again and again and again and again and again and again and ...
-        bool connection_error = true;
-        while (connection_error) {
-            try {
-               con = client.connect( pStruct->ws_server );
-                connection_error = false;
-            } catch (...) {
-                connection_error = true;
-                QtDelay(1000);
-            }
-        }
-        auto apic = std::make_shared<fc::rpc::websocket_api_connection>(*con);
-
-        auto remote_api = apic->get_remote_api< login_api >(1);
-        //edump((wdata.ws_user)(wdata.ws_password) );
-        // TODO:  Error message here
-        FC_ASSERT( remote_api->login( pStruct->ws_user, pStruct->ws_password ) );
-
-        auto wapiptr = std::make_shared<graphene::wallet::wallet_api>( *s_wdata_ptr, remote_api );
-        wapiptr->set_wallet_filename( wallet_file.generic_string() );
-        wapiptr->load_wallet_file();
-        aApiToCreate.wal_api = wapiptr.get();
-
-        fc::api<graphene::wallet::wallet_api> wapi(wapiptr);
-
-        auto wallet_gui = std::make_shared<fc::rpc::gui>();
-        aApiToCreate.gui_api = wallet_gui.get();
-        SetCurrentApis(&aApiToCreate);
-        for( auto& name_formatter : wapiptr->get_result_formatters() )
-           wallet_gui->format_result( name_formatter.first, name_formatter.second );
-
-        boost::signals2::scoped_connection closed_connection(con->closed.connect([=]{
-
-            WalletInterface::callFunctionInGuiLoop(a_con_data.callbackArg,UNABLE_TO_CONNECT, __CONNECTION_CLB_, "Server has disconnected us.", a_con_data.owner,a_con_data.callback);
-           wallet_gui->stop();
-        }));
-        (void)(closed_connection);
-
-       
-
-         wallet_gui->register_api( wapi );
-         wallet_gui->start();
-
-       if( wapiptr->is_new() )
-        {
-           std::string aPassword("");
-           
-           WarnAndWaitFunc(a_con_data.owner,pStruct->setPasswordFn, &aPassword, "Please use the set_password method to initialize a new wallet before continuing\n");
-           if(aPassword != "")
-           {
-               wapiptr->set_password(aPassword);
-               wapiptr->unlock(aPassword);
-           }
-        }
-       
-        boost::signals2::scoped_connection locked_connection(wapiptr->lock_changed.connect([&](bool /*locked*/) {
-           //wallet_cli->set_prompt(  locked ? "locked >>> " : "unlocked >>> " );
-        }));
-
-
-
-       WalletInterface::LoadWalletFile(pStruct);
-
-       std::string possible_input = __CONNECTION_CLB_;
-       if(pStruct->wallet_file_name != "" ){possible_input = "load_wallet_file " + pStruct->wallet_file_name;}
-
-       WalletInterface::callFunctionInGuiLoop(a_con_data.callbackArg,0, possible_input, "true", a_con_data.owner,a_con_data.callback);
-       wallet_gui->wait();
-
-        wapi->save_wallet_file(wallet_file.generic_string());
-        locked_connection.disconnect();
-        closed_connection.disconnect();
-    }
-    catch(const fc::exception& a_fc) {
-       
-        int64_t llnErr = a_fc.code() ? a_fc.code() : -2;
-        WalletInterface::callFunctionInGuiLoop(a_con_data.callbackArg,llnErr, a_fc.to_string(),
-                              a_fc.to_detail_string(),
-                              a_con_data.owner,a_con_data.callback);
-       
-    } catch(...) {
-       
-        WalletInterface::callFunctionInGuiLoop(a_con_data.callbackArg, UNKNOWN_EXCEPTION, __CONNECTION_CLB_,
-                              "Unknown exception!",
-                              a_con_data.owner,a_con_data.callback);
-    }
-
-    return 0;
+      FC_ASSERT( remote_api->login( pStruct->ws_user, pStruct->ws_password ) );
+      
+      auto wapiptr = std::make_shared<graphene::wallet::wallet_api>( *s_wdata_ptr, remote_api );
+      wapiptr->set_wallet_filename( wallet_file.generic_string() );
+      wapiptr->load_wallet_file();
+      aApiToCreate.wal_api = wapiptr.get();
+      
+      fc::api<graphene::wallet::wallet_api> wapi(wapiptr);
+      
+      auto wallet_gui = std::make_shared<fc::rpc::gui>();
+      aApiToCreate.gui_api = wallet_gui.get();
+      
+      
+      s_pMutex_for_cur_api->write_lock();
+      memcpy(&s_CurrentApi, &aApiToCreate,sizeof(StructApi));
+      s_pMutex_for_cur_api->unlock();
+      
+      for( auto& name_formatter : wapiptr->get_result_formatters() )
+         wallet_gui->format_result( name_formatter.first, name_formatter.second );
+      
+      boost::signals2::scoped_connection closed_connection(con->closed.connect([=]{
+         
+         WalletInterface::callFunctionInGuiLoop(a_con_data.callbackArg,UNABLE_TO_CONNECT, __CONNECTION_CLB_, "Server has disconnected us.", a_con_data.owner,a_con_data.callback);
+         wallet_gui->stop();
+      }));
+      (void)(closed_connection);
+      
+      
+      
+      wallet_gui->register_api( wapi );
+      wallet_gui->start();
+      
+      if( wapiptr->is_new() )
+      {
+         std::string aPassword("");
+         
+         WarnAndWaitFunc(a_con_data.owner,pStruct->setPasswordFn, &aPassword, "Please use the set_password method to initialize a new wallet before continuing\n");
+         if(aPassword != "")
+         {
+            wapiptr->set_password(aPassword);
+            wapiptr->unlock(aPassword);
+         }
+      }
+      
+      boost::signals2::scoped_connection locked_connection(wapiptr->lock_changed.connect([&](bool /*locked*/) {
+         //wallet_cli->set_prompt(  locked ? "locked >>> " : "unlocked >>> " );
+      }));
+      
+      
+      
+      WalletInterface::LoadWalletFile(pStruct);
+      
+      std::string possible_input = __CONNECTION_CLB_;
+      if(pStruct->wallet_file_name != "" ){possible_input = "load_wallet_file " + pStruct->wallet_file_name;}
+      
+      WalletInterface::callFunctionInGuiLoop(a_con_data.callbackArg,0, possible_input, "true", a_con_data.owner,a_con_data.callback);
+      wallet_gui->wait();
+      
+      wapi->save_wallet_file(wallet_file.generic_string());
+      locked_connection.disconnect();
+      closed_connection.disconnect();
+   }
+   catch(const fc::exception& a_fc) {
+      
+      int64_t llnErr = a_fc.code() ? a_fc.code() : -2;
+      WalletInterface::callFunctionInGuiLoop(a_con_data.callbackArg,llnErr, a_fc.to_string(),
+                                             a_fc.to_detail_string(),
+                                             a_con_data.owner,a_con_data.callback);
+      
+   } catch(...) {
+      
+      WalletInterface::callFunctionInGuiLoop(a_con_data.callbackArg, UNKNOWN_EXCEPTION, __CONNECTION_CLB_,
+                                             "Unknown exception!",
+                                             a_con_data.owner,a_con_data.callback);
+   }
+   
+   return 0;
 }
 
 

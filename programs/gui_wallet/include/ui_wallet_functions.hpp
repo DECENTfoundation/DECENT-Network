@@ -46,13 +46,18 @@ struct SConnectionStruct {
 class WalletInterface {
 public:
    static void initialize();
-   static void startConnecting(SConnectionStruct* a_conn_str, void *owner, void* clbData);
+   static void startConnecting(SConnectionStruct* connectionInfo);
    static void destroy();
    static int callFunctionInGuiLoop(void* a_clbData, int64_t a_err, const std::string& a_inp, const std::string& a_result,void* a_owner,TypeCallbackSetNewTaskGlb2 a_fpFunc);
-
+   
 public:
    static int LoadWalletFile(SConnectionStruct* a_pWalletData);
    static int SaveWalletFile(const SConnectionStruct& a_pWalletData);
+
+private:
+   static void connectionThreadFunction();
+   static void connectedCallback(void* owner, void* a_clbData, int64_t a_err, const std::string& a_inp, const std::string& a_result);
+
 
    
 };
@@ -62,31 +67,10 @@ public:
 
 
 
-int SetNewTask_base(const std::string& inp_line, void* ownr, void* clbData, ...);
-
-int SetNewTask(const std::string& inp_line, void* ownr, void* clbData, TypeCallbackSetNewTaskGlb2 clbkFunction);
-
-template <typename Type>
-static int SetNewTask(const std::string& a_inp_line, Type* a_memb, void* a_clbData,
-                       void (Type::*a_clbkFunction)(SetNewTask_last_args2,const std::string&))
-{
-    return SetNewTask_base(a_inp_line, a_memb, a_clbData, a_clbkFunction);
-}
-
+int SetNewTask(const std::string& inp_line, void* ownr, void* clbData, TypeCallbackSetNewTaskGlb2 fpTaskDone);
 
 void RunTask(std::string const& str_command, std::string& str_result);
 
 }
 
-
-// This function should not exist. Remove this when you can
-inline void* GetFunctionPointerAsVoid(int a_first,...) {
-   va_list aFunc;
-   
-   va_start( aFunc, a_first );
-   void* pReturn = va_arg( aFunc, void*);
-   va_end( aFunc );
-   
-   return pReturn;
-}
 

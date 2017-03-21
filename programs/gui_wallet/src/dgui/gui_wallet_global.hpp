@@ -309,12 +309,19 @@ namespace gui_wallet
       
       
       std::string getCurrentUser() const { return _currentUser; }
-      void setCurrentUser(const std::string& user) { _currentUser = user; emit currentUserChanged(_currentUser);}
+      void setCurrentUser(const std::string& user) { _currentUser = user; emit currentUserChanged(_currentUser); }
+      
       void setWalletUnlocked() { emit walletUnlocked(); }
+      
+      void setWalletConnected() { emit walletConnected(); }
+      void setWalletError(std::string error) { emit walletConnectionError(error); }
       
    signals:
       void currentUserChanged(std::string user);
       void walletUnlocked();
+      
+      void walletConnectionError(std::string message);
+      void walletConnected();
       
       
    };

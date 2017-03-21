@@ -25,7 +25,8 @@
 
 #define SetNewTask_last_args2    void* a_clbData, int64_t a_err, const std::string& a_inp
 
-typedef void (__THISCALL__ *TypeCallbackSetNewTaskGlb2)(void* owner,SetNewTask_last_args2,const std::string& a_result);
+typedef void (__THISCALL__ *TypeCallbackSetNewTaskGlb2)(void* owner, void* a_clbData, int64_t a_err, const std::string& a_inp, const std::string& a_result);
+
 typedef void (__THISCALL__ *TypeManagementClbk)(void* owner,SetNewTask_last_args2,const std::string& a_result);
 typedef void (__THISCALL__ *WarnYesOrNoFuncType)(void*owner,int answer,/*string**/void* str_ptr);
 typedef int (__THISCALL__ *TypeWarnAndWaitFunc)(void* owner,
