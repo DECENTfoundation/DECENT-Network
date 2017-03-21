@@ -86,7 +86,6 @@ void TransactionsTab::currentUserChanged(std::string userName) {
    user.setText(QString::fromStdString(userName));
 }
 
-
 void TransactionsTab::maybeUpdateContent() {
    if (!m_doUpdate) {
       return;

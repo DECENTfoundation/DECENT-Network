@@ -152,13 +152,14 @@ void BrowseContentTab::updateContents() {
             
             cont.price.amount /= GRAPHENE_BLOCKCHAIN_PRECISION;
             cont.AVG_rating = contents[i]["AVG_rating"].get<double>()  / 1000;
+            
         }
         
         ShowDigitalContentsGUI();
     } catch (std::exception& ex) {
         std::cout << ex.what() << std::endl;
     }
-    
+    connect(&m_pTableWidget , SIGNAL(MouseWasMoved()),this,SLOT(paintRow()));
 }
 
 
@@ -196,6 +197,7 @@ void BrowseContentTab::ShowDigitalContentsGUI() {
         info_icon->setPixmap(info_image);
         info_icon->setAlignment(Qt::AlignCenter);
         connect(info_icon, SIGNAL(clicked()), this, SLOT(show_content_popup()));
+        connect(&m_pTableWidget , SIGNAL(MouseWasMoved()),this,SLOT(paintRow()));
         m_pTableWidget.setCellWidget(index, 6, info_icon);
         
         
@@ -273,4 +275,26 @@ void BrowseContentTab::ShowDigitalContentsGUI() {
         ++index;
     }
     
+    connect(&m_pTableWidget , SIGNAL(MouseWasMoved()),this,SLOT(paintRow()));
+    
+}
+
+
+
+void BrowseContentTab::paintRow()
+{
+    QPixmap info_image(":/icon/images/pop_up.png");
+    QPixmap info_image_white(":/icon/images/pop_up1.png");
+    int row = m_pTableWidget.getCurrentHighlightedRow();
+    for(int i = 0; i < m_pTableWidget.rowCount(); ++i)
+    {
+        if(i == row)
+        {
+            ((NewButton*)m_pTableWidget.cellWidget(i,6))->setPixmap(info_image_white);
+        }
+        else
+        {
+            ((NewButton*)m_pTableWidget.cellWidget(i,6))->setPixmap(info_image);
+        }
+    }
 }

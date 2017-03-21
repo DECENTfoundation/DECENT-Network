@@ -134,9 +134,9 @@ namespace gui_wallet
    public:
       virtual void content_activated() {}
       virtual void content_deactivated() {}
-      
-      
       public slots:
+      void paintRow();
+       
       void updateContents();
       
       void maybeUpdateContent();

@@ -112,28 +112,30 @@ void Overview_tab::updateContents() {
       auto content = contents[i];
       
       NewButton* transaction = new NewButton(content[0].get<std::string>());
-       //transaction->load(QString(":/icons/transaction5.svg"));
       NewButton* transfer = new NewButton(content[0].get<std::string>());
-       //transfer->load(QString(":/icons/transaction5.svg"));
       transaction->setAlignment(Qt::AlignCenter);
       transfer->setAlignment(Qt::AlignCenter);
        
 
 
       
-      QPixmap image1(":/icon/images/transaction.png");
-      QPixmap image(":/icon/images/transfer.png");
-      transaction->setPixmap(image1);
-      transfer->setPixmap(image);
-      
-      transaction->setMouseTracking(true);
-      transfer->setMouseTracking(true);
-      
-      connect(transfer, SIGNAL(ButtonPushedSignal(std::string)), this , SLOT(buttonPressed(std::string)));
-      connect(transaction, SIGNAL(ButtonPushedSignal(std::string)), this , SLOT(transaction_button_pressed(std::string)));
-      
       table_widget.setItem(i, 1, new QTableWidgetItem(QString::fromStdString(content[0].get<std::string>())));
       table_widget.setItem(i, 0, new QTableWidgetItem(QString::fromStdString(content[1].get<std::string>())));
+       
+       
+       QPixmap trans(":/icon/images/transaction.png");
+       QPixmap transf(":/icon/images/transfer.png");
+
+        transaction->setPixmap(trans);
+        transfer->setPixmap(transf);
+       
+       transaction->setMouseTracking(true);
+       transfer->setMouseTracking(true);
+       
+       connect(transfer, SIGNAL(ButtonPushedSignal(std::string)), this , SLOT(buttonPressed(std::string)));
+       connect(transaction, SIGNAL(ButtonPushedSignal(std::string)), this , SLOT(transaction_button_pressed(std::string)));
+
+       
       table_widget.setCellWidget(i, 2, transaction);
       table_widget.setCellWidget(i, 3, transfer);
       
@@ -153,8 +155,32 @@ void Overview_tab::updateContents() {
       
       table_widget.item(i,0)->setForeground(QColor::fromRgb(88,88,88));
       table_widget.item(i,1)->setForeground(QColor::fromRgb(88,88,88));
-      
+       
+       
+       connect(&table_widget , SIGNAL(MouseWasMoved()),this,SLOT(paintRow()));
    }
+}
+
+void Overview_tab::paintRow()
+{
+    QPixmap trans(":/icon/images/transaction.png");
+    QPixmap transf(":/icon/images/transfer.png");
+    QPixmap trans_white(":/icon/images/transaction1.png");
+    QPixmap transf_white(":/icon/images/transfer1.png");
+    int row = table_widget.getCurrentHighlightedRow();
+    for(int i = 0; i < table_widget.rowCount(); ++i)
+    {
+        if(i == row)
+        {
+            ((NewButton*)table_widget.cellWidget(i,2))->setPixmap(trans_white);
+            ((NewButton*)table_widget.cellWidget(i,3))->setPixmap(transf_white);
+        }
+        else
+        {
+            ((NewButton*)table_widget.cellWidget(i,2))->setPixmap(trans);
+            ((NewButton*)table_widget.cellWidget(i,3))->setPixmap(transf);
+        }
+    }
 }
 
 
