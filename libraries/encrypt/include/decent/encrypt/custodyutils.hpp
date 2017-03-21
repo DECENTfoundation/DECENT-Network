@@ -3,12 +3,10 @@
 //
 
 #pragma once
-#if defined( MSC_VER )
-#include <include/pcb.h>
-#elif defined ( __GNUC__ )
-#include <pbc/pbc.h>
+#if defined ( _MSC_VER )
+#include <pbc.h>
 #else
-#error "Undefined compiler platform"
+#include <pbc/pbc.h>
 #endif
 
 #include <fstream>
