@@ -22,6 +22,10 @@
 #include <QStringList>
 #include <QFont>
 
+#include <QtSvg/QSvgRenderer>
+#include <QPainter>
+#include <QSvgWidget>
+
 #include "gui_wallet_global.hpp"
 #include "gui_wallet_tabcontentmanager.hpp"
 
@@ -130,9 +134,9 @@ namespace gui_wallet
    public:
       virtual void content_activated() {}
       virtual void content_deactivated() {}
-      
-      
       public slots:
+      void paintRow();
+       
       void updateContents();
       
       void maybeUpdateContent();

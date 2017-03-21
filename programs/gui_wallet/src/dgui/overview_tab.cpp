@@ -1,12 +1,12 @@
-/*
- *	File      : overview_tab.cpp
- *
- *	Created on: 21 Nov 2016
- *	Created by: Davit Kalantaryan (Email: davit.kalantaryan@desy.de)
- *
- *  This file implements ...
- *
- */
+//*
+//*	File      : overview_tab.cpp
+//*
+//*	Created on: 21 Nov 2016
+//*	Created by: Davit Kalantaryan (Email: davit.kalantaryan@desy.de)
+//*
+//*  This file implements ...
+//*
+//*/
 #include "overview_tab.hpp"
 #include "gui_wallet_mainwindow.hpp"
 #include "gui_wallet_centralwidget.hpp"
@@ -17,6 +17,7 @@
 #include <graphene/chain/config.hpp>
 #include "json.hpp"
 
+
 using namespace gui_wallet;
 using namespace nlohmann;
 
@@ -24,12 +25,11 @@ using namespace nlohmann;
 Overview_tab::Overview_tab(class Mainwindow_gui_wallet* a_pPar)
 : m_pPar(a_pPar)
 {
-   
    table_widget.set_columns({
-      {"Account ID", 20},
-      {"Author", 50},
-      {"", 20},
-      {"", 20}
+      {"Account ID", 40},
+      {"Account", 40},
+      {"", 10},
+      {"", 10}
    });
    
    QVBoxLayout* main = new QVBoxLayout();
@@ -115,23 +115,27 @@ void Overview_tab::updateContents() {
       NewButton* transfer = new NewButton(content[0].get<std::string>());
       transaction->setAlignment(Qt::AlignCenter);
       transfer->setAlignment(Qt::AlignCenter);
-      
-      transaction->setText("Transaction");
-      transfer->setText("Transfer");
-      QFont f( "Open Sans Bold", 14, QFont::Bold);
-      transaction->setFont(f);
-      transaction->setStyleSheet("* { background-color: rgb(255,255,255); color : rgb(27,176,104); }");
-      transfer->setFont(f);
-      transfer->setStyleSheet("* { background-color: rgb(255,255,255); color : rgb(27,176,104); }");
-      
-      transaction->setMouseTracking(true);
-      transfer->setMouseTracking(true);
-      
-      connect(transfer, SIGNAL(ButtonPushedSignal(std::string)), this , SLOT(buttonPressed(std::string)));
-      connect(transaction, SIGNAL(ButtonPushedSignal(std::string)), this , SLOT(transaction_button_pressed(std::string)));
+       
+
+
       
       table_widget.setItem(i, 1, new QTableWidgetItem(QString::fromStdString(content[0].get<std::string>())));
       table_widget.setItem(i, 0, new QTableWidgetItem(QString::fromStdString(content[1].get<std::string>())));
+       
+       
+       QPixmap trans(":/icon/images/transaction.png");
+       QPixmap transf(":/icon/images/transfer.png");
+
+        transaction->setPixmap(trans);
+        transfer->setPixmap(transf);
+       
+       transaction->setMouseTracking(true);
+       transfer->setMouseTracking(true);
+       
+       connect(transfer, SIGNAL(ButtonPushedSignal(std::string)), this , SLOT(buttonPressed(std::string)));
+       connect(transaction, SIGNAL(ButtonPushedSignal(std::string)), this , SLOT(transaction_button_pressed(std::string)));
+
+       
       table_widget.setCellWidget(i, 2, transaction);
       table_widget.setCellWidget(i, 3, transfer);
       
@@ -151,8 +155,32 @@ void Overview_tab::updateContents() {
       
       table_widget.item(i,0)->setForeground(QColor::fromRgb(88,88,88));
       table_widget.item(i,1)->setForeground(QColor::fromRgb(88,88,88));
-      
+       
+       
+       connect(&table_widget , SIGNAL(MouseWasMoved()),this,SLOT(paintRow()));
    }
+}
+
+void Overview_tab::paintRow()
+{
+    QPixmap trans(":/icon/images/transaction.png");
+    QPixmap transf(":/icon/images/transfer.png");
+    QPixmap trans_white(":/icon/images/transaction1.png");
+    QPixmap transf_white(":/icon/images/transfer1.png");
+    int row = table_widget.getCurrentHighlightedRow();
+    for(int i = 0; i < table_widget.rowCount(); ++i)
+    {
+        if(i == row)
+        {
+            ((NewButton*)table_widget.cellWidget(i,2))->setPixmap(trans_white);
+            ((NewButton*)table_widget.cellWidget(i,3))->setPixmap(transf_white);
+        }
+        else
+        {
+            ((NewButton*)table_widget.cellWidget(i,2))->setPixmap(trans);
+            ((NewButton*)table_widget.cellWidget(i,3))->setPixmap(transf);
+        }
+    }
 }
 
 
@@ -197,5 +225,4 @@ void Overview_tab::buttonPressed(std::string accountName)
    } catch(...) {
       // Ignore for now
    }
-   
 }
