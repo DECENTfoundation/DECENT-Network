@@ -31,7 +31,8 @@ public:
    static const uint8_t type_id  = seeder_object_type;
 
    account_id_type seeder;
-   decent::crypto::d_integer_string content_privKey;
+   decent::encrypt::DIntegerString content_privKey;
+
    fc::ecc::private_key privKey;
    uint64_t free_space;
    uint32_t price;
@@ -45,9 +46,10 @@ public:
 
    string URI;
    fc::time_point_sec expiration;
-   decent::crypto::custody_data cd;
+   decent::encrypt::CustodyData cd;
    account_id_type seeder;
-   decent::crypto::ciphertext_string key;
+   decent::encrypt::CiphertextString key;
+
    uint32_t space;
 };
 

@@ -85,7 +85,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       vector<account_id_type> get_account_references( account_id_type account_id )const;
       vector<optional<account_object>> lookup_account_names(const vector<string>& account_names)const;
       map<string,account_id_type> lookup_accounts(const string& lower_bound_name, uint32_t limit)const;
-      map<string,account_id_type> search_accounts(const string& search_tearm, uint32_t limit)const;
+      map<string,account_id_type> search_accounts(const string& search_term, uint32_t limit)const;
 
       uint64_t get_account_count()const;
 
@@ -137,7 +137,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       vector<buying_object> get_open_buyings_by_consumer(const account_id_type& consumer)const;
       optional<buying_object> get_buying_by_consumer_URI( const account_id_type& consumer, const string& URI) const;
       vector<buying_object> get_buying_history_objects_by_consumer( const account_id_type& consumer )const;
-      vector<buying_object> get_buying_history_objects_by_consumer_all( const account_id_type& consumer )const;
+      vector<buying_object> get_buying_objects_by_consumer( const account_id_type& consumer )const;
       optional<uint64_t> get_rating_by_consumer_URI( const account_id_type& consumer, const string& URI )const;
       optional<content_object> get_content( const string& URI )const;
       vector<content_object> list_content_by_author( const account_id_type& author )const;
@@ -441,7 +441,7 @@ vector<vector<account_id_type>> database_api::get_key_references( vector<public_
 }
 
 /**
- *  @return all accounts that referr to the key or account id in their owner or active authorities.
+ *  @return all accounts that refer to the key or account id in their owner or active authorities.
  */
 vector<vector<account_id_type>> database_api_impl::get_key_references( vector<public_key_type> keys )const
 {
@@ -642,8 +642,8 @@ vector<optional<account_object>> database_api_impl::lookup_account_names(const v
 }
     
     
-map<string,account_id_type> database_api::search_accounts(const string& search_tearm, uint32_t limit) const {
-    return my->search_accounts( search_tearm, limit );
+map<string,account_id_type> database_api::search_accounts(const string& search_term, uint32_t limit) const {
+    return my->search_accounts( search_term, limit );
 }
 
 
@@ -1595,14 +1595,14 @@ vector<buying_object> database_api_impl::get_buying_history_objects_by_consumer 
 }
     
     
-vector<buying_object> database_api::get_buying_history_objects_by_consumer_all( const account_id_type& consumer )const
+vector<buying_object> database_api::get_buying_objects_by_consumer( const account_id_type& consumer )const
 {
-    return my->get_buying_history_objects_by_consumer_all( consumer );
+    return my->get_buying_objects_by_consumer( consumer );
 }
 
 
 
-vector<buying_object> database_api_impl::get_buying_history_objects_by_consumer_all ( const account_id_type& consumer )const
+vector<buying_object> database_api_impl::get_buying_objects_by_consumer( const account_id_type& consumer )const
 {
    try {
       vector<buying_object> result;
@@ -1821,11 +1821,13 @@ vector<content_object> database_api_impl::list_content_by_bought( uint32_t count
    auto itr = idx.begin();
 
    while(count-- && itr != idx.end())
+   {
       if( itr->expiration >= _db.head_block_time() )
          result.emplace_back(*itr);
       else
          ++count;
-   ++itr;
+      ++itr;
+   }
 
    return result;
 }

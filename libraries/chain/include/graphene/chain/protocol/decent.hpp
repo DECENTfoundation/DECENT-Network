@@ -17,7 +17,10 @@
 
 namespace graphene { namespace chain {
 
-
+   /**
+    * @ingroup transactions
+    * @brief Submits content to the blockchain.
+    */
    struct content_submit_operation : public base_operation
    {
       struct fee_parameters_type { uint64_t fee = 0; };
@@ -26,20 +29,26 @@ namespace graphene { namespace chain {
       account_id_type author;
       string URI;
       asset price;
-      uint64_t size;
+      uint64_t size; //<Size of content, including samples, in megabytes
       fc::ripemd160 hash;
-      vector<account_id_type> seeders;
-      vector<decent::crypto::ciphertext_string> key_parts;
+
+      vector<account_id_type> seeders; //<List of selected seeders
+      vector<decent::encrypt::CiphertextString> key_parts; //<Key particles, each assigned to one of the seeders, encrypted with his key
+      /// Defines number of seeders needed to restore the encryption key
       uint32_t quorum;
       fc::time_point_sec expiration;
-      asset publishing_fee;
+      asset publishing_fee; //< Fee must be greater than the sum of seeders' publishing prices * number of days
       string synopsis;
-      decent::crypto::custody_data cd;
+      decent::encrypt::CustodyData cd;
       
       account_id_type fee_payer()const { return author; }
       void validate()const;
    };
-   
+
+   /**
+    * @ingroup transactions
+    * @brief This operation is used to send a request to buy a content.
+    */
    struct request_to_buy_operation : public base_operation
    {
       struct fee_parameters_type { uint64_t fee = 0; };
@@ -48,12 +57,17 @@ namespace graphene { namespace chain {
       string URI;
       account_id_type consumer;
       asset price;
-      decent::crypto::d_integer_string pubKey;
+      /// Consumer's public key
+      decent::encrypt::DIntegerString pubKey;
       
       account_id_type fee_payer()const { return consumer; }
       void validate()const;
    };
-   
+
+   /**
+    * @ingroup transactions
+    * @brief Rates a content.
+    */
    struct leave_rating_operation : public base_operation
    {
       struct fee_parameters_type { uint64_t fee = 0; };
@@ -61,27 +75,37 @@ namespace graphene { namespace chain {
       asset fee;
       string URI;
       account_id_type consumer;
-      uint64_t rating;
+      uint64_t rating; //<1-5
       
       account_id_type fee_payer()const { return consumer; }
       void validate()const;
    };
-   
+
+   /**
+    * @ingroup transactions
+    * @brief This operation is used to register a new seeder, modify the existing seeder or to extend seeder's lifetime.
+    */
    struct ready_to_publish_operation : public base_operation
    {
       struct fee_parameters_type { uint64_t fee = 0; };
       
       asset fee;
       account_id_type seeder;
-      decent::crypto::d_integer_string pubKey;
+      decent::encrypt::DIntegerString pubKey;
+      /// Available space on seeder's disc dedicated to contents, in MBs
       uint64_t space;
+      /// The price charged to author for seeding 1 MB per day
       uint32_t price_per_MByte;
       vector<string> ipfs_IDs;
       
       account_id_type fee_payer()const { return seeder; }
       void validate()const;
    };
-   
+
+   /**
+    * @ingroup transactions
+    * @brief Seeders have to periodically prove that they hold the content.
+    */
    struct proof_of_custody_operation : public base_operation
    {
       struct fee_parameters_type { uint64_t fee = 0; };
@@ -89,12 +113,17 @@ namespace graphene { namespace chain {
       asset fee;
       account_id_type seeder;
       string URI;
-      decent::crypto::custody_proof proof;
-      
+
+      decent::encrypt::CustodyProof proof;
+
       account_id_type fee_payer()const { return seeder; }
       void validate()const;
    };
-   
+
+   /**
+    * @ingroup transactions
+    * @brief This operation is used to send encrypted share of a content and proof of delivery to consumer.
+    */
    struct deliver_keys_operation : public base_operation
    {
       struct fee_parameters_type { uint64_t fee = 0; };
@@ -102,13 +131,18 @@ namespace graphene { namespace chain {
       asset fee;
       account_id_type seeder;
       buying_id_type buying;
-      decent::crypto::delivery_proof_string proof;
-      decent::crypto::ciphertext_string key;
+
+      decent::encrypt::DeliveryProofString proof;
+      decent::encrypt::CiphertextString key;
       
       account_id_type fee_payer()const { return seeder; }
       void validate()const;
    };
 
+   /**
+    * @ingroup transactions
+    * @brief This is a virtual operation emitted for the purpose of returning escrow to author
+    */
    struct return_escrow_submission_operation : public base_operation
    {
       struct fee_parameters_type { uint64_t fee = 0; };
@@ -122,6 +156,10 @@ namespace graphene { namespace chain {
       void            validate()const { FC_ASSERT( !"virtual operation" ); }
    };
 
+   /**
+    * @ingroup transactions
+    * @brief This is a virtual operation emitted for the purpose of returning escrow to consumer
+    */
    struct return_escrow_buying_operation : public base_operation
    {
       struct fee_parameters_type { uint64_t fee = 0; };
@@ -135,12 +173,16 @@ namespace graphene { namespace chain {
       void            validate()const { FC_ASSERT( !"virtual operation" ); }
    };
 
+   /**
+    * @ingroup transactions
+    * @brief This operation is used to report stats. These stats are later used to rate seeders.
+    */
    struct report_stats_operation : public base_operation
    {
       struct fee_parameters_type { uint64_t fee = 0; };
 
       asset fee;
-
+      /// The final stats about single download process. Map of seeders to amount they uploaded
       map<account_id_type,uint64_t> stats;
       account_id_type consumer;
 
@@ -148,6 +190,10 @@ namespace graphene { namespace chain {
       void validate()const;
    };
 
+   /**
+    * @ingroup transactions
+    * @brief
+    */
    struct pay_seeder_operation : public base_operation
    {
       struct fee_parameters_type { uint64_t fee = 0; };
@@ -162,6 +208,10 @@ namespace graphene { namespace chain {
       void            validate()const { FC_ASSERT( !"virtual operation" ); }
    };
 
+   /**
+    * @ingroup transactions
+    * @brief
+    */
    struct finish_buying_operation : public base_operation
    {
       struct fee_parameters_type { uint64_t fee = 0; };

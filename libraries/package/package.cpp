@@ -436,7 +436,7 @@ namespace decent { namespace package {
                 {
                     const auto aes_file_path = temp_dir_path / "content.zip.aes";
 
-                    decent::crypto::aes_key k;
+                    decent::encrypt::AesKey k;
                     for (int i = 0; i < CryptoPP::AES::MAX_KEYLENGTH; i++) {
                         k.key_byte[i] = key.data()[i];
                     }
@@ -1179,7 +1179,8 @@ int package_object::get_size() const {
    return size;
 }
 
-uint32_t package_object::create_proof_of_custody(const decent::crypto::custody_data& cd, decent::crypto::custody_proof& proof) const {
+
+uint32_t package_object::create_proof_of_custody(const decent::encrypt::CustodyData& cd, decent::encrypt::CustodyProof& proof) const {
    return package_manager::instance().create_proof_of_custody(get_content_file(), cd, proof);
 }
 
@@ -1303,7 +1304,8 @@ bool package_manager::unpack_package(const path& destination_directory, const pa
     path temp_dir = temp_directory_path();
     path zip_file = temp_dir / "content.zip";
 
-    decent::crypto::aes_key k;
+    decent::encrypt::AesKey k;
+
     for (int i = 0; i < CryptoPP::AES::MAX_KEYLENGTH; i++)
       k.key_byte[i] = key.data()[i];
 
@@ -1323,8 +1325,8 @@ bool package_manager::unpack_package(const path& destination_directory, const pa
     return true;
 }
 
-package_object package_manager::create_package( const boost::filesystem::path& content_path, const boost::filesystem::path& samples, const fc::sha512& key, decent::crypto::custody_data& cd) {
-    if (!is_directory(content_path) && !is_regular_file(content_path)) {
+package_object package_manager::create_package( const boost::filesystem::path& content_path, const boost::filesystem::path& samples, const fc::sha512& key, decent::encrypt::CustodyData& cd) {
+	if (!is_directory(content_path) && !is_regular_file(content_path)) {
         FC_THROW("Content path is not directory or file");
     }
 
@@ -1374,7 +1376,8 @@ package_object package_manager::create_package( const boost::filesystem::path& c
 
     path aes_file_path = temp_path / "content.zip.aes";
 
-    decent::crypto::aes_key k;
+    decent::encrypt::AesKey k;
+
     for (int i = 0; i < CryptoPP::AES::MAX_KEYLENGTH; i++)
       k.key_byte[i] = key.data()[i];
 
@@ -1520,7 +1523,8 @@ void package_manager::delete_package(fc::ripemd160 hash) {
     }
 }
 
-uint32_t package_manager::create_proof_of_custody(const boost::filesystem::path& content_file, const decent::crypto::custody_data& cd, decent::crypto::custody_proof& proof) {
+uint32_t package_manager::create_proof_of_custody(const boost::filesystem::path& content_file, const decent::encrypt::CustodyData& cd, decent::encrypt::CustodyProof& proof) {
+
     fc::scoped_lock<fc::mutex> guard(_mutex);
     return _custody_utils.create_proof_of_custody(content_file, cd, proof);
 }

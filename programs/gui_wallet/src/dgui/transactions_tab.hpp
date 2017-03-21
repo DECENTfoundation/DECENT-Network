@@ -1,17 +1,7 @@
-/*
- *	File      : transactions_tab.hpp
- *
- *	Created on: 21 Nov 2016
- *	Created by: Davit Kalantaryan (Email: davit.kalantaryan@desy.de)
- *
- *  This file implements ...
- *
- */
-#ifndef TRANSACTIONS_TAB_HPP
-#define TRANSACTIONS_TAB_HPP
+
+#pragma once
 
 #include <QWidget>
-#include <iostream>
 #include <QTableWidget>
 #include <QTableWidgetItem>
 #include <QVBoxLayout>
@@ -27,64 +17,47 @@
 #include <QMouseEvent>
 #include <QTimer>
 
+#include <iostream>
+#include <vector>
+
 #include "gui_wallet_tabcontentmanager.hpp"
-
-
-
-class HTableWidget : public QTableWidget
-{
-    Q_OBJECT
-public:
-    HTableWidget();
-
-    virtual void mouseMoveEvent(QMouseEvent * event);
-public:
-signals:
-    void mouseMoveEventDid();
-};
-
-
+#include "gui_wallet_global.hpp"
 
 
 namespace gui_wallet
 {
-    class Transactions_tab : public TabContentManager
-    {
+   class TransactionsTab : public TabContentManager {
+      
+      Q_OBJECT
+   public:
+      TransactionsTab();
+      
+      virtual void content_activated() {}
+      virtual void content_deactivated() {}
 
-        Q_OBJECT
-    public:
-        Transactions_tab();
-        ~Transactions_tab();
-
-        QVBoxLayout main_layout;
-        QLabel search_label;
-        HTableWidget* tablewidget;
-        QTableWidgetItem* itm;
-        QPushButton* more;
-        QLineEdit user;
-        int green_row;
-        void createNewRow();
-        void deleteEmptyRows();
-        void ArrangeSize();
-        void Connects();
-        
-    public:
-        virtual void content_activated() {}
-        virtual void content_deactivated() {}
-        virtual void resizeEvent(QResizeEvent *a_event);
-        
-
-    public slots:
-        void doRowColor();
-        void onTextChanged(const QString& text);
-        void updateContents();
-        void maybeUpdateContent();
-
-    private:
-        QTimer  m_contentUpdateTimer;
-        bool m_doUpdate = true;
-    };
+      void set_user_filter(const std::string& user_name);
+      
+   public:
+      QVBoxLayout       main_layout;
+      QLabel            search_label;
+      DecentTable       tablewidget;
+      QLineEdit         user;
+      
+   private:
+      std::string getAccountName(std::string accountId);
+      
+   public slots:
+      void onTextChanged(const QString& text);
+      void updateContents();
+      void maybeUpdateContent();
+      void currentUserChanged(std::string user);
+      
+   private:
+      QTimer   m_contentUpdateTimer;
+      bool     m_doUpdate = true;
+      
+      std::map<std::string, std::string> _user_id_cache;
+      
+   };
 }
 
-
-#endif // TRANSACTIONS_TAB_HPP
