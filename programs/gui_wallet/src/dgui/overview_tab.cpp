@@ -27,7 +27,7 @@ Overview_tab::Overview_tab(class Mainwindow_gui_wallet* a_pPar)
 {
    table_widget.set_columns({
       {"Account ID", 40},
-      {"Author", 40},
+      {"Account", 40},
       {"", 10},
       {"", 10}
    });
