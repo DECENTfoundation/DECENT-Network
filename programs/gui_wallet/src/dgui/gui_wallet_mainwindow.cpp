@@ -218,11 +218,14 @@ void Mainwindow_gui_wallet::CreateMenues()
 
     m_pMenuHelpL = pMenuBar->addMenu( tr("&Help") );
 
+    m_pMenuStatus = pMenuBar->addMenu( tr("&Status") );
+    m_pMenuStatus->addAction(&m_ActionHelp);
 
     /******************************************************/
     m_pMenuHelpL->addAction(&m_ActionAbout);
     m_pMenuHelpL->addAction(&m_ActionInfo);
-    m_pMenuHelpL->addAction(&m_ActionHelp);
+    
+    
 }
 
 void Mainwindow_gui_wallet::ViewAction() {
