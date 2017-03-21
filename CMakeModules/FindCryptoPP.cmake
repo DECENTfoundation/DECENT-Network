@@ -11,8 +11,11 @@ message( STATUS "Looking for Crypto++" )
 
 find_library( CRYPTOPP_LIBRARIES NAMES "cryptopp" )
 find_path( CRYPTOPP_INCLUDE_DIR "cryptopp/integer.h" )
-if( NOT CRYPTOPP_LIBRARIES OR NOT CRYPTOPP_INCLUDE_DIR )
-    message( FATAL_ERROR "Crypto++ not found" )
+if( NOT CRYPTOPP_INCLUDE_DIR )
+   message( FATAL_ERROR "Crypto++ includes not found")    
+endif()
+if( NOT CRYPTOPP_LIBRARIES )
+   message( FATAL_ERROR "Crypto++ libraries not found")
 endif()
 
 message( STATUS "Crypto++ found at ${CRYPTOPP_LIBRARIES}" )

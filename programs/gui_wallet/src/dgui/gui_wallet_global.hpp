@@ -377,6 +377,11 @@ namespace gui_wallet
    
    class DecentTable : public QTableWidget {
       Q_OBJECT
+       
+   public:
+   signals:
+       void MouseWasMoved();
+       
    public:
       DecentTable() {
          this->horizontalHeader()->setStretchLastSection(true);
@@ -388,6 +393,8 @@ namespace gui_wallet
          this->verticalHeader()->hide();
          this->setMouseTracking(true);
       }
+       
+       int getCurrentHighlightedRow(){return _current_highlighted_row;}
       
       
       void set_columns(const std::vector<DecentColumn>& cols) {
@@ -493,7 +500,12 @@ namespace gui_wallet
          }
          
          _current_highlighted_row = row;
+          
+          emit MouseWasMoved();
       }
+       
+       
+
       
    private:
       int                            _current_highlighted_row = -1;

@@ -21,11 +21,11 @@ DecentButton::DecentButton()
     setStyleSheet("QLabel { background-color :rgb(27,176,104); color : white;}");
     setScaledContents(true);
     
-    QGraphicsDropShadowEffect *effect = new QGraphicsDropShadowEffect(this);
-    effect->setBlurRadius(20);
-    effect->setOffset(2,2);
+    //QGraphicsDropShadowEffect *effect = new QGraphicsDropShadowEffect(this);
+    //effect->setBlurRadius(20);
+    //effect->setOffset(2,2);
     
-    setGraphicsEffect(effect);
+    //setGraphicsEffect(effect);
 }
 
 DecentButton::~DecentButton()

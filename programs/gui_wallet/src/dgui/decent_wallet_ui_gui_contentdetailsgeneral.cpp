@@ -10,12 +10,9 @@
 #include <QFileDialog>
 
 using namespace gui_wallet;
-
-
-
 ContentDetailsGeneral::ContentDetailsGeneral() {
    QVBoxLayout* image_layout = new QVBoxLayout;
-   m_label.setText("BUY");
+   m_label.setText("Get it");
    m_label.setFixedWidth(120);
    m_label.setFixedHeight(30);
    

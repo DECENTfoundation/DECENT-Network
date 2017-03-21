@@ -21,7 +21,8 @@ namespace graphene { namespace chain {
       uint64_t free_space;
       asset price;
       time_point_sec expiration;
-      decent::encrypt::d_integer_string pubKey;
+      decent::encrypt::DIntegerString pubKey;
+
       vector<string> ipfs_IDs;
       seeding_statistics_id_type stats;
    };
