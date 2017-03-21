@@ -18,13 +18,10 @@
 #include <vector>
 #include <string>
 
-namespace decent{
-
-namespace gui{
-namespace tools{
+namespace gui_wallet {
 
 
-enum RET_TYPE{RDB_OK,RDB_CANCEL};
+enum RET_TYPE {RDB_OK, RDB_CANCEL};
 
 class RichDialogBase : protected QDialog
 {
@@ -65,10 +62,7 @@ protected:
 };
 
 
-} // namespace tools{
-}  // namespace gui{
-
-}  //namespace decent{
+}
 
 
 #endif // RICHDIALOG_HPP

@@ -97,10 +97,10 @@ CentralWigdet::CentralWigdet(QBoxLayout* a_pAllLayout, Mainwindow_gui_wallet* a_
       m_parent_main_window(a_pPar),
       m_browse_cont_tab(a_pPar),
       m_Overview_tab(a_pPar),
-      m_Upload_tab(a_pPar)
+      m_Upload_tab(a_pPar) {
 
-{
 
+         
     m_allTabs.push_back(&m_browse_cont_tab);
     m_allTabs.push_back(&m_trans_tab);
     m_allTabs.push_back(&m_Upload_tab);

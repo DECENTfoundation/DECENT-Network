@@ -167,7 +167,7 @@ QWidget* gui_wallet::ConnectDlg::GetTableWidget(int a_column, int a_row)
 
 int gui_wallet::ConnectDlg::execNew(SConnectionStruct* a_pData)
 {
-    m_ret_value = decent::gui::tools::RDB_CANCEL;
+    m_ret_value = RDB_CANCEL;
     
     QString tqsString;
     ((QLineEdit*)m_main_table.cellWidget(RPC_ENDPOINT_FIELD,1))->setText(tr(a_pData->ws_server.c_str()));
@@ -190,6 +190,6 @@ int gui_wallet::ConnectDlg::execNew(SConnectionStruct* a_pData)
 
 void gui_wallet::ConnectDlg::ConnectPushedSlot()
 {
-    m_ret_value = decent::gui::tools::RDB_OK;
+    m_ret_value = RDB_OK;
     close();
 }
