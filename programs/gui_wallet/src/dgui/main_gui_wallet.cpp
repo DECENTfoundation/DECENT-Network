@@ -64,7 +64,6 @@
 using namespace graphene;
 namespace bpo = boost::program_options;
 
-extern InGuiThreatCaller* s_pWarner;
 
 void write_default_logging_config_to_stream(std::ostream& out);
 fc::optional<fc::logging_config> load_logging_config_from_ini_file(const fc::path& config_ini_filename);

@@ -17,7 +17,7 @@
 #include <pthread.h>
 #endif  // #ifdef WIN32
 
-namespace decent{ namespace tools{
+namespace gui_wallet {
 
 class RWLock
 {
@@ -38,6 +38,6 @@ protected:
 #endif  // #ifdef WIN32
 };
 
-}}
+}
 
 #endif // DECENT_TOOLS_RWLOCK_HPP

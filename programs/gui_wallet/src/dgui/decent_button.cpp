@@ -9,7 +9,6 @@
  */
 
 #include "decent_button.hpp"
-#include "debug_decent_application.h"
 #include <QGraphicsDropShadowEffect>
 #include <string>
 
