@@ -43,6 +43,7 @@
 #include <boost/iostreams/filtering_stream.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
 #include <boost/iostreams/device/file.hpp>
+#include <boost/iostreams/stream.hpp>
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_io.hpp>
@@ -50,6 +51,10 @@
 
 #include <iostream>
 #include <atomic>
+
+#include <cstdio>
+#include <cstring>
+
 
 using namespace std;
 using namespace nlohmann;
@@ -69,66 +74,67 @@ const int RIPEMD160_BUFFER_SIZE  = 1024 * 1024; // 4kb
     
 struct arc_header {
     char type; // 0 = EOF, 1 = REGULAR FILE
-	char name[255];
-	char size[8];
+    char name[255];
+    char size[8];
 };
 
 
 class archiver {
-	filtering_ostream&   _out;
+private:
+    filtering_ostream& _out;
+
 public:
-	archiver(filtering_ostream& out): _out(out) {
+    explicit archiver(filtering_ostream& out) : _out(out) { }
 
-	}
+    bool put(const std::string& file_name, const path& source_file_path) {
+        file_source in(source_file_path.string(), std::ios_base::in | std::ios_base::binary);
 
-	bool put(const std::string& file_name, file_source& in, int file_size) {
-		arc_header header;
+        if (!in.is_open()) {
+            FC_THROW("Unable to open file ${file} for reading", ("file", source_file_path.string()) );
+        }
 
-		std::memset((void*)&header, 0, sizeof(arc_header));
-        
-	    std::snprintf(header.name, 255, "%s", file_name.c_str());
-        
+        const int file_size = boost::filesystem::file_size(source_file_path);
+
+        arc_header header;
+
+        std::memset((void*)&header, 0, sizeof(arc_header));
+        std::snprintf(header.name, 255, "%s", file_name.c_str());
+
         header.type = 1;
         *(int*)header.size = file_size;
+        _out.write((const char*)&header, sizeof(arc_header));
 
+        stream<file_source> is(in);
+        _out << is.rdbuf();
 
-		_out.write((const char*)&header,sizeof(arc_header));
-        
-        char buffer[ARC_BUFFER_SIZE];
-        int bytes_read = in.read(buffer, ARC_BUFFER_SIZE);
-        
-        while (bytes_read > 0) {
-            _out.write(buffer, bytes_read);
-            bytes_read = in.read(buffer, ARC_BUFFER_SIZE);
-        }
-        
         return true;
-	}
+    }
 
-	void finalize() {
-		arc_header header;
+    void finalize() {
+        arc_header header;
 
-		std::memset((void*)&header, 0, sizeof(arc_header));
-		_out.write((const char*)&header,sizeof(arc_header));
-		_out.flush();
+        std::memset((void*)&header, 0, sizeof(arc_header));
+        _out.write((const char*)&header, sizeof(arc_header));
+        _out.flush();
         _out.reset();      
-	}
-
+    }
 };
 
 
 class dearchiver {
+private:
     filtering_istream& _in;
 
 public:
-    dearchiver(filtering_istream& in) : _in(in) { }
+    explicit dearchiver(filtering_istream& in) : _in(in) { }
 
     bool extract(const std::string& output_dir) {
-        arc_header header;
-
         while (true) {
+            arc_header header;
+
             std::memset((void*)&header, 0, sizeof(arc_header));
             _in.read((char*)&header, sizeof(arc_header));
+
             if (header.type == 0) {
                 break;
             }
@@ -163,6 +169,7 @@ public:
 
             while (bytes_to_read > 0) {
                 const int bytes_read = boost::iostreams::read(_in, buffer, std::min(ARC_BUFFER_SIZE, bytes_to_read));
+
                 if (bytes_read < 0) {
                     break;
                 }
@@ -174,7 +181,7 @@ public:
 
                 bytes_to_read -= bytes_read;
             }
-
+            
             if (bytes_to_read != 0) {
                 FC_THROW("Unexpected end of file");
             }
@@ -197,9 +204,9 @@ void get_files_recursive(boost::filesystem::path path, std::vector<boost::filesy
  
     while(it != end) // 2.
     {
-    	if (is_regular_file(*it)) {
-    		all_files.push_back(*it);
-    	}
+        if (is_regular_file(*it)) {
+            all_files.push_back(*it);
+        }
 
         if(is_directory(*it) && is_symlink(*it))
             it.no_push();
@@ -259,21 +266,46 @@ boost::filesystem::path relative_path( const boost::filesystem::path &path, cons
 
 
 fc::ripemd160 calculate_hash(path file_path) {
-    file_source source(file_path.string(), std::ifstream::binary);
+    std::FILE* source = std::fopen(file_path.string().c_str(), "rb");
 
-    if (!source.is_open()) {
-         FC_THROW("Unable to open file ${fn} for reading", ("fn", file_path.string()) );
+    if (!source) {
+        FC_THROW("Unable to open file ${fn} for reading", ("fn", file_path.string()) );
     }
 
-    char buffer[RIPEMD160_BUFFER_SIZE];
-    int bytes_read = source.read(buffer, RIPEMD160_BUFFER_SIZE);
-    
     fc::ripemd160::encoder ripe_calc;
 
-    while (bytes_read > 0) {
-        ripe_calc.write(buffer, bytes_read);
-        bytes_read = source.read(buffer, RIPEMD160_BUFFER_SIZE);
+    try {
+        std::fseek(source, 0, SEEK_END);
+        auto source_size = std::ftell(source);
+        std::rewind(source);
+
+        char buffer[RIPEMD160_BUFFER_SIZE];
+
+        size_t total_read = 0;
+
+        while (true) {
+            const int bytes_read = std::fread(buffer, 1, sizeof(buffer), source);
+
+            if (bytes_read > 0) {
+                ripe_calc.write(buffer, bytes_read);
+                total_read += bytes_read;
+            }
+
+            if (bytes_read < sizeof(buffer)) {
+                break;
+            }
+        }
+
+        if (total_read != source_size) {
+            FC_THROW("Failed to read ${fn} file: ${error} (${ec})", ("fn", file_path.string()) ("error", std::strerror(errno)) ("ec", errno) );
+        }
     }
+    catch ( ... ) {
+        std::fclose(source);
+        throw;
+    }
+
+    std::fclose(source);
 
     return ripe_calc.result();
 }
@@ -464,62 +496,53 @@ bool package_manager::unpack_package(const path& destination_directory, const pa
 
     filtering_istream istr;
     istr.push(gzip_decompressor());
-    istr.push(file_source(zip_file.string(), std::ifstream::binary));
+    istr.push(file_source(zip_file.string(), std::ios::in | std::ios::binary));
 
     dearchiver dearc(istr);
     dearc.extract(destination_directory.string());
 
-	return true;
+    return true;
 }
 
 package_object package_manager::create_package( const boost::filesystem::path& content_path, const boost::filesystem::path& samples, const fc::sha512& key, decent::encrypt::CustodyData& cd) {
-	if (!is_directory(content_path) && !is_regular_file(content_path)) {
+    if (!is_directory(content_path) && !is_regular_file(content_path)) {
         FC_THROW("Content path is not directory or file");
-	}
+    }
 
-	//if (!is_directory(samples) || samples.size() == 0) {
-    //    FC_THROW("Samples path is not directory");
-	//}
+//  if (!is_directory(samples) || samples.size() == 0) {
+//      FC_THROW("Samples path is not directory");
+//  }
 
     const path packages_path = get_packages_path();
 
-	path temp_path = packages_path / make_uuid();
-	if (!create_directory(temp_path)) {
+    path temp_path = packages_path / make_uuid();
+    if (!create_directory(temp_path)) {
         FC_THROW("Failed to create temporary directory");
-	}
+    }
 
     if (CryptoPP::AES::MAX_KEYLENGTH > key.data_size()) {
         FC_THROW("CryptoPP::AES::MAX_KEYLENGTH is bigger than key size");
     }
 
+    path content_zip = temp_path / "content.zip";
 
-	path content_zip = temp_path / "content.zip";
-
-	filtering_ostream out;
+    filtering_ostream out;
     out.push(gzip_compressor());
-    out.push(file_sink(content_zip.string(), std::ofstream::binary));
-	archiver arc(out);
+    out.push(file_sink(content_zip.string(), std::ios::out | std::ios::binary));
+    archiver arc(out);
 
-	vector<path> all_files;
+    vector<path> all_files;
     if (is_regular_file(content_path)) {
-        file_source source(content_path.string(), std::ifstream::binary);
-        
-        arc.put(content_path.filename().string(), source, file_size(content_path));
-
+        arc.put(content_path.filename().string(), content_path);
     } else {
-	   get_files_recursive(content_path, all_files);
-        
+        get_files_recursive(content_path, all_files);
+
         for (int i = 0; i < all_files.size(); ++i) {
-            file_source source(all_files[i].string(), std::ifstream::binary);
-            
-            arc.put(relative_path(all_files[i], content_path).string(), source, file_size(all_files[i]));
+            arc.put(relative_path(all_files[i], content_path).string(), all_files[i]);
         }
     }
-    
-	
 
-	arc.finalize();
-
+    arc.finalize();
 
     path aes_file_path = temp_path / "content.zip.aes";
 
@@ -549,7 +572,7 @@ package_object package_manager::create_package( const boost::filesystem::path& c
         
     rename(temp_path, packages_path / hash.str());
 
-	return package_object(packages_path / hash.str());
+    return package_object(packages_path / hash.str());
 }
 
 package_transfer_interface::transfer_id
@@ -581,30 +604,36 @@ package_manager::upload_package( const package_object& package,
 package_transfer_interface::transfer_id 
 package_manager::download_package( const string& url,
                                    package_transfer_interface::transfer_listener& listener,
-                                   report_stats_listener_base& stats_listener ) {try{
+                                   report_stats_listener_base& stats_listener ) {
+    try{
+        ilog("package_manager:download_package called for ${u}",("u", url));
+        fc::scoped_lock<fc::mutex> guard(_mutex);
+        fc::url download_url(url);
 
-   ilog("package_manager:download_package called for ${u}",("u", url));
-   fc::scoped_lock<fc::mutex> guard(_mutex);
-    fc::url download_url(url);
+        protocol_handler_map::iterator it = _protocol_handlers.find(download_url.proto());
+        if (it == _protocol_handlers.end()) {
+            FC_THROW("Can not find protocol handler for : ${proto}", ("proto", download_url.proto()) );
+        }
 
-    protocol_handler_map::iterator it = _protocol_handlers.find(download_url.proto());
-    if (it == _protocol_handlers.end()) {
-        FC_THROW("Can not find protocol handler for : ${proto}", ("proto", download_url.proto()) );
+        transfer_job& t = create_transfer_object();
+        t.transport = it->second->clone();
+        t.listener = &listener;
+        t.job_type = transfer_job::DOWNLOAD;
+
+        try {
+            t.transport->download_package(t.job_id, url, &listener, stats_listener);
+        } catch(std::exception& ex) {
+            elog("download error: ${error}", ("error", ex.what()));
+        }
+
+        return t.job_id;
+    }
+    catch( ... ) {
+        elog("package_manager:download_package unspecified error");
     }
 
-    transfer_job& t = create_transfer_object();
-    t.transport = it->second->clone();
-    t.listener = &listener;
-    t.job_type = transfer_job::DOWNLOAD;
-
-    try {
-        t.transport->download_package(t.job_id, url, &listener, stats_listener);
-    } catch(std::exception& ex) {
-        elog("download error: ${error}", ("error", ex.what()));
-    }
-
-    return t.job_id;
-}catch(...){elog("package_manager:download_package unspecified error");} }
+    return package_transfer_interface::transfer_id();
+}
 
 void package_manager::print_all_transfers() {
     fc::scoped_lock<fc::mutex> guard(_mutex);
