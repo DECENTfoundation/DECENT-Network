@@ -114,7 +114,7 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
    
     
     _balanceUpdater.setSingleShot(false);
-    _balanceUpdater.setInterval(1000);
+    _balanceUpdater.setInterval(10000);
     connect(&_balanceUpdater, SIGNAL(timeout()), this, SLOT( CurrentUserBalanceUpdate() ));
     _balanceUpdater.start();
    
@@ -127,6 +127,10 @@ void Mainwindow_gui_wallet::CurrentUserBalanceUpdate()
 {
     std::string user_balance_update;
     user_balance_update = GlobalEvents::instance().getCurrentUser();
+    if( user_balance_update == "" )
+    {
+        return;
+    }
     UpdateAccountBalances(user_balance_update);
 }
 
