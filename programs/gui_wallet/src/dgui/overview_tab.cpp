@@ -61,48 +61,17 @@ Overview_tab::Overview_tab(class Mainwindow_gui_wallet* a_pPar)
    main->addWidget(&table_widget);
    
    setLayout(main);
-   
-   connect(&search, SIGNAL(textChanged(QString)), this, SLOT(onTextChanged(QString)));
-   
-   
-   m_contentUpdateTimer.connect(&m_contentUpdateTimer, SIGNAL(timeout()), this, SLOT(maybeUpdateContent()));
-   m_contentUpdateTimer.setInterval(1000);
-   m_contentUpdateTimer.start();
-   
+ 
    table_widget.setMouseTracking(true);
 }
 
 
 
-void Overview_tab::maybeUpdateContent() {
-   if (!m_doUpdate) {
+void Overview_tab::timeToUpdate(const std::string& result) {
+   if (result.empty()) {
+      table_widget.setRowCount(0);
       return;
    }
-   
-   m_doUpdate = false;
-   try {
-      updateContents();
-   } catch (...) {
-      // Ignore for now;
-   }
-}
-
-void Overview_tab::onTextChanged(const QString& text) {
-   
-   m_doUpdate = true;
-}
-
-
-void Overview_tab::updateContents() {
-   table_widget.setRowCount(0); //Remove everything but header
-   
-   
-   if (search.text().toStdString().empty()) {
-      return;
-   }
-   
-   std::string result;
-   RunTask("search_accounts \"" + search.text().toStdString() +"\" 100", result);
    
    auto contents = json::parse(result);
    
@@ -110,25 +79,25 @@ void Overview_tab::updateContents() {
    
    for (int i = 0; i < contents.size() + 1; ++i) {
       auto content = contents[i];
-
-
+      
+      
       
       table_widget.setItem(i, 1, new QTableWidgetItem(QString::fromStdString(content[0].get<std::string>())));
       table_widget.setItem(i, 0, new QTableWidgetItem(QString::fromStdString(content[1].get<std::string>())));
-       
-       
-       EventPassthrough<DecentSmallButton>* trans = new EventPassthrough<DecentSmallButton>(":/icon/images/transaction.png", ":/icon/images/transaction1.png");
-       trans->setProperty("accountName", QVariant::fromValue(QString::fromStdString(content[0].get<std::string>())));
-       trans->setAlignment(Qt::AlignCenter);
-       connect(trans, SIGNAL(clicked()), this, SLOT(transactionButtonPressed()));
-       table_widget.setCellWidget(i, 2, trans);
-       
-       EventPassthrough<DecentSmallButton>* transf = new EventPassthrough<DecentSmallButton>(":/icon/images/transfer.png", ":/icon/images/transfer1.png");
-       transf->setProperty("accountName", QVariant::fromValue(QString::fromStdString(content[0].get<std::string>())));
-       transf->setAlignment(Qt::AlignCenter);
-       connect(transf, SIGNAL(clicked()), this, SLOT(buttonPressed()));
-       table_widget.setCellWidget(i, 3, transf);
-       
+      
+      
+      EventPassthrough<DecentSmallButton>* trans = new EventPassthrough<DecentSmallButton>(":/icon/images/transaction.png", ":/icon/images/transaction1.png");
+      trans->setProperty("accountName", QVariant::fromValue(QString::fromStdString(content[0].get<std::string>())));
+      trans->setAlignment(Qt::AlignCenter);
+      connect(trans, SIGNAL(clicked()), this, SLOT(transactionButtonPressed()));
+      table_widget.setCellWidget(i, 2, trans);
+      
+      EventPassthrough<DecentSmallButton>* transf = new EventPassthrough<DecentSmallButton>(":/icon/images/transfer.png", ":/icon/images/transfer1.png");
+      transf->setProperty("accountName", QVariant::fromValue(QString::fromStdString(content[0].get<std::string>())));
+      transf->setAlignment(Qt::AlignCenter);
+      connect(transf, SIGNAL(clicked()), this, SLOT(buttonPressed()));
+      table_widget.setCellWidget(i, 3, transf);
+      
       table_widget.setRowHeight(i,40);
       table_widget.cellWidget(i, 2)->setStyleSheet("* { background-color: rgb(255,255,255); color : rgb(27,176,104); }");
       table_widget.cellWidget(i, 3)->setStyleSheet("* { background-color: rgb(255,255,255); color : rgb(27,176,104); }");
@@ -145,7 +114,13 @@ void Overview_tab::updateContents() {
       
       table_widget.item(i,0)->setForeground(QColor::fromRgb(88,88,88));
       table_widget.item(i,1)->setForeground(QColor::fromRgb(88,88,88));
-    }
+   }
+
+}
+
+
+std::string Overview_tab::getUpdateCommand() {
+   return "search_accounts \"" + search.text().toStdString() +"\" 100";
 }
 
 

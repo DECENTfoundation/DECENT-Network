@@ -92,11 +92,12 @@ public:
     }
    
     void initTabChanged();
-    
     void SetTransactionInfo(std::string info_from_other_tab);
+   
 public slots:
-    void tabChanged(int index);
-
+   void tabChanged(int index);
+   void walletUnlockedSlot();
+   void updateActiveTab();
     
 protected:
     virtual void showEvent ( QShowEvent * event ) ;

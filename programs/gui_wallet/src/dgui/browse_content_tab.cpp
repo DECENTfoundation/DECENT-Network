@@ -36,7 +36,7 @@ using namespace gui_wallet;
 using namespace nlohmann;
 
 
-BrowseContentTab::BrowseContentTab(Mainwindow_gui_wallet* parent) : _parent(parent) , _content_popup(NULL){
+BrowseContentTab::BrowseContentTab(Mainwindow_gui_wallet* parent) : _content_popup(NULL), _parent(parent) {
     
     m_pTableWidget.set_columns({
         {"Title", 20},
@@ -79,88 +79,61 @@ BrowseContentTab::BrowseContentTab(Mainwindow_gui_wallet* parent) : _parent(pare
     m_main_layout.addWidget(&m_pTableWidget);
     setLayout(&m_main_layout);
     
-    connect(&m_filterLineEdit, SIGNAL(textChanged(QString)), this, SLOT(onTextChanged(QString)));
-    
-    
-    m_contentUpdateTimer.connect(&m_contentUpdateTimer, SIGNAL(timeout()), this, SLOT(maybeUpdateContent()));
-    m_contentUpdateTimer.connect(&GlobalEvents::instance(), SIGNAL(walletUnlocked()), this, SLOT(requestContentUpdate()));
-    
-    m_contentUpdateTimer.setInterval(1000);
-    m_contentUpdateTimer.start();
     
 }
 
-void BrowseContentTab::requestContentUpdate() {
-    m_doUpdate = true;
+void BrowseContentTab::timeToUpdate(const std::string& result) {
+   _digital_contents.clear();
+   
+   if (result.empty()) {
+      ShowDigitalContentsGUI();
+      return;
+   }
+   
+   auto contents = json::parse(result);
+   
+   _digital_contents.resize(contents.size());
+   
+   
+   for (int i = 0; i < contents.size(); ++i) {
+      SDigitalContent& cont = _digital_contents[i];
+      
+      cont.type = DCT::GENERAL;
+      cont.author = contents[i]["author"].get<std::string>();
+      cont.price.asset_id = contents[i]["price"]["asset_id"].get<std::string>();
+      cont.synopsis = contents[i]["synopsis"].get<std::string>();
+      cont.URI = contents[i]["URI"].get<std::string>();
+      cont.created = contents[i]["created"].get<std::string>();
+      cont.expiration = contents[i]["expiration"].get<std::string>();
+      cont.size = contents[i]["size"].get<int>();
+      
+      if (contents[i]["times_bougth"].is_number()) {
+         cont.times_bougth = contents[i]["times_bougth"].get<int>();
+      } else {
+         cont.times_bougth = 0;
+      }
+      
+      
+      if (contents[i]["price"]["amount"].is_number()){
+         cont.price.amount =  contents[i]["price"]["amount"].get<double>();
+      } else {
+         cont.price.amount =  std::stod(contents[i]["price"]["amount"].get<std::string>());
+      }
+      
+      cont.price.amount /= GRAPHENE_BLOCKCHAIN_PRECISION;
+      cont.AVG_rating = contents[i]["AVG_rating"].get<double>()  / 1000;
+      
+   }
+   
+   ShowDigitalContentsGUI();
 }
 
-void BrowseContentTab::maybeUpdateContent() {
-    if (!m_doUpdate) {
-        return;
-    }
-    
-    m_doUpdate = false;
-    updateContents();
+
+
+std::string BrowseContentTab::getUpdateCommand() {
+   std::string filterText = m_filterLineEdit.text().toStdString();
+   return "search_content \"" + filterText + "\" 100";
 }
-
-void BrowseContentTab::onTextChanged(const QString& text) {
-    
-    m_doUpdate = true;
-}
-
-
-
-void BrowseContentTab::updateContents() {
-    std::string filterText = m_filterLineEdit.text().toStdString();
-    
-    std::string a_result;
-    
-    
-    try {
-        RunTask("search_content \"" + filterText + "\" 100", a_result);
-        
-        auto contents = json::parse(a_result);
-        
-        _digital_contents.clear();
-        _digital_contents.resize(contents.size());
-        
-        
-        for (int i = 0; i < contents.size(); ++i) {
-            SDigitalContent& cont = _digital_contents[i];
-            
-            cont.type = DCT::GENERAL;
-            cont.author = contents[i]["author"].get<std::string>();
-            cont.price.asset_id = contents[i]["price"]["asset_id"].get<std::string>();
-            cont.synopsis = contents[i]["synopsis"].get<std::string>();
-            cont.URI = contents[i]["URI"].get<std::string>();
-            cont.created = contents[i]["created"].get<std::string>();
-            cont.expiration = contents[i]["expiration"].get<std::string>();
-            cont.size = contents[i]["size"].get<int>();
-            
-            if (contents[i]["times_bougth"].is_number()) {
-                cont.times_bougth = contents[i]["times_bougth"].get<int>();
-            } else {
-                cont.times_bougth = 0;
-            }
-            
-            
-            if (contents[i]["price"]["amount"].is_number()){
-                cont.price.amount =  contents[i]["price"]["amount"].get<double>();
-            } else {
-                cont.price.amount =  std::stod(contents[i]["price"]["amount"].get<std::string>());
-            }
-            
-            cont.price.amount /= GRAPHENE_BLOCKCHAIN_PRECISION;
-            cont.AVG_rating = contents[i]["AVG_rating"].get<double>()  / 1000;
-            
-        }
-        
-        ShowDigitalContentsGUI();
-    } catch (std::exception& ex) {
-        std::cout << ex.what() << std::endl;
-    }
-}
-
 
 
 void BrowseContentTab::show_content_popup() {
