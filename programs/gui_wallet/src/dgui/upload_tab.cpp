@@ -573,14 +573,12 @@ void Upload_tab::content_was_bought() {
 void Upload_tab::ShowDigitalContentsGUI() {
     
     m_pTableWidget.setRowCount(_digital_contents.size());
-    QPixmap info_image(":/icon/images/pop_up.png");
     
     int index = 0;
     for(SDigitalContent& aTemporar: _digital_contents) {
         
-        EventPassthrough<ClickableLabel>* info_icon = new EventPassthrough<ClickableLabel>();
+        EventPassthrough<DecentSmallButton>* info_icon = new EventPassthrough<DecentSmallButton>(":/icon/images/pop_up.png",":/icon/images/pop_up1.png");
         info_icon->setProperty("id", QVariant::fromValue(index));
-        info_icon->setPixmap(info_image);
         info_icon->setAlignment(Qt::AlignCenter);
         connect(info_icon, SIGNAL(clicked()), this, SLOT(show_content_popup()));
         m_pTableWidget.setCellWidget(index, 6, info_icon);
@@ -659,27 +657,8 @@ void Upload_tab::ShowDigitalContentsGUI() {
         
         ++index;
     }
-    connect(&m_pTableWidget , SIGNAL(MouseWasMoved()),this,SLOT(paintRow()));
-
 }
 
-void Upload_tab::paintRow()
-{
-    QPixmap info_image(":/icon/images/pop_up.png");
-    QPixmap info_image_white(":/icon/images/pop_up1.png");
-    int row = m_pTableWidget.getCurrentHighlightedRow();
-    for(int i = 0; i < m_pTableWidget.rowCount(); ++i)
-    {
-        if(i == row)
-        {
-            ((NewButton*)m_pTableWidget.cellWidget(i,6))->setPixmap(info_image_white);
-        }
-        else
-        {
-            ((NewButton*)m_pTableWidget.cellWidget(i,6))->setPixmap(info_image);
-        }
-    }
-}
 
 void Upload_tab::upload_popup()
 {

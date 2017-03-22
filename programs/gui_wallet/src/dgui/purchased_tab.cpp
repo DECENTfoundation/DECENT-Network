@@ -181,9 +181,9 @@ void PurchasedTab::updateContents() {
          m_pTableWidget.horizontalHeader()->setStretchLastSection(true);
          
          
-         EventPassthrough<ClickableLabel>* info_icon = new EventPassthrough<ClickableLabel>();
+         EventPassthrough<DecentSmallButton>* info_icon = new EventPassthrough<DecentSmallButton>(":/icon/images/pop_up.png", ":/icon/images/pop_up1.png");
          info_icon->setProperty("id", QVariant::fromValue(i));
-         info_icon->setPixmap(info_image);
+         //info_icon->setPixmap(info_image);
          info_icon->setAlignment(Qt::AlignCenter);
          connect(info_icon, SIGNAL(clicked()), this, SLOT(show_content_popup()));
          m_pTableWidget.setCellWidget(i, 7, info_icon);
@@ -242,14 +242,13 @@ void PurchasedTab::updateContents() {
             m_pTableWidget.item(i, 6)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
          } else {
             
-            EventPassthrough<ClickableLabel>* extract_icon = new EventPassthrough<ClickableLabel>();
+            EventPassthrough<DecentSmallButton>* extract_icon = new EventPassthrough<DecentSmallButton>(":/icon/images/export.png", ":/icon/images/export1.png");
             
             
             extract_icon->setProperty("id", QVariant::fromValue(QString::fromStdString(content["id"].get<std::string>())));
             extract_icon->setProperty("hash", QVariant::fromValue(QString::fromStdString(dcontent_json["_hash"].get<std::string>())));
             extract_icon->setProperty("URI", QVariant::fromValue(QString::fromStdString(content["URI"].get<std::string>())));
             
-            extract_icon->setPixmap(extract_image.scaled(20, 20, Qt::KeepAspectRatio));
             
             extract_icon->setAlignment(Qt::AlignCenter);
 
@@ -271,35 +270,6 @@ void PurchasedTab::updateContents() {
    } catch (std::exception& ex) {
       std::cout << ex.what() << std::endl;
    }
-   
-    connect(&m_pTableWidget , SIGNAL(MouseWasMoved()),this,SLOT(paintRow()));
-
-   
-}
-
-void PurchasedTab::paintRow()
-{
-    QPixmap info_image(":/icon/images/pop_up.png");
-    QPixmap extract_image(":/icon/images/export.png");
-    QPixmap info_image_white(":/icon/images/pop_up1.png");
-    QPixmap extract_image_white(":/icon/images/export1.png");
-    int row = m_pTableWidget.getCurrentHighlightedRow();
-    for(int i = 0; i < m_pTableWidget.rowCount(); ++i)
-    {
-        if(i == row)
-        {
-            if(((QLabel*)m_pTableWidget.cellWidget(i,6)) != NULL) {  ((QLabel*)m_pTableWidget.cellWidget(i,6))->setPixmap(extract_image_white);}
-            ((QLabel*)m_pTableWidget.cellWidget(i,7))->setPixmap(info_image_white);
-        }
-        else
-        {
-            if(((QLabel*)m_pTableWidget.cellWidget(i,6)) != NULL)
-            {
-                ((QLabel*)m_pTableWidget.cellWidget(i,6))->setPixmap(extract_image);
-            }
-            ((QLabel*)m_pTableWidget.cellWidget(i,7))->setPixmap(info_image);
-        }
-    }
 }
 
 void PurchasedTab::extractPackage() {

@@ -342,22 +342,55 @@ namespace gui_wallet
    
    // QLabel with clicked() signal implemented
    
-   class ClickableLabel : public QLabel {
-      Q_OBJECT;
-   public:
-      template<class... Args>
-      ClickableLabel(const Args&... args) : QLabel(args...) {}
-      
-      
-   signals:
-      void clicked();
-      
-   protected:
-      void mousePressEvent(QMouseEvent* event) {
-         emit clicked();
-      }
-   };
-   
+    class DecentSmallButton : public QLabel {
+        Q_OBJECT;
+    public:
+        DecentSmallButton(const QString& normalImg, const QString& highlightedImg ){
+            normalImage.load(normalImg);
+            highlightedImage.load(highlightedImg);
+            this->setPixmap(normalImg);
+        }
+        
+        void unhighlight()
+        {
+            this->setPixmap(normalImage);
+            this->setStyleSheet("* { background-color: rgb(255,255,255); color : black; }");
+        }
+        
+        void highlight()
+        {
+            this->setPixmap(highlightedImage);
+            this->setStyleSheet("* { background-color: rgb(27,176,104); color : white; }");
+        }
+    
+    private:
+        QPixmap normalImage;
+        QPixmap highlightedImage;
+        
+    signals:
+        void clicked();
+        
+    protected:
+        void mousePressEvent(QMouseEvent* event) {
+            emit clicked();
+        }
+    };
+    class ClickableLabel : public QLabel {
+        Q_OBJECT;
+    public:
+        template<class... Args>
+        ClickableLabel(const Args&... args) : QLabel(args...) {}
+        
+        
+    signals:
+        void clicked();
+        
+    protected:
+        void mousePressEvent(QMouseEvent* event) {
+            emit clicked();
+        }
+    };
+    
    
    
    
@@ -454,12 +487,16 @@ namespace gui_wallet
                }
                
                if(cell_widget != NULL) {
-                  QString old_style = cell_widget->property("old_style").toString();
-                  
-                  if (old_style.isEmpty())
-                     cell_widget->setStyleSheet("* { background-color: rgb(255,255,255); color : black; }");
-                  else
-                     cell_widget->setStyleSheet(old_style);
+                   if(DecentSmallButton *button = qobject_cast<DecentSmallButton*>(cell_widget)) {
+                       button->unhighlight();
+                   } else {
+                      QString old_style = cell_widget->property("old_style").toString();
+                      
+                      if (old_style.isEmpty())
+                         cell_widget->setStyleSheet("* { background-color: rgb(255,255,255); color : black; }");
+                      else
+                         cell_widget->setStyleSheet(old_style);
+                   }
                }
             }
              
@@ -485,13 +522,16 @@ namespace gui_wallet
                cell->setForeground(QColor::fromRgb(255,255,255));
             }
             
-            if(cell_widget != NULL) {
-               cell_widget->setProperty("old_style", cell_widget->styleSheet());
-               cell_widget->setStyleSheet("* { background-color: rgb(27,176,104); color : white; }");
-            }
+            if(cell_widget != NULL)
+                if(DecentSmallButton *button = qobject_cast<DecentSmallButton*>(cell_widget)) {
+                    button->highlight();
+                } else {
+                   cell_widget->setProperty("old_style", cell_widget->styleSheet());
+                   cell_widget->setStyleSheet("* { background-color: rgb(27,176,104); color : white; }");
+                }
+            
             
          }
-         emit MouseWasMoved();
           _current_highlighted_row = row;
       }
        
