@@ -13,7 +13,7 @@ using namespace fc;
 using namespace gui_wallet;
 
 
-gui::gui() : _b_task_cancelled(false) {
+/*gui::gui() : _b_task_cancelled(false) {
 
 }
 
@@ -27,17 +27,17 @@ gui::~gui()
 }
 
 
-variant gui::send_call( api_id_type api_id, string method_name, variants args /* = variants() */ )
+variant gui::send_call( api_id_type api_id, string method_name, variants args /-* = variants() *-/ )
 {
    FC_ASSERT(false);
 }
 
-variant gui::send_callback( uint64_t callback_id, variants args /* = variants() */ )
+variant gui::send_callback( uint64_t callback_id, variants args /-* = variants() *-/ )
 {
    FC_ASSERT(false);
 }
 
-void gui::send_notice( uint64_t callback_id, variants args /* = variants() */ )
+void gui::send_notice( uint64_t callback_id, variants args /-* = variants() *-/ )
 {
    FC_ASSERT(false);
 }
@@ -119,4 +119,4 @@ void gui::run()
           WalletInterface::callFunctionInGuiLoop(aTaskItem.callbackArg,UNKNOWN_EXCEPTION,aTaskItem.input, "Unknown exception", aTaskItem.owner, aTaskItem.callback);
       }
    }
-}
+}*/

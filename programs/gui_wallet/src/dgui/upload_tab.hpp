@@ -117,13 +117,14 @@ namespace gui_wallet
     {
         Q_OBJECT;
     public:
-        Upload_tab(){}
         Upload_tab(Mainwindow_gui_wallet* parent);
         void ShowDigitalContentsGUI();
         
     public:
         virtual void content_activated() { }
         virtual void content_deactivated() {}
+
+       void RunTask(std::string const& str_command, std::string& str_result);
         
     public slots:
         void onTextChanged(const QString& text);

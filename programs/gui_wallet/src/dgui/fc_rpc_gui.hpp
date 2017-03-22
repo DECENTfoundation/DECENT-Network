@@ -15,7 +15,7 @@ namespace fc { namespace rpc {
    /**
     *  Provides a simple wrapper for RPC calls to a given interface.
     */
-   class gui : public api_connection
+   /*class gui : public api_connection
    {
    public:
       gui();
@@ -42,7 +42,7 @@ namespace fc { namespace rpc {
 
       gui_wallet::FiFo<gui_wallet::TaskListItem>     m_Fifo;
       gui_wallet::UnnamedSemaphoreLite               m_semaphore;
-   };
+   };*/
 
 } }
 

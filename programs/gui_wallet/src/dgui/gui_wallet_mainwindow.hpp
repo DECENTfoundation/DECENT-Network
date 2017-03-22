@@ -16,6 +16,7 @@
 #include <QLineEdit>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
+#include <QThread>
 #include "gui_wallet_connectdlg.hpp"
 #include "text_display_dialog.hpp"
 #include "richdialog.hpp"
@@ -23,17 +24,30 @@
 #include <stdarg.h>
 #include <string>
 #include <map>
+#include <set>
 #include <decent/wallet_utility/wallet_utility.hpp>
 #include "decent_wallet_ui_gui_contentdetailsgeneral.hpp"
 
 namespace gui_wallet
 {
-   
+using WalletAPI = decent::wallet_utility::WalletAPI;
+
+class WalletOperator : public QObject
+{
+    Q_OBJECT
+public:
+    WalletOperator();
+    ~WalletOperator();
+
+public slots:
+   void slot_connect(WalletAPI* pwallet_api);
+signals:
+   void signal_connected();
+};
 
 
 class Mainwindow_gui_wallet : public QMainWindow
 {
-   
    Q_OBJECT
 public:
    Mainwindow_gui_wallet();
@@ -75,6 +89,14 @@ protected slots:
    void ImportKeySlot();
    void LockSlot();
    void UnlockSlot();
+
+   void slot_connected();
+
+public:
+   void RunTask(std::string str_command, std::string str_result);
+
+signals:
+   void signal_connect(WalletAPI* pwallet_api);
    
 protected:
    class QVBoxLayout*   m_pCentralAllLayout;
@@ -105,13 +127,16 @@ protected:
    bool                                m_locked;
    RichDialog                          m_import_key_dlg;
    int                                 m_nConnected;
-   SConnectionStruct                   m_wdata2;
+   //SConnectionStruct                   m_wdata2;
    PasswordDialog                      m_SetPasswordDialog;
    PasswordDialog                      m_UnlockDialog;
    
    QTimer                              _downloadChecker;
    std::set<std::string>               _activeDownloads;
 
+   WalletOperator*   m_p_wallet_operator;
+   QThread           m_wallet_operator_thread;
+   WalletAPI         m_wallet_api;
 };
 
    

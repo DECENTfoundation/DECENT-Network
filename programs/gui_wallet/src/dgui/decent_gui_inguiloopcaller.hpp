@@ -5,7 +5,7 @@
 
 namespace gui_wallet {
 
-class InGuiLoopCaller : public QObject
+/*class InGuiLoopCaller : public QObject
 {
     Q_OBJECT
 public:
@@ -25,6 +25,6 @@ signals:
 
 private slots:
     void NextFunctionToCallSlot2(void*,int64_t, std::string, std::string,void*,TypeCallbackSetNewTaskGlb2);
-};
+};*/
 
 }

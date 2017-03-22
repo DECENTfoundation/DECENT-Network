@@ -144,6 +144,8 @@ namespace gui_wallet
       
       void buttonPressed(std::string accountName);
       void transaction_button_pressed(std::string accountName);
+
+      void RunTask(std::string const& str_command, std::string& str_result);
       
    public:
       QLineEdit      search;

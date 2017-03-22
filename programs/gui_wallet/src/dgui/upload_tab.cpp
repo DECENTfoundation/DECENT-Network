@@ -244,7 +244,7 @@ m_getPublishersTimer(this)
 
 void Upload_popup::onGrabPublishers() {
    
-    AsyncTask("list_publishers_by_price 100", this, NULL, +[](void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
+    /*AsyncTask("list_publishers_by_price 100", this, NULL, +[](void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
        Upload_popup* obj = (Upload_popup*)owner;
        
        auto publishers = json::parse(a_result);
@@ -268,7 +268,7 @@ void Upload_popup::onGrabPublishers() {
         }
         
         
-    });
+    });*/
 }
 
 void Upload_popup::browseContent() {
@@ -365,9 +365,9 @@ void Upload_popup::uploadContent() {
     submitCommand += " true";                                           //broadcast
 
 
-    AsyncTask(submitCommand, this, NULL, +[](void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
+    /*AsyncTask(submitCommand, this, NULL, +[](void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
         ((Upload_popup*)owner)->uploadDone(a_clbkArg, a_err, a_task, a_result);
-    });
+    });*/
 }
 
 void Upload_popup::uploadDone(void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
@@ -490,7 +490,10 @@ void Upload_tab::onTextChanged(const QString& text) {
     m_doUpdate = true;
 }
 
-
+void Upload_tab::RunTask(std::string const& str_command, std::string& str_result)
+{
+   _parent->RunTask(str_command, str_result);
+}
 
 void Upload_tab::updateContents() {
     std::string filterText = m_filterLineEdit.text().toStdString();
@@ -554,12 +557,12 @@ void Upload_tab::show_content_popup() {
     QLabel* btn = (QLabel*)sender();
     int id = btn->property("id").toInt();
     if (id < 0 || id >= _digital_contents.size()) {
-        throw std::out_of_range("Content index is our of range");
+        throw std::out_of_range("Content index is out of range");
     }
     
     if (_content_popup)
         delete _content_popup;
-    _content_popup = new ContentDetailsGeneral();
+    _content_popup = new ContentDetailsGeneral(_parent);
     
     connect(_content_popup, SIGNAL(ContentWasBought()), this, SLOT(content_was_bought()));
     _content_popup->execCDD(_digital_contents[id]);

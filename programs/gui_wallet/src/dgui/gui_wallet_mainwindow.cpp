@@ -36,95 +36,126 @@ using namespace utilities;
 
 static gui_wallet::Mainwindow_gui_wallet*  s_pMainWindowInstance = NULL;
 
+WalletOperator::WalletOperator()
+: QObject(nullptr)
+{
+
+}
+
+WalletOperator::~WalletOperator()
+{
+
+}
+
+void WalletOperator::slot_connect(WalletAPI* pwallet_api)
+{
+   pwallet_api->Connent();
+   emit signal_connected();
+}
 
 
 Mainwindow_gui_wallet::Mainwindow_gui_wallet()
-        :
-        m_ActionExit(tr("&Exit"),this),
-        m_ActionConnect(tr("Connect"),this),
-        m_ActionAbout(tr("About"),this),
-        m_ActionInfo(tr("Info"),this),
-        m_ActionHelp(tr("Help"),this),
-        m_ActionLock(tr("Lock"),this),
-        m_ActionUnlock(tr("Unlock"),this),
-        m_ActionImportKey(tr("Import key"),this),
-        m_info_dialog(),
-        m_locked(true),
-        m_import_key_dlg(2),
-        m_nConnected(0),
-        m_SetPasswordDialog(this, true),
-        m_UnlockDialog(this, false)
+: m_ActionExit(tr("&Exit"),this)
+, m_ActionConnect(tr("Connect"),this)
+, m_ActionAbout(tr("About"),this)
+, m_ActionInfo(tr("Info"),this)
+, m_ActionHelp(tr("Help"),this)
+, m_ActionLock(tr("Lock"),this)
+, m_ActionUnlock(tr("Unlock"),this)
+, m_ActionImportKey(tr("Import key"),this)
+, m_info_dialog()
+, m_locked(true)
+, m_import_key_dlg(2)
+, m_nConnected(0)
+, m_SetPasswordDialog(this, true)
+, m_UnlockDialog(this, false)
+, m_p_wallet_operator(new WalletOperator())
+, m_wallet_operator_thread(this)
+, m_wallet_api()
 {
-    s_pMainWindowInstance = this;
-   
-    m_barLeft = new QMenuBar;
-    m_barRight = new QMenuBar;
+   s_pMainWindowInstance = this;
 
-    m_pCentralAllLayout = new QVBoxLayout;
-    m_pMenuLayout = new QHBoxLayout;
-    
-    fc::path wallet_path = decent_path_finder::instance().get_decent_home() / DEFAULT_WALLET_FILE_NAME;
-    m_wdata2.wallet_file_name = wallet_path.string().c_str();
-    
-    m_wdata2.ws_server = "ws://127.0.0.1:8090";
-    m_wdata2.chain_id = "0000000000000000000000000000000000000000000000000000000000000000";
+   m_barLeft = new QMenuBar;
+   m_barRight = new QMenuBar;
 
-    m_pMenuLayout->addWidget(m_barLeft);
-    m_pMenuLayout->addWidget(m_barRight);
+   m_pCentralAllLayout = new QVBoxLayout;
+   m_pMenuLayout = new QHBoxLayout;
 
-    m_pMenuLayout->setAlignment(m_barLeft, Qt::AlignLeft);
-    m_pMenuLayout->setAlignment(m_barRight, Qt::AlignRight);
+   fc::path wallet_path = decent_path_finder::instance().get_decent_home() / DEFAULT_WALLET_FILE_NAME;
+   //m_wdata2.wallet_file_name = wallet_path.string().c_str();
 
-    m_pCentralAllLayout->addLayout(m_pMenuLayout);
+   //m_wdata2.ws_server = "ws://127.0.0.1:8090";
+   //m_wdata2.chain_id = "0000000000000000000000000000000000000000000000000000000000000000";
+
+   m_pMenuLayout->addWidget(m_barLeft);
+   m_pMenuLayout->addWidget(m_barRight);
+
+   m_pMenuLayout->setAlignment(m_barLeft, Qt::AlignLeft);
+   m_pMenuLayout->setAlignment(m_barRight, Qt::AlignRight);
+
+   m_pCentralAllLayout->addLayout(m_pMenuLayout);
 
 
-    m_pCentralWidget = new CentralWigdet(m_pCentralAllLayout,this);
-    m_pCentralWidget->setLayout(m_pCentralAllLayout);
-    setCentralWidget(m_pCentralWidget);
-    CreateActions();
-    CreateMenues();
-    resize(900,550);
+   m_pCentralWidget = new CentralWigdet(m_pCentralAllLayout,this);
+   m_pCentralWidget->setLayout(m_pCentralAllLayout);
+   setCentralWidget(m_pCentralWidget);
+   CreateActions();
+   CreateMenues();
+   resize(900,550);
 
-    setCentralWidget(m_pCentralWidget);
+   setCentralWidget(m_pCentralWidget);
 
-    m_info_dialog.resize(0,0);
+   m_info_dialog.resize(0,0);
 
-    setUnifiedTitleAndToolBarOnMac(false);
+   setUnifiedTitleAndToolBarOnMac(false);
 
-    QComboBox* pUsersCombo = m_pCentralWidget->usersCombo();
+   QComboBox* pUsersCombo = m_pCentralWidget->usersCombo();
 
-    
-    connect(pUsersCombo, SIGNAL(currentIndexChanged(const QString&)), this, SLOT(CurrentUserChangedSlot(const QString&)) );
-    
-    
-    setWindowTitle(tr("DECENT - Blockchain Content Distribution"));
-    
-    centralWidget()->layout()->setContentsMargins(0, 0, 0, 0);
-    setStyleSheet("QMainWindow{color:black;""background-color:white;}");
-    
-    
-    
-    WalletInterface::initialize();
-    ConnectSlot();
-   
-    _downloadChecker.setSingleShot(false);
-    _downloadChecker.setInterval(5000);
-    connect(&_downloadChecker, SIGNAL(timeout()), this, SLOT(CheckDownloads()));
-    _downloadChecker.start();
-   
-   
-   connect(&GlobalEvents::instance(), SIGNAL(walletConnected()), this, SLOT(DisplayWalletContentGUI()));
-   connect(&GlobalEvents::instance(), SIGNAL(walletConnectionError(std::string)), this, SLOT(DisplayConnectionError(std::string)));
-   
+
+   connect(pUsersCombo, SIGNAL(currentIndexChanged(const QString&)), this, SLOT(CurrentUserChangedSlot(const QString&)) );
+
+
+   setWindowTitle(tr("DECENT - Blockchain Content Distribution"));
+
+   centralWidget()->layout()->setContentsMargins(0, 0, 0, 0);
+   setStyleSheet("QMainWindow{color:black;""background-color:white;}");
+
+
+   m_p_wallet_operator->moveToThread(&m_wallet_operator_thread);
+   m_wallet_operator_thread.start();
+
+   connect(this, SIGNAL(signal_connect(WalletAPI*)), m_p_wallet_operator, SLOT(slot_connect(WalletAPI*)));
+   connect(m_p_wallet_operator, SIGNAL(signal_connected()), this, SLOT(slot_connected()));
+
+   //WalletInterface::initialize();
+   //ConnectSlot();
+   emit signal_connect(&m_wallet_api);
+
+   //connect(&GlobalEvents::instance(), SIGNAL(walletConnected()), this, SLOT(DisplayWalletContentGUI()));
+   //connect(&GlobalEvents::instance(), SIGNAL(walletConnectionError(std::string)), this, SLOT(DisplayConnectionError(std::string)));
+
 }
 
-Mainwindow_gui_wallet::~Mainwindow_gui_wallet() {
-   
-   WalletInterface::saveWalletFile(m_wdata2);
-   WalletInterface::destroy();
+Mainwindow_gui_wallet::~Mainwindow_gui_wallet()
+{
+   m_wallet_operator_thread.quit();
+   m_wallet_operator_thread.wait();
+   //WalletInterface::saveWalletFile(m_wdata2);
+   //WalletInterface::destroy();
 }
 
+void Mainwindow_gui_wallet::slot_connected()
+{
+   _downloadChecker.setSingleShot(false);
+   _downloadChecker.setInterval(5000);
+   connect(&_downloadChecker, SIGNAL(timeout()), this, SLOT(CheckDownloads()));
+   _downloadChecker.start();
+}
 
+void Mainwindow_gui_wallet::RunTask(std::string str_command, std::string str_result)
+{
+   str_result = m_wallet_api.RunTask(str_command);
+}
 
 void Mainwindow_gui_wallet::CreateActions()
 {
@@ -550,7 +581,7 @@ void Mainwindow_gui_wallet::HelpSlot()
 
 void Mainwindow_gui_wallet::ConnectSlot()
 {
-    int nRet = RDB_OK;
+    /*int nRet = RDB_OK;
 
     WalletInterface::loadWalletFile(&m_wdata2);
 
@@ -564,7 +595,7 @@ void Mainwindow_gui_wallet::ConnectSlot()
         ((Mainwindow_gui_wallet*)owner)->SetPassword(owner, str_ptr);
     };
    
-   WalletInterface::startConnecting(&m_wdata2);
+   WalletInterface::startConnecting(&m_wdata2);*/
 }
 
 

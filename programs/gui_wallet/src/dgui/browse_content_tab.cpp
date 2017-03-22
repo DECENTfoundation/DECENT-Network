@@ -173,7 +173,7 @@ void BrowseContentTab::show_content_popup() {
     
     if (_content_popup)
         delete _content_popup;
-    _content_popup = new ContentDetailsGeneral();
+    _content_popup = new ContentDetailsGeneral(_parent);
     
     connect(_content_popup, SIGNAL(ContentWasBought()), this, SLOT(content_was_bought()));
     _content_popup->execCDD(_digital_contents[id]);
@@ -279,7 +279,10 @@ void BrowseContentTab::ShowDigitalContentsGUI() {
     
 }
 
-
+void BrowseContentTab::RunTask(std::string const& str_command, std::string& str_result)
+{
+   _parent->RunTask(str_command, str_result);
+}
 
 void BrowseContentTab::paintRow()
 {

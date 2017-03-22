@@ -190,6 +190,11 @@ void Overview_tab::transaction_button_pressed(std::string accountName)
    m_pPar->GoToThisTab(1 , accountName);
 }
 
+void Overview_tab::RunTask(std::string const& str_command, std::string& str_result)
+{
+   m_pPar->RunTask(str_command, str_result);
+}
+
 void Overview_tab::buttonPressed(std::string accountName)
 {
    try {

@@ -15,7 +15,7 @@
 #include <iostream>
 
 
-using namespace gui_wallet;
+/*using namespace gui_wallet;
 
 
 static InGuiLoopCaller* s_pInGuiThreadCaller = NULL;
@@ -77,7 +77,7 @@ void InGuiLoopCaller::NextFunctionToCallSlot2(void* a_clbData,int64_t a_err,
         std::cout << "Exception running " << a_inp << "\n";
         std::cout << ex.what() << "\n";
     }
-}
+}*/
 
 
 

@@ -31,7 +31,7 @@
 using namespace gui_wallet;
 
 
-InGuiThreatCaller* s_pWarner = NULL;
+/*InGuiThreatCaller* s_pWarner = NULL;
 
 
 gui_wallet::application::application(int argc, char** argv)
@@ -39,9 +39,9 @@ gui_wallet::application::application(int argc, char** argv)
       QApplication(argc,argv)
 {
     qRegisterMetaType<std::string>( "std::string" );
-    qRegisterMetaType<WarnYesOrNoFuncType>( "WarnYesOrNoFuncType" );
+    //qRegisterMetaType<WarnYesOrNoFuncType>( "WarnYesOrNoFuncType" );
     qRegisterMetaType<int64_t>( "int64_t" );
-    qRegisterMetaType<TypeCallbackSetNewTaskGlb2>( "TypeCallbackSetNewTaskGlb2" );
+    //qRegisterMetaType<TypeCallbackSetNewTaskGlb2>( "TypeCallbackSetNewTaskGlb2" );
     qRegisterMetaType<SDigitalContent>( "SDigitalContent" );
 
     setApplicationDisplayName("Decent");
@@ -57,7 +57,6 @@ gui_wallet::application::~application() {
 
 
 
-/* //////////////////////// */
 
 InGuiThreatCaller::InGuiThreatCaller()
 {
@@ -90,4 +89,4 @@ void InGuiThreatCaller::MakeShowMessageBoxSlot(const QString& a_str,WarnYesOrNoF
 void InGuiThreatCaller::MakeCallFuncSlot(SInGuiThreadCallInfo a_call_info)
 {
     (*a_call_info.function)(a_call_info.data);
-}
+}*/

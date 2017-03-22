@@ -97,7 +97,10 @@ CentralWigdet::CentralWigdet(QBoxLayout* a_pAllLayout, Mainwindow_gui_wallet* a_
       m_parent_main_window(a_pPar),
       m_browse_cont_tab(a_pPar),
       m_Overview_tab(a_pPar),
-      m_Upload_tab(a_pPar) {
+      m_Upload_tab(a_pPar),
+      m_Purchased_tab(a_pPar),
+      m_trans_tab(a_pPar)
+{
 
 
          
@@ -344,6 +347,10 @@ void CentralWigdet::tabChanged(int index) {
 
 }
 
+void CentralWigdet::RunTask(std::string const& str_command, std::string& str_result)
+{
+   m_parent_main_window->RunTask(str_command, str_result);
+}
 
 QString CentralWigdet::getFilterText()const
 {

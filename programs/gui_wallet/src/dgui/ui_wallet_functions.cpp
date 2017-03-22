@@ -66,17 +66,17 @@ struct task_result {
 
 
 
-struct StructApi {
+/*struct StructApi {
     StructApi(): wal_api(NULL), gui_api(NULL) {
 
     } 
 
     graphene::wallet::wallet_api* wal_api; 
     fc::rpc::gui* gui_api;
-};
+};*/
 
 
-static int                          s_nLibraryInited = 0;
+/*static int                          s_nLibraryInited = 0;
 
 static RWLock*                                                  s_pMutex_for_cur_api; // It is better to use here rw mutex
 static FiFo<ConnectListItem>*                                   s_pConnectionRequestFifo;
@@ -87,7 +87,7 @@ static std::thread*                                             s_pConnectionThr
 
 static volatile int   s_nConThreadRun;
 static StructApi      s_CurrentApi;
-
+*/
 
 
 
@@ -103,7 +103,7 @@ void QtDelay( int millisecondsToWait )
 
 
 
-
+/*
 void WalletInterface::initialize() {
 
    int nLibInited(s_nLibraryInited++);
@@ -191,12 +191,12 @@ void WalletInterface::destroy() {
         delete s_pConnectionRequestFifo;
         delete s_pMutex_for_cur_api;
     }
-}
+}*/
 
 
 
 
-int WalletInterface::setNewTask(const std::string& a_inp_line, void* a_owner, void* a_clbData, TypeCallbackSetNewTaskGlb2 fpTaskDone) {
+/*int WalletInterface::setNewTask(const std::string& a_inp_line, void* a_owner, void* a_clbData, TypeCallbackSetNewTaskGlb2 fpTaskDone) {
     int nReturn = 0;
    
     std::lock_guard<RWLock> lock(*s_pMutex_for_cur_api);
@@ -239,10 +239,10 @@ void WalletInterface::runTask(std::string const& str_command, std::string& str_r
    setNewTask(str_command,
               nullptr,
               static_cast<void*>(&result),
-              +[](void* /*owner*/,
+              +[](void* /-*owner*-/,
                   void* a_clbkArg,
                   int64_t a_err,
-                  std::string const& /*a_task*/,
+                  std::string const& /-*a_task*-/,
                   std::string const& a_result)
               {
                  task_result& result = *static_cast<task_result*>(a_clbkArg);
@@ -262,11 +262,11 @@ void WalletInterface::runTask(std::string const& str_command, std::string& str_r
       str_result = result.m_strResult;
    else
       throw task_exception(result.m_strResult);
-}
+}*/
 
 
 
-
+/*
 int WalletInterface::loadWalletFile(SConnectionStruct* a_pWalletData) {
     int nReturn = 0;
 
@@ -295,7 +295,6 @@ int WalletInterface::loadWalletFile(SConnectionStruct* a_pWalletData) {
 }
 
 
-
 int WalletInterface::saveWalletFile(const SConnectionStruct& a_WalletData) {
     int nReturn = 0;
     s_pMutex_for_cur_api->lock();
@@ -318,6 +317,7 @@ int WalletInterface::saveWalletFile(const SConnectionStruct& a_WalletData) {
     s_pMutex_for_cur_api->unlock();
     return nReturn;
 }
+*/
 
 
 
@@ -326,8 +326,7 @@ int WalletInterface::saveWalletFile(const SConnectionStruct& a_WalletData) {
 
 
 
-
-
+/*
 int WalletInterface::connectToNewWitness(const ConnectListItem& a_con_data) {
    try {
       
@@ -437,6 +436,6 @@ int WalletInterface::connectToNewWitness(const ConnectListItem& a_con_data) {
    return 0;
 }
 
-
+*/
 
 

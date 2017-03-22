@@ -8,7 +8,7 @@ namespace gui_wallet {
    
    
    
-   template <class ListItemType>
+   /*template <class ListItemType>
    class FiFo {
    public:
       FiFo() : m_pFirstTask(NULL), m_pLastTask(NULL) {
@@ -81,7 +81,7 @@ namespace gui_wallet {
       ListItemType*  m_pFirstTask;
       ListItemType*  m_pLastTask;
       std::mutex     m_task_mutex;
-   };
+   };*/
    
    
    
