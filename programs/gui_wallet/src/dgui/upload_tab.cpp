@@ -66,8 +66,9 @@ using namespace nlohmann;
 CryptoPP::AutoSeededRandomPool rng;
 
 
-Upload_popup::Upload_popup()
+Upload_popup::Upload_popup(QWidget *parent)
 :
+QDialog(parent),
 m_info_widget(3, 6),
 m_title_label(tr("Title")),
 m_description_label(tr("Description")),
@@ -368,6 +369,7 @@ void Upload_popup::uploadContent() {
     SetNewTask(submitCommand, this, NULL, +[](void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
         ((Upload_popup*)owner)->uploadDone(a_clbkArg, a_err, a_task, a_result);
     });
+    emit uploadFinished();
 }
 
 Upload_popup::~Upload_popup()
@@ -480,11 +482,6 @@ void Upload_tab::requestContentUpdate() {
 }
 
 void Upload_tab::maybeUpdateContent() {
-    if (!m_doUpdate) {
-        return;
-    }
-    
-    m_doUpdate = false;
     updateContents();
 }
 
@@ -686,11 +683,9 @@ void Upload_tab::paintRow()
 
 void Upload_tab::upload_popup()
 {
-    upload_up* dialog = new upload_up();
     Upload_popup* popup = new Upload_popup();
-    dialog->setLayout(&popup->u_main_layout);
-    dialog->show();
+    connect(popup,SIGNAL(uploadFinished()),popup,SLOT(close()));
+    popup->setLayout(&popup->u_main_layout);
+    popup->show();
 }
 
-upload_up::upload_up(QWidget *parent) : QDialog(parent)
-{}

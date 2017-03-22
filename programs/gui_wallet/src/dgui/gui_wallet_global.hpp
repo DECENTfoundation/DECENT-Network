@@ -460,10 +460,9 @@ namespace gui_wallet
                      cell_widget->setStyleSheet("* { background-color: rgb(255,255,255); color : black; }");
                   else
                      cell_widget->setStyleSheet(old_style);
-                  
-                  
                }
             }
+             
          }
          
          
@@ -472,6 +471,7 @@ namespace gui_wallet
          
          if(row < 0) {
             _current_highlighted_row = -1;
+             emit MouseWasMoved();
             return;
          }
          
@@ -491,10 +491,8 @@ namespace gui_wallet
             }
             
          }
-         
-         _current_highlighted_row = row;
-          
-          emit MouseWasMoved();
+         emit MouseWasMoved();
+          _current_highlighted_row = row;
       }
        
        
