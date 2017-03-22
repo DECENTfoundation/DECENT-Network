@@ -63,7 +63,7 @@ protected slots:
    void CheckDownloads();
    void DisplayWalletContentGUI();
    void DisplayConnectionError(std::string errorMessage);
-   void CurrentUserBalanceUpdate();
+   void currentUserBalanceUpdate();
    
 protected slots:
    

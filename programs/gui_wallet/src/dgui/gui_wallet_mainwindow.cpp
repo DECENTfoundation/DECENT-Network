@@ -123,15 +123,13 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
    
 }
 
-void Mainwindow_gui_wallet::CurrentUserBalanceUpdate()
+void Mainwindow_gui_wallet::currentUserBalanceUpdate()
 {
-    std::string user_balance_update;
-    user_balance_update = GlobalEvents::instance().getCurrentUser();
-    if( user_balance_update == "" )
-    {
+    std::string userBalanceUpdate = GlobalEvents::instance().getCurrentUser();
+    if( userBalanceUpdate == "" ) {
         return;
     }
-    UpdateAccountBalances(user_balance_update);
+    UpdateAccountBalances(userBalanceUpdate);
 }
 
 Mainwindow_gui_wallet::~Mainwindow_gui_wallet() {
