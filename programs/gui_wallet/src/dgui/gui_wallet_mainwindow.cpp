@@ -112,10 +112,22 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
     connect(&_downloadChecker, SIGNAL(timeout()), this, SLOT(CheckDownloads()));
     _downloadChecker.start();
    
+    
+    _balanceUpdater.setSingleShot(false);
+    _balanceUpdater.setInterval(1000);
+    connect(&_balanceUpdater, SIGNAL(timeout()), this, SLOT( CurrentUserBalanceUpdate() ));
+    _balanceUpdater.start();
    
    connect(&GlobalEvents::instance(), SIGNAL(walletConnected()), this, SLOT(DisplayWalletContentGUI()));
    connect(&GlobalEvents::instance(), SIGNAL(walletConnectionError(std::string)), this, SLOT(DisplayConnectionError(std::string)));
    
+}
+
+void Mainwindow_gui_wallet::CurrentUserBalanceUpdate()
+{
+    std::string user_balance_update;
+    user_balance_update = GlobalEvents::instance().getCurrentUser();
+    UpdateAccountBalances(user_balance_update);
 }
 
 Mainwindow_gui_wallet::~Mainwindow_gui_wallet() {
@@ -362,7 +374,6 @@ void Mainwindow_gui_wallet::UpdateLockedStatus()
 
 void Mainwindow_gui_wallet::CheckDownloads()
 {
-    
     auto& global_instance = gui_wallet::GlobalEvents::instance();
     std::string str_current_username = global_instance.getCurrentUser();
 

@@ -63,6 +63,7 @@ protected slots:
    void CheckDownloads();
    void DisplayWalletContentGUI();
    void DisplayConnectionError(std::string errorMessage);
+   void CurrentUserBalanceUpdate();
    
 protected slots:
    
@@ -111,6 +112,7 @@ protected:
    PasswordDialog                      m_UnlockDialog;
    
    QTimer                              _downloadChecker;
+   QTimer                              _balanceUpdater;
    std::set<std::string>               _activeDownloads;
 
 };
