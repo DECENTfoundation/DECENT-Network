@@ -39,10 +39,6 @@ void InitializeUiInterfaceOfWallet_base(TypeWarnAndWaitFunc a_fpWarnAndWait,
                                         TypeCallFunctionInGuiLoop2 a_fpCorrectUiCaller2,TypeCallFunctionInGuiLoop3 a_fpCorrectUiCaller3,
                                         void* a_pMngOwner,void* a_pMngClb,...);
 
-void InitializeUiInterfaceOfWallet(TypeWarnAndWaitFunc a_fpWarnAndWait,
-                                   TypeCallFunctionInGuiLoop2 a_fpCorrectUiCaller2,TypeCallFunctionInGuiLoop3 a_fpCorrectUiCaller3,
-                                   void* a_pMngOwner,void* a_pMngClb,
-                                   TypeManagementClbk a_fpMngClbk);
 
 void DestroyUiInterfaceOfWallet(void);
 

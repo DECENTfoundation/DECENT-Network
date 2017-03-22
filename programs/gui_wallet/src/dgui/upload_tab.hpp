@@ -29,6 +29,12 @@
 #include "decent_button.hpp"
 #include "gui_wallet_tabcontentmanager.hpp"
 
+#include <QDialog>
+#include <vector>
+#include "qt_commonheader.hpp"
+#include "gui_wallet_global.hpp"
+#include "decent_wallet_ui_gui_contentdetailsgeneral.hpp"
+
 
 
 #define INFO_LIFETIME   "Lifetime"
@@ -40,7 +46,7 @@
 
 namespace gui_wallet
 {
-                                            
+    
     enum FieldsRows {
         LIFETIME = 0,
         KEYPARTS,
@@ -53,47 +59,48 @@ namespace gui_wallet
         SELECTSAMPLES,
         NUM_FIELDS
     };
-
-
-    class Upload_tab : public TabContentManager
-    {    
-    Q_OBJECT
-
+    
+    
+    class Upload_popup : public QDialog
+    {
+        Q_OBJECT
+        
         typedef std::map<std::string, std::string> AssetMap;
-
+        
     public:
-        Upload_tab();
-        virtual ~Upload_tab();
-    public slots:
+        Upload_popup(QWidget *parent = 0);
+        virtual ~Upload_popup();
+        public slots:
         void browseContent();
         void browseSamples();
         void uploadContent();
         void onGrabPublishers();
-
+        
     public:
+        friend class upload_up;
         void uploadDone(void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result);
         void onPublishersDone(void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result);
-
+        
         virtual void content_activated() {}
         virtual void content_deactivated() {}
+        QVBoxLayout     u_main_layout;
 
     protected:
         virtual void resizeEvent ( QResizeEvent * event );
     private:
-        QVBoxLayout     m_main_layout;
         QVBoxLayout     m_synopsis_layout;
         QVBoxLayout     m_info_layout;
         QTableWidget    m_info_widget;
         
         QLabel          m_title_label;
         QLineEdit       m_title_text;
-
+        
         QLabel          m_description_label;
         QTextEdit       m_description_text;
-
+        
         QLabel          m_infoLayoutHeader;
         QTimer          m_getPublishersTimer;
-
+        
         QLineEdit*      m_contentPath;
         QLineEdit*      m_samplesPath;
         
@@ -103,8 +110,57 @@ namespace gui_wallet
         QLineEdit*      price;
         QLineEdit*      sim;
         QLineEdit*      cont;
+    public:
+    signals:
+        void uploadFinished();
     };
-
+    
 }
 
-#endif // UPLOAD_TAB_HPP
+
+
+namespace gui_wallet
+{
+    class Mainwindow_gui_wallet;
+    
+    
+    class Upload_tab : public TabContentManager
+    {
+        Q_OBJECT;
+    public:
+        Upload_tab(){}
+        Upload_tab(Mainwindow_gui_wallet* parent);
+        void ShowDigitalContentsGUI();
+        
+    public:
+        virtual void content_activated() { }
+        virtual void content_deactivated() {}
+        
+    public slots:
+        void onTextChanged(const QString& text);
+        void updateContents();
+        void maybeUpdateContent();
+        void requestContentUpdate();
+        void show_content_popup();
+        void content_was_bought();
+        void upload_popup();
+        void paintRow();
+    protected:
+        QVBoxLayout     m_main_layout;
+        QHBoxLayout     m_search_layout;
+        DecentTable     m_pTableWidget;
+        QLineEdit       m_filterLineEdit;
+        QComboBox       m_searchTypeCombo;
+        DecentButton*   upload_button;
+        
+        std::vector<SDigitalContent>  _digital_contents;
+        ContentDetailsGeneral*        _content_popup;
+        Mainwindow_gui_wallet*        _parent;
+        bool                          m_doUpdate;
+        QTimer                        m_contentUpdateTimer;
+    };
+    
+    
+}
+
+#endif //UploadTab_H

@@ -22,7 +22,6 @@ class ContentDetailsGeneral : public ContentDetailsBase
     Q_OBJECT
 public:
     ContentDetailsGeneral();
-    virtual ~ContentDetailsGeneral();
 
     virtual void execCDD(const SDigitalContent& a_cnt_details);
 
@@ -30,11 +29,12 @@ public:
 signals:
     void ContentWasBought();
 
-protected:
-    void LabelPushCallbackGUI(void* clbkData,QMouseEvent* mouse_event);
+protected slots:
+    void LabelPushCallbackGUI();
+   
 
 protected:
-    WidgetWithCallback<DecentButton>   m_label;
+    DecentButton   m_label;
 };
 
 }

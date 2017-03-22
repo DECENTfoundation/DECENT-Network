@@ -372,4 +372,4 @@ FC_REFLECT_TYPENAME( graphene::chain::publisher_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::rating_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::seeding_statistics_id_type )
 
-FC_REFLECT( graphene::chain::void_t, )
+FC_REFLECT_EMPTY( graphene::chain::void_t )

@@ -10,7 +10,7 @@
 #ifndef DECENT_WALLET_UI_GUI_CONTENTDETAILSBASE_HPP
 #define DECENT_WALLET_UI_GUI_CONTENTDETAILSBASE_HPP
 
-#define NUMBER_OF_SUB_LAYOUTS2   8
+#define NUMBER_OF_SUB_LAYOUTS2   7
 
 #include <QDialog>
 #include "qt_commonheader.hpp"
@@ -33,6 +33,8 @@ public:
     virtual ~ContentDetailsBase();
 
     void execCDB(const SDigitalContent& a_cnt_details);
+    
+    void popup_for_purchased(int);
 
     //virtual void execCDD(const decent::wallet::ui::gui::SDigitalContent& a_cnt_details)=0;
 
@@ -76,13 +78,14 @@ protected:
     QVBoxLayout     m_main_layout;
     QHBoxLayout     m_free_for_child;
     QWidget         m_vSub_Widgets[NUMBER_OF_SUB_LAYOUTS2];
-    QVBoxLayout     m_vSub_layouts[NUMBER_OF_SUB_LAYOUTS2];
+    QHBoxLayout     m_vSub_layouts[NUMBER_OF_SUB_LAYOUTS2];
     QLabel          m_vLabels[NUMBER_OF_SUB_LAYOUTS2*2];
     QLabel          m_stars[5];
     QTextEdit       desc_text;
     int             m_currentMyRating = 0;
     std::vector<NewCheckBox*> stars_labels;
     QLabel*         m_RateText;
+    QTextEdit       m_desc;
 
 };
 
