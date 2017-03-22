@@ -127,7 +127,7 @@ CentralWigdet::CentralWigdet(QBoxLayout* a_pAllLayout, Mainwindow_gui_wallet* a_
 
     PrepareGUIprivate(a_pAllLayout);
 
-    QTimer::singleShot(200, this, SLOT(CentralWigdet::initTabChanged));
+    QTimer::singleShot(200, this, SLOT(initTabChanged()));
 }
 
 void  CentralWigdet::initTabChanged() {

@@ -18,17 +18,15 @@ namespace gui_wallet {
    
    
 typedef void (*TypeCallbackSetNewTaskGlb2)(void* owner, void* a_clbData, int64_t a_err, const std::string& a_inp, const std::string& a_result);
-typedef void (*WarnYesOrNoFuncType)(void*owner,int answer,/*string**/void* str_ptr);
    
    
    
    
 struct SConnectionStruct {
-    SConnectionStruct() : setPasswordFn(NULL) {
+    SConnectionStruct() {
     }
 
    std::string         wallet_file_name;
-   WarnYesOrNoFuncType setPasswordFn;
    QWidget*            owner;
 
    std::string  ws_server;
@@ -56,23 +54,6 @@ struct TaskListItem {
 };
 
 
-struct ConnectListItem {
-   typedef SConnectionStruct*     value_type;
-   
-   ConnectListItem() : input(NULL), callback(NULL) {}
-   
-   ConnectListItem(TypeCallbackSetNewTaskGlb2 callback_function, SConnectionStruct* a_inp, void* a_owner = NULL, void* a_clbArg=NULL)
-   : next(NULL), owner(a_owner), callbackArg(a_clbArg), input(a_inp), callback(callback_function) {
-      
-   }
-   
-   ConnectListItem*                next;
-   void*                           owner;
-   void*                           callbackArg;
-   SConnectionStruct*              input;
-   TypeCallbackSetNewTaskGlb2      callback;
-};
-
 
 
 
@@ -80,7 +61,7 @@ struct ConnectListItem {
 class WalletInterface {
 public:
    static void initialize();
-   static void startConnecting(SConnectionStruct* connectionInfo);
+   static int  connectToNewWitness(SConnectionStruct* connectionInfo);
    static void destroy();
    static int  callFunctionInGuiLoop(void* a_clbData, int64_t a_err, const std::string& a_inp, const std::string& a_result,void* a_owner,TypeCallbackSetNewTaskGlb2 a_fpFunc);
    
@@ -95,9 +76,9 @@ public:
    static void runTask(std::string const& str_command, std::string& str_result);
    
 private:
+   static int  connectToNewWitnessImpl(SConnectionStruct* connectionInfo);
    static void connectionThreadFunction();
-   static void connectedCallback(void* owner, void* a_clbData, int64_t a_err, const std::string& a_inp, const std::string& a_result);
-   static int  connectToNewWitness(const ConnectListItem& item);
+   
 
 
    

@@ -463,10 +463,11 @@ Upload_tab::Upload_tab(Mainwindow_gui_wallet* parent) :  _content_popup(NULL), _
     connect(&m_filterLineEdit, SIGNAL(textChanged(QString)), this, SLOT(onTextChanged(QString)));
     connect(upload_button, SIGNAL(LabelClicked()), this, SLOT(upload_popup()));
     connect(&GlobalEvents::instance(), SIGNAL(currentUserChanged(std::string)), this, SLOT(updateContents()));
-
+    connect(&GlobalEvents::instance(), SIGNAL(walletUnlocked()), this, SLOT(requestContentUpdate()));
+   
     m_contentUpdateTimer.connect(&m_contentUpdateTimer, SIGNAL(timeout()), this, SLOT(maybeUpdateContent()));
-    m_contentUpdateTimer.connect(&GlobalEvents::instance(), SIGNAL(walletUnlocked()), this, SLOT(requestContentUpdate()));
-    
+   
+   
     m_contentUpdateTimer.setInterval(1000);
     m_contentUpdateTimer.start();
     

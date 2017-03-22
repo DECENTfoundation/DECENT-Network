@@ -313,7 +313,7 @@ namespace gui_wallet
       
       void setWalletUnlocked() { emit walletUnlocked(); }
       
-      void setWalletConnected() { emit walletConnected(); }
+      void setWalletConnected(bool isNew) { emit walletConnected(isNew); }
       void setWalletError(std::string error) { emit walletConnectionError(error); }
       
    signals:
@@ -321,7 +321,7 @@ namespace gui_wallet
       void walletUnlocked();
       
       void walletConnectionError(std::string message);
-      void walletConnected();
+      void walletConnected(bool isNew);
       
       
    };

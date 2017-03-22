@@ -102,19 +102,22 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
     centralWidget()->layout()->setContentsMargins(0, 0, 0, 0);
     setStyleSheet("QMainWindow{color:black;""background-color:white;}");
     
-    
-    
-    WalletInterface::initialize();
-    ConnectSlot();
-   
-    _downloadChecker.setSingleShot(false);
-    _downloadChecker.setInterval(5000);
-    connect(&_downloadChecker, SIGNAL(timeout()), this, SLOT(CheckDownloads()));
-    _downloadChecker.start();
    
    
-   connect(&GlobalEvents::instance(), SIGNAL(walletConnected()), this, SLOT(DisplayWalletContentGUI()));
+   
+   connect(&GlobalEvents::instance(), SIGNAL(walletConnected(bool)), this, SLOT(DisplayWalletContentGUI(bool)));
    connect(&GlobalEvents::instance(), SIGNAL(walletConnectionError(std::string)), this, SLOT(DisplayConnectionError(std::string)));
+   
+   WalletInterface::initialize();
+   QTimer::singleShot(200, this, SLOT(ConnectSlot()));
+   
+   
+   
+   _downloadChecker.setSingleShot(false);
+   _downloadChecker.setInterval(5000);
+   connect(&_downloadChecker, SIGNAL(timeout()), this, SLOT(CheckDownloads()));
+   _downloadChecker.start();
+   
    
 }
 
@@ -414,11 +417,15 @@ void Mainwindow_gui_wallet::DisplayConnectionError(std::string errorMessage) {
 }
 
 
-void Mainwindow_gui_wallet::DisplayWalletContentGUI()
+void Mainwindow_gui_wallet::DisplayWalletContentGUI(bool isNewWallet)
 {
-    m_ActionLock.setDisabled(true);
-    m_ActionUnlock.setDisabled(true);
-    UpdateLockedStatus();
+   if (isNewWallet) {
+      SetPassword();
+   }
+   
+   m_ActionLock.setDisabled(true);
+   m_ActionUnlock.setDisabled(true);
+   UpdateLockedStatus();
 
     m_ActionImportKey.setEnabled(true);
     QComboBox& userCombo = *m_pCentralWidget->usersCombo();
@@ -485,7 +492,7 @@ void Mainwindow_gui_wallet::ImportKeySlot()
     if (hasError) {
         ALERT_DETAILS("Can not import key.", result.c_str());
     } else {
-        DisplayWalletContentGUI();
+        DisplayWalletContentGUI(false);
 
     }
 
@@ -550,47 +557,50 @@ void Mainwindow_gui_wallet::HelpSlot()
 
 void Mainwindow_gui_wallet::ConnectSlot()
 {
-    int nRet = RDB_OK;
+   WalletInterface::loadWalletFile(&m_wdata2);
 
-    WalletInterface::loadWalletFile(&m_wdata2);
-
-    if(nRet == RDB_CANCEL) {
-       return;
-    }
-
-    m_ActionConnect.setEnabled(false);
+   m_ActionConnect.setEnabled(false);
    m_wdata2.owner = this;
-    m_wdata2.setPasswordFn = +[](void*owner, int answer, void* str_ptr) {
-        ((Mainwindow_gui_wallet*)owner)->SetPassword(owner, str_ptr);
-    };
    
-   WalletInterface::startConnecting(&m_wdata2);
+   WalletInterface::connectToNewWitness(&m_wdata2);
 }
 
 
-void Mainwindow_gui_wallet::SetPassword(void* a_owner, void* a_str_ptr)
+
+
+void Mainwindow_gui_wallet::SetPassword()
 {
-    std::string* pcsPassword = (std::string*)a_str_ptr;
-    *pcsPassword = "";
+   std::string pcsPassword;
+   
+   QPoint thisPos = pos();
+   thisPos.rx() += this->size().width() / 2;
+   thisPos.ry() += this->size().height() / 2;
+   
+   if (m_SetPasswordDialog.execRD(thisPos, pcsPassword)) {
+      
+      const std::string setPassword = "set_password " + pcsPassword;
+      const std::string unlockTask = "unlock " + pcsPassword;
+      std::string result;
+      
+      try {
+         RunTask(setPassword, result);
+         RunTask(unlockTask, result);
+      
+         WalletInterface::saveWalletFile(m_wdata2);
+         
+         m_ActionImportKey.setEnabled(true);
+         m_ActionUnlock.setEnabled(false);
+         m_ActionLock.setEnabled(true);
+         
+         GlobalEvents::instance().setWalletUnlocked();
+      } catch (const std::exception& ex) {
+         ALERT_DETAILS("Unable to unlock the wallet", ex.what());
+      }
 
-
-    Mainwindow_gui_wallet* pThisCon = (Mainwindow_gui_wallet*)a_owner;
-    PasswordDialog* pThis = &pThisCon->m_SetPasswordDialog;
-    
-    QPoint thisPos = pThisCon->pos();
-    thisPos.rx() += this->size().width() / 2;
-    thisPos.ry() += this->size().height() / 2;
-
-    if (pThis->execRD(thisPos, *pcsPassword)) {
-        m_ActionImportKey.setEnabled(true);
-        m_ActionUnlock.setEnabled(false);
-        m_ActionLock.setEnabled(true);
-       GlobalEvents::instance().setWalletUnlocked();
-    }
-    
-    
-    
+      
+   }
 }
+
 
 void Mainwindow_gui_wallet::GoToThisTab(int index , std::string info)
 {

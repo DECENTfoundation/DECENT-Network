@@ -12,6 +12,9 @@ using namespace fc::rpc;
 using namespace fc;
 using namespace gui_wallet;
 
+static std::thread*   guiRunThread;
+
+
 
 gui::gui() : _b_task_cancelled(false) {
 
@@ -44,6 +47,7 @@ void gui::send_notice( uint64_t callback_id, variants args /* = variants() */ )
 
 void gui::start()
 {
+   //guiRunThread = new std::thread(&gui::run, this);
    //cli_commands() = get_method_names(0);
    _run_complete = std::async(std::launch::deferred, [&](){ run(); } );
 }
@@ -66,6 +70,7 @@ void gui::format_result( const string& method, std::function<string(variant,cons
 
 
 void gui::SetNewTask(const std::string& a_inp_line, void* a_owner, void* a_clbData, TypeCallbackSetNewTaskGlb2 fpTaskDone) {
+   std::cout << "Queue task: " << a_inp_line << std::endl;
     m_Fifo.AddNewTask(a_inp_line,a_owner,a_clbData,fpTaskDone);
     m_semaphore.post();
 }
@@ -83,7 +88,7 @@ void gui::run()
          m_semaphore.wait();
 
          while(m_Fifo.GetFirstTask(&aTaskItem)) {
-            
+            std::cout << "Process task: " << aTaskItem.input << std::endl;
              std::string line = aTaskItem.input;
              line += char(EOF);
              fc::variants args = fc::json::variants_from_string(line);
@@ -104,8 +109,11 @@ void gui::run()
              } else {
                  tsResult = itr->second( result, args );
              }
-
-             WalletInterface::callFunctionInGuiLoop(aTaskItem.callbackArg, 0, aTaskItem.input, tsResult, aTaskItem.owner, aTaskItem.callback);
+            if (aTaskItem.owner == nullptr) {
+               aTaskItem.callback(nullptr, aTaskItem.callbackArg, 0, aTaskItem.input, tsResult)
+            } else {
+               WalletInterface::callFunctionInGuiLoop(aTaskItem.callbackArg, 0, aTaskItem.input, tsResult, aTaskItem.owner, aTaskItem.callback);
+            }
          }
 
       } catch ( const fc::exception& e ) {
