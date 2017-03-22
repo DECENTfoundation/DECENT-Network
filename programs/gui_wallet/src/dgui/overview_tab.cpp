@@ -110,12 +110,6 @@ void Overview_tab::updateContents() {
    
    for (int i = 0; i < contents.size() + 1; ++i) {
       auto content = contents[i];
-      
-      NewButton* transaction = new NewButton(content[0].get<std::string>());
-      NewButton* transfer = new NewButton(content[0].get<std::string>());
-      transaction->setAlignment(Qt::AlignCenter);
-      transfer->setAlignment(Qt::AlignCenter);
-       
 
 
       
@@ -123,22 +117,18 @@ void Overview_tab::updateContents() {
       table_widget.setItem(i, 0, new QTableWidgetItem(QString::fromStdString(content[1].get<std::string>())));
        
        
-       QPixmap trans(":/icon/images/transaction.png");
-       QPixmap transf(":/icon/images/transfer.png");
-
-        transaction->setPixmap(trans);
-        transfer->setPixmap(transf);
+       EventPassthrough<DecentSmallButton>* trans = new EventPassthrough<DecentSmallButton>(":/icon/images/transaction.png", ":/icon/images/transaction1.png");
+       trans->setProperty("accountName", QVariant::fromValue(QString::fromStdString(content[0].get<std::string>())));
+       trans->setAlignment(Qt::AlignCenter);
+       connect(trans, SIGNAL(clicked()), this, SLOT(transactionButtonPressed()));
+       table_widget.setCellWidget(i, 2, trans);
        
-       transaction->setMouseTracking(true);
-       transfer->setMouseTracking(true);
+       EventPassthrough<DecentSmallButton>* transf = new EventPassthrough<DecentSmallButton>(":/icon/images/transfer.png", ":/icon/images/transfer1.png");
+       transf->setProperty("accountName", QVariant::fromValue(QString::fromStdString(content[0].get<std::string>())));
+       transf->setAlignment(Qt::AlignCenter);
+       connect(transf, SIGNAL(clicked()), this, SLOT(buttonPressed()));
+       table_widget.setCellWidget(i, 3, transf);
        
-       connect(transfer, SIGNAL(ButtonPushedSignal(std::string)), this , SLOT(buttonPressed(std::string)));
-       connect(transaction, SIGNAL(ButtonPushedSignal(std::string)), this , SLOT(transaction_button_pressed(std::string)));
-
-       
-      table_widget.setCellWidget(i, 2, transaction);
-      table_widget.setCellWidget(i, 3, transfer);
-      
       table_widget.setRowHeight(i,40);
       table_widget.cellWidget(i, 2)->setStyleSheet("* { background-color: rgb(255,255,255); color : rgb(27,176,104); }");
       table_widget.cellWidget(i, 3)->setStyleSheet("* { background-color: rgb(255,255,255); color : rgb(27,176,104); }");
@@ -155,46 +145,26 @@ void Overview_tab::updateContents() {
       
       table_widget.item(i,0)->setForeground(QColor::fromRgb(88,88,88));
       table_widget.item(i,1)->setForeground(QColor::fromRgb(88,88,88));
-       
-       
-       connect(&table_widget , SIGNAL(MouseWasMoved()),this,SLOT(paintRow()));
-   }
-}
-
-void Overview_tab::paintRow()
-{
-    QPixmap trans(":/icon/images/transaction.png");
-    QPixmap transf(":/icon/images/transfer.png");
-    QPixmap trans_white(":/icon/images/transaction1.png");
-    QPixmap transf_white(":/icon/images/transfer1.png");
-    int row = table_widget.getCurrentHighlightedRow();
-    for(int i = 0; i < table_widget.rowCount(); ++i)
-    {
-        if(i == row)
-        {
-            ((NewButton*)table_widget.cellWidget(i,2))->setPixmap(trans_white);
-            ((NewButton*)table_widget.cellWidget(i,3))->setPixmap(transf_white);
-        }
-        else
-        {
-            ((NewButton*)table_widget.cellWidget(i,2))->setPixmap(trans);
-            ((NewButton*)table_widget.cellWidget(i,3))->setPixmap(transf);
-        }
     }
 }
 
 
 
-void Overview_tab::transaction_button_pressed(std::string accountName)
+void Overview_tab::transactionButtonPressed()
 {
-   m_pPar->GoToThisTab(1 , accountName);
+    DecentSmallButton* button = (DecentSmallButton*)sender();
+    QString accountName = button->property("accountName").toString();
+    m_pPar->GoToThisTab(1 , accountName.toStdString());
 }
 
-void Overview_tab::buttonPressed(std::string accountName)
+void Overview_tab::buttonPressed()
 {
+    DecentSmallButton* button = (DecentSmallButton*)sender();
+    QString accountName = button->property("accountName").toString();
+
    try {
       std::string result;
-      RunTask("get_account " + accountName, result);
+      RunTask("get_account " + accountName.toStdString(), result);
       auto accountInfo = json::parse(result);
       
       std::string id = accountInfo["id"].get<std::string>();

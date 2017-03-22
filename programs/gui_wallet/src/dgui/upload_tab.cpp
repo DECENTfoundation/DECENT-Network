@@ -66,8 +66,9 @@ using namespace nlohmann;
 CryptoPP::AutoSeededRandomPool rng;
 
 
-Upload_popup::Upload_popup()
+Upload_popup::Upload_popup(QWidget *parent)
 :
+QDialog(parent),
 m_info_widget(3, 6),
 m_title_label(tr("Title")),
 m_description_label(tr("Description")),
@@ -368,6 +369,7 @@ void Upload_popup::uploadContent() {
     SetNewTask(submitCommand, this, NULL, +[](void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
         ((Upload_popup*)owner)->uploadDone(a_clbkArg, a_err, a_task, a_result);
     });
+    emit uploadFinished();
 }
 
 Upload_popup::~Upload_popup()
@@ -467,7 +469,6 @@ Upload_tab::Upload_tab(Mainwindow_gui_wallet* parent) :  _content_popup(NULL), _
     connect(upload_button, SIGNAL(LabelClicked()), this, SLOT(upload_popup()));
     connect(&GlobalEvents::instance(), SIGNAL(currentUserChanged(std::string)), this, SLOT(updateContents()));
 
-    m_contentUpdateTimer.connect(&m_contentUpdateTimer, SIGNAL(timeout()), this, SLOT(maybeUpdateContent()));
     m_contentUpdateTimer.connect(&GlobalEvents::instance(), SIGNAL(walletUnlocked()), this, SLOT(requestContentUpdate()));
     
     m_contentUpdateTimer.setInterval(1000);
@@ -476,15 +477,11 @@ Upload_tab::Upload_tab(Mainwindow_gui_wallet* parent) :  _content_popup(NULL), _
 }
 
 void Upload_tab::requestContentUpdate() {
-    m_doUpdate = true;
+    m_contentUpdateTimer.connect(&m_contentUpdateTimer, SIGNAL(timeout()), this, SLOT(maybeUpdateContent()));
+
 }
 
 void Upload_tab::maybeUpdateContent() {
-    if (!m_doUpdate) {
-        return;
-    }
-    
-    m_doUpdate = false;
     updateContents();
 }
 
@@ -576,14 +573,12 @@ void Upload_tab::content_was_bought() {
 void Upload_tab::ShowDigitalContentsGUI() {
     
     m_pTableWidget.setRowCount(_digital_contents.size());
-    QPixmap info_image(":/icon/images/pop_up.png");
     
     int index = 0;
     for(SDigitalContent& aTemporar: _digital_contents) {
         
-        EventPassthrough<ClickableLabel>* info_icon = new EventPassthrough<ClickableLabel>();
+        EventPassthrough<DecentSmallButton>* info_icon = new EventPassthrough<DecentSmallButton>(":/icon/images/pop_up.png",":/icon/images/pop_up1.png");
         info_icon->setProperty("id", QVariant::fromValue(index));
-        info_icon->setPixmap(info_image);
         info_icon->setAlignment(Qt::AlignCenter);
         connect(info_icon, SIGNAL(clicked()), this, SLOT(show_content_popup()));
         m_pTableWidget.setCellWidget(index, 6, info_icon);
@@ -662,35 +657,14 @@ void Upload_tab::ShowDigitalContentsGUI() {
         
         ++index;
     }
-    connect(&m_pTableWidget , SIGNAL(MouseWasMoved()),this,SLOT(paintRow()));
-
 }
 
-void Upload_tab::paintRow()
-{
-    QPixmap info_image(":/icon/images/pop_up.png");
-    QPixmap info_image_white(":/icon/images/pop_up1.png");
-    int row = m_pTableWidget.getCurrentHighlightedRow();
-    for(int i = 0; i < m_pTableWidget.rowCount(); ++i)
-    {
-        if(i == row)
-        {
-            ((NewButton*)m_pTableWidget.cellWidget(i,6))->setPixmap(info_image_white);
-        }
-        else
-        {
-            ((NewButton*)m_pTableWidget.cellWidget(i,6))->setPixmap(info_image);
-        }
-    }
-}
 
 void Upload_tab::upload_popup()
 {
-    upload_up* dialog = new upload_up();
     Upload_popup* popup = new Upload_popup();
-    dialog->setLayout(&popup->u_main_layout);
-    dialog->show();
+    connect(popup,SIGNAL(uploadFinished()),popup,SLOT(close()));
+    popup->setLayout(&popup->u_main_layout);
+    popup->show();
 }
 
-upload_up::upload_up(QWidget *parent) : QDialog(parent)
-{}
