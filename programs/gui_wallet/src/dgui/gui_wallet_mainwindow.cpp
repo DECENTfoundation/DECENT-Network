@@ -114,7 +114,7 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
    
     
     _balanceUpdater.setSingleShot(false);
-    _balanceUpdater.setInterval(1000);
+    _balanceUpdater.setInterval(10000);
     connect(&_balanceUpdater, SIGNAL(timeout()), this, SLOT( CurrentUserBalanceUpdate() ));
     _balanceUpdater.start();
    
