@@ -275,9 +275,7 @@ fc::ripemd160 calculate_hash(path file_path) {
     fc::ripemd160::encoder ripe_calc;
 
     try {
-        std::fseek(source, 0, SEEK_END);
-        auto source_size = std::ftell(source);
-        std::rewind(source);
+        const size_t source_size = boost::filesystem::file_size(file_path);
 
         char buffer[RIPEMD160_BUFFER_SIZE];
 
