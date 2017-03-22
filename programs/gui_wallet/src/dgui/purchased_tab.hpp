@@ -66,9 +66,7 @@ public slots:
    void maybeUpdateContent();
    void extractPackage();
    
-   void show_content_popup();
-   void paintRow();
-   
+   void show_content_popup();   
 private:
    QTimer        m_contentUpdateTimer;
    bool          m_doUpdate = true;

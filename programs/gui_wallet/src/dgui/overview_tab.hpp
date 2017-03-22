@@ -134,16 +134,14 @@ namespace gui_wallet
    public:
       virtual void content_activated() {}
       virtual void content_deactivated() {}
-      public slots:
-      void paintRow();
-       
+      public slots:       
       void updateContents();
       
       void maybeUpdateContent();
       void onTextChanged(const QString& text);
       
-      void buttonPressed(std::string accountName);
-      void transaction_button_pressed(std::string accountName);
+      void buttonPressed();
+      void transactionButtonPressed();
       
    public:
       QLineEdit      search;
