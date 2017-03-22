@@ -81,7 +81,7 @@ BrowseContentTab::BrowseContentTab(Mainwindow_gui_wallet* parent) : _parent(pare
     
     connect(&m_filterLineEdit, SIGNAL(textChanged(QString)), this, SLOT(onTextChanged(QString)));
     
-    
+   m_doUpdate = false;
     m_contentUpdateTimer.connect(&m_contentUpdateTimer, SIGNAL(timeout()), this, SLOT(maybeUpdateContent()));
     m_contentUpdateTimer.connect(&GlobalEvents::instance(), SIGNAL(walletUnlocked()), this, SLOT(requestContentUpdate()));
     

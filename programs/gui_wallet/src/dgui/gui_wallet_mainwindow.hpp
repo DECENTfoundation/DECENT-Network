@@ -51,9 +51,7 @@ class Mainwindow_gui_wallet : public QMainWindow
    Q_OBJECT
 public:
    Mainwindow_gui_wallet();
-   virtual ~Mainwindow_gui_wallet();   // virtual because may be this class will be
-   // used by inheritanc
-   void SetNewTaskQtMainWnd2(const std::string& a_inp_line, void* a_clbData);
+   virtual ~Mainwindow_gui_wallet(); 
    
    void GoToThisTab(int index, std::string info);
    void UpdateAccountBalances(const std::string& username);
@@ -66,16 +64,13 @@ protected:
 private:
    
    void UpdateLockedStatus();
-   
-   void CliCallbackFnc(void*arg,const std::string& task);
-   
-   void SetPassword(void* a_owner, void* a_str_ptr);
+   void SetPassword();
    
    
 protected slots:
    void CurrentUserChangedSlot(const QString&);
    void CheckDownloads();
-   void DisplayWalletContentGUI();
+   void DisplayWalletContentGUI(bool isNewWallet);
    void DisplayConnectionError(std::string errorMessage);
    
 protected slots:

@@ -15,11 +15,12 @@ namespace gui_wallet {
    Q_OBJECT
 public:
    application(int argc, char** argv);
-   virtual ~application();
+   virtual ~application() {}
    
 };
 
 
+<<<<<<< HEAD
 typedef void (*TypeInGuiFunction)(void*);
 
 struct SInGuiThreadCallInfo
@@ -59,5 +60,4 @@ signals:
     void ShowMessageBoxSig(const QString& a_str,WarnYesOrNoFuncType a_fpYesOrNo,void* a_pDataForYesOrNo);
     void CallFuncSig(SInGuiThreadCallInfo a_call_info);
 };*/
-
 }
