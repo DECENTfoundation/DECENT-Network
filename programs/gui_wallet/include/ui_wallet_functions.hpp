@@ -81,7 +81,8 @@ private:
    
 
 
-   
+private:
+   static std::thread* guiRunThread;
 };
    
 

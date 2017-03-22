@@ -110,21 +110,31 @@ void gui::run()
                  tsResult = itr->second( result, args );
              }
             if (aTaskItem.owner == nullptr) {
-               aTaskItem.callback(nullptr, aTaskItem.callbackArg, 0, aTaskItem.input, tsResult)
+               aTaskItem.callback(nullptr, aTaskItem.callbackArg, 0, aTaskItem.input, tsResult);
             } else {
                WalletInterface::callFunctionInGuiLoop(aTaskItem.callbackArg, 0, aTaskItem.input, tsResult, aTaskItem.owner, aTaskItem.callback);
             }
          }
 
       } catch ( const fc::exception& e ) {
-         
-          WalletInterface::callFunctionInGuiLoop(aTaskItem.callbackArg, e.code(), aTaskItem.input, e.to_detail_string(), aTaskItem.owner, aTaskItem.callback);
+         if (aTaskItem.owner == nullptr) {
+            aTaskItem.callback(nullptr, aTaskItem.callbackArg, e.code(), aTaskItem.input, e.to_detail_string());
+         } else {
+            WalletInterface::callFunctionInGuiLoop(aTaskItem.callbackArg, e.code(), aTaskItem.input, e.to_detail_string(), aTaskItem.owner, aTaskItem.callback);
+         }
+
       } catch ( const std::exception& e ) {
-           
+         if (aTaskItem.owner == nullptr) {
+            aTaskItem.callback(nullptr, aTaskItem.callbackArg, UNKNOWN_EXCEPTION, aTaskItem.input, e.what());
+         } else {
             WalletInterface::callFunctionInGuiLoop(aTaskItem.callbackArg, UNKNOWN_EXCEPTION, aTaskItem.input, e.what(), aTaskItem.owner, aTaskItem.callback);
+         }
       } catch(...) {
-          
+         if (aTaskItem.owner == nullptr) {
+            aTaskItem.callback(nullptr, aTaskItem.callbackArg, UNKNOWN_EXCEPTION, aTaskItem.input, "Unknown exception");
+         } else {
           WalletInterface::callFunctionInGuiLoop(aTaskItem.callbackArg,UNKNOWN_EXCEPTION,aTaskItem.input, "Unknown exception", aTaskItem.owner, aTaskItem.callback);
+         }
       }
    }
 }

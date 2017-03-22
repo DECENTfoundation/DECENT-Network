@@ -79,10 +79,11 @@ struct StructApi {
 
 static RWLock*                                                  s_pMutex_for_cur_api; // It is better to use here rw mutex
 static graphene::wallet::wallet_data*                           s_wdata_ptr;
-static StructApi      s_CurrentApi;
+static StructApi                                                s_CurrentApi;
 
 
 
+std::thread* gui_wallet::WalletInterface::guiRunThread = nullptr;
 
 
 void QtDelay( int millisecondsToWait )
@@ -229,6 +230,7 @@ int WalletInterface::saveWalletFile(const SConnectionStruct& a_WalletData) {
 
 
 int WalletInterface::connectToNewWitness(SConnectionStruct* pStruct) {
+   WalletInterface::guiRunThread = new std::thread(std::bind(WalletInterface::connectToNewWitnessImpl, pStruct));
    
 }
 
@@ -295,23 +297,7 @@ int WalletInterface::connectToNewWitnessImpl(SConnectionStruct* pStruct) {
       
       wallet_gui->register_api( wapi );
       wallet_gui->start();
-      /*
-      if( wapiptr->is_new() )
-      {
-         std::string aPassword;
-         QString aString = "Please use the set_password method to initialize a new wallet before continuing";
-         
-         InGuiThreatCaller::instance()->m_pParent2 = pStruct->owner;
-         InGuiThreatCaller::instance()->EmitShowMessageBox(aString, pStruct->setPasswordFn, &aPassword);
-         InGuiThreatCaller::instance()->m_sema.wait();
-         
-         if(aPassword != "") {
-            wapiptr->set_password(aPassword);
-            wapiptr->unlock(aPassword);
-         }
-      }
-      
-      */
+
       
       WalletInterface::loadWalletFile(pStruct);
       
