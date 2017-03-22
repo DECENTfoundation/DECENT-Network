@@ -1,19 +1,10 @@
-/*
- *	File: fc_rpc_gui.hpp
- *
- *	Created on: 14 Dec 2016
- *	Created by: Davit Kalantaryan (Email: davit.kalantaryan@desy.de)
- *
- *  This file implements ...
- *
- */
-#ifndef FC_RPC_GUI_HPP
-#define FC_RPC_GUI_HPP
+#pragma once
+
 
 #include <fc/rpc/api_connection.hpp>
 #include <unnamedsemaphorelite.hpp>
 #include <mutex>
-#include "ui_wallet_functions_base.hpp"
+#include "ui_wallet_functions.hpp"
 #include "decent_tool_fifo.hpp"
 #include <future>
 #include <atomic>
@@ -39,7 +30,7 @@ namespace fc { namespace rpc {
       void wait();
       void format_result( const string& method, std::function<string(variant,const variants&)> formatter);
 
-      void SetNewTask(const std::string& inp_line, void* ownr, void* clbData, TypeCallbackSetNewTaskGlb2 fpTaskDone);
+      void SetNewTask(const std::string& inp_line, void* ownr, void* clbData, gui_wallet::TypeCallbackSetNewTaskGlb2 fpTaskDone);
    private:
 
       void run();
@@ -55,4 +46,3 @@ namespace fc { namespace rpc {
 
 } }
 
-#endif // FC_RPC_GUI_HPP

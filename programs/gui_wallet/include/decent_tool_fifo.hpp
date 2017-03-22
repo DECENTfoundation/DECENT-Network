@@ -2,47 +2,9 @@
 
 #include <mutex>
 #include <stddef.h>
-#include "ui_wallet_functions_base.hpp"
+#include "ui_wallet_functions.hpp"
 
 namespace gui_wallet {
-   
-   struct SConnectionStruct;
-   
-   struct TaskListItem {
-      typedef std::string            value_type;
-      
-      
-      TaskListItem() : callback(NULL) {}
-      TaskListItem(TypeCallbackSetNewTaskGlb2 callback_function, const std::string& a_inp, void* a_owner = NULL, void* a_clbArg=NULL)
-      : next(NULL), owner(a_owner), callbackArg(a_clbArg), input(a_inp), callback(callback_function) {
-         
-      }
-      
-      TaskListItem*                   next;
-      void*                           owner;
-      void*                           callbackArg;
-      std::string                     input;
-      TypeCallbackSetNewTaskGlb2      callback;
-   };
-   
-   
-   struct ConnectListItem {
-      typedef SConnectionStruct*     value_type;
-      
-      ConnectListItem() : input(NULL), callback(NULL) {}
-      
-      ConnectListItem(TypeCallbackSetNewTaskGlb2 callback_function, SConnectionStruct* a_inp, void* a_owner = NULL, void* a_clbArg=NULL)
-      : next(NULL), owner(a_owner), callbackArg(a_clbArg), input(a_inp), callback(callback_function) {
-         
-      }
-      
-      ConnectListItem*                next;
-      void*                           owner;
-      void*                           callbackArg;
-      SConnectionStruct*              input;
-      TypeCallbackSetNewTaskGlb2      callback;
-   };
-   
    
    
    

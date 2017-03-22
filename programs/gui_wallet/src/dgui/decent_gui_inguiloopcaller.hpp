@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ui_wallet_functions_base.hpp"
+#include "ui_wallet_functions.hpp"
 #include <QObject>
 
 namespace gui_wallet {
@@ -15,7 +15,7 @@ public:
 public:
    static InGuiLoopCaller* instance();
    
-   void CallFunctionInGuiLoop2(SetNewTask_last_args2,const std::string& a_result,
+   void CallFunctionInGuiLoop2(void* a_clbData, int64_t a_err, const std::string& a_inp, const std::string& a_result,
                                 void* owner,TypeCallbackSetNewTaskGlb2 fpFnc);
 
 

@@ -59,7 +59,7 @@ InGuiLoopCaller* InGuiLoopCaller::instance() {
    return s_pInGuiThreadCaller;
 }
 
-void InGuiLoopCaller::CallFunctionInGuiLoop2(SetNewTask_last_args2,const std::string& a_result,
+void InGuiLoopCaller::CallFunctionInGuiLoop2(void* a_clbData, int64_t a_err, const std::string& a_inp, const std::string& a_result,
                                                           void* a_owner,TypeCallbackSetNewTaskGlb2 a_fpFnc) {
    
     emit NewFunctionToCallSig2(a_clbData,a_err,a_inp,a_result,a_owner,a_fpFnc);

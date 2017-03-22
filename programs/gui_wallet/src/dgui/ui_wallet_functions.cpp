@@ -381,7 +381,7 @@ int WalletInterface::connectToNewWitness(const ConnectListItem& a_con_data) {
       
       boost::signals2::scoped_connection closed_connection(con->closed.connect([=]{
          
-         WalletInterface::callFunctionInGuiLoop(a_con_data.callbackArg,UNABLE_TO_CONNECT, __CONNECTION_CLB_, "Server has disconnected us.", a_con_data.owner,a_con_data.callback);
+         WalletInterface::callFunctionInGuiLoop(a_con_data.callbackArg,UNABLE_TO_CONNECT, "", "Server has disconnected us.", a_con_data.owner,a_con_data.callback);
          wallet_gui->stop();
       }));
       (void)(closed_connection);
@@ -409,10 +409,12 @@ int WalletInterface::connectToNewWitness(const ConnectListItem& a_con_data) {
       
       WalletInterface::loadWalletFile(pStruct);
       
-      std::string possible_input = __CONNECTION_CLB_;
-      if(pStruct->wallet_file_name != "" ){possible_input = "load_wallet_file " + pStruct->wallet_file_name;}
       
-      WalletInterface::callFunctionInGuiLoop(a_con_data.callbackArg,0, possible_input, "true", a_con_data.owner,a_con_data.callback);
+      if(pStruct->wallet_file_name != "" ) {
+         WalletInterface::callFunctionInGuiLoop(a_con_data.callbackArg, 0, "load_wallet_file " + pStruct->wallet_file_name, "true", a_con_data.owner,a_con_data.callback);
+         
+      }
+      
       wallet_gui->wait();
       
       wapi->save_wallet_file(wallet_file.generic_string());
@@ -427,7 +429,7 @@ int WalletInterface::connectToNewWitness(const ConnectListItem& a_con_data) {
       
    } catch(...) {
       
-      WalletInterface::callFunctionInGuiLoop(a_con_data.callbackArg, UNKNOWN_EXCEPTION, __CONNECTION_CLB_,
+      WalletInterface::callFunctionInGuiLoop(a_con_data.callbackArg, UNKNOWN_EXCEPTION, "",
                                              "Unknown exception!",
                                              a_con_data.owner,a_con_data.callback);
    }

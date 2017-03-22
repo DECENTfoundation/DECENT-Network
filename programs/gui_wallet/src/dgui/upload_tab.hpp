@@ -37,13 +37,6 @@
 
 
 
-#define INFO_LIFETIME   "Lifetime"
-#define INFO_SEEDERS    "Seeders"
-#define INFO_KEYPARTS   "Key particles"
-#define INFO_TAGS       "Tags"
-#define INFO_PRICE      "Price"
-
-
 namespace gui_wallet
 {
     

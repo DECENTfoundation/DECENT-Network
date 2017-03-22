@@ -41,7 +41,6 @@ add_executable( DECENT MACOSX_BUNDLE
                 include/decent_tool_fifo.hpp
                 include/richdialog.hpp
                 include/ui_wallet_functions.hpp
-                include/ui_wallet_functions_base.hpp
                 include/unnamedsemaphorelite.hpp
                 src/dgui/browse_content_tab.hpp
                 src/dgui/decent_gui_inguiloopcaller.hpp

@@ -311,9 +311,11 @@ void Mainwindow_gui_wallet::UnlockSlot()
     
     std::string cvsPassword;
     
-    if(!m_UnlockDialog.execRD(thisPos, cvsPassword))
-        return;
-    
+   if(!m_UnlockDialog.execRD(thisPos, cvsPassword)) {
+      UpdateLockedStatus();
+      return;
+   }
+   
     m_ActionLock.setDisabled(true);
     m_ActionUnlock.setDisabled(true);
     
