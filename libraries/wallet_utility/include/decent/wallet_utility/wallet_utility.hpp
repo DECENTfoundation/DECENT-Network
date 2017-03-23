@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <string>
+#include <mutex>
 
 namespace graphene
 {
@@ -10,6 +11,10 @@ namespace wallet
 {
     class wallet_api;
 }
+}
+namespace fc
+{
+   class thread;
 }
 namespace decent
 {
@@ -29,12 +34,17 @@ namespace wallet_utility
 
       void Connent();
       bool Connected();
-      graphene::wallet::wallet_api* operator -> ();
+      bool IsNew();
+      bool IsLocked();
+      void SetPassword(string const& str_password);
+      void Unlock(string const& str_password);
+
       string RunTask(string& str_command);
 
    private:
-
+      std::unique_ptr<fc::thread> m_pthread;
       std::unique_ptr<detail::WalletAPIHelper> m_pimpl;
+      std::mutex m_mutex;
    };
 }
 }

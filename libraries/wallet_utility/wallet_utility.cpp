@@ -62,7 +62,6 @@ namespace wallet_utility
          WalletAPIHelper()
          : m_ptr_wallet_api(nullptr)
          , m_ptr_fc_api_connection(nullptr)
-         , m_mutex()
          {
             wallet_data wdata;
             fc::path wallet_file(decent_path_finder::instance().get_decent_home() / "wallet.json");
@@ -124,7 +123,6 @@ namespace wallet_utility
 
          wallet_api_ptr m_ptr_wallet_api;
          WalletAPIConnectionPtr m_ptr_fc_api_connection;
-         std::mutex m_mutex;
          std::map<string, std::function<string(fc::variant,const fc::variants&)> > m_result_formatters;
       };
    }
@@ -132,92 +130,163 @@ namespace wallet_utility
    //  WalletAPI
    //
    WalletAPI::WalletAPI()
-   : m_pimpl(nullptr)
+   : m_pthread(nullptr)
+   , m_pimpl(nullptr)
+   , m_mutex()
    {
-
    }
 
    WalletAPI::~WalletAPI()
    {
-
    }
 
    void WalletAPI::Connent()
    {
-      if (m_pimpl)
+      if (Connected())
          throw wallet_exception("already connected");
 
-      while (true)
-      {
-         try
-         {
-            m_pimpl.reset(new detail::WalletAPIHelper());
-            break;
-         }
-         catch(wallet_exception const& ex)
-         {
-            throw ex;
-         }
-         catch(fc::exception const& ex)
-         {
-            std::string error = ex.what();
-         }
-         catch(std::exception const& ex)
-         {
-            std::string error = ex.what();
-         }
-         catch(...)
-         {
+      std::lock_guard<std::mutex> lock(m_mutex);
 
-         }
-      }
+      m_pthread.reset(new fc::thread("wallet_api_service"));
+
+      auto& pimpl = m_pimpl;
+      fc::future<string> future_connect =
+      m_pthread->async([&pimpl] () -> string
+                       {
+                          while (true)
+                          {
+                             try
+                             {
+                                pimpl.reset(new detail::WalletAPIHelper());
+                                break;
+                             }
+                             catch(wallet_exception const& ex)
+                             {
+                                return ex.what();
+                             }
+                             catch(fc::exception const& ex)
+                             {
+                                std::string error = ex.what();
+                             }
+                             catch(std::exception const& ex)
+                             {
+                                std::string error = ex.what();
+                             }
+                             catch(...)
+                             {
+
+                             }
+                          }
+                          return string();
+                       });
+      string str_result = future_connect.wait();
+      if (false == str_result.empty())
+         throw wallet_exception(str_result);
    }
 
    bool WalletAPI::Connected()
    {
+      std::lock_guard<std::mutex> lock(m_mutex);
       return nullptr != m_pimpl;
    }
 
-   graphene::wallet::wallet_api* WalletAPI::operator -> ()
+   bool WalletAPI::IsNew()
    {
-      if (nullptr == m_pimpl)
+      if (false == Connected())
          throw wallet_exception("not yet connected");
 
-      std::lock_guard<std::mutex> lock(m_pimpl->m_mutex);
+      std::lock_guard<std::mutex> lock(m_mutex);
 
-      return m_pimpl->m_ptr_wallet_api.get();
+      auto& pimpl = m_pimpl->m_ptr_wallet_api;
+      fc::future<bool> future_is_new =
+      m_pthread->async([&pimpl] () -> bool
+                       {
+                          return pimpl->is_new();
+                       });
+      return future_is_new.wait();
+   }
+   bool WalletAPI::IsLocked()
+   {
+      if (false == Connected())
+         throw wallet_exception("not yet connected");
+
+      std::lock_guard<std::mutex> lock(m_mutex);
+
+      auto& pimpl = m_pimpl->m_ptr_wallet_api;
+      fc::future<bool> future_is_locked =
+      m_pthread->async([&pimpl] () -> bool
+                       {
+                          return pimpl->is_locked();
+                       });
+      return future_is_locked.wait();
+   }
+   void WalletAPI::SetPassword(string const& str_password)
+   {
+      if (false == Connected())
+         throw wallet_exception("not yet connected");
+
+      std::lock_guard<std::mutex> lock(m_mutex);
+
+      auto& pimpl = m_pimpl->m_ptr_wallet_api;
+      fc::future<void> future_set_password =
+      m_pthread->async([&pimpl, &str_password] ()
+                       {
+                          return pimpl->set_password(str_password);
+                       });
+      return future_set_password.wait();
+   }
+   void WalletAPI::Unlock(string const& str_password)
+   {
+      if (false == Connected())
+         throw wallet_exception("not yet connected");
+
+      std::lock_guard<std::mutex> lock(m_mutex);
+
+      auto& pimpl = m_pimpl->m_ptr_wallet_api;
+      fc::future<void> future_unlock =
+      m_pthread->async([&pimpl, &str_password] ()
+                       {
+                          return pimpl->unlock(str_password);
+                       });
+      return future_unlock.wait();
    }
 
    string WalletAPI::RunTask(string& str_command)
    {
-      if (nullptr == m_pimpl)
+      if (false == Connected())
          throw wallet_exception("not yet connected");
 
-      std::lock_guard<std::mutex> lock(m_pimpl->m_mutex);
+      std::lock_guard<std::mutex> lock(m_mutex);
 
-      std::string line = str_command;
-      line += char(EOF);
-      fc::variants args = fc::json::variants_from_string(line);
+      auto& pimpl = m_pimpl;
+      fc::future<string> future_run =
+      m_pthread->async([&pimpl, &str_command] ()
+                       {
+                          std::string line = str_command;
+                          line += char(EOF);
+                          fc::variants args = fc::json::variants_from_string(line);
 
-      if (false == args.empty())
-      {
-         const string& method = args.front().get_string();
+                          if (false == args.empty())
+                          {
+                             const string& method = args.front().get_string();
 
-         auto result = m_pimpl->m_ptr_fc_api_connection->receive_call(0, method, fc::variants(args.begin()+1, args.end()));
+                             auto result = pimpl->m_ptr_fc_api_connection->receive_call(0, method, fc::variants(args.begin()+1, args.end()));
 
-         auto it = m_pimpl->m_result_formatters.find(method);
+                             auto it = pimpl->m_result_formatters.find(method);
 
-         string str_result;
-         if (it == m_pimpl->m_result_formatters.end())
-            str_result = fc::json::to_pretty_string(result);
-         else
-            str_result = it->second(result, args);
-
-         return str_result;
-      }
-      // may as well throw an exception?
-
-      return string();
+                             string str_result;
+                             if (it == pimpl->m_result_formatters.end())
+                                str_result = fc::json::to_pretty_string(result);
+                             else
+                                str_result = it->second(result, args);
+                             
+                             return str_result;
+                          }
+                          // may as well throw an exception?
+                          
+                          return string();
+                       });
+      return future_run.wait();
    }
 }
 }

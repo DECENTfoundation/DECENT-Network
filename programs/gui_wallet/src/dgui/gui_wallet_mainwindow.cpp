@@ -179,7 +179,7 @@ void Mainwindow_gui_wallet::slot_connected()
    connect(&_downloadChecker, SIGNAL(timeout()), this, SLOT(CheckDownloads()));
    _downloadChecker.start();
 
-   DisplayWalletContentGUI(m_wallet_api->is_new());
+   DisplayWalletContentGUI(m_wallet_api.IsNew());
 }
 
 void Mainwindow_gui_wallet::slot_connection_error(std::string const& str_error)
