@@ -245,7 +245,10 @@ int main(int argc, char* argv[])
        QApplication app(argc, argv);
        //gui_wallet::application aApp(argc, argv);
 
+       qRegisterMetaType<std::string>( "std::string" );
+       qRegisterMetaType<int64_t>( "int64_t" );
 
+       app.setApplicationDisplayName("Decent");
 
        try
        {

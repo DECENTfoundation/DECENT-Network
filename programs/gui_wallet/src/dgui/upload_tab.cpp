@@ -78,8 +78,10 @@ m_getPublishersTimer(this)
     QFont m_font( "Open Sans Bold", 14, QFont::Bold);
     QPalette pltEdit;
     
-   DCT_VERIFY(connect(this, SIGNAL(signal_upload_content(WalletAPI*, std::string const&)), m_pMainWindow->m_p_wallet_operator, SLOT(slot_upload_content(WalletAPI*, std::string const&))));
-   DCT_VERIFY(connect(m_pMainWindow->m_p_wallet_operator, SIGNAL(signal_upload_content_result(bool)), this, SLOT(slot_upload_content_result(bool))));
+   DCT_VERIFY(connect(this, SIGNAL(signal_content_upload(std::string)),
+                      m_pMainWindow->m_p_wallet_operator, SLOT(slot_content_upload(std::string))));
+   DCT_VERIFY(connect(m_pMainWindow->m_p_wallet_operator, SIGNAL(signal_content_uploaded(std::string)),
+                      this, SLOT(slot_content_uploaded(std::string))));
 
     m_infoLayoutHeader.setFont(m_font);
     m_title_text.setPlaceholderText("  Title:");
@@ -374,14 +376,14 @@ void Upload_popup::uploadContent() {
     submitCommand += " true";                                           //broadcast
 
 
-   emit signal_upload_content(&m_pMainWindow->m_wallet_api, submitCommand);
+   emit signal_content_upload(submitCommand);
     /*AsyncTask(submitCommand, this, NULL, +[](void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
         ((Upload_popup*)owner)->uploadDone(a_clbkArg, a_err, a_task, a_result);
     });*/
 }
-void Upload_popup::slot_upload_content_result(bool bool_result)
+void Upload_popup::slot_content_uploaded(std::string str_error)
 {
-   uploadDone(nullptr, (int)bool_result, std::string(), std::string());
+   uploadDone(nullptr, (int)(false == str_error.empty()), std::string(), std::string());
 }
 
 void Upload_popup::uploadDone(void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {

@@ -25,7 +25,6 @@
 #include <QTimer>
 #include <QDateEdit>
 #include <QComboBox>
-#include <decent/wallet_utility/wallet_utility.hpp>
 
 #include "decent_button.hpp"
 #include "gui_wallet_tabcontentmanager.hpp"
@@ -40,8 +39,6 @@
 
 namespace gui_wallet
 {
-    using WalletAPI = decent::wallet_utility::WalletAPI;
-
     enum FieldsRows {
         LIFETIME = 0,
         KEYPARTS,
@@ -74,10 +71,10 @@ namespace gui_wallet
         void browseSamples();
         void uploadContent();
         void onGrabPublishers();
-       void slot_upload_content_result(bool bool_result);
+       void slot_content_uploaded(std::string);
 
     signals:
-       void signal_upload_content(WalletAPI*, std::string const&);
+       void signal_content_upload(std::string);
 
     public:
         void uploadDone(void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result);

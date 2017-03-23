@@ -39,6 +39,7 @@ static gui_wallet::Mainwindow_gui_wallet*  s_pMainWindowInstance = NULL;
 
 WalletOperator::WalletOperator()
 : QObject(nullptr)
+, m_wallet_api()
 {
 
 }
@@ -48,34 +49,36 @@ WalletOperator::~WalletOperator()
 
 }
 
-void WalletOperator::slot_connect(WalletAPI* pwallet_api)
+void WalletOperator::slot_connect()
 {
+   string str_error;
    try
    {
-      pwallet_api->Connent();
+      m_wallet_api.Connent();
    }
    catch(std::exception const& ex)
    {
-      emit signal_connection_error(ex.what());
+      str_error = ex.what();
    }
-   emit signal_connected();
+   emit signal_connected(str_error);
 }
 
-void WalletOperator::slot_upload_content(WalletAPI* pwallet_api, std::string const& str_command)
+void WalletOperator::slot_content_upload(std::string str_command)
 {
-   bool bRes = true;
+   string str_error;
    try
    {
       std::string str_result;
-      str_result = pwallet_api->RunTask(str_command);
+      str_result = m_wallet_api.RunTask(str_command);
    }
    catch(std::exception const& ex)
    {
-      bRes = false;
+      str_error = ex.what();
    }
 
-   emit signal_upload_content_result(bRes);
+   emit signal_content_uploaded(str_error);
 }
+
 
 Mainwindow_gui_wallet::Mainwindow_gui_wallet()
 : m_ActionExit(tr("&Exit"),this)
@@ -94,7 +97,6 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
 , m_UnlockDialog(this, false)
 , m_p_wallet_operator(new WalletOperator())
 , m_wallet_operator_thread(this)
-, m_wallet_api()
 {
    s_pMainWindowInstance = this;
 
@@ -147,13 +149,14 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
    m_p_wallet_operator->moveToThread(&m_wallet_operator_thread);
    m_wallet_operator_thread.start();
 
-   DCT_VERIFY(connect(this, SIGNAL(signal_connect(WalletAPI*)), m_p_wallet_operator, SLOT(slot_connect(WalletAPI*))));
-   DCT_VERIFY(connect(m_p_wallet_operator, SIGNAL(signal_connected()), this, SLOT(slot_connected())));
-   DCT_VERIFY(connect(m_p_wallet_operator, SIGNAL(signal_connection_error(std::string const&)), this, SLOT(slot_connection_error(std::string const&))));
+   DCT_VERIFY(connect(this, SIGNAL(signal_connect()),
+                      m_p_wallet_operator, SLOT(slot_connect())));
+   DCT_VERIFY(connect(m_p_wallet_operator, SIGNAL(signal_connected(std::string)),
+                      this, SLOT(slot_connected(std::string))));
 
    //WalletInterface::initialize();
    //ConnectSlot();
-   emit signal_connect(&m_wallet_api);
+   emit signal_connect();
 
    //connect(&GlobalEvents::instance(), SIGNAL(walletConnected()), this, SLOT(DisplayWalletContentGUI()));
    //connect(&GlobalEvents::instance(), SIGNAL(walletConnectionError(std::string)), this, SLOT(DisplayConnectionError(std::string)));
@@ -183,28 +186,29 @@ Mainwindow_gui_wallet::~Mainwindow_gui_wallet()
 {
    m_wallet_operator_thread.quit();
    m_wallet_operator_thread.wait();
-   m_wallet_api.SaveWalletFile();
+   m_p_wallet_operator->m_wallet_api.SaveWalletFile();
    //WalletInterface::destroy();
 }
 
-void Mainwindow_gui_wallet::slot_connected()
+void Mainwindow_gui_wallet::slot_connected(std::string str_error)
 {
-   _downloadChecker.setSingleShot(false);
-   _downloadChecker.setInterval(5000);
-   connect(&_downloadChecker, SIGNAL(timeout()), this, SLOT(CheckDownloads()));
-   _downloadChecker.start();
+   if (str_error.empty())
+   {
+      _downloadChecker.setSingleShot(false);
+      _downloadChecker.setInterval(5000);
+      connect(&_downloadChecker, SIGNAL(timeout()), this, SLOT(CheckDownloads()));
+      _downloadChecker.start();
 
-   DisplayWalletContentGUI(m_wallet_api.IsNew());
+      DisplayWalletContentGUI(m_p_wallet_operator->m_wallet_api.IsNew());
+   }
+   else
+      QMessageBox::critical(this, "Error", str_error.c_str());
 }
 
-void Mainwindow_gui_wallet::slot_connection_error(std::string const& str_error)
-{
-   QMessageBox::critical(this, "Error", str_error.c_str());
-}
 
 void Mainwindow_gui_wallet::RunTask(std::string const& str_command, std::string& str_result)
 {
-   str_result = m_wallet_api.RunTask(str_command);
+   str_result = m_p_wallet_operator->m_wallet_api.RunTask(str_command);
 }
 
 void Mainwindow_gui_wallet::CreateActions()
@@ -690,7 +694,7 @@ void Mainwindow_gui_wallet::SetPassword()
          RunTask(setPassword, result);
          RunTask(unlockTask, result);
 
-         m_wallet_api.SaveWalletFile();
+         m_p_wallet_operator->m_wallet_api.SaveWalletFile();
          
          m_ActionImportKey.setEnabled(true);
          m_ActionUnlock.setEnabled(false);

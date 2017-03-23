@@ -40,12 +40,13 @@ public:
     ~WalletOperator();
 
 public slots:
-   void slot_connect(WalletAPI* pwallet_api);
-   void slot_upload_content(WalletAPI* pwallet_api, std::string const& str_command);
+   void slot_connect();
+   void slot_content_upload(std::string str_command);
 signals:
-   void signal_connected();
-   void signal_connection_error(std::string const& str_error);
-   void signal_upload_content_result(bool);
+   void signal_connected(std::string str_error);
+   void signal_content_uploaded(std::string str_error);
+public:
+   WalletAPI m_wallet_api;
 };
 
 
@@ -88,14 +89,13 @@ protected slots:
    void LockSlot();
    void UnlockSlot();
 
-   void slot_connected();
-   void slot_connection_error(std::string const& str_error);
+   void slot_connected(std::string str_error);
 
 public:
    void RunTask(std::string const& str_command, std::string& str_result);
 
 signals:
-   void signal_connect(WalletAPI* pwallet_api);
+   void signal_connect();
    
 protected:
    class QVBoxLayout*   m_pCentralAllLayout;
@@ -135,8 +135,8 @@ protected:
 
 public:
    WalletOperator*   m_p_wallet_operator;
+protected:
    QThread           m_wallet_operator_thread;
-   WalletAPI         m_wallet_api;
 };
 
    
