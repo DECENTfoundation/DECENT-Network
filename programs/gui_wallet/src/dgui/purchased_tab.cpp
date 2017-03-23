@@ -144,8 +144,6 @@ void PurchasedTab::timeToUpdate(const std::string& result) {
       contentObject.AVG_rating = dcontent_json["AVG_rating"].get<double>() / 1000;
       
       
-      m_pTableWidget.horizontalHeader()->setStretchLastSection(true);
-      
       
       EventPassthrough<DecentSmallButton>* info_icon = new EventPassthrough<DecentSmallButton>(":/icon/images/pop_up.png", ":/icon/images/pop_up1.png");
       info_icon->setProperty("id", QVariant::fromValue(i));

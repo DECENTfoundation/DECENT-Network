@@ -524,7 +524,7 @@ std::string Upload_tab::getUpdateCommand() {
       return "";
    }
    
-   return "search_content \"" + filterText + "\" 100";
+   return "search_user_content \"" + currentUserName + "\" \"" + filterText + "\" 100";
    
 }
 
