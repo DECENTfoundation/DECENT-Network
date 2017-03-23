@@ -67,7 +67,7 @@ void WalletOperator::slot_upload_content(WalletAPI* pwallet_api, std::string con
    try
    {
       std::string str_result;
-      pwallet_api->RunTask(str_command, str_result);
+      str_result = pwallet_api->RunTask(str_command);
    }
    catch(std::exception const& ex)
    {
