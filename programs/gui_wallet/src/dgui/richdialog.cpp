@@ -29,7 +29,7 @@ RichDialogBase::RichDialogBase(QString title)
     connect(&m_cancel_button,SIGNAL(LabelClicked()),this,SLOT(close()));
     connect(&m_ok_button,SIGNAL(LabelClicked()),this,SLOT(set_ok_and_closeSlot()));
     setWindowTitle(title);
-    resize(300, 140);
+    resize(350, 150);
 }
 
 

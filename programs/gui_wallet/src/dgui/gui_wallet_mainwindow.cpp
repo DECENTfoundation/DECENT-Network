@@ -478,8 +478,8 @@ void Mainwindow_gui_wallet::ImportKeySlot()
     }
 
     QPoint thisPos = pos();
-    thisPos.rx() += size().width() / 2 - 150;
-    thisPos.ry() += size().height() / 2 - 70;
+    thisPos.rx() += size().width() / 2 - 175;
+    thisPos.ry() += size().height() / 2 - 75;
     RET_TYPE aRet = m_import_key_dlg.execRD(&thisPos,cvsUsKey);
    
     if(aRet == RDB_CANCEL){
