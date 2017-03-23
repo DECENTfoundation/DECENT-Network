@@ -31,9 +31,6 @@ namespace gui_wallet
       Q_OBJECT
    public:
       TransactionsTab();
-      
-      virtual void contentActivated() { }
-      virtual void contentDeactivated() {}
       virtual void timeToUpdate(const std::string& result);
       virtual std::string getUpdateCommand();
 

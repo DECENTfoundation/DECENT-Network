@@ -43,8 +43,6 @@ namespace gui_wallet
       
    public:
       
-      virtual void contentActivated() { }
-      virtual void contentDeactivated() {}
       virtual void timeToUpdate(const std::string& result);
       virtual std::string getUpdateCommand();
        
