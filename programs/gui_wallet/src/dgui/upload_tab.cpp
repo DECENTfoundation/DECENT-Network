@@ -68,41 +68,34 @@ CryptoPP::AutoSeededRandomPool rng;
 
 Upload_popup::Upload_popup()
 :
-m_info_widget(3, 6),
-m_title_label(tr("Title")),
-m_description_label(tr("Description")),
-m_infoLayoutHeader(tr("Content info:")),
 m_getPublishersTimer(this)
 {
     QFont m_font( "Open Sans Bold", 14, QFont::Bold);
     QPalette pltEdit;
     
     
-    m_infoLayoutHeader.setFont(m_font);
     m_title_text.setPlaceholderText("  Title:");
     m_title_text.setAttribute(Qt::WA_MacShowFocusRect, 0);
     m_title_text.setFixedHeight(40);
+    
+    m_synopsis_layout.setContentsMargins(0, 0, 0, 0);
     m_synopsis_layout.addWidget(&m_title_text);
     
+    m_description_text.setContentsMargins(0, 0, 0, 0);
     m_description_text.setPlaceholderText("  Description:");
     m_description_text.resize(138, 822);
     m_description_text.setFixedHeight(138);
     
+    m_description_text.setContentsMargins(0, 0, 0, 0);
+    m_synopsis_layout.setMargin(0);
     m_synopsis_layout.addWidget(&m_description_text);
     
-    QFont font( "Open Sans Bold", 14, QFont::Bold);
-    m_infoLayoutHeader.setFont(font);
     
     u_main_layout.addLayout(&m_synopsis_layout);
-    u_main_layout.addWidget(&m_infoLayoutHeader);
     
     ////////////////////////////////////////////////////////////////////////////
     /// Lifetime
     ////////////////////////////////////////////////////////////////////////////
-    
-    QLabel* lifetime = new QLabel("LifeTime");
-    lifetime->setStyleSheet("border:1px solid black");
-    lifetime->setStyleSheet("border:0px");
     
     m_samplesPath = new QLineEdit("", this);
     m_samplesPath->setReadOnly(true);
@@ -118,36 +111,42 @@ m_getPublishersTimer(this)
     //////////////////////
     //////                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     //////////////////////
-    seeders = new QComboBox(this);
-    
-    
     QHBoxLayout* firstRow = new QHBoxLayout;
     
     //LIFETIME
     QLabel* lab = new QLabel("LifeTime");
-    lab->setStyleSheet("border:0; color: Gray");
-    lab->setContentsMargins(0, 0, -2, 0);
+    lab->setStyleSheet("QLabel { background-color : white; border:0; color: Gray}");
+    lab->setContentsMargins(0, 0, -1, 0);
     lab->setMinimumWidth(60);
     lab->setFixedHeight(25);
     
+    firstRow->setMargin(0);
     firstRow->addWidget(lab);
     firstRow->addWidget(de);
+    u_main_layout.addLayout(firstRow);
     
     //SEEDERS
+    QHBoxLayout* seedRow = new QHBoxLayout;
+
+    seeders      = new QComboBox(this);
     QLabel* seed = new QLabel("Seeders");
-    seed->setStyleSheet("border:0; color: Gray");
+    seed->setStyleSheet("QLabel { background-color : white; border:0; color: Gray}");
     
-    seed->setContentsMargins(20, 0, -2, 0);
+    seed->setContentsMargins(0, 0, 0, 0);
     seed->setMinimumWidth(70);
     seed->setFixedHeight(25);
     seeders->setStyle(QStyleFactory::create("fusion"));
-    firstRow->addWidget(seed);
-    firstRow->addWidget(seeders);
+    seedRow->addWidget(seed);
+    seedRow->addWidget(seeders);
+    seedRow->setMargin(0);
+    u_main_layout.addLayout(seedRow);
     
     //KEYPARTICLES
+    QHBoxLayout* keyRow = new QHBoxLayout;
+
     QLabel* key = new QLabel("Key Particles");
-    key->setStyleSheet("border:0; color: Gray");
-    key->setContentsMargins(20, 0, -2, 0);
+    key->setStyleSheet("QLabel { background-color : white; border:0; color: Gray}");
+    key->setContentsMargins(0, 0, 0, 0);
     key->setMinimumWidth(90);
     key->setFixedHeight(25);
     
@@ -158,34 +157,34 @@ m_getPublishersTimer(this)
         keyparts->addItem(val, val);
     }
     
-    firstRow->addWidget(key);
-    firstRow->addWidget(keyparts);
+    keyRow->addWidget(key);
+    keyRow->addWidget(keyparts);
     
-    u_main_layout.addLayout(firstRow);
-    
-    //\\//\\//\\\//\\\/SECOND ROW\//\\//\\//
-    
-    QHBoxLayout* secondrow = new QHBoxLayout;
+    u_main_layout.addLayout(keyRow);
     
     //PRICE
+    QHBoxLayout* priceRow = new QHBoxLayout;
+    
     price = new QLineEdit;
     price->setValidator( new QDoubleValidator(0.001, 100000, 3, this) );
     price->setPlaceholderText("Price");
     price->setAttribute(Qt::WA_MacShowFocusRect, 0);
     price->setStyleSheet("border:1px solid lightGray; color: Gray");
     price->setFixedHeight(30);
-    price->setFixedWidth(150);
-    price->setContentsMargins(0, 0, 10, 0);
+    price->setContentsMargins(0, 0, 0, 0);
     
-    secondrow->setContentsMargins(0, 2, 0, 0);
-    secondrow->addWidget(price);
+    priceRow->setContentsMargins(0, 0, 0, 0);
+    priceRow->addWidget(price);
+    
+    u_main_layout.addLayout(priceRow);
     
     //SIMPLES
+    QHBoxLayout* simRow = new QHBoxLayout;
+    
     sim = new QLineEdit("Samples");
     sim->setReadOnly(true);
     sim->setStyleSheet("border:1px solid lightGray; color: Gray");
-    sim->setContentsMargins(10, 0, 0, 0);
-    sim->setFixedWidth(270);
+    sim->setContentsMargins(0, 0, 0, 0);
     sim->setFixedHeight(30);
     
     DecentButton* browse_samples_button = new DecentButton();
@@ -194,15 +193,18 @@ m_getPublishersTimer(this)
     browse_samples_button->setFixedHeight(30);
     connect(browse_samples_button, SIGNAL(LabelClicked()),this, SLOT(browseSamples()));
     
-    secondrow->addWidget(sim);
-    secondrow->addWidget(browse_samples_button);
+    simRow->addWidget(sim);
+    simRow->addWidget(browse_samples_button);
+    
+    u_main_layout.addLayout(simRow);
     
     //CONTENT
+    QHBoxLayout* contRow = new QHBoxLayout;
+
     cont = new QLineEdit("Path");
     cont->setReadOnly(true);
     cont->setStyleSheet("border:1px solid lightGray; color: Gray");
-    cont->setContentsMargins(10, 0, 0, 0);
-    cont->setFixedWidth(270);
+    cont->setContentsMargins(0, 0, 0, 0);
     cont->setFixedHeight(30);
     
     m_contentPath = new QLineEdit("", this);
@@ -215,10 +217,11 @@ m_getPublishersTimer(this)
     browse_content_button->setFixedHeight(30);
     connect(browse_content_button, SIGNAL(LabelClicked()),this, SLOT(browseContent()));
     
-    secondrow->addWidget(cont);
-    secondrow->addWidget(browse_content_button);
+    contRow->addWidget(cont);
+    contRow->addWidget(browse_content_button);
     
-    u_main_layout.addLayout(secondrow);
+    u_main_layout.addLayout(contRow);
+    
     ////////////////////////////                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     ////////////////////////////////////////////////////////////////////////////
     /// Upload
@@ -227,15 +230,26 @@ m_getPublishersTimer(this)
     QHBoxLayout* button = new QHBoxLayout;
     
     DecentButton* upload_label = new DecentButton();
-    upload_label->setText("UPLOAD");
+    DecentButton* cancel_label = new DecentButton();
+
+    cancel_label->setText("Cancel");
+    cancel_label->setFixedHeight(30);
+    cancel_label->setFixedWidth(120);
+    cancel_label->setStyleSheet("QLabel { background-color :rgb(255, 255, 255); border:1px solid Gray; color : Grey;}");
+    
+    upload_label->setText("Upload");
     upload_label->setFixedHeight(30);
     upload_label->setFixedWidth(120);
     
     connect(upload_label, SIGNAL(LabelClicked()),this, SLOT(uploadContent()));
-    button->setContentsMargins(250, 0, 250, 0);
+    connect(cancel_label, SIGNAL(LabelClicked()),this, SLOT( uploadCanceled() ));
+
+    button->setContentsMargins(150, 0, 150, 0);
     button->addWidget(upload_label);
-    
+    button->addWidget(cancel_label);
+
     u_main_layout.addLayout(button);
+    u_main_layout.setContentsMargins(0, 0, 0, 5 );
     
     m_getPublishersTimer.setSingleShot(true);
     connect(&m_getPublishersTimer, SIGNAL(timeout()), SLOT(onGrabPublishers()));
@@ -419,7 +433,7 @@ Upload_tab::Upload_tab(Mainwindow_gui_wallet* parent) :  _content_popup(NULL), _
         {"Size", 10},
         {"Price", 10},
         {"Uploaded", 10},
-        {"Expiration", 10},
+        {"Time Left ", 10},
         {" ", -50}
 
     });
@@ -444,7 +458,7 @@ Upload_tab::Upload_tab(Mainwindow_gui_wallet* parent) :  _content_popup(NULL), _
     QPixmap image(":/icon/images/search.svg");
     lab->setPixmap(image);
     
-    m_filterLineEdit.setPlaceholderText("Enter search term");
+    m_filterLineEdit.setPlaceholderText("Search Content");
     m_filterLineEdit.setFixedHeight(40);
     m_filterLineEdit.setStyleSheet("border: 1px solid white");
     m_filterLineEdit.setAttribute(Qt::WA_MacShowFocusRect, 0);
@@ -461,7 +475,7 @@ Upload_tab::Upload_tab(Mainwindow_gui_wallet* parent) :  _content_popup(NULL), _
     setLayout(&m_main_layout);
     
     connect(&m_filterLineEdit, SIGNAL(textChanged(QString)), this, SLOT(onTextChanged(QString)));
-    connect(upload_button, SIGNAL(LabelClicked()), this, SLOT(upload_popup()));
+    connect(upload_button, SIGNAL(LabelClicked()), this, SLOT(uploadPopup()));
     connect(&GlobalEvents::instance(), SIGNAL(currentUserChanged(std::string)), this, SLOT(updateContents()));
 
     m_contentUpdateTimer.connect(&m_contentUpdateTimer, SIGNAL(timeout()), this, SLOT(maybeUpdateContent()));
@@ -585,10 +599,6 @@ void Upload_tab::ShowDigitalContentsGUI() {
         connect(info_icon, SIGNAL(clicked()), this, SLOT(show_content_popup()));
         m_pTableWidget.setCellWidget(index, 6, info_icon);
         
-        
-        
-        
-        
         // Need to rewrite this
         std::string created_str = aTemporar.created.substr(0, 10);
         
@@ -615,7 +625,7 @@ void Upload_tab::ShowDigitalContentsGUI() {
         m_pTableWidget.item(index, 0)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
         
         std::string rating;
-        for(int i = 0; i < std::to_string(aTemporar.AVG_rating).find(".") + 2; ++i)
+        for(int i = 0; i < std::to_string(aTemporar.AVG_rating).find(".") + 4; ++i)
         {
             rating.push_back(std::to_string(aTemporar.AVG_rating)[i]);
         }
@@ -627,14 +637,14 @@ void Upload_tab::ShowDigitalContentsGUI() {
         
         if(aTemporar.size < 1024)
         {
-            m_pTableWidget.setItem(index,2,new QTableWidgetItem(QString::fromStdString(std::to_string(aTemporar.size) + " MB")));
+            m_pTableWidget.setItem(index,2,new QTableWidgetItem(QString::fromStdString(std::to_string(aTemporar.size) + ".000 MB")));
         }
         else
         {
             float size = (float)aTemporar.size/1024;
             std::string size_s;
             std::string s = std::to_string(size);
-            for(int i = 0; i < s.find(".") + 3; ++i)
+            for(int i = 0; i < s.find(".") + 4; ++i)
             {
                 size_s.push_back(s[i]);
             }
@@ -644,7 +654,7 @@ void Upload_tab::ShowDigitalContentsGUI() {
         m_pTableWidget.item(index, 2)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
         
         
-        m_pTableWidget.setItem(index,3,new QTableWidgetItem(QString::number(aTemporar.price.amount) + " DCT"));
+        m_pTableWidget.setItem(index,3,new QTableWidgetItem(QString::number(aTemporar.price.amount,'f', 4) + " DCT"));
         m_pTableWidget.item(index, 3)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
         m_pTableWidget.item(index, 3)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
         
@@ -681,13 +691,15 @@ void Upload_tab::paintRow()
     }
 }
 
-void Upload_tab::upload_popup()
+void Upload_tab::uploadPopup()
 {
-    upload_up* dialog = new upload_up();
-    Upload_popup* popup = new Upload_popup();
-    dialog->setLayout(&popup->u_main_layout);
-    dialog->show();
+    popup.setWindowTitle("Upload");
+    popup.setLayout(&popup.u_main_layout);
+    popup.setStyleSheet("background-color : white");
+    popup.show();
 }
 
-upload_up::upload_up(QWidget *parent) : QDialog(parent)
-{}
+void Upload_popup::uploadCanceled()
+{
+    this->close();
+}

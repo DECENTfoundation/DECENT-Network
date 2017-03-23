@@ -61,12 +61,12 @@ namespace gui_wallet
     };
     
     
-    class Upload_popup : public TabContentManager
+    class Upload_popup : public QDialog
     {
         Q_OBJECT
         
         typedef std::map<std::string, std::string> AssetMap;
-        
+        friend class Upload_tab;
     public:
         Upload_popup();
 
@@ -75,7 +75,8 @@ namespace gui_wallet
         void browseSamples();
         void uploadContent();
         void onGrabPublishers();
-        
+        void uploadCanceled();
+
     public:
         void uploadDone(void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result);
         void onPublishersDone(void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result);
@@ -139,8 +140,9 @@ namespace gui_wallet
         void requestContentUpdate();
         void show_content_popup();
         void content_was_bought();
-        void upload_popup();
+        void uploadPopup();
         void paintRow();
+        
     protected:
         QVBoxLayout     m_main_layout;
         QHBoxLayout     m_search_layout;
@@ -148,6 +150,7 @@ namespace gui_wallet
         QLineEdit       m_filterLineEdit;
         QComboBox       m_searchTypeCombo;
         DecentButton*   upload_button;
+        Upload_popup    popup;
         
         std::vector<SDigitalContent>  _digital_contents;
         ContentDetailsGeneral*        _content_popup;
@@ -156,15 +159,7 @@ namespace gui_wallet
         QTimer                        m_contentUpdateTimer;
     };
     
-    class upload_up : public QDialog
-    {
-        Q_OBJECT
-    public:
-        upload_up(QWidget *parent = 0);
-        ~upload_up(){}
-        friend class Upload_tab;
-    };
-    
+
     
 }
 
