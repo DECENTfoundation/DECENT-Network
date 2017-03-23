@@ -58,7 +58,11 @@ msgBox.exec();                                      \
 }                                                   \
 
 
-
+#define DCT_VERIFY(condition) \
+{ \
+   bool _b_condition_ = (condition); \
+   Q_ASSERT(_b_condition_); \
+}
 
 namespace gui_wallet
 {

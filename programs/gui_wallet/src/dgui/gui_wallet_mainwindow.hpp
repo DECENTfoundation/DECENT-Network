@@ -43,6 +43,7 @@ public slots:
    void slot_connect(WalletAPI* pwallet_api);
 signals:
    void signal_connected();
+   void signal_connection_error(std::string const& str_error);
 };
 
 
@@ -86,6 +87,7 @@ protected slots:
    void UnlockSlot();
 
    void slot_connected();
+   void slot_connection_error(std::string const& str_error);
 
 public:
    void RunTask(std::string str_command, std::string str_result);
@@ -131,6 +133,7 @@ protected:
 
    WalletOperator*   m_p_wallet_operator;
    QThread           m_wallet_operator_thread;
+public:
    WalletAPI         m_wallet_api;
 };
 

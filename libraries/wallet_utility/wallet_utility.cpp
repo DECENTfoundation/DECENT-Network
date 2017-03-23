@@ -20,6 +20,8 @@ namespace wallet_utility
    using websocket_api_connection_ptr = std::shared_ptr<websocket_api_connection>;
    using fc_api = fc::api<wallet_api>;
    using fc_api_ptr = std::shared_ptr<fc_api>;
+   using fc_remote_api = fc::api<graphene::app::login_api>;
+   using fc_remote_api_ptr = std::shared_ptr<fc_remote_api>;
 
    namespace
    {
@@ -59,7 +61,6 @@ namespace wallet_utility
       public:
          WalletAPIHelper()
          : m_ptr_wallet_api(nullptr)
-         , m_ptr_fc_api(nullptr)
          , m_ptr_fc_api_connection(nullptr)
          , m_mutex()
          {
@@ -77,7 +78,7 @@ namespace wallet_utility
             websocket_client_ptr ptr_ws_client(new websocket_client());
             websocket_connection_ptr ptr_ws_connection = ptr_ws_client->connect(wdata.ws_server);
 
-            //  capture ptr_ws_connection, own the lifetime
+            //  capture ptr_ws_connection and ptr_ws_client own the lifetime
             websocket_api_connection_ptr ptr_api_connection =
             websocket_api_connection_ptr(new websocket_api_connection(*ptr_ws_connection),
                                          [ptr_ws_connection, ptr_ws_client](websocket_api_connection* &p_api_connection) mutable
@@ -88,32 +89,40 @@ namespace wallet_utility
                                             ptr_ws_client.reset();
                                          });
 
-            fc::api<graphene::app::login_api> remote_api = ptr_api_connection->get_remote_api<graphene::app::login_api>(1);
-            remote_api->login(wdata.ws_user, wdata.ws_password);
+            fc_remote_api_ptr ptr_remote_api =
+            fc_remote_api_ptr(new fc_remote_api(ptr_api_connection->get_remote_api<graphene::app::login_api>(1)));
+            if (false == (*ptr_remote_api)->login(wdata.ws_user, wdata.ws_password))
+               throw wallet_exception("fc::api<graphene::app::login_api>::login");
 
-            //  capture ptr_api_connection too. encapsulate all inside wallet_api
-            m_ptr_wallet_api.reset(new wallet_api(wdata, remote_api),
-                                   [ptr_api_connection](wallet_api* &p_wallet_api) mutable
+            //  capture ptr_api_connection and ptr_remote_api too. encapsulate all inside wallet_api
+            m_ptr_wallet_api.reset(new wallet_api(wdata, *ptr_remote_api),
+                                   [ptr_api_connection, ptr_remote_api](wallet_api* &p_wallet_api) mutable
                                    {
                                       delete p_wallet_api;
                                       p_wallet_api = nullptr;
                                       ptr_api_connection.reset();
+                                      ptr_remote_api.reset();
                                    });
 
             m_ptr_wallet_api->set_wallet_filename(wallet_file.generic_string());
             m_ptr_wallet_api->load_wallet_file();
 
-            m_ptr_fc_api = fc_api_ptr(new fc_api(m_ptr_wallet_api.get()));
+            fc_api_ptr ptr_fc_api = fc_api_ptr(new fc_api(m_ptr_wallet_api.get()));
 
             for (auto& name_formatter : m_ptr_wallet_api->get_result_formatters())
                m_result_formatters[name_formatter.first] = name_formatter.second;
 
-            m_ptr_fc_api_connection = WalletAPIConnectionPtr(new WalletAPIConnection());
-            m_ptr_fc_api_connection->register_api(*m_ptr_fc_api);
+            m_ptr_fc_api_connection = WalletAPIConnectionPtr(new WalletAPIConnection(),
+                                                             [ptr_fc_api](WalletAPIConnection* &pWAPICon) mutable
+                                                             {
+                                                                delete pWAPICon;
+                                                                pWAPICon = nullptr;
+                                                                ptr_fc_api.reset();
+                                                             });
+            m_ptr_fc_api_connection->register_api(*ptr_fc_api);
          }
 
          wallet_api_ptr m_ptr_wallet_api;
-         fc_api_ptr m_ptr_fc_api;
          WalletAPIConnectionPtr m_ptr_fc_api_connection;
          std::mutex m_mutex;
          std::map<string, std::function<string(fc::variant,const fc::variants&)> > m_result_formatters;
@@ -145,11 +154,15 @@ namespace wallet_utility
             m_pimpl.reset(new detail::WalletAPIHelper());
             break;
          }
+         catch(wallet_exception const& ex)
+         {
+            throw ex;
+         }
          catch(fc::exception const& ex)
          {
             std::string error = ex.what();
          }
-         catch(fc::exception const& ex)
+         catch(std::exception const& ex)
          {
             std::string error = ex.what();
          }

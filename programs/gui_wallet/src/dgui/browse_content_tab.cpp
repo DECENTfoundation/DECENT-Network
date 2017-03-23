@@ -26,6 +26,7 @@
 #include <limits>
 #include <iostream>
 #include <graphene/chain/config.hpp>
+#include <graphene/wallet/wallet.hpp>
 
 
 #include <QDateTime>
@@ -117,6 +118,7 @@ void BrowseContentTab::updateContents() {
     
     
     try {
+       //_parent->m_wallet_api->search_content(filterText, 100);
         RunTask("search_content \"" + filterText + "\" 100", a_result);
         
         auto contents = json::parse(a_result);

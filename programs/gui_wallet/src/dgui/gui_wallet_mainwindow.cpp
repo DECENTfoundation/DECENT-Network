@@ -22,6 +22,7 @@
 #include <stdlib.h>
 
 #include <graphene/utilities/dirhelper.hpp>
+#include <graphene/wallet/wallet.hpp>
 #include "json.hpp"
 
 #ifndef DEFAULT_WALLET_FILE_NAME
@@ -49,7 +50,14 @@ WalletOperator::~WalletOperator()
 
 void WalletOperator::slot_connect(WalletAPI* pwallet_api)
 {
-   pwallet_api->Connent();
+   try
+   {
+      pwallet_api->Connent();
+   }
+   catch(std::exception const& ex)
+   {
+      emit signal_connection_error(ex.what());
+   }
    emit signal_connected();
 }
 
@@ -124,8 +132,9 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
    m_p_wallet_operator->moveToThread(&m_wallet_operator_thread);
    m_wallet_operator_thread.start();
 
-   connect(this, SIGNAL(signal_connect(WalletAPI*)), m_p_wallet_operator, SLOT(slot_connect(WalletAPI*)));
-   connect(m_p_wallet_operator, SIGNAL(signal_connected()), this, SLOT(slot_connected()));
+   DCT_VERIFY(connect(this, SIGNAL(signal_connect(WalletAPI*)), m_p_wallet_operator, SLOT(slot_connect(WalletAPI*))));
+   DCT_VERIFY(connect(m_p_wallet_operator, SIGNAL(signal_connected()), this, SLOT(slot_connected())));
+   DCT_VERIFY(connect(m_p_wallet_operator, SIGNAL(signal_connection_error(std::string const&)), this, SLOT(slot_connection_error(std::string const&))));
 
    //WalletInterface::initialize();
    //ConnectSlot();
@@ -169,6 +178,13 @@ void Mainwindow_gui_wallet::slot_connected()
    _downloadChecker.setInterval(5000);
    connect(&_downloadChecker, SIGNAL(timeout()), this, SLOT(CheckDownloads()));
    _downloadChecker.start();
+
+   DisplayWalletContentGUI(m_wallet_api->is_new());
+}
+
+void Mainwindow_gui_wallet::slot_connection_error(std::string const& str_error)
+{
+   QMessageBox::critical(this, "Error", str_error.c_str());
 }
 
 void Mainwindow_gui_wallet::RunTask(std::string str_command, std::string str_result)
@@ -386,25 +402,30 @@ void Mainwindow_gui_wallet::UnlockSlot()
 
 void Mainwindow_gui_wallet::UpdateLockedStatus()
 {
-    const std::string csLine = "is_locked";
-    std::string a_result;
-    
-    try {
-        
-        RunTask(csLine, a_result);
-        m_locked = (a_result == "true");
-        
-    } catch (const std::exception& ex) {
-        ALERT_DETAILS("Unable to get wallet lock status", ex.what());
-        m_locked = true;
-    }
-    
-    
-    m_ActionLock.setDisabled(m_locked);
-    m_ActionUnlock.setEnabled(m_locked);
-    if (m_locked) {
-        UnlockSlot();
-    }
+   const std::string csLine = "is_locked";
+   std::string a_result;
+
+   try
+   {
+      RunTask(csLine, a_result);
+      m_locked = (a_result == "true");
+
+      if (false == m_locked)
+         GlobalEvents::instance().setWalletUnlocked();
+
+   }
+   catch (const std::exception& ex)
+   {
+      ALERT_DETAILS("Unable to get wallet lock status", ex.what());
+      m_locked = true;
+   }
+
+   m_ActionLock.setDisabled(m_locked);
+   m_ActionUnlock.setEnabled(m_locked);
+   if (m_locked)
+   {
+      UnlockSlot();
+   }
 }
 
 
@@ -466,39 +487,56 @@ void Mainwindow_gui_wallet::DisplayConnectionError(std::string errorMessage) {
 
 void Mainwindow_gui_wallet::DisplayWalletContentGUI(bool isNewWallet)
 {
-   if (isNewWallet) {
+   if (isNewWallet)
+   {
       SetPassword();
    }
-   
+
    m_ActionLock.setDisabled(true);
    m_ActionUnlock.setDisabled(true);
    UpdateLockedStatus();
 
-    m_ActionImportKey.setEnabled(true);
-    QComboBox& userCombo = *m_pCentralWidget->usersCombo();
+   m_ActionImportKey.setEnabled(true);
+   QComboBox& userCombo = *m_pCentralWidget->usersCombo();
 
-    try {
-        std::string a_result;
-        RunTask("list_my_accounts", a_result);
+   try
+   {
+      std::string a_result;
+      RunTask("list_my_accounts", a_result);
 
-        
-        auto accs = json::parse(a_result);
-        
-        for (int i = 0; i < accs.size(); ++i) {
+      // something funny
+      // without this empty check, json::parse can throw,
+      // and while showing QMessageBox, a timer calls some other wallet_api
+      // function, which relies on boost context switches
+      // which in turn does not support execution from inside catch block
+      //
+      // something not funny is that even with this check the ****in fc api misbehaves
+      // and later search_content does not return
+      //
+      if (false == a_result.empty())
+      {
+         auto accs = json::parse(a_result);
+
+         for (int i = 0; i < accs.size(); ++i)
+         {
             std::string id = accs[i]["id"].get<std::string>();
             std::string name = accs[i]["name"].get<std::string>();
-            
+
             userCombo.addItem(tr(name.c_str()));
-        }
-        
-        if (accs.size() > 0)
-        {
+         }
+
+         if (accs.size() > 0)
+         {
             userCombo.setCurrentIndex(0);
             UpdateAccountBalances(userCombo.itemText(0).toStdString());
-        }
-    } catch (const std::exception& ex) {
-        ALERT_DETAILS("Faild to get account information", ex.what());
-    }
+         }
+      }
+   }
+   catch (const std::exception& ex)
+   {
+      //ALERT_DETAILS("Failed to get account information", ex.what());
+      QMessageBox::critical(this, "Error", QString("Failed to get account information - %1").arg(ex.what()));
+   }
 }
 
 
@@ -638,13 +676,14 @@ void Mainwindow_gui_wallet::SetPassword()
    thisPos.rx() += this->size().width() / 2;
    thisPos.ry() += this->size().height() / 2;
    
-   if (m_SetPasswordDialog.execRD(thisPos, pcsPassword)) {
-      
+   if (m_SetPasswordDialog.execRD(thisPos, pcsPassword))
+   {
       const std::string setPassword = "set_password " + pcsPassword;
       const std::string unlockTask = "unlock " + pcsPassword;
       std::string result;
       
-      try {
+      try
+      {
          RunTask(setPassword, result);
          RunTask(unlockTask, result);
       
@@ -653,13 +692,11 @@ void Mainwindow_gui_wallet::SetPassword()
          m_ActionImportKey.setEnabled(true);
          m_ActionUnlock.setEnabled(false);
          m_ActionLock.setEnabled(true);
-         
-         GlobalEvents::instance().setWalletUnlocked();
-      } catch (const std::exception& ex) {
+      }
+      catch (const std::exception& ex)
+      {
          ALERT_DETAILS("Unable to unlock the wallet", ex.what());
       }
-
-      
    }
 }
 
