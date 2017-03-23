@@ -43,9 +43,10 @@ namespace wallet_utility
       bool IsLocked();
       void SetPassword(string const& str_password);
       void Unlock(string const& str_password);
+      void SaveWalletFile();
       std::vector<graphene::chain::content_summary> SearchContent(string const& str_term, uint32_t iCount);
 
-      string RunTask(string& str_command);
+      string RunTask(string const& str_command);
 
    private:
       // wallet_api does not like to be accessed from several threads

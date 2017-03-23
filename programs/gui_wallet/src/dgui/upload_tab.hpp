@@ -52,6 +52,9 @@ namespace gui_wallet
         SELECTSAMPLES,
         NUM_FIELDS
     };
+
+   class Mainwindow_gui_wallet;
+   class WalletAPI;
     
     
     class Upload_popup : public TabContentManager
@@ -61,14 +64,19 @@ namespace gui_wallet
         typedef std::map<std::string, std::string> AssetMap;
         
     public:
-        Upload_popup();
+        Upload_popup(Mainwindow_gui_wallet* pMainWindow);
+        void RunTask(std::string const& str_command, std::string& str_result);
 
     public slots:
         void browseContent();
         void browseSamples();
         void uploadContent();
         void onGrabPublishers();
-        
+       void slot_upload_content_result(bool bool_result);
+
+    signals:
+       void signal_upload_content(WalletAPI*, std::string const&);
+
     public:
         void uploadDone(void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result);
         void onPublishersDone(void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result);
@@ -80,6 +88,7 @@ namespace gui_wallet
     protected:
         virtual void resizeEvent ( QResizeEvent * event );
     private:
+        Mainwindow_gui_wallet* m_pMainWindow;
         QVBoxLayout     m_synopsis_layout;
         QVBoxLayout     m_info_layout;
         QTableWidget    m_info_widget;

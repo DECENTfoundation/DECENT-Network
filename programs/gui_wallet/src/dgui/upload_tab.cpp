@@ -66,8 +66,9 @@ using namespace nlohmann;
 CryptoPP::AutoSeededRandomPool rng;
 
 
-Upload_popup::Upload_popup()
+Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow)
 :
+m_pMainWindow(pMainWindow),
 m_info_widget(3, 6),
 m_title_label(tr("Title")),
 m_description_label(tr("Description")),
@@ -77,7 +78,9 @@ m_getPublishersTimer(this)
     QFont m_font( "Open Sans Bold", 14, QFont::Bold);
     QPalette pltEdit;
     
-    
+   DCT_VERIFY(connect(this, SIGNAL(signal_upload_content(WalletAPI*, std::string const&)), m_pMainWindow->m_p_wallet_operator, SLOT(slot_upload_content(WalletAPI*, std::string const&))));
+   DCT_VERIFY(connect(m_pMainWindow->m_p_wallet_operator, SIGNAL(signal_upload_content_result(bool)), this, SLOT(slot_upload_content_result(bool))));
+
     m_infoLayoutHeader.setFont(m_font);
     m_title_text.setPlaceholderText("  Title:");
     m_title_text.setAttribute(Qt::WA_MacShowFocusRect, 0);
@@ -242,10 +245,16 @@ m_getPublishersTimer(this)
     m_getPublishersTimer.start(1000);
 }
 
+void Upload_popup::RunTask(std::string const& str_command, std::string& str_result)
+{
+   m_pMainWindow->RunTask(str_command, str_result);
+}
+
 void Upload_popup::onGrabPublishers() {
-   
-    /*AsyncTask("list_publishers_by_price 100", this, NULL, +[](void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
-       Upload_popup* obj = (Upload_popup*)owner;
+   std::string a_result;
+   RunTask("list_publishers_by_price 100", a_result);
+    //AsyncTask("list_publishers_by_price 100", this, NULL, +[](void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
+       //Upload_popup* obj = (Upload_popup*)owner;
        
        auto publishers = json::parse(a_result);
         
@@ -261,14 +270,14 @@ void Upload_popup::onGrabPublishers() {
                 pubFreeSpace = QString::number(1.0 * free_space / 1024, 'f', 2).toStdString() + "GB free";
             }
             
-            obj->seeders->addItem(QString("%0 @%1 %2 [%3]").arg(QString::fromStdString(pubIdStr),
+            seeders->addItem(QString("%0 @%1 %2 [%3]").arg(QString::fromStdString(pubIdStr),
                                                                 QString::fromStdString(pubPrice),
                                                                 QString::fromStdString("DCT"),
                                                                 QString::fromStdString(pubFreeSpace)), QString::fromStdString(pubIdStr));
         }
         
         
-    });*/
+    //});
 }
 
 void Upload_popup::browseContent() {
@@ -365,9 +374,14 @@ void Upload_popup::uploadContent() {
     submitCommand += " true";                                           //broadcast
 
 
+   emit signal_upload_content(&m_pMainWindow->m_wallet_api, submitCommand);
     /*AsyncTask(submitCommand, this, NULL, +[](void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
         ((Upload_popup*)owner)->uploadDone(a_clbkArg, a_err, a_task, a_result);
     });*/
+}
+void Upload_popup::slot_upload_content_result(bool bool_result)
+{
+   uploadDone(nullptr, (int)bool_result, std::string(), std::string());
 }
 
 void Upload_popup::uploadDone(void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
@@ -688,7 +702,7 @@ void Upload_tab::paintRow()
 void Upload_tab::upload_popup()
 {
     upload_up* dialog = new upload_up();
-    Upload_popup* popup = new Upload_popup();
+    Upload_popup* popup = new Upload_popup(_parent);
     dialog->setLayout(&popup->u_main_layout);
     dialog->show();
 }

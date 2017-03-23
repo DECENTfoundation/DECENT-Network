@@ -61,6 +61,21 @@ void WalletOperator::slot_connect(WalletAPI* pwallet_api)
    emit signal_connected();
 }
 
+void WalletOperator::slot_upload_content(WalletAPI* pwallet_api, std::string const& str_command)
+{
+   bool bRes = true;
+   try
+   {
+      std::string str_result;
+      pwallet_api->RunTask(str_command, str_result);
+   }
+   catch(std::exception const& ex)
+   {
+      bRes = false;
+   }
+
+   emit signal_upload_content_result(bRes);
+}
 
 Mainwindow_gui_wallet::Mainwindow_gui_wallet()
 : m_ActionExit(tr("&Exit"),this)
@@ -168,7 +183,7 @@ Mainwindow_gui_wallet::~Mainwindow_gui_wallet()
 {
    m_wallet_operator_thread.quit();
    m_wallet_operator_thread.wait();
-   //WalletInterface::saveWalletFile(m_wdata2);
+   m_wallet_api.SaveWalletFile();
    //WalletInterface::destroy();
 }
 
@@ -187,7 +202,7 @@ void Mainwindow_gui_wallet::slot_connection_error(std::string const& str_error)
    QMessageBox::critical(this, "Error", str_error.c_str());
 }
 
-void Mainwindow_gui_wallet::RunTask(std::string str_command, std::string str_result)
+void Mainwindow_gui_wallet::RunTask(std::string const& str_command, std::string& str_result)
 {
    str_result = m_wallet_api.RunTask(str_command);
 }
@@ -504,23 +519,20 @@ void Mainwindow_gui_wallet::DisplayWalletContentGUI(bool isNewWallet)
       std::string a_result;
       RunTask("list_my_accounts", a_result);
 
-      //if (false == a_result.empty()) // let it throw
+      auto accs = json::parse(a_result);
+
+      for (int i = 0; i < accs.size(); ++i)
       {
-         auto accs = json::parse(a_result);
+         std::string id = accs[i]["id"].get<std::string>();
+         std::string name = accs[i]["name"].get<std::string>();
 
-         for (int i = 0; i < accs.size(); ++i)
-         {
-            std::string id = accs[i]["id"].get<std::string>();
-            std::string name = accs[i]["name"].get<std::string>();
+         userCombo.addItem(tr(name.c_str()));
+      }
 
-            userCombo.addItem(tr(name.c_str()));
-         }
-
-         if (accs.size() > 0)
-         {
-            userCombo.setCurrentIndex(0);
-            UpdateAccountBalances(userCombo.itemText(0).toStdString());
-         }
+      if (accs.size() > 0)
+      {
+         userCombo.setCurrentIndex(0);
+         UpdateAccountBalances(userCombo.itemText(0).toStdString());
       }
    }
    catch (const std::exception& ex)
@@ -677,8 +689,8 @@ void Mainwindow_gui_wallet::SetPassword()
       {
          RunTask(setPassword, result);
          RunTask(unlockTask, result);
-      
-         //WalletInterface::saveWalletFile(m_wdata2); change to something new
+
+         m_wallet_api.SaveWalletFile();
          
          m_ActionImportKey.setEnabled(true);
          m_ActionUnlock.setEnabled(false);

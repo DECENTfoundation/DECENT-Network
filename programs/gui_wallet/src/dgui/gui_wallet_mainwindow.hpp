@@ -41,9 +41,11 @@ public:
 
 public slots:
    void slot_connect(WalletAPI* pwallet_api);
+   void slot_upload_content(WalletAPI* pwallet_api, std::string const& str_command);
 signals:
    void signal_connected();
    void signal_connection_error(std::string const& str_error);
+   void signal_upload_content_result(bool);
 };
 
 
@@ -90,7 +92,7 @@ protected slots:
    void slot_connection_error(std::string const& str_error);
 
 public:
-   void RunTask(std::string str_command, std::string str_result);
+   void RunTask(std::string const& str_command, std::string& str_result);
 
 signals:
    void signal_connect(WalletAPI* pwallet_api);
@@ -131,9 +133,9 @@ protected:
    QTimer                              _downloadChecker;
    std::set<std::string>               _activeDownloads;
 
+public:
    WalletOperator*   m_p_wallet_operator;
    QThread           m_wallet_operator_thread;
-public:
    WalletAPI         m_wallet_api;
 };
 

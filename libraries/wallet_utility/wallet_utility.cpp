@@ -5,6 +5,7 @@
 #include <fc/filesystem.hpp>
 #include <graphene/wallet/wallet.hpp>
 #include <fc/rpc/api_connection.hpp>
+#include <graphene/package/package.hpp>
 
 namespace decent
 {
@@ -70,9 +71,8 @@ namespace wallet_utility
             else
                wdata.chain_id = chain_id_type("0000000000000000000000000000000000000000000000000000000000000000");
 
-            //  probably need to open this when this usage of wallet_api is universally used
             //  most probably this needs to get out to somewhere else
-            //package_manager::instance().set_libtorrent_config(wdata.libtorrent_config_path);
+            graphene::package::package_manager::instance().set_libtorrent_config(wdata.libtorrent_config_path);
 
             websocket_client_ptr ptr_ws_client(new websocket_client());
             websocket_connection_ptr ptr_ws_connection = ptr_ws_client->connect(wdata.ws_server);
@@ -250,6 +250,24 @@ namespace wallet_utility
                        });
       return future_unlock.wait();
    }
+   void WalletAPI::SaveWalletFile()
+   {
+      if (false == Connected())
+         throw wallet_exception("not yet connected");
+
+      fc::path wallet_file(decent_path_finder::instance().get_decent_home() / "wallet.json");
+      string str_file = wallet_file.to_native_ansi_path();
+
+      std::lock_guard<std::mutex> lock(m_mutex);
+
+      auto& pimpl = m_pimpl->m_ptr_wallet_api;
+      fc::future<void> future_save_wallet_file =
+      m_pthread->async([&pimpl, &str_file] ()
+                       {
+                          return pimpl->save_wallet_file(str_file);
+                       });
+      return future_save_wallet_file.wait();
+   }
    std::vector<graphene::chain::content_summary> WalletAPI::SearchContent(string const& str_term, uint32_t iCount)
    {
       if (false == Connected())
@@ -266,7 +284,7 @@ namespace wallet_utility
       return future_search_content.wait();
    }
 
-   string WalletAPI::RunTask(string& str_command)
+   string WalletAPI::RunTask(string const& str_command)
    {
       if (false == Connected())
          throw wallet_exception("not yet connected");
@@ -275,7 +293,7 @@ namespace wallet_utility
 
       auto& pimpl = m_pimpl;
       fc::future<string> future_run =
-      m_pthread->async([&pimpl, &str_command] ()
+      m_pthread->async([&pimpl, &str_command] () -> string
                        {
                           std::string line = str_command;
                           line += char(EOF);
@@ -301,7 +319,8 @@ namespace wallet_utility
                           
                           return string();
                        });
-      return future_run.wait();
+      string str_result = future_run.wait();
+      return str_result;
    }
 }
 }
