@@ -35,6 +35,7 @@ protected slots:
 
 protected:
     DecentButton   m_label;
+    DecentButton   m_close;
 };
 
 }
