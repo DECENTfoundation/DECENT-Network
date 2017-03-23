@@ -16,14 +16,14 @@ using namespace nlohmann;
 PurchasedTab::PurchasedTab() {
    
    m_pTableWidget.set_columns({
-      {"Title", 10},
+      {"Title", 30},
       {"Rating", 10},
-      {"Size", 15},
-      {"Price", 15},
+      {"Size", 10},
+      {"Price", 10},
       {"Created", 15},
-      {"Status", 15},
-      {"", 10},
-      {" ", 10}
+      {"Status", 20},
+      {"", 5},
+      {" ", 5}
    });
    
    
@@ -265,7 +265,13 @@ void PurchasedTab::extractPackage() {
       RunTask("restore_encryption_key \"" + id + "\"", key);
       
       RunTask("extract_package \"" + hash + "\" \"" + extract_dir.toStdString() + "\" " + key, dummy);
-      MESSAGE("Package was successfully extracted");
+      
+      if (dummy.find("exception:") != std::string::npos) {
+         ALERT_DETAILS("Failed to extract package", dummy.c_str());
+
+      } else {
+         MESSAGE("Package was successfully extracted");
+      }
       
    } catch (const std::exception& ex) {
       ALERT_DETAILS("Failed to extract package", ex.what());

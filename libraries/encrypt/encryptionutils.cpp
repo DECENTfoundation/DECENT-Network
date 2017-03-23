@@ -91,10 +91,12 @@ encryption_results AES_decrypt_file(const std::string &fileIn, const std::string
     } catch (const CryptoPP::Exception &e) {
         elog(e.GetWhat());
         switch (e.GetErrorType()) {
-            case CryptoPP::Exception::IO_ERROR:
-                return io_error;
-            default:
-                return other_error;
+           case CryptoPP::Exception::IO_ERROR:
+              return io_error;
+           case CryptoPP::Exception::INVALID_DATA_FORMAT:
+              return key_error;
+           default:
+              return other_error;
         }
     }
     return ok;

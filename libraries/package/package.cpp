@@ -460,7 +460,14 @@ bool package_manager::unpack_package(const path& destination_directory, const pa
         FC_THROW("Not enough storage space to create package");
     }
 
-    AES_decrypt_file(archive_file.string(), zip_file.string(), k);
+   decent::encrypt::encryption_results result = AES_decrypt_file(archive_file.string(), zip_file.string(), k);
+   if (result == decent::encrypt::key_error) {
+      FC_THROW("Invalid decryption key was provided");
+   }
+   
+   if (result != decent::encrypt::ok) {
+      FC_THROW("Error while trying to decrypt the content");
+   }
 
     filtering_istream istr;
     istr.push(gzip_decompressor());
