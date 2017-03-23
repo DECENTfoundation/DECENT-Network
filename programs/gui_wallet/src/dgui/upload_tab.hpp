@@ -81,8 +81,7 @@ namespace gui_wallet
         void uploadDone(void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result);
         void onPublishersDone(void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result);
         
-        virtual void content_activated() {}
-        virtual void content_deactivated() {}
+       
         QVBoxLayout     u_main_layout;
 
     protected:
@@ -133,17 +132,16 @@ namespace gui_wallet
         void ShowDigitalContentsGUI();
         
     public:
-        virtual void content_activated() { }
-        virtual void content_deactivated() {}
-        
+       virtual void contentActivated() { }
+       virtual void contentDeactivated() {}
+       virtual void timeToUpdate(const std::string& result);
+       virtual std::string getUpdateCommand();
+       
     public slots:
-        void onTextChanged(const QString& text);
-        void updateContents();
-        void maybeUpdateContent();
-        void requestContentUpdate();
         void show_content_popup();
         void content_was_bought();
         void upload_popup();
+       
     protected:
         QVBoxLayout     m_main_layout;
         QHBoxLayout     m_search_layout;

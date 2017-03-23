@@ -132,16 +132,15 @@ namespace gui_wallet
       void ArrangeSize();
       
    public:
-      virtual void content_activated() {}
-      virtual void content_deactivated() {}
-      public slots:       
-      void updateContents();
-      
-      void maybeUpdateContent();
-      void onTextChanged(const QString& text);
-      
+      virtual void contentActivated() { }
+      virtual void contentDeactivated() {}
+      virtual void timeToUpdate(const std::string& result);
+      virtual std::string getUpdateCommand();
+
+   public slots:
       void buttonPressed();
       void transactionButtonPressed();
+      
       
    public:
       QLineEdit      search;
@@ -153,9 +152,6 @@ namespace gui_wallet
    protected:
       class Mainwindow_gui_wallet* m_pPar;
       
-   private:
-      QTimer  m_contentUpdateTimer;
-      bool m_doUpdate = true;
    };
 }
 

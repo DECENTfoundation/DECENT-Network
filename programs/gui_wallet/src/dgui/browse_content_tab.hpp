@@ -43,18 +43,16 @@ namespace gui_wallet
       
    public:
       
-      virtual void content_activated() { }
-      virtual void content_deactivated() {}
-      
+      virtual void contentActivated() { }
+      virtual void contentDeactivated() {}
+      virtual void timeToUpdate(const std::string& result);
+      virtual std::string getUpdateCommand();
        
    public slots:
       
-      void onTextChanged(const QString& text);
-      void updateContents();
-      void maybeUpdateContent();
-      void requestContentUpdate();
       void show_content_popup();
       void content_was_bought();
+      
    protected:
       QVBoxLayout     m_main_layout;
       QHBoxLayout     m_search_layout;
@@ -65,8 +63,6 @@ namespace gui_wallet
       std::vector<SDigitalContent>  _digital_contents;
       ContentDetailsGeneral*        _content_popup;
       Mainwindow_gui_wallet*        _parent;
-      bool                          m_doUpdate;
-      QTimer                        m_contentUpdateTimer;
    };
    
    
