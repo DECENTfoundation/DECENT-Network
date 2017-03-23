@@ -48,21 +48,13 @@ void ContentDetailsGeneral::LabelPushCallbackGUI()
    downloadCommand += " true";                                           //broadcast
    
    std::string a_result;
-   try {
-      SetNewTask(downloadCommand, this, NULL, +[](void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
-         if (a_err != 0) {
-            ALERT("Failed to download content");
-         }
-      });
-      
-      close();
-      emit ContentWasBought();
-
-   } catch (const std::exception& ex) {
-   }
    
-
-   
+   SetNewTask(downloadCommand, this, NULL, +[](void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
+      if (a_err != 0) {
+         ALERT("Failed to download content");
+      }
+   });
+   emit ContentWasBought();
    
 }
 

@@ -31,7 +31,7 @@ PurchasedTab::PurchasedTab() {
    QHBoxLayout* search_lay = new QHBoxLayout();
    
    m_filterLineEditer.setPlaceholderText(QString("Enter the term to search in title and description"));
-   m_filterLineEditer.setStyleSheet("border: 1px solid white");
+   m_filterLineEditer.setStyleSheet("border: 0");
    m_filterLineEditer.setFixedHeight(40);
    m_filterLineEditer.setAttribute(Qt::WA_MacShowFocusRect, 0);
    
