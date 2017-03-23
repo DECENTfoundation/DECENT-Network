@@ -1639,7 +1639,7 @@ namespace graphene { namespace wallet {
           * @ingroup WalletCLI
           */
          vector<content_summary> list_content( const string& URI_begin, uint32_t count )const;
-
+         
          /**
           * @brief Get a list of contents ordered alphabetically by search term
           * @param term seach term
@@ -1648,6 +1648,14 @@ namespace graphene { namespace wallet {
           * @ingroup WalletCLI
           */
          vector<content_summary> search_content( const string& term, uint32_t count )const;
+         /**
+          * @brief Get a list of contents ordered alphabetically by search term
+          * @param term seach term
+          * @param count Maximum number of contents to fetch (must not exceed 100)
+          * @return The contents found
+          * @ingroup WalletCLI
+          */
+         vector<content_summary> search_user_content( const string& user, const string& term, uint32_t count )const;
 
          /**
           * @brief Get a list of contents by times bought, in decreasing order
@@ -1940,6 +1948,7 @@ FC_API( graphene::wallet::wallet_api,
            (list_content_by_author)
            (list_content)
            (search_content)
+           (search_user_content)
            (list_content_by_bought)
            (list_publishers_by_price)
            (get_content_ratings)
