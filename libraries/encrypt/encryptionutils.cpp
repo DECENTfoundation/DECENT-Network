@@ -2,6 +2,7 @@
 // Created by Josef Sevcik on 25/11/2016.
 //
 #include <decent/encrypt/encryptionutils.hpp>
+#define CRYPTOPP_ENABLE_NAMESPACE_WEAK 1
 
 #include <cryptopp/aes.h>
 #include <cryptopp/filters.h>
@@ -17,6 +18,9 @@
 #include <fc/crypto/sha512.hpp>
 #include <fc/exception/exception.hpp>
 #include <iostream>
+
+
+
 
 #ifdef _MSC_VER
 class RunCryptoPPTest

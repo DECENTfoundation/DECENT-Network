@@ -1,3 +1,4 @@
+//#define _CUSTODY_STATS
 #include <decent/encrypt/encryptionutils.hpp>
 #include <decent/encrypt/custodyutils.hpp>
 
@@ -14,6 +15,8 @@
 #include <sstream>
 #include <iomanip>
 #include <gmp.h>
+#include <thread>
+
 
 using namespace std;
 
@@ -120,154 +123,9 @@ void test_shamir(decent::encrypt::DInteger secret)
 }
 
 
-
-/*void test_passed_op(graphene::chain::ready_to_publish_operation& op){
-   std::vector<char> data = fc::raw::pack(op);
-   idump((op));
-
-   graphene::chain::ready_to_publish_operation tmp;
-   fc::datastream<const char*> ds( data.data(), data.size() );
-   fc::raw::unpack( ds, tmp );
-   idump((tmp));
-}
-
-void test_passing_add_level_reference(graphene::chain::ready_to_publish_operation& op){
-   std::shared_ptr<fc::thread> new_thread = std::make_shared<fc::thread>("p2p");
-   new_thread->async([&](){ return test_passed_op(op);}).wait();
-
-}
-
-
-void test_move(){
-
-
-   graphene::chain::ready_to_publish_operation op;
-   op.space = 1000;
-   decent::encrypt::DInteger a = decent::encrypt::DInteger::from_string("12132131.");
-
-   op.pubKey = a;
-   op.price_per_MByte = 1;
-   idump((op));
-   test_passing_add_level_reference(op);
-}*/
-/*
-inline void get_data(std::fstream &file, uint32_t i, char buffer[])
-{
-   uint64_t position = DECENT_SIZE_OF_NUMBER_IN_THE_FIELD * DECENT_SECTORS * i;
-
-   file.seekg (0, file.end);
-   uint64_t realLen = file.tellg();
-   file.seekg(std::min(position, realLen), file.beg);
-
-   if (realLen > ((long long)(file.tellg()) + DECENT_SIZE_OF_NUMBER_IN_THE_FIELD * DECENT_SECTORS))
-      file.read(buffer, DECENT_SIZE_OF_NUMBER_IN_THE_FIELD * DECENT_SECTORS);
-   else
-   {
-      if (file.eof())
-         memset(buffer,0,DECENT_SIZE_OF_NUMBER_IN_THE_FIELD * DECENT_SECTORS);
-      else{
-         int left = realLen - (long long)(file.tellg());
-         file.read(buffer, left);
-         memset(buffer+left,0, (DECENT_SIZE_OF_NUMBER_IN_THE_FIELD * DECENT_SECTORS) -left );
-      }
-   }
-
-}
-
-
-inline void int_to_elem( CryptoPP::Integer& in, element_t& out ){
-   char buffer[100];
-
-   std::ostringstream oss;
-   oss << in;
-
-   strcmp(buffer, oss.str().c_str());
-   buffer[strlen(buffer)-1]=0;
-
-   element_set_str(out, buffer, 10);
-}
-
-inline void elem_to_int( element_t& in, CryptoPP::Integer& out){
-   char buffer[100];
-
-   element_snprint(buffer, 100, in);
-   int len = strlen(buffer);
-   buffer[len]='.';
-   buffer[len+1]=0;
-   out = CryptoPP::Integer(buffer);
-}
-
-inline CryptoPP::Integer get_m(std::fstream &file, uint32_t i, uint32_t j)
-{
-   uint64_t position = DECENT_SIZE_OF_NUMBER_IN_THE_FIELD * (j + DECENT_SECTORS*i);
-   char buffer[DECENT_SIZE_OF_NUMBER_IN_THE_FIELD];
-   file.seekg (0, file.end);
-   uint64_t realLen = file.tellg();
-   if( realLen < position ){ //we are either close or behinf EoF
-      memset(buffer,0,DECENT_SIZE_OF_NUMBER_IN_THE_FIELD);
-   }else{
-      file.seekg(position, file.beg);
-      if( realLen < position + DECENT_SIZE_OF_NUMBER_IN_THE_FIELD) { //we can't read the whole string
-         int left = realLen - (uint64_t)(file.tellg());
-         file.read(buffer, left);
-         memset(buffer+left,0, DECENT_SIZE_OF_NUMBER_IN_THE_FIELD-left );
-      }else{
-         file.read(buffer, DECENT_SIZE_OF_NUMBER_IN_THE_FIELD);
-      }
-   }
-   return CryptoPP::Integer( (byte*) buffer, DECENT_SIZE_OF_NUMBER_IN_THE_FIELD);
-
-}
-
-void alt_get_sigmas(std::fstream &file, const unsigned int n, element_t *u, element_t pk, element_t **sigmas){
-   element_t *ret = new element_t[n];
-   CryptoPP::Integer reti[n];
-   CryptoPP::Integer ui[DECENT_SECTORS];
-   CryptoPP::Integer modulo("1287689620916637251875563089646583807.");
-   CryptoPP::ModularArithmetic mr(modulo);
-   for( int k =0; k < DECENT_SECTORS; k++)
-      elem_to_int(u[k], ui[k]);
-   for (int i = 0; i < n; i++)
-   {
-      element_init_G1(ret[i], c.pairing);
-
-      CryptoPP::Integer temp;
-
-      for(int j = 0; j < DECENT_SECTORS; j++)
-      {
-         temp = mr.Exponentiate( ui[j], get_m(file,i,j) );
-         if (j) {
-            reti[i] = mr.Multiply( reti[i], temp );
-            //element_mul(reti[i], ret[i], temp);
-         }
-         else {
-            reti[i] = temp;
-           // element_set(reti[i], temp);
-         }
-      }
-      unsigned char buf[32];
-      char index[16];
-      memset(index,0,16);
-      memset(buf,0,32);
-      sprintf(index, "%d", i);
-      SHA256((unsigned char *)index, 16, buf);
-      CryptoPP::Integer hash( (byte*) buf, DECENT_SIZE_OF_NUMBER_IN_THE_FIELD);
-
-      reti[i] = mr.Multiply(reti[i],hash);
-      reti[i] = mr.Exponentiate(reti[i], pk);
-
-      int_to_elem(reti[i], ret[i]);
-   }
-   *sigmas = ret;
-}
-*/
 void test_custody(){
    std::cout << GMP_NUMB_BITS <<"\n";
-
-
-   //pbc_param_t par;
-   //pbc_param_init_a_gen( par, 320, 1024 );
-   //pbc_param_out_str(stdout,par);
+   std::cout <<"number of cores "<< std::thread::hardware_concurrency()<<"\n";
 
    decent::encrypt::CustodyData cd;
    decent::encrypt::CustodyProof proof;
@@ -288,22 +146,7 @@ void test_custody(){
       std::cout <<"Something wrong during verification...\n";
    else
       std::cout <<"Verify sucessful!\n";
-
 }
-
-/*void test_key_manipulation()
-{
-   DInteger initial_key(123456789);
-   char* buffer = (char*)malloc(1000);
-   initial_key.Encode((byte*)buffer, 1000);
-   fc::sha512 key1;
-   for(int i=0; i<8; i++) key1._hash[i]=buffer[i];
-
-   decent::encrypt::AesKey k;
-
-   for (int i = 0; i < CryptoPP::AES::MAX_KEYLENGTH; i++)
-      k.key_byte[i] = key1.data()[i];
-}*/
 
 void generate_params(){
    int rbits = 120;
@@ -452,13 +295,11 @@ int main(int argc, char**argv)
  //  test_aes(k);
 //   cout<<"AES finished \n";
 //   test_key_manipulation();
-  // test_move();
 
  //  test_el_gamal(k);
-   const CryptoPP::Integer secret("123433334548654864334348647431133987884123665444598978777891235468864444444445445556666666987455334678979464");
-   test_shamir(secret);
+ //  const CryptoPP::Integer secret("123433334548654864334348647431133987884123665444598978777891235468864444444445445556666666987455334678979464");
+//   test_shamir(secret);
 //   generate_params();
 //   test_generator();
-//  test_custody();
-
+  test_custody();
 }
