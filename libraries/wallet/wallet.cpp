@@ -2200,11 +2200,13 @@ public:
             CryptoPP::Integer secret(randomGenerator, 512);
             fc::sha512 sha_key;
             secret.Encode((byte*)sha_key._hash, 64);
+#ifndef DECENT_LONG_SHAMIR
+            //short Shamir is able to store onlu 256 bites, rest will make content unrecoverable
             sha_key._hash[0] = 0;
             sha_key._hash[1] = 0;
             sha_key._hash[2] = 0;
             sha_key._hash[3] = 0;
-
+#endif
             decent::encrypt::CustodyData cd;
 
             package_object pack = package_manager::instance().create_package(content_dir, samples_dir, sha_key, cd);
