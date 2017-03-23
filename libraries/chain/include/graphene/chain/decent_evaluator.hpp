@@ -101,7 +101,7 @@ namespace graphene { namespace chain {
    class finish_buying_evaluator : public evaluator<finish_buying_evaluator>
    {
    public:
-      typedef finish_buying_evaluator operation_type;
+      typedef finish_buying_operation operation_type;
 
       void_result do_evaluate( const finish_buying_operation& o );
       void_result do_apply( const finish_buying_operation& o );
