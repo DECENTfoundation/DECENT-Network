@@ -208,6 +208,27 @@ void PurchasedTab::timeToUpdate(const std::string& result) {
          
          EventPassthrough<DecentSmallButton>* extract_icon = new EventPassthrough<DecentSmallButton>(":/icon/images/export.png", ":/icon/images/export1.png");
          
+         if ((received_download_bytes < total_download_bytes) || !is_delivered) {
+            m_pTableWidget.setItem(i, 6, new QTableWidgetItem(QString::number(progress) + "%"));
+            m_pTableWidget.item(i, 6)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+            m_pTableWidget.item(i, 6)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+         } else {
+            
+            EventPassthrough<ClickableLabel>* extract_icon = new EventPassthrough<ClickableLabel>();
+            
+            
+            extract_icon->setProperty("id", QVariant::fromValue(QString::fromStdString(content["id"].get<std::string>())));
+            extract_icon->setProperty("hash", QVariant::fromValue(QString::fromStdString(dcontent_json["_hash"].get<std::string>())));
+            extract_icon->setProperty("URI", QVariant::fromValue(QString::fromStdString(content["URI"].get<std::string>())));
+            
+            extract_icon->setPixmap(extract_image);
+            
+            extract_icon->setAlignment(Qt::AlignCenter);
+
+            connect(extract_icon, SIGNAL(clicked()), this, SLOT(extractPackage()));
+            m_pTableWidget.setCellWidget(i, 6, extract_icon);
+         }
+
          
          extract_icon->setProperty("id", QVariant::fromValue(QString::fromStdString(content["id"].get<std::string>())));
          extract_icon->setProperty("hash", QVariant::fromValue(QString::fromStdString(dcontent_json["_hash"].get<std::string>())));
