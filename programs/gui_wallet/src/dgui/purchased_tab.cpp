@@ -249,7 +249,7 @@ void PurchasedTab::updateContents() {
             extract_icon->setProperty("hash", QVariant::fromValue(QString::fromStdString(dcontent_json["_hash"].get<std::string>())));
             extract_icon->setProperty("URI", QVariant::fromValue(QString::fromStdString(content["URI"].get<std::string>())));
             
-            extract_icon->setPixmap(extract_image.scaled(20, 20, Qt::KeepAspectRatio));
+            extract_icon->setPixmap(extract_image);
             
             extract_icon->setAlignment(Qt::AlignCenter);
 

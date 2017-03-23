@@ -65,7 +65,7 @@ BrowseContentTab::BrowseContentTab(Mainwindow_gui_wallet* parent) : _parent(pare
     QPixmap image(":/icon/images/search.svg");
     lab->setPixmap(image);
     
-    m_filterLineEdit.setPlaceholderText("Enter search term");
+    m_filterLineEdit.setPlaceholderText("Search Content");
     m_filterLineEdit.setFixedHeight(40);
     m_filterLineEdit.setStyleSheet("border: 1px solid white");
     m_filterLineEdit.setAttribute(Qt::WA_MacShowFocusRect, 0);
@@ -259,7 +259,7 @@ void BrowseContentTab::ShowDigitalContentsGUI() {
         m_pTableWidget.item(index, 2)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
         
         
-        m_pTableWidget.setItem(index,3,new QTableWidgetItem(QString::number(aTemporar.price.amount) + " DCT"));
+        m_pTableWidget.setItem(index,3,new QTableWidgetItem(QString::number(aTemporar.price.amount, 'f', 4) + " DCT"));
         m_pTableWidget.item(index, 3)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
         m_pTableWidget.item(index, 3)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
         
