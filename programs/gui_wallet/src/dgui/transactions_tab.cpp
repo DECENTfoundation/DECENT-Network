@@ -46,7 +46,7 @@ TransactionsTab::TransactionsTab() {
    });
    
    
-   user.setStyleSheet("border: 0px solid white");
+   user.setStyleSheet("border: 0");
    user.setPlaceholderText("Enter user name to see transaction history");
    user.setAttribute(Qt::WA_MacShowFocusRect, 0);
    user.setMaximumHeight(40);

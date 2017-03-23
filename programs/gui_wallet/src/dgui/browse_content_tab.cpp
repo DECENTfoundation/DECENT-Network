@@ -49,25 +49,14 @@ BrowseContentTab::BrowseContentTab(Mainwindow_gui_wallet* parent) : _content_pop
     });
     
     
-    
-    
-    m_filterLineEdit.setStyleSheet( "{"
-                                   "background: #f3f3f3;"
-                                   "background-image: url(:Images/search.svg); /* actual size, e.g. 16x16 */"
-                                   "background-repeat: no-repeat;"
-                                   "background-position: left;"
-                                   "color: #252424;"
-                                   "font-family: SegoeUI;"
-                                   "font-size: 12px;"
-                                   "padding: 2 2 2 20; /* left padding (last number) must be more than the icon's width */"
-                                   "}");
+ 
     QLabel* lab = new QLabel();
     QPixmap image(":/icon/images/search.svg");
     lab->setPixmap(image);
     
     m_filterLineEdit.setPlaceholderText("Enter search term");
     m_filterLineEdit.setFixedHeight(40);
-    m_filterLineEdit.setStyleSheet("border: 1px solid white");
+    m_filterLineEdit.setStyleSheet("border: 0");
     m_filterLineEdit.setAttribute(Qt::WA_MacShowFocusRect, 0);
     
     m_search_layout.setContentsMargins(42, 0, 0, 0);
@@ -143,17 +132,26 @@ void BrowseContentTab::show_content_popup() {
         throw std::out_of_range("Content index is our of range");
     }
     
-    if (_content_popup)
-        delete _content_popup;
-    _content_popup = new ContentDetailsGeneral();
+   if (_content_popup) {
+      delete _content_popup;
+      _content_popup = NULL;
+   }
+   
+   _content_popup = new ContentDetailsGeneral();
     
-    connect(_content_popup, SIGNAL(ContentWasBought()), this, SLOT(content_was_bought()));
-    _content_popup->execCDD(_digital_contents[id]);
+   connect(_content_popup, SIGNAL(ContentWasBought()), this, SLOT(content_was_bought()));
+   _content_popup->execCDD(_digital_contents[id]);
 }
 
 void BrowseContentTab::content_was_bought() {
-    _parent->GoToThisTab(4, "");
-    _parent->UpdateAccountBalances(GlobalEvents::instance().getCurrentUser());
+   if (_content_popup) {
+      delete _content_popup;
+      _content_popup = NULL;
+   }
+   _parent->GoToThisTab(4, "");
+   _parent->UpdateAccountBalances(GlobalEvents::instance().getCurrentUser());
+   
+
 }
 
 void BrowseContentTab::ShowDigitalContentsGUI() {
