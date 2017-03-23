@@ -250,6 +250,21 @@ namespace wallet_utility
                        });
       return future_unlock.wait();
    }
+   std::vector<graphene::chain::content_summary> WalletAPI::SearchContent(string const& str_term, uint32_t iCount)
+   {
+      if (false == Connected())
+         throw wallet_exception("not yet connected");
+
+      std::lock_guard<std::mutex> lock(m_mutex);
+
+      auto& pimpl = m_pimpl->m_ptr_wallet_api;
+      fc::future<vector<graphene::chain::content_summary>> future_search_content =
+      m_pthread->async([&pimpl, &str_term, iCount] ()
+                       {
+                          return pimpl->search_content(str_term, iCount);
+                       });
+      return future_search_content.wait();
+   }
 
    string WalletAPI::RunTask(string& str_command)
    {

@@ -504,16 +504,7 @@ void Mainwindow_gui_wallet::DisplayWalletContentGUI(bool isNewWallet)
       std::string a_result;
       RunTask("list_my_accounts", a_result);
 
-      // something funny
-      // without this empty check, json::parse can throw,
-      // and while showing QMessageBox, a timer calls some other wallet_api
-      // function, which relies on boost context switches
-      // which in turn does not support execution from inside catch block
-      //
-      // something not funny is that even with this check the ****in fc api misbehaves
-      // and later search_content does not return
-      //
-      if (false == a_result.empty())
+      //if (false == a_result.empty()) // let it throw
       {
          auto accs = json::parse(a_result);
 

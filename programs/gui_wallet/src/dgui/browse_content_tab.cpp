@@ -118,6 +118,7 @@ void BrowseContentTab::updateContents() {
     
     
     try {
+       //auto content2 = _parent->m_wallet_api.SearchContent(filterText, 100);
         RunTask("search_content \"" + filterText + "\" 100", a_result);
         
         auto contents = json::parse(a_result);

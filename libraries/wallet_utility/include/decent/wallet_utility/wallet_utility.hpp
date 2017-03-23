@@ -4,12 +4,17 @@
 #include <memory>
 #include <string>
 #include <mutex>
+#include <vector>
 
 namespace graphene
 {
 namespace wallet
 {
     class wallet_api;
+}
+namespace chain
+{
+   class content_summary;
 }
 }
 namespace fc
@@ -38,10 +43,13 @@ namespace wallet_utility
       bool IsLocked();
       void SetPassword(string const& str_password);
       void Unlock(string const& str_password);
+      std::vector<graphene::chain::content_summary> SearchContent(string const& str_term, uint32_t iCount);
 
       string RunTask(string& str_command);
 
    private:
+      // wallet_api does not like to be accessed from several threads
+      // so all the access is encapsulated inside m_pthread :(
       std::unique_ptr<fc::thread> m_pthread;
       std::unique_ptr<detail::WalletAPIHelper> m_pimpl;
       std::mutex m_mutex;
