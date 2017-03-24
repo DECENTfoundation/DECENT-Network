@@ -48,8 +48,6 @@ protected:
    void CreateActions();
    void CreateMenues();
    
-   void TaskDoneFuncGUI(void* clbkArg,int64_t err,const std::string& task,const std::string& result);
-   void ManagementNewFuncGUI(void* clbkArg,int64_t err,const std::string& task,const std::string& result);
    
 private:
    
@@ -57,16 +55,17 @@ private:
    
    void CliCallbackFnc(void*arg,const std::string& task);
    
-   void DisplayWalletContentGUI();
    void SetPassword(void* a_owner, void* a_str_ptr);
    
    
-   protected slots:
+protected slots:
    void CurrentUserChangedSlot(const QString&);
    void CheckDownloads();
+   void DisplayWalletContentGUI();
+   void DisplayConnectionError(std::string errorMessage);
+   void currentUserBalanceUpdate();
    
-   
-   protected slots:
+protected slots:
    
    void AboutSlot();
    void HelpSlot();
@@ -91,6 +90,7 @@ protected:
    QMenu*              m_pMenuContent;
    QMenu*              m_pMenuHelpR;
    QMenu*              m_pMenuView;
+   QMenu*              m_pMenuStatus;
    
    QAction             m_ActionExit;
    QAction             m_ActionConnect;
@@ -105,13 +105,14 @@ protected:
    
    QVBoxLayout                         m_main_layout;
    bool                                m_locked;
-   decent::gui::tools::RichDialog      m_import_key_dlg;
+   RichDialog                          m_import_key_dlg;
    int                                 m_nConnected;
    SConnectionStruct                   m_wdata2;
    PasswordDialog                      m_SetPasswordDialog;
    PasswordDialog                      m_UnlockDialog;
    
    QTimer                              _downloadChecker;
+   QTimer                              _balanceUpdater;
    std::set<std::string>               _activeDownloads;
 
 };

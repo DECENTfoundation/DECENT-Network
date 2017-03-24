@@ -90,15 +90,13 @@ public:
     void SetMyCurrentTabIndex(int index) {
         m_main_tabs.setCurrentIndex(index);
     }
-   
-    void initTabChanged();
+
     void SetTransactionInfo(std::string info_from_other_tab);
-   
+
 public slots:
-   void tabChanged(int index);
-   void walletUnlockedSlot();
-   void updateActiveTab();
-    
+    void initTabChanged();
+    void tabChanged(int index);
+
 protected:
     virtual void showEvent ( QShowEvent * event ) ;
     virtual void resizeEvent ( QResizeEvent * event );

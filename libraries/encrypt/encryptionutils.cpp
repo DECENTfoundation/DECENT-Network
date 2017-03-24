@@ -2,6 +2,7 @@
 // Created by Josef Sevcik on 25/11/2016.
 //
 #include <decent/encrypt/encryptionutils.hpp>
+#define CRYPTOPP_ENABLE_NAMESPACE_WEAK 1
 
 #include <cryptopp/aes.h>
 #include <cryptopp/filters.h>
@@ -14,8 +15,12 @@
 #include <fstream>
 #include <streambuf>
 #include <fc/log/logger.hpp>
+#include <fc/crypto/sha512.hpp>
 #include <fc/exception/exception.hpp>
 #include <iostream>
+
+
+
 
 #ifdef _MSC_VER
 class RunCryptoPPTest
@@ -107,6 +112,14 @@ DInteger generate_private_el_gamal_key()
     CryptoPP::Integer im (rng, CryptoPP::Integer::One(), DECENT_EL_GAMAL_MODULUS_512 -1);
     DInteger key = im;
     return key;
+}
+
+DInteger generate_private_el_gamal_key_from_secret(fc::sha256 secret)
+{
+   fc::sha512 hash = fc::sha512::hash( (char*) secret._hash, 32 );
+   CryptoPP::Integer key( (byte*)hash._hash, 64 );
+   DInteger ret = key.Modulo( DECENT_EL_GAMAL_MODULUS_512 );
+   return key;
 }
 
 DInteger get_public_el_gamal_key(const DInteger &privateKey)

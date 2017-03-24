@@ -97,10 +97,10 @@ CentralWigdet::CentralWigdet(QBoxLayout* a_pAllLayout, Mainwindow_gui_wallet* a_
       m_parent_main_window(a_pPar),
       m_browse_cont_tab(a_pPar),
       m_Overview_tab(a_pPar),
-      m_Upload_tab(a_pPar)
+      m_Upload_tab(a_pPar) {
 
-{
 
+         
     m_allTabs.push_back(&m_browse_cont_tab);
     m_allTabs.push_back(&m_trans_tab);
     m_allTabs.push_back(&m_Upload_tab);
@@ -108,7 +108,7 @@ CentralWigdet::CentralWigdet(QBoxLayout* a_pAllLayout, Mainwindow_gui_wallet* a_
     m_allTabs.push_back(&m_Purchased_tab);
     m_currentTab = -1;
 
-    
+
 
     m_main_tabs.setStyleSheet("QTabBar::tab{"
                               "font:bold;"
@@ -126,9 +126,8 @@ CentralWigdet::CentralWigdet(QBoxLayout* a_pAllLayout, Mainwindow_gui_wallet* a_
                                );
 
     PrepareGUIprivate(a_pAllLayout);
-    
-    QTimer::singleShot(200, this, &CentralWigdet::initTabChanged);
 
+    QTimer::singleShot(200, this, SLOT(CentralWigdet::initTabChanged));
 }
 
 void  CentralWigdet::initTabChanged() {

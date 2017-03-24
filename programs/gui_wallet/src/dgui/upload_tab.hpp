@@ -68,9 +68,9 @@ namespace gui_wallet
         typedef std::map<std::string, std::string> AssetMap;
         
     public:
-        Upload_popup(QWidget *parent = 0);
-        virtual ~Upload_popup();
-        public slots:
+        Upload_popup();
+
+    public slots:
         void browseContent();
         void browseSamples();
         void uploadContent();
