@@ -8,6 +8,7 @@
 #include <QMouseEvent>
 #include <QMessageBox>
 #include <QFileDialog>
+#include <QPushButton>
 
 using namespace gui_wallet;
 ContentDetailsGeneral::ContentDetailsGeneral() {
@@ -20,7 +21,6 @@ ContentDetailsGeneral::ContentDetailsGeneral() {
    m_close.setFixedWidth(120);
    m_close.setFixedHeight(30);
    m_close.setStyleSheet("QLabel { background-color :rgb(255,255,255); color : rgb(0,0,0);border: 1px solid grey}");
-   //m_close.setStyleSheet("border: 1px solid grey");
    
    image_layout->addWidget(&m_label);
    image_layout->addWidget(new QLabel());
@@ -42,15 +42,22 @@ void ContentDetailsGeneral::execCDD(const SDigitalContent& a_cnt_details) {
 
 void ContentDetailsGeneral::LabelPushCallbackGUI()
 {
-   
-   QMessageBox::StandardButton reply;
-   reply = QMessageBox::question(this, "Please confirm", "Do you really want to buy this content?",
-                                 QMessageBox::Yes|QMessageBox::No);
-   if (reply != QMessageBox::Yes) {
+   QMessageBox* reply = new QMessageBox();
+   reply->setFixedSize(500, 400);
+   reply->setContentsMargins(0, 30, 80, 30);
+   reply->setWindowFlags(Qt::WindowTitleHint);
+   reply->QDialog::setWindowTitle("Decent-Blockchain Content Distributor");
+   reply->setText(tr("          Are you sure you want to buy this content?"));
+   QPushButton* pButtonCencel = reply->addButton(tr("Cencel"), QMessageBox::YesRole);
+   QPushButton* pButtonOk = reply->addButton(tr("Get it"), QMessageBox::NoRole);
+   pButtonOk->setStyleSheet("background-color: rgb(27,176,104); color: rgb(255,255,255);border-top: 0px;border-left: 0px;border-right: 0px;border-bottom: 0px;");
+   pButtonCencel->setStyleSheet("background-color: rgb(255,255,255); color: rgb(0,0,0);border: 1px solid grey;");
+   pButtonOk->setFixedSize(100, 30);
+   pButtonCencel->setFixedSize(100, 30);
+   reply->exec();
+   if (reply->clickedButton()==pButtonCencel) {
       return;
    }
-   
-   
    std::string downloadCommand = "download_content";
    downloadCommand += " " + GlobalEvents::instance().getCurrentUser();   //consumer
    downloadCommand += " \"" + m_pContentInfo->URI + "\"";                 //URI
@@ -66,10 +73,6 @@ void ContentDetailsGeneral::LabelPushCallbackGUI()
    } catch (const std::exception& ex) {
       ALERT("Failed to download content");
    }
-   
-
-   
-   
 }
 
 
