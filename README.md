@@ -12,7 +12,7 @@ Building Decent [![Build Status](https://travis-ci.com/DECENTfoundation/DECENT-N
 For Ubuntu 16.04 LTS (for extra actions needed for 14.04 LTS, 14.10, or 16.10 see notes below), execute in console:
 
     $ sudo apt-get update
-    $ sudo apt-get install build-essential autotools-dev automake autoconf libtool make cmake checkinstall realpath gcc g++ clang flex bison doxygen gettext git qt5-default libreadline-dev libcrypto++-dev libgmp-dev libdb-dev libdb++-dev libssl-dev libncurses5-dev libboost-all-dev libcurl4-openssl-dev python-dev libicu-dev libbz2-dev
+    $ sudo apt-get install build-essential autotools-dev automake autoconf libtool make cmake checkinstall realpath gcc g++ clang flex bison doxygen gettext git qt5-default libqt5svg5-dev libreadline-dev libcrypto++-dev libgmp-dev libdb-dev libdb++-dev libssl-dev libncurses5-dev libboost-all-dev libcurl4-openssl-dev python-dev libicu-dev libbz2-dev
 
 (Ubuntu 16.10 only) Note, that the default version of Boost installed in Ubuntu 16.10 is too high and not supported. In order to install a supported one, in addition to the common commands above, execute the following in console:
 
@@ -67,7 +67,7 @@ At this point, `$CC` and `$CXX` should be set to your compilers, `cmake` command
 For Fedora 24 or later, execute in console:
 
     $ sudo dnf clean metadata
-    $ sudo dnf install automake autoconf libtool make cmake gcc clang flex bison doxygen gettext-devel git qt5-qtbase-devel readline-devel cryptopp-devel gmp-devel libdb-devel libdb-cxx-devel openssl-devel libcurl-devel ncurses-devel boost-devel boost-static python-devel libicu-devel bzip2-devel
+    $ sudo dnf install automake autoconf libtool make cmake gcc clang flex bison doxygen gettext-devel git qt5-qtbase-devel qt5-qtsvg-devel readline-devel cryptopp-devel gmp-devel libdb-devel libdb-cxx-devel openssl-devel libcurl-devel ncurses-devel boost-devel boost-static python-devel libicu-devel bzip2-devel
 
 ### Installing prerequisites in macOS
 
