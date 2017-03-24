@@ -49,7 +49,7 @@ TransactionsTab::TransactionsTab(Mainwindow_gui_wallet* pMainWindow)
    });
    
    
-   user.setStyleSheet("border: 0px solid white");
+   user.setStyleSheet("border: 0");
    user.setPlaceholderText("Enter user name to see transaction history");
    user.setAttribute(Qt::WA_MacShowFocusRect, 0);
    user.setMaximumHeight(40);
@@ -73,34 +73,86 @@ TransactionsTab::TransactionsTab(Mainwindow_gui_wallet* pMainWindow)
    setLayout(&main_layout);
    
    
-   connect(&user, SIGNAL(textChanged(QString)), this, SLOT(onTextChanged(QString)));
    connect(&GlobalEvents::instance(), SIGNAL(currentUserChanged(std::string)), this, SLOT(currentUserChanged(std::string)));
-   
-   m_contentUpdateTimer.connect(&m_contentUpdateTimer, SIGNAL(timeout()), this, SLOT(maybeUpdateContent()));
-   m_contentUpdateTimer.setInterval(1000);
-   m_contentUpdateTimer.start();
 
 }
 
+void TransactionsTab::timeToUpdate(const std::string& result) {
+   if (result.empty()) {
+      tablewidget.setRowCount(0);
+      return;
+   }
+   
+   auto contents = json::parse(result);
+   
+   tablewidget.setRowCount(contents.size());
+   
+   for (int i = 0; i < contents.size(); ++i) {
+      auto content = contents[i];
+      std::string from_account = getAccountName(content["from_account"].get<std::string>());
+      std::string to_account = getAccountName(content["to_account"].get<std::string>());
+      std::string operation_type = content["operation_type"].get<std::string>();
+      std::string description = content["description"].get<std::string>();
+      std::string timestamp = boost::replace_all_copy(content["timestamp"].get<std::string>(), "T", " ");
+      
+      
+      if (operation_type == "Buy" || operation_type == "Content submit") {
+         std::string contentStr;
+         RunTask("get_content \"" + description + "\"", contentStr);
+         auto contentObject = json::parse(contentStr);
+         
+         std::string synopsis = contentObject["synopsis"].get<std::string>();
+         from_account = getAccountName(contentObject["author"].get<std::string>());
+         try {
+            auto synopsis_parsed = json::parse(synopsis);
+            synopsis = synopsis_parsed["title"].get<std::string>();
+         } catch (...) {}
+         
+         description = synopsis;
+      }
+      
+      auto transaction_amount_js = content["transaction_amount"]["amount"];
+      auto transaction_fee_js = content["transaction_fee"]["amount"];
+      
+      QString transaction_amount, transaction_fee;
+      
+      if (transaction_fee_js.is_number()) {
+         transaction_fee = QString::number(transaction_fee_js.get<double>() / GRAPHENE_BLOCKCHAIN_PRECISION) + tr(" DCT");
+      } else {
+         transaction_fee = QString::number(std::stod(transaction_fee_js.get<std::string>()) / GRAPHENE_BLOCKCHAIN_PRECISION) + tr(" DCT");
+      }
+      
+      if (transaction_amount_js.is_number()) {
+         transaction_amount = QString::number(transaction_amount_js.get<double>() / GRAPHENE_BLOCKCHAIN_PRECISION) + tr(" DCT");
+      } else {
+         transaction_amount = QString::number(std::stod(transaction_amount_js.get<std::string>()) / GRAPHENE_BLOCKCHAIN_PRECISION) + tr(" DCT");
+      }
+      
+      std::vector<QString> values = {  QString::fromStdString(timestamp),
+         QString::fromStdString(operation_type),
+         QString::fromStdString(from_account),
+         QString::fromStdString(to_account),
+         transaction_amount,
+         transaction_fee,
+         QString::fromStdString(description) };
+      
+      
+      for (int col = 0; col < tablewidget.columnCount(); ++col) {
+         
+         tablewidget.setItem(i, col, new QTableWidgetItem(values[col]));
+         tablewidget.item(i, col)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+         tablewidget.item(i, col)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+         
+      }
+      
+      
+   }
 
+}
 
 
 void TransactionsTab::currentUserChanged(std::string userName) {
    user.setText(QString::fromStdString(userName));
-}
-
-void TransactionsTab::maybeUpdateContent() {
-   if (!m_doUpdate) {
-      return;
-   }
-   
-   m_doUpdate = false;
-   updateContents();
-}
-
-void TransactionsTab::onTextChanged(const QString& text) {
-   
-   m_doUpdate = true;
 }
 
 
@@ -124,89 +176,17 @@ std::string TransactionsTab::getAccountName(std::string accountId) {
    return _user_id_cache[accountId];
 }
 
-void TransactionsTab::updateContents() {
-   if (user.text().toStdString().empty()) {
-      return;
-   }
-   
-   std::string a_result;
-   try {
-      RunTask("get_account_history \"" + user.text().toStdString() +"\" 100", a_result);
-   } catch (const std::exception& ex) {
-      return;
-   }
-   
-   
-   try {
-      auto contents = json::parse(a_result);
-      
-      tablewidget.setRowCount(contents.size());
-      
-      for (int i = 0; i < contents.size(); ++i) {
-         auto content = contents[i];
-         std::string from_account = getAccountName(content["from_account"].get<std::string>());
-         std::string to_account = getAccountName(content["to_account"].get<std::string>());
-         std::string operation_type = content["operation_type"].get<std::string>();
-         std::string description = content["description"].get<std::string>();
-         std::string timestamp = boost::replace_all_copy(content["timestamp"].get<std::string>(), "T", " ");
-         
 
-         if (operation_type == "Buy" || operation_type == "Content submit") {
-            std::string contentStr;
-            RunTask("get_content \"" + description + "\"", contentStr);
-            auto contentObject = json::parse(contentStr);
-            
-            std::string synopsis = contentObject["synopsis"].get<std::string>();
-            from_account = getAccountName(contentObject["author"].get<std::string>());
-            try {
-               auto synopsis_parsed = json::parse(synopsis);
-               synopsis = synopsis_parsed["title"].get<std::string>();
-            } catch (...) {}
-            
-            description = synopsis;
-         }
-         
-         auto transaction_amount_js = content["transaction_amount"]["amount"];
-         auto transaction_fee_js = content["transaction_fee"]["amount"];
-         
-         QString transaction_amount, transaction_fee;
-         
-         if (transaction_fee_js.is_number()) {
-            transaction_fee = QString::number(transaction_fee_js.get<double>() / GRAPHENE_BLOCKCHAIN_PRECISION) + tr(" DCT");
-         } else {
-            transaction_fee = QString::number(std::stod(transaction_fee_js.get<std::string>()) / GRAPHENE_BLOCKCHAIN_PRECISION) + tr(" DCT");
-         }
-         
-         if (transaction_amount_js.is_number()) {
-            transaction_amount = QString::number(transaction_amount_js.get<double>() / GRAPHENE_BLOCKCHAIN_PRECISION) + tr(" DCT");
-         } else {
-            transaction_amount = QString::number(std::stod(transaction_amount_js.get<std::string>()) / GRAPHENE_BLOCKCHAIN_PRECISION) + tr(" DCT");
-         }
-         
-         std::vector<QString> values = {  QString::fromStdString(timestamp),
-                                          QString::fromStdString(operation_type),
-                                          QString::fromStdString(from_account),
-                                          QString::fromStdString(to_account),
-                                          transaction_amount,
-                                          transaction_fee,
-                                          QString::fromStdString(description) };
-         
-         
-         for (int col = 0; col < tablewidget.columnCount(); ++col) {
-            
-            tablewidget.setItem(i, col, new QTableWidgetItem(values[col]));
-            tablewidget.item(i, col)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
-            tablewidget.item(i, col)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
-            
-         }
-         
-         
-      }
-   } catch (std::exception& ex) {
-      std::cout << ex.what() << std::endl;
+std::string TransactionsTab::getUpdateCommand() {
+   if (user.text().toStdString().empty()) {
+      return "";
    }
+
+   return "get_account_history \"" + user.text().toStdString() +"\" 100";
    
 }
+
+
 
 void TransactionsTab::set_user_filter(const std::string& user_name) {
    user.setText(QString::fromStdString(user_name));
