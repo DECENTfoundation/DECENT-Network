@@ -199,7 +199,7 @@ seeding_plugin_impl::generate_por(my_seeding_id_type so_id, graphene::package::p
    if( citr->expiration < fc::time_point::now() ){
       ilog("seeding plugin_impl:  generate_por() - content expired, cleaning up");
       package_manager::instance().delete_package(downloaded_package.get_hash());
-      db.remove(mso);
+      main_thread->async([&]{ db.remove(mso);});
       return;
    }
 
@@ -256,13 +256,6 @@ seeding_plugin_impl::generate_por(my_seeding_id_type so_id, graphene::package::p
 
       ilog("broadcasting out PoR");
       _self.p2p_node().broadcast_transaction(tx);
-   }
-
-   if(  fc::time_point( mso.expiration ) <=  fc::time_point::now() ){
-      ilog("seeding plugin_impl:  generate_por() - content expired, cleaning up");
-      package_manager::instance().delete_package(downloaded_package.get_hash());
-      db.remove(mso);
-      return;
    }
 
    ilog("seeding plugin_impl:  generate_por() - planning next wake-up at ${t}",("t", next_wakeup) );
