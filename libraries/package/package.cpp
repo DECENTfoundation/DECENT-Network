@@ -102,7 +102,8 @@ public:
         
       header.type = 1;
       *(int*)header.size = file_size;
-
+      
+      _out.write((const char*)&header, sizeof(arc_header));
 
       stream<file_source> is(in);
       _out << is.rdbuf();
