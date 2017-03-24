@@ -42,7 +42,7 @@
 #include <fc/io/raw_fwd.hpp>
 #include <fc/array.hpp>
 
-#define DECENT_TESTNET2
+//#define DECENT_TESTNET2
 #ifdef DECENT_TESTNET2
 #define DECENT_LONG_SHAMIR
 #define DECENT_SECTORS 100
