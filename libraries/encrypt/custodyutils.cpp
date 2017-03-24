@@ -1,5 +1,5 @@
 // Copyright (c) 2015-2015 Decent developers
-
+#define CRYPTOPP_ENABLE_NAMESPACE_WEAK 1
 #include <cstddef>
 #include <iostream>
 #include "decent/encrypt/custodyutils.hpp"
@@ -8,9 +8,10 @@
 #include <sstream>
 #include <iomanip>
 #include <fc/thread/thread.hpp>
-#define CRYPTOPP_ENABLE_NAMESPACE_WEAK 1
+
+
 #define DECENT_CUSTODY_THREADS 4
-//#define _CUSTODY_STATS
+#define _CUSTODY_STATS
 namespace decent {
 namespace encrypt {
 
@@ -87,6 +88,7 @@ int CustodyUtils::get_u_from_seed(const mpz_t &seedU, element_t out[]) {
 }
 
 int CustodyUtils::get_n(std::fstream &file) {
+
    if( !file.is_open())
       return -1;
    file.seekg(0, file.end);
@@ -94,40 +96,8 @@ int CustodyUtils::get_n(std::fstream &file) {
    int n = length / (DECENT_SIZE_OF_NUMBER_IN_THE_FIELD * DECENT_SECTORS);
    if( length % (DECENT_SIZE_OF_NUMBER_IN_THE_FIELD * DECENT_SECTORS))
       n += 1;
+
    return n;
-}
-
-int CustodyUtils::split_file(std::fstream &file, unsigned int &n, element_t ***out) {
-   n = get_n(file);
-   file.seekg(0, file.end);
-   long long realLen = file.tellg();
-   file.seekg(0);
-
-   element_t **m = new element_t *[n];
-   element_printf("Size of n is: %d\n", n);
-   for( int i = 0; i < n; i++ )
-      m[i] = new element_t[DECENT_SECTORS];
-
-   char buffer[DECENT_SIZE_OF_NUMBER_IN_THE_FIELD];
-
-   for( int i = 0; i < n; i++ ) {
-      for( int j = 0; j < DECENT_SECTORS; j++ ) {
-         element_init_Zr(m[i][j], pairing);
-         if( realLen > ((long long) (file.tellg()) + DECENT_SIZE_OF_NUMBER_IN_THE_FIELD)) {
-            file.read(buffer, DECENT_SIZE_OF_NUMBER_IN_THE_FIELD);
-         } else if( file.eof()) {
-            memset(buffer, 0, DECENT_SIZE_OF_NUMBER_IN_THE_FIELD);
-         } else {
-            int left = realLen - (long long) (file.tellg());
-            file.read(buffer, left);
-            memset(buffer + left, 0, DECENT_SIZE_OF_NUMBER_IN_THE_FIELD - left);
-         }
-         element_from_bytes(m[i][j], (unsigned char *) buffer);
-      }
-   }
-   *out = m;
-
-   return 0;
 }
 
 inline int CustodyUtils::get_data(std::fstream &file, uint32_t i, char buffer[]) {
@@ -182,31 +152,38 @@ int CustodyUtils::get_sigma(uint64_t idx, mpz_t mi[], element_pp_t u_pp[], eleme
    element_t temp;
    element_init_G1(temp, pairing);
    element_init_G1(out[idx], pairing);
-   for( int j = 0; j < DECENT_SECTORS; j++ ) {
+   {
+      int j=0;
+      element_pp_pow(out[idx], mi[j], u_pp[j]);
+#ifdef _CUSTODY_STATS
+      pow_pp++;
+#endif
+   }
+   for( int j = 1; j < DECENT_SECTORS; j++ ) {
       element_pp_pow(temp, mi[j], u_pp[j]);
 #ifdef _CUSTODY_STATS
       pow_pp++;
 #endif
       mpz_clear(mi[j]);
-      if( j ) {
-         element_mul(out[idx], out[idx], temp);
+      element_mul(out[idx], out[idx], temp);
 #ifdef _CUSTODY_STATS
-         mul++;
+      mul++;
 #endif
-      }else
-         element_set(out[idx], temp);
    }
    element_clear(temp);
 
    element_t hash;
    element_init_G1(hash, pairing);
-   unsigned char buf[32];
-   memset(buf, 0, 32);
+
    char index[16];
    memset(index, 0, 16);
    sprintf(index, "%llu", idx);
+
+   unsigned char buf[32];
+   memset(buf, 0, 32);
    fc::sha256 stemp = fc::sha256::hash(index, 16);
    memcpy(buf, stemp._hash, (4 * sizeof(uint64_t)));
+
    element_from_hash(hash, buf, 32);
    element_mul(out[idx], out[idx], hash);
    element_pow_zn(out[idx], out[idx], pk);
@@ -221,12 +198,19 @@ int CustodyUtils::get_sigma(uint64_t idx, mpz_t mi[], element_pp_t u_pp[], eleme
 int
 CustodyUtils::get_sigmas(std::fstream &file, const unsigned int n, element_t *u, element_t pk, element_t **sigmas) {
    element_t *ret = new element_t[n];
-   element_pp_t *u_pp = new element_pp_t[DECENT_SECTORS];
-   for( int k = 0; k < DECENT_SECTORS; k++ )
-      element_pp_init(u_pp[k], u[k]);
    //start threads
    fc::thread t[DECENT_CUSTODY_THREADS];
    fc::future<int> fut[DECENT_CUSTODY_THREADS];
+   fc::future<void> fut_pp[DECENT_CUSTODY_THREADS];
+
+   element_pp_t *u_pp = new element_pp_t[DECENT_SECTORS];
+   for( int k = 0; k < DECENT_SECTORS; k++ ) {
+      int idx = k % DECENT_CUSTODY_THREADS;
+      fut_pp[idx] = t[idx].async([=](){ element_pp_init(u_pp[k], u[k]); return; });
+   }
+   //wait for the threads...
+   for( int k = 0; k < DECENT_CUSTODY_THREADS; ++k )
+      fut_pp[k].wait();
 
 //   std::cout<<"get_sigmas: n = "<<n<<" , cycles = " << cycles <<"\n";
    int total_thread_to_wait_for = std::min( n, (const unsigned int) DECENT_CUSTODY_THREADS );
@@ -255,10 +239,9 @@ CustodyUtils::get_sigmas(std::fstream &file, const unsigned int n, element_t *u,
          });
       }
    }
-
+   //wait for the threads...
    for( int k = 0; k < total_thread_to_wait_for; ++k )
       fut[k].wait();
-
 
    *sigmas = ret;
    for( int k = 0; k < DECENT_SECTORS; k++ )
@@ -352,7 +335,7 @@ int CustodyUtils::verify(element_t sigma, unsigned int q, uint64_t *indices, ele
       memset(buf, 0, 32);
       char index[16];
       memset(index, 0, 16);
-      sprintf(index, "%lu", indices[i]);
+      sprintf(index, "%llu", indices[i]);
       fc::sha256 stemp = fc::sha256::hash(index, 16);
       memcpy(buf, stemp._hash, (4 * sizeof(uint64_t)));
       element_from_hash(hash, buf, 32);

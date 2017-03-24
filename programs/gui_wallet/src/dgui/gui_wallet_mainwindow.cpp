@@ -171,6 +171,11 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
     
    
    
+    
+    _balanceUpdater.setSingleShot(false);
+    _balanceUpdater.setInterval(10000);
+    connect(&_balanceUpdater, SIGNAL(timeout()), this, SLOT( CurrentUserBalanceUpdate() ));
+    _balanceUpdater.start();
    
    connect(&GlobalEvents::instance(), SIGNAL(walletConnected(bool)), this, SLOT(DisplayWalletContentGUI(bool)));
    connect(&GlobalEvents::instance(), SIGNAL(walletConnectionError(std::string)), this, SLOT(DisplayConnectionError(std::string)));
@@ -201,9 +206,19 @@ void Mainwindow_gui_wallet::slot_connected(std::string str_error)
 
       DisplayWalletContentGUI(m_p_wallet_operator->m_wallet_api.IsNew());
    }
-   else
-      QMessageBox::critical(this, "Error", str_error.c_str());
+   //else
+      //QMessageBox::critical(this, "Error", str_error.c_str());
 }
+
+void Mainwindow_gui_wallet::currentUserBalanceUpdate()
+{
+    std::string userBalanceUpdate = GlobalEvents::instance().getCurrentUser();
+    if( userBalanceUpdate == "" ) {
+        return;
+    }
+    UpdateAccountBalances(userBalanceUpdate);
+}
+
 
 
 void Mainwindow_gui_wallet::RunTask(std::string const& str_command, std::string& str_result)
@@ -293,11 +308,14 @@ void Mainwindow_gui_wallet::CreateMenues()
 
     m_pMenuHelpL = pMenuBar->addMenu( tr("&Help") );
 
+    m_pMenuStatus = pMenuBar->addMenu( tr("&Status") );
+    m_pMenuStatus->addAction(&m_ActionHelp);
 
     /******************************************************/
     m_pMenuHelpL->addAction(&m_ActionAbout);
     m_pMenuHelpL->addAction(&m_ActionInfo);
-    m_pMenuHelpL->addAction(&m_ActionHelp);
+    
+    
 }
 
 void Mainwindow_gui_wallet::ViewAction() {
@@ -451,7 +469,6 @@ void Mainwindow_gui_wallet::UpdateLockedStatus()
 
 void Mainwindow_gui_wallet::CheckDownloads()
 {
-    
     auto& global_instance = gui_wallet::GlobalEvents::instance();
     std::string str_current_username = global_instance.getCurrentUser();
 

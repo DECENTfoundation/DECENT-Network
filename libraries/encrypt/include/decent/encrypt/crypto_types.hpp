@@ -42,6 +42,14 @@
 #include <fc/io/raw_fwd.hpp>
 #include <fc/array.hpp>
 
+#define DECENT_TESTNET2
+#ifdef DECENT_TESTNET2
+#define DECENT_LONG_SHAMIR
+#define DECENT_SECTORS 100
+#else
+#define DECENT_SECTORS 32
+#endif
+
 #define SHORT_CURVE 1
 #ifdef SHORT_CURVE
 #define DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED 33
@@ -51,7 +59,7 @@
 #define DECENT_SIZE_OF_MU 32
 #endif
 
-#define DECENT_SECTORS 32
+
 
 namespace decent{
 namespace encrypt{
@@ -86,8 +94,8 @@ public:
 };
 
 /*****
- * Class d_integer_string
- * Stores big integers in string form. Used in objects that needs to be serialized/deserialized
+ * Class DInteger
+ * Stores big integers.
  */
 class DInteger : public CryptoPP::Integer {
 public:
@@ -114,7 +122,13 @@ public:
 
 typedef std::vector<unsigned char> valtype;
 
+
 struct DeliveryProof;
+
+/*****
+ * Class DeliveryProofString
+ * Stores proof of key delivery, in string form. For field details refer to the whitepaper
+ */
 struct DeliveryProofString {
    DIntegerString G1;
    DIntegerString G2;
@@ -135,6 +149,10 @@ struct DeliveryProofString {
    };
 };
 
+/*****
+ * Class DeliveryProof
+ * Stores proof of key delivery.
+ */
 struct DeliveryProof {
    DInteger G1;
    DInteger G2;
@@ -168,20 +186,35 @@ struct DeliveryProof {
 
 };
 
+/*****
+ * Class CustodyData
+ * Stores blockchain part of custody data.
+ */
 struct CustodyData{
-   uint32_t n; //number of signatures
-   fc::array<int8_t,16> u_seed; //generator for u's
-   fc::array<uint8_t,DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED> pubKey; //uploaders public key
+   uint32_t n; //<number of signatures
+   fc::array<int8_t,16> u_seed; //<generator for u's
+   fc::array<uint8_t,DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED> pubKey; //<uploaders public key
 };
 
+
+/*****
+ * Class CustodyProof
+ * Represent proof of retrievability
+ */
 struct CustodyProof{
-   uint32_t reference_block;
-   fc::array<uint32_t,5> seed; //ripemd160._hash of the reference block
-   std::vector<std::string> mus;
-   fc::array<uint8_t,DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED> sigma;
+   uint32_t reference_block; //<Block used to get entrophy from. Must be recent
+   fc::array<uint32_t,5> seed; //<ripemd160._hash of the reference block
+   std::vector<std::string> mus; //<Mju-s
+   fc::array<uint8_t,DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED> sigma; //<sigma
 };
+
 
 struct Ciphertext;
+
+/*****
+ * Class CiphertextString
+ * Stores encrypted key particle, in string format.
+ */
 struct CiphertextString {
    DIntegerString C1;
    DIntegerString D1;
@@ -193,6 +226,10 @@ struct CiphertextString {
    }
 };
 
+/*****
+ * Class Ciphertext
+ * Stores encrypted key particle.
+ */
 struct Ciphertext {
    DInteger C1 = decent::encrypt::DInteger(CryptoPP::Integer::One());
    DInteger D1 = decent::encrypt::DInteger(CryptoPP::Integer::One());
@@ -202,8 +239,9 @@ struct Ciphertext {
 };
 
 
-
+// Point on the elyptic curve
 typedef std::pair<DInteger, DInteger> point;
+
 
 struct AesKey {
    unsigned char key_byte[CryptoPP::AES::MAX_KEYLENGTH];
