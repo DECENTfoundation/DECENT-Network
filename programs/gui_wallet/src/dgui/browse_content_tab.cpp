@@ -48,7 +48,7 @@ BrowseContentTab::BrowseContentTab(Mainwindow_gui_wallet* parent) : _parent(pare
         {" ", -50},
     });
     
-    
+//    m_pTableWidget.setStyleSheet("border: 1px solid ");
     
     
     m_filterLineEdit.setStyleSheet( "{"

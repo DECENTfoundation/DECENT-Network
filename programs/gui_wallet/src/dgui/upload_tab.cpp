@@ -115,8 +115,8 @@ m_getPublishersTimer(this)
     
     //LIFETIME
     QLabel* lab = new QLabel("LifeTime");
-    lab->setStyleSheet("QLabel { background-color : white; border:0; color: Gray}");
-    lab->setContentsMargins(0, 0, -1, 0);
+    lab->setStyleSheet("QLabel { background-color : white; border:1 solid lightGray; color: Gray}");
+    lab->setContentsMargins(0, 0, -5, 0);
     lab->setMinimumWidth(60);
     lab->setFixedHeight(25);
     
@@ -130,7 +130,7 @@ m_getPublishersTimer(this)
 
     seeders      = new QComboBox(this);
     QLabel* seed = new QLabel("Seeders");
-    seed->setStyleSheet("QLabel { background-color : white; border:0; color: Gray}");
+    seed->setStyleSheet("QLabel { background-color : white; border:1 solid lightGray; color: Gray}");
     
     seed->setContentsMargins(0, 0, 0, 0);
     seed->setMinimumWidth(70);
@@ -145,13 +145,14 @@ m_getPublishersTimer(this)
     QHBoxLayout* keyRow = new QHBoxLayout;
 
     QLabel* key = new QLabel("Key Particles");
-    key->setStyleSheet("QLabel { background-color : white; border:0; color: Gray}");
+    key->setStyleSheet("QLabel { background-color : white; border:1 solid lightGray; color: Gray}");
     key->setContentsMargins(0, 0, 0, 0);
     key->setMinimumWidth(90);
     key->setFixedHeight(25);
     
     keyparts = new QComboBox(this);
     keyparts->setStyle(QStyleFactory::create("fusion"));
+    keyparts->setStyleSheet("color : black;");
     for (int r = 2; r <= 7; ++r) {
         QString val = QString::fromStdString(std::to_string(r));
         keyparts->addItem(val, val);
