@@ -163,6 +163,22 @@ namespace decent { namespace package {
         };
 
 
+        bool is_correct_hash_str(const std::string& hash_str) {
+            if (hash_str.size() != 40) {
+                return false;
+            }
+
+            for(auto ch : hash_str) {
+                if ( !(ch >= '0' && ch <= '9') &&
+                     !(ch >= 'a' && ch <= 'f') &&
+                     !(ch >= 'A' && ch <= 'F') ) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
         fc::ripemd160 calculate_hash(const boost::filesystem::path& file_path) {
             boost::iostreams::file_source source(file_path.string(), std::ifstream::binary);
 
@@ -587,9 +603,8 @@ namespace decent { namespace package {
         _thread->async([&] () {
 
             try {
-                if (!exists(get_package_dir()) || !is_directory(get_package_dir())) {
-                    FC_THROW("Package directory ${path} does not exist", ("path", get_package_dir().string()) );
-                }
+
+
 
 
 //              PACKAGE_INFO_GENERATE_EVENT(package_transfer_progress, ( ) );
@@ -708,7 +723,8 @@ namespace decent { namespace package {
 */
 
     package_manager::package_manager(const boost::filesystem::path& packages_path)
-        : _packages_path(packages_path)
+        : _thread(new fc::thread())
+        , _packages_path(packages_path)
     {
         if (!exists(_packages_path) || !is_directory(_packages_path)) {
             try {
@@ -728,30 +744,7 @@ namespace decent { namespace package {
 
         set_libtorrent_config(graphene::utilities::decent_path_finder::instance().get_decent_home() / "libtorrent.json");
 
-        ilog("reading packages from directory ${path}", ("path", _packages_path.string()) );
-
-        using namespace boost::filesystem;
-
-        for (directory_iterator entry(_packages_path); entry != directory_iterator(); ++entry) {
-            try {
-                const std::string hash_str = entry->path().filename().string();
-
-
-                // TODO: throw on wrong string size, etc.
-
-
-                package_handle package(new package_info(*this, fc::ripemd160(hash_str)));
-                _packages.insert(package);
-            }
-            catch (const fc::exception& ex)
-            {
-                elog("unable to read package at ${path}: ${error}", ("path", entry->path().string()) ("error", ex.to_detail_string()) );
-            }
-        }
-
-        ilog("read ${size} packages", ("size", _packages.size()) );
-
-        // TODO: restore anything else?
+        // TODO: restore anything?
     }
 
     package_manager::~package_manager() {
@@ -760,7 +753,7 @@ namespace decent { namespace package {
             _packages.clear();
         }
 
-        // TODO: save anything else?
+        // TODO: save anything?
     }
 
     package_handle package_manager::get_package(const boost::filesystem::path& content_dir_path,
@@ -781,19 +774,53 @@ namespace decent { namespace package {
         return *_packages.insert(package).first;
     }
 
-    // TODO: do we need this?
-    package_handle package_manager::get_package(const fc::ripemd160& hash) {
+    package_handle package_manager::get_package(const fc::ripemd160& hash,
+                                                const event_listener_handle& event_listener)
+    {
         std::lock_guard<std::recursive_mutex> guard(_mutex);
 
         for (auto& package : _packages) {
             if (package) {
                 if (package->_hash == hash) {
+                    package->add_event_listener(event_listener);
                     return package;
                 }
             }
         }
 
-        return package_handle();
+        package_handle package(new package_info(*this, hash, event_listener));
+        return *_packages.insert(package).first;
+    }
+
+    package_handle_set package_manager::get_all_known_packages() const {
+        std::lock_guard<std::recursive_mutex> guard(_mutex);
+        return _packages;
+    }
+
+    void package_manager::recover_all_packages(const event_listener_handle& event_listener) {
+        std::lock_guard<std::recursive_mutex> guard(_mutex);
+
+        ilog("reading packages from directory ${path}", ("path", _packages_path.string()) );
+
+        using namespace boost::filesystem;
+
+        for (directory_iterator entry(_packages_path); entry != directory_iterator(); ++entry) {
+            try {
+                const std::string hash_str = entry->path().filename().string();
+
+                if (!utilities::is_correct_hash_str(hash_str)) {
+                    FC_THROW("Package directory ${path} does not look like RIPEMD-160 hash", ("path", hash_str) );
+                }
+
+                get_package(fc::ripemd160(hash_str), event_listener);
+            }
+            catch (const fc::exception& ex)
+            {
+                elog("unable to read package at ${path}: ${error}", ("path", entry->path().string()) ("error", ex.to_detail_string()) );
+            }
+        }
+
+        ilog("read ${size} packages", ("size", _packages.size()) );
     }
 
     void package_manager::release_package(const fc::ripemd160& hash) {
@@ -812,11 +839,6 @@ namespace decent { namespace package {
     void package_manager::release_package(const package_handle& package) {
         std::lock_guard<std::recursive_mutex> guard(_mutex);
         _packages.erase(package);
-    }
-
-    package_handle_set package_manager::get_all_known_packages() const {
-        std::lock_guard<std::recursive_mutex> guard(_mutex);
-        return _packages;
     }
 
     boost::filesystem::path package_manager::get_packages_path() const {

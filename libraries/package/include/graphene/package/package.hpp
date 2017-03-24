@@ -181,12 +181,15 @@ namespace decent { namespace package {
         package_handle get_package(const std::string& url,
                                    const event_listener_handle& event_listener = event_listener_handle());
 
-        package_handle get_package(const fc::ripemd160& hash); // TODO: do we need this?
+        package_handle get_package(const fc::ripemd160& hash,
+                                   const event_listener_handle& event_listener = event_listener_handle());
+
+        package_handle_set get_all_known_packages() const;
+        void recover_all_packages(const event_listener_handle& event_listener = event_listener_handle());
 
         void release_package(const fc::ripemd160& hash);
         void release_package(const package_handle& package);
 
-        package_handle_set get_all_known_packages() const;
         boost::filesystem::path get_packages_path() const;
         std::shared_ptr<fc::thread> get_thread() const;
         void set_libtorrent_config(const boost::filesystem::path& libtorrent_config_file);
