@@ -73,9 +73,9 @@ const int RIPEMD160_BUFFER_SIZE  = 1024 * 1024; // 4kb
 
     
 struct arc_header {
-    char type; // 0 = EOF, 1 = REGULAR FILE
-	char name[255];
-	char size[8];
+   char type; // 0 = EOF, 1 = REGULAR FILE
+   char name[255];
+   char size[8];
 };
 
 
@@ -139,7 +139,8 @@ public:
          if (header.type == 0) {
             break;
          }
-
+         if( strlen(header.name) == 0 )
+            break;
          const path file_path = output_dir / header.name;
          const path file_dir = file_path.parent_path();
 
@@ -155,20 +156,24 @@ public:
                }
             }
          }
-
+         
          std::fstream sink(file_path.string(), ios::out | ios::binary);
          if (!sink.is_open()) {
             FC_THROW("Unable to open file ${file} for writing", ("file", file_path.string()) );
          }
 
-         char buffer[ARC_BUFFER_SIZE];
+         //char buffer[ARC_BUFFER_SIZE];
          int bytes_to_read = *(int*)header.size;
 
          if (bytes_to_read < 0) {
             FC_THROW("Unexpected size in header");
          }
 
-         while (bytes_to_read > 0) {
+         copy_n( istreambuf_iterator<char>(_in),
+                bytes_to_read,
+                ostreambuf_iterator<char>(sink)
+         );
+         /*while (bytes_to_read > 0) {
             const int bytes_read = boost::iostreams::read(_in, buffer, std::min(ARC_BUFFER_SIZE, bytes_to_read));
 
             if (bytes_read < 0) {
@@ -185,7 +190,7 @@ public:
 
          if (bytes_to_read != 0) {
             FC_THROW("Unexpected end of file");
-         }
+         }*/
       }
         
       return true;
