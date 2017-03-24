@@ -48,18 +48,31 @@ public:
    void ShowDigitalContentsGUI(std::vector<SDigitalContent>& contents);
    
 public:
-   virtual void timeToUpdate(const std::string& result);
-   virtual std::string getUpdateCommand();
+    
+   virtual void content_activated() {
+      m_contentUpdateTimer.start();
+   }
+   virtual void content_deactivated() {
+      m_contentUpdateTimer.stop();
+   }
    
 protected:
    void PrepareTableWidgetHeaderGUI();
    
    
 public slots:
+   void onTextChanged(const QString& text);
+   void updateContents();
+   void maybeUpdateContent();
    void extractPackage();
+   
    void show_content_popup();
+   void paintRow();
    
 private:
+   QTimer        m_contentUpdateTimer;
+   bool          m_doUpdate = true;
+   std::string   last_contents;
    
    std::vector<SDigitalContent>   _current_content;
    
