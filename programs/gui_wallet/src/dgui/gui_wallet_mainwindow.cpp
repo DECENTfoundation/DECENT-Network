@@ -96,8 +96,6 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
     CreateMenues();
     resize(900,550);
 
-    setCentralWidget(m_pCentralWidget);
-
     m_info_dialog.resize(0,0);
 
     setUnifiedTitleAndToolBarOnMac(false);

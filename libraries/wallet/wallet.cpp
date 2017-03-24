@@ -2257,6 +2257,9 @@ public:
             submit_op.synopsis = synopsis;
             submit_op.cd = cd;
 
+            FC_ASSERT( !submit_op.URI.empty(), "File transport error");
+
+            
             signed_transaction tx;
             tx.operations.push_back( submit_op );
             set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);

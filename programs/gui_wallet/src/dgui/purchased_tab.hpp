@@ -20,6 +20,8 @@
 #include <QLineEdit>
 #include <QTimer>
 #include <QPushButton>
+#include <QFileDialog>
+#include <QMessageBox>
 
 #include "qt_commonheader.hpp"
 #include "gui_wallet_tabcontentmanager.hpp"
@@ -58,7 +60,12 @@ protected:
 public slots:
    void extractPackage();
    void show_content_popup();
+   void showMessageBoxSlot(std::string message);
+   void extractionDirSelected(const QString& path);
    
+signals:
+   void showMessageBox(std::string message);
+
 private:
    
    std::vector<SDigitalContent>   _current_content;
@@ -68,7 +75,9 @@ protected:
    DecentTable             m_pTableWidget;
    QLineEdit               m_filterLineEditer;
    ContentDetailsBase*     _details_dialog = nullptr;
-
+   bool                    _isExtractingPackage;
+   QMessageBox             _msgBox;
+   QFileDialog             _fileDialog;
 };
    
    
