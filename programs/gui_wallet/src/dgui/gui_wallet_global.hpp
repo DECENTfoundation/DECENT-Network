@@ -67,7 +67,7 @@ msgBox.exec();                                      \
 namespace gui_wallet
 {
     
-        std::string CalculateRemainingTime(QDateTime now_time , QDateTime time);
+        std::string CalculateRemainingTime(QDateTime const& dt, QDateTime const& dtFuture);
     
     
         inline std::size_t extra_space(const std::string& s) noexcept
