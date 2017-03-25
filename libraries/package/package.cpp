@@ -51,6 +51,8 @@
 
 #include <iostream>
 #include <atomic>
+#include <cstdio>
+#include <cstring>
 
 #include <cstdio>
 #include <cstring>
@@ -63,6 +65,8 @@ using namespace boost::filesystem;
 using namespace boost::iostreams;
 using namespace graphene::package;
 using namespace graphene::utilities;
+
+
 
 
 namespace {
@@ -560,13 +564,11 @@ package_object package_manager::create_package( const boost::filesystem::path& c
       fc::scoped_lock<fc::mutex> guard(_mutex);
       _custody_utils.create_custody_data(aes_file_path, cd);
    }
-   
    fc::ripemd160 hash = calculate_hash(aes_file_path);
    if (is_directory(packages_path / hash.str())) {
       ilog("package_manager:create_package replacing existing package ${hash}",("hash", hash.str()));
       remove_all(packages_path / hash.str());
    }
-   
    rename(temp_path, packages_path / hash.str());
    
    return package_object(packages_path / hash.str());
@@ -633,12 +635,10 @@ package_manager::download_package( const string& url,
       if (it == _protocol_handlers.end()) {
          FC_THROW("Can not find protocol handler for : ${proto}", ("proto", download_url.proto()) );
       }
-      
       transfer_job& t = create_transfer_object();
       t.transport = it->second->clone();
       t.listener = &listener;
       t.job_type = transfer_job::DOWNLOAD;
-      
       try {
          t.transport->download_package(t.job_id, url, &listener, stats_listener);
       } catch(std::exception& ex) {
