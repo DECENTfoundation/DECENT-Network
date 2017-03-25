@@ -306,6 +306,10 @@ namespace {
    
 } // namespace
 
+package_object::package_object() {
+   _package_path = path();
+   _hash = fc::ripemd160();
+}
 
 package_object::package_object(const boost::filesystem::path& package_path) {
    _package_path = package_path;
@@ -595,6 +599,27 @@ package_manager::upload_package( const package_object& package,
    return t.job_id;
 }
 
+package_object package_manager::get_package_object(const std::string& URI) const {
+   fc::url download_url(URI);
+   
+   protocol_handler_map::const_iterator it = _protocol_handlers.find(download_url.proto());
+   if (it == _protocol_handlers.end()) {
+      return package_object();
+   }
+   
+   fc::ripemd160 hash = it->second->hash_from_url(URI);
+   return get_package_object(hash);
+}
+
+bool package_manager::package_exists(const string& url) const {
+   package_object pobj = get_package_object(url);
+   if (pobj.verify_hash()) {
+      return true;
+   }
+   
+   return false;
+}
+
 package_transfer_interface::transfer_id
 package_manager::download_package( const string& url,
                                   package_transfer_interface::transfer_listener& listener,
@@ -642,6 +667,7 @@ void package_manager::print_all_transfers() {
 package_transfer_interface::transfer_progress
 package_manager::get_progress(std::string URI) const {
    fc::scoped_lock<fc::mutex> guard(_mutex);
+      
    for (auto transfer : _transfers) {
       auto job = transfer.second;
       string transfer_url = job.transport->get_transfer_url();
@@ -677,7 +703,7 @@ std::vector<package_object> package_manager::get_packages() {
    return all_packages;
 }
 
-package_object package_manager::get_package_object(fc::ripemd160 hash) {
+package_object package_manager::get_package_object(fc::ripemd160 hash) const {
    const path packages_path = get_packages_path();
    return package_object(packages_path / hash.str());
 }

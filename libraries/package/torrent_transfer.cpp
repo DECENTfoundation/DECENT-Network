@@ -1110,6 +1110,11 @@ void torrent_transfer::print_status() {
 	cout << "Block Size/Num Pieces: " << st.block_size << " / " << st.num_pieces<< endl;
 }
 
+
+fc::ripemd160 torrent_transfer::hash_from_url(const std::string& url) {
+   
+}
+
 void torrent_transfer::upload_package(transfer_id id, const package_object& package, transfer_listener* listener) {
     _id = id;
     _listener = listener;
