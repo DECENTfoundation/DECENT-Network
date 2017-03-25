@@ -233,10 +233,12 @@ void PurchasedTab::timeToUpdate(const std::string& result) {
       }
       
       
-      for(int j = 0; j < m_pTableWidget.columnCount() - 2; ++j)
-      {
-         m_pTableWidget.item(i, j)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
-         m_pTableWidget.item(i, j)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+      for(int j = 0; j < m_pTableWidget.columnCount() - 2; ++j) {
+         auto* item = m_pTableWidget.item(i, j);
+         if (item) {
+            m_pTableWidget.item(i, j)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+            m_pTableWidget.item(i, j)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+         }
       }
       
       

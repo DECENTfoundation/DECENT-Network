@@ -628,15 +628,17 @@ void RunTask(std::string const& str_command, std::string& str_result)
    
    task_is_running = true;
     task_result result;
+   std::cout << "Starting task " << str_command << std::endl;
     SetNewTask(str_command,
                nullptr,
                static_cast<void*>(&result),
                +[](void* /*owner*/,
                    void* a_clbkArg,
                    int64_t a_err,
-                   std::string const& /*a_task*/,
+                   std::string const& a_task,
                    std::string const& a_result)
                {
+                  std::cout << "Task " << a_task << " finished" << std::endl;
                    task_result& result = *static_cast<task_result*>(a_clbkArg);
                    result.m_bDone = true;
                    result.m_error = a_err;
@@ -657,5 +659,25 @@ void RunTask(std::string const& str_command, std::string& str_result)
       task_is_running = false;
       throw task_exception(result.m_strResult);
    }
+}
+
+
+void ForceToRunTask(std::string const& str_command, std::string& str_result) {
+   
+   while (true) {
+      bool success = false;
+      try {
+         RunTask(str_command, str_result);
+         success = true;
+      } catch (const run_task_busy&) {
+         success = false;
+      }
+      
+      if (success)
+         break;
+      
+      QtDelay(100);
+   }
+   
 }
 

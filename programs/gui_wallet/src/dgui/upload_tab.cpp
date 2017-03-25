@@ -398,6 +398,9 @@ void Upload_popup::uploadContent() {
       msgBox->setText(tr("Content is submitted"));
 
       setEnabled(true);
+
+      emit uploadFinished();
+
    } else {
       msgBox->setWindowTitle("Error");
       msgBox->setText(tr("Failed to submit content"));
@@ -406,7 +409,6 @@ void Upload_popup::uploadContent() {
    
    msgBox->open();
 
-   emit uploadFinished();
 }
 
 Upload_popup::~Upload_popup()

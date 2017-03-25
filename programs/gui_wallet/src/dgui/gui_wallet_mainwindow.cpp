@@ -91,11 +91,14 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
 
     m_pCentralWidget = new CentralWigdet(m_pCentralAllLayout,this);
     m_pCentralWidget->setLayout(m_pCentralAllLayout);
-    setCentralWidget(m_pCentralWidget);
-    CreateActions();
-    CreateMenues();
-    resize(900,550);
 
+   setCentralWidget(m_pCentralWidget);
+   CreateActions();
+   CreateMenues();
+   resize(900,550);
+   
+   setCentralWidget(m_pCentralWidget);
+   
     m_info_dialog.resize(0,0);
 
     setUnifiedTitleAndToolBarOnMac(false);
@@ -298,7 +301,7 @@ void Mainwindow_gui_wallet::LockSlot()
     std::string dummy;
     
     try {
-        RunTask(csLine, dummy);
+        ForceToRunTask(csLine, dummy);
     } catch (std::exception& ex) {
         ALERT_DETAILS("Unable to lock the wallet", ex.what());
     }
@@ -331,7 +334,7 @@ void Mainwindow_gui_wallet::UnlockSlot()
     std::string result;
     
     try {
-       RunTask(csPassLine, result);
+       ForceToRunTask(csPassLine, result);
        GlobalEvents::instance().setWalletUnlocked();
     } catch (const std::exception& ex) {
         ALERT_DETAILS("Unable to unlock the wallet", ex.what());
@@ -349,7 +352,7 @@ void Mainwindow_gui_wallet::UpdateLockedStatus()
     
     try {
         
-        RunTask(csLine, a_result);
+        ForceToRunTask(csLine, a_result);
         m_locked = (a_result == "true");
         
     } catch (const std::exception& ex) {
@@ -482,7 +485,7 @@ void Mainwindow_gui_wallet::ImportKeySlot()
     bool hasError = false;
     
     try {
-        RunTask(csTaskStr, result);
+        ForceToRunTask(csTaskStr, result);
         hasError = result.find("exception") != std::string::npos;
     } catch (...) {
         hasError = true;

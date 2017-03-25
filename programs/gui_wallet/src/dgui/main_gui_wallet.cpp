@@ -242,12 +242,12 @@ int main(int argc, char* argv[])
         QCoreApplication::setLibraryPaths(QStringList(dir.absolutePath()));
 #endif
         
-        gui_wallet::application aApp(argc, argv);
-        
-        
-        
+       gui_wallet::application aApp(argc, argv);
+       gui_wallet::Mainwindow_gui_wallet aMainWindow;
+
+       
+       
         try{
-            gui_wallet::Mainwindow_gui_wallet aMainWindow;
             aMainWindow.show();
             aApp.exec();
         } catch(const char* a_ext_str) {
