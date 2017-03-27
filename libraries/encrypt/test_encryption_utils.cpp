@@ -1,3 +1,4 @@
+//#define _CUSTODY_STATS
 #include <decent/encrypt/encryptionutils.hpp>
 #include <decent/encrypt/custodyutils.hpp>
 
@@ -14,10 +15,12 @@
 #include <sstream>
 #include <iomanip>
 #include <gmp.h>
+#include <thread>
+
 
 using namespace std;
 
-decent::crypto::custody_utils c;
+decent::encrypt::CustodyUtils c;
 
 namespace {
 
@@ -41,35 +44,37 @@ void string_to_bytes(std::string& in, unsigned char *data, int len){
 }
 }
 
-using decent::crypto::d_integer;
-void test_aes(decent::crypto::aes_key k)
+using decent::encrypt::DInteger;
+void test_aes(decent::encrypt::AesKey k)
+
 {
-   decent::crypto::AES_encrypt_file("/tmp/test_file.txt","/tmp/test_file.out", k);
-   decent::crypto::AES_decrypt_file("/tmp/test_file.out","/tmp/test_file.orig",k);
+   decent::encrypt::AES_encrypt_file("/tmp/test_file.txt","/tmp/test_file.out", k);
+   decent::encrypt::AES_decrypt_file("/tmp/test_file.out","/tmp/test_file.orig",k);
 
 }
 
-void test_el_gamal(decent::crypto::aes_key k)
+void test_el_gamal(decent::encrypt::AesKey k)
 {
    cout<<"Catchpoint 0 \n";
-   d_integer pk1 = decent::crypto::generate_private_el_gamal_key();
-   d_integer pk2 = decent::crypto::generate_private_el_gamal_key();
-   d_integer pubk1 = decent::crypto::get_public_el_gamal_key(pk1);
-   d_integer pubk2 = decent::crypto::get_public_el_gamal_key(pk2);
+   DInteger pk1 = decent::encrypt::generate_private_el_gamal_key();
+   DInteger pk2 = decent::encrypt::generate_private_el_gamal_key();
+   DInteger pubk1 = decent::encrypt::get_public_el_gamal_key(pk1);
+   DInteger pubk2 = decent::encrypt::get_public_el_gamal_key(pk2);
+
 
    cout <<"pk1 = " << pk1.to_string();
    cout <<"pk2 = " << pk2.to_string();
    cout<<"Catchpoint 1 \n";
-   decent::crypto::point secret;
-   secret.first = d_integer(10000);
-   secret.second = d_integer(1000000000);
+   decent::encrypt::point secret;
+   secret.first = DInteger(10000);
+   secret.second = DInteger(1000000000);
 
    cout<<"Catchpoint 2 \n";
-   decent::crypto::ciphertext ct1, ct2;
-   decent::crypto::el_gamal_encrypt(secret, pubk1, ct1);
+   decent::encrypt::Ciphertext ct1, ct2;
+   decent::encrypt::el_gamal_encrypt(secret, pubk1, ct1);
 
-   decent::crypto::point received_secret;
-   decent::crypto::el_gamal_decrypt(ct1,pk1,received_secret);
+   decent::encrypt::point received_secret;
+   decent::encrypt::el_gamal_decrypt(ct1,pk1,received_secret);
    cout<<"Catchpoint 3 \n";
 
    cout <<"Secret is: "<<secret.first.to_string()<<" "<<secret.second.to_string();
@@ -78,32 +83,35 @@ void test_el_gamal(decent::crypto::aes_key k)
 
    cout <<"recovered secret is "<<received_secret.first.to_string()<<" "<<received_secret.second.to_string() <<"\n";
 
-   decent::crypto::delivery_proof proof(CryptoPP::Integer::One(),CryptoPP::Integer::One(),CryptoPP::Integer::One(),CryptoPP::Integer::One(),CryptoPP::Integer::One());
+   decent::encrypt::DeliveryProof proof(CryptoPP::Integer::One(),CryptoPP::Integer::One(),CryptoPP::Integer::One(),CryptoPP::Integer::One(),CryptoPP::Integer::One());
+
    cout<<"Catchpoint 4 \n";
-   decent::crypto::encrypt_with_proof(received_secret, pk1, pubk2, ct1, ct2, proof);
+   decent::encrypt::encrypt_with_proof(received_secret, pk1, pubk2, ct1, ct2, proof);
    cout<<"Catchpoint 5 \n";
-   decent::crypto::point received_secret2;
-   decent::crypto::el_gamal_decrypt(ct2,pk2,received_secret2);
+   decent::encrypt::point received_secret2;
+   decent::encrypt::el_gamal_decrypt(ct2,pk2,received_secret2);
 
    cout <<"recovered secret is "<<received_secret.first.to_string()<<" "<<received_secret.second.to_string() <<"\n";
 
    for (int i=0; i<1; i++)
-      bool ret_val = decent::crypto::verify_delivery_proof(proof, ct1,ct2,pubk1,pubk2);
+      bool ret_val = decent::encrypt::verify_delivery_proof(proof, ct1,ct2,pubk1,pubk2);
    /*if(ret_val)
       cout<< "everything OK!\n";*/
 
 }
 
-void test_shamir(decent::crypto::d_integer secret)
+void test_shamir(decent::encrypt::DInteger secret)
 {
-   decent::crypto::shamir_secret ss(5,9,secret);
-   decent::crypto::point x0 = ss.split[0];
-   decent::crypto::point x1 = ss.split[1];
-   decent::crypto::point x2 = ss.split[2];
-   decent::crypto::point x3 = ss.split[3];
-   decent::crypto::point x4 = ss.split[6];
+   decent::encrypt::ShamirSecret ss(5,9,secret);
+   ss.calculate_split();
+   decent::encrypt::point x0 = ss.split[0];
+   decent::encrypt::point x1 = ss.split[1];
+   decent::encrypt::point x2 = ss.split[2];
+   decent::encrypt::point x3 = ss.split[3];
+   decent::encrypt::point x4 = ss.split[6];
 
-   decent::crypto::shamir_secret rs(5,9);
+   decent::encrypt::ShamirSecret rs(5,9);
+
    rs.add_point(x0);
    rs.add_point(x1);
    rs.add_point(x2);
@@ -115,156 +123,13 @@ void test_shamir(decent::crypto::d_integer secret)
 }
 
 
-
-/*void test_passed_op(graphene::chain::ready_to_publish_operation& op){
-   std::vector<char> data = fc::raw::pack(op);
-   idump((op));
-
-   graphene::chain::ready_to_publish_operation tmp;
-   fc::datastream<const char*> ds( data.data(), data.size() );
-   fc::raw::unpack( ds, tmp );
-   idump((tmp));
-}
-
-void test_passing_add_level_reference(graphene::chain::ready_to_publish_operation& op){
-   std::shared_ptr<fc::thread> new_thread = std::make_shared<fc::thread>("p2p");
-   new_thread->async([&](){ return test_passed_op(op);}).wait();
-
-}
-
-
-void test_move(){
-
-
-   graphene::chain::ready_to_publish_operation op;
-   op.space = 1000;
-   decent::crypto::d_integer a = decent::crypto::d_integer::from_string("12132131.");
-   op.pubKey = a;
-   op.price_per_MByte = 1;
-   idump((op));
-   test_passing_add_level_reference(op);
-}*/
-/*
-inline void get_data(std::fstream &file, uint32_t i, char buffer[])
-{
-   uint64_t position = DECENT_SIZE_OF_NUMBER_IN_THE_FIELD * DECENT_SECTORS * i;
-
-   file.seekg (0, file.end);
-   uint64_t realLen = file.tellg();
-   file.seekg(std::min(position, realLen), file.beg);
-
-   if (realLen > ((long long)(file.tellg()) + DECENT_SIZE_OF_NUMBER_IN_THE_FIELD * DECENT_SECTORS))
-      file.read(buffer, DECENT_SIZE_OF_NUMBER_IN_THE_FIELD * DECENT_SECTORS);
-   else
-   {
-      if (file.eof())
-         memset(buffer,0,DECENT_SIZE_OF_NUMBER_IN_THE_FIELD * DECENT_SECTORS);
-      else{
-         int left = realLen - (long long)(file.tellg());
-         file.read(buffer, left);
-         memset(buffer+left,0, (DECENT_SIZE_OF_NUMBER_IN_THE_FIELD * DECENT_SECTORS) -left );
-      }
-   }
-
-}
-
-
-inline void int_to_elem( CryptoPP::Integer& in, element_t& out ){
-   char buffer[100];
-
-   std::ostringstream oss;
-   oss << in;
-
-   strcmp(buffer, oss.str().c_str());
-   buffer[strlen(buffer)-1]=0;
-
-   element_set_str(out, buffer, 10);
-}
-
-inline void elem_to_int( element_t& in, CryptoPP::Integer& out){
-   char buffer[100];
-
-   element_snprint(buffer, 100, in);
-   int len = strlen(buffer);
-   buffer[len]='.';
-   buffer[len+1]=0;
-   out = CryptoPP::Integer(buffer);
-}
-
-inline CryptoPP::Integer get_m(std::fstream &file, uint32_t i, uint32_t j)
-{
-   uint64_t position = DECENT_SIZE_OF_NUMBER_IN_THE_FIELD * (j + DECENT_SECTORS*i);
-   char buffer[DECENT_SIZE_OF_NUMBER_IN_THE_FIELD];
-   file.seekg (0, file.end);
-   uint64_t realLen = file.tellg();
-   if( realLen < position ){ //we are either close or behinf EoF
-      memset(buffer,0,DECENT_SIZE_OF_NUMBER_IN_THE_FIELD);
-   }else{
-      file.seekg(position, file.beg);
-      if( realLen < position + DECENT_SIZE_OF_NUMBER_IN_THE_FIELD) { //we can't read the whole string
-         int left = realLen - (uint64_t)(file.tellg());
-         file.read(buffer, left);
-         memset(buffer+left,0, DECENT_SIZE_OF_NUMBER_IN_THE_FIELD-left );
-      }else{
-         file.read(buffer, DECENT_SIZE_OF_NUMBER_IN_THE_FIELD);
-      }
-   }
-   return CryptoPP::Integer( (byte*) buffer, DECENT_SIZE_OF_NUMBER_IN_THE_FIELD);
-
-}
-
-void alt_get_sigmas(std::fstream &file, const unsigned int n, element_t *u, element_t pk, element_t **sigmas){
-   element_t *ret = new element_t[n];
-   CryptoPP::Integer reti[n];
-   CryptoPP::Integer ui[DECENT_SECTORS];
-   CryptoPP::Integer modulo("1287689620916637251875563089646583807.");
-   CryptoPP::ModularArithmetic mr(modulo);
-   for( int k =0; k < DECENT_SECTORS; k++)
-      elem_to_int(u[k], ui[k]);
-   for (int i = 0; i < n; i++)
-   {
-      element_init_G1(ret[i], c.pairing);
-
-      CryptoPP::Integer temp;
-
-      for(int j = 0; j < DECENT_SECTORS; j++)
-      {
-         temp = mr.Exponentiate( ui[j], get_m(file,i,j) );
-         if (j) {
-            reti[i] = mr.Multiply( reti[i], temp );
-            //element_mul(reti[i], ret[i], temp);
-         }
-         else {
-            reti[i] = temp;
-           // element_set(reti[i], temp);
-         }
-      }
-      unsigned char buf[32];
-      char index[16];
-      memset(index,0,16);
-      memset(buf,0,32);
-      sprintf(index, "%d", i);
-      SHA256((unsigned char *)index, 16, buf);
-      CryptoPP::Integer hash( (byte*) buf, DECENT_SIZE_OF_NUMBER_IN_THE_FIELD);
-
-      reti[i] = mr.Multiply(reti[i],hash);
-      reti[i] = mr.Exponentiate(reti[i], pk);
-
-      int_to_elem(reti[i], ret[i]);
-   }
-   *sigmas = ret;
-}
-*/
 void test_custody(){
    std::cout << GMP_NUMB_BITS <<"\n";
+   std::cout <<"number of cores "<< std::thread::hardware_concurrency()<<"\n";
 
+   decent::encrypt::CustodyData cd;
+   decent::encrypt::CustodyProof proof;
 
-   //pbc_param_t par;
-   //pbc_param_init_a_gen( par, 320, 1024 );
-   //pbc_param_out_str(stdout,par);
-
-   decent::crypto::custody_data cd;
-   decent::crypto::custody_proof proof;
    proof.seed.data[0]=21; proof.seed.data[1] =155; proof.seed.data[2] = 231; proof.seed.data[3] = 98; proof.seed.data[4] = 1;
 
    c.create_custody_data(boost::filesystem::path("/tmp/content.zip"),cd );
@@ -281,21 +146,7 @@ void test_custody(){
       std::cout <<"Something wrong during verification...\n";
    else
       std::cout <<"Verify sucessful!\n";
-
 }
-
-/*void test_key_manipulation()
-{
-   d_integer initial_key(123456789);
-   char* buffer = (char*)malloc(1000);
-   initial_key.Encode((byte*)buffer, 1000);
-   fc::sha512 key1;
-   for(int i=0; i<8; i++) key1._hash[i]=buffer[i];
-
-   decent::crypto::aes_key k;
-   for (int i = 0; i < CryptoPP::AES::MAX_KEYLENGTH; i++)
-      k.key_byte[i] = key1.data()[i];
-}*/
 
 void generate_params(){
    int rbits = 120;
@@ -436,22 +287,19 @@ void test_generator(){
 
 int main(int argc, char**argv)
 {
-//  decent::crypto::aes_key k;
+
+//  decent::encrypt::AesKey k;
+
 //   for (int i=0; i<CryptoPP::AES::MAX_KEYLENGTH; i++)
 //      k.key_byte[i]=i;
  //  test_aes(k);
-   cout<<"AES finished \n";
+//   cout<<"AES finished \n";
 //   test_key_manipulation();
-//   test_el_gamal(k);
-//   const CryptoPP::Integer secret("12354678979464");
- //  test_shamir(secret);
-  // test_move();
 
  //  test_el_gamal(k);
-//   const CryptoPP::Integer secret("12354678979464");
- //  test_shamir(secret);
+ //  const CryptoPP::Integer secret("123433334548654864334348647431133987884123665444598978777891235468864444444445445556666666987455334678979464");
+//   test_shamir(secret);
 //   generate_params();
 //   test_generator();
   test_custody();
-
 }

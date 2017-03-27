@@ -34,31 +34,7 @@ using namespace gui_wallet;
 InGuiThreatCaller* s_pWarner = NULL;
 
 
-int WarnAndWaitFunc(void* a_pOwner,WarnYesOrNoFuncType a_fpYesOrNo,
-                           void* a_pDataForYesOrNo,const char* a_form,...)
-{
-   QString aString;
-
-   va_list args;
-
-   va_start( args, a_form );
-   aString.vsprintf(a_form,args);
-   va_end( args );
-
-   s_pWarner->m_nRes = -1;
-   s_pWarner->m_pParent2 = (QWidget*)a_pOwner;
-   s_pWarner->EmitShowMessageBox(aString, a_fpYesOrNo, a_pDataForYesOrNo);
-   s_pWarner->m_sema.wait();
-    
-   //(*a_fpYesOrNo)((QWidget*)a_pOwner, 0, a_pDataForYesOrNo);
-
-
-   //return s_pWarner->m_nRes;
-    return 0;
-}
-
-
-gui_wallet::application::application(int& argc, char** argv)
+gui_wallet::application::application(int argc, char** argv)
     :
       QApplication(argc,argv)
 {
@@ -66,8 +42,6 @@ gui_wallet::application::application(int& argc, char** argv)
     qRegisterMetaType<WarnYesOrNoFuncType>( "WarnYesOrNoFuncType" );
     qRegisterMetaType<int64_t>( "int64_t" );
     qRegisterMetaType<TypeCallbackSetNewTaskGlb2>( "TypeCallbackSetNewTaskGlb2" );
-    qRegisterMetaType<TypeCallbackSetNewTaskGlb3>( "TypeCallbackSetNewTaskGlb3" );
-    qRegisterMetaType<fc::variant>( "fc::variant" );
     qRegisterMetaType<SDigitalContent>( "SDigitalContent" );
 
     setApplicationDisplayName("Decent");
@@ -77,8 +51,7 @@ gui_wallet::application::application(int& argc, char** argv)
 }
 
 
-gui_wallet::application::~application()
-{
+gui_wallet::application::~application() {
     delete s_pWarner;
 }
 
@@ -94,9 +67,8 @@ InGuiThreatCaller::InGuiThreatCaller()
              this, SLOT(MakeCallFuncSlot(SInGuiThreadCallInfo)) );
 }
 
-InGuiThreatCaller::~InGuiThreatCaller()
-{
-    //
+InGuiThreatCaller* InGuiThreatCaller::instance() {
+   return s_pWarner;
 }
 
 void InGuiThreatCaller::EmitShowMessageBox(const QString& a_str,WarnYesOrNoFuncType a_fpYesOrNo,void* a_pDataForYesOrNo)
@@ -117,5 +89,5 @@ void InGuiThreatCaller::MakeShowMessageBoxSlot(const QString& a_str,WarnYesOrNoF
 
 void InGuiThreatCaller::MakeCallFuncSlot(SInGuiThreadCallInfo a_call_info)
 {
-    (*a_call_info.fnc)(a_call_info.data);
+    (*a_call_info.function)(a_call_info.data);
 }

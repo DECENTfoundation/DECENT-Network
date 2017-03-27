@@ -1,5 +1,5 @@
 //*
-// *	File      : transactions_tab.cpp
+// *	File      : TransactionsTab.cpp
 // *
 // *	Created on: 21 Nov 2016
 // *	Created by: Davit Kalantaryan (Email: davit.kalantaryan@desy.de)
@@ -8,254 +8,205 @@
 // *
 // */
 #include "transactions_tab.hpp"
+
 #include <QHeaderView>
 #include <QFont>
 #include <QTableWidgetItem>
-#include <iostream>
 #include <QResource>
+#include <QStringList>
+
+#include <iostream>
+
+#include <boost/algorithm/string/replace.hpp>
 
 #include <graphene/chain/config.hpp>
+
 #include "gui_wallet_global.hpp"
 #include "qt_commonheader.hpp"
 #include "ui_wallet_functions.hpp"
+
 #include "json.hpp"
 
 using namespace gui_wallet;
 using namespace nlohmann;
 
-static const char* firsItemNames[]={"ID", "Info", "Memo", "Fee"};
-const int numTransactionCols = sizeof(firsItemNames) / sizeof(const char*);
 
 
 
-HTableWidget::HTableWidget() : QTableWidget()
-{
-    this->setMouseTracking(true);
-}
+TransactionsTab::TransactionsTab() {
 
+   tablewidget.set_columns({
+      {"Time", 20},
+      {"Type", 10},
+      {"From", 20},
+      {"To", 20},
+      {"Amount", 10},
+      {"Fee", 10},
+      {"Description", 25}
+   });
+   
+   
+   user.setStyleSheet("border: 0px solid white");
+   user.setPlaceholderText("Enter user name to see transaction history");
+   user.setAttribute(Qt::WA_MacShowFocusRect, 0);
+   user.setMaximumHeight(40);
+   user.setFixedHeight(40);
+   user.setFrame(false);
+   
+   
+   QHBoxLayout* search_lay = new QHBoxLayout();
+   QPixmap image(":/icon/images/search.svg");
+   search_label.setSizeIncrement(100,40);
+   search_label.setPixmap(image);
+   
+   search_lay->setContentsMargins(42, 0, 0, 0);
+   search_lay->addWidget(&search_label);
+   search_lay->addWidget(&user);
+   
+   tablewidget.horizontalHeader()->setStretchLastSection(true);
+   main_layout.setContentsMargins(0, 0, 0, 0);
+   main_layout.addLayout(search_lay);
+   main_layout.addWidget(&tablewidget);
+   setLayout(&main_layout);
+   
+   
+   connect(&user, SIGNAL(textChanged(QString)), this, SLOT(onTextChanged(QString)));
+   connect(&GlobalEvents::instance(), SIGNAL(currentUserChanged(std::string)), this, SLOT(currentUserChanged(std::string)));
+   
+   m_contentUpdateTimer.connect(&m_contentUpdateTimer, SIGNAL(timeout()), this, SLOT(maybeUpdateContent()));
+   m_contentUpdateTimer.setInterval(1000);
+   m_contentUpdateTimer.start();
 
-void HTableWidget::mouseMoveEvent(QMouseEvent *event)
-{
-    mouseMoveEventDid();
-}
-
-
-
-
-
-Transactions_tab::Transactions_tab() : green_row(0)
-{
-    //create table (widget)
-    tablewidget = new HTableWidget();
-    tablewidget->setRowCount(1);//add first row in table
-    tablewidget->setColumnCount(numTransactionCols);
-    
-    tablewidget->verticalHeader()->setDefaultSectionSize(35);
-    tablewidget->horizontalHeader()->setDefaultSectionSize(230);
-    tablewidget->horizontalHeader()->hide();
-    tablewidget->verticalHeader()->hide();
-    tablewidget->setStyleSheet("QTableView{border : 1px solid lightGray}");
-    //tablewidget->setShowGrid(false);
-
-    tablewidget->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    tablewidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-
-    user.setStyleSheet("border: 0px solid white");
-    user.setPlaceholderText("Enter user name to see transaction history");
-    user.setAttribute(Qt::WA_MacShowFocusRect, 0);
-    user.setMaximumHeight(40);
-    user.setFixedHeight(40);
-    user.setFrame(false);
-
-    QFont f( "Open Sans Bold", 14, QFont::Bold);
-    for (int i = 0; i < numTransactionCols; ++i)
-    {
-        tablewidget->setItem(0, i, new QTableWidgetItem(tr(firsItemNames[i])));
-        tablewidget->item(0, i)->setFont(f);
-        tablewidget->item(0, i)->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
-        tablewidget->item(0, i)->setBackground(QColor(228,227,228));
-        tablewidget->item(0, i)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
-        tablewidget->item(0, i)->setForeground(QColor::fromRgb(51,51,51));
-    }
-
-    connect(tablewidget,SIGNAL(mouseMoveEventDid()),this,SLOT(doRowColor()));
-
-    QHBoxLayout* search_lay = new QHBoxLayout();
-    QPixmap image(":/icon/images/search.svg");
-    search_label.setSizeIncrement(100,40);
-    search_label.setPixmap(image);
-
-    search_lay->addWidget(new QLabel());
-    search_lay->addWidget(new QLabel());
-    search_lay->addWidget(new QLabel());
-    search_lay->addWidget(&search_label);
-    search_lay->addWidget(&user);
-
-    main_layout.setContentsMargins(0, 0, 0, 0);
-    main_layout.addLayout(search_lay);
-    main_layout.addWidget(tablewidget);
-    setLayout(&main_layout);
-    
-    
-    connect(&user, SIGNAL(textChanged(QString)), this, SLOT(onTextChanged(QString)));
-
-    m_contentUpdateTimer.connect(&m_contentUpdateTimer, SIGNAL(timeout()), this, SLOT(maybeUpdateContent()));
-    m_contentUpdateTimer.setInterval(1000);
-    m_contentUpdateTimer.start();
 }
 
 
 
 
-
-
-void Transactions_tab::maybeUpdateContent() {
-    if (!m_doUpdate) {
-        return;
-    }
-    
-    m_doUpdate = false;
-    updateContents();
+void TransactionsTab::currentUserChanged(std::string userName) {
+   user.setText(QString::fromStdString(userName));
 }
 
-void Transactions_tab::onTextChanged(const QString& text) {
-    
-    m_doUpdate = true;
-}
-
-
-void Transactions_tab::createNewRow(const int str)
-{
-    int count = str/50;
-    tablewidget->setRowCount(count);
-}
-
-void Transactions_tab::ArrangeSize()
-{
-  QSize tqsTableSize = tablewidget->size();
-  tablewidget->setColumnWidth(0,(tqsTableSize.width()*25)/100);
-  tablewidget->setColumnWidth(1,(tqsTableSize.width()*25)/100);
-  tablewidget->setColumnWidth(2,(tqsTableSize.width()*25)/100);
-  tablewidget->setColumnWidth(3,(tqsTableSize.width()*25)/100);
-}
-
-void Transactions_tab::resizeEvent(QResizeEvent *a_event)
-{
-  QWidget::resizeEvent(a_event);
-  ArrangeSize();
-}
-
-void Transactions_tab::deleteEmptyRows()
-{
-   for (int i = tablewidget->rowCount(); tablewidget->item(i, 0) == 0; --i)
-   {
-       tablewidget->removeRow(i);
+void TransactionsTab::maybeUpdateContent() {
+   if (!m_doUpdate) {
+      return;
    }
+   
+   m_doUpdate = false;
+   updateContents();
 }
 
-Transactions_tab::~Transactions_tab()
-{
-    main_layout.removeWidget(tablewidget);
-    delete tablewidget;
-}
-
-void Transactions_tab::doRowColor()
-{
-    if(green_row != 0)
-    {
-        tablewidget->item(green_row,0)->setBackgroundColor(QColor(255,255,255));
-        tablewidget->item(green_row,1)->setBackgroundColor(QColor(255,255,255));
-        tablewidget->item(green_row,2)->setBackgroundColor(QColor(255,255,255));
-        tablewidget->item(green_row,3)->setBackgroundColor(QColor(255,255,255));
-
-        tablewidget->item(green_row,0)->setForeground(QColor::fromRgb(0,0,0));
-        tablewidget->item(green_row,1)->setForeground(QColor::fromRgb(0,0,0));
-        tablewidget->item(green_row,2)->setForeground(QColor::fromRgb(0,0,0));
-        tablewidget->item(green_row,3)->setForeground(QColor::fromRgb(0,0,0));
-    }
-    QPoint mouse_pos = tablewidget->mapFromGlobal(QCursor::pos());
-    QTableWidgetItem *ite = tablewidget->itemAt(mouse_pos);
-
-    if(ite != NULL)
-    {
-
-        int a = ite->row();
-        if(a != 0)
-        {
-            tablewidget->item(a,0)->setBackgroundColor(QColor(27,176,104));
-            tablewidget->item(a,1)->setBackgroundColor(QColor(27,176,104));
-            tablewidget->item(a,2)->setBackgroundColor(QColor(27,176,104));
-            tablewidget->item(a,3)->setBackgroundColor(QColor(27,176,104));
-
-            tablewidget->item(a,0)->setForeground(QColor::fromRgb(255,255,255));
-            tablewidget->item(a,1)->setForeground(QColor::fromRgb(255,255,255));
-            tablewidget->item(a,2)->setForeground(QColor::fromRgb(255,255,255));
-            tablewidget->item(a,3)->setForeground(QColor::fromRgb(255,255,255));
-            green_row = a;
-        }
-    }
-    else
-    {
-        green_row = 0;
-    }
-}
-
-void Transactions_tab::Connects()
-{
-    connect(tablewidget,SIGNAL(mouseMoveEventDid()),this,SLOT(doRowColor()));
+void TransactionsTab::onTextChanged(const QString& text) {
+   
+   m_doUpdate = true;
 }
 
 
 
 
 
-void Transactions_tab::updateContents() {
-    tablewidget->setRowCount(1); //Remove everything but header
+std::string TransactionsTab::getAccountName(std::string accountId) {
+   
+   auto seach = _user_id_cache.find(accountId);
+   if (seach == _user_id_cache.end()) {
+      std::string accountInfo, accountName = "Unknown";
+      RunTask("get_object \"" + accountId + "\"", accountInfo);
+      
+      auto accountInfoParsed = json::parse(accountInfo);
+      if (accountInfoParsed.size() != 0) {
+         accountName = accountInfoParsed[0]["name"].get<std::string>();
+      }
+      _user_id_cache.insert(std::make_pair(accountId, accountName));
+   }
+   
+   return _user_id_cache[accountId];
+}
 
-    
-    if (user.text().toStdString().empty()) {
-        return;
-    }
-    
-    SetNewTask("get_account_history \"" + user.text().toStdString() +"\" 100", this, NULL, +[](void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
-        
-        if (a_err != 0) {
-            return;
-        }
-        
-        Transactions_tab* obj = (Transactions_tab*)owner;
-        
-        try {
-            auto contents = json::parse(a_result);
+void TransactionsTab::updateContents() {
+   if (user.text().toStdString().empty()) {
+      return;
+   }
+   
+   std::string a_result;
+   try {
+      RunTask("get_account_history \"" + user.text().toStdString() +"\" 100", a_result);
+   } catch (const std::exception& ex) {
+      return;
+   }
+   
+   
+   try {
+      auto contents = json::parse(a_result);
+      
+      tablewidget.setRowCount(contents.size());
+      
+      for (int i = 0; i < contents.size(); ++i) {
+         auto content = contents[i];
+         std::string from_account = getAccountName(content["from_account"].get<std::string>());
+         std::string to_account = getAccountName(content["to_account"].get<std::string>());
+         std::string operation_type = content["operation_type"].get<std::string>();
+         std::string description = content["description"].get<std::string>();
+         std::string timestamp = boost::replace_all_copy(content["timestamp"].get<std::string>(), "T", " ");
+         
+
+         if (operation_type == "Buy" || operation_type == "Content submit") {
+            std::string contentStr;
+            RunTask("get_content \"" + description + "\"", contentStr);
+            auto contentObject = json::parse(contentStr);
             
-            obj->tablewidget->setRowCount(contents.size() + 1);
+            std::string synopsis = contentObject["synopsis"].get<std::string>();
+            from_account = getAccountName(contentObject["author"].get<std::string>());
+            try {
+               auto synopsis_parsed = json::parse(synopsis);
+               synopsis = synopsis_parsed["title"].get<std::string>();
+            } catch (...) {}
             
-            for (int i = 0; i < contents.size(); ++i) {
-                auto content = contents[i];
-                auto op = content["op"];
-                
-                
-                obj->tablewidget->setCellWidget(i + 1, 0, new QLabel(QString::fromStdString(op["id"].get<std::string>())));
-                obj->tablewidget->setCellWidget(i + 1, 1, new QLabel(QString::fromStdString(contents[i]["description"].get<std::string>())));
-                obj->tablewidget->setCellWidget(i + 1, 2, new QLabel(QString::fromStdString(contents[i]["memo"].get<std::string>())));
-                
-                auto amount = op["op"][1]["fee"]["amount"];
-                QString amountText = "";
-                
-                if (amount.is_number()){
-                    amountText = QString::number(amount.get<double>() / GRAPHENE_BLOCKCHAIN_PRECISION) + " DCT";
-                } else {
-                    amountText = QString::number(std::stod(amount.get<std::string>()) / GRAPHENE_BLOCKCHAIN_PRECISION) + " DCT";
+            description = synopsis;
+         }
+         
+         auto transaction_amount_js = content["transaction_amount"]["amount"];
+         auto transaction_fee_js = content["transaction_fee"]["amount"];
+         
+         QString transaction_amount, transaction_fee;
+         
+         if (transaction_fee_js.is_number()) {
+            transaction_fee = QString::number(transaction_fee_js.get<double>() / GRAPHENE_BLOCKCHAIN_PRECISION) + tr(" DCT");
+         } else {
+            transaction_fee = QString::number(std::stod(transaction_fee_js.get<std::string>()) / GRAPHENE_BLOCKCHAIN_PRECISION) + tr(" DCT");
+         }
+         
+         if (transaction_amount_js.is_number()) {
+            transaction_amount = QString::number(transaction_amount_js.get<double>() / GRAPHENE_BLOCKCHAIN_PRECISION) + tr(" DCT");
+         } else {
+            transaction_amount = QString::number(std::stod(transaction_amount_js.get<std::string>()) / GRAPHENE_BLOCKCHAIN_PRECISION) + tr(" DCT");
+         }
+         
+         std::vector<QString> values = {  QString::fromStdString(timestamp),
+                                          QString::fromStdString(operation_type),
+                                          QString::fromStdString(from_account),
+                                          QString::fromStdString(to_account),
+                                          transaction_amount,
+                                          transaction_fee,
+                                          QString::fromStdString(description) };
+         
+         
+         for (int col = 0; col < tablewidget.columnCount(); ++col) {
+            
+            tablewidget.setItem(i, col, new QTableWidgetItem(values[col]));
+            tablewidget.item(i, col)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+            tablewidget.item(i, col)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+            
+         }
+         
+         
+      }
+   } catch (std::exception& ex) {
+      std::cout << ex.what() << std::endl;
+   }
+   
+}
 
-                }
-                obj->tablewidget->setCellWidget(i + 1, 3, new QLabel(amountText));
-                
-
-            }
-        } catch (std::exception& ex) {
-            std::cout << ex.what() << std::endl;
-        }
-    });
+void TransactionsTab::set_user_filter(const std::string& user_name) {
+   user.setText(QString::fromStdString(user_name));
 }
 
 

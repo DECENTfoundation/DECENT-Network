@@ -12,8 +12,9 @@
 
 #include "richdialog.hpp"
 
+using namespace gui_wallet;
 
-decent::gui::tools::RichDialogBase::RichDialogBase()
+RichDialogBase::RichDialogBase()
     :
       m_ok_button(tr("OK")),
       m_cancel_button(tr("Cancel"))
@@ -28,14 +29,14 @@ decent::gui::tools::RichDialogBase::RichDialogBase()
 }
 
 
-void decent::gui::tools::RichDialogBase::set_ok_and_closeSlot()
+void RichDialogBase::set_ok_and_closeSlot()
 {
     m_ret_value = RDB_OK;
     close();
 }
 
 
-decent::gui::tools::RET_TYPE decent::gui::tools::RichDialogBase::execRB(const QPoint* a_pMove)
+RET_TYPE RichDialogBase::execRB(const QPoint* a_pMove)
 {
     m_ret_value = RDB_CANCEL;
     if(a_pMove){QDialog::move(*a_pMove);} QDialog::exec();
@@ -43,19 +44,19 @@ decent::gui::tools::RET_TYPE decent::gui::tools::RichDialogBase::execRB(const QP
 }
 
 
-void decent::gui::tools::RichDialogBase::AddLayout(QLayout* a_pLayout)
+void RichDialogBase::AddLayout(QLayout* a_pLayout)
 {
     m_controls_layout.addLayout(a_pLayout);
 }
 
-void decent::gui::tools::RichDialogBase::AddWidget(QWidget* a_pWidget)
+void RichDialogBase::AddWidget(QWidget* a_pWidget)
 {
     m_controls_layout.addWidget(a_pWidget);
 }
 
 
 /********************************************/
-decent::gui::tools::RichDialog::RichDialog(int a_num_of_text_boxes)
+RichDialog::RichDialog(int a_num_of_text_boxes)
     : m_nNumOfTextBoxes(a_num_of_text_boxes),m_pTextBoxes(NULL)
 {
     if(a_num_of_text_boxes<=0) return;
@@ -69,13 +70,14 @@ decent::gui::tools::RichDialog::RichDialog(int a_num_of_text_boxes)
     }
 }
 
-decent::gui::tools::RichDialog::~RichDialog()
-{
-    if(m_nNumOfTextBoxes>0){delete [] m_pTextBoxes;}
+RichDialog::~RichDialog() {
+    if(m_nNumOfTextBoxes>0) {
+       delete [] m_pTextBoxes;
+    }
 }
 
 
-decent::gui::tools::RET_TYPE decent::gui::tools::RichDialog::execRD(const QPoint* a_pMove, std::vector<std::string>& a_cvResults)
+RET_TYPE RichDialog::execRD(const QPoint* a_pMove, std::vector<std::string>& a_cvResults)
 {
     QString cqsResult;
     QByteArray cbaResult;

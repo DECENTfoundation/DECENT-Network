@@ -3,8 +3,12 @@
 //
 
 #pragma once
-
+#if defined ( _MSC_VER )
+#include <pbc.h>
+#else
 #include <pbc/pbc.h>
+#endif
+
 #include <fstream>
 
 #include <vector>
@@ -37,28 +41,40 @@ sign0 -1"
 
 #define _DECENT_GENERATOR_ "[86840749517316137157891261963398293121077652946631672762188488864778675462754, \
 46298439815083954540948251518245740272972067256063234341481114422918560267725]"
-//Make it 16 to better fit into mpz
-#define DECENT_SIZE_OF_NUMBER_IN_THE_FIELD 32
-#define DECENT_MP_SIZE_OF_NUMBER_IN_THE_FIELD 4
 #endif
+
+#ifdef DECENT_TESTNET2
+//Make it 16 to better fit into mpz
+#define DECENT_SIZE_OF_NUMBER_IN_THE_FIELD 16
+#else
+#define DECENT_SIZE_OF_NUMBER_IN_THE_FIELD 32
+#endif
+#define DECENT_MP_SIZE_OF_NUMBER_IN_THE_FIELD ( DECENT_SIZE_OF_NUMBER_IN_THE_FIELD / sizeof(long long) )
+
 
 
 
 namespace decent{
-namespace crypto{
+namespace encrypt{
 
 using namespace boost::filesystem;
 
 
 
 
-class custody_utils
+class CustodyUtils
 {
 public:
-   custody_utils();
-   ~custody_utils();
+   CustodyUtils();
+   ~CustodyUtils();
 
-   int verify_by_miner(custody_data cd, custody_proof proof){
+    /**
+     * Verifies the received PoC
+     * @param cd Custody data from the auhtor
+     * @param proof Proof of Custody from the seeder
+     * @return 0 on success; non-zero otherwise
+     */
+   int verify_by_miner(CustodyData cd, CustodyProof proof){
       mpz_t s;
       mpz_init(s);
       mpz_import(s, 5, 1, sizeof(uint32_t), 0, 0, proof.seed.data);
@@ -66,12 +82,24 @@ public:
       mpz_clear(s);
       return ret;
    }
-
-   int create_custody_data(boost::filesystem::path content, custody_data & cd){
+   /**
+    * Create custody data for a given content. Creates custody data and custody signatures in file content.cus
+    * @param content Path to conent.aes.zip file
+    * @param cd Generated custody data
+    * @return
+    */
+   int create_custody_data(boost::filesystem::path content, CustodyData & cd){
       return create_custody_data(content, cd.n, (char*)cd.u_seed.data, cd.pubKey.data);
    }
 
-   int create_proof_of_custody(boost::filesystem::path content, custody_data cd, custody_proof& proof){
+   /**
+    * Creates proof of custody for a given package. Assumes content.cus exists within the package
+    * @param content Path to content.zip.aes file
+    * @param cd Custody data from author
+    * @param proof Generated proof
+    * @return
+    */
+   int create_proof_of_custody(boost::filesystem::path content, CustodyData cd, CustodyProof& proof){
       mpz_t s;
       mpz_init(s);
       mpz_import(s, 5, 1, sizeof(uint32_t), 0, 0, proof.seed.data);
@@ -114,14 +142,10 @@ public:
    int create_proof_of_custody(boost::filesystem::path content, const uint32_t n, const char u_seed[], unsigned char pubKey[],
                                unsigned char sigma[], std::vector<std::string> &mus, mpz_t seed);
 
-//private:
+private:
    element_t generator;
    pairing_t pairing;
-   /*
-    * Split the files to array of m_ij elements
-    * TODO_DECENT rework to stram version
-    */
-   int split_file(std::fstream &file, unsigned int &n, element_t ***out);
+
    /*
     * Calculate sigmas based on formula
     * TODO_DECENT rework to stram version
