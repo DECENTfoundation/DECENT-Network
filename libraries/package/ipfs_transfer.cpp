@@ -77,6 +77,30 @@ std::string ipfs_transfer::get_transfer_url() {
     return _url;
 }
 
+fc::ripemd160 ipfs_transfer::hash_from_url(const std::string& url) {
+   const size_t last_char_i = url.size() - 1;
+   
+   const size_t first = url.find_first_of(":");
+   if (first >= last_char_i) {
+      FC_THROW("Invalid download URL");
+   }
+   
+   const string proto = url.substr(0, first);
+   if (proto != "ipfs") {
+      FC_THROW("Invalid download URL");
+   }
+   
+   const string body = url.substr(first + 1);
+   const size_t sep = body.find_first_of(":");
+   if (sep >= last_char_i) {
+      FC_THROW("Invalid download URL");
+   }
+   
+   const string hash = body.substr(0, sep);
+   const string package_name = body.substr(sep + 1);
+   return fc::ripemd160(package_name);
+}
+
 void ipfs_transfer::upload_package(transfer_id id, const package_object& package, transfer_listener* listener) {
 	_id = id;
 	_listener = listener;

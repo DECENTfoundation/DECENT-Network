@@ -80,13 +80,14 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
 
     m_pCentralWidget = new CentralWigdet(m_pCentralAllLayout,this);
     m_pCentralWidget->setLayout(m_pCentralAllLayout);
-    setCentralWidget(m_pCentralWidget);
-    CreateActions();
-    CreateMenues();
-    resize(900,550);
 
-    setCentralWidget(m_pCentralWidget);
-
+   setCentralWidget(m_pCentralWidget);
+   CreateActions();
+   CreateMenues();
+   resize(900,550);
+   
+   setCentralWidget(m_pCentralWidget);
+   
     m_info_dialog.resize(0,0);
 
     setUnifiedTitleAndToolBarOnMac(false);

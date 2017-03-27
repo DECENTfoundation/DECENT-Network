@@ -2259,6 +2259,9 @@ public:
             submit_op.synopsis = synopsis;
             submit_op.cd = cd;
 
+            FC_ASSERT( !submit_op.URI.empty(), "File transport error");
+
+            
             signed_transaction tx;
             tx.operations.push_back( submit_op );
             set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
@@ -2272,6 +2275,7 @@ public:
 
    optional<content_download_status> get_download_status(string consumer, string URI) {
       try {
+         
          account_id_type acc = get_account(consumer).id;
          optional<buying_object> bobj = _remote_db->get_buying_by_consumer_URI( acc, URI );
          if (!bobj) {
@@ -2287,8 +2291,14 @@ public:
          content_download_status status;
          status.received_key_parts = bobj->key_particles.size();
          status.total_key_parts = content->key_parts.size();
-
-         package_transfer_interface::transfer_progress progress = package_manager::instance().get_progress(URI);
+         
+         package_object pack = package_manager::instance().get_package_object(URI);
+         package_transfer_interface::transfer_progress progress;
+         if (pack.is_valid()) {
+            progress = package_transfer_interface::transfer_progress(pack.get_size(), pack.get_size(), 0, "Downloaded");
+         } else {
+            progress = package_manager::instance().get_progress(URI);
+         }
 
          status.total_download_bytes = progress.total_bytes;
          status.received_download_bytes = progress.current_bytes;
@@ -3987,6 +3997,12 @@ void wallet_api::download_package(const std::string& url) const {
    FC_ASSERT(!is_locked());
 // detail::report_stats_listener stats_listener( url, my->self);
 // stats_listener.ipfs_IDs = list_seeders_ipfs_IDs( url);
+   
+   if (package_manager::instance().package_exists(url)) {
+      ilog("package exists for URI ${uri}",("uri", url));
+      return;
+   }
+   
    package_manager::instance().download_package(url, transfer_progress_printer::instance(), empty_report_stats_listener::instance());
 }
 

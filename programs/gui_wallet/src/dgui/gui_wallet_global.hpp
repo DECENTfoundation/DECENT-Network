@@ -26,23 +26,28 @@
 
 #include <numeric>
 
+
 #define ALERT(message)                                  \
 {                                                       \
-QMessageBox msgBox;                                 \
-msgBox.setWindowTitle("Error");                     \
-msgBox.setText(QString::fromStdString(message));    \
-msgBox.exec();                                      \
-}                                                       \
+QMessageBox* msgBox = new QMessageBox();                \
+msgBox->setWindowTitle("Error");                     \
+msgBox->setText(QString::fromStdString(message));    \
+msgBox->exec();                                      \
+msgBox->close();                                      \
+delete msgBox;                                      \
+}
 
 
 
 #define ALERT_DETAILS(message, details)                                  \
 {                                                       \
-QMessageBox msgBox;                                 \
-msgBox.setWindowTitle("Error");                     \
-msgBox.setText(QString::fromStdString(message));    \
-msgBox.setDetailedText(QObject::tr(details));    \
-msgBox.exec();                                      \
+QMessageBox* msgBox = new QMessageBox();                \
+msgBox->setWindowTitle("Error");                     \
+msgBox->setText(QString::fromStdString(message));    \
+msgBox->setDetailedText(QObject::tr(details));    \
+msgBox->exec();                                      \
+msgBox->close();                                      \
+delete msgBox;                                      \
 }                                                       \
 
 
@@ -51,10 +56,12 @@ msgBox.exec();                                      \
 
 #define MESSAGE(message)                                  \
 {                                                       \
-QMessageBox msgBox;                                 \
-msgBox.setWindowTitle("Message");                     \
-msgBox.setText(QString::fromStdString(message));    \
-msgBox.exec();                                      \
+QMessageBox* msgBox = new QMessageBox();                     \
+msgBox->setWindowTitle("Message");                     \
+msgBox->setText(QString::fromStdString(message));    \
+msgBox->exec();                                      \
+msgBox->close();                                      \
+delete msgBox;                                      \
 }                                                   \
 
 
