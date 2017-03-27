@@ -307,9 +307,13 @@ void seeding_plugin_impl::restart_downloads(){
         elog("restarting downloads, service thread");
         const auto& cidx = database().get_index_type<my_seeding_index>().indices().get<by_URI>();
         auto citr = cidx.begin();
-        while(citr!=cidx.end()){
-           active_downloads[package_manager::instance().download_package(citr->URI, *this, empty_report_stats_listener::instance() )] = citr->id;
-           ++citr;
+        while( citr!=cidx.end() ){
+           if( citr->expiration > fc::time_point_sec( fc::time_point::now() ) ) {
+              active_downloads[ package_manager::instance().download_package(citr->URI, *this,
+                                                                             empty_report_stats_listener::instance()) ] = citr->id;
+              ++citr;
+           }
+           //TODO_DECENT remove the package too...
         }
         elog("restarting downloads, service thread end");
    });
