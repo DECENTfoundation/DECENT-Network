@@ -66,30 +66,31 @@ struct task_result {
 
 
 
-struct StructApi {
+/*struct StructApi {
     StructApi(): wal_api(NULL), gui_api(NULL) {
 
     } 
 
     graphene::wallet::wallet_api* wal_api; 
     fc::rpc::gui* gui_api;
-};
+};*/
 
 
-static int                          s_nLibraryInited = 0;
+/*static int                          s_nLibraryInited = 0;
+=======
+>>>>>>> 23697d791aa0432922a72d609a202a5d2a2e8a1f
 
 static RWLock*                                                  s_pMutex_for_cur_api; // It is better to use here rw mutex
-static FiFo<ConnectListItem>*                                   s_pConnectionRequestFifo;
-static UnnamedSemaphoreLite*                                    s_pSema_for_connection_thread;
 static graphene::wallet::wallet_data*                           s_wdata_ptr;
+<<<<<<< HEAD
 static std::thread*                                             s_pConnectionThread ;
 
 
 static volatile int   s_nConThreadRun;
 static StructApi      s_CurrentApi;
+*/
 
-
-
+//std::thread* gui_wallet::WalletInterface::guiRunThread = nullptr;
 
 
 void QtDelay( int millisecondsToWait )
@@ -103,66 +104,14 @@ void QtDelay( int millisecondsToWait )
 
 
 
-
+/*
 void WalletInterface::initialize() {
-
-   int nLibInited(s_nLibraryInited++);
-    s_nLibraryInited = 1;
-   
-    if(!nLibInited)  // should be done in real atomic manner
-    {
-        s_pMutex_for_cur_api = new RWLock;
-        s_pConnectionRequestFifo = new FiFo<ConnectListItem>;
-
-        s_pSema_for_connection_thread = new UnnamedSemaphoreLite;
-        
-        s_wdata_ptr = new graphene::wallet::wallet_data;
-       
-       s_pConnectionThread = new std::thread(&WalletInterface::connectionThreadFunction);
-       
-    }
-
-}
-
-
-void WalletInterface::connectedCallback(void* owner, void* a_clbData, int64_t a_err, const std::string& a_inp, const std::string& a_result) {
-   if(a_err) {
-      GlobalEvents::instance().setWalletError(a_result);
-      return;
-   }
-   
-   GlobalEvents::instance().setWalletConnected();
+   s_pMutex_for_cur_api = new RWLock;
+   s_wdata_ptr = new graphene::wallet::wallet_data;
 }
 
 
 
-void WalletInterface::startConnecting(SConnectionStruct* connectionInfo) {
-   s_pConnectionRequestFifo->AddNewTask(connectionInfo, connectionInfo->owner, NULL, &WalletInterface::connectedCallback);
-   s_pSema_for_connection_thread->post();
-}
-
-
-
-void WalletInterface::connectionThreadFunction() {
-   ConnectListItem aTaskItem(NULL,NULL);
-   s_nConThreadRun = 1;
-   std::thread* pConnectionThread;
-   
-   while(s_nConThreadRun)
-   {
-      s_pSema_for_connection_thread->wait();
-      
-      while(s_pConnectionRequestFifo->GetFirstTask(&aTaskItem))
-      {
-         pConnectionThread = new std::thread(&WalletInterface::connectToNewWitness, aTaskItem);
-         if(pConnectionThread){
-            pConnectionThread->detach();
-            delete pConnectionThread;
-         }
-      }
-      
-   }
-}
 
 
 
@@ -191,45 +140,25 @@ void WalletInterface::destroy() {
         delete s_pConnectionRequestFifo;
         delete s_pMutex_for_cur_api;
     }
+
+   delete s_wdata_ptr;
+   delete s_pMutex_for_cur_api;
 }
 
 
 
 
+
+/*
 int WalletInterface::setNewTask(const std::string& a_inp_line, void* a_owner, void* a_clbData, TypeCallbackSetNewTaskGlb2 fpTaskDone) {
-    int nReturn = 0;
+
+   std::lock_guard<RWLock> lock(*s_pMutex_for_cur_api);
+   if(!s_CurrentApi.gui_api) {
+      return NO_API_INITED;
+   }
    
-    std::lock_guard<RWLock> lock(*s_pMutex_for_cur_api);
-    if(s_CurrentApi.gui_api)
-    {
-        nReturn = 0;
-        (s_CurrentApi.gui_api)->SetNewTask(a_inp_line,a_owner,a_clbData,fpTaskDone);
-    }
-    else if(strstr(a_inp_line.c_str(),"load_wallet_file "))
-    {
-        static SConnectionStruct aConStr;
-        const char* cpcWlFlName = a_inp_line.c_str() + strlen("load_wallet_file ");
-        for(;*cpcWlFlName == ' ' && *cpcWlFlName != 0;++cpcWlFlName);
-
-        if(*cpcWlFlName)
-        {
-            aConStr.wallet_file_name = cpcWlFlName;
-            nReturn = WalletInterface::loadWalletFile(&aConStr);
-
-            if(!nReturn)
-            {
-                s_pConnectionRequestFifo->AddNewTask(&aConStr,a_owner,a_clbData, fpTaskDone);
-                s_pSema_for_connection_thread->post();
-            }
-
-        } else {
-           nReturn = WRONG_ARGUMENT;
-        }
-    } else {
-        nReturn = NO_API_INITED;
-    }
-
-    return nReturn;
+   (s_CurrentApi.gui_api)->SetNewTask(a_inp_line,a_owner,a_clbData,fpTaskDone);
+   return 0;
 }
 
 
@@ -239,10 +168,10 @@ void WalletInterface::runTask(std::string const& str_command, std::string& str_r
    setNewTask(str_command,
               nullptr,
               static_cast<void*>(&result),
-              +[](void* /*owner*/,
+              +[](void* /-*owner*-/,
                   void* a_clbkArg,
                   int64_t a_err,
-                  std::string const& /*a_task*/,
+                  std::string const& /-*a_task*-/,
                   std::string const& a_result)
               {
                  task_result& result = *static_cast<task_result*>(a_clbkArg);
@@ -255,18 +184,18 @@ void WalletInterface::runTask(std::string const& str_command, std::string& str_r
    while (false == bDone)
    {
       std::this_thread::sleep_for(chrono::milliseconds(0));
-      QCoreApplication::processEvents();
+      //QCoreApplication::processEvents();
    }
    
    if (0 == result.m_error)
       str_result = result.m_strResult;
    else
       throw task_exception(result.m_strResult);
-}
+}*/
 
 
 
-
+/*
 int WalletInterface::loadWalletFile(SConnectionStruct* a_pWalletData) {
     int nReturn = 0;
 
@@ -295,7 +224,6 @@ int WalletInterface::loadWalletFile(SConnectionStruct* a_pWalletData) {
 }
 
 
-
 int WalletInterface::saveWalletFile(const SConnectionStruct& a_WalletData) {
     int nReturn = 0;
     s_pMutex_for_cur_api->lock();
@@ -318,20 +246,24 @@ int WalletInterface::saveWalletFile(const SConnectionStruct& a_WalletData) {
     s_pMutex_for_cur_api->unlock();
     return nReturn;
 }
+*/
 
 
 
 
 
 
+/*int WalletInterface::connectToNewWitness(SConnectionStruct* pStruct) {
+   WalletInterface::guiRunThread = new std::thread(std::bind(WalletInterface::connectToNewWitnessImpl, pStruct));
+   
+}*/
 
 
-
-
-int WalletInterface::connectToNewWitness(const ConnectListItem& a_con_data) {
+/*
+int WalletInterface::connectToNewWitnessImpl(SConnectionStruct* pStruct) {
    try {
       
-      SConnectionStruct* pStruct = a_con_data.input;
+      //SConnectionStruct* pStruct = a_con_data.input;
 
       
       StructApi aApiToCreate;
@@ -380,8 +312,7 @@ int WalletInterface::connectToNewWitness(const ConnectListItem& a_con_data) {
          wallet_gui->format_result( name_formatter.first, name_formatter.second );
       
       boost::signals2::scoped_connection closed_connection(con->closed.connect([=]{
-         
-         WalletInterface::callFunctionInGuiLoop(a_con_data.callbackArg,UNABLE_TO_CONNECT, __CONNECTION_CLB_, "Server has disconnected us.", a_con_data.owner,a_con_data.callback);
+         GlobalEvents::instance().setWalletError("Connection to server was closed.");
          wallet_gui->stop();
       }));
       (void)(closed_connection);
@@ -390,51 +321,30 @@ int WalletInterface::connectToNewWitness(const ConnectListItem& a_con_data) {
       
       wallet_gui->register_api( wapi );
       wallet_gui->start();
-      
-      if( wapiptr->is_new() )
-      {
-         std::string aPassword;
-         QString aString = "Please use the set_password method to initialize a new wallet before continuing";
-         
-         InGuiThreatCaller::instance()->m_pParent2 = (QWidget*)a_con_data.owner;
-         InGuiThreatCaller::instance()->EmitShowMessageBox(aString, pStruct->setPasswordFn, &aPassword);
-         InGuiThreatCaller::instance()->m_sema.wait();
-         
-         if(aPassword != "") {
-            wapiptr->set_password(aPassword);
-            wapiptr->unlock(aPassword);
-         }
-      }
-      
+
       
       WalletInterface::loadWalletFile(pStruct);
       
-      std::string possible_input = __CONNECTION_CLB_;
-      if(pStruct->wallet_file_name != "" ){possible_input = "load_wallet_file " + pStruct->wallet_file_name;}
       
-      WalletInterface::callFunctionInGuiLoop(a_con_data.callbackArg,0, possible_input, "true", a_con_data.owner,a_con_data.callback);
+      if(pStruct->wallet_file_name != "" ) {
+         GlobalEvents::instance().setWalletConnected(wapiptr->is_new());
+      }
+      
       wallet_gui->wait();
       
       wapi->save_wallet_file(wallet_file.generic_string());
       closed_connection.disconnect();
    }
    catch(const fc::exception& a_fc) {
-      
-      int64_t llnErr = a_fc.code() ? a_fc.code() : -2;
-      WalletInterface::callFunctionInGuiLoop(a_con_data.callbackArg,llnErr, a_fc.to_string(),
-                                             a_fc.to_detail_string(),
-                                             a_con_data.owner,a_con_data.callback);
+      GlobalEvents::instance().setWalletError(a_fc.to_detail_string());
       
    } catch(...) {
-      
-      WalletInterface::callFunctionInGuiLoop(a_con_data.callbackArg, UNKNOWN_EXCEPTION, __CONNECTION_CLB_,
-                                             "Unknown exception!",
-                                             a_con_data.owner,a_con_data.callback);
+      GlobalEvents::instance().setWalletError("Unhandled exception");
    }
    
    return 0;
 }
 
-
+*/
 
 

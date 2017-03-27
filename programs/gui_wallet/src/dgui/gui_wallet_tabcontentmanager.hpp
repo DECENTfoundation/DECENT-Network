@@ -21,6 +21,7 @@ public:
    }
    virtual void timeToUpdate(const std::string& result) = 0;
    virtual std::string getUpdateCommand() = 0;
+   virtual void RunTask(std::string const& str_command, std::string& str_result) = 0;
    
 public:
    void tryToUpdate() {

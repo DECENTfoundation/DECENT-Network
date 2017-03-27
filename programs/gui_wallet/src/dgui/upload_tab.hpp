@@ -37,16 +37,8 @@
 
 
 
-#define INFO_LIFETIME   "Lifetime"
-#define INFO_SEEDERS    "Seeders"
-#define INFO_KEYPARTS   "Key particles"
-#define INFO_TAGS       "Tags"
-#define INFO_PRICE      "Price"
-
-
 namespace gui_wallet
 {
-    
     enum FieldsRows {
         LIFETIME = 0,
         KEYPARTS,
@@ -59,6 +51,9 @@ namespace gui_wallet
         SELECTSAMPLES,
         NUM_FIELDS
     };
+
+   class Mainwindow_gui_wallet;
+   
     
     
     class Upload_popup : public QDialog
@@ -68,9 +63,10 @@ namespace gui_wallet
         typedef std::map<std::string, std::string> AssetMap;
         
     public:
+        Upload_popup(Mainwindow_gui_wallet* pMainWindow);
+        void RunTask(std::string const& str_command, std::string& str_result);
 
-        Upload_popup(QWidget *parent = 0);
-   public slots:
+    public slots:
         void browseContent();
         void browseSamples();
         void uploadContent();
@@ -78,7 +74,6 @@ namespace gui_wallet
         
     public:
         friend class upload_up;
-        void uploadDone(void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result);
         void onPublishersDone(void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result);
         
        
@@ -87,6 +82,7 @@ namespace gui_wallet
     protected:
         virtual void resizeEvent ( QResizeEvent * event );
     private:
+        Mainwindow_gui_wallet* m_pMainWindow;
         QVBoxLayout     m_synopsis_layout;
         QVBoxLayout     m_info_layout;
         QTableWidget    m_info_widget;
@@ -127,7 +123,6 @@ namespace gui_wallet
     {
         Q_OBJECT;
     public:
-        Upload_tab(){}
         Upload_tab(Mainwindow_gui_wallet* parent);
         void ShowDigitalContentsGUI();
        
@@ -135,6 +130,8 @@ namespace gui_wallet
     public:
        virtual void timeToUpdate(const std::string& result);
        virtual std::string getUpdateCommand();
+
+       void RunTask(std::string const& str_command, std::string& str_result);
        
     public slots:
         void show_content_popup();

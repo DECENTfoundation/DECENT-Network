@@ -7,14 +7,16 @@
 #include "json.hpp"
 #include <QMessageBox>
 #include "ui_wallet_functions.hpp"
+#include "gui_wallet_mainwindow.hpp"
 #include "decent_wallet_ui_gui_contentdetailsgeneral.hpp"
 
 using namespace gui_wallet;
 using namespace nlohmann;
 
 
-PurchasedTab::PurchasedTab() {
-   
+PurchasedTab::PurchasedTab(Mainwindow_gui_wallet* pMainWindow)
+: m_pMainWindow(pMainWindow)
+{
    m_pTableWidget.set_columns({
       {"Title", 30},
       {"Rating", 10},
@@ -67,7 +69,10 @@ PurchasedTab::PurchasedTab() {
    
 }
 
-
+void PurchasedTab::RunTask(std::string const& str_command, std::string& str_result)
+{
+   m_pMainWindow->RunTask(str_command, str_result);
+}
 
 void PurchasedTab::timeToUpdate(const std::string& result) {
    m_pTableWidget.setRowCount(0);
@@ -360,7 +365,7 @@ void PurchasedTab::show_content_popup() {
    
    if (nullptr == _details_dialog)
       delete _details_dialog;
-   _details_dialog = new ContentDetailsBase();
+   _details_dialog = new ContentDetailsBase(m_pMainWindow);
    _details_dialog->execCDB(_current_content[id]);
 }
 

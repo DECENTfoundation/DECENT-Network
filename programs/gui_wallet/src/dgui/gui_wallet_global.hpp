@@ -65,12 +65,16 @@ delete msgBox;                                      \
 }                                                   \
 
 
-
+#define DCT_VERIFY(condition) \
+{ \
+   bool _b_condition_ = (condition); \
+   Q_ASSERT(_b_condition_); \
+}
 
 namespace gui_wallet
 {
     
-        std::string CalculateRemainingTime(QDateTime now_time , QDateTime time);
+        std::string CalculateRemainingTime(QDateTime const& dt, QDateTime const& dtFuture);
     
     
         inline std::size_t extra_space(const std::string& s) noexcept
@@ -320,7 +324,7 @@ namespace gui_wallet
       
       void setWalletUnlocked() { emit walletUnlocked(); }
       
-      void setWalletConnected() { emit walletConnected(); }
+      void setWalletConnected(bool isNew) { emit walletConnected(isNew); }
       void setWalletError(std::string error) { emit walletConnectionError(error); }
       
    signals:
@@ -328,7 +332,7 @@ namespace gui_wallet
       void walletUnlocked();
       
       void walletConnectionError(std::string message);
-      void walletConnected();
+      void walletConnected(bool isNew);
       
       
    };

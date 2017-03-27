@@ -66,9 +66,10 @@ using namespace nlohmann;
 CryptoPP::AutoSeededRandomPool rng;
 
 
-Upload_popup::Upload_popup(QWidget *parent)
+Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow)
 :
-QDialog(parent),
+QDialog(pMainWindow),
+m_pMainWindow(pMainWindow),
 m_info_widget(3, 6),
 m_title_label(tr("Title")),
 m_description_label(tr("Description")),
@@ -243,10 +244,16 @@ m_getPublishersTimer(this)
     m_getPublishersTimer.start(1000);
 }
 
+void Upload_popup::RunTask(std::string const& str_command, std::string& str_result)
+{
+   m_pMainWindow->RunTask(str_command, str_result);
+}
+
 void Upload_popup::onGrabPublishers() {
-   
-    AsyncTask("list_publishers_by_price 100", this, NULL, +[](void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
-       Upload_popup* obj = (Upload_popup*)owner;
+   std::string a_result;
+   RunTask("list_publishers_by_price 100", a_result);
+    //AsyncTask("list_publishers_by_price 100", this, NULL, +[](void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
+       //Upload_popup* obj = (Upload_popup*)owner;
        
        auto publishers = json::parse(a_result);
         
@@ -262,14 +269,14 @@ void Upload_popup::onGrabPublishers() {
                 pubFreeSpace = QString::number(1.0 * free_space / 1024, 'f', 2).toStdString() + "GB free";
             }
             
-            obj->seeders->addItem(QString("%0 @%1 %2 [%3]").arg(QString::fromStdString(pubIdStr),
+            seeders->addItem(QString("%0 @%1 %2 [%3]").arg(QString::fromStdString(pubIdStr),
                                                                 QString::fromStdString(pubPrice),
                                                                 QString::fromStdString("DCT"),
                                                                 QString::fromStdString(pubFreeSpace)), QString::fromStdString(pubIdStr));
         }
         
         
-    });
+    //});
 }
 
 void Upload_popup::browseContent() {
@@ -407,17 +414,6 @@ void Upload_popup::uploadContent() {
 
 }
 
-void Upload_popup::uploadDone(void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
-
-    if (a_err != 0) {
-        //ALERT("Failed to submit content");
-        setEnabled(true);
-        return;
-    }
-    
-
-}
-
 void Upload_popup::resizeEvent ( QResizeEvent * event )
 {
     QWidget::resizeEvent(event);
@@ -522,6 +518,10 @@ void Upload_tab::timeToUpdate(const std::string& result) {
    
 }
 
+void Upload_tab::RunTask(std::string const& str_command, std::string& str_result)
+{
+   _parent->RunTask(str_command, str_result);
+}
 
 std::string Upload_tab::getUpdateCommand() {
    std::string filterText = m_filterLineEdit.text().toStdString();
@@ -538,7 +538,6 @@ std::string Upload_tab::getUpdateCommand() {
 
 
 
-
 void Upload_tab::show_content_popup() {
    if (_isUploading) {
       return;
@@ -549,14 +548,14 @@ void Upload_tab::show_content_popup() {
     QLabel* btn = (QLabel*)sender();
     int id = btn->property("id").toInt();
     if (id < 0 || id >= _digital_contents.size()) {
-        throw std::out_of_range("Content index is our of range");
+        throw std::out_of_range("Content index is out of range");
     }
     
    if (_content_popup) {
         delete _content_popup;
       _content_popup = NULL;
    }
-    _content_popup = new ContentDetailsGeneral();
+    _content_popup = new ContentDetailsGeneral(_parent);
     
     connect(_content_popup, SIGNAL(ContentWasBought()), this, SLOT(content_was_bought()));
     _content_popup->execCDD(_digital_contents[id]);
@@ -666,7 +665,7 @@ void Upload_tab::ShowDigitalContentsGUI() {
 
 void Upload_tab::upload_popup()
 {
-    Upload_popup* popup = new Upload_popup();
+    Upload_popup* popup = new Upload_popup(_parent);
     connect(popup,SIGNAL(uploadFinished()),popup,SLOT(close()));
     popup->setLayout(&popup->u_main_layout);
     popup->show();

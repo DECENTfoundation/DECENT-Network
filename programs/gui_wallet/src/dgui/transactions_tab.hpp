@@ -26,15 +26,18 @@
 
 namespace gui_wallet
 {
+   class Mainwindow_gui_wallet;
    class TransactionsTab : public TabContentManager {
       
       Q_OBJECT
    public:
-      TransactionsTab();
+      TransactionsTab(Mainwindow_gui_wallet* pMainWindow);
       virtual void timeToUpdate(const std::string& result);
       virtual std::string getUpdateCommand();
 
       void set_user_filter(const std::string& user_name);
+
+      void RunTask(std::string const& str_command, std::string& str_result);
       
    public:
       QVBoxLayout       main_layout;
@@ -54,7 +57,7 @@ namespace gui_wallet
       bool     m_doUpdate = true;
       
       std::map<std::string, std::string> _user_id_cache;
-      
+      Mainwindow_gui_wallet* m_pMainWindow;
    };
 }
 

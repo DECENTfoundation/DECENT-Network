@@ -37,7 +37,7 @@ namespace gui_wallet {
    
 
 class ContentDetailsBase;
-
+class Mainwindow_gui_wallet;
 
 class PurchasedTab : public TabContentManager
 {
@@ -45,13 +45,14 @@ class PurchasedTab : public TabContentManager
    Q_OBJECT;
          
 public:
-   PurchasedTab();
+   PurchasedTab(Mainwindow_gui_wallet* pMainWindow);
    
    void ShowDigitalContentsGUI(std::vector<SDigitalContent>& contents);
    
 public:
    virtual void timeToUpdate(const std::string& result);
    virtual std::string getUpdateCommand();
+   void RunTask(std::string const& str_command, std::string& str_result);
    
 protected:
    void PrepareTableWidgetHeaderGUI();
@@ -78,6 +79,7 @@ protected:
    bool                    _isExtractingPackage;
    QMessageBox             _msgBox;
    QFileDialog             _fileDialog;
+   Mainwindow_gui_wallet*  m_pMainWindow;
 };
    
    

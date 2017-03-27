@@ -249,28 +249,34 @@ int main(int argc, char* argv[])
         QCoreApplication::setLibraryPaths(QStringList(dir.absolutePath()));
 #endif
 */
-        
-       gui_wallet::application aApp(argc, argv);
-       gui_wallet::Mainwindow_gui_wallet aMainWindow;
 
-       
-        try{
-            aMainWindow.show();
-            aApp.exec();
-        } catch(const char* a_ext_str) {
-            std::cout << "Exception: " << a_ext_str << std::endl;
-        } catch(const std::exception& ex) {
-            std::cout << "Exception: " << ex.what() << std::endl;
-        } catch(const fc::exception& ex) {
-            std::cout << "Exception: " << ex.what() << std::endl;
-        } catch (...) {
-            std::cout << "Unknown Exception " << std::endl;
-        }
-        
-        kill(pid, SIGTERM); //Kill decentd
+       QApplication app(argc, argv);
+       //gui_wallet::application aApp(argc, argv);
+
+       qRegisterMetaType<std::string>( "std::string" );
+       qRegisterMetaType<int64_t>( "int64_t" );
+
+       app.setApplicationDisplayName("Decent");
+
+       try
+       {
+          gui_wallet::Mainwindow_gui_wallet aMainWindow;
+          aMainWindow.show();
+          app.exec();
+       } catch(const char* a_ext_str) {
+          std::cout << "Exception: " << a_ext_str << std::endl;
+       } catch(const std::exception& ex) {
+          std::cout << "Exception: " << ex.what() << std::endl;
+       } catch(const fc::exception& ex) {
+          std::cout << "Exception: " << ex.what() << std::endl;
+       } catch (...) {
+          std::cout << "Unknown Exception " << std::endl;
+       }
+
+       kill(pid, SIGTERM); //Kill decentd
     }
-    
-  
+
+
     return 0;
 }
 

@@ -132,6 +132,11 @@ void Overview_tab::transactionButtonPressed()
     m_pPar->GoToThisTab(1 , accountName.toStdString());
 }
 
+void Overview_tab::RunTask(std::string const& str_command, std::string& str_result)
+{
+   m_pPar->RunTask(str_command, str_result);
+}
+
 void Overview_tab::buttonPressed()
 {
     DecentSmallButton* button = (DecentSmallButton*)sender();

@@ -22,9 +22,9 @@
 #include <QStringList>
 #include <QFont>
 
-#include <QtSvg/QSvgRenderer>
+//#include <QtSvg/QSvgRenderer>
 #include <QPainter>
-#include <QSvgWidget>
+//#include <QSvgWidget>
 
 #include "gui_wallet_global.hpp"
 #include "gui_wallet_tabcontentmanager.hpp"
@@ -130,6 +130,7 @@ namespace gui_wallet
       Overview_tab(class Mainwindow_gui_wallet* pPar);
       void CreateTable();
       void ArrangeSize();
+      void RunTask(std::string const& str_command, std::string& str_result);
       
    public:
       virtual void timeToUpdate(const std::string& result);

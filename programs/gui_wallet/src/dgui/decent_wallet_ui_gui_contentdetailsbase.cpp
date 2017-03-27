@@ -12,6 +12,7 @@
 #include <QDateTime>
 #include "gui_wallet_global.hpp"
 #include "ui_wallet_functions.hpp"
+#include "gui_wallet_mainwindow.hpp"
 #include "json.hpp"
 #include <QFrame>
 using namespace nlohmann;
@@ -33,11 +34,18 @@ typedef TypeCpcChar* NewType;
 
 static NewType  s_vFields[]={ s_vcpcFieldsGeneral, s_vcpcFieldsBougth, s_vcpcFieldsBougth };
 
-ContentDetailsBase::ContentDetailsBase(){}
+ContentDetailsBase::ContentDetailsBase(Mainwindow_gui_wallet* pMainWindow)
+: m_pMainWindow(pMainWindow)
+{}
 
 
 ContentDetailsBase::~ContentDetailsBase()
 {
+}
+
+void ContentDetailsBase::RunTask(std::string const& str_command, std::string& str_result)
+{
+   m_pMainWindow->RunTask(str_command, str_result);
 }
 
 // DCF stands for Digital Content Fields

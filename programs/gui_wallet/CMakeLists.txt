@@ -41,7 +41,6 @@ add_executable( DECENT MACOSX_BUNDLE
                 include/decent_tool_fifo.hpp
                 include/richdialog.hpp
                 include/ui_wallet_functions.hpp
-                include/ui_wallet_functions_base.hpp
                 include/unnamedsemaphorelite.hpp
                 src/dgui/browse_content_tab.hpp
                 src/dgui/decent_gui_inguiloopcaller.hpp
@@ -73,7 +72,7 @@ target_include_directories( DECENT PUBLIC
                           )
 
 target_link_libraries( DECENT PUBLIC
-                       Qt5::Core Qt5::Widgets Qt5::Svg graphene_app graphene_net graphene_chain  graphene_utilities graphene_wallet wallet_utility package_manager decent_encrypt pbc gmp graphene_account_history graphene_market_history decent_seeding graphene_witness graphene_debug_witness graphene_egenesis_decent fc ${CMAKE_DL_LIBS} ${PLATFORM_SPECIFIC_LIBS}
+                       Qt5::Core Qt5::Widgets graphene_app graphene_net graphene_chain  graphene_utilities graphene_wallet wallet_utility package_manager decent_encrypt pbc gmp graphene_account_history graphene_market_history decent_seeding graphene_witness graphene_debug_witness graphene_egenesis_decent fc ${CMAKE_DL_LIBS} ${PLATFORM_SPECIFIC_LIBS}
                      )
 
 set_target_properties(DECENT PROPERTIES MACOSX_BUNDLE_BUNDLE_NAME "DECENT")
