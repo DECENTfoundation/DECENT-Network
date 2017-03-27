@@ -96,8 +96,8 @@ CentralWigdet::CentralWigdet(QBoxLayout* a_pAllLayout, Mainwindow_gui_wallet* a_
     : m_first_line_lbl(),
       m_parent_main_window(a_pPar),
       m_browse_cont_tab(a_pPar),
-      m_Overview_tab(a_pPar),
-      m_Upload_tab(a_pPar)
+      m_Upload_tab(a_pPar),
+      m_Overview_tab(a_pPar)
 
 {
 
@@ -249,12 +249,9 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     pLabelTmp->setFixedSize(28,28);
     
     pComboTmp1 = new QComboBox;
-    pComboTmp1->setStyleSheet("QWidget:item:selected{border: 0px solid #999900;background: rgb(27,176,104);}");
-    //pComboTmp1->setStyleSheet("color: black;""background-color:white;");
+    //pComboTmp1->setStyleSheet("QWidget:item:selected{border: 0px solid #999900;background-color: rgb(27,176,104);}");
     pComboTmp1->setStyle(QStyleFactory::create("fusion"));
-    if(!pComboTmp1){throw __FILE__ "Low memory";}
-    
-//    pComboTmp1->setStyleSheet("color: black;""background-color:white;");
+   
     pHBoxLayoutTmp->addWidget(pComboTmp1);
     m_pUsernameWgt->setLayout(pHBoxLayoutTmp);
     m_first_line_lbl.addWidget(m_pUsernameWgt);

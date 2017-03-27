@@ -151,8 +151,8 @@ namespace gui_wallet
         std::vector<SDigitalContent>  _digital_contents;
         ContentDetailsGeneral*        _content_popup;
         Mainwindow_gui_wallet*        _parent;
-        bool                          m_doUpdate;
-        QTimer                        m_contentUpdateTimer;
+       bool                          _isUploading;
+       
     };
     
     

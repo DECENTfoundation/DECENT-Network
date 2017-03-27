@@ -45,9 +45,10 @@ public:
     virtual void upload_package(transfer_id id, const package_object& package, transfer_listener* listener);
     virtual void download_package(transfer_id id, const std::string& url, transfer_listener* listener, report_stats_listener_base& stats_listener);
 
-    virtual std::string get_transfer_url();
-    virtual void        print_status();
+    virtual std::string       get_transfer_url();
+    virtual void              print_status();
     virtual transfer_progress get_progress();
+   virtual fc::ripemd160      hash_from_url(const std::string& url);
 
     virtual std::shared_ptr<package_transfer_interface> clone() {
         return std::shared_ptr<torrent_transfer>(new torrent_transfer(*this));

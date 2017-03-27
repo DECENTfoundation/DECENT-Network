@@ -361,7 +361,7 @@ static void gui_wallet_application_MenegerThreadFunc(void)
         }  // for(i=0;i<_API_STATE_SIZE;++i)
 
 
-       Sleep(100);
+       std::this_thread::sleep_for(chrono::milliseconds(100));
     } // while(s_nManagerThreadRun)
 }
 
@@ -581,16 +581,28 @@ int CallFunctionInUiLoopGeneral(int a_nType,SetNewTask_last_args2,
 class task_exception : public std::exception
 {
 public:
-    task_exception(std::string const& str_info) noexcept
-    : m_str_info(str_info) {}
-    virtual ~task_exception() {}
-    
-    char const* what() const noexcept override
-    {
-        return m_str_info.c_str();
-    }
+   task_exception(std::string const& str_info) noexcept
+   : m_str_info(str_info) {}
+   virtual ~task_exception() {}
+   
+   char const* what() const noexcept override
+   {
+      return m_str_info.c_str();
+   }
 private:
-    std::string m_str_info;
+   std::string m_str_info;
+};
+
+class run_task_busy : public std::exception
+{
+public:
+   run_task_busy() noexcept {}
+   virtual ~run_task_busy() {}
+   
+   char const* what() const noexcept override
+   {
+      return "Run task is busy";
+   }
 };
 
 struct task_result
@@ -607,16 +619,26 @@ struct task_result
 
 void RunTask(std::string const& str_command, std::string& str_result)
 {
+   static volatile bool task_is_running = false;
+   
+   if (task_is_running) {
+      throw run_task_busy();
+   }
+   
+   
+   task_is_running = true;
     task_result result;
+   std::cout << "Starting task " << str_command << std::endl;
     SetNewTask(str_command,
                nullptr,
                static_cast<void*>(&result),
                +[](void* /*owner*/,
                    void* a_clbkArg,
                    int64_t a_err,
-                   std::string const& /*a_task*/,
+                   std::string const& a_task,
                    std::string const& a_result)
                {
+                  std::cout << "Task " << a_task << " finished" << std::endl;
                    task_result& result = *static_cast<task_result*>(a_clbkArg);
                    result.m_bDone = true;
                    result.m_error = a_err;
@@ -626,13 +648,36 @@ void RunTask(std::string const& str_command, std::string& str_result)
     bool volatile& bDone = result.m_bDone;
     while (false == bDone)
     {
-        std::this_thread::sleep_for(chrono::milliseconds(0));
+        std::this_thread::sleep_for(chrono::milliseconds(10));
         QCoreApplication::processEvents();
     }
     
-    if (0 == result.m_error)
-        str_result = result.m_strResult;
-    else
-        throw task_exception(result.m_strResult);
+   if (0 == result.m_error) {
+      str_result = result.m_strResult;
+      task_is_running = false;
+   } else {
+      task_is_running = false;
+      throw task_exception(result.m_strResult);
+   }
+}
+
+
+void ForceToRunTask(std::string const& str_command, std::string& str_result) {
+   
+   while (true) {
+      bool success = false;
+      try {
+         RunTask(str_command, str_result);
+         success = true;
+      } catch (const run_task_busy&) {
+         success = false;
+      }
+      
+      if (success)
+         break;
+      
+      QtDelay(100);
+   }
+   
 }
 
