@@ -3895,10 +3895,16 @@ vector<content_summary> wallet_api::list_content( const string& URI, uint32_t co
 {
     return my->_remote_db->list_content( URI, count );
 }
-
+   
 vector<content_summary> wallet_api::search_content( const string& term, uint32_t count)const
 {
-    return my->_remote_db->search_content( term, count );
+   return my->_remote_db->search_content( term, count );
+}
+
+
+vector<content_summary> wallet_api::search_user_content( const string& user, const string& term, uint32_t count)const
+{
+   return my->_remote_db->search_user_content( user, term, count );
 }
 
 vector<content_object> wallet_api::list_content_by_bought( uint32_t count)const

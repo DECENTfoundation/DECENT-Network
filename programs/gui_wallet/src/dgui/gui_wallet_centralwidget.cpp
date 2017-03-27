@@ -323,9 +323,24 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
 
     a_pAllLayout->addLayout(&m_main_layout);
     
-    connect(&m_main_tabs, SIGNAL(currentChanged(int)), this, SLOT(tabChanged(int)));
+   connect(&m_main_tabs, SIGNAL(currentChanged(int)), this, SLOT(tabChanged(int)));
+   connect(&GlobalEvents::instance(), SIGNAL(walletUnlocked()), this, SLOT(walletUnlockedSlot()));
+   
 }
 
+
+void CentralWigdet::walletUnlockedSlot() {
+   QTimer::singleShot(1000, this, SLOT(updateActiveTab()));
+}
+
+
+void CentralWigdet::updateActiveTab() {
+   if (m_currentTab >= 0) {
+      m_allTabs[m_currentTab]->tryToUpdate();
+
+   }
+   QTimer::singleShot(1000, this, SLOT(updateActiveTab()));
+}
 
 
 void CentralWigdet::tabChanged(int index) {
@@ -335,12 +350,12 @@ void CentralWigdet::tabChanged(int index) {
     
     if (index != m_currentTab) {
         if (m_currentTab >= 0) {
-            m_allTabs[m_currentTab]->content_deactivated();
+            m_allTabs[m_currentTab]->contentDeactivated();
         }
     }
 
     m_currentTab = index;
-    m_allTabs[m_currentTab]->content_activated();
+    m_allTabs[m_currentTab]->contentActivated();
 
 }
 

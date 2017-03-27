@@ -31,9 +31,8 @@ namespace gui_wallet
       Q_OBJECT
    public:
       TransactionsTab();
-      
-      virtual void content_activated() {}
-      virtual void content_deactivated() {}
+      virtual void timeToUpdate(const std::string& result);
+      virtual std::string getUpdateCommand();
 
       void set_user_filter(const std::string& user_name);
       
@@ -47,9 +46,7 @@ namespace gui_wallet
       std::string getAccountName(std::string accountId);
       
    public slots:
-      void onTextChanged(const QString& text);
-      void updateContents();
-      void maybeUpdateContent();
+      
       void currentUserChanged(std::string user);
       
    private:
