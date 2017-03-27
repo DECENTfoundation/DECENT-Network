@@ -18,16 +18,11 @@
 #include "gui_wallet_mainwindow.hpp"
 #include <QSortFilterProxyModel>
 #include <QStyleFactory>
+#include "decent_wallet_ui_gui_newcheckbox.hpp"
 
 
-#ifdef WIN32
-#include <direct.h>
-#ifndef getcwd
-#define getcwd _getcwd
-#endif
-#else
-#include <unistd.h>
-#endif
+#define __SIZE_FOR_IMGS__   40
+#define __HEIGHT__  60
 
 
 using namespace gui_wallet;
@@ -125,7 +120,7 @@ CentralWigdet::CentralWigdet(QBoxLayout* a_pAllLayout, Mainwindow_gui_wallet* a_
 
     PrepareGUIprivate(a_pAllLayout);
 
-    QTimer::singleShot(200, this, SLOT(CentralWigdet::initTabChanged));
+    QTimer::singleShot(200, this, SLOT(initTabChanged()));
 }
 
 void  CentralWigdet::initTabChanged() {
@@ -173,9 +168,6 @@ QWidget* CentralWigdet::GetWidgetFromTable5(int a_nColumn, int a_nWidget)
 }
 
 
-#define __SIZE_FOR_IMGS__   40
-#define __HEIGHT__  60
-#include "decent_wallet_ui_gui_newcheckbox.hpp"
 
 void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
 {
