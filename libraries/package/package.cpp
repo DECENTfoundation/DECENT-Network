@@ -12,6 +12,7 @@
 #include <boost/iostreams/filtering_stream.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
 #include <boost/iostreams/device/file.hpp>
+#include <boost/iostreams/stream.hpp>
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_io.hpp>
@@ -26,29 +27,37 @@ namespace decent { namespace package {
     using graphene::package::ipfs_transfer;
 
 
-    namespace utilities {
+    namespace detail {
 
 
         const int ARC_BUFFER_SIZE        = 1024 * 1024; // 1kb
         const int RIPEMD160_BUFFER_SIZE  = 1024 * 1024; // 1kb
 
 
-        struct arc_header {
+        struct ArchiveHeader {
             char type; // 0 = EOF, 1 = REGULAR FILE
             char name[255];
             char size[8];
         };
 
 
-        class archiver {
+        class Archiver {
         public:
-            explicit archiver(boost::iostreams::filtering_ostream& out)
+            explicit Archiver(boost::iostreams::filtering_ostream& out)
                 : _out(out)
             {
             }
 
-            bool put(const std::string& file_name, boost::iostreams::file_source& in, int file_size) {
-                arc_header header;
+            bool put(const std::string& file_name, const boost::filesystem::path& source_file_path) {
+                boost::iostreams::file_source in(source_file_path.string(), std::ios_base::in | std::ios_base::binary);
+
+                if (!in.is_open()) {
+                    FC_THROW("Unable to open file ${file} for reading", ("file", source_file_path.string()) );
+                }
+
+                const int file_size = boost::filesystem::file_size(source_file_path);
+
+                ArchiveHeader header;
 
                 std::memset((void*)&header, 0, sizeof(header));
                 std::snprintf(header.name, sizeof(header.name), "%s", file_name.c_str());
@@ -58,21 +67,14 @@ namespace decent { namespace package {
 
                 _out.write((const char*)&header, sizeof(header));
 
-                char buffer[ARC_BUFFER_SIZE];
-
-                while (true) {
-                    int bytes_read = in.read(buffer, ARC_BUFFER_SIZE);
-                    if (bytes_read <= 0) {
-                        break;
-                    }
-                    _out.write(buffer, bytes_read);
-                }
+                boost::iostreams::stream<boost::iostreams::file_source> is(in);
+                _out << is.rdbuf();
 
                 return true;
             }
-            
-            ~archiver() {
-                arc_header header;
+
+            ~Archiver() {
+                ArchiveHeader header;
                 
                 std::memset((void*)&header, 0, sizeof(header));
                 _out.write((const char*)&header, sizeof(header));
@@ -85,18 +87,19 @@ namespace decent { namespace package {
         };
 
 
-        class dearchiver {
+        class Dearchiver {
         public:
-            explicit dearchiver(boost::iostreams::filtering_istream& in)
+            explicit Dearchiver(boost::iostreams::filtering_istream& in)
                 : _in(in)
             {
             }
 
-            bool extract(const std::string& output_dir) {
-                arc_header header;
-
+            bool extract(const boost::filesystem::path& output_dir) {
                 while (true) {
+                    ArchiveHeader header;
+
                     std::memset((void*)&header, 0, sizeof(header));
+
                     _in.read((char*)&header, sizeof(header));
 
                     if (header.type == 0) {
@@ -127,32 +130,16 @@ namespace decent { namespace package {
                         FC_THROW("Unable to open file ${file} for writing", ("file", file_path.string()) );
                     }
 
-                    char buffer[ARC_BUFFER_SIZE];
-                    int bytes_to_read = *(int*)header.size;
+                    const int bytes_to_read = *(int*)header.size;
 
                     if (bytes_to_read < 0) {
                         FC_THROW("Unexpected size in header");
                     }
 
-                    while (bytes_to_read > 0) {
-                        const int bytes_read = boost::iostreams::read(_in, buffer, std::min(ARC_BUFFER_SIZE, bytes_to_read));
-
-                        if (bytes_read < 0) {
-                            break;
-                        }
-
-                        sink.write(buffer, bytes_read);
-
-                        if (sink.bad()) {
-                            FC_THROW("Unable to write to file ${file}", ("file", file_path.string()) );
-                        }
-
-                        bytes_to_read -= bytes_read;
-                    }
-
-                    if (bytes_to_read != 0) {
-                        FC_THROW("Unexpected end of file");
-                    }
+                    std::copy_n(std::istreambuf_iterator<char>(_in),
+                                bytes_to_read,
+                                std::ostreambuf_iterator<char>(sink)
+                    );
                 }
                 
                 return true;
@@ -180,23 +167,43 @@ namespace decent { namespace package {
         }
 
         fc::ripemd160 calculate_hash(const boost::filesystem::path& file_path) {
-            boost::iostreams::file_source source(file_path.string(), std::ifstream::binary);
+            std::FILE* source = std::fopen(file_path.string().c_str(), "rb");
 
-            if (!source.is_open()) {
+            if (!source) {
                 FC_THROW("Unable to open file ${fn} for reading", ("fn", file_path.string()) );
             }
 
             fc::ripemd160::encoder ripe_calc;
-            char buffer[RIPEMD160_BUFFER_SIZE];
 
-            while (true) {
-                int bytes_read = source.read(buffer, RIPEMD160_BUFFER_SIZE);
-                if (bytes_read <= 0) {
-                    break;
+            try {
+                char buffer[RIPEMD160_BUFFER_SIZE];
+                const size_t source_size = boost::filesystem::file_size(file_path);
+                size_t total_read = 0;
+
+                while (true) {
+                    const int bytes_read = std::fread(buffer, 1, sizeof(buffer), source);
+
+                    if (bytes_read > 0) {
+                        ripe_calc.write(buffer, bytes_read);
+                        total_read += bytes_read;
+                    }
+
+                    if (bytes_read < sizeof(buffer)) {
+                        break;
+                    }
                 }
-                ripe_calc.write(buffer, bytes_read);
+                
+                if (total_read != source_size) {
+                    FC_THROW("Failed to read ${fn} file: ${error} (${ec})", ("fn", file_path.string()) ("error", std::strerror(errno)) ("ec", errno) );
+                }
+            }
+            catch ( ... ) {
+                std::fclose(source);
+                throw;
             }
 
+            std::fclose(source);
+            
             return ripe_calc.result();
         }
 
@@ -349,7 +356,7 @@ namespace decent { namespace package {
         }
 
 
-    } // namespace utilities
+    } // namespace detail
 
 
 #define PACKAGE_INFO_GENERATE_EVENT(event_name, event_params)   \
@@ -375,11 +382,11 @@ namespace decent { namespace package {
 }                                                                      \
 
 
-    package_info::package_info(package_manager& manager,
-                               const boost::filesystem::path& content_dir_path,
-                               const boost::filesystem::path& samples_dir_path,
-                               const fc::sha512& key,
-                               const event_listener_handle& event_listener)
+    PackageInfo::PackageInfo(PackageManager& manager,
+                             const boost::filesystem::path& content_dir_path,
+                             const boost::filesystem::path& samples_dir_path,
+                             const fc::sha512& key,
+                             const event_listener_handle_t& event_listener)
         : _thread(manager.get_thread())
         , _state(UNINITIALIZED)
         , _action(IDLE)
@@ -394,7 +401,7 @@ namespace decent { namespace package {
 
             using namespace boost::filesystem;
 
-            const auto temp_dir_path = graphene::utilities::decent_path_finder::instance().get_decent_temp() / utilities::make_uuid();
+            const auto temp_dir_path = graphene::utilities::decent_path_finder::instance().get_decent_temp() / detail::make_uuid();
             
             try {
                 if (CryptoPP::AES::MAX_KEYLENGTH > key.data_size()) {
@@ -428,17 +435,15 @@ namespace decent { namespace package {
                     out.push(gzip_compressor());
                     out.push(file_sink(zip_file_path.string(), std::ofstream::binary));
 
-                    utilities::archiver arc(out);
+                    detail::Archiver archiver(out);
 
                     if (is_regular_file(content_dir_path)) {
-                        file_source source(content_dir_path.string(), std::ifstream::binary);
-                        arc.put(content_dir_path.filename().string(), source, file_size(content_dir_path));
+                        archiver.put(content_dir_path.filename().string(), content_dir_path);
                     } else {
                         std::vector<path> all_files;
-                        utilities::get_files_recursive(content_dir_path, all_files);
+                        detail::get_files_recursive(content_dir_path, all_files);
                         for (auto& file : all_files) {
-                            file_source source(file.string(), std::ifstream::binary);
-                            arc.put(utilities::get_relative(content_dir_path, file).string(), source, file_size(file));
+                            archiver.put(detail::get_relative(content_dir_path, file).string(), file);
                         }
                     }
                 }
@@ -458,7 +463,7 @@ namespace decent { namespace package {
                     }
 
                     AES_encrypt_file(zip_file_path.string(), aes_file_path.string(), k);
-                    _hash = utilities::calculate_hash(aes_file_path);
+                    _hash = detail::calculate_hash(aes_file_path);
                 }
 
                 PACKAGE_INFO_CHANGE_ACTION(STAGING);
@@ -481,13 +486,13 @@ namespace decent { namespace package {
 
                 paths_to_skip.clear();
                 paths_to_skip.insert(get_lock_file_path());
-                utilities::remove_all_except(package_dir, paths_to_skip);
+                detail::remove_all_except(package_dir, paths_to_skip);
 
                 paths_to_skip.clear();
                 paths_to_skip.insert(get_package_state_dir(temp_dir_path));
                 paths_to_skip.insert(get_lock_file_path(temp_dir_path));
                 paths_to_skip.insert(zip_file_path);
-                utilities::move_all_except(temp_dir_path, package_dir, paths_to_skip);
+                detail::move_all_except(temp_dir_path, package_dir, paths_to_skip);
 
                 remove_all(temp_dir_path);
 
@@ -523,9 +528,9 @@ namespace decent { namespace package {
         });
     }
 
-    package_info::package_info(package_manager& manager,
-                               const fc::ripemd160& package_hash,
-                               const event_listener_handle& event_listener)
+    PackageInfo::PackageInfo(PackageManager& manager,
+                             const fc::ripemd160& package_hash,
+                             const event_listener_handle_t& event_listener)
         : _thread(manager.get_thread())
         , _state(UNINITIALIZED)
         , _action(IDLE)
@@ -587,9 +592,9 @@ namespace decent { namespace package {
         });
     }
 
-    package_info::package_info(package_manager& manager,
-                               const std::string& url,
-                               const event_listener_handle& event_listener)
+    PackageInfo::PackageInfo(PackageManager& manager,
+                             const std::string& url,
+                             const event_listener_handle_t& event_listener)
         : _thread(manager.get_thread())
         , _state(UNINITIALIZED)
         , _action(IDLE)
@@ -649,26 +654,26 @@ namespace decent { namespace package {
         });
     }
 
-    package_info::~package_info() {
+    PackageInfo::~PackageInfo() {
 
         // TODO: cleanup
 
         unlock_dir();
     }
 
-    void package_info::consume(const boost::filesystem::path& dir_path) {
+    void PackageInfo::consume(const boost::filesystem::path& dir_path) {
     }
 
-    void package_info::cancel_consuming() {
+    void PackageInfo::cancel_consuming() {
     }
 
-    void package_info::seed() {
+    void PackageInfo::seed() {
     }
 
-    void package_info::cancel_seeding() {
+    void PackageInfo::cancel_seeding() {
     }
 
-    void package_info::add_event_listener(const event_listener_handle& event_listener) {
+    void PackageInfo::add_event_listener(const event_listener_handle_t& event_listener) {
         std::lock_guard<std::recursive_mutex> guard(_event_mutex);
 
         if (event_listener) {
@@ -678,22 +683,22 @@ namespace decent { namespace package {
         }
     }
 
-    void package_info::remove_event_listener(const event_listener_handle& event_listener) {
+    void PackageInfo::remove_event_listener(const event_listener_handle_t& event_listener) {
         std::lock_guard<std::recursive_mutex> guard(_event_mutex);
         _event_listeners.remove(event_listener);
     }
 
-    package_info::State package_info::get_state() const {
+    PackageInfo::State PackageInfo::get_state() const {
         std::lock_guard<std::recursive_mutex> guard(_mutex);
         return _state;
     }
 
-    package_info::Action package_info::get_action() const {
+    PackageInfo::Action PackageInfo::get_action() const {
         std::lock_guard<std::recursive_mutex> guard(_mutex);
         return _action;
     }
 
-    void package_info::lock_dir() {
+    void PackageInfo::lock_dir() {
         std::lock_guard<std::recursive_mutex> guard(_mutex);
 
         using namespace boost::interprocess;
@@ -709,20 +714,20 @@ namespace decent { namespace package {
         _file_lock_guard.reset(new scoped_lock<file_lock>(*_file_lock, accept_ownership_type()));
     }
 
-    void package_info::unlock_dir() {
+    void PackageInfo::unlock_dir() {
         std::lock_guard<std::recursive_mutex> guard(_mutex);
         _file_lock_guard.reset();
         _file_lock.reset();
     }
 
 /*
-    bool package_info::is_dir_locked() const {
+    bool PackageInfo::is_dir_locked() const {
         std::lock_guard<std::recursive_mutex> guard(_mutex);
         return _file_lock;
     }
 */
 
-    package_manager::package_manager(const boost::filesystem::path& packages_path)
+    PackageManager::PackageManager(const boost::filesystem::path& packages_path)
         : _thread(new fc::thread())
         , _packages_path(packages_path)
     {
@@ -747,7 +752,7 @@ namespace decent { namespace package {
         // TODO: restore anything?
     }
 
-    package_manager::~package_manager() {
+    PackageManager::~PackageManager() {
         if (!_packages_path.empty()) {
             ilog("releasing ${size} packages", ("size", _packages.size()) );
             _packages.clear();
@@ -756,26 +761,26 @@ namespace decent { namespace package {
         // TODO: save anything?
     }
 
-    package_handle package_manager::get_package(const boost::filesystem::path& content_dir_path,
+    package_handle_t PackageManager::get_package(const boost::filesystem::path& content_dir_path,
                                                 const boost::filesystem::path& samples_dir_path,
                                                 const fc::sha512& key,
-                                                const event_listener_handle& event_listener)
+                                                const event_listener_handle_t& event_listener)
     {
         std::lock_guard<std::recursive_mutex> guard(_mutex);
-        package_handle package(new package_info(*this, content_dir_path, samples_dir_path, key, event_listener));
+        package_handle_t package(new PackageInfo(*this, content_dir_path, samples_dir_path, key, event_listener));
         return *_packages.insert(package).first;
     }
 
-    package_handle package_manager::get_package(const std::string& url,
-                               const event_listener_handle& event_listener)
+    package_handle_t PackageManager::get_package(const std::string& url,
+                               const event_listener_handle_t& event_listener)
     {
         std::lock_guard<std::recursive_mutex> guard(_mutex);
-        package_handle package(new package_info(*this, url, event_listener));
+        package_handle_t package(new PackageInfo(*this, url, event_listener));
         return *_packages.insert(package).first;
     }
 
-    package_handle package_manager::get_package(const fc::ripemd160& hash,
-                                                const event_listener_handle& event_listener)
+    package_handle_t PackageManager::get_package(const fc::ripemd160& hash,
+                                                const event_listener_handle_t& event_listener)
     {
         std::lock_guard<std::recursive_mutex> guard(_mutex);
 
@@ -788,16 +793,16 @@ namespace decent { namespace package {
             }
         }
 
-        package_handle package(new package_info(*this, hash, event_listener));
+        package_handle_t package(new PackageInfo(*this, hash, event_listener));
         return *_packages.insert(package).first;
     }
 
-    package_handle_set package_manager::get_all_known_packages() const {
+    package_handle_set_t PackageManager::get_all_known_packages() const {
         std::lock_guard<std::recursive_mutex> guard(_mutex);
         return _packages;
     }
 
-    void package_manager::recover_all_packages(const event_listener_handle& event_listener) {
+    void PackageManager::recover_all_packages(const event_listener_handle_t& event_listener) {
         std::lock_guard<std::recursive_mutex> guard(_mutex);
 
         ilog("reading packages from directory ${path}", ("path", _packages_path.string()) );
@@ -808,7 +813,7 @@ namespace decent { namespace package {
             try {
                 const std::string hash_str = entry->path().filename().string();
 
-                if (!utilities::is_correct_hash_str(hash_str)) {
+                if (!detail::is_correct_hash_str(hash_str)) {
                     FC_THROW("Package directory ${path} does not look like RIPEMD-160 hash", ("path", hash_str) );
                 }
 
@@ -823,7 +828,7 @@ namespace decent { namespace package {
         ilog("read ${size} packages", ("size", _packages.size()) );
     }
 
-    void package_manager::release_package(const fc::ripemd160& hash) {
+    void PackageManager::release_package(const fc::ripemd160& hash) {
         std::lock_guard<std::recursive_mutex> guard(_mutex);
 
         for (auto it = _packages.begin(); it != _packages.end(); ) {
@@ -836,22 +841,22 @@ namespace decent { namespace package {
         }
     }
 
-    void package_manager::release_package(const package_handle& package) {
+    void PackageManager::release_package(const package_handle_t& package) {
         std::lock_guard<std::recursive_mutex> guard(_mutex);
         _packages.erase(package);
     }
 
-    boost::filesystem::path package_manager::get_packages_path() const {
+    boost::filesystem::path PackageManager::get_packages_path() const {
         std::lock_guard<std::recursive_mutex> guard(_mutex);
         return _packages_path;
     }
 
-    std::shared_ptr<fc::thread> package_manager::get_thread() const {
+    std::shared_ptr<fc::thread> PackageManager::get_thread() const {
         std::lock_guard<std::recursive_mutex> guard(_mutex);
         return _thread;
     }
 
-    void package_manager::set_libtorrent_config(const boost::filesystem::path& libtorrent_config_file) {
+    void PackageManager::set_libtorrent_config(const boost::filesystem::path& libtorrent_config_file) {
         std::lock_guard<std::recursive_mutex> guard(_mutex);
 
         for(auto& proto_transfer_engine : _proto_transfer_engines) {

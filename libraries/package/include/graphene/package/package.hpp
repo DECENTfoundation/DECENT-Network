@@ -24,20 +24,20 @@
 namespace decent { namespace package {
 
 
-    class package_manager;
-    class package_info;
-    class event_listener_interface;
-    class transfer_engine_interface;
+    class PackageManager;
+    class PackageInfo;
+    class EventListenerInterface;
+    class TransferEngineInterface;
 
-    typedef std::shared_ptr<package_info>               package_handle;
-    typedef std::set<package_handle>                    package_handle_set;
-    typedef std::shared_ptr<event_listener_interface>   event_listener_handle;
-    typedef std::list<event_listener_handle>            event_listener_handle_list;
-    typedef std::shared_ptr<transfer_engine_interface>  transfer_engine;
-    typedef std::map<std::string, transfer_engine>      proto_to_transfer_engine_map;
+    typedef std::shared_ptr<PackageInfo>               package_handle_t;
+    typedef std::set<package_handle_t>                  package_handle_set_t;
+    typedef std::shared_ptr<EventListenerInterface>     event_listener_handle_t;
+    typedef std::list<event_listener_handle_t>          event_listener_handle_list_t;
+    typedef std::shared_ptr<TransferEngineInterface>    transfer_engine_t;
+    typedef std::map<std::string, transfer_engine_t>    proto_to_transfer_engine_map_t;
 
 
-    class package_info {
+    class PackageInfo {
     public:
         enum State {
             UNINITIALIZED,
@@ -61,29 +61,29 @@ namespace decent { namespace package {
         };
 
     private:
-        friend class package_manager;
+        friend class PackageManager;
 
-        package_info(package_manager& manager,
-                     const boost::filesystem::path& content_dir_path,
-                     const boost::filesystem::path& samples_dir_path,
-                     const fc::sha512& key,
-                     const event_listener_handle& event_listener = event_listener_handle());
+        PackageInfo(PackageManager& manager,
+                    const boost::filesystem::path& content_dir_path,
+                    const boost::filesystem::path& samples_dir_path,
+                    const fc::sha512& key,
+                    const event_listener_handle_t& event_listener = event_listener_handle_t());
 
-        package_info(package_manager& manager,
-                     const fc::ripemd160& package_hash,
-                     const event_listener_handle& event_listener = event_listener_handle());
+        PackageInfo(PackageManager& manager,
+                    const fc::ripemd160& package_hash,
+                    const event_listener_handle_t& event_listener = event_listener_handle_t());
 
-        package_info(package_manager& manager,
-                     const std::string& url,
-                     const event_listener_handle& event_listener = event_listener_handle());
-
+        PackageInfo(PackageManager& manager,
+                    const std::string& url,
+                    const event_listener_handle_t& event_listener = event_listener_handle_t());
+        
     public:
-        package_info(const package_info&)             = delete;
-        package_info(package_info&&)                  = delete;
-        package_info& operator=(const package_info&)  = delete;
-        package_info& operator=(package_info&&)       = delete;
+        PackageInfo(const PackageInfo&)             = delete;
+        PackageInfo(PackageInfo&&)                  = delete;
+        PackageInfo& operator=(const PackageInfo&)  = delete;
+        PackageInfo& operator=(PackageInfo&&)       = delete;
 
-        ~package_info();
+        ~PackageInfo();
 
     public:
         void consume(const boost::filesystem::path& dir_path);
@@ -92,8 +92,8 @@ namespace decent { namespace package {
         void seed();
         void cancel_seeding();
 
-        void add_event_listener(const event_listener_handle& event_listener);
-        void remove_event_listener(const event_listener_handle& event_listener);
+        void add_event_listener(const event_listener_handle_t& event_listener);
+        void remove_event_listener(const event_listener_handle_t& event_listener);
 
         State get_state() const;
         Action get_action() const;
@@ -119,16 +119,16 @@ namespace decent { namespace package {
         std::shared_ptr<boost::interprocess::file_lock> _file_lock;
         std::shared_ptr<boost::interprocess::scoped_lock<boost::interprocess::file_lock>> _file_lock_guard;
         mutable std::recursive_mutex  _event_mutex;
-        event_listener_handle_list    _event_listeners;
+        event_listener_handle_list_t  _event_listeners;
     };
 
 
-    class event_listener_interface {
+    class EventListenerInterface {
     public:
-        virtual ~event_listener_interface() {}
+        virtual ~EventListenerInterface() {}
 
-        virtual void package_state_change(package_info::State) {};
-        virtual void package_action_change(package_info::Action) {};
+        virtual void package_state_change(PackageInfo::State) {};
+        virtual void package_action_change(PackageInfo::Action) {};
 
         virtual void package_creation_start() {};
         virtual void package_creation_progress(const std::string&) {};
@@ -147,59 +147,59 @@ namespace decent { namespace package {
     };
 
 
-    class transfer_engine_interface {
+    class TransferEngineInterface {
     public:
-        virtual ~transfer_engine_interface() {}
+        virtual ~TransferEngineInterface() {}
 
     };
 
 
-    class package_manager {
+    class PackageManager {
     private:
-        explicit package_manager(const boost::filesystem::path& packages_path);
+        explicit PackageManager(const boost::filesystem::path& packages_path);
 
     public:
-        package_manager()                                   = delete;
-        package_manager(const package_manager&)             = delete;
-        package_manager(package_manager&&)                  = delete;
-        package_manager& operator=(const package_manager&)  = delete;
-        package_manager& operator=(package_manager&&)       = delete;
+        PackageManager()                                   = delete;
+        PackageManager(const PackageManager&)             = delete;
+        PackageManager(PackageManager&&)                  = delete;
+        PackageManager& operator=(const PackageManager&)  = delete;
+        PackageManager& operator=(PackageManager&&)       = delete;
 
-        ~package_manager();
+        ~PackageManager();
 
-        static package_manager& instance() {
-            static package_manager the_package_manager(graphene::utilities::decent_path_finder::instance().get_decent_data() / "packages");
+        static PackageManager& instance() {
+            static PackageManager the_package_manager(graphene::utilities::decent_path_finder::instance().get_decent_data() / "packages");
             return the_package_manager;
         }
 
     public:
-        package_handle get_package(const boost::filesystem::path& content_dir_path,
-                                   const boost::filesystem::path& samples_dir_path,
-                                   const fc::sha512& key,
-                                   const event_listener_handle& event_listener = event_listener_handle());
+        package_handle_t get_package(const boost::filesystem::path& content_dir_path,
+                                     const boost::filesystem::path& samples_dir_path,
+                                     const fc::sha512& key,
+                                     const event_listener_handle_t& event_listener = event_listener_handle_t());
 
-        package_handle get_package(const std::string& url,
-                                   const event_listener_handle& event_listener = event_listener_handle());
+        package_handle_t get_package(const std::string& url,
+                                     const event_listener_handle_t& event_listener = event_listener_handle_t());
 
-        package_handle get_package(const fc::ripemd160& hash,
-                                   const event_listener_handle& event_listener = event_listener_handle());
-
-        package_handle_set get_all_known_packages() const;
-        void recover_all_packages(const event_listener_handle& event_listener = event_listener_handle());
+        package_handle_t get_package(const fc::ripemd160& hash,
+                                     const event_listener_handle_t& event_listener = event_listener_handle_t());
+        
+        package_handle_set_t get_all_known_packages() const;
+        void recover_all_packages(const event_listener_handle_t& event_listener = event_listener_handle_t());
 
         void release_package(const fc::ripemd160& hash);
-        void release_package(const package_handle& package);
+        void release_package(const package_handle_t& package);
 
         boost::filesystem::path get_packages_path() const;
         std::shared_ptr<fc::thread> get_thread() const;
         void set_libtorrent_config(const boost::filesystem::path& libtorrent_config_file);
 
     private:
-        mutable std::recursive_mutex  _mutex;
-        std::shared_ptr<fc::thread>   _thread;
-        boost::filesystem::path       _packages_path;
-        package_handle_set            _packages;
-        proto_to_transfer_engine_map  _proto_transfer_engines;
+        mutable std::recursive_mutex    _mutex;
+        std::shared_ptr<fc::thread>     _thread;
+        boost::filesystem::path         _packages_path;
+        package_handle_set_t            _packages;
+        proto_to_transfer_engine_map_t  _proto_transfer_engines;
     };
 
 
@@ -275,7 +275,7 @@ private:
 };
 
 
-    class package_transfer_interface : public decent::package::transfer_engine_interface {
+    class package_transfer_interface : public decent::package::TransferEngineInterface {
 public:
     typedef int transfer_id;
 
