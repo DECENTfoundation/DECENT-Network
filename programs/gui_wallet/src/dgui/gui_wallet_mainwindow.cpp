@@ -115,11 +115,17 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
    m_pMenuLayout->addWidget(m_barLeft);
    m_pMenuLayout->addWidget(m_barRight);
 
-   m_pMenuLayout->setAlignment(m_barLeft, Qt::AlignLeft);
-   m_pMenuLayout->setAlignment(m_barRight, Qt::AlignRight);
+    m_pCentralWidget = new CentralWigdet(m_pCentralAllLayout,this);
+    m_pCentralWidget->setLayout(m_pCentralAllLayout);
 
-   m_pCentralAllLayout->addLayout(m_pMenuLayout);
-
+   setCentralWidget(m_pCentralWidget);
+   CreateActions();
+   CreateMenues();
+   resize(900,550);
+   
+   setCentralWidget(m_pCentralWidget);
+   
+    m_info_dialog.resize(0,0);
 
    m_pCentralWidget = new CentralWigdet(m_pCentralAllLayout,this);
    m_pCentralWidget->setLayout(m_pCentralAllLayout);

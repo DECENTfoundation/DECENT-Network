@@ -71,11 +71,7 @@ namespace gui_wallet
         void browseSamples();
         void uploadContent();
         void onGrabPublishers();
-       void slot_content_uploaded(std::string);
-
-    signals:
-       void signal_content_upload(std::string);
-
+        
     public:
         friend class upload_up;
         void uploadDone(void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result);
@@ -130,6 +126,7 @@ namespace gui_wallet
     public:
         Upload_tab(Mainwindow_gui_wallet* parent);
         void ShowDigitalContentsGUI();
+       
         
     public:
        virtual void timeToUpdate(const std::string& result);
@@ -153,8 +150,8 @@ namespace gui_wallet
         std::vector<SDigitalContent>  _digital_contents;
         ContentDetailsGeneral*        _content_popup;
         Mainwindow_gui_wallet*        _parent;
-        bool                          m_doUpdate;
-        QTimer                        m_contentUpdateTimer;
+       bool                          _isUploading;
+       
     };
     
     

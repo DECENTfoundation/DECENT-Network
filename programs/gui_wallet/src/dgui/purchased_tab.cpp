@@ -53,6 +53,18 @@ PurchasedTab::PurchasedTab(Mainwindow_gui_wallet* pMainWindow)
    m_main_layout.addLayout(search_lay);
    m_main_layout.addWidget(&m_pTableWidget);
    
+   connect(this, SIGNAL(showMessageBox(std::string)), this, SLOT(showMessageBoxSlot(std::string)));
+   
+   _isExtractingPackage = false;
+   connect(&_fileDialog, SIGNAL(fileSelected(const QString&)), this, SLOT(extractionDirSelected(const QString&)));
+   
+   _fileDialog.setFileMode(QFileDialog::Directory);
+   _fileDialog.setOptions(QFileDialog::ShowDirsOnly);
+   //_fileDialog.setAttribute(Qt::WA_DeleteOnClose);
+   
+   _fileDialog.setOptions(QFileDialog::DontUseNativeDialog);
+   
+   _fileDialog.setLabelText(QFileDialog::Accept, "Extract");
    setLayout(&m_main_layout);
    
 }
@@ -247,10 +259,12 @@ void PurchasedTab::timeToUpdate(const std::string& result) {
       }
       
       
-      for(int j = 0; j < m_pTableWidget.columnCount() - 2; ++j)
-      {
-         m_pTableWidget.item(i, j)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
-         m_pTableWidget.item(i, j)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+      for(int j = 0; j < m_pTableWidget.columnCount() - 2; ++j) {
+         auto* item = m_pTableWidget.item(i, j);
+         if (item) {
+            m_pTableWidget.item(i, j)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+            m_pTableWidget.item(i, j)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+         }
       }
       
       
@@ -272,40 +286,77 @@ std::string PurchasedTab::getUpdateCommand() {
 
 }
 
-
-
-void PurchasedTab::extractPackage() {
-   QPushButton* btn = (QPushButton*)sender();
-   std::string id = btn->property("id").toString().toStdString();
-   std::string URI = btn->property("URI").toString().toStdString();
-   std::string hash = btn->property("hash").toString().toStdString();
+void PurchasedTab::extractionDirSelected(const QString& path) {
    
-   QString extract_dir = QFileDialog::getExistingDirectory(this, tr("Select directory to extract"), "~", QFileDialog::DontResolveSymlinks);
-   if (extract_dir.isEmpty()) {
-      return;
-   }
-   
+   std::string id = _fileDialog.property("id").toString().toStdString();
+   std::string URI = _fileDialog.property("URI").toString().toStdString();
+   std::string hash = _fileDialog.property("hash").toString().toStdString();
+
    std::string key, dummy;
+   
+   std::string message;
    
    try {
       RunTask("restore_encryption_key \"" + id + "\"", key);
       
-      RunTask("extract_package \"" + hash + "\" \"" + extract_dir.toStdString() + "\" " + key, dummy);
+      RunTask("extract_package \"" + hash + "\" \"" + path.toStdString() + "\" " + key, dummy);
       
       if (dummy.find("exception:") != std::string::npos) {
-         ALERT_DETAILS("Failed to extract package", dummy.c_str());
-
-      } else {
-         MESSAGE("Package was successfully extracted");
+         message = dummy;
       }
-      
    } catch (const std::exception& ex) {
-      ALERT_DETAILS("Failed to extract package", ex.what());
+      message = ex.what();
    }
+   
+   emit showMessageBox(message);
+   _isExtractingPackage = false;
+}
+
+void PurchasedTab::extractPackage() {
+   std::cout << "isExtractingPackage = " << _isExtractingPackage << std::endl;
+   if (_isExtractingPackage) {
+      return;
+   }
+   
+   _isExtractingPackage = true;
+   
+   
+   QPushButton* btn = (QPushButton*)sender();
+   
+   _fileDialog.setProperty("id", btn->property("id"));
+   _fileDialog.setProperty("hash", btn->property("hash"));
+   _fileDialog.setProperty("URI", btn->property("URI"));
+   
+   _fileDialog.open();
+   /*
+   if (!) {
+      _isExtractingPackage = false;
+      return;
+   }
+    */
+   
 }
 
 
+void PurchasedTab::showMessageBoxSlot(std::string message) {
+   if (message.empty()) {
+      _msgBox.setWindowTitle("Success");
+      _msgBox.setText(tr("Package was successfully extracted"));
+      _msgBox.open();
+      
+   } else {
+      _msgBox.setWindowTitle("Error");
+      _msgBox.setText(tr("Failed to extract package"));
+      _msgBox.setDetailedText(QObject::tr(message.c_str()));
+      _msgBox.open();
+   }
+}
+           
 void PurchasedTab::show_content_popup() {
+   if (_isExtractingPackage) {
+      return;
+   }
+   
    QPushButton* btn = (QPushButton*)sender();
    int id = btn->property("id").toInt();
    if (id < 0 || id >= _current_content.size()) {

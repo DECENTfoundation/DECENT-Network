@@ -42,7 +42,7 @@ public:
 
 class package_object {
 public:
-    package_object() = delete;
+   package_object();
 	explicit package_object(const boost::filesystem::path& package_path);
 
 	boost::filesystem::path get_custody_file() const { return _package_path / "content.cus"; }
@@ -93,6 +93,7 @@ public:
 	virtual void print_status() = 0;
 	virtual transfer_progress get_progress() = 0;
 	virtual std::string get_transfer_url() = 0;
+   virtual fc::ripemd160 hash_from_url(const std::string& url) = 0;
 	virtual std::shared_ptr<package_transfer_interface> clone() = 0;
 };
 
@@ -157,6 +158,7 @@ public:
 						 const package_object& package,
 						 const fc::sha512& key);
 
+   bool package_exists(const std::string& url) const;
     void delete_package(fc::ripemd160 hash);
 
 	package_transfer_interface::transfer_id upload_package( const package_object& package, 
@@ -169,7 +171,8 @@ public:
 
 
 	std::vector<package_object> get_packages();
-	package_object              get_package_object(fc::ripemd160 hash);
+   package_object              get_package_object(fc::ripemd160 hash) const;
+   package_object              get_package_object(const std::string& URI) const;
 
 	std::string                                   get_transfer_url(package_transfer_interface::transfer_id id);
 	package_transfer_interface::transfer_progress get_progress(std::string URI) const;

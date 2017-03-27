@@ -79,11 +79,7 @@ m_getPublishersTimer(this)
     QFont m_font( "Open Sans Bold", 14, QFont::Bold);
     QPalette pltEdit;
     
-   DCT_VERIFY(connect(this, SIGNAL(signal_content_upload(std::string)),
-                      m_pMainWindow->m_p_wallet_operator, SLOT(slot_content_upload(std::string))));
-   DCT_VERIFY(connect(m_pMainWindow->m_p_wallet_operator, SIGNAL(signal_content_uploaded(std::string)),
-                      this, SLOT(slot_content_uploaded(std::string))));
-
+    
     m_infoLayoutHeader.setFont(m_font);
     m_title_text.setPlaceholderText("  Title:");
     m_title_text.setAttribute(Qt::WA_MacShowFocusRect, 0);
@@ -376,36 +372,57 @@ void Upload_popup::uploadContent() {
     submitCommand += " \"" + escape_string(synopsis) + "\"";            //synopsis
     submitCommand += " true";                                           //broadcast
 
+   
+   std::string a_result;
+   std::string message;
+   
+   try {
+      RunTask(submitCommand, a_result);
+      if (a_result.find("exception:") != std::string::npos) {
+         message = a_result;
+      }
+   } catch (const std::exception& ex) {
+      message = ex.what();
+      setEnabled(true);
+   }
+   
+   QMessageBox* msgBox = new QMessageBox();
+   msgBox->setAttribute(Qt::WA_DeleteOnClose);
+   
+   if (message.empty()) {
+      m_title_text.setText("");
+      m_description_text.setPlainText("");
+      de->setDate(QDate::currentDate());
+      price->setText("");
+      m_contentPath->setText("");
+      m_samplesPath->setText("");
+      
+      msgBox->setWindowTitle("Success");
+      msgBox->setText(tr("Content is submitted"));
 
-   emit signal_content_upload(submitCommand);
-    /*AsyncTask(submitCommand, this, NULL, +[](void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
-        ((Upload_popup*)owner)->uploadDone(a_clbkArg, a_err, a_task, a_result);
-    });*/
-    emit uploadFinished();
-}
+      setEnabled(true);
 
-void Upload_popup::slot_content_uploaded(std::string str_error)
-{
-   uploadDone(nullptr, (int)(false == str_error.empty()), std::string(), std::string());
+      emit uploadFinished();
+
+   } else {
+      msgBox->setWindowTitle("Error");
+      msgBox->setText(tr("Failed to submit content"));
+      msgBox->setDetailedText(message.c_str());
+   }
+   
+   msgBox->open();
+
 }
 
 void Upload_popup::uploadDone(void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
+
     if (a_err != 0) {
-        ALERT("Failed to submit content");
+        //ALERT("Failed to submit content");
         setEnabled(true);
         return;
     }
     
-    // On success reset only these.
-    m_title_text.setText("");
-    m_description_text.setPlainText("");
-    de->setDate(QDate::currentDate());
-    price->setText("");
-    m_contentPath->setText("");
-    m_samplesPath->setText("");
-    
-    ALERT("Content is submitted!");
-    setEnabled(true);
+
 }
 
 void Upload_popup::resizeEvent ( QResizeEvent * event )
@@ -424,10 +441,6 @@ void Upload_popup::resizeEvent ( QResizeEvent * event )
 
 
 // UPLOAD TAB
-using namespace gui_wallet;
-using namespace nlohmann;
-
-
 
 Upload_tab::Upload_tab(Mainwindow_gui_wallet* parent) :  _content_popup(NULL), _parent(parent) {
     
@@ -468,7 +481,7 @@ Upload_tab::Upload_tab(Mainwindow_gui_wallet* parent) :  _content_popup(NULL), _
     setLayout(&m_main_layout);
     
     connect(upload_button, SIGNAL(LabelClicked()), this, SLOT(upload_popup()));
-
+   _isUploading = false;
 }
 
 void Upload_tab::timeToUpdate(const std::string& result) {
@@ -537,21 +550,36 @@ std::string Upload_tab::getUpdateCommand() {
 
 
 void Upload_tab::show_content_popup() {
+   if (_isUploading) {
+      return;
+   }
+   
+   _isUploading = true;
+   
     QLabel* btn = (QLabel*)sender();
     int id = btn->property("id").toInt();
     if (id < 0 || id >= _digital_contents.size()) {
         throw std::out_of_range("Content index is out of range");
     }
     
-    if (_content_popup)
+   if (_content_popup) {
         delete _content_popup;
+      _content_popup = NULL;
+   }
     _content_popup = new ContentDetailsGeneral(_parent);
     
     connect(_content_popup, SIGNAL(ContentWasBought()), this, SLOT(content_was_bought()));
     _content_popup->execCDD(_digital_contents[id]);
+    
+   _isUploading = false;
 }
 
 void Upload_tab::content_was_bought() {
+   if (_content_popup) {
+      delete _content_popup;
+      _content_popup = NULL;
+   }
+   
     _parent->GoToThisTab(4, "");
     _parent->UpdateAccountBalances(GlobalEvents::instance().getCurrentUser());
 }
