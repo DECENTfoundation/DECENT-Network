@@ -311,8 +311,9 @@ void seeding_plugin_impl::restart_downloads(){
            if( citr->expiration > fc::time_point_sec( fc::time_point::now() ) ) {
               active_downloads[ package_manager::instance().download_package(citr->URI, *this,
                                                                              empty_report_stats_listener::instance()) ] = citr->id;
-              ++citr;
+
            }
+           ++citr;
         }
         elog("restarting downloads, service thread end");
    });
