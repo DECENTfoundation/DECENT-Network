@@ -41,10 +41,10 @@ public:
 
 public slots:
    void slot_connect();
-   void slot_content_upload(std::string str_command);
+   //void slot_content_upload(std::string str_command);
 signals:
    void signal_connected(std::string str_error);
-   void signal_content_uploaded(std::string str_error);
+   //void signal_content_uploaded(std::string str_error);
 public:
    WalletAPI m_wallet_api;
 };

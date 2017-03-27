@@ -63,7 +63,7 @@ void WalletOperator::slot_connect()
    emit signal_connected(str_error);
 }
 
-void WalletOperator::slot_content_upload(std::string str_command)
+/*void WalletOperator::slot_content_upload(std::string str_command)
 {
    string str_error;
    try
@@ -77,7 +77,7 @@ void WalletOperator::slot_content_upload(std::string str_command)
    }
 
    emit signal_content_uploaded(str_error);
-}
+}*/
 
 
 Mainwindow_gui_wallet::Mainwindow_gui_wallet()

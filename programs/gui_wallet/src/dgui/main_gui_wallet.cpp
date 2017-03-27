@@ -248,7 +248,7 @@ int main(int argc, char* argv[])
         dir.cd("lib");
         QCoreApplication::setLibraryPaths(QStringList(dir.absolutePath()));
 #endif
-
+*/
 
        QApplication app(argc, argv);
        //gui_wallet::application aApp(argc, argv);

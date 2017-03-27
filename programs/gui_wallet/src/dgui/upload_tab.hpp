@@ -74,7 +74,6 @@ namespace gui_wallet
         
     public:
         friend class upload_up;
-        void uploadDone(void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result);
         void onPublishersDone(void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result);
         
        

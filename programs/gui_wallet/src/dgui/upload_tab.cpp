@@ -414,17 +414,6 @@ void Upload_popup::uploadContent() {
 
 }
 
-void Upload_popup::uploadDone(void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
-
-    if (a_err != 0) {
-        //ALERT("Failed to submit content");
-        setEnabled(true);
-        return;
-    }
-    
-
-}
-
 void Upload_popup::resizeEvent ( QResizeEvent * event )
 {
     QWidget::resizeEvent(event);
