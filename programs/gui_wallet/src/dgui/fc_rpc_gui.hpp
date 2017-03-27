@@ -11,7 +11,7 @@
 #define FC_RPC_GUI_HPP
 
 #include <fc/rpc/api_connection.hpp>
-#include <unnamedsemaphorelite.hpp>
+#include "unnamedsemaphorelite.hpp"
 #include <mutex>
 #include "ui_wallet_functions_base.hpp"
 #include "decent_tool_fifo.hpp"
