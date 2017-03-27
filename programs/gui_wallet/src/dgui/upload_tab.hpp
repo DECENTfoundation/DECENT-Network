@@ -70,7 +70,6 @@ namespace gui_wallet
     public:
 
         Upload_popup(QWidget *parent = 0);
-        virtual ~Upload_popup();
    public slots:
         void browseContent();
         void browseSamples();
@@ -131,6 +130,7 @@ namespace gui_wallet
         Upload_tab(){}
         Upload_tab(Mainwindow_gui_wallet* parent);
         void ShowDigitalContentsGUI();
+       
         
     public:
        virtual void timeToUpdate(const std::string& result);
