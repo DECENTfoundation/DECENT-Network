@@ -72,7 +72,6 @@ namespace gui_wallet {
 //   SConnectionStruct*              input;
 //   TypeCallbackSetNewTaskGlb2      callback;
 //};
-=======
 #define NO_API_INITED -1
 #define UNABLE_TO_CONNECT -2
 #define UNKNOWN_EXCEPTION -3
@@ -117,7 +116,6 @@ struct TaskListItem {
    TypeCallbackSetNewTaskGlb2      callback;
 };
 
->>>>>>> 23697d791aa0432922a72d609a202a5d2a2e8a1f
 
 
 
@@ -125,17 +123,14 @@ struct TaskListItem {
    
 class WalletInterface {
 public:
-<<<<<<< HEAD
    //static void initialize();
    //static void startConnecting(SConnectionStruct* connectionInfo);
    //static void destroy();
    //static int  callFunctionInGuiLoop(void* a_clbData, int64_t a_err, const std::string& a_inp, const std::string& a_result,void* a_owner,TypeCallbackSetNewTaskGlb2 a_fpFunc);
-=======
    static void initialize();
    static int  connectToNewWitness(SConnectionStruct* connectionInfo);
    static void destroy();
    static int  callFunctionInGuiLoop(void* a_clbData, int64_t a_err, const std::string& a_inp, const std::string& a_result,void* a_owner,TypeCallbackSetNewTaskGlb2 a_fpFunc);
->>>>>>> 23697d791aa0432922a72d609a202a5d2a2e8a1f
    
 public:
    //static int loadWalletFile(SConnectionStruct* a_pWalletData);
@@ -148,15 +143,13 @@ public:
    //static void runTask(std::string const& str_command, std::string& str_result);
    
 private:
-<<<<<<< HEAD
+//<<<<<<< HEAD
    //static void connectionThreadFunction();
    //static void connectedCallback(void* owner, void* a_clbData, int64_t a_err, const std::string& a_inp, const std::string& a_result);
    //static int  connectToNewWitness(const ConnectListItem& item);
-=======
    static int  connectToNewWitnessImpl(SConnectionStruct* connectionInfo);
    static void connectionThreadFunction();
    
->>>>>>> 23697d791aa0432922a72d609a202a5d2a2e8a1f
 
 
 private:

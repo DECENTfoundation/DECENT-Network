@@ -43,37 +43,42 @@ namespace gui_wallet
         m_main_table.setPalette(plt_tbl);
         
         DecentButton* unlockButton = new DecentButton();
+        DecentButton* cencel = new DecentButton();
         
         // set hight
-        unlockButton->setFixedHeight(30);
-        
+        cencel->setStyleSheet("QLabel { background-color :rgb(255,255,255); color : rgb(0,0,0);}");
         if (isSet) {
             unlockButton->setText("Set Password");
             unlockButton->setFixedWidth(150);
         } else {
             unlockButton->setText("Unlock");
-            unlockButton->setFixedWidth(100);
+            cencel->setText("Cencel");
         }
-        unlockButton->setFixedHeight(30);
         unlockButton->setFixedWidth(120);
+        cencel->setFixedWidth(120);
+        unlockButton->setFixedHeight(30);
+        cencel->setFixedHeight(30);
         password_box.setEchoMode(QLineEdit::Password);
         password_box.setAttribute(Qt::WA_MacShowFocusRect, 0);
+        password_box.setPlaceholderText(QString("Password"));
         
         if (isSet) {
             m_main_table.setCellWidget(0, 0, new QLabel(tr("Choose password to encrypt your wallet.")));
         } else {
-            m_main_table.setCellWidget(0, 0, new QLabel(tr("Please unlock your wallet to continue.")));
+           setWindowTitle("Unlock your wallet");
         }
-        
+       
         m_main_table.setCellWidget(1, 0, &password_box);
         //m_main_table.setCellWidget(2, 0, unlockButton);
         QHBoxLayout* button_layout = new QHBoxLayout();
         button_layout->addWidget(unlockButton);
+        button_layout->addWidget(cencel);
         connect(unlockButton, SIGNAL(LabelClicked()), this, SLOT(unlock_slot()));
+        connect(cencel, SIGNAL(LabelClicked()), this, SLOT(close()));
         connect(&password_box, SIGNAL(returnPressed()), unlockButton, SIGNAL(LabelClicked()));
-        
+        button_layout->setContentsMargins(0, 0, 0, 0);
+        m_main_layout.setContentsMargins(40, 0, 40, 30);
         m_main_layout.addWidget(&m_main_table);
-        //button_layout->setContentsMargins(50, 0, 50, 0);
         m_main_layout.addLayout(button_layout);
         setLayout(&m_main_layout);
         

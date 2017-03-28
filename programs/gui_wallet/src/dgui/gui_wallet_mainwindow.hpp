@@ -12,10 +12,13 @@
 #include "text_display_dialog.hpp"
 #include "richdialog.hpp"
 #include "unnamedsemaphorelite.hpp"
+//<<<<<<< HEAD
 
 #include <decent/wallet_utility/wallet_utility.hpp>
 #include "decent_wallet_ui_gui_contentdetailsgeneral.hpp"
-
+//
+//=======
+//>>>>>>> 601e33eff763d3315666f2b397ef7005a1b21d96
 #include <stdarg.h>
 #include <string>
 #include <map>
