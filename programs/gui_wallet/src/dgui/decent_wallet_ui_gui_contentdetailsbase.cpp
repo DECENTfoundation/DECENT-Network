@@ -19,7 +19,7 @@ using namespace nlohmann;
 using namespace gui_wallet;
 
 static const char* s_vcpcFieldsGeneral[NUMBER_OF_SUB_LAYOUTS2] = {
-    "Author", "Expiration","Created","Amount",
+    "Author", "Expiration","Uploaded","Amount",
     "Average Rating","Size","Times Bought" 
 };
 
