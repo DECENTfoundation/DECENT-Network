@@ -182,29 +182,9 @@ m_getPublishersTimer(this)
     
     u_main_layout.addLayout(priceRow);
     
-    //SIMPLES
-    QHBoxLayout* simRow = new QHBoxLayout;
-    
-    sim = new QLineEdit("Samples(Optional)");
-    sim->setReadOnly(true);
-    sim->setStyleSheet("border:1px solid lightGray; color: Gray");
-    sim->setContentsMargins(0, 0, 0, 0);
-    sim->setFixedHeight(30);
-    
-    DecentButton* browse_samples_button = new DecentButton();
-    browse_samples_button->setText("Browse");
-    browse_samples_button->setFixedWidth(70);
-    browse_samples_button->setFixedHeight(30);
-    connect(browse_samples_button, SIGNAL(LabelClicked()),this, SLOT(browseSamples()));
-    
-    simRow->addWidget(sim);
-    simRow->addWidget(browse_samples_button);
-    
-    u_main_layout.addLayout(simRow);
-    
     //CONTENT
     QHBoxLayout* contRow = new QHBoxLayout;
-
+    
     cont = new QLineEdit("Path");
     cont->setReadOnly(true);
     cont->setStyleSheet("border:1px solid lightGray; color: Gray");
@@ -225,6 +205,26 @@ m_getPublishersTimer(this)
     contRow->addWidget(browse_content_button);
     
     u_main_layout.addLayout(contRow);
+    
+    //SIMPLES
+    QHBoxLayout* simRow = new QHBoxLayout;
+    
+    sim = new QLineEdit("Samples(Optional)");
+    sim->setReadOnly(true);
+    sim->setStyleSheet("border:1px solid lightGray; color: Gray");
+    sim->setContentsMargins(0, 0, 0, 0);
+    sim->setFixedHeight(30);
+    
+    DecentButton* browse_samples_button = new DecentButton();
+    browse_samples_button->setText("Browse");
+    browse_samples_button->setFixedWidth(70);
+    browse_samples_button->setFixedHeight(30);
+    connect(browse_samples_button, SIGNAL(LabelClicked()),this, SLOT(browseSamples()));
+    
+    simRow->addWidget(sim);
+    simRow->addWidget(browse_samples_button);
+    
+    u_main_layout.addLayout(simRow);
     
     ////////////////////////////                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     ////////////////////////////////////////////////////////////////////////////
