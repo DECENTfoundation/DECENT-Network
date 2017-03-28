@@ -137,6 +137,8 @@ m_getPublishersTimer(this)
     seed->setMinimumWidth(70);
     seed->setFixedHeight(25);
     seeders->setStyle(QStyleFactory::create("fusion"));
+    seeders->setStyleSheet("color : black;");
+    
     seedRow->addWidget(seed);
     seedRow->addWidget(seeders);
     seedRow->setMargin(0);
@@ -183,7 +185,7 @@ m_getPublishersTimer(this)
     //SIMPLES
     QHBoxLayout* simRow = new QHBoxLayout;
     
-    sim = new QLineEdit("Samples");
+    sim = new QLineEdit("Samples(Optional)");
     sim->setReadOnly(true);
     sim->setStyleSheet("border:1px solid lightGray; color: Gray");
     sim->setContentsMargins(0, 0, 0, 0);
