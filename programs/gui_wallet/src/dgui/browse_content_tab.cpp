@@ -26,6 +26,7 @@
 #include <limits>
 #include <iostream>
 #include <graphene/chain/config.hpp>
+#include <graphene/wallet/wallet.hpp>
 
 
 #include <QDateTime>
@@ -36,7 +37,7 @@ using namespace gui_wallet;
 using namespace nlohmann;
 
 
-BrowseContentTab::BrowseContentTab(Mainwindow_gui_wallet* parent) : _parent(parent) , _content_popup(NULL){
+BrowseContentTab::BrowseContentTab(Mainwindow_gui_wallet* parent) : _content_popup(NULL), _parent(parent) {
     
     m_pTableWidget.set_columns({
         {"Title", 20},
@@ -49,25 +50,14 @@ BrowseContentTab::BrowseContentTab(Mainwindow_gui_wallet* parent) : _parent(pare
     });
     
     
-    
-    
-    m_filterLineEdit.setStyleSheet( "{"
-                                   "background: #f3f3f3;"
-                                   "background-image: url(:Images/search.svg); /* actual size, e.g. 16x16 */"
-                                   "background-repeat: no-repeat;"
-                                   "background-position: left;"
-                                   "color: #252424;"
-                                   "font-family: SegoeUI;"
-                                   "font-size: 12px;"
-                                   "padding: 2 2 2 20; /* left padding (last number) must be more than the icon's width */"
-                                   "}");
+ 
     QLabel* lab = new QLabel();
     QPixmap image(":/icon/images/search.svg");
     lab->setPixmap(image);
     
     m_filterLineEdit.setPlaceholderText("Enter search term");
     m_filterLineEdit.setFixedHeight(40);
-    m_filterLineEdit.setStyleSheet("border: 1px solid white");
+    m_filterLineEdit.setStyleSheet("border: 0");
     m_filterLineEdit.setAttribute(Qt::WA_MacShowFocusRect, 0);
     
     m_search_layout.setContentsMargins(42, 0, 0, 0);
@@ -79,89 +69,61 @@ BrowseContentTab::BrowseContentTab(Mainwindow_gui_wallet* parent) : _parent(pare
     m_main_layout.addWidget(&m_pTableWidget);
     setLayout(&m_main_layout);
     
-    connect(&m_filterLineEdit, SIGNAL(textChanged(QString)), this, SLOT(onTextChanged(QString)));
-    
-    
-    m_contentUpdateTimer.connect(&m_contentUpdateTimer, SIGNAL(timeout()), this, SLOT(maybeUpdateContent()));
-    m_contentUpdateTimer.connect(&GlobalEvents::instance(), SIGNAL(walletUnlocked()), this, SLOT(requestContentUpdate()));
-    
-    m_contentUpdateTimer.setInterval(1000);
-    m_contentUpdateTimer.start();
     
 }
 
-void BrowseContentTab::requestContentUpdate() {
-    m_doUpdate = true;
+void BrowseContentTab::timeToUpdate(const std::string& result) {
+   _digital_contents.clear();
+   
+   if (result.empty()) {
+      ShowDigitalContentsGUI();
+      return;
+   }
+   
+   auto contents = json::parse(result);
+   
+   _digital_contents.resize(contents.size());
+   
+   
+   for (int i = 0; i < contents.size(); ++i) {
+      SDigitalContent& cont = _digital_contents[i];
+      
+      cont.type = DCT::GENERAL;
+      cont.author = contents[i]["author"].get<std::string>();
+      cont.price.asset_id = contents[i]["price"]["asset_id"].get<std::string>();
+      cont.synopsis = contents[i]["synopsis"].get<std::string>();
+      cont.URI = contents[i]["URI"].get<std::string>();
+      cont.created = contents[i]["created"].get<std::string>();
+      cont.expiration = contents[i]["expiration"].get<std::string>();
+      cont.size = contents[i]["size"].get<int>();
+      
+      if (contents[i]["times_bougth"].is_number()) {
+         cont.times_bougth = contents[i]["times_bougth"].get<int>();
+      } else {
+         cont.times_bougth = 0;
+      }
+      
+      
+      if (contents[i]["price"]["amount"].is_number()){
+         cont.price.amount =  contents[i]["price"]["amount"].get<double>();
+      } else {
+         cont.price.amount =  std::stod(contents[i]["price"]["amount"].get<std::string>());
+      }
+      
+      cont.price.amount /= GRAPHENE_BLOCKCHAIN_PRECISION;
+      cont.AVG_rating = contents[i]["AVG_rating"].get<double>()  / 1000;
+      
+   }
+   
+   ShowDigitalContentsGUI();
 }
 
-void BrowseContentTab::maybeUpdateContent() {
-    if (!m_doUpdate) {
-        return;
-    }
-    
-    m_doUpdate = false;
-    updateContents();
+
+
+std::string BrowseContentTab::getUpdateCommand() {
+   std::string filterText = m_filterLineEdit.text().toStdString();
+   return "search_content \"" + filterText + "\" 100";
 }
-
-void BrowseContentTab::onTextChanged(const QString& text) {
-    
-    m_doUpdate = true;
-}
-
-
-
-void BrowseContentTab::updateContents() {
-    std::string filterText = m_filterLineEdit.text().toStdString();
-    
-    std::string a_result;
-    
-    
-    try {
-        RunTask("search_content \"" + filterText + "\" 100", a_result);
-        
-        auto contents = json::parse(a_result);
-        
-        _digital_contents.clear();
-        _digital_contents.resize(contents.size());
-        
-        
-        for (int i = 0; i < contents.size(); ++i) {
-            SDigitalContent& cont = _digital_contents[i];
-            
-            cont.type = DCT::GENERAL;
-            cont.author = contents[i]["author"].get<std::string>();
-            cont.price.asset_id = contents[i]["price"]["asset_id"].get<std::string>();
-            cont.synopsis = contents[i]["synopsis"].get<std::string>();
-            cont.URI = contents[i]["URI"].get<std::string>();
-            cont.created = contents[i]["created"].get<std::string>();
-            cont.expiration = contents[i]["expiration"].get<std::string>();
-            cont.size = contents[i]["size"].get<int>();
-            
-            if (contents[i]["times_bougth"].is_number()) {
-                cont.times_bougth = contents[i]["times_bougth"].get<int>();
-            } else {
-                cont.times_bougth = 0;
-            }
-            
-            
-            if (contents[i]["price"]["amount"].is_number()){
-                cont.price.amount =  contents[i]["price"]["amount"].get<double>();
-            } else {
-                cont.price.amount =  std::stod(contents[i]["price"]["amount"].get<std::string>());
-            }
-            
-            cont.price.amount /= GRAPHENE_BLOCKCHAIN_PRECISION;
-            cont.AVG_rating = contents[i]["AVG_rating"].get<double>()  / 1000;
-            
-        }
-        
-        ShowDigitalContentsGUI();
-    } catch (std::exception& ex) {
-        std::cout << ex.what() << std::endl;
-    }
-    connect(&m_pTableWidget , SIGNAL(MouseWasMoved()),this,SLOT(paintRow()));
-}
-
 
 
 void BrowseContentTab::show_content_popup() {
@@ -171,35 +133,40 @@ void BrowseContentTab::show_content_popup() {
         throw std::out_of_range("Content index is our of range");
     }
     
-    if (_content_popup)
-        delete _content_popup;
-    _content_popup = new ContentDetailsGeneral();
+   if (_content_popup) {
+      delete _content_popup;
+      _content_popup = NULL;
+   }
+   
+   _content_popup = new ContentDetailsGeneral(_parent);
     
-    connect(_content_popup, SIGNAL(ContentWasBought()), this, SLOT(content_was_bought()));
-    _content_popup->execCDD(_digital_contents[id]);
+   connect(_content_popup, SIGNAL(ContentWasBought()), this, SLOT(content_was_bought()));
+   _content_popup->execCDD(_digital_contents[id]);
 }
 
 void BrowseContentTab::content_was_bought() {
-    _parent->GoToThisTab(4, "");
-    _parent->UpdateAccountBalances(GlobalEvents::instance().getCurrentUser());
+   if (_content_popup) {
+      delete _content_popup;
+      _content_popup = NULL;
+   }
+   _parent->GoToThisTab(4, "");
+   _parent->UpdateAccountBalances(GlobalEvents::instance().getCurrentUser());
+   
+
 }
 
 void BrowseContentTab::ShowDigitalContentsGUI() {
     
     m_pTableWidget.setRowCount(_digital_contents.size());
-    QPixmap info_image(":/icon/images/pop_up.png");
     
     int index = 0;
     for(SDigitalContent& aTemporar: _digital_contents) {
         
-        EventPassthrough<ClickableLabel>* info_icon = new EventPassthrough<ClickableLabel>();
+        EventPassthrough<DecentSmallButton>* info_icon = new EventPassthrough<DecentSmallButton>(":/icon/images/pop_up.png", ":/icon/images/pop_up1.png");
         info_icon->setProperty("id", QVariant::fromValue(index));
-        info_icon->setPixmap(info_image);
         info_icon->setAlignment(Qt::AlignCenter);
         connect(info_icon, SIGNAL(clicked()), this, SLOT(show_content_popup()));
-        connect(&m_pTableWidget , SIGNAL(MouseWasMoved()),this,SLOT(paintRow()));
         m_pTableWidget.setCellWidget(index, 6, info_icon);
-        
         
         
         
@@ -274,27 +241,6 @@ void BrowseContentTab::ShowDigitalContentsGUI() {
         
         ++index;
     }
-    
-    connect(&m_pTableWidget , SIGNAL(MouseWasMoved()),this,SLOT(paintRow()));
-    
 }
 
 
-
-void BrowseContentTab::paintRow()
-{
-    QPixmap info_image(":/icon/images/pop_up.png");
-    QPixmap info_image_white(":/icon/images/pop_up1.png");
-    int row = m_pTableWidget.getCurrentHighlightedRow();
-    for(int i = 0; i < m_pTableWidget.rowCount(); ++i)
-    {
-        if(i == row)
-        {
-            ((NewButton*)m_pTableWidget.cellWidget(i,6))->setPixmap(info_image_white);
-        }
-        else
-        {
-            ((NewButton*)m_pTableWidget.cellWidget(i,6))->setPixmap(info_image);
-        }
-    }
-}

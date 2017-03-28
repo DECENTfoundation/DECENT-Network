@@ -46,7 +46,7 @@ Overview_tab::Overview_tab(class Mainwindow_gui_wallet* a_pPar)
    search_label.setSizeIncrement(100,40);
    search_label.setPixmap(image);
    search.setPlaceholderText(QString("Search"));
-   search.setStyleSheet("border: 0px solid white");
+   search.setStyleSheet("border: 0");
    search.setAttribute(Qt::WA_MacShowFocusRect, 0);
    search.setFixedHeight(40);
    
@@ -61,48 +61,17 @@ Overview_tab::Overview_tab(class Mainwindow_gui_wallet* a_pPar)
    main->addWidget(&table_widget);
    
    setLayout(main);
-   
-   connect(&search, SIGNAL(textChanged(QString)), this, SLOT(onTextChanged(QString)));
-   
-   
-   m_contentUpdateTimer.connect(&m_contentUpdateTimer, SIGNAL(timeout()), this, SLOT(maybeUpdateContent()));
-   m_contentUpdateTimer.setInterval(1000);
-   m_contentUpdateTimer.start();
-   
+ 
    table_widget.setMouseTracking(true);
 }
 
 
 
-void Overview_tab::maybeUpdateContent() {
-   if (!m_doUpdate) {
+void Overview_tab::timeToUpdate(const std::string& result) {
+   if (result.empty()) {
+      table_widget.setRowCount(0);
       return;
    }
-   
-   m_doUpdate = false;
-   try {
-      updateContents();
-   } catch (...) {
-      // Ignore for now;
-   }
-}
-
-void Overview_tab::onTextChanged(const QString& text) {
-   
-   m_doUpdate = true;
-}
-
-
-void Overview_tab::updateContents() {
-   table_widget.setRowCount(0); //Remove everything but header
-   
-   
-   if (search.text().toStdString().empty()) {
-      return;
-   }
-   
-   std::string result;
-   RunTask("search_accounts \"" + search.text().toStdString() +"\" 100", result);
    
    auto contents = json::parse(result);
    
@@ -111,33 +80,23 @@ void Overview_tab::updateContents() {
    for (int i = 0; i < contents.size() + 1; ++i) {
       auto content = contents[i];
       
-      NewButton* transaction = new NewButton(content[0].get<std::string>());
-      NewButton* transfer = new NewButton(content[0].get<std::string>());
-      transaction->setAlignment(Qt::AlignCenter);
-      transfer->setAlignment(Qt::AlignCenter);
-       
-
-
+      
       
       table_widget.setItem(i, 1, new QTableWidgetItem(QString::fromStdString(content[0].get<std::string>())));
       table_widget.setItem(i, 0, new QTableWidgetItem(QString::fromStdString(content[1].get<std::string>())));
-       
-       
-       QPixmap trans(":/icon/images/transaction.png");
-       QPixmap transf(":/icon/images/transfer.png");
-
-        transaction->setPixmap(trans);
-        transfer->setPixmap(transf);
-       
-       transaction->setMouseTracking(true);
-       transfer->setMouseTracking(true);
-       
-       connect(transfer, SIGNAL(ButtonPushedSignal(std::string)), this , SLOT(buttonPressed(std::string)));
-       connect(transaction, SIGNAL(ButtonPushedSignal(std::string)), this , SLOT(transaction_button_pressed(std::string)));
-
-       
-      table_widget.setCellWidget(i, 2, transaction);
-      table_widget.setCellWidget(i, 3, transfer);
+      
+      
+      EventPassthrough<DecentSmallButton>* trans = new EventPassthrough<DecentSmallButton>(":/icon/images/transaction.png", ":/icon/images/transaction1.png");
+      trans->setProperty("accountName", QVariant::fromValue(QString::fromStdString(content[0].get<std::string>())));
+      trans->setAlignment(Qt::AlignCenter);
+      connect(trans, SIGNAL(clicked()), this, SLOT(transactionButtonPressed()));
+      table_widget.setCellWidget(i, 2, trans);
+      
+      EventPassthrough<DecentSmallButton>* transf = new EventPassthrough<DecentSmallButton>(":/icon/images/transfer.png", ":/icon/images/transfer1.png");
+      transf->setProperty("accountName", QVariant::fromValue(QString::fromStdString(content[0].get<std::string>())));
+      transf->setAlignment(Qt::AlignCenter);
+      connect(transf, SIGNAL(clicked()), this, SLOT(buttonPressed()));
+      table_widget.setCellWidget(i, 3, transf);
       
       table_widget.setRowHeight(i,40);
       table_widget.cellWidget(i, 2)->setStyleSheet("* { background-color: rgb(255,255,255); color : rgb(27,176,104); }");
@@ -155,46 +114,32 @@ void Overview_tab::updateContents() {
       
       table_widget.item(i,0)->setForeground(QColor::fromRgb(88,88,88));
       table_widget.item(i,1)->setForeground(QColor::fromRgb(88,88,88));
-       
-       
-       connect(&table_widget , SIGNAL(MouseWasMoved()),this,SLOT(paintRow()));
    }
+
 }
 
-void Overview_tab::paintRow()
-{
-    QPixmap trans(":/icon/images/transaction.png");
-    QPixmap transf(":/icon/images/transfer.png");
-    QPixmap trans_white(":/icon/images/transaction1.png");
-    QPixmap transf_white(":/icon/images/transfer1.png");
-    int row = table_widget.getCurrentHighlightedRow();
-    for(int i = 0; i < table_widget.rowCount(); ++i)
-    {
-        if(i == row)
-        {
-            ((NewButton*)table_widget.cellWidget(i,2))->setPixmap(trans_white);
-            ((NewButton*)table_widget.cellWidget(i,3))->setPixmap(transf_white);
-        }
-        else
-        {
-            ((NewButton*)table_widget.cellWidget(i,2))->setPixmap(trans);
-            ((NewButton*)table_widget.cellWidget(i,3))->setPixmap(transf);
-        }
-    }
+
+std::string Overview_tab::getUpdateCommand() {
+   return "search_accounts \"" + search.text().toStdString() +"\" 100";
 }
 
 
 
-void Overview_tab::transaction_button_pressed(std::string accountName)
+void Overview_tab::transactionButtonPressed()
 {
-   m_pPar->GoToThisTab(1 , accountName);
+    DecentSmallButton* button = (DecentSmallButton*)sender();
+    QString accountName = button->property("accountName").toString();
+    m_pPar->GoToThisTab(1 , accountName.toStdString());
 }
 
-void Overview_tab::buttonPressed(std::string accountName)
+void Overview_tab::buttonPressed()
 {
+    DecentSmallButton* button = (DecentSmallButton*)sender();
+    QString accountName = button->property("accountName").toString();
+
    try {
       std::string result;
-      RunTask("get_account " + accountName, result);
+      RunTask("get_account " + accountName.toStdString(), result);
       auto accountInfo = json::parse(result);
       
       std::string id = accountInfo["id"].get<std::string>();

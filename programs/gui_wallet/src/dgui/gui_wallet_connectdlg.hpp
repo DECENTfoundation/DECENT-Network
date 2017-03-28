@@ -58,6 +58,7 @@ private:
     QLineEdit password_box;
 };
 
+/*
 class ConnectDlg : public QDialog
 {
     Q_OBJECT
@@ -84,7 +85,7 @@ private:
     QTableWidget                    m_main_table;
     int                             m_ret_value;
 };
-    
+   */ 
     
 
 }

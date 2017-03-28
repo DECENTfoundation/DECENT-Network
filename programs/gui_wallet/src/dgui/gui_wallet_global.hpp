@@ -26,23 +26,28 @@
 
 #include <numeric>
 
+
 #define ALERT(message)                                  \
 {                                                       \
-QMessageBox msgBox;                                 \
-msgBox.setWindowTitle("Error");                     \
-msgBox.setText(QString::fromStdString(message));    \
-msgBox.exec();                                      \
-}                                                       \
+QMessageBox* msgBox = new QMessageBox();                \
+msgBox->setWindowTitle("Error");                     \
+msgBox->setText(QString::fromStdString(message));    \
+msgBox->exec();                                      \
+msgBox->close();                                      \
+delete msgBox;                                      \
+}
 
 
 
 #define ALERT_DETAILS(message, details)                                  \
 {                                                       \
-QMessageBox msgBox;                                 \
-msgBox.setWindowTitle("Error");                     \
-msgBox.setText(QString::fromStdString(message));    \
-msgBox.setDetailedText(QObject::tr(details));    \
-msgBox.exec();                                      \
+QMessageBox* msgBox = new QMessageBox();                \
+msgBox->setWindowTitle("Error");                     \
+msgBox->setText(QString::fromStdString(message));    \
+msgBox->setDetailedText(QObject::tr(details));    \
+msgBox->exec();                                      \
+msgBox->close();                                      \
+delete msgBox;                                      \
 }                                                       \
 
 
@@ -51,19 +56,25 @@ msgBox.exec();                                      \
 
 #define MESSAGE(message)                                  \
 {                                                       \
-QMessageBox msgBox;                                 \
-msgBox.setWindowTitle("Message");                     \
-msgBox.setText(QString::fromStdString(message));    \
-msgBox.exec();                                      \
+QMessageBox* msgBox = new QMessageBox();                     \
+msgBox->setWindowTitle("Message");                     \
+msgBox->setText(QString::fromStdString(message));    \
+msgBox->exec();                                      \
+msgBox->close();                                      \
+delete msgBox;                                      \
 }                                                   \
 
 
-
+#define DCT_VERIFY(condition) \
+{ \
+   bool _b_condition_ = (condition); \
+   Q_ASSERT(_b_condition_); \
+}
 
 namespace gui_wallet
 {
     
-        std::string CalculateRemainingTime(QDateTime now_time , QDateTime time);
+        std::string CalculateRemainingTime(QDateTime const& dt, QDateTime const& dtFuture);
     
     
         inline std::size_t extra_space(const std::string& s) noexcept
@@ -313,7 +324,7 @@ namespace gui_wallet
       
       void setWalletUnlocked() { emit walletUnlocked(); }
       
-      void setWalletConnected() { emit walletConnected(); }
+      void setWalletConnected(bool isNew) { emit walletConnected(isNew); }
       void setWalletError(std::string error) { emit walletConnectionError(error); }
       
    signals:
@@ -321,7 +332,7 @@ namespace gui_wallet
       void walletUnlocked();
       
       void walletConnectionError(std::string message);
-      void walletConnected();
+      void walletConnected(bool isNew);
       
       
    };
@@ -349,22 +360,55 @@ namespace gui_wallet
    
    // QLabel with clicked() signal implemented
    
-   class ClickableLabel : public QLabel {
-      Q_OBJECT;
-   public:
-      template<class... Args>
-      ClickableLabel(const Args&... args) : QLabel(args...) {}
-      
-      
-   signals:
-      void clicked();
-      
-   protected:
-      void mousePressEvent(QMouseEvent* event) {
-         emit clicked();
-      }
-   };
-   
+    class DecentSmallButton : public QLabel {
+        Q_OBJECT;
+    public:
+        DecentSmallButton(const QString& normalImg, const QString& highlightedImg ){
+            normalImage.load(normalImg);
+            highlightedImage.load(highlightedImg);
+            this->setPixmap(normalImg);
+        }
+        
+        void unhighlight()
+        {
+            this->setPixmap(normalImage);
+            this->setStyleSheet("* { background-color: rgb(255,255,255); color : black; }");
+        }
+        
+        void highlight()
+        {
+            this->setPixmap(highlightedImage);
+            this->setStyleSheet("* { background-color: rgb(27,176,104); color : white; }");
+        }
+    
+    private:
+        QPixmap normalImage;
+        QPixmap highlightedImage;
+        
+    signals:
+        void clicked();
+        
+    protected:
+        void mousePressEvent(QMouseEvent* event) {
+            emit clicked();
+        }
+    };
+    class ClickableLabel : public QLabel {
+        Q_OBJECT;
+    public:
+        template<class... Args>
+        ClickableLabel(const Args&... args) : QLabel(args...) {}
+        
+        
+    signals:
+        void clicked();
+        
+    protected:
+        void mousePressEvent(QMouseEvent* event) {
+            emit clicked();
+        }
+    };
+    
    
    
    
@@ -461,16 +505,19 @@ namespace gui_wallet
                }
                
                if(cell_widget != NULL) {
-                  QString old_style = cell_widget->property("old_style").toString();
-                  
-                  if (old_style.isEmpty())
-                     cell_widget->setStyleSheet("* { background-color: rgb(255,255,255); color : black; }");
-                  else
-                     cell_widget->setStyleSheet(old_style);
-                  
-                  
+                   if(DecentSmallButton *button = qobject_cast<DecentSmallButton*>(cell_widget)) {
+                       button->unhighlight();
+                   } else {
+                      QString old_style = cell_widget->property("old_style").toString();
+                      
+                      if (old_style.isEmpty())
+                         cell_widget->setStyleSheet("* { background-color: rgb(255,255,255); color : black; }");
+                      else
+                         cell_widget->setStyleSheet(old_style);
+                   }
                }
             }
+             
          }
          
          
@@ -479,6 +526,7 @@ namespace gui_wallet
          
          if(row < 0) {
             _current_highlighted_row = -1;
+             emit MouseWasMoved();
             return;
          }
          
@@ -492,16 +540,17 @@ namespace gui_wallet
                cell->setForeground(QColor::fromRgb(255,255,255));
             }
             
-            if(cell_widget != NULL) {
-               cell_widget->setProperty("old_style", cell_widget->styleSheet());
-               cell_widget->setStyleSheet("* { background-color: rgb(27,176,104); color : white; }");
-            }
+            if(cell_widget != NULL)
+                if(DecentSmallButton *button = qobject_cast<DecentSmallButton*>(cell_widget)) {
+                    button->highlight();
+                } else {
+                   cell_widget->setProperty("old_style", cell_widget->styleSheet());
+                   cell_widget->setStyleSheet("* { background-color: rgb(27,176,104); color : white; }");
+                }
+            
             
          }
-         
-         _current_highlighted_row = row;
-          
-          emit MouseWasMoved();
+          _current_highlighted_row = row;
       }
        
        

@@ -66,8 +66,10 @@ using namespace nlohmann;
 CryptoPP::AutoSeededRandomPool rng;
 
 
-Upload_popup::Upload_popup()
+Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow)
 :
+QDialog(pMainWindow),
+m_pMainWindow(pMainWindow),
 m_info_widget(3, 6),
 m_title_label(tr("Title")),
 m_description_label(tr("Description")),
@@ -242,10 +244,12 @@ m_getPublishersTimer(this)
     m_getPublishersTimer.start(1000);
 }
 
+
 void Upload_popup::onGrabPublishers() {
-   
-    AsyncTask("list_publishers_by_price 100", this, NULL, +[](void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
-       Upload_popup* obj = (Upload_popup*)owner;
+   std::string a_result;
+   RunTask("list_publishers_by_price 100", a_result);
+    //AsyncTask("list_publishers_by_price 100", this, NULL, +[](void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
+       //Upload_popup* obj = (Upload_popup*)owner;
        
        auto publishers = json::parse(a_result);
         
@@ -261,14 +265,14 @@ void Upload_popup::onGrabPublishers() {
                 pubFreeSpace = QString::number(1.0 * free_space / 1024, 'f', 2).toStdString() + "GB free";
             }
             
-            obj->seeders->addItem(QString("%0 @%1 %2 [%3]").arg(QString::fromStdString(pubIdStr),
+            seeders->addItem(QString("%0 @%1 %2 [%3]").arg(QString::fromStdString(pubIdStr),
                                                                 QString::fromStdString(pubPrice),
                                                                 QString::fromStdString("DCT"),
                                                                 QString::fromStdString(pubFreeSpace)), QString::fromStdString(pubIdStr));
         }
         
         
-    });
+    //});
 }
 
 void Upload_popup::browseContent() {
@@ -364,30 +368,46 @@ void Upload_popup::uploadContent() {
     submitCommand += " \"" + escape_string(synopsis) + "\"";            //synopsis
     submitCommand += " true";                                           //broadcast
 
+   
+   std::string a_result;
+   std::string message;
+   
+   try {
+      RunTask(submitCommand, a_result);
+      if (a_result.find("exception:") != std::string::npos) {
+         message = a_result;
+      }
+   } catch (const std::exception& ex) {
+      message = ex.what();
+      setEnabled(true);
+   }
+   
+   QMessageBox* msgBox = new QMessageBox();
+   msgBox->setAttribute(Qt::WA_DeleteOnClose);
+   
+   if (message.empty()) {
+      m_title_text.setText("");
+      m_description_text.setPlainText("");
+      de->setDate(QDate::currentDate());
+      price->setText("");
+      m_contentPath->setText("");
+      m_samplesPath->setText("");
+      
+      msgBox->setWindowTitle("Success");
+      msgBox->setText(tr("Content is submitted"));
 
-    AsyncTask(submitCommand, this, NULL, +[](void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
-        ((Upload_popup*)owner)->uploadDone(a_clbkArg, a_err, a_task, a_result);
-    });
-}
+      setEnabled(true);
 
-void Upload_popup::uploadDone(void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
+      emit uploadFinished();
 
-    if (a_err != 0) {
-        ALERT("Failed to submit content");
-        setEnabled(true);
-        return;
-    }
-    
-    // On success reset only these.
-    m_title_text.setText("");
-    m_description_text.setPlainText("");
-    de->setDate(QDate::currentDate());
-    price->setText("");
-    m_contentPath->setText("");
-    m_samplesPath->setText("");
-    
-    ALERT("Content is submitted!");
-    setEnabled(true);
+   } else {
+      msgBox->setWindowTitle("Error");
+      msgBox->setText(tr("Failed to submit content"));
+      msgBox->setDetailedText(message.c_str());
+   }
+   
+   msgBox->open();
+
 }
 
 void Upload_popup::resizeEvent ( QResizeEvent * event )
@@ -406,10 +426,6 @@ void Upload_popup::resizeEvent ( QResizeEvent * event )
 
 
 // UPLOAD TAB
-using namespace gui_wallet;
-using namespace nlohmann;
-
-
 
 Upload_tab::Upload_tab(Mainwindow_gui_wallet* parent) :  _content_popup(NULL), _parent(parent) {
     
@@ -425,18 +441,7 @@ Upload_tab::Upload_tab(Mainwindow_gui_wallet* parent) :  _content_popup(NULL), _
     });
     
     
-    
-    
-    m_filterLineEdit.setStyleSheet( "{"
-                                   "background: #f3f3f3;"
-                                   "background-image: url(:Images/search.svg); /* actual size, e.g. 16x16 */"
-                                   "background-repeat: no-repeat;"
-                                   "background-position: left;"
-                                   "color: #252424;"
-                                   "font-family: SegoeUI;"
-                                   "font-size: 12px;"
-                                   "padding: 2 2 2 20; /* left padding (last number) must be more than the icon's width */"
-                                   "}");
+ 
     upload_button = new DecentButton();
     upload_button->setText("UPLOAD");
     upload_button->setFixedWidth(150);
@@ -446,7 +451,7 @@ Upload_tab::Upload_tab(Mainwindow_gui_wallet* parent) :  _content_popup(NULL), _
     
     m_filterLineEdit.setPlaceholderText("Enter search term");
     m_filterLineEdit.setFixedHeight(40);
-    m_filterLineEdit.setStyleSheet("border: 1px solid white");
+   m_filterLineEdit.setStyleSheet("border: 0");
     m_filterLineEdit.setAttribute(Qt::WA_MacShowFocusRect, 0);
     
     m_search_layout.setContentsMargins(42, 0, 0, -50);
@@ -460,112 +465,102 @@ Upload_tab::Upload_tab(Mainwindow_gui_wallet* parent) :  _content_popup(NULL), _
     m_main_layout.addWidget(&m_pTableWidget);
     setLayout(&m_main_layout);
     
-    connect(&m_filterLineEdit, SIGNAL(textChanged(QString)), this, SLOT(onTextChanged(QString)));
     connect(upload_button, SIGNAL(LabelClicked()), this, SLOT(upload_popup()));
-    connect(&GlobalEvents::instance(), SIGNAL(currentUserChanged(std::string)), this, SLOT(updateContents()));
-
-    m_contentUpdateTimer.connect(&m_contentUpdateTimer, SIGNAL(timeout()), this, SLOT(maybeUpdateContent()));
-    m_contentUpdateTimer.connect(&GlobalEvents::instance(), SIGNAL(walletUnlocked()), this, SLOT(requestContentUpdate()));
-    
-    m_contentUpdateTimer.setInterval(1000);
-    m_contentUpdateTimer.start();
-    
+   _isUploading = false;
 }
 
-void Upload_tab::requestContentUpdate() {
-    m_doUpdate = true;
+void Upload_tab::timeToUpdate(const std::string& result) {
+   _digital_contents.clear();
+
+   if (result.empty()) {
+      return;
+   }
+   
+   auto contents = json::parse(result);
+   
+   _digital_contents.resize(contents.size());
+   
+   
+   for (int i = 0; i < contents.size(); ++i) {
+      SDigitalContent& cont = _digital_contents[i];
+      
+      cont.type = DCT::GENERAL;
+      cont.author = contents[i]["author"].get<std::string>();
+      cont.price.asset_id = contents[i]["price"]["asset_id"].get<std::string>();
+      cont.synopsis = contents[i]["synopsis"].get<std::string>();
+      cont.URI = contents[i]["URI"].get<std::string>();
+      cont.created = contents[i]["created"].get<std::string>();
+      cont.expiration = contents[i]["expiration"].get<std::string>();
+      cont.size = contents[i]["size"].get<int>();
+      
+      if (contents[i]["times_bougth"].is_number()) {
+         cont.times_bougth = contents[i]["times_bougth"].get<int>();
+      } else {
+         cont.times_bougth = 0;
+      }
+      
+      
+      if (contents[i]["price"]["amount"].is_number()){
+         cont.price.amount =  contents[i]["price"]["amount"].get<double>();
+      } else {
+         cont.price.amount =  std::stod(contents[i]["price"]["amount"].get<std::string>());
+      }
+      
+      cont.price.amount /= GRAPHENE_BLOCKCHAIN_PRECISION;
+      cont.AVG_rating = contents[i]["AVG_rating"].get<double>()  / 1000;
+   }
+   
+   ShowDigitalContentsGUI();
+   
 }
 
-void Upload_tab::maybeUpdateContent() {
-    if (!m_doUpdate) {
-        return;
-    }
-    
-    m_doUpdate = false;
-    updateContents();
-}
 
-void Upload_tab::onTextChanged(const QString& text) {
-    
-    m_doUpdate = true;
-}
-
-
-
-void Upload_tab::updateContents() {
-    std::string filterText = m_filterLineEdit.text().toStdString();
-
-    if( filterText.empty() )
-    {
-        filterText = GlobalEvents::instance().getCurrentUser();
-    }
-    
-    std::string a_result;
-    
-    
-    try {
-        RunTask("search_content \"" + filterText + "\" 100", a_result);
-        
-        auto contents = json::parse(a_result);
-        
-        _digital_contents.clear();
-        _digital_contents.resize(contents.size());
-        
-        
-        for (int i = 0; i < contents.size(); ++i) {
-            SDigitalContent& cont = _digital_contents[i];
-            
-            cont.type = DCT::GENERAL;
-            cont.author = contents[i]["author"].get<std::string>();
-            cont.price.asset_id = contents[i]["price"]["asset_id"].get<std::string>();
-            cont.synopsis = contents[i]["synopsis"].get<std::string>();
-            cont.URI = contents[i]["URI"].get<std::string>();
-            cont.created = contents[i]["created"].get<std::string>();
-            cont.expiration = contents[i]["expiration"].get<std::string>();
-            cont.size = contents[i]["size"].get<int>();
-            
-            if (contents[i]["times_bougth"].is_number()) {
-                cont.times_bougth = contents[i]["times_bougth"].get<int>();
-            } else {
-                cont.times_bougth = 0;
-            }
-            
-            
-            if (contents[i]["price"]["amount"].is_number()){
-                cont.price.amount =  contents[i]["price"]["amount"].get<double>();
-            } else {
-                cont.price.amount =  std::stod(contents[i]["price"]["amount"].get<std::string>());
-            }
-            
-            cont.price.amount /= GRAPHENE_BLOCKCHAIN_PRECISION;
-            cont.AVG_rating = contents[i]["AVG_rating"].get<double>()  / 1000;
-        }
-        
-        ShowDigitalContentsGUI();
-    } catch (std::exception& ex) {
-        std::cout << ex.what() << std::endl;
-    }
-    
+std::string Upload_tab::getUpdateCommand() {
+   std::string filterText = m_filterLineEdit.text().toStdString();
+   
+   std::string currentUserName = GlobalEvents::instance().getCurrentUser();
+   
+   if (currentUserName.empty()) {
+      return "";
+   }
+   
+   return "search_user_content \"" + currentUserName + "\" \"" + filterText + "\" 100";
+   
 }
 
 
 
 void Upload_tab::show_content_popup() {
+   if (_isUploading) {
+      return;
+   }
+   
+   _isUploading = true;
+   
     QLabel* btn = (QLabel*)sender();
     int id = btn->property("id").toInt();
     if (id < 0 || id >= _digital_contents.size()) {
-        throw std::out_of_range("Content index is our of range");
+        throw std::out_of_range("Content index is out of range");
     }
     
-    if (_content_popup)
+   if (_content_popup) {
         delete _content_popup;
-    _content_popup = new ContentDetailsGeneral();
+      _content_popup = NULL;
+   }
+    _content_popup = new ContentDetailsGeneral(_parent);
     
     connect(_content_popup, SIGNAL(ContentWasBought()), this, SLOT(content_was_bought()));
     _content_popup->execCDD(_digital_contents[id]);
+    
+   _isUploading = false;
 }
 
 void Upload_tab::content_was_bought() {
+   if (_content_popup) {
+      delete _content_popup;
+      _content_popup = NULL;
+   }
+   
     _parent->GoToThisTab(4, "");
     _parent->UpdateAccountBalances(GlobalEvents::instance().getCurrentUser());
 }
@@ -573,14 +568,12 @@ void Upload_tab::content_was_bought() {
 void Upload_tab::ShowDigitalContentsGUI() {
     
     m_pTableWidget.setRowCount(_digital_contents.size());
-    QPixmap info_image(":/icon/images/pop_up.png");
     
     int index = 0;
     for(SDigitalContent& aTemporar: _digital_contents) {
         
-        EventPassthrough<ClickableLabel>* info_icon = new EventPassthrough<ClickableLabel>();
+        EventPassthrough<DecentSmallButton>* info_icon = new EventPassthrough<DecentSmallButton>(":/icon/images/pop_up.png",":/icon/images/pop_up1.png");
         info_icon->setProperty("id", QVariant::fromValue(index));
-        info_icon->setPixmap(info_image);
         info_icon->setAlignment(Qt::AlignCenter);
         connect(info_icon, SIGNAL(clicked()), this, SLOT(show_content_popup()));
         m_pTableWidget.setCellWidget(index, 6, info_icon);
@@ -659,35 +652,14 @@ void Upload_tab::ShowDigitalContentsGUI() {
         
         ++index;
     }
-    connect(&m_pTableWidget , SIGNAL(MouseWasMoved()),this,SLOT(paintRow()));
-
 }
 
-void Upload_tab::paintRow()
-{
-    QPixmap info_image(":/icon/images/pop_up.png");
-    QPixmap info_image_white(":/icon/images/pop_up1.png");
-    int row = m_pTableWidget.getCurrentHighlightedRow();
-    for(int i = 0; i < m_pTableWidget.rowCount(); ++i)
-    {
-        if(i == row)
-        {
-            ((NewButton*)m_pTableWidget.cellWidget(i,6))->setPixmap(info_image_white);
-        }
-        else
-        {
-            ((NewButton*)m_pTableWidget.cellWidget(i,6))->setPixmap(info_image);
-        }
-    }
-}
 
 void Upload_tab::upload_popup()
 {
-    upload_up* dialog = new upload_up();
-    Upload_popup* popup = new Upload_popup();
-    dialog->setLayout(&popup->u_main_layout);
-    dialog->show();
+    Upload_popup* popup = new Upload_popup(_parent);
+    connect(popup,SIGNAL(uploadFinished()),popup,SLOT(close()));
+    popup->setLayout(&popup->u_main_layout);
+    popup->show();
 }
 
-upload_up::upload_up(QWidget *parent) : QDialog(parent)
-{}

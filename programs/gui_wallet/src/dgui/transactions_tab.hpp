@@ -26,14 +26,14 @@
 
 namespace gui_wallet
 {
+   class Mainwindow_gui_wallet;
    class TransactionsTab : public TabContentManager {
       
       Q_OBJECT
    public:
-      TransactionsTab();
-      
-      virtual void content_activated() {}
-      virtual void content_deactivated() {}
+      TransactionsTab(Mainwindow_gui_wallet* pMainWindow);
+      virtual void timeToUpdate(const std::string& result);
+      virtual std::string getUpdateCommand();
 
       void set_user_filter(const std::string& user_name);
       
@@ -47,9 +47,7 @@ namespace gui_wallet
       std::string getAccountName(std::string accountId);
       
    public slots:
-      void onTextChanged(const QString& text);
-      void updateContents();
-      void maybeUpdateContent();
+      
       void currentUserChanged(std::string user);
       
    private:
@@ -57,7 +55,7 @@ namespace gui_wallet
       bool     m_doUpdate = true;
       
       std::map<std::string, std::string> _user_id_cache;
-      
+      Mainwindow_gui_wallet* m_pMainWindow;
    };
 }
 
