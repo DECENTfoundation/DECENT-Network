@@ -3851,7 +3851,7 @@ vector<buying_object> wallet_api::get_buying_history_objects_by_consumer_term( c
         bobj.synopsis = content->synopsis;
         
         std::string synopsis = json_unescape_string(content->synopsis);
-        std::string title;
+        std::string title = synopsis;
         std::string description;
         
         try {
