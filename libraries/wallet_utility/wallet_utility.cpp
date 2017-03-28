@@ -284,13 +284,13 @@ namespace wallet_utility
       return future_search_content.wait();
    }
 
-   string WalletAPI::RunTask(string const& str_command)
+   string WalletAPI::RunTaskImpl(string const& str_command)
    {
       if (false == Connected())
          throw wallet_exception("not yet connected");
 
       std::lock_guard<std::mutex> lock(m_mutex);
-
+      
       auto& pimpl = m_pimpl;
       fc::future<string> future_run =
       m_pthread->async([&pimpl, &str_command] () -> string
@@ -303,8 +303,12 @@ namespace wallet_utility
                           {
                              const string& method = args.front().get_string();
 
-                             auto result = pimpl->m_ptr_fc_api_connection->receive_call(0, method, fc::variants(args.begin()+1, args.end()));
-
+                             variant result;
+                             try {
+                                result = pimpl->m_ptr_fc_api_connection->receive_call(0, method, fc::variants(args.begin()+1, args.end()));
+                             } catch (fc::exception& ex) {
+                                throw std::runtime_error(ex.what());
+                             }
                              auto it = pimpl->m_result_formatters.find(method);
 
                              string str_result;

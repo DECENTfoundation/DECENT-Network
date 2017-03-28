@@ -244,10 +244,6 @@ m_getPublishersTimer(this)
     m_getPublishersTimer.start(1000);
 }
 
-void Upload_popup::RunTask(std::string const& str_command, std::string& str_result)
-{
-   m_pMainWindow->RunTask(str_command, str_result);
-}
 
 void Upload_popup::onGrabPublishers() {
    std::string a_result;
@@ -518,10 +514,6 @@ void Upload_tab::timeToUpdate(const std::string& result) {
    
 }
 
-void Upload_tab::RunTask(std::string const& str_command, std::string& str_result)
-{
-   _parent->RunTask(str_command, str_result);
-}
 
 std::string Upload_tab::getUpdateCommand() {
    std::string filterText = m_filterLineEdit.text().toStdString();

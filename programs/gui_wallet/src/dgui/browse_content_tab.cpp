@@ -243,8 +243,4 @@ void BrowseContentTab::ShowDigitalContentsGUI() {
     }
 }
 
-void BrowseContentTab::RunTask(std::string const& str_command, std::string& str_result)
-{
-   _parent->RunTask(str_command, str_result);
-}
 

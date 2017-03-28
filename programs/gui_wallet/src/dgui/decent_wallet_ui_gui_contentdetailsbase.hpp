@@ -32,11 +32,7 @@ class ContentDetailsBase : public QDialog
     
 public:
     ContentDetailsBase(Mainwindow_gui_wallet* pMainWindow);
-    virtual ~ContentDetailsBase();
-
-   void RunTask(std::string const& str_command, std::string& str_result);
-    void execCDB(const SDigitalContent& a_cnt_details);
-    
+    void execCDB(const SDigitalContent& a_cnt_details);    
     void popup_for_purchased(int);
 
     //virtual void execCDD(const decent::wallet::ui::gui::SDigitalContent& a_cnt_details)=0;

@@ -64,7 +64,6 @@ namespace gui_wallet
         
     public:
         Upload_popup(Mainwindow_gui_wallet* pMainWindow);
-        void RunTask(std::string const& str_command, std::string& str_result);
 
     public slots:
         void browseContent();
@@ -130,8 +129,6 @@ namespace gui_wallet
     public:
        virtual void timeToUpdate(const std::string& result);
        virtual std::string getUpdateCommand();
-
-       void RunTask(std::string const& str_command, std::string& str_result);
        
     public slots:
         void show_content_popup();

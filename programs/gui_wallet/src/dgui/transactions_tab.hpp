@@ -36,8 +36,6 @@ namespace gui_wallet
       virtual std::string getUpdateCommand();
 
       void set_user_filter(const std::string& user_name);
-
-      void RunTask(std::string const& str_command, std::string& str_result);
       
    public:
       QVBoxLayout       main_layout;

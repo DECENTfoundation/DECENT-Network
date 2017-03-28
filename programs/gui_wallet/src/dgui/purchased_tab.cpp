@@ -69,11 +69,6 @@ PurchasedTab::PurchasedTab(Mainwindow_gui_wallet* pMainWindow)
    
 }
 
-void PurchasedTab::RunTask(std::string const& str_command, std::string& str_result)
-{
-   m_pMainWindow->RunTask(str_command, str_result);
-}
-
 void PurchasedTab::timeToUpdate(const std::string& result) {
    m_pTableWidget.setRowCount(0);
    

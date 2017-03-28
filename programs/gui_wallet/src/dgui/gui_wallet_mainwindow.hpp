@@ -1,35 +1,29 @@
-/*
- *	File: gui_wallet_mainwindow.cpp
- *
- *	Created on: Nov 11, 2016
- *	Created by: Davit Kalantaryan (Email: davit.kalantaryan@desy.de)
- *
- *  This file implements ...
- *
- */
-#ifndef MAINWINDOW_GUI_WALLET_H
-#define MAINWINDOW_GUI_WALLET_H
+#pragma once
 
 #include <QMainWindow>
-#include "gui_wallet_centralwidget.hpp"
 #include <QAction>
 #include <QLineEdit>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QThread>
+
+#include "gui_wallet_centralwidget.hpp"
 #include "gui_wallet_connectdlg.hpp"
 #include "text_display_dialog.hpp"
 #include "richdialog.hpp"
-#include <unnamedsemaphorelite.hpp>
+#include "unnamedsemaphorelite.hpp"
+
+#include <decent/wallet_utility/wallet_utility.hpp>
+#include "decent_wallet_ui_gui_contentdetailsgeneral.hpp"
+
 #include <stdarg.h>
 #include <string>
 #include <map>
 #include <set>
-#include <decent/wallet_utility/wallet_utility.hpp>
-#include "decent_wallet_ui_gui_contentdetailsgeneral.hpp"
 
 namespace gui_wallet
 {
+   
 using WalletAPI = decent::wallet_utility::WalletAPI;
 
 class WalletOperator : public QObject
@@ -49,16 +43,26 @@ public:
    WalletAPI m_wallet_api;
 };
 
+   
+   
+   
+   
 
 class Mainwindow_gui_wallet : public QMainWindow
 {
    Q_OBJECT
 public:
+   
    Mainwindow_gui_wallet();
    virtual ~Mainwindow_gui_wallet(); 
    
    void GoToThisTab(int index, std::string info);
    void UpdateAccountBalances(const std::string& username);
+   
+public:
+   
+   static void RunTaskImpl(std::string const& str_command, std::string& str_result);
+
    
 protected:
    void CreateActions();
@@ -91,9 +95,6 @@ protected slots:
    void UnlockSlot();
 
    void slot_connected(std::string str_error);
-
-public:
-   void RunTask(std::string const& str_command, std::string& str_result);
 
 signals:
    void signal_connect();
@@ -143,8 +144,11 @@ protected:
 };
 
    
-   
-   
 }
 
-#endif // MAINWINDOW_GUI_WALLET_H
+
+
+
+#define RunTask gui_wallet::Mainwindow_gui_wallet::RunTaskImpl
+
+
