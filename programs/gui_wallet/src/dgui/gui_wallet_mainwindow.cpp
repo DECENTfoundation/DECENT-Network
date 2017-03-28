@@ -63,21 +63,7 @@ void WalletOperator::slot_connect()
    emit signal_connected(str_error);
 }
 
-/*void WalletOperator::slot_content_upload(std::string str_command)
-{
-   string str_error;
-   try
-   {
-      std::string str_result;
-      str_result = m_wallet_api.RunTask(str_command);
-   }
-   catch(std::exception const& ex)
-   {
-      str_error = ex.what();
-   }
 
-   emit signal_content_uploaded(str_error);
-}*/
 
 
 Mainwindow_gui_wallet::Mainwindow_gui_wallet()
@@ -107,29 +93,14 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
    m_pMenuLayout = new QHBoxLayout;
 
    fc::path wallet_path = decent_path_finder::instance().get_decent_home() / DEFAULT_WALLET_FILE_NAME;
-   //m_wdata2.wallet_file_name = wallet_path.string().c_str();
-
-   //m_wdata2.ws_server = "ws://127.0.0.1:8090";
-   //m_wdata2.chain_id = "0000000000000000000000000000000000000000000000000000000000000000";
 
    m_pMenuLayout->addWidget(m_barLeft);
    m_pMenuLayout->addWidget(m_barRight);
 
-    m_pCentralWidget = new CentralWigdet(m_pCentralAllLayout,this);
-    m_pCentralWidget->setLayout(m_pCentralAllLayout);
-
-   setCentralWidget(m_pCentralWidget);
-   CreateActions();
-   CreateMenues();
-   resize(900,550);
-   
-   setCentralWidget(m_pCentralWidget);
-   
-    m_info_dialog.resize(0,0);
 
    m_pCentralWidget = new CentralWigdet(m_pCentralAllLayout,this);
    m_pCentralWidget->setLayout(m_pCentralAllLayout);
-   setCentralWidget(m_pCentralWidget);
+   //setCentralWidget(m_pCentralWidget);
    CreateActions();
    CreateMenues();
    resize(900,550);
@@ -227,9 +198,13 @@ void Mainwindow_gui_wallet::currentUserBalanceUpdate()
 
 
 
-void Mainwindow_gui_wallet::RunTask(std::string const& str_command, std::string& str_result)
+void Mainwindow_gui_wallet::RunTaskImpl(std::string const& str_command, std::string& str_result)
 {
-   str_result = m_p_wallet_operator->m_wallet_api.RunTask(str_command);
+   if (s_pMainWindowInstance == NULL) {
+      throw std::runtime_error("Main window is not initialized yet");
+   }
+   
+   str_result = s_pMainWindowInstance->m_p_wallet_operator->m_wallet_api.RunTaskImpl(str_command);
 }
 
 void Mainwindow_gui_wallet::CreateActions()

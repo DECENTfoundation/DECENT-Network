@@ -52,7 +52,6 @@ public:
 public:
    virtual void timeToUpdate(const std::string& result);
    virtual std::string getUpdateCommand();
-   void RunTask(std::string const& str_command, std::string& str_result);
    
 protected:
    void PrepareTableWidgetHeaderGUI();

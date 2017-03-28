@@ -192,9 +192,3 @@ void TransactionsTab::set_user_filter(const std::string& user_name) {
    user.setText(QString::fromStdString(user_name));
 }
 
-void TransactionsTab::RunTask(std::string const& str_command, std::string& str_result)
-{
-   m_pMainWindow->RunTask(str_command, str_result);
-}
-
-

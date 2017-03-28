@@ -39,14 +39,7 @@ ContentDetailsBase::ContentDetailsBase(Mainwindow_gui_wallet* pMainWindow)
 {}
 
 
-ContentDetailsBase::~ContentDetailsBase()
-{
-}
 
-void ContentDetailsBase::RunTask(std::string const& str_command, std::string& str_result)
-{
-   m_pMainWindow->RunTask(str_command, str_result);
-}
 
 // DCF stands for Digital Content Fields
 namespace DCF{enum{AMOUNT=9, TIMES_BOUGHT=15};}

@@ -40,9 +40,6 @@ namespace gui_wallet
       BrowseContentTab(Mainwindow_gui_wallet* parent);
       
       void ShowDigitalContentsGUI();
-
-
-      void RunTask(std::string const& str_command, std::string& str_result);
       
    public:
       

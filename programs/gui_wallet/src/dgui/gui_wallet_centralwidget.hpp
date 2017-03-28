@@ -82,7 +82,6 @@ public:
     QString getFilterText()const;
     QComboBox* usersCombo();
 
-   void RunTask(std::string const& str_command, std::string& str_result);
     
     int GetMyCurrentTabIndex()const {
         return m_main_tabs.currentIndex();
