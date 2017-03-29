@@ -2273,7 +2273,7 @@ public:
       }
 
 
-   optional<content_download_status> get_download_status(string consumer, string URI) {
+   optional<content_download_status> get_download_status(string consumer, string URI) const {
       try {
          
          account_id_type acc = get_account(consumer).id;
@@ -3737,7 +3737,7 @@ wallet_api::download_content(string consumer, string URI, bool broadcast)
    return my->download_content(consumer, URI, broadcast);
 }
 
-optional<content_download_status> wallet_api::get_download_status(string consumer, string URI)
+optional<content_download_status> wallet_api::get_download_status(string consumer, string URI) const
 {
    return my->get_download_status(consumer, URI);
 }
@@ -3830,54 +3830,72 @@ vector<buying_object> wallet_api::get_buying_history_objects_by_consumer( const 
     }
     return result;
 }
-    
-vector<buying_object> wallet_api::get_buying_history_objects_by_consumer_term( const string& account_id_or_name, const string& term )const
-{
-    account_id_type consumer = get_account( account_id_or_name ).id;
-    vector<buying_object> result = my->_remote_db->get_buying_objects_by_consumer( consumer );
-    
-    size_t iWriteIndex = 0;
-    for (size_t i = 0; i < result.size(); ++i) {
-            
-        buying_object& bobj = result[i];
-            
-        optional<content_object> content = my->_remote_db->get_content( bobj.URI );
-        if (!content) {
+   
+   vector<buying_object_ex> wallet_api::search_my_purchases( const string& account_id_or_name, const string& term )const
+   {
+      account_id_type consumer = get_account( account_id_or_name ).id;
+      const vector<buying_object>& bobjects = my->_remote_db->get_buying_objects_by_consumer( consumer );
+      
+      vector<buying_object_ex> result;
+      
+      for (size_t i = 0; i < bobjects.size(); ++i) {
+         
+         buying_object buyobj = bobjects[i];
+         
+         optional<content_download_status> status = get_download_status(account_id_or_name, buyobj.URI);
+         if (!status) {
             continue;
-        }
-        bobj.price = content->price;
-        bobj.size = content->size;
-        bobj.rating = content->AVG_rating;
-        bobj.synopsis = content->synopsis;
-        
-        std::string synopsis = json_unescape_string(content->synopsis);
-        std::string title = synopsis;
-        std::string description;
-        
-        try {
+         }
+         
+         optional<content_object> content = my->_remote_db->get_content( buyobj.URI );
+         if (!content) {
+            continue;
+         }
+         
+         
+         
+         std::string synopsis = json_unescape_string(content->synopsis);
+         std::string title = synopsis;
+         std::string description;
+         
+         try {
             auto synopsis_parsed = nlohmann::json::parse(synopsis);
             title = synopsis_parsed["title"].get<std::string>();
             description = synopsis_parsed["description"].get<std::string>();
-        } catch (...) {}
-        
-        std::string search_term = term;
-        boost::algorithm::to_lower(search_term);
-        boost::algorithm::to_lower(title);
-        boost::algorithm::to_lower(description);
-        
-        if (false == search_term.empty() &&
-            std::string::npos == title.find(search_term) &&
-            std::string::npos == description.find(search_term))
+         } catch (...) {}
+         
+         std::string search_term = term;
+         boost::algorithm::to_lower(search_term);
+         boost::algorithm::to_lower(title);
+         boost::algorithm::to_lower(description);
+         
+         if (false == search_term.empty() &&
+             std::string::npos == title.find(search_term) &&
+             std::string::npos == description.find(search_term))
             continue;
+         
+         
+         
+         
+         result.emplace_back(buying_object_ex(bobjects[i], *status));
+         buying_object_ex& bobj = result.back();
+         
+         bobj.price = content->price;
+         bobj.size = content->size;
+         bobj.rating = content->AVG_rating;
+         bobj.synopsis = content->synopsis;
+         
+         bobj.author_account = account_id_or_name;
+         bobj.created = content->created;
+         bobj.expiration = content->expiration;
+         bobj.times_bought = content->times_bought;
+         bobj.hash = content->_hash;
 
-        result[iWriteIndex] = bobj;
-        ++iWriteIndex;
-    }
-    result.resize(iWriteIndex);
-    
-    return result;
-}
-
+      }
+      
+      return result;
+   }
+   
 optional<buying_object> wallet_api::get_buying_by_consumer_URI( const string& account_id_or_name, const string & URI )const
 {
    account_id_type account = get_account( account_id_or_name ).id;
