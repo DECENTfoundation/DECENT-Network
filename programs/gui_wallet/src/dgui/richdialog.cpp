@@ -14,18 +14,25 @@
 
 using namespace gui_wallet;
 
-RichDialogBase::RichDialogBase()
-    :
-      m_ok_button(tr("OK")),
-      m_cancel_button(tr("Cancel"))
+RichDialogBase::RichDialogBase(QString title)
 {
+    m_ok_button.setText("Import");
+    m_cancel_button.setText("Cancel");
+    m_ok_button.setFixedSize(178, 40);
+    m_cancel_button.setFixedSize(178, 40);
     m_buttons_layout.addWidget(&m_ok_button);
+    m_buttons_layout.addWidget(new QLabel());
     m_buttons_layout.addWidget(&m_cancel_button);
+    m_controls_layout.setContentsMargins(0, 0, 0, 20);
+    m_cancel_button.setStyleSheet("QLabel {border: 1px solid rgb(143,143,143); background-color :rgb(255,255,255); color: rgb(0,0,0);}");
+    m_main_layout.setContentsMargins(113, 45, 113, 50);
     m_main_layout.addLayout(&m_controls_layout);
     m_main_layout.addLayout(&m_buttons_layout);
     setLayout(&m_main_layout);
-    connect(&m_cancel_button,SIGNAL(clicked()),this,SLOT(close()));
-    connect(&m_ok_button,SIGNAL(clicked()),this,SLOT(set_ok_and_closeSlot()));
+    connect(&m_cancel_button,SIGNAL(LabelClicked()),this,SLOT(close()));
+    connect(&m_ok_button,SIGNAL(LabelClicked()),this,SLOT(set_ok_and_closeSlot()));
+    setWindowTitle(title);
+    resize(610, 273);
 }
 
 
@@ -56,14 +63,21 @@ void RichDialogBase::AddWidget(QWidget* a_pWidget)
 
 
 /********************************************/
-RichDialog::RichDialog(int a_num_of_text_boxes)
-    : m_nNumOfTextBoxes(a_num_of_text_boxes),m_pTextBoxes(NULL)
+RichDialog::RichDialog(int a_num_of_text_boxes  , QString title)
+    : m_nNumOfTextBoxes(a_num_of_text_boxes),m_pTextBoxes(NULL),RichDialogBase(title)
 {
     if(a_num_of_text_boxes<=0) return;
 
     m_pTextBoxes = new QLineEdit[a_num_of_text_boxes];
-    if(!m_pTextBoxes) {throw "Low memory!";}
+    m_pTextBoxes[0].setPlaceholderText(QString("Account"));
+    m_pTextBoxes[0].setAttribute(Qt::WA_MacShowFocusRect, 0);
+    m_pTextBoxes[0].setFixedSize(383, 44);
+    m_pTextBoxes[0].setStyleSheet("border: 1px solid rgb(143,143,143);padding-left:25px;");
 
+    m_pTextBoxes[1].setPlaceholderText(QString("Key"));
+    m_pTextBoxes[1].setAttribute(Qt::WA_MacShowFocusRect, 0);
+    m_pTextBoxes[1].setFixedSize(383, 44);
+    m_pTextBoxes[1].setStyleSheet("border: 1px solid rgb(143,143,143);padding-left:25px;");
     for(int i(0); i<a_num_of_text_boxes; ++i )
     {
         m_controls_layout.addWidget(&m_pTextBoxes[i]);
