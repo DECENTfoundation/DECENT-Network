@@ -69,7 +69,7 @@ namespace gui_wallet
         button_layout->addWidget(unlockButton);
         connect(unlockButton, SIGNAL(LabelClicked()), this, SLOT(unlock_slot()));
         connect(&password_box, SIGNAL(returnPressed()), unlockButton, SIGNAL(LabelClicked()));
-        m_main_layout.setContentsMargins(93, 40, 93, 60);
+        m_main_layout.setContentsMargins(93, 30, 93, 60);
         m_main_layout.addWidget(&m_main_table);
         m_main_layout.addLayout(button_layout);
         setLayout(&m_main_layout);
@@ -103,90 +103,3 @@ namespace gui_wallet
         close();
     }
 }
-
-/* ///////////////////////////////////  */
-/*
-gui_wallet::ConnectDlg::ConnectDlg(QWidget* a_parent)
-    :
-      QDialog(a_parent),
-      m_main_table(NUM_OF_FIELDS,2)
-{
-    m_main_table.setItem(RPC_ENDPOINT_FIELD,0,new QTableWidgetItem(tr("rpc-endpoint")));
-    m_main_table.setCellWidget(RPC_ENDPOINT_FIELD,1,new QLineEdit(tr("ws://127.0.0.1:8090")));
-
-    m_main_table.setItem(WALLET_FILE_FIELD,0,new QTableWidgetItem(tr("wallet file")));
-    m_main_table.setCellWidget(WALLET_FILE_FIELD,1,new QLineEdit(tr("")));
-
-    m_main_table.setItem(CHAIN_ID_FIELD,0,new QTableWidgetItem(tr("chain-id")));
-    //m_main_table.setCellWidget(CHAIN_ID_FIELD,1,new QLineEdit(tr("d9561465fd1aab95eb6fec9a60705e983b7759ea4c9892ac4acd30737f5079b4")));
-    m_main_table.setCellWidget(CHAIN_ID_FIELD,1,new QLineEdit(tr("0000000000000000000000000000000000000000000000000000000000000000")));
-
-    //m_main_table.setItem(FIELDS-1,0,new QTableWidgetItem(tr("rpc-endpoint")));
-    m_main_table.setCellWidget(CONNECT_BUTTON_FIELD,0,new QLabel);
-    m_main_table.setCellWidget(CONNECT_BUTTON_FIELD,1,new QPushButton(tr("Connect")));
-
-    QPalette aPalette = m_main_table.cellWidget(CONNECT_BUTTON_FIELD,0)->palette();
-    aPalette.setColor(QPalette::Base,Qt::gray);
-    m_main_table.cellWidget(CONNECT_BUTTON_FIELD,0)->setPalette(aPalette);
-
-    m_main_table.horizontalHeader()->hide();
-    m_main_table.verticalHeader()->hide();
-    m_main_table.resize(size());
-    m_main_layout.addWidget(&m_main_table);
-    setLayout(&m_main_layout);
-
-    /-* Initing signal-slot pairs*-/
-    connect( m_main_table.cellWidget(CONNECT_BUTTON_FIELD,1), SIGNAL(clicked()), this, SLOT(ConnectPushedSlot()) );
-}
-
-
-gui_wallet::ConnectDlg::~ConnectDlg()
-{
-}
-
-
-void gui_wallet::ConnectDlg::resizeEvent ( QResizeEvent * event )
-{
-    QWidget::resizeEvent(event);
-
-    QSize aInfWidgSize = m_main_table.size();
-
-    m_main_table.setColumnWidth(0,40*aInfWidgSize.width()/100);
-    m_main_table.setColumnWidth(1,59*aInfWidgSize.width()/100);
-
-}
-
-
-QWidget* gui_wallet::ConnectDlg::GetTableWidget(int a_column, int a_row)
-{
-    return m_main_table.cellWidget(a_column,a_row);
-}
-
-int gui_wallet::ConnectDlg::execNew(SConnectionStruct* a_pData)
-{
-    m_ret_value = RDB_CANCEL;
-    
-    QString tqsString;
-    ((QLineEdit*)m_main_table.cellWidget(RPC_ENDPOINT_FIELD,1))->setText(tr(a_pData->ws_server.c_str()));
-    ((QLineEdit*)(m_main_table.cellWidget(WALLET_FILE_FIELD,1)))->setText(tr(a_pData->wallet_file_name.c_str()));
-    ((QLineEdit*)m_main_table.cellWidget(CHAIN_ID_FIELD,1))->setText(tr(a_pData->chain_id.c_str()));
-    
-    
-    QDialog::exec();
-
-    tqsString = ((QLineEdit*)m_main_table.cellWidget(RPC_ENDPOINT_FIELD,1))->text();
-    a_pData->ws_server = tqsString.toStdString();
-    tqsString = ((QLineEdit*)m_main_table.cellWidget(WALLET_FILE_FIELD,1))->text();
-    a_pData->wallet_file_name = tqsString.toStdString();
-    tqsString = ((QLineEdit*)m_main_table.cellWidget(CHAIN_ID_FIELD,1))->text();
-    a_pData->chain_id = tqsString.toStdString();
-
-    return m_ret_value;
-}
-
-
-void gui_wallet::ConnectDlg::ConnectPushedSlot()
-{
-    m_ret_value = RDB_OK;
-    close();
-}*/
