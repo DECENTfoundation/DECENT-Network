@@ -12,6 +12,7 @@
 #include "text_display_dialog.hpp"
 #include "richdialog.hpp"
 #include "unnamedsemaphorelite.hpp"
+#include "json.hpp"
 
 #include <decent/wallet_utility/wallet_utility.hpp>
 #include "decent_wallet_ui_gui_contentdetailsgeneral.hpp"
@@ -62,6 +63,7 @@ public:
 public:
    
    static void RunTaskImpl(std::string const& str_command, std::string& str_result);
+   static bool RunTaskParseImpl(std::string const& str_command, nlohmann::json& json_result);
 
    
 protected:
@@ -150,5 +152,6 @@ protected:
 
 
 #define RunTask gui_wallet::Mainwindow_gui_wallet::RunTaskImpl
+#define RunTaskParse gui_wallet::Mainwindow_gui_wallet::RunTaskParseImpl
 
 

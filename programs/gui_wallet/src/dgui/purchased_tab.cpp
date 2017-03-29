@@ -275,7 +275,7 @@ std::string PurchasedTab::getUpdateCommand() {
       return "";
    } // if key not imported
    
-   return "get_buying_history_objects_by_consumer_term "
+   return "search_my_purchases "
            "\"" + str_current_username +"\" "
            "\"" + m_filterLineEditer.text().toStdString() +"\"";
 

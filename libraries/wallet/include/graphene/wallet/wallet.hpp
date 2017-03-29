@@ -1595,7 +1595,7 @@ namespace graphene { namespace wallet {
           * @return History buying objects corresponding to the provided consumer and matching search term
           * @ingroup WalletCLI
           */
-         vector<buying_object> get_buying_history_objects_by_consumer_term( const string& account_id_or_name, const string& term )const;
+         vector<buying_object> search_my_purchases( const string& account_id_or_name, const string& term )const;
 
          /**
          * @brief Get buying (open or history) by consumer and URI
@@ -1940,7 +1940,7 @@ FC_API( graphene::wallet::wallet_api,
            (get_open_buyings_by_URI)
            (get_open_buyings_by_consumer)
            (get_buying_history_objects_by_consumer)
-           (get_buying_history_objects_by_consumer_term)
+           (search_my_purchases)
            (get_buying_by_consumer_URI)
            (get_rating)
            (get_content)

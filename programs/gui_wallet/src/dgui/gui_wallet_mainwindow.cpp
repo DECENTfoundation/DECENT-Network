@@ -23,7 +23,6 @@
 
 #include <graphene/utilities/dirhelper.hpp>
 #include <graphene/wallet/wallet.hpp>
-#include "json.hpp"
 
 #ifndef DEFAULT_WALLET_FILE_NAME
 #define DEFAULT_WALLET_FILE_NAME       "wallet.json"
@@ -151,7 +150,7 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
     
     _balanceUpdater.setSingleShot(false);
     _balanceUpdater.setInterval(10000);
-    connect(&_balanceUpdater, SIGNAL(timeout()), this, SLOT( CurrentUserBalanceUpdate() ));
+    connect(&_balanceUpdater, SIGNAL(timeout()), this, SLOT( currentUserBalanceUpdate() ));
     _balanceUpdater.start();
    
    connect(&GlobalEvents::instance(), SIGNAL(walletConnected(bool)), this, SLOT(DisplayWalletContentGUI(bool)));
@@ -206,6 +205,21 @@ void Mainwindow_gui_wallet::RunTaskImpl(std::string const& str_command, std::str
    
    str_result = s_pMainWindowInstance->m_p_wallet_operator->m_wallet_api.RunTaskImpl(str_command);
 }
+
+bool Mainwindow_gui_wallet::RunTaskParseImpl(std::string const& str_command, nlohmann::json& json_result) {
+   try {
+      std::string str_result;
+      Mainwindow_gui_wallet::RunTaskImpl(str_command, str_result);
+      json_result = json::parse(str_result);
+      return true;
+   } catch (const std::exception& ex) {
+      json_result = json(ex.what());
+   } catch (...) {
+      json_result = json("Unhandled exception");
+   }
+   return false;
+}
+
 
 void Mainwindow_gui_wallet::CreateActions()
 {
@@ -315,64 +329,63 @@ void Mainwindow_gui_wallet::CurrentUserChangedSlot(const QString& a_new_user)
 
 void Mainwindow_gui_wallet::UpdateAccountBalances(const std::string& username) {
 
-    try {
-    
-        std::string assetsResult;
-        std::string getAssetsCommand = "list_assets \"\" 100";
-        RunTask(getAssetsCommand, assetsResult);
-        
-        
-        std::string csLineToRun = "list_account_balances " + username;
-        std::string result;
-        
-        RunTask(csLineToRun, result);
-        
-        
-        auto allAssets = json::parse(assetsResult);
-        auto allBalances = json::parse(result);
-        
-        std::vector<std::string> balances;
-        for (int i = 0; i < allBalances.size(); ++i) {
-            
-            std::string assetName = "Unknown";
-            int precision = 1;
-            
-            for (int assInd = 0; assInd < allAssets.size(); ++assInd) {
-                if (allAssets[assInd]["id"].get<std::string>() == allBalances[i]["asset_id"]) {
-                    assetName = allAssets[assInd]["symbol"].get<std::string>();
-                    precision = allAssets[assInd]["precision"].get<int>();
-                    break;
-                }
-            }
-            
-            double amount = 0;
-            if (allBalances[i]["amount"].is_number()) {
-                amount = allBalances[i]["amount"].get<double>();
-            } else {
-                amount = std::stod(allBalances[i]["amount"].get<std::string>());
-            }
-            amount = amount / pow(10, precision);
-            
-            QString str = QString::number(amount) + tr(" ") + QString::fromStdString(assetName);
-            
-            balances.push_back(str.toStdString());
-        }
-        m_pCentralWidget->SetAccountBalancesFromStrGUI(balances);
-        
-    } catch (const std::exception& ex) {
-        ALERT_DETAILS("Could not get account balances", ex.what());
-    }
-
+   
+   json allAssets;
+   std::string getAssetsCommand = "list_assets \"\" 100";
+   if (!RunTaskParse(getAssetsCommand, allAssets)) {
+      ALERT_DETAILS("Could not get account balances", allAssets.get<string>().c_str());
+      return;
+   }
+   
+   
+   std::string csLineToRun = "list_account_balances " + username;
+   json allBalances;
+   
+   if (!RunTaskParse(csLineToRun, allBalances)) {
+      ALERT_DETAILS("Could not get account balances", allBalances.get<string>().c_str());
+      return;
+   }
+   
+   
+   
+   std::vector<std::string> balances;
+   for (int i = 0; i < allBalances.size(); ++i) {
+      
+      std::string assetName = "Unknown";
+      int precision = 1;
+      
+      for (int assInd = 0; assInd < allAssets.size(); ++assInd) {
+         if (allAssets[assInd]["id"].get<std::string>() == allBalances[i]["asset_id"]) {
+            assetName = allAssets[assInd]["symbol"].get<std::string>();
+            precision = allAssets[assInd]["precision"].get<int>();
+            break;
+         }
+      }
+      
+      double amount = 0;
+      if (allBalances[i]["amount"].is_number()) {
+         amount = allBalances[i]["amount"].get<double>();
+      } else {
+         amount = std::stod(allBalances[i]["amount"].get<std::string>());
+      }
+      amount = amount / pow(10, precision);
+      
+      QString str = QString::number(amount) + tr(" ") + QString::fromStdString(assetName);
+      
+      balances.push_back(str.toStdString());
+   }
+   m_pCentralWidget->SetAccountBalancesFromStrGUI(balances);
+   
 }
 
 void Mainwindow_gui_wallet::LockSlot()
 {
     m_ActionLock.setDisabled(true);
     m_ActionUnlock.setDisabled(true);
-    
+   
     const std::string csLine = "lock";
     std::string dummy;
-    
+   
     try {
         RunTask(csLine, dummy);
     } catch (std::exception& ex) {
@@ -404,13 +417,11 @@ void Mainwindow_gui_wallet::UnlockSlot()
     m_ActionUnlock.setDisabled(true);
     
     const std::string csPassLine = "unlock " + cvsPassword;
-    std::string result;
-    
-    try {
-       RunTask(csPassLine, result);
-       GlobalEvents::instance().setWalletUnlocked();
-    } catch (const std::exception& ex) {
-        ALERT_DETAILS("Unable to unlock the wallet", ex.what());
+    json result;
+   
+    if (!RunTaskParse(csPassLine, result)) {
+       ALERT_DETAILS("Unable to unlock the wallet", result.get<std::string>().c_str());
+       return;
     }
     
     UpdateLockedStatus();
@@ -457,42 +468,39 @@ void Mainwindow_gui_wallet::CheckDownloads()
         _activeDownloads.clear();
         return;
     }
-    
-    try {
-        
-        std::string a_result;
-        RunTask("get_buying_history_objects_by_consumer_term \"" + str_current_username +"\" \"\" ", a_result);
-    
-        
-        auto contents = json::parse(a_result);
-        for (int i = 0; i < contents.size(); ++i) {
+   
+   json contents;
+   if (!RunTaskParse("search_my_purchases \"" + str_current_username +"\" \"\" ", contents)) {
+      std::cout << contents.get<string>() << std::endl;
+      return;
+   }
+   
+   
+   for (int i = 0; i < contents.size(); ++i) {
+      
+      auto content = contents[i];
+      std::string URI = contents[i]["URI"].get<std::string>();
+      
+      if (URI == "") {
+         continue;
+      }
+      
+      if (_activeDownloads.find(URI) == _activeDownloads.end()) {
+         json ignore_result;
+         if (RunTaskParse("download_package \"" + URI +"\" ", ignore_result)) {
+            _activeDownloads.insert(URI);
+         } else {
+            std::cout << "Can not resume download: " << URI << std::endl;
+            std::cout << "Error: " << ignore_result.get<string>() << std::endl;
             
-            auto content = contents[i];
-            std::string URI = contents[i]["URI"].get<std::string>();
-            
-            if (URI == "") {
-                continue;
-            }
-            
-            if (_activeDownloads.find(URI) == _activeDownloads.end()) {
-                std::string ignore_string;
-                try {
-                    RunTask("download_package \"" + URI +"\" ", ignore_string);
-                    _activeDownloads.insert(URI);
-                } catch (const std::exception& ex) {
-                    std::cout << "Can not resume download: " << URI << std::endl;
-                    std::cout << "Error: " << ex.what() << std::endl;
-                }
-                
-            }
-            
-        }
-        
-        
-    } catch (std::exception& ex) {
-        std::cout << ex.what() << std::endl;
-    }
-    
+         }
+         
+      }
+      
+   }
+   
+   
+   
 
 }
 
@@ -647,27 +655,6 @@ void Mainwindow_gui_wallet::HelpSlot()
 
 void Mainwindow_gui_wallet::ConnectSlot()
 {
-   /*
-<<<<<<< HEAD
-    int nRet = RDB_OK;
-
-    WalletInterface::loadWalletFile(&m_wdata2);
-
-    if(nRet == RDB_CANCEL) {
-       return;
-    }
-=======
-   WalletInterface::loadWalletFile(&m_wdata2);
->>>>>>> 23697d791aa0432922a72d609a202a5d2a2e8a1f
-
-   m_ActionConnect.setEnabled(false);
-   m_wdata2.owner = this;
-   
-<<<<<<< HEAD
-   WalletInterface::startConnecting(&m_wdata2);
-=======
-   WalletInterface::connectToNewWitness(&m_wdata2);
->>>>>>> 23697d791aa0432922a72d609a202a5d2a2e8a1f*/
 }
 
 

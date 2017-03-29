@@ -3831,7 +3831,7 @@ vector<buying_object> wallet_api::get_buying_history_objects_by_consumer( const 
     return result;
 }
     
-vector<buying_object> wallet_api::get_buying_history_objects_by_consumer_term( const string& account_id_or_name, const string& term )const
+vector<buying_object> wallet_api::search_my_purchases( const string& account_id_or_name, const string& term )const
 {
     account_id_type consumer = get_account( account_id_or_name ).id;
     vector<buying_object> result = my->_remote_db->get_buying_objects_by_consumer( consumer );
