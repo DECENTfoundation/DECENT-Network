@@ -67,7 +67,6 @@ void WalletOperator::slot_connect()
 
 
 Mainwindow_gui_wallet::Mainwindow_gui_wallet()
-//<<<<<<< HEAD
 : m_ActionExit(tr("&Exit"),this)
 , m_ActionConnect(tr("Connect"),this)
 , m_ActionAbout(tr("About"),this)
@@ -78,29 +77,12 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
 , m_ActionImportKey(tr("Import key"),this)
 , m_info_dialog()
 , m_locked(true)
-, m_import_key_dlg(2, "title")
+, m_import_key_dlg(2, "Key Import")
 , m_nConnected(0)
 , m_SetPasswordDialog(this, true)
 , m_UnlockDialog(this, false)
 , m_p_wallet_operator(new WalletOperator())
 , m_wallet_operator_thread(this)
-//=======
-//        :
-//        m_ActionExit(tr("&Exit"),this),
-//        m_ActionConnect(tr("Connect"),this),
-//        m_ActionAbout(tr("About"),this),
-//        m_ActionInfo(tr("Info"),this),
-//        m_ActionHelp(tr("Help"),this),
-//        m_ActionLock(tr("Lock"),this),
-//        m_ActionUnlock(tr("Unlock"),this),
-//        m_ActionImportKey(tr("Import key"),this),
-//        m_info_dialog(),
-//        m_locked(true),
-//        m_import_key_dlg(2 , "Key Import"),
-//        m_nConnected(0),
-//        m_SetPasswordDialog(this, true),
-//        m_UnlockDialog(this, false)
-//>>>>>>> 601e33eff763d3315666f2b397ef7005a1b21d96
 {
    s_pMainWindowInstance = this;
 

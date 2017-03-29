@@ -31,8 +31,9 @@ namespace gui_wallet
     , m_pParent(pParent)
     , m_main_table(2, 1)
     {
-        resize(350, 150);
-        
+        resize(570, 220);
+       
+       
         m_main_table.horizontalHeader()->hide();
         m_main_table.verticalHeader()->hide();
         m_main_table.setShowGrid(false);
@@ -43,41 +44,32 @@ namespace gui_wallet
         m_main_table.setPalette(plt_tbl);
         
         DecentButton* unlockButton = new DecentButton();
-        DecentButton* cencel = new DecentButton();
-        
-        // set hight
-        cencel->setStyleSheet("QLabel { background-color :rgb(255,255,255); color : rgb(0,0,0);}");
+
         if (isSet) {
             unlockButton->setText("Set Password");
-            unlockButton->setFixedWidth(150);
         } else {
             unlockButton->setText("Unlock");
-            cencel->setText("Cencel");
         }
-        unlockButton->setFixedWidth(120);
-        cencel->setFixedWidth(120);
-        unlockButton->setFixedHeight(30);
-        cencel->setFixedHeight(30);
+        unlockButton->setFixedWidth(185);
+        unlockButton->setFixedHeight(38);
+        password_box.setFixedSize(383, 44);
         password_box.setEchoMode(QLineEdit::Password);
         password_box.setAttribute(Qt::WA_MacShowFocusRect, 0);
         password_box.setPlaceholderText(QString("Password"));
-        
+        password_box.setStyleSheet("border: 1px solid rgb(143,143,143);padding-left:25px;");
+       
         if (isSet) {
-            m_main_table.setCellWidget(0, 0, new QLabel(tr("Choose password to encrypt your wallet.")));
+           setWindowTitle("Set Password");
         } else {
            setWindowTitle("Unlock your wallet");
         }
        
         m_main_table.setCellWidget(1, 0, &password_box);
-        //m_main_table.setCellWidget(2, 0, unlockButton);
         QHBoxLayout* button_layout = new QHBoxLayout();
         button_layout->addWidget(unlockButton);
-        button_layout->addWidget(cencel);
         connect(unlockButton, SIGNAL(LabelClicked()), this, SLOT(unlock_slot()));
-        connect(cencel, SIGNAL(LabelClicked()), this, SLOT(close()));
         connect(&password_box, SIGNAL(returnPressed()), unlockButton, SIGNAL(LabelClicked()));
-        button_layout->setContentsMargins(0, 0, 0, 0);
-        m_main_layout.setContentsMargins(40, 0, 40, 30);
+        m_main_layout.setContentsMargins(93, 40, 93, 60);
         m_main_layout.addWidget(&m_main_table);
         m_main_layout.addLayout(button_layout);
         setLayout(&m_main_layout);

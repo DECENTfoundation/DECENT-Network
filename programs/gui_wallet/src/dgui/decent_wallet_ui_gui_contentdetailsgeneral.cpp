@@ -12,34 +12,26 @@
 #include <QPushButton>
 
 using namespace gui_wallet;
-//<<<<<<< HEAD
-//ContentDetailsGeneral::ContentDetailsGeneral(Mainwindow_gui_wallet* pMainWindow)
-//: ContentDetailsBase(pMainWindow)
-//{
-//   QVBoxLayout* image_layout = new QVBoxLayout;
-//=======
 ContentDetailsGeneral::ContentDetailsGeneral(Mainwindow_gui_wallet* pMainWindow) : ContentDetailsBase(pMainWindow){
    QHBoxLayout* image_layout = new QHBoxLayout;
-//>>>>>>> 601e33eff763d3315666f2b397ef7005a1b21d96
-   m_label.setText("Get it");
-   m_label.setFixedWidth(120);
-   m_label.setFixedHeight(30);
+   m_label.setText("Get it!");
+   m_label.setFixedWidth(178);
+   m_label.setFixedHeight(40);
    
    m_close.setText("Close");
-   m_close.setFixedWidth(120);
-   m_close.setFixedHeight(30);
+   m_close.setFixedWidth(178);
+   m_close.setFixedHeight(40);
    m_close.setStyleSheet("QLabel { background-color :rgb(255,255,255); color : rgb(0,0,0);border: 1px solid grey}");
    
    image_layout->addWidget(&m_label);
    image_layout->addWidget(new QLabel());
    image_layout->addWidget(&m_close);
-   image_layout->setContentsMargins(180, 5, 180, 10);
+   image_layout->setContentsMargins(115, 15, 115, 15);
    
    m_free_for_child.addLayout(image_layout);
    
    connect(&m_label, SIGNAL(LabelClicked()), this, SLOT(LabelPushCallbackGUI()));
    connect(&m_close, SIGNAL(LabelClicked()), this, SLOT(close()));
-   setFixedSize(620,480);
 }
 
 

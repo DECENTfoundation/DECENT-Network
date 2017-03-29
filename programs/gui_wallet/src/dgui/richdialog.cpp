@@ -18,18 +18,21 @@ RichDialogBase::RichDialogBase(QString title)
 {
     m_ok_button.setText("Import");
     m_cancel_button.setText("Cancel");
-    m_buttons_layout.setContentsMargins(20, 5, 20, 5);
-    m_controls_layout.setContentsMargins(20, 0, 20, 0);
+    m_ok_button.setFixedSize(178, 40);
+    m_cancel_button.setFixedSize(178, 40);
     m_buttons_layout.addWidget(&m_ok_button);
+    m_buttons_layout.addWidget(new QLabel());
     m_buttons_layout.addWidget(&m_cancel_button);
-    m_cancel_button.setStyleSheet("QLabel { background-color :rgb(255,255,255); color : rgb(0,0,0);}");
+    m_controls_layout.setContentsMargins(0, 0, 0, 20);
+    m_cancel_button.setStyleSheet("QLabel {border: 1px solid rgb(143,143,143); background-color :rgb(255,255,255); color: rgb(0,0,0);}");
+    m_main_layout.setContentsMargins(113, 45, 113, 50);
     m_main_layout.addLayout(&m_controls_layout);
     m_main_layout.addLayout(&m_buttons_layout);
     setLayout(&m_main_layout);
     connect(&m_cancel_button,SIGNAL(LabelClicked()),this,SLOT(close()));
     connect(&m_ok_button,SIGNAL(LabelClicked()),this,SLOT(set_ok_and_closeSlot()));
     setWindowTitle(title);
-    resize(350, 150);
+    resize(610, 273);
 }
 
 
@@ -68,8 +71,13 @@ RichDialog::RichDialog(int a_num_of_text_boxes  , QString title)
     m_pTextBoxes = new QLineEdit[a_num_of_text_boxes];
     m_pTextBoxes[0].setPlaceholderText(QString("Account"));
     m_pTextBoxes[0].setAttribute(Qt::WA_MacShowFocusRect, 0);
+    m_pTextBoxes[0].setFixedSize(383, 44);
+    m_pTextBoxes[0].setStyleSheet("border: 1px solid rgb(143,143,143);padding-left:25px;");
+
     m_pTextBoxes[1].setPlaceholderText(QString("Key"));
     m_pTextBoxes[1].setAttribute(Qt::WA_MacShowFocusRect, 0);
+    m_pTextBoxes[1].setFixedSize(383, 44);
+    m_pTextBoxes[1].setStyleSheet("border: 1px solid rgb(143,143,143);padding-left:25px;");
     for(int i(0); i<a_num_of_text_boxes; ++i )
     {
         m_controls_layout.addWidget(&m_pTextBoxes[i]);
