@@ -33,8 +33,8 @@ PurchasedTab::PurchasedTab(Mainwindow_gui_wallet* pMainWindow)
    QHBoxLayout* search_lay = new QHBoxLayout();
    
    m_filterLineEditer.setPlaceholderText(QString("Enter the term to search in title and description"));
-   m_filterLineEditer.setStyleSheet("border: 0");
-   m_filterLineEditer.setFixedHeight(40);
+   m_filterLineEditer.setStyleSheet("border: 0; padding-left: 10 px;");
+   m_filterLineEditer.setFixedHeight(54);
    m_filterLineEditer.setAttribute(Qt::WA_MacShowFocusRect, 0);
    
    QPixmap image(":/icon/images/search.svg");
@@ -50,6 +50,7 @@ PurchasedTab::PurchasedTab(Mainwindow_gui_wallet* pMainWindow)
    search_lay->addWidget(&m_filterLineEditer);
    
    m_main_layout.setContentsMargins(0, 0, 0, 0);
+   m_main_layout.setSpacing(0);
    m_main_layout.addLayout(search_lay);
    m_main_layout.addWidget(&m_pTableWidget);
    

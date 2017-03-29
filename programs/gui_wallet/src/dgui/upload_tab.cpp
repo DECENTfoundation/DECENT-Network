@@ -71,11 +71,11 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow)
 
 m_getPublishersTimer(this)
 {
-    QFont m_font( "Open Sans Bold", 14, QFont::Bold);
     QPalette pltEdit;
     
     
-    m_title_text.setPlaceholderText("  Title:");
+    m_title_text.setPlaceholderText("Title:");
+    m_title_text.setStyleSheet("padding-left: 10px;");
     m_title_text.setAttribute(Qt::WA_MacShowFocusRect, 0);
     m_title_text.setMinimumHeight(44);
     m_title_text.setContentsMargins(0, 0, 0, 0);
@@ -84,8 +84,8 @@ m_getPublishersTimer(this)
     m_synopsis_layout.addWidget(&m_title_text);
     
     m_description_text.setContentsMargins(0, 0, 0, 0);
-    m_description_text.setPlaceholderText("  Description:");
-    m_description_text.setStyleSheet("border-top: 0px;border-left: 0px;border-right: 0px;border-bottom: 0px;");
+    m_description_text.setPlaceholderText("Description:");
+    m_description_text.setStyleSheet("border-top: 0px; border-left: 0px; border-right: 0px; padding-left: 10px; border-bottom: 0px;");
     m_description_text.setMinimumHeight(161);
     m_description_text.setContentsMargins(0, 0, 0, 0);
     
@@ -175,9 +175,9 @@ m_getPublishersTimer(this)
     
     price = new QLineEdit;
     price->setValidator( new QDoubleValidator(0.001, 100000, 3, this) );
-    price->setPlaceholderText("  Price");
+    price->setPlaceholderText("Price");
     price->setAttribute(Qt::WA_MacShowFocusRect, 0);
-    price->setStyleSheet("border:1px solid lightGray; color: Gray");
+    price->setStyleSheet("border:1px solid lightGray; padding-left: 8px; color: Gray");
     price->setMinimumHeight(44);
     price->setContentsMargins(0, 0, 0, 0);
     
@@ -204,12 +204,12 @@ m_getPublishersTimer(this)
     browse_content_button->setText("Browse");
     browse_content_button->setFont(fontBrowse);
     browse_content_button->setMinimumWidth(105);
-    browse_content_button->setMinimumHeight(44);
+    browse_content_button->setFixedHeight(43);
     connect(browse_content_button, SIGNAL(LabelClicked()),this, SLOT(browseContent()));
     
     contRow->addWidget(cont);
     contRow->addWidget(browse_content_button);
-    
+
     u_main_layout.addLayout(contRow);
     
     //SIMPLES
@@ -225,7 +225,7 @@ m_getPublishersTimer(this)
     browse_samples_button->setText("Browse");
     browse_samples_button->setFont(fontBrowse);
     browse_samples_button->setMinimumWidth(105);
-    browse_samples_button->setMinimumHeight(44);
+    browse_samples_button->setFixedHeight(43);
     connect(browse_samples_button, SIGNAL(LabelClicked()),this, SLOT(browseSamples()));
     
     simRow->addWidget(sim);
@@ -264,6 +264,7 @@ m_getPublishersTimer(this)
 
     u_main_layout.addLayout(button);
     u_main_layout.setContentsMargins(0, 0, 0, 5 );
+    u_main_layout.setSpacing(0);
     
     m_getPublishersTimer.setSingleShot(true);
     connect(&m_getPublishersTimer, SIGNAL(timeout()), SLOT(onGrabPublishers()));
@@ -466,26 +467,31 @@ Upload_tab::Upload_tab(Mainwindow_gui_wallet* parent) : popup(0), _content_popup
 
     });
     
+    QFont fontUpload( "Myriad Pro Regular", 14, QFont::Bold);
+
     upload_button = new DecentButton();
-    upload_button->setText("UPLOAD");
-    upload_button->setFixedWidth(150);
+    upload_button->setFont(fontUpload);
+    upload_button->setText("Upload");
+    upload_button->setMinimumWidth(102);
+    upload_button->setMinimumHeight(54);
+    
     QLabel* lab = new QLabel();
     QPixmap image(":/icon/images/search.svg");
     lab->setPixmap(image);
     
     m_filterLineEdit.setPlaceholderText("Search Content");
-    m_filterLineEdit.setFixedHeight(40);
-   m_filterLineEdit.setStyleSheet("border: 0");
+    m_filterLineEdit.setFixedHeight(54);
+    m_filterLineEdit.setStyleSheet("border: 0; padding-left: 10px;");
     m_filterLineEdit.setAttribute(Qt::WA_MacShowFocusRect, 0);
     
-    m_search_layout.setContentsMargins(42, 0, 0, -50);
+    m_search_layout.setContentsMargins(42, 0, 0, 0);
     m_search_layout.addWidget(lab);
     m_search_layout.addWidget(&m_filterLineEdit);
-    m_search_layout.addWidget(upload_button);
+    m_search_layout.addWidget(upload_button, 0 , Qt::AlignBottom);
     
     m_main_layout.setContentsMargins(0, 0, 0, 0);
+    m_main_layout.setSpacing(0);
     m_main_layout.addLayout(&m_search_layout);
-    
     m_main_layout.addWidget(&m_pTableWidget);
     setLayout(&m_main_layout);
     

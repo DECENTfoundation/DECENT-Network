@@ -49,11 +49,10 @@ TransactionsTab::TransactionsTab(Mainwindow_gui_wallet* pMainWindow)
    });
    
    
-   user.setStyleSheet("border: 0");
+   user.setStyleSheet("border: 0; padding-left: 10px;");
    user.setPlaceholderText("Enter user name to see transaction history");
    user.setAttribute(Qt::WA_MacShowFocusRect, 0);
-   user.setMaximumHeight(40);
-   user.setFixedHeight(40);
+   user.setFixedHeight(54);
    user.setFrame(false);
    
    
@@ -68,6 +67,7 @@ TransactionsTab::TransactionsTab(Mainwindow_gui_wallet* pMainWindow)
    
    tablewidget.horizontalHeader()->setStretchLastSection(true);
    main_layout.setContentsMargins(0, 0, 0, 0);
+   main_layout.setSpacing(0);
    main_layout.addLayout(search_lay);
    main_layout.addWidget(&tablewidget);
    setLayout(&main_layout);

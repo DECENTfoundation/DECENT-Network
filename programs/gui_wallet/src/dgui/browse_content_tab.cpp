@@ -68,8 +68,8 @@ BrowseContentTab::BrowseContentTab(Mainwindow_gui_wallet* parent) : _content_pop
     lab->setPixmap(image);
     
     m_filterLineEdit.setPlaceholderText("Search Content");
-    m_filterLineEdit.setFixedHeight(40);
-    m_filterLineEdit.setStyleSheet("border: 0");
+    m_filterLineEdit.setFixedHeight(54);
+    m_filterLineEdit.setStyleSheet("border: 0; padding-left: 10px;");
     m_filterLineEdit.setAttribute(Qt::WA_MacShowFocusRect, 0);
     
     m_search_layout.setContentsMargins(42, 0, 0, 0);
@@ -77,6 +77,7 @@ BrowseContentTab::BrowseContentTab(Mainwindow_gui_wallet* parent) : _content_pop
     m_search_layout.addWidget(&m_filterLineEdit);
     
     m_main_layout.setContentsMargins(0, 0, 0, 0);
+    m_main_layout.setSpacing(0);
     m_main_layout.addLayout(&m_search_layout);
     m_main_layout.addWidget(&m_pTableWidget);
     setLayout(&m_main_layout);
