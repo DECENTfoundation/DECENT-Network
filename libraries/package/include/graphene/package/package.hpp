@@ -8,6 +8,7 @@
 #include <fc/thread/mutex.hpp>
 #include <fc/crypto/ripemd160.hpp>
 #include <fc/crypto/sha512.hpp>
+#include <fc/network/url.hpp>
 
 #include <boost/filesystem.hpp>
 #include <boost/interprocess/sync/file_lock.hpp>
@@ -29,7 +30,7 @@ namespace decent { namespace package {
     class EventListenerInterface;
     class TransferEngineInterface;
 
-    typedef std::shared_ptr<PackageInfo>               package_handle_t;
+    typedef std::shared_ptr<PackageInfo>                package_handle_t;
     typedef std::set<package_handle_t>                  package_handle_set_t;
     typedef std::shared_ptr<EventListenerInterface>     event_listener_handle_t;
     typedef std::list<event_listener_handle_t>          event_listener_handle_list_t;
@@ -37,23 +38,41 @@ namespace decent { namespace package {
     typedef std::map<std::string, transfer_engine_t>    proto_to_transfer_engine_map_t;
 
 
+    namespace detail {
+
+
+        class PackageTask;
+        class CreatePackageTask;
+        class DownloadPackageTask;
+        class RemovePackageTask;
+        class UnpackPackageTask;
+        class SeedPackageTask;
+
+
+    } // namespace detail
+
+
     class PackageInfo {
     public:
-        enum State {
-            UNINITIALIZED,
+        enum DataState {
+            DS_NONE = 0,
             INVALID,
             PARTIAL,
             UNCHECKED,
             CHECKED
         };
 
-        enum Action {
-            IDLE,
+        enum TransferState {
+            TS_NONE = 0,
+            DOWNLOADING,
+            SEEDING,
+        };
+
+        enum ManipulationState {
+            MS_NONE = 0,
             PACKING,
             ENCRYPTING,
             STAGING,
-            SEEDING,
-            DOWNLOADING,
             CHECKING,
             DECRYPTING,
             UNPACKING,
@@ -62,21 +81,22 @@ namespace decent { namespace package {
 
     private:
         friend class PackageManager;
+        friend class detail::CreatePackageTask;
+        friend class detail::DownloadPackageTask;
+        friend class detail::RemovePackageTask;
+        friend class detail::UnpackPackageTask;
+        friend class detail::SeedPackageTask;
+
 
         PackageInfo(PackageManager& manager,
                     const boost::filesystem::path& content_dir_path,
                     const boost::filesystem::path& samples_dir_path,
-                    const fc::sha512& key,
-                    const event_listener_handle_t& event_listener = event_listener_handle_t());
+                    const fc::sha512& key);
 
-        PackageInfo(PackageManager& manager,
-                    const fc::ripemd160& package_hash,
-                    const event_listener_handle_t& event_listener = event_listener_handle_t());
+        PackageInfo(PackageManager& manager,const fc::ripemd160& package_hash);
 
-        PackageInfo(PackageManager& manager,
-                    const std::string& url,
-                    const event_listener_handle_t& event_listener = event_listener_handle_t());
-        
+        PackageInfo(PackageManager& manager, const fc::url& url);
+
     public:
         PackageInfo(const PackageInfo&)             = delete;
         PackageInfo(PackageInfo&&)                  = delete;
@@ -86,17 +106,20 @@ namespace decent { namespace package {
         ~PackageInfo();
 
     public:
-        void consume(const boost::filesystem::path& dir_path);
-        void cancel_consuming();
-
-        void seed();
-        void cancel_seeding();
-
         void add_event_listener(const event_listener_handle_t& event_listener);
         void remove_event_listener(const event_listener_handle_t& event_listener);
 
-        State get_state() const;
-        Action get_action() const;
+        DataState get_data_state() const;
+        TransferState get_transfer_state() const;
+        ManipulationState get_manipulation_state() const;
+
+        void create();
+        void unpack(const boost::filesystem::path& dir_path, const fc::sha512& key);
+        void download(const boost::filesystem::path& dir_path);
+        void seed(const std::string& proto = "");
+        void remove(bool block = false);
+
+        void cancel_current_task(bool block = false);
 
     private:
         static boost::filesystem::path get_package_state_dir(const boost::filesystem::path& package_dir)  { return package_dir / ".state" ; }
@@ -112,14 +135,25 @@ namespace decent { namespace package {
     private:
         mutable std::recursive_mutex  _mutex;
         std::shared_ptr<fc::thread>   _thread;
-        State                         _state;
-        Action                        _action;
+
+        DataState                     _data_state;
+        TransferState                 _transfer_state;
+        ManipulationState             _manipulation_state;
+
         fc::ripemd160                 _hash;
+        fc::url                       _url;
         boost::filesystem::path       _parent_dir;
+
         std::shared_ptr<boost::interprocess::file_lock> _file_lock;
         std::shared_ptr<boost::interprocess::scoped_lock<boost::interprocess::file_lock>> _file_lock_guard;
+
         mutable std::recursive_mutex  _event_mutex;
         event_listener_handle_list_t  _event_listeners;
+
+        mutable std::recursive_mutex                  _task_mutex;
+        std::shared_ptr<detail::CreatePackageTask>    _create_task;
+        std::shared_ptr<detail::DownloadPackageTask>  _download_task;
+        std::shared_ptr<detail::PackageTask>          _current_task;
     };
 
 
@@ -127,8 +161,9 @@ namespace decent { namespace package {
     public:
         virtual ~EventListenerInterface() {}
 
-        virtual void package_state_change(PackageInfo::State) {};
-        virtual void package_action_change(PackageInfo::Action) {};
+        virtual void package_data_state_change(PackageInfo::DataState) {};
+        virtual void package_transfer_state_change(PackageInfo::TransferState) {};
+        virtual void package_manipulation_state_change(PackageInfo::ManipulationState) {};
 
         virtual void package_creation_start() {};
         virtual void package_creation_progress(const std::string&) {};
@@ -140,10 +175,15 @@ namespace decent { namespace package {
         virtual void package_restoration_error(const std::string&) {};
         virtual void package_restoration_complete() {};
 
-        virtual void package_transfer_start() {};
-        virtual void package_transfer_progress() {};
-        virtual void package_transfer_error(const std::string&) {};
-        virtual void package_transfer_complete() {};
+        virtual void package_upload_start() {};
+        virtual void package_upload_progress() {};
+        virtual void package_upload_error(const std::string&) {};
+        virtual void package_upload_complete() {};
+
+        virtual void package_download_start() {};
+        virtual void package_download_progress() {};
+        virtual void package_download_error(const std::string&) {};
+        virtual void package_download_complete() {};
     };
 
 
@@ -159,7 +199,7 @@ namespace decent { namespace package {
         explicit PackageManager(const boost::filesystem::path& packages_path);
 
     public:
-        PackageManager()                                   = delete;
+        PackageManager()                                  = delete;
         PackageManager(const PackageManager&)             = delete;
         PackageManager(PackageManager&&)                  = delete;
         PackageManager& operator=(const PackageManager&)  = delete;
@@ -175,20 +215,15 @@ namespace decent { namespace package {
     public:
         package_handle_t get_package(const boost::filesystem::path& content_dir_path,
                                      const boost::filesystem::path& samples_dir_path,
-                                     const fc::sha512& key,
-                                     const event_listener_handle_t& event_listener = event_listener_handle_t());
+                                     const fc::sha512& key);
+        package_handle_t get_package(const fc::url& url);
+        package_handle_t get_package(const fc::ripemd160& hash);
 
-        package_handle_t get_package(const std::string& url,
-                                     const event_listener_handle_t& event_listener = event_listener_handle_t());
-
-        package_handle_t get_package(const fc::ripemd160& hash,
-                                     const event_listener_handle_t& event_listener = event_listener_handle_t());
-        
         package_handle_set_t get_all_known_packages() const;
         void recover_all_packages(const event_listener_handle_t& event_listener = event_listener_handle_t());
 
-        void release_package(const fc::ripemd160& hash);
-        void release_package(const package_handle_t& package);
+        bool release_package(const fc::ripemd160& hash);
+        bool release_package(package_handle_t& package);
 
         boost::filesystem::path get_packages_path() const;
         std::shared_ptr<fc::thread> get_thread() const;
