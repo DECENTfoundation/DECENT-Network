@@ -289,8 +289,12 @@ void PurchasedTab::extractionDirSelected(const QString& path) {
    
    std::string message;
    
+   auto& global_instance = gui_wallet::GlobalEvents::instance();
+   std::string str_current_username = global_instance.getCurrentUser();
+ 
+   
    try {
-      RunTask("restore_encryption_key \"" + id + "\"", key);
+      RunTask("restore_encryption_key \"" + str_current_username + "\" \"" + id + "\"", key);
       
       RunTask("extract_package \"" + hash + "\" \"" + path.toStdString() + "\" " + key, dummy);
       

@@ -2325,13 +2325,13 @@ public:
             request_to_buy_operation request_op;
             request_op.consumer = consumer_account.id;
             request_op.URI = URI;
-            
-            if (_wallet.priv_el_gamal_key == decent::encrypt::DInteger::Zero()) { // Generate key if it does not exist
-                import_el_gamal_key(decent::encrypt::generate_private_el_gamal_key());
-
-            }
+           
+            DInteger el_gamal_priv_key = generate_private_el_gamal_key_from_secret ( get_private_key_for_account(consumer_account).get_secret() );
+            //if (_wallet.priv_el_gamal_key == decent::encrypt::DInteger::Zero()) { // Generate key if it does not exist
+            //    import_el_gamal_key(decent::encrypt::generate_private_el_gamal_key());
+            //}
                    
-            request_op.pubKey = decent::encrypt::get_public_el_gamal_key( _wallet.priv_el_gamal_key );
+            request_op.pubKey = decent::encrypt::get_public_el_gamal_key( el_gamal_priv_key );
             request_op.price = content->price;
             
             signed_transaction tx;
@@ -2361,8 +2361,10 @@ public:
       request_op.consumer = consumer_account.id;
       request_op.URI = URI;
 
-      FC_ASSERT( _wallet.priv_el_gamal_key != decent::encrypt::DInteger::Zero(), "Private ElGamal key is not imported. " );
-      request_op.pubKey = decent::encrypt::get_public_el_gamal_key( _wallet.priv_el_gamal_key );
+      DInteger el_gamal_priv_key = generate_private_el_gamal_key_from_secret ( get_private_key_for_account(consumer_account).get_secret() );
+
+      //FC_ASSERT( _wallet.priv_el_gamal_key != decent::encrypt::DInteger::Zero(), "Private ElGamal key is not imported. " );
+      request_op.pubKey = decent::encrypt::get_public_el_gamal_key( el_gamal_priv_key );
 
       request_op.price = asset_obj->amount_from_string(price_amount);
 
@@ -2408,8 +2410,9 @@ public:
       op.price_per_MByte = price_per_MByte;
       op.ipfs_IDs = ipfs_IDs;
 
-      FC_ASSERT( _wallet.priv_el_gamal_key != decent::encrypt::DInteger::Zero(), "Private ElGamal key is not imported. " );
-      op.pubKey = decent::encrypt::get_public_el_gamal_key( _wallet.priv_el_gamal_key );
+      //FC_ASSERT( _wallet.priv_el_gamal_key != decent::encrypt::DInteger::Zero(), "Private ElGamal key is not imported. " );
+      DInteger el_gamal_priv_key = generate_private_el_gamal_key_from_secret ( get_private_key_for_account(seeder_account).get_secret() );
+      op.pubKey = decent::encrypt::get_public_el_gamal_key( el_gamal_priv_key );
 
 
       signed_transaction tx;
@@ -2501,23 +2504,26 @@ public:
          return sign_transaction( tx, broadcast );
    } FC_CAPTURE_AND_RETHROW( (stats)(broadcast) ) }
 
-   DInteger restore_encryption_key(buying_id_type buying )
+   DInteger restore_encryption_key(std::string account, buying_id_type buying )
    {
+      account_object buyer_account = get_account( account );
       const buying_object bo = get_object<buying_object>(buying);
       const content_object co = *(_remote_db->get_content(bo.URI));
 
 
       decent::encrypt::ShamirSecret ss( co.quorum, co.key_parts.size() );
       decent::encrypt::point message;
-       
-       if (_wallet.priv_el_gamal_key == decent::encrypt::DInteger::Zero()) { // Generate key if it does not exist
-           import_el_gamal_key(decent::encrypt::generate_private_el_gamal_key());
-       }     
+      
+       DInteger el_gamal_priv_key = generate_private_el_gamal_key_from_secret ( get_private_key_for_account(buyer_account).get_secret() );
+      
+//       if (_wallet.priv_el_gamal_key == decent::encrypt::DInteger::Zero()) { // Generate key if it does not exist
+//           import_el_gamal_key(decent::encrypt::generate_private_el_gamal_key());
+//       }
 //      FC_ASSERT( _wallet.priv_el_gamal_key != decent::encrypt::DInteger::Zero(), "Private ElGamal key is not imported. " );
 
       for( const auto key_particle : bo.key_particles )
       {
-         auto result = decent::encrypt::el_gamal_decrypt( decent::encrypt::Ciphertext( key_particle ), _wallet.priv_el_gamal_key, message );
+         auto result = decent::encrypt::el_gamal_decrypt( decent::encrypt::Ciphertext( key_particle ), el_gamal_priv_key, message );
          FC_ASSERT(result == decent::encrypt::ok);
          ss.add_point( message );
       }
@@ -3788,9 +3794,9 @@ signed_transaction wallet_api::report_stats(string consumer,
    return my->report_stats(consumer, stats, broadcast);
 }
 
-DInteger wallet_api::restore_encryption_key(buying_id_type buying)
+DInteger wallet_api::restore_encryption_key(string consumer, buying_id_type buying)
 {
-   return my->restore_encryption_key(buying);
+   return my->restore_encryption_key(consumer, buying);
 }
 
 vector<buying_object> wallet_api::get_open_buyings()const

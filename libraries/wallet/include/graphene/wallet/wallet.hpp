@@ -1560,11 +1560,12 @@ namespace graphene { namespace wallet {
 
          /**
           * @brief Restores AES key( used to encrypt and decrypt a content) from key particles stored in a buying object
+          * @param account consumers account id or name
           * @param buying The buying object containing key particles
           * @return restored AES key from particles
           * @ingroup WalletCLI
           */
-         DInteger restore_encryption_key(buying_id_type buying);
+         DInteger restore_encryption_key(std::string account, buying_id_type buying);
 
          /**
           * @brief Generates private ElGamal key and corresponding public key.
