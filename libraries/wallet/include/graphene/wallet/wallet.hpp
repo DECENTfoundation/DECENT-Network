@@ -280,7 +280,7 @@ namespace graphene { namespace wallet {
 
          /**
           * @brief Get names and IDs for registered accounts that match search term
-          * @param search_term will try to partially match account name or id
+          * @param term will try to partially match account name or id
           * @param limit Maximum number of results to return -- must not exceed 1000
           * @return Map of account names to corresponding IDs
           * @ingroup WalletCLI
@@ -337,13 +337,13 @@ namespace graphene { namespace wallet {
 
          /**
           * @brief Get limit orders in a given market
-          * @param a ID of asset being sold
-          * @param b ID of asset being purchased
+          * @param base ID of asset being sold
+          * @param quote ID of asset being purchased
           * @param limit Maximum number of orders to retrieve
           * @return The limit orders, ordered from least price to greatest
           * @ingroup WalletCLI
           */
-         vector<limit_order_object>        get_limit_orders(string a, string b, uint32_t limit)const;
+         vector<limit_order_object>        get_limit_orders(string base, string quote, uint32_t limit)const;
 
          /**
           * @brief Returns the block chain's slowly-changing settings.
@@ -824,6 +824,14 @@ namespace graphene { namespace wallet {
          /**
           *  @brief This method works just like transfer, except it always broadcasts and
           *  returns the transaction ID along with the signed transaction.
+          *  @param from the name or id of the account sending the funds
+          *  @param to the name or id of the account receiving the funds
+          *  @param amount the amount to send (in nominal units -- to send half of a BTS, specify 0.5)
+          *  @param asset_symbol the symbol or id of the asset to send
+          *  @param memo a memo to attach to the transaction.  The memo will be encrypted in the
+          *             transaction and readable for the receiver.  There is no length limit
+          *             other than the limit imposed by maximum transaction size, but transaction
+          *             increase with transaction size
           *  @ingroup WalletCLI
           */
          pair<transaction_id_type,signed_transaction> transfer2(string from,
@@ -934,7 +942,7 @@ namespace graphene { namespace wallet {
           * @param rate The rate in base:quote at which you want to buy.
           * @param amount the amount of base you want to buy.
           * @param broadcast true to broadcast the transaction on the network.
-          * @param The signed transaction selling the funds.
+          * @returns The signed transaction selling the funds.
           * @ingroup WalletCLI
           */
          signed_transaction buy( string buyer_account,
@@ -993,7 +1001,8 @@ namespace graphene { namespace wallet {
           * @returns the signed transaction issuing the new shares
           * @ingroup WalletCLI
           */
-         signed_transaction issue_asset(string to_account, string amount,
+         signed_transaction issue_asset(string to_account,
+                                        string amount,
                                         string symbol,
                                         string memo,
                                         bool broadcast = false);
@@ -1114,7 +1123,7 @@ namespace graphene { namespace wallet {
          /**
           * @brief Update a witness object owned by the given account.
           *
-          * @param witness The name of the witness's owner account.  Also accepts the ID of the owner account or the ID of the witness.
+          * @param witness_name The name of the witness's owner account.  Also accepts the ID of the owner account or the ID of the witness.
           * @param url Same as for create_witness.  The empty string makes it remain the same.
           * @param block_signing_key The new block signing public key.  The empty string makes it remain the same.
           * @param broadcast true if you wish to broadcast the transaction.
@@ -1212,7 +1221,7 @@ namespace graphene { namespace wallet {
           * set, your preferences will be ignored.
           *
           * @param account_to_modify the name or id of the account to update
-          *
+          * @param desired_number_of_witnesses
           * @param broadcast true if you wish to broadcast the transaction
           * @return the signed transaction changing your vote proxy settings
           * @ingroup WalletCLI
