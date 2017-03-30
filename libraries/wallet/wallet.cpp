@@ -2210,7 +2210,7 @@ public:
             package_object pack = package_manager::instance().create_package(content_dir, samples_dir, sha_key, cd);
             fc::ripemd160 hash = pack.get_hash();
             
-            uint32_t quorum = std::max((unsigned long)1, seeders.size()/3);
+            uint32_t quorum = std::max((vector<account_id_type>::size_type)1, seeders.size()/3);
             uint64_t size = std::max(1, ( pack.get_size() + (1024 * 1024) -1 ) / (1024 * 1024));
 
 

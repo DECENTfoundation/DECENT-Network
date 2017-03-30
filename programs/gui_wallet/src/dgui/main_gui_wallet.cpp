@@ -52,8 +52,13 @@
 #include <iostream>
 #include <fstream>
 
-#ifdef WIN32
-# include <signal.h> 
+#if defined( _MSC_VER )
+
+#include <Windows.h>
+#include <signal.h> 
+#define kill(p,sig) raise(sig)
+typedef int pid_t;
+
 #else
 # include <csignal>
 #endif
@@ -189,12 +194,13 @@ int runDecentD(int argc, char** argv) {
          elog( "Caught SIGTERM attempting to exit cleanly" );
          exit_promise->set_value(signal);
       }, SIGTERM);
-
+#if defined( _MSC_VER )
+#else
       fc::set_signal_handler([&exit_promise](int signal) {
          elog( "Caught SIGHUP attempting to exit cleanly" );
          exit_promise->set_value(signal);
       }, SIGHUP);
-
+#endif
       ilog("Started witness node on a chain with ${h} blocks.", ("h", node->chain_database()->head_block_num()));
       ilog("Chain ID is ${id}", ("id", node->chain_database()->get_chain_id()) );
       
@@ -219,15 +225,83 @@ int runDecentD(int argc, char** argv) {
    }
 }
 
+#include "decent_gui_inguiloopcaller.hpp"
+decent::gui::InGuiLoopCaller* s_pInGuiThreadCaller = NULL;
+namespace decent {
+   namespace gui {
+
+      class InGuiLoopCallerIniter {
+      public:
+         InGuiLoopCallerIniter() {
+            decent::gui::InGuiLoopCaller* pInGuiThreadCaller = new decent::gui::InGuiLoopCaller;
+            if (!pInGuiThreadCaller) {} // make deleyed error
+            s_pInGuiThreadCaller = pInGuiThreadCaller;
+         }
+
+         ~InGuiLoopCallerIniter() {
+            decent::gui::InGuiLoopCaller* pInGuiThreadCaller = s_pInGuiThreadCaller;
+            s_pInGuiThreadCaller = NULL;
+            delete pInGuiThreadCaller;
+         }
+      };
+      //static InGuiLoopCallerIniter   s_InGuiLoopCallerIniter;
+
+   }
+}
 
 
 int main(int argc, char* argv[])
 {
-    
     pid_t  pid;
+#if defined( _MSC_VER )
+    decent::gui::InGuiLoopCallerIniter   s_InGuiLoopCallerIniter;
+    pid = getpid();
+    std::string cmdLine = argv[0];
+    size_t pos = cmdLine.find_last_of('\\');
+    cmdLine = cmdLine.substr(0, pos);
+    cmdLine += "\\decentd.exe ";
+   
+    for (int i = 1; i < argc; i++)
+    {
+       if (std::string(argv[i]).find_first_of(" ") != std::string::npos)
+       {
+          cmdLine += "\"";
+          cmdLine += argv[i];
+          cmdLine += "\"";
+          cmdLine += " ";
+       } else 
+          cmdLine += argv[i];
+       cmdLine += " ";
+    }
+    STARTUPINFO si;
+    PROCESS_INFORMATION pi;
+    memset(&si, 0, sizeof(si));
+    memset(&pi, 0, sizeof(pi));
+    si.cb = sizeof(si);
+    BOOL created = 
+    CreateProcessA(NULL, (char*)cmdLine.c_str(), NULL, NULL, FALSE,
+#ifdef _DEBUG
+       0,
+#else
+       CREATE_NO_WINDOW,
+#endif
+       NULL, NULL,
+       &si, &pi);
+    DWORD err = 0;
+    if (created == FALSE)
+       err = GetLastError();
+    else
+    {
+       CloseHandle(pi.hThread);
+       CloseHandle(pi.hProcess);
+    }
+    if(0) 
+    {
+#else
     pid = fork();
     if (pid == 0) {
         runDecentD(argc, argv);
+#endif
     } else {
         
         

@@ -32,7 +32,9 @@ public:
 protected:
 #ifdef WIN32
     int m_nReadersCount;
-    HANDLE      m_vRWMutexes[2];
+    HANDLE  m_wrMutex;
+    HANDLE  m_rdHelperMutex;
+    HANDLE  m_noReaderEvent;
 #else  // #ifdef WIN32
     pthread_rwlock_t    m_rwLock;
 #endif  // #ifdef WIN32

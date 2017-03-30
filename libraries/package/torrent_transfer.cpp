@@ -1112,7 +1112,8 @@ void torrent_transfer::print_status() {
 
 
 fc::ripemd160 torrent_transfer::hash_from_url(const std::string& url) {
-   
+   fc::ripemd160 result;
+   return result;
 }
 
 void torrent_transfer::upload_package(transfer_id id, const package_object& package, transfer_listener* listener) {
