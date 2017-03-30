@@ -110,7 +110,7 @@ m_getPublishersTimer(this)
     de->setMinimumDate(QDate::currentDate());
     de->setStyle(QStyleFactory::create("fusion"));
     de->setMinimumHeight(44);
-    de->setMinimumWidth(100);
+    de->setFixedWidth(220);
     
     QHBoxLayout* firstRow = new QHBoxLayout;
     
@@ -139,7 +139,7 @@ m_getPublishersTimer(this)
     seeders->setStyle(QStyleFactory::create("fusion"));
     seeders->setStyleSheet("color : black;");
     seeders->setMinimumHeight(44);
-    seeders->setMinimumWidth(100);
+    seeders->setFixedWidth(220);
     
     seedRow->addWidget(seed);
     seedRow->addWidget(seeders);
@@ -159,7 +159,8 @@ m_getPublishersTimer(this)
     keyparts->setStyle(QStyleFactory::create("fusion"));
     keyparts->setStyleSheet("color : black;");
     keyparts->setMinimumHeight(44);
-    
+   keyparts->setFixedWidth(220);
+   
     for (int r = 2; r <= 7; ++r) {
         QString val = QString::fromStdString(std::to_string(r));
         keyparts->addItem(val, val);
