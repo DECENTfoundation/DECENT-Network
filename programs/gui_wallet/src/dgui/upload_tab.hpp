@@ -136,7 +136,6 @@ namespace gui_wallet
         void content_was_bought();
         void uploadPopup();
         
-//>>>>>>> 601e33eff763d3315666f2b397ef7005a1b21d96
     protected:
         QVBoxLayout     m_main_layout;
         QHBoxLayout     m_search_layout;
@@ -149,10 +148,8 @@ namespace gui_wallet
         std::vector<SDigitalContent>  _digital_contents;
         ContentDetailsGeneral*        _content_popup;
         Mainwindow_gui_wallet*        _parent;
-//<<<<<<< HEAD
        bool                          _isUploading;
     
-//=======
         bool                          m_doUpdate;
         QTimer                        m_contentUpdateTimer;
     };
