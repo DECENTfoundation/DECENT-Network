@@ -224,7 +224,8 @@ int runDecentD(int argc, char** argv) {
       return 1;
    }
 }
-
+// Temporary moved here because on Windows connect() in static class constructor crashes:
+// TODO: Question is if connected signals cannot be used after leaving main()
 #include "decent_gui_inguiloopcaller.hpp"
 decent::gui::InGuiLoopCaller* s_pInGuiThreadCaller = NULL;
 namespace decent {
@@ -249,12 +250,11 @@ namespace decent {
    }
 }
 
-
 int main(int argc, char* argv[])
 {
+    decent::gui::InGuiLoopCallerIniter   s_InGuiLoopCallerIniter;
     pid_t  pid;
 #if defined( _MSC_VER )
-    decent::gui::InGuiLoopCallerIniter   s_InGuiLoopCallerIniter;
     pid = getpid();
     std::string cmdLine = argv[0];
     size_t pos = cmdLine.find_last_of('\\');
