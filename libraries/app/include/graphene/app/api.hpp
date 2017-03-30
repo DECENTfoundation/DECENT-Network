@@ -45,6 +45,12 @@
 #include <string>
 #include <vector>
 
+/**
+ * @defgroup HistoryAPI History API
+ * @defgroup Network_broadcastAPI Network broadcastAPI
+ * @defgroup Network_NodeAPI Network NodeAPI
+ * @defgroup LoginAPI LoginAPI
+ */
 namespace graphene { namespace app {
    using namespace graphene::chain;
    using namespace graphene::market_history;

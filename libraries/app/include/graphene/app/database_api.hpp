@@ -57,6 +57,9 @@
 #include <memory>
 #include <vector>
 
+/**
+ * @defgroup DatabaseAPI Database API
+ */
 namespace graphene { namespace app {
 
       using namespace graphene::chain;
