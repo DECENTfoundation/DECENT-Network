@@ -356,7 +356,7 @@ void PurchasedTab::show_content_popup() {
    QPushButton* btn = (QPushButton*)sender();
    int id = btn->property("id").toInt();
    if (id < 0 || id >= _current_content.size()) {
-      throw std::out_of_range("Content index is our of range");
+      throw std::out_of_range("Content index is out of range");
    }
    
    if (nullptr == _details_dialog)

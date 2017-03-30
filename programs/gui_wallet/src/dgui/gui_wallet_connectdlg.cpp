@@ -29,10 +29,9 @@ namespace gui_wallet
     : QDialog((QWidget*)pParent, Qt::Window | Qt::WindowTitleHint | Qt::CustomizeWindowHint | Qt::WindowCloseButtonHint)
     , ret_value()
     , m_pParent(pParent)
-    , m_main_table(2, 1)
+    , m_main_table(1, 1)
     {
-        resize(570, 220);
-       
+        setFixedSize(380,180);
        
         m_main_table.horizontalHeader()->hide();
         m_main_table.verticalHeader()->hide();
@@ -50,9 +49,9 @@ namespace gui_wallet
         } else {
             unlockButton->setText("Unlock");
         }
-        unlockButton->setFixedWidth(185);
-        unlockButton->setFixedHeight(38);
-        password_box.setFixedSize(383, 44);
+        unlockButton->setFixedWidth(140);
+        unlockButton->setFixedHeight(40);
+        password_box.setFixedSize(300, 44);
         password_box.setEchoMode(QLineEdit::Password);
         password_box.setAttribute(Qt::WA_MacShowFocusRect, 0);
         password_box.setPlaceholderText(QString("Password"));
@@ -64,12 +63,12 @@ namespace gui_wallet
            setWindowTitle("Unlock your wallet");
         }
        
-        m_main_table.setCellWidget(1, 0, &password_box);
+        m_main_table.setCellWidget(0, 0, &password_box);
         QHBoxLayout* button_layout = new QHBoxLayout();
         button_layout->addWidget(unlockButton);
         connect(unlockButton, SIGNAL(LabelClicked()), this, SLOT(unlock_slot()));
         connect(&password_box, SIGNAL(returnPressed()), unlockButton, SIGNAL(LabelClicked()));
-        m_main_layout.setContentsMargins(93, 30, 93, 60);
+        m_main_layout.setContentsMargins(40, 40, 40, 40);
         m_main_layout.addWidget(&m_main_table);
         m_main_layout.addLayout(button_layout);
         setLayout(&m_main_layout);

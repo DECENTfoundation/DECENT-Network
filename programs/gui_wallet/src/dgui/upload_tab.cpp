@@ -240,7 +240,8 @@ m_getPublishersTimer(this)
     QFont fontCanUplo( "Myriad Pro Regular", 15, QFont::Bold);
     
     QHBoxLayout* button = new QHBoxLayout;
-    
+   
+    button->setSpacing(20);
     DecentButton* upload_label = new DecentButton();
     DecentButton* cancel_label = new DecentButton();
 
@@ -258,7 +259,7 @@ m_getPublishersTimer(this)
     connect(upload_label, SIGNAL(LabelClicked()),this, SLOT(uploadContent()));
     connect(cancel_label, SIGNAL(LabelClicked()),this, SLOT( uploadCanceled() ));
 
-    button->setContentsMargins(161, 20, 161, 20);
+    button->setContentsMargins(161, 30, 161, 20);
     button->addWidget(upload_label);
     button->addWidget(cancel_label);
 
