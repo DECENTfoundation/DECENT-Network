@@ -189,6 +189,11 @@ int runDecentD(int argc, char** argv) {
          exit_promise->set_value(signal);
       }, SIGTERM);
 
+      fc::set_signal_handler([&exit_promise](int signal) {
+         elog( "Caught SIGHUP attempting to exit cleanly" );
+         exit_promise->set_value(signal);
+      }, SIGHUP);
+
       ilog("Started witness node on a chain with ${h} blocks.", ("h", node->chain_database()->head_block_num()));
       ilog("Chain ID is ${id}", ("id", node->chain_database()->get_chain_id()) );
       
@@ -236,33 +241,42 @@ int main(int argc, char* argv[])
         
         QDir dir(argv[0]);
 
-        
+/*        
 #if NDEBUG
+        dir.cdUp();
+        dir.cdUp();
+        dir.cd("lib");
         QCoreApplication::setLibraryPaths(QStringList(dir.absolutePath()));
 #endif
-        
-        gui_wallet::application aApp(argc, argv);
-        
-        
-        
-        try{
-            gui_wallet::Mainwindow_gui_wallet aMainWindow;
-            aMainWindow.show();
-            aApp.exec();
-        } catch(const char* a_ext_str) {
-            std::cout << "Exception: " << a_ext_str << std::endl;
-        } catch(const std::exception& ex) {
-            std::cout << "Exception: " << ex.what() << std::endl;
-        } catch(const fc::exception& ex) {
-            std::cout << "Exception: " << ex.what() << std::endl;
-        } catch (...) {
-            std::cout << "Unknown Exception " << std::endl;
-        }
-        
-        kill(pid, SIGTERM); //Kill decentd
+*/
+
+       QApplication app(argc, argv);
+       //gui_wallet::application aApp(argc, argv);
+
+       qRegisterMetaType<std::string>( "std::string" );
+       qRegisterMetaType<int64_t>( "int64_t" );
+
+       app.setApplicationDisplayName("Decent");
+
+       try
+       {
+          gui_wallet::Mainwindow_gui_wallet aMainWindow;
+          aMainWindow.show();
+          app.exec();
+       } catch(const char* a_ext_str) {
+          std::cout << "Exception: " << a_ext_str << std::endl;
+       } catch(const std::exception& ex) {
+          std::cout << "Exception: " << ex.what() << std::endl;
+       } catch(const fc::exception& ex) {
+          std::cout << "Exception: " << ex.what() << std::endl;
+       } catch (...) {
+          std::cout << "Unknown Exception " << std::endl;
+       }
+
+       kill(pid, SIGTERM); //Kill decentd
     }
-    
-  
+
+
     return 0;
 }
 

@@ -20,6 +20,8 @@
 #include <QLineEdit>
 #include <QTimer>
 #include <QPushButton>
+#include <QFileDialog>
+#include <QMessageBox>
 
 #include "qt_commonheader.hpp"
 #include "gui_wallet_tabcontentmanager.hpp"
@@ -35,7 +37,7 @@ namespace gui_wallet {
    
 
 class ContentDetailsBase;
-
+class Mainwindow_gui_wallet;
 
 class PurchasedTab : public TabContentManager
 {
@@ -43,36 +45,28 @@ class PurchasedTab : public TabContentManager
    Q_OBJECT;
          
 public:
-   PurchasedTab();
+   PurchasedTab(Mainwindow_gui_wallet* pMainWindow);
    
    void ShowDigitalContentsGUI(std::vector<SDigitalContent>& contents);
    
 public:
-    
-   virtual void content_activated() {
-      m_contentUpdateTimer.start();
-   }
-   virtual void content_deactivated() {
-      m_contentUpdateTimer.stop();
-   }
+   virtual void timeToUpdate(const std::string& result);
+   virtual std::string getUpdateCommand();
    
 protected:
    void PrepareTableWidgetHeaderGUI();
    
    
 public slots:
-   void onTextChanged(const QString& text);
-   void updateContents();
-   void maybeUpdateContent();
    void extractPackage();
-   
    void show_content_popup();
-   void paintRow();
+   void showMessageBoxSlot(std::string message);
+   void extractionDirSelected(const QString& path);
    
+signals:
+   void showMessageBox(std::string message);
+
 private:
-   QTimer        m_contentUpdateTimer;
-   bool          m_doUpdate = true;
-   std::string   last_contents;
    
    std::vector<SDigitalContent>   _current_content;
    
@@ -81,7 +75,10 @@ protected:
    DecentTable             m_pTableWidget;
    QLineEdit               m_filterLineEditer;
    ContentDetailsBase*     _details_dialog = nullptr;
-
+   bool                    _isExtractingPackage;
+   QMessageBox             _msgBox;
+   QFileDialog             _fileDialog;
+   Mainwindow_gui_wallet*  m_pMainWindow;
 };
    
    

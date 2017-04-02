@@ -1,31 +1,33 @@
-/*
- *	File: gui_wallet_centralwigdet.h
- *
- *	Created on: Nov 11, 2016
- *	Created by: Davit Kalantaryan (Email: davit.kalantaryan@desy.de)
- *
- *  This file implements ...
- *
- */
-#ifndef TAB_CONTENT_MANAGER_HPP
-#define TAB_CONTENT_MANAGER_HPP
+#pragma once
 
-
+#include "ui_wallet_functions.hpp"
 #include <QWidget>
 
-namespace gui_wallet {
 
+namespace gui_wallet {
+   
 
 class TabContentManager : public QWidget {
-    
+   
 public:
-    virtual void content_activated() = 0;
-    virtual void content_deactivated() = 0;
-    
+   virtual void contentActivated() {
+      _lastResult = "";
+   }
+   
+   virtual void contentDeactivated() {
+      
+   }
+   virtual void timeToUpdate(const std::string& result) = 0;
+   virtual std::string getUpdateCommand() = 0;
+   
+public:
+   void tryToUpdate();
+   
+private:
+   
+   std::string _lastResult = "";
 };
 
-
+   
 }
 
-
-#endif // TAB_CONTENT_MANAGER_HPP

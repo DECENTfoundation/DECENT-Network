@@ -4,13 +4,16 @@
 #include "decent_wallet_ui_gui_contentdetailsgeneral.hpp"
 #include "gui_wallet_global.hpp"
 #include "ui_wallet_functions.hpp"
+#include "gui_wallet_mainwindow.hpp"
 
 #include <QMouseEvent>
 #include <QMessageBox>
 #include <QFileDialog>
 
 using namespace gui_wallet;
-ContentDetailsGeneral::ContentDetailsGeneral() {
+ContentDetailsGeneral::ContentDetailsGeneral(Mainwindow_gui_wallet* pMainWindow)
+: ContentDetailsBase(pMainWindow)
+{
    QVBoxLayout* image_layout = new QVBoxLayout;
    m_label.setText("Get it");
    m_label.setFixedWidth(120);
@@ -48,18 +51,20 @@ void ContentDetailsGeneral::LabelPushCallbackGUI()
    downloadCommand += " true";                                           //broadcast
    
    std::string a_result;
-   try {
-      RunTask(downloadCommand, a_result);
-      
-      close();
-      emit ContentWasBought();
 
-   } catch (const std::exception& ex) {
-      ALERT("Failed to download content");
+   std::string str_error;
+   try
+   {
+      m_pMainWindow->RunTask(downloadCommand, a_result);
    }
-   
+   catch(std::exception const& ex)
+   {
+      str_error = ex.what();
+   }
+   if (false == str_error.empty())
+      ALERT("Failed to download content" + str_error);
 
-   
+   emit ContentWasBought();
    
 }
 

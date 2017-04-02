@@ -18,16 +18,11 @@
 #include "gui_wallet_mainwindow.hpp"
 #include <QSortFilterProxyModel>
 #include <QStyleFactory>
+#include "decent_wallet_ui_gui_newcheckbox.hpp"
 
 
-#ifdef WIN32
-#include <direct.h>
-#ifndef getcwd
-#define getcwd _getcwd
-#endif
-#else
-#include <unistd.h>
-#endif
+#define __SIZE_FOR_IMGS__   40
+#define __HEIGHT__  60
 
 
 using namespace gui_wallet;
@@ -97,7 +92,10 @@ CentralWigdet::CentralWigdet(QBoxLayout* a_pAllLayout, Mainwindow_gui_wallet* a_
       m_parent_main_window(a_pPar),
       m_browse_cont_tab(a_pPar),
       m_Overview_tab(a_pPar),
-      m_Upload_tab(a_pPar) {
+      m_Upload_tab(a_pPar),
+      m_Purchased_tab(a_pPar),
+      m_trans_tab(a_pPar)
+{
 
 
          
@@ -127,7 +125,7 @@ CentralWigdet::CentralWigdet(QBoxLayout* a_pAllLayout, Mainwindow_gui_wallet* a_
 
     PrepareGUIprivate(a_pAllLayout);
 
-    QTimer::singleShot(200, this, SLOT(CentralWigdet::initTabChanged));
+    QTimer::singleShot(200, this, SLOT(initTabChanged()));
 }
 
 void  CentralWigdet::initTabChanged() {
@@ -175,9 +173,6 @@ QWidget* CentralWigdet::GetWidgetFromTable5(int a_nColumn, int a_nWidget)
 }
 
 
-#define __SIZE_FOR_IMGS__   40
-#define __HEIGHT__  60
-#include "decent_wallet_ui_gui_newcheckbox.hpp"
 
 void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
 {
@@ -248,12 +243,9 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     pLabelTmp->setFixedSize(28,28);
     
     pComboTmp1 = new QComboBox;
-    pComboTmp1->setStyleSheet("QWidget:item:selected{border: 0px solid #999900;background: rgb(27,176,104);}");
-    //pComboTmp1->setStyleSheet("color: black;""background-color:white;");
+    //pComboTmp1->setStyleSheet("QWidget:item:selected{border: 0px solid #999900;background-color: rgb(27,176,104);}");
     pComboTmp1->setStyle(QStyleFactory::create("fusion"));
-    if(!pComboTmp1){throw __FILE__ "Low memory";}
-    
-//    pComboTmp1->setStyleSheet("color: black;""background-color:white;");
+   
     pHBoxLayoutTmp->addWidget(pComboTmp1);
     m_pUsernameWgt->setLayout(pHBoxLayoutTmp);
     m_first_line_lbl.addWidget(m_pUsernameWgt);
@@ -323,9 +315,24 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
 
     a_pAllLayout->addLayout(&m_main_layout);
     
-    connect(&m_main_tabs, SIGNAL(currentChanged(int)), this, SLOT(tabChanged(int)));
+   connect(&m_main_tabs, SIGNAL(currentChanged(int)), this, SLOT(tabChanged(int)));
+   connect(&GlobalEvents::instance(), SIGNAL(walletUnlocked()), this, SLOT(walletUnlockedSlot()));
+   
 }
 
+
+void CentralWigdet::walletUnlockedSlot() {
+   QTimer::singleShot(1000, this, SLOT(updateActiveTab()));
+}
+
+
+void CentralWigdet::updateActiveTab() {
+   if (m_currentTab >= 0) {
+      m_allTabs[m_currentTab]->tryToUpdate();
+
+   }
+   QTimer::singleShot(1000, this, SLOT(updateActiveTab()));
+}
 
 
 void CentralWigdet::tabChanged(int index) {
@@ -335,12 +342,12 @@ void CentralWigdet::tabChanged(int index) {
     
     if (index != m_currentTab) {
         if (m_currentTab >= 0) {
-            m_allTabs[m_currentTab]->content_deactivated();
+            m_allTabs[m_currentTab]->contentDeactivated();
         }
     }
 
     m_currentTab = index;
-    m_allTabs[m_currentTab]->content_activated();
+    m_allTabs[m_currentTab]->contentActivated();
 
 }
 

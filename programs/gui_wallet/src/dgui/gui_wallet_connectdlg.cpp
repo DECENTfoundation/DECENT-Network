@@ -108,6 +108,7 @@ namespace gui_wallet
 }
 
 /* ///////////////////////////////////  */
+/*
 gui_wallet::ConnectDlg::ConnectDlg(QWidget* a_parent)
     :
       QDialog(a_parent),
@@ -137,7 +138,7 @@ gui_wallet::ConnectDlg::ConnectDlg(QWidget* a_parent)
     m_main_layout.addWidget(&m_main_table);
     setLayout(&m_main_layout);
 
-    /* Initing signal-slot pairs*/
+    /-* Initing signal-slot pairs*-/
     connect( m_main_table.cellWidget(CONNECT_BUTTON_FIELD,1), SIGNAL(clicked()), this, SLOT(ConnectPushedSlot()) );
 }
 
@@ -163,7 +164,6 @@ QWidget* gui_wallet::ConnectDlg::GetTableWidget(int a_column, int a_row)
 {
     return m_main_table.cellWidget(a_column,a_row);
 }
-
 
 int gui_wallet::ConnectDlg::execNew(SConnectionStruct* a_pData)
 {
@@ -192,4 +192,4 @@ void gui_wallet::ConnectDlg::ConnectPushedSlot()
 {
     m_ret_value = RDB_OK;
     close();
-}
+}*/

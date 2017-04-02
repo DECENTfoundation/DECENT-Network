@@ -61,6 +61,7 @@ enum encryption_results {
    ok,
    io_error,
    other_error,
+   key_error,
 };
 
 /*
