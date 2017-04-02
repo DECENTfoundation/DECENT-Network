@@ -964,7 +964,7 @@ torrent_transfer::torrent_transfer()
     if (load_file(session_state_file, in, ec) == 0) {
         bdecode_node e;
         if (bdecode(&in[0], &in[0] + in.size(), e, ec) == 0)
-            _session->load_state(e, session::save_dht_state);
+            _session->load_state(e, libtorrent::session::save_dht_state);
     }
 
     auto lifetime_info_mutex = _lifetime_info_mutex;
@@ -989,7 +989,7 @@ torrent_transfer::~torrent_transfer() {
     if (_session.use_count() == 1)
     {
         entry session_state;
-        _session->save_state(session_state, session::save_dht_state);
+        _session->save_state(session_state, libtorrent::session::save_dht_state);
 
         const path session_state_file = decent_path_finder::instance().get_decent_home() / ".ses_state";
         std::vector<char> out;

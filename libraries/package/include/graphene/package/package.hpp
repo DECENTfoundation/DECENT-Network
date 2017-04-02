@@ -47,6 +47,7 @@ namespace decent { namespace package {
         class RemovePackageTask;
         class UnpackPackageTask;
         class SeedPackageTask;
+        class CheckPackageTask;
 
 
     } // namespace detail
@@ -86,6 +87,7 @@ namespace decent { namespace package {
         friend class detail::RemovePackageTask;
         friend class detail::UnpackPackageTask;
         friend class detail::SeedPackageTask;
+        friend class detail::CheckPackageTask;
 
 
         PackageInfo(PackageManager& manager,
@@ -109,17 +111,20 @@ namespace decent { namespace package {
         void add_event_listener(const event_listener_handle_t& event_listener);
         void remove_event_listener(const event_listener_handle_t& event_listener);
 
-        DataState get_data_state() const;
-        TransferState get_transfer_state() const;
-        ManipulationState get_manipulation_state() const;
+        DataState          get_data_state() const;
+        TransferState      get_transfer_state() const;
+        ManipulationState  get_manipulation_state() const;
 
-        void create();
-        void unpack(const boost::filesystem::path& dir_path, const fc::sha512& key);
-        void download(const boost::filesystem::path& dir_path);
-        void seed(const std::string& proto = "");
+        void create(bool block = false);
+        void unpack(const boost::filesystem::path& dir_path, const fc::sha512& key, bool block = false);
+        void download(const boost::filesystem::path& dir_path, bool block = false);
+        void seed(const std::string& proto = "", bool block = false);
+        void check(bool block = false);
         void remove(bool block = false);
 
+        void wait_for_current_task();
         void cancel_current_task(bool block = false);
+        std::exception_ptr get_task_last_error() const;
 
     private:
         static boost::filesystem::path get_package_state_dir(const boost::filesystem::path& package_dir)  { return package_dir / ".state" ; }
@@ -128,6 +133,9 @@ namespace decent { namespace package {
         boost::filesystem::path get_package_dir() const        { return _parent_dir / _hash.str(); }
         boost::filesystem::path get_package_state_dir() const  { return get_package_state_dir(get_package_dir()); }
         boost::filesystem::path get_lock_file_path() const     { return get_lock_file_path(get_package_dir()); }
+        boost::filesystem::path get_custody_file() const       { return get_package_dir() / "content.cus"; }
+        boost::filesystem::path get_content_file() const       { return get_package_dir() / "content.zip.aes"; }
+        boost::filesystem::path get_samples_path() const       { return get_package_dir() / "samples"; }
 
         void lock_dir();
         void unlock_dir();
@@ -161,29 +169,39 @@ namespace decent { namespace package {
     public:
         virtual ~EventListenerInterface() {}
 
-        virtual void package_data_state_change(PackageInfo::DataState) {};
-        virtual void package_transfer_state_change(PackageInfo::TransferState) {};
-        virtual void package_manipulation_state_change(PackageInfo::ManipulationState) {};
+        virtual void package_data_state_change(PackageInfo::DataState) {}
+        virtual void package_transfer_state_change(PackageInfo::TransferState) {}
+        virtual void package_manipulation_state_change(PackageInfo::ManipulationState) {}
 
         virtual void package_creation_start() {};
-        virtual void package_creation_progress(const std::string&) {};
-        virtual void package_creation_error(const std::string&) {};
-        virtual void package_creation_complete() {};
+        virtual void package_creation_progress() {}
+        virtual void package_creation_error(const std::string&) {}
+        virtual void package_creation_complete() {}
 
-        virtual void package_restoration_start() {};
-        virtual void package_restoration_progress() {};
-        virtual void package_restoration_error(const std::string&) {};
-        virtual void package_restoration_complete() {};
+        virtual void package_restoration_start() {}
+        virtual void package_restoration_progress() {}
+        virtual void package_restoration_error(const std::string&) {}
+        virtual void package_restoration_complete() {}
 
-        virtual void package_upload_start() {};
-        virtual void package_upload_progress() {};
-        virtual void package_upload_error(const std::string&) {};
-        virtual void package_upload_complete() {};
+        virtual void package_extraction_start() {}
+        virtual void package_extraction_progress() {}
+        virtual void package_extraction_error(const std::string&) {}
+        virtual void package_extraction_complete() {}
 
-        virtual void package_download_start() {};
-        virtual void package_download_progress() {};
-        virtual void package_download_error(const std::string&) {};
-        virtual void package_download_complete() {};
+        virtual void package_check_start() {}
+        virtual void package_check_progress() {}
+        virtual void package_check_error(const std::string&) {}
+        virtual void package_check_complete() {}
+
+        virtual void package_upload_start() {}
+        virtual void package_upload_progress() {}
+        virtual void package_upload_error(const std::string&) {}
+        virtual void package_upload_complete() {}
+
+        virtual void package_download_start() {}
+        virtual void package_download_progress() {}
+        virtual void package_download_error(const std::string&) {}
+        virtual void package_download_complete() {}
     };
 
 
@@ -226,8 +244,10 @@ namespace decent { namespace package {
         bool release_package(package_handle_t& package);
 
         boost::filesystem::path get_packages_path() const;
-        std::shared_ptr<fc::thread> get_thread() const;
         void set_libtorrent_config(const boost::filesystem::path& libtorrent_config_file);
+
+        std::shared_ptr<fc::thread> get_thread() const;
+        TransferEngineInterface&    get_proto_transfer_engine(const std::string& proto) const;
 
     private:
         mutable std::recursive_mutex    _mutex;

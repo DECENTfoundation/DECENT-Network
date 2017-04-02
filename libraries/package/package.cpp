@@ -165,45 +165,40 @@ namespace decent { namespace package {
         }
 
         fc::ripemd160 calculate_hash(const boost::filesystem::path& file_path) {
-            std::FILE* source = std::fopen(file_path.string().c_str(), "rb");
+            std::ifstream fin(file_path.string().c_str(), std::ios::binary | std::ios::in);
 
-            if (!source) {
+            if (!fin.is_open()) {
                 FC_THROW("Unable to open file ${fn} for reading", ("fn", file_path.string()) );
             }
 
             fc::ripemd160::encoder ripe_calc;
 
-            try {
-                const size_t RIPEMD160_BUFFER_SIZE  = 1024 * 1024; // 1Mb
-                char buffer[RIPEMD160_BUFFER_SIZE];
+            const size_t RIPEMD160_BUFFER_SIZE  = 1024 * 1024; // 1Mb
+            char* buffer = new char[RIPEMD160_BUFFER_SIZE];
 
-                const size_t source_size = boost::filesystem::file_size(file_path);
-                size_t total_read = 0;
+            const size_t source_size = boost::filesystem::file_size(file_path);
+            size_t total_read = 0;
 
-                while (true) {
-                    const int bytes_read = std::fread(buffer, 1, sizeof(buffer), source);
+            while (true) {
+                fin.read(buffer, RIPEMD160_BUFFER_SIZE);
+                const int bytes_read = fin.gcount();
 
-                    if (bytes_read > 0) {
-                        ripe_calc.write(buffer, bytes_read);
-                        total_read += bytes_read;
-                    }
-
-                    if (bytes_read < sizeof(buffer)) {
-                        break;
-                    }
+                if (bytes_read > 0) {
+                    ripe_calc.write(buffer, bytes_read);
+                    total_read += bytes_read;
                 }
-                
-                if (total_read != source_size) {
-                    FC_THROW("Failed to read ${fn} file: ${error} (${ec})", ("fn", file_path.string()) ("error", std::strerror(errno)) ("ec", errno) );
+
+                if (bytes_read < RIPEMD160_BUFFER_SIZE) {
+                    break;
                 }
             }
-            catch ( ... ) {
-                std::fclose(source);
-                throw;
-            }
-
-            std::fclose(source);
             
+            delete[] buffer;
+
+            if (total_read != source_size) {
+                FC_THROW("Failed to read entire ${fn} file", ("fn", file_path.string()) );
+            }
+
             return ripe_calc.result();
         }
 
@@ -288,6 +283,7 @@ namespace decent { namespace package {
             }
 
             dir = dir.lexically_normal();
+            std::set<path> paths_to_remove;
 
             for (recursive_directory_iterator it(dir); it != recursive_directory_iterator(); ++it) {
                 if (is_directory(*it) && is_symlink(*it)) {
@@ -308,9 +304,13 @@ namespace decent { namespace package {
                 }
 
                 if (!skip_this) {
-                    remove_all(it->path());
+                    paths_to_remove.insert(it->path());
                     it.no_push();
                 }
+            }
+
+            for (const auto& path_to_remove : paths_to_remove) {
+                remove_all(path_to_remove);
             }
         }
 
@@ -327,6 +327,7 @@ namespace decent { namespace package {
 
             from_dir = from_dir.lexically_normal();
             to_dir = to_dir.lexically_normal();
+            std::map<path, path> paths_to_rename;
 
             for (recursive_directory_iterator it(from_dir); it != recursive_directory_iterator(); ++it) {
                 if (is_directory(*it) && is_symlink(*it)) {
@@ -349,10 +350,25 @@ namespace decent { namespace package {
                 }
 
                 if (!skip_this) {
-                    const auto relative = get_relative(from_dir, it->path());
-                    rename(it->path(), to_dir / relative);
+                    paths_to_rename[it->path()] = to_dir / get_relative(from_dir, it->path());
                 }
             }
+
+            for (const auto& path_to_rename : paths_to_rename) {
+                rename(path_to_rename.first, path_to_rename.second);
+            }
+        }
+
+        void touch(const boost::filesystem::path& file_path) {
+            using namespace boost::filesystem;
+            using namespace boost::interprocess;
+
+            const auto file_dir = file_path.parent_path();
+            if (!create_directories(file_dir) && !is_directory(file_dir)) {
+                FC_THROW("Unable to create directory ${path}", ("path", file_dir.string()) );
+            }
+
+            std::ofstream file(file_path.string());
         }
 
 
@@ -368,25 +384,49 @@ namespace decent { namespace package {
 }                                                                        \
 
 
-#define PACKAGE_INFO_CHANGE_DATA_STATE(new_state)                                       \
-if (_package._data_state != PackageInfo:: new_state) {                                  \
-    _package._data_state = PackageInfo:: new_state;                                     \
-    PACKAGE_INFO_GENERATE_EVENT(package_data_state_change, ( _package._data_state ) );  \
-}                                                                                       \
+#define PACKAGE_INFO_CHANGE_DATA_STATE(state)                                    \
+{                                                                                \
+    PackageInfo::DataState new_state = PackageInfo:: state;                      \
+    PackageInfo::DataState old_state = new_state;                                \
+    {                                                                            \
+        std::lock_guard<std::recursive_mutex> guard(_package._mutex);            \
+        old_state = _package._data_state;                                        \
+        _package._data_state = new_state;                                        \
+    }                                                                            \
+    if (old_state != new_state) {                                                \
+        PACKAGE_INFO_GENERATE_EVENT(package_data_state_change, ( new_state ) );  \
+    }                                                                            \
+}                                                                                \
 
 
-#define PACKAGE_INFO_CHANGE_TRANSFER_STATE(new_state)                                           \
-if (_package._transfer_state != PackageInfo:: new_state) {                                      \
-    _package._transfer_state = PackageInfo:: new_state;                                         \
-    PACKAGE_INFO_GENERATE_EVENT(package_transfer_state_change, ( _package._transfer_state ) );  \
-}                                                                                               \
+#define PACKAGE_INFO_CHANGE_TRANSFER_STATE(state)                                    \
+{                                                                                    \
+    PackageInfo::TransferState new_state = PackageInfo:: state;                      \
+    PackageInfo::TransferState old_state = new_state;                                \
+    {                                                                                \
+        std::lock_guard<std::recursive_mutex> guard(_package._mutex);                \
+        old_state = _package._transfer_state;                                        \
+        _package._transfer_state = new_state;                                        \
+    }                                                                                \
+    if (old_state != new_state) {                                                    \
+        PACKAGE_INFO_GENERATE_EVENT(package_transfer_state_change, ( new_state ) );  \
+    }                                                                                \
+}                                                                                    \
 
 
-#define PACKAGE_INFO_CHANGE_MANIPULATION_STATE(new_state)                                               \
-if (_package._manipulation_state != PackageInfo:: new_state) {                                          \
-    _package._manipulation_state = PackageInfo:: new_state;                                             \
-    PACKAGE_INFO_GENERATE_EVENT(package_manipulation_state_change, ( _package._manipulation_state ) );  \
-}                                                                                                       \
+#define PACKAGE_INFO_CHANGE_MANIPULATION_STATE(state)                                    \
+{                                                                                        \
+    PackageInfo::ManipulationState new_state = PackageInfo:: state;                      \
+    PackageInfo::ManipulationState old_state = new_state;                                \
+    {                                                                                    \
+        std::lock_guard<std::recursive_mutex> guard(_package._mutex);                    \
+        old_state = _package._manipulation_state;                                        \
+        _package._manipulation_state = new_state;                                        \
+    }                                                                                    \
+    if (old_state != new_state) {                                                        \
+        PACKAGE_INFO_GENERATE_EVENT(package_manipulation_state_change, ( new_state ) );  \
+    }                                                                                    \
+}                                                                                        \
 
 
     namespace detail {
@@ -397,13 +437,15 @@ if (_package._manipulation_state != PackageInfo:: new_state) {                  
             explicit PackageTask(PackageInfo& package)
                 : _running(false)
                 , _stop_requested(false)
+                , _last_exception(nullptr)
                 , _package(package)
             {
             }
 
             virtual void run() {
                 if (_running) {
-                    FC_THROW("task is already running");
+                    _stop_requested = false;
+                    return;
                 }
 
                 _running = true;
@@ -422,24 +464,22 @@ if (_package._manipulation_state != PackageInfo:: new_state) {                  
                 _running = false;
             }
 
-            void stop(const bool block = false) {
-                _stop_requested = true;
-                while (block && _running) {
-                    _stop_requested = true;
-                    std::this_thread::yield();
-                }
-            }
-
             bool is_running() const {
                 return _running;
+            }
+
+            void request_stop() {
+                _stop_requested = true;
             }
 
             bool is_stop_requested() const {
                 return _stop_requested;
             }
 
-            std::exception_ptr get_last_error() const {
-                return _last_exception;
+            std::exception_ptr consume_last_error() {
+                auto last_exception = _last_exception;
+                _last_exception = nullptr;
+                return last_exception;
             }
 
         protected:
@@ -468,7 +508,6 @@ if (_package._manipulation_state != PackageInfo:: new_state) {                  
                               const boost::filesystem::path& samples_dir_path,
                               const fc::sha512& key)
                 : PackageTask(package)
-                , _manager(manager)
                 , _content_dir_path(content_dir_path)
                 , _samples_dir_path(samples_dir_path)
                 , _key(key)
@@ -481,7 +520,8 @@ if (_package._manipulation_state != PackageInfo:: new_state) {                  
 
                 using namespace boost::filesystem;
 
-                const auto temp_dir_path = graphene::utilities::decent_path_finder::instance().get_decent_temp() / detail::make_uuid();
+                const auto temp_dir_path = unique_path(graphene::utilities::decent_path_finder::instance().get_decent_temp() / "%%%%-%%%%-%%%%-%%%%");
+                //graphene::utilities::decent_path_finder::instance().get_decent_temp() / detail::make_uuid();
 
                 try {
                     PACKAGE_TASK_EXIT_IF_REQUESTED;
@@ -515,7 +555,7 @@ if (_package._manipulation_state != PackageInfo:: new_state) {                  
 
                         filtering_ostream out;
                         out.push(gzip_compressor());
-                        out.push(file_sink(zip_file_path.string(), std::ofstream::binary));
+                        out.push(file_sink(zip_file_path.string(), std::ios::out | std::ios::binary));
 
                         detail::Archiver archiver(out);
 
@@ -619,13 +659,10 @@ if (_package._manipulation_state != PackageInfo:: new_state) {                  
             }
 
         private:
-            PackageManager&                _manager;
             const boost::filesystem::path  _content_dir_path;
             const boost::filesystem::path  _samples_dir_path;
             const fc::sha512               _key;
         };
-
-
 
 
         class DownloadPackageTask : public PackageTask {
@@ -634,7 +671,7 @@ if (_package._manipulation_state != PackageInfo:: new_state) {                  
                                 PackageManager& manager,
                                 const fc::url& url)
                 : PackageTask(package)
-                , _manager(manager)
+                , _transfer_engine(manager.get_proto_transfer_engine(url.proto()))
                 , _url(url)
             {
             }
@@ -645,12 +682,12 @@ if (_package._manipulation_state != PackageInfo:: new_state) {                  
 
                 try {
                     PACKAGE_TASK_EXIT_IF_REQUESTED;
+                    PACKAGE_INFO_CHANGE_TRANSFER_STATE(DOWNLOADING);
 
 
 //                  PACKAGE_INFO_GENERATE_EVENT(package_download_progress, ( ) );
 
 
-                    PACKAGE_INFO_CHANGE_TRANSFER_STATE(DOWNLOADING);
 
 
                     PACKAGE_TASK_EXIT_IF_REQUESTED;
@@ -686,9 +723,9 @@ if (_package._manipulation_state != PackageInfo:: new_state) {                  
             }
 
         private:
-            PackageManager&          _manager;
-            const fc::url&           _url;
-            boost::filesystem::path  _target_dir;
+            TransferEngineInterface&  _transfer_engine;
+            const fc::url&            _url;
+            boost::filesystem::path   _target_dir;
         };
 
 
@@ -725,6 +762,98 @@ if (_package._manipulation_state != PackageInfo:: new_state) {                  
 
         protected:
             virtual void task() override {
+                PACKAGE_INFO_GENERATE_EVENT(package_extraction_start, ( ) );
+
+                using namespace boost::filesystem;
+
+                const auto temp_dir_path = unique_path(graphene::utilities::decent_path_finder::instance().get_decent_temp() / "%%%%-%%%%-%%%%-%%%%");
+                //graphene::utilities::decent_path_finder::instance().get_decent_temp() / detail::make_uuid();
+
+                try {
+                    PACKAGE_TASK_EXIT_IF_REQUESTED;
+
+                    if (CryptoPP::AES::MAX_KEYLENGTH > _key.data_size()) {
+                        FC_THROW("CryptoPP::AES::MAX_KEYLENGTH is bigger than key size (${size})", ("size", _key.data_size()) );
+                    }
+
+                    if (exists(_target_dir) && !is_directory(_target_dir)) {
+                        FC_THROW("Samples path ${path} must point to directory", ("path", _target_dir.string()));
+                    }
+
+//                  PACKAGE_INFO_GENERATE_EVENT(package_extraction_progress, ( ) );
+
+
+                    if (!exists(_target_dir) || !is_directory(_target_dir)) {
+                        try {
+                            if (!create_directories(_target_dir) && !is_directory(_target_dir)) {
+                                FC_THROW("Unable to create destination directory");
+                            }
+                        }
+                        catch (const boost::filesystem::filesystem_error& ex) {
+                            if (!is_directory(_target_dir)) {
+                                FC_THROW("Unable to create destination directory: ${error}", ("error", ex.what()) );
+                            }
+                        }
+                    }
+
+                    const auto aes_file_path = _package.get_content_file();
+                    const auto archive_file_path = temp_dir_path / "content.zip";
+
+                    {
+                        PACKAGE_INFO_CHANGE_MANIPULATION_STATE(DECRYPTING);
+
+                        decent::encrypt::AesKey k;
+
+                        for (int i = 0; i < CryptoPP::AES::MAX_KEYLENGTH; ++i) {
+                            k.key_byte[i] = _key.data()[i];
+                        }
+
+                        if (space(temp_dir_path).available < file_size(aes_file_path) * 1.5) { // Safety margin
+                            FC_THROW("Not enough storage space to create package in ${tmp_dir}", ("tmp_dir", temp_dir_path.string()) );
+                        }
+
+                        AES_decrypt_file(aes_file_path.string(), archive_file_path.string(), k);
+
+                        PACKAGE_TASK_EXIT_IF_REQUESTED;
+                        PACKAGE_INFO_CHANGE_MANIPULATION_STATE(UNPACKING);
+
+                        using namespace boost::iostreams;
+
+                        boost::iostreams::filtering_istream istr;
+                        istr.push(gzip_decompressor());
+                        istr.push(file_source(archive_file_path.string(), std::ios::in | std::ios::binary));
+
+                        detail::Dearchiver dearchiver(istr);
+                        dearchiver.extract(_target_dir);
+                    }
+
+                    remove_all(temp_dir_path);
+
+                    PACKAGE_INFO_CHANGE_DATA_STATE(CHECKED);
+                    PACKAGE_INFO_CHANGE_MANIPULATION_STATE(MS_NONE);
+                    PACKAGE_INFO_GENERATE_EVENT(package_extraction_complete, ( ) );
+                }
+                catch ( const fc::exception& ex ) {
+                    remove_all(temp_dir_path);
+                    PACKAGE_INFO_CHANGE_DATA_STATE(INVALID);
+                    PACKAGE_INFO_CHANGE_MANIPULATION_STATE(MS_NONE);
+                    PACKAGE_INFO_GENERATE_EVENT(package_extraction_error, ( ex.what() ) );
+                    throw;
+                }
+                catch ( const std::exception& ex ) {
+                    remove_all(temp_dir_path);
+                    PACKAGE_INFO_CHANGE_DATA_STATE(INVALID);
+                    PACKAGE_INFO_CHANGE_MANIPULATION_STATE(MS_NONE);
+                    PACKAGE_INFO_GENERATE_EVENT(package_extraction_error, ( ex.what() ) );
+                    throw;
+                }
+                catch ( ... ) {
+                    remove_all(temp_dir_path);
+                    PACKAGE_INFO_CHANGE_DATA_STATE(INVALID);
+                    PACKAGE_INFO_CHANGE_MANIPULATION_STATE(MS_NONE);
+                    PACKAGE_INFO_GENERATE_EVENT(package_extraction_error, ( "unknown" ) );
+                    throw;
+                }
             }
 
         private:
@@ -735,9 +864,9 @@ if (_package._manipulation_state != PackageInfo:: new_state) {                  
 
         class SeedPackageTask : public PackageTask {
         public:
-            explicit SeedPackageTask(PackageInfo& package, const std::string& proto)
+            explicit SeedPackageTask(PackageInfo& package, TransferEngineInterface& transfer_engine)
                 : PackageTask(package)
-                , _proto(proto)
+                , _transfer_engine(transfer_engine)
             {
             }
 
@@ -746,12 +875,64 @@ if (_package._manipulation_state != PackageInfo:: new_state) {                  
             }
 
         private:
-            const std::string& _proto;
+            TransferEngineInterface& _transfer_engine;
         };
+
+
+        class CheckPackageTask : public PackageTask {
+        public:
+            explicit CheckPackageTask(PackageInfo& package)
+                : PackageTask(package)
+            {
+            }
+
+        protected:
+            virtual void task() override {
+                PACKAGE_INFO_GENERATE_EVENT(package_check_start, ( ) );
+
+                try {
+                    PACKAGE_TASK_EXIT_IF_REQUESTED;
+                    PACKAGE_INFO_CHANGE_MANIPULATION_STATE(CHECKING);
+
+
+//                  PACKAGE_INFO_GENERATE_EVENT(package_check_progress, ( ) );
+
+
+                    const auto aes_file_path = _package.get_content_file();
+                    const auto file_hash = detail::calculate_hash(aes_file_path);
+
+                    if (_package._hash != file_hash) {
+                        FC_THROW("Package hash (${phash}) does not match ${fn} content file hash (${fhash})",
+                                  ("phash", _package._hash.str()) ("fn", aes_file_path.string()) ("fhash", file_hash.str()) );
+                    }
+
+                    PACKAGE_INFO_CHANGE_DATA_STATE(CHECKED);
+                    PACKAGE_INFO_CHANGE_MANIPULATION_STATE(MS_NONE);
+                    PACKAGE_INFO_GENERATE_EVENT(package_check_complete, ( ) );
+                }
+                catch ( const fc::exception& ex ) {
+                    PACKAGE_INFO_CHANGE_DATA_STATE(INVALID);
+                    PACKAGE_INFO_CHANGE_MANIPULATION_STATE(MS_NONE);
+                    PACKAGE_INFO_GENERATE_EVENT(package_check_error, ( ex.what() ) );
+                    throw;
+                }
+                catch ( const std::exception& ex ) {
+                    PACKAGE_INFO_CHANGE_DATA_STATE(INVALID);
+                    PACKAGE_INFO_CHANGE_MANIPULATION_STATE(MS_NONE);
+                    PACKAGE_INFO_GENERATE_EVENT(package_check_error, ( ex.what() ) );
+                    throw;
+                }
+                catch ( ... ) {
+                    PACKAGE_INFO_CHANGE_DATA_STATE(INVALID);
+                    PACKAGE_INFO_CHANGE_MANIPULATION_STATE(MS_NONE);
+                    PACKAGE_INFO_GENERATE_EVENT(package_check_error, ( "unknown" ) );
+                    throw;
+                }
+            }
+        };
+
+
     } // namespace detail
-
-
-
 
 
     PackageInfo::PackageInfo(PackageManager& manager,
@@ -772,6 +953,7 @@ if (_package._manipulation_state != PackageInfo:: new_state) {                  
         , _data_state(DS_NONE)
         , _transfer_state(TS_NONE)
         , _manipulation_state(MS_NONE)
+        , _hash(package_hash)
         , _parent_dir(manager.get_packages_path())
     {
         auto& _package = *this; // For macros to work.
@@ -835,62 +1017,100 @@ if (_package._manipulation_state != PackageInfo:: new_state) {                  
         unlock_dir();
     }
 
-    void PackageInfo::create() {
+    void PackageInfo::create(bool block) {
         std::lock_guard<std::recursive_mutex> guard(_task_mutex);
 
         if (!_create_task) {
-            FC_THROW("package is not prepared for creation");
+            FC_THROW("package handle was not prepared for creation");
         }
 
         cancel_current_task(true);
         _current_task = _create_task;
 
-        auto task = _current_task;
-        _thread->async([task] () {
-            task->run();
-        });
+        if (block) {
+            _current_task->run();
+        }
+        else {
+            auto task = _current_task;
+            _thread->async([task] () {
+                task->run();
+            });
+        }
     }
 
-    void PackageInfo::unpack(const boost::filesystem::path& dir_path, const fc::sha512& key) {
+    void PackageInfo::unpack(const boost::filesystem::path& dir_path, const fc::sha512& key, bool block) {
         std::lock_guard<std::recursive_mutex> guard(_task_mutex);
 
         cancel_current_task(true);
         _current_task.reset(new detail::UnpackPackageTask(*this, dir_path, key));
 
-        auto task = _current_task;
-        _thread->async([task] () {
-            task->run();
-        });
+        if (block) {
+            _current_task->run();
+        }
+        else {
+            auto task = _current_task;
+            _thread->async([task] () {
+                task->run();
+            });
+        }
     }
 
-    void PackageInfo::download(const boost::filesystem::path& dir_path) {
+    void PackageInfo::download(const boost::filesystem::path& dir_path, bool block) {
         std::lock_guard<std::recursive_mutex> guard(_task_mutex);
 
         if (!_download_task) {
-            FC_THROW("package is not prepared for download");
+            FC_THROW("package handle was not prepared for download");
         }
 
-        _download_task->set_target_dir(dir_path);
-
         cancel_current_task(true);
+        _download_task->set_target_dir(dir_path);
         _current_task = _download_task;
 
-        auto task = _current_task;
-        _thread->async([task] () {
-            task->run();
-        });
+        if (block) {
+            _current_task->run();
+        }
+        else {
+            auto task = _current_task;
+            _thread->async([task] () {
+                task->run();
+            });
+        }
     }
 
-    void PackageInfo::seed(const std::string& proto) {
+    void PackageInfo::seed(const std::string& proto, bool block) {
+        std::lock_guard<std::recursive_mutex> guard(_task_mutex);
+
+        auto& transfer_engine = PackageManager::instance().get_proto_transfer_engine(proto);
+
+        cancel_current_task(true);
+        _current_task.reset(new detail::SeedPackageTask(*this, transfer_engine));
+
+        if (block) {
+            _current_task->run();
+        }
+        else {
+            auto task = _current_task;
+            _thread->async([task] () {
+                task->run();
+            });
+        }
+    }
+
+    void PackageInfo::check(bool block) {
         std::lock_guard<std::recursive_mutex> guard(_task_mutex);
 
         cancel_current_task(true);
-        _current_task.reset(new detail::SeedPackageTask(*this, proto));
+        _current_task.reset(new detail::CheckPackageTask(*this));
 
-        auto task = _current_task;
-        _thread->async([task] () {
-            task->run();
-        });
+        if (block) {
+            _current_task->run();
+        }
+        else {
+            auto task = _current_task;
+            _thread->async([task] () {
+                task->run();
+            });
+        }
     }
 
     void PackageInfo::remove(bool block) {
@@ -910,20 +1130,43 @@ if (_package._manipulation_state != PackageInfo:: new_state) {                  
         }
     }
 
+    void PackageInfo::wait_for_current_task() {
+        decltype(_current_task) current_task_init;
+
+        {
+            std::lock_guard<std::recursive_mutex> guard(_task_mutex);
+            current_task_init = _current_task;
+        }
+
+        while (current_task_init && current_task_init->is_running()) {
+            std::this_thread::yield();
+        }
+    }
+
     void PackageInfo::cancel_current_task(bool block) {
         std::lock_guard<std::recursive_mutex> guard(_task_mutex);
 
         if (_current_task) {
             if (block) {
-                _current_task->stop();
+                while (_current_task->is_running()) {
+                    _current_task->request_stop();
+                    std::this_thread::yield();
+                }
             }
             else {
-                auto task = _current_task;
-                _thread->async([task] () {
-                    task->run();
-                });
+                _current_task->request_stop();
             }
         }
+    }
+
+    std::exception_ptr PackageInfo::get_task_last_error() const {
+        std::lock_guard<std::recursive_mutex> guard(_task_mutex);
+
+        if (_current_task) {
+            return _current_task->consume_last_error();
+        }
+
+        return nullptr;
     }
 
     void PackageInfo::add_event_listener(const event_listener_handle_t& event_listener) {
@@ -960,6 +1203,8 @@ if (_package._manipulation_state != PackageInfo:: new_state) {                  
         std::lock_guard<std::recursive_mutex> guard(_mutex);
 
         using namespace boost::interprocess;
+
+        detail::touch(get_lock_file_path());
 
         _file_lock_guard.reset();
         _file_lock.reset(new file_lock(get_lock_file_path().string().c_str()));
@@ -1115,11 +1360,6 @@ if (_package._manipulation_state != PackageInfo:: new_state) {                  
         return _packages_path;
     }
 
-    std::shared_ptr<fc::thread> PackageManager::get_thread() const {
-        std::lock_guard<std::recursive_mutex> guard(_mutex);
-        return _thread;
-    }
-
     void PackageManager::set_libtorrent_config(const boost::filesystem::path& libtorrent_config_file) {
         std::lock_guard<std::recursive_mutex> guard(_mutex);
 
@@ -1135,6 +1375,22 @@ if (_package._manipulation_state != PackageInfo:: new_state) {                  
                 }
             }
         }
+    }
+
+    std::shared_ptr<fc::thread> PackageManager::get_thread() const {
+        std::lock_guard<std::recursive_mutex> guard(_mutex);
+        return _thread;
+    }
+
+    TransferEngineInterface& PackageManager::get_proto_transfer_engine(const std::string& proto) const {
+        std::lock_guard<std::recursive_mutex> guard(_mutex);
+
+        auto it = _proto_transfer_engines.find(proto);
+        if (it == _proto_transfer_engines.end()) {
+            FC_THROW("Cannot find protocol handler for '${proto}'", ("proto", proto) );
+        }
+
+        return *it->second;
     }
 
 
