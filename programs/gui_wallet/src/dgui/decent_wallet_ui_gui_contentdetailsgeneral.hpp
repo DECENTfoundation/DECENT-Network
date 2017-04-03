@@ -16,26 +16,26 @@
 
 namespace gui_wallet {
 
-   class ContentDetailsGeneral : public ContentDetailsBase
-   {
-      Q_OBJECT
-   public:
-      ContentDetailsGeneral(Mainwindow_gui_wallet* pMainWindow);
+class ContentDetailsGeneral : public ContentDetailsBase
+{
+    Q_OBJECT
+public:
+    ContentDetailsGeneral(Mainwindow_gui_wallet* pMainWindow);
 
-      virtual void execCDD(const SDigitalContent& a_cnt_details);
+    virtual void execCDD(const SDigitalContent& a_cnt_details);
 
-   public:
-   signals:
-      void ContentWasBought();
+public:
+signals:
+    void ContentWasBought();
 
-      protected slots:
-      void LabelPushCallbackGUI();
-      
-      
-   protected:
-      DecentButton   m_label;
-   };
+protected slots:
+    void LabelPushCallbackGUI();
+   
 
+protected:
+    DecentButton   m_label;
+    DecentButton   m_close;
+};
 }
 
 

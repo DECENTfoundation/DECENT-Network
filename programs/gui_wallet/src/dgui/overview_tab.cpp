@@ -46,9 +46,9 @@ Overview_tab::Overview_tab(class Mainwindow_gui_wallet* a_pPar)
    search_label.setSizeIncrement(100,40);
    search_label.setPixmap(image);
    search.setPlaceholderText(QString("Search"));
-   search.setStyleSheet("border: 0");
+   search.setStyleSheet("border: 0; padding-left: 10px;");
    search.setAttribute(Qt::WA_MacShowFocusRect, 0);
-   search.setFixedHeight(40);
+   search.setFixedHeight(54);
    
    
    search_lay->setContentsMargins(42, 0, 0, 0);
@@ -59,7 +59,8 @@ Overview_tab::Overview_tab(class Mainwindow_gui_wallet* a_pPar)
    
    main->addLayout(search_lay);
    main->addWidget(&table_widget);
-   
+   main->setSpacing(0);
+    
    setLayout(main);
  
    table_widget.setMouseTracking(true);
