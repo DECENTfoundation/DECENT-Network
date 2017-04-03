@@ -20,6 +20,7 @@
 #include <mutex>
 #include <set>
 #include <string>
+#include <thread>
 
 
 namespace decent { namespace package {
@@ -29,6 +30,28 @@ namespace decent { namespace package {
     class PackageInfo;
     class EventListenerInterface;
     class TransferEngineInterface;
+    class IPFSTransferEngine;
+    class TorrentTransferEngine;
+    class IPFSDownloadPackageTask;
+    class IPFSStartSeedingPackageTask;
+    class IPFSStopSeedingPackageTask;
+    class TorrentDownloadPackageTask;
+    class TorrentStartSeedingPackageTask;
+    class TorrentStopSeedingPackageTask;
+
+
+    namespace detail {
+
+
+        class PackageTask;
+        class CreatePackageTask;
+        class RemovePackageTask;
+        class UnpackPackageTask;
+        class CheckPackageTask;
+
+
+    } // namespace detail
+
 
     typedef std::shared_ptr<PackageInfo>                package_handle_t;
     typedef std::set<package_handle_t>                  package_handle_set_t;
@@ -38,25 +61,10 @@ namespace decent { namespace package {
     typedef std::map<std::string, transfer_engine_t>    proto_to_transfer_engine_map_t;
 
 
-    namespace detail {
-
-
-        class PackageTask;
-        class CreatePackageTask;
-        class DownloadPackageTask;
-        class RemovePackageTask;
-        class UnpackPackageTask;
-        class SeedPackageTask;
-        class CheckPackageTask;
-
-
-    } // namespace detail
-
-
     class PackageInfo {
     public:
         enum DataState {
-            DS_NONE = 0,
+            DS_UNINITIALIZED = 0,
             INVALID,
             PARTIAL,
             UNCHECKED,
@@ -64,13 +72,13 @@ namespace decent { namespace package {
         };
 
         enum TransferState {
-            TS_NONE = 0,
+            TS_IDLE = 0,
             DOWNLOADING,
             SEEDING,
         };
 
         enum ManipulationState {
-            MS_NONE = 0,
+            MS_IDLE = 0,
             PACKING,
             ENCRYPTING,
             STAGING,
@@ -82,11 +90,17 @@ namespace decent { namespace package {
 
     private:
         friend class PackageManager;
+
+        friend class IPFSDownloadPackageTask;
+        friend class IPFSStartSeedingPackageTask;
+        friend class IPFSStopSeedingPackageTask;
+        friend class TorrentDownloadPackageTask;
+        friend class TorrentStartSeedingPackageTask;
+        friend class TorrentStopSeedingPackageTask;
+
         friend class detail::CreatePackageTask;
-        friend class detail::DownloadPackageTask;
         friend class detail::RemovePackageTask;
         friend class detail::UnpackPackageTask;
-        friend class detail::SeedPackageTask;
         friend class detail::CheckPackageTask;
 
 
@@ -97,7 +111,7 @@ namespace decent { namespace package {
 
         PackageInfo(PackageManager& manager,const fc::ripemd160& package_hash);
 
-        PackageInfo(PackageManager& manager, const fc::url& url);
+        PackageInfo(PackageManager& manager, const std::string& url);
 
     public:
         PackageInfo(const PackageInfo&)             = delete;
@@ -117,8 +131,9 @@ namespace decent { namespace package {
 
         void create(bool block = false);
         void unpack(const boost::filesystem::path& dir_path, const fc::sha512& key, bool block = false);
-        void download(const boost::filesystem::path& dir_path, bool block = false);
-        void seed(const std::string& proto = "", bool block = false);
+        void download(bool block = false);
+        void start_seeding(std::string proto = "", bool block = false);
+        void stop_seeding(std::string proto = "", bool block = false);
         void check(bool block = false);
         void remove(bool block = false);
 
@@ -130,26 +145,28 @@ namespace decent { namespace package {
         static boost::filesystem::path get_package_state_dir(const boost::filesystem::path& package_dir)  { return package_dir / ".state" ; }
         static boost::filesystem::path get_lock_file_path(const boost::filesystem::path& package_dir)     { return get_package_state_dir(package_dir) / "lock"; }
 
-        boost::filesystem::path get_package_dir() const        { return _parent_dir / _hash.str(); }
+        void lock_dir();
+        void unlock_dir();
+
         boost::filesystem::path get_package_state_dir() const  { return get_package_state_dir(get_package_dir()); }
         boost::filesystem::path get_lock_file_path() const     { return get_lock_file_path(get_package_dir()); }
         boost::filesystem::path get_custody_file() const       { return get_package_dir() / "content.cus"; }
         boost::filesystem::path get_content_file() const       { return get_package_dir() / "content.zip.aes"; }
         boost::filesystem::path get_samples_path() const       { return get_package_dir() / "samples"; }
 
-        void lock_dir();
-        void unlock_dir();
+    public:
+        boost::filesystem::path get_package_dir() const        { return _parent_dir / _hash.str(); }
+        std::string             get_url() const                { return _url; }
 
     private:
         mutable std::recursive_mutex  _mutex;
-        std::shared_ptr<fc::thread>   _thread;
 
         DataState                     _data_state;
         TransferState                 _transfer_state;
         ManipulationState             _manipulation_state;
 
         fc::ripemd160                 _hash;
-        fc::url                       _url;
+        std::string                   _url;
         boost::filesystem::path       _parent_dir;
 
         std::shared_ptr<boost::interprocess::file_lock> _file_lock;
@@ -160,12 +177,28 @@ namespace decent { namespace package {
 
         mutable std::recursive_mutex                  _task_mutex;
         std::shared_ptr<detail::CreatePackageTask>    _create_task;
-        std::shared_ptr<detail::DownloadPackageTask>  _download_task;
+        std::shared_ptr<detail::PackageTask>          _download_task;
         std::shared_ptr<detail::PackageTask>          _current_task;
     };
 
 
-    class EventListenerInterface {
+    class TransferListenerInterface {
+    public:
+        virtual ~TransferListenerInterface() {}
+
+        virtual void package_seed_start() {}
+        virtual void package_seed_progress() {}
+        virtual void package_seed_error(const std::string&) {}
+        virtual void package_seed_complete() {}
+
+        virtual void package_download_start() {}
+        virtual void package_download_progress() {}
+        virtual void package_download_error(const std::string&) {}
+        virtual void package_download_complete() {}
+    };
+
+
+    class EventListenerInterface : public TransferListenerInterface {
     public:
         virtual ~EventListenerInterface() {}
 
@@ -192,23 +225,27 @@ namespace decent { namespace package {
         virtual void package_check_progress() {}
         virtual void package_check_error(const std::string&) {}
         virtual void package_check_complete() {}
-
-        virtual void package_upload_start() {}
-        virtual void package_upload_progress() {}
-        virtual void package_upload_error(const std::string&) {}
-        virtual void package_upload_complete() {}
-
-        virtual void package_download_start() {}
-        virtual void package_download_progress() {}
-        virtual void package_download_error(const std::string&) {}
-        virtual void package_download_complete() {}
     };
 
 
     class TransferEngineInterface {
     public:
+        TransferEngineInterface(const TransferEngineInterface& orig)        = delete;
+        TransferEngineInterface(TransferEngineInterface&&)                  = delete;
+        TransferEngineInterface& operator=(const TransferEngineInterface&)  = delete;
+        TransferEngineInterface& operator=(TransferEngineInterface&&)       = delete;
+
+        TransferEngineInterface() {}
         virtual ~TransferEngineInterface() {}
 
+    public:
+        virtual std::shared_ptr<detail::PackageTask> create_download_task(PackageInfo& package) = 0;
+        virtual std::shared_ptr<detail::PackageTask> create_start_seeding_task(PackageInfo& package) = 0;
+        virtual std::shared_ptr<detail::PackageTask> create_stop_seeding_task(PackageInfo& package) = 0;
+
+    protected:
+        fc::mutex   _mutex;
+        fc::thread  _thread;
     };
 
 
@@ -234,11 +271,12 @@ namespace decent { namespace package {
         package_handle_t get_package(const boost::filesystem::path& content_dir_path,
                                      const boost::filesystem::path& samples_dir_path,
                                      const fc::sha512& key);
-        package_handle_t get_package(const fc::url& url);
+        package_handle_t get_package(const std::string& url);
         package_handle_t get_package(const fc::ripemd160& hash);
 
         package_handle_set_t get_all_known_packages() const;
         void recover_all_packages(const event_listener_handle_t& event_listener = event_listener_handle_t());
+        bool release_all_packages();
 
         bool release_package(const fc::ripemd160& hash);
         bool release_package(package_handle_t& package);
@@ -246,19 +284,17 @@ namespace decent { namespace package {
         boost::filesystem::path get_packages_path() const;
         void set_libtorrent_config(const boost::filesystem::path& libtorrent_config_file);
 
-        std::shared_ptr<fc::thread> get_thread() const;
         TransferEngineInterface&    get_proto_transfer_engine(const std::string& proto) const;
 
     private:
         mutable std::recursive_mutex    _mutex;
-        std::shared_ptr<fc::thread>     _thread;
         boost::filesystem::path         _packages_path;
         package_handle_set_t            _packages;
         proto_to_transfer_engine_map_t  _proto_transfer_engines;
     };
 
 
-} } // decent::package
+} } // namespace decent::package
 
 
 
@@ -330,7 +366,7 @@ private:
 };
 
 
-    class package_transfer_interface : public decent::package::TransferEngineInterface {
+    class package_transfer_interface {
 public:
     typedef int transfer_id;
 

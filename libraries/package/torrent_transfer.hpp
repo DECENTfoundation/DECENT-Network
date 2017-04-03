@@ -1,6 +1,91 @@
 
 #pragma once
 
+#include "detail.hpp"
+
+#include <graphene/package/package.hpp>
+
+#include <memory>
+
+
+namespace decent { namespace package {
+
+
+    class TorrentTransferEngine;
+
+
+    class TorrentDownloadPackageTask : public detail::PackageTask {
+    public:
+        explicit TorrentDownloadPackageTask(PackageInfo& package);
+
+    protected:
+        virtual void task() override;
+
+    private:
+    };
+
+
+    class TorrentStartSeedingPackageTask : public detail::PackageTask {
+    public:
+        TorrentStartSeedingPackageTask(PackageInfo& package);
+
+    protected:
+        virtual void task() override;
+
+    private:
+    };
+
+    class TorrentStopSeedingPackageTask : public detail::PackageTask {
+    public:
+        TorrentStopSeedingPackageTask(PackageInfo& package);
+
+    protected:
+        virtual void task() override;
+
+    private:
+    };
+
+    class TorrentTransferEngine : public TransferEngineInterface {
+    public:
+        TorrentTransferEngine();
+
+        virtual std::shared_ptr<detail::PackageTask> create_download_task(PackageInfo& package) override;
+        virtual std::shared_ptr<detail::PackageTask> create_start_seeding_task(PackageInfo& package) override;
+        virtual std::shared_ptr<detail::PackageTask> create_stop_seeding_task(PackageInfo& package) override;
+
+    private:
+    };
+    
+    
+} } // namespace decent::package
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 #include <decent/encrypt/crypto_types.hpp>
 #include <decent/encrypt/custodyutils.hpp>
 #include <graphene/package/package.hpp>

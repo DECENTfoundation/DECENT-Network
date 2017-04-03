@@ -7,47 +7,24 @@
 #include <iostream>
 
 
-void unit_test_pm();
-
-
-int main(int argc, const char* argv[]) {
-    try {
-
-        unit_test_pm();
-
-    }
-    catch (const fc::exception& ex) {
-        std::cerr << ex.to_string() << std::endl;
-    }
-    catch (const std::exception& ex) {
-        std::cerr << ex.what() << std::endl;
-    }
-    catch (...) {
-        std::cerr << "Unknown exception has been thrown" << std::endl;
-    }
-
-    return 0;
-}
-
-
 using namespace decent::package;
 
 
 std::ostream& operator<< (std::ostream& os, const PackageInfo::DataState state) {
     switch (state) {
-        case PackageInfo::DS_NONE:    os << "NONE";       break;
-        case PackageInfo::INVALID:    os << "INVALID";    break;
-        case PackageInfo::PARTIAL:    os << "PARTIAL";    break;
-        case PackageInfo::UNCHECKED:  os << "UNCHECKED";  break;
-        case PackageInfo::CHECKED:    os << "CHECKED";    break;
-        default:                      os << "???";        break;
+        case PackageInfo::DS_UNINITIALIZED:  os << "UNINITIALIZED";  break;
+        case PackageInfo::INVALID:           os << "INVALID";        break;
+        case PackageInfo::PARTIAL:           os << "PARTIAL";        break;
+        case PackageInfo::UNCHECKED:         os << "UNCHECKED";      break;
+        case PackageInfo::CHECKED:           os << "CHECKED";        break;
+        default:                             os << "???";            break;
     }
     return os;
 }
 
 std::ostream& operator<< (std::ostream& os, const PackageInfo::TransferState state) {
     switch (state) {
-        case PackageInfo::TS_NONE:      os << "NONE";         break;
+        case PackageInfo::TS_IDLE:      os << "IDLE";         break;
         case PackageInfo::DOWNLOADING:  os << "DOWNLOADING";  break;
         case PackageInfo::SEEDING:      os << "SEEDING";      break;
         default:                        os << "???";          break;
@@ -57,7 +34,7 @@ std::ostream& operator<< (std::ostream& os, const PackageInfo::TransferState sta
 
 std::ostream& operator<< (std::ostream& os, const PackageInfo::ManipulationState state) {
     switch (state) {
-        case PackageInfo::MS_NONE:     os << "NONE";        break;
+        case PackageInfo::MS_IDLE:     os << "IDLE";        break;
         case PackageInfo::PACKING:     os << "PACKING";     break;
         case PackageInfo::ENCRYPTING:  os << "ENCRYPTING";  break;
         case PackageInfo::STAGING:     os << "STAGING";     break;
@@ -98,10 +75,10 @@ public:
     virtual void package_check_error(const std::string& error)  { std::clog << "Package check error: " << error << std::endl; }
     virtual void package_check_complete()                       { std::clog << "Package check complete" << std::endl; }
 
-    virtual void package_upload_start() {}
-    virtual void package_upload_progress() {}
-    virtual void package_upload_error(const std::string&) {}
-    virtual void package_upload_complete() {}
+    virtual void package_seed_start() {}
+    virtual void package_seed_progress() {}
+    virtual void package_seed_error(const std::string&) {}
+    virtual void package_seed_complete() {}
 
     virtual void package_download_start() {}
     virtual void package_download_progress() {}
@@ -111,42 +88,91 @@ public:
 
 
 
-void unit_test_pm()
+void pm_sandbox()
 {
 
     auto& package_manager = decent::package::PackageManager::instance();
 
     package_manager.recover_all_packages();
 
+
     const boost::filesystem::path content_dir = "/tmp/test/test1_content";
     const boost::filesystem::path samples_dir = "/tmp/test/test1_samples";
+    const boost::filesystem::path dest_dir = "/tmp/test/test1_unpacked";
     const fc::sha512 key = fc::sha512::hash(std::string("some_string_to_use_as_a_key"));
     const bool block = false;
 
-    auto package_handle = package_manager.get_package(content_dir, samples_dir, key);
 
-    package_handle->add_event_listener(std::make_shared<MyEventListener>());
-    package_handle->create(block);
+    {
+        auto package_handle = package_manager.get_package(content_dir, samples_dir, key);
+        package_handle->add_event_listener(std::make_shared<MyEventListener>());
+
+        {
+            package_handle->create(block);
+            package_handle->wait_for_current_task();
+            auto ex_ptr = package_handle->get_task_last_error();
+            if (ex_ptr) {
+                std::rethrow_exception(ex_ptr);
+            }
+        }
+
+        {
+            package_handle->start_seeding("ipfs");
+            package_handle->wait_for_current_task();
+            auto ex_ptr = package_handle->get_task_last_error();
+            if (ex_ptr) {
+                std::rethrow_exception(ex_ptr);
+            }
+        }
+
+        {
+            package_handle->stop_seeding();
+            package_handle->wait_for_current_task();
+            auto ex_ptr = package_handle->get_task_last_error();
+            if (ex_ptr) {
+                std::rethrow_exception(ex_ptr);
+            }
+        }
+
+        const boost::filesystem::path package_dir = package_handle->get_package_dir();
+        const std::string url = package_handle->get_url();
 
 
-    package_handle->wait_for_current_task();
+        package_manager.release_package(package_handle);
 
 
-    const boost::filesystem::path dest_dir = "/tmp/test/test1_unpacked";
+        package_handle = package_manager.get_package(url);
+        package_handle->add_event_listener(std::make_shared<MyEventListener>());
 
-    package_handle->unpack(dest_dir, key, block);
+        {
+            package_handle->download();
+            package_handle->wait_for_current_task();
+            auto ex_ptr = package_handle->get_task_last_error();
+            if (ex_ptr) {
+                std::rethrow_exception(ex_ptr);
+            }
+        }
 
-    package_handle->wait_for_current_task();
+        {
+            package_handle->check(block);
+            package_handle->wait_for_current_task();
+            auto ex_ptr = package_handle->get_task_last_error();
+            if (ex_ptr) {
+                std::rethrow_exception(ex_ptr);
+            }
+        }
 
-
-    auto ex_ptr = package_handle->get_task_last_error();
-    if (ex_ptr) {
-        std::rethrow_exception(ex_ptr);
+        {
+            package_handle->unpack(dest_dir, key, block);
+            package_handle->wait_for_current_task();
+            auto ex_ptr = package_handle->get_task_last_error();
+            if (ex_ptr) {
+                std::rethrow_exception(ex_ptr);
+            }
+        }
     }
 
-    std::cout << "Done." << std::endl;
-
-
+    package_manager.release_all_packages();
 
 
 /*
@@ -218,4 +244,23 @@ void unit_test_pm()
         dearc.extract(dst_content_path.string());
     }
 */
+}
+
+int main(int argc, const char* argv[]) {
+    try {
+
+        pm_sandbox();
+
+    }
+    catch (const fc::exception& ex) {
+        std::cerr << ex.to_detail_string() << std::endl;
+    }
+    catch (const std::exception& ex) {
+        std::cerr << ex.what() << std::endl;
+    }
+    catch (...) {
+        std::cerr << "Unknown exception has been thrown" << std::endl;
+    }
+
+    return 0;
 }

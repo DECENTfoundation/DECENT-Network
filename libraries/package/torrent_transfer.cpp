@@ -1,6 +1,176 @@
 
 #include "torrent_transfer.hpp"
 
+#include <graphene/package/package.hpp>
+
+#include <vector>
+
+
+namespace decent { namespace package {
+
+
+    namespace detail {
+
+
+        boost::filesystem::path get_relative(boost::filesystem::path from, boost::filesystem::path to);
+
+
+    } // namespace detail
+
+
+    TorrentTransferEngine::TorrentTransferEngine()
+    {
+    }
+
+    TorrentDownloadPackageTask::TorrentDownloadPackageTask(PackageInfo& package)
+        : detail::PackageTask(package)
+    {
+    }
+
+    void TorrentDownloadPackageTask::task() {
+        PACKAGE_INFO_GENERATE_EVENT(package_download_start, ( ) );
+
+        try {
+            PACKAGE_TASK_EXIT_IF_REQUESTED;
+            PACKAGE_INFO_CHANGE_TRANSFER_STATE(DOWNLOADING);
+
+
+//          PACKAGE_INFO_GENERATE_EVENT(package_download_progress, ( ) );
+
+
+
+
+            PACKAGE_TASK_EXIT_IF_REQUESTED;
+
+
+            PACKAGE_INFO_CHANGE_DATA_STATE(UNCHECKED);
+            PACKAGE_INFO_CHANGE_TRANSFER_STATE(TS_IDLE);
+            PACKAGE_INFO_GENERATE_EVENT(package_download_complete, ( ) );
+        }
+        catch ( const fc::exception& ex ) {
+            PACKAGE_INFO_CHANGE_DATA_STATE(INVALID);
+            PACKAGE_INFO_CHANGE_TRANSFER_STATE(TS_IDLE);
+            PACKAGE_INFO_GENERATE_EVENT(package_download_error, ( ex.to_detail_string() ) );
+            throw;
+        }
+        catch ( const std::exception& ex ) {
+            PACKAGE_INFO_CHANGE_DATA_STATE(INVALID);
+            PACKAGE_INFO_CHANGE_TRANSFER_STATE(TS_IDLE);
+            PACKAGE_INFO_GENERATE_EVENT(package_download_error, ( ex.what() ) );
+            throw;
+        }
+        catch ( ... ) {
+            PACKAGE_INFO_CHANGE_DATA_STATE(INVALID);
+            PACKAGE_INFO_CHANGE_TRANSFER_STATE(TS_IDLE);
+            PACKAGE_INFO_GENERATE_EVENT(package_download_error, ( "unknown" ) );
+            throw;
+        }
+    }
+
+
+    TorrentStartSeedingPackageTask::TorrentStartSeedingPackageTask(PackageInfo& package)
+        : detail::PackageTask(package)
+    {
+    }
+
+    void TorrentStartSeedingPackageTask::task() {
+        PACKAGE_INFO_GENERATE_EVENT(package_seed_start, ( ) );
+
+        try {
+            PACKAGE_TASK_EXIT_IF_REQUESTED;
+
+
+
+            PACKAGE_INFO_CHANGE_TRANSFER_STATE(TS_IDLE);
+            PACKAGE_INFO_GENERATE_EVENT(package_seed_complete, ( ) );
+        }
+        catch ( const fc::exception& ex ) {
+            PACKAGE_INFO_CHANGE_TRANSFER_STATE(TS_IDLE);
+            PACKAGE_INFO_GENERATE_EVENT(package_seed_error, ( ex.to_detail_string() ) );
+            throw;
+        }
+        catch ( const std::exception& ex ) {
+            PACKAGE_INFO_CHANGE_TRANSFER_STATE(TS_IDLE);
+            PACKAGE_INFO_GENERATE_EVENT(package_seed_error, ( ex.what() ) );
+            throw;
+        }
+        catch ( ... ) {
+            PACKAGE_INFO_CHANGE_TRANSFER_STATE(TS_IDLE);
+            PACKAGE_INFO_GENERATE_EVENT(package_seed_error, ( "unknown" ) );
+            throw;
+        }
+    }
+
+    TorrentStopSeedingPackageTask::TorrentStopSeedingPackageTask(PackageInfo& package)
+        : detail::PackageTask(package)
+    {
+    }
+
+    void TorrentStopSeedingPackageTask::task() {
+        PACKAGE_INFO_GENERATE_EVENT(package_seed_start, ( ) );
+
+        try {
+            PACKAGE_TASK_EXIT_IF_REQUESTED;
+
+
+
+            PACKAGE_INFO_CHANGE_TRANSFER_STATE(TS_IDLE);
+            PACKAGE_INFO_GENERATE_EVENT(package_seed_complete, ( ) );
+        }
+        catch ( const fc::exception& ex ) {
+            PACKAGE_INFO_CHANGE_TRANSFER_STATE(TS_IDLE);
+            PACKAGE_INFO_GENERATE_EVENT(package_seed_error, ( ex.to_detail_string() ) );
+            throw;
+        }
+        catch ( const std::exception& ex ) {
+            PACKAGE_INFO_CHANGE_TRANSFER_STATE(TS_IDLE);
+            PACKAGE_INFO_GENERATE_EVENT(package_seed_error, ( ex.what() ) );
+            throw;
+        }
+        catch ( ... ) {
+            PACKAGE_INFO_CHANGE_TRANSFER_STATE(TS_IDLE);
+            PACKAGE_INFO_GENERATE_EVENT(package_seed_error, ( "unknown" ) );
+            throw;
+        }
+    }
+
+    std::shared_ptr<detail::PackageTask> TorrentTransferEngine::create_download_task(PackageInfo& package) {
+        return std::make_shared<TorrentDownloadPackageTask>(package);
+    }
+
+    std::shared_ptr<detail::PackageTask> TorrentTransferEngine::create_start_seeding_task(PackageInfo& package) {
+        return std::make_shared<TorrentStartSeedingPackageTask>(package);
+    }
+
+    std::shared_ptr<detail::PackageTask> TorrentTransferEngine::create_stop_seeding_task(PackageInfo& package) {
+        return std::make_shared<TorrentStopSeedingPackageTask>(package);
+    }
+
+
+} } // namespace decent::package
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 #include <decent/encrypt/encryptionutils.hpp>
 #include <graphene/package/package.hpp>
 #include <graphene/utilities/dirhelper.hpp>
