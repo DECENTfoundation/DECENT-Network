@@ -143,10 +143,7 @@ public:
    //static void runTask(std::string const& str_command, std::string& str_result);
    
 private:
-//<<<<<<< HEAD
-   //static void connectionThreadFunction();
-   //static void connectedCallback(void* owner, void* a_clbData, int64_t a_err, const std::string& a_inp, const std::string& a_result);
-   //static int  connectToNewWitness(const ConnectListItem& item);
+
    static int  connectToNewWitnessImpl(SConnectionStruct* connectionInfo);
    static void connectionThreadFunction();
    

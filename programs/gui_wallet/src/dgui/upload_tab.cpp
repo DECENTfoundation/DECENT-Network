@@ -71,23 +71,24 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow)
 
 m_getPublishersTimer(this)
 {
-    QFont m_font( "Open Sans Bold", 14, QFont::Bold);
     QPalette pltEdit;
     
     
-    m_title_text.setPlaceholderText("  Title:");
+    m_title_text.setPlaceholderText("Title:");
+    m_title_text.setStyleSheet("padding-left: 10px;");
     m_title_text.setAttribute(Qt::WA_MacShowFocusRect, 0);
-    m_title_text.setFixedHeight(40);
+    m_title_text.setMinimumHeight(44);
+    m_title_text.setContentsMargins(0, 0, 0, 0);
     
     m_synopsis_layout.setContentsMargins(0, 0, 0, 0);
     m_synopsis_layout.addWidget(&m_title_text);
     
     m_description_text.setContentsMargins(0, 0, 0, 0);
-    m_description_text.setPlaceholderText("  Description:");
-    m_description_text.resize(138, 822);
-    m_description_text.setFixedHeight(138);
-    
+    m_description_text.setPlaceholderText("Description:");
+    m_description_text.setStyleSheet("border-top: 0px; border-left: 0px; border-right: 0px; padding-left: 10px; border-bottom: 0px;");
+    m_description_text.setMinimumHeight(161);
     m_description_text.setContentsMargins(0, 0, 0, 0);
+    
     m_synopsis_layout.setMargin(0);
     m_synopsis_layout.addWidget(&m_description_text);
     
@@ -108,18 +109,17 @@ m_getPublishersTimer(this)
     de->setCalendarPopup(true);
     de->setMinimumDate(QDate::currentDate());
     de->setStyle(QStyleFactory::create("fusion"));
+    de->setMinimumHeight(44);
+    de->setFixedWidth(220);
     
-    //////////////////////
-    //////                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    //////////////////////
     QHBoxLayout* firstRow = new QHBoxLayout;
     
     //LIFETIME
-    QLabel* lab = new QLabel("LifeTime");
+    QLabel* lab = new QLabel("  LifeTime");
     lab->setStyleSheet("QLabel { background-color : white; border:1 solid lightGray; color: Gray}");
     lab->setContentsMargins(0, 0, -5, 0);
     lab->setMinimumWidth(60);
-    lab->setFixedHeight(25);
+    lab->setMinimumHeight(44);
     
     firstRow->setMargin(0);
     firstRow->addWidget(lab);
@@ -130,13 +130,17 @@ m_getPublishersTimer(this)
     QHBoxLayout* seedRow = new QHBoxLayout;
 
     seeders      = new QComboBox(this);
-    QLabel* seed = new QLabel("Seeders");
+    QLabel* seed = new QLabel("  Seeders");
     seed->setStyleSheet("QLabel { background-color : white; border:1 solid lightGray; color: Gray}");
     
     seed->setContentsMargins(0, 0, 0, 0);
     seed->setMinimumWidth(70);
-    seed->setFixedHeight(25);
+    seed->setMinimumHeight(44);
     seeders->setStyle(QStyleFactory::create("fusion"));
+    seeders->setStyleSheet("color : black;");
+    seeders->setMinimumHeight(44);
+    seeders->setFixedWidth(220);
+    
     seedRow->addWidget(seed);
     seedRow->addWidget(seeders);
     seedRow->setMargin(0);
@@ -145,15 +149,18 @@ m_getPublishersTimer(this)
     //KEYPARTICLES
     QHBoxLayout* keyRow = new QHBoxLayout;
 
-    QLabel* key = new QLabel("Key Particles");
+    QLabel* key = new QLabel("  Key Particles");
     key->setStyleSheet("QLabel { background-color : white; border:1 solid lightGray; color: Gray}");
     key->setContentsMargins(0, 0, 0, 0);
     key->setMinimumWidth(90);
-    key->setFixedHeight(25);
+    key->setMinimumHeight(44);
     
     keyparts = new QComboBox(this);
     keyparts->setStyle(QStyleFactory::create("fusion"));
     keyparts->setStyleSheet("color : black;");
+    keyparts->setMinimumHeight(44);
+   keyparts->setFixedWidth(220);
+   
     for (int r = 2; r <= 7; ++r) {
         QString val = QString::fromStdString(std::to_string(r));
         keyparts->addItem(val, val);
@@ -171,8 +178,8 @@ m_getPublishersTimer(this)
     price->setValidator( new QDoubleValidator(0.001, 100000, 3, this) );
     price->setPlaceholderText("Price");
     price->setAttribute(Qt::WA_MacShowFocusRect, 0);
-    price->setStyleSheet("border:1px solid lightGray; color: Gray");
-    price->setFixedHeight(30);
+    price->setStyleSheet("border:1px solid lightGray; padding-left: 8px; color: Gray");
+    price->setMinimumHeight(44);
     price->setContentsMargins(0, 0, 0, 0);
     
     priceRow->setContentsMargins(0, 0, 0, 0);
@@ -180,34 +187,15 @@ m_getPublishersTimer(this)
     
     u_main_layout.addLayout(priceRow);
     
-    //SIMPLES
-    QHBoxLayout* simRow = new QHBoxLayout;
-    
-    sim = new QLineEdit("Samples");
-    sim->setReadOnly(true);
-    sim->setStyleSheet("border:1px solid lightGray; color: Gray");
-    sim->setContentsMargins(0, 0, 0, 0);
-    sim->setFixedHeight(30);
-    
-    DecentButton* browse_samples_button = new DecentButton();
-    browse_samples_button->setText("Browse");
-    browse_samples_button->setFixedWidth(70);
-    browse_samples_button->setFixedHeight(30);
-    connect(browse_samples_button, SIGNAL(LabelClicked()),this, SLOT(browseSamples()));
-    
-    simRow->addWidget(sim);
-    simRow->addWidget(browse_samples_button);
-    
-    u_main_layout.addLayout(simRow);
-    
     //CONTENT
+    QFont fontBrowse( "Myriad Pro Regular", 13, QFont::Bold);
     QHBoxLayout* contRow = new QHBoxLayout;
-
-    cont = new QLineEdit("Path");
+    
+    cont = new QLineEdit("  Path");
     cont->setReadOnly(true);
     cont->setStyleSheet("border:1px solid lightGray; color: Gray");
     cont->setContentsMargins(0, 0, 0, 0);
-    cont->setFixedHeight(30);
+    cont->setMinimumHeight(44);
     
     m_contentPath = new QLineEdit("", this);
     m_contentPath->setReadOnly(true);
@@ -215,43 +203,70 @@ m_getPublishersTimer(this)
     
     DecentButton* browse_content_button = new DecentButton();
     browse_content_button->setText("Browse");
-    browse_content_button->setFixedWidth(70);
-    browse_content_button->setFixedHeight(30);
+    browse_content_button->setFont(fontBrowse);
+    browse_content_button->setMinimumWidth(105);
+    browse_content_button->setFixedHeight(43);
     connect(browse_content_button, SIGNAL(LabelClicked()),this, SLOT(browseContent()));
     
     contRow->addWidget(cont);
     contRow->addWidget(browse_content_button);
-    
+
     u_main_layout.addLayout(contRow);
+    
+    //SIMPLES
+    QHBoxLayout* simRow = new QHBoxLayout;
+    
+    sim = new QLineEdit("  Samples(Optional)");
+    sim->setReadOnly(true);
+    sim->setStyleSheet("border:1px solid lightGray; color: Gray");
+    sim->setContentsMargins(0, 0, 0, 0);
+    sim->setMinimumHeight(44);
+    
+    DecentButton* browse_samples_button = new DecentButton();
+    browse_samples_button->setText("Browse");
+    browse_samples_button->setFont(fontBrowse);
+    browse_samples_button->setMinimumWidth(105);
+    browse_samples_button->setFixedHeight(43);
+    connect(browse_samples_button, SIGNAL(LabelClicked()),this, SLOT(browseSamples()));
+    
+    simRow->addWidget(sim);
+    simRow->addWidget(browse_samples_button);
+    
+    u_main_layout.addLayout(simRow);
     
     ////////////////////////////                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     ////////////////////////////////////////////////////////////////////////////
-    /// Upload
+    /// Upload & Cancel
     ////////////////////////////////////////////////////////////////////////////
+    QFont fontCanUplo( "Myriad Pro Regular", 15, QFont::Bold);
     
     QHBoxLayout* button = new QHBoxLayout;
-    
+   
+    button->setSpacing(20);
     DecentButton* upload_label = new DecentButton();
     DecentButton* cancel_label = new DecentButton();
 
     cancel_label->setText("Cancel");
-    cancel_label->setFixedHeight(30);
-    cancel_label->setFixedWidth(120);
-    cancel_label->setStyleSheet("QLabel { background-color :rgb(255, 255, 255); border:1px solid Gray; color : Grey;}");
+    cancel_label->setFont(fontCanUplo);
+    cancel_label->setMinimumHeight(48);
+    cancel_label->setMinimumWidth(137);
+    cancel_label->setStyleSheet("QLabel { background-color :rgb(255, 255, 255); border:1px solid lightGray; color : Grey;}");
     
     upload_label->setText("Upload");
-    upload_label->setFixedHeight(30);
-    upload_label->setFixedWidth(120);
+    upload_label->setFont(fontCanUplo);
+    upload_label->setMinimumHeight(48);
+    upload_label->setMinimumWidth(137);
     
     connect(upload_label, SIGNAL(LabelClicked()),this, SLOT(uploadContent()));
     connect(cancel_label, SIGNAL(LabelClicked()),this, SLOT( uploadCanceled() ));
 
-    button->setContentsMargins(150, 0, 150, 0);
+    button->setContentsMargins(161, 30, 161, 20);
     button->addWidget(upload_label);
     button->addWidget(cancel_label);
 
     u_main_layout.addLayout(button);
     u_main_layout.setContentsMargins(0, 0, 0, 5 );
+    u_main_layout.setSpacing(0);
     
     m_getPublishersTimer.setSingleShot(true);
     connect(&m_getPublishersTimer, SIGNAL(timeout()), SLOT(onGrabPublishers()));
@@ -455,26 +470,31 @@ Upload_tab::Upload_tab(Mainwindow_gui_wallet* parent) :  popup(0), _content_popu
 
     });
     
+    QFont fontUpload( "Myriad Pro Regular", 14, QFont::Bold);
+
     upload_button = new DecentButton();
-    upload_button->setText("UPLOAD");
-    upload_button->setFixedWidth(150);
+    upload_button->setFont(fontUpload);
+    upload_button->setText("Upload");
+    upload_button->setMinimumWidth(102);
+    upload_button->setMinimumHeight(54);
+    
     QLabel* lab = new QLabel();
     QPixmap image(":/icon/images/search.svg");
     lab->setPixmap(image);
     
     m_filterLineEdit.setPlaceholderText("Search Content");
-    m_filterLineEdit.setFixedHeight(40);
-   m_filterLineEdit.setStyleSheet("border: 0");
+    m_filterLineEdit.setFixedHeight(54);
+    m_filterLineEdit.setStyleSheet("border: 0; padding-left: 10px;");
     m_filterLineEdit.setAttribute(Qt::WA_MacShowFocusRect, 0);
     
-    m_search_layout.setContentsMargins(42, 0, 0, -50);
+    m_search_layout.setContentsMargins(42, 0, 0, 0);
     m_search_layout.addWidget(lab);
     m_search_layout.addWidget(&m_filterLineEdit);
-    m_search_layout.addWidget(upload_button);
+    m_search_layout.addWidget(upload_button, 0 , Qt::AlignBottom);
     
     m_main_layout.setContentsMargins(0, 0, 0, 0);
+    m_main_layout.setSpacing(0);
     m_main_layout.addLayout(&m_search_layout);
-    
     m_main_layout.addWidget(&m_pTableWidget);
     setLayout(&m_main_layout);
     
