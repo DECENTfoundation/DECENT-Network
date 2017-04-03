@@ -12,6 +12,7 @@
 #include "text_display_dialog.hpp"
 #include "richdialog.hpp"
 #include "unnamedsemaphorelite.hpp"
+
 #include "json.hpp"
 
 #include <decent/wallet_utility/wallet_utility.hpp>
