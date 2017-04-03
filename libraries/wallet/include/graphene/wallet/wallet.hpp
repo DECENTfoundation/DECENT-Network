@@ -1664,7 +1664,7 @@ namespace graphene { namespace wallet {
           * @return The contents found
           * @ingroup WalletCLI
           */
-         vector<content_summary> search_content( const string& term, uint32_t count )const;
+         vector<content_summary> search_content( const string& term, const string& order, uint32_t count )const;
          /**
           * @brief Get a list of contents ordered alphabetically by search term
           * @param term seach term

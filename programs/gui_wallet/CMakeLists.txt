@@ -35,13 +35,11 @@ add_executable( DECENT MACOSX_BUNDLE
                 src/dgui/purchased_tab.cpp
                 src/dgui/upload_tab.cpp
                 src/dgui/fc_rpc_gui.cpp
-                src/dgui/ui_wallet_functions.cpp
                 src/utils/decent_tools_rwlock.cpp
                 src/utils/richdialog.cpp
 
                 include/decent_tool_fifo.hpp
                 include/richdialog.hpp
-                include/ui_wallet_functions.hpp
                 include/unnamedsemaphorelite.hpp
                 src/dgui/browse_content_tab.hpp
                 src/dgui/decent_gui_inguiloopcaller.hpp

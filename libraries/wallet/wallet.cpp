@@ -3930,9 +3930,9 @@ vector<content_summary> wallet_api::list_content( const string& URI, uint32_t co
     return my->_remote_db->list_content( URI, count );
 }
    
-vector<content_summary> wallet_api::search_content( const string& term, uint32_t count)const
+vector<content_summary> wallet_api::search_content( const string& term, const string& order, uint32_t count)const
 {
-   return my->_remote_db->search_content( term, count );
+   return my->_remote_db->search_content( term, order, count );
 }
 
 
