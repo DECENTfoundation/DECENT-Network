@@ -428,14 +428,21 @@ void Upload_popup::resizeEvent ( QResizeEvent * event )
 // UPLOAD TAB
 
 Upload_tab::Upload_tab(Mainwindow_gui_wallet* parent) :  _content_popup(NULL), _parent(parent) {
-    
+    /*
+     {"Author", 15, "author"},
+     {"Rating", 5, "rating"},
+     {"Size", 5, "size"},
+     {"Price", 5, "price"},
+     {"Uploaded", 7, "created"},
+     {"Expiration", 7, "expiration"},
+     */
     m_pTableWidget.set_columns({
         {"Title", 20},
-        {"Rating", 10},
-        {"Size", 10},
-        {"Price", 10},
-        {"Uploaded", 10},
-        {"Expiration", 10},
+        {"Rating", 10, "rating"},
+        {"Size", 10, "size"},
+        {"Price", 10, "price"},
+        {"Uploaded", 10, "created"},
+        {"Expiration", 10, "expiration"},
         {" ", -50}
 
     });
@@ -524,7 +531,7 @@ std::string Upload_tab::getUpdateCommand() {
       return "";
    }
    
-   return "search_user_content \"" + currentUserName + "\" \"" + filterText + "\" 100";
+   return "search_user_content \"" + currentUserName + "\" \"" + filterText + "\" \"" + m_pTableWidget.getSortedColumn() + "\" 100";
    
 }
 
