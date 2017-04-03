@@ -59,26 +59,13 @@ using namespace decent::encrypt;
    };
    
    struct by_author;
-   struct by_author_desc;
-   
    struct by_URI;
-   
    struct by_AVG_rating;
-   struct by_AVG_rating_desc;
-   
    struct by_size;
-   struct by_size_desc;
-   
    struct by_price;
-   struct by_price_desc;
-   
    struct by_times_bought;
-   
    struct by_expiration;
-   struct by_expiration_desc;
-   
    struct by_created;
-   struct by_created_desc;
    
    
    typedef multi_index_container<
@@ -92,12 +79,6 @@ using namespace decent::encrypt;
             ordered_non_unique<tag<by_author>,
                member<content_object, account_id_type, &content_object::author>
             >,
-            ordered_non_unique<tag<by_author_desc>,
-               member<content_object, account_id_type, &content_object::author>,
-               std::greater<account_id_type>
-            >,
-   
-   
             ordered_unique<tag<by_URI>,
                member<content_object, string, &content_object::URI>
             >,
@@ -106,29 +87,13 @@ using namespace decent::encrypt;
             ordered_non_unique<tag<by_price>,
                const_mem_fun<content_object, share_type, &content_object::get_price_amount>
             >,
-            ordered_non_unique<tag<by_price_desc>,
-               const_mem_fun<content_object, share_type, &content_object::get_price_amount>,
-               std::greater<share_type>
-            >,
-   
    
             ordered_non_unique<tag<by_size>,
                member<content_object, uint64_t, &content_object::size>
             >,
-            ordered_non_unique<tag<by_size_desc>,
-               member<content_object, uint64_t, &content_object::size>,
-               std::greater<uint64_t>
-            >,
-            
             ordered_non_unique<tag<by_AVG_rating>,
                member<content_object, uint64_t, &content_object::AVG_rating>
             >,
-            ordered_non_unique<tag<by_AVG_rating_desc>,
-               member<content_object, uint64_t, &content_object::AVG_rating>,
-               std::less<uint64_t>
-            >,
-   
-   
             ordered_non_unique<tag<by_times_bought>,
                member<content_object, uint32_t, &content_object::times_bought>,
                std::greater<uint32_t>
@@ -138,18 +103,9 @@ using namespace decent::encrypt;
             ordered_non_unique<tag<by_expiration>,
                member<content_object, time_point_sec, &content_object::expiration>
             >,
-            ordered_non_unique<tag<by_expiration_desc>,
-               member<content_object, time_point_sec, &content_object::expiration>,
-               std::greater<time_point_sec>
-            >,
-   
    
             ordered_non_unique<tag<by_created>,
                member<content_object, time_point_sec, &content_object::created>
-            >,
-            ordered_non_unique<tag<by_created_desc>,
-               member<content_object, time_point_sec, &content_object::created>,
-               std::greater<time_point_sec>
             >
    
          >

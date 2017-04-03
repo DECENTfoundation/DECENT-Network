@@ -1820,18 +1820,40 @@ vector<content_summary> database_api_impl::list_content( const string& URI_begin
 
    
 namespace {
-   template <class SortTag>
+   
+   template <bool is_ascending>
+   struct return_one {
+      
+      template <class T1, class T2>
+      static auto choose(const T1& t1, const T2& t2) -> typename std::conditional<is_ascending, T1, T2 >::type {
+         return t1;
+      };
+   };
+   
+   template <>
+   struct return_one<false> {
+      
+      template <class T1, class T2>
+      static auto choose(const T1& t1, const T2& t2) -> typename std::conditional<false, T1, T2 >::type {
+         return t2;
+      };
+   };
+   
+   
+   
+   template <bool is_ascending, class sort_tag>
    void search_content_template(graphene::chain::database& db, const string& search_term, uint32_t count, vector<content_summary>& result) {
       
-      const auto& idx = db.get_index_type<content_index>().indices().get<SortTag>();
+      const auto& idx = db.get_index_type<content_index>().indices().get<sort_tag>();
       
-      auto itr = idx.begin();
+      auto itr = return_one<is_ascending>::choose(idx.begin(), idx.rbegin());
+      auto itr_end = return_one<is_ascending>::choose(idx.end(), idx.rend());
       
       
       content_summary content;
       const auto& idx2 = db.get_index_type<account_index>().indices().get<by_id>();
       
-      while(count && itr != idx.end())
+      while(count && itr != itr_end)
       {
          const auto& account = idx2.find(itr->author);
          
@@ -1880,25 +1902,21 @@ vector<content_summary> database_api_impl::search_content( const string& search_
    vector<content_summary> result;
    result.reserve( count );
    
-   if (order == "+author") search_content_template<by_author>(_db, search_term, count, result);
-   if (order == "-author") search_content_template<by_author_desc>(_db, search_term, count, result);
+   if (order == "+author") search_content_template<true, by_author>(_db, search_term, count, result);
+   if (order == "+rating") search_content_template<true, by_AVG_rating>(_db, search_term, count, result);
+   if (order == "+size") search_content_template<true, by_size>(_db, search_term, count, result);
+   if (order == "+price") search_content_template<true, by_price>(_db, search_term, count, result);
+   if (order == "+created") search_content_template<true, by_created>(_db, search_term, count, result);
+   if (order == "+expiration") search_content_template<true, by_expiration>(_db, search_term, count, result);
    
-   if (order == "+rating") search_content_template<by_AVG_rating>(_db, search_term, count, result);
-   if (order == "-rating") search_content_template<by_AVG_rating_desc>(_db, search_term, count, result);
+   if (order == "-author") search_content_template<false, by_author>(_db, search_term, count, result);
+   if (order == "-rating") search_content_template<false, by_AVG_rating>(_db, search_term, count, result);
+   if (order == "-size") search_content_template<false, by_size>(_db, search_term, count, result);
+   if (order == "-price") search_content_template<false, by_price>(_db, search_term, count, result);
+   if (order == "-created") search_content_template<false, by_created>(_db, search_term, count, result);
+   if (order == "-expiration") search_content_template<false, by_expiration>(_db, search_term, count, result);
    
-   if (order == "+size") search_content_template<by_size>(_db, search_term, count, result);
-   if (order == "-size") search_content_template<by_size_desc>(_db, search_term, count, result);
-   
-   if (order == "+price") search_content_template<by_price>(_db, search_term, count, result);
-   if (order == "-price") search_content_template<by_price_desc>(_db, search_term, count, result);
-   
-   if (order == "+created") search_content_template<by_created>(_db, search_term, count, result);
-   if (order == "-created") search_content_template<by_created_desc>(_db, search_term, count, result);
-   
-   if (order == "+expiration") search_content_template<by_expiration>(_db, search_term, count, result);
-   if (order == "-expiration") search_content_template<by_expiration_desc>(_db, search_term, count, result);
-   
-   search_content_template<by_URI>(_db, search_term, count, result);
+//   search_content_template<by_URI>(_db, search_term, count, true, result);
    
    return result;
 }
