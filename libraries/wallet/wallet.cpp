@@ -2925,8 +2925,12 @@ vector<asset_object> wallet_api::list_assets(const string& lowerbound, uint32_t 
    return my->_remote_db->list_assets( lowerbound, limit );
 }
 
-vector<operation_detail> wallet_api::get_account_history(string name, int limit)const {
+vector<operation_detail> wallet_api::get_account_history(string name, const string& order, int limit)const {
    
+    std::cout << "\n\n\n~_~_~_~: " << name << std::endl;
+    
+    std::cout << "\n\n\n~_~_~_~: " << order << std::endl;
+
    vector<operation_detail> result;
    auto account_id = get_account(name).get_id();
    
@@ -2940,7 +2944,7 @@ vector<operation_detail> wallet_api::get_account_history(string name, int limit)
       }
       
       
-      vector<operation_history_object> current = my->_remote_hist->get_account_history(account_id, operation_history_id_type(), std::min(100,limit), start);
+      vector<operation_history_object> current = my->_remote_hist->get_account_history(account_id, order, operation_history_id_type(), std::min(100,limit), start);
       for( auto& o : current ) {
          std::stringstream ss;
          operation_detail op_detail;
@@ -2966,6 +2970,7 @@ vector<operation_detail> wallet_api::get_account_history(string name, int limit)
    
    return result;
 }
+
 
 
 vector<bucket_object> wallet_api::get_market_history( string symbol1, string symbol2, uint32_t bucket )const
