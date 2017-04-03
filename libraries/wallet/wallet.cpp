@@ -197,7 +197,7 @@ public:
    std::string operator()(const asset_create_operation& op)const;
    std::string operator()(const content_submit_operation& op)const;
    std::string operator()(const request_to_buy_operation& op)const;
-   std::string operator()(const leave_rating_operation& op)const;
+   std::string operator()(const leave_rating_and_comment_operation& op)const;
    std::string operator()(const ready_to_publish_operation& op)const;
 };
 
@@ -258,14 +258,16 @@ public:
       detail.transaction_fee = op.fee;
       detail.description = op.URI;
    }
-   void operator()(const leave_rating_operation& op)const {
-      detail.operation_type = "Rate";
+   void operator()(const leave_rating_and_comment_operation& op)const {
+      detail.operation_type = "Rate/comment";
       detail.from_account = op.consumer;
       detail.to_account = op.consumer;
       detail.transaction_amount = asset();
       detail.transaction_fee = op.fee;
-      detail.description = std::to_string(op.rating);
-      
+      if( op.rating == 0 )
+         detail.description = std::to_string(op.rating);
+      else
+         detail.description = "comment";
    }
    
 };
@@ -2376,17 +2378,19 @@ public:
       return sign_transaction( tx, broadcast );
    } FC_CAPTURE_AND_RETHROW( (consumer)(URI)(price_asset_symbol)(price_amount)(broadcast) ) }
    
-   signed_transaction leave_rating(string consumer,
-                                   string URI,
-                                   uint64_t rating,
-                                   bool broadcast/* = false */)
+   signed_transaction leave_rating_and_comment(string consumer,
+                                               string URI,
+                                               uint64_t rating,
+                                               string comment,
+                                               bool broadcast/* = false */)
    { try {
       account_object consumer_account = get_account( consumer );
 
-      leave_rating_operation leave_rating_op;
+      leave_rating_and_comment_operation leave_rating_op;
       leave_rating_op.consumer = consumer_account.id;
       leave_rating_op.URI = URI;
       leave_rating_op.rating = rating;
+      leave_rating_op.comment = comment;
       
       signed_transaction tx;
       tx.operations.push_back( leave_rating_op );
@@ -2394,7 +2398,7 @@ public:
       tx.validate();
       
       return sign_transaction( tx, broadcast );
-   } FC_CAPTURE_AND_RETHROW( (consumer)(URI)(rating)(broadcast) ) }
+   } FC_CAPTURE_AND_RETHROW( (consumer)(URI)(rating)(comment)(broadcast) ) }
    
    signed_transaction ready_to_publish(string seeder,
                                        uint64_t space,
@@ -2839,9 +2843,15 @@ std::string operation_printer::operator()(const request_to_buy_operation& op) co
    return fee(op.fee);
 }
 
-std::string operation_printer::operator()(const leave_rating_operation& op) const
+std::string operation_printer::operator()(const leave_rating_and_comment_operation& op) const
 {
-   out << wallet.get_account(op.consumer).name << " rated " << op.URI << " -- Rating: " << op.rating;
+   out << wallet.get_account(op.consumer).name;
+   if( op.comment.empty() )
+      out << " rated " << op.URI << " -- Rating: " << op.rating;
+   else if( op.rating == 0 )
+      out << " commented " << op.URI << " -- Comment: " << op.comment;
+   else
+      out << " rated and commented " << op.URI << " -- Rating: " << op.rating << " -- Comment: " << op.comment;
    return fee(op.fee);
 }
 
@@ -3722,44 +3732,70 @@ real_supply wallet_api::get_real_supply()const
    return my->_remote_db->get_real_supply();
 }
 
-signed_transaction
-wallet_api::submit_content(string author, string URI, string price_asset_name, string price_amount, uint64_t size,
-                           fc::ripemd160 hash, vector<account_id_type> seeders, uint32_t quorum, fc::time_point_sec expiration,
-                           string publishing_fee_asset, string publishing_fee_amount, string synopsis, DInteger secret,
-                           decent::encrypt::CustodyData cd, bool broadcast)
+signed_transaction wallet_api::submit_content(string author,
+                           string URI,
+                           string price_asset_name,
+                           string price_amount,
+                           uint64_t size,
+                           fc::ripemd160 hash,
+                           vector<account_id_type> seeders,
+                           uint32_t quorum,
+                           fc::time_point_sec expiration,
+                           string publishing_fee_asset,
+                           string publishing_fee_amount,
+                           string synopsis,
+                           DInteger secret,
+                           decent::encrypt::CustodyData cd,
+                           bool broadcast)
 {
-   return my->submit_content(author, URI, price_asset_name, price_amount, hash, size, seeders, quorum, expiration, publishing_fee_asset, publishing_fee_amount, synopsis, secret, cd, broadcast);
+   return my->submit_content(author, URI, price_asset_name, price_amount, hash, size, seeders, quorum, expiration,
+                             publishing_fee_asset, publishing_fee_amount, synopsis, secret, cd, broadcast);
 }
 
-signed_transaction
-wallet_api::submit_content_new(string author, string content_dir, string samples_dir, string protocol, string price_asset_symbol, string price_amount, vector<account_id_type> seeders, fc::time_point_sec expiration, string synopsis, bool broadcast)
+signed_transaction wallet_api::submit_content_new(string author,
+                                                  string content_dir,
+                                                  string samples_dir,
+                                                  string protocol,
+                                                  string price_asset_symbol,
+                                                  string price_amount,
+                                                  vector<account_id_type> seeders,
+                                                  fc::time_point_sec expiration,
+                                                  string synopsis,
+                                                  bool broadcast)
 {
-   return my->submit_content_new(author, content_dir, samples_dir, protocol, price_asset_symbol, price_amount, seeders, expiration, synopsis, broadcast);
+   return my->submit_content_new(author, content_dir, samples_dir, protocol, price_asset_symbol, price_amount,
+                                 seeders, expiration, synopsis, broadcast);
 }
 
-void
-wallet_api::download_content(string consumer, string URI, bool broadcast)
+void wallet_api::download_content(string consumer,
+                                  string URI,
+                                  bool broadcast)
 {
    return my->download_content(consumer, URI, broadcast);
 }
 
-optional<content_download_status> wallet_api::get_download_status(string consumer, string URI) const
+optional<content_download_status> wallet_api::get_download_status(string consumer,
+                                                                  string URI) const
 {
    return my->get_download_status(consumer, URI);
 }
 
-signed_transaction
-wallet_api::request_to_buy(string consumer, string URI, string price_asset_name, string price_amount, bool broadcast)
+signed_transaction wallet_api::request_to_buy(string consumer,
+                                              string URI,
+                                              string price_asset_name,
+                                              string price_amount,
+                                              bool broadcast)
 {
    return my->request_to_buy(consumer, URI, price_asset_name, price_amount, broadcast);
 }
 
-signed_transaction wallet_api::leave_rating(string consumer,
-                                            string URI,
-                                            uint64_t rating,
-                                            bool broadcast)
+signed_transaction wallet_api::leave_rating_and_comment(string consumer,
+                                                        string URI,
+                                                        uint64_t rating,
+                                                        string comment,
+                                                        bool broadcast)
 {
-   return my->leave_rating(consumer, URI, rating, broadcast);
+   return my->leave_rating_and_comment(consumer, URI, rating, comment, broadcast);
 }
 
 signed_transaction wallet_api::ready_to_publish(string seeder,
@@ -3837,70 +3873,70 @@ vector<buying_object> wallet_api::get_buying_history_objects_by_consumer( const 
     return result;
 }
    
-   vector<buying_object_ex> wallet_api::search_my_purchases( const string& account_id_or_name, const string& term )const
-   {
-      account_id_type consumer = get_account( account_id_or_name ).id;
-      const vector<buying_object>& bobjects = my->_remote_db->get_buying_objects_by_consumer( consumer );
-      
-      vector<buying_object_ex> result;
-      
-      for (size_t i = 0; i < bobjects.size(); ++i) {
-         
-         buying_object buyobj = bobjects[i];
-         
-         optional<content_download_status> status = get_download_status(account_id_or_name, buyobj.URI);
-         if (!status) {
-            continue;
-         }
-         
-         optional<content_object> content = my->_remote_db->get_content( buyobj.URI );
-         if (!content) {
-            continue;
-         }
-         
-         
-         
-         std::string synopsis = json_unescape_string(content->synopsis);
-         std::string title = synopsis;
-         std::string description;
-         
-         try {
-            auto synopsis_parsed = nlohmann::json::parse(synopsis);
-            title = synopsis_parsed["title"].get<std::string>();
-            description = synopsis_parsed["description"].get<std::string>();
-         } catch (...) {}
-         
-         std::string search_term = term;
-         boost::algorithm::to_lower(search_term);
-         boost::algorithm::to_lower(title);
-         boost::algorithm::to_lower(description);
-         
-         if (false == search_term.empty() &&
-             std::string::npos == title.find(search_term) &&
-             std::string::npos == description.find(search_term))
-            continue;
-         
-         
-         
-         
-         result.emplace_back(buying_object_ex(bobjects[i], *status));
-         buying_object_ex& bobj = result.back();
-         
-         bobj.price = content->price;
-         bobj.size = content->size;
-         bobj.rating = content->AVG_rating;
-         bobj.synopsis = content->synopsis;
-         
-         bobj.author_account = account_id_or_name;
-         bobj.created = content->created;
-         bobj.expiration = content->expiration;
-         bobj.times_bought = content->times_bought;
-         bobj.hash = content->_hash;
+vector<buying_object_ex> wallet_api::search_my_purchases( const string& account_id_or_name, const string& term )const
+{
+   account_id_type consumer = get_account( account_id_or_name ).id;
+   const vector<buying_object>& bobjects = my->_remote_db->get_buying_objects_by_consumer( consumer );
 
+   vector<buying_object_ex> result;
+
+   for (size_t i = 0; i < bobjects.size(); ++i) {
+
+      buying_object buyobj = bobjects[i];
+
+      optional<content_download_status> status = get_download_status(account_id_or_name, buyobj.URI);
+      if (!status) {
+         continue;
       }
-      
-      return result;
+
+      optional<content_object> content = my->_remote_db->get_content( buyobj.URI );
+      if (!content) {
+         continue;
+      }
+
+
+
+      std::string synopsis = json_unescape_string(content->synopsis);
+      std::string title = synopsis;
+      std::string description;
+
+      try {
+         auto synopsis_parsed = nlohmann::json::parse(synopsis);
+         title = synopsis_parsed["title"].get<std::string>();
+         description = synopsis_parsed["description"].get<std::string>();
+      } catch (...) {}
+
+      std::string search_term = term;
+      boost::algorithm::to_lower(search_term);
+      boost::algorithm::to_lower(title);
+      boost::algorithm::to_lower(description);
+
+      if (false == search_term.empty() &&
+          std::string::npos == title.find(search_term) &&
+          std::string::npos == description.find(search_term))
+         continue;
+
+
+
+
+      result.emplace_back(buying_object_ex(bobjects[i], *status));
+      buying_object_ex& bobj = result.back();
+
+      bobj.price = content->price;
+      bobj.size = content->size;
+      bobj.rating = content->AVG_rating;
+      bobj.synopsis = content->synopsis;
+
+      bobj.author_account = account_id_or_name;
+      bobj.created = content->created;
+      bobj.expiration = content->expiration;
+      bobj.times_bought = content->times_bought;
+      bobj.hash = content->_hash;
+
    }
+
+   return result;
+}
    
 optional<buying_object> wallet_api::get_buying_by_consumer_URI( const string& account_id_or_name, const string & URI )const
 {
@@ -3912,6 +3948,24 @@ optional<uint64_t> wallet_api::get_rating( const string& consumer, const string 
 {
    account_id_type account = get_account( consumer ).id;
    return my->_remote_db->get_rating_by_consumer_URI( account, URI );
+}
+
+optional<string> wallet_api::get_comment( const string& consumer, const string & URI )const
+{
+   account_id_type account = get_account( consumer ).id;
+   return my->_remote_db->get_comment_by_consumer_URI( account, URI );
+}
+
+optional<std::pair<uint64_t, string>> get_rating_and_comment( const string& consumer, const string& URI )const;
+{
+   account_id_type account = get_account( consumer ).id;
+   uint64_t rating = my->_remote_db->get_rating_by_consumer_URI( account, URI );
+   string comment = my->_remote_db->get_comment_by_consumer_URI( account, URI );
+
+   if( rating != 0 || !comment.empty() )
+      return std::pair<rating, comment>;
+   else
+      return optional<std::pair<uint64_t, string>>();
 }
 
 optional<content_object> wallet_api::get_content( const string& URI )const
@@ -3935,7 +3989,6 @@ vector<content_summary> wallet_api::search_content( const string& term, uint32_t
    return my->_remote_db->search_content( term, count );
 }
 
-
 vector<content_summary> wallet_api::search_user_content( const string& user, const string& term, uint32_t count)const
 {
    return my->_remote_db->search_user_content( user, term, count );
@@ -3954,6 +4007,11 @@ vector<seeder_object> wallet_api::list_publishers_by_price( uint32_t count )cons
 vector<uint64_t> wallet_api::get_content_ratings( const string& URI )const
 {
    return my->_remote_db->get_content_ratings( URI );
+}
+
+map<string, string> wallet_api::get_content_comments( const string& URI )const
+{
+   return my->_remote_db->get_content_comments( URI );
 }
 
 vector<string> wallet_api::list_imported_ipfs_IDs( const string& seeder)const

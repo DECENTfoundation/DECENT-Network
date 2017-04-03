@@ -68,7 +68,7 @@ namespace graphene { namespace chain {
     * @ingroup transactions
     * @brief Rates a content.
     */
-   struct leave_rating_operation : public base_operation
+   struct leave_rating_and_comment_operation : public base_operation
    {
       struct fee_parameters_type { uint64_t fee = 0; };
 
@@ -76,6 +76,7 @@ namespace graphene { namespace chain {
       string URI;
       account_id_type consumer;
       uint64_t rating; //<1-5
+      string comment; // up to 1000 characters
       
       account_id_type fee_payer()const { return consumer; }
       void validate()const;
@@ -230,7 +231,7 @@ namespace graphene { namespace chain {
 
 FC_REFLECT(graphene::chain::content_submit_operation,(fee)(size)(author)(URI)(quorum)(price)(hash)(seeders)(key_parts)(expiration)(publishing_fee)(synopsis)(cd))
 FC_REFLECT(graphene::chain::request_to_buy_operation,(fee)(URI)(consumer)(price)(pubKey))
-FC_REFLECT(graphene::chain::leave_rating_operation,(fee)(URI)(consumer)(rating))
+FC_REFLECT(graphene::chain::leave_rating_and_comment_operation,(fee)(URI)(consumer)(rating))
 FC_REFLECT(graphene::chain::ready_to_publish_operation,(fee)(seeder)(space)(pubKey)(price_per_MByte)(ipfs_IDs))
 FC_REFLECT(graphene::chain::proof_of_custody_operation,(fee)(seeder)(URI)(proof))
 FC_REFLECT(graphene::chain::deliver_keys_operation,(fee)(seeder)(proof)(key)(buying))
@@ -243,7 +244,7 @@ FC_REFLECT(graphene::chain::finish_buying_operation,(fee)(payout)(author)(buying
 
 FC_REFLECT( graphene::chain::content_submit_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::request_to_buy_operation::fee_parameters_type, (fee) )
-FC_REFLECT( graphene::chain::leave_rating_operation::fee_parameters_type, (fee) )
+FC_REFLECT( graphene::chain::leave_rating_and_comment_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::ready_to_publish_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::proof_of_custody_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::deliver_keys_operation::fee_parameters_type, (fee) )

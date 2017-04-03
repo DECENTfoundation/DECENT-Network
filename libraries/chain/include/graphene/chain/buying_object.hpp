@@ -39,7 +39,9 @@ using decent::encrypt::DInteger;
       bool delivered = false;
       bool is_open()const { return !( expired || delivered ); }
       time_point_sec expiration_or_delivery_time;
-      bool rated = false;
+      // User can't add rating and comment in two steps. For example, if content is already rated by user, he is not
+      // allowed to add comment later. If user wants to add both rating and comment, he has to do it in one step.
+      bool rated_or_commented = false;
    };
 
 
@@ -106,4 +108,4 @@ using decent::encrypt::DInteger;
 FC_REFLECT_DERIVED(graphene::chain::buying_object,
                    (graphene::db::object),
                    (consumer)(URI)(synopsis)(price)(seeders_answered)(size)(rating)(expiration_time)(pubKey)(key_particles)
-                   (expired)(delivered)(expiration_or_delivery_time)(rated) )
+                   (expired)(delivered)(expiration_or_delivery_time)(rated_or_commented) )

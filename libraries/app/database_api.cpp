@@ -139,6 +139,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       vector<buying_object> get_buying_history_objects_by_consumer( const account_id_type& consumer )const;
       vector<buying_object> get_buying_objects_by_consumer( const account_id_type& consumer )const;
       optional<uint64_t> get_rating_by_consumer_URI( const account_id_type& consumer, const string& URI )const;
+      optional<string> get_comment_by_consumer_URI( const account_id_type& consumer, const string& URI )const;
       optional<content_object> get_content( const string& URI )const;
       vector<content_object> list_content_by_author( const account_id_type& author )const;
       vector<content_summary> list_content( const string& URI_begin, uint32_t count)const;
@@ -146,7 +147,8 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       vector<content_summary> search_user_content( const string& user, const string& term, uint32_t count)const;
       vector<content_object> list_content_by_bought( const uint32_t count )const;
       vector<seeder_object> list_publishers_by_price( const uint32_t count )const;
-      vector<uint64_t> get_content_ratings( const string& URI)const;
+      vector<uint64_t> get_content_ratings( const string& URI )const;
+      map<string, string> get_content_comments( const string& URI )const;
       optional<seeder_object> get_seeder(account_id_type) const;
       optional<vector<seeder_object>> list_seeders_by_upload( const uint32_t count )const;
 
@@ -1646,6 +1648,24 @@ optional<uint64_t> database_api_impl::get_rating_by_consumer_URI( const account_
    }FC_CAPTURE_AND_RETHROW( (consumer)(URI) );
 }
 
+optional<string> database_api::get_comment_by_consumer_URI( const account_id_type& consumer, const string& URI )const
+{
+   return my->get_comment_by_consumer_URI( consumer, URI );
+}
+
+optional<string> database_api_impl::get_comment_by_consumer_URI( const account_id_type& consumer, const string& URI )const
+{
+   try{
+      const auto & idx = _db.get_index_type<rating_index>().indices().get<by_consumer_URI>();
+      auto itr = idx.find(std::make_tuple(consumer, URI));
+      if(itr!=idx.end() && !itr->comment.empty()){
+         return itr->comment;
+      }
+      return optional<string>();
+
+   }FC_CAPTURE_AND_RETHROW( (consumer)(URI) );
+}
+
 optional<buying_object> database_api::get_buying_by_consumer_URI( const account_id_type& consumer, const string& URI )const
 {
    return my->get_buying_by_consumer_URI( consumer, URI );
@@ -1758,67 +1778,63 @@ vector<content_summary> database_api_impl::list_content( const string& URI_begin
     return result;
 }
 
-   
-   vector<content_summary> database_api_impl::search_user_content( const string& user, const string& search_term, uint32_t count)const
-   {
-      FC_ASSERT( count <= 100 );
-      const auto& idx = _db.get_index_type<content_index>().indices().get<by_URI>();
-      
-      vector<content_summary> result;
-      result.reserve( count );
-      
-      auto itr = idx.begin();
-      
-      content_summary content;
-      const auto& idx2 = _db.get_index_type<account_index>().indices().get<by_id>();
-      
-      while(count && itr != idx.end())
-      {
-         const auto& account = idx2.find(itr->author);
-         if (account->name != user) {
-            ++itr;
-            continue;
-         }
-         
-         content.set( *itr , *account );
-         if (content.expiration > fc::time_point::now()) {
-            
-            std::string term = search_term;
-            std::string title = content.synopsis;
-            std::string desc = "";
-            std::string author = content.author;
-            
-            try {
-               auto synopsis_parsed = nlohmann::json::parse(content.synopsis);
-               title = synopsis_parsed["title"].get<std::string>();
-               desc = synopsis_parsed["description"].get<std::string>();
-            } catch (...) {}
-            
-            boost::algorithm::to_lower(term);
-            boost::algorithm::to_lower(title);
-            boost::algorithm::to_lower(desc);
-            boost::algorithm::to_lower(author);
-            
-            if (term.empty() ||
-                author.find(term) != std::string::npos ||
-                title.find(term) != std::string::npos ||
-                desc.find(term) != std::string::npos) {
-               
-               
-               count--;
-               result.push_back( content );
-            }
-            
-         }
-         
-         ++itr;
-      }
-      
-      return result;
-   }
-   
+vector<content_summary> database_api_impl::search_user_content( const string& user, const string& search_term, uint32_t count)const
+{
+   FC_ASSERT( count <= 100 );
+   const auto& idx = _db.get_index_type<content_index>().indices().get<by_URI>();
 
-   
+   vector<content_summary> result;
+   result.reserve( count );
+
+   auto itr = idx.begin();
+
+   content_summary content;
+   const auto& idx2 = _db.get_index_type<account_index>().indices().get<by_id>();
+
+   while(count && itr != idx.end())
+   {
+      const auto& account = idx2.find(itr->author);
+      if (account->name != user) {
+         ++itr;
+         continue;
+      }
+
+      content.set( *itr , *account );
+      if (content.expiration > fc::time_point::now()) {
+
+         std::string term = search_term;
+         std::string title = content.synopsis;
+         std::string desc = "";
+         std::string author = content.author;
+
+         try {
+            auto synopsis_parsed = nlohmann::json::parse(content.synopsis);
+            title = synopsis_parsed["title"].get<std::string>();
+            desc = synopsis_parsed["description"].get<std::string>();
+         } catch (...) {}
+
+         boost::algorithm::to_lower(term);
+         boost::algorithm::to_lower(title);
+         boost::algorithm::to_lower(desc);
+         boost::algorithm::to_lower(author);
+
+         if (term.empty() ||
+             author.find(term) != std::string::npos ||
+             title.find(term) != std::string::npos ||
+             desc.find(term) != std::string::npos) {
+
+
+            count--;
+            result.push_back( content );
+         }
+
+      }
+
+      ++itr;
+   }
+
+   return result;
+}
 
 vector<content_summary> database_api_impl::search_content( const string& search_term, uint32_t count)const
 {
@@ -1941,6 +1957,26 @@ vector<uint64_t> database_api_impl::get_content_ratings( const string& URI)const
       std::for_each(range.first, range.second,
          [&result](const rating_object& element) {
             result.emplace_back(element.rating);
+         });
+      return result;
+   }
+   FC_CAPTURE_AND_RETHROW( (URI) );
+}
+
+map<string, string> database_api::get_content_comments( const string& URI)const
+{
+   return my->get_content_comments( URI );
+}
+
+map<string, string> database_api_impl::get_content_comments( const string& URI)const
+{
+   try
+   {
+      auto range = _db.get_index_type<rating_index>().indices().get<by_URI_consumer>().equal_range(URI);
+      map<string, string> result;
+      std::for_each(range.first, range.second, [&result](const rating_object& element) {
+         if( !element.comment.empty )
+           result[ std::string( object_id_type ( element.consumer ) ) ] = element.comment;
          });
       return result;
    }

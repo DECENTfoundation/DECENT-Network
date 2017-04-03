@@ -24,10 +24,10 @@ void request_to_buy_operation::validate()const
    FC_ASSERT( price.amount >= 0 );
 }
 
-void leave_rating_operation::validate()const
+void leave_rating_and_comment_operation::validate()const
 {
    FC_ASSERT( fee.amount >= 0 );
-   FC_ASSERT( rating >= 0 && rating <= UINT64_MAX );
+   FC_ASSERT( ( rating >= 0 && rating <= 5 ) || ( comment.length() <= 100 && !comment.empty() ) );
 }
 
 void ready_to_publish_operation::validate()const

@@ -647,6 +647,15 @@ namespace graphene { namespace app {
          optional<uint64_t> get_rating_by_consumer_URI( const account_id_type& consumer, const string& URI )const;
 
          /**
+          * @brief Get comment given by the consumer to the content specified by it's URI
+          * @param consumer Consumer giving the comment
+          * @param URI Commented content
+          * @return Comment, if given
+          * @ingroup DatabaseAPI
+          */
+         optional<string> get_comment_by_consumer_URI( const account_id_type& consumer, const string& URI )const;
+
+         /**
           * @brief Get a content by URI
           * @param URI URI of the content to retrieve
           * @return The content corresponding to the provided URI, or null if no matching content was found
@@ -712,6 +721,7 @@ namespace graphene { namespace app {
           * @ingroup DatabaseAPI
           */
          optional<seeder_object> get_seeder(account_id_type aid) const;
+
          /**
           * @brief Get a list of content ratings corresponding to the provided URI
           * @param URI URI of the content ratings to retrieve
@@ -719,6 +729,14 @@ namespace graphene { namespace app {
           * @ingroup DatabaseAPI
           */
          vector<uint64_t> get_content_ratings( const string& URI )const;
+
+         /**
+          * @brief Get a list of content comments corresponding to the provided URI
+          * @param URI URI of the content
+          * @return Map of accounts to corresponding comments
+          * @ingroup DatabaseAPI
+          */
+         map<string, string> get_content_comments( const string& URI )const;
 
          /**
           * @brief Get a list of seeders by total upload, in decreasing order
@@ -824,6 +842,7 @@ FC_API(graphene::app::database_api,
           (get_buying_history_objects_by_consumer)
           (get_buying_objects_by_consumer)
           (get_rating_by_consumer_URI)
+          (get_comment_by_consumer_URI)
           (get_content)
           (list_content_by_author)
           (list_content)
@@ -832,6 +851,7 @@ FC_API(graphene::app::database_api,
           (list_content_by_bought)
           (list_publishers_by_price)
           (get_content_ratings)
+          (get_content_comments)
           (list_seeders_by_upload)
           (get_seeder)
           (get_real_supply)

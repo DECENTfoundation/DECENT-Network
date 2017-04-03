@@ -19,6 +19,7 @@ namespace graphene { namespace chain {
       account_id_type consumer;
       string URI;
       uint64_t rating;
+      string comment; // up to 1000 characters
       buying_id_type buying;
    };
    
@@ -47,11 +48,10 @@ namespace graphene { namespace chain {
          >
    >rating_object_multi_index_type;
    
-   
    typedef generic_index< rating_object, rating_object_multi_index_type > rating_index;
 
 }}
 
 FC_REFLECT_DERIVED(graphene::chain::rating_object,
                    (graphene::db::object),
-                   (consumer)(URI)(rating)(buying) )
+                   (consumer)(URI)(rating)(comment)(buying) )
