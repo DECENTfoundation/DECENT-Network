@@ -27,6 +27,11 @@ namespace graphene { namespace chain {
 
       asset fee;
       account_id_type author;
+      // optional parameter. If map is not empty, payout will be splitted
+      // maps co-authors to split based on basis points
+      // author can be included in co_authors map
+      // max num of co-authors = 10
+      map<account_id_type, uint32_t> co_authors;
       string URI;
       asset price;
       uint64_t size; //<Size of content, including samples, in megabytes
@@ -37,7 +42,7 @@ namespace graphene { namespace chain {
       /// Defines number of seeders needed to restore the encryption key
       uint32_t quorum;
       fc::time_point_sec expiration;
-      asset publishing_fee; //< Fee must be greater than the sum of seeders' publishing prices * number of days
+      asset publishing_fee; //< Fee must be greater than the sum of seeders' publishing prices * number of days. Is paid by author
       string synopsis;
       decent::encrypt::CustodyData cd;
       
@@ -220,6 +225,7 @@ namespace graphene { namespace chain {
 
       asset payout;
       account_id_type author;
+      map<account_id_type, uint32_t> co_authors;
       buying_id_type buying;
 
       account_id_type fee_payer()const { return author; }
@@ -228,7 +234,7 @@ namespace graphene { namespace chain {
 
 } } // graphene::chain
 
-FC_REFLECT(graphene::chain::content_submit_operation,(fee)(size)(author)(URI)(quorum)(price)(hash)(seeders)(key_parts)(expiration)(publishing_fee)(synopsis)(cd))
+FC_REFLECT(graphene::chain::content_submit_operation,(fee)(size)(author)(co_authors)(URI)(quorum)(price)(hash)(seeders)(key_parts)(expiration)(publishing_fee)(synopsis)(cd))
 FC_REFLECT(graphene::chain::request_to_buy_operation,(fee)(URI)(consumer)(price)(pubKey))
 FC_REFLECT(graphene::chain::leave_rating_operation,(fee)(URI)(consumer)(rating))
 FC_REFLECT(graphene::chain::ready_to_publish_operation,(fee)(seeder)(space)(pubKey)(price_per_MByte)(ipfs_IDs))
@@ -238,7 +244,7 @@ FC_REFLECT(graphene::chain::return_escrow_submission_operation,(fee)(author)(esc
 FC_REFLECT(graphene::chain::return_escrow_buying_operation,(fee)(consumer)(escrow)(buying))
 FC_REFLECT(graphene::chain::report_stats_operation,(fee)(consumer)(stats))
 FC_REFLECT(graphene::chain::pay_seeder_operation,(fee)(payout)(author)(seeder));
-FC_REFLECT(graphene::chain::finish_buying_operation,(fee)(payout)(author)(buying));
+FC_REFLECT(graphene::chain::finish_buying_operation,(fee)(payout)(author)(co_authors)(buying));
 
 
 FC_REFLECT( graphene::chain::content_submit_operation::fee_parameters_type, (fee) )

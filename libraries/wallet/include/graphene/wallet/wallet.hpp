@@ -1416,6 +1416,7 @@ namespace graphene { namespace wallet {
           * @brief Submits content to the blockchain.
           * @see submit_content_new()
           * @param author The author of the content
+          * @param co_authors The co-authors' account name or ID mapped to corresponding payment split based on basis points
           * @param URI The URI of the content
           * @param price_asset_name Ticker symbol of the asset which will be used to buy content
           * @param price_amount The price of the content
@@ -1434,10 +1435,11 @@ namespace graphene { namespace wallet {
           * @ingroup WalletCLI
           */
          signed_transaction
-         submit_content(string author, string URI, string price_asset_name, string price_amount, uint64_t size,
-                        fc::ripemd160 hash, vector<account_id_type> seeders, uint32_t quorum, fc::time_point_sec expiration,
-                        string publishing_fee_asset, string publishing_fee_amount, string synopsis, DInteger secret,
-                        decent::encrypt::CustodyData cd, bool broadcast);
+         submit_content(string author, vector< pair< string, uint32_t>> co_authors, string URI, string price_asset_name,
+                        string price_amount, uint64_t size, fc::ripemd160 hash, vector<account_id_type> seeders,
+                        uint32_t quorum, fc::time_point_sec expiration, string publishing_fee_asset,
+                        string publishing_fee_amount, string synopsis, DInteger secret, decent::encrypt::CustodyData cd,
+                        bool broadcast);
 
          /**
           * @brief This function is used to create package, upload package and submit content in one step.
@@ -1445,6 +1447,7 @@ namespace graphene { namespace wallet {
           * @see upload_package()
           * @see submit_content()
           * @param author The author of the content
+          * @param co_authors The co-authors' account name or ID mapped to corresponding payment split based on basis points
           * @param content_dir Path to the directory containing all content that should be packed
           * @param samples_dir Path to the directory containing samples of content
           * @param protocol Protocol for uploading package( magnet or IPFS)
@@ -1457,7 +1460,10 @@ namespace graphene { namespace wallet {
           * @return The signed transaction submitting the content
           * @ingroup WalletCLI
           */
-         signed_transaction submit_content_new(string author, string content_dir, string samples_dir, string protocol, string price_asset_symbol, string price_amount, vector<account_id_type> seeders, fc::time_point_sec expiration, string synopsis, bool broadcast = false);
+         signed_transaction submit_content_new(string author, vector< pair< string, uint32_t>> co_authors, string content_dir,
+                                               string samples_dir, string protocol, string price_asset_symbol,
+                                               string price_amount, vector<account_id_type> seeders,
+                                               fc::time_point_sec expiration, string synopsis, bool broadcast = false);
 
          /**
           * @brief Downloads encrypted content specified by provided URI.
@@ -1723,6 +1729,13 @@ namespace graphene { namespace wallet {
          optional<vector<seeder_object>> list_seeders_by_upload( const uint32_t count )const;
 
          /**
+          * @brief Get author and list of co-authors of a content corresponding to the provided URI
+          * @param URI URI of the content
+          * @return The autor of the content and the list of co-authors, if provided
+          */
+         pair<account_id_type, vector<account_id_type>> get_author_and_co_authors_by_URI( const string& URI )const;
+
+         /**
           * @brief Get a list of packages
           * @return The list of packages
           * @ingroup WalletCLI
@@ -1982,6 +1995,8 @@ FC_API( graphene::wallet::wallet_api,
            (list_publishers_by_price)
            (get_content_ratings)
            (list_imported_ipfs_IDs)
+           (list_seeders_by_upload)
+           (get_author_and_co_authors_by_URI)
            (list_packages)
            (packages_path)
            (create_package)

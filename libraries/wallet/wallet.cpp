@@ -2116,6 +2116,7 @@ public:
    }
 
    signed_transaction submit_content(string author,
+                                     vector< pair< string, uint32_t>> co_authors,
                                      string URI,
                                      string price_asset_symbol,
                                      string price_amount,
@@ -2134,7 +2135,20 @@ public:
       {
          try {
          FC_ASSERT(!is_locked());
-         account_object author_account = get_account( author );
+         account_id_type author_account = get_account_id( author );
+
+         map<account_id_type, uint32_t> co_authors_id_to_split;
+         if( !co_authors.empty() )
+         {
+            for( auto const& element : co_authors )
+            {
+               account_id_type co_author = get_account_id( element.first );
+               co_authors_id_to_split[ co_author ] = element.second;
+            }
+         }
+
+         // checking for duplicates
+         FC_ASSERT( co_authors.size() == co_authors_id_to_split, "Duplicity in the list of co-authors is not allowed." );
 
          fc::optional<asset_object> price_asset_obj = get_asset(price_asset_symbol);
          fc::optional<asset_object> fee_asset_obj = get_asset(publishing_fee_symbol_name);
@@ -2152,7 +2166,8 @@ public:
          }
 
 
-         submit_op.author = author_account.id;
+         submit_op.author = author_account;
+         submit_op.co_authors = co_authors_id_to_split;
          submit_op.URI = URI;
          submit_op.price = price_asset_obj->amount_from_string(price_amount);
          submit_op.hash = hash;
@@ -2175,6 +2190,7 @@ public:
 
 
       signed_transaction submit_content_new(string author,
+                                            vector< pair< string, uint32_t>> co_authors,
                                             string content_dir,
                                             string samples_dir,
                                             string protocol,
@@ -2187,11 +2203,23 @@ public:
       {
          try {
             FC_ASSERT(!is_locked());
-            account_object author_account = get_account( author );
+            account_id_type author_account = get_account_id( author );
 
-             fc::optional<asset_object> DTC_asset = get_asset("DCT");
-             fc::optional<asset_object> price_asset_obj = get_asset(price_asset_symbol);
-    
+            map<account_id_type, uint32_t> co_authors_id_to_split;
+            if( !co_authors.empty() )
+            {
+               for( auto const &element : co_authors )
+               {
+                  account_id_type co_author = get_account_id( element.first );
+                  co_authors_id_to_split[ co_author ] = element.second;
+               }
+            }
+
+            // checking for duplicates
+            FC_ASSERT( co_authors.size() == co_authors_id_to_split, "Duplicity in the list of co-authors is not allowed." );
+
+            fc::optional<asset_object> DTC_asset = get_asset("DCT");
+            fc::optional<asset_object> price_asset_obj = get_asset(price_asset_symbol);
 
             FC_ASSERT(DTC_asset, "Could not find asset matching DCT");
             FC_ASSERT(DTC_asset, "Could not find asset");
@@ -2201,7 +2229,7 @@ public:
             fc::sha512 sha_key;
             secret.Encode((byte*)sha_key._hash, 64);
 #ifndef DECENT_LONG_SHAMIR
-            //short Shamir is able to store onlu 256 bites, rest will make content unrecoverable
+            //short Shamir is able to store only 256 bites, rest will make content unrecoverable
             sha_key._hash[0] = 0;
             sha_key._hash[1] = 0;
             sha_key._hash[2] = 0;
@@ -2215,39 +2243,32 @@ public:
             uint32_t quorum = std::max((unsigned long)1, seeders.size()/3);
             uint64_t size = std::max(1, ( pack.get_size() + (1024 * 1024) -1 ) / (1024 * 1024));
 
-
             ShamirSecret ss(quorum, seeders.size(), secret);
             ss.calculate_split();
             content_submit_operation submit_op;
              
-             
-             
-             asset total_price_per_day;
+            asset total_price_per_day;
              
             for( int i =0; i < seeders.size(); i++ ){
                const auto& s = _remote_db->get_seeder( seeders[i] );
                Ciphertext cp;
                point p = ss.split[i];
                decent::encrypt::el_gamal_encrypt( p ,s->pubKey ,cp );
-               submit_op.key_parts.push_back(cp);
+               submit_op.key_parts.push_back( cp );
             
-                total_price_per_day += s->price.amount * size;
+               total_price_per_day += s->price.amount * size;
                total_price_per_day += s->price.amount;
-                
             }
 
-             FC_ASSERT( time_point_sec(fc::time_point::now()) <= expiration);
+            FC_ASSERT( time_point_sec(fc::time_point::now()) <= expiration);
 
-             fc::microseconds duration = (expiration - fc::time_point::now());
+            fc::microseconds duration = (expiration - fc::time_point::now());
             uint64_t days = duration.to_seconds() / 3600 / 24;
 
-             
-            
-
             package_transfer_interface::transfer_id id = package_manager::instance().upload_package(pack, protocol, transfer_progress_printer::instance());
-   
           
-            submit_op.author = author_account.id;
+            submit_op.author = author_account;
+            submit_op.co_authors = co_authors_id_to_split;
             submit_op.URI = package_manager::instance().get_transfer_url(id);
             submit_op.price = price_asset_obj->amount_from_string(price_amount);
             submit_op.hash = hash;
@@ -2261,7 +2282,6 @@ public:
 
             FC_ASSERT( !submit_op.URI.empty(), "File transport error");
 
-            
             signed_transaction tx;
             tx.operations.push_back( submit_op );
             set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
@@ -2271,7 +2291,6 @@ public:
          } 
          FC_CAPTURE_AND_RETHROW( (author)(content_dir)(samples_dir)(protocol)(price_asset_symbol)(price_amount)(seeders)(expiration)(synopsis)(broadcast) )
       }
-
 
    optional<content_download_status> get_download_status(string consumer, string URI) const {
       try {
@@ -2544,7 +2563,7 @@ public:
    map<string, vector<string>> list_seeders_ipfs_IDs( const string& URI )const
    {
       fc::optional<content_object> co = _remote_db->get_content( URI );
-      FC_ASSERT( co.valid(), "content does not exist");
+      FC_ASSERT( co.valid(), "Content does not exist.");
       map<string, vector<string>> mapped_IDs;
       string account;
       for( const auto& item : co->key_parts )
@@ -2554,6 +2573,18 @@ public:
       }
       return mapped_IDs;
    }
+
+   pair<account_id_type, vector<account_id_type>> get_author_and_co_authors_by_URI( const string& URI )const
+   {
+      fc::optional<content_object> co = _remote_db->get_content( URI );
+      FC_ASSERT( co.valid(), "Content does not exist.");
+      pair<account_id_type, vector<account_id_type>> result;
+      result.first = co.author;
+      for( auto const& co_author : content.co_authors )
+         result.second.emplace_back( co_author.first );
+
+      return result;
+   };
 
    void dbg_make_uia(string creator, string symbol)
    {
@@ -3723,18 +3754,18 @@ real_supply wallet_api::get_real_supply()const
 }
 
 signed_transaction
-wallet_api::submit_content(string author, string URI, string price_asset_name, string price_amount, uint64_t size,
+wallet_api::submit_content(string author, vector< pair< string, uint32_t>> co_authors, string URI, string price_asset_name, string price_amount, uint64_t size,
                            fc::ripemd160 hash, vector<account_id_type> seeders, uint32_t quorum, fc::time_point_sec expiration,
                            string publishing_fee_asset, string publishing_fee_amount, string synopsis, DInteger secret,
                            decent::encrypt::CustodyData cd, bool broadcast)
 {
-   return my->submit_content(author, URI, price_asset_name, price_amount, hash, size, seeders, quorum, expiration, publishing_fee_asset, publishing_fee_amount, synopsis, secret, cd, broadcast);
+   return my->submit_content(author, co_authors, URI, price_asset_name, price_amount, hash, size, seeders, quorum, expiration, publishing_fee_asset, publishing_fee_amount, synopsis, secret, cd, broadcast);
 }
 
 signed_transaction
-wallet_api::submit_content_new(string author, string content_dir, string samples_dir, string protocol, string price_asset_symbol, string price_amount, vector<account_id_type> seeders, fc::time_point_sec expiration, string synopsis, bool broadcast)
+wallet_api::submit_content_new(string author, vector< pair< string, uint32_t>> co_authors, string content_dir, string samples_dir, string protocol, string price_asset_symbol, string price_amount, vector<account_id_type> seeders, fc::time_point_sec expiration, string synopsis, bool broadcast)
 {
-   return my->submit_content_new(author, content_dir, samples_dir, protocol, price_asset_symbol, price_amount, seeders, expiration, synopsis, broadcast);
+   return my->submit_content_new(author, co_authors, content_dir, samples_dir, protocol, price_asset_symbol, price_amount, seeders, expiration, synopsis, broadcast);
 }
 
 void
@@ -3969,6 +4000,11 @@ map<string, vector<string>> wallet_api::list_seeders_ipfs_IDs( const string& URI
 optional<vector<seeder_object>> wallet_api::list_seeders_by_upload( const uint32_t count )const
 {
    return my->_remote_db->list_seeders_by_upload( count );
+}
+
+pair<account_id_type, vector<account_id_type>> wallet_api::get_author_and_co_authors_by_URI( const string& URI )const
+{
+   return my->get_author_and_co_authors_by_URI( URI );
 }
 
 vector<string> wallet_api::list_packages( ) const
