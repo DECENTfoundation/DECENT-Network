@@ -125,6 +125,9 @@ void pm_sandbox()
             }
         }
 
+        // It is assumed that the package is now available for download from elsewhere.
+        std::this_thread::sleep_for(std::chrono::seconds(20));
+
         {
             package_handle->stop_seeding();
             package_handle->wait_for_current_task();

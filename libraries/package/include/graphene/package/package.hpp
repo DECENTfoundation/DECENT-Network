@@ -286,7 +286,7 @@ namespace decent { namespace package {
         boost::filesystem::path get_packages_path() const;
         void set_libtorrent_config(const boost::filesystem::path& libtorrent_config_file);
 
-        TransferEngineInterface&    get_proto_transfer_engine(const std::string& proto) const;
+        TransferEngineInterface& get_proto_transfer_engine(const std::string& proto) const;
 
     private:
         mutable std::recursive_mutex    _mutex;

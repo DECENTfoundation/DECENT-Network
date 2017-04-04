@@ -772,6 +772,15 @@ namespace decent { namespace package { namespace detail {
     }
 
 
+    libtorrent::session_params get_default_session_params() {
+        libtorrent::session_params p;
+        detail::libtorrent_config_data config_data;
+        detail::to_settings_pack(config_data.settings, p.settings);
+        p.dht_settings = config_data.dht_settings;
+        return p;
+    }
+
+
 } } } // namespace decent::package::detail
 
 
@@ -845,13 +854,8 @@ namespace decent { namespace package {
 
 
     TorrentTransferEngine::TorrentTransferEngine()
+        : _session(detail::get_default_session_params())
     {
-        libtorrent::session_params p;
-        detail::to_settings_pack(_config_data.settings, p.settings);
-        p.dht_settings = _config_data.dht_settings;
-
-        _session = libtorrent::session(p);
-
 //      _session.add_extension(&libtorrent::create_metadata_plugin);
         _session.add_extension(&libtorrent::create_ut_metadata_plugin);
         _session.add_extension(&libtorrent::create_ut_pex_plugin);
@@ -1028,12 +1032,12 @@ namespace decent { namespace package {
 
         libtorrent::add_torrent_params atp;
 
-        atp.save_path = temp_dir_path.string();
-
         atp.flags |= libtorrent::add_torrent_params::flag_merge_resume_http_seeds;
         atp.flags |= libtorrent::add_torrent_params::flag_merge_resume_trackers;
 
         if (seed_mode) {
+            atp.save_path = _package.get_package_dir().string();
+
             atp.flags |= libtorrent::add_torrent_params::flag_seed_mode;
             (utp.upload_mode         ? atp.flags |= libtorrent::add_torrent_params::flag_upload_mode    : atp.flags &= ~libtorrent::add_torrent_params::flag_upload_mode);
             (utp.super_seeding_mode  ? atp.flags |= libtorrent::add_torrent_params::flag_super_seeding  : atp.flags &= ~libtorrent::add_torrent_params::flag_super_seeding);
@@ -1044,6 +1048,8 @@ namespace decent { namespace package {
             atp.trackers = utp.trackers;
         }
         else {
+            atp.save_path = temp_dir_path.string();
+
             (dtp.upload_mode         ? atp.flags |= libtorrent::add_torrent_params::flag_upload_mode    : atp.flags &= ~libtorrent::add_torrent_params::flag_upload_mode);
             (dtp.share_mode          ? atp.flags |= libtorrent::add_torrent_params::flag_share_mode     : atp.flags &= ~libtorrent::add_torrent_params::flag_share_mode);
             (dtp.auto_managed        ? atp.flags |= libtorrent::add_torrent_params::flag_auto_managed   : atp.flags &= ~libtorrent::add_torrent_params::flag_auto_managed);
@@ -1061,7 +1067,7 @@ namespace decent { namespace package {
             using namespace boost::filesystem;
 
             if (exists(torrent_file) && is_regular_file(torrent_file)) {
-                ilog("reusing torrent file {fn}", ("fn", torrent_file.string()) );
+                ilog("reusing torrent file ${fn}", ("fn", torrent_file.string()) );
             }
             else {
                 remove_all(torrent_file);
@@ -1098,11 +1104,11 @@ namespace decent { namespace package {
                 const auto package_base_path = _package.get_package_dir().lexically_normal();
                 libtorrent::set_piece_hashes(t, package_base_path.string());
 
-                std::ofstream out(torrent_file.string(), std::ios_base::in | std::ios_base::binary);
-                bencode(std::ostream_iterator<char>(out), t.generate());
+                std::ofstream out(torrent_file.string(), std::ios_base::binary);
+                libtorrent::bencode(std::ostream_iterator<char>(out), t.generate());
                 out.close();
 
-                ilog("created torrent file {fn}", ("fn", torrent_file.string()) );
+                ilog("created torrent file ${fn}", ("fn", torrent_file.string()) );
             }
 
             atp.ti = std::make_shared<libtorrent::torrent_info>(torrent_file.string(), 0);
@@ -1210,7 +1216,7 @@ namespace decent { namespace package {
 
                 libtorrent::torrent_status st = _torrent_handle.status();
 
-                const bool is_finished = (st.total_wanted_done >= st.total_wanted); // (st.state == libtorrent::torrent_status::finished || st.state == libtorrent::torrent_status::seeding);
+                const bool is_finished = (st.total_wanted != 0 && st.total_wanted_done >= st.total_wanted); // (st.state == libtorrent::torrent_status::finished || st.state == libtorrent::torrent_status::seeding);
                 const bool is_error = (st.errc != 0);
 
                 if (is_error) {

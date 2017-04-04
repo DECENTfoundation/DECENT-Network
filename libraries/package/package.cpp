@@ -29,7 +29,7 @@ namespace decent { namespace package {
 
 
         struct ArchiveHeader {
-            char type; // 0 = EOF, 1 = REGULAR FILE
+            char type;       // 0 = EOF, 1 = REGULAR FILE
             char name[255];
             char size[8];
         };
@@ -54,6 +54,7 @@ namespace decent { namespace package {
                 ArchiveHeader header;
 
                 std::memset((void*)&header, 0, sizeof(header));
+
                 std::snprintf(header.name, sizeof(header.name), "%s", file_name.c_str());
 
                 header.type = 1;
@@ -69,11 +70,9 @@ namespace decent { namespace package {
 
             ~Archiver() {
                 ArchiveHeader header;
-                
+
                 std::memset((void*)&header, 0, sizeof(header));
                 _out.write((const char*)&header, sizeof(header));
-//                _out.flush();
-//                _out.reset();
             }
 
         private:
@@ -96,7 +95,8 @@ namespace decent { namespace package {
 
                     _in.read((char*)&header, sizeof(header));
 
-                    if (header.type == 0) {
+                    // FIXME: this masks the bug when file is corrupted and header type is a random byte.
+                    if (header.type != 1 || strlen(header.name) == 0) { // if (header.type == 0) {
                         break;
                     }
 
@@ -786,7 +786,7 @@ namespace decent { namespace package {
             }
         }
 
-        _proto_transfer_engines["magnet"] = std::make_shared<TorrentTransferEngine>();
+//      _proto_transfer_engines["magnet"] = std::make_shared<TorrentTransferEngine>();
         _proto_transfer_engines["ipfs"] = std::make_shared<IPFSTransferEngine>();
 
         set_libtorrent_config(graphene::utilities::decent_path_finder::instance().get_decent_home() / "libtorrent.json");
@@ -921,14 +921,14 @@ namespace decent { namespace package {
         for(auto& proto_transfer_engine : _proto_transfer_engines) {
             TorrentTransferEngine* torrent_engine = dynamic_cast<TorrentTransferEngine*>(proto_transfer_engine.second.get());
             if (torrent_engine) {
-/*                if (libtorrent_config_file.empty() || boost::filesystem::exists(libtorrent_config_file)) {
+                if (libtorrent_config_file.empty() || boost::filesystem::exists(libtorrent_config_file)) {
                     torrent_engine->reconfigure(libtorrent_config_file);
                 }
                 else {
                     torrent_engine->dump_config(libtorrent_config_file);
                     break; // dump the config of first one found only
                 }
-*/            }
+            }
         }
     }
 
