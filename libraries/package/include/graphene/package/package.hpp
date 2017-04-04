@@ -31,10 +31,11 @@ namespace decent { namespace package {
     class EventListenerInterface;
     class TransferEngineInterface;
     class IPFSTransferEngine;
-    class TorrentTransferEngine;
     class IPFSDownloadPackageTask;
     class IPFSStartSeedingPackageTask;
     class IPFSStopSeedingPackageTask;
+    class TorrentTransferEngine;
+    class TorrentPackageTask;
     class TorrentDownloadPackageTask;
     class TorrentStartSeedingPackageTask;
     class TorrentStopSeedingPackageTask;
@@ -94,6 +95,7 @@ namespace decent { namespace package {
         friend class IPFSDownloadPackageTask;
         friend class IPFSStartSeedingPackageTask;
         friend class IPFSStopSeedingPackageTask;
+        friend class TorrentPackageTask;
         friend class TorrentDownloadPackageTask;
         friend class TorrentStartSeedingPackageTask;
         friend class TorrentStopSeedingPackageTask;
@@ -295,6 +297,14 @@ namespace decent { namespace package {
 
 
 } } // namespace decent::package
+
+
+
+
+
+
+
+// ====================================================
 
 
 
