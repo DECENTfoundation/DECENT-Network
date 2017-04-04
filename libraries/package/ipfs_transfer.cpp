@@ -191,6 +191,10 @@ namespace decent { namespace package {
 
             _client.PinAdd(root_hash); // just in case
 
+
+            // TODO: remove the actual files?
+
+
             _package._url = "/ipfs/" + root_hash;
 
             PACKAGE_INFO_CHANGE_TRANSFER_STATE(SEEDING);
@@ -269,6 +273,10 @@ namespace decent { namespace package {
 
 
 
+
+
+
+// ====================================================
 
 
 
