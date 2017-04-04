@@ -95,7 +95,7 @@ namespace graphene { namespace wallet {
          }
 
          /* private el gamal key */
-         d_integer priv_el_gamal_key;
+         DInteger priv_el_gamal_key;
 
          /** encrypted keys */
          vector<char>              cipher_keys;
@@ -131,8 +131,8 @@ namespace graphene { namespace wallet {
 
       struct el_gamal_key_pair
       {
-         d_integer private_key;
-         d_integer public_key;
+         DInteger private_key;
+         DInteger public_key;
       };
 
       struct approval_delta
@@ -183,17 +183,17 @@ namespace graphene { namespace wallet {
       namespace detail {
          class wallet_api_impl;
       }
-
-      struct operation_detail {
-          account_id_type         from_account;
-          account_id_type         to_account;
-          string                  operation_type;
-          asset                   transaction_amount;
-          asset                   transaction_fee;
-          string                  description;
-
-          operation_history_object op;
-      };
+   
+   struct operation_detail {
+      account_id_type             from_account;
+      account_id_type             to_account;
+      string                      operation_type;
+      asset                       transaction_amount;
+      asset                       transaction_fee;
+      string                      description;
+      fc::time_point_sec          timestamp;
+      operation_history_object    op;
+   };
 
 /**
  * This wallet assumes it is connected to the database server with a high-bandwidth, low-latency connection and
@@ -280,7 +280,7 @@ namespace graphene { namespace wallet {
 
          /**
           * @brief Get names and IDs for registered accounts that match search term
-          * @param search_term will try to partially match account name or id
+          * @param term will try to partially match account name or id
           * @param limit Maximum number of results to return -- must not exceed 1000
           * @return Map of account names to corresponding IDs
           * @ingroup WalletCLI
@@ -337,13 +337,13 @@ namespace graphene { namespace wallet {
 
          /**
           * @brief Get limit orders in a given market
-          * @param a ID of asset being sold
-          * @param b ID of asset being purchased
+          * @param base ID of asset being sold
+          * @param quote ID of asset being purchased
           * @param limit Maximum number of orders to retrieve
           * @return The limit orders, ordered from least price to greatest
           * @ingroup WalletCLI
           */
-         vector<limit_order_object>        get_limit_orders(string a, string b, uint32_t limit)const;
+         vector<limit_order_object>        get_limit_orders(string base, string quote, uint32_t limit)const;
 
          /**
           * @brief Returns the block chain's slowly-changing settings.
@@ -706,7 +706,7 @@ namespace graphene { namespace wallet {
           * @returns true if the key was imported
           * @ingroup WalletCLI
           */
-         void import_el_gamal_key(d_integer privKey );
+         void import_el_gamal_key(DInteger privKey );
 
          /**
           * @brief Imports accounts from the other wallet file
@@ -824,6 +824,14 @@ namespace graphene { namespace wallet {
          /**
           *  @brief This method works just like transfer, except it always broadcasts and
           *  returns the transaction ID along with the signed transaction.
+          *  @param from the name or id of the account sending the funds
+          *  @param to the name or id of the account receiving the funds
+          *  @param amount the amount to send (in nominal units -- to send half of a BTS, specify 0.5)
+          *  @param asset_symbol the symbol or id of the asset to send
+          *  @param memo a memo to attach to the transaction.  The memo will be encrypted in the
+          *             transaction and readable for the receiver.  There is no length limit
+          *             other than the limit imposed by maximum transaction size, but transaction
+          *             increase with transaction size
           *  @ingroup WalletCLI
           */
          pair<transaction_id_type,signed_transaction> transfer2(string from,
@@ -934,7 +942,7 @@ namespace graphene { namespace wallet {
           * @param rate The rate in base:quote at which you want to buy.
           * @param amount the amount of base you want to buy.
           * @param broadcast true to broadcast the transaction on the network.
-          * @param The signed transaction selling the funds.
+          * @returns The signed transaction selling the funds.
           * @ingroup WalletCLI
           */
          signed_transaction buy( string buyer_account,
@@ -993,7 +1001,8 @@ namespace graphene { namespace wallet {
           * @returns the signed transaction issuing the new shares
           * @ingroup WalletCLI
           */
-         signed_transaction issue_asset(string to_account, string amount,
+         signed_transaction issue_asset(string to_account,
+                                        string amount,
                                         string symbol,
                                         string memo,
                                         bool broadcast = false);
@@ -1114,7 +1123,7 @@ namespace graphene { namespace wallet {
          /**
           * @brief Update a witness object owned by the given account.
           *
-          * @param witness The name of the witness's owner account.  Also accepts the ID of the owner account or the ID of the witness.
+          * @param witness_name The name of the witness's owner account.  Also accepts the ID of the owner account or the ID of the witness.
           * @param url Same as for create_witness.  The empty string makes it remain the same.
           * @param block_signing_key The new block signing public key.  The empty string makes it remain the same.
           * @param broadcast true if you wish to broadcast the transaction.
@@ -1212,7 +1221,7 @@ namespace graphene { namespace wallet {
           * set, your preferences will be ignored.
           *
           * @param account_to_modify the name or id of the account to update
-          *
+          * @param desired_number_of_witnesses
           * @param broadcast true if you wish to broadcast the transaction
           * @return the signed transaction changing your vote proxy settings
           * @ingroup WalletCLI
@@ -1420,8 +1429,9 @@ namespace graphene { namespace wallet {
          signed_transaction
          submit_content(string author, string URI, string price_asset_name, string price_amount, uint64_t size,
                         fc::ripemd160 hash, vector<account_id_type> seeders, uint32_t quorum, fc::time_point_sec expiration,
-                        string publishing_fee_asset, string publishing_fee_amount, string synopsis, d_integer secret,
-                        decent::crypto::custody_data cd, bool broadcast);
+                        string publishing_fee_asset, string publishing_fee_amount, string synopsis, DInteger secret,
+                        decent::encrypt::CustodyData cd, bool broadcast);
+
          /**
           * @brief This function is used to create package, upload package and submit content in one step.
           * @see create_package()
@@ -1525,7 +1535,7 @@ namespace graphene { namespace wallet {
           * @ingroup WalletCLI
           */
          signed_transaction deliver_keys(string seeder,
-                                         d_integer privKey,
+                                         DInteger privKey,
                                          buying_id_type buying,
                                          bool broadcast = false);
 
@@ -1547,7 +1557,7 @@ namespace graphene { namespace wallet {
           * @return restored AES key from particles
           * @ingroup WalletCLI
           */
-         d_integer restore_encryption_key(buying_id_type buying);
+         DInteger restore_encryption_key(buying_id_type buying);
 
          /**
           * @brief Generates private ElGamal key and corresponding public key.
@@ -1638,7 +1648,7 @@ namespace graphene { namespace wallet {
           * @ingroup WalletCLI
           */
          vector<content_summary> list_content( const string& URI_begin, uint32_t count )const;
-
+         
          /**
           * @brief Get a list of contents ordered alphabetically by search term
           * @param term seach term
@@ -1647,6 +1657,14 @@ namespace graphene { namespace wallet {
           * @ingroup WalletCLI
           */
          vector<content_summary> search_content( const string& term, uint32_t count )const;
+         /**
+          * @brief Get a list of contents ordered alphabetically by search term
+          * @param term seach term
+          * @param count Maximum number of contents to fetch (must not exceed 100)
+          * @return The contents found
+          * @ingroup WalletCLI
+          */
+         vector<content_summary> search_user_content( const string& user, const string& term, uint32_t count )const;
 
          /**
           * @brief Get a list of contents by times bought, in decreasing order
@@ -1719,7 +1737,8 @@ namespace graphene { namespace wallet {
           * @return package hash (ripemd160 hash of package content) and content custody data
           * @ingroup WalletCLI
           */
-         std::pair<string, decent::crypto::custody_data> create_package(const std::string& content_dir, const std::string& samples_dir, const d_integer& aes_key) const;
+         std::pair<string, decent::encrypt::CustodyData> create_package(const std::string& content_dir, const std::string& samples_dir, const DInteger& aes_key) const;
+
 
          /**
           * @brief Extract selected package
@@ -1729,7 +1748,7 @@ namespace graphene { namespace wallet {
           * @return Nothing
           * @ingroup WalletCLI
           */
-         void extract_package(const std::string& package_hash, const std::string& output_dir, const d_integer& aes_key) const;
+         void extract_package(const std::string& package_hash, const std::string& output_dir, const DInteger& aes_key) const;
 
          /**
           * @brief Download package
@@ -1828,6 +1847,7 @@ FC_REFLECT( graphene::wallet::operation_detail,
            (transaction_amount)
            (transaction_fee)
            (description)
+           (timestamp)
            (op)
         )
 
@@ -1937,6 +1957,7 @@ FC_API( graphene::wallet::wallet_api,
            (list_content_by_author)
            (list_content)
            (search_content)
+           (search_user_content)
            (list_content_by_bought)
            (list_publishers_by_price)
            (get_content_ratings)

@@ -24,9 +24,11 @@ int CallFunctionInUiLoopGeneral(int a_nType,SetNewTask_last_args2,
                                 void* a_owner,void* a_fpFnc);
 
 gui::gui()
-    :
-      _result_formatters(),
-      m_semaphore()
+   : _b_task_cancelled(false)
+   , _result_formatters()
+   , _run_complete()
+   , m_Fifo()
+   , m_semaphore()
 {
     //m_pTaskInitial = new taskList;
 }
@@ -38,7 +40,6 @@ gui::~gui()
    {
       stop();
    }
-
 }
 
 
@@ -60,12 +61,12 @@ void gui::send_notice( uint64_t callback_id, variants args /* = variants() */ )
 void gui::start()
 {
    //cli_commands() = get_method_names(0);
-   _run_complete = fc::async( [&](){ run(); } );
+   _run_complete = std::async(std::launch::deferred, [&](){ run(); } );
 }
 
 void gui::stop()
 {
-   _run_complete.cancel();
+   _b_task_cancelled = true;
    _run_complete.wait();
 }
 
@@ -99,7 +100,7 @@ void gui::run()
    decent::tools::taskListItem<std::string,TypeCallbackSetNewTaskGlb2> aTaskItem(NULL,"");
    //int nIteration;
 
-   while( !_run_complete.canceled() )
+   while( false == _b_task_cancelled )
    {
       try
       {
@@ -129,8 +130,6 @@ void gui::run()
                                          aTaskItem.callbackArg,0,aTaskItem.input,
                                          result,tsResult,
                                          aTaskItem.owner,aTaskItem.fn_tsk_ptr);
-
-
          }
 
       } catch ( const fc::exception& e ) {

@@ -15,26 +15,39 @@
 #include <QObject>
 #include <QDateTime>
 #include <QDate>
+#include <QEvent>
 #include <QTime>
+#include <QWidget>
+#include <QLabel>
+#include <QTableWidget>
+#include <QMouseEvent>
+#include <QHeaderView>
+
+
 #include <numeric>
+
 
 #define ALERT(message)                                  \
 {                                                       \
-QMessageBox msgBox;                                 \
-msgBox.setWindowTitle("Error");                     \
-msgBox.setText(QString::fromStdString(message));    \
-msgBox.exec();                                      \
-}                                                       \
+QMessageBox* msgBox = new QMessageBox();                \
+msgBox->setWindowTitle("Error");                     \
+msgBox->setText(QString::fromStdString(message));    \
+msgBox->exec();                                      \
+msgBox->close();                                      \
+delete msgBox;                                      \
+}
 
 
 
 #define ALERT_DETAILS(message, details)                                  \
 {                                                       \
-QMessageBox msgBox;                                 \
-msgBox.setWindowTitle("Error");                     \
-msgBox.setText(QString::fromStdString(message));    \
-msgBox.setDetailedText(QObject::tr(details));    \
-msgBox.exec();                                      \
+QMessageBox* msgBox = new QMessageBox();                \
+msgBox->setWindowTitle("Error");                     \
+msgBox->setText(QString::fromStdString(message));    \
+msgBox->setDetailedText(QObject::tr(details));    \
+msgBox->exec();                                      \
+msgBox->close();                                      \
+delete msgBox;                                      \
 }                                                       \
 
 
@@ -43,10 +56,12 @@ msgBox.exec();                                      \
 
 #define MESSAGE(message)                                  \
 {                                                       \
-QMessageBox msgBox;                                 \
-msgBox.setWindowTitle("Message");                     \
-msgBox.setText(QString::fromStdString(message));    \
-msgBox.exec();                                      \
+QMessageBox* msgBox = new QMessageBox();                     \
+msgBox->setWindowTitle("Message");                     \
+msgBox->setText(QString::fromStdString(message));    \
+msgBox->exec();                                      \
+msgBox->close();                                      \
+delete msgBox;                                      \
 }                                                   \
 
 
@@ -281,35 +296,262 @@ namespace gui_wallet
     
     
     
+   
+   
+   class GlobalEvents : public QObject {
+      Q_OBJECT
+   private:
+      
+      std::string 	_currentUser;
+      
+   private:
+      GlobalEvents() { }
+      GlobalEvents(const GlobalEvents& other) { }
+      
+   public:
+      static GlobalEvents& instance() {
+         static GlobalEvents theOne;
+         return theOne;
+      }
+      
+      
+      std::string getCurrentUser() const { return _currentUser; }
+      void setCurrentUser(const std::string& user) { _currentUser = user; emit currentUserChanged(_currentUser);}
+      void setWalletUnlocked() { emit walletUnlocked(); }
+      
+   signals:
+      void currentUserChanged(std::string user);
+      void walletUnlocked();
+      
+      
+   };
+
+   
+   
+   // This is helper class that allows to passthrough mousemove events to parent widget.
+   // Useful when highlighting rows in tableview
+   template<class QTType>
+   class EventPassthrough : public QTType {
+      
+   public:
+      template<class... Args>
+      EventPassthrough(const Args&... args) : QTType(args...) {
+         this->setMouseTracking(true);
+      }
+      
+      bool event(QEvent *event){
+         if (event->type() == QEvent::MouseMove)
+            return false;
+         else
+            return QWidget::event(event);
+      }
+   };
+   
+   // QLabel with clicked() signal implemented
+   
+    class DecentSmallButton : public QLabel {
+        Q_OBJECT;
+    public:
+        DecentSmallButton(const QString& normalImg, const QString& highlightedImg ){
+            normalImage.load(normalImg);
+            highlightedImage.load(highlightedImg);
+            this->setPixmap(normalImg);
+        }
+        
+        void unhighlight()
+        {
+            this->setPixmap(normalImage);
+            this->setStyleSheet("* { background-color: rgb(255,255,255); color : black; }");
+        }
+        
+        void highlight()
+        {
+            this->setPixmap(highlightedImage);
+            this->setStyleSheet("* { background-color: rgb(27,176,104); color : white; }");
+        }
     
+    private:
+        QPixmap normalImage;
+        QPixmap highlightedImage;
+        
+    signals:
+        void clicked();
+        
+    protected:
+        void mousePressEvent(QMouseEvent* event) {
+            emit clicked();
+        }
+    };
+    class ClickableLabel : public QLabel {
+        Q_OBJECT;
+    public:
+        template<class... Args>
+        ClickableLabel(const Args&... args) : QLabel(args...) {}
+        
+        
+    signals:
+        void clicked();
+        
+    protected:
+        void mousePressEvent(QMouseEvent* event) {
+            emit clicked();
+        }
+    };
+    
+   
+   
+   
+   
+   // Table with additional functionality to use in our GUI
+   struct DecentColumn {
+      std::string title;
+      int size; // Negative value of size means absolute value of width, positive is weighted value
+   };
+   
+   class DecentTable : public QTableWidget {
+      Q_OBJECT
+       
+   public:
+   signals:
+       void MouseWasMoved();
+       
+   public:
+      DecentTable() {
+         this->horizontalHeader()->setStretchLastSection(true);
+         this->setSelectionMode(QAbstractItemView::NoSelection);
+         this->setStyleSheet("QTableView{border : 0px}");
+         this->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+         this->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+         
+         this->verticalHeader()->hide();
+         this->setMouseTracking(true);
+      }
+       
+       int getCurrentHighlightedRow(){return _current_highlighted_row;}
+      
+      
+      void set_columns(const std::vector<DecentColumn>& cols) {
+         _cols = cols;
+         
+         this->setColumnCount(cols.size());
+         
+         QFont font("Open Sans Bold", 14, QFont::Bold);
+         this->horizontalHeader()->setDefaultSectionSize(300);
+         this->setRowHeight(0,35);
+         
+         
+         QStringList columns;
+         for (const DecentColumn& col: cols) {
+            columns << QString::fromStdString(col.title);
+         }
+         this->setHorizontalHeaderLabels(columns);
+         
+         _sum_weights = std::accumulate(_cols.begin(), _cols.end(),
+                                         0, [](int sum, const DecentColumn& col) {
+                                            return (col.size > 0) ? sum + col.size : sum;
+                                         });
+         
+         _sum_absoulte = std::accumulate(_cols.begin(), _cols.end(),
+                                        0, [](int sum, const DecentColumn& col) {
+                                           return (col.size > 0) ? sum : sum - col.size;
+                                        });
+         
+         
+         this->horizontalHeader()->setFixedHeight(35);
+         this->horizontalHeader()->setFont(font);
+         
+         this->horizontalHeader()->setStyleSheet("QHeaderView::section {"
+                                                          "border-right: 1px solid rgb(193,192,193);"
+                                                          "border-bottom: 0px;"
+                                                          "border-top: 0px;}");
+      }
+      
+   private:
+      virtual void resizeEvent(QResizeEvent * a_event) {
+         QSize tableSize = this->size();
+         int width = tableSize.width() - _sum_absoulte;
+         
+         for(int i = 0; i < _cols.size(); ++i) {
+            if (_cols[i].size > 0) {
+               this->setColumnWidth(i, width * _cols[i].size / _sum_weights);
+            } else {
+               this->setColumnWidth(i, -_cols[i].size);
+            }
+         }
 
-	void makeWarningImediatly(const char* waringTitle, const char* waringText, const char* details, void* parent );
+      }
 
+      virtual void mouseMoveEvent(QMouseEvent * event) {
+         
+         if (_current_highlighted_row != -1) {
+            for (int i = 0; i < this->columnCount(); ++i) {
+               QTableWidgetItem* cell = this->item(_current_highlighted_row, i);
+               QWidget* cell_widget = this->cellWidget(_current_highlighted_row, i);
+               
+               if(cell != NULL) {
+                  cell->setBackgroundColor(QColor(255,255,255));
+                  cell->setForeground(QColor::fromRgb(0,0,0));
+               }
+               
+               if(cell_widget != NULL) {
+                   if(DecentSmallButton *button = qobject_cast<DecentSmallButton*>(cell_widget)) {
+                       button->unhighlight();
+                   } else {
+                      QString old_style = cell_widget->property("old_style").toString();
+                      
+                      if (old_style.isEmpty())
+                         cell_widget->setStyleSheet("* { background-color: rgb(255,255,255); color : black; }");
+                      else
+                         cell_widget->setStyleSheet(old_style);
+                   }
+               }
+            }
+             
+         }
+         
+         
+         int row = this->rowAt(event->pos().y());
+         
+         
+         if(row < 0) {
+            _current_highlighted_row = -1;
+             emit MouseWasMoved();
+            return;
+         }
+         
+         
+         for (int i = 0; i < this->columnCount(); ++i) {
+            QTableWidgetItem* cell = this->item(row, i);
+            QWidget* cell_widget = this->cellWidget(row, i);
 
-	class GlobalEvents : public QObject {
-	    Q_OBJECT
-	private:
+            if (cell != NULL) {
+               cell->setBackgroundColor(QColor(27,176,104));
+               cell->setForeground(QColor::fromRgb(255,255,255));
+            }
+            
+            if(cell_widget != NULL)
+                if(DecentSmallButton *button = qobject_cast<DecentSmallButton*>(cell_widget)) {
+                    button->highlight();
+                } else {
+                   cell_widget->setProperty("old_style", cell_widget->styleSheet());
+                   cell_widget->setStyleSheet("* { background-color: rgb(27,176,104); color : white; }");
+                }
+            
+            
+         }
+          _current_highlighted_row = row;
+      }
+       
+       
 
-		std::string 	_currentUser;
+      
+   private:
+      int                            _current_highlighted_row = -1;
+      int                            _sum_weights = 1;
+      int                            _sum_absoulte = 0;
+      std::vector<DecentColumn>      _cols;
+   };
 
-	private:
-		GlobalEvents() { }
-		GlobalEvents(const GlobalEvents& other) { }
-
-	public:
-	    static GlobalEvents& instance() {
-	    	static GlobalEvents theOne;
-	    	return theOne;
-	    }
-
-
-	    std::string getCurrentUser() const { return _currentUser; }
-        void setCurrentUser(const std::string& user) { _currentUser = user; emit currentUserChanged(_currentUser);}
-	
-	signals:
-	    void currentUserChanged(std::string user);
-
-	};
 
 
 

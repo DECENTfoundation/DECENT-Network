@@ -19,13 +19,6 @@
 #include <QSortFilterProxyModel>
 #include <QStyleFactory>
 
-#ifndef _PATH_DELIMER_
-#ifdef WIN32
-#define _PATH_DELIMER_  '\\'
-#else
-#define _PATH_DELIMER_  '/'
-#endif
-#endif
 
 #ifdef WIN32
 #include <direct.h>
@@ -40,11 +33,8 @@
 using namespace gui_wallet;
 
 
-AccountBalanceWidget::AccountBalanceWidget()
-    :   TableWidgetItemW_base<QWidget,int>(1,this,NULL,
-                                                                     &AccountBalanceWidget::ClbFunction),
-      m_nCurrentIndex(-1)
-{
+AccountBalanceWidget::AccountBalanceWidget() : m_nCurrentIndex(-1) {
+   
     m_amount_label.setStyleSheet("color:green;""background-color:white;");
     m_asset_type_label.setStyleSheet("color:black;""background-color:white;");
     m_amount_label.setAlignment(Qt::AlignRight|Qt::AlignVCenter);
@@ -89,36 +79,6 @@ void AccountBalanceWidget::addItem(const std::string& a_balance)
     }
 }
 
-QString CentralWigdet::FilterStr()
-{
-    int nCurTab(m_main_tabs.currentIndex());
-
-    switch(nCurTab)
-    {
-    case BROWSE_CONTENT:
-        return m_browse_cont_tab.m_filterLineEdit.text();
-        break;
-    case TRANSACTIONS:
-        return m_trans_tab.user.text();
-        break;
-    case UPLOAD:
-        return 0;
-        break;
-    case OVERVIEW:
-    {
-        return m_Overview_tab.search.text();
-        break;
-    }
-    case PURCHASED:
-        return 0;
-        break;
-    default:
-        break;
-    }
-    return tr("");
-}
-
-
 void AccountBalanceWidget::setCurrentIndex(int a_nIndex)
 {
     //__DEBUG_APP2__(0," ");
@@ -130,16 +90,15 @@ void AccountBalanceWidget::setCurrentIndex(int a_nIndex)
 }
 
 
-void AccountBalanceWidget::ClbFunction(_NEEDED_ARGS1_(int))
-{
-    //
-}
-
-
 /*//////////////////////////////////////////////////*/
 
 CentralWigdet::CentralWigdet(QBoxLayout* a_pAllLayout, Mainwindow_gui_wallet* a_pPar)
-    : m_first_line_lbl(), m_parent_main_window(a_pPar), m_Overview_tab(a_pPar)
+    : m_first_line_lbl(),
+      m_parent_main_window(a_pPar),
+      m_browse_cont_tab(a_pPar),
+      m_Upload_tab(a_pPar),
+      m_Overview_tab(a_pPar)
+
 {
 
     m_allTabs.push_back(&m_browse_cont_tab);
@@ -152,13 +111,18 @@ CentralWigdet::CentralWigdet(QBoxLayout* a_pAllLayout, Mainwindow_gui_wallet* a_
     
 
     m_main_tabs.setStyleSheet("QTabBar::tab{"
+                              "font:bold;"
                               " height: 40px; width: 181px;"
-                              "color:rgb(27,176,104);background-color:white;"
-                              "border-left: 1 solid rgb(240,240,240);"
-                              "border-top: 1 solid rgb(240,240,240);"
-                              "border-bottom: 1 solid rgb(240,240,240);}"
+                              "color:rgb(0,0,0);background-color:white;"
+                              "border-left: 0px;"
+                              "border-top: 1px solid rgb(240,240,240);"
+                              "border-bottom: 1px solid rgb(240,240,240);}"
                               "QTabBar::tab:selected{"
-                              "color:white;background-color:rgb(27,176,104);}"
+                              "color:rgb(27,176,104);"
+                              "border-bottom:3px solid rgb(27,176,104);"
+                              "border-top: 1px solid rgb(240,240,240);"
+                              "border-left:0px;"
+                              "border-right:0px;}"
                                );
 
     PrepareGUIprivate(a_pAllLayout);
@@ -285,12 +249,9 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     pLabelTmp->setFixedSize(28,28);
     
     pComboTmp1 = new QComboBox;
-    pComboTmp1->setStyleSheet("QWidget:item:selected{border: 0px solid #999900;background: rgb(27,176,104);}");
-    //pComboTmp1->setStyleSheet("color: black;""background-color:white;");
+    //pComboTmp1->setStyleSheet("QWidget:item:selected{border: 0px solid #999900;background-color: rgb(27,176,104);}");
     pComboTmp1->setStyle(QStyleFactory::create("fusion"));
-    if(!pComboTmp1){throw __FILE__ "Low memory";}
-    
-//    pComboTmp1->setStyleSheet("color: black;""background-color:white;");
+   
     pHBoxLayoutTmp->addWidget(pComboTmp1);
     m_pUsernameWgt->setLayout(pHBoxLayoutTmp);
     m_first_line_lbl.addWidget(m_pUsernameWgt);
@@ -328,7 +289,7 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     m_first_line_lbl.addWidget(m_pBalanceWgt1);
     pHBoxLayoutTmp->setContentsMargins(400, 0, 0, 0);
     m_pBalanceWgt1->setFixedHeight(__HEIGHT__);
-
+    //m_pBalanceWgt1->setFixedWidth(m_pBalanceWgt1->size().width() - 30);
  
     
     m_browse_cont_tab.setStyleSheet("color: black;""background-color:white;");
@@ -341,14 +302,43 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
 
 
     m_main_layout.addLayout(&m_first_line_lbl);
+    
+    line = new QFrame(this);
+    line->setFrameShape(QFrame::HLine);
+    line->setLineWidth(500);
+    line->setStyleSheet("color: #f0f0f0");
+    line->setFixedHeight(1);
 
-    m_main_layout.addWidget(&m_main_tabs);
+    
+    m_main_layout.addWidget(line);
+    QHBoxLayout* tab_lay = new QHBoxLayout();
+    tab_lay->addWidget(&m_main_tabs);
+    tab_lay->activate();
+    tab_lay->setContentsMargins(0, 0, 0, 0);
+    m_main_layout.addLayout(tab_lay);
+    //m_main_layout.addWidget(&m_main_tabs);
+    
 
     a_pAllLayout->addLayout(&m_main_layout);
     
-    connect(&m_main_tabs, SIGNAL(currentChanged(int)), this, SLOT(tabChanged(int)));
+   connect(&m_main_tabs, SIGNAL(currentChanged(int)), this, SLOT(tabChanged(int)));
+   connect(&GlobalEvents::instance(), SIGNAL(walletUnlocked()), this, SLOT(walletUnlockedSlot()));
+   
 }
 
+
+void CentralWigdet::walletUnlockedSlot() {
+   QTimer::singleShot(1000, this, SLOT(updateActiveTab()));
+}
+
+
+void CentralWigdet::updateActiveTab() {
+   if (m_currentTab >= 0) {
+      m_allTabs[m_currentTab]->tryToUpdate();
+
+   }
+   QTimer::singleShot(1000, this, SLOT(updateActiveTab()));
+}
 
 
 void CentralWigdet::tabChanged(int index) {
@@ -358,12 +348,12 @@ void CentralWigdet::tabChanged(int index) {
     
     if (index != m_currentTab) {
         if (m_currentTab >= 0) {
-            m_allTabs[m_currentTab]->content_deactivated();
+            m_allTabs[m_currentTab]->contentDeactivated();
         }
     }
 
     m_currentTab = index;
-    m_allTabs[m_currentTab]->content_activated();
+    m_allTabs[m_currentTab]->contentActivated();
 
 }
 
@@ -392,44 +382,62 @@ void CentralWigdet::showEvent ( QShowEvent * event )
 }
 
 
-void CentralWigdet::make_deleyed_warning()
-{
-    gui_wallet::makeWarningImediatly(m_DelayedWaringTitle.toLatin1().data(),
-                                     m_DelayedWaringText.toLatin1().data(),
-                                     m_DelayedWaringDetails.toLatin1().data(),this);
-}
-
-
 void CentralWigdet::resizeEvent ( QResizeEvent * a_event )
 {
-    //return ;
     QWidget::resizeEvent(a_event);
     
     int each_width = m_parent_main_window->size().width()/5-3;
     QString s = QString::number(each_width);
-    m_main_tabs.setStyleSheet("QTabBar::tab{"
-                              " height: 40px; min-width: " + s + "px;"
-                              "color:rgb(27,176,104);background-color:white;"
-                              "border-left: 1 solid rgb(240,240,240);"
-                              "border-top: 1 solid rgb(240,240,240);"
-                              "border-bottom: 1 solid rgb(240,240,240);}"
-                              "QTabBar::tab:selected{"
-                              "color:white;background-color:rgb(27,176,104);}"
-                              );
+    if(a_event->oldSize().width() > a_event->size().width())
+    {
+        s = QString::number(each_width - 11);
+        m_main_tabs.setStyleSheet("QTabBar::tab{"
+                                  "font:bold;"
+                                  " height: 40px; width: " + s + "px;"
+                                  "color:rgb(0,0,0);background-color:white;"
+                                  "border-left:0;"
+                                  "border-top: 1 solid rgb(240,240,240);"
+                                  "border-bottom: 1 solid rgb(240,240,240);}"
+                                  "QTabBar::tab:selected{"
+                                  "color: rgb(27,176,104);"
+                                  "border-bottom:3px solid rgb(27,176,104);"
+                                  "border-top: 1px solid rgb(240,240,240);"
+                                  "border-left:0px;"
+                                  "border-right:0px;}"
+                                  );
+    }
+    else
+    {
+        m_main_tabs.setStyleSheet("QTabBar::tab{"
+                                  "font:bold;"
+                                  " height: 40px; width: " + s + "px;"
+                                  "color:rgb(0,0,0);background-color:white;"
+                                  "border-left:0;"
+                                  "border-top: 1 solid rgb(240,240,240);"
+                                  "border-bottom: 1 solid rgb(240,240,240);}"
+                                  "QTabBar::tab:selected{"
+                                  "color: rgb(27,176,104);"
+                                  "border-bottom:3px solid rgb(27,176,104);"
+                                  "border-top: 1px solid rgb(240,240,240);"
+                                  "border-left:0px;"
+                                  "border-right:0px;}"
+                                  );
+    }
 
-    int nWidth_small (size().width()*13/100);
-    int nWidth_big (size().width()*28/100);
-    int nWidth_medium (size().width()*38/100);
-    m_pDcLogoWgt->resize(nWidth_small,m_pDcLogoWgt->height());
-    m_pUsernameWgt->resize(nWidth_big,m_pUsernameWgt->height());
-    //m_pBalanceWgt1->resize(nWidth_medium,m_pBalanceWgt1->height());
-    m_pBalanceWgt1->setMinimumSize(nWidth_medium,m_pBalanceWgt1->size().height());
+
+
+    //int nWidth_small (size().width()*13/100);
+    //int nWidth_big (size().width()*28/100);
+    //int nWidth_medium (size().width()*38/100);
+    //m_pDcLogoWgt->resize(nWidth_small,m_pDcLogoWgt->height());
+    //m_pUsernameWgt->resize(nWidth_big,m_pUsernameWgt->height());
+    //m_pBalanceWgt1->setMaximumSize(m_pBalanceWgt1->size().width() - 30,m_pBalanceWgt1->size().height());
 
 }
 
 void CentralWigdet::SetTransactionInfo(std::string info_from_other_tab)
 {
-    m_trans_tab.SetInfo(info_from_other_tab);
+    m_trans_tab.set_user_filter(info_from_other_tab);
 }
 
 

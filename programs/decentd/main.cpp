@@ -179,6 +179,11 @@ int main(int argc, char** argv) {
          exit_promise->set_value(signal);
       }, SIGTERM);
 
+      fc::set_signal_handler([&exit_promise](int signal) {
+           elog( "Caught SIGHUP attempting to exit cleanly" );
+           exit_promise->set_value(signal);
+      }, SIGHUP);
+
       ilog("Started witness node on a chain with ${h} blocks.", ("h", node->chain_database()->head_block_num()));
       ilog("Chain ID is ${id}", ("id", node->chain_database()->get_chain_id()) );
 

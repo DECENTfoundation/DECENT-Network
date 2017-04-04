@@ -39,10 +39,6 @@ void InitializeUiInterfaceOfWallet_base(TypeWarnAndWaitFunc a_fpWarnAndWait,
                                         TypeCallFunctionInGuiLoop2 a_fpCorrectUiCaller2,TypeCallFunctionInGuiLoop3 a_fpCorrectUiCaller3,
                                         void* a_pMngOwner,void* a_pMngClb,...);
 
-void InitializeUiInterfaceOfWallet(TypeWarnAndWaitFunc a_fpWarnAndWait,
-                                   TypeCallFunctionInGuiLoop2 a_fpCorrectUiCaller2,TypeCallFunctionInGuiLoop3 a_fpCorrectUiCaller3,
-                                   void* a_pMngOwner,void* a_pMngClb,
-                                   TypeManagementClbk a_fpMngClbk);
 
 void DestroyUiInterfaceOfWallet(void);
 
@@ -76,5 +72,6 @@ static int SetNewTask3(const std::string& a_inp_line, Type* a_memb, void* a_clbD
 void* GetFunctionPointerAsVoid(int,...);
 
 void RunTask(std::string const& str_command, std::string& str_result);
+void ForceToRunTask(std::string const& str_command, std::string& str_result);
 
 #endif // UI_WALLET_FUNCTIONS_HPP

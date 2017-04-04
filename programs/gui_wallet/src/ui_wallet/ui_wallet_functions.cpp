@@ -119,16 +119,6 @@ __DLL_EXPORT__ void* GetFunctionPointerAsVoid(int a_first,...)
     return pReturn;
 }
 
-__DLL_EXPORT__ void InitializeUiInterfaceOfWallet(TypeWarnAndWaitFunc a_fpWarnAndWait,
-                                                  TypeCallFunctionInGuiLoop2 a_fpCorrectUiCaller2,
-                                                  TypeCallFunctionInGuiLoop3 a_fpCorrectUiCaller3,
-                                                  void* a_pMngOwner,void* a_pMngClb,
-                                                  TypeManagementClbk a_fpMngClbk)
-{
-    InitializeUiInterfaceOfWallet_base(a_fpWarnAndWait,a_fpCorrectUiCaller2,a_fpCorrectUiCaller3,
-                                       a_pMngOwner,a_pMngClb,a_fpMngClbk);
-}
-
 
 __DLL_EXPORT__ void InitializeUiInterfaceOfWallet_base(TypeWarnAndWaitFunc a_fpWarnAndWait,
                                                        TypeCallFunctionInGuiLoop2 a_fpCorrectUiCaller2,
@@ -371,7 +361,7 @@ static void gui_wallet_application_MenegerThreadFunc(void)
         }  // for(i=0;i<_API_STATE_SIZE;++i)
 
 
-       Sleep(100);
+       std::this_thread::sleep_for(chrono::milliseconds(100));
     } // while(s_nManagerThreadRun)
 }
 
@@ -490,7 +480,12 @@ static int ConnectToNewWitness(const decent::tools::taskListItem<SConnectionStru
         }));
         (void)(closed_connection);
 
-        if( wapiptr->is_new() )
+       
+
+         wallet_gui->register_api( wapi );
+         wallet_gui->start();
+
+       if( wapiptr->is_new() )
         {
            std::string aPassword("");
            
@@ -500,20 +495,13 @@ static int ConnectToNewWitness(const decent::tools::taskListItem<SConnectionStru
                wapiptr->set_password(aPassword);
                wapiptr->unlock(aPassword);
            }
-        } else
-           {/*wallet_cli->set_prompt( "locked >>> " );*/}
-
+        }
+       
         boost::signals2::scoped_connection locked_connection(wapiptr->lock_changed.connect([&](bool /*locked*/) {
            //wallet_cli->set_prompt(  locked ? "locked >>> " : "unlocked >>> " );
         }));
 
 
-
-       wallet_gui->register_api( wapi );
-       wallet_gui->start();
-       //(*a_fpDone)(a_pOwner);
-       //(*(a_con_data.fn_tsk_dn))(a_con_data.owner,a_con_data.callbackArg,0,
-       //                          __CONNECTION_CLB_, __FILE__ "\nConnection is ok");
 
        LoadWalletFile(pStruct);
 
@@ -535,15 +523,12 @@ static int ConnectToNewWitness(const decent::tools::taskListItem<SConnectionStru
         (*s_fpCorrectUiCaller2)(a_con_data.callbackArg,llnErr, a_fc.to_string(),
                               a_fc.to_detail_string(),
                               a_con_data.owner,a_con_data.fn_tsk_dn2);
-        __DEBUG_APP2__(1,"err=%d, err_str=%s, details=%s\n",
-                       (int)llnErr,a_fc.to_string().c_str(),(a_fc.to_detail_string()).c_str());
     }
     catch(...)
     {
         (*s_fpCorrectUiCaller2)(a_con_data.callbackArg,UNKNOWN_EXCEPTION, __CONNECTION_CLB_,
                               __FILE__ "\nUnknown exception!",
                               a_con_data.owner,a_con_data.fn_tsk_dn2);
-        __DEBUG_APP2__(1,"Unknown exception\n");
     }
 
     return 0;
@@ -596,16 +581,28 @@ int CallFunctionInUiLoopGeneral(int a_nType,SetNewTask_last_args2,
 class task_exception : public std::exception
 {
 public:
-    task_exception(std::string const& str_info) noexcept
-    : m_str_info(str_info) {}
-    virtual ~task_exception() {}
-    
-    char const* what() const noexcept override
-    {
-        return m_str_info.c_str();
-    }
+   task_exception(std::string const& str_info) noexcept
+   : m_str_info(str_info) {}
+   virtual ~task_exception() {}
+   
+   char const* what() const noexcept override
+   {
+      return m_str_info.c_str();
+   }
 private:
-    std::string m_str_info;
+   std::string m_str_info;
+};
+
+class run_task_busy : public std::exception
+{
+public:
+   run_task_busy() noexcept {}
+   virtual ~run_task_busy() {}
+   
+   char const* what() const noexcept override
+   {
+      return "Run task is busy";
+   }
 };
 
 struct task_result
@@ -622,16 +619,26 @@ struct task_result
 
 void RunTask(std::string const& str_command, std::string& str_result)
 {
+   static volatile bool task_is_running = false;
+   
+   if (task_is_running) {
+      throw run_task_busy();
+   }
+   
+   
+   task_is_running = true;
     task_result result;
+   std::cout << "Starting task " << str_command << std::endl;
     SetNewTask(str_command,
                nullptr,
                static_cast<void*>(&result),
                +[](void* /*owner*/,
                    void* a_clbkArg,
                    int64_t a_err,
-                   std::string const& /*a_task*/,
+                   std::string const& a_task,
                    std::string const& a_result)
                {
+                  std::cout << "Task " << a_task << " finished" << std::endl;
                    task_result& result = *static_cast<task_result*>(a_clbkArg);
                    result.m_bDone = true;
                    result.m_error = a_err;
@@ -641,13 +648,36 @@ void RunTask(std::string const& str_command, std::string& str_result)
     bool volatile& bDone = result.m_bDone;
     while (false == bDone)
     {
-        std::this_thread::sleep_for(chrono::milliseconds(0));
+        std::this_thread::sleep_for(chrono::milliseconds(10));
         QCoreApplication::processEvents();
     }
     
-    if (0 == result.m_error)
-        str_result = result.m_strResult;
-    else
-        throw task_exception(result.m_strResult);
+   if (0 == result.m_error) {
+      str_result = result.m_strResult;
+      task_is_running = false;
+   } else {
+      task_is_running = false;
+      throw task_exception(result.m_strResult);
+   }
+}
+
+
+void ForceToRunTask(std::string const& str_command, std::string& str_result) {
+   
+   while (true) {
+      bool success = false;
+      try {
+         RunTask(str_command, str_result);
+         success = true;
+      } catch (const run_task_busy&) {
+         success = false;
+      }
+      
+      if (success)
+         break;
+      
+      QtDelay(100);
+   }
+   
 }
 

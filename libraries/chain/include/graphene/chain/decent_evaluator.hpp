@@ -5,7 +5,7 @@
 
 namespace graphene { namespace chain {
 
-   static decent::crypto::custody_utils _custody_utils;
+   static decent::encrypt::CustodyUtils _custody_utils;
 
    class content_submit_evaluator : public evaluator<content_submit_evaluator>
    {
@@ -101,7 +101,7 @@ namespace graphene { namespace chain {
    class finish_buying_evaluator : public evaluator<finish_buying_evaluator>
    {
    public:
-      typedef finish_buying_evaluator operation_type;
+      typedef finish_buying_operation operation_type;
 
       void_result do_evaluate( const finish_buying_operation& o );
       void_result do_apply( const finish_buying_operation& o );
