@@ -7,11 +7,16 @@ namespace graphene { namespace chain {
 
    content_summary& content_summary::set( const content_object& co, const account_object& ao )
    {
+#ifdef DECENT_TESTNET2
       string str_region_code;
       optional<asset> op_price = co.GetPrice(str_region_code);
-      this->author = ao.name;
+
       if (op_price.valid())
          this->price = *op_price;
+#else
+      this->price = co.price;
+#endif
+      this->author = ao.name;
       this->synopsis = co.synopsis;
       this->URI = co.URI;
       this->AVG_rating = co.AVG_rating;
@@ -23,7 +28,7 @@ namespace graphene { namespace chain {
        
       return *this;
    }
-
+#ifdef DECENT_TESTNET2
    optional<asset> content_object::GetPrice(string const& str_region_code) const
    {
       optional<asset> op_price;
@@ -59,5 +64,5 @@ namespace graphene { namespace chain {
       map_price.clear();
       map_price.insert(pair<string, asset>(string(), price));
    }
-   
+#endif
 }}

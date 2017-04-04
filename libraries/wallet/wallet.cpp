@@ -2319,16 +2319,16 @@ public:
          optional<content_object> content = _remote_db->get_content( URI );
          account_object consumer_account = get_account( consumer );
 
-         string str_region_code;
-
          if (!content)
          {
             FC_THROW("Invalid content URI");
          }
-
+#ifdef DECENT_TESTNET2
+         string str_region_code;
          optional<asset> op_price = content->GetPrice(str_region_code);
          if (!op_price)
             FC_THROW("content not available for this region");
+#endif
 
          request_to_buy_operation request_op;
          request_op.consumer = consumer_account.id;
@@ -2340,7 +2340,11 @@ public:
          //}
 
          request_op.pubKey = decent::encrypt::get_public_el_gamal_key( el_gamal_priv_key );
+#ifdef DECENT_TESTNET2
          request_op.price = *op_price;
+#else
+         request_op.price = content->price;
+#endif
 
          signed_transaction tx;
          tx.operations.push_back( request_op );
@@ -3836,12 +3840,15 @@ vector<buying_object> wallet_api::get_open_buyings_by_consumer( const string& ac
          optional<content_object> content = my->_remote_db->get_content( bobj.URI );
          if (!content)
             continue;
-
+#ifdef DECENT_TESTNET2
          optional<asset> op_price = content->GetPrice(string());
          if (!op_price)
             continue;
 
          bobj.price = *op_price;
+#else
+         bobj.price = content->price;
+#endif
          bobj.size = content->size;
          bobj.rating = content->AVG_rating;
          bobj.synopsis = content->synopsis;
@@ -3869,9 +3876,11 @@ vector<buying_object> wallet_api::get_open_buyings_by_consumer( const string& ac
          if (!content)
             continue;
 
+#ifdef DECENT_TESTNET2
          optional<asset> op_price = content->GetPrice(string());
          if (!op_price)
             continue;
+#endif
 
          std::string synopsis = json_unescape_string(content->synopsis);
          std::string title = synopsis;
@@ -3899,7 +3908,11 @@ vector<buying_object> wallet_api::get_open_buyings_by_consumer( const string& ac
          result.emplace_back(buying_object_ex(bobjects[i], *status));
          buying_object_ex& bobj = result.back();
 
+#ifdef DECENT_TESTNET2
          bobj.price = *op_price;
+#else
+         bobj.price = content->price;
+#endif
          bobj.size = content->size;
          bobj.rating = content->AVG_rating;
          bobj.synopsis = content->synopsis;

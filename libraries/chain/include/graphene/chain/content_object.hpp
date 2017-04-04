@@ -38,15 +38,20 @@ using namespace decent::encrypt;
       account_id_type author;
       time_point_sec expiration;
       time_point_sec created;
+#ifndef DECENT_TESTNET2
+      asset price;
+#endif
       string synopsis;
       uint64_t size;
       uint32_t quorum;
       string URI;
       map<account_id_type, CiphertextString> key_parts;
       map<account_id_type, time_point_sec> last_proof;
+#ifdef DECENT_TESTNET2
       map<string, asset> map_price;
       optional<asset> GetPrice(string const& str_region_code) const;
       void SetSimplePrice(asset const& price);
+#endif
 
       fc::ripemd160 _hash;
       uint64_t AVG_rating;
@@ -92,11 +97,18 @@ using namespace decent::encrypt;
    typedef generic_index< content_object, content_object_multi_index_type > content_index;
    
 }}
-
+#ifdef DECENT_TESTNET2
 FC_REFLECT_DERIVED(graphene::chain::content_object,
                    (graphene::db::object),
                    (author)(expiration)(created)(size)(synopsis)
                    (URI)(quorum)(key_parts)(_hash)(last_proof)
                          (map_price)(AVG_rating)(total_rating)(times_bought)(publishing_fee_escrow)(cd) )
+#else
+FC_REFLECT_DERIVED(graphene::chain::content_object,
+                   (graphene::db::object),
+                   (author)(expiration)(created)(price)(size)(synopsis)
+                   (URI)(quorum)(key_parts)(_hash)(last_proof)
+                   (AVG_rating)(total_rating)(times_bought)(publishing_fee_escrow)(cd) )
+#endif
 
 FC_REFLECT( graphene::chain::content_summary, (author)(price)(synopsis)(URI)(AVG_rating)(size)(expiration)(created)(times_bought) )
