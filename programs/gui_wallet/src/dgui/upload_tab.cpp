@@ -36,7 +36,6 @@
 #include <QIcon>
 
 #include "gui_wallet_global.hpp"
-#include "ui_wallet_functions.hpp"
 #include "gui_wallet_mainwindow.hpp"
 
 #include <QLayout>

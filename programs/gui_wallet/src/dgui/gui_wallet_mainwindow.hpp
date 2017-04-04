@@ -11,7 +11,6 @@
 #include "gui_wallet_connectdlg.hpp"
 #include "text_display_dialog.hpp"
 #include "richdialog.hpp"
-#include "unnamedsemaphorelite.hpp"
 
 #include "json.hpp"
 

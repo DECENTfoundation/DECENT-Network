@@ -1,6 +1,5 @@
 #pragma once
 
-#include "ui_wallet_functions.hpp"
 #include <QWidget>
 
 

@@ -40,7 +40,7 @@ namespace graphene { namespace chain {
    {try{
       db().create<content_object>( [&](content_object& co){ //create new content object and store all vaues from the operation
          co.author = o.author;
-         co.price = o.price;
+         co.SetSimplePrice(o.price);
          co.size = o.size;
          co.synopsis = o.synopsis;
          co.URI = o.URI;
@@ -81,9 +81,11 @@ namespace graphene { namespace chain {
       const auto& content = idx.find( o.URI );
       FC_ASSERT( content!= idx.end() );
       FC_ASSERT( o.price <= db().get_balance( o.consumer, o.price.asset_id ) );
-      FC_ASSERT( o.price >= content->price );
+      optional<asset> price = content->GetPrice(string());
+      FC_ASSERT( price.valid() );
+      FC_ASSERT( o.price >= *price );
       FC_ASSERT( content->expiration > db().head_block_time() );
-      FC_ASSERT( o.price.asset_id == content->price.asset_id );
+      FC_ASSERT( o.price.asset_id == price->asset_id );
 
    }FC_CAPTURE_AND_RETHROW( (o) ) }
 

@@ -8,21 +8,22 @@
  *
  */
 
-#include <stdio.h>
-#include <wchar.h>
-#include <string.h>
-#include <string>
-#include <fc/exception/exception.hpp>
-#include <QDir>
-#include <QCoreApplication>
-#include "gui_wallet_application.hpp"
+#include <QApplication>
 #include "gui_wallet_mainwindow.hpp"
-#include "gui_wallet_global.hpp"
-#include <QMessageBox>
-#include <QFileInfo>
-#include <QProcess>
-#include <QThread>
-#include <graphene/app/application.hpp>
+
+#if NDEBUG
+//#define SET_LIBRARY_PATHS
+#endif
+
+#ifdef SET_LIBRARY_PATHS
+#include <QDir>
+#endif
+
+// used both by main() and runDecentD()
+#include <string>
+using string = std::string;
+
+// used only by runDecentD()
 
 #include <graphene/witness/witness.hpp>
 #include <graphene/seeding/seeding.hpp>
@@ -39,18 +40,13 @@
 #include <fc/log/logger_config.hpp>
 
 #include <boost/filesystem.hpp>
-
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/ini_parser.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
 
-#include <boost/interprocess/sync/interprocess_condition.hpp>
-#include <boost/interprocess/sync/scoped_lock.hpp>
 
-#include <iostream>
-#include <fstream>
 
 #ifdef WIN32
 # include <signal.h> 
@@ -58,9 +54,43 @@
 # include <csignal>
 #endif
 
+int runDecentD(int argc, char** argv);
 
+int main(int argc, char* argv[])
+{
+   fc::thread thread_decentd("decentd service");
+   fc::future<int> future_decentd = thread_decentd.async([argc, argv]() -> int
+                                                         {
+                                                            return runDecentD(argc, argv);
+                                                         });
+#ifdef SET_LIBRARY_PATHS
+   QDir dir(argv[0]);
 
+   dir.cdUp();
+   dir.cdUp();
+   dir.cd("lib");
+   QCoreApplication::setLibraryPaths(QStringList(dir.absolutePath()));
+#endif
 
+   QApplication app(argc, argv);
+
+   qRegisterMetaType<string>( "std::string" );
+   qRegisterMetaType<int64_t>( "int64_t" );
+   app.setApplicationDisplayName("Decent");
+
+   gui_wallet::Mainwindow_gui_wallet aMainWindow;
+   aMainWindow.show();
+   app.exec();
+   // qt event loop does not support exceptions anyway
+   // there is no need for all try-catches
+
+   future_decentd.wait();
+
+   return 0;
+}
+//
+// below is decent daemon staff, that's executed in a parallel thread
+//
 using namespace graphene;
 namespace bpo = boost::program_options;
 
@@ -73,13 +103,13 @@ int runDecentD(int argc, char** argv) {
    app::application* node = new app::application();
    fc::oexception unhandled_exception;
    try {
-       bpo::options_description app_options("DECENT Daemon");
-       bpo::options_description cfg_options("DECENT Daemon");
+      bpo::options_description app_options("DECENT Daemon");
+      bpo::options_description cfg_options("DECENT Daemon");
       app_options.add_options()
-            ("help,h", "Print this help message and exit.")
-            ("data-dir,d", bpo::value<boost::filesystem::path>()->default_value( utilities::decent_path_finder::instance().get_decent_data() / "decentd"), "Directory containing databases, configuration file, etc.")
-            ;
-       
+      ("help,h", "Print this help message and exit.")
+      ("data-dir,d", bpo::value<boost::filesystem::path>()->default_value( utilities::decent_path_finder::instance().get_decent_data() / "decentd"), "Directory containing databases, configuration file, etc.")
+      ;
+
 
       bpo::variables_map options;
 
@@ -94,13 +124,13 @@ int runDecentD(int argc, char** argv) {
          node->set_program_options(cli, cfg);
          app_options.add(cli);
          cfg_options.add(cfg);
-         
+
          bpo::store(bpo::parse_command_line(argc, argv, app_options), options);
       }
       catch (const boost::program_options::error& e)
       {
-        std::cerr << "Error parsing command line: " << e.what() << "\n";
-        return 1;
+         std::cerr << "Error parsing command line: " << e.what() << "\n";
+         return 1;
       }
 
       if( options.count("help") )
@@ -135,7 +165,7 @@ int runDecentD(int argc, char** argv) {
             wlog("Error parsing logging config from config file ${config}, using default config", ("config", config_ini_path.preferred_string()));
          }
       }
-      else 
+      else
       {
          ilog("Writing new config file at ${path}", ("path", config_ini_path));
          if( !fc::exists(data_dir) )
@@ -164,7 +194,7 @@ int runDecentD(int argc, char** argv) {
             out_cfg << "\n";
          }
          write_default_logging_config_to_stream(out_cfg);
-         out_cfg.close(); 
+         out_cfg.close();
          // read the default logging config we just wrote out to the file and start using it
          fc::optional<fc::logging_config> logging_config = load_logging_config_from_ini_file(config_ini_path);
          if (logging_config)
@@ -173,10 +203,10 @@ int runDecentD(int argc, char** argv) {
       bpo::notify(options);
       node->initialize(data_dir, options);
       node->initialize_plugins( options );
-       
+
       node->startup();
       node->startup_plugins();
-              
+
       fc::promise<int>::ptr exit_promise = new fc::promise<int>("UNIX Signal Handler");
 
       fc::set_signal_handler([&exit_promise](int signal) {
@@ -196,8 +226,8 @@ int runDecentD(int argc, char** argv) {
 
       ilog("Started witness node on a chain with ${h} blocks.", ("h", node->chain_database()->head_block_num()));
       ilog("Chain ID is ${id}", ("id", node->chain_database()->get_chain_id()) );
-      
-       
+
+
       int signal = exit_promise->wait();
       ilog("Exiting from signal ${n}", ("n", signal));
       node->shutdown_plugins();
@@ -217,76 +247,6 @@ int runDecentD(int argc, char** argv) {
       return 1;
    }
 }
-
-
-
-int main(int argc, char* argv[])
-{
-    
-    pid_t  pid;
-    pid = fork();
-    if (pid == 0) {
-        runDecentD(argc, argv);
-    } else {
-        
-        
-        fc::set_signal_handler([pid](int signal) {
-            kill(pid, SIGINT); //Kill decentd
-
-        }, SIGINT);
-        
-        fc::set_signal_handler([pid](int signal) {
-            kill(pid, SIGTERM); //Kill decentd
-        }, SIGTERM);
-        
-        QDir dir(argv[0]);
-
-/*        
-#if NDEBUG
-        dir.cdUp();
-        dir.cdUp();
-        dir.cd("lib");
-        QCoreApplication::setLibraryPaths(QStringList(dir.absolutePath()));
-#endif
-*/
-
-       QApplication app(argc, argv);
-       //gui_wallet::application aApp(argc, argv);
-
-       qRegisterMetaType<std::string>( "std::string" );
-       qRegisterMetaType<int64_t>( "int64_t" );
-
-       app.setApplicationDisplayName("Decent");
-
-       try
-       {
-          gui_wallet::Mainwindow_gui_wallet aMainWindow;
-          aMainWindow.show();
-          app.exec();
-       } catch(const char* a_ext_str) {
-          std::cout << "Exception: " << a_ext_str << std::endl;
-       } catch(const std::exception& ex) {
-          std::cout << "Exception: " << ex.what() << std::endl;
-       } catch(const fc::exception& ex) {
-          std::cout << "Exception: " << ex.what() << std::endl;
-       } catch (...) {
-          std::cout << "Unknown Exception " << std::endl;
-       }
-
-       kill(pid, SIGTERM); //Kill decentd
-    }
-
-
-    return 0;
-}
-
-
-
-
-
-
-
-
 
 void write_default_logging_config_to_stream(std::ostream& out)
 {
@@ -319,17 +279,17 @@ fc::optional<fc::logging_config> load_logging_config_from_ini_file(const fc::pat
       boost::property_tree::ini_parser::read_ini(config_ini_filename.preferred_string().c_str(), config_ini_tree);
       for (const auto& section : config_ini_tree)
       {
-         const std::string& section_name = section.first;
+         const string& section_name = section.first;
          const boost::property_tree::ptree& section_tree = section.second;
 
-         const std::string console_appender_section_prefix = "log.console_appender.";
-         const std::string file_appender_section_prefix = "log.file_appender.";
-         const std::string logger_section_prefix = "logger.";
+         const string console_appender_section_prefix = "log.console_appender.";
+         const string file_appender_section_prefix = "log.file_appender.";
+         const string logger_section_prefix = "logger.";
 
          if (boost::starts_with(section_name, console_appender_section_prefix))
          {
-            std::string console_appender_name = section_name.substr(console_appender_section_prefix.length());
-            std::string stream_name = section_tree.get<std::string>("stream");
+            string console_appender_name = section_name.substr(console_appender_section_prefix.length());
+            string stream_name = section_tree.get<string>("stream");
 
             // construct a default console appender config here
             // stdout/stderr will be taken from ini file, everything else hard-coded here
@@ -349,8 +309,8 @@ fc::optional<fc::logging_config> load_logging_config_from_ini_file(const fc::pat
          }
          else if (boost::starts_with(section_name, file_appender_section_prefix))
          {
-            std::string file_appender_name = section_name.substr(file_appender_section_prefix.length());
-            fc::path file_name = section_tree.get<std::string>("filename");
+            string file_appender_name = section_name.substr(file_appender_section_prefix.length());
+            fc::path file_name = section_tree.get<string>("filename");
             if (file_name.is_relative())
                file_name = fc::absolute(config_ini_filename).parent_path() / file_name;
             
@@ -368,9 +328,9 @@ fc::optional<fc::logging_config> load_logging_config_from_ini_file(const fc::pat
          }
          else if (boost::starts_with(section_name, logger_section_prefix))
          {
-            std::string logger_name = section_name.substr(logger_section_prefix.length());
-            std::string level_string = section_tree.get<std::string>("level");
-            std::string appenders_string = section_tree.get<std::string>("appenders");
+            string logger_name = section_name.substr(logger_section_prefix.length());
+            string level_string = section_tree.get<string>("level");
+            string appenders_string = section_tree.get<string>("appenders");
             fc::logger_config logger_config(logger_name);
             logger_config.level = fc::variant(level_string).as<fc::log_level>();
             boost::split(logger_config.appenders, appenders_string, 

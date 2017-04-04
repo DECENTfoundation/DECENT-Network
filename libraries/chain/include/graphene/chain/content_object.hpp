@@ -38,13 +38,15 @@ using namespace decent::encrypt;
       account_id_type author;
       time_point_sec expiration;
       time_point_sec created;
-      asset price;
       string synopsis;
       uint64_t size;
       uint32_t quorum;
       string URI;
       map<account_id_type, CiphertextString> key_parts;
       map<account_id_type, time_point_sec> last_proof;
+      map<string, asset> map_price;
+      optional<asset> GetPrice(string const& str_region_code) const;
+      void SetSimplePrice(asset const& price);
 
       fc::ripemd160 _hash;
       uint64_t AVG_rating;
@@ -93,8 +95,8 @@ using namespace decent::encrypt;
 
 FC_REFLECT_DERIVED(graphene::chain::content_object,
                    (graphene::db::object),
-                   (author)(expiration)(created)(price)(size)(synopsis)
+                   (author)(expiration)(created)(size)(synopsis)
                    (URI)(quorum)(key_parts)(_hash)(last_proof)
-                         (AVG_rating)(total_rating)(times_bought)(publishing_fee_escrow)(cd) )
+                         (map_price)(AVG_rating)(total_rating)(times_bought)(publishing_fee_escrow)(cd) )
 
 FC_REFLECT( graphene::chain::content_summary, (author)(price)(synopsis)(URI)(AVG_rating)(size)(expiration)(created)(times_bought) )
