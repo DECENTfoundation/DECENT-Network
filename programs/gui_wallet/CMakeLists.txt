@@ -4,7 +4,7 @@ set(CMAKE_AUTORCC ON)
 
 find_package( Qt5Core REQUIRED )
 find_package( Qt5Widgets REQUIRED )
-#find_package( Qt5Svg REQUIRED )
+find_package( Qt5Svg REQUIRED )
 
 set(MACOSX_BUNDLE_ICON_FILE desktop)
 set(MACOSX_BUNDLE_BUNDLE_NAME DECENT)
@@ -61,8 +61,8 @@ target_include_directories( DECENT PUBLIC
                             include
                           )
 
-target_link_libraries( DECENT PUBLIC
-                       Qt5::Core Qt5::Widgets graphene_app graphene_net graphene_chain  graphene_utilities graphene_wallet wallet_utility package_manager decent_encrypt pbc gmp graphene_account_history graphene_market_history decent_seeding graphene_witness graphene_debug_witness graphene_egenesis_decent fc ${CMAKE_DL_LIBS} ${PLATFORM_SPECIFIC_LIBS}
+target_link_libraries(  DECENT PUBLIC
+                        Qt5::Core Qt5::Widgets Qt5::Svg graphene_app graphene_net graphene_chain  graphene_utilities graphene_wallet wallet_utility package_manager decent_encrypt pbc gmp graphene_account_history graphene_market_history decent_seeding graphene_witness graphene_debug_witness graphene_egenesis_decent fc ${CMAKE_DL_LIBS} ${PLATFORM_SPECIFIC_LIBS}
                      )
 
 set_target_properties(DECENT PROPERTIES MACOSX_BUNDLE_BUNDLE_NAME "DECENT")

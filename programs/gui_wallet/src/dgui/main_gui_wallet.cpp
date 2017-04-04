@@ -9,6 +9,9 @@
  */
 
 #include <QApplication>
+#include <fc/interprocess/signals.hpp>
+#include <fc/thread/thread.hpp>
+
 #include "gui_wallet_mainwindow.hpp"
 
 #if NDEBUG
@@ -32,8 +35,6 @@ using string = std::string;
 #include <graphene/utilities/dirhelper.hpp>
 
 #include <fc/exception/exception.hpp>
-#include <fc/thread/thread.hpp>
-#include <fc/interprocess/signals.hpp>
 #include <fc/log/console_appender.hpp>
 #include <fc/log/file_appender.hpp>
 #include <fc/log/logger.hpp>
@@ -46,22 +47,38 @@ using string = std::string;
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
 
-
-
-#ifdef WIN32
-# include <signal.h> 
-#else
-# include <csignal>
-#endif
-
-int runDecentD(int argc, char** argv);
+int runDecentD(int argc, char** argv, fc::promise<void>::ptr& exit_promise);
 
 int main(int argc, char* argv[])
 {
    fc::thread thread_decentd("decentd service");
-   fc::future<int> future_decentd = thread_decentd.async([argc, argv]() -> int
+
+   fc::promise<void>::ptr exit_promise = new fc::promise<void>("Decent Daemon Exit Promise");
+
+   fc::set_signal_handler([&exit_promise](int /*signal*/)
+                          {
+                             elog( "Caught SIGINT attempting to exit cleanly" );
+                             exit_promise->set_value();
+                          },
+                          SIGINT);
+
+   fc::set_signal_handler([&exit_promise](int /*signal*/)
+                          {
+                             elog( "Caught SIGTERM attempting to exit cleanly" );
+                             exit_promise->set_value();
+                          },
+                          SIGTERM);
+
+   fc::set_signal_handler([&exit_promise](int /*signal*/)
+                          {
+                             elog( "Caught SIGHUP attempting to exit cleanly" );
+                             exit_promise->set_value();
+                          },
+                          SIGHUP);
+
+   fc::future<int> future_decentd = thread_decentd.async([argc, argv, &exit_promise]() -> int
                                                          {
-                                                            return runDecentD(argc, argv);
+                                                            return runDecentD(argc, argv, exit_promise);
                                                          });
 #ifdef SET_LIBRARY_PATHS
    QDir dir(argv[0]);
@@ -84,6 +101,7 @@ int main(int argc, char* argv[])
    // qt event loop does not support exceptions anyway
    // there is no need for all try-catches
 
+   exit_promise->set_value();
    future_decentd.wait();
 
    return 0;
@@ -99,7 +117,7 @@ void write_default_logging_config_to_stream(std::ostream& out);
 fc::optional<fc::logging_config> load_logging_config_from_ini_file(const fc::path& config_ini_filename);
 
 
-int runDecentD(int argc, char** argv) {
+int runDecentD(int argc, char** argv, fc::promise<void>::ptr& exit_promise) {
    app::application* node = new app::application();
    fc::oexception unhandled_exception;
    try {
@@ -207,29 +225,11 @@ int runDecentD(int argc, char** argv) {
       node->startup();
       node->startup_plugins();
 
-      fc::promise<int>::ptr exit_promise = new fc::promise<int>("UNIX Signal Handler");
-
-      fc::set_signal_handler([&exit_promise](int signal) {
-         elog( "Caught SIGINT attempting to exit cleanly" );
-         exit_promise->set_value(signal);
-      }, SIGINT);
-
-      fc::set_signal_handler([&exit_promise](int signal) {
-         elog( "Caught SIGTERM attempting to exit cleanly" );
-         exit_promise->set_value(signal);
-      }, SIGTERM);
-
-      fc::set_signal_handler([&exit_promise](int signal) {
-         elog( "Caught SIGHUP attempting to exit cleanly" );
-         exit_promise->set_value(signal);
-      }, SIGHUP);
-
       ilog("Started witness node on a chain with ${h} blocks.", ("h", node->chain_database()->head_block_num()));
       ilog("Chain ID is ${id}", ("id", node->chain_database()->get_chain_id()) );
 
 
-      int signal = exit_promise->wait();
-      ilog("Exiting from signal ${n}", ("n", signal));
+      exit_promise->wait();
       node->shutdown_plugins();
       node->shutdown();
       delete node;
