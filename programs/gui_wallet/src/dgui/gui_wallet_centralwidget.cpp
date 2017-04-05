@@ -11,6 +11,7 @@
 #include "gui_wallet_centralwidget.hpp"
 #include <QMessageBox>
 #include <QTimer>
+#include <QStatusBar>
 #include <QHeaderView>
 #include <QResizeEvent>
 #include <QScrollBar>
@@ -312,7 +313,10 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     m_main_layout.addLayout(tab_lay);
     //m_main_layout.addWidget(&m_main_tabs);
     
-
+    QStatusBar* status = new QStatusBar(this);
+    status->showMessage(tr("Status: "));
+    m_main_layout.addWidget(status);
+    
     a_pAllLayout->addLayout(&m_main_layout);
     
    connect(&m_main_tabs, SIGNAL(currentChanged(int)), this, SLOT(tabChanged(int)));
