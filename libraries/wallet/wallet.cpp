@@ -2324,8 +2324,7 @@ public:
             FC_THROW("Invalid content URI");
          }
 #ifdef DECENT_TESTNET2
-         string str_region_code;
-         optional<asset> op_price = content->GetPrice(str_region_code);
+         optional<asset> op_price = content->price.GetPrice();
          if (!op_price)
             FC_THROW("content not available for this region");
 #endif
@@ -3834,14 +3833,13 @@ vector<buying_object> wallet_api::get_open_buyings_by_consumer( const string& ac
 
       for (int i = 0; i < result.size(); ++i)
       {
-
          buying_object& bobj = result[i];
 
          optional<content_object> content = my->_remote_db->get_content( bobj.URI );
          if (!content)
             continue;
 #ifdef DECENT_TESTNET2
-         optional<asset> op_price = content->GetPrice(string());
+         optional<asset> op_price = content->price.GetPrice();
          if (!op_price)
             continue;
 
@@ -3877,7 +3875,7 @@ vector<buying_object> wallet_api::get_open_buyings_by_consumer( const string& ac
             continue;
 
 #ifdef DECENT_TESTNET2
-         optional<asset> op_price = content->GetPrice(string());
+         optional<asset> op_price = content->price.GetPrice();
          if (!op_price)
             continue;
 #endif
