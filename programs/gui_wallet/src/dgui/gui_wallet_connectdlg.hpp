@@ -28,7 +28,6 @@
 
 #include "decent_button.hpp"
 #include "richdialog.hpp"
-#include "ui_wallet_functions.hpp"
 
 const char* StringFromQString(const QString& a_cqsString);
 

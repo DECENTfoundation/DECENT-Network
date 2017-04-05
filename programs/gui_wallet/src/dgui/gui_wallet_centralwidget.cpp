@@ -30,7 +30,7 @@ using namespace gui_wallet;
 
 AccountBalanceWidget::AccountBalanceWidget() : m_nCurrentIndex(-1) {
    
-    m_amount_label.setStyleSheet("color:green;""background-color:white;");
+    m_amount_label.setStyleSheet("color: rgb(27,176,104);""background-color:white;");
     m_asset_type_label.setStyleSheet("color:black;""background-color:white;");
     m_amount_label.setAlignment(Qt::AlignRight|Qt::AlignVCenter);
     m_asset_type_label.setAlignment(Qt::AlignRight|Qt::AlignVCenter);
