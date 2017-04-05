@@ -1669,19 +1669,25 @@ namespace graphene { namespace wallet {
          /**
           * @brief Get a list of contents ordered alphabetically by search term
           * @param term seach term
+          * @param order Order field
+          * @param user Content owner
+          * @param region_code Two letter region code
           * @param count Maximum number of contents to fetch (must not exceed 100)
           * @return The contents found
           * @ingroup WalletCLI
           */
-         vector<content_summary> search_content( const string& term, const string& order, const string& user, uint32_t count )const;
+         vector<content_summary> search_content( const string& term, const string& order, const string& user, const string& region_code, uint32_t count )const;
          /**
           * @brief Get a list of contents ordered alphabetically by search term
+          * @param user Content owner
           * @param term seach term
+          * @param order Order field
+          * @param region_code Two letter region code
           * @param count Maximum number of contents to fetch (must not exceed 100)
           * @return The contents found
           * @ingroup WalletCLI
           */
-         vector<content_summary> search_user_content( const string& user, const string& term, const string& order, uint32_t count )const;
+         vector<content_summary> search_user_content( const string& user, const string& term, const string& order, const string& region_code, uint32_t count )const;
 
          /**
           * @brief Get a list of contents by times bought, in decreasing order

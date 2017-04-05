@@ -2323,7 +2323,7 @@ public:
          {
             FC_THROW("Invalid content URI");
          }
-#ifdef DECENT_TESTNET2
+#ifdef PRICE_REGIONS
          optional<asset> op_price = content->price.GetPrice();
          if (!op_price)
             FC_THROW("content not available for this region");
@@ -2339,7 +2339,7 @@ public:
          //}
 
          request_op.pubKey = decent::encrypt::get_public_el_gamal_key( el_gamal_priv_key );
-#ifdef DECENT_TESTNET2
+#ifdef PRICE_REGIONS
          request_op.price = *op_price;
 #else
          request_op.price = content->price;
@@ -3838,7 +3838,7 @@ vector<buying_object> wallet_api::get_open_buyings_by_consumer( const string& ac
          optional<content_object> content = my->_remote_db->get_content( bobj.URI );
          if (!content)
             continue;
-#ifdef DECENT_TESTNET2
+#ifdef PRICE_REGIONS
          optional<asset> op_price = content->price.GetPrice();
          if (!op_price)
             continue;
@@ -3874,7 +3874,7 @@ vector<buying_object> wallet_api::get_open_buyings_by_consumer( const string& ac
          if (!content)
             continue;
 
-#ifdef DECENT_TESTNET2
+#ifdef PRICE_REGIONS
          optional<asset> op_price = content->price.GetPrice();
          if (!op_price)
             continue;
@@ -3900,13 +3900,10 @@ vector<buying_object> wallet_api::get_open_buyings_by_consumer( const string& ac
              std::string::npos == description.find(search_term))
             continue;
 
-
-
-
          result.emplace_back(buying_object_ex(bobjects[i], *status));
          buying_object_ex& bobj = result.back();
 
-#ifdef DECENT_TESTNET2
+#ifdef PRICE_REGIONS
          bobj.price = *op_price;
 #else
          bobj.price = content->price;
@@ -3954,15 +3951,15 @@ vector<content_summary> wallet_api::list_content( const string& URI, uint32_t co
     return my->_remote_db->list_content( URI, count );
 }
    
-vector<content_summary> wallet_api::search_content( const string& term, const string& order, const string& user, uint32_t count)const
+vector<content_summary> wallet_api::search_content( const string& term, const string& order, const string& user, const string& region_code, uint32_t count)const
 {
-   return my->_remote_db->search_content( term, order, user, count );
+   return my->_remote_db->search_content( term, order, user, region_code, count );
 }
 
 
-vector<content_summary> wallet_api::search_user_content( const string& user, const string& term, const string& order, uint32_t count)const
+vector<content_summary> wallet_api::search_user_content( const string& user, const string& term, const string& order, const string& region_code, uint32_t count)const
 {
-   return my->_remote_db->search_user_content( user, term, order, count );
+   return my->_remote_db->search_user_content( user, term, order, region_code, count );
 }
 
 vector<content_object> wallet_api::list_content_by_bought( uint32_t count)const

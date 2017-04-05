@@ -556,7 +556,12 @@ std::string Upload_tab::getUpdateCommand() {
       return "";
    }
    
-   return "search_user_content \"" + currentUserName + "\" \"" + filterText + "\" \"" + m_pTableWidget.getSortedColumn() + "\" 100";
+   return   std::string("search_user_content ") +
+            "\"" + currentUserName + "\" " +
+            "\"" + filterText + "\" " +
+            "\"" + m_pTableWidget.getSortedColumn() + "\" " +
+            "\"\" " +   // region_code
+            "100";
    
 }
 

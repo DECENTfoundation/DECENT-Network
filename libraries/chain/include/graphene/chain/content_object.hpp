@@ -10,17 +10,26 @@
 #include <stdint.h>
 #include <vector>
 
+#ifdef DECENT_TESTNET2
+#define PRICE_REGIONS
+#endif
+
 namespace graphene { namespace chain {
 using namespace decent::encrypt;
+
+   struct PriceRegions
+   {
+      map<string, asset> map_price;
+
+      optional<asset> GetPrice(string const& region_code = string()) const;
+      void SetSimplePrice(asset const& price);
+      bool Valid(string const& region_code) const;
+   };
 
    struct content_summary
    {
       string author;
-#ifdef DECENT_TESTNET2
-      price_regions price;
-#else
       asset price;
-#endif
       string synopsis;
       string URI;
       uint32_t AVG_rating;
@@ -30,7 +39,7 @@ using namespace decent::encrypt;
       uint32_t times_bought;
 
 
-      content_summary& set( const content_object& co, const account_object& ao );
+      content_summary& set( const content_object& co, const account_object& ao, const string& region_code );
    };
 
    class content_object : public graphene::db::abstract_object<content_object>
@@ -42,8 +51,8 @@ using namespace decent::encrypt;
       account_id_type author;
       time_point_sec expiration;
       time_point_sec created;
-#ifdef DECENT_TESTNET2
-      price_regions price;
+#ifdef PRICE_REGIONS
+      PriceRegions price;
 #else
       asset price;
 #endif
@@ -63,8 +72,9 @@ using namespace decent::encrypt;
 
       share_type get_price_amount() const
       {
-#ifdef DECENT_TESTNET2
-         return share_type();
+#ifdef PRICE_REGIONS
+         FC_ASSERT(price.Valid(string()));
+         return price.GetPrice()->amount;
 #else
          return price.amount;
 #endif
@@ -136,3 +146,4 @@ FC_REFLECT_DERIVED(graphene::chain::content_object,
                    (AVG_rating)(total_rating)(times_bought)(publishing_fee_escrow)(cd) )
 
 FC_REFLECT( graphene::chain::content_summary, (author)(price)(synopsis)(URI)(AVG_rating)(size)(expiration)(created)(times_bought) )
+FC_REFLECT( graphene::chain::PriceRegions, (map_price) )

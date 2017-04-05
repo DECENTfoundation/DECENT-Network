@@ -124,9 +124,15 @@ void BrowseContentTab::timeToUpdate(const std::string& result) {
 
 
 
-std::string BrowseContentTab::getUpdateCommand() {
+std::string BrowseContentTab::getUpdateCommand()
+{
    std::string filterText = m_filterLineEdit.text().toStdString();
-   return "search_content \"" + filterText + "\" \"" + m_pTableWidget.getSortedColumn() + "\" \"" + "" + "\" 100";
+   return   string("search_content ") +
+            "\"" + filterText + "\" " +
+            "\"" + m_pTableWidget.getSortedColumn() + "\" " +
+            "\"\" " +   // user
+            "\"\" " +   // region code
+            "100";
 }
 
 

@@ -22,12 +22,8 @@
  * THE SOFTWARE.
  */
 #pragma once
-#include <map>
-
 #include <graphene/chain/protocol/config.hpp>
 #include <graphene/chain/protocol/types.hpp>
-
-#include <boost/optional.hpp>
 
 namespace graphene { namespace chain {
 
@@ -182,55 +178,10 @@ namespace graphene { namespace chain {
       bool is_for( asset_id_type asset_id ) const;
    };
 
-   /**
-    *  @class price_regions
-    *  @brief defines the price specific to regions
-    */
-   struct price_regions
-   {
-      std::map<std::string, asset> map_price;
-
-      optional<asset> GetPrice(std::string const& str_region_code = std::string()) const
-      {
-         optional<asset> op_price;
-         auto it_single_price = map_price.find(std::string());
-         if (it_single_price != map_price.end())
-         {
-            // content has one price for all regions
-            op_price = it_single_price->second;
-            return op_price;
-         }
-
-         auto it_region_price = map_price.find(str_region_code);
-         if (it_region_price != map_price.end())
-         {
-            // content has price corresponding to this region
-            op_price = it_region_price->second;
-            return op_price;
-         }
-
-         auto it_default_price = map_price.find("default");
-         if (it_default_price != map_price.end())
-         {
-            // content has default price covering this and all other regions
-            op_price = it_default_price->second;
-            return op_price;
-         }
-         
-         return op_price;
-      }
-      void SetSimplePrice(asset const& price)
-      {
-         map_price.clear();
-         map_price.insert(std::pair<string, asset>(std::string(), price));
-      }
-   };
-
 } }
 
 FC_REFLECT( graphene::chain::asset, (amount)(asset_id) )
 FC_REFLECT( graphene::chain::price, (base)(quote) )
-FC_REFLECT( graphene::chain::price_regions, (map_price) )
 
 #define GRAPHENE_PRICE_FEED_FIELDS (core_exchange_rate)
 
