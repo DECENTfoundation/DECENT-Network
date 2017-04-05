@@ -1,12 +1,3 @@
-//*
-// *	File      : TransactionsTab.cpp
-// *
-// *	Created on: 21 Nov 2016
-// *	Created by: Davit Kalantaryan (Email: davit.kalantaryan@desy.de)
-// *
-// *  This file implements ...
-// *
-// */
 #include "transactions_tab.hpp"
 
 #include <QHeaderView>
@@ -23,7 +14,6 @@
 
 #include "gui_wallet_global.hpp"
 #include "qt_commonheader.hpp"
-#include "ui_wallet_functions.hpp"
 #include "gui_wallet_mainwindow.hpp"
 
 #include "json.hpp"

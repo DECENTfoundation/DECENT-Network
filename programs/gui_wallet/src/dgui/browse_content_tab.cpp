@@ -1,15 +1,5 @@
-/*
- *	File: BrowseContentTab.cpp
- *
- *	Cted on: 11 Nov 2016
- *	Created by: Davit Kalantaryan (Email: davit.kalantaryan@desy.de)
- *
- *  This file implements ...
- *
- */
 #include "browse_content_tab.hpp"
 #include "gui_wallet_global.hpp"
-#include "ui_wallet_functions.hpp"
 #include "gui_wallet_mainwindow.hpp"
 
 #include <QLayout>
@@ -257,7 +247,7 @@ void BrowseContentTab::ShowDigitalContentsGUI() {
       
       ++index;
    }
-//>>>>>>> 2f8909c35fecf51a22957cd6c41b3ab8adb99853
+
 }
 
 

@@ -6,7 +6,6 @@
 #include <graphene/chain/config.hpp>
 #include "json.hpp"
 #include <QMessageBox>
-#include "ui_wallet_functions.hpp"
 #include "gui_wallet_mainwindow.hpp"
 #include "decent_wallet_ui_gui_contentdetailsgeneral.hpp"
 
