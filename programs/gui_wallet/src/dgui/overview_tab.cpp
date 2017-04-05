@@ -26,8 +26,8 @@ Overview_tab::Overview_tab(class Mainwindow_gui_wallet* a_pPar)
 : m_pPar(a_pPar)
 {
    table_widget.set_columns({
-      {"Account ID", 40},
-      {"Account", 40},
+      {"Account ID", 40, "id"},
+      {"Account", 40, "name"},
       {"", 10},
       {"", 10}
    });
@@ -120,10 +120,10 @@ void Overview_tab::timeToUpdate(const std::string& result) {
 
 
 std::string Overview_tab::getUpdateCommand() {
-   return "search_accounts \"" + search.text().toStdString() +"\" 100";
+   return "search_accounts \"" + search.text().toStdString() + "\" \"" + table_widget.getSortedColumn() + "\" 100";
 }
 
-
+//return "search_content \"" + filterText + "\" \"" + m_pTableWidget.getSortedColumn() + "\" 100";
 
 void Overview_tab::transactionButtonPressed()
 {

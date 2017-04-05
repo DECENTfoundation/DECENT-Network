@@ -85,7 +85,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       vector<account_id_type> get_account_references( account_id_type account_id )const;
       vector<optional<account_object>> lookup_account_names(const vector<string>& account_names)const;
       map<string,account_id_type> lookup_accounts(const string& lower_bound_name, uint32_t limit)const;
-      map<string,account_id_type> search_accounts(const string& search_term, uint32_t limit)const;
+      map<string,account_id_type> search_accounts(const string& search_term,const string& order, uint32_t limit)const;
 
       uint64_t get_account_count()const;
 
@@ -137,7 +137,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       vector<buying_object> get_open_buyings_by_consumer(const account_id_type& consumer)const;
       optional<buying_object> get_buying_by_consumer_URI( const account_id_type& consumer, const string& URI) const;
       vector<buying_object> get_buying_history_objects_by_consumer( const account_id_type& consumer )const;
-      vector<buying_object> get_buying_objects_by_consumer( const account_id_type& consumer )const;
+      vector<buying_object> get_buying_objects_by_consumer( const account_id_type& consumer, const string& order )const;
       optional<uint64_t> get_rating_by_consumer_URI( const account_id_type& consumer, const string& URI )const;
       optional<content_object> get_content( const string& URI )const;
       vector<content_object> list_content_by_author( const account_id_type& author )const;
@@ -643,8 +643,8 @@ vector<optional<account_object>> database_api_impl::lookup_account_names(const v
 }
     
     
-map<string,account_id_type> database_api::search_accounts(const string& search_term, uint32_t limit) const {
-    return my->search_accounts( search_term, limit );
+map<string,account_id_type> database_api::search_accounts(const string& search_term, const string& order, uint32_t limit) const {
+    return my->search_accounts( search_term, order, limit );
 }
 
 
@@ -652,12 +652,76 @@ map<string,account_id_type> database_api::lookup_accounts(const string& lower_bo
 {
    return my->lookup_accounts( lower_bound_name, limit );
 }
-    
-    
-map<string,account_id_type> database_api_impl::search_accounts(const string& term, uint32_t limit)const
+   
+   
+   
+//   namespace {
+//      
+//      template <bool is_ascending>
+//      struct return_one1 {
+//         
+//         template <class T1, class T2>
+//         static auto choose(const T1& t1, const T2& t2) -> typename std::conditional<is_ascending, T1, T2 >::type {
+//            return t1;
+//         };
+//      };
+//      
+//      template <>
+//      struct return_one1<false> {
+//         
+//         template <class T1, class T2>
+//         static auto choose(const T1& t1, const T2& t2) -> typename std::conditional<false, T1, T2 >::type {
+//            return t2;
+//         };
+//      };
+//      
+//      
+//      
+//      template <bool is_ascending, class sort_tag>
+//      void search_users_template(graphene::chain::database& db, const string& term, uint32_t limit, vector<content_summary>& result) {
+//         
+//       const auto& accounts_by_name = db.get_index_type<content_index>().indices().get<sort_tag>();
+//
+//       for( auto itr = accounts_by_name.begin(); itr != accounts_by_name.end() && limit > 0; ++itr ) {
+//       std::string account_id_str = fc::variant(itr->get_id()).as<std::string>();
+//       std::string account_name = itr->name;
+//       std::string search_term = term;
+//   
+//       boost::algorithm::to_lower(account_id_str);
+//       boost::algorithm::to_lower(account_name);
+//       boost::algorithm::to_lower(search_term);
+//   
+//       if (account_name.find(search_term) != std::string::npos || account_id_str.find(search_term) != std::string::npos) {
+//          result.insert(make_pair(itr->name, itr->get_id()));
+//          limit--;
+//       }
+//      }
+//      }
+//   }
+//
+//
+//   
+//   map<string,account_id_type> database_api_impl::search_accounts( const string& term, const string& order, uint32_t limit)const
+//   {
+//      FC_ASSERT( limit <= 1000 );
+//      
+//      map<string,account_id_type> result;
+//      
+//      if (order == "+name") search_users_template<true, by_name>(_db, term, limit , result);
+//      if (order == "+id") search_users_template<true, by_id>(_db, term, limit, result);
+//      
+//      if (order == "-name") search_users_template<false, by_name>(_db, term, limit, result);
+//      if (order == "-id")   search_users_template<false, by_id>(_db, term, limit, result);
+//      
+//      //   search_content_template<by_URI>(_db, search_term, count, true, result);
+//      
+//      return result;
+//   }
+   
+map<string,account_id_type> database_api_impl::search_accounts(const string& term, const string& order, uint32_t limit)const
 {
     FC_ASSERT( limit <= 1000 );
-    const auto& accounts_by_name = _db.get_index_type<account_index>().indices().get<by_name>();
+    const auto& accounts_by_name = _db.get_index_type<account_index>().indices().get<by_id>();
     map<string,account_id_type> result;
     
     for( auto itr = accounts_by_name.begin(); itr != accounts_by_name.end() && limit > 0; ++itr ) {
@@ -1596,33 +1660,72 @@ vector<buying_object> database_api_impl::get_buying_history_objects_by_consumer 
 }
     
     
-vector<buying_object> database_api::get_buying_objects_by_consumer( const account_id_type& consumer )const
+vector<buying_object> database_api::get_buying_objects_by_consumer( const account_id_type& consumer, const string& order )const
 {
-    return my->get_buying_objects_by_consumer( consumer );
+    return my->get_buying_objects_by_consumer( consumer, order );
 }
+   
 
-
-
-vector<buying_object> database_api_impl::get_buying_objects_by_consumer( const account_id_type& consumer )const
+vector<buying_object> database_api_impl::get_buying_objects_by_consumer( const account_id_type& consumer, const string& order )const
 {
    try {
       vector<buying_object> result;
       
-       
-       const auto &range = _db.get_index_type<buying_index>().indices().get<by_consumer_open>().equal_range( std::make_tuple(consumer, true));
-       const auto &range1 = _db.get_index_type<buying_index>().indices().get<by_consumer_open>().equal_range( std::make_tuple(consumer, false));
-       
-       result.reserve(distance(range.first, range.second) + distance(range1.first, range1.second));
-       
-       std::for_each(range.first, range.second, [&](const buying_object &element) {
-           result.emplace_back(element);
-       });
-       
-       
-       std::for_each(range1.first, range1.second, [&](const buying_object &element) {
-           result.emplace_back(element);
-       });
-       
+      if(order == "+size")
+      {
+         const auto& idx = _db.get_index_type<buying_index>().indices().get<by_size>();
+         /*for (auto it = idx.begin(); it != idx.end(); ++it)
+         {
+            buying_object const& element = *it;
+            
+            if (element.consumer == consumer)
+               result.emplace_back(element);
+         }*/
+         
+         std::for_each(idx.begin(), idx.end(),
+                       [&result, &consumer](const buying_object &element)
+                       {
+                          if (element.consumer == consumer)
+                             result.emplace_back(element);
+                       });
+      }
+      else if(order == "+rating")
+      {
+            const auto& idx = _db.get_index_type<buying_index>().indices().get<by_rating>();
+            std::for_each(idx.begin(), idx.end(),
+                          [&result, &consumer](const buying_object &element)
+                          {
+                             if (element.consumer == consumer)
+                                result.emplace_back(element);
+                          });
+      }
+      else if(order == "+price")
+      {
+         const auto& idx = _db.get_index_type<buying_index>().indices().get<by_price>();
+         std::for_each(idx.begin(), idx.end(),
+                       [&result, &consumer](const buying_object &element)
+                       {
+                          if (element.consumer == consumer)
+                             result.emplace_back(element);
+                       });
+      }
+      else
+      {
+         const auto &range = _db.get_index_type<buying_index>().indices().get<by_consumer_open>().equal_range( std::make_tuple(consumer, true));
+         const auto &range1 = _db.get_index_type<buying_index>().indices().get<by_consumer_open>().equal_range( std::make_tuple(consumer, false));
+         
+         result.reserve(distance(range.first, range.second) + distance(range1.first, range1.second));
+         
+         std::for_each(range.first, range.second, [&](const buying_object &element) {
+            result.emplace_back(element);
+         });
+         
+         
+         std::for_each(range1.first, range1.second, [&](const buying_object &element) {
+            result.emplace_back(element);
+         });
+      }
+      
       return result;
    }
    FC_CAPTURE_AND_RETHROW( (consumer) );

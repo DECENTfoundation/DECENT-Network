@@ -321,7 +321,7 @@ namespace graphene { namespace app {
           * @return Map of account names to corresponding IDs
           * @ingroup DatabaseAPI
           */
-         map<string,account_id_type> search_accounts(const string& search_term, uint32_t limit) const;
+         map<string,account_id_type> search_accounts(const string& search_term, const string& order, uint32_t limit) const;
 
          //////////////
          // Balances //
@@ -626,7 +626,7 @@ namespace graphene { namespace app {
           * @return Buying objects corresponding to the provided consumer
           * @ingroup DatabaseAPI
           */
-         vector<buying_object> get_buying_objects_by_consumer( const account_id_type& consumer )const;
+         vector<buying_object> get_buying_objects_by_consumer( const account_id_type& consumer, const string& order )const;
 
          /**
           * @brief Get buying (open or history) by consumer and URI
