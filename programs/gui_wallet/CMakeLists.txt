@@ -4,7 +4,7 @@ set(CMAKE_AUTORCC ON)
 
 find_package( Qt5Core REQUIRED )
 find_package( Qt5Widgets REQUIRED )
-#find_package( Qt5Svg REQUIRED )
+find_package( Qt5Svg REQUIRED )
 
 set(MACOSX_BUNDLE_ICON_FILE desktop)
 set(MACOSX_BUNDLE_BUNDLE_NAME DECENT)
