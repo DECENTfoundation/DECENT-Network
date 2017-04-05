@@ -593,7 +593,13 @@ void Mainwindow_gui_wallet::ConnectSlot()
     m_ActionConnect.setEnabled(false);
     m_wdata2.action = WAT::CONNECT;
     
-    m_wdata2.setPasswordFn = +[](void*owner, int answer, void* str_ptr) {
+    m_wdata2.setPasswordFn =
+#if defined( _MSC_VER )
+       []
+#else
+       +[]
+#endif
+       (void*owner, int answer, void* str_ptr) {
         ((Mainwindow_gui_wallet*)owner)->SetPassword(owner, str_ptr);
     };
     

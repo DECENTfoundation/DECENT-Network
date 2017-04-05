@@ -245,7 +245,13 @@ m_getPublishersTimer(this)
 
 void Upload_popup::onGrabPublishers() {
     
-    SetNewTask("list_publishers_by_price 100", this, NULL, +[](void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
+    SetNewTask("list_publishers_by_price 100", this, NULL,
+#if defined( _MSC_VER )
+       []
+#else
+       +[]
+#endif
+       (void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
         Upload_popup* obj = (Upload_popup*)owner;
         
         auto publishers = json::parse(a_result);
@@ -364,12 +370,11 @@ void Upload_popup::uploadContent() {
     submitCommand += " \"" + m_life_time + "T23:59:59\"";                  //expiration
     submitCommand += " \"" + escape_string(synopsis) + "\"";            //synopsis
     submitCommand += " true";                                           //broadcast
-    
-    
-    //SetNewTask(submitCommand, this, NULL, +[](void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
-     //   ((Upload_popup*)owner)->uploadDone(a_clbkArg, a_err, a_task, a_result);
-    //});
-   
+
+    //SetNewTask(submitCommand, this, NULL, +[](void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) { 
+    //   ((Upload_popup*)owner)->uploadDone(a_clbkArg, a_err, a_task, a_result); 
+    //}); 
+
    std::string a_result;
    std::string message;
    
@@ -408,7 +413,6 @@ void Upload_popup::uploadContent() {
    }
    
    msgBox->open();
-
 }
 
 Upload_popup::~Upload_popup()

@@ -15,7 +15,9 @@
 #include <stdarg.h>
 #include <iostream>
 
-static decent::gui::InGuiLoopCaller* s_pInGuiThreadCaller = NULL;
+extern decent::gui::InGuiLoopCaller* s_pInGuiThreadCaller;// windows change
+/* crash on Windows static calss instance cannot call connect()
+static decent::gui::InGuiLoopCaller* s_pInGuiThreadCaller = NULL; // moved to main_gui_wallet.cpp
 
 namespace decent{ namespace gui{
 
@@ -35,7 +37,7 @@ public:
 };
 static InGuiLoopCallerIniter   s_InGuiLoopCallerIniter;
 
-}}
+}}*/
 
 decent::gui::InGuiLoopCaller::InGuiLoopCaller()
 {

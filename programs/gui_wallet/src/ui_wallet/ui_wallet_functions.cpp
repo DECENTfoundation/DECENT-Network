@@ -632,7 +632,12 @@ void RunTask(std::string const& str_command, std::string& str_result)
     SetNewTask(str_command,
                nullptr,
                static_cast<void*>(&result),
-               +[](void* /*owner*/,
+#if defined( _MSC_VER )
+               []
+#else
+               +[]
+#endif
+               (void* /*owner*/,
                    void* a_clbkArg,
                    int64_t a_err,
                    std::string const& a_task,

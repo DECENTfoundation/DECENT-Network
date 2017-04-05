@@ -49,7 +49,13 @@ void ContentDetailsGeneral::LabelPushCallbackGUI()
    
    std::string a_result;
    
-   SetNewTask(downloadCommand, this, NULL, +[](void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
+   SetNewTask(downloadCommand, this, NULL,
+#if defined( _MSC_VER )
+      []
+#else
+      +[]
+#endif
+      (void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
       if (a_err != 0) {
          ALERT("Failed to download content");
       }
