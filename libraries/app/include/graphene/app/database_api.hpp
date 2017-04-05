@@ -693,7 +693,7 @@ namespace graphene { namespace app {
           * @return The contents found
           * @ingroup DatabaseAPI
           */
-         vector<content_summary> search_content( const string& term, uint32_t count )const;
+         vector<content_summary> search_content( const string& term, const string& order, uint32_t count )const;
          
          /**
           * @brief Search for term in contents (author, title and description)

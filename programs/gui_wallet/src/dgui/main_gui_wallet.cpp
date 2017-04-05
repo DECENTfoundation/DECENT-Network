@@ -1,12 +1,3 @@
-/*
- *	File: main_gui_wallet.cpp
- *
- *	Created on: Nov 11, 2016
- *	Created by: Davit Kalantaryan (Email: davit.kalantaryan@desy.de)
- *
- *  This file implements ...
- *
- */
 
 #include <stdio.h>
 #include <wchar.h>
@@ -15,7 +6,7 @@
 #include <fc/exception/exception.hpp>
 #include <QDir>
 #include <QCoreApplication>
-#include "gui_wallet_application.hpp"
+#include <QApplication>
 #include "gui_wallet_mainwindow.hpp"
 #include "gui_wallet_global.hpp"
 #include <QMessageBox>

@@ -142,7 +142,10 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       optional<content_object> get_content( const string& URI )const;
       vector<content_object> list_content_by_author( const account_id_type& author )const;
       vector<content_summary> list_content( const string& URI_begin, uint32_t count)const;
+   
+      template <bool is_ascending, class sort_tag>
       vector<content_summary> search_content( const string& term, uint32_t count)const;
+   
       vector<content_summary> search_user_content( const string& user, const string& term, uint32_t count)const;
       vector<content_object> list_content_by_bought( const uint32_t count )const;
       vector<seeder_object> list_publishers_by_price( const uint32_t count )const;
@@ -1719,16 +1722,32 @@ vector<content_summary> database_api::list_content( const string& URI_begin, uin
     return my->list_content( URI_begin, count);
 }
    
-   vector<content_summary> database_api::search_content( const string& term, uint32_t count)const
-   {
-      return my->search_content( term, count);
-   }
+vector<content_summary> database_api::search_content( const string& search_term, const string& order, uint32_t count)const
+{
+   
+   if (order == "+author") return my->search_content<true, by_author>(search_term, count);
+   if (order == "+rating") return my->search_content<true, by_AVG_rating>(search_term, count);
+   if (order == "+size") return my->search_content<true, by_size>(search_term, count);
+   if (order == "+price") return my->search_content<true, by_price>(search_term, count);
+   if (order == "+created") return my->search_content<true, by_created>(search_term, count);
+   if (order == "+expiration") return my->search_content<true, by_expiration>(search_term, count);
+   
+   if (order == "-author") return my->search_content<false, by_author>(search_term, count);
+   if (order == "-rating") return my->search_content<false, by_AVG_rating>(search_term, count);
+   if (order == "-size") return my->search_content<false, by_size>(search_term, count);
+   if (order == "-price") return my->search_content<false, by_price>(search_term, count);
+   if (order == "-created") return my->search_content<false, by_created>(search_term, count);
+   if (order == "-expiration") return my->search_content<false, by_expiration>(search_term, count);
    
    
-   vector<content_summary> database_api::search_user_content( const string& user, const string& term, uint32_t count)const
-   {
-      return my->search_user_content( user, term, count);
-   }
+   return my->search_content<true, by_URI>(search_term, count);
+}
+
+
+vector<content_summary> database_api::search_user_content( const string& user, const string& term, uint32_t count)const
+{
+   return my->search_user_content( user, term, count);
+}
    
    
     
@@ -1819,59 +1838,86 @@ vector<content_summary> database_api_impl::list_content( const string& URI_begin
    
 
    
+namespace {
+   
+   template <bool is_ascending>
+   struct return_one {
+      
+      template <class T1, class T2>
+      static auto choose(const T1& t1, const T2& t2) -> typename std::conditional<is_ascending, T1, T2 >::type {
+         return t1;
+      };
+   };
+   
+   template <>
+   struct return_one<false> {
+      
+      template <class T1, class T2>
+      static auto choose(const T1& t1, const T2& t2) -> typename std::conditional<false, T1, T2 >::type {
+         return t2;
+      };
+   };
 
+}
+   
+   
+   
+template <bool is_ascending, class sort_tag>
 vector<content_summary> database_api_impl::search_content( const string& search_term, uint32_t count)const
 {
     FC_ASSERT( count <= 100 );
-    const auto& idx = _db.get_index_type<content_index>().indices().get<by_URI>();
-    
-    vector<content_summary> result;
-    result.reserve( count );
-    
-    auto itr = idx.begin();
-    
-    content_summary content;
-    const auto& idx2 = _db.get_index_type<account_index>().indices().get<by_id>();
-    
-    while(count && itr != idx.end())
-    {
-        const auto& account = idx2.find(itr->author);
-        
-        content.set( *itr , *account );
-        if (content.expiration > fc::time_point::now()) {
+   
+   vector<content_summary> result;
+   result.reserve( count );
+   
+   const auto& idx = _db.get_index_type<content_index>().indices().get<sort_tag>();
+   
+   auto itr = return_one<is_ascending>::choose(idx.begin(), idx.rbegin());
+   auto itr_end = return_one<is_ascending>::choose(idx.end(), idx.rend());
+   
+   
+   content_summary content;
+   const auto& idx2 = _db.get_index_type<account_index>().indices().get<by_id>();
+   
+   while(count && itr != itr_end)
+   {
+      const auto& account = idx2.find(itr->author);
+      
+      content.set( *itr , *account );
+      if (content.expiration > fc::time_point::now()) {
+         
+         std::string term = search_term;
+         std::string title = content.synopsis;
+         std::string desc = "";
+         std::string author = content.author;
+         
+         try {
+            auto synopsis_parsed = nlohmann::json::parse(content.synopsis);
+            title = synopsis_parsed["title"].get<std::string>();
+            desc = synopsis_parsed["description"].get<std::string>();
+         } catch (...) {}
+         
+         boost::algorithm::to_lower(term);
+         boost::algorithm::to_lower(title);
+         boost::algorithm::to_lower(desc);
+         boost::algorithm::to_lower(author);
+         
+         if (term.empty() ||
+             author.find(term) != std::string::npos ||
+             title.find(term) != std::string::npos ||
+             desc.find(term) != std::string::npos) {
             
-            std::string term = search_term;
-            std::string title = content.synopsis;
-            std::string desc = "";
-            std::string author = content.author;
             
-            try {
-                auto synopsis_parsed = nlohmann::json::parse(content.synopsis);
-                title = synopsis_parsed["title"].get<std::string>();
-                desc = synopsis_parsed["description"].get<std::string>();
-            } catch (...) {}
-            
-            boost::algorithm::to_lower(term);
-            boost::algorithm::to_lower(title);
-            boost::algorithm::to_lower(desc);
-            boost::algorithm::to_lower(author);
-            
-            if (term.empty() ||
-                author.find(term) != std::string::npos ||
-                title.find(term) != std::string::npos ||
-                desc.find(term) != std::string::npos) {
-                
-                
-                count--;
-                result.push_back( content );
-            }
-            
-        }
-        
-        ++itr;
-    }
-    
-    return result;
+            count--;
+            result.push_back( content );
+         }
+         
+      }
+      
+      ++itr;
+   }
+   
+   return result;
 }
 
 vector<content_object> database_api::list_content_by_bought( uint32_t count )const
