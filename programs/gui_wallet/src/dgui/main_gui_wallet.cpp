@@ -38,6 +38,11 @@ using string = std::string;
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
 
+#if defined( _MSC_VER )
+#include <Windows.h>
+#include <signal.h> 
+#endif
+
 int runDecentD(int argc, char** argv, fc::promise<void>::ptr& exit_promise);
 
 int main(int argc, char* argv[])
@@ -59,14 +64,14 @@ int main(int argc, char* argv[])
                              exit_promise->set_value();
                           },
                           SIGTERM);
-
+#if !defined( _MSC_VER )
    fc::set_signal_handler([&exit_promise](int /*signal*/)
                           {
                              elog( "Caught SIGHUP attempting to exit cleanly" );
                              exit_promise->set_value();
                           },
                           SIGHUP);
-
+#endif
    fc::future<int> future_decentd = thread_decentd.async([argc, argv, &exit_promise]() -> int
                                                          {
                                                             return runDecentD(argc, argv, exit_promise);

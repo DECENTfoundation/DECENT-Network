@@ -1,8 +1,12 @@
 
 #include <graphene/utilities/dirhelper.hpp>
+#if defined( _MSC_VER )
+#include <ShlObj.h>
+#else
 #include <unistd.h>
 #include <sys/types.h>
 #include <pwd.h>
+#endif
 #include <cstdlib>
 #include <boost/filesystem.hpp>
 
@@ -11,8 +15,19 @@ using namespace utilities;
 
 
 decent_path_finder::decent_path_finder() {
+#if defined( _MSC_VER )
+   PWSTR path = NULL;
+   HRESULT hr = SHGetKnownFolderPath(FOLDERID_LocalAppData, 0, NULL, &path);
+   char home_dir[MAX_PATH];
+   memset(home_dir, 0, sizeof(home_dir));
+   if (SUCCEEDED(hr)) {
+      wcstombs(home_dir, path, MAX_PATH - 1);
+      CoTaskMemFree(path);
+   }
+#else
     struct passwd *pw = getpwuid(getuid());
     const char *home_dir = pw->pw_dir;
+#endif
     _user_home = home_dir;
 
     const char* decent_home = getenv("DECENT_HOME");
