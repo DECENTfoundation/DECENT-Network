@@ -32,10 +32,12 @@ add_executable( DECENT MACOSX_BUNDLE
                 src/dgui/transactions_tab.cpp
                 src/dgui/purchased_tab.cpp
                 src/dgui/upload_tab.cpp
+
                 src/dgui/decent_tools_rwlock.cpp
                 src/dgui/richdialog.cpp
 
                 src/dgui/richdialog.hpp
+
                 src/dgui/unnamedsemaphorelite.hpp
                 src/dgui/browse_content_tab.hpp
                 src/dgui/decent_wallet_ui_gui_contentdetailsbase.hpp

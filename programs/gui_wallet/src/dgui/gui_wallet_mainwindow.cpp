@@ -82,6 +82,7 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
 , m_UnlockDialog(this, false)
 , m_p_wallet_operator(new WalletOperator())
 , m_wallet_operator_thread(this)
+
 {
    s_pMainWindowInstance = this;
 

@@ -155,7 +155,6 @@ namespace gui_wallet
     };
     
 
-//>>>>>>> 601e33eff763d3315666f2b397ef7005a1b21d96
     
 }
 
