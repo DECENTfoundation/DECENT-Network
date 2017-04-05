@@ -1,12 +1,3 @@
-//*
-// *	File      : TransactionsTab.cpp
-// *
-// *	Created on: 21 Nov 2016
-// *	Created by: Davit Kalantaryan (Email: davit.kalantaryan@desy.de)
-// *
-// *  This file implements ...
-// *
-// */
 #include "transactions_tab.hpp"
 
 #include <QHeaderView>

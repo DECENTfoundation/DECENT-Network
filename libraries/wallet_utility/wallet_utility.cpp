@@ -6,6 +6,7 @@
 #include <graphene/wallet/wallet.hpp>
 #include <fc/rpc/api_connection.hpp>
 #include <graphene/package/package.hpp>
+#include <iostream>
 
 namespace decent
 {
@@ -268,6 +269,7 @@ namespace wallet_utility
                        });
       return future_save_wallet_file.wait();
    }
+   /*
    std::vector<graphene::chain::content_summary> WalletAPI::SearchContent(string const& str_term, uint32_t iCount)
    {
       if (false == Connected())
@@ -283,6 +285,7 @@ namespace wallet_utility
                        });
       return future_search_content.wait();
    }
+    */
 
    string WalletAPI::RunTaskImpl(string const& str_command)
    {
@@ -292,6 +295,8 @@ namespace wallet_utility
       std::lock_guard<std::mutex> lock(m_mutex);
       
       auto& pimpl = m_pimpl;
+      std::cout << "Running task " << str_command << std::endl;
+      
       fc::future<string> future_run =
       m_pthread->async([&pimpl, &str_command] () -> string
                        {

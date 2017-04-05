@@ -114,7 +114,6 @@ protected:
    QMenu*              m_pMenuContent;
    QMenu*              m_pMenuHelpR;
    QMenu*              m_pMenuView;
-   QMenu*              m_pMenuStatus;
    
    QAction             m_ActionExit;
    QAction             m_ActionConnect;

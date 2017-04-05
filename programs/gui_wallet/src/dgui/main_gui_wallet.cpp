@@ -1,12 +1,3 @@
-/*
- *	File: main_gui_wallet.cpp
- *
- *	Created on: Nov 11, 2016
- *	Created by: Davit Kalantaryan (Email: davit.kalantaryan@desy.de)
- *
- *  This file implements ...
- *
- */
 
 #include <QApplication>
 #include <fc/interprocess/signals.hpp>

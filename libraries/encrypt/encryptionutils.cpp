@@ -65,12 +65,10 @@ encryption_results AES_encrypt_file(const std::string &fileIn, const std::string
         byte iv[CryptoPP::AES::BLOCKSIZE];
         memset(iv, 0, sizeof(iv));
         CryptoPP::CBC_Mode<CryptoPP::AES>::Encryption e;
-        CryptoPP::FileSink fs(fileOut.c_str(), true);
         e.SetKeyWithIV(key.key_byte, CryptoPP::AES::MAX_KEYLENGTH, iv);
-        CryptoPP::StreamTransformationFilter* filter=new CryptoPP::StreamTransformationFilter(e, &fs);
-
-        const char* file_name = fileIn.c_str();
-        CryptoPP::FileSource* fsource= new CryptoPP::FileSource(file_name, true, filter);
+        CryptoPP::FileSource fsource(fileIn.c_str(), true,
+            new CryptoPP::StreamTransformationFilter(e,
+                new CryptoPP::FileSink(fileOut.c_str(), true)));
     } catch (const CryptoPP::Exception &e) {
         elog(e.GetWhat());
         switch (e.GetErrorType()) {
