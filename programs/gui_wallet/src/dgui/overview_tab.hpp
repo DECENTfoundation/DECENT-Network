@@ -22,9 +22,9 @@
 #include <QStringList>
 #include <QFont>
 
-//#include <QtSvg/QSvgRenderer>
+#include <QtSvg/QSvgRenderer>
 #include <QPainter>
-//#include <QSvgWidget>
+#include <QSvgWidget>
 
 #include "gui_wallet_global.hpp"
 #include "gui_wallet_tabcontentmanager.hpp"
