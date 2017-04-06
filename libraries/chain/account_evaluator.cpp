@@ -184,7 +184,6 @@ void_result account_update_evaluator::do_evaluate( const account_update_operatio
 void_result account_update_evaluator::do_apply( const account_update_operation& o )
 { try {
    database& d = db();
-   bool sa_before, sa_after;
    d.modify( *acnt, [&](account_object& a){
       if( o.owner )
       {

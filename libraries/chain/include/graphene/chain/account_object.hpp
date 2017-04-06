@@ -211,10 +211,6 @@ namespace graphene { namespace chain {
           */
          optional< flat_set<asset_id_type> > allowed_assets;
 
-         bool allow_subscription;
-         asset price_per_subscribe;
-         uint32_t subscription_period;
-
          template<typename DB>
          const vesting_balance_object& cashback_balance(const DB& db)const
          {
@@ -336,7 +332,6 @@ FC_REFLECT_DERIVED( graphene::chain::account_object,
                     (cashback_vb)
                     (top_n_control_flags)
                     (allowed_assets)
-                    (allow_subscription)(price_per_subscribe)(subscription_period)
                     )
 
 FC_REFLECT_DERIVED( graphene::chain::account_balance_object,

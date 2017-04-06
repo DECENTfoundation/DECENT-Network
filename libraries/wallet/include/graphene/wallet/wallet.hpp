@@ -1450,6 +1450,56 @@ class wallet_api
                                       buying_id_type buying,
                                       bool broadcast = false);
 
+      /**
+       * @brief Creates a subscription to author. This function is used by consumers.
+       * @param from Account who wants subscription to author
+       * @param to The author you wish to subscribe to
+       * @param duration Duration of subscription in days
+       * @param price_amount Price for the subscription
+       * @param price_asset_symbol Ticker symbol of the asset which will be used to buy subscription
+       * @param broadcast True if you wish to broadcast the transaction
+       * @return The signed transaction subscribing the consumer to the author
+       * @ingroup WalletCLI
+       */
+      signed_transaction subscribe_to_author( string from,
+                                              string to,
+                                              uint32_t duration,
+                                              string price_amount,
+                                              string price_asset_symbol,
+                                              bool broadcast/* = false */);
+
+      /**
+       * @brief Creates a subscription to author. This function is used by author.
+       * @param from The account obtaining subscription from the author
+       * @param to The name or id of the author
+       * @param duration Duration of subscription in days
+       * @param broadcast True if you wish to broadcast the transaction
+       * @return The signed transaction subscribing the consumer to the author
+       * @ingroup WalletCLI
+       */
+      signed_transaction subscribe_by_author( string from,
+                                              string to,
+                                              uint32_t duration,
+                                              bool broadcast/* = false */);
+
+   /**
+    * @brief This function can be used to allow/disallow subscription.
+    * @param account The name or id of the account to update
+    * @param allow_subscription True if account (author) wants to allow subscription, false otherwise
+    * @param subscription_period Minimal duration of subscription in days
+    * @param price_amount Price for subscription per one subscription period
+    * @param price_asset_symbol Ticker symbol of the asset which will be used to buy subscription
+    * @param broadcast True if you wish to broadcast the transaction
+    * @return The signed transaction updating the account
+    * @ingroup WalletCLI
+    */
+      signed_transaction set_subscription( string account,
+                                           bool allow_subscription,
+                                           uint32_t subscription_period,
+                                           string price_amount,
+                                           string price_asset_symbol,
+                                           bool broadcast/* = false */);
+
       std::pair<d_integer, d_integer> generate_el_gamal_keys();
 
       /**
@@ -1689,6 +1739,9 @@ FC_API( graphene::wallet::wallet_api,
         (ready_to_publish)
         (proof_of_custody)
         (deliver_keys)
+        (subscribe_to_author)
+        (subscribe_by_author)
+        (set_subscription)
         (generate_el_gamal_keys)
         (get_open_buyings)
         (get_open_buyings_by_URI)

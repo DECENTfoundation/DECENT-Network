@@ -56,6 +56,13 @@ namespace graphene { namespace chain {
       flat_set<vote_id_type> votes;
       extensions_type        extensions;
 
+      /// True if account (author) allows subscription
+      bool allow_subscription;
+      /// Price for subscription per one subscription period
+      asset price_per_subscribe;
+      /// Minimal duration of subscription in days
+      uint32_t subscription_period;
+
       void validate()const;
    };
 
@@ -93,10 +100,6 @@ namespace graphene { namespace chain {
 
       account_options options;
       extension< ext > extensions;
-
-      bool allow_subscription;
-      asset price_per_subscribe;
-      uint32_t subscription_period;
 
       account_id_type fee_payer()const { return registrar; }
       void            validate()const;
@@ -143,10 +146,6 @@ namespace graphene { namespace chain {
       /// New account options
       optional<account_options> new_options;
       extension< ext > extensions;
-
-      bool allow_subscription;
-      asset price_per_subscribe;
-      uint32_t subscription_period;
 
       account_id_type fee_payer()const { return account; }
       void       validate()const;
@@ -235,7 +234,8 @@ namespace graphene { namespace chain {
 
 } } // graphene::chain
 
-FC_REFLECT(graphene::chain::account_options, (memo_key)(voting_account)(num_witness)(num_committee)(votes)(extensions))
+FC_REFLECT(graphene::chain::account_options, (memo_key)(voting_account)(num_witness)(num_committee)(votes)(extensions)
+           (allow_subscription)(price_per_subscribe)(subscription_period))
 FC_REFLECT_TYPENAME( graphene::chain::account_whitelist_operation::account_listing)
 FC_REFLECT_ENUM( graphene::chain::account_whitelist_operation::account_listing,
                 (no_listing)(white_listed)(black_listed)(white_and_black_listed))
@@ -245,13 +245,11 @@ FC_REFLECT( graphene::chain::account_create_operation,
             (fee)(registrar)
             (referrer)(referrer_percent)
             (name)(owner)(active)(options)(extensions)
-            (allow_subscription)(price_per_subscribe)(subscription_period)
           )
 
 FC_REFLECT(graphene::chain::account_update_operation::ext, (null_ext))
 FC_REFLECT( graphene::chain::account_update_operation,
             (fee)(account)(owner)(active)(new_options)(extensions)
-            (allow_subscription)(price_per_subscribe)(subscription_period)
           )
 
 FC_REFLECT( graphene::chain::account_whitelist_operation, (fee)(authorizing_account)(account_to_list)(new_listing)(extensions))

@@ -11,6 +11,7 @@
 
 namespace graphene { namespace chain {
 
+   /// Tracks consumer's subscription to author
    class subscription_object : public graphene::db::abstract_object< subscription_object >
    {
    public:

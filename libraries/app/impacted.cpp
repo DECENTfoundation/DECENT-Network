@@ -203,7 +203,6 @@ struct get_impacted_account_visitor
    void operator()( const deliver_keys_operation& op) {}
    void operator()( const subscribe_operation& op) {}
    void operator()( const subscribe_by_author_operation& op) {}
-   void operator()( const allow_subscription_operation& op) {}
 };
 
 void operation_get_impacted_accounts( const operation& op, flat_set<account_id_type>& result )

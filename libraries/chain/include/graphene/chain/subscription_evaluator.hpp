@@ -27,13 +27,4 @@ namespace graphene { namespace chain {
       uint32_t period_count;
    };
 
-   class allow_subscription_evaluator : public evaluator< allow_subscription_evaluator >
-   {
-   public:
-      typedef allow_subscription_operation operation_type;
-
-      void_result do_evaluate( const allow_subscription_operation& o );
-      void_result do_apply( const allow_subscription_operation& o );
-   };
-
 } } // namespace::chain

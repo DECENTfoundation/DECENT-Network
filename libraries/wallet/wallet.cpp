@@ -2437,7 +2437,78 @@ public:
       
       return sign_transaction( tx, broadcast );
    } FC_CAPTURE_AND_RETHROW( (seeder)(privKey)(buying)(broadcast) ) }
-   
+
+   signed_transaction subscribe_to_author( string from,
+                                           string to,
+                                           uint32_t duration,
+                                           string price_amount,
+                                           string price_asset_symbol,
+                                           bool broadcast/* = false */)
+   { try {
+         fc::optional<asset_object> asset_obj = get_asset(price_asset_symbol);
+         FC_ASSERT(asset_obj, "Could not find asset matching ${asset}", ("asset", price_asset_symbol));
+
+         subscribe_operation subscribe_op;
+         subscribe_op.from = get_account_id( from );
+         subscribe_op.to = get_account_id( to );
+         subscribe_op.duration = duration;
+         subscribe_op.price = asset_obj->amount_from_string(price_amount);
+
+         signed_transaction tx;
+         tx.operations.push_back( subscribe_op );
+         set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
+         tx.validate();
+
+         return sign_transaction( tx, broadcast );
+      } FC_CAPTURE_AND_RETHROW( (from)(to)(duration)(price_amount)(price_asset_symbol)(broadcast) ) }
+
+   signed_transaction subscribe_by_author( string from,
+                                           string to,
+                                           uint32_t duration,
+                                           bool broadcast/* = false */)
+   { try {
+         subscribe_by_author_operation subscribe_op;
+         subscribe_op.from = get_account_id( from );
+         subscribe_op.to = get_account_id( to );
+         subscribe_op.duration = duration;
+
+         signed_transaction tx;
+         tx.operations.push_back( subscribe_op );
+         set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
+         tx.validate();
+
+         return sign_transaction( tx, broadcast );
+      } FC_CAPTURE_AND_RETHROW( (from)(to)(duration)(broadcast)) }
+
+
+   signed_transaction set_subscription( string account,
+                                        bool allow_subscription,
+                                        uint32_t subscription_period,
+                                        string price_amount,
+                                        string price_asset_symbol,
+                                        bool broadcast/* = false */)
+   { try {
+         fc::optional<asset_object> asset_obj = get_asset(price_asset_symbol);
+         FC_ASSERT(asset_obj, "Could not find asset matching ${asset}", ("asset", price_asset_symbol));
+
+         account_object account_object_to_modify = get_account( account );
+         account_object_to_modify.options.allow_subscription = allow_subscription;
+         account_object_to_modify.options.subscription_period = subscription_period;
+         account_object_to_modify.options.price_per_subscribe = asset_obj->amount_from_string(price_amount);
+
+         account_update_operation account_update_op;
+         account_update_op.account = account_object_to_modify.id;
+         account_update_op.new_options = account_object_to_modify.options;
+
+         signed_transaction tx;
+         tx.operations.push_back( account_update_op );
+         set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
+         tx.validate();
+
+         return sign_transaction( tx, broadcast );
+      } FC_CAPTURE_AND_RETHROW( (account)(allow_subscription)(subscription_period)(price_amount)(price_asset_symbol)(broadcast) ) }
+
+
    void dbg_make_uia(string creator, string symbol)
    {
       asset_options opts;
@@ -4231,6 +4302,33 @@ vesting_balance_object_with_info::vesting_balance_object_with_info( const vestin
       return my->deliver_keys(seeder, privKey, buying, broadcast);
    }
 
+   signed_transaction wallet_api::subscribe_to_author( string from,
+                                                       string to,
+                                                       uint32_t duration,
+                                                       string price_amount,
+                                                       string price_asset_symbol,
+                                                       bool broadcast/* = false */)
+   {
+      return my->subscribe_to_author(from, to, duration, price_amount, price_asset_symbol, broadcast);
+   }
+
+   signed_transaction wallet_api::subscribe_by_author( string from,
+                                                       string to,
+                                                       uint32_t duration,
+                                                       bool broadcast/* = false */)
+   {
+      return my->subscribe_by_author(from, to, duration, broadcast);
+   }
+
+   signed_transaction wallet_api::set_subscription( string account,
+                                                    bool allow_subscription,
+                                                    uint32_t subscription_period,
+                                                    string price_amount,
+                                                    string price_asset_symbol,
+                                                    bool broadcast/* = false */)
+{
+   return my->set_subscription(account, allow_subscription, subscription_period, price_amount, price_asset_symbol, broadcast);
+   }
 
    vector<buying_object> wallet_api::get_open_buyings()const
    {

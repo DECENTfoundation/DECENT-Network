@@ -93,18 +93,12 @@ namespace graphene { namespace chain {
          auto &range = db().get_index_type<subscription_index>().indices().get<by_from_to>();
          const auto &subscription = range.find(boost::make_tuple(op.consumer, content->author));
 
-         bool subscription_exists = false;
+         /// Check whether subscription exists. If so, consumer doesn't pay for content
          if (op.consumer == subscription->from && content->author == subscription->to &&
-             content->expiration == subscription->expiration) {
-            subscription_exists = true;
-         }
-
-         if (subscription_exists)
+             subscription->expiration > db().head_block_time())
             FC_ASSERT(op.price.amount >= 0);
          else
             FC_ASSERT(op.price >= content->price);
-
-         //check if the content exist, has not expired and the price is not lower than expected
 
          return void_result();
       } FC_CAPTURE_AND_RETHROW( (op) )
