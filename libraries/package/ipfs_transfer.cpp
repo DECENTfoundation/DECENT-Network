@@ -189,13 +189,11 @@ namespace decent { namespace package {
                 FC_THROW("Unable to find root hash in 'ipfs add' results");
             }
 
+            _package._url = "/ipfs/" + root_hash;
+
             _client.PinAdd(root_hash); // just in case
 
-
             // TODO: remove the actual files?
-
-
-            _package._url = "/ipfs/" + root_hash;
 
             PACKAGE_INFO_CHANGE_TRANSFER_STATE(SEEDING);
             PACKAGE_INFO_GENERATE_EVENT(package_seed_complete, ( ) );

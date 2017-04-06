@@ -245,6 +245,9 @@ namespace decent { namespace package {
                         AES_encrypt_file(zip_file_path.string(), aes_file_path.string(), k);
                         PACKAGE_TASK_EXIT_IF_REQUESTED;
                         _package._hash = detail::calculate_hash(aes_file_path);
+                        PACKAGE_TASK_EXIT_IF_REQUESTED;
+                        //calculate custody...
+                        decent::encrypt::CustodyUtils::instance().create_custody_data(aes_file_path, _package._custody_data);
                     }
 
                     PACKAGE_INFO_CHANGE_MANIPULATION_STATE(STAGING);
@@ -365,7 +368,7 @@ namespace decent { namespace package {
                     }
 
                     if (exists(_target_dir) && !is_directory(_target_dir)) {
-                        FC_THROW("Samples path ${path} must point to directory", ("path", _target_dir.string()));
+                        FC_THROW("Target path ${path} must point to directory", ("path", _target_dir.string()));
                     }
 
 
@@ -542,9 +545,7 @@ namespace decent { namespace package {
                 FC_THROW("Package directory ${path} does not exist", ("path", get_package_dir().string()) );
             }
 
-
 //          PACKAGE_INFO_GENERATE_EVENT(package_restoration_progress, ( ) );
-
 
             lock_dir();
 
@@ -677,6 +678,15 @@ namespace decent { namespace package {
 
         _current_task.reset(new detail::RemovePackageTask(*this));
         _current_task->start(block);
+    }
+
+    void PackageInfo::create_proof_of_custody(const decent::encrypt::CustodyData& cd, decent::encrypt::CustodyProof& proof)const {
+        //assume the data are downloaded and available
+
+       int ret = decent::encrypt::CustodyUtils::instance().create_proof_of_custody(get_content_file(), cd, proof);
+       if( ret != 0 )
+          FC_THROW("Failed to create custody data");
+       return;
     }
 
     void PackageInfo::wait_for_current_task() {

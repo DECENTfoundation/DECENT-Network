@@ -77,7 +77,7 @@ public:
 
     virtual void package_seed_start() {}
     virtual void package_seed_progress() {}
-    virtual void package_seed_error(const std::string&) {}
+    virtual void package_seed_error(const std::string& error) { std::clog << "Package seed error: " << error << std::endl; }
     virtual void package_seed_complete() {}
 
     virtual void package_download_start() {}
@@ -117,9 +117,12 @@ void pm_sandbox()
         }
 
         {
+            std::cerr << "starting seeding"<<std::endl;
             package_handle->start_seeding("ipfs");
             package_handle->wait_for_current_task();
             auto ex_ptr = package_handle->get_task_last_error();
+            std::cerr << "started seeding"<<std::endl;
+            std::cerr << "Package url:" << package_handle->get_url() << std::endl;
             if (ex_ptr) {
                 std::rethrow_exception(ex_ptr);
             }
