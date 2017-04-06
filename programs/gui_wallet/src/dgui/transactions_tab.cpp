@@ -29,13 +29,13 @@ TransactionsTab::TransactionsTab(Mainwindow_gui_wallet* pMainWindow)
 {
 
    tablewidget.set_columns({
-      {"Time", 20, "created"},
+      {"Time", 20, "time"},
       {"Type", 10, "type"},
       {"From", 20, "from"},
       {"To"  , 20, "to"},
-      {"Price", 10, "price"},
-      {"Fee", 10,    "fee"},
-      {"Description", 25}
+      {"Price", 10,"price"},
+      {"Fee", 10,  "fee"},
+      {"Description", 25, "description"}
    });
    
    
