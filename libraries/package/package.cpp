@@ -172,6 +172,7 @@ namespace decent { namespace package {
                 using namespace boost::filesystem;
 
                 const auto temp_dir_path = unique_path(graphene::utilities::decent_path_finder::instance().get_decent_temp() / "%%%%-%%%%-%%%%-%%%%");
+                bool samples = false;
 
                 try {
                     PACKAGE_TASK_EXIT_IF_REQUESTED;
@@ -186,6 +187,8 @@ namespace decent { namespace package {
 
                     if (exists(_samples_dir_path) && !is_directory(_samples_dir_path)) {
                         FC_THROW("Samples path ${path} must point to directory", ("path", _samples_dir_path.string()));
+                    }else{
+                        samples = true;
                     }
 
                     if (exists(temp_dir_path) || !create_directory(temp_dir_path)) {
@@ -249,6 +252,21 @@ namespace decent { namespace package {
                         PACKAGE_TASK_EXIT_IF_REQUESTED;
                         //calculate custody...
                         decent::encrypt::CustodyUtils::instance().create_custody_data(aes_file_path, _package._custody_data);
+                    }
+
+                    if( samples ){
+                        const auto temp_samples_dir_path = temp_dir_path / "Samples";
+
+                        create_directories(temp_samples_dir_path);
+                        remove_all(temp_samples_dir_path);
+                        create_directories(temp_samples_dir_path);
+
+                        for( directory_iterator file(_samples_dir_path); file != directory_iterator(); ++file ){
+                            path current (file->path());
+                            if (is_regular_file(current)){
+                                copy_file(current, temp_samples_dir_path / current.filename() );
+                            }
+                        }
                     }
 
                     PACKAGE_INFO_CHANGE_MANIPULATION_STATE(STAGING);

@@ -64,6 +64,22 @@ typedef graphene::chain::object_id< SEEDING_PLUGIN_SPACE_ID, seeding_object_type
 
 
 namespace detail {
+
+class SeedingListenerInterface : public EventListenerInterface{
+private:
+   my_seeding_object & _mso;
+   PackageInfo& pi;
+public:
+   virtual void package_download_error(const std::string&);
+   virtual void package_download_complete();
+   virtual void package_seed_error(const std::string&);
+   virtual void package_seed_complete();
+   virtual void package_extraction_error(const std::string&);
+   virtual void package_extraction_complete();
+};
+
+
+
 /**
  * @class seeding_plugin_impl This class implements the seeder functionality.
  * @inherits package_transfer_interface::transfer_listener Integrates with package manager through this interface.
@@ -220,3 +236,4 @@ class seeding_plugin : public graphene::app::plugin
 FC_REFLECT_DERIVED( graphene::seeding::my_seeder_object, (graphene::db::object), (seeder)(content_privKey)(privKey)(free_space) );
 FC_REFLECT_DERIVED( graphene::seeding::my_seeding_object, (graphene::db::object), (URI)(expiration)(cd)(seeder)(key)(space) );
 
+R fc::generic_api::call_generic<graphene::app::order_book,const std::string&,const std::string&,unsigned int>(const std::function<graphene::app::order_book (const std::string &,const std::string &,unsigned int)> &,std::_Vector_const_iterator<std::_Vector_val<std::_Simple_types<fc::variant>>>,std::_Vector_const_iterator<std::_Vector_val<std::_Simple_types<fc::variant>>>);
