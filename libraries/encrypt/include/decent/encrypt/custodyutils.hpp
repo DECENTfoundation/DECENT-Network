@@ -3,7 +3,8 @@
 //
 
 #pragma once
-#if defined ( _MSC_VER )
+
+#if defined( _MSC_VER )
 #include <pbc.h>
 #else
 #include <pbc/pbc.h>

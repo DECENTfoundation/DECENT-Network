@@ -2212,7 +2212,7 @@ public:
             package_object pack = package_manager::instance().create_package(content_dir, samples_dir, sha_key, cd);
             fc::ripemd160 hash = pack.get_hash();
             
-            uint32_t quorum = std::max((unsigned long)1, seeders.size()/3);
+            uint32_t quorum = std::max((vector<account_id_type>::size_type)1, seeders.size()/3);
             uint64_t size = std::max(1, ( pack.get_size() + (1024 * 1024) -1 ) / (1024 * 1024));
 
 
@@ -2310,41 +2310,53 @@ public:
 
 
 
-    void download_content(string consumer, string URI, bool broadcast) {
-        
-        try {
-            FC_ASSERT( !is_locked() );
-            
-            optional<content_object> content = _remote_db->get_content( URI );
-            account_object consumer_account = get_account( consumer );
+   void download_content(string consumer, string URI, bool broadcast)
+   {
+      try
+      {
+         FC_ASSERT( !is_locked() );
 
-            if (!content) {
-                FC_THROW("Invalid content URI");
-            }
-            
-            request_to_buy_operation request_op;
-            request_op.consumer = consumer_account.id;
-            request_op.URI = URI;
-           
-            DInteger el_gamal_priv_key = generate_private_el_gamal_key_from_secret ( get_private_key_for_account(consumer_account).get_secret() );
-            //if (_wallet.priv_el_gamal_key == decent::encrypt::DInteger::Zero()) { // Generate key if it does not exist
-            //    import_el_gamal_key(decent::encrypt::generate_private_el_gamal_key());
-            //}
-                   
-            request_op.pubKey = decent::encrypt::get_public_el_gamal_key( el_gamal_priv_key );
-            request_op.price = content->price;
-            
-            signed_transaction tx;
-            tx.operations.push_back( request_op );
-            set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
-            tx.validate();
-            sign_transaction( tx, broadcast );
-            //detail::report_stats_listener stats_listener( URI, self);
-            //stats_listener.ipfs_IDs = list_seeders_ipfs_IDs( URI);
-            package_manager::instance().download_package(URI, empty_transfer_listener::instance(), empty_report_stats_listener::instance());
-            
-        } FC_CAPTURE_AND_RETHROW( (consumer)(URI)(broadcast) )
-    }
+         optional<content_object> content = _remote_db->get_content( URI );
+         account_object consumer_account = get_account( consumer );
+
+         if (!content)
+         {
+            FC_THROW("Invalid content URI");
+         }
+#ifdef DECENT_TESTNET2
+         string str_region_code;
+         optional<asset> op_price = content->GetPrice(str_region_code);
+         if (!op_price)
+            FC_THROW("content not available for this region");
+#endif
+
+         request_to_buy_operation request_op;
+         request_op.consumer = consumer_account.id;
+         request_op.URI = URI;
+
+         DInteger el_gamal_priv_key = generate_private_el_gamal_key_from_secret ( get_private_key_for_account(consumer_account).get_secret() );
+         //if (_wallet.priv_el_gamal_key == decent::encrypt::DInteger::Zero()) { // Generate key if it does not exist
+         //    import_el_gamal_key(decent::encrypt::generate_private_el_gamal_key());
+         //}
+
+         request_op.pubKey = decent::encrypt::get_public_el_gamal_key( el_gamal_priv_key );
+#ifdef DECENT_TESTNET2
+         request_op.price = *op_price;
+#else
+         request_op.price = content->price;
+#endif
+
+         signed_transaction tx;
+         tx.operations.push_back( request_op );
+         set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
+         tx.validate();
+         sign_transaction( tx, broadcast );
+         //detail::report_stats_listener stats_listener( URI, self);
+         //stats_listener.ipfs_IDs = list_seeders_ipfs_IDs( URI);
+         package_manager::instance().download_package(URI, empty_transfer_listener::instance(), empty_report_stats_listener::instance());
+
+      } FC_CAPTURE_AND_RETHROW( (consumer)(URI)(broadcast) )
+   }
 
 
    signed_transaction request_to_buy(string consumer,
@@ -2908,9 +2920,9 @@ map<string,account_id_type> wallet_api::list_accounts(const string& lowerbound, 
 }
 
     
-map<string,account_id_type> wallet_api::search_accounts(const string& term, const string& order, uint32_t limit)
+map<string,account_id_type> wallet_api::search_accounts(const string& term, uint32_t limit)
 {
-    return my->_remote_db->search_accounts(term, order, limit);
+    return my->_remote_db->search_accounts(term, limit);
 }
 
 vector<asset> wallet_api::list_account_balances(const string& id)
@@ -3815,82 +3827,96 @@ vector<buying_object> wallet_api::get_open_buyings_by_consumer( const string& ac
    return my->_remote_db->get_open_buyings_by_consumer( consumer );
 }
 
-vector<buying_object> wallet_api::get_buying_history_objects_by_consumer( const string& account_id_or_name )const
-{
-    account_id_type consumer = get_account( account_id_or_name ).id;
-    vector<buying_object> result = my->_remote_db->get_buying_history_objects_by_consumer( consumer );
-    
-    for (int i = 0; i < result.size(); ++i) {
-        
-        buying_object& bobj = result[i];
-        
-        optional<content_object> content = my->_remote_db->get_content( bobj.URI );
-        if (!content) {
+   vector<buying_object> wallet_api::get_buying_history_objects_by_consumer( const string& account_id_or_name )const
+   {
+      account_id_type consumer = get_account( account_id_or_name ).id;
+      vector<buying_object> result = my->_remote_db->get_buying_history_objects_by_consumer( consumer );
+
+      for (int i = 0; i < result.size(); ++i)
+      {
+
+         buying_object& bobj = result[i];
+
+         optional<content_object> content = my->_remote_db->get_content( bobj.URI );
+         if (!content)
             continue;
-        }
-        bobj.price = content->price;
-        bobj.size = content->size;
-        bobj.rating = content->AVG_rating;
-        bobj.synopsis = content->synopsis;
-        
-    }
-    return result;
-}
+#ifdef DECENT_TESTNET2
+         optional<asset> op_price = content->GetPrice(string());
+         if (!op_price)
+            continue;
+
+         bobj.price = *op_price;
+#else
+         bobj.price = content->price;
+#endif
+         bobj.size = content->size;
+         bobj.rating = content->AVG_rating;
+         bobj.synopsis = content->synopsis;
+
+      }
+      return result;
+   }
    
    vector<buying_object_ex> wallet_api::search_my_purchases( const string& account_id_or_name, const string& term, const string& order )const
    {
       account_id_type consumer = get_account( account_id_or_name ).id;
       const vector<buying_object>& bobjects = my->_remote_db->get_buying_objects_by_consumer( consumer, order );
-      
+
       vector<buying_object_ex> result;
-      
-      for (size_t i = 0; i < bobjects.size(); ++i) {
-         
+
+      for (size_t i = 0; i < bobjects.size(); ++i)
+      {
          buying_object buyobj = bobjects[i];
+
          optional<content_download_status> status = get_download_status(account_id_or_name, buyobj.URI);
-         if (!status) {
+         if (!status)
             continue;
-         }
-         
+
          optional<content_object> content = my->_remote_db->get_content( buyobj.URI );
-         if (!content) {
+         if (!content)
             continue;
-         }
-         
-         
-         
+
+#ifdef DECENT_TESTNET2
+         optional<asset> op_price = content->GetPrice(string());
+         if (!op_price)
+            continue;
+#endif
+
          std::string synopsis = json_unescape_string(content->synopsis);
          std::string title = synopsis;
          std::string description;
-         
+
          try {
             auto synopsis_parsed = nlohmann::json::parse(synopsis);
             title = synopsis_parsed["title"].get<std::string>();
             description = synopsis_parsed["description"].get<std::string>();
          } catch (...) {}
-         
+
          std::string search_term = term;
          boost::algorithm::to_lower(search_term);
          boost::algorithm::to_lower(title);
          boost::algorithm::to_lower(description);
-         
+
          if (false == search_term.empty() &&
              std::string::npos == title.find(search_term) &&
              std::string::npos == description.find(search_term))
             continue;
-         
-         
-         
-         
+
+
+
+
          result.emplace_back(buying_object_ex(bobjects[i], *status));
          buying_object_ex& bobj = result.back();
 
-         
+#ifdef DECENT_TESTNET2
+         bobj.price = *op_price;
+#else
          bobj.price = content->price;
+#endif
          bobj.size = content->size;
          bobj.rating = content->AVG_rating;
          bobj.synopsis = content->synopsis;
-         
+
          bobj.author_account = account_id_or_name;
          bobj.created = content->created;
          bobj.expiration = content->expiration;
@@ -4009,6 +4035,7 @@ vector<buying_object> wallet_api::get_buying_history_objects_by_consumer( const 
             }
          }
       }
+
       return result;
    }
    
@@ -4040,15 +4067,15 @@ vector<content_summary> wallet_api::list_content( const string& URI, uint32_t co
     return my->_remote_db->list_content( URI, count );
 }
    
-vector<content_summary> wallet_api::search_content( const string& term, const string& order, uint32_t count)const
+vector<content_summary> wallet_api::search_content( const string& term, const string& order, const string& user, uint32_t count)const
 {
-   return my->_remote_db->search_content( term, order, count );
+   return my->_remote_db->search_content( term, order, user, count );
 }
 
 
-vector<content_summary> wallet_api::search_user_content( const string& user, const string& term, uint32_t count)const
+vector<content_summary> wallet_api::search_user_content( const string& user, const string& term, const string& order, uint32_t count)const
 {
-   return my->_remote_db->search_user_content( user, term, count );
+   return my->_remote_db->search_user_content( user, term, order, count );
 }
 
 vector<content_object> wallet_api::list_content_by_bought( uint32_t count)const

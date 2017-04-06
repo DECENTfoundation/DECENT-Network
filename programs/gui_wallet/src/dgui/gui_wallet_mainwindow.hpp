@@ -11,7 +11,6 @@
 #include "gui_wallet_connectdlg.hpp"
 #include "text_display_dialog.hpp"
 #include "richdialog.hpp"
-#include "unnamedsemaphorelite.hpp"
 
 #include "json.hpp"
 
@@ -115,7 +114,6 @@ protected:
    QMenu*              m_pMenuContent;
    QMenu*              m_pMenuHelpR;
    QMenu*              m_pMenuView;
-   QMenu*              m_pMenuStatus;
    
    QAction             m_ActionExit;
    QAction             m_ActionConnect;

@@ -126,7 +126,7 @@ void BrowseContentTab::timeToUpdate(const std::string& result) {
 
 std::string BrowseContentTab::getUpdateCommand() {
    std::string filterText = m_filterLineEdit.text().toStdString();
-   return "search_content \"" + filterText + "\" \"" + m_pTableWidget.getSortedColumn() + "\" 100";
+   return "search_content \"" + filterText + "\" \"" + m_pTableWidget.getSortedColumn() + "\" \"" + "" + "\" 100";
 }
 
 
@@ -134,7 +134,7 @@ void BrowseContentTab::show_content_popup() {
     QLabel* btn = (QLabel*)sender();
     int id = btn->property("id").toInt();
     if (id < 0 || id >= _digital_contents.size()) {
-        throw std::out_of_range("Content index is our of range");
+        throw std::out_of_range("Content index is out of range");
     }
     
    if (_content_popup) {
