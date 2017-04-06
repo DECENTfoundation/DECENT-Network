@@ -38,9 +38,11 @@ using string = std::string;
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
 
-#if defined( _MSC_VER )
-#include <Windows.h>
-#include <signal.h> 
+#ifdef _MSC_VER
+   #include <Windows.h>
+   #include <signal.h>
+#else
+   #include <csignal>
 #endif
 
 int runDecentD(int argc, char** argv, fc::promise<void>::ptr& exit_promise);
