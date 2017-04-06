@@ -86,7 +86,7 @@ namespace graphene { namespace chain {
       FC_ASSERT( content!= idx.end() );
       FC_ASSERT( o.price <= db().get_balance( o.consumer, o.price.asset_id ) );
 #ifdef PRICE_REGIONS
-      optional<asset> price = content->price.GetPrice();
+      optional<asset> price = content->price.GetPrice(static_cast<RegionCodes::RegionCode>(o.region_code));
       FC_ASSERT( price.valid() );
       FC_ASSERT( o.price >= *price );
       FC_ASSERT( o.price.asset_id == price->asset_id );

@@ -9,6 +9,7 @@
 
 #include <stdint.h>
 #include <vector>
+#include <utility>
 
 #ifdef DECENT_TESTNET2
 #define PRICE_REGIONS
@@ -17,12 +18,30 @@
 namespace graphene { namespace chain {
 using namespace decent::encrypt;
 
+   class RegionCodes
+   {
+   public:
+      enum RegionCode
+      {
+         OO_none = 1,
+         OO_all,
+         US,
+         UK
+      };
+      static bool bAuxillary;
+      static map<RegionCode, string> s_mapCodeToName;
+      static map<string, RegionCode> s_mapNameToCode;
+
+      static bool InitCodeAndName();
+   };
+
    struct PriceRegions
    {
-      map<string, asset> map_price;
+      map<int, asset> map_price;
 
-      optional<asset> GetPrice(string const& region_code = string()) const;
+      optional<asset> GetPrice(RegionCodes::RegionCode = RegionCodes::OO_none) const;
       void SetSimplePrice(asset const& price);
+      bool Valid(RegionCodes::RegionCode region_code = RegionCodes::OO_none) const;
       bool Valid(string const& region_code) const;
    };
 
@@ -39,7 +58,8 @@ using namespace decent::encrypt;
       uint32_t times_bought;
 
 
-      content_summary& set( const content_object& co, const account_object& ao, const string& region_code );
+      content_summary& set( const content_object& co, const account_object& ao, RegionCodes::RegionCode region_code );
+      content_summary& set( const content_object& co, const account_object& ao, string const& region_code );
    };
 
    class content_object : public graphene::db::abstract_object<content_object>
@@ -73,7 +93,7 @@ using namespace decent::encrypt;
       share_type get_price_amount() const
       {
 #ifdef PRICE_REGIONS
-         FC_ASSERT(price.Valid(string()));
+         FC_ASSERT(price.Valid());
          return price.GetPrice()->amount;
 #else
          return price.amount;

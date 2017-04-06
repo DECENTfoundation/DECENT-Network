@@ -1759,7 +1759,7 @@ namespace graphene { namespace app {
         while(count-- && itr != idx.end())
         {
             const auto& account = idx2.find(itr->author);
-            result.emplace_back( content.set( *itr , *account, string() ) );
+            result.emplace_back( content.set( *itr , *account, RegionCodes::OO_none ) );
             ++itr;
         }
         
