@@ -3035,7 +3035,7 @@ vector<asset_object> wallet_api::list_assets(const string& lowerbound, uint32_t 
             account_object lto = this->get_account(string(object_id_type(l.to_account)));
             account_object rto = this->get_account(string(object_id_type(r.to_account)));
             
-             
+            
             if (is_ascending && (lto.name < rto.name)) {
                 return true;
             }
@@ -3045,7 +3045,7 @@ vector<asset_object> wallet_api::list_assets(const string& lowerbound, uint32_t 
             }
             
             return false;
-        }));
+        })); 
 
         //price
         sorters.insert(std::make_pair("price", [is_ascending](const operation_detail& l, const operation_detail& r) {
