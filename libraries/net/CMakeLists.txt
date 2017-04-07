@@ -1,4 +1,3 @@
-find_package(CryptoPP REQUIRED)
 
 file(GLOB HEADERS "include/graphene/net/*.hpp")
 
@@ -28,10 +27,10 @@ if (USE_PCH)
   cotire(graphene_net)
 endif(USE_PCH)
 
-install( TARGETS
-   graphene_net
-
-   RUNTIME DESTINATION bin
-   LIBRARY DESTINATION lib
-   ARCHIVE DESTINATION lib
-)
+#install( TARGETS
+#   graphene_net
+#
+#   RUNTIME DESTINATION bin
+#   LIBRARY DESTINATION lib
+#   ARCHIVE DESTINATION lib
+#)

@@ -40,7 +40,6 @@ add_library( graphene_chain
              protocol/assert.cpp
              protocol/account.cpp
              protocol/transfer.cpp
-             protocol/committee_member.cpp
              protocol/witness.cpp
              protocol/market.cpp
              protocol/proposal.cpp
@@ -52,7 +51,7 @@ add_library( graphene_chain
              protocol/transaction.cpp
              protocol/block.cpp
              protocol/fee_schedule.cpp
-             protocol/confidential.cpp
+
              protocol/vote.cpp
              protocol/decent.cpp
              protocol/subscription.cpp
@@ -66,37 +65,30 @@ add_library( graphene_chain
              account_evaluator.cpp
              assert_evaluator.cpp
              witness_evaluator.cpp
-             committee_member_evaluator.cpp
              asset_evaluator.cpp
              transfer_evaluator.cpp
              proposal_evaluator.cpp
              market_evaluator.cpp
              vesting_balance_evaluator.cpp
              withdraw_permission_evaluator.cpp
-             confidential_evaluator.cpp
              buyback.cpp
              decent_evaluator.cpp
              subscription_evaluator.cpp
 
              account_object.cpp
              asset_object.cpp
+             content_object.cpp
              proposal_object.cpp
              vesting_balance_object.cpp
-             buying_object.cpp
-             content_object.cpp
-             seeder_object.cpp
-             rating_object.cpp
 
              block_database.cpp
-
-             is_authorized_asset.cpp
 
              ${HEADERS}
              "${CMAKE_CURRENT_BINARY_DIR}/include/graphene/chain/hardfork.hpp"
            )
 
 add_dependencies( graphene_chain build_hardfork_hpp )
-target_link_libraries( graphene_chain fc graphene_db decent_encrypt )
+target_link_libraries( graphene_chain fc graphene_db decent_encrypt pbc gmp )
 target_include_directories( graphene_chain
                             PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" "${CMAKE_CURRENT_BINARY_DIR}/include" )
 
@@ -104,10 +96,10 @@ if(MSVC)
   set_source_files_properties( db_init.cpp db_block.cpp database.cpp block_database.cpp PROPERTIES COMPILE_FLAGS "/bigobj" )
 endif(MSVC)
 
-INSTALL( TARGETS
-   graphene_chain
-
-   RUNTIME DESTINATION bin
-   LIBRARY DESTINATION lib
-   ARCHIVE DESTINATION lib
-)
+#install( TARGETS
+#   graphene_chain
+#
+#   RUNTIME DESTINATION bin
+#   LIBRARY DESTINATION lib
+#   ARCHIVE DESTINATION lib
+#)

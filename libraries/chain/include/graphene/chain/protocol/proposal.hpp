@@ -23,6 +23,7 @@
  */
 #pragma once
 #include <graphene/chain/protocol/base.hpp>
+#include <graphene/chain/protocol/chain_parameters.hpp>
 
 namespace graphene { namespace chain { 
    /**
@@ -69,7 +70,7 @@ namespace graphene { namespace chain {
    struct proposal_create_operation : public base_operation
    {
        struct fee_parameters_type { 
-          uint64_t fee            = 20 * GRAPHENE_BLOCKCHAIN_PRECISION; 
+          uint64_t fee            = GRAPHENE_BLOCKCHAIN_PRECISION / 10;
           uint32_t price_per_kbyte = 10;
        };
 
@@ -90,7 +91,7 @@ namespace graphene { namespace chain {
         * in proposed_ops, and proposed_ops is untouched by this
         * function.)
         */
-       static proposal_create_operation committee_proposal(const chain_parameters& param, fc::time_point_sec head_block_time );
+       static proposal_create_operation witness_proposal(const chain_parameters& param, fc::time_point_sec head_block_time );
 
        account_id_type fee_payer()const { return fee_paying_account; }
        void            validate()const;
@@ -118,7 +119,7 @@ namespace graphene { namespace chain {
    struct proposal_update_operation : public base_operation
    {
       struct fee_parameters_type { 
-         uint64_t fee            = 20 * GRAPHENE_BLOCKCHAIN_PRECISION; 
+         uint64_t fee            = GRAPHENE_BLOCKCHAIN_PRECISION / 10;
          uint32_t price_per_kbyte = 10;
       };
 
@@ -154,7 +155,7 @@ namespace graphene { namespace chain {
     */
    struct proposal_delete_operation : public base_operation
    {
-      struct fee_parameters_type { uint64_t fee =  GRAPHENE_BLOCKCHAIN_PRECISION; };
+      struct fee_parameters_type { uint64_t fee =  GRAPHENE_BLOCKCHAIN_PRECISION / 10; };
 
       account_id_type   fee_paying_account;
       bool              using_owner_authority = false;

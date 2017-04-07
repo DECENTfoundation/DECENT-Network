@@ -1,10 +1,12 @@
 #pragma once
 #include <graphene/chain/evaluator.hpp>
-
+#include <decent/encrypt/custodyutils.hpp>
 // return type?
 
 namespace graphene { namespace chain {
- 
+
+   static decent::encrypt::CustodyUtils _custody_utils;
+
    class content_submit_evaluator : public evaluator<content_submit_evaluator>
    {
    public:
@@ -43,6 +45,7 @@ namespace graphene { namespace chain {
    
    class proof_of_custody_evaluator : public evaluator<proof_of_custody_evaluator>
    {
+   private:
    public:
       typedef proof_of_custody_operation operation_type;
       
@@ -58,5 +61,50 @@ namespace graphene { namespace chain {
       void_result do_evaluate( const deliver_keys_operation& o );
       void_result do_apply( const deliver_keys_operation& o );
    };
-   
+
+   class return_escrow_submission_evaluator : public evaluator<return_escrow_submission_evaluator>
+   {
+   public:
+      typedef return_escrow_submission_operation operation_type;
+
+      void_result do_evaluate( const return_escrow_submission_operation& o );
+      void_result do_apply( const return_escrow_submission_operation& o );
+   };
+
+   class return_escrow_buying_evaluator : public evaluator<return_escrow_buying_evaluator>
+   {
+   public:
+      typedef return_escrow_buying_operation operation_type;
+
+      void_result do_evaluate( const return_escrow_buying_operation& o );
+      void_result do_apply( const return_escrow_buying_operation& o );
+   };
+
+   class report_stats_evaluator : public evaluator<report_stats_evaluator>
+   {
+   public:
+      typedef report_stats_operation operation_type;
+
+      void_result do_evaluate( const report_stats_operation& o );
+      void_result do_apply( const report_stats_operation& o );
+   };
+
+   class pay_seeder_evaluator : public evaluator<pay_seeder_evaluator>
+   {
+   public:
+      typedef pay_seeder_operation operation_type;
+
+      void_result do_evaluate( const pay_seeder_operation& o );
+      void_result do_apply( const pay_seeder_operation& o );
+   };
+
+   class finish_buying_evaluator : public evaluator<finish_buying_evaluator>
+   {
+   public:
+      typedef finish_buying_operation operation_type;
+
+      void_result do_evaluate( const finish_buying_operation& o );
+      void_result do_apply( const finish_buying_operation& o );
+   };
+
 }}

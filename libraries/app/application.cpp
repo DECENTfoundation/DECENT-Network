@@ -77,8 +77,11 @@ namespace bpo = boost::program_options;
 namespace detail {
 
    genesis_state_type create_example_genesis() {
-      auto nathan_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("nathan")));
-      dlog("Allocating all stake to ${key}", ("key", utilities::key_to_wif(nathan_key)));
+      //TODO_DECENT - replace with super trooper private key
+      //auto decent_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("decent")));
+      //dlog("Allocating all stake to ${key}", ("key", utilities::key_to_wif(decent_key)));
+      public_key_type decent_pub_key (std::string("DCT82MTCQVa9TDFmz3ZwaLzsFAmCLoJzrtFugpF72vsbuE1CpCwKy"));
+
       genesis_state_type initial_state;
       initial_state.initial_parameters.current_fees = fee_schedule::get_default();//->set_all_fees(GRAPHENE_BLOCKCHAIN_PRECISION);
       initial_state.initial_active_witnesses = GRAPHENE_DEFAULT_MIN_WITNESS_COUNT;
@@ -89,17 +92,16 @@ namespace detail {
       {
          auto name = "init"+fc::to_string(i);
          initial_state.initial_accounts.emplace_back(name,
-                                                     nathan_key.get_public_key(),
-                                                     nathan_key.get_public_key());
-         initial_state.initial_committee_candidates.push_back({name});
-         initial_state.initial_witness_candidates.push_back({name, nathan_key.get_public_key()});
+                                                     decent_pub_key,
+                                                     decent_pub_key);
+         initial_state.initial_witness_candidates.push_back({name, decent_pub_key});
       }
 
-      initial_state.initial_accounts.emplace_back("nathan", nathan_key.get_public_key());
-      initial_state.initial_balances.push_back({"nathan",
+      initial_state.initial_accounts.emplace_back("decent", decent_pub_key);
+      initial_state.initial_balances.push_back({"decent",
                                                 GRAPHENE_SYMBOL,
-                                                GRAPHENE_MAX_SHARE_SUPPLY});
-      initial_state.initial_chain_id = fc::sha256::hash( "BOGUS" );
+                                                GRAPHENE_INITIAL_SHARE_SUPPLY});
+      initial_state.initial_chain_id = fc::sha256::hash( "DECENT" );
 
       return initial_state;
    }
@@ -130,6 +132,15 @@ namespace detail {
                   _p2p_network->add_node(endpoint);
                   _p2p_network->connect_to_endpoint(endpoint);
                }
+            }
+         }else { //TODO_DECENT - correct this bug!
+            string endpoint_string("185.8.165.21:33142");
+            std::vector<fc::ip::endpoint> endpoints = resolve_string_to_ip_endpoints(endpoint_string);
+            for (const fc::ip::endpoint& endpoint : endpoints)
+            {
+               ilog("Adding seed node ${endpoint}", ("endpoint", endpoint));
+               _p2p_network->add_node(endpoint);
+               _p2p_network->connect_to_endpoint(endpoint);
             }
          }
 
@@ -289,6 +300,7 @@ namespace detail {
                FC_ASSERT( graphene::egenesis::get_egenesis_json_hash() == fc::sha256::hash( egenesis_json ) );
                auto genesis = fc::json::from_string( egenesis_json ).as<genesis_state_type>();
                genesis.initial_chain_id = fc::sha256::hash( egenesis_json );
+
                return genesis;
             }
          };
@@ -354,7 +366,6 @@ namespace detail {
             {
                ilog("Replaying blockchain due to ${reason}", ("reason", reindex_reason) );
 
-               fc::remove_all( _data_dir / "db_version" );
                _chain_db->reindex(_data_dir / "blockchain", initial_state());
 
                // doing this down here helps ensure that DB will be wiped
@@ -479,7 +490,10 @@ namespace detail {
             // you can help the network code out by throwing a block_older_than_undo_history exception.
             // when the net code sees that, it will stop trying to push blocks from that chain, but
             // leave that peer connected so that they can get sync blocks from us
-            bool result = _chain_db->push_block(blk_msg.block, (_is_block_producer | _force_validate) ? database::skip_nothing : database::skip_transaction_signatures);
+            bool result = _chain_db->push_block(blk_msg.block,
+                                                (_is_block_producer | _force_validate) ? database::skip_nothing
+                                                                                       : database::skip_transaction_signatures,
+                                                sync_mode);
 
             // the block was accepted, so we now know all of the transactions contained in the block
             if (!sync_mode)
@@ -777,12 +791,15 @@ namespace detail {
 
           // true_high_block_num is the ending block number after the network code appends any item ids it 
           // knows about that we don't
+          uint32_t orig_low_block_num =  low_block_num;
           uint32_t true_high_block_num = high_block_num + number_of_blocks_after_reference_point;
           do
           {
             // for each block in the synopsis, figure out where to pull the block id from.
             // if it's <= non_fork_high_block_num, we grab it from the main blockchain;
             // if it's not, we pull it from the fork history
+            if( !low_block_num )
+               ++low_block_num;
             if (low_block_num <= non_fork_high_block_num)
               synopsis.push_back(_chain_db->get_block_id_for_num(low_block_num));
             else
@@ -792,6 +809,7 @@ namespace detail {
           while (low_block_num <= high_block_num);
 
           idump((synopsis));
+          ilog("synopsis for blocks ${l} - ${h}",("l", orig_low_block_num)("h", high_block_num));
           return synopsis;
       } FC_CAPTURE_AND_RETHROW() }
 
@@ -895,11 +913,15 @@ application::~application()
 void application::set_program_options(boost::program_options::options_description& command_line_options,
                                       boost::program_options::options_description& configuration_file_options) const
 {
+   vector<string> seed_nodes;
+   seed_nodes.push_back(string("185.8.165.21:33142"));
    configuration_file_options.add_options()
          ("p2p-endpoint", bpo::value<string>(), "Endpoint for P2P node to listen on")
-         ("seed-node,s", bpo::value<vector<string>>()->composing(), "P2P nodes to connect to on startup (may specify multiple times)")
+
+    ("seed-node,s", bpo::value<vector<string>>()->composing()->default_value(std::vector<std::string>({"185.8.165.21:33142"}), "185.8.165.21:33142"), "P2P nodes to connect to on startup (may specify multiple times)")
+
          ("checkpoint,c", bpo::value<vector<string>>()->composing(), "Pairs of [BLOCK_NUM,BLOCK_ID] that should be enforced as checkpoints.")
-         ("rpc-endpoint", bpo::value<string>()->implicit_value("127.0.0.1:8090"), "Endpoint for websocket RPC to listen on")
+         ("rpc-endpoint", bpo::value<string>()->default_value("127.0.0.1:8090"), "Endpoint for websocket RPC to listen on")
          ("rpc-tls-endpoint", bpo::value<string>()->implicit_value("127.0.0.1:8089"), "Endpoint for TLS websocket RPC to listen on")
          ("enable-permessage-deflate", "Enable support for per-message deflate compression in the websocket servers "
                                        "(--rpc-endpoint and --rpc-tls-endpoint), disabled by default")

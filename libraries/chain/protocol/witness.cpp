@@ -38,4 +38,10 @@ void witness_update_operation::validate() const
        FC_ASSERT(new_url->size() < GRAPHENE_MAX_URL_LENGTH );
 }
 
+void witness_update_global_parameters_operation::validate() const
+{
+   FC_ASSERT( fee.amount >= 0 );
+   new_parameters.validate();
+}
+
 } } // graphene::chain

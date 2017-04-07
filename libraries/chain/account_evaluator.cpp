@@ -63,8 +63,6 @@ void verify_account_votes( const database& db, const account_options& options )
 
    FC_ASSERT( options.num_witness <= chain_params.maximum_witness_count,
               "Voted for more witnesses than currently allowed (${c})", ("c", chain_params.maximum_witness_count) );
-   FC_ASSERT( options.num_committee <= chain_params.maximum_committee_count,
-              "Voted for more committee members than currently allowed (${c})", ("c", chain_params.maximum_committee_count) );
 
    uint32_t max_vote_id = gpo.next_available_vote_id;
    for( auto id : options.votes )
@@ -123,12 +121,6 @@ object_id_type account_create_evaluator::do_apply( const account_create_operatio
          obj.active           = o.active;
          obj.options          = o.options;
          obj.statistics = db().create<account_statistics_object>([&](account_statistics_object& s){s.owner = obj.id;}).id;
-
-         if( o.extensions.value.buyback_options.valid() )
-         {
-            obj.allowed_assets = o.extensions.value.buyback_options->markets;
-            obj.allowed_assets->emplace( o.extensions.value.buyback_options->asset_to_buy );
-         }
    });
 
    const auto& dynamic_properties = db().get_dynamic_global_properties();
@@ -175,8 +167,10 @@ void_result account_update_evaluator::do_evaluate( const account_update_operatio
 
    acnt = &o.account(d);
 
-   if( o.new_options.valid() )
-      verify_account_votes( d, *o.new_options );
+   if( o.new_options.valid() ) {
+      elog("verifying up new options ${a} ${o}",("o", *o.new_options)("a", o.account ));
+      verify_account_votes(d, *o.new_options);
+   }
 
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (o) ) }
@@ -195,52 +189,15 @@ void_result account_update_evaluator::do_apply( const account_update_operation& 
          a.active = *o.active;
          a.top_n_control_flags = 0;
       }
-      if( o.new_options ) a.options = *o.new_options;
-   });
+      if( o.new_options ){
+         elog("setting up new options ${a} ${o}",("o", *o.new_options)("a", a ));
+         a.options = *o.new_options;
 
+      }
+
+   });
+   elog("a after update: ${a}",("a", *acnt ));
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (o) ) }
-
-void_result account_whitelist_evaluator::do_evaluate(const account_whitelist_operation& o)
-{ try {
-   database& d = db();
-
-   listed_account = &o.account_to_list(d);
-
-   return void_result();
-} FC_CAPTURE_AND_RETHROW( (o) ) }
-
-void_result account_whitelist_evaluator::do_apply(const account_whitelist_operation& o)
-{ try {
-   database& d = db();
-
-   d.modify(*listed_account, [&o](account_object& a) {
-      if( o.new_listing & o.white_listed )
-         a.whitelisting_accounts.insert(o.authorizing_account);
-      else
-         a.whitelisting_accounts.erase(o.authorizing_account);
-
-      if( o.new_listing & o.black_listed )
-         a.blacklisting_accounts.insert(o.authorizing_account);
-      else
-         a.blacklisting_accounts.erase(o.authorizing_account);
-   });
-
-   /** for tracking purposes only, this state is not needed to evaluate */
-   d.modify( o.authorizing_account(d), [&]( account_object& a ) {
-     if( o.new_listing & o.white_listed )
-        a.whitelisted_accounts.insert( o.account_to_list );
-     else
-        a.whitelisted_accounts.erase( o.account_to_list );
-
-     if( o.new_listing & o.black_listed )
-        a.blacklisted_accounts.insert( o.account_to_list );
-     else
-        a.blacklisted_accounts.erase( o.account_to_list );
-   });
-
-   return void_result();
-} FC_CAPTURE_AND_RETHROW( (o) ) }
-
 
 } } // graphene::chain

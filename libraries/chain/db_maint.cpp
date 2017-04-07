@@ -34,7 +34,6 @@
 #include <graphene/chain/budget_record_object.hpp>
 #include <graphene/chain/buyback_object.hpp>
 #include <graphene/chain/chain_property_object.hpp>
-#include <graphene/chain/committee_member_object.hpp>
 #include <graphene/chain/global_property_object.hpp>
 #include <graphene/chain/market_object.hpp>
 #include <graphene/chain/vesting_balance_object.hpp>
@@ -129,52 +128,6 @@ void database::update_active_witnesses()
 
 } FC_CAPTURE_AND_RETHROW() }
 
-void database::update_active_committee_members()
-{ try {
-   assert( _committee_count_histogram_buffer.size() > 0 );
-   share_type stake_target = (_total_voting_stake-_witness_count_histogram_buffer[0]) / 2;
-
-   /// accounts that vote for 0 or 1 witness do not get to express an opinion on
-   /// the number of witnesses to have (they abstain and are non-voting accounts)
-   uint64_t stake_tally = 0; // _committee_count_histogram_buffer[0];
-   size_t committee_member_count = 0;
-   if( stake_target > 0 )
-      while( (committee_member_count < _committee_count_histogram_buffer.size() - 1)
-             && (stake_tally <= stake_target) )
-         stake_tally += _committee_count_histogram_buffer[++committee_member_count];
-
-   const chain_property_object& cpo = get_chain_properties();
-   auto committee_members = sort_votable_objects<committee_member_index>(std::max(committee_member_count*2+1, (size_t)cpo.immutable_parameters.min_committee_member_count));
-
-   for( const committee_member_object& del : committee_members )
-   {
-      modify( del, [&]( committee_member_object& obj ){
-              obj.total_votes = _vote_tally_buffer[del.vote_id];
-              });
-   }
-
-   // Update committee authorities
-   if( !committee_members.empty() )
-   {
-      modify(get(GRAPHENE_COMMITTEE_ACCOUNT), [&](account_object& a)
-      {
-         vote_counter vc;
-         for( const committee_member_object& cm : committee_members )
-            vc.add( cm.committee_member_account, _vote_tally_buffer[cm.vote_id] );
-         vc.finish( a.active );
-      } );
-      modify(get(GRAPHENE_RELAXED_COMMITTEE_ACCOUNT), [&](account_object& a) {
-         a.active = get(GRAPHENE_COMMITTEE_ACCOUNT).active;
-      });
-   }
-   modify(get_global_properties(), [&](global_property_object& gp) {
-      gp.active_committee_members.clear();
-      std::transform(committee_members.begin(), committee_members.end(),
-                     std::inserter(gp.active_committee_members, gp.active_committee_members.begin()),
-                     [](const committee_member_object& d) { return d.id; });
-   });
-} FC_CAPTURE_AND_RETHROW() }
-
 void database::initialize_budget_record( fc::time_point_sec now, budget_record& rec )const
 {
    const dynamic_global_property_object& dpo = get_dynamic_global_properties();
@@ -184,6 +137,8 @@ void database::initialize_budget_record( fc::time_point_sec now, budget_record& 
    rec.from_initial_reserve = core.reserved(*this);
    rec.from_accumulated_fees = core_dd.accumulated_fees;
    rec.from_unused_witness_budget = dpo.witness_budget;
+
+   rec._real_supply = get_real_supply();
 
    if(    (dpo.last_budget_time == fc::time_point_sec())
        || (now <= dpo.last_budget_time) )
@@ -195,6 +150,12 @@ void database::initialize_budget_record( fc::time_point_sec now, budget_record& 
    int64_t dt = (now - dpo.last_budget_time).to_seconds();
    rec.time_since_last_budget = uint64_t( dt );
 
+   if( rec.from_initial_reserve < 0 ) //this should never happen but better check than sorry
+   {
+      elog("from_initial_reserve is negative!");
+      rec.total_budget = 0;
+      return;
+   }
    // We'll consider accumulated_fees to be reserved at the BEGINNING
    // of the maintenance interval.  However, for speed we only
    // call modify() on the asset_dynamic_data_object once at the
@@ -206,19 +167,14 @@ void database::initialize_budget_record( fc::time_point_sec now, budget_record& 
    // at the BEGINNING of the maintenance interval.
    reserve += dpo.witness_budget;
 
+   //we allocate at most 5% of the reserve per year to witness budget.
+   // This is used iff we don't generate new coins anymore.
+
    fc::uint128_t budget_u128 = reserve.value;
-   budget_u128 *= uint64_t(dt);
-   budget_u128 *= GRAPHENE_CORE_ASSET_CYCLE_RATE;
-   //round up to the nearest satoshi -- this is necessary to ensure
-   //   there isn't an "untouchable" reserve, and we will eventually
-   //   be able to use the entire reserve
-   budget_u128 += ((uint64_t(1) << GRAPHENE_CORE_ASSET_CYCLE_RATE_BITS) - 1);
-   budget_u128 >>= GRAPHENE_CORE_ASSET_CYCLE_RATE_BITS;
-   share_type budget;
-   if( budget_u128 < reserve.value )
-      rec.total_budget = share_type(budget_u128.to_uint64());
-   else
-      rec.total_budget = reserve;
+   budget_u128 *= 5;
+   budget_u128 /= 100 * 365;
+
+   rec.total_budget = share_type(budget_u128.to_uint64());
 
    return;
 }
@@ -256,14 +212,12 @@ void database::process_budget()
 
       budget_record rec;
       initialize_budget_record( now, rec );
-      share_type available_funds = rec.total_budget;
 
-      share_type witness_budget = gpo.parameters.witness_pay_per_block.value * blocks_to_maint;
+      share_type witness_budget = get_witness_budget();
       rec.requested_witness_budget = witness_budget;
-      witness_budget = std::min(witness_budget, available_funds);
+      if( witness_budget == 0 )
+         witness_budget = rec.total_budget;
       rec.witness_budget = witness_budget;
-      available_funds -= witness_budget;
-
 
       rec.supply_delta = rec.witness_budget
          - rec.from_accumulated_fees
@@ -315,12 +269,6 @@ void create_buyback_orders( database& db )
       const account_object& buyback_account = (*(asset_to_buy.buyback_account))(db);
       asset_id_type next_asset = asset_id_type();
 
-      if( !buyback_account.allowed_assets.valid() )
-      {
-         wlog( "skipping buyback account ${b} at block ${n} because allowed_assets does not exist", ("b", buyback_account)("n", db.head_block_num()) );
-         continue;
-      }
-
       while( true )
       {
          auto it = bal_idx.lower_bound( boost::make_tuple( buyback_account.id, next_asset ) );
@@ -335,11 +283,6 @@ void create_buyback_orders( database& db )
             continue;
          if( amount_to_sell == 0 )
             continue;
-         if( buyback_account.allowed_assets->find( asset_to_sell ) == buyback_account.allowed_assets->end() )
-         {
-            wlog( "buyback account ${b} not selling disallowed holdings of asset ${a} at block ${n}", ("b", buyback_account)("a", asset_to_sell)("n", db.head_block_num()) );
-            continue;
-         }
 
          try
          {
@@ -394,7 +337,6 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
       {
          d._vote_tally_buffer.resize(props.next_available_vote_id);
          d._witness_count_histogram_buffer.resize(props.parameters.maximum_witness_count / 2 + 1);
-         d._committee_count_histogram_buffer.resize(props.parameters.maximum_committee_count / 2 + 1);
          d._total_voting_stake = 0;
       }
 
@@ -429,16 +371,6 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
             // parameter was lowered.
             d._witness_count_histogram_buffer[offset] += voting_stake;
          }
-         if( opinion_account.options.num_committee <= props.parameters.maximum_committee_count )
-         {
-            uint16_t offset = std::min(size_t(opinion_account.options.num_committee/2),
-                                       d._committee_count_histogram_buffer.size() - 1);
-            // votes for a number greater than maximum_committee_count
-            // are turned into votes for maximum_committee_count.
-            //
-            // same rationale as for witnesses
-            d._committee_count_histogram_buffer[offset] += voting_stake;
-         }
          
          d._total_voting_stake += voting_stake;
       }
@@ -468,14 +400,14 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
       vector<uint64_t>& target;
    };
    clear_canary a(_witness_count_histogram_buffer),
-                b(_committee_count_histogram_buffer),
-                c(_vote_tally_buffer);
+                b(_vote_tally_buffer);
 
    update_active_witnesses();
-   update_active_committee_members();
+   decent_housekeeping();
 
    modify(gpo, [this](global_property_object& p) {
       // Remove scaling of account registration fee
+        //TODO_DECENT rework
       const auto& dgpo = get_dynamic_global_properties();
       p.parameters.current_fees->get<account_create_operation>().basic_fee >>= p.parameters.account_fee_scale_bitshifts *
             (dgpo.accounts_registered_this_interval / p.parameters.accounts_per_fee_scale);
@@ -524,12 +456,9 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
       d.accounts_registered_this_interval = 0;
    });
 
-   // Reset all BitAsset force settlement volumes to zero
-   for( const asset_bitasset_data_object* d : get_index_type<asset_bitasset_data_index>() )
-      modify(*d, [](asset_bitasset_data_object& d) { d.force_settled_volume = 0; });
-
    // process_budget needs to run at the bottom because
    //   it needs to know the next_maintenance_time
+   //TODO_DECENT rework
    process_budget();
 }
 

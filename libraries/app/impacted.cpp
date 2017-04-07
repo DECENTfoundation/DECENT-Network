@@ -42,13 +42,11 @@ struct get_impacted_account_visitor
       _impacted.insert( op.to );
    }
 
-   void operator()( const asset_claim_fees_operation& op ){}
    void operator()( const limit_order_create_operation& op ) {}
    void operator()( const limit_order_cancel_operation& op )
    {
       _impacted.insert( op.fee_paying_account );
    }
-   void operator()( const call_order_update_operation& op ) {}
    void operator()( const fill_order_operation& op )
    {
       _impacted.insert( op.account_id );
@@ -71,11 +69,6 @@ struct get_impacted_account_visitor
          add_authority_accounts( _impacted, *(op.active) );
    }
 
-   void operator()( const account_whitelist_operation& op )
-   {
-      _impacted.insert( op.account_to_list );
-   }
-
    void operator()( const account_transfer_operation& op )
    {
       _impacted.insert( op.new_owner );
@@ -88,18 +81,13 @@ struct get_impacted_account_visitor
          _impacted.insert( *(op.new_issuer) );
    }
 
-   void operator()( const asset_update_bitasset_operation& op ) {}
-   void operator()( const asset_update_feed_producers_operation& op ) {}
+   void operator()( const asset_update_monitored_asset_operation& op ) {}
 
    void operator()( const asset_issue_operation& op )
    {
       _impacted.insert( op.issue_to_account );
    }
 
-   void operator()( const asset_reserve_operation& op ) {}
-   void operator()( const asset_fund_fee_pool_operation& op ) {}
-   void operator()( const asset_settle_operation& op ) {}
-   void operator()( const asset_global_settle_operation& op ) {}
    void operator()( const asset_publish_feed_operation& op ) {}
    void operator()( const witness_create_operation& op )
    {
@@ -109,6 +97,7 @@ struct get_impacted_account_visitor
    {
       _impacted.insert( op.witness_account );
    }
+   void operator()( const witness_update_global_parameters_operation& op ){}
 
    void operator()( const proposal_create_operation& op )
    {
@@ -142,16 +131,6 @@ struct get_impacted_account_visitor
       _impacted.insert( op.authorized_account );
    }
 
-   void operator()( const committee_member_create_operation& op )
-   {
-      _impacted.insert( op.committee_member_account );
-   }
-   void operator()( const committee_member_update_operation& op )
-   {
-      _impacted.insert( op.committee_member_account );
-   }
-   void operator()( const committee_member_update_global_parameters_operation& op ) {}
-
    void operator()( const vesting_balance_create_operation& op )
    {
       _impacted.insert( op.owner );
@@ -160,49 +139,19 @@ struct get_impacted_account_visitor
    void operator()( const vesting_balance_withdraw_operation& op ) {}
    void operator()( const custom_operation& op ) {}
    void operator()( const assert_operation& op ) {}
-
-   void operator()( const override_transfer_operation& op )
-   {
-      _impacted.insert( op.to );
-      _impacted.insert( op.from );
-      _impacted.insert( op.issuer );
-   }
-
-   void operator()( const transfer_to_blind_operation& op )
-   {
-      _impacted.insert( op.from );
-      for( const auto& out : op.outputs )
-         add_authority_accounts( _impacted, out.owner );
-   }
-
-   void operator()( const blind_transfer_operation& op )
-   {
-      for( const auto& in : op.inputs )
-         add_authority_accounts( _impacted, in.owner );
-      for( const auto& out : op.outputs )
-         add_authority_accounts( _impacted, out.owner );
-   }
-
-   void operator()( const transfer_from_blind_operation& op )
-   {
-      _impacted.insert( op.to );
-      for( const auto& in : op.inputs )
-         add_authority_accounts( _impacted, in.owner );
-   }
-
-   void operator()( const asset_settle_cancel_operation& op )
-   {
-      _impacted.insert( op.account );
-   }
-
-   void operator()( const content_submit_operation& op) {}
-   void operator()( const request_to_buy_operation& op) {}
-   void operator()( const leave_rating_operation& op) {}
-   void operator()( const ready_to_publish_operation& op) {}
-   void operator()( const proof_of_custody_operation& op) {}
-   void operator()( const deliver_keys_operation& op) {}
-   void operator()( const subscribe_operation& op) {}
-   void operator()( const subscribe_by_author_operation& op) {}
+   void operator()( const content_submit_operation& op) { _impacted.insert(op.author); }
+   void operator()( const request_to_buy_operation& op) { _impacted.insert(op.consumer); }
+   void operator()( const leave_rating_operation& op) { _impacted.insert(op.consumer);}
+   void operator()( const ready_to_publish_operation& op) { _impacted.insert(op.seeder); }
+   void operator()( const proof_of_custody_operation& op) { _impacted.insert(op.seeder);}
+   void operator()( const deliver_keys_operation& op) {  _impacted.insert(op.seeder);}
+   void operator()( const subscribe_operation& op) { _impacted.insert(op.from); _impacted.insert(op.to); }
+   void operator()( const subscribe_by_author_operation& op) { _impacted.insert(op.from); _impacted.insert(op.to); }
+   void operator()( const return_escrow_submission_operation& op) {  _impacted.insert(op.author);}
+   void operator()( const return_escrow_buying_operation& op) {  _impacted.insert(op.consumer);}
+   void operator()( const report_stats_operation& op) { _impacted.insert(op.consumer);}
+   void operator()( const pay_seeder_operation& op) { _impacted.insert(op.author); _impacted.insert(op.seeder); };
+   void operator()( const finish_buying_operation& op) { _impacted.insert(op.author); };
 };
 
 void operation_get_impacted_accounts( const operation& op, flat_set<account_id_type>& result )

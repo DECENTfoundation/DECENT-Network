@@ -12,7 +12,7 @@ file(GLOB headers "include/graphene/utilities/*.hpp")
 set(sources
    key_conversion.cpp
    string_escape.cpp
-   tempdir.cpp
+   dirhelper.cpp
    words.cpp
    ${headers})
 
@@ -30,10 +30,10 @@ if (USE_PCH)
   cotire(graphene_utilities)
 endif(USE_PCH)
 
-install( TARGETS
-   graphene_utilities
-
-   RUNTIME DESTINATION bin
-   LIBRARY DESTINATION lib
-   ARCHIVE DESTINATION lib
-)
+#install( TARGETS
+#   graphene_utilities
+#
+#   RUNTIME DESTINATION bin
+#   LIBRARY DESTINATION lib
+#   ARCHIVE DESTINATION lib
+#)

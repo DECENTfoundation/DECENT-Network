@@ -1,0 +1,27 @@
+<a><font size="12"><div align="center">Steps for compiling 'gui_wallet' application on MAC OS</div></font></a><br><br><br>
+
+
+<font size="4.5">
+
+1.  <a href="http://doc.qt.io/qt-5/osx.html">Check existance of QT5. If it does not exist, then install it </a>(<font color="red">qt4 also should work</font>)<br><br>
+
+2.  <a href="http://stackoverflow.com/questions/33728905/qt-creator-project-error-xcode-not-set-up-properly-you-may-need-to-confirm-t">
+Xcode set up properly </a>(follow the link or accoprding to Vazgen  this should also work 'sudo xcode-select -switch /Applications/Xcode.app/Contents/Developer') <br><br>
+
+3. Set up following environmental variables (<font color="red">export VAR_NAME=VAR_VALUE</font>)<br>
+&nbsp &nbsp &nbsp &nbsp a) DECENT_ROOT (<font color="red">Default: '../../../../DECENT-Network'</font>) &nbsp &nbsp &nbsp &nbsp # the path to the root of DECENT-Network <br>
+&nbsp &nbsp &nbsp &nbsp b) BOOST_ROOT  (<font color="red">Default: '/usr/local/opt/boost'</font>)  &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp # path, where boost 'lib' and 'include' folders are located <br>
+&nbsp &nbsp &nbsp &nbsp c) OPENSSL_ROOT_DIR (<font color="red">Default: '/usr/local/opt/openssl'</font>)   &nbsp &nbsp &nbsp # path for openssl stuff<br>
+&nbsp &nbsp &nbsp &nbsp d) CRIPTOPP_ROOT_DIR (<font color="red">Default: '/usr/local/opt/cryptopp'</font>) &nbsp # path for openssl stuff<br>
+
+4. before running the app set up DYLD_LIBRARY_PATH environmental variable (<font color="red">export DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH:$BOOST_ROOT/lib</font>)
+
+<br>
+<br>
+<br>
+<a href="mac.details.hist.html">details+hist</a>
+
+
+
+
+</font>

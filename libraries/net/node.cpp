@@ -4855,6 +4855,7 @@ namespace graphene { namespace net { namespace detail {
 
     void node_impl::broadcast( const message& item_to_broadcast, const message_propagation_data& propagation_data )
     {
+      ilog("node_impl::broadcast begin");
       VERIFY_CORRECT_THREAD();
       fc::uint160_t hash_of_message_contents;
       if( item_to_broadcast.msg_type == graphene::net::block_message_type )
@@ -5142,6 +5143,8 @@ namespace graphene { namespace net { namespace detail {
 
   void node::broadcast( const message& msg )
   {
+    ilog("broadcast started");
+     edump((msg));
     INVOKE_IN_IMPL(broadcast, msg);
   }
 
