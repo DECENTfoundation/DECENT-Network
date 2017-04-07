@@ -18,10 +18,10 @@ PurchasedTab::PurchasedTab(Mainwindow_gui_wallet* pMainWindow)
 {
    m_pTableWidget.set_columns({
       {"Title", 30},
-      {"Rating", 10},
-      {"Size", 10},
-      {"Price", 10},
-      {"Created", 15},
+      {"Rating", 10, "rating"},
+      {"Size", 10, "size"},
+      {"Price", 10, "price"},
+      {"Created", 15, "created"},
       {"Status", 20},
       {"", 5},
       {" ", 5}
@@ -90,8 +90,7 @@ void PurchasedTab::timeToUpdate(const std::string& result) {
       
       auto content = contents[i];
       
-      
-      std::string time = content["expiration_time"].get<std::string>();
+      std::string time = content["created"].get<std::string>();
       
       std::string synopsis = unescape_string(content["synopsis"].get<std::string>());
       std::replace(synopsis.begin(), synopsis.end(), '\t', ' '); // JSON does not like tabs :(
@@ -274,9 +273,8 @@ std::string PurchasedTab::getUpdateCommand() {
    } // if key not imported
    
    return "search_my_purchases "
-           "\"" + str_current_username +"\" "
-           "\"" + m_filterLineEditer.text().toStdString() +"\"";
-
+   "\"" + str_current_username +"\" "
+   "\"" + m_filterLineEditer.text().toStdString() +"\" \"" + m_pTableWidget.getSortedColumn() + "\"";
 }
 
 void PurchasedTab::extractionDirSelected(const QString& path) {
