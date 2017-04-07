@@ -75,7 +75,6 @@ void TransactionsTab::timeToUpdate(const std::string& result) {
    }
    
    auto contents = json::parse(result);
-   
    tablewidget.setRowCount(contents.size());
    
    for (int i = 0; i < contents.size(); ++i) {

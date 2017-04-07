@@ -106,7 +106,6 @@ using namespace decent::encrypt;
                std::greater<uint32_t>
             >,
    
-   
             ordered_non_unique<tag<by_expiration>,
                member<content_object, time_point_sec, &content_object::expiration>
             >,

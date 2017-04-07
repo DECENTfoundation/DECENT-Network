@@ -50,7 +50,10 @@ using decent::encrypt::DInteger;
    struct by_URI_open;
    struct by_open_expiration;
    struct by_consumer_open;
-   
+   struct by_size;
+   struct by_rating;
+   struct by_price;
+
    typedef multi_index_container<
       buying_object,
          indexed_by<
@@ -95,11 +98,21 @@ using decent::encrypt::DInteger;
                   member<buying_object, account_id_type, &buying_object::consumer>,
                   const_mem_fun<buying_object, bool, &buying_object::is_open>
                >
+            >,
+            ordered_non_unique< tag< by_size>,
+                  member<buying_object, uint64_t, &buying_object::size>
+            >,
+            ordered_non_unique< tag< by_rating>,
+                  member<buying_object, uint64_t, &buying_object::rating>
+            >,
+            ordered_non_unique< tag< by_price>,
+                  member<buying_object, asset, &buying_object::price>
             >
          >
    >buying_object_multi_index_type;
    
    typedef generic_index< buying_object, buying_object_multi_index_type > buying_index;
+
 
 }}
 

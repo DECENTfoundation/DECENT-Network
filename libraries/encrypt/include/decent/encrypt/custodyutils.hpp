@@ -65,8 +65,15 @@ using namespace boost::filesystem;
 
 class CustodyUtils
 {
+private:
+
 public:
    CustodyUtils();
+   static CustodyUtils& instance(){
+      static CustodyUtils cu;
+      return cu;
+   };
+
    ~CustodyUtils();
 
     /**
