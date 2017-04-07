@@ -17,7 +17,7 @@
 #include <iostream>
 #include <graphene/chain/config.hpp>
 #include <graphene/wallet/wallet.hpp>
-
+#include "gui_design.hpp"
 
 #include <QDateTime>
 #include <QDate>
@@ -39,28 +39,14 @@ BrowseContentTab::BrowseContentTab(Mainwindow_gui_wallet* parent) : _content_pop
         {"Expiration", 7, "expiration"},
         {" ", -50},
     });
-    
-
-//    m_pTableWidget.setStyleSheet("border: 1px solid ");
-    
-    
-    m_filterLineEdit.setStyleSheet( "{"
-                                   "background: #f3f3f3;"
-                                   "background-image: url(:Images/search.svg); /* actual size, e.g. 16x16 */"
-                                   "background-repeat: no-repeat;"
-                                   "background-position: left;"
-                                   "color: #252424;"
-                                   "font-family: SegoeUI;"
-                                   "font-size: 12px;"
-                                   "padding: 2 2 2 20; /* left padding (last number) must be more than the icon's width */"
-                                   "}");
+        
     QLabel* lab = new QLabel();
     QPixmap image(":/icon/images/search.svg");
     lab->setPixmap(image);
     
     m_filterLineEdit.setPlaceholderText("Search Content");
     m_filterLineEdit.setFixedHeight(54);
-    m_filterLineEdit.setStyleSheet("border: 0; padding-left: 10px;");
+    m_filterLineEdit.setStyleSheet(d_lineEdit);
     m_filterLineEdit.setAttribute(Qt::WA_MacShowFocusRect, 0);
     
     m_search_layout.setContentsMargins(42, 0, 0, 0);

@@ -15,6 +15,7 @@
 #include "gui_wallet_global.hpp"
 #include "qt_commonheader.hpp"
 #include "gui_wallet_mainwindow.hpp"
+#include "gui_design.hpp"
 
 #include "json.hpp"
 
@@ -39,7 +40,7 @@ TransactionsTab::TransactionsTab(Mainwindow_gui_wallet* pMainWindow)
    });
    
    
-   user.setStyleSheet("border: 0; padding-left: 10px;");
+   user.setStyleSheet(d_lineEdit);
    user.setPlaceholderText("Enter user name to see transaction history");
    user.setAttribute(Qt::WA_MacShowFocusRect, 0);
    user.setFixedHeight(54);
@@ -47,7 +48,7 @@ TransactionsTab::TransactionsTab(Mainwindow_gui_wallet* pMainWindow)
    
    
    QHBoxLayout* search_lay = new QHBoxLayout();
-   QPixmap image(":/icon/images/search.svg");
+   QPixmap image(i_search);
    search_label.setSizeIncrement(100,40);
    search_label.setPixmap(image);
    

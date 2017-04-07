@@ -39,6 +39,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include "json.hpp"
+#include "gui_design.hpp"
 
 #include <ctime>
 #include <limits>
@@ -66,7 +67,7 @@ m_getPublishersTimer(this)
     
     
     m_title_text.setPlaceholderText("Title:");
-    m_title_text.setStyleSheet("padding-left: 10px;");
+    m_title_text.setStyleSheet(d_lineEdit);
     m_title_text.setAttribute(Qt::WA_MacShowFocusRect, 0);
     m_title_text.setMinimumHeight(44);
     m_title_text.setContentsMargins(0, 0, 0, 0);
@@ -76,7 +77,7 @@ m_getPublishersTimer(this)
     
     m_description_text.setContentsMargins(0, 0, 0, 0);
     m_description_text.setPlaceholderText("Description:");
-    m_description_text.setStyleSheet("border-top: 0px; border-left: 0px; border-right: 0px; padding-left: 10px; border-bottom: 0px;");
+    m_description_text.setStyleSheet(d_desc);
     m_description_text.setMinimumHeight(161);
     m_description_text.setContentsMargins(0, 0, 0, 0);
     
@@ -107,7 +108,7 @@ m_getPublishersTimer(this)
     
     //LIFETIME
     QLabel* lab = new QLabel("  LifeTime");
-    lab->setStyleSheet("QLabel { background-color : white; border:1 solid lightGray; color: Gray}");
+    lab->setStyleSheet(d_label);
     lab->setContentsMargins(0, 0, -5, 0);
     lab->setMinimumWidth(60);
     lab->setMinimumHeight(44);
@@ -122,7 +123,7 @@ m_getPublishersTimer(this)
 
     seeders      = new QComboBox(this);
     QLabel* seed = new QLabel("  Seeders");
-    seed->setStyleSheet("QLabel { background-color : white; border:1 solid lightGray; color: Gray}");
+    seed->setStyleSheet(d_label);
     
     seed->setContentsMargins(0, 0, 0, 0);
     seed->setMinimumWidth(70);
@@ -141,7 +142,7 @@ m_getPublishersTimer(this)
     QHBoxLayout* keyRow = new QHBoxLayout;
 
     QLabel* key = new QLabel("  Key Particles");
-    key->setStyleSheet("QLabel { background-color : white; border:1 solid lightGray; color: Gray}");
+    key->setStyleSheet(d_label);
     key->setContentsMargins(0, 0, 0, 0);
     key->setMinimumWidth(90);
     key->setMinimumHeight(44);
@@ -169,7 +170,7 @@ m_getPublishersTimer(this)
     price->setValidator( new QDoubleValidator(0.001, 100000, 3, this) );
     price->setPlaceholderText("Price");
     price->setAttribute(Qt::WA_MacShowFocusRect, 0);
-    price->setStyleSheet("border:1px solid lightGray; padding-left: 8px; color: Gray");
+    price->setStyleSheet(d_price);
     price->setMinimumHeight(44);
     price->setContentsMargins(0, 0, 0, 0);
     
@@ -184,7 +185,7 @@ m_getPublishersTimer(this)
     
     cont = new QLineEdit("  Path");
     cont->setReadOnly(true);
-    cont->setStyleSheet("border:1px solid lightGray; color: Gray");
+    cont->setStyleSheet(d_label);
     cont->setContentsMargins(0, 0, 0, 0);
     cont->setMinimumHeight(44);
     
@@ -209,7 +210,7 @@ m_getPublishersTimer(this)
     
     sim = new QLineEdit("  Samples(Optional)");
     sim->setReadOnly(true);
-    sim->setStyleSheet("border:1px solid lightGray; color: Gray");
+    sim->setStyleSheet(d_label);
     sim->setContentsMargins(0, 0, 0, 0);
     sim->setMinimumHeight(44);
     
@@ -241,7 +242,7 @@ m_getPublishersTimer(this)
     cancel_label->setFont(fontCanUplo);
     cancel_label->setMinimumHeight(48);
     cancel_label->setMinimumWidth(137);
-    cancel_label->setStyleSheet("QLabel { background-color :rgb(255, 255, 255); border:1px solid lightGray; color : Grey;}");
+    cancel_label->setStyleSheet(d_cancel);
     
     upload_label->setText("Upload");
     upload_label->setFont(fontCanUplo);
@@ -470,12 +471,12 @@ Upload_tab::Upload_tab(Mainwindow_gui_wallet* parent) :  popup(0), _content_popu
     upload_button->setMinimumHeight(54);
     
     QLabel* lab = new QLabel();
-    QPixmap image(":/icon/images/search.svg");
+    QPixmap image(i_search);
     lab->setPixmap(image);
     
     m_filterLineEdit.setPlaceholderText("Search Content");
     m_filterLineEdit.setFixedHeight(54);
-    m_filterLineEdit.setStyleSheet("border: 0; padding-left: 10px;");
+    m_filterLineEdit.setStyleSheet(d_lineEdit);
     m_filterLineEdit.setAttribute(Qt::WA_MacShowFocusRect, 0);
     
     m_search_layout.setContentsMargins(42, 0, 0, 0);
@@ -604,7 +605,7 @@ void Upload_tab::ShowDigitalContentsGUI() {
     int index = 0;
     for(SDigitalContent& aTemporar: _digital_contents) {
         
-        EventPassthrough<DecentSmallButton>* info_icon = new EventPassthrough<DecentSmallButton>(":/icon/images/pop_up.png",":/icon/images/pop_up1.png");
+        EventPassthrough<DecentSmallButton>* info_icon = new EventPassthrough<DecentSmallButton>(i_popup, i_popup_);
         info_icon->setProperty("id", QVariant::fromValue(index));
         info_icon->setAlignment(Qt::AlignCenter);
         connect(info_icon, SIGNAL(clicked()), this, SLOT(show_content_popup()));
@@ -688,7 +689,7 @@ void Upload_tab::uploadPopup()
 
     popup.setWindowTitle("Upload");
     popup.setLayout(&popup.u_main_layout);
-    popup.setStyleSheet("background-color : white");
+    popup.setStyleSheet(d_upload_popup);
     popup.show();
 }
 
