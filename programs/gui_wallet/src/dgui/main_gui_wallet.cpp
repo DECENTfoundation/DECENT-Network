@@ -42,8 +42,10 @@ using string = std::string;
 
 #if defined( _MSC_VER )
 #include <Windows.h>
-#include <signal.h> 
 #endif
+
+#include <signal.h>
+
 
 int runDecentD(int argc, char** argv, fc::promise<void>::ptr& exit_promise);
 QProcess* run_ipfs_daemon(QObject* parent);
