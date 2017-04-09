@@ -1,5 +1,6 @@
 
 #include <QApplication>
+#include <QProcess>
 #include <fc/interprocess/signals.hpp>
 #include <fc/thread/thread.hpp>
 
@@ -30,6 +31,7 @@ using string = std::string;
 #include <fc/log/file_appender.hpp>
 #include <fc/log/logger.hpp>
 #include <fc/log/logger_config.hpp>
+#include <fc/filesystem.hpp>
 
 #include <boost/filesystem.hpp>
 #include <boost/property_tree/ptree.hpp>
@@ -40,42 +42,66 @@ using string = std::string;
 
 #if defined( _MSC_VER )
 #include <Windows.h>
-#include <signal.h> 
 #endif
 
+#include <signal.h>
+
+
 int runDecentD(int argc, char** argv, fc::promise<void>::ptr& exit_promise);
+QProcess* run_ipfs_daemon(QObject* parent);
+
 
 int main(int argc, char* argv[])
 {
+   QApplication app(argc, argv);
+   gui_wallet::Mainwindow_gui_wallet aMainWindow;
+   
+   QProcess* daemon_process = nullptr;
+   try {
+      daemon_process = run_ipfs_daemon(&aMainWindow);
+   } catch (const std::exception& ex) {
+      QMessageBox* msgBox = new QMessageBox();
+      msgBox->setWindowTitle("Error");
+      msgBox->setText(QString::fromStdString(ex.what()));
+      msgBox->exec();
+      std::cout << ex.what();
+      exit(1);
+   }
+   
    fc::thread thread_decentd("decentd service");
 
    fc::promise<void>::ptr exit_promise = new fc::promise<void>("Decent Daemon Exit Promise");
 
-   fc::set_signal_handler([&exit_promise](int /*signal*/)
-                          {
-                             elog( "Caught SIGINT attempting to exit cleanly" );
-                             exit_promise->set_value();
-                          },
-                          SIGINT);
+   fc::set_signal_handler([&exit_promise, daemon_process](int /*signal*/) {
+      elog( "Caught SIGINT attempting to exit cleanly" );
+      daemon_process->terminate();
+      exit_promise->set_value();
+   }, SIGINT);
 
-   fc::set_signal_handler([&exit_promise](int /*signal*/)
-                          {
-                             elog( "Caught SIGTERM attempting to exit cleanly" );
-                             exit_promise->set_value();
-                          },
-                          SIGTERM);
+   fc::set_signal_handler([&exit_promise, daemon_process](int /*signal*/) {
+     elog( "Caught SIGTERM attempting to exit cleanly" );
+      daemon_process->terminate();
+     exit_promise->set_value();
+   }, SIGTERM);
+   
+   
 #if !defined( _MSC_VER )
-   fc::set_signal_handler([&exit_promise](int /*signal*/)
-                          {
-                             elog( "Caught SIGHUP attempting to exit cleanly" );
-                             exit_promise->set_value();
-                          },
-                          SIGHUP);
+   
+   fc::set_signal_handler([&exit_promise, daemon_process](int /*signal*/) {
+     elog( "Caught SIGHUP attempting to exit cleanly" );
+      daemon_process->terminate();
+     exit_promise->set_value();
+  }, SIGHUP);
+   
 #endif
-   fc::future<int> future_decentd = thread_decentd.async([argc, argv, &exit_promise]() -> int
-                                                         {
-                                                            return runDecentD(argc, argv, exit_promise);
-                                                         });
+   
+   
+   fc::future<int> future_decentd = thread_decentd.async([argc, argv, &exit_promise]() -> int {
+      return runDecentD(argc, argv, exit_promise);
+   });
+   
+   
+   
 #ifdef SET_LIBRARY_PATHS
    QDir dir(argv[0]);
 
@@ -85,19 +111,21 @@ int main(int argc, char* argv[])
    QCoreApplication::setLibraryPaths(QStringList(dir.absolutePath()));
 #endif
 
-   QApplication app(argc, argv);
+
 
    qRegisterMetaType<string>( "std::string" );
    qRegisterMetaType<int64_t>( "int64_t" );
    app.setApplicationDisplayName("Decent");
 
-   gui_wallet::Mainwindow_gui_wallet aMainWindow;
    aMainWindow.show();
+   
+   
    app.exec();
    // qt event loop does not support exceptions anyway
    // there is no need for all try-catches
 
    exit_promise->set_value();
+   daemon_process->terminate();
    future_decentd.wait();
 
    return 0;
@@ -111,6 +139,47 @@ namespace bpo = boost::program_options;
 
 void write_default_logging_config_to_stream(std::ostream& out);
 fc::optional<fc::logging_config> load_logging_config_from_ini_file(const fc::path& config_ini_filename);
+
+
+QProcess* run_ipfs_daemon(QObject* parent) {
+   
+   boost::filesystem::path ipfs_bin = utilities::decent_path_finder::instance().get_ipfs_bin();
+   
+   QString program = "ipfs";
+   
+   if (!ipfs_bin.empty()) {
+      program = QString::fromStdString((ipfs_bin / "ipfs").string());
+   }
+   
+   // Check if we found IPFS
+   QProcess *checkProcess = new QProcess(parent);
+   checkProcess->start(program, QStringList("version"));
+   
+   if (!checkProcess->waitForStarted(2000)) {
+      throw std::runtime_error("Can not find IPFS executable. Please export IPFS_BIN environment variable that points to IPFS installation directory");
+   }
+   
+   
+   if (!checkProcess->waitForFinished(2000)) {
+      throw std::runtime_error("Can not find IPFS executable. Please export IPFS_BIN environment variable that points to IPFS installation directory");
+   }
+   
+   
+   
+   
+   QProcess *initProcess = new QProcess(parent);
+   initProcess->start(program, QStringList("init"));
+   
+   // If init timeout throw something
+   if (!initProcess->waitForFinished(2000)) {
+      throw std::runtime_error("Timeout while initializing ipfs");
+   }
+   
+   // Run daemon
+   QProcess *daemonProcess = new QProcess(parent);
+   daemonProcess->start(program, QStringList("daemon"));
+   return daemonProcess;
+}
 
 
 int runDecentD(int argc, char** argv, fc::promise<void>::ptr& exit_promise) {
@@ -256,11 +325,11 @@ void write_default_logging_config_to_stream(std::ostream& out)
           "# route any messages logged to the default logger to the \"stderr\" logger we\n"
           "# declared above, if they are info level are higher\n"
           "[logger.default]\n"
-          "level=info\n"
+          "level=warn\n"
           "appenders=stderr\n\n"
           "# route messages sent to the \"p2p\" logger to the p2p appender declared above\n"
           "[logger.p2p]\n"
-          "level=debug\n"
+          "level=warn\n"
           "appenders=p2p\n\n";
 }
 
