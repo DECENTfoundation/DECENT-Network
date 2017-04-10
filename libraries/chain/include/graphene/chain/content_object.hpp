@@ -9,9 +9,42 @@
 
 #include <stdint.h>
 #include <vector>
+#include <utility>
+
+#ifdef DECENT_TESTNET2
+#define PRICE_REGIONS
+#endif
 
 namespace graphene { namespace chain {
 using namespace decent::encrypt;
+
+   class RegionCodes
+   {
+   public:
+      enum RegionCode
+      {
+         OO_none = 1,
+         OO_all,
+         US,
+         UK
+      };
+      static bool bAuxillary;
+      static map<uint32_t, string> s_mapCodeToName;
+      static map<string, uint32_t> s_mapNameToCode;
+
+      static bool InitCodeAndName();
+   };
+
+   struct PriceRegions
+   {
+      map<uint32_t, asset> map_price;
+
+      optional<asset> GetPrice(uint32_t region_code) const;
+      void SetSimplePrice(asset const& price);
+      void SetRegionPrice(uint32_t region_code, asset const& price);
+      bool Valid(uint32_t region_code) const;
+      bool Valid(string const& region_code) const;
+   };
 
    struct content_summary
    {
@@ -26,7 +59,8 @@ using namespace decent::encrypt;
       uint32_t times_bought;
 
 
-      content_summary& set( const content_object& co, const account_object& ao );
+      content_summary& set( const content_object& co, const account_object& ao, uint32_t region_code );
+      content_summary& set( const content_object& co, const account_object& ao, string const& region_code );
    };
 
    class content_object : public graphene::db::abstract_object<content_object>
@@ -38,7 +72,9 @@ using namespace decent::encrypt;
       account_id_type author;
       time_point_sec expiration;
       time_point_sec created;
-#ifndef DECENT_TESTNET2
+#ifdef PRICE_REGIONS
+      PriceRegions price;
+#else
       asset price;
 #endif
       string synopsis;
@@ -47,11 +83,6 @@ using namespace decent::encrypt;
       string URI;
       map<account_id_type, CiphertextString> key_parts;
       map<account_id_type, time_point_sec> last_proof;
-#ifdef DECENT_TESTNET2
-      map<string, asset> map_price;
-      optional<asset> GetPrice(string const& str_region_code) const;
-      void SetSimplePrice(asset const& price);
-#endif
 
       fc::ripemd160 _hash;
       uint64_t AVG_rating;
@@ -59,10 +90,21 @@ using namespace decent::encrypt;
       uint32_t times_bought;
       asset publishing_fee_escrow;
       decent::encrypt::CustodyData cd;
-      
-      share_type get_price_amount() const {
+
+
+#ifdef PRICE_REGIONS
+      template <RegionCodes::RegionCode code>
+      share_type get_price_amount() const
+      {
+         FC_ASSERT(price.Valid(code));
+         return price.GetPrice(code)->amount;
+      }
+#else
+      share_type get_price_amount() const
+      {
          return price.amount;
       }
+#endif
    };
    
    struct by_author;
@@ -90,11 +132,16 @@ using namespace decent::encrypt;
                member<content_object, string, &content_object::URI>
             >,
    
-   
+#ifdef PRICE_REGIONS
             ordered_non_unique<tag<by_price>,
-               const_mem_fun<content_object, share_type, &content_object::get_price_amount>
+            const_mem_fun<content_object, share_type, &content_object::get_price_amount<RegionCodes::OO_none>>
             >,
-   
+#else
+            ordered_non_unique<tag<by_price>,
+            const_mem_fun<content_object, share_type, &content_object::get_price_amount>
+            >,
+#endif
+
             ordered_non_unique<tag<by_size>,
                member<content_object, uint64_t, &content_object::size>
             >,
@@ -121,18 +168,12 @@ using namespace decent::encrypt;
    typedef generic_index< content_object, content_object_multi_index_type > content_index;
    
 }}
-#ifdef DECENT_TESTNET2
-FC_REFLECT_DERIVED(graphene::chain::content_object,
-                   (graphene::db::object),
-                   (author)(expiration)(created)(size)(synopsis)
-                   (URI)(quorum)(key_parts)(_hash)(last_proof)
-                         (map_price)(AVG_rating)(total_rating)(times_bought)(publishing_fee_escrow)(cd) )
-#else
+
 FC_REFLECT_DERIVED(graphene::chain::content_object,
                    (graphene::db::object),
                    (author)(expiration)(created)(price)(size)(synopsis)
                    (URI)(quorum)(key_parts)(_hash)(last_proof)
                    (AVG_rating)(total_rating)(times_bought)(publishing_fee_escrow)(cd) )
-#endif
 
 FC_REFLECT( graphene::chain::content_summary, (author)(price)(synopsis)(URI)(AVG_rating)(size)(expiration)(created)(times_bought) )
+FC_REFLECT( graphene::chain::PriceRegions, (map_price) )

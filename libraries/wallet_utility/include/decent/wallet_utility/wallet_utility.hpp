@@ -14,7 +14,7 @@ namespace wallet
 }
 namespace chain
 {
-   class content_summary;
+   struct content_summary;
 }
 }
 namespace fc

@@ -410,88 +410,96 @@ void Upload_popup::browseSamples() {
 }
 
 
-void Upload_popup::uploadContent() {
-    std::string m_life_time = _lifeTime->text().toStdString();
-    std::string m_seeders   = _seeders->currentData().toString().toStdString();
-    std::string m_keyparts  = _keyparts->currentData().toString().toStdString();
-    std::string m_price     = _price->text().toStdString();
-    
-    
-    std::string assetName = "DCT";
-    std::string path = _contentPath->text().toStdString();
-    std::string samples_path = _samplesPath->text().toStdString();
-    
-    std::string title = _titleText->text().toStdString();
-    std::string desc = _descriptionText->toPlainText().toStdString();
-   
-    setEnabled(false);
-    
-    json synopsis_obj;
-    synopsis_obj["title"] = title;
-    synopsis_obj["description"] = desc;
-    
-    std::string synopsis = synopsis_obj.dump(4);
-    
-    CryptoPP::Integer randomKey (rng, 512);
-    
-    std::ostringstream oss;
-    oss << randomKey;
-    std::string randomKeyString(oss.str());
-    
-    
-    
-    std::string submitCommand = "submit_content_new";
-    submitCommand += " " + GlobalEvents::instance().getCurrentUser();   //author
-    submitCommand += " \"" + path + "\"";                               //URI
-    submitCommand += " \"" + samples_path + "\"";                       //Samples
-    submitCommand += " \"ipfs\"";                                     //Protocol
-    submitCommand += " " + assetName;                                   //price_asset_name
-    submitCommand += " " + m_price;                                       //price_amount
-    submitCommand += " [" + m_seeders + "]";                              //seeders
-    submitCommand += " \"" + m_life_time + "T23:59:59\"";                  //expiration
-    submitCommand += " \"" + escape_string(synopsis) + "\"";            //synopsis
-    submitCommand += " true";                                           //broadcast
+void Upload_popup::uploadContent()
+{
+   std::string m_life_time = _lifeTime->text().toStdString();
+   std::string m_seeders   = _seeders->currentData().toString().toStdString();
+   std::string m_keyparts  = _keyparts->currentData().toString().toStdString();
+   std::string m_price     = _price->text().toStdString();
 
-   
+
+   std::string assetName = "DCT";
+   std::string path = _contentPath->text().toStdString();
+   std::string samples_path = _samplesPath->text().toStdString();
+
+   std::string title = _titleText->text().toStdString();
+   std::string desc = _descriptionText->toPlainText().toStdString();
+
+   setEnabled(false);
+
+   json synopsis_obj;
+   synopsis_obj["title"] = title;
+   synopsis_obj["description"] = desc;
+
+   std::string synopsis = synopsis_obj.dump(4);
+
+   CryptoPP::Integer randomKey (rng, 512);
+
+   std::ostringstream oss;
+   oss << randomKey;
+   std::string randomKeyString(oss.str());
+
+
+
+   std::string submitCommand = "submit_content_new";
+   submitCommand += " " + GlobalEvents::instance().getCurrentUser();    // author
+   submitCommand += " \"" + path + "\"";                                // URI
+   submitCommand += " \"" + samples_path + "\"";                        // Samples
+   submitCommand += " \"ipfs\"";                                        // Protocol
+   submitCommand += " " + assetName;                                    // price_asset_name
+   submitCommand += " [[\"\", \"" + m_price + "\"]]";                   // price_amount
+   submitCommand += " [" + m_seeders + "]";                             // seeders
+   submitCommand += " \"" + m_life_time + "T23:59:59\"";                // expiration
+   submitCommand += " \"" + escape_string(synopsis) + "\"";             // synopsis
+   submitCommand += " true";                                            // broadcast
+
+   // this is an example how price per regions will be used
+   // submitCommand += " [[\"default\", \"0\"], [\"US\", \"10\"]]";
+
    std::string a_result;
    std::string message;
-   
-   try {
+
+   try
+   {
       RunTask(submitCommand, a_result);
-      if (a_result.find("exception:") != std::string::npos) {
+      if (a_result.find("exception:") != std::string::npos)
+      {
          message = a_result;
       }
-   } catch (const std::exception& ex) {
+   }
+   catch (const std::exception& ex)
+   {
       message = ex.what();
       setEnabled(true);
    }
-   
+
    QMessageBox* msgBox = new QMessageBox();
    msgBox->setAttribute(Qt::WA_DeleteOnClose);
-   
-   if (message.empty()) {
+
+   if (message.empty())
+   {
       _titleText->setText("");
       _descriptionText->setPlainText("");
       _lifeTime->setDate(QDate::currentDate());
       _price->setText("");
       _contentPath->setText("");
       _samplesPath->setText("");
-      
+
       msgBox->setWindowTitle("Success");
       msgBox->setText(tr("Content is submitted"));
 
       setEnabled(true);
 
       emit uploadFinished();
-
-   } else {
+   }
+   else
+   {
       msgBox->setWindowTitle("Error");
       msgBox->setText(tr("Failed to submit content"));
       msgBox->setDetailedText(message.c_str());
    }
-   
-   msgBox->open();
 
+   msgBox->open();
 }
 
 
@@ -601,7 +609,12 @@ std::string Upload_tab::getUpdateCommand() {
       return "";
    }
    
-   return "search_user_content \"" + currentUserName + "\" \"" + filterText + "\" \"" + m_pTableWidget.getSortedColumn() + "\" 100";
+   return   std::string("search_user_content ") +
+            "\"" + currentUserName + "\" " +
+            "\"" + filterText + "\" " +
+            "\"" + m_pTableWidget.getSortedColumn() + "\" " +
+            "\"\" " +   // region_code
+            "100";
    
 }
 

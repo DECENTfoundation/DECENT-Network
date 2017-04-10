@@ -63,7 +63,13 @@ using decent::encrypt::DInteger;
          const auto& idx = db->get_index_type<content_index>().indices().get<by_URI>();
          auto itr = idx.find(URI);
          if (itr != idx.end())
+         {
+#ifdef PRICE_REGIONS
+            return (*itr).get_price_amount(region_code_from);
+#else
             return (*itr).get_price_amount();
+#endif
+         }
          
          return 0;
       }
@@ -83,7 +89,11 @@ using decent::encrypt::DInteger;
       
       asset price;
       std::string synopsis;
-       
+
+#ifdef PRICE_REGIONS
+      uint32_t region_code_from;
+#endif
+
       vector<account_id_type> seeders_answered;
 
       vector<decent::encrypt::CiphertextString> key_particles;
@@ -176,7 +186,14 @@ using decent::encrypt::DInteger;
 
 }}
 
+#ifdef PRICE_REGIONS
+FC_REFLECT_DERIVED(graphene::chain::buying_object,
+                   (graphene::db::object),
+                   (consumer)(URI)(synopsis)(region_code_from)(price)(seeders_answered)(size)(rating)(expiration_time)(pubKey)(key_particles)
+                   (expired)(delivered)(expiration_or_delivery_time)(rated) )
+#else
 FC_REFLECT_DERIVED(graphene::chain::buying_object,
                    (graphene::db::object),
                    (consumer)(URI)(synopsis)(price)(seeders_answered)(size)(rating)(expiration_time)(pubKey)(key_particles)
                    (expired)(delivered)(expiration_or_delivery_time)(rated) )
+#endif
