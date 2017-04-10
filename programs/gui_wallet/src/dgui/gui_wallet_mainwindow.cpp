@@ -469,7 +469,7 @@ void Mainwindow_gui_wallet::CheckDownloads()
     }
    
    json contents;
-   if (!RunTaskParse("search_my_purchases \"" + str_current_username +"\" \"\" ", contents)) {
+   if (!RunTaskParse("search_my_purchases \"" + str_current_username +"\" \"\" \"\" ", contents)) {
       std::cout << contents.get<string>() << std::endl;
       return;
    }
