@@ -74,8 +74,10 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
 , m_ActionLock(tr("Lock"),this)
 , m_ActionUnlock(tr("Unlock"),this)
 , m_ActionImportKey(tr("Import key"),this)
+, m_ActionSendDCT(tr("Send DCT"), this)
 , m_info_dialog()
 , m_locked(true)
+, m_sendDCT_dialog(2, "Send DCT")
 , m_import_key_dlg(2, "Key Import")
 , m_nConnected(0)
 , m_SetPasswordDialog(this, true)
@@ -251,6 +253,9 @@ void Mainwindow_gui_wallet::CreateActions()
     m_ActionImportKey.setDisabled(true);
     m_ActionImportKey.setStatusTip( tr("Import key") );
     connect( &m_ActionImportKey, SIGNAL(triggered()), this, SLOT(ImportKeySlot()) );
+   
+    m_ActionSendDCT.setStatusTip( tr("Send DCT") );
+    connect( &m_ActionSendDCT, SIGNAL(triggered()), this, SLOT(SendDCTSlot()) );
 
 
 }
@@ -266,6 +271,7 @@ void Mainwindow_gui_wallet::CreateMenues()
     m_pMenuFile->addAction( &m_ActionLock );
     m_pMenuFile->addAction( &m_ActionUnlock );
     m_pMenuFile->addAction( &m_ActionImportKey );
+    m_pMenuFile->addAction( &m_ActionSendDCT );
 
 
 
@@ -593,10 +599,19 @@ void Mainwindow_gui_wallet::ImportKeySlot()
         DisplayWalletContentGUI(false);
 
     }
-
-    
 }
 
+
+void Mainwindow_gui_wallet::SendDCTSlot()
+{
+   std::vector<std::string> cvsUsKey(2);
+   cvsUsKey[0] = "";
+   cvsUsKey[1] = "";
+   QPoint thisPos = pos();
+   thisPos.rx() += size().width() / 2 - 175;
+   thisPos.ry() += size().height() / 2 - 75;
+   RET_TYPE aRet = m_sendDCT_dialog.execRD(&thisPos,cvsUsKey);
+}
 
 void Mainwindow_gui_wallet::InfoSlot()
 {
