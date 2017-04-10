@@ -442,16 +442,16 @@ void Upload_popup::uploadContent()
 
 
    std::string submitCommand = "submit_content_new";
-   submitCommand += " " + GlobalEvents::instance().getCurrentUser();    //author
-   submitCommand += " \"" + path + "\"";                                //URI
-   submitCommand += " \"" + samples_path + "\"";                        //Samples
-   submitCommand += " \"ipfs\"";                                        //Protocol
-   submitCommand += " " + assetName;                                    //price_asset_name
+   submitCommand += " " + GlobalEvents::instance().getCurrentUser();    // author
+   submitCommand += " \"" + path + "\"";                                // URI
+   submitCommand += " \"" + samples_path + "\"";                        // Samples
+   submitCommand += " \"ipfs\"";                                        // Protocol
+   submitCommand += " " + assetName;                                    // price_asset_name
    submitCommand += " [[\"\", \"" + m_price + "\"]]";                   // price_amount
-   submitCommand += " [" + m_seeders + "]";                             //seeders
-   submitCommand += " \"" + m_life_time + "T23:59:59\"";                //expiration
-   submitCommand += " \"" + escape_string(synopsis) + "\"";             //synopsis
-   submitCommand += " true";                                            //broadcast
+   submitCommand += " [" + m_seeders + "]";                             // seeders
+   submitCommand += " \"" + m_life_time + "T23:59:59\"";                // expiration
+   submitCommand += " \"" + escape_string(synopsis) + "\"";             // synopsis
+   submitCommand += " true";                                            // broadcast
 
    // this is an example how price per regions will be used
    // submitCommand += " [[\"default\", \"0\"], [\"US\", \"10\"]]";
