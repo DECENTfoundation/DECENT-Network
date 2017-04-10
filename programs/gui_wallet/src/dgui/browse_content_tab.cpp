@@ -219,7 +219,14 @@ void BrowseContentTab::ShowDigitalContentsGUI() {
       
       // Price
       colIndex++;
-      m_pTableWidget.setItem(index, colIndex, new QTableWidgetItem(QString::number(aTemporar.price.amount) + " DCT"));
+      if(aTemporar.price.amount)
+      {
+         m_pTableWidget.setItem(index, colIndex, new QTableWidgetItem(QString::number(aTemporar.price.amount , 'f' , 4) + " DCT"));
+      }
+      else
+      {
+         m_pTableWidget.setItem(index, colIndex, new QTableWidgetItem("Free"));
+      }
       m_pTableWidget.item(index, colIndex)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
       m_pTableWidget.item(index, colIndex)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
       
