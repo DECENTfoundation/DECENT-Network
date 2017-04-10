@@ -94,7 +94,12 @@ using namespace decent::encrypt;
 
 #ifdef PRICE_REGIONS
       template <RegionCodes::RegionCode code>
-      share_type get_price_amount() const
+      share_type get_price_amount_template() const
+      {
+         FC_ASSERT(price.Valid(code));
+         return price.GetPrice(code)->amount;
+      }
+      share_type get_price_amount(uint32_t code) const
       {
          FC_ASSERT(price.Valid(code));
          return price.GetPrice(code)->amount;
@@ -134,7 +139,7 @@ using namespace decent::encrypt;
    
 #ifdef PRICE_REGIONS
             ordered_non_unique<tag<by_price>,
-            const_mem_fun<content_object, share_type, &content_object::get_price_amount<RegionCodes::OO_none>>
+            const_mem_fun<content_object, share_type, &content_object::get_price_amount_template<RegionCodes::OO_none>>
             >,
 #else
             ordered_non_unique<tag<by_price>,
