@@ -63,7 +63,13 @@ using decent::encrypt::DInteger;
          const auto& idx = db->get_index_type<content_index>().indices().get<by_URI>();
          auto itr = idx.find(URI);
          if (itr != idx.end())
+         {
+#ifdef PRICE_REGIONS
+            return (*itr).get_price_amount(region_code_from);
+#else
             return (*itr).get_price_amount();
+#endif
+         }
          
          return 0;
       }
