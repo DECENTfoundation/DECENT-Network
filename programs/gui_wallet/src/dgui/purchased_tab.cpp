@@ -169,7 +169,14 @@ void PurchasedTab::timeToUpdate(const std::string& result) {
       
       m_pTableWidget.setItem(i, 0, new QTableWidgetItem(QString::fromStdString(synopsis)));
       m_pTableWidget.setItem(i, 1, new QTableWidgetItem(QString::number(size) + tr(" MB")));
-      m_pTableWidget.setItem(i, 2, new QTableWidgetItem(QString::number(price, 'f', 4) + " DCT"));
+      if(price)
+      {
+         m_pTableWidget.setItem(i, 2, new QTableWidgetItem(QString::number(price, 'f', 4) + " DCT"));
+      }
+      else
+      {
+         m_pTableWidget.setItem(i, 2, new QTableWidgetItem("Free"));
+      }
       
       
       std::string s_time = time.substr(0, time.find("T"));
