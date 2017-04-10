@@ -111,11 +111,12 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
 
    setUnifiedTitleAndToolBarOnMac(false);
 
-   QComboBox* pUsersCombo = m_pCentralWidget->usersCombo();
-
-
+   QComboBox*   pUsersCombo = m_pCentralWidget->usersCombo();
+   DecentButton* pImportButton = m_pCentralWidget->importButton();
+   pUsersCombo->hide();
+   
    connect(pUsersCombo, SIGNAL(currentIndexChanged(const QString&)), this, SLOT(CurrentUserChangedSlot(const QString&)) );
-
+   connect(pImportButton, SIGNAL(LabelClicked()), this, SLOT(ImportKeySlot()));
 
    setWindowTitle(tr("DECENT - Blockchain Content Distribution"));
 
@@ -339,13 +340,21 @@ void Mainwindow_gui_wallet::UpdateAccountBalances(const std::string& username) {
    
    std::string csLineToRun = "list_account_balances " + username;
    json allBalances;
-   
+
    if (!RunTaskParse(csLineToRun, allBalances)) {
       ALERT_DETAILS("Could not get account balances", allBalances.get<string>().c_str());
       return;
    }
-   
-   
+   if(!allBalances.size())
+   {
+      m_pCentralWidget->usersCombo()->hide();
+      m_pCentralWidget->importButton()->show();
+   }
+   else
+   {
+      m_pCentralWidget->importButton()->hide();
+      m_pCentralWidget->usersCombo()->show();
+   }
    
    std::vector<std::string> balances;
    for (int i = 0; i < allBalances.size(); ++i) {
