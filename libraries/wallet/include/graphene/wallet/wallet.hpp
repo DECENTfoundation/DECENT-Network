@@ -301,7 +301,7 @@ namespace graphene { namespace wallet {
           * @return Map of account names to corresponding IDs
           * @ingroup WalletCLI
           */
-         map<string,account_id_type>       search_accounts(const string& term, uint32_t limit);
+         vector<account_object>       search_accounts(const string& term, const string order, uint32_t limit);
 
          /**
           * @brief List the balances of an account.

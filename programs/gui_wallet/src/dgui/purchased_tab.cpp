@@ -18,9 +18,8 @@ PurchasedTab::PurchasedTab(Mainwindow_gui_wallet* pMainWindow)
 {
    m_pTableWidget.set_columns({
       {"Title", 30},
-      {"Rating", 10, "rating"},
-      {"Size", 10, "size"},
-      {"Price", 10, "price"},
+      {"Size", 15, "size"},
+      {"Price", 15, "price"},
       {"Created", 15, "created"},
       {"Status", 20},
       {"", 5},
@@ -101,7 +100,7 @@ void PurchasedTab::timeToUpdate(const std::string& result) {
          synopsis = synopsis_parsed["title"].get<std::string>();
       } catch (...) {}
       
-      double rating = content["rating"].get<double>() / 1000;
+      //double rating = content["rating"].get<double>() / 1000;
       uint64_t size = content["size"].get<int>();
       
       
@@ -164,19 +163,18 @@ void PurchasedTab::timeToUpdate(const std::string& result) {
       info_icon->setProperty("id", QVariant::fromValue(i));
       info_icon->setAlignment(Qt::AlignCenter);
       connect(info_icon, SIGNAL(clicked()), this, SLOT(show_content_popup()));
-      m_pTableWidget.setCellWidget(i, 7, info_icon);
+      m_pTableWidget.setCellWidget(i, 6, info_icon);
       
       
       
       m_pTableWidget.setItem(i, 0, new QTableWidgetItem(QString::fromStdString(synopsis)));
-      m_pTableWidget.setItem(i, 1, new QTableWidgetItem(QString::number(rating)));
-      m_pTableWidget.setItem(i, 2, new QTableWidgetItem(QString::number(size) + tr(" MB")));
-      m_pTableWidget.setItem(i, 3, new QTableWidgetItem(QString::number(price, 'f', 4) + " DCT"));
+      m_pTableWidget.setItem(i, 1, new QTableWidgetItem(QString::number(size) + tr(" MB")));
+      m_pTableWidget.setItem(i, 2, new QTableWidgetItem(QString::number(price, 'f', 4) + " DCT"));
       
       
       std::string s_time = time.substr(0, time.find("T"));
       
-      m_pTableWidget.setItem(i, 4, new QTableWidgetItem(QString::fromStdString(s_time)));
+      m_pTableWidget.setItem(i, 3, new QTableWidgetItem(QString::fromStdString(s_time)));
       
       
       
@@ -195,7 +193,7 @@ void PurchasedTab::timeToUpdate(const std::string& result) {
          status_text = status_text + tr(" ") + QString::fromStdString(content["status_text"].get<std::string>());
       }
       
-      m_pTableWidget.setItem(i, 5, new QTableWidgetItem(status_text));
+      m_pTableWidget.setItem(i, 4, new QTableWidgetItem(status_text));
       
       if (total_key_parts == 0) {
          total_key_parts = 1;
@@ -210,17 +208,17 @@ void PurchasedTab::timeToUpdate(const std::string& result) {
       progress *= 100; // Percent
       
       if ((received_download_bytes < total_download_bytes) || !is_delivered) {
-         m_pTableWidget.setItem(i, 6, new QTableWidgetItem(QString::number(progress) + "%"));
-         m_pTableWidget.item(i, 6)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
-         m_pTableWidget.item(i, 6)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+         m_pTableWidget.setItem(i, 5, new QTableWidgetItem(QString::number(progress) + "%"));
+         m_pTableWidget.item(i, 5)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+         m_pTableWidget.item(i, 5)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
       } else {
          
          EventPassthrough<DecentSmallButton>* extract_icon = new EventPassthrough<DecentSmallButton>(":/icon/images/export.png", ":/icon/images/export1.png");
          
          if ((received_download_bytes < total_download_bytes) || !is_delivered) {
-            m_pTableWidget.setItem(i, 6, new QTableWidgetItem(QString::number(progress) + "%"));
-            m_pTableWidget.item(i, 6)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
-            m_pTableWidget.item(i, 6)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+            m_pTableWidget.setItem(i, 5, new QTableWidgetItem(QString::number(progress) + "%"));
+            m_pTableWidget.item(i, 5)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+            m_pTableWidget.item(i, 5)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
          } else {
             
             EventPassthrough<ClickableLabel>* extract_icon = new EventPassthrough<ClickableLabel>();
@@ -235,7 +233,7 @@ void PurchasedTab::timeToUpdate(const std::string& result) {
             extract_icon->setAlignment(Qt::AlignCenter);
 
             connect(extract_icon, SIGNAL(clicked()), this, SLOT(extractPackage()));
-            m_pTableWidget.setCellWidget(i, 6, extract_icon);
+            m_pTableWidget.setCellWidget(i, 5, extract_icon);
          }
 
          
@@ -247,7 +245,7 @@ void PurchasedTab::timeToUpdate(const std::string& result) {
          extract_icon->setAlignment(Qt::AlignCenter);
          
          connect(extract_icon, SIGNAL(clicked()), this, SLOT(extractPackage()));
-         m_pTableWidget.setCellWidget(i, 6, extract_icon);
+         m_pTableWidget.setCellWidget(i, 5, extract_icon);
       }
       
       

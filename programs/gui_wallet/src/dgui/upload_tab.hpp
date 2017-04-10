@@ -149,10 +149,7 @@ namespace gui_wallet
         ContentDetailsGeneral*        _content_popup;
         Mainwindow_gui_wallet*        _parent;
        bool                          _isUploading;
-    
-        bool                          m_doUpdate;
-        QTimer                        m_contentUpdateTimer;
-    };
+   };
     
 
     
