@@ -77,40 +77,33 @@ namespace gui_wallet
         void onPublishersDone(void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result);
         
        
-        QVBoxLayout     u_main_layout;
+        QVBoxLayout*     u_main_layout;
 
-    protected:
-        virtual void resizeEvent ( QResizeEvent * event );
     private:
         Mainwindow_gui_wallet* m_pMainWindow;
-        QVBoxLayout     m_synopsis_layout;
-        QVBoxLayout     m_info_layout;
-        QTableWidget    m_info_widget;
-        
-        QLabel          m_title_label;
-        QLineEdit       m_title_text;
-        
-        QLabel          m_description_label;
-        QTextEdit       m_description_text;
-        
-        QLabel          m_infoLayoutHeader;
+       
+        QLineEdit*       _titleText;
+        QTextEdit*       _descriptionText;
+        QDateEdit*       _lifeTime;
+        QComboBox*       _seeders;
+        QComboBox*       _keyparts;
+        QLineEdit*       _price;
+        QLineEdit*       _contentPath;
+        QLineEdit*       _samplesPath;
+       
+       
         QTimer          m_getPublishersTimer;
-        
-        QLineEdit*      m_contentPath;
-        QLineEdit*      m_samplesPath;
-        
-        QDateEdit*      de;
-        QComboBox*      seeders;
-        QComboBox*      keyparts;
-        QLineEdit*      price;
-        QLineEdit*      sim;
-        QLineEdit*      cont;
     public:
     signals:
         void uploadFinished();
     };
     
 }
+
+
+
+
+
 
 
 
