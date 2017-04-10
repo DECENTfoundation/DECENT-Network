@@ -281,7 +281,7 @@ void Mainwindow_gui_wallet::CreateMenues()
     m_pMenuView->addAction(transactionsAction);
     transactionsAction->setProperty("index", 1);
 
-    QAction* uploadAction = new QAction(tr("Upload"), this);
+    QAction* uploadAction = new QAction(tr("Publish"), this);
     m_pMenuView->addAction(uploadAction);
     uploadAction->setProperty("index", 2);
 

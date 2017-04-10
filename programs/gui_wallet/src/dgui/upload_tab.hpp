@@ -71,17 +71,15 @@ namespace gui_wallet
         void uploadContent();
         void onGrabPublishers();
         void uploadCanceled();
+        void updateUploadButtonStatus();
 
     public:
-        friend class upload_up;
         void onPublishersDone(void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result);
-        
        
-        QVBoxLayout*     u_main_layout;
-
     private:
         Mainwindow_gui_wallet* m_pMainWindow;
        
+        QVBoxLayout*     u_main_layout;
         QLineEdit*       _titleText;
         QTextEdit*       _descriptionText;
         QDateEdit*       _lifeTime;
@@ -90,9 +88,13 @@ namespace gui_wallet
         QLineEdit*       _price;
         QLineEdit*       _contentPath;
         QLineEdit*       _samplesPath;
-       
+        DecentButton*    _upload_button;
+        DecentButton*    _cancel_button;
        
         QTimer          m_getPublishersTimer;
+        QTimer*          _buttonStatusCheck;
+       
+       std::map<std::string, double> _publisherIdToPriceMap;
     public:
     signals:
         void uploadFinished();
