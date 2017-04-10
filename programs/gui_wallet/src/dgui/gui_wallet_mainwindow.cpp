@@ -193,8 +193,10 @@ void Mainwindow_gui_wallet::currentUserBalanceUpdate()
 {
     std::string userBalanceUpdate = GlobalEvents::instance().getCurrentUser();
     if( userBalanceUpdate == "" ) {
+        m_ActionSendDCT.setDisabled(true);
         return;
     }
+    m_ActionSendDCT.setDisabled(false);
     UpdateAccountBalances(userBalanceUpdate);
 }
 
