@@ -41,6 +41,7 @@ using namespace decent::encrypt;
 
       optional<asset> GetPrice(uint32_t region_code) const;
       void SetSimplePrice(asset const& price);
+      void SetRegionPrice(uint32_t region_code, asset const& price);
       bool Valid(uint32_t region_code) const;
       bool Valid(string const& region_code) const;
    };
@@ -90,15 +91,20 @@ using namespace decent::encrypt;
       asset publishing_fee_escrow;
       decent::encrypt::CustodyData cd;
 
+
+#ifdef PRICE_REGIONS
+      template <RegionCodes::RegionCode code>
       share_type get_price_amount() const
       {
-#ifdef PRICE_REGIONS
-         //FC_ASSERT(price.Valid());
-         //return price.GetPrice()->amount;
-#else
-         return price.amount;
-#endif
+         FC_ASSERT(price.Valid(code));
+         return price.GetPrice(code)->amount;
       }
+#else
+      share_type get_price_amount() const
+      {
+         return price.amount;
+      }
+#endif
    };
    
    struct by_author;
@@ -126,11 +132,16 @@ using namespace decent::encrypt;
                member<content_object, string, &content_object::URI>
             >,
    
-   
+#ifdef PRICE_REGIONS
             ordered_non_unique<tag<by_price>,
-               const_mem_fun<content_object, share_type, &content_object::get_price_amount>
+            const_mem_fun<content_object, share_type, &content_object::get_price_amount<RegionCodes::OO_none>>
             >,
-   
+#else
+            ordered_non_unique<tag<by_price>,
+            const_mem_fun<content_object, share_type, &content_object::get_price_amount>
+            >,
+#endif
+
             ordered_non_unique<tag<by_size>,
                member<content_object, uint64_t, &content_object::size>
             >,

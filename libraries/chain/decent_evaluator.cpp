@@ -36,46 +36,64 @@ namespace graphene { namespace chain {
       //TODO_DECENT - what if it is resubmit? Drop 2
    }FC_CAPTURE_AND_RETHROW( (o) ) }
    
-   void_result content_submit_evaluator::do_apply(const content_submit_operation& o )
+   void_result content_submit_evaluator::do_apply(const content_submit_operation& o)
    {try{
-      db().create<content_object>( [&](content_object& co){ //create new content object and store all vaues from the operation
-         co.author = o.author;
+      db().create<content_object>([&](content_object& co)
+                                  {  //create new content object and store all vaues from the operation
+                                     co.author = o.author;
 #ifdef PRICE_REGIONS
-         co.price.SetSimplePrice(o.price);
+                                     map<uint32_t, asset> prices;
+                                     for (auto const& item : o.price)
+                                     {
+                                        prices.insert(std::make_pair(item.first, item.second));
+                                     }
+
+                                     auto it_no_regions = prices.find(RegionCodes::OO_none);
+                                     if (it_no_regions == prices.end())
+                                        co.price.SetSimplePrice(it_no_regions->second);
+                                     else
+                                     {
+                                        for (auto const& price_item : prices)
+                                        {
+                                           co.price.SetRegionPrice(price_item.first, price_item.second);
+                                        }
+                                     }
 #else
-         co.price = o.price;
+                                     co.price = o.price;
 #endif
-         co.size = o.size;
-         co.synopsis = o.synopsis;
-         co.URI = o.URI;
-         co.publishing_fee_escrow = o.publishing_fee;
-         auto itr1 = o.seeders.begin();
-         auto itr2 = o.key_parts.begin();
-         while ( itr1 != o.seeders.end() && itr2 != o.key_parts.end() )
-         {
-            co.key_parts.emplace(std::make_pair( *itr1, *itr2 ));
-            itr1++;
-            itr2++;
-         }
-         co._hash = o.hash;
-         co.cd = o.cd;
-         co.quorum = o.quorum;
-         co.expiration = o.expiration;
-         co.created = db().head_block_time();
-         co.times_bought = 0;
-         co.AVG_rating = 0;
-         co.total_rating = 0;
-      });
+                                     co.size = o.size;
+                                     co.synopsis = o.synopsis;
+                                     co.URI = o.URI;
+                                     co.publishing_fee_escrow = o.publishing_fee;
+                                     auto itr1 = o.seeders.begin();
+                                     auto itr2 = o.key_parts.begin();
+                                     while ( itr1 != o.seeders.end() && itr2 != o.key_parts.end() )
+                                     {
+                                        co.key_parts.emplace(std::make_pair( *itr1, *itr2 ));
+                                        itr1++;
+                                        itr2++;
+                                     }
+                                     co._hash = o.hash;
+                                     co.cd = o.cd;
+                                     co.quorum = o.quorum;
+                                     co.expiration = o.expiration;
+                                     co.created = db().head_block_time();
+                                     co.times_bought = 0;
+                                     co.AVG_rating = 0;
+                                     co.total_rating = 0;
+                                  });
       db().adjust_balance(o.author,-o.publishing_fee);  //pay the escrow from author's account
       auto& idx = db().get_index_type<seeder_index>().indices().get<by_seeder>();
       // Reserve the space on seeder's boxes
       // TODO_DECENT - we should better reserve the disk space after the first PoC
-      for ( const auto &p : o.seeders ){
+      for ( const auto &p : o.seeders )
+      {
          const auto& itr = idx.find( p );
          FC_ASSERT( itr != idx.end(), "seeder does not exist" );
-         db().modify<seeder_object>( *itr, [&](seeder_object& so){
-              so.free_space -= o.size;
-         });
+         db().modify<seeder_object>( *itr, [&](seeder_object& so)
+                                    {
+                                       so.free_space -= o.size;
+                                    });
       }
    }FC_CAPTURE_AND_RETHROW( (o) ) }
    

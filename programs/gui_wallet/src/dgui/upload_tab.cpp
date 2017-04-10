@@ -308,126 +308,137 @@ void Upload_popup::browseSamples() {
 }
 
 
-void Upload_popup::uploadContent() {
-    std::string m_life_time = de->text().toStdString();
-    std::string m_seeders   = seeders->currentData().toString().toStdString();
-    std::string m_keyparts  = keyparts->currentData().toString().toStdString();
-    std::string m_price     = price->text().toStdString();
-    
-    
-    std::string assetName = "DCT";
-    std::string path = m_contentPath->text().toStdString();
-    std::string samples_path = m_samplesPath->text().toStdString();
-    
-    std::string title = m_title_text.text().toStdString();
-    std::string desc = m_description_text.toPlainText().toStdString();
-    
-    if (m_price.empty()) {
-        ALERT("Please specify price");
-        return;
-    }
-    
-    if (path.empty()) {
-        ALERT("Please specify path");
-        return;
-    }
-    
-    
-    boost::system::error_code ec;
-    if (boost::filesystem::file_size(path, ec) > 100 * 1024 * 1024) {
-        ALERT("Content size is limited in Testnet 0.1 to 100MB");
-        return;
-    }
-    
-    if (ec) {
-        ALERT("Please select valid file for upload.");
-        return;
-    }
-    
-    
-    if (title.empty()) {
-        ALERT("Please specify title");
-        return;
-    }
-    
-    if (desc.empty()) {
-        ALERT("Please specify description");
-        return;
-    }
-    
-    if (GlobalEvents::instance().getCurrentUser().empty()) {
-        ALERT("Please select user to upload");
-        return;
-    }
-    
-    setEnabled(false);
-    
-    json synopsis_obj;
-    synopsis_obj["title"] = title;
-    synopsis_obj["description"] = desc;
-    
-    std::string synopsis = synopsis_obj.dump(4);
-    
-    CryptoPP::Integer randomKey (rng, 512);
-    
-    std::ostringstream oss;
-    oss << randomKey;
-    std::string randomKeyString(oss.str());
-    
-    
-    
-    std::string submitCommand = "submit_content_new";
-    submitCommand += " " + GlobalEvents::instance().getCurrentUser();   //author
-    submitCommand += " \"" + path + "\"";                               //URI
-    submitCommand += " \"" + samples_path + "\"";                       //Samples
-    submitCommand += " \"ipfs\"";                                     //Protocol
-    submitCommand += " " + assetName;                                   //price_asset_name
-    submitCommand += " " + m_price;                                       //price_amount
-    submitCommand += " [" + m_seeders + "]";                              //seeders
-    submitCommand += " \"" + m_life_time + "T23:59:59\"";                  //expiration
-    submitCommand += " \"" + escape_string(synopsis) + "\"";            //synopsis
-    submitCommand += " true";                                           //broadcast
+void Upload_popup::uploadContent()
+{
+   std::string m_life_time = de->text().toStdString();
+   std::string m_seeders   = seeders->currentData().toString().toStdString();
+   std::string m_keyparts  = keyparts->currentData().toString().toStdString();
+   std::string m_price     = price->text().toStdString();
 
-   
+   std::string assetName = "DCT";
+   std::string path = m_contentPath->text().toStdString();
+   std::string samples_path = m_samplesPath->text().toStdString();
+
+   std::string title = m_title_text.text().toStdString();
+   std::string desc = m_description_text.toPlainText().toStdString();
+
+   if (m_price.empty())
+   {
+      ALERT("Please specify price");
+      return;
+   }
+
+   if (path.empty())
+   {
+      ALERT("Please specify path");
+      return;
+   }
+
+   boost::system::error_code ec;
+   if (boost::filesystem::file_size(path, ec) > 100 * 1024 * 1024)
+   {
+      ALERT("Content size is limited in Testnet 0.1 to 100MB");
+      return;
+   }
+
+   if (ec)
+   {
+      ALERT("Please select valid file for upload.");
+      return;
+   }
+
+   if (title.empty())
+   {
+      ALERT("Please specify title");
+      return;
+   }
+
+   if (desc.empty())
+   {
+      ALERT("Please specify description");
+      return;
+   }
+
+   if (GlobalEvents::instance().getCurrentUser().empty())
+   {
+      ALERT("Please select user to upload");
+      return;
+   }
+
+   setEnabled(false);
+
+   json synopsis_obj;
+   synopsis_obj["title"] = title;
+   synopsis_obj["description"] = desc;
+
+   std::string synopsis = synopsis_obj.dump(4);
+
+   CryptoPP::Integer randomKey (rng, 512);
+
+   std::ostringstream oss;
+   oss << randomKey;
+   std::string randomKeyString(oss.str());
+
+   std::string submitCommand = "submit_content_new";
+   submitCommand += " " + GlobalEvents::instance().getCurrentUser();   // author
+   submitCommand += " \"" + path + "\"";                               // URI
+   submitCommand += " \"" + samples_path + "\"";                       // Samples
+   submitCommand += " \"ipfs\"";                                       // Protocol
+   submitCommand += " " + assetName;                                   // price_asset_name
+   submitCommand += " {\"\", \"" + m_price + "\"}";                    // price_amount
+   submitCommand += " [" + m_seeders + "]";                            // seeders
+   submitCommand += " \"" + m_life_time + "T23:59:59\"";               // expiration
+   submitCommand += " \"" + escape_string(synopsis) + "\"";            // synopsis
+   submitCommand += " true";                                           // broadcast
+
+
+   // this is an example how price per regions will be used
+   //submitCommand += " [[\"default\", \"0\"], [\"US\", \"10\"]]";
+   //
    std::string a_result;
    std::string message;
-   
-   try {
+
+   try
+   {
       RunTask(submitCommand, a_result);
-      if (a_result.find("exception:") != std::string::npos) {
+      if (a_result.find("exception:") != std::string::npos)
+      {
          message = a_result;
       }
-   } catch (const std::exception& ex) {
+   }
+   catch (const std::exception& ex)
+   {
       message = ex.what();
       setEnabled(true);
    }
-   
+
    QMessageBox* msgBox = new QMessageBox();
    msgBox->setAttribute(Qt::WA_DeleteOnClose);
-   
-   if (message.empty()) {
+
+   if (message.empty())
+   {
       m_title_text.setText("");
       m_description_text.setPlainText("");
       de->setDate(QDate::currentDate());
       price->setText("");
       m_contentPath->setText("");
       m_samplesPath->setText("");
-      
+
       msgBox->setWindowTitle("Success");
       msgBox->setText(tr("Content is submitted"));
 
       setEnabled(true);
 
       emit uploadFinished();
-
-   } else {
+   }
+   else
+   {
       msgBox->setWindowTitle("Error");
       msgBox->setText(tr("Failed to submit content"));
       msgBox->setDetailedText(message.c_str());
    }
-   
-   msgBox->open();
 
+   msgBox->open();
 }
 
 void Upload_popup::resizeEvent ( QResizeEvent * event )

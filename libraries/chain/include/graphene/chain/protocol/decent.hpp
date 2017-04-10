@@ -12,6 +12,7 @@
 
 #include <stdint.h>
 #include <vector>
+#include <utility>
 
 #include <decent/encrypt/crypto_types.hpp>
 
@@ -28,7 +29,11 @@ namespace graphene { namespace chain {
       asset fee;
       account_id_type author;
       string URI;
+#ifdef PRICE_REGIONS
+      vector<pair<uint32_t, asset>> price;
+#else
       asset price;
+#endif
       uint64_t size; //<Size of content, including samples, in megabytes
       fc::ripemd160 hash;
 

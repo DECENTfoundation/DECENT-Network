@@ -60,6 +60,10 @@ namespace graphene { namespace chain {
       map_price.clear();
       map_price.insert(std::make_pair(uint32_t(RegionCodes::OO_none), price));
    }
+   void PriceRegions::SetRegionPrice(uint32_t region_code, asset const& price)
+   {
+      map_price.insert(std::make_pair(region_code, price));
+   }
    bool PriceRegions::Valid(uint32_t region_code) const
    {
       optional<asset> op_price = GetPrice(region_code);

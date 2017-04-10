@@ -2115,24 +2115,53 @@ public:
       return sign_transaction(tx, broadcast);
    }
 
-   signed_transaction submit_content(string author,
-                                     string URI,
-                                     string price_asset_symbol,
-                                     string price_amount,
-                                     fc::ripemd160 hash,
-                                     uint64_t size,
-                                     vector<account_id_type> seeders,
-                                     uint32_t quorum,
-                                     fc::time_point_sec expiration,
-                                     string publishing_fee_symbol_name,
-                                     string publishing_fee_amount,
-                                     string synopsis,
-                                     DInteger secret,
-                                     decent::encrypt::CustodyData cd,
+   static void submit_content_utility(content_submit_operation& submit_op,
+                                      vector<pair<string, string>> const& price_amounts,
+                                      fc::optional<asset_object> const& price_asset_obj)
+   {
+#ifdef PRICE_REGIONS
+      vector<pair<uint32_t, asset>> arr_prices;
 
-                                     bool broadcast/* = false */)
+      for (auto const& item : price_amounts)
       {
-         try {
+         string const& str_region_code = item.first;
+         string const& str_price = item.second;
+
+         uint32_t region_code_for = RegionCodes::OO_none;
+
+         auto it = RegionCodes::s_mapNameToCode.find(str_region_code);
+         if (it != RegionCodes::s_mapNameToCode.end())
+            region_code_for = it->second;
+         else
+            FC_ASSERT(false);
+
+         arr_prices.push_back(std::make_pair(region_code_for, price_asset_obj->amount_from_string(str_price)));
+      }
+
+      submit_op.price = arr_prices;
+#else
+      submit_op.price = price_asset_obj->amount_from_string(price_amounts.front().second);
+#endif
+   }
+
+   signed_transaction submit_content(string const& author,
+                                     string const& URI,
+                                     string const& price_asset_symbol,
+                                     vector<pair<string, string>> const& price_amounts,
+                                     fc::ripemd160 const& hash,
+                                     uint64_t size,
+                                     vector<account_id_type> const& seeders,
+                                     uint32_t quorum,
+                                     fc::time_point_sec const& expiration,
+                                     string const& publishing_fee_symbol_name,
+                                     string const& publishing_fee_amount,
+                                     string const& synopsis,
+                                     DInteger const& secret,
+                                     decent::encrypt::CustodyData const& cd,
+                                     bool broadcast/* = false */)
+   {
+      try
+      {
          FC_ASSERT(!is_locked());
          account_object author_account = get_account( author );
 
@@ -2143,7 +2172,8 @@ public:
          ShamirSecret ss(quorum, seeders.size(), secret);
          ss.calculate_split();
          content_submit_operation submit_op;
-         for( int i =0; i<seeders.size(); i++ ){
+         for( int i =0; i<seeders.size(); i++ )
+         {
             const auto& s = _remote_db->get_seeder( seeders[i] );
             Ciphertext cp;
             point p = ss.split[i];
@@ -2151,10 +2181,9 @@ public:
             submit_op.key_parts.push_back(cp);
          }
 
-
          submit_op.author = author_account.id;
          submit_op.URI = URI;
-         submit_op.price = price_asset_obj->amount_from_string(price_amount);
+         submit_content_utility(submit_op, price_amounts, price_asset_obj);
          submit_op.hash = hash;
          submit_op.size = size;
          submit_op.seeders = seeders;
@@ -2163,114 +2192,109 @@ public:
          submit_op.publishing_fee = fee_asset_obj->amount_from_string(publishing_fee_amount);
          submit_op.synopsis = synopsis;
          submit_op.cd = cd;
-         
+
          signed_transaction tx;
          tx.operations.push_back( submit_op );
          set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
          tx.validate();
-         
+
          return sign_transaction( tx, broadcast );
-      } FC_CAPTURE_AND_RETHROW( (author)(URI)(price_asset_symbol)(price_amount)(hash)(seeders)(quorum)(expiration)(publishing_fee_symbol_name)(publishing_fee_amount)(synopsis)(secret)(broadcast) ) }
-   
+      } FC_CAPTURE_AND_RETHROW( (author)(URI)(price_asset_symbol)(price_amounts)(hash)(seeders)(quorum)(expiration)(publishing_fee_symbol_name)(publishing_fee_amount)(synopsis)(secret)(broadcast) )
+   }
 
-
-      signed_transaction submit_content_new(string author,
-                                            string content_dir,
-                                            string samples_dir,
-                                            string protocol,
-                                            string price_asset_symbol,
-                                            string price_amount,
-                                            vector<account_id_type> seeders,
-                                            fc::time_point_sec expiration,
-                                            string synopsis,
-                                            bool broadcast/* = false */)
+   signed_transaction submit_content_new(string const& author,
+                                         string const& content_dir,
+                                         string const& samples_dir,
+                                         string const& protocol,
+                                         string const& price_asset_symbol,
+                                         vector<pair<string, string>> const& price_amounts,
+                                         vector<account_id_type> const& seeders,
+                                         fc::time_point_sec const& expiration,
+                                         string const& synopsis,
+                                         bool broadcast/* = false */)
+   {
+      try
       {
-         try {
-            FC_ASSERT(!is_locked());
-            account_object author_account = get_account( author );
+         FC_ASSERT(!is_locked());
+         account_object author_account = get_account( author );
 
-             fc::optional<asset_object> DTC_asset = get_asset("DCT");
-             fc::optional<asset_object> price_asset_obj = get_asset(price_asset_symbol);
-    
-
-            FC_ASSERT(DTC_asset, "Could not find asset matching DCT");
-            FC_ASSERT(DTC_asset, "Could not find asset");
+         fc::optional<asset_object> DTC_asset = get_asset("DCT");
+         fc::optional<asset_object> price_asset_obj = get_asset(price_asset_symbol);
 
 
-            CryptoPP::Integer secret(randomGenerator, 512);
-            fc::sha512 sha_key;
-            secret.Encode((byte*)sha_key._hash, 64);
+         FC_ASSERT(DTC_asset, "Could not find asset matching DCT");
+         FC_ASSERT(DTC_asset, "Could not find asset");
+         FC_ASSERT(false == price_amounts.empty());
+
+
+         CryptoPP::Integer secret(randomGenerator, 512);
+         fc::sha512 sha_key;
+         secret.Encode((byte*)sha_key._hash, 64);
 #ifndef DECENT_LONG_SHAMIR
-            //short Shamir is able to store onlu 256 bites, rest will make content unrecoverable
-            sha_key._hash[0] = 0;
-            sha_key._hash[1] = 0;
-            sha_key._hash[2] = 0;
-            sha_key._hash[3] = 0;
+         //short Shamir is able to store onlu 256 bites, rest will make content unrecoverable
+         sha_key._hash[0] = 0;
+         sha_key._hash[1] = 0;
+         sha_key._hash[2] = 0;
+         sha_key._hash[3] = 0;
 #endif
-            decent::encrypt::CustodyData cd;
+         decent::encrypt::CustodyData cd;
 
-            package_object pack = package_manager::instance().create_package(content_dir, samples_dir, sha_key, cd);
-            fc::ripemd160 hash = pack.get_hash();
-            
-            uint32_t quorum = std::max((vector<account_id_type>::size_type)1, seeders.size()/3);
-            uint64_t size = std::max(1, ( pack.get_size() + (1024 * 1024) -1 ) / (1024 * 1024));
+         package_object pack = package_manager::instance().create_package(content_dir, samples_dir, sha_key, cd);
+         fc::ripemd160 hash = pack.get_hash();
+
+         uint32_t quorum = std::max((vector<account_id_type>::size_type)1, seeders.size()/3);
+         uint64_t size = std::max(1, ( pack.get_size() + (1024 * 1024) -1 ) / (1024 * 1024));
 
 
-            ShamirSecret ss(quorum, seeders.size(), secret);
-            ss.calculate_split();
-            content_submit_operation submit_op;
-             
-             
-             
-             asset total_price_per_day;
-             
-            for( int i =0; i < seeders.size(); i++ ){
-               const auto& s = _remote_db->get_seeder( seeders[i] );
-               Ciphertext cp;
-               point p = ss.split[i];
-               decent::encrypt::el_gamal_encrypt( p ,s->pubKey ,cp );
-               submit_op.key_parts.push_back(cp);
-            
-                total_price_per_day += s->price.amount * size;
-               total_price_per_day += s->price.amount;
-                
-            }
+         ShamirSecret ss(quorum, seeders.size(), secret);
+         ss.calculate_split();
+         content_submit_operation submit_op;
 
-             FC_ASSERT( time_point_sec(fc::time_point::now()) <= expiration);
+         asset total_price_per_day;
 
-             fc::microseconds duration = (expiration - fc::time_point::now());
-            uint64_t days = duration.to_seconds() / 3600 / 24;
+         for( int i =0; i < seeders.size(); i++ )
+         {
+            const auto& s = _remote_db->get_seeder( seeders[i] );
+            Ciphertext cp;
+            point p = ss.split[i];
+            decent::encrypt::el_gamal_encrypt( p ,s->pubKey ,cp );
+            submit_op.key_parts.push_back(cp);
 
-             
-            
+            total_price_per_day += s->price.amount * size;
+            total_price_per_day += s->price.amount;
+         }
 
-            package_transfer_interface::transfer_id id = package_manager::instance().upload_package(pack, protocol, transfer_progress_printer::instance());
-   
-          
-            submit_op.author = author_account.id;
-            submit_op.URI = package_manager::instance().get_transfer_url(id);
-            submit_op.price = price_asset_obj->amount_from_string(price_amount);
-            submit_op.hash = hash;
-            submit_op.size = size;
-            submit_op.seeders = seeders;
-            submit_op.quorum = quorum;
-            submit_op.expiration = expiration;
-            submit_op.publishing_fee = days * total_price_per_day;
-            submit_op.synopsis = synopsis;
-            submit_op.cd = cd;
+         FC_ASSERT(time_point_sec(fc::time_point::now()) <= expiration);
 
-            FC_ASSERT( !submit_op.URI.empty(), "File transport error");
+         fc::microseconds duration = (expiration - fc::time_point::now());
+         uint64_t days = duration.to_seconds() / 3600 / 24;
 
-            
-            signed_transaction tx;
-            tx.operations.push_back( submit_op );
-            set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
-            tx.validate();
+         package_transfer_interface::transfer_id id = package_manager::instance().upload_package(pack, protocol, transfer_progress_printer::instance());
 
-            return sign_transaction( tx, broadcast );
-         } 
-         FC_CAPTURE_AND_RETHROW( (author)(content_dir)(samples_dir)(protocol)(price_asset_symbol)(price_amount)(seeders)(expiration)(synopsis)(broadcast) )
+         submit_op.author = author_account.id;
+         submit_op.URI = package_manager::instance().get_transfer_url(id);
+
+         submit_content_utility(submit_op, price_amounts, price_asset_obj);
+         submit_op.hash = hash;
+         submit_op.size = size;
+         submit_op.seeders = seeders;
+         submit_op.quorum = quorum;
+         submit_op.expiration = expiration;
+         submit_op.publishing_fee = days * total_price_per_day;
+         submit_op.synopsis = synopsis;
+         submit_op.cd = cd;
+
+         FC_ASSERT( !submit_op.URI.empty(), "File transport error");
+
+         signed_transaction tx;
+         tx.operations.push_back( submit_op );
+         set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
+         tx.validate();
+
+         return sign_transaction( tx, broadcast );
       }
+      FC_CAPTURE_AND_RETHROW( (author)(content_dir)(samples_dir)(protocol)(price_asset_symbol)(price_amounts)(seeders)(expiration)(synopsis)(broadcast) )
+   }
 
 
    optional<content_download_status> get_download_status(string consumer, string URI) const {
@@ -2851,7 +2875,11 @@ std::string operation_printer::operator()(const asset_create_operation& op) cons
 
 std::string operation_printer::operator()(const content_submit_operation& op) const
 {
+#ifdef PRICE_REGIONS
+   out << "Submit content by " << wallet.get_account(op.author).name << " -- URI: " << op.URI;
+#else
    out << "Submit content by " << wallet.get_account(op.author).name << " -- URI: " << op.URI << " -- Price: " << op.price.amount.value;
+#endif
    return fee(op.fee);
 }
 
@@ -3745,18 +3773,38 @@ real_supply wallet_api::get_real_supply()const
 }
 
 signed_transaction
-wallet_api::submit_content(string author, string URI, string price_asset_name, string price_amount, uint64_t size,
-                           fc::ripemd160 hash, vector<account_id_type> seeders, uint32_t quorum, fc::time_point_sec expiration,
-                           string publishing_fee_asset, string publishing_fee_amount, string synopsis, DInteger secret,
-                           decent::encrypt::CustodyData cd, bool broadcast)
+wallet_api::submit_content(string const& author,
+                           string const& URI,
+                           string const& price_asset_name,
+                           vector <pair<string, string>> const& price_amounts,
+                           uint64_t size,
+                           fc::ripemd160 const& hash,
+                           vector<account_id_type> const& seeders,
+                           uint32_t quorum,
+                           fc::time_point_sec const& expiration,
+                           string const& publishing_fee_asset,
+                           string const& publishing_fee_amount,
+                           string const& synopsis,
+                           DInteger const& secret,
+                           decent::encrypt::CustodyData const& cd,
+                           bool broadcast)
 {
-   return my->submit_content(author, URI, price_asset_name, price_amount, hash, size, seeders, quorum, expiration, publishing_fee_asset, publishing_fee_amount, synopsis, secret, cd, broadcast);
+   return my->submit_content(author, URI, price_asset_name, price_amounts, hash, size, seeders, quorum, expiration, publishing_fee_asset, publishing_fee_amount, synopsis, secret, cd, broadcast);
 }
 
 signed_transaction
-wallet_api::submit_content_new(string author, string content_dir, string samples_dir, string protocol, string price_asset_symbol, string price_amount, vector<account_id_type> seeders, fc::time_point_sec expiration, string synopsis, bool broadcast)
+wallet_api::submit_content_new(string const& author,
+                               string const& content_dir,
+                               string const& samples_dir,
+                               string const& protocol,
+                               string const& price_asset_symbol,
+                               vector <pair<string, string>> const& price_amounts,
+                               vector<account_id_type> const& seeders,
+                               fc::time_point_sec const& expiration,
+                               string const& synopsis,
+                               bool broadcast)
 {
-   return my->submit_content_new(author, content_dir, samples_dir, protocol, price_asset_symbol, price_amount, seeders, expiration, synopsis, broadcast);
+   return my->submit_content_new(author, content_dir, samples_dir, protocol, price_asset_symbol, price_amounts, seeders, expiration, synopsis, broadcast);
 }
 
 void
