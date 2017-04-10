@@ -493,11 +493,6 @@ Upload_tab::Upload_tab(Mainwindow_gui_wallet* parent) :  popup(0), _content_popu
     connect(upload_button, SIGNAL(LabelClicked()), this, SLOT(uploadPopup()));
     connect(&GlobalEvents::instance(), SIGNAL(currentUserChanged(std::string)), this, SLOT(updateContents()));
 
-    m_contentUpdateTimer.connect(&m_contentUpdateTimer, SIGNAL(timeout()), this, SLOT(maybeUpdateContent()));
-    m_contentUpdateTimer.connect(&GlobalEvents::instance(), SIGNAL(walletUnlocked()), this, SLOT(requestContentUpdate()));
-    
-    m_contentUpdateTimer.setInterval(1000);
-    m_contentUpdateTimer.start();
     
 }
 

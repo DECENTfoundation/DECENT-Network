@@ -107,6 +107,7 @@ namespace graphene { namespace chain {
            bo.expiration_time = db().head_block_time() + 24*3600;
            bo.pubKey = o.pubKey;
            bo.price = o.price;
+           bo.set_db(&db());
       });
       db().adjust_balance( o.consumer, -o.price );
    }FC_CAPTURE_AND_RETHROW( (o) ) }

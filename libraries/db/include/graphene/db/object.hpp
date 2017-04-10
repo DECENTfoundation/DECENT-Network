@@ -69,6 +69,7 @@ namespace graphene { namespace db {
 
          // serialized
          object_id_type          id;
+         
 
          /// these methods are implemented for derived classes by inheriting abstract_object<DerivedClass>
          virtual unique_ptr<object> clone()const = 0;

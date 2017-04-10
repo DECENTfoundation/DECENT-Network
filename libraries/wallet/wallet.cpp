@@ -2922,9 +2922,9 @@ map<string,account_id_type> wallet_api::list_accounts(const string& lowerbound, 
 }
 
     
-map<string,account_id_type> wallet_api::search_accounts(const string& term, uint32_t limit)
+vector<account_object> wallet_api::search_accounts(const string& term, const string order, uint32_t limit)
 {
-    return my->_remote_db->search_accounts(term, limit);
+    return my->_remote_db->search_accounts(term, order, limit);
 }
 
 vector<asset> wallet_api::list_account_balances(const string& id)
@@ -4058,7 +4058,6 @@ vector<buying_object> wallet_api::get_open_buyings_by_consumer( const string& ac
    {
       account_id_type consumer = get_account( account_id_or_name ).id;
       const vector<buying_object>& bobjects = my->_remote_db->get_buying_objects_by_consumer( consumer, order );
-
       vector<buying_object_ex> result;
 
       for (size_t i = 0; i < bobjects.size(); ++i)
@@ -4119,118 +4118,6 @@ vector<buying_object> wallet_api::get_open_buyings_by_consumer( const string& ac
          bobj.expiration = content->expiration;
          bobj.times_bought = content->times_bought;
          bobj.hash = content->_hash;
-         if(order == "+size")
-         {
-            int j = 1;
-            for(int i = result.size() - 2; i >= 0; --i)
-            {
-               if(result[i].size > result[result.size() - j].size)
-               {
-                  auto c = result[i];
-                  result[i] = result[result.size() - j];
-                  result[result.size() - j] = c;
-                  ++j;
-               }
-            }
-         }
-         else if(order == "-size")
-         {
-            int j = 1;
-            for(int i = result.size() - 2; i >= 0; --i)
-            {
-               if(result[i].size < result[result.size() - j].size)
-               {
-                  auto c = result[i];
-                  result[i] = result[result.size() - j];
-                  result[result.size() - j] = c;
-                  ++j;
-               }
-            }
-         }
-         else if(order == "+rating")
-         {
-            int j = 1;
-            for(int i = result.size() - 2; i >= 0; --i)
-            {
-               if(result[i].rating > result[result.size() - j].rating)
-               {
-                  auto c = result[i];
-                  result[i] = result[result.size() - j];
-                  result[result.size() - j] = c;
-                  ++j;
-               }
-            }
-         }
-         else if(order == "-rating")
-         {
-            int j = 1;
-            for(int i = result.size() - 2; i >= 0; --i)
-            {
-               if(result[i].rating < result[result.size() - j].rating)
-               {
-                  auto c = result[i];
-                  result[i] = result[result.size() - j];
-                  result[result.size() - j] = c;
-                  ++j;
-               }
-            }
-         }
-         else if(order == "+price")
-         {
-            int j = 1;
-            for(int i = result.size() - 2; i >= 0; --i)
-            {
-               if(result[i].price.amount.value > result[result.size() - j].price.amount.value)
-               {
-                  auto c = result[i];
-                  result[i] = result[result.size() - j];
-                  result[result.size() - j] = c;
-                  ++j;
-               }
-            }
-         }
-         else if(order == "-price")
-         {
-            int j = 1;
-            for(int i = result.size() - 2; i >= 0; --i)
-            {
-               if(result[i].price.amount.value < result[result.size() - j].price.amount.value)
-               {
-                  auto c = result[i];
-                  result[i] = result[result.size() - j];
-                  result[result.size() - j] = c;
-                  ++j;
-               }
-            }
-         }
-         else if(order == "+created")
-         {
-            int j = 1;
-            for(int i = result.size() - 2; i >= 0; --i)
-            {
-               if(result[i].created > result[result.size() - j].created)
-               {
-                  auto c = result[i];
-                  result[i] = result[result.size() - j];
-                  result[result.size() - j] = c;
-                  ++j;
-               }
-            }
-         }
-         else if(order == "-created")
-         {
-            int j = 1;
-            for(int i = result.size() - 2; i >= 0; --i)
-            {
-               if(result[i].created < result[result.size() - j].created)
-               {
-                  auto c = result[i];
-                  result[i] = result[result.size() - j];
-                  result[result.size() - j] = c;
-                  ++j;
-               }
-            }
-         }
       }
 
       return result;
