@@ -689,20 +689,26 @@ namespace graphene { namespace app {
          /**
           * @brief Search for term in contents (author, title and description)
           * @param term Search term
+          * @param order Ordering field
+          * @param user Content owner
+          * @param region Two letter region code
           * @param count Maximum number of contents to fetch (must not exceed 100)
           * @return The contents found
           * @ingroup DatabaseAPI
           */
-         vector<content_summary> search_content( const string& term, const string& order, const string& user, uint32_t count )const;
+         vector<content_summary> search_content( const string& term, const string& order, const string& user, const string& region_code, uint32_t count )const;
          
          /**
           * @brief Search for term in contents (author, title and description)
+          * @param user Content owner
           * @param term Search term
+          * @param order Ordering field
+          * @param region Two letter region code
           * @param count Maximum number of contents to fetch (must not exceed 100)
           * @return The contents found
           * @ingroup DatabaseAPI
           */
-         vector<content_summary> search_user_content( const string& user, const string& term, const string& order, uint32_t count )const;
+         vector<content_summary> search_user_content( const string& user, const string& term, const string& order, const string& region_code, uint32_t count )const;
 
          /**
           * @brief Get a list of contents by times bought, in decreasing order

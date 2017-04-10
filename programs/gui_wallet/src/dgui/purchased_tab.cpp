@@ -262,17 +262,20 @@ void PurchasedTab::timeToUpdate(const std::string& result) {
 }
 
 
-std::string PurchasedTab::getUpdateCommand() {
+std::string PurchasedTab::getUpdateCommand()
+{
    auto& global_instance = gui_wallet::GlobalEvents::instance();
    std::string str_current_username = global_instance.getCurrentUser();
-   
-   if ( str_current_username == "" ) {
+
+   if ( str_current_username == "" )
+   {
       return "";
    } // if key not imported
-   
-   return "search_my_purchases "
-   "\"" + str_current_username +"\" "
-   "\"" + m_filterLineEditer.text().toStdString() +"\" \"" + m_pTableWidget.getSortedColumn() + "\"";
+
+   return   "search_my_purchases "
+            "\"" + str_current_username + "\" "
+            "\"" + m_filterLineEditer.text().toStdString() + "\" "
+            "\"" + m_pTableWidget.getSortedColumn() + "\"";
 }
 
 void PurchasedTab::extractionDirSelected(const QString& path) {
