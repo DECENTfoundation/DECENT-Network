@@ -1815,15 +1815,23 @@ namespace graphene { namespace app {
       return my->list_content( URI_begin, count);
    }
    
-   vector<content_summary> database_api::search_content( const string& term, const string& order, const string& user, uint32_t count)const
+   vector<content_summary> database_api::search_content(const string& term,
+                                                        const string& order,
+                                                        const string& user,
+                                                        const string& region_code,
+                                                        uint32_t count)const
    {
-      return my->search_content( term, order, user, count);
+      return my->search_content( term, order, user, region_code, count);
    }
    
    
-   vector<content_summary> database_api::search_user_content( const string& user, const string& term, const string& order, uint32_t count)const
+   vector<content_summary> database_api::search_user_content(const string& user,
+                                                             const string& term,
+                                                             const string& order,
+                                                             const string& region_code,
+                                                             uint32_t count)const
    {
-      return my->search_user_content( user, term, order, count);
+      return my->search_user_content( user, term, order, region_code, count);
    }
    
    
@@ -1847,7 +1855,7 @@ namespace graphene { namespace app {
       while(count-- && itr != idx.end())
       {
          const auto& account = idx2.find(itr->author);
-         result.emplace_back( content.set( *itr , *account ) );
+         result.emplace_back( content.set( *itr , *account, RegionCodes::OO_none ) );
          ++itr;
       }
       
@@ -1855,14 +1863,18 @@ namespace graphene { namespace app {
    }
    
    
-   vector<content_summary> database_api_impl::search_user_content( const string& user, const string& search_term, const string& order, uint32_t count)const
+   vector<content_summary> database_api_impl::search_user_content(const string& user,
+                                                                  const string& search_term,
+                                                                  const string& order,
+                                                                  const string& region_code,
+                                                                  uint32_t count)const
    {
       FC_ASSERT( count <= 100 );
       
       vector<content_summary> result;
       result.reserve( count );
       
-      return result = search_content(search_term, order, user, count);
+      return result = search_content(search_term, order, user, region_code, count);
    }
    
    
@@ -1872,7 +1884,12 @@ namespace graphene { namespace app {
       
       
       template <bool is_ascending, class sort_tag>
-      void search_content_template(graphene::chain::database& db, const string& search_term, uint32_t count, const string& user, vector<content_summary>& result) {
+      void search_content_template(graphene::chain::database& db,
+                                   const string& search_term,
+                                   uint32_t count,
+                                   const string& user,
+                                   const string& region_code,
+                                   vector<content_summary>& result) {
          
          const auto& idx = db.get_index_type<content_index>().indices().get<sort_tag>();
          
@@ -1894,9 +1911,13 @@ namespace graphene { namespace app {
                   continue;
                }
             }
-            content.set( *itr , *account );
-            if (content.expiration > fc::time_point::now()) {
-               
+#ifdef PRICE_REGIONS
+            if (false == itr->price.Valid(region_code))
+               continue;
+#endif
+            content.set( *itr , *account, region_code );
+            if (content.expiration > fc::time_point::now())
+            {
                std::string term = search_term;
                std::string title = content.synopsis;
                std::string desc = "";
@@ -1916,9 +1937,8 @@ namespace graphene { namespace app {
                if (term.empty() ||
                    author.find(term) != std::string::npos ||
                    title.find(term) != std::string::npos ||
-                   desc.find(term) != std::string::npos) {
-                  
-                  
+                   desc.find(term) != std::string::npos)
+               {
                   count--;
                   result.push_back( content );
                }
@@ -1932,28 +1952,32 @@ namespace graphene { namespace app {
    }
    
    
-   vector<content_summary> database_api_impl::search_content( const string& search_term, const string& order, const string& user, uint32_t count)const
+   vector<content_summary> database_api_impl::search_content(const string& search_term,
+                                                             const string& order,
+                                                             const string& user,
+                                                             const string& region_code,
+                                                             uint32_t count)const
    {
       FC_ASSERT( count <= 100 );
       
       vector<content_summary> result;
       result.reserve( count );
       
-      if (order == "+author") search_content_template<true, by_author>(_db, search_term, count, user, result);
-      if (order == "+rating") search_content_template<true, by_AVG_rating>(_db, search_term, count, user, result);
-      if (order == "+size") search_content_template<true, by_size>(_db, search_term, count, user, result);
-      if (order == "+price") search_content_template<true, by_price>(_db, search_term, count, user, result);
-      if (order == "+created") search_content_template<true, by_created>(_db, search_term, count, user, result);
-      if (order == "+expiration") search_content_template<true, by_expiration>(_db, search_term, count, user, result);
+      if (order == "+author") search_content_template<true, by_author>(_db, search_term, count, user, region_code, result);
+      if (order == "+rating") search_content_template<true, by_AVG_rating>(_db, search_term, count, user, region_code, result);
+      if (order == "+size") search_content_template<true, by_size>(_db, search_term, count, user, region_code, result);
+      if (order == "+price") search_content_template<true, by_price>(_db, search_term, count, user, region_code, result);
+      if (order == "+created") search_content_template<true, by_created>(_db, search_term, count, user, region_code, result);
+      if (order == "+expiration") search_content_template<true, by_expiration>(_db, search_term, count, user, region_code, result);
       
-      if (order == "-author") search_content_template<false, by_author>(_db, search_term, count, user, result);
-      if (order == "-rating") search_content_template<false, by_AVG_rating>(_db, search_term, count, user, result);
-      if (order == "-size") search_content_template<false, by_size>(_db, search_term, count, user, result);
-      if (order == "-price") search_content_template<false, by_price>(_db, search_term, count, user, result);
-      if (order == "-created") search_content_template<false, by_created>(_db, search_term, count, user, result);
-      if (order == "-expiration") search_content_template<false, by_expiration>(_db, search_term, count, user, result);
-      if (order == "") search_content_template<true, by_URI>(_db, search_term, count, user, result);
-      //   search_content_template<by_URI>(_db, search_term, count, true, result);
+      if (order == "-author") search_content_template<false, by_author>(_db, search_term, count, user, region_code, result);
+      if (order == "-rating") search_content_template<false, by_AVG_rating>(_db, search_term, count, user, region_code, result);
+      if (order == "-size") search_content_template<false, by_size>(_db, search_term, count, user, region_code, result);
+      if (order == "-price") search_content_template<false, by_price>(_db, search_term, count, user, region_code, result);
+      if (order == "-created") search_content_template<false, by_created>(_db, search_term, count, user, region_code, result);
+      if (order == "-expiration") search_content_template<false, by_expiration>(_db, search_term, count, user, region_code, result);
+      if (order == "") search_content_template<true, by_URI>(_db, search_term, count, user, region_code, result);
+      //   search_content_template<by_URI>(_db, search_term, count, true, region_code, result);
       
       return result;
    }
