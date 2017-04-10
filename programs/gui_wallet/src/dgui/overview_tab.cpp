@@ -41,7 +41,7 @@ Overview_tab::Overview_tab(class Mainwindow_gui_wallet* a_pPar)
    search_lay->setMargin(0);
    search_lay->setContentsMargins(0,0,0,0);
    
-   QPixmap image(i_search);
+   QPixmap image(icon_search);
    
    search_label.setSizeIncrement(100,40);
    search_label.setPixmap(image);
@@ -87,13 +87,13 @@ void Overview_tab::timeToUpdate(const std::string& result) {
       table_widget.setItem(i, 0, new QTableWidgetItem(QString::fromStdString(content[1].get<std::string>())));
       
       
-      EventPassthrough<DecentSmallButton>* trans = new EventPassthrough<DecentSmallButton>(i_transaction, i_transaction_);
+      EventPassthrough<DecentSmallButton>* trans = new EventPassthrough<DecentSmallButton>(icon_transaction, icon_transaction_white);
       trans->setProperty("accountName", QVariant::fromValue(QString::fromStdString(content[0].get<std::string>())));
       trans->setAlignment(Qt::AlignCenter);
       connect(trans, SIGNAL(clicked()), this, SLOT(transactionButtonPressed()));
       table_widget.setCellWidget(i, 2, trans);
       
-      EventPassthrough<DecentSmallButton>* transf = new EventPassthrough<DecentSmallButton>(i_transfer, i_transfer_);
+      EventPassthrough<DecentSmallButton>* transf = new EventPassthrough<DecentSmallButton>(icon_transfer, icon_transfer_white);
       transf->setProperty("accountName", QVariant::fromValue(QString::fromStdString(content[0].get<std::string>())));
       transf->setAlignment(Qt::AlignCenter);
       connect(transf, SIGNAL(clicked()), this, SLOT(buttonPressed()));

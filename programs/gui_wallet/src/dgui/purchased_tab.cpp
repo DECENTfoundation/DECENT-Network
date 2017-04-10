@@ -37,7 +37,7 @@ PurchasedTab::PurchasedTab(Mainwindow_gui_wallet* pMainWindow)
    m_filterLineEditer.setFixedHeight(54);
    m_filterLineEditer.setAttribute(Qt::WA_MacShowFocusRect, 0);
    
-   QPixmap image(i_search);
+   QPixmap image(icon_search);
    
    QLabel* search_label = new QLabel();
    search_label->setSizeIncrement(100,40);
@@ -80,8 +80,8 @@ void PurchasedTab::timeToUpdate(const std::string& result) {
    auto contents = json::parse(result);
    m_pTableWidget.setRowCount(contents.size());
    
-   QPixmap info_image(i_popup);
-   QPixmap extract_image(i_export);
+   QPixmap info_image(icon_popup);
+   QPixmap extract_image(icon_export);
    QFont bold_font( "Open Sans Bold", 14, QFont::Bold);
    
    _current_content.clear();
@@ -161,7 +161,7 @@ void PurchasedTab::timeToUpdate(const std::string& result) {
       
       
       
-      EventPassthrough<DecentSmallButton>* info_icon = new EventPassthrough<DecentSmallButton>(i_popup, i_popup_);
+      EventPassthrough<DecentSmallButton>* info_icon = new EventPassthrough<DecentSmallButton>(icon_popup, icon_popup_white);
       info_icon->setProperty("id", QVariant::fromValue(i));
       info_icon->setAlignment(Qt::AlignCenter);
       connect(info_icon, SIGNAL(clicked()), this, SLOT(show_content_popup()));
@@ -216,7 +216,7 @@ void PurchasedTab::timeToUpdate(const std::string& result) {
          m_pTableWidget.item(i, 6)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
       } else {
          
-         EventPassthrough<DecentSmallButton>* extract_icon = new EventPassthrough<DecentSmallButton>(i_export, i_export_);
+         EventPassthrough<DecentSmallButton>* extract_icon = new EventPassthrough<DecentSmallButton>(icon_export, icon_export_white);
          
          if ((received_download_bytes < total_download_bytes) || !is_delivered) {
             m_pTableWidget.setItem(i, 6, new QTableWidgetItem(QString::number(progress) + "%"));

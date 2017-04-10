@@ -48,7 +48,7 @@ TransactionsTab::TransactionsTab(Mainwindow_gui_wallet* pMainWindow)
    
    
    QHBoxLayout* search_lay = new QHBoxLayout();
-   QPixmap image(i_search);
+   QPixmap image(icon_search);
    search_label.setSizeIncrement(100,40);
    search_label.setPixmap(image);
    

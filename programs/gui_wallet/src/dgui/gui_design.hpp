@@ -13,6 +13,7 @@
 
 #include <iostream>
 #include <string>
+#include <QFont>
 
 //Brows_content_tab
 const char* const d_lineEdit        = "border: 0; padding-left: 10px;";
@@ -60,9 +61,10 @@ const char* const d_main_tabs           = "QTabBar::tab{"
                                                     "border-right:0px;}";
 const char* const d_amount_label        = "color: rgb(27,176,104);""background-color:white;";
 const char* const d_asset               = "color:black;""background-color:white;";
-const char* const i_decent              = ":/icon/images/decent_logo.svg";
+const char* const icon_decent           = ":/icon/images/decent_logo.svg";
 const char* const d_color               = "color: #f0f0f0";
-const char* const i_user                = ":/icon/images/user.png";
+const char* const icon_user             = ":/icon/images/user.png";
+const char* const icon_balance          = ":/icon/images/balance.png";
 
 //gui_wallet_connectdlg
 const char* const d_pass                = "border: 1px solid rgb(143,143,143);padding-left:25px;";
@@ -72,21 +74,21 @@ const char* const d_style               = "QMainWindow{color:black;""background-
 
 
 //users_tab
-const char* const i_search              = ":/icon/images/search.svg";
-const char* const i_transaction         = ":/icon/images/transaction.png";
-const char* const i_transaction_        = ":/icon/images/transaction1.png";
-const char* const i_transfer            = ":/icon/images/transfer.png";
-const char* const i_transfer_           = ":/icon/images/transfer1.png";
-const char* const d_table               = "* { background-color: rgb(255,255,255); color : rgb(27,176,104); }";
+const char* const icon_search              = ":/icon/images/search.svg";
+const char* const icon_transaction         = ":/icon/images/transaction.png";
+const char* const icon_transaction_white   = ":/icon/images/transaction1.png";
+const char* const icon_transfer            = ":/icon/images/transfer.png";
+const char* const icon_transfer_white      = ":/icon/images/transfer1.png";
+const char* const d_table                  = "* { background-color: rgb(255,255,255); color : rgb(27,176,104); }";
 
 //purchased_tab
-const char* const i_popup               = ":/icon/images/pop_up.png";
-const char* const i_popup_              = ":/icon/images/pop_up1.png";
-const char* const i_export              = ":/icon/images/export.png";
-const char* const i_export_             = ":/icon/images/export1.png";
+const char* const icon_popup               = ":/icon/images/pop_up.png";
+const char* const icon_popup_white         = ":/icon/images/pop_up1.png";
+const char* const icon_export              = ":/icon/images/export.png";
+const char* const icon_export_white        = ":/icon/images/export1.png";
 
 //richdialog
-const char* const d_cancel_button       = "QLabel {border: 1px solid rgb(143,143,143); background-color :rgb(255,255,255); color: rgb(0,0,0);}";
+const char* const d_cancel_button          = "QLabel {border: 1px solid rgb(143,143,143); background-color :rgb(255,255,255); color: rgb(0,0,0);}";
 const char* const d_text_box            = "border: 1px solid rgb(143,143,143);padding-left:25px;";
 
 //upload

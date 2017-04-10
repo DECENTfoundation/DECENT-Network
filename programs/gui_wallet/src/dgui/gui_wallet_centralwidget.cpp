@@ -29,7 +29,6 @@
 
 using namespace gui_wallet;
 
-
 AccountBalanceWidget::AccountBalanceWidget() : m_nCurrentIndex(-1) {
    
     m_amount_label.setStyleSheet(d_amount_label);
@@ -195,7 +194,7 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     pLabelTmp = new QLabel(tr(""));
     pLabelTmp->setScaledContents(true);
 
-    QPixmap m_image1(i_decent);
+    QPixmap m_image1(icon_decent);
     pHBoxLayoutTmp->setContentsMargins(0, 0, 0, 90);
     pLabelTmp->setPixmap(m_image1);
     pHBoxLayoutTmp->addWidget(pLabelTmp);
@@ -226,7 +225,7 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     
     pLabelTmp->setScaledContents(true);
 
-    QPixmap m_image2(i_user);
+    QPixmap m_image2(icon_user);
     pLabelTmp->setPixmap(m_image2);
     pHBoxLayoutTmp->addWidget(pLabelTmp);
     pLabelTmp->setFixedSize(28,28);
@@ -257,15 +256,15 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     pLabelTmp = new QLabel(tr(""));
     pLabelTmp->setScaledContents(true);
 
-    QPixmap m_image3(":/icon/images/balance.png");
+    QPixmap m_image3(icon_balance);
     pLabelTmp->setPixmap(m_image3);
     pLabelTmp->setFixedSize(30,30);
     pHBoxLayoutTmp->addWidget(pLabelTmp);
     
     pCombo2 = new AccountBalanceWidget;
     
-    QFont f( "Myriad Pro Regular", 12, QFont::Bold);
-    pCombo2->setFont(f);
+    QFont font( "Myriad Pro Regular", 12, QFont::Bold);
+    pCombo2->setFont(font);
     pHBoxLayoutTmp->addWidget(pCombo2);
     
     m_pBalanceWgt1->setLayout(pHBoxLayoutTmp);

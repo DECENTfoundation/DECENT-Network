@@ -41,7 +41,7 @@ BrowseContentTab::BrowseContentTab(Mainwindow_gui_wallet* parent) : _content_pop
     });
         
     QLabel* lab = new QLabel();
-    QPixmap image(":/icon/images/search.svg");
+    QPixmap image(icon_search);
     lab->setPixmap(image);
     
     m_filterLineEdit.setPlaceholderText("Search Content");
@@ -224,7 +224,7 @@ void BrowseContentTab::ShowDigitalContentsGUI() {
       
       // Button
       colIndex++;
-      EventPassthrough<DecentSmallButton>* info_icon = new EventPassthrough<DecentSmallButton>(":/icon/images/pop_up.png", ":/icon/images/pop_up1.png");
+      EventPassthrough<DecentSmallButton>* info_icon = new EventPassthrough<DecentSmallButton>(icon_popup, icon_popup_white);
       info_icon->setProperty("id", QVariant::fromValue(index));
       info_icon->setAlignment(Qt::AlignCenter);
       connect(info_icon, SIGNAL(clicked()), this, SLOT(show_content_popup()));

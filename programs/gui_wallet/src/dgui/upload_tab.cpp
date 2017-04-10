@@ -471,7 +471,7 @@ Upload_tab::Upload_tab(Mainwindow_gui_wallet* parent) :  popup(0), _content_popu
     upload_button->setMinimumHeight(54);
     
     QLabel* lab = new QLabel();
-    QPixmap image(i_search);
+    QPixmap image(icon_search);
     lab->setPixmap(image);
     
     m_filterLineEdit.setPlaceholderText("Search Content");
@@ -605,7 +605,7 @@ void Upload_tab::ShowDigitalContentsGUI() {
     int index = 0;
     for(SDigitalContent& aTemporar: _digital_contents) {
         
-        EventPassthrough<DecentSmallButton>* info_icon = new EventPassthrough<DecentSmallButton>(i_popup, i_popup_);
+        EventPassthrough<DecentSmallButton>* info_icon = new EventPassthrough<DecentSmallButton>(icon_popup, icon_popup_white);
         info_icon->setProperty("id", QVariant::fromValue(index));
         info_icon->setAlignment(Qt::AlignCenter);
         connect(info_icon, SIGNAL(clicked()), this, SLOT(show_content_popup()));
