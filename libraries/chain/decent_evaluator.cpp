@@ -49,7 +49,7 @@ namespace graphene { namespace chain {
                                      }
 
                                      auto it_no_regions = prices.find(RegionCodes::OO_none);
-                                     if (it_no_regions == prices.end())
+                                     if (it_no_regions != prices.end())
                                         co.price.SetSimplePrice(it_no_regions->second);
                                      else
                                      {
