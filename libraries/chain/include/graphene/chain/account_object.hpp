@@ -179,8 +179,8 @@ namespace graphene { namespace chain {
             FC_ASSERT(cashback_vb);
             return db.get(*cashback_vb);
          }
-
          account_id_type get_id()const { return id; }
+
    };
 
    /**
@@ -274,7 +274,7 @@ namespace graphene { namespace chain {
       account_object,
       indexed_by<
          ordered_unique< tag<by_id>, member< object, object_id_type, &object::id > >,
-         ordered_unique< tag<by_name>, member<account_object, string, &account_object::name> >
+         ordered_unique< tag<by_name>, member<account_object, std::string, &account_object::name>  >
       >
    > account_multi_index_type;
 

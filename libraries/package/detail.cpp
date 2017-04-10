@@ -175,6 +175,11 @@ namespace decent { namespace package { namespace detail {
                 }
             }
 
+            if( is_directory(*it) && !skip_this ) {
+                create_directory( to_dir / get_relative(from_dir, it->path() ) );
+                skip_this = true;
+            }
+
             if (!skip_this) {
                 paths_to_rename[it->path()] = to_dir / get_relative(from_dir, it->path());
             }

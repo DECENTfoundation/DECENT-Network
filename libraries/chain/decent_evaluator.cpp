@@ -126,6 +126,7 @@ namespace graphene { namespace chain {
                                                          bo.expiration_time = db().head_block_time() + 24*3600;
                                                          bo.pubKey = o.pubKey;
                                                          bo.price = o.price;
+                                                         bo.set_db(&db());
 #ifdef PRICE_REGIONS
                                                          bo.region_code_from = o.region_code_from;
 #endif

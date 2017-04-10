@@ -301,7 +301,7 @@ namespace graphene { namespace wallet {
           * @return Map of account names to corresponding IDs
           * @ingroup WalletCLI
           */
-         map<string,account_id_type>       search_accounts(const string& term, uint32_t limit);
+         vector<account_object>       search_accounts(const string& term, const string order, uint32_t limit);
 
          /**
           * @brief List the balances of an account.
@@ -339,7 +339,7 @@ namespace graphene { namespace wallet {
           * @returns a list of \c operation_history_objects
           * @ingroup WalletCLI
           */
-         vector<operation_detail>  get_account_history(string name, int limit)const;
+         vector<operation_detail>  get_account_history(string name, const string& order, int limit)const;
 
          /**
           *
@@ -1642,7 +1642,7 @@ namespace graphene { namespace wallet {
           * @return History buying objects corresponding to the provided consumer and matching search term
           * @ingroup WalletCLI
           */
-         vector<buying_object_ex> search_my_purchases( const string& account_id_or_name, const string& term )const;
+         vector<buying_object_ex> search_my_purchases( const string& account_id_or_name, const string& term, const string& order )const;
 
          /**
          * @brief Get buying (open or history) by consumer and URI

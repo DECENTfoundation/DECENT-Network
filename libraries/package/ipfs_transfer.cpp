@@ -26,7 +26,6 @@ namespace decent { namespace package {
             return false;
         }
 
-
     } // namespace detail
 
 
@@ -35,6 +34,39 @@ namespace decent { namespace package {
         : detail::PackageTask(package)
         , _client("localhost", 5001)
     {
+    }
+
+    void IPFSDownloadPackageTask::ipfs_recursive_get(const std::string& url, const boost::filesystem::path & dest_path )
+    {
+        FC_ASSERT( exists(dest_path) && is_directory(dest_path) );
+
+        ipfs::Json objects;
+        _client.Ls(url, &objects);
+
+        for( auto nested_object : objects) {
+            std::cerr << "nested object: "<< nested_object.dump() << "\n" ;
+
+            ipfs::Json links = nested_object.at("Links");
+
+            uint64_t total_size = 0;
+            for( auto &link : links ) {
+                if((int) link.at("Type") == 1 ) //directory
+                {
+                    const auto dir_name = dest_path / link.at("Name");
+                    create_directories(dir_name);
+                    ipfs_recursive_get(link.at("Hash"), dir_name);
+                }
+                if((int) link.at("Type") == 2 ) //file
+                {
+                    total_size += (uint64_t) link.at("Size");
+                    const std::string file_name = link.at("Name");
+                    const std::string file_obj_id = link.at("Hash");
+                    std::fstream myfile((dest_path / file_name).string(), std::ios::out | std::ios::binary);
+                    _client.FilesGet(file_obj_id, &myfile);
+                }
+                PACKAGE_TASK_EXIT_IF_REQUESTED;
+            }
+        }
     }
 
     void IPFSDownloadPackageTask::task() {
@@ -59,35 +91,10 @@ namespace decent { namespace package {
 
             PACKAGE_INFO_CHANGE_TRANSFER_STATE(DOWNLOADING);
 
-            ipfs::Json object;
-            _client.ObjectGet(obj_id, &object);
-
-            ipfs::Json links = object.at("Links");
-
-            size_t total_size = 0;
-            for (auto& link : links) {
-                total_size += (size_t)link.at("Size");
-            }
-
-            PACKAGE_TASK_EXIT_IF_REQUESTED;
-
-            size_t downloaded_size = 0;
-            for (auto& link : links) {
-                const std::string file_name = link.at("Name");
-                const std::string file_obj_id = link.at("Hash");
-                const size_t file_size = link.at("Size");
-
-                std::fstream myfile((temp_dir_path / file_name).string(), std::ios::out | std::ios::binary);
-                _client.FilesGet(file_obj_id, &myfile);
-
-                downloaded_size += file_size;
-
-//              PACKAGE_INFO_GENERATE_EVENT(package_download_progress, ( ) );
-
-                PACKAGE_TASK_EXIT_IF_REQUESTED;
-            }
+            ipfs_recursive_get( obj_id, temp_dir_path );
 
             const auto content_file = temp_dir_path / "content.zip.aes";
+
             _package._hash = detail::calculate_hash(content_file);
             const auto package_dir = _package.get_package_dir();
 
@@ -189,13 +196,11 @@ namespace decent { namespace package {
                 FC_THROW("Unable to find root hash in 'ipfs add' results");
             }
 
+            _package._url = "/ipfs/" + root_hash;
+
             _client.PinAdd(root_hash); // just in case
 
-
             // TODO: remove the actual files?
-
-
-            _package._url = "/ipfs/" + root_hash;
 
             PACKAGE_INFO_CHANGE_TRANSFER_STATE(SEEDING);
             PACKAGE_INFO_GENERATE_EVENT(package_seed_complete, ( ) );

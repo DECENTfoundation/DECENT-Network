@@ -64,6 +64,22 @@ typedef graphene::chain::object_id< SEEDING_PLUGIN_SPACE_ID, seeding_object_type
 
 
 namespace detail {
+
+/*class SeedingListenerInterface : public EventListenerInterface{
+private:
+   my_seeding_object & _mso;
+   PackageInfo& pi;
+public:
+   virtual void package_download_error(const std::string&);
+   virtual void package_download_complete();
+   virtual void package_seed_error(const std::string&);
+   virtual void package_seed_complete();
+   virtual void package_extraction_error(const std::string&);
+   virtual void package_extraction_complete();
+};
+*/
+
+
 /**
  * @class seeding_plugin_impl This class implements the seeder functionality.
  * @inherits package_transfer_interface::transfer_listener Integrates with package manager through this interface.

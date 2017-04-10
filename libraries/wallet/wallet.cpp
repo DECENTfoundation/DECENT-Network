@@ -21,6 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+#include <functional>
 #include <algorithm>
 #include <cctype>
 #include <iomanip>
@@ -30,6 +31,7 @@
 #include <utility>
 #include <string>
 #include <list>
+#include <map>
 
 #include <boost/version.hpp>
 #include <boost/lexical_cast.hpp>
@@ -2958,9 +2960,9 @@ map<string,account_id_type> wallet_api::list_accounts(const string& lowerbound, 
 }
 
     
-map<string,account_id_type> wallet_api::search_accounts(const string& term, uint32_t limit)
+vector<account_object> wallet_api::search_accounts(const string& term, const string order, uint32_t limit)
 {
-    return my->_remote_db->search_accounts(term, limit);
+    return my->_remote_db->search_accounts(term, order, limit);
 }
 
 vector<asset> wallet_api::list_account_balances(const string& id)
@@ -2975,48 +2977,243 @@ vector<asset_object> wallet_api::list_assets(const string& lowerbound, uint32_t 
    return my->_remote_db->list_assets( lowerbound, limit );
 }
 
-vector<operation_detail> wallet_api::get_account_history(string name, int limit)const {
-   
-   vector<operation_detail> result;
-   auto account_id = get_account(name).get_id();
-   
-   while( limit > 0 )
-   {
-      operation_history_id_type start;
-      if( result.size() )
-      {
-         start = result.back().op.id;
-         start = start + 1;
-      }
-      
-      
-      vector<operation_history_object> current = my->_remote_hist->get_account_history(account_id, operation_history_id_type(), std::min(100,limit), start);
-      for( auto& o : current ) {
-         std::stringstream ss;
-         operation_detail op_detail;
-         
-         
-         
-         o.op.visit(detail::operation_detail_extractor(op_detail, *my, o.result));
-         if (op_detail.operation_type != "") {
+    vector<operation_detail> wallet_api::get_account_history(string name, const string& order, int limit) const
+    {
+        vector<operation_detail> result;
+        auto account_id = get_account(name).get_id();
+        
+        while( limit > 0 )
+        {
+            operation_history_id_type start;
+            if( result.size() )
+            {
+                start = result.back().op.id;
+                start = start + 1;
+            }
             
             
-            auto block = my->_remote_db->get_block_header(o.block_num);
-            FC_ASSERT(block);
-            op_detail.timestamp = block->timestamp;
-            result.push_back(op_detail);
-         }
-         
-         
-      }
-      if( current.size() < std::min(100,limit) )
-         break;
-      limit -= current.size();
-   }
-   
-   return result;
-}
+            vector<operation_history_object> current = my->_remote_hist->get_account_history(account_id, order, operation_history_id_type(), std::min(100,limit), start);
+            for( auto& o : current ) {
+                std::stringstream ss;
+                operation_detail op_detail;
+                
+                
+                
+                o.op.visit(detail::operation_detail_extractor(op_detail, *my, o.result));
+                if (op_detail.operation_type != "") {
+                    
+                    
+                    auto block = my->_remote_db->get_block_header(o.block_num);
+                    FC_ASSERT(block);
+                    op_detail.timestamp = block->timestamp;
+                    result.push_back(op_detail);
+                }
+                
+                
+            }
+            if( current.size() < std::min(100,limit) )
+                break;
+            limit -= current.size();
+        }
+        /*
+        operation_detail a;
+        
+        account_object from = get_account(string(object_id_type(result[8].from_account)));
+        string s_from = from.name;
+        
+        account_object to = get_account(string(object_id_type(a.from_account)));
+        string s_to = to.name;
+        */
+        
+        if (order.empty()) {
+            return result;
+        }
+        
+        bool is_ascending = (order[0] == '+');
+        const std::string& order_by = order.substr(1);
 
+        typedef std::function<bool(const operation_detail&, const operation_detail&)> sorter_callback;
+        
+        std::map<std::string, sorter_callback> sorters;
+        
+        //type
+        sorters.insert(std::make_pair("type", [is_ascending](const operation_detail& l, const operation_detail& r) {
+            if (is_ascending && (l.operation_type < r.operation_type)) {
+                return true;
+            }
+            
+            if (!is_ascending && (l.operation_type > r.operation_type)) {
+                return true;
+            }
+            
+            return false;
+        }));
+
+        //from
+        sorters.insert(std::make_pair("from", [is_ascending, this](const operation_detail& l, const operation_detail& r) {
+            
+            account_object lfrom = this->get_account(string(object_id_type(l.from_account)));
+            account_object rfrom = this->get_account(string(object_id_type(r.from_account)));
+            
+            
+            if (is_ascending && (lfrom.name < rfrom.name)) {
+                return true;
+            }
+            
+            if (!is_ascending && (lfrom.name > rfrom.name)) {
+                return true;
+            }
+            
+            return false;
+        }));
+
+        //to
+        sorters.insert(std::make_pair("to", [is_ascending, this](const operation_detail& l, const operation_detail& r) {
+            
+            account_object lto = this->get_account(string(object_id_type(l.to_account)));
+            account_object rto = this->get_account(string(object_id_type(r.to_account)));
+            
+            
+            if (is_ascending && (lto.name < rto.name)) {
+                return true;
+            }
+            
+            if (!is_ascending && (lto.name > rto.name)) {
+                return true;
+            }
+            
+            return false;
+        })); 
+
+        //price
+        sorters.insert(std::make_pair("price", [is_ascending](const operation_detail& l, const operation_detail& r) {
+            if (is_ascending && (l.transaction_amount < r.transaction_amount)) {
+                return true;
+            }
+            
+            if (!is_ascending && (l.transaction_amount > r.transaction_amount)) {
+                return true;
+            }
+            
+            return false;
+        }));
+        
+        //fee
+        sorters.insert(std::make_pair("fee", [is_ascending](const operation_detail& l, const operation_detail& r) {
+            if (is_ascending && (l.transaction_fee < r.transaction_fee)) {
+                return true;
+            }
+            
+            if (!is_ascending && (l.transaction_fee > r.transaction_fee)) {
+                return true;
+            }
+            
+            return false;
+        }));
+        
+        //description
+        sorters.insert(std::make_pair("description", [is_ascending](const operation_detail& l, const operation_detail& r) {
+            if (is_ascending && (l.description < r.description)) {
+                return true;
+            }
+            
+            if (!is_ascending && (l.description > r.description)) {
+                return true;
+            }
+            
+            return false;
+        }));
+        
+        auto it = sorters.find(order_by);
+        if (it == sorters.end()) {
+            return result;
+        }
+        
+        
+        
+        std::sort(result.begin(), result.end(), it->second);
+        return result;
+    }
+        /*
+                  {
+                      bool ord = true;
+                      if (order.empty()) {
+                          return l.timestamp < r.timestamp;
+                      };
+                      
+                      bool is_ascending = (order[0] == '+');
+                      const std::string& order_by = order.substr(1);
+                      
+                      if ( order_by == "from")
+                      {
+                          if (l.operation_type == r.operation_type) {
+                              return false;
+                          }
+                          
+                          ord = l.operation_type < r.operation_type;
+                          return is_ascending ? ord: !ord;
+                      }
+
+                      if ( order_by == "to")
+                      {
+                          if (l.operation_type == r.operation_type) {
+                              return false;
+                          }
+                          
+                          ord = l.operation_type < r.operation_type;
+                          return is_ascending ? ord: !ord;
+                      }
+
+                      
+                      if ( order_by == "type")
+                      {
+                          if (l.operation_type == r.operation_type) {
+                              return false;
+                          }
+                          
+                          ord = l.operation_type < r.operation_type;
+                          return is_ascending ? ord: !ord;
+                      }
+                      if ( order_by == "time")
+                      {
+                          if (l.timestamp == r.timestamp) {
+                              return false;
+                          }
+                          
+                          ord = l.timestamp < r.timestamp;
+                          return is_ascending ? ord: !ord;
+                      }
+                      if ( order_by == "price")
+                      {
+                          if (l.transaction_amount == r.transaction_amount) {
+                              return false;
+                          }
+                          
+                          ord = l.transaction_amount < r.transaction_amount;
+                          return is_ascending ? ord: !ord;
+                      }
+                      if ( order_by == "fee")
+                      {
+                          if (l.transaction_fee == r.transaction_fee) {
+                              return false;
+                          }
+                          ord = l.transaction_fee < r.transaction_fee;
+                          return is_ascending ? ord: !ord;
+                      }
+                      
+                      if ( order_by == "description")
+                      {
+                          if (l.description == r.description) {
+                              return false;
+                          }
+                          ord = l.description < r.description;
+                          return is_ascending ? ord: !ord;
+                      }
+                      
+                      return false;
+                  });
+        */
+    
 
 vector<bucket_object> wallet_api::get_market_history( string symbol1, string symbol2, uint32_t bucket )const
 {
@@ -3914,11 +4111,10 @@ vector<buying_object> wallet_api::get_open_buyings_by_consumer( const string& ac
       return result;
    }
    
-   vector<buying_object_ex> wallet_api::search_my_purchases( const string& account_id_or_name, const string& term )const
+   vector<buying_object_ex> wallet_api::search_my_purchases( const string& account_id_or_name, const string& term, const string& order )const
    {
       account_id_type consumer = get_account( account_id_or_name ).id;
-      vector<buying_object> bobjects = my->_remote_db->get_buying_objects_by_consumer( consumer );
-
+      vector<buying_object> bobjects = my->_remote_db->get_buying_objects_by_consumer( consumer, order );
       vector<buying_object_ex> result;
 
       for (size_t i = 0; i < bobjects.size(); ++i)
@@ -3976,7 +4172,6 @@ vector<buying_object> wallet_api::get_open_buyings_by_consumer( const string& ac
          bobj.expiration = content->expiration;
          bobj.times_bought = content->times_bought;
          bobj.hash = content->_hash;
-
       }
 
       return result;

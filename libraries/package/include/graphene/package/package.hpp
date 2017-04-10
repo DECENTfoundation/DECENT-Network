@@ -138,6 +138,7 @@ namespace decent { namespace package {
         void stop_seeding(std::string proto = "", bool block = false);
         void check(bool block = false);
         void remove(bool block = false);
+        void create_proof_of_custody(const decent::encrypt::CustodyData& cd, decent::encrypt::CustodyProof& proof)const;
 
         void wait_for_current_task();
         void cancel_current_task(bool block = false);
@@ -159,6 +160,7 @@ namespace decent { namespace package {
     public:
         boost::filesystem::path get_package_dir() const        { return _parent_dir / _hash.str(); }
         std::string             get_url() const                { return _url; }
+        decent::encrypt::CustodyData get_custody_data() const  { return _custody_data; };
 
     private:
         mutable std::recursive_mutex  _mutex;
@@ -170,6 +172,8 @@ namespace decent { namespace package {
         fc::ripemd160                 _hash;
         std::string                   _url;
         boost::filesystem::path       _parent_dir;
+        decent::encrypt::CustodyData  _custody_data;
+
 
         std::shared_ptr<boost::interprocess::file_lock> _file_lock;
         std::shared_ptr<boost::interprocess::scoped_lock<boost::interprocess::file_lock>> _file_lock_guard;
@@ -509,8 +513,8 @@ private:
     mutable fc::mutex                  _mutex;
     boost::filesystem::path            _packages_path;
     boost::filesystem::path            _libtorrent_config_file;
-    decent::encrypt::CustodyUtils      _custody_utils;
-	protocol_handler_map               _protocol_handlers;
+    decent::encrypt::CustodyUtils     _custody_utils;
+ 	protocol_handler_map               _protocol_handlers;
 	transfer_map                       _transfers;
     int                                _next_transfer_id;
     package_set                        _packages;

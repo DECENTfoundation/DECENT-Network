@@ -29,13 +29,13 @@ TransactionsTab::TransactionsTab(Mainwindow_gui_wallet* pMainWindow)
 {
 
    tablewidget.set_columns({
-      {"Time", 20},
-      {"Type", 10},
-      {"From", 20},
-      {"To", 20},
-      {"Amount", 10},
-      {"Fee", 10},
-      {"Description", 25}
+      {"Time", 20, "time"},
+      {"Type", 10, "type"},
+      {"From", 20, "from"},
+      {"To"  , 20, "to"},
+      {"Price", 10,"price"},
+      {"Fee", 10,  "fee"},
+      {"Description", 25, "description"}
    });
    
    
@@ -74,7 +74,6 @@ void TransactionsTab::timeToUpdate(const std::string& result) {
    }
    
    auto contents = json::parse(result);
-   
    tablewidget.setRowCount(contents.size());
    
    for (int i = 0; i < contents.size(); ++i) {
@@ -172,8 +171,8 @@ std::string TransactionsTab::getUpdateCommand() {
       return "";
    }
 
-   return "get_account_history \"" + user.text().toStdString() +"\" 100";
-   
+   return "get_account_history \"" + user.text().toStdString() + "\" \"" + tablewidget.getSortedColumn() + "\" 100";
+    
 }
 
 
