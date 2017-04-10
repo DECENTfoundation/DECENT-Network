@@ -24,6 +24,7 @@ namespace decent { namespace package {
         virtual void task() override;
 
     private:
+        void ipfs_recursive_get(const std::string& url, const boost::filesystem::path & dest_path );
         ipfs::Client _client;
     };
 

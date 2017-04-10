@@ -339,7 +339,7 @@ namespace graphene { namespace wallet {
           * @returns a list of \c operation_history_objects
           * @ingroup WalletCLI
           */
-         vector<operation_detail>  get_account_history(string name, int limit)const;
+         vector<operation_detail>  get_account_history(string name, const string& order, int limit)const;
 
          /**
           *
