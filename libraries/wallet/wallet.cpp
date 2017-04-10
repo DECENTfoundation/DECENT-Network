@@ -2310,7 +2310,7 @@ public:
 
 
 
-   void download_content(string consumer, string URI, bool broadcast)
+   void download_content(string const& consumer, string const& URI, string const& str_region_code_from, bool broadcast)
    {
       try
       {
@@ -2324,7 +2324,17 @@ public:
             FC_THROW("Invalid content URI");
          }
 #ifdef PRICE_REGIONS
-         optional<asset> op_price = content->price.GetPrice();
+         uint32_t region_code_from = RegionCodes::OO_none;
+
+         auto it = RegionCodes::s_mapNameToCode.find(str_region_code_from);
+         if (it != RegionCodes::s_mapNameToCode.end())
+            region_code_from = it->second;
+         //
+         // may want to throw here to forbid purchase form unknown region
+         // but seems can also try to allow purchase if the content has default price
+         //
+
+         optional<asset> op_price = content->price.GetPrice(region_code_from);
          if (!op_price)
             FC_THROW("content not available for this region");
 #endif
@@ -2341,6 +2351,7 @@ public:
          request_op.pubKey = decent::encrypt::get_public_el_gamal_key( el_gamal_priv_key );
 #ifdef PRICE_REGIONS
          request_op.price = *op_price;
+         request_op.region_code_from = region_code_from;
 #else
          request_op.price = content->price;
 #endif
@@ -3749,9 +3760,9 @@ wallet_api::submit_content_new(string author, string content_dir, string samples
 }
 
 void
-wallet_api::download_content(string consumer, string URI, bool broadcast)
+wallet_api::download_content(string const& consumer, string const& URI, string const& region_code_from, bool broadcast)
 {
-   return my->download_content(consumer, URI, broadcast);
+   return my->download_content(consumer, URI, region_code_from, broadcast);
 }
 
 optional<content_download_status> wallet_api::get_download_status(string consumer, string URI) const
@@ -3839,7 +3850,7 @@ vector<buying_object> wallet_api::get_open_buyings_by_consumer( const string& ac
          if (!content)
             continue;
 #ifdef PRICE_REGIONS
-         optional<asset> op_price = content->price.GetPrice();
+         optional<asset> op_price = content->price.GetPrice(bobj.region_code_from);
          if (!op_price)
             continue;
 
@@ -3858,13 +3869,13 @@ vector<buying_object> wallet_api::get_open_buyings_by_consumer( const string& ac
    vector<buying_object_ex> wallet_api::search_my_purchases( const string& account_id_or_name, const string& term )const
    {
       account_id_type consumer = get_account( account_id_or_name ).id;
-      const vector<buying_object>& bobjects = my->_remote_db->get_buying_objects_by_consumer( consumer );
+      vector<buying_object> bobjects = my->_remote_db->get_buying_objects_by_consumer( consumer );
 
       vector<buying_object_ex> result;
 
       for (size_t i = 0; i < bobjects.size(); ++i)
       {
-         buying_object buyobj = bobjects[i];
+         buying_object const& buyobj = bobjects[i];
 
          optional<content_download_status> status = get_download_status(account_id_or_name, buyobj.URI);
          if (!status)
@@ -3875,7 +3886,7 @@ vector<buying_object> wallet_api::get_open_buyings_by_consumer( const string& ac
             continue;
 
 #ifdef PRICE_REGIONS
-         optional<asset> op_price = content->price.GetPrice();
+         optional<asset> op_price = content->price.GetPrice(buyobj.region_code_from);
          if (!op_price)
             continue;
 #endif

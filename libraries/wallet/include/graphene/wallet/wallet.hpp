@@ -1472,10 +1472,11 @@ namespace graphene { namespace wallet {
           * @brief Downloads encrypted content specified by provided URI.
           * @param consumer Consumer of the content
           * @param URI The URI of the content
+          * @param region_code_from Two letter region code
           * @param broadcast true to broadcast the transaction on the network
           * @ingroup WalletCLI
           */
-         void download_content(string consumer, string URI, bool broadcast = false);
+         void download_content(string const& consumer, string const& URI, string const& region_code_from, bool broadcast = false);
 
          /**
           * @brief Get status about particular download process specified by provided URI.

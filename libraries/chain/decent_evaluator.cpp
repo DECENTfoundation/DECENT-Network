@@ -86,7 +86,7 @@ namespace graphene { namespace chain {
       FC_ASSERT( content!= idx.end() );
       FC_ASSERT( o.price <= db().get_balance( o.consumer, o.price.asset_id ) );
 #ifdef PRICE_REGIONS
-      optional<asset> price = content->price.GetPrice(static_cast<RegionCodes::RegionCode>(o.region_code));
+      optional<asset> price = content->price.GetPrice(o.region_code_from);
       FC_ASSERT( price.valid() );
       FC_ASSERT( o.price >= *price );
       FC_ASSERT( o.price.asset_id == price->asset_id );
@@ -101,13 +101,17 @@ namespace graphene { namespace chain {
 
    void_result request_to_buy_evaluator::do_apply(const request_to_buy_operation& o )
    {try{
-      const auto& object = db().create<buying_object>([&](buying_object& bo){ //create new buying object
-           bo.consumer = o.consumer;
-           bo.URI = o.URI;
-           bo.expiration_time = db().head_block_time() + 24*3600;
-           bo.pubKey = o.pubKey;
-           bo.price = o.price;
-      });
+      const auto& object = db().create<buying_object>([&](buying_object& bo)
+                                                      { //create new buying object
+                                                         bo.consumer = o.consumer;
+                                                         bo.URI = o.URI;
+                                                         bo.expiration_time = db().head_block_time() + 24*3600;
+                                                         bo.pubKey = o.pubKey;
+                                                         bo.price = o.price;
+#ifdef PRICE_REGIONS
+                                                         bo.region_code_from = o.region_code_from;
+#endif
+                                                      });
       db().adjust_balance( o.consumer, -o.price );
    }FC_CAPTURE_AND_RETHROW( (o) ) }
 
@@ -283,7 +287,7 @@ namespace graphene { namespace chain {
          });
       }else{
          //recurrent PoR, calculate payment
-         //the PoR shall be ideally broadcasted once per 24h. if the seeder pushes them to often, he is penalized by a
+         //the PoR shall be ideally broadcasted once per 24h. if the seeder pushes them too often, he is penalized by a
          // loss factor equal to one forth of the time remaining to 24h. E.g. by pushing it in 12h he is penalized by
          // loss = (12/24)/4 = 12,5%; if it is pushed in 18h (i.e. 6 hours prematurely) the loss = (6/24)/4=6,25%.
          fc::microseconds diff = db().head_block_time() - last_proof->second;

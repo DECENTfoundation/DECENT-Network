@@ -29,19 +29,19 @@ using namespace decent::encrypt;
          UK
       };
       static bool bAuxillary;
-      static map<RegionCode, string> s_mapCodeToName;
-      static map<string, RegionCode> s_mapNameToCode;
+      static map<uint32_t, string> s_mapCodeToName;
+      static map<string, uint32_t> s_mapNameToCode;
 
       static bool InitCodeAndName();
    };
 
    struct PriceRegions
    {
-      map<int, asset> map_price;
+      map<uint32_t, asset> map_price;
 
-      optional<asset> GetPrice(RegionCodes::RegionCode = RegionCodes::OO_none) const;
+      optional<asset> GetPrice(uint32_t region_code) const;
       void SetSimplePrice(asset const& price);
-      bool Valid(RegionCodes::RegionCode region_code = RegionCodes::OO_none) const;
+      bool Valid(uint32_t region_code) const;
       bool Valid(string const& region_code) const;
    };
 
@@ -58,7 +58,7 @@ using namespace decent::encrypt;
       uint32_t times_bought;
 
 
-      content_summary& set( const content_object& co, const account_object& ao, RegionCodes::RegionCode region_code );
+      content_summary& set( const content_object& co, const account_object& ao, uint32_t region_code );
       content_summary& set( const content_object& co, const account_object& ao, string const& region_code );
    };
 
@@ -93,8 +93,8 @@ using namespace decent::encrypt;
       share_type get_price_amount() const
       {
 #ifdef PRICE_REGIONS
-         FC_ASSERT(price.Valid());
-         return price.GetPrice()->amount;
+         //FC_ASSERT(price.Valid());
+         //return price.GetPrice()->amount;
 #else
          return price.amount;
 #endif

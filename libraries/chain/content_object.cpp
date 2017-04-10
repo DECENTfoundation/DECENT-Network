@@ -4,19 +4,19 @@
 
 namespace graphene { namespace chain {
 
-   map<RegionCodes::RegionCode, string> RegionCodes::s_mapCodeToName;
-   map<string, RegionCodes::RegionCode> RegionCodes::s_mapNameToCode;
+   map<uint32_t, string> RegionCodes::s_mapCodeToName;
+   map<string, uint32_t> RegionCodes::s_mapNameToCode;
 
    bool RegionCodes::bAuxillary = RegionCodes::InitCodeAndName();
 
    bool RegionCodes::InitCodeAndName()
    {
-      vector<pair<RegionCodes::RegionCode, string>> arr
+      vector<pair<uint32_t, string>> arr
       {
-         std::make_pair(RegionCodes::OO_none, ""),
-         std::make_pair(RegionCodes::OO_all, "default"),
-         std::make_pair(RegionCodes::US, "US"),
-         std::make_pair(RegionCodes::UK, "UK")
+         std::make_pair(uint32_t(RegionCodes::OO_none), ""),
+         std::make_pair(uint32_t(RegionCodes::OO_all), "default"),
+         std::make_pair(uint32_t(RegionCodes::US), "US"),
+         std::make_pair(uint32_t(RegionCodes::UK), "UK")
       };
 
       for (auto const& item : arr)
@@ -26,10 +26,10 @@ namespace graphene { namespace chain {
       }
    }
 
-   optional<asset> PriceRegions::GetPrice(RegionCodes::RegionCode region_code/* = RegionCodes::OO_none*/) const
+   optional<asset> PriceRegions::GetPrice(uint32_t region_code) const
    {
       optional<asset> op_price;
-      auto it_single_price = map_price.find(static_cast<int>(RegionCodes::OO_none));
+      auto it_single_price = map_price.find(uint32_t(RegionCodes::OO_none));
       if (it_single_price != map_price.end())
       {
          // content has one price for all regions
@@ -37,7 +37,7 @@ namespace graphene { namespace chain {
          return op_price;
       }
 
-      auto it_region_price = map_price.find(static_cast<int>(region_code));
+      auto it_region_price = map_price.find(region_code);
       if (it_region_price != map_price.end())
       {
          // content has price corresponding to this region
@@ -45,7 +45,7 @@ namespace graphene { namespace chain {
          return op_price;
       }
 
-      auto it_default_price = map_price.find(static_cast<int>(RegionCodes::OO_all));
+      auto it_default_price = map_price.find(uint32_t(RegionCodes::OO_all));
       if (it_default_price != map_price.end())
       {
          // content has default price covering this and all other regions
@@ -58,9 +58,9 @@ namespace graphene { namespace chain {
    void PriceRegions::SetSimplePrice(asset const& price)
    {
       map_price.clear();
-      map_price.insert(pair<RegionCodes::RegionCode, asset>(RegionCodes::OO_none, price));
+      map_price.insert(std::make_pair(uint32_t(RegionCodes::OO_none), price));
    }
-   bool PriceRegions::Valid(RegionCodes::RegionCode region_code/* = RegionCodes::OO_none*/) const
+   bool PriceRegions::Valid(uint32_t region_code) const
    {
       optional<asset> op_price = GetPrice(region_code);
       return op_price.valid();
@@ -77,7 +77,7 @@ namespace graphene { namespace chain {
    // database_api_impl::list_content is not implemented to respect region_code
    // it is not used currently in DECENT runtime
    //
-   content_summary& content_summary::set( const content_object& co, const account_object& ao, RegionCodes::RegionCode region_code )
+   content_summary& content_summary::set( const content_object& co, const account_object& ao, uint32_t region_code )
    {
       this->author = ao.name;
 #ifdef PRICE_REGIONS

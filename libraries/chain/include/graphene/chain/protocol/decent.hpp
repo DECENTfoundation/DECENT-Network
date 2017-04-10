@@ -58,7 +58,7 @@ namespace graphene { namespace chain {
       account_id_type consumer;
       asset price;
 #ifdef PRICE_REGIONS
-      int region_code;
+      uint32_t region_code_from;
 #endif
       /// Consumer's public key
       decent::encrypt::DIntegerString pubKey;
@@ -222,6 +222,7 @@ namespace graphene { namespace chain {
       asset fee;
 
       asset payout;
+      // do we need here region_code_from?
       account_id_type author;
       buying_id_type buying;
 
@@ -233,7 +234,7 @@ namespace graphene { namespace chain {
 
 FC_REFLECT(graphene::chain::content_submit_operation,(fee)(size)(author)(URI)(quorum)(price)(hash)(seeders)(key_parts)(expiration)(publishing_fee)(synopsis)(cd))
 #ifdef PRICE_REGIONS
-FC_REFLECT(graphene::chain::request_to_buy_operation,(fee)(URI)(consumer)(price)(region_code)(pubKey))
+FC_REFLECT(graphene::chain::request_to_buy_operation,(fee)(URI)(consumer)(price)(region_code_from)(pubKey))
 #else
 FC_REFLECT(graphene::chain::request_to_buy_operation,(fee)(URI)(consumer)(price)(pubKey))
 #endif
