@@ -8,6 +8,7 @@
  *
  */
 
+#include "gui_design.hpp"
 #include "decent_button.hpp"
 #include <QGraphicsDropShadowEffect>
 #include <string>

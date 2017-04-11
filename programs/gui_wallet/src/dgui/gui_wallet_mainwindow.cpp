@@ -17,7 +17,7 @@
 #include "qt_commonheader.hpp"
 #include "gui_wallet_mainwindow.hpp"
 #include "gui_wallet_global.hpp"
-
+#include "gui_design.hpp"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -123,7 +123,7 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
    setWindowTitle(tr("DECENT - Blockchain Content Distribution"));
 
    centralWidget()->layout()->setContentsMargins(0, 0, 0, 0);
-   setStyleSheet("QMainWindow{color:black;""background-color:white;}");
+   setStyleSheet(d_style);
 
 
    m_p_wallet_operator->moveToThread(&m_wallet_operator_thread);
@@ -147,7 +147,7 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
     setWindowTitle(tr("DECENT - Blockchain Content Distribution"));
     
     centralWidget()->layout()->setContentsMargins(0, 0, 0, 0);
-    setStyleSheet("QMainWindow{color:black;""background-color:white;}");
+    setStyleSheet(d_style);
     
    
    

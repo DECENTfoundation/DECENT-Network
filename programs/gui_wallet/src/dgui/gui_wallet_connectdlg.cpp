@@ -10,6 +10,7 @@
  *
  */
 
+#include "gui_design.hpp"
 #include "gui_wallet_connectdlg.hpp"
 //#include "connected_api_instance.hpp"
 #include <QLineEdit>
@@ -55,7 +56,7 @@ namespace gui_wallet
         password_box.setEchoMode(QLineEdit::Password);
         password_box.setAttribute(Qt::WA_MacShowFocusRect, 0);
         password_box.setPlaceholderText(QString("Password"));
-        password_box.setStyleSheet("border: 1px solid rgb(143,143,143);padding-left:25px;");
+        password_box.setStyleSheet(d_pass);
        
         if (isSet) {
            setWindowTitle("Set Password");
