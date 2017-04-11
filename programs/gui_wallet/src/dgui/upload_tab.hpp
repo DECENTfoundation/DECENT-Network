@@ -85,13 +85,13 @@ namespace gui_wallet
         QLineEdit*       _titleText;
         QTextEdit*       _descriptionText;
         QDateEdit*       _lifeTime;
-        QComboBox*       _seeders;
         QComboBox*       _keyparts;
         QLineEdit*       _price;
         QLineEdit*       _contentPath;
         QLineEdit*       _samplesPath;
         DecentButton*    _upload_button;
         DecentButton*    _cancel_button;
+        DecentButton*    _seeder_ok;
         QCheckBox*       _seeders_checkbox[3];
         QVBoxLayout*     dialog_layout;
        
@@ -100,7 +100,7 @@ namespace gui_wallet
         QDialog*         _seeders_dialog;
        
        std::map<std::string, double> _publisherIdToPriceMap;
-       std::string                   _checkedSeeders[3];
+       std::vector<std::string>      _checkedSeeders;
 
     public:
     signals:

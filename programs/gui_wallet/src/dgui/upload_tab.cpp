@@ -71,6 +71,7 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    
    _titleText = new QLineEdit();
    _titleText->setPlaceholderText("Title");
+   _titleText->setStyleSheet("padding-left: 6px");
    _titleText->setAttribute(Qt::WA_MacShowFocusRect, 0);
    _titleText->setTextMargins(5, 5, 5, 5);
    _titleText->setMinimumHeight(40);
@@ -81,7 +82,7 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    ////////////////////////////////////////////////////////////////////////////
    _descriptionText = new QTextEdit();
    _descriptionText->setPlaceholderText("Description");
-   _descriptionText->setStyleSheet("border: 1 solid lightGray; padding 5px;");
+   _descriptionText->setStyleSheet("border: 1 solid lightGray; padding-left: 8px;");
    _descriptionText->setMinimumHeight(160);
    _descriptionText->setMinimumWidth(420);
    u_main_layout->addWidget(_descriptionText);
@@ -92,7 +93,7 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    QHBoxLayout* lifeTimeRow = new QHBoxLayout();
    
    QLabel* lifeTimeLabel = new QLabel("Expiration date");
-   lifeTimeLabel->setStyleSheet("QLabel { background-color : white; color: Gray}");
+   lifeTimeLabel->setStyleSheet("border: 1 solid lightGray; padding-left: 10px; color: Gray}");
    lifeTimeLabel->setMinimumWidth(60);
    lifeTimeLabel->setMinimumHeight(40);
    
@@ -104,7 +105,7 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    _lifeTime->setMinimumDate(QDate::currentDate());
    _lifeTime->setStyle(QStyleFactory::create("fusion"));
    _lifeTime->setMinimumHeight(40);
-   _lifeTime->setFixedWidth(320);
+   _lifeTime->setFixedWidth(120);
    
    lifeTimeRow->addWidget(lifeTimeLabel);
    lifeTimeRow->addWidget(_lifeTime);
@@ -119,7 +120,7 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
     QHBoxLayout* keyRow = new QHBoxLayout();
 
     QLabel* keypartsLabel = new QLabel("Key particles");
-    keypartsLabel->setStyleSheet("QLabel { background-color : white; color: Gray}");
+    keypartsLabel->setStyleSheet("border:1 solid lightGray; padding-left: 10px; color: Gray}");
     keypartsLabel->setMinimumWidth(60);
     keypartsLabel->setMinimumHeight(40);
     
@@ -127,7 +128,7 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
     _keyparts->setStyle(QStyleFactory::create("fusion"));
     _keyparts->setStyleSheet("color : black;");
     _keyparts->setMinimumHeight(40);
-    _keyparts->setFixedWidth(320);
+    _keyparts->setFixedWidth(120);
    
    
     for (int r = 2; r <= 7; ++r) {
@@ -147,7 +148,7 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    QHBoxLayout* priceRow = new QHBoxLayout();
    
    QLabel* priceLabel = new QLabel("Price");
-   priceLabel->setStyleSheet("QLabel { background-color : white; color: Gray}");
+   priceLabel->setStyleSheet("border:1 solid lightGray; padding-left: 10px; color: Gray}");
    priceLabel->setMinimumWidth(60);
    priceLabel->setMinimumHeight(40);
 
@@ -158,22 +159,20 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    _price->setStyleSheet("border:1px solid lightGray; color: Gray");
    _price->setTextMargins(5, 5, 5, 5);
    _price->setMinimumHeight(40);
-   _price->setFixedWidth(320);
+   _price->setFixedWidth(120);
 
    priceRow->addWidget(priceLabel);
    priceRow->addWidget(_price);
 
    u_main_layout->addLayout(priceRow);
    
-   
-   
    ////////////////////////////////////////////////////////////////////////////
    /// Seeders
    ////////////////////////////////////////////////////////////////////////////
    QHBoxLayout* seedersRow = new QHBoxLayout();
    
-   QLabel* seedersLabel = new QLabel("Seeders");
-   seedersLabel->setStyleSheet("QLabel { background-color : white; color: Gray}");
+   QLabel* seedersLabel = new QLabel("   Seeders");
+   seedersLabel->setStyleSheet("border:1 solid lightGray; padding-left: 10px; color: Gray}");
    seedersLabel->setContentsMargins(0, 0, 0, 0);
    seedersLabel->setMinimumWidth(60);
    seedersLabel->setMinimumHeight(40);
@@ -182,6 +181,7 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    seeders_button->setText("Select Seeders");
    seeders_button->setFont(font);
    seeders_button->setFixedWidth(100);
+   seeders_button->setFixedHeight(39);
    
    seedersRow->addWidget(seedersLabel);
    seedersRow->addWidget(seeders_button);
@@ -195,18 +195,10 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    _seeders_dialog->setWindowTitle("Seeders");
    
    dialog_layout = new QVBoxLayout(_seeders_dialog);
-   
-   _seeders = new QComboBox(_seeders_dialog);
-   _seeders->setStyle(QStyleFactory::create("fusion"));
-   _seeders->setStyleSheet("color : black;");
-   _seeders->setMinimumHeight(40);
-   _seeders->setFixedWidth(320);
-   
-   dialog_layout->addWidget(_seeders);
 
    _seeders_dialog->setLayout(dialog_layout);
    _seeders_dialog->resize(100, 200);
-   
+
    connect(seeders_button, SIGNAL(LabelClicked()), _seeders_dialog, SLOT(show()) );
    
 
@@ -219,7 +211,7 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
 
    _contentPath = new QLineEdit("Content path");
    _contentPath->setReadOnly(true);
-   _contentPath->setStyleSheet("border:1px solid lightGray; color: Gray");
+   _contentPath->setStyleSheet("border:1px solid lightGray; padding-left: 10px; color: Gray");
    _contentPath->setMinimumHeight(40);
    _contentPath->setTextMargins(5, 5, 5, 5);
 
@@ -227,7 +219,7 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    browseContentButton->setText("Browse");
    browseContentButton->setFont(font);
    browseContentButton->setMinimumWidth(100);
-   browseContentButton->setFixedHeight(40);
+   browseContentButton->setFixedHeight(39);
    connect(browseContentButton, SIGNAL(LabelClicked()),this, SLOT(browseContent()));
 
    contentRow->addWidget(_contentPath);
@@ -241,16 +233,16 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
 
    _samplesPath = new QLineEdit("Samples (optional)");
    _samplesPath->setReadOnly(true);
-   _samplesPath->setStyleSheet("border:1px solid lightGray; color: Gray");
+   _samplesPath->setStyleSheet("border:1px solid lightGray; padding-left: 10px; color: Gray");
    _samplesPath->setMinimumHeight(40);
    _samplesPath->setTextMargins(5, 5, 5, 5);
-
+   
 
    DecentButton* browseSamplesButton = new DecentButton();
    browseSamplesButton->setText("Browse");
    browseSamplesButton->setFont(font);
    browseSamplesButton->setMinimumWidth(100);
-   browseSamplesButton->setFixedHeight(40);
+   browseSamplesButton->setFixedHeight(39);
    connect(browseSamplesButton, SIGNAL(LabelClicked()),this, SLOT(browseSamples()));
 
    samplesRow->addWidget(_samplesPath);
@@ -288,8 +280,8 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    button->addWidget(_cancel_button);
 
    u_main_layout->addLayout(button);
-   u_main_layout->setContentsMargins(10, 10, 10, 10);
-   u_main_layout->setSpacing(5);
+   u_main_layout->setContentsMargins(0, 0, 0, 0);
+   u_main_layout->setSpacing(0);
    
    
    setWindowTitle("Upload new content");
@@ -312,6 +304,12 @@ void Upload_popup::onGrabPublishers() {
    std::string a_result;
    RunTask("list_publishers_by_price 100", a_result);
    
+   //seeders popup ok button
+   _seeder_ok = new DecentButton();
+   _seeder_ok->setText("OK");
+   _seeder_ok->setFixedHeight(30);
+   _seeder_ok->setContentsMargins(0, 0, 0, 0);
+   
    auto publishers = json::parse(a_result);
 
    for (int r = 0; r < publishers.size(); ++r) {
@@ -331,11 +329,6 @@ void Upload_popup::onGrabPublishers() {
       
       _publisherIdToPriceMap.insert(std::make_pair(pubIdStr, price));
       
-      _seeders->addItem(QString("%0 @%1 %2 [%3]").arg(QString::fromStdString(pubIdStr),
-                                                          QString::fromStdString(pubPrice),
-                                                          QString::fromStdString("DCT"),
-                                                          QString::fromStdString(pubFreeSpace)), QString::fromStdString(pubIdStr));
-      
       _seeders_checkbox[r] = new QCheckBox(_seeders_dialog);
       _seeders_checkbox[r]->setText(QString("%0 @%1 %2 [%3]").arg(QString::fromStdString(pubIdStr),
                                                           QString::fromStdString(pubPrice),
@@ -343,28 +336,33 @@ void Upload_popup::onGrabPublishers() {
                                                           QString::fromStdString(pubFreeSpace)) /*, QString::fromStdString(pubIdStr))*/);
       
       dialog_layout->addWidget(_seeders_checkbox[r]);
-
+      dialog_layout->addWidget(_seeder_ok);
+      
       QObject::connect(_seeders_checkbox[r], SIGNAL(stateChanged(int)), SLOT(stateChanged(const int)));
+      QObject::connect(_seeder_ok, SIGNAL(LabelClicked()),_seeders_dialog, SLOT(close()));
    }
    
    
 }
 
 void Upload_popup::stateChanged(const int state)
-{   
+{
+   _checkedSeeders.clear();
    for (int i = 0; i < 3; ++i){
       if (_seeders_checkbox[i]->isChecked()){
-         _checkedSeeders[i] = _seeders_checkbox[i]->text().toStdString();
-//         std::cout << "~_~_~_~_~\n\n\n\n "<<  i << ": " << _checkedSeeders[i] << std::endl;
-      }else{
-         _checkedSeeders[i] = "";
+         char buf[10];
+         std::size_t _size = _seeders_checkbox[i]->text().toStdString().copy(buf, 6, 0);
+         buf[_size] = '\0';
+         
+         _checkedSeeders.push_back(buf);
       }
    }
 }
 
 void Upload_popup::updateUploadButtonStatus() {
    std::string lifeTime    = _lifeTime->text().toStdString();
-   std::string seeders     = _seeders->currentData().toString().toStdString();
+   //std::string seeders     = _seeders->currentData().toString().toStdString();
+   //seeders push_back in stateChanged slot on _checkedSeeders member
    std::string keyparts    = _keyparts->currentData().toString().toStdString();
    std::string price       = _price->text().toStdString();
    std::string path        = _contentPath->text().toStdString();
@@ -372,7 +370,7 @@ void Upload_popup::updateUploadButtonStatus() {
    
    std::string title = _titleText->text().toStdString();
    std::string desc = _descriptionText->toPlainText().toStdString();
-   
+
    bool isValid = true;
    
    if (price.empty())
@@ -400,9 +398,18 @@ void Upload_popup::updateUploadButtonStatus() {
    if (GlobalEvents::instance().getCurrentUser().empty())
       isValid = false;
    
-   auto it = _publisherIdToPriceMap.find(seeders);
-   if (it == _publisherIdToPriceMap.end()) {
+
+   auto it = _publisherIdToPriceMap.find("b"); //So it was not empty
+   if (_checkedSeeders.empty()) {
       isValid = false;
+   }
+   else{
+      for (std::vector<std::string>::iterator iter = _checkedSeeders.begin(); iter != _checkedSeeders.end(); ++iter){
+         it = _publisherIdToPriceMap.find(*iter);
+         if (it == _publisherIdToPriceMap.end()) {
+            isValid = false;
+         }
+      }
    }
    
    double publishingPrice = it->second;
@@ -418,8 +425,6 @@ void Upload_popup::updateUploadButtonStatus() {
       _upload_button->setText("Publish");
       _upload_button->setEnabled(false);
    }
-   
-   
 }
 
 
@@ -443,12 +448,19 @@ void Upload_popup::browseSamples() {
 
 void Upload_popup::uploadContent()
 {
+   std::string m_seeder = "";
+   if ( _checkedSeeders.size() > 1 ){
+      for (int i = 0; i < _checkedSeeders.size(); ++i){
+         m_seeder += _checkedSeeders[i];
+         if( i + 1 != _checkedSeeders.size() ) {
+            m_seeder += ", ";
+         }
+      }
+   }
+   
    std::string m_life_time = _lifeTime->text().toStdString();
-   std::string m_seeders   = _seeders->currentData().toString().toStdString();
    std::string m_keyparts  = _keyparts->currentData().toString().toStdString();
    std::string m_price     = _price->text().toStdString();
-
-
    std::string assetName = "DCT";
    std::string path = _contentPath->text().toStdString();
    std::string samples_path = _samplesPath->text().toStdString();
@@ -479,7 +491,7 @@ void Upload_popup::uploadContent()
    submitCommand += " \"ipfs\"";                                        // Protocol
    submitCommand += " " + assetName;                                    // price_asset_name
    submitCommand += " [[\"\", \"" + m_price + "\"]]";                   // price_amount
-   submitCommand += " [" + m_seeders + "]";                             // seeders
+   submitCommand += " [" + m_seeder + "]";                  // seeders
    submitCommand += " \"" + m_life_time + "T23:59:59\"";                // expiration
    submitCommand += " \"" + escape_string(synopsis) + "\"";             // synopsis
    submitCommand += " true";                                            // broadcast
