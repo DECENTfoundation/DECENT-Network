@@ -43,6 +43,28 @@
 
 #define GET_REQUIRED_FEES_MAX_RECURSION 4
 
+
+namespace {
+   
+   template <bool is_ascending>
+   struct return_one {
+      
+      template <class T1, class T2>
+      static auto choose(const T1& t1, const T2& t2) -> typename std::conditional<is_ascending, T1, T2 >::type {
+         return t1;
+      };
+   };
+   
+   template <>
+   struct return_one<false> {
+      
+      template <class T1, class T2>
+      static auto choose(const T1& t1, const T2& t2) -> typename std::conditional<false, T1, T2 >::type {
+         return t2;
+      };
+   };
+}
+
 namespace graphene { namespace app {
    
    class database_api_impl;
@@ -85,7 +107,7 @@ namespace graphene { namespace app {
       vector<account_id_type> get_account_references( account_id_type account_id )const;
       vector<optional<account_object>> lookup_account_names(const vector<string>& account_names)const;
       map<string,account_id_type> lookup_accounts(const string& lower_bound_name, uint32_t limit)const;
-      map<string,account_id_type> search_accounts(const string& search_term, uint32_t limit)const;
+      vector<account_object> search_accounts(const string& search_term, const string order, uint32_t limit)const;
       
       uint64_t get_account_count()const;
       
@@ -142,8 +164,8 @@ namespace graphene { namespace app {
       optional<content_object> get_content( const string& URI )const;
       vector<content_object> list_content_by_author( const account_id_type& author )const;
       vector<content_summary> list_content( const string& URI_begin, uint32_t count)const;
-      vector<content_summary> search_content( const string& term, const string& order, const string& user, uint32_t count)const;
-      vector<content_summary> search_user_content( const string& user, const string& term, const string& order, uint32_t count)const;
+      vector<content_summary> search_content( const string& term, const string& order, const string& user, const string& region_code, uint32_t count)const;
+      vector<content_summary> search_user_content( const string& user, const string& term, const string& order, const string& region_code, uint32_t count)const;
       vector<content_object> list_content_by_bought( const uint32_t count )const;
       vector<seeder_object> list_publishers_by_price( const uint32_t count )const;
       vector<uint64_t> get_content_ratings( const string& URI)const;
@@ -643,8 +665,8 @@ namespace graphene { namespace app {
    }
    
    
-   map<string,account_id_type> database_api::search_accounts(const string& search_term, uint32_t limit) const {
-      return my->search_accounts( search_term, limit );
+   vector<account_object> database_api::search_accounts(const string& search_term, const string order, uint32_t limit) const {
+      return my->search_accounts( search_term, order, limit );
    }
    
    
@@ -654,28 +676,91 @@ namespace graphene { namespace app {
    }
    
    
-   map<string,account_id_type> database_api_impl::search_accounts(const string& term, uint32_t limit)const
+   vector<account_object> database_api_impl::search_accounts(const string& term, const string order, uint32_t limit)const
    {
       FC_ASSERT( limit <= 1000 );
-      const auto& accounts_by_name = _db.get_index_type<account_index>().indices().get<by_name>();
-      map<string,account_id_type> result;
-      
-      for( auto itr = accounts_by_name.begin(); itr != accounts_by_name.end() && limit > 0; ++itr ) {
+      vector<account_object> result;
+
+      if(order == "-name")
+      {
+         const auto& accounts_by_name = _db.get_index_type<account_index>().indices().get<by_name>();
          
-         std::string account_id_str = fc::variant(itr->get_id()).as<std::string>();
-         std::string account_name = itr->name;
-         std::string search_term = term;
-         
-         boost::algorithm::to_lower(account_id_str);
-         boost::algorithm::to_lower(account_name);
-         boost::algorithm::to_lower(search_term);
-         
-         if (account_name.find(search_term) != std::string::npos || account_id_str.find(search_term) != std::string::npos) {
-            result.insert(make_pair(itr->name, itr->get_id()));
-            limit--;
+         for( auto itr = accounts_by_name.rbegin(); itr != accounts_by_name.rend() && limit > 0; ++itr ) {
+            
+            std::string account_id_str = fc::variant(itr->get_id()).as<std::string>();
+            std::string account_name = itr->name;
+            std::string search_term = term;
+            
+            boost::algorithm::to_lower(account_id_str);
+            boost::algorithm::to_lower(account_name);
+            boost::algorithm::to_lower(search_term);
+            
+            if (account_name.find(search_term) != std::string::npos || account_id_str.find(search_term) != std::string::npos) {
+               result.push_back(*itr);
+               limit--;
+            }
          }
       }
-      
+      else if(order == "+id")
+      {
+         const auto& accounts_by_name = _db.get_index_type<account_index>().indices().get<by_id>();
+         
+         for( auto itr = accounts_by_name.begin(); itr != accounts_by_name.end() && limit > 0; ++itr ) {
+            
+            std::string account_id_str = fc::variant(itr->get_id()).as<std::string>();
+            std::string account_name = itr->name;
+            std::string search_term = term;
+            
+            boost::algorithm::to_lower(account_id_str);
+            boost::algorithm::to_lower(account_name);
+            boost::algorithm::to_lower(search_term);
+            
+            if (account_name.find(search_term) != std::string::npos || account_id_str.find(search_term) != std::string::npos) {
+               result.push_back(*itr);
+               limit--;
+            }
+         }
+      }
+      else if(order == "-id")
+      {
+         const auto& accounts_by_name = _db.get_index_type<account_index>().indices().get<by_id>();
+         
+         for( auto itr = accounts_by_name.rbegin(); itr != accounts_by_name.rend() && limit > 0; ++itr ) {
+            
+            std::string account_id_str = fc::variant(itr->get_id()).as<std::string>();
+            std::string account_name = itr->name;
+            std::string search_term = term;
+            
+            boost::algorithm::to_lower(account_id_str);
+            boost::algorithm::to_lower(account_name);
+            boost::algorithm::to_lower(search_term);
+            
+            if (account_name.find(search_term) != std::string::npos || account_id_str.find(search_term) != std::string::npos) {
+               result.push_back(*itr);
+               limit--;
+            }
+         }
+      }
+      else
+      {
+         const auto& accounts_by_name = _db.get_index_type<account_index>().indices().get<by_name>();
+         
+         for( auto itr = accounts_by_name.begin(); itr != accounts_by_name.end() && limit > 0; ++itr ) {
+            
+            std::string account_id_str = fc::variant(itr->get_id()).as<std::string>();
+            std::string account_name = itr->name;
+            std::string search_term = term;
+            
+            boost::algorithm::to_lower(account_id_str);
+            boost::algorithm::to_lower(account_name);
+            boost::algorithm::to_lower(search_term);
+            
+            if (account_name.find(search_term) != std::string::npos || account_id_str.find(search_term) != std::string::npos) {
+               result.push_back(*itr);
+               limit--;
+            }
+         }
+      }
       return result;
    }
    
@@ -1600,68 +1685,39 @@ namespace graphene { namespace app {
    {
       return my->get_buying_objects_by_consumer( consumer, order );
    }
-   
-   
+
+   template <bool is_ascending, class sort_tag>
+   void search_buying_template(graphene::chain::database& db, const account_id_type& consumer, vector<buying_object>& result)
+   {
+      const auto& idx = db.get_index_type<buying_index>().indices().get<sort_tag>();
+      
+      auto itr = return_one<is_ascending>::choose(idx.begin(), idx.rbegin());
+      auto itr_end = return_one<is_ascending>::choose(idx.end(), idx.rend());
+      
+      while(itr != itr_end)
+      {
+         buying_object const& element = *itr;
+         
+         if (element.consumer == consumer)
+            result.emplace_back(element);
+         
+         ++itr;
+      }
+   }
+
    
    vector<buying_object> database_api_impl::get_buying_objects_by_consumer( const account_id_type& consumer, const string& order )const
    {
       try {
          vector<buying_object> result;
          
-         if(order == "+size")
-         {
-            const auto& idx = _db.get_index_type<buying_index>().indices().get<by_size>();
-            /*for (auto it = idx.begin(); it != idx.end(); ++it)
-             {
-             buying_object const& element = *it;
-             
-             if (element.consumer == consumer)
-             result.emplace_back(element);
-             }*/
-            
-            std::for_each(idx.begin(), idx.end(),
-                          [&result, &consumer](const buying_object &element)
-                          {
-                             if (element.consumer == consumer)
-                                result.emplace_back(element);
-                          });
-         }
-         else if(order == "+rating")
-         {
-            const auto& idx = _db.get_index_type<buying_index>().indices().get<by_rating>();
-            std::for_each(idx.begin(), idx.end(),
-                          [&result, &consumer](const buying_object &element)
-                          {
-                             if (element.consumer == consumer)
-                                result.emplace_back(element);
-                          });
-         }
-         else if(order == "+price")
-         {
-            const auto& idx = _db.get_index_type<buying_index>().indices().get<by_price>();
-            std::for_each(idx.begin(), idx.end(),
-                          [&result, &consumer](const buying_object &element)
-                          {
-                             if (element.consumer == consumer)
-                                result.emplace_back(element);
-                          });
-         }
-         else
-         {
-            const auto &range = _db.get_index_type<buying_index>().indices().get<by_consumer_open>().equal_range( std::make_tuple(consumer, true));
-            const auto &range1 = _db.get_index_type<buying_index>().indices().get<by_consumer_open>().equal_range( std::make_tuple(consumer, false));
-            
-            result.reserve(distance(range.first, range.second) + distance(range1.first, range1.second));
-            
-            std::for_each(range.first, range.second, [&](const buying_object &element) {
-               result.emplace_back(element);
-            });
-            
-            
-            std::for_each(range1.first, range1.second, [&](const buying_object &element) {
-               result.emplace_back(element);
-            });
-         }
+         if(order == "+size") search_buying_template<true, by_size>(_db, consumer, result);
+         if(order == "-size") search_buying_template<false, by_size>(_db, consumer, result);
+         if(order == "+price") search_buying_template<true, by_price>(_db, consumer, result);
+         if(order == "-price") search_buying_template<false, by_price>(_db, consumer, result);
+         if(order == "+created") search_buying_template<true, by_created>(_db, consumer, result);
+         if(order == "-created") search_buying_template<false, by_created>(_db, consumer, result);
+         if(order == "") search_buying_template<true, by_consumer_open>(_db, consumer, result);
          
          return result;
       }
@@ -1759,15 +1815,23 @@ namespace graphene { namespace app {
       return my->list_content( URI_begin, count);
    }
    
-   vector<content_summary> database_api::search_content( const string& term, const string& order, const string& user, uint32_t count)const
+   vector<content_summary> database_api::search_content(const string& term,
+                                                        const string& order,
+                                                        const string& user,
+                                                        const string& region_code,
+                                                        uint32_t count)const
    {
-      return my->search_content( term, order, user, count);
+      return my->search_content( term, order, user, region_code, count);
    }
    
    
-   vector<content_summary> database_api::search_user_content( const string& user, const string& term, const string& order, uint32_t count)const
+   vector<content_summary> database_api::search_user_content(const string& user,
+                                                             const string& term,
+                                                             const string& order,
+                                                             const string& region_code,
+                                                             uint32_t count)const
    {
-      return my->search_user_content( user, term, order, count);
+      return my->search_user_content( user, term, order, region_code, count);
    }
    
    
@@ -1791,7 +1855,7 @@ namespace graphene { namespace app {
       while(count-- && itr != idx.end())
       {
          const auto& account = idx2.find(itr->author);
-         result.emplace_back( content.set( *itr , *account ) );
+         result.emplace_back( content.set( *itr , *account, RegionCodes::OO_none ) );
          ++itr;
       }
       
@@ -1799,42 +1863,33 @@ namespace graphene { namespace app {
    }
    
    
-   vector<content_summary> database_api_impl::search_user_content( const string& user, const string& search_term, const string& order, uint32_t count)const
+   vector<content_summary> database_api_impl::search_user_content(const string& user,
+                                                                  const string& search_term,
+                                                                  const string& order,
+                                                                  const string& region_code,
+                                                                  uint32_t count)const
    {
       FC_ASSERT( count <= 100 );
       
       vector<content_summary> result;
       result.reserve( count );
       
-      return result = search_content(search_term, order, user, count);
+      return result = search_content(search_term, order, user, region_code, count);
    }
    
    
    
    namespace {
-      
-      template <bool is_ascending>
-      struct return_one {
-         
-         template <class T1, class T2>
-         static auto choose(const T1& t1, const T2& t2) -> typename std::conditional<is_ascending, T1, T2 >::type {
-            return t1;
-         };
-      };
-      
-      template <>
-      struct return_one<false> {
-         
-         template <class T1, class T2>
-         static auto choose(const T1& t1, const T2& t2) -> typename std::conditional<false, T1, T2 >::type {
-            return t2;
-         };
-      };
-      
+
       
       
       template <bool is_ascending, class sort_tag>
-      void search_content_template(graphene::chain::database& db, const string& search_term, uint32_t count, const string& user, vector<content_summary>& result) {
+      void search_content_template(graphene::chain::database& db,
+                                   const string& search_term,
+                                   uint32_t count,
+                                   const string& user,
+                                   const string& region_code,
+                                   vector<content_summary>& result) {
          
          const auto& idx = db.get_index_type<content_index>().indices().get<sort_tag>();
          
@@ -1856,9 +1911,13 @@ namespace graphene { namespace app {
                   continue;
                }
             }
-            content.set( *itr , *account );
-            if (content.expiration > fc::time_point::now()) {
-               
+#ifdef PRICE_REGIONS
+            if (false == itr->price.Valid(region_code))
+               continue;
+#endif
+            content.set( *itr , *account, region_code );
+            if (content.expiration > fc::time_point::now())
+            {
                std::string term = search_term;
                std::string title = content.synopsis;
                std::string desc = "";
@@ -1878,9 +1937,8 @@ namespace graphene { namespace app {
                if (term.empty() ||
                    author.find(term) != std::string::npos ||
                    title.find(term) != std::string::npos ||
-                   desc.find(term) != std::string::npos) {
-                  
-                  
+                   desc.find(term) != std::string::npos)
+               {
                   count--;
                   result.push_back( content );
                }
@@ -1894,28 +1952,32 @@ namespace graphene { namespace app {
    }
    
    
-   vector<content_summary> database_api_impl::search_content( const string& search_term, const string& order, const string& user, uint32_t count)const
+   vector<content_summary> database_api_impl::search_content(const string& search_term,
+                                                             const string& order,
+                                                             const string& user,
+                                                             const string& region_code,
+                                                             uint32_t count)const
    {
       FC_ASSERT( count <= 100 );
       
       vector<content_summary> result;
       result.reserve( count );
       
-      if (order == "+author") search_content_template<true, by_author>(_db, search_term, count, user, result);
-      if (order == "+rating") search_content_template<true, by_AVG_rating>(_db, search_term, count, user, result);
-      if (order == "+size") search_content_template<true, by_size>(_db, search_term, count, user, result);
-      if (order == "+price") search_content_template<true, by_price>(_db, search_term, count, user, result);
-      if (order == "+created") search_content_template<true, by_created>(_db, search_term, count, user, result);
-      if (order == "+expiration") search_content_template<true, by_expiration>(_db, search_term, count, user, result);
+      if (order == "+author") search_content_template<true, by_author>(_db, search_term, count, user, region_code, result);
+      if (order == "+rating") search_content_template<true, by_AVG_rating>(_db, search_term, count, user, region_code, result);
+      if (order == "+size") search_content_template<true, by_size>(_db, search_term, count, user, region_code, result);
+      if (order == "+price") search_content_template<true, by_price>(_db, search_term, count, user, region_code, result);
+      if (order == "+created") search_content_template<true, by_created>(_db, search_term, count, user, region_code, result);
+      if (order == "+expiration") search_content_template<true, by_expiration>(_db, search_term, count, user, region_code, result);
       
-      if (order == "-author") search_content_template<false, by_author>(_db, search_term, count, user, result);
-      if (order == "-rating") search_content_template<false, by_AVG_rating>(_db, search_term, count, user, result);
-      if (order == "-size") search_content_template<false, by_size>(_db, search_term, count, user, result);
-      if (order == "-price") search_content_template<false, by_price>(_db, search_term, count, user, result);
-      if (order == "-created") search_content_template<false, by_created>(_db, search_term, count, user, result);
-      if (order == "-expiration") search_content_template<false, by_expiration>(_db, search_term, count, user, result);
-      if (order == "") search_content_template<true, by_URI>(_db, search_term, count, user, result);
-      //   search_content_template<by_URI>(_db, search_term, count, true, result);
+      if (order == "-author") search_content_template<false, by_author>(_db, search_term, count, user, region_code, result);
+      if (order == "-rating") search_content_template<false, by_AVG_rating>(_db, search_term, count, user, region_code, result);
+      if (order == "-size") search_content_template<false, by_size>(_db, search_term, count, user, region_code, result);
+      if (order == "-price") search_content_template<false, by_price>(_db, search_term, count, user, region_code, result);
+      if (order == "-created") search_content_template<false, by_created>(_db, search_term, count, user, region_code, result);
+      if (order == "-expiration") search_content_template<false, by_expiration>(_db, search_term, count, user, region_code, result);
+      if (order == "") search_content_template<true, by_URI>(_db, search_term, count, user, region_code, result);
+      //   search_content_template<by_URI>(_db, search_term, count, true, region_code, result);
       
       return result;
    }

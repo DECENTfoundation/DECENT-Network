@@ -301,7 +301,7 @@ namespace graphene { namespace wallet {
           * @return Map of account names to corresponding IDs
           * @ingroup WalletCLI
           */
-         map<string,account_id_type>       search_accounts(const string& term, uint32_t limit);
+         vector<account_object>       search_accounts(const string& term, const string order, uint32_t limit);
 
          /**
           * @brief List the balances of an account.
@@ -1427,7 +1427,7 @@ namespace graphene { namespace wallet {
           * @param author The author of the content
           * @param URI The URI of the content
           * @param price_asset_name Ticker symbol of the asset which will be used to buy content
-          * @param price_amount The price of the content
+          * @param price_amounts The price of the content per regions
           * @param size The size of the content
           * @param hash The Hash of the package
           * @param seeders List of the seeders, which will publish the content
@@ -1443,10 +1443,21 @@ namespace graphene { namespace wallet {
           * @ingroup WalletCLI
           */
          signed_transaction
-         submit_content(string author, string URI, string price_asset_name, string price_amount, uint64_t size,
-                        fc::ripemd160 hash, vector<account_id_type> seeders, uint32_t quorum, fc::time_point_sec expiration,
-                        string publishing_fee_asset, string publishing_fee_amount, string synopsis, DInteger secret,
-                        decent::encrypt::CustodyData cd, bool broadcast);
+         submit_content(string const& author,
+                        string const& URI,
+                        string const& price_asset_name,
+                        vector <pair<string, string>> const& price_amounts,
+                        uint64_t size,
+                        fc::ripemd160 const& hash,
+                        vector<account_id_type> const& seeders,
+                        uint32_t quorum,
+                        fc::time_point_sec const& expiration,
+                        string const& publishing_fee_asset,
+                        string const& publishing_fee_amount,
+                        string const& synopsis,
+                        DInteger const& secret,
+                        decent::encrypt::CustodyData const& cd,
+                        bool broadcast);
 
          /**
           * @brief This function is used to create package, upload package and submit content in one step.
@@ -1458,7 +1469,7 @@ namespace graphene { namespace wallet {
           * @param samples_dir Path to the directory containing samples of content
           * @param protocol Protocol for uploading package( magnet or IPFS)
           * @param price_asset_symbol Ticker symbol of the asset which will be used to buy content
-          * @param price_amount The price of the content
+          * @param price_amounts The prices of the content per regions
           * @param seeders List of the seeders, which will publish the content
           * @param expiration The expiration time of the content. The content is available to buy till it's expiration time
           * @param synopsis The description of the content
@@ -1466,16 +1477,26 @@ namespace graphene { namespace wallet {
           * @return The signed transaction submitting the content
           * @ingroup WalletCLI
           */
-         signed_transaction submit_content_new(string author, string content_dir, string samples_dir, string protocol, string price_asset_symbol, string price_amount, vector<account_id_type> seeders, fc::time_point_sec expiration, string synopsis, bool broadcast = false);
+         signed_transaction submit_content_new(string const& author,
+                                               string const& content_dir,
+                                               string const& samples_dir,
+                                               string const& protocol,
+                                               string const& price_asset_symbol,
+                                               vector <pair<string, string>> const& price_amounts,
+                                               vector<account_id_type> const& seeders,
+                                               fc::time_point_sec const& expiration,
+                                               string const& synopsis,
+                                               bool broadcast = false);
 
          /**
           * @brief Downloads encrypted content specified by provided URI.
           * @param consumer Consumer of the content
           * @param URI The URI of the content
+          * @param region_code_from Two letter region code
           * @param broadcast true to broadcast the transaction on the network
           * @ingroup WalletCLI
           */
-         void download_content(string consumer, string URI, bool broadcast = false);
+         void download_content(string const& consumer, string const& URI, string const& region_code_from, bool broadcast = false);
 
          /**
           * @brief Get status about particular download process specified by provided URI.
@@ -1669,19 +1690,25 @@ namespace graphene { namespace wallet {
          /**
           * @brief Get a list of contents ordered alphabetically by search term
           * @param term seach term
+          * @param order Order field
+          * @param user Content owner
+          * @param region_code Two letter region code
           * @param count Maximum number of contents to fetch (must not exceed 100)
           * @return The contents found
           * @ingroup WalletCLI
           */
-         vector<content_summary> search_content( const string& term, const string& order, const string& user, uint32_t count )const;
+         vector<content_summary> search_content( const string& term, const string& order, const string& user, const string& region_code, uint32_t count )const;
          /**
           * @brief Get a list of contents ordered alphabetically by search term
+          * @param user Content owner
           * @param term seach term
+          * @param order Order field
+          * @param region_code Two letter region code
           * @param count Maximum number of contents to fetch (must not exceed 100)
           * @return The contents found
           * @ingroup WalletCLI
           */
-         vector<content_summary> search_user_content( const string& user, const string& term, const string& order, uint32_t count )const;
+         vector<content_summary> search_user_content( const string& user, const string& term, const string& order, const string& region_code, uint32_t count )const;
 
          /**
           * @brief Get a list of contents by times bought, in decreasing order

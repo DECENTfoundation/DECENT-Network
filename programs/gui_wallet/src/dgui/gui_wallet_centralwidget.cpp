@@ -166,6 +166,10 @@ QComboBox* CentralWigdet::usersCombo()
     return (QComboBox*)GetWidgetFromTable5(USERNAME,1);
 }
 
+DecentButton* CentralWigdet::importButton()
+{
+   return (DecentButton*)GetWidgetFromTable5(USERNAME,2);
+};
 
 QWidget* CentralWigdet::GetWidgetFromTable5(int a_nColumn, int a_nWidget)
 {
@@ -195,6 +199,7 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     QHBoxLayout *pHBoxLayoutTmp = nullptr;
     QComboBox* pComboTmp1 = nullptr;
     QFrame* line = nullptr;
+    DecentButton* importKeyButton = nullptr;
 
     AccountBalanceWidget* pCombo2;
 
@@ -244,10 +249,13 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     pLabelTmp->setFixedSize(28,28);
     
     pComboTmp1 = new QComboBox;
-    //pComboTmp1->setStyleSheet("QWidget:item:selected{border: 0px solid #999900;background-color: rgb(27,176,104);}");
     pComboTmp1->setStyle(QStyleFactory::create("fusion"));
-   
+    importKeyButton = new DecentButton();
+    importKeyButton->setText("Import Key");
+    importKeyButton->setFixedSize(100, 25);
     pHBoxLayoutTmp->addWidget(pComboTmp1);
+    pHBoxLayoutTmp->addWidget(importKeyButton);
+    //pHBoxLayoutTmp->setContentsMargins(0, 10, 0, 10);
     m_pUsernameWgt->setLayout(pHBoxLayoutTmp);
     m_first_line_lbl.addWidget(m_pUsernameWgt);
     m_pUsernameWgt->setFixedHeight(__HEIGHT__);

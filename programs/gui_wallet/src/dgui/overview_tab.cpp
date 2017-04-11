@@ -81,20 +81,21 @@ void Overview_tab::timeToUpdate(const std::string& result) {
    for (int i = 0; i < contents.size() + 1; ++i) {
       auto content = contents[i];
       
+      std::string name = content["name"].get<std::string>();
+      std::string id = content["id"].get<std::string>();
       
-      
-      table_widget.setItem(i, 1, new QTableWidgetItem(QString::fromStdString(content[0].get<std::string>())));
-      table_widget.setItem(i, 0, new QTableWidgetItem(QString::fromStdString(content[1].get<std::string>())));
+      table_widget.setItem(i, 1, new QTableWidgetItem(QString::fromStdString(name)));
+      table_widget.setItem(i, 0, new QTableWidgetItem(QString::fromStdString(id)));
       
       
       EventPassthrough<DecentSmallButton>* trans = new EventPassthrough<DecentSmallButton>(":/icon/images/transaction.png", ":/icon/images/transaction1.png");
-      trans->setProperty("accountName", QVariant::fromValue(QString::fromStdString(content[0].get<std::string>())));
+      trans->setProperty("accountName", QVariant::fromValue(QString::fromStdString(name)));
       trans->setAlignment(Qt::AlignCenter);
       connect(trans, SIGNAL(clicked()), this, SLOT(transactionButtonPressed()));
       table_widget.setCellWidget(i, 2, trans);
       
       EventPassthrough<DecentSmallButton>* transf = new EventPassthrough<DecentSmallButton>(":/icon/images/transfer.png", ":/icon/images/transfer1.png");
-      transf->setProperty("accountName", QVariant::fromValue(QString::fromStdString(content[0].get<std::string>())));
+      transf->setProperty("accountName", QVariant::fromValue(QString::fromStdString(name)));
       transf->setAlignment(Qt::AlignCenter);
       connect(transf, SIGNAL(clicked()), this, SLOT(buttonPressed()));
       table_widget.setCellWidget(i, 3, transf);
