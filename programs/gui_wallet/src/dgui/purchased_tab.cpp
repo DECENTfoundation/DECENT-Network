@@ -8,6 +8,7 @@
 #include <QMessageBox>
 #include "gui_wallet_mainwindow.hpp"
 #include "decent_wallet_ui_gui_contentdetailsgeneral.hpp"
+#include "gui_design.hpp"
 
 using namespace gui_wallet;
 using namespace nlohmann;
@@ -30,12 +31,12 @@ PurchasedTab::PurchasedTab(Mainwindow_gui_wallet* pMainWindow)
    
    QHBoxLayout* search_lay = new QHBoxLayout();
    
-   m_filterLineEditer.setPlaceholderText(QString("Enter the term to search in title and description"));
-   m_filterLineEditer.setStyleSheet("border: 0; padding-left: 10 px;");
+   m_filterLineEditer.setPlaceholderText(QString("Search Content"));
+   m_filterLineEditer.setStyleSheet(d_lineEdit);
    m_filterLineEditer.setFixedHeight(54);
    m_filterLineEditer.setAttribute(Qt::WA_MacShowFocusRect, 0);
    
-   QPixmap image(":/icon/images/search.svg");
+   QPixmap image(icon_search);
    
    QLabel* search_label = new QLabel();
    search_label->setSizeIncrement(100,40);
@@ -78,8 +79,8 @@ void PurchasedTab::timeToUpdate(const std::string& result) {
    auto contents = json::parse(result);
    m_pTableWidget.setRowCount(contents.size());
    
-   QPixmap info_image(":/icon/images/pop_up.png");
-   QPixmap extract_image(":/icon/images/export.png");
+   QPixmap info_image(icon_popup);
+   QPixmap extract_image(icon_export);
    QFont bold_font( "Open Sans Bold", 14, QFont::Bold);
    
    _current_content.clear();
@@ -159,7 +160,7 @@ void PurchasedTab::timeToUpdate(const std::string& result) {
       
       
       
-      EventPassthrough<DecentSmallButton>* info_icon = new EventPassthrough<DecentSmallButton>(":/icon/images/pop_up.png", ":/icon/images/pop_up1.png");
+      EventPassthrough<DecentSmallButton>* info_icon = new EventPassthrough<DecentSmallButton>(icon_popup, icon_popup_white);
       info_icon->setProperty("id", QVariant::fromValue(i));
       info_icon->setAlignment(Qt::AlignCenter);
       connect(info_icon, SIGNAL(clicked()), this, SLOT(show_content_popup()));
@@ -220,7 +221,7 @@ void PurchasedTab::timeToUpdate(const std::string& result) {
          m_pTableWidget.item(i, 5)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
       } else {
          
-         EventPassthrough<DecentSmallButton>* extract_icon = new EventPassthrough<DecentSmallButton>(":/icon/images/export.png", ":/icon/images/export1.png");
+         EventPassthrough<DecentSmallButton>* extract_icon = new EventPassthrough<DecentSmallButton>(icon_export, icon_export_white);
          
          if ((received_download_bytes < total_download_bytes) || !is_delivered) {
             m_pTableWidget.setItem(i, 5, new QTableWidgetItem(QString::number(progress) + "%"));

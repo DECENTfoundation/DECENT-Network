@@ -8,6 +8,7 @@
  *
  */
 
+#include "gui_design.hpp"
 #include "decent_wallet_ui_gui_contentdetailsbase.hpp"
 #include <QDateTime>
 #include "gui_wallet_global.hpp"
@@ -78,10 +79,10 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details)
             } else {
                 m_RateText->setText( tr("Please Rate:"));
             }
-            m_RateText->setStyleSheet("color:green;" "background-color:white;" "font-weight: bold");
+            m_RateText->setStyleSheet(m_RateText_design);
             
-            QPixmap green_star(":/icon/images/green_asterix.png");
-            QPixmap white_star(":/icon/images/white_asterix.png");
+            QPixmap green_star(green_star_image);
+            QPixmap white_star(white_star_image);
             
             white_star = white_star.scaled(QSize(20,20));
             green_star = green_star.scaled(QSize(20,20));
@@ -185,8 +186,8 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details)
         QString str_price = QString::number(a_cnt_details.price.amount) + " DCT";
         m_vLabels[7].setText(str_price);
         
-        QPixmap green_star(":/icon/images/green_asterix.png");
-        QPixmap white_star(":/icon/images/white_asterix.png");
+        QPixmap green_star(green_star_image);
+        QPixmap white_star(white_star_image);
         
         white_star = white_star.scaled(QSize(20,20));
         green_star = green_star.scaled(QSize(20,20));
@@ -213,8 +214,8 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details)
         QString str_price = QString::number(a_cnt_details.price.amount) + " DCT";
         m_vLabels[5].setText(str_price);
         
-        QPixmap green_star(":/icon/images/green_asterix.png");
-        QPixmap white_star(":/icon/images/white_asterix.png");
+        QPixmap green_star(green_star_image);
+        QPixmap white_star(white_star_image);
         
         white_star = white_star.scaled(QSize(20,20));
         green_star = green_star.scaled(QSize(20,20));
@@ -286,9 +287,9 @@ void ContentDetailsBase::popup_for_purchased(int row_star)
     
     for(i=0;i<row_count;++i,nIndexZuyg+=2,nIndexKent+=2)
     {
-        if(i%2==0){m_vSub_Widgets[i].setStyleSheet("background-color:rgb(244,244,244);");}
-        else{m_vSub_Widgets[i].setStyleSheet("background-color:white;");}
-        m_vLabels[nIndexKent].setStyleSheet("font-weight: bold");
+        if(i%2==0){m_vSub_Widgets[i].setStyleSheet(bg_color_grey);}
+        else{m_vSub_Widgets[i].setStyleSheet(bg_color_wgite);}
+        m_vLabels[nIndexKent].setStyleSheet(font_bold);
         m_vLabels[nIndexKent].setContentsMargins(0, 17, 50, 17);
         m_vLabels[nIndexKent].setAlignment(Qt::AlignRight);
         m_vLabels[nIndexKent].setFixedHeight(54);
@@ -331,7 +332,7 @@ void ContentDetailsBase::popup_for_purchased(int row_star)
        line->setFrameShape(QFrame::HLine); // Horizontal line
    
        line->setLineWidth(300);
-       line->setStyleSheet("color: rgb(244,244,244)");
+       line->setStyleSheet(col_grey);
        line->setFixedHeight(1);
        m_main_layout.addWidget(line);
     }
@@ -339,7 +340,7 @@ void ContentDetailsBase::popup_for_purchased(int row_star)
    
     QHBoxLayout* desc_lay = new QHBoxLayout();
     m_desc.setText("Description\n\n");
-    m_desc.setStyleSheet("border: 0px;");
+    m_desc.setStyleSheet(border_0);
     m_desc.setReadOnly(true);
     m_desc.setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     QFont f("Myriad Pro Regular",13);
@@ -353,7 +354,7 @@ void ContentDetailsBase::popup_for_purchased(int row_star)
     line->setFrameShape(QFrame::HLine); // Horizontal line
     
     line->setLineWidth(300);
-    line->setStyleSheet("color: rgb(244,244,244)");
+    line->setStyleSheet(col_grey);
     line->setFixedHeight(1);
     m_main_layout.addWidget(line);
     

@@ -8,6 +8,7 @@
  *
  */
 
+#include "gui_design.hpp"
 #include "gui_wallet_centralwidget.hpp"
 #include <QMessageBox>
 #include <QTimer>
@@ -28,11 +29,10 @@
 
 using namespace gui_wallet;
 
-
 AccountBalanceWidget::AccountBalanceWidget() : m_nCurrentIndex(-1) {
    
-    m_amount_label.setStyleSheet("color: rgb(27,176,104);""background-color:white;");
-    m_asset_type_label.setStyleSheet("color:black;""background-color:white;");
+    m_amount_label.setStyleSheet(d_amount_label);
+    m_asset_type_label.setStyleSheet(d_asset);
     m_amount_label.setAlignment(Qt::AlignRight|Qt::AlignVCenter);
     m_asset_type_label.setAlignment(Qt::AlignRight|Qt::AlignVCenter);
     m_main_layout.addWidget(&m_amount_label);
@@ -109,20 +109,7 @@ CentralWigdet::CentralWigdet(QBoxLayout* a_pAllLayout, Mainwindow_gui_wallet* a_
 
 
 
-    m_main_tabs.setStyleSheet("QTabBar::tab{"
-                              "font:bold;"
-                              " height: 40px; width: 181px;"
-                              "color:rgb(0,0,0);background-color:white;"
-                              "border-left: 0px;"
-                              "border-top: 1px solid rgb(240,240,240);"
-                              "border-bottom: 1px solid rgb(240,240,240);}"
-                              "QTabBar::tab:selected{"
-                              "color:rgb(27,176,104);"
-                              "border-bottom:3px solid rgb(27,176,104);"
-                              "border-top: 1px solid rgb(240,240,240);"
-                              "border-left:0px;"
-                              "border-right:0px;}"
-                               );
+    m_main_tabs.setStyleSheet(d_main_tabs);
 
     PrepareGUIprivate(a_pAllLayout);
 
@@ -212,7 +199,7 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     pLabelTmp = new QLabel(tr(""));
     pLabelTmp->setScaledContents(true);
 
-    QPixmap m_image1(":/icon/images/decent_logo.svg");
+    QPixmap m_image1(icon_decent);
     pHBoxLayoutTmp->setContentsMargins(0, 0, 0, 90);
     pLabelTmp->setPixmap(m_image1);
     pHBoxLayoutTmp->addWidget(pLabelTmp);
@@ -228,7 +215,7 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     line = new QFrame(this);
     line->setFrameShape(QFrame::VLine); // Horizontal line
     line->setLineWidth(1);
-    line->setStyleSheet("color: #f0f0f0");
+    line->setStyleSheet(d_color);
     line->setFixedHeight(68);
     m_first_line_lbl.addWidget(line);
 
@@ -243,7 +230,7 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     
     pLabelTmp->setScaledContents(true);
 
-    QPixmap m_image2(":/icon/images/user.png");
+    QPixmap m_image2(icon_user);
     pLabelTmp->setPixmap(m_image2);
     pHBoxLayoutTmp->addWidget(pLabelTmp);
     pLabelTmp->setFixedSize(28,28);
@@ -277,15 +264,15 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     pLabelTmp = new QLabel(tr(""));
     pLabelTmp->setScaledContents(true);
 
-    QPixmap m_image3(":/icon/images/balance.png");
+    QPixmap m_image3(icon_balance);
     pLabelTmp->setPixmap(m_image3);
     pLabelTmp->setFixedSize(30,30);
     pHBoxLayoutTmp->addWidget(pLabelTmp);
     
     pCombo2 = new AccountBalanceWidget;
     
-    QFont f( "Myriad Pro Regular", 12, QFont::Bold);
-    pCombo2->setFont(f);
+    QFont font( "Myriad Pro Regular", 12, QFont::Bold);
+    pCombo2->setFont(font);
     pHBoxLayoutTmp->addWidget(pCombo2);
     
     m_pBalanceWgt1->setLayout(pHBoxLayoutTmp);
