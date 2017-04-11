@@ -32,3 +32,4 @@ void DecentButton::setEnabled(bool isEnabled) {
       setStyleSheet("QLabel { background-color :rgb(180,180,180); color : rgb(30, 30, 30); }");
 }
 
+ 

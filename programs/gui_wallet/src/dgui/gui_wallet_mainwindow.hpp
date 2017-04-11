@@ -95,6 +95,7 @@ protected slots:
    void ImportKeySlot();
    void LockSlot();
    void UnlockSlot();
+   void SendDCTSlot();
 
    void slot_connected(std::string str_error);
 
@@ -123,12 +124,13 @@ protected:
    QAction             m_ActionLock;
    QAction             m_ActionUnlock;
    QAction             m_ActionImportKey;
+   QAction             m_ActionSendDCT;
    TextDisplayDialog   m_info_dialog;
-   
    
    QVBoxLayout                         m_main_layout;
    bool                                m_locked;
    RichDialog                          m_import_key_dlg;
+   SendDialog                          m_sendDCT_dialog;
    int                                 m_nConnected;
    //SConnectionStruct                   m_wdata2;
    PasswordDialog                      m_SetPasswordDialog;
