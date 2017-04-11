@@ -25,6 +25,7 @@
 #include <QTimer>
 #include <QDateEdit>
 #include <QComboBox>
+#include <QCheckBox>
 
 #include "decent_button.hpp"
 #include "gui_wallet_tabcontentmanager.hpp"
@@ -64,7 +65,7 @@ namespace gui_wallet
         friend class Upload_tab;
     public:
         Upload_popup(Mainwindow_gui_wallet* pMainWindow);
-
+       
     public slots:
         void browseContent();
         void browseSamples();
@@ -72,7 +73,8 @@ namespace gui_wallet
         void onGrabPublishers();
         void uploadCanceled();
         void updateUploadButtonStatus();
-
+        void stateChanged(const int state);
+       
     public:
         void onPublishersDone(void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result);
        
@@ -83,18 +85,23 @@ namespace gui_wallet
         QLineEdit*       _titleText;
         QTextEdit*       _descriptionText;
         QDateEdit*       _lifeTime;
-        QComboBox*       _seeders;
         QComboBox*       _keyparts;
         QLineEdit*       _price;
         QLineEdit*       _contentPath;
         QLineEdit*       _samplesPath;
         DecentButton*    _upload_button;
         DecentButton*    _cancel_button;
+        DecentButton*    _seeder_ok;
+        QCheckBox*       _seeders_checkbox[3];
+        QVBoxLayout*     dialog_layout;
        
-        QTimer          m_getPublishersTimer;
+        QTimer           m_getPublishersTimer;
         QTimer*          _buttonStatusCheck;
+        QDialog*         _seeders_dialog;
        
        std::map<std::string, double> _publisherIdToPriceMap;
+       std::vector<std::string>      _checkedSeeders;
+
     public:
     signals:
         void uploadFinished();

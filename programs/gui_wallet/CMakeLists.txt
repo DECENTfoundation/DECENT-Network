@@ -50,6 +50,7 @@ add_executable(DECENT MACOSX_BUNDLE
                src/dgui/transactions_tab.hpp
                src/dgui/upload_tab.cpp
                src/dgui/upload_tab.hpp
+               src/dgui/gui_design.hpp
 
                resources.qrc
                desktop.icns
