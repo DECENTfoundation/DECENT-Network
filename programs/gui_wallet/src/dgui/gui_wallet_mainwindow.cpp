@@ -618,13 +618,17 @@ void Mainwindow_gui_wallet::ImportKeySlot()
 
 void Mainwindow_gui_wallet::SendDCTSlot()
 {
-   std::vector<std::string> cvsUsKey(2);
+   std::vector<std::string> cvsUsKey(3);
    cvsUsKey[0] = "";
    cvsUsKey[1] = "";
+   cvsUsKey[2] = "";
    QPoint thisPos = pos();
    thisPos.rx() += size().width() / 2 - 175;
    thisPos.ry() += size().height() / 2 - 75;
    RET_TYPE aRet = m_sendDCT_dialog.execRD(&thisPos,cvsUsKey);
+   std::string a_result;
+   std::string message;
+
    if(aRet == RDB_OK)
    {
       try {
@@ -635,11 +639,28 @@ void Mainwindow_gui_wallet::SendDCTSlot()
          + "\" \"DCT\" \""
          + QString::fromStdString(cvsUsKey[2])
          + "\" \"true\"";
-         std::cout<<run_str.toStdString()<<std::endl;
-         std::string a_result;
          RunTask(run_str.toStdString(), a_result);
-      } catch(...){
+      } catch(const std::exception& ex){
+         message = ex.what();
+         setEnabled(true);
       }
+      
+      QMessageBox* msgBox = new QMessageBox();
+      msgBox->setAttribute(Qt::WA_DeleteOnClose);
+      
+      if (message.empty())
+      {
+         msgBox->setWindowTitle("Success");
+         msgBox->setText(tr("Success"));
+      }
+      else
+      {
+         msgBox->setWindowTitle("Error");
+         msgBox->setText(tr("Failed to submit content"));
+         msgBox->setDetailedText(message.c_str());
+      }
+      
+      msgBox->open();
    }
 }
 

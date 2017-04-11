@@ -461,6 +461,7 @@ void Upload_popup::uploadContent()
    std::string m_life_time = _lifeTime->text().toStdString();
    std::string m_keyparts  = _keyparts->currentData().toString().toStdString();
    std::string m_price     = _price->text().toStdString();
+
    std::string assetName = "DCT";
    std::string path = _contentPath->text().toStdString();
    std::string samples_path = _samplesPath->text().toStdString();
