@@ -179,6 +179,7 @@ SendDialog::SendDialog(int a_num_of_text_boxes  , QString title)
    m_pTextBoxes = new QLineEdit[a_num_of_text_boxes];
    connect(&m_pTextBoxes[0], SIGNAL(returnPressed()), &m_ok_button, SIGNAL(LabelClicked()));
    connect(&m_pTextBoxes[1], SIGNAL(returnPressed()), &m_ok_button, SIGNAL(LabelClicked()));
+   connect(&m_pTextBoxes[2], SIGNAL(returnPressed()), &m_ok_button, SIGNAL(LabelClicked()));
    
    m_pTextBoxes[0].setPlaceholderText(QString("Account"));
    m_pTextBoxes[0].setAttribute(Qt::WA_MacShowFocusRect, 0);
