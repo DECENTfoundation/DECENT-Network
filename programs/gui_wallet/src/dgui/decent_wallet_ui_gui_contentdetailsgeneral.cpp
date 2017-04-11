@@ -59,9 +59,10 @@ void ContentDetailsGeneral::LabelPushCallbackGUI()
       return;
    }
    std::string downloadCommand = "download_content";
-   downloadCommand += " " + GlobalEvents::instance().getCurrentUser();   //consumer
-   downloadCommand += " \"" + m_pContentInfo->URI + "\"";                 //URI
-   downloadCommand += " true";                                           //broadcast
+   downloadCommand += " " + GlobalEvents::instance().getCurrentUser();  // consumer
+   downloadCommand += " \"" + m_pContentInfo->URI + "\"";               // URI
+   downloadCommand += " \"\"";                                          // region_code
+   downloadCommand += " true";                                          // broadcast
    
    std::string a_result;
 

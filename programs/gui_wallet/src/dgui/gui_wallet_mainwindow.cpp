@@ -111,11 +111,12 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
 
    setUnifiedTitleAndToolBarOnMac(false);
 
-   QComboBox* pUsersCombo = m_pCentralWidget->usersCombo();
-
-
+   QComboBox*   pUsersCombo = m_pCentralWidget->usersCombo();
+   DecentButton* pImportButton = m_pCentralWidget->importButton();
+   pUsersCombo->hide();
+   
    connect(pUsersCombo, SIGNAL(currentIndexChanged(const QString&)), this, SLOT(CurrentUserChangedSlot(const QString&)) );
-
+   connect(pImportButton, SIGNAL(LabelClicked()), this, SLOT(ImportKeySlot()));
 
    setWindowTitle(tr("DECENT - Blockchain Content Distribution"));
 
@@ -339,13 +340,21 @@ void Mainwindow_gui_wallet::UpdateAccountBalances(const std::string& username) {
    
    std::string csLineToRun = "list_account_balances " + username;
    json allBalances;
-   
+
    if (!RunTaskParse(csLineToRun, allBalances)) {
       ALERT_DETAILS("Could not get account balances", allBalances.get<string>().c_str());
       return;
    }
-   
-   
+   if(!allBalances.size())
+   {
+      m_pCentralWidget->usersCombo()->hide();
+      m_pCentralWidget->importButton()->show();
+   }
+   else
+   {
+      m_pCentralWidget->importButton()->hide();
+      m_pCentralWidget->usersCombo()->show();
+   }
    
    std::vector<std::string> balances;
    for (int i = 0; i < allBalances.size(); ++i) {
@@ -469,38 +478,41 @@ void Mainwindow_gui_wallet::CheckDownloads()
     }
    
    json contents;
-   if (!RunTaskParse("search_my_purchases \"" + str_current_username +"\" \"\" \"\" ", contents)) {
+   if (!RunTaskParse("search_my_purchases "
+                     "\"" + str_current_username + "\" "
+                     "\"\" "
+                     "\"\" ",
+                     contents))
+   {
       std::cout << contents.get<string>() << std::endl;
       return;
    }
    
    
-   for (int i = 0; i < contents.size(); ++i) {
-      
+   for (int i = 0; i < contents.size(); ++i)
+   {
       auto content = contents[i];
       std::string URI = contents[i]["URI"].get<std::string>();
       
-      if (URI == "") {
+      if (URI == "")
          continue;
-      }
       
-      if (_activeDownloads.find(URI) == _activeDownloads.end()) {
+      if (_activeDownloads.find(URI) == _activeDownloads.end())
+      {
          json ignore_result;
-         if (RunTaskParse("download_package \"" + URI +"\" ", ignore_result)) {
+         if (RunTaskParse("download_package "
+                          "\"" + URI + "\" ",
+                          ignore_result))
+         {
             _activeDownloads.insert(URI);
-         } else {
+         }
+         else
+         {
             std::cout << "Can not resume download: " << URI << std::endl;
             std::cout << "Error: " << ignore_result.get<string>() << std::endl;
-            
          }
-         
       }
-      
    }
-   
-   
-   
-
 }
 
 

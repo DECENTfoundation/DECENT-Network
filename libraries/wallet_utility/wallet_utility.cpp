@@ -311,8 +311,8 @@ namespace wallet_utility
                              variant result;
                              try {
                                 result = pimpl->m_ptr_fc_api_connection->receive_call(0, method, fc::variants(args.begin()+1, args.end()));
-                             } catch (fc::exception& ex) {
-                                throw std::runtime_error(ex.what());
+                             } catch (fc::exception const& ex) {
+                                throw std::runtime_error(ex.to_detail_string());
                              }
                              auto it = pimpl->m_result_formatters.find(method);
 
