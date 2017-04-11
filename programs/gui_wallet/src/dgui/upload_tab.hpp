@@ -25,6 +25,7 @@
 #include <QTimer>
 #include <QDateEdit>
 #include <QComboBox>
+#include <QCheckBox>
 
 #include "decent_button.hpp"
 #include "gui_wallet_tabcontentmanager.hpp"
@@ -64,24 +65,23 @@ namespace gui_wallet
         friend class Upload_tab;
     public:
         Upload_popup(Mainwindow_gui_wallet* pMainWindow);
-
+       
     public slots:
         void browseContent();
         void browseSamples();
         void uploadContent();
         void onGrabPublishers();
         void uploadCanceled();
-
-    public:
-        friend class upload_up;
-        void onPublishersDone(void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result);
-        
+        void updateUploadButtonStatus();
+        void stateChanged(const int state);
        
-        QVBoxLayout*     u_main_layout;
-
+    public:
+        void onPublishersDone(void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result);
+       
     private:
         Mainwindow_gui_wallet* m_pMainWindow;
        
+        QVBoxLayout*     u_main_layout;
         QLineEdit*       _titleText;
         QTextEdit*       _descriptionText;
         QDateEdit*       _lifeTime;
@@ -90,9 +90,18 @@ namespace gui_wallet
         QLineEdit*       _price;
         QLineEdit*       _contentPath;
         QLineEdit*       _samplesPath;
+        DecentButton*    _upload_button;
+        DecentButton*    _cancel_button;
+        QCheckBox*       _seeders_checkbox[3];
+        QVBoxLayout*     dialog_layout;
        
+        QTimer           m_getPublishersTimer;
+        QTimer*          _buttonStatusCheck;
+        QDialog*         _seeders_dialog;
        
-        QTimer          m_getPublishersTimer;
+       std::map<std::string, double> _publisherIdToPriceMap;
+       std::string                   _checkedSeeders[3];
+
     public:
     signals:
         void uploadFinished();
@@ -142,10 +151,7 @@ namespace gui_wallet
         ContentDetailsGeneral*        _content_popup;
         Mainwindow_gui_wallet*        _parent;
        bool                          _isUploading;
-    
-        bool                          m_doUpdate;
-        QTimer                        m_contentUpdateTimer;
-    };
+   };
     
 
     

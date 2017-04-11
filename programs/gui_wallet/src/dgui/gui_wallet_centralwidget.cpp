@@ -167,7 +167,7 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
 
     m_main_tabs.addTab(&m_browse_cont_tab,tr("Browse Content"));
     m_main_tabs.addTab(&m_trans_tab,tr("Transactions"));
-    m_main_tabs.addTab(&m_Upload_tab,tr("Upload"));
+    m_main_tabs.addTab(&m_Upload_tab,tr("Publish"));
     m_main_tabs.addTab(&m_Overview_tab,tr("Users"));
     m_main_tabs.addTab(&m_Purchased_tab,tr("Purchased"));
 

@@ -18,13 +18,18 @@ using namespace gui_wallet;
 
 DecentButton::DecentButton()
 {
-    setAlignment(Qt::AlignCenter);
-    setStyleSheet(decent_button_style);
-    setScaledContents(true);
-
+   _isEnabled = true;
+   setAlignment(Qt::AlignCenter);
+   setStyleSheet("QLabel { background-color :rgb(27,176,104); color : white;}");
+   setScaledContents(true);
 }
 
-DecentButton::~DecentButton()
-{
-    
+
+void DecentButton::setEnabled(bool isEnabled) {
+   _isEnabled = isEnabled;
+   if (_isEnabled)
+      setStyleSheet("QLabel { background-color :rgb(27,176,104); color : white;}");
+   else
+      setStyleSheet("QLabel { background-color :rgb(180,180,180); color : rgb(30, 30, 30); }");
 }
+

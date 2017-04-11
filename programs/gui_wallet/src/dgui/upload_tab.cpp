@@ -44,6 +44,8 @@
 #include <ctime>
 #include <limits>
 #include <iostream>
+#include <cmath>
+#include <algorithm>
 #include <graphene/chain/config.hpp>
 
 
@@ -60,6 +62,8 @@ CryptoPP::AutoSeededRandomPool rng;
 
 Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishersTimer(this) {
    
+   QFont font( "Myriad Pro Regular", 13, QFont::Bold);
+
    u_main_layout = new QVBoxLayout(this);
    ////////////////////////////////////////////////////////////////////////////
    /// Title field
@@ -79,6 +83,7 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    _descriptionText->setPlaceholderText("Description");
    _descriptionText->setStyleSheet("border: 1 solid lightGray; padding 5px;");
    _descriptionText->setMinimumHeight(160);
+   _descriptionText->setMinimumWidth(420);
    u_main_layout->addWidget(_descriptionText);
    
    ////////////////////////////////////////////////////////////////////////////
@@ -104,30 +109,6 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    lifeTimeRow->addWidget(lifeTimeLabel);
    lifeTimeRow->addWidget(_lifeTime);
    u_main_layout->addLayout(lifeTimeRow);
-   
-   
-   
-   
-   ////////////////////////////////////////////////////////////////////////////
-   /// Seeders
-   ////////////////////////////////////////////////////////////////////////////
-   QHBoxLayout* seedersRow = new QHBoxLayout();
-
-   QLabel* seedersLabel = new QLabel("Seeders");
-   seedersLabel->setStyleSheet("QLabel { background-color : white; color: Gray}");
-   seedersLabel->setContentsMargins(0, 0, 0, 0);
-   seedersLabel->setMinimumWidth(60);
-   seedersLabel->setMinimumHeight(40);
-
-   _seeders = new QComboBox(this);
-   _seeders->setStyle(QStyleFactory::create("fusion"));
-   _seeders->setStyleSheet("color : black;");
-   _seeders->setMinimumHeight(40);
-   _seeders->setFixedWidth(320);
-
-   seedersRow->addWidget(seedersLabel);
-   seedersRow->addWidget(_seeders);
-   u_main_layout->addLayout(seedersRow);
    
    
    
@@ -183,12 +164,57 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    priceRow->addWidget(_price);
 
    u_main_layout->addLayout(priceRow);
+   
+   
+   
+   ////////////////////////////////////////////////////////////////////////////
+   /// Seeders
+   ////////////////////////////////////////////////////////////////////////////
+   QHBoxLayout* seedersRow = new QHBoxLayout();
+   
+   QLabel* seedersLabel = new QLabel("Seeders");
+   seedersLabel->setStyleSheet("QLabel { background-color : white; color: Gray}");
+   seedersLabel->setContentsMargins(0, 0, 0, 0);
+   seedersLabel->setMinimumWidth(60);
+   seedersLabel->setMinimumHeight(40);
+   
+   DecentButton* seeders_button = new DecentButton();
+   seeders_button->setText("Select Seeders");
+   seeders_button->setFont(font);
+   seeders_button->setFixedWidth(100);
+   
+   seedersRow->addWidget(seedersLabel);
+   seedersRow->addWidget(seeders_button);
+   u_main_layout->addLayout(seedersRow);
+   
+   
+   ////////////////////////////////////////////////////////////////////////////
+   /// Seeders Dialog
+   ////////////////////////////////////////////////////////////////////////////
+   _seeders_dialog = new QDialog(this);
+   _seeders_dialog->setWindowTitle("Seeders");
+   
+   dialog_layout = new QVBoxLayout(_seeders_dialog);
+   
+   _seeders = new QComboBox(_seeders_dialog);
+   _seeders->setStyle(QStyleFactory::create("fusion"));
+   _seeders->setStyleSheet("color : black;");
+   _seeders->setMinimumHeight(40);
+   _seeders->setFixedWidth(320);
+   
+   dialog_layout->addWidget(_seeders);
+
+   _seeders_dialog->setLayout(dialog_layout);
+   _seeders_dialog->resize(100, 200);
+   
+   connect(seeders_button, SIGNAL(LabelClicked()), _seeders_dialog, SLOT(show()) );
+   
+
 
    ////////////////////////////////////////////////////////////////////////////
    /// Content path
    ////////////////////////////////////////////////////////////////////////////
    
-   QFont fontBrowse( "Myriad Pro Regular", 13, QFont::Bold);
    QHBoxLayout* contentRow = new QHBoxLayout();
 
    _contentPath = new QLineEdit("Content path");
@@ -199,7 +225,7 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
 
    DecentButton* browseContentButton = new DecentButton();
    browseContentButton->setText("Browse");
-   browseContentButton->setFont(fontBrowse);
+   browseContentButton->setFont(font);
    browseContentButton->setMinimumWidth(100);
    browseContentButton->setFixedHeight(40);
    connect(browseContentButton, SIGNAL(LabelClicked()),this, SLOT(browseContent()));
@@ -207,7 +233,6 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    contentRow->addWidget(_contentPath);
    contentRow->addWidget(browseContentButton);
    u_main_layout->addLayout(contentRow);
-
    
    ////////////////////////////////////////////////////////////////////////////
    /// Content path
@@ -223,7 +248,7 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
 
    DecentButton* browseSamplesButton = new DecentButton();
    browseSamplesButton->setText("Browse");
-   browseSamplesButton->setFont(fontBrowse);
+   browseSamplesButton->setFont(font);
    browseSamplesButton->setMinimumWidth(100);
    browseSamplesButton->setFixedHeight(40);
    connect(browseSamplesButton, SIGNAL(LabelClicked()),this, SLOT(browseSamples()));
@@ -241,75 +266,172 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    QHBoxLayout* button = new QHBoxLayout;
 
    button->setSpacing(20);
-   DecentButton* upload_label = new DecentButton();
-   DecentButton* cancel_label = new DecentButton();
+   _upload_button = new DecentButton();
+   _cancel_button = new DecentButton();
 
-   cancel_label->setText("Cancel");
-   cancel_label->setFont(uploadButtonFont);
-   cancel_label->setMinimumHeight(50);
-   cancel_label->setMinimumWidth(140);
-   cancel_label->setStyleSheet("QLabel { background-color :rgb(255, 255, 255); border:1px solid lightGray; color : Grey;}");
+   _cancel_button->setText("Cancel");
+   _cancel_button->setFont(uploadButtonFont);
+   _cancel_button->setMinimumHeight(50);
+   //_cancel_button->setMinimumWidth(140);
+   _cancel_button->setStyleSheet("QLabel { background-color :rgb(255, 255, 255); border:1px solid lightGray; color : Grey;}");
 
-   upload_label->setText("Upload");
-   upload_label->setFont(uploadButtonFont);
-   upload_label->setMinimumHeight(50);
-   upload_label->setMinimumWidth(140);
+   _upload_button->setText("Publish");
+   _upload_button->setFont(uploadButtonFont);
+   _upload_button->setMinimumHeight(50);
+   //_upload_button->setMinimumWidth(140);
 
-   connect(upload_label, SIGNAL(LabelClicked()),this, SLOT(uploadContent()));
-   connect(cancel_label, SIGNAL(LabelClicked()),this, SLOT( uploadCanceled() ));
+   connect(_upload_button, SIGNAL(LabelClicked()),this, SLOT(uploadContent()));
+   connect(_cancel_button, SIGNAL(LabelClicked()),this, SLOT( uploadCanceled() ));
 
-   button->setContentsMargins(160, 30, 160, 20);
-   button->addWidget(upload_label);
-   button->addWidget(cancel_label);
+   button->setContentsMargins(20, 20, 20, 20);
+   button->addWidget(_upload_button);
+   button->addWidget(_cancel_button);
 
    u_main_layout->addLayout(button);
    u_main_layout->setContentsMargins(10, 10, 10, 10);
    u_main_layout->setSpacing(5);
    
    
-   setWindowTitle("Upload");
+   setWindowTitle("Upload new content");
    setStyleSheet("background-color : white");
    setLayout(u_main_layout);
    
    
-    m_getPublishersTimer.setSingleShot(true);
-    connect(&m_getPublishersTimer, SIGNAL(timeout()), SLOT(onGrabPublishers()));
-    m_getPublishersTimer.start(1000);
+   m_getPublishersTimer.setSingleShot(true);
+   connect(&m_getPublishersTimer, SIGNAL(timeout()), SLOT(onGrabPublishers()));
+   m_getPublishersTimer.start(1000);
+   
+   updateUploadButtonStatus();
+   
+   _buttonStatusCheck = new QTimer(this);
+   connect(_buttonStatusCheck, SIGNAL(timeout()), SLOT(updateUploadButtonStatus()));
+   _buttonStatusCheck->start(500);
 }
-
 
 void Upload_popup::onGrabPublishers() {
    std::string a_result;
    RunTask("list_publishers_by_price 100", a_result);
-    //AsyncTask("list_publishers_by_price 100", this, NULL, +[](void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
-       //Upload_popup* obj = (Upload_popup*)owner;
-       
-       auto publishers = json::parse(a_result);
-        
-        for (int r = 0; r < publishers.size(); ++r) {
-            std::string pubIdStr = publishers[r]["seeder"].get<std::string>();
-            std::string pubPrice = QString::number(publishers[r]["price"]["amount"].get<double>() / GRAPHENE_BLOCKCHAIN_PRECISION).toStdString();
-            std::string pubAssetId = publishers[r]["price"]["asset_id"].get<std::string>();
-            
-            int free_space = publishers[r]["free_space"].get<int>();
-            std::string pubFreeSpace = std::to_string(free_space) + "MB free";
-            
-            if (free_space > 800) {
-                pubFreeSpace = QString::number(1.0 * free_space / 1024, 'f', 2).toStdString() + "GB free";
-            }
-            
-            _seeders->addItem(QString("%0 @%1 %2 [%3]").arg(QString::fromStdString(pubIdStr),
-                                                                QString::fromStdString(pubPrice),
-                                                                QString::fromStdString("DCT"),
-                                                                QString::fromStdString(pubFreeSpace)), QString::fromStdString(pubIdStr));
-        }
-        
-        
-    //});
+   
+   auto publishers = json::parse(a_result);
+
+   for (int r = 0; r < publishers.size(); ++r) {
+      std::string pubIdStr = publishers[r]["seeder"].get<std::string>();
+      
+      double price = publishers[r]["price"]["amount"].get<double>() / GRAPHENE_BLOCKCHAIN_PRECISION;
+      
+      std::string pubPrice = QString::number(price).toStdString();
+      std::string pubAssetId = publishers[r]["price"]["asset_id"].get<std::string>();
+      
+      int free_space = publishers[r]["free_space"].get<int>();
+      std::string pubFreeSpace = std::to_string(free_space) + "MB free";
+      
+      if (free_space > 800) {
+          pubFreeSpace = QString::number(1.0 * free_space / 1024, 'f', 2).toStdString() + "GB free";
+      }
+      
+      _publisherIdToPriceMap.insert(std::make_pair(pubIdStr, price));
+      
+      _seeders->addItem(QString("%0 @%1 %2 [%3]").arg(QString::fromStdString(pubIdStr),
+                                                          QString::fromStdString(pubPrice),
+                                                          QString::fromStdString("DCT"),
+                                                          QString::fromStdString(pubFreeSpace)), QString::fromStdString(pubIdStr));
+      
+      _seeders_checkbox[r] = new QCheckBox(_seeders_dialog);
+      _seeders_checkbox[r]->setText(QString("%0 @%1 %2 [%3]").arg(QString::fromStdString(pubIdStr),
+                                                          QString::fromStdString(pubPrice),
+                                                          QString::fromStdString("DCT"),
+                                                          QString::fromStdString(pubFreeSpace)) /*, QString::fromStdString(pubIdStr))*/);
+      
+      dialog_layout->addWidget(_seeders_checkbox[r]);
+
+      QObject::connect(_seeders_checkbox[r], SIGNAL(stateChanged(int)), SLOT(stateChanged(const int)));
+   }
+   
+   
 }
+
+void Upload_popup::stateChanged(const int state)
+{   
+   for (int i = 0; i < 3; ++i){
+      if (_seeders_checkbox[i]->isChecked()){
+         _checkedSeeders[i] = _seeders_checkbox[i]->text().toStdString();
+//         std::cout << "~_~_~_~_~\n\n\n\n "<<  i << ": " << _checkedSeeders[i] << std::endl;
+      }else{
+         _checkedSeeders[i] = "";
+      }
+   }
+}
+
+void Upload_popup::updateUploadButtonStatus() {
+   std::string lifeTime    = _lifeTime->text().toStdString();
+   std::string seeders     = _seeders->currentData().toString().toStdString();
+   std::string keyparts    = _keyparts->currentData().toString().toStdString();
+   std::string price       = _price->text().toStdString();
+   std::string path        = _contentPath->text().toStdString();
+   std::string samplesPath = _samplesPath->text().toStdString();
+   
+   std::string title = _titleText->text().toStdString();
+   std::string desc = _descriptionText->toPlainText().toStdString();
+   
+   bool isValid = true;
+   
+   if (price.empty())
+      isValid = false;
+   
+   if (path.empty())
+      isValid = false;
+   
+   boost::system::error_code ec;
+   uint64_t fileSize = boost::filesystem::file_size(path, ec);
+   
+   if (fileSize > 100 * 1024 * 1024)
+      isValid = false;
+   
+   if (ec)
+      isValid = false;
+   
+   
+   if (title.empty())
+      isValid = false;
+   
+   if (desc.empty())
+      isValid = false;
+   
+   if (GlobalEvents::instance().getCurrentUser().empty())
+      isValid = false;
+   
+   auto it = _publisherIdToPriceMap.find(seeders);
+   if (it == _publisherIdToPriceMap.end()) {
+      isValid = false;
+   }
+   
+   double publishingPrice = it->second;
+   uint64_t size = std::max( (uint64_t)1, ( fileSize + (1024 * 1024) -1 ) / (1024 * 1024));
+   double totalPricePerDay = size * publishingPrice;
+   int days = QDate::currentDate().daysTo(_lifeTime->date());
+   
+   
+   if (isValid) {
+      _upload_button->setText(tr("Publish for ") + QString::number(days * totalPricePerDay) + tr(" DCT"));
+      _upload_button->setEnabled(true);
+   } else {
+      _upload_button->setText("Publish");
+      _upload_button->setEnabled(false);
+   }
+   
+   
+}
+
 
 void Upload_popup::browseContent() {
     QString contentPathSelected = QFileDialog::getOpenFileName(this, tr("Select content"), "~");
+   
+   boost::system::error_code ec;
+   if (boost::filesystem::file_size(contentPathSelected.toStdString(), ec) > 100 * 1024 * 1024) {
+      ALERT("Content size is limited in Testnet 0.1 to 100MB");
+      return;
+   }
+   
     _contentPath->setText(contentPathSelected);
 }
 
@@ -332,45 +454,7 @@ void Upload_popup::uploadContent() {
     
     std::string title = _titleText->text().toStdString();
     std::string desc = _descriptionText->toPlainText().toStdString();
-    
-    if (m_price.empty()) {
-        ALERT("Please specify price");
-        return;
-    }
-    
-    if (path.empty()) {
-        ALERT("Please specify path");
-        return;
-    }
-    
-    
-    boost::system::error_code ec;
-    if (boost::filesystem::file_size(path, ec) > 100 * 1024 * 1024) {
-        ALERT("Content size is limited in Testnet 0.1 to 100MB");
-        return;
-    }
-    
-    if (ec) {
-        ALERT("Please select valid file for upload.");
-        return;
-    }
-    
-    
-    if (title.empty()) {
-        ALERT("Please specify title");
-        return;
-    }
-    
-    if (desc.empty()) {
-        ALERT("Please specify description");
-        return;
-    }
-    
-    if (GlobalEvents::instance().getCurrentUser().empty()) {
-        ALERT("Please select user to upload");
-        return;
-    }
-    
+   
     setEnabled(false);
     
     json synopsis_obj;
@@ -452,7 +536,7 @@ Upload_tab::Upload_tab(Mainwindow_gui_wallet* parent) :  popup(0), _content_popu
         {"Rating", 10, "rating"},
         {"Size", 10, "size"},
         {"Price", 10, "price"},
-        {"Uploaded", 10, "created"},
+        {"Published", 10, "created"},
         {"Expiration", 10, "expiration"},
         {" ", -50}
 
@@ -462,7 +546,7 @@ Upload_tab::Upload_tab(Mainwindow_gui_wallet* parent) :  popup(0), _content_popu
 
     upload_button = new DecentButton();
     upload_button->setFont(fontUpload);
-    upload_button->setText("Upload");
+    upload_button->setText("Publish");
     upload_button->setMinimumWidth(102);
     upload_button->setMinimumHeight(54);
     
@@ -490,11 +574,6 @@ Upload_tab::Upload_tab(Mainwindow_gui_wallet* parent) :  popup(0), _content_popu
     connect(upload_button, SIGNAL(LabelClicked()), this, SLOT(uploadPopup()));
     connect(&GlobalEvents::instance(), SIGNAL(currentUserChanged(std::string)), this, SLOT(updateContents()));
 
-    m_contentUpdateTimer.connect(&m_contentUpdateTimer, SIGNAL(timeout()), this, SLOT(maybeUpdateContent()));
-    m_contentUpdateTimer.connect(&GlobalEvents::instance(), SIGNAL(walletUnlocked()), this, SLOT(requestContentUpdate()));
-    
-    m_contentUpdateTimer.setInterval(1000);
-    m_contentUpdateTimer.start();
     
 }
 
