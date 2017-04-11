@@ -77,7 +77,7 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
 , m_ActionSendDCT(tr("Send DCT"), this)
 , m_info_dialog()
 , m_locked(true)
-, m_sendDCT_dialog(2, "Send DCT")
+, m_sendDCT_dialog(3, "Send DCT")
 , m_import_key_dlg(2, "Key Import")
 , m_nConnected(0)
 , m_SetPasswordDialog(this, true)
@@ -613,6 +613,22 @@ void Mainwindow_gui_wallet::SendDCTSlot()
    thisPos.rx() += size().width() / 2 - 175;
    thisPos.ry() += size().height() / 2 - 75;
    RET_TYPE aRet = m_sendDCT_dialog.execRD(&thisPos,cvsUsKey);
+   if(aRet == RDB_OK)
+   {
+      try {
+         QString run_str = "transfer \""
+         + m_pCentralWidget->usersCombo()->currentText() + "\" \""
+         + QString::fromStdString(cvsUsKey[0]) + "\" \""
+         + QString::fromStdString(cvsUsKey[1])
+         + "\" \"DCT\" \""
+         + QString::fromStdString(cvsUsKey[2])
+         + "\" \"true\"";
+         std::cout<<run_str.toStdString()<<std::endl;
+         std::string a_result;
+         RunTask(run_str.toStdString(), a_result);
+      } catch(...){
+      }
+   }
 }
 
 void Mainwindow_gui_wallet::InfoSlot()
