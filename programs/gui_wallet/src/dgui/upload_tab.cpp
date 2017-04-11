@@ -449,7 +449,7 @@ void Upload_popup::browseSamples() {
 void Upload_popup::uploadContent()
 {
    std::string m_seeder = "";
-   if ( _checkedSeeders.size() > 1 ){
+   if ( _checkedSeeders.size() > 0 ){
       for (int i = 0; i < _checkedSeeders.size(); ++i){
          m_seeder += _checkedSeeders[i];
          if( i + 1 != _checkedSeeders.size() ) {
