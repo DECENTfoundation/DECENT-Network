@@ -15,6 +15,8 @@
 #include "gui_wallet_mainwindow.hpp"
 #include "json.hpp"
 #include <QFrame>
+#include <graphene/chain/content_object.hpp>
+
 using namespace nlohmann;
 using namespace gui_wallet;
 
@@ -235,23 +237,32 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details)
         
         m_vLabels[11].setText(QString::number(a_cnt_details.times_bougth));
     }
-
-    
-    
-    
-    
-    
-    
    
     std::string synopsis = m_pContentInfo->synopsis;
-    std::string desc = "";
-    try {
-        auto synopsis_parsed = json::parse(m_pContentInfo->synopsis);
-        synopsis = synopsis_parsed["title"].get<std::string>();
+    std::string title;
+    std::string desc;
+
+    graphene::chain::ContentObjectPropertyManager synopsis_parser(synopsis);
+    try
+    {
+       title = synopsis_parser.get<graphene::chain::ContentObjectTitle>();
+       desc = synopsis_parser.get<graphene::chain::ContentObjectDescription>();
+       graphene::chain::EContentObjectType coType = synopsis_parser.get<graphene::chain::ContentObjectType>();
+    }
+    catch (...)
+    {
+       title = synopsis;
+    }
+
+    /*try {
+        auto synopsis_parsed = json::parse(synopsis);
+        title = synopsis_parsed["title"].get<std::string>();
         desc = synopsis_parsed["description"].get<std::string>();
         
-    } catch (...) {}
-    this->setWindowTitle(QString::fromStdString(synopsis));
+    } catch (...) {
+       title = synopsis;
+    }*/
+    this->setWindowTitle(QString::fromStdString(title));
     m_desc.setText(m_desc.toPlainText() + QString::fromStdString(desc) + "\n");
    
     QDialog::exec();

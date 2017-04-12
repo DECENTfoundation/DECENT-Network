@@ -161,17 +161,21 @@ void BrowseContentTab::ShowDigitalContentsGUI() {
       std::string synopsis = unescape_string(aTemporar.synopsis);
       std::replace(synopsis.begin(), synopsis.end(), '\t', ' '); // JSON does not like tabs
       std::replace(synopsis.begin(), synopsis.end(), '\n', ' '); // JSON does not like newlines either
+      std::string title;
       //massageBox_title.push_back(	)
-      
+
       try {
          auto synopsis_parsed = json::parse(synopsis);
-         synopsis = synopsis_parsed["title"].get<std::string>();
+         title = synopsis_parsed["title"].get<std::string>();
          
-      } catch (...) {}
+      } catch (...) {
+         title = synopsis;
+      }
+
       
       // Title
       int colIndex = 0;
-      m_pTableWidget.setItem(index, colIndex,new QTableWidgetItem(QString::fromStdString(synopsis)));
+      m_pTableWidget.setItem(index, colIndex,new QTableWidgetItem(QString::fromStdString(title)));
       m_pTableWidget.item(index, colIndex)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
       m_pTableWidget.item(index, colIndex)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
      
