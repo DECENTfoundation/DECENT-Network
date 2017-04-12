@@ -619,14 +619,11 @@ void Mainwindow_gui_wallet::ImportKeySlot()
 void Mainwindow_gui_wallet::SendDCTSlot()
 {
    std::vector<std::string> cvsUsKey(3);
-   cvsUsKey[0] = "";
-   cvsUsKey[1] = "";
-   cvsUsKey[2] = "";
    QPoint thisPos = pos();
    thisPos.rx() += size().width() / 2 - 175;
    thisPos.ry() += size().height() / 2 - 75;
    m_sendDCT_dialog.curentName = m_pCentralWidget->usersCombo()->currentText();
-   RET_TYPE aRet = m_sendDCT_dialog.execRD(&thisPos,cvsUsKey);
+   m_sendDCT_dialog.execRD(&thisPos,cvsUsKey);
 }
 
 void Mainwindow_gui_wallet::InfoSlot()
