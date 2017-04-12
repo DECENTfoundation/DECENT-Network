@@ -330,8 +330,12 @@ void Mainwindow_gui_wallet::ViewAction() {
 
 void Mainwindow_gui_wallet::CurrentUserChangedSlot(const QString& a_new_user)
 {
-    GlobalEvents::instance().setCurrentUser(a_new_user.toStdString());
-    UpdateAccountBalances(a_new_user.toStdString());
+   QComboBox& userCombo = *m_pCentralWidget->usersCombo();
+   if(userCombo.count())
+   {
+      GlobalEvents::instance().setCurrentUser(a_new_user.toStdString());
+      UpdateAccountBalances(a_new_user.toStdString());
+   }
 }
 
 
@@ -352,6 +356,16 @@ void Mainwindow_gui_wallet::UpdateAccountBalances(const std::string& username) {
    if (!RunTaskParse(csLineToRun, allBalances)) {
       ALERT_DETAILS("Could not get account balances", allBalances.get<string>().c_str());
       return;
+   }
+   if(!m_pCentralWidget->usersCombo()->count())
+   {
+      m_pCentralWidget->usersCombo()->hide();
+      m_pCentralWidget->importButton()->show();
+   }
+   else
+   {
+      m_pCentralWidget->importButton()->hide();
+      m_pCentralWidget->usersCombo()->show();
    }
    if(!allBalances.size())
    {
@@ -549,12 +563,12 @@ void Mainwindow_gui_wallet::DisplayWalletContentGUI(bool isNewWallet)
       RunTask("list_my_accounts", a_result);
 
       auto accs = json::parse(a_result);
-
+      userCombo.clear();
       for (int i = 0; i < accs.size(); ++i)
       {
          std::string id = accs[i]["id"].get<std::string>();
          std::string name = accs[i]["name"].get<std::string>();
-
+         
          userCombo.addItem(tr(name.c_str()));
       }
 
