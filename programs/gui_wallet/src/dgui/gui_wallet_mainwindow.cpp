@@ -619,49 +619,11 @@ void Mainwindow_gui_wallet::ImportKeySlot()
 void Mainwindow_gui_wallet::SendDCTSlot()
 {
    std::vector<std::string> cvsUsKey(3);
-   cvsUsKey[0] = "";
-   cvsUsKey[1] = "";
-   cvsUsKey[2] = "";
    QPoint thisPos = pos();
    thisPos.rx() += size().width() / 2 - 175;
    thisPos.ry() += size().height() / 2 - 75;
-   RET_TYPE aRet = m_sendDCT_dialog.execRD(&thisPos,cvsUsKey);
-   std::string a_result;
-   std::string message;
-
-   if(aRet == RDB_OK)
-   {
-      try {
-         QString run_str = "transfer \""
-         + m_pCentralWidget->usersCombo()->currentText() + "\" \""
-         + QString::fromStdString(cvsUsKey[0]) + "\" \""
-         + QString::fromStdString(cvsUsKey[1])
-         + "\" \"DCT\" \""
-         + QString::fromStdString(cvsUsKey[2])
-         + "\" \"true\"";
-         RunTask(run_str.toStdString(), a_result);
-      } catch(const std::exception& ex){
-         message = ex.what();
-         setEnabled(true);
-      }
-      
-      QMessageBox* msgBox = new QMessageBox();
-      msgBox->setAttribute(Qt::WA_DeleteOnClose);
-      
-      if (message.empty())
-      {
-         msgBox->setWindowTitle("Success");
-         msgBox->setText(tr("Success"));
-      }
-      else
-      {
-         msgBox->setWindowTitle("Error");
-         msgBox->setText(tr("Failed to send DCT"));
-         msgBox->setDetailedText(message.c_str());
-      }
-      
-      msgBox->open();
-   }
+   m_sendDCT_dialog.curentName = m_pCentralWidget->usersCombo()->currentText();
+   m_sendDCT_dialog.execRD(&thisPos,cvsUsKey);
 }
 
 void Mainwindow_gui_wallet::InfoSlot()

@@ -65,7 +65,7 @@ protected:
 
    
 
-class SendDialogBase : protected QDialog
+class SendDialogBase : public QDialog
 {
    Q_OBJECT
 public:
@@ -86,20 +86,30 @@ protected:
    DecentButton  m_ok_button;
    DecentButton  m_cancel_button;
    RET_TYPE      m_ret_value;
+   
+public:
+signals:
+   void RDB_is_OK();
 };
 
 /********************************************/
-class SendDialog : protected SendDialogBase
+class SendDialog : public SendDialogBase
 {
+   Q_OBJECT
 public:
    SendDialog(int num_of_text_boxes , QString title);
    virtual ~SendDialog();
    
    virtual RET_TYPE execRD(const QPoint* pMove, std::vector<std::string>& results);
    
+   public slots:
+   void sendDCT();
+   
 protected:
    int         m_nNumOfTextBoxes;
    QLineEdit*  m_pTextBoxes;
+public:
+   QString curentName;
    
 };
    
