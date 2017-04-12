@@ -656,7 +656,7 @@ void Mainwindow_gui_wallet::SendDCTSlot()
       else
       {
          msgBox->setWindowTitle("Error");
-         msgBox->setText(tr("Failed to submit content"));
+         msgBox->setText(tr("Failed to send DCT"));
          msgBox->setDetailedText(message.c_str());
       }
       
