@@ -12,6 +12,7 @@
 #include <QIntValidator>
 #include "richdialog.hpp"
 #include "gui_design.hpp"
+#include "gui_wallet_mainwindow.hpp"
 
 using namespace gui_wallet;
 
@@ -148,7 +149,7 @@ SendDialogBase::SendDialogBase(QString title)
 void SendDialogBase::set_ok_and_closeSlot()
 {
    m_ret_value = RDB_OK;
-   close();
+   emit RDB_is_OK();
 }
 
 
@@ -176,6 +177,8 @@ SendDialog::SendDialog(int a_num_of_text_boxes  , QString title)
 : m_nNumOfTextBoxes(a_num_of_text_boxes),m_pTextBoxes(NULL),SendDialogBase(title)
 {
    if(a_num_of_text_boxes<=0) return;
+   
+   connect(this, SIGNAL(RDB_is_OK()), this, SLOT(sendDCT()));
    
    m_pTextBoxes = new QLineEdit[a_num_of_text_boxes];
    connect(&m_pTextBoxes[0], SIGNAL(returnPressed()), &m_ok_button, SIGNAL(LabelClicked()));
@@ -207,6 +210,44 @@ SendDialog::~SendDialog() {
    if(m_nNumOfTextBoxes>0) {
       delete [] m_pTextBoxes;
    }
+}
+
+void SendDialog::sendDCT()
+{
+   std::string a_result;
+   std::string message;
+   
+   try {
+      QString run_str = "transfer \""
+      + curentName + "\" \""
+      + m_pTextBoxes[0].text() + "\" \""
+      + m_pTextBoxes[1].text()
+      + "\" \"DCT\" \""
+      + m_pTextBoxes[2].text()
+      + "\" \"true\"";
+      RunTask(run_str.toStdString(), a_result);
+   } catch(const std::exception& ex){
+      message = ex.what();
+      setEnabled(true);
+   }
+   
+   QMessageBox* msgBox = new QMessageBox();
+   msgBox->setAttribute(Qt::WA_DeleteOnClose);
+   
+   if (message.empty())
+   {
+      msgBox->setWindowTitle("Success");
+      msgBox->setText(tr("Success"));
+      close();
+   }
+   else
+   {
+      msgBox->setWindowTitle("Error");
+      msgBox->setText(tr("Failed to send DCT"));
+      msgBox->setDetailedText(message.c_str());
+   }
+   
+   msgBox->open();
 }
 
 
