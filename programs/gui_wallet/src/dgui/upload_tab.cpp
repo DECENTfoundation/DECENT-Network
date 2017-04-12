@@ -198,7 +198,7 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    _seeders_dialog->setLayout(dialog_layout);
    _seeders_dialog->resize(100, 200);
 
-   connect(seeders_button, SIGNAL(LabelClicked()), _seeders_dialog, SLOT(show()) );
+   connect(seeders_button, SIGNAL(LabelClicked()), _seeders_dialog, SLOT(exec()) );
    
 
 
