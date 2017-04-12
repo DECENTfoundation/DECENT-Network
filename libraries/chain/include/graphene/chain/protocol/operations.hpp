@@ -80,11 +80,14 @@ namespace graphene { namespace chain {
             deliver_keys_operation,
             subscribe_operation,
             subscribe_by_author_operation,
+            automatic_renewal_of_subscription_operation,
             report_stats_operation,
-            return_escrow_submission_operation,      // VIRTUAL
-            return_escrow_buying_operation,           // VIRTUAL
-            pay_seeder_operation,                     // VIRTUAL
-            finish_buying_operation                   // VIRTUAL
+            disallow_automatic_renewal_of_subscription_operation,  // VIRTUAL
+            return_escrow_submission_operation,                    // VIRTUAL
+            return_escrow_buying_operation,                        // VIRTUAL
+            pay_seeder_operation,                                  // VIRTUAL
+            finish_buying_operation,                               // VIRTUAL
+            renewal_of_subscription_operation                      // VIRTUAL
          > operation;
 
    /// @} // operations group

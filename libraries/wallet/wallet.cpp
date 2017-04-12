@@ -2585,6 +2585,30 @@ public:
          return sign_transaction( tx, broadcast );
       } FC_CAPTURE_AND_RETHROW( (account)(allow_subscription)(subscription_period)(price_amount)(price_asset_symbol)(broadcast) ) }
 
+   signed_transaction set_automatic_renewal_of_subscription( string account_id_or_name,
+                                                             subscription_id_type subscription_id,
+                                                             bool automatic_renewal,
+                                                             bool broadcast/* = false */)
+   {
+      try {
+
+         account_id_type account = get_account_id( account_id_or_name );
+         fc::optional<subscription_object> subscription_obj = _remote_db->get_subscription(subscription_id);
+         FC_ASSERT(subscription_obj, "Could not find subscription matching ${subscription}", ("subscription", subscription_id));
+
+         automatic_renewal_of_subscription_operation aros_op;
+         aros_op.consumer = account;
+         aros_op.subscription = subscription_id;
+         aros_op.automatic_renewal = automatic_renewal;
+
+         signed_transaction tx;
+         tx.operations.push_back( aros_op );
+         set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
+         tx.validate();
+
+         return sign_transaction( tx, broadcast );
+      } FC_CAPTURE_AND_RETHROW( (account_id_or_name)(subscription_id)(automatic_renewal)(broadcast) ) }
+
    DInteger restore_encryption_key(std::string account, buying_id_type buying )
    {
       account_object buyer_account = get_account( account );
@@ -4082,33 +4106,65 @@ public:
       package_manager::instance().set_packages_path(packages_dir);
    }
 
-      signed_transaction wallet_api::subscribe_to_author( string from,
-                                                          string to,
-                                                          uint32_t duration,
-                                                          string price_amount,
-                                                          string price_asset_symbol,
-                                                          bool broadcast/* = false */)
-      {
-         return my->subscribe_to_author(from, to, duration, price_amount, price_asset_symbol, broadcast);
-      }
-
-      signed_transaction wallet_api::subscribe_by_author( string from,
-                                                          string to,
-                                                          uint32_t duration,
-                                                          bool broadcast/* = false */)
-      {
-         return my->subscribe_by_author(from, to, duration, broadcast);
-      }
-
-      signed_transaction wallet_api::set_subscription( string account,
-                                                       bool allow_subscription,
-                                                       uint32_t subscription_period,
+   signed_transaction wallet_api::subscribe_to_author( string from,
+                                                       string to,
+                                                       uint32_t duration,
                                                        string price_amount,
                                                        string price_asset_symbol,
                                                        bool broadcast/* = false */)
    {
+      return my->subscribe_to_author(from, to, duration, price_amount, price_asset_symbol, broadcast);
+   }
+
+   signed_transaction wallet_api::subscribe_by_author( string from,
+                                                       string to,
+                                                       uint32_t duration,
+                                                       bool broadcast/* = false */)
+   {
+      return my->subscribe_by_author(from, to, duration, broadcast);
+   }
+
+   signed_transaction wallet_api::set_subscription( string account,
+                                                    bool allow_subscription,
+                                                    uint32_t subscription_period,
+                                                    string price_amount,
+                                                    string price_asset_symbol,
+                                                    bool broadcast/* = false */)
+   {
       return my->set_subscription(account, allow_subscription, subscription_period, price_amount, price_asset_symbol, broadcast);
-      }
+   }
+
+   signed_transaction wallet_api::set_automatic_renewal_of_subscription( string account_id_or_name,
+                                                             subscription_id_type subscription_id,
+                                                             bool automatic_renewal,
+                                                             bool broadcast/* = false */)
+   {
+      return my->set_automatic_renewal_of_subscription(account_id_or_name, subscription_id, automatic_renewal, broadcast);
+   }
+
+   vector< subscription_object > wallet_api::list_active_subscriptions_by_consumer( const string& account_id_or_name, const uint32_t count) const
+   {
+      account_id_type account = get_account( account_id_or_name ).id;
+      return my->_remote_db->list_active_subscriptions_by_consumer( account, count);
+   }
+
+   vector< subscription_object > wallet_api::list_subscriptions_by_consumer( const string& account_id_or_name, const uint32_t count) const
+   {
+      account_id_type account = get_account( account_id_or_name ).id;
+      return my->_remote_db->list_subscriptions_by_consumer( account, count);
+   }
+
+   vector< subscription_object > wallet_api::list_active_subscriptions_by_author( const string& account_id_or_name, const uint32_t count) const
+   {
+      account_id_type account = get_account( account_id_or_name ).id;
+      return my->_remote_db->list_active_subscriptions_by_author( account, count);
+   }
+
+   vector< subscription_object > wallet_api::list_subscriptions_by_author( const string& account_id_or_name, const uint32_t count) const
+   {
+      account_id_type account = get_account( account_id_or_name ).id;
+      return my->_remote_db->list_subscriptions_by_author( account, count);
+   }
 
    std::pair<string, decent::encrypt::CustodyData>  wallet_api::create_package(const std::string& content_dir, const std::string& samples_dir, const DInteger& aes_key) const {
       FC_ASSERT(!is_locked());

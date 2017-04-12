@@ -27,4 +27,31 @@ namespace graphene { namespace chain {
       uint32_t period_count;
    };
 
+   class automatic_renewal_of_subscription_evaluator : public evaluator<automatic_renewal_of_subscription_evaluator>
+   {
+   public:
+      typedef automatic_renewal_of_subscription_operation operation_type;
+
+      void_result do_evaluate( const automatic_renewal_of_subscription_operation& o );
+      void_result do_apply( const automatic_renewal_of_subscription_operation& o );
+   };
+
+   class disallow_automatic_renewal_of_subscription_evaluator : public evaluator<disallow_automatic_renewal_of_subscription_evaluator>
+   {
+   public:
+      typedef disallow_automatic_renewal_of_subscription_operation operation_type;
+
+      void_result do_evaluate( const disallow_automatic_renewal_of_subscription_operation& o );
+      void_result do_apply( const disallow_automatic_renewal_of_subscription_operation& o );
+   };
+
+   class renewal_of_subscription_evaluator : public evaluator<renewal_of_subscription_evaluator>
+   {
+   public:
+      typedef renewal_of_subscription_operation operation_type;
+
+      void_result do_evaluate( const renewal_of_subscription_operation& o );
+      void_result do_apply( const renewal_of_subscription_operation& o );
+   };
+
 } } // namespace::chain

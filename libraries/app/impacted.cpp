@@ -147,6 +147,9 @@ struct get_impacted_account_visitor
    void operator()( const deliver_keys_operation& op) {  _impacted.insert(op.seeder);}
    void operator()( const subscribe_operation& op) { _impacted.insert(op.from); _impacted.insert(op.to); }
    void operator()( const subscribe_by_author_operation& op) { _impacted.insert(op.from); _impacted.insert(op.to); }
+   void operator()( const automatic_renewal_of_subscription_operation& op) { _impacted.insert(op.consumer); }
+   void operator()( const disallow_automatic_renewal_of_subscription_operation& op) { _impacted.insert(op.consumer); }
+   void operator()( const renewal_of_subscription_operation& op) { _impacted.insert(op.consumer); }
    void operator()( const return_escrow_submission_operation& op) {  _impacted.insert(op.author);}
    void operator()( const return_escrow_buying_operation& op) {  _impacted.insert(op.consumer);}
    void operator()( const report_stats_operation& op) { _impacted.insert(op.consumer);}
