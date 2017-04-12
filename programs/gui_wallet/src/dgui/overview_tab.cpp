@@ -87,7 +87,6 @@ void Overview_tab::timeToUpdate(const std::string& result) {
       table_widget.setItem(i, 1, new QTableWidgetItem(QString::fromStdString(name)));
       table_widget.setItem(i, 0, new QTableWidgetItem(QString::fromStdString(id)));
       
-      
       EventPassthrough<DecentSmallButton>* trans = new EventPassthrough<DecentSmallButton>(icon_transaction, icon_transaction_white);
       trans->setProperty("accountName", QVariant::fromValue(QString::fromStdString(name)));
 
@@ -96,6 +95,7 @@ void Overview_tab::timeToUpdate(const std::string& result) {
       table_widget.setCellWidget(i, 2, trans);
       
       EventPassthrough<DecentSmallButton>* transf = new EventPassthrough<DecentSmallButton>(icon_transfer, icon_transfer_white);
+
       transf->setProperty("accountName", QVariant::fromValue(QString::fromStdString(name)));
       transf->setAlignment(Qt::AlignCenter);
       connect(transf, SIGNAL(clicked()), this, SLOT(buttonPressed()));
