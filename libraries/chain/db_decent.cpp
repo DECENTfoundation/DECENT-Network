@@ -51,8 +51,12 @@ void database::content_expire(const content_object& content){
 }
 
 void database::renew_subscription(const subscription_object& subscription, const uint32_t subscription_period){
+   // head_block_time rounded up to midnight
+   uint32_t head_block_time_rounded_to_days = head_block_time().sec_since_epoch() / ( 24 * 3600 );
+   head_block_time_rounded_to_days += 24 * 3600;
+
    modify<subscription_object>(subscription, [&](subscription_object& so){
-      so.expiration = head_block_time() + subscription_period * 24 * 3600;
+      so.expiration = time_point_sec( head_block_time_rounded_to_days ) + subscription_period * 24 * 3600;
    });
 }
 

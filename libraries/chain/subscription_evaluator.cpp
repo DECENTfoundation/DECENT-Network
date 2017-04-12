@@ -89,12 +89,17 @@ void_result subscribe_by_author_evaluator::do_apply( const subscribe_by_author_o
 
       auto &idx2 = db().get_index_type<subscription_index>().indices().get<by_from_to>();
       const auto &subscription = idx2.find(boost::make_tuple(op.from, op.to));
+
+      // head_block_time rounded up to midnight
+      uint32_t head_block_time_rounded_to_days = db().head_block_time().sec_since_epoch() / ( 24 * 3600 );
+      head_block_time_rounded_to_days += 24 * 3600;
+
       if (subscription != idx2.end())
       {
          if (subscription->expiration < db().head_block_time())
             db().modify<subscription_object>(*subscription, [&](subscription_object &so)
             {
-               so.expiration = db().head_block_time() + period_count * to_account->options.subscription_period * 24 * 3600; // seconds
+               so.expiration = time_point_sec( head_block_time_rounded_to_days ) + period_count * to_account->options.subscription_period * 24 * 3600; // seconds
             });
          else
             db().modify<subscription_object>(*subscription, [&](subscription_object &so)
@@ -108,7 +113,7 @@ void_result subscribe_by_author_evaluator::do_apply( const subscribe_by_author_o
          {
             so.from = op.from;
             so.to = op.to;
-            so.expiration = db().head_block_time() + period_count * to_account->options.subscription_period * 24 * 3600; // seconds
+            so.expiration = time_point_sec( head_block_time_rounded_to_days ) + period_count * to_account->options.subscription_period * 24 * 3600; // seconds
             so.automatic_renewal = false;
          });
       }
