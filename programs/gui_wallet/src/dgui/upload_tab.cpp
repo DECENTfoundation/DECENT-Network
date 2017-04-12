@@ -784,7 +784,7 @@ void Upload_tab::ShowDigitalContentsGUI() {
 }
 
 void Upload_tab::uploadPopup() {
-    popup.show();
+    popup.exec();
 }
 
 void Upload_popup::uploadCanceled()
