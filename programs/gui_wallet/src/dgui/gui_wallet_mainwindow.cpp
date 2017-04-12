@@ -330,8 +330,7 @@ void Mainwindow_gui_wallet::ViewAction() {
 
 void Mainwindow_gui_wallet::CurrentUserChangedSlot(const QString& a_new_user)
 {
-   QComboBox& userCombo = *m_pCentralWidget->usersCombo();
-   if(userCombo.count())
+   if(m_pCentralWidget->usersCombo()->count())
    {
       GlobalEvents::instance().setCurrentUser(a_new_user.toStdString());
       UpdateAccountBalances(a_new_user.toStdString());
@@ -561,9 +560,10 @@ void Mainwindow_gui_wallet::DisplayWalletContentGUI(bool isNewWallet)
    {
       std::string a_result;
       RunTask("list_my_accounts", a_result);
-
-      auto accs = json::parse(a_result);
       userCombo.clear();
+      
+      auto accs = json::parse(a_result);
+      
       for (int i = 0; i < accs.size(); ++i)
       {
          std::string id = accs[i]["id"].get<std::string>();
