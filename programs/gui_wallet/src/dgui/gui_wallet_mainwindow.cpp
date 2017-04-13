@@ -74,11 +74,10 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
 , m_ActionLock(tr("Lock"),this)
 , m_ActionUnlock(tr("Unlock"),this)
 , m_ActionImportKey(tr("Import key"),this)
-, m_ActionSendDCT(tr("Send DCT"), this)
 , m_info_dialog()
 , m_locked(true)
-, m_sendDCT_dialog(3, "Send DCT")
-, m_import_key_dlg(2, "Key Import")
+, m_sendDCT_dialog(nullptr)
+, m_import_key_dlg(nullptr)
 , m_nConnected(0)
 , m_SetPasswordDialog(this, true)
 , m_UnlockDialog(this, false)
@@ -160,6 +159,7 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
    connect(&GlobalEvents::instance(), SIGNAL(walletConnected(bool)), this, SLOT(DisplayWalletContentGUI(bool)));
    connect(&GlobalEvents::instance(), SIGNAL(walletConnectionError(std::string)), this, SLOT(DisplayConnectionError(std::string)));
 
+   connect(m_pCentralWidget, SIGNAL(sendDCT()), this, SLOT(SendDCTSlot()));
    
    _downloadChecker.setSingleShot(false);
    _downloadChecker.setInterval(5000);
@@ -193,11 +193,6 @@ void Mainwindow_gui_wallet::slot_connected(std::string str_error)
 void Mainwindow_gui_wallet::currentUserBalanceUpdate()
 {
     std::string userBalanceUpdate = GlobalEvents::instance().getCurrentUser();
-    if( userBalanceUpdate == "" ) {
-        m_ActionSendDCT.setDisabled(true);
-        return;
-    }
-    m_ActionSendDCT.setDisabled(false);
     UpdateAccountBalances(userBalanceUpdate);
 }
 
@@ -257,8 +252,6 @@ void Mainwindow_gui_wallet::CreateActions()
     m_ActionImportKey.setStatusTip( tr("Import key") );
     connect( &m_ActionImportKey, SIGNAL(triggered()), this, SLOT(ImportKeySlot()) );
    
-    m_ActionSendDCT.setStatusTip( tr("Send DCT") );
-    connect( &m_ActionSendDCT, SIGNAL(triggered()), this, SLOT(SendDCTSlot()) );
 
 
 }
@@ -274,7 +267,6 @@ void Mainwindow_gui_wallet::CreateMenues()
     m_pMenuFile->addAction( &m_ActionLock );
     m_pMenuFile->addAction( &m_ActionUnlock );
     m_pMenuFile->addAction( &m_ActionImportKey );
-    m_pMenuFile->addAction( &m_ActionSendDCT );
 
 
 
@@ -330,8 +322,11 @@ void Mainwindow_gui_wallet::ViewAction() {
 
 void Mainwindow_gui_wallet::CurrentUserChangedSlot(const QString& a_new_user)
 {
-    GlobalEvents::instance().setCurrentUser(a_new_user.toStdString());
-    UpdateAccountBalances(a_new_user.toStdString());
+   if(m_pCentralWidget->usersCombo()->count())
+   {
+      GlobalEvents::instance().setCurrentUser(a_new_user.toStdString());
+      UpdateAccountBalances(a_new_user.toStdString());
+   }
 }
 
 
@@ -353,6 +348,7 @@ void Mainwindow_gui_wallet::UpdateAccountBalances(const std::string& username) {
       ALERT_DETAILS("Could not get account balances", allBalances.get<string>().c_str());
       return;
    }
+   
    if(!allBalances.size())
    {
       m_pCentralWidget->usersCombo()->hide();
@@ -363,6 +359,17 @@ void Mainwindow_gui_wallet::UpdateAccountBalances(const std::string& username) {
       m_pCentralWidget->importButton()->hide();
       m_pCentralWidget->usersCombo()->show();
    }
+   if(!m_pCentralWidget->usersCombo()->count())
+   {
+      m_pCentralWidget->usersCombo()->hide();
+      m_pCentralWidget->importButton()->show();
+   }
+   else
+   {
+      m_pCentralWidget->importButton()->hide();
+      m_pCentralWidget->usersCombo()->show();
+   }
+
    
    std::vector<std::string> balances;
    for (int i = 0; i < allBalances.size(); ++i) {
@@ -547,14 +554,15 @@ void Mainwindow_gui_wallet::DisplayWalletContentGUI(bool isNewWallet)
    {
       std::string a_result;
       RunTask("list_my_accounts", a_result);
-
+      userCombo.clear();
+      
       auto accs = json::parse(a_result);
-
+      
       for (int i = 0; i < accs.size(); ++i)
       {
          std::string id = accs[i]["id"].get<std::string>();
          std::string name = accs[i]["name"].get<std::string>();
-
+         
          userCombo.addItem(tr(name.c_str()));
       }
 
@@ -574,9 +582,17 @@ void Mainwindow_gui_wallet::DisplayWalletContentGUI(bool isNewWallet)
 
 void Mainwindow_gui_wallet::ImportKeySlot()
 {
+    if(m_import_key_dlg != nullptr)
+    {
+       delete m_import_key_dlg;
+       m_import_key_dlg = new RichDialog(2 , "key import");
+    }
+    else
+    {
+       m_import_key_dlg = new RichDialog(2 , "key import");
+    }
     std::vector<std::string> cvsUsKey(2);
     QComboBox& cUsersCombo = *m_pCentralWidget->usersCombo();
-    cUsersCombo.setWindowTitle("key import");
     cvsUsKey[0] = "";
     cvsUsKey[1] = "";
 
@@ -590,7 +606,7 @@ void Mainwindow_gui_wallet::ImportKeySlot()
     QPoint thisPos = pos();
     thisPos.rx() += size().width() / 2 - 175;
     thisPos.ry() += size().height() / 2 - 75;
-    RET_TYPE aRet = m_import_key_dlg.execRD(&thisPos,cvsUsKey);
+    RET_TYPE aRet = m_import_key_dlg->execRD(&thisPos,cvsUsKey);
    
     if(aRet == RDB_CANCEL){
         return ;
@@ -606,7 +622,6 @@ void Mainwindow_gui_wallet::ImportKeySlot()
     } catch (...) {
         hasError = true;
     }
-    
     if (hasError) {
         ALERT_DETAILS("Can not import key.", result.c_str());
     } else {
@@ -618,50 +633,21 @@ void Mainwindow_gui_wallet::ImportKeySlot()
 
 void Mainwindow_gui_wallet::SendDCTSlot()
 {
+   if(m_sendDCT_dialog != nullptr)
+   {
+      delete m_sendDCT_dialog;
+      m_sendDCT_dialog = new SendDialog(3, "Send DCT");
+   }
+   else
+   {
+      m_sendDCT_dialog = new SendDialog(3, "Send DCT");
+   }
    std::vector<std::string> cvsUsKey(3);
-   cvsUsKey[0] = "";
-   cvsUsKey[1] = "";
-   cvsUsKey[2] = "";
    QPoint thisPos = pos();
    thisPos.rx() += size().width() / 2 - 175;
    thisPos.ry() += size().height() / 2 - 75;
-   RET_TYPE aRet = m_sendDCT_dialog.execRD(&thisPos,cvsUsKey);
-   std::string a_result;
-   std::string message;
-
-   if(aRet == RDB_OK)
-   {
-      try {
-         QString run_str = "transfer \""
-         + m_pCentralWidget->usersCombo()->currentText() + "\" \""
-         + QString::fromStdString(cvsUsKey[0]) + "\" \""
-         + QString::fromStdString(cvsUsKey[1])
-         + "\" \"DCT\" \""
-         + QString::fromStdString(cvsUsKey[2])
-         + "\" \"true\"";
-         RunTask(run_str.toStdString(), a_result);
-      } catch(const std::exception& ex){
-         message = ex.what();
-         setEnabled(true);
-      }
-      
-      QMessageBox* msgBox = new QMessageBox();
-      msgBox->setAttribute(Qt::WA_DeleteOnClose);
-      
-      if (message.empty())
-      {
-         msgBox->setWindowTitle("Success");
-         msgBox->setText(tr("Success"));
-      }
-      else
-      {
-         msgBox->setWindowTitle("Error");
-         msgBox->setText(tr("Failed to submit content"));
-         msgBox->setDetailedText(message.c_str());
-      }
-      
-      msgBox->open();
-   }
+   m_sendDCT_dialog->curentName = m_pCentralWidget->usersCombo()->currentText();
+   m_sendDCT_dialog->execRD(&thisPos,cvsUsKey);
 }
 
 void Mainwindow_gui_wallet::InfoSlot()

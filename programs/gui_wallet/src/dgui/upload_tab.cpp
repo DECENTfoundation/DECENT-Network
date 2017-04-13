@@ -71,7 +71,6 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    
    _titleText = new QLineEdit();
    _titleText->setPlaceholderText("Title");
-   _titleText->setStyleSheet("padding-left: 6px");
    _titleText->setAttribute(Qt::WA_MacShowFocusRect, 0);
    _titleText->setTextMargins(5, 5, 5, 5);
    _titleText->setMinimumHeight(40);
@@ -82,7 +81,7 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    ////////////////////////////////////////////////////////////////////////////
    _descriptionText = new QTextEdit();
    _descriptionText->setPlaceholderText("Description");
-   _descriptionText->setStyleSheet("border: 1 solid lightGray; padding-left: 8px;");
+   _descriptionText->setStyleSheet(d_desc);
    _descriptionText->setMinimumHeight(160);
    _descriptionText->setMinimumWidth(420);
    u_main_layout->addWidget(_descriptionText);
@@ -93,7 +92,7 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    QHBoxLayout* lifeTimeRow = new QHBoxLayout();
    
    QLabel* lifeTimeLabel = new QLabel("Expiration date");
-   lifeTimeLabel->setStyleSheet("border: 1 solid lightGray; padding-left: 10px; color: Gray}");
+   lifeTimeLabel->setStyleSheet(d_label_v1);
    lifeTimeLabel->setMinimumWidth(60);
    lifeTimeLabel->setMinimumHeight(40);
    
@@ -105,7 +104,7 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    _lifeTime->setMinimumDate(QDate::currentDate());
    _lifeTime->setStyle(QStyleFactory::create("fusion"));
    _lifeTime->setMinimumHeight(40);
-   _lifeTime->setFixedWidth(120);
+   _lifeTime->setFixedWidth(320);
    
    lifeTimeRow->addWidget(lifeTimeLabel);
    lifeTimeRow->addWidget(_lifeTime);
@@ -120,15 +119,15 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
     QHBoxLayout* keyRow = new QHBoxLayout();
 
     QLabel* keypartsLabel = new QLabel("Key particles");
-    keypartsLabel->setStyleSheet("border:1 solid lightGray; padding-left: 10px; color: Gray}");
+    keypartsLabel->setStyleSheet(d_label_v1);
     keypartsLabel->setMinimumWidth(60);
     keypartsLabel->setMinimumHeight(40);
     
     _keyparts = new QComboBox(this);
     _keyparts->setStyle(QStyleFactory::create("fusion"));
-    _keyparts->setStyleSheet("color : black;");
+    _keyparts->setStyleSheet(c_keyparts);
     _keyparts->setMinimumHeight(40);
-    _keyparts->setFixedWidth(120);
+    _keyparts->setFixedWidth(320);
    
    
     for (int r = 2; r <= 7; ++r) {
@@ -148,7 +147,7 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    QHBoxLayout* priceRow = new QHBoxLayout();
    
    QLabel* priceLabel = new QLabel("Price");
-   priceLabel->setStyleSheet("border:1 solid lightGray; padding-left: 10px; color: Gray}");
+   priceLabel->setStyleSheet(d_label_v1);
    priceLabel->setMinimumWidth(60);
    priceLabel->setMinimumHeight(40);
 
@@ -156,10 +155,10 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    _price = new QLineEdit();
    _price->setValidator( new QDoubleValidator(0.001, 100000, 3, this) );
    _price->setAttribute(Qt::WA_MacShowFocusRect, 0);
-   _price->setStyleSheet("border:1px solid lightGray; color: Gray");
+   _price->setStyleSheet(d_label_v2);
    _price->setTextMargins(5, 5, 5, 5);
    _price->setMinimumHeight(40);
-   _price->setFixedWidth(120);
+   _price->setFixedWidth(320);
 
    priceRow->addWidget(priceLabel);
    priceRow->addWidget(_price);
@@ -171,8 +170,8 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    ////////////////////////////////////////////////////////////////////////////
    QHBoxLayout* seedersRow = new QHBoxLayout();
    
-   QLabel* seedersLabel = new QLabel("   Seeders");
-   seedersLabel->setStyleSheet("border:1 solid lightGray; padding-left: 10px; color: Gray}");
+   QLabel* seedersLabel = new QLabel("Seeders");
+   seedersLabel->setStyleSheet(d_label_v1);
    seedersLabel->setContentsMargins(0, 0, 0, 0);
    seedersLabel->setMinimumWidth(60);
    seedersLabel->setMinimumHeight(40);
@@ -181,7 +180,7 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    seeders_button->setText("Select Seeders");
    seeders_button->setFont(font);
    seeders_button->setFixedWidth(100);
-   seeders_button->setFixedHeight(39);
+   seeders_button->setFixedHeight(40);
    
    seedersRow->addWidget(seedersLabel);
    seedersRow->addWidget(seeders_button);
@@ -199,7 +198,7 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    _seeders_dialog->setLayout(dialog_layout);
    _seeders_dialog->resize(100, 200);
 
-   connect(seeders_button, SIGNAL(LabelClicked()), _seeders_dialog, SLOT(show()) );
+   connect(seeders_button, SIGNAL(LabelClicked()), _seeders_dialog, SLOT(exec()) );
    
 
 
@@ -211,7 +210,7 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
 
    _contentPath = new QLineEdit("Content path");
    _contentPath->setReadOnly(true);
-   _contentPath->setStyleSheet("border:1px solid lightGray; padding-left: 10px; color: Gray");
+   _contentPath->setStyleSheet(d_label_v2);
    _contentPath->setMinimumHeight(40);
    _contentPath->setTextMargins(5, 5, 5, 5);
 
@@ -219,7 +218,7 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    browseContentButton->setText("Browse");
    browseContentButton->setFont(font);
    browseContentButton->setMinimumWidth(100);
-   browseContentButton->setFixedHeight(39);
+   browseContentButton->setFixedHeight(40);
    connect(browseContentButton, SIGNAL(LabelClicked()),this, SLOT(browseContent()));
 
    contentRow->addWidget(_contentPath);
@@ -233,7 +232,7 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
 
    _samplesPath = new QLineEdit("Samples (optional)");
    _samplesPath->setReadOnly(true);
-   _samplesPath->setStyleSheet("border:1px solid lightGray; padding-left: 10px; color: Gray");
+   _samplesPath->setStyleSheet(d_samples);
    _samplesPath->setMinimumHeight(40);
    _samplesPath->setTextMargins(5, 5, 5, 5);
    
@@ -242,7 +241,7 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    browseSamplesButton->setText("Browse");
    browseSamplesButton->setFont(font);
    browseSamplesButton->setMinimumWidth(100);
-   browseSamplesButton->setFixedHeight(39);
+   browseSamplesButton->setFixedHeight(40);
    connect(browseSamplesButton, SIGNAL(LabelClicked()),this, SLOT(browseSamples()));
 
    samplesRow->addWidget(_samplesPath);
@@ -265,7 +264,7 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    _cancel_button->setFont(uploadButtonFont);
    _cancel_button->setMinimumHeight(50);
    //_cancel_button->setMinimumWidth(140);
-   _cancel_button->setStyleSheet("QLabel { background-color :rgb(255, 255, 255); border:1px solid lightGray; color : Grey;}");
+   _cancel_button->setStyleSheet(d_cancel);
 
    _upload_button->setText("Publish");
    _upload_button->setFont(uploadButtonFont);
@@ -280,12 +279,12 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    button->addWidget(_cancel_button);
 
    u_main_layout->addLayout(button);
-   u_main_layout->setContentsMargins(0, 0, 0, 0);
-   u_main_layout->setSpacing(0);
+   u_main_layout->setContentsMargins(10, 10, 10, 10);
+   u_main_layout->setSpacing(5);
    
    
    setWindowTitle("Upload new content");
-   setStyleSheet("background-color : white");
+   setStyleSheet(d_upload_popup);
    setLayout(u_main_layout);
    
    
@@ -785,7 +784,7 @@ void Upload_tab::ShowDigitalContentsGUI() {
 }
 
 void Upload_tab::uploadPopup() {
-    popup.show();
+    popup.exec();
 }
 
 void Upload_popup::uploadCanceled()

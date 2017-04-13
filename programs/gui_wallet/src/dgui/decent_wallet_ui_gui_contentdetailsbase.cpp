@@ -353,7 +353,7 @@ void ContentDetailsBase::popup_for_purchased(int row_star)
     line->setFixedHeight(1);
     m_main_layout.addWidget(line);
     
-    setStyleSheet("background-color:white;");
+    setStyleSheet(d_qdialog);
 }
 
 

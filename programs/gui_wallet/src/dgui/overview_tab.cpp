@@ -126,7 +126,6 @@ std::string Overview_tab::getUpdateCommand() {
    return "search_accounts \"" + search.text().toStdString() + "\" \"" + table_widget.getSortedColumn() + "\" 100";
 }
 
-//return "search_content \"" + filterText + "\" \"" + m_pTableWidget.getSortedColumn() + "\" 100";
 
 void Overview_tab::transactionButtonPressed()
 {

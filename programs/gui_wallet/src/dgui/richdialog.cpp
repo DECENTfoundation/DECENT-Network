@@ -12,6 +12,8 @@
 #include <QIntValidator>
 #include "richdialog.hpp"
 #include "gui_design.hpp"
+#include "gui_wallet_mainwindow.hpp"
+#include "gui_design.hpp"
 
 using namespace gui_wallet;
 
@@ -131,7 +133,7 @@ SendDialogBase::SendDialogBase(QString title)
    m_buttons_layout.addWidget(&m_ok_button);
    m_buttons_layout.addWidget(&m_cancel_button);
    m_controls_layout.setContentsMargins(0, 0, 0, 0);
-   m_cancel_button.setStyleSheet("QLabel {border: 1px solid rgb(143,143,143); background-color :rgb(255,255,255); color: rgb(0,0,0);}");
+   m_cancel_button.setStyleSheet(d_cancel_button);
    m_main_layout.setContentsMargins(40, 10, 40, 10);
    m_main_layout.setAlignment(Qt::AlignCenter);
    m_main_layout.setSpacing(10);
@@ -148,7 +150,7 @@ SendDialogBase::SendDialogBase(QString title)
 void SendDialogBase::set_ok_and_closeSlot()
 {
    m_ret_value = RDB_OK;
-   close();
+   emit RDB_is_OK();
 }
 
 
@@ -177,6 +179,8 @@ SendDialog::SendDialog(int a_num_of_text_boxes  , QString title)
 {
    if(a_num_of_text_boxes<=0) return;
    
+   connect(this, SIGNAL(RDB_is_OK()), this, SLOT(sendDCT()));
+   
    m_pTextBoxes = new QLineEdit[a_num_of_text_boxes];
    connect(&m_pTextBoxes[0], SIGNAL(returnPressed()), &m_ok_button, SIGNAL(LabelClicked()));
    connect(&m_pTextBoxes[1], SIGNAL(returnPressed()), &m_ok_button, SIGNAL(LabelClicked()));
@@ -185,18 +189,18 @@ SendDialog::SendDialog(int a_num_of_text_boxes  , QString title)
    m_pTextBoxes[0].setPlaceholderText(QString("Account"));
    m_pTextBoxes[0].setAttribute(Qt::WA_MacShowFocusRect, 0);
    m_pTextBoxes[0].setFixedSize(300, 44);
-   m_pTextBoxes[0].setStyleSheet("border: 1px solid rgb(143,143,143);padding-left:25px;");
+   m_pTextBoxes[0].setStyleSheet(d_text_box);
    
    m_pTextBoxes[1].setValidator(new QDoubleValidator(0.001, 100000, 4, this));
    m_pTextBoxes[1].setPlaceholderText(QString("Amount"));
    m_pTextBoxes[1].setAttribute(Qt::WA_MacShowFocusRect, 0);
    m_pTextBoxes[1].setFixedSize(300, 44);
-   m_pTextBoxes[1].setStyleSheet("border: 1px solid rgb(143,143,143);padding-left:25px;");
+   m_pTextBoxes[1].setStyleSheet(d_text_box);
    
    m_pTextBoxes[2].setPlaceholderText(QString("Memo"));
    m_pTextBoxes[2].setAttribute(Qt::WA_MacShowFocusRect, 0);
    m_pTextBoxes[2].setFixedSize(300, 44);
-   m_pTextBoxes[2].setStyleSheet("border: 1px solid rgb(143,143,143);padding-left:25px;");
+   m_pTextBoxes[2].setStyleSheet(d_text_box);
    for(int i(0); i<a_num_of_text_boxes; ++i )
    {
       m_controls_layout.addWidget(&m_pTextBoxes[i]);
@@ -207,6 +211,44 @@ SendDialog::~SendDialog() {
    if(m_nNumOfTextBoxes>0) {
       delete [] m_pTextBoxes;
    }
+}
+
+void SendDialog::sendDCT()
+{
+   std::string a_result;
+   std::string message;
+   
+   try {
+      QString run_str = "transfer \""
+      + curentName + "\" \""
+      + m_pTextBoxes[0].text() + "\" \""
+      + m_pTextBoxes[1].text()
+      + "\" \"DCT\" \""
+      + m_pTextBoxes[2].text()
+      + "\" \"true\"";
+      RunTask(run_str.toStdString(), a_result);
+   } catch(const std::exception& ex){
+      message = ex.what();
+      setEnabled(true);
+   }
+   
+   QMessageBox* msgBox = new QMessageBox();
+   msgBox->setAttribute(Qt::WA_DeleteOnClose);
+   
+   if (message.empty())
+   {
+      msgBox->setWindowTitle("Success");
+      msgBox->setText(tr("Success"));
+      close();
+   }
+   else
+   {
+      msgBox->setWindowTitle("Error");
+      msgBox->setText(tr("Failed to send DCT"));
+      msgBox->setDetailedText(message.c_str());
+   }
+   
+   msgBox->open();
 }
 
 
