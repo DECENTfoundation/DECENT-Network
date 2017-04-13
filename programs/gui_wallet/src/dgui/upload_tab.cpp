@@ -81,7 +81,7 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    ////////////////////////////////////////////////////////////////////////////
    _descriptionText = new QTextEdit();
    _descriptionText->setPlaceholderText("Description");
-   _descriptionText->setStyleSheet("border: 1 solid lightGray; padding 5px;");
+   _descriptionText->setStyleSheet(d_desc);
    _descriptionText->setMinimumHeight(160);
    _descriptionText->setMinimumWidth(420);
    u_main_layout->addWidget(_descriptionText);
@@ -92,7 +92,7 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    QHBoxLayout* lifeTimeRow = new QHBoxLayout();
    
    QLabel* lifeTimeLabel = new QLabel("Expiration date");
-   lifeTimeLabel->setStyleSheet("QLabel { background-color : white; color: Gray}");
+   lifeTimeLabel->setStyleSheet(d_label_v1);
    lifeTimeLabel->setMinimumWidth(60);
    lifeTimeLabel->setMinimumHeight(40);
    
@@ -119,13 +119,13 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
     QHBoxLayout* keyRow = new QHBoxLayout();
 
     QLabel* keypartsLabel = new QLabel("Key particles");
-    keypartsLabel->setStyleSheet("QLabel { background-color : white; color: Gray}");
+    keypartsLabel->setStyleSheet(d_label_v1);
     keypartsLabel->setMinimumWidth(60);
     keypartsLabel->setMinimumHeight(40);
     
     _keyparts = new QComboBox(this);
     _keyparts->setStyle(QStyleFactory::create("fusion"));
-    _keyparts->setStyleSheet("color : black;");
+    _keyparts->setStyleSheet(c_keyparts);
     _keyparts->setMinimumHeight(40);
     _keyparts->setFixedWidth(320);
    
@@ -147,7 +147,7 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    QHBoxLayout* priceRow = new QHBoxLayout();
    
    QLabel* priceLabel = new QLabel("Price");
-   priceLabel->setStyleSheet("QLabel { background-color : white; color: Gray}");
+   priceLabel->setStyleSheet(d_label_v1);
    priceLabel->setMinimumWidth(60);
    priceLabel->setMinimumHeight(40);
 
@@ -155,7 +155,7 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    _price = new QLineEdit();
    _price->setValidator( new QDoubleValidator(0.001, 100000, 3, this) );
    _price->setAttribute(Qt::WA_MacShowFocusRect, 0);
-   _price->setStyleSheet("border:1px solid lightGray; color: Gray");
+   _price->setStyleSheet(d_label_v2);
    _price->setTextMargins(5, 5, 5, 5);
    _price->setMinimumHeight(40);
    _price->setFixedWidth(320);
@@ -171,7 +171,7 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    QHBoxLayout* seedersRow = new QHBoxLayout();
    
    QLabel* seedersLabel = new QLabel("Seeders");
-   seedersLabel->setStyleSheet("QLabel { background-color : white; color: Gray}");
+   seedersLabel->setStyleSheet(d_label_v1);
    seedersLabel->setContentsMargins(0, 0, 0, 0);
    seedersLabel->setMinimumWidth(60);
    seedersLabel->setMinimumHeight(40);
@@ -210,7 +210,7 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
 
    _contentPath = new QLineEdit("Content path");
    _contentPath->setReadOnly(true);
-   _contentPath->setStyleSheet("border:1px solid lightGray; color: Gray");
+   _contentPath->setStyleSheet(d_label_v2);
    _contentPath->setMinimumHeight(40);
    _contentPath->setTextMargins(5, 5, 5, 5);
 
@@ -232,7 +232,7 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
 
    _samplesPath = new QLineEdit("Samples (optional)");
    _samplesPath->setReadOnly(true);
-   _samplesPath->setStyleSheet("border:1px solid lightGray; padding-left: 10px; color: Gray");
+   _samplesPath->setStyleSheet(d_samples);
    _samplesPath->setMinimumHeight(40);
    _samplesPath->setTextMargins(5, 5, 5, 5);
    
@@ -264,7 +264,7 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    _cancel_button->setFont(uploadButtonFont);
    _cancel_button->setMinimumHeight(50);
    //_cancel_button->setMinimumWidth(140);
-   _cancel_button->setStyleSheet("QLabel { background-color :rgb(255, 255, 255); border:1px solid lightGray; color : Grey;}");
+   _cancel_button->setStyleSheet(d_cancel);
 
    _upload_button->setText("Publish");
    _upload_button->setFont(uploadButtonFont);
@@ -284,7 +284,7 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    
    
    setWindowTitle("Upload new content");
-   setStyleSheet("background-color : white");
+   setStyleSheet(d_upload_popup);
    setLayout(u_main_layout);
    
    
