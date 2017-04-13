@@ -99,7 +99,11 @@ public slots:
    void tabChanged(int index);
    void walletUnlockedSlot();
    void updateActiveTab();
-    
+   void sendDCTSlot();
+   
+public:
+signals:
+   void sendDCT();
 protected:
     virtual void showEvent ( QShowEvent * event ) ;
     virtual void resizeEvent ( QResizeEvent * event );
@@ -134,6 +138,7 @@ private:
     QWidget*            m_pDcLogoWgt;
     QWidget*            m_pUsernameWgt;
     QWidget*            m_pBalanceWgt1;
+    QWidget*            m_pSendWgt1;
 
     
 };

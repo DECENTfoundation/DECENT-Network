@@ -74,7 +74,6 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
 , m_ActionLock(tr("Lock"),this)
 , m_ActionUnlock(tr("Unlock"),this)
 , m_ActionImportKey(tr("Import key"),this)
-, m_ActionSendDCT(tr("Send DCT"), this)
 , m_info_dialog()
 , m_locked(true)
 , m_sendDCT_dialog(nullptr)
@@ -160,6 +159,7 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
    connect(&GlobalEvents::instance(), SIGNAL(walletConnected(bool)), this, SLOT(DisplayWalletContentGUI(bool)));
    connect(&GlobalEvents::instance(), SIGNAL(walletConnectionError(std::string)), this, SLOT(DisplayConnectionError(std::string)));
 
+   connect(m_pCentralWidget, SIGNAL(sendDCT()), this, SLOT(SendDCTSlot()));
    
    _downloadChecker.setSingleShot(false);
    _downloadChecker.setInterval(5000);
@@ -193,11 +193,6 @@ void Mainwindow_gui_wallet::slot_connected(std::string str_error)
 void Mainwindow_gui_wallet::currentUserBalanceUpdate()
 {
     std::string userBalanceUpdate = GlobalEvents::instance().getCurrentUser();
-    if( userBalanceUpdate == "" ) {
-        m_ActionSendDCT.setDisabled(true);
-        return;
-    }
-    m_ActionSendDCT.setDisabled(false);
     UpdateAccountBalances(userBalanceUpdate);
 }
 
@@ -257,8 +252,6 @@ void Mainwindow_gui_wallet::CreateActions()
     m_ActionImportKey.setStatusTip( tr("Import key") );
     connect( &m_ActionImportKey, SIGNAL(triggered()), this, SLOT(ImportKeySlot()) );
    
-    m_ActionSendDCT.setStatusTip( tr("Send DCT") );
-    connect( &m_ActionSendDCT, SIGNAL(triggered()), this, SLOT(SendDCTSlot()) );
 
 
 }
@@ -274,7 +267,6 @@ void Mainwindow_gui_wallet::CreateMenues()
     m_pMenuFile->addAction( &m_ActionLock );
     m_pMenuFile->addAction( &m_ActionUnlock );
     m_pMenuFile->addAction( &m_ActionImportKey );
-    m_pMenuFile->addAction( &m_ActionSendDCT );
 
 
 
@@ -356,16 +348,7 @@ void Mainwindow_gui_wallet::UpdateAccountBalances(const std::string& username) {
       ALERT_DETAILS("Could not get account balances", allBalances.get<string>().c_str());
       return;
    }
-   if(!m_pCentralWidget->usersCombo()->count())
-   {
-      m_pCentralWidget->usersCombo()->hide();
-      m_pCentralWidget->importButton()->show();
-   }
-   else
-   {
-      m_pCentralWidget->importButton()->hide();
-      m_pCentralWidget->usersCombo()->show();
-   }
+   
    if(!allBalances.size())
    {
       m_pCentralWidget->usersCombo()->hide();
@@ -376,6 +359,17 @@ void Mainwindow_gui_wallet::UpdateAccountBalances(const std::string& username) {
       m_pCentralWidget->importButton()->hide();
       m_pCentralWidget->usersCombo()->show();
    }
+   if(!m_pCentralWidget->usersCombo()->count())
+   {
+      m_pCentralWidget->usersCombo()->hide();
+      m_pCentralWidget->importButton()->show();
+   }
+   else
+   {
+      m_pCentralWidget->importButton()->hide();
+      m_pCentralWidget->usersCombo()->show();
+   }
+
    
    std::vector<std::string> balances;
    for (int i = 0; i < allBalances.size(); ++i) {
@@ -599,7 +593,6 @@ void Mainwindow_gui_wallet::ImportKeySlot()
     }
     std::vector<std::string> cvsUsKey(2);
     QComboBox& cUsersCombo = *m_pCentralWidget->usersCombo();
-    //cUsersCombo.setWindowTitle("key import");
     cvsUsKey[0] = "";
     cvsUsKey[1] = "";
 
