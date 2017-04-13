@@ -1650,7 +1650,7 @@ namespace graphene { namespace wallet {
           * @return Rating and/or comment, if given, empty otherwise
           * @ingroup WalletCLI
           */
-         optional<std::pair<uint64_t, string>> get_rating_and_comment( const string& consumer, const string& URI )const;
+         std::pair<optional<uint64_t>, string> get_rating_and_comment( const string& consumer, const string& URI )const;
 
          /**
           * @brief Get a content by URI

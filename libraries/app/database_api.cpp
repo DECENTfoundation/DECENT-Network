@@ -1640,8 +1640,10 @@ optional<uint64_t> database_api_impl::get_rating_by_consumer_URI( const account_
    try{
       const auto & idx = _db.get_index_type<rating_index>().indices().get<by_consumer_URI>();
       auto itr = idx.find(std::make_tuple(consumer, URI));
-      if(itr!=idx.end()){
-         return itr->rating;
+      if(itr!=idx.end())
+      {
+         if (0 < itr->rating)
+            return itr->rating;
       }
       return optional<uint64_t>();
 
@@ -1975,7 +1977,7 @@ map<string, string> database_api_impl::get_content_comments( const string& URI)c
       auto range = _db.get_index_type<rating_index>().indices().get<by_URI_consumer>().equal_range(URI);
       map<string, string> result;
       std::for_each(range.first, range.second, [&result](const rating_object& element) {
-         if( !element.comment.empty )
+         if( !element.comment.empty() )
            result[ std::string( object_id_type ( element.consumer ) ) ] = element.comment;
          });
       return result;

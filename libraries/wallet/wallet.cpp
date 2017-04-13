@@ -3956,16 +3956,16 @@ optional<string> wallet_api::get_comment( const string& consumer, const string &
    return my->_remote_db->get_comment_by_consumer_URI( account, URI );
 }
 
-optional<std::pair<uint64_t, string>> get_rating_and_comment( const string& consumer, const string& URI )const;
+std::pair<optional<uint64_t>, string> wallet_api::get_rating_and_comment( const string& consumer, const string& URI )const
 {
    account_id_type account = get_account( consumer ).id;
-   uint64_t rating = my->_remote_db->get_rating_by_consumer_URI( account, URI );
-   string comment = my->_remote_db->get_comment_by_consumer_URI( account, URI );
-
-   if( rating != 0 || !comment.empty() )
-      return std::pair<rating, comment>;
-   else
-      return optional<std::pair<uint64_t, string>>();
+   optional<uint64_t> rating = my->_remote_db->get_rating_by_consumer_URI( account, URI );
+   optional<string> op_comment = my->_remote_db->get_comment_by_consumer_URI( account, URI );
+   string comment;
+   if (op_comment.valid())
+      comment = *op_comment;
+   
+   return std::pair<optional<uint64_t>, string>(rating, comment);
 }
 
 optional<content_object> wallet_api::get_content( const string& URI )const
