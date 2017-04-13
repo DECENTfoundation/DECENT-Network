@@ -242,7 +242,6 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     importKeyButton->setFixedSize(100, 25);
     pHBoxLayoutTmp->addWidget(pComboTmp1);
     pHBoxLayoutTmp->addWidget(importKeyButton);
-    //pHBoxLayoutTmp->setContentsMargins(0, 10, 0, 10);
     m_pUsernameWgt->setLayout(pHBoxLayoutTmp);
     m_first_line_lbl.addWidget(m_pUsernameWgt);
     m_pUsernameWgt->setFixedHeight(__HEIGHT__);
@@ -277,11 +276,41 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     
     m_pBalanceWgt1->setLayout(pHBoxLayoutTmp);
     m_first_line_lbl.addWidget(m_pBalanceWgt1);
-    pHBoxLayoutTmp->setContentsMargins(400, 0, 0, 0);
+    pHBoxLayoutTmp->setContentsMargins(220, 0, 40, 0);
     m_pBalanceWgt1->setFixedHeight(__HEIGHT__);
-    //m_pBalanceWgt1->setFixedWidth(m_pBalanceWgt1->size().width() - 30);
- 
-    
+   
+   
+   /*//////////////////////////////////////////*/
+   line = new QFrame(this);
+   line->setFrameShape(QFrame::VLine); // Vertical line
+   
+   line->setLineWidth(1);
+   line->setStyleSheet("color: #f0f0f0");
+   line->setFixedHeight(68);
+   m_first_line_lbl.addWidget(line);
+   
+   /*//////////////////////////////////////////*/
+   m_pSendWgt1 = new QWidget;
+   pHBoxLayoutTmp = new QHBoxLayout;
+   DecentSmallButton* sendButton = new DecentSmallButton(icon_send,icon_send);
+   sendButton->setScaledContents(true);
+   QLabel* send_text = new QLabel(tr("  Send"));
+   
+
+   
+   QPixmap send_icon(icon_send);
+   sendButton->setFixedSize(30,30);
+   connect(sendButton, SIGNAL(clicked()), this, SLOT(sendDCTSlot()));
+   pHBoxLayoutTmp->addWidget(sendButton);
+   pHBoxLayoutTmp->addWidget(send_text);
+   
+   m_pSendWgt1->setLayout(pHBoxLayoutTmp);
+   m_first_line_lbl.addWidget(m_pSendWgt1);
+   pHBoxLayoutTmp->setContentsMargins(50, 0, 50, 0);
+   m_pSendWgt1->setFixedHeight(__HEIGHT__);
+   
+
+   
     m_browse_cont_tab.setStyleSheet("color: black;""background-color:white;");
     SetAccountBalancesFromStrGUI(std::vector<std::string>());
 
@@ -317,6 +346,11 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
    connect(&m_main_tabs, SIGNAL(currentChanged(int)), this, SLOT(tabChanged(int)));
    connect(&GlobalEvents::instance(), SIGNAL(walletUnlocked()), this, SLOT(walletUnlockedSlot()));
    
+}
+
+void CentralWigdet::sendDCTSlot()
+{
+   emit sendDCT();
 }
 
 

@@ -65,6 +65,7 @@ const char* const icon_decent           = ":/icon/images/decent_logo.svg";
 const char* const d_color               = "color: #f0f0f0";
 const char* const icon_user             = ":/icon/images/user.png";
 const char* const icon_balance          = ":/icon/images/balance.png";
+const char* const icon_send             = ":/icon/images/send.png";
 
 //gui_wallet_connectdlg
 const char* const d_pass                = "border: 1px solid rgb(143,143,143);padding-left:25px;";
