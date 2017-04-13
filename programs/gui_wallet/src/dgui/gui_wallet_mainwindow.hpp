@@ -129,8 +129,8 @@ protected:
    
    QVBoxLayout                         m_main_layout;
    bool                                m_locked;
-   RichDialog                          m_import_key_dlg;
-   SendDialog                          m_sendDCT_dialog;
+   RichDialog*                         m_import_key_dlg;
+   SendDialog*                         m_sendDCT_dialog;
    int                                 m_nConnected;
    //SConnectionStruct                   m_wdata2;
    PasswordDialog                      m_SetPasswordDialog;

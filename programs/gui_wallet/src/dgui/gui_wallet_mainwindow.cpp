@@ -77,8 +77,8 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
 , m_ActionSendDCT(tr("Send DCT"), this)
 , m_info_dialog()
 , m_locked(true)
-, m_sendDCT_dialog(3, "Send DCT")
-, m_import_key_dlg(2, "Key Import")
+, m_sendDCT_dialog(nullptr)
+, m_import_key_dlg(nullptr)
 , m_nConnected(0)
 , m_SetPasswordDialog(this, true)
 , m_UnlockDialog(this, false)
@@ -588,9 +588,18 @@ void Mainwindow_gui_wallet::DisplayWalletContentGUI(bool isNewWallet)
 
 void Mainwindow_gui_wallet::ImportKeySlot()
 {
+    if(m_import_key_dlg != nullptr)
+    {
+       delete m_import_key_dlg;
+       m_import_key_dlg = new RichDialog(2 , "key import");
+    }
+    else
+    {
+       m_import_key_dlg = new RichDialog(2 , "key import");
+    }
     std::vector<std::string> cvsUsKey(2);
     QComboBox& cUsersCombo = *m_pCentralWidget->usersCombo();
-    cUsersCombo.setWindowTitle("key import");
+    //cUsersCombo.setWindowTitle("key import");
     cvsUsKey[0] = "";
     cvsUsKey[1] = "";
 
@@ -604,7 +613,7 @@ void Mainwindow_gui_wallet::ImportKeySlot()
     QPoint thisPos = pos();
     thisPos.rx() += size().width() / 2 - 175;
     thisPos.ry() += size().height() / 2 - 75;
-    RET_TYPE aRet = m_import_key_dlg.execRD(&thisPos,cvsUsKey);
+    RET_TYPE aRet = m_import_key_dlg->execRD(&thisPos,cvsUsKey);
    
     if(aRet == RDB_CANCEL){
         return ;
@@ -620,7 +629,6 @@ void Mainwindow_gui_wallet::ImportKeySlot()
     } catch (...) {
         hasError = true;
     }
-    
     if (hasError) {
         ALERT_DETAILS("Can not import key.", result.c_str());
     } else {
@@ -632,12 +640,21 @@ void Mainwindow_gui_wallet::ImportKeySlot()
 
 void Mainwindow_gui_wallet::SendDCTSlot()
 {
+   if(m_sendDCT_dialog != nullptr)
+   {
+      delete m_sendDCT_dialog;
+      m_sendDCT_dialog = new SendDialog(3, "Send DCT");
+   }
+   else
+   {
+      m_sendDCT_dialog = new SendDialog(3, "Send DCT");
+   }
    std::vector<std::string> cvsUsKey(3);
    QPoint thisPos = pos();
    thisPos.rx() += size().width() / 2 - 175;
    thisPos.ry() += size().height() / 2 - 75;
-   m_sendDCT_dialog.curentName = m_pCentralWidget->usersCombo()->currentText();
-   m_sendDCT_dialog.execRD(&thisPos,cvsUsKey);
+   m_sendDCT_dialog->curentName = m_pCentralWidget->usersCombo()->currentText();
+   m_sendDCT_dialog->execRD(&thisPos,cvsUsKey);
 }
 
 void Mainwindow_gui_wallet::InfoSlot()
