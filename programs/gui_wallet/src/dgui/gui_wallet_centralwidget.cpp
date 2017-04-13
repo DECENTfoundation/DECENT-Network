@@ -276,7 +276,7 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     
     m_pBalanceWgt1->setLayout(pHBoxLayoutTmp);
     m_first_line_lbl.addWidget(m_pBalanceWgt1);
-    pHBoxLayoutTmp->setContentsMargins(200, 0, 0, 0);
+    pHBoxLayoutTmp->setContentsMargins(220, 0, 40, 0);
     m_pBalanceWgt1->setFixedHeight(__HEIGHT__);
    
    
@@ -294,7 +294,7 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
    pHBoxLayoutTmp = new QHBoxLayout;
    DecentSmallButton* sendButton = new DecentSmallButton(icon_send,icon_send);
    sendButton->setScaledContents(true);
-   QLabel* send_text = new QLabel(tr("Send"));
+   QLabel* send_text = new QLabel(tr("  Send"));
    
 
    
@@ -306,7 +306,7 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
    
    m_pSendWgt1->setLayout(pHBoxLayoutTmp);
    m_first_line_lbl.addWidget(m_pSendWgt1);
-   pHBoxLayoutTmp->setContentsMargins(100, 0, 0, 0);
+   pHBoxLayoutTmp->setContentsMargins(50, 0, 50, 0);
    m_pSendWgt1->setFixedHeight(__HEIGHT__);
    
 
