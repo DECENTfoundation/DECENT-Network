@@ -57,8 +57,17 @@ using namespace decent::encrypt;
       {
          m_arrValues.clear();
          fc::variant variant_synopsis;
-         if (false == str_synopsis.empty())
-            variant_synopsis = fc::json::from_string(str_synopsis);
+         bool bFallBack = false;   // fallback to support synopsis that was used simply as a string
+         try
+         {
+            if (false == str_synopsis.empty())
+               variant_synopsis = fc::json::from_string(str_synopsis);
+         }
+         catch(...)
+         {
+            if (is_fallback(0))
+               bFallBack = true;
+         }
 
          fc::variant variant_value;
 
@@ -76,7 +85,7 @@ using namespace decent::encrypt;
             {
                fc::variant const& variant_item = variant_value[iIndex];
                string str_value = variant_item.as_string();
-               basic_type item;
+               value_type item;
                ContentObjectPropertyBase::convert_from_string(str_value, item);
                m_arrValues.push_back(item);
             }
@@ -84,8 +93,16 @@ using namespace decent::encrypt;
          else if (false == variant_value.is_null())
          {
             string str_value = variant_value.as_string();
-            basic_type item;
+            value_type item;
             ContentObjectPropertyBase::convert_from_string(str_value, item);
+            m_arrValues.push_back(item);
+         }
+
+         if (bFallBack &&
+             m_arrValues.empty())
+         {
+            value_type item;
+            ContentObjectPropertyBase::convert_from_string(str_synopsis, item);
             m_arrValues.push_back(item);
          }
 
@@ -93,7 +110,7 @@ using namespace decent::encrypt;
              m_arrValues.empty())
          {
             string str_value;
-            basic_type item;
+            value_type item;
             ContentObjectPropertyBase::convert_from_string(str_value, item);
             m_arrValues.push_back(item);
          }
@@ -116,7 +133,7 @@ using namespace decent::encrypt;
              arrValues.empty())
          {
             string str_value;
-            basic_type item;
+            value_type item;
             ContentObjectPropertyBase::convert_from_string(str_value, item);
             arrValues.push_back(item);
          }
@@ -127,7 +144,7 @@ using namespace decent::encrypt;
          variant variant_value;
          if (1 == arrValues.size())
          {
-            basic_type const& item = arrValues.front();
+            value_type const& item = arrValues[0];
             string str_value;
             ContentObjectPropertyBase::convert_to_string(item, str_value);
             variant_value = str_value;
@@ -144,7 +161,9 @@ using namespace decent::encrypt;
             variant_value = arr_variant_value;
          }
 
-         fc::variant variant_synopsis = fc::json::from_string(str_synopsis);
+         fc::variant variant_synopsis;
+         if (false == str_synopsis.empty())
+            variant_synopsis = fc::json::from_string(str_synopsis);
 
          if (false == variant_synopsis.is_null() &&
              false == variant_synopsis.is_object())
@@ -172,7 +191,7 @@ using namespace decent::encrypt;
          Derived::convert_from_string(str_value, converted_value);
       }
       template <typename U>
-      static void convert_to_string(U const& value, string const& str_converted_value)
+      static void convert_to_string(U const& value, string& str_converted_value)
       {
          Derived::convert_to_string(value, str_converted_value);
       }
@@ -209,6 +228,17 @@ using namespace decent::encrypt;
       {
          return true;
       }
+      template <typename U = Derived>
+      static bool is_fallback(...)
+      {
+         return false;
+      }
+
+      template <typename U = Derived>
+      static bool is_fallback(typename U::meta_fallback)
+      {
+         return true;
+      }
 
    public:
       vector<value_type> m_arrValues;
@@ -235,12 +265,12 @@ using namespace decent::encrypt;
       {
          if (str_value == "GUI")
             type = EContentObjectType::GUI;
-         if (str_value == "Book")
+         else if (str_value == "Book")
             type = EContentObjectType::Book;
-         if (str_value == "")
+         else if (str_value == "")
             type = EContentObjectType::GUI;
-
-         throw std::runtime_error("EContentObjectType is in exceptional situation");
+         else
+            throw std::runtime_error("EContentObjectType is in exceptional situation");
       }
       static void convert_to_string(EContentObjectType const& type, string& str_value)
       {
@@ -258,6 +288,7 @@ using namespace decent::encrypt;
    class ContentObjectTitle : public ContentObjectPropertyBase<string, ContentObjectTitle>
    {
    public:
+      using meta_fallback = bool;
       using meta_unique = bool;
       static string name()
       {
@@ -267,6 +298,7 @@ using namespace decent::encrypt;
    class ContentObjectDescription : public ContentObjectPropertyBase<string, ContentObjectDescription>
    {
    public:
+      using meta_default = bool;
       using meta_unique = bool;
       static string name()
       {
@@ -286,7 +318,7 @@ using namespace decent::encrypt;
    class ContentObjectPropertyManager
    {
    public:
-      ContentObjectPropertyManager(string const& str_synopsis)
+      ContentObjectPropertyManager(string const& str_synopsis = string())
          : m_str_synopsis(str_synopsis)
       {
 
@@ -310,22 +342,6 @@ using namespace decent::encrypt;
          P property;
          property.m_arrValues.clear();
          property.m_arrValues.push_back(value);
-         property.save(m_str_synopsis);
-      }
-
-      template <typename P>
-      vector<typename P::value_type> get_all() const
-      {
-         P property;
-         property.load(m_str_synopsis);
-         return property.m_arrValues;
-      }
-
-      template <typename P>
-      void set_all(vector<typename P::value_type> const& arrValues) const
-      {
-         P property;
-         property.m_arrValues = arrValues;
          property.save(m_str_synopsis);
       }
 
@@ -380,11 +396,6 @@ using namespace decent::encrypt;
 #ifdef PRICE_REGIONS
       template <RegionCodes::RegionCode code>
       share_type get_price_amount_template() const
-      {
-         FC_ASSERT(price.Valid(code));
-         return price.GetPrice(code)->amount;
-      }
-      share_type get_price_amount(uint32_t code) const
       {
          FC_ASSERT(price.Valid(code));
          return price.GetPrice(code)->amount;

@@ -243,25 +243,9 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details)
     std::string desc;
 
     graphene::chain::ContentObjectPropertyManager synopsis_parser(synopsis);
-    try
-    {
-       title = synopsis_parser.get<graphene::chain::ContentObjectTitle>();
-       desc = synopsis_parser.get<graphene::chain::ContentObjectDescription>();
-       graphene::chain::EContentObjectType coType = synopsis_parser.get<graphene::chain::ContentObjectType>();
-    }
-    catch (...)
-    {
-       title = synopsis;
-    }
+    title = synopsis_parser.get<graphene::chain::ContentObjectTitle>();
+    desc = synopsis_parser.get<graphene::chain::ContentObjectDescription>();
 
-    /*try {
-        auto synopsis_parsed = json::parse(synopsis);
-        title = synopsis_parsed["title"].get<std::string>();
-        desc = synopsis_parsed["description"].get<std::string>();
-        
-    } catch (...) {
-       title = synopsis;
-    }*/
     this->setWindowTitle(QString::fromStdString(title));
     m_desc.setText(m_desc.toPlainText() + QString::fromStdString(desc) + "\n");
    

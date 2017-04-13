@@ -16,6 +16,7 @@
 #include <limits>
 #include <iostream>
 #include <graphene/chain/config.hpp>
+#include <graphene/chain/content_object.hpp>
 #include <graphene/wallet/wallet.hpp>
 #include "gui_design.hpp"
 
@@ -161,18 +162,9 @@ void BrowseContentTab::ShowDigitalContentsGUI() {
       std::string synopsis = unescape_string(aTemporar.synopsis);
       std::replace(synopsis.begin(), synopsis.end(), '\t', ' '); // JSON does not like tabs
       std::replace(synopsis.begin(), synopsis.end(), '\n', ' '); // JSON does not like newlines either
-      std::string title;
-      //massageBox_title.push_back(	)
+      graphene::chain::ContentObjectPropertyManager synopsis_parser(synopsis);
+      std::string title = synopsis_parser.get<graphene::chain::ContentObjectTitle>();
 
-      try {
-         auto synopsis_parsed = json::parse(synopsis);
-         title = synopsis_parsed["title"].get<std::string>();
-         
-      } catch (...) {
-         title = synopsis;
-      }
-
-      
       // Title
       int colIndex = 0;
       m_pTableWidget.setItem(index, colIndex,new QTableWidgetItem(QString::fromStdString(title)));
