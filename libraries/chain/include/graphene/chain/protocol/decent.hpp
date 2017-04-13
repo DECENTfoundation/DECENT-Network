@@ -27,11 +27,13 @@ namespace graphene { namespace chain {
 
       asset fee;
       account_id_type author;
+#ifdef DECENT_TESTNET2
       // optional parameter. If map is not empty, payout will be splitted
       // maps co-authors to split based on basis points
       // author can be included in co_authors map
       // max num of co-authors = 10
       map<account_id_type, uint32_t> co_authors;
+#endif
       string URI;
       asset price;
       uint64_t size; //<Size of content, including samples, in megabytes
@@ -234,7 +236,11 @@ namespace graphene { namespace chain {
 
 } } // graphene::chain
 
+#ifdef DECENT_TESTNET2
 FC_REFLECT(graphene::chain::content_submit_operation,(fee)(size)(author)(co_authors)(URI)(quorum)(price)(hash)(seeders)(key_parts)(expiration)(publishing_fee)(synopsis)(cd))
+#else
+FC_REFLECT(graphene::chain::content_submit_operation,(fee)(size)(author)(URI)(quorum)(price)(hash)(seeders)(key_parts)(expiration)(publishing_fee)(synopsis)(cd))
+#endif
 FC_REFLECT(graphene::chain::request_to_buy_operation,(fee)(URI)(consumer)(price)(pubKey))
 FC_REFLECT(graphene::chain::leave_rating_operation,(fee)(URI)(consumer)(rating))
 FC_REFLECT(graphene::chain::ready_to_publish_operation,(fee)(seeder)(space)(pubKey)(price_per_MByte)(ipfs_IDs))

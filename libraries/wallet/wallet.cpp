@@ -2221,8 +2221,8 @@ public:
             fc::optional<asset_object> DTC_asset = get_asset("DCT");
             fc::optional<asset_object> price_asset_obj = get_asset(price_asset_symbol);
 
-            FC_ASSERT(DTC_asset, "Could not find asset matching DCT");
-            FC_ASSERT(DTC_asset, "Could not find asset");
+            FC_ASSERT(DCT_asset, "Could not find asset matching DCT");
+            FC_ASSERT(price_asset_obj, "Could not find asset");
 
 
             CryptoPP::Integer secret(randomGenerator, 512);

@@ -7,6 +7,7 @@ void content_submit_operation::validate()const
 {
    FC_ASSERT( fee.amount >= 0 );
    FC_ASSERT( co_authors.size() <= 10 );
+#ifdef DECENT_TESTNET2
    uint32_t sum_of_splits = 0;
    for( auto const &element : co_authors )
    {
@@ -14,6 +15,7 @@ void content_submit_operation::validate()const
       sum_of_splits += element.second;
    }
    FC_ASSERT( sum_of_splits <= 10000 );
+#endif
    FC_ASSERT( price.amount >= 0 );
    FC_ASSERT( size > 0 && size <= 100 ); //TODO_DECENT - increase in testnet
    FC_ASSERT( seeders.size() > 0 );
