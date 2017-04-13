@@ -276,16 +276,16 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     
     m_pBalanceWgt1->setLayout(pHBoxLayoutTmp);
     m_first_line_lbl.addWidget(m_pBalanceWgt1);
-    pHBoxLayoutTmp->setContentsMargins(100, 0, 0, 0);
+    pHBoxLayoutTmp->setContentsMargins(200, 0, 0, 0);
     m_pBalanceWgt1->setFixedHeight(__HEIGHT__);
    
    
    /*//////////////////////////////////////////*/
    line = new QFrame(this);
-   line->setFrameShape(QFrame::VLine); // Horizontal line
+   line->setFrameShape(QFrame::VLine); // Vertical line
    
    line->setLineWidth(1);
-   line->setStyleSheet("color: #ffffff");
+   line->setStyleSheet("color: #f0f0f0");
    line->setFixedHeight(68);
    m_first_line_lbl.addWidget(line);
    
