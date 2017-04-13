@@ -124,7 +124,6 @@ protected:
    QAction             m_ActionLock;
    QAction             m_ActionUnlock;
    QAction             m_ActionImportKey;
-   QAction             m_ActionSendDCT;
    TextDisplayDialog   m_info_dialog;
    
    QVBoxLayout                         m_main_layout;
