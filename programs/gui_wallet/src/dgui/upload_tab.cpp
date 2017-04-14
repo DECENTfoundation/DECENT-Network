@@ -614,6 +614,11 @@ Upload_tab::Upload_tab(Mainwindow_gui_wallet* parent) : _content_popup(NULL), _p
     upload_button->setText("Publish");
     upload_button->setMinimumWidth(102);
     upload_button->setMinimumHeight(54);
+    std::string currentUserName = GlobalEvents::instance().getCurrentUser();
+    if(currentUserName.empty())
+      upload_button->setEnabled(false);
+    else
+      upload_button->setEnabled(true);
     
     QLabel* lab = new QLabel();
     QPixmap image(icon_search);
@@ -638,8 +643,16 @@ Upload_tab::Upload_tab(Mainwindow_gui_wallet* parent) : _content_popup(NULL), _p
     connect(&m_filterLineEdit, SIGNAL(textChanged(QString)), this, SLOT(onTextChanged(QString)));
     connect(upload_button, SIGNAL(LabelClicked()), this, SLOT(uploadPopup()));
     connect(&GlobalEvents::instance(), SIGNAL(currentUserChanged(std::string)), this, SLOT(updateContents()));
+}
 
-    
+void Upload_tab::updateContents()
+{
+   std::string currentUserName = GlobalEvents::instance().getCurrentUser();
+   if(currentUserName.empty())
+      upload_button->setEnabled(false);
+   else
+      upload_button->setEnabled(true);
+
 }
 
 void Upload_tab::timeToUpdate(const std::string& result) {
@@ -829,8 +842,10 @@ void Upload_tab::ShowDigitalContentsGUI() {
 }
 
 void Upload_tab::uploadPopup() {
-   Upload_popup popup(_parent);
-   popup.exec();
+   if(_parent->getCentralWidget()->usersCombo()->count()){
+      Upload_popup popup(_parent);
+      popup.exec();
+   }
 }
 
 void Upload_popup::uploadCanceled()

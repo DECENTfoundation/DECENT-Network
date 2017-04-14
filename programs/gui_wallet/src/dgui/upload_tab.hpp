@@ -140,6 +140,7 @@ namespace gui_wallet
         void show_content_popup();
         void content_was_bought();
         void uploadPopup();
+        void updateContents();
         
     protected:
         QVBoxLayout     m_main_layout;
