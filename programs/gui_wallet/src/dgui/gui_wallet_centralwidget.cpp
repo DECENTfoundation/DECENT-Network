@@ -32,7 +32,7 @@ using namespace gui_wallet;
 AccountBalanceWidget::AccountBalanceWidget() : m_nCurrentIndex(-1) {
    
     m_amount_label.setStyleSheet(d_amount_label);
-    m_asset_type_label.setStyleSheet(d_asset);
+    m_asset_type_label.setStyleSheet(d_label);
     m_amount_label.setAlignment(Qt::AlignRight|Qt::AlignVCenter);
     m_asset_type_label.setAlignment(Qt::AlignRight|Qt::AlignVCenter);
     m_main_layout.addWidget(&m_amount_label);
@@ -259,7 +259,7 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     line->setFrameShape(QFrame::VLine); // Horizontal line
     
     line->setLineWidth(1);
-    line->setStyleSheet("color: #ffffff");
+    line->setStyleSheet(c_line);
     line->setFixedHeight(68);
     m_first_line_lbl.addWidget(line);
 
@@ -285,14 +285,14 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     m_first_line_lbl.addWidget(m_pBalanceWgt1);
     pHBoxLayoutTmp->setContentsMargins(220, 0, 40, 0);
     m_pBalanceWgt1->setFixedHeight(__HEIGHT__);
-   
-   
+    m_browse_cont_tab.setStyleSheet(d_label);
+
    /*//////////////////////////////////////////*/
    line = new QFrame(this);
    line->setFrameShape(QFrame::VLine); // Vertical line
    
    line->setLineWidth(1);
-   line->setStyleSheet("color: #f0f0f0");
+   line->setStyleSheet(d_color);
    line->setFixedHeight(68);
    m_first_line_lbl.addWidget(line);
    
@@ -303,9 +303,7 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
    DecentButton* send_text = new DecentButton();
    send_text->setText("  Send");
    send_text->setStyleSheet("QLabel { color : rgb(0,0,0);}");
-   
 
-   
    sendButton->setFixedSize(30,30);
    connect(sendButton, SIGNAL(clicked()), this, SLOT(sendDCTSlot()));
    connect(send_text, SIGNAL(LabelClicked()), this, SLOT(sendDCTSlot()));
@@ -317,9 +315,7 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
    pHBoxLayoutTmp->setContentsMargins(50, 0, 50, 0);
    m_pSendWgt1->setFixedHeight(__HEIGHT__);
    
-
-   
-    m_browse_cont_tab.setStyleSheet("color: black;""background-color:white;");
+    m_browse_cont_tab.setStyleSheet(d_label);
     SetAccountBalancesFromStrGUI(std::vector<std::string>());
 
 
@@ -333,7 +329,7 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     line = new QFrame(this);
     line->setFrameShape(QFrame::HLine);
     line->setLineWidth(500);
-    line->setStyleSheet("color: #f0f0f0");
+    line->setStyleSheet(c_line);
     line->setFixedHeight(1);
 
     

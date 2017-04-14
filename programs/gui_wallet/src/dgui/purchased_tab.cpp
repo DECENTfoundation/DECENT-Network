@@ -101,7 +101,7 @@ void PurchasedTab::timeToUpdate(const std::string& result) {
          synopsis = synopsis_parsed["title"].get<std::string>();
       } catch (...) {}
       
-      //double rating = content["rating"].get<double>() / 1000;
+      //double rating = content["average_rating"].get<double>() / 1000;
       uint64_t size = content["size"].get<int>();
       
       
@@ -151,7 +151,7 @@ void PurchasedTab::timeToUpdate(const std::string& result) {
       }
       
       contentObject.price.amount /= GRAPHENE_BLOCKCHAIN_PRECISION;
-      contentObject.AVG_rating = content["rating"].get<double>() / 1000;
+      contentObject.AVG_rating = content["average_rating"].get<double>() / 1000;
       
       
       

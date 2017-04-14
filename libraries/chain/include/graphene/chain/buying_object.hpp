@@ -19,93 +19,33 @@ using decent::encrypt::DInteger;
    class buying_object : public graphene::db::abstract_object<buying_object>
    {
    public:
-      
-      void set_db(const graphene::chain::database*  obj_db) {
-         db = obj_db;
-      };
-
-      
-      const graphene::chain::database* db = nullptr;
-      
       static const uint8_t space_id = implementation_ids;
       static const uint8_t type_id  = impl_buying_object_type;
 
       account_id_type consumer;
       string URI;
-      
-      
-      uint64_t get_size() const {
-         FC_ASSERT(db);
-         const auto& idx = db->get_index_type<content_index>().indices().get<by_URI>();
-         auto itr = idx.find(URI);
-         if (itr != idx.end())
-            return (*itr).size;
-         
-         return 0;
-      }
-      
-      uint64_t get_rating() const {
-         FC_ASSERT(db);
-         const auto& idx = db->get_index_type<content_index>().indices().get<by_URI>();
-         auto itr = idx.find(URI);
-         if (itr != idx.end())
-            return (*itr).AVG_rating;
-         
-         return 0;
-      }
-
-      
-      uint64_t size;
-      uint64_t rating;
-      
-      share_type get_price() const {
-         FC_ASSERT(db);
-         const auto& idx = db->get_index_type<content_index>().indices().get<by_URI>();
-         auto itr = idx.find(URI);
-         if (itr != idx.end())
-         {
-#ifdef PRICE_REGIONS
-            return (*itr).get_price_amount(region_code_from);
-#else
-            return (*itr).get_price_amount();
-#endif
-         }
-         
-         return 0;
-      }
-      
-      time_point_sec get_created_time() const {
-         FC_ASSERT(db);
-         const auto& idx = db->get_index_type<content_index>().indices().get<by_URI>();
-         auto itr = idx.find(URI);
-         if (itr != idx.end())
-            return (*itr).created;
-         
-         return time_point();
-      }
-      
-
-
-      
-      asset price;
-      std::string synopsis;
-
+      uint64_t size = uint64_t(-1); // initialized by content.size
+      uint64_t rating = uint64_t(-1);  // this is the user rating
+      uint64_t average_rating = uint64_t(-1);   // initialized by content_object.AVG_rating
+      asset price;  // initialized by request_to_buy_operation.price then reset to 0 for escrow system and inflation calculations
+      asset paid_price; // initialized by request_to_buy_operation.price
+      std::string synopsis;   // initialized by content.synopsis
+      vector<account_id_type> seeders_answered;
+      vector<decent::encrypt::CiphertextString> key_particles;
+      DIntegerString pubKey;
+      time_point_sec expiration_time;
+      bool expired = false;
+      bool delivered = false;
+      time_point_sec expiration_or_delivery_time;
+      bool rated = false;
+      time_point_sec created; // initialized by content.created
+      time_point_sec expiration; // initialized by content.expiration
 #ifdef PRICE_REGIONS
       uint32_t region_code_from;
 #endif
 
-      vector<account_id_type> seeders_answered;
-
-      vector<decent::encrypt::CiphertextString> key_particles;
-      DIntegerString pubKey;
-
-      time_point_sec expiration_time;
-
-      bool expired = false;
-      bool delivered = false;
-      bool is_open()const { return !( expired || delivered ); }
-      time_point_sec expiration_or_delivery_time;
-      bool rated = false;
+      bool is_open() const { return !( expired || delivered ); }
+      share_type get_price() const { return paid_price.amount; }
    };
 
 
@@ -117,7 +57,6 @@ using decent::encrypt::DInteger;
    struct by_open_expiration;
    struct by_consumer_open;
    struct by_size;
-   struct by_rating;
    struct by_price;
    struct by_created;
 
@@ -167,16 +106,13 @@ using decent::encrypt::DInteger;
                >
             >,
             ordered_non_unique< tag< by_size>,
-                  const_mem_fun<buying_object, uint64_t, &buying_object::get_size>
-            >,
-            ordered_non_unique< tag< by_rating>,
-                  member<buying_object, uint64_t, &buying_object::rating>
+                  member<buying_object, uint64_t, &buying_object::size>
             >,
             ordered_non_unique< tag< by_price>,
                   const_mem_fun<buying_object, share_type, &buying_object::get_price>
             >,
             ordered_non_unique< tag< by_created>,
-                  const_mem_fun<buying_object, time_point_sec, &buying_object::get_created_time>
+                  member<buying_object, time_point_sec, &buying_object::created>
             >
          >
    >buying_object_multi_index_type;
@@ -189,11 +125,11 @@ using decent::encrypt::DInteger;
 #ifdef PRICE_REGIONS
 FC_REFLECT_DERIVED(graphene::chain::buying_object,
                    (graphene::db::object),
-                   (consumer)(URI)(synopsis)(region_code_from)(price)(seeders_answered)(size)(rating)(expiration_time)(pubKey)(key_particles)
-                   (expired)(delivered)(expiration_or_delivery_time)(rated) )
+                   (consumer)(URI)(synopsis)(price)(paid_price)(seeders_answered)(size)(rating)(average_rating)(expiration_time)(pubKey)(key_particles)
+                   (expired)(delivered)(expiration_or_delivery_time)(rated)(created)(expiration)(region_code_from) )
 #else
 FC_REFLECT_DERIVED(graphene::chain::buying_object,
                    (graphene::db::object),
-                   (consumer)(URI)(synopsis)(price)(seeders_answered)(size)(rating)(expiration_time)(pubKey)(key_particles)
-                   (expired)(delivered)(expiration_or_delivery_time)(rated) )
+                   (consumer)(URI)(synopsis)(price)(paid_price)(seeders_answered)(size)(rating)(average_rating)(expiration_time)(pubKey)(key_particles)
+                   (expired)(delivered)(expiration_or_delivery_time)(rated)(created)(expiration) )
 #endif
