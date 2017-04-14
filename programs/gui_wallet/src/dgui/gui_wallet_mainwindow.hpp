@@ -60,6 +60,8 @@ public:
    void GoToThisTab(int index, std::string info);
    void UpdateAccountBalances(const std::string& username);
    
+   CentralWigdet* getCentralWidget();
+   
 public:
    
    static void RunTaskImpl(std::string const& str_command, std::string& str_result);

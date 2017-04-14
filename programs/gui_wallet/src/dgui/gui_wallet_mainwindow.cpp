@@ -192,8 +192,23 @@ void Mainwindow_gui_wallet::slot_connected(std::string str_error)
 
 void Mainwindow_gui_wallet::currentUserBalanceUpdate()
 {
-    std::string userBalanceUpdate = GlobalEvents::instance().getCurrentUser();
-    UpdateAccountBalances(userBalanceUpdate);
+   std::string userBalanceUpdate = GlobalEvents::instance().getCurrentUser();
+   if(m_pCentralWidget->usersCombo()->count())
+   {
+      UpdateAccountBalances(userBalanceUpdate);
+      m_pCentralWidget->getSendButton()->highlight();
+      m_pCentralWidget->getSendButton()->setStyleSheet("* { background-color: rgb(255,255,255); color : black; }");
+   }
+   else
+   {
+      m_pCentralWidget->getSendButton()->unhighlight();
+      m_pCentralWidget->getSendButton()->setStyleSheet("* { background-color: rgb(255,255,255); color : black; }");
+   }
+}
+
+CentralWigdet* Mainwindow_gui_wallet::getCentralWidget()
+{
+   return m_pCentralWidget;
 }
 
 
@@ -448,7 +463,8 @@ void Mainwindow_gui_wallet::UnlockSlot()
     }
     
     UpdateLockedStatus();
-    
+    m_pCentralWidget->getSendButton()->highlight();
+    m_pCentralWidget->getSendButton()->setStyleSheet("* { background-color: rgb(255,255,255); color : black; }");
 }
 
 
@@ -626,13 +642,16 @@ void Mainwindow_gui_wallet::ImportKeySlot()
         ALERT_DETAILS("Can not import key.", result.c_str());
     } else {
         DisplayWalletContentGUI(false);
-
     }
+    m_pCentralWidget->getSendButton()->highlight();
+    m_pCentralWidget->getSendButton()->setStyleSheet("* { background-color: rgb(255,255,255); color : black; }");
 }
 
 
 void Mainwindow_gui_wallet::SendDCTSlot()
 {
+   if(!m_pCentralWidget->usersCombo()->count())
+      return;
    if(m_sendDCT_dialog != nullptr)
    {
       delete m_sendDCT_dialog;

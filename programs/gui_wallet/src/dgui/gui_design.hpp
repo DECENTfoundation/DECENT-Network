@@ -68,6 +68,7 @@ const char* const icon_user             = ":/icon/images/user.png";
 const char* const icon_balance          = ":/icon/images/balance.png";
 const char* const c_line                = "color: #ffffff";
 const char* const icon_send             = ":/icon/images/send.png";
+const char* const icon_inactive_send    = ":/icon/images/inactive_send.png";
 
 //gui_wallet_connectdlg
 const char* const d_pass                = "border: 1px solid rgb(143,143,143);padding-left:25px;";

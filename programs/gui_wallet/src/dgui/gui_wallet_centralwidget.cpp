@@ -95,7 +95,8 @@ CentralWigdet::CentralWigdet(QBoxLayout* a_pAllLayout, Mainwindow_gui_wallet* a_
       m_Overview_tab(a_pPar),
       m_Upload_tab(a_pPar),
       m_Purchased_tab(a_pPar),
-      m_trans_tab(a_pPar)
+      m_trans_tab(a_pPar),
+      sendButton(new DecentSmallButton(icon_inactive_send,icon_send))
 {
 
 
@@ -156,7 +157,12 @@ QComboBox* CentralWigdet::usersCombo()
 DecentButton* CentralWigdet::importButton()
 {
    return (DecentButton*)GetWidgetFromTable5(USERNAME,2);
-};
+}
+
+DecentSmallButton* CentralWigdet::getSendButton()
+{
+   return sendButton;
+}
 
 QWidget* CentralWigdet::GetWidgetFromTable5(int a_nColumn, int a_nWidget)
 {
@@ -267,7 +273,8 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     pLabelTmp->setPixmap(m_image3);
     pLabelTmp->setFixedSize(30,30);
     pHBoxLayoutTmp->addWidget(pLabelTmp);
-    
+    pHBoxLayoutTmp->setSpacing(0);
+   
     pCombo2 = new AccountBalanceWidget;
     
     QFont font( "Myriad Pro Regular", 12, QFont::Bold);
@@ -292,13 +299,14 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
    /*//////////////////////////////////////////*/
    m_pSendWgt1 = new QWidget;
    pHBoxLayoutTmp = new QHBoxLayout;
-   DecentSmallButton* sendButton = new DecentSmallButton(icon_send,icon_send);
    sendButton->setScaledContents(true);
-   QLabel* send_text = new QLabel(tr("  Send"));
-   
-   QPixmap send_icon(icon_send);
+   DecentButton* send_text = new DecentButton();
+   send_text->setText("  Send");
+   send_text->setStyleSheet("QLabel { color : rgb(0,0,0);}");
+
    sendButton->setFixedSize(30,30);
    connect(sendButton, SIGNAL(clicked()), this, SLOT(sendDCTSlot()));
+   connect(send_text, SIGNAL(LabelClicked()), this, SLOT(sendDCTSlot()));
    pHBoxLayoutTmp->addWidget(sendButton);
    pHBoxLayoutTmp->addWidget(send_text);
    
@@ -446,8 +454,6 @@ void CentralWigdet::resizeEvent ( QResizeEvent * a_event )
                                   "border-right:0px;}"
                                   );
     }
-
-
 }
 
 void CentralWigdet::SetTransactionInfo(std::string info_from_other_tab)
