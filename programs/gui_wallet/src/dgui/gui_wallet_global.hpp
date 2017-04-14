@@ -112,7 +112,7 @@ namespace gui_wallet
 
    
    //
-   // EventPassthtough
+   // EventPassthrough
    //
    // This is helper class that allows to passthrough mousemove events to parent widget.
    // Useful when highlighting rows in tableview
