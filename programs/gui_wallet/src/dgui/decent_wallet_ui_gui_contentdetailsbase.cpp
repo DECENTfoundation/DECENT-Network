@@ -36,17 +36,13 @@ typedef TypeCpcChar* NewType;
 
 static NewType  s_vFields[]={ s_vcpcFieldsGeneral, s_vcpcFieldsBougth, s_vcpcFieldsBougth };
 
-ContentDetailsBase::ContentDetailsBase(Mainwindow_gui_wallet* pMainWindow)
-: m_pMainWindow(pMainWindow)
-{}
-
-
-
+ContentDetailsBase::ContentDetailsBase(QWidget* pParent)
+: QDialog(pParent){}
 
 // DCF stands for Digital Content Fields
 namespace DCF{enum{AMOUNT=9, TIMES_BOUGHT=15};}
 
-void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details)
+void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details, bool bSilent/* = false*/)
 {
     
     
@@ -248,8 +244,9 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details)
 
     this->setWindowTitle(QString::fromStdString(title));
     m_desc.setText(m_desc.toPlainText() + QString::fromStdString(desc) + "\n");
-   
-    QDialog::exec();
+
+   if (false == bSilent)
+      QDialog::exec();
 }
 
 
@@ -338,8 +335,7 @@ void ContentDetailsBase::popup_for_purchased(int row_star)
     m_desc.setStyleSheet(border_0);
     m_desc.setReadOnly(true);
     m_desc.setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    QFont f("Myriad Pro Regular",13);
-    m_desc.setFont(f);
+    m_desc.setFont(DescriptionDetailsFont());
     desc_lay->setContentsMargins(42, 17, 0, 3);
     desc_lay->addWidget(&m_desc);
     

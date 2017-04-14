@@ -1,6 +1,7 @@
 
 #include <QApplication>
 #include <QProcess>
+#include <QMessageBox>
 #include <fc/interprocess/signals.hpp>
 #include <fc/thread/thread.hpp>
 

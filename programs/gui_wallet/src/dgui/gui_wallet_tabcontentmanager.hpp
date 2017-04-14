@@ -9,6 +9,7 @@ namespace gui_wallet {
 class TabContentManager : public QWidget {
    
 public:
+   TabContentManager(QWidget* pParent = nullptr);
    virtual void contentActivated() {
       _lastResult = "";
    }

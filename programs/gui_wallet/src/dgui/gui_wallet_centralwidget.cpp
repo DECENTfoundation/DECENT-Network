@@ -276,9 +276,8 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     pHBoxLayoutTmp->setSpacing(0);
    
     pCombo2 = new AccountBalanceWidget;
-    
-    QFont font( "Myriad Pro Regular", 12, QFont::Bold);
-    pCombo2->setFont(font);
+
+    pCombo2->setFont(AccountBalanceFont());
     pHBoxLayoutTmp->addWidget(pCombo2);
     
     m_pBalanceWgt1->setLayout(pHBoxLayoutTmp);
