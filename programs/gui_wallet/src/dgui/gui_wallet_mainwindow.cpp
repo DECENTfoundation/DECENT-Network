@@ -192,8 +192,9 @@ void Mainwindow_gui_wallet::slot_connected(std::string str_error)
 
 void Mainwindow_gui_wallet::currentUserBalanceUpdate()
 {
-    std::string userBalanceUpdate = GlobalEvents::instance().getCurrentUser();
-    UpdateAccountBalances(userBalanceUpdate);
+   std::string userBalanceUpdate = GlobalEvents::instance().getCurrentUser();
+   if ( userBalanceUpdate == ""){ return;}
+   UpdateAccountBalances(userBalanceUpdate);
 }
 
 

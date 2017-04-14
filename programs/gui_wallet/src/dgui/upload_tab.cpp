@@ -170,11 +170,12 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    ////////////////////////////////////////////////////////////////////////////
    QHBoxLayout* seedersRow = new QHBoxLayout();
    
-   QLabel* seedersLabel = new QLabel("Seeders");
-   seedersLabel->setStyleSheet(d_label_v1);
-   seedersLabel->setContentsMargins(0, 0, 0, 0);
-   seedersLabel->setMinimumWidth(60);
-   seedersLabel->setMinimumHeight(40);
+   _seedersPath = new QLineEdit("Seeders");
+   _seedersPath->setReadOnly(true);
+   _seedersPath->setStyleSheet(d_label_v2);
+   _seedersPath->setTextMargins(5, 5, 5, 5);
+   _seedersPath->setMinimumWidth(100);
+   _seedersPath->setMinimumHeight(40);
    
    DecentButton* seeders_button = new DecentButton();
    seeders_button->setText("Select Seeders");
@@ -182,7 +183,7 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    seeders_button->setFixedWidth(100);
    seeders_button->setFixedHeight(40);
    
-   seedersRow->addWidget(seedersLabel);
+   seedersRow->addWidget(_seedersPath);
    seedersRow->addWidget(seeders_button);
    u_main_layout->addLayout(seedersRow);
    
@@ -190,13 +191,13 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    ////////////////////////////////////////////////////////////////////////////
    /// Seeders Dialog
    ////////////////////////////////////////////////////////////////////////////
-   _seeders_dialog = new QDialog(this);
+   _seeders_dialog = new QDialog(this, Qt::Window | Qt::WindowTitleHint | Qt::CustomizeWindowHint | Qt::WindowCloseButtonHint);
    _seeders_dialog->setWindowTitle("Seeders");
    
    dialog_layout = new QVBoxLayout(_seeders_dialog);
-
+   
    _seeders_dialog->setLayout(dialog_layout);
-   _seeders_dialog->resize(100, 200);
+   _seeders_dialog->resize(600, 340);
 
    connect(seeders_button, SIGNAL(LabelClicked()), _seeders_dialog, SLOT(exec()) );
    
@@ -226,13 +227,13 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    u_main_layout->addLayout(contentRow);
    
    ////////////////////////////////////////////////////////////////////////////
-   /// Content path
+   /// Samples path
    ////////////////////////////////////////////////////////////////////////////
    QHBoxLayout* samplesRow = new QHBoxLayout();
 
    _samplesPath = new QLineEdit("Samples (optional)");
    _samplesPath->setReadOnly(true);
-   _samplesPath->setStyleSheet(d_samples);
+   _samplesPath->setStyleSheet(d_label_v2);
    _samplesPath->setMinimumHeight(40);
    _samplesPath->setTextMargins(5, 5, 5, 5);
    
@@ -300,6 +301,18 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
 }
 
 void Upload_popup::onGrabPublishers() {
+   
+   seederTable = new DecentTable(this);
+   seederTable->setRowCount(3);
+   
+   seederTable->set_columns({
+      {" ", -60},
+      {"Seeder", 10, "rating"},
+      {"Price",  10, "price"},
+      {"Size" ,  10, "size"}
+   });
+   
+
    std::string a_result;
    RunTask("list_publishers_by_price 100", a_result);
    
@@ -312,36 +325,72 @@ void Upload_popup::onGrabPublishers() {
    auto publishers = json::parse(a_result);
 
    for (int r = 0; r < publishers.size(); ++r) {
+      _seeders_checkbox[r] = new QCheckBox(_seeders_dialog);
+      
+      QTableWidgetItem* check = new QTableWidgetItem;
+      check->setCheckState(Qt::Unchecked);
+      seederTable->setCellWidget(r, 0, _seeders_checkbox[r]);
+
       std::string pubIdStr = publishers[r]["seeder"].get<std::string>();
+      seederTable->setItem(r, 1, new QTableWidgetItem(QString::fromStdString(pubIdStr)));
+      seederTable->item(r, 1)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+      seederTable->item(r, 1)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
       
       double price = publishers[r]["price"]["amount"].get<double>() / GRAPHENE_BLOCKCHAIN_PRECISION;
-      
       std::string pubPrice = QString::number(price).toStdString();
+      seederTable->setItem(r, 2, new QTableWidgetItem(QString::number(price) + " DCT"));
+      seederTable->item(r, 2)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+      seederTable->item(r, 2)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+      
       std::string pubAssetId = publishers[r]["price"]["asset_id"].get<std::string>();
       
       int free_space = publishers[r]["free_space"].get<int>();
       std::string pubFreeSpace = std::to_string(free_space) + "MB free";
       
       if (free_space > 800) {
-          pubFreeSpace = QString::number(1.0 * free_space / 1024, 'f', 2).toStdString() + "GB free";
+         pubFreeSpace = QString::number(1.0 * free_space / 1024, 'f', 2).toStdString() + "GB free";
       }
       
+      seederTable->setItem(r, 3, new QTableWidgetItem(QString::fromStdString(pubFreeSpace)));
+      seederTable->item(r, 3)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+      seederTable->item(r, 3)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+      
       _publisherIdToPriceMap.insert(std::make_pair(pubIdStr, price));
-      
-      _seeders_checkbox[r] = new QCheckBox(_seeders_dialog);
-      _seeders_checkbox[r]->setText(QString("%0 @%1 %2 [%3]").arg(QString::fromStdString(pubIdStr),
-                                                          QString::fromStdString(pubPrice),
-                                                          QString::fromStdString("DCT"),
-                                                          QString::fromStdString(pubFreeSpace)) /*, QString::fromStdString(pubIdStr))*/);
-      
-      dialog_layout->addWidget(_seeders_checkbox[r]);
-      dialog_layout->addWidget(_seeder_ok);
+   
+      //dialog_layout->addWidget(_seeders_checkbox[r]);
       
       QObject::connect(_seeders_checkbox[r], SIGNAL(stateChanged(int)), SLOT(stateChanged(const int)));
-      QObject::connect(_seeder_ok, SIGNAL(LabelClicked()),_seeders_dialog, SLOT(close()));
+      QObject::connect(_seeder_ok, SIGNAL(LabelClicked()),this, SLOT(seederOkSlot()));
    }
    
+   dialog_layout->addWidget(seederTable);
+   dialog_layout->addWidget(_seeder_ok);
    
+   
+}
+
+void Upload_popup::seederOkSlot()
+{
+   std::string str;
+   if (_checkedSeeders.size() < 1){
+      str += "Seeders";
+   }
+
+   if( _checkedSeeders.size() > 4){
+      str = std::to_string(_checkedSeeders.size());
+      _seedersPath->setText(QString::fromStdString(str));
+      _seeders_dialog->close();
+      
+      return;
+   }
+   
+   for ( int i = 0; i < _checkedSeeders.size(); ++i){
+      str += _checkedSeeders[i];
+      str += (i + 1) == _checkedSeeders.size()? "": ", ";
+   }
+
+   _seedersPath->setText(QString::fromStdString(str));
+   _seeders_dialog->close();
 }
 
 void Upload_popup::stateChanged(const int state)
@@ -349,11 +398,7 @@ void Upload_popup::stateChanged(const int state)
    _checkedSeeders.clear();
    for (int i = 0; i < 3; ++i){
       if (_seeders_checkbox[i]->isChecked()){
-         char buf[10];
-         std::size_t _size = _seeders_checkbox[i]->text().toStdString().copy(buf, 6, 0);
-         buf[_size] = '\0';
-         
-         _checkedSeeders.push_back(buf);
+         _checkedSeeders.push_back(seederTable->item(i, 1)->text().toStdString());
       }
    }
 }
@@ -549,7 +594,7 @@ void Upload_popup::uploadContent()
 // UPLOAD TAB
 
 
-Upload_tab::Upload_tab(Mainwindow_gui_wallet* parent) :  popup(0), _content_popup(NULL), _parent(parent) {
+Upload_tab::Upload_tab(Mainwindow_gui_wallet* parent) : _content_popup(NULL), _parent(parent) {
 
     m_pTableWidget.set_columns({
         {"Title", 20},
@@ -784,7 +829,8 @@ void Upload_tab::ShowDigitalContentsGUI() {
 }
 
 void Upload_tab::uploadPopup() {
-    popup.exec();
+   Upload_popup popup(_parent);
+   popup.exec();
 }
 
 void Upload_popup::uploadCanceled()

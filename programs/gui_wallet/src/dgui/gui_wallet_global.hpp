@@ -418,7 +418,9 @@ namespace gui_wallet
       Q_OBJECT
       
    public:
-      DecentTable() {
+      DecentTable(QWidget* parent = Q_NULLPTR) :
+      QTableWidget(parent)
+      {
          this->horizontalHeader()->setStretchLastSection(true);
          this->setSelectionMode(QAbstractItemView::NoSelection);
          this->setStyleSheet("QTableView{border : 0px}");
