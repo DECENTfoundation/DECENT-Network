@@ -28,7 +28,12 @@ using namespace gui_wallet;
 using namespace nlohmann;
 
 
-BrowseContentTab::BrowseContentTab(Mainwindow_gui_wallet* parent) : _content_popup(NULL), _parent(parent) {
+BrowseContentTab::BrowseContentTab(Mainwindow_gui_wallet* parent)
+: TabContentManager(parent)
+, _content_popup(NULL)
+, _parent(parent)
+, m_pTableWidget(this)
+{
     
     m_pTableWidget.set_columns({
         {"Title", 20},

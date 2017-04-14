@@ -10,6 +10,7 @@
  */
 
 #include <QIntValidator>
+#include <QMessageBox>
 #include "richdialog.hpp"
 #include "gui_design.hpp"
 #include "gui_wallet_mainwindow.hpp"

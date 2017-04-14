@@ -547,8 +547,13 @@ void Upload_popup::uploadContent()
 // UPLOAD TAB
 
 
-Upload_tab::Upload_tab(Mainwindow_gui_wallet* parent) :  popup(0), _content_popup(NULL), _parent(parent) {
-
+Upload_tab::Upload_tab(Mainwindow_gui_wallet* parent)
+: TabContentManager(parent)
+, popup(0)
+, _content_popup(NULL)
+, _parent(parent)
+, m_pTableWidget(this)
+{
     m_pTableWidget.set_columns({
         {"Title", 20},
         {"Rating", 10, "rating"},
