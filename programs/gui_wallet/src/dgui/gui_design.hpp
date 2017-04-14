@@ -98,7 +98,6 @@ const char* const d_text_box               = "border: 1px solid rgb(143,143,143)
 const char* const d_desc                = "border: 1 solid lightGray; padding 5px;";
 const char* const d_label_v1            = "QLabel { background-color : white; color: Gray}";
 const char* const d_label_v2            = "border:1px solid lightGray; color: Gray";
-const char* const d_samples             = "border:1px solid lightGray; padding-left: 10px; color: Gray";
 const char* const d_upload_button_true  = "QLabel { background-color :rgb(27,176,104); color : white;}";
 const char* const d_upload_button_false = "QLabel { background-color :rgb(180,180,180); color : rgb(30, 30, 30); }";
 const char* const d_cancel              = "QLabel { background-color :rgb(255, 255, 255); border:1px solid lightGray; color : Grey;}";

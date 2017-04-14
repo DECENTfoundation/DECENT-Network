@@ -74,6 +74,7 @@ namespace gui_wallet
         void uploadCanceled();
         void updateUploadButtonStatus();
         void stateChanged(const int state);
+        void seederOkSlot();
        
     public:
         void onPublishersDone(void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result);
@@ -87,11 +88,13 @@ namespace gui_wallet
         QDateEdit*       _lifeTime;
         QComboBox*       _keyparts;
         QLineEdit*       _price;
+        QLineEdit*       _seedersPath;
         QLineEdit*       _contentPath;
         QLineEdit*       _samplesPath;
         DecentButton*    _upload_button;
         DecentButton*    _cancel_button;
         DecentButton*    _seeder_ok;
+        DecentTable*     seederTable;
         QCheckBox*       _seeders_checkbox[3];
         QVBoxLayout*     dialog_layout;
        
@@ -146,7 +149,6 @@ namespace gui_wallet
         QLineEdit       m_filterLineEdit;
         QComboBox       m_searchTypeCombo;
         DecentButton*   upload_button;
-        Upload_popup    popup;
         
         std::vector<SDigitalContent>  _digital_contents;
         ContentDetailsGeneral*        _content_popup;
