@@ -338,8 +338,7 @@ void ContentDetailsBase::popup_for_purchased(int row_star)
     m_desc.setStyleSheet(border_0);
     m_desc.setReadOnly(true);
     m_desc.setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    QFont f("Myriad Pro Regular",13);
-    m_desc.setFont(f);
+    m_desc.setFont(DescriptionDetailsFont());
     desc_lay->setContentsMargins(42, 17, 0, 3);
     desc_lay->addWidget(&m_desc);
     

@@ -26,34 +26,36 @@ PurchasedTab::PurchasedTab(Mainwindow_gui_wallet* pMainWindow)
       {"", 5},
       {" ", 5}
    });
-   
-   
-   
-   QHBoxLayout* search_lay = new QHBoxLayout();
-   
-   m_filterLineEditer.setPlaceholderText(QString("Search Content"));
-   m_filterLineEditer.setStyleSheet(d_lineEdit);
-   m_filterLineEditer.setFixedHeight(54);
-   m_filterLineEditer.setAttribute(Qt::WA_MacShowFocusRect, 0);
+
+   // search layout
+   //
+   QHBoxLayout* search_layout = new QHBoxLayout();
+
+   QLineEdit* pfilterLineEditor = new QLineEdit(this);
+   pfilterLineEditor->setPlaceholderText(QString("Search Content"));
+   pfilterLineEditor->setStyleSheet(d_lineEdit);
+   pfilterLineEditor->setFixedHeight(54);
+   pfilterLineEditor->setAttribute(Qt::WA_MacShowFocusRect, 0);
+   QObject::connect(pfilterLineEditor, &QLineEdit::textChanged,
+                    this, &PurchasedTab::slot_SearchTermChanged);
    
    QPixmap image(icon_search);
    
    QLabel* search_label = new QLabel();
    search_label->setSizeIncrement(100,40);
    search_label->setPixmap(image);
-   
-   
-   
-   search_lay->setContentsMargins(40, 0, 0, 0);
-   search_lay->addWidget(search_label);
-   search_lay->addWidget(&m_filterLineEditer);
-   
-   m_main_layout.setContentsMargins(0, 0, 0, 0);
-   m_main_layout.setSpacing(0);
-   m_main_layout.addLayout(search_lay);
-   m_main_layout.addWidget(&m_pTableWidget);
-   
-   connect(this, SIGNAL(showMessageBox(std::string)), this, SLOT(showMessageBoxSlot(std::string)));
+
+   search_layout->setContentsMargins(40, 0, 0, 0);
+   search_layout->addWidget(search_label);
+   search_layout->addWidget(pfilterLineEditor);
+
+   // the main layout
+   //
+   QVBoxLayout* pMainLayout = new QVBoxLayout(this);
+   pMainLayout->setContentsMargins(0, 0, 0, 0);
+   pMainLayout->setSpacing(0);
+   pMainLayout->addLayout(search_layout);
+   pMainLayout->addWidget(&m_pTableWidget);
    
    _isExtractingPackage = false;
    connect(&_fileDialog, SIGNAL(fileSelected(const QString&)), this, SLOT(extractionDirSelected(const QString&)));
@@ -65,8 +67,7 @@ PurchasedTab::PurchasedTab(Mainwindow_gui_wallet* pMainWindow)
    _fileDialog.setOptions(QFileDialog::DontUseNativeDialog);
    
    _fileDialog.setLabelText(QFileDialog::Accept, "Extract");
-   setLayout(&m_main_layout);
-   
+   setLayout(pMainLayout);
 }
 
 void PurchasedTab::timeToUpdate(const std::string& result) {
@@ -81,7 +82,6 @@ void PurchasedTab::timeToUpdate(const std::string& result) {
    
    QPixmap info_image(icon_popup);
    QPixmap extract_image(icon_export);
-   QFont bold_font( "Open Sans Bold", 14, QFont::Bold);
    
    _current_content.clear();
    _current_content.reserve(contents.size());
@@ -282,7 +282,7 @@ std::string PurchasedTab::getUpdateCommand()
 
    return   "search_my_purchases "
             "\"" + str_current_username + "\" "
-            "\"" + m_filterLineEditer.text().toStdString() + "\" "
+            "\"" + m_strSearchTerm.toStdString() + "\" "
             "\"" + m_pTableWidget.getSortedColumn() + "\"";
 }
 
@@ -312,8 +312,13 @@ void PurchasedTab::extractionDirSelected(const QString& path) {
       message = ex.what();
    }
    
-   emit showMessageBox(message);
+   ShowMessageBox(message);
    _isExtractingPackage = false;
+}
+
+void PurchasedTab::slot_SearchTermChanged(QString const& strSearchTerm)
+{
+   m_strSearchTerm = strSearchTerm;
 }
 
 void PurchasedTab::extractPackage() {
@@ -342,7 +347,7 @@ void PurchasedTab::extractPackage() {
 }
 
 
-void PurchasedTab::showMessageBoxSlot(std::string message) {
+void PurchasedTab::ShowMessageBox(std::string const& message) {
    if (message.empty()) {
       _msgBox.setWindowTitle("Success");
       _msgBox.setText(tr("Package was successfully extracted"));

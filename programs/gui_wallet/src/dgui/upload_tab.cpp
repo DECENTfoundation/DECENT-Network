@@ -61,8 +61,6 @@ CryptoPP::AutoSeededRandomPool rng;
 
 
 Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishersTimer(this) {
-   
-   QFont font( "Myriad Pro Regular", 13, QFont::Bold);
 
    u_main_layout = new QVBoxLayout(this);
    ////////////////////////////////////////////////////////////////////////////
@@ -178,7 +176,7 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    
    DecentButton* seeders_button = new DecentButton();
    seeders_button->setText("Select Seeders");
-   seeders_button->setFont(font);
+   seeders_button->setFont(PopupButtonRegularFont());
    seeders_button->setFixedWidth(100);
    seeders_button->setFixedHeight(40);
    
@@ -216,7 +214,7 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
 
    DecentButton* browseContentButton = new DecentButton();
    browseContentButton->setText("Browse");
-   browseContentButton->setFont(font);
+   browseContentButton->setFont(PopupButtonRegularFont());
    browseContentButton->setMinimumWidth(100);
    browseContentButton->setFixedHeight(40);
    connect(browseContentButton, SIGNAL(LabelClicked()),this, SLOT(browseContent()));
@@ -239,7 +237,7 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
 
    DecentButton* browseSamplesButton = new DecentButton();
    browseSamplesButton->setText("Browse");
-   browseSamplesButton->setFont(font);
+   browseSamplesButton->setFont(PopupButtonRegularFont());
    browseSamplesButton->setMinimumWidth(100);
    browseSamplesButton->setFixedHeight(40);
    connect(browseSamplesButton, SIGNAL(LabelClicked()),this, SLOT(browseSamples()));
@@ -252,7 +250,7 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    ////////////////////////////////////////////////////////////////////////////
    /// Upload & Cancel
    ////////////////////////////////////////////////////////////////////////////
-   QFont uploadButtonFont( "Myriad Pro Regular", 15, QFont::Bold);
+   
 
    QHBoxLayout* button = new QHBoxLayout;
 
@@ -261,13 +259,13 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    _cancel_button = new DecentButton();
 
    _cancel_button->setText("Cancel");
-   _cancel_button->setFont(uploadButtonFont);
+   _cancel_button->setFont(PopupButtonBigFont());
    _cancel_button->setMinimumHeight(50);
    //_cancel_button->setMinimumWidth(140);
    _cancel_button->setStyleSheet(d_cancel);
 
    _upload_button->setText("Publish");
-   _upload_button->setFont(uploadButtonFont);
+   _upload_button->setFont(PopupButtonBigFont());
    _upload_button->setMinimumHeight(50);
    //_upload_button->setMinimumWidth(140);
 
@@ -561,11 +559,9 @@ Upload_tab::Upload_tab(Mainwindow_gui_wallet* parent) :  popup(0), _content_popu
         {" ", -50}
 
     });
-    
-    QFont fontUpload( "Myriad Pro Regular", 14, QFont::Bold);
 
     upload_button = new DecentButton();
-    upload_button->setFont(fontUpload);
+    upload_button->setFont(TabButtonFont());
     upload_button->setText("Publish");
     upload_button->setMinimumWidth(102);
     upload_button->setMinimumHeight(54);

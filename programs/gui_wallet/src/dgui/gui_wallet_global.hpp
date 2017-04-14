@@ -11,6 +11,7 @@
 #include <QMouseEvent>
 #include <QHeaderView>
 #include <iostream>
+#include "gui_design.hpp"
 
 #include <numeric>
 #if defined( _MSC_VER )
@@ -448,7 +449,6 @@ namespace gui_wallet
          
          this->setColumnCount(cols.size());
          
-         QFont font("Open Sans Bold", 14, QFont::Bold);
          this->horizontalHeader()->setDefaultSectionSize(300);
          this->setRowHeight(0,35);
          
@@ -471,7 +471,7 @@ namespace gui_wallet
          
          
          this->horizontalHeader()->setFixedHeight(35);
-         this->horizontalHeader()->setFont(font);
+         this->horizontalHeader()->setFont(TableHeaderFont());
          
          this->horizontalHeader()->setStyleSheet("QHeaderView::section {"
                                                           "border-right: 1px solid rgb(193,192,193);"
