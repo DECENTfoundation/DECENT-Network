@@ -1480,7 +1480,7 @@ namespace graphene { namespace wallet {
           * @return The signed transaction submitting the content
           * @ingroup WalletCLI
           */
-         signed_transaction submit_content_new(string const& author,
+         fc::ripemd160  submit_content_new(string const& author,
                                                string const& content_dir,
                                                string const& samples_dir,
                                                string const& protocol,

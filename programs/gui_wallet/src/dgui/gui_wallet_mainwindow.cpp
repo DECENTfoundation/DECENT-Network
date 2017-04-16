@@ -193,6 +193,10 @@ void Mainwindow_gui_wallet::slot_connected(std::string str_error)
 void Mainwindow_gui_wallet::currentUserBalanceUpdate()
 {
    std::string userBalanceUpdate = GlobalEvents::instance().getCurrentUser();
+
+   if (userBalanceUpdate.empty())
+      return;
+
    if(m_pCentralWidget->usersCombo()->count())
    {
       UpdateAccountBalances(userBalanceUpdate);
@@ -500,6 +504,8 @@ void Mainwindow_gui_wallet::UpdateLockedStatus()
 
 void Mainwindow_gui_wallet::CheckDownloads()
 {
+   return; //TODO: remove this later
+   
     auto& global_instance = gui_wallet::GlobalEvents::instance();
     std::string str_current_username = global_instance.getCurrentUser();
 

@@ -480,11 +480,13 @@ void Upload_popup::browseContent() {
    }
    
     _contentPath->setText(contentPathSelected);
+   _contentPath->setProperty("path", contentPathSelected);
 }
 
 void Upload_popup::browseSamples() {
     QString sampleDir = QFileDialog::getExistingDirectory(this, tr("Select samples"), "~", QFileDialog::DontResolveSymlinks);
     _samplesPath->setText(sampleDir);
+   _samplesPath->setProperty("path", sampleDir);
 }
 
 
@@ -505,8 +507,15 @@ void Upload_popup::uploadContent()
    std::string m_price     = _price->text().toStdString();
 
    std::string assetName = "DCT";
-   std::string path = _contentPath->text().toStdString();
-   std::string samples_path = _samplesPath->text().toStdString();
+   
+   std::string path = "";
+   if (_contentPath->property("path").isValid())
+      path = _contentPath->property("path").toString().toStdString();
+
+   
+   std::string samples_path = "";
+   if (_samplesPath->property("path").isValid())
+      samples_path = _samplesPath->property("path").toString().toStdString();
 
    std::string title = _titleText->text().toStdString();
    std::string desc = _descriptionText->toPlainText().toStdString();
@@ -568,8 +577,8 @@ void Upload_popup::uploadContent()
       _descriptionText->setPlainText("");
       _lifeTime->setDate(QDate::currentDate());
       _price->setText("");
-      _contentPath->setText("");
-      _samplesPath->setText("");
+      _contentPath->setText("Content path");
+      _samplesPath->setText("Samples (optional)");
 
       msgBox->setWindowTitle("Success");
       msgBox->setText(tr("Content is submitted"));

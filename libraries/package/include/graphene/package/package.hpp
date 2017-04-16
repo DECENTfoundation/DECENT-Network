@@ -158,9 +158,11 @@ namespace decent { namespace package {
         boost::filesystem::path get_samples_path() const       { return get_package_dir() / "samples"; }
 
     public:
-        boost::filesystem::path get_package_dir() const        { return _parent_dir / _hash.str(); }
-        std::string             get_url() const                { return _url; }
-        decent::encrypt::CustodyData get_custody_data() const  { return _custody_data; };
+       boost::filesystem::path  get_package_dir() const        { return _parent_dir / _hash.str(); }
+       fc::ripemd160            get_hash() const               { return _hash; }
+       std::string              get_url() const                { return _url; }
+       int                      get_size() const;
+       decent::encrypt::CustodyData get_custody_data() const   { return _custody_data; };
 
     private:
         mutable std::recursive_mutex  _mutex;

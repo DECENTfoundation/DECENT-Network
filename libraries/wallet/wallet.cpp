@@ -133,7 +133,8 @@ namespace {
             elog("transfer ${id}: error: ${error}", ("id", id) ("error", error));
         }
     };
-
+   
+  
 
 } // namespace
 
@@ -141,6 +142,27 @@ namespace {
 namespace graphene { namespace wallet {
 
 namespace detail {
+
+   
+   
+   
+   
+struct submit_transfer_listener : public decent::package::EventListenerInterface {
+   
+   submit_transfer_listener(wallet_api_impl& wallet, fc::ripemd160 package_hash, content_submit_operation submit_op) : _wallet(wallet), _hash(package_hash), _op(submit_op) {
+      
+   }
+   
+   virtual void package_seed_complete();
+   
+private:
+   wallet_api_impl&          _wallet;
+   fc::ripemd160             _hash;
+   content_submit_operation  _op;
+};
+
+
+   
 class report_stats_listener:public report_stats_listener_base{
    public:
       string URI;
@@ -624,7 +646,7 @@ public:
       return ob.template as<T>();
    }
 
-   void set_operation_fees( signed_transaction& tx, const fee_schedule& s  )
+   void set_operation_fees( signed_transaction& tx, const fee_schedule& s  ) const
    {
       for( auto& op : tx.operations )
          s.set_fee(op);
@@ -2204,7 +2226,7 @@ public:
       } FC_CAPTURE_AND_RETHROW( (author)(URI)(price_asset_symbol)(price_amounts)(hash)(seeders)(quorum)(expiration)(publishing_fee_symbol_name)(publishing_fee_amount)(synopsis)(secret)(broadcast) )
    }
 
-   signed_transaction submit_content_new(string const& author,
+   fc::ripemd160 submit_content_new(string const& author,
                                          string const& content_dir,
                                          string const& samples_dir,
                                          string const& protocol,
@@ -2215,6 +2237,9 @@ public:
                                          string const& synopsis,
                                          bool broadcast/* = false */)
    {
+      auto& package_manager = decent::package::PackageManager::instance();
+
+      
       try
       {
          FC_ASSERT(!is_locked());
@@ -2225,7 +2250,6 @@ public:
 
 
          FC_ASSERT(DTC_asset, "Could not find asset matching DCT");
-         FC_ASSERT(DTC_asset, "Could not find asset");
          FC_ASSERT(false == price_amounts.empty());
 
 
@@ -2240,12 +2264,23 @@ public:
          sha_key._hash[3] = 0;
 #endif
          decent::encrypt::CustodyData cd;
+         
+         auto package_handle = package_manager.get_package(content_dir, samples_dir, sha_key);
+         
+         package_handle->create();
+         package_handle->wait_for_current_task();
+         
+         auto ex_ptr = package_handle->get_task_last_error();
+         if (ex_ptr) {
+            std::rethrow_exception(ex_ptr);
+         }
 
-         package_object pack = package_manager::instance().create_package(content_dir, samples_dir, sha_key, cd);
-         fc::ripemd160 hash = pack.get_hash();
+
+         //package_object pack = package_manager::instance().create_package(content_dir, samples_dir, sha_key, cd);
+         fc::ripemd160 hash = package_handle->get_hash();
 
          uint32_t quorum = std::max((vector<account_id_type>::size_type)1, seeders.size()/3);
-         uint64_t size = std::max(1, ( pack.get_size() + (1024 * 1024) -1 ) / (1024 * 1024));
+         uint64_t size = std::max(1, ( package_handle->get_size() + (1024 * 1024) -1 ) / (1024 * 1024));
 
 
          ShamirSecret ss(quorum, seeders.size(), secret);
@@ -2263,19 +2298,18 @@ public:
             submit_op.key_parts.push_back(cp);
 
             total_price_per_day += s->price.amount * size;
-            total_price_per_day += s->price.amount;
          }
 
          FC_ASSERT(time_point_sec(fc::time_point::now()) <= expiration);
 
          fc::microseconds duration = (expiration - fc::time_point::now());
          uint64_t days = duration.to_seconds() / 3600 / 24;
-
-         package_transfer_interface::transfer_id id = package_manager::instance().upload_package(pack, protocol, transfer_progress_printer::instance());
-
+         
+         
+         
          submit_op.author = author_account.id;
-         submit_op.URI = package_manager::instance().get_transfer_url(id);
-
+         //submit_op.URI = package_handle->get_url();
+         
          submit_content_utility(submit_op, price_amounts, price_asset_obj);
          submit_op.hash = hash;
          submit_op.size = size;
@@ -2286,14 +2320,16 @@ public:
          submit_op.synopsis = synopsis;
          submit_op.cd = cd;
 
-         FC_ASSERT( !submit_op.URI.empty(), "File transport error");
-
+         package_handle->add_event_listener(std::make_shared<submit_transfer_listener>(*this, hash, submit_op));
+         package_handle->start_seeding(protocol, false);
+         
+      /*
          signed_transaction tx;
          tx.operations.push_back( submit_op );
          set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
          tx.validate();
-
-         return sign_transaction( tx, broadcast );
+       */
+         return hash;
       }
       FC_CAPTURE_AND_RETHROW( (author)(content_dir)(samples_dir)(protocol)(price_asset_symbol)(price_amounts)(seeders)(expiration)(synopsis)(broadcast) )
    }
@@ -3989,7 +4025,7 @@ wallet_api::submit_content(string const& author,
    return my->submit_content(author, URI, price_asset_name, price_amounts, hash, size, seeders, quorum, expiration, publishing_fee_asset, publishing_fee_amount, synopsis, secret, cd, broadcast);
 }
 
-signed_transaction
+fc::ripemd160
 wallet_api::submit_content_new(string const& author,
                                string const& content_dir,
                                string const& samples_dir,
@@ -4315,4 +4351,21 @@ void fc::from_variant(const fc::variant& var, account_multi_index_type& vo)
 {
    const vector<account_object>& v = var.as<vector<account_object>>();
    vo = account_multi_index_type(v.begin(), v.end());
+}
+
+
+
+
+ void graphene::wallet::detail::submit_transfer_listener::package_seed_complete() {
+   auto& package_manager = decent::package::PackageManager::instance();
+   auto package_handle = package_manager.get_package(_hash);
+   
+   _op.URI = package_handle->get_url();
+   
+   signed_transaction tx;
+   tx.operations.push_back( _op );
+   _wallet.set_operation_fees( tx, _wallet._remote_db->get_global_properties().parameters.current_fees);
+   tx.validate();
+    _wallet.sign_transaction(tx, true);
+    
 }
