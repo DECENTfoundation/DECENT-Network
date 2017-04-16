@@ -31,7 +31,7 @@ namespace gui_wallet
       
       Q_OBJECT
    public:
-      TransactionsTab(Mainwindow_gui_wallet* pMainWindow);
+      TransactionsTab(QWidget* pParent);
       virtual void timeToUpdate(const std::string& result);
       virtual std::string getUpdateCommand();
 
@@ -55,7 +55,6 @@ namespace gui_wallet
       bool     m_doUpdate = true;
       
       std::map<std::string, std::string> _user_id_cache;
-      Mainwindow_gui_wallet* m_pMainWindow;
    };
 }
 

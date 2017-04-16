@@ -82,8 +82,8 @@ public:
     QString getFilterText()const;
     QComboBox* usersCombo();
     DecentButton* importButton();
-
-    
+    DecentSmallButton* getSendButton();
+   
     int GetMyCurrentTabIndex()const {
         return m_main_tabs.currentIndex();
     }   
@@ -127,7 +127,9 @@ private:
     Upload_tab          m_Upload_tab;
     Overview_tab        m_Overview_tab;
     PurchasedTab        m_Purchased_tab;
-    
+   
+    DecentSmallButton*  sendButton;
+   
     std::vector<TabContentManager*>  m_allTabs;
     int                              m_currentTab = -1;
 

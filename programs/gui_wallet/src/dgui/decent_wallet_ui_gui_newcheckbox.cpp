@@ -19,7 +19,7 @@ NewCheckBox::NewCheckBox(int a_index)
     :
       m_index(a_index)
 {
-    setStyleSheet(qsStyleSheet.c_str());
+    setStyleSheet(d_StyleSheet);
 }
 
 

@@ -4165,21 +4165,13 @@ vector<buying_object> wallet_api::get_open_buyings_by_consumer( const string& ac
          if (!content)
             continue;
 
-#ifdef PRICE_REGIONS
-         optional<asset> op_price = content->price.GetPrice(buyobj.region_code_from);
-         if (!op_price)
-            continue;
-#endif
-
-         std::string synopsis = json_unescape_string(content->synopsis);
-         std::string title = synopsis;
+         std::string synopsis = json_unescape_string(buyobj.synopsis);
+         std::string title;
          std::string description;
 
-         try {
-            auto synopsis_parsed = nlohmann::json::parse(synopsis);
-            title = synopsis_parsed["title"].get<std::string>();
-            description = synopsis_parsed["description"].get<std::string>();
-         } catch (...) {}
+         ContentObjectPropertyManager synopsis_parser(synopsis);
+         title = synopsis_parser.get<ContentObjectTitle>();
+         description = synopsis_parser.get<ContentObjectDescription>();
 
          std::string search_term = term;
          boost::algorithm::to_lower(search_term);
@@ -4194,18 +4186,7 @@ vector<buying_object> wallet_api::get_open_buyings_by_consumer( const string& ac
          result.emplace_back(buying_object_ex(bobjects[i], *status));
          buying_object_ex& bobj = result.back();
 
-#ifdef PRICE_REGIONS
-         bobj.price = *op_price;
-#else
-         bobj.price = content->price;
-#endif
-         bobj.size = content->size;
-         bobj.rating = content->AVG_rating;
-         bobj.synopsis = content->synopsis;
-
          bobj.author_account = account_id_or_name;
-         bobj.created = content->created;
-         bobj.expiration = content->expiration;
          bobj.times_bought = content->times_bought;
          bobj.hash = content->_hash;
       }

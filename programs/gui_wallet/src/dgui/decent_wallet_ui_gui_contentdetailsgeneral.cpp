@@ -12,7 +12,7 @@
 #include <QPushButton>
 
 using namespace gui_wallet;
-ContentDetailsGeneral::ContentDetailsGeneral(Mainwindow_gui_wallet* pMainWindow) : ContentDetailsBase(pMainWindow){
+ContentDetailsGeneral::ContentDetailsGeneral(QWidget* pParent) : ContentDetailsBase(pParent){
    QHBoxLayout* image_layout = new QHBoxLayout;
    m_label.setText("Get it!");
    m_label.setFixedWidth(178);
@@ -69,7 +69,7 @@ void ContentDetailsGeneral::LabelPushCallbackGUI()
    std::string str_error;
    try
    {
-      m_pMainWindow->RunTask(downloadCommand, a_result);
+      RunTask(downloadCommand, a_result);
    }
    catch(std::exception const& ex)
    {

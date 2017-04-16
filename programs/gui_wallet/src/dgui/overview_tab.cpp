@@ -24,6 +24,7 @@ using namespace nlohmann;
 
 Overview_tab::Overview_tab(class Mainwindow_gui_wallet* a_pPar)
 : m_pPar(a_pPar)
+, table_widget(this)
 {
    table_widget.set_columns({
       {"Account ID", 40, "id"},
