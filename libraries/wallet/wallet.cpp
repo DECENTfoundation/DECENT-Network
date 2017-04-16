@@ -2319,11 +2319,9 @@ public:
          submit_op.publishing_fee = days * total_price_per_day;
          submit_op.synopsis = synopsis;
          submit_op.cd = cd;
-         
-
-         package_handle->start_seeding(protocol, false);
 
          package_handle->add_event_listener(std::make_shared<submit_transfer_listener>(*this, hash, submit_op));
+         package_handle->start_seeding(protocol, false);
          
       /*
          signed_transaction tx;

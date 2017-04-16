@@ -16,7 +16,7 @@ namespace decent { namespace package {
 
 
         bool parse_ipfs_url(const std::string& url, std::string& obj_id) {
-            const std::string ipfs = "/ipfs/";
+            const std::string ipfs = "ipfs:";
             if (url.substr(0, ipfs.size()) == ipfs) {
                 obj_id = url.substr(ipfs.size());
                 boost::algorithm::trim_left_if(obj_id, [](char ch) { return ch == '/'; });
@@ -196,7 +196,7 @@ namespace decent { namespace package {
                 FC_THROW("Unable to find root hash in 'ipfs add' results");
             }
 
-            _package._url = "/ipfs/" + root_hash;
+            _package._url = "ipfs:" + root_hash;
 
             _client.PinAdd(root_hash); // just in case
 
