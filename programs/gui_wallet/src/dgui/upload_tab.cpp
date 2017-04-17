@@ -300,10 +300,8 @@ void Upload_popup::onGrabPublishers() {
    QVBoxLayout* dialog_layout = new QVBoxLayout(_seeders_dialog);
    
    _seeder_table = new DecentTable(this);
-   _seeder_table->setRowCount(3);
-
    _seeder_table->set_columns({
-      {"", -50},
+      {"", -25},
       {"Seeder", 10, "rating"},
       {"Price",  10, "price"},
       {"Size" ,  10, "size"}
@@ -321,7 +319,11 @@ void Upload_popup::onGrabPublishers() {
    _seeder_ok->setFont(TabButtonFont());
 
    auto publishers = json::parse(a_result);
-
+   _seeder_table->setRowCount(publishers.size());
+   
+   _seeders_checkbox.clear();
+   _seeders_checkbox.reserve(publishers.size());
+                             
    for (int r = 0; r < publishers.size(); ++r) {
       
       _seeders_checkbox[r] = new QCheckBox(_seeders_dialog);

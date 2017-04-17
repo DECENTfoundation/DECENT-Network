@@ -94,13 +94,13 @@ namespace gui_wallet
         DecentButton*    _cancel_button;
         DecentButton*    _seeder_ok;
         DecentTable*     _seeder_table;
-        QCheckBox*       _seeders_checkbox[3];
        
         QTimer           m_getPublishersTimer;
         QTimer*          _buttonStatusCheck;
         QDialog*         _seeders_dialog;
        
        std::map<std::string, double> _publisherIdToPriceMap;
+       std::vector<QCheckBox*>       _seeders_checkbox;
        std::vector<std::string>      _checkedSeeders;
 
     public:
