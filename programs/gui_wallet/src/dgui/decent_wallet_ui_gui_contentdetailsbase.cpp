@@ -60,7 +60,7 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details, bool bSil
     
     std::string result;
     try {
-        RunTask("get_rating \"" + GlobalEvents::instance().getCurrentUser() + "\" \"" + m_pContentInfo->URI + "\"", result);
+        RunTask("get_rating \"" + Globals::instance().getCurrentUser() + "\" \"" + m_pContentInfo->URI + "\"", result);
         m_currentMyRating = QString::fromStdString(result).toInt(); // Returns 0 on fail so everything will work as intended
         
     } catch (...) {} // Ignore for now;
@@ -256,7 +256,7 @@ void ContentDetailsBase::MouseClickedStar(int index) {
     
     std::string result;
     try {
-        RunTask("leave_rating \"" + GlobalEvents::instance().getCurrentUser() + "\" \"" + m_pContentInfo->URI + "\" " + std::to_string(index + 1) + " true", result);
+        RunTask("leave_rating \"" + Globals::instance().getCurrentUser() + "\" \"" + m_pContentInfo->URI + "\" " + std::to_string(index + 1) + " true", result);
         
         m_currentMyRating = (index + 1);
     } catch (...) {} // Ignore for now;

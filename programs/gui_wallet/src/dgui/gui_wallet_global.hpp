@@ -1,17 +1,16 @@
 #pragma once
 
 #include <QObject>
-#include <QDateTime>
-#include <QDate>
+#include <QMouseEvent>
 #include <QEvent>
-#include <QTime>
 #include <QWidget>
 #include <QLabel>
 #include <QTableWidget>
-#include <QMouseEvent>
-#include <QHeaderView>
+#include <chrono>
 #include <iostream>
 #include "gui_design.hpp"
+
+#include <decent/wallet_utility/wallet_utility.hpp>
 
 #include <numeric>
 #if defined( _MSC_VER )
@@ -63,9 +62,13 @@ delete msgBox;                                      \
    Q_ASSERT(_b_condition_); \
 }
 
+class QEvent;
+class QTimer;
+
 namespace gui_wallet
 {
    std::string CalculateRemainingTime(QDateTime const& dt, QDateTime const& dtFuture);
+   std::string CalculateRemainingTime_Behind(QDateTime const& dt, QDateTime const& dtFuture);
    void ShowMessageBox(QString const& strTitle,
                        QString const& strMessage,
                        QString const& strDetailedText = QString());
@@ -75,39 +78,69 @@ namespace gui_wallet
    std::string unescape_string(const std::string& s);
    std::string escape_string(const std::string& s);
 
-   //
-   // GlobalEvents
-   //
-   class GlobalEvents : public QObject {
+   using WalletAPI = decent::wallet_utility::WalletAPI;
+
+   class WalletOperator : public QObject
+   {
       Q_OBJECT
+   public:
+      WalletOperator();
+      ~WalletOperator();
+
+      public slots:
+      void slot_connect();
+   signals:
+      void signal_connected(std::string const& str_error);
+   public:
+      WalletAPI m_wallet_api;
+   };
+   //
+   // Globals
+   //
+   class Globals : public QObject
+   {
+      Q_OBJECT
+
    private:
-      
-      std::string 	_currentUser;
-      
-   private:
-      GlobalEvents() { }
-      GlobalEvents(const GlobalEvents& other) { }
+      Globals();
+      Globals(Globals const&) = delete;
+      Globals(Globals&&) = delete;
+      ~Globals();
       
    public:
-      static GlobalEvents& instance() {
-         static GlobalEvents theOne;
-         return theOne;
-      }
+      static Globals& instance();
 
-      std::string getCurrentUser() const { return _currentUser; }
-      void setCurrentUser(const std::string& user) { _currentUser = user; emit currentUserChanged(_currentUser); }
-      
-      void setWalletUnlocked() { emit walletUnlocked(); }
-      
-      void setWalletConnected(bool isNew) { emit walletConnected(isNew); }
-      void setWalletError(std::string error) { emit walletConnectionError(error); }
-      
+      std::string getCurrentUser() const;
+      bool isConnected() const;
+      WalletAPI& getWallet() const;
+
+      void setCurrentUser(std::string const& user);
+      void setWalletUnlocked();
+      void setWalletConnected();
+      void setWalletError(std::string const& error);
    signals:
-      void currentUserChanged(std::string user);
+      void signal_connect();  // for internal use
+   private slots:
+      void slot_connected(std::string const& str_error);
+      void slot_timer();
+
+   signals:
+      void connectingProgress(std::string const& str_progress);
+      void currentUserChanged(std::string const& user);
+      void statusShowMessage(QString const& str_message, int timeout = 0);
+      void statusClearMessage();
       void walletUnlocked();
       
-      void walletConnectionError(std::string message);
-      void walletConnected(bool isNew);
+      void walletConnectionError(std::string const& message);
+      void walletConnected();
+
+   private:
+      bool m_connected;
+      WalletOperator* m_p_wallet_operator;
+      QThread* m_p_wallet_operator_thread;
+      QTimer* m_p_timer;
+      std::string m_str_currentUser;
+      std::chrono::steady_clock::time_point m_tp_started;
    };
 
    
@@ -142,7 +175,7 @@ namespace gui_wallet
    {
       Q_OBJECT;
    public:
-      DecentSmallButton(const QString& normalImg, const QString& highlightedImg );
+      DecentSmallButton(const QString& normalImg, const QString& highlightedImg, QWidget* pParent = nullptr);
 
       void unhighlight();
       void highlight();

@@ -157,7 +157,7 @@ void PurchasedTab::timeToUpdate(const std::string& result) {
       contentObject.price.amount /= GRAPHENE_BLOCKCHAIN_PRECISION;
       contentObject.AVG_rating = content["average_rating"].get<double>() / 1000;
 
-      EventPassthrough<DecentSmallButton>* info_icon = new EventPassthrough<DecentSmallButton>(icon_popup, icon_popup_white);
+      EventPassthrough<DecentSmallButton>* info_icon = new EventPassthrough<DecentSmallButton>(icon_popup, icon_popup_white, m_pTableWidget);
       info_icon->setAlignment(Qt::AlignCenter);
       m_pTableWidget->setCellWidget(iIndex, 6, info_icon);
 
@@ -216,7 +216,7 @@ void PurchasedTab::timeToUpdate(const std::string& result) {
          m_pTableWidget->item(iIndex, 5)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
       } else {
 
-         EventPassthrough<DecentSmallButton>* extract_icon = new EventPassthrough<DecentSmallButton>(icon_export, icon_export_white);
+         EventPassthrough<DecentSmallButton>* extract_icon = new EventPassthrough<DecentSmallButton>(icon_export, icon_export_white, m_pTableWidget);
          extract_icon->setAlignment(Qt::AlignCenter);
 
 
@@ -241,7 +241,7 @@ void PurchasedTab::timeToUpdate(const std::string& result) {
 
 std::string PurchasedTab::getUpdateCommand()
 {
-   auto& global_instance = gui_wallet::GlobalEvents::instance();
+   auto& global_instance = gui_wallet::Globals::instance();
    std::string str_current_username = global_instance.getCurrentUser();
 
    if ( str_current_username == "" )
@@ -266,7 +266,7 @@ void PurchasedTab::slot_ExtractionDirSelected(QString const& path) {
    std::string strExtractID = _current_content[m_iActiveItemIndex].id;
    std::string strExtractHash = _current_content[m_iActiveItemIndex].hash;
    
-   auto& global_instance = gui_wallet::GlobalEvents::instance();
+   auto& global_instance = gui_wallet::Globals::instance();
    std::string str_current_username = global_instance.getCurrentUser();
    
    try {

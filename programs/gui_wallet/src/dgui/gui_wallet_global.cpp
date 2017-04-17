@@ -2,6 +2,13 @@
 #include "gui_wallet_global.hpp"
 
 #include <QMessageBox>
+#include <QThread>
+#include <QDateTime>
+#include <QDate>
+#include <QTime>
+#include <QTimer>
+#include <QHeaderView>
+
 #include <iostream>
 
 namespace gui_wallet
@@ -20,28 +27,44 @@ void ShowMessageBox(QString const& strTitle,
    // alternatively can connect to delete later as below
    //pMessageBox->open(pMessageBox, SLOT(deleteLater()));
 }
-   
-std::string CalculateRemainingTime(QDateTime const& dt, QDateTime const& dtFuture)
+
+struct CalendarDuration
 {
-   if (dtFuture <= dt)
-      return "expired";
+   enum esign {sign_positive, sign_negative} sign = sign_positive;
+   uint32_t seconds = 0;
+   uint32_t minutes = 0;
+   uint32_t hours = 0;
+   uint32_t days = 0;
+   uint32_t months = 0;
+   uint32_t years = 0;
+};
+
+static CalendarDuration CalculateCalendarDuration(QDateTime const& dt, QDateTime const& dtFuture)
+{
+   if (dtFuture == dt)
+      return CalendarDuration();
+   else if (dtFuture < dt)
+   {
+      CalendarDuration duration = CalculateCalendarDuration(dtFuture, dt);
+      duration.sign = CalendarDuration::sign_negative;
+      return duration;
+   }
    else
    {
-      QDate d = dt.date();
-      QDate dFuture = dtFuture.date();
+      QDateTime dt_scan = dt;
 
       int iMonthsDiff = 0, iMonthsStep = 12*12;
       while (true)
       {
-         QDate d_temp = d.addMonths(iMonthsStep);
-         if (d_temp > dFuture &&
+         QDateTime dt_temp = dt_scan.addMonths(iMonthsStep);
+         if (dt_temp > dtFuture &&
              1 == iMonthsStep)
             break;
-         else if (d_temp > dFuture)
+         else if (dt_temp > dtFuture)
             iMonthsStep /= 12;
          else
          {
-            d = d_temp;
+            dt_scan = dt_temp;
             iMonthsDiff += iMonthsStep;
          }
       }
@@ -49,21 +72,20 @@ std::string CalculateRemainingTime(QDateTime const& dt, QDateTime const& dtFutur
       int iYearsDiff = iMonthsDiff / 12;
       iMonthsDiff %= 12;
 
-      QDateTime dt2(d, dt.time());
       // 60*24 minutes (a day) = 12*5*12*2 minutes = 12*12*10
       // so the step here is almost a day
       int iMinutesDiff = 0, iMinutesStep = 12 * 12 * 12;
       while (true)
       {
-         QDateTime dt2_temp = dt2.addSecs(60 * iMinutesStep);
-         if (dt2_temp > dtFuture &&
+         QDateTime dt_temp = dt_scan.addSecs(60 * iMinutesStep);
+         if (dt_temp > dtFuture &&
              1 == iMinutesStep)
             break;
-         else if (dt2_temp > dtFuture)
+         else if (dt_temp > dtFuture)
             iMinutesStep /= 12;
          else
          {
-            dt2 = dt2_temp;
+            dt_scan = dt_temp;
             iMinutesDiff += iMinutesStep;
          }
       }
@@ -74,18 +96,37 @@ std::string CalculateRemainingTime(QDateTime const& dt, QDateTime const& dtFutur
       int iDaysDiff = iHoursDiff / 24;
       iHoursDiff %= 24;
 
+      CalendarDuration result;
+      result.years = iYearsDiff;
+      result.months = iMonthsDiff;
+      result.days = iDaysDiff;
+      result.hours = iHoursDiff;
+      result.minutes = iMinutesDiff;
+      result.seconds = dt_scan.secsTo(dtFuture);
+
+      return result;
+   }
+}
+
+std::string CalculateRemainingTime(QDateTime const& dt, QDateTime const& dtFuture)
+{
+   CalendarDuration duration = CalculateCalendarDuration(dt, dtFuture);
+   if (duration.sign == CalendarDuration::sign_negative)
+      return "expired";
+   else
+   {
       std::vector<std::string> arrParts;
 
-      if (iYearsDiff)
-         arrParts.push_back(std::to_string(iYearsDiff) + " y");
-      if (iMonthsDiff)
-         arrParts.push_back(std::to_string(iMonthsDiff) + " m");
-      if (iDaysDiff)
-         arrParts.push_back(std::to_string(iDaysDiff) + " d");
-      if (iHoursDiff)
-         arrParts.push_back(std::to_string(iHoursDiff) + " h");
-      if (iMinutesDiff)
-         arrParts.push_back(std::to_string(iMinutesDiff) + " min");
+      if (duration.years)
+         arrParts.push_back(std::to_string(duration.years) + " y");
+      if (duration.months)
+         arrParts.push_back(std::to_string(duration.months) + " m");
+      if (duration.days)
+         arrParts.push_back(std::to_string(duration.days) + " d");
+      if (duration.hours)
+         arrParts.push_back(std::to_string(duration.hours) + " h");
+      if (duration.minutes)
+         arrParts.push_back(std::to_string(duration.minutes) + " min");
 
       std::string str_result;
       if (arrParts.empty())
@@ -98,6 +139,61 @@ std::string CalculateRemainingTime(QDateTime const& dt, QDateTime const& dtFutur
             str_result += " " + arrParts[1];
       }
       
+      return str_result;
+   }
+}
+
+std::string CalculateRemainingTime_Behind(QDateTime const& dt, QDateTime const& dtFuture)
+{
+   CalendarDuration duration = CalculateCalendarDuration(dt, dtFuture);
+   if (duration.sign == CalendarDuration::sign_negative)
+      return std::string();
+   else
+   {
+      std::string str_result;
+      std::vector<std::string> arrParts;
+
+      if (duration.years > 1)
+         arrParts.push_back(std::to_string(duration.years) + " years");
+      else if (duration.years)
+         arrParts.push_back("a year");
+      if (duration.months > 1)
+         arrParts.push_back(std::to_string(duration.months) + " months");
+      else if (duration.months)
+         arrParts.push_back("a month");
+      if (duration.days > 1)
+         arrParts.push_back(std::to_string(duration.days) + " days");
+      else if (duration.days)
+         arrParts.push_back("a day");
+      if (duration.hours > 1)
+         arrParts.push_back(std::to_string(duration.hours) + " hours");
+      else if (duration.hours)
+         arrParts.push_back("an hour");
+      if (duration.minutes > 1)
+         arrParts.push_back(std::to_string(duration.minutes) + " minutes");
+      else if (duration.minutes)
+         arrParts.push_back("a minute");
+      if (duration.seconds > 1)
+         arrParts.push_back(std::to_string(duration.seconds) + " seconds");
+      else if (duration.seconds)
+         arrParts.push_back("a second");
+
+      if (arrParts.empty())
+         return std::string();
+      else if (arrParts.size() == 1 &&
+               duration.seconds < 30)
+         return std::string();
+      else
+      {
+         str_result += "syncing up with blockchain: ";
+         str_result += arrParts[0];
+
+         if (arrParts.size() > 1)
+            str_result += " and " + arrParts[1];
+
+         str_result += " to go";
+      }
+
       return str_result;
    }
 }
@@ -316,12 +412,148 @@ std::string escape_string(const std::string& s)
    return result;
 }
 
+//
+// WalletOperator
+//
+WalletOperator::WalletOperator()
+: QObject(nullptr)
+, m_wallet_api()
+{
 
+}
+
+WalletOperator::~WalletOperator()
+{
+
+}
+
+void WalletOperator::slot_connect()
+{
+   std::string str_error;
+   try
+   {
+      m_wallet_api.Connent();
+   }
+   catch(std::exception const& ex)
+   {
+      str_error = ex.what();
+   }
+   emit signal_connected(str_error);
+}
+//
+// Globals
+//
+Globals::Globals()
+: m_connected(false)
+, m_p_wallet_operator(new WalletOperator())
+, m_p_wallet_operator_thread(new QThread(this))
+, m_p_timer(new QTimer())
+, m_str_currentUser()
+, m_tp_started(std::chrono::steady_clock::now())
+{
+   m_p_wallet_operator->moveToThread(m_p_wallet_operator_thread);
+   m_p_wallet_operator_thread->start();
+
+   QObject::connect(this, &Globals::signal_connect,
+                    m_p_wallet_operator, &WalletOperator::slot_connect);
+   QObject::connect(m_p_wallet_operator, &WalletOperator::signal_connected,
+                    this, &Globals::slot_connected);
+
+   emit signal_connect();
+
+   m_p_timer->setSingleShot(true);
+   m_p_timer->start(1000);
+   QObject::connect(m_p_timer, &QTimer::timeout,
+                    this, &Globals::slot_timer);
+}
+
+Globals::~Globals()
+{
+   m_p_wallet_operator_thread->quit();
+   m_p_wallet_operator_thread->wait();
+   delete m_p_wallet_operator_thread;
+
+   m_p_wallet_operator->m_wallet_api.SaveWalletFile();
+}
+
+Globals& Globals::instance()
+{
+   static Globals theOne;
+   return theOne;
+}
+
+std::string Globals::getCurrentUser() const
+{
+   return m_str_currentUser;
+}
+
+bool Globals::isConnected() const
+{
+   return m_connected;
+}
+
+WalletAPI& Globals::getWallet() const
+{
+   return m_p_wallet_operator->m_wallet_api;
+}
+
+void Globals::setCurrentUser(std::string const& user)
+{
+   m_str_currentUser = user;
+   emit currentUserChanged(m_str_currentUser);
+}
+
+void Globals::setWalletUnlocked()
+{
+   emit walletUnlocked();
+}
+
+void Globals::setWalletConnected()
+{
+   m_connected = true;
+   emit walletConnected();
+}
+
+void Globals::setWalletError(std::string const& error)
+{
+   emit walletConnectionError(error);
+}
+
+void Globals::slot_connected(std::string const& str_error)
+{
+   m_connected = true;
+   if (str_error.empty())
+      emit walletConnected();
+   else
+      emit walletConnectionError(str_error);
+}
+
+void Globals::slot_timer()
+{
+   auto duration = std::chrono::steady_clock::now() - m_tp_started;
+
+   if (false == m_connected)
+   {
+      if (duration > std::chrono::seconds(40))
+         emit connectingProgress("still connecting");
+      else if (duration > std::chrono::seconds(30))
+         emit connectingProgress("verifying the local databse, probably the local database is corrupted");
+      else if (duration > std::chrono::seconds(20))
+         emit connectingProgress("verifying the local databse");
+      else
+         emit connectingProgress("connecting");
+
+      m_p_timer->start(1000);
+   }
+   else
+      emit connectingProgress(std::string());
+}
 //
 // DecentSmallButton
 //
 
-DecentSmallButton::DecentSmallButton(const QString& normalImg, const QString& highlightedImg )
+DecentSmallButton::DecentSmallButton(const QString& normalImg, const QString& highlightedImg, QWidget* pParent/* = nullptr*/)
+: QLabel(pParent)
 {
    normalImage.load(normalImg);
    highlightedImage.load(highlightedImg);

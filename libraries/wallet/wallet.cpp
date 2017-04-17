@@ -2800,6 +2800,11 @@ public:
       return it->second;
    }
 
+   fc::time_point_sec head_block_time() const
+   {
+      return _remote_db->head_block_time();
+   }
+
    string                  _wallet_filename;
    wallet_data             _wallet;
 
@@ -4338,6 +4343,10 @@ void wallet_api::set_transfer_logs(bool enable) const {
 // FC_ASSERT(!is_locked());
 }
 
+fc::time_point_sec wallet_api::head_block_time() const
+{
+   return my->head_block_time();
+}
 
 } } // graphene::wallet
 

@@ -48,7 +48,7 @@ namespace gui_wallet
       
    public slots:
       
-      void currentUserChanged(std::string user);
+      void currentUserChanged(std::string const&);
       
    private:
       QTimer   m_contentUpdateTimer;
