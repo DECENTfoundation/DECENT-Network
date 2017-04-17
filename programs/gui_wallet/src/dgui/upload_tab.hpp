@@ -73,12 +73,11 @@ namespace gui_wallet
         void onGrabPublishers();
         void uploadCanceled();
         void updateUploadButtonStatus();
-        void stateChanged(const int state);
         void seederOkSlot();
        
     public:
         void onPublishersDone(void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result);
-       
+
     private:
         Mainwindow_gui_wallet* m_pMainWindow;
        
@@ -94,9 +93,8 @@ namespace gui_wallet
         DecentButton*    _upload_button;
         DecentButton*    _cancel_button;
         DecentButton*    _seeder_ok;
-        DecentTable*     seederTable;
+        DecentTable*     _seeder_table;
         QCheckBox*       _seeders_checkbox[3];
-        QVBoxLayout*     dialog_layout;
        
         QTimer           m_getPublishersTimer;
         QTimer*          _buttonStatusCheck;
