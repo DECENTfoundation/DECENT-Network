@@ -1836,6 +1836,12 @@ namespace graphene { namespace wallet {
           * @ingroup WalletCLI
           */
          void set_transfer_logs(bool enable) const;
+
+         /**
+          * @brief Query the last local block
+          * @return the block time
+          */
+         fc::time_point_sec head_block_time() const;
       };
 
    } }
@@ -2029,4 +2035,5 @@ FC_API( graphene::wallet::wallet_api,
            (remove_package)
            (print_all_transfers)
            (set_transfer_logs)
+           (head_block_time)
 )

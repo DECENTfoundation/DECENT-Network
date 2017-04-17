@@ -5,6 +5,7 @@
 #include <string>
 #include <mutex>
 #include <vector>
+#include <chrono>
 
 namespace graphene
 {
@@ -41,6 +42,7 @@ namespace wallet_utility
       bool Connected();
       bool IsNew();
       bool IsLocked();
+      std::chrono::system_clock::time_point HeadBlockTime();
       void SetPassword(string const& str_password);
       void Unlock(string const& str_password);
       void SaveWalletFile();

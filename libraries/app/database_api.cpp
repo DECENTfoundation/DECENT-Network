@@ -89,6 +89,7 @@ namespace graphene { namespace app {
       optional<block_header> get_block_header(uint32_t block_num)const;
       optional<signed_block> get_block(uint32_t block_num)const;
       processed_transaction get_transaction( uint32_t block_num, uint32_t trx_in_block )const;
+      fc::time_point_sec head_block_time()const;
       
       // Globals
       chain_property_object get_chain_properties()const;
@@ -378,6 +379,11 @@ namespace graphene { namespace app {
    {
       return my->get_transaction( block_num, trx_in_block );
    }
+
+   fc::time_point_sec database_api::head_block_time() const
+   {
+      return my->head_block_time();
+   }
    
    optional<signed_transaction> database_api::get_recent_transaction_by_id( const transaction_id_type& id )const
    {
@@ -395,7 +401,12 @@ namespace graphene { namespace app {
       FC_ASSERT( opt_block->transactions.size() > trx_num );
       return opt_block->transactions[trx_num];
    }
-   
+
+   fc::time_point_sec database_api_impl::head_block_time() const
+   {
+      return _db.head_block_time();
+   }
+
    //////////////////////////////////////////////////////////////////////
    //                                                                  //
    // Globals                                                          //

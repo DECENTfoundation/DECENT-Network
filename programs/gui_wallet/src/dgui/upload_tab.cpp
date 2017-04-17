@@ -439,7 +439,7 @@ void Upload_popup::updateUploadButtonStatus() {
    if (desc.empty())
       isValid = false;
    
-   if (GlobalEvents::instance().getCurrentUser().empty())
+   if (Globals::instance().getCurrentUser().empty())
       isValid = false;
    
 
@@ -539,7 +539,7 @@ void Upload_popup::uploadContent()
 
 
    std::string submitCommand = "submit_content_new";
-   submitCommand += " " + GlobalEvents::instance().getCurrentUser();    // author
+   submitCommand += " " + Globals::instance().getCurrentUser();    // author
    submitCommand += " \"" + path + "\"";                                // URI
    submitCommand += " \"" + samples_path + "\"";                        // Samples
    submitCommand += " \"ipfs\"";                                        // Protocol
@@ -625,7 +625,7 @@ Upload_tab::Upload_tab(Mainwindow_gui_wallet* parent)
     upload_button->setText("Publish");
     upload_button->setMinimumWidth(102);
     upload_button->setMinimumHeight(54);
-    std::string currentUserName = GlobalEvents::instance().getCurrentUser();
+    std::string currentUserName = Globals::instance().getCurrentUser();
     if(currentUserName.empty())
       upload_button->setEnabled(false);
     else
@@ -653,12 +653,14 @@ Upload_tab::Upload_tab(Mainwindow_gui_wallet* parent)
     
     connect(&m_filterLineEdit, SIGNAL(textChanged(QString)), this, SLOT(onTextChanged(QString)));
     connect(upload_button, SIGNAL(LabelClicked()), this, SLOT(uploadPopup()));
-    connect(&GlobalEvents::instance(), SIGNAL(currentUserChanged(std::string)), this, SLOT(updateContents()));
+
+   QObject::connect(&Globals::instance(), &Globals::currentUserChanged,
+                    this, &Upload_tab::updateContents);
 }
 
 void Upload_tab::updateContents()
 {
-   std::string currentUserName = GlobalEvents::instance().getCurrentUser();
+   std::string currentUserName = Globals::instance().getCurrentUser();
    if(currentUserName.empty())
       upload_button->setEnabled(false);
    else
@@ -715,7 +717,7 @@ void Upload_tab::timeToUpdate(const std::string& result) {
 std::string Upload_tab::getUpdateCommand() {
    std::string filterText = m_filterLineEdit.text().toStdString();
    
-   std::string currentUserName = GlobalEvents::instance().getCurrentUser();
+   std::string currentUserName = Globals::instance().getCurrentUser();
    
    if (currentUserName.empty()) {
       return "";
@@ -764,7 +766,7 @@ void Upload_tab::content_was_bought() {
    }
    
     _parent->GoToThisTab(4, "");
-    _parent->UpdateAccountBalances(GlobalEvents::instance().getCurrentUser());
+    _parent->UpdateAccountBalances(Globals::instance().getCurrentUser());
 }
 
 void Upload_tab::ShowDigitalContentsGUI() {

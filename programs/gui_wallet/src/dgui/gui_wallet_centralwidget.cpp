@@ -340,14 +340,17 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     m_main_layout.addLayout(tab_lay);
     //m_main_layout.addWidget(&m_main_tabs);
     
-    QStatusBar* status = new QStatusBar(this);
-    status->showMessage(tr("Status: "));
-    m_main_layout.addWidget(status);
-    
+   QStatusBar* status = new QStatusBar(this);
+   m_main_layout.addWidget(status);
+   QObject::connect(&Globals::instance(), &Globals::statusShowMessage,
+                    status, &QStatusBar::showMessage);
+   QObject::connect(&Globals::instance(), &Globals::statusClearMessage,
+                    status, &QStatusBar::clearMessage);
+
     a_pAllLayout->addLayout(&m_main_layout);
     
    connect(&m_main_tabs, SIGNAL(currentChanged(int)), this, SLOT(tabChanged(int)));
-   connect(&GlobalEvents::instance(), SIGNAL(walletUnlocked()), this, SLOT(walletUnlockedSlot()));
+   connect(&Globals::instance(), SIGNAL(walletUnlocked()), this, SLOT(walletUnlockedSlot()));
    
 }
 

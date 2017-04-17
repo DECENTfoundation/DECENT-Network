@@ -152,7 +152,7 @@ void BrowseContentTab::content_was_bought() {
       _content_popup = NULL;
    }
    _parent->GoToThisTab(4, "");
-   _parent->UpdateAccountBalances(GlobalEvents::instance().getCurrentUser());
+   _parent->UpdateAccountBalances(Globals::instance().getCurrentUser());
    
 
 }

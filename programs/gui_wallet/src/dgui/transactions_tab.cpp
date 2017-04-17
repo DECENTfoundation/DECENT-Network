@@ -64,8 +64,9 @@ TransactionsTab::TransactionsTab(QWidget* pParent)
    main_layout.addWidget(&tablewidget);
    setLayout(&main_layout);
    
-   
-   connect(&GlobalEvents::instance(), SIGNAL(currentUserChanged(std::string)), this, SLOT(currentUserChanged(std::string)));
+
+   QObject::connect(&Globals::instance(), &Globals::currentUserChanged,
+                    this, &TransactionsTab::currentUserChanged);
 
 }
 
@@ -142,7 +143,7 @@ void TransactionsTab::timeToUpdate(const std::string& result) {
 }
 
 
-void TransactionsTab::currentUserChanged(std::string userName) {
+void TransactionsTab::currentUserChanged(std::string const& userName) {
    user.setText(QString::fromStdString(userName));
 }
 
