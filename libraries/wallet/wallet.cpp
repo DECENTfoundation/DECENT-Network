@@ -91,7 +91,7 @@
 CryptoPP::AutoSeededRandomPool randomGenerator;
 
 using namespace graphene::package;
-
+using namespace decent::package;
 
 namespace {
 
@@ -147,18 +147,19 @@ namespace detail {
    
    
    
-struct submit_transfer_listener : public decent::package::EventListenerInterface {
+struct submit_transfer_listener : public EventListenerInterface {
    
-   submit_transfer_listener(wallet_api_impl& wallet, fc::ripemd160 package_hash, content_submit_operation submit_op) : _wallet(wallet), _hash(package_hash), _op(submit_op) {
-      
+   submit_transfer_listener(wallet_api_impl& wallet, shared_ptr<PackageInfo> info, const content_submit_operation& op, const std::string& protocol) : _wallet(wallet), _info(info), _op(op), _protocol(protocol) {
    }
    
    virtual void package_seed_complete();
+   virtual void package_creation_complete();
    
 private:
    wallet_api_impl&          _wallet;
-   fc::ripemd160             _hash;
+   shared_ptr<PackageInfo>   _info;
    content_submit_operation  _op;
+   std::string               _protocol;
 };
 
 
@@ -2247,12 +2248,14 @@ public:
 
          fc::optional<asset_object> DTC_asset = get_asset("DCT");
          fc::optional<asset_object> price_asset_obj = get_asset(price_asset_symbol);
-
-
          FC_ASSERT(DTC_asset, "Could not find asset matching DCT");
          FC_ASSERT(false == price_amounts.empty());
+         FC_ASSERT(time_point_sec(fc::time_point::now()) <= expiration);
 
-
+         
+         
+         
+         
          CryptoPP::Integer secret(randomGenerator, 512);
          fc::sha512 sha_key;
          secret.Encode((byte*)sha_key._hash, 64);
@@ -2263,32 +2266,18 @@ public:
          sha_key._hash[2] = 0;
          sha_key._hash[3] = 0;
 #endif
+         
+         
          decent::encrypt::CustodyData cd;
-         
-         auto package_handle = package_manager.get_package(content_dir, samples_dir, sha_key);
-         
-         package_handle->create();
-         package_handle->wait_for_current_task();
-         
-         auto ex_ptr = package_handle->get_task_last_error();
-         if (ex_ptr) {
-            std::rethrow_exception(ex_ptr);
-         }
 
-
-         //package_object pack = package_manager::instance().create_package(content_dir, samples_dir, sha_key, cd);
-         fc::ripemd160 hash = package_handle->get_hash();
-
+         
          uint32_t quorum = std::max((vector<account_id_type>::size_type)1, seeders.size()/3);
-         uint64_t size = std::max(1, ( package_handle->get_size() + (1024 * 1024) -1 ) / (1024 * 1024));
-
-
          ShamirSecret ss(quorum, seeders.size(), secret);
          ss.calculate_split();
+         
+         
          content_submit_operation submit_op;
-
-         asset total_price_per_day;
-
+         
          for( int i =0; i < seeders.size(); i++ )
          {
             const auto& s = _remote_db->get_seeder( seeders[i] );
@@ -2296,40 +2285,24 @@ public:
             point p = ss.split[i];
             decent::encrypt::el_gamal_encrypt( p ,s->pubKey ,cp );
             submit_op.key_parts.push_back(cp);
-
-            total_price_per_day += s->price.amount * size;
          }
-
-         FC_ASSERT(time_point_sec(fc::time_point::now()) <= expiration);
-
-         fc::microseconds duration = (expiration - fc::time_point::now());
-         uint64_t days = duration.to_seconds() / 3600 / 24;
-         
-         
-         
          submit_op.author = author_account.id;
-         //submit_op.URI = package_handle->get_url();
-         
          submit_content_utility(submit_op, price_amounts, price_asset_obj);
-         submit_op.hash = hash;
-         submit_op.size = size;
          submit_op.seeders = seeders;
          submit_op.quorum = quorum;
          submit_op.expiration = expiration;
-         submit_op.publishing_fee = days * total_price_per_day;
          submit_op.synopsis = synopsis;
          submit_op.cd = cd;
-
-         package_handle->add_event_listener(std::make_shared<submit_transfer_listener>(*this, hash, submit_op));
-         package_handle->start_seeding(protocol, false);
          
-      /*
-         signed_transaction tx;
-         tx.operations.push_back( submit_op );
-         set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
-         tx.validate();
-       */
-         return hash;
+         
+         
+         
+        auto package_handle = package_manager.get_package(content_dir, samples_dir, sha_key);
+         package_handle->add_event_listener(std::make_shared<submit_transfer_listener>(*this, package_handle, submit_op, protocol));
+         package_handle->create(false);
+
+     
+         return fc::ripemd160();
       }
       FC_CAPTURE_AND_RETHROW( (author)(content_dir)(samples_dir)(protocol)(price_asset_symbol)(price_amounts)(seeders)(expiration)(synopsis)(broadcast) )
    }
@@ -4249,7 +4222,30 @@ vector<content_summary> wallet_api::search_content( const string& term, const st
 
 vector<content_summary> wallet_api::search_user_content( const string& user, const string& term, const string& order, const string& region_code, uint32_t count)const
 {
-   return my->_remote_db->search_user_content( user, term, order, region_code, count );
+   vector<content_summary> result = my->_remote_db->search_user_content( user, term, order, region_code, count );
+   
+   auto packages = PackageManager::instance().get_all_known_packages();
+   for (auto package: packages) {
+      auto state = package->get_manipulation_state();
+      
+      if (package->get_data_state() == PackageInfo::CHECKED) {
+         continue;
+      }
+      
+      content_summary newObject;
+      
+      if (state == PackageInfo::PACKING) {
+         newObject.status = "Packing";
+      } else if (state == PackageInfo::ENCRYPTING) {
+         newObject.status = "Encrypting";
+      } else if (state == PackageInfo::STAGING) {
+         newObject.status = "Staging";
+      }
+      
+      result.insert(result.begin(), newObject);
+   }
+   
+   return result;
 }
 
 vector<content_object> wallet_api::list_content_by_bought( uint32_t count)const
@@ -4375,11 +4371,38 @@ void fc::from_variant(const fc::variant& var, account_multi_index_type& vo)
 
 
 
- void graphene::wallet::detail::submit_transfer_listener::package_seed_complete() {
-   auto& package_manager = decent::package::PackageManager::instance();
-   auto package_handle = package_manager.get_package(_hash);
+
+
+
+
+
+void graphene::wallet::detail::submit_transfer_listener::package_creation_complete() {
+   uint64_t size = std::max(1, ( _info->get_size() + (1024 * 1024) -1 ) / (1024 * 1024));
    
-   _op.URI = package_handle->get_url();
+   asset total_price_per_day;
+   for( int i =0; i < _op.seeders.size(); i++ )
+   {
+      const auto& s = _wallet._remote_db->get_seeder( _op.seeders[i] );
+      total_price_per_day += s->price.amount * size;
+   }
+   
+   
+   fc::microseconds duration = (_op.expiration - fc::time_point::now());
+   uint64_t days = duration.to_seconds() / 3600 / 24;
+   
+   
+   
+   _op.hash = _info->get_hash();
+   _op.size = size;
+   _op.publishing_fee = days * total_price_per_day;
+   
+   
+   _info->start_seeding(_protocol, false);
+}
+
+void graphene::wallet::detail::submit_transfer_listener::package_seed_complete() {
+   
+   _op.URI = _info->get_url();
    
    signed_transaction tx;
    tx.operations.push_back( _op );

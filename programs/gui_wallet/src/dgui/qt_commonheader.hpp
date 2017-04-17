@@ -33,6 +33,7 @@ struct SDigitalContent{
     double        AVG_rating;
     std::string   created;
     std::string   expiration;
+    std::string   status;
     int           size;
     int           times_bougth;
 };

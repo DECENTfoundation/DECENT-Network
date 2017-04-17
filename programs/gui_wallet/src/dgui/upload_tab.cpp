@@ -567,6 +567,7 @@ Upload_tab::Upload_tab(Mainwindow_gui_wallet* parent) :  popup(0), _content_popu
         {"Price", 10, "price"},
         {"Published", 10, "created"},
         {"Expiration", 10, "expiration"},
+        {"Status", 10},
         {" ", -50}
 
     });
@@ -629,6 +630,18 @@ void Upload_tab::timeToUpdate(const std::string& result) {
       cont.created = contents[i]["created"].get<std::string>();
       cont.expiration = contents[i]["expiration"].get<std::string>();
       cont.size = contents[i]["size"].get<int>();
+      cont.status = contents[i]["status"].get<std::string>();
+
+      QDateTime time = QDateTime::fromString(QString::fromStdString(cont.expiration), "yyyy-MM-ddTHH:mm:ss");
+
+      if (cont.status.empty()) {
+
+         if (time < QDateTime::currentDateTime()) {
+            cont.status = "Expired";
+         } else {
+            cont.status = "Published";
+         }
+      }
       
       if (contents[i]["times_bougth"].is_number()) {
          cont.times_bougth = contents[i]["times_bougth"].get<int>();
@@ -713,12 +726,7 @@ void Upload_tab::ShowDigitalContentsGUI() {
     
     int index = 0;
     for(SDigitalContent& aTemporar: _digital_contents) {
-        
-        EventPassthrough<DecentSmallButton>* info_icon = new EventPassthrough<DecentSmallButton>(icon_popup, icon_popup_white);
-        info_icon->setProperty("id", QVariant::fromValue(index));
-        info_icon->setAlignment(Qt::AlignCenter);
-        connect(info_icon, SIGNAL(clicked()), this, SLOT(show_content_popup()));
-        m_pTableWidget.setCellWidget(index, 6, info_icon);
+       
         
         // Need to rewrite this
         std::string created_str = aTemporar.created.substr(0, 10);
@@ -784,10 +792,22 @@ void Upload_tab::ShowDigitalContentsGUI() {
         
         std::string e_str = CalculateRemainingTime(QDateTime::currentDateTime(), time);
         
-        m_pTableWidget.setItem(index, 5, new QTableWidgetItem(QString::fromStdString(e_str)));
-        m_pTableWidget.item(index, 5)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
-        m_pTableWidget.item(index, 5)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
-        
+       m_pTableWidget.setItem(index, 5, new QTableWidgetItem(QString::fromStdString(e_str)));
+       m_pTableWidget.item(index, 5)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+       m_pTableWidget.item(index, 5)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+       
+       m_pTableWidget.setItem(index, 6, new QTableWidgetItem(QString::fromStdString(aTemporar.status)));
+       m_pTableWidget.item(index, 6)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+       m_pTableWidget.item(index, 6)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+       
+       
+       
+       EventPassthrough<DecentSmallButton>* info_icon = new EventPassthrough<DecentSmallButton>(icon_popup, icon_popup_white);
+       info_icon->setProperty("id", QVariant::fromValue(index));
+       info_icon->setAlignment(Qt::AlignCenter);
+       connect(info_icon, SIGNAL(clicked()), this, SLOT(show_content_popup()));
+       m_pTableWidget.setCellWidget(index, 7, info_icon);
+       
         ++index;
     }
 }
