@@ -25,8 +25,9 @@ using namespace nlohmann;
 
 
 
-TransactionsTab::TransactionsTab(Mainwindow_gui_wallet* pMainWindow)
-: m_pMainWindow(pMainWindow)
+TransactionsTab::TransactionsTab(QWidget* pParent)
+: TabContentManager(pParent)
+, tablewidget(this)
 {
 
    tablewidget.set_columns({

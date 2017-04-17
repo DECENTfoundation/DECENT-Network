@@ -16,6 +16,7 @@
 #include <limits>
 #include <iostream>
 #include <graphene/chain/config.hpp>
+#include <graphene/chain/content_object.hpp>
 #include <graphene/wallet/wallet.hpp>
 #include "gui_design.hpp"
 
@@ -27,7 +28,12 @@ using namespace gui_wallet;
 using namespace nlohmann;
 
 
-BrowseContentTab::BrowseContentTab(Mainwindow_gui_wallet* parent) : _content_popup(NULL), _parent(parent) {
+BrowseContentTab::BrowseContentTab(Mainwindow_gui_wallet* parent)
+: TabContentManager(parent)
+, _content_popup(NULL)
+, _parent(parent)
+, m_pTableWidget(this)
+{
     
     m_pTableWidget.set_columns({
         {"Title", 20},
@@ -161,17 +167,12 @@ void BrowseContentTab::ShowDigitalContentsGUI() {
       std::string synopsis = unescape_string(aTemporar.synopsis);
       std::replace(synopsis.begin(), synopsis.end(), '\t', ' '); // JSON does not like tabs
       std::replace(synopsis.begin(), synopsis.end(), '\n', ' '); // JSON does not like newlines either
-      //massageBox_title.push_back(	)
-      
-      try {
-         auto synopsis_parsed = json::parse(synopsis);
-         synopsis = synopsis_parsed["title"].get<std::string>();
-         
-      } catch (...) {}
-      
+      graphene::chain::ContentObjectPropertyManager synopsis_parser(synopsis);
+      std::string title = synopsis_parser.get<graphene::chain::ContentObjectTitle>();
+
       // Title
       int colIndex = 0;
-      m_pTableWidget.setItem(index, colIndex,new QTableWidgetItem(QString::fromStdString(synopsis)));
+      m_pTableWidget.setItem(index, colIndex,new QTableWidgetItem(QString::fromStdString(title)));
       m_pTableWidget.item(index, colIndex)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
       m_pTableWidget.item(index, colIndex)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
      
