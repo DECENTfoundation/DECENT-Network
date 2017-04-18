@@ -123,7 +123,7 @@ void Mainwindow_gui_wallet::slot_connected()
    Globals::instance().statusClearMessage();
 
    QTimer* pTimerBlockChainQuery = new QTimer(this);
-   pTimerBlockChainQuery->start(std::chrono::milliseconds(1000));
+   pTimerBlockChainQuery->start(1000);
    QObject::connect(pTimerBlockChainQuery, &QTimer::timeout,
                     this, &Mainwindow_gui_wallet::slot_query_blockchain);
 
