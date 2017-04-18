@@ -125,7 +125,7 @@ void seeding_plugin_impl::handle_request_to_buy(const operation_history_object &
       FC_THROW("cannot find content by URI");
    const content_object &co = *citr;
    if(co.expiration < fc::time_point::now() ){
-      //if the content expired let the PoR generation cycle take care of the cleaning up...
+      //if the content expired let the PoR generation cycle, return. PoR cycle will take care of the cleaning up...
       return;
    }
 

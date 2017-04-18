@@ -12,6 +12,7 @@
 #include <vector>
 #include <utility>
 
+#define DECENT_TESTNET2
 #ifdef DECENT_TESTNET2
 #define PRICE_REGIONS
 #endif
