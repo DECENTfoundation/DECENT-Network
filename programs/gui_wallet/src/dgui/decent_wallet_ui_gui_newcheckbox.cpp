@@ -9,7 +9,6 @@
  */
 
 #include "decent_wallet_ui_gui_newcheckbox.hpp"
-#include "debug_decent_application.h"
 #include <string>
 
 

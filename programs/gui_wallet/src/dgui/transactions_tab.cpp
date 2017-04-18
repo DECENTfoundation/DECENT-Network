@@ -1,12 +1,3 @@
-//*
-// *	File      : TransactionsTab.cpp
-// *
-// *	Created on: 21 Nov 2016
-// *	Created by: Davit Kalantaryan (Email: davit.kalantaryan@desy.de)
-// *
-// *  This file implements ...
-// *
-// */
 #include "transactions_tab.hpp"
 
 #include <QHeaderView>
@@ -23,7 +14,7 @@
 
 #include "gui_wallet_global.hpp"
 #include "qt_commonheader.hpp"
-#include "ui_wallet_functions.hpp"
+#include "gui_wallet_mainwindow.hpp"
 
 #include "json.hpp"
 
@@ -33,7 +24,9 @@ using namespace nlohmann;
 
 
 
-TransactionsTab::TransactionsTab() {
+TransactionsTab::TransactionsTab(Mainwindow_gui_wallet* pMainWindow)
+: m_pMainWindow(pMainWindow)
+{
 
    tablewidget.set_columns({
       {"Time", 20},
@@ -46,11 +39,10 @@ TransactionsTab::TransactionsTab() {
    });
    
    
-   user.setStyleSheet("border: 0");
+   user.setStyleSheet("border: 0; padding-left: 10px;");
    user.setPlaceholderText("Enter user name to see transaction history");
    user.setAttribute(Qt::WA_MacShowFocusRect, 0);
-   user.setMaximumHeight(40);
-   user.setFixedHeight(40);
+   user.setFixedHeight(54);
    user.setFrame(false);
    
    
@@ -65,6 +57,7 @@ TransactionsTab::TransactionsTab() {
    
    tablewidget.horizontalHeader()->setStretchLastSection(true);
    main_layout.setContentsMargins(0, 0, 0, 0);
+   main_layout.setSpacing(0);
    main_layout.addLayout(search_lay);
    main_layout.addWidget(&tablewidget);
    setLayout(&main_layout);
@@ -114,15 +107,15 @@ void TransactionsTab::timeToUpdate(const std::string& result) {
       QString transaction_amount, transaction_fee;
       
       if (transaction_fee_js.is_number()) {
-         transaction_fee = QString::number(transaction_fee_js.get<double>() / GRAPHENE_BLOCKCHAIN_PRECISION) + tr(" DCT");
+         transaction_fee = QString::number(transaction_fee_js.get<double>() / GRAPHENE_BLOCKCHAIN_PRECISION , 'f', 4) + tr(" DCT");
       } else {
-         transaction_fee = QString::number(std::stod(transaction_fee_js.get<std::string>()) / GRAPHENE_BLOCKCHAIN_PRECISION) + tr(" DCT");
+         transaction_fee = QString::number(std::stod(transaction_fee_js.get<std::string>()) / GRAPHENE_BLOCKCHAIN_PRECISION, 'f', 4) + tr(" DCT");
       }
       
       if (transaction_amount_js.is_number()) {
-         transaction_amount = QString::number(transaction_amount_js.get<double>() / GRAPHENE_BLOCKCHAIN_PRECISION) + tr(" DCT");
+         transaction_amount = QString::number(transaction_amount_js.get<double>() / GRAPHENE_BLOCKCHAIN_PRECISION, 'f', 4) + tr(" DCT");
       } else {
-         transaction_amount = QString::number(std::stod(transaction_amount_js.get<std::string>()) / GRAPHENE_BLOCKCHAIN_PRECISION) + tr(" DCT");
+         transaction_amount = QString::number(std::stod(transaction_amount_js.get<std::string>()) / GRAPHENE_BLOCKCHAIN_PRECISION, 'f', 4) + tr(" DCT");
       }
       
       std::vector<QString> values = {  QString::fromStdString(timestamp),
@@ -188,5 +181,4 @@ std::string TransactionsTab::getUpdateCommand() {
 void TransactionsTab::set_user_filter(const std::string& user_name) {
    user.setText(QString::fromStdString(user_name));
 }
-
 

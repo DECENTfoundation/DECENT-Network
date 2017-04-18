@@ -1,16 +1,4 @@
-/*
- *	File: gui_wallet_global.hpp
- *
- *	Created on: 30 Nov, 2016
- *	Created by: Davit Kalantaryan (Email: davit.kalantaryan@desy.de)
- *
- *  This file declares the global functions,
- *  implemented in the file gui_wallet_global.cpp
- *
- *
- */
-#ifndef GUI_WALLET_GLOBAL_HPP
-#define GUI_WALLET_GLOBAL_HPP
+#pragma once
 
 #include <QObject>
 #include <QDateTime>
@@ -22,9 +10,12 @@
 #include <QTableWidget>
 #include <QMouseEvent>
 #include <QHeaderView>
-
+#include <iostream>
 
 #include <numeric>
+#if defined( _MSC_VER )
+#include <iso646.h>
+#endif
 
 
 #define ALERT(message)                                  \
@@ -65,12 +56,16 @@ delete msgBox;                                      \
 }                                                   \
 
 
-
+#define DCT_VERIFY(condition) \
+{ \
+   bool _b_condition_ = (condition); \
+   Q_ASSERT(_b_condition_); \
+}
 
 namespace gui_wallet
 {
     
-        std::string CalculateRemainingTime(QDateTime now_time , QDateTime time);
+        std::string CalculateRemainingTime(QDateTime const& dt, QDateTime const& dtFuture);
     
     
         inline std::size_t extra_space(const std::string& s) noexcept
@@ -316,12 +311,19 @@ namespace gui_wallet
       
       
       std::string getCurrentUser() const { return _currentUser; }
-      void setCurrentUser(const std::string& user) { _currentUser = user; emit currentUserChanged(_currentUser);}
+      void setCurrentUser(const std::string& user) { _currentUser = user; emit currentUserChanged(_currentUser); }
+      
       void setWalletUnlocked() { emit walletUnlocked(); }
+      
+      void setWalletConnected(bool isNew) { emit walletConnected(isNew); }
+      void setWalletError(std::string error) { emit walletConnectionError(error); }
       
    signals:
       void currentUserChanged(std::string user);
       void walletUnlocked();
+      
+      void walletConnectionError(std::string message);
+      void walletConnected(bool isNew);
       
       
    };
@@ -404,17 +406,17 @@ namespace gui_wallet
    
    // Table with additional functionality to use in our GUI
    struct DecentColumn {
+      DecentColumn(std::string title, int size) : title(title), size(size) {}
+      DecentColumn(std::string title, int size, std::string sortid) : title(title), size(size), sortid(sortid) {}
+      
       std::string title;
       int size; // Negative value of size means absolute value of width, positive is weighted value
+      std::string sortid; // "+author" means sort by author ascending "-author" descending
    };
    
    class DecentTable : public QTableWidget {
       Q_OBJECT
-       
-   public:
-   signals:
-       void MouseWasMoved();
-       
+      
    public:
       DecentTable() {
          this->horizontalHeader()->setStretchLastSection(true);
@@ -425,9 +427,20 @@ namespace gui_wallet
          
          this->verticalHeader()->hide();
          this->setMouseTracking(true);
+         
+         connect(this->horizontalHeader(), SIGNAL(sectionClicked(int)), this, SLOT(sectionClicked(int)));
       }
        
-       int getCurrentHighlightedRow(){return _current_highlighted_row;}
+      int getCurrentHighlightedRow() { return _current_highlighted_row; }
+      
+      std::string getSortedColumn() const {
+         if (_current_sort_index < 0) {
+            return "";
+         }
+         
+         return  (_is_ascending ? "+" : "-") + _cols[_current_sort_index].sortid;
+
+      }
       
       
       void set_columns(const std::vector<DecentColumn>& cols) {
@@ -464,6 +477,20 @@ namespace gui_wallet
                                                           "border-right: 1px solid rgb(193,192,193);"
                                                           "border-bottom: 0px;"
                                                           "border-top: 0px;}");
+      }
+      
+   private slots:
+      void sectionClicked(int index) {
+         if (_cols[index].sortid.empty()) {
+            return;
+         }
+         
+         if (_current_sort_index == index) {
+            _is_ascending = !_is_ascending;
+         } else {
+            _current_sort_index = index;
+            _is_ascending = true;
+         }
       }
       
    private:
@@ -515,7 +542,6 @@ namespace gui_wallet
          
          if(row < 0) {
             _current_highlighted_row = -1;
-             emit MouseWasMoved();
             return;
          }
          
@@ -529,27 +555,28 @@ namespace gui_wallet
                cell->setForeground(QColor::fromRgb(255,255,255));
             }
             
-            if(cell_widget != NULL)
+            if(cell_widget != NULL) {
                 if(DecentSmallButton *button = qobject_cast<DecentSmallButton*>(cell_widget)) {
                     button->highlight();
                 } else {
                    cell_widget->setProperty("old_style", cell_widget->styleSheet());
                    cell_widget->setStyleSheet("* { background-color: rgb(27,176,104); color : white; }");
                 }
-            
+            }
             
          }
           _current_highlighted_row = row;
       }
        
        
-
-      
+     
    private:
       int                            _current_highlighted_row = -1;
       int                            _sum_weights = 1;
       int                            _sum_absoulte = 0;
       std::vector<DecentColumn>      _cols;
+      int                            _current_sort_index = -1;
+      bool                           _is_ascending = true;
    };
 
 
@@ -557,4 +584,3 @@ namespace gui_wallet
 
 }
 
-#endif // GUI_WALLET_GLOBAL_HPP

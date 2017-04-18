@@ -90,6 +90,13 @@ find_package( Boost 1.60 REQUIRED
 find_package( CryptoPP REQUIRED )
 find_package( PBC REQUIRED )
 
+
+find_program(CCACHE_FOUND ccache)
+if(CCACHE_FOUND)
+   set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
+   set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
+endif(CCACHE_FOUND)
+
 if( WIN32 )
 
     message( STATUS "Configuring Decent on WIN32" )
@@ -188,7 +195,7 @@ if(UNIX)
     if(APPLE)
         set(CMAKE_INSTALL_RPATH "@executable_path" CACHE INTERNAL "")
         set(CMAKE_MACOSX_RPATH TRUE CACHE INTERNAL "")
-        #set(CMAKE_OSX_DEPLOYMENT_TARGET 10.10 CACHE INTERNAL "")
+#       set(CMAKE_OSX_DEPLOYMENT_TARGET 10.10 CACHE INTERNAL "")
     else()
         set(CMAKE_INSTALL_RPATH "\$ORIGIN" CACHE INTERNAL "")
     endif()

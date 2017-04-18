@@ -16,176 +16,87 @@ void makeWarningImediatly(const char* a_WaringTitle, const char* a_WaringText, c
    aMessageBox.setDetailedText(QObject::tr(a_detailed));
    aMessageBox.exec();
 }
-
-
-
-std::string CalculateRemainingTime(QDateTime now_time , QDateTime time)
+   
+std::string CalculateRemainingTime(QDateTime const& dt, QDateTime const& dtFuture)
 {
-   int now_year = now_time.date().year();
-   int year =  time.date().year();
-   
-   int now_month = now_time.date().month();
-   int month = time.date().month();
-   
-   
-   int now_day = now_time.date().day();
-   int day = time.date().day();
-   
-   int e_year = 0;
-   int e_month = 0;
-   int e_day = 0;
-   int e_hour = 0;
-   int e_min = 0;
-   int e_sec = 0;
-   
-   if(now_time < time)
-   {
-      if(now_time.date() != time.date())
-      {
-         if(year >= now_year)
-         {
-            if(year == now_year)
-            {
-               e_year = 0;
-               if(month >= now_month)
-               {
-                  if(month == now_month)
-                  {
-                     e_month = 0;
-                     if(time.time() > now_time.time())
-                     {
-                        e_day = time.date().day() - now_time.date().day();
-                        e_hour = time.time().hour() - now_time.time().hour();
-                     }
-                     else
-                     {
-                        e_day = time.date().day() - now_time.date().day() - 1;
-                        if(e_day == 0)
-                        {
-                           if(time.time().minute() > now_time.time().minute())
-                           {
-                              e_hour = time.time().hour() + 24 - now_time.time().hour();
-                              e_min =time.time().minute() - now_time.time().minute();
-                           }
-                           else
-                           {
-                              e_hour = time.time().hour() + 24 - now_time.time().hour() - 1;
-                              e_min =time.time().minute() - now_time.time().minute() + 60;
-                           }
-                        }
-                        else
-                        {
-                           if(time.time().minute() > now_time.time().minute())
-                           {
-                              e_hour = time.time().hour() + 24 - now_time.time().hour();
-                           }
-                           else
-                           {
-                              e_hour = time.time().hour() + 24 - now_time.time().hour() - 1;
-                           }
-                        }
-                     }
-                  }
-                  else
-                  {
-                     if(day >= now_day)
-                     {
-                        e_month = month - now_month;
-                        e_day = day - now_day;
-                     }
-                     else
-                     {
-                        e_month = month - now_month - 1;
-                        if(e_month == 0)
-                        {
-                           if(time.time() > now_time.time())
-                           {
-                              e_day = now_time.date().daysInMonth() - now_time.date().day() + time.date().day();
-                              e_hour = time.time().hour() - now_time.time().hour();
-                           }
-                           else
-                           {
-                              e_day = now_time.date().daysInMonth() - now_time.date().day() + time.date().day() - 1;
-                              e_hour = time.time().hour() + 24 - now_time.time().hour();
-                           }
-                        }
-                        else
-                        {
-                           e_day = now_time.date().daysInMonth() - now_time.date().day() + time.date().day();
-                        }
-                     }
-                  }
-               }
-            }
-            else
-            {
-               if(month >= now_month)
-               {
-                  e_year = year - now_year;
-                  e_month = month - now_month;
-               }
-               else
-               {
-                  e_year = year - now_year - 1;
-                  e_month = 12 - now_month + month;
-               }
-            }
-         }
-      }
-      else
-      {
-         e_year = 0;
-         e_month = 0;
-         e_day = 0;
-         
-         int sec = now_time.time().secsTo(time.time());
-         e_hour = sec / 3600;
-         sec -= e_hour * 3600;
-         
-         e_min = sec / 60;
-         e_sec = sec - e_min * 60;
-      }
-   }
-   std::string e_str;
-   
-   if(e_year != 0)
-   {
-      e_str = std::to_string(e_year) + " y " + std::to_string(e_month) + " m";
-   }
+   if (dtFuture <= dt)
+      return "expired";
    else
    {
-      if(e_month != 0)
+      QDate d = dt.date();
+      QDate dFuture = dtFuture.date();
+
+      int iMonthsDiff = 0, iMonthsStep = 12*12;
+      while (true)
       {
-         e_str = std::to_string(e_month) + " m " + std::to_string(e_day) + " d";
-      }
-      else
-      {
-         if(e_day != 0)
-         {
-            e_str = std::to_string(e_day) + " d " + std::to_string(e_hour) + " h";
-         }
+         QDate d_temp = d.addMonths(iMonthsStep);
+         if (d_temp > dFuture &&
+             1 == iMonthsStep)
+            break;
+         else if (d_temp > dFuture)
+            iMonthsStep /= 12;
          else
          {
-            if(e_hour != 0)
-            {
-               e_str = std::to_string(e_hour) + " h " + std::to_string(e_min) + " m";
-            }
-            else
-            {
-               if(e_min != 0)
-               {
-                  e_str = std::to_string(e_min) + " m";
-               }
-            }
+            d = d_temp;
+            iMonthsDiff += iMonthsStep;
          }
       }
+
+      int iYearsDiff = iMonthsDiff / 12;
+      iMonthsDiff %= 12;
+
+      QDateTime dt2(d, dt.time());
+      // 60*24 minutes (a day) = 12*5*12*2 minutes = 12*12*10
+      // so the step here is almost a day
+      int iMinutesDiff = 0, iMinutesStep = 12 * 12 * 12;
+      while (true)
+      {
+         QDateTime dt2_temp = dt2.addSecs(60 * iMinutesStep);
+         if (dt2_temp > dtFuture &&
+             1 == iMinutesStep)
+            break;
+         else if (dt2_temp > dtFuture)
+            iMinutesStep /= 12;
+         else
+         {
+            dt2 = dt2_temp;
+            iMinutesDiff += iMinutesStep;
+         }
+      }
+
+      int iHoursDiff = iMinutesDiff / 60;
+      iMinutesDiff %= 60;
+
+      int iDaysDiff = iHoursDiff / 24;
+      iHoursDiff %= 24;
+
+      std::vector<std::string> arrParts;
+
+      if (iYearsDiff)
+         arrParts.push_back(std::to_string(iYearsDiff) + " y");
+      if (iMonthsDiff)
+         arrParts.push_back(std::to_string(iMonthsDiff) + " m");
+      if (iDaysDiff)
+         arrParts.push_back(std::to_string(iDaysDiff) + " d");
+      if (iHoursDiff)
+         arrParts.push_back(std::to_string(iHoursDiff) + " h");
+      if (iMinutesDiff)
+         arrParts.push_back(std::to_string(iMinutesDiff) + " min");
+
+      std::string str_result;
+      if (arrParts.empty())
+         str_result = "expiring in a minute";
+      else
+      {
+         str_result = arrParts.front();
+         
+         if (arrParts.size() > 1)
+            str_result += " " + arrParts[1];
+      }
+      
+      return str_result;
    }
-   
-   
-   return e_str;
-};
-   
-   
+}
    
    
 }

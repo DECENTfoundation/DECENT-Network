@@ -4,7 +4,6 @@
 #include <QObject>
 #include <stdio.h>
 #include <QMouseEvent>
-#include "ui_wallet_functions_base.hpp"
 #include <QTime>
 
 

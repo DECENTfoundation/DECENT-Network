@@ -153,6 +153,20 @@ namespace graphene { namespace wallet {
          int          received_download_bytes;
          std::string  status_text;
       };
+   
+   
+      struct buying_object_ex : public buying_object, public content_download_status {
+         buying_object_ex(const buying_object& obj, const content_download_status& status)
+          : buying_object(obj), content_download_status(status) {
+         }
+         
+         std::string         author_account;
+         time_point_sec      created;
+         time_point_sec      expiration;
+         uint32_t            times_bought;
+         fc::ripemd160       hash;
+      };
+
 
       struct signed_block_with_info : public signed_block
       {
@@ -194,7 +208,9 @@ namespace graphene { namespace wallet {
       fc::time_point_sec          timestamp;
       operation_history_object    op;
    };
-
+   
+   
+   
 /**
  * This wallet assumes it is connected to the database server with a high-bandwidth, low-latency connection and
  * performs minimal caching. This API could be provided locally to be used by a web interface.
@@ -1468,7 +1484,7 @@ namespace graphene { namespace wallet {
           * @return Download status, or null if no matching download process was found
           * @ingroup WalletCLI
           */
-         optional<content_download_status> get_download_status(string consumer, string URI);
+         optional<content_download_status> get_download_status(string consumer, string URI) const;
 
          /**
           * @brief This function is used to send a request to buy a content. This request is caught by seeders.
@@ -1553,11 +1569,12 @@ namespace graphene { namespace wallet {
 
          /**
           * @brief Restores AES key( used to encrypt and decrypt a content) from key particles stored in a buying object
+          * @param account consumers account id or name
           * @param buying The buying object containing key particles
           * @return restored AES key from particles
           * @ingroup WalletCLI
           */
-         DInteger restore_encryption_key(buying_id_type buying);
+         DInteger restore_encryption_key(std::string account, buying_id_type buying);
 
          /**
           * @brief Generates private ElGamal key and corresponding public key.
@@ -1591,7 +1608,7 @@ namespace graphene { namespace wallet {
 
          /**
           * @brief Get history buyings by consumer
-          * @param consumer Consumer of the buyings to retrieve
+          * @param account_id_or_name Consumer of the buyings to retrieve
           * @return History buying objects corresponding to the provided consumer
           * @ingroup WalletCLI
           */
@@ -1599,12 +1616,12 @@ namespace graphene { namespace wallet {
 
          /**
           * @brief Get history buying objects by consumer that match search term
-          * @param consumer Consumer of the buyings to retrieve
+          * @param account_id_or_name Consumer of the buyings to retrieve
           * @param term Search term to look up in Title and Description
           * @return History buying objects corresponding to the provided consumer and matching search term
           * @ingroup WalletCLI
           */
-         vector<buying_object> get_buying_history_objects_by_consumer_term( const string& account_id_or_name, const string& term )const;
+         vector<buying_object_ex> search_my_purchases( const string& account_id_or_name, const string& term )const;
 
          /**
          * @brief Get buying (open or history) by consumer and URI
@@ -1656,7 +1673,7 @@ namespace graphene { namespace wallet {
           * @return The contents found
           * @ingroup WalletCLI
           */
-         vector<content_summary> search_content( const string& term, uint32_t count )const;
+         vector<content_summary> search_content( const string& term, const string& order, const string& user, uint32_t count )const;
          /**
           * @brief Get a list of contents ordered alphabetically by search term
           * @param term seach term
@@ -1664,7 +1681,7 @@ namespace graphene { namespace wallet {
           * @return The contents found
           * @ingroup WalletCLI
           */
-         vector<content_summary> search_user_content( const string& user, const string& term, uint32_t count )const;
+         vector<content_summary> search_user_content( const string& user, const string& term, const string& order, uint32_t count )const;
 
          /**
           * @brief Get a list of contents by times bought, in decreasing order
@@ -1840,6 +1857,18 @@ FC_REFLECT_DERIVED( graphene::wallet::signed_block_with_info, (graphene::chain::
 FC_REFLECT_DERIVED( graphene::wallet::vesting_balance_object_with_info, (graphene::chain::vesting_balance_object),
                     (allowed_withdraw)(allowed_withdraw_time) )
 
+
+FC_REFLECT_DERIVED( graphene::wallet::buying_object_ex,
+                   (graphene::chain::buying_object)
+                   (graphene::wallet::content_download_status),
+                   (author_account)
+                   (created)
+                   (expiration)
+                   (times_bought)
+                   (hash)
+                  )
+
+
 FC_REFLECT( graphene::wallet::operation_detail,
            (from_account)
            (to_account)
@@ -1949,7 +1978,7 @@ FC_API( graphene::wallet::wallet_api,
            (get_open_buyings_by_URI)
            (get_open_buyings_by_consumer)
            (get_buying_history_objects_by_consumer)
-           (get_buying_history_objects_by_consumer_term)
+           (search_my_purchases)
            (get_buying_by_consumer_URI)
            (get_rating)
            (get_content)

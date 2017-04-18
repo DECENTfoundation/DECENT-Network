@@ -28,7 +28,6 @@
 
 #include "decent_button.hpp"
 #include "richdialog.hpp"
-#include "ui_wallet_functions.hpp"
 
 const char* StringFromQString(const QString& a_cqsString);
 
@@ -58,6 +57,7 @@ private:
     QLineEdit password_box;
 };
 
+/*
 class ConnectDlg : public QDialog
 {
     Q_OBJECT
@@ -84,7 +84,7 @@ private:
     QTableWidget                    m_main_table;
     int                             m_ret_value;
 };
-    
+   */ 
     
 
 }

@@ -24,7 +24,9 @@
 #include <graphene/utilities/string_escape.hpp>
 #include <sstream>
 #include <numeric>
-
+#if defined( _MSC_VER )
+#include <iso646.h>
+#endif
 namespace graphene { namespace utilities {
 
   std::string escape_string_for_c_source_code(const std::string& input)

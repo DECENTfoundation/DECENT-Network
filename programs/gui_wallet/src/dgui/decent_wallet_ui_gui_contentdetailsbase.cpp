@@ -11,14 +11,14 @@
 #include "decent_wallet_ui_gui_contentdetailsbase.hpp"
 #include <QDateTime>
 #include "gui_wallet_global.hpp"
-#include "ui_wallet_functions.hpp"
+#include "gui_wallet_mainwindow.hpp"
 #include "json.hpp"
 #include <QFrame>
 using namespace nlohmann;
 using namespace gui_wallet;
 
 static const char* s_vcpcFieldsGeneral[NUMBER_OF_SUB_LAYOUTS2] = {
-    "Author", "Expiration","Created","Amount",
+    "Author", "Expiration","Uploaded","Amount",
     "Average Rating","Size","Times Bought" 
 };
 
@@ -33,12 +33,12 @@ typedef TypeCpcChar* NewType;
 
 static NewType  s_vFields[]={ s_vcpcFieldsGeneral, s_vcpcFieldsBougth, s_vcpcFieldsBougth };
 
-ContentDetailsBase::ContentDetailsBase(){}
+ContentDetailsBase::ContentDetailsBase(Mainwindow_gui_wallet* pMainWindow)
+: m_pMainWindow(pMainWindow)
+{}
 
 
-ContentDetailsBase::~ContentDetailsBase()
-{
-}
+
 
 // DCF stands for Digital Content Fields
 namespace DCF{enum{AMOUNT=9, TIMES_BOUGHT=15};}
@@ -68,7 +68,6 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details)
 
 
     
-//    if(a_cnt_details.type == DCT::BOUGHT) {m_main_layout.removeWidget(&m_vSub_Widgets[4]);
     if(a_cnt_details.type == DCT::BOUGHT) {
         
         if (stars_labels.size() == 0) {
@@ -252,10 +251,8 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details)
         
     } catch (...) {}
     this->setWindowTitle(QString::fromStdString(synopsis));
-    m_desc.setText(m_desc.toPlainText() + QString::fromStdString(desc));
-    
-    setFixedSize(620,400);
-
+    m_desc.setText(m_desc.toPlainText() + QString::fromStdString(desc) + "\n");
+   
     QDialog::exec();
 }
 
@@ -292,11 +289,12 @@ void ContentDetailsBase::popup_for_purchased(int row_star)
         if(i%2==0){m_vSub_Widgets[i].setStyleSheet("background-color:rgb(244,244,244);");}
         else{m_vSub_Widgets[i].setStyleSheet("background-color:white;");}
         m_vLabels[nIndexKent].setStyleSheet("font-weight: bold");
-        m_vLabels[nIndexKent].setContentsMargins(0, 10, 50, 10);
+        m_vLabels[nIndexKent].setContentsMargins(0, 17, 50, 17);
         m_vLabels[nIndexKent].setAlignment(Qt::AlignRight);
-        //m_vLabels[nIndexKent].setAlignment(Qt::AlignCenter);
+        m_vLabels[nIndexKent].setFixedHeight(54);
+        m_vLabels[nIndexZuyg].setFixedHeight(54);
         m_vSub_layouts[i].setSpacing(0);
-        m_vSub_layouts[i].setContentsMargins(45,3,0,3);
+        m_vSub_layouts[i].setContentsMargins(45,0,0,0);
         
         if(nIndexKent == row_star)
         {
@@ -304,9 +302,10 @@ void ContentDetailsBase::popup_for_purchased(int row_star)
             QHBoxLayout* stars = new QHBoxLayout;
             QHBoxLayout* main_layout = new QHBoxLayout;
             
-            stars->setContentsMargins(250, 10, 50, 10);
+            stars->setContentsMargins(270, 0, 50, 0);
             text_layout->addWidget(&m_vLabels[nIndexZuyg]);
             stars->addWidget(&m_vLabels[nIndexKent]);
+            m_vLabels[nIndexKent].setContentsMargins(0, 19, 10, 19);
             for(int i = 0; i <5; ++i)
             {
                 stars->addWidget(&m_stars[i]);
@@ -326,26 +325,27 @@ void ContentDetailsBase::popup_for_purchased(int row_star)
         }
     }
     QFrame* line;
-    
-    line = new QFrame(this);
-    line->setFrameShape(QFrame::HLine); // Horizontal line
-    
-    line->setLineWidth(300);
-    line->setStyleSheet("color: rgb(193,192,193)");
-    line->setFixedHeight(1);
-    m_main_layout.addWidget(line);
-    
+    if(row_star == 7)
+    {
+       line = new QFrame(this);
+       line->setFrameShape(QFrame::HLine); // Horizontal line
+   
+       line->setLineWidth(300);
+       line->setStyleSheet("color: rgb(244,244,244)");
+       line->setFixedHeight(1);
+       m_main_layout.addWidget(line);
+    }
+
+   
     QHBoxLayout* desc_lay = new QHBoxLayout();
-    m_desc.setText("Description\n");
-    m_desc.setStyleSheet("border-top: 0px solid rgb(193,192,193); border-bottom: 0px solid rgb(193,192,193); border-left: 0px; border-right: 0px;");
+    m_desc.setText("Description\n\n");
+    m_desc.setStyleSheet("border: 0px;");
     m_desc.setReadOnly(true);
     m_desc.setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    m_desc.setMinimumHeight(20);
-    m_desc.setMaximumHeight(50);
-    desc_lay->setContentsMargins(45, 3, 0, 3);
+    QFont f("Myriad Pro Regular",13);
+    m_desc.setFont(f);
+    desc_lay->setContentsMargins(42, 17, 0, 3);
     desc_lay->addWidget(&m_desc);
-    
-    
     
     m_main_layout.addLayout(desc_lay);
     
@@ -353,10 +353,9 @@ void ContentDetailsBase::popup_for_purchased(int row_star)
     line->setFrameShape(QFrame::HLine); // Horizontal line
     
     line->setLineWidth(300);
-    line->setStyleSheet("color: rgb(193,192,193)");
+    line->setStyleSheet("color: rgb(244,244,244)");
     line->setFixedHeight(1);
     m_main_layout.addWidget(line);
-    //m_main_layout.addWidget(&m_desc);
     
     setStyleSheet("background-color:white;");
 }

@@ -37,16 +37,8 @@
 
 
 
-#define INFO_LIFETIME   "Lifetime"
-#define INFO_SEEDERS    "Seeders"
-#define INFO_KEYPARTS   "Key particles"
-#define INFO_TAGS       "Tags"
-#define INFO_PRICE      "Price"
-
-
 namespace gui_wallet
 {
-    
     enum FieldsRows {
         LIFETIME = 0,
         KEYPARTS,
@@ -59,6 +51,9 @@ namespace gui_wallet
         SELECTSAMPLES,
         NUM_FIELDS
     };
+
+   class Mainwindow_gui_wallet;
+   
     
     
     class Upload_popup : public QDialog
@@ -66,19 +61,19 @@ namespace gui_wallet
         Q_OBJECT
         
         typedef std::map<std::string, std::string> AssetMap;
-        
+        friend class Upload_tab;
     public:
-        Upload_popup(QWidget *parent = 0);
-        virtual ~Upload_popup();
-        public slots:
+        Upload_popup(Mainwindow_gui_wallet* pMainWindow);
+
+    public slots:
         void browseContent();
         void browseSamples();
         void uploadContent();
         void onGrabPublishers();
-        
+        void uploadCanceled();
+
     public:
         friend class upload_up;
-        void uploadDone(void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result);
         void onPublishersDone(void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result);
         
        
@@ -87,6 +82,7 @@ namespace gui_wallet
     protected:
         virtual void resizeEvent ( QResizeEvent * event );
     private:
+        Mainwindow_gui_wallet* m_pMainWindow;
         QVBoxLayout     m_synopsis_layout;
         QVBoxLayout     m_info_layout;
         QTableWidget    m_info_widget;
@@ -127,9 +123,9 @@ namespace gui_wallet
     {
         Q_OBJECT;
     public:
-        Upload_tab(){}
         Upload_tab(Mainwindow_gui_wallet* parent);
         void ShowDigitalContentsGUI();
+       
         
     public:
        virtual void timeToUpdate(const std::string& result);
@@ -138,8 +134,8 @@ namespace gui_wallet
     public slots:
         void show_content_popup();
         void content_was_bought();
-        void upload_popup();
-       
+        void uploadPopup();
+        
     protected:
         QVBoxLayout     m_main_layout;
         QHBoxLayout     m_search_layout;
@@ -147,14 +143,18 @@ namespace gui_wallet
         QLineEdit       m_filterLineEdit;
         QComboBox       m_searchTypeCombo;
         DecentButton*   upload_button;
+        Upload_popup    popup;
         
         std::vector<SDigitalContent>  _digital_contents;
         ContentDetailsGeneral*        _content_popup;
         Mainwindow_gui_wallet*        _parent;
        bool                          _isUploading;
-       
+    
+        bool                          m_doUpdate;
+        QTimer                        m_contentUpdateTimer;
     };
     
+
     
 }
 

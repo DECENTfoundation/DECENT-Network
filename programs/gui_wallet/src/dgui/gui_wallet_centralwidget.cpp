@@ -11,6 +11,7 @@
 #include "gui_wallet_centralwidget.hpp"
 #include <QMessageBox>
 #include <QTimer>
+#include <QStatusBar>
 #include <QHeaderView>
 #include <QResizeEvent>
 #include <QScrollBar>
@@ -18,16 +19,11 @@
 #include "gui_wallet_mainwindow.hpp"
 #include <QSortFilterProxyModel>
 #include <QStyleFactory>
+#include "decent_wallet_ui_gui_newcheckbox.hpp"
 
 
-#ifdef WIN32
-#include <direct.h>
-#ifndef getcwd
-#define getcwd _getcwd
-#endif
-#else
-#include <unistd.h>
-#endif
+#define __SIZE_FOR_IMGS__   40
+#define __HEIGHT__  60
 
 
 using namespace gui_wallet;
@@ -35,7 +31,7 @@ using namespace gui_wallet;
 
 AccountBalanceWidget::AccountBalanceWidget() : m_nCurrentIndex(-1) {
    
-    m_amount_label.setStyleSheet("color:green;""background-color:white;");
+    m_amount_label.setStyleSheet("color: rgb(27,176,104);""background-color:white;");
     m_asset_type_label.setStyleSheet("color:black;""background-color:white;");
     m_amount_label.setAlignment(Qt::AlignRight|Qt::AlignVCenter);
     m_asset_type_label.setAlignment(Qt::AlignRight|Qt::AlignVCenter);
@@ -96,11 +92,14 @@ CentralWigdet::CentralWigdet(QBoxLayout* a_pAllLayout, Mainwindow_gui_wallet* a_
     : m_first_line_lbl(),
       m_parent_main_window(a_pPar),
       m_browse_cont_tab(a_pPar),
+      m_Overview_tab(a_pPar),
       m_Upload_tab(a_pPar),
-      m_Overview_tab(a_pPar)
-
+      m_Purchased_tab(a_pPar),
+      m_trans_tab(a_pPar)
 {
 
+
+         
     m_allTabs.push_back(&m_browse_cont_tab);
     m_allTabs.push_back(&m_trans_tab);
     m_allTabs.push_back(&m_Upload_tab);
@@ -108,7 +107,7 @@ CentralWigdet::CentralWigdet(QBoxLayout* a_pAllLayout, Mainwindow_gui_wallet* a_
     m_allTabs.push_back(&m_Purchased_tab);
     m_currentTab = -1;
 
-    
+
 
     m_main_tabs.setStyleSheet("QTabBar::tab{"
                               "font:bold;"
@@ -126,9 +125,8 @@ CentralWigdet::CentralWigdet(QBoxLayout* a_pAllLayout, Mainwindow_gui_wallet* a_
                                );
 
     PrepareGUIprivate(a_pAllLayout);
-    
-    QTimer::singleShot(200, this, &CentralWigdet::initTabChanged);
 
+    QTimer::singleShot(200, this, SLOT(initTabChanged()));
 }
 
 void  CentralWigdet::initTabChanged() {
@@ -176,9 +174,6 @@ QWidget* CentralWigdet::GetWidgetFromTable5(int a_nColumn, int a_nWidget)
 }
 
 
-#define __SIZE_FOR_IMGS__   40
-#define __HEIGHT__  60
-#include "decent_wallet_ui_gui_newcheckbox.hpp"
 
 void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
 {
@@ -318,7 +313,10 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     m_main_layout.addLayout(tab_lay);
     //m_main_layout.addWidget(&m_main_tabs);
     
-
+    QStatusBar* status = new QStatusBar(this);
+    status->showMessage(tr("Status: "));
+    m_main_layout.addWidget(status);
+    
     a_pAllLayout->addLayout(&m_main_layout);
     
    connect(&m_main_tabs, SIGNAL(currentChanged(int)), this, SLOT(tabChanged(int)));
