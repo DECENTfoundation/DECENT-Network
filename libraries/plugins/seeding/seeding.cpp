@@ -10,7 +10,7 @@
 #include <fc/smart_ref_impl.hpp>
 #include <algorithm>
 
-namespace graphene { namespace seeding {
+namespace decent { namespace seeding {
 namespace bpo = boost::program_options;
 namespace detail {
 
@@ -66,26 +66,33 @@ void seeding_plugin_impl::handle_content_submit(const operation_history_object &
                     mso.free_space -= diff_space;
                });
             } else { // new content case, create the object in DB and download the package
-               my_seeding_id_type so_id = db.create<my_seeding_object>([&](my_seeding_object &so) {
+               const my_seeding_object& mso = db.create<my_seeding_object>([&](my_seeding_object &so) {
                     so.URI = cs_op.URI;
                     so.seeder = seeder_itr->seeder;
+                    so._hash = cs_op.hash;
                     so.space = cs_op.size; //we allocate the whole megabytes per content
                     if( k != cs_op.key_parts.end())
                        so.key = *k;
                     so.expiration = cs_op.expiration;
                     so.cd = cs_op.cd;
-               }).id;
+               });
+               auto so_id = mso.id;
                ilog("seeding plugin:  handle_content_submit() created new content_object ${s}",("s",so_id));
                db.modify<my_seeder_object>(*seeder_itr, [&](my_seeder_object &mso) {
                     mso.free_space -= cs_op.size ; //we allocate the whole megabytes per content
                });
                //if we run this in main thread it can crash _push_block
-               service_thread->async( [cs_op, this, so_id](){
-                    ilog("seeding plugin:  handle_content_submit() lambda called");
+               service_thread->async( [cs_op, this, mso](){
+                    /*ilog("seeding plugin:  handle_content_submit() lambda called");
                     auto id = package_manager::instance().download_package(cs_op.URI, *this, empty_report_stats_listener::instance());
                     active_downloads[id] = so_id;
+                    */
+                    auto& pm = decent::package::PackageManager::instance();
+                    auto package_handle = pm.get_package(cs_op.URI);
+                    decent::package::event_listener_handle_t sl = std::make_shared<SeedingListener>(*this, mso , package_handle);
+                    package_handle->add_event_listener(sl);
+                    package_handle->download(false);
                });
-
             }
          }
          ++seeder_itr;
@@ -179,6 +186,99 @@ void seeding_plugin_impl::handle_commited_operation(const operation_history_obje
    }
 }
 
+
+void
+seeding_plugin_impl::generate_por2(const my_seeding_object& mso, decent::package::package_handle_t package_handle)
+{
+   ilog("seeding plugin_impl:  generate_por() start");
+   graphene::chain::database &db = database();
+
+   //Collect data first...
+   const auto &sidx = db.get_index_type<my_seeder_index>().indices().get<by_seeder>();
+   const auto &sritr = sidx.find(mso.seeder);
+   FC_ASSERT(sritr != sidx.end());
+   const auto& cidx = db.get_index_type<content_index>().indices().get<graphene::chain::by_URI>();
+   const auto& citr = cidx.find(mso.URI);
+
+   ilog("seeding plugin_impl:  generate_por() processing content ${c}",("c", mso.URI));
+
+   FC_ASSERT(citr != cidx.end());
+   if( citr->expiration < fc::time_point::now() ){
+      ilog("seeding plugin_impl:  generate_por() - content expired, cleaning up");
+      auto& pm = decent::package::PackageManager::instance();
+      package_handle->stop_seeding();
+      pm.release_package(package_handle);
+      return;
+   }
+
+   //calculate time when next PoR has to be sent out
+   fc::time_point_sec generate_time;
+
+   try {
+      fc::time_point_sec last_proof_time = citr->last_proof.at(mso.seeder);
+      generate_time = last_proof_time + fc::seconds(24*60*60) - fc::seconds(POR_WAKEUP_INTERVAL_SEC/2);
+      if( generate_time > citr->expiration )
+         generate_time = citr->expiration - fc::seconds(POR_WAKEUP_INTERVAL_SEC);
+   }catch (std::out_of_range e){
+      //no proof has been delivered by us yet...
+      generate_time = fc::time_point::now();
+   }
+
+   ilog("seeding plugin_impl:  generate_por() - generate time for this content is planned at ${t}",("t", generate_time) );
+   fc::time_point next_wakeup( fc::time_point::now() + fc::microseconds(POR_WAKEUP_INTERVAL_SEC * 1000000 ));
+   //If we are about to generate PoR, generate it.
+   if( fc::time_point(generate_time) - fc::seconds(POR_WAKEUP_INTERVAL_SEC) <= ( fc::time_point::now() ) )
+   {
+      ilog("seeding plugin_impl: generate_por() - generating PoR");
+
+      decent::encrypt::CustodyProof proof;
+
+      auto dyn_props = db.get_dynamic_global_properties();
+      fc::ripemd160 b_id = dyn_props.head_block_id;
+      uint32_t b_num = dyn_props.head_block_number;
+      proof.reference_block = b_num;
+      for( int i = 0; i < 5; i++ )
+         proof.seed.data[i] = b_id._hash[i]; //use the block ID as source of entrophy
+
+      if(package_handle->get_data_state() == decent::package::PackageInfo::DataState::CHECKED ) //files available on disk
+         package_handle->create_proof_of_custody(mso.cd, proof);
+      else{
+         package_handle->download(true);
+         package_handle->create_proof_of_custody(mso.cd, proof);
+         package_handle->remove(true);
+      }
+      // issue PoR and plan periodic PoR generation
+      proof_of_custody_operation op;
+
+      op.seeder = mso.seeder;
+      op.proof = proof;
+      op.URI = mso.URI;
+
+      signed_transaction tx;
+      tx.operations.push_back(op);
+
+      tx.set_reference_block(dyn_props.head_block_id);
+      tx.set_expiration(dyn_props.time + fc::seconds(30));
+      tx.validate();
+
+      chain_id_type _chain_id = db.get_chain_id();
+
+      tx.sign(sritr->privKey, _chain_id);
+      idump((tx));
+
+      main_thread->async([this, tx]() { database().push_transaction(tx); });
+
+      ilog("broadcasting out PoR");
+      _self.p2p_node().broadcast_transaction(tx);
+   }
+
+   ilog("seeding plugin_impl:  generate_por() - planning next wake-up at ${t}",("t", next_wakeup) );
+   service_thread->schedule([this, mso, package_handle]() { generate_por2(mso, package_handle); }, next_wakeup,
+                            "Seeding plugin PoR generate");
+
+   ilog("seeding plugin_impl:  generate_por() end");
+}
+/*
 void
 seeding_plugin_impl::generate_por(my_seeding_id_type so_id, graphene::package::package_object downloaded_package)
 {
@@ -263,7 +363,7 @@ seeding_plugin_impl::generate_por(my_seeding_id_type so_id, graphene::package::p
                    "Seeding plugin PoR generate");
 
    ilog("seeding plugin_impl:  generate_por() end");
-}
+} //*/
 
 void seeding_plugin_impl::send_ready_to_publish()
 {
@@ -307,7 +407,7 @@ void seeding_plugin_impl::restart_downloads(){
    elog("restarting downloads, main thread");
    service_thread->async([this](){
         elog("restarting downloads, service thread");
-        const auto& cidx = database().get_index_type<my_seeding_index>().indices().get<by_URI>();
+        /*const auto& cidx = database().get_index_type<my_seeding_index>().indices().get<by_URI>();
         auto citr = cidx.begin();
 
         while(citr!=cidx.end()){
@@ -318,6 +418,41 @@ void seeding_plugin_impl::restart_downloads(){
            }
            ++citr;
 
+        }*/
+
+        //We need to rebuild the list of downloaded packages and compare it to the list of my_seeding_objects.
+        // However, we can't rely on the
+        //For the downloaded packages we can issue PoR right away, the others needs to be downloaded
+        auto& pm = decent::package::PackageManager::instance();
+        pm.recover_all_packages();
+        auto packages = pm.get_all_known_packages();
+        for( decent::package::package_handle_t package : packages ){
+           package->check(true);
+           if ( package->get_data_state() != decent::package::PackageInfo::CHECKED )
+              pm.release_package( package );
+        }
+
+        packages = pm.get_all_known_packages();
+        const auto& cidx = database().get_index_type<my_seeding_index>().indices().get<by_URI>();
+        auto citr = cidx.begin();
+        while(citr!=cidx.end()) {
+           int already_have = false;
+           decent::package::package_handle_t package_handle(0);
+           for( auto package : packages )
+              if( package->get_hash() == citr->_hash ) {
+                 already_have = true;
+                 package_handle = package;
+              }
+
+           if(already_have){
+              generate_por2( *citr, package_handle );
+           }else{
+              package_handle = pm.get_package(citr->URI);
+              decent::package::event_listener_handle_t sl = std::make_shared<SeedingListener>(*this, *citr , package_handle);
+              package_handle->add_event_listener(sl);
+              package_handle->download(false);
+           }
+           ++citr;
         }
         elog("restarting downloads, service thread end");
    });
@@ -388,7 +523,7 @@ void seeding_plugin::plugin_initialize( const boost::program_options::variables_
       } else {
          FC_THROW("missing content-private-key parameter");
       }
-      if( options.count("packages-path")) {
+/*      if( options.count("packages-path")) {
          try {
             boost::filesystem::path master_path = boost::filesystem::path(options["packages-path"].as<string>());
             package_manager::instance().set_packages_path(master_path);
@@ -398,7 +533,7 @@ void seeding_plugin::plugin_initialize( const boost::program_options::variables_
          }
       } else {
          FC_THROW("missing packages-path parameter");
-      }
+      } */
       if( options.count("seeding-price")) {
          price = options["seeding-price"].as<int>();
       } else{

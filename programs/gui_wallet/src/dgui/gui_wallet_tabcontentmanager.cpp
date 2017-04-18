@@ -1,11 +1,15 @@
 
 #include "gui_wallet_mainwindow.hpp"
-#include "ui_wallet_functions.hpp"
 #include <QWidget>
 
 
 using namespace gui_wallet;
 
+TabContentManager::TabContentManager(QWidget* pParent/* = nullptr*/)
+: QWidget(pParent)
+{
+
+}
 
 void TabContentManager::tryToUpdate() {
    try {

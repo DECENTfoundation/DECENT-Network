@@ -57,6 +57,9 @@
 #include <memory>
 #include <vector>
 
+/**
+ * @defgroup DatabaseAPI Database API
+ */
 namespace graphene { namespace app {
 
       using namespace graphene::chain;
@@ -198,6 +201,12 @@ namespace graphene { namespace app {
          processed_transaction get_transaction( uint32_t block_num, uint32_t trx_in_block )const;
 
          /**
+          * @brief Query the last local block
+          * @return the block time
+          */
+         fc::time_point_sec head_block_time()const;
+
+         /**
           * @brief If the transaction has not expired, this method will return the transaction for the given ID or
           * it will return NULL if it is not known.  Just because it is not known does not mean it wasn't
           * included in the blockchain.
@@ -268,7 +277,7 @@ namespace graphene { namespace app {
 
          /**
           * @brief Fetch all objects relevant to the specified accounts and subscribe to updates
-          * @param callback Function to call with updates
+          * @param subscribe true to subscribe to updates
           * @param names_or_ids Each item must be the name or ID of an account to retrieve
           * @return Map of string from @ref names_or_ids to the corresponding account
           * @ingroup DatabaseAPI
@@ -321,7 +330,7 @@ namespace graphene { namespace app {
           * @return Map of account names to corresponding IDs
           * @ingroup DatabaseAPI
           */
-         map<string,account_id_type> search_accounts(const string& search_term, uint32_t limit) const;
+         vector<account_object> search_accounts(const string& search_term, const string order, uint32_t limit) const;
 
          //////////////
          // Balances //
@@ -338,6 +347,8 @@ namespace graphene { namespace app {
 
          /**
           * @brief Semantically equivalent to @ref get_account_balances, but takes a name instead of an ID.
+          * @param name of the account to get balances for
+          * @assets IDs of the assets to get balances of; if empty, get all assets account has a balance in
           * @ingroup DatabaseAPI
           */
          vector<asset> get_named_account_balances(const std::string& name, const flat_set<asset_id_type>& assets)const;
@@ -381,7 +392,7 @@ namespace graphene { namespace app {
 
          /**
           * @brief Get a list of assets by symbol
-          * @param asset_symbols Symbols or stringified IDs of the assets to retrieve
+          * @param symbols_or_ids Symbols or stringified IDs of the assets to retrieve
           * @return The assets corresponding to the provided symbols or IDs
           * @ingroup DatabaseAPI
           *
@@ -395,36 +406,36 @@ namespace graphene { namespace app {
 
          /**
           * @brief Get limit orders in a given market
-          * @param a ID of asset being sold
-          * @param b ID of asset being purchased
+          * @param base ID of asset being sold
+          * @param quote ID of asset being purchased
           * @param limit Maximum number of orders to retrieve
           * @return The limit orders, ordered from least price to greatest
           * @ingroup DatabaseAPI
           */
-         vector<limit_order_object> get_limit_orders(asset_id_type a, asset_id_type b, uint32_t limit)const;
+         vector<limit_order_object> get_limit_orders(asset_id_type base, asset_id_type quote, uint32_t limit)const;
 
          /**
           * @brief Subscribe to updates to a given market
           * @param callback Callback function
-          * @param a First asset ID
-          * @param b Second asset ID
+          * @param base First asset ID
+          * @param quote Second asset ID
           * @ingroup DatabaseAPI
           */
          void subscribe_to_market(std::function<void(const variant&)> callback,
-                                  asset_id_type a, asset_id_type b);
+                                  asset_id_type base, asset_id_type quote);
 
          /**
           * @brief Unsubscribe from updates to a given market
-          * @param a First asset ID
-          * @param b Second asset ID
+          * @param base First asset ID
+          * @param quote Second asset ID
           * @ingroup DatabaseAPI
           */
-         void unsubscribe_from_market( asset_id_type a, asset_id_type b );
+         void unsubscribe_from_market( asset_id_type base, asset_id_type quote );
 
          /**
           * @brief Returns the ticker for the market assetA:assetB
-          * @param a String name of the first asset
-          * @param b String name of the second asset
+          * @param base String name of the first asset
+          * @param quote String name of the second asset
           * @return The market ticker for the past 24 hours.
           * @ingroup DatabaseAPI
           */
@@ -432,8 +443,8 @@ namespace graphene { namespace app {
 
          /**
           * @brief Returns the 24 hour volume for the market assetA:assetB
-          * @param a String name of the first asset
-          * @param b String name of the second asset
+          * @param base String name of the first asset
+          * @param quote String name of the second asset
           * @return The market volume over the past 24 hours
           * @ingroup DatabaseAPI
           */
@@ -452,11 +463,11 @@ namespace graphene { namespace app {
          /**
           * @brief Returns recent trades for the market assetA:assetB
           * Note: Currentlt, timezone offsets are not supported. The time must be UTC.
-          * @param a String name of the first asset
-          * @param b String name of the second asset
+          * @param base String name of the first asset
+          * @param quote String name of the second asset
+          * @param start Start time as a UNIX timestamp
           * @param stop Stop time as a UNIX timestamp
           * @param limit Number of trasactions to retrieve, capped at 100
-          * @param start Start time as a UNIX timestamp
           * @return Recent transactions in the market
           * @ingroup DatabaseAPI
           */
@@ -508,7 +519,7 @@ namespace graphene { namespace app {
          /**
           *  @brief Given a set of votes, return the objects they are voting for.
           *  @ingroup DatabaseAPI
-          *
+          *  @param votes Set of votes
           *  The results will be in the same order as the votes.  Null will be returned for
           *  any vote ids that are not found.
           */
@@ -529,6 +540,8 @@ namespace graphene { namespace app {
          /**
           *  @brief This API will take a partially signed transaction and a set of public keys that the owner has the ability to sign for
           *  and return the minimal subset of public keys that should add signatures to the transaction.
+          *  @param trx
+          *  @param available_keys Set of available public keys
           *  @ingroup DatabaseAPI
           */
          set<public_key_type> get_required_signatures( const signed_transaction& trx, const flat_set<public_key_type>& available_keys )const;
@@ -537,6 +550,7 @@ namespace graphene { namespace app {
           *  @brief This method will return the set of all public keys that could possibly sign for a given transaction.  This call can
           *  be used by wallets to filter their set of public keys to just the relevant subset prior to calling @ref get_required_signatures
           *  to get the minimum subset.
+          *  @param trx
           *  @ingroup DatabaseAPI
           */
          set<public_key_type> get_potential_signatures( const signed_transaction& trx )const;
@@ -544,17 +558,21 @@ namespace graphene { namespace app {
          /**
           * @return true if the @ref trx has all of the required signatures, otherwise throws an exception
           * @ingroup DatabaseAPI
+          * @param trx
           */
          bool           verify_authority( const signed_transaction& trx )const;
 
          /**
           * @return true if the signers have enough authority to authorize an account
           * @ingroup DatabaseAPI
+          * @param name_or_id The name or id of the account
+          * @param signers Set of public keys
           */
          bool           verify_account_authority( const string& name_or_id, const flat_set<public_key_type>& signers )const;
 
          /**
           *  @brief Validates a transaction against the current state without broadcasting it on the network.
+          *  @param trx
           *  @ingroup DatabaseAPI
           */
          processed_transaction validate_transaction( const signed_transaction& trx )const;
@@ -562,6 +580,8 @@ namespace graphene { namespace app {
          /**
           *  @brief For each operation calculate the required fee in the specified asset type. If the asset type does
           *  not have a valid core_exchange_rate
+          *  @param ops The set of operations
+          *  @param id  The asset ID
           *  @ingroup DatabaseAPI
           */
          vector< fc::variant > get_required_fees( const vector<operation>& ops, asset_id_type id )const;
@@ -572,6 +592,7 @@ namespace graphene { namespace app {
 
          /**
           * @brief Get the set of proposed transactions relevant to the specified account id
+          * @param id The account ID
           * @return Set of proposed transactions
           * @ingroup DatabaseAPI
           */
@@ -626,7 +647,7 @@ namespace graphene { namespace app {
           * @return Buying objects corresponding to the provided consumer
           * @ingroup DatabaseAPI
           */
-         vector<buying_object> get_buying_objects_by_consumer( const account_id_type& consumer )const;
+         vector<buying_object> get_buying_objects_by_consumer( const account_id_type& consumer, const string& order )const;
 
          /**
           * @brief Get buying (open or history) by consumer and URI
@@ -683,20 +704,26 @@ namespace graphene { namespace app {
          /**
           * @brief Search for term in contents (author, title and description)
           * @param term Search term
+          * @param order Ordering field
+          * @param user Content owner
+          * @param region Two letter region code
           * @param count Maximum number of contents to fetch (must not exceed 100)
           * @return The contents found
           * @ingroup DatabaseAPI
           */
-         vector<content_summary> search_content( const string& term, uint32_t count )const;
+         vector<content_summary> search_content( const string& term, const string& order, const string& user, const string& region_code, uint32_t count )const;
          
          /**
           * @brief Search for term in contents (author, title and description)
+          * @param user Content owner
           * @param term Search term
+          * @param order Ordering field
+          * @param region Two letter region code
           * @param count Maximum number of contents to fetch (must not exceed 100)
           * @return The contents found
           * @ingroup DatabaseAPI
           */
-         vector<content_summary> search_user_content( const string& user, const string& term, uint32_t count )const;
+         vector<content_summary> search_user_content( const string& user, const string& term, const string& order, const string& region_code, uint32_t count )const;
 
          /**
           * @brief Get a list of contents by times bought, in decreasing order
@@ -772,6 +799,7 @@ FC_API(graphene::app::database_api,
           (get_block_header)
           (get_block)
           (get_transaction)
+          (head_block_time)
           (get_recent_transaction_by_id)
 
           // Globals

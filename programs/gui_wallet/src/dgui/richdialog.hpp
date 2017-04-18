@@ -63,7 +63,56 @@ protected:
 
 };
 
+   
 
+class SendDialogBase : public QDialog
+{
+   Q_OBJECT
+public:
+   SendDialogBase(QString title);
+   virtual ~SendDialogBase(){}
+   
+   virtual RET_TYPE execRB(const QPoint* pMove);
+   virtual void AddLayout(QLayout* pLayout);
+   virtual void AddWidget(QWidget* pWidget);
+   
+   protected slots:
+   void set_ok_and_closeSlot();
+   
+protected:
+   QVBoxLayout   m_main_layout;
+   QVBoxLayout   m_controls_layout;
+   QHBoxLayout   m_buttons_layout;
+   DecentButton  m_ok_button;
+   DecentButton  m_cancel_button;
+   RET_TYPE      m_ret_value;
+   
+public:
+signals:
+   void RDB_is_OK();
+};
+
+/********************************************/
+class SendDialog : public SendDialogBase
+{
+   Q_OBJECT
+public:
+   SendDialog(int num_of_text_boxes , QString title);
+   virtual ~SendDialog();
+   
+   virtual RET_TYPE execRD(const QPoint* pMove, std::vector<std::string>& results);
+   
+   public slots:
+   void sendDCT();
+   
+protected:
+   int         m_nNumOfTextBoxes;
+   QLineEdit*  m_pTextBoxes;
+public:
+   QString curentName;
+   
+};
+   
 }
 
 

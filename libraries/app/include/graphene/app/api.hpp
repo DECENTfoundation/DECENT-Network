@@ -45,6 +45,12 @@
 #include <string>
 #include <vector>
 
+/**
+ * @defgroup HistoryAPI History API
+ * @defgroup Network_broadcastAPI Network broadcastAPI
+ * @defgroup Network_NodeAPI Network NodeAPI
+ * @defgroup LoginAPI LoginAPI
+ */
 namespace graphene { namespace app {
    using namespace graphene::chain;
    using namespace graphene::market_history;
@@ -87,8 +93,10 @@ namespace graphene { namespace app {
           * @param limit Maximum number of operations to retrieve (must not exceed 100)
           * @param start ID of the most recent operation to retrieve
           * @return A list of operations performed by account, ordered from most recent to oldest.
+          * @ingroup HistoryAPI
           */
          vector<operation_history_object> get_account_history(account_id_type account,
+                                                              const string& order,
                                                               operation_history_id_type stop = operation_history_id_type(),
                                                               unsigned limit = 100,
                                                               operation_history_id_type start = operation_history_id_type())const;
@@ -103,6 +111,7 @@ namespace graphene { namespace app {
           * @param start Sequence number of the most recent operation to retrieve.
           * 0 is default, which will start querying from the most recent operation.
           * @return A list of operations performed by account, ordered from most recent to oldest.
+          * @ingroup HistoryAPI
           */
          vector<operation_history_object> get_relative_account_history( account_id_type account,
                                                                         uint32_t stop = 0,
@@ -141,12 +150,17 @@ namespace graphene { namespace app {
           *
           * The transaction will be checked for validity in the local database prior to broadcasting. If it fails to
           * apply locally, an error will be thrown and the transaction will not be broadcast.
+          * @ingroup Network_broadcastAPI
           */
          void broadcast_transaction(const signed_transaction& trx);
 
-         /** this version of broadcast transaction registers a callback method that will be called when the transaction is
+         /**
+          * @brief This version of broadcast transaction registers a callback method that will be called when the transaction is
           * included into a block.  The callback method includes the transaction id, block number, and transaction number in the
           * block.
+          * @param cb Callback function
+          * @param trx
+          * @ingroup Network_broadcastAPI
           */
          void broadcast_transaction_with_callback( confirmation_callback cb, const signed_transaction& trx);
 
@@ -159,6 +173,8 @@ namespace graphene { namespace app {
           * signal from the chain database when a block is received.
           * It then dispatches callbacks to clients who have requested
           * to be notified when a particular txid is included in a block.
+          * @param b The signed block
+          * @ingroup Network_broadcastAPI
           */
          void on_applied_block( const signed_block& b );
       private:
@@ -177,23 +193,27 @@ namespace graphene { namespace app {
 
          /**
           * @brief Return general network information, such as p2p port
+          * @ingroup Network_NodeAPI
           */
          fc::variant_object get_info() const;
 
          /**
           * @brief add_node Connect to a new peer
           * @param ep The IP/Port of the peer to connect to
+          * @ingroup Network_NodeAPI
           */
          void add_node(const fc::ip::endpoint& ep);
 
          /**
           * @brief Get status of all current connections to peers
+          * @ingroup Network_NodeAPI
           */
          std::vector<net::peer_status> get_connected_peers() const;
 
          /**
           * @brief Get advanced node parameters, such as desired and max
           *        number of connections
+          * @ingroup Network_NodeAPI
           */
          fc::variant_object get_advanced_node_parameters() const;
 
@@ -201,11 +221,13 @@ namespace graphene { namespace app {
           * @brief Set advanced node parameters, such as desired and max
           *        number of connections
           * @param params a JSON object containing the name/value pairs for the parameters to set
+          * @ingroup Network_NodeAPI
           */
          void set_advanced_node_parameters(const fc::variant_object& params);
 
          /**
           * @brief Return list of potential peers
+          * @ingroup Network_NodeAPI
           */
          std::vector<net::potential_peer_record> get_potential_peers() const;
 
@@ -270,23 +292,47 @@ namespace graphene { namespace app {
           *
           * @note This must be called prior to requesting other APIs. Other APIs may not be accessible until the client
           * has sucessfully authenticated.
+          * @ingroup LoginAPI
           */
          bool login(const string& user, const string& password);
-         /// @brief Retrieve the network broadcast API
+
+         /**
+          * @brief Retrieve the network broadcast API
+          * @ingroup LoginAPI
+          */
          fc::api<network_broadcast_api> network_broadcast()const;
-         /// @brief Retrieve the database API
+         /**
+          * @brief Retrieve the database API
+          * @ingroup LoginAPI
+          */
          fc::api<database_api> database()const;
-         /// @brief Retrieve the history API
+         /**
+          * @brief Retrieve the history API
+          * @ingroup LoginAPI
+          */
          fc::api<history_api> history()const;
-         /// @brief Retrieve the network node API
+         /**
+          * @brief Retrieve the network node API
+          * @ingroup LoginAPI
+          */
          fc::api<network_node_api> network_node()const;
-         /// @brief Retrieve the cryptography API
+         /**
+          * @brief Retrieve the cryptography API
+          * @ingroup LoginAPI
+          */
          fc::api<crypto_api> crypto()const;
-         /// @brief Retrieve the debug API (if available)
+         /**
+          * @brief Retrieve the debug API (if available)
+          * @ingroup LoginAPI
+          */
          fc::api<graphene::debug_witness::debug_api> debug()const;
 
       private:
-         /// @brief Called to enable an API, not reflected.
+         /**
+          * @brief Called to enable an API, not reflected.
+          * @param api_name
+          * @ingroup LoginAPI
+          */
          void enable_api( const string& api_name );
 
          application& _app;

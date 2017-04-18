@@ -75,7 +75,7 @@ int main(int argc, char** argv) {
 
       auto witness_plug = node->register_plugin<witness_plugin::witness_plugin>();
       auto history_plug = node->register_plugin<account_history::account_history_plugin>();
-      auto seeding_plug = node->register_plugin<seeding::seeding_plugin>();
+      auto seeding_plug = node->register_plugin<decent::seeding::seeding_plugin>();
       auto market_history_plug = node->register_plugin<market_history::market_history_plugin>();
 
       try
@@ -178,12 +178,13 @@ int main(int argc, char** argv) {
          elog( "Caught SIGTERM attempting to exit cleanly" );
          exit_promise->set_value(signal);
       }, SIGTERM);
-
+#if defined( _MSC_VER )
+#else
       fc::set_signal_handler([&exit_promise](int signal) {
            elog( "Caught SIGHUP attempting to exit cleanly" );
            exit_promise->set_value(signal);
       }, SIGHUP);
-
+#endif
       ilog("Started witness node on a chain with ${h} blocks.", ("h", node->chain_database()->head_block_num()));
       ilog("Chain ID is ${id}", ("id", node->chain_database()->get_chain_id()) );
 

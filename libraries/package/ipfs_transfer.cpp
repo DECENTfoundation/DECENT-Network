@@ -1,8 +1,301 @@
 
 #include "ipfs_transfer.hpp"
 
-#include <decent/encrypt/encryptionutils.hpp>
 #include <graphene/package/package.hpp>
+
+#include <boost/filesystem/path.hpp>
+#include <boost/algorithm/string/trim.hpp>
+
+#include <vector>
+
+
+namespace decent { namespace package {
+
+
+    namespace detail {
+
+
+        bool parse_ipfs_url(const std::string& url, std::string& obj_id) {
+            const std::string ipfs = "ipfs:";
+            if (url.substr(0, ipfs.size()) == ipfs) {
+                obj_id = url.substr(ipfs.size());
+                boost::algorithm::trim_left_if(obj_id, [](char ch) { return ch == '/'; });
+                boost::algorithm::trim_right_if(obj_id, [](char ch) { return ch == '/'; });
+                return true;
+            }
+            return false;
+        }
+
+    } // namespace detail
+
+
+
+    IPFSDownloadPackageTask::IPFSDownloadPackageTask(PackageInfo& package)
+        : detail::PackageTask(package)
+        , _client("localhost", 5001)
+    {
+    }
+
+    uint64_t IPFSDownloadPackageTask::ipfs_recursive_get(const std::string &url,
+                                                         const boost::filesystem::path &dest_path)
+    {
+        FC_ASSERT( exists(dest_path) && is_directory(dest_path) );
+
+        uint64_t size = 0;
+        ipfs::Json objects;
+        _client.Ls(url, &objects);
+
+        for( auto nested_object : objects) {
+
+            ipfs::Json links = nested_object.at("Links");
+
+            for( auto &link : links ) {
+                if((int) link.at("Type") == 1 ) //directory
+                {
+                    const auto dir_name = dest_path / link.at("Name");
+                    create_directories(dir_name);
+                    size += ipfs_recursive_get(link.at("Hash"), dir_name);
+                }
+                if((int) link.at("Type") == 2 ) //file
+                {
+                    size += (uint64_t) link.at("Size");
+                    const std::string file_name = link.at("Name");
+                    const std::string file_obj_id = link.at("Hash");
+                    std::fstream myfile((dest_path / file_name).string(), std::ios::out | std::ios::binary);
+                    _client.FilesGet(file_obj_id, &myfile);
+                }
+                PACKAGE_TASK_EXIT_IF_REQUESTED;
+            }
+        }
+        return size;
+    }
+
+    void IPFSDownloadPackageTask::task() {
+        PACKAGE_INFO_GENERATE_EVENT(package_download_start, ( ) );
+
+        using namespace boost::filesystem;
+
+        const auto temp_dir_path = unique_path(graphene::utilities::decent_path_finder::instance().get_decent_temp() / "%%%%-%%%%-%%%%-%%%%");
+
+        try {
+            PACKAGE_TASK_EXIT_IF_REQUESTED;
+
+            std::string obj_id;
+
+            if (!detail::parse_ipfs_url(_package._url, obj_id)) {
+                FC_THROW("'${url}' is not an ipfs NURI", ("url", _package._url));
+            }
+
+            create_directories(temp_dir_path);
+            remove_all(temp_dir_path);
+            create_directories(temp_dir_path);
+
+            PACKAGE_INFO_CHANGE_TRANSFER_STATE(DOWNLOADING);
+
+            _package._size = ipfs_recursive_get( obj_id, temp_dir_path );
+
+            const auto content_file = temp_dir_path / "content.zip.aes";
+
+            _package._hash = detail::calculate_hash(content_file);
+            const auto package_dir = _package.get_package_dir();
+
+            PACKAGE_TASK_EXIT_IF_REQUESTED;
+
+            _package.lock_dir();
+
+            PACKAGE_INFO_CHANGE_DATA_STATE(PARTIAL);
+
+            std::set<boost::filesystem::path> paths_to_skip;
+
+            paths_to_skip.clear();
+            paths_to_skip.insert(_package.get_lock_file_path());
+            detail::remove_all_except(package_dir, paths_to_skip);
+
+            PACKAGE_TASK_EXIT_IF_REQUESTED;
+
+            paths_to_skip.clear();
+            paths_to_skip.insert(_package.get_package_state_dir(temp_dir_path));
+            paths_to_skip.insert(_package.get_lock_file_path(temp_dir_path));
+            detail::move_all_except(temp_dir_path, package_dir, paths_to_skip);
+
+            remove_all(temp_dir_path);
+
+            PACKAGE_INFO_CHANGE_DATA_STATE(CHECKED);
+            PACKAGE_INFO_CHANGE_TRANSFER_STATE(TS_IDLE);
+            PACKAGE_INFO_GENERATE_EVENT(package_download_complete, ( ) );
+        }
+        catch ( const fc::exception& ex ) {
+            remove_all(temp_dir_path);
+            _package.unlock_dir();
+            PACKAGE_INFO_CHANGE_DATA_STATE(INVALID);
+            PACKAGE_INFO_CHANGE_TRANSFER_STATE(TS_IDLE);
+            PACKAGE_INFO_GENERATE_EVENT(package_download_error, ( ex.to_detail_string() ) );
+            throw;
+        }
+        catch ( const std::exception& ex ) {
+            remove_all(temp_dir_path);
+            _package.unlock_dir();
+            PACKAGE_INFO_CHANGE_DATA_STATE(INVALID);
+            PACKAGE_INFO_CHANGE_TRANSFER_STATE(TS_IDLE);
+            PACKAGE_INFO_GENERATE_EVENT(package_download_error, ( ex.what() ) );
+            throw;
+        }
+        catch ( ... ) {
+            remove_all(temp_dir_path);
+            _package.unlock_dir();
+            PACKAGE_INFO_CHANGE_DATA_STATE(INVALID);
+            PACKAGE_INFO_CHANGE_TRANSFER_STATE(TS_IDLE);
+            PACKAGE_INFO_GENERATE_EVENT(package_download_error, ( "unknown" ) );
+            throw;
+        }
+    }
+
+    IPFSStartSeedingPackageTask::IPFSStartSeedingPackageTask(PackageInfo& package)
+        : detail::PackageTask(package)
+        , _client("localhost", 5001)
+    {
+    }
+
+    void IPFSStartSeedingPackageTask::task() {
+        PACKAGE_INFO_GENERATE_EVENT(package_seed_start, ( ) );
+
+        try {
+            PACKAGE_TASK_EXIT_IF_REQUESTED;
+
+            std::set<boost::filesystem::path> paths_to_skip;
+            paths_to_skip.insert(_package.get_package_state_dir());
+            paths_to_skip.insert(_package.get_lock_file_path());
+
+            std::vector<boost::filesystem::path> files;
+            detail::get_files_recursive_except(_package.get_package_dir(), files, paths_to_skip);
+
+            std::vector<ipfs::http::FileUpload> files_to_add;
+
+            const auto package_base_path = _package._parent_dir.lexically_normal();
+
+            for (auto& file : files) {
+                const auto file_rel_path = detail::get_relative(package_base_path, file.lexically_normal());
+                files_to_add.push_back({ file_rel_path.string(), ipfs::http::FileUpload::Type::kFileName, file.string() });
+            }
+
+            PACKAGE_INFO_CHANGE_TRANSFER_STATE(SEEDING);
+
+            ipfs::Json added_files;
+            _client.FilesAdd(files_to_add, &added_files);
+
+//          PACKAGE_INFO_GENERATE_EVENT(package_seed_progress, ( ) );
+
+            std::string root_hash;
+            for (auto& added_file : added_files) {
+                if (added_file.at("path") == _package._hash.str()) {
+                    root_hash = added_file.at("hash");
+                    break;
+                }
+            }
+
+            if (root_hash.empty()) {
+                FC_THROW("Unable to find root hash in 'ipfs add' results");
+            }
+
+            _package._url = "ipfs:" + root_hash;
+
+            _client.PinAdd(root_hash); // just in case
+
+            // TODO: remove the actual files?
+
+            PACKAGE_INFO_CHANGE_TRANSFER_STATE(SEEDING);
+            PACKAGE_INFO_GENERATE_EVENT(package_seed_complete, ( ) );
+        }
+        catch ( const fc::exception& ex ) {
+            PACKAGE_INFO_CHANGE_TRANSFER_STATE(TS_IDLE);
+            PACKAGE_INFO_GENERATE_EVENT(package_seed_error, ( ex.to_detail_string() ) );
+            throw;
+        }
+        catch ( const std::exception& ex ) {
+            PACKAGE_INFO_CHANGE_TRANSFER_STATE(TS_IDLE);
+            PACKAGE_INFO_GENERATE_EVENT(package_seed_error, ( ex.what() ) );
+            throw;
+        }
+        catch ( ... ) {
+            PACKAGE_INFO_CHANGE_TRANSFER_STATE(TS_IDLE);
+            PACKAGE_INFO_GENERATE_EVENT(package_seed_error, ( "unknown" ) );
+            throw;
+        }
+    }
+
+    IPFSStopSeedingPackageTask::IPFSStopSeedingPackageTask(PackageInfo& package)
+        : detail::PackageTask(package)
+        , _client("localhost", 5001)
+    {
+    }
+
+    void IPFSStopSeedingPackageTask::task() {
+        try {
+            PACKAGE_TASK_EXIT_IF_REQUESTED;
+
+            std::string obj_id;
+
+            if (!detail::parse_ipfs_url(_package._url, obj_id)) {
+                FC_THROW("'${url}' is not an ipfs NURI", ("url", _package._url));
+            }
+
+            _client.PinRm(obj_id, ipfs::Client::PinRmOptions::RECURSIVE);
+
+            PACKAGE_INFO_CHANGE_TRANSFER_STATE(TS_IDLE);
+        }
+        catch ( const fc::exception& ex ) {
+            PACKAGE_INFO_CHANGE_TRANSFER_STATE(TS_IDLE);
+            PACKAGE_INFO_GENERATE_EVENT(package_seed_error, ( ex.to_detail_string() ) );
+            throw;
+        }
+        catch ( const std::exception& ex ) {
+            PACKAGE_INFO_CHANGE_TRANSFER_STATE(TS_IDLE);
+            PACKAGE_INFO_GENERATE_EVENT(package_seed_error, ( ex.what() ) );
+            throw;
+        }
+        catch ( ... ) {
+            PACKAGE_INFO_CHANGE_TRANSFER_STATE(TS_IDLE);
+            PACKAGE_INFO_GENERATE_EVENT(package_seed_error, ( "unknown" ) );
+            throw;
+        }
+    }
+
+    std::shared_ptr<detail::PackageTask> IPFSTransferEngine::create_download_task(PackageInfo& package) {
+        return std::make_shared<IPFSDownloadPackageTask>(package);
+    }
+
+    std::shared_ptr<detail::PackageTask> IPFSTransferEngine::create_start_seeding_task(PackageInfo& package) {
+        return std::make_shared<IPFSStartSeedingPackageTask>(package);
+    }
+
+    std::shared_ptr<detail::PackageTask> IPFSTransferEngine::create_stop_seeding_task(PackageInfo& package) {
+        return std::make_shared<IPFSStopSeedingPackageTask>(package);
+    }
+
+
+} } // namespace decent::package
+
+
+
+
+
+
+
+
+// ====================================================
+
+
+
+
+
+
+
+
+
+
+
+
+#include <decent/encrypt/encryptionutils.hpp>
 
 #include <fc/exception/exception.hpp>
 #include <fc/io/fstream.hpp>

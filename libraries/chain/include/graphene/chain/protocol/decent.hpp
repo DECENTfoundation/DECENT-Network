@@ -12,6 +12,7 @@
 
 #include <stdint.h>
 #include <vector>
+#include <utility>
 
 #include <decent/encrypt/crypto_types.hpp>
 
@@ -28,7 +29,11 @@ namespace graphene { namespace chain {
       asset fee;
       account_id_type author;
       string URI;
+#ifdef PRICE_REGIONS
+      vector<pair<uint32_t, asset>> price;
+#else
       asset price;
+#endif
       uint64_t size; //<Size of content, including samples, in megabytes
       fc::ripemd160 hash;
 
@@ -57,6 +62,9 @@ namespace graphene { namespace chain {
       string URI;
       account_id_type consumer;
       asset price;
+#ifdef PRICE_REGIONS
+      uint32_t region_code_from;
+#endif
       /// Consumer's public key
       decent::encrypt::DIntegerString pubKey;
       
@@ -220,6 +228,7 @@ namespace graphene { namespace chain {
       asset fee;
 
       asset payout;
+      // do we need here region_code_from?
       account_id_type author;
       buying_id_type buying;
 
@@ -230,7 +239,11 @@ namespace graphene { namespace chain {
 } } // graphene::chain
 
 FC_REFLECT(graphene::chain::content_submit_operation,(fee)(size)(author)(URI)(quorum)(price)(hash)(seeders)(key_parts)(expiration)(publishing_fee)(synopsis)(cd))
+#ifdef PRICE_REGIONS
+FC_REFLECT(graphene::chain::request_to_buy_operation,(fee)(URI)(consumer)(price)(region_code_from)(pubKey))
+#else
 FC_REFLECT(graphene::chain::request_to_buy_operation,(fee)(URI)(consumer)(price)(pubKey))
+#endif
 FC_REFLECT(graphene::chain::leave_rating_and_comment_operation,(fee)(URI)(consumer)(rating))
 FC_REFLECT(graphene::chain::ready_to_publish_operation,(fee)(seeder)(space)(pubKey)(price_per_MByte)(ipfs_IDs))
 FC_REFLECT(graphene::chain::proof_of_custody_operation,(fee)(seeder)(URI)(proof))

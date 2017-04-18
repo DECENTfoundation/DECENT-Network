@@ -1,6 +1,5 @@
 #pragma once
 
-#include "ui_wallet_functions.hpp"
 #include <QWidget>
 
 
@@ -10,6 +9,7 @@ namespace gui_wallet {
 class TabContentManager : public QWidget {
    
 public:
+   TabContentManager(QWidget* pParent = nullptr);
    virtual void contentActivated() {
       _lastResult = "";
    }

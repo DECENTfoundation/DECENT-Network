@@ -6,6 +6,7 @@
 #include <graphene/wallet/wallet.hpp>
 #include <fc/rpc/api_connection.hpp>
 #include <graphene/package/package.hpp>
+#include <iostream>
 
 namespace decent
 {
@@ -220,6 +221,22 @@ namespace wallet_utility
                        });
       return future_is_locked.wait();
    }
+   std::chrono::system_clock::time_point WalletAPI::HeadBlockTime()
+   {
+      if (false == Connected())
+         throw wallet_exception("not yet connected");
+
+      std::lock_guard<std::mutex> lock(m_mutex);
+
+      auto& pimpl = m_pimpl->m_ptr_wallet_api;
+      fc::future<fc::time_point_sec> future_head_block_time =
+      m_pthread->async([&pimpl] ()
+                       {
+                          return pimpl->head_block_time();
+                       });
+      fc::time_point_sec fctp = future_head_block_time.wait();
+      return std::chrono::system_clock::from_time_t(fctp.sec_since_epoch());
+   }
    void WalletAPI::SetPassword(string const& str_password)
    {
       if (false == Connected())
@@ -268,6 +285,7 @@ namespace wallet_utility
                        });
       return future_save_wallet_file.wait();
    }
+   /*
    std::vector<graphene::chain::content_summary> WalletAPI::SearchContent(string const& str_term, uint32_t iCount)
    {
       if (false == Connected())
@@ -283,6 +301,7 @@ namespace wallet_utility
                        });
       return future_search_content.wait();
    }
+    */
 
    string WalletAPI::RunTaskImpl(string const& str_command)
    {
@@ -292,6 +311,8 @@ namespace wallet_utility
       std::lock_guard<std::mutex> lock(m_mutex);
       
       auto& pimpl = m_pimpl;
+      std::cout << "Running task " << str_command << std::endl;
+      
       fc::future<string> future_run =
       m_pthread->async([&pimpl, &str_command] () -> string
                        {
@@ -306,8 +327,8 @@ namespace wallet_utility
                              variant result;
                              try {
                                 result = pimpl->m_ptr_fc_api_connection->receive_call(0, method, fc::variants(args.begin()+1, args.end()));
-                             } catch (fc::exception& ex) {
-                                throw std::runtime_error(ex.what());
+                             } catch (fc::exception const& ex) {
+                                throw std::runtime_error(ex.to_detail_string());
                              }
                              auto it = pimpl->m_result_formatters.find(method);
 

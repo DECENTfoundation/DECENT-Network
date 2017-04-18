@@ -2,108 +2,110 @@
 #include <QHeaderView>
 #include <QPushButton>
 #include <QFileDialog>
-#include <iostream>
+#include <QVBoxLayout>
+#include <QHBoxLayout>
+#include <QSignalMapper>
 #include <graphene/chain/config.hpp>
+#include <graphene/chain/content_object.hpp>
 #include "json.hpp"
-#include <QMessageBox>
-#include "ui_wallet_functions.hpp"
 #include "gui_wallet_mainwindow.hpp"
 #include "decent_wallet_ui_gui_contentdetailsgeneral.hpp"
+#include "gui_design.hpp"
+#include "gui_wallet_global.hpp"
 
 using namespace gui_wallet;
 using namespace nlohmann;
 
 
-PurchasedTab::PurchasedTab(Mainwindow_gui_wallet* pMainWindow)
-: m_pMainWindow(pMainWindow)
+PurchasedTab::PurchasedTab(QWidget* pParent)
+: TabContentManager(pParent)
+, m_pExtractSignalMapper(nullptr)
+, m_pDetailsSignalMapper(nullptr)
+, m_pTableWidget(new DecentTable(this))
+, m_iActiveItemIndex(-1)
 {
-   m_pTableWidget.set_columns({
+   m_pTableWidget->set_columns({
       {"Title", 30},
-      {"Rating", 10},
-      {"Size", 10},
-      {"Price", 10},
-      {"Created", 15},
+      {"Size", 15, "size"},
+      {"Price", 15, "price"},
+      {"Created", 15, "created"},
       {"Status", 20},
       {"", 5},
       {" ", 5}
    });
+
+   // search layout
+   //
+   QHBoxLayout* search_layout = new QHBoxLayout();
+
+   QLineEdit* pfilterLineEditor = new QLineEdit(this);
+   pfilterLineEditor->setPlaceholderText(QString("Search Content"));
+   pfilterLineEditor->setStyleSheet(d_lineEdit);
+   pfilterLineEditor->setFixedHeight(54);
+   pfilterLineEditor->setAttribute(Qt::WA_MacShowFocusRect, 0);
+   QObject::connect(pfilterLineEditor, &QLineEdit::textChanged,
+                    this, &PurchasedTab::slot_SearchTermChanged);
    
-   
-   
-   QHBoxLayout* search_lay = new QHBoxLayout();
-   
-   m_filterLineEditer.setPlaceholderText(QString("Enter the term to search in title and description"));
-   m_filterLineEditer.setStyleSheet("border: 0; padding-left: 10 px;");
-   m_filterLineEditer.setFixedHeight(54);
-   m_filterLineEditer.setAttribute(Qt::WA_MacShowFocusRect, 0);
-   
-   QPixmap image(":/icon/images/search.svg");
+   QPixmap image(icon_search);
    
    QLabel* search_label = new QLabel();
    search_label->setSizeIncrement(100,40);
    search_label->setPixmap(image);
-   
-   
-   
-   search_lay->setContentsMargins(40, 0, 0, 0);
-   search_lay->addWidget(search_label);
-   search_lay->addWidget(&m_filterLineEditer);
-   
-   m_main_layout.setContentsMargins(0, 0, 0, 0);
-   m_main_layout.setSpacing(0);
-   m_main_layout.addLayout(search_lay);
-   m_main_layout.addWidget(&m_pTableWidget);
-   
-   connect(this, SIGNAL(showMessageBox(std::string)), this, SLOT(showMessageBoxSlot(std::string)));
-   
-   _isExtractingPackage = false;
-   connect(&_fileDialog, SIGNAL(fileSelected(const QString&)), this, SLOT(extractionDirSelected(const QString&)));
-   
-   _fileDialog.setFileMode(QFileDialog::Directory);
-   _fileDialog.setOptions(QFileDialog::ShowDirsOnly);
-   //_fileDialog.setAttribute(Qt::WA_DeleteOnClose);
-   
-   _fileDialog.setOptions(QFileDialog::DontUseNativeDialog);
-   
-   _fileDialog.setLabelText(QFileDialog::Accept, "Extract");
-   setLayout(&m_main_layout);
-   
+
+   search_layout->setContentsMargins(40, 0, 0, 0);
+   search_layout->addWidget(search_label);
+   search_layout->addWidget(pfilterLineEditor);
+
+   // the main layout
+   //
+   QVBoxLayout* pMainLayout = new QVBoxLayout(this);
+   pMainLayout->setContentsMargins(0, 0, 0, 0);
+   pMainLayout->setSpacing(0);
+   pMainLayout->addLayout(search_layout);
+   pMainLayout->addWidget(m_pTableWidget);
+
+   setLayout(pMainLayout);
 }
 
 void PurchasedTab::timeToUpdate(const std::string& result) {
-   m_pTableWidget.setRowCount(0);
+   m_pTableWidget->setRowCount(0);
    
    if (result.empty()) {
       return;
    }
    
    auto contents = json::parse(result);
-   m_pTableWidget.setRowCount(contents.size());
-   
-   QPixmap info_image(":/icon/images/pop_up.png");
-   QPixmap extract_image(":/icon/images/export.png");
-   QFont bold_font( "Open Sans Bold", 14, QFont::Bold);
+   m_pTableWidget->setRowCount(contents.size());
    
    _current_content.clear();
    _current_content.reserve(contents.size());
+
+   if (m_pExtractSignalMapper)
+      delete m_pExtractSignalMapper;
+   m_pExtractSignalMapper = new QSignalMapper(this);  // the last one will be deleted thanks to it's parent
+   QObject::connect(m_pExtractSignalMapper, (void (QSignalMapper::*)(int))&QSignalMapper::mapped,
+                    this, &PurchasedTab::slot_ExtractPackage);
+
+   if (m_pDetailsSignalMapper)
+      delete m_pDetailsSignalMapper;
+   m_pDetailsSignalMapper = new QSignalMapper(this);  // similar to extract signal handler
+   QObject::connect(m_pDetailsSignalMapper, (void (QSignalMapper::*)(int))&QSignalMapper::mapped,
+                    this, &PurchasedTab::slot_Details);
    
-   for (int i = 0; i < contents.size(); ++i) {
+   for (int iIndex = 0; iIndex < contents.size(); ++iIndex)
+   {
+      auto content = contents[iIndex];
       
-      auto content = contents[i];
-      
-      
-      std::string time = content["expiration_time"].get<std::string>();
+      std::string time = content["created"].get<std::string>();
       
       std::string synopsis = unescape_string(content["synopsis"].get<std::string>());
       std::replace(synopsis.begin(), synopsis.end(), '\t', ' '); // JSON does not like tabs :(
       std::replace(synopsis.begin(), synopsis.end(), '\n', ' '); // JSON does not like tabs :(
+
+      graphene::chain::ContentObjectPropertyManager synopsis_parser(synopsis);
+      std::string title = synopsis_parser.get<graphene::chain::ContentObjectTitle>();
       
-      try {
-         auto synopsis_parsed = json::parse(synopsis);
-         synopsis = synopsis_parsed["title"].get<std::string>();
-      } catch (...) {}
-      
-      double rating = content["rating"].get<double>() / 1000;
+      //double rating = content["average_rating"].get<double>() / 1000;
       uint64_t size = content["size"].get<int>();
       
       
@@ -118,9 +120,8 @@ void PurchasedTab::timeToUpdate(const std::string& result) {
       std::string expiration_or_delivery_time = content["expiration_or_delivery_time"].get<std::string>();
       std::string URI = content["URI"].get<std::string>();
       
-      
-      
-// Create SDigitalContent object
+
+      // Create SDigitalContent object
       
       _current_content.push_back(SDigitalContent());
       SDigitalContent& contentObject = _current_content.back();
@@ -138,14 +139,15 @@ void PurchasedTab::timeToUpdate(const std::string& result) {
       contentObject.created = content["created"].get<std::string>();
       contentObject.expiration = content["expiration"].get<std::string>();
       contentObject.size = content["size"].get<int>();
+      contentObject.id = content["id"].get<std::string>();
+      contentObject.hash = content["hash"].get<std::string>();
       
       if (content["times_bougth"].is_number()) {
          contentObject.times_bougth = content["times_bougth"].get<int>();
       } else {
          contentObject.times_bougth = 0;
       }
-      
-      
+
       if (content["price"]["amount"].is_number()){
          contentObject.price.amount =  content["price"]["amount"].get<double>();
       } else {
@@ -153,35 +155,33 @@ void PurchasedTab::timeToUpdate(const std::string& result) {
       }
       
       contentObject.price.amount /= GRAPHENE_BLOCKCHAIN_PRECISION;
-      contentObject.AVG_rating = content["rating"].get<double>() / 1000;
-      
-      
-      
-      
-      
-      
-      
-      
-      EventPassthrough<DecentSmallButton>* info_icon = new EventPassthrough<DecentSmallButton>(":/icon/images/pop_up.png", ":/icon/images/pop_up1.png");
-      info_icon->setProperty("id", QVariant::fromValue(i));
+      contentObject.AVG_rating = content["average_rating"].get<double>() / 1000;
+
+      EventPassthrough<DecentSmallButton>* info_icon = new EventPassthrough<DecentSmallButton>(icon_popup, icon_popup_white, m_pTableWidget);
       info_icon->setAlignment(Qt::AlignCenter);
-      connect(info_icon, SIGNAL(clicked()), this, SLOT(show_content_popup()));
-      m_pTableWidget.setCellWidget(i, 7, info_icon);
-      
-      
-      
-      m_pTableWidget.setItem(i, 0, new QTableWidgetItem(QString::fromStdString(synopsis)));
-      m_pTableWidget.setItem(i, 1, new QTableWidgetItem(QString::number(rating)));
-      m_pTableWidget.setItem(i, 2, new QTableWidgetItem(QString::number(size) + tr(" MB")));
-      m_pTableWidget.setItem(i, 3, new QTableWidgetItem(QString::number(price, 'f', 4) + " DCT"));
-      
-      
+      m_pTableWidget->setCellWidget(iIndex, 6, info_icon);
+
+      QObject::connect(info_icon, &DecentSmallButton::clicked,
+                       m_pDetailsSignalMapper, (void (QSignalMapper::*)())&QSignalMapper::map);
+      m_pDetailsSignalMapper->setMapping(info_icon, iIndex);
+
+
+      m_pTableWidget->setItem(iIndex, 0, new QTableWidgetItem(QString::fromStdString(title)));
+      m_pTableWidget->setItem(iIndex, 1, new QTableWidgetItem(QString::number(size) + tr(" MB")));
+      if(price)
+      {
+         m_pTableWidget->setItem(iIndex, 2, new QTableWidgetItem(QString::number(price, 'f', 4) + " DCT"));
+      }
+      else
+      {
+         m_pTableWidget->setItem(iIndex, 2, new QTableWidgetItem("Free"));
+      }
+
       std::string s_time = time.substr(0, time.find("T"));
       
-      m_pTableWidget.setItem(i, 4, new QTableWidgetItem(QString::fromStdString(s_time)));
+      m_pTableWidget->setItem(iIndex, 3, new QTableWidgetItem(QString::fromStdString(s_time)));
       
-      
-      
+
       int total_key_parts = content["total_key_parts"].get<int>();
       int received_key_parts  = content["received_key_parts"].get<int>();
       int total_download_bytes  = content["total_download_bytes"].get<int>();
@@ -197,7 +197,7 @@ void PurchasedTab::timeToUpdate(const std::string& result) {
          status_text = status_text + tr(" ") + QString::fromStdString(content["status_text"].get<std::string>());
       }
       
-      m_pTableWidget.setItem(i, 5, new QTableWidgetItem(status_text));
+      m_pTableWidget->setItem(iIndex, 4, new QTableWidgetItem(status_text));
       
       if (total_key_parts == 0) {
          total_key_parts = 1;
@@ -206,98 +206,73 @@ void PurchasedTab::timeToUpdate(const std::string& result) {
       if (total_download_bytes == 0) {
          total_download_bytes = 1;
       }
-      
-      
+
       double progress = (0.1 * received_key_parts) / total_key_parts + (0.9 * received_download_bytes) / total_download_bytes;
       progress *= 100; // Percent
       
       if ((received_download_bytes < total_download_bytes) || !is_delivered) {
-         m_pTableWidget.setItem(i, 6, new QTableWidgetItem(QString::number(progress) + "%"));
-         m_pTableWidget.item(i, 6)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
-         m_pTableWidget.item(i, 6)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+         m_pTableWidget->setItem(iIndex, 5, new QTableWidgetItem(QString::number(progress) + "%"));
+         m_pTableWidget->item(iIndex, 5)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+         m_pTableWidget->item(iIndex, 5)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
       } else {
-         
-         EventPassthrough<DecentSmallButton>* extract_icon = new EventPassthrough<DecentSmallButton>(":/icon/images/export.png", ":/icon/images/export1.png");
-         
-         if ((received_download_bytes < total_download_bytes) || !is_delivered) {
-            m_pTableWidget.setItem(i, 6, new QTableWidgetItem(QString::number(progress) + "%"));
-            m_pTableWidget.item(i, 6)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
-            m_pTableWidget.item(i, 6)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
-         } else {
-            
-            EventPassthrough<ClickableLabel>* extract_icon = new EventPassthrough<ClickableLabel>();
-            
-            
-            extract_icon->setProperty("id", QVariant::fromValue(QString::fromStdString(content["id"].get<std::string>())));
-            extract_icon->setProperty("hash", QVariant::fromValue(QString::fromStdString(content["hash"].get<std::string>())));
-            extract_icon->setProperty("URI", QVariant::fromValue(QString::fromStdString(content["URI"].get<std::string>())));
-            
-            extract_icon->setPixmap(extract_image);
-            
-            extract_icon->setAlignment(Qt::AlignCenter);
 
-            connect(extract_icon, SIGNAL(clicked()), this, SLOT(extractPackage()));
-            m_pTableWidget.setCellWidget(i, 6, extract_icon);
-         }
-
-         
-         extract_icon->setProperty("id", QVariant::fromValue(QString::fromStdString(content["id"].get<std::string>())));
-         extract_icon->setProperty("hash", QVariant::fromValue(QString::fromStdString(content["hash"].get<std::string>())));
-         extract_icon->setProperty("URI", QVariant::fromValue(QString::fromStdString(content["URI"].get<std::string>())));
-         
-         
+         EventPassthrough<DecentSmallButton>* extract_icon = new EventPassthrough<DecentSmallButton>(icon_export, icon_export_white, m_pTableWidget);
          extract_icon->setAlignment(Qt::AlignCenter);
-         
-         connect(extract_icon, SIGNAL(clicked()), this, SLOT(extractPackage()));
-         m_pTableWidget.setCellWidget(i, 6, extract_icon);
+
+
+         QObject::connect(extract_icon, &DecentSmallButton::clicked,
+                          m_pExtractSignalMapper, (void (QSignalMapper::*)())&QSignalMapper::map);
+         m_pExtractSignalMapper->setMapping(extract_icon, iIndex);
+
+         m_pTableWidget->setCellWidget(iIndex, 5, extract_icon);
       }
-      
-      
-      for(int j = 0; j < m_pTableWidget.columnCount() - 2; ++j) {
-         auto* item = m_pTableWidget.item(i, j);
+
+      for(int j = 0; j < m_pTableWidget->columnCount() - 2; ++j) {
+         auto* item = m_pTableWidget->item(iIndex, j);
          if (item) {
-            m_pTableWidget.item(i, j)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
-            m_pTableWidget.item(i, j)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+            m_pTableWidget->item(iIndex, j)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+            m_pTableWidget->item(iIndex, j)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
          }
       }
-      
-      
+
    }
 }
 
 
-std::string PurchasedTab::getUpdateCommand() {
-   auto& global_instance = gui_wallet::GlobalEvents::instance();
+std::string PurchasedTab::getUpdateCommand()
+{
+   auto& global_instance = gui_wallet::Globals::instance();
    std::string str_current_username = global_instance.getCurrentUser();
-   
-   if ( str_current_username == "" ) {
+
+   if ( str_current_username == "" )
+   {
       return "";
    } // if key not imported
-   
-   return "search_my_purchases "
-           "\"" + str_current_username +"\" "
-           "\"" + m_filterLineEditer.text().toStdString() +"\"";
 
+   return   "search_my_purchases "
+            "\"" + str_current_username + "\" "
+            "\"" + m_strSearchTerm.toStdString() + "\" "
+            "\"" + m_pTableWidget->getSortedColumn() + "\"";
 }
 
-void PurchasedTab::extractionDirSelected(const QString& path) {
-   
-   std::string id = _fileDialog.property("id").toString().toStdString();
-   std::string URI = _fileDialog.property("URI").toString().toStdString();
-   std::string hash = _fileDialog.property("hash").toString().toStdString();
+void PurchasedTab::slot_ExtractionDirSelected(QString const& path) {
+
+   if (m_iActiveItemIndex < 0 || m_iActiveItemIndex >= _current_content.size())
+      throw std::out_of_range("Content index is out of range");
 
    std::string key, dummy;
-   
    std::string message;
+
+   std::string strExtractID = _current_content[m_iActiveItemIndex].id;
+   std::string strExtractHash = _current_content[m_iActiveItemIndex].hash;
    
-   auto& global_instance = gui_wallet::GlobalEvents::instance();
+   auto& global_instance = gui_wallet::Globals::instance();
    std::string str_current_username = global_instance.getCurrentUser();
- 
    
    try {
-      RunTask("restore_encryption_key \"" + str_current_username + "\" \"" + id + "\"", key);
+      RunTask("restore_encryption_key \"" + str_current_username + "\" \"" + strExtractID + "\"", key);
       
-      RunTask("extract_package \"" + hash + "\" \"" + path.toStdString() + "\" " + key, dummy);
+      RunTask("extract_package \"" + strExtractHash + "\" \"" + path.toStdString() + "\" " + key, dummy);
       
       if (dummy.find("exception:") != std::string::npos) {
          message = dummy;
@@ -305,65 +280,56 @@ void PurchasedTab::extractionDirSelected(const QString& path) {
    } catch (const std::exception& ex) {
       message = ex.what();
    }
-   
-   emit showMessageBox(message);
-   _isExtractingPackage = false;
+
+   ShowMessageBox(message);
 }
 
-void PurchasedTab::extractPackage() {
-   std::cout << "isExtractingPackage = " << _isExtractingPackage << std::endl;
-   if (_isExtractingPackage) {
-      return;
-   }
-   
-   _isExtractingPackage = true;
-   
-   
-   QPushButton* btn = (QPushButton*)sender();
-   
-   _fileDialog.setProperty("id", btn->property("id"));
-   _fileDialog.setProperty("hash", btn->property("hash"));
-   _fileDialog.setProperty("URI", btn->property("URI"));
-   
-   _fileDialog.open();
-   /*
-   if (!) {
-      _isExtractingPackage = false;
-      return;
-   }
-    */
-   
+void PurchasedTab::slot_SearchTermChanged(QString const& strSearchTerm)
+{
+   m_strSearchTerm = strSearchTerm;
 }
 
+void PurchasedTab::slot_ExtractPackage(int iIndex) {
 
-void PurchasedTab::showMessageBoxSlot(std::string message) {
-   if (message.empty()) {
-      _msgBox.setWindowTitle("Success");
-      _msgBox.setText(tr("Package was successfully extracted"));
-      _msgBox.open();
-      
-   } else {
-      _msgBox.setWindowTitle("Error");
-      _msgBox.setText(tr("Failed to extract package"));
-      _msgBox.setDetailedText(QObject::tr(message.c_str()));
-      _msgBox.open();
-   }
-}
-           
-void PurchasedTab::show_content_popup() {
-   if (_isExtractingPackage) {
-      return;
-   }
-   
-   QPushButton* btn = (QPushButton*)sender();
-   int id = btn->property("id").toInt();
-   if (id < 0 || id >= _current_content.size()) {
+   if (iIndex < 0 || iIndex >= _current_content.size())
       throw std::out_of_range("Content index is out of range");
-   }
-   
-   if (nullptr == _details_dialog)
-      delete _details_dialog;
-   _details_dialog = new ContentDetailsBase(m_pMainWindow);
-   _details_dialog->execCDB(_current_content[id]);
+
+   m_iActiveItemIndex = iIndex;
+
+   QFileDialog* pFileDialog = new QFileDialog();
+   QObject::connect(pFileDialog, &QFileDialog::fileSelected,
+                    this, &PurchasedTab::slot_ExtractionDirSelected);
+
+   pFileDialog->setFileMode(QFileDialog::Directory);
+   pFileDialog->setOptions(QFileDialog::ShowDirsOnly);
+   pFileDialog->setOptions(QFileDialog::DontUseNativeDialog);
+   pFileDialog->setAttribute(Qt::WA_DeleteOnClose);
+   pFileDialog->setLabelText(QFileDialog::Accept, "Extract");
+
+   pFileDialog->open();
 }
+
+void PurchasedTab::slot_Details(int iIndex)
+{
+   if (iIndex < 0 || iIndex >= _current_content.size())
+      throw std::out_of_range("Content index is out of range");
+
+   // content details dialog is ugly, needs to be rewritten
+   ContentDetailsBase* pDetailsDialog = new ContentDetailsBase(nullptr);
+   pDetailsDialog->execCDB(_current_content[iIndex], true);
+   pDetailsDialog->setAttribute(Qt::WA_DeleteOnClose);
+   pDetailsDialog->open();
+}
+
+void PurchasedTab::ShowMessageBox(std::string const& message)
+{
+   if (message.empty())
+      gui_wallet::ShowMessageBox("Success",
+                                 "Package was successfully extracted");
+   else
+      gui_wallet::ShowMessageBox("Error",
+                                 "Failed to extract package",
+                                 QObject::tr(message.c_str()));
+}
+
 

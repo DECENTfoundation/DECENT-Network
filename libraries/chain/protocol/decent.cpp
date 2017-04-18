@@ -6,7 +6,15 @@ namespace graphene { namespace chain {
 void content_submit_operation::validate()const
 {
    FC_ASSERT( fee.amount >= 0 );
+#ifdef PRICE_REGIONS
+   FC_ASSERT(false == price.empty());
+   for (auto const& item : price)
+   {
+      FC_ASSERT(item.second.amount >= 0);
+   }
+#else
    FC_ASSERT( price.amount >= 0 );
+#endif
    FC_ASSERT( size > 0 && size <= 100 ); //TODO_DECENT - increase in testnet
    FC_ASSERT( seeders.size() > 0 );
    FC_ASSERT( seeders.size() == key_parts.size() );
