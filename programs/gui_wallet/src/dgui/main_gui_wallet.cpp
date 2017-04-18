@@ -129,7 +129,7 @@ int runDecentD(int argc, char** argv, fc::promise<void>::ptr& exit_promise) {
 
       auto witness_plug = node->register_plugin<witness_plugin::witness_plugin>();
       auto history_plug = node->register_plugin<account_history::account_history_plugin>();
-      auto seeding_plug = node->register_plugin<seeding::seeding_plugin>();
+      auto seeding_plug = node->register_plugin<decent::seeding::seeding_plugin>();
       auto market_history_plug = node->register_plugin<market_history::market_history_plugin>();
 
       try

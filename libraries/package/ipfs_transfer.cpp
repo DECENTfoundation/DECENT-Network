@@ -36,29 +36,29 @@ namespace decent { namespace package {
     {
     }
 
-    void IPFSDownloadPackageTask::ipfs_recursive_get(const std::string& url, const boost::filesystem::path & dest_path )
+    uint64_t IPFSDownloadPackageTask::ipfs_recursive_get(const std::string &url,
+                                                         const boost::filesystem::path &dest_path)
     {
         FC_ASSERT( exists(dest_path) && is_directory(dest_path) );
 
+        uint64_t size = 0;
         ipfs::Json objects;
         _client.Ls(url, &objects);
 
         for( auto nested_object : objects) {
-            std::cerr << "nested object: "<< nested_object.dump() << "\n" ;
 
             ipfs::Json links = nested_object.at("Links");
 
-            uint64_t total_size = 0;
             for( auto &link : links ) {
                 if((int) link.at("Type") == 1 ) //directory
                 {
                     const auto dir_name = dest_path / link.at("Name");
                     create_directories(dir_name);
-                    ipfs_recursive_get(link.at("Hash"), dir_name);
+                    size += ipfs_recursive_get(link.at("Hash"), dir_name);
                 }
                 if((int) link.at("Type") == 2 ) //file
                 {
-                    total_size += (uint64_t) link.at("Size");
+                    size += (uint64_t) link.at("Size");
                     const std::string file_name = link.at("Name");
                     const std::string file_obj_id = link.at("Hash");
                     std::fstream myfile((dest_path / file_name).string(), std::ios::out | std::ios::binary);
@@ -67,6 +67,7 @@ namespace decent { namespace package {
                 PACKAGE_TASK_EXIT_IF_REQUESTED;
             }
         }
+        return size;
     }
 
     void IPFSDownloadPackageTask::task() {
@@ -91,7 +92,7 @@ namespace decent { namespace package {
 
             PACKAGE_INFO_CHANGE_TRANSFER_STATE(DOWNLOADING);
 
-            ipfs_recursive_get( obj_id, temp_dir_path );
+            _package._size = ipfs_recursive_get( obj_id, temp_dir_path );
 
             const auto content_file = temp_dir_path / "content.zip.aes";
 
