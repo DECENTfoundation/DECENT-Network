@@ -4367,7 +4367,7 @@ void fc::from_variant(const fc::variant& var, account_multi_index_type& vo)
 
 
 void graphene::wallet::detail::submit_transfer_listener::package_creation_complete() {
-   uint64_t size = std::max(1, ( _info->get_size() + (1024 * 1024) -1 ) / (1024 * 1024));
+   uint64_t size = std::max((uint64_t)1, ( _info->get_size() + (1024 * 1024) -1 ) / (1024 * 1024));
    
    asset total_price_per_day;
    for( int i =0; i < _op.seeders.size(); i++ )

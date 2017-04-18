@@ -780,17 +780,6 @@ namespace decent { namespace package {
     }
    
    
-   int PackageInfo::get_size() const {
-      size_t size=0;
-      for(recursive_directory_iterator it( get_package_dir() );
-          it!=recursive_directory_iterator();
-          ++it)
-      {
-         if(!is_directory(*it))
-            size+=file_size(*it);
-      }
-      return size;
-   }
 
     void PackageInfo::lock_dir() {
         std::lock_guard<std::recursive_mutex> guard(_mutex);
