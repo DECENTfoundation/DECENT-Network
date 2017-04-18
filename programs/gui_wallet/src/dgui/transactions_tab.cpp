@@ -15,6 +15,7 @@
 #include "gui_wallet_global.hpp"
 #include "qt_commonheader.hpp"
 #include "gui_wallet_mainwindow.hpp"
+#include "gui_design.hpp"
 
 #include "json.hpp"
 
@@ -24,22 +25,23 @@ using namespace nlohmann;
 
 
 
-TransactionsTab::TransactionsTab(Mainwindow_gui_wallet* pMainWindow)
-: m_pMainWindow(pMainWindow)
+TransactionsTab::TransactionsTab(QWidget* pParent)
+: TabContentManager(pParent)
+, tablewidget(this)
 {
 
    tablewidget.set_columns({
-      {"Time", 20},
-      {"Type", 10},
-      {"From", 20},
-      {"To", 20},
-      {"Amount", 10},
-      {"Fee", 10},
-      {"Description", 25}
+      {"Time", 20, "time"},
+      {"Type", 10, "type"},
+      {"From", 20, "from"},
+      {"To"  , 20, "to"},
+      {"Price", 10,"price"},
+      {"Fee", 10,  "fee"},
+      {"Description", 25, "description"}
    });
    
    
-   user.setStyleSheet("border: 0; padding-left: 10px;");
+   user.setStyleSheet(d_lineEdit);
    user.setPlaceholderText("Enter user name to see transaction history");
    user.setAttribute(Qt::WA_MacShowFocusRect, 0);
    user.setFixedHeight(54);
@@ -47,7 +49,7 @@ TransactionsTab::TransactionsTab(Mainwindow_gui_wallet* pMainWindow)
    
    
    QHBoxLayout* search_lay = new QHBoxLayout();
-   QPixmap image(":/icon/images/search.svg");
+   QPixmap image(icon_search);
    search_label.setSizeIncrement(100,40);
    search_label.setPixmap(image);
    
@@ -62,8 +64,9 @@ TransactionsTab::TransactionsTab(Mainwindow_gui_wallet* pMainWindow)
    main_layout.addWidget(&tablewidget);
    setLayout(&main_layout);
    
-   
-   connect(&GlobalEvents::instance(), SIGNAL(currentUserChanged(std::string)), this, SLOT(currentUserChanged(std::string)));
+
+   QObject::connect(&Globals::instance(), &Globals::currentUserChanged,
+                    this, &TransactionsTab::currentUserChanged);
 
 }
 
@@ -74,7 +77,6 @@ void TransactionsTab::timeToUpdate(const std::string& result) {
    }
    
    auto contents = json::parse(result);
-   
    tablewidget.setRowCount(contents.size());
    
    for (int i = 0; i < contents.size(); ++i) {
@@ -141,7 +143,7 @@ void TransactionsTab::timeToUpdate(const std::string& result) {
 }
 
 
-void TransactionsTab::currentUserChanged(std::string userName) {
+void TransactionsTab::currentUserChanged(std::string const& userName) {
    user.setText(QString::fromStdString(userName));
 }
 
@@ -172,8 +174,8 @@ std::string TransactionsTab::getUpdateCommand() {
       return "";
    }
 
-   return "get_account_history \"" + user.text().toStdString() +"\" 100";
-   
+   return "get_account_history \"" + user.text().toStdString() + "\" \"" + tablewidget.getSortedColumn() + "\" 100";
+    
 }
 
 

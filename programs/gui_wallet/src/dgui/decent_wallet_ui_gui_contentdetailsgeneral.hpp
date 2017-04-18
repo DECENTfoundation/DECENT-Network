@@ -20,7 +20,7 @@ class ContentDetailsGeneral : public ContentDetailsBase
 {
     Q_OBJECT
 public:
-    ContentDetailsGeneral(Mainwindow_gui_wallet* pMainWindow);
+    ContentDetailsGeneral(QWidget* pParent);
 
     virtual void execCDD(const SDigitalContent& a_cnt_details);
 

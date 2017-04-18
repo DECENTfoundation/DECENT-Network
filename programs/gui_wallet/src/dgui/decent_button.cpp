@@ -8,6 +8,7 @@
  *
  */
 
+#include "gui_design.hpp"
 #include "decent_button.hpp"
 #include <QGraphicsDropShadowEffect>
 #include <string>
@@ -17,18 +18,19 @@ using namespace gui_wallet;
 
 DecentButton::DecentButton()
 {
-    setAlignment(Qt::AlignCenter);
-    setStyleSheet("QLabel { background-color :rgb(27,176,104); color : white;}");
-    setScaledContents(true);
-    
-    //QGraphicsDropShadowEffect *effect = new QGraphicsDropShadowEffect(this);
-    //effect->setBlurRadius(20);
-    //effect->setOffset(2,2);
-    
-    //setGraphicsEffect(effect);
+   _isEnabled = true;
+   setAlignment(Qt::AlignCenter);
+   setStyleSheet(decent_button_style);
+   setScaledContents(true);
 }
 
-DecentButton::~DecentButton()
-{
-    
+
+void DecentButton::setEnabled(bool isEnabled) {
+   _isEnabled = isEnabled;
+   if (_isEnabled)
+      setStyleSheet(d_upload_button_true);
+   else
+      setStyleSheet(d_upload_button_false);
 }
+
+ 

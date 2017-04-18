@@ -16,7 +16,7 @@
 #include <QFont>
 #include <graphene/chain/config.hpp>
 #include "json.hpp"
-
+#include "gui_design.hpp"
 
 using namespace gui_wallet;
 using namespace nlohmann;
@@ -24,10 +24,11 @@ using namespace nlohmann;
 
 Overview_tab::Overview_tab(class Mainwindow_gui_wallet* a_pPar)
 : m_pPar(a_pPar)
+, table_widget(this)
 {
    table_widget.set_columns({
-      {"Account ID", 40},
-      {"Account", 40},
+      {"Account ID", 40, "id"},
+      {"Account", 40, "name"},
       {"", 10},
       {"", 10}
    });
@@ -41,12 +42,12 @@ Overview_tab::Overview_tab(class Mainwindow_gui_wallet* a_pPar)
    search_lay->setMargin(0);
    search_lay->setContentsMargins(0,0,0,0);
    
-   QPixmap image(":/icon/images/search.svg");
+   QPixmap image(icon_search);
    
    search_label.setSizeIncrement(100,40);
    search_label.setPixmap(image);
    search.setPlaceholderText(QString("Search"));
-   search.setStyleSheet("border: 0; padding-left: 10px;");
+   search.setStyleSheet(d_lineEdit);
    search.setAttribute(Qt::WA_MacShowFocusRect, 0);
    search.setFixedHeight(54);
    
@@ -81,27 +82,29 @@ void Overview_tab::timeToUpdate(const std::string& result) {
    for (int i = 0; i < contents.size() + 1; ++i) {
       auto content = contents[i];
       
+      std::string name = content["name"].get<std::string>();
+      std::string id = content["id"].get<std::string>();
       
+      table_widget.setItem(i, 1, new QTableWidgetItem(QString::fromStdString(name)));
+      table_widget.setItem(i, 0, new QTableWidgetItem(QString::fromStdString(id)));
       
-      table_widget.setItem(i, 1, new QTableWidgetItem(QString::fromStdString(content[0].get<std::string>())));
-      table_widget.setItem(i, 0, new QTableWidgetItem(QString::fromStdString(content[1].get<std::string>())));
-      
-      
-      EventPassthrough<DecentSmallButton>* trans = new EventPassthrough<DecentSmallButton>(":/icon/images/transaction.png", ":/icon/images/transaction1.png");
-      trans->setProperty("accountName", QVariant::fromValue(QString::fromStdString(content[0].get<std::string>())));
+      EventPassthrough<DecentSmallButton>* trans = new EventPassthrough<DecentSmallButton>(icon_transaction, icon_transaction_white);
+      trans->setProperty("accountName", QVariant::fromValue(QString::fromStdString(name)));
+
       trans->setAlignment(Qt::AlignCenter);
       connect(trans, SIGNAL(clicked()), this, SLOT(transactionButtonPressed()));
       table_widget.setCellWidget(i, 2, trans);
       
-      EventPassthrough<DecentSmallButton>* transf = new EventPassthrough<DecentSmallButton>(":/icon/images/transfer.png", ":/icon/images/transfer1.png");
-      transf->setProperty("accountName", QVariant::fromValue(QString::fromStdString(content[0].get<std::string>())));
+      EventPassthrough<DecentSmallButton>* transf = new EventPassthrough<DecentSmallButton>(icon_transfer, icon_transfer_white);
+
+      transf->setProperty("accountName", QVariant::fromValue(QString::fromStdString(name)));
       transf->setAlignment(Qt::AlignCenter);
       connect(transf, SIGNAL(clicked()), this, SLOT(buttonPressed()));
       table_widget.setCellWidget(i, 3, transf);
       
       table_widget.setRowHeight(i,40);
-      table_widget.cellWidget(i, 2)->setStyleSheet("* { background-color: rgb(255,255,255); color : rgb(27,176,104); }");
-      table_widget.cellWidget(i, 3)->setStyleSheet("* { background-color: rgb(255,255,255); color : rgb(27,176,104); }");
+      table_widget.cellWidget(i, 2)->setStyleSheet(d_table);
+      table_widget.cellWidget(i, 3)->setStyleSheet(d_table);
       
       
       table_widget.item(i,0)->setBackground(Qt::white);
@@ -121,9 +124,8 @@ void Overview_tab::timeToUpdate(const std::string& result) {
 
 
 std::string Overview_tab::getUpdateCommand() {
-   return "search_accounts \"" + search.text().toStdString() +"\" 100";
+   return "search_accounts \"" + search.text().toStdString() + "\" \"" + table_widget.getSortedColumn() + "\" 100";
 }
-
 
 
 void Overview_tab::transactionButtonPressed()

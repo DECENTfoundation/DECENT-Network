@@ -164,6 +164,7 @@ namespace decent { namespace package {
         uint64_t                get_size() const               { FC_ASSERT( _data_state == CHECKED, "Size unknows" ); return _size; }
         decent::encrypt::CustodyData get_custody_data() const  { return _custody_data; };
 
+
     private:
         mutable std::recursive_mutex  _mutex;
 

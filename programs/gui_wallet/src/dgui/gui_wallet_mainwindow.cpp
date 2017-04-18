@@ -17,7 +17,7 @@
 #include "qt_commonheader.hpp"
 #include "gui_wallet_mainwindow.hpp"
 #include "gui_wallet_global.hpp"
-
+#include "gui_design.hpp"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -34,40 +34,8 @@ using namespace std;
 using namespace graphene;
 using namespace utilities;
 
-static gui_wallet::Mainwindow_gui_wallet*  s_pMainWindowInstance = NULL;
-
-WalletOperator::WalletOperator()
-: QObject(nullptr)
-, m_wallet_api()
-{
-
-}
-
-WalletOperator::~WalletOperator()
-{
-
-}
-
-void WalletOperator::slot_connect()
-{
-   string str_error;
-   try
-   {
-      m_wallet_api.Connent();
-   }
-   catch(std::exception const& ex)
-   {
-      str_error = ex.what();
-   }
-   emit signal_connected(str_error);
-}
-
-
-
-
 Mainwindow_gui_wallet::Mainwindow_gui_wallet()
 : m_ActionExit(tr("&Exit"),this)
-, m_ActionConnect(tr("Connect"),this)
 , m_ActionAbout(tr("About"),this)
 , m_ActionInfo(tr("Info"),this)
 , m_ActionHelp(tr("Help"),this)
@@ -76,16 +44,12 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
 , m_ActionImportKey(tr("Import key"),this)
 , m_info_dialog()
 , m_locked(true)
-, m_import_key_dlg(2, "Key Import")
+, m_sendDCT_dialog(nullptr)
+, m_import_key_dlg(nullptr)
 , m_nConnected(0)
 , m_SetPasswordDialog(this, true)
 , m_UnlockDialog(this, false)
-, m_p_wallet_operator(new WalletOperator())
-, m_wallet_operator_thread(this)
-
 {
-   s_pMainWindowInstance = this;
-
    m_barLeft = new QMenuBar;
    m_barRight = new QMenuBar;
 
@@ -111,8 +75,23 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
 
    setUnifiedTitleAndToolBarOnMac(false);
 
-   QComboBox* pUsersCombo = m_pCentralWidget->usersCombo();
+   QComboBox*   pUsersCombo = m_pCentralWidget->usersCombo();
+   DecentButton* pImportButton = m_pCentralWidget->importButton();
+   pUsersCombo->hide();
+   
+   connect(pUsersCombo, SIGNAL(currentIndexChanged(const QString&)), this, SLOT(CurrentUserChangedSlot(const QString&)) );
+   connect(pImportButton, SIGNAL(LabelClicked()), this, SLOT(ImportKeySlot()));
 
+   setWindowTitle(tr("DECENT - Blockchain Content Distribution"));
+
+   centralWidget()->layout()->setContentsMargins(0, 0, 0, 0);
+   setStyleSheet(d_style);
+
+   QObject::connect(&Globals::instance(), &Globals::walletConnected,
+                    this, &Mainwindow_gui_wallet::slot_connected);
+
+   QObject::connect(&Globals::instance(), &Globals::connectingProgress,
+                    this, &Mainwindow_gui_wallet::slot_connecting_progress);
 
    connect(pUsersCombo, SIGNAL(currentIndexChanged(const QString&)), this, SLOT(CurrentUserChangedSlot(const QString&)) );
 
@@ -120,91 +99,83 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
    setWindowTitle(tr("DECENT - Blockchain Content Distribution"));
 
    centralWidget()->layout()->setContentsMargins(0, 0, 0, 0);
-   setStyleSheet("QMainWindow{color:black;""background-color:white;}");
+   setStyleSheet(d_style);
 
+   _balanceUpdater.setSingleShot(false);
+   _balanceUpdater.setInterval(10000);
+   connect(&_balanceUpdater, SIGNAL(timeout()), this, SLOT( currentUserBalanceUpdate() ));
+   _balanceUpdater.start();
 
-   m_p_wallet_operator->moveToThread(&m_wallet_operator_thread);
-   m_wallet_operator_thread.start();
-
-   DCT_VERIFY(connect(this, SIGNAL(signal_connect()),
-                      m_p_wallet_operator, SLOT(slot_connect())));
-   DCT_VERIFY(connect(m_p_wallet_operator, SIGNAL(signal_connected(std::string)),
-                      this, SLOT(slot_connected(std::string))));
-
-   //WalletInterface::initialize();
-   //ConnectSlot();
-   emit signal_connect();
-
-   //connect(&GlobalEvents::instance(), SIGNAL(walletConnected()), this, SLOT(DisplayWalletContentGUI()));
-   //connect(&GlobalEvents::instance(), SIGNAL(walletConnectionError(std::string)), this, SLOT(DisplayConnectionError(std::string)));
-
-    connect(pUsersCombo, SIGNAL(currentIndexChanged(const QString&)), this, SLOT(CurrentUserChangedSlot(const QString&)) );
-    
-    
-    setWindowTitle(tr("DECENT - Blockchain Content Distribution"));
-    
-    centralWidget()->layout()->setContentsMargins(0, 0, 0, 0);
-    setStyleSheet("QMainWindow{color:black;""background-color:white;}");
-    
-   
-   
-    
-    _balanceUpdater.setSingleShot(false);
-    _balanceUpdater.setInterval(10000);
-    connect(&_balanceUpdater, SIGNAL(timeout()), this, SLOT( currentUserBalanceUpdate() ));
-    _balanceUpdater.start();
-   
-   connect(&GlobalEvents::instance(), SIGNAL(walletConnected(bool)), this, SLOT(DisplayWalletContentGUI(bool)));
-   connect(&GlobalEvents::instance(), SIGNAL(walletConnectionError(std::string)), this, SLOT(DisplayConnectionError(std::string)));
-
-   
-   _downloadChecker.setSingleShot(false);
-   _downloadChecker.setInterval(5000);
-   connect(&_downloadChecker, SIGNAL(timeout()), this, SLOT(CheckDownloads()));
-   _downloadChecker.start();
+   connect(m_pCentralWidget, SIGNAL(sendDCT()), this, SLOT(SendDCTSlot()));
 }
 
 Mainwindow_gui_wallet::~Mainwindow_gui_wallet()
 {
-   m_wallet_operator_thread.quit();
-   m_wallet_operator_thread.wait();
-   m_p_wallet_operator->m_wallet_api.SaveWalletFile();
-   //WalletInterface::destroy();
 }
 
-void Mainwindow_gui_wallet::slot_connected(std::string str_error)
+void Mainwindow_gui_wallet::slot_connected()
 {
-   if (str_error.empty())
-   {
-      _downloadChecker.setSingleShot(false);
-      _downloadChecker.setInterval(5000);
-      connect(&_downloadChecker, SIGNAL(timeout()), this, SLOT(CheckDownloads()));
-      _downloadChecker.start();
+   _downloadChecker.setSingleShot(false);
+   _downloadChecker.setInterval(5000);
+   connect(&_downloadChecker, SIGNAL(timeout()), this, SLOT(CheckDownloads()));
+   _downloadChecker.start();
 
-      DisplayWalletContentGUI(m_p_wallet_operator->m_wallet_api.IsNew());
-   }
-   //else
-      //QMessageBox::critical(this, "Error", str_error.c_str());
+   Globals::instance().statusClearMessage();
+
+   QTimer* pTimerBlockChainQuery = new QTimer(this);
+   pTimerBlockChainQuery->start(std::chrono::milliseconds(1000));
+   QObject::connect(pTimerBlockChainQuery, &QTimer::timeout,
+                    this, &Mainwindow_gui_wallet::slot_query_blockchain);
+
+   DisplayWalletContentGUI(Globals::instance().getWallet().IsNew());
+}
+
+void Mainwindow_gui_wallet::slot_query_blockchain()
+{
+   QDateTime qdt;
+   qdt.setTime_t(std::chrono::system_clock::to_time_t(Globals::instance().getWallet().HeadBlockTime()));
+   std::string str_result = CalculateRemainingTime_Behind(qdt, QDateTime::currentDateTime());
+
+   if (false == str_result.empty())
+      Globals::instance().statusShowMessage(str_result.c_str(), 5000);
+}
+
+void Mainwindow_gui_wallet::slot_connecting_progress(std::string const& str_progress)
+{
+   if (false == str_progress.empty())
+      Globals::instance().statusShowMessage(str_progress.c_str(), 5000);
 }
 
 void Mainwindow_gui_wallet::currentUserBalanceUpdate()
 {
-    std::string userBalanceUpdate = GlobalEvents::instance().getCurrentUser();
-    if( userBalanceUpdate == "" ) {
-        return;
-    }
-    UpdateAccountBalances(userBalanceUpdate);
+   std::string userBalanceUpdate = Globals::instance().getCurrentUser();
+
+   if (userBalanceUpdate.empty())
+      return;
+
+   if(m_pCentralWidget->usersCombo()->count())
+   {
+      UpdateAccountBalances(userBalanceUpdate);
+      m_pCentralWidget->getSendButton()->highlight();
+      m_pCentralWidget->getSendButton()->setStyleSheet("* { background-color: rgb(255,255,255); color : black; }");
+   }
+   else
+   {
+      m_pCentralWidget->getSendButton()->unhighlight();
+      m_pCentralWidget->getSendButton()->setStyleSheet("* { background-color: rgb(255,255,255); color : black; }");
+   }
+}
+
+CentralWigdet* Mainwindow_gui_wallet::getCentralWidget()
+{
+   return m_pCentralWidget;
 }
 
 
 
 void Mainwindow_gui_wallet::RunTaskImpl(std::string const& str_command, std::string& str_result)
 {
-   if (s_pMainWindowInstance == NULL) {
-      throw std::runtime_error("Main window is not initialized yet");
-   }
-   
-   str_result = s_pMainWindowInstance->m_p_wallet_operator->m_wallet_api.RunTaskImpl(str_command);
+   str_result = Globals::instance().getWallet().RunTaskImpl(str_command);
 }
 
 bool Mainwindow_gui_wallet::RunTaskParseImpl(std::string const& str_command, nlohmann::json& json_result) {
@@ -235,10 +206,6 @@ void Mainwindow_gui_wallet::CreateActions()
 
     m_ActionInfo.setStatusTip( tr("Info") );
     connect( &m_ActionInfo, SIGNAL(triggered()), this, SLOT(InfoSlot()) );
-
-    m_ActionConnect.setStatusTip( tr("Connect to witness node") );
-    connect( &m_ActionConnect, SIGNAL(triggered()), this, SLOT(ConnectSlot()) );
-
    
     m_ActionLock.setDisabled(m_locked);
     m_ActionLock.setStatusTip( tr("Lock account") );
@@ -251,6 +218,7 @@ void Mainwindow_gui_wallet::CreateActions()
     m_ActionImportKey.setDisabled(true);
     m_ActionImportKey.setStatusTip( tr("Import key") );
     connect( &m_ActionImportKey, SIGNAL(triggered()), this, SLOT(ImportKeySlot()) );
+   
 
 
 }
@@ -262,7 +230,6 @@ void Mainwindow_gui_wallet::CreateMenues()
     QMenuBar* pMenuBar = m_barLeft;
     m_pMenuFile = pMenuBar->addMenu( tr("&File") );
     m_pMenuFile->addAction( &m_ActionExit );
-    m_pMenuFile->addAction( &m_ActionConnect );
     m_pMenuFile->addAction( &m_ActionLock );
     m_pMenuFile->addAction( &m_ActionUnlock );
     m_pMenuFile->addAction( &m_ActionImportKey );
@@ -281,7 +248,7 @@ void Mainwindow_gui_wallet::CreateMenues()
     m_pMenuView->addAction(transactionsAction);
     transactionsAction->setProperty("index", 1);
 
-    QAction* uploadAction = new QAction(tr("Upload"), this);
+    QAction* uploadAction = new QAction(tr("Publish"), this);
     m_pMenuView->addAction(uploadAction);
     uploadAction->setProperty("index", 2);
 
@@ -321,8 +288,11 @@ void Mainwindow_gui_wallet::ViewAction() {
 
 void Mainwindow_gui_wallet::CurrentUserChangedSlot(const QString& a_new_user)
 {
-    GlobalEvents::instance().setCurrentUser(a_new_user.toStdString());
-    UpdateAccountBalances(a_new_user.toStdString());
+   if(m_pCentralWidget->usersCombo()->count())
+   {
+      Globals::instance().setCurrentUser(a_new_user.toStdString());
+      UpdateAccountBalances(a_new_user.toStdString());
+   }
 }
 
 
@@ -339,13 +309,33 @@ void Mainwindow_gui_wallet::UpdateAccountBalances(const std::string& username) {
    
    std::string csLineToRun = "list_account_balances " + username;
    json allBalances;
-   
+
    if (!RunTaskParse(csLineToRun, allBalances)) {
       ALERT_DETAILS("Could not get account balances", allBalances.get<string>().c_str());
       return;
    }
    
-   
+   if(!allBalances.size())
+   {
+      m_pCentralWidget->usersCombo()->hide();
+      m_pCentralWidget->importButton()->show();
+   }
+   else
+   {
+      m_pCentralWidget->importButton()->hide();
+      m_pCentralWidget->usersCombo()->show();
+   }
+   if(!m_pCentralWidget->usersCombo()->count())
+   {
+      m_pCentralWidget->usersCombo()->hide();
+      m_pCentralWidget->importButton()->show();
+   }
+   else
+   {
+      m_pCentralWidget->importButton()->hide();
+      m_pCentralWidget->usersCombo()->show();
+   }
+
    
    std::vector<std::string> balances;
    for (int i = 0; i < allBalances.size(); ++i) {
@@ -424,7 +414,8 @@ void Mainwindow_gui_wallet::UnlockSlot()
     }
     
     UpdateLockedStatus();
-    
+    m_pCentralWidget->getSendButton()->highlight();
+    m_pCentralWidget->getSendButton()->setStyleSheet("* { background-color: rgb(255,255,255); color : black; }");
 }
 
 
@@ -439,7 +430,7 @@ void Mainwindow_gui_wallet::UpdateLockedStatus()
       m_locked = (a_result == "true");
 
       if (false == m_locked)
-         GlobalEvents::instance().setWalletUnlocked();
+         Globals::instance().setWalletUnlocked();
 
    }
    catch (const std::exception& ex)
@@ -460,7 +451,9 @@ void Mainwindow_gui_wallet::UpdateLockedStatus()
 
 void Mainwindow_gui_wallet::CheckDownloads()
 {
-    auto& global_instance = gui_wallet::GlobalEvents::instance();
+   return; //TODO: remove this later
+   
+    auto& global_instance = gui_wallet::Globals::instance();
     std::string str_current_username = global_instance.getCurrentUser();
 
     if (str_current_username == "") {
@@ -469,38 +462,41 @@ void Mainwindow_gui_wallet::CheckDownloads()
     }
    
    json contents;
-   if (!RunTaskParse("search_my_purchases \"" + str_current_username +"\" \"\" ", contents)) {
+   if (!RunTaskParse("search_my_purchases "
+                     "\"" + str_current_username + "\" "
+                     "\"\" "
+                     "\"\" ",
+                     contents))
+   {
       std::cout << contents.get<string>() << std::endl;
       return;
    }
    
    
-   for (int i = 0; i < contents.size(); ++i) {
-      
+   for (int i = 0; i < contents.size(); ++i)
+   {
       auto content = contents[i];
       std::string URI = contents[i]["URI"].get<std::string>();
       
-      if (URI == "") {
+      if (URI == "")
          continue;
-      }
       
-      if (_activeDownloads.find(URI) == _activeDownloads.end()) {
+      if (_activeDownloads.find(URI) == _activeDownloads.end())
+      {
          json ignore_result;
-         if (RunTaskParse("download_package \"" + URI +"\" ", ignore_result)) {
+         if (RunTaskParse("download_package "
+                          "\"" + URI + "\" ",
+                          ignore_result))
+         {
             _activeDownloads.insert(URI);
-         } else {
+         }
+         else
+         {
             std::cout << "Can not resume download: " << URI << std::endl;
             std::cout << "Error: " << ignore_result.get<string>() << std::endl;
-            
          }
-         
       }
-      
    }
-   
-   
-   
-
 }
 
 
@@ -527,14 +523,15 @@ void Mainwindow_gui_wallet::DisplayWalletContentGUI(bool isNewWallet)
    {
       std::string a_result;
       RunTask("list_my_accounts", a_result);
-
+      userCombo.clear();
+      
       auto accs = json::parse(a_result);
-
+      
       for (int i = 0; i < accs.size(); ++i)
       {
          std::string id = accs[i]["id"].get<std::string>();
          std::string name = accs[i]["name"].get<std::string>();
-
+         
          userCombo.addItem(tr(name.c_str()));
       }
 
@@ -554,9 +551,17 @@ void Mainwindow_gui_wallet::DisplayWalletContentGUI(bool isNewWallet)
 
 void Mainwindow_gui_wallet::ImportKeySlot()
 {
+    if(m_import_key_dlg != nullptr)
+    {
+       delete m_import_key_dlg;
+       m_import_key_dlg = new RichDialog(2 , "key import");
+    }
+    else
+    {
+       m_import_key_dlg = new RichDialog(2 , "key import");
+    }
     std::vector<std::string> cvsUsKey(2);
     QComboBox& cUsersCombo = *m_pCentralWidget->usersCombo();
-    cUsersCombo.setWindowTitle("key import");
     cvsUsKey[0] = "";
     cvsUsKey[1] = "";
 
@@ -570,7 +575,7 @@ void Mainwindow_gui_wallet::ImportKeySlot()
     QPoint thisPos = pos();
     thisPos.rx() += size().width() / 2 - 175;
     thisPos.ry() += size().height() / 2 - 75;
-    RET_TYPE aRet = m_import_key_dlg.execRD(&thisPos,cvsUsKey);
+    RET_TYPE aRet = m_import_key_dlg->execRD(&thisPos,cvsUsKey);
    
     if(aRet == RDB_CANCEL){
         return ;
@@ -586,17 +591,36 @@ void Mainwindow_gui_wallet::ImportKeySlot()
     } catch (...) {
         hasError = true;
     }
-    
     if (hasError) {
         ALERT_DETAILS("Can not import key.", result.c_str());
     } else {
         DisplayWalletContentGUI(false);
-
     }
-
-    
+    m_pCentralWidget->getSendButton()->highlight();
+    m_pCentralWidget->getSendButton()->setStyleSheet("* { background-color: rgb(255,255,255); color : black; }");
 }
 
+
+void Mainwindow_gui_wallet::SendDCTSlot()
+{
+   if(!m_pCentralWidget->usersCombo()->count())
+      return;
+   if(m_sendDCT_dialog != nullptr)
+   {
+      delete m_sendDCT_dialog;
+      m_sendDCT_dialog = new SendDialog(3, "Send DCT");
+   }
+   else
+   {
+      m_sendDCT_dialog = new SendDialog(3, "Send DCT");
+   }
+   std::vector<std::string> cvsUsKey(3);
+   QPoint thisPos = pos();
+   thisPos.rx() += size().width() / 2 - 175;
+   thisPos.ry() += size().height() / 2 - 75;
+   m_sendDCT_dialog->curentName = m_pCentralWidget->usersCombo()->currentText();
+   m_sendDCT_dialog->execRD(&thisPos,cvsUsKey);
+}
 
 void Mainwindow_gui_wallet::InfoSlot()
 {
@@ -650,16 +674,6 @@ void Mainwindow_gui_wallet::HelpSlot()
 }
 
 
-
-
-
-void Mainwindow_gui_wallet::ConnectSlot()
-{
-}
-
-
-
-
 void Mainwindow_gui_wallet::SetPassword()
 {
    std::string pcsPassword;
@@ -679,7 +693,7 @@ void Mainwindow_gui_wallet::SetPassword()
          RunTask(setPassword, result);
          RunTask(unlockTask, result);
 
-         m_p_wallet_operator->m_wallet_api.SaveWalletFile();
+         Globals::instance().getWallet().SaveWalletFile();
          
          m_ActionImportKey.setEnabled(true);
          m_ActionUnlock.setEnabled(false);

@@ -1,4 +1,3 @@
-
 #include <cstddef>
 #include "torrent_transfer.hpp"
 #include "ipfs_transfer.hpp"
@@ -21,6 +20,10 @@
 #include <atomic>
 #include <thread>
 #include <vector>
+
+
+using namespace boost;
+using namespace boost::filesystem;
 
 
 namespace decent { namespace package {
@@ -188,7 +191,7 @@ namespace decent { namespace package {
                     if (exists(_samples_dir_path) && !is_directory(_samples_dir_path)) {
                         FC_THROW("Samples path ${path} must point to directory", ("path", _samples_dir_path.string()));
                     }else{
-                        samples = true;
+                        samples = !_samples_dir_path.empty();
                     }
 
                     if (exists(temp_dir_path) || !create_directory(temp_dir_path)) {
@@ -775,6 +778,19 @@ namespace decent { namespace package {
         std::lock_guard<std::recursive_mutex> guard(_mutex);
         return _manipulation_state;
     }
+   
+   
+   int PackageInfo::get_size() const {
+      size_t size=0;
+      for(recursive_directory_iterator it( get_package_dir() );
+          it!=recursive_directory_iterator();
+          ++it)
+      {
+         if(!is_directory(*it))
+            size+=file_size(*it);
+      }
+      return size;
+   }
 
     void PackageInfo::lock_dir() {
         std::lock_guard<std::recursive_mutex> guard(_mutex);

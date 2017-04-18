@@ -19,16 +19,22 @@ class DecentButton : public QLabel
     Q_OBJECT
 public:
     DecentButton();
-    virtual ~DecentButton();
+   
+   void setEnabled(bool isEnabled);
+   bool isEnabled() const { return _isEnabled; }
     
 protected:
     void mousePressEvent(QMouseEvent *event) {
-       emit LabelClicked();
+       if (_isEnabled)
+          emit LabelClicked();
     }
    
 public:
 signals:
     void LabelClicked();
+   
+private:
+   bool _isEnabled;
 };
     
 

@@ -16,8 +16,9 @@
 #include <limits>
 #include <iostream>
 #include <graphene/chain/config.hpp>
+#include <graphene/chain/content_object.hpp>
 #include <graphene/wallet/wallet.hpp>
-
+#include "gui_design.hpp"
 
 #include <QDateTime>
 #include <QDate>
@@ -27,7 +28,12 @@ using namespace gui_wallet;
 using namespace nlohmann;
 
 
-BrowseContentTab::BrowseContentTab(Mainwindow_gui_wallet* parent) : _content_popup(NULL), _parent(parent) {
+BrowseContentTab::BrowseContentTab(Mainwindow_gui_wallet* parent)
+: TabContentManager(parent)
+, _content_popup(NULL)
+, _parent(parent)
+, m_pTableWidget(this)
+{
     
     m_pTableWidget.set_columns({
         {"Title", 20},
@@ -39,28 +45,14 @@ BrowseContentTab::BrowseContentTab(Mainwindow_gui_wallet* parent) : _content_pop
         {"Expiration", 7, "expiration"},
         {" ", -50},
     });
-    
-
-//    m_pTableWidget.setStyleSheet("border: 1px solid ");
-    
-    
-    m_filterLineEdit.setStyleSheet( "{"
-                                   "background: #f3f3f3;"
-                                   "background-image: url(:Images/search.svg); /* actual size, e.g. 16x16 */"
-                                   "background-repeat: no-repeat;"
-                                   "background-position: left;"
-                                   "color: #252424;"
-                                   "font-family: SegoeUI;"
-                                   "font-size: 12px;"
-                                   "padding: 2 2 2 20; /* left padding (last number) must be more than the icon's width */"
-                                   "}");
+        
     QLabel* lab = new QLabel();
-    QPixmap image(":/icon/images/search.svg");
+    QPixmap image(icon_search);
     lab->setPixmap(image);
     
     m_filterLineEdit.setPlaceholderText("Search Content");
     m_filterLineEdit.setFixedHeight(54);
-    m_filterLineEdit.setStyleSheet("border: 0; padding-left: 10px;");
+    m_filterLineEdit.setStyleSheet(d_lineEdit);
     m_filterLineEdit.setAttribute(Qt::WA_MacShowFocusRect, 0);
     
     m_search_layout.setContentsMargins(42, 0, 0, 0);
@@ -124,9 +116,15 @@ void BrowseContentTab::timeToUpdate(const std::string& result) {
 
 
 
-std::string BrowseContentTab::getUpdateCommand() {
+std::string BrowseContentTab::getUpdateCommand()
+{
    std::string filterText = m_filterLineEdit.text().toStdString();
-   return "search_content \"" + filterText + "\" \"" + m_pTableWidget.getSortedColumn() + "\" \"" + "" + "\" 100";
+   return   string("search_content ") +
+            "\"" + filterText + "\" " +
+            "\"" + m_pTableWidget.getSortedColumn() + "\" " +
+            "\"\" " +   // user
+            "\"\" " +   // region code
+            "100";
 }
 
 
@@ -154,7 +152,7 @@ void BrowseContentTab::content_was_bought() {
       _content_popup = NULL;
    }
    _parent->GoToThisTab(4, "");
-   _parent->UpdateAccountBalances(GlobalEvents::instance().getCurrentUser());
+   _parent->UpdateAccountBalances(Globals::instance().getCurrentUser());
    
 
 }
@@ -169,17 +167,12 @@ void BrowseContentTab::ShowDigitalContentsGUI() {
       std::string synopsis = unescape_string(aTemporar.synopsis);
       std::replace(synopsis.begin(), synopsis.end(), '\t', ' '); // JSON does not like tabs
       std::replace(synopsis.begin(), synopsis.end(), '\n', ' '); // JSON does not like newlines either
-      //massageBox_title.push_back(	)
-      
-      try {
-         auto synopsis_parsed = json::parse(synopsis);
-         synopsis = synopsis_parsed["title"].get<std::string>();
-         
-      } catch (...) {}
-      
+      graphene::chain::ContentObjectPropertyManager synopsis_parser(synopsis);
+      std::string title = synopsis_parser.get<graphene::chain::ContentObjectTitle>();
+
       // Title
       int colIndex = 0;
-      m_pTableWidget.setItem(index, colIndex,new QTableWidgetItem(QString::fromStdString(synopsis)));
+      m_pTableWidget.setItem(index, colIndex,new QTableWidgetItem(QString::fromStdString(title)));
       m_pTableWidget.item(index, colIndex)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
       m_pTableWidget.item(index, colIndex)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
      
@@ -213,7 +206,14 @@ void BrowseContentTab::ShowDigitalContentsGUI() {
       
       // Price
       colIndex++;
-      m_pTableWidget.setItem(index, colIndex, new QTableWidgetItem(QString::number(aTemporar.price.amount) + " DCT"));
+      if(aTemporar.price.amount)
+      {
+         m_pTableWidget.setItem(index, colIndex, new QTableWidgetItem(QString::number(aTemporar.price.amount , 'f' , 4) + " DCT"));
+      }
+      else
+      {
+         m_pTableWidget.setItem(index, colIndex, new QTableWidgetItem("Free"));
+      }
       m_pTableWidget.item(index, colIndex)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
       m_pTableWidget.item(index, colIndex)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
       
@@ -238,7 +238,7 @@ void BrowseContentTab::ShowDigitalContentsGUI() {
       
       // Button
       colIndex++;
-      EventPassthrough<DecentSmallButton>* info_icon = new EventPassthrough<DecentSmallButton>(":/icon/images/pop_up.png", ":/icon/images/pop_up1.png");
+      EventPassthrough<DecentSmallButton>* info_icon = new EventPassthrough<DecentSmallButton>(icon_popup, icon_popup_white);
       info_icon->setProperty("id", QVariant::fromValue(index));
       info_icon->setAlignment(Qt::AlignCenter);
       connect(info_icon, SIGNAL(clicked()), this, SLOT(show_content_popup()));

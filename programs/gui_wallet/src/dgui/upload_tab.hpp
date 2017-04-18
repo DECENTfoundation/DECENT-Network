@@ -25,6 +25,7 @@
 #include <QTimer>
 #include <QDateEdit>
 #include <QComboBox>
+#include <QCheckBox>
 
 #include "decent_button.hpp"
 #include "gui_wallet_tabcontentmanager.hpp"
@@ -64,53 +65,55 @@ namespace gui_wallet
         friend class Upload_tab;
     public:
         Upload_popup(Mainwindow_gui_wallet* pMainWindow);
-
+       
     public slots:
         void browseContent();
         void browseSamples();
         void uploadContent();
         void onGrabPublishers();
         void uploadCanceled();
-
-    public:
-        friend class upload_up;
-        void onPublishersDone(void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result);
-        
+        void updateUploadButtonStatus();
+        void seederOkSlot();
        
-        QVBoxLayout     u_main_layout;
+    public:
+        void onPublishersDone(void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result);
 
-    protected:
-        virtual void resizeEvent ( QResizeEvent * event );
     private:
         Mainwindow_gui_wallet* m_pMainWindow;
-        QVBoxLayout     m_synopsis_layout;
-        QVBoxLayout     m_info_layout;
-        QTableWidget    m_info_widget;
-        
-        QLabel          m_title_label;
-        QLineEdit       m_title_text;
-        
-        QLabel          m_description_label;
-        QTextEdit       m_description_text;
-        
-        QLabel          m_infoLayoutHeader;
-        QTimer          m_getPublishersTimer;
-        
-        QLineEdit*      m_contentPath;
-        QLineEdit*      m_samplesPath;
-        
-        QDateEdit*      de;
-        QComboBox*      seeders;
-        QComboBox*      keyparts;
-        QLineEdit*      price;
-        QLineEdit*      sim;
-        QLineEdit*      cont;
+       
+        QVBoxLayout*     u_main_layout;
+        QLineEdit*       _titleText;
+        QTextEdit*       _descriptionText;
+        QDateEdit*       _lifeTime;
+        QComboBox*       _keyparts;
+        QLineEdit*       _price;
+        QLineEdit*       _seedersPath;
+        QLineEdit*       _contentPath;
+        QLineEdit*       _samplesPath;
+        DecentButton*    _upload_button;
+        DecentButton*    _cancel_button;
+        DecentButton*    _seeder_ok;
+        DecentTable*     _seeder_table;
+       
+        QTimer           m_getPublishersTimer;
+        QTimer*          _buttonStatusCheck;
+        QDialog*         _seeders_dialog;
+       
+       std::map<std::string, double> _publisherIdToPriceMap;
+       std::vector<QCheckBox*>       _seeders_checkbox;
+       std::vector<std::string>      _checkedSeeders;
+
     public:
     signals:
         void uploadFinished();
     };
     
 }
+
+
+
+
+
 
 
 
@@ -135,6 +138,7 @@ namespace gui_wallet
         void show_content_popup();
         void content_was_bought();
         void uploadPopup();
+        void updateContents();
         
     protected:
         QVBoxLayout     m_main_layout;
@@ -143,16 +147,12 @@ namespace gui_wallet
         QLineEdit       m_filterLineEdit;
         QComboBox       m_searchTypeCombo;
         DecentButton*   upload_button;
-        Upload_popup    popup;
         
         std::vector<SDigitalContent>  _digital_contents;
         ContentDetailsGeneral*        _content_popup;
         Mainwindow_gui_wallet*        _parent;
        bool                          _isUploading;
-    
-        bool                          m_doUpdate;
-        QTimer                        m_contentUpdateTimer;
-    };
+   };
     
 
     

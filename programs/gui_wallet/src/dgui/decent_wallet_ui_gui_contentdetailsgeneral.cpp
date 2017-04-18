@@ -4,6 +4,7 @@
 #include "decent_wallet_ui_gui_contentdetailsgeneral.hpp"
 #include "gui_wallet_global.hpp"
 #include "gui_wallet_mainwindow.hpp"
+#include "gui_design.hpp"
 
 #include <QMouseEvent>
 #include <QMessageBox>
@@ -11,7 +12,7 @@
 #include <QPushButton>
 
 using namespace gui_wallet;
-ContentDetailsGeneral::ContentDetailsGeneral(Mainwindow_gui_wallet* pMainWindow) : ContentDetailsBase(pMainWindow){
+ContentDetailsGeneral::ContentDetailsGeneral(QWidget* pParent) : ContentDetailsBase(pParent){
    QHBoxLayout* image_layout = new QHBoxLayout;
    m_label.setText("Get it!");
    m_label.setFixedWidth(178);
@@ -20,7 +21,7 @@ ContentDetailsGeneral::ContentDetailsGeneral(Mainwindow_gui_wallet* pMainWindow)
    m_close.setText("Close");
    m_close.setFixedWidth(178);
    m_close.setFixedHeight(40);
-   m_close.setStyleSheet("QLabel { background-color :rgb(255,255,255); color : rgb(0,0,0);border: 1px solid grey}");
+   m_close.setStyleSheet(d_close);
    
    image_layout->addWidget(&m_label);
    image_layout->addWidget(new QLabel());
@@ -49,8 +50,8 @@ void ContentDetailsGeneral::LabelPushCallbackGUI()
    reply->setText(tr("          Are you sure you want to buy this content?"));
    QPushButton* pButtonCencel = reply->addButton(tr("Cencel"), QMessageBox::YesRole);
    QPushButton* pButtonOk = reply->addButton(tr("Get it"), QMessageBox::NoRole);
-   pButtonOk->setStyleSheet("background-color: rgb(27,176,104); color: rgb(255,255,255);border-top: 0px;border-left: 0px;border-right: 0px;border-bottom: 0px;");
-   pButtonCencel->setStyleSheet("background-color: rgb(255,255,255); color: rgb(0,0,0);border: 1px solid grey;");
+   pButtonOk->setStyleSheet(d_pButtonOk);
+   pButtonCencel->setStyleSheet(d_pbuttonCancel);
    pButtonOk->setFixedSize(100, 30);
    pButtonCencel->setFixedSize(100, 30);
    reply->exec();
@@ -58,16 +59,17 @@ void ContentDetailsGeneral::LabelPushCallbackGUI()
       return;
    }
    std::string downloadCommand = "download_content";
-   downloadCommand += " " + GlobalEvents::instance().getCurrentUser();   //consumer
-   downloadCommand += " \"" + m_pContentInfo->URI + "\"";                 //URI
-   downloadCommand += " true";                                           //broadcast
+   downloadCommand += " " + Globals::instance().getCurrentUser();  // consumer
+   downloadCommand += " \"" + m_pContentInfo->URI + "\"";               // URI
+   downloadCommand += " \"\"";                                          // region_code
+   downloadCommand += " true";                                          // broadcast
    
    std::string a_result;
 
    std::string str_error;
    try
    {
-      m_pMainWindow->RunTask(downloadCommand, a_result);
+      RunTask(downloadCommand, a_result);
    }
    catch(std::exception const& ex)
    {
