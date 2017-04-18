@@ -779,6 +779,18 @@ namespace decent { namespace package {
         return _manipulation_state;
     }
    
+   uint64_t PackageInfo::get_size() const {
+      size_t size=0;
+      for(recursive_directory_iterator it( get_package_dir() );
+          it != recursive_directory_iterator();
+          ++it)
+      {
+         if(!is_directory(*it))
+            size+=file_size(*it);
+      }
+      return size;
+   }
+   
    
 
     void PackageInfo::lock_dir() {

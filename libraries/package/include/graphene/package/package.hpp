@@ -161,7 +161,7 @@ namespace decent { namespace package {
         boost::filesystem::path get_package_dir() const        { return _parent_dir / _hash.str(); }
         std::string             get_url() const                { return _url; }
         fc::ripemd160           get_hash() const               { return _hash; }
-        uint64_t                get_size() const               { FC_ASSERT( _data_state == CHECKED, "Size unknows" ); return _size; }
+        uint64_t                get_size() const;
         decent::encrypt::CustodyData get_custody_data() const  { return _custody_data; };
 
 
