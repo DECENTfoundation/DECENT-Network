@@ -16,8 +16,7 @@ namespace DCT {
 
 
 namespace gui_wallet {
-    
-    
+   
    struct SDigitalContent
    {
       DCT::DIG_CONT_TYPES  type = DCT::GENERAL;
@@ -37,6 +36,7 @@ namespace gui_wallet {
       std::string   expiration;
       std::string   id;
       std::string   hash;
+      std::string   status;
       int           size;
       int           times_bougth;
    };

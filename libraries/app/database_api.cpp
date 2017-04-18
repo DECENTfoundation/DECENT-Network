@@ -1880,12 +1880,7 @@ namespace graphene { namespace app {
                                                                   const string& region_code,
                                                                   uint32_t count)const
    {
-      FC_ASSERT( count <= 100 );
-      
-      vector<content_summary> result;
-      result.reserve( count );
-      
-      return result = search_content(search_term, order, user, region_code, count);
+      return search_content(search_term, order, user, region_code, count);
    }
    
    
