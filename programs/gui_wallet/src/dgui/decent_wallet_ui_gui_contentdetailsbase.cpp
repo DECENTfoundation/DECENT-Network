@@ -68,11 +68,12 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details, bool bSil
 
     
     if(a_cnt_details.type == DCT::BOUGHT) {
-        
+       
         if (stars_labels.size() == 0) {
             m_RateText = new QLabel;
             
             if (m_currentMyRating > 0) {
+                m_rating = m_currentMyRating;
                 m_RateText->setText( tr("You rated:"));
             } else {
                 m_RateText->setText( tr("Please Rate:"));
@@ -117,10 +118,7 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details, bool bSil
                 stars_labels[i]->setVisible(true);
             }
         }
-        
-        
-        
-        
+       
         if (m_currentMyRating > 0) { // To show stars when opened
             for (int i = 0; i < m_currentMyRating; ++i) {
                 stars_labels[i]->setCheckState(Qt::Checked);
@@ -129,8 +127,46 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details, bool bSil
                 stars_labels[i]->setCheckState(Qt::Unchecked);
             }
         }
-        
-        
+       
+       std::string comment_result;
+       try {
+          RunTask("get_comment_by_consumer_URI \"" + Globals::instance().getCurrentUser() + "\" \"" + m_pContentInfo->URI + "\"", comment_result);
+       } catch (...) { }
+    
+       std::cout << "\n\n\n\n\n\n ~_~_~_~gui- get_comment : " << comment_result << std::endl;
+       m_CommentOrRate_Text = new QLabel;
+       m_comment = new QTextEdit;
+
+       if ( comment_result.empty() )
+       {
+          m_CommentOrRate_Text->setText("Leave comment about this content");
+          m_comment->setPlaceholderText("Text heare");
+          
+          m_main_layout.addWidget(m_CommentOrRate_Text);
+          m_main_layout.addWidget(m_comment);
+          
+          QHBoxLayout* button = new QHBoxLayout;
+          button->setAlignment(Qt::AlignRight);
+          button->setMargin(4);
+          
+          DecentButton* leave_comment_button = new DecentButton;
+          leave_comment_button->setText("Leave comment");
+          leave_comment_button->setFixedHeight(40);
+          leave_comment_button->setFixedWidth(100);
+          button->addWidget(leave_comment_button);
+          
+          m_main_layout.addLayout(button);
+          
+          connect(leave_comment_button, SIGNAL(LabelClicked()), this, SLOT(LeaveComment()));
+       }
+       else{
+          m_CommentOrRate_Text->setText("You Commented");
+          m_comment->setText("COMMENT");
+          
+          m_main_layout.addWidget(m_CommentOrRate_Text);
+          m_main_layout.addWidget(m_comment);
+       }
+       
     }
     
     if(a_cnt_details.type == DCT::WAITING_DELIVERY) {
@@ -146,10 +182,9 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details, bool bSil
     if (a_cnt_details.type == DCT::GENERAL) {
         m_main_layout.addLayout(&m_free_for_child);
     }
-
-    
-    setLayout(&m_main_layout);
-    
+   
+   setLayout(&m_main_layout);
+   
     int i,nIndexZuyg(0);
     
     NewType vNames = s_vFields[a_cnt_details.type];
@@ -249,11 +284,28 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details, bool bSil
       QDialog::exec();
 }
 
+void ContentDetailsBase::LeaveComment()
+{
+   std::string leave_result;
+   
+   try {
+      RunTask("leave_rating_and_comment "
+              "\"" + Globals::instance().getCurrentUser() + "\" "
+              "\"" + m_pContentInfo->URI + "\" "
+              "\"" + std::to_string(m_rating) + "\" "
+              "\"" + escape_string(m_comment->toPlainText().toStdString()) + "\" "
+              "\"true\"", leave_result);
+
+   }catch (...) {}
+
+   std::cout << "\n\n\n\n ~~~~~~ gui leave_result: " << leave_result << std::endl;
+}
 
 void ContentDetailsBase::MouseClickedStar(int index) {
     if (m_currentMyRating > 0)
         return;
-    
+    m_rating = ++index;
+   
     std::string result;
     try {
         RunTask("leave_rating \"" + Globals::instance().getCurrentUser() + "\" \"" + m_pContentInfo->URI + "\" " + std::to_string(index + 1) + " true", result);

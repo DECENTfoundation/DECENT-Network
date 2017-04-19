@@ -36,6 +36,7 @@ public:
     //virtual void execCDD(const decent::wallet::ui::gui::SDigitalContent& a_cnt_details)=0;
 
 private slots:
+    void LeaveComment();
     void MouseEnteredStar(int index) {
         if (m_currentMyRating > 0)
             return;
@@ -82,6 +83,9 @@ protected:
     int             m_currentMyRating = 0;
     std::vector<NewCheckBox*> stars_labels;
     QLabel*         m_RateText;
+    QLabel*         m_CommentOrRate_Text;
+    QTextEdit*      m_comment;
+    uint64_t        m_rating;
     QTextEdit       m_desc;
 };
 

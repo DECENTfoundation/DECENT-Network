@@ -2440,7 +2440,10 @@ public:
                                                uint64_t rating,
                                                string comment,
                                                bool broadcast/* = false */)
-   { try {
+   {
+      std::cout << "\n\n\n\n\n  ~_~_~_~_~:: wallet leave_rating_and_comment \n rating: " << rating << "\n URI: "  "\n comment: " << comment << std::endl;
+
+      try {
       account_object consumer_account = get_account( consumer );
 
       leave_rating_and_comment_operation leave_rating_op;
@@ -2455,7 +2458,9 @@ public:
       tx.validate();
       
       return sign_transaction( tx, broadcast );
-   } FC_CAPTURE_AND_RETHROW( (consumer)(URI)(rating)(comment)(broadcast) ) }
+      } FC_CAPTURE_AND_RETHROW( (consumer)(URI)(rating)(comment)(broadcast) )
+   
+   }
    
    signed_transaction ready_to_publish(string seeder,
                                        uint64_t space,
