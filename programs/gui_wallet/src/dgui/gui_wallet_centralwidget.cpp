@@ -7,21 +7,30 @@
  *  This file implements ...
  *
  */
+#include "stdafx.h"
 
 #include "gui_design.hpp"
 #include "gui_wallet_centralwidget.hpp"
+
+
+#ifndef _MSC_VER
 #include <QMessageBox>
 #include <QTimer>
 #include <QStatusBar>
 #include <QHeaderView>
 #include <QResizeEvent>
 #include <QScrollBar>
+#endif
+
 #include "gui_wallet_global.hpp"
 #include "gui_wallet_mainwindow.hpp"
+
+#ifndef _MSC_VER
 #include <QSortFilterProxyModel>
 #include <QStyleFactory>
-#include "decent_wallet_ui_gui_newcheckbox.hpp"
+#endif
 
+#include "decent_wallet_ui_gui_newcheckbox.hpp"
 
 #define __SIZE_FOR_IMGS__   40
 #define __HEIGHT__  60

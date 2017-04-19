@@ -18,9 +18,12 @@
 #endif
 
 
+
 #define ALERT(message)                                  \
 {                                                       \
 QMessageBox* msgBox = new QMessageBox();                \
+QIcon i = msgBox->style()->standardIcon(QStyle::SP_MessageBoxCritical);\
+msgBox->setWindowIcon(i);\
 msgBox->setWindowTitle("Error");                     \
 msgBox->setText(QString::fromStdString(message));    \
 msgBox->exec();                                      \
@@ -29,10 +32,11 @@ delete msgBox;                                      \
 }
 
 
-
 #define ALERT_DETAILS(message, details)                                  \
 {                                                       \
 QMessageBox* msgBox = new QMessageBox();                \
+QIcon i = msgBox->style()->standardIcon(QStyle::SP_MessageBoxCritical);\
+msgBox->setWindowIcon(i);\
 msgBox->setWindowTitle("Error");                     \
 msgBox->setText(QString::fromStdString(message));    \
 msgBox->setDetailedText(QObject::tr(details));    \
@@ -42,19 +46,17 @@ delete msgBox;                                      \
 }                                                       \
 
 
-
-
-
 #define MESSAGE(message)                                  \
 {                                                       \
 QMessageBox* msgBox = new QMessageBox();                     \
+QIcon i = msgBox->style()->standardIcon(QStyle::SP_MessageBoxInformation);\
+msgBox->setWindowIcon(i);\
 msgBox->setWindowTitle("Message");                     \
 msgBox->setText(QString::fromStdString(message));    \
 msgBox->exec();                                      \
 msgBox->close();                                      \
 delete msgBox;                                      \
 }                                                   \
-
 
 #define DCT_VERIFY(condition) \
 { \
@@ -113,6 +115,7 @@ namespace gui_wallet
       std::string getCurrentUser() const;
       bool isConnected() const;
       WalletAPI& getWallet() const;
+      void clear();
 
       void setCurrentUser(std::string const& user);
       void setWalletUnlocked();

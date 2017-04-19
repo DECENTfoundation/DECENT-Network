@@ -7,15 +7,23 @@
  *  This file implements ...
  *
  */
+#include "stdafx.h"
 
 #include "gui_design.hpp"
 #include "decent_wallet_ui_gui_contentdetailsbase.hpp"
+
+#ifndef _MSC_VER
 #include <QDateTime>
+#endif
+
 #include "gui_wallet_global.hpp"
 #include "gui_wallet_mainwindow.hpp"
+
+#ifndef _MSC_VER
 #include "json.hpp"
 #include <QFrame>
 #include <graphene/chain/content_object.hpp>
+#endif
 
 using namespace nlohmann;
 using namespace gui_wallet;
@@ -37,7 +45,14 @@ typedef TypeCpcChar* NewType;
 static NewType  s_vFields[]={ s_vcpcFieldsGeneral, s_vcpcFieldsBougth, s_vcpcFieldsBougth };
 
 ContentDetailsBase::ContentDetailsBase(QWidget* pParent)
-: QDialog(pParent){}
+: QDialog(pParent)
+{
+#ifdef _MSC_VER
+   int height = style()->pixelMetric(QStyle::PM_TitleBarHeight);
+   setWindowIcon(height > 32 ? QIcon(":/icon/images/windows_decent_icon_32x32.png")
+      : QIcon(":/icon/images/windows_decent_icon_16x16.png"));
+#endif
+}
 
 // DCF stands for Digital Content Fields
 namespace DCF{enum{AMOUNT=9, TIMES_BOUGHT=15};}

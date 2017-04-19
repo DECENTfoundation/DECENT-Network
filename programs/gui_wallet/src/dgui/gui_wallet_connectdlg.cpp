@@ -9,10 +9,12 @@
  *   functionality necessary to connect to witness node
  *
  */
+#include "stdafx.h"
 
 #include "gui_design.hpp"
 #include "gui_wallet_connectdlg.hpp"
 //#include "connected_api_instance.hpp"
+#ifndef _MSC_VER
 #include <QLineEdit>
 #include <QPushButton>
 #include <QHeaderView>
@@ -20,6 +22,8 @@
 #include <QLabel>
 #include <stdio.h>
 #include <QMessageBox>
+#endif
+
 #include "richdialog.hpp"
 #include "gui_wallet_mainwindow.hpp"
 
@@ -75,6 +79,11 @@ namespace gui_wallet
         setLayout(&m_main_layout);
         
         QTimer::singleShot(0, &password_box, SLOT(setFocus()));
+#ifdef _MSC_VER
+        int height = style()->pixelMetric(QStyle::PM_TitleBarHeight);
+        setWindowIcon(height > 32 ? QIcon(":/icon/images/windows_decent_icon_32x32.png")
+           : QIcon(":/icon/images/windows_decent_icon_16x16.png"));
+#endif
     }
     
     bool PasswordDialog::execRD(QPoint centerPosition, std::string& pass)

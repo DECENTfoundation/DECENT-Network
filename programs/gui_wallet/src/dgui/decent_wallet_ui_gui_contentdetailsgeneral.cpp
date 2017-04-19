@@ -1,15 +1,19 @@
+#include "stdafx.h"
 
+#ifndef _MSC_VER
 #include <QGraphicsDropShadowEffect>
-
+#endif
 #include "decent_wallet_ui_gui_contentdetailsgeneral.hpp"
 #include "gui_wallet_global.hpp"
 #include "gui_wallet_mainwindow.hpp"
 #include "gui_design.hpp"
 
+#ifndef _MSC_VER
 #include <QMouseEvent>
 #include <QMessageBox>
 #include <QFileDialog>
 #include <QPushButton>
+#endif
 
 using namespace gui_wallet;
 ContentDetailsGeneral::ContentDetailsGeneral(QWidget* pParent) : ContentDetailsBase(pParent){

@@ -1,6 +1,7 @@
+#include "stdafx.h"
 
 #include "gui_wallet_global.hpp"
-
+#ifndef _MSC_VER
 #include <QMessageBox>
 #include <QThread>
 #include <QDateTime>
@@ -10,6 +11,7 @@
 #include <QHeaderView>
 
 #include <iostream>
+#endif
 
 namespace gui_wallet
 {
@@ -469,11 +471,8 @@ Globals::Globals()
 
 Globals::~Globals()
 {
-   m_p_wallet_operator_thread->quit();
-   m_p_wallet_operator_thread->wait();
-   delete m_p_wallet_operator_thread;
-
-   m_p_wallet_operator->m_wallet_api.SaveWalletFile();
+   // make sure the cleanup happens before the destructor to avoid segfault
+   clear();
 }
 
 Globals& Globals::instance()
@@ -495,6 +494,24 @@ bool Globals::isConnected() const
 WalletAPI& Globals::getWallet() const
 {
    return m_p_wallet_operator->m_wallet_api;
+}
+
+void Globals::clear()
+{
+   if (m_p_wallet_operator_thread)
+   {
+      m_p_wallet_operator_thread->quit();
+      m_p_wallet_operator_thread->wait();
+      delete m_p_wallet_operator_thread;
+      m_p_wallet_operator_thread = nullptr;
+   }
+
+   if (m_p_wallet_operator)
+   {
+      m_p_wallet_operator->m_wallet_api.SaveWalletFile();
+      delete m_p_wallet_operator;
+      m_p_wallet_operator = nullptr;
+   }
 }
 
 void Globals::setCurrentUser(std::string const& user)
