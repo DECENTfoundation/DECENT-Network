@@ -13,6 +13,7 @@
 #include <QApplication>
 #include <QProcess>
 #include <QMessageBox>
+#include <QDir>
 #include <fc/interprocess/signals.hpp>
 #include <fc/thread/thread.hpp>
 #endif
@@ -25,9 +26,6 @@
 //#define SET_LIBRARY_PATHS
 #endif
 
-#ifdef SET_LIBRARY_PATHS
-#include <QDir>
-#endif
 
 // used both by main() and runDecentD()
 #include <string>
@@ -64,7 +62,7 @@ using string = std::string;
 
 
 int runDecentD(int argc, char** argv, fc::promise<void>::ptr& exit_promise);
-QProcess* run_ipfs_daemon(QObject* parent);
+QProcess* run_ipfs_daemon(QObject* parent, QString app_dir);
 
 
 int main(int argc, char* argv[])
@@ -74,7 +72,7 @@ int main(int argc, char* argv[])
    
    QProcess* daemon_process = nullptr;
    try {
-      daemon_process = run_ipfs_daemon(&aMainWindow);
+      daemon_process = run_ipfs_daemon(&aMainWindow, app.applicationDirPath());
    } catch (const std::exception& ex) {
       QMessageBox* msgBox = new QMessageBox();
       msgBox->setWindowTitle("Error");
@@ -157,29 +155,69 @@ void write_default_logging_config_to_stream(std::ostream& out);
 fc::optional<fc::logging_config> load_logging_config_from_ini_file(const fc::path& config_ini_filename);
 
 
-QProcess* run_ipfs_daemon(QObject* parent) {
+bool check_for_ipfs(QObject* parent, QString program) {
    
-   boost::filesystem::path ipfs_bin = utilities::decent_path_finder::instance().get_ipfs_bin();
-   
-   QString program = "ipfs";
-   
-   if (!ipfs_bin.empty()) {
-      program = QString::fromStdString((ipfs_bin / "ipfs").string());
-   }
-   
-   // Check if we found IPFS
    QProcess *checkProcess = new QProcess(parent);
    checkProcess->start(program, QStringList("version"));
    
    if (!checkProcess->waitForStarted(2000)) {
-      throw std::runtime_error("Can not find IPFS executable. Please export IPFS_BIN environment variable that points to IPFS installation directory");
+      return false;
    }
    
    
    if (!checkProcess->waitForFinished(2000)) {
-      throw std::runtime_error("Can not find IPFS executable. Please export IPFS_BIN environment variable that points to IPFS installation directory");
+      return false;
    }
    
+   return true;
+}
+
+QString get_ipfs_path(QObject* parent, QString app_dir) {
+   
+   QString ipfs_bin = QString::fromStdString(utilities::decent_path_finder::instance().get_ipfs_bin().string());
+   QString ipfs_path_bin = QString::fromStdString((utilities::decent_path_finder::instance().get_ipfs_path() / "ipfs").string());
+
+   QString ipfs_path_next_to_exe = app_dir + QDir::separator() + "ipfs";
+   QString ipfs_path_next_to_bin_exe = app_dir + QDir::separator() + ".."  + QDir::separator() + "bin"  + QDir::separator() + "ipfs";
+
+   
+   if (utilities::decent_path_finder::instance().get_ipfs_bin() != fc::path()) {
+      if (check_for_ipfs(parent, ipfs_bin)) {
+         return ipfs_bin;
+      }
+   }
+   
+   if (utilities::decent_path_finder::instance().get_ipfs_path() != fc::path()) {
+      if (check_for_ipfs(parent, ipfs_path_bin)) {
+         return ipfs_path_bin;
+      }
+   }
+   
+   if (check_for_ipfs(parent, ipfs_path_next_to_exe)) {
+      return ipfs_path_next_to_exe;
+   }
+   
+   if (check_for_ipfs(parent, ipfs_path_next_to_bin_exe)) {
+      return ipfs_path_next_to_bin_exe;
+   }
+   
+   
+   if (check_for_ipfs(parent, "ipfs")) {
+      return "ipfs";
+   }
+   
+   
+   return "";
+}
+
+
+QProcess* run_ipfs_daemon(QObject* parent, QString app_dir) {
+   
+   QString program = get_ipfs_path(parent, app_dir);
+   
+   if (program.isEmpty()) {
+      throw std::runtime_error("Can not find IPFS executable. Please export IPFS_BIN or IPFS_PATH environment variables");
+   }
    
    
    
