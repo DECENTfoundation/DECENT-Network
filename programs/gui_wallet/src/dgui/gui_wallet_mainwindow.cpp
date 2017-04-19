@@ -111,6 +111,7 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
 
 Mainwindow_gui_wallet::~Mainwindow_gui_wallet()
 {
+   Globals::instance().clear();
 }
 
 void Mainwindow_gui_wallet::slot_connected()
