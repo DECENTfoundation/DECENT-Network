@@ -113,6 +113,7 @@ namespace gui_wallet
       std::string getCurrentUser() const;
       bool isConnected() const;
       WalletAPI& getWallet() const;
+      void clear();
 
       void setCurrentUser(std::string const& user);
       void setWalletUnlocked();
