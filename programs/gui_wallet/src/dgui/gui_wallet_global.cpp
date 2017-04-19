@@ -1,6 +1,7 @@
+#include "stdafx.h"
 
 #include "gui_wallet_global.hpp"
-
+#ifndef _MSC_VER
 #include <QMessageBox>
 #include <QThread>
 #include <QDateTime>
@@ -10,6 +11,7 @@
 #include <QHeaderView>
 
 #include <iostream>
+#endif
 
 namespace gui_wallet
 {

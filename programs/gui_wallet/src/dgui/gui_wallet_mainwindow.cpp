@@ -7,22 +7,28 @@
  *  This file implements ...
  *
  */
+#include "stdafx.h"
 
+#define     WALLET_CONNECT_CODE     ((void*)-2)
 
-
+#ifndef _MSC_VER
 #include <QMenuBar>
 #include <QMoveEvent>
 #include <QMessageBox>
+#endif
 
 #include "qt_commonheader.hpp"
 #include "gui_wallet_mainwindow.hpp"
 #include "gui_wallet_global.hpp"
 #include "gui_design.hpp"
+
+#ifndef _MSC_VER
 #include <stdio.h>
 #include <stdlib.h>
 
 #include <graphene/utilities/dirhelper.hpp>
 #include <graphene/wallet/wallet.hpp>
+#endif
 
 #ifndef DEFAULT_WALLET_FILE_NAME
 #define DEFAULT_WALLET_FILE_NAME       "wallet.json"
@@ -107,6 +113,12 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
    _balanceUpdater.start();
 
    connect(m_pCentralWidget, SIGNAL(sendDCT()), this, SLOT(SendDCTSlot()));
+
+#ifdef _MSC_VER
+    int height = style()->pixelMetric(QStyle::PM_TitleBarHeight);
+    setWindowIcon(height > 32 ? QIcon(":/icon/images/windows_decent_icon_32x32.png")
+         : QIcon(":/icon/images/windows_decent_icon_16x16.png"));
+#endif
 }
 
 Mainwindow_gui_wallet::~Mainwindow_gui_wallet()
@@ -640,7 +652,6 @@ void Mainwindow_gui_wallet::InfoSlot()
 
 }
 
-
 void Mainwindow_gui_wallet::AboutSlot()
 {
     try {
@@ -674,7 +685,6 @@ void Mainwindow_gui_wallet::HelpSlot()
     }
 }
 
-
 void Mainwindow_gui_wallet::SetPassword()
 {
    std::string pcsPassword;
@@ -706,7 +716,6 @@ void Mainwindow_gui_wallet::SetPassword()
       }
    }
 }
-
 
 void Mainwindow_gui_wallet::GoToThisTab(int index , std::string info)
 {

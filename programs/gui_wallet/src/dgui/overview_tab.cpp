@@ -7,16 +7,23 @@
 //*  This file implements ...
 //*
 //*/
+#include "stdafx.h"
+
 #include "overview_tab.hpp"
 #include "gui_wallet_mainwindow.hpp"
 #include "gui_wallet_centralwidget.hpp"
+
+#ifndef _MSC_VER
 #include <QPixmap>
 #include <QStackedWidget>
 #include <QRect>
 #include <QFont>
 #include <graphene/chain/config.hpp>
 #include "json.hpp"
+#endif
+
 #include "gui_design.hpp"
+
 
 using namespace gui_wallet;
 using namespace nlohmann;

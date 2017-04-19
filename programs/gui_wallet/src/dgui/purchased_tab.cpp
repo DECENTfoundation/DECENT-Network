@@ -1,4 +1,8 @@
+#include "stdafx.h"
+
 #include "purchased_tab.hpp"
+
+#ifndef _MSC_VER
 #include <QHeaderView>
 #include <QPushButton>
 #include <QFileDialog>
@@ -8,6 +12,7 @@
 #include <graphene/chain/config.hpp>
 #include <graphene/chain/content_object.hpp>
 #include "json.hpp"
+#endif
 #include "gui_wallet_mainwindow.hpp"
 #include "decent_wallet_ui_gui_contentdetailsgeneral.hpp"
 #include "gui_design.hpp"
