@@ -131,7 +131,7 @@ public:
    void generate_por( my_seeding_id_type so_id, graphene::package::package_object downloaded_package );
 
    /**
-    * Handle newly submitted content. If it is content managed by one of our seeders, download it.
+    * Handle newly submitted or resubmitted content. If it is content managed by one of our seeders, download it.
     * @param op_obj The operation wrapper carrying content submit operation
     */
    void handle_content_submit(const operation_history_object &op_obj);
