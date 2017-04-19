@@ -8,6 +8,7 @@
  *  this class will implement functional part necessary for the application
  *
  */
+#include "stdafx.h"
 
 #include "gui_wallet_application.hpp"
 
@@ -15,14 +16,16 @@
 //#include <fc/network/http/websocket.hpp>
 //#include <fc/rpc/websocket_api.hpp>
 //#include <graphene/egenesis/egenesis.hpp>
+#ifndef _MSC_VER
 #include <mutex>
 #include <QMessageBox>
 #include <QWidget>
 #include <stdarg.h>
 #include <thread>
+#endif
 
 #ifdef WIN32
-#include <windows.h>
+//#include <windows.h>
 #else
 #include <unistd.h>
 #define Sleep(__ms__) usleep(1000*(__ms__))

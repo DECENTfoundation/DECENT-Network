@@ -7,18 +7,26 @@
  *  This file implements ...
  *
  */
+#include "stdafx.h"
 
 #include "gui_wallet_centralwidget.hpp"
+
+
+#ifndef _MSC_VER
 #include <QMessageBox>
 #include <QTimer>
 #include <QHeaderView>
 #include <QResizeEvent>
 #include <QScrollBar>
+#endif
+
 #include "gui_wallet_global.hpp"
 #include "gui_wallet_mainwindow.hpp"
+
+#ifndef _MSC_VER
 #include <QSortFilterProxyModel>
 #include <QStyleFactory>
-
+#endif
 
 #ifdef WIN32
 #include <direct.h>

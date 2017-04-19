@@ -7,8 +7,11 @@
 // *  This file implements ...
 // *
 // */
+#include "stdafx.h"
+
 #include "transactions_tab.hpp"
 
+#ifndef _MSC_VER
 #include <QHeaderView>
 #include <QFont>
 #include <QTableWidgetItem>
@@ -20,12 +23,14 @@
 #include <boost/algorithm/string/replace.hpp>
 
 #include <graphene/chain/config.hpp>
-
+#endif
 #include "gui_wallet_global.hpp"
 #include "qt_commonheader.hpp"
 #include "ui_wallet_functions.hpp"
 
+#ifndef _MSC_VER
 #include "json.hpp"
+#endif
 
 using namespace gui_wallet;
 using namespace nlohmann;

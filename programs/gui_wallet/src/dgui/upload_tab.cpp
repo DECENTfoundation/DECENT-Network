@@ -7,10 +7,12 @@
  *  This file implements ...
  *
  */
+#include "stdafx.h"
 
 #include "upload_tab.hpp"
 #include "gui_wallet_global.hpp"
 
+#ifndef _MSC_VER
 #include <QMessageBox>
 #include <QFileDialog>
 #include <QStandardItemModel>
@@ -20,8 +22,11 @@
 #include <QDateEdit>
 #include <stdio.h>
 #include <QStyleFactory>
+#endif
+
 #include "decent_button.hpp"
 
+#ifndef _MSC_VER
 #include <graphene/chain/config.hpp>
 #include <boost/filesystem.hpp>
 
@@ -34,11 +39,13 @@
 #include <cryptopp/osrng.h>
 
 #include <QIcon>
+#endif
 
 #include "gui_wallet_global.hpp"
 #include "ui_wallet_functions.hpp"
 #include "gui_wallet_mainwindow.hpp"
 
+#ifndef _MSC_VER
 #include <QLayout>
 #include <QCheckBox>
 #include <stdio.h>
@@ -58,7 +65,7 @@
 #include <QDateTime>
 #include <QDate>
 #include <QTime>
-
+#endif
 
 using namespace gui_wallet;
 using namespace nlohmann;
@@ -241,16 +248,49 @@ m_getPublishersTimer(this)
     m_getPublishersTimer.setSingleShot(true);
     connect(&m_getPublishersTimer, SIGNAL(timeout()), SLOT(onGrabPublishers()));
     m_getPublishersTimer.start(1000);
+#ifdef _MSC_VER
+    int height = style()->pixelMetric(QStyle::PM_TitleBarHeight);
+    setWindowIcon(height > 32 ? QIcon(":/icon/images/windows_decent_icon_32x32.png")
+       : QIcon(":/icon/images/windows_decent_icon_16x16.png"));
+#endif
 }
+
+#ifdef _MSC_VER
+void Upload_popup::onGrabPublishers_Lambda(void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result)
+{
+   Upload_popup* obj = (Upload_popup*)owner;
+
+   auto publishers = json::parse(a_result);
+
+   for (int r = 0; r < publishers.size(); ++r) {
+      std::string pubIdStr = publishers[r]["seeder"].get<std::string>();
+      std::string pubPrice = QString::number(publishers[r]["price"]["amount"].get<double>() / GRAPHENE_BLOCKCHAIN_PRECISION).toStdString();
+      std::string pubAssetId = publishers[r]["price"]["asset_id"].get<std::string>();
+
+      int free_space = publishers[r]["free_space"].get<int>();
+      std::string pubFreeSpace = std::to_string(free_space) + "MB free";
+
+      if (free_space > 800) {
+         pubFreeSpace = QString::number(1.0 * free_space / 1024, 'f', 2).toStdString() + "GB free";
+      }
+
+      obj->seeders->addItem(QString("%0 @%1 %2 [%3]").arg(QString::fromStdString(pubIdStr),
+         QString::fromStdString(pubPrice),
+         QString::fromStdString("DCT"),
+         QString::fromStdString(pubFreeSpace)), QString::fromStdString(pubIdStr));
+
+   }
+}
+
+#endif
 
 void Upload_popup::onGrabPublishers() {
     
     SetNewTask("list_publishers_by_price 100", this, NULL,
 #if defined( _MSC_VER )
-       []
+       onGrabPublishers_Lambda
 #else
        +[]
-#endif
        (void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result) {
         Upload_popup* obj = (Upload_popup*)owner;
         
@@ -275,7 +315,9 @@ void Upload_popup::onGrabPublishers() {
         }
         
         
-    });
+    }
+#endif
+      );
 }
 
 void Upload_popup::browseContent() {

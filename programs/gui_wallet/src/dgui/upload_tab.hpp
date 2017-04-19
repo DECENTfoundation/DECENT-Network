@@ -75,6 +75,9 @@ namespace gui_wallet
         void browseSamples();
         void uploadContent();
         void onGrabPublishers();
+#ifdef _MSC_VER
+        static void onGrabPublishers_Lambda(void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result);
+#endif
         
     public:
         friend class upload_up;

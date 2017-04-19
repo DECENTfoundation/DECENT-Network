@@ -1,13 +1,17 @@
+#include "stdafx.h"
 
+#ifndef _MSC_VER
 #include <QGraphicsDropShadowEffect>
-
+#endif
 #include "decent_wallet_ui_gui_contentdetailsgeneral.hpp"
 #include "gui_wallet_global.hpp"
 #include "ui_wallet_functions.hpp"
 
+#ifndef _MSC_VER
 #include <QMouseEvent>
 #include <QMessageBox>
 #include <QFileDialog>
+#endif
 
 using namespace gui_wallet;
 ContentDetailsGeneral::ContentDetailsGeneral() {

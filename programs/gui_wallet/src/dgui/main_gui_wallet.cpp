@@ -7,7 +7,9 @@
  *  This file implements ...
  *
  */
+#include "stdafx.h"
 
+#ifndef _MSC_VER
 #include <stdio.h>
 #include <wchar.h>
 #include <string.h>
@@ -15,9 +17,13 @@
 #include <fc/exception/exception.hpp>
 #include <QDir>
 #include <QCoreApplication>
+#endif
+
 #include "gui_wallet_application.hpp"
 #include "gui_wallet_mainwindow.hpp"
 #include "gui_wallet_global.hpp"
+
+#ifndef _MSC_VER
 #include <QMessageBox>
 #include <QFileInfo>
 #include <QProcess>
@@ -51,6 +57,7 @@
 
 #include <iostream>
 #include <fstream>
+#endif
 
 #if defined( _MSC_VER )
 
@@ -255,6 +262,7 @@ int main(int argc, char* argv[])
     decent::gui::InGuiLoopCallerIniter   s_InGuiLoopCallerIniter;
     pid_t  pid;
 #if defined( _MSC_VER )
+    HANDLE stopDaemonEvent = NULL;
     pid = getpid();
     std::string cmdLine = argv[0];
     size_t pos = cmdLine.find_last_of('\\');
@@ -273,6 +281,7 @@ int main(int argc, char* argv[])
           cmdLine += argv[i];
        cmdLine += " ";
     }
+    stopDaemonEvent = CreateEventA(NULL, FALSE, FALSE, "A883EF36-8168-4E45-A08F-97EFFC5B6694");
     STARTUPINFO si;
     PROCESS_INFORMATION pi;
     memset(&si, 0, sizeof(si));
@@ -281,9 +290,9 @@ int main(int argc, char* argv[])
     BOOL created = 
     CreateProcessA(NULL, (char*)cmdLine.c_str(), NULL, NULL, FALSE,
 #ifdef _DEBUG
-       0,
+       CREATE_NEW_PROCESS_GROUP,
 #else
-       CREATE_NO_WINDOW,
+       CREATE_NO_WINDOW | CREATE_NEW_PROCESS_GROUP,
 #endif
        NULL, NULL,
        &si, &pi);
@@ -342,10 +351,14 @@ int main(int argc, char* argv[])
             std::cout << "Unknown Exception " << std::endl;
         }
         
+#ifdef _MSC_VER
+        SetEvent(stopDaemonEvent);
+        CloseHandle(stopDaemonEvent);
+#else
         kill(pid, SIGTERM); //Kill decentd
+#endif
     }
-    
-  
+      
     return 0;
 }
 

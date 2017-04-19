@@ -7,24 +7,27 @@
  *  This file implements ...
  *
  */
-
+#include "stdafx.h"
 
 #define     WALLET_CONNECT_CODE     ((void*)-2)
 
-
+#ifndef _MSC_VER
 #include <QMenuBar>
 #include <QMoveEvent>
 #include <QMessageBox>
+#endif
 
 #include "qt_commonheader.hpp"
 #include "gui_wallet_mainwindow.hpp"
 #include "gui_wallet_global.hpp"
 
+#ifndef _MSC_VER
 #include <stdio.h>
 #include <stdlib.h>
 
 #include <graphene/utilities/dirhelper.hpp>
 #include "json.hpp"
+#endif
 
 #ifndef DEFAULT_WALLET_FILE_NAME
 #define DEFAULT_WALLET_FILE_NAME       "wallet.json"
@@ -48,7 +51,6 @@ int CallFunctionInGuiLoop3(SetNewTask_last_args2,const fc::variant& a_result,voi
 
 
 /*//////////////////////////////////////////////////////////////////////////////////*/
-
 Mainwindow_gui_wallet::Mainwindow_gui_wallet()
         :
         m_ActionExit(tr("&Exit"),this),
@@ -119,14 +121,25 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
     InitializeUiInterfaceOfWallet_base(&WarnAndWaitFunc,
                                        &CallFunctionInGuiLoop2,
                                        &CallFunctionInGuiLoop3, this, NULL,
-                                       GetFunctionPointerAsVoid(0, &Mainwindow_gui_wallet::ManagementNewFuncGUI));
+#ifdef _MSC_VER
+                                       Mainwindow_gui_wallet::ManagementNewFuncGUI_static
+#else
+                                       GetFunctionPointerAsVoid(0, &Mainwindow_gui_wallet::ManagementNewFuncGUI)
+#endif
+                                       );
+
     ConnectSlot();
    
     _downloadChecker.setSingleShot(false);
     _downloadChecker.setInterval(5000);
     connect(&_downloadChecker, SIGNAL(timeout()), this, SLOT(CheckDownloads()));
     _downloadChecker.start();
-    
+
+#ifdef _MSC_VER
+    int height = style()->pixelMetric(QStyle::PM_TitleBarHeight);
+    setWindowIcon(height > 32 ? QIcon(":/icon/images/windows_decent_icon_32x32.png")
+         : QIcon(":/icon/images/windows_decent_icon_16x16.png"));
+#endif
 }
 
 Mainwindow_gui_wallet::~Mainwindow_gui_wallet()
@@ -519,7 +532,6 @@ void Mainwindow_gui_wallet::InfoSlot()
 
 }
 
-
 void Mainwindow_gui_wallet::AboutSlot()
 {
     try {
@@ -553,8 +565,10 @@ void Mainwindow_gui_wallet::HelpSlot()
     }
 }
 
-
-
+void Mainwindow_gui_wallet::TaskDoneFuncGUI_static(void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result)
+{
+   s_pMainWindowInstance->TaskDoneFuncGUI(a_clbkArg, a_err, a_task, a_result);
+}
 
 void Mainwindow_gui_wallet::TaskDoneFuncGUI(void* a_clbkArg,int64_t a_err,const std::string& a_task,const std::string& a_result)
 {
@@ -574,7 +588,10 @@ void Mainwindow_gui_wallet::TaskDoneFuncGUI(void* a_clbkArg,int64_t a_err,const 
    
 }
 
-
+void Mainwindow_gui_wallet::ManagementNewFuncGUI_static(void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result)
+{
+   s_pMainWindowInstance->ManagementNewFuncGUI(a_clbkArg, a_err, a_task, a_result);
+}
 void Mainwindow_gui_wallet::ManagementNewFuncGUI(void* a_clbkArg,int64_t a_err,const std::string& a_task,const std::string& a_result)
 {
 
@@ -603,7 +620,12 @@ void Mainwindow_gui_wallet::ConnectSlot()
         ((Mainwindow_gui_wallet*)owner)->SetPassword(owner, str_ptr);
     };
     
+#ifdef _MSC_VER
+    m_wdata2.fpDone = (TypeCallbackSetNewTaskGlb2)Mainwindow_gui_wallet::TaskDoneFuncGUI_static;
+#else
     m_wdata2.fpDone = (TypeCallbackSetNewTaskGlb2)GetFunctionPointerAsVoid(1,&Mainwindow_gui_wallet::TaskDoneFuncGUI);
+#endif
+    
     StartConnectionProcedure(&m_wdata2,this,WALLET_CONNECT_CODE);
 }
 

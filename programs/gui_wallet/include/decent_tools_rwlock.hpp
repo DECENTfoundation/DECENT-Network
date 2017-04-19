@@ -35,6 +35,7 @@ protected:
     HANDLE  m_wrMutex;
     HANDLE  m_rdHelperMutex;
     HANDLE  m_noReaderEvent;
+    bool    m_isRwLock;
 #else  // #ifdef WIN32
     pthread_rwlock_t    m_rwLock;
 #endif  // #ifdef WIN32

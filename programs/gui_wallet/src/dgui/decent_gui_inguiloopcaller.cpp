@@ -7,13 +7,16 @@
  *  This file implements ...
  *
  */
-
+#include "stdafx.h"
 
 #include "decent_gui_inguiloopcaller.hpp"
 #include "decent_gui_inguiloopcaller_glb.hpp"
+
+#ifndef _MSC_VER
 #include <stdio.h>
 #include <stdarg.h>
 #include <iostream>
+#endif
 
 extern decent::gui::InGuiLoopCaller* s_pInGuiThreadCaller;// windows change
 /* crash on Windows static calss instance cannot call connect()
@@ -51,11 +54,11 @@ decent::gui::InGuiLoopCaller::InGuiLoopCaller()
 
 decent::gui::InGuiLoopCaller::~InGuiLoopCaller()
 {
-    disconnect(this,SIGNAL(NewFunctionToCallSig3(void*,int64_t, std::string, fc::variant,void*,TypeCallbackSetNewTaskGlb3)),
-               this,SLOT(NextFunctionToCallSlot3(void*,int64_t, std::string, fc::variant,void*,TypeCallbackSetNewTaskGlb3)));
+    disconnect(this,SIGNAL(NewFunctionToCallSig3(void*,int64_t, std::string, fc::variant,void*,TypeCallbackSetNewTaskGlb3,void*)),
+               this,SLOT(NextFunctionToCallSlot3(void*,int64_t, std::string, fc::variant,void*,TypeCallbackSetNewTaskGlb3,void*)));
 
-    disconnect(this,SIGNAL(NewFunctionToCallSig2(void*,int64_t, std::string, std::string,void*,TypeCallbackSetNewTaskGlb2)),
-               this,SLOT(NextFunctionToCallSlot2(void*,int64_t, std::string, std::string,void*,TypeCallbackSetNewTaskGlb2)));
+    disconnect(this,SIGNAL(NewFunctionToCallSig2(void*,int64_t, std::string, std::string,void*,TypeCallbackSetNewTaskGlb2,void*)),
+               this,SLOT(NextFunctionToCallSlot2(void*,int64_t, std::string, std::string,void*,TypeCallbackSetNewTaskGlb2,void*)));
 }
 
 

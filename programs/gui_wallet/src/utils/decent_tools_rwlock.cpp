@@ -8,11 +8,14 @@
  *  This file implements ...
  *
  */
+#include "stdafx.h"
 
 
 #include "decent_tools_rwlock.hpp"
+#ifndef _MSC_VER
 #include <stddef.h>
 #include <stdio.h>
+#endif
 #include "debug_decent_application.h"
 
 #define __LOG_LEVEL__   3
@@ -26,6 +29,7 @@ decent::tools::RWLock::RWLock()
     m_wrMutex = CreateMutex(NULL,FALSE,NULL);
     m_rdHelperMutex = CreateMutex(NULL, FALSE, NULL);
     m_noReaderEvent = CreateEvent(NULL,TRUE,TRUE,NULL);
+    m_isRwLock = false;
 #else  // #ifdef WIN32
     pthread_rwlock_init(&m_rwLock,NULL);
 #endif  // #ifdef WIN32
@@ -71,6 +75,8 @@ void decent::tools::RWLock::write_lock()
 #ifdef WIN32
     HANDLE hArray[3] = { m_wrMutex, m_rdHelperMutex, m_noReaderEvent };
     WaitForMultipleObjects(3, hArray,TRUE/*wait all*/,INFINITE);
+    SetEvent(m_noReaderEvent);
+    m_isRwLock = true;
 #else  // #ifdef WIN32
     pthread_rwlock_wrlock(&m_rwLock);
 #endif  // #ifdef WIN32
@@ -84,17 +90,23 @@ void decent::tools::RWLock::unlock()
    __DEBUG_APP2__(__LOG_LEVEL__,"----- unlocking!!!\n");
 
 #ifdef WIN32
-   WaitForSingleObject(m_rdHelperMutex, INFINITE);
-   if (m_nReadersCount)
+   if (m_isRwLock == false)
    {
-      m_nReadersCount--;
-      SetEvent(m_noReaderEvent);
+      WaitForSingleObject(m_rdHelperMutex, INFINITE);
+      if (m_nReadersCount)
+      {
+         m_nReadersCount--;
+         if (m_nReadersCount == 0)
+            SetEvent(m_noReaderEvent);
+      }
+      ReleaseMutex(m_rdHelperMutex);
    }
    else
+   {
+      m_isRwLock = false;
       ReleaseMutex(m_wrMutex);
-
-   ReleaseMutex(m_rdHelperMutex);
-  
+      ReleaseMutex(m_rdHelperMutex);
+   }
 #else  // #ifdef WIN32
     pthread_rwlock_unlock(&m_rwLock);
 #endif  // #ifdef WIN32

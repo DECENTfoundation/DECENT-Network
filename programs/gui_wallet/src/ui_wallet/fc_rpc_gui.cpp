@@ -7,13 +7,18 @@
  *  This file implements ...
  *
  */
+#include "stdafx.h"
+
 
 #include "fc_rpc_gui.hpp"
+
+#ifndef _MSC_VER
 #include <fc/variant.hpp>
 #include <fc/io/json.hpp>
 #include <iostream>
 #include <stdio.h>
 #include <stdarg.h>
+#endif
 #include "decent_gui_inguiloopcaller_glb.hpp"
 
 using namespace fc::rpc;
@@ -43,7 +48,7 @@ gui::~gui()
 }
 
 
-variant gui::send_call( api_id_type api_id, string method_name, variants args /* = variants() */ )
+variant gui::send_call( api_id_type api_id, std::string method_name, variants args /* = variants() */ )
 {
    FC_ASSERT(false);
 }
@@ -75,7 +80,7 @@ void gui::wait()
    _run_complete.wait();
 }
 
-void gui::format_result( const string& method, std::function<string(variant,const variants&)> formatter)
+void gui::format_result( const std::string& method, std::function<std::string(variant,const variants&)> formatter)
 {
    _result_formatters[method] = formatter;
 }

@@ -48,7 +48,10 @@ protected:
    void CreateActions();
    void CreateMenues();
    
+   static void TaskDoneFuncGUI_static(void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result);
    void TaskDoneFuncGUI(void* clbkArg,int64_t err,const std::string& task,const std::string& result);
+
+   static void ManagementNewFuncGUI_static(void* clbkArg, int64_t err, const std::string& task, const std::string& result);
    void ManagementNewFuncGUI(void* clbkArg,int64_t err,const std::string& task,const std::string& result);
    
 private:

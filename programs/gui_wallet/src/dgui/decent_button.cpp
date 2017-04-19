@@ -7,12 +7,15 @@
  *  This file implements ...
  *
  */
+#include "stdafx.h"
 
 #include "decent_button.hpp"
 #include "debug_decent_application.h"
+
+#ifndef _MSC_VER
 #include <QGraphicsDropShadowEffect>
 #include <string>
-
+#endif
 
 using namespace gui_wallet;
 

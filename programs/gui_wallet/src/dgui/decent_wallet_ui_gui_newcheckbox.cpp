@@ -7,11 +7,14 @@
  *  This file implements ...
  *
  */
+#include "stdafx.h"
 
 #include "decent_wallet_ui_gui_newcheckbox.hpp"
 #include "debug_decent_application.h"
-#include <string>
 
+#ifdef _MSC_VER
+#include <string>
+#endif
 
 using namespace gui_wallet;
 

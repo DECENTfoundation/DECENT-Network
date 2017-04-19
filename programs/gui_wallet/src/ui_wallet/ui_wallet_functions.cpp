@@ -7,31 +7,45 @@
  *  This file implements ...
  *
  */
+#include "stdafx.h"
 
 #include "ui_wallet_functions.hpp"
+
+#ifndef _MSC_VER
 #include <mutex>
 #include <stdio.h>
 #include <stdarg.h>
 #include <iostream>
+#endif
+
 #include "fc_rpc_gui.hpp"
+
+#ifndef _MSC_VER
 #include <graphene/wallet/wallet.hpp>
 #include <thread>
+#endif
+
 #include "unnamedsemaphorelite.hpp"
 #include "decent_tool_fifo.hpp"
+
+#ifndef _MSC_VER
 #include <fc/network/http/websocket.hpp>
 #include <fc/rpc/websocket_api.hpp>
 #include <fc/thread/thread.hpp>
+#endif
 
 #include "decent_gui_inguiloopcaller_glb.hpp"
 #include "decent_tools_rwlock.hpp"
 
-
+#ifndef _MSC_VER
 #include <QCoreApplication>
 #include <QEventLoop>
 #include <QTime>
 
 #include <chrono>
 #include <thread>
+#endif
+
 #ifdef WIN32
 #include <windows.h>
 #else  // #ifdef WIN32
@@ -133,12 +147,12 @@ __DLL_EXPORT__ void InitializeUiInterfaceOfWallet_base(TypeWarnAndWaitFunc a_fpW
     va_start( aFunc, a_pMngClb );
     TypeManagementClbk fpMenegmentClbk2 = (TypeManagementClbk)va_arg( aFunc, void*);
     va_end( aFunc );
-
+#ifndef _MSC_VER // have not time to fix this, omited on Windows
     __DEBUG_APP2__(1,"fpWarn=%p, fpCaller2=%p, fpCaller3=%p, pMnOwner=%p, pMngrClb=%p, fpMngClb=%p",
                    GetFunctionPointerAsVoid(0,a_fpWarnAndWait),GetFunctionPointerAsVoid(0,a_fpCorrectUiCaller2),
                    GetFunctionPointerAsVoid(0,a_fpCorrectUiCaller3),a_pMngOwner,a_pMngClb,
                    GetFunctionPointerAsVoid(0,fpMenegmentClbk2));
-
+#endif             
     if(!nLibInited)  // should be done in real atomic manner
     {
         s_fpWarnAndWaitFunc = a_fpWarnAndWait;
@@ -507,10 +521,11 @@ static int ConnectToNewWitness(const decent::tools::taskListItem<SConnectionStru
 
        std::string possible_input = __CONNECTION_CLB_;
        if(pStruct->wallet_file_name != "" ){possible_input = "load_wallet_file " + pStruct->wallet_file_name;}
-
+       
        (*s_fpCorrectUiCaller2)(a_con_data.callbackArg,0, possible_input,
                              "true",
                              a_con_data.owner,a_con_data.fn_tsk_dn2);
+
        wallet_gui->wait();
 
         wapi->save_wallet_file(wallet_file.generic_string());
@@ -617,6 +632,21 @@ struct task_result
     std::string m_strResult;
 };
 
+#ifdef _MSC_VER
+void RunTask_Lambda(void* /*owner*/,
+   void* a_clbkArg,
+   int64_t a_err,
+   std::string const& a_task,
+   std::string const& a_result)
+{
+   std::cout << "Task " << a_task << " finished" << std::endl;
+   task_result& result = *static_cast<task_result*>(a_clbkArg);
+   result.m_bDone = true;
+   result.m_error = a_err;
+   result.m_strResult = a_result;
+}
+#endif
+
 void RunTask(std::string const& str_command, std::string& str_result)
 {
    static volatile bool task_is_running = false;
@@ -633,10 +663,9 @@ void RunTask(std::string const& str_command, std::string& str_result)
                nullptr,
                static_cast<void*>(&result),
 #if defined( _MSC_VER )
-               []
+               RunTask_Lambda
 #else
                +[]
-#endif
                (void* /*owner*/,
                    void* a_clbkArg,
                    int64_t a_err,
@@ -648,7 +677,9 @@ void RunTask(std::string const& str_command, std::string& str_result)
                    result.m_bDone = true;
                    result.m_error = a_err;
                    result.m_strResult = a_result;
-               });
+               }
+#endif
+    );
     
     bool volatile& bDone = result.m_bDone;
     while (false == bDone)

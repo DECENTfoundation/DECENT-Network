@@ -22,5 +22,7 @@
         <file>images/transfer1.png</file>
         <file>images/transaction5.svg</file>
         <file>images/extract.svg</file>
+        <file>images/windows_decent_icon_16x16.png</file>
+        <file>images/windows_decent_icon_32x32.png</file>
     </qresource>
 </RCC>

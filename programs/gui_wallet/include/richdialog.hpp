@@ -10,6 +10,7 @@
 #ifndef RICHDIALOG_HPP
 #define RICHDIALOG_HPP
 
+
 #include <QDialog>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -17,6 +18,7 @@
 #include <QLineEdit>
 #include <vector>
 #include <string>
+
 
 namespace decent{
 
