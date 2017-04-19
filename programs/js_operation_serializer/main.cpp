@@ -33,6 +33,8 @@
 #include <graphene/chain/witness_object.hpp>
 #include <graphene/chain/buying_object.hpp>
 
+#include <graphene/chain/subscription_object.hpp>
+
 #include <fc/smart_ref_impl.hpp>
 #include <iostream>
 

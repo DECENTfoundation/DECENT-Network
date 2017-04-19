@@ -162,7 +162,7 @@ namespace graphene { namespace chain {
          void clear_pending();
 
          /**
-          *  This method is used to track appied operations during the evaluation of a block, these
+          *  This method is used to track applied operations during the evaluation of a block, these
           *  operations should include any operation actually included in a transaction as well
           *  as any implied/virtual operations that resulted, such as filling an order.  The
           *  applied operations is cleared after applying each block and calling the block
@@ -338,8 +338,28 @@ namespace graphene { namespace chain {
 
          //////////////////// db_decent.cpp ////////////////////
 
+         /**
+          * @brief Returns unused escrow from expired buying to consumer
+          * @param buying Expired buying object
+          */
          void buying_expire(const buying_object& buying);
+         /**
+          * @brief Returns unused publishing fee to author
+          * @param content Expired content object
+          */
          void content_expire(const content_object& content);
+         /**
+          * @brief Renewal of expired subscription
+          * @param subscription Expired subscription object
+          * @param subscription_period Extension of subscription, in days
+          */
+         void renew_subscription(const subscription_object& subscription, const uint32_t subscription_period);
+         /**
+          * @brief Disallows automatic renewal of subscription if consumer doesn't have enought balance to renew
+          * expired subscription
+          * @param subscription Expired subscription object
+          */
+         void disallow_automatic_renewal_of_subscription(const subscription_object& subscription);
          void decent_housekeeping();
          share_type get_witness_budget();
 

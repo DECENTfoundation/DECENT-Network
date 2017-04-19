@@ -29,6 +29,7 @@
 #include <graphene/chain/asset_object.hpp>
 #include <graphene/chain/content_object.hpp>
 #include <graphene/chain/buying_object.hpp>
+#include <graphene/chain/subscription_object.hpp>
 
 
 namespace graphene { namespace chain {
@@ -49,6 +50,22 @@ void database::content_expire(const content_object& content){
    });
 }
 
+void database::renew_subscription(const subscription_object& subscription, const uint32_t subscription_period){
+   // head_block_time rounded up to midnight
+   uint32_t head_block_time_rounded_to_days = head_block_time().sec_since_epoch() / ( 24 * 3600 );
+   head_block_time_rounded_to_days += 24 * 3600;
+
+   modify<subscription_object>(subscription, [&](subscription_object& so){
+      so.expiration = time_point_sec( head_block_time_rounded_to_days ) + subscription_period * 24 * 3600;
+   });
+}
+
+void database::disallow_automatic_renewal_of_subscription(const subscription_object& subscription){
+   modify<subscription_object>(subscription, [&](subscription_object& so){
+      so.automatic_renewal= false;
+   });
+}
+
 void database::decent_housekeeping()
 {
    const auto& cidx = get_index_type<content_index>().indices().get<by_expiration>();
@@ -66,6 +83,7 @@ void database::decent_housekeeping()
 
       ++citr;
    }
+
    const auto& bidx = get_index_type<buying_index>().indices().get<by_expiration_time>();
    auto bitr = bidx.begin();
    while( bitr != bidx.end() && bitr->expiration_time <= head_block_time() )
@@ -81,6 +99,38 @@ void database::decent_housekeeping()
 
       }
       ++bitr;
+   }
+
+   const auto& sidx = get_index_type<subscription_index>().indices().get<by_renewal>();
+   const auto& aidx = get_index_type<account_index>().indices().get<by_id>();
+   auto sitr = sidx.begin();
+   while( sitr != sidx.end() && sitr->automatic_renewal )
+   {
+      if(sitr->expiration <= head_block_time()) {
+         const auto &author = aidx.find(sitr->to);
+         if( author->options.price_per_subscribe <= get_balance( sitr->from, author->options.price_per_subscribe.asset_id ))
+         {
+            renew_subscription(*sitr, author->options.subscription_period);
+
+            adjust_balance( sitr->from, -author->options.price_per_subscribe );
+            adjust_balance( sitr->to, author->options.price_per_subscribe );
+
+            renewal_of_subscription_operation ros_vop;
+            ros_vop.consumer = sitr->from;
+            ros_vop.subscription = sitr->id;
+            push_applied_operation(ros_vop);
+         }
+         else
+         {
+            disallow_automatic_renewal_of_subscription(*sitr);
+
+            disallow_automatic_renewal_of_subscription_operation daros_vop;
+            daros_vop.consumer = sitr->from;
+            daros_vop.subscription = sitr->id;
+            push_applied_operation(daros_vop);
+         }
+      }
+      ++sitr;
    }
 }
 
