@@ -28,6 +28,7 @@ namespace graphene { namespace utilities {
       fc::path get_decent_logs() const { return _decent_logs; }
       fc::path get_decent_temp() const { return _decent_temp; }
       fc::path get_ipfs_bin() const { return _ipfs_bin; }
+      fc::path get_ipfs_path() const { return _ipfs_path; }
       
    private:
       fc::path _user_home;
@@ -36,6 +37,7 @@ namespace graphene { namespace utilities {
       fc::path _decent_logs;
       fc::path _decent_temp;
       fc::path _ipfs_bin;
+      fc::path _ipfs_path;
    };
    
    

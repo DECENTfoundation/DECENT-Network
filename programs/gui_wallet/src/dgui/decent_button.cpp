@@ -7,12 +7,15 @@
  *  This file implements ...
  *
  */
+#include "stdafx.h"
 
 #include "gui_design.hpp"
 #include "decent_button.hpp"
+
+#ifndef _MSC_VER
 #include <QGraphicsDropShadowEffect>
 #include <string>
-
+#endif
 
 using namespace gui_wallet;
 
@@ -20,7 +23,7 @@ DecentButton::DecentButton()
 {
    _isEnabled = true;
    setAlignment(Qt::AlignCenter);
-   setStyleSheet("QLabel { background-color :rgb(27,176,104); color : white;}");
+   setStyleSheet(decent_button_style);
    setScaledContents(true);
 }
 
@@ -28,9 +31,9 @@ DecentButton::DecentButton()
 void DecentButton::setEnabled(bool isEnabled) {
    _isEnabled = isEnabled;
    if (_isEnabled)
-      setStyleSheet("QLabel { background-color :rgb(27,176,104); color : white;}");
+      setStyleSheet(d_upload_button_true);
    else
-      setStyleSheet("QLabel { background-color :rgb(180,180,180); color : rgb(30, 30, 30); }");
+      setStyleSheet(d_upload_button_false);
 }
 
  

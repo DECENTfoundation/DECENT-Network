@@ -5,6 +5,7 @@
         <file>images/info1.svg</file>
         <file>images/decent_logo.svg</file>
         <file>images/send.png</file>
+        <file>images/inactive_send.png</file>
         <file>images/user.png</file>
         <file>images/balance.png</file>
         <file>images/buy_button_image.png</file>
@@ -22,5 +23,7 @@
         <file>images/transfer1.png</file>
         <file>images/transaction5.svg</file>
         <file>images/extract.svg</file>
+        <file>images/windows_decent_icon_16x16.png</file>
+        <file>images/windows_decent_icon_32x32.png</file>
     </qresource>
 </RCC>

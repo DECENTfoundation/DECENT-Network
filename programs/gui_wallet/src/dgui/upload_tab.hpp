@@ -73,11 +73,15 @@ namespace gui_wallet
         void onGrabPublishers();
         void uploadCanceled();
         void updateUploadButtonStatus();
-        void stateChanged(const int state);
+        void seederOkSlot();
        
+#ifdef _MSC_VER
+        static void onGrabPublishers_Lambda(void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result);
+#endif
+    
     public:
         void onPublishersDone(void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result);
-       
+
     private:
         Mainwindow_gui_wallet* m_pMainWindow;
        
@@ -87,19 +91,20 @@ namespace gui_wallet
         QDateEdit*       _lifeTime;
         QComboBox*       _keyparts;
         QLineEdit*       _price;
+        QLineEdit*       _seedersPath;
         QLineEdit*       _contentPath;
         QLineEdit*       _samplesPath;
         DecentButton*    _upload_button;
         DecentButton*    _cancel_button;
         DecentButton*    _seeder_ok;
-        QCheckBox*       _seeders_checkbox[3];
-        QVBoxLayout*     dialog_layout;
+        DecentTable*     _seeder_table;
        
         QTimer           m_getPublishersTimer;
         QTimer*          _buttonStatusCheck;
         QDialog*         _seeders_dialog;
        
        std::map<std::string, double> _publisherIdToPriceMap;
+       std::vector<QCheckBox*>       _seeders_checkbox;
        std::vector<std::string>      _checkedSeeders;
 
     public:
@@ -137,6 +142,7 @@ namespace gui_wallet
         void show_content_popup();
         void content_was_bought();
         void uploadPopup();
+        void updateContents();
         
     protected:
         QVBoxLayout     m_main_layout;
@@ -145,7 +151,6 @@ namespace gui_wallet
         QLineEdit       m_filterLineEdit;
         QComboBox       m_searchTypeCombo;
         DecentButton*   upload_button;
-        Upload_popup    popup;
         
         std::vector<SDigitalContent>  _digital_contents;
         ContentDetailsGeneral*        _content_popup;

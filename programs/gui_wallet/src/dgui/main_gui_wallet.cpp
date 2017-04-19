@@ -1,18 +1,31 @@
+/*
+ *	File: main_gui_wallet.cpp
+ *
+ *	Created on: Nov 11, 2016
+ *	Created by: Davit Kalantaryan (Email: davit.kalantaryan@desy.de)
+ *
+ *  This file implements ...
+ *
+ */
+#include "stdafx.h"
 
+#ifndef _MSC_VER
 #include <QApplication>
 #include <QProcess>
+#include <QMessageBox>
+#include <QDir>
 #include <fc/interprocess/signals.hpp>
 #include <fc/thread/thread.hpp>
+#endif
 
 #include "gui_wallet_mainwindow.hpp"
+
+#ifndef _MSC_VER
 
 #if NDEBUG
 //#define SET_LIBRARY_PATHS
 #endif
 
-#ifdef SET_LIBRARY_PATHS
-#include <QDir>
-#endif
 
 // used both by main() and runDecentD()
 #include <string>
@@ -39,8 +52,9 @@ using string = std::string;
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
+#endif
 
-#if defined( _MSC_VER )
+#ifdef _MSC_VER
 #include <Windows.h>
 #endif
 
@@ -48,7 +62,7 @@ using string = std::string;
 
 
 int runDecentD(int argc, char** argv, fc::promise<void>::ptr& exit_promise);
-QProcess* run_ipfs_daemon(QObject* parent);
+QProcess* run_ipfs_daemon(QObject* parent, QString app_dir);
 
 
 int main(int argc, char* argv[])
@@ -58,7 +72,7 @@ int main(int argc, char* argv[])
    
    QProcess* daemon_process = nullptr;
    try {
-      daemon_process = run_ipfs_daemon(&aMainWindow);
+      daemon_process = run_ipfs_daemon(&aMainWindow, app.applicationDirPath());
    } catch (const std::exception& ex) {
       QMessageBox* msgBox = new QMessageBox();
       msgBox->setWindowTitle("Error");
@@ -141,29 +155,69 @@ void write_default_logging_config_to_stream(std::ostream& out);
 fc::optional<fc::logging_config> load_logging_config_from_ini_file(const fc::path& config_ini_filename);
 
 
-QProcess* run_ipfs_daemon(QObject* parent) {
+bool check_for_ipfs(QObject* parent, QString program) {
    
-   boost::filesystem::path ipfs_bin = utilities::decent_path_finder::instance().get_ipfs_bin();
-   
-   QString program = "ipfs";
-   
-   if (!ipfs_bin.empty()) {
-      program = QString::fromStdString((ipfs_bin / "ipfs").string());
-   }
-   
-   // Check if we found IPFS
    QProcess *checkProcess = new QProcess(parent);
    checkProcess->start(program, QStringList("version"));
    
    if (!checkProcess->waitForStarted(2000)) {
-      throw std::runtime_error("Can not find IPFS executable. Please export IPFS_BIN environment variable that points to IPFS installation directory");
+      return false;
    }
    
    
    if (!checkProcess->waitForFinished(2000)) {
-      throw std::runtime_error("Can not find IPFS executable. Please export IPFS_BIN environment variable that points to IPFS installation directory");
+      return false;
    }
    
+   return true;
+}
+
+QString get_ipfs_path(QObject* parent, QString app_dir) {
+   
+   QString ipfs_bin = QString::fromStdString(utilities::decent_path_finder::instance().get_ipfs_bin().string());
+   QString ipfs_path_bin = QString::fromStdString((utilities::decent_path_finder::instance().get_ipfs_path() / "ipfs").string());
+
+   QString ipfs_path_next_to_exe = app_dir + QDir::separator() + "ipfs";
+   QString ipfs_path_next_to_bin_exe = app_dir + QDir::separator() + ".."  + QDir::separator() + "bin"  + QDir::separator() + "ipfs";
+
+   
+   if (utilities::decent_path_finder::instance().get_ipfs_bin() != fc::path()) {
+      if (check_for_ipfs(parent, ipfs_bin)) {
+         return ipfs_bin;
+      }
+   }
+   
+   if (utilities::decent_path_finder::instance().get_ipfs_path() != fc::path()) {
+      if (check_for_ipfs(parent, ipfs_path_bin)) {
+         return ipfs_path_bin;
+      }
+   }
+   
+   if (check_for_ipfs(parent, ipfs_path_next_to_exe)) {
+      return ipfs_path_next_to_exe;
+   }
+   
+   if (check_for_ipfs(parent, ipfs_path_next_to_bin_exe)) {
+      return ipfs_path_next_to_bin_exe;
+   }
+   
+   
+   if (check_for_ipfs(parent, "ipfs")) {
+      return "ipfs";
+   }
+   
+   
+   return "";
+}
+
+
+QProcess* run_ipfs_daemon(QObject* parent, QString app_dir) {
+   
+   QString program = get_ipfs_path(parent, app_dir);
+   
+   if (program.isEmpty()) {
+      throw std::runtime_error("Can not find IPFS executable. Please export IPFS_BIN or IPFS_PATH environment variables");
+   }
    
    
    
@@ -198,7 +252,7 @@ int runDecentD(int argc, char** argv, fc::promise<void>::ptr& exit_promise) {
 
       auto witness_plug = node->register_plugin<witness_plugin::witness_plugin>();
       auto history_plug = node->register_plugin<account_history::account_history_plugin>();
-      auto seeding_plug = node->register_plugin<seeding::seeding_plugin>();
+      auto seeding_plug = node->register_plugin<decent::seeding::seeding_plugin>();
       auto market_history_plug = node->register_plugin<market_history::market_history_plugin>();
 
       try
@@ -325,11 +379,11 @@ void write_default_logging_config_to_stream(std::ostream& out)
           "# route any messages logged to the default logger to the \"stderr\" logger we\n"
           "# declared above, if they are info level are higher\n"
           "[logger.default]\n"
-          "level=warn\n"
+          "level=info\n"
           "appenders=stderr\n\n"
           "# route messages sent to the \"p2p\" logger to the p2p appender declared above\n"
           "[logger.p2p]\n"
-          "level=warn\n"
+          "level=debug\n"
           "appenders=p2p\n\n";
 }
 

@@ -22,6 +22,10 @@
 #include <vector>
 
 
+using namespace boost;
+using namespace boost::filesystem;
+
+
 namespace decent { namespace package {
 
 
@@ -187,7 +191,7 @@ namespace decent { namespace package {
                     if (exists(_samples_dir_path) && !is_directory(_samples_dir_path)) {
                         FC_THROW("Samples path ${path} must point to directory", ("path", _samples_dir_path.string()));
                     }else{
-                        samples = true;
+                        samples = !_samples_dir_path.empty();
                     }
 
                     if (exists(temp_dir_path) || !create_directory(temp_dir_path)) {
@@ -234,6 +238,8 @@ namespace decent { namespace package {
                         FC_THROW("Not enough storage space in ${path} to create package", ("path", temp_dir_path.string()) );
                     }
 
+                   uint64_t size = 0;
+
                     {
                         PACKAGE_INFO_CHANGE_MANIPULATION_STATE(ENCRYPTING);
 
@@ -251,6 +257,9 @@ namespace decent { namespace package {
                         PACKAGE_TASK_EXIT_IF_REQUESTED;
                         //calculate custody...
                         decent::encrypt::CustodyUtils::instance().create_custody_data(aes_file_path, _package._custody_data);
+                        size += file_size( aes_file_path );
+                        const auto cus_file_path = temp_dir_path / "content.cus";
+                        size += file_size( cus_file_path );
                     }
 
                     if( samples ){
@@ -264,6 +273,7 @@ namespace decent { namespace package {
                             path current (file->path());
                             if (is_regular_file(current)){
                                 copy_file(current, temp_samples_dir_path / current.filename() );
+                                size += file_size( temp_samples_dir_path / current.filename() );
                             }
                         }
                     }
@@ -299,6 +309,7 @@ namespace decent { namespace package {
                     paths_to_skip.insert(_package.get_lock_file_path(temp_dir_path));
                     paths_to_skip.insert(zip_file_path);
                     detail::move_all_except(temp_dir_path, package_dir, paths_to_skip);
+                    _package._size = size;
 
                     remove_all(temp_dir_path);
 
@@ -502,6 +513,7 @@ namespace decent { namespace package {
                         FC_THROW("Package hash (${phash}) does not match ${fn} content file hash (${fhash})",
                                   ("phash", _package._hash.str()) ("fn", aes_file_path.string()) ("fhash", file_hash.str()) );
                     }
+                    //TODO_DECENT - we should check the size here...
 
                     PACKAGE_INFO_CHANGE_DATA_STATE(CHECKED);
                     PACKAGE_INFO_CHANGE_MANIPULATION_STATE(MS_IDLE);
@@ -766,6 +778,20 @@ namespace decent { namespace package {
         std::lock_guard<std::recursive_mutex> guard(_mutex);
         return _manipulation_state;
     }
+   
+   uint64_t PackageInfo::get_size() const {
+      size_t size=0;
+      for(recursive_directory_iterator it( get_package_dir() );
+          it != recursive_directory_iterator();
+          ++it)
+      {
+         if(!is_directory(*it))
+            size+=file_size(*it);
+      }
+      return size;
+   }
+   
+   
 
     void PackageInfo::lock_dir() {
         std::lock_guard<std::recursive_mutex> guard(_mutex);

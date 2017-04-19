@@ -1,5 +1,17 @@
+//*
+// *	File      : TransactionsTab.cpp
+// *
+// *	Created on: 21 Nov 2016
+// *	Created by: Davit Kalantaryan (Email: davit.kalantaryan@desy.de)
+// *
+// *  This file implements ...
+// *
+// */
+#include "stdafx.h"
+
 #include "transactions_tab.hpp"
 
+#ifndef _MSC_VER
 #include <QHeaderView>
 #include <QFont>
 #include <QTableWidgetItem>
@@ -11,13 +23,15 @@
 #include <boost/algorithm/string/replace.hpp>
 
 #include <graphene/chain/config.hpp>
-
+#endif
 #include "gui_wallet_global.hpp"
 #include "qt_commonheader.hpp"
 #include "gui_wallet_mainwindow.hpp"
 #include "gui_design.hpp"
 
+#ifndef _MSC_VER
 #include "json.hpp"
+#endif
 
 using namespace gui_wallet;
 using namespace nlohmann;
@@ -25,8 +39,9 @@ using namespace nlohmann;
 
 
 
-TransactionsTab::TransactionsTab(Mainwindow_gui_wallet* pMainWindow)
-: m_pMainWindow(pMainWindow)
+TransactionsTab::TransactionsTab(QWidget* pParent)
+: TabContentManager(pParent)
+, tablewidget(this)
 {
 
    tablewidget.set_columns({
@@ -63,8 +78,9 @@ TransactionsTab::TransactionsTab(Mainwindow_gui_wallet* pMainWindow)
    main_layout.addWidget(&tablewidget);
    setLayout(&main_layout);
    
-   
-   connect(&GlobalEvents::instance(), SIGNAL(currentUserChanged(std::string)), this, SLOT(currentUserChanged(std::string)));
+
+   QObject::connect(&Globals::instance(), &Globals::currentUserChanged,
+                    this, &TransactionsTab::currentUserChanged);
 
 }
 
@@ -141,7 +157,7 @@ void TransactionsTab::timeToUpdate(const std::string& result) {
 }
 
 
-void TransactionsTab::currentUserChanged(std::string userName) {
+void TransactionsTab::currentUserChanged(std::string const& userName) {
    user.setText(QString::fromStdString(userName));
 }
 

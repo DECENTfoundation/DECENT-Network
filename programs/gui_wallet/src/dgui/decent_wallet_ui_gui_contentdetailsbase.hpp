@@ -24,15 +24,13 @@
 
 namespace gui_wallet {
 
-class Mainwindow_gui_wallet;
-
 class ContentDetailsBase : public QDialog
 {
     Q_OBJECT
     
 public:
-    ContentDetailsBase(Mainwindow_gui_wallet* pMainWindow);
-    void execCDB(const SDigitalContent& a_cnt_details);    
+    ContentDetailsBase(QWidget* pParent);
+    void execCDB(const SDigitalContent& a_cnt_details, bool bSilent = false);
     void popup_for_purchased(int);
 
     //virtual void execCDD(const decent::wallet::ui::gui::SDigitalContent& a_cnt_details)=0;
@@ -85,8 +83,6 @@ protected:
     std::vector<NewCheckBox*> stars_labels;
     QLabel*         m_RateText;
     QTextEdit       m_desc;
-   Mainwindow_gui_wallet* m_pMainWindow;
-
 };
 
 }

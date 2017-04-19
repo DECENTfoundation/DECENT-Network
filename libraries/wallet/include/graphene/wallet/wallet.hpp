@@ -157,12 +157,15 @@ namespace graphene { namespace wallet {
    
       struct buying_object_ex : public buying_object, public content_download_status {
          buying_object_ex(const buying_object& obj, const content_download_status& status)
-          : buying_object(obj), content_download_status(status) {
+          : buying_object(obj), content_download_status(status)
+         {
+            // buying_object price is used for other purposes
+            // but the GUI relies on buying_object_ex::price
+            // so overwrite as a quick fix
+            price = paid_price;
          }
          
          std::string         author_account;
-         time_point_sec      created;
-         time_point_sec      expiration;
          uint32_t            times_bought;
          fc::ripemd160       hash;
       };
@@ -1478,7 +1481,7 @@ namespace graphene { namespace wallet {
           * @return The signed transaction submitting the content
           * @ingroup WalletCLI
           */
-         signed_transaction submit_content_new(string const& author,
+         fc::ripemd160  submit_content_new(string const& author,
                                                string const& content_dir,
                                                string const& samples_dir,
                                                string const& protocol,
@@ -1640,6 +1643,7 @@ namespace graphene { namespace wallet {
           * @brief Get history buying objects by consumer that match search term
           * @param account_id_or_name Consumer of the buyings to retrieve
           * @param term Search term to look up in Title and Description
+          * @param order Sort data by field
           * @return History buying objects corresponding to the provided consumer and matching search term
           * @ingroup WalletCLI
           */
@@ -1833,6 +1837,12 @@ namespace graphene { namespace wallet {
           * @ingroup WalletCLI
           */
          void set_transfer_logs(bool enable) const;
+
+         /**
+          * @brief Query the last local block
+          * @return the block time
+          */
+         fc::time_point_sec head_block_time() const;
       };
 
    } }
@@ -1890,8 +1900,6 @@ FC_REFLECT_DERIVED( graphene::wallet::buying_object_ex,
                    (graphene::chain::buying_object)
                    (graphene::wallet::content_download_status),
                    (author_account)
-                   (created)
-                   (expiration)
                    (times_bought)
                    (hash)
                   )
@@ -2028,4 +2036,5 @@ FC_API( graphene::wallet::wallet_api,
            (remove_package)
            (print_all_transfers)
            (set_transfer_logs)
+           (head_block_time)
 )

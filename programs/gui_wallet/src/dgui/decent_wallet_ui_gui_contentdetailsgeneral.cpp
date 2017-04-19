@@ -1,18 +1,22 @@
+#include "stdafx.h"
 
+#ifndef _MSC_VER
 #include <QGraphicsDropShadowEffect>
-
+#endif
 #include "decent_wallet_ui_gui_contentdetailsgeneral.hpp"
 #include "gui_wallet_global.hpp"
 #include "gui_wallet_mainwindow.hpp"
 #include "gui_design.hpp"
 
+#ifndef _MSC_VER
 #include <QMouseEvent>
 #include <QMessageBox>
 #include <QFileDialog>
 #include <QPushButton>
+#endif
 
 using namespace gui_wallet;
-ContentDetailsGeneral::ContentDetailsGeneral(Mainwindow_gui_wallet* pMainWindow) : ContentDetailsBase(pMainWindow){
+ContentDetailsGeneral::ContentDetailsGeneral(QWidget* pParent) : ContentDetailsBase(pParent){
    QHBoxLayout* image_layout = new QHBoxLayout;
    m_label.setText("Get it!");
    m_label.setFixedWidth(178);
@@ -59,7 +63,7 @@ void ContentDetailsGeneral::LabelPushCallbackGUI()
       return;
    }
    std::string downloadCommand = "download_content";
-   downloadCommand += " " + GlobalEvents::instance().getCurrentUser();  // consumer
+   downloadCommand += " " + Globals::instance().getCurrentUser();  // consumer
    downloadCommand += " \"" + m_pContentInfo->URI + "\"";               // URI
    downloadCommand += " \"\"";                                          // region_code
    downloadCommand += " true";                                          // broadcast
@@ -69,7 +73,7 @@ void ContentDetailsGeneral::LabelPushCallbackGUI()
    std::string str_error;
    try
    {
-      m_pMainWindow->RunTask(downloadCommand, a_result);
+      RunTask(downloadCommand, a_result);
    }
    catch(std::exception const& ex)
    {

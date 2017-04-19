@@ -5,7 +5,6 @@
 #include <QLineEdit>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
-#include <QThread>
 
 #include "gui_wallet_centralwidget.hpp"
 #include "gui_wallet_connectdlg.hpp"
@@ -14,7 +13,6 @@
 
 #include "json.hpp"
 
-#include <decent/wallet_utility/wallet_utility.hpp>
 #include "decent_wallet_ui_gui_contentdetailsgeneral.hpp"
 
 #include <stdarg.h>
@@ -23,31 +21,7 @@
 #include <set>
 
 namespace gui_wallet
-{
-   
-using WalletAPI = decent::wallet_utility::WalletAPI;
-
-class WalletOperator : public QObject
-{
-    Q_OBJECT
-public:
-    WalletOperator();
-    ~WalletOperator();
-
-public slots:
-   void slot_connect();
-   //void slot_content_upload(std::string str_command);
-signals:
-   void signal_connected(std::string str_error);
-   //void signal_content_uploaded(std::string str_error);
-public:
-   WalletAPI m_wallet_api;
-};
-
-   
-   
-   
-   
+{   
 
 class Mainwindow_gui_wallet : public QMainWindow
 {
@@ -60,6 +34,8 @@ public:
    void GoToThisTab(int index, std::string info);
    void UpdateAccountBalances(const std::string& username);
    
+   CentralWigdet* getCentralWidget();
+   
 public:
    
    static void RunTaskImpl(std::string const& str_command, std::string& str_result);
@@ -69,7 +45,6 @@ public:
 protected:
    void CreateActions();
    void CreateMenues();
-   
    
 private:
    
@@ -90,17 +65,15 @@ protected slots:
    void HelpSlot();
    void InfoSlot();
    void ViewAction();
-   
-   void ConnectSlot();
+
    void ImportKeySlot();
    void LockSlot();
    void UnlockSlot();
    void SendDCTSlot();
 
-   void slot_connected(std::string str_error);
-
-signals:
-   void signal_connect();
+   void slot_connected();
+   void slot_query_blockchain();
+   void slot_connecting_progress(std::string const&);
    
 protected:
    class QVBoxLayout*   m_pCentralAllLayout;
@@ -117,14 +90,12 @@ protected:
    QMenu*              m_pMenuView;
    
    QAction             m_ActionExit;
-   QAction             m_ActionConnect;
    QAction             m_ActionAbout;
    QAction             m_ActionInfo;
    QAction             m_ActionHelp;
    QAction             m_ActionLock;
    QAction             m_ActionUnlock;
    QAction             m_ActionImportKey;
-   QAction             m_ActionSendDCT;
    TextDisplayDialog   m_info_dialog;
    
    QVBoxLayout                         m_main_layout;
@@ -139,18 +110,10 @@ protected:
    QTimer                              _downloadChecker;
    QTimer                              _balanceUpdater;
    std::set<std::string>               _activeDownloads;
-
-public:
-   WalletOperator*   m_p_wallet_operator;
-protected:
-   QThread           m_wallet_operator_thread;
 };
 
    
 }
-
-
-
 
 #define RunTask gui_wallet::Mainwindow_gui_wallet::RunTaskImpl
 #define RunTaskParse gui_wallet::Mainwindow_gui_wallet::RunTaskParseImpl

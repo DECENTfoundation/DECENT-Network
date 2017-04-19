@@ -7,11 +7,16 @@
  *  This file implements ...
  *
  */
+#include "stdafx.h"
 
 #include "decent_wallet_ui_gui_newcheckbox.hpp"
 #include "gui_design.hpp"
 #include <string>
 
+
+#ifdef _MSC_VER
+#include <string>
+#endif
 
 using namespace gui_wallet;
 
@@ -19,7 +24,7 @@ NewCheckBox::NewCheckBox(int a_index)
     :
       m_index(a_index)
 {
-    setStyleSheet(qsStyleSheet.c_str());
+    setStyleSheet(d_StyleSheet);
 }
 
 

@@ -49,7 +49,8 @@
 #include <fstream>
 
 #ifdef WIN32
-# include <signal.h> 
+#include <signal.h> 
+#include <windows.h>
 #else
 # include <csignal>
 #endif
@@ -59,7 +60,26 @@ namespace bpo = boost::program_options;
          
 void write_default_logging_config_to_stream(std::ostream& out);
 fc::optional<fc::logging_config> load_logging_config_from_ini_file(const fc::path& config_ini_filename);
+#ifdef _MSC_VER
+// Stopping from GUI
+static fc::promise<int>::ptr s_exit_promise;
+BOOL s_bStop = FALSE;
+HANDLE s_hStopProcess = NULL;
 
+DWORD WINAPI StopFromGUIThreadProc(void* params)
+{
+   while (s_bStop == FALSE)
+   {
+      if (WaitForSingleObject(s_hStopProcess, 0) == 0)
+         s_bStop = TRUE;
+      Sleep(50);
+   }
+   CloseHandle(s_hStopProcess);
+   elog("Caught stop from GUI attempting to exit cleanly");
+   s_exit_promise->set_value(SIGTERM);
+   return 0;
+}
+#endif
 int main(int argc, char** argv) {
    app::application* node = new app::application();
    fc::oexception unhandled_exception;
@@ -75,7 +95,7 @@ int main(int argc, char** argv) {
 
       auto witness_plug = node->register_plugin<witness_plugin::witness_plugin>();
       auto history_plug = node->register_plugin<account_history::account_history_plugin>();
-      auto seeding_plug = node->register_plugin<seeding::seeding_plugin>();
+      auto seeding_plug = node->register_plugin<decent::seeding::seeding_plugin>();
       auto market_history_plug = node->register_plugin<market_history::market_history_plugin>();
 
       try
@@ -168,7 +188,15 @@ int main(int argc, char** argv) {
       node->startup_plugins();
 
       fc::promise<int>::ptr exit_promise = new fc::promise<int>("UNIX Signal Handler");
-
+#ifdef _MSC_VER
+      s_exit_promise = exit_promise;
+      s_hStopProcess = OpenEventA(SYNCHRONIZE, FALSE, "A883EF36-8168-4E45-A08F-97EFFC5B6694");
+      if (s_hStopProcess)
+      {
+         DWORD tid = 0;
+         CreateThread(NULL, 0, StopFromGUIThreadProc, NULL, 0, &tid);
+      }
+#else
       fc::set_signal_handler([&exit_promise](int signal) {
          elog( "Caught SIGINT attempting to exit cleanly" );
          exit_promise->set_value(signal);
@@ -178,8 +206,7 @@ int main(int argc, char** argv) {
          elog( "Caught SIGTERM attempting to exit cleanly" );
          exit_promise->set_value(signal);
       }, SIGTERM);
-#if defined( _MSC_VER )
-#else
+
       fc::set_signal_handler([&exit_promise](int signal) {
            elog( "Caught SIGHUP attempting to exit cleanly" );
            exit_promise->set_value(signal);
@@ -193,12 +220,17 @@ int main(int argc, char** argv) {
       node->shutdown_plugins();
       node->shutdown();
       delete node;
+#ifdef _MSC_VER
+      s_bStop = TRUE;
+#endif
       return 0;
    } catch( const fc::exception& e ) {
       // deleting the node can yield, so do this outside the exception handler
       unhandled_exception = e;
    }
-
+#ifdef _MSC_VER
+   s_bStop = TRUE;
+#endif
    if (unhandled_exception)
    {
       elog("Exiting with error:\n${e}", ("e", unhandled_exception->to_detail_string()));

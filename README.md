@@ -1,6 +1,6 @@
 Intro for new developers
 ------------------------
-
+ 
 This is a quick introduction to get new developers up to speed on Decent.
 
 

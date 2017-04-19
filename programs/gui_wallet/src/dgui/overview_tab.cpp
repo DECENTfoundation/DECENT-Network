@@ -7,16 +7,23 @@
 //*  This file implements ...
 //*
 //*/
+#include "stdafx.h"
+
 #include "overview_tab.hpp"
 #include "gui_wallet_mainwindow.hpp"
 #include "gui_wallet_centralwidget.hpp"
+
+#ifndef _MSC_VER
 #include <QPixmap>
 #include <QStackedWidget>
 #include <QRect>
 #include <QFont>
 #include <graphene/chain/config.hpp>
 #include "json.hpp"
+#endif
+
 #include "gui_design.hpp"
+
 
 using namespace gui_wallet;
 using namespace nlohmann;
@@ -24,6 +31,7 @@ using namespace nlohmann;
 
 Overview_tab::Overview_tab(class Mainwindow_gui_wallet* a_pPar)
 : m_pPar(a_pPar)
+, table_widget(this)
 {
    table_widget.set_columns({
       {"Account ID", 40, "id"},
@@ -126,7 +134,6 @@ std::string Overview_tab::getUpdateCommand() {
    return "search_accounts \"" + search.text().toStdString() + "\" \"" + table_widget.getSortedColumn() + "\" 100";
 }
 
-//return "search_content \"" + filterText + "\" \"" + m_pTableWidget.getSortedColumn() + "\" 100";
 
 void Overview_tab::transactionButtonPressed()
 {

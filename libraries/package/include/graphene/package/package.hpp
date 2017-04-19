@@ -160,7 +160,10 @@ namespace decent { namespace package {
     public:
         boost::filesystem::path get_package_dir() const        { return _parent_dir / _hash.str(); }
         std::string             get_url() const                { return _url; }
+        fc::ripemd160           get_hash() const               { return _hash; }
+        uint64_t                get_size() const;
         decent::encrypt::CustodyData get_custody_data() const  { return _custody_data; };
+
 
     private:
         mutable std::recursive_mutex  _mutex;
@@ -173,6 +176,7 @@ namespace decent { namespace package {
         std::string                   _url;
         boost::filesystem::path       _parent_dir;
         decent::encrypt::CustodyData  _custody_data;
+        uint64_t                      _size;
 
 
         std::shared_ptr<boost::interprocess::file_lock> _file_lock;

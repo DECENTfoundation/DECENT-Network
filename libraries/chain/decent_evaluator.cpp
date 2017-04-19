@@ -209,7 +209,19 @@ namespace graphene { namespace chain {
                                                          bo.expiration_time = db().head_block_time() + 24*3600;
                                                          bo.pubKey = o.pubKey;
                                                          bo.price = o.price;
-                                                         bo.set_db(&db());
+                                                         bo.paid_price = o.price;
+
+                                                         {
+                                                            const auto& idx = db().get_index_type<content_index>().indices().get<by_URI>();
+                                                            auto itr = idx.find(o.URI);
+                                                            if (itr != idx.end())
+                                                            {
+                                                               bo.synopsis = itr->synopsis;
+                                                               bo.size = itr->size;
+                                                               bo.created = itr->created;
+                                                               bo.average_rating = itr->AVG_rating;
+                                                            }
+                                                         }
 #ifdef PRICE_REGIONS
                                                          bo.region_code_from = o.region_code_from;
 #endif

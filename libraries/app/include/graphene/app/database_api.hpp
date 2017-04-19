@@ -201,6 +201,12 @@ namespace graphene { namespace app {
          processed_transaction get_transaction( uint32_t block_num, uint32_t trx_in_block )const;
 
          /**
+          * @brief Query the last local block
+          * @return the block time
+          */
+         fc::time_point_sec head_block_time()const;
+
+         /**
           * @brief If the transaction has not expired, this method will return the transaction for the given ID or
           * it will return NULL if it is not known.  Just because it is not known does not mean it wasn't
           * included in the blockchain.
@@ -775,6 +781,7 @@ FC_API(graphene::app::database_api,
           (get_block_header)
           (get_block)
           (get_transaction)
+          (head_block_time)
           (get_recent_transaction_by_id)
 
           // Globals
