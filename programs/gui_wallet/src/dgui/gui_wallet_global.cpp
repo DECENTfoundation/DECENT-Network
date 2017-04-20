@@ -1,4 +1,6 @@
+#ifdef _MSC_VER
 #include "stdafx.h"
+#endif
 
 #include "gui_wallet_global.hpp"
 #ifndef _MSC_VER

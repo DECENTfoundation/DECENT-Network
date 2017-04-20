@@ -7,7 +7,9 @@
  *  This file implements ...
  *
  */
+#ifdef _MSC_VER
 #include "stdafx.h"
+#endif
 
 #include "decent_wallet_ui_gui_newcheckbox.hpp"
 #include "gui_design.hpp"

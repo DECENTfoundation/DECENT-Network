@@ -1,4 +1,6 @@
+#ifdef _MSC_VER
 #include "stdafx.h"
+#endif
 
 #include "purchased_tab.hpp"
 
