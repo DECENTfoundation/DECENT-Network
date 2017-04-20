@@ -7,7 +7,9 @@
  *  This file implements ...
  *
  */
+#ifdef _MSC_VER
 #include "stdafx.h"
+#endif
 
 #include "text_display_dialog.hpp"
 #ifndef _MSC_VER

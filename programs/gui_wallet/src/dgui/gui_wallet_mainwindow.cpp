@@ -7,7 +7,9 @@
  *  This file implements ...
  *
  */
+#ifdef _MSC_VER
 #include "stdafx.h"
+#endif
 
 #define     WALLET_CONNECT_CODE     ((void*)-2)
 

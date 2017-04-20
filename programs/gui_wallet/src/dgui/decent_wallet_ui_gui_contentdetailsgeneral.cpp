@@ -1,4 +1,6 @@
+#ifdef _MSC_VER
 #include "stdafx.h"
+#endif
 
 #ifndef _MSC_VER
 #include <QGraphicsDropShadowEffect>
