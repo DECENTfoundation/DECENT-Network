@@ -7,9 +7,7 @@
  *  This file implements ...
  *
  */
-#ifdef _MSC_VER
 #include "stdafx.h"
-#endif
 
 #include "gui_design.hpp"
 #include "decent_button.hpp"

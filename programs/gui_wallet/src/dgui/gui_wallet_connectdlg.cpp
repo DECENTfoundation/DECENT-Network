@@ -9,9 +9,7 @@
  *   functionality necessary to connect to witness node
  *
  */
-#ifdef _MSC_VER
 #include "stdafx.h"
-#endif
 
 #include "gui_design.hpp"
 #include "gui_wallet_connectdlg.hpp"

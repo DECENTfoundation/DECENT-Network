@@ -7,9 +7,7 @@
 //*  This file implements ...
 //*
 //*/
-#ifdef _MSC_VER
 #include "stdafx.h"
-#endif
 
 #include "overview_tab.hpp"
 #include "gui_wallet_mainwindow.hpp"
