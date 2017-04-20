@@ -75,6 +75,10 @@ namespace gui_wallet
         void updateUploadButtonStatus();
         void seederOkSlot();
        
+#ifdef _MSC_VER
+        static void onGrabPublishers_Lambda(void* owner, void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result);
+#endif
+    
     public:
         void onPublishersDone(void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result);
 
