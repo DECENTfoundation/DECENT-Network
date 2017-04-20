@@ -46,7 +46,6 @@ protected:
    void CreateActions();
    void CreateMenues();
    
-   
 private:
    
    void UpdateLockedStatus();
@@ -115,9 +114,6 @@ protected:
 
    
 }
-
-
-
 
 #define RunTask gui_wallet::Mainwindow_gui_wallet::RunTaskImpl
 #define RunTaskParse gui_wallet::Mainwindow_gui_wallet::RunTaskParseImpl

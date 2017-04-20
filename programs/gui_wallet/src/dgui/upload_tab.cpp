@@ -1,8 +1,18 @@
-
+/*
+ *	File      : upload_tab.cpp
+ *
+ *	Created on: 21 Nov 2016
+ *	Created by: Davit Kalantaryan (Email: davit.kalantaryan@desy.de)
+ *
+ *  This file implements ...
+ *
+ */
+#include "stdafx.h"
 
 #include "upload_tab.hpp"
 #include "gui_wallet_global.hpp"
 
+#ifndef _MSC_VER
 #include <QMessageBox>
 #include <QFileDialog>
 #include <QStandardItemModel>
@@ -12,8 +22,11 @@
 #include <QDateEdit>
 #include <stdio.h>
 #include <QStyleFactory>
+#endif
+
 #include "decent_button.hpp"
 
+#ifndef _MSC_VER
 #include <graphene/chain/config.hpp>
 #include <boost/filesystem.hpp>
 
@@ -26,10 +39,12 @@
 #include <cryptopp/osrng.h>
 
 #include <QIcon>
+#endif
 
 #include "gui_wallet_global.hpp"
 #include "gui_wallet_mainwindow.hpp"
 
+#ifndef _MSC_VER
 #include <QLayout>
 #include <QCheckBox>
 #include <stdio.h>
@@ -52,7 +67,7 @@
 #include <QDateTime>
 #include <QDate>
 #include <QTime>
-
+#endif
 
 using namespace gui_wallet;
 using namespace nlohmann;
@@ -295,6 +310,11 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    _buttonStatusCheck = new QTimer(this);
    connect(_buttonStatusCheck, SIGNAL(timeout()), SLOT(updateUploadButtonStatus()));
    _buttonStatusCheck->start(500);
+#ifdef _MSC_VER
+   int height = style()->pixelMetric(QStyle::PM_TitleBarHeight);
+   setWindowIcon(height > 32 ? QIcon(":/icon/images/windows_decent_icon_32x32.png")
+      : QIcon(":/icon/images/windows_decent_icon_16x16.png"));
+#endif
 }
 
 void Upload_popup::onGrabPublishers() {

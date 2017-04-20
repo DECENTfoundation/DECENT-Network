@@ -1,12 +1,26 @@
+/*
+ *	File: main_gui_wallet.cpp
+ *
+ *	Created on: Nov 11, 2016
+ *	Created by: Davit Kalantaryan (Email: davit.kalantaryan@desy.de)
+ *
+ *  This file implements ...
+ *
+ */
+#include "stdafx.h"
 
+#ifndef _MSC_VER
 #include <QApplication>
 #include <QProcess>
 #include <QMessageBox>
 #include <QDir>
 #include <fc/interprocess/signals.hpp>
 #include <fc/thread/thread.hpp>
+#endif
 
 #include "gui_wallet_mainwindow.hpp"
+
+#ifndef _MSC_VER
 
 #if NDEBUG
 //#define SET_LIBRARY_PATHS
@@ -38,8 +52,9 @@ using string = std::string;
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
+#endif
 
-#if defined( _MSC_VER )
+#ifdef _MSC_VER
 #include <Windows.h>
 #endif
 

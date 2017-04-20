@@ -1,7 +1,10 @@
-#include "browse_content_tab.hpp"
+#include "stdafx.h"
+
+#include "browse_content_tab.hpp" 
 #include "gui_wallet_global.hpp"
 #include "gui_wallet_mainwindow.hpp"
 
+#ifndef _MSC_VER
 #include <QLayout>
 #include <QCheckBox>
 #include <stdio.h>
@@ -23,6 +26,7 @@
 #include <QDateTime>
 #include <QDate>
 #include <QTime>
+#endif
 
 using namespace gui_wallet;
 using namespace nlohmann;
