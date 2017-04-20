@@ -398,7 +398,7 @@ void seeding_plugin_impl::send_ready_to_publish()
       sritr++;
    }
    fc::time_point next_wakeup(fc::time_point::now() + fc::microseconds( (uint64_t) 1000000 * (60 * 60)));
-   ilog("seeding plugin_impl: planning next PoR at ${t}",("t",next_wakeup ));
+   ilog("seeding plugin_impl: planning next send_ready_to_publish at ${t}",("t",next_wakeup ));
    service_thread->schedule([=](){ send_ready_to_publish();}, next_wakeup, "Seeding plugin RtP generate" );
    ilog("seeding plugin_impl: send_ready_to_publish() end");
 }

@@ -208,6 +208,7 @@ namespace graphene { namespace chain {
          finish_buying_operation op;
          op.author = content->author;
          op.payout = price;
+         op.consumer = buying.consumer;
          op.buying = buying.id;
          idump((op));
 
