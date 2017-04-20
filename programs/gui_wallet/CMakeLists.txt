@@ -55,6 +55,8 @@ add_executable(DECENT MACOSX_BUNDLE
 
                resources.qrc
                desktop.icns
+
+               stdafx.h
              )
 
 
