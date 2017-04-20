@@ -64,6 +64,12 @@ decent_path_finder::decent_path_finder() {
    }
    
    
+   const char* ipfs_path_dir = getenv("IPFS_PATH");
+   if (ipfs_path_dir != NULL) {
+      _ipfs_path = ipfs_path_dir;
+   }
+   
+   
    
    create_directories(_decent_home);
    create_directories(_decent_data);
