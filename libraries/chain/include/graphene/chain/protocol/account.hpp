@@ -53,6 +53,13 @@ namespace graphene { namespace chain {
       flat_set<vote_id_type> votes;
       extensions_type        extensions;
 
+      /// True if account (author) allows subscription
+      bool allow_subscription;
+      /// Price for subscription per one subscription period
+      asset price_per_subscribe;
+      /// Minimal duration of subscription in days
+      uint32_t subscription_period;
+
       void validate()const;
    };
 
@@ -179,7 +186,9 @@ namespace graphene { namespace chain {
 
 } } // graphene::chain
 
-FC_REFLECT(graphene::chain::account_options, (memo_key)(voting_account)(num_witness)(votes)(extensions))
+
+FC_REFLECT(graphene::chain::account_options, (memo_key)(voting_account)(num_witness)(votes)(extensions)
+           (allow_subscription)(price_per_subscribe)(subscription_period))
 
 FC_REFLECT(graphene::chain::account_create_operation::ext, (null_ext)(buyback_options))
 FC_REFLECT( graphene::chain::account_create_operation,

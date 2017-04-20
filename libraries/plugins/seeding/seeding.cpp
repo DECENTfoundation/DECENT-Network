@@ -82,7 +82,7 @@ void seeding_plugin_impl::handle_content_submit(const operation_history_object &
                     mso.free_space -= cs_op.size ; //we allocate the whole megabytes per content
                });
                //if we run this in main thread it can crash _push_block
-               service_thread->async( [cs_op, this, mso](){
+               //service_thread->async( [cs_op, this, mso](){
                     /*ilog("seeding plugin:  handle_content_submit() lambda called");
                     auto id = package_manager::instance().download_package(cs_op.URI, *this, empty_report_stats_listener::instance());
                     active_downloads[id] = so_id;
@@ -92,7 +92,7 @@ void seeding_plugin_impl::handle_content_submit(const operation_history_object &
                     decent::package::event_listener_handle_t sl = std::make_shared<SeedingListener>(*this, mso , package_handle);
                     package_handle->add_event_listener(sl);
                     package_handle->download(false);
-               });
+               //});
             }
          }
          ++seeder_itr;
@@ -125,7 +125,7 @@ void seeding_plugin_impl::handle_request_to_buy(const operation_history_object &
       FC_THROW("cannot find content by URI");
    const content_object &co = *citr;
    if(co.expiration < fc::time_point::now() ){
-      //if the content expired let the PoR generation cycle take care of the cleaning up...
+      //if the content expired let the PoR generation cycle, return. PoR cycle will take care of the cleaning up...
       return;
    }
 
@@ -398,7 +398,7 @@ void seeding_plugin_impl::send_ready_to_publish()
       sritr++;
    }
    fc::time_point next_wakeup(fc::time_point::now() + fc::microseconds( (uint64_t) 1000000 * (60 * 60)));
-   ilog("seeding plugin_impl: planning next PoR at ${t}",("t",next_wakeup ));
+   ilog("seeding plugin_impl: planning next send_ready_to_publish at ${t}",("t",next_wakeup ));
    service_thread->schedule([=](){ send_ready_to_publish();}, next_wakeup, "Seeding plugin RtP generate" );
    ilog("seeding plugin_impl: send_ready_to_publish() end");
 }

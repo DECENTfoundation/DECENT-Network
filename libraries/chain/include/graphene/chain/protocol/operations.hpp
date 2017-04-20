@@ -34,6 +34,7 @@
 #include <graphene/chain/protocol/withdraw_permission.hpp>
 #include <graphene/chain/protocol/witness.hpp>
 #include <graphene/chain/protocol/decent.hpp>
+#include <graphene/chain/protocol/subscription.hpp>
 
 namespace graphene { namespace chain {
 
@@ -77,11 +78,16 @@ namespace graphene { namespace chain {
             ready_to_publish_operation,
             proof_of_custody_operation,
             deliver_keys_operation,
+            subscribe_operation,
+            subscribe_by_author_operation,
+            automatic_renewal_of_subscription_operation,
             report_stats_operation,
-            return_escrow_submission_operation,      // VIRTUAL
-            return_escrow_buying_operation,           // VIRTUAL
-            pay_seeder_operation,                     // VIRTUAL
-            finish_buying_operation                   // VIRTUAL
+            disallow_automatic_renewal_of_subscription_operation,  // VIRTUAL
+            return_escrow_submission_operation,                    // VIRTUAL
+            return_escrow_buying_operation,                        // VIRTUAL
+            pay_seeder_operation,                                  // VIRTUAL
+            finish_buying_operation,                               // VIRTUAL
+            renewal_of_subscription_operation                      // VIRTUAL
          > operation;
 
    /// @} // operations group
