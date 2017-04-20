@@ -63,6 +63,7 @@ add_executable(DECENT MACOSX_BUNDLE
 
 target_include_directories( DECENT PUBLIC
                             include
+                            .
                           )
 
 target_link_libraries(  DECENT PUBLIC
