@@ -155,6 +155,9 @@ struct submit_transfer_listener : public EventListenerInterface {
    virtual void package_seed_complete();
    virtual void package_creation_complete();
    
+   fc::ripemd160 get_hash() const { return _info->get_hash(); }
+   const content_submit_operation& op() const { return _op; }
+   
 private:
    wallet_api_impl&          _wallet;
    shared_ptr<PackageInfo>   _info;
@@ -2299,7 +2302,10 @@ public:
          
          
          auto package_handle = package_manager.get_package(content_dir, samples_dir, sha_key);
-         package_handle->add_event_listener(std::make_shared<submit_transfer_listener>(*this, package_handle, submit_op, protocol));
+         shared_ptr<submit_transfer_listener> listener_ptr = std::make_shared<submit_transfer_listener>(*this, package_handle, submit_op, protocol);
+         _package_manager_listeners.push_back(listener_ptr);
+         
+         package_handle->add_event_listener(listener_ptr);
          package_handle->create(false);
 
      
@@ -2895,6 +2901,7 @@ public:
    const string _wallet_filename_extension = ".wallet";
 
    mutable map<asset_id_type, asset_object> _asset_cache;
+   vector<shared_ptr<graphene::wallet::detail::submit_transfer_listener>> _package_manager_listeners;
 };
 
    std::string operation_printer::fee(const asset& a)const {
@@ -4317,18 +4324,29 @@ public:
          if (package->get_data_state() == PackageInfo::CHECKED) {
             continue;
          }
+         
+         
+         for (auto listener: my->_package_manager_listeners) {
+            if (listener->get_hash() == package->get_hash()) {
 
-         content_summary newObject;
+               content_summary newObject;
+               newObject.synopsis = listener->op().synopsis;
+               newObject.expiration = listener->op().expiration;
+               newObject.author = my->get_account( listener->op().author ).name;
+               
+               if (state == PackageInfo::PACKING) {
+                  newObject.status = "Packing";
+               } else if (state == PackageInfo::ENCRYPTING) {
+                  newObject.status = "Encrypting";
+               } else if (state == PackageInfo::STAGING) {
+                  newObject.status = "Staging";
+               }
+               
+               result.insert(result.begin(), newObject);
 
-         if (state == PackageInfo::PACKING) {
-            newObject.status = "Packing";
-         } else if (state == PackageInfo::ENCRYPTING) {
-            newObject.status = "Encrypting";
-         } else if (state == PackageInfo::STAGING) {
-            newObject.status = "Staging";
+            }
          }
 
-         result.insert(result.begin(), newObject);
       }
 
       return result;
