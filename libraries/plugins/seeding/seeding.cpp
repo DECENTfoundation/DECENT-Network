@@ -82,7 +82,7 @@ void seeding_plugin_impl::handle_content_submit(const operation_history_object &
                     mso.free_space -= cs_op.size ; //we allocate the whole megabytes per content
                });
                //if we run this in main thread it can crash _push_block
-               //service_thread->async( [cs_op, this, mso](){
+               service_thread->async( [cs_op, this, mso](){
                     /*ilog("seeding plugin:  handle_content_submit() lambda called");
                     auto id = package_manager::instance().download_package(cs_op.URI, *this, empty_report_stats_listener::instance());
                     active_downloads[id] = so_id;
@@ -92,7 +92,7 @@ void seeding_plugin_impl::handle_content_submit(const operation_history_object &
                     decent::package::event_listener_handle_t sl = std::make_shared<SeedingListener>(*this, mso , package_handle);
                     package_handle->add_event_listener(sl);
                     package_handle->download(false);
-               //});
+               });
             }
          }
          ++seeder_itr;
@@ -436,7 +436,8 @@ void seeding_plugin_impl::restart_downloads(){
         const auto& cidx = database().get_index_type<my_seeding_index>().indices().get<by_URI>();
         auto citr = cidx.begin();
         while(citr!=cidx.end()) {
-           int already_have = false;
+           elog("restarting downloads, dealing with package ${u}", ("u", citr->URI));
+           bool already_have = false;
            decent::package::package_handle_t package_handle(0);
            for( auto package : packages )
               if( package->get_hash() == citr->_hash ) {
@@ -447,6 +448,7 @@ void seeding_plugin_impl::restart_downloads(){
            if(already_have){
               generate_por2( *citr, package_handle );
            }else{
+              elog("restarting downloads, re-downloading package ${u}", ("u", citr->URI));
               package_handle = pm.get_package(citr->URI);
               decent::package::event_listener_handle_t sl = std::make_shared<SeedingListener>(*this, *citr , package_handle);
               package_handle->add_event_listener(sl);
