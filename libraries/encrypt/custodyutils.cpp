@@ -613,10 +613,14 @@ int CustodyUtils::create_proof_of_custody(path content, const uint32_t n, const 
    element_t sigmas[n];
 #endif
    char buffer[DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED];
+   try {
    for( int i = 0; i < n; i++ ) {
       cusfile.read(buffer, DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED);
       element_init_G1(sigmas[i], pairing);
       element_from_bytes_compressed(sigmas[i], (unsigned char *) buffer);
+   }
+   } catch (std::exception ){
+      return -1;
    }
 
    //read the file and get m's

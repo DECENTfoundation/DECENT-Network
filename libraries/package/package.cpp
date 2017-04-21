@@ -1356,6 +1356,7 @@ int package_object::get_size() const {
 
 
 uint32_t package_object::create_proof_of_custody(const decent::encrypt::CustodyData& cd, decent::encrypt::CustodyProof& proof) const {
+   FC_ASSERT(cd.n < 10000000);
    return package_manager::instance().create_proof_of_custody(get_content_file(), cd, proof);
 }
 
