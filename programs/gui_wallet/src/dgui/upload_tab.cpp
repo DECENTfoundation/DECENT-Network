@@ -300,7 +300,9 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    
    
    m_getPublishersTimer.setSingleShot(true);
-   connect(&m_getPublishersTimer, SIGNAL(timeout()), SLOT(onGrabPublishers()));
+   QObject::connect(&m_getPublishersTimer, &QTimer::timeout,
+                    this, &Upload_popup::onGrabPublishers);
+
    m_getPublishersTimer.start(1000);
    
    updateUploadButtonStatus();
@@ -342,7 +344,7 @@ void Upload_popup::onGrabPublishers() {
    _seeder_table->setRowCount(publishers.size());
    
    _seeders_checkbox.clear();
-   _seeders_checkbox.reserve(publishers.size());
+   _seeders_checkbox.resize(publishers.size());
                              
    for (int r = 0; r < publishers.size(); ++r) {
       
@@ -395,7 +397,7 @@ void Upload_popup::onGrabPublishers() {
 void Upload_popup::seederOkSlot()
 {
    _checkedSeeders.clear();
-   for (int i = 0; i < 3; ++i){
+   for (int i = 0; i < _seeders_checkbox.size(); ++i){
       if (_seeders_checkbox[i]->isChecked()){
          _checkedSeeders.push_back(_seeder_table->item(i, 1)->text().toStdString());
       }
