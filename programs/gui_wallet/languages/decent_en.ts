@@ -702,42 +702,42 @@
     <message>
         <location filename="../src/dgui/transactions_tab.cpp" line="48"/>
         <source>Time</source>
-        <translation>Time-</translation>
+        <translation>Time</translation>
     </message>
     <message>
         <location filename="../src/dgui/transactions_tab.cpp" line="49"/>
         <source>Type</source>
-        <translation>Type-</translation>
+        <translation>Type</translation>
     </message>
     <message>
         <location filename="../src/dgui/transactions_tab.cpp" line="50"/>
         <source>From</source>
-        <translation>From-</translation>
+        <translation>From</translation>
     </message>
     <message>
         <location filename="../src/dgui/transactions_tab.cpp" line="51"/>
         <source>To</source>
-        <translation>To-</translation>
+        <translation>To</translation>
     </message>
     <message>
         <location filename="../src/dgui/transactions_tab.cpp" line="52"/>
         <source>Price</source>
-        <translation>Price-</translation>
+        <translation>Price</translation>
     </message>
     <message>
         <location filename="../src/dgui/transactions_tab.cpp" line="53"/>
         <source>Fee</source>
-        <translation>Fee-</translation>
+        <translation>Fee</translation>
     </message>
     <message>
         <location filename="../src/dgui/transactions_tab.cpp" line="54"/>
         <source>Description</source>
-        <translation>Description-</translation>
+        <translation>Description</translation>
     </message>
     <message>
         <location filename="../src/dgui/transactions_tab.cpp" line="59"/>
         <source>Enter user name to see transaction history</source>
-        <translation>Enter user name to see transaction history-</translation>
+        <translation>Enter user name to see transaction history</translation>
     </message>
     <message>
         <location filename="../src/dgui/transactions_tab.cpp" line="126"/>
