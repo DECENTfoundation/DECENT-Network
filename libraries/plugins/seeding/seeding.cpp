@@ -77,7 +77,7 @@ void seeding_plugin_impl::handle_content_submit(const operation_history_object &
                     so.cd = cs_op.cd;
                });
                auto so_id = mso.id;
-               ilog("seeding plugin:  handle_content_submit() created new content_object ${s}",("s",so_id));
+               ilog("seeding plugin:  handle_content_submit() created new content_object ${s}",("s",mso));
                db.modify<my_seeder_object>(*seeder_itr, [&](my_seeder_object &mso) {
                     mso.free_space -= cs_op.size ; //we allocate the whole megabytes per content
                });
@@ -88,7 +88,7 @@ void seeding_plugin_impl::handle_content_submit(const operation_history_object &
                     active_downloads[id] = so_id;
                     */
                     auto& pm = decent::package::PackageManager::instance();
-                    auto package_handle = pm.get_package(cs_op.URI);
+                    auto package_handle = pm.get_package(mso.URI);
                     decent::package::event_listener_handle_t sl = std::make_shared<SeedingListener>(*this, mso , package_handle);
                     package_handle->add_event_listener(sl);
                     package_handle->download(false);

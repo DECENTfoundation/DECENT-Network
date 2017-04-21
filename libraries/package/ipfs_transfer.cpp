@@ -39,6 +39,7 @@ namespace decent { namespace package {
     uint64_t IPFSDownloadPackageTask::ipfs_recursive_get(const std::string &url,
                                                          const boost::filesystem::path &dest_path)
     {
+        ilog("ipfs_recursive_get called for url ${u}",("u", url));
         FC_ASSERT( exists(dest_path) && is_directory(dest_path) );
 
         uint64_t size = 0;

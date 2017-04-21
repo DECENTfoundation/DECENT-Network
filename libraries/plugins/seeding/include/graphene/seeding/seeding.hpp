@@ -176,13 +176,13 @@ private:
    decent::package::package_handle_t _pi;
    seeding_plugin_impl * _my;
 public:
-   SeedingListener(seeding_plugin_impl& impl, const my_seeding_object & mso, const decent::package::package_handle_t pi):_mso(mso),_pi(pi){ _my = &impl;};
+   SeedingListener(seeding_plugin_impl& impl, const my_seeding_object & mso, const decent::package::package_handle_t pi){ _mso = mso; _pi = pi; _my = &impl;};
    ~SeedingListener(){};
 
    virtual void package_download_error(const std::string&){
       //In case the download fails, delete the package and seeding objects - TODO_DECENT
       //_my->database().remove(mso);
-      elog("seeding plugin: package_download_error(): Failed downloading package ${s}",("s",_mso.URI));
+      elog("seeding plugin: package_download_error(): Failed downloading package ${s}",("s",_mso));
       auto& pm = decent::package::PackageManager::instance();
       pm.release_package(_pi);
    };
