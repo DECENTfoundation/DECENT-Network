@@ -59,8 +59,6 @@ protected slots:
    void DisplayConnectionError(std::string errorMessage);
    void currentUserBalanceUpdate();
    
-protected slots:
-   
    void AboutSlot();
    void HelpSlot();
    void InfoSlot();
@@ -71,6 +69,9 @@ protected slots:
    void UnlockSlot();
    void SendDCTSlot();
 
+   void slot_showPurchasedTab();
+   void slot_updateAccountBalance(Asset const&);
+   
    void slot_connected();
    void slot_query_blockchain();
    void slot_connecting_progress(std::string const&);

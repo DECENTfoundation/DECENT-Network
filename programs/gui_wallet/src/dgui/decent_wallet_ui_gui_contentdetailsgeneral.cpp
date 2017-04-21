@@ -39,8 +39,8 @@ ContentDetailsGeneral::ContentDetailsGeneral(QWidget* pParent) : ContentDetailsB
 }
 
 
-void ContentDetailsGeneral::execCDD(const SDigitalContent& a_cnt_details) {
-   execCDB(a_cnt_details);
+void ContentDetailsGeneral::execCDD(const SDigitalContent& a_cnt_details, bool bSilent/* = false*/) {
+   execCDB(a_cnt_details, bSilent);
 }
 
 

@@ -25,7 +25,6 @@
 #include <graphene/chain/config.hpp>
 #endif
 #include "gui_wallet_global.hpp"
-#include "qt_commonheader.hpp"
 #include "gui_wallet_mainwindow.hpp"
 #include "gui_design.hpp"
 

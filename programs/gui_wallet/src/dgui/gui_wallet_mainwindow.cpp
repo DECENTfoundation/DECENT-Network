@@ -17,7 +17,6 @@
 #include <QMessageBox>
 #endif
 
-#include "qt_commonheader.hpp"
 #include "gui_wallet_mainwindow.hpp"
 #include "gui_wallet_global.hpp"
 #include "gui_design.hpp"
@@ -99,6 +98,12 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
    QObject::connect(&Globals::instance(), &Globals::connectingProgress,
                     this, &Mainwindow_gui_wallet::slot_connecting_progress);
 
+   QObject::connect(&Globals::instance(), &Globals::signal_showPurchasedTab,
+                    this, &Mainwindow_gui_wallet::slot_showPurchasedTab);
+
+   QObject::connect(&Globals::instance(), &Globals::signal_updateAccountBalance,
+                    this, &Mainwindow_gui_wallet::slot_updateAccountBalance);
+
    connect(pUsersCombo, SIGNAL(currentIndexChanged(const QString&)), this, SLOT(CurrentUserChangedSlot(const QString&)) );
 
 
@@ -177,6 +182,17 @@ void Mainwindow_gui_wallet::currentUserBalanceUpdate()
       m_pCentralWidget->getSendButton()->unhighlight();
       m_pCentralWidget->getSendButton()->setStyleSheet("* { background-color: rgb(255,255,255); color : black; }");
    }
+}
+
+void Mainwindow_gui_wallet::slot_showPurchasedTab()
+{
+   GoToThisTab(4, std::string());
+}
+
+void Mainwindow_gui_wallet::slot_updateAccountBalance(Asset const& balance)
+{
+   // use old function needs to be reviewed
+   UpdateAccountBalances(Globals::instance().getCurrentUser());
 }
 
 CentralWigdet* Mainwindow_gui_wallet::getCentralWidget()

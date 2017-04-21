@@ -2,7 +2,10 @@
 
 #include "browse_content_tab.hpp" 
 #include "gui_wallet_global.hpp"
-#include "gui_wallet_mainwindow.hpp"
+#include "decent_wallet_ui_gui_contentdetailsgeneral.hpp"
+#include "gui_wallet_global.hpp"
+
+
 
 #ifndef _MSC_VER
 #include <QLayout>
@@ -32,14 +35,12 @@ using namespace gui_wallet;
 using namespace nlohmann;
 
 
-BrowseContentTab::BrowseContentTab(Mainwindow_gui_wallet* parent)
-: TabContentManager(parent)
-, _content_popup(NULL)
-, _parent(parent)
-, m_pTableWidget(this)
+BrowseContentTab::BrowseContentTab(QWidget* pParent)
+: TabContentManager(pParent)
+, m_pTableWidget(new DecentTable(this))
 {
     
-    m_pTableWidget.set_columns({
+    m_pTableWidget->set_columns({
         {"Title", 20},
         {"Author", 15, "author"},
         {"Rating", 5, "rating"},
@@ -66,7 +67,7 @@ BrowseContentTab::BrowseContentTab(Mainwindow_gui_wallet* parent)
     m_main_layout.setContentsMargins(0, 0, 0, 0);
     m_main_layout.setSpacing(0);
     m_main_layout.addLayout(&m_search_layout);
-    m_main_layout.addWidget(&m_pTableWidget);
+    m_main_layout.addWidget(m_pTableWidget);
     setLayout(&m_main_layout);
     
     
@@ -125,7 +126,7 @@ std::string BrowseContentTab::getUpdateCommand()
    std::string filterText = m_filterLineEdit.text().toStdString();
    return   string("search_content ") +
             "\"" + filterText + "\" " +
-            "\"" + m_pTableWidget.getSortedColumn() + "\" " +
+            "\"" + m_pTableWidget->getSortedColumn() + "\" " +
             "\"\" " +   // user
             "\"\" " +   // region code
             "100";
@@ -138,32 +139,25 @@ void BrowseContentTab::show_content_popup() {
     if (id < 0 || id >= _digital_contents.size()) {
         throw std::out_of_range("Content index is out of range");
     }
-    
-   if (_content_popup) {
-      delete _content_popup;
-      _content_popup = NULL;
-   }
-   
-   _content_popup = new ContentDetailsGeneral(_parent);
-    
-   connect(_content_popup, SIGNAL(ContentWasBought()), this, SLOT(content_was_bought()));
-   _content_popup->execCDD(_digital_contents[id]);
+
+   // content details dialog is ugly, needs to be rewritten
+   ContentDetailsGeneral* pDetailsDialog = new ContentDetailsGeneral(nullptr);
+   QObject::connect(pDetailsDialog, &ContentDetailsGeneral::ContentWasBought,
+                    this, &BrowseContentTab::content_was_bought);
+   pDetailsDialog->execCDD(_digital_contents[id], true);
+   pDetailsDialog->setAttribute(Qt::WA_DeleteOnClose);
+   pDetailsDialog->open();
 }
 
-void BrowseContentTab::content_was_bought() {
-   if (_content_popup) {
-      delete _content_popup;
-      _content_popup = NULL;
-   }
-   _parent->GoToThisTab(4, "");
-   _parent->UpdateAccountBalances(Globals::instance().getCurrentUser());
-   
-
+void BrowseContentTab::content_was_bought()
+{
+   Globals::instance().signal_showPurchasedTab();
+   Globals::instance().updateAccountBalance();
 }
 
 void BrowseContentTab::ShowDigitalContentsGUI() {
    
-   m_pTableWidget.setRowCount(_digital_contents.size());
+   m_pTableWidget->setRowCount(_digital_contents.size());
    
    int index = 0;
    for(SDigitalContent& aTemporar: _digital_contents) {
@@ -176,22 +170,22 @@ void BrowseContentTab::ShowDigitalContentsGUI() {
 
       // Title
       int colIndex = 0;
-      m_pTableWidget.setItem(index, colIndex,new QTableWidgetItem(QString::fromStdString(title)));
-      m_pTableWidget.item(index, colIndex)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
-      m_pTableWidget.item(index, colIndex)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+      m_pTableWidget->setItem(index, colIndex,new QTableWidgetItem(QString::fromStdString(title)));
+      m_pTableWidget->item(index, colIndex)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+      m_pTableWidget->item(index, colIndex)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
      
       // Author
       colIndex++;
-      m_pTableWidget.setItem(index, colIndex,new QTableWidgetItem(QString::fromStdString(aTemporar.author)));
-      m_pTableWidget.item(index, colIndex)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
-      m_pTableWidget.item(index, colIndex)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+      m_pTableWidget->setItem(index, colIndex,new QTableWidgetItem(QString::fromStdString(aTemporar.author)));
+      m_pTableWidget->item(index, colIndex)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+      m_pTableWidget->item(index, colIndex)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
       
       // Rating
       colIndex++;
       QString rating = QString::number(aTemporar.AVG_rating, 'g', 2);
-      m_pTableWidget.setItem(index,colIndex,new QTableWidgetItem(rating));
-      m_pTableWidget.item(index, colIndex)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
-      m_pTableWidget.item(index, colIndex)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+      m_pTableWidget->setItem(index,colIndex,new QTableWidgetItem(rating));
+      m_pTableWidget->item(index, colIndex)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+      m_pTableWidget->item(index, colIndex)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
       
       
       // Size
@@ -204,40 +198,40 @@ void BrowseContentTab::ShowDigitalContentsGUI() {
          sizeAdjusted = aTemporar.size / 1024.0;
       }
       
-      m_pTableWidget.setItem(index, colIndex,new QTableWidgetItem(QString::number(sizeAdjusted, 'g', 2) + unit));
-      m_pTableWidget.item(index, colIndex)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
-      m_pTableWidget.item(index, colIndex)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+      m_pTableWidget->setItem(index, colIndex,new QTableWidgetItem(QString::number(sizeAdjusted, 'g', 2) + unit));
+      m_pTableWidget->item(index, colIndex)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+      m_pTableWidget->item(index, colIndex)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
       
       // Price
       colIndex++;
       if(aTemporar.price.amount)
       {
-         m_pTableWidget.setItem(index, colIndex, new QTableWidgetItem(QString::number(aTemporar.price.amount , 'f' , 4) + " DCT"));
+         m_pTableWidget->setItem(index, colIndex, new QTableWidgetItem(QString::number(aTemporar.price.amount , 'f' , 4) + " DCT"));
       }
       else
       {
-         m_pTableWidget.setItem(index, colIndex, new QTableWidgetItem("Free"));
+         m_pTableWidget->setItem(index, colIndex, new QTableWidgetItem("Free"));
       }
-      m_pTableWidget.item(index, colIndex)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
-      m_pTableWidget.item(index, colIndex)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+      m_pTableWidget->item(index, colIndex)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+      m_pTableWidget->item(index, colIndex)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
       
       
       
       // Uploaded
       colIndex++;
       std::string created_str = aTemporar.created.substr(0, 10);
-      m_pTableWidget.setItem(index, colIndex, new QTableWidgetItem(QString::fromStdString(created_str)));
-      m_pTableWidget.item(index, colIndex)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
-      m_pTableWidget.item(index, colIndex)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+      m_pTableWidget->setItem(index, colIndex, new QTableWidgetItem(QString::fromStdString(created_str)));
+      m_pTableWidget->item(index, colIndex)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+      m_pTableWidget->item(index, colIndex)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
       
       // Expiration
       colIndex++;
       QDateTime time = QDateTime::fromString(QString::fromStdString(aTemporar.expiration), "yyyy-MM-ddTHH:mm:ss");
       std::string e_str = CalculateRemainingTime(QDateTime::currentDateTime(), time);
       
-      m_pTableWidget.setItem(index, colIndex, new QTableWidgetItem(QString::fromStdString(e_str)));
-      m_pTableWidget.item(index, colIndex)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
-      m_pTableWidget.item(index, colIndex)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+      m_pTableWidget->setItem(index, colIndex, new QTableWidgetItem(QString::fromStdString(e_str)));
+      m_pTableWidget->item(index, colIndex)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+      m_pTableWidget->item(index, colIndex)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
       
       
       // Button
@@ -246,7 +240,7 @@ void BrowseContentTab::ShowDigitalContentsGUI() {
       info_icon->setProperty("id", QVariant::fromValue(index));
       info_icon->setAlignment(Qt::AlignCenter);
       connect(info_icon, SIGNAL(clicked()), this, SLOT(show_content_popup()));
-      m_pTableWidget.setCellWidget(index, colIndex, info_icon);
+      m_pTableWidget->setCellWidget(index, colIndex, info_icon);
       
       
       ++index;

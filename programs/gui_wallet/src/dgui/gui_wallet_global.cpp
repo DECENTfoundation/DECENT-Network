@@ -9,9 +9,12 @@
 #include <QTime>
 #include <QTimer>
 #include <QHeaderView>
+#include <cmath>
 
 #include <iostream>
 #endif
+
+using string = std::string;
 
 namespace gui_wallet
 {
@@ -443,6 +446,20 @@ void WalletOperator::slot_connect()
    emit signal_connected(str_error);
 }
 //
+// Asset
+//
+Asset::operator double()
+{
+   uint64_t amount = m_amount / m_scale;
+   uint64_t tail = m_amount % m_scale;
+   double result = amount + double(tail) / m_scale;
+   return result;
+}
+Asset::operator std::string()
+{
+   return std::to_string(double(*this));
+}
+//
 // Globals
 //
 Globals::Globals()
@@ -512,6 +529,53 @@ void Globals::clear()
       delete m_p_wallet_operator;
       m_p_wallet_operator = nullptr;
    }
+}
+
+Asset Globals::asset(uint64_t amount)
+{
+   Asset ast_amount;
+   uint8_t precision = 1;
+   getWallet().LoadAssetInfo(ast_amount.m_str_symbol, precision);
+   ast_amount.m_scale = pow(10, precision);
+   ast_amount.m_amount = amount;
+
+   return ast_amount;
+}
+
+void Globals::updateAccountBalance()
+{
+   if (false == m_str_currentUser.empty())
+   {
+      nlohmann::json allBalances = runTask("list_account_balances " + m_str_currentUser);
+
+      if (allBalances.empty())
+         emit signal_updateAccountBalance(asset(0));
+      else if (allBalances.size() != 1)
+         throw std::runtime_error("an account cannot have more than one balance");
+      else
+      {
+         auto const& json_balance = allBalances[0]["amount"];
+
+         Asset ast_balance = asset(0);
+
+         if (json_balance.is_number())
+            ast_balance.m_amount = json_balance.get<uint64_t>();
+         else
+            ast_balance.m_amount = std::stoll(json_balance.get<string>());
+
+         emit signal_updateAccountBalance(ast_balance);
+      }
+   }
+}
+
+nlohmann::json Globals::runTask(std::string const& str_command)
+{
+   nlohmann::json json_result;
+   string str_result = getWallet().RunTaskImpl(str_command);
+   if (false == str_result.empty())
+      json_result = nlohmann::json::parse(str_result);
+
+   return json_result;
 }
 
 void Globals::setCurrentUser(std::string const& user)

@@ -1,6 +1,11 @@
 #include "stdafx.h"
 
 #include "purchased_tab.hpp"
+#include "gui_wallet_mainwindow.hpp"
+#include "decent_wallet_ui_gui_contentdetailsgeneral.hpp"
+#include "gui_design.hpp"
+#include "gui_wallet_global.hpp"
+#include "json.hpp"
 
 #ifndef _MSC_VER
 #include <QHeaderView>
@@ -11,17 +16,10 @@
 #include <QSignalMapper>
 #include <graphene/chain/config.hpp>
 #include <graphene/chain/content_object.hpp>
-#include "json.hpp"
 #endif
-#include "gui_wallet_mainwindow.hpp"
-#include "decent_wallet_ui_gui_contentdetailsgeneral.hpp"
-#include "gui_design.hpp"
-#include "gui_wallet_global.hpp"
 
-using namespace gui_wallet;
-using namespace nlohmann;
-
-
+namespace gui_wallet
+{
 PurchasedTab::PurchasedTab(QWidget* pParent)
 : TabContentManager(pParent)
 , m_pExtractSignalMapper(nullptr)
@@ -79,7 +77,7 @@ void PurchasedTab::timeToUpdate(const std::string& result) {
       return;
    }
    
-   auto contents = json::parse(result);
+   auto contents = nlohmann::json::parse(result);
    m_pTableWidget->setRowCount(contents.size());
    
    _current_content.clear();
@@ -336,5 +334,6 @@ void PurchasedTab::ShowMessageBox(std::string const& message)
                                  "Failed to extract package",
                                  QObject::tr(message.c_str()));
 }
+}  // end namespace gui_wallet
 
 

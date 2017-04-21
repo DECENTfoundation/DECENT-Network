@@ -8,6 +8,7 @@
 #include <QTableWidget>
 #include <chrono>
 #include <iostream>
+#include "json.hpp"
 #include "gui_design.hpp"
 
 #include <decent/wallet_utility/wallet_utility.hpp>
@@ -97,6 +98,19 @@ namespace gui_wallet
       WalletAPI m_wallet_api;
    };
    //
+   // Asset
+   //
+   // use Globals.asset to get a valid one
+   class Asset
+   {
+   public:
+      operator double();
+      operator std::string();
+      uint64_t m_amount = 0;
+      uint64_t m_scale = 1;
+      std::string m_str_symbol;
+   };
+   //
    // Globals
    //
    class Globals : public QObject
@@ -116,7 +130,15 @@ namespace gui_wallet
       bool isConnected() const;
       WalletAPI& getWallet() const;
       void clear();
+      Asset asset(uint64_t amount);
+      void updateAccountBalance();
+      nlohmann::json runTask(std::string const& str_command);
 
+   signals:
+      void signal_showPurchasedTab();
+      void signal_updateAccountBalance(Asset const&);
+
+   public:
       void setCurrentUser(std::string const& user);
       void setWalletUnlocked();
       void setWalletConnected();
@@ -254,6 +276,37 @@ namespace gui_wallet
       bool                           _is_ascending = true;
    };
 
+
+
+   // DCT stands for Digital Contex Actions
+   namespace DCT {
+      enum DIG_CONT_TYPES {GENERAL, BOUGHT, WAITING_DELIVERY};
+   }
+
+
+   struct SDigitalContent
+   {
+      DCT::DIG_CONT_TYPES  type = DCT::GENERAL;
+      std::string          author;
+      struct
+      {
+         double      amount;
+         std::string asset_id;
+         std::string symbol;
+         std::string precision;
+      } price;
+
+      std::string   synopsis;
+      std::string   URI;
+      double        AVG_rating;
+      std::string   created;
+      std::string   expiration;
+      std::string   id;
+      std::string   hash;
+      std::string   status;
+      int           size;
+      int           times_bougth;
+   };
 
 
 

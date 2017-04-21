@@ -8,6 +8,14 @@ using namespace gui_wallet;
 TabContentManager::TabContentManager(QWidget* pParent/* = nullptr*/)
 : QWidget(pParent)
 {
+}
+
+void TabContentManager::contentActivated()
+{
+   _lastResult = "";
+}
+void TabContentManager::contentDeactivated()
+{
 
 }
 

@@ -2,15 +2,17 @@
 
 #include <string>
 
-#include "qt_commonheader.hpp"
+
 #include "gui_wallet_tabcontentmanager.hpp"
 
 
 class QSignalMapper;
 
-namespace gui_wallet {
+namespace gui_wallet
+{
 
 class DecentTable;
+class SDigitalContent;
 
 class PurchasedTab : public TabContentManager
 {
@@ -20,8 +22,8 @@ public:
    PurchasedTab(QWidget* pParent);
    
 public:
-   virtual void timeToUpdate(const std::string& result);
-   virtual std::string getUpdateCommand();
+   virtual void timeToUpdate(const std::string& result) override;
+   virtual std::string getUpdateCommand() override;
    
 protected:
    void ShowMessageBox(std::string const& message);
