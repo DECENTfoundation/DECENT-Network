@@ -615,7 +615,8 @@ int CustodyUtils::create_proof_of_custody(path content, const uint32_t n, const 
    char buffer[DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED];
    try {
    for( int i = 0; i < n; i++ ) {
-      cusfile.read(buffer, DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED);
+      if(cusfile.readsome(buffer, DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED) != DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED )
+         return -1;
       element_init_G1(sigmas[i], pairing);
       element_from_bytes_compressed(sigmas[i], (unsigned char *) buffer);
    }
