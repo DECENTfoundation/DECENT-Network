@@ -83,7 +83,7 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    ////////////////////////////////////////////////////////////////////////////
    
    _titleText = new QLineEdit();
-   _titleText->setPlaceholderText("Title");
+   _titleText->setPlaceholderText(tr("Title"));
    _titleText->setAttribute(Qt::WA_MacShowFocusRect, 0);
    _titleText->setTextMargins(5, 5, 5, 5);
    _titleText->setMinimumHeight(40);
@@ -93,7 +93,7 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    /// Description field
    ////////////////////////////////////////////////////////////////////////////
    _descriptionText = new QTextEdit();
-   _descriptionText->setPlaceholderText("Description");
+   _descriptionText->setPlaceholderText(tr("Description"));
    _descriptionText->setStyleSheet(d_desc);
    _descriptionText->setMinimumHeight(160);
    _descriptionText->setMinimumWidth(420);
@@ -104,7 +104,7 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    ////////////////////////////////////////////////////////////////////////////
    QHBoxLayout* lifeTimeRow = new QHBoxLayout();
    
-   QLabel* lifeTimeLabel = new QLabel("Expiration date");
+   QLabel* lifeTimeLabel = new QLabel(tr("Expiration date"));
    lifeTimeLabel->setStyleSheet(d_label_v1);
    lifeTimeLabel->setMinimumWidth(60);
    lifeTimeLabel->setMinimumHeight(40);
@@ -131,7 +131,7 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    ////////////////////////////////////////////////////////////////////////////
     QHBoxLayout* keyRow = new QHBoxLayout();
 
-    QLabel* keypartsLabel = new QLabel("Key particles");
+    QLabel* keypartsLabel = new QLabel(tr("Key particles"));
     keypartsLabel->setStyleSheet(d_label_v1);
     keypartsLabel->setMinimumWidth(60);
     keypartsLabel->setMinimumHeight(40);
@@ -159,7 +159,7 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    ////////////////////////////////////////////////////////////////////////////
    QHBoxLayout* priceRow = new QHBoxLayout();
    
-   QLabel* priceLabel = new QLabel("Price");
+   QLabel* priceLabel = new QLabel(tr("Price"));
    priceLabel->setStyleSheet(d_label_v1);
    priceLabel->setMinimumWidth(60);
    priceLabel->setMinimumHeight(40);
@@ -183,7 +183,7 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    ////////////////////////////////////////////////////////////////////////////
    QHBoxLayout* seedersRow = new QHBoxLayout();
    
-   _seedersPath = new QLineEdit("Seeders");
+   _seedersPath = new QLineEdit(tr("Seeders"));
    _seedersPath->setReadOnly(true);
    _seedersPath->setStyleSheet(d_label_v2);
    _seedersPath->setTextMargins(5, 5, 5, 5);
@@ -191,7 +191,7 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    _seedersPath->setMinimumHeight(40);
    
    DecentButton* seeders_button = new DecentButton();
-   seeders_button->setText("Select Seeders");
+   seeders_button->setText(tr("Select Seeders"));
    seeders_button->setFont(PopupButtonRegularFont());
    seeders_button->setFixedWidth(100);
    seeders_button->setFixedHeight(40);
@@ -205,7 +205,7 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    /// Seeders Dialog
    ////////////////////////////////////////////////////////////////////////////
    _seeders_dialog = new QDialog(this, Qt::Window | Qt::WindowTitleHint | Qt::CustomizeWindowHint | Qt::WindowCloseButtonHint);
-   _seeders_dialog->setWindowTitle("Seeders");
+   _seeders_dialog->setWindowTitle(tr("Seeders"));
    _seeders_dialog->setContentsMargins(0, 0, 0, 0);
    _seeders_dialog->resize(450, 250);
 
@@ -219,14 +219,14 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    
    QHBoxLayout* contentRow = new QHBoxLayout();
 
-   _contentPath = new QLineEdit("Content path");
+   _contentPath = new QLineEdit(tr("Content path"));
    _contentPath->setReadOnly(true);
    _contentPath->setStyleSheet(d_label_v2);
    _contentPath->setMinimumHeight(40);
    _contentPath->setTextMargins(5, 5, 5, 5);
 
    DecentButton* browseContentButton = new DecentButton();
-   browseContentButton->setText("Browse");
+   browseContentButton->setText(tr("Browse"));
    browseContentButton->setFont(PopupButtonRegularFont());
    browseContentButton->setMinimumWidth(100);
    browseContentButton->setFixedHeight(40);
@@ -241,7 +241,7 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    ////////////////////////////////////////////////////////////////////////////
    QHBoxLayout* samplesRow = new QHBoxLayout();
 
-   _samplesPath = new QLineEdit("Samples (optional)");
+   _samplesPath = new QLineEdit(tr("Samples (optional)"));
    _samplesPath->setReadOnly(true);
    _samplesPath->setStyleSheet(d_label_v2);
    _samplesPath->setMinimumHeight(40);
@@ -249,7 +249,7 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    
 
    DecentButton* browseSamplesButton = new DecentButton();
-   browseSamplesButton->setText("Browse");
+   browseSamplesButton->setText(tr("Browse"));
    browseSamplesButton->setFont(PopupButtonRegularFont());
    browseSamplesButton->setMinimumWidth(100);
    browseSamplesButton->setFixedHeight(40);
@@ -271,13 +271,13 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    _upload_button = new DecentButton();
    _cancel_button = new DecentButton();
 
-   _cancel_button->setText("Cancel");
+   _cancel_button->setText(tr("Cancel"));
    _cancel_button->setFont(PopupButtonBigFont());
    _cancel_button->setMinimumHeight(50);
    //_cancel_button->setMinimumWidth(140);
    _cancel_button->setStyleSheet(d_cancel);
 
-   _upload_button->setText("Publish");
+   _upload_button->setText(tr("Publish"));
    _upload_button->setFont(PopupButtonBigFont());
    _upload_button->setMinimumHeight(50);
    //_upload_button->setMinimumWidth(140);
@@ -294,7 +294,7 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    u_main_layout->setSpacing(5);
    
    
-   setWindowTitle("Upload new content");
+   setWindowTitle(tr("Upload new content"));
    setStyleSheet(d_upload_popup);
    setLayout(u_main_layout);
    
@@ -322,9 +322,9 @@ void Upload_popup::onGrabPublishers() {
    _seeder_table = new DecentTable(this);
    _seeder_table->set_columns({
       {"", -25},
-      {"Seeder", 10, "rating"},
-      {"Price",  10, "price"},
-      {"Size" ,  10, "size"}
+      {tr("Seeder"), 10, "rating"},
+      {tr("Price"),  10, "price"},
+      {tr("Size") ,  10, "size"}
    });
    
 
@@ -486,7 +486,7 @@ void Upload_popup::updateUploadButtonStatus() {
       _upload_button->setText(tr("Publish for ") + QString::number(days * totalPricePerDay) + tr(" DCT"));
       _upload_button->setEnabled(true);
    } else {
-      _upload_button->setText("Publish");
+      _upload_button->setText(tr("Publish"));
       _upload_button->setEnabled(false);
    }
 }
@@ -599,10 +599,10 @@ void Upload_popup::uploadContent()
       _descriptionText->setPlainText("");
       _lifeTime->setDate(QDate::currentDate());
       _price->setText("");
-      _contentPath->setText("Content path");
-      _samplesPath->setText("Samples (optional)");
+      _contentPath->setText(tr("Content path"));
+      _samplesPath->setText(tr("Samples (optional)"));
 
-      msgBox->setWindowTitle("Success");
+      msgBox->setWindowTitle(tr("Success"));
       msgBox->setText(tr("Content is submitted"));
 
       setEnabled(true);
@@ -611,7 +611,7 @@ void Upload_popup::uploadContent()
    }
    else
    {
-      msgBox->setWindowTitle("Error");
+      msgBox->setWindowTitle(tr("Error"));
       msgBox->setText(tr("Failed to submit content"));
       msgBox->setDetailedText(message.c_str());
    }
@@ -630,20 +630,20 @@ Upload_tab::Upload_tab(Mainwindow_gui_wallet* parent)
 , m_pTableWidget(this)
 {
     m_pTableWidget.set_columns({
-        {"Title", 20},
-        {"Rating", 10, "rating"},
-        {"Size", 10, "size"},
-        {"Price", 10, "price"},
-        {"Published", 10, "created"},
-        {"Expiration", 10, "expiration"},
-        {"Status", 10},
+        {tr("Title"), 20},
+        {tr("Rating"), 10, "rating"},
+        {tr("Size"), 10, "size"},
+        {tr("Price"), 10, "price"},
+        {tr("Published"), 10, "created"},
+        {tr("Expiration"), 10, "expiration"},
+        {tr("Status"), 10},
         {" ", -50}
 
     });
 
     upload_button = new DecentButton();
     upload_button->setFont(TabButtonFont());
-    upload_button->setText("Publish");
+    upload_button->setText(tr("Publish"));
     upload_button->setMinimumWidth(102);
     upload_button->setMinimumHeight(54);
     std::string currentUserName = Globals::instance().getCurrentUser();
@@ -656,7 +656,7 @@ Upload_tab::Upload_tab(Mainwindow_gui_wallet* parent)
     QPixmap image(icon_search);
     lab->setPixmap(image);
     
-    m_filterLineEdit.setPlaceholderText("Search Content");
+    m_filterLineEdit.setPlaceholderText(tr("Search Content"));
     m_filterLineEdit.setFixedHeight(54);
     m_filterLineEdit.setStyleSheet(d_lineEdit);
     m_filterLineEdit.setAttribute(Qt::WA_MacShowFocusRect, 0);

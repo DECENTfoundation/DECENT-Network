@@ -83,6 +83,9 @@ protected:
     std::vector<NewCheckBox*> stars_labels;
     QLabel*         m_RateText;
     QTextEdit       m_desc;
+public:
+    std::vector<QString> s_vcpcFieldsGeneral;
+    std::vector<QString> s_vcpcFieldsBougth;
 };
 
 }
