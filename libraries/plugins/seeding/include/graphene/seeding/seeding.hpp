@@ -185,7 +185,6 @@ public:
       elog("seeding plugin: package_download_error(): Failed downloading package ${s}",("s",_mso.URI));
       auto& pm = decent::package::PackageManager::instance();
       pm.release_package(_pi);
-      _pi = 0;
    };
 
    virtual void package_download_complete(){
