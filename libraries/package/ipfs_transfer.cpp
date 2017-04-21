@@ -47,7 +47,7 @@ namespace decent { namespace package {
         _client.Ls(url, &objects);
 
         for( auto nested_object : objects) {
-
+            ilog("ipfs_recursive_get inside loop");
             ipfs::Json links = nested_object.at("Links");
 
             for( auto &link : links ) {
