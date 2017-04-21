@@ -76,6 +76,7 @@ namespace detail {
 
 #define PACKAGE_INFO_CHANGE_DATA_STATE(state)                                    \
 {                                                                                \
+    ilog("Package ${p} changed state ${s}", ("p", _package._url)("s", #state));       \
     PackageInfo::DataState new_state = PackageInfo:: state;                      \
     PackageInfo::DataState old_state = new_state;                                \
     {                                                                            \
@@ -85,12 +86,13 @@ namespace detail {
     }                                                                            \
     if (old_state != new_state) {                                                \
         PACKAGE_INFO_GENERATE_EVENT(package_data_state_change, ( new_state ) );  \
-    }                                                                            \
+    }     \
 }                                                                                \
 
 
 #define PACKAGE_INFO_CHANGE_TRANSFER_STATE(state)                                    \
 {                                                                                    \
+    ilog("Package ${p} changed state ${s}", ("p", _package._url)("s", #state));           \
     PackageInfo::TransferState new_state = PackageInfo:: state;                      \
     PackageInfo::TransferState old_state = new_state;                                \
     {                                                                                \
@@ -106,6 +108,7 @@ namespace detail {
 
 #define PACKAGE_INFO_CHANGE_MANIPULATION_STATE(state)                                    \
 {                                                                                        \
+    ilog("Package ${p} changed state ${s}", ("p", _package._url)("s", #state));              \
     PackageInfo::ManipulationState new_state = PackageInfo:: state;                      \
     PackageInfo::ManipulationState old_state = new_state;                                \
     {                                                                                    \

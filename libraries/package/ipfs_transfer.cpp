@@ -39,6 +39,7 @@ namespace decent { namespace package {
     uint64_t IPFSDownloadPackageTask::ipfs_recursive_get(const std::string &url,
                                                          const boost::filesystem::path &dest_path)
     {
+        ilog("ipfs_recursive_get called for url ${u}",("u", url));
         FC_ASSERT( exists(dest_path) && is_directory(dest_path) );
 
         uint64_t size = 0;
@@ -46,7 +47,7 @@ namespace decent { namespace package {
         _client.Ls(url, &objects);
 
         for( auto nested_object : objects) {
-
+            ilog("ipfs_recursive_get inside loop");
             ipfs::Json links = nested_object.at("Links");
 
             for( auto &link : links ) {
