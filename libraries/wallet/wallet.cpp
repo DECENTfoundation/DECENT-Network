@@ -2300,7 +2300,6 @@ public:
          
          package_handle->add_event_listener(listener_ptr);
          package_handle->create(false);
-         submit_op.cd = package_handle->get_custody_data();
 
      
          return fc::ripemd160();
@@ -2328,17 +2327,18 @@ public:
          status.received_key_parts = bobj->key_particles.size();
          status.total_key_parts = content->key_parts.size();
 
-         package_object pack = package_manager::instance().get_package_object(URI);
-         package_transfer_interface::transfer_progress progress;
-         if (pack.is_valid()) {
-            progress = package_transfer_interface::transfer_progress(pack.get_size(), pack.get_size(), 0, "Downloaded");
-         } else {
-            progress = package_manager::instance().get_progress(URI);
-         }
+         
+         //package_object pack = package_manager::instance().get_package_object(URI);
+         //package_transfer_interface::transfer_progress progress;
+         //if (pack.is_valid()) {
+         //   progress = package_transfer_interface::transfer_progress(pack.get_size(), pack.get_size(), 0, "Downloaded");
+         //} else {
+         //   progress = package_manager::instance().get_progress(URI);
+         //}
 
-         status.total_download_bytes = progress.total_bytes;
-         status.received_download_bytes = progress.current_bytes;
-          status.status_text = progress.str_status;
+         status.total_download_bytes = 100; //progress.total_bytes;
+         status.received_download_bytes = 100; //progress.current_bytes;
+         status.status_text = "Downloading..."; //progress.str_status;
 
          return status;
       } FC_CAPTURE_AND_RETHROW( (consumer)(URI) )
@@ -2399,8 +2399,11 @@ public:
          sign_transaction( tx, broadcast );
          //detail::report_stats_listener stats_listener( URI, self);
          //stats_listener.ipfs_IDs = list_seeders_ipfs_IDs( URI);
-         package_manager::instance().download_package(URI, empty_transfer_listener::instance(), empty_report_stats_listener::instance());
+         auto& package_manager = decent::package::PackageManager::instance();
 
+         auto package = package_manager.get_package(URI);
+         package->download();
+         
       } FC_CAPTURE_AND_RETHROW( (consumer)(URI)(broadcast) )
    }
 
@@ -4500,7 +4503,8 @@ void graphene::wallet::detail::submit_transfer_listener::package_creation_comple
    _op.hash = _info->get_hash();
    _op.size = size;
    _op.publishing_fee = days * total_price_per_day;
-   
+   _op.cd = _info->get_custody_data();
+
    
    _info->start_seeding(_protocol, false);
 }
