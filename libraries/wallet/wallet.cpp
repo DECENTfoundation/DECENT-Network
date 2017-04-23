@@ -111,7 +111,7 @@ namespace {
             ilog("transfer ${id}: download finished: ${hash}", ("id", id) ("hash", downloaded_package.get_hash().str()));
         }
 
-        virtual void on_download_progress(package_transfer_interface::transfer_id id, package_transfer_interface::transfer_progress progress) {
+        virtual void on_download_progress(package_transfer_interface::transfer_id id, transfer_progress progress) {
             ilog("transfer ${id}: download progress: ${curr}/${total} @ ${speed} Bytes/sec",
                  ("id", id) ("curr", progress.current_bytes) ("total", progress.total_bytes) ("speed", progress.current_speed));
         }
@@ -124,7 +124,7 @@ namespace {
             ilog("transfer ${id}: upload finished", ("id", id));
         }
 
-        virtual void on_upload_progress(package_transfer_interface::transfer_id id, package_transfer_interface::transfer_progress progress) {
+        virtual void on_upload_progress(package_transfer_interface::transfer_id id, transfer_progress progress) {
             ilog("transfer ${id}: upload progress: ${curr}/${total} @ ${speed} Bytes/sec",
                  ("id", id) ("curr", progress.current_bytes) ("total", progress.total_bytes) ("speed", progress.current_speed));
         }
@@ -2328,18 +2328,19 @@ public:
          status.total_key_parts = content->key_parts.size();
 
          
-         //package_object pack = package_manager::instance().get_package_object(URI);
-         //package_transfer_interface::transfer_progress progress;
-         //if (pack.is_valid()) {
-         //   progress = package_transfer_interface::transfer_progress(pack.get_size(), pack.get_size(), 0, "Downloaded");
-         //} else {
-         //   progress = package_manager::instance().get_progress(URI);
-         //}
+         auto pack = PackageManager::instance().find_package(URI);
+         transfer_progress progress;
 
-         status.total_download_bytes = 100; //progress.total_bytes;
-         status.received_download_bytes = 100; //progress.current_bytes;
-         status.status_text = "Downloading..."; //progress.str_status;
-
+         if (!pack) {
+             progress = transfer_progress(0, 0, 0, "Unknown"); 
+         } else {
+            if (pack->get_data_state() == PackageInfo::CHECKED) {
+                progress = transfer_progress(pack->get_size(), pack->get_size(), 0, "Downloaded");
+            } else {
+                progress = transfer_progress(pack->get_total_size(), pack->get_downloaded_size(), 0, "Downloading...");
+            }
+         }
+         
          return status;
       } FC_CAPTURE_AND_RETHROW( (consumer)(URI) )
    }

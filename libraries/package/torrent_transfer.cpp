@@ -1531,7 +1531,7 @@ void torrent_transfer::dump_config(const boost::filesystem::path& config_file) {
     outfile.write(data.c_str(), data.length());
 }
 
-package_transfer_interface::transfer_progress torrent_transfer::get_progress() {
+transfer_progress torrent_transfer::get_progress() {
     libtorrent::torrent_status st = _torrent_handle.status();
     
     std::string str_status = "";

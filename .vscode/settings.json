@@ -1,5 +1,13 @@
 {
     "files.associations": {
-        "qfont": "cpp"
+        "qfont": "cpp",
+        "bitset": "cpp",
+        "slist": "cpp",
+        "array": "cpp",
+        "hashtable": "cpp",
+        "valarray": "cpp",
+        "initializer_list": "cpp",
+        "utility": "cpp",
+        "mutex": "cpp"
     }
 }
