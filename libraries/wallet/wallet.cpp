@@ -2329,18 +2329,25 @@ public:
 
          
          auto pack = PackageManager::instance().find_package(URI);
-         transfer_progress progress;
 
          if (!pack) {
-             progress = transfer_progress(0, 0, 0, "Unknown"); 
+             status.total_download_bytes = 0;
+             status.received_download_bytes = 0;
+             status.status_text = "Unknown";
          } else {
             if (pack->get_data_state() == PackageInfo::CHECKED) {
-                progress = transfer_progress(pack->get_size(), pack->get_size(), 0, "Downloaded");
+
+                status.total_download_bytes = pack->get_size();
+                status.received_download_bytes = pack->get_size();
+                status.status_text = "Downloaded";
+                
             } else {
-                progress = transfer_progress(pack->get_total_size(), pack->get_downloaded_size(), 0, "Downloading...");
+                status.total_download_bytes = pack->get_total_size();
+                status.received_download_bytes = pack->get_downloaded_size();
+                status.status_text = "Downloading...";                
             }
          }
-         
+
          return status;
       } FC_CAPTURE_AND_RETHROW( (consumer)(URI) )
    }
@@ -4481,8 +4488,15 @@ public:
       key1._hash[2] = 0;
       key1._hash[3] = 0;
 
-      package_object package = package_manager::instance().get_package_object(fc::ripemd160(package_hash));
-      package_manager::instance().unpack_package(output_dir, package, key1);
+      auto pack = PackageManager::instance().find_package(fc::ripemd160(package_hash));
+      if (pack == nullptr) {
+          FC_THROW("Can not find package");
+      }
+
+      if (pack->get_manipulation_state() != PackageInfo::ManipulationState::MS_IDLE) {
+          FC_THROW("Package is not in valid state");
+      }
+      pack->unpack(output_dir, key1);
    }
 
 void graphene::wallet::detail::submit_transfer_listener::package_creation_complete() {
@@ -4531,12 +4545,8 @@ void graphene::wallet::detail::submit_transfer_listener::package_seed_complete()
    // detail::report_stats_listener stats_listener( url, my->self);
    // stats_listener.ipfs_IDs = list_seeders_ipfs_IDs( url);
 
-      if (package_manager::instance().package_exists(url)) {
-         ilog("package exists for URI ${uri}",("uri", url));
-         return;
-      }
-
-      package_manager::instance().download_package(url, transfer_progress_printer::instance(), empty_report_stats_listener::instance());
+      auto pack = PackageManager::instance().get_package(url);
+      pack->download(false);
    }
 
    std::string wallet_api::upload_package(const std::string& package_hash, const std::string& protocol) const {

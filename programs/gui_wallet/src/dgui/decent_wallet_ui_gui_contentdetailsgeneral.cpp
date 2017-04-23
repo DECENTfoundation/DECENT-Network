@@ -80,7 +80,7 @@ void ContentDetailsGeneral::LabelPushCallbackGUI()
       str_error = ex.what();
    }
    if (false == str_error.empty())
-      ALERT("Failed to download content" + str_error);
+      ALERT_DETAILS("Failed to download content.", str_error.c_str());
 
    emit ContentWasBought();
    

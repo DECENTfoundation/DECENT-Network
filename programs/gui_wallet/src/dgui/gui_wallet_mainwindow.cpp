@@ -463,9 +463,7 @@ void Mainwindow_gui_wallet::UpdateLockedStatus()
 
 
 void Mainwindow_gui_wallet::CheckDownloads()
-{
-   return; //TODO: remove this later
-   
+{   
     auto& global_instance = gui_wallet::Globals::instance();
     std::string str_current_username = global_instance.getCurrentUser();
 
