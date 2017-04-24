@@ -196,7 +196,7 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details, bool bSil
         m_vLabels[3].setText(QString::fromStdString(e_str));
         m_vLabels[5].setText(tr(creat.c_str()));
         
-        QString str_price = QString::number(a_cnt_details.price.amount) + " DCT";
+        QString str_price = a_cnt_details.price.getString().c_str();
         m_vLabels[7].setText(str_price);
         
         QPixmap green_star(green_star_image);
@@ -224,7 +224,7 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details, bool bSil
     {
         m_vLabels[3].setText(tr(creat.c_str()));
         
-        QString str_price = QString::number(a_cnt_details.price.amount) + " DCT";
+        QString str_price = a_cnt_details.price.getString().c_str();
         m_vLabels[5].setText(str_price);
         
         QPixmap green_star(green_star_image);

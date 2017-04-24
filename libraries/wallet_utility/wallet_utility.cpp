@@ -337,7 +337,7 @@ namespace wallet_utility
    }
     */
 
-   string WalletAPI::RunTaskImpl(string const& str_command)
+   string WalletAPI::RunTask(string const& str_command)
    {
       if (false == Connected())
          throw wallet_exception("not yet connected");

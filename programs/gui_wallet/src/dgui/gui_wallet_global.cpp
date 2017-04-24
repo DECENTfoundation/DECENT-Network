@@ -9,6 +9,7 @@
 #include <QTime>
 #include <QTimer>
 #include <QHeaderView>
+#include <QString>
 #include <cmath>
 
 #include <iostream>
@@ -448,16 +449,24 @@ void WalletOperator::slot_connect()
 //
 // Asset
 //
-Asset::operator double()
+Asset::operator double() const
 {
    uint64_t amount = m_amount / m_scale;
-   uint64_t tail = m_amount % m_scale;
-   double result = amount + double(tail) / m_scale;
-   return result;
+   double tail = double(m_amount % m_scale) / m_scale;
+   return amount + tail;
 }
-Asset::operator std::string()
+
+Asset::operator string() const
 {
    return std::to_string(double(*this));
+}
+
+string Asset::getString() const
+{
+   if (m_amount)
+      return QString::number(double(*this), 'f' , 4).toStdString() + " " + m_str_symbol;
+   else
+      return "Free";
 }
 //
 // Globals
@@ -534,7 +543,7 @@ void Globals::clear()
 Asset Globals::asset(uint64_t amount)
 {
    Asset ast_amount;
-   uint8_t precision = 1;
+   uint8_t precision = 0;
    getWallet().LoadAssetInfo(ast_amount.m_str_symbol, precision);
    ast_amount.m_scale = pow(10, precision);
    ast_amount.m_amount = amount;
@@ -568,14 +577,16 @@ void Globals::updateAccountBalance()
    }
 }
 
-nlohmann::json Globals::runTask(std::string const& str_command)
+void Globals::runTask(std::string const& str_command, nlohmann::json& json_result)
 {
-   nlohmann::json json_result;
-   string str_result = getWallet().RunTaskImpl(str_command);
+   string str_result = runTask(str_command);
    if (false == str_result.empty())
       json_result = nlohmann::json::parse(str_result);
+}
 
-   return json_result;
+string Globals::runTask(string const& str_command)
+{
+   return getWallet().RunTask(str_command);
 }
 
 void Globals::setCurrentUser(std::string const& user)
@@ -636,21 +647,30 @@ void Globals::slot_timer()
 DecentSmallButton::DecentSmallButton(const QString& normalImg, const QString& highlightedImg, QWidget* pParent/* = nullptr*/)
 : QLabel(pParent)
 {
+   setMouseTracking(true);
    normalImage.load(normalImg);
    highlightedImage.load(highlightedImg);
-   this->setPixmap(normalImg);
+   setPixmap(normalImg);
 }
 
 void DecentSmallButton::unhighlight()
 {
-   this->setPixmap(normalImage);
-   this->setStyleSheet("* { background-color: rgb(255,255,255); color : black; }");
+   setPixmap(normalImage);
+   setStyleSheet("* { background-color: rgb(255,255,255); color : black; }");
 }
 
 void DecentSmallButton::highlight()
 {
    this->setPixmap(highlightedImage);
    this->setStyleSheet("* { background-color: rgb(27,176,104); color : white; }");
+}
+
+bool DecentSmallButton::event(QEvent *event)
+{
+   if (event->type() == QEvent::MouseMove)
+      return false;
+   else
+      return QWidget::event(event);
 }
 
 void DecentSmallButton::mousePressEvent(QMouseEvent* event)

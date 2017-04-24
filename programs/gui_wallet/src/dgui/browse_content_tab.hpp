@@ -1,14 +1,8 @@
 #pragma once
 
-#include <QWidget>
-#include <QTableWidget>
-#include <QVBoxLayout>
 #include <vector>
 #include <string>
-
-#include <QLineEdit>
-#include <QHBoxLayout>
-#include <QComboBox>
+#include <QString>
 
 #include "gui_wallet_tabcontentmanager.hpp"
 
@@ -34,13 +28,11 @@ namespace gui_wallet
       
       void show_content_popup();
       void content_was_bought();
+      void slot_SearchTermChanged(QString const& strSearchTerm);
       
    protected:
-      QVBoxLayout     m_main_layout;
-      QHBoxLayout     m_search_layout;
-      DecentTable*    m_pTableWidget;
-      QLineEdit       m_filterLineEdit;
-      QComboBox       m_searchTypeCombo;
+      DecentTable*   m_pTableWidget;
+      QString        m_strSearchTerm;
       
       std::vector<SDigitalContent>  _digital_contents;
    };

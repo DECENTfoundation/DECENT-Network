@@ -708,7 +708,8 @@ void Upload_tab::timeToUpdate(const std::string& result) {
       
       cont.type = DCT::GENERAL;
       cont.author = contents[i]["author"].get<std::string>();
-      cont.price.asset_id = contents[i]["price"]["asset_id"].get<std::string>();
+      uint64_t iPrice = json_to_int64(contents[i]["price"]["amount"]);
+      cont.price = Globals::instance().asset(iPrice);
       cont.synopsis = contents[i]["synopsis"].get<std::string>();
       cont.URI = contents[i]["URI"].get<std::string>();
       cont.created = contents[i]["created"].get<std::string>();
@@ -732,15 +733,7 @@ void Upload_tab::timeToUpdate(const std::string& result) {
       } else {
          cont.times_bougth = 0;
       }
-      
-      
-      if (contents[i]["price"]["amount"].is_number()){
-         cont.price.amount =  contents[i]["price"]["amount"].get<double>();
-      } else {
-         cont.price.amount =  std::stod(contents[i]["price"]["amount"].get<std::string>());
-      }
-      
-      cont.price.amount /= GRAPHENE_BLOCKCHAIN_PRECISION;
+
       cont.AVG_rating = contents[i]["AVG_rating"].get<double>()  / 1000;
    }
    
@@ -867,7 +860,7 @@ void Upload_tab::ShowDigitalContentsGUI() {
         m_pTableWidget.item(index, 2)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
         
         
-        m_pTableWidget.setItem(index,3,new QTableWidgetItem(QString::number(aTemporar.price.amount,'f', 4) + " DCT"));
+        m_pTableWidget.setItem(index,3,new QTableWidgetItem(aTemporar.price.getString().c_str()));
         m_pTableWidget.item(index, 3)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
         m_pTableWidget.item(index, 3)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
         

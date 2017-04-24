@@ -98,14 +98,26 @@ namespace gui_wallet
       WalletAPI m_wallet_api;
    };
    //
+   // lame to write the full type definition of **** json variant
+   //
+   template <typename json_variant>
+   uint64_t json_to_int64(json_variant const& o)
+   {
+      if (o.is_number())
+         return o.template get<uint64_t>();
+      else
+         return std::stoll(o.template get<std::string>());
+   }
+   //
    // Asset
    //
    // use Globals.asset to get a valid one
    class Asset
    {
    public:
-      operator double();
-      operator std::string();
+      operator double() const;
+      operator std::string() const;
+      std::string getString() const;
       uint64_t m_amount = 0;
       uint64_t m_scale = 1;
       std::string m_str_symbol;
@@ -132,7 +144,8 @@ namespace gui_wallet
       void clear();
       Asset asset(uint64_t amount);
       void updateAccountBalance();
-      nlohmann::json runTask(std::string const& str_command);
+      void runTask(std::string const& str_command, nlohmann::json& json_result);
+      std::string runTask(std::string const& str_command);
 
    signals:
       void signal_showPurchasedTab();
@@ -183,7 +196,7 @@ namespace gui_wallet
          this->setMouseTracking(true);
       }
       
-      bool event(QEvent *event){
+      virtual bool event(QEvent *event) override{
          if (event->type() == QEvent::MouseMove)
             return false;
          else
@@ -205,11 +218,13 @@ namespace gui_wallet
       void unhighlight();
       void highlight();
 
+      virtual bool event(QEvent* event) override;
+
    signals:
       void clicked();
 
    protected:
-      void mousePressEvent(QMouseEvent* event);
+      virtual void mousePressEvent(QMouseEvent* event) override;
    private:
       QPixmap normalImage;
       QPixmap highlightedImage;
@@ -288,13 +303,8 @@ namespace gui_wallet
    {
       DCT::DIG_CONT_TYPES  type = DCT::GENERAL;
       std::string          author;
-      struct
-      {
-         double      amount;
-         std::string asset_id;
-         std::string symbol;
-         std::string precision;
-      } price;
+
+      Asset price;
 
       std::string   synopsis;
       std::string   URI;

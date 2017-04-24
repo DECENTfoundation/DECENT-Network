@@ -116,7 +116,13 @@ protected:
    
 }
 
-#define RunTask gui_wallet::Mainwindow_gui_wallet::RunTaskImpl
-#define RunTaskParse gui_wallet::Mainwindow_gui_wallet::RunTaskParseImpl
+inline void RunTask(std::string const& str_command, std::string& str_result)
+{
+   gui_wallet::Mainwindow_gui_wallet::RunTaskImpl(str_command, str_result);
+}
+inline bool RunTaskParse(std::string const& str_command, nlohmann::json& json_result)
+{
+   return gui_wallet::Mainwindow_gui_wallet::RunTaskParseImpl(str_command, json_result);
+}
 
 

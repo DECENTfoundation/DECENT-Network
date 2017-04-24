@@ -3,19 +3,12 @@
 #include "browse_content_tab.hpp" 
 #include "gui_wallet_global.hpp"
 #include "decent_wallet_ui_gui_contentdetailsgeneral.hpp"
-#include "gui_wallet_global.hpp"
-
-
 
 #ifndef _MSC_VER
-#include <QLayout>
-#include <QCheckBox>
-#include <stdio.h>
-#include <QHeaderView>
+#include <QHBoxLayout>
+#include <QVBoxLayout>
 #include <QLabel>
-#include <QMouseEvent>
-#include <stdio.h>
-#include <stdarg.h>
+#include <QLineEdit>
 #include "json.hpp"
 
 #include <ctime>
@@ -31,46 +24,50 @@
 #include <QTime>
 #endif
 
-using namespace gui_wallet;
-using namespace nlohmann;
 
 
+namespace gui_wallet
+{
 BrowseContentTab::BrowseContentTab(QWidget* pParent)
 : TabContentManager(pParent)
 , m_pTableWidget(new DecentTable(this))
 {
-    
-    m_pTableWidget->set_columns({
-        {"Title", 20},
-        {"Author", 15, "author"},
-        {"Rating", 5, "rating"},
-        {"Size", 5, "size"},
-        {"Price", 5, "price"},
-        {"Uploaded", 7, "created"},
-        {"Expiration", 7, "expiration"},
-        {" ", -50},
-    });
-        
-    QLabel* lab = new QLabel();
-    QPixmap image(icon_search);
-    lab->setPixmap(image);
-    
-    m_filterLineEdit.setPlaceholderText("Search Content");
-    m_filterLineEdit.setFixedHeight(54);
-    m_filterLineEdit.setStyleSheet(d_lineEdit);
-    m_filterLineEdit.setAttribute(Qt::WA_MacShowFocusRect, 0);
-    
-    m_search_layout.setContentsMargins(42, 0, 0, 0);
-    m_search_layout.addWidget(lab);
-    m_search_layout.addWidget(&m_filterLineEdit);
-    
-    m_main_layout.setContentsMargins(0, 0, 0, 0);
-    m_main_layout.setSpacing(0);
-    m_main_layout.addLayout(&m_search_layout);
-    m_main_layout.addWidget(m_pTableWidget);
-    setLayout(&m_main_layout);
-    
-    
+   m_pTableWidget->set_columns({
+      {"Title", 20},
+      {"Author", 15, "author"},
+      {"Rating", 5, "rating"},
+      {"Size", 5, "size"},
+      {"Price", 5, "price"},
+      {"Uploaded", 7, "created"},
+      {"Expiration", 7, "expiration"},
+      {" ", -50},
+   });
+
+   QLabel* pLabelSearchIcon = new QLabel(this);
+   QPixmap px_search_icon(icon_search);
+   pLabelSearchIcon->setPixmap(px_search_icon);
+
+   QLineEdit* pSearchTerm = new QLineEdit(this);
+   pSearchTerm->setPlaceholderText("Search Content");
+   pSearchTerm->setFixedHeight(54);
+   pSearchTerm->setStyleSheet(d_lineEdit);
+   pSearchTerm->setAttribute(Qt::WA_MacShowFocusRect, 0);
+
+   QHBoxLayout* pSearchLayout = new QHBoxLayout();
+
+   pSearchLayout->setContentsMargins(42, 0, 0, 0);
+   pSearchLayout->addWidget(pLabelSearchIcon);
+   pSearchLayout->addWidget(pSearchTerm);
+
+   QVBoxLayout* pMainLayout = new QVBoxLayout();
+   pMainLayout->setContentsMargins(0, 0, 0, 0);
+   pMainLayout->setSpacing(0);
+   pMainLayout->addLayout(pSearchLayout);
+   pMainLayout->addWidget(m_pTableWidget);
+   setLayout(pMainLayout);
+
+   QObject::connect(pSearchTerm, &QLineEdit::textChanged,
+                    this, &BrowseContentTab::slot_SearchTermChanged);
 }
 
 void BrowseContentTab::timeToUpdate(const std::string& result) {
@@ -81,7 +78,7 @@ void BrowseContentTab::timeToUpdate(const std::string& result) {
       return;
    }
    
-   auto contents = json::parse(result);
+   auto contents = nlohmann::json::parse(result);
    
    _digital_contents.resize(contents.size());
    
@@ -91,7 +88,7 @@ void BrowseContentTab::timeToUpdate(const std::string& result) {
       
       cont.type = DCT::GENERAL;
       cont.author = contents[i]["author"].get<std::string>();
-      cont.price.asset_id = contents[i]["price"]["asset_id"].get<std::string>();
+
       cont.synopsis = contents[i]["synopsis"].get<std::string>();
       cont.URI = contents[i]["URI"].get<std::string>();
       cont.created = contents[i]["created"].get<std::string>();
@@ -104,15 +101,10 @@ void BrowseContentTab::timeToUpdate(const std::string& result) {
          cont.times_bougth = 0;
       }
       
-      
-      if (contents[i]["price"]["amount"].is_number()){
-         cont.price.amount =  contents[i]["price"]["amount"].get<double>();
-      } else {
-         cont.price.amount =  std::stod(contents[i]["price"]["amount"].get<std::string>());
-      }
-      
-      cont.price.amount /= GRAPHENE_BLOCKCHAIN_PRECISION;
-      cont.AVG_rating = contents[i]["AVG_rating"].get<double>()  / 1000;
+      uint64_t iPrice = json_to_int64(contents[i]["price"]["amount"]);
+      cont.price = Globals::instance().asset(iPrice);
+
+      cont.AVG_rating = contents[i]["AVG_rating"].get<double>() / 1000;
       
    }
    
@@ -123,9 +115,8 @@ void BrowseContentTab::timeToUpdate(const std::string& result) {
 
 std::string BrowseContentTab::getUpdateCommand()
 {
-   std::string filterText = m_filterLineEdit.text().toStdString();
    return   string("search_content ") +
-            "\"" + filterText + "\" " +
+            "\"" + m_strSearchTerm.toStdString() + "\" " +
             "\"" + m_pTableWidget->getSortedColumn() + "\" " +
             "\"\" " +   // user
             "\"\" " +   // region code
@@ -204,14 +195,8 @@ void BrowseContentTab::ShowDigitalContentsGUI() {
       
       // Price
       colIndex++;
-      if(aTemporar.price.amount)
-      {
-         m_pTableWidget->setItem(index, colIndex, new QTableWidgetItem(QString::number(aTemporar.price.amount , 'f' , 4) + " DCT"));
-      }
-      else
-      {
-         m_pTableWidget->setItem(index, colIndex, new QTableWidgetItem("Free"));
-      }
+      m_pTableWidget->setItem(index, colIndex, new QTableWidgetItem(aTemporar.price.getString().c_str()));
+
       m_pTableWidget->item(index, colIndex)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
       m_pTableWidget->item(index, colIndex)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
       
@@ -236,7 +221,7 @@ void BrowseContentTab::ShowDigitalContentsGUI() {
       
       // Button
       colIndex++;
-      EventPassthrough<DecentSmallButton>* info_icon = new EventPassthrough<DecentSmallButton>(icon_popup, icon_popup_white);
+      DecentSmallButton* info_icon = new DecentSmallButton(icon_popup, icon_popup_white);
       info_icon->setProperty("id", QVariant::fromValue(index));
       info_icon->setAlignment(Qt::AlignCenter);
       connect(info_icon, SIGNAL(clicked()), this, SLOT(show_content_popup()));
@@ -247,5 +232,11 @@ void BrowseContentTab::ShowDigitalContentsGUI() {
    }
 
 }
+
+void BrowseContentTab::slot_SearchTermChanged(QString const& strSearchTerm)
+{
+   m_strSearchTerm = strSearchTerm;
+}
+} // end namespace gui_wallet
 
 

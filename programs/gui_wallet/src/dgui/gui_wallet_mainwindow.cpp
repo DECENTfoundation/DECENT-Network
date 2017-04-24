@@ -204,7 +204,7 @@ CentralWigdet* Mainwindow_gui_wallet::getCentralWidget()
 
 void Mainwindow_gui_wallet::RunTaskImpl(std::string const& str_command, std::string& str_result)
 {
-   str_result = Globals::instance().getWallet().RunTaskImpl(str_command);
+   str_result = Globals::instance().runTask(str_command);
 }
 
 bool Mainwindow_gui_wallet::RunTaskParseImpl(std::string const& str_command, nlohmann::json& json_result) {

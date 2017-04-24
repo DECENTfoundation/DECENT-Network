@@ -1,16 +1,14 @@
 #include "stdafx.h"
 
 #include "purchased_tab.hpp"
-#include "gui_wallet_mainwindow.hpp"
 #include "decent_wallet_ui_gui_contentdetailsgeneral.hpp"
 #include "gui_design.hpp"
 #include "gui_wallet_global.hpp"
 #include "json.hpp"
 
 #ifndef _MSC_VER
-#include <QHeaderView>
-#include <QPushButton>
 #include <QFileDialog>
+#include <QLineEdit>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QSignalMapper>
@@ -51,7 +49,7 @@ PurchasedTab::PurchasedTab(QWidget* pParent)
    
    QPixmap image(icon_search);
    
-   QLabel* search_label = new QLabel();
+   QLabel* search_label = new QLabel(this);
    search_label->setSizeIncrement(100,40);
    search_label->setPixmap(image);
 
@@ -136,7 +134,9 @@ void PurchasedTab::timeToUpdate(const std::string& result) {
       }
       
       contentObject.author = content["author_account"].get<std::string>();
-      contentObject.price.asset_id = content["price"]["asset_id"].get<std::string>();
+      uint64_t iPrice = json_to_int64(content["price"]["amount"]);
+      contentObject.price = Globals::instance().asset(iPrice);
+
       contentObject.synopsis = content["synopsis"].get<std::string>();
       contentObject.URI = content["URI"].get<std::string>();
       contentObject.created = content["created"].get<std::string>();
@@ -151,16 +151,9 @@ void PurchasedTab::timeToUpdate(const std::string& result) {
          contentObject.times_bougth = 0;
       }
 
-      if (content["price"]["amount"].is_number()){
-         contentObject.price.amount =  content["price"]["amount"].get<double>();
-      } else {
-         contentObject.price.amount =  std::stod(content["price"]["amount"].get<std::string>());
-      }
-      
-      contentObject.price.amount /= GRAPHENE_BLOCKCHAIN_PRECISION;
       contentObject.AVG_rating = content["average_rating"].get<double>() / 1000;
 
-      EventPassthrough<DecentSmallButton>* info_icon = new EventPassthrough<DecentSmallButton>(icon_popup, icon_popup_white, m_pTableWidget);
+      DecentSmallButton* info_icon = new DecentSmallButton(icon_popup, icon_popup_white, m_pTableWidget);
       info_icon->setAlignment(Qt::AlignCenter);
       m_pTableWidget->setCellWidget(iIndex, 6, info_icon);
 
@@ -219,7 +212,7 @@ void PurchasedTab::timeToUpdate(const std::string& result) {
          m_pTableWidget->item(iIndex, 5)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
       } else {
 
-         EventPassthrough<DecentSmallButton>* extract_icon = new EventPassthrough<DecentSmallButton>(icon_export, icon_export_white, m_pTableWidget);
+         DecentSmallButton* extract_icon = new DecentSmallButton(icon_export, icon_export_white, m_pTableWidget);
          extract_icon->setAlignment(Qt::AlignCenter);
 
 
@@ -273,9 +266,9 @@ void PurchasedTab::slot_ExtractionDirSelected(QString const& path) {
    std::string str_current_username = global_instance.getCurrentUser();
    
    try {
-      RunTask("restore_encryption_key \"" + str_current_username + "\" \"" + strExtractID + "\"", key);
+      key = Globals::instance().runTask("restore_encryption_key \"" + str_current_username + "\" \"" + strExtractID + "\"");
       
-      RunTask("extract_package \"" + strExtractHash + "\" \"" + path.toStdString() + "\" " + key, dummy);
+      dummy = Globals::instance().runTask("extract_package \"" + strExtractHash + "\" \"" + path.toStdString() + "\" " + key);
       
       if (dummy.find("exception:") != std::string::npos) {
          message = dummy;
