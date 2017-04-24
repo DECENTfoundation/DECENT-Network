@@ -66,8 +66,9 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
 
    m_pMenuLayout->addWidget(m_barLeft);
    m_pMenuLayout->addWidget(m_barRight);
-
-
+#ifdef _MSC_VER
+   m_pCentralAllLayout->addLayout(m_pMenuLayout);// Windows needs it
+#endif
    m_pCentralWidget = new CentralWigdet(m_pCentralAllLayout,this);
    m_pCentralWidget->setLayout(m_pCentralAllLayout);
    //setCentralWidget(m_pCentralWidget);

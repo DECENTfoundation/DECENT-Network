@@ -90,6 +90,11 @@ RichDialog::RichDialog(int a_num_of_text_boxes  , QString title)
     {
         m_controls_layout.addWidget(&m_pTextBoxes[i]);
     }
+#ifdef _MSC_VER
+    int height = style()->pixelMetric(QStyle::PM_TitleBarHeight);
+    setWindowIcon(height > 32 ? QIcon(":/icon/images/windows_decent_icon_32x32.png")
+       : QIcon(":/icon/images/windows_decent_icon_16x16.png"));
+#endif
 }
 
 RichDialog::~RichDialog() {
@@ -206,6 +211,11 @@ SendDialog::SendDialog(int a_num_of_text_boxes  , QString title)
    {
       m_controls_layout.addWidget(&m_pTextBoxes[i]);
    }
+#ifdef _MSC_VER
+   int height = style()->pixelMetric(QStyle::PM_TitleBarHeight);
+   setWindowIcon(height > 32 ? QIcon(":/icon/images/windows_decent_icon_32x32.png")
+      : QIcon(":/icon/images/windows_decent_icon_16x16.png"));
+#endif
 }
 
 SendDialog::~SendDialog() {

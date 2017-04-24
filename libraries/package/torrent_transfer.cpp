@@ -1,4 +1,3 @@
-
 #include "torrent_transfer.hpp"
 
 #include <decent/encrypt/encryptionutils.hpp>
@@ -1409,7 +1408,9 @@ namespace decent { namespace package {
 
 
 using namespace std;
+#ifndef _MSC_VER // compile error: C2872 'xtime': ambiguous symbol
 using namespace boost;
+#endif
 using namespace boost::filesystem;
 using namespace boost::iostreams;
 using namespace libtorrent;
