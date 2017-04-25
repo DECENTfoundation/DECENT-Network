@@ -590,8 +590,7 @@ void Upload_popup::uploadContent()
       setEnabled(true);
    }
 
-   QMessageBox* msgBox = new QMessageBox();
-   msgBox->setAttribute(Qt::WA_DeleteOnClose);
+   
 
    if (message.empty())
    {
@@ -602,8 +601,11 @@ void Upload_popup::uploadContent()
       _contentPath->setText("Content path");
       _samplesPath->setText("Samples (optional)");
 
-      msgBox->setWindowTitle("Success");
-      msgBox->setText(tr("Content is processing..."));
+      
+      SuccessMessageDialog* successMessage = new SuccessMessageDialog("Content is processing..." , "Success");
+      successMessage->execSMD();
+      delete successMessage;
+
 
       setEnabled(true);
 
@@ -611,12 +613,13 @@ void Upload_popup::uploadContent()
    }
    else
    {
+      QMessageBox* msgBox = new QMessageBox();
+      msgBox->setAttribute(Qt::WA_DeleteOnClose);
       msgBox->setWindowTitle("Error");
       msgBox->setText(tr("Failed to submit content"));
       msgBox->setDetailedText(message.c_str());
+      msgBox->open();
    }
-
-   msgBox->open();
 }
 
 
