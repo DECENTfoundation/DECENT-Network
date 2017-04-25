@@ -34,8 +34,9 @@ Overview_tab::Overview_tab(class Mainwindow_gui_wallet* a_pPar)
 , table_widget(this)
 {
    table_widget.set_columns({
-      {"Account ID", 40, "id"},
-      {"Account", 40, "name"},
+      {tr("Account ID"), 20, "id"},
+      {tr("Account"), 50, "name"},
+      {"", 10},
       {"", 10},
       {"", 10}
    });
@@ -53,7 +54,7 @@ Overview_tab::Overview_tab(class Mainwindow_gui_wallet* a_pPar)
    
    search_label.setSizeIncrement(100,40);
    search_label.setPixmap(image);
-   search.setPlaceholderText(QString("Search"));
+   search.setPlaceholderText(QString(tr("Search")));
    search.setStyleSheet(d_lineEdit);
    search.setAttribute(Qt::WA_MacShowFocusRect, 0);
    search.setFixedHeight(54);
@@ -102,16 +103,26 @@ void Overview_tab::timeToUpdate(const std::string& result) {
       connect(trans, SIGNAL(clicked()), this, SLOT(transactionButtonPressed()));
       table_widget.setCellWidget(i, 2, trans);
       
-      EventPassthrough<DecentSmallButton>* transf = new EventPassthrough<DecentSmallButton>(icon_transfer, icon_transfer_white);
+      EventPassthrough<DecentSmallButton>* transf = new EventPassthrough<DecentSmallButton>(icon_popup, icon_popup_white);
 
       transf->setProperty("accountName", QVariant::fromValue(QString::fromStdString(name)));
       transf->setAlignment(Qt::AlignCenter);
       connect(transf, SIGNAL(clicked()), this, SLOT(buttonPressed()));
-      table_widget.setCellWidget(i, 3, transf);
+      table_widget.setCellWidget(i, 4, transf);
+      
+      
+      EventPassthrough<DecentSmallButton>* sendDCT = new EventPassthrough<DecentSmallButton>(icon_transfer, icon_transfer_white);
+      
+      sendDCT->setProperty("accountName", QVariant::fromValue(QString::fromStdString(name)));
+      sendDCT->setAlignment(Qt::AlignCenter);
+      connect(sendDCT, SIGNAL(clicked()), m_pPar, SLOT(SendDCTSlot()));
+      table_widget.setCellWidget(i, 3, sendDCT);
       
       table_widget.setRowHeight(i,40);
       table_widget.cellWidget(i, 2)->setStyleSheet(d_table);
       table_widget.cellWidget(i, 3)->setStyleSheet(d_table);
+      table_widget.cellWidget(i, 4)->setStyleSheet(d_table);
+      
       
       
       table_widget.item(i,0)->setBackground(Qt::white);
@@ -166,15 +177,15 @@ void Overview_tab::buttonPressed()
       
       QZebraWidget* info_window = new QZebraWidget();
       
-      info_window->AddInfo("Registrar", registrar);
-      info_window->AddInfo("Referrer", referrer);
-      info_window->AddInfo("Lifetime Referrer", lifetime_referrer);
-      info_window->AddInfo("Network Fee", network_fee_percentage);
-      info_window->AddInfo("Lifetime Referrer Fee", lifetime_referrer_fee_percentage);
-      info_window->AddInfo("Referrer Rewards Percentage", referrer_rewards_percentage);
+      info_window->AddInfo(tr("Registrar"), registrar);
+      info_window->AddInfo(tr("Referrer"), referrer);
+      info_window->AddInfo(tr("Lifetime Referrer"), lifetime_referrer);
+      info_window->AddInfo(tr("Network Fee"), network_fee_percentage);
+      info_window->AddInfo(tr("Lifetime Referrer Fee"), lifetime_referrer_fee_percentage);
+      info_window->AddInfo(tr("Referrer Rewards Percentage"), referrer_rewards_percentage);
       
       
-      info_window->setWindowTitle(QString::fromStdString(name) + tr(" (") + QString::fromStdString(id) + tr(")"));
+      info_window->setWindowTitle(QString::fromStdString(name) + " (" + QString::fromStdString(id) + ")");
       info_window->setFixedSize(620,420);
       info_window->show();
    } catch(...) {

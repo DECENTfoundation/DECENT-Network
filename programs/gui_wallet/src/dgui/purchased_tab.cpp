@@ -30,11 +30,11 @@ PurchasedTab::PurchasedTab(QWidget* pParent)
 , m_iActiveItemIndex(-1)
 {
    m_pTableWidget->set_columns({
-      {"Title", 30},
-      {"Size", 15, "size"},
-      {"Price", 15, "price"},
-      {"Created", 15, "created"},
-      {"Status", 20},
+      {tr("Title"), 30},
+      {tr("Size"), 15, "size"},
+      {tr("Price"), 15, "price"},
+      {tr("Created"), 15, "created"},
+      {tr("Status"), 20},
       {"", 5},
       {" ", 5}
    });
@@ -44,7 +44,7 @@ PurchasedTab::PurchasedTab(QWidget* pParent)
    QHBoxLayout* search_layout = new QHBoxLayout();
 
    QLineEdit* pfilterLineEditor = new QLineEdit(this);
-   pfilterLineEditor->setPlaceholderText(QString("Search Content"));
+   pfilterLineEditor->setPlaceholderText(QString(tr("Search Content")));
    pfilterLineEditor->setStyleSheet(d_lineEdit);
    pfilterLineEditor->setFixedHeight(54);
    pfilterLineEditor->setAttribute(Qt::WA_MacShowFocusRect, 0);
@@ -197,7 +197,7 @@ void PurchasedTab::timeToUpdate(const std::string& result) {
       
       bool is_delivered = content["delivered"].get<bool>();
       if (!is_delivered) {
-         status_text = "Waiting for key delivery";
+         status_text = tr("Waiting for key delivery");
       } else {
          status_text = status_text + tr(" ") + QString::fromStdString(content["status_text"].get<std::string>());
       }
@@ -309,7 +309,7 @@ void PurchasedTab::slot_ExtractPackage(int iIndex) {
    pFileDialog->setOptions(QFileDialog::ShowDirsOnly);
    pFileDialog->setOptions(QFileDialog::DontUseNativeDialog);
    pFileDialog->setAttribute(Qt::WA_DeleteOnClose);
-   pFileDialog->setLabelText(QFileDialog::Accept, "Extract");
+   pFileDialog->setLabelText(QFileDialog::Accept, tr("Extract"));
 
    pFileDialog->open();
 }
@@ -329,11 +329,11 @@ void PurchasedTab::slot_Details(int iIndex)
 void PurchasedTab::ShowMessageBox(std::string const& message)
 {
    if (message.empty())
-      gui_wallet::ShowMessageBox("Success",
-                                 "Package was successfully extracted");
+      gui_wallet::ShowMessageBox(tr("Success"),
+                                 tr("Package was successfully extracted"));
    else
-      gui_wallet::ShowMessageBox("Error",
-                                 "Failed to extract package",
+      gui_wallet::ShowMessageBox(tr("Error"),
+                                 tr("Failed to extract package"),
                                  QObject::tr(message.c_str()));
 }
 

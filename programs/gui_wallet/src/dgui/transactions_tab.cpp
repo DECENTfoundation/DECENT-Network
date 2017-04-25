@@ -45,18 +45,18 @@ TransactionsTab::TransactionsTab(QWidget* pParent)
 {
 
    tablewidget.set_columns({
-      {"Time", 20, "time"},
-      {"Type", 10, "type"},
-      {"From", 20, "from"},
-      {"To"  , 20, "to"},
-      {"Price", 10,"price"},
-      {"Fee", 10,  "fee"},
-      {"Description", 25, "description"}
+      {tr("Time"), 20, "time"},
+      {tr("Type"), 10, "type"},
+      {tr("From"), 20, "from"},
+      {tr("To")  , 20, "to"},
+      {tr("Price"), 10,"price"},
+      {tr("Fee"), 10,  "fee"},
+      {tr("Description"), 25, "description"}
    });
    
    
    user.setStyleSheet(d_lineEdit);
-   user.setPlaceholderText("Enter user name to see transaction history");
+   user.setPlaceholderText(tr("Enter user name to see transaction history"));
    user.setAttribute(Qt::WA_MacShowFocusRect, 0);
    user.setFixedHeight(54);
    user.setFrame(false);
