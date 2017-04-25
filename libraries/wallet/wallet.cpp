@@ -4295,9 +4295,14 @@ public:
    }
 
 
-   vector<content_summary> wallet_api::search_content( const string& term, const string& order, const string& user, const string& region_code, uint32_t count)const
+   vector<content_summary> wallet_api::search_content(const string& term,
+                                                      const string& order,
+                                                      const string& user,
+                                                      const string& region_code,
+                                                      const string& uri,
+                                                      uint32_t count)const
    {
-      return my->_remote_db->search_content( term, order, user, region_code, count );
+      return my->_remote_db->search_content(term, order, user, region_code, uri, count);
    }
 
    vector<content_object> wallet_api::list_content_by_author( const string& account_id_or_name )const
@@ -4313,9 +4318,14 @@ public:
    }
 
 
-   vector<content_summary> wallet_api::search_user_content( const string& user, const string& term, const string& order, const string& region_code, uint32_t count)const
+   vector<content_summary> wallet_api::search_user_content(const string& user,
+                                                           const string& term,
+                                                           const string& order,
+                                                           const string& region_code,
+                                                           const string& uri,
+                                                           uint32_t count)const
    {
-      vector<content_summary> result = my->_remote_db->search_user_content( user, term, order, region_code, count );
+      vector<content_summary> result = my->_remote_db->search_user_content(user, term, order, region_code, uri, count);
 
       auto packages = PackageManager::instance().get_all_known_packages();
       for (auto package: packages) {

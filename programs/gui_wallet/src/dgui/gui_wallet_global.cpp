@@ -759,6 +759,7 @@ void DecentTable::set_columns(const std::vector<DecentColumn>& cols)
 
 void DecentTable::sectionClicked(int index)
 {
+   emit signal_SortingChanged(index);
    if (_cols[index].sortid.empty()) {
       return;
    }

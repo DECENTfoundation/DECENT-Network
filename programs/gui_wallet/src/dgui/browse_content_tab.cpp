@@ -9,11 +9,9 @@
 #include <QVBoxLayout>
 #include <QLabel>
 #include <QLineEdit>
+#include <QSignalMapper>
 #include "json.hpp"
 
-#include <ctime>
-#include <limits>
-#include <iostream>
 #include <graphene/chain/config.hpp>
 #include <graphene/chain/content_object.hpp>
 #include <graphene/wallet/wallet.hpp>
@@ -24,13 +22,12 @@
 #include <QTime>
 #endif
 
-
-
 namespace gui_wallet
 {
 BrowseContentTab::BrowseContentTab(QWidget* pParent)
 : TabContentManager(pParent)
 , m_pTableWidget(new DecentTable(this))
+, m_pDetailsSignalMapper(nullptr)
 {
    m_pTableWidget->set_columns({
       {"Title", 20},
@@ -68,6 +65,9 @@ BrowseContentTab::BrowseContentTab(QWidget* pParent)
 
    QObject::connect(pSearchTerm, &QLineEdit::textChanged,
                     this, &BrowseContentTab::slot_SearchTermChanged);
+
+   QObject::connect(m_pTableWidget, &DecentTable::signal_SortingChanged,
+                    this, &BrowseContentTab::slot_SortingChanged);
 }
 
 void BrowseContentTab::timeToUpdate(const std::string& result) {
@@ -79,39 +79,45 @@ void BrowseContentTab::timeToUpdate(const std::string& result) {
    }
    
    auto contents = nlohmann::json::parse(result);
+   size_t iSize = contents.size();
+   if (iSize > m_i_page_size)
+      iSize = m_i_page_size;
    
-   _digital_contents.resize(contents.size());
+   _digital_contents.resize(iSize);
    
-   
-   for (int i = 0; i < contents.size(); ++i) {
-      SDigitalContent& cont = _digital_contents[i];
+   for (size_t iIndex = 0; iIndex < iSize; ++iIndex)
+   {
+      SDigitalContent& cont = _digital_contents[iIndex];
+      auto const& json_item = contents[iIndex];
       
       cont.type = DCT::GENERAL;
-      cont.author = contents[i]["author"].get<std::string>();
+      cont.author = json_item["author"].get<std::string>();
 
-      cont.synopsis = contents[i]["synopsis"].get<std::string>();
-      cont.URI = contents[i]["URI"].get<std::string>();
-      cont.created = contents[i]["created"].get<std::string>();
-      cont.expiration = contents[i]["expiration"].get<std::string>();
-      cont.size = contents[i]["size"].get<int>();
+      cont.synopsis = json_item["synopsis"].get<std::string>();
+      cont.URI = json_item["URI"].get<std::string>();
+      cont.created = json_item["created"].get<std::string>();
+      cont.expiration = json_item["expiration"].get<std::string>();
+      cont.size = json_item["size"].get<int>();
       
-      if (contents[i]["times_bougth"].is_number()) {
-         cont.times_bougth = contents[i]["times_bougth"].get<int>();
+      if (json_item["times_bought"].is_number()) {
+         cont.times_bougth = json_item["times_bought"].get<int>();
       } else {
          cont.times_bougth = 0;
       }
       
-      uint64_t iPrice = json_to_int64(contents[i]["price"]["amount"]);
+      uint64_t iPrice = json_to_int64(json_item["price"]["amount"]);
       cont.price = Globals::instance().asset(iPrice);
 
-      cont.AVG_rating = contents[i]["AVG_rating"].get<double>() / 1000;
-      
+      cont.AVG_rating = json_item["AVG_rating"].get<double>() / 1000;
    }
+
+   if (contents.size() > m_i_page_size)
+      set_next_page_iterator(contents[m_i_page_size]["URI"].get<std::string>());
+   else
+      set_next_page_iterator(string());
    
    ShowDigitalContentsGUI();
 }
-
-
 
 std::string BrowseContentTab::getUpdateCommand()
 {
@@ -120,27 +126,26 @@ std::string BrowseContentTab::getUpdateCommand()
             "\"" + m_pTableWidget->getSortedColumn() + "\" " +
             "\"\" " +   // user
             "\"\" " +   // region code
-            "100";
+            "\"" + next_iterator() + "\" " +
+            std::to_string(m_i_page_size + 1);
 }
 
-
-void BrowseContentTab::show_content_popup() {
-    QLabel* btn = (QLabel*)sender();
-    int id = btn->property("id").toInt();
-    if (id < 0 || id >= _digital_contents.size()) {
+void BrowseContentTab::slot_Details(int iIndex)
+{
+    if (iIndex < 0 || iIndex >= _digital_contents.size()) {
         throw std::out_of_range("Content index is out of range");
     }
 
    // content details dialog is ugly, needs to be rewritten
    ContentDetailsGeneral* pDetailsDialog = new ContentDetailsGeneral(nullptr);
    QObject::connect(pDetailsDialog, &ContentDetailsGeneral::ContentWasBought,
-                    this, &BrowseContentTab::content_was_bought);
-   pDetailsDialog->execCDD(_digital_contents[id], true);
+                    this, &BrowseContentTab::slot_Bought);
+   pDetailsDialog->execCDD(_digital_contents[iIndex], true);
    pDetailsDialog->setAttribute(Qt::WA_DeleteOnClose);
    pDetailsDialog->open();
 }
 
-void BrowseContentTab::content_was_bought()
+void BrowseContentTab::slot_Bought()
 {
    Globals::instance().signal_showPurchasedTab();
    Globals::instance().updateAccountBalance();
@@ -149,11 +154,17 @@ void BrowseContentTab::content_was_bought()
 void BrowseContentTab::ShowDigitalContentsGUI() {
    
    m_pTableWidget->setRowCount(_digital_contents.size());
+
+   if (m_pDetailsSignalMapper)
+      delete m_pDetailsSignalMapper;
+   m_pDetailsSignalMapper = new QSignalMapper(this);
+   QObject::connect(m_pDetailsSignalMapper, (void (QSignalMapper::*)(int))&QSignalMapper::mapped,
+                    this, &BrowseContentTab::slot_Details);
    
    int index = 0;
-   for(SDigitalContent& aTemporar: _digital_contents) {
-
-      std::string synopsis = unescape_string(aTemporar.synopsis);
+   for(SDigitalContent& item: _digital_contents)
+   {
+      std::string synopsis = unescape_string(item.synopsis);
       std::replace(synopsis.begin(), synopsis.end(), '\t', ' '); // JSON does not like tabs
       std::replace(synopsis.begin(), synopsis.end(), '\n', ' '); // JSON does not like newlines either
       graphene::chain::ContentObjectPropertyManager synopsis_parser(synopsis);
@@ -167,13 +178,13 @@ void BrowseContentTab::ShowDigitalContentsGUI() {
      
       // Author
       colIndex++;
-      m_pTableWidget->setItem(index, colIndex,new QTableWidgetItem(QString::fromStdString(aTemporar.author)));
+      m_pTableWidget->setItem(index, colIndex,new QTableWidgetItem(QString::fromStdString(item.author)));
       m_pTableWidget->item(index, colIndex)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
       m_pTableWidget->item(index, colIndex)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
       
       // Rating
       colIndex++;
-      QString rating = QString::number(aTemporar.AVG_rating, 'g', 2);
+      QString rating = QString::number(item.AVG_rating, 'g', 2);
       m_pTableWidget->setItem(index,colIndex,new QTableWidgetItem(rating));
       m_pTableWidget->item(index, colIndex)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
       m_pTableWidget->item(index, colIndex)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
@@ -182,11 +193,11 @@ void BrowseContentTab::ShowDigitalContentsGUI() {
       // Size
       colIndex++;
       QString unit = " MB";
-      double sizeAdjusted = aTemporar.size;
+      double sizeAdjusted = item.size;
       
-      if(aTemporar.size > 1024) {
+      if(item.size > 1024) {
          unit = " GB";
-         sizeAdjusted = aTemporar.size / 1024.0;
+         sizeAdjusted = item.size / 1024.0;
       }
       
       m_pTableWidget->setItem(index, colIndex,new QTableWidgetItem(QString::number(sizeAdjusted, 'g', 2) + unit));
@@ -195,47 +206,49 @@ void BrowseContentTab::ShowDigitalContentsGUI() {
       
       // Price
       colIndex++;
-      m_pTableWidget->setItem(index, colIndex, new QTableWidgetItem(aTemporar.price.getString().c_str()));
+      m_pTableWidget->setItem(index, colIndex, new QTableWidgetItem(item.price.getString().c_str()));
 
       m_pTableWidget->item(index, colIndex)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
       m_pTableWidget->item(index, colIndex)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
-      
-      
-      
+
       // Uploaded
       colIndex++;
-      std::string created_str = aTemporar.created.substr(0, 10);
+      std::string created_str = item.created.substr(0, 10);
       m_pTableWidget->setItem(index, colIndex, new QTableWidgetItem(QString::fromStdString(created_str)));
       m_pTableWidget->item(index, colIndex)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
       m_pTableWidget->item(index, colIndex)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
       
       // Expiration
       colIndex++;
-      QDateTime time = QDateTime::fromString(QString::fromStdString(aTemporar.expiration), "yyyy-MM-ddTHH:mm:ss");
+      QDateTime time = QDateTime::fromString(QString::fromStdString(item.expiration), "yyyy-MM-ddTHH:mm:ss");
       std::string e_str = CalculateRemainingTime(QDateTime::currentDateTime(), time);
       
       m_pTableWidget->setItem(index, colIndex, new QTableWidgetItem(QString::fromStdString(e_str)));
       m_pTableWidget->item(index, colIndex)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
       m_pTableWidget->item(index, colIndex)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
-      
-      
+
       // Button
       colIndex++;
-      DecentSmallButton* info_icon = new DecentSmallButton(icon_popup, icon_popup_white);
-      info_icon->setProperty("id", QVariant::fromValue(index));
+      DecentSmallButton* info_icon = new DecentSmallButton(icon_popup, icon_popup_white, m_pTableWidget);
+
+      QObject::connect(info_icon, &DecentSmallButton::clicked,
+                       m_pDetailsSignalMapper, (void (QSignalMapper::*)())&QSignalMapper::map);
+      m_pDetailsSignalMapper->setMapping(info_icon, index);
+
       info_icon->setAlignment(Qt::AlignCenter);
-      connect(info_icon, SIGNAL(clicked()), this, SLOT(show_content_popup()));
       m_pTableWidget->setCellWidget(index, colIndex, info_icon);
-      
-      
+
       ++index;
    }
-
 }
 
 void BrowseContentTab::slot_SearchTermChanged(QString const& strSearchTerm)
 {
    m_strSearchTerm = strSearchTerm;
+}
+void BrowseContentTab::slot_SortingChanged(int index)
+{
+   reset();
 }
 } // end namespace gui_wallet
 

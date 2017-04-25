@@ -274,7 +274,9 @@ namespace gui_wallet
       int getCurrentHighlightedRow() const;
       std::string getSortedColumn() const;
       void set_columns(const std::vector<DecentColumn>& cols);
-      
+
+   signals:
+      void signal_SortingChanged(int);
    private slots:
       void sectionClicked(int index);
       

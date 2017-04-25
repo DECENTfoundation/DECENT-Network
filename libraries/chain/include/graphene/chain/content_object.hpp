@@ -418,8 +418,77 @@ using namespace decent::encrypt;
    struct by_times_bought;
    struct by_expiration;
    struct by_created;
-   
-   
+
+   template <typename TAG>
+   struct key_extractor;
+
+   template <>
+   struct key_extractor<by_author>
+   {
+      static account_id_type get(content_object const& ob)
+      {
+         return ob.author;
+      }
+   };
+
+   template <>
+   struct key_extractor<by_URI>
+   {
+      static std::string get(content_object const& ob)
+      {
+         return ob.URI;
+      }
+   };
+
+   template <>
+   struct key_extractor<by_AVG_rating>
+   {
+      static uint64_t get(content_object const& ob)
+      {
+         return ob.AVG_rating;
+      }
+   };
+
+   template <>
+   struct key_extractor<by_size>
+   {
+      static uint64_t get(content_object const& ob)
+      {
+         return ob.size;
+      }
+   };
+
+   template <>
+   struct key_extractor<by_price>
+   {
+      static share_type get(content_object const& ob)
+      {
+#ifdef PRICE_REGIONS
+         return ob.get_price_amount_template<RegionCodes::OO_none>();
+#else
+         return ob.get_price_amount();
+#endif
+      }
+   };
+
+   template <>
+   struct key_extractor<by_expiration>
+   {
+      static time_point_sec get(content_object const& ob)
+      {
+         return ob.expiration;
+      }
+   };
+
+   template <>
+   struct key_extractor<by_created>
+   {
+      static time_point_sec get(content_object const& ob)
+      {
+         return ob.created;
+      }
+   };
+
    typedef multi_index_container<
       content_object,
          indexed_by<

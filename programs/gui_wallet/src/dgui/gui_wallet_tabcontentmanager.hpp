@@ -1,6 +1,8 @@
 #pragma once
 
 #include <QWidget>
+#include <string>
+#include <vector>
 
 namespace gui_wallet {
 
@@ -16,10 +18,21 @@ public:
    
 public:
    void tryToUpdate();
-   
+
+   bool next();
+   void reset();
+   bool previous();
+   bool is_first() const;
+   bool is_last() const;
+   void set_next_page_iterator(std::string const& iterator);
+   std::string next_iterator() const;
+
+protected:
+   size_t m_i_page_size;
 private:
-   
-   std::string _lastResult = "";
+   std::string m_last_result;
+   std::string m_next_iterator;
+   std::vector<std::string> m_iterators;
 };
 
    

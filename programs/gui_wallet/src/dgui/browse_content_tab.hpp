@@ -6,6 +6,7 @@
 
 #include "gui_wallet_tabcontentmanager.hpp"
 
+class QSignalMapper;
 
 namespace gui_wallet
 {
@@ -25,13 +26,15 @@ namespace gui_wallet
       virtual std::string getUpdateCommand() override;
        
    public slots:
-      
-      void show_content_popup();
-      void content_was_bought();
+
+      void slot_Details(int);
+      void slot_Bought();
       void slot_SearchTermChanged(QString const& strSearchTerm);
+      void slot_SortingChanged(int);
       
    protected:
       DecentTable*   m_pTableWidget;
+      QSignalMapper* m_pDetailsSignalMapper;
       QString        m_strSearchTerm;
       
       std::vector<SDigitalContent>  _digital_contents;
