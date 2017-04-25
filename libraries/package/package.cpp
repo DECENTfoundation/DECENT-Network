@@ -888,6 +888,35 @@ namespace decent { namespace package {
         return *_packages.insert(package).first;
     }
 
+
+    package_handle_t PackageManager::find_package(const std::string& url)
+    {
+        std::lock_guard<std::recursive_mutex> guard(_mutex);
+        
+        for (auto& pack: _packages) {
+            if (pack->get_url() == url) {
+                return pack;
+            }
+        }
+        return nullptr;
+    }
+
+    package_handle_t PackageManager::find_package(const fc::ripemd160& hash)
+    {
+        std::lock_guard<std::recursive_mutex> guard(_mutex);
+
+        for (auto& package : _packages) {
+            if (package) {
+                if (package->_hash == hash) {
+                    return package;
+                }
+            }
+        }
+
+        return nullptr;
+    }
+
+
     package_handle_set_t PackageManager::get_all_known_packages() const {
         std::lock_guard<std::recursive_mutex> guard(_mutex);
         return _packages;
@@ -1667,7 +1696,7 @@ void package_manager::print_all_transfers() {
    }
 }
 
-package_transfer_interface::transfer_progress
+transfer_progress
 package_manager::get_progress(std::string uri) const {
    fc::scoped_lock<fc::mutex> guard(_mutex);
    for (auto transfer : _transfers) {
@@ -1678,7 +1707,7 @@ package_manager::get_progress(std::string uri) const {
       }
    }
    
-   return package_transfer_interface::transfer_progress();
+   return transfer_progress();
 }
 
 std::string package_manager::get_transfer_url(package_transfer_interface::transfer_id id) {

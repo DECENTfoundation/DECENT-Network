@@ -66,8 +66,9 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
 
    m_pMenuLayout->addWidget(m_barLeft);
    m_pMenuLayout->addWidget(m_barRight);
-
-
+#ifdef _MSC_VER
+   m_pCentralAllLayout->addLayout(m_pMenuLayout);// Windows needs it
+#endif
    m_pCentralWidget = new CentralWigdet(m_pCentralAllLayout,this);
    m_pCentralWidget->setLayout(m_pCentralAllLayout);
    //setCentralWidget(m_pCentralWidget);
@@ -463,9 +464,7 @@ void Mainwindow_gui_wallet::UpdateLockedStatus()
 
 
 void Mainwindow_gui_wallet::CheckDownloads()
-{
-   return; //TODO: remove this later
-   
+{   
     auto& global_instance = gui_wallet::Globals::instance();
     std::string str_current_username = global_instance.getCurrentUser();
 

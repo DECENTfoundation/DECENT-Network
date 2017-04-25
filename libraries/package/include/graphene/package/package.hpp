@@ -162,6 +162,8 @@ namespace decent { namespace package {
         std::string             get_url() const                { return _url; }
         fc::ripemd160           get_hash() const               { return _hash; }
         uint64_t                get_size() const;
+        uint64_t                get_downloaded_size() const    { return _downloaded_size; }
+        uint64_t                get_total_size() const         { return _size; }
         decent::encrypt::CustodyData get_custody_data() const  { return _custody_data; };
 
 
@@ -177,6 +179,7 @@ namespace decent { namespace package {
         boost::filesystem::path       _parent_dir;
         decent::encrypt::CustodyData  _custody_data;
         uint64_t                      _size;
+        uint64_t                      _downloaded_size;
 
 
         std::shared_ptr<boost::interprocess::file_lock> _file_lock;
@@ -284,6 +287,9 @@ namespace decent { namespace package {
         package_handle_t get_package(const std::string& url);
         package_handle_t get_package(const fc::ripemd160& hash);
 
+        package_handle_t find_package(const std::string& url);
+        package_handle_t find_package(const fc::ripemd160& hash);
+
         package_handle_set_t get_all_known_packages() const;
         void recover_all_packages(const event_listener_handle_t& event_listener = event_listener_handle_t());
         bool release_all_packages();
@@ -361,6 +367,17 @@ public:
 };
 
 
+struct transfer_progress {
+    transfer_progress() : total_bytes(0), current_bytes(0), current_speed(0), str_status("No Status") { }
+    transfer_progress(int tb, int cb, int cs, const std::string& status) : total_bytes(tb), current_bytes(cb), current_speed(cs), str_status(status) { }
+
+    int total_bytes;
+    int current_bytes;
+    int current_speed; // Bytes per second
+    std::string str_status;
+};
+
+
 class package_object {
 public:
     package_object();
@@ -388,15 +405,7 @@ private:
 public:
     typedef int transfer_id;
 
-    struct transfer_progress {
-        transfer_progress() : total_bytes(0), current_bytes(0), current_speed(0), str_status("No Status") { }
-        transfer_progress(int tb, int cb, int cs, const std::string& status) : total_bytes(tb), current_bytes(cb), current_speed(cs), str_status(status) { }
 
-        int total_bytes;
-        int current_bytes;
-        int current_speed; // Bytes per second
-        std::string str_status;
-    };
 
     class transfer_listener {
     public:
@@ -428,7 +437,7 @@ public:
 
     virtual void on_download_started(package_transfer_interface::transfer_id id) { }
     virtual void on_download_finished(package_transfer_interface::transfer_id id, package_object downloaded_package) { }
-    virtual void on_download_progress(package_transfer_interface::transfer_id id, package_transfer_interface::transfer_progress progress) { }
+    virtual void on_download_progress(package_transfer_interface::transfer_id id, transfer_progress progress) { }
     virtual void on_upload_started(package_transfer_interface::transfer_id id, const std::string& url) { }
     virtual void on_error(package_transfer_interface::transfer_id id, std::string error) { }
 };
@@ -495,7 +504,7 @@ public:
     package_object              get_package_object(const std::string& uri) const;
 
     std::string                                   get_transfer_url(package_transfer_interface::transfer_id id);
-    package_transfer_interface::transfer_progress get_progress(std::string URI) const;
+    transfer_progress                             get_progress(std::string URI) const;
 
     void set_packages_path(const boost::filesystem::path& packages_path);
     boost::filesystem::path get_packages_path() const;
