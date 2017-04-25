@@ -98,7 +98,7 @@ class SendDialog : public SendDialogBase
 {
    Q_OBJECT
 public:
-   SendDialog(int num_of_text_boxes , QString title);
+   SendDialog(int num_of_text_boxes , QString title, QString userName);
    virtual ~SendDialog();
    
    virtual RET_TYPE execRD(const QPoint* pMove, std::vector<std::string>& results);
@@ -107,6 +107,7 @@ public:
    void sendDCT();
    
 protected:
+   QString     m_userName;
    int         m_nNumOfTextBoxes;
    QLineEdit*  m_pTextBoxes;
 public:
