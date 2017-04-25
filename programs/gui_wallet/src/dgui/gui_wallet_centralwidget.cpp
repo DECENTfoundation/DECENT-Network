@@ -291,6 +291,7 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     pLabelTmp->setPixmap(m_image3);
     pLabelTmp->setFixedSize(30,30);
     pHBoxLayoutTmp->addWidget(pLabelTmp);
+    pHBoxLayoutTmp->setAlignment(Qt::AlignCenter);
     pHBoxLayoutTmp->setSpacing(0);
    
     pCombo2 = new AccountBalanceWidget;
@@ -328,6 +329,7 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
    sendButton->setFixedSize(30,30);
    connect(sendButton, SIGNAL(clicked()), this, SLOT(sendDCTSlot()));
    connect(send_text, SIGNAL(LabelClicked()), this, SLOT(sendDCTSlot()));
+   pHBoxLayoutTmp->setAlignment(Qt::AlignCenter);
    pHBoxLayoutTmp->addWidget(sendButton);
    pHBoxLayoutTmp->addWidget(send_text);
    
