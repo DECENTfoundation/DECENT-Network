@@ -9,6 +9,7 @@
 #include <QTime>
 #include <QTimer>
 #include <QHeaderView>
+#include <QObject>
 
 #include <iostream>
 #endif
@@ -145,55 +146,43 @@ std::string CalculateRemainingTime(QDateTime const& dt, QDateTime const& dtFutur
    }
 }
 
-std::string CalculateRemainingTime_Behind(QDateTime const& dt, QDateTime const& dtFuture)
+QString CalculateRemainingTime_Behind(QDateTime const& dt, QDateTime const& dtFuture)
 {
    CalendarDuration duration = CalculateCalendarDuration(dt, dtFuture);
    if (duration.sign == CalendarDuration::sign_negative)
-      return std::string();
+      return QString();
    else
    {
-      std::string str_result;
-      std::vector<std::string> arrParts;
+      QString str_result;
+      std::vector<QString> arrParts;
 
-      if (duration.years > 1)
-         arrParts.push_back(std::to_string(duration.years) + " years");
-      else if (duration.years)
-         arrParts.push_back("a year");
-      if (duration.months > 1)
-         arrParts.push_back(std::to_string(duration.months) + " months");
-      else if (duration.months)
-         arrParts.push_back("a month");
-      if (duration.days > 1)
-         arrParts.push_back(std::to_string(duration.days) + " days");
-      else if (duration.days)
-         arrParts.push_back("a day");
-      if (duration.hours > 1)
-         arrParts.push_back(std::to_string(duration.hours) + " hours");
-      else if (duration.hours)
-         arrParts.push_back("an hour");
-      if (duration.minutes > 1)
-         arrParts.push_back(std::to_string(duration.minutes) + " minutes");
-      else if (duration.minutes)
-         arrParts.push_back("a minute");
-      if (duration.seconds > 1)
-         arrParts.push_back(std::to_string(duration.seconds) + " seconds");
-      else if (duration.seconds)
-         arrParts.push_back("a second");
+      if(duration.years)
+         arrParts.push_back(QObject::tr("%n year(s)", "", duration.years));
+      if(duration.months)
+      arrParts.push_back(QObject::tr("%n month(s)", "", duration.months));
+      if(duration.days)
+      arrParts.push_back(QObject::tr("%n day(s)", "", duration.days));
+      if(duration.hours)
+      arrParts.push_back(QObject::tr("%n hour(s)", "", duration.hours));
+      if(duration.minutes)
+      arrParts.push_back(QObject::tr("%n minute(s)", "", duration.minutes));
+      if(duration.seconds)
+      arrParts.push_back(QObject::tr("%n second(s)", "", duration.seconds));
 
       if (arrParts.empty())
-         return std::string();
+         return QString();
       else if (arrParts.size() == 1 &&
                duration.seconds < 30)
-         return std::string();
+         return QString();
       else
       {
-         str_result += "syncing up with blockchain: ";
+         str_result += QObject::tr("syncing up with blockchain: ");
          str_result += arrParts[0];
 
          if (arrParts.size() > 1)
-            str_result += " and " + arrParts[1];
+            str_result += QObject::tr(" and ") + arrParts[1];
 
-         str_result += " to go";
+         str_result += QObject::tr(" to go");
       }
 
       return str_result;
@@ -552,13 +541,13 @@ void Globals::slot_timer()
    if (false == m_connected)
    {
       if (duration > std::chrono::seconds(40))
-         emit connectingProgress("still connecting");
+         emit connectingProgress(tr("still connecting").toStdString());
       else if (duration > std::chrono::seconds(30))
-         emit connectingProgress("verifying the local database, probably the local database is corrupted");
+         emit connectingProgress(tr("verifying the local database, probably the local database is corrupted").toStdString());
       else if (duration > std::chrono::seconds(20))
-         emit connectingProgress("verifying the local databse");
+         emit connectingProgress(tr("verifying the local databse").toStdString());
       else
-         emit connectingProgress("connecting");
+         emit connectingProgress(tr("connecting").toStdString());
 
       m_p_timer->start(1000);
    }
@@ -602,7 +591,7 @@ void DecentSmallButton::mousePressEvent(QMouseEvent* event)
 // DecentColumn
 //
 
-DecentColumn::DecentColumn(std::string title, int size, std::string const& sortid/* = std::string()*/)
+DecentColumn::DecentColumn(QString title, int size, std::string const& sortid/* = std::string()*/)
 : title(title)
 , size(size)
 , sortid(sortid) {}
@@ -649,7 +638,7 @@ void DecentTable::set_columns(const std::vector<DecentColumn>& cols)
 
    QStringList columns;
    for (const DecentColumn& col: cols) {
-      columns << QString::fromStdString(col.title);
+      columns << col.title;
    }
    this->setHorizontalHeaderLabels(columns);
 

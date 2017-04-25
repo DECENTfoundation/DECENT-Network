@@ -11,12 +11,13 @@
 #include <graphene/chain/seeder_object.hpp>
 #include <graphene/chain/content_object.hpp>
 #include <graphene/chain/rating_object.hpp>
+#include <graphene/chain/subscription_object.hpp>
 #include <graphene/chain/seeding_statistics_object.hpp>
 
 #include <decent/encrypt/encryptionutils.hpp>
 
 namespace graphene { namespace chain {
-  
+
    void_result content_submit_evaluator::do_evaluate(const content_submit_operation& o )
    {try{
       auto& idx = db().get_index_type<seeder_index>().indices().get<by_seeder>();
@@ -96,7 +97,7 @@ namespace graphene { namespace chain {
                                     });
       }
    }FC_CAPTURE_AND_RETHROW( (o) ) }
-   
+
    void_result request_to_buy_evaluator::do_evaluate(const request_to_buy_operation& o )
    {try{
       auto& idx = db().get_index_type<content_index>().indices().get<by_URI>();
@@ -105,12 +106,19 @@ namespace graphene { namespace chain {
       FC_ASSERT( o.price <= db().get_balance( o.consumer, o.price.asset_id ) );
 #ifdef PRICE_REGIONS
       optional<asset> price = content->price.GetPrice(o.region_code_from);
-      FC_ASSERT( price.valid() );
-      FC_ASSERT( o.price >= *price );
-      FC_ASSERT( o.price.asset_id == price->asset_id );
+
+      auto &range = db().get_index_type<subscription_index>().indices().get<by_from_to>();
+      const auto &subscription = range.find(boost::make_tuple(o.consumer, content->author));
+
+      /// Check whether subscription exists. If so, consumer doesn't pay for content
+      if (subscription == range.end() || (subscription != range.end() && subscription->expiration < db().head_block_time()))
+         FC_ASSERT( price.valid() && o.price >= *price && o.price.asset_id == price->asset_id );
+
 #else
-      FC_ASSERT( o.price >= content->price );
-      FC_ASSERT( o.price.asset_id == content->price.asset_id );
+      optional<asset> price = content->GetPrice(string());
+
+      if (subscription == range.end() || (subscription != range.end() && subscription->expiration < db().head_block_time()))
+         FC_ASSERT(o.price >= content->price && o.price.asset_id == content->price.asset_id);
 #endif
 
       FC_ASSERT( content->expiration > db().head_block_time() );
@@ -200,6 +208,7 @@ namespace graphene { namespace chain {
          finish_buying_operation op;
          op.author = content->author;
          op.payout = price;
+         op.consumer = buying.consumer;
          op.buying = buying.id;
          idump((op));
 
