@@ -299,8 +299,13 @@ void ContentDetailsBase::popup_for_purchased(int row_star)
         m_vLabels[nIndexKent].setStyleSheet(font_bold);
         m_vLabels[nIndexKent].setContentsMargins(0, 17, 50, 17);
         m_vLabels[nIndexKent].setAlignment(Qt::AlignRight);
+#ifdef WINDOWS_HIGH_DPI
+        m_vLabels[nIndexKent].setFixedHeight(70);
+        m_vLabels[nIndexZuyg].setFixedHeight(70);
+#else
         m_vLabels[nIndexKent].setFixedHeight(54);
         m_vLabels[nIndexZuyg].setFixedHeight(54);
+#endif
         m_vSub_layouts[i].setSpacing(0);
         m_vSub_layouts[i].setContentsMargins(45,0,0,0);
         

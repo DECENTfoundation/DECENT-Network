@@ -191,9 +191,17 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    _seedersPath->setMinimumHeight(40);
    
    DecentButton* seeders_button = new DecentButton();
+#ifdef WINDOWS_HIGH_DPI
+   seeders_button->setText("Select");// to keep all three buttons the same size and save edit boxes space
+#else
    seeders_button->setText("Select Seeders");
+#endif
    seeders_button->setFont(PopupButtonRegularFont());
+#ifdef WINDOWS_HIGH_DPI
+   seeders_button->setFixedWidth(150);
+#else
    seeders_button->setFixedWidth(100);
+#endif
    seeders_button->setFixedHeight(40);
    
    seedersRow->addWidget(_seedersPath);
@@ -228,7 +236,11 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    DecentButton* browseContentButton = new DecentButton();
    browseContentButton->setText("Browse");
    browseContentButton->setFont(PopupButtonRegularFont());
+#ifdef WINDOWS_HIGH_DPI
+   browseContentButton->setMinimumWidth(150);
+#else
    browseContentButton->setMinimumWidth(100);
+#endif
    browseContentButton->setFixedHeight(40);
    connect(browseContentButton, SIGNAL(LabelClicked()),this, SLOT(browseContent()));
 
@@ -251,7 +263,11 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    DecentButton* browseSamplesButton = new DecentButton();
    browseSamplesButton->setText("Browse");
    browseSamplesButton->setFont(PopupButtonRegularFont());
+#ifdef WINDOWS_HIGH_DPI
+   browseSamplesButton->setMinimumWidth(150);
+#else
    browseSamplesButton->setMinimumWidth(100);
+#endif
    browseSamplesButton->setFixedHeight(40);
    connect(browseSamplesButton, SIGNAL(LabelClicked()),this, SLOT(browseSamples()));
 
@@ -645,7 +661,11 @@ Upload_tab::Upload_tab(Mainwindow_gui_wallet* parent)
         {"Published", 10, "created"},
         {"Expiration", 10, "expiration"},
         {"Status", 10},
+#ifdef WINDOWS_HIGH_DPI
+        {" ", -80}
+#else
         {" ", -50}
+#endif
 
     });
 

@@ -663,7 +663,7 @@ void DecentTable::set_columns(const std::vector<DecentColumn>& cols)
                                    });
 
 #ifdef WINDOWS_HIGH_DPI
-   this->horizontalHeader()->setFixedHeight(60);
+   this->horizontalHeader()->setFixedHeight(45);
 #else
    this->horizontalHeader()->setFixedHeight(35);
 #endif
