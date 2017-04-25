@@ -274,13 +274,11 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    _cancel_button->setText("Cancel");
    _cancel_button->setFont(PopupButtonBigFont());
    _cancel_button->setMinimumHeight(50);
-   //_cancel_button->setMinimumWidth(140);
-   _cancel_button->setStyleSheet(d_cancel);
+
 
    _upload_button->setText("Publish");
    _upload_button->setFont(PopupButtonBigFont());
    _upload_button->setMinimumHeight(50);
-   //_upload_button->setMinimumWidth(140);
 
    connect(_upload_button, SIGNAL(LabelClicked()),this, SLOT(uploadContent()));
    connect(_cancel_button, SIGNAL(LabelClicked()),this, SLOT( uploadCanceled() ));
@@ -624,7 +622,8 @@ void Upload_popup::uploadContent()
 
 void Upload_popup::uploadCanceled()
 {
-   }
+   this->close();
+}
 
 
 //////////////////////////////////////////////////
