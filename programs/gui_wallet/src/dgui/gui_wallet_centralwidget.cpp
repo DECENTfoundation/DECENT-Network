@@ -253,7 +253,8 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     pComboTmp1 = new QComboBox;
     pComboTmp1->setStyle(QStyleFactory::create("fusion"));
     importKeyButton = new DecentButton();
-    importKeyButton->setText("Import Key");
+
+    importKeyButton->setText(tr("Import Key"));
 #ifdef WINDOWS_HIGH_DPI
     importKeyButton->setFixedSize(150, 30);
 #else
@@ -321,7 +322,7 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
    pHBoxLayoutTmp = new QHBoxLayout;
    sendButton->setScaledContents(true);
    DecentButton* send_text = new DecentButton();
-   send_text->setText("  Send");
+   send_text->setText(tr("  Send"));
    send_text->setStyleSheet("QLabel { color : rgb(0,0,0);}");
 
    sendButton->setFixedSize(30,30);
@@ -483,6 +484,12 @@ void CentralWigdet::SetTransactionInfo(std::string info_from_other_tab)
 {
     m_trans_tab.set_user_filter(info_from_other_tab);
 }
+
+Overview_tab* CentralWigdet::getUsersTab()
+{
+   return &m_Overview_tab;
+}
+
 
 
 
