@@ -1,0 +1,15 @@
+{
+    "files.associations": {
+        "qfont": "cpp",
+        "bitset": "cpp",
+        "slist": "cpp",
+        "array": "cpp",
+        "hashtable": "cpp",
+        "valarray": "cpp",
+        "initializer_list": "cpp",
+        "utility": "cpp",
+        "mutex": "cpp",
+        "*.ipp": "cpp",
+        "*.tcc": "cpp"
+    }
+}

@@ -635,7 +635,6 @@ void DecentTable::set_columns(const std::vector<DecentColumn>& cols)
    this->horizontalHeader()->setDefaultSectionSize(300);
    this->setRowHeight(0,35);
 
-
    QStringList columns;
    for (const DecentColumn& col: cols) {
       columns << col.title;
@@ -652,8 +651,11 @@ void DecentTable::set_columns(const std::vector<DecentColumn>& cols)
                                       return (col.size > 0) ? sum : sum - col.size;
                                    });
 
-
+#ifdef WINDOWS_HIGH_DPI
+   this->horizontalHeader()->setFixedHeight(60);
+#else
    this->horizontalHeader()->setFixedHeight(35);
+#endif
    this->horizontalHeader()->setFont(TableHeaderFont());
 
    this->horizontalHeader()->setStyleSheet("QHeaderView::section {"

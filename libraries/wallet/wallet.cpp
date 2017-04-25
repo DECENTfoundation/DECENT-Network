@@ -111,7 +111,7 @@ namespace {
             ilog("transfer ${id}: download finished: ${hash}", ("id", id) ("hash", downloaded_package.get_hash().str()));
         }
 
-        virtual void on_download_progress(package_transfer_interface::transfer_id id, package_transfer_interface::transfer_progress progress) {
+        virtual void on_download_progress(package_transfer_interface::transfer_id id, transfer_progress progress) {
             ilog("transfer ${id}: download progress: ${curr}/${total} @ ${speed} Bytes/sec",
                  ("id", id) ("curr", progress.current_bytes) ("total", progress.total_bytes) ("speed", progress.current_speed));
         }
@@ -124,7 +124,7 @@ namespace {
             ilog("transfer ${id}: upload finished", ("id", id));
         }
 
-        virtual void on_upload_progress(package_transfer_interface::transfer_id id, package_transfer_interface::transfer_progress progress) {
+        virtual void on_upload_progress(package_transfer_interface::transfer_id id, transfer_progress progress) {
             ilog("transfer ${id}: upload progress: ${curr}/${total} @ ${speed} Bytes/sec",
                  ("id", id) ("curr", progress.current_bytes) ("total", progress.total_bytes) ("speed", progress.current_speed));
         }
@@ -2300,7 +2300,6 @@ public:
          
          package_handle->add_event_listener(listener_ptr);
          package_handle->create(false);
-         submit_op.cd = package_handle->get_custody_data();
 
      
          return fc::ripemd160();
@@ -2328,17 +2327,26 @@ public:
          status.received_key_parts = bobj->key_particles.size();
          status.total_key_parts = content->key_parts.size();
 
-         package_object pack = package_manager::instance().get_package_object(URI);
-         package_transfer_interface::transfer_progress progress;
-         if (pack.is_valid()) {
-            progress = package_transfer_interface::transfer_progress(pack.get_size(), pack.get_size(), 0, "Downloaded");
-         } else {
-            progress = package_manager::instance().get_progress(URI);
-         }
+         
+         auto pack = PackageManager::instance().find_package(URI);
 
-         status.total_download_bytes = progress.total_bytes;
-         status.received_download_bytes = progress.current_bytes;
-          status.status_text = progress.str_status;
+         if (!pack) {
+             status.total_download_bytes = 0;
+             status.received_download_bytes = 0;
+             status.status_text = "Unknown";
+         } else {
+            if (pack->get_data_state() == PackageInfo::CHECKED) {
+
+                status.total_download_bytes = pack->get_size();
+                status.received_download_bytes = pack->get_size();
+                status.status_text = "Downloaded";
+                
+            } else {
+                status.total_download_bytes = pack->get_total_size();
+                status.received_download_bytes = pack->get_downloaded_size();
+                status.status_text = "Downloading...";                
+            }
+         }
 
          return status;
       } FC_CAPTURE_AND_RETHROW( (consumer)(URI) )
@@ -2399,8 +2407,11 @@ public:
          sign_transaction( tx, broadcast );
          //detail::report_stats_listener stats_listener( URI, self);
          //stats_listener.ipfs_IDs = list_seeders_ipfs_IDs( URI);
-         package_manager::instance().download_package(URI, empty_transfer_listener::instance(), empty_report_stats_listener::instance());
+         auto& package_manager = decent::package::PackageManager::instance();
 
+         auto package = package_manager.get_package(URI);
+         package->download();
+         
       } FC_CAPTURE_AND_RETHROW( (consumer)(URI)(broadcast) )
    }
 
@@ -4477,8 +4488,15 @@ public:
       key1._hash[2] = 0;
       key1._hash[3] = 0;
 
-      package_object package = package_manager::instance().get_package_object(fc::ripemd160(package_hash));
-      package_manager::instance().unpack_package(output_dir, package, key1);
+      auto pack = PackageManager::instance().find_package(fc::ripemd160(package_hash));
+      if (pack == nullptr) {
+          FC_THROW("Can not find package");
+      }
+
+      if (pack->get_manipulation_state() != PackageInfo::ManipulationState::MS_IDLE) {
+          FC_THROW("Package is not in valid state");
+      }
+      pack->unpack(output_dir, key1);
    }
 
 void graphene::wallet::detail::submit_transfer_listener::package_creation_complete() {
@@ -4500,7 +4518,8 @@ void graphene::wallet::detail::submit_transfer_listener::package_creation_comple
    _op.hash = _info->get_hash();
    _op.size = size;
    _op.publishing_fee = days * total_price_per_day;
-   
+   _op.cd = _info->get_custody_data();
+
    
    _info->start_seeding(_protocol, false);
 }
@@ -4526,12 +4545,8 @@ void graphene::wallet::detail::submit_transfer_listener::package_seed_complete()
    // detail::report_stats_listener stats_listener( url, my->self);
    // stats_listener.ipfs_IDs = list_seeders_ipfs_IDs( url);
 
-      if (package_manager::instance().package_exists(url)) {
-         ilog("package exists for URI ${uri}",("uri", url));
-         return;
-      }
-
-      package_manager::instance().download_package(url, transfer_progress_printer::instance(), empty_report_stats_listener::instance());
+      auto pack = PackageManager::instance().get_package(url);
+      pack->download(false);
    }
 
    std::string wallet_api::upload_package(const std::string& package_hash, const std::string& protocol) const {

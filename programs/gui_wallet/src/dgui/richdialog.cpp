@@ -90,6 +90,11 @@ RichDialog::RichDialog(int a_num_of_text_boxes  , QString title)
     {
         m_controls_layout.addWidget(&m_pTextBoxes[i]);
     }
+#ifdef _MSC_VER
+    int height = style()->pixelMetric(QStyle::PM_TitleBarHeight);
+    setWindowIcon(height > 32 ? QIcon(":/icon/images/windows_decent_icon_32x32.png")
+       : QIcon(":/icon/images/windows_decent_icon_16x16.png"));
+#endif
 }
 
 RichDialog::~RichDialog() {
@@ -175,8 +180,8 @@ void SendDialogBase::AddWidget(QWidget* a_pWidget)
 
 
 /********************************************/
-SendDialog::SendDialog(int a_num_of_text_boxes  , QString title)
-: m_nNumOfTextBoxes(a_num_of_text_boxes),m_pTextBoxes(NULL),SendDialogBase(title)
+SendDialog::SendDialog(int a_num_of_text_boxes  , QString title, QString userName)
+: m_nNumOfTextBoxes(a_num_of_text_boxes),m_pTextBoxes(NULL),SendDialogBase(title) , m_userName(userName)
 {
    if(a_num_of_text_boxes<=0) return;
    
@@ -206,6 +211,11 @@ SendDialog::SendDialog(int a_num_of_text_boxes  , QString title)
    {
       m_controls_layout.addWidget(&m_pTextBoxes[i]);
    }
+#ifdef _MSC_VER
+   int height = style()->pixelMetric(QStyle::PM_TitleBarHeight);
+   setWindowIcon(height > 32 ? QIcon(":/icon/images/windows_decent_icon_32x32.png")
+      : QIcon(":/icon/images/windows_decent_icon_16x16.png"));
+#endif
 }
 
 SendDialog::~SendDialog() {
@@ -261,7 +271,8 @@ RET_TYPE SendDialog::execRD(const QPoint* a_pMove, std::vector<std::string>& a_c
    int nSizeToSet(nVectInitSize<m_nNumOfTextBoxes ? nVectInitSize : m_nNumOfTextBoxes);
    
    for(i = 0; i<nSizeToSet; ++i){m_pTextBoxes[i].setText(tr(a_cvResults[i].c_str()));}
-   
+   if(m_userName != "")
+      m_pTextBoxes[0].setText(m_userName);
    RET_TYPE rtReturn = SendDialogBase::execRB(a_pMove);
    if(m_nNumOfTextBoxes>nVectInitSize){a_cvResults.resize(m_nNumOfTextBoxes);}
    

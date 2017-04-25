@@ -111,10 +111,10 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    
 
    _lifeTime = new QDateEdit(this);
-   _lifeTime->setDate(QDate::currentDate());
+   _lifeTime->setDate(QDate::currentDate().addDays(30));
    _lifeTime->setDisplayFormat("yyyy-MM-dd");
    _lifeTime->setCalendarPopup(true);
-   _lifeTime->setMinimumDate(QDate::currentDate());
+   _lifeTime->setMinimumDate(QDate::currentDate().addDays(1));
    _lifeTime->setStyle(QStyleFactory::create("fusion"));
    _lifeTime->setMinimumHeight(40);
    _lifeTime->setFixedWidth(320);
@@ -604,12 +604,13 @@ void Upload_popup::uploadContent()
       _contentPath->setText(tr("Content path"));
       _samplesPath->setText(tr("Samples (optional)"));
 
+
       msgBox->setWindowTitle(tr("Success"));
-      msgBox->setText(tr("Content is submitted"));
+      msgBox->setText(tr("Content is processing..."));
 
       setEnabled(true);
 
-      emit uploadFinished();
+      this->close();
    }
    else
    {
@@ -622,8 +623,14 @@ void Upload_popup::uploadContent()
 }
 
 
-// UPLOAD TAB
+void Upload_popup::uploadCanceled()
+{
+   }
 
+
+//////////////////////////////////////////////////
+// UPLOAD TAB
+//////////////////////////////////////////////////
 
 Upload_tab::Upload_tab(Mainwindow_gui_wallet* parent)
 : TabContentManager(parent)
@@ -901,9 +908,4 @@ void Upload_tab::uploadPopup() {
       Upload_popup popup(_parent);
       popup.exec();
    }
-}
-
-void Upload_popup::uploadCanceled()
-{
-    this->close();
 }

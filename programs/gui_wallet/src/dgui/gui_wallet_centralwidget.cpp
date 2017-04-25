@@ -253,16 +253,25 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     pComboTmp1 = new QComboBox;
     pComboTmp1->setStyle(QStyleFactory::create("fusion"));
     importKeyButton = new DecentButton();
-    importKeyButton->setText(tr("Import key"));
+
+    importKeyButton->setText(tr("Import Key"));
+#ifdef WINDOWS_HIGH_DPI
+    importKeyButton->setFixedSize(150, 30);
+#else
     importKeyButton->setFixedSize(100, 25);
+#endif
     pHBoxLayoutTmp->addWidget(pComboTmp1);
     pHBoxLayoutTmp->addWidget(importKeyButton);
     m_pUsernameWgt->setLayout(pHBoxLayoutTmp);
     m_first_line_lbl.addWidget(m_pUsernameWgt);
+#ifdef WINDOWS_HIGH_DPI
+    m_pUsernameWgt->setFixedHeight(100);
+    m_pUsernameWgt->setMaximumWidth(300);
+#else
     m_pUsernameWgt->setFixedHeight(__HEIGHT__);
     m_pUsernameWgt->setMaximumWidth(271);
-    
-    
+#endif
+   
     /*//////////////////////////////////////////*/
     line = new QFrame(this);
     line->setFrameShape(QFrame::VLine); // Horizontal line
@@ -292,7 +301,11 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     m_pBalanceWgt1->setLayout(pHBoxLayoutTmp);
     m_first_line_lbl.addWidget(m_pBalanceWgt1);
     pHBoxLayoutTmp->setContentsMargins(220, 0, 40, 0);
+#ifdef WINDOWS_HIGH_DPI
+    m_pBalanceWgt1->setFixedHeight(100);
+#else
     m_pBalanceWgt1->setFixedHeight(__HEIGHT__);
+#endif
     m_browse_cont_tab.setStyleSheet(d_label);
 
    /*//////////////////////////////////////////*/
@@ -471,6 +484,12 @@ void CentralWigdet::SetTransactionInfo(std::string info_from_other_tab)
 {
     m_trans_tab.set_user_filter(info_from_other_tab);
 }
+
+Overview_tab* CentralWigdet::getUsersTab()
+{
+   return &m_Overview_tab;
+}
+
 
 
 
