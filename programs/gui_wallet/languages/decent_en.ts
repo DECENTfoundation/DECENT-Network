@@ -7,48 +7,48 @@
         <location filename="../src/dgui/gui_wallet_global.cpp" line="160"/>
         <source>%n year(s)</source>
         <translation>
-            <numerusform>a year</numerusform>
-            <numerusform>%n years</numerusform>
+            <numerusform> a year</numerusform>
+            <numerusform> %n years</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <location filename="../src/dgui/gui_wallet_global.cpp" line="162"/>
         <source>%n month(s)</source>
         <translation>
-            <numerusform>a month</numerusform>
-            <numerusform>%n months</numerusform>
+            <numerusform> a month</numerusform>
+            <numerusform> %n months</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <location filename="../src/dgui/gui_wallet_global.cpp" line="164"/>
         <source>%n day(s)</source>
         <translation>
-            <numerusform>a day</numerusform>
-            <numerusform>%n days</numerusform>
+            <numerusform> a day</numerusform>
+            <numerusform> %n days</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <location filename="../src/dgui/gui_wallet_global.cpp" line="166"/>
         <source>%n hour(s)</source>
         <translation>
-            <numerusform>an hour</numerusform>
-            <numerusform>%n hours</numerusform>
+            <numerusform> an hour</numerusform>
+            <numerusform> %n hours</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <location filename="../src/dgui/gui_wallet_global.cpp" line="168"/>
         <source>%n minute(s)</source>
         <translation>
-            <numerusform>a minute</numerusform>
-            <numerusform>%n minutes</numerusform>
+            <numerusform> a minute</numerusform>
+            <numerusform> %n minutes</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <location filename="../src/dgui/gui_wallet_global.cpp" line="170"/>
         <source>%n second(s)</source>
         <translation>
-            <numerusform>a second</numerusform>
-            <numerusform>%n seconds</numerusform>
+            <numerusform> a second</numerusform>
+            <numerusform> %n seconds</numerusform>
         </translation>
     </message>
     <message>
