@@ -250,16 +250,9 @@ public:
    void operator()(const T& op)const {
       detail.operation_type = "";
    }
-
-   void operator()(const transfer_operation& op)const {
-      detail.operation_type = "Transfer";
-      detail.from_account = op.from;
-      detail.to_account = op.to;
-      detail.transaction_amount = op.amount;
-      detail.transaction_fee = op.fee;
-      detail.description = "";
-   }
-
+   
+   void operator()(const transfer_operation& op)const;
+   
    void operator()(const account_create_operation& op)const {
       detail.operation_type = "Create account";
       detail.from_account = op.registrar;
@@ -2897,6 +2890,17 @@ public:
    mutable map<asset_id_type, asset_object> _asset_cache;
    vector<shared_ptr<graphene::wallet::detail::submit_transfer_listener>> _package_manager_listeners;
 };
+   
+   void operation_detail_extractor::operator()(const transfer_operation& op) const
+   {
+      detail.operation_type = "Transfer";
+      detail.from_account = op.from;
+      detail.to_account = op.to;
+      detail.transaction_amount = op.amount;
+      detail.transaction_fee = op.fee;
+      if ( op.memo )
+         detail.description = op.memo->get_message(*wif_to_key( wallet._keys.at(op.memo->to) ), op.memo->from);
+   }
 
    std::string operation_printer::fee(const asset& a)const {
       out << "   (Fee: " << wallet.get_asset(a.asset_id).amount_to_pretty_string(a) << ")";
