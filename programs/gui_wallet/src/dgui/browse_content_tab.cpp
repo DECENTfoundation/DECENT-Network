@@ -30,13 +30,13 @@ BrowseContentTab::BrowseContentTab(QWidget* pParent)
 , m_pDetailsSignalMapper(nullptr)
 {
    m_pTableWidget->set_columns({
-      {"Title", 20},
-      {"Author", 15, "author"},
-      {"Rating", 5, "rating"},
-      {"Size", 5, "size"},
-      {"Price", 5, "price"},
-      {"Uploaded", 7, "created"},
-      {"Expiration", 7, "expiration"},
+      {tr("Title"), 20},
+      {tr("Author"), 15, "author"},
+      {tr("Rating"), 5, "rating"},
+      {tr("Size"), 5, "size"},
+      {tr("Price"), 5, "price"},
+      {tr("Uploaded"), 7, "created"},
+      {tr("Expiration"), 7, "expiration"},
       {" ", -50},
    });
 
@@ -45,7 +45,7 @@ BrowseContentTab::BrowseContentTab(QWidget* pParent)
    pLabelSearchIcon->setPixmap(px_search_icon);
 
    QLineEdit* pSearchTerm = new QLineEdit(this);
-   pSearchTerm->setPlaceholderText("Search Content");
+   pSearchTerm->setPlaceholderText(tr("Search Content"));
    pSearchTerm->setFixedHeight(54);
    pSearchTerm->setStyleSheet(d_lineEdit);
    pSearchTerm->setAttribute(Qt::WA_MacShowFocusRect, 0);

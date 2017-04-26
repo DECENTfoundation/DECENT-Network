@@ -20,8 +20,8 @@ using namespace gui_wallet;
 
 RichDialogBase::RichDialogBase(QString title)
 {
-    m_ok_button.setText("Import");
-    m_cancel_button.setText("Cancel");
+    m_ok_button.setText(tr("Import"));
+    m_cancel_button.setText(tr("Cancel"));
     m_ok_button.setFixedSize(140, 40);
     m_cancel_button.setFixedSize(140, 40);
     m_buttons_layout.setSpacing(20);
@@ -77,12 +77,12 @@ RichDialog::RichDialog(int a_num_of_text_boxes  , QString title)
     m_pTextBoxes = new QLineEdit[a_num_of_text_boxes];
     connect(&m_pTextBoxes[0], SIGNAL(returnPressed()), &m_ok_button, SIGNAL(LabelClicked()));
     connect(&m_pTextBoxes[1], SIGNAL(returnPressed()), &m_ok_button, SIGNAL(LabelClicked()));
-    m_pTextBoxes[0].setPlaceholderText(QString("Account"));
+    m_pTextBoxes[0].setPlaceholderText((tr("Account")));
     m_pTextBoxes[0].setAttribute(Qt::WA_MacShowFocusRect, 0);
     m_pTextBoxes[0].setFixedSize(300, 44);
     m_pTextBoxes[0].setStyleSheet(d_text_box);
 
-    m_pTextBoxes[1].setPlaceholderText(QString("Key"));
+    m_pTextBoxes[1].setPlaceholderText((tr("Key")));
     m_pTextBoxes[1].setAttribute(Qt::WA_MacShowFocusRect, 0);
     m_pTextBoxes[1].setFixedSize(300, 44);
     m_pTextBoxes[1].setStyleSheet(d_text_box);
@@ -126,8 +126,8 @@ RET_TYPE RichDialog::execRD(const QPoint* a_pMove, std::vector<std::string>& a_c
 //Send Dialog *********************************************************
 SendDialogBase::SendDialogBase(QString title)
 {
-   m_ok_button.setText("Send");
-   m_cancel_button.setText("Cancel");
+   m_ok_button.setText(tr("Send"));
+   m_cancel_button.setText(tr("Cancel"));
    m_ok_button.setFixedSize(140, 40);
    m_cancel_button.setFixedSize(140, 40);
    m_buttons_layout.setSpacing(20);
@@ -187,18 +187,18 @@ SendDialog::SendDialog(int a_num_of_text_boxes  , QString title)
    connect(&m_pTextBoxes[1], SIGNAL(returnPressed()), &m_ok_button, SIGNAL(LabelClicked()));
    connect(&m_pTextBoxes[2], SIGNAL(returnPressed()), &m_ok_button, SIGNAL(LabelClicked()));
    
-   m_pTextBoxes[0].setPlaceholderText(QString("Account"));
+   m_pTextBoxes[0].setPlaceholderText(QString(tr("Account")));
    m_pTextBoxes[0].setAttribute(Qt::WA_MacShowFocusRect, 0);
    m_pTextBoxes[0].setFixedSize(300, 44);
    m_pTextBoxes[0].setStyleSheet(d_text_box);
    
    m_pTextBoxes[1].setValidator(new QDoubleValidator(0.001, 100000, 4, this));
-   m_pTextBoxes[1].setPlaceholderText(QString("Amount"));
+   m_pTextBoxes[1].setPlaceholderText(QString(tr("Amount")));
    m_pTextBoxes[1].setAttribute(Qt::WA_MacShowFocusRect, 0);
    m_pTextBoxes[1].setFixedSize(300, 44);
    m_pTextBoxes[1].setStyleSheet(d_text_box);
    
-   m_pTextBoxes[2].setPlaceholderText(QString("Memo"));
+   m_pTextBoxes[2].setPlaceholderText(QString(tr("Memo")));
    m_pTextBoxes[2].setAttribute(Qt::WA_MacShowFocusRect, 0);
    m_pTextBoxes[2].setFixedSize(300, 44);
    m_pTextBoxes[2].setStyleSheet(d_text_box);
@@ -238,13 +238,13 @@ void SendDialog::sendDCT()
    
    if (message.empty())
    {
-      msgBox->setWindowTitle("Success");
+      msgBox->setWindowTitle(tr("Success"));
       msgBox->setText(tr("Success"));
       close();
    }
    else
    {
-      msgBox->setWindowTitle("Error");
+      msgBox->setWindowTitle(tr("Error"));
       msgBox->setText(tr("Failed to send DCT"));
       msgBox->setDetailedText(message.c_str());
    }

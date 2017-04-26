@@ -712,7 +712,7 @@ namespace decent { namespace package {
 
     void PackageInfo::create_proof_of_custody(const decent::encrypt::CustodyData& cd, decent::encrypt::CustodyProof& proof)const {
         //assume the data are downloaded and available
-
+       FC_ASSERT(cd.n < 10000000 );
        int ret = decent::encrypt::CustodyUtils::instance().create_proof_of_custody(get_content_file(), cd, proof);
        if( ret != 0 )
           FC_THROW("Failed to create custody data");
@@ -1356,6 +1356,8 @@ int package_object::get_size() const {
 
 
 uint32_t package_object::create_proof_of_custody(const decent::encrypt::CustodyData& cd, decent::encrypt::CustodyProof& proof) const {
+   FC_ASSERT(cd.n < 10000000 );
+
    return package_manager::instance().create_proof_of_custody(get_content_file(), cd, proof);
 }
 

@@ -71,7 +71,7 @@ class QTimer;
 namespace gui_wallet
 {
    std::string CalculateRemainingTime(QDateTime const& dt, QDateTime const& dtFuture);
-   std::string CalculateRemainingTime_Behind(QDateTime const& dt, QDateTime const& dtFuture);
+   QString CalculateRemainingTime_Behind(QDateTime const& dt, QDateTime const& dtFuture);
    void ShowMessageBox(QString const& strTitle,
                        QString const& strMessage,
                        QString const& strDetailedText = QString());
@@ -256,9 +256,9 @@ namespace gui_wallet
 
    struct DecentColumn
    {
-      DecentColumn(std::string title, int size, std::string const& sortid = std::string());
+      DecentColumn(QString title, int size, std::string const& sortid = std::string());
       
-      std::string title;
+      QString title;
       int size; // Negative value of size means absolute value of width, positive is weighted value
       std::string sortid; // "+author" means sort by author ascending "-author" descending
    };

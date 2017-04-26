@@ -152,10 +152,10 @@ void Mainwindow_gui_wallet::slot_query_blockchain()
 {
    QDateTime qdt;
    qdt.setTime_t(std::chrono::system_clock::to_time_t(Globals::instance().getWallet().HeadBlockTime()));
-   std::string str_result = CalculateRemainingTime_Behind(qdt, QDateTime::currentDateTime());
-
-   if (false == str_result.empty())
-      Globals::instance().statusShowMessage(str_result.c_str(), 5000);
+   QString str_result = CalculateRemainingTime_Behind(qdt, QDateTime::currentDateTime());
+   std::string result = str_result.toStdString();
+   if (false == result.empty())
+      Globals::instance().statusShowMessage(result.c_str(), 5000);
 }
 
 void Mainwindow_gui_wallet::slot_connecting_progress(std::string const& str_progress)
@@ -331,7 +331,7 @@ void Mainwindow_gui_wallet::UpdateAccountBalances(const std::string& username) {
    json allAssets;
    std::string getAssetsCommand = "list_assets \"\" 100";
    if (!RunTaskParse(getAssetsCommand, allAssets)) {
-      ALERT_DETAILS("Could not get account balances", allAssets.get<string>().c_str());
+      ALERT_DETAILS(tr("Could not get account balances").toStdString(), allAssets.get<string>().c_str());
       return;
    }
    
@@ -340,7 +340,7 @@ void Mainwindow_gui_wallet::UpdateAccountBalances(const std::string& username) {
    json allBalances;
 
    if (!RunTaskParse(csLineToRun, allBalances)) {
-      ALERT_DETAILS("Could not get account balances", allBalances.get<string>().c_str());
+      ALERT_DETAILS(tr("Could not get account balances").toStdString(), allBalances.get<string>().c_str());
       return;
    }
    
@@ -407,7 +407,7 @@ void Mainwindow_gui_wallet::LockSlot()
     try {
         RunTask(csLine, dummy);
     } catch (std::exception& ex) {
-        ALERT_DETAILS("Unable to lock the wallet", ex.what());
+        ALERT_DETAILS(tr("Unable to lock the wallet").toStdString(), ex.what());
     }
     
     UpdateLockedStatus();
@@ -438,7 +438,7 @@ void Mainwindow_gui_wallet::UnlockSlot()
     json result;
    
     if (!RunTaskParse(csPassLine, result)) {
-       ALERT_DETAILS("Unable to unlock the wallet", result.get<std::string>().c_str());
+       ALERT_DETAILS(tr("Unable to unlock the wallet").toStdString(), result.get<std::string>().c_str());
        return;
     }
     
@@ -464,7 +464,7 @@ void Mainwindow_gui_wallet::UpdateLockedStatus()
    }
    catch (const std::exception& ex)
    {
-      ALERT_DETAILS("Unable to get wallet lock status", ex.what());
+      ALERT_DETAILS(tr("Unable to get wallet lock status").toStdString(), ex.what());
       m_locked = true;
    }
 
@@ -530,7 +530,7 @@ void Mainwindow_gui_wallet::CheckDownloads()
 
 
 void Mainwindow_gui_wallet::DisplayConnectionError(std::string errorMessage) {
-   ALERT_DETAILS("Could not connect to wallet", errorMessage.c_str());
+   ALERT_DETAILS(tr("Could not connect to wallet").toStdString(), errorMessage.c_str());
 }
 
 
@@ -573,7 +573,7 @@ void Mainwindow_gui_wallet::DisplayWalletContentGUI(bool isNewWallet)
    catch (const std::exception& ex)
    {
       //ALERT_DETAILS("Failed to get account information", ex.what());
-      QMessageBox::critical(this, "Error", QString("Failed to get account information - %1").arg(ex.what()));
+      QMessageBox::critical(this, "Error", QString(tr("Failed to get account information - %1")).arg(ex.what()));
    }
 }
 
@@ -583,11 +583,11 @@ void Mainwindow_gui_wallet::ImportKeySlot()
     if(m_import_key_dlg != nullptr)
     {
        delete m_import_key_dlg;
-       m_import_key_dlg = new RichDialog(2 , "key import");
+       m_import_key_dlg = new RichDialog(2 , tr("key import"));
     }
     else
     {
-       m_import_key_dlg = new RichDialog(2 , "key import");
+       m_import_key_dlg = new RichDialog(2 , tr("key import"));
     }
     std::vector<std::string> cvsUsKey(2);
     QComboBox& cUsersCombo = *m_pCentralWidget->usersCombo();
@@ -621,7 +621,7 @@ void Mainwindow_gui_wallet::ImportKeySlot()
         hasError = true;
     }
     if (hasError) {
-        ALERT_DETAILS("Can not import key.", result.c_str());
+        ALERT_DETAILS(tr("Can not import key.").toStdString(), result.c_str());
     } else {
         DisplayWalletContentGUI(false);
     }
@@ -637,11 +637,11 @@ void Mainwindow_gui_wallet::SendDCTSlot()
    if(m_sendDCT_dialog != nullptr)
    {
       delete m_sendDCT_dialog;
-      m_sendDCT_dialog = new SendDialog(3, "Send DCT");
+      m_sendDCT_dialog = new SendDialog(3, tr("Send DCT"));
    }
    else
    {
-      m_sendDCT_dialog = new SendDialog(3, "Send DCT");
+      m_sendDCT_dialog = new SendDialog(3, tr("Send DCT"));
    }
    std::vector<std::string> cvsUsKey(3);
    QPoint thisPos = pos();
@@ -728,7 +728,7 @@ void Mainwindow_gui_wallet::SetPassword()
       }
       catch (const std::exception& ex)
       {
-         ALERT_DETAILS("Unable to unlock the wallet", ex.what());
+         ALERT_DETAILS(tr("Unable to unlock the wallet").toStdString(), ex.what());
       }
    }
 }

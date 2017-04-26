@@ -34,8 +34,8 @@ Overview_tab::Overview_tab(class Mainwindow_gui_wallet* a_pPar)
 , table_widget(this)
 {
    table_widget.set_columns({
-      {"Account ID", 40, "id"},
-      {"Account", 40, "name"},
+      {tr("Account ID"), 40, "id"},
+      {tr("Account"), 40, "name"},
       {"", 10},
       {"", 10}
    });
@@ -53,7 +53,7 @@ Overview_tab::Overview_tab(class Mainwindow_gui_wallet* a_pPar)
    
    search_label.setSizeIncrement(100,40);
    search_label.setPixmap(image);
-   search.setPlaceholderText(QString("Search"));
+   search.setPlaceholderText(QString(tr("Search")));
    search.setStyleSheet(d_lineEdit);
    search.setAttribute(Qt::WA_MacShowFocusRect, 0);
    search.setFixedHeight(54);
@@ -166,15 +166,15 @@ void Overview_tab::buttonPressed()
       
       QZebraWidget* info_window = new QZebraWidget();
       
-      info_window->AddInfo("Registrar", registrar);
-      info_window->AddInfo("Referrer", referrer);
-      info_window->AddInfo("Lifetime Referrer", lifetime_referrer);
-      info_window->AddInfo("Network Fee", network_fee_percentage);
-      info_window->AddInfo("Lifetime Referrer Fee", lifetime_referrer_fee_percentage);
-      info_window->AddInfo("Referrer Rewards Percentage", referrer_rewards_percentage);
+      info_window->AddInfo(tr("Registrar"), registrar);
+      info_window->AddInfo(tr("Referrer"), referrer);
+      info_window->AddInfo(tr("Lifetime Referrer"), lifetime_referrer);
+      info_window->AddInfo(tr("Network Fee"), network_fee_percentage);
+      info_window->AddInfo(tr("Lifetime Referrer Fee"), lifetime_referrer_fee_percentage);
+      info_window->AddInfo(tr("Referrer Rewards Percentage"), referrer_rewards_percentage);
       
       
-      info_window->setWindowTitle(QString::fromStdString(name) + tr(" (") + QString::fromStdString(id) + tr(")"));
+      info_window->setWindowTitle(QString::fromStdString(name) + " (" + QString::fromStdString(id) + ")");
       info_window->setFixedSize(620,420);
       info_window->show();
    } catch(...) {

@@ -2272,9 +2272,6 @@ public:
          sha_key._hash[3] = 0;
 #endif
 
-         decent::encrypt::CustodyData cd;
-
-         
          uint32_t quorum = std::max((vector<account_id_type>::size_type)1, seeders.size()/3);
          ShamirSecret ss(quorum, seeders.size(), secret);
          ss.calculate_split();
@@ -2296,17 +2293,14 @@ public:
          submit_op.quorum = quorum;
          submit_op.expiration = expiration;
          submit_op.synopsis = synopsis;
-         submit_op.cd = cd;
-         
-         
-         
-         
+
          auto package_handle = package_manager.get_package(content_dir, samples_dir, sha_key);
          shared_ptr<submit_transfer_listener> listener_ptr = std::make_shared<submit_transfer_listener>(*this, package_handle, submit_op, protocol);
          _package_manager_listeners.push_back(listener_ptr);
          
          package_handle->add_event_listener(listener_ptr);
          package_handle->create(false);
+         submit_op.cd = package_handle->get_custody_data();
 
      
          return fc::ripemd160();

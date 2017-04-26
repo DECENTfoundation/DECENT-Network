@@ -62,6 +62,31 @@ public:
 typedef graphene::chain::object_id< SEEDING_PLUGIN_SPACE_ID, seeding_object_type,  my_seeding_object>     my_seeding_id_type;
 typedef graphene::chain::object_id< SEEDING_PLUGIN_SPACE_ID, seeding_object_type,  my_seeder_object>     my_seeder_id_type;
 
+struct by_id;
+struct by_URI;
+struct by_hash;
+struct by_seeder;
+
+typedef multi_index_container<
+      my_seeder_object,
+      indexed_by<
+            ordered_unique< tag<by_id>, member< object, object_id_type, &object::id >>,
+            ordered_unique< tag< by_seeder >, member< my_seeder_object, account_id_type, &my_seeder_object::seeder> >
+      >
+>my_seeder_object_multi_index_type;
+
+typedef generic_index< my_seeder_object, my_seeder_object_multi_index_type > my_seeder_index;
+
+typedef multi_index_container<
+      my_seeding_object,
+      indexed_by<
+            ordered_unique< tag<by_id>, member< object, object_id_type, &object::id >>,
+            ordered_unique< tag< by_URI >, member< my_seeding_object, string, &my_seeding_object::URI> >,
+            ordered_unique< tag< by_hash >, member< my_seeding_object, fc::ripemd160, &my_seeding_object::_hash> >
+      >
+>my_seeding_object_multi_index_type;
+
+typedef generic_index< my_seeding_object, my_seeding_object_multi_index_type > my_seeding_index;
 
 
 namespace detail {
@@ -172,45 +197,43 @@ public:
 
 class SeedingListener : public decent::package::EventListenerInterface, public std::enable_shared_from_this<SeedingListener>{
 private:
-   const my_seeding_object & _mso;
+   string _url;
    decent::package::package_handle_t _pi;
    seeding_plugin_impl * _my;
 public:
-   SeedingListener(seeding_plugin_impl& impl, const my_seeding_object & mso, const decent::package::package_handle_t pi)
-   : _mso(mso)
-   , _pi(pi)
-   , _my(&impl)
-   {}
-   ~SeedingListener(){}
+   SeedingListener(seeding_plugin_impl& impl, const my_seeding_object & mso, const decent::package::package_handle_t pi){ _url = mso.URI; _pi = pi; _my = &impl;};
+   ~SeedingListener(){};
 
    virtual void package_download_error(const std::string&){
       //In case the download fails, delete the package and seeding objects - TODO_DECENT
       //_my->database().remove(mso);
-      elog("seeding plugin: package_download_error(): Failed downloading package ${s}",("s",_mso));
+      elog("seeding plugin: package_download_error(): Failed downloading package ${s}",("s",_url));
       auto& pm = decent::package::PackageManager::instance();
       pm.release_package(_pi);
    };
 
    virtual void package_download_complete(){
-      ilog("seeding plugin: package_download_complete(): Finished downloading package${u}",("u",_mso.URI));
+      ilog("seeding plugin: package_download_complete(): Finished downloading package${u}",("u",_url));
       auto& pm = decent::package::PackageManager::instance();
+      const auto &mso_idx = _my->database().get_index_type<my_seeding_index>().indices().get<by_URI>();
+      const auto &mso_itr = mso_idx.find(_url);
 
       size_t size = (_pi->get_size() + 1024*1024 - 1) / (1024 * 1024);
-      if ( size > _mso.space ) {
+      if ( size > mso_itr->space ) {
          ilog("seeding plugin: package_download_complete(): Fraud detected: real content size is greater than propagated in blockchain; deleting...");
          pm.release_package(_pi);
          _pi = 0;
          //changing DB outside the main thread does not work properly, let's delete it from there
-         _my->main_thread->async( [=](){ database().remove(_mso); } );
+         _my->main_thread->async( [=](){ database().remove(*mso_itr); } );
          return;
       }
       _pi->start_seeding();
       //Don't block package manager thread for too long.
-      fc::url download_url( _mso.URI );
+      fc::url download_url( _url );
       if(download_url.proto() == "ipfs")
-         _my->service_thread->async( [=](){ _my->generate_por2( _mso, _pi ); _pi->remove(false); });
+         _my->service_thread->async( [=](){ _my->generate_por2( *mso_itr, _pi ); _pi->remove(false); });
       else
-         _my->service_thread->async( [=](){ _my->generate_por2( _mso, _pi ); });
+         _my->service_thread->async( [=](){ _my->generate_por2( *mso_itr, _pi ); });
    };
 
 };
@@ -220,31 +243,6 @@ public:
 
 
 
-struct by_id;
-struct by_URI;
-struct by_hash;
-struct by_seeder;
-
-typedef multi_index_container<
-   my_seeder_object,
-   indexed_by<
-      ordered_unique< tag<by_id>, member< object, object_id_type, &object::id >>,
-      ordered_unique< tag< by_seeder >, member< my_seeder_object, account_id_type, &my_seeder_object::seeder> >
-   >
->my_seeder_object_multi_index_type;
-
-typedef generic_index< my_seeder_object, my_seeder_object_multi_index_type > my_seeder_index;
-
-typedef multi_index_container<
-   my_seeding_object,
-   indexed_by<
-      ordered_unique< tag<by_id>, member< object, object_id_type, &object::id >>,
-      ordered_unique< tag< by_URI >, member< my_seeding_object, string, &my_seeding_object::URI> >,
-      ordered_unique< tag< by_hash >, member< my_seeding_object, fc::ripemd160, &my_seeding_object::_hash> >
-   >
->my_seeding_object_multi_index_type;
-
-typedef generic_index< my_seeding_object, my_seeding_object_multi_index_type > my_seeding_index;
 
 
 class seeding_plugin : public graphene::app::plugin
