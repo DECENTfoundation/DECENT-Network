@@ -1928,7 +1928,7 @@ namespace graphene { namespace wallet {
           * @return nothing
           * @ingroup WalletCLI
           */
-         void print_all_transfers() const;
+         void print_all_packages() const;
 
          /**
           * @brief Print statuses of all active transfers
@@ -2141,7 +2141,7 @@ FC_API( graphene::wallet::wallet_api,
            (download_package)
            (upload_package)
            (remove_package)
-           (print_all_transfers)
+           (print_all_packages)
            (set_transfer_logs)
            (head_block_time)
 )
