@@ -483,7 +483,7 @@ void Upload_popup::updateUploadButtonStatus() {
    
    
    if (isValid) {
-      _upload_button->setText(tr("Publish for ") + QString::number(days * totalPricePerDay) + tr(" DCT"));
+      _upload_button->setText(tr("Publish for") + " " + QString::number(days * totalPricePerDay) + " DCT");
       _upload_button->setEnabled(true);
    } else {
       _upload_button->setText(tr("Publish"));
@@ -602,7 +602,7 @@ void Upload_popup::uploadContent()
       _samplesPath->setText(tr("Samples (optional)"));
 
       
-      SuccessMessageDialog* successMessage = new SuccessMessageDialog(tr("Content is processing...") , tr("Success"));
+      SuccessMessageDialog* successMessage = new SuccessMessageDialog(tr("Content is processing") + "..." , tr("Success"));
       successMessage->execSMD();
       delete successMessage;
 

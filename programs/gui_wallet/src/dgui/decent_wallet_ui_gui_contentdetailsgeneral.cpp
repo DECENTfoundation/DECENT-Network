@@ -18,7 +18,7 @@
 using namespace gui_wallet;
 ContentDetailsGeneral::ContentDetailsGeneral(QWidget* pParent) : ContentDetailsBase(pParent){
    QHBoxLayout* image_layout = new QHBoxLayout;
-   m_label.setText(tr("Get it!"));
+   m_label.setText(tr("Get it") + "!");
    m_label.setFixedWidth(178);
    m_label.setFixedHeight(40);
    
@@ -51,7 +51,7 @@ void ContentDetailsGeneral::LabelPushCallbackGUI()
    reply->setContentsMargins(0, 30, 80, 30);
    reply->setWindowFlags(Qt::WindowTitleHint);
    reply->QDialog::setWindowTitle(tr("Decent-Blockchain Content Distributor"));
-   reply->setText(tr("          Are you sure you want to buy this content?"));
+   reply->setText("          " + tr("Are you sure you want to buy this content") + "?");
    QPushButton* pButtonCencel = reply->addButton(tr("Cencel"), QMessageBox::YesRole);
    QPushButton* pButtonOk = reply->addButton(tr("Get it"), QMessageBox::NoRole);
    pButtonOk->setStyleSheet(d_pButtonOk);

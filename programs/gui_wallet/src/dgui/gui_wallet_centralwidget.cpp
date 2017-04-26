@@ -68,8 +68,8 @@ void AccountBalanceWidget::clear()
 {
     m_nCurrentIndex = -1;
     m_vBalances.clear();
-    m_amount_label.setText(tr(""));
-    m_asset_type_label.setText(tr(""));
+    m_amount_label.setText("");
+    m_asset_type_label.setText("");
 }
 
 
@@ -211,7 +211,7 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     m_pDcLogoWgt = new QWidget;
 
     pHBoxLayoutTmp = new QHBoxLayout;
-    pLabelTmp = new QLabel(tr(""));
+    pLabelTmp = new QLabel("");
     pLabelTmp->setScaledContents(true);
 
     QPixmap m_image1(icon_decent);
@@ -241,7 +241,7 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     
     pHBoxLayoutTmp = new QHBoxLayout;
     
-    pLabelTmp = new QLabel(tr(""));
+    pLabelTmp = new QLabel("");
     
     pLabelTmp->setScaledContents(true);
 
@@ -284,7 +284,7 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     /*//////////////////////////////////////////*/
     m_pBalanceWgt1 = new QWidget;
     pHBoxLayoutTmp = new QHBoxLayout;
-    pLabelTmp = new QLabel(tr(""));
+    pLabelTmp = new QLabel("");
     pLabelTmp->setScaledContents(true);
 
     QPixmap m_image3(icon_balance);
@@ -323,7 +323,7 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
    pHBoxLayoutTmp = new QHBoxLayout;
    sendButton->setScaledContents(true);
    DecentButton* send_text = new DecentButton();
-   send_text->setText(tr("  Send"));
+   send_text->setText("  " + tr("Send"));
    send_text->setStyleSheet("QLabel { color : rgb(0,0,0);}");
 
    sendButton->setFixedSize(30,30);
@@ -429,7 +429,7 @@ QString CentralWigdet::getFilterText()const
         break;
     }
 
-    return tr("");
+    return "";
 }
 
 
