@@ -351,6 +351,7 @@ using namespace decent::encrypt;
 
    struct content_summary
    {
+      string id;
       string author;
       asset price;
       string synopsis;
@@ -547,5 +548,5 @@ FC_REFLECT_DERIVED(graphene::chain::content_object,
                    (URI)(quorum)(key_parts)(_hash)(last_proof)
                    (AVG_rating)(total_rating)(times_bought)(publishing_fee_escrow)(cd) )
 
-FC_REFLECT( graphene::chain::content_summary, (author)(price)(synopsis)(status)(URI)(AVG_rating)(size)(expiration)(created)(times_bought) )
+FC_REFLECT( graphene::chain::content_summary, (id)(author)(price)(synopsis)(status)(URI)(AVG_rating)(size)(expiration)(created)(times_bought) )
 FC_REFLECT( graphene::chain::PriceRegions, (map_price) )

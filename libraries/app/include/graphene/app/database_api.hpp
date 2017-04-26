@@ -708,7 +708,7 @@ namespace graphene { namespace app {
                                                 const string& order,
                                                 const string& user,
                                                 const string& region_code,
-                                                const string& uri,
+                                                const object_id_type& id,
                                                 uint32_t count )const;
          
          /**
@@ -726,7 +726,7 @@ namespace graphene { namespace app {
                                                      const string& term,
                                                      const string& order,
                                                      const string& region_code,
-                                                     const string& uri,
+                                                     const object_id_type& id,
                                                      uint32_t count )const;
 
          /**

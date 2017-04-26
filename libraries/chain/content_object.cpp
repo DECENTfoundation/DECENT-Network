@@ -83,6 +83,7 @@ namespace graphene { namespace chain {
    //
    content_summary& content_summary::set( const content_object& co, const account_object& ao, uint32_t region_code )
    {
+      this->id = string(co.id);
       this->author = ao.name;
 #ifdef PRICE_REGIONS
       optional<asset> op_price = co.price.GetPrice(region_code);

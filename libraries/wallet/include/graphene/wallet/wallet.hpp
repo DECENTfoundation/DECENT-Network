@@ -1803,7 +1803,7 @@ namespace graphene { namespace wallet {
           * @param order Order field
           * @param user Content owner
           * @param region_code Two letter region code
-          * @param uri The URI of content object to start searching from
+          * @param id The id of content object to start searching from
           * @param count Maximum number of contents to fetch (must not exceed 100)
           * @return The contents found
           * @ingroup WalletCLI
@@ -1812,7 +1812,7 @@ namespace graphene { namespace wallet {
                                                 const string& order,
                                                 const string& user,
                                                 const string& region_code,
-                                                const string& uri,
+                                                const string& id,
                                                 uint32_t count )const;
          /**
           * @brief Get a list of contents ordered alphabetically by search term
@@ -1820,7 +1820,7 @@ namespace graphene { namespace wallet {
           * @param term seach term
           * @param order Order field
           * @param region_code Two letter region code
-          * @param uri The URI of content object to start searching from
+          * @param id The id of content object to start searching from
           * @param count Maximum number of contents to fetch (must not exceed 100)
           * @return The contents found
           * @ingroup WalletCLI
@@ -1829,7 +1829,7 @@ namespace graphene { namespace wallet {
                                                      const string& term,
                                                      const string& order,
                                                      const string& region_code,
-                                                     const string& uri,
+                                                     const string& id,
                                                      uint32_t count )const;
 
          /**

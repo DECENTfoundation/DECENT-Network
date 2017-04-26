@@ -4297,10 +4297,10 @@ public:
                                                       const string& order,
                                                       const string& user,
                                                       const string& region_code,
-                                                      const string& uri,
+                                                      const string& id,
                                                       uint32_t count)const
    {
-      return my->_remote_db->search_content(term, order, user, region_code, uri, count);
+      return my->_remote_db->search_content(term, order, user, region_code, object_id_type(id), count);
    }
 
    vector<content_object> wallet_api::list_content_by_author( const string& account_id_or_name )const
@@ -4320,10 +4320,10 @@ public:
                                                            const string& term,
                                                            const string& order,
                                                            const string& region_code,
-                                                           const string& uri,
+                                                           const string& id,
                                                            uint32_t count)const
    {
-      vector<content_summary> result = my->_remote_db->search_user_content(user, term, order, region_code, uri, count);
+      vector<content_summary> result = my->_remote_db->search_user_content(user, term, order, region_code, object_id_type(id), count);
 
       auto packages = PackageManager::instance().get_all_known_packages();
       for (auto package: packages) {

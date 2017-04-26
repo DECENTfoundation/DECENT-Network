@@ -165,8 +165,8 @@ namespace graphene { namespace app {
       optional<content_object> get_content( const string& URI )const;
       vector<content_object> list_content_by_author( const account_id_type& author )const;
       vector<content_summary> list_content( const string& URI_begin, uint32_t count)const;
-      vector<content_summary> search_content( const string& term, const string& order, const string& user, const string& region_code, const string& uri, uint32_t count)const;
-      vector<content_summary> search_user_content( const string& user, const string& term, const string& order, const string& region_code, const string& uri, uint32_t count)const;
+      vector<content_summary> search_content( const string& term, const string& order, const string& user, const string& region_code, const object_id_type& id, uint32_t count)const;
+      vector<content_summary> search_user_content( const string& user, const string& term, const string& order, const string& region_code, const object_id_type& id, uint32_t count)const;
       vector<content_object> list_content_by_bought( const uint32_t count )const;
       vector<seeder_object> list_publishers_by_price( const uint32_t count )const;
       vector<uint64_t> get_content_ratings( const string& URI)const;
@@ -1963,10 +1963,10 @@ namespace graphene { namespace app {
                                                         const string& order,
                                                         const string& user,
                                                         const string& region_code,
-                                                        const string& uri,
+                                                        const object_id_type& id,
                                                         uint32_t count)const
    {
-      return my->search_content(term, order, user, region_code, uri, count);
+      return my->search_content(term, order, user, region_code, id, count);
    }
    
    
@@ -1974,10 +1974,10 @@ namespace graphene { namespace app {
                                                              const string& term,
                                                              const string& order,
                                                              const string& region_code,
-                                                             const string& uri,
+                                                             const object_id_type& id,
                                                              uint32_t count)const
    {
-      return my->search_user_content( user, term, order, region_code, uri, count);
+      return my->search_user_content( user, term, order, region_code, id, count);
    }
    
    
@@ -2013,10 +2013,10 @@ namespace graphene { namespace app {
                                                                   const string& search_term,
                                                                   const string& order,
                                                                   const string& region_code,
-                                                                  const string& uri,
+                                                                  const object_id_type& id,
                                                                   uint32_t count)const
    {
-      return search_content(search_term, order, user, region_code, uri, count);
+      return search_content(search_term, order, user, region_code, id, count);
    }
    
    
@@ -2031,7 +2031,7 @@ namespace graphene { namespace app {
                                    uint32_t count,
                                    const string& user,
                                    const string& region_code,
-                                   const string& uri,
+                                   const object_id_type& id,
                                    vector<content_summary>& result)
       {
          const auto& idx_by_sort_tag = db.get_index_type<content_index>().indices().get<sort_tag>();
@@ -2039,21 +2039,21 @@ namespace graphene { namespace app {
          auto itr_begin = return_one<is_ascending>::choose(idx_by_sort_tag.cbegin(), idx_by_sort_tag.crbegin());
          auto itr_end = return_one<is_ascending>::choose(idx_by_sort_tag.cend(), idx_by_sort_tag.crend());
 
-         const auto& idx_by_uri = db.get_index_type<content_index>().indices().get<by_URI>();
-         auto itr_uri = idx_by_uri.find(uri);
+         const auto& idx_by_id = db.get_index_type<content_index>().indices().get<by_id>();
+         auto itr_id = idx_by_id.find(id);
 
          auto itr_find = idx_by_sort_tag.end();
-         if (itr_uri != idx_by_uri.end())
-            itr_find = idx_by_sort_tag.find(key_extractor<sort_tag>::get(*itr_uri));
+         if (itr_id != idx_by_id.end())
+            itr_find = idx_by_sort_tag.find(key_extractor<sort_tag>::get(*itr_id));
 
-         // itr_find has the same keys as the object with uri
-         // scan to next items until exactly the object with uri is found
+         // itr_find has the same keys as the object with id
+         // scan to next items until exactly the object with id is found
          auto itr_scan = itr_find;
          while (itr_find != idx_by_sort_tag.end() &&
-                itr_uri != idx_by_uri.end() &&
+                itr_id != idx_by_id.end() &&
                 ++itr_scan != idx_by_sort_tag.end() &&
-                itr_find->URI != itr_uri->URI &&
-                key_extractor<sort_tag>::get(*itr_scan) == key_extractor<sort_tag>::get(*itr_uri))
+                itr_find->id != itr_id->id &&
+                key_extractor<sort_tag>::get(*itr_scan) == key_extractor<sort_tag>::get(*itr_id))
             itr_find = itr_scan;
 
          if (itr_find != idx_by_sort_tag.end())
@@ -2121,7 +2121,7 @@ namespace graphene { namespace app {
                                                              const string& order,
                                                              const string& user,
                                                              const string& region_code,
-                                                             const string& uri,
+                                                             const object_id_type& id,
                                                              uint32_t count)const
    {
       FC_ASSERT( count <= 100 );
@@ -2130,32 +2130,32 @@ namespace graphene { namespace app {
       result.reserve( count );
       
       if (order == "+author")
-         search_content_template<true, by_author>(_db, search_term, count, user, region_code, uri, result);
+         search_content_template<true, by_author>(_db, search_term, count, user, region_code, id, result);
       else if (order == "+rating")
-         search_content_template<true, by_AVG_rating>(_db, search_term, count, user, region_code, uri, result);
+         search_content_template<true, by_AVG_rating>(_db, search_term, count, user, region_code, id, result);
       else if (order == "+size")
-         search_content_template<true, by_size>(_db, search_term, count, user, region_code, uri, result);
+         search_content_template<true, by_size>(_db, search_term, count, user, region_code, id, result);
       else if (order == "+price")
-         search_content_template<true, by_price>(_db, search_term, count, user, region_code, uri, result);
+         search_content_template<true, by_price>(_db, search_term, count, user, region_code, id, result);
       else if (order == "+created")
-         search_content_template<true, by_created>(_db, search_term, count, user, region_code, uri, result);
+         search_content_template<true, by_created>(_db, search_term, count, user, region_code, id, result);
       else if (order == "+expiration")
-         search_content_template<true, by_expiration>(_db, search_term, count, user, region_code, uri, result);
+         search_content_template<true, by_expiration>(_db, search_term, count, user, region_code, id, result);
       
       else if (order == "-author")
-         search_content_template<false, by_author>(_db, search_term, count, user, region_code, uri, result);
+         search_content_template<false, by_author>(_db, search_term, count, user, region_code, id, result);
       else if (order == "-rating")
-         search_content_template<false, by_AVG_rating>(_db, search_term, count, user, region_code, uri, result);
+         search_content_template<false, by_AVG_rating>(_db, search_term, count, user, region_code, id, result);
       else if (order == "-size")
-         search_content_template<false, by_size>(_db, search_term, count, user, region_code, uri, result);
+         search_content_template<false, by_size>(_db, search_term, count, user, region_code, id, result);
       else if (order == "-price")
-         search_content_template<false, by_price>(_db, search_term, count, user, region_code, uri, result);
+         search_content_template<false, by_price>(_db, search_term, count, user, region_code, id, result);
       else if (order == "-created")
-         search_content_template<false, by_created>(_db, search_term, count, user, region_code, uri, result);
+         search_content_template<false, by_created>(_db, search_term, count, user, region_code, id, result);
       else if (order == "-expiration")
-         search_content_template<false, by_expiration>(_db, search_term, count, user, region_code, uri, result);
+         search_content_template<false, by_expiration>(_db, search_term, count, user, region_code, id, result);
       else
-         search_content_template<true, by_URI>(_db, search_term, count, user, region_code, uri, result);
+         search_content_template<true, by_URI>(_db, search_term, count, user, region_code, id, result);
       
       return result;
    }

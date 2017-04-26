@@ -112,7 +112,7 @@ void BrowseContentTab::timeToUpdate(const std::string& result) {
    }
 
    if (contents.size() > m_i_page_size)
-      set_next_page_iterator(contents[m_i_page_size]["URI"].get<std::string>());
+      set_next_page_iterator(contents[m_i_page_size]["id"].get<std::string>());
    else
       set_next_page_iterator(string());
    
