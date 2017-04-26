@@ -62,7 +62,6 @@ using namespace graphene::app;
 using namespace graphene::chain;
 using namespace graphene::utilities;
 using namespace graphene::wallet;
-using namespace graphene::package;
 using namespace std;
 namespace bpo = boost::program_options;
 
