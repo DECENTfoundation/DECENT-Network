@@ -571,6 +571,7 @@ public:
       _wallet.ws_server = initial_data.ws_server;
       _wallet.ws_user = initial_data.ws_user;
       _wallet.ws_password = initial_data.ws_password;
+      decent::package::PackageManager::instance().recover_all_packages();
    }
    virtual ~wallet_api_impl()
    {
@@ -4483,10 +4484,6 @@ public:
       FC_ASSERT(!is_locked());
       fc::sha512 key1;
       aes_key.Encode((byte*)key1._hash, 64);
-      key1._hash[0] = 0;
-      key1._hash[1] = 0;
-      key1._hash[2] = 0;
-      key1._hash[3] = 0;
 
       auto pack = PackageManager::instance().find_package(fc::ripemd160(package_hash));
       if (pack == nullptr) {
@@ -4556,8 +4553,12 @@ void graphene::wallet::detail::submit_transfer_listener::package_seed_complete()
       return package_manager::instance().get_transfer_url(id);
    }
 
-   void wallet_api::print_all_transfers() const {
-   // FC_ASSERT(!is_locked());
+   void wallet_api::print_all_packages() const {
+
+      auto packages = PackageManager::instance().get_all_known_packages();
+      for( auto& package : packages ){
+         cout << "Package: " << package->get_hash().str() <<"\n";
+      }
       package_manager::instance().print_all_transfers();
    }
 

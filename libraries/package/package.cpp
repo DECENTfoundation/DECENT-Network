@@ -311,7 +311,7 @@ namespace decent { namespace package {
                     detail::move_all_except(temp_dir_path, package_dir, paths_to_skip);
                     _package._size = size;
 
-                    remove_all(temp_dir_path);
+                    //remove_all(temp_dir_path);
 
                     PACKAGE_INFO_CHANGE_DATA_STATE(CHECKED);
                     PACKAGE_INFO_CHANGE_MANIPULATION_STATE(MS_IDLE);
@@ -452,7 +452,7 @@ namespace decent { namespace package {
                         dearchiver.extract(_target_dir);
                     }
 
-                    remove_all(temp_dir_path);
+                    //remove_all(temp_dir_path);
 
                     PACKAGE_INFO_CHANGE_DATA_STATE(CHECKED);
                     PACKAGE_INFO_CHANGE_MANIPULATION_STATE(MS_IDLE);
