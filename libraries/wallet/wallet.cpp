@@ -2272,7 +2272,7 @@ public:
          sha_key._hash[3] = 0;
 #endif
 
-         uint32_t quorum = std::max((vector<account_id_type>::size_type)1, seeders.size()/3);
+         uint32_t quorum = std::max((vector<account_id_type>::size_type)1, seeders.size()/3); // TODO_DECENT - quorum >= 2 see also content_submit_operation::validate
          ShamirSecret ss(quorum, seeders.size(), secret);
          ss.calculate_split();
          
