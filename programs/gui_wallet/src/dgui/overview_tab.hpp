@@ -54,7 +54,7 @@ public:
 #endif
    }
    
-   void AddInfo(std::string title, std::string info) {
+   void AddInfo(QString title, std::string info) {
       _subWidgets.push_back(new QWidget());
       _subLayouts.push_back(new QVBoxLayout());
       
@@ -64,7 +64,7 @@ public:
          _subWidgets.back()->setStyleSheet("background-color:rgb(255, 255, 255);");
       }
       
-      QLabel* lblTitle = new QLabel(QString::fromStdString(title));
+      QLabel* lblTitle = new QLabel((title));
       lblTitle->setStyleSheet("font-weight: bold");
       
       QLabel* lblInfo = new QLabel(QString::fromStdString(info));

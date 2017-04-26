@@ -55,12 +55,15 @@ add_executable(DECENT MACOSX_BUNDLE
 
                resources.qrc
                desktop.icns
+
+               stdafx.h
              )
 
 
 
 target_include_directories( DECENT PUBLIC
                             include
+                            .
                           )
 
 target_link_libraries(  DECENT PUBLIC

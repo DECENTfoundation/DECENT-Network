@@ -139,13 +139,17 @@ struct get_impacted_account_visitor
    void operator()( const vesting_balance_withdraw_operation& op ) {}
    void operator()( const custom_operation& op ) {}
    void operator()( const assert_operation& op ) {}
-
    void operator()( const content_submit_operation& op) { _impacted.insert(op.author); }
    void operator()( const request_to_buy_operation& op) { _impacted.insert(op.consumer); }
    void operator()( const leave_rating_and_comment_operation& op) { _impacted.insert(op.consumer);}
    void operator()( const ready_to_publish_operation& op) { _impacted.insert(op.seeder); }
    void operator()( const proof_of_custody_operation& op) { _impacted.insert(op.seeder);}
    void operator()( const deliver_keys_operation& op) {  _impacted.insert(op.seeder);}
+   void operator()( const subscribe_operation& op) { _impacted.insert(op.from); _impacted.insert(op.to); }
+   void operator()( const subscribe_by_author_operation& op) { _impacted.insert(op.from); _impacted.insert(op.to); }
+   void operator()( const automatic_renewal_of_subscription_operation& op) { _impacted.insert(op.consumer); }
+   void operator()( const disallow_automatic_renewal_of_subscription_operation& op) { _impacted.insert(op.consumer); }
+   void operator()( const renewal_of_subscription_operation& op) { _impacted.insert(op.consumer); }
    void operator()( const return_escrow_submission_operation& op) {  _impacted.insert(op.author);}
    void operator()( const return_escrow_buying_operation& op) {  _impacted.insert(op.consumer);}
    void operator()( const report_stats_operation& op) { _impacted.insert(op.consumer);}

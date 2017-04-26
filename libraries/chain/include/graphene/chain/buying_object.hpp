@@ -128,7 +128,7 @@ using decent::encrypt::DInteger;
 FC_REFLECT_DERIVED(graphene::chain::buying_object,
                    (graphene::db::object),
                    (consumer)(URI)(synopsis)(price)(paid_price)(seeders_answered)(size)(rating)(average_rating)(expiration_time)(pubKey)(key_particles)
-                   (expired)(delivered)(expiration_or_delivery_time)(rated)(created)(expiration)(region_code_from) )
+                   (expired)(delivered)(expiration_or_delivery_time)(rated_or_commented)(created)(expiration)(region_code_from) )
 #else
 FC_REFLECT_DERIVED(graphene::chain::buying_object,
                    (graphene::db::object),

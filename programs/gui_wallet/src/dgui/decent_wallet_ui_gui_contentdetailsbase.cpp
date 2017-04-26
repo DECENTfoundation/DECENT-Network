@@ -22,31 +22,32 @@
 #ifndef _MSC_VER
 #include "json.hpp"
 #include <QFrame>
+#include <QObject>
 #include <graphene/chain/content_object.hpp>
 #endif
 
 using namespace nlohmann;
 using namespace gui_wallet;
 
-static const char* s_vcpcFieldsGeneral[NUMBER_OF_SUB_LAYOUTS2] = {
-    "Author", "Expiration","Uploaded","Amount",
-    "Average Rating","Size","Times Bought" 
-};
-
-
-static const char* s_vcpcFieldsBougth[NUMBER_OF_SUB_LAYOUTS2 - 1] = {
-    "Author","Created","Amount",
-    "Average Rating","Size","Times Bought"
-};
-
-typedef const char* TypeCpcChar;
-typedef TypeCpcChar* NewType;
-
-static NewType  s_vFields[]={ s_vcpcFieldsGeneral, s_vcpcFieldsBougth, s_vcpcFieldsBougth };
 
 ContentDetailsBase::ContentDetailsBase(QWidget* pParent)
 : QDialog(pParent)
 {
+   s_vcpcFieldsGeneral.push_back(tr("Author"));
+   s_vcpcFieldsGeneral.push_back(tr("Expiration"));
+   s_vcpcFieldsGeneral.push_back(tr("Uploaded"));
+   s_vcpcFieldsGeneral.push_back(tr("Amount"));
+   s_vcpcFieldsGeneral.push_back(tr("Average Rating"));
+   s_vcpcFieldsGeneral.push_back(tr("Size"));
+   s_vcpcFieldsGeneral.push_back(tr("Times Bought"));
+   
+   s_vcpcFieldsBougth.push_back(tr("Author"));
+   s_vcpcFieldsBougth.push_back(tr("Created"));
+   s_vcpcFieldsBougth.push_back(tr("Amount"));
+   s_vcpcFieldsBougth.push_back(tr("Average Rating"));
+   s_vcpcFieldsBougth.push_back(tr("Size"));
+   s_vcpcFieldsBougth.push_back(tr("Times Bought"));
+   
 #ifdef _MSC_VER
    int height = style()->pixelMetric(QStyle::PM_TitleBarHeight);
    setWindowIcon(height > 32 ? QIcon(":/icon/images/windows_decent_icon_32x32.png")
@@ -88,7 +89,6 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details, bool bSil
             m_RateText = new QLabel;
             
             if (m_currentMyRating > 0) {
-                m_rating = m_currentMyRating;
                 m_RateText->setText( tr("You rated:"));
             } else {
                 m_RateText->setText( tr("Please Rate:"));
@@ -202,13 +202,21 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details, bool bSil
    
     int i,nIndexZuyg(0);
     
-    NewType vNames = s_vFields[a_cnt_details.type];
-    
-    for(i = 0; i < NUMBER_OF_SUB_LAYOUTS2;++i,nIndexZuyg+=2)
+    if (a_cnt_details.type == DCT::GENERAL)
     {
-       m_vLabels[nIndexZuyg].setText(tr(vNames[i]));
+       for(i = 0; i < NUMBER_OF_SUB_LAYOUTS2;++i,nIndexZuyg+=2)
+       {
+          m_vLabels[nIndexZuyg].setText(s_vcpcFieldsGeneral[i]);
+       }
     }
-    
+   else
+   {
+      for(i = 0; i < NUMBER_OF_SUB_LAYOUTS2 - 1;++i,nIndexZuyg+=2)
+      {
+         m_vLabels[nIndexZuyg].setText(s_vcpcFieldsBougth[i]);
+      }
+   }
+   
     std::string e_str = "";
     if (a_cnt_details.type == DCT::BOUGHT || a_cnt_details.type == DCT::WAITING_DELIVERY) {
         e_str = (m_pContentInfo->expiration);
@@ -301,13 +309,16 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details, bool bSil
 
 void ContentDetailsBase::LeaveComment()
 {
-   std::string leave_result;
+   if ( m_currentMyRating > 0 ){
+      return;
+   }
    
+   std::string leave_result;
    try {
       RunTask("leave_rating_and_comment "
               "\"" + Globals::instance().getCurrentUser() + "\" "
               "\"" + m_pContentInfo->URI + "\" "
-              "\"" + std::to_string(m_rating) + "\" "
+              "\"" + std::to_string(m_currentMyRating) + "\" "
               "\"" + escape_string(m_comment->toPlainText().toStdString()) + "\" "
               "\"true\"", leave_result);
 
@@ -319,15 +330,23 @@ void ContentDetailsBase::LeaveComment()
 void ContentDetailsBase::MouseClickedStar(int index) {
     if (m_currentMyRating > 0)
         return;
-    m_rating = ++index;
+
+   for (int i = index + 1; i < 5; ++i) {
+      stars_labels[i]->setCheckState(Qt::Unchecked);
+   }
+   
+   for (int i = 0; i < index + 1; ++i) {
+      stars_labels[i]->setCheckState(Qt::Checked);
+   }
+
    
     std::string result;
     try {
         RunTask("leave_rating \"" + Globals::instance().getCurrentUser() + "\" \"" + m_pContentInfo->URI + "\" " + std::to_string(index + 1) + " true", result);
-        
-        m_currentMyRating = (index + 1);
+       
+       m_currentMyRating = (index + 1);
     } catch (...) {} // Ignore for now;
-    
+   
 }
 
 
@@ -398,7 +417,7 @@ void ContentDetailsBase::popup_for_purchased(int row_star)
 
    
     QHBoxLayout* desc_lay = new QHBoxLayout();
-    m_desc.setText("Description\n\n");
+    m_desc.setText(tr("Description\n\n"));
     m_desc.setStyleSheet(border_0);
     m_desc.setReadOnly(true);
     m_desc.setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);

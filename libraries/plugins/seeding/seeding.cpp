@@ -77,7 +77,7 @@ void seeding_plugin_impl::handle_content_submit(const operation_history_object &
                     so.cd = cs_op.cd;
                });
                auto so_id = mso.id;
-               ilog("seeding plugin:  handle_content_submit() created new content_object ${s}",("s",so_id));
+               ilog("seeding plugin:  handle_content_submit() created new content_object ${s}",("s",mso));
                db.modify<my_seeder_object>(*seeder_itr, [&](my_seeder_object &mso) {
                     mso.free_space -= cs_op.size ; //we allocate the whole megabytes per content
                });
@@ -88,7 +88,7 @@ void seeding_plugin_impl::handle_content_submit(const operation_history_object &
                     active_downloads[id] = so_id;
                     */
                     auto& pm = decent::package::PackageManager::instance();
-                    auto package_handle = pm.get_package(cs_op.URI);
+                    auto package_handle = pm.get_package(mso.URI);
                     decent::package::event_listener_handle_t sl = std::make_shared<SeedingListener>(*this, mso , package_handle);
                     package_handle->add_event_listener(sl);
                     package_handle->download(false);
@@ -125,7 +125,7 @@ void seeding_plugin_impl::handle_request_to_buy(const operation_history_object &
       FC_THROW("cannot find content by URI");
    const content_object &co = *citr;
    if(co.expiration < fc::time_point::now() ){
-      //if the content expired let the PoR generation cycle take care of the cleaning up...
+      //if the content expired let the PoR generation cycle, return. PoR cycle will take care of the cleaning up...
       return;
    }
 
@@ -398,7 +398,7 @@ void seeding_plugin_impl::send_ready_to_publish()
       sritr++;
    }
    fc::time_point next_wakeup(fc::time_point::now() + fc::microseconds( (uint64_t) 1000000 * (60 * 60)));
-   ilog("seeding plugin_impl: planning next PoR at ${t}",("t",next_wakeup ));
+   ilog("seeding plugin_impl: planning next send_ready_to_publish at ${t}",("t",next_wakeup ));
    service_thread->schedule([=](){ send_ready_to_publish();}, next_wakeup, "Seeding plugin RtP generate" );
    ilog("seeding plugin_impl: send_ready_to_publish() end");
 }
@@ -436,7 +436,8 @@ void seeding_plugin_impl::restart_downloads(){
         const auto& cidx = database().get_index_type<my_seeding_index>().indices().get<by_URI>();
         auto citr = cidx.begin();
         while(citr!=cidx.end()) {
-           int already_have = false;
+           elog("restarting downloads, dealing with package ${u}", ("u", citr->URI));
+           bool already_have = false;
            decent::package::package_handle_t package_handle(0);
            for( auto package : packages )
               if( package->get_hash() == citr->_hash ) {
@@ -447,6 +448,7 @@ void seeding_plugin_impl::restart_downloads(){
            if(already_have){
               generate_por2( *citr, package_handle );
            }else{
+              elog("restarting downloads, re-downloading package ${u}", ("u", citr->URI));
               package_handle = pm.get_package(citr->URI);
               decent::package::event_listener_handle_t sl = std::make_shared<SeedingListener>(*this, *citr , package_handle);
               package_handle->add_event_listener(sl);

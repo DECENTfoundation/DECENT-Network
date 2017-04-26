@@ -42,7 +42,7 @@ using namespace graphene::chain;
 
 static const char genesis_json_array[132][40+1] =
 {
-"{\"initial_timestamp\":\"2017-03-09T14:26:4",
+"{\"initial_timestamp\":\"2017-04-18T13:27:4",
 "0\",\"max_core_supply\":\"6000000000000000\",",
 "\"initial_parameters\":{\"current_fees\":{\"p",
 "arameters\":[[0,{\"fee\":10000000,\"price_pe",
@@ -178,7 +178,7 @@ static const char genesis_json_array[132][40+1] =
 
 chain_id_type get_egenesis_chain_id()
 {
-   return chain_id_type( "6af7b83a55a87b52d038aaf9584402edb4ec7624c1b0ec6c80b008e7987f86f2" );
+   return chain_id_type( "de58253de2ce168ae549b28d18fce0d212ef7c881db88bc1e6b098435fb7a55e" );
 }
 
 void compute_egenesis_json( std::string& result )
@@ -195,7 +195,7 @@ void compute_egenesis_json( std::string& result )
 
 fc::sha256 get_egenesis_json_hash()
 {
-   return fc::sha256( "6af7b83a55a87b52d038aaf9584402edb4ec7624c1b0ec6c80b008e7987f86f2" );
+   return fc::sha256( "de58253de2ce168ae549b28d18fce0d212ef7c881db88bc1e6b098435fb7a55e" );
 }
 
 } }
