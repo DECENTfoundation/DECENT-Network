@@ -1885,7 +1885,7 @@ namespace graphene { namespace wallet {
           * @return package hash (ripemd160 hash of package content) and content custody data
           * @ingroup WalletCLI
           */
-         std::pair<string, decent::encrypt::CustodyData> create_package(const std::string& content_dir, const std::string& samples_dir, const DInteger& aes_key) const;
+         //std::pair<string, decent::encrypt::CustodyData> create_package(const std::string& content_dir, const std::string& samples_dir, const DInteger& aes_key) const;
 
 
          /**
@@ -2136,7 +2136,7 @@ FC_API( graphene::wallet::wallet_api,
            (list_imported_ipfs_IDs)
            (list_packages)
            (packages_path)
-           (create_package)
+          // (create_package)
            (extract_package)
            (download_package)
            (upload_package)

@@ -160,7 +160,7 @@ namespace decent { namespace package {
                               PackageManager& manager,
                               const boost::filesystem::path& content_dir_path,
                               const boost::filesystem::path& samples_dir_path,
-                              const fc::sha512& key)
+                              const fc::sha256& key)
                 : PackageTask(package)
                 , _content_dir_path(content_dir_path)
                 , _samples_dir_path(samples_dir_path)
@@ -311,7 +311,7 @@ namespace decent { namespace package {
                     detail::move_all_except(temp_dir_path, package_dir, paths_to_skip);
                     _package._size = size;
 
-                    //remove_all(temp_dir_path);
+                    remove_all(temp_dir_path);
 
                     PACKAGE_INFO_CHANGE_DATA_STATE(CHECKED);
                     PACKAGE_INFO_CHANGE_MANIPULATION_STATE(MS_IDLE);
@@ -346,7 +346,7 @@ namespace decent { namespace package {
         private:
             const boost::filesystem::path  _content_dir_path;
             const boost::filesystem::path  _samples_dir_path;
-            const fc::sha512               _key;
+            const fc::sha256               _key;
         };
 
 
@@ -374,7 +374,7 @@ namespace decent { namespace package {
         public:
             explicit UnpackPackageTask(PackageInfo& package,
                                        const boost::filesystem::path& dir_path,
-                                       const fc::sha512& key)
+                                       const fc::sha256& key)
                 : PackageTask(package)
                 , _target_dir(dir_path)
                 , _key(key)
@@ -452,7 +452,7 @@ namespace decent { namespace package {
                         dearchiver.extract(_target_dir);
                     }
 
-                    //remove_all(temp_dir_path);
+                    remove_all(temp_dir_path);
 
                     PACKAGE_INFO_CHANGE_DATA_STATE(CHECKED);
                     PACKAGE_INFO_CHANGE_MANIPULATION_STATE(MS_IDLE);
@@ -483,7 +483,7 @@ namespace decent { namespace package {
 
         private:
             const boost::filesystem::path& _target_dir;
-            const fc::sha512& _key;
+            const fc::sha256& _key;
         };
 
 
@@ -547,7 +547,7 @@ namespace decent { namespace package {
     PackageInfo::PackageInfo(PackageManager& manager,
                              const boost::filesystem::path& content_dir_path,
                              const boost::filesystem::path& samples_dir_path,
-                             const fc::sha512& key)
+                             const fc::sha256& key)
         : _data_state(DS_UNINITIALIZED)
         , _transfer_state(TS_IDLE)
         , _manipulation_state(MS_IDLE)
@@ -634,7 +634,7 @@ namespace decent { namespace package {
         _current_task->start(block);
     }
 
-    void PackageInfo::unpack(const boost::filesystem::path& dir_path, const fc::sha512& key, bool block) {
+    void PackageInfo::unpack(const boost::filesystem::path& dir_path, const fc::sha256& key, bool block) {
         std::lock_guard<std::recursive_mutex> guard(_task_mutex);
 
         _current_task.reset(new detail::UnpackPackageTask(*this, dir_path, key));
@@ -858,7 +858,7 @@ namespace decent { namespace package {
 
     package_handle_t PackageManager::get_package(const boost::filesystem::path& content_dir_path,
                                                  const boost::filesystem::path& samples_dir_path,
-                                                 const fc::sha512& key)
+                                                 const fc::sha256& key)
     {
         std::lock_guard<std::recursive_mutex> guard(_mutex);
         package_handle_t package(new PackageInfo(*this, content_dir_path, samples_dir_path, key));
@@ -1478,7 +1478,7 @@ boost::filesystem::path package_manager::get_libtorrent_config() const {
    return _libtorrent_config_file;
 }
 
-bool package_manager::unpack_package(const path& destination_directory, const package_object& package, const fc::sha512& key) {
+bool package_manager::unpack_package(const path& destination_directory, const package_object& package, const fc::sha256& key) {
    if (!package.is_valid()) {
       FC_THROW("Invalid package");
    }
@@ -1539,7 +1539,7 @@ bool package_manager::unpack_package(const path& destination_directory, const pa
    return true;
 }
 
-package_object package_manager::create_package( const boost::filesystem::path& content_path, const boost::filesystem::path& samples, const fc::sha512& key, decent::encrypt::CustodyData& cd) {
+package_object package_manager::create_package( const boost::filesystem::path& content_path, const boost::filesystem::path& samples, const fc::sha256& key, decent::encrypt::CustodyData& cd) {
    if (!is_directory(content_path) && !is_regular_file(content_path)) {
       FC_THROW("Content path is not directory or file");
    }

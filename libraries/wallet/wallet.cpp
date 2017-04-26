@@ -2262,16 +2262,9 @@ public:
          
          
          
-         CryptoPP::Integer secret(randomGenerator, 512);
-         fc::sha512 sha_key;
-         secret.Encode((byte*)sha_key._hash, 64);
-#ifndef DECENT_LONG_SHAMIR
-         //short Shamir is able to store onlu 256 bites, rest will make content unrecoverable
-         sha_key._hash[0] = 0;
-         sha_key._hash[1] = 0;
-         sha_key._hash[2] = 0;
-         sha_key._hash[3] = 0;
-#endif
+         CryptoPP::Integer secret(randomGenerator, 256);
+         fc::sha256 sha_key;
+         secret.Encode((byte*)sha_key._hash, 32);
 
          uint32_t quorum = std::max((vector<account_id_type>::size_type)1, seeders.size()/3); // TODO_DECENT - quorum >= 2 see also content_submit_operation::validate
          ShamirSecret ss(quorum, seeders.size(), secret);
@@ -4470,20 +4463,20 @@ public:
       return my->_remote_db->list_subscriptions_by_author( account, count);
    }
 
-   std::pair<string, decent::encrypt::CustodyData>  wallet_api::create_package(const std::string& content_dir, const std::string& samples_dir, const DInteger& aes_key) const {
+/*   std::pair<string, decent::encrypt::CustodyData>  wallet_api::create_package(const std::string& content_dir, const std::string& samples_dir, const DInteger& aes_key) const {
       FC_ASSERT(!is_locked());
-      fc::sha512 key1;
-      aes_key.Encode((byte*)key1._hash, 64);
+      fc::sha256 key1;
+      aes_key.Encode((byte*)key1._hash, 32);
 
       decent::encrypt::CustodyData cd;
       package_object pack = package_manager::instance().create_package(content_dir, samples_dir, key1, cd);
       return std::pair<string, decent::encrypt::CustodyData>(pack.get_hash().str(), cd);
-   }
+   }*/
 
    void wallet_api::extract_package(const std::string& package_hash, const std::string& output_dir, const DInteger& aes_key) const {
       FC_ASSERT(!is_locked());
-      fc::sha512 key1;
-      aes_key.Encode((byte*)key1._hash, 64);
+      fc::sha256 key1;
+      aes_key.Encode((byte*)key1._hash, 32);
 
       auto pack = PackageManager::instance().find_package(fc::ripemd160(package_hash));
       if (pack == nullptr) {
