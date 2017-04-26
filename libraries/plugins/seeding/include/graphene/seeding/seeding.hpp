@@ -208,8 +208,8 @@ public:
       //In case the download fails, delete the package and seeding objects - TODO_DECENT
       //_my->database().remove(mso);
       elog("seeding plugin: package_download_error(): Failed downloading package ${s}",("s",_url));
-      auto& pm = decent::package::PackageManager::instance();
-      pm.release_package(_pi);
+      //auto& pm = decent::package::PackageManager::instance();
+      //pm.release_package(_pi);
    };
 
    virtual void package_download_complete(){

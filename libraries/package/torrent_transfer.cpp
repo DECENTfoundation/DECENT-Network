@@ -1,4 +1,3 @@
-
 #include "torrent_transfer.hpp"
 
 #include <decent/encrypt/encryptionutils.hpp>
@@ -1376,8 +1375,6 @@ namespace decent { namespace package {
 
 
 } } // namespace decent::package
-
-
 
 
 

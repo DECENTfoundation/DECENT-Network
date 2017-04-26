@@ -1683,7 +1683,7 @@ namespace graphene { namespace app {
    vector<buying_object> database_api_impl::get_buying_history_objects_by_consumer ( const account_id_type& consumer )const
    {
       try {
-         const auto &range = _db.get_index_type<buying_index>().indices().get<by_consumer_open>().equal_range( std::make_tuple(consumer, true));
+         const auto &range = _db.get_index_type<buying_index>().indices().get<by_consumer_open>().equal_range( std::make_tuple(consumer, false));
          vector<buying_object> result;
          result.reserve(distance(range.first, range.second));
          

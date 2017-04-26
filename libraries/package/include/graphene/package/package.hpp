@@ -7,7 +7,7 @@
 #include <fc/thread/thread.hpp>
 #include <fc/thread/mutex.hpp>
 #include <fc/crypto/ripemd160.hpp>
-#include <fc/crypto/sha512.hpp>
+#include <fc/crypto/sha256.hpp>
 #include <fc/network/url.hpp>
 
 #include <boost/filesystem.hpp>
@@ -109,7 +109,7 @@ namespace decent { namespace package {
         PackageInfo(PackageManager& manager,
                     const boost::filesystem::path& content_dir_path,
                     const boost::filesystem::path& samples_dir_path,
-                    const fc::sha512& key);
+                    const fc::sha256& key);
 
         PackageInfo(PackageManager& manager,const fc::ripemd160& package_hash);
 
@@ -132,7 +132,7 @@ namespace decent { namespace package {
         ManipulationState  get_manipulation_state() const;
 
         void create(bool block = false);
-        void unpack(const boost::filesystem::path& dir_path, const fc::sha512& key, bool block = false);
+        void unpack(const boost::filesystem::path& dir_path, const fc::sha256& key, bool block = false);
         void download(bool block = false);
         void start_seeding(std::string proto = "", bool block = false);
         void stop_seeding(std::string proto = "", bool block = false);
@@ -283,7 +283,7 @@ namespace decent { namespace package {
     public:
         package_handle_t get_package(const boost::filesystem::path& content_dir_path,
                                      const boost::filesystem::path& samples_dir_path,
-                                     const fc::sha512& key);
+                                     const fc::sha256& key);
         package_handle_t get_package(const std::string& url);
         package_handle_t get_package(const fc::ripemd160& hash);
 
@@ -311,4 +311,3 @@ namespace decent { namespace package {
 
 
 } } // namespace decent::package
-

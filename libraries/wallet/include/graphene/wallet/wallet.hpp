@@ -1915,6 +1915,7 @@ namespace graphene { namespace wallet {
           * @return nothing
           * @ingroup WalletCLI
           */
+
          void set_transfer_logs(bool enable) const;
 
          /**

@@ -40,21 +40,27 @@ BrowseContentTab::BrowseContentTab(Mainwindow_gui_wallet* parent)
 {
     
     m_pTableWidget.set_columns({
-        {"Title", 20},
-        {"Author", 15, "author"},
-        {"Rating", 5, "rating"},
-        {"Size", 5, "size"},
-        {"Price", 5, "price"},
-        {"Uploaded", 7, "created"},
-        {"Expiration", 7, "expiration"},
-        {" ", -50},
+        {tr("Title"), 20},
+        {tr("Author"), 15, "author"},
+        {tr("Rating"), 5, "rating"},
+        {tr("Size"), 5, "size"},
+        {tr("Price"), 5, "price"},
+        {tr("Uploaded"), 7, "created"},
+        {tr("Expiration"), 7, "expiration"},
+        { " ",
+#ifdef WINDOWS_HIGH_DPI
+        -90
+#else
+        -50
+#endif
+        },
     });
         
     QLabel* lab = new QLabel();
     QPixmap image(icon_search);
     lab->setPixmap(image);
     
-    m_filterLineEdit.setPlaceholderText("Search Content");
+    m_filterLineEdit.setPlaceholderText(tr("Search Content"));
     m_filterLineEdit.setFixedHeight(54);
     m_filterLineEdit.setStyleSheet(d_lineEdit);
     m_filterLineEdit.setAttribute(Qt::WA_MacShowFocusRect, 0);
@@ -68,8 +74,6 @@ BrowseContentTab::BrowseContentTab(Mainwindow_gui_wallet* parent)
     m_main_layout.addLayout(&m_search_layout);
     m_main_layout.addWidget(&m_pTableWidget);
     setLayout(&m_main_layout);
-    
-    
 }
 
 void BrowseContentTab::timeToUpdate(const std::string& result) {
