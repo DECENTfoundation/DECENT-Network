@@ -4224,7 +4224,11 @@ public:
    }
 
    
-   vector<buying_object_ex> wallet_api::search_my_purchases( const string& account_id_or_name, const string& term, const string& order )const
+   vector<buying_object_ex> wallet_api::search_my_purchases(const string& account_id_or_name,
+                                                            const string& term,
+                                                            const string& order,
+                                                            object_id_type const& id,
+                                                            uint32_t count)const
    {
       account_id_type consumer = get_account( account_id_or_name ).id;
       vector<buying_object> bobjects = my->_remote_db->get_buying_objects_by_consumer( consumer, order );

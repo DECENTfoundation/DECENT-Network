@@ -11,7 +11,7 @@ class QSignalMapper;
 namespace gui_wallet
 {
    class DecentTable;
-   class SDigitalContent;
+   struct SDigitalContent;
 
    class BrowseContentTab : public TabContentManager
    {

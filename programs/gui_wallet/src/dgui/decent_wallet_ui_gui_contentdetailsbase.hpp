@@ -22,7 +22,7 @@
 
 namespace gui_wallet {
 
-class SDigitalContent;
+struct SDigitalContent;
 
 class ContentDetailsBase : public QDialog
 {

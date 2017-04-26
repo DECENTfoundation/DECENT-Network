@@ -1703,37 +1703,55 @@ namespace graphene { namespace app {
    }
 
    template <bool is_ascending, class sort_tag>
-   void search_buying_template(graphene::chain::database& db, const account_id_type& consumer, vector<buying_object>& result)
+   void search_buying_template(graphene::chain::database& db,
+                               const account_id_type& consumer,
+                               object_id_type const& id,
+                               uint32_t count,
+                               vector<buying_object>& result)
    {
-      const auto& idx = db.get_index_type<buying_index>().indices().get<sort_tag>();
+      const auto& idx_by_sort_tag = db.get_index_type<buying_index>().indices().get<sort_tag>();
+
+      auto itr_begin = return_one<is_ascending>::choose(idx_by_sort_tag.cbegin(), idx_by_sort_tag.crbegin());
+      auto itr_end = return_one<is_ascending>::choose(idx_by_sort_tag.end(), idx_by_sort_tag.rend());
       
-      auto itr = return_one<is_ascending>::choose(idx.begin(), idx.rbegin());
-      auto itr_end = return_one<is_ascending>::choose(idx.end(), idx.rend());
-      
-      while(itr != itr_end)
+      while(count &&
+            itr_begin != itr_end)
       {
-         buying_object const& element = *itr;
+         buying_object const& element = *itr_begin;
          
          if (element.consumer == consumer)
+         {
             result.emplace_back(element);
-         
-         ++itr;
+            --count;
+         }
+
+         ++itr_begin;
       }
    }
 
    
-   vector<buying_object> database_api_impl::get_buying_objects_by_consumer( const account_id_type& consumer, const string& order )const
+   vector<buying_object> database_api_impl::get_buying_objects_by_consumer(const account_id_type& consumer,
+                                                                           const string& order)const
    {
+      object_id_type id;
+      uint32_t count = 100;
       try {
          vector<buying_object> result;
          
-         if(order == "+size") search_buying_template<true, by_size>(_db, consumer, result);
-         if(order == "-size") search_buying_template<false, by_size>(_db, consumer, result);
-         if(order == "+price") search_buying_template<true, by_price>(_db, consumer, result);
-         if(order == "-price") search_buying_template<false, by_price>(_db, consumer, result);
-         if(order == "+created") search_buying_template<true, by_created>(_db, consumer, result);
-         if(order == "-created") search_buying_template<false, by_created>(_db, consumer, result);
-         if(order == "") search_buying_template<true, by_consumer_open>(_db, consumer, result);
+         if(order == "+size")
+            search_buying_template<true, by_size>(_db, consumer, id, count, result);
+         else if(order == "-size")
+            search_buying_template<false, by_size>(_db, consumer, id, count, result);
+         else if(order == "+price")
+            search_buying_template<true, by_price>(_db, consumer, id, count, result);
+         else if(order == "-price")
+            search_buying_template<false, by_price>(_db, consumer, id, count, result);
+         else if(order == "+created")
+            search_buying_template<true, by_created>(_db, consumer, id, count, result);
+         else if(order == "-created")
+            search_buying_template<false, by_created>(_db, consumer, id, count, result);
+         else
+            search_buying_template<true, by_consumer_open>(_db, consumer, id, count, result);
          
          return result;
       }

@@ -1,18 +1,16 @@
 #pragma once
 
 #include <string>
-
+#include <QString>
 
 #include "gui_wallet_tabcontentmanager.hpp"
-
 
 class QSignalMapper;
 
 namespace gui_wallet
 {
-
 class DecentTable;
-class SDigitalContent;
+struct SDigitalContentPurchase;
 
 class PurchasedTab : public TabContentManager
 {
@@ -27,7 +25,7 @@ public:
    
 protected:
    void ShowMessageBox(std::string const& message);
-   void ShowDigitalContentsGUI(std::vector<SDigitalContent>& contents);
+   void ShowDigitalContentsGUI();
 
 public slots:
    void slot_ExtractPackage(int);
@@ -42,6 +40,6 @@ protected:
    DecentTable*            m_pTableWidget;
    int                     m_iActiveItemIndex;
    QString                 m_strSearchTerm;
-   std::vector<SDigitalContent>   _current_content;
+   std::vector<SDigitalContentPurchase>   _current_content;
 };
 }//   end namespace gui_wallet

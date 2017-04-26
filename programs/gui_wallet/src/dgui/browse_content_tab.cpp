@@ -1,7 +1,7 @@
 #include "stdafx.h"
 
-#include "browse_content_tab.hpp" 
 #include "gui_wallet_global.hpp"
+#include "browse_content_tab.hpp"
 #include "decent_wallet_ui_gui_contentdetailsgeneral.hpp"
 
 #ifndef _MSC_VER
