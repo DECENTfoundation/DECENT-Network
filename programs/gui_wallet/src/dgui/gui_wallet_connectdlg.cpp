@@ -50,22 +50,22 @@ namespace gui_wallet
         DecentButton* unlockButton = new DecentButton();
 
         if (isSet) {
-            unlockButton->setText("Set Password");
+            unlockButton->setText(tr("Set Password"));
         } else {
-            unlockButton->setText("Unlock");
+            unlockButton->setText(tr("Unlock"));
         }
         unlockButton->setFixedWidth(140);
         unlockButton->setFixedHeight(40);
         password_box.setFixedSize(300, 44);
         password_box.setEchoMode(QLineEdit::Password);
         password_box.setAttribute(Qt::WA_MacShowFocusRect, 0);
-        password_box.setPlaceholderText(QString("Password"));
+        password_box.setPlaceholderText(QString(tr("Password")));
         password_box.setStyleSheet(d_pass);
        
         if (isSet) {
-           setWindowTitle("Set Password");
+           setWindowTitle(tr("Set Password"));
         } else {
-           setWindowTitle("Unlock your wallet");
+           setWindowTitle(tr("Unlock your wallet"));
         }
        
         m_main_table.setCellWidget(0, 0, &password_box);

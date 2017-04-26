@@ -26,4 +26,7 @@
         <file>images/windows_decent_icon_16x16.png</file>
         <file>images/windows_decent_icon_32x32.png</file>
     </qresource>
+    <qresource prefix="/translations">
+        <file>languages/decent_en.qm</file>
+    </qresource>
 </RCC>

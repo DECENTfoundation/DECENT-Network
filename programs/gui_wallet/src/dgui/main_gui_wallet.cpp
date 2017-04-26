@@ -59,6 +59,7 @@ using string = std::string;
 #endif
 
 #include <signal.h>
+#include <QTranslator>
 
 
 int runDecentD(int argc, char** argv, fc::promise<void>::ptr& exit_promise);
@@ -68,8 +69,15 @@ QProcess* run_ipfs_daemon(QObject* parent, QString app_dir);
 int main(int argc, char* argv[])
 {
    QApplication app(argc, argv);
-   gui_wallet::Mainwindow_gui_wallet aMainWindow;
    
+   
+   QTranslator* translator = new QTranslator();
+   if (translator->load("decent_en", ":/translations/languages")) {
+      app.installTranslator(translator);
+   }
+   
+   
+   gui_wallet::Mainwindow_gui_wallet aMainWindow;
    QProcess* daemon_process = nullptr;
    try {
       daemon_process = run_ipfs_daemon(&aMainWindow, app.applicationDirPath());
@@ -115,14 +123,15 @@ int main(int argc, char* argv[])
    });
    
    
-   
+#define SET_LIBRARY_PATHS
 #ifdef SET_LIBRARY_PATHS
-   QDir dir(argv[0]);
+   auto pluginsDir = QDir(QCoreApplication::applicationDirPath());
+   if (pluginsDir.dirName() == "MacOS") {
+      pluginsDir.cdUp();
+   }
+   pluginsDir.cd("plugins");
 
-   dir.cdUp();
-   dir.cdUp();
-   dir.cd("lib");
-   QCoreApplication::setLibraryPaths(QStringList(dir.absolutePath()));
+   QCoreApplication::setLibraryPaths(QStringList(pluginsDir.absolutePath()));
 #endif
 
 
