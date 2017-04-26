@@ -1862,20 +1862,7 @@ namespace graphene { namespace wallet {
           */
          optional<vector<seeder_object>> list_seeders_by_upload( const uint32_t count )const;
 
-         /**
-          * @brief Get a list of packages
-          * @return The list of packages
-          * @ingroup WalletCLI
-          */
-         vector<string> list_packages( ) const;
-
-         /**
-          * @brief Set directory of package manager packages
-          * @param packages_dir Directory in which all packages are located
-          * @return Nothing
-          * @ingroup WalletCLI
-          */
-         void packages_path(const std::string& packages_dir) const;
+         
 
          /**
           * @brief Create package from selected files
@@ -1922,13 +1909,6 @@ namespace graphene { namespace wallet {
           * @ingroup WalletCLI
           */
          void remove_package(const std::string& package_hash) const;
-
-         /**
-          * @brief Print statuses of all active transfers
-          * @return nothing
-          * @ingroup WalletCLI
-          */
-         void print_all_transfers() const;
 
          /**
           * @brief Print statuses of all active transfers
@@ -2134,14 +2114,11 @@ FC_API( graphene::wallet::wallet_api,
            (list_publishers_by_price)
            (get_content_ratings)
            (list_imported_ipfs_IDs)
-           (list_packages)
-           (packages_path)
            (create_package)
            (extract_package)
            (download_package)
            (upload_package)
            (remove_package)
-           (print_all_transfers)
            (set_transfer_logs)
            (head_block_time)
 )

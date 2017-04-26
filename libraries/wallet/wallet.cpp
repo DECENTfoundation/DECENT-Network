@@ -90,53 +90,8 @@
 
 CryptoPP::AutoSeededRandomPool randomGenerator;
 
-using namespace graphene::package;
 using namespace decent::package;
 
-namespace {
-
-
-    struct transfer_progress_printer: public package_transfer_interface::transfer_listener {
-
-        static transfer_progress_printer& instance() {
-            static transfer_progress_printer the_transfer_progress_printer;
-            return the_transfer_progress_printer;
-        }
-
-        virtual void on_download_started(package_transfer_interface::transfer_id id) {
-            ilog("transfer ${id}: download started", ("id", id));
-        }
-
-        virtual void on_download_finished(package_transfer_interface::transfer_id id, package_object downloaded_package) {
-            ilog("transfer ${id}: download finished: ${hash}", ("id", id) ("hash", downloaded_package.get_hash().str()));
-        }
-
-        virtual void on_download_progress(package_transfer_interface::transfer_id id, transfer_progress progress) {
-            ilog("transfer ${id}: download progress: ${curr}/${total} @ ${speed} Bytes/sec",
-                 ("id", id) ("curr", progress.current_bytes) ("total", progress.total_bytes) ("speed", progress.current_speed));
-        }
-
-        virtual void on_upload_started(package_transfer_interface::transfer_id id, const std::string& url) {
-            ilog("transfer ${id}: upload started on URL: ${url}", ("id", id) ("url", url));
-        }
-
-        virtual void on_upload_finished(package_transfer_interface::transfer_id id) {
-            ilog("transfer ${id}: upload finished", ("id", id));
-        }
-
-        virtual void on_upload_progress(package_transfer_interface::transfer_id id, transfer_progress progress) {
-            ilog("transfer ${id}: upload progress: ${curr}/${total} @ ${speed} Bytes/sec",
-                 ("id", id) ("curr", progress.current_bytes) ("total", progress.total_bytes) ("speed", progress.current_speed));
-        }
-
-        virtual void on_error(package_transfer_interface::transfer_id id, std::string error) {
-            elog("transfer ${id}: error: ${error}", ("id", id) ("error", error));
-        }
-    };
-   
-  
-
-} // namespace
 
 
 namespace graphene { namespace wallet {
@@ -166,7 +121,7 @@ private:
 };
 
 
-   
+/*   
 class report_stats_listener:public report_stats_listener_base{
    public:
       string URI;
@@ -184,6 +139,7 @@ class report_stats_listener:public report_stats_listener_base{
          _wallet_api.report_stats( consumer, stats2, true);
       }
 };
+*/
 
 struct operation_result_printer
 {
@@ -2499,7 +2455,11 @@ public:
    { try {
       account_object seeder_account = get_account( seeder );
       fc::ripemd160 hash(package);
-      package_object po = package_manager::instance().get_package_object(hash);
+      auto po = PackageManager::instance().find_package(hash);
+      if (po == nullptr) {
+          FC_THROW("Invalid package hash");
+      }
+
       decent::encrypt::CustodyProof proof;
 
       auto dynamic_props = get_dynamic_global_properties();
@@ -2511,7 +2471,7 @@ public:
 
       FC_ASSERT(co, "content does not exist");
 
-      po.create_proof_of_custody(co->cd, proof);
+      po->create_proof_of_custody(co->cd, proof);
 
       proof_of_custody_operation op;
       op.seeder = seeder_account.id;
@@ -4386,24 +4346,7 @@ public:
    {
       return my->_remote_db->list_seeders_by_upload( count );
    }
-
-   vector<string> wallet_api::list_packages( ) const
-   {
-      FC_ASSERT(!is_locked());
-      vector<string> str_packages;
-      vector<package_object> objects = package_manager::instance().get_packages();
-      for (int i = 0; i < objects.size(); ++i) {
-         str_packages.push_back(objects[i].get_hash().str());
-      }
-      return str_packages;
-   }
-
-   void wallet_api::packages_path(const std::string& packages_dir) const {
-   // FC_ASSERT(!is_locked());
-      my->_wallet.packages_path = packages_dir;
-      package_manager::instance().set_packages_path(packages_dir);
-   }
-
+   
    signed_transaction wallet_api::subscribe_to_author( string from,
                                                        string to,
                                                        uint32_t duration,
@@ -4474,9 +4417,9 @@ public:
       fc::sha512 key1;
       aes_key.Encode((byte*)key1._hash, 64);
 
-      decent::encrypt::CustodyData cd;
-      package_object pack = package_manager::instance().create_package(content_dir, samples_dir, key1, cd);
-      return std::pair<string, decent::encrypt::CustodyData>(pack.get_hash().str(), cd);
+      auto pack = PackageManager::instance().get_package(content_dir, samples_dir, key1);
+      decent::encrypt::CustodyData cd = pack->get_custody_data();
+      return std::pair<string, decent::encrypt::CustodyData>(pack->get_hash().str(), cd);
    }
 
    void wallet_api::extract_package(const std::string& package_hash, const std::string& output_dir, const DInteger& aes_key) const {
@@ -4537,29 +4480,22 @@ void graphene::wallet::detail::submit_transfer_listener::package_seed_complete()
 }
    void wallet_api::remove_package(const std::string& package_hash) const {
       FC_ASSERT(!is_locked());
-      package_manager::instance().delete_package(fc::ripemd160(package_hash));
+      PackageManager::instance().release_package(fc::ripemd160(package_hash));
    }
 
    void wallet_api::download_package(const std::string& url) const {
       FC_ASSERT(!is_locked());
-   // detail::report_stats_listener stats_listener( url, my->self);
-   // stats_listener.ipfs_IDs = list_seeders_ipfs_IDs( url);
-
       auto pack = PackageManager::instance().get_package(url);
       pack->download(false);
    }
 
    std::string wallet_api::upload_package(const std::string& package_hash, const std::string& protocol) const {
       FC_ASSERT(!is_locked());
-      package_object package = package_manager::instance().get_package_object(fc::ripemd160(package_hash));
-      package_transfer_interface::transfer_id id = package_manager::instance().upload_package(package, protocol, transfer_progress_printer::instance());
-      return package_manager::instance().get_transfer_url(id);
+      auto package = PackageManager::instance().get_package(fc::ripemd160(package_hash));
+      package->start_seeding(protocol, true);
+      return package->get_url();
    }
 
-   void wallet_api::print_all_transfers() const {
-   // FC_ASSERT(!is_locked());
-      package_manager::instance().print_all_transfers();
-   }
 
    void wallet_api::set_transfer_logs(bool enable) const {
    // FC_ASSERT(!is_locked());
