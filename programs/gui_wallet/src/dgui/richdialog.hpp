@@ -15,6 +15,9 @@
 #include <QHBoxLayout>
 #include <QPushButton>
 #include <QLineEdit>
+#include <QLocale>
+#include <QInputMethod>
+#include <QApplication>
 #include <vector>
 #include <string>
 #include "decent_button.hpp"
@@ -110,6 +113,7 @@ protected:
    QString     m_userName;
    int         m_nNumOfTextBoxes;
    QLineEdit*  m_pTextBoxes;
+   QLocale     _locale;
 public:
    QString curentName;
    
