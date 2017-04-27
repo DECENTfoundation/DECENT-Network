@@ -389,7 +389,7 @@ void Mainwindow_gui_wallet::UpdateAccountBalances(const std::string& username) {
       }
       amount = amount / pow(10, precision);
       
-      QString str = QString::number(amount) + tr(" ") + QString::fromStdString(assetName);
+      QString str = QString::number(amount) + " " + QString::fromStdString(assetName);
       
       balances.push_back(str.toStdString());
    }
@@ -620,7 +620,7 @@ void Mainwindow_gui_wallet::ImportKeySlot()
         hasError = true;
     }
     if (hasError) {
-        ALERT_DETAILS(tr("Can not import key.").toStdString(), result.c_str());
+        ALERT_DETAILS(tr("Cannot import key.").toStdString(), result.c_str());
     } else {
         DisplayWalletContentGUI(false);
     }
@@ -640,7 +640,7 @@ void Mainwindow_gui_wallet::SendDCTSlot()
    if(m_sendDCT_dialog != nullptr)
       delete m_sendDCT_dialog;
 
-   m_sendDCT_dialog = new SendDialog(3, tr("Send DCT") , accountName);
+   m_sendDCT_dialog = new SendDialog(3, tr("Send") + " DCT" , accountName);
 
    std::vector<std::string> cvsUsKey(3);
    QPoint thisPos = pos();

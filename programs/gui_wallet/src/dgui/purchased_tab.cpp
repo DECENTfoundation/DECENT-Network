@@ -124,7 +124,7 @@ void PurchasedTab::timeToUpdate(const std::string& result)
       contentObject.total_download_bytes  = content["total_download_bytes"].get<int>();
       contentObject.received_download_bytes  = content["received_download_bytes"].get<int>();
 
-      QString status_text = tr("Keys: ") + QString::number(contentObject.received_key_parts) + "/" + QString::number(contentObject.total_key_parts);
+      QString status_text = tr("Keys") + ": " + QString::number(contentObject.received_key_parts) + "/" + QString::number(contentObject.total_key_parts);
 
       if (DCT::WAITING_DELIVERY == contentObject.type) {
          status_text = tr("Waiting for key delivery");

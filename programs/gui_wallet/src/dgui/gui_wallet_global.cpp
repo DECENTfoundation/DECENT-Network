@@ -182,9 +182,9 @@ QString CalculateRemainingTime_Behind(QDateTime const& dt, QDateTime const& dtFu
          str_result += arrParts[0];
 
          if (arrParts.size() > 1)
-            str_result += QObject::tr(" and ") + arrParts[1];
+            str_result += " " + QObject::tr("and") + " " + arrParts[1];
 
-         str_result += QObject::tr(" to go");
+         str_result += " " + QObject::tr("to go");
       }
 
       return str_result;

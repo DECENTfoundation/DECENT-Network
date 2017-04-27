@@ -51,15 +51,15 @@ void ContentDetailsGeneral::LabelPushCallbackGUI()
    reply->setContentsMargins(0, 30, 80, 30);
    reply->setWindowFlags(Qt::WindowTitleHint);
    reply->QDialog::setWindowTitle(tr("Decent-Blockchain Content Distributor"));
-   reply->setText(tr("          Are you sure you want to buy this content?"));
-   QPushButton* pButtonCencel = reply->addButton(tr("Cancel"), QMessageBox::YesRole);
+   reply->setText("          " + tr("Are you sure you want to buy this content?"));
+   QPushButton* pButtonCancel = reply->addButton(tr("Cancel"), QMessageBox::YesRole);
    QPushButton* pButtonOk = reply->addButton(tr("Get it"), QMessageBox::NoRole);
    pButtonOk->setStyleSheet(d_pButtonOk);
-   pButtonCencel->setStyleSheet(d_pbuttonCancel);
+   pButtonCancel->setStyleSheet(d_pbuttonCancel);
    pButtonOk->setFixedSize(100, 30);
-   pButtonCencel->setFixedSize(100, 30);
+   pButtonCancel->setFixedSize(100, 30);
    reply->exec();
-   if (reply->clickedButton()==pButtonCencel) {
+   if (reply->clickedButton()==pButtonCancel) {
       return;
    }
    std::string downloadCommand = "download_content";

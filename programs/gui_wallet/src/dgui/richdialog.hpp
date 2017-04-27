@@ -20,6 +20,7 @@
 #include "decent_button.hpp"
 
 
+
 namespace gui_wallet {
 
 
@@ -112,6 +113,21 @@ protected:
 public:
    QString curentName;
    
+};
+   
+class SuccessMessageDialog : public QDialog
+{
+   Q_OBJECT
+public:
+   SuccessMessageDialog(QString message , QString title);
+   void execSMD();
+
+   void keyPressEvent(QKeyEvent *evt);
+
+private:
+   DecentButton* m_ok_button;
+   QLabel*       m_text;
+   QVBoxLayout   m_controls_layout;
 };
    
 }
