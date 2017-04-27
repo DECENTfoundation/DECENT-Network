@@ -143,7 +143,7 @@ public:
     * @param so_id ID of the my_seeding_object
     * @param downloaded_package Downloaded package object
     */
-   void generate_por( my_seeding_id_type so_id, graphene::package::package_object downloaded_package );
+   //void generate_por( my_seeding_id_type so_id, graphene::package::package_object downloaded_package );
 
    /**
     * Generates proof of retrievability of a package

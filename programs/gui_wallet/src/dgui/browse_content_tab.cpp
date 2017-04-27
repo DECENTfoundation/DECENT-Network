@@ -47,7 +47,13 @@ BrowseContentTab::BrowseContentTab(Mainwindow_gui_wallet* parent)
         {tr("Price"), 5, "price"},
         {tr("Uploaded"), 7, "created"},
         {tr("Expiration"), 7, "expiration"},
-        {" ", -50},
+        { " ",
+#ifdef WINDOWS_HIGH_DPI
+        -90
+#else
+        -50
+#endif
+        },
     });
         
     QLabel* lab = new QLabel();
@@ -68,8 +74,6 @@ BrowseContentTab::BrowseContentTab(Mainwindow_gui_wallet* parent)
     m_main_layout.addLayout(&m_search_layout);
     m_main_layout.addWidget(&m_pTableWidget);
     setLayout(&m_main_layout);
-    
-    
 }
 
 void BrowseContentTab::timeToUpdate(const std::string& result) {

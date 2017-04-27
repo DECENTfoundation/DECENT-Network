@@ -449,6 +449,9 @@ void CentralWigdet::resizeEvent ( QResizeEvent * a_event )
     {
         s = QString::number(each_width - 11);
         m_main_tabs.setStyleSheet("QTabBar::tab{"
+#ifdef WINDOWS_HIGH_DPI
+                                  "font-size: 10pt;"
+#endif
                                   "font:bold;"
                                   " height: 40px; width: " + s + "px;"
                                   "color:rgb(0,0,0);background-color:white;"
@@ -466,6 +469,9 @@ void CentralWigdet::resizeEvent ( QResizeEvent * a_event )
     else
     {
         m_main_tabs.setStyleSheet("QTabBar::tab{"
+#ifdef WINDOWS_HIGH_DPI
+                                 "font-size: 10pt;"
+#endif
                                   "font:bold;"
                                   " height: 40px; width: " + s + "px;"
                                   "color:rgb(0,0,0);background-color:white;"
