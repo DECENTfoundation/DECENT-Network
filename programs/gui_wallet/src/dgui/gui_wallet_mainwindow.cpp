@@ -604,7 +604,7 @@ void Mainwindow_gui_wallet::ImportKeySlot()
         hasError = true;
     }
     if (hasError) {
-        ALERT_DETAILS(tr("Can not import key").toStdString() + ".", result.c_str());
+        ALERT_DETAILS(tr("Cannot import key.").toStdString(), result.c_str());
     } else {
         DisplayWalletContentGUI(false);
     }
