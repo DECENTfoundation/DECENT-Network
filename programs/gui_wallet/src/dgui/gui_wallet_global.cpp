@@ -1,6 +1,8 @@
 #include "stdafx.h"
 
 #include "gui_wallet_global.hpp"
+#include "richdialog.hpp"
+
 #ifndef _MSC_VER
 #include <QMessageBox>
 #include <QThread>
@@ -10,10 +12,9 @@
 #include <QTimer>
 #include <QHeaderView>
 #include <QObject>
+#include <QHBoxLayout>
 #include <QVBoxLayout>
-#include "decent_button.hpp"
 
-#include <iostream>
 #endif
 
 using string = std::string;
@@ -615,6 +616,20 @@ void Globals::setWalletError(std::string const& error)
    emit walletConnectionError(error);
 }
 
+void Globals::showTransferDialog(std::string const& user)
+{
+   if(getCurrentUser().empty())
+      return;
+
+   SendDialog* pTransferDialog = new SendDialog(3, QObject::tr("Send") + " " + asset(0).m_str_symbol.c_str() , user.c_str());
+
+   std::vector<std::string> cvsUsKey(3);
+
+   pTransferDialog->curentName = user.c_str();
+   pTransferDialog->execRD(nullptr, cvsUsKey);
+   delete pTransferDialog;
+}
+
 void Globals::slot_connected(std::string const& str_error)
 {
    m_connected = true;
@@ -700,14 +715,14 @@ DecentColumn::DecentColumn(QString title, int size, std::string const& sortid/* 
 DecentTable::DecentTable(QWidget* pParent)
    : QTableWidget(pParent)
 {
-   //this->horizontalHeader()->setStretchLastSection(true);
-   this->setSelectionMode(QAbstractItemView::NoSelection);
-   this->setStyleSheet("QTableView{border : 0px}");
-   this->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-   this->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+   //horizontalHeader()->setStretchLastSection(true);
+   setSelectionMode(QAbstractItemView::NoSelection);
+   setStyleSheet("QTableView{border : 0px}");
+   setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+   setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
-   this->verticalHeader()->hide();
-   this->setMouseTracking(true);
+   verticalHeader()->hide();
+   setMouseTracking(true);
 
    connect(this->horizontalHeader(), SIGNAL(sectionClicked(int)), this, SLOT(sectionClicked(int)));
 }
