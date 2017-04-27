@@ -100,7 +100,7 @@ void pm_sandbox()
     const boost::filesystem::path content_dir = "/tmp/test/test1_content";
     const boost::filesystem::path samples_dir = "/tmp/test/test1_samples";
     const boost::filesystem::path dest_dir = "/tmp/test/test1_unpacked";
-    const fc::sha512 key = fc::sha512::hash(std::string("some_string_to_use_as_a_key"));
+    const fc::sha256 key = fc::sha256::hash(std::string("some_string_to_use_as_a_key"));
     const bool block = false;
 
 

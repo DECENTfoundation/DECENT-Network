@@ -22,7 +22,7 @@ class ContentDetailsGeneral : public ContentDetailsBase
 public:
     ContentDetailsGeneral(QWidget* pParent);
 
-    virtual void execCDD(const SDigitalContent& a_cnt_details);
+    virtual void execCDD(const SDigitalContent& a_cnt_details, bool bSilent = false);
 
 public:
 signals:

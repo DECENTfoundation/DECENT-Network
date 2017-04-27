@@ -18,7 +18,7 @@ void content_submit_operation::validate()const
    FC_ASSERT( size > 0 && size <= 100 ); //TODO_DECENT - increase in testnet
    FC_ASSERT( seeders.size() > 0 );
    FC_ASSERT( seeders.size() == key_parts.size() );
-   FC_ASSERT( quorum >= 1 && quorum < UINT32_MAX);
+   FC_ASSERT( quorum >= 1 && quorum < UINT32_MAX); // TODO_DECENT  quorum >= 2. See also wallet_api::submit_content_new
    FC_ASSERT( seeders.size() >= quorum );
    FC_ASSERT( expiration <= fc::time_point_sec::maximum() );
    FC_ASSERT( publishing_fee.amount >= 0);

@@ -14,6 +14,8 @@
 #include <iostream>
 #endif
 
+using string = std::string;
+
 namespace gui_wallet
 {
    
@@ -180,9 +182,9 @@ QString CalculateRemainingTime_Behind(QDateTime const& dt, QDateTime const& dtFu
          str_result += arrParts[0];
 
          if (arrParts.size() > 1)
-            str_result += QObject::tr(" and ") + arrParts[1];
+            str_result += " " + QObject::tr("and") + " " + arrParts[1];
 
-         str_result += QObject::tr(" to go");
+         str_result += " " + QObject::tr("to go");
       }
 
       return str_result;
@@ -432,6 +434,28 @@ void WalletOperator::slot_connect()
    emit signal_connected(str_error);
 }
 //
+// Asset
+//
+Asset::operator double() const
+{
+   uint64_t amount = m_amount / m_scale;
+   double tail = double(m_amount % m_scale) / m_scale;
+   return amount + tail;
+}
+
+Asset::operator string() const
+{
+   return std::to_string(double(*this));
+}
+
+string Asset::getString() const
+{
+   if (m_amount)
+      return QString::number(double(*this), 'f' , 4).toStdString() + " " + m_str_symbol;
+   else
+      return "Free";
+}
+//
 // Globals
 //
 Globals::Globals()
@@ -503,6 +527,55 @@ void Globals::clear()
    }
 }
 
+Asset Globals::asset(uint64_t amount)
+{
+   Asset ast_amount;
+   uint8_t precision = 0;
+   getWallet().LoadAssetInfo(ast_amount.m_str_symbol, precision);
+   ast_amount.m_scale = pow(10, precision);
+   ast_amount.m_amount = amount;
+
+   return ast_amount;
+}
+
+void Globals::updateAccountBalance()
+{
+   if (false == m_str_currentUser.empty())
+   {
+      nlohmann::json allBalances = runTask("list_account_balances " + m_str_currentUser);
+
+      if (allBalances.empty())
+         emit signal_updateAccountBalance(asset(0));
+      else if (allBalances.size() != 1)
+         throw std::runtime_error("an account cannot have more than one balance");
+      else
+      {
+         auto const& json_balance = allBalances[0]["amount"];
+
+         Asset ast_balance = asset(0);
+
+         if (json_balance.is_number())
+            ast_balance.m_amount = json_balance.get<uint64_t>();
+         else
+            ast_balance.m_amount = std::stoll(json_balance.get<string>());
+
+         emit signal_updateAccountBalance(ast_balance);
+      }
+   }
+}
+
+void Globals::runTask(std::string const& str_command, nlohmann::json& json_result)
+{
+   string str_result = runTask(str_command);
+   if (false == str_result.empty())
+      json_result = nlohmann::json::parse(str_result);
+}
+
+string Globals::runTask(string const& str_command)
+{
+   return getWallet().RunTask(str_command);
+}
+
 void Globals::setCurrentUser(std::string const& user)
 {
    m_str_currentUser = user;
@@ -561,21 +634,30 @@ void Globals::slot_timer()
 DecentSmallButton::DecentSmallButton(const QString& normalImg, const QString& highlightedImg, QWidget* pParent/* = nullptr*/)
 : QLabel(pParent)
 {
+   setMouseTracking(true);
    normalImage.load(normalImg);
    highlightedImage.load(highlightedImg);
-   this->setPixmap(normalImg);
+   setPixmap(normalImg);
 }
 
 void DecentSmallButton::unhighlight()
 {
-   this->setPixmap(normalImage);
-   this->setStyleSheet("* { background-color: rgb(255,255,255); color : black; }");
+   setPixmap(normalImage);
+   setStyleSheet("* { background-color: rgb(255,255,255); color : black; }");
 }
 
 void DecentSmallButton::highlight()
 {
    this->setPixmap(highlightedImage);
    this->setStyleSheet("* { background-color: rgb(27,176,104); color : white; }");
+}
+
+bool DecentSmallButton::event(QEvent *event)
+{
+   if (event->type() == QEvent::MouseMove)
+      return false;
+   else
+      return QWidget::event(event);
 }
 
 void DecentSmallButton::mousePressEvent(QMouseEvent* event)
@@ -635,7 +717,6 @@ void DecentTable::set_columns(const std::vector<DecentColumn>& cols)
    this->horizontalHeader()->setDefaultSectionSize(300);
    this->setRowHeight(0,35);
 
-
    QStringList columns;
    for (const DecentColumn& col: cols) {
       columns << col.title;
@@ -652,8 +733,11 @@ void DecentTable::set_columns(const std::vector<DecentColumn>& cols)
                                       return (col.size > 0) ? sum : sum - col.size;
                                    });
 
-
+#ifdef WINDOWS_HIGH_DPI
+   this->horizontalHeader()->setFixedHeight(45);
+#else
    this->horizontalHeader()->setFixedHeight(35);
+#endif
    this->horizontalHeader()->setFont(TableHeaderFont());
 
    this->horizontalHeader()->setStyleSheet("QHeaderView::section {"
@@ -664,6 +748,7 @@ void DecentTable::set_columns(const std::vector<DecentColumn>& cols)
 
 void DecentTable::sectionClicked(int index)
 {
+   emit signal_SortingChanged(index);
    if (_cols[index].sortid.empty()) {
       return;
    }

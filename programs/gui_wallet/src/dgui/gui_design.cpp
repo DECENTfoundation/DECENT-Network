@@ -4,7 +4,13 @@
 
 QFont TableHeaderFont()
 {
-   return QFont("Open Sans Bold", 14, QFont::Bold);
+   return QFont("Open Sans Bold", 
+#ifdef WINDOWS_HIGH_DPI
+      10, 
+#else
+      14,
+#endif
+      QFont::Bold);
 }
 
 QFont AccountBalanceFont()
@@ -19,15 +25,33 @@ QFont DescriptionDetailsFont()
 
 QFont PopupButtonRegularFont()
 {
-   return QFont("Myriad Pro Regular", 13, QFont::Bold);
+   return QFont("Myriad Pro Regular", 
+#ifdef WINDOWS_HIGH_DPI
+      8,
+#else
+      13,
+#endif
+      QFont::Bold);
 }
 
 QFont PopupButtonBigFont()
 {
-   return QFont("Myriad Pro Regular", 15, QFont::Bold);
+   return QFont("Myriad Pro Regular", 
+#ifdef WINDOWS_HIGH_DPI
+      8,
+#else
+      15,
+#endif
+      QFont::Bold);
 }
 
 QFont TabButtonFont()
 {
-   return QFont( "Myriad Pro Regular", 14, QFont::Bold);
+   return QFont( "Myriad Pro Regular", 
+#ifdef WINDOWS_HIGH_DPI
+      8,
+#else
+      14, 
+#endif
+      QFont::Bold);
 }

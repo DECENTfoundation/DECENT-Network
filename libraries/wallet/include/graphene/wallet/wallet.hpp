@@ -163,8 +163,10 @@ namespace graphene { namespace wallet {
             // but the GUI relies on buying_object_ex::price
             // so overwrite as a quick fix
             price = paid_price;
+            this->id = std::string(obj.id);
          }
          
+         std::string         id;
          std::string         author_account;
          uint32_t            times_bought;
          fc::ripemd160       hash;
@@ -1745,10 +1747,16 @@ namespace graphene { namespace wallet {
           * @param account_id_or_name Consumer of the buyings to retrieve
           * @param term Search term to look up in Title and Description
           * @param order Sort data by field
+          * @param id object_it to start searching from
+          * @param count Maximum number of contents to fetch (must not exceed 100)
           * @return History buying objects corresponding to the provided consumer and matching search term
           * @ingroup WalletCLI
           */
-         vector<buying_object_ex> search_my_purchases( const string& account_id_or_name, const string& term, const string& order )const;
+         vector<buying_object_ex> search_my_purchases(const string& account_id_or_name,
+                                                      const string& term,
+                                                      const string& order,
+                                                      const string& id,
+                                                      uint32_t count) const;
 
          /**
          * @brief Get buying (open or history) by consumer and URI
@@ -1817,22 +1825,34 @@ namespace graphene { namespace wallet {
           * @param order Order field
           * @param user Content owner
           * @param region_code Two letter region code
+          * @param id The id of content object to start searching from
           * @param count Maximum number of contents to fetch (must not exceed 100)
           * @return The contents found
           * @ingroup WalletCLI
           */
-         vector<content_summary> search_content( const string& term, const string& order, const string& user, const string& region_code, uint32_t count )const;
+         vector<content_summary> search_content(const string& term,
+                                                const string& order,
+                                                const string& user,
+                                                const string& region_code,
+                                                const string& id,
+                                                uint32_t count )const;
          /**
           * @brief Get a list of contents ordered alphabetically by search term
           * @param user Content owner
           * @param term seach term
           * @param order Order field
           * @param region_code Two letter region code
+          * @param id The id of content object to start searching from
           * @param count Maximum number of contents to fetch (must not exceed 100)
           * @return The contents found
           * @ingroup WalletCLI
           */
-         vector<content_summary> search_user_content( const string& user, const string& term, const string& order, const string& region_code, uint32_t count )const;
+         vector<content_summary> search_user_content(const string& user,
+                                                     const string& term,
+                                                     const string& order,
+                                                     const string& region_code,
+                                                     const string& id,
+                                                     uint32_t count )const;
 
          /**
           * @brief Get a list of contents by times bought, in decreasing order
@@ -1890,20 +1910,7 @@ namespace graphene { namespace wallet {
           */
          optional<vector<seeder_object>> list_seeders_by_upload( const uint32_t count )const;
 
-         /**
-          * @brief Get a list of packages
-          * @return The list of packages
-          * @ingroup WalletCLI
-          */
-         vector<string> list_packages( ) const;
-
-         /**
-          * @brief Set directory of package manager packages
-          * @param packages_dir Directory in which all packages are located
-          * @return Nothing
-          * @ingroup WalletCLI
-          */
-         void packages_path(const std::string& packages_dir) const;
+         
 
          /**
           * @brief Create package from selected files
@@ -1956,13 +1963,7 @@ namespace graphene { namespace wallet {
           * @return nothing
           * @ingroup WalletCLI
           */
-         void print_all_transfers() const;
 
-         /**
-          * @brief Print statuses of all active transfers
-          * @return nothing
-          * @ingroup WalletCLI
-          */
          void set_transfer_logs(bool enable) const;
 
          /**
@@ -2026,6 +2027,7 @@ FC_REFLECT_DERIVED( graphene::wallet::vesting_balance_object_with_info, (graphen
 FC_REFLECT_DERIVED( graphene::wallet::buying_object_ex,
                    (graphene::chain::buying_object)
                    (graphene::wallet::content_download_status),
+                   (id)
                    (author_account)
                    (times_bought)
                    (hash)
@@ -2165,14 +2167,11 @@ FC_API( graphene::wallet::wallet_api,
            (get_content_ratings)
            (get_content_comments)
            (list_imported_ipfs_IDs)
-           (list_packages)
-           (packages_path)
            (create_package)
            (extract_package)
            (download_package)
            (upload_package)
            (remove_package)
-           (print_all_transfers)
            (set_transfer_logs)
            (head_block_time)
 )

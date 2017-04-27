@@ -8,6 +8,7 @@
 #include <QTableWidget>
 #include <chrono>
 #include <iostream>
+#include "json.hpp"
 #include "gui_design.hpp"
 
 #include <decent/wallet_utility/wallet_utility.hpp>
@@ -97,6 +98,31 @@ namespace gui_wallet
       WalletAPI m_wallet_api;
    };
    //
+   // lame to write the full type definition of **** json variant
+   //
+   template <typename json_variant>
+   uint64_t json_to_int64(json_variant const& o)
+   {
+      if (o.is_number())
+         return o.template get<uint64_t>();
+      else
+         return std::stoll(o.template get<std::string>());
+   }
+   //
+   // Asset
+   //
+   // use Globals.asset to get a valid one
+   class Asset
+   {
+   public:
+      operator double() const;
+      operator std::string() const;
+      std::string getString() const;
+      uint64_t m_amount = 0;
+      uint64_t m_scale = 1;
+      std::string m_str_symbol;
+   };
+   //
    // Globals
    //
    class Globals : public QObject
@@ -116,7 +142,16 @@ namespace gui_wallet
       bool isConnected() const;
       WalletAPI& getWallet() const;
       void clear();
+      Asset asset(uint64_t amount);
+      void updateAccountBalance();
+      void runTask(std::string const& str_command, nlohmann::json& json_result);
+      std::string runTask(std::string const& str_command);
 
+   signals:
+      void signal_showPurchasedTab();
+      void signal_updateAccountBalance(Asset const&);
+
+   public:
       void setCurrentUser(std::string const& user);
       void setWalletUnlocked();
       void setWalletConnected();
@@ -161,7 +196,7 @@ namespace gui_wallet
          this->setMouseTracking(true);
       }
       
-      bool event(QEvent *event){
+      virtual bool event(QEvent *event) override{
          if (event->type() == QEvent::MouseMove)
             return false;
          else
@@ -183,11 +218,13 @@ namespace gui_wallet
       void unhighlight();
       void highlight();
 
+      virtual bool event(QEvent* event) override;
+
    signals:
       void clicked();
 
    protected:
-      void mousePressEvent(QMouseEvent* event);
+      virtual void mousePressEvent(QMouseEvent* event) override;
    private:
       QPixmap normalImage;
       QPixmap highlightedImage;
@@ -237,7 +274,9 @@ namespace gui_wallet
       int getCurrentHighlightedRow() const;
       std::string getSortedColumn() const;
       void set_columns(const std::vector<DecentColumn>& cols);
-      
+
+   signals:
+      void signal_SortingChanged(int);
    private slots:
       void sectionClicked(int index);
       
@@ -254,6 +293,41 @@ namespace gui_wallet
       bool                           _is_ascending = true;
    };
 
+
+
+   // DCT stands for Digital Contex Actions
+   namespace DCT {
+      enum DIG_CONT_TYPES {GENERAL, BOUGHT, WAITING_DELIVERY};
+   }
+
+
+   struct SDigitalContent
+   {
+      DCT::DIG_CONT_TYPES  type = DCT::GENERAL;
+      std::string          author;
+
+      Asset price;
+
+      std::string   synopsis;
+      std::string   URI;
+      double        AVG_rating;
+      std::string   created;
+      std::string   expiration;
+      std::string   id;
+      std::string   hash;
+      std::string   status;
+      int           size;
+      int           times_bougth;
+   };
+
+   struct SDigitalContentPurchase : public SDigitalContent
+   {
+      uint32_t total_key_parts = 0;
+      uint32_t received_key_parts = 0;
+      uint32_t total_download_bytes = 0;
+      uint32_t received_download_bytes = 0;
+      QString status_text;
+   };
 
 
 

@@ -43,7 +43,6 @@ add_executable(DECENT MACOSX_BUNDLE
                src/dgui/overview_tab.hpp
                src/dgui/purchased_tab.cpp
                src/dgui/purchased_tab.hpp
-               src/dgui/qt_commonheader.hpp
                src/dgui/richdialog.cpp
                src/dgui/richdialog.hpp
                src/dgui/text_display_dialog.cpp

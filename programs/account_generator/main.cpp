@@ -67,7 +67,7 @@ using namespace graphene::app;
 using namespace graphene::chain;
 using namespace graphene::utilities;
 using namespace graphene::wallet;
-using namespace graphene::package;
+
 using namespace std;
 namespace bpo = boost::program_options;
 
@@ -303,7 +303,7 @@ int main( int argc, char** argv )
          wdata.ws_password = options.at("server-rpc-password").as<std::string>();
 
 //      package_manager::instance().set_packages_path(wdata.packages_path);
-      package_manager::instance().set_libtorrent_config(wdata.libtorrent_config_path);
+      //package_manager::instance().set_libtorrent_config(wdata.libtorrent_config_path);
 
       fc::http::websocket_client client;
       idump((wdata.ws_server));

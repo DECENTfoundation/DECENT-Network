@@ -90,53 +90,8 @@
 
 CryptoPP::AutoSeededRandomPool randomGenerator;
 
-using namespace graphene::package;
 using namespace decent::package;
 
-namespace {
-
-
-    struct transfer_progress_printer: public package_transfer_interface::transfer_listener {
-
-        static transfer_progress_printer& instance() {
-            static transfer_progress_printer the_transfer_progress_printer;
-            return the_transfer_progress_printer;
-        }
-
-        virtual void on_download_started(package_transfer_interface::transfer_id id) {
-            ilog("transfer ${id}: download started", ("id", id));
-        }
-
-        virtual void on_download_finished(package_transfer_interface::transfer_id id, package_object downloaded_package) {
-            ilog("transfer ${id}: download finished: ${hash}", ("id", id) ("hash", downloaded_package.get_hash().str()));
-        }
-
-        virtual void on_download_progress(package_transfer_interface::transfer_id id, package_transfer_interface::transfer_progress progress) {
-            ilog("transfer ${id}: download progress: ${curr}/${total} @ ${speed} Bytes/sec",
-                 ("id", id) ("curr", progress.current_bytes) ("total", progress.total_bytes) ("speed", progress.current_speed));
-        }
-
-        virtual void on_upload_started(package_transfer_interface::transfer_id id, const std::string& url) {
-            ilog("transfer ${id}: upload started on URL: ${url}", ("id", id) ("url", url));
-        }
-
-        virtual void on_upload_finished(package_transfer_interface::transfer_id id) {
-            ilog("transfer ${id}: upload finished", ("id", id));
-        }
-
-        virtual void on_upload_progress(package_transfer_interface::transfer_id id, package_transfer_interface::transfer_progress progress) {
-            ilog("transfer ${id}: upload progress: ${curr}/${total} @ ${speed} Bytes/sec",
-                 ("id", id) ("curr", progress.current_bytes) ("total", progress.total_bytes) ("speed", progress.current_speed));
-        }
-
-        virtual void on_error(package_transfer_interface::transfer_id id, std::string error) {
-            elog("transfer ${id}: error: ${error}", ("id", id) ("error", error));
-        }
-    };
-
-
-
-} // namespace
 
 
 namespace graphene { namespace wallet {
@@ -166,7 +121,7 @@ private:
 };
 
 
-
+/*   
 class report_stats_listener:public report_stats_listener_base{
    public:
       string URI;
@@ -184,6 +139,7 @@ class report_stats_listener:public report_stats_listener_base{
          _wallet_api.report_stats( consumer, stats2, true);
       }
 };
+*/
 
 struct operation_result_printer
 {
@@ -250,16 +206,9 @@ public:
    void operator()(const T& op)const {
       detail.operation_type = "";
    }
-
-   void operator()(const transfer_operation& op)const {
-      detail.operation_type = "Transfer";
-      detail.from_account = op.from;
-      detail.to_account = op.to;
-      detail.transaction_amount = op.amount;
-      detail.transaction_fee = op.fee;
-      detail.description = "";
-   }
-
+   
+   void operator()(const transfer_operation& op)const;
+   
    void operator()(const account_create_operation& op)const {
       detail.operation_type = "Create account";
       detail.from_account = op.registrar;
@@ -570,6 +519,7 @@ public:
       _wallet.ws_server = initial_data.ws_server;
       _wallet.ws_user = initial_data.ws_user;
       _wallet.ws_password = initial_data.ws_password;
+      decent::package::PackageManager::instance().recover_all_packages();
    }
    virtual ~wallet_api_impl()
    {
@@ -2260,18 +2210,11 @@ public:
          
          
          
-         CryptoPP::Integer secret(randomGenerator, 512);
-         fc::sha512 sha_key;
-         secret.Encode((byte*)sha_key._hash, 64);
-#ifndef DECENT_LONG_SHAMIR
-         //short Shamir is able to store onlu 256 bites, rest will make content unrecoverable
-         sha_key._hash[0] = 0;
-         sha_key._hash[1] = 0;
-         sha_key._hash[2] = 0;
-         sha_key._hash[3] = 0;
-#endif
+         CryptoPP::Integer secret(randomGenerator, 256);
+         fc::sha256 sha_key;
+         secret.Encode((byte*)sha_key._hash, 32);
 
-         uint32_t quorum = std::max((vector<account_id_type>::size_type)1, seeders.size()/3);
+         uint32_t quorum = std::max((vector<account_id_type>::size_type)1, seeders.size()/3); // TODO_DECENT - quorum >= 2 see also content_submit_operation::validate
          ShamirSecret ss(quorum, seeders.size(), secret);
          ss.calculate_split();
          
@@ -2299,7 +2242,6 @@ public:
          
          package_handle->add_event_listener(listener_ptr);
          package_handle->create(false);
-         submit_op.cd = package_handle->get_custody_data();
 
      
          return fc::ripemd160();
@@ -2327,17 +2269,26 @@ public:
          status.received_key_parts = bobj->key_particles.size();
          status.total_key_parts = content->key_parts.size();
 
-         package_object pack = package_manager::instance().get_package_object(URI);
-         package_transfer_interface::transfer_progress progress;
-         if (pack.is_valid()) {
-            progress = package_transfer_interface::transfer_progress(pack.get_size(), pack.get_size(), 0, "Downloaded");
-         } else {
-            progress = package_manager::instance().get_progress(URI);
-         }
+         
+         auto pack = PackageManager::instance().find_package(URI);
 
-         status.total_download_bytes = progress.total_bytes;
-         status.received_download_bytes = progress.current_bytes;
-          status.status_text = progress.str_status;
+         if (!pack) {
+             status.total_download_bytes = 0;
+             status.received_download_bytes = 0;
+             status.status_text = "Unknown";
+         } else {
+            if (pack->get_data_state() == PackageInfo::CHECKED) {
+
+                status.total_download_bytes = pack->get_size();
+                status.received_download_bytes = pack->get_size();
+                status.status_text = "Downloaded";
+                
+            } else {
+                status.total_download_bytes = pack->get_total_size();
+                status.received_download_bytes = pack->get_downloaded_size();
+                status.status_text = "Downloading...";                
+            }
+         }
 
          return status;
       } FC_CAPTURE_AND_RETHROW( (consumer)(URI) )
@@ -2398,8 +2349,11 @@ public:
          sign_transaction( tx, broadcast );
          //detail::report_stats_listener stats_listener( URI, self);
          //stats_listener.ipfs_IDs = list_seeders_ipfs_IDs( URI);
-         package_manager::instance().download_package(URI, empty_transfer_listener::instance(), empty_report_stats_listener::instance());
+         auto& package_manager = decent::package::PackageManager::instance();
 
+         auto package = package_manager.get_package(URI);
+         package->download();
+         
       } FC_CAPTURE_AND_RETHROW( (consumer)(URI)(broadcast) )
    }
 
@@ -2506,7 +2460,11 @@ public:
    { try {
       account_object seeder_account = get_account( seeder );
       fc::ripemd160 hash(package);
-      package_object po = package_manager::instance().get_package_object(hash);
+      auto po = PackageManager::instance().find_package(hash);
+      if (po == nullptr) {
+          FC_THROW("Invalid package hash");
+      }
+
       decent::encrypt::CustodyProof proof;
 
       auto dynamic_props = get_dynamic_global_properties();
@@ -2518,7 +2476,7 @@ public:
 
       FC_ASSERT(co, "content does not exist");
 
-      po.create_proof_of_custody(co->cd, proof);
+      po->create_proof_of_custody(co->cd, proof);
 
       proof_of_custody_operation op;
       op.seeder = seeder_account.id;
@@ -2915,6 +2873,17 @@ public:
    mutable map<asset_id_type, asset_object> _asset_cache;
    vector<shared_ptr<graphene::wallet::detail::submit_transfer_listener>> _package_manager_listeners;
 };
+   
+   void operation_detail_extractor::operator()(const transfer_operation& op) const
+   {
+      detail.operation_type = "Transfer";
+      detail.from_account = op.from;
+      detail.to_account = op.to;
+      detail.transaction_amount = op.amount;
+      detail.transaction_fee = op.fee;
+      if ( op.memo )
+         detail.description = op.memo->get_message(*wif_to_key( wallet._keys.at(op.memo->to) ), op.memo->from);
+   }
 
    std::string operation_printer::fee(const asset& a)const {
       out << "   (Fee: " << wallet.get_asset(a.asset_id).amount_to_pretty_string(a) << ")";
@@ -4279,11 +4248,15 @@ signed_transaction wallet_api::leave_rating_and_comment(string consumer,
       return result;
    }
 
-
-   vector<buying_object_ex> wallet_api::search_my_purchases( const string& account_id_or_name, const string& term, const string& order )const
+   
+   vector<buying_object_ex> wallet_api::search_my_purchases(const string& account_id_or_name,
+                                                            const string& term,
+                                                            const string& order,
+                                                            const string& id,
+                                                            uint32_t count)const
    {
       account_id_type consumer = get_account( account_id_or_name ).id;
-      vector<buying_object> bobjects = my->_remote_db->get_buying_objects_by_consumer( consumer, order );
+      vector<buying_object> bobjects = my->_remote_db->get_buying_objects_by_consumer(consumer, order, object_id_type(id), term, count );
       vector<buying_object_ex> result;
 
       for (size_t i = 0; i < bobjects.size(); ++i)
@@ -4296,24 +4269,6 @@ signed_transaction wallet_api::leave_rating_and_comment(string consumer,
 
          optional<content_object> content = my->_remote_db->get_content( buyobj.URI );
          if (!content)
-            continue;
-
-         std::string synopsis = json_unescape_string(buyobj.synopsis);
-         std::string title;
-         std::string description;
-
-         ContentObjectPropertyManager synopsis_parser(synopsis);
-         title = synopsis_parser.get<ContentObjectTitle>();
-         description = synopsis_parser.get<ContentObjectDescription>();
-
-         std::string search_term = term;
-         boost::algorithm::to_lower(search_term);
-         boost::algorithm::to_lower(title);
-         boost::algorithm::to_lower(description);
-
-         if (false == search_term.empty() &&
-             std::string::npos == title.find(search_term) &&
-             std::string::npos == description.find(search_term))
             continue;
 
          result.emplace_back(buying_object_ex(bobjects[i], *status));
@@ -4350,50 +4305,59 @@ optional<content_object> wallet_api::get_content( const string& URI )const
 {
    return my->_remote_db->get_content( URI );
 }
-//=======
-   optional<buying_object> wallet_api::get_buying_by_consumer_URI( const string& account_id_or_name, const string & URI )const
-   {
-      account_id_type account = get_account( account_id_or_name ).id;
-      return my->_remote_db->get_buying_by_consumer_URI( account, URI );
-   }
-//>>>>>>> 4c1f30cb8000875a949c8819f1c860061a981e21
 
-   optional<uint64_t> wallet_api::get_rating( const string& consumer, const string & URI )const
-   {
-      account_id_type account = get_account( consumer ).id;
-      return my->_remote_db->get_rating_by_consumer_URI( account, URI );
-   }
+optional<buying_object> wallet_api::get_buying_by_consumer_URI( const string& account_id_or_name, const string & URI )const
+{
+   account_id_type account = get_account( account_id_or_name ).id;
+   return my->_remote_db->get_buying_by_consumer_URI( account, URI );
+}
+   
+optional<uint64_t> wallet_api::get_rating( const string& consumer, const string & URI )const
+{
+   account_id_type account = get_account( consumer ).id;
+   return my->_remote_db->get_rating_by_consumer_URI( account, URI );
+}
 
-   vector<content_summary> wallet_api::search_content( const string& term, const string& order, const string& user, const string& region_code, uint32_t count)const
-   {
-      return my->_remote_db->search_content( term, order, user, region_code, count );
-   }
+vector<content_summary> wallet_api::search_content(const string& term,
+                                                   const string& order,
+                                                   const string& user,
+                                                   const string& region_code,
+                                                   const string& id,
+                                                   uint32_t count)const
+{
+   return my->_remote_db->search_content(term, order, user, region_code, object_id_type(id), count);
+}
 
-   vector<content_object> wallet_api::list_content_by_author( const string& account_id_or_name )const
-   {
-      account_id_type account = get_account( account_id_or_name ).id;
-      return my->_remote_db->list_content_by_author( account );
-   }
+vector<content_object> wallet_api::list_content_by_author( const string& account_id_or_name )const
+{
+   account_id_type account = get_account( account_id_or_name ).id;
+   return my->_remote_db->list_content_by_author( account );
+}
 
 
-   vector<content_summary> wallet_api::list_content( const string& URI, uint32_t count)const
-   {
-       return my->_remote_db->list_content( URI, count );
-   }
+vector<content_summary> wallet_api::list_content( const string& URI, uint32_t count)const
+{
+    return my->_remote_db->list_content( URI, count );
+}
 
 map<string, string> wallet_api::get_content_comments( const string& URI )const
 {
    return my->_remote_db->get_content_comments( URI );
 }
+       
+       vector<string> wallet_api::list_imported_ipfs_IDs( const string& seeder)const
+       {
+           return my->list_imported_ipfs_IDs( seeder );
+       }
 
-vector<string> wallet_api::list_imported_ipfs_IDs( const string& seeder)const
-{
-   return my->list_imported_ipfs_IDs( seeder );
-}
-
-   vector<content_summary> wallet_api::search_user_content( const string& user, const string& term, const string& order, const string& region_code, uint32_t count)const
+   vector<content_summary> wallet_api::search_user_content(const string& user,
+                                                           const string& term,
+                                                           const string& order,
+                                                           const string& region_code,
+                                                           const string& id,
+                                                           uint32_t count)const
    {
-      vector<content_summary> result = my->_remote_db->search_user_content( user, term, order, region_code, count );
+      vector<content_summary> result = my->_remote_db->search_user_content(user, term, order, region_code, object_id_type(id), count);
 
       auto packages = PackageManager::instance().get_all_known_packages();
       for (auto package: packages) {
@@ -4454,24 +4418,7 @@ vector<string> wallet_api::list_imported_ipfs_IDs( const string& seeder)const
    {
       return my->_remote_db->list_seeders_by_upload( count );
    }
-
-   vector<string> wallet_api::list_packages( ) const
-   {
-      FC_ASSERT(!is_locked());
-      vector<string> str_packages;
-      vector<package_object> objects = package_manager::instance().get_packages();
-      for (int i = 0; i < objects.size(); ++i) {
-         str_packages.push_back(objects[i].get_hash().str());
-      }
-      return str_packages;
-   }
-
-   void wallet_api::packages_path(const std::string& packages_dir) const {
-   // FC_ASSERT(!is_locked());
-      my->_wallet.packages_path = packages_dir;
-      package_manager::instance().set_packages_path(packages_dir);
-   }
-
+   
    signed_transaction wallet_api::subscribe_to_author( string from,
                                                        string to,
                                                        uint32_t duration,
@@ -4539,25 +4486,29 @@ vector<string> wallet_api::list_imported_ipfs_IDs( const string& seeder)const
 
    std::pair<string, decent::encrypt::CustodyData>  wallet_api::create_package(const std::string& content_dir, const std::string& samples_dir, const DInteger& aes_key) const {
       FC_ASSERT(!is_locked());
-      fc::sha512 key1;
-      aes_key.Encode((byte*)key1._hash, 64);
+      fc::sha256 key1;
+      aes_key.Encode((byte*)key1._hash, 32);
 
-      decent::encrypt::CustodyData cd;
-      package_object pack = package_manager::instance().create_package(content_dir, samples_dir, key1, cd);
-      return std::pair<string, decent::encrypt::CustodyData>(pack.get_hash().str(), cd);
+      auto pack = PackageManager::instance().get_package(content_dir, samples_dir, key1);
+      decent::encrypt::CustodyData cd = pack->get_custody_data();
+      return std::pair<string, decent::encrypt::CustodyData>(pack->get_hash().str(), cd);
    }
+
 
    void wallet_api::extract_package(const std::string& package_hash, const std::string& output_dir, const DInteger& aes_key) const {
       FC_ASSERT(!is_locked());
-      fc::sha512 key1;
-      aes_key.Encode((byte*)key1._hash, 64);
-      key1._hash[0] = 0;
-      key1._hash[1] = 0;
-      key1._hash[2] = 0;
-      key1._hash[3] = 0;
+      fc::sha256 key1;
+      aes_key.Encode((byte*)key1._hash, 32);
 
-      package_object package = package_manager::instance().get_package_object(fc::ripemd160(package_hash));
-      package_manager::instance().unpack_package(output_dir, package, key1);
+      auto pack = PackageManager::instance().find_package(fc::ripemd160(package_hash));
+      if (pack == nullptr) {
+          FC_THROW("Can not find package");
+      }
+
+      if (pack->get_manipulation_state() != PackageInfo::ManipulationState::MS_IDLE) {
+          FC_THROW("Package is not in valid state");
+      }
+      pack->unpack(output_dir, key1);
    }
 
 void graphene::wallet::detail::submit_transfer_listener::package_creation_complete() {
@@ -4579,7 +4530,8 @@ void graphene::wallet::detail::submit_transfer_listener::package_creation_comple
    _op.hash = _info->get_hash();
    _op.size = size;
    _op.publishing_fee = days * total_price_per_day;
-   
+   _op.cd = _info->get_custody_data();
+
    
    _info->start_seeding(_protocol, false);
 }
@@ -4597,33 +4549,22 @@ void graphene::wallet::detail::submit_transfer_listener::package_seed_complete()
 }
    void wallet_api::remove_package(const std::string& package_hash) const {
       FC_ASSERT(!is_locked());
-      package_manager::instance().delete_package(fc::ripemd160(package_hash));
+      PackageManager::instance().release_package(fc::ripemd160(package_hash));
    }
 
    void wallet_api::download_package(const std::string& url) const {
       FC_ASSERT(!is_locked());
-   // detail::report_stats_listener stats_listener( url, my->self);
-   // stats_listener.ipfs_IDs = list_seeders_ipfs_IDs( url);
-
-      if (package_manager::instance().package_exists(url)) {
-         ilog("package exists for URI ${uri}",("uri", url));
-         return;
-      }
-
-      package_manager::instance().download_package(url, transfer_progress_printer::instance(), empty_report_stats_listener::instance());
+      auto pack = PackageManager::instance().get_package(url);
+      pack->download(false);
    }
 
    std::string wallet_api::upload_package(const std::string& package_hash, const std::string& protocol) const {
       FC_ASSERT(!is_locked());
-      package_object package = package_manager::instance().get_package_object(fc::ripemd160(package_hash));
-      package_transfer_interface::transfer_id id = package_manager::instance().upload_package(package, protocol, transfer_progress_printer::instance());
-      return package_manager::instance().get_transfer_url(id);
+      auto package = PackageManager::instance().get_package(fc::ripemd160(package_hash));
+      package->start_seeding(protocol, true);
+      return package->get_url();
    }
 
-   void wallet_api::print_all_transfers() const {
-   // FC_ASSERT(!is_locked());
-      package_manager::instance().print_all_transfers();
-   }
 
    void wallet_api::set_transfer_logs(bool enable) const {
    // FC_ASSERT(!is_locked());

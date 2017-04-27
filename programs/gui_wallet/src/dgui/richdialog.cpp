@@ -15,6 +15,7 @@
 #include "gui_design.hpp"
 #include "gui_wallet_mainwindow.hpp"
 #include "gui_design.hpp"
+#include <QKeyEvent>
 
 using namespace gui_wallet;
 
@@ -90,6 +91,11 @@ RichDialog::RichDialog(int a_num_of_text_boxes  , QString title)
     {
         m_controls_layout.addWidget(&m_pTextBoxes[i]);
     }
+#ifdef _MSC_VER
+    int height = style()->pixelMetric(QStyle::PM_TitleBarHeight);
+    setWindowIcon(height > 32 ? QIcon(":/icon/images/windows_decent_icon_32x32.png")
+       : QIcon(":/icon/images/windows_decent_icon_16x16.png"));
+#endif
 }
 
 RichDialog::~RichDialog() {
@@ -175,8 +181,8 @@ void SendDialogBase::AddWidget(QWidget* a_pWidget)
 
 
 /********************************************/
-SendDialog::SendDialog(int a_num_of_text_boxes  , QString title)
-: m_nNumOfTextBoxes(a_num_of_text_boxes),m_pTextBoxes(NULL),SendDialogBase(title)
+SendDialog::SendDialog(int a_num_of_text_boxes  , QString title, QString userName)
+: m_nNumOfTextBoxes(a_num_of_text_boxes),m_pTextBoxes(NULL),SendDialogBase(title) , m_userName(userName)
 {
    if(a_num_of_text_boxes<=0) return;
    
@@ -206,6 +212,11 @@ SendDialog::SendDialog(int a_num_of_text_boxes  , QString title)
    {
       m_controls_layout.addWidget(&m_pTextBoxes[i]);
    }
+#ifdef _MSC_VER
+   int height = style()->pixelMetric(QStyle::PM_TitleBarHeight);
+   setWindowIcon(height > 32 ? QIcon(":/icon/images/windows_decent_icon_32x32.png")
+      : QIcon(":/icon/images/windows_decent_icon_16x16.png"));
+#endif
 }
 
 SendDialog::~SendDialog() {
@@ -233,23 +244,22 @@ void SendDialog::sendDCT()
       setEnabled(true);
    }
    
-   QMessageBox* msgBox = new QMessageBox();
-   msgBox->setAttribute(Qt::WA_DeleteOnClose);
-   
    if (message.empty())
    {
-      msgBox->setWindowTitle(tr("Success"));
-      msgBox->setText(tr("Success"));
+      SuccessMessageDialog* successMessage = new SuccessMessageDialog(tr("Success") , tr("Success"));
+      successMessage->execSMD();
+      delete successMessage;
       close();
    }
    else
    {
+      QMessageBox* msgBox = new QMessageBox();
+      msgBox->setAttribute(Qt::WA_DeleteOnClose);
       msgBox->setWindowTitle(tr("Error"));
       msgBox->setText(tr("Failed to send DCT"));
       msgBox->setDetailedText(message.c_str());
+      msgBox->open();
    }
-   
-   msgBox->open();
 }
 
 
@@ -261,7 +271,8 @@ RET_TYPE SendDialog::execRD(const QPoint* a_pMove, std::vector<std::string>& a_c
    int nSizeToSet(nVectInitSize<m_nNumOfTextBoxes ? nVectInitSize : m_nNumOfTextBoxes);
    
    for(i = 0; i<nSizeToSet; ++i){m_pTextBoxes[i].setText(tr(a_cvResults[i].c_str()));}
-   
+   if(m_userName != "")
+      m_pTextBoxes[0].setText(m_userName);
    RET_TYPE rtReturn = SendDialogBase::execRB(a_pMove);
    if(m_nNumOfTextBoxes>nVectInitSize){a_cvResults.resize(m_nNumOfTextBoxes);}
    
@@ -273,4 +284,37 @@ RET_TYPE SendDialog::execRD(const QPoint* a_pMove, std::vector<std::string>& a_c
    }
    
    return rtReturn;
+}
+
+
+
+
+SuccessMessageDialog::SuccessMessageDialog(QString message , QString title)
+{
+   m_text = new QLabel(message);
+   m_text->setFont(AccountBalanceFont());
+   
+   m_ok_button = new DecentButton();
+   m_ok_button->setText(tr("OK"));
+   m_ok_button->setFixedSize(140, 40);
+   connect(m_ok_button, SIGNAL(LabelClicked()), this , SLOT(close()));
+   
+   m_controls_layout.addWidget(m_text, 0, Qt::AlignCenter);
+   m_controls_layout.addWidget(m_ok_button, 0, Qt::AlignCenter);
+   
+   setWindowTitle(title);
+   setLayout(&m_controls_layout);
+   setFixedSize(300,100);
+}
+
+void SuccessMessageDialog::execSMD()
+{
+   this->exec();
+}
+
+void SuccessMessageDialog::keyPressEvent(QKeyEvent *evt)
+{
+   if(evt->key() == Qt::Key_Enter || evt->key() == Qt::Key_Return)
+      close();
+   QDialog::keyPressEvent(evt);
 }

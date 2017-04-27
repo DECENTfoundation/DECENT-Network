@@ -94,6 +94,8 @@ public:
    
     void SetTransactionInfo(std::string info_from_other_tab);
    
+    Overview_tab* getUsersTab();
+   
 public slots:
    void initTabChanged();
    void tabChanged(int index);

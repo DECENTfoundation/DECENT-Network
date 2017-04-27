@@ -83,8 +83,8 @@ void seeding_plugin_impl::handle_content_submit(const operation_history_object &
                });
                //if we run this in main thread it can crash _push_block
                service_thread->async( [cs_op, this, mso](){
-                    /*ilog("seeding plugin:  handle_content_submit() lambda called");
-                    auto id = package_manager::instance().download_package(cs_op.URI, *this, empty_report_stats_listener::instance());
+                    ilog("seeding plugin:  handle_content_submit() lambda called");
+                    /*auto id = package_manager::instance().download_package(cs_op.URI, *this, empty_report_stats_listener::instance());
                     active_downloads[id] = so_id;
                     */
                     auto& pm = decent::package::PackageManager::instance();
@@ -92,6 +92,7 @@ void seeding_plugin_impl::handle_content_submit(const operation_history_object &
                     decent::package::event_listener_handle_t sl = std::make_shared<SeedingListener>(*this, mso , package_handle);
                     package_handle->add_event_listener(sl);
                     package_handle->download(false);
+                    ilog("seeding plugin:  handle_content_submit() lambda ended");
                });
             }
          }

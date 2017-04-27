@@ -32,7 +32,6 @@
 
 #include <QDialog>
 #include <vector>
-#include "qt_commonheader.hpp"
 #include "gui_wallet_global.hpp"
 #include "decent_wallet_ui_gui_contentdetailsgeneral.hpp"
 

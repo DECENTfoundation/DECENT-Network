@@ -145,7 +145,6 @@ namespace gui_wallet
       void buttonPressed();
       void transactionButtonPressed();
       
-      
    public:
       QLineEdit      search;
       DecentTable    table_widget;

@@ -20,6 +20,7 @@
 #include "decent_button.hpp"
 
 
+
 namespace gui_wallet {
 
 
@@ -97,7 +98,7 @@ class SendDialog : public SendDialogBase
 {
    Q_OBJECT
 public:
-   SendDialog(int num_of_text_boxes , QString title);
+   SendDialog(int num_of_text_boxes , QString title, QString userName);
    virtual ~SendDialog();
    
    virtual RET_TYPE execRD(const QPoint* pMove, std::vector<std::string>& results);
@@ -106,11 +107,27 @@ public:
    void sendDCT();
    
 protected:
+   QString     m_userName;
    int         m_nNumOfTextBoxes;
    QLineEdit*  m_pTextBoxes;
 public:
    QString curentName;
    
+};
+   
+class SuccessMessageDialog : public QDialog
+{
+   Q_OBJECT
+public:
+   SuccessMessageDialog(QString message , QString title);
+   void execSMD();
+
+   void keyPressEvent(QKeyEvent *evt);
+
+private:
+   DecentButton* m_ok_button;
+   QLabel*       m_text;
+   QVBoxLayout   m_controls_layout;
 };
    
 }

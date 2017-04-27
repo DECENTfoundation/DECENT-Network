@@ -17,7 +17,6 @@
 #include <QMessageBox>
 #endif
 
-#include "qt_commonheader.hpp"
 #include "gui_wallet_mainwindow.hpp"
 #include "gui_wallet_global.hpp"
 #include "gui_design.hpp"
@@ -66,8 +65,9 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
 
    m_pMenuLayout->addWidget(m_barLeft);
    m_pMenuLayout->addWidget(m_barRight);
-
-
+#ifdef _MSC_VER
+   m_pCentralAllLayout->addLayout(m_pMenuLayout);// Windows needs it
+#endif
    m_pCentralWidget = new CentralWigdet(m_pCentralAllLayout,this);
    m_pCentralWidget->setLayout(m_pCentralAllLayout);
    //setCentralWidget(m_pCentralWidget);
@@ -98,6 +98,12 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
 
    QObject::connect(&Globals::instance(), &Globals::connectingProgress,
                     this, &Mainwindow_gui_wallet::slot_connecting_progress);
+
+   QObject::connect(&Globals::instance(), &Globals::signal_showPurchasedTab,
+                    this, &Mainwindow_gui_wallet::slot_showPurchasedTab);
+
+   QObject::connect(&Globals::instance(), &Globals::signal_updateAccountBalance,
+                    this, &Mainwindow_gui_wallet::slot_updateAccountBalance);
 
    connect(pUsersCombo, SIGNAL(currentIndexChanged(const QString&)), this, SLOT(CurrentUserChangedSlot(const QString&)) );
 
@@ -179,6 +185,17 @@ void Mainwindow_gui_wallet::currentUserBalanceUpdate()
    }
 }
 
+void Mainwindow_gui_wallet::slot_showPurchasedTab()
+{
+   GoToThisTab(4, std::string());
+}
+
+void Mainwindow_gui_wallet::slot_updateAccountBalance(Asset const& balance)
+{
+   // use old function needs to be reviewed
+   UpdateAccountBalances(Globals::instance().getCurrentUser());
+}
+
 CentralWigdet* Mainwindow_gui_wallet::getCentralWidget()
 {
    return m_pCentralWidget;
@@ -188,7 +205,7 @@ CentralWigdet* Mainwindow_gui_wallet::getCentralWidget()
 
 void Mainwindow_gui_wallet::RunTaskImpl(std::string const& str_command, std::string& str_result)
 {
-   str_result = Globals::instance().getWallet().RunTaskImpl(str_command);
+   str_result = Globals::instance().runTask(str_command);
 }
 
 bool Mainwindow_gui_wallet::RunTaskParseImpl(std::string const& str_command, nlohmann::json& json_result) {
@@ -372,7 +389,7 @@ void Mainwindow_gui_wallet::UpdateAccountBalances(const std::string& username) {
       }
       amount = amount / pow(10, precision);
       
-      QString str = QString::number(amount) + tr(" ") + QString::fromStdString(assetName);
+      QString str = QString::number(amount) + " " + QString::fromStdString(assetName);
       
       balances.push_back(str.toStdString());
    }
@@ -463,9 +480,7 @@ void Mainwindow_gui_wallet::UpdateLockedStatus()
 
 
 void Mainwindow_gui_wallet::CheckDownloads()
-{
-   return; //TODO: remove this later
-   
+{   
     auto& global_instance = gui_wallet::Globals::instance();
     std::string str_current_username = global_instance.getCurrentUser();
 
@@ -605,7 +620,7 @@ void Mainwindow_gui_wallet::ImportKeySlot()
         hasError = true;
     }
     if (hasError) {
-        ALERT_DETAILS(tr("Can not import key.").toStdString(), result.c_str());
+        ALERT_DETAILS(tr("Cannot import key.").toStdString(), result.c_str());
     } else {
         DisplayWalletContentGUI(false);
     }
@@ -618,15 +633,15 @@ void Mainwindow_gui_wallet::SendDCTSlot()
 {
    if(!m_pCentralWidget->usersCombo()->count())
       return;
+   
+   DecentSmallButton* button = (DecentSmallButton*)sender();
+   QString accountName = button->property("accountName").toString();
+   
    if(m_sendDCT_dialog != nullptr)
-   {
       delete m_sendDCT_dialog;
-      m_sendDCT_dialog = new SendDialog(3, tr("Send DCT"));
-   }
-   else
-   {
-      m_sendDCT_dialog = new SendDialog(3, tr("Send DCT"));
-   }
+
+   m_sendDCT_dialog = new SendDialog(3, tr("Send") + " DCT" , accountName);
+
    std::vector<std::string> cvsUsKey(3);
    QPoint thisPos = pos();
    thisPos.rx() += size().width() / 2 - 175;
