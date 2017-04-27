@@ -1,7 +1,7 @@
 #include "stdafx.h"
 
 #include "gui_wallet_global.hpp"
-#include "decent_button.hpp"
+#include "richdialog.hpp"
 
 #ifndef _MSC_VER
 #include <QMessageBox>
@@ -12,8 +12,9 @@
 #include <QTimer>
 #include <QHeaderView>
 #include <QObject>
+#include <QHBoxLayout>
+#include <QVBoxLayout>
 
-#include <iostream>
 #endif
 
 using string = std::string;
@@ -620,44 +621,13 @@ void Globals::showTransferDialog(std::string const& user)
    if(getCurrentUser().empty())
       return;
 
-   QString strTitle = QObject::tr("Send");
-   strTitle += " ";
-   strTitle += asset(0).m_str_symbol.c_str();
-
-   QDialog* pTransferDialog = new QDialog();
-   pTransferDialog->setAttribute(Qt::WA_DeleteOnClose);
-
-   DecentButton* pOKButton = new DecentButton(pTransferDialog);
-   DecentButton* pOKButton = new DecentButton(pTransferDialog);
-   pOKButton->setText(tr("Send"));
-   {
-
-      m_ok_button.setText(tr("Send"));
-      m_cancel_button.setText(tr("Cancel"));
-      m_ok_button.setFixedSize(140, 40);
-      m_cancel_button.setFixedSize(140, 40);
-      m_buttons_layout.setSpacing(20);
-      m_buttons_layout.addWidget(&m_ok_button);
-      m_buttons_layout.addWidget(&m_cancel_button);
-      m_controls_layout.setContentsMargins(0, 0, 0, 0);
-      m_cancel_button.setStyleSheet(d_cancel_button);
-      m_main_layout.setContentsMargins(40, 10, 40, 10);
-      m_main_layout.setAlignment(Qt::AlignCenter);
-      m_main_layout.setSpacing(10);
-      m_main_layout.addLayout(&m_controls_layout);
-      m_main_layout.addLayout(&m_buttons_layout);
-      setLayout(&m_main_layout);
-      connect(&m_cancel_button,SIGNAL(LabelClicked()),this,SLOT(close()));
-      connect(&m_ok_button,SIGNAL(LabelClicked()),this,SLOT(set_ok_and_closeSlot()));
-      setWindowTitle(title);
-      setFixedSize(380,240);
-   }
-   pTransferDialog->open();
+   SendDialog* pTransferDialog = new SendDialog(3, QObject::tr("Send") + " " + asset(0).m_str_symbol.c_str() , user.c_str());
 
    std::vector<std::string> cvsUsKey(3);
 
-   pTransferDialog->curentName = getCurrentUser().c_str();
-   pTransferDialog->execRD(&thisPos,cvsUsKey);
+   pTransferDialog->curentName = user.c_str();
+   pTransferDialog->execRD(nullptr, cvsUsKey);
+   delete pTransferDialog;
 }
 
 void Globals::slot_connected(std::string const& str_error)

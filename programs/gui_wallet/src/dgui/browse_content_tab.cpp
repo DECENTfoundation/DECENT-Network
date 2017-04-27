@@ -106,7 +106,7 @@ void BrowseContentTab::timeToUpdate(const std::string& result) {
       cont.size = json_item["size"].get<int>();
       
       if (json_item["times_bought"].is_number()) {
-         cont.times_bougth = json_item["times_bought"].get<int>();
+         cont.times_bought = json_item["times_bought"].get<int>();
       } else {
          cont.times_bought = 0;
       }

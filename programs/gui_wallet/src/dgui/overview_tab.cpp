@@ -119,6 +119,9 @@ Overview_tab::Overview_tab(class Mainwindow_gui_wallet* a_pPar)
 
    QObject::connect(pfilterLineEditor, &QLineEdit::textChanged,
                     this, &Overview_tab::slot_SearchTermChanged);
+
+   QObject::connect(m_pTableWidget, &DecentTable::signal_SortingChanged,
+                    this, &Overview_tab::slot_SortingChanged);
 }
 
 void Overview_tab::timeToUpdate(const std::string& result) {
@@ -270,5 +273,10 @@ void Overview_tab::slot_SearchTermChanged(QString const& strSearchTerm)
 void Overview_tab::slot_AccountChanged(QString const& strAccountName)
 {
    m_strSelectedAccount = strAccountName;
+}
+
+void Overview_tab::slot_SortingChanged(int index)
+{
+   reset();
 }
 }//   end namespace gui_wallet

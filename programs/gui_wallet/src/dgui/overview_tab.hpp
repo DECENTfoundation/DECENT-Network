@@ -28,6 +28,7 @@ namespace gui_wallet
       void slot_Transfer();
       void slot_SearchTermChanged(QString const& strSearchTerm);
       void slot_AccountChanged(QString const& strAccountName);
+      void slot_SortingChanged(int index);
 
    public:
       QSignalMapper* m_pAccountSignalMapper;
