@@ -100,10 +100,7 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details, bool bSil
             
             white_star = white_star.scaled(QSize(20,20));
             green_star = green_star.scaled(QSize(20,20));
-            
-            
-            
-            
+           
             QHBoxLayout* stars = new QHBoxLayout;
             stars->addWidget(m_RateText);
             stars->setContentsMargins(250, 10, 20, 20);
@@ -145,43 +142,34 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details, bool bSil
        
        std::string comment_result;
        try {
-          RunTask("get_comment_by_consumer_URI \"" + Globals::instance().getCurrentUser() + "\" \"" + m_pContentInfo->URI + "\"", comment_result);
+          RunTask("get_rating_and_comment \"" + Globals::instance().getCurrentUser() + "\" \"" + m_pContentInfo->URI + "\"", comment_result);
        } catch (...) { }
     
-       std::cout << "\n\n\n\n\n\n ~_~_~_~gui- get_comment : " << comment_result << std::endl;
+       std::cout << "\n\n\n\n\n\n gui- get_rating_and_comment : " << comment_result << std::endl;
        m_CommentOrRate_Text = new QLabel;
        m_comment = new QTextEdit;
 
-       if ( comment_result.empty() )
-       {
-          m_CommentOrRate_Text->setText("Leave comment about this content");
-          m_comment->setPlaceholderText("Text heare");
-          
-          m_main_layout.addWidget(m_CommentOrRate_Text);
-          m_main_layout.addWidget(m_comment);
-          
-          QHBoxLayout* button = new QHBoxLayout;
-          button->setAlignment(Qt::AlignRight);
-          button->setMargin(4);
-          
-          DecentButton* leave_comment_button = new DecentButton;
-          leave_comment_button->setText("Leave comment");
-          leave_comment_button->setFixedHeight(40);
-          leave_comment_button->setFixedWidth(100);
-          button->addWidget(leave_comment_button);
-          
-          m_main_layout.addLayout(button);
-          
-          connect(leave_comment_button, SIGNAL(LabelClicked()), this, SLOT(LeaveComment()));
-       }
-       else{
-          m_CommentOrRate_Text->setText("You Commented");
-          m_comment->setText("COMMENT");
-          
-          m_main_layout.addWidget(m_CommentOrRate_Text);
-          m_main_layout.addWidget(m_comment);
-       }
+       auto c_result = json::parse(comment_result);
+
+       m_CommentOrRate_Text->setText("Leave comment about this content");
+       m_comment->setPlaceholderText(QString::fromStdString(comment_result));
        
+       m_main_layout.addWidget(m_CommentOrRate_Text);
+       m_main_layout.addWidget(m_comment);
+       
+       QHBoxLayout* button = new QHBoxLayout;
+       button->setAlignment(Qt::AlignRight);
+       button->setMargin(4);
+       
+       DecentButton* leave_comment_button = new DecentButton;
+       leave_comment_button->setText("Leave comment");
+       leave_comment_button->setFixedHeight(40);
+       leave_comment_button->setFixedWidth(100);
+       button->addWidget(leave_comment_button);
+       
+       m_main_layout.addLayout(button);
+       
+       connect(leave_comment_button, SIGNAL(LabelClicked()), this, SLOT(LeaveComment()));
     }
     
     if(a_cnt_details.type == DCT::WAITING_DELIVERY) {
@@ -313,21 +301,27 @@ void ContentDetailsBase::LeaveComment()
 
    }catch (...) {}
 
-   std::cout << "\n\n\n\n ~~~~~~ gui leave_result: " << leave_result << std::endl;
+   std::cout << "\n\n\n\n run task result: \n" << leave_result << "\n" << std::endl;
 }
 
 void ContentDetailsBase::MouseClickedStar(int index) {
     if (m_currentMyRating > 0)
         return;
-    m_rating = ++index;
-   
-    std::string result;
-    try {
-        RunTask("leave_rating \"" + Globals::instance().getCurrentUser() + "\" \"" + m_pContentInfo->URI + "\" " + std::to_string(index + 1) + " true", result);
-        
+//    std::string result;
+//    try {
+//        RunTask("leave_rating \"" + Globals::instance().getCurrentUser() + "\" \"" + m_pContentInfo->URI + "\" " + std::to_string(index + 1) + " true", result);
         m_currentMyRating = (index + 1);
-    } catch (...) {} // Ignore for now;
-    
+//        } catch (...) {} // Ignore for now;
+   m_rating = index + 1;
+   std::cout << "\n\n  m_rating \n" << m_rating << std::endl;
+   
+   for (int i = m_currentMyRating; i < 5; ++i) {
+      stars_labels[i]->setCheckState(Qt::Unchecked);
+   }
+   for (int i = 0; i < m_currentMyRating; ++i) {
+      stars_labels[i]->setCheckState(Qt::Checked);
+   }
+
 }
 
 

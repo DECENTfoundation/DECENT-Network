@@ -289,10 +289,12 @@ public:
       detail.to_account = op.consumer;
       detail.transaction_amount = asset();
       detail.transaction_fee = op.fee;
+      
       if( op.rating == 0 )
          detail.description = std::to_string(op.rating);
       else
-         detail.description = "comment";
+         detail.description = "-";
+      
    }
    
 };
@@ -2441,7 +2443,7 @@ public:
                                                string comment,
                                                bool broadcast/* = false */)
    {
-      std::cout << "\n\n\n\n\n  ~_~_~_~_~:: wallet leave_rating_and_comment \n rating: " << rating << "\n URI: "  "\n comment: " << comment << std::endl;
+      std::cout << "\n\n\n\n\n  ~_~_~_~_~:: wallet leave_rating_and_comment \n rating: " << rating << "\n comment: " << comment << std::endl;
 
       try {
       account_object consumer_account = get_account( consumer );
