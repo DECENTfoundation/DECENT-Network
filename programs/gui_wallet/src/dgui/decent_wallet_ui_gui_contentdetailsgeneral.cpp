@@ -18,7 +18,7 @@
 using namespace gui_wallet;
 ContentDetailsGeneral::ContentDetailsGeneral(QWidget* pParent) : ContentDetailsBase(pParent){
    QHBoxLayout* image_layout = new QHBoxLayout;
-   m_label.setText(tr("Get it") + "!");
+   m_label.setText(tr("Get it!"));
    m_label.setFixedWidth(178);
    m_label.setFixedHeight(40);
    
