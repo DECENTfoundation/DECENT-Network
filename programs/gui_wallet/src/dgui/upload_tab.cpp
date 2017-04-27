@@ -88,7 +88,8 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    _descriptionText->setPlaceholderText(tr("Description"));
    _descriptionText->setStyleSheet(d_desc);
    _descriptionText->setMinimumHeight(160);
-   _descriptionText->setMinimumWidth(420);
+   _descriptionText->setMinimumWidth(480);
+   _descriptionText->setTabChangesFocus(true);
    u_main_layout->addWidget(_descriptionText);
    
    ////////////////////////////////////////////////////////////////////////////
@@ -183,17 +184,11 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    _seedersPath->setMinimumHeight(40);
    
    DecentButton* seeders_button = new DecentButton();
-#ifdef WINDOWS_HIGH_DPI
-   seeders_button->setText(tr("Select"));// to keep all three buttons the same size and save edit boxes space
-#else
+
    seeders_button->setText(tr("Select Seeders"));
-#endif
    seeders_button->setFont(PopupButtonRegularFont());
-#ifdef WINDOWS_HIGH_DPI
-   seeders_button->setFixedWidth(150);
-#else
-   seeders_button->setFixedWidth(100);
-#endif
+
+   seeders_button->setFixedWidth(120);
    seeders_button->setFixedHeight(40);
    
    seedersRow->addWidget(_seedersPath);
@@ -228,11 +223,8 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    DecentButton* browseContentButton = new DecentButton();
    browseContentButton->setText(tr("Browse"));
    browseContentButton->setFont(PopupButtonRegularFont());
-#ifdef WINDOWS_HIGH_DPI
-   browseContentButton->setMinimumWidth(150);
-#else
-   browseContentButton->setMinimumWidth(100);
-#endif
+
+   browseContentButton->setMinimumWidth(120);
    browseContentButton->setFixedHeight(40);
    connect(browseContentButton, SIGNAL(LabelClicked()),this, SLOT(browseContent()));
 
@@ -255,11 +247,8 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    DecentButton* browseSamplesButton = new DecentButton();
    browseSamplesButton->setText(tr("Browse"));
    browseSamplesButton->setFont(PopupButtonRegularFont());
-#ifdef WINDOWS_HIGH_DPI
-   browseSamplesButton->setMinimumWidth(150);
-#else
-   browseSamplesButton->setMinimumWidth(100);
-#endif
+
+   browseSamplesButton->setMinimumWidth(120);
    browseSamplesButton->setFixedHeight(40);
    connect(browseSamplesButton, SIGNAL(LabelClicked()),this, SLOT(browseSamples()));
 
@@ -503,6 +492,9 @@ void Upload_popup::updateUploadButtonStatus() {
 void Upload_popup::browseContent() {
     QString contentPathSelected = QFileDialog::getOpenFileName(this, tr("Select content"), "~");
    
+   if (contentPathSelected.size() == 0) {
+       return;
+   }
    boost::system::error_code ec;
    if (boost::filesystem::file_size(contentPathSelected.toStdString(), ec) > 100 * 1024 * 1024) {
       ALERT("Content size is limited in Testnet 0.1 to 100MB");
