@@ -24,6 +24,7 @@ namespace graphene { namespace chain {
          s_mapCodeToName.insert(std::make_pair(item.first, item.second));
          s_mapNameToCode.insert(std::make_pair(item.second, item.first));
       }
+      return true;
    }
 
    optional<asset> PriceRegions::GetPrice(uint32_t region_code) const

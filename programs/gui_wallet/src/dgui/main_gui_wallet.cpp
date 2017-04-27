@@ -123,14 +123,15 @@ int main(int argc, char* argv[])
    });
    
    
-   
+#define SET_LIBRARY_PATHS
 #ifdef SET_LIBRARY_PATHS
-   QDir dir(argv[0]);
+   auto pluginsDir = QDir(QCoreApplication::applicationDirPath());
+   if (pluginsDir.dirName() == "MacOS") {
+      pluginsDir.cdUp();
+   }
+   pluginsDir.cd("plugins");
 
-   dir.cdUp();
-   dir.cdUp();
-   dir.cd("lib");
-   QCoreApplication::setLibraryPaths(QStringList(dir.absolutePath()));
+   QCoreApplication::setLibraryPaths(QStringList(pluginsDir.absolutePath()));
 #endif
 
 

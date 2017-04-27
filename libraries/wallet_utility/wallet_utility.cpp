@@ -74,7 +74,7 @@ namespace wallet_utility
                wdata.chain_id = chain_id_type("0000000000000000000000000000000000000000000000000000000000000000");
 
             //  most probably this needs to get out to somewhere else
-            graphene::package::package_manager::instance().set_libtorrent_config(wdata.libtorrent_config_path);
+            //graphene::package::package_manager::instance().set_libtorrent_config(wdata.libtorrent_config_path);
 
             websocket_client_ptr ptr_ws_client(new websocket_client());
             websocket_connection_ptr ptr_ws_connection = ptr_ws_client->connect(wdata.ws_server);

@@ -38,6 +38,9 @@ const char* const d_StyleSheet      =
 
 //gui_wallet_centralwidget
 const char* const d_main_tabs           = "QTabBar::tab{"
+#ifdef WINDOWS_HIGH_DPI
+                                          "font-size: 10pt;"
+#endif
                                           "font:bold;"
                                           " height: 40px; width: 181px;"
                                           "color:rgb(0,0,0);background-color:white;"

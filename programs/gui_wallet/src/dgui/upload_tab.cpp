@@ -1,12 +1,4 @@
-/*
- *	File      : upload_tab.cpp
- *
- *	Created on: 21 Nov 2016
- *	Created by: Davit Kalantaryan (Email: davit.kalantaryan@desy.de)
- *
- *  This file implements ...
- *
- */
+
 #include "stdafx.h"
 
 #include "upload_tab.hpp"
@@ -111,10 +103,10 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    
 
    _lifeTime = new QDateEdit(this);
-   _lifeTime->setDate(QDate::currentDate());
+   _lifeTime->setDate(QDate::currentDate().addDays(30));
    _lifeTime->setDisplayFormat("yyyy-MM-dd");
    _lifeTime->setCalendarPopup(true);
-   _lifeTime->setMinimumDate(QDate::currentDate());
+   _lifeTime->setMinimumDate(QDate::currentDate().addDays(1));
    _lifeTime->setStyle(QStyleFactory::create("fusion"));
    _lifeTime->setMinimumHeight(40);
    _lifeTime->setFixedWidth(320);
@@ -191,9 +183,17 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    _seedersPath->setMinimumHeight(40);
    
    DecentButton* seeders_button = new DecentButton();
+#ifdef WINDOWS_HIGH_DPI
+   seeders_button->setText(tr("Select"));// to keep all three buttons the same size and save edit boxes space
+#else
    seeders_button->setText(tr("Select Seeders"));
+#endif
    seeders_button->setFont(PopupButtonRegularFont());
+#ifdef WINDOWS_HIGH_DPI
+   seeders_button->setFixedWidth(150);
+#else
    seeders_button->setFixedWidth(100);
+#endif
    seeders_button->setFixedHeight(40);
    
    seedersRow->addWidget(_seedersPath);
@@ -228,7 +228,11 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    DecentButton* browseContentButton = new DecentButton();
    browseContentButton->setText(tr("Browse"));
    browseContentButton->setFont(PopupButtonRegularFont());
+#ifdef WINDOWS_HIGH_DPI
+   browseContentButton->setMinimumWidth(150);
+#else
    browseContentButton->setMinimumWidth(100);
+#endif
    browseContentButton->setFixedHeight(40);
    connect(browseContentButton, SIGNAL(LabelClicked()),this, SLOT(browseContent()));
 
@@ -251,7 +255,11 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    DecentButton* browseSamplesButton = new DecentButton();
    browseSamplesButton->setText(tr("Browse"));
    browseSamplesButton->setFont(PopupButtonRegularFont());
+#ifdef WINDOWS_HIGH_DPI
+   browseSamplesButton->setMinimumWidth(150);
+#else
    browseSamplesButton->setMinimumWidth(100);
+#endif
    browseSamplesButton->setFixedHeight(40);
    connect(browseSamplesButton, SIGNAL(LabelClicked()),this, SLOT(browseSamples()));
 
@@ -274,13 +282,11 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    _cancel_button->setText(tr("Cancel"));
    _cancel_button->setFont(PopupButtonBigFont());
    _cancel_button->setMinimumHeight(50);
-   //_cancel_button->setMinimumWidth(140);
-   _cancel_button->setStyleSheet(d_cancel);
+
 
    _upload_button->setText(tr("Publish"));
    _upload_button->setFont(PopupButtonBigFont());
    _upload_button->setMinimumHeight(50);
-   //_upload_button->setMinimumWidth(140);
 
    connect(_upload_button, SIGNAL(LabelClicked()),this, SLOT(uploadContent()));
    connect(_cancel_button, SIGNAL(LabelClicked()),this, SLOT( uploadCanceled() ));
@@ -604,12 +610,13 @@ void Upload_popup::uploadContent()
       _contentPath->setText(tr("Content path"));
       _samplesPath->setText(tr("Samples (optional)"));
 
+
       msgBox->setWindowTitle(tr("Success"));
-      msgBox->setText(tr("Content is submitted"));
+      msgBox->setText(tr("Content is processing..."));
 
       setEnabled(true);
 
-      emit uploadFinished();
+      this->close();
    }
    else
    {
@@ -622,8 +629,15 @@ void Upload_popup::uploadContent()
 }
 
 
-// UPLOAD TAB
+void Upload_popup::uploadCanceled()
+{
+   this->close();
+}
 
+
+//////////////////////////////////////////////////
+// UPLOAD TAB
+//////////////////////////////////////////////////
 
 Upload_tab::Upload_tab(Mainwindow_gui_wallet* parent)
 : TabContentManager(parent)
@@ -639,8 +653,11 @@ Upload_tab::Upload_tab(Mainwindow_gui_wallet* parent)
         {tr("Published"), 10, "created"},
         {tr("Expiration"), 10, "expiration"},
         {tr("Status"), 10},
+#ifdef WINDOWS_HIGH_DPI
+        { " ", -80 }
+#else
         {" ", -50}
-
+#endif
     });
 
     upload_button = new DecentButton();
@@ -894,9 +911,4 @@ void Upload_tab::uploadPopup() {
       Upload_popup popup(_parent);
       popup.exec();
    }
-}
-
-void Upload_popup::uploadCanceled()
-{
-    this->close();
 }

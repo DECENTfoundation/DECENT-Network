@@ -37,7 +37,13 @@ BrowseContentTab::BrowseContentTab(QWidget* pParent)
       {tr("Price"), 5, "price"},
       {tr("Uploaded"), 7, "created"},
       {tr("Expiration"), 7, "expiration"},
-      {" ", -50},
+      { " ",
+#ifdef WINDOWS_HIGH_DPI
+           -90
+#else
+           -50
+#endif
+      },
    });
 
    QLabel* pLabelSearchIcon = new QLabel(this);

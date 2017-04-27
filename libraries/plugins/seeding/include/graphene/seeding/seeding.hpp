@@ -143,7 +143,7 @@ public:
     * @param so_id ID of the my_seeding_object
     * @param downloaded_package Downloaded package object
     */
-   void generate_por( my_seeding_id_type so_id, graphene::package::package_object downloaded_package );
+   //void generate_por( my_seeding_id_type so_id, graphene::package::package_object downloaded_package );
 
    /**
     * Generates proof of retrievability of a package
@@ -208,8 +208,8 @@ public:
       //In case the download fails, delete the package and seeding objects - TODO_DECENT
       //_my->database().remove(mso);
       elog("seeding plugin: package_download_error(): Failed downloading package ${s}",("s",_url));
-      auto& pm = decent::package::PackageManager::instance();
-      pm.release_package(_pi);
+      //auto& pm = decent::package::PackageManager::instance();
+      //pm.release_package(_pi);
    };
 
    virtual void package_download_complete(){

@@ -52,7 +52,7 @@ void ContentDetailsGeneral::LabelPushCallbackGUI()
    reply->setWindowFlags(Qt::WindowTitleHint);
    reply->QDialog::setWindowTitle(tr("Decent-Blockchain Content Distributor"));
    reply->setText(tr("          Are you sure you want to buy this content?"));
-   QPushButton* pButtonCencel = reply->addButton(tr("Cencel"), QMessageBox::YesRole);
+   QPushButton* pButtonCencel = reply->addButton(tr("Cancel"), QMessageBox::YesRole);
    QPushButton* pButtonOk = reply->addButton(tr("Get it"), QMessageBox::NoRole);
    pButtonOk->setStyleSheet(d_pButtonOk);
    pButtonCencel->setStyleSheet(d_pbuttonCancel);
@@ -80,7 +80,8 @@ void ContentDetailsGeneral::LabelPushCallbackGUI()
       str_error = ex.what();
    }
    if (false == str_error.empty())
-      ALERT(tr("Failed to download content").toStdString() + str_error);
+      ALERT(tr("Failed to download content").toStdString() + str_error.c_str());
+
 
    emit ContentWasBought();
    
