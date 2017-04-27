@@ -1,6 +1,8 @@
 #include "stdafx.h"
 
 #include "gui_wallet_global.hpp"
+#include "decent_button.hpp"
+
 #ifndef _MSC_VER
 #include <QMessageBox>
 #include <QThread>
@@ -598,6 +600,51 @@ void Globals::setWalletError(std::string const& error)
    emit walletConnectionError(error);
 }
 
+void Globals::showTransferDialog(std::string const& user)
+{
+   if(getCurrentUser().empty())
+      return;
+
+   QString strTitle = QObject::tr("Send");
+   strTitle += " ";
+   strTitle += asset(0).m_str_symbol.c_str();
+
+   QDialog* pTransferDialog = new QDialog();
+   pTransferDialog->setAttribute(Qt::WA_DeleteOnClose);
+
+   DecentButton* pOKButton = new DecentButton(pTransferDialog);
+   DecentButton* pOKButton = new DecentButton(pTransferDialog);
+   pOKButton->setText(tr("Send"));
+   {
+
+      m_ok_button.setText(tr("Send"));
+      m_cancel_button.setText(tr("Cancel"));
+      m_ok_button.setFixedSize(140, 40);
+      m_cancel_button.setFixedSize(140, 40);
+      m_buttons_layout.setSpacing(20);
+      m_buttons_layout.addWidget(&m_ok_button);
+      m_buttons_layout.addWidget(&m_cancel_button);
+      m_controls_layout.setContentsMargins(0, 0, 0, 0);
+      m_cancel_button.setStyleSheet(d_cancel_button);
+      m_main_layout.setContentsMargins(40, 10, 40, 10);
+      m_main_layout.setAlignment(Qt::AlignCenter);
+      m_main_layout.setSpacing(10);
+      m_main_layout.addLayout(&m_controls_layout);
+      m_main_layout.addLayout(&m_buttons_layout);
+      setLayout(&m_main_layout);
+      connect(&m_cancel_button,SIGNAL(LabelClicked()),this,SLOT(close()));
+      connect(&m_ok_button,SIGNAL(LabelClicked()),this,SLOT(set_ok_and_closeSlot()));
+      setWindowTitle(title);
+      setFixedSize(380,240);
+   }
+   pTransferDialog->open();
+
+   std::vector<std::string> cvsUsKey(3);
+
+   pTransferDialog->curentName = getCurrentUser().c_str();
+   pTransferDialog->execRD(&thisPos,cvsUsKey);
+}
+
 void Globals::slot_connected(std::string const& str_error)
 {
    m_connected = true;
@@ -683,14 +730,14 @@ DecentColumn::DecentColumn(QString title, int size, std::string const& sortid/* 
 DecentTable::DecentTable(QWidget* pParent)
    : QTableWidget(pParent)
 {
-   this->horizontalHeader()->setStretchLastSection(true);
-   this->setSelectionMode(QAbstractItemView::NoSelection);
-   this->setStyleSheet("QTableView{border : 0px}");
-   this->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-   this->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+   horizontalHeader()->setStretchLastSection(true);
+   setSelectionMode(QAbstractItemView::NoSelection);
+   setStyleSheet("QTableView{border : 0px}");
+   setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+   setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
-   this->verticalHeader()->hide();
-   this->setMouseTracking(true);
+   verticalHeader()->hide();
+   setMouseTracking(true);
 
    connect(this->horizontalHeader(), SIGNAL(sectionClicked(int)), this, SLOT(sectionClicked(int)));
 }

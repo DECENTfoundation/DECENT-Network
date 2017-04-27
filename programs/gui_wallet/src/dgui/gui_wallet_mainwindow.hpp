@@ -70,6 +70,7 @@ protected slots:
    void SendDCTSlot();
 
    void slot_showPurchasedTab();
+   void slot_showTransactionsTab(std::string const&);
    void slot_updateAccountBalance(Asset const&);
    
    void slot_connected();
@@ -103,8 +104,6 @@ protected:
    bool                                m_locked;
    RichDialog*                         m_import_key_dlg;
    SendDialog*                         m_sendDCT_dialog;
-   int                                 m_nConnected;
-   //SConnectionStruct                   m_wdata2;
    PasswordDialog                      m_SetPasswordDialog;
    PasswordDialog                      m_UnlockDialog;
    

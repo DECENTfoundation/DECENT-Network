@@ -258,8 +258,8 @@ std::string PurchasedTab::getUpdateCommand()
             "\"" + str_current_username + "\" "
             "\"" + m_strSearchTerm.toStdString() + "\" "
             "\"" + m_pTableWidget->getSortedColumn() + "\" "
-            "\"" + next_iterator() + "\" " +
-            std::to_string(m_i_page_size + 1);
+            "\"" + next_iterator() + "\" "
+            + std::to_string(m_i_page_size + 1);
 }
 
 void PurchasedTab::slot_ExtractionDirSelected(QString const& path) {

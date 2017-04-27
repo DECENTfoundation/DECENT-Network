@@ -149,6 +149,7 @@ namespace gui_wallet
 
    signals:
       void signal_showPurchasedTab();
+      void signal_showTransactionsTab(std::string const&);
       void signal_updateAccountBalance(Asset const&);
 
    public:
@@ -156,6 +157,7 @@ namespace gui_wallet
       void setWalletUnlocked();
       void setWalletConnected();
       void setWalletError(std::string const& error);
+      void showTransferDialog(std::string const& user);
    signals:
       void signal_connect();  // for internal use
    private slots:
