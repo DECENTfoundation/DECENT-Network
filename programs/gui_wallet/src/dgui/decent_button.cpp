@@ -19,21 +19,9 @@
 
 using namespace gui_wallet;
 
-DecentButton::DecentButton()
+
+DecentButton::DecentButton(QWidget *parent) : QPushButton(parent)
 {
-   _isEnabled = true;
-   setAlignment(Qt::AlignCenter);
-   setStyleSheet(decent_button_style);
-   setScaledContents(true);
+   this->setStyleSheet("QPushButton{border: 0px ; background-color :rgb(27,176,104); color : white;}"
+                       "QPushButton:!enabled{background-color :rgb(180,180,180); color : rgb(30, 30, 30);}");
 }
-
-
-void DecentButton::setEnabled(bool isEnabled) {
-   _isEnabled = isEnabled;
-   if (_isEnabled)
-      setStyleSheet(d_upload_button_true);
-   else
-      setStyleSheet(d_upload_button_false);
-}
-
- 

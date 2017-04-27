@@ -155,7 +155,7 @@
     <message>
         <location filename="../src/dgui/gui_wallet_centralwidget.cpp" line="187"/>
         <source>Browse Content</source>
-        <translation>Brows Content</translation>
+        <translation>Browse Content</translation>
     </message>
     <message>
         <location filename="../src/dgui/gui_wallet_centralwidget.cpp" line="188"/>
