@@ -756,10 +756,10 @@ void Upload_tab::timeToUpdate(const std::string& result) {
          }
       }
       
-      if (contents[i]["times_bougth"].is_number()) {
-         cont.times_bougth = contents[i]["times_bougth"].get<int>();
+      if (contents[i]["times_bought"].is_number()) {
+         cont.times_bought = contents[i]["times_bought"].get<int>();
       } else {
-         cont.times_bougth = 0;
+         cont.times_bought = 0;
       }
       
       

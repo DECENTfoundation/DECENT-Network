@@ -38,7 +38,7 @@ namespace gui_wallet {
       std::string   hash;
       std::string   status;
       int           size;
-      int           times_bougth;
+      int           times_bought;
    };
 
 
