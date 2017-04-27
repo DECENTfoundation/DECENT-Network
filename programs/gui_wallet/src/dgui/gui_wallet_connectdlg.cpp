@@ -47,7 +47,7 @@ namespace gui_wallet
         plt_tbl.setColor(QPalette::Base, palette().color(QPalette::Window));
         m_main_table.setPalette(plt_tbl);
         
-        DecentButton1* unlockButton = new DecentButton1();
+        DecentButton* unlockButton = new DecentButton();
 
         if (isSet) {
             unlockButton->setText(tr("Set Password"));

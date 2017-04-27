@@ -33,8 +33,8 @@ protected slots:
    
 
 protected:
-    DecentButton1   m_label;
-    DecentButton1   m_close;
+    DecentButton   m_label;
+    DecentButton   m_close;
 };
 }
 

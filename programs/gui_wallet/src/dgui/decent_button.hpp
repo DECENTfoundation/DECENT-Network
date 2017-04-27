@@ -15,36 +15,11 @@
 
 namespace gui_wallet {
 
-class DecentButton : public QLabel
-{
-    Q_OBJECT
-public:
-    DecentButton();
-   
-   void setEnabled(bool isEnabled);
-   bool isEnabled() const { return _isEnabled; }
-    
-protected:
-    void mousePressEvent(QMouseEvent *event) {
-       if (_isEnabled)
-          emit LabelClicked();
-    }
-   
-public:
-signals:
-    void LabelClicked();
-   
-private:
-   bool _isEnabled;
-};
-   
-   
-   
-class DecentButton1 : public QPushButton
+class DecentButton : public QPushButton
 {
    Q_OBJECT
 public:
-   DecentButton1(QWidget *parent = Q_NULLPTR);
+   DecentButton(QWidget *parent = Q_NULLPTR);
 };
 
 }

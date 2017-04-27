@@ -260,7 +260,7 @@ void SendDialog::sendDCT()
    
    if (message.empty())
    {
-      ShowMessageBox1(tr("Success") , tr("Success"));
+      ShowMessageBox(tr("Success") , tr("Success"));
       close();
    }
    else

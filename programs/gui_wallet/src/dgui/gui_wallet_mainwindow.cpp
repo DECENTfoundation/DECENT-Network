@@ -83,7 +83,7 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
    setUnifiedTitleAndToolBarOnMac(false);
 
    QComboBox*   pUsersCombo = m_pCentralWidget->usersCombo();
-   DecentButton1* pImportButton = m_pCentralWidget->importButton();
+   DecentButton* pImportButton = m_pCentralWidget->importButton();
    pUsersCombo->hide();
    
    connect(pUsersCombo, SIGNAL(currentIndexChanged(const QString&)), this, SLOT(CurrentUserChangedSlot(const QString&)) );

@@ -209,7 +209,7 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    _seeders_dialog->setContentsMargins(0, 0, 0, 0);
    _seeders_dialog->resize(450, 250);
 
-   connect(seeders_button, SIGNAL(LabelClicked()), _seeders_dialog, SLOT(exec()) );
+   connect(seeders_button, SIGNAL(clicked()), _seeders_dialog, SLOT(exec()) );
    
 
 
@@ -231,7 +231,7 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
 
    browseContentButton->setMinimumWidth(120);
    browseContentButton->setFixedHeight(40);
-   connect(browseContentButton, SIGNAL(LabelClicked()),this, SLOT(browseContent()));
+   connect(browseContentButton, SIGNAL(clicked()),this, SLOT(browseContent()));
 
    contentRow->addWidget(_contentPath);
    contentRow->addWidget(browseContentButton);
@@ -255,7 +255,7 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
 
    browseSamplesButton->setMinimumWidth(120);
    browseSamplesButton->setFixedHeight(40);
-   connect(browseSamplesButton, SIGNAL(LabelClicked()),this, SLOT(browseSamples()));
+   connect(browseSamplesButton, SIGNAL(clicked()),this, SLOT(browseSamples()));
 
    samplesRow->addWidget(_samplesPath);
    samplesRow->addWidget(browseSamplesButton);
@@ -282,8 +282,8 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    _upload_button->setFont(PopupButtonBigFont());
    _upload_button->setMinimumHeight(50);
 
-   connect(_upload_button, SIGNAL(LabelClicked()),this, SLOT(uploadContent()));
-   connect(_cancel_button, SIGNAL(LabelClicked()),this, SLOT( uploadCanceled() ));
+   connect(_upload_button, SIGNAL(clicked()),this, SLOT(uploadContent()));
+   connect(_cancel_button, SIGNAL(clicked()),this, SLOT( uploadCanceled() ));
 
    button->setContentsMargins(20, 20, 20, 20);
    button->addWidget(_upload_button);
@@ -335,7 +335,7 @@ void Upload_popup::onGrabPublishers() {
    
    //seeders popup ok button
    _seeder_ok = new DecentButton();
-   _seeder_ok->setText("OK");
+   _seeder_ok->setText(tr("OK"));
    _seeder_ok->setFixedHeight(50);
    _seeder_ok->setFixedWidth(100);
    _seeder_ok->setFont(TabButtonFont());
@@ -377,7 +377,7 @@ void Upload_popup::onGrabPublishers() {
       
       _publisherIdToPriceMap.insert(std::make_pair(pubIdStr, price));
       
-      QObject::connect(_seeder_ok, SIGNAL(LabelClicked()),this, SLOT(seederOkSlot()));
+      QObject::connect(_seeder_ok, SIGNAL(clicked()),this, SLOT(seederOkSlot()));
    }
    
    QHBoxLayout* button = new QHBoxLayout(_seeders_dialog);
@@ -619,7 +619,7 @@ void Upload_popup::uploadContent()
       _contentPath->setText(tr("Content path"));
       _samplesPath->setText(tr("Samples (optional)"));
 
-      ShowMessageBox1(tr("Content is being processed...") , tr("Success"));
+      ShowMessageBox(tr("Content is being processed...") , tr("Success"));
 
       setEnabled(true);
 
@@ -700,7 +700,7 @@ Upload_tab::Upload_tab(Mainwindow_gui_wallet* parent)
     setLayout(&m_main_layout);
     
     connect(&m_filterLineEdit, SIGNAL(textChanged(QString)), this, SLOT(onTextChanged(QString)));
-    connect(upload_button, SIGNAL(LabelClicked()), this, SLOT(uploadPopup()));
+    connect(upload_button, SIGNAL(clicked()), this, SLOT(uploadPopup()));
 
    QObject::connect(&Globals::instance(), &Globals::currentUserChanged,
                     this, &Upload_tab::updateContents);

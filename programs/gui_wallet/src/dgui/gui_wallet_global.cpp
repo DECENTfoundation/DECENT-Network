@@ -19,22 +19,7 @@
 namespace gui_wallet
 {
    
-
 void ShowMessageBox(QString const& strTitle,
-                    QString const& strMessage,
-                    QString const& strDetailedText/* = QString()*/)
-{
-   QMessageBox* pMessageBox = new QMessageBox();
-   pMessageBox->setWindowTitle(strTitle);
-   pMessageBox->setText(strMessage);
-   pMessageBox->setDetailedText(strDetailedText);
-   pMessageBox->setAttribute(Qt::WA_DeleteOnClose);
-   pMessageBox->open();
-   // alternatively can connect to delete later as below
-   //pMessageBox->open(pMessageBox, SLOT(deleteLater()));
-}
-   
-void ShowMessageBox1(QString const& strTitle,
                     QString const& strMessage,
                     QString const& strDetailedText/* = QString()*/)
 {
@@ -44,7 +29,7 @@ void ShowMessageBox1(QString const& strTitle,
    
    QVBoxLayout*   main = new QVBoxLayout();
    QLabel*        pText = new QLabel(strMessage, pDialog);
-   DecentButton1* pOkButton = new DecentButton1(pDialog);
+   DecentButton* pOkButton = new DecentButton(pDialog);
    
    pText->setFont(AccountBalanceFont());
    

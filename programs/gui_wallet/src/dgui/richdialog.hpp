@@ -47,8 +47,8 @@ protected:
     QVBoxLayout    m_main_layout;
     QVBoxLayout    m_controls_layout;
     QHBoxLayout    m_buttons_layout;
-    DecentButton1  m_ok_button;
-    DecentButton1  m_cancel_button;
+    DecentButton  m_ok_button;
+    DecentButton  m_cancel_button;
     RET_TYPE       m_ret_value;
 };
 
@@ -87,8 +87,8 @@ protected:
    QVBoxLayout    m_main_layout;
    QVBoxLayout    m_controls_layout;
    QHBoxLayout    m_buttons_layout;
-   DecentButton1  m_ok_button;
-   DecentButton1  m_cancel_button;
+   DecentButton  m_ok_button;
+   DecentButton  m_cancel_button;
    RET_TYPE       m_ret_value;
    
 public:

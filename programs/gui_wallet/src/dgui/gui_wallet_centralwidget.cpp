@@ -155,9 +155,9 @@ QComboBox* CentralWigdet::usersCombo()
     return (QComboBox*)GetWidgetFromTable5(USERNAME,1);
 }
 
-DecentButton1* CentralWigdet::importButton()
+DecentButton* CentralWigdet::importButton()
 {
-   return (DecentButton1*)GetWidgetFromTable5(USERNAME,2);
+   return (DecentButton*)GetWidgetFromTable5(USERNAME,2);
 }
 
 DecentSmallButton* CentralWigdet::getSendButton()
@@ -193,7 +193,7 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     QHBoxLayout *pHBoxLayoutTmp = nullptr;
     QComboBox* pComboTmp1 = nullptr;
     QFrame* line = nullptr;
-    DecentButton1* importKeyButton = nullptr;
+    DecentButton* importKeyButton = nullptr;
 
     AccountBalanceWidget* pCombo2;
 
@@ -244,7 +244,7 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     
     pComboTmp1 = new QComboBox;
     pComboTmp1->setStyle(QStyleFactory::create("fusion"));
-    importKeyButton = new DecentButton1();
+    importKeyButton = new DecentButton();
 
     importKeyButton->setText(tr("Import Key"));
 #ifdef WINDOWS_HIGH_DPI
@@ -314,7 +314,7 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
    m_pSendWgt1 = new QWidget;
    pHBoxLayoutTmp = new QHBoxLayout;
    sendButton->setScaledContents(true);
-   DecentButton1* send_text = new DecentButton1();
+   DecentButton* send_text = new DecentButton();
    send_text->setText(tr("Send"));
    send_text->setStyleSheet("border: 1px solid rgb(255, 255, 255); background-color :rgb(255,255,255); color: rgb(0,0,0);");
 
