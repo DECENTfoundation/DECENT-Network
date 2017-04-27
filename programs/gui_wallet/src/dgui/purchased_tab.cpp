@@ -147,10 +147,10 @@ void PurchasedTab::timeToUpdate(const std::string& result) {
       contentObject.id = content["id"].get<std::string>();
       contentObject.hash = content["hash"].get<std::string>();
       
-      if (content["times_bougth"].is_number()) {
-         contentObject.times_bougth = content["times_bougth"].get<int>();
+      if (content["times_bought"].is_number()) {
+         contentObject.times_bought = content["times_bought"].get<int>();
       } else {
-         contentObject.times_bougth = 0;
+         contentObject.times_bought = 0;
       }
 
       if (content["price"]["amount"].is_number()){

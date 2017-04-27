@@ -601,7 +601,7 @@ DecentColumn::DecentColumn(QString title, int size, std::string const& sortid/* 
 DecentTable::DecentTable(QWidget* pParent)
    : QTableWidget(pParent)
 {
-   this->horizontalHeader()->setStretchLastSection(true);
+   //this->horizontalHeader()->setStretchLastSection(true);
    this->setSelectionMode(QAbstractItemView::NoSelection);
    this->setStyleSheet("QTableView{border : 0px}");
    this->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -636,8 +636,9 @@ void DecentTable::set_columns(const std::vector<DecentColumn>& cols)
    this->setRowHeight(0,35);
 
    QStringList columns;
-   for (const DecentColumn& col: cols) {
-      columns << col.title;
+   for (int i = 0; i < cols.size(); ++i) {
+      this->horizontalHeader()->setSectionResizeMode(i, QHeaderView::Fixed);
+      columns << cols[i].title;
    }
    this->setHorizontalHeaderLabels(columns);
 
