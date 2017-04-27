@@ -60,6 +60,45 @@ using decent::encrypt::DInteger;
    struct by_price;
    struct by_created;
 
+   template <typename TAG, typename _t_object>
+   struct key_extractor;
+
+   template <>
+   struct key_extractor<by_size, buying_object>
+   {
+      static uint64_t get(buying_object const& ob)
+      {
+         return ob.size;
+      }
+   };
+
+   template <>
+   struct key_extractor<by_price, buying_object>
+   {
+      static share_type get(buying_object const& ob)
+      {
+         return ob.get_price();
+      }
+   };
+
+   template <>
+   struct key_extractor<by_created, buying_object>
+   {
+      static time_point_sec get(buying_object const& ob)
+      {
+         return ob.created;
+      }
+   };
+
+   template <>
+   struct key_extractor<by_consumer_open, buying_object>
+   {
+      static boost::tuple<account_id_type, bool> get(buying_object const& ob)
+      {
+         return boost::make_tuple(ob.consumer, ob.is_open());
+      }
+   };
+
    typedef multi_index_container<
       buying_object,
          indexed_by<

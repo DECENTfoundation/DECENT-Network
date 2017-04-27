@@ -1,27 +1,26 @@
 #include "stdafx.h"
 
+#include "gui_wallet_global.hpp"
 #include "purchased_tab.hpp"
+#include "decent_wallet_ui_gui_contentdetailsgeneral.hpp"
+#include "gui_design.hpp"
+#include "json.hpp"
 
 #ifndef _MSC_VER
-#include <QHeaderView>
-#include <QPushButton>
 #include <QFileDialog>
+#include <QLineEdit>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QSignalMapper>
 #include <graphene/chain/config.hpp>
 #include <graphene/chain/content_object.hpp>
-#include "json.hpp"
 #endif
-#include "gui_wallet_mainwindow.hpp"
-#include "decent_wallet_ui_gui_contentdetailsgeneral.hpp"
-#include "gui_design.hpp"
-#include "gui_wallet_global.hpp"
 
-using namespace gui_wallet;
-using namespace nlohmann;
+using string = std::string;
 
-
+namespace gui_wallet
+{
+   
 PurchasedTab::PurchasedTab(QWidget* pParent)
 : TabContentManager(pParent)
 , m_pExtractSignalMapper(nullptr)
@@ -50,10 +49,13 @@ PurchasedTab::PurchasedTab(QWidget* pParent)
    pfilterLineEditor->setAttribute(Qt::WA_MacShowFocusRect, 0);
    QObject::connect(pfilterLineEditor, &QLineEdit::textChanged,
                     this, &PurchasedTab::slot_SearchTermChanged);
+
+   QObject::connect(m_pTableWidget, &DecentTable::signal_SortingChanged,
+                    this, &PurchasedTab::slot_SortingChanged);
    
    QPixmap image(icon_search);
    
-   QLabel* search_label = new QLabel();
+   QLabel* search_label = new QLabel(this);
    search_label->setSizeIncrement(100,40);
    search_label->setPixmap(image);
 
@@ -72,18 +74,86 @@ PurchasedTab::PurchasedTab(QWidget* pParent)
    setLayout(pMainLayout);
 }
 
-void PurchasedTab::timeToUpdate(const std::string& result) {
-   m_pTableWidget->setRowCount(0);
-   
+void PurchasedTab::timeToUpdate(const std::string& result)
+{
+   _current_content.clear();
    if (result.empty()) {
       return;
    }
    
-   auto contents = json::parse(result);
-   m_pTableWidget->setRowCount(contents.size());
+   auto contents = nlohmann::json::parse(result);
+
+   size_t iSize = contents.size();
+   if (iSize > m_i_page_size)
+      iSize = m_i_page_size;
+
+   _current_content.reserve(iSize);
    
-   _current_content.clear();
-   _current_content.reserve(contents.size());
+   for (int iIndex = 0; iIndex < iSize; ++iIndex)
+   {
+      auto content = contents[iIndex];
+      
+      std::string expiration_or_delivery_time = content["expiration_or_delivery_time"].get<std::string>();
+      std::string URI = content["URI"].get<std::string>();
+
+      // Create SDigitalContent object
+      
+      _current_content.push_back(SDigitalContentPurchase());
+      SDigitalContentPurchase& contentObject = _current_content.back();
+      
+      if (content["delivered"].get<bool>()) {
+         contentObject.type = DCT::BOUGHT;
+      } else {
+         contentObject.type = DCT::WAITING_DELIVERY;
+      }
+      
+      contentObject.author = content["author_account"].get<std::string>();
+      uint64_t iPrice = json_to_int64(content["price"]["amount"]);
+      contentObject.price = Globals::instance().asset(iPrice);
+
+      contentObject.synopsis = content["synopsis"].get<std::string>();
+      contentObject.URI = content["URI"].get<std::string>();
+      contentObject.created = content["created"].get<std::string>();
+      contentObject.expiration = content["expiration"].get<std::string>();
+      contentObject.size = content["size"].get<int>();
+      contentObject.id = content["id"].get<std::string>();
+      contentObject.hash = content["hash"].get<std::string>();
+
+      contentObject.total_key_parts = content["total_key_parts"].get<int>();
+      contentObject.received_key_parts  = content["received_key_parts"].get<int>();
+      contentObject.total_download_bytes  = content["total_download_bytes"].get<int>();
+      contentObject.received_download_bytes  = content["received_download_bytes"].get<int>();
+
+      QString status_text = tr("Keys") + ": " + QString::number(contentObject.received_key_parts) + "/" + QString::number(contentObject.total_key_parts);
+
+      if (DCT::WAITING_DELIVERY == contentObject.type) {
+         status_text = tr("Waiting for key delivery");
+      } else {
+         status_text = status_text + tr(" ") + QString::fromStdString(content["status_text"].get<std::string>());
+      }
+      contentObject.status_text = status_text;
+      
+      if (content["times_bougth"].is_number()) {
+         contentObject.times_bougth = content["times_bougth"].get<int>();
+      } else {
+         contentObject.times_bougth = 0;
+      }
+
+      contentObject.AVG_rating = content["average_rating"].get<double>() / 1000;
+   }
+
+
+   if (contents.size() > m_i_page_size)
+      set_next_page_iterator(contents[m_i_page_size]["id"].get<std::string>());
+   else
+      set_next_page_iterator(string());
+
+   ShowDigitalContentsGUI();
+}
+
+void PurchasedTab::ShowDigitalContentsGUI()
+{
+   m_pTableWidget->setRowCount(_current_content.size());
 
    if (m_pExtractSignalMapper)
       delete m_pExtractSignalMapper;
@@ -96,73 +166,19 @@ void PurchasedTab::timeToUpdate(const std::string& result) {
    m_pDetailsSignalMapper = new QSignalMapper(this);  // similar to extract signal handler
    QObject::connect(m_pDetailsSignalMapper, (void (QSignalMapper::*)(int))&QSignalMapper::mapped,
                     this, &PurchasedTab::slot_Details);
-   
-   for (int iIndex = 0; iIndex < contents.size(); ++iIndex)
+
+   for (int iIndex = 0; iIndex < _current_content.size(); ++iIndex)
    {
-      auto content = contents[iIndex];
-      
-      std::string time = content["created"].get<std::string>();
-      
-      std::string synopsis = unescape_string(content["synopsis"].get<std::string>());
+      SDigitalContentPurchase& contentObject = _current_content[iIndex];
+
+      std::string synopsis = unescape_string(contentObject.synopsis);
       std::replace(synopsis.begin(), synopsis.end(), '\t', ' '); // JSON does not like tabs :(
       std::replace(synopsis.begin(), synopsis.end(), '\n', ' '); // JSON does not like tabs :(
 
       graphene::chain::ContentObjectPropertyManager synopsis_parser(synopsis);
       std::string title = synopsis_parser.get<graphene::chain::ContentObjectTitle>();
-      
-      //double rating = content["average_rating"].get<double>() / 1000;
-      uint64_t size = content["size"].get<int>();
-      
-      
-      double price = 0;
-      if (content["price"]["amount"].is_number()){
-         price =  content["price"]["amount"].get<double>();
-      } else {
-         price =  std::stod(content["price"]["amount"].get<std::string>());
-      }
-      price /= GRAPHENE_BLOCKCHAIN_PRECISION;
-      
-      std::string expiration_or_delivery_time = content["expiration_or_delivery_time"].get<std::string>();
-      std::string URI = content["URI"].get<std::string>();
-      
 
-      // Create SDigitalContent object
-      
-      _current_content.push_back(SDigitalContent());
-      SDigitalContent& contentObject = _current_content.back();
-      
-      if (content["delivered"].get<bool>()) {
-         contentObject.type = DCT::BOUGHT;
-      } else {
-         contentObject.type = DCT::WAITING_DELIVERY;
-      }
-      
-      contentObject.author = content["author_account"].get<std::string>();
-      contentObject.price.asset_id = content["price"]["asset_id"].get<std::string>();
-      contentObject.synopsis = content["synopsis"].get<std::string>();
-      contentObject.URI = content["URI"].get<std::string>();
-      contentObject.created = content["created"].get<std::string>();
-      contentObject.expiration = content["expiration"].get<std::string>();
-      contentObject.size = content["size"].get<int>();
-      contentObject.id = content["id"].get<std::string>();
-      contentObject.hash = content["hash"].get<std::string>();
-      
-      if (content["times_bougth"].is_number()) {
-         contentObject.times_bougth = content["times_bougth"].get<int>();
-      } else {
-         contentObject.times_bougth = 0;
-      }
-
-      if (content["price"]["amount"].is_number()){
-         contentObject.price.amount =  content["price"]["amount"].get<double>();
-      } else {
-         contentObject.price.amount =  std::stod(content["price"]["amount"].get<std::string>());
-      }
-      
-      contentObject.price.amount /= GRAPHENE_BLOCKCHAIN_PRECISION;
-      contentObject.AVG_rating = content["average_rating"].get<double>() / 1000;
-
-      EventPassthrough<DecentSmallButton>* info_icon = new EventPassthrough<DecentSmallButton>(icon_popup, icon_popup_white, m_pTableWidget);
+      DecentSmallButton* info_icon = new DecentSmallButton(icon_popup, icon_popup_white, m_pTableWidget);
       info_icon->setAlignment(Qt::AlignCenter);
       m_pTableWidget->setCellWidget(iIndex, 6, info_icon);
 
@@ -172,37 +188,23 @@ void PurchasedTab::timeToUpdate(const std::string& result) {
 
 
       m_pTableWidget->setItem(iIndex, 0, new QTableWidgetItem(QString::fromStdString(title)));
-      m_pTableWidget->setItem(iIndex, 1, new QTableWidgetItem(QString::number(size) + tr(" MB")));
-      if(price)
-      {
-         m_pTableWidget->setItem(iIndex, 2, new QTableWidgetItem(QString::number(price, 'f', 4) + " DCT"));
-      }
-      else
-      {
-         m_pTableWidget->setItem(iIndex, 2, new QTableWidgetItem("Free"));
-      }
+      m_pTableWidget->setItem(iIndex, 1, new QTableWidgetItem(QString::number(contentObject.size) + tr(" MB")));
+      m_pTableWidget->setItem(iIndex, 2, new QTableWidgetItem(contentObject.price.getString().c_str()));
 
-      std::string s_time = time.substr(0, time.find("T"));
+      std::string s_time = contentObject.created.substr(0, contentObject.created.find("T"));
       
       m_pTableWidget->setItem(iIndex, 3, new QTableWidgetItem(QString::fromStdString(s_time)));
-      
 
-      int total_key_parts = content["total_key_parts"].get<int>();
-      int received_key_parts  = content["received_key_parts"].get<int>();
-      int total_download_bytes  = content["total_download_bytes"].get<int>();
-      int received_download_bytes  = content["received_download_bytes"].get<int>();
+      uint32_t total_key_parts = contentObject.total_key_parts;
+      uint32_t received_key_parts  = contentObject.received_key_parts;
+      uint32_t total_download_bytes  = contentObject.total_download_bytes;
+      uint32_t received_download_bytes  = contentObject.received_download_bytes;
+
+      bool is_delivered = true;
+      if (DCT::WAITING_DELIVERY == contentObject.type)
+         is_delivered = false;
       
-      
-      QString status_text = tr("Keys: ") + QString::number(received_key_parts) + "/" + QString::number(total_key_parts);
-      
-      bool is_delivered = content["delivered"].get<bool>();
-      if (!is_delivered) {
-         status_text = tr("Waiting for key delivery");
-      } else {
-         status_text = status_text + tr(" ") + QString::fromStdString(content["status_text"].get<std::string>());
-      }
-      
-      m_pTableWidget->setItem(iIndex, 4, new QTableWidgetItem(status_text));
+      m_pTableWidget->setItem(iIndex, 4, new QTableWidgetItem(contentObject.status_text));
       
       if (total_key_parts == 0) {
          total_key_parts = 1;
@@ -214,16 +216,15 @@ void PurchasedTab::timeToUpdate(const std::string& result) {
 
       double progress = (0.1 * received_key_parts) / total_key_parts + (0.9 * received_download_bytes) / total_download_bytes;
       progress *= 100; // Percent
-      
+
       if ((received_download_bytes < total_download_bytes) || !is_delivered) {
          m_pTableWidget->setItem(iIndex, 5, new QTableWidgetItem(QString::number(progress) + "%"));
          m_pTableWidget->item(iIndex, 5)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
          m_pTableWidget->item(iIndex, 5)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
       } else {
 
-         EventPassthrough<DecentSmallButton>* extract_icon = new EventPassthrough<DecentSmallButton>(icon_export, icon_export_white, m_pTableWidget);
+         DecentSmallButton* extract_icon = new DecentSmallButton(icon_export, icon_export_white, m_pTableWidget);
          extract_icon->setAlignment(Qt::AlignCenter);
-
 
          QObject::connect(extract_icon, &DecentSmallButton::clicked,
                           m_pExtractSignalMapper, (void (QSignalMapper::*)())&QSignalMapper::map);
@@ -232,17 +233,16 @@ void PurchasedTab::timeToUpdate(const std::string& result) {
          m_pTableWidget->setCellWidget(iIndex, 5, extract_icon);
       }
 
-      for(int j = 0; j < m_pTableWidget->columnCount() - 2; ++j) {
+      for(int j = 0; j < m_pTableWidget->columnCount() - 2; ++j)
+      {
          auto* item = m_pTableWidget->item(iIndex, j);
          if (item) {
             m_pTableWidget->item(iIndex, j)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
             m_pTableWidget->item(iIndex, j)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
          }
       }
-
    }
 }
-
 
 std::string PurchasedTab::getUpdateCommand()
 {
@@ -257,7 +257,9 @@ std::string PurchasedTab::getUpdateCommand()
    return   "search_my_purchases "
             "\"" + str_current_username + "\" "
             "\"" + m_strSearchTerm.toStdString() + "\" "
-            "\"" + m_pTableWidget->getSortedColumn() + "\"";
+            "\"" + m_pTableWidget->getSortedColumn() + "\" "
+            "\"" + next_iterator() + "\" " +
+            std::to_string(m_i_page_size + 1);
 }
 
 void PurchasedTab::slot_ExtractionDirSelected(QString const& path) {
@@ -275,9 +277,9 @@ void PurchasedTab::slot_ExtractionDirSelected(QString const& path) {
    std::string str_current_username = global_instance.getCurrentUser();
    
    try {
-      RunTask("restore_encryption_key \"" + str_current_username + "\" \"" + strExtractID + "\"", key);
+      key = Globals::instance().runTask("restore_encryption_key \"" + str_current_username + "\" \"" + strExtractID + "\"");
       
-      RunTask("extract_package \"" + strExtractHash + "\" \"" + path.toStdString() + "\" " + key, dummy);
+      dummy = Globals::instance().runTask("extract_package \"" + strExtractHash + "\" \"" + path.toStdString() + "\" " + key);
       
       if (dummy.find("exception:") != std::string::npos) {
          message = dummy;
@@ -336,5 +338,11 @@ void PurchasedTab::ShowMessageBox(std::string const& message)
                                  tr("Failed to extract package"),
                                  QObject::tr(message.c_str()));
 }
+
+void PurchasedTab::slot_SortingChanged(int index)
+{
+   reset();
+}
+}  // end namespace gui_wallet
 
 

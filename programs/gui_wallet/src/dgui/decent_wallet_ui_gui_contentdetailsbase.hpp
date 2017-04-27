@@ -13,16 +13,16 @@
 #define NUMBER_OF_SUB_LAYOUTS2   7
 
 #include <QDialog>
-#include "qt_commonheader.hpp"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QTextEdit>
-#include <iostream>
 #include "decent_wallet_ui_gui_newcheckbox.hpp"
 
 
 namespace gui_wallet {
+
+struct SDigitalContent;
 
 class ContentDetailsBase : public QDialog
 {

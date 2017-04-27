@@ -1,16 +1,16 @@
 #pragma once
 
 #include <string>
+#include <QString>
 
-#include "qt_commonheader.hpp"
 #include "gui_wallet_tabcontentmanager.hpp"
-
 
 class QSignalMapper;
 
-namespace gui_wallet {
-
+namespace gui_wallet
+{
 class DecentTable;
+struct SDigitalContentPurchase;
 
 class PurchasedTab : public TabContentManager
 {
@@ -20,16 +20,17 @@ public:
    PurchasedTab(QWidget* pParent);
    
 public:
-   virtual void timeToUpdate(const std::string& result);
-   virtual std::string getUpdateCommand();
+   virtual void timeToUpdate(const std::string& result) override;
+   virtual std::string getUpdateCommand() override;
    
 protected:
    void ShowMessageBox(std::string const& message);
-   void ShowDigitalContentsGUI(std::vector<SDigitalContent>& contents);
+   void ShowDigitalContentsGUI();
 
 public slots:
    void slot_ExtractPackage(int);
    void slot_Details(int);
+   void slot_SortingChanged(int);
 
    void slot_ExtractionDirSelected(QString const& path);
    void slot_SearchTermChanged(QString const& strSearchTerm);
@@ -40,6 +41,6 @@ protected:
    DecentTable*            m_pTableWidget;
    int                     m_iActiveItemIndex;
    QString                 m_strSearchTerm;
-   std::vector<SDigitalContent>   _current_content;
+   std::vector<SDigitalContentPurchase>   _current_content;
 };
 }//   end namespace gui_wallet

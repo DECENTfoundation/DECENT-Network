@@ -1,12 +1,4 @@
-/*
- *	File      : upload_tab.cpp
- *
- *	Created on: 21 Nov 2016
- *	Created by: Davit Kalantaryan (Email: davit.kalantaryan@desy.de)
- *
- *  This file implements ...
- *
- */
+
 #include "stdafx.h"
 
 #include "upload_tab.hpp"
@@ -96,7 +88,8 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    _descriptionText->setPlaceholderText(tr("Description"));
    _descriptionText->setStyleSheet(d_desc);
    _descriptionText->setMinimumHeight(160);
-   _descriptionText->setMinimumWidth(420);
+   _descriptionText->setMinimumWidth(480);
+   _descriptionText->setTabChangesFocus(true);
    u_main_layout->addWidget(_descriptionText);
    
    ////////////////////////////////////////////////////////////////////////////
@@ -111,10 +104,10 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    
 
    _lifeTime = new QDateEdit(this);
-   _lifeTime->setDate(QDate::currentDate());
+   _lifeTime->setDate(QDate::currentDate().addMonths(1));
    _lifeTime->setDisplayFormat("yyyy-MM-dd");
    _lifeTime->setCalendarPopup(true);
-   _lifeTime->setMinimumDate(QDate::currentDate());
+   _lifeTime->setMinimumDate(QDate::currentDate().addDays(1));
    _lifeTime->setStyle(QStyleFactory::create("fusion"));
    _lifeTime->setMinimumHeight(40);
    _lifeTime->setFixedWidth(320);
@@ -191,9 +184,11 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    _seedersPath->setMinimumHeight(40);
    
    DecentButton* seeders_button = new DecentButton();
+
    seeders_button->setText(tr("Select Seeders"));
    seeders_button->setFont(PopupButtonRegularFont());
-   seeders_button->setFixedWidth(100);
+
+   seeders_button->setFixedWidth(120);
    seeders_button->setFixedHeight(40);
    
    seedersRow->addWidget(_seedersPath);
@@ -228,7 +223,8 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    DecentButton* browseContentButton = new DecentButton();
    browseContentButton->setText(tr("Browse"));
    browseContentButton->setFont(PopupButtonRegularFont());
-   browseContentButton->setMinimumWidth(100);
+
+   browseContentButton->setMinimumWidth(120);
    browseContentButton->setFixedHeight(40);
    connect(browseContentButton, SIGNAL(LabelClicked()),this, SLOT(browseContent()));
 
@@ -251,7 +247,8 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    DecentButton* browseSamplesButton = new DecentButton();
    browseSamplesButton->setText(tr("Browse"));
    browseSamplesButton->setFont(PopupButtonRegularFont());
-   browseSamplesButton->setMinimumWidth(100);
+
+   browseSamplesButton->setMinimumWidth(120);
    browseSamplesButton->setFixedHeight(40);
    connect(browseSamplesButton, SIGNAL(LabelClicked()),this, SLOT(browseSamples()));
 
@@ -274,13 +271,11 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    _cancel_button->setText(tr("Cancel"));
    _cancel_button->setFont(PopupButtonBigFont());
    _cancel_button->setMinimumHeight(50);
-   //_cancel_button->setMinimumWidth(140);
-   _cancel_button->setStyleSheet(d_cancel);
+
 
    _upload_button->setText(tr("Publish"));
    _upload_button->setFont(PopupButtonBigFont());
    _upload_button->setMinimumHeight(50);
-   //_upload_button->setMinimumWidth(140);
 
    connect(_upload_button, SIGNAL(LabelClicked()),this, SLOT(uploadContent()));
    connect(_cancel_button, SIGNAL(LabelClicked()),this, SLOT( uploadCanceled() ));
@@ -485,7 +480,7 @@ void Upload_popup::updateUploadButtonStatus() {
    
    
    if (isValid) {
-      _upload_button->setText(tr("Publish for ") + QString::number(days * totalPricePerDay) + tr(" DCT"));
+      _upload_button->setText(tr("Publish for") + " " + QString::number(days * totalPricePerDay) + " DCT");
       _upload_button->setEnabled(true);
    } else {
       _upload_button->setText(tr("Publish"));
@@ -497,6 +492,9 @@ void Upload_popup::updateUploadButtonStatus() {
 void Upload_popup::browseContent() {
     QString contentPathSelected = QFileDialog::getOpenFileName(this, tr("Select content"), "~");
    
+   if (contentPathSelected.size() == 0) {
+       return;
+   }
    boost::system::error_code ec;
    if (boost::filesystem::file_size(contentPathSelected.toStdString(), ec) > 100 * 1024 * 1024) {
       ALERT("Content size is limited in Testnet 0.1 to 100MB");
@@ -592,8 +590,7 @@ void Upload_popup::uploadContent()
       setEnabled(true);
    }
 
-   QMessageBox* msgBox = new QMessageBox();
-   msgBox->setAttribute(Qt::WA_DeleteOnClose);
+   
 
    if (message.empty())
    {
@@ -604,26 +601,37 @@ void Upload_popup::uploadContent()
       _contentPath->setText(tr("Content path"));
       _samplesPath->setText(tr("Samples (optional)"));
 
-      msgBox->setWindowTitle(tr("Success"));
-      msgBox->setText(tr("Content is submitted"));
+      
+      SuccessMessageDialog* successMessage = new SuccessMessageDialog(tr("Content is being processed...") , tr("Success"));
+      successMessage->execSMD();
+      delete successMessage;
+
 
       setEnabled(true);
 
-      emit uploadFinished();
+      this->close();
    }
    else
    {
+      QMessageBox* msgBox = new QMessageBox();
+      msgBox->setAttribute(Qt::WA_DeleteOnClose);
       msgBox->setWindowTitle(tr("Error"));
       msgBox->setText(tr("Failed to submit content"));
       msgBox->setDetailedText(message.c_str());
+      msgBox->open();
    }
-
-   msgBox->open();
 }
 
 
-// UPLOAD TAB
+void Upload_popup::uploadCanceled()
+{
+   this->close();
+}
 
+
+//////////////////////////////////////////////////
+// UPLOAD TAB
+//////////////////////////////////////////////////
 
 Upload_tab::Upload_tab(Mainwindow_gui_wallet* parent)
 : TabContentManager(parent)
@@ -639,8 +647,11 @@ Upload_tab::Upload_tab(Mainwindow_gui_wallet* parent)
         {tr("Published"), 10, "created"},
         {tr("Expiration"), 10, "expiration"},
         {tr("Status"), 10},
+#ifdef WINDOWS_HIGH_DPI
+        { " ", -80 }
+#else
         {" ", -50}
-
+#endif
     });
 
     upload_button = new DecentButton();
@@ -708,7 +719,8 @@ void Upload_tab::timeToUpdate(const std::string& result) {
       
       cont.type = DCT::GENERAL;
       cont.author = contents[i]["author"].get<std::string>();
-      cont.price.asset_id = contents[i]["price"]["asset_id"].get<std::string>();
+      uint64_t iPrice = json_to_int64(contents[i]["price"]["amount"]);
+      cont.price = Globals::instance().asset(iPrice);
       cont.synopsis = contents[i]["synopsis"].get<std::string>();
       cont.URI = contents[i]["URI"].get<std::string>();
       cont.created = contents[i]["created"].get<std::string>();
@@ -732,15 +744,7 @@ void Upload_tab::timeToUpdate(const std::string& result) {
       } else {
          cont.times_bougth = 0;
       }
-      
-      
-      if (contents[i]["price"]["amount"].is_number()){
-         cont.price.amount =  contents[i]["price"]["amount"].get<double>();
-      } else {
-         cont.price.amount =  std::stod(contents[i]["price"]["amount"].get<std::string>());
-      }
-      
-      cont.price.amount /= GRAPHENE_BLOCKCHAIN_PRECISION;
+
       cont.AVG_rating = contents[i]["AVG_rating"].get<double>()  / 1000;
    }
    
@@ -867,7 +871,7 @@ void Upload_tab::ShowDigitalContentsGUI() {
         m_pTableWidget.item(index, 2)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
         
         
-        m_pTableWidget.setItem(index,3,new QTableWidgetItem(QString::number(aTemporar.price.amount,'f', 4) + " DCT"));
+        m_pTableWidget.setItem(index,3,new QTableWidgetItem(aTemporar.price.getString().c_str()));
         m_pTableWidget.item(index, 3)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
         m_pTableWidget.item(index, 3)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
         
@@ -901,9 +905,4 @@ void Upload_tab::uploadPopup() {
       Upload_popup popup(_parent);
       popup.exec();
    }
-}
-
-void Upload_popup::uploadCanceled()
-{
-    this->close();
 }

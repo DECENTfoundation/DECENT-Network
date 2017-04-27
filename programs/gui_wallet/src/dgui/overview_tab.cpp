@@ -34,8 +34,9 @@ Overview_tab::Overview_tab(class Mainwindow_gui_wallet* a_pPar)
 , table_widget(this)
 {
    table_widget.set_columns({
-      {tr("Account ID"), 40, "id"},
-      {tr("Account"), 40, "name"},
+      {tr("Account ID"), 20, "id"},
+      {tr("Account"), 50, "name"},
+      {"", 10},
       {"", 10},
       {"", 10}
    });
@@ -102,16 +103,26 @@ void Overview_tab::timeToUpdate(const std::string& result) {
       connect(trans, SIGNAL(clicked()), this, SLOT(transactionButtonPressed()));
       table_widget.setCellWidget(i, 2, trans);
       
-      EventPassthrough<DecentSmallButton>* transf = new EventPassthrough<DecentSmallButton>(icon_transfer, icon_transfer_white);
+      EventPassthrough<DecentSmallButton>* transf = new EventPassthrough<DecentSmallButton>(icon_popup, icon_popup_white);
 
       transf->setProperty("accountName", QVariant::fromValue(QString::fromStdString(name)));
       transf->setAlignment(Qt::AlignCenter);
       connect(transf, SIGNAL(clicked()), this, SLOT(buttonPressed()));
-      table_widget.setCellWidget(i, 3, transf);
+      table_widget.setCellWidget(i, 4, transf);
+      
+      
+      EventPassthrough<DecentSmallButton>* sendDCT = new EventPassthrough<DecentSmallButton>(icon_transfer, icon_transfer_white);
+      
+      sendDCT->setProperty("accountName", QVariant::fromValue(QString::fromStdString(name)));
+      sendDCT->setAlignment(Qt::AlignCenter);
+      connect(sendDCT, SIGNAL(clicked()), m_pPar, SLOT(SendDCTSlot()));
+      table_widget.setCellWidget(i, 3, sendDCT);
       
       table_widget.setRowHeight(i,40);
       table_widget.cellWidget(i, 2)->setStyleSheet(d_table);
       table_widget.cellWidget(i, 3)->setStyleSheet(d_table);
+      table_widget.cellWidget(i, 4)->setStyleSheet(d_table);
+      
       
       
       table_widget.item(i,0)->setBackground(Qt::white);

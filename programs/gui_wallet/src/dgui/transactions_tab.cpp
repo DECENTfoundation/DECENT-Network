@@ -25,7 +25,6 @@
 #include <graphene/chain/config.hpp>
 #endif
 #include "gui_wallet_global.hpp"
-#include "qt_commonheader.hpp"
 #include "gui_wallet_mainwindow.hpp"
 #include "gui_design.hpp"
 
@@ -123,15 +122,15 @@ void TransactionsTab::timeToUpdate(const std::string& result) {
       QString transaction_amount, transaction_fee;
       
       if (transaction_fee_js.is_number()) {
-         transaction_fee = QString::number(transaction_fee_js.get<double>() / GRAPHENE_BLOCKCHAIN_PRECISION , 'f', 4) + tr(" DCT");
+         transaction_fee = QString::number(transaction_fee_js.get<double>() / GRAPHENE_BLOCKCHAIN_PRECISION , 'f', 4) + " DCT";
       } else {
-         transaction_fee = QString::number(std::stod(transaction_fee_js.get<std::string>()) / GRAPHENE_BLOCKCHAIN_PRECISION, 'f', 4) + tr(" DCT");
+         transaction_fee = QString::number(std::stod(transaction_fee_js.get<std::string>()) / GRAPHENE_BLOCKCHAIN_PRECISION, 'f', 4) + " DCT";
       }
       
       if (transaction_amount_js.is_number()) {
-         transaction_amount = QString::number(transaction_amount_js.get<double>() / GRAPHENE_BLOCKCHAIN_PRECISION, 'f', 4) + tr(" DCT");
+         transaction_amount = QString::number(transaction_amount_js.get<double>() / GRAPHENE_BLOCKCHAIN_PRECISION, 'f', 4) + " DCT";
       } else {
-         transaction_amount = QString::number(std::stod(transaction_amount_js.get<std::string>()) / GRAPHENE_BLOCKCHAIN_PRECISION, 'f', 4) + tr(" DCT");
+         transaction_amount = QString::number(std::stod(transaction_amount_js.get<std::string>()) / GRAPHENE_BLOCKCHAIN_PRECISION, 'f', 4) + " DCT";
       }
       
       std::vector<QString> values = {  QString::fromStdString(timestamp),

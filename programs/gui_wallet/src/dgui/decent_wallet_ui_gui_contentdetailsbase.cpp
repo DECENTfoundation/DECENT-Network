@@ -89,9 +89,9 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details, bool bSil
             m_RateText = new QLabel;
             
             if (m_currentMyRating > 0) {
-                m_RateText->setText( tr("You rated:"));
+                m_RateText->setText( tr("You rated") + ":");
             } else {
-                m_RateText->setText( tr("Please Rate:"));
+                m_RateText->setText( tr("Please Rate") + ":");
             }
             m_RateText->setStyleSheet(m_RateText_design);
             
@@ -205,7 +205,7 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details, bool bSil
         m_vLabels[3].setText(QString::fromStdString(e_str));
         m_vLabels[5].setText(tr(creat.c_str()));
         
-        QString str_price = QString::number(a_cnt_details.price.amount) + " DCT";
+        QString str_price = a_cnt_details.price.getString().c_str();
         m_vLabels[7].setText(str_price);
         
         QPixmap green_star(green_star_image);
@@ -224,7 +224,7 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details, bool bSil
             m_stars[i].setPixmap(white_star);
         }
         
-        QString qsSizeTxt = QString::number(m_pContentInfo->size) + tr(" MB");
+        QString qsSizeTxt = QString::number(m_pContentInfo->size) + " MB";
         m_vLabels[11].setText(qsSizeTxt);
         
         m_vLabels[13].setText(QString::number(a_cnt_details.times_bougth));
@@ -233,7 +233,7 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details, bool bSil
     {
         m_vLabels[3].setText(tr(creat.c_str()));
         
-        QString str_price = QString::number(a_cnt_details.price.amount) + " DCT";
+        QString str_price = a_cnt_details.price.getString().c_str();
         m_vLabels[5].setText(str_price);
         
         QPixmap green_star(green_star_image);
@@ -252,7 +252,7 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details, bool bSil
             m_stars[i].setPixmap(white_star);
         }
         
-        QString qsSizeTxt = QString::number(m_pContentInfo->size) + tr(" MB");
+        QString qsSizeTxt = QString::number(m_pContentInfo->size) + " MB";
         m_vLabels[9].setText(qsSizeTxt);
         
         m_vLabels[11].setText(QString::number(a_cnt_details.times_bougth));
@@ -308,8 +308,13 @@ void ContentDetailsBase::popup_for_purchased(int row_star)
         m_vLabels[nIndexKent].setStyleSheet(font_bold);
         m_vLabels[nIndexKent].setContentsMargins(0, 17, 50, 17);
         m_vLabels[nIndexKent].setAlignment(Qt::AlignRight);
+#ifdef WINDOWS_HIGH_DPI
+        m_vLabels[nIndexKent].setFixedHeight(70);
+        m_vLabels[nIndexZuyg].setFixedHeight(70);
+#else
         m_vLabels[nIndexKent].setFixedHeight(54);
         m_vLabels[nIndexZuyg].setFixedHeight(54);
+#endif
         m_vSub_layouts[i].setSpacing(0);
         m_vSub_layouts[i].setContentsMargins(45,0,0,0);
         
@@ -355,7 +360,7 @@ void ContentDetailsBase::popup_for_purchased(int row_star)
 
    
     QHBoxLayout* desc_lay = new QHBoxLayout();
-    m_desc.setText(tr("Description\n\n"));
+    m_desc.setText(tr("Description") + "\n\n");
     m_desc.setStyleSheet(border_0);
     m_desc.setReadOnly(true);
     m_desc.setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
