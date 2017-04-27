@@ -602,7 +602,7 @@ void Upload_popup::uploadContent()
       _samplesPath->setText(tr("Samples (optional)"));
 
       
-      SuccessMessageDialog* successMessage = new SuccessMessageDialog(tr("Content is processing") + "..." , tr("Success"));
+      SuccessMessageDialog* successMessage = new SuccessMessageDialog(tr("Content is being processed...") , tr("Success"));
       successMessage->execSMD();
       delete successMessage;
 

@@ -246,7 +246,7 @@ void SendDialog::sendDCT()
    
    if (message.empty())
    {
-      SuccessMessageDialog* successMessage = new SuccessMessageDialog(tr("Success") , "Success");
+      SuccessMessageDialog* successMessage = new SuccessMessageDialog(tr("Success") , tr("Success"));
       successMessage->execSMD();
       delete successMessage;
       close();
@@ -295,7 +295,7 @@ SuccessMessageDialog::SuccessMessageDialog(QString message , QString title)
    m_text->setFont(AccountBalanceFont());
    
    m_ok_button = new DecentButton();
-   m_ok_button->setText("OK");
+   m_ok_button->setText(tr("OK"));
    m_ok_button->setFixedSize(140, 40);
    connect(m_ok_button, SIGNAL(LabelClicked()), this , SLOT(close()));
    
