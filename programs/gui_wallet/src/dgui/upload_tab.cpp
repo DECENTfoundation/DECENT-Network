@@ -106,7 +106,7 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    _lifeTime->setDate(QDate::currentDate().addMonths(1));
    _lifeTime->setDisplayFormat("yyyy-MM-dd");
    _lifeTime->setCalendarPopup(true);
-   _lifeTime->setMinimumDate(QDate::currentDate().addMonths(1));
+   _lifeTime->setMinimumDate(QDate::currentDate().addDays(1));
    _lifeTime->setStyle(QStyleFactory::create("fusion"));
    _lifeTime->setMinimumHeight(40);
    _lifeTime->setFixedWidth(320);
