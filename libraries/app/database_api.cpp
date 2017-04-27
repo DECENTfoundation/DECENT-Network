@@ -1763,6 +1763,7 @@ namespace
             itr_begin != itr_end)
       {
          buying_object const& element = *itr_begin;
+         ++itr_begin;
 
          if (element.consumer != consumer)
             continue;
@@ -1786,8 +1787,6 @@ namespace
 
          result.emplace_back(element);
          --count;
-
-         ++itr_begin;
       }
    }
 }
