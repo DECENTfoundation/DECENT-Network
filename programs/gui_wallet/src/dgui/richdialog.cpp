@@ -184,6 +184,8 @@ void SendDialogBase::AddWidget(QWidget* a_pWidget)
 SendDialog::SendDialog(int a_num_of_text_boxes  , QString title, QString userName)
 : m_nNumOfTextBoxes(a_num_of_text_boxes),m_pTextBoxes(NULL),SendDialogBase(title) , m_userName(userName)
 {
+   _locale = ((QApplication*)QApplication::instance())->inputMethod()->locale();
+
    if(a_num_of_text_boxes<=0) return;
    
    connect(this, SIGNAL(RDB_is_OK()), this, SLOT(sendDCT()));
@@ -198,7 +200,7 @@ SendDialog::SendDialog(int a_num_of_text_boxes  , QString title, QString userNam
    m_pTextBoxes[0].setFixedSize(300, 44);
    m_pTextBoxes[0].setStyleSheet(d_text_box);
    
-   m_pTextBoxes[1].setValidator(new QDoubleValidator(0.001, 100000, 4, this));
+   m_pTextBoxes[1].setValidator(new QDoubleValidator(0.0001, 100000, 4, this));
    m_pTextBoxes[1].setPlaceholderText(QString(tr("Amount")));
    m_pTextBoxes[1].setAttribute(Qt::WA_MacShowFocusRect, 0);
    m_pTextBoxes[1].setFixedSize(300, 44);
@@ -229,12 +231,24 @@ void SendDialog::sendDCT()
 {
    std::string a_result;
    std::string message;
+
+   bool isOK = false;
+   QString amount = QString::number(_locale.toDouble(m_pTextBoxes[1].text(), &isOK));
+   if (!isOK) {
+      QMessageBox* msgBox = new QMessageBox();
+      msgBox->setAttribute(Qt::WA_DeleteOnClose);
+      msgBox->setWindowTitle(tr("Error"));
+      msgBox->setText(tr("Invalid amount is specified"));
+      msgBox->open();
+
+      return;
+   }
    
    try {
       QString run_str = "transfer \""
       + curentName + "\" \""
       + m_pTextBoxes[0].text() + "\" \""
-      + m_pTextBoxes[1].text()
+      + amount
       + "\" \"DCT\" \""
       + m_pTextBoxes[2].text()
       + "\" \"true\"";
