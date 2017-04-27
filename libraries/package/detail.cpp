@@ -203,7 +203,7 @@ namespace decent { namespace package { namespace detail {
     }
 
     std::string get_proto(const std::string& url) {
-        const std::string ipfs = "/ipfs/";
+        const std::string ipfs = "ipfs:";
         const std::string magnet = "magnet:";
         if (url.substr(0, ipfs.size()) == ipfs)           { return "ipfs"; }
         else if (url.substr(0, magnet.size()) == magnet)  { return "magnet"; }

@@ -54,6 +54,7 @@
 #include <graphene/chain/vesting_balance_evaluator.hpp>
 #include <graphene/chain/withdraw_permission_evaluator.hpp>
 #include <graphene/chain/witness_evaluator.hpp>
+#include <graphene/chain/subscription_evaluator.hpp>
 
 #include <graphene/chain/protocol/fee_schedule.hpp>
 
@@ -139,6 +140,11 @@ void database::initialize_evaluators()
    register_evaluator<ready_to_publish_evaluator>();
    register_evaluator<deliver_keys_evaluator>();
    register_evaluator<proof_of_custody_evaluator>();
+   register_evaluator<subscribe_evaluator>();
+   register_evaluator<subscribe_by_author_evaluator>();
+   register_evaluator<automatic_renewal_of_subscription_evaluator>();
+   register_evaluator<disallow_automatic_renewal_of_subscription_evaluator>();
+   register_evaluator<renewal_of_subscription_evaluator>();
    register_evaluator<asset_publish_feeds_evaluator>();
    register_evaluator<return_escrow_submission_evaluator>();
    register_evaluator<return_escrow_buying_evaluator>();
@@ -182,7 +188,7 @@ void database::initialize_indexes()
    add_index< primary_index< rating_index                                 > >();
    add_index< primary_index< content_index                                > >();
    add_index< primary_index< buying_index                                 > >();
-
+   add_index< primary_index< subscription_index                                 > >();
 }
 
 void database::init_genesis(const genesis_state_type& genesis_state)

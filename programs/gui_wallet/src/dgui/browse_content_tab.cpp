@@ -1,4 +1,3 @@
-
 #include "stdafx.h"
 
 #include "browse_content_tab.hpp" 
@@ -41,13 +40,13 @@ BrowseContentTab::BrowseContentTab(Mainwindow_gui_wallet* parent)
 {
     
     m_pTableWidget.set_columns({
-        {"Title", 20},
-        {"Author", 15, "author"},
-        {"Rating", 5, "rating"},
-        {"Size", 5, "size"},
-        {"Price", 5, "price"},
-        {"Uploaded", 7, "created"},
-        {"Expiration", 7, "expiration"},
+        {tr("Title"), 20},
+        {tr("Author"), 15, "author"},
+        {tr("Rating"), 5, "rating"},
+        {tr("Size"), 5, "size"},
+        {tr("Price"), 5, "price"},
+        {tr("Uploaded"), 7, "created"},
+        {tr("Expiration"), 7, "expiration"},
         {" ", -50},
     });
         
@@ -55,7 +54,7 @@ BrowseContentTab::BrowseContentTab(Mainwindow_gui_wallet* parent)
     QPixmap image(icon_search);
     lab->setPixmap(image);
     
-    m_filterLineEdit.setPlaceholderText("Search Content");
+    m_filterLineEdit.setPlaceholderText(tr("Search Content"));
     m_filterLineEdit.setFixedHeight(54);
     m_filterLineEdit.setStyleSheet(d_lineEdit);
     m_filterLineEdit.setAttribute(Qt::WA_MacShowFocusRect, 0);

@@ -85,8 +85,10 @@ protected:
     QLabel*         m_RateText;
     QLabel*         m_CommentOrRate_Text;
     QTextEdit*      m_comment;
-    uint64_t        m_rating;
     QTextEdit       m_desc;
+public:
+    std::vector<QString> s_vcpcFieldsGeneral;
+    std::vector<QString> s_vcpcFieldsBougth;
 };
 
 }

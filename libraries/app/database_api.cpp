@@ -66,7 +66,7 @@ namespace {
 }
 
 namespace graphene { namespace app {
-   
+
    class database_api_impl;
    
    
@@ -174,7 +174,12 @@ namespace graphene { namespace app {
       map<string, string> get_content_comments( const string& URI )const;
       optional<seeder_object> get_seeder(account_id_type) const;
       optional<vector<seeder_object>> list_seeders_by_upload( const uint32_t count )const;
-      
+      vector<subscription_object> list_active_subscriptions_by_consumer( const account_id_type& account, const uint32_t count )const;
+      vector<subscription_object> list_subscriptions_by_consumer( const account_id_type& account, const uint32_t count )const;
+      vector<subscription_object> list_active_subscriptions_by_author( const account_id_type& account, const uint32_t count )const;
+      vector<subscription_object> list_subscriptions_by_author( const account_id_type& account, const uint32_t count )const;
+      optional<subscription_object> get_subscription( const subscription_id_type& sid) const;
+
       //private:
       template<typename T>
       void subscribe_to_item( const T& i )const
@@ -269,7 +274,7 @@ namespace graphene { namespace app {
          {
             if( id.type() == operation_history_object_type && id.space() == protocol_ids ) continue;
             if( id.type() == impl_account_transaction_history_object_type && id.space() == implementation_ids ) continue;
-            
+
             this->subscribe_to_item( id );
          }
       }
@@ -1820,6 +1825,116 @@ namespace graphene { namespace app {
       if (itr != idx.end())
          return *itr;
       return optional<seeder_object>();
+   }
+
+   optional<subscription_object> database_api::get_subscription( const subscription_id_type& sid) const
+   {
+      return my->get_subscription(sid);
+   }
+
+   optional<subscription_object> database_api_impl::get_subscription( const subscription_id_type& sid) const
+   {
+      const auto& idx = _db.get_index_type<subscription_index>().indices().get<by_id>();
+      auto itr = idx.find(sid);
+      if (itr != idx.end())
+         return *itr;
+      return optional<subscription_object>();
+   }
+
+   vector< subscription_object > database_api::list_active_subscriptions_by_consumer( const account_id_type& account, const uint32_t count)const
+   {
+      return my->list_active_subscriptions_by_consumer( account, count );
+   }
+
+   vector< subscription_object > database_api_impl::list_active_subscriptions_by_consumer( const account_id_type& account, const uint32_t count)const
+   {
+      try{
+         FC_ASSERT( count <= 100 );
+         auto range = _db.get_index_type<subscription_index>().indices().get<by_from_expiration>().equal_range(account);
+         vector<subscription_object> result;
+         result.reserve(distance(range.first, range.second));
+         std::for_each(range.first, range.second,
+                       [&](const subscription_object& element) {
+                            if( element.expiration > _db.head_block_time() )
+                               result.emplace_back(element);
+                       });
+         return result;
+
+      }FC_CAPTURE_AND_RETHROW( (account)(count) );
+   }
+
+   vector< subscription_object > database_api::list_subscriptions_by_consumer( const account_id_type& account, const uint32_t count)const
+   {
+      return my->list_subscriptions_by_consumer( account, count );
+   }
+
+   vector< subscription_object > database_api_impl::list_subscriptions_by_consumer( const account_id_type& account, const uint32_t count)const
+   {
+      try{
+         FC_ASSERT( count <= 100 );
+         uint32_t i = count;
+         const auto& idx = _db.get_index_type<subscription_index>().indices().get<by_from>();
+         vector<subscription_object> result;
+         result.reserve(count);
+         auto itr = idx.begin();
+
+         while(i-- && itr != idx.end())
+         {
+            result.emplace_back(*itr);
+            ++itr;
+         }
+
+         return result;
+
+      }FC_CAPTURE_AND_RETHROW( (account)(count) );
+   }
+
+   vector< subscription_object > database_api::list_active_subscriptions_by_author( const account_id_type& account, const uint32_t count)const
+   {
+      return my->list_active_subscriptions_by_author( account, count );
+   }
+
+   vector< subscription_object > database_api_impl::list_active_subscriptions_by_author( const account_id_type& account, const uint32_t count)const
+   {
+      try{
+         FC_ASSERT( count <= 100 );
+         auto range = _db.get_index_type<subscription_index>().indices().get<by_to_expiration>().equal_range(account);
+         vector<subscription_object> result;
+         result.reserve(distance(range.first, range.second));
+         std::for_each(range.first, range.second,
+                       [&](const subscription_object& element) {
+                            if( element.expiration > _db.head_block_time() )
+                               result.emplace_back(element);
+                       });
+         return result;
+
+      }FC_CAPTURE_AND_RETHROW( (account)(count) );
+   }
+
+   vector< subscription_object > database_api::list_subscriptions_by_author( const account_id_type& account, const uint32_t count)const
+   {
+      return my->list_subscriptions_by_author( account, count );
+   }
+
+   vector< subscription_object > database_api_impl::list_subscriptions_by_author( const account_id_type& account, const uint32_t count)const
+   {
+      try{
+         FC_ASSERT( count <= 100 );
+         uint32_t i = count;
+         const auto& idx = _db.get_index_type<subscription_index>().indices().get<by_to>();
+         vector<subscription_object> result;
+         result.reserve(count);
+         auto itr = idx.begin();
+
+         while(i-- && itr != idx.end())
+         {
+            result.emplace_back(*itr);
+            ++itr;
+         }
+
+         return result;
+
+      }FC_CAPTURE_AND_RETHROW( (account)(count) );
    }
    
    vector<content_object> database_api::list_content_by_author( const account_id_type& author )const

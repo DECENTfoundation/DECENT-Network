@@ -253,7 +253,7 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     pComboTmp1 = new QComboBox;
     pComboTmp1->setStyle(QStyleFactory::create("fusion"));
     importKeyButton = new DecentButton();
-    importKeyButton->setText("Import Key");
+    importKeyButton->setText(tr("Import key"));
     importKeyButton->setFixedSize(100, 25);
     pHBoxLayoutTmp->addWidget(pComboTmp1);
     pHBoxLayoutTmp->addWidget(importKeyButton);
@@ -309,7 +309,7 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
    pHBoxLayoutTmp = new QHBoxLayout;
    sendButton->setScaledContents(true);
    DecentButton* send_text = new DecentButton();
-   send_text->setText("  Send");
+   send_text->setText(tr("  Send"));
    send_text->setStyleSheet("QLabel { color : rgb(0,0,0);}");
 
    sendButton->setFixedSize(30,30);

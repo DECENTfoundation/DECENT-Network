@@ -230,6 +230,7 @@ namespace graphene { namespace chain {
       asset payout;
       // do we need here region_code_from?
       account_id_type author;
+      account_id_type consumer;
       buying_id_type buying;
 
       account_id_type fee_payer()const { return author; }
@@ -246,13 +247,13 @@ FC_REFLECT(graphene::chain::request_to_buy_operation,(fee)(URI)(consumer)(price)
 #endif
 FC_REFLECT(graphene::chain::leave_rating_and_comment_operation,(fee)(URI)(consumer)(comment)(rating))
 FC_REFLECT(graphene::chain::ready_to_publish_operation,(fee)(seeder)(space)(pubKey)(price_per_MByte)(ipfs_IDs))
-FC_REFLECT(graphene::chain::proof_of_custody_operation,(fee)(seeder)(URI)(proof))
+FC_REFLECT(graphene::chain::proof_of_custody_oper<<<<ation,(fee)(seeder)(URI)(proof))
 FC_REFLECT(graphene::chain::deliver_keys_operation,(fee)(seeder)(proof)(key)(buying))
 FC_REFLECT(graphene::chain::return_escrow_submission_operation,(fee)(author)(escrow)(content))
 FC_REFLECT(graphene::chain::return_escrow_buying_operation,(fee)(consumer)(escrow)(buying))
 FC_REFLECT(graphene::chain::report_stats_operation,(fee)(consumer)(stats))
 FC_REFLECT(graphene::chain::pay_seeder_operation,(fee)(payout)(author)(seeder));
-FC_REFLECT(graphene::chain::finish_buying_operation,(fee)(payout)(author)(buying));
+FC_REFLECT(graphene::chain::finish_buying_operation,(fee)(payout)(author)(buying)(consumer));
 
 
 FC_REFLECT( graphene::chain::content_submit_operation::fee_parameters_type, (fee) )
