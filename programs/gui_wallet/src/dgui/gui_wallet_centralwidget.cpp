@@ -175,7 +175,7 @@ QWidget* CentralWigdet::GetWidgetFromTable5(int a_nColumn, int a_nWidget)
 
 void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
 {
-
+ 
     m_main_tabs.addTab(&m_browse_cont_tab,tr("Browse Content"));
     m_main_tabs.addTab(&m_trans_tab,tr("Transactions"));
     m_main_tabs.addTab(&m_Upload_tab,tr("Publish"));
