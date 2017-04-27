@@ -1,12 +1,4 @@
-/*
- *	File: gui_wallet_centralwigdet.cpp
- *
- *	Created on: Nov 11, 2016
- *	Created by: Davit Kalantaryan (Email: davit.kalantaryan@desy.de)
- *
- *  This file implements ...
- *
- */
+
 #include "stdafx.h"
 
 #include "gui_design.hpp"
