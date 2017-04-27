@@ -420,11 +420,11 @@ using namespace decent::encrypt;
    struct by_expiration;
    struct by_created;
 
-   template <typename TAG>
+   template <typename TAG, typename _t_object>
    struct key_extractor;
 
    template <>
-   struct key_extractor<by_author>
+   struct key_extractor<by_author, content_object>
    {
       static account_id_type get(content_object const& ob)
       {
@@ -433,7 +433,7 @@ using namespace decent::encrypt;
    };
 
    template <>
-   struct key_extractor<by_URI>
+   struct key_extractor<by_URI, content_object>
    {
       static std::string get(content_object const& ob)
       {
@@ -442,7 +442,7 @@ using namespace decent::encrypt;
    };
 
    template <>
-   struct key_extractor<by_AVG_rating>
+   struct key_extractor<by_AVG_rating, content_object>
    {
       static uint64_t get(content_object const& ob)
       {
@@ -451,7 +451,7 @@ using namespace decent::encrypt;
    };
 
    template <>
-   struct key_extractor<by_size>
+   struct key_extractor<by_size, content_object>
    {
       static uint64_t get(content_object const& ob)
       {
@@ -460,7 +460,7 @@ using namespace decent::encrypt;
    };
 
    template <>
-   struct key_extractor<by_price>
+   struct key_extractor<by_price, content_object>
    {
       static share_type get(content_object const& ob)
       {
@@ -473,7 +473,7 @@ using namespace decent::encrypt;
    };
 
    template <>
-   struct key_extractor<by_expiration>
+   struct key_extractor<by_expiration, content_object>
    {
       static time_point_sec get(content_object const& ob)
       {
@@ -482,7 +482,7 @@ using namespace decent::encrypt;
    };
 
    template <>
-   struct key_extractor<by_created>
+   struct key_extractor<by_created, content_object>
    {
       static time_point_sec get(content_object const& ob)
       {

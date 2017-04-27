@@ -16,6 +16,8 @@
 #include <graphene/chain/content_object.hpp>
 #endif
 
+using string = std::string;
+
 namespace gui_wallet
 {
    
@@ -47,6 +49,9 @@ PurchasedTab::PurchasedTab(QWidget* pParent)
    pfilterLineEditor->setAttribute(Qt::WA_MacShowFocusRect, 0);
    QObject::connect(pfilterLineEditor, &QLineEdit::textChanged,
                     this, &PurchasedTab::slot_SearchTermChanged);
+
+   QObject::connect(m_pTableWidget, &DecentTable::signal_SortingChanged,
+                    this, &PurchasedTab::slot_SortingChanged);
    
    QPixmap image(icon_search);
    
@@ -71,26 +76,22 @@ PurchasedTab::PurchasedTab(QWidget* pParent)
 
 void PurchasedTab::timeToUpdate(const std::string& result)
 {
+   _current_content.clear();
    if (result.empty()) {
       return;
    }
    
    auto contents = nlohmann::json::parse(result);
+
+   size_t iSize = contents.size();
+   if (iSize > m_i_page_size)
+      iSize = m_i_page_size;
+
+   _current_content.reserve(iSize);
    
-   _current_content.clear();
-   _current_content.reserve(contents.size());
-   
-   for (int iIndex = 0; iIndex < contents.size(); ++iIndex)
+   for (int iIndex = 0; iIndex < iSize; ++iIndex)
    {
       auto content = contents[iIndex];
-
-      double price = 0;
-      if (content["price"]["amount"].is_number()){
-         price =  content["price"]["amount"].get<double>();
-      } else {
-         price =  std::stod(content["price"]["amount"].get<std::string>());
-      }
-      price /= GRAPHENE_BLOCKCHAIN_PRECISION;
       
       std::string expiration_or_delivery_time = content["expiration_or_delivery_time"].get<std::string>();
       std::string URI = content["URI"].get<std::string>();
@@ -140,6 +141,14 @@ void PurchasedTab::timeToUpdate(const std::string& result)
 
       contentObject.AVG_rating = content["average_rating"].get<double>() / 1000;
    }
+
+
+   if (contents.size() > m_i_page_size)
+      set_next_page_iterator(contents[m_i_page_size]["id"].get<std::string>());
+   else
+      set_next_page_iterator(string());
+
+   ShowDigitalContentsGUI();
 }
 
 void PurchasedTab::ShowDigitalContentsGUI()
@@ -248,9 +257,9 @@ std::string PurchasedTab::getUpdateCommand()
    return   "search_my_purchases "
             "\"" + str_current_username + "\" "
             "\"" + m_strSearchTerm.toStdString() + "\" "
-            "\"" + m_pTableWidget->getSortedColumn() + "\""
-            "\""  ""  "\""
-            "\"" "50" "\"";
+            "\"" + m_pTableWidget->getSortedColumn() + "\" "
+            "\"" + next_iterator() + "\" " +
+            std::to_string(m_i_page_size + 1);
 }
 
 void PurchasedTab::slot_ExtractionDirSelected(QString const& path) {
@@ -328,6 +337,11 @@ void PurchasedTab::ShowMessageBox(std::string const& message)
       gui_wallet::ShowMessageBox(tr("Error"),
                                  tr("Failed to extract package"),
                                  QObject::tr(message.c_str()));
+}
+
+void PurchasedTab::slot_SortingChanged(int index)
+{
+   reset();
 }
 }  // end namespace gui_wallet
 

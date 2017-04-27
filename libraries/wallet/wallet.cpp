@@ -4227,11 +4227,11 @@ public:
    vector<buying_object_ex> wallet_api::search_my_purchases(const string& account_id_or_name,
                                                             const string& term,
                                                             const string& order,
-                                                            object_id_type const& id,
+                                                            const string& id,
                                                             uint32_t count)const
    {
       account_id_type consumer = get_account( account_id_or_name ).id;
-      vector<buying_object> bobjects = my->_remote_db->get_buying_objects_by_consumer( consumer, order );
+      vector<buying_object> bobjects = my->_remote_db->get_buying_objects_by_consumer(consumer, order, object_id_type(id), term, count );
       vector<buying_object_ex> result;
 
       for (size_t i = 0; i < bobjects.size(); ++i)
@@ -4244,24 +4244,6 @@ public:
 
          optional<content_object> content = my->_remote_db->get_content( buyobj.URI );
          if (!content)
-            continue;
-
-         std::string synopsis = json_unescape_string(buyobj.synopsis);
-         std::string title;
-         std::string description;
-
-         ContentObjectPropertyManager synopsis_parser(synopsis);
-         title = synopsis_parser.get<ContentObjectTitle>();
-         description = synopsis_parser.get<ContentObjectDescription>();
-
-         std::string search_term = term;
-         boost::algorithm::to_lower(search_term);
-         boost::algorithm::to_lower(title);
-         boost::algorithm::to_lower(description);
-
-         if (false == search_term.empty() &&
-             std::string::npos == title.find(search_term) &&
-             std::string::npos == description.find(search_term))
             continue;
 
          result.emplace_back(buying_object_ex(bobjects[i], *status));

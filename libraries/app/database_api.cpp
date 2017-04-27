@@ -160,7 +160,7 @@ namespace graphene { namespace app {
       vector<buying_object> get_open_buyings_by_consumer(const account_id_type& consumer)const;
       optional<buying_object> get_buying_by_consumer_URI( const account_id_type& consumer, const string& URI) const;
       vector<buying_object> get_buying_history_objects_by_consumer( const account_id_type& consumer )const;
-      vector<buying_object> get_buying_objects_by_consumer( const account_id_type& consumer, const string& order )const;
+      vector<buying_object> get_buying_objects_by_consumer( const account_id_type& consumer, const string& order, const object_id_type& id, const string& term, uint32_t count)const;
       optional<uint64_t> get_rating_by_consumer_URI( const account_id_type& consumer, const string& URI )const;
       optional<content_object> get_content( const string& URI )const;
       vector<content_object> list_content_by_author( const account_id_type& author )const;
@@ -1697,15 +1697,58 @@ namespace graphene { namespace app {
    }
    
    
-   vector<buying_object> database_api::get_buying_objects_by_consumer( const account_id_type& consumer, const string& order )const
+   vector<buying_object> database_api::get_buying_objects_by_consumer(const account_id_type& consumer,
+                                                                      const string& order,
+                                                                      const object_id_type& id,
+                                                                      const string& term,
+                                                                      uint32_t count)const
    {
-      return my->get_buying_objects_by_consumer( consumer, order );
+      return my->get_buying_objects_by_consumer( consumer, order, id, term, count );
+   }
+
+namespace
+{
+   template <  typename _t_object_index,
+               typename _t_object,
+               typename _t_sort_tag,
+               typename _t_iterator,
+               bool is_ascending>
+   void correct_iterator(graphene::chain::database& db,
+                         const object_id_type& id,
+                         _t_iterator& itr_begin)
+   {
+      const auto& idx_by_id = db.get_index_type<_t_object_index>().indices().template get<by_id>();
+      auto itr_id = idx_by_id.find(id);
+
+      const auto& idx_by_sort_tag = db.get_index_type<_t_object_index>().indices().template get<_t_sort_tag>();
+
+      auto itr_find = idx_by_sort_tag.end();
+      if (itr_id != idx_by_id.end())
+         itr_find = idx_by_sort_tag.find(key_extractor<_t_sort_tag, _t_object>::get(*itr_id));
+
+      // itr_find has the same keys as the object with id
+      // scan to next items until exactly the object with id is found
+      auto itr_scan = itr_find;
+      while (itr_find != idx_by_sort_tag.end() &&
+             itr_id != idx_by_id.end() &&
+             ++itr_scan != idx_by_sort_tag.end() &&
+             itr_find->id != itr_id->id &&
+             key_extractor<_t_sort_tag, _t_object>::get(*itr_scan) == key_extractor<_t_sort_tag, _t_object>::get(*itr_id))
+         itr_find = itr_scan;
+
+      if (itr_find != idx_by_sort_tag.end())
+      {
+         itr_begin = return_one<is_ascending>::choose(itr_find, boost::reverse_iterator<decltype(itr_find)>(itr_find));
+         if (false == is_ascending)
+            --itr_begin;
+      }
    }
 
    template <bool is_ascending, class sort_tag>
    void search_buying_template(graphene::chain::database& db,
                                const account_id_type& consumer,
-                               object_id_type const& id,
+                               const string& term,
+                               const object_id_type& id,
                                uint32_t count,
                                vector<buying_object>& result)
    {
@@ -1713,45 +1756,65 @@ namespace graphene { namespace app {
 
       auto itr_begin = return_one<is_ascending>::choose(idx_by_sort_tag.cbegin(), idx_by_sort_tag.crbegin());
       auto itr_end = return_one<is_ascending>::choose(idx_by_sort_tag.end(), idx_by_sort_tag.rend());
+
+      correct_iterator<buying_index, buying_object, sort_tag, decltype(itr_begin), is_ascending>(db, id, itr_begin);
       
       while(count &&
             itr_begin != itr_end)
       {
          buying_object const& element = *itr_begin;
-         
-         if (element.consumer == consumer)
-         {
-            result.emplace_back(element);
-            --count;
-         }
+
+         if (element.consumer != consumer)
+            continue;
+
+         std::string title;
+         std::string description;
+
+         ContentObjectPropertyManager synopsis_parser(element.synopsis);
+         title = synopsis_parser.get<ContentObjectTitle>();
+         description = synopsis_parser.get<ContentObjectDescription>();
+
+         std::string search_term = term;
+         boost::algorithm::to_lower(search_term);
+         boost::algorithm::to_lower(title);
+         boost::algorithm::to_lower(description);
+
+         if (false == search_term.empty() &&
+             std::string::npos == title.find(search_term) &&
+             std::string::npos == description.find(search_term))
+            continue;
+
+         result.emplace_back(element);
+         --count;
 
          ++itr_begin;
       }
    }
-
+}
    
    vector<buying_object> database_api_impl::get_buying_objects_by_consumer(const account_id_type& consumer,
-                                                                           const string& order)const
+                                                                           const string& order,
+                                                                           const object_id_type& id,
+                                                                           const string& term,
+                                                                           uint32_t count)const
    {
-      object_id_type id;
-      uint32_t count = 100;
       try {
          vector<buying_object> result;
          
          if(order == "+size")
-            search_buying_template<true, by_size>(_db, consumer, id, count, result);
+            search_buying_template<true, by_size>(_db, consumer, term, id, count, result);
          else if(order == "-size")
-            search_buying_template<false, by_size>(_db, consumer, id, count, result);
+            search_buying_template<false, by_size>(_db, consumer, term, id, count, result);
          else if(order == "+price")
-            search_buying_template<true, by_price>(_db, consumer, id, count, result);
+            search_buying_template<true, by_price>(_db, consumer, term, id, count, result);
          else if(order == "-price")
-            search_buying_template<false, by_price>(_db, consumer, id, count, result);
+            search_buying_template<false, by_price>(_db, consumer, term, id, count, result);
          else if(order == "+created")
-            search_buying_template<true, by_created>(_db, consumer, id, count, result);
+            search_buying_template<true, by_created>(_db, consumer, term, id, count, result);
          else if(order == "-created")
-            search_buying_template<false, by_created>(_db, consumer, id, count, result);
+            search_buying_template<false, by_created>(_db, consumer, term, id, count, result);
          else
-            search_buying_template<true, by_consumer_open>(_db, consumer, id, count, result);
+            search_buying_template<true, by_created>(_db, consumer, term, id, count, result);
          
          return result;
       }
@@ -2022,8 +2085,6 @@ namespace graphene { namespace app {
    
    
    namespace {
-
-      
       
       template <bool is_ascending, class sort_tag>
       void search_content_template(graphene::chain::database& db,
@@ -2039,29 +2100,7 @@ namespace graphene { namespace app {
          auto itr_begin = return_one<is_ascending>::choose(idx_by_sort_tag.cbegin(), idx_by_sort_tag.crbegin());
          auto itr_end = return_one<is_ascending>::choose(idx_by_sort_tag.cend(), idx_by_sort_tag.crend());
 
-         const auto& idx_by_id = db.get_index_type<content_index>().indices().get<by_id>();
-         auto itr_id = idx_by_id.find(id);
-
-         auto itr_find = idx_by_sort_tag.end();
-         if (itr_id != idx_by_id.end())
-            itr_find = idx_by_sort_tag.find(key_extractor<sort_tag>::get(*itr_id));
-
-         // itr_find has the same keys as the object with id
-         // scan to next items until exactly the object with id is found
-         auto itr_scan = itr_find;
-         while (itr_find != idx_by_sort_tag.end() &&
-                itr_id != idx_by_id.end() &&
-                ++itr_scan != idx_by_sort_tag.end() &&
-                itr_find->id != itr_id->id &&
-                key_extractor<sort_tag>::get(*itr_scan) == key_extractor<sort_tag>::get(*itr_id))
-            itr_find = itr_scan;
-
-         if (itr_find != idx_by_sort_tag.end())
-         {
-            itr_begin = return_one<is_ascending>::choose(itr_find, boost::reverse_iterator<decltype(itr_find)>(itr_find));
-            if (false == is_ascending)
-               --itr_begin;
-         }
+         correct_iterator<content_index, content_object, sort_tag, decltype(itr_begin), is_ascending>(db, id, itr_begin);
 
          content_summary content;
          const auto& idx_account = db.get_index_type<account_index>().indices().get<by_id>();

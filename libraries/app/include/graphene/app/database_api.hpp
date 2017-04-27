@@ -645,10 +645,18 @@ namespace graphene { namespace app {
          /**
           * @brief Get buying objects (open or history) by consumer
           * @param consumer Consumer of the buyings to retrieve
+          * @param order Ordering field
+          * @param id The id of buying object to start searching from
+          * @param term Search term
+          * @param count Maximum number of contents to fetch (must not exceed 100)
           * @return Buying objects corresponding to the provided consumer
           * @ingroup DatabaseAPI
           */
-         vector<buying_object> get_buying_objects_by_consumer( const account_id_type& consumer, const string& order )const;
+         vector<buying_object> get_buying_objects_by_consumer(const account_id_type& consumer,
+                                                              const string& order,
+                                                              const object_id_type& id,
+                                                              const string& term,
+                                                              uint32_t count)const;
 
          /**
           * @brief Get buying (open or history) by consumer and URI
@@ -699,7 +707,7 @@ namespace graphene { namespace app {
           * @param order Ordering field
           * @param user Content owner
           * @param region Two letter region code
-          * @param uri The URI of content object to start searching from
+          * @param id The id of content object to start searching from
           * @param count Maximum number of contents to fetch (must not exceed 100)
           * @return The contents found
           * @ingroup DatabaseAPI
@@ -717,7 +725,7 @@ namespace graphene { namespace app {
           * @param term Search term
           * @param order Ordering field
           * @param region Two letter region code
-          * @param uri The URI of content object to start searching from
+          * @param id The id of content object to start searching from
           * @param count Maximum number of contents to fetch (must not exceed 100)
           * @return The contents found
           * @ingroup DatabaseAPI

@@ -163,8 +163,10 @@ namespace graphene { namespace wallet {
             // but the GUI relies on buying_object_ex::price
             // so overwrite as a quick fix
             price = paid_price;
+            this->id = std::string(obj.id);
          }
          
+         std::string         id;
          std::string         author_account;
          uint32_t            times_bought;
          fc::ripemd160       hash;
@@ -1751,7 +1753,7 @@ namespace graphene { namespace wallet {
          vector<buying_object_ex> search_my_purchases(const string& account_id_or_name,
                                                       const string& term,
                                                       const string& order,
-                                                      object_id_type const& id,
+                                                      const string& id,
                                                       uint32_t count) const;
 
          /**
@@ -2016,6 +2018,7 @@ FC_REFLECT_DERIVED( graphene::wallet::vesting_balance_object_with_info, (graphen
 FC_REFLECT_DERIVED( graphene::wallet::buying_object_ex,
                    (graphene::chain::buying_object)
                    (graphene::wallet::content_download_status),
+                   (id)
                    (author_account)
                    (times_bought)
                    (hash)
