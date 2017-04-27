@@ -172,7 +172,7 @@ void PurchasedTab::timeToUpdate(const std::string& result) {
 
 
       m_pTableWidget->setItem(iIndex, 0, new QTableWidgetItem(QString::fromStdString(title)));
-      m_pTableWidget->setItem(iIndex, 1, new QTableWidgetItem(QString::number(size) + tr(" MB")));
+      m_pTableWidget->setItem(iIndex, 1, new QTableWidgetItem(QString::number(size) + " MB"));
       if(price)
       {
          m_pTableWidget->setItem(iIndex, 2, new QTableWidgetItem(QString::number(price, 'f', 4) + " DCT"));
@@ -193,13 +193,13 @@ void PurchasedTab::timeToUpdate(const std::string& result) {
       int received_download_bytes  = content["received_download_bytes"].get<int>();
       
       
-      QString status_text = tr("Keys: ") + QString::number(received_key_parts) + "/" + QString::number(total_key_parts);
+      QString status_text = tr("Keys") + ": " + QString::number(received_key_parts) + "/" + QString::number(total_key_parts);
       
       bool is_delivered = content["delivered"].get<bool>();
       if (!is_delivered) {
          status_text = tr("Waiting for key delivery");
       } else {
-         status_text = status_text + tr(" ") + QString::fromStdString(content["status_text"].get<std::string>());
+         status_text = status_text + " " + QString::fromStdString(content["status_text"].get<std::string>());
       }
       
       m_pTableWidget->setItem(iIndex, 4, new QTableWidgetItem(status_text));
