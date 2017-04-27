@@ -486,8 +486,9 @@ void Upload_popup::updateUploadButtonStatus() {
          }
       }
    }
-   
-   double publishingPrice = it->second;
+   double publishingPrice = 0;
+   if( isValid )
+      publishingPrice = it->second;
    uint64_t size = std::max( (uint64_t)1, ( fileSize + (1024 * 1024) -1 ) / (1024 * 1024));
    double totalPricePerDay = size * publishingPrice;
    int days = QDate::currentDate().daysTo(_lifeTime->date());
