@@ -482,7 +482,7 @@ namespace decent { namespace package {
             }
 
         private:
-            const boost::filesystem::path& _target_dir;
+            const boost::filesystem::path _target_dir;
             const fc::sha256& _key;
         };
 

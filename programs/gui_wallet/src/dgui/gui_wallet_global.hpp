@@ -72,9 +72,10 @@ namespace gui_wallet
 {
    std::string CalculateRemainingTime(QDateTime const& dt, QDateTime const& dtFuture);
    QString CalculateRemainingTime_Behind(QDateTime const& dt, QDateTime const& dtFuture);
+   
    void ShowMessageBox(QString const& strTitle,
-                       QString const& strMessage,
-                       QString const& strDetailedText = QString());
+                        QString const& strMessage,
+                        QString const& strDetailedText = QString());
     
     
    std::size_t extra_space(const std::string& s) noexcept;
@@ -317,7 +318,7 @@ namespace gui_wallet
       std::string   hash;
       std::string   status;
       int           size;
-      int           times_bougth;
+      int           times_bought;
    };
 
    struct SDigitalContentPurchase : public SDigitalContent

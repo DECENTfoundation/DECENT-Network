@@ -10,6 +10,8 @@
 #include <QTimer>
 #include <QHeaderView>
 #include <QObject>
+#include <QVBoxLayout>
+#include "decent_button.hpp"
 
 #include <iostream>
 #endif
@@ -23,15 +25,30 @@ void ShowMessageBox(QString const& strTitle,
                     QString const& strMessage,
                     QString const& strDetailedText/* = QString()*/)
 {
-   QMessageBox* pMessageBox = new QMessageBox();
-   pMessageBox->setWindowTitle(strTitle);
-   pMessageBox->setText(strMessage);
-   pMessageBox->setDetailedText(strDetailedText);
-   pMessageBox->setAttribute(Qt::WA_DeleteOnClose);
-   pMessageBox->open();
-   // alternatively can connect to delete later as below
-   //pMessageBox->open(pMessageBox, SLOT(deleteLater()));
+   QDialog* pDialog = new QDialog();
+   pDialog->setWindowTitle(strTitle);
+   pDialog->setAttribute(Qt::WA_DeleteOnClose);
+   
+   QVBoxLayout*   main = new QVBoxLayout();
+   QLabel*        pText = new QLabel(strMessage, pDialog);
+   DecentButton* pOkButton = new DecentButton(pDialog);
+   
+   pText->setFont(AccountBalanceFont());
+   
+   pOkButton->setText(QObject::tr("OK"));
+   pOkButton->setFixedSize(140, 40);
+   pOkButton->setFocus();
+   QObject::connect(pOkButton, SIGNAL(clicked()), pDialog , SLOT(close()));
+   
+   main->addWidget(pText, 0, Qt::AlignCenter);
+   main->addWidget(pOkButton, 0, Qt::AlignCenter);
+   
+   pDialog->setLayout(main);
+   pDialog->setFixedSize(300, 100);
+   
+   pDialog->open();
 }
+   
 
 struct CalendarDuration
 {
@@ -683,7 +700,7 @@ DecentColumn::DecentColumn(QString title, int size, std::string const& sortid/* 
 DecentTable::DecentTable(QWidget* pParent)
    : QTableWidget(pParent)
 {
-   this->horizontalHeader()->setStretchLastSection(true);
+   //this->horizontalHeader()->setStretchLastSection(true);
    this->setSelectionMode(QAbstractItemView::NoSelection);
    this->setStyleSheet("QTableView{border : 0px}");
    this->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -718,8 +735,9 @@ void DecentTable::set_columns(const std::vector<DecentColumn>& cols)
    this->setRowHeight(0,35);
 
    QStringList columns;
-   for (const DecentColumn& col: cols) {
-      columns << col.title;
+   for (int i = 0; i < cols.size(); ++i) {
+      this->horizontalHeader()->setSectionResizeMode(i, QHeaderView::Fixed);
+      columns << cols[i].title;
    }
    this->setHorizontalHeaderLabels(columns);
 

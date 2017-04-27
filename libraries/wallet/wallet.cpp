@@ -4221,6 +4221,9 @@ public:
          bobj.author_account = account_id_or_name;
          bobj.times_bought = content->times_bought;
          bobj.hash = content->_hash;
+         bobj.AVG_rating = content->AVG_rating;
+         bobj.rating = content->AVG_rating;
+         bobj.average_rating = content->AVG_rating;
       }
 
       return result;

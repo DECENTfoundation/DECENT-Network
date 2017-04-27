@@ -170,6 +170,7 @@ namespace graphene { namespace wallet {
          std::string         author_account;
          uint32_t            times_bought;
          fc::ripemd160       hash;
+         double              AVG_rating;
       };
 
 
@@ -2001,6 +2002,7 @@ FC_REFLECT_DERIVED( graphene::wallet::buying_object_ex,
                    (graphene::wallet::content_download_status),
                    (id)
                    (author_account)
+                   (AVG_rating)
                    (times_bought)
                    (hash)
                   )
