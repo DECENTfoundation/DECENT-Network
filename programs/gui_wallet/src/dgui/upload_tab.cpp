@@ -104,7 +104,7 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    
 
    _lifeTime = new QDateEdit(this);
-   _lifeTime->setDate(QDate::currentDate().addDays(30));
+   _lifeTime->setDate(QDate::currentDate().addMonths(1));
    _lifeTime->setDisplayFormat("yyyy-MM-dd");
    _lifeTime->setCalendarPopup(true);
    _lifeTime->setMinimumDate(QDate::currentDate().addDays(1));
@@ -480,7 +480,7 @@ void Upload_popup::updateUploadButtonStatus() {
    
    
    if (isValid) {
-      _upload_button->setText(tr("Publish for ") + QString::number(days * totalPricePerDay) + tr(" DCT"));
+      _upload_button->setText(tr("Publish for") + " " + QString::number(days * totalPricePerDay) + " DCT");
       _upload_button->setEnabled(true);
    } else {
       _upload_button->setText(tr("Publish"));
@@ -590,8 +590,7 @@ void Upload_popup::uploadContent()
       setEnabled(true);
    }
 
-   QMessageBox* msgBox = new QMessageBox();
-   msgBox->setAttribute(Qt::WA_DeleteOnClose);
+   
 
    if (message.empty())
    {
@@ -602,9 +601,11 @@ void Upload_popup::uploadContent()
       _contentPath->setText(tr("Content path"));
       _samplesPath->setText(tr("Samples (optional)"));
 
+      
+      SuccessMessageDialog* successMessage = new SuccessMessageDialog(tr("Content is processing") + "..." , tr("Success"));
+      successMessage->execSMD();
+      delete successMessage;
 
-      msgBox->setWindowTitle(tr("Success"));
-      msgBox->setText(tr("Content is processing..."));
 
       setEnabled(true);
 
@@ -612,12 +613,13 @@ void Upload_popup::uploadContent()
    }
    else
    {
+      QMessageBox* msgBox = new QMessageBox();
+      msgBox->setAttribute(Qt::WA_DeleteOnClose);
       msgBox->setWindowTitle(tr("Error"));
       msgBox->setText(tr("Failed to submit content"));
       msgBox->setDetailedText(message.c_str());
+      msgBox->open();
    }
-
-   msgBox->open();
 }
 
 

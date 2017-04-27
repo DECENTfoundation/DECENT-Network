@@ -15,6 +15,7 @@
 #include "gui_design.hpp"
 #include "gui_wallet_mainwindow.hpp"
 #include "gui_design.hpp"
+#include <QKeyEvent>
 
 using namespace gui_wallet;
 
@@ -243,23 +244,22 @@ void SendDialog::sendDCT()
       setEnabled(true);
    }
    
-   QMessageBox* msgBox = new QMessageBox();
-   msgBox->setAttribute(Qt::WA_DeleteOnClose);
-   
    if (message.empty())
    {
-      msgBox->setWindowTitle(tr("Success"));
-      msgBox->setText(tr("Success"));
+      SuccessMessageDialog* successMessage = new SuccessMessageDialog(tr("Success") , "Success");
+      successMessage->execSMD();
+      delete successMessage;
       close();
    }
    else
    {
+      QMessageBox* msgBox = new QMessageBox();
+      msgBox->setAttribute(Qt::WA_DeleteOnClose);
       msgBox->setWindowTitle(tr("Error"));
       msgBox->setText(tr("Failed to send DCT"));
       msgBox->setDetailedText(message.c_str());
+      msgBox->open();
    }
-   
-   msgBox->open();
 }
 
 
@@ -284,4 +284,37 @@ RET_TYPE SendDialog::execRD(const QPoint* a_pMove, std::vector<std::string>& a_c
    }
    
    return rtReturn;
+}
+
+
+
+
+SuccessMessageDialog::SuccessMessageDialog(QString message , QString title)
+{
+   m_text = new QLabel(message);
+   m_text->setFont(AccountBalanceFont());
+   
+   m_ok_button = new DecentButton();
+   m_ok_button->setText("OK");
+   m_ok_button->setFixedSize(140, 40);
+   connect(m_ok_button, SIGNAL(LabelClicked()), this , SLOT(close()));
+   
+   m_controls_layout.addWidget(m_text, 0, Qt::AlignCenter);
+   m_controls_layout.addWidget(m_ok_button, 0, Qt::AlignCenter);
+   
+   setWindowTitle(title);
+   setLayout(&m_controls_layout);
+   setFixedSize(300,100);
+}
+
+void SuccessMessageDialog::execSMD()
+{
+   this->exec();
+}
+
+void SuccessMessageDialog::keyPressEvent(QKeyEvent *evt)
+{
+   if(evt->key() == Qt::Key_Enter || evt->key() == Qt::Key_Return)
+      close();
+   QDialog::keyPressEvent(evt);
 }
