@@ -297,7 +297,7 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details, bool bSil
 
 void ContentDetailsBase::LeaveComment()
 {
-   if ( m_currentMyRating > 0 ){
+   if ( m_currentMyRating < 0 ){
       return;
    }
    
@@ -324,7 +324,7 @@ void ContentDetailsBase::MouseClickedStar(int index) {
         m_currentMyRating = (index + 1);
 //        } catch (...) {} // Ignore for now;
    int m_rating = index + 1;
-   std::cout << "\n\n  m_rating \n" << m_rating << std::endl;
+   std::cout << "\n\n  m_rating \n    " << m_rating << std::endl;
    
    for (int i = m_currentMyRating; i < 5; ++i) {
       stars_labels[i]->setCheckState(Qt::Unchecked);

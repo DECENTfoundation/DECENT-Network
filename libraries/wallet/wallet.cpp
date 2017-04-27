@@ -2397,14 +2397,6 @@ public:
       std::cout << "\n\n\n\n\n  ~_~_~_~_~:: wallet leave_rat_and_com \n rating: " << rating << "\n comment: " << comment << std::endl;
 
       try {
-//=======
-//
-//   signed_transaction leave_rating(string consumer,
-//                                   string URI,
-//                                   uint64_t rating,
-//                                   bool broadcast/* = false */)
-//   { try {
-//>>>>>>> 4c1f30cb8000875a949c8819f1c860061a981e21
       account_object consumer_account = get_account( consumer );
 
       leave_rating_and_comment_operation leave_rating_op;
@@ -2421,11 +2413,7 @@ public:
       return sign_transaction( tx, broadcast );
       } FC_CAPTURE_AND_RETHROW( (consumer)(URI)(rating)(comment)(broadcast) )
    }
-   
-//=======
-//   } FC_CAPTURE_AND_RETHROW( (consumer)(URI)(rating)(broadcast) ) }
-//
-//>>>>>>> 4c1f30cb8000875a949c8819f1c860061a981e21
+
    signed_transaction ready_to_publish(string seeder,
                                        uint64_t space,
                                        uint32_t price_per_MByte,
