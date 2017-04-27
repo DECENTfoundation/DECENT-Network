@@ -85,7 +85,7 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
    pUsersCombo->hide();
    
    connect(pUsersCombo, SIGNAL(currentIndexChanged(const QString&)), this, SLOT(CurrentUserChangedSlot(const QString&)) );
-   connect(pImportButton, SIGNAL(LabelClicked()), this, SLOT(ImportKeySlot()));
+   connect(pImportButton, SIGNAL(clicked()), this, SLOT(ImportKeySlot()));
 
    setWindowTitle(tr("DECENT - Blockchain Content Distribution"));
 
