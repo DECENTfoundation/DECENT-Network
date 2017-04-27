@@ -36,4 +36,8 @@ void DecentButton::setEnabled(bool isEnabled) {
       setStyleSheet(d_upload_button_false);
 }
 
- 
+DecentButton1::DecentButton1(QWidget *parent) : QPushButton(parent)
+{
+   this->setStyleSheet("QPushButton{border: 0px ; background-color :rgb(27,176,104); color : white;}"
+                       "QPushButton:!enabled{background-color :rgb(180,180,180); color : rgb(30, 30, 30);}");
+}

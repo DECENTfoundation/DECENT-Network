@@ -155,9 +155,9 @@ QComboBox* CentralWigdet::usersCombo()
     return (QComboBox*)GetWidgetFromTable5(USERNAME,1);
 }
 
-DecentButton* CentralWigdet::importButton()
+DecentButton1* CentralWigdet::importButton()
 {
-   return (DecentButton*)GetWidgetFromTable5(USERNAME,2);
+   return (DecentButton1*)GetWidgetFromTable5(USERNAME,2);
 }
 
 DecentSmallButton* CentralWigdet::getSendButton()
@@ -193,7 +193,7 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     QHBoxLayout *pHBoxLayoutTmp = nullptr;
     QComboBox* pComboTmp1 = nullptr;
     QFrame* line = nullptr;
-    DecentButton* importKeyButton = nullptr;
+    DecentButton1* importKeyButton = nullptr;
 
     AccountBalanceWidget* pCombo2;
 
@@ -244,7 +244,7 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     
     pComboTmp1 = new QComboBox;
     pComboTmp1->setStyle(QStyleFactory::create("fusion"));
-    importKeyButton = new DecentButton();
+    importKeyButton = new DecentButton1();
 
     importKeyButton->setText(tr("Import Key"));
 #ifdef WINDOWS_HIGH_DPI
@@ -314,14 +314,14 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
    m_pSendWgt1 = new QWidget;
    pHBoxLayoutTmp = new QHBoxLayout;
    sendButton->setScaledContents(true);
-   DecentButton* send_text = new DecentButton();
-   send_text->setText("  " + tr("Send"));
-   send_text->setStyleSheet("QLabel { color : rgb(0,0,0);}");
+   DecentButton1* send_text = new DecentButton1();
+   send_text->setText(tr("Send"));
+   send_text->setStyleSheet("border: 1px solid rgb(255, 255, 255); background-color :rgb(255,255,255); color: rgb(0,0,0);");
 
    sendButton->setFixedSize(30,30);
    connect(sendButton, SIGNAL(clicked()), this, SLOT(sendDCTSlot()));
-   connect(send_text, SIGNAL(LabelClicked()), this, SLOT(sendDCTSlot()));
-   pHBoxLayoutTmp->setAlignment(Qt::AlignCenter);
+   connect(send_text, SIGNAL(clicked()), this, SLOT(sendDCTSlot()));
+   pHBoxLayoutTmp->setAlignment(Qt::AlignRight);
    pHBoxLayoutTmp->addWidget(sendButton);
    pHBoxLayoutTmp->addWidget(send_text);
    

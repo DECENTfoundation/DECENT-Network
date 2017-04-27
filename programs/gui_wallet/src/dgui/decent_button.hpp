@@ -11,6 +11,7 @@
 #define DECENT_BUTTON_HPP
 
 #include <QLabel>
+#include <QPushButton>
 
 namespace gui_wallet {
 
@@ -36,7 +37,15 @@ signals:
 private:
    bool _isEnabled;
 };
-    
+   
+   
+   
+class DecentButton1 : public QPushButton
+{
+   Q_OBJECT
+public:
+   DecentButton1(QWidget *parent = Q_NULLPTR);
+};
 
 }
 

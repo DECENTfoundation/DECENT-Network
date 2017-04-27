@@ -81,7 +81,7 @@ public:
     
     QString getFilterText()const;
     QComboBox* usersCombo();
-    DecentButton* importButton();
+    DecentButton1* importButton();
     DecentSmallButton* getSendButton();
    
     int GetMyCurrentTabIndex()const {

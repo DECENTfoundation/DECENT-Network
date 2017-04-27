@@ -44,12 +44,12 @@ protected slots:
     void set_ok_and_closeSlot();
 
 protected:
-    QVBoxLayout   m_main_layout;
-    QVBoxLayout   m_controls_layout;
-    QHBoxLayout   m_buttons_layout;
-    DecentButton  m_ok_button;
-    DecentButton  m_cancel_button;
-    RET_TYPE      m_ret_value;
+    QVBoxLayout    m_main_layout;
+    QVBoxLayout    m_controls_layout;
+    QHBoxLayout    m_buttons_layout;
+    DecentButton1  m_ok_button;
+    DecentButton1  m_cancel_button;
+    RET_TYPE       m_ret_value;
 };
 
 /********************************************/
@@ -84,12 +84,12 @@ public:
    void set_ok_and_closeSlot();
    
 protected:
-   QVBoxLayout   m_main_layout;
-   QVBoxLayout   m_controls_layout;
-   QHBoxLayout   m_buttons_layout;
-   DecentButton  m_ok_button;
-   DecentButton  m_cancel_button;
-   RET_TYPE      m_ret_value;
+   QVBoxLayout    m_main_layout;
+   QVBoxLayout    m_controls_layout;
+   QHBoxLayout    m_buttons_layout;
+   DecentButton1  m_ok_button;
+   DecentButton1  m_cancel_button;
+   RET_TYPE       m_ret_value;
    
 public:
 signals:
@@ -117,21 +117,6 @@ protected:
 public:
    QString curentName;
    
-};
-   
-class SuccessMessageDialog : public QDialog
-{
-   Q_OBJECT
-public:
-   SuccessMessageDialog(QString message , QString title);
-   void execSMD();
-
-   void keyPressEvent(QKeyEvent *evt);
-
-private:
-   DecentButton* m_ok_button;
-   QLabel*       m_text;
-   QVBoxLayout   m_controls_layout;
 };
    
 }

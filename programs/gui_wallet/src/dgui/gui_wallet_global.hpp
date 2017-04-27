@@ -74,6 +74,10 @@ namespace gui_wallet
    void ShowMessageBox(QString const& strTitle,
                        QString const& strMessage,
                        QString const& strDetailedText = QString());
+   
+   void ShowMessageBox1(QString const& strTitle,
+                        QString const& strMessage,
+                        QString const& strDetailedText = QString());
     
     
    std::size_t extra_space(const std::string& s) noexcept;

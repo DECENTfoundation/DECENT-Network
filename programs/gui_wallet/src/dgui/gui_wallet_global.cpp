@@ -10,6 +10,8 @@
 #include <QTimer>
 #include <QHeaderView>
 #include <QObject>
+#include <QVBoxLayout>
+#include "decent_button.hpp"
 
 #include <iostream>
 #endif
@@ -17,6 +19,7 @@
 namespace gui_wallet
 {
    
+
 void ShowMessageBox(QString const& strTitle,
                     QString const& strMessage,
                     QString const& strDetailedText/* = QString()*/)
@@ -30,6 +33,35 @@ void ShowMessageBox(QString const& strTitle,
    // alternatively can connect to delete later as below
    //pMessageBox->open(pMessageBox, SLOT(deleteLater()));
 }
+   
+void ShowMessageBox1(QString const& strTitle,
+                    QString const& strMessage,
+                    QString const& strDetailedText/* = QString()*/)
+{
+   QDialog* pDialog = new QDialog();
+   pDialog->setWindowTitle(strTitle);
+   pDialog->setAttribute(Qt::WA_DeleteOnClose);
+   
+   QVBoxLayout*   main = new QVBoxLayout();
+   QLabel*        pText = new QLabel(strMessage, pDialog);
+   DecentButton1* pOkButton = new DecentButton1(pDialog);
+   
+   pText->setFont(AccountBalanceFont());
+   
+   pOkButton->setText(QObject::tr("OK"));
+   pOkButton->setFixedSize(140, 40);
+   pOkButton->setFocus();
+   QObject::connect(pOkButton, SIGNAL(clicked()), pDialog , SLOT(close()));
+   
+   main->addWidget(pText, 0, Qt::AlignCenter);
+   main->addWidget(pOkButton, 0, Qt::AlignCenter);
+   
+   pDialog->setLayout(main);
+   pDialog->setFixedSize(300, 100);
+   
+   pDialog->open();
+}
+   
 
 struct CalendarDuration
 {
