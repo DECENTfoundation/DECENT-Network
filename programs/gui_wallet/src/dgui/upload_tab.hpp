@@ -102,6 +102,7 @@ namespace gui_wallet
         QTimer           m_getPublishersTimer;
         QTimer*          _buttonStatusCheck;
         QDialog*         _seeders_dialog;
+        QLocale          _locale;
        
        std::map<std::string, double> _publisherIdToPriceMap;
        std::vector<QCheckBox*>       _seeders_checkbox;

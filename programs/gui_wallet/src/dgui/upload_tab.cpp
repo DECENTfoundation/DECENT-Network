@@ -12,8 +12,11 @@
 #include <QCalendarWidget>
 #include <QDate>
 #include <QDateEdit>
+#include <QApplication>
 #include <stdio.h>
 #include <QStyleFactory>
+#include <QInputMethod>
+#include <QLocale>
 #endif
 
 #include "decent_button.hpp"
@@ -70,6 +73,8 @@ CryptoPP::AutoSeededRandomPool rng;
 Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishersTimer(this) {
 
    u_main_layout = new QVBoxLayout(this);
+
+   _locale = ((QApplication*)QApplication::instance())->inputMethod()->locale();
    ////////////////////////////////////////////////////////////////////////////
    /// Title field
    ////////////////////////////////////////////////////////////////////////////
@@ -159,7 +164,7 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
 
 
    _price = new QLineEdit();
-   _price->setValidator( new QDoubleValidator(0.001, 100000, 3, this) );
+   _price->setValidator( new QDoubleValidator(0.0001, 100000, 4, this) );
    _price->setAttribute(Qt::WA_MacShowFocusRect, 0);
    _price->setStyleSheet(d_label_v2);
    _price->setTextMargins(5, 5, 5, 5);
@@ -421,18 +426,27 @@ void Upload_popup::seederOkSlot()
 }
 
 void Upload_popup::updateUploadButtonStatus() {
+   bool isValid = true;
+
+
    std::string lifeTime    = _lifeTime->text().toStdString();
    //std::string seeders     = _seeders->currentData().toString().toStdString();
    //seeders push_back in stateChanged slot on _checkedSeeders member
    std::string keyparts    = _keyparts->currentData().toString().toStdString();
-   std::string price       = _price->text().toStdString();
+
+   bool isOK = false;
+   std::string price = QString::number(_locale.toDouble(_price->text(), &isOK)).toStdString();
+   if (!isOK)
+       isValid = false;
+
+   
+
    std::string path        = _contentPath->text().toStdString();
    std::string samplesPath = _samplesPath->text().toStdString();
    
    std::string title = _titleText->text().toStdString();
    std::string desc = _descriptionText->toPlainText().toStdString();
 
-   bool isValid = true;
    
    if (price.empty())
       isValid = false;
@@ -526,7 +540,11 @@ void Upload_popup::uploadContent()
    
    std::string m_life_time = _lifeTime->text().toStdString();
    std::string m_keyparts  = _keyparts->currentData().toString().toStdString();
-   std::string m_price     = _price->text().toStdString();
+
+
+   
+   double price = _locale.toDouble(_price->text(), NULL);
+   std::string m_price     = QString::number(price).toStdString();
 
    std::string assetName = "DCT";
    
