@@ -2394,8 +2394,6 @@ public:
                                                string comment,
                                                bool broadcast/* = false */)
    {
-      std::cout << "\n\n\n\n\n  ~_~_~_~_~:: wallet leave_rat_and_com \n rating: " << rating << "\n comment: " << comment << std::endl;
-
       try {
       account_object consumer_account = get_account( consumer );
 

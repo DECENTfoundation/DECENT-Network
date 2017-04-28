@@ -145,31 +145,46 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details, bool bSil
           RunTask("get_rating_and_comment \"" + Globals::instance().getCurrentUser() + "\" \"" + m_pContentInfo->URI + "\"", comment_result);
        } catch (...) { }
     
-       std::cout << "\n\n\n\n\n\n gui- get_rating_and_comment : " << comment_result << std::endl;
-       m_CommentOrRate_Text = new QLabel;
+       auto c_result = json::parse(comment_result);
+       int get_rating;
+       std::string get_comment;
+       
+       QHBoxLayout* comment_status = new QHBoxLayout;
+       QLabel*    m_commentOrRate_Text = new QLabel;
+
+       m_commentOrRate_Text->setStyleSheet(d_comment);
        m_comment = new QTextEdit;
 
-       auto c_result = json::parse(comment_result);
-
-       m_CommentOrRate_Text->setText("Leave comment about this content");
-       m_comment->setPlaceholderText(QString::fromStdString(comment_result));
+       comment_status->addWidget(m_commentOrRate_Text);
+       comment_status->setAlignment(Qt::AlignRight);
+       comment_status->setMargin(5);
        
-       m_main_layout.addWidget(m_CommentOrRate_Text);
+       m_main_layout.addLayout(comment_status);
        m_main_layout.addWidget(m_comment);
        
-       QHBoxLayout* button = new QHBoxLayout;
-       button->setAlignment(Qt::AlignRight);
-       button->setMargin(4);
+       if ( is_empty(c_result, get_rating, get_comment) )
+       {
+          m_commentOrRate_Text->setText("Leave comment about this content");
+          m_comment->setPlaceholderText("Comment heare...");
+          
+          QHBoxLayout* button = new QHBoxLayout;
+          button->setAlignment(Qt::AlignRight);
+          button->setMargin(5);
+          
+          DecentButton* leave_comment_button = new DecentButton;
+          leave_comment_button->setText("Leave comment");
+          leave_comment_button->setFixedHeight(40);
+          leave_comment_button->setFixedWidth(120);
+          button->addWidget(leave_comment_button);
+          
+          m_main_layout.addLayout(button);
+          connect(leave_comment_button, SIGNAL(LabelClicked()), this, SLOT(LeaveComment()));
+       }else{
+          m_commentOrRate_Text->setText("You was Commented");
+          m_comment->setText( QString::fromStdString(get_comment) );
+          m_comment->setReadOnly(true);
+       }
        
-       DecentButton* leave_comment_button = new DecentButton;
-       leave_comment_button->setText("Leave comment");
-       leave_comment_button->setFixedHeight(40);
-       leave_comment_button->setFixedWidth(100);
-       button->addWidget(leave_comment_button);
-       
-       m_main_layout.addLayout(button);
-       
-       connect(leave_comment_button, SIGNAL(LabelClicked()), this, SLOT(LeaveComment()));
     }
     
     if(a_cnt_details.type == DCT::WAITING_DELIVERY) {
@@ -311,20 +326,16 @@ void ContentDetailsBase::LeaveComment()
               "\"true\"", leave_result);
 
    }catch (...) {}
-
-   std::cout << "\n\n\n\n run task result: \n" << leave_result << "\n" << std::endl;
 }
 
 void ContentDetailsBase::MouseClickedStar(int index) {
-    if (m_currentMyRating > 0)
-        return;
+//    if (m_currentMyRating > 0)
+//        return;
 //    std::string result;
 //    try {
 //        RunTask("leave_rating \"" + Globals::instance().getCurrentUser() + "\" \"" + m_pContentInfo->URI + "\" " + std::to_string(index + 1) + " true", result);
-        m_currentMyRating = (index + 1);
 //        } catch (...) {} // Ignore for now;
-   int m_rating = index + 1;
-   std::cout << "\n\n  m_rating \n    " << m_rating << std::endl;
+   m_currentMyRating = (index + 1);
    
    for (int i = m_currentMyRating; i < 5; ++i) {
       stars_labels[i]->setCheckState(Qt::Unchecked);

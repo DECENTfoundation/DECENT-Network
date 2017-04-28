@@ -109,6 +109,24 @@ namespace gui_wallet
          return std::stoll(o.template get<std::string>());
    }
    //
+   //comment_and_rating
+   //
+   template<typename json_parse>
+   bool is_empty(json_parse const& json, int& rating, std::string& comment)
+   {
+      comment = json[1].template get<std::string>();
+
+      if ( comment.empty() )
+      {
+         return true;
+      }
+      
+      rating = json[0].template get<int>();
+
+      return false;
+   }
+   
+   //
    // Asset
    //
    // use Globals.asset to get a valid one

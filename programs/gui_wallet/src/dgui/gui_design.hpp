@@ -18,6 +18,7 @@ const char* const bg_color_wgite        = "background-color:white;";
 const char* const font_bold             = "font-weight: bold";
 const char* const col_grey              = "color: rgb(244,244,244)";
 const char* const border_0              = "border: 0px;";
+const char* const d_comment             = "background-color: white; color: rgb(27,176,104);";
 
 //decent_wallet_ui_gui_contentdetailsgeneral
 const char* const d_close               = "QLabel { background-color :rgb(255,255,255); color : rgb(0,0,0);border: 1px solid grey}";
