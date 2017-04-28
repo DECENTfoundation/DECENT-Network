@@ -279,92 +279,7 @@ seeding_plugin_impl::generate_por2(const my_seeding_object& mso, decent::package
 
    ilog("seeding plugin_impl:  generate_por() end");
 }
-/*
-void
-seeding_plugin_impl::generate_por(my_seeding_id_type so_id, graphene::package::package_object downloaded_package)
-{
-   ilog("seeding plugin_impl:  generate_por() start");
-   graphene::chain::database &db = database();
 
-   //Collect data first...
-   const my_seeding_object &mso = db.get<my_seeding_object>(so_id);
-   const auto &sidx = db.get_index_type<my_seeder_index>().indices().get<by_seeder>();
-   const auto &sritr = sidx.find(mso.seeder);
-   FC_ASSERT(sritr != sidx.end());
-   const auto& cidx = db.get_index_type<content_index>().indices().get<graphene::chain::by_URI>();
-   const auto& citr = cidx.find(mso.URI);
-
-   ilog("seeding plugin_impl:  generate_por() processing content ${c}",("c", mso.URI));
-
-   FC_ASSERT(citr != cidx.end());
-   if( citr->expiration < fc::time_point::now() ){
-      ilog("seeding plugin_impl:  generate_por() - content expired, cleaning up");
-      package_manager::instance().delete_package(downloaded_package.get_hash());
-      main_thread->async([&]{ db.remove(mso);});
-      return;
-   }
-
-   //calculate time when next PoR has to be sent out
-   fc::time_point_sec generate_time;
-
-   try {
-      fc::time_point_sec last_proof_time = citr->last_proof.at(mso.seeder);
-      generate_time = last_proof_time + fc::seconds(24*60*60) - fc::seconds(POR_WAKEUP_INTERVAL_SEC/2);
-      if( generate_time > citr->expiration )
-         generate_time = citr->expiration - fc::seconds(POR_WAKEUP_INTERVAL_SEC);
-   }catch (std::out_of_range e){
-      //no proof has been delivered by us yet...
-      generate_time = fc::time_point::now();
-   }
-
-   ilog("seeding plugin_impl:  generate_por() - generate time for this content is planned at ${t}",("t", generate_time) );
-   fc::time_point next_wakeup( fc::time_point::now() + fc::microseconds(POR_WAKEUP_INTERVAL_SEC * 1000000 ));
-   //If we are about to generate PoR, generate it.
-   if( fc::time_point(generate_time) - fc::seconds(POR_WAKEUP_INTERVAL_SEC) <= ( fc::time_point::now() ) )
-   {
-      ilog("seeding plugin_impl: generate_por() - generating PoR");
-
-      decent::encrypt::CustodyProof proof;
-
-      auto dyn_props = db.get_dynamic_global_properties();
-      fc::ripemd160 b_id = dyn_props.head_block_id;
-      uint32_t b_num = dyn_props.head_block_number;
-      proof.reference_block = b_num;
-      for( int i = 0; i < 5; i++ )
-         proof.seed.data[i] = b_id._hash[i]; //use the block ID as source of entrophy
-
-      downloaded_package.create_proof_of_custody(mso.cd, proof);
-      // issue PoR and plan periodic PoR generation
-      proof_of_custody_operation op;
-
-      op.seeder = mso.seeder;
-      op.proof = proof;
-      op.URI = mso.URI;
-
-      signed_transaction tx;
-      tx.operations.push_back(op);
-
-      tx.set_reference_block(dyn_props.head_block_id);
-      tx.set_expiration(dyn_props.time + fc::seconds(30));
-      tx.validate();
-
-      chain_id_type _chain_id = db.get_chain_id();
-
-      tx.sign(sritr->privKey, _chain_id);
-      idump((tx));
-
-      main_thread->async([this, tx]() { database().push_transaction(tx); });
-
-      ilog("broadcasting out PoR");
-      _self.p2p_node().broadcast_transaction(tx);
-   }
-
-   ilog("seeding plugin_impl:  generate_por() - planning next wake-up at ${t}",("t", next_wakeup) );
-   service_thread->schedule([this, so_id, downloaded_package]() { generate_por(so_id, downloaded_package); }, next_wakeup,
-                   "Seeding plugin PoR generate");
-
-   ilog("seeding plugin_impl:  generate_por() end");
-} //*/
 
 void seeding_plugin_impl::send_ready_to_publish()
 {
@@ -408,18 +323,6 @@ void seeding_plugin_impl::restart_downloads(){
    elog("restarting downloads, main thread");
    service_thread->async([this](){
         elog("restarting downloads, service thread");
-        /*const auto& cidx = database().get_index_type<my_seeding_index>().indices().get<by_URI>();
-        auto citr = cidx.begin();
-
-        while(citr!=cidx.end()){
-           if( citr->expiration > fc::time_point_sec( fc::time_point::now() ) ) {
-              active_downloads[ package_manager::instance().download_package(citr->URI, *this,
-                                                                             empty_report_stats_listener::instance()) ] = citr->id;
-
-           }
-           ++citr;
-
-        }*/
 
         //We need to rebuild the list of downloaded packages and compare it to the list of my_seeding_objects.
         // However, we can't rely on the
