@@ -173,7 +173,7 @@ public:
       //In case the download fails, delete the package and seeding objects - TODO_DECENT
       //_my->database().remove(mso);
       elog("seeding plugin: package_download_error(): Failed downloading package ${s}",("s",_url));
-      _pi->remove_event_listener(shared_from_this());
+
       //auto& pm = decent::package::PackageManager::instance();
       //pm.release_package(_pi);
    };
@@ -193,7 +193,7 @@ public:
          _my->main_thread->async( [=](){ database().remove(*mso_itr); } );
          return;
       }
-      _pi->remove_event_listener(shared_from_this());
+      //_pi->remove_event_listener(shared_from_this());
       _pi->start_seeding();
       //Don't block package manager thread for too long.
       fc::url download_url( _url );

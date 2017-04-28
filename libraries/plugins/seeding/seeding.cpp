@@ -90,6 +90,7 @@ void seeding_plugin_impl::handle_content_submit(const operation_history_object &
                     auto& pm = decent::package::PackageManager::instance();
                     auto package_handle = pm.get_package(mso.URI);
                     decent::package::event_listener_handle_t sl = std::make_shared<SeedingListener>(*this, mso , package_handle);
+                    package_handle->remove_all_event_listeners();
                     package_handle->add_event_listener(sl);
                     package_handle->download(false);
                     ilog("seeding plugin:  handle_content_submit() lambda ended");
@@ -192,6 +193,7 @@ void
 seeding_plugin_impl::generate_por2(const my_seeding_object& mso, decent::package::package_handle_t package_handle)
 {
    ilog("seeding plugin_impl:  generate_por() start");
+   package_handle->remove_all_event_listeners();
    graphene::chain::database &db = database();
 
    //Collect data first...
