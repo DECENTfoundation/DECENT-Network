@@ -187,8 +187,11 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
 
    seeders_button->setText(tr("Select Seeders"));
    seeders_button->setFont(PopupButtonRegularFont());
-
+#ifdef WINDOWS_HIGH_DPI
+   seeders_button->setFixedWidth(240);
+#else
    seeders_button->setFixedWidth(120);
+#endif
    seeders_button->setFixedHeight(40);
    
    seedersRow->addWidget(_seedersPath);

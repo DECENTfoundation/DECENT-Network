@@ -95,7 +95,11 @@ const char* const d_label_v2            = "border:1px solid lightGray; color: Gr
 const char* const d_upload_button_true  = "QLabel { background-color :rgb(27,176,104); color : white;}";
 const char* const d_upload_button_false = "QLabel { background-color :rgb(180,180,180); color : rgb(30, 30, 30); }";
 const char* const d_cancel              = "QLabel { background-color :rgb(255, 255, 255); border:1px solid lightGray; color : Grey;}";
-const char* const d_upload_popup        = "background-color : white";
+#ifdef WINDOWS_HIGH_DPI
+const char* const d_upload_popup        = "background-color : white; height: 150px; width: 400px;";
+#else
+const char* const d_upload_popup        = "background-color : white;";
+#endif
 const char* const c_keyparts            = "color : black;";
 
 QFont TableHeaderFont();
