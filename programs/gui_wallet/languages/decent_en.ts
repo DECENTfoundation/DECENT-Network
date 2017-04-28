@@ -3,8 +3,13 @@
 <TS version="2.1" language="en_US">
 <context>
     <name>QObject</name>
+    <message>
+        <location filename="../src/dgui/gui_wallet_global.cpp" line="36"/>
+        <source>OK</source>
+        <translation>OK</translation>
+    </message>
     <message numerus="yes">
-        <location filename="../src/dgui/gui_wallet_global.cpp" line="160"/>
+        <location filename="../src/dgui/gui_wallet_global.cpp" line="177"/>
         <source>%n year(s)</source>
         <translation>
             <numerusform> a year</numerusform>
@@ -12,7 +17,7 @@
         </translation>
     </message>
     <message numerus="yes">
-        <location filename="../src/dgui/gui_wallet_global.cpp" line="162"/>
+        <location filename="../src/dgui/gui_wallet_global.cpp" line="179"/>
         <source>%n month(s)</source>
         <translation>
             <numerusform> a month</numerusform>
@@ -20,7 +25,7 @@
         </translation>
     </message>
     <message numerus="yes">
-        <location filename="../src/dgui/gui_wallet_global.cpp" line="164"/>
+        <location filename="../src/dgui/gui_wallet_global.cpp" line="181"/>
         <source>%n day(s)</source>
         <translation>
             <numerusform> a day</numerusform>
@@ -28,7 +33,7 @@
         </translation>
     </message>
     <message numerus="yes">
-        <location filename="../src/dgui/gui_wallet_global.cpp" line="166"/>
+        <location filename="../src/dgui/gui_wallet_global.cpp" line="183"/>
         <source>%n hour(s)</source>
         <translation>
             <numerusform> an hour</numerusform>
@@ -36,7 +41,7 @@
         </translation>
     </message>
     <message numerus="yes">
-        <location filename="../src/dgui/gui_wallet_global.cpp" line="168"/>
+        <location filename="../src/dgui/gui_wallet_global.cpp" line="185"/>
         <source>%n minute(s)</source>
         <translation>
             <numerusform> a minute</numerusform>
@@ -44,7 +49,7 @@
         </translation>
     </message>
     <message numerus="yes">
-        <location filename="../src/dgui/gui_wallet_global.cpp" line="170"/>
+        <location filename="../src/dgui/gui_wallet_global.cpp" line="187"/>
         <source>%n second(s)</source>
         <translation>
             <numerusform> a second</numerusform>
@@ -52,17 +57,17 @@
         </translation>
     </message>
     <message>
-        <location filename="../src/dgui/gui_wallet_global.cpp" line="179"/>
+        <location filename="../src/dgui/gui_wallet_global.cpp" line="196"/>
         <source>syncing up with blockchain: </source>
         <translation>syncing up with blockchain:</translation>
     </message>
     <message>
-        <location filename="../src/dgui/gui_wallet_global.cpp" line="183"/>
+        <location filename="../src/dgui/gui_wallet_global.cpp" line="200"/>
         <source>and</source>
         <translation>and</translation>
     </message>
     <message>
-        <location filename="../src/dgui/gui_wallet_global.cpp" line="185"/>
+        <location filename="../src/dgui/gui_wallet_global.cpp" line="202"/>
         <source>to go</source>
         <translation>to go</translation>
     </message>
@@ -153,32 +158,32 @@
 <context>
     <name>gui_wallet::CentralWigdet</name>
     <message>
-        <location filename="../src/dgui/gui_wallet_centralwidget.cpp" line="187"/>
+        <location filename="../src/dgui/gui_wallet_centralwidget.cpp" line="179"/>
         <source>Browse Content</source>
-        <translation>Brows Content</translation>
+        <translation>Browse Content</translation>
     </message>
     <message>
-        <location filename="../src/dgui/gui_wallet_centralwidget.cpp" line="188"/>
+        <location filename="../src/dgui/gui_wallet_centralwidget.cpp" line="180"/>
         <source>Transactions</source>
         <translation>Transactions </translation>
     </message>
     <message>
-        <location filename="../src/dgui/gui_wallet_centralwidget.cpp" line="189"/>
+        <location filename="../src/dgui/gui_wallet_centralwidget.cpp" line="181"/>
         <source>Publish</source>
         <translation>Publish </translation>
     </message>
     <message>
-        <location filename="../src/dgui/gui_wallet_centralwidget.cpp" line="190"/>
+        <location filename="../src/dgui/gui_wallet_centralwidget.cpp" line="182"/>
         <source>Users</source>
         <translation>Users </translation>
     </message>
     <message>
-        <location filename="../src/dgui/gui_wallet_centralwidget.cpp" line="191"/>
+        <location filename="../src/dgui/gui_wallet_centralwidget.cpp" line="183"/>
         <source>Purchased</source>
         <translation>Purchased </translation>
     </message>
     <message>
-        <location filename="../src/dgui/gui_wallet_centralwidget.cpp" line="326"/>
+        <location filename="../src/dgui/gui_wallet_centralwidget.cpp" line="318"/>
         <source>Send</source>
         <translation>Send</translation>
     </message>
@@ -187,7 +192,7 @@
         <translation type="vanished">Import key</translation>
     </message>
     <message>
-        <location filename="../src/dgui/gui_wallet_centralwidget.cpp" line="257"/>
+        <location filename="../src/dgui/gui_wallet_centralwidget.cpp" line="249"/>
         <source>Import Key</source>
         <translation>Import Key</translation>
     </message>
@@ -327,22 +332,22 @@
 <context>
     <name>gui_wallet::Globals</name>
     <message>
-        <location filename="../src/dgui/gui_wallet_global.cpp" line="544"/>
+        <location filename="../src/dgui/gui_wallet_global.cpp" line="561"/>
         <source>still connecting</source>
         <translation>still connecting</translation>
     </message>
     <message>
-        <location filename="../src/dgui/gui_wallet_global.cpp" line="546"/>
+        <location filename="../src/dgui/gui_wallet_global.cpp" line="563"/>
         <source>verifying the local database, probably the local database is corrupted</source>
         <translation>verifying the local database, probably the local database is corrupted</translation>
     </message>
     <message>
-        <location filename="../src/dgui/gui_wallet_global.cpp" line="548"/>
+        <location filename="../src/dgui/gui_wallet_global.cpp" line="565"/>
         <source>verifying the local databse</source>
         <translation>verifying the local databse</translation>
     </message>
     <message>
-        <location filename="../src/dgui/gui_wallet_global.cpp" line="550"/>
+        <location filename="../src/dgui/gui_wallet_global.cpp" line="567"/>
         <source>connecting</source>
         <translation>connecting</translation>
     </message>
@@ -687,32 +692,38 @@
 <context>
     <name>gui_wallet::SendDialog</name>
     <message>
-        <location filename="../src/dgui/richdialog.cpp" line="196"/>
+        <location filename="../src/dgui/richdialog.cpp" line="198"/>
         <source>Account</source>
         <translation>Account</translation>
     </message>
     <message>
-        <location filename="../src/dgui/richdialog.cpp" line="202"/>
+        <location filename="../src/dgui/richdialog.cpp" line="204"/>
         <source>Amount</source>
         <translation>Amount</translation>
     </message>
     <message>
-        <location filename="../src/dgui/richdialog.cpp" line="207"/>
+        <location filename="../src/dgui/richdialog.cpp" line="209"/>
         <source>Memo</source>
         <translation>Memo</translation>
     </message>
     <message>
-        <location filename="../src/dgui/richdialog.cpp" line="249"/>
+        <location filename="../src/dgui/richdialog.cpp" line="241"/>
+        <source>Invalid amount is specified</source>
+        <translation>Invalid amount is specified</translation>
+    </message>
+    <message>
+        <location filename="../src/dgui/richdialog.cpp" line="263"/>
         <source>Success</source>
         <translation>Success</translation>
     </message>
     <message>
-        <location filename="../src/dgui/richdialog.cpp" line="258"/>
+        <location filename="../src/dgui/richdialog.cpp" line="240"/>
+        <location filename="../src/dgui/richdialog.cpp" line="270"/>
         <source>Error</source>
         <translation>Error</translation>
     </message>
     <message>
-        <location filename="../src/dgui/richdialog.cpp" line="259"/>
+        <location filename="../src/dgui/richdialog.cpp" line="271"/>
         <source>Failed to send DCT</source>
         <translation>Failed to send DCT</translation>
     </message>
@@ -727,15 +738,14 @@
     <message>
         <location filename="../src/dgui/richdialog.cpp" line="136"/>
         <source>Cancel</source>
-        <translation>Cencel</translation>
+        <translation>Cancel</translation>
     </message>
 </context>
 <context>
     <name>gui_wallet::SuccessMessageDialog</name>
     <message>
-        <location filename="../src/dgui/richdialog.cpp" line="298"/>
         <source>OK</source>
-        <translation>OK</translation>
+        <translation type="vanished">OK</translation>
     </message>
 </context>
 <context>
@@ -784,34 +794,34 @@
 <context>
     <name>gui_wallet::Upload_popup</name>
     <message>
-        <location filename="../src/dgui/upload_tab.cpp" line="78"/>
+        <location filename="../src/dgui/upload_tab.cpp" line="83"/>
         <source>Title</source>
         <translation>Title</translation>
     </message>
     <message>
-        <location filename="../src/dgui/upload_tab.cpp" line="88"/>
+        <location filename="../src/dgui/upload_tab.cpp" line="93"/>
         <source>Description</source>
         <translation>Description</translation>
     </message>
     <message>
-        <location filename="../src/dgui/upload_tab.cpp" line="100"/>
+        <location filename="../src/dgui/upload_tab.cpp" line="105"/>
         <source>Expiration date</source>
         <translation>Expiration date</translation>
     </message>
     <message>
-        <location filename="../src/dgui/upload_tab.cpp" line="127"/>
+        <location filename="../src/dgui/upload_tab.cpp" line="132"/>
         <source>Key particles</source>
         <translation>Key particles</translation>
     </message>
     <message>
-        <location filename="../src/dgui/upload_tab.cpp" line="155"/>
-        <location filename="../src/dgui/upload_tab.cpp" line="323"/>
+        <location filename="../src/dgui/upload_tab.cpp" line="160"/>
+        <location filename="../src/dgui/upload_tab.cpp" line="331"/>
         <source>Price</source>
         <translation>Price</translation>
     </message>
     <message>
-        <location filename="../src/dgui/upload_tab.cpp" line="179"/>
-        <location filename="../src/dgui/upload_tab.cpp" line="203"/>
+        <location filename="../src/dgui/upload_tab.cpp" line="184"/>
+        <location filename="../src/dgui/upload_tab.cpp" line="211"/>
         <source>Seeders</source>
         <translation>Seeders</translation>
     </message>
@@ -820,61 +830,66 @@
         <translation type="vanished">Select</translation>
     </message>
     <message>
-        <location filename="../src/dgui/upload_tab.cpp" line="188"/>
+        <location filename="../src/dgui/upload_tab.cpp" line="193"/>
         <source>Select Seeders</source>
         <translation>Select Seeders</translation>
     </message>
     <message>
-        <location filename="../src/dgui/upload_tab.cpp" line="217"/>
-        <location filename="../src/dgui/upload_tab.cpp" line="601"/>
+        <location filename="../src/dgui/upload_tab.cpp" line="225"/>
+        <location filename="../src/dgui/upload_tab.cpp" line="623"/>
         <source>Content path</source>
         <translation>Content path</translation>
     </message>
     <message>
-        <location filename="../src/dgui/upload_tab.cpp" line="224"/>
-        <location filename="../src/dgui/upload_tab.cpp" line="248"/>
+        <location filename="../src/dgui/upload_tab.cpp" line="232"/>
+        <location filename="../src/dgui/upload_tab.cpp" line="256"/>
         <source>Browse</source>
         <translation>Browse</translation>
     </message>
     <message>
-        <location filename="../src/dgui/upload_tab.cpp" line="240"/>
-        <location filename="../src/dgui/upload_tab.cpp" line="602"/>
+        <location filename="../src/dgui/upload_tab.cpp" line="248"/>
+        <location filename="../src/dgui/upload_tab.cpp" line="624"/>
         <source>Samples (optional)</source>
         <translation>Samples (optional)</translation>
     </message>
     <message>
-        <location filename="../src/dgui/upload_tab.cpp" line="271"/>
+        <location filename="../src/dgui/upload_tab.cpp" line="279"/>
         <source>Cancel</source>
         <translation>Cancel</translation>
     </message>
     <message>
-        <location filename="../src/dgui/upload_tab.cpp" line="276"/>
-        <location filename="../src/dgui/upload_tab.cpp" line="486"/>
+        <location filename="../src/dgui/upload_tab.cpp" line="284"/>
+        <location filename="../src/dgui/upload_tab.cpp" line="504"/>
         <source>Publish</source>
         <translation>Publish </translation>
     </message>
     <message>
-        <location filename="../src/dgui/upload_tab.cpp" line="292"/>
+        <location filename="../src/dgui/upload_tab.cpp" line="300"/>
         <source>Upload new content</source>
         <translation>Upload new content</translation>
     </message>
     <message>
-        <location filename="../src/dgui/upload_tab.cpp" line="322"/>
+        <location filename="../src/dgui/upload_tab.cpp" line="330"/>
         <source>Seeder</source>
         <translation>Seeder</translation>
     </message>
     <message>
-        <location filename="../src/dgui/upload_tab.cpp" line="324"/>
+        <location filename="../src/dgui/upload_tab.cpp" line="332"/>
         <source>Size</source>
         <translation>Size</translation>
     </message>
     <message>
-        <location filename="../src/dgui/upload_tab.cpp" line="483"/>
+        <location filename="../src/dgui/upload_tab.cpp" line="341"/>
+        <source>OK</source>
+        <translation>OK</translation>
+    </message>
+    <message>
+        <location filename="../src/dgui/upload_tab.cpp" line="501"/>
         <source>Publish for</source>
         <translation>Publish for</translation>
     </message>
     <message>
-        <location filename="../src/dgui/upload_tab.cpp" line="605"/>
+        <location filename="../src/dgui/upload_tab.cpp" line="626"/>
         <source>Content is being processed...</source>
         <translation>Content is being processed...</translation>
     </message>
@@ -887,17 +902,17 @@
         <translation type="vanished">Publish for </translation>
     </message>
     <message>
-        <location filename="../src/dgui/upload_tab.cpp" line="493"/>
+        <location filename="../src/dgui/upload_tab.cpp" line="511"/>
         <source>Select content</source>
         <translation>Publish for </translation>
     </message>
     <message>
-        <location filename="../src/dgui/upload_tab.cpp" line="509"/>
+        <location filename="../src/dgui/upload_tab.cpp" line="527"/>
         <source>Select samples</source>
         <translation>Select samples</translation>
     </message>
     <message>
-        <location filename="../src/dgui/upload_tab.cpp" line="605"/>
+        <location filename="../src/dgui/upload_tab.cpp" line="626"/>
         <source>Success</source>
         <translation>Success</translation>
     </message>
@@ -906,12 +921,12 @@
         <translation type="vanished">Content is submitted</translation>
     </message>
     <message>
-        <location filename="../src/dgui/upload_tab.cpp" line="618"/>
+        <location filename="../src/dgui/upload_tab.cpp" line="636"/>
         <source>Error</source>
         <translation>Error</translation>
     </message>
     <message>
-        <location filename="../src/dgui/upload_tab.cpp" line="619"/>
+        <location filename="../src/dgui/upload_tab.cpp" line="637"/>
         <source>Failed to submit content</source>
         <translation>Failed to submit content</translation>
     </message>
@@ -919,47 +934,47 @@
 <context>
     <name>gui_wallet::Upload_tab</name>
     <message>
-        <location filename="../src/dgui/upload_tab.cpp" line="643"/>
+        <location filename="../src/dgui/upload_tab.cpp" line="661"/>
         <source>Title</source>
         <translation>Title</translation>
     </message>
     <message>
-        <location filename="../src/dgui/upload_tab.cpp" line="644"/>
+        <location filename="../src/dgui/upload_tab.cpp" line="662"/>
         <source>Rating</source>
         <translation>Rating</translation>
     </message>
     <message>
-        <location filename="../src/dgui/upload_tab.cpp" line="645"/>
+        <location filename="../src/dgui/upload_tab.cpp" line="663"/>
         <source>Size</source>
         <translation>Size</translation>
     </message>
     <message>
-        <location filename="../src/dgui/upload_tab.cpp" line="646"/>
+        <location filename="../src/dgui/upload_tab.cpp" line="664"/>
         <source>Price</source>
         <translation>Price</translation>
     </message>
     <message>
-        <location filename="../src/dgui/upload_tab.cpp" line="647"/>
+        <location filename="../src/dgui/upload_tab.cpp" line="665"/>
         <source>Published</source>
         <translation>Published</translation>
     </message>
     <message>
-        <location filename="../src/dgui/upload_tab.cpp" line="648"/>
+        <location filename="../src/dgui/upload_tab.cpp" line="666"/>
         <source>Expiration</source>
         <translation>Expiration</translation>
     </message>
     <message>
-        <location filename="../src/dgui/upload_tab.cpp" line="649"/>
+        <location filename="../src/dgui/upload_tab.cpp" line="667"/>
         <source>Status</source>
         <translation>Status</translation>
     </message>
     <message>
-        <location filename="../src/dgui/upload_tab.cpp" line="659"/>
+        <location filename="../src/dgui/upload_tab.cpp" line="677"/>
         <source>Publish</source>
         <translation>Publish </translation>
     </message>
     <message>
-        <location filename="../src/dgui/upload_tab.cpp" line="672"/>
+        <location filename="../src/dgui/upload_tab.cpp" line="690"/>
         <source>Search Content</source>
         <translation>Search Content</translation>
     </message>

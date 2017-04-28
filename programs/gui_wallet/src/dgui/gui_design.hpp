@@ -6,8 +6,7 @@ class QFont;
 const char* const d_lineEdit        = "border: 0; padding-left: 10px;";
 
 //decent_button
-const char* const decent_button_style   = "QLabel { background-color :rgb(27,176,104); color : white;}";
-
+const char* const decent_button_style   = "border: 0px ; background-color :rgb(27,176,104); color : white;";
 //ui_gui_contentdatailsbase
 const char* const d_qdialog             = "background-color:white;";
 const char* const m_RateText_design     = "color:green;" "background-color:white;" "font-weight: bold";
@@ -20,7 +19,6 @@ const char* const col_grey              = "color: rgb(244,244,244)";
 const char* const border_0              = "border: 0px;";
 
 //decent_wallet_ui_gui_contentdetailsgeneral
-const char* const d_close               = "QLabel { background-color :rgb(255,255,255); color : rgb(0,0,0);border: 1px solid grey}";
 const char* const d_pButtonOk           = "background-color: rgb(27,176,104); color: rgb(255,255,255);border-top: 0px;border-left: 0px;border-right: 0px;border-bottom: 0px;";
 const char* const d_pbuttonCancel       = "background-color: rgb(255,255,255); color: rgb(0,0,0);border: 1px solid grey;";
 
@@ -85,17 +83,21 @@ const char* const icon_export              = ":/icon/images/export.png";
 const char* const icon_export_white        = ":/icon/images/export1.png";
 
 //richdialog
-const char* const d_cancel_button          = "QLabel {border: 1px solid rgb(143,143,143); background-color :rgb(255,255,255); color: rgb(0,0,0);}";
+const char* const d_cancel_button          = "border: 1px solid rgb(143,143,143); background-color :rgb(255,255,255); color: rgb(0,0,0);";
 const char* const d_text_box               = "border: 1px solid rgb(143,143,143);padding-left:25px;";
 
 //upload
 const char* const d_desc                = "border: 1 solid lightGray; padding 5px;";
 const char* const d_label_v1            = "QLabel { background-color : white; color: Gray}";
 const char* const d_label_v2            = "border:1px solid lightGray; color: Gray";
-const char* const d_upload_button_true  = "QLabel { background-color :rgb(27,176,104); color : white;}";
-const char* const d_upload_button_false = "QLabel { background-color :rgb(180,180,180); color : rgb(30, 30, 30); }";
+const char* const d_upload_button_true  = "border: 0px ; background-color :rgb(27,176,104); color : white;";
+const char* const d_upload_button_false = "border: 0px ; background-color :rgb(180,180,180); color : rgb(30, 30, 30); ";
 const char* const d_cancel              = "QLabel { background-color :rgb(255, 255, 255); border:1px solid lightGray; color : Grey;}";
-const char* const d_upload_popup        = "background-color : white";
+#ifdef WINDOWS_HIGH_DPI
+const char* const d_upload_popup        = "background-color : white; height: 150px; width: 400px;";
+#else
+const char* const d_upload_popup        = "background-color : white;";
+#endif
 const char* const c_keyparts            = "color : black;";
 
 QFont TableHeaderFont();

@@ -315,13 +315,13 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
    pHBoxLayoutTmp = new QHBoxLayout;
    sendButton->setScaledContents(true);
    DecentButton* send_text = new DecentButton();
-   send_text->setText("  " + tr("Send"));
-   send_text->setStyleSheet("QLabel { color : rgb(0,0,0);}");
+   send_text->setText(tr("Send"));
+   send_text->setStyleSheet("border: 1px solid rgb(255, 255, 255); background-color :rgb(255,255,255); color: rgb(0,0,0);");
 
    sendButton->setFixedSize(30,30);
    connect(sendButton, SIGNAL(clicked()), this, SLOT(sendDCTSlot()));
-   connect(send_text, SIGNAL(LabelClicked()), this, SLOT(sendDCTSlot()));
-   pHBoxLayoutTmp->setAlignment(Qt::AlignCenter);
+   connect(send_text, SIGNAL(clicked()), this, SLOT(sendDCTSlot()));
+   pHBoxLayoutTmp->setAlignment(Qt::AlignRight);
    pHBoxLayoutTmp->addWidget(sendButton);
    pHBoxLayoutTmp->addWidget(send_text);
    

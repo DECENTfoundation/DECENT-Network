@@ -25,7 +25,7 @@ ContentDetailsGeneral::ContentDetailsGeneral(QWidget* pParent) : ContentDetailsB
    m_close.setText(tr("Close"));
    m_close.setFixedWidth(178);
    m_close.setFixedHeight(40);
-   m_close.setStyleSheet(d_close);
+   m_close.setStyleSheet(d_cancel_button);
    
    image_layout->addWidget(&m_label);
    image_layout->addWidget(new QLabel());
@@ -34,8 +34,8 @@ ContentDetailsGeneral::ContentDetailsGeneral(QWidget* pParent) : ContentDetailsB
    
    m_free_for_child.addLayout(image_layout);
    
-   connect(&m_label, SIGNAL(LabelClicked()), this, SLOT(LabelPushCallbackGUI()));
-   connect(&m_close, SIGNAL(LabelClicked()), this, SLOT(close()));
+   connect(&m_label, SIGNAL(clicked()), this, SLOT(LabelPushCallbackGUI()));
+   connect(&m_close, SIGNAL(clicked()), this, SLOT(close()));
 }
 
 
@@ -80,7 +80,7 @@ void ContentDetailsGeneral::LabelPushCallbackGUI()
       str_error = ex.what();
    }
    if (false == str_error.empty())
-      ALERT(tr("Failed to download content").toStdString() + str_error.c_str());
+      ALERT_DETAILS(tr("Failed to download content").toStdString(), str_error.c_str());
 
 
    emit ContentWasBought();
