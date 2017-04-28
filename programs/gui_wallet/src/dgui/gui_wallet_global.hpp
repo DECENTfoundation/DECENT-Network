@@ -323,16 +323,6 @@ namespace gui_wallet
       int           times_bought;
    };
 
-   struct SDigitalContentPurchase : public SDigitalContent
-   {
-      uint32_t total_key_parts = 0;
-      uint32_t received_key_parts = 0;
-      uint32_t total_download_bytes = 0;
-      uint32_t received_download_bytes = 0;
-      QString status_text;
-   };
-
-
 
 }
 

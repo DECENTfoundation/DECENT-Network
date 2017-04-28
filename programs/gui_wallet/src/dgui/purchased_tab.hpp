@@ -18,6 +18,7 @@ class PurchasedTab : public TabContentManager
 
 public:
    PurchasedTab(QWidget* pParent);
+   ~PurchasedTab();
    
 public:
    virtual void timeToUpdate(const std::string& result) override;
