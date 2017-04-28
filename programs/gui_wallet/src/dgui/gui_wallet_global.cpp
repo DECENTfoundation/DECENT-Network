@@ -1,6 +1,7 @@
 #include "stdafx.h"
 
 #include "gui_wallet_global.hpp"
+
 #ifndef _MSC_VER
 #include <QMessageBox>
 #include <QThread>
@@ -14,6 +15,8 @@
 #include "decent_button.hpp"
 
 #include <iostream>
+#else
+#include "decent_button.hpp"
 #endif
 
 namespace gui_wallet
