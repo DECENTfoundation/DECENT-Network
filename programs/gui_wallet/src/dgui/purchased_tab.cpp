@@ -20,6 +20,14 @@ using string = std::string;
 
 namespace gui_wallet
 {
+struct SDigitalContentPurchase : public SDigitalContent
+{
+   uint32_t total_key_parts = 0;
+   uint32_t received_key_parts = 0;
+   uint32_t total_download_bytes = 0;
+   uint32_t received_download_bytes = 0;
+   QString status_text;
+};
    
 PurchasedTab::PurchasedTab(QWidget* pParent)
 : TabContentManager(pParent)
@@ -72,6 +80,14 @@ PurchasedTab::PurchasedTab(QWidget* pParent)
    pMainLayout->addWidget(m_pTableWidget);
 
    setLayout(pMainLayout);
+}
+
+//
+// it is important to have a constructor/destructor body in cpp
+// when class has forward declared members
+PurchasedTab::~PurchasedTab()
+{
+
 }
 
 void PurchasedTab::timeToUpdate(const std::string& result)
@@ -133,10 +149,10 @@ void PurchasedTab::timeToUpdate(const std::string& result)
       }
       contentObject.status_text = status_text;
       
-      if (content["times_bougth"].is_number()) {
-         contentObject.times_bougth = content["times_bougth"].get<int>();
+      if (content["times_bought"].is_number()) {
+         contentObject.times_bought = content["times_bought"].get<int>();
       } else {
-         contentObject.times_bougth = 0;
+         contentObject.times_bought = 0;
       }
 
       contentObject.AVG_rating = content["average_rating"].get<double>() / 1000;
@@ -258,8 +274,8 @@ std::string PurchasedTab::getUpdateCommand()
             "\"" + str_current_username + "\" "
             "\"" + m_strSearchTerm.toStdString() + "\" "
             "\"" + m_pTableWidget->getSortedColumn() + "\" "
-            "\"" + next_iterator() + "\" " +
-            std::to_string(m_i_page_size + 1);
+            "\"" + next_iterator() + "\" "
+            + std::to_string(m_i_page_size + 1);
 }
 
 void PurchasedTab::slot_ExtractionDirSelected(QString const& path) {

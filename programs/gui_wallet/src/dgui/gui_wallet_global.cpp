@@ -1,6 +1,8 @@
 #include "stdafx.h"
 
 #include "gui_wallet_global.hpp"
+#include "richdialog.hpp"
+
 #ifndef _MSC_VER
 #include <QMessageBox>
 #include <QThread>
@@ -10,8 +12,9 @@
 #include <QTimer>
 #include <QHeaderView>
 #include <QObject>
+#include <QHBoxLayout>
+#include <QVBoxLayout>
 
-#include <iostream>
 #endif
 
 using string = std::string;
@@ -23,15 +26,30 @@ void ShowMessageBox(QString const& strTitle,
                     QString const& strMessage,
                     QString const& strDetailedText/* = QString()*/)
 {
-   QMessageBox* pMessageBox = new QMessageBox();
-   pMessageBox->setWindowTitle(strTitle);
-   pMessageBox->setText(strMessage);
-   pMessageBox->setDetailedText(strDetailedText);
-   pMessageBox->setAttribute(Qt::WA_DeleteOnClose);
-   pMessageBox->open();
-   // alternatively can connect to delete later as below
-   //pMessageBox->open(pMessageBox, SLOT(deleteLater()));
+   QDialog* pDialog = new QDialog();
+   pDialog->setWindowTitle(strTitle);
+   pDialog->setAttribute(Qt::WA_DeleteOnClose);
+   
+   QVBoxLayout*   main = new QVBoxLayout();
+   QLabel*        pText = new QLabel(strMessage, pDialog);
+   DecentButton* pOkButton = new DecentButton(pDialog);
+   
+   pText->setFont(AccountBalanceFont());
+   
+   pOkButton->setText(QObject::tr("OK"));
+   pOkButton->setFixedSize(140, 40);
+   pOkButton->setFocus();
+   QObject::connect(pOkButton, SIGNAL(clicked()), pDialog , SLOT(close()));
+   
+   main->addWidget(pText, 0, Qt::AlignCenter);
+   main->addWidget(pOkButton, 0, Qt::AlignCenter);
+   
+   pDialog->setLayout(main);
+   pDialog->setFixedSize(300, 100);
+   
+   pDialog->open();
 }
+   
 
 struct CalendarDuration
 {
@@ -598,6 +616,20 @@ void Globals::setWalletError(std::string const& error)
    emit walletConnectionError(error);
 }
 
+void Globals::showTransferDialog(std::string const& user)
+{
+   if(getCurrentUser().empty())
+      return;
+
+   SendDialog* pTransferDialog = new SendDialog(3, QObject::tr("Send") + " " + asset(0).m_str_symbol.c_str() , user.c_str());
+
+   std::vector<std::string> cvsUsKey(3);
+
+   pTransferDialog->curentName = user.c_str();
+   pTransferDialog->execRD(nullptr, cvsUsKey);
+   delete pTransferDialog;
+}
+
 void Globals::slot_connected(std::string const& str_error)
 {
    m_connected = true;
@@ -683,14 +715,14 @@ DecentColumn::DecentColumn(QString title, int size, std::string const& sortid/* 
 DecentTable::DecentTable(QWidget* pParent)
    : QTableWidget(pParent)
 {
-   this->horizontalHeader()->setStretchLastSection(true);
-   this->setSelectionMode(QAbstractItemView::NoSelection);
-   this->setStyleSheet("QTableView{border : 0px}");
-   this->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-   this->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+   //horizontalHeader()->setStretchLastSection(true);
+   setSelectionMode(QAbstractItemView::NoSelection);
+   setStyleSheet("QTableView{border : 0px}");
+   setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+   setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
-   this->verticalHeader()->hide();
-   this->setMouseTracking(true);
+   verticalHeader()->hide();
+   setMouseTracking(true);
 
    connect(this->horizontalHeader(), SIGNAL(sectionClicked(int)), this, SLOT(sectionClicked(int)));
 }
@@ -718,8 +750,9 @@ void DecentTable::set_columns(const std::vector<DecentColumn>& cols)
    this->setRowHeight(0,35);
 
    QStringList columns;
-   for (const DecentColumn& col: cols) {
-      columns << col.title;
+   for (int i = 0; i < cols.size(); ++i) {
+      this->horizontalHeader()->setSectionResizeMode(i, QHeaderView::Fixed);
+      columns << cols[i].title;
    }
    this->setHorizontalHeaderLabels(columns);
 

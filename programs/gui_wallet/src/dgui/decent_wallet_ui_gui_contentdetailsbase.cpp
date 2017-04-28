@@ -264,7 +264,7 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details, bool bSil
         QString qsSizeTxt = QString::number(m_pContentInfo->size) + " MB";
         m_vLabels[11].setText(qsSizeTxt);
         
-        m_vLabels[13].setText(QString::number(a_cnt_details.times_bougth));
+        m_vLabels[13].setText(QString::number(a_cnt_details.times_bought));
     }
     else
     {
@@ -292,7 +292,7 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details, bool bSil
         QString qsSizeTxt = QString::number(m_pContentInfo->size) + " MB";
         m_vLabels[9].setText(qsSizeTxt);
         
-        m_vLabels[11].setText(QString::number(a_cnt_details.times_bougth));
+        m_vLabels[11].setText(QString::number(a_cnt_details.times_bought));
     }
    
     std::string synopsis = m_pContentInfo->synopsis;

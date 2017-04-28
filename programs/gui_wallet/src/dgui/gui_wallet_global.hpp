@@ -72,9 +72,10 @@ namespace gui_wallet
 {
    std::string CalculateRemainingTime(QDateTime const& dt, QDateTime const& dtFuture);
    QString CalculateRemainingTime_Behind(QDateTime const& dt, QDateTime const& dtFuture);
+   
    void ShowMessageBox(QString const& strTitle,
-                       QString const& strMessage,
-                       QString const& strDetailedText = QString());
+                        QString const& strMessage,
+                        QString const& strDetailedText = QString());
     
     
    std::size_t extra_space(const std::string& s) noexcept;
@@ -167,6 +168,7 @@ namespace gui_wallet
 
    signals:
       void signal_showPurchasedTab();
+      void signal_showTransactionsTab(std::string const&);
       void signal_updateAccountBalance(Asset const&);
 
    public:
@@ -174,6 +176,7 @@ namespace gui_wallet
       void setWalletUnlocked();
       void setWalletConnected();
       void setWalletError(std::string const& error);
+      void showTransferDialog(std::string const& user);
    signals:
       void signal_connect();  // for internal use
    private slots:
@@ -335,18 +338,8 @@ namespace gui_wallet
       std::string   hash;
       std::string   status;
       int           size;
-      int           times_bougth;
+      int           times_bought;
    };
-
-   struct SDigitalContentPurchase : public SDigitalContent
-   {
-      uint32_t total_key_parts = 0;
-      uint32_t received_key_parts = 0;
-      uint32_t total_download_bytes = 0;
-      uint32_t received_download_bytes = 0;
-      QString status_text;
-   };
-
 
 
 }

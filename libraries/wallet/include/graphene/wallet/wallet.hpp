@@ -170,6 +170,7 @@ namespace graphene { namespace wallet {
          std::string         author_account;
          uint32_t            times_bought;
          fc::ripemd160       hash;
+         double              AVG_rating;
       };
 
 
@@ -303,10 +304,12 @@ namespace graphene { namespace wallet {
           * @brief Get names and IDs for registered accounts that match search term
           * @param term will try to partially match account name or id
           * @param limit Maximum number of results to return -- must not exceed 1000
+          * @param order Sort data by field
+          * @param id object_id to start searching from
           * @return Map of account names to corresponding IDs
           * @ingroup WalletCLI
           */
-         vector<account_object>       search_accounts(const string& term, const string order, uint32_t limit);
+         vector<account_object>       search_accounts(const string& term, const string& order, const string& id, uint32_t limit);
 
          /**
           * @brief List the balances of an account.
@@ -1747,7 +1750,7 @@ namespace graphene { namespace wallet {
           * @param account_id_or_name Consumer of the buyings to retrieve
           * @param term Search term to look up in Title and Description
           * @param order Sort data by field
-          * @param id object_it to start searching from
+          * @param id object_id to start searching from
           * @param count Maximum number of contents to fetch (must not exceed 100)
           * @return History buying objects corresponding to the provided consumer and matching search term
           * @ingroup WalletCLI
@@ -2029,6 +2032,7 @@ FC_REFLECT_DERIVED( graphene::wallet::buying_object_ex,
                    (graphene::wallet::content_download_status),
                    (id)
                    (author_account)
+                   (AVG_rating)
                    (times_bought)
                    (hash)
                   )

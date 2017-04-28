@@ -1,167 +1,239 @@
-//*
-//*	File      : overview_tab.cpp
-//*
-//*	Created on: 21 Nov 2016
-//*	Created by: Davit Kalantaryan (Email: davit.kalantaryan@desy.de)
-//*
-//*  This file implements ...
-//*
-//*/
 #include "stdafx.h"
 
+#include "gui_wallet_global.hpp"
 #include "overview_tab.hpp"
 #include "gui_wallet_mainwindow.hpp"
 #include "gui_wallet_centralwidget.hpp"
 
 #ifndef _MSC_VER
 #include <QPixmap>
-#include <QStackedWidget>
 #include <QRect>
-#include <QFont>
+#include <QSignalMapper>
+#include <QLabel>
 #include <graphene/chain/config.hpp>
 #include "json.hpp"
 #endif
 
 #include "gui_design.hpp"
 
+// these were included in hpp, let's have these around when needed
+//#include <QtSvg/QSvgRenderer>
+//#include <QPainter>
+//#include <QSvgWidget>
 
-using namespace gui_wallet;
-using namespace nlohmann;
+using string = std::string;
 
-
-Overview_tab::Overview_tab(class Mainwindow_gui_wallet* a_pPar)
-: m_pPar(a_pPar)
-, table_widget(this)
+class QZebraWidget : public QWidget
 {
-   table_widget.set_columns({
+public:
+   QZebraWidget()
+   {
+      m_main_layout.setSpacing(0);
+      m_main_layout.setContentsMargins(0, 0, 0, 0);
+
+      setStyleSheet("background-color:white;");
+      setLayout(&m_main_layout);
+
+#ifdef _MSC_VER
+      int height = style()->pixelMetric(QStyle::PM_TitleBarHeight);
+      setWindowIcon(height > 32 ? QIcon(":/icon/images/windows_decent_icon_32x32.png")
+                    : QIcon(":/icon/images/windows_decent_icon_16x16.png"));
+#endif
+   }
+
+   void AddInfo(QString title, std::string info) {
+      _subWidgets.push_back(new QWidget());
+      _subLayouts.push_back(new QVBoxLayout());
+
+      if (_subWidgets.size() % 2 == 0) {
+         _subWidgets.back()->setStyleSheet("background-color:rgb(244,244,244);");
+      } else {
+         _subWidgets.back()->setStyleSheet("background-color:rgb(255, 255, 255);");
+      }
+
+      QLabel* lblTitle = new QLabel((title));
+      lblTitle->setStyleSheet("font-weight: bold");
+
+      QLabel* lblInfo = new QLabel(QString::fromStdString(info));
+
+      _subLayouts.back()->setSpacing(0);
+      _subLayouts.back()->setContentsMargins(45,3,0,3);
+      _subLayouts.back()->addWidget(lblTitle);
+      _subLayouts.back()->addWidget(lblInfo);
+
+      _subWidgets.back()->setLayout(_subLayouts.back());
+      m_main_layout.addWidget(_subWidgets.back());
+
+
+   }
+private:
+   QVBoxLayout     m_main_layout;
+
+   std::vector<QWidget*>     _subWidgets;
+   std::vector<QVBoxLayout*> _subLayouts;
+   
+};
+
+namespace gui_wallet
+{
+
+Overview_tab::Overview_tab(QWidget* pParent)
+: TabContentManager(pParent)
+, m_pAccountSignalMapper(nullptr)
+, m_pTableWidget(new DecentTable(this))
+{
+   m_pTableWidget->set_columns({
       {tr("Account ID"), 20, "id"},
       {tr("Account"), 50, "name"},
       {"", 10},
       {"", 10},
       {"", 10}
    });
-   
-   QVBoxLayout* main = new QVBoxLayout();
-   QHBoxLayout* search_lay = new QHBoxLayout();
-   
-   main->setContentsMargins(0, 5, 0, 0);
-   main->setMargin(0);
-   
-   search_lay->setMargin(0);
-   search_lay->setContentsMargins(0,0,0,0);
-   
+
+   QLineEdit* pfilterLineEditor = new QLineEdit(this);
+   pfilterLineEditor->setPlaceholderText(QString(tr("Search")));
+   pfilterLineEditor->setStyleSheet(d_lineEdit);
+   pfilterLineEditor->setAttribute(Qt::WA_MacShowFocusRect, 0);
+   pfilterLineEditor->setFixedHeight(54);
+
    QPixmap image(icon_search);
-   
-   search_label.setSizeIncrement(100,40);
-   search_label.setPixmap(image);
-   search.setPlaceholderText(QString(tr("Search")));
-   search.setStyleSheet(d_lineEdit);
-   search.setAttribute(Qt::WA_MacShowFocusRect, 0);
-   search.setFixedHeight(54);
-   
-   
-   search_lay->setContentsMargins(42, 0, 0, 0);
-   search_lay->addWidget(&search_label);
-   search_lay->addWidget(&search);
-   
-   
-   
-   main->addLayout(search_lay);
-   main->addWidget(&table_widget);
-   main->setSpacing(0);
+
+   QLabel* pSearchLabel = new QLabel(this);
+   pSearchLabel->setSizeIncrement(100,40);
+   pSearchLabel->setPixmap(image);
+
+   QHBoxLayout* pSearchLayout = new QHBoxLayout();
+   pSearchLayout->setMargin(0);
+   pSearchLayout->setContentsMargins(0,0,0,0);
+   pSearchLayout->setContentsMargins(42, 0, 0, 0);
+   pSearchLayout->addWidget(pSearchLabel);
+   pSearchLayout->addWidget(pfilterLineEditor);
+
+   QVBoxLayout* pMainLayout = new QVBoxLayout();
+   pMainLayout->setContentsMargins(0, 5, 0, 0);
+   pMainLayout->setMargin(0);
+   pMainLayout->addLayout(pSearchLayout);
+   pMainLayout->addWidget(m_pTableWidget);
+   pMainLayout->setSpacing(0);
     
-   setLayout(main);
- 
-   table_widget.setMouseTracking(true);
+   setLayout(pMainLayout);
+
+   QObject::connect(pfilterLineEditor, &QLineEdit::textChanged,
+                    this, &Overview_tab::slot_SearchTermChanged);
+
+   QObject::connect(m_pTableWidget, &DecentTable::signal_SortingChanged,
+                    this, &Overview_tab::slot_SortingChanged);
 }
-
-
 
 void Overview_tab::timeToUpdate(const std::string& result) {
    if (result.empty()) {
-      table_widget.setRowCount(0);
+      m_pTableWidget->setRowCount(0);
       return;
    }
    
-   auto contents = json::parse(result);
+   auto contents = nlohmann::json::parse(result);
+
+   size_t iSize = contents.size();
+   if (iSize > m_i_page_size)
+      iSize = m_i_page_size;
    
-   table_widget.setRowCount(contents.size());
+   m_pTableWidget->setRowCount(iSize);
+
+   if (m_pAccountSignalMapper)
+      delete m_pAccountSignalMapper;
+   m_pAccountSignalMapper = new QSignalMapper(this);  // the last one will be deleted thanks to it's parent
+   QObject::connect(m_pAccountSignalMapper, (void (QSignalMapper::*)(QString const&))&QSignalMapper::mapped,
+                    this, &Overview_tab::slot_AccountChanged);
    
-   for (int i = 0; i < contents.size() + 1; ++i) {
-      auto content = contents[i];
+   for (size_t iIndex = 0; iIndex < iSize; ++iIndex)
+   {
+      auto const& content = contents[iIndex];
       
       std::string name = content["name"].get<std::string>();
       std::string id = content["id"].get<std::string>();
       
-      table_widget.setItem(i, 1, new QTableWidgetItem(QString::fromStdString(name)));
-      table_widget.setItem(i, 0, new QTableWidgetItem(QString::fromStdString(id)));
-      
-      EventPassthrough<DecentSmallButton>* trans = new EventPassthrough<DecentSmallButton>(icon_transaction, icon_transaction_white);
-      trans->setProperty("accountName", QVariant::fromValue(QString::fromStdString(name)));
+      m_pTableWidget->setItem(iIndex, 1, new QTableWidgetItem(QString::fromStdString(name)));
+      m_pTableWidget->setItem(iIndex, 0, new QTableWidgetItem(QString::fromStdString(id)));
 
-      trans->setAlignment(Qt::AlignCenter);
-      connect(trans, SIGNAL(clicked()), this, SLOT(transactionButtonPressed()));
-      table_widget.setCellWidget(i, 2, trans);
-      
-      EventPassthrough<DecentSmallButton>* transf = new EventPassthrough<DecentSmallButton>(icon_popup, icon_popup_white);
+      // Transaction Button
+      //
+      DecentSmallButton* pTransactionButton = new DecentSmallButton(icon_transaction, icon_transaction_white);
+      pTransactionButton->setAlignment(Qt::AlignCenter);
+      m_pTableWidget->setCellWidget(iIndex, 2, pTransactionButton);
 
-      transf->setProperty("accountName", QVariant::fromValue(QString::fromStdString(name)));
-      transf->setAlignment(Qt::AlignCenter);
-      connect(transf, SIGNAL(clicked()), this, SLOT(buttonPressed()));
-      table_widget.setCellWidget(i, 4, transf);
+      m_pAccountSignalMapper->setMapping(pTransactionButton, name.c_str());
+      QObject::connect(pTransactionButton, &DecentSmallButton::clicked,
+                       m_pAccountSignalMapper, (void (QSignalMapper::*)())&QSignalMapper::map);
+      QObject::connect(pTransactionButton, &DecentSmallButton::clicked,
+                       this, &Overview_tab::slot_Transactions);
+
+      // Details Button
+      //
+      DecentSmallButton* pDetailsButton = new DecentSmallButton(icon_popup, icon_popup_white);
+      pDetailsButton->setAlignment(Qt::AlignCenter);
+      m_pTableWidget->setCellWidget(iIndex, 4, pDetailsButton);
+
+      m_pAccountSignalMapper->setMapping(pDetailsButton, name.c_str());
+      QObject::connect(pDetailsButton, &DecentSmallButton::clicked,
+                       m_pAccountSignalMapper, (void (QSignalMapper::*)())&QSignalMapper::map);
+      QObject::connect(pDetailsButton, &DecentSmallButton::clicked,
+                       this, &Overview_tab::slot_Details);
       
+      // Transfer Button
+      //
+      DecentSmallButton* pTransferButton = new DecentSmallButton(icon_transfer, icon_transfer_white);
+      pTransferButton->setAlignment(Qt::AlignCenter);
+      m_pTableWidget->setCellWidget(iIndex, 3, pTransferButton);
+
+      m_pAccountSignalMapper->setMapping(pTransferButton, name.c_str());
+      QObject::connect(pTransferButton, &DecentSmallButton::clicked,
+                       m_pAccountSignalMapper, (void (QSignalMapper::*)())&QSignalMapper::map);
+      QObject::connect(pTransferButton, &DecentSmallButton::clicked,
+                       this, &Overview_tab::slot_Transfer);
       
-      EventPassthrough<DecentSmallButton>* sendDCT = new EventPassthrough<DecentSmallButton>(icon_transfer, icon_transfer_white);
+      m_pTableWidget->setRowHeight(iIndex,40);
+      m_pTableWidget->cellWidget(iIndex, 2)->setStyleSheet(d_table);
+      m_pTableWidget->cellWidget(iIndex, 3)->setStyleSheet(d_table);
+      m_pTableWidget->cellWidget(iIndex, 4)->setStyleSheet(d_table);
+
+      m_pTableWidget->item(iIndex,0)->setBackground(Qt::white);
+      m_pTableWidget->item(iIndex,1)->setBackground(Qt::white);
       
-      sendDCT->setProperty("accountName", QVariant::fromValue(QString::fromStdString(name)));
-      sendDCT->setAlignment(Qt::AlignCenter);
-      connect(sendDCT, SIGNAL(clicked()), m_pPar, SLOT(SendDCTSlot()));
-      table_widget.setCellWidget(i, 3, sendDCT);
+      m_pTableWidget->item(iIndex,0)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+      m_pTableWidget->item(iIndex,1)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
       
-      table_widget.setRowHeight(i,40);
-      table_widget.cellWidget(i, 2)->setStyleSheet(d_table);
-      table_widget.cellWidget(i, 3)->setStyleSheet(d_table);
-      table_widget.cellWidget(i, 4)->setStyleSheet(d_table);
+      m_pTableWidget->item(iIndex,0)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+      m_pTableWidget->item(iIndex,1)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
       
-      
-      
-      table_widget.item(i,0)->setBackground(Qt::white);
-      table_widget.item(i,1)->setBackground(Qt::white);
-      
-      table_widget.item(i,0)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
-      table_widget.item(i,1)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
-      
-      table_widget.item(i,0)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
-      table_widget.item(i,1)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
-      
-      table_widget.item(i,0)->setForeground(QColor::fromRgb(88,88,88));
-      table_widget.item(i,1)->setForeground(QColor::fromRgb(88,88,88));
+      m_pTableWidget->item(iIndex,0)->setForeground(QColor::fromRgb(88,88,88));
+      m_pTableWidget->item(iIndex,1)->setForeground(QColor::fromRgb(88,88,88));
    }
 
+   if (contents.size() > m_i_page_size)
+      set_next_page_iterator(contents[m_i_page_size]["id"].get<std::string>());
+   else
+      set_next_page_iterator(string());
 }
-
 
 std::string Overview_tab::getUpdateCommand() {
-   return "search_accounts \"" + search.text().toStdString() + "\" \"" + table_widget.getSortedColumn() + "\" 100";
+   return   "search_accounts "
+            "\"" + m_strSearchTerm.toStdString() + "\" "
+            "\"" + m_pTableWidget->getSortedColumn() + "\" "
+            "\"" + next_iterator() + "\" "
+            + std::to_string(m_i_page_size + 1);
 }
 
-
-void Overview_tab::transactionButtonPressed()
+void Overview_tab::slot_Transactions()
 {
-    DecentSmallButton* button = (DecentSmallButton*)sender();
-    QString accountName = button->property("accountName").toString();
-    m_pPar->GoToThisTab(1 , accountName.toStdString());
+   Globals::instance().signal_showTransactionsTab(m_strSelectedAccount.toStdString());
 }
 
-void Overview_tab::buttonPressed()
+void Overview_tab::slot_Details()
 {
-    DecentSmallButton* button = (DecentSmallButton*)sender();
-    QString accountName = button->property("accountName").toString();
-
    try {
       std::string result;
-      RunTask("get_account " + accountName.toStdString(), result);
-      auto accountInfo = json::parse(result);
+      RunTask("get_account " + m_strSelectedAccount.toStdString(), result);
+      auto accountInfo = nlohmann::json::parse(result);
       
       std::string id = accountInfo["id"].get<std::string>();
       std::string registrar = accountInfo["registrar"].get<std::string>();
@@ -173,8 +245,6 @@ void Overview_tab::buttonPressed()
       
       std::string name = accountInfo["name"].get<std::string>();
       
-      
-      
       QZebraWidget* info_window = new QZebraWidget();
       
       info_window->AddInfo(tr("Registrar"), registrar);
@@ -183,8 +253,7 @@ void Overview_tab::buttonPressed()
       info_window->AddInfo(tr("Network Fee"), network_fee_percentage);
       info_window->AddInfo(tr("Lifetime Referrer Fee"), lifetime_referrer_fee_percentage);
       info_window->AddInfo(tr("Referrer Rewards Percentage"), referrer_rewards_percentage);
-      
-      
+
       info_window->setWindowTitle(QString::fromStdString(name) + " (" + QString::fromStdString(id) + ")");
       info_window->setFixedSize(620,420);
       info_window->show();
@@ -192,3 +261,23 @@ void Overview_tab::buttonPressed()
       // Ignore for now
    }
 }
+
+void Overview_tab::slot_Transfer()
+{
+   Globals::instance().showTransferDialog(m_strSelectedAccount.toStdString());
+}
+
+void Overview_tab::slot_SearchTermChanged(QString const& strSearchTerm)
+{
+   m_strSearchTerm = strSearchTerm;
+}
+void Overview_tab::slot_AccountChanged(QString const& strAccountName)
+{
+   m_strSelectedAccount = strAccountName;
+}
+
+void Overview_tab::slot_SortingChanged(int index)
+{
+   reset();
+}
+}//   end namespace gui_wallet

@@ -43,6 +43,8 @@
 #include <QStatusBar>
 #include <QSignalMapper>
 #include <Qtimer>
+#include <QHBoxLayout>
+#include <QVBoxLayout>
 
 #include <stdio.h>
 #include <stdlib.h>

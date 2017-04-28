@@ -51,7 +51,6 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
 , m_locked(true)
 , m_sendDCT_dialog(nullptr)
 , m_import_key_dlg(nullptr)
-, m_nConnected(0)
 , m_SetPasswordDialog(this, true)
 , m_UnlockDialog(this, false)
 {
@@ -86,7 +85,7 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
    pUsersCombo->hide();
    
    connect(pUsersCombo, SIGNAL(currentIndexChanged(const QString&)), this, SLOT(CurrentUserChangedSlot(const QString&)) );
-   connect(pImportButton, SIGNAL(LabelClicked()), this, SLOT(ImportKeySlot()));
+   connect(pImportButton, SIGNAL(clicked()), this, SLOT(ImportKeySlot()));
 
    setWindowTitle(tr("DECENT - Blockchain Content Distribution"));
 
@@ -101,6 +100,9 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
 
    QObject::connect(&Globals::instance(), &Globals::signal_showPurchasedTab,
                     this, &Mainwindow_gui_wallet::slot_showPurchasedTab);
+
+   QObject::connect(&Globals::instance(), &Globals::signal_showTransactionsTab,
+                    this, &Mainwindow_gui_wallet::slot_showTransactionsTab);
 
    QObject::connect(&Globals::instance(), &Globals::signal_updateAccountBalance,
                     this, &Mainwindow_gui_wallet::slot_updateAccountBalance);
@@ -188,6 +190,11 @@ void Mainwindow_gui_wallet::currentUserBalanceUpdate()
 void Mainwindow_gui_wallet::slot_showPurchasedTab()
 {
    GoToThisTab(4, std::string());
+}
+
+void Mainwindow_gui_wallet::slot_showTransactionsTab(std::string const& account_name)
+{
+   GoToThisTab(1, account_name);
 }
 
 void Mainwindow_gui_wallet::slot_updateAccountBalance(Asset const& balance)

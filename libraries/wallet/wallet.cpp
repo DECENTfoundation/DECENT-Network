@@ -3292,10 +3292,9 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
        return my->_remote_db->lookup_accounts(lowerbound, limit);
    }
 
-
-   vector<account_object> wallet_api::search_accounts(const string& term, const string order, uint32_t limit)
+   vector<account_object> wallet_api::search_accounts(const string& term, const string& order, const string& id, uint32_t limit)
    {
-      return my->_remote_db->search_accounts(term, order, limit);
+      return my->_remote_db->search_accounts(term, order, object_id_type(id), limit);
    }
 
    vector<asset> wallet_api::list_account_balances(const string& id)
@@ -4263,6 +4262,9 @@ signed_transaction wallet_api::leave_rating_and_comment(string consumer,
          bobj.author_account = account_id_or_name;
          bobj.times_bought = content->times_bought;
          bobj.hash = content->_hash;
+         bobj.AVG_rating = content->AVG_rating;
+         bobj.rating = content->AVG_rating;
+         bobj.average_rating = content->AVG_rating;
       }
 
       return result;

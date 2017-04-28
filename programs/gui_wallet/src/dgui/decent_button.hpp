@@ -11,32 +11,16 @@
 #define DECENT_BUTTON_HPP
 
 #include <QLabel>
+#include <QPushButton>
 
 namespace gui_wallet {
 
-class DecentButton : public QLabel
+class DecentButton : public QPushButton
 {
-    Q_OBJECT
+   Q_OBJECT
 public:
-    DecentButton();
-   
-   void setEnabled(bool isEnabled);
-   bool isEnabled() const { return _isEnabled; }
-    
-protected:
-    void mousePressEvent(QMouseEvent *event) {
-       if (_isEnabled)
-          emit LabelClicked();
-    }
-   
-public:
-signals:
-    void LabelClicked();
-   
-private:
-   bool _isEnabled;
+   DecentButton(QWidget *parent = Q_NULLPTR);
 };
-    
 
 }
 
