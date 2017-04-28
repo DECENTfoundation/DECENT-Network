@@ -160,46 +160,52 @@ public:
    fc::thread* main_thread; //The main thread, used mainly for DB modifications
 };
 
-class SeedingListener : public decent::package::EventListenerInterface, public std::enable_shared_from_this<SeedingListener>{
+class SeedingListener : public decent::package::EventListenerInterface, public std::enable_shared_from_this<SeedingListener> {
 private:
    string _url;
    decent::package::package_handle_t _pi;
-   seeding_plugin_impl * _my;
+   seeding_plugin_impl *_my;
 public:
-   SeedingListener(seeding_plugin_impl& impl, const my_seeding_object & mso, const decent::package::package_handle_t pi){ _url = mso.URI; _pi = pi; _my = &impl;};
-   ~SeedingListener(){};
+   SeedingListener(seeding_plugin_impl &impl, const my_seeding_object &mso,
+                   const decent::package::package_handle_t pi) {
+      _url = mso.URI;
+      _pi = pi;
+      _my = &impl;
+   };
 
-   virtual void package_download_error(const std::string&){
+   ~SeedingListener() {};
+
+   virtual void package_download_error(const std::string &) {
       //In case the download fails, delete the package and seeding objects - TODO_DECENT
       //_my->database().remove(mso);
-      elog("seeding plugin: package_download_error(): Failed downloading package ${s}",("s",_url));
+      elog("seeding plugin: package_download_error(): Failed downloading package ${s}", ("s", _url));
 
       //auto& pm = decent::package::PackageManager::instance();
       //pm.release_package(_pi);
    };
 
-   virtual void package_download_complete(){
-      ilog("seeding plugin: package_download_complete(): Finished downloading package${u}",("u",_url));
-      auto& pm = decent::package::PackageManager::instance();
+   virtual void package_download_complete() {
+      ilog("seeding plugin: package_download_complete(): Finished downloading package${u}", ("u", _url));
+      auto &pm = decent::package::PackageManager::instance();
       const auto &mso_idx = _my->database().get_index_type<my_seeding_index>().indices().get<by_URI>();
       const auto &mso_itr = mso_idx.find(_url);
 
-      size_t size = (_pi->get_size() + 1024*1024 - 1) / (1024 * 1024);
-      if ( size > mso_itr->space ) {
+      size_t size = (_pi->get_size() + 1024 * 1024 - 1) / (1024 * 1024);
+      if( size > mso_itr->space ) {
          ilog("seeding plugin: package_download_complete(): Fraud detected: real content size is greater than propagated in blockchain; deleting...");
          pm.release_package(_pi);
          _pi = 0;
          //changing DB outside the main thread does not work properly, let's delete it from there
-         _my->main_thread->async( [=](){ database().remove(*mso_itr); } );
+         _my->main_thread->async([ = ]() { database().remove(*mso_itr); });
          return;
       }
       //_pi->remove_event_listener(shared_from_this());
       _pi->start_seeding();
       //Don't block package manager thread for too long.
-      fc::url download_url( _url );
-      _my->service_thread->async( [=](){ _my->generate_por2( *mso_itr, _pi ); });
+      fc::url download_url(_url);
+      _my->service_thread->async([ = ]() { _my->generate_por2(*mso_itr, _pi); });
+   };
 };
-
 
 } //namespace detail
 
