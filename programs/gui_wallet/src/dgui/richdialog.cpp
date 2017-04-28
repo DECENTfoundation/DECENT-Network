@@ -36,8 +36,8 @@ RichDialogBase::RichDialogBase(QString title)
     m_main_layout.addLayout(&m_controls_layout);
     m_main_layout.addLayout(&m_buttons_layout);
     setLayout(&m_main_layout);
-    connect(&m_cancel_button,SIGNAL(LabelClicked()),this,SLOT(close()));
-    connect(&m_ok_button,SIGNAL(LabelClicked()),this,SLOT(set_ok_and_closeSlot()));
+    connect(&m_cancel_button,SIGNAL(clicked()),this,SLOT(close()));
+    connect(&m_ok_button,SIGNAL(clicked()),this,SLOT(set_ok_and_closeSlot()));
     setWindowTitle(title);
     setFixedSize(380,240);
 }
@@ -147,8 +147,8 @@ SendDialogBase::SendDialogBase(QString title)
    m_main_layout.addLayout(&m_controls_layout);
    m_main_layout.addLayout(&m_buttons_layout);
    setLayout(&m_main_layout);
-   connect(&m_cancel_button,SIGNAL(LabelClicked()),this,SLOT(close()));
-   connect(&m_ok_button,SIGNAL(LabelClicked()),this,SLOT(set_ok_and_closeSlot()));
+   connect(&m_cancel_button,SIGNAL(clicked()),this,SLOT(close()));
+   connect(&m_ok_button,SIGNAL(clicked()),this,SLOT(set_ok_and_closeSlot()));
    setWindowTitle(title);
    setFixedSize(380,240);
 }
@@ -184,6 +184,8 @@ void SendDialogBase::AddWidget(QWidget* a_pWidget)
 SendDialog::SendDialog(int a_num_of_text_boxes  , QString title, QString userName)
 : m_nNumOfTextBoxes(a_num_of_text_boxes),m_pTextBoxes(NULL),SendDialogBase(title) , m_userName(userName)
 {
+   _locale = ((QApplication*)QApplication::instance())->inputMethod()->locale();
+
    if(a_num_of_text_boxes<=0) return;
    
    connect(this, SIGNAL(RDB_is_OK()), this, SLOT(sendDCT()));
@@ -198,7 +200,7 @@ SendDialog::SendDialog(int a_num_of_text_boxes  , QString title, QString userNam
    m_pTextBoxes[0].setFixedSize(300, 44);
    m_pTextBoxes[0].setStyleSheet(d_text_box);
    
-   m_pTextBoxes[1].setValidator(new QDoubleValidator(0.001, 100000, 4, this));
+   m_pTextBoxes[1].setValidator(new QDoubleValidator(0.0001, 100000, 4, this));
    m_pTextBoxes[1].setPlaceholderText(QString(tr("Amount")));
    m_pTextBoxes[1].setAttribute(Qt::WA_MacShowFocusRect, 0);
    m_pTextBoxes[1].setFixedSize(300, 44);
@@ -229,12 +231,24 @@ void SendDialog::sendDCT()
 {
    std::string a_result;
    std::string message;
+
+   bool isOK = false;
+   QString amount = QString::number(_locale.toDouble(m_pTextBoxes[1].text(), &isOK));
+   if (!isOK) {
+      QMessageBox* msgBox = new QMessageBox();
+      msgBox->setAttribute(Qt::WA_DeleteOnClose);
+      msgBox->setWindowTitle(tr("Error"));
+      msgBox->setText(tr("Invalid amount is specified"));
+      msgBox->open();
+
+      return;
+   }
    
    try {
       QString run_str = "transfer \""
       + curentName + "\" \""
       + m_pTextBoxes[0].text() + "\" \""
-      + m_pTextBoxes[1].text()
+      + amount
       + "\" \"DCT\" \""
       + m_pTextBoxes[2].text()
       + "\" \"true\"";
@@ -246,9 +260,7 @@ void SendDialog::sendDCT()
    
    if (message.empty())
    {
-      SuccessMessageDialog* successMessage = new SuccessMessageDialog(tr("Success") , "Success");
-      successMessage->execSMD();
-      delete successMessage;
+      ShowMessageBox(tr("Success") , tr("Success"));
       close();
    }
    else
@@ -284,37 +296,4 @@ RET_TYPE SendDialog::execRD(const QPoint* a_pMove, std::vector<std::string>& a_c
    }
    
    return rtReturn;
-}
-
-
-
-
-SuccessMessageDialog::SuccessMessageDialog(QString message , QString title)
-{
-   m_text = new QLabel(message);
-   m_text->setFont(AccountBalanceFont());
-   
-   m_ok_button = new DecentButton();
-   m_ok_button->setText("OK");
-   m_ok_button->setFixedSize(140, 40);
-   connect(m_ok_button, SIGNAL(LabelClicked()), this , SLOT(close()));
-   
-   m_controls_layout.addWidget(m_text, 0, Qt::AlignCenter);
-   m_controls_layout.addWidget(m_ok_button, 0, Qt::AlignCenter);
-   
-   setWindowTitle(title);
-   setLayout(&m_controls_layout);
-   setFixedSize(300,100);
-}
-
-void SuccessMessageDialog::execSMD()
-{
-   this->exec();
-}
-
-void SuccessMessageDialog::keyPressEvent(QKeyEvent *evt)
-{
-   if(evt->key() == Qt::Key_Enter || evt->key() == Qt::Key_Return)
-      close();
-   QDialog::keyPressEvent(evt);
 }

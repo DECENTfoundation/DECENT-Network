@@ -71,8 +71,8 @@ namespace gui_wallet
         m_main_table.setCellWidget(0, 0, &password_box);
         QHBoxLayout* button_layout = new QHBoxLayout();
         button_layout->addWidget(unlockButton);
-        connect(unlockButton, SIGNAL(LabelClicked()), this, SLOT(unlock_slot()));
-        connect(&password_box, SIGNAL(returnPressed()), unlockButton, SIGNAL(LabelClicked()));
+        connect(unlockButton, SIGNAL(clicked()), this, SLOT(unlock_slot()));
+        connect(&password_box, SIGNAL(returnPressed()), unlockButton, SIGNAL(clicked()));
         m_main_layout.setContentsMargins(40, 40, 40, 40);
         m_main_layout.addWidget(&m_main_table);
         m_main_layout.addLayout(button_layout);

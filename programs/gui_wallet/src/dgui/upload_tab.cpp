@@ -12,8 +12,11 @@
 #include <QCalendarWidget>
 #include <QDate>
 #include <QDateEdit>
+#include <QApplication>
 #include <stdio.h>
 #include <QStyleFactory>
+#include <QInputMethod>
+#include <QLocale>
 #endif
 
 #include "decent_button.hpp"
@@ -70,6 +73,8 @@ CryptoPP::AutoSeededRandomPool rng;
 Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishersTimer(this) {
 
    u_main_layout = new QVBoxLayout(this);
+
+   _locale = ((QApplication*)QApplication::instance())->inputMethod()->locale();
    ////////////////////////////////////////////////////////////////////////////
    /// Title field
    ////////////////////////////////////////////////////////////////////////////
@@ -159,7 +164,7 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
 
 
    _price = new QLineEdit();
-   _price->setValidator( new QDoubleValidator(0.001, 100000, 3, this) );
+   _price->setValidator( new QDoubleValidator(0.0001, 100000, 4, this) );
    _price->setAttribute(Qt::WA_MacShowFocusRect, 0);
    _price->setStyleSheet(d_label_v2);
    _price->setTextMargins(5, 5, 5, 5);
@@ -207,7 +212,7 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    _seeders_dialog->setContentsMargins(0, 0, 0, 0);
    _seeders_dialog->resize(450, 250);
 
-   connect(seeders_button, SIGNAL(LabelClicked()), _seeders_dialog, SLOT(exec()) );
+   connect(seeders_button, SIGNAL(clicked()), _seeders_dialog, SLOT(exec()) );
    
 
 
@@ -229,7 +234,7 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
 
    browseContentButton->setMinimumWidth(120);
    browseContentButton->setFixedHeight(40);
-   connect(browseContentButton, SIGNAL(LabelClicked()),this, SLOT(browseContent()));
+   connect(browseContentButton, SIGNAL(clicked()),this, SLOT(browseContent()));
 
    contentRow->addWidget(_contentPath);
    contentRow->addWidget(browseContentButton);
@@ -253,7 +258,7 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
 
    browseSamplesButton->setMinimumWidth(120);
    browseSamplesButton->setFixedHeight(40);
-   connect(browseSamplesButton, SIGNAL(LabelClicked()),this, SLOT(browseSamples()));
+   connect(browseSamplesButton, SIGNAL(clicked()),this, SLOT(browseSamples()));
 
    samplesRow->addWidget(_samplesPath);
    samplesRow->addWidget(browseSamplesButton);
@@ -280,8 +285,8 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    _upload_button->setFont(PopupButtonBigFont());
    _upload_button->setMinimumHeight(50);
 
-   connect(_upload_button, SIGNAL(LabelClicked()),this, SLOT(uploadContent()));
-   connect(_cancel_button, SIGNAL(LabelClicked()),this, SLOT( uploadCanceled() ));
+   connect(_upload_button, SIGNAL(clicked()),this, SLOT(uploadContent()));
+   connect(_cancel_button, SIGNAL(clicked()),this, SLOT( uploadCanceled() ));
 
    button->setContentsMargins(20, 20, 20, 20);
    button->addWidget(_upload_button);
@@ -333,7 +338,7 @@ void Upload_popup::onGrabPublishers() {
    
    //seeders popup ok button
    _seeder_ok = new DecentButton();
-   _seeder_ok->setText("OK");
+   _seeder_ok->setText(tr("OK"));
    _seeder_ok->setFixedHeight(50);
    _seeder_ok->setFixedWidth(100);
    _seeder_ok->setFont(TabButtonFont());
@@ -375,7 +380,7 @@ void Upload_popup::onGrabPublishers() {
       
       _publisherIdToPriceMap.insert(std::make_pair(pubIdStr, price));
       
-      QObject::connect(_seeder_ok, SIGNAL(LabelClicked()),this, SLOT(seederOkSlot()));
+      QObject::connect(_seeder_ok, SIGNAL(clicked()),this, SLOT(seederOkSlot()));
    }
    
    QHBoxLayout* button = new QHBoxLayout(_seeders_dialog);
@@ -424,18 +429,27 @@ void Upload_popup::seederOkSlot()
 }
 
 void Upload_popup::updateUploadButtonStatus() {
+   bool isValid = true;
+
+
    std::string lifeTime    = _lifeTime->text().toStdString();
    //std::string seeders     = _seeders->currentData().toString().toStdString();
    //seeders push_back in stateChanged slot on _checkedSeeders member
    std::string keyparts    = _keyparts->currentData().toString().toStdString();
-   std::string price       = _price->text().toStdString();
+
+   bool isOK = false;
+   std::string price = QString::number(_locale.toDouble(_price->text(), &isOK)).toStdString();
+   if (!isOK)
+       isValid = false;
+
+   
+
    std::string path        = _contentPath->text().toStdString();
    std::string samplesPath = _samplesPath->text().toStdString();
    
    std::string title = _titleText->text().toStdString();
    std::string desc = _descriptionText->toPlainText().toStdString();
 
-   bool isValid = true;
    
    if (price.empty())
       isValid = false;
@@ -475,8 +489,9 @@ void Upload_popup::updateUploadButtonStatus() {
          }
       }
    }
-   
-   double publishingPrice = it->second;
+   double publishingPrice = 0;
+   if( isValid )
+      publishingPrice = it->second;
    uint64_t size = std::max( (uint64_t)1, ( fileSize + (1024 * 1024) -1 ) / (1024 * 1024));
    double totalPricePerDay = size * publishingPrice;
    int days = QDate::currentDate().daysTo(_lifeTime->date());
@@ -529,7 +544,11 @@ void Upload_popup::uploadContent()
    
    std::string m_life_time = _lifeTime->text().toStdString();
    std::string m_keyparts  = _keyparts->currentData().toString().toStdString();
-   std::string m_price     = _price->text().toStdString();
+
+
+   
+   double price = _locale.toDouble(_price->text(), NULL);
+   std::string m_price     = QString::number(price).toStdString();
 
    std::string assetName = "DCT";
    
@@ -604,11 +623,7 @@ void Upload_popup::uploadContent()
       _contentPath->setText(tr("Content path"));
       _samplesPath->setText(tr("Samples (optional)"));
 
-      
-      SuccessMessageDialog* successMessage = new SuccessMessageDialog(tr("Content is processing") + "..." , tr("Success"));
-      successMessage->execSMD();
-      delete successMessage;
-
+      ShowMessageBox(tr("Content is being processed...") , tr("Success"));
 
       setEnabled(true);
 
@@ -689,7 +704,7 @@ Upload_tab::Upload_tab(Mainwindow_gui_wallet* parent)
     setLayout(&m_main_layout);
     
     connect(&m_filterLineEdit, SIGNAL(textChanged(QString)), this, SLOT(onTextChanged(QString)));
-    connect(upload_button, SIGNAL(LabelClicked()), this, SLOT(uploadPopup()));
+    connect(upload_button, SIGNAL(clicked()), this, SLOT(uploadPopup()));
 
    QObject::connect(&Globals::instance(), &Globals::currentUserChanged,
                     this, &Upload_tab::updateContents);
@@ -741,10 +756,10 @@ void Upload_tab::timeToUpdate(const std::string& result) {
          }
       }
       
-      if (contents[i]["times_bougth"].is_number()) {
-         cont.times_bougth = contents[i]["times_bougth"].get<int>();
+      if (contents[i]["times_bought"].is_number()) {
+         cont.times_bought = contents[i]["times_bought"].get<int>();
       } else {
-         cont.times_bougth = 0;
+         cont.times_bought = 0;
       }
       
       

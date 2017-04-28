@@ -1,12 +1,4 @@
-/*
- *	File: gui_wallet_centralwigdet.cpp
- *
- *	Created on: Nov 11, 2016
- *	Created by: Davit Kalantaryan (Email: davit.kalantaryan@desy.de)
- *
- *  This file implements ...
- *
- */
+
 #include "stdafx.h"
 
 #include "gui_design.hpp"
@@ -183,7 +175,7 @@ QWidget* CentralWigdet::GetWidgetFromTable5(int a_nColumn, int a_nWidget)
 
 void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
 {
-
+ 
     m_main_tabs.addTab(&m_browse_cont_tab,tr("Browse Content"));
     m_main_tabs.addTab(&m_trans_tab,tr("Transactions"));
     m_main_tabs.addTab(&m_Upload_tab,tr("Publish"));
@@ -323,13 +315,13 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
    pHBoxLayoutTmp = new QHBoxLayout;
    sendButton->setScaledContents(true);
    DecentButton* send_text = new DecentButton();
-   send_text->setText("  " + tr("Send"));
-   send_text->setStyleSheet("QLabel { color : rgb(0,0,0);}");
+   send_text->setText(tr("Send"));
+   send_text->setStyleSheet("border: 1px solid rgb(255, 255, 255); background-color :rgb(255,255,255); color: rgb(0,0,0);");
 
    sendButton->setFixedSize(30,30);
    connect(sendButton, SIGNAL(clicked()), this, SLOT(sendDCTSlot()));
-   connect(send_text, SIGNAL(LabelClicked()), this, SLOT(sendDCTSlot()));
-   pHBoxLayoutTmp->setAlignment(Qt::AlignCenter);
+   connect(send_text, SIGNAL(clicked()), this, SLOT(sendDCTSlot()));
+   pHBoxLayoutTmp->setAlignment(Qt::AlignRight);
    pHBoxLayoutTmp->addWidget(sendButton);
    pHBoxLayoutTmp->addWidget(send_text);
    

@@ -87,7 +87,7 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
    pUsersCombo->hide();
    
    connect(pUsersCombo, SIGNAL(currentIndexChanged(const QString&)), this, SLOT(CurrentUserChangedSlot(const QString&)) );
-   connect(pImportButton, SIGNAL(LabelClicked()), this, SLOT(ImportKeySlot()));
+   connect(pImportButton, SIGNAL(clicked()), this, SLOT(ImportKeySlot()));
 
    setWindowTitle(tr("DECENT - Blockchain Content Distribution"));
 
@@ -604,7 +604,7 @@ void Mainwindow_gui_wallet::ImportKeySlot()
         hasError = true;
     }
     if (hasError) {
-        ALERT_DETAILS(tr("Can not import key").toStdString() + ".", result.c_str());
+        ALERT_DETAILS(tr("Cannot import key.").toStdString(), result.c_str());
     } else {
         DisplayWalletContentGUI(false);
     }

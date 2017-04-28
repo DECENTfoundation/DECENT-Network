@@ -102,6 +102,7 @@ namespace gui_wallet
         QTimer           m_getPublishersTimer;
         QTimer*          _buttonStatusCheck;
         QDialog*         _seeders_dialog;
+        QLocale          _locale;
        
        std::map<std::string, double> _publisherIdToPriceMap;
        std::vector<QCheckBox*>       _seeders_checkbox;
@@ -150,7 +151,7 @@ namespace gui_wallet
         DecentTable     m_pTableWidget;
         QLineEdit       m_filterLineEdit;
         QComboBox       m_searchTypeCombo;
-        DecentButton*   upload_button;
+        DecentButton*  upload_button;
         
         std::vector<SDigitalContent>  _digital_contents;
         ContentDetailsGeneral*        _content_popup;
