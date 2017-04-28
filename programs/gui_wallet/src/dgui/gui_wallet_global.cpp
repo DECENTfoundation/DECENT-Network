@@ -49,7 +49,14 @@ void ShowMessageBox(QString const& strTitle,
    
    pDialog->open();
 }
-   
+
+uint64_t json_to_int64(nlohmann::json const& o)
+{
+   if (o.is_number())
+      return o.get<uint64_t>();
+   else
+      return std::stoll(o.get<std::string>());
+}
 
 struct CalendarDuration
 {
@@ -560,7 +567,7 @@ void Globals::updateAccountBalance()
 {
    if (false == m_str_currentUser.empty())
    {
-      nlohmann::json allBalances = runTask("list_account_balances " + m_str_currentUser);
+      nlohmann::json allBalances = runTaskParse("list_account_balances " + m_str_currentUser);
 
       if (allBalances.empty())
          emit signal_updateAccountBalance(asset(0));
@@ -582,22 +589,21 @@ void Globals::updateAccountBalance()
    }
 }
 
-void Globals::runTask(std::string const& str_command, nlohmann::json& json_result)
-{
-   string str_result = runTask(str_command);
-   if (false == str_result.empty())
-      json_result = nlohmann::json::parse(str_result);
-}
-
 string Globals::runTask(string const& str_command)
 {
    return getWallet().RunTask(str_command);
 }
 
+nlohmann::json Globals::runTaskParse(string const& str_command)
+{
+   string str_result = runTask(str_command);
+   return nlohmann::json::parse(str_result);
+}
+
 void Globals::setCurrentUser(std::string const& user)
 {
    m_str_currentUser = user;
-   emit currentUserChanged(m_str_currentUser);
+   emit currentUserChanged(m_str_currentUser.c_str());
 }
 
 void Globals::setWalletUnlocked()
@@ -628,6 +634,24 @@ void Globals::showTransferDialog(std::string const& user)
    pTransferDialog->curentName = user.c_str();
    pTransferDialog->execRD(nullptr, cvsUsKey);
    delete pTransferDialog;
+}
+
+string Globals::getAccountName(string const& accountId)
+{
+   auto search = m_map_user_id_cache.find(accountId);
+   if (search == m_map_user_id_cache.end())
+   {
+      string accountName = "Unknown";
+      nlohmann::json accountInfoParsed = runTaskParse("get_object \"" + accountId + "\"");
+
+      if (false == accountInfoParsed.empty())
+         accountName = accountInfoParsed[0]["name"].get<std::string>();
+
+      auto pair_value = m_map_user_id_cache.insert(std::make_pair(accountId, accountName));
+      search = pair_value.first;
+   }
+
+   return search->second;
 }
 
 void Globals::slot_connected(std::string const& str_error)

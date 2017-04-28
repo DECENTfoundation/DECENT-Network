@@ -482,7 +482,7 @@ void CentralWigdet::resizeEvent ( QResizeEvent * a_event )
 
 void CentralWigdet::SetTransactionInfo(std::string info_from_other_tab)
 {
-    m_trans_tab.set_user_filter(info_from_other_tab);
+    m_trans_tab.signal_setUserFilter(info_from_other_tab.c_str());
 }
 
 Overview_tab* CentralWigdet::getUsersTab()
