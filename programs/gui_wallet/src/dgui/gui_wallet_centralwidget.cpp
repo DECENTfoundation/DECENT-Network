@@ -314,9 +314,10 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
    m_pSendWgt1 = new QWidget;
    pHBoxLayoutTmp = new QHBoxLayout;
    sendButton->setScaledContents(true);
-   DecentButton* send_text = new DecentButton();
-   send_text->setText(tr("Send"));
-   send_text->setStyleSheet("border: 1px solid rgb(255, 255, 255); background-color :rgb(255,255,255); color: rgb(0,0,0);");
+   DecentButton* send_text = new DecentButton(nullptr, ":/icon/images/transactionSVG.svg");
+   //send_text->setFixedSize(60,60);
+   //send_text->setText(tr("Send"));
+
 
    sendButton->setFixedSize(30,30);
    connect(sendButton, SIGNAL(clicked()), this, SLOT(sendDCTSlot()));

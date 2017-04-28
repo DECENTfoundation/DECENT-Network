@@ -235,13 +235,13 @@ void BrowseContentTab::ShowDigitalContentsGUI() {
 
       // Button
       colIndex++;
-      DecentSmallButton* info_icon = new DecentSmallButton(icon_popup, icon_popup_white, m_pTableWidget);
+      DecentButton* info_icon = new DecentButton(m_pTableWidget, icon_popup, icon_popup_white);
 
-      QObject::connect(info_icon, &DecentSmallButton::clicked,
+      QObject::connect(info_icon, &DecentButton::clicked,
                        m_pDetailsSignalMapper, (void (QSignalMapper::*)())&QSignalMapper::map);
       m_pDetailsSignalMapper->setMapping(info_icon, index);
 
-      info_icon->setAlignment(Qt::AlignCenter);
+      //info_icon->setAlignment(Qt::AlignCenter);
       m_pTableWidget->setCellWidget(index, colIndex, info_icon);
 
       ++index;

@@ -905,9 +905,9 @@ void Upload_tab::ShowDigitalContentsGUI() {
        
        
        
-       EventPassthrough<DecentSmallButton>* info_icon = new EventPassthrough<DecentSmallButton>(icon_popup, icon_popup_white);
+       EventPassthrough<DecentButton>* info_icon = new EventPassthrough<DecentButton>(nullptr, icon_popup, icon_popup_white);
        info_icon->setProperty("id", QVariant::fromValue(index));
-       info_icon->setAlignment(Qt::AlignCenter);
+       //info_icon->setAlignment(Qt::AlignCenter);
        connect(info_icon, SIGNAL(clicked()), this, SLOT(show_content_popup()));
        m_pTableWidget.setCellWidget(index, 7, info_icon);
        
