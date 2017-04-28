@@ -331,7 +331,7 @@ namespace graphene { namespace app {
           * @return Map of account names to corresponding IDs
           * @ingroup DatabaseAPI
           */
-         vector<account_object> search_accounts(const string& search_term, const string order, uint32_t limit) const;
+         vector<account_object> search_accounts(const string& search_term, const string order, const object_id_type& id, uint32_t limit) const;
 
          //////////////
          // Balances //

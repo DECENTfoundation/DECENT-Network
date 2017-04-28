@@ -3276,10 +3276,9 @@ public:
        return my->_remote_db->lookup_accounts(lowerbound, limit);
    }
 
-
-   vector<account_object> wallet_api::search_accounts(const string& term, const string order, uint32_t limit)
+   vector<account_object> wallet_api::search_accounts(const string& term, const string& order, const string& id, uint32_t limit)
    {
-      return my->_remote_db->search_accounts(term, order, limit);
+      return my->_remote_db->search_accounts(term, order, object_id_type(id), limit);
    }
 
    vector<asset> wallet_api::list_account_balances(const string& id)

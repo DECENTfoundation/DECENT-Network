@@ -77,8 +77,9 @@ private:
 namespace gui_wallet
 {
 
-Overview_tab::Overview_tab(class Mainwindow_gui_wallet* a_pPar)
-: m_pPar(a_pPar)
+Overview_tab::Overview_tab(QWidget* pParent)
+: TabContentManager(pParent)
+, m_pAccountSignalMapper(nullptr)
 , m_pTableWidget(new DecentTable(this))
 {
    m_pTableWidget->set_columns({
@@ -218,7 +219,7 @@ std::string Overview_tab::getUpdateCommand() {
    return   "search_accounts "
             "\"" + m_strSearchTerm.toStdString() + "\" "
             "\"" + m_pTableWidget->getSortedColumn() + "\" "
-            //"\"" + next_iterator() + "\" "
+            "\"" + next_iterator() + "\" "
             + std::to_string(m_i_page_size + 1);
 }
 

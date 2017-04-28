@@ -20,6 +20,14 @@ using string = std::string;
 
 namespace gui_wallet
 {
+struct SDigitalContentPurchase : public SDigitalContent
+{
+   uint32_t total_key_parts = 0;
+   uint32_t received_key_parts = 0;
+   uint32_t total_download_bytes = 0;
+   uint32_t received_download_bytes = 0;
+   QString status_text;
+};
    
 PurchasedTab::PurchasedTab(QWidget* pParent)
 : TabContentManager(pParent)
@@ -72,6 +80,14 @@ PurchasedTab::PurchasedTab(QWidget* pParent)
    pMainLayout->addWidget(m_pTableWidget);
 
    setLayout(pMainLayout);
+}
+
+//
+// it is important to have a constructor/destructor body in cpp
+// when class has forward declared members
+PurchasedTab::~PurchasedTab()
+{
+
 }
 
 void PurchasedTab::timeToUpdate(const std::string& result)
