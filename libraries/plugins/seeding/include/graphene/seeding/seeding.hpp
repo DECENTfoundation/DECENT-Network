@@ -197,12 +197,7 @@ public:
       _pi->start_seeding();
       //Don't block package manager thread for too long.
       fc::url download_url( _url );
-      if(download_url.proto() == "ipfs")
-         _my->service_thread->async( [=](){ _my->generate_por2( *mso_itr, _pi ); _pi->remove(false); });
-      else
-         _my->service_thread->async( [=](){ _my->generate_por2( *mso_itr, _pi ); });
-   };
-
+      _my->service_thread->async( [=](){ _my->generate_por2( *mso_itr, _pi ); });
 };
 
 
