@@ -703,7 +703,7 @@ Upload_tab::Upload_tab(Mainwindow_gui_wallet* parent)
     m_main_layout.addWidget(&m_pTableWidget);
     setLayout(&m_main_layout);
     
-    connect(&m_filterLineEdit, SIGNAL(textChanged(QString)), this, SLOT(onTextChanged(QString)));
+//    connect(&m_filterLineEdit, SIGNAL(textChanged(QString)), this, SLOT(onTextChanged(QString)));
     connect(upload_button, SIGNAL(clicked()), this, SLOT(uploadPopup()));
 
    QObject::connect(&Globals::instance(), &Globals::currentUserChanged,

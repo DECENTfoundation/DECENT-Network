@@ -355,7 +355,26 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     tab_lay->setContentsMargins(0, 0, 0, 0);
     m_main_layout.addLayout(tab_lay);
     //m_main_layout.addWidget(&m_main_tabs);
-    
+   
+   QHBoxLayout* pagination_layout = new QHBoxLayout();
+   prev_button = new QPushButton();
+   next_button = new QPushButton();
+   
+   prev_button->setText("Prev");
+   next_button->setText("Next");
+   
+   QTimer* time = new QTimer;
+   time->setInterval(500);
+   time->start();
+   QObject::connect(time, SIGNAL(timeout()), SLOT(paginationController()));
+   
+   pagination_layout->addWidget(prev_button);
+   pagination_layout->addWidget(next_button);
+   m_main_layout.addLayout(pagination_layout);
+   
+   QObject::connect(prev_button, SIGNAL(clicked()), this, SLOT(prevButtonSlot()));
+   QObject::connect(next_button, SIGNAL(clicked()), this, SLOT(nextButtonSlot()));
+   
    QStatusBar* status = new QStatusBar(this);
    m_main_layout.addWidget(status);
    QObject::connect(&Globals::instance(), &Globals::statusShowMessage,
@@ -368,6 +387,39 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
    connect(&m_main_tabs, SIGNAL(currentChanged(int)), this, SLOT(tabChanged(int)));
    connect(&Globals::instance(), SIGNAL(walletUnlocked()), this, SLOT(walletUnlockedSlot()));
    
+}
+
+void CentralWigdet::paginationController()
+{
+   m_allTabs[m_currentTab]->m_i_page_size = (m_allTabs[m_currentTab]->size().height()-25)/35; // 25 for button layout, 35-cloumn height
+}
+
+void CentralWigdet::prevButtonSlot()
+{
+   if( m_allTabs[m_currentTab]->previous() ){
+      prev_button->setDisabled(false);
+      next_button->setDisabled(false);
+            std::cout << "\n prev true" << std::endl;
+   }else{
+      prev_button->setDisabled(true);
+      next_button->setDisabled(false);
+            std::cout << "\n prev false" << std::endl;
+   }
+   paginationController();
+}
+
+void CentralWigdet::nextButtonSlot()
+{
+   if ( m_allTabs[m_currentTab]->next() ){
+      next_button->setDisabled(false);
+      prev_button->setDisabled(false);
+            std::cout << "\n next true" << std::endl;
+   }else{
+      next_button->setDisabled(true);
+      prev_button->setDisabled(false);
+            std::cout << "\n next flase" << std::endl;
+   }
+   paginationController();
 }
 
 void CentralWigdet::sendDCTSlot()

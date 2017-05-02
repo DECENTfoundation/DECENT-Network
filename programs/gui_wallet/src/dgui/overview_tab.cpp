@@ -191,7 +191,6 @@ void Overview_tab::timeToUpdate(const std::string& result) {
       QObject::connect(pTransferButton, &DecentSmallButton::clicked,
                        this, &Overview_tab::slot_Transfer);
       
-      m_pTableWidget->setRowHeight(iIndex,40);
       m_pTableWidget->cellWidget(iIndex, 2)->setStyleSheet(d_table);
       m_pTableWidget->cellWidget(iIndex, 3)->setStyleSheet(d_table);
       m_pTableWidget->cellWidget(iIndex, 4)->setStyleSheet(d_table);

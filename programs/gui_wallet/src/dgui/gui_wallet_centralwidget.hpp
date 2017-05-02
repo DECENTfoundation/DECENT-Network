@@ -77,8 +77,8 @@ public:
     
     
     void SetDigitalContentsGUI(const std::vector<SDigitalContent>& vContents);
-    
-    
+
+   
     QString getFilterText()const;
     QComboBox* usersCombo();
     DecentButton* importButton();
@@ -102,7 +102,10 @@ public slots:
    void walletUnlockedSlot();
    void updateActiveTab();
    void sendDCTSlot();
-   
+   void nextButtonSlot();
+   void prevButtonSlot();
+   void paginationController();
+
 public:
 signals:
    void sendDCT();
@@ -113,7 +116,6 @@ protected:
 private:
     void PrepareGUIprivate(class QBoxLayout* pAllLayout);
     QWidget* GetWidgetFromTable5(int column, int widget);
-
 
 private:
     QVBoxLayout         m_main_layout;
@@ -131,6 +133,8 @@ private:
     PurchasedTab        m_Purchased_tab;
    
     DecentSmallButton*  sendButton;
+    QPushButton*         prev_button;
+    QPushButton*         next_button;
    
     std::vector<TabContentManager*>  m_allTabs;
     int                              m_currentTab = -1;
