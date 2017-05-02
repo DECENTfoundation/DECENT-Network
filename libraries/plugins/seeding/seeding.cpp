@@ -405,7 +405,7 @@ void seeding_plugin::plugin_initialize( const boost::program_options::variables_
    account_id_type seeder;
    uint64_t free_space;
    uint32_t price;
-   if( options.count("seeder-private-key") || options.count("content-private-key") || options.count("seeder") || options.count("free-space") ) {
+   if( options.count("seeder-private-key") || options.count("content-private-key") || options.count("seeder") || options.count("free-space") || options.count("seeding-price") ) {
       if( options.count("seeder-private-key")) {
          private_key = graphene::utilities::wif_to_key(options["seeder-private-key"].as<std::string>());
          if( !private_key )

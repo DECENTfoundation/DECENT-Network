@@ -674,7 +674,7 @@ void Globals::slot_timer()
       else if (duration > std::chrono::seconds(30))
          emit connectingProgress(tr("verifying the local database, probably the local database is corrupted").toStdString());
       else if (duration > std::chrono::seconds(20))
-         emit connectingProgress(tr("verifying the local databse").toStdString());
+         emit connectingProgress(tr("verifying the local database").toStdString());
       else
          emit connectingProgress(tr("connecting").toStdString());
 

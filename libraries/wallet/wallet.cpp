@@ -3912,7 +3912,7 @@ public:
          result.emplace_back(buying_object_ex(bobjects[i], *status));
          buying_object_ex& bobj = result.back();
 
-         bobj.author_account = account_id_or_name;
+         bobj.author_account = my->get_account(content->author).name;
          bobj.times_bought = content->times_bought;
          bobj.hash = content->_hash;
          bobj.AVG_rating = content->AVG_rating;
