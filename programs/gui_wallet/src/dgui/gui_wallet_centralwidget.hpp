@@ -133,8 +133,8 @@ private:
     PurchasedTab        m_Purchased_tab;
    
     DecentSmallButton*  sendButton;
-    QPushButton*         prev_button;
-    QPushButton*         next_button;
+    DecentButton*         prev_button;
+    DecentButton*         next_button;
    
     std::vector<TabContentManager*>  m_allTabs;
     int                              m_currentTab = -1;

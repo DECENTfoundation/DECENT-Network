@@ -357,15 +357,14 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     //m_main_layout.addWidget(&m_main_tabs);
    
    QHBoxLayout* pagination_layout = new QHBoxLayout();
-   prev_button = new QPushButton();
-   next_button = new QPushButton();
+   prev_button = new DecentButton();
+   next_button = new DecentButton();
    
    prev_button->setText("Prev");
    next_button->setText("Next");
    
    QTimer* time = new QTimer;
-   time->setInterval(500);
-   time->start();
+   time->start(500);
    QObject::connect(time, SIGNAL(timeout()), SLOT(paginationController()));
    
    pagination_layout->addWidget(prev_button);
@@ -391,7 +390,7 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
 
 void CentralWigdet::paginationController()
 {
-   m_allTabs[m_currentTab]->m_i_page_size = (m_allTabs[m_currentTab]->size().height()-25)/35; // 25 for button layout, 35-cloumn height
+   m_allTabs[m_currentTab]->m_i_page_size = ( m_allTabs[m_currentTab]->size().height() - 25)/35; // 25 for button layout, 35-cloumn height
 }
 
 void CentralWigdet::prevButtonSlot()
@@ -399,11 +398,9 @@ void CentralWigdet::prevButtonSlot()
    if( m_allTabs[m_currentTab]->previous() ){
       prev_button->setDisabled(false);
       next_button->setDisabled(false);
-            std::cout << "\n prev true" << std::endl;
    }else{
       prev_button->setDisabled(true);
       next_button->setDisabled(false);
-            std::cout << "\n prev false" << std::endl;
    }
    paginationController();
 }
@@ -413,11 +410,9 @@ void CentralWigdet::nextButtonSlot()
    if ( m_allTabs[m_currentTab]->next() ){
       next_button->setDisabled(false);
       prev_button->setDisabled(false);
-            std::cout << "\n next true" << std::endl;
    }else{
       next_button->setDisabled(true);
       prev_button->setDisabled(false);
-            std::cout << "\n next flase" << std::endl;
    }
    paginationController();
 }
