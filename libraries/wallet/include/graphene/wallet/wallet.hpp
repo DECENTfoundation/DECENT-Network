@@ -26,6 +26,7 @@
 #include <graphene/app/api.hpp>
 #include <graphene/utilities/key_conversion.hpp>
 #include <decent/encrypt/encryptionutils.hpp>
+#include <graphene/chain/transaction_detail_object.hpp>
 
 
 using namespace graphene::app;
@@ -348,6 +349,23 @@ namespace graphene { namespace wallet {
           * @ingroup WalletCLI
           */
          vector<operation_detail>  get_account_history(string name, const string& order, int limit)const;
+
+         /**
+          * @brief Returns the operations on the named account.
+          *
+          * This returns a list of transaction detail object, which describe activity on the account.
+          *
+          * @param account_name the name or id of the account
+          * @param order Sort data by field
+          * @param id object_id to start searching from
+          * @param limit the number of entries to return (starting from the most recent) (max 100)
+          * @returns a list of \c transaction_detail_object
+          * @ingroup WalletCLI
+          */
+         vector<class transaction_detail_object> search_account_history(string const& account_name,
+                                                                        string const& order,
+                                                                        string const& id,
+                                                                        int limit) const;
 
          /**
           *
@@ -2079,6 +2097,7 @@ FC_API( graphene::wallet::wallet_api,
            (get_block)
            (get_account_count)
            (get_account_history)
+           (search_account_history)
            (get_market_history)
            (get_global_properties)
            (get_dynamic_global_properties)

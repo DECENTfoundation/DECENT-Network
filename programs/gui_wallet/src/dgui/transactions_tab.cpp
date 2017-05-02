@@ -15,6 +15,7 @@
 #include <boost/algorithm/string/replace.hpp>
 #include <graphene/chain/config.hpp>
 #include <graphene/chain/content_object.hpp>
+#include <graphene/chain/transaction_detail_object.hpp>
 #include <string>
 
 #include "json.hpp"
@@ -77,7 +78,7 @@ TransactionsTab::TransactionsTab(QWidget* pParent)
                     this, &TransactionsTab::slot_SortingChanged);
 }
 
-void TransactionsTab::timeToUpdate(const std::string& result) {
+/*void TransactionsTab::timeToUpdate(const std::string& result) {
    if (result.empty()) {
       m_pTableWidget->setRowCount(0);
       return;
@@ -138,6 +139,76 @@ void TransactionsTab::timeToUpdate(const std::string& result) {
       set_next_page_iterator(contents[m_i_page_size]["id"].get<std::string>());
    else
       set_next_page_iterator(string());
+}*/
+void TransactionsTab::timeToUpdate(const string& result)
+{
+   m_pTableWidget->setRowCount(0);
+   if (result.empty())
+      return;
+
+   auto contents = nlohmann::json::parse(result);
+   size_t iSize = contents.size();
+   if (iSize > m_i_page_size)
+      iSize = m_i_page_size;
+
+   m_pTableWidget->setRowCount(iSize);
+
+   for (size_t iIndex = 0; iIndex < iSize; ++iIndex)
+   {
+      auto const& content = contents[iIndex];
+      string from_account = Globals::instance().getAccountName(content["m_from_account"].get<string>());
+      string to_account = Globals::instance().getAccountName(content["m_to_account"].get<string>());
+      graphene::chain::transaction_detail_object::eOperationType en_operation_type =
+         (graphene::chain::transaction_detail_object::eOperationType)content["m_operation_type"].get<uint8_t>();
+      string description = content["m_str_description"].get<string>();
+      string timestamp = boost::replace_all_copy(content["m_timestamp"].get<string>(), "T", " ");
+
+      Asset transaction_amount_ast = Globals::instance().asset(json_to_int64(content["m_transaction_amount"]["amount"]));
+      Asset transaction_fee_ast = Globals::instance().asset(json_to_int64(content["m_transaction_fee"]["amount"]));
+
+      QString str_operation_type;
+      switch (en_operation_type)
+      {
+      case graphene::chain::transaction_detail_object::account_create:
+         str_operation_type = tr("Create account");
+         break;
+      case graphene::chain::transaction_detail_object::content_submit:
+         str_operation_type = tr("Content submit");
+         break;
+      case graphene::chain::transaction_detail_object::content_buy:
+         str_operation_type = tr("Buy");
+            break;
+      case graphene::chain::transaction_detail_object::content_rate:
+         str_operation_type = tr("Rate");
+         break;
+      case graphene::chain::transaction_detail_object::transfer:
+         str_operation_type = tr("Transfer");
+         break;
+      }
+
+      std::vector<QString> values =
+      {
+         QString::fromStdString(timestamp),
+         str_operation_type,
+         QString::fromStdString(from_account),
+         QString::fromStdString(to_account),
+         transaction_amount_ast.getString().c_str(),
+         transaction_fee_ast.getString().c_str(),
+         QString::fromStdString(description)
+      };
+
+      for (int col = 0; col < m_pTableWidget->columnCount(); ++col)
+      {
+         m_pTableWidget->setItem(iIndex, col, new QTableWidgetItem(values[col]));
+         m_pTableWidget->item(iIndex, col)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+         m_pTableWidget->item(iIndex, col)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+      }
+   }
+   
+   if (contents.size() > m_i_page_size)
+      set_next_page_iterator(contents[m_i_page_size]["id"].get<string>());
+   else
+      set_next_page_iterator(string());
 }
 
 string TransactionsTab::getUpdateCommand()
@@ -145,7 +216,7 @@ string TransactionsTab::getUpdateCommand()
    if (m_strSearchTerm.toStdString().empty())
       return string();
 
-   return   "get_account_history "
+   return   "search_account_history "//"get_account_history "
             "\"" + m_strSearchTerm.toStdString() + "\" "
             "\"" + m_pTableWidget->getSortedColumn() + "\" "
             "\"" + next_iterator() + "\" "

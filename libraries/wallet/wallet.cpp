@@ -3298,6 +3298,30 @@ public:
       return my->_remote_hist->get_market_history( get_asset_id(symbol1), get_asset_id(symbol2), bucket, fc::time_point_sec(), fc::time_point::now() );
    }
 
+   vector<transaction_detail_object> wallet_api::search_account_history(string const& account_name,
+                                                                        string const& order,
+                                                                        string const& id,
+                                                                        int limit) const
+   {
+      vector<transaction_detail_object> result;
+      try
+      {
+         account_object account = get_account(account_name);
+         result = my->_remote_db->search_account_history(account.id, order, object_id_type(id), limit);
+
+         for (auto& item : result)
+         {
+            if (item.m_transaction_encrypted_memo)
+               item.m_str_description += " - " + item.m_transaction_encrypted_memo->get_message(
+                                       *wif_to_key(my->_keys.at(item.m_transaction_encrypted_memo->to) ),
+                                       item.m_transaction_encrypted_memo->from);
+         }
+      }
+      catch(...){}
+
+      return result;
+   }
+
    vector<limit_order_object> wallet_api::get_limit_orders(string a, string b, uint32_t limit)const
    {
       return my->_remote_db->get_limit_orders(get_asset(a).id, get_asset(b).id, limit);
