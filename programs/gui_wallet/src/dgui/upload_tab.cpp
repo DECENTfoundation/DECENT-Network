@@ -482,16 +482,20 @@ void Upload_popup::updateUploadButtonStatus() {
       isValid = false;
    }
    else{
+      double publisherPrice = 0;
       for (std::vector<std::string>::iterator iter = _checkedSeeders.begin(); iter != _checkedSeeders.end(); ++iter){
          it = _publisherIdToPriceMap.find(*iter);
+
          if (it == _publisherIdToPriceMap.end()) {
             isValid = false;
+         }else{
+            publisherPrice += it->second;
          }
       }
    }
    double publishingPrice = 0;
    if( isValid )
-      publishingPrice = it->second;
+      publishingPrice = publisherPrice;
    uint64_t size = std::max( (uint64_t)1, ( fileSize + (1024 * 1024) -1 ) / (1024 * 1024));
    double totalPricePerDay = size * publishingPrice;
    int days = QDate::currentDate().daysTo(_lifeTime->date());
