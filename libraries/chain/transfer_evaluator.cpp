@@ -25,6 +25,7 @@
 #include <graphene/chain/account_object.hpp>
 #include <graphene/chain/exceptions.hpp>
 #include <graphene/chain/hardfork.hpp>
+#include <graphene/chain/transaction_detail_object.hpp>
 
 namespace graphene { namespace chain {
 void_result transfer_evaluator::do_evaluate( const transfer_operation& op )
@@ -52,6 +53,22 @@ void_result transfer_evaluator::do_apply( const transfer_operation& o )
 { try {
    db().adjust_balance( o.from, -o.amount );
    db().adjust_balance( o.to, o.amount );
+
+   auto & d = db();
+
+   db().create<transaction_detail_object>([&o, &d](transaction_detail_object& obj)
+                                          {
+                                             obj.m_operation_type = (uint8_t)transaction_detail_object::transfer;
+
+                                             obj.m_from_account = o.from;
+                                             obj.m_to_account = o.to;
+                                             obj.m_transaction_amount = o.amount;
+                                             obj.m_transaction_fee = o.fee;
+                                             obj.m_transaction_encrypted_memo = o.memo;
+                                             obj.m_str_description = "transfer";
+                                             obj.m_timestamp = d.head_block_time();
+                                             obj.m_transaction_encrypted_memo = o.memo;
+                                          });
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (o) ) }
 

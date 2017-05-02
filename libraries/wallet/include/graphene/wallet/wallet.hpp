@@ -26,6 +26,7 @@
 #include <graphene/app/api.hpp>
 #include <graphene/utilities/key_conversion.hpp>
 #include <decent/encrypt/encryptionutils.hpp>
+#include <graphene/chain/transaction_detail_object.hpp>
 
 
 using namespace graphene::app;
@@ -204,17 +205,6 @@ namespace graphene { namespace wallet {
          class wallet_api_impl;
       }
    
-   struct operation_detail {
-      account_id_type             from_account;
-      account_id_type             to_account;
-      string                      operation_type;
-      asset                       transaction_amount;
-      asset                       transaction_fee;
-      string                      description;
-      fc::time_point_sec          timestamp;
-      operation_history_object    op;
-   };
-   
    
    
 /**
@@ -336,18 +326,21 @@ namespace graphene { namespace wallet {
          vector<asset_object>              list_assets(const string& lowerbound, uint32_t limit)const;
 
          /**
-          * @brief Returns the most recent operations on the named account.
+          * @brief Returns the operations on the named account.
           *
-          * This returns a list of operation history objects, which describe activity on the account.
+          * This returns a list of transaction detail object, which describe activity on the account.
           *
-          * @note this API doesn't give a way to retrieve more than the most recent 100 transactions,
-          *       you can interface directly with the blockchain to get more history
-          * @param name the name or id of the account
+          * @param account_name the name or id of the account
+          * @param order Sort data by field
+          * @param id object_id to start searching from
           * @param limit the number of entries to return (starting from the most recent) (max 100)
-          * @returns a list of \c operation_history_objects
+          * @returns a list of \c transaction_detail_object
           * @ingroup WalletCLI
           */
-         vector<operation_detail>  get_account_history(string name, const string& order, int limit)const;
+         vector<class transaction_detail_object> search_account_history(string const& account_name,
+                                                                        string const& order,
+                                                                        string const& id,
+                                                                        int limit) const;
 
          /**
           *
@@ -2010,17 +2003,6 @@ FC_REFLECT_DERIVED( graphene::wallet::buying_object_ex,
                   )
 
 
-FC_REFLECT( graphene::wallet::operation_detail,
-           (from_account)
-           (to_account)
-           (operation_type)
-           (transaction_amount)
-           (transaction_fee)
-           (description)
-           (timestamp)
-           (op)
-        )
-
 FC_API( graphene::wallet::wallet_api,
            (help)
            (gethelp)
@@ -2078,7 +2060,7 @@ FC_API( graphene::wallet::wallet_api,
            (get_account_id)
            (get_block)
            (get_account_count)
-           (get_account_history)
+           (search_account_history)
            (get_market_history)
            (get_global_properties)
            (get_dynamic_global_properties)

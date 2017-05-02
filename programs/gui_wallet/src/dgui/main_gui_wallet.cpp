@@ -229,7 +229,7 @@ QProcess* run_ipfs_daemon(QObject* parent, QString app_dir) {
    }
    
    
-   
+
    QProcess *initProcess = new QProcess(parent);
    initProcess->start(program, QStringList("init"));
    

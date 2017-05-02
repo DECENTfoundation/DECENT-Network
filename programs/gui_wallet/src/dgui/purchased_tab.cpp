@@ -55,11 +55,6 @@ PurchasedTab::PurchasedTab(QWidget* pParent)
    pfilterLineEditor->setStyleSheet(d_lineEdit);
    pfilterLineEditor->setFixedHeight(54);
    pfilterLineEditor->setAttribute(Qt::WA_MacShowFocusRect, 0);
-   QObject::connect(pfilterLineEditor, &QLineEdit::textChanged,
-                    this, &PurchasedTab::slot_SearchTermChanged);
-
-   QObject::connect(m_pTableWidget, &DecentTable::signal_SortingChanged,
-                    this, &PurchasedTab::slot_SortingChanged);
    
    QPixmap image(icon_search);
    
@@ -80,6 +75,12 @@ PurchasedTab::PurchasedTab(QWidget* pParent)
    pMainLayout->addWidget(m_pTableWidget);
 
    setLayout(pMainLayout);
+
+   QObject::connect(pfilterLineEditor, &QLineEdit::textChanged,
+                    this, &PurchasedTab::slot_SearchTermChanged);
+
+   QObject::connect(m_pTableWidget, &DecentTable::signal_SortingChanged,
+                    this, &PurchasedTab::slot_SortingChanged);
 }
 
 //
