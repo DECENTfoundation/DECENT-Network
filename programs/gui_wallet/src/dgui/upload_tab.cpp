@@ -478,11 +478,12 @@ void Upload_popup::updateUploadButtonStatus() {
    
 
    auto it = _publisherIdToPriceMap.find("b"); //So it was not empty
+   double publisherPrice = 0;
    if (_checkedSeeders.empty()) {
       isValid = false;
    }
    else{
-      double publisherPrice = 0;
+
       for (std::vector<std::string>::iterator iter = _checkedSeeders.begin(); iter != _checkedSeeders.end(); ++iter){
          it = _publisherIdToPriceMap.find(*iter);
 
