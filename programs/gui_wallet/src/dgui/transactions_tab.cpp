@@ -78,68 +78,6 @@ TransactionsTab::TransactionsTab(QWidget* pParent)
                     this, &TransactionsTab::slot_SortingChanged);
 }
 
-/*void TransactionsTab::timeToUpdate(const std::string& result) {
-   if (result.empty()) {
-      m_pTableWidget->setRowCount(0);
-      return;
-   }
-   
-   auto contents = nlohmann::json::parse(result);
-   size_t iSize = contents.size();
-   if (iSize > m_i_page_size)
-      iSize = m_i_page_size;
-
-   m_pTableWidget->setRowCount(iSize);
-   
-   for (size_t iIndex = 0; iIndex < iSize; ++iIndex)
-   {
-      auto const& content = contents[iIndex];
-      std::string from_account = Globals::instance().getAccountName(content["from_account"].get<std::string>());
-      std::string to_account = Globals::instance().getAccountName(content["to_account"].get<std::string>());
-      std::string operation_type = content["operation_type"].get<std::string>();
-      std::string description = content["description"].get<std::string>();
-      std::string timestamp = boost::replace_all_copy(content["timestamp"].get<std::string>(), "T", " ");
-
-      if (operation_type == "Buy" || operation_type == "Content submit")
-      {
-         auto contentObject = Globals::instance().runTaskParse("get_content \"" + description + "\"");
-         from_account = Globals::instance().getAccountName(contentObject["author"].get<std::string>());
-         std::string synopsis = contentObject["synopsis"].get<std::string>();
-         synopsis = unescape_string(synopsis);
-         std::replace(synopsis.begin(), synopsis.end(), '\t', ' '); // JSON does not like tabs
-         std::replace(synopsis.begin(), synopsis.end(), '\n', ' '); // JSON does not like newlines either
-         graphene::chain::ContentObjectPropertyManager synopsis_parser(synopsis);
-         std::string title = synopsis_parser.get<graphene::chain::ContentObjectTitle>();
-         description = title;
-      }
-
-      Asset transaction_amount_ast = Globals::instance().asset(json_to_int64(content["transaction_amount"]["amount"]));
-      Asset transaction_fee_ast = Globals::instance().asset(json_to_int64(content["transaction_fee"]["amount"]));
-      
-      std::vector<QString> values =
-      {
-         QString::fromStdString(timestamp),
-         QString::fromStdString(operation_type),
-         QString::fromStdString(from_account),
-         QString::fromStdString(to_account),
-         transaction_amount_ast.getString().c_str(),
-         transaction_fee_ast.getString().c_str(),
-         QString::fromStdString(description)
-      };
-      
-      for (int col = 0; col < m_pTableWidget->columnCount(); ++col)
-      {
-         m_pTableWidget->setItem(iIndex, col, new QTableWidgetItem(values[col]));
-         m_pTableWidget->item(iIndex, col)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
-         m_pTableWidget->item(iIndex, col)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
-      }
-   }
-
-   if (contents.size() > m_i_page_size)
-      set_next_page_iterator(contents[m_i_page_size]["id"].get<std::string>());
-   else
-      set_next_page_iterator(string());
-}*/
 void TransactionsTab::timeToUpdate(const string& result)
 {
    m_pTableWidget->setRowCount(0);
@@ -216,7 +154,7 @@ string TransactionsTab::getUpdateCommand()
    if (m_strSearchTerm.toStdString().empty())
       return string();
 
-   return   "search_account_history "//"get_account_history "
+   return   "search_account_history "
             "\"" + m_strSearchTerm.toStdString() + "\" "
             "\"" + m_pTableWidget->getSortedColumn() + "\" "
             "\"" + next_iterator() + "\" "
