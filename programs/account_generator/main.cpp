@@ -188,7 +188,7 @@ int main( int argc, char** argv )
        ("wallet-file,w", bpo::value<string>()->implicit_value("wallet.json"), "wallet to load")
        ("chain-id", bpo::value<string>(), "chain ID to connect to")
        ("skip", bpo::value<size_t>(), "skip accounts")
-       ("tesetnet", bpo::value<size_t>(), "tesetnet version 1 or 2")
+       ("testnet", bpo::value<size_t>(), "testnet version 1 or 2")
        ;
 
       bpo::variables_map options;
@@ -332,17 +332,17 @@ int main( int argc, char** argv )
            
            size_t i_users_get = 100;
            size_t i_users_got = 0;
-           size_t i_tesetnet = 1;
+           size_t i_testnet = 1;
            
            if( options.count("skip") )
            {
                i_users_got = options.at("skip").as<size_t>();
            }
            
-           // specify tesetnet version
-           if( options.count("tesetnet") )
+           // specify testnet version
+           if( options.count("testnet") )
            {
-               i_tesetnet = options.at("tesetnet").as<size_t>();
+               i_testnet = options.at("testnet").as<size_t>();
            }
            
 
@@ -355,7 +355,7 @@ int main( int argc, char** argv )
            {
                string str_response;
                curl_test_func("https://api.decent.ch/v1.0/subscribers/" +
-                              std::to_string(i_tesetnet) +
+                              std::to_string(i_testnet) +
                               "/" +
                               std::to_string(i_users_got) +
                               "/" +
