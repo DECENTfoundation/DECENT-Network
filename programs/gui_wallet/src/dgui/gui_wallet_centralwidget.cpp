@@ -355,7 +355,41 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     tab_lay->setContentsMargins(0, 0, 0, 0);
     m_main_layout.addLayout(tab_lay);
     //m_main_layout.addWidget(&m_main_tabs);
-    
+   
+   QHBoxLayout* pagination_layout = new QHBoxLayout();
+   prev_button = new DecentButton();
+   next_button = new DecentButton();
+   reset_button = new DecentButton();
+   
+   prev_button->setText("Previous");
+   prev_button->setStyleSheet(d_pagination_buttons);
+   prev_button->setFixedHeight(35);
+   prev_button->setFont(PaginationFont());
+   
+   next_button->setText("Next");
+   next_button->setStyleSheet(d_pagination_buttons);
+   next_button->setFixedHeight(35);
+   next_button->setFont(PaginationFont());
+   
+   reset_button->setText("First Page");
+   reset_button->setStyleSheet(d_pagination_buttons);
+   reset_button->setFixedHeight(35);
+   reset_button->setFont(PaginationFont());
+   
+   pagination_layout->addWidget(prev_button);
+   pagination_layout->addWidget(next_button);
+   pagination_layout->addWidget(reset_button);
+   
+   m_main_layout.addLayout(pagination_layout);
+   
+   QTimer* time = new QTimer;
+   QObject::connect( time, SIGNAL(timeout()), SLOT(paginationController()) );
+   time->start(500);
+
+   QObject::connect( prev_button, SIGNAL(clicked()), this, SLOT(prevButtonSlot()) );
+   QObject::connect( next_button, SIGNAL(clicked()), this, SLOT(nextButtonSlot()) );
+   QObject::connect( reset_button, SIGNAL(clicked()), this, SLOT(resetButtonSlot()) );
+   
    QStatusBar* status = new QStatusBar(this);
    m_main_layout.addWidget(status);
    QObject::connect(&Globals::instance(), &Globals::statusShowMessage,
@@ -368,6 +402,32 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
    connect(&m_main_tabs, SIGNAL(currentChanged(int)), this, SLOT(tabChanged(int)));
    connect(&Globals::instance(), SIGNAL(walletUnlocked()), this, SLOT(walletUnlockedSlot()));
    
+}
+
+void CentralWigdet::paginationController()
+{
+   m_allTabs[m_currentTab]->m_i_page_size = ( m_allTabs[m_currentTab]->size().height() - 35)/35; // 30 for buttons layout, 35-cloumn height
+
+   prev_button->setDisabled( m_allTabs[m_currentTab]->is_first() );
+   next_button->setDisabled( m_allTabs[m_currentTab]->is_last() );
+}
+
+void CentralWigdet::prevButtonSlot()
+{
+   m_allTabs[m_currentTab]->previous();
+   paginationController();
+}
+
+void CentralWigdet::nextButtonSlot()
+{
+   m_allTabs[m_currentTab]->next();
+   paginationController();
+}
+
+void CentralWigdet::resetButtonSlot()
+{
+   m_allTabs[m_currentTab]->reset();
+   paginationController();
 }
 
 void CentralWigdet::sendDCTSlot()
