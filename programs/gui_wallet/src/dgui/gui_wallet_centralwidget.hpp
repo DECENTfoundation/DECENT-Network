@@ -104,8 +104,9 @@ public slots:
    void sendDCTSlot();
    void nextButtonSlot();
    void prevButtonSlot();
+   void resetButtonSlot();
    void paginationController();
-
+   
 public:
 signals:
    void sendDCT();
@@ -135,6 +136,7 @@ private:
     DecentSmallButton*  sendButton;
     DecentButton*         prev_button;
     DecentButton*         next_button;
+    DecentButton*         reset_button;
    
     std::vector<TabContentManager*>  m_allTabs;
     int                              m_currentTab = -1;

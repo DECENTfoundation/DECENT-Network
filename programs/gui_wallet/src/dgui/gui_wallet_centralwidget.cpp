@@ -359,20 +359,25 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
    QHBoxLayout* pagination_layout = new QHBoxLayout();
    prev_button = new DecentButton();
    next_button = new DecentButton();
+   reset_button = new DecentButton();
    
-   prev_button->setText("Prev");
+   prev_button->setText("Previous");
    next_button->setText("Next");
-   
-   QTimer* time = new QTimer;
-   time->start(500);
-   QObject::connect(time, SIGNAL(timeout()), SLOT(paginationController()));
+   reset_button->setText("First Page");
    
    pagination_layout->addWidget(prev_button);
    pagination_layout->addWidget(next_button);
+   pagination_layout->addWidget(reset_button);
+   
    m_main_layout.addLayout(pagination_layout);
    
-   QObject::connect(prev_button, SIGNAL(clicked()), this, SLOT(prevButtonSlot()));
-   QObject::connect(next_button, SIGNAL(clicked()), this, SLOT(nextButtonSlot()));
+   QTimer* time = new QTimer;
+   QObject::connect( time, SIGNAL(timeout()), SLOT(paginationController()) );
+   time->start(500);
+
+   QObject::connect( prev_button, SIGNAL(clicked()), this, SLOT(prevButtonSlot()) );
+   QObject::connect( next_button, SIGNAL(clicked()), this, SLOT(nextButtonSlot()) );
+   QObject::connect( reset_button, SIGNAL(clicked()), this, SLOT(resetButtonSlot()) );
    
    QStatusBar* status = new QStatusBar(this);
    m_main_layout.addWidget(status);
@@ -391,29 +396,26 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
 void CentralWigdet::paginationController()
 {
    m_allTabs[m_currentTab]->m_i_page_size = ( m_allTabs[m_currentTab]->size().height() - 25)/35; // 25 for button layout, 35-cloumn height
+
+   prev_button->setDisabled( m_allTabs[m_currentTab]->is_first() );
+   next_button->setDisabled( m_allTabs[m_currentTab]->is_last() );
 }
 
 void CentralWigdet::prevButtonSlot()
 {
-   if( m_allTabs[m_currentTab]->previous() ){
-      prev_button->setDisabled(false);
-      next_button->setDisabled(false);
-   }else{
-      prev_button->setDisabled(true);
-      next_button->setDisabled(false);
-   }
+   m_allTabs[m_currentTab]->previous();
    paginationController();
 }
 
 void CentralWigdet::nextButtonSlot()
 {
-   if ( m_allTabs[m_currentTab]->next() ){
-      next_button->setDisabled(false);
-      prev_button->setDisabled(false);
-   }else{
-      next_button->setDisabled(true);
-      prev_button->setDisabled(false);
-   }
+   m_allTabs[m_currentTab]->next();
+   paginationController();
+}
+
+void CentralWigdet::resetButtonSlot()
+{
+   m_allTabs[m_currentTab]->reset();
    paginationController();
 }
 
