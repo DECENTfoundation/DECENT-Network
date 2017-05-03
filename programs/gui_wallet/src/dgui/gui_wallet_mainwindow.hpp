@@ -21,7 +21,8 @@
 #include <set>
 
 namespace gui_wallet
-{   
+{
+class Asset;
 
 class Mainwindow_gui_wallet : public QMainWindow
 {

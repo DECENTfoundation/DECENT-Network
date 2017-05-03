@@ -362,8 +362,19 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
    reset_button = new DecentButton();
    
    prev_button->setText("Previous");
+   prev_button->setStyleSheet(d_pagination_buttons);
+   prev_button->setFixedHeight(35);
+   prev_button->setFont(PaginationFont());
+   
    next_button->setText("Next");
+   next_button->setStyleSheet(d_pagination_buttons);
+   next_button->setFixedHeight(35);
+   next_button->setFont(PaginationFont());
+   
    reset_button->setText("First Page");
+   reset_button->setStyleSheet(d_pagination_buttons);
+   reset_button->setFixedHeight(35);
+   reset_button->setFont(PaginationFont());
    
    pagination_layout->addWidget(prev_button);
    pagination_layout->addWidget(next_button);
@@ -395,7 +406,7 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
 
 void CentralWigdet::paginationController()
 {
-   m_allTabs[m_currentTab]->m_i_page_size = ( m_allTabs[m_currentTab]->size().height() - 25)/35; // 25 for button layout, 35-cloumn height
+   m_allTabs[m_currentTab]->m_i_page_size = ( m_allTabs[m_currentTab]->size().height() - 35)/35; // 30 for buttons layout, 35-cloumn height
 
    prev_button->setDisabled( m_allTabs[m_currentTab]->is_first() );
    next_button->setDisabled( m_allTabs[m_currentTab]->is_last() );
