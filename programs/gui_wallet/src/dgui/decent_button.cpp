@@ -16,6 +16,8 @@
 #include <QPixmap>
 #include <QIcon>
 #include <QEvent>
+#include <QPainter>
+#include <QSvgRenderer>
 
 #ifndef _MSC_VER
 #include <QGraphicsDropShadowEffect>
@@ -30,7 +32,6 @@ DecentButton::DecentButton(QWidget *parent/* = Q_NULLPTR*/,
                            const QString& highlightedImage/* = QString()*/,
                            const QString& disabledImage/* = QString()*/)
 : QPushButton(parent)
-, m_isHighlight(false)
 , m_standardImage(standardImage)
 , m_highlightedImage(highlightedImage)
 , m_disabledImage(disabledImage)
@@ -42,15 +43,14 @@ DecentButton::DecentButton(QWidget *parent/* = Q_NULLPTR*/,
    if (m_disabledImage.isEmpty())
       m_disabledImage = m_standardImage;
    
-   if(m_standardImage.isEmpty() && m_highlightedImage.isEmpty() && m_disabledImage.isEmpty())
+   if(m_standardImage.isEmpty())
    {
-      this->setStyleSheet(DecentButtonNormal);
+      this->setStyleSheet(GreenDecentButtonEnabled);
    }
    else
    {
       putImage(m_standardImage);
-      setStyleSheet("QPushButton{border: 0px ; background-color :rgb(255, 255, 255); color : rgb(0, 0, 0);}"
-                    "QPushButton:!enabled{background-color :rgb(180,180,180); color : rgb(30, 30, 30);}");
+      setStyleSheet(DecentButtonNormal);
    }
 }
 
@@ -58,48 +58,59 @@ void DecentButton::putImage(const QString& imageName)
 {
    if(!imageName.isEmpty())
    {
-      if (imageName.endsWith(".svg"))
-      {
+
+         QIcon ButtonIcon;
          setSizePolicy( QSizePolicy::Preferred, QSizePolicy::Preferred );
-         QSvgWidget *icon = new QSvgWidget(imageName, this);
-         icon->setSizePolicy( QSizePolicy::Preferred, QSizePolicy::Preferred );
-         //icon->setFixedSize(40, 40);
-         setLayout( new QHBoxLayout() );
-         layout()->addWidget( icon );
-      }
-      else if (imageName.endsWith(".png"))
-      {
-         QPixmap pixmap(imageName);
-         QIcon ButtonIcon(pixmap);
-         setIconSize(QSize(80,80));
+         setFlat(true);
+         ButtonIcon.addFile(imageName, QSize(), QIcon::Normal, QIcon::On);
+         ButtonIcon.addFile(m_disabledImage, QSize(), QIcon::Disabled, QIcon::Off);
          setIcon(ButtonIcon);
-      }
    }
 };
 
 void DecentButton::setHighlighted(bool bIsHighlighted)
 {
-   
-   if (!isEnabled())
-      putImage(m_disabledImage);
-   else if (bIsHighlighted)
+   if (bIsHighlighted)
       putImage(m_highlightedImage);
    else
       putImage(m_standardImage);
    
-   if (bIsHighlighted)
-      setStyleSheet("QPushButton{border: 0px ; background-color :rgb(27,176,104); color : white;}"
-                    "QPushButton:!enabled{background-color :rgb(180,180,180); color : rgb(30, 30, 30);}");
+   if(m_standardImage.isEmpty())
+   {
+      if (bIsHighlighted)
+         setStyleSheet(GreenDecentButtonEnabled);
+      else
+         setStyleSheet(DecentButtonEnabled);
+   }
    else
-      setStyleSheet("QPushButton{border: 0px ; background-color :rgb(255, 255, 255); color : rgb(0, 0, 0);}"
-                    "QPushButton:!enabled{background-color :rgb(180,180,180); color : rgb(30, 30, 30);}");
-   
+   {
+      if (bIsHighlighted)
+         setStyleSheet(GreenDecentButtonNormal);
+      else
+         setStyleSheet(DecentButtonNormal);
+   }
 }
 
-bool DecentButton::event(QEvent *event)
+bool DecentButton::event(QEvent* event)
 {
    if (event->type() == QEvent::MouseMove)
       return false;
    else
       return QWidget::event(event);
 }
+
+void DecentButton::changeEvent(QEvent* event)
+{
+   if(event->type() == QEvent::EnabledChange)
+   {
+      if(isEnabled())
+      {
+         putImage(m_standardImage);
+      }
+      else
+      {
+         putImage(m_disabledImage);
+      }
+   }
+}
+

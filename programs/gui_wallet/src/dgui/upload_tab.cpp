@@ -188,12 +188,15 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    _seedersPath->setMinimumWidth(100);
    _seedersPath->setMinimumHeight(40);
    
-   DecentButton* seeders_button = new DecentButton();
+   DecentButton* seeders_button = new DecentButton(this);
 
    seeders_button->setText(tr("Select Seeders"));
    seeders_button->setFont(PopupButtonRegularFont());
-
+#ifdef WINDOWS_HIGH_DPI
+   seeders_button->setFixedWidth(240);
+#else
    seeders_button->setFixedWidth(120);
+#endif
    seeders_button->setFixedHeight(40);
    
    seedersRow->addWidget(_seedersPath);
@@ -225,7 +228,7 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    _contentPath->setMinimumHeight(40);
    _contentPath->setTextMargins(5, 5, 5, 5);
 
-   DecentButton* browseContentButton = new DecentButton();
+   DecentButton* browseContentButton = new DecentButton(this);
    browseContentButton->setText(tr("Browse"));
    browseContentButton->setFont(PopupButtonRegularFont());
 
@@ -249,7 +252,7 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    _samplesPath->setTextMargins(5, 5, 5, 5);
    
 
-   DecentButton* browseSamplesButton = new DecentButton();
+   DecentButton* browseSamplesButton = new DecentButton(this);
    browseSamplesButton->setText(tr("Browse"));
    browseSamplesButton->setFont(PopupButtonRegularFont());
 
@@ -270,8 +273,8 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    QHBoxLayout* button = new QHBoxLayout;
 
    button->setSpacing(20);
-   _upload_button = new DecentButton();
-   _cancel_button = new DecentButton();
+   _upload_button = new DecentButton(this);
+   _cancel_button = new DecentButton(this);
 
    _cancel_button->setText(tr("Cancel"));
    _cancel_button->setFont(PopupButtonBigFont());
@@ -334,7 +337,7 @@ void Upload_popup::onGrabPublishers() {
    RunTask("list_publishers_by_price 100", a_result);
    
    //seeders popup ok button
-   _seeder_ok = new DecentButton();
+   _seeder_ok = new DecentButton(this);
    _seeder_ok->setText(tr("OK"));
    _seeder_ok->setFixedHeight(50);
    _seeder_ok->setFixedWidth(100);
@@ -669,7 +672,7 @@ Upload_tab::Upload_tab(Mainwindow_gui_wallet* parent)
 #endif
     });
 
-    upload_button = new DecentButton();
+    upload_button = new DecentButton(this);
     upload_button->setFont(TabButtonFont());
     upload_button->setText(tr("Publish"));
     upload_button->setMinimumWidth(102);

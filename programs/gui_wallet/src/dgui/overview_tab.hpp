@@ -14,7 +14,7 @@ namespace gui_wallet
    {
       Q_OBJECT
    public:
-      Overview_tab(class Mainwindow_gui_wallet* pPar);
+      Overview_tab(QWidget* pParent);
       void CreateTable();
       void ArrangeSize();
       
@@ -34,12 +34,7 @@ namespace gui_wallet
       QSignalMapper* m_pAccountSignalMapper;
       DecentTable* m_pTableWidget;
       QString m_strSearchTerm;
-      QString m_strSelectedAccount;
-
-      
-   protected:
-      class Mainwindow_gui_wallet* m_pPar;
-      
+      QString m_strSelectedAccount;      
    };
 }
 

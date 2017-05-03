@@ -16,7 +16,7 @@
 #endif
 
 using namespace gui_wallet;
-ContentDetailsGeneral::ContentDetailsGeneral(QWidget* pParent) : ContentDetailsBase(pParent){
+ContentDetailsGeneral::ContentDetailsGeneral(QWidget* pParent) : ContentDetailsBase(pParent), m_label(this), m_close(this){
    QHBoxLayout* image_layout = new QHBoxLayout;
    m_label.setText(tr("Get it!"));
    m_label.setFixedWidth(178);
@@ -27,10 +27,11 @@ ContentDetailsGeneral::ContentDetailsGeneral(QWidget* pParent) : ContentDetailsB
    m_close.setFixedHeight(40);
    m_close.setStyleSheet(d_cancel_button);
    
+   image_layout->setSpacing(10);
    image_layout->addWidget(&m_label);
-   image_layout->addWidget(new QLabel());
    image_layout->addWidget(&m_close);
-   image_layout->setContentsMargins(115, 15, 115, 15);
+
+   image_layout->setContentsMargins(50, 15, 50, 15);
    
    m_free_for_child.addLayout(image_layout);
    
@@ -50,7 +51,7 @@ void ContentDetailsGeneral::LabelPushCallbackGUI()
    reply->setFixedSize(500, 400);
    reply->setContentsMargins(0, 30, 80, 30);
    reply->setWindowFlags(Qt::WindowTitleHint);
-   reply->QDialog::setWindowTitle(tr("Decent-Blockchain Content Distributor"));
+   reply->QDialog::setWindowTitle(tr("DECENT-Blockchain Content Distribution"));
    reply->setText("          " + tr("Are you sure you want to buy this content?"));
    QPushButton* pButtonCancel = reply->addButton(tr("Cancel"), QMessageBox::YesRole);
    QPushButton* pButtonOk = reply->addButton(tr("Get it"), QMessageBox::NoRole);

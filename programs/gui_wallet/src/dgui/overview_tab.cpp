@@ -77,8 +77,9 @@ private:
 namespace gui_wallet
 {
 
-Overview_tab::Overview_tab(class Mainwindow_gui_wallet* a_pPar)
-: m_pPar(a_pPar)
+Overview_tab::Overview_tab(QWidget* pParent)
+: TabContentManager(pParent)
+, m_pAccountSignalMapper(nullptr)
 , m_pTableWidget(new DecentTable(this))
 {
    m_pTableWidget->set_columns({
@@ -157,7 +158,7 @@ void Overview_tab::timeToUpdate(const std::string& result) {
       // Transaction Button
       //
       DecentButton* pTransactionButton = new DecentButton(m_pTableWidget, icon_transaction, icon_transaction_white);
-      //pTransactionButton->setAlignment(Qt::AlignCenter);
+      pTransactionButton->setIconSize(QSize(40,40));
       
       QObject::connect(pTransactionButton, &DecentButton::clicked,
                        m_pAccountSignalMapper, (void (QSignalMapper::*)())&QSignalMapper::map);
@@ -170,7 +171,7 @@ void Overview_tab::timeToUpdate(const std::string& result) {
       // Details Button
       //
       DecentButton* pDetailsButton = new DecentButton(m_pTableWidget, icon_popup, icon_popup_white);
-      //pDetailsButton->setAlignment(Qt::AlignCenter);
+      pDetailsButton->setIconSize(QSize(40,40));
       m_pTableWidget->setCellWidget(iIndex, 4, pDetailsButton);
 
       m_pAccountSignalMapper->setMapping(pDetailsButton, name.c_str());
@@ -182,8 +183,9 @@ void Overview_tab::timeToUpdate(const std::string& result) {
       // Transfer Button
       //
       DecentButton* pTransferButton = new DecentButton(m_pTableWidget, icon_transfer, icon_transfer_white);
-      //pTransferButton->setAlignment(Qt::AlignCenter);
+      pTransferButton->setIconSize(QSize(40,40));
       m_pTableWidget->setCellWidget(iIndex, 3, pTransferButton);
+            
 
       m_pAccountSignalMapper->setMapping(pTransferButton, name.c_str());
       QObject::connect(pTransferButton, &DecentButton::clicked,
@@ -216,7 +218,7 @@ std::string Overview_tab::getUpdateCommand() {
    return   "search_accounts "
             "\"" + m_strSearchTerm.toStdString() + "\" "
             "\"" + m_pTableWidget->getSortedColumn() + "\" "
-            //"\"" + next_iterator() + "\" "
+            "\"" + next_iterator() + "\" "
             + std::to_string(m_i_page_size + 1);
 }
 

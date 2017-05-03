@@ -207,47 +207,6 @@ namespace gui_wallet
       }
    };
 
-   //
-   // DecentSmallButton
-   //
-   // QLabel with clicked() signal implemented
-   
-   class DecentSmallButton : public QLabel
-   {
-      Q_OBJECT;
-   public:
-      DecentSmallButton(const QString& normalImg, const QString& highlightedImg, QWidget* pParent = nullptr);
-
-      void unhighlight();
-      void highlight();
-
-      virtual bool event(QEvent* event) override;
-
-   signals:
-      void clicked();
-
-   protected:
-      virtual void mousePressEvent(QMouseEvent* event) override;
-   private:
-      QPixmap normalImage;
-      QPixmap highlightedImage;
-   };
-
-   class ClickableLabel : public QLabel {
-      Q_OBJECT;
-   public:
-      template<class... Args>
-      ClickableLabel(const Args&... args) : QLabel(args...) {}
-
-
-   signals:
-      void clicked();
-
-   protected:
-      void mousePressEvent(QMouseEvent* event) {
-         emit clicked();
-      }
-   };
 
    //**
    // DecentTable and DecentColumn
@@ -322,16 +281,6 @@ namespace gui_wallet
       int           size;
       int           times_bought;
    };
-
-   struct SDigitalContentPurchase : public SDigitalContent
-   {
-      uint32_t total_key_parts = 0;
-      uint32_t received_key_parts = 0;
-      uint32_t total_download_bytes = 0;
-      uint32_t received_download_bytes = 0;
-      QString status_text;
-   };
-
 
 
 }
