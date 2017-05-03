@@ -86,10 +86,7 @@ PurchasedTab::PurchasedTab(QWidget* pParent)
 //
 // it is important to have a constructor/destructor body in cpp
 // when class has forward declared members
-PurchasedTab::~PurchasedTab()
-{
-
-}
+PurchasedTab::~PurchasedTab() = default;
 
 void PurchasedTab::timeToUpdate(const std::string& result)
 {
@@ -131,6 +128,7 @@ void PurchasedTab::timeToUpdate(const std::string& result)
       contentObject.synopsis = content["synopsis"].get<std::string>();
       contentObject.URI = content["URI"].get<std::string>();
       contentObject.created = content["created"].get<std::string>();
+      contentObject.created = contentObject.created.substr(0, contentObject.created.find("T"));
       contentObject.expiration = content["expiration"].get<std::string>();
       contentObject.size = content["size"].get<int>();
       contentObject.id = content["id"].get<std::string>();
@@ -207,10 +205,8 @@ void PurchasedTab::ShowDigitalContentsGUI()
       m_pTableWidget->setItem(iIndex, 0, new QTableWidgetItem(QString::fromStdString(title)));
       m_pTableWidget->setItem(iIndex, 1, new QTableWidgetItem(QString::number(contentObject.size) + tr(" MB")));
       m_pTableWidget->setItem(iIndex, 2, new QTableWidgetItem(contentObject.price.getString().c_str()));
-
-      std::string s_time = contentObject.created.substr(0, contentObject.created.find("T"));
       
-      m_pTableWidget->setItem(iIndex, 3, new QTableWidgetItem(QString::fromStdString(s_time)));
+      m_pTableWidget->setItem(iIndex, 3, new QTableWidgetItem(QString::fromStdString(contentObject.created)));
 
       uint32_t total_key_parts = contentObject.total_key_parts;
       uint32_t received_key_parts  = contentObject.received_key_parts;

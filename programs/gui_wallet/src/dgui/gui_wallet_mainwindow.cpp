@@ -485,35 +485,37 @@ void Mainwindow_gui_wallet::UpdateLockedStatus()
 
 
 void Mainwindow_gui_wallet::CheckDownloads()
-{   
-    auto& global_instance = gui_wallet::Globals::instance();
-    std::string str_current_username = global_instance.getCurrentUser();
+{
+   auto& global_instance = gui_wallet::Globals::instance();
+   std::string str_current_username = global_instance.getCurrentUser();
 
-    if (str_current_username == "") {
-        _activeDownloads.clear();
-        return;
-    }
-   
+   if (str_current_username == "") {
+      _activeDownloads.clear();
+      return;
+   }
+
    json contents;
    if (!RunTaskParse("search_my_purchases "
                      "\"" + str_current_username + "\" "
                      "\"\" "
-                     "\"\" ",
+                     "\"\" "
+                     "\"\" "
+                     "\"-1\" ",
                      contents))
    {
       std::cout << contents.get<string>() << std::endl;
       return;
    }
-   
-   
+
+
    for (int i = 0; i < contents.size(); ++i)
    {
       auto content = contents[i];
       std::string URI = contents[i]["URI"].get<std::string>();
-      
+
       if (URI == "")
          continue;
-      
+
       if (_activeDownloads.find(URI) == _activeDownloads.end())
       {
          json ignore_result;
@@ -525,7 +527,7 @@ void Mainwindow_gui_wallet::CheckDownloads()
          }
          else
          {
-            std::cout << "Can not resume download: " << URI << std::endl;
+            std::cout << "Cannot resume download: " << URI << std::endl;
             std::cout << "Error: " << ignore_result.get<string>() << std::endl;
          }
       }

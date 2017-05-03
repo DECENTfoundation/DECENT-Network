@@ -193,17 +193,12 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details, bool bSil
         e_str = CalculateRemainingTime(QDateTime::currentDateTime(), time);
     }
     
-    m_vLabels[1].setText(tr(m_pContentInfo->author.c_str()));
-    std::string creat;
-    for(int i = 0; i < m_pContentInfo->created.find("T"); ++i)
-    {
-        creat.push_back(m_pContentInfo->created[i]);
-    }
+    m_vLabels[1].setText(m_pContentInfo->author.c_str());
     
     if (a_cnt_details.type == DCT::GENERAL)
     {
         m_vLabels[3].setText(QString::fromStdString(e_str));
-        m_vLabels[5].setText(tr(creat.c_str()));
+        m_vLabels[5].setText(tr(m_pContentInfo->created.c_str()));
         
         QString str_price = a_cnt_details.price.getString().c_str();
         m_vLabels[7].setText(str_price);
@@ -231,7 +226,7 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details, bool bSil
     }
     else
     {
-        m_vLabels[3].setText(tr(creat.c_str()));
+        m_vLabels[3].setText(m_pContentInfo->author.c_str());
         
         QString str_price = a_cnt_details.price.getString().c_str();
         m_vLabels[5].setText(str_price);
