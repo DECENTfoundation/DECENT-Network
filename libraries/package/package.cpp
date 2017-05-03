@@ -764,6 +764,12 @@ namespace decent { namespace package {
         _event_listeners.remove(event_listener);
     }
 
+    void PackageInfo::remove_all_event_listeners() {
+        std::lock_guard<std::recursive_mutex> guard(_event_mutex);
+        _event_listeners.clear();
+    }
+
+
     PackageInfo::DataState PackageInfo::get_data_state() const {
         std::lock_guard<std::recursive_mutex> guard(_mutex);
         return _data_state;
