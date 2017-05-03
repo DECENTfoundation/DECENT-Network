@@ -1,19 +1,8 @@
-/*
- *	File      : upload_tab.hpp
- *
- *	Created on: 21 Nov 2016
- *	Created by: Davit Kalantaryan (Email: davit.kalantaryan@desy.de)
- *
- *  This file implements ...
- *
- */
-#ifndef UPLOAD_TAB_HPP
-#define UPLOAD_TAB_HPP
+#pragma once
 
 #include <map>
 #include <string>
 
-#include <QWidget>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QLabel>
@@ -32,8 +21,7 @@
 
 #include <QDialog>
 #include <vector>
-#include "gui_wallet_global.hpp"
-#include "decent_wallet_ui_gui_contentdetailsgeneral.hpp"
+
 
 
 
@@ -52,7 +40,6 @@ namespace gui_wallet
         NUM_FIELDS
     };
 
-   class Mainwindow_gui_wallet;
    
     
     
@@ -63,7 +50,7 @@ namespace gui_wallet
         typedef std::map<std::string, std::string> AssetMap;
         friend class Upload_tab;
     public:
-        Upload_popup(Mainwindow_gui_wallet* pMainWindow);
+        Upload_popup(QWidget* pParent);
        
     public slots:
         void browseContent();
@@ -82,7 +69,7 @@ namespace gui_wallet
         void onPublishersDone(void* a_clbkArg, int64_t a_err, const std::string& a_task, const std::string& a_result);
 
     private:
-        Mainwindow_gui_wallet* m_pMainWindow;
+        
        
         QVBoxLayout*     u_main_layout;
         QLineEdit*       _titleText;
@@ -115,51 +102,41 @@ namespace gui_wallet
 }
 
 
-
-
-
-
-
+class QSignalMapper;
 
 namespace gui_wallet
 {
-    class Mainwindow_gui_wallet;
-    
-    
-    class Upload_tab : public TabContentManager
-    {
-        Q_OBJECT;
-    public:
-        Upload_tab(Mainwindow_gui_wallet* parent);
-        void ShowDigitalContentsGUI();
-       
-        
-    public:
-       virtual void timeToUpdate(const std::string& result);
-       virtual std::string getUpdateCommand();
-       
-    public slots:
-        void show_content_popup();
-        void content_was_bought();
-        void uploadPopup();
-        void updateContents();
-        
-    protected:
-        QVBoxLayout     m_main_layout;
-        QHBoxLayout     m_search_layout;
-        DecentTable     m_pTableWidget;
-        QLineEdit       m_filterLineEdit;
-        QComboBox       m_searchTypeCombo;
-        DecentButton*  upload_button;
-        
-        std::vector<SDigitalContent>  _digital_contents;
-        ContentDetailsGeneral*        _content_popup;
-        Mainwindow_gui_wallet*        _parent;
-       bool                          _isUploading;
-   };
-    
+   class DecentTable;
+   class SDigitalContent;
 
-    
+   class Upload_tab : public TabContentManager
+   {
+      Q_OBJECT;
+   public:
+      Upload_tab(QWidget* pParent);
+      ~Upload_tab();
+   public:
+      virtual void timeToUpdate(const std::string& result) override;
+      virtual std::string getUpdateCommand() override;
+
+      void ShowDigitalContentsGUI();
+
+   public slots:
+      void slot_SearchTermChanged(QString const& strSearchTerm);
+      void slot_SortingChanged(int);
+      void slot_UpdateContents();
+      void slot_Bought();
+      void slot_ShowContentPopup(int);
+      void slot_UploadPopup();
+
+   signals:
+      void signal_setEnabledUpload(bool);
+
+   protected:
+      DecentTable* m_pTableWidget;
+      QSignalMapper* m_pDetailsSignalMapper;
+      QString m_strSearchTerm;
+      std::vector<SDigitalContent> _digital_contents;
+   };
 }
 
-#endif //UploadTab_H

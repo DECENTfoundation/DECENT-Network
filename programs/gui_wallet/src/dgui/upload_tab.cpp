@@ -1,8 +1,9 @@
-
 #include "stdafx.h"
 
-#include "upload_tab.hpp"
 #include "gui_wallet_global.hpp"
+#include "upload_tab.hpp"
+#include "decent_wallet_ui_gui_contentdetailsgeneral.hpp"
+#include "decent_button.hpp"
 
 #ifndef _MSC_VER
 #include <QMessageBox>
@@ -16,13 +17,10 @@
 #include <stdio.h>
 #include <QStyleFactory>
 #include <QInputMethod>
+#include <QSignalMapper>
 #include <QLocale>
-#endif
-
-#include "decent_button.hpp"
-
-#ifndef _MSC_VER
 #include <graphene/chain/config.hpp>
+#include <graphene/chain/content_object.hpp>
 #include <boost/filesystem.hpp>
 
 #include <cryptopp/integer.h>
@@ -34,12 +32,7 @@
 #include <cryptopp/osrng.h>
 
 #include <QIcon>
-#endif
 
-#include "gui_wallet_global.hpp"
-#include "gui_wallet_mainwindow.hpp"
-
-#ifndef _MSC_VER
 #include <QLayout>
 #include <QCheckBox>
 #include <stdio.h>
@@ -64,14 +57,17 @@
 #include <QTime>
 #endif
 
+using string = std::string;
 using namespace gui_wallet;
 using namespace nlohmann;
 
 CryptoPP::AutoSeededRandomPool rng;
 
 
-Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishersTimer(this) {
-
+Upload_popup::Upload_popup(QWidget* pParent)
+: QDialog(pParent)
+, m_getPublishersTimer(this)
+{
    u_main_layout = new QVBoxLayout(this);
 
    _locale = ((QApplication*)QApplication::instance())->inputMethod()->locale();
@@ -295,13 +291,11 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
    u_main_layout->addLayout(button);
    u_main_layout->setContentsMargins(10, 10, 10, 10);
    u_main_layout->setSpacing(5);
-   
-   
+
    setWindowTitle(tr("Upload new content"));
    setStyleSheet(d_upload_popup);
    setLayout(u_main_layout);
-   
-   
+
    m_getPublishersTimer.setSingleShot(true);
    QObject::connect(&m_getPublishersTimer, &QTimer::timeout,
                     this, &Upload_popup::onGrabPublishers);
@@ -333,8 +327,7 @@ void Upload_popup::onGrabPublishers() {
    });
    
 
-   std::string a_result;
-   RunTask("list_publishers_by_price 100", a_result);
+   std::string a_result = Globals::instance().runTask("list_publishers_by_price 100");
    
    //seeders popup ok button
    _seeder_ok = new DecentButton();
@@ -605,7 +598,7 @@ void Upload_popup::uploadContent()
 
    try
    {
-      RunTask(submitCommand, a_result);
+      a_result = Globals::instance().runTask(submitCommand);
       if (a_result.find("exception:") != std::string::npos)
       {
          message = a_result;
@@ -636,12 +629,7 @@ void Upload_popup::uploadContent()
    }
    else
    {
-      QMessageBox* msgBox = new QMessageBox();
-      msgBox->setAttribute(Qt::WA_DeleteOnClose);
-      msgBox->setWindowTitle(tr("Error"));
-      msgBox->setText(tr("Failed to submit content"));
-      msgBox->setDetailedText(message.c_str());
-      msgBox->open();
+      ShowMessageBox(tr("Error"), tr("Failed to submit content"), message.c_str());
    }
 }
 
@@ -656,276 +644,267 @@ void Upload_popup::uploadCanceled()
 // UPLOAD TAB
 //////////////////////////////////////////////////
 
-Upload_tab::Upload_tab(Mainwindow_gui_wallet* parent)
-: TabContentManager(parent)
-, _content_popup(NULL)
-, _parent(parent)
-, m_pTableWidget(this)
+Upload_tab::Upload_tab(QWidget* pParent)
+: TabContentManager(pParent)
+, m_pTableWidget(new DecentTable(this))
+, m_pDetailsSignalMapper(nullptr)
 {
-    m_pTableWidget.set_columns({
-        {tr("Title"), 20},
-        {tr("Rating"), 10, "rating"},
-        {tr("Size"), 10, "size"},
-        {tr("Price"), 10, "price"},
-        {tr("Published"), 10, "created"},
-        {tr("Expiration"), 10, "expiration"},
-        {tr("Status"), 10},
+   m_pTableWidget->set_columns({
+      {tr("Title"), 20},
+      {tr("Rating"), 10, "rating"},
+      {tr("Size"), 10, "size"},
+      {tr("Price"), 10, "price"},
+      {tr("Published"), 10, "created"},
+      {tr("Expiration"), 10, "expiration"},
+      {tr("Status"), 10},
 #ifdef WINDOWS_HIGH_DPI
-        { " ", -80 }
+      { " ", -80 }
 #else
-        {" ", -50}
+      {" ", -50}
 #endif
-    });
+   });
 
-    upload_button = new DecentButton();
-    upload_button->setFont(TabButtonFont());
-    upload_button->setText(tr("Publish"));
-    upload_button->setMinimumWidth(102);
-    upload_button->setMinimumHeight(54);
-    std::string currentUserName = Globals::instance().getCurrentUser();
-    if(currentUserName.empty())
-      upload_button->setEnabled(false);
-    else
-      upload_button->setEnabled(true);
-    
-    QLabel* lab = new QLabel();
-    QPixmap image(icon_search);
-    lab->setPixmap(image);
-    
-    m_filterLineEdit.setPlaceholderText(tr("Search Content"));
-    m_filterLineEdit.setFixedHeight(54);
-    m_filterLineEdit.setStyleSheet(d_lineEdit);
-    m_filterLineEdit.setAttribute(Qt::WA_MacShowFocusRect, 0);
-    
-    m_search_layout.setContentsMargins(42, 0, 0, 0);
-    m_search_layout.addWidget(lab);
-    m_search_layout.addWidget(&m_filterLineEdit);
-    m_search_layout.addWidget(upload_button, 0 , Qt::AlignBottom);
-    
-    m_main_layout.setContentsMargins(0, 0, 0, 0);
-    m_main_layout.setSpacing(0);
-    m_main_layout.addLayout(&m_search_layout);
-    m_main_layout.addWidget(&m_pTableWidget);
-    setLayout(&m_main_layout);
-    
-    connect(&m_filterLineEdit, SIGNAL(textChanged(QString)), this, SLOT(onTextChanged(QString)));
-    connect(upload_button, SIGNAL(clicked()), this, SLOT(uploadPopup()));
+   DecentButton* pUploadButton = new DecentButton(this);
+   pUploadButton->setFont(TabButtonFont());
+   pUploadButton->setText(tr("Publish"));
+   pUploadButton->setMinimumWidth(102);
+   pUploadButton->setMinimumHeight(54);
+
+   QLabel* pSearchLabel = new QLabel(this);
+   QPixmap image(icon_search);
+   pSearchLabel->setPixmap(image);
+
+   QLineEdit* pfilterLineEditor = new QLineEdit(this);
+   pfilterLineEditor->setPlaceholderText(tr("Search Content"));
+   pfilterLineEditor->setFixedHeight(54);
+   pfilterLineEditor->setStyleSheet(d_lineEdit);
+   pfilterLineEditor->setAttribute(Qt::WA_MacShowFocusRect, 0);
+
+   QHBoxLayout* pSearchLayout = new QHBoxLayout;
+   pSearchLayout->setContentsMargins(42, 0, 0, 0);
+   pSearchLayout->addWidget(pSearchLabel);
+   pSearchLayout->addWidget(pfilterLineEditor);
+   pSearchLayout->addWidget(pUploadButton, 0 , Qt::AlignBottom);
+
+   QVBoxLayout* pMainLayout = new QVBoxLayout;
+   pMainLayout->setContentsMargins(0, 0, 0, 0);
+   pMainLayout->setSpacing(0);
+   pMainLayout->addLayout(pSearchLayout);
+   pMainLayout->addWidget(m_pTableWidget);
+   setLayout(pMainLayout);
 
    QObject::connect(&Globals::instance(), &Globals::currentUserChanged,
-                    this, &Upload_tab::updateContents);
+                    this, &Upload_tab::slot_UpdateContents);
+   QObject::connect(this, &Upload_tab::signal_setEnabledUpload,
+                    pUploadButton, &QWidget::setEnabled);
+   QObject::connect(m_pTableWidget, &DecentTable::signal_SortingChanged,
+                    this, &Upload_tab::slot_SortingChanged);
+   QObject::connect(pfilterLineEditor, &QLineEdit::textChanged,
+                    this, &Upload_tab::slot_SearchTermChanged);
+   QObject::connect(pUploadButton, &QPushButton::clicked,
+                    this, &Upload_tab::slot_UploadPopup);
+
+   slot_UpdateContents();
 }
 
-void Upload_tab::updateContents()
+// when class has forward declared members
+// this becomes necessary
+Upload_tab::~Upload_tab() = default;
+
+void Upload_tab::slot_UpdateContents()
 {
-   std::string currentUserName = Globals::instance().getCurrentUser();
+   string currentUserName = Globals::instance().getCurrentUser();
    if(currentUserName.empty())
-      upload_button->setEnabled(false);
+      emit signal_setEnabledUpload(false);
    else
-      upload_button->setEnabled(true);
-
+      emit signal_setEnabledUpload(true);
 }
 
-void Upload_tab::timeToUpdate(const std::string& result) {
+void Upload_tab::timeToUpdate(const string& result)
+{
    _digital_contents.clear();
 
-   if (result.empty()) {
+   if (result.empty())
       return;
-   }
-   
-   auto contents = json::parse(result);
+
+   auto contents = nlohmann::json::parse(result);
+   size_t iSize = contents.size();
+   if (iSize > m_i_page_size)
+      iSize = m_i_page_size;
    
    _digital_contents.resize(contents.size());
    
-   
-   for (int i = 0; i < contents.size(); ++i) {
-      SDigitalContent& cont = _digital_contents[i];
+   for (size_t iIndex = 0; iIndex < iSize; ++iIndex)
+   {
+      SDigitalContent& content = _digital_contents[iIndex];
+      auto const& json_content = contents[iIndex];
       
-      cont.type = DCT::GENERAL;
-      cont.author = contents[i]["author"].get<std::string>();
-      uint64_t iPrice = json_to_int64(contents[i]["price"]["amount"]);
-      cont.price = Globals::instance().asset(iPrice);
-      cont.synopsis = contents[i]["synopsis"].get<std::string>();
-      cont.URI = contents[i]["URI"].get<std::string>();
-      cont.created = contents[i]["created"].get<std::string>();
-      cont.expiration = contents[i]["expiration"].get<std::string>();
-      cont.size = contents[i]["size"].get<int>();
-      cont.status = contents[i]["status"].get<std::string>();
+      content.type = DCT::GENERAL;
+      content.author = json_content["author"].get<string>();
+      uint64_t iPrice = json_to_int64(json_content["price"]["amount"]);
+      content.price = Globals::instance().asset(iPrice);
+      content.synopsis = json_content["synopsis"].get<string>();
+      content.URI = json_content["URI"].get<string>();
+      content.created = json_content["created"].get<string>();
+      content.created = content.created.substr(0, content.created.find("T"));
+      content.expiration = json_content["expiration"].get<string>();
+      content.size = json_content["size"].get<int>();
+      content.status = json_content["status"].get<string>();
 
-      QDateTime time = QDateTime::fromString(QString::fromStdString(cont.expiration), "yyyy-MM-ddTHH:mm:ss");
+      QDateTime time = QDateTime::fromString(QString::fromStdString(content.expiration), "yyyy-MM-ddTHH:mm:ss");
 
-      if (cont.status.empty()) {
-
-         if (time < QDateTime::currentDateTime()) {
-            cont.status = "Expired";
-         } else {
-            cont.status = "Published";
-         }
+      if (content.status.empty())
+      {
+         if (time < QDateTime::currentDateTime())
+            content.status = "Expired";
+         else
+            content.status = "Published";
       }
       
-      if (contents[i]["times_bought"].is_number()) {
-         cont.times_bought = contents[i]["times_bought"].get<int>();
-      } else {
-         cont.times_bought = 0;
-      }
+      if (json_content["times_bought"].is_number())
+         content.times_bought = json_content["times_bought"].get<int>();
+      else
+         content.times_bought = 0;
 
-      cont.AVG_rating = contents[i]["AVG_rating"].get<double>()  / 1000;
+      content.AVG_rating = json_content["AVG_rating"].get<double>() / 1000.0;
    }
+
+   if (contents.size() > m_i_page_size)
+      set_next_page_iterator(contents[m_i_page_size]["id"].get<string>());
+   else
+      set_next_page_iterator(string());
    
    ShowDigitalContentsGUI();
-   
 }
 
+string Upload_tab::getUpdateCommand()
+{
+   string currentUserName = Globals::instance().getCurrentUser();
+   if (currentUserName.empty())
+      return string();
+   
+   return   "search_user_content "
+            "\"" + currentUserName + "\" "
+            "\"" + m_strSearchTerm.toStdString() + "\" "
+            "\"" + m_pTableWidget->getSortedColumn() + "\" "
+            "\"\" "   // region_code
+            "\"" + next_iterator() + "\" "
+            + std::to_string(m_i_page_size + 1);
+}
 
-std::string Upload_tab::getUpdateCommand() {
-   std::string filterText = m_filterLineEdit.text().toStdString();
-   
-   std::string currentUserName = Globals::instance().getCurrentUser();
-   
-   if (currentUserName.empty()) {
-      return "";
+void Upload_tab::ShowDigitalContentsGUI()
+{
+   m_pTableWidget->setRowCount(_digital_contents.size());
+
+   enum {eTitle, eRating, eSize, ePrice, eCreated, eRemaining, eStatus, eIcon};
+
+   if (m_pDetailsSignalMapper)
+      delete m_pDetailsSignalMapper;
+   m_pDetailsSignalMapper = new QSignalMapper(this);  // similar to extract signal handler
+   QObject::connect(m_pDetailsSignalMapper, (void (QSignalMapper::*)(int))&QSignalMapper::mapped,
+                    this, &Upload_tab::slot_ShowContentPopup);
+
+   for (size_t iIndex = 0; iIndex < _digital_contents.size(); ++iIndex)
+   {
+      SDigitalContent const& content = _digital_contents[iIndex];
+
+      std::string synopsis = unescape_string(content.synopsis);
+      std::replace(synopsis.begin(), synopsis.end(), '\t', ' '); // JSON does not like tabs :(
+      std::replace(synopsis.begin(), synopsis.end(), '\n', ' '); // JSON does not like tabs :(
+
+      graphene::chain::ContentObjectPropertyManager synopsis_parser(synopsis);
+      std::string title = synopsis_parser.get<graphene::chain::ContentObjectTitle>();
+
+      // Title
+      //
+      m_pTableWidget->setItem(iIndex, eTitle, new QTableWidgetItem(QString::fromStdString(title)));
+
+      // Rating
+      //
+      QString rating = QString::number(content.AVG_rating, 'f', 2);
+      m_pTableWidget->setItem(iIndex, eRating, new QTableWidgetItem(rating));
+
+      // Size
+      //
+      QString unit = " MB";
+      double sizeAdjusted = content.size;
+
+      if(content.size > 1024)
+      {
+         unit = " GB";
+         sizeAdjusted = content.size / 1024.0;
+      }
+      m_pTableWidget->setItem(iIndex, eSize, new QTableWidgetItem(QString::number(sizeAdjusted, 'f', 2) + unit));
+
+      // Price
+      m_pTableWidget->setItem(iIndex, ePrice, new QTableWidgetItem(content.price.getString().c_str()));
+
+      // Created
+      m_pTableWidget->setItem(iIndex, eCreated, new QTableWidgetItem(QString::fromStdString(content.created)));
+
+      QDateTime time = QDateTime::fromString(QString::fromStdString(content.expiration), "yyyy-MM-ddTHH:mm:ss");
+
+      std::string e_str = CalculateRemainingTime(QDateTime::currentDateTime(), time);
+
+      // Remaining
+      m_pTableWidget->setItem(iIndex, eRemaining, new QTableWidgetItem(QString::fromStdString(e_str)));
+
+      // Status
+      m_pTableWidget->setItem(iIndex, eStatus, new QTableWidgetItem(QString::fromStdString(content.status)));
+
+
+      for (size_t iColIndex = eTitle; iColIndex < eIcon; ++iColIndex)
+      {
+         m_pTableWidget->item(iIndex, iColIndex)->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+         m_pTableWidget->item(iIndex, iColIndex)->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
+      }
+      // Icon
+      //
+      DecentSmallButton* info_icon = new DecentSmallButton(icon_popup, icon_popup_white, this);
+      info_icon->setAlignment(Qt::AlignCenter);
+      m_pTableWidget->setCellWidget(iIndex, eIcon, info_icon);
+
+      QObject::connect(info_icon, &DecentSmallButton::clicked,
+                       m_pDetailsSignalMapper, (void (QSignalMapper::*)())&QSignalMapper::map);
+      m_pDetailsSignalMapper->setMapping(info_icon, iIndex);
    }
-   
-   return   std::string("search_user_content ") +
-            "\"" + currentUserName + "\" " +
-            "\"" + filterText + "\" " +
-            "\"" + m_pTableWidget.getSortedColumn() + "\" " +
-            "\"\" " +   // region_code
-            "100";
-   
 }
 
-
-
-void Upload_tab::show_content_popup() {
-   if (_isUploading) {
-      return;
-   }
-   
-   _isUploading = true;
-   
-    QLabel* btn = (QLabel*)sender();
-    int id = btn->property("id").toInt();
-    if (id < 0 || id >= _digital_contents.size()) {
-        throw std::out_of_range("Content index is out of range");
-    }
-    
-   if (_content_popup) {
-        delete _content_popup;
-      _content_popup = NULL;
-   }
-    _content_popup = new ContentDetailsGeneral(_parent);
-    
-    connect(_content_popup, SIGNAL(ContentWasBought()), this, SLOT(content_was_bought()));
-    _content_popup->execCDD(_digital_contents[id]);
-    
-   _isUploading = false;
-}
-
-void Upload_tab::content_was_bought() {
-   if (_content_popup) {
-      delete _content_popup;
-      _content_popup = NULL;
-   }
-   
-    _parent->GoToThisTab(4, "");
-    _parent->UpdateAccountBalances(Globals::instance().getCurrentUser());
-}
-
-void Upload_tab::ShowDigitalContentsGUI() {
-    
-    m_pTableWidget.setRowCount(_digital_contents.size());
-    
-    int index = 0;
-    for(SDigitalContent& aTemporar: _digital_contents) {
-       
-        
-        // Need to rewrite this
-        std::string created_str = aTemporar.created.substr(0, 10);
-        
-        m_pTableWidget.setItem(index,4,new QTableWidgetItem(QString::fromStdString(created_str)));
-        m_pTableWidget.item(index, 4)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
-        m_pTableWidget.item(index, 4)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
-        
-        
-        std::string synopsis = unescape_string(aTemporar.synopsis);
-        std::replace(synopsis.begin(), synopsis.end(), '\t', ' '); // JSON does not like tabs
-        std::replace(synopsis.begin(), synopsis.end(), '\n', ' '); // JSON does not like newlines either
-        //massageBox_title.push_back(	)
-        
-        try {
-            auto synopsis_parsed = json::parse(synopsis);
-            synopsis = synopsis_parsed["title"].get<std::string>();
-            
-        } catch (...) {}
-        
-        
-        
-        m_pTableWidget.setItem(index,0,new QTableWidgetItem(QString::fromStdString(synopsis)));
-        m_pTableWidget.item(index, 0)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
-        m_pTableWidget.item(index, 0)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
-        
-        std::string rating;
-        for(int i = 0; i < std::to_string(aTemporar.AVG_rating).find(".") + 4; ++i)
-        {
-            rating.push_back(std::to_string(aTemporar.AVG_rating)[i]);
-        }
-        m_pTableWidget.setItem(index,1,new QTableWidgetItem(QString::fromStdString(rating)));
-        m_pTableWidget.item(index, 1)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
-        m_pTableWidget.item(index, 1)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
-        
-        
-        
-        if(aTemporar.size < 1024)
-        {
-            m_pTableWidget.setItem(index,2,new QTableWidgetItem(QString::fromStdString(std::to_string(aTemporar.size) + ".000 MB")));
-        }
-        else
-        {
-            float size = (float)aTemporar.size/1024;
-            std::string size_s;
-            std::string s = std::to_string(size);
-            for(int i = 0; i < s.find(".") + 4; ++i)
-            {
-                size_s.push_back(s[i]);
-            }
-            m_pTableWidget.setItem(index,2,new QTableWidgetItem(QString::fromStdString(size_s + " GB")));
-        }
-        m_pTableWidget.item(index, 2)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
-        m_pTableWidget.item(index, 2)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
-        
-        
-        m_pTableWidget.setItem(index,3,new QTableWidgetItem(aTemporar.price.getString().c_str()));
-        m_pTableWidget.item(index, 3)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
-        m_pTableWidget.item(index, 3)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
-        
-        
-        QDateTime time = QDateTime::fromString(QString::fromStdString(aTemporar.expiration), "yyyy-MM-ddTHH:mm:ss");
-        
-        std::string e_str = CalculateRemainingTime(QDateTime::currentDateTime(), time);
-        
-       m_pTableWidget.setItem(index, 5, new QTableWidgetItem(QString::fromStdString(e_str)));
-       m_pTableWidget.item(index, 5)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
-       m_pTableWidget.item(index, 5)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
-       
-       m_pTableWidget.setItem(index, 6, new QTableWidgetItem(QString::fromStdString(aTemporar.status)));
-       m_pTableWidget.item(index, 6)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
-       m_pTableWidget.item(index, 6)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
-       
-       
-       
-       EventPassthrough<DecentSmallButton>* info_icon = new EventPassthrough<DecentSmallButton>(icon_popup, icon_popup_white);
-       info_icon->setProperty("id", QVariant::fromValue(index));
-       info_icon->setAlignment(Qt::AlignCenter);
-       connect(info_icon, SIGNAL(clicked()), this, SLOT(show_content_popup()));
-       m_pTableWidget.setCellWidget(index, 7, info_icon);
-       
-        ++index;
-    }
-}
-
-void Upload_tab::uploadPopup() {
-   if(_parent->getCentralWidget()->usersCombo()->count()){
-      Upload_popup popup(_parent);
+void Upload_tab::slot_UploadPopup()
+{
+   if (false == Globals::instance().getCurrentUser().empty())
+   {
+      Upload_popup popup(this);
       popup.exec();
    }
 }
+
+void Upload_tab::slot_ShowContentPopup(int iIndex)
+{
+   if (iIndex < 0 || iIndex >= _digital_contents.size())
+      throw std::out_of_range("Content index is out of range");
+
+   ContentDetailsGeneral* pDetailsDialog = new ContentDetailsGeneral(nullptr);
+   QObject::connect(pDetailsDialog, &ContentDetailsGeneral::ContentWasBought,
+                    this, &Upload_tab::slot_Bought);
+   pDetailsDialog->execCDD(_digital_contents[iIndex], true);
+   pDetailsDialog->setAttribute(Qt::WA_DeleteOnClose);
+   pDetailsDialog->open();
+}
+
+void Upload_tab::slot_Bought()
+{
+   Globals::instance().signal_showPurchasedTab();
+   Globals::instance().updateAccountBalance();
+}
+
+void Upload_tab::slot_SortingChanged(int index)
+{
+   reset();
+}
+
+void Upload_tab::slot_SearchTermChanged(QString const& strSearchTerm)
+{
+   m_strSearchTerm = strSearchTerm;
+}
+

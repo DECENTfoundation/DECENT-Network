@@ -8,7 +8,7 @@
  *  This file implements ...
  *
  */
-
+#include "gui_wallet_global.hpp"
 #include <QIntValidator>
 #include <QMessageBox>
 #include "richdialog.hpp"
@@ -265,12 +265,7 @@ void SendDialog::sendDCT()
    }
    else
    {
-      QMessageBox* msgBox = new QMessageBox();
-      msgBox->setAttribute(Qt::WA_DeleteOnClose);
-      msgBox->setWindowTitle(tr("Error"));
-      msgBox->setText(tr("Failed to send DCT"));
-      msgBox->setDetailedText(message.c_str());
-      msgBox->open();
+      ShowMessageBox(tr("Error"), tr("Failed to send DCT"), message.c_str());
    }
 }
 
