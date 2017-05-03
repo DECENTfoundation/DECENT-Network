@@ -68,6 +68,14 @@ Upload_popup::Upload_popup(QWidget* pParent)
 : QDialog(pParent)
 , m_getPublishersTimer(this)
 {
+   std::vector<Publisher> publishers = Globals::instance().getPublishers();
+   m_arrPublishers.resize(publishers.size());
+   for (size_t iIndex = 0; iIndex < publishers.size(); ++iIndex)
+   {
+      m_arrPublishers[iIndex].first = publishers[iIndex];
+      m_arrPublishers[iIndex].second = false;
+   }
+
    u_main_layout = new QVBoxLayout(this);
 
    _locale = ((QApplication*)QApplication::instance())->inputMethod()->locale();
@@ -209,6 +217,8 @@ Upload_popup::Upload_popup(QWidget* pParent)
    _seeders_dialog->resize(450, 250);
 
    connect(seeders_button, SIGNAL(clicked()), _seeders_dialog, SLOT(exec()) );
+   QObject::connect(seeders_button, &QPushButton::clicked,
+                    this, &Upload_popup::slot_ChooseSeeders);
    
 
 
@@ -314,10 +324,55 @@ Upload_popup::Upload_popup(QWidget* pParent)
 #endif
 }
 
+Upload_popup::~Upload_popup() = default;
+
+void Upload_popup::slot_ChooseSeeders()
+{
+   QDialog* pDialog = new QDialog(nullptr, Qt::Window | Qt::WindowTitleHint | Qt::CustomizeWindowHint | Qt::WindowCloseButtonHint);
+   pDialog->setAttribute(Qt::WA_DeleteOnClose);
+   pDialog->setWindowTitle(tr("Seeders"));
+   pDialog->setContentsMargins(0, 0, 0, 0);
+   pDialog->resize(450, 250);
+
+   DecentTable* pSeedersTable = new DecentTable(pDialog);
+   pSeedersTable->set_columns({
+      {"", -25},
+      {tr("Seeder"), 10, "rating"},
+      {tr("Price"),  10, "price"},
+      {tr("Size") ,  10, "size"}
+   });
+
+   DecentButton* pOKButton = new DecentButton(pDialog);
+   pOKButton->setText(tr("OK"));
+   pOKButton->setFixedHeight(50);
+   pOKButton->setFixedWidth(100);
+   pOKButton->setFont(TabButtonFont());
+
+   QHBoxLayout* pButtonsLayout = new QHBoxLayout;
+   pButtonsLayout->addWidget(pOKButton);
+   pButtonsLayout->setMargin(10);
+   pButtonsLayout->setAlignment(Qt::AlignHCenter);
+
+   QVBoxLayout* pMainLayout = new QVBoxLayout;
+   pMainLayout->addWidget(pSeedersTable);
+   pMainLayout->addWidget(pOKButton);
+   pMainLayout->addLayout(pButtonsLayout);
+   pMainLayout->setContentsMargins(0, 0, 0, 0);
+   pMainLayout->setMargin(0);
+   pMainLayout->setSpacing(0);
+
+   pDialog->setLayout(pMainLayout);
+
+
+
+
+   pDialog->open();
+}
+
 void Upload_popup::onGrabPublishers() {
    
    QVBoxLayout* dialog_layout = new QVBoxLayout(_seeders_dialog);
-   
+
    _seeder_table = new DecentTable(this);
    _seeder_table->set_columns({
       {"", -25},
@@ -327,7 +382,7 @@ void Upload_popup::onGrabPublishers() {
    });
    
 
-   std::string a_result = Globals::instance().runTask("list_publishers_by_price 100");
+
    
    //seeders popup ok button
    _seeder_ok = new DecentButton();
@@ -336,6 +391,7 @@ void Upload_popup::onGrabPublishers() {
    _seeder_ok->setFixedWidth(100);
    _seeder_ok->setFont(TabButtonFont());
 
+   std::string a_result = Globals::instance().runTask("list_publishers_by_price 100");
    auto publishers = json::parse(a_result);
    _seeder_table->setRowCount(publishers.size());
    

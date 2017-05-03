@@ -7,18 +7,17 @@
 #include <QLabel>
 #include <QTableWidget>
 #include <chrono>
-#include <iostream>
-#include "json.hpp"
-#include "gui_design.hpp"
+#include <vector>
 
 #include <decent/wallet_utility/wallet_utility.hpp>
+
+#include "json.hpp"
+#include "gui_design.hpp"
 
 #include <numeric>
 #if defined( _MSC_VER )
 #include <iso646.h>
 #endif
-
-
 
 #define ALERT(message)                                  \
 {                                                       \
@@ -99,8 +98,6 @@ namespace gui_wallet
    public:
       WalletAPI m_wallet_api;
    };
-   //
-   //
    // Asset
    //
    // use Globals.asset to get a valid one
@@ -113,6 +110,16 @@ namespace gui_wallet
       uint64_t m_amount = 0;
       uint64_t m_scale = 1;
       std::string m_str_symbol;
+   };
+   //
+   // Publisher
+   //
+   class Publisher
+   {
+   public:
+      double m_storage_size = 0;
+      std::string m_str_name;
+      Asset m_price;
    };
    //
    // Globals
@@ -138,6 +145,7 @@ namespace gui_wallet
       void updateAccountBalance();
       std::string runTask(std::string const& str_command);
       nlohmann::json runTaskParse(std::string const& str_command);
+      std::vector<Publisher> getPublishers();
 
    signals:
       void signal_showPurchasedTab();

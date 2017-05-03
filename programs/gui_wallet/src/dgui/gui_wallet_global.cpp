@@ -26,7 +26,7 @@ void ShowMessageBox(QString const& strTitle,
                     QString const& strMessage,
                     QString const& strDetailedText/* = QString()*/)
 {
-   QDialog* pDialog = new QDialog();
+   QDialog* pDialog = new QDialog(nullptr);
    pDialog->setWindowTitle(strTitle);
    pDialog->setAttribute(Qt::WA_DeleteOnClose);
    
@@ -598,6 +598,25 @@ nlohmann::json Globals::runTaskParse(string const& str_command)
 {
    string str_result = runTask(str_command);
    return nlohmann::json::parse(str_result);
+}
+
+std::vector<Publisher> Globals::getPublishers()
+{
+   auto publishers = runTaskParse("list_publishers_by_price 100");
+   std::vector<Publisher> result;
+
+   for (int iIndex = 0; iIndex < publishers.size(); ++iIndex)
+   {
+      result.push_back(Publisher());
+      Publisher& publisher = result.back();
+
+      publisher.m_str_name = publishers[iIndex]["seeder"].get<std::string>();
+      uint64_t iPrice = json_to_int64(publishers[iIndex]["price"]["amount"]);
+      publisher.m_price = asset(iPrice);
+      publisher.m_storage_size = publishers[iIndex]["free_space"].get<int>();
+   }
+
+   return result;
 }
 
 void Globals::setCurrentUser(std::string const& user)
