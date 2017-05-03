@@ -102,6 +102,7 @@ void BrowseContentTab::timeToUpdate(const std::string& result) {
       cont.synopsis = json_item["synopsis"].get<std::string>();
       cont.URI = json_item["URI"].get<std::string>();
       cont.created = json_item["created"].get<std::string>();
+      cont.created = cont.created.substr(0, cont.created.find("T"));
       cont.expiration = json_item["expiration"].get<std::string>();
       cont.size = json_item["size"].get<int>();
       
@@ -190,7 +191,7 @@ void BrowseContentTab::ShowDigitalContentsGUI() {
       
       // Rating
       colIndex++;
-      QString rating = QString::number(item.AVG_rating, 'g', 2);
+      QString rating = QString::number(item.AVG_rating, 'f', 2);
       m_pTableWidget->setItem(index,colIndex,new QTableWidgetItem(rating));
       m_pTableWidget->item(index, colIndex)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
       m_pTableWidget->item(index, colIndex)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
@@ -206,7 +207,7 @@ void BrowseContentTab::ShowDigitalContentsGUI() {
          sizeAdjusted = item.size / 1024.0;
       }
       
-      m_pTableWidget->setItem(index, colIndex,new QTableWidgetItem(QString::number(sizeAdjusted, 'g', 2) + unit));
+      m_pTableWidget->setItem(index, colIndex,new QTableWidgetItem(QString::number(sizeAdjusted, 'f', 2) + unit));
       m_pTableWidget->item(index, colIndex)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
       m_pTableWidget->item(index, colIndex)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
       
@@ -219,8 +220,7 @@ void BrowseContentTab::ShowDigitalContentsGUI() {
 
       // Uploaded
       colIndex++;
-      std::string created_str = item.created.substr(0, 10);
-      m_pTableWidget->setItem(index, colIndex, new QTableWidgetItem(QString::fromStdString(created_str)));
+      m_pTableWidget->setItem(index, colIndex, new QTableWidgetItem(QString::fromStdString(item.created)));
       m_pTableWidget->item(index, colIndex)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
       m_pTableWidget->item(index, colIndex)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
       

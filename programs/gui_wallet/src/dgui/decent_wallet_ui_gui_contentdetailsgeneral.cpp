@@ -85,6 +85,7 @@ void ContentDetailsGeneral::LabelPushCallbackGUI()
 
 
    emit ContentWasBought();
+   close();
    
 }
 

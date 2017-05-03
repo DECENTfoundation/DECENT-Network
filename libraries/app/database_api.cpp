@@ -25,6 +25,7 @@
 #include <graphene/app/database_api.hpp>
 #include <graphene/chain/get_config.hpp>
 
+
 #include <fc/bloom_filter.hpp>
 #include <fc/smart_ref_impl.hpp>
 
@@ -109,7 +110,10 @@ namespace graphene { namespace app {
       vector<optional<account_object>> lookup_account_names(const vector<string>& account_names)const;
       map<string,account_id_type> lookup_accounts(const string& lower_bound_name, uint32_t limit)const;
       vector<account_object> search_accounts(const string& search_term, const string order, const object_id_type& id, uint32_t limit)const;
-      
+      vector<transaction_detail_object> search_account_history(account_id_type const& account,
+                                                               string const& order,
+                                                               object_id_type const& id,
+                                                               int limit) const;
       uint64_t get_account_count()const;
       
       // Balances
@@ -684,8 +688,16 @@ namespace graphene { namespace app {
    vector<account_object> database_api::search_accounts(const string& search_term, const string order, const object_id_type& id, uint32_t limit) const {
       return my->search_accounts( search_term, order, id, limit );
    }
-   
-   
+
+   vector<transaction_detail_object> database_api::search_account_history(account_id_type const& account,
+                                                                          string const& order,
+                                                                          object_id_type const& id,
+                                                                          int limit) const
+   {
+      return my->search_account_history(account, order, id, limit);
+   }
+
+
    map<string,account_id_type> database_api::lookup_accounts(const string& lower_bound_name, uint32_t limit)const
    {
       return my->lookup_accounts( lower_bound_name, limit );
@@ -749,8 +761,9 @@ namespace graphene { namespace app {
             account_object const& element = *itr_begin;
             ++itr_begin;
 
-            std::string account_id_str = fc::variant(itr_begin->get_id()).as<std::string>();
-            std::string account_name = itr_begin->name;
+
+            std::string account_id_str = fc::variant(element.get_id()).as<std::string>();
+            std::string account_name = element.name;
             std::string search_term = term;
 
             boost::algorithm::to_lower(account_id_str);
@@ -782,9 +795,81 @@ namespace graphene { namespace app {
       else
          search_accounts_template<true, by_name>(_db, term, limit, id, result);
 
+
       return result;
    }
-   
+
+   namespace
+   {
+      template <bool is_ascending, class sort_tag>
+      void search_account_history_template(graphene::chain::database& db,
+                                           const account_id_type& account,
+                                           uint32_t count,
+                                           const object_id_type& id,
+                                           vector<transaction_detail_object>& result)
+      {
+         const auto& idx_by_sort_tag = db.get_index_type<transaction_detail_index>().indices().get<sort_tag>();
+
+         auto itr_begin = return_one<is_ascending>::choose(idx_by_sort_tag.cbegin(), idx_by_sort_tag.crbegin());
+         auto itr_end = return_one<is_ascending>::choose(idx_by_sort_tag.end(), idx_by_sort_tag.rend());
+
+         correct_iterator<transaction_detail_index, transaction_detail_object, sort_tag, decltype(itr_begin), is_ascending>(db, id, itr_begin);
+
+         while(count &&
+               itr_begin != itr_end)
+         {
+            transaction_detail_object const& element = *itr_begin;
+            ++itr_begin;
+
+            if (account != element.m_from_account &&
+                account != element.m_to_account)
+               continue;
+
+            result.emplace_back(element);
+            --count;
+         }
+      }
+   }
+
+   vector<transaction_detail_object> database_api_impl::search_account_history(account_id_type const& account,
+                                                                               string const& order,
+                                                                               object_id_type const& id,
+                                                                               int limit) const
+   {
+      vector<transaction_detail_object> result;
+
+      if (order == "+type")
+         search_account_history_template<true, by_operation_type>(_db, account, limit, id, result);
+      else if (order == "-type")
+         search_account_history_template<false, by_operation_type>(_db, account, limit, id, result);
+      else if (order == "+to")
+         search_account_history_template<true, by_to_account>(_db, account, limit, id, result);
+      else if (order == "-to")
+         search_account_history_template<false, by_to_account>(_db, account, limit, id, result);
+      else if (order == "+from")
+         search_account_history_template<true, by_from_account>(_db, account, limit, id, result);
+      else if (order == "-from")
+         search_account_history_template<false, by_from_account>(_db, account, limit, id, result);
+      else if (order == "+price")
+         search_account_history_template<true, by_transaction_amount>(_db, account, limit, id, result);
+      else if (order == "-price")
+         search_account_history_template<false, by_transaction_amount>(_db, account, limit, id, result);
+      else if (order == "+fee")
+         search_account_history_template<true, by_transaction_fee>(_db, account, limit, id, result);
+      else if (order == "-fee")
+         search_account_history_template<false, by_transaction_fee>(_db, account, limit, id, result);
+      else if (order == "+description")
+         search_account_history_template<true, by_description>(_db, account, limit, id, result);
+      else if (order == "-description")
+         search_account_history_template<false, by_description>(_db, account, limit, id, result);
+      else if (order == "+time")
+         search_account_history_template<true, by_time>(_db, account, limit, id, result);
+      else// if (order == "-time")
+         search_account_history_template<false, by_time>(_db, account, limit, id, result);
+
+      return result;
+   }
+
    map<string,account_id_type> database_api_impl::lookup_accounts(const string& lower_bound_name, uint32_t limit)const
    {
       FC_ASSERT( limit <= 1000 );
@@ -2086,7 +2171,10 @@ namespace
             }
 #ifdef PRICE_REGIONS
             if (false == itr_begin->price.Valid(region_code))
+            {
+               ++itr_begin;
                continue;
+            }
 #endif
             content.set( *itr_begin , *account, region_code );
             if (content.expiration > fc::time_point::now())

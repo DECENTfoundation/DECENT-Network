@@ -80,6 +80,7 @@ add_library( graphene_chain
              content_object.cpp
              proposal_object.cpp
              vesting_balance_object.cpp
+             transaction_detail_object.cpp
 
              block_database.cpp
 

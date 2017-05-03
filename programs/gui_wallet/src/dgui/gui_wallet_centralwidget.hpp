@@ -34,11 +34,11 @@
 
 
 
-namespace gui_wallet {
+namespace gui_wallet
+{
 
 enum FRST_LINE_ELEMS{DECENT_LOGO,USERNAME,BALANCE,SEND_,NUMBER_OF_FRST_LINE_ELEMS};
 enum MAIN_TABS_ENM{BROWSE_CONTENT,TRANSACTIONS,UPLOAD,OVERVIEW,PURCHASED};
-
 
 
 class AccountBalanceWidget : public QWidget

@@ -83,11 +83,8 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
    QComboBox*   pUsersCombo = m_pCentralWidget->usersCombo();
    DecentButton* pImportButton = m_pCentralWidget->importButton();
    pUsersCombo->hide();
-   
-   connect(pUsersCombo, SIGNAL(currentIndexChanged(const QString&)), this, SLOT(CurrentUserChangedSlot(const QString&)) );
-   connect(pImportButton, SIGNAL(clicked()), this, SLOT(ImportKeySlot()));
 
-   setWindowTitle(tr("DECENT - Blockchain Content Distribution"));
+   connect(pImportButton, SIGNAL(clicked()), this, SLOT(ImportKeySlot()));
 
    centralWidget()->layout()->setContentsMargins(0, 0, 0, 0);
    setStyleSheet(d_style);
@@ -190,7 +187,8 @@ void Mainwindow_gui_wallet::slot_showPurchasedTab()
 
 void Mainwindow_gui_wallet::slot_showTransactionsTab(std::string const& account_name)
 {
-   GoToThisTab(1, account_name);
+   GoToThisTab(1, std::string());
+   m_pCentralWidget->SetTransactionInfo(account_name);
 }
 
 void Mainwindow_gui_wallet::slot_updateAccountBalance(Asset const& balance)
@@ -481,35 +479,37 @@ void Mainwindow_gui_wallet::UpdateLockedStatus()
 
 
 void Mainwindow_gui_wallet::CheckDownloads()
-{   
-    auto& global_instance = gui_wallet::Globals::instance();
-    std::string str_current_username = global_instance.getCurrentUser();
+{
+   auto& global_instance = gui_wallet::Globals::instance();
+   std::string str_current_username = global_instance.getCurrentUser();
 
-    if (str_current_username == "") {
-        _activeDownloads.clear();
-        return;
-    }
-   
+   if (str_current_username == "") {
+      _activeDownloads.clear();
+      return;
+   }
+
    json contents;
    if (!RunTaskParse("search_my_purchases "
                      "\"" + str_current_username + "\" "
                      "\"\" "
-                     "\"\" ",
+                     "\"\" "
+                     "\"\" "
+                     "\"-1\" ",
                      contents))
    {
       std::cout << contents.get<string>() << std::endl;
       return;
    }
-   
-   
+
+
    for (int i = 0; i < contents.size(); ++i)
    {
       auto content = contents[i];
       std::string URI = contents[i]["URI"].get<std::string>();
-      
+
       if (URI == "")
          continue;
-      
+
       if (_activeDownloads.find(URI) == _activeDownloads.end())
       {
          json ignore_result;
@@ -521,7 +521,7 @@ void Mainwindow_gui_wallet::CheckDownloads()
          }
          else
          {
-            std::cout << "Can not resume download: " << URI << std::endl;
+            std::cout << "Cannot resume download: " << URI << std::endl;
             std::cout << "Error: " << ignore_result.get<string>() << std::endl;
          }
       }
@@ -732,9 +732,8 @@ void Mainwindow_gui_wallet::SetPassword()
    }
 }
 
-void Mainwindow_gui_wallet::GoToThisTab(int index , std::string info)
+void Mainwindow_gui_wallet::GoToThisTab(int index , std::string)
 {
-    m_pCentralWidget->SetTransactionInfo(info);
     m_pCentralWidget->SetMyCurrentTabIndex(index);
 }
 
