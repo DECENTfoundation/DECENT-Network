@@ -205,8 +205,31 @@ namespace decent { namespace package {
             const auto package_base_path = _package._parent_dir.lexically_normal();
 
             for (auto& file : files) {
+#ifdef _MSC_VER 
+                std::string fileUnixPathDelim = file.string();
+                std::string::iterator iter = fileUnixPathDelim.begin();
+                while (iter != fileUnixPathDelim.end())
+                {
+                   if ((*iter) == '\\')
+                      (*iter) = '/';
+                   iter++;
+                }
+ 
+                const auto file_rel_path = detail::get_relative(package_base_path, file.lexically_normal());
+                
+                std::string file_relPath_UnixPathDelim = file_rel_path.string();
+                iter = file_relPath_UnixPathDelim.begin();
+                while (iter != file_relPath_UnixPathDelim.end())
+                {
+                   if ((*iter) == '\\')
+                      (*iter) = '/';
+                   iter++;
+                }
+                files_to_add.push_back({ file_relPath_UnixPathDelim, ipfs::http::FileUpload::Type::kFileName, fileUnixPathDelim });
+#else
                 const auto file_rel_path = detail::get_relative(package_base_path, file.lexically_normal());
                 files_to_add.push_back({ file_rel_path.string(), ipfs::http::FileUpload::Type::kFileName, file.string() });
+#endif
             }
 
             PACKAGE_INFO_CHANGE_TRANSFER_STATE(SEEDING);
