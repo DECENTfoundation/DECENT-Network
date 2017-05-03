@@ -76,7 +76,8 @@ namespace gui_wallet
    void ShowMessageBox(QString const& strTitle,
                         QString const& strMessage,
                         QString const& strDetailedText = QString());
-    
+
+   uint64_t json_to_int64(nlohmann::json const& o);
     
    std::size_t extra_space(const std::string& s) noexcept;
    std::string unescape_string(const std::string& s);
@@ -99,16 +100,6 @@ namespace gui_wallet
       WalletAPI m_wallet_api;
    };
    //
-   // lame to write the full type definition of **** json variant
-   //
-   template <typename json_variant>
-   uint64_t json_to_int64(json_variant const& o)
-   {
-      if (o.is_number())
-         return o.template get<uint64_t>();
-      else
-         return std::stoll(o.template get<std::string>());
-   }
    //
    // Asset
    //
@@ -145,8 +136,8 @@ namespace gui_wallet
       void clear();
       Asset asset(uint64_t amount);
       void updateAccountBalance();
-      void runTask(std::string const& str_command, nlohmann::json& json_result);
       std::string runTask(std::string const& str_command);
+      nlohmann::json runTaskParse(std::string const& str_command);
 
    signals:
       void signal_showPurchasedTab();
@@ -159,6 +150,7 @@ namespace gui_wallet
       void setWalletConnected();
       void setWalletError(std::string const& error);
       void showTransferDialog(std::string const& user);
+      std::string getAccountName(std::string const& accountId);
    signals:
       void signal_connect();  // for internal use
    private slots:
@@ -167,7 +159,7 @@ namespace gui_wallet
 
    signals:
       void connectingProgress(std::string const& str_progress);
-      void currentUserChanged(std::string const& user);
+      void currentUserChanged(QString const& user);
       void statusShowMessage(QString const& str_message, int timeout = 0);
       void statusClearMessage();
       void walletUnlocked();
@@ -182,6 +174,7 @@ namespace gui_wallet
       QTimer* m_p_timer;
       std::string m_str_currentUser;
       std::chrono::steady_clock::time_point m_tp_started;
+      std::map<std::string, std::string> m_map_user_id_cache;
    };
 
    

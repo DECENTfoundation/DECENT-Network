@@ -83,11 +83,8 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
    QComboBox*   pUsersCombo = m_pCentralWidget->usersCombo();
    DecentButton* pImportButton = m_pCentralWidget->importButton();
    pUsersCombo->hide();
-   
-   connect(pUsersCombo, SIGNAL(currentIndexChanged(const QString&)), this, SLOT(CurrentUserChangedSlot(const QString&)) );
-   connect(pImportButton, SIGNAL(clicked()), this, SLOT(ImportKeySlot()));
 
-   setWindowTitle(tr("DECENT - Blockchain Content Distribution"));
+   connect(pImportButton, SIGNAL(clicked()), this, SLOT(ImportKeySlot()));
 
    centralWidget()->layout()->setContentsMargins(0, 0, 0, 0);
    setStyleSheet(d_style);
@@ -194,7 +191,8 @@ void Mainwindow_gui_wallet::slot_showPurchasedTab()
 
 void Mainwindow_gui_wallet::slot_showTransactionsTab(std::string const& account_name)
 {
-   GoToThisTab(1, account_name);
+   GoToThisTab(1, std::string());
+   m_pCentralWidget->SetTransactionInfo(account_name);
 }
 
 void Mainwindow_gui_wallet::slot_updateAccountBalance(Asset const& balance)
@@ -739,9 +737,8 @@ void Mainwindow_gui_wallet::SetPassword()
    }
 }
 
-void Mainwindow_gui_wallet::GoToThisTab(int index , std::string info)
+void Mainwindow_gui_wallet::GoToThisTab(int index , std::string)
 {
-    m_pCentralWidget->SetTransactionInfo(info);
     m_pCentralWidget->SetMyCurrentTabIndex(index);
 }
 
