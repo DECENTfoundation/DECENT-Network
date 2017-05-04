@@ -7,7 +7,7 @@
 #include <boost/algorithm/string/trim.hpp>
 
 #include <vector>
-
+#include <regex>
 
 namespace decent { namespace package {
 
@@ -206,8 +206,13 @@ namespace decent { namespace package {
 
             for (auto& file : files) {
                 const auto file_rel_path = detail::get_relative(package_base_path, file.lexically_normal());
-                files_to_add.push_back({ file_rel_path.string(), ipfs::http::FileUpload::Type::kFileName, file.string() });
+
+                std::regex e ("(\\\\)");
+                std::string rel_path=std::regex_replace (file_rel_path.string(),e,"/");
+                files_to_add.push_back({ rel_path, ipfs::http::FileUpload::Type::kFileName, file.string() });
             }
+
+
 
             PACKAGE_INFO_CHANGE_TRANSFER_STATE(SEEDING);
 
