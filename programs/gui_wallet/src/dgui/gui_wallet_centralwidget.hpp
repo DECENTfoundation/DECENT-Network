@@ -31,6 +31,7 @@
 #include <QTableWidget>
 #include "purchased_tab.hpp"
 #include <QString>
+#include "decent_button.hpp"
 
 
 

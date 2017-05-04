@@ -26,28 +26,14 @@ void ShowMessageBox(QString const& strTitle,
                     QString const& strMessage,
                     QString const& strDetailedText/* = QString()*/)
 {
-   QDialog* pDialog = new QDialog();
-   pDialog->setWindowTitle(strTitle);
-   pDialog->setAttribute(Qt::WA_DeleteOnClose);
-   
-   QVBoxLayout*   main = new QVBoxLayout();
-   QLabel*        pText = new QLabel(strMessage, pDialog);
-   DecentButton*  pOkButton = new DecentButton(pDialog);
-   
-   pText->setFont(AccountBalanceFont());
-   
-   pOkButton->setText(QObject::tr("OK"));
-   pOkButton->setFixedSize(140, 40);
-   pOkButton->setFocus();
-   QObject::connect(pOkButton, SIGNAL(clicked()), pDialog , SLOT(close()));
-   
-   main->addWidget(pText, 0, Qt::AlignCenter);
-   main->addWidget(pOkButton, 0, Qt::AlignCenter);
-   
-   pDialog->setLayout(main);
-   pDialog->setFixedSize(300, 100);
-   
-   pDialog->open();
+   QMessageBox* pMessageBox = new QMessageBox(nullptr);
+   pMessageBox->setWindowTitle(strTitle); // funny MacOS ignores the title
+   pMessageBox->setText(strMessage);
+   pMessageBox->setDetailedText(strDetailedText);
+   pMessageBox->setAttribute(Qt::WA_DeleteOnClose);
+   pMessageBox->open();
+   // alternatively can connect to delete later as below
+   //pMessageBox->open(pMessageBox, SLOT(deleteLater()));
 }
 
 uint64_t json_to_int64(nlohmann::json const& o)
@@ -598,6 +584,25 @@ nlohmann::json Globals::runTaskParse(string const& str_command)
 {
    string str_result = runTask(str_command);
    return nlohmann::json::parse(str_result);
+}
+
+std::vector<Publisher> Globals::getPublishers()
+{
+   auto publishers = runTaskParse("list_publishers_by_price 100");
+   std::vector<Publisher> result;
+
+   for (int iIndex = 0; iIndex < publishers.size(); ++iIndex)
+   {
+      result.push_back(Publisher());
+      Publisher& publisher = result.back();
+
+      publisher.m_str_name = publishers[iIndex]["seeder"].get<std::string>();
+      uint64_t iPrice = json_to_int64(publishers[iIndex]["price"]["amount"]);
+      publisher.m_price = asset(iPrice);
+      publisher.m_storage_size = publishers[iIndex]["free_space"].get<int>();
+   }
+
+   return result;
 }
 
 void Globals::setCurrentUser(std::string const& user)

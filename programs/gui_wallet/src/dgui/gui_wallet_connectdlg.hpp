@@ -53,7 +53,7 @@ private:
     bool ret_value;
     Mainwindow_gui_wallet* m_pParent;
     QVBoxLayout m_main_layout;
-    QTableWidget m_main_table;
+    //QTableWidget m_main_table;
     QLineEdit password_box;
 };
 

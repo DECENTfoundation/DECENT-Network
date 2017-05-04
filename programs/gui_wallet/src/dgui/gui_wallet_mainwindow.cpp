@@ -15,6 +15,7 @@
 #include <QMenuBar>
 #include <QMoveEvent>
 #include <QMessageBox>
+#include <QDateTime>
 #endif
 
 #include "gui_wallet_mainwindow.hpp"

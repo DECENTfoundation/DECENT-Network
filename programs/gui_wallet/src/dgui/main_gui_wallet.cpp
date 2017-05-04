@@ -61,6 +61,8 @@ using string = std::string;
 #include <signal.h>
 #include <QTranslator>
 
+#include "gui_design.hpp"
+
 
 int runDecentD(int argc, char** argv, fc::promise<void>::ptr& exit_promise);
 QProcess* run_ipfs_daemon(QObject* parent, QString app_dir);
@@ -69,8 +71,10 @@ QProcess* run_ipfs_daemon(QObject* parent, QString app_dir);
 int main(int argc, char* argv[])
 {
    QApplication app(argc, argv);
-   
-   
+
+   app.setStyleSheet(d_global_white_style);
+
+
    QTranslator* translator = new QTranslator();
    if (translator->load("decent_en", ":/translations/languages")) {
       app.installTranslator(translator);
