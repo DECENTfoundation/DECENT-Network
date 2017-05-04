@@ -26,9 +26,8 @@ public:
    bool is_last() const;
    void set_next_page_iterator(std::string const& iterator);
    std::string next_iterator() const;
-
-protected:
    size_t m_i_page_size;
+   
 private:
    std::string m_last_result;
    std::string m_next_iterator;

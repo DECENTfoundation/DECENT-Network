@@ -194,6 +194,9 @@ void Overview_tab::timeToUpdate(const std::string& result) {
                        this, &Overview_tab::slot_Transfer);
       
       m_pTableWidget->setRowHeight(iIndex,40);
+//      m_pTableWidget->cellWidget(iIndex, 2)->setStyleSheet(d_table);
+//      m_pTableWidget->cellWidget(iIndex, 3)->setStyleSheet(d_table);
+//      m_pTableWidget->cellWidget(iIndex, 4)->setStyleSheet(d_table);
 
       m_pTableWidget->item(iIndex,0)->setBackground(Qt::white);
       m_pTableWidget->item(iIndex,1)->setBackground(Qt::white);

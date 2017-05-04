@@ -35,6 +35,10 @@ const char* const d_StyleSheet      =
                "QCheckBox::indicator { width: 13px; height: 13px; }";
 
 //gui_wallet_centralwidget
+const char* const d_pagination_buttons = "QPushButton{border-top: 1px solid lightGrey ;border-left: 1px solid lightGrey ; "
+                                                      "background-color :rgb(255, 255, 255); color : rgb(27,176,104);}"
+                                          "QPushButton:!enabled{background-color :rgb(242, 242, 242); color : rgb(30, 30, 30);}";
+
 const char* const d_main_tabs           = "QTabBar::tab{"
 #ifdef WINDOWS_HIGH_DPI
                                           "font-size: 10pt;"
@@ -118,4 +122,5 @@ QFont DescriptionDetailsFont();
 QFont PopupButtonRegularFont();
 QFont PopupButtonBigFont();
 QFont TabButtonFont();
+QFont PaginationFont();
 
