@@ -26,28 +26,14 @@ void ShowMessageBox(QString const& strTitle,
                     QString const& strMessage,
                     QString const& strDetailedText/* = QString()*/)
 {
-   QDialog* pDialog = new QDialog(nullptr);
-   pDialog->setWindowTitle(strTitle);
-   pDialog->setAttribute(Qt::WA_DeleteOnClose);
-   
-   QVBoxLayout*   main = new QVBoxLayout();
-   QLabel*        pText = new QLabel(strMessage, pDialog);
-   DecentButton* pOkButton = new DecentButton(pDialog);
-   
-   pText->setFont(AccountBalanceFont());
-   
-   pOkButton->setText(QObject::tr("OK"));
-   pOkButton->setFixedSize(140, 40);
-   pOkButton->setFocus();
-   QObject::connect(pOkButton, SIGNAL(clicked()), pDialog , SLOT(close()));
-   
-   main->addWidget(pText, 0, Qt::AlignCenter);
-   main->addWidget(pOkButton, 0, Qt::AlignCenter);
-   
-   pDialog->setLayout(main);
-   pDialog->setFixedSize(300, 100);
-   
-   pDialog->open();
+   QMessageBox* pMessageBox = new QMessageBox();
+   pMessageBox->setWindowTitle(strTitle);
+   pMessageBox->setText(strMessage);
+   pMessageBox->setDetailedText(strDetailedText);
+   pMessageBox->setAttribute(Qt::WA_DeleteOnClose);
+   pMessageBox->open();
+   // alternatively can connect to delete later as below
+   //pMessageBox->open(pMessageBox, SLOT(deleteLater()));
 }
 
 uint64_t json_to_int64(nlohmann::json const& o)

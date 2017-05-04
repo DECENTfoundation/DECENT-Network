@@ -2,6 +2,36 @@
 
 #include <QFont>
 
+const char* const d_global_white_style =
+"QDialog, QMainWindow, QMessageBox"
+"{"
+   "color:black;"
+   "background-color:white;"
+"}"
+"QPushButton"
+"{"
+   "border: 0px ;"
+   "background-color :rgb(27,176,104);"
+   "color : white;"
+   "min-width: 80px;"
+   "min-height: 25px;"
+   "width: 100px;"
+   "height: 100px;"
+   "max-width: 1000px;"
+   "max-height: 1000px;"
+"}"
+"QPushButton:!enabled"
+"{"
+   "background-color :rgb(180,180,180);"
+   "color : rgb(30, 30, 30);"
+   "min-width: 80px;"
+   "min-height: 25px;"
+   "width: 100px;"
+   "height: 100px;"
+   "max-width: 1000px;"
+   "max-height: 1000px;"
+"}";
+
 QFont PaginationFont()
 {
    return QFont("Myriad Pro Regular",14, QFont::Weight::Normal);
@@ -9,9 +39,9 @@ QFont PaginationFont()
 
 QFont TableHeaderFont()
 {
-   return QFont("Open Sans Bold", 
+   return QFont("Open Sans Bold",
 #ifdef WINDOWS_HIGH_DPI
-      10, 
+      10,
 #else
       14,
 #endif
@@ -30,7 +60,7 @@ QFont DescriptionDetailsFont()
 
 QFont PopupButtonRegularFont()
 {
-   return QFont("Myriad Pro Regular", 
+   return QFont("Myriad Pro Regular",
 #ifdef WINDOWS_HIGH_DPI
       8,
 #else
@@ -41,7 +71,7 @@ QFont PopupButtonRegularFont()
 
 QFont PopupButtonBigFont()
 {
-   return QFont("Myriad Pro Regular", 
+   return QFont("Myriad Pro Regular",
 #ifdef WINDOWS_HIGH_DPI
       8,
 #else
@@ -52,7 +82,7 @@ QFont PopupButtonBigFont()
 
 QFont TabButtonFont()
 {
-   return QFont( "Myriad Pro Regular", 
+   return QFont( "Myriad Pro Regular",
 #ifdef WINDOWS_HIGH_DPI
       8,
 #else

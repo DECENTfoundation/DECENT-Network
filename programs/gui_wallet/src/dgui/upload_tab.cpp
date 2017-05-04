@@ -333,6 +333,7 @@ void Upload_popup::slot_ChooseSeeders()
    pDialog->setWindowTitle(tr("Seeders"));
    pDialog->setContentsMargins(0, 0, 0, 0);
    pDialog->resize(450, 250);
+   //pDialog->setStyleSheet(d_style);
 
    DecentTable* pSeedersTable = new DecentTable(pDialog);
    pSeedersTable->set_columns({
@@ -344,22 +345,21 @@ void Upload_popup::slot_ChooseSeeders()
 
    DecentButton* pOKButton = new DecentButton(pDialog);
    pOKButton->setText(tr("OK"));
-   pOKButton->setFixedHeight(50);
+   pOKButton->setFixedHeight(150);
    pOKButton->setFixedWidth(100);
    pOKButton->setFont(TabButtonFont());
 
    QHBoxLayout* pButtonsLayout = new QHBoxLayout;
-   pButtonsLayout->addWidget(pOKButton);
    pButtonsLayout->setMargin(10);
    pButtonsLayout->setAlignment(Qt::AlignHCenter);
+   pButtonsLayout->addWidget(pOKButton);
 
    QVBoxLayout* pMainLayout = new QVBoxLayout;
-   pMainLayout->addWidget(pSeedersTable);
-   pMainLayout->addWidget(pOKButton);
-   pMainLayout->addLayout(pButtonsLayout);
    pMainLayout->setContentsMargins(0, 0, 0, 0);
    pMainLayout->setMargin(0);
    pMainLayout->setSpacing(0);
+   pMainLayout->addWidget(pSeedersTable);
+   pMainLayout->addLayout(pButtonsLayout);
 
    pDialog->setLayout(pMainLayout);
 
@@ -367,6 +367,8 @@ void Upload_popup::slot_ChooseSeeders()
 
 
    pDialog->open();
+
+   ShowMessageBox("Title", "Message", "Detail");
 }
 
 void Upload_popup::onGrabPublishers() {
