@@ -83,7 +83,8 @@ const char* const icon_transaction         = ":/icon/images/transaction.png";
 const char* const icon_transaction_white   = ":/icon/images/transaction1.png";
 const char* const icon_transfer            = ":/icon/images/transfer.png";
 const char* const icon_transfer_white      = ":/icon/images/transfer1.png";
-const char* const d_table                  = "* { background-color: rgb(255,255,255); color : rgb(27,176,104); }";
+const char* const icon_transfer_           = ":/icon/images/transactionSVG.svg";
+
 
 //purchased_tab
 const char* const icon_popup               = ":/icon/images/pop_up.png";
@@ -108,6 +109,17 @@ const char* const d_upload_popup        = "background-color : white; height: 150
 const char* const d_upload_popup        = "background-color : white;";
 #endif
 const char* const c_keyparts            = "color : black;";
+
+//DecentButton
+const char* const GreenDecentButtonEnabled       = "QPushButton{border: 0px ; background-color :rgb(27,176,104); color : white;}"
+                                                   "QPushButton:!enabled{background-color :rgb(180,180,180); color : rgb(30, 30, 30);}";
+
+const char* const DecentButtonNormal             = "QPushButton{border: 0px ; background-color :rgb(255, 255, 255); color : rgb(0, 0, 0);}";
+
+const char* const GreenDecentButtonNormal        = "QPushButton{border: 0px ; background-color :rgb(27,176,104); color : white;}";
+
+const char* const DecentButtonEnabled            = "QPushButton{border: 0px ; background-color :rgb(255, 255, 255); color : rgb(0, 0, 0);}"
+                                                   "QPushButton:!enabled{background-color :rgb(180,180,180); color : rgb(30, 30, 30);}";
 
 QFont TableHeaderFont();
 QFont AccountBalanceFont();

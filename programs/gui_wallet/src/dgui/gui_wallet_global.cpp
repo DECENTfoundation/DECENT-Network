@@ -688,43 +688,7 @@ void Globals::slot_timer()
    else
       emit connectingProgress(std::string());
 }
-//
-// DecentSmallButton
-//
 
-DecentSmallButton::DecentSmallButton(const QString& normalImg, const QString& highlightedImg, QWidget* pParent/* = nullptr*/)
-: QLabel(pParent)
-{
-   setMouseTracking(true);
-   normalImage.load(normalImg);
-   highlightedImage.load(highlightedImg);
-   setPixmap(normalImg);
-}
-
-void DecentSmallButton::unhighlight()
-{
-   setPixmap(normalImage);
-   setStyleSheet("* { background-color: rgb(255,255,255); color : black; }");
-}
-
-void DecentSmallButton::highlight()
-{
-   this->setPixmap(highlightedImage);
-   this->setStyleSheet("* { background-color: rgb(27,176,104); color : white; }");
-}
-
-bool DecentSmallButton::event(QEvent *event)
-{
-   if (event->type() == QEvent::MouseMove)
-      return false;
-   else
-      return QWidget::event(event);
-}
-
-void DecentSmallButton::mousePressEvent(QMouseEvent* event)
-{
-   emit clicked();
-}
 
 //**
 // DecentTable and DecentColumn
@@ -850,13 +814,13 @@ void DecentTable::mouseMoveEvent(QMouseEvent * event)
          }
 
          if(cell_widget != NULL) {
-            if(DecentSmallButton *button = qobject_cast<DecentSmallButton*>(cell_widget)) {
-               button->unhighlight();
+            if(DecentButton *button = qobject_cast<DecentButton*>(cell_widget)) {
+               button->setHighlighted(false);
             } else {
                QString old_style = cell_widget->property("old_style").toString();
 
                if (old_style.isEmpty())
-                  cell_widget->setStyleSheet("* { background-color: rgb(255,255,255); color : black; }");
+                  cell_widget->setStyleSheet("* {border: 0px ; background-color :rgb(255, 255, 255); color : rgb(0, 0, 0);}");
                else
                   cell_widget->setStyleSheet(old_style);
             }
@@ -882,11 +846,11 @@ void DecentTable::mouseMoveEvent(QMouseEvent * event)
       }
 
       if(cell_widget != NULL) {
-         if(DecentSmallButton *button = qobject_cast<DecentSmallButton*>(cell_widget)) {
-            button->highlight();
+         if(DecentButton *button = qobject_cast<DecentButton*>(cell_widget)) {
+            button->setHighlighted(true);
          } else {
             cell_widget->setProperty("old_style", cell_widget->styleSheet());
-            cell_widget->setStyleSheet("* { background-color: rgb(27,176,104); color : white; }");
+            cell_widget->setStyleSheet("* {border: 0px ; background-color :rgb(27,176,104); color : white;}");
          }
       }
 

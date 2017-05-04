@@ -86,6 +86,7 @@ PurchasedTab::PurchasedTab(QWidget* pParent)
 //
 // it is important to have a constructor/destructor body in cpp
 // when class has forward declared members
+
 PurchasedTab::~PurchasedTab() = default;
 
 void PurchasedTab::timeToUpdate(const std::string& result)
@@ -193,11 +194,11 @@ void PurchasedTab::ShowDigitalContentsGUI()
       graphene::chain::ContentObjectPropertyManager synopsis_parser(synopsis);
       std::string title = synopsis_parser.get<graphene::chain::ContentObjectTitle>();
 
-      DecentSmallButton* info_icon = new DecentSmallButton(icon_popup, icon_popup_white, m_pTableWidget);
-      info_icon->setAlignment(Qt::AlignCenter);
+      DecentButton* info_icon = new DecentButton(m_pTableWidget, icon_popup, icon_popup_white);
+      //info_icon->setAlignment(Qt::AlignCenter);
       m_pTableWidget->setCellWidget(iIndex, 6, info_icon);
 
-      QObject::connect(info_icon, &DecentSmallButton::clicked,
+      QObject::connect(info_icon, &DecentButton::clicked,
                        m_pDetailsSignalMapper, (void (QSignalMapper::*)())&QSignalMapper::map);
       m_pDetailsSignalMapper->setMapping(info_icon, iIndex);
 
@@ -236,10 +237,10 @@ void PurchasedTab::ShowDigitalContentsGUI()
          m_pTableWidget->item(iIndex, 5)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
       } else {
 
-         DecentSmallButton* extract_icon = new DecentSmallButton(icon_export, icon_export_white, m_pTableWidget);
-         extract_icon->setAlignment(Qt::AlignCenter);
+         DecentButton* extract_icon = new DecentButton(m_pTableWidget, icon_export, icon_export_white);
+         //extract_icon->setAlignment(Qt::AlignCenter);
 
-         QObject::connect(extract_icon, &DecentSmallButton::clicked,
+         QObject::connect(extract_icon, &DecentButton::clicked,
                           m_pExtractSignalMapper, (void (QSignalMapper::*)())&QSignalMapper::map);
          m_pExtractSignalMapper->setMapping(extract_icon, iIndex);
 

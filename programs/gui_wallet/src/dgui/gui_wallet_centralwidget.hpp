@@ -40,7 +40,6 @@ namespace gui_wallet
 enum FRST_LINE_ELEMS{DECENT_LOGO,USERNAME,BALANCE,SEND_,NUMBER_OF_FRST_LINE_ELEMS};
 enum MAIN_TABS_ENM{BROWSE_CONTENT,TRANSACTIONS,UPLOAD,OVERVIEW,PURCHASED};
 
-class DecentSmallButton;
 
 class AccountBalanceWidget : public QWidget
 {
@@ -83,7 +82,7 @@ public:
     QString getFilterText()const;
     QComboBox* usersCombo();
     DecentButton* importButton();
-    DecentSmallButton* getSendButton();
+    DecentButton* getSendButton();
    
     int GetMyCurrentTabIndex()const {
         return m_main_tabs.currentIndex();
@@ -134,7 +133,7 @@ private:
     Overview_tab        m_Overview_tab;
     PurchasedTab        m_Purchased_tab;
    
-    DecentSmallButton*  sendButton;
+    DecentButton*  sendButton;
     DecentButton*         prev_button;
     DecentButton*         next_button;
     DecentButton*         reset_button;

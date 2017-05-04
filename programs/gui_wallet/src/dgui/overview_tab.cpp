@@ -157,43 +157,46 @@ void Overview_tab::timeToUpdate(const std::string& result) {
 
       // Transaction Button
       //
-      DecentSmallButton* pTransactionButton = new DecentSmallButton(icon_transaction, icon_transaction_white);
-      pTransactionButton->setAlignment(Qt::AlignCenter);
-      m_pTableWidget->setCellWidget(iIndex, 2, pTransactionButton);
-
-      m_pAccountSignalMapper->setMapping(pTransactionButton, name.c_str());
-      QObject::connect(pTransactionButton, &DecentSmallButton::clicked,
+      DecentButton* pTransactionButton = new DecentButton(m_pTableWidget, icon_transaction, icon_transaction_white);
+      pTransactionButton->setIconSize(QSize(40,40));
+      
+      QObject::connect(pTransactionButton, &DecentButton::clicked,
                        m_pAccountSignalMapper, (void (QSignalMapper::*)())&QSignalMapper::map);
-      QObject::connect(pTransactionButton, &DecentSmallButton::clicked,
+      QObject::connect(pTransactionButton, &DecentButton::clicked,
                        this, &Overview_tab::slot_Transactions);
+      
+      m_pAccountSignalMapper->setMapping(pTransactionButton, name.c_str());
+      m_pTableWidget->setCellWidget(iIndex, 2, pTransactionButton);
 
       // Details Button
       //
-      DecentSmallButton* pDetailsButton = new DecentSmallButton(icon_popup, icon_popup_white);
-      pDetailsButton->setAlignment(Qt::AlignCenter);
+      DecentButton* pDetailsButton = new DecentButton(m_pTableWidget, icon_popup, icon_popup_white);
+      pDetailsButton->setIconSize(QSize(40,40));
       m_pTableWidget->setCellWidget(iIndex, 4, pDetailsButton);
 
       m_pAccountSignalMapper->setMapping(pDetailsButton, name.c_str());
-      QObject::connect(pDetailsButton, &DecentSmallButton::clicked,
+      QObject::connect(pDetailsButton, &DecentButton::clicked,
                        m_pAccountSignalMapper, (void (QSignalMapper::*)())&QSignalMapper::map);
-      QObject::connect(pDetailsButton, &DecentSmallButton::clicked,
+      QObject::connect(pDetailsButton, &DecentButton::clicked,
                        this, &Overview_tab::slot_Details);
       
       // Transfer Button
       //
-      DecentSmallButton* pTransferButton = new DecentSmallButton(icon_transfer, icon_transfer_white);
-      pTransferButton->setAlignment(Qt::AlignCenter);
+      DecentButton* pTransferButton = new DecentButton(m_pTableWidget, icon_transfer, icon_transfer_white);
+      pTransferButton->setIconSize(QSize(40,40));
       m_pTableWidget->setCellWidget(iIndex, 3, pTransferButton);
+            
 
       m_pAccountSignalMapper->setMapping(pTransferButton, name.c_str());
-      QObject::connect(pTransferButton, &DecentSmallButton::clicked,
+      QObject::connect(pTransferButton, &DecentButton::clicked,
                        m_pAccountSignalMapper, (void (QSignalMapper::*)())&QSignalMapper::map);
-      QObject::connect(pTransferButton, &DecentSmallButton::clicked,
+      QObject::connect(pTransferButton, &DecentButton::clicked,
                        this, &Overview_tab::slot_Transfer);
       
-      m_pTableWidget->cellWidget(iIndex, 2)->setStyleSheet(d_table);
-      m_pTableWidget->cellWidget(iIndex, 3)->setStyleSheet(d_table);
-      m_pTableWidget->cellWidget(iIndex, 4)->setStyleSheet(d_table);
+      m_pTableWidget->setRowHeight(iIndex,40);
+//      m_pTableWidget->cellWidget(iIndex, 2)->setStyleSheet(d_table);
+//      m_pTableWidget->cellWidget(iIndex, 3)->setStyleSheet(d_table);
+//      m_pTableWidget->cellWidget(iIndex, 4)->setStyleSheet(d_table);
 
       m_pTableWidget->item(iIndex,0)->setBackground(Qt::white);
       m_pTableWidget->item(iIndex,1)->setBackground(Qt::white);

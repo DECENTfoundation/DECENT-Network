@@ -19,7 +19,7 @@
 
 using namespace gui_wallet;
 
-RichDialogBase::RichDialogBase(QString title)
+RichDialogBase::RichDialogBase(QString title) : m_ok_button(this), m_cancel_button(this)
 {
     m_ok_button.setText(tr("Import"));
     m_cancel_button.setText(tr("Cancel"));
@@ -130,7 +130,7 @@ RET_TYPE RichDialog::execRD(const QPoint* a_pMove, std::vector<std::string>& a_c
 
 
 //Send Dialog *********************************************************
-SendDialogBase::SendDialogBase(QString title)
+SendDialogBase::SendDialogBase(QString title) : m_ok_button(this), m_cancel_button(this)
 {
    m_ok_button.setText(tr("Send"));
    m_cancel_button.setText(tr("Cancel"));

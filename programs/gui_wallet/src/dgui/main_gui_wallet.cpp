@@ -142,7 +142,7 @@ int main(int argc, char* argv[])
 
    qRegisterMetaType<string>( "std::string" );
    qRegisterMetaType<int64_t>( "int64_t" );
-   app.setApplicationDisplayName("Decent");
+   app.setApplicationDisplayName("DECENT");
 
    aMainWindow.show();
    
