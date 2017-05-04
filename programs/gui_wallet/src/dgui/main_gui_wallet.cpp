@@ -72,7 +72,7 @@ int main(int argc, char* argv[])
 {
    QApplication app(argc, argv);
 
-   //app.setStyleSheet(d_global_white_style);
+   app.setStyleSheet(d_global_white_style);
 
 
    QTranslator* translator = new QTranslator();

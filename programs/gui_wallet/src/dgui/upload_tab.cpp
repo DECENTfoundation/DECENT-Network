@@ -742,7 +742,8 @@ Upload_tab::Upload_tab(QWidget* pParent)
    pSearchLayout->setContentsMargins(42, 0, 0, 0);
    pSearchLayout->addWidget(pSearchLabel);
    pSearchLayout->addWidget(pfilterLineEditor);
-   pSearchLayout->addWidget(pUploadButton, 0 , Qt::AlignBottom);
+   pSearchLayout->addWidget(pUploadButton, 0 , Qt::AlignCenter);
+   //pSearchLayout->addWidget(pUploadButton, 0 , Qt::AlignBottom);
 
    QVBoxLayout* pMainLayout = new QVBoxLayout;
    pMainLayout->setContentsMargins(0, 0, 0, 0);

@@ -34,18 +34,18 @@ namespace gui_wallet
     : QDialog((QWidget*)pParent, Qt::Window | Qt::WindowTitleHint | Qt::CustomizeWindowHint | Qt::WindowCloseButtonHint)
     , ret_value()
     , m_pParent(pParent)
-    , m_main_table(1, 1)
+    //, m_main_table(1, 1)
     {
         setFixedSize(380,180);
        
-        m_main_table.horizontalHeader()->hide();
+        /*m_main_table.horizontalHeader()->hide();
         m_main_table.verticalHeader()->hide();
         m_main_table.setShowGrid(false);
         m_main_table.setFrameShape(QFrame::NoFrame);
         
         QPalette plt_tbl = m_main_table.palette();
         plt_tbl.setColor(QPalette::Base, palette().color(QPalette::Window));
-        m_main_table.setPalette(plt_tbl);
+        m_main_table.setPalette(plt_tbl);*/
         
         DecentButton* unlockButton = new DecentButton(this);
 
@@ -68,13 +68,13 @@ namespace gui_wallet
            setWindowTitle(tr("Unlock your wallet"));
         }
        
-        m_main_table.setCellWidget(0, 0, &password_box);
+        //m_main_table.setCellWidget(0, 0, &password_box);
         QHBoxLayout* button_layout = new QHBoxLayout();
         button_layout->addWidget(unlockButton);
         connect(unlockButton, SIGNAL(clicked()), this, SLOT(unlock_slot()));
         connect(&password_box, SIGNAL(returnPressed()), unlockButton, SIGNAL(clicked()));
         m_main_layout.setContentsMargins(40, 40, 40, 40);
-        m_main_layout.addWidget(&m_main_table);
+        m_main_layout.addWidget(&password_box);
         m_main_layout.addLayout(button_layout);
         setLayout(&m_main_layout);
         
@@ -103,8 +103,8 @@ namespace gui_wallet
     
     void PasswordDialog::resizeEvent(QResizeEvent * event)
     {
-        QSize tableSize = m_main_table.size();
-        m_main_table.setColumnWidth(0, tableSize.width() - 10);
+        //QSize tableSize = m_main_table.size();
+        //m_main_table.setColumnWidth(0, tableSize.width() - 10);
     }
     
     void PasswordDialog::unlock_slot() {

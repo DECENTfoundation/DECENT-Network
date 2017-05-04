@@ -26,8 +26,8 @@ void ShowMessageBox(QString const& strTitle,
                     QString const& strMessage,
                     QString const& strDetailedText/* = QString()*/)
 {
-   QMessageBox* pMessageBox = new QMessageBox();
-   pMessageBox->setWindowTitle(strTitle);
+   QMessageBox* pMessageBox = new QMessageBox(nullptr);
+   pMessageBox->setWindowTitle(strTitle); // funny MacOS ignores the title
    pMessageBox->setText(strMessage);
    pMessageBox->setDetailedText(strDetailedText);
    pMessageBox->setAttribute(Qt::WA_DeleteOnClose);
