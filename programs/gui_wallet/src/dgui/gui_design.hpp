@@ -116,6 +116,8 @@ const char* const GreenDecentButtonNormal        = "QPushButton{border: 0px ; ba
 const char* const DecentButtonEnabled            = "QPushButton{border: 0px ; background-color :rgb(255, 255, 255); color : rgb(0, 0, 0);}"
                                                    "QPushButton:!enabled{background-color :rgb(180,180,180); color : rgb(30, 30, 30);}";
 
+const char* const d_table                        = "* { background-color: rgb(255,255,255); color : rgb(27,176,104); }";
+
 QFont TableHeaderFont();
 QFont AccountBalanceFont();
 QFont DescriptionDetailsFont();
