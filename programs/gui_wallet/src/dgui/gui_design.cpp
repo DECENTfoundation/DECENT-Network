@@ -2,6 +2,11 @@
 
 #include <QFont>
 
+QFont PaginationFont()
+{
+   return QFont("Myriad Pro Regular",14, QFont::Weight::Normal);
+}
+
 QFont TableHeaderFont()
 {
    return QFont("Open Sans Bold", 

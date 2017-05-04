@@ -59,6 +59,8 @@ void TabContentManager::reset()
 {
    m_iterators.clear();
    m_next_iterator.clear();
+   m_last_result.clear();
+   tryToUpdate();
 }
 
 bool TabContentManager::previous()
