@@ -100,6 +100,8 @@ const char* const d_upload_popup        = "background-color : white;";
 #endif
 const char* const c_keyparts            = "color : black;";
 
+const char* const d_table               = "* { background-color: rgb(255,255,255); color : rgb(27,176,104); }";
+
 QFont TableHeaderFont();
 QFont AccountBalanceFont();
 QFont DescriptionDetailsFont();
