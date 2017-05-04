@@ -114,7 +114,6 @@ namespace graphene { namespace app {
                                                                string const& order,
                                                                object_id_type const& id,
                                                                int limit) const;
-
       uint64_t get_account_count()const;
       
       // Balances
@@ -762,6 +761,7 @@ namespace graphene { namespace app {
             account_object const& element = *itr_begin;
             ++itr_begin;
 
+
             std::string account_id_str = fc::variant(element.get_id()).as<std::string>();
             std::string account_name = element.name;
             std::string search_term = term;
@@ -794,6 +794,7 @@ namespace graphene { namespace app {
          search_accounts_template<false, by_name>(_db, term, limit, id, result);
       else
          search_accounts_template<true, by_name>(_db, term, limit, id, result);
+
 
       return result;
    }

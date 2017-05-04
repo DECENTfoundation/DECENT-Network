@@ -184,7 +184,7 @@ Upload_popup::Upload_popup(QWidget* pParent)
    _seedersPath->setMinimumWidth(100);
    _seedersPath->setMinimumHeight(40);
    
-   DecentButton* seeders_button = new DecentButton();
+   DecentButton* seeders_button = new DecentButton(this);
 
    seeders_button->setText(tr("Select Seeders"));
    seeders_button->setFont(PopupButtonRegularFont());
@@ -224,7 +224,7 @@ Upload_popup::Upload_popup(QWidget* pParent)
    _contentPath->setMinimumHeight(40);
    _contentPath->setTextMargins(5, 5, 5, 5);
 
-   DecentButton* browseContentButton = new DecentButton();
+   DecentButton* browseContentButton = new DecentButton(this);
    browseContentButton->setText(tr("Browse"));
    browseContentButton->setFont(PopupButtonRegularFont());
 
@@ -248,7 +248,7 @@ Upload_popup::Upload_popup(QWidget* pParent)
    _samplesPath->setTextMargins(5, 5, 5, 5);
    
 
-   DecentButton* browseSamplesButton = new DecentButton();
+   DecentButton* browseSamplesButton = new DecentButton(this);
    browseSamplesButton->setText(tr("Browse"));
    browseSamplesButton->setFont(PopupButtonRegularFont());
 
@@ -269,8 +269,8 @@ Upload_popup::Upload_popup(QWidget* pParent)
    QHBoxLayout* button = new QHBoxLayout;
 
    button->setSpacing(20);
-   _upload_button = new DecentButton();
-   _cancel_button = new DecentButton();
+   _upload_button = new DecentButton(this);
+   _cancel_button = new DecentButton(this);
 
    _cancel_button->setText(tr("Cancel"));
    _cancel_button->setFont(PopupButtonBigFont());
@@ -330,7 +330,7 @@ void Upload_popup::onGrabPublishers() {
    std::string a_result = Globals::instance().runTask("list_publishers_by_price 100");
    
    //seeders popup ok button
-   _seeder_ok = new DecentButton();
+   _seeder_ok = new DecentButton(this);
    _seeder_ok->setText(tr("OK"));
    _seeder_ok->setFixedHeight(50);
    _seeder_ok->setFixedWidth(100);
@@ -860,11 +860,10 @@ void Upload_tab::ShowDigitalContentsGUI()
       }
       // Icon
       //
-      DecentSmallButton* info_icon = new DecentSmallButton(icon_popup, icon_popup_white, this);
-      info_icon->setAlignment(Qt::AlignCenter);
+      DecentButton* info_icon = new DecentButton(this, icon_popup, icon_popup_white);
       m_pTableWidget->setCellWidget(iIndex, eIcon, info_icon);
 
-      QObject::connect(info_icon, &DecentSmallButton::clicked,
+      QObject::connect(info_icon, &DecentButton::clicked,
                        m_pDetailsSignalMapper, (void (QSignalMapper::*)())&QSignalMapper::map);
       m_pDetailsSignalMapper->setMapping(info_icon, iIndex);
    }

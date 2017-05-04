@@ -97,7 +97,7 @@ CentralWigdet::CentralWigdet(QBoxLayout* a_pAllLayout, Mainwindow_gui_wallet* a_
       m_Upload_tab(a_pPar),
       m_Purchased_tab(a_pPar),
       m_trans_tab(a_pPar),
-      sendButton(new DecentSmallButton(icon_inactive_send,icon_send))
+      sendButton(new DecentButton(this, icon_send, icon_send, icon_inactive_send))
 {
 
 
@@ -160,7 +160,7 @@ DecentButton* CentralWigdet::importButton()
    return (DecentButton*)GetWidgetFromTable5(USERNAME,2);
 }
 
-DecentSmallButton* CentralWigdet::getSendButton()
+DecentButton* CentralWigdet::getSendButton()
 {
    return sendButton;
 }
@@ -244,7 +244,7 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     
     pComboTmp1 = new QComboBox;
     pComboTmp1->setStyle(QStyleFactory::create("fusion"));
-    importKeyButton = new DecentButton();
+    importKeyButton = new DecentButton(this);
 
     importKeyButton->setText(tr("Import Key"));
 #ifdef WINDOWS_HIGH_DPI
@@ -313,17 +313,13 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
    /*//////////////////////////////////////////*/
    m_pSendWgt1 = new QWidget;
    pHBoxLayoutTmp = new QHBoxLayout;
-   sendButton->setScaledContents(true);
-   DecentButton* send_text = new DecentButton();
-   send_text->setText(tr("Send"));
-   send_text->setStyleSheet("border: 1px solid rgb(255, 255, 255); background-color :rgb(255,255,255); color: rgb(0,0,0);");
 
-   sendButton->setFixedSize(30,30);
+   sendButton->setText(tr("Send"));
+   //sendButton->setFixedSize(50,50);
+   sendButton->setIconSize(QSize(40,40));
    connect(sendButton, SIGNAL(clicked()), this, SLOT(sendDCTSlot()));
-   connect(send_text, SIGNAL(clicked()), this, SLOT(sendDCTSlot()));
    pHBoxLayoutTmp->setAlignment(Qt::AlignRight);
    pHBoxLayoutTmp->addWidget(sendButton);
-   pHBoxLayoutTmp->addWidget(send_text);
    
    m_pSendWgt1->setLayout(pHBoxLayoutTmp);
    m_first_line_lbl.addWidget(m_pSendWgt1);
@@ -357,9 +353,9 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     //m_main_layout.addWidget(&m_main_tabs);
    
    QHBoxLayout* pagination_layout = new QHBoxLayout();
-   prev_button = new DecentButton();
-   next_button = new DecentButton();
-   reset_button = new DecentButton();
+   prev_button = new DecentButton(this);
+   next_button = new DecentButton(this);
+   reset_button = new DecentButton(this);
    
    prev_button->setText("Previous");
    prev_button->setStyleSheet(d_pagination_buttons);
