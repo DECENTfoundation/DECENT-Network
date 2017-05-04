@@ -50,7 +50,7 @@ void ContentDetailsGeneral::LabelPushCallbackGUI()
    reply->setFixedSize(500, 400);
    reply->setContentsMargins(0, 30, 80, 30);
    reply->setWindowFlags(Qt::WindowTitleHint);
-   reply->QDialog::setWindowTitle(tr("Decent-Blockchain Content Distributor"));
+   reply->QDialog::setWindowTitle(tr("DECENT-Blockchain Content Distribution"));
    reply->setText("          " + tr("Are you sure you want to buy this content?"));
    QPushButton* pButtonCancel = reply->addButton(tr("Cancel"), QMessageBox::YesRole);
    QPushButton* pButtonOk = reply->addButton(tr("Get it"), QMessageBox::NoRole);
