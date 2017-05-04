@@ -49,6 +49,8 @@ add_executable(DECENT MACOSX_BUNDLE
                src/dgui/text_display_dialog.hpp
                src/dgui/transactions_tab.cpp
                src/dgui/transactions_tab.hpp
+               src/dgui/upload_popup.cpp
+               src/dgui/upload_popup.hpp
                src/dgui/upload_tab.cpp
                src/dgui/upload_tab.hpp
 

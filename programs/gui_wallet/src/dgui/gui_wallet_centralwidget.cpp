@@ -17,6 +17,7 @@
 #include "gui_wallet_global.hpp"
 #include "gui_wallet_mainwindow.hpp"
 
+
 #ifndef _MSC_VER
 #include <QSortFilterProxyModel>
 #include <QStyleFactory>
