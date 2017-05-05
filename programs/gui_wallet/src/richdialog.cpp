@@ -243,6 +243,8 @@ void SendDialog::sendDCT()
 
       return;
    }
+
+   QString curentName = Globals::instance().getCurrentUser().c_str();
    
    try {
       QString run_str = "transfer \""

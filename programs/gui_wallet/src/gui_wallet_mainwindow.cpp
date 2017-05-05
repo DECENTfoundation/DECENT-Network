@@ -647,7 +647,7 @@ void Mainwindow_gui_wallet::SendDCTSlot()
    QPoint thisPos = pos();
    thisPos.rx() += size().width() / 2 - 175;
    thisPos.ry() += size().height() / 2 - 75;
-   m_sendDCT_dialog->curentName = m_pCentralWidget->usersCombo()->currentText();
+   
    m_sendDCT_dialog->execRD(&thisPos,cvsUsKey);
 }
 

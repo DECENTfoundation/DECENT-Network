@@ -114,8 +114,6 @@ protected:
    int         m_nNumOfTextBoxes;
    QLineEdit*  m_pTextBoxes;
    QLocale     _locale;
-public:
-   QString curentName;
    
 };
    

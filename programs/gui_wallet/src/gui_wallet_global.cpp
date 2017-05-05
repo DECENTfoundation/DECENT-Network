@@ -636,7 +636,6 @@ void Globals::showTransferDialog(std::string const& user)
 
    std::vector<std::string> cvsUsKey(3);
 
-   pTransferDialog->curentName = user.c_str();
    pTransferDialog->execRD(nullptr, cvsUsKey);
    delete pTransferDialog;
 }
