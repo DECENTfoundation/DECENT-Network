@@ -1,0 +1,41 @@
+QDialog, QMainWindow, QMessageBox
+{
+   color: black;
+   background-color: white;
+}
+QPushButton
+{
+   border: 0px;
+   background-color: rgb(27,176,104);
+   color: white;
+}
+QPushButton:!enabled
+{
+   border: 0px;
+   background-color: rgb(180,180,180);
+   color: rgb(30, 30, 30);
+}
+QPushButton[type='send'][enabled=true]
+{
+   border: 0px;
+   background-color: white;
+   color: black;
+   qproperty-icon: url(':/icon/images/send.png');
+}
+QPushButton[type='send'][enabled=false]
+{
+   border: 0px;
+   background-color: white;
+   color: black;
+   qproperty-icon: url(':/icon/images/inactive_send.png');
+}
+QMessageBox QPushButton, QFileDialog QPushButton
+{
+   border: 0px;
+   background-color: rgb(27,176,104);
+   color: white;
+   min-width: 100px;
+   min-height: 35px;
+   max-width: 200px;
+   max-height: 35px;
+}
