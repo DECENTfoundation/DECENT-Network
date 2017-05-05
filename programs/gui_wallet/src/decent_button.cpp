@@ -45,7 +45,7 @@ DecentButton::DecentButton(QWidget *parent/* = Q_NULLPTR*/,
    
    if(m_standardImage.isEmpty())
    {
-      this->setStyleSheet(GreenDecentButtonEnabled);
+      setStyleSheet(GreenDecentButtonEnabled);
    }
    else
    {
@@ -58,13 +58,12 @@ void DecentButton::putImage(const QString& imageName)
 {
    if(!imageName.isEmpty())
    {
-
-         QIcon ButtonIcon;
-         setSizePolicy( QSizePolicy::Preferred, QSizePolicy::Preferred );
-         setFlat(true);
-         ButtonIcon.addFile(imageName, QSize(), QIcon::Normal, QIcon::On);
-         ButtonIcon.addFile(m_disabledImage, QSize(), QIcon::Disabled, QIcon::Off);
-         setIcon(ButtonIcon);
+      QIcon ButtonIcon;
+      setSizePolicy( QSizePolicy::Preferred, QSizePolicy::Preferred );
+      setFlat(true);
+      ButtonIcon.addFile(imageName, QSize(), QIcon::Normal, QIcon::On);
+      ButtonIcon.addFile(m_disabledImage, QSize(), QIcon::Disabled, QIcon::Off);
+      setIcon(ButtonIcon);
    }
 };
 
@@ -101,9 +100,9 @@ bool DecentButton::event(QEvent* event)
 
 void DecentButton::changeEvent(QEvent* event)
 {
-   if(event->type() == QEvent::EnabledChange)
+   if (event->type() == QEvent::EnabledChange)
    {
-      if(isEnabled())
+      if (isEnabled())
       {
          putImage(m_standardImage);
       }
@@ -112,5 +111,7 @@ void DecentButton::changeEvent(QEvent* event)
          putImage(m_disabledImage);
       }
    }
+
+   QPushButton::changeEvent(event);
 }
 

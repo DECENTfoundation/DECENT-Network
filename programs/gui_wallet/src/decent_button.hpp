@@ -28,7 +28,7 @@ public:
 
 protected:
    virtual bool event(QEvent* event) override;
-   void changeEvent(QEvent* event) override;
+   virtual void changeEvent(QEvent* event) override;
 private:
    QString m_standardImage;
    QString m_highlightedImage;

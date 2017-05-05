@@ -354,9 +354,10 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     //m_main_layout.addWidget(&m_main_tabs);
    
    QHBoxLayout* pagination_layout = new QHBoxLayout();
-   prev_button = new DecentButton(this);
-   next_button = new DecentButton(this);
-   reset_button = new DecentButton(this);
+
+   DecentButton* prev_button = new DecentButton(this);
+   DecentButton* next_button = new DecentButton(this);
+   DecentButton* reset_button = new DecentButton(this);
    
    prev_button->setText("Previous");
    prev_button->setStyleSheet(d_pagination_buttons);
@@ -386,6 +387,11 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
    QObject::connect( prev_button, SIGNAL(clicked()), this, SLOT(prevButtonSlot()) );
    QObject::connect( next_button, SIGNAL(clicked()), this, SLOT(nextButtonSlot()) );
    QObject::connect( reset_button, SIGNAL(clicked()), this, SLOT(resetButtonSlot()) );
+
+   QObject::connect(this, &CentralWigdet::signal_SetNextPageDisabled,
+                    next_button, &QPushButton::setDisabled);
+   QObject::connect(this, &CentralWigdet::signal_SetPreviousPageDisabled,
+                    prev_button, &QPushButton::setDisabled);
    
    QStatusBar* status = new QStatusBar(this);
    m_main_layout.addWidget(status);
@@ -405,8 +411,8 @@ void CentralWigdet::paginationController()
 {
    m_allTabs[m_currentTab]->m_i_page_size = ( m_allTabs[m_currentTab]->size().height() - 35)/35; // 30 for buttons layout, 35-cloumn height
 
-   prev_button->setDisabled( m_allTabs[m_currentTab]->is_first() );
-   next_button->setDisabled( m_allTabs[m_currentTab]->is_last() );
+   emit signal_SetNextPageDisabled(m_allTabs[m_currentTab]->is_last());
+   emit signal_SetPreviousPageDisabled(m_allTabs[m_currentTab]->is_first());
 }
 
 void CentralWigdet::prevButtonSlot()
