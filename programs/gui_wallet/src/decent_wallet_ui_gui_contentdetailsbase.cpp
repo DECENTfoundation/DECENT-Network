@@ -358,7 +358,6 @@ void ContentDetailsBase::popup_for_purchased(int row_star)
     m_desc.setText(tr("Description") + "\n\n");
     m_desc.setStyleSheet(border_0);
     m_desc.setReadOnly(true);
-    m_desc.setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     m_desc.setFont(DescriptionDetailsFont());
     desc_lay->setContentsMargins(42, 17, 0, 3);
     desc_lay->addWidget(&m_desc);
