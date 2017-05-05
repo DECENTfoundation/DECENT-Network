@@ -16,7 +16,32 @@ const char* const bg_color_grey         = "background-color:rgb(244,244,244);";
 const char* const bg_color_wgite        = "background-color:white;";
 const char* const font_bold             = "font-weight: bold";
 const char* const col_grey              = "color: rgb(244,244,244)";
-const char* const border_0              = "border: 0px;";
+const char* const border_0              = "QTextEdit {border: 0px;}"
+                                          "QScrollBar:vertical {"
+                                          "    border: 0px;"
+                                          "    background:white;"
+                                          "    width:7px;    "
+                                          "    margin: 0px 0px 0px 0px;"
+                                          "}"
+                                          "QScrollBar::handle:vertical {"
+                                          "    background: qlineargradient(x1:0, y1:0, x2:1, y2:0,"
+                                          "    stop: 0 rgb(180,180,180), stop: 0.5 rgb(180,180,180), stop:1 rgb(180,180,180));"
+                                          "    min-height: 0px;"
+                                          "}"
+                                          "QScrollBar::add-line:vertical {"
+                                          "    background: qlineargradient(x1:0, y1:0, x2:1, y2:0,"
+                                          "    stop: 0 rgb(180,180,180), stop: 0.5 rgb(180,180,180),  stop:1 rgb(180,180,180));"
+                                          "    height: 0px;"
+                                          "    subcontrol-position: bottom;"
+                                          "    subcontrol-origin: margin;"
+                                          "}"
+                                          "QScrollBar::sub-line:vertical {"
+                                          "    background: qlineargradient(x1:0, y1:0, x2:1, y2:0,"
+                                          "    stop: 0  rgb(180,180,180), stop: 0.5 rgb(180,180,180),  stop:1 rgb(180,180,180));"
+                                          "    height: 0 px;"
+                                          "    subcontrol-position: top;"
+                                          "    subcontrol-origin: margin;"
+                                          "}";
 
 //decent_wallet_ui_gui_contentdetailsgeneral
 const char* const d_pButtonOk           = "background-color: rgb(27,176,104); color: rgb(255,255,255);border-top: 0px;border-left: 0px;border-right: 0px;border-bottom: 0px;";
