@@ -20,7 +20,7 @@ public:
    void tryToUpdate();
 
    bool next();
-   void reset();
+   void reset(bool bRefresh = true);
    bool previous();
    bool is_first() const;
    bool is_last() const;

@@ -251,6 +251,7 @@ void BrowseContentTab::ShowDigitalContentsGUI() {
 void BrowseContentTab::slot_SearchTermChanged(QString const& strSearchTerm)
 {
    m_strSearchTerm = strSearchTerm;
+   reset(false);
 }
 void BrowseContentTab::slot_SortingChanged(int index)
 {

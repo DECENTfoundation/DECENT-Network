@@ -169,5 +169,6 @@ void TransactionsTab::slot_SortingChanged(int index)
 void TransactionsTab::slot_SearchTermChanged(QString const& strSearchTerm)
 {
    m_strSearchTerm = strSearchTerm;
+   reset(false);
 }
 }  // end namespace gui_wallet

@@ -308,6 +308,7 @@ void PurchasedTab::slot_ExtractionDirSelected(QString const& path) {
 void PurchasedTab::slot_SearchTermChanged(QString const& strSearchTerm)
 {
    m_strSearchTerm = strSearchTerm;
+   reset(false);
 }
 
 void PurchasedTab::slot_ExtractPackage(int iIndex) {

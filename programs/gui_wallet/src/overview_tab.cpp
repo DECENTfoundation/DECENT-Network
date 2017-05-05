@@ -271,6 +271,7 @@ void Overview_tab::slot_Transfer()
 void Overview_tab::slot_SearchTermChanged(QString const& strSearchTerm)
 {
    m_strSearchTerm = strSearchTerm;
+   reset(false);
 }
 void Overview_tab::slot_AccountChanged(QString const& strAccountName)
 {

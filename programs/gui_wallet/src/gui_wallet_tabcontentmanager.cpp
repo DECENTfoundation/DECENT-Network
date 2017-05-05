@@ -55,12 +55,16 @@ bool TabContentManager::next()
    return true;
 }
 
-void TabContentManager::reset()
+void TabContentManager::reset(bool bRefresh/* = true*/)
 {
    m_iterators.clear();
    m_next_iterator.clear();
-   m_last_result.clear();
-   tryToUpdate();
+
+   if (bRefresh)
+   {
+      m_last_result.clear();
+      tryToUpdate();
+   }
 }
 
 bool TabContentManager::previous()

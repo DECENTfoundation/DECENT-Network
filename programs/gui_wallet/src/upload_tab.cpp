@@ -336,5 +336,6 @@ void Upload_tab::slot_SortingChanged(int index)
 void Upload_tab::slot_SearchTermChanged(QString const& strSearchTerm)
 {
    m_strSearchTerm = strSearchTerm;
+   reset(false);
 }
 
