@@ -1,15 +1,4 @@
-/*
- *	File: gui_wallet_mainwindow.cpp
- *
- *	Created on: Nov 11, 2016
- *	Created by: Davit Kalantaryan (Email: davit.kalantaryan@desy.de)
- *
- *  This file implements ...
- *
- */
 #include "stdafx.h"
-
-#define     WALLET_CONNECT_CODE     ((void*)-2)
 
 #ifndef _MSC_VER
 #include <QMenuBar>
@@ -442,6 +431,7 @@ void Mainwindow_gui_wallet::UnlockSlot()
    
     if (!RunTaskParse(csPassLine, result)) {
        ALERT_DETAILS(tr("Unable to unlock the wallet").toStdString(), result.get<std::string>().c_str());
+       UpdateLockedStatus();
        return;
     }
     

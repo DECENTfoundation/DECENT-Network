@@ -149,7 +149,11 @@ Upload_popup::Upload_popup(QWidget* pParent)
    priceLabel->setMinimumHeight(40);
 
    QLineEdit* pPriceEditor = new QLineEdit();
-   pPriceEditor->setValidator( new QDoubleValidator(0.0001, 100000, 4, this) );
+   
+   QDoubleValidator* dblValidator = new QDoubleValidator(0.0001, 100000, 4, this);
+   dblValidator->setLocale(_locale);
+   pPriceEditor->setValidator(dblValidator);
+
    pPriceEditor->setAttribute(Qt::WA_MacShowFocusRect, 0);
    pPriceEditor->setStyleSheet(d_label_v2);
    pPriceEditor->setTextMargins(5, 5, 5, 5);
