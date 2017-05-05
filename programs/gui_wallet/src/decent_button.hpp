@@ -19,22 +19,13 @@ class DecentButton : public QPushButton
 {
    Q_OBJECT
 public:
-   DecentButton(QWidget *parent,
-                const QString& standardImage = QString(),
-                const QString& highlightedImage = QString(),
-                const QString& disableImage = QString());
-   
-   void setHighlighted(bool bIsHighlighted);
+   DecentButton(QWidget* parent,
+                QString enabledImage = QString(),
+                QString disabledImage = QString(),
+                bool bOption = false);
 
 protected:
    virtual bool event(QEvent* event) override;
-   virtual void changeEvent(QEvent* event) override;
-private:
-   QString m_standardImage;
-   QString m_highlightedImage;
-   QString m_disabledImage;
-private:
-   void putImage(const QString&);
 };
 
 }

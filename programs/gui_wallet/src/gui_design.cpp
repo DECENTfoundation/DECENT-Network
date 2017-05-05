@@ -20,7 +20,7 @@ const char* const d_global_white_style =
    "background-color: rgb(180,180,180);"
    "color: rgb(30, 30, 30);"
 "}"
-"QMessageBox QPushButton"
+"QMessageBox QPushButton, QFileDialog QPushButton"
 "{"
    "border: 0px;"
    "background-color: rgb(27,176,104);"
