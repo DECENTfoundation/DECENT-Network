@@ -98,10 +98,8 @@ CentralWigdet::CentralWigdet(QBoxLayout* a_pAllLayout, Mainwindow_gui_wallet* a_
       m_Upload_tab(a_pPar),
       m_Purchased_tab(a_pPar),
       m_trans_tab(a_pPar),
-      sendButton(new DecentButton(this, icon_send, icon_inactive_send, true)) // ugly, will fix somehow
+      sendButton(new DecentButton(this, DecentButton::Send))
 {
-
-
          
     m_allTabs.push_back(&m_browse_cont_tab);
     m_allTabs.push_back(&m_trans_tab);
@@ -245,7 +243,7 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     
     pComboTmp1 = new QComboBox;
     pComboTmp1->setStyle(QStyleFactory::create("fusion"));
-    importKeyButton = new DecentButton(this);
+    importKeyButton = new DecentButton(this, DecentButton::Default);
 
     importKeyButton->setText(tr("Import Key"));
 #ifdef WINDOWS_HIGH_DPI
@@ -316,7 +314,7 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
    pHBoxLayoutTmp = new QHBoxLayout;
 
    sendButton->setText(tr("Send"));
-   sendButton->setEnabled(false);
+   //sendButton->setEnabled(false);
    //sendButton->setFixedSize(50,50);
    sendButton->setIconSize(QSize(40,40));
    connect(sendButton, SIGNAL(clicked()), this, SLOT(sendDCTSlot()));

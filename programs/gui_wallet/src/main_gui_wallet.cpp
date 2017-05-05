@@ -14,6 +14,8 @@
 #include <QProcess>
 #include <QMessageBox>
 #include <QDir>
+#include <QFile>
+#include <QTextStream>
 #include <fc/interprocess/signals.hpp>
 #include <fc/thread/thread.hpp>
 #endif
@@ -72,7 +74,14 @@ int main(int argc, char* argv[])
 {
    QApplication app(argc, argv);
 
-   app.setStyleSheet(d_global_white_style);
+   QFile styleFile(":/css/styles/white_green.css");
+   if(styleFile.open(QIODevice::ReadOnly))
+   {
+      QTextStream textStream(&styleFile);
+      QString styleSheet = textStream.readAll();
+      styleFile.close();
+      app.setStyleSheet(styleSheet);
+   }
 
 
    QTranslator* translator = new QTranslator();

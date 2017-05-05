@@ -97,10 +97,6 @@ const char* const d_pass                = "border: 1px solid rgb(143,143,143);pa
 //gui_wallet_mainwindow
 const char* const d_style               = "QMainWindow{color:black;background-color:white;};";
 
-extern const char* const d_global_white_style;
-
-
-
 
 //users_tab
 const char* const icon_search              = ":/icon/images/search.svg";

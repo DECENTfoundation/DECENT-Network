@@ -29,4 +29,7 @@
     <qresource prefix="/translations">
         <file>languages/decent_en.qm</file>
     </qresource>
+    <qresource prefix="/css">
+         <file>styles/white_green.css</file>
+    </qresource>
 </RCC>

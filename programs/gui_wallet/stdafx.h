@@ -46,6 +46,7 @@
 #include <Qtimer>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
+#include <QTextStream>
 
 #include <stdio.h>
 #include <stdlib.h>

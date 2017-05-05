@@ -2,35 +2,6 @@
 
 #include <QFont>
 
-const char* const d_global_white_style =
-"QDialog, QMainWindow, QMessageBox"
-"{"
-   "color: black;"
-   "background-color: white;"
-"}"
-"QPushButton"
-"{"
-   "border: 0px;"
-   "background-color: rgb(27,176,104);"
-   "color: white;"
-"}"
-"QPushButton:!enabled"
-"{"
-   "border: 0px;"
-   "background-color: rgb(180,180,180);"
-   "color: rgb(30, 30, 30);"
-"}"
-"QMessageBox QPushButton, QFileDialog QPushButton"
-"{"
-   "border: 0px;"
-   "background-color: rgb(27,176,104);"
-   "color: white;"
-   "min-width: 100px;"
-   "min-height: 35px;"
-   "max-width: 200px;"
-   "max-height: 35px;"
-"}";
-
 QFont PaginationFont()
 {
    return QFont("Myriad Pro Regular",14, QFont::Weight::Normal);

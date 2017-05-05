@@ -31,8 +31,7 @@ using namespace gui_wallet;
 
 DecentButton::DecentButton(QWidget *parent/* = Q_NULLPTR*/,
                            QString enabledImage/* = QString()*/,
-                           QString disabledImage/* = QString()*/,
-                           bool bOption/* = false*/)  // ugly, will fix somehow
+                           QString disabledImage/* = QString()*/)
 : QPushButton(parent)
 {
    setMouseTracking(true);
@@ -51,13 +50,8 @@ DecentButton::DecentButton(QWidget *parent/* = Q_NULLPTR*/,
 
       const char* const style =  "QPushButton{border: 0px ; background-color :rgb(27,176,104); color : white;}"
                                  "QPushButton:!enabled{border: 0px ; background-color :rgb(255, 255, 255); color : rgb(0, 0, 0);}";
-      const char* const style_option = "QPushButton{border: 0px ; background-color :white; color : black;}"
-                                       "QPushButton:!enabled{border: 0px ; background-color :rgb(255, 255, 255); color : rgb(0, 0, 0);}";
 
-      if (bOption)
-         setStyleSheet(style_option);
-      else
-         setStyleSheet(style);
+      setStyleSheet(style);
    }
    else
    {
@@ -68,12 +62,37 @@ DecentButton::DecentButton(QWidget *parent/* = Q_NULLPTR*/,
    }
 }
 
+DecentButton::DecentButton(QWidget *parent, eType enType)
+: QPushButton(parent)
+{
+   switch (enType)
+   {
+   case Send:
+      setProperty("type", "send");
+      setObjectName("send");
+      break;
+   case Default:
+   default:
+      break;
+   }
+}
+
 bool DecentButton::event(QEvent* event)
 {
    if (event->type() == QEvent::MouseMove)
       return false;
    else
       return QWidget::event(event);
+}
+
+void DecentButton::changeEvent(QEvent* event)
+{
+   if (event->type() == QEvent::EnabledChange)
+   {
+      style()->unpolish(this);
+      style()->polish(this);
+   }
+   QPushButton::changeEvent(event);
 }
 
 
