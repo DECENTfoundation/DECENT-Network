@@ -67,7 +67,6 @@ void_result transfer_evaluator::do_apply( const transfer_operation& o )
                                              obj.m_transaction_encrypted_memo = o.memo;
                                              obj.m_str_description = "transfer";
                                              obj.m_timestamp = d.head_block_time();
-                                             obj.m_transaction_encrypted_memo = o.memo;
                                           });
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (o) ) }
