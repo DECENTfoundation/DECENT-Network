@@ -235,7 +235,7 @@ void BrowseContentTab::ShowDigitalContentsGUI() {
 
       // Button
       colIndex++;
-      DecentButton* info_icon = new DecentButton(m_pTableWidget, icon_popup_white, icon_popup);
+      DecentButton* info_icon = new DecentButton(m_pTableWidget, DecentButton::TableIcon, DecentButton::Detail);
       info_icon->setEnabled(false);
       info_icon->setIconSize(QSize(40,40));
 

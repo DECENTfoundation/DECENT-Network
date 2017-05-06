@@ -12,12 +12,19 @@ public:
    enum eType
    {
       Default,
-      Send
+      Send,
+      TableIcon
    };
-   DecentButton(QWidget* parent,
-                QString enabledImage,
-                QString disabledImage = QString());
-   DecentButton(QWidget *parent, eType enType = Default);
+
+   enum eName
+   {
+      None,
+      Transaction,
+      Detail,
+      Transfer,
+      Export
+   };
+   DecentButton(QWidget *parent, eType enType = Default, eName = None);
 
 
 protected:

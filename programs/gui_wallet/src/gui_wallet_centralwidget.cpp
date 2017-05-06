@@ -243,7 +243,7 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     
     pComboTmp1 = new QComboBox;
     pComboTmp1->setStyle(QStyleFactory::create("fusion"));
-    importKeyButton = new DecentButton(this, DecentButton::Default);
+    importKeyButton = new DecentButton(this);
 
     importKeyButton->setText(tr("Import Key"));
 #ifdef WINDOWS_HIGH_DPI
@@ -298,7 +298,7 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
 #else
     m_pBalanceWgt1->setFixedHeight(__HEIGHT__);
 #endif
-    m_browse_cont_tab.setStyleSheet(d_label);
+    //m_browse_cont_tab.setStyleSheet(d_label);
 
    /*//////////////////////////////////////////*/
    line = new QFrame(this);
@@ -326,7 +326,7 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
    pHBoxLayoutTmp->setContentsMargins(50, 0, 50, 0);
    m_pSendWgt1->setFixedHeight(__HEIGHT__);
    
-    m_browse_cont_tab.setStyleSheet(d_label);
+    //m_browse_cont_tab.setStyleSheet(d_label);
     SetAccountBalancesFromStrGUI(std::vector<std::string>());
 
 

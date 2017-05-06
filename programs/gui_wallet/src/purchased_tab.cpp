@@ -194,7 +194,7 @@ void PurchasedTab::ShowDigitalContentsGUI()
       graphene::chain::ContentObjectPropertyManager synopsis_parser(synopsis);
       std::string title = synopsis_parser.get<graphene::chain::ContentObjectTitle>();
 
-      DecentButton* info_icon = new DecentButton(m_pTableWidget, icon_popup_white, icon_popup);
+      DecentButton* info_icon = new DecentButton(m_pTableWidget, DecentButton::TableIcon, DecentButton::Detail);
       info_icon->setEnabled(false);
       info_icon->setIconSize(QSize(40,40));
       //info_icon->setAlignment(Qt::AlignCenter);
@@ -239,7 +239,7 @@ void PurchasedTab::ShowDigitalContentsGUI()
          m_pTableWidget->item(iIndex, 5)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
       } else {
 
-         DecentButton* extract_icon = new DecentButton(m_pTableWidget, icon_export_white, icon_export);
+         DecentButton* extract_icon = new DecentButton(m_pTableWidget, DecentButton::TableIcon, DecentButton::Export);
          extract_icon->setEnabled(false);
          extract_icon->setIconSize(QSize(40,40));
          //extract_icon->setAlignment(Qt::AlignCenter);

@@ -1,12 +1,3 @@
-/*
- *	File: decent_wallet_ui_gui_newcheckbox.cpp
- *
- *	Created on: 22 Feb 2017
- *	Created by: Davit Kalantaryan (Email: davit.kalantaryan@desy.de)
- *
- *  This file implements ...
- *
- */
 #include "stdafx.h"
 
 #include "gui_design.hpp"
@@ -26,54 +17,43 @@
 #include <string>
 #endif
 
-using namespace gui_wallet;
-
-
-DecentButton::DecentButton(QWidget *parent/* = Q_NULLPTR*/,
-                           QString enabledImage/* = QString()*/,
-                           QString disabledImage/* = QString()*/)
-: QPushButton(parent)
+namespace gui_wallet
 {
-   setMouseTracking(true);
-
-   if (disabledImage.isEmpty())
-      disabledImage = enabledImage;
-   
-   if (false == enabledImage.isEmpty())
-   {
-      QIcon ButtonIcon;
-      setSizePolicy( QSizePolicy::Preferred, QSizePolicy::Preferred );
-      setFlat(true);
-      ButtonIcon.addFile(enabledImage, QSize(), QIcon::Normal, QIcon::On);
-      ButtonIcon.addFile(disabledImage, QSize(), QIcon::Disabled, QIcon::Off);
-      setIcon(ButtonIcon);
-
-      const char* const style =  "QPushButton{border: 0px ; background-color :rgb(27,176,104); color : white;}"
-                                 "QPushButton:!enabled{border: 0px ; background-color :rgb(255, 255, 255); color : rgb(0, 0, 0);}";
-
-      setStyleSheet(style);
-   }
-   else
-   {
-      const char* const style =  "QPushButton{border: 0px ; background-color :rgb(27,176,104); color : white;}"
-                                 "QPushButton:!enabled{background-color :rgb(180,180,180); color : rgb(30, 30, 30);}";
-
-      setStyleSheet(style);
-   }
-}
-
-DecentButton::DecentButton(QWidget *parent, eType enType)
+DecentButton::DecentButton(QWidget *parent,
+                           eType enType/* = Default*/,
+                           eName enName/* = None*/)
 : QPushButton(parent)
 {
    switch (enType)
    {
    case Send:
       setProperty("type", "send");
-      setObjectName("send");
+      break;
+   case TableIcon:
+      setProperty("type", "tableicon");
       break;
    case Default:
    default:
       break;
+   }
+
+   switch (enName)
+   {
+      case Transaction:
+         setProperty("name", "transaction");
+         break;
+      case Detail:
+         setProperty("name", "detail");
+         break;
+      case Transfer:
+         setProperty("name", "transfer");
+         break;
+      case Export:
+         setProperty("name", "export");
+         break;
+      case None:
+      default:
+         break;
    }
 }
 
@@ -94,5 +74,5 @@ void DecentButton::changeEvent(QEvent* event)
    }
    QPushButton::changeEvent(event);
 }
-
+}
 

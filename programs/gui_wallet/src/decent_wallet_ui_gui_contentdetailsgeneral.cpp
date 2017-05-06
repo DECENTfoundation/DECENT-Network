@@ -21,6 +21,7 @@ ContentDetailsGeneral::ContentDetailsGeneral(QWidget* pParent) : ContentDetailsB
    m_label.setText(tr("Get it!"));
    m_label.setFixedWidth(178);
    m_label.setFixedHeight(40);
+   m_label.setStyleSheet(d_pButtonOk);
    
    m_close.setText(tr("Close"));
    m_close.setFixedWidth(178);
