@@ -164,7 +164,11 @@ Upload_popup::Upload_popup(Mainwindow_gui_wallet* pMainWindow) : m_getPublishers
 
 
    _price = new QLineEdit();
-   _price->setValidator( new QDoubleValidator(0.0001, 100000, 4, this) );
+
+
+   QDoubleValidator* dblValidator = new QDoubleValidator(0.0001, 100000, 4, this);
+   dblValidator->setLocale(_locale);
+   _price->setValidator(dblValidator);
    _price->setAttribute(Qt::WA_MacShowFocusRect, 0);
    _price->setStyleSheet(d_label_v2);
    _price->setTextMargins(5, 5, 5, 5);

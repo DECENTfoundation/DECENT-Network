@@ -1,13 +1,3 @@
-/*
- *
- *	File: richdialog.cpp
- *
- *	Created on: 27 Jan 2017
- *	Created by: Davit Kalantaryan (Email: davit.kalantaryan@desy.de)
- *
- *  This file implements ...
- *
- */
 
 #include <QIntValidator>
 #include <QMessageBox>
@@ -200,7 +190,10 @@ SendDialog::SendDialog(int a_num_of_text_boxes  , QString title, QString userNam
    m_pTextBoxes[0].setFixedSize(300, 44);
    m_pTextBoxes[0].setStyleSheet(d_text_box);
    
-   m_pTextBoxes[1].setValidator(new QDoubleValidator(0.0001, 100000, 4, this));
+
+   QDoubleValidator* dblValidator = new QDoubleValidator(0.0001, 100000, 4, this);
+   dblValidator->setLocale(_locale);
+   m_pTextBoxes[1].setValidator(dblValidator);
    m_pTextBoxes[1].setPlaceholderText(QString(tr("Amount")));
    m_pTextBoxes[1].setAttribute(Qt::WA_MacShowFocusRect, 0);
    m_pTextBoxes[1].setFixedSize(300, 44);
