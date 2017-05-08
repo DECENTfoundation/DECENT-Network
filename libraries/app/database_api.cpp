@@ -1925,8 +1925,10 @@ namespace
       try{
          const auto & idx = _db.get_index_type<rating_index>().indices().get<by_consumer_URI>();
          auto itr = idx.find(std::make_tuple(consumer, URI));
-         if(itr!=idx.end() && !itr->comment.empty()){
-            return itr->comment;
+         if(itr!=idx.end())
+         {
+            if (!itr->comment.empty())
+               return itr->comment;
          }
          return optional<string>();
 

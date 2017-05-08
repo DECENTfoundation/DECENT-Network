@@ -41,19 +41,20 @@ uint64_t json_to_int64(nlohmann::json const& o)
    if (o.is_number())
       return o.get<uint64_t>();
    else
-      return std::stoll(o.get<std::string>());
+      return std::stoll(o.get<string>());
 }
 
-bool is_empty(nlohmann::json const& json, int& rating, std::string& comment)
+bool is_empty(nlohmann::json const& json, int& rating, string& comment)
 {
-   comment = json[1].template get<std::string>();
+   comment = json[1].get<string>();
 
    if ( comment.empty() )
    {
       return true;
    }
 
-   rating = json[0].get<int>();
+   if (false == json[0].is_null())
+      rating = json[0].get<int>();
 
    return false;
 }
