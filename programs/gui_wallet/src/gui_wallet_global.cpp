@@ -44,6 +44,20 @@ uint64_t json_to_int64(nlohmann::json const& o)
       return std::stoll(o.get<std::string>());
 }
 
+bool is_empty(nlohmann::json const& json, int& rating, std::string& comment)
+{
+   comment = json[1].template get<std::string>();
+
+   if ( comment.empty() )
+   {
+      return true;
+   }
+
+   rating = json[0].get<int>();
+
+   return false;
+}
+
 struct CalendarDuration
 {
    enum esign {sign_positive, sign_negative} sign = sign_positive;

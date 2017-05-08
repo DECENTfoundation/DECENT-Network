@@ -77,6 +77,7 @@ namespace gui_wallet
                         QString const& strDetailedText = QString());
 
    uint64_t json_to_int64(nlohmann::json const& o);
+   bool is_empty(nlohmann::json const& json, int& rating, std::string& comment);
     
    std::size_t extra_space(const std::string& s) noexcept;
    std::string unescape_string(const std::string& s);
@@ -97,36 +98,7 @@ namespace gui_wallet
       void signal_connected(std::string const& str_error);
    public:
       WalletAPI m_wallet_api;
-   };
-   //
-   // lame to write the full type definition of **** json variant
-   //
-   template <typename json_variant>
-   uint64_t json_to_int64(json_variant const& o)
-   {
-      if (o.is_number())
-         return o.template get<uint64_t>();
-      else
-         return std::stoll(o.template get<std::string>());
-   }
-   //
-   //comment_and_rating
-   //
-   template<typename json_parse>
-   bool is_empty(json_parse const& json, int& rating, std::string& comment)
-   {
-      comment = json[1].template get<std::string>();
-
-      if ( comment.empty() )
-      {
-         return true;
-      }
-      
-      rating = json[0].template get<int>();
-
-      return false;
-   }
-   
+   };   
    // Asset
    //
    // use Globals.asset to get a valid one
