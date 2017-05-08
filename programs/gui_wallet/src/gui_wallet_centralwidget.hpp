@@ -111,6 +111,8 @@ public slots:
 public:
 signals:
    void sendDCT();
+   void signal_SetNextPageDisabled(bool);
+   void signal_SetPreviousPageDisabled(bool);
 protected:
     virtual void showEvent ( QShowEvent * event ) ;
     virtual void resizeEvent ( QResizeEvent * event );
@@ -135,9 +137,6 @@ private:
     PurchasedTab        m_Purchased_tab;
    
     DecentButton*  sendButton;
-    DecentButton*         prev_button;
-    DecentButton*         next_button;
-    DecentButton*         reset_button;
    
     std::vector<TabContentManager*>  m_allTabs;
     int                              m_currentTab = -1;

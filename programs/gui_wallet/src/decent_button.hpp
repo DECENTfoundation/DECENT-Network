@@ -1,14 +1,4 @@
-/*
- *	File: decent_wallet_ui_gui_newcheckbox.hpp
- *
- *	Created on: 22 Feb 2017
- *	Created by: Davit Kalantaryan (Email: davit.kalantaryan@desy.de)
- *
- *  This file implements ...
- *
- */
-#ifndef DECENT_BUTTON_HPP
-#define DECENT_BUTTON_HPP
+#pragma once
 
 #include <QLabel>
 #include <QPushButton>
@@ -19,24 +9,27 @@ class DecentButton : public QPushButton
 {
    Q_OBJECT
 public:
-   DecentButton(QWidget *parent,
-                const QString& standardImage = QString(),
-                const QString& highlightedImage = QString(),
-                const QString& disableImage = QString());
-   
-   void setHighlighted(bool bIsHighlighted);
+   enum eType
+   {
+      Default,
+      Send,
+      TableIcon
+   };
+
+   enum eName
+   {
+      None,
+      Transaction,
+      Detail,
+      Transfer,
+      Export
+   };
+   DecentButton(QWidget *parent, eType enType = Default, eName = None);
+
 
 protected:
    virtual bool event(QEvent* event) override;
-   void changeEvent(QEvent* event) override;
-private:
-   QString m_standardImage;
-   QString m_highlightedImage;
-   QString m_disabledImage;
-private:
-   void putImage(const QString&);
+   virtual void changeEvent(QEvent* event) override;
 };
 
 }
-
-#endif // DECENT_BUTTON_HPP

@@ -810,18 +810,8 @@ void DecentTable::mouseMoveEvent(QMouseEvent * event)
             cell->setForeground(QColor::fromRgb(0,0,0));
          }
 
-         if(cell_widget != NULL) {
-            if(DecentButton *button = qobject_cast<DecentButton*>(cell_widget)) {
-               button->setHighlighted(false);
-            } else {
-               QString old_style = cell_widget->property("old_style").toString();
-
-               if (old_style.isEmpty())
-                  cell_widget->setStyleSheet("* {border: 0px ; background-color :rgb(255, 255, 255); color : rgb(0, 0, 0);}");
-               else
-                  cell_widget->setStyleSheet(old_style);
-            }
-         }
+         if (cell_widget)
+            cell_widget->setEnabled(false);
       }
 
    }
@@ -842,15 +832,8 @@ void DecentTable::mouseMoveEvent(QMouseEvent * event)
          cell->setForeground(QColor::fromRgb(255,255,255));
       }
 
-      if(cell_widget != NULL) {
-         if(DecentButton *button = qobject_cast<DecentButton*>(cell_widget)) {
-            button->setHighlighted(true);
-         } else {
-            cell_widget->setProperty("old_style", cell_widget->styleSheet());
-            cell_widget->setStyleSheet("* {border: 0px ; background-color :rgb(27,176,104); color : white;}");
-         }
-      }
-
+      if (cell_widget)
+         cell_widget->setEnabled(true);
    }
    _current_highlighted_row = row;
 }

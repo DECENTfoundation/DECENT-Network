@@ -1,0 +1,62 @@
+QDialog, QMainWindow, QMessageBox
+{
+   color: black;
+   background-color: white;
+}
+QPushButton
+{
+   border: 0px;
+   background-color: rgb(27,176,104);
+   color: white;
+}
+QPushButton:!enabled
+{
+   border: 0px;
+   background-color: rgb(180,180,180);
+   color: rgb(30, 30, 30);
+}
+QPushButton[type='send']
+{
+   border: 0px;
+   background-color: white;
+   color: black;
+   qproperty-icon: url(':/icon/images/send.png'), url(':/icon/images/inactive_send.png') disabled;
+}
+QPushButton[type='tableicon'][enabled=true]
+{
+   border: 0px;
+   background-color: rgb(27,176,104);
+   color: white;
+}
+QPushButton[type='tableicon'][enabled=false]
+{
+   border: 0px;
+   background-color: white;
+   color: black;
+}
+QPushButton[name='transaction']
+{
+   qproperty-icon: url(':/icon/images/transaction1.png'), url(':/icon/images/transaction.png') disabled;
+}
+QPushButton[name='detail']
+{
+   qproperty-icon: url(':/icon/images/pop_up1.png'), url(':/icon/images/pop_up.png') disabled;
+}
+QPushButton[name='transfer']
+{
+   qproperty-icon: url(':/icon/images/transfer1.png'), url(':/icon/images/transfer.png') disabled;
+}
+QPushButton[name='export']
+{
+   qproperty-icon: url(':/icon/images/export1.png'), url(':/icon/images/export.png') disabled;
+}
+QMessageBox QPushButton, QFileDialog QPushButton
+{
+   border: 0px;
+   background-color: rgb(27,176,104);
+   color: white;
+   min-width: 100px;
+   min-height: 35px;
+   max-width: 200px;
+   max-height: 35px;
+}

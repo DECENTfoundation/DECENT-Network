@@ -98,10 +98,8 @@ CentralWigdet::CentralWigdet(QBoxLayout* a_pAllLayout, Mainwindow_gui_wallet* a_
       m_Upload_tab(a_pPar),
       m_Purchased_tab(a_pPar),
       m_trans_tab(a_pPar),
-      sendButton(new DecentButton(this, icon_send, icon_send, icon_inactive_send))
+      sendButton(new DecentButton(this, DecentButton::Send))
 {
-
-
          
     m_allTabs.push_back(&m_browse_cont_tab);
     m_allTabs.push_back(&m_trans_tab);
@@ -300,7 +298,7 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
 #else
     m_pBalanceWgt1->setFixedHeight(__HEIGHT__);
 #endif
-    m_browse_cont_tab.setStyleSheet(d_label);
+    //m_browse_cont_tab.setStyleSheet(d_label);
 
    /*//////////////////////////////////////////*/
    line = new QFrame(this);
@@ -316,6 +314,7 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
    pHBoxLayoutTmp = new QHBoxLayout;
 
    sendButton->setText(tr("Send"));
+   //sendButton->setEnabled(false);
    //sendButton->setFixedSize(50,50);
    sendButton->setIconSize(QSize(40,40));
    connect(sendButton, SIGNAL(clicked()), this, SLOT(sendDCTSlot()));
@@ -327,7 +326,7 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
    pHBoxLayoutTmp->setContentsMargins(50, 0, 50, 0);
    m_pSendWgt1->setFixedHeight(__HEIGHT__);
    
-    m_browse_cont_tab.setStyleSheet(d_label);
+    //m_browse_cont_tab.setStyleSheet(d_label);
     SetAccountBalancesFromStrGUI(std::vector<std::string>());
 
 
@@ -354,9 +353,10 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     //m_main_layout.addWidget(&m_main_tabs);
    
    QHBoxLayout* pagination_layout = new QHBoxLayout();
-   prev_button = new DecentButton(nullptr);
-   next_button = new DecentButton(nullptr);
-   reset_button = new DecentButton(nullptr);
+
+   DecentButton* prev_button = new DecentButton(this);
+   DecentButton* next_button = new DecentButton(this);
+   DecentButton* reset_button = new DecentButton(this);
    
    prev_button->setText("Previous");
    prev_button->setStyleSheet(d_pagination_buttons);
@@ -386,6 +386,11 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
    QObject::connect( prev_button, SIGNAL(clicked()), this, SLOT(prevButtonSlot()) );
    QObject::connect( next_button, SIGNAL(clicked()), this, SLOT(nextButtonSlot()) );
    QObject::connect( reset_button, SIGNAL(clicked()), this, SLOT(resetButtonSlot()) );
+
+   QObject::connect(this, &CentralWigdet::signal_SetNextPageDisabled,
+                    next_button, &QPushButton::setDisabled);
+   QObject::connect(this, &CentralWigdet::signal_SetPreviousPageDisabled,
+                    prev_button, &QPushButton::setDisabled);
    
    QStatusBar* status = new QStatusBar(this);
    m_main_layout.addWidget(status);
@@ -405,8 +410,8 @@ void CentralWigdet::paginationController()
 {
    m_allTabs[m_currentTab]->m_i_page_size = ( m_allTabs[m_currentTab]->size().height() - 35)/35; // 30 for buttons layout, 35-cloumn height
 
-   prev_button->setDisabled( m_allTabs[m_currentTab]->is_first() );
-   next_button->setDisabled( m_allTabs[m_currentTab]->is_last() );
+   emit signal_SetNextPageDisabled(m_allTabs[m_currentTab]->is_last());
+   emit signal_SetPreviousPageDisabled(m_allTabs[m_currentTab]->is_first());
 }
 
 void CentralWigdet::prevButtonSlot()

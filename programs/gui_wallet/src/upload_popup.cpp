@@ -265,7 +265,7 @@ Upload_popup::Upload_popup(QWidget* pParent)
 
 
    setWindowTitle(tr("Upload new content"));
-   setStyleSheet(d_upload_popup);
+
 
    QHBoxLayout* pLifeTimeRow = new QHBoxLayout();
    pLifeTimeRow->addWidget(pLifeTimeLabel);
@@ -400,7 +400,7 @@ void Upload_popup::slot_ChooseSeeders()
       if (free_space > 800)
          pubFreeSpace = QString::number(free_space / 1024.0, 'f', 2) + " GB free";
 
-      QCheckBox* pCheckBox = new QCheckBox(pSeedersTable);
+      EventPassthrough<QCheckBox>* pCheckBox = new EventPassthrough<QCheckBox>(pSeedersTable);
       pSeedersTable->setCellWidget(iIndex, eCheckBox, pCheckBox);
       pSeedersTable->setItem(iIndex, eName, new QTableWidgetItem(QString::fromStdString(seeder.m_str_name)));
       pSeedersTable->setItem(iIndex, ePrice, new QTableWidgetItem(seeder.m_price.getString().c_str()));

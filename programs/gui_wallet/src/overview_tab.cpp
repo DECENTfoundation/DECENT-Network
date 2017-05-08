@@ -157,8 +157,9 @@ void Overview_tab::timeToUpdate(const std::string& result) {
 
       // Transaction Button
       //
-      DecentButton* pTransactionButton = new DecentButton(m_pTableWidget, icon_transaction, icon_transaction_white);
+      DecentButton* pTransactionButton = new DecentButton(m_pTableWidget, DecentButton::TableIcon, DecentButton::Transaction);
       pTransactionButton->setIconSize(QSize(40,40));
+      pTransactionButton->setEnabled(false);
       
       QObject::connect(pTransactionButton, &DecentButton::clicked,
                        m_pAccountSignalMapper, (void (QSignalMapper::*)())&QSignalMapper::map);
@@ -170,8 +171,9 @@ void Overview_tab::timeToUpdate(const std::string& result) {
 
       // Details Button
       //
-      DecentButton* pDetailsButton = new DecentButton(m_pTableWidget, icon_popup, icon_popup_white);
+      DecentButton* pDetailsButton = new DecentButton(m_pTableWidget, DecentButton::TableIcon, DecentButton::Detail);
       pDetailsButton->setIconSize(QSize(40,40));
+      pDetailsButton->setEnabled(false);
       m_pTableWidget->setCellWidget(iIndex, 4, pDetailsButton);
 
       m_pAccountSignalMapper->setMapping(pDetailsButton, name.c_str());
@@ -179,11 +181,12 @@ void Overview_tab::timeToUpdate(const std::string& result) {
                        m_pAccountSignalMapper, (void (QSignalMapper::*)())&QSignalMapper::map);
       QObject::connect(pDetailsButton, &DecentButton::clicked,
                        this, &Overview_tab::slot_Details);
-      
+
       // Transfer Button
       //
-      DecentButton* pTransferButton = new DecentButton(m_pTableWidget, icon_transfer, icon_transfer_white);
+      DecentButton* pTransferButton = new DecentButton(m_pTableWidget, DecentButton::TableIcon, DecentButton::Transfer);
       pTransferButton->setIconSize(QSize(40,40));
+      pTransferButton->setEnabled(false);
       m_pTableWidget->setCellWidget(iIndex, 3, pTransferButton);
             
 
@@ -192,10 +195,6 @@ void Overview_tab::timeToUpdate(const std::string& result) {
                        m_pAccountSignalMapper, (void (QSignalMapper::*)())&QSignalMapper::map);
       QObject::connect(pTransferButton, &DecentButton::clicked,
                        this, &Overview_tab::slot_Transfer);
-      
-      m_pTableWidget->cellWidget(iIndex, 2)->setStyleSheet(d_table);
-      m_pTableWidget->cellWidget(iIndex, 3)->setStyleSheet(d_table);
-      m_pTableWidget->cellWidget(iIndex, 4)->setStyleSheet(d_table);
 
       m_pTableWidget->item(iIndex,0)->setBackground(Qt::white);
       m_pTableWidget->item(iIndex,1)->setBackground(Qt::white);
@@ -271,6 +270,7 @@ void Overview_tab::slot_Transfer()
 void Overview_tab::slot_SearchTermChanged(QString const& strSearchTerm)
 {
    m_strSearchTerm = strSearchTerm;
+   reset(false);
 }
 void Overview_tab::slot_AccountChanged(QString const& strAccountName)
 {
