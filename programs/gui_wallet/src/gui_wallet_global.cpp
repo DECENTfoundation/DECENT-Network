@@ -633,9 +633,13 @@ void Globals::showTransferDialog(std::string const& user)
       return;
    
    TransferDialog* pTransferDialog = new TransferDialog(nullptr , QString::fromStdString(user));
-
+   pTransferDialog->setAttribute(Qt::WA_DeleteOnClose);
    pTransferDialog->open();
-   //delete pTransferDialog;
+}
+   
+void Globals::slot_displayWalletContent()
+{
+   emit signal_importKeyDid(false);
 }
 
 string Globals::getAccountName(string const& accountId)

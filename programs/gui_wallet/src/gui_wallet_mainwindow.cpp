@@ -39,8 +39,6 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
 , m_ActionImportKey(tr("Import key"),this)
 , m_info_dialog()
 , m_locked(true)
-, m_sendDCT_dialog(nullptr)
-, m_import_key_dlg(nullptr)
 , m_SetPasswordDialog(this, true)
 , m_UnlockDialog(this, false)
 {
@@ -93,6 +91,9 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
 
    QObject::connect(&Globals::instance(), &Globals::signal_updateAccountBalance,
                     this, &Mainwindow_gui_wallet::slot_updateAccountBalance);
+   
+   QObject::connect(&Globals::instance(), &Globals::signal_importKeyDid,
+                    this, &Mainwindow_gui_wallet::DisplayWalletContentGUI);
 
    connect(pUsersCombo, SIGNAL(currentIndexChanged(const QString&)), this, SLOT(CurrentUserChangedSlot(const QString&)) );
 
@@ -571,52 +572,12 @@ void Mainwindow_gui_wallet::DisplayWalletContentGUI(bool isNewWallet)
 
 void Mainwindow_gui_wallet::ImportKeySlot()
 {
-    if(m_import_key_dlg != nullptr)
-    {
-       delete m_import_key_dlg;
-       m_import_key_dlg = new RichDialog(2 , tr("key import"));
-    }
-    else
-    {
-       m_import_key_dlg = new RichDialog(2 , tr("key import"));
-    }
-    std::vector<std::string> cvsUsKey(2);
-    QComboBox& cUsersCombo = *m_pCentralWidget->usersCombo();
-    cvsUsKey[0] = "";
-    cvsUsKey[1] = "";
-
-    if(cUsersCombo.count()&&(cUsersCombo.currentIndex()>0))
-    {
-        QString cqsUserName = cUsersCombo.currentText();
-        QByteArray cbaResult = cqsUserName.toLatin1();
-        cvsUsKey[0] = cbaResult.data();
-    }
-
-    QPoint thisPos = pos();
-    thisPos.rx() += size().width() / 2 - 175;
-    thisPos.ry() += size().height() / 2 - 75;
-    RET_TYPE aRet = m_import_key_dlg->execRD(&thisPos,cvsUsKey);
+   ImportDialog*  import_key_dlg = new ImportDialog(this);;
    
-    if(aRet == RDB_CANCEL){
-        return ;
-    }
+   import_key_dlg->setAttribute(Qt::WA_DeleteOnClose);
+   import_key_dlg->open();
 
-    std::string csTaskStr = "import_key " + cvsUsKey[0] + " " + cvsUsKey[1];
-    std::string result;
-    bool hasError = false;
-    
-    try {
-        RunTask(csTaskStr, result);
-        hasError = result.find("exception") != std::string::npos;
-    } catch (...) {
-        hasError = true;
-    }
-    if (hasError) {
-        ALERT_DETAILS(tr("Cannot import key.").toStdString(), result.c_str());
-    } else {
-        DisplayWalletContentGUI(false);
-    }
-    m_pCentralWidget->getSendButton()->setEnabled(true);;
+   m_pCentralWidget->getSendButton()->setEnabled(true);;
 }
 
 
@@ -628,14 +589,10 @@ void Mainwindow_gui_wallet::SendDCTSlot()
    DecentButton* button = (DecentButton*)sender();
    QString accountName = button->property("accountName").toString();
    
-   if(m_transfer_dialog != nullptr)
-      delete m_transfer_dialog;
 
-
-   
-   m_transfer_dialog = new TransferDialog(this , accountName);
-   m_transfer_dialog->open();
-   
+   TransferDialog* transfer_dialog = new TransferDialog(this, accountName);
+   transfer_dialog->setAttribute(Qt::WA_DeleteOnClose);
+   transfer_dialog->open();
 }
 
 void Mainwindow_gui_wallet::InfoSlot()
