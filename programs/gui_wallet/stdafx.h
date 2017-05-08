@@ -15,6 +15,7 @@
 #include <QWidget>
 #include <QLineEdit>
 #include <QPushButton>
+#include <QComboBox>
 #include <QHeaderView>
 #include <QMenuBar>
 #include <QMoveEvent>
@@ -45,6 +46,7 @@
 #include <Qtimer>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
+#include <QTextStream>
 
 #include <stdio.h>
 #include <stdlib.h>

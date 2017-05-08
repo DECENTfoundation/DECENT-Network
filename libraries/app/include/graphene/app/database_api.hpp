@@ -42,6 +42,7 @@
 #include <graphene/chain/rating_object.hpp>
 #include <graphene/chain/budget_record_object.hpp>
 #include <graphene/chain/subscription_object.hpp>
+#include <graphene/chain/transaction_detail_object.hpp>
 
 #include <graphene/market_history/market_history_plugin.hpp>
 
@@ -332,6 +333,23 @@ namespace graphene { namespace app {
           * @ingroup DatabaseAPI
           */
          vector<account_object> search_accounts(const string& search_term, const string order, const object_id_type& id, uint32_t limit) const;
+
+         /**
+          * @brief Returns the operations on the named account.
+          *
+          * This returns a list of transaction detail object, which describe activity on the account.
+          *
+          * @param account the account to search
+          * @param order Sort data by field
+          * @param id object_id to start searching from
+          * @param limit the number of entries to return (starting from the most recent) (max 100)
+          * @returns a list of \c transaction_detail_object
+          * @ingroup WalletCLI
+          */
+         vector<class transaction_detail_object> search_account_history(account_id_type const& account,
+                                                                        string const& order,
+                                                                        object_id_type const& id,
+                                                                        int limit) const;
 
          //////////////
          // Balances //
@@ -886,6 +904,7 @@ FC_API(graphene::app::database_api,
           (lookup_accounts)
           (search_accounts)
           (get_account_count)
+          (search_account_history)
 
           // Balances
           (get_account_balances)

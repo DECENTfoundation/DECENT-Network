@@ -74,7 +74,7 @@ namespace graphene { namespace db {
             FC_ASSERT(idx == index1);
             uint8_t t = std::stoi(str_id.substr(index1 + 1, index2 - index1 - 1), &idx);
             FC_ASSERT(idx == index2 - index1 - 1);
-            uint8_t i = std::stoi(str_id.substr(index2 + 1, index3 - index2 - 1), &idx);
+            uint64_t i = std::stoll(str_id.substr(index2 + 1, index3 - index2 - 1), &idx);
             FC_ASSERT(idx == index3 - index2 - 1);
 
             *this = object_id_type(s, t, i);

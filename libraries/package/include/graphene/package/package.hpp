@@ -126,6 +126,7 @@ namespace decent { namespace package {
     public:
         void add_event_listener(const event_listener_handle_t& event_listener);
         void remove_event_listener(const event_listener_handle_t& event_listener);
+        void remove_all_event_listeners();
 
         DataState          get_data_state() const;
         TransferState      get_transfer_state() const;

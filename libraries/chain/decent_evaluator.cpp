@@ -13,6 +13,7 @@
 #include <graphene/chain/rating_object.hpp>
 #include <graphene/chain/subscription_object.hpp>
 #include <graphene/chain/seeding_statistics_object.hpp>
+#include <graphene/chain/transaction_detail_object.hpp>
 
 #include <decent/encrypt/encryptionutils.hpp>
 
@@ -39,7 +40,7 @@ namespace graphene { namespace chain {
    
    void_result content_submit_evaluator::do_apply(const content_submit_operation& o)
    {try{
-      db().create<content_object>([&](content_object& co)
+      content_object new_content_object = db().create<content_object>([&](content_object& co)
                                   {  //create new content object and store all vaues from the operation
                                      co.author = o.author;
 #ifdef PRICE_REGIONS
@@ -97,6 +98,22 @@ namespace graphene { namespace chain {
                                        so.free_space -= o.size;
                                     });
       }
+
+      graphene::chain::ContentObjectPropertyManager synopsis_parser(new_content_object.synopsis);
+      std::string title = synopsis_parser.get<graphene::chain::ContentObjectTitle>();
+
+      auto& d = db();
+      db().create<transaction_detail_object>([&o, &title, &d](transaction_detail_object& obj)
+                                             {
+                                                obj.m_operation_type = (uint8_t)transaction_detail_object::content_submit;
+
+                                                obj.m_from_account = o.author;
+                                                obj.m_to_account = account_id_type();
+                                                obj.m_transaction_amount = o.publishing_fee;
+                                                obj.m_transaction_fee = o.fee;
+                                                obj.m_str_description = title;
+                                                obj.m_timestamp = d.head_block_time();
+                                             });
    }FC_CAPTURE_AND_RETHROW( (o) ) }
 
    void_result request_to_buy_evaluator::do_evaluate(const request_to_buy_operation& o )
@@ -153,6 +170,26 @@ namespace graphene { namespace chain {
 #endif
                                                       });
       db().adjust_balance( o.consumer, -o.price );
+
+      auto& d = db();
+      db().create<transaction_detail_object>([&o, &d](transaction_detail_object& obj)
+                                             {
+                                                obj.m_operation_type = (uint8_t)transaction_detail_object::content_buy;
+
+                                                const auto& idx = d.get_index_type<content_index>().indices().get<by_URI>();
+                                                auto itr = idx.find(o.URI);
+                                                if (itr != idx.end())
+                                                {
+                                                   obj.m_from_account = itr->author;
+                                                   graphene::chain::ContentObjectPropertyManager synopsis_parser(itr->synopsis);
+                                                   obj.m_str_description = synopsis_parser.get<graphene::chain::ContentObjectTitle>();
+                                                }
+
+                                                obj.m_to_account = o.consumer;
+                                                obj.m_transaction_amount = o.price;
+                                                obj.m_transaction_fee = o.fee;
+                                                obj.m_timestamp = d.head_block_time();
+                                             });
    }FC_CAPTURE_AND_RETHROW( (o) ) }
 
    void_result deliver_keys_evaluator::do_evaluate(const deliver_keys_operation& o )
@@ -260,6 +297,29 @@ namespace graphene { namespace chain {
            else
               co.AVG_rating = (co.AVG_rating * co.num_of_ratings + o.rating * 1000) / (++co.num_of_ratings);
       });
+
+      auto& d = db();
+      db().create<transaction_detail_object>([&o, &d](transaction_detail_object& obj)
+                                             {
+                                                obj.m_operation_type = (uint8_t)transaction_detail_object::content_rate;
+
+                                                const auto& idx = d.get_index_type<content_index>().indices().get<by_URI>();
+                                                auto itr = idx.find(o.URI);
+                                                if (itr != idx.end())
+                                                {
+                                                   obj.m_to_account = itr->author;
+
+                                                   graphene::chain::ContentObjectPropertyManager synopsis_parser(itr->synopsis);
+                                                   obj.m_str_description = synopsis_parser.get<graphene::chain::ContentObjectTitle>();
+                                                }
+
+                                                obj.m_from_account = o.consumer;
+
+                                                obj.m_transaction_amount = asset();
+                                                obj.m_transaction_fee = o.fee;
+                                                obj.m_str_description = std::to_string(o.rating) + " (" + obj.m_str_description + ")";
+                                                obj.m_timestamp = d.head_block_time();
+                                             });
    }FC_CAPTURE_AND_RETHROW( (o) ) }
    
    void_result ready_to_publish_evaluator::do_evaluate(const ready_to_publish_operation& o )

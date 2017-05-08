@@ -42,6 +42,7 @@
 #include <graphene/chain/withdraw_permission_object.hpp>
 #include <graphene/chain/witness_object.hpp>
 #include <graphene/chain/witness_schedule_object.hpp>
+#include <graphene/chain/transaction_detail_object.hpp>
 
 #include <graphene/chain/account_evaluator.hpp>
 #include <graphene/chain/asset_evaluator.hpp>
@@ -189,6 +190,7 @@ void database::initialize_indexes()
    add_index< primary_index< content_index                                > >();
    add_index< primary_index< buying_index                                 > >();
    add_index< primary_index< subscription_index                                 > >();
+   add_index< primary_index< transaction_detail_index                     > >();
 }
 
 void database::init_genesis(const genesis_state_type& genesis_state)
