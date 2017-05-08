@@ -164,23 +164,24 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details, bool bSil
        
        if ( is_empty(c_result, get_rating, get_comment) )
        {
-          m_commentOrRate_Text->setText("Leave comment about this content");
-          m_comment->setPlaceholderText("Comment heare...");
+          m_commentOrRate_Text->setText(tr("You can comment with your opinion on this item"));
+          m_comment->setPlaceholderText(tr("Comment here..."));
           
           QHBoxLayout* button = new QHBoxLayout;
           button->setAlignment(Qt::AlignRight);
           button->setMargin(5);
           
-          QPushButton* leave_comment_button = new QPushButton();
-          leave_comment_button->setText("Leave comment");
+          DecentButton* leave_comment_button = new DecentButton(this);
+          leave_comment_button->setText(tr("Leave comment"));
           leave_comment_button->setFixedHeight(40);
           leave_comment_button->setFixedWidth(120);
           button->addWidget(leave_comment_button);
           
           m_main_layout.addLayout(button);
-          connect(leave_comment_button, SIGNAL(clicked()), this, SLOT(LeaveComment()));
+          QObject::connect(leave_comment_button, &QPushButton::clicked,
+                           this, &ContentDetailsBase::LeaveComment);
        }else{
-          m_commentOrRate_Text->setText("You was Commented");
+          m_commentOrRate_Text->setText(tr("You have already commented"));
           m_comment->setText( QString::fromStdString(get_comment) );
           m_comment->setReadOnly(true);
        }
@@ -358,7 +359,7 @@ void ContentDetailsBase::popup_for_purchased(int row_star)
     for(i=0;i<row_count;++i,nIndexZuyg+=2,nIndexKent+=2)
     {
         if(i%2==0){m_vSub_Widgets[i].setStyleSheet(bg_color_grey);}
-        else{m_vSub_Widgets[i].setStyleSheet(bg_color_wgite);}
+        //else{m_vSub_Widgets[i].setStyleSheet(bg_color_wgite);}
         m_vLabels[nIndexKent].setStyleSheet(font_bold);
         m_vLabels[nIndexKent].setContentsMargins(0, 17, 50, 17);
         m_vLabels[nIndexKent].setAlignment(Qt::AlignRight);
@@ -431,7 +432,7 @@ void ContentDetailsBase::popup_for_purchased(int row_star)
     line->setFixedHeight(1);
     m_main_layout.addWidget(line);
     
-    setStyleSheet(d_qdialog);
+    //setStyleSheet(d_qdialog);
 }
 
 
