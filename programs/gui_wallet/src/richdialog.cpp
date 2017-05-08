@@ -297,3 +297,123 @@ RET_TYPE SendDialog::execRD(const QPoint* a_pMove, std::vector<std::string>& a_c
    
    return rtReturn;
 }
+
+
+
+
+
+//new
+
+
+TransferDialog::TransferDialog(QWidget* parent, QString const& userName/* = QString()*/) : m_toUserName(userName)
+{
+   QVBoxLayout* mainLayout       = new QVBoxLayout();
+   QVBoxLayout* lineEditsLayout  = new QVBoxLayout();
+   QHBoxLayout* buttonsLayout    = new QHBoxLayout();
+   
+   DecentButton* ok = new DecentButton(this);
+   ok->setText("Send");
+   ok->setFixedSize(140, 40);
+   DecentButton* cancel = new DecentButton(this);
+   cancel->setText("Cancel");
+   cancel->setFixedSize(140, 40);
+   
+   connect(ok, SIGNAL(clicked()), this, SLOT(Transfer()));
+   connect(cancel, SIGNAL(clicked()), this, SLOT(close()));
+   
+   QLineEdit* name = new QLineEdit();
+   QLineEdit* amount = new QLineEdit();
+   QLineEdit* memo = new QLineEdit();
+   
+   name->setPlaceholderText(QString(tr("Account")));
+   name->setAttribute(Qt::WA_MacShowFocusRect, 0);
+   name->setFixedSize(300, 44);
+   name->setStyleSheet(d_text_box);
+   name->setText(m_toUserName);
+   connect(name, SIGNAL(textChanged(const QString &)), this, SLOT(nameChanged(const QString &)));
+   
+   amount->setPlaceholderText(QString(tr("Amount")));
+   amount->setAttribute(Qt::WA_MacShowFocusRect, 0);
+   amount->setFixedSize(300, 44);
+   amount->setStyleSheet(d_text_box);
+   QDoubleValidator* dblValidator = new QDoubleValidator(0.0001, 100000, 4, this);
+   amount->setValidator(dblValidator);
+   connect(amount, SIGNAL(textChanged(const QString &)), this, SLOT(amountChanged(const QString &)));
+   
+   memo->setPlaceholderText(QString(tr("Memo")));
+   memo->setAttribute(Qt::WA_MacShowFocusRect, 0);
+   memo->setFixedSize(300, 44);
+   memo->setStyleSheet(d_text_box);
+   connect(memo, SIGNAL(textChanged(const QString &)), this, SLOT(memoChanged(const QString &)));
+   
+   lineEditsLayout->addWidget(name);
+   lineEditsLayout->addWidget(amount);
+   lineEditsLayout->addWidget(memo);
+   
+   buttonsLayout->setSpacing(20);
+   buttonsLayout->addWidget(ok);
+   buttonsLayout->addWidget(cancel);
+   
+   
+   mainLayout->setContentsMargins(40, 10, 40, 10);
+   mainLayout->addLayout(lineEditsLayout);
+   mainLayout->addLayout(buttonsLayout);
+   
+   setLayout(mainLayout);
+   
+   setFixedSize(380, 220);
+}
+
+void TransferDialog::nameChanged(const QString & name)
+{
+   m_toUserName = name;
+}
+
+void TransferDialog::amountChanged(const QString & amount)
+{
+   m_amount = amount.toInt();
+}
+
+void TransferDialog::memoChanged(const QString & memo)
+{
+   m_memo = memo;
+}
+
+void TransferDialog::Transfer()
+{
+   std::string a_result;
+   std::string message;
+   
+   if(m_fromUserName.isEmpty())
+       m_fromUserName = Globals::instance().getCurrentUser().c_str();
+   
+   
+   QString strAssetSymbol = Globals::instance().asset(0).m_str_symbol.c_str();
+
+   try {
+      QString run_str = "transfer "
+      "\"" + m_fromUserName + "\" "
+      "\"" + m_toUserName + "\" "
+      "\"" + QString::number(m_amount) + "\""
+      "\"" + strAssetSymbol + "\" "
+      "\"" + m_memo + "\" "
+      "\"true\"";
+      RunTask(run_str.toStdString(), a_result);
+   } catch(const std::exception& ex){
+      message = ex.what();
+      setEnabled(true);
+   }
+   
+   if (message.empty())
+   {
+      close();
+   }
+   else
+   {
+      ShowMessageBox(tr("Error"), tr("Failed to send DCT"), message.c_str());
+   }
+}
+
+
+
+

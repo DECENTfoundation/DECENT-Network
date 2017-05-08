@@ -354,9 +354,9 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     //m_main_layout.addWidget(&m_main_tabs);
    
    QHBoxLayout* pagination_layout = new QHBoxLayout();
-   prev_button = new DecentButton(this);
-   next_button = new DecentButton(this);
-   reset_button = new DecentButton(this);
+   prev_button = new DecentButton(nullptr);
+   next_button = new DecentButton(nullptr);
+   reset_button = new DecentButton(nullptr);
    
    prev_button->setText("Previous");
    prev_button->setStyleSheet(d_pagination_buttons);

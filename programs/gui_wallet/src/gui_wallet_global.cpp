@@ -631,13 +631,11 @@ void Globals::showTransferDialog(std::string const& user)
 {
    if(getCurrentUser().empty())
       return;
+   
+   TransferDialog* pTransferDialog = new TransferDialog(nullptr , QString::fromStdString(user));
 
-   SendDialog* pTransferDialog = new SendDialog(3, QObject::tr("Send") + " " + asset(0).m_str_symbol.c_str() , user.c_str());
-
-   std::vector<std::string> cvsUsKey(3);
-
-   pTransferDialog->execRD(nullptr, cvsUsKey);
-   delete pTransferDialog;
+   pTransferDialog->open();
+   //delete pTransferDialog;
 }
 
 string Globals::getAccountName(string const& accountId)

@@ -105,6 +105,7 @@ protected:
    bool                                m_locked;
    RichDialog*                         m_import_key_dlg;
    SendDialog*                         m_sendDCT_dialog;
+   TransferDialog*                     m_transfer_dialog;
    PasswordDialog                      m_SetPasswordDialog;
    PasswordDialog                      m_UnlockDialog;
    

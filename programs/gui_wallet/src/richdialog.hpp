@@ -117,6 +117,25 @@ protected:
    
 };
    
+   
+class TransferDialog : public QDialog
+{
+   Q_OBJECT
+public:
+   TransferDialog(QWidget* parent, QString const& userName = QString());
+   
+public slots:
+   void nameChanged(const QString &);
+   void amountChanged(const QString &);
+   void memoChanged(const QString &);
+   void Transfer();
+private:
+   QString  m_toUserName;
+   double   m_amount;
+   QString  m_memo;
+   QString  m_fromUserName;
+};
+   
 }
 
 

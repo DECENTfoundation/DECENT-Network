@@ -628,17 +628,14 @@ void Mainwindow_gui_wallet::SendDCTSlot()
    DecentButton* button = (DecentButton*)sender();
    QString accountName = button->property("accountName").toString();
    
-   if(m_sendDCT_dialog != nullptr)
-      delete m_sendDCT_dialog;
+   if(m_transfer_dialog != nullptr)
+      delete m_transfer_dialog;
 
-   m_sendDCT_dialog = new SendDialog(3, tr("Send") + " DCT" , accountName);
 
-   std::vector<std::string> cvsUsKey(3);
-   QPoint thisPos = pos();
-   thisPos.rx() += size().width() / 2 - 175;
-   thisPos.ry() += size().height() / 2 - 75;
    
-   m_sendDCT_dialog->execRD(&thisPos,cvsUsKey);
+   m_transfer_dialog = new TransferDialog(this , accountName);
+   m_transfer_dialog->open();
+   
 }
 
 void Mainwindow_gui_wallet::InfoSlot()
