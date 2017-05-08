@@ -171,14 +171,14 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details, bool bSil
           button->setAlignment(Qt::AlignRight);
           button->setMargin(5);
           
-          DecentButton* leave_comment_button = new DecentButton(this);
+          QPushButton* leave_comment_button = new QPushButton();
           leave_comment_button->setText("Leave comment");
           leave_comment_button->setFixedHeight(40);
           leave_comment_button->setFixedWidth(120);
           button->addWidget(leave_comment_button);
           
           m_main_layout.addLayout(button);
-          connect(leave_comment_button, SIGNAL(LabelClicked()), this, SLOT(LeaveComment()));
+          connect(leave_comment_button, SIGNAL(clicked()), this, SLOT(LeaveComment()));
        }else{
           m_commentOrRate_Text->setText("You was Commented");
           m_comment->setText( QString::fromStdString(get_comment) );
