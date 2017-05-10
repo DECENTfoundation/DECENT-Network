@@ -245,9 +245,45 @@ using namespace decent::encrypt;
       vector<value_type> m_arrValues;
    };
 
+   enum class EContentObjectApplication
+   {
+      DecentCore,
+      DecentGo
+   };
+   class ContentObjectApplication : public ContentObjectPropertyBase<EContentObjectApplication, ContentObjectApplication>
+   {
+   public:
+      using meta_default = bool;
+      using meta_unique = bool;
+
+      static string name()
+      {
+         return "application_id";
+      }
+
+      static void convert_from_string(string const& str_value, EContentObjectApplication& type)
+      {
+         type = EContentObjectApplication::DecentCore;
+         if (str_value.empty())
+            return;
+         size_t pos;
+         long long converted = std::stoll(str_value, &pos);
+         if (pos != str_value.length() ||
+             static_cast<long long>(EContentObjectApplication::DecentCore) > converted ||
+             static_cast<long long>(EContentObjectApplication::DecentGo) < converted)
+            throw std::runtime_error("ContentObjectApplication is in exceptional situation");
+         else
+            type = static_cast<EContentObjectApplication>(converted);
+      }
+      static void convert_to_string(EContentObjectApplication const& type, string& str_value)
+      {
+         str_value = std::to_string(static_cast<long long>(type));
+      }
+   };
+
    enum class EContentObjectType
    {
-      GUI,
+      None,
       Book
    };
 
@@ -259,33 +295,29 @@ using namespace decent::encrypt;
 
       static string name()
       {
-         return "type";
+         return "content_id";
       }
 
       static void convert_from_string(string const& str_value, EContentObjectType& type)
       {
-         if (str_value == "GUI")
-            type = EContentObjectType::GUI;
-         else if (str_value == "Book")
-            type = EContentObjectType::Book;
-         else if (str_value == "")
-            type = EContentObjectType::GUI;
+         type = EContentObjectType::None;
+         if (str_value.empty())
+            return;
+         size_t pos;
+         long long converted = std::stoll(str_value, &pos);
+         if (pos != str_value.length() ||
+             static_cast<long long>(EContentObjectType::None) > converted ||
+             static_cast<long long>(EContentObjectType::Book) < converted)
+            throw std::runtime_error("ContentObjectType is in exceptional situation");
          else
-            throw std::runtime_error("EContentObjectType is in exceptional situation");
+            type = static_cast<EContentObjectType>(converted);
       }
       static void convert_to_string(EContentObjectType const& type, string& str_value)
       {
-         switch (type)
-         {
-         case EContentObjectType::GUI:
-            str_value = "GUI";
-            break;
-         case EContentObjectType::Book:
-            str_value = "Book";
-            break;
-         }
+         str_value = std::to_string(static_cast<long long>(type));
       }
    };
+
    class ContentObjectTitle : public ContentObjectPropertyBase<string, ContentObjectTitle>
    {
    public:

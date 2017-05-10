@@ -16,7 +16,7 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QLabel>
-#include <QTextEdit>
+#include "decent_text_edit.hpp"
 #include "decent_wallet_ui_gui_newcheckbox.hpp"
 
 
@@ -78,11 +78,10 @@ protected:
     QHBoxLayout     m_vSub_layouts[NUMBER_OF_SUB_LAYOUTS2];
     QLabel          m_vLabels[NUMBER_OF_SUB_LAYOUTS2*2];
     QLabel          m_stars[5];
-    QTextEdit       desc_text;
     int             m_currentMyRating = 0;
     std::vector<NewCheckBox*> stars_labels;
     QLabel*         m_RateText;
-    QTextEdit       m_desc;
+    DecentTextEdit  m_desc;
 public:
     std::vector<QString> s_vcpcFieldsGeneral;
     std::vector<QString> s_vcpcFieldsBougth;

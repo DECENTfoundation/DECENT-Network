@@ -47,6 +47,7 @@
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QTextStream>
+#include <QLocale>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -93,7 +94,6 @@
 #include <graphene/chain/content_object.hpp>
 #include <graphene/wallet/wallet.hpp>
 #include <graphene/utilities/dirhelper.hpp>
-#include <graphene/chain/config.hpp>
 
 #include <cryptopp/integer.h>
 #include <cryptopp/aes.h>

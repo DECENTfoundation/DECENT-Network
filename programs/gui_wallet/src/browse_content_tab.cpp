@@ -3,6 +3,8 @@
 #include "gui_wallet_global.hpp"
 #include "browse_content_tab.hpp"
 #include "decent_wallet_ui_gui_contentdetailsgeneral.hpp"
+#include "decent_line_edit.hpp"
+#include "decent_button.hpp"
 
 #ifndef _MSC_VER
 #include <QHBoxLayout>
@@ -50,17 +52,16 @@ BrowseContentTab::BrowseContentTab(QWidget* pParent)
    QPixmap px_search_icon(icon_search);
    pLabelSearchIcon->setPixmap(px_search_icon);
 
-   QLineEdit* pSearchTerm = new QLineEdit(this);
-   pSearchTerm->setPlaceholderText(tr("Search Content"));
-   pSearchTerm->setFixedHeight(54);
-   pSearchTerm->setStyleSheet(d_lineEdit);
-   pSearchTerm->setAttribute(Qt::WA_MacShowFocusRect, 0);
+   DecentLineEdit* pfilterLineEditor = new DecentLineEdit(this, DecentLineEdit::TableSearch);
+   pfilterLineEditor->setPlaceholderText(tr("Search Content"));
+   pfilterLineEditor->setFixedHeight(54);
+   pfilterLineEditor->setAttribute(Qt::WA_MacShowFocusRect, 0);
 
    QHBoxLayout* pSearchLayout = new QHBoxLayout();
 
    pSearchLayout->setContentsMargins(42, 0, 0, 0);
    pSearchLayout->addWidget(pLabelSearchIcon);
-   pSearchLayout->addWidget(pSearchTerm);
+   pSearchLayout->addWidget(pfilterLineEditor);
 
    QVBoxLayout* pMainLayout = new QVBoxLayout();
    pMainLayout->setContentsMargins(0, 0, 0, 0);
@@ -69,7 +70,7 @@ BrowseContentTab::BrowseContentTab(QWidget* pParent)
    pMainLayout->addWidget(m_pTableWidget);
    setLayout(pMainLayout);
 
-   QObject::connect(pSearchTerm, &QLineEdit::textChanged,
+   QObject::connect(pfilterLineEditor, &QLineEdit::textChanged,
                     this, &BrowseContentTab::slot_SearchTermChanged);
 
    QObject::connect(m_pTableWidget, &DecentTable::signal_SortingChanged,

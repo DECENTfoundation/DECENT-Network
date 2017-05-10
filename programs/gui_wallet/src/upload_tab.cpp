@@ -5,6 +5,7 @@
 #include "upload_popup.hpp"
 #include "decent_wallet_ui_gui_contentdetailsgeneral.hpp"
 #include "decent_button.hpp"
+#include "decent_line_edit.hpp"
 #include "gui_design.hpp"
 
 #ifndef _MSC_VER
@@ -18,10 +19,7 @@
 #include <QLabel>
 #include <QLineEdit>
 
-#include <graphene/chain/config.hpp>
 #include <graphene/chain/content_object.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/optional.hpp>
 
 #include "json.hpp"
 #endif
@@ -61,17 +59,16 @@ Upload_tab::Upload_tab(QWidget* pParent)
    QPixmap image(icon_search);
    pSearchLabel->setPixmap(image);
 
-   QLineEdit* pfilterLineEditor = new QLineEdit(this);
+   DecentLineEdit* pfilterLineEditor = new DecentLineEdit(this, DecentLineEdit::TableSearch);
    pfilterLineEditor->setPlaceholderText(tr("Search Content"));
    pfilterLineEditor->setFixedHeight(54);
-   pfilterLineEditor->setStyleSheet(d_lineEdit);
    pfilterLineEditor->setAttribute(Qt::WA_MacShowFocusRect, 0);
 
    QHBoxLayout* pSearchLayout = new QHBoxLayout;
    pSearchLayout->setContentsMargins(42, 0, 0, 0);
    pSearchLayout->addWidget(pSearchLabel);
    pSearchLayout->addWidget(pfilterLineEditor);
-   pSearchLayout->addWidget(pUploadButton, 0 , Qt::AlignCenter);
+   pSearchLayout->addWidget(pUploadButton);
    //pSearchLayout->addWidget(pUploadButton, 0 , Qt::AlignBottom);
 
    QVBoxLayout* pMainLayout = new QVBoxLayout;

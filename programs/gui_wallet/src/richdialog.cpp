@@ -54,7 +54,7 @@ TransferDialog::TransferDialog(QWidget* parent, QString const& userName/* = QStr
    amount->setAttribute(Qt::WA_MacShowFocusRect, 0);
    amount->setFixedSize(300, 44);
    QDoubleValidator* dblValidator = new QDoubleValidator(0.0001, 100000, 4, this);
-   dblValidator->setLocale(Globals::instance().m_locale);
+   dblValidator->setLocale(Globals::instance().locale());
    amount->setValidator(dblValidator);
    QObject::connect(amount, &QLineEdit::textChanged, this, &TransferDialog::amountChanged);
    

@@ -2,27 +2,17 @@
 
 #include "gui_design.hpp"
 #include "decent_button.hpp"
-#include <QHBoxLayout>
-#include <QSvgWidget>
-#include <QPixmap>
-#include <QIcon>
-#include <QEvent>
-#include <QPainter>
-#include <QSvgRenderer>
+
 #include <QVariant>
 #include <QStyle>
-
-#ifndef _MSC_VER
-#include <QGraphicsDropShadowEffect>
-#include <string>
-#endif
+#include <QEvent>
 
 namespace gui_wallet
 {
-DecentButton::DecentButton(QWidget *parent,
+DecentButton::DecentButton(QWidget* pParent,
                            eType enType/* = Default*/,
                            eName enName/* = None*/)
-: QPushButton(parent)
+: QPushButton(pParent)
 {
    setMouseTracking(true);
 

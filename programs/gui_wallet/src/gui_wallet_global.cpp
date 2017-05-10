@@ -14,7 +14,7 @@
 #include <QObject>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
-
+#include <QLocale>
 #endif
 
 using string = std::string;
@@ -473,7 +473,8 @@ Globals::Globals()
 : m_connected(false)
 , m_p_wallet_operator(new WalletOperator())
 , m_p_wallet_operator_thread(new QThread(this))
-, m_p_timer(new QTimer())
+, m_p_timer(new QTimer(this))
+, m_p_locale(new QLocale())
 , m_str_currentUser()
 , m_tp_started(std::chrono::steady_clock::now())
 {
@@ -491,6 +492,8 @@ Globals::Globals()
    m_p_timer->start(1000);
    QObject::connect(m_p_timer, &QTimer::timeout,
                     this, &Globals::slot_timer);
+
+   *m_p_locale = ((QApplication*)QApplication::instance())->inputMethod()->locale();
 }
 
 Globals::~Globals()
@@ -535,6 +538,12 @@ void Globals::clear()
       m_p_wallet_operator->m_wallet_api.SaveWalletFile();
       delete m_p_wallet_operator;
       m_p_wallet_operator = nullptr;
+   }
+
+   if (m_p_locale)
+   {
+      delete m_p_locale;
+      m_p_locale = nullptr;
    }
 }
 
@@ -603,6 +612,11 @@ std::vector<Publisher> Globals::getPublishers()
    }
 
    return result;
+}
+
+QLocale& Globals::locale()
+{
+   return *m_p_locale;
 }
 
 void Globals::setCurrentUser(std::string const& user)

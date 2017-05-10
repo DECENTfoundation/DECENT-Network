@@ -32,6 +32,7 @@ using namespace gui_wallet;
 
 ContentDetailsBase::ContentDetailsBase(QWidget* pParent)
 : QDialog(pParent)
+, m_desc(this, DecentTextEdit::Info)
 {
    s_vcpcFieldsGeneral.push_back(tr("Author"));
    s_vcpcFieldsGeneral.push_back(tr("Expiration"));
@@ -356,7 +357,6 @@ void ContentDetailsBase::popup_for_purchased(int row_star)
    
     QHBoxLayout* desc_lay = new QHBoxLayout();
     m_desc.setText(tr("Description") + "\n\n");
-    m_desc.setStyleSheet(border_0);
     m_desc.setReadOnly(true);
     m_desc.setFont(DescriptionDetailsFont());
     desc_lay->setContentsMargins(42, 17, 0, 3);
