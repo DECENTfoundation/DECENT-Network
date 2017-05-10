@@ -1,0 +1,24 @@
+#pragma once
+#include <fc/thread/future.hpp>
+#include <graphene/chain/protocol/types.hpp>
+
+namespace decent { namespace seeding {
+
+
+//using namespace graphene::chain;
+
+   struct seeding_plugin_startup_options
+   {
+      graphene::chain::account_id_type seeder;
+      graphene::chain::DInteger content_private_key;
+      fc::ecc::private_key seeder_private_key;
+      uint64_t free_space;
+      uint32_t seeding_price;
+   };
+
+   extern fc::promise<seeding_plugin_startup_options>::ptr seeding_promise;
+}
+}
+
+FC_REFLECT(decent::seeding::seeding_plugin_startup_options,
+           (seeder)(content_private_key)(seeder_private_key)(free_space)(seeding_price))
