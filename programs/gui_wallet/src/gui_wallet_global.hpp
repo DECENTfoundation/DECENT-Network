@@ -8,6 +8,7 @@
 #include <QTableWidget>
 #include <chrono>
 #include <vector>
+#include <QLocale>
 
 #include <decent/wallet_utility/wallet_utility.hpp>
 
@@ -138,6 +139,7 @@ namespace gui_wallet
    public:
       static Globals& instance();
 
+      QLocale  m_locale;
       std::string getCurrentUser() const;
       bool isConnected() const;
       WalletAPI& getWallet() const;
@@ -152,6 +154,7 @@ namespace gui_wallet
       void signal_showPurchasedTab();
       void signal_showTransactionsTab(std::string const&);
       void signal_updateAccountBalance(Asset const&);
+      void signal_importKeyDid(bool);
 
    public:
       void setCurrentUser(std::string const& user);
@@ -175,6 +178,9 @@ namespace gui_wallet
       
       void walletConnectionError(std::string const& message);
       void walletConnected();
+      
+   public slots:
+      void slot_displayWalletContent();
 
    private:
       bool m_connected;

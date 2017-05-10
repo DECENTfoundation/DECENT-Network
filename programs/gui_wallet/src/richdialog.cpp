@@ -19,281 +19,210 @@
 
 using namespace gui_wallet;
 
-RichDialogBase::RichDialogBase(QString title) : m_ok_button(this), m_cancel_button(this)
+
+
+                  //Send Dialog
+/*********************************************************/
+ 
+TransferDialog::TransferDialog(QWidget* parent, QString const& userName/* = QString()*/) : m_toUserName(userName)
 {
-    m_ok_button.setText(tr("Import"));
-    m_cancel_button.setText(tr("Cancel"));
-    m_ok_button.setFixedSize(140, 40);
-    m_cancel_button.setFixedSize(140, 40);
-    m_buttons_layout.setSpacing(20);
-    m_buttons_layout.addWidget(&m_ok_button);
-    m_buttons_layout.addWidget(&m_cancel_button);
-    m_controls_layout.setContentsMargins(0, 0, 0, 0);
-    m_cancel_button.setStyleSheet(d_cancel_button);
-    m_main_layout.setContentsMargins(40, 40, 40, 40);
-    m_main_layout.setAlignment(Qt::AlignCenter);
-    m_main_layout.setSpacing(10);
-    m_main_layout.addLayout(&m_controls_layout);
-    m_main_layout.addLayout(&m_buttons_layout);
-    setLayout(&m_main_layout);
-    connect(&m_cancel_button,SIGNAL(clicked()),this,SLOT(close()));
-    connect(&m_ok_button,SIGNAL(clicked()),this,SLOT(set_ok_and_closeSlot()));
-    setWindowTitle(title);
-    setFixedSize(380,240);
-}
-
-
-void RichDialogBase::set_ok_and_closeSlot()
-{
-    m_ret_value = RDB_OK;
-    close();
-}
-
-
-RET_TYPE RichDialogBase::execRB(const QPoint* a_pMove)
-{
-    m_ret_value = RDB_CANCEL;
-    if(a_pMove){QDialog::move(*a_pMove);} QDialog::exec();
-    return m_ret_value;
-}
-
-
-void RichDialogBase::AddLayout(QLayout* a_pLayout)
-{
-    m_controls_layout.addLayout(a_pLayout);
-}
-
-void RichDialogBase::AddWidget(QWidget* a_pWidget)
-{
-    m_controls_layout.addWidget(a_pWidget);
-}
-
-
-/********************************************/
-RichDialog::RichDialog(int a_num_of_text_boxes  , QString title)
-    : m_nNumOfTextBoxes(a_num_of_text_boxes),m_pTextBoxes(NULL),RichDialogBase(title)
-{
-    if(a_num_of_text_boxes<=0) return;
-
-    m_pTextBoxes = new QLineEdit[a_num_of_text_boxes];
-    connect(&m_pTextBoxes[0], SIGNAL(returnPressed()), &m_ok_button, SIGNAL(LabelClicked()));
-    connect(&m_pTextBoxes[1], SIGNAL(returnPressed()), &m_ok_button, SIGNAL(LabelClicked()));
-    m_pTextBoxes[0].setPlaceholderText((tr("Account")));
-    m_pTextBoxes[0].setAttribute(Qt::WA_MacShowFocusRect, 0);
-    m_pTextBoxes[0].setFixedSize(300, 44);
-    m_pTextBoxes[0].setStyleSheet(d_text_box);
-
-    m_pTextBoxes[1].setPlaceholderText((tr("Key")));
-    m_pTextBoxes[1].setAttribute(Qt::WA_MacShowFocusRect, 0);
-    m_pTextBoxes[1].setFixedSize(300, 44);
-    m_pTextBoxes[1].setStyleSheet(d_text_box);
-    for(int i(0); i<a_num_of_text_boxes; ++i )
-    {
-        m_controls_layout.addWidget(&m_pTextBoxes[i]);
-    }
-#ifdef _MSC_VER
-    int height = style()->pixelMetric(QStyle::PM_TitleBarHeight);
-    setWindowIcon(height > 32 ? QIcon(":/icon/images/windows_decent_icon_32x32.png")
-       : QIcon(":/icon/images/windows_decent_icon_16x16.png"));
-#endif
-}
-
-RichDialog::~RichDialog() {
-    if(m_nNumOfTextBoxes>0) {
-       delete [] m_pTextBoxes;
-    }
-}
-
-
-RET_TYPE RichDialog::execRD(const QPoint* a_pMove, std::vector<std::string>& a_cvResults)
-{
-    QString cqsResult;
-    QByteArray cbaResult;
-    int i,nVectInitSize(a_cvResults.size());
-    int nSizeToSet(nVectInitSize<m_nNumOfTextBoxes ? nVectInitSize : m_nNumOfTextBoxes);
-
-    for(i = 0; i<nSizeToSet; ++i){m_pTextBoxes[i].setText(tr(a_cvResults[i].c_str()));}
-
-    RET_TYPE rtReturn = RichDialogBase::execRB(a_pMove);
-    if(m_nNumOfTextBoxes>nVectInitSize){a_cvResults.resize(m_nNumOfTextBoxes);}
-
-    for(i = 0; i<m_nNumOfTextBoxes; ++i)
-    {
-        cqsResult = m_pTextBoxes[i].text();
-        cbaResult = cqsResult.toLatin1();
-        a_cvResults[i] = cbaResult.data();
-    }
-
-    return rtReturn;
-}
-
-
-
-//Send Dialog *********************************************************
-SendDialogBase::SendDialogBase(QString title) : m_ok_button(this), m_cancel_button(this)
-{
-   m_ok_button.setText(tr("Send"));
-   m_cancel_button.setText(tr("Cancel"));
-   m_ok_button.setFixedSize(140, 40);
-   m_cancel_button.setFixedSize(140, 40);
-   m_buttons_layout.setSpacing(20);
-   m_buttons_layout.addWidget(&m_ok_button);
-   m_buttons_layout.addWidget(&m_cancel_button);
-   m_controls_layout.setContentsMargins(0, 0, 0, 0);
-   m_cancel_button.setStyleSheet(d_cancel_button);
-   m_main_layout.setContentsMargins(40, 10, 40, 10);
-   m_main_layout.setAlignment(Qt::AlignCenter);
-   m_main_layout.setSpacing(10);
-   m_main_layout.addLayout(&m_controls_layout);
-   m_main_layout.addLayout(&m_buttons_layout);
-   setLayout(&m_main_layout);
-   connect(&m_cancel_button,SIGNAL(clicked()),this,SLOT(close()));
-   connect(&m_ok_button,SIGNAL(clicked()),this,SLOT(set_ok_and_closeSlot()));
-   setWindowTitle(title);
-   setFixedSize(380,240);
-}
-
-
-void SendDialogBase::set_ok_and_closeSlot()
-{
-   m_ret_value = RDB_OK;
-   emit RDB_is_OK();
-}
-
-
-RET_TYPE SendDialogBase::execRB(const QPoint* a_pMove)
-{
-   m_ret_value = RDB_CANCEL;
-   if(a_pMove){QDialog::move(*a_pMove);} QDialog::exec();
-   return m_ret_value;
-}
-
-
-void SendDialogBase::AddLayout(QLayout* a_pLayout)
-{
-   m_controls_layout.addLayout(a_pLayout);
-}
-
-void SendDialogBase::AddWidget(QWidget* a_pWidget)
-{
-   m_controls_layout.addWidget(a_pWidget);
-}
-
-
-/********************************************/
-SendDialog::SendDialog(int a_num_of_text_boxes  , QString title, QString userName)
-: m_nNumOfTextBoxes(a_num_of_text_boxes),m_pTextBoxes(NULL),SendDialogBase(title) , m_userName(userName)
-{
-   _locale = ((QApplication*)QApplication::instance())->inputMethod()->locale();
-
-   if(a_num_of_text_boxes<=0) return;
+   QVBoxLayout* mainLayout       = new QVBoxLayout(this);
+   QVBoxLayout* lineEditsLayout  = new QVBoxLayout(this);
+   QHBoxLayout* buttonsLayout    = new QHBoxLayout(this);
    
-   connect(this, SIGNAL(RDB_is_OK()), this, SLOT(sendDCT()));
+   DecentButton* ok = new DecentButton(this);
+   ok->setText(tr("Send"));
+   ok->setFixedSize(140, 40);
+   DecentButton* cancel = new DecentButton(this);
+   cancel->setText(tr("Cancel"));
+   cancel->setFixedSize(140, 40);
    
-   m_pTextBoxes = new QLineEdit[a_num_of_text_boxes];
-   connect(&m_pTextBoxes[0], SIGNAL(returnPressed()), &m_ok_button, SIGNAL(LabelClicked()));
-   connect(&m_pTextBoxes[1], SIGNAL(returnPressed()), &m_ok_button, SIGNAL(LabelClicked()));
-   connect(&m_pTextBoxes[2], SIGNAL(returnPressed()), &m_ok_button, SIGNAL(LabelClicked()));
+   QObject::connect(ok, &QPushButton::clicked, this, &TransferDialog::Transfer);
+   QObject::connect(cancel, &QPushButton::clicked, this, &QDialog::close);
    
-   m_pTextBoxes[0].setPlaceholderText(QString(tr("Account")));
-   m_pTextBoxes[0].setAttribute(Qt::WA_MacShowFocusRect, 0);
-   m_pTextBoxes[0].setFixedSize(300, 44);
-   m_pTextBoxes[0].setStyleSheet(d_text_box);
-
+   QLineEdit* name = new QLineEdit(this);
+   QLineEdit* amount = new QLineEdit(this);
+   QLineEdit* memo = new QLineEdit(this);
+   
+   name->setPlaceholderText(tr("Account"));
+   name->setAttribute(Qt::WA_MacShowFocusRect, 0);
+   name->setFixedSize(300, 44);
+   name->setText(m_toUserName);
+   QObject::connect(name, &QLineEdit::textChanged, this, &TransferDialog::nameChanged);
+   
+   amount->setPlaceholderText(tr("Amount"));
+   amount->setAttribute(Qt::WA_MacShowFocusRect, 0);
+   amount->setFixedSize(300, 44);
    QDoubleValidator* dblValidator = new QDoubleValidator(0.0001, 100000, 4, this);
-   dblValidator->setLocale(_locale);
-   m_pTextBoxes[1].setValidator(dblValidator);
+   dblValidator->setLocale(Globals::instance().m_locale);
+   amount->setValidator(dblValidator);
+   QObject::connect(amount, &QLineEdit::textChanged, this, &TransferDialog::amountChanged);
    
-   m_pTextBoxes[1].setPlaceholderText(QString(tr("Amount")));
-   m_pTextBoxes[1].setAttribute(Qt::WA_MacShowFocusRect, 0);
-   m_pTextBoxes[1].setFixedSize(300, 44);
-   m_pTextBoxes[1].setStyleSheet(d_text_box);
+   memo->setPlaceholderText(tr("Memo"));
+   memo->setAttribute(Qt::WA_MacShowFocusRect, 0);
+   memo->setFixedSize(300, 44);
+   QObject::connect(memo, &QLineEdit::textChanged, this, &TransferDialog::memoChanged);
    
-   m_pTextBoxes[2].setPlaceholderText(QString(tr("Memo")));
-   m_pTextBoxes[2].setAttribute(Qt::WA_MacShowFocusRect, 0);
-   m_pTextBoxes[2].setFixedSize(300, 44);
-   m_pTextBoxes[2].setStyleSheet(d_text_box);
-   for(int i(0); i<a_num_of_text_boxes; ++i )
-   {
-      m_controls_layout.addWidget(&m_pTextBoxes[i]);
-   }
-#ifdef _MSC_VER
-   int height = style()->pixelMetric(QStyle::PM_TitleBarHeight);
-   setWindowIcon(height > 32 ? QIcon(":/icon/images/windows_decent_icon_32x32.png")
-      : QIcon(":/icon/images/windows_decent_icon_16x16.png"));
-#endif
+   lineEditsLayout->addWidget(name);
+   lineEditsLayout->addWidget(amount);
+   lineEditsLayout->addWidget(memo);
+   
+   buttonsLayout->setSpacing(20);
+   buttonsLayout->addWidget(ok);
+   buttonsLayout->addWidget(cancel);
+   
+   
+   mainLayout->setContentsMargins(40, 10, 40, 10);
+   mainLayout->addLayout(lineEditsLayout);
+   mainLayout->addLayout(buttonsLayout);
+   
+   setLayout(mainLayout);
+   
+   setFixedSize(380, 220);
 }
 
-SendDialog::~SendDialog() {
-   if(m_nNumOfTextBoxes>0) {
-      delete [] m_pTextBoxes;
-   }
+void TransferDialog::nameChanged(const QString & name)
+{
+   m_toUserName = name;
 }
 
-void SendDialog::sendDCT()
+void TransferDialog::amountChanged(const QString & amount)
+{
+   m_amount = amount.toDouble();
+}
+
+void TransferDialog::memoChanged(const QString & memo)
+{
+   m_memo = memo;
+}
+
+void TransferDialog::Transfer()
 {
    std::string a_result;
    std::string message;
-
-   bool isOK = false;
-   QString amount = QString::number(_locale.toDouble(m_pTextBoxes[1].text(), &isOK));
-   if (!isOK) {
-      QMessageBox* msgBox = new QMessageBox();
-      msgBox->setAttribute(Qt::WA_DeleteOnClose);
-      msgBox->setWindowTitle(tr("Error"));
-      msgBox->setText(tr("Invalid amount is specified"));
-      msgBox->open();
-
-      return;
-   }
-
-   QString curentName = Globals::instance().getCurrentUser().c_str();
    
+   if(m_fromUserName.isEmpty())
+       m_fromUserName = Globals::instance().getCurrentUser().c_str();
+   
+   
+   QString strAssetSymbol = Globals::instance().asset(0).m_str_symbol.c_str();
+
    try {
-      QString run_str = "transfer \""
-      + curentName + "\" \""
-      + m_pTextBoxes[0].text() + "\" \""
-      + amount
-      + "\" \"DCT\" \""
-      + m_pTextBoxes[2].text()
-      + "\" \"true\"";
+      QString run_str = "transfer "
+      "\"" + m_fromUserName + "\" "
+      "\"" + m_toUserName + "\" "
+      "\"" + QString::number(m_amount) + "\""
+      "\"" + strAssetSymbol + "\" "
+      "\"" + m_memo + "\" "
+      "\"true\"";
       RunTask(run_str.toStdString(), a_result);
    } catch(const std::exception& ex){
       message = ex.what();
-      setEnabled(true);
    }
    
    if (message.empty())
    {
-      ShowMessageBox(tr("Success") , tr("Success"));
       close();
    }
    else
    {
-      ShowMessageBox(tr("Error"), tr("Failed to send DCT"), message.c_str());
+      ShowMessageBox(tr("Error"), tr("Failed to transfer DCT"), message.c_str());
    }
 }
 
+/*********************************************************/
 
-RET_TYPE SendDialog::execRD(const QPoint* a_pMove, std::vector<std::string>& a_cvResults)
+
+                  //ImportDialog
+/*********************************************************/
+
+ImportDialog::ImportDialog(QWidget* parent)
 {
-   QString cqsResult;
-   QByteArray cbaResult;
-   int i,nVectInitSize(a_cvResults.size());
-   int nSizeToSet(nVectInitSize<m_nNumOfTextBoxes ? nVectInitSize : m_nNumOfTextBoxes);
+   QObject::connect(this, &ImportDialog::isOk, &Globals::instance(), &Globals::slot_displayWalletContent);
    
-   for(i = 0; i<nSizeToSet; ++i){m_pTextBoxes[i].setText(tr(a_cvResults[i].c_str()));}
-   if(m_userName != "")
-      m_pTextBoxes[0].setText(m_userName);
-   RET_TYPE rtReturn = SendDialogBase::execRB(a_pMove);
-   if(m_nNumOfTextBoxes>nVectInitSize){a_cvResults.resize(m_nNumOfTextBoxes);}
+   QVBoxLayout* mainLayout       = new QVBoxLayout();
+   QVBoxLayout* lineEditsLayout  = new QVBoxLayout();
+   QHBoxLayout* buttonsLayout    = new QHBoxLayout();
    
-   for(i = 0; i<m_nNumOfTextBoxes; ++i)
-   {
-      cqsResult = m_pTextBoxes[i].text();
-      cbaResult = cqsResult.toLatin1();
-      a_cvResults[i] = cbaResult.data();
-   }
+   DecentButton* ok = new DecentButton(this);
+   ok->setText(tr("Ok"));
+   ok->setFixedSize(140, 40);
+   DecentButton* cancel = new DecentButton(this);
+   cancel->setText(tr("Cancel"));
+   cancel->setFixedSize(140, 40);
    
-   return rtReturn;
+   QObject::connect(ok, &QPushButton::clicked, this, &ImportDialog::Import);
+   QObject::connect(cancel, &QPushButton::clicked, this, &QDialog::close);
+   
+   QLineEdit* name = new QLineEdit(this);
+   QLineEdit* key  = new QLineEdit(this);
+   
+   name->setPlaceholderText(tr("Account"));
+   name->setAttribute(Qt::WA_MacShowFocusRect, 0);
+   name->setFixedSize(300, 44);
+   QObject::connect(name, &QLineEdit::textChanged, this, &ImportDialog::nameChanged);
+   //connect(name, SIGNAL(textChanged(const QString &)), this, SLOT(nameChanged(const QString &)));
+   
+   key->setPlaceholderText(tr("Key"));
+   key->setAttribute(Qt::WA_MacShowFocusRect, 0);
+   key->setFixedSize(300, 44);
+   QObject::connect(key, &QLineEdit::textChanged, this, &ImportDialog::keyChanged);
+   //connect(key, SIGNAL(textChanged(const QString &)), this, SLOT(keyChanged(const QString &)));
+   
+
+   
+   lineEditsLayout->addWidget(name);
+   lineEditsLayout->addWidget(key);
+   
+   buttonsLayout->setSpacing(20);
+   buttonsLayout->addWidget(ok);
+   buttonsLayout->addWidget(cancel);
+   
+   
+   mainLayout->setContentsMargins(40, 10, 40, 10);
+   mainLayout->addLayout(lineEditsLayout);
+   mainLayout->addLayout(buttonsLayout);
+   
+   setLayout(mainLayout);
+   
+   setFixedSize(380, 220);
 }
+
+void ImportDialog::nameChanged(const QString & name)
+{
+   m_userName = name;
+}
+
+void ImportDialog::keyChanged(const QString & key)
+{
+   m_key = key;
+}
+
+
+void ImportDialog::Import()
+{
+   std::string message;
+   std::string result;
+   try {
+      QString csTaskStr = "import_key "
+      "\"" + m_userName + "\" "
+      "\"" + m_key + "\" ";
+      RunTask(csTaskStr.toStdString(), result);
+   } catch (const std::exception& ex) {
+      message = ex.what();
+   }
+   if (message.empty()) {
+      emit isOk();
+      close();
+   }
+   else
+   {
+      ShowMessageBox(tr("Error"), tr("Cannot import key."), message.c_str());
+   }
+}
+
+/*********************************************************/
+
+
+
+
