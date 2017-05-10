@@ -152,12 +152,16 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details, bool bSil
        QHBoxLayout* comment_status = new QHBoxLayout;
        QLabel*    m_commentOrRate_Text = new QLabel;
 
-       m_commentOrRate_Text->setStyleSheet(border_0);
+       m_commentOrRate_Text->setStyleSheet(d_m_comment_label_text);
+       m_commentOrRate_Text->setFixedHeight(30);
+       
        m_comment = new QTextEdit;
-
+       m_comment->setStyleSheet(d_m_comment);
+       m_comment->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+       
        comment_status->addWidget(m_commentOrRate_Text);
        comment_status->setAlignment(Qt::AlignRight);
-       comment_status->setMargin(5);
+       comment_status->setContentsMargins(0, 0, 45, 1);
        
        m_main_layout.addLayout(comment_status);
        m_main_layout.addWidget(m_comment);
@@ -168,17 +172,18 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details, bool bSil
           m_comment->setPlaceholderText(tr("Comment here..."));
           
           QHBoxLayout* button = new QHBoxLayout;
-          button->setAlignment(Qt::AlignRight);
-          button->setMargin(5);
+          button->setAlignment(Qt::AlignCenter);
           
-          DecentButton* leave_comment_button = new DecentButton(this);
-          leave_comment_button->setText(tr("Leave comment"));
-          leave_comment_button->setFixedHeight(40);
-          leave_comment_button->setFixedWidth(120);
-          button->addWidget(leave_comment_button);
+          DecentButton* leave_feedback_button = new DecentButton(this);
+          leave_feedback_button->setText(tr("Leave feedback"));
+          leave_feedback_button->setFixedHeight(40);
+          leave_feedback_button->setFixedWidth(130);
+          
+          button->setContentsMargins(10, 10, 10, 10);
+          button->addWidget(leave_feedback_button);
           
           m_main_layout.addLayout(button);
-          QObject::connect(leave_comment_button, &QPushButton::clicked,
+          QObject::connect(leave_feedback_button, &QPushButton::clicked,
                            this, &ContentDetailsBase::LeaveComment);
        }else{
           m_commentOrRate_Text->setText(tr("You have already commented"));
