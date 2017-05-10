@@ -30,6 +30,12 @@
         <file>languages/decent_en.qm</file>
     </qresource>
     <qresource prefix="/css">
-         <file>styles/white_green.css</file>
+        <file>styles/white_green.css</file>
+    </qresource>
+    <qresource prefix="/fonts">
+        <file>font/Verdana Bold Italic.ttf</file>
+        <file>font/Verdana Bold.ttf</file>
+        <file>font/Verdana Italic.ttf</file>
+        <file>font/Verdana.ttf</file>
     </qresource>
 </RCC>

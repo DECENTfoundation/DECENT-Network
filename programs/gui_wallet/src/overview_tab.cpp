@@ -52,7 +52,7 @@ public:
       }
 
       QLabel* lblTitle = new QLabel((title));
-      lblTitle->setStyleSheet("font-weight: bold");
+//      lblTitle->setStyleSheet("font-weight: bold");
 
       QLabel* lblInfo = new QLabel(QString::fromStdString(info));
 
@@ -205,8 +205,8 @@ void Overview_tab::timeToUpdate(const std::string& result) {
       m_pTableWidget->item(iIndex,0)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
       m_pTableWidget->item(iIndex,1)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
       
-      m_pTableWidget->item(iIndex,0)->setForeground(QColor::fromRgb(88,88,88));
-      m_pTableWidget->item(iIndex,1)->setForeground(QColor::fromRgb(88,88,88));
+//      m_pTableWidget->item(iIndex,0)->setForeground(QColor::fromRgb(88,88,88));
+//      m_pTableWidget->item(iIndex,1)->setForeground(QColor::fromRgb(88,88,88));
    }
 
    if (contents.size() > m_i_page_size)

@@ -1,62 +1,81 @@
 #include "gui_design.hpp"
 
+#include <QFontDatabase>
 #include <QFont>
+#include <iostream>
+
+QFontDatabase FontVerdana()
+{
+   QFontDatabase resourcesFont;
+   resourcesFont.addApplicationFont(":/fonts/font/Verdana.ttf");
+   
+   return resourcesFont;
+}
+
+QFontDatabase FontVerdanaBold()
+{
+   QFontDatabase resourcesFont;
+   resourcesFont.addApplicationFont(":/fonts/font/Verdana Bold.ttf");
+   
+   return resourcesFont;
+}
+
 
 QFont PaginationFont()
 {
-   return QFont("Verdana Regular",14, QFont::Weight::Normal);
+   return FontVerdana().font("Verdana", "Normal", 14);
 }
 
 QFont TableHeaderFont()
 {
-   return QFont("Verdana Bold",
+   return FontVerdanaBold().font("Verdana", "Bold",
 #ifdef WINDOWS_HIGH_DPI
-      10,
+      10
 #else
-      14,
+      14
 #endif
-      QFont::Bold);
+      );
 }
 
 QFont AccountBalanceFont()
 {
-   return QFont("Verdana Regular", 12, QFont::Bold);
+   return FontVerdana().font("Verdana", "Regular", 12);
 }
 
 QFont DescriptionDetailsFont()
 {
-   return QFont("Verdana Regular", 13);
+   return FontVerdana().font("Verdana", "Regular", 13);
 }
 
 QFont PopupButtonRegularFont()
 {
-   return QFont("Verdana Regular",
+   return FontVerdana().font("Verdana", "Regular",
 #ifdef WINDOWS_HIGH_DPI
-      8,
+      8
 #else
-      13,
+      13
 #endif
-      QFont::Bold);
+      );
 }
 
 QFont PopupButtonBigFont()
 {
-   return QFont("Verdana Regular",
+   return FontVerdana().font("Verdana", "Regular",
 #ifdef WINDOWS_HIGH_DPI
-      8,
+      8
 #else
-      15,
+      15
 #endif
-      QFont::Bold);
+      );
 }
 
 QFont TabButtonFont()
 {
-   return QFont( "Verdana Regular",
+   return FontVerdana().font("Verdana", "Regular",
 #ifdef WINDOWS_HIGH_DPI
-      8,
+      8
 #else
-      14, 
+      14
 #endif
-      QFont::Bold);
+      );
 }
