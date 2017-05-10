@@ -32,10 +32,12 @@ public:
     ContentDetailsBase(QWidget* pParent);
     void execCDB(const SDigitalContent& a_cnt_details, bool bSilent = false);
     void popup_for_purchased(int);
+    bool empty_comment_or_rating();
 
     //virtual void execCDD(const decent::wallet::ui::gui::SDigitalContent& a_cnt_details)=0;
 
 private slots:
+   void LeaveComment();
     void MouseEnteredStar(int index) {
         if (m_currentMyRating > 0)
             return;
@@ -83,6 +85,7 @@ protected:
     std::vector<NewCheckBox*> stars_labels;
     QLabel*         m_RateText;
     QTextEdit       m_desc;
+    QTextEdit* m_comment;
 public:
     std::vector<QString> s_vcpcFieldsGeneral;
     std::vector<QString> s_vcpcFieldsBougth;

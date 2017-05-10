@@ -78,6 +78,7 @@ namespace gui_wallet
                         QString const& strDetailedText = QString());
 
    uint64_t json_to_int64(nlohmann::json const& o);
+   bool is_empty(nlohmann::json const& json, int& rating, std::string& comment);
     
    std::size_t extra_space(const std::string& s) noexcept;
    std::string unescape_string(const std::string& s);
@@ -98,7 +99,7 @@ namespace gui_wallet
       void signal_connected(std::string const& str_error);
    public:
       WalletAPI m_wallet_api;
-   };
+   };   
    // Asset
    //
    // use Globals.asset to get a valid one

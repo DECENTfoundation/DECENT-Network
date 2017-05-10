@@ -37,7 +37,9 @@ using decent::encrypt::DInteger;
       bool expired = false;
       bool delivered = false;
       time_point_sec expiration_or_delivery_time;
-      bool rated = false;
+      // User can't add rating and comment in two time-separated steps. For example, if content is already rated by user, he is not
+      // allowed to add comment later. If user wants to add both rating and comment, he has to do it in one step.
+      bool rated_or_commented = false;
       time_point_sec created; // initialized by content.created
       time_point_sec expiration; // initialized by content.expiration
 #ifdef PRICE_REGIONS
@@ -165,10 +167,10 @@ using decent::encrypt::DInteger;
 FC_REFLECT_DERIVED(graphene::chain::buying_object,
                    (graphene::db::object),
                    (consumer)(URI)(synopsis)(price)(paid_price)(seeders_answered)(size)(rating)(average_rating)(expiration_time)(pubKey)(key_particles)
-                   (expired)(delivered)(expiration_or_delivery_time)(rated)(created)(expiration)(region_code_from) )
+                   (expired)(delivered)(expiration_or_delivery_time)(rated_or_commented)(created)(expiration)(region_code_from) )
 #else
 FC_REFLECT_DERIVED(graphene::chain::buying_object,
                    (graphene::db::object),
                    (consumer)(URI)(synopsis)(price)(paid_price)(seeders_answered)(size)(rating)(average_rating)(expiration_time)(pubKey)(key_particles)
-                   (expired)(delivered)(expiration_or_delivery_time)(rated)(created)(expiration) )
+                   (expired)(delivered)(expiration_or_delivery_time)(rated_or_commented)(created)(expiration) )
 #endif
