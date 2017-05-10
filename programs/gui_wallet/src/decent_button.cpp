@@ -24,6 +24,8 @@ DecentButton::DecentButton(QWidget *parent,
                            eName enName/* = None*/)
 : QPushButton(parent)
 {
+   setMouseTracking(true);
+
    switch (enType)
    {
    case Send:
