@@ -2994,10 +2994,26 @@ public:
 
          for (auto& item : result)
          {
-            if (item.m_transaction_encrypted_memo)
-               item.m_str_description += " - " + item.m_transaction_encrypted_memo->get_message(
-                                       *wif_to_key(my->_keys.at(item.m_transaction_encrypted_memo->to) ),
-                                       item.m_transaction_encrypted_memo->from);
+            auto const& memo = item.m_transaction_encrypted_memo;
+            if (memo)
+            {
+               item.m_str_description += " - ";
+               auto it = my->_keys.find(memo->to);
+               if (it == my->_keys.end())
+                  // memo is encrypted for someone else
+                  item.m_str_description += "{encrypted}";
+               else
+               {
+                  // here the memo is encrypted for me
+                  // so I can decrypt it
+                  string mykey = it->second;
+                  auto wtok = *wif_to_key(mykey);
+                  string str_memo =
+                     memo->get_message(wtok, memo->from);
+
+                  item.m_str_description += str_memo;
+               }
+            }
          }
       }
       catch(...){}
