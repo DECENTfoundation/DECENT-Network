@@ -4,12 +4,12 @@
 
 QFont PaginationFont()
 {
-   return QFont("Myriad Pro Regular",14, QFont::Weight::Normal);
+   return QFont("Verdana Regular",14, QFont::Weight::Normal);
 }
 
 QFont TableHeaderFont()
 {
-   return QFont("Open Sans Bold",
+   return QFont("Verdana Bold",
 #ifdef WINDOWS_HIGH_DPI
       10,
 #else
@@ -20,17 +20,17 @@ QFont TableHeaderFont()
 
 QFont AccountBalanceFont()
 {
-   return QFont("Myriad Pro Regular", 12, QFont::Bold);
+   return QFont("Verdana Regular", 12, QFont::Bold);
 }
 
 QFont DescriptionDetailsFont()
 {
-   return QFont("Myriad Pro Regular", 13);
+   return QFont("Verdana Regular", 13);
 }
 
 QFont PopupButtonRegularFont()
 {
-   return QFont("Myriad Pro Regular",
+   return QFont("Verdana Regular",
 #ifdef WINDOWS_HIGH_DPI
       8,
 #else
@@ -41,7 +41,7 @@ QFont PopupButtonRegularFont()
 
 QFont PopupButtonBigFont()
 {
-   return QFont("Myriad Pro Regular",
+   return QFont("Verdana Regular",
 #ifdef WINDOWS_HIGH_DPI
       8,
 #else
@@ -52,7 +52,7 @@ QFont PopupButtonBigFont()
 
 QFont TabButtonFont()
 {
-   return QFont( "Myriad Pro Regular",
+   return QFont( "Verdana Regular",
 #ifdef WINDOWS_HIGH_DPI
       8,
 #else
