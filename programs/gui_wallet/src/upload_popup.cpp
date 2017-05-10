@@ -151,7 +151,7 @@ Upload_popup::Upload_popup(QWidget* pParent)
    QLineEdit* pPriceEditor = new QLineEdit();
    
    QDoubleValidator* dblValidator = new QDoubleValidator(0.0001, 100000, 4, this);
-   dblValidator->setLocale(_locale);
+   dblValidator->setLocale(Globals::instance().m_locale);
    pPriceEditor->setValidator(dblValidator);
 
    pPriceEditor->setAttribute(Qt::WA_MacShowFocusRect, 0);

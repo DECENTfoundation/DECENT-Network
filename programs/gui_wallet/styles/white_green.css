@@ -60,3 +60,8 @@ QMessageBox QPushButton, QFileDialog QPushButton
    max-width: 200px;
    max-height: 35px;
 }
+QLineEdit
+{
+   border: 1px solid rgb(143,143,143);
+   padding-left: 20px;
+}

@@ -631,13 +631,15 @@ void Globals::showTransferDialog(std::string const& user)
 {
    if(getCurrentUser().empty())
       return;
-
-   SendDialog* pTransferDialog = new SendDialog(3, QObject::tr("Send") + " " + asset(0).m_str_symbol.c_str() , user.c_str());
-
-   std::vector<std::string> cvsUsKey(3);
-
-   pTransferDialog->execRD(nullptr, cvsUsKey);
-   delete pTransferDialog;
+   
+   TransferDialog* pTransferDialog = new TransferDialog(nullptr , QString::fromStdString(user));
+   pTransferDialog->setAttribute(Qt::WA_DeleteOnClose);
+   pTransferDialog->open();
+}
+   
+void Globals::slot_displayWalletContent()
+{
+   emit signal_importKeyDid(false);
 }
 
 string Globals::getAccountName(string const& accountId)
