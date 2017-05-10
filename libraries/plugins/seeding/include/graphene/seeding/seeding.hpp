@@ -6,6 +6,7 @@
 #include <graphene/db/generic_index.hpp>
 #include <graphene/chain/protocol/types.hpp>
 #include <graphene/package/package.hpp>
+#include <graphene/seeding/seeding_utility.hpp>
 
 namespace decent { namespace seeding {
 
@@ -234,6 +235,7 @@ class seeding_plugin : public graphene::app::plugin
        * @param options
        */
       void plugin_initialize(const boost::program_options::variables_map& options) override;
+      void plugin_pre_startup( const seeding_plugin_startup_options& seeding_options );
       /**
        * Start the plugin and begin work.
        */

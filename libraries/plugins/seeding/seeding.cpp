@@ -397,14 +397,13 @@ void seeding_plugin::plugin_startup()
 void seeding_plugin::plugin_initialize( const boost::program_options::variables_map& options )
 {try{
    ilog("seeding plugin:  plugin_initialize() start");
+
    database().add_index< primary_index < my_seeding_index > >();
    database().add_index< primary_index < my_seeder_index > >();
 
    fc::optional<fc::ecc::private_key> private_key;
-   DInteger content_key;
-   account_id_type seeder;
-   uint64_t free_space;
-   uint32_t price;
+   seeding_plugin_startup_options seeding_options;
+
    if( options.count("seeder-private-key") || options.count("content-private-key") || options.count("seeder") || options.count("free-space") || options.count("seeding-price") ) {
       if( options.count("seeder-private-key")) {
          private_key = graphene::utilities::wif_to_key(options["seeder-private-key"].as<std::string>());
@@ -419,11 +418,11 @@ void seeding_plugin::plugin_initialize( const boost::program_options::variables_
       } else {
          FC_THROW("missing seeder-private-key parameter");
       }
-
+      seeding_options.seeder_private_key = *private_key;
 
       if( options.count("content-private-key")) {
          try {
-            content_key = decent::encrypt::DInteger::from_string(options["content-private-key"].as<string>());
+            seeding_options.content_private_key = decent::encrypt::DInteger::from_string(options["content-private-key"].as<string>());
          } catch( ... ) {
             FC_THROW("Invalid content private key ${key_string}",
                      ("key_string", options["content-private-key"].as<string>()));
@@ -431,54 +430,53 @@ void seeding_plugin::plugin_initialize( const boost::program_options::variables_
       } else {
          FC_THROW("missing content-private-key parameter");
       }
-/*      if( options.count("packages-path")) {
-         try {
-            boost::filesystem::path master_path = boost::filesystem::path(options["packages-path"].as<string>());
-            package_manager::instance().set_packages_path(master_path);
-         } catch( ... ) {
-            FC_THROW("Invalid packages path ${path_string}",
-                     ("path_string", options["packages-path"].as<string>()));
-         }
-      } else {
-         FC_THROW("missing packages-path parameter");
-      } */
+
       if( options.count("seeding-price")) {
-         price = options["seeding-price"].as<int>();
+         seeding_options.seeding_price = options["seeding-price"].as<int>();
       } else{
          FC_THROW("missing seeding-price parameter");
       }
       if( options.count("seeder"))
-         seeder = fc::variant(options["seeder"].as<string>()).as<account_id_type>();
+         seeding_options.seeder = fc::variant(options["seeder"].as<string>()).as<account_id_type>();
       else
          FC_THROW("missing seeder parameter");
 
       if( options.count("free-space"))
-         free_space = options["free-space"].as<int>();
+         seeding_options.free_space = options["free-space"].as<int>();
       else
          FC_THROW("missing free-space parameter");
-      
-      ilog("starting service thread");
-      my = unique_ptr<detail::seeding_plugin_impl>( new detail::seeding_plugin_impl( *this) );
-      my->service_thread = std::make_shared<fc::thread>("seeding");
-      my->main_thread = &fc::thread::current();
 
-      database().on_new_commited_operation.connect( [&]( const operation_history_object& b ){ my->handle_commited_operation( b, false ); } );
-      database().on_new_commited_operation_during_sync.connect( [&]( const operation_history_object& b ){
-           my->handle_commited_operation(b, true); } );
-
-      ilog("seeding plugin:  plugin_initialize() seeder prepared");
-      try {
-         database().create<my_seeder_object>([&](my_seeder_object &mso) {
-              mso.seeder = seeder;
-              mso.free_space = free_space;
-              mso.content_privKey = content_key;
-              mso.privKey = *private_key;
-              mso.price = price;
-         });
-      }catch(...){}
+      plugin_pre_startup( seeding_options );
    }
+
    ilog("seeding plugin:  plugin_initialize() end");
 }FC_LOG_AND_RETHROW() }
+
+void seeding_plugin::plugin_pre_startup( const seeding_plugin_startup_options& seeding_options )
+{
+   ilog("seeding plugin:  plugin_pre_startup() start");
+
+   ilog("starting service thread");
+   my = unique_ptr<detail::seeding_plugin_impl>( new detail::seeding_plugin_impl( *this) );
+   my->service_thread = std::make_shared<fc::thread>("seeding");
+   my->main_thread = &fc::thread::current();
+
+   database().on_new_commited_operation.connect( [&]( const operation_history_object& b ){ my->handle_commited_operation( b, false ); } );
+   database().on_new_commited_operation_during_sync.connect( [&]( const operation_history_object& b ){
+      my->handle_commited_operation(b, true); } );
+
+   ilog("seeding plugin:  plugin_pre_startup() seeder prepared");
+   try {
+      database().create<my_seeder_object>([&seeding_options](my_seeder_object &mso) {
+         mso.seeder = seeding_options.seeder;
+         mso.free_space = seeding_options.free_space;
+         mso.content_privKey = seeding_options.content_private_key;
+         mso.privKey = seeding_options.seeder_private_key;
+         mso.price = seeding_options.seeding_price;
+      });
+   }catch(...){}
+   ilog("seeding plugin:  plugin_pre_startup() end");
+}
 
 std::string seeding_plugin::plugin_name()const
 {
@@ -494,7 +492,6 @@ void seeding_plugin::plugin_set_program_options(
          ("content-private-key", bpo::value<string>(), "El Gamal content private key")
          ("seeder-private-key", bpo::value<string>(), "Private key of the account controlling this seeder")
          ("free-space", bpo::value<int>(), "Allocated disk space, in MegaBytes")
-         ("packages-path", bpo::value<string>(), "Packages storage path")
          ("seeding-price", bpo::value<int>(), "price per MegaBytes")
          ;
 }

@@ -231,6 +231,12 @@ namespace graphene { namespace app {
           */
          std::vector<net::potential_peer_record> get_potential_peers() const;
 
+         void seeding_startup(const account_id_type& account_id,
+                              const DInteger& content_private_key,
+                              const fc::ecc::private_key& seeder_private_key,
+                              const uint64_t free_space,
+                              const uint32_t seeding_price);
+
       private:
          application& _app;
    };
@@ -374,6 +380,7 @@ FC_API(graphene::app::network_node_api,
        (get_potential_peers)
        (get_advanced_node_parameters)
        (set_advanced_node_parameters)
+       (seeding_startup)
      )
 FC_API(graphene::app::crypto_api,
        (blind_sign)

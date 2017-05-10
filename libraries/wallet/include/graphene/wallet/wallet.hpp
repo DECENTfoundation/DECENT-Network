@@ -1576,6 +1576,19 @@ namespace graphene { namespace wallet {
                                          DInteger privKey,
                                          buying_id_type buying,
                                          bool broadcast = false);
+         /**
+          *
+          * @param account_id_type_or_name
+          * @param content_private_key
+          * @param seeder_private_key
+          * @param free_space
+          * @param seeding_price
+          */
+         void seeding_startup( string account_id_type_or_name,
+                               DInteger content_private_key,
+                               string seeder_private_key,
+                               uint64_t free_space,
+                               uint32_t seeding_price);
 
          /**
           * @brief Creates a subscription to author. This function is used by consumers.
@@ -2095,6 +2108,7 @@ FC_API( graphene::wallet::wallet_api,
            (ready_to_publish)
            (proof_of_custody)
            (deliver_keys)
+           (seeding_startup)
            (restore_encryption_key)
            (generate_el_gamal_keys)
            (subscribe_to_author)
