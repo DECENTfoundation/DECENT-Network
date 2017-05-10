@@ -267,6 +267,27 @@ namespace graphene { namespace chain {
 
    struct by_name{};
 
+   template <typename TAG, typename _t_object>
+   struct key_extractor;
+
+   template <>
+   struct key_extractor<by_id, account_object>
+   {
+      static object_id_type get(account_object const& ob)
+      {
+         return ob.id;
+      }
+   };
+
+   template <>
+   struct key_extractor<by_name, account_object>
+   {
+      static std::string get(account_object const& ob)
+      {
+         return ob.name;
+      }
+   };
+
    /**
     * @ingroup object_index
     */

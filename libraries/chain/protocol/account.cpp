@@ -152,7 +152,10 @@ void account_options::validate() const
       if( id.type() == vote_id_type::witness && needed_witnesses )
          --needed_witnesses;
 
-   FC_ASSERT( needed_witnesses == 0, "May not specify fewer witnesses or committee members than the number voted for.");
+   FC_ASSERT( needed_witnesses == 0, "May not specify fewer witnesses than the number voted for.");
+
+   FC_ASSERT( subscription_period > 0 );
+   FC_ASSERT( price_per_subscribe.amount >= 0 );
 }
 
 share_type account_create_operation::calculate_fee( const fee_parameters_type& k )const
@@ -168,7 +171,6 @@ share_type account_create_operation::calculate_fee( const fee_parameters_type& k
 
    return core_fee_required;
 }
-
 
 void account_create_operation::validate()const
 {

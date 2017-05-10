@@ -54,6 +54,7 @@ add_library( graphene_chain
 
              protocol/vote.cpp
              protocol/decent.cpp
+             protocol/subscription.cpp
 
              genesis_state.cpp
              get_config.cpp
@@ -72,12 +73,14 @@ add_library( graphene_chain
              withdraw_permission_evaluator.cpp
              buyback.cpp
              decent_evaluator.cpp
+             subscription_evaluator.cpp
 
              account_object.cpp
              asset_object.cpp
              content_object.cpp
              proposal_object.cpp
              vesting_balance_object.cpp
+             transaction_detail_object.cpp
 
              block_database.cpp
 

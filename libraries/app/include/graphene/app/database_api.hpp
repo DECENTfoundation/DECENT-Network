@@ -41,6 +41,8 @@
 #include <graphene/chain/seeder_object.hpp>
 #include <graphene/chain/rating_object.hpp>
 #include <graphene/chain/budget_record_object.hpp>
+#include <graphene/chain/subscription_object.hpp>
+#include <graphene/chain/transaction_detail_object.hpp>
 
 #include <graphene/market_history/market_history_plugin.hpp>
 
@@ -330,7 +332,24 @@ namespace graphene { namespace app {
           * @return Map of account names to corresponding IDs
           * @ingroup DatabaseAPI
           */
-         vector<account_object> search_accounts(const string& search_term, const string order, uint32_t limit) const;
+         vector<account_object> search_accounts(const string& search_term, const string order, const object_id_type& id, uint32_t limit) const;
+
+         /**
+          * @brief Returns the operations on the named account.
+          *
+          * This returns a list of transaction detail object, which describe activity on the account.
+          *
+          * @param account the account to search
+          * @param order Sort data by field
+          * @param id object_id to start searching from
+          * @param limit the number of entries to return (starting from the most recent) (max 100)
+          * @returns a list of \c transaction_detail_object
+          * @ingroup WalletCLI
+          */
+         vector<class transaction_detail_object> search_account_history(account_id_type const& account,
+                                                                        string const& order,
+                                                                        object_id_type const& id,
+                                                                        int limit) const;
 
          //////////////
          // Balances //
@@ -644,10 +663,18 @@ namespace graphene { namespace app {
          /**
           * @brief Get buying objects (open or history) by consumer
           * @param consumer Consumer of the buyings to retrieve
+          * @param order Ordering field
+          * @param id The id of buying object to start searching from
+          * @param term Search term
+          * @param count Maximum number of contents to fetch (must not exceed 100)
           * @return Buying objects corresponding to the provided consumer
           * @ingroup DatabaseAPI
           */
-         vector<buying_object> get_buying_objects_by_consumer( const account_id_type& consumer, const string& order )const;
+         vector<buying_object> get_buying_objects_by_consumer(const account_id_type& consumer,
+                                                              const string& order,
+                                                              const object_id_type& id,
+                                                              const string& term,
+                                                              uint32_t count)const;
 
          /**
           * @brief Get buying (open or history) by consumer and URI
@@ -698,11 +725,17 @@ namespace graphene { namespace app {
           * @param order Ordering field
           * @param user Content owner
           * @param region Two letter region code
+          * @param id The id of content object to start searching from
           * @param count Maximum number of contents to fetch (must not exceed 100)
           * @return The contents found
           * @ingroup DatabaseAPI
           */
-         vector<content_summary> search_content( const string& term, const string& order, const string& user, const string& region_code, uint32_t count )const;
+         vector<content_summary> search_content(const string& term,
+                                                const string& order,
+                                                const string& user,
+                                                const string& region_code,
+                                                const object_id_type& id,
+                                                uint32_t count )const;
          
          /**
           * @brief Search for term in contents (author, title and description)
@@ -710,11 +743,17 @@ namespace graphene { namespace app {
           * @param term Search term
           * @param order Ordering field
           * @param region Two letter region code
+          * @param id The id of content object to start searching from
           * @param count Maximum number of contents to fetch (must not exceed 100)
           * @return The contents found
           * @ingroup DatabaseAPI
           */
-         vector<content_summary> search_user_content( const string& user, const string& term, const string& order, const string& region_code, uint32_t count )const;
+         vector<content_summary> search_user_content(const string& user,
+                                                     const string& term,
+                                                     const string& order,
+                                                     const string& region_code,
+                                                     const object_id_type& id,
+                                                     uint32_t count )const;
 
          /**
           * @brief Get a list of contents by times bought, in decreasing order
@@ -754,6 +793,50 @@ namespace graphene { namespace app {
           * @ingroup DatabaseAPI
           */
          optional<vector<seeder_object>> list_seeders_by_upload( const uint32_t count )const;
+
+         /**
+          * @brief Get a subscription object by ID
+          * @param sid ID of the subscription to retrieve
+          * @return The subscription object corresponding to the provided ID, or null if no matching subscription was found
+          * @ingroup DatabaseAPI
+          */
+         optional<subscription_object> get_subscription( const subscription_id_type& sid)const;
+
+         /**
+          * @brief Get a list of active (not expired) subscriptions subscribed by account (consumer)
+          * @param URI_begin Lower bound of URI strings to retrieve
+          * @param count Maximum number of subscription objects to fetch (must not exceed 100)
+          * @return The list of subscription objects corresponding to the provided consumer
+          * @ingroup DatabaseAPI
+          */
+         vector<subscription_object> list_active_subscriptions_by_consumer( const account_id_type& account, const uint32_t count )const;
+
+         /**
+          * @brief Get a list of subscriptions subscribed by account (consumer)
+          * @param URI_begin Lower bound of URI strings to retrieve
+          * @param count Maximum number of subscription objects to fetch (must not exceed 100)
+          * @return The contents found
+          * @ingroup DatabaseAPI
+          */
+         vector<subscription_object> list_subscriptions_by_consumer( const account_id_type& account, const uint32_t count )const;
+
+         /**
+          * @brief Get a list of active (not expired) subscriptions to account (author)
+          * @param URI_begin Lower bound of URI strings to retrieve
+          * @param count Maximum number of subscription objects to fetch (must not exceed 100)
+          * @return The contents found
+          * @ingroup DatabaseAPI
+          */
+         vector<subscription_object> list_active_subscriptions_by_author( const account_id_type& account, const uint32_t count )const;
+
+         /**
+          * @brief Get a list of  subscriptions subscribed to account (author)
+          * @param URI_begin Lower bound of URI strings to retrieve
+          * @param count Maximum number of subscription objects to fetch (must not exceed 100)
+          * @return The contents found
+          * @ingroup DatabaseAPI
+          */
+         vector<subscription_object> list_subscriptions_by_author( const account_id_type& account, const uint32_t count )const;
 
       private:
          std::shared_ptr< database_api_impl > my;
@@ -803,6 +886,7 @@ FC_API(graphene::app::database_api,
           (lookup_accounts)
           (search_accounts)
           (get_account_count)
+          (search_account_history)
 
           // Balances
           (get_account_balances)
@@ -863,4 +947,9 @@ FC_API(graphene::app::database_api,
           (list_seeders_by_upload)
           (get_seeder)
           (get_real_supply)
+          (get_subscription)
+          (list_active_subscriptions_by_consumer)
+          (list_subscriptions_by_consumer)
+          (list_active_subscriptions_by_author)
+          (list_subscriptions_by_author)
 )

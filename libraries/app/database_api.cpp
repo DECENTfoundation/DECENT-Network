@@ -25,6 +25,7 @@
 #include <graphene/app/database_api.hpp>
 #include <graphene/chain/get_config.hpp>
 
+
 #include <fc/bloom_filter.hpp>
 #include <fc/smart_ref_impl.hpp>
 
@@ -66,7 +67,7 @@ namespace {
 }
 
 namespace graphene { namespace app {
-   
+
    class database_api_impl;
    
    
@@ -108,8 +109,11 @@ namespace graphene { namespace app {
       vector<account_id_type> get_account_references( account_id_type account_id )const;
       vector<optional<account_object>> lookup_account_names(const vector<string>& account_names)const;
       map<string,account_id_type> lookup_accounts(const string& lower_bound_name, uint32_t limit)const;
-      vector<account_object> search_accounts(const string& search_term, const string order, uint32_t limit)const;
-      
+      vector<account_object> search_accounts(const string& search_term, const string order, const object_id_type& id, uint32_t limit)const;
+      vector<transaction_detail_object> search_account_history(account_id_type const& account,
+                                                               string const& order,
+                                                               object_id_type const& id,
+                                                               int limit) const;
       uint64_t get_account_count()const;
       
       // Balances
@@ -160,19 +164,24 @@ namespace graphene { namespace app {
       vector<buying_object> get_open_buyings_by_consumer(const account_id_type& consumer)const;
       optional<buying_object> get_buying_by_consumer_URI( const account_id_type& consumer, const string& URI) const;
       vector<buying_object> get_buying_history_objects_by_consumer( const account_id_type& consumer )const;
-      vector<buying_object> get_buying_objects_by_consumer( const account_id_type& consumer, const string& order )const;
+      vector<buying_object> get_buying_objects_by_consumer( const account_id_type& consumer, const string& order, const object_id_type& id, const string& term, uint32_t count)const;
       optional<uint64_t> get_rating_by_consumer_URI( const account_id_type& consumer, const string& URI )const;
       optional<content_object> get_content( const string& URI )const;
       vector<content_object> list_content_by_author( const account_id_type& author )const;
       vector<content_summary> list_content( const string& URI_begin, uint32_t count)const;
-      vector<content_summary> search_content( const string& term, const string& order, const string& user, const string& region_code, uint32_t count)const;
-      vector<content_summary> search_user_content( const string& user, const string& term, const string& order, const string& region_code, uint32_t count)const;
+      vector<content_summary> search_content( const string& term, const string& order, const string& user, const string& region_code, const object_id_type& id, uint32_t count)const;
+      vector<content_summary> search_user_content( const string& user, const string& term, const string& order, const string& region_code, const object_id_type& id, uint32_t count)const;
       vector<content_object> list_content_by_bought( const uint32_t count )const;
       vector<seeder_object> list_publishers_by_price( const uint32_t count )const;
       vector<uint64_t> get_content_ratings( const string& URI)const;
       optional<seeder_object> get_seeder(account_id_type) const;
       optional<vector<seeder_object>> list_seeders_by_upload( const uint32_t count )const;
-      
+      vector<subscription_object> list_active_subscriptions_by_consumer( const account_id_type& account, const uint32_t count )const;
+      vector<subscription_object> list_subscriptions_by_consumer( const account_id_type& account, const uint32_t count )const;
+      vector<subscription_object> list_active_subscriptions_by_author( const account_id_type& account, const uint32_t count )const;
+      vector<subscription_object> list_subscriptions_by_author( const account_id_type& account, const uint32_t count )const;
+      optional<subscription_object> get_subscription( const subscription_id_type& sid) const;
+
       //private:
       template<typename T>
       void subscribe_to_item( const T& i )const
@@ -267,7 +276,7 @@ namespace graphene { namespace app {
          {
             if( id.type() == operation_history_object_type && id.space() == protocol_ids ) continue;
             if( id.type() == impl_account_transaction_history_object_type && id.space() == implementation_ids ) continue;
-            
+
             this->subscribe_to_item( id );
          }
       }
@@ -676,105 +685,191 @@ namespace graphene { namespace app {
    }
    
    
-   vector<account_object> database_api::search_accounts(const string& search_term, const string order, uint32_t limit) const {
-      return my->search_accounts( search_term, order, limit );
+   vector<account_object> database_api::search_accounts(const string& search_term, const string order, const object_id_type& id, uint32_t limit) const {
+      return my->search_accounts( search_term, order, id, limit );
    }
-   
-   
+
+   vector<transaction_detail_object> database_api::search_account_history(account_id_type const& account,
+                                                                          string const& order,
+                                                                          object_id_type const& id,
+                                                                          int limit) const
+   {
+      return my->search_account_history(account, order, id, limit);
+   }
+
+
    map<string,account_id_type> database_api::lookup_accounts(const string& lower_bound_name, uint32_t limit)const
    {
       return my->lookup_accounts( lower_bound_name, limit );
    }
+
+   namespace
+   {
+      template <  typename _t_object_index,
+      typename _t_object,
+      typename _t_sort_tag,
+      typename _t_iterator,
+      bool is_ascending>
+      void correct_iterator(graphene::chain::database& db,
+                            const object_id_type& id,
+                            _t_iterator& itr_begin)
+      {
+         const auto& idx_by_id = db.get_index_type<_t_object_index>().indices().template get<by_id>();
+         auto itr_id = idx_by_id.find(id);
+
+         const auto& idx_by_sort_tag = db.get_index_type<_t_object_index>().indices().template get<_t_sort_tag>();
+
+         auto itr_find = idx_by_sort_tag.end();
+         if (itr_id != idx_by_id.end())
+            itr_find = idx_by_sort_tag.find(key_extractor<_t_sort_tag, _t_object>::get(*itr_id));
+
+         // itr_find has the same keys as the object with id
+         // scan to next items until exactly the object with id is found
+         auto itr_scan = itr_find;
+         while (itr_find != idx_by_sort_tag.end() &&
+                itr_id != idx_by_id.end() &&
+                ++itr_scan != idx_by_sort_tag.end() &&
+                itr_find->id != itr_id->id &&
+                key_extractor<_t_sort_tag, _t_object>::get(*itr_scan) == key_extractor<_t_sort_tag, _t_object>::get(*itr_id))
+            itr_find = itr_scan;
+
+         if (itr_find != idx_by_sort_tag.end())
+         {
+            itr_begin = return_one<is_ascending>::choose(itr_find, boost::reverse_iterator<decltype(itr_find)>(itr_find));
+            if (false == is_ascending)
+               --itr_begin;
+         }
+      }
+
+      template <bool is_ascending, class sort_tag>
+      void search_accounts_template(graphene::chain::database& db,
+                                    const string& term,
+                                    uint32_t count,
+                                    const object_id_type& id,
+                                    vector<account_object>& result)
+      {
+         const auto& idx_by_sort_tag = db.get_index_type<account_index>().indices().get<sort_tag>();
+
+         auto itr_begin = return_one<is_ascending>::choose(idx_by_sort_tag.cbegin(), idx_by_sort_tag.crbegin());
+         auto itr_end = return_one<is_ascending>::choose(idx_by_sort_tag.end(), idx_by_sort_tag.rend());
+
+         correct_iterator<account_index, account_object, sort_tag, decltype(itr_begin), is_ascending>(db, id, itr_begin);
+
+         while(count &&
+               itr_begin != itr_end)
+         {
+            account_object const& element = *itr_begin;
+            ++itr_begin;
+
+
+            std::string account_id_str = fc::variant(element.get_id()).as<std::string>();
+            std::string account_name = element.name;
+            std::string search_term = term;
+
+            boost::algorithm::to_lower(account_id_str);
+            boost::algorithm::to_lower(account_name);
+            boost::algorithm::to_lower(search_term);
+
+            if (false == search_term.empty() &&
+                account_name.find(search_term) == std::string::npos &&
+                account_id_str.find(search_term) == std::string::npos)
+               continue;
+            
+            result.emplace_back(element);
+            --count;
+         }
+      }
+   }
    
-   
-   vector<account_object> database_api_impl::search_accounts(const string& term, const string order, uint32_t limit)const
+   vector<account_object> database_api_impl::search_accounts(const string& term, const string order, const object_id_type& id, uint32_t limit)const
    {
       FC_ASSERT( limit <= 1000 );
       vector<account_object> result;
 
-      if(order == "-name")
-      {
-         const auto& accounts_by_name = _db.get_index_type<account_index>().indices().get<by_name>();
-         
-         for( auto itr = accounts_by_name.rbegin(); itr != accounts_by_name.rend() && limit > 0; ++itr ) {
-            
-            std::string account_id_str = fc::variant(itr->get_id()).as<std::string>();
-            std::string account_name = itr->name;
-            std::string search_term = term;
-            
-            boost::algorithm::to_lower(account_id_str);
-            boost::algorithm::to_lower(account_name);
-            boost::algorithm::to_lower(search_term);
-            
-            if (account_name.find(search_term) != std::string::npos || account_id_str.find(search_term) != std::string::npos) {
-               result.push_back(*itr);
-               limit--;
-            }
-         }
-      }
-      else if(order == "+id")
-      {
-         const auto& accounts_by_name = _db.get_index_type<account_index>().indices().get<by_id>();
-         
-         for( auto itr = accounts_by_name.begin(); itr != accounts_by_name.end() && limit > 0; ++itr ) {
-            
-            std::string account_id_str = fc::variant(itr->get_id()).as<std::string>();
-            std::string account_name = itr->name;
-            std::string search_term = term;
-            
-            boost::algorithm::to_lower(account_id_str);
-            boost::algorithm::to_lower(account_name);
-            boost::algorithm::to_lower(search_term);
-            
-            if (account_name.find(search_term) != std::string::npos || account_id_str.find(search_term) != std::string::npos) {
-               result.push_back(*itr);
-               limit--;
-            }
-         }
-      }
-      else if(order == "-id")
-      {
-         const auto& accounts_by_name = _db.get_index_type<account_index>().indices().get<by_id>();
-         
-         for( auto itr = accounts_by_name.rbegin(); itr != accounts_by_name.rend() && limit > 0; ++itr ) {
-            
-            std::string account_id_str = fc::variant(itr->get_id()).as<std::string>();
-            std::string account_name = itr->name;
-            std::string search_term = term;
-            
-            boost::algorithm::to_lower(account_id_str);
-            boost::algorithm::to_lower(account_name);
-            boost::algorithm::to_lower(search_term);
-            
-            if (account_name.find(search_term) != std::string::npos || account_id_str.find(search_term) != std::string::npos) {
-               result.push_back(*itr);
-               limit--;
-            }
-         }
-      }
+      if (order == "+id")
+         search_accounts_template<true, by_id>(_db, term, limit, id, result);
+      else if (order == "-id")
+         search_accounts_template<false, by_id>(_db, term, limit, id, result);
+      else if (order == "-name")
+         search_accounts_template<false, by_name>(_db, term, limit, id, result);
       else
-      {
-         const auto& accounts_by_name = _db.get_index_type<account_index>().indices().get<by_name>();
-         
-         for( auto itr = accounts_by_name.begin(); itr != accounts_by_name.end() && limit > 0; ++itr ) {
-            
-            std::string account_id_str = fc::variant(itr->get_id()).as<std::string>();
-            std::string account_name = itr->name;
-            std::string search_term = term;
-            
-            boost::algorithm::to_lower(account_id_str);
-            boost::algorithm::to_lower(account_name);
-            boost::algorithm::to_lower(search_term);
-            
-            if (account_name.find(search_term) != std::string::npos || account_id_str.find(search_term) != std::string::npos) {
-               result.push_back(*itr);
-               limit--;
-            }
-         }
-      }
+         search_accounts_template<true, by_name>(_db, term, limit, id, result);
+
+
       return result;
    }
-   
+
+   namespace
+   {
+      template <bool is_ascending, class sort_tag>
+      void search_account_history_template(graphene::chain::database& db,
+                                           const account_id_type& account,
+                                           uint32_t count,
+                                           const object_id_type& id,
+                                           vector<transaction_detail_object>& result)
+      {
+         const auto& idx_by_sort_tag = db.get_index_type<transaction_detail_index>().indices().get<sort_tag>();
+
+         auto itr_begin = return_one<is_ascending>::choose(idx_by_sort_tag.cbegin(), idx_by_sort_tag.crbegin());
+         auto itr_end = return_one<is_ascending>::choose(idx_by_sort_tag.end(), idx_by_sort_tag.rend());
+
+         correct_iterator<transaction_detail_index, transaction_detail_object, sort_tag, decltype(itr_begin), is_ascending>(db, id, itr_begin);
+
+         while(count &&
+               itr_begin != itr_end)
+         {
+            transaction_detail_object const& element = *itr_begin;
+            ++itr_begin;
+
+            if (account != element.m_from_account &&
+                account != element.m_to_account)
+               continue;
+
+            result.emplace_back(element);
+            --count;
+         }
+      }
+   }
+
+   vector<transaction_detail_object> database_api_impl::search_account_history(account_id_type const& account,
+                                                                               string const& order,
+                                                                               object_id_type const& id,
+                                                                               int limit) const
+   {
+      vector<transaction_detail_object> result;
+
+      if (order == "+type")
+         search_account_history_template<true, by_operation_type>(_db, account, limit, id, result);
+      else if (order == "-type")
+         search_account_history_template<false, by_operation_type>(_db, account, limit, id, result);
+      else if (order == "+to")
+         search_account_history_template<true, by_to_account>(_db, account, limit, id, result);
+      else if (order == "-to")
+         search_account_history_template<false, by_to_account>(_db, account, limit, id, result);
+      else if (order == "+from")
+         search_account_history_template<true, by_from_account>(_db, account, limit, id, result);
+      else if (order == "-from")
+         search_account_history_template<false, by_from_account>(_db, account, limit, id, result);
+      else if (order == "+price")
+         search_account_history_template<true, by_transaction_amount>(_db, account, limit, id, result);
+      else if (order == "-price")
+         search_account_history_template<false, by_transaction_amount>(_db, account, limit, id, result);
+      else if (order == "+fee")
+         search_account_history_template<true, by_transaction_fee>(_db, account, limit, id, result);
+      else if (order == "-fee")
+         search_account_history_template<false, by_transaction_fee>(_db, account, limit, id, result);
+      else if (order == "+description")
+         search_account_history_template<true, by_description>(_db, account, limit, id, result);
+      else if (order == "-description")
+         search_account_history_template<false, by_description>(_db, account, limit, id, result);
+      else if (order == "+time")
+         search_account_history_template<true, by_time>(_db, account, limit, id, result);
+      else// if (order == "-time")
+         search_account_history_template<false, by_time>(_db, account, limit, id, result);
+
+      return result;
+   }
+
    map<string,account_id_type> database_api_impl::lookup_accounts(const string& lower_bound_name, uint32_t limit)const
    {
       FC_ASSERT( limit <= 1000 );
@@ -1678,7 +1773,7 @@ namespace graphene { namespace app {
    vector<buying_object> database_api_impl::get_buying_history_objects_by_consumer ( const account_id_type& consumer )const
    {
       try {
-         const auto &range = _db.get_index_type<buying_index>().indices().get<by_consumer_open>().equal_range( std::make_tuple(consumer, true));
+         const auto &range = _db.get_index_type<buying_index>().indices().get<by_consumer_open>().equal_range( std::make_tuple(consumer, false));
          vector<buying_object> result;
          result.reserve(distance(range.first, range.second));
          
@@ -1692,43 +1787,87 @@ namespace graphene { namespace app {
    }
    
    
-   vector<buying_object> database_api::get_buying_objects_by_consumer( const account_id_type& consumer, const string& order )const
+   vector<buying_object> database_api::get_buying_objects_by_consumer(const account_id_type& consumer,
+                                                                      const string& order,
+                                                                      const object_id_type& id,
+                                                                      const string& term,
+                                                                      uint32_t count)const
    {
-      return my->get_buying_objects_by_consumer( consumer, order );
+      return my->get_buying_objects_by_consumer( consumer, order, id, term, count );
    }
 
+namespace
+{
    template <bool is_ascending, class sort_tag>
-   void search_buying_template(graphene::chain::database& db, const account_id_type& consumer, vector<buying_object>& result)
+   void search_buying_template(graphene::chain::database& db,
+                               const account_id_type& consumer,
+                               const string& term,
+                               const object_id_type& id,
+                               uint32_t count,
+                               vector<buying_object>& result)
    {
-      const auto& idx = db.get_index_type<buying_index>().indices().get<sort_tag>();
+      const auto& idx_by_sort_tag = db.get_index_type<buying_index>().indices().get<sort_tag>();
+
+      auto itr_begin = return_one<is_ascending>::choose(idx_by_sort_tag.cbegin(), idx_by_sort_tag.crbegin());
+      auto itr_end = return_one<is_ascending>::choose(idx_by_sort_tag.end(), idx_by_sort_tag.rend());
+
+      correct_iterator<buying_index, buying_object, sort_tag, decltype(itr_begin), is_ascending>(db, id, itr_begin);
       
-      auto itr = return_one<is_ascending>::choose(idx.begin(), idx.rbegin());
-      auto itr_end = return_one<is_ascending>::choose(idx.end(), idx.rend());
-      
-      while(itr != itr_end)
+      while(count &&
+            itr_begin != itr_end)
       {
-         buying_object const& element = *itr;
-         
-         if (element.consumer == consumer)
-            result.emplace_back(element);
-         
-         ++itr;
+         buying_object const& element = *itr_begin;
+         ++itr_begin;
+
+         if (element.consumer != consumer)
+            continue;
+
+         std::string title;
+         std::string description;
+
+         ContentObjectPropertyManager synopsis_parser(element.synopsis);
+         title = synopsis_parser.get<ContentObjectTitle>();
+         description = synopsis_parser.get<ContentObjectDescription>();
+
+         std::string search_term = term;
+         boost::algorithm::to_lower(search_term);
+         boost::algorithm::to_lower(title);
+         boost::algorithm::to_lower(description);
+
+         if (false == search_term.empty() &&
+             std::string::npos == title.find(search_term) &&
+             std::string::npos == description.find(search_term))
+            continue;
+
+         result.emplace_back(element);
+         --count;
       }
    }
-
+}
    
-   vector<buying_object> database_api_impl::get_buying_objects_by_consumer( const account_id_type& consumer, const string& order )const
+   vector<buying_object> database_api_impl::get_buying_objects_by_consumer(const account_id_type& consumer,
+                                                                           const string& order,
+                                                                           const object_id_type& id,
+                                                                           const string& term,
+                                                                           uint32_t count)const
    {
       try {
          vector<buying_object> result;
          
-         if(order == "+size") search_buying_template<true, by_size>(_db, consumer, result);
-         if(order == "-size") search_buying_template<false, by_size>(_db, consumer, result);
-         if(order == "+price") search_buying_template<true, by_price>(_db, consumer, result);
-         if(order == "-price") search_buying_template<false, by_price>(_db, consumer, result);
-         if(order == "+created") search_buying_template<true, by_created>(_db, consumer, result);
-         if(order == "-created") search_buying_template<false, by_created>(_db, consumer, result);
-         if(order == "") search_buying_template<true, by_consumer_open>(_db, consumer, result);
+         if(order == "+size")
+            search_buying_template<true, by_size>(_db, consumer, term, id, count, result);
+         else if(order == "-size")
+            search_buying_template<false, by_size>(_db, consumer, term, id, count, result);
+         else if(order == "+price")
+            search_buying_template<true, by_price>(_db, consumer, term, id, count, result);
+         else if(order == "-price")
+            search_buying_template<false, by_price>(_db, consumer, term, id, count, result);
+         else if(order == "+created")
+            search_buying_template<true, by_created>(_db, consumer, term, id, count, result);
+         else if(order == "-created")
+            search_buying_template<false, by_created>(_db, consumer, term, id, count, result);
+         else
+            search_buying_template<true, by_created>(_db, consumer, term, id, count, result);
          
          return result;
       }
@@ -1800,6 +1939,116 @@ namespace graphene { namespace app {
          return *itr;
       return optional<seeder_object>();
    }
+
+   optional<subscription_object> database_api::get_subscription( const subscription_id_type& sid) const
+   {
+      return my->get_subscription(sid);
+   }
+
+   optional<subscription_object> database_api_impl::get_subscription( const subscription_id_type& sid) const
+   {
+      const auto& idx = _db.get_index_type<subscription_index>().indices().get<by_id>();
+      auto itr = idx.find(sid);
+      if (itr != idx.end())
+         return *itr;
+      return optional<subscription_object>();
+   }
+
+   vector< subscription_object > database_api::list_active_subscriptions_by_consumer( const account_id_type& account, const uint32_t count)const
+   {
+      return my->list_active_subscriptions_by_consumer( account, count );
+   }
+
+   vector< subscription_object > database_api_impl::list_active_subscriptions_by_consumer( const account_id_type& account, const uint32_t count)const
+   {
+      try{
+         FC_ASSERT( count <= 100 );
+         auto range = _db.get_index_type<subscription_index>().indices().get<by_from_expiration>().equal_range(account);
+         vector<subscription_object> result;
+         result.reserve(distance(range.first, range.second));
+         std::for_each(range.first, range.second,
+                       [&](const subscription_object& element) {
+                            if( element.expiration > _db.head_block_time() )
+                               result.emplace_back(element);
+                       });
+         return result;
+
+      }FC_CAPTURE_AND_RETHROW( (account)(count) );
+   }
+
+   vector< subscription_object > database_api::list_subscriptions_by_consumer( const account_id_type& account, const uint32_t count)const
+   {
+      return my->list_subscriptions_by_consumer( account, count );
+   }
+
+   vector< subscription_object > database_api_impl::list_subscriptions_by_consumer( const account_id_type& account, const uint32_t count)const
+   {
+      try{
+         FC_ASSERT( count <= 100 );
+         uint32_t i = count;
+         const auto& idx = _db.get_index_type<subscription_index>().indices().get<by_from>();
+         vector<subscription_object> result;
+         result.reserve(count);
+         auto itr = idx.begin();
+
+         while(i-- && itr != idx.end())
+         {
+            result.emplace_back(*itr);
+            ++itr;
+         }
+
+         return result;
+
+      }FC_CAPTURE_AND_RETHROW( (account)(count) );
+   }
+
+   vector< subscription_object > database_api::list_active_subscriptions_by_author( const account_id_type& account, const uint32_t count)const
+   {
+      return my->list_active_subscriptions_by_author( account, count );
+   }
+
+   vector< subscription_object > database_api_impl::list_active_subscriptions_by_author( const account_id_type& account, const uint32_t count)const
+   {
+      try{
+         FC_ASSERT( count <= 100 );
+         auto range = _db.get_index_type<subscription_index>().indices().get<by_to_expiration>().equal_range(account);
+         vector<subscription_object> result;
+         result.reserve(distance(range.first, range.second));
+         std::for_each(range.first, range.second,
+                       [&](const subscription_object& element) {
+                            if( element.expiration > _db.head_block_time() )
+                               result.emplace_back(element);
+                       });
+         return result;
+
+      }FC_CAPTURE_AND_RETHROW( (account)(count) );
+   }
+
+   vector< subscription_object > database_api::list_subscriptions_by_author( const account_id_type& account, const uint32_t count)const
+   {
+      return my->list_subscriptions_by_author( account, count );
+   }
+
+   vector< subscription_object > database_api_impl::list_subscriptions_by_author( const account_id_type& account, const uint32_t count)const
+   {
+      try{
+         FC_ASSERT( count <= 100 );
+         uint32_t i = count;
+         const auto& idx = _db.get_index_type<subscription_index>().indices().get<by_to>();
+         vector<subscription_object> result;
+         result.reserve(count);
+         auto itr = idx.begin();
+
+         while(i-- && itr != idx.end())
+         {
+            result.emplace_back(*itr);
+            ++itr;
+         }
+
+         return result;
+
+      }FC_CAPTURE_AND_RETHROW( (account)(count) );
+   }
    
    vector<content_object> database_api::list_content_by_author( const account_id_type& author )const
    {
@@ -1830,9 +2079,10 @@ namespace graphene { namespace app {
                                                         const string& order,
                                                         const string& user,
                                                         const string& region_code,
+                                                        const object_id_type& id,
                                                         uint32_t count)const
    {
-      return my->search_content( term, order, user, region_code, count);
+      return my->search_content(term, order, user, region_code, id, count);
    }
    
    
@@ -1840,9 +2090,10 @@ namespace graphene { namespace app {
                                                              const string& term,
                                                              const string& order,
                                                              const string& region_code,
+                                                             const object_id_type& id,
                                                              uint32_t count)const
    {
-      return my->search_user_content( user, term, order, region_code, count);
+      return my->search_user_content( user, term, order, region_code, id, count);
    }
    
    
@@ -1878,16 +2129,15 @@ namespace graphene { namespace app {
                                                                   const string& search_term,
                                                                   const string& order,
                                                                   const string& region_code,
+                                                                  const object_id_type& id,
                                                                   uint32_t count)const
    {
-      return search_content(search_term, order, user, region_code, count);
+      return search_content(search_term, order, user, region_code, id, count);
    }
    
    
    
    namespace {
-
-      
       
       template <bool is_ascending, class sort_tag>
       void search_content_template(graphene::chain::database& db,
@@ -1895,33 +2145,38 @@ namespace graphene { namespace app {
                                    uint32_t count,
                                    const string& user,
                                    const string& region_code,
-                                   vector<content_summary>& result) {
+                                   const object_id_type& id,
+                                   vector<content_summary>& result)
+      {
+         const auto& idx_by_sort_tag = db.get_index_type<content_index>().indices().get<sort_tag>();
          
-         const auto& idx = db.get_index_type<content_index>().indices().get<sort_tag>();
-         
-         auto itr = return_one<is_ascending>::choose(idx.begin(), idx.rbegin());
-         auto itr_end = return_one<is_ascending>::choose(idx.end(), idx.rend());
-         
-         
+         auto itr_begin = return_one<is_ascending>::choose(idx_by_sort_tag.cbegin(), idx_by_sort_tag.crbegin());
+         auto itr_end = return_one<is_ascending>::choose(idx_by_sort_tag.cend(), idx_by_sort_tag.crend());
+
+         correct_iterator<content_index, content_object, sort_tag, decltype(itr_begin), is_ascending>(db, id, itr_begin);
+
          content_summary content;
-         const auto& idx2 = db.get_index_type<account_index>().indices().get<by_id>();
+         const auto& idx_account = db.get_index_type<account_index>().indices().get<by_id>();
          
-         while(count && itr != itr_end)
+         while(count && itr_begin != itr_end)
          {
-            const auto& account = idx2.find(itr->author);
-            if ( user != "" )
+            const auto& account = idx_account.find(itr_begin->author);
+            if ( false == user.empty() )
             {
                if ( account->name != user )
                {
-                  ++itr;
+                  ++itr_begin;
                   continue;
                }
             }
 #ifdef PRICE_REGIONS
-            if (false == itr->price.Valid(region_code))
+            if (false == itr_begin->price.Valid(region_code))
+            {
+               ++itr_begin;
                continue;
+            }
 #endif
-            content.set( *itr , *account, region_code );
+            content.set( *itr_begin , *account, region_code );
             if (content.expiration > fc::time_point::now())
             {
                std::string term = search_term;
@@ -1948,10 +2203,9 @@ namespace graphene { namespace app {
                   count--;
                   result.push_back( content );
                }
-               
             }
             
-            ++itr;
+            ++itr_begin;
          }
          
       }
@@ -1962,6 +2216,7 @@ namespace graphene { namespace app {
                                                              const string& order,
                                                              const string& user,
                                                              const string& region_code,
+                                                             const object_id_type& id,
                                                              uint32_t count)const
    {
       FC_ASSERT( count <= 100 );
@@ -1969,21 +2224,33 @@ namespace graphene { namespace app {
       vector<content_summary> result;
       result.reserve( count );
       
-      if (order == "+author") search_content_template<true, by_author>(_db, search_term, count, user, region_code, result);
-      if (order == "+rating") search_content_template<true, by_AVG_rating>(_db, search_term, count, user, region_code, result);
-      if (order == "+size") search_content_template<true, by_size>(_db, search_term, count, user, region_code, result);
-      if (order == "+price") search_content_template<true, by_price>(_db, search_term, count, user, region_code, result);
-      if (order == "+created") search_content_template<true, by_created>(_db, search_term, count, user, region_code, result);
-      if (order == "+expiration") search_content_template<true, by_expiration>(_db, search_term, count, user, region_code, result);
+      if (order == "+author")
+         search_content_template<true, by_author>(_db, search_term, count, user, region_code, id, result);
+      else if (order == "+rating")
+         search_content_template<true, by_AVG_rating>(_db, search_term, count, user, region_code, id, result);
+      else if (order == "+size")
+         search_content_template<true, by_size>(_db, search_term, count, user, region_code, id, result);
+      else if (order == "+price")
+         search_content_template<true, by_price>(_db, search_term, count, user, region_code, id, result);
+      else if (order == "+created")
+         search_content_template<true, by_created>(_db, search_term, count, user, region_code, id, result);
+      else if (order == "+expiration")
+         search_content_template<true, by_expiration>(_db, search_term, count, user, region_code, id, result);
       
-      if (order == "-author") search_content_template<false, by_author>(_db, search_term, count, user, region_code, result);
-      if (order == "-rating") search_content_template<false, by_AVG_rating>(_db, search_term, count, user, region_code, result);
-      if (order == "-size") search_content_template<false, by_size>(_db, search_term, count, user, region_code, result);
-      if (order == "-price") search_content_template<false, by_price>(_db, search_term, count, user, region_code, result);
-      if (order == "-created") search_content_template<false, by_created>(_db, search_term, count, user, region_code, result);
-      if (order == "-expiration") search_content_template<false, by_expiration>(_db, search_term, count, user, region_code, result);
-      if (order == "") search_content_template<true, by_URI>(_db, search_term, count, user, region_code, result);
-      //   search_content_template<by_URI>(_db, search_term, count, true, region_code, result);
+      else if (order == "-author")
+         search_content_template<false, by_author>(_db, search_term, count, user, region_code, id, result);
+      else if (order == "-rating")
+         search_content_template<false, by_AVG_rating>(_db, search_term, count, user, region_code, id, result);
+      else if (order == "-size")
+         search_content_template<false, by_size>(_db, search_term, count, user, region_code, id, result);
+      else if (order == "-price")
+         search_content_template<false, by_price>(_db, search_term, count, user, region_code, id, result);
+      else if (order == "-created")
+         search_content_template<false, by_created>(_db, search_term, count, user, region_code, id, result);
+      else if (order == "-expiration")
+         search_content_template<false, by_expiration>(_db, search_term, count, user, region_code, id, result);
+      else
+         search_content_template<true, by_URI>(_db, search_term, count, user, region_code, id, result);
       
       return result;
    }

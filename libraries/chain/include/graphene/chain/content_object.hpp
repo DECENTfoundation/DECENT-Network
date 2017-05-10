@@ -12,6 +12,7 @@
 #include <vector>
 #include <utility>
 
+#define DECENT_TESTNET2
 #ifdef DECENT_TESTNET2
 #define PRICE_REGIONS
 #endif
@@ -350,6 +351,7 @@ using namespace decent::encrypt;
 
    struct content_summary
    {
+      string id;
       string author;
       asset price;
       string synopsis;
@@ -417,8 +419,77 @@ using namespace decent::encrypt;
    struct by_times_bought;
    struct by_expiration;
    struct by_created;
-   
-   
+
+   template <typename TAG, typename _t_object>
+   struct key_extractor;
+
+   template <>
+   struct key_extractor<by_author, content_object>
+   {
+      static account_id_type get(content_object const& ob)
+      {
+         return ob.author;
+      }
+   };
+
+   template <>
+   struct key_extractor<by_URI, content_object>
+   {
+      static std::string get(content_object const& ob)
+      {
+         return ob.URI;
+      }
+   };
+
+   template <>
+   struct key_extractor<by_AVG_rating, content_object>
+   {
+      static uint64_t get(content_object const& ob)
+      {
+         return ob.AVG_rating;
+      }
+   };
+
+   template <>
+   struct key_extractor<by_size, content_object>
+   {
+      static uint64_t get(content_object const& ob)
+      {
+         return ob.size;
+      }
+   };
+
+   template <>
+   struct key_extractor<by_price, content_object>
+   {
+      static share_type get(content_object const& ob)
+      {
+#ifdef PRICE_REGIONS
+         return ob.get_price_amount_template<RegionCodes::OO_none>();
+#else
+         return ob.get_price_amount();
+#endif
+      }
+   };
+
+   template <>
+   struct key_extractor<by_expiration, content_object>
+   {
+      static time_point_sec get(content_object const& ob)
+      {
+         return ob.expiration;
+      }
+   };
+
+   template <>
+   struct key_extractor<by_created, content_object>
+   {
+      static time_point_sec get(content_object const& ob)
+      {
+         return ob.created;
+      }
+   };
+
    typedef multi_index_container<
       content_object,
          indexed_by<
@@ -477,5 +548,5 @@ FC_REFLECT_DERIVED(graphene::chain::content_object,
                    (URI)(quorum)(key_parts)(_hash)(last_proof)
                    (AVG_rating)(total_rating)(times_bought)(publishing_fee_escrow)(cd) )
 
-FC_REFLECT( graphene::chain::content_summary, (author)(price)(synopsis)(status)(URI)(AVG_rating)(size)(expiration)(created)(times_bought) )
+FC_REFLECT( graphene::chain::content_summary, (id)(author)(price)(synopsis)(status)(URI)(AVG_rating)(size)(expiration)(created)(times_bought) )
 FC_REFLECT( graphene::chain::PriceRegions, (map_price) )

@@ -45,6 +45,41 @@ namespace graphene { namespace db {
          number = (uint64_t(s)<<56) | (uint64_t(t)<<48) | i;
       }
       object_id_type(){ number = 0; }
+      explicit object_id_type(std::string const& str_id)
+      {
+         size_t index1 = std::string::npos;
+         size_t index2 = std::string::npos;
+         size_t index3 = std::string::npos;
+
+         char const * const sz_dot = ".";
+
+         index1 = str_id.find(sz_dot);
+         if (index1 != std::string::npos &&
+             index1 != str_id.length())
+            index2 = str_id.find(sz_dot, index1 + 1);
+         if (index2 != std::string::npos &&
+             index2 != str_id.length())
+            index3 = str_id.find(sz_dot, index2 + 1);
+
+         if (str_id.empty())
+            *this = object_id_type();
+         else
+         {
+            FC_ASSERT(index1 != std::string::npos);
+            FC_ASSERT(index2 != std::string::npos);
+            FC_ASSERT(index3 == std::string::npos);
+            index3 = str_id.length();
+            size_t idx;
+            uint8_t s = std::stoi(str_id.substr(0, index1), &idx);
+            FC_ASSERT(idx == index1);
+            uint8_t t = std::stoi(str_id.substr(index1 + 1, index2 - index1 - 1), &idx);
+            FC_ASSERT(idx == index2 - index1 - 1);
+            uint64_t i = std::stoll(str_id.substr(index2 + 1, index3 - index2 - 1), &idx);
+            FC_ASSERT(idx == index3 - index2 - 1);
+
+            *this = object_id_type(s, t, i);
+         }
+      }
 
       uint8_t  space()const       { return number >> 56;              }
       uint8_t  type()const        { return number >> 48 & 0x00ff;     }

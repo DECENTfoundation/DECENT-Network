@@ -1,0 +1,35 @@
+#pragma once
+
+#include <QLabel>
+#include <QPushButton>
+
+namespace gui_wallet {
+
+class DecentButton : public QPushButton
+{
+   Q_OBJECT
+public:
+   enum eType
+   {
+      Default,
+      Send,
+      TableIcon
+   };
+
+   enum eName
+   {
+      None,
+      Transaction,
+      Detail,
+      Transfer,
+      Export
+   };
+   DecentButton(QWidget *parent, eType enType = Default, eName = None);
+
+
+protected:
+   virtual bool event(QEvent* event) override;
+   virtual void changeEvent(QEvent* event) override;
+};
+
+}
