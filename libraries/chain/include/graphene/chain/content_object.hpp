@@ -422,7 +422,7 @@ using namespace decent::encrypt;
 
       fc::ripemd160 _hash;
       uint64_t AVG_rating;
-      uint32_t total_rating;
+      uint32_t num_of_ratings;
       uint32_t times_bought;
       asset publishing_fee_escrow;
       decent::encrypt::CustodyData cd;
@@ -578,7 +578,7 @@ FC_REFLECT_DERIVED(graphene::chain::content_object,
                    (graphene::db::object),
                    (author)(expiration)(created)(price)(size)(synopsis)
                    (URI)(quorum)(key_parts)(_hash)(last_proof)
-                   (AVG_rating)(total_rating)(times_bought)(publishing_fee_escrow)(cd) )
+                   (AVG_rating)(num_of_ratings)(times_bought)(publishing_fee_escrow)(cd) )
 
 FC_REFLECT( graphene::chain::content_summary, (id)(author)(price)(synopsis)(status)(URI)(AVG_rating)(size)(expiration)(created)(times_bought) )
 FC_REFLECT( graphene::chain::PriceRegions, (map_price) )

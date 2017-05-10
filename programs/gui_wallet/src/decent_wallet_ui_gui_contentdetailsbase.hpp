@@ -16,13 +16,14 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QLabel>
-#include "decent_text_edit.hpp"
+
 #include "decent_wallet_ui_gui_newcheckbox.hpp"
 
 
 namespace gui_wallet {
 
 struct SDigitalContent;
+class DecentTextEdit;
 
 class ContentDetailsBase : public QDialog
 {
@@ -32,10 +33,12 @@ public:
     ContentDetailsBase(QWidget* pParent);
     void execCDB(const SDigitalContent& a_cnt_details, bool bSilent = false);
     void popup_for_purchased(int);
+    bool empty_comment_or_rating();
 
     //virtual void execCDD(const decent::wallet::ui::gui::SDigitalContent& a_cnt_details)=0;
 
 private slots:
+   void LeaveComment();
     void MouseEnteredStar(int index) {
         if (m_currentMyRating > 0)
             return;
@@ -81,7 +84,8 @@ protected:
     int             m_currentMyRating = 0;
     std::vector<NewCheckBox*> stars_labels;
     QLabel*         m_RateText;
-    DecentTextEdit  m_desc;
+    DecentTextEdit* m_desc;
+    DecentTextEdit* m_comment;
 public:
     std::vector<QString> s_vcpcFieldsGeneral;
     std::vector<QString> s_vcpcFieldsBougth;
