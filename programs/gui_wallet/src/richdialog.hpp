@@ -79,6 +79,27 @@ private:
             //ZebraDialog
 /********************************************/
 
+   class DecentWidget : public QWidget
+   {
+      Q_OBJECT
+   public:
+      enum eType
+      {
+         Default,
+         HighlightedRow
+      };
+
+      enum eName
+      {
+         None
+      };
+
+      DecentWidget(QWidget* pParent, eType enType = Default, eName = None);
+
+   protected:
+      virtual void changeEvent(QEvent* event) override;
+   };
+
 class userInfoDialog : public QDialog
 {
    Q_OBJECT

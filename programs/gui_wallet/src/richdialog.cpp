@@ -226,7 +226,38 @@ void ImportDialog::Import()
                   //ZebraDialog
 /*********************************************************/
 
+DecentWidget::DecentWidget(QWidget* pParent,
+                           eType enType/* = Default*/,
+                           eName enName/* = None*/)
+: QWidget(pParent)
+{
+   switch (enType)
+   {
+      case HighlightedRow:
+         setProperty("type", "highlightedrow");
+         break;
+      case Default:
+         default:
+         break;
+   }
 
+   switch (enName)
+   {
+      case None:
+         default:
+         break;
+   }
+}
+
+void DecentWidget::changeEvent(QEvent* event)
+{
+   if (event->type() == QEvent::EnabledChange)
+   {
+      style()->unpolish(this);
+      style()->polish(this);
+   }
+   QWidget::changeEvent(event);
+}
 
 
 userInfoDialog::userInfoDialog(QWidget* parent,
@@ -245,11 +276,12 @@ userInfoDialog::userInfoDialog(QWidget* parent,
    
    setStyleSheet("background-color:white;");
    
-   QWidget*     WidgetRegistrar = new QWidget(this);
+   DecentWidget*     WidgetRegistrar = new DecentWidget(this, DecentWidget::HighlightedRow);
    QVBoxLayout* LayoutRegistrar = new QVBoxLayout();
    LayoutRegistrar->setSpacing(0);
    LayoutRegistrar->setContentsMargins(45,3,0,3);
-   WidgetRegistrar->setStyleSheet("background-color:rgb(244,244,244);");
+   //WidgetRegistrar->setStyleSheet("background-color:rgb(244,244,244);");
+
    QLabel* lblTitle = new QLabel(tr("Registrar"), this);
    QLabel* lblInfo = new QLabel(registrar, this);
    LayoutRegistrar->addWidget(lblTitle);
