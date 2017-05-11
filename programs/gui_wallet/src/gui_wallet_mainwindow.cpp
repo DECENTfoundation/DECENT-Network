@@ -92,8 +92,10 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
    QObject::connect(&Globals::instance(), &Globals::signal_updateAccountBalance,
                     this, &Mainwindow_gui_wallet::slot_updateAccountBalance);
    
-   QObject::connect(&Globals::instance(), &Globals::signal_importKeyDid,
+   QObject::connect(&Globals::instance(), &Globals::signal_keyImported,
                     this, &Mainwindow_gui_wallet::DisplayWalletContentGUI);
+   QObject::connect(&Globals::instance(), &Globals::signal_keyImported,
+                    this, &Mainwindow_gui_wallet::slot_enabledSendButton);
 
    connect(pUsersCombo, SIGNAL(currentIndexChanged(const QString&)), this, SLOT(CurrentUserChangedSlot(const QString&)) );
 
@@ -525,6 +527,11 @@ void Mainwindow_gui_wallet::DisplayConnectionError(std::string errorMessage) {
    ALERT_DETAILS(tr("Could not connect to wallet").toStdString(), errorMessage.c_str());
 }
 
+void Mainwindow_gui_wallet::slot_enabledSendButton()
+{
+   m_pCentralWidget->getSendButton()->setEnabled(true);
+}
+
 
 void Mainwindow_gui_wallet::DisplayWalletContentGUI(bool isNewWallet)
 {
@@ -576,14 +583,8 @@ void Mainwindow_gui_wallet::ImportKeySlot()
    
    import_key_dlg->setAttribute(Qt::WA_DeleteOnClose);
    import_key_dlg->open();
-   
-   QObject::connect(import_key_dlg, &ImportDialog::signal_keyImported, this, &Mainwindow_gui_wallet::sendButtonEnabled);
 }
 
-void Mainwindow_gui_wallet::sendButtonEnabled()
-{
-   m_pCentralWidget->getSendButton()->setEnabled(true);
-}
 
 void Mainwindow_gui_wallet::SendDCTSlot()
 {
