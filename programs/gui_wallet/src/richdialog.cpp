@@ -230,14 +230,14 @@ void ImportDialog::Import()
 
 
 UserInfoDialog::UserInfoDialog(QWidget* parent,
-                               QString registrar,
-                               QString referrer,
-                               QString lifetime_referrer,
-                               QString network_fee_percentage,
-                               QString lifetime_referrer_fee_percentage,
-                               QString referrer_rewards_percentage,
-                               QString name,
-                               QString id
+                               const QString& registrar,
+                               const QString& referrer,
+                               const QString& lifetime_referrer,
+                               const QString& network_fee_percentage,
+                               const QString& lifetime_referrer_fee_percentage,
+                               const QString& referrer_rewards_percentage,
+                               const QString& name,
+                               const QString& id
                                )
 {
    QVBoxLayout* main_layout = new QVBoxLayout();
