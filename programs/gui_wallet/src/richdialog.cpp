@@ -235,12 +235,88 @@ ZebraDialog::ZebraDialog(QWidget* parent,
                          QString referrer_rewards_percentage
                          )
 {
-//   QVBoxLayout* main_layout = new QVBoxLayout();
-//   main_layout->setSpacing(0);
-//   main_layout->setContentsMargins(0, 0, 0, 0);
-//   
-//   setStyleSheet("background-color:white;");
-//   setLayout(main_layout);
+   QVBoxLayout* main_layout = new QVBoxLayout();
+   main_layout->setSpacing(0);
+   main_layout->setContentsMargins(0, 0, 0, 0);
+   
+   setStyleSheet("background-color:white;");
+   QVBoxLayout*  _subLayouts;
+   QWidget*    _subWidgets;
+   
+   _subWidgets = new QWidget();
+   _subLayouts = new QVBoxLayout();
+   _subLayouts->setSpacing(0);
+   _subLayouts->setContentsMargins(45,3,0,3);
+   _subWidgets->setStyleSheet("background-color:rgb(244,244,244);");
+   QLabel* lblTitle = new QLabel(("Registrar"));
+   QLabel* lblInfo = new QLabel((registrar));
+   _subLayouts->addWidget(lblTitle);
+   _subLayouts->addWidget(lblInfo);
+   _subWidgets->setLayout(_subLayouts);
+   main_layout->addWidget(_subWidgets);
+   
+   
+   _subWidgets = new QWidget();
+   _subLayouts = new QVBoxLayout();
+   _subLayouts->setSpacing(0);
+   _subLayouts->setContentsMargins(45,3,0,3);
+   _subWidgets->setStyleSheet("background-color:rgb(255, 255, 255);");
+   lblTitle = new QLabel(("Referrer"));
+   lblInfo = new QLabel((referrer));
+   _subLayouts->addWidget(lblTitle);
+   _subLayouts->addWidget(lblInfo);
+   _subWidgets->setLayout(_subLayouts);
+   main_layout->addWidget(_subWidgets);
+   
+   _subWidgets = new QWidget();
+   _subLayouts = new QVBoxLayout();
+   _subLayouts->setSpacing(0);
+   _subLayouts->setContentsMargins(45,3,0,3);
+   _subWidgets->setStyleSheet("background-color:rgb(244,244,244);");
+   lblTitle = new QLabel(("Lifetime Referrer"));
+   lblInfo = new QLabel((lifetime_referrer));
+   _subLayouts->addWidget(lblTitle);
+   _subLayouts->addWidget(lblInfo);
+   _subWidgets->setLayout(_subLayouts);
+   main_layout->addWidget(_subWidgets);
+   
+   _subWidgets = new QWidget();
+   _subLayouts = new QVBoxLayout();
+   _subLayouts->setSpacing(0);
+   _subLayouts->setContentsMargins(45,3,0,3);
+   _subWidgets->setStyleSheet("background-color:rgb(255, 255, 255);");
+   lblTitle = new QLabel(("Network Fee"));
+   lblInfo = new QLabel((network_fee_percentage));
+   _subLayouts->addWidget(lblTitle);
+   _subLayouts->addWidget(lblInfo);
+   _subWidgets->setLayout(_subLayouts);
+   main_layout->addWidget(_subWidgets);
+   
+   _subWidgets = new QWidget();
+   _subLayouts = new QVBoxLayout();
+   _subLayouts->setSpacing(0);
+   _subLayouts->setContentsMargins(45,3,0,3);
+   _subWidgets->setStyleSheet("background-color:rgb(244,244,244);");
+   lblTitle = new QLabel(("Lifetime Referrer Fee"));
+   lblInfo = new QLabel((lifetime_referrer_fee_percentage));
+   _subLayouts->addWidget(lblTitle);
+   _subLayouts->addWidget(lblInfo);
+   _subWidgets->setLayout(_subLayouts);
+   main_layout->addWidget(_subWidgets);
+   
+   _subWidgets = new QWidget();
+   _subLayouts = new QVBoxLayout();
+   _subLayouts->setSpacing(0);
+   _subLayouts->setContentsMargins(45,3,0,3);
+   _subWidgets->setStyleSheet("background-color:rgb(255, 255, 255);");
+   lblTitle = new QLabel(("Referrer Rewards Percentage"));
+   lblInfo = new QLabel((referrer_rewards_percentage));
+   _subLayouts->addWidget(lblTitle);
+   _subLayouts->addWidget(lblInfo);
+   _subWidgets->setLayout(_subLayouts);
+   main_layout->addWidget(_subWidgets);
+   
+   setLayout(main_layout);
 }
 
 

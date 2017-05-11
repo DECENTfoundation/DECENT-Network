@@ -4,6 +4,7 @@
 #include "overview_tab.hpp"
 #include "decent_line_edit.hpp"
 #include "decent_button.hpp"
+#include "richdialog.hpp"
 
 #ifndef _MSC_VER
 #include <QPixmap>
@@ -243,18 +244,31 @@ void Overview_tab::slot_Details()
       
       std::string name = accountInfo["name"].get<std::string>();
       
-      QZebraWidget* info_window = new QZebraWidget();
+      ZebraDialog* dialog = new ZebraDialog(this,
+                                            QString::fromStdString(registrar),
+                                            QString::fromStdString(referrer),
+                                            QString::fromStdString(lifetime_referrer),
+                                            QString::fromStdString(network_fee_percentage),
+                                            QString::fromStdString(lifetime_referrer_fee_percentage),
+                                            QString::fromStdString(referrer_rewards_percentage));
+      dialog->setWindowTitle(QString::fromStdString(name) + " (" + QString::fromStdString(id) + ")");
+      dialog->setFixedSize(620,420);
+      dialog->open();
       
-      info_window->AddInfo(tr("Registrar"), registrar);
-      info_window->AddInfo(tr("Referrer"), referrer);
-      info_window->AddInfo(tr("Lifetime Referrer"), lifetime_referrer);
-      info_window->AddInfo(tr("Network Fee"), network_fee_percentage);
-      info_window->AddInfo(tr("Lifetime Referrer Fee"), lifetime_referrer_fee_percentage);
-      info_window->AddInfo(tr("Referrer Rewards Percentage"), referrer_rewards_percentage);
-
-      info_window->setWindowTitle(QString::fromStdString(name) + " (" + QString::fromStdString(id) + ")");
-      info_window->setFixedSize(620,420);
-      info_window->show();
+               
+      
+//      QZebraWidget* info_window = new QZebraWidget(QString::fromStdString(name) + " (" + QString::fromStdString(id) + ")");
+//      
+//      info_window->AddInfo(tr("Registrar"), registrar);
+//      info_window->AddInfo(tr("Referrer"), referrer);
+//      info_window->AddInfo(tr("Lifetime Referrer"), lifetime_referrer);
+//      info_window->AddInfo(tr("Network Fee"), network_fee_percentage);
+//      info_window->AddInfo(tr("Lifetime Referrer Fee"), lifetime_referrer_fee_percentage);
+//      info_window->AddInfo(tr("Referrer Rewards Percentage"), referrer_rewards_percentage);
+//
+//      info_window->setWindowTitle(QString::fromStdString(name) + " (" + QString::fromStdString(id) + ")");
+//      info_window->setFixedSize(620,420);
+//      info_window->show();
    } catch(...) {
       // Ignore for now
    }
