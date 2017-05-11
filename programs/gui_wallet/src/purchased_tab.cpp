@@ -4,7 +4,8 @@
 #include "purchased_tab.hpp"
 #include "decent_wallet_ui_gui_contentdetailsgeneral.hpp"
 #include "gui_design.hpp"
-#include "json.hpp"
+#include "decent_line_edit.hpp"
+#include "decent_button.hpp"
 
 #ifndef _MSC_VER
 #include <QFileDialog>
@@ -14,6 +15,7 @@
 #include <QSignalMapper>
 #include <graphene/chain/config.hpp>
 #include <graphene/chain/content_object.hpp>
+#include "json.hpp"
 #endif
 
 using string = std::string;
@@ -50,9 +52,8 @@ PurchasedTab::PurchasedTab(QWidget* pParent)
    //
    QHBoxLayout* search_layout = new QHBoxLayout();
 
-   QLineEdit* pfilterLineEditor = new QLineEdit(this);
+   DecentLineEdit* pfilterLineEditor = new DecentLineEdit(this, DecentLineEdit::TableSearch);
    pfilterLineEditor->setPlaceholderText(QString(tr("Search Content")));
-   pfilterLineEditor->setStyleSheet(d_lineEdit);
    pfilterLineEditor->setFixedHeight(54);
    pfilterLineEditor->setAttribute(Qt::WA_MacShowFocusRect, 0);
    

@@ -5,74 +5,29 @@
 #include "upload_popup.hpp"
 #include "decent_wallet_ui_gui_contentdetailsgeneral.hpp"
 #include "decent_button.hpp"
+#include "decent_line_edit.hpp"
 #include "gui_design.hpp"
 
 #ifndef _MSC_VER
 #include <QHBoxLayout>
 #include <QVBoxLayout>
-#include <QMessageBox>
-#include <QFileDialog>
-#include <QComboBox>
-#include <QStandardItemModel>
-#include <QStandardItem>
-#include <QCalendarWidget>
 #include <QDateTime>
 #include <QDate>
 #include <QTime>
 #include <QTimer>
-#include <QDateEdit>
-#include <QTextEdit>
-#include <QApplication>
-#include <QCheckBox>
-#include <QStyleFactory>
-#include <QInputMethod>
 #include <QSignalMapper>
-#include <QLocale>
 #include <QLabel>
 #include <QLineEdit>
 
-#include <graphene/chain/config.hpp>
 #include <graphene/chain/content_object.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/optional.hpp>
-
-#include <cryptopp/integer.h>
-#include <cryptopp/aes.h>
-#include <cryptopp/filters.h>
-#include <cryptopp/files.h>
-#include <cryptopp/ccm.h>
-#include <cryptopp/md5.h>
-#include <cryptopp/osrng.h>
-
-#include <QIcon>
-
-
-
-
-
-#include <QMouseEvent>
-
-
-
-
-#include <ctime>
-#include <limits>
-#include <iostream>
-#include <cmath>
-#include <algorithm>
-#include <graphene/chain/config.hpp>
-
 
 #include "json.hpp"
 #endif
 
 using string = std::string;
-using namespace gui_wallet;
-using namespace nlohmann;
 
-//////////////////////////////////////////////////
-// UPLOAD TAB
-//////////////////////////////////////////////////
+namespace gui_wallet
+{
 
 Upload_tab::Upload_tab(QWidget* pParent)
 : TabContentManager(pParent)
@@ -104,17 +59,16 @@ Upload_tab::Upload_tab(QWidget* pParent)
    QPixmap image(icon_search);
    pSearchLabel->setPixmap(image);
 
-   QLineEdit* pfilterLineEditor = new QLineEdit(this);
+   DecentLineEdit* pfilterLineEditor = new DecentLineEdit(this, DecentLineEdit::TableSearch);
    pfilterLineEditor->setPlaceholderText(tr("Search Content"));
    pfilterLineEditor->setFixedHeight(54);
-   pfilterLineEditor->setStyleSheet(d_lineEdit);
    pfilterLineEditor->setAttribute(Qt::WA_MacShowFocusRect, 0);
 
    QHBoxLayout* pSearchLayout = new QHBoxLayout;
    pSearchLayout->setContentsMargins(42, 0, 0, 0);
    pSearchLayout->addWidget(pSearchLabel);
    pSearchLayout->addWidget(pfilterLineEditor);
-   pSearchLayout->addWidget(pUploadButton, 0 , Qt::AlignCenter);
+   pSearchLayout->addWidget(pUploadButton);
    //pSearchLayout->addWidget(pUploadButton, 0 , Qt::AlignBottom);
 
    QVBoxLayout* pMainLayout = new QVBoxLayout;
@@ -247,16 +201,13 @@ void Upload_tab::ShowDigitalContentsGUI()
       std::string title = synopsis_parser.get<graphene::chain::ContentObjectTitle>();
 
       // Title
-      //
       m_pTableWidget->setItem(iIndex, eTitle, new QTableWidgetItem(QString::fromStdString(title)));
 
       // Rating
-      //
       QString rating = QString::number(content.AVG_rating, 'f', 2);
       m_pTableWidget->setItem(iIndex, eRating, new QTableWidgetItem(rating));
 
       // Size
-      //
       QString unit = " MB";
       double sizeAdjusted = content.size;
 
@@ -283,14 +234,12 @@ void Upload_tab::ShowDigitalContentsGUI()
       // Status
       m_pTableWidget->setItem(iIndex, eStatus, new QTableWidgetItem(QString::fromStdString(content.status)));
 
-
       for (size_t iColIndex = eTitle; iColIndex < eIcon; ++iColIndex)
       {
          m_pTableWidget->item(iIndex, iColIndex)->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
          m_pTableWidget->item(iIndex, iColIndex)->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
       }
       // Icon
-      //
       DecentButton* info_icon = new DecentButton(m_pTableWidget, DecentButton::TableIcon, DecentButton::Detail);
       info_icon->setEnabled(false);
       info_icon->setIconSize(QSize(40,40));
@@ -340,4 +289,6 @@ void Upload_tab::slot_SearchTermChanged(QString const& strSearchTerm)
    m_strSearchTerm = strSearchTerm;
    reset(false);
 }
+
+}  // end namespace gui_wallet
 

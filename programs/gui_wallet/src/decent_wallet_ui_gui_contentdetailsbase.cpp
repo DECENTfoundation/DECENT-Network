@@ -11,6 +11,7 @@
 
 #include "gui_design.hpp"
 #include "decent_wallet_ui_gui_contentdetailsbase.hpp"
+#include "decent_text_edit.hpp"
 
 #ifndef _MSC_VER
 #include <QDateTime>
@@ -32,6 +33,7 @@ using namespace gui_wallet;
 
 ContentDetailsBase::ContentDetailsBase(QWidget* pParent)
 : QDialog(pParent)
+, m_desc (new DecentTextEdit(this, DecentTextEdit::Info))
 {
    s_vcpcFieldsGeneral.push_back(tr("Author"));
    s_vcpcFieldsGeneral.push_back(tr("Expiration"));
@@ -84,7 +86,7 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details, bool bSil
 
     
     if(a_cnt_details.type == DCT::BOUGHT) {
-        
+       
         if (stars_labels.size() == 0) {
             m_RateText = new QLabel;
             
@@ -100,10 +102,7 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details, bool bSil
             
             white_star = white_star.scaled(QSize(20,20));
             green_star = green_star.scaled(QSize(20,20));
-            
-            
-            
-            
+           
             QHBoxLayout* stars = new QHBoxLayout;
             stars->addWidget(m_RateText);
             stars->setContentsMargins(250, 10, 20, 20);
@@ -133,10 +132,7 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details, bool bSil
                 stars_labels[i]->setVisible(true);
             }
         }
-        
-        
-        
-        
+       
         if (m_currentMyRating > 0) { // To show stars when opened
             for (int i = 0; i < m_currentMyRating; ++i) {
                 stars_labels[i]->setCheckState(Qt::Checked);
@@ -145,8 +141,58 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details, bool bSil
                 stars_labels[i]->setCheckState(Qt::Unchecked);
             }
         }
-        
-        
+       
+       std::string comment_result;
+       try {
+          RunTask("get_rating_and_comment \"" + Globals::instance().getCurrentUser() + "\" \"" + m_pContentInfo->URI + "\"", comment_result);
+       } catch (...) { }
+    
+       auto c_result = json::parse(comment_result);
+       int get_rating;
+       std::string get_comment;
+       
+       QHBoxLayout* comment_status = new QHBoxLayout;
+       QLabel*    m_commentOrRate_Text = new QLabel;
+
+       m_commentOrRate_Text->setStyleSheet(d_m_comment_label_text);
+       m_commentOrRate_Text->setFixedHeight(30);
+       
+       m_comment = new DecentTextEdit(this);
+       m_comment->setStyleSheet(d_m_comment);
+       m_comment->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+       
+       comment_status->addWidget(m_commentOrRate_Text);
+       comment_status->setAlignment(Qt::AlignRight);
+       comment_status->setContentsMargins(0, 0, 45, 1);
+       
+       m_main_layout.addLayout(comment_status);
+       m_main_layout.addWidget(m_comment);
+       
+       if ( is_empty(c_result, get_rating, get_comment) )
+       {
+          m_commentOrRate_Text->setText(tr("You can comment with your opinion on this item"));
+          m_comment->setPlaceholderText(tr("Comment here..."));
+          
+          QHBoxLayout* button = new QHBoxLayout;
+          button->setAlignment(Qt::AlignCenter);
+          
+          DecentButton* leave_feedback_button = new DecentButton(this);
+          leave_feedback_button->setText(tr("Leave feedback"));
+          leave_feedback_button->setFixedHeight(40);
+          leave_feedback_button->setFixedWidth(130);
+          
+          button->setContentsMargins(10, 10, 10, 10);
+          button->addWidget(leave_feedback_button);
+          
+          m_main_layout.addLayout(button);
+          QObject::connect(leave_feedback_button, &QPushButton::clicked,
+                           this, &ContentDetailsBase::LeaveComment);
+       }else{
+          m_commentOrRate_Text->setText(tr("You have already commented"));
+          m_comment->setText( QString::fromStdString(get_comment) );
+          m_comment->setReadOnly(true);
+       }
+       
     }
     
     if(a_cnt_details.type == DCT::WAITING_DELIVERY) {
@@ -162,10 +208,9 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details, bool bSil
     if (a_cnt_details.type == DCT::GENERAL) {
         m_main_layout.addLayout(&m_free_for_child);
     }
-
-    
-    setLayout(&m_main_layout);
-    
+   
+   setLayout(&m_main_layout);
+   
     int i,nIndexZuyg(0);
     
     if (a_cnt_details.type == DCT::GENERAL)
@@ -262,24 +307,46 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details, bool bSil
     desc = synopsis_parser.get<graphene::chain::ContentObjectDescription>();
 
     this->setWindowTitle(QString::fromStdString(title));
-    m_desc.setText(m_desc.toPlainText() + QString::fromStdString(desc) + "\n");
+    m_desc->setText(m_desc->toPlainText() + QString::fromStdString(desc) + "\n");
 
    if (false == bSilent)
       QDialog::exec();
 }
 
+void ContentDetailsBase::LeaveComment()
+{
+   if ( m_currentMyRating < 0 ){
+      return;
+   }
+   
+   std::string leave_result;
+   try {
+      RunTask("leave_rating_and_comment "
+              "\"" + Globals::instance().getCurrentUser() + "\" "
+              "\"" + m_pContentInfo->URI + "\" "
+              "\"" + std::to_string(m_currentMyRating) + "\" "
+              "\"" + escape_string(m_comment->toPlainText().toStdString()) + "\" "
+              "\"true\"", leave_result);
+
+   }catch (...) {}
+}
 
 void ContentDetailsBase::MouseClickedStar(int index) {
-    if (m_currentMyRating > 0)
-        return;
-    
-    std::string result;
-    try {
-        RunTask("leave_rating \"" + Globals::instance().getCurrentUser() + "\" \"" + m_pContentInfo->URI + "\" " + std::to_string(index + 1) + " true", result);
-        
-        m_currentMyRating = (index + 1);
-    } catch (...) {} // Ignore for now;
-    
+//    if (m_currentMyRating > 0)
+//        return;
+//    std::string result;
+//    try {
+//        RunTask("leave_rating \"" + Globals::instance().getCurrentUser() + "\" \"" + m_pContentInfo->URI + "\" " + std::to_string(index + 1) + " true", result);
+//        } catch (...) {} // Ignore for now;
+   m_currentMyRating = (index + 1);
+   
+   for (int i = m_currentMyRating; i < 5; ++i) {
+      stars_labels[i]->setCheckState(Qt::Unchecked);
+   }
+   for (int i = 0; i < m_currentMyRating; ++i) {
+      stars_labels[i]->setCheckState(Qt::Checked);
+   }
+
 }
 
 
@@ -299,7 +366,7 @@ void ContentDetailsBase::popup_for_purchased(int row_star)
     for(i=0;i<row_count;++i,nIndexZuyg+=2,nIndexKent+=2)
     {
         if(i%2==0){m_vSub_Widgets[i].setStyleSheet(bg_color_grey);}
-        else{m_vSub_Widgets[i].setStyleSheet(bg_color_wgite);}
+        //else{m_vSub_Widgets[i].setStyleSheet(bg_color_wgite);}
         m_vLabels[nIndexKent].setStyleSheet(font_bold);
         m_vLabels[nIndexKent].setContentsMargins(0, 17, 50, 17);
         m_vLabels[nIndexKent].setAlignment(Qt::AlignRight);
@@ -355,12 +422,11 @@ void ContentDetailsBase::popup_for_purchased(int row_star)
 
    
     QHBoxLayout* desc_lay = new QHBoxLayout();
-    m_desc.setText(tr("Description") + "\n\n");
-    m_desc.setStyleSheet(border_0);
-    m_desc.setReadOnly(true);
-    m_desc.setFont(DescriptionDetailsFont());
+    m_desc->setText(tr("Description") + "\n\n");
+    m_desc->setReadOnly(true);
+    m_desc->setFont(DescriptionDetailsFont());
     desc_lay->setContentsMargins(42, 17, 0, 3);
-    desc_lay->addWidget(&m_desc);
+    desc_lay->addWidget(m_desc);
     
     m_main_layout.addLayout(desc_lay);
     
@@ -372,7 +438,7 @@ void ContentDetailsBase::popup_for_purchased(int row_star)
     line->setFixedHeight(1);
     m_main_layout.addWidget(line);
     
-    setStyleSheet(d_qdialog);
+    //setStyleSheet(d_qdialog);
 }
 
 

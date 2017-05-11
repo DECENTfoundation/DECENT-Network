@@ -8,7 +8,6 @@
 #include <QTableWidget>
 #include <chrono>
 #include <vector>
-#include <QLocale>
 
 #include <decent/wallet_utility/wallet_utility.hpp>
 
@@ -78,6 +77,7 @@ namespace gui_wallet
                         QString const& strDetailedText = QString());
 
    uint64_t json_to_int64(nlohmann::json const& o);
+   bool is_empty(nlohmann::json const& json, int& rating, std::string& comment);
     
    std::size_t extra_space(const std::string& s) noexcept;
    std::string unescape_string(const std::string& s);
@@ -98,7 +98,7 @@ namespace gui_wallet
       void signal_connected(std::string const& str_error);
    public:
       WalletAPI m_wallet_api;
-   };
+   };   
    // Asset
    //
    // use Globals.asset to get a valid one
@@ -138,7 +138,6 @@ namespace gui_wallet
    public:
       static Globals& instance();
 
-      QLocale  m_locale;
       std::string getCurrentUser() const;
       bool isConnected() const;
       WalletAPI& getWallet() const;
@@ -148,6 +147,7 @@ namespace gui_wallet
       std::string runTask(std::string const& str_command);
       nlohmann::json runTaskParse(std::string const& str_command);
       std::vector<Publisher> getPublishers();
+      QLocale& locale();
 
    signals:
       void signal_showPurchasedTab();
@@ -186,6 +186,7 @@ namespace gui_wallet
       WalletOperator* m_p_wallet_operator;
       QThread* m_p_wallet_operator_thread;
       QTimer* m_p_timer;
+      QLocale* m_p_locale;
       std::string m_str_currentUser;
       std::chrono::steady_clock::time_point m_tp_started;
       std::map<std::string, std::string> m_map_user_id_cache;

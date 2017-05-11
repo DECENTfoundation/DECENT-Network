@@ -8,6 +8,8 @@ const char* const d_lineEdit        = "border: 0; padding-left: 10px;";
 //decent_button
 const char* const decent_button_style   = "border: 0px ; background-color :rgb(27,176,104); color : white;";
 //ui_gui_contentdatailsbase
+const char* const d_m_comment_label_text= "color:green;" "background-color:white;" "font-weight: bold";
+const char* const d_m_comment           = "border: 1 solid lightGray; background-color: rgb(249, 249, 249); padding 5px;";
 const char* const d_qdialog             = "background-color:white;";
 const char* const m_RateText_design     = "color:green;" "background-color:white;" "font-weight: bold";
 const char* const green_star_image      = ":/icon/images/green_asterix.png";

@@ -1521,18 +1521,20 @@ namespace graphene { namespace wallet {
          signed_transaction request_to_buy(string consumer, string URI, string price_asset_name, string price_amount, bool broadcast);
 
          /**
-          * @brief Rates a content.
+          * @brief Rates and/or comments a content.
           * @param consumer Consumer giving the rating
           * @param URI The URI of the content
           * @param rating Rating
+          * @param comment Comment
           * @param broadcast true to broadcast the transaction on the network
           * @return The signed transaction adding the rate to the content
           * @ingroup WalletCLI
           */
-         signed_transaction leave_rating(string consumer,
-                                         string URI,
-                                         uint64_t rating,
-                                         bool broadcast = false);
+         signed_transaction leave_rating_and_comment(string consumer,
+                                                     string URI,
+                                                     uint64_t rating,
+                                                     string comment,
+                                                     bool broadcast = false);
 
          /**
           * @brief This function is used to register a new seeder, modify the existing seeder or to extend seeder's lifetime.
@@ -1771,6 +1773,24 @@ namespace graphene { namespace wallet {
          optional<uint64_t> get_rating( const string& consumer, const string & URI )const;
 
          /**
+          * @brief Get comment given by a consumer to a content
+          * @param consumer Consumer giving comment
+          * @param URI URI specifying the content
+          * @return Comment, if given, empty otherwise
+          * @ingroup WalletCLI
+          */
+         optional<string> get_comment( const string& consumer, const string & URI )const;
+
+         /**
+          * @brief Get rating and/or comment given by a consumer to a content
+          * @param consumer Consumer giving rating and/or comment
+          * @param URI URI specifying the content
+          * @return Rating and/or comment, if given, empty otherwise
+          * @ingroup WalletCLI
+          */
+         std::pair<optional<uint64_t>, string> get_rating_and_comment( const string& consumer, const string& URI )const;
+
+         /**
           * @brief Get a content by URI
           * @param URI URI of the content to retrieve
           * @return The content corresponding to the provided URI, or null if no matching content was found
@@ -1848,11 +1868,19 @@ namespace graphene { namespace wallet {
 
          /**
           * @brief Get a list of content ratings corresponding to the provided URI
-          * @param URI URI of the content ratings to retrieve
+          * @param URI URI of the content
           * @return The ratings of the content
           * @ingroup WalletCLI
           */
          vector<uint64_t> get_content_ratings( const string& URI )const;
+
+         /**
+          * @brief Get a list of content comments corresponding to the provided URI
+          * @param URI URI of the content
+          * @return Map of accounts to corresponding comments
+          * @ingroup WalletCLI
+          */
+         map<string, string> get_content_comments( const string& URI )const;
 
          /**
           * @brief Get a list of IPFS IDs imported by a seeder
@@ -2091,7 +2119,7 @@ FC_API( graphene::wallet::wallet_api,
            (submit_content)
            (submit_content_new)
            (request_to_buy)
-           (leave_rating)
+           (leave_rating_and_comment)
            (ready_to_publish)
            (proof_of_custody)
            (deliver_keys)
@@ -2112,6 +2140,8 @@ FC_API( graphene::wallet::wallet_api,
            (search_my_purchases)
            (get_buying_by_consumer_URI)
            (get_rating)
+           (get_comment)
+           (get_rating_and_comment)
            (get_content)
            (get_real_supply)
            (list_content_by_author)
@@ -2121,6 +2151,7 @@ FC_API( graphene::wallet::wallet_api,
            (list_content_by_bought)
            (list_publishers_by_price)
            (get_content_ratings)
+           (get_content_comments)
            (list_imported_ipfs_IDs)
            (create_package)
            (extract_package)
