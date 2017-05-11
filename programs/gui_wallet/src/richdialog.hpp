@@ -20,7 +20,6 @@
 #include <QApplication>
 #include <vector>
 #include <string>
-#include "decent_wallet_ui_gui_contentdetailsbase.hpp"
 #include "decent_button.hpp"
 
 
@@ -100,18 +99,19 @@ private:
       virtual void changeEvent(QEvent* event) override;
    };
 
-class userInfoDialog : public QDialog
+class UserInfoDialog : public QDialog
 {
    Q_OBJECT
 public:
-   userInfoDialog(QWidget* parent,
+   UserInfoDialog(QWidget* parent,
                QString registrar,
                QString referrer,
                QString lifetime_referrer,
                QString network_fee_percentage,
                QString lifetime_referrer_fee_percentage,
                QString referrer_rewards_percentage,
-               QString title
+               QString name,
+               QString id
                );
 
 };
@@ -119,6 +119,7 @@ public:
 /********************************************/
 
 
+struct SDigitalContent;
             //BuyDialog
 /********************************************/
 

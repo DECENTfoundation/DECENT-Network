@@ -259,15 +259,15 @@ void DecentWidget::changeEvent(QEvent* event)
    QWidget::changeEvent(event);
 }
 
-
-userInfoDialog::userInfoDialog(QWidget* parent,
+UserInfoDialog::UserInfoDialog(QWidget* parent,
                                QString registrar,
                                QString referrer,
                                QString lifetime_referrer,
                                QString network_fee_percentage,
                                QString lifetime_referrer_fee_percentage,
                                QString referrer_rewards_percentage,
-                               QString title
+                               QString name,
+                               QString id
                                )
 {
    QVBoxLayout* main_layout = new QVBoxLayout();
@@ -276,78 +276,78 @@ userInfoDialog::userInfoDialog(QWidget* parent,
    
    setStyleSheet("background-color:white;");
    
-   DecentWidget*     WidgetRegistrar = new DecentWidget(this, DecentWidget::HighlightedRow);
-   QVBoxLayout* LayoutRegistrar = new QVBoxLayout();
-   LayoutRegistrar->setSpacing(0);
-   LayoutRegistrar->setContentsMargins(45,3,0,3);
-   //WidgetRegistrar->setStyleSheet("background-color:rgb(244,244,244);");
-
+   QWidget*     widgetRegistrar = new QWidget(this);
+   QVBoxLayout* layoutRegistrar = new QVBoxLayout();
+   layoutRegistrar->setSpacing(0);
+   layoutRegistrar->setContentsMargins(45,3,0,3);
+   widgetRegistrar->setStyleSheet("background-color:rgb(244,244,244);");
    QLabel* lblTitle = new QLabel(tr("Registrar"), this);
    QLabel* lblInfo = new QLabel(registrar, this);
-   LayoutRegistrar->addWidget(lblTitle);
-   LayoutRegistrar->addWidget(lblInfo);
-   WidgetRegistrar->setLayout(LayoutRegistrar);
-   main_layout->addWidget(WidgetRegistrar);
+   layoutRegistrar->addWidget(lblTitle);
+   layoutRegistrar->addWidget(lblInfo);
+   widgetRegistrar->setLayout(layoutRegistrar);
+   main_layout->addWidget(widgetRegistrar);
    
    
-   QWidget*     WidgetReferrer = new QWidget(this);
-   QVBoxLayout* LayoutReferrer = new QVBoxLayout();
-   LayoutReferrer->setSpacing(0);
-   LayoutReferrer->setContentsMargins(45,3,0,3);
+   QWidget*     widgetReferrer = new QWidget(this);
+   QVBoxLayout* layoutReferrer = new QVBoxLayout();
+   layoutReferrer->setSpacing(0);
+   layoutReferrer->setContentsMargins(45,3,0,3);
    lblTitle = new QLabel(tr("Referrer"), this);
    lblInfo = new QLabel(referrer, this);
-   LayoutReferrer->addWidget(lblTitle);
-   LayoutReferrer->addWidget(lblInfo);
-   WidgetReferrer->setLayout(LayoutReferrer);
-   main_layout->addWidget(WidgetReferrer);
+   layoutReferrer->addWidget(lblTitle);
+   layoutReferrer->addWidget(lblInfo);
+   widgetReferrer->setLayout(layoutReferrer);
+   main_layout->addWidget(widgetReferrer);
    
-   QWidget*     WidgetLifetimeReferrer = new QWidget(this);
-   QVBoxLayout* LayoutLifetimeReferrer = new QVBoxLayout();
-   LayoutLifetimeReferrer->setSpacing(0);
-   LayoutLifetimeReferrer->setContentsMargins(45,3,0,3);
-   WidgetLifetimeReferrer->setStyleSheet("background-color:rgb(244,244,244);");
+   QWidget*     widgetLifetimeReferrer = new QWidget(this);
+   QVBoxLayout* layoutLifetimeReferrer = new QVBoxLayout();
+   layoutLifetimeReferrer->setSpacing(0);
+   layoutLifetimeReferrer->setContentsMargins(45,3,0,3);
+   widgetLifetimeReferrer->setStyleSheet("background-color:rgb(244,244,244);");
    lblTitle = new QLabel(tr("Lifetime Referrer"), this);
    lblInfo = new QLabel(lifetime_referrer, this);
-   LayoutLifetimeReferrer->addWidget(lblTitle);
-   LayoutLifetimeReferrer->addWidget(lblInfo);
-   WidgetLifetimeReferrer->setLayout(LayoutLifetimeReferrer);
-   main_layout->addWidget(WidgetLifetimeReferrer);
+   layoutLifetimeReferrer->addWidget(lblTitle);
+   layoutLifetimeReferrer->addWidget(lblInfo);
+   widgetLifetimeReferrer->setLayout(layoutLifetimeReferrer);
+   main_layout->addWidget(widgetLifetimeReferrer);
    
-   QWidget*     WidgetNetworkFeePercentage = new QWidget(this);
-   QVBoxLayout* LayoutNetworkFeePercentage = new QVBoxLayout();
-   LayoutNetworkFeePercentage->setSpacing(0);
-   LayoutNetworkFeePercentage->setContentsMargins(45,3,0,3);
+   QWidget*     widgetNetworkFeePercentage = new QWidget(this);
+   QVBoxLayout* layoutNetworkFeePercentage = new QVBoxLayout();
+   layoutNetworkFeePercentage->setSpacing(0);
+   layoutNetworkFeePercentage->setContentsMargins(45,3,0,3);
    lblTitle = new QLabel(tr("Network Fee"), this);
    lblInfo = new QLabel(network_fee_percentage, this);
-   LayoutNetworkFeePercentage->addWidget(lblTitle);
-   LayoutNetworkFeePercentage->addWidget(lblInfo);
-   WidgetNetworkFeePercentage->setLayout(LayoutNetworkFeePercentage);
-   main_layout->addWidget(WidgetNetworkFeePercentage);
+   layoutNetworkFeePercentage->addWidget(lblTitle);
+   layoutNetworkFeePercentage->addWidget(lblInfo);
+   widgetNetworkFeePercentage->setLayout(layoutNetworkFeePercentage);
+   main_layout->addWidget(widgetNetworkFeePercentage);
    
-   QWidget*     WidgetLifetimeReferrerFeePercentage = new QWidget(this);
-   QVBoxLayout* LifetimeReferrerFeePercentage = new QVBoxLayout();
-   LifetimeReferrerFeePercentage->setSpacing(0);
-   LifetimeReferrerFeePercentage->setContentsMargins(45,3,0,3);
-   WidgetLifetimeReferrerFeePercentage->setStyleSheet("background-color:rgb(244,244,244);");
+   QWidget*     widgetLifetimeReferrerFeePercentage = new QWidget(this);
+   QVBoxLayout* lifetimeReferrerFeePercentage = new QVBoxLayout();
+   lifetimeReferrerFeePercentage->setSpacing(0);
+   lifetimeReferrerFeePercentage->setContentsMargins(45,3,0,3);
+   widgetLifetimeReferrerFeePercentage->setStyleSheet("background-color:rgb(244,244,244);");
    lblTitle = new QLabel(tr("Lifetime Referrer Fee"), this);
    lblInfo = new QLabel(lifetime_referrer_fee_percentage, this);
-   LifetimeReferrerFeePercentage->addWidget(lblTitle);
-   LifetimeReferrerFeePercentage->addWidget(lblInfo);
-   WidgetLifetimeReferrerFeePercentage->setLayout(LifetimeReferrerFeePercentage);
-   main_layout->addWidget(WidgetLifetimeReferrerFeePercentage);
+   lifetimeReferrerFeePercentage->addWidget(lblTitle);
+   lifetimeReferrerFeePercentage->addWidget(lblInfo);
+   widgetLifetimeReferrerFeePercentage->setLayout(lifetimeReferrerFeePercentage);
+   main_layout->addWidget(widgetLifetimeReferrerFeePercentage);
    
-   QWidget*     WidgetReferrerRewardsPercentage = new QWidget(this);
-   QVBoxLayout* LayoutReferrerRewardsPercentage = new QVBoxLayout();
-   LayoutReferrerRewardsPercentage->setSpacing(0);
-   LayoutReferrerRewardsPercentage->setContentsMargins(45,3,0,3);
+   QWidget*     widgetReferrerRewardsPercentage = new QWidget(this);
+   QVBoxLayout* layoutReferrerRewardsPercentage = new QVBoxLayout();
+   layoutReferrerRewardsPercentage->setSpacing(0);
+   layoutReferrerRewardsPercentage->setContentsMargins(45,3,0,3);
    lblTitle = new QLabel(tr("Referrer Rewards Percentage"), this);
    lblInfo = new QLabel(referrer_rewards_percentage, this);
-   LayoutReferrerRewardsPercentage->addWidget(lblTitle);
-   LayoutReferrerRewardsPercentage->addWidget(lblInfo);
-   WidgetReferrerRewardsPercentage->setLayout(LayoutReferrerRewardsPercentage);
-   main_layout->addWidget(WidgetReferrerRewardsPercentage);
+   layoutReferrerRewardsPercentage->addWidget(lblTitle);
+   layoutReferrerRewardsPercentage->addWidget(lblInfo);
+   widgetReferrerRewardsPercentage->setLayout(layoutReferrerRewardsPercentage);
+   main_layout->addWidget(widgetReferrerRewardsPercentage);
    
-   setWindowTitle(title);
+
+   setWindowTitle(name + " (" + id + ")");
    setFixedSize(620,420);
    setLayout(main_layout);
 }
