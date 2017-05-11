@@ -19,16 +19,29 @@
 
 #include "decent_wallet_ui_gui_newcheckbox.hpp"
 
-
 namespace gui_wallet {
 
 struct SDigitalContent;
 class DecentTextEdit;
 
+class CommentWidget : public QWidget
+{
+   Q_OBJECT
+public:
+   CommentWidget(QWidget*);
+   ~CommentWidget();
+   
+   public slots:
+   void nextButtonSlot();
+   void previousButtonSlot();
+   void resetButtonSlot();
+private:
+//   QLineEdit*  m_Name;
+};
+   
 class ContentDetailsBase : public QDialog
 {
     Q_OBJECT
-    
 public:
     ContentDetailsBase(QWidget* pParent);
     void execCDB(const SDigitalContent& a_cnt_details, bool bSilent = false);
@@ -38,7 +51,8 @@ public:
     //virtual void execCDD(const decent::wallet::ui::gui::SDigitalContent& a_cnt_details)=0;
 
 private slots:
-   void LeaveComment();
+    void LeaveComment();
+    void commentWidgetSlot();
     void MouseEnteredStar(int index) {
         if (m_currentMyRating > 0)
             return;
@@ -86,6 +100,8 @@ protected:
     QLabel*         m_RateText;
     DecentTextEdit* m_desc;
     DecentTextEdit* m_comment;
+    CommentWidget*  m_commentWidget;
+
 public:
     std::vector<QString> s_vcpcFieldsGeneral;
     std::vector<QString> s_vcpcFieldsBougth;
