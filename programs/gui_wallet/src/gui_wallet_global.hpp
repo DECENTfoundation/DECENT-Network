@@ -153,7 +153,7 @@ namespace gui_wallet
       void signal_showPurchasedTab();
       void signal_showTransactionsTab(std::string const&);
       void signal_updateAccountBalance(Asset const&);
-      void signal_importKeyDid(bool);
+      void signal_keyImported(bool);
 
    public:
       void setCurrentUser(std::string const& user);

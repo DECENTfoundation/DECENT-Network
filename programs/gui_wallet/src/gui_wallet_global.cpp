@@ -668,7 +668,7 @@ void Globals::showTransferDialog(std::string const& user)
    
 void Globals::slot_displayWalletContent()
 {
-   emit signal_importKeyDid(false);
+   emit signal_keyImported(false);
 }
 
 string Globals::getAccountName(string const& accountId)
