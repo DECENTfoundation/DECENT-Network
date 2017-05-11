@@ -78,6 +78,8 @@ protected slots:
    void slot_query_blockchain();
    void slot_connecting_progress(std::string const&);
    
+   void sendButtonEnabled();
+   
 protected:
    class QVBoxLayout*   m_pCentralAllLayout;
    class QHBoxLayout*   m_pMenuLayout;

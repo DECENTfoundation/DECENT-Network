@@ -138,7 +138,7 @@ void TransferDialog::Transfer()
 
 ImportDialog::ImportDialog(QWidget* parent)
 {
-   QObject::connect(this, &ImportDialog::isOk, &Globals::instance(), &Globals::slot_displayWalletContent);
+   QObject::connect(this, &ImportDialog::signal_keyImported, &Globals::instance(), &Globals::slot_displayWalletContent);
    
    QVBoxLayout* mainLayout       = new QVBoxLayout();
    QVBoxLayout* lineEditsLayout  = new QVBoxLayout();
@@ -210,7 +210,7 @@ void ImportDialog::Import()
       message = ex.what();
    }
    if (message.empty()) {
-      emit isOk();
+      emit signal_keyImported();
       close();
    }
    else
@@ -218,6 +218,31 @@ void ImportDialog::Import()
       ShowMessageBox(tr("Error"), tr("Cannot import key."), message.c_str());
    }
 }
+
+/*********************************************************/
+
+
+                  //ZebraDialog
+/*********************************************************/
+
+
+ZebraDialog::ZebraDialog(QWidget* parent,
+                         QString registrar,
+                         QString referrer,
+                         QString lifetime_referrer,
+                         QString network_fee_percentage,
+                         QString lifetime_referrer_fee_percentage,
+                         QString referrer_rewards_percentage
+                         )
+{
+//   QVBoxLayout* main_layout = new QVBoxLayout();
+//   main_layout->setSpacing(0);
+//   main_layout->setContentsMargins(0, 0, 0, 0);
+//   
+//   setStyleSheet("background-color:white;");
+//   setLayout(main_layout);
+}
+
 
 /*********************************************************/
 

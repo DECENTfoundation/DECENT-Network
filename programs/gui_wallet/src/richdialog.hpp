@@ -64,7 +64,7 @@ public:
    void Import();
 public:
 signals:
-   void isOk();
+   void signal_keyImported();
 private:
    QString  m_userName;
    QString  m_key;
@@ -72,6 +72,28 @@ private:
 
 /********************************************/
    
+   
+   
+   
+   //ZebraDialog
+   /********************************************/
+   
+   class ZebraDialog : public QDialog
+   {
+      Q_OBJECT
+   public:
+      ZebraDialog(QWidget* parent,
+                  QString registrar,
+                  QString referrer,
+                  QString lifetime_referrer,
+                  QString network_fee_percentage,
+                  QString lifetime_referrer_fee_percentage,
+                  QString referrer_rewards_percentage
+                  );
+
+   };
+   
+   /********************************************/
 }
 
 

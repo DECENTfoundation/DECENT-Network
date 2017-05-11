@@ -572,14 +572,18 @@ void Mainwindow_gui_wallet::DisplayWalletContentGUI(bool isNewWallet)
 
 void Mainwindow_gui_wallet::ImportKeySlot()
 {
-   ImportDialog*  import_key_dlg = new ImportDialog(this);;
+   ImportDialog*  import_key_dlg = new ImportDialog(this);
    
    import_key_dlg->setAttribute(Qt::WA_DeleteOnClose);
    import_key_dlg->open();
-
-   m_pCentralWidget->getSendButton()->setEnabled(true);;
+   
+   QObject::connect(import_key_dlg, &ImportDialog::signal_keyImported, this, &Mainwindow_gui_wallet::sendButtonEnabled);
 }
 
+void Mainwindow_gui_wallet::sendButtonEnabled()
+{
+   m_pCentralWidget->getSendButton()->setEnabled(true);
+}
 
 void Mainwindow_gui_wallet::SendDCTSlot()
 {
