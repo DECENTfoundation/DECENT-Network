@@ -226,39 +226,6 @@ void ImportDialog::Import()
                   //ZebraDialog
 /*********************************************************/
 
-DecentWidget::DecentWidget(QWidget* pParent,
-                           eType enType/* = Default*/,
-                           eName enName/* = None*/)
-: QWidget(pParent)
-{
-   switch (enType)
-   {
-      case HighlightedRow:
-         setProperty("type", "highlightedrow");
-         break;
-      case Default:
-         default:
-         break;
-   }
-
-   switch (enName)
-   {
-      case None:
-         default:
-         break;
-   }
-}
-
-void DecentWidget::changeEvent(QEvent* event)
-{
-   if (event->type() == QEvent::EnabledChange)
-   {
-      style()->unpolish(this);
-      style()->polish(this);
-   }
-   QWidget::changeEvent(event);
-}
-
 UserInfoDialog::UserInfoDialog(QWidget* parent,
                                QString registrar,
                                QString referrer,
@@ -276,7 +243,7 @@ UserInfoDialog::UserInfoDialog(QWidget* parent,
    
    setStyleSheet("background-color:white;");
    
-   QWidget*     widgetRegistrar = new QWidget(this);
+   QWidget* widgetRegistrar = new QWidget(this);
    QVBoxLayout* layoutRegistrar = new QVBoxLayout();
    layoutRegistrar->setSpacing(0);
    layoutRegistrar->setContentsMargins(45,3,0,3);
