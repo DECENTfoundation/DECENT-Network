@@ -78,7 +78,7 @@ protected slots:
    void slot_query_blockchain();
    void slot_connecting_progress(std::string const&);
    
-   void slot_enablSendButton();
+   void slot_enableSendButton();
       
 protected:
    class QVBoxLayout*   m_pCentralAllLayout;

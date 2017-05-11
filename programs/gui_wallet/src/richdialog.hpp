@@ -20,6 +20,7 @@
 #include <QApplication>
 #include <vector>
 #include <string>
+#include "decent_wallet_ui_gui_contentdetailsbase.hpp"
 #include "decent_button.hpp"
 
 
@@ -74,27 +75,40 @@ private:
    
    
    
-   
-   //ZebraDialog
-   /********************************************/
-   
-   class ZebraDialog : public QDialog
-   {
-      Q_OBJECT
-   public:
-      ZebraDialog(QWidget* parent,
-                  QString registrar,
-                  QString referrer,
-                  QString lifetime_referrer,
-                  QString network_fee_percentage,
-                  QString lifetime_referrer_fee_percentage,
-                  QString referrer_rewards_percentage
-                  );
 
-   };
-   
-   /********************************************/
+            //ZebraDialog
+/********************************************/
+
+class userInfoDialog : public QDialog
+{
+   Q_OBJECT
+public:
+   userInfoDialog(QWidget* parent,
+               QString registrar,
+               QString referrer,
+               QString lifetime_referrer,
+               QString network_fee_percentage,
+               QString lifetime_referrer_fee_percentage,
+               QString referrer_rewards_percentage,
+               QString title
+               );
+
+};
+
+/********************************************/
+
+
+            //BuyDialog
+/********************************************/
+
+class BuyDialog : public QDialog
+{
+   Q_OBJECT
+public:
+   BuyDialog(QWidget* parent, const SDigitalContent& a_cnt_details, bool bSilent = false);
+};
+
+/********************************************/
 }
-
 
 #endif // RICHDIALOG_HPP

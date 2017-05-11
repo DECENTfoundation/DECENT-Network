@@ -243,16 +243,16 @@ void Overview_tab::slot_Details()
       std::string referrer_rewards_percentage = std::to_string(accountInfo["referrer_rewards_percentage"].get<int>());
       
       std::string name = accountInfo["name"].get<std::string>();
-      
-      ZebraDialog* dialog = new ZebraDialog(this,
-                                            QString::fromStdString(registrar),
-                                            QString::fromStdString(referrer),
-                                            QString::fromStdString(lifetime_referrer),
-                                            QString::fromStdString(network_fee_percentage),
-                                            QString::fromStdString(lifetime_referrer_fee_percentage),
-                                            QString::fromStdString(referrer_rewards_percentage));
-      dialog->setWindowTitle(QString::fromStdString(name) + " (" + QString::fromStdString(id) + ")");
-      dialog->setFixedSize(620,420);
+      QString title = QString::fromStdString(name) + " (" + QString::fromStdString(id) + ")";
+      userInfoDialog* dialog = new userInfoDialog(this,
+                                                  QString::fromStdString(registrar),
+                                                  QString::fromStdString(referrer),
+                                                  QString::fromStdString(lifetime_referrer),
+                                                  QString::fromStdString(network_fee_percentage),
+                                                  QString::fromStdString(lifetime_referrer_fee_percentage),
+                                                  QString::fromStdString(referrer_rewards_percentage),
+                                                  title);
+      dialog->setAttribute(Qt::WA_DeleteOnClose);
       dialog->open();
       
                
