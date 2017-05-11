@@ -226,9 +226,6 @@ void ImportDialog::Import()
                   //ZebraDialog
 /*********************************************************/
 
-
-
-
 UserInfoDialog::UserInfoDialog(QWidget* parent,
                                const QString& registrar,
                                const QString& referrer,
@@ -246,7 +243,7 @@ UserInfoDialog::UserInfoDialog(QWidget* parent,
    
    setStyleSheet("background-color:white;");
    
-   QWidget*     widgetRegistrar = new QWidget(this);
+   QWidget* widgetRegistrar = new QWidget(this);
    QVBoxLayout* layoutRegistrar = new QVBoxLayout();
    layoutRegistrar->setSpacing(0);
    layoutRegistrar->setContentsMargins(45,3,0,3);
