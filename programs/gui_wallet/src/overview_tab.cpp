@@ -66,8 +66,6 @@ public:
 
       _subWidgets.back()->setLayout(_subLayouts.back());
       m_main_layout.addWidget(_subWidgets.back());
-
-
    }
 private:
    QVBoxLayout     m_main_layout;
