@@ -204,17 +204,17 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details, bool bSil
             }
         }
     }
-    
+   
     if (a_cnt_details.type == DCT::GENERAL) {
         m_main_layout.addLayout(&m_free_for_child);
     }
-   
-   setLayout(&m_main_layout);
    
     int i,nIndexZuyg(0);
     
     if (a_cnt_details.type == DCT::GENERAL)
     {
+       m_commentWidget = new CommentWidget(this);
+       m_main_layout.addWidget(m_commentWidget);
        for(i = 0; i < NUMBER_OF_SUB_LAYOUTS2;++i,nIndexZuyg+=2)
        {
           m_vLabels[nIndexZuyg].setText(s_vcpcFieldsGeneral[i]);
@@ -228,6 +228,8 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details, bool bSil
       }
    }
    
+   setLayout(&m_main_layout);
+
     std::string e_str = "";
     if (a_cnt_details.type == DCT::BOUGHT || a_cnt_details.type == DCT::WAITING_DELIVERY) {
         e_str = (m_pContentInfo->expiration);
@@ -422,14 +424,26 @@ void ContentDetailsBase::popup_for_purchased(int row_star)
 
    
     QHBoxLayout* desc_lay = new QHBoxLayout();
+    QHBoxLayout* comment_layout = new QHBoxLayout;
+    comment_layout->setAlignment(Qt::AlignRight);
+   
+    DecentButton* commentButton = new DecentButton(this);
+    commentButton->setText("Content Comments");
+    commentButton->setFixedHeight(30);
+    comment_layout->addWidget(commentButton);
+   
+    connect(commentButton, SIGNAL(clicked()), this, SLOT(commentWidgetSlot()));
+   
     m_desc->setText(tr("Description") + "\n\n");
     m_desc->setReadOnly(true);
     m_desc->setFont(DescriptionDetailsFont());
+   
     desc_lay->setContentsMargins(42, 17, 0, 3);
     desc_lay->addWidget(m_desc);
-    
+   
     m_main_layout.addLayout(desc_lay);
-    
+    m_main_layout.addLayout(comment_layout);
+   
     line = new QFrame(this);
     line->setFrameShape(QFrame::HLine); // Horizontal line
     
@@ -440,6 +454,62 @@ void ContentDetailsBase::popup_for_purchased(int row_star)
     
     //setStyleSheet(d_qdialog);
 }
+
+void ContentDetailsBase::commentWidgetSlot()
+{
+   m_commentWidget->setVisible(!m_commentWidget->isVisible());
+}
+
+/* /////////////Comment Widget////////////////*/
+CommentWidget::CommentWidget(QWidget* parent)
+: QWidget(parent)
+{
+   QVBoxLayout* main_layout = new QVBoxLayout();
+   QHBoxLayout* buttons = new QHBoxLayout();
+   
+   DecentButton* next = new DecentButton(this);
+   DecentButton* previous = new DecentButton(this);
+   DecentButton* reset = new DecentButton(this);
+   
+   next->setText("Next");
+   previous->setText("Previous");
+   reset->setText("First");
+   
+   buttons->addWidget(next);
+   buttons->addWidget(previous);
+   buttons->addWidget(reset);
+   buttons->setAlignment(Qt::AlignBottom);
+   
+   connect(next, SIGNAL(clicked()), this, SLOT(nextButtonSlot()));
+   connect(previous, SIGNAL(clicked()), this, SLOT(previousButtonSlot()));
+   connect(reset, SIGNAL(clicked()), this, SLOT(resetButtonSlot()));
+   
+   main_layout->addLayout(buttons);
+   setLayout(main_layout);
+   
+   setVisible(false);
+}
+
+void CommentWidget::nextButtonSlot()
+{
+   //
+}
+
+void CommentWidget::previousButtonSlot()
+{
+   //
+}
+
+void CommentWidget::resetButtonSlot()
+{
+   //
+}
+
+CommentWidget::~CommentWidget()
+{
+   //
+}
+
 
 
 
