@@ -2305,27 +2305,33 @@ public:
       } FC_CAPTURE_AND_RETHROW( (consumer)(URI)(price_asset_symbol)(price_amount)(broadcast) )
    }
 
-   signed_transaction leave_rating_and_comment(string consumer,
-                                               string URI,
-                                               uint64_t rating,
-                                               string comment,
-                                               bool broadcast/* = false */)
+   void leave_rating_and_comment(string consumer,
+                                 string URI,
+                                 uint64_t rating,
+                                 string comment,
+                                 bool broadcast/* = false */)
    {
-      try {
-      account_object consumer_account = get_account( consumer );
+      try
+      {
+         if (rating > 0 &&
+             rating <= 5 &&
+             false == comment.empty())
+         {
+            account_object consumer_account = get_account( consumer );
 
-      leave_rating_and_comment_operation leave_rating_op;
-      leave_rating_op.consumer = consumer_account.id;
-      leave_rating_op.URI = URI;
-      leave_rating_op.rating = rating;
-      leave_rating_op.comment = comment;
+            leave_rating_and_comment_operation leave_rating_op;
+            leave_rating_op.consumer = consumer_account.id;
+            leave_rating_op.URI = URI;
+            leave_rating_op.rating = rating;
+            leave_rating_op.comment = comment;
 
-      signed_transaction tx;
-      tx.operations.push_back( leave_rating_op );
-      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
-      tx.validate();
+            signed_transaction tx;
+            tx.operations.push_back( leave_rating_op );
+            set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
+            tx.validate();
 
-      return sign_transaction( tx, broadcast );
+            sign_transaction( tx, broadcast );
+         }
       } FC_CAPTURE_AND_RETHROW( (consumer)(URI)(rating)(comment)(broadcast) )
    }
 
@@ -3831,7 +3837,7 @@ signed_transaction wallet_api::request_to_buy(string consumer,
    return my->request_to_buy(consumer, URI, price_asset_name, price_amount, broadcast);
 }
 
-signed_transaction wallet_api::leave_rating_and_comment(string consumer,
+void wallet_api::leave_rating_and_comment(string consumer,
                                                         string URI,
                                                         uint64_t rating,
                                                         string comment,
@@ -3979,23 +3985,21 @@ signed_transaction wallet_api::leave_rating_and_comment(string consumer,
       return result;
    }
 
-// HEAD
-optional<string> wallet_api::get_comment( const string& consumer, const string & URI )const
+vector<rating_object_ex> wallet_api::search_feedback(const string& user,
+                                                     const string& URI,
+                                                     const string& id,
+                                                     uint32_t count) const
 {
-   account_id_type account = get_account( consumer ).id;
-   return my->_remote_db->get_comment_by_consumer_URI( account, URI );
-}
+   vector<rating_object_ex> result;
+   vector<rating_object> temp = my->_remote_db->search_feedback(user, URI, object_id_type(id), count);
 
-std::pair<optional<uint64_t>, string> wallet_api::get_rating_and_comment( const string& consumer, const string& URI )const
-{
-   account_id_type account = get_account( consumer ).id;
-   optional<uint64_t> rating = my->_remote_db->get_rating_by_consumer_URI( account, URI );
-   optional<string> op_comment = my->_remote_db->get_comment_by_consumer_URI( account, URI );
-   string comment;
-   if (op_comment.valid())
-      comment = *op_comment;
-   
-   return std::pair<optional<uint64_t>, string>(rating, comment);
+   for (auto const& item : temp)
+   {
+      result.push_back(rating_object_ex(item));
+      result.back().author = get_account(string(object_id_type(item.consumer))).name;
+   }
+
+   return result;
 }
 
 optional<content_object> wallet_api::get_content( const string& URI )const
@@ -4007,12 +4011,6 @@ optional<buying_object> wallet_api::get_buying_by_consumer_URI( const string& ac
 {
    account_id_type account = get_account( account_id_or_name ).id;
    return my->_remote_db->get_buying_by_consumer_URI( account, URI );
-}
-   
-optional<uint64_t> wallet_api::get_rating( const string& consumer, const string & URI )const
-{
-   account_id_type account = get_account( consumer ).id;
-   return my->_remote_db->get_rating_by_consumer_URI( account, URI );
 }
 
 vector<content_summary> wallet_api::search_content(const string& term,
