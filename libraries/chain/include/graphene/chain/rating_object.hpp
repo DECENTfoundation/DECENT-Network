@@ -25,6 +25,19 @@ namespace graphene { namespace chain {
    
    struct by_URI_consumer;
    struct by_consumer_URI;
+   struct by_URI_time;
+
+   template <typename TAG, typename _t_object>
+   struct key_extractor;
+
+   template <>
+   struct key_extractor<by_URI_time, rating_object>
+   {
+      static std::tuple<string, object_id_type> get(rating_object const& ob)
+      {
+         return std::make_tuple(ob.URI, ob.id);
+      }
+   };
    
    typedef multi_index_container<
       rating_object,
@@ -42,6 +55,12 @@ namespace graphene { namespace chain {
                composite_key< rating_object,
                   member<rating_object, account_id_type, &rating_object::consumer>,
                   member<rating_object, string, &rating_object::URI>
+               >
+            >,
+            ordered_unique< tag< by_URI_time>,
+               composite_key< rating_object,
+                  member<rating_object, string, &rating_object::URI>,
+                  member<object, object_id_type, &object::id>
                >
             >
          >
