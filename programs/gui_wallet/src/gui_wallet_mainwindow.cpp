@@ -579,7 +579,7 @@ void Mainwindow_gui_wallet::DisplayWalletContentGUI(bool isNewWallet)
 
 void Mainwindow_gui_wallet::ImportKeySlot()
 {
-   ImportDialog*  import_key_dlg = new ImportDialog(this);
+   ImportKeyDialog*  import_key_dlg = new ImportKeyDialog(this);
    
    import_key_dlg->setAttribute(Qt::WA_DeleteOnClose);
    import_key_dlg->open();

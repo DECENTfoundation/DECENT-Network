@@ -15,6 +15,7 @@
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QLocale>
+#include <QApplication>
 #endif
 
 using string = std::string;
