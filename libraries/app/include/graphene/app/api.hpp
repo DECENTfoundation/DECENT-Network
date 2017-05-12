@@ -231,6 +231,15 @@ namespace graphene { namespace app {
           */
          std::vector<net::potential_peer_record> get_potential_peers() const;
 
+        /**
+         * @brief This method allows user to start seeding plugin from running application
+         * @param account_id ID of account controlling this seeder
+         * @param content_private_key El Gamal content private key
+         * @param seeder_private_key Private key of the account controlling this seeder
+         * @param free_space Allocated disk space, in MegaBytes
+         * @param seeding_price price per MegaBytes
+         * @ingroup Network_NodeAPI
+         */
          void seeding_startup(const account_id_type& account_id,
                               const DInteger& content_private_key,
                               const fc::ecc::private_key& seeder_private_key,

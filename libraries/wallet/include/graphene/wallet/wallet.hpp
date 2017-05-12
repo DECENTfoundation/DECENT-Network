@@ -1577,12 +1577,13 @@ namespace graphene { namespace wallet {
                                          buying_id_type buying,
                                          bool broadcast = false);
          /**
-          *
-          * @param account_id_type_or_name
-          * @param content_private_key
-          * @param seeder_private_key
-          * @param free_space
-          * @param seeding_price
+          * @brief This method allows user to start seeding plugin from running application
+          * @param account_id_type_or_name Name or ID of account controlling this seeder
+          * @param content_private_key El Gamal content private key
+          * @param seeder_private_key Private key of the account controlling this seeder
+          * @param free_space Allocated disk space, in MegaBytes
+          * @param seeding_price price per MegaBytes
+          * @ingroup WalletCLI
           */
          void seeding_startup( string account_id_type_or_name,
                                DInteger content_private_key,

@@ -496,15 +496,15 @@ using namespace decent::encrypt;
             ordered_unique< tag<by_id>,
                member< object, object_id_type, &object::id >
             >,
-   
-   
+
+
             ordered_non_unique<tag<by_author>,
                member<content_object, account_id_type, &content_object::author>
             >,
             ordered_unique<tag<by_URI>,
                member<content_object, string, &content_object::URI>
             >,
-   
+
 #ifdef PRICE_REGIONS
             ordered_non_unique<tag<by_price>,
             const_mem_fun<content_object, share_type, &content_object::get_price_amount_template<RegionCodes::OO_none>>
@@ -529,7 +529,7 @@ using namespace decent::encrypt;
             ordered_non_unique<tag<by_expiration>,
                member<content_object, time_point_sec, &content_object::expiration>
             >,
-   
+
             ordered_non_unique<tag<by_created>,
                member<content_object, time_point_sec, &content_object::created>
             >
