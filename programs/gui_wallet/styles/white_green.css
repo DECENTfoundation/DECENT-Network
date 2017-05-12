@@ -10,6 +10,17 @@ QLabel[name='highlighted']
 {
    background-color: rgb(244, 244, 244);
 }
+QLabel[name='right']
+{
+   padding-right: 2em;
+   qproperty-alignment: AlignRight;
+}
+QLabel[name='highlightedright']
+{
+   padding-right: 2em;
+   background-color: rgb(244, 244, 244);
+   qproperty-alignment: AlignRight;
+}
 QDialog, QMainWindow, QMessageBox
 {
    color: black;

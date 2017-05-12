@@ -29,6 +29,12 @@ namespace gui_wallet
          case Highlighted:
             setProperty("name", "highlighted");
             break;
+         case Right:
+            setProperty("name", "right");
+            break;
+         case HighlightedRight:
+            setProperty("name", "highlightedright");
+            break;
          case None:
          default:
             break;

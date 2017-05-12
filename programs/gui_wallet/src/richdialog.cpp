@@ -327,87 +327,79 @@ BuyDialog::BuyDialog(QWidget* parent, const SDigitalContent& a_cnt_details)
    QGridLayout* main_layout = new QGridLayout();
    main_layout->setSpacing(0);
    main_layout->setContentsMargins(0, 0, 0, 0);
-   
+
+   int iRowIndex = 0;
    // Author
    //
-   
    DecentLabel* labelAuthorTitle = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
-   DecentLabel* labelAuthorInfo = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
-   labelAuthorTitle->setFixedSize(250, 50);
-   labelAuthorInfo->setFixedSize(250, 50);
+   DecentLabel* labelAuthorInfo = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::HighlightedRight);
    labelAuthorTitle->setText(tr("Author"));
    labelAuthorInfo->setText(QString::fromStdString(a_cnt_details.author));
-   main_layout->addWidget(labelAuthorTitle, 0, 0);
-   main_layout->addWidget(labelAuthorInfo, 0, 1);
-
+   main_layout->addWidget(labelAuthorTitle, iRowIndex, 0);
+   main_layout->addWidget(labelAuthorInfo, iRowIndex, 1);
+   ++iRowIndex;
    // Expiration
    //
    DecentLabel* labelExpirationTitle = new DecentLabel(this, DecentLabel::RowLabel);
-   DecentLabel* labelExpirationInfo = new DecentLabel(this, DecentLabel::RowLabel);
-   labelExpirationTitle->setFixedSize(250, 50);
-   labelExpirationInfo->setFixedSize(250, 50);
+   DecentLabel* labelExpirationInfo = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Right);
    QDateTime time = QDateTime::fromString(QString::fromStdString(a_cnt_details.expiration), "yyyy-MM-ddTHH:mm:ss");
    std::string e_str = CalculateRemainingTime(QDateTime::currentDateTime(), time);
    labelExpirationTitle->setText(tr("Expiration"));
    labelExpirationInfo->setText(QString::fromStdString(e_str));
-   main_layout->addWidget(labelExpirationTitle, 1, 0);
-   main_layout->addWidget(labelExpirationInfo, 1, 1);
+   main_layout->addWidget(labelExpirationTitle, iRowIndex, 0);
+   main_layout->addWidget(labelExpirationInfo, iRowIndex, 1);
+   ++iRowIndex;
 
    // Uploaded
    //
    DecentLabel* labelUploadedTitle = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
-   DecentLabel* labelUploadedInfo = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
-   labelUploadedTitle->setFixedSize(250, 50);
-   labelUploadedInfo->setFixedSize(250, 50);
+   DecentLabel* labelUploadedInfo = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::HighlightedRight);
    labelUploadedTitle->setText(tr("Uploaded"));
    labelUploadedInfo->setText(QString::fromStdString(a_cnt_details.created));
-   main_layout->addWidget(labelUploadedTitle, 2, 0);
-   main_layout->addWidget(labelUploadedInfo, 2, 1);
+   main_layout->addWidget(labelUploadedTitle, iRowIndex, 0);
+   main_layout->addWidget(labelUploadedInfo, iRowIndex, 1);
+   ++iRowIndex;
 
    // Average Rating
    //
    DecentLabel* labelAverageRatingTitle = new DecentLabel(this, DecentLabel::RowLabel);
    RatingWidget* averageRatingInfo = new RatingWidget(this);
-   labelAverageRatingTitle->setFixedSize(250, 50);
-   averageRatingInfo->setFixedSize(250, 50);
    averageRatingInfo->setRating(a_cnt_details.AVG_rating);
    labelAverageRatingTitle->setText(tr("Average Rating"));
-   main_layout->addWidget(labelAverageRatingTitle, 3, 0);
-   main_layout->addWidget(averageRatingInfo, 3, 1);
+   main_layout->addWidget(labelAverageRatingTitle, iRowIndex, 0);
+   main_layout->addWidget(averageRatingInfo, iRowIndex, 1);
+   ++iRowIndex;
 
    // Amount
    //
    DecentLabel* labelAmountTitle = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
-   DecentLabel* labelAmountInfo  = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
-   labelAmountTitle->setFixedSize(250, 50);
-   labelAmountInfo->setFixedSize(250, 50);
+   DecentLabel* labelAmountInfo  = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::HighlightedRight);
    QString str_price = a_cnt_details.price.getString().c_str();
    labelAmountTitle->setText(tr("Amount"));
    labelAmountInfo->setText(str_price);
-   main_layout->addWidget(labelAmountTitle, 4, 0);
-   main_layout->addWidget(labelAmountInfo, 4, 1);
+   main_layout->addWidget(labelAmountTitle, iRowIndex, 0);
+   main_layout->addWidget(labelAmountInfo, iRowIndex, 1);
+   ++iRowIndex;
 
    // Size
    //
    DecentLabel* labelSizeTitle = new DecentLabel(this, DecentLabel::RowLabel);
-   DecentLabel* labelSizeInfo = new DecentLabel(this, DecentLabel::RowLabel);
-   labelSizeTitle->setFixedSize(250, 50);
-   labelSizeInfo->setFixedSize(250, 50);
+   DecentLabel* labelSizeInfo = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Right);
    labelSizeTitle->setText(tr("Size"));
    labelSizeInfo->setText(QString::number(a_cnt_details.size) + " MB");
-   main_layout->addWidget(labelSizeTitle, 5, 0);
-   main_layout->addWidget(labelSizeInfo, 5, 1);
+   main_layout->addWidget(labelSizeTitle, iRowIndex, 0);
+   main_layout->addWidget(labelSizeInfo, iRowIndex, 1);
+   ++iRowIndex;
    
    // Times Bought
    //
    DecentLabel* labelTimesBoughtTitle = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
-   DecentLabel* labelTimesBoughtInfo = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
-   labelTimesBoughtTitle->setFixedSize(250, 50);
-   labelTimesBoughtInfo->setFixedSize(250, 50);
+   DecentLabel* labelTimesBoughtInfo = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::HighlightedRight);
    labelTimesBoughtTitle->setText(tr("Times Bought"));
    labelTimesBoughtInfo->setText(QString::number(a_cnt_details.times_bought));
-   main_layout->addWidget(labelTimesBoughtTitle, 6, 0);
-   main_layout->addWidget(labelTimesBoughtInfo, 6, 1);
+   main_layout->addWidget(labelTimesBoughtTitle, iRowIndex, 0);
+   main_layout->addWidget(labelTimesBoughtInfo, iRowIndex, 1);
+   ++iRowIndex;
    
    DecentTextEdit* description = new DecentTextEdit(this, DecentTextEdit::Info);
    description->setText(tr("Description") + "\n\n");
@@ -426,7 +418,7 @@ BuyDialog::BuyDialog(QWidget* parent, const SDigitalContent& a_cnt_details)
    this->setWindowTitle(QString::fromStdString(title));
    description->setText(description->toPlainText() + QString::fromStdString(desc) + "\n");
    
-   main_layout->addWidget(description, 7, 0, -1, 1);
+   //main_layout->addWidget(description, iRowIndex, 0, -1, 1);
    
    setFixedSize(500, 500);
    setLayout(main_layout);
