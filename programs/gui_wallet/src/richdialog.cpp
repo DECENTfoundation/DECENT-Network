@@ -431,6 +431,8 @@ UserInfoDialog::UserInfoDialog(QWidget* parent,
    
    main_layout->addWidget(getItButton, iRowIndex, 0);
    main_layout->addWidget(cancelButton, iRowIndex, 1);
+   main_layout->itemAtPosition(iRowIndex, 0)->setAlignment(Qt::AlignCenter);
+   main_layout->itemAtPosition(iRowIndex, 1)->setAlignment(Qt::AlignCenter);
    
    setFixedSize(500, 500);
    setLayout(main_layout);
