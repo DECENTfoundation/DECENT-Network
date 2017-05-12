@@ -2,14 +2,17 @@
 
 #include "gui_wallet_global.hpp"
 #include "overview_tab.hpp"
-#include "gui_wallet_mainwindow.hpp"
-#include "gui_wallet_centralwidget.hpp"
+#include "decent_line_edit.hpp"
+#include "decent_button.hpp"
 
 #ifndef _MSC_VER
 #include <QPixmap>
 #include <QRect>
 #include <QSignalMapper>
 #include <QLabel>
+#include <QWidget>
+#include <QVBoxLayout>
+#include <QHBoxLayout>
 #include <graphene/chain/config.hpp>
 #include "json.hpp"
 #endif
@@ -52,7 +55,7 @@ public:
       }
 
       QLabel* lblTitle = new QLabel((title));
-      lblTitle->setStyleSheet("font-weight: bold");
+//      lblTitle->setStyleSheet("font-weight: bold");
 
       QLabel* lblInfo = new QLabel(QString::fromStdString(info));
 
@@ -63,8 +66,6 @@ public:
 
       _subWidgets.back()->setLayout(_subLayouts.back());
       m_main_layout.addWidget(_subWidgets.back());
-
-
    }
 private:
    QVBoxLayout     m_main_layout;
@@ -90,9 +91,8 @@ Overview_tab::Overview_tab(QWidget* pParent)
       {"", 10}
    });
 
-   QLineEdit* pfilterLineEditor = new QLineEdit(this);
+   DecentLineEdit* pfilterLineEditor = new DecentLineEdit(this, DecentLineEdit::TableSearch);
    pfilterLineEditor->setPlaceholderText(QString(tr("Search")));
-   pfilterLineEditor->setStyleSheet(d_lineEdit);
    pfilterLineEditor->setAttribute(Qt::WA_MacShowFocusRect, 0);
    pfilterLineEditor->setFixedHeight(54);
 
@@ -205,8 +205,8 @@ void Overview_tab::timeToUpdate(const std::string& result) {
       m_pTableWidget->item(iIndex,0)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
       m_pTableWidget->item(iIndex,1)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
       
-      m_pTableWidget->item(iIndex,0)->setForeground(QColor::fromRgb(88,88,88));
-      m_pTableWidget->item(iIndex,1)->setForeground(QColor::fromRgb(88,88,88));
+//      m_pTableWidget->item(iIndex,0)->setForeground(QColor::fromRgb(88,88,88));
+//      m_pTableWidget->item(iIndex,1)->setForeground(QColor::fromRgb(88,88,88));
    }
 
    if (contents.size() > m_i_page_size)
@@ -231,9 +231,7 @@ void Overview_tab::slot_Transactions()
 void Overview_tab::slot_Details()
 {
    try {
-      std::string result;
-      RunTask("get_account " + m_strSelectedAccount.toStdString(), result);
-      auto accountInfo = nlohmann::json::parse(result);
+      auto accountInfo = Globals::instance().runTaskParse("get_account " + m_strSelectedAccount.toStdString());
       
       std::string id = accountInfo["id"].get<std::string>();
       std::string registrar = accountInfo["registrar"].get<std::string>();

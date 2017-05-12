@@ -74,7 +74,7 @@ namespace graphene { namespace chain {
             assert_operation,
             content_submit_operation,
             request_to_buy_operation,
-            leave_rating_operation,
+            leave_rating_and_comment_operation,
             ready_to_publish_operation,
             proof_of_custody_operation,
             deliver_keys_operation,

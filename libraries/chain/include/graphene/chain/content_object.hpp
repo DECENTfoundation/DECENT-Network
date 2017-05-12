@@ -245,9 +245,45 @@ using namespace decent::encrypt;
       vector<value_type> m_arrValues;
    };
 
+   enum class EContentObjectApplication
+   {
+      DecentCore,
+      DecentGo
+   };
+   class ContentObjectApplication : public ContentObjectPropertyBase<EContentObjectApplication, ContentObjectApplication>
+   {
+   public:
+      using meta_default = bool;
+      using meta_unique = bool;
+
+      static string name()
+      {
+         return "application_id";
+      }
+
+      static void convert_from_string(string const& str_value, EContentObjectApplication& type)
+      {
+         type = EContentObjectApplication::DecentCore;
+         if (str_value.empty())
+            return;
+         size_t pos;
+         long long converted = std::stoll(str_value, &pos);
+         if (pos != str_value.length() ||
+             static_cast<long long>(EContentObjectApplication::DecentCore) > converted ||
+             static_cast<long long>(EContentObjectApplication::DecentGo) < converted)
+            throw std::runtime_error("ContentObjectApplication is in exceptional situation");
+         else
+            type = static_cast<EContentObjectApplication>(converted);
+      }
+      static void convert_to_string(EContentObjectApplication const& type, string& str_value)
+      {
+         str_value = std::to_string(static_cast<long long>(type));
+      }
+   };
+
    enum class EContentObjectType
    {
-      GUI,
+      None,
       Book
    };
 
@@ -259,33 +295,29 @@ using namespace decent::encrypt;
 
       static string name()
       {
-         return "type";
+         return "content_id";
       }
 
       static void convert_from_string(string const& str_value, EContentObjectType& type)
       {
-         if (str_value == "GUI")
-            type = EContentObjectType::GUI;
-         else if (str_value == "Book")
-            type = EContentObjectType::Book;
-         else if (str_value == "")
-            type = EContentObjectType::GUI;
+         type = EContentObjectType::None;
+         if (str_value.empty())
+            return;
+         size_t pos;
+         long long converted = std::stoll(str_value, &pos);
+         if (pos != str_value.length() ||
+             static_cast<long long>(EContentObjectType::None) > converted ||
+             static_cast<long long>(EContentObjectType::Book) < converted)
+            throw std::runtime_error("ContentObjectType is in exceptional situation");
          else
-            throw std::runtime_error("EContentObjectType is in exceptional situation");
+            type = static_cast<EContentObjectType>(converted);
       }
       static void convert_to_string(EContentObjectType const& type, string& str_value)
       {
-         switch (type)
-         {
-         case EContentObjectType::GUI:
-            str_value = "GUI";
-            break;
-         case EContentObjectType::Book:
-            str_value = "Book";
-            break;
-         }
+         str_value = std::to_string(static_cast<long long>(type));
       }
    };
+
    class ContentObjectTitle : public ContentObjectPropertyBase<string, ContentObjectTitle>
    {
    public:
@@ -390,7 +422,7 @@ using namespace decent::encrypt;
 
       fc::ripemd160 _hash;
       uint64_t AVG_rating;
-      uint32_t total_rating;
+      uint32_t num_of_ratings;
       uint32_t times_bought;
       asset publishing_fee_escrow;
       decent::encrypt::CustodyData cd;
@@ -546,7 +578,7 @@ FC_REFLECT_DERIVED(graphene::chain::content_object,
                    (graphene::db::object),
                    (author)(expiration)(created)(price)(size)(synopsis)
                    (URI)(quorum)(key_parts)(_hash)(last_proof)
-                   (AVG_rating)(total_rating)(times_bought)(publishing_fee_escrow)(cd) )
+                   (AVG_rating)(num_of_ratings)(times_bought)(publishing_fee_escrow)(cd) )
 
 FC_REFLECT( graphene::chain::content_summary, (id)(author)(price)(synopsis)(status)(URI)(AVG_rating)(size)(expiration)(created)(times_bought) )
 FC_REFLECT( graphene::chain::PriceRegions, (map_price) )

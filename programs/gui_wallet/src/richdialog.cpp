@@ -26,9 +26,9 @@ using namespace gui_wallet;
  
 TransferDialog::TransferDialog(QWidget* parent, QString const& userName/* = QString()*/) : m_toUserName(userName)
 {
-   QVBoxLayout* mainLayout       = new QVBoxLayout(this);
-   QVBoxLayout* lineEditsLayout  = new QVBoxLayout(this);
-   QHBoxLayout* buttonsLayout    = new QHBoxLayout(this);
+   QVBoxLayout* mainLayout       = new QVBoxLayout();
+   QVBoxLayout* lineEditsLayout  = new QVBoxLayout();
+   QHBoxLayout* buttonsLayout    = new QHBoxLayout();
    
    DecentButton* ok = new DecentButton(this);
    ok->setText(tr("Send"));
@@ -54,7 +54,7 @@ TransferDialog::TransferDialog(QWidget* parent, QString const& userName/* = QStr
    amount->setAttribute(Qt::WA_MacShowFocusRect, 0);
    amount->setFixedSize(300, 44);
    QDoubleValidator* dblValidator = new QDoubleValidator(0.0001, 100000, 4, this);
-   dblValidator->setLocale(Globals::instance().m_locale);
+   dblValidator->setLocale(Globals::instance().locale());
    amount->setValidator(dblValidator);
    QObject::connect(amount, &QLineEdit::textChanged, this, &TransferDialog::amountChanged);
    
@@ -138,7 +138,7 @@ void TransferDialog::Transfer()
 
 ImportDialog::ImportDialog(QWidget* parent)
 {
-   QObject::connect(this, &ImportDialog::isOk, &Globals::instance(), &Globals::slot_displayWalletContent);
+   QObject::connect(this, &ImportDialog::signal_keyImported, &Globals::instance(), &Globals::slot_displayWalletContent);
    
    QVBoxLayout* mainLayout       = new QVBoxLayout();
    QVBoxLayout* lineEditsLayout  = new QVBoxLayout();
@@ -161,13 +161,11 @@ ImportDialog::ImportDialog(QWidget* parent)
    name->setAttribute(Qt::WA_MacShowFocusRect, 0);
    name->setFixedSize(300, 44);
    QObject::connect(name, &QLineEdit::textChanged, this, &ImportDialog::nameChanged);
-   //connect(name, SIGNAL(textChanged(const QString &)), this, SLOT(nameChanged(const QString &)));
    
    key->setPlaceholderText(tr("Key"));
    key->setAttribute(Qt::WA_MacShowFocusRect, 0);
    key->setFixedSize(300, 44);
    QObject::connect(key, &QLineEdit::textChanged, this, &ImportDialog::keyChanged);
-   //connect(key, SIGNAL(textChanged(const QString &)), this, SLOT(keyChanged(const QString &)));
    
 
    
@@ -212,7 +210,7 @@ void ImportDialog::Import()
       message = ex.what();
    }
    if (message.empty()) {
-      emit isOk();
+      emit signal_keyImported();
       close();
    }
    else
@@ -220,6 +218,31 @@ void ImportDialog::Import()
       ShowMessageBox(tr("Error"), tr("Cannot import key."), message.c_str());
    }
 }
+
+/*********************************************************/
+
+
+                  //ZebraDialog
+/*********************************************************/
+
+
+ZebraDialog::ZebraDialog(QWidget* parent,
+                         QString registrar,
+                         QString referrer,
+                         QString lifetime_referrer,
+                         QString network_fee_percentage,
+                         QString lifetime_referrer_fee_percentage,
+                         QString referrer_rewards_percentage
+                         )
+{
+//   QVBoxLayout* main_layout = new QVBoxLayout();
+//   main_layout->setSpacing(0);
+//   main_layout->setContentsMargins(0, 0, 0, 0);
+//   
+//   setStyleSheet("background-color:white;");
+//   setLayout(main_layout);
+}
+
 
 /*********************************************************/
 

@@ -99,9 +99,6 @@ namespace graphene { namespace wallet {
 namespace detail {
 
    
-   
-   
-   
 struct submit_transfer_listener : public EventListenerInterface {
    
    submit_transfer_listener(wallet_api_impl& wallet, shared_ptr<PackageInfo> info, const content_submit_operation& op, const std::string& protocol) : _wallet(wallet), _info(info), _op(op), _protocol(protocol) {
@@ -181,7 +178,7 @@ public:
    std::string operator()(const asset_create_operation& op)const;
    std::string operator()(const content_submit_operation& op)const;
    std::string operator()(const request_to_buy_operation& op)const;
-   std::string operator()(const leave_rating_operation& op)const;
+   std::string operator()(const leave_rating_and_comment_operation& op)const;
    std::string operator()(const ready_to_publish_operation& op)const;
 };
 
@@ -2305,19 +2302,23 @@ public:
       tx.validate();
 
       return sign_transaction( tx, broadcast );
-   } FC_CAPTURE_AND_RETHROW( (consumer)(URI)(price_asset_symbol)(price_amount)(broadcast) ) }
+      } FC_CAPTURE_AND_RETHROW( (consumer)(URI)(price_asset_symbol)(price_amount)(broadcast) )
+   }
 
-   signed_transaction leave_rating(string consumer,
-                                   string URI,
-                                   uint64_t rating,
-                                   bool broadcast/* = false */)
-   { try {
+   signed_transaction leave_rating_and_comment(string consumer,
+                                               string URI,
+                                               uint64_t rating,
+                                               string comment,
+                                               bool broadcast/* = false */)
+   {
+      try {
       account_object consumer_account = get_account( consumer );
 
-      leave_rating_operation leave_rating_op;
+      leave_rating_and_comment_operation leave_rating_op;
       leave_rating_op.consumer = consumer_account.id;
       leave_rating_op.URI = URI;
       leave_rating_op.rating = rating;
+      leave_rating_op.comment = comment;
 
       signed_transaction tx;
       tx.operations.push_back( leave_rating_op );
@@ -2325,7 +2326,8 @@ public:
       tx.validate();
 
       return sign_transaction( tx, broadcast );
-   } FC_CAPTURE_AND_RETHROW( (consumer)(URI)(rating)(broadcast) ) }
+      } FC_CAPTURE_AND_RETHROW( (consumer)(URI)(rating)(comment)(broadcast) )
+   }
 
    signed_transaction ready_to_publish(string seeder,
                                        uint64_t space,
@@ -2849,6 +2851,18 @@ public:
       return memo;
    }
 
+std::string operation_printer::operator()(const leave_rating_and_comment_operation& op) const
+{
+   out << wallet.get_account(op.consumer).name;
+   if( op.comment.empty() )
+      out << " rated " << op.URI << " -- Rating: " << op.rating;
+   else if( op.rating == 0 )
+      out << " commented " << op.URI << " -- Comment: " << op.comment;
+   else
+      out << " rated and commented " << op.URI << " -- Rating: " << op.rating << " -- Comment: " << op.comment;
+   return fee(op.fee);
+}
+
 
    std::string operation_printer::operator()(const account_create_operation& op) const
    {
@@ -2889,11 +2903,11 @@ public:
       return fee(op.fee);
    }
 
-   std::string operation_printer::operator()(const leave_rating_operation& op) const
-   {
-      out << wallet.get_account(op.consumer).name << " rated " << op.URI << " -- Rating: " << op.rating;
-      return fee(op.fee);
-   }
+//   std::string operation_printer::operator()(const leave_rating_operation& op) const
+//   {
+//      out << wallet.get_account(op.consumer).name << " rated " << op.URI << " -- Rating: " << op.rating;
+//      return fee(op.fee);
+//   }
 
    std::string operation_printer::operator()(const ready_to_publish_operation& op) const
    {
@@ -3813,24 +3827,50 @@ public:
    }
 
 
-   optional<content_download_status> wallet_api::get_download_status(string consumer, string URI) const
-   {
-      return my->get_download_status(consumer, URI);
-   }
+// HEAD
+optional<content_download_status> wallet_api::get_download_status(string consumer,
+                                                                  string URI) const
+{
+   return my->get_download_status(consumer, URI);
+}
 
-   signed_transaction
-   wallet_api::request_to_buy(string consumer, string URI, string price_asset_name, string price_amount, bool broadcast)
-   {
-      return my->request_to_buy(consumer, URI, price_asset_name, price_amount, broadcast);
-   }
+signed_transaction wallet_api::request_to_buy(string consumer,
+                                              string URI,
+                                              string price_asset_name,
+                                              string price_amount,
+                                              bool broadcast)
+{
+   return my->request_to_buy(consumer, URI, price_asset_name, price_amount, broadcast);
+}
 
-   signed_transaction wallet_api::leave_rating(string consumer,
-                                               string URI,
-                                               uint64_t rating,
-                                               bool broadcast)
-   {
-      return my->leave_rating(consumer, URI, rating, broadcast);
-   }
+signed_transaction wallet_api::leave_rating_and_comment(string consumer,
+                                                        string URI,
+                                                        uint64_t rating,
+                                                        string comment,
+                                                        bool broadcast)
+{
+   return my->leave_rating_and_comment(consumer, URI, rating, comment, broadcast);
+}
+//=======
+//   optional<content_download_status> wallet_api::get_download_status(string consumer, string URI) const
+//   {
+//      return my->get_download_status(consumer, URI);
+//   }
+
+//   signed_transaction
+//   wallet_api::request_to_buy(string consumer, string URI, string price_asset_name, string price_amount, bool broadcast)
+//   {
+//      return my->request_to_buy(consumer, URI, price_asset_name, price_amount, broadcast);
+//   }
+
+//   signed_transaction wallet_api::leave_rating(string consumer,
+//                                               string URI,
+//                                               uint64_t rating,
+//                                               bool broadcast)
+//   {
+//      return my->leave_rating(consumer, URI, rating, broadcast);
+//   }
+//>>>>>>> 4c1f30cb8000875a949c8819f1c860061a981e21
 
    signed_transaction wallet_api::ready_to_publish(string seeder,
                                                    uint64_t space,
@@ -3960,46 +4000,73 @@ public:
       return result;
    }
 
-   optional<buying_object> wallet_api::get_buying_by_consumer_URI( const string& account_id_or_name, const string & URI )const
-   {
-      account_id_type account = get_account( account_id_or_name ).id;
-      return my->_remote_db->get_buying_by_consumer_URI( account, URI );
-   }
+// HEAD
+optional<string> wallet_api::get_comment( const string& consumer, const string & URI )const
+{
+   account_id_type account = get_account( consumer ).id;
+   return my->_remote_db->get_comment_by_consumer_URI( account, URI );
+}
 
-   optional<uint64_t> wallet_api::get_rating( const string& consumer, const string & URI )const
-   {
-      account_id_type account = get_account( consumer ).id;
-      return my->_remote_db->get_rating_by_consumer_URI( account, URI );
-   }
+std::pair<optional<uint64_t>, string> wallet_api::get_rating_and_comment( const string& consumer, const string& URI )const
+{
+   account_id_type account = get_account( consumer ).id;
+   optional<uint64_t> rating = my->_remote_db->get_rating_by_consumer_URI( account, URI );
+   optional<string> op_comment = my->_remote_db->get_comment_by_consumer_URI( account, URI );
+   string comment;
+   if (op_comment.valid())
+      comment = *op_comment;
+   
+   return std::pair<optional<uint64_t>, string>(rating, comment);
+}
 
-   optional<content_object> wallet_api::get_content( const string& URI )const
-   {
-      return my->_remote_db->get_content( URI );
-   }
+optional<content_object> wallet_api::get_content( const string& URI )const
+{
+   return my->_remote_db->get_content( URI );
+}
+
+optional<buying_object> wallet_api::get_buying_by_consumer_URI( const string& account_id_or_name, const string & URI )const
+{
+   account_id_type account = get_account( account_id_or_name ).id;
+   return my->_remote_db->get_buying_by_consumer_URI( account, URI );
+}
+   
+optional<uint64_t> wallet_api::get_rating( const string& consumer, const string & URI )const
+{
+   account_id_type account = get_account( consumer ).id;
+   return my->_remote_db->get_rating_by_consumer_URI( account, URI );
+}
+
+vector<content_summary> wallet_api::search_content(const string& term,
+                                                   const string& order,
+                                                   const string& user,
+                                                   const string& region_code,
+                                                   const string& id,
+                                                   uint32_t count)const
+{
+   return my->_remote_db->search_content(term, order, user, region_code, object_id_type(id), count);
+}
+
+vector<content_object> wallet_api::list_content_by_author( const string& account_id_or_name )const
+{
+   account_id_type account = get_account( account_id_or_name ).id;
+   return my->_remote_db->list_content_by_author( account );
+}
 
 
-   vector<content_summary> wallet_api::search_content(const string& term,
-                                                      const string& order,
-                                                      const string& user,
-                                                      const string& region_code,
-                                                      const string& id,
-                                                      uint32_t count)const
-   {
-      return my->_remote_db->search_content(term, order, user, region_code, object_id_type(id), count);
-   }
+vector<content_summary> wallet_api::list_content( const string& URI, uint32_t count)const
+{
+    return my->_remote_db->list_content( URI, count );
+}
 
-   vector<content_object> wallet_api::list_content_by_author( const string& account_id_or_name )const
-   {
-      account_id_type account = get_account( account_id_or_name ).id;
-      return my->_remote_db->list_content_by_author( account );
-   }
-
-
-   vector<content_summary> wallet_api::list_content( const string& URI, uint32_t count)const
-   {
-       return my->_remote_db->list_content( URI, count );
-   }
-
+map<string, string> wallet_api::get_content_comments( const string& URI )const
+{
+   return my->_remote_db->get_content_comments( URI );
+}
+       
+       vector<string> wallet_api::list_imported_ipfs_IDs( const string& seeder)const
+       {
+           return my->list_imported_ipfs_IDs( seeder );
+       }
 
    vector<content_summary> wallet_api::search_user_content(const string& user,
                                                            const string& term,
@@ -4058,11 +4125,6 @@ public:
    vector<uint64_t> wallet_api::get_content_ratings( const string& URI )const
    {
       return my->_remote_db->get_content_ratings( URI );
-   }
-
-   vector<string> wallet_api::list_imported_ipfs_IDs( const string& seeder)const
-   {
-      return my->list_imported_ipfs_IDs( seeder );
    }
 
    map<string, vector<string>> wallet_api::list_seeders_ipfs_IDs( const string& URI)const

@@ -14,7 +14,7 @@
 #include <QObject>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
-
+#include <QLocale>
 #endif
 
 using string = std::string;
@@ -41,7 +41,22 @@ uint64_t json_to_int64(nlohmann::json const& o)
    if (o.is_number())
       return o.get<uint64_t>();
    else
-      return std::stoll(o.get<std::string>());
+      return std::stoll(o.get<string>());
+}
+
+bool is_empty(nlohmann::json const& json, int& rating, string& comment)
+{
+   comment = json[1].get<string>();
+
+   if ( comment.empty() )
+   {
+      return true;
+   }
+
+   if (false == json[0].is_null())
+      rating = json[0].get<int>();
+
+   return false;
 }
 
 struct CalendarDuration
@@ -473,7 +488,8 @@ Globals::Globals()
 : m_connected(false)
 , m_p_wallet_operator(new WalletOperator())
 , m_p_wallet_operator_thread(new QThread(this))
-, m_p_timer(new QTimer())
+, m_p_timer(new QTimer(this))
+, m_p_locale(new QLocale())
 , m_str_currentUser()
 , m_tp_started(std::chrono::steady_clock::now())
 {
@@ -491,6 +507,8 @@ Globals::Globals()
    m_p_timer->start(1000);
    QObject::connect(m_p_timer, &QTimer::timeout,
                     this, &Globals::slot_timer);
+
+   *m_p_locale = ((QApplication*)QApplication::instance())->inputMethod()->locale();
 }
 
 Globals::~Globals()
@@ -535,6 +553,12 @@ void Globals::clear()
       m_p_wallet_operator->m_wallet_api.SaveWalletFile();
       delete m_p_wallet_operator;
       m_p_wallet_operator = nullptr;
+   }
+
+   if (m_p_locale)
+   {
+      delete m_p_locale;
+      m_p_locale = nullptr;
    }
 }
 
@@ -605,6 +629,11 @@ std::vector<Publisher> Globals::getPublishers()
    return result;
 }
 
+QLocale& Globals::locale()
+{
+   return *m_p_locale;
+}
+
 void Globals::setCurrentUser(std::string const& user)
 {
    m_str_currentUser = user;
@@ -639,7 +668,7 @@ void Globals::showTransferDialog(std::string const& user)
    
 void Globals::slot_displayWalletContent()
 {
-   emit signal_importKeyDid(false);
+   emit signal_keyImported(false);
 }
 
 string Globals::getAccountName(string const& accountId)
