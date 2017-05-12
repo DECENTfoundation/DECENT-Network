@@ -483,35 +483,10 @@ void ContentDetailsBase::commentWidgetSlot()
 /* /////////////Comment Widget////////////////*/
 CommentWidget::CommentWidget(QWidget* parent, const SDigitalContent* content_info)
 :  QWidget(parent),
-   m_comment_count(1)
+   m_comment_count(1),
+   m_content_uri(content_info->URI)
 {
-   m_content_info = content_info->URI;
    update_run_task();
-   
-   QVBoxLayout* main_layout = new QVBoxLayout();
-   QHBoxLayout* buttons = new QHBoxLayout();
-   
-   DecentButton* next = new DecentButton(this);
-   DecentButton* previous = new DecentButton(this);
-   DecentButton* reset = new DecentButton(this);
-   
-   next->setText("Next");
-   previous->setText("Previous");
-   reset->setText("First");
-   
-   buttons->addWidget(next);
-   buttons->addWidget(previous);
-   buttons->addWidget(reset);
-   buttons->setAlignment(Qt::AlignBottom);
-   
-   connect(next, SIGNAL(clicked()), this, SLOT(nextButtonSlot()));
-   connect(previous, SIGNAL(clicked()), this, SLOT(previousButtonSlot()));
-   connect(reset, SIGNAL(clicked()), this, SLOT(resetButtonSlot()));
-   
-   main_layout->addLayout(buttons);
-   setLayout(main_layout);
-   
-   setVisible(false);
 }
 
 void CommentWidget::update_run_task()
@@ -521,7 +496,7 @@ void CommentWidget::update_run_task()
    {
       comment = Globals::instance().runTaskParse("search_feedback "
                                                  "\"" /*    empty user    */"\" "
-                                                 "\"" + m_content_info + "\" "
+                                                 "\"" + m_content_uri + "\" "
                                                  "\"" + next_iterator()   + "\" " +
                                                  std::to_string(m_comment_count + 1) );
    }catch(...){}
@@ -532,6 +507,41 @@ void CommentWidget::update_run_task()
       set_next_comment(std::string());
    }
 
+   QVBoxLayout* main_lay    = new QVBoxLayout();
+   QHBoxLayout* comment_lay = new QHBoxLayout();
+   QHBoxLayout* buttons_lay = new QHBoxLayout();
+   
+   DecentButton* next     = new DecentButton(this);
+   DecentButton* previous = new DecentButton(this);
+   DecentButton* reset    = new DecentButton(this);
+   
+   next->setText(tr("Next"));
+   previous->setText(tr("Previous"));
+   reset->setText(tr("First"));
+   
+   auto result = comment[0];
+   
+   QLabel* r_user = new QLabel;
+   QLabel* r_comment = new QLabel;
+   
+   r_user->setText( QString::fromStdString(result["author"].get<std::string>()) );
+   r_comment->setText( QString::fromStdString(result["comment"].get<std::string>()) );
+   
+   comment_lay->addWidget(r_user);
+   comment_lay->addWidget(r_comment);
+   
+   buttons_lay->addWidget(next);
+   buttons_lay->addWidget(previous);
+   buttons_lay->addWidget(reset);
+   buttons_lay->setAlignment(Qt::AlignBottom);
+   
+   connect(next, SIGNAL(clicked()), this, SLOT(nextButtonSlot()));
+   connect(previous, SIGNAL(clicked()), this, SLOT(previousButtonSlot()));
+   connect(reset, SIGNAL(clicked()), this, SLOT(resetButtonSlot()));
+   
+   main_lay->addLayout(comment_lay);
+   main_lay->addLayout(buttons_lay);
+   setLayout(main_lay);
 }
 
 bool CommentWidget::next()
@@ -581,16 +591,36 @@ void CommentWidget::set_next_comment(std::string const& last)
 
 std::string CommentWidget::next_iterator()
 {
-   if(!m_iterators.empty())
+   if( !m_iterators.empty() )
    {
       return m_iterators.back();
    }
    
    return std::string();
 }
-void CommentWidget::nextButtonSlot(){}
-void CommentWidget::previousButtonSlot(){}
-void CommentWidget::resetButtonSlot(){}
+
+void CommentWidget::controller()
+{
+   
+}
+
+void CommentWidget::nextButtonSlot()
+{
+   next();
+   controller();
+}
+
+void CommentWidget::previousButtonSlot()
+{
+   previous();
+   controller();
+}
+
+void CommentWidget::resetButtonSlot()
+{
+   reset();
+   controller();
+}
 
 CommentWidget::~CommentWidget()
 {

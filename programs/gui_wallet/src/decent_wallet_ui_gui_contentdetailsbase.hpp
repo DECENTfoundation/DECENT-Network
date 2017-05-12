@@ -29,7 +29,6 @@ class DecentTextEdit;
 class CommentWidget : public QWidget
 {
    Q_OBJECT
-   friend class ContentDetailsBase;
 public:
    CommentWidget(QWidget*, const SDigitalContent*);
    ~CommentWidget();
@@ -42,6 +41,7 @@ public:
    bool        is_first() const;
    void        update_run_task();
    void        set_next_comment(std::string const&);
+   void        controller();
    std::string next_iterator();
    
 public slots:
@@ -54,7 +54,7 @@ private:
    std::string                m_next_itr;
    std::vector<std::string>   m_iterators;
    size_t                     m_comment_count;
-   std::string                m_content_info;
+   std::string                m_content_uri;
 };
 /////// *****/////
    
