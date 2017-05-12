@@ -266,131 +266,102 @@ UserInfoDialog::UserInfoDialog(QWidget* parent,
 //
 // BuyDialog
 //
-BuyDialog::BuyDialog(QWidget* parent, const SDigitalContent& a_cnt_details, bool bSilent)
+BuyDialog::BuyDialog(QWidget* parent, const SDigitalContent& a_cnt_details)
 {
-   QVBoxLayout* main_layout = new QVBoxLayout();
+   QGridLayout* main_layout = new QGridLayout();
    main_layout->setSpacing(0);
    main_layout->setContentsMargins(0, 0, 0, 0);
    
-   setStyleSheet("background-color:white;");
-   
    // Author
    //
-   QWidget*     WidgetRegistrar = new QWidget(this);
-   QHBoxLayout* LayoutRegistrar = new QHBoxLayout();
-   LayoutRegistrar->setSpacing(0);
-   LayoutRegistrar->setContentsMargins(45,3,0,3);
-   WidgetRegistrar->setStyleSheet("background-color:rgb(244,244,244);");
-   QLabel* lblTitle = new QLabel("Author", this);
-   QLabel* lblInfo = new QLabel(QString::fromStdString(a_cnt_details.author), this);
-   LayoutRegistrar->addWidget(lblTitle);
-   LayoutRegistrar->addWidget(lblInfo);
-   WidgetRegistrar->setLayout(LayoutRegistrar);
-   main_layout->addWidget(WidgetRegistrar);
+   
+   DecentLabel* labelAuthorTitle = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
+   DecentLabel* labelAuthorInfo = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
+   labelAuthorTitle->setText(tr("Author"));
+   labelAuthorInfo->setText(QString::fromStdString(a_cnt_details.author));
+   main_layout->addWidget(labelAuthorTitle, 0, 0);
+   main_layout->addWidget(labelAuthorInfo, 0, 1);
+   //main_layout->itemAtPosition(0,1)->setAlignment(Qt::AlignRight);
+   //main_layout->itemAtPosition(0,0)->setAlignment(Qt::AlignLeft);
 
    // Expiration
    //
-   QWidget*     WidgetReferrer = new QWidget(this);
-   QHBoxLayout* LayoutReferrer = new QHBoxLayout();
-   LayoutReferrer->setSpacing(0);
-   LayoutReferrer->setContentsMargins(45,3,0,3);
-   lblTitle = new QLabel("Expiration", this);
+   DecentLabel* labelExpirationTitle = new DecentLabel(this, DecentLabel::RowLabel);
+   DecentLabel* labelExpirationInfo = new DecentLabel(this, DecentLabel::RowLabel);
    QDateTime time = QDateTime::fromString(QString::fromStdString(a_cnt_details.expiration), "yyyy-MM-ddTHH:mm:ss");
    std::string e_str = CalculateRemainingTime(QDateTime::currentDateTime(), time);
-   lblInfo = new QLabel(QString::fromStdString(e_str), this);
-   LayoutReferrer->addWidget(lblTitle);
-   LayoutReferrer->addWidget(lblInfo);
-   WidgetReferrer->setLayout(LayoutReferrer);
-   main_layout->addWidget(WidgetReferrer);
+   labelExpirationTitle->setText(tr("Expiration"));
+   labelExpirationInfo->setText(QString::fromStdString(e_str));
+   main_layout->addWidget(labelExpirationTitle, 1, 0);
+   main_layout->addWidget(labelExpirationInfo, 1, 1);
 
    // Uploaded
    //
-   QWidget*     WidgetLifetimeReferrer = new QWidget(this);
-   QHBoxLayout* LayoutLifetimeReferrer = new QHBoxLayout();
-   LayoutLifetimeReferrer->setSpacing(0);
-   LayoutLifetimeReferrer->setContentsMargins(45,3,0,3);
-   WidgetLifetimeReferrer->setStyleSheet("background-color:rgb(244,244,244);");
-   lblTitle = new QLabel("Uploaded", this);
-   lblInfo = new QLabel(QString::fromStdString(a_cnt_details.created), this);
-   LayoutLifetimeReferrer->addWidget(lblTitle);
-   LayoutLifetimeReferrer->addWidget(lblInfo);
-   WidgetLifetimeReferrer->setLayout(LayoutLifetimeReferrer);
-   main_layout->addWidget(WidgetLifetimeReferrer);
+   DecentLabel* labelUploadedTitle = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
+   DecentLabel* labelUploadedInfo = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
+   labelUploadedTitle->setText(tr("Uploaded"));
+   labelUploadedInfo->setText(QString::fromStdString(a_cnt_details.created));
+   main_layout->addWidget(labelUploadedTitle, 2, 0);
+   main_layout->addWidget(labelUploadedInfo, 2, 1);
 
    // Amount
    //
-   QWidget*     WidgetNetworkFeePercentage = new QWidget(this);
-   QHBoxLayout* LayoutNetworkFeePercentage = new QHBoxLayout();
-   LayoutNetworkFeePercentage->setSpacing(0);
-   LayoutNetworkFeePercentage->setContentsMargins(45,3,0,3);
-   lblTitle = new QLabel("Amount", this);
+   DecentLabel* labelAmountTitle = new DecentLabel(this, DecentLabel::RowLabel);
+   DecentLabel* labelAmountInfo = new DecentLabel(this, DecentLabel::RowLabel);
    QString str_price = a_cnt_details.price.getString().c_str();
-   lblInfo = new QLabel(str_price, this);
-   LayoutNetworkFeePercentage->addWidget(lblTitle);
-   LayoutNetworkFeePercentage->addWidget(lblInfo);
-   WidgetNetworkFeePercentage->setLayout(LayoutNetworkFeePercentage);
-   main_layout->addWidget(WidgetNetworkFeePercentage);
+   labelAmountTitle->setText(tr("Amount"));
+   labelAmountInfo->setText(str_price);
+   main_layout->addWidget(labelAmountTitle, 3, 0);
+   main_layout->addWidget(labelAmountInfo, 3, 1);
 
    // Average Rating
    //
-   QWidget*     WidgetLifetimeReferrerFeePercentage = new QWidget(this);
-   QHBoxLayout* LifetimeReferrerFeePercentage = new QHBoxLayout();
-   LifetimeReferrerFeePercentage->setSpacing(0);
-   LifetimeReferrerFeePercentage->setContentsMargins(45,3,0,3);
-   WidgetLifetimeReferrerFeePercentage->setStyleSheet("background-color:rgb(244,244,244);");
-   lblTitle = new QLabel("Average Rating", this);
+   DecentLabel* labelAverageRatingTitle = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
+   //DecentLabel* labelAverageRating = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
+//   
+//   QPixmap green_star(green_star_image);
+//   QPixmap white_star(white_star_image);
+//   
+//   white_star = white_star.scaled(QSize(20,20));
+//   green_star = green_star.scaled(QSize(20,20));
    
-   QPixmap green_star(green_star_image);
-   QPixmap white_star(white_star_image);
+   labelAverageRatingTitle->setText(tr("Average Rating"));
+   std::vector<DecentLabel*> stars;
+   main_layout->addWidget(labelAverageRatingTitle, 4, 0);
+   //main_layout->addWidget(labelAverageRatingTitle, 4, 1);
+//   for(int i = 0; i < a_cnt_details.AVG_rating; ++i) {
+//      stars.push_back(new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted));
+//      stars.back()->setPixmap(green_star);
+//      starLeyout->addWidget(stars[i]);
+//   }
+//   
+//   for(int i = a_cnt_details.AVG_rating; i < 5; ++i) {
+//      stars.push_back(new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted));
+//      stars.back()->setPixmap(white_star);
+//      starLeyout->addWidget(stars[i]);
+//   }
    
-   white_star = white_star.scaled(QSize(20,20));
-   green_star = green_star.scaled(QSize(20,20));
-   
-   lblInfo = new QLabel(QString::number(a_cnt_details.AVG_rating), this);
-   QLabel m_stars[5];
-   for(int i = 0; i < a_cnt_details.AVG_rating; ++i) {
-      m_stars[i].setPixmap(green_star);
-   }
-   
-   for(int i = a_cnt_details.AVG_rating; i < 5; ++i) {
-      m_stars[i].setPixmap(white_star);
-   }
-
-   LifetimeReferrerFeePercentage->addWidget(lblTitle);
-   LifetimeReferrerFeePercentage->addWidget(lblInfo);
-   WidgetLifetimeReferrerFeePercentage->setLayout(LifetimeReferrerFeePercentage);
-   main_layout->addWidget(WidgetLifetimeReferrerFeePercentage);
-
    // Size
    //
-//   QWidget*     WidgetReferrerRewardsPercentage = new QWidget(this);
-//   QHBoxLayout* LayoutReferrerRewardsPercentage = new QHBoxLayout();
-//   LayoutReferrerRewardsPercentage->setSpacing(0);
-//   LayoutReferrerRewardsPercentage->setContentsMargins(45,3,0,3);
-//   lblTitle = new QLabel("Size", this);
-//   lblInfo = new QLabel(referrer_rewards_percentage, this);
-//   LayoutReferrerRewardsPercentage->addWidget(lblTitle);
-//   LayoutReferrerRewardsPercentage->addWidget(lblInfo);
-//   WidgetReferrerRewardsPercentage->setLayout(LayoutReferrerRewardsPercentage);
-//   main_layout->addWidget(WidgetReferrerRewardsPercentage);
-//                  /***********************/
-//   
-//   
-//                           //Size
-//                  /***********************/
-//   QWidget*     WidgetReferrerRewardsPercentage = new QWidget(this);
-//   QHBoxLayout* LayoutReferrerRewardsPercentage = new QHBoxLayout();
-//   LayoutReferrerRewardsPercentage->setSpacing(0);
-//   LayoutReferrerRewardsPercentage->setContentsMargins(45,3,0,3);
-//   WidgetLifetimeReferrerFeePercentage->setStyleSheet("background-color:rgb(244,244,244);");
-//   lblTitle = new QLabel("Times Bought", this);
-//   lblInfo = new QLabel(referrer_rewards_percentage, this);
-//   LayoutReferrerRewardsPercentage->addWidget(lblTitle);
-//   LayoutReferrerRewardsPercentage->addWidget(lblInfo);
-//   WidgetReferrerRewardsPercentage->setLayout(LayoutReferrerRewardsPercentage);
-//   main_layout->addWidget(WidgetReferrerRewardsPercentage);
-                  /***********************/
+   DecentLabel* labelSizeTitle = new DecentLabel(this, DecentLabel::RowLabel);
+   DecentLabel* labelSizeInfo = new DecentLabel(this, DecentLabel::RowLabel);
+   labelSizeTitle->setText(tr("Size"));
+   labelSizeInfo->setText(QString::number(a_cnt_details.size) + " MB");
+   main_layout->addWidget(labelSizeTitle, 5, 0);
+   main_layout->addWidget(labelSizeInfo, 5, 1);
+ 
    
+   // Times Bought
+   //
+   DecentLabel* labelTimesBoughtTitle = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
+   DecentLabel* labelTimesBoughtInfo = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
+   labelTimesBoughtTitle->setText(tr("Times Bought"));
+   labelTimesBoughtInfo->setText(QString::number(a_cnt_details.times_bought));
+   main_layout->addWidget(labelTimesBoughtTitle, 6, 0);
+   main_layout->addWidget(labelTimesBoughtInfo, 6, 1);
+
+   
+   setFixedSize(500, 500);
    setLayout(main_layout);
 
 }

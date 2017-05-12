@@ -71,7 +71,7 @@ class BuyDialog : public QDialog
 {
    Q_OBJECT
 public:
-   BuyDialog(QWidget* parent, const SDigitalContent& a_cnt_details, bool bSilent = false);
+   BuyDialog(QWidget* parent, const SDigitalContent& a_cnt_details);
 };
 
 }

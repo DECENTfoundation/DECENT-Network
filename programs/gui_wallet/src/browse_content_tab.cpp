@@ -5,6 +5,7 @@
 #include "decent_wallet_ui_gui_contentdetailsgeneral.hpp"
 #include "decent_line_edit.hpp"
 #include "decent_button.hpp"
+#include "richdialog.hpp"
 
 #ifndef _MSC_VER
 #include <QHBoxLayout>
@@ -145,12 +146,15 @@ void BrowseContentTab::slot_Details(int iIndex)
     }
 
    // content details dialog is ugly, needs to be rewritten
-   ContentDetailsGeneral* pDetailsDialog = new ContentDetailsGeneral(nullptr);
-   QObject::connect(pDetailsDialog, &ContentDetailsGeneral::ContentWasBought,
-                    this, &BrowseContentTab::slot_Bought);
-   pDetailsDialog->execCDD(_digital_contents[iIndex], true);
-   pDetailsDialog->setAttribute(Qt::WA_DeleteOnClose);
-   pDetailsDialog->open();
+   BuyDialog* dialog = new BuyDialog(this, _digital_contents[iIndex]);
+   dialog->setAttribute(Qt::WA_DeleteOnClose);
+   dialog->open();
+//   ContentDetailsGeneral* pDetailsDialog = new ContentDetailsGeneral(nullptr);
+//   QObject::connect(pDetailsDialog, &ContentDetailsGeneral::ContentWasBought,
+//                    this, &BrowseContentTab::slot_Bought);
+//   pDetailsDialog->execCDD(_digital_contents[iIndex], true);
+//   pDetailsDialog->setAttribute(Qt::WA_DeleteOnClose);
+//   pDetailsDialog->open();
 }
 
 void BrowseContentTab::slot_Bought()
