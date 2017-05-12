@@ -439,7 +439,7 @@ BuyDialog::BuyDialog(QWidget* parent, const SDigitalContent& a_cnt_details)
    this->setWindowTitle(QString::fromStdString(title));
    description->setText(description->toPlainText() + QString::fromStdString(desc) + "\n");
    
-   main_layout->addWidget(description, 7, 0, -1, 1);
+   //main_layout->addWidget(description, 7, 0, -1, 1);
    
    setFixedSize(500, 500);
    setLayout(main_layout);
