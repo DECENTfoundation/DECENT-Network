@@ -36,7 +36,6 @@ RatingWidget::RatingWidget(QWidget* pParent)
 {
    QHBoxLayout* pMainLayout = new QHBoxLayout();
 
-
    m_arr_p_rate.resize(size);
    for (int index = 0; index < size; ++index)
    {
@@ -51,6 +50,7 @@ RatingWidget::RatingWidget(QWidget* pParent)
 
    pMainLayout->setSpacing(0);
    pMainLayout->setContentsMargins(0, 0, 0, 0);
+   pMainLayout->setSizeConstraint(QLayout::SetFixedSize);
 
    setLayout(pMainLayout);
 }
@@ -365,9 +365,10 @@ UserInfoDialog::UserInfoDialog(QWidget* parent,
    DecentLabel* labelAverageRatingTitle = new DecentLabel(this, DecentLabel::RowLabel);
    RatingWidget* averageRatingInfo = new RatingWidget(this);
    averageRatingInfo->setRating(a_cnt_details.AVG_rating);
+   averageRatingInfo->setEnabled(false);
    labelAverageRatingTitle->setText(tr("Average Rating"));
    main_layout->addWidget(labelAverageRatingTitle, iRowIndex, 0);
-   main_layout->addWidget(averageRatingInfo, iRowIndex, 1);
+   main_layout->addWidget(averageRatingInfo, iRowIndex, 1, Qt::AlignCenter);
    ++iRowIndex;
 
    // Amount
