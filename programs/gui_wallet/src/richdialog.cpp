@@ -337,10 +337,8 @@ BuyDialog::BuyDialog(QWidget* parent, const SDigitalContent& a_cnt_details)
    labelAuthorInfo->setFixedSize(250, 50);
    labelAuthorTitle->setText(tr("Author"));
    labelAuthorInfo->setText(QString::fromStdString(a_cnt_details.author));
-   main_layout->addWidget(labelAuthorTitle, 0, 0, 1, 1);
-   main_layout->addWidget(labelAuthorInfo, 0, 1, 1, 1);
-   main_layout->itemAtPosition(0,1)->setAlignment(Qt::AlignRight);
-   main_layout->itemAtPosition(0,0)->setAlignment(Qt::AlignLeft);
+   main_layout->addWidget(labelAuthorTitle, 0, 0);
+   main_layout->addWidget(labelAuthorInfo, 0, 1);
 
    // Expiration
    //
@@ -352,10 +350,8 @@ BuyDialog::BuyDialog(QWidget* parent, const SDigitalContent& a_cnt_details)
    std::string e_str = CalculateRemainingTime(QDateTime::currentDateTime(), time);
    labelExpirationTitle->setText(tr("Expiration"));
    labelExpirationInfo->setText(QString::fromStdString(e_str));
-   main_layout->addWidget(labelExpirationTitle, 1, 0, 1, 1);
-   main_layout->addWidget(labelExpirationInfo, 1, 1, 1, 1);
-   main_layout->itemAtPosition(1,1)->setAlignment(Qt::AlignRight);
-   main_layout->itemAtPosition(1,0)->setAlignment(Qt::AlignLeft);
+   main_layout->addWidget(labelExpirationTitle, 1, 0);
+   main_layout->addWidget(labelExpirationInfo, 1, 1);
 
    // Uploaded
    //
@@ -365,25 +361,20 @@ BuyDialog::BuyDialog(QWidget* parent, const SDigitalContent& a_cnt_details)
    labelUploadedInfo->setFixedSize(250, 50);
    labelUploadedTitle->setText(tr("Uploaded"));
    labelUploadedInfo->setText(QString::fromStdString(a_cnt_details.created));
-   main_layout->addWidget(labelUploadedTitle, 2, 0, 1, 1);
-   main_layout->addWidget(labelUploadedInfo, 2, 1, 1, 1);
-   main_layout->itemAtPosition(2,1)->setAlignment(Qt::AlignRight);
-   main_layout->itemAtPosition(2,0)->setAlignment(Qt::AlignLeft);
-
+   main_layout->addWidget(labelUploadedTitle, 2, 0);
+   main_layout->addWidget(labelUploadedInfo, 2, 1);
 
    // Average Rating
    //
    DecentLabel* labelAverageRatingTitle = new DecentLabel(this, DecentLabel::RowLabel);
    RatingWidget* averageRatingInfo = new RatingWidget(this);
-   labelAverageRatingTitle->setFixedSize(400, 50);
-   averageRatingInfo->setFixedSize(100, 50);
+   labelAverageRatingTitle->setFixedSize(250, 50);
+   averageRatingInfo->setFixedSize(250, 50);
    averageRatingInfo->setRating(a_cnt_details.AVG_rating);
    labelAverageRatingTitle->setText(tr("Average Rating"));
-   main_layout->addWidget(labelAverageRatingTitle, 3, 0, 1, 1);
-   main_layout->addWidget(averageRatingInfo, 3, 1, 1, 1);
-   main_layout->itemAtPosition(3,1)->setAlignment(Qt::AlignRight);
-   main_layout->itemAtPosition(3,0)->setAlignment(Qt::AlignLeft);
-   
+   main_layout->addWidget(labelAverageRatingTitle, 3, 0);
+   main_layout->addWidget(averageRatingInfo, 3, 1);
+
    // Amount
    //
    DecentLabel* labelAmountTitle = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
@@ -393,10 +384,8 @@ BuyDialog::BuyDialog(QWidget* parent, const SDigitalContent& a_cnt_details)
    QString str_price = a_cnt_details.price.getString().c_str();
    labelAmountTitle->setText(tr("Amount"));
    labelAmountInfo->setText(str_price);
-   main_layout->addWidget(labelAmountTitle, 4, 0, 1, 1);
-   main_layout->addWidget(labelAmountInfo, 4, 1, 1, 1);
-   main_layout->itemAtPosition(4,1)->setAlignment(Qt::AlignRight);
-   main_layout->itemAtPosition(4,0)->setAlignment(Qt::AlignLeft);
+   main_layout->addWidget(labelAmountTitle, 4, 0);
+   main_layout->addWidget(labelAmountInfo, 4, 1);
 
    // Size
    //
@@ -406,11 +395,8 @@ BuyDialog::BuyDialog(QWidget* parent, const SDigitalContent& a_cnt_details)
    labelSizeInfo->setFixedSize(250, 50);
    labelSizeTitle->setText(tr("Size"));
    labelSizeInfo->setText(QString::number(a_cnt_details.size) + " MB");
-   main_layout->addWidget(labelSizeTitle, 5, 0, 1, 1);
-   main_layout->addWidget(labelSizeInfo, 5, 1, 1, 1);
-   main_layout->itemAtPosition(5,1)->setAlignment(Qt::AlignRight);
-   main_layout->itemAtPosition(5,0)->setAlignment(Qt::AlignLeft);
- 
+   main_layout->addWidget(labelSizeTitle, 5, 0);
+   main_layout->addWidget(labelSizeInfo, 5, 1);
    
    // Times Bought
    //
@@ -420,10 +406,8 @@ BuyDialog::BuyDialog(QWidget* parent, const SDigitalContent& a_cnt_details)
    labelTimesBoughtInfo->setFixedSize(250, 50);
    labelTimesBoughtTitle->setText(tr("Times Bought"));
    labelTimesBoughtInfo->setText(QString::number(a_cnt_details.times_bought));
-   main_layout->addWidget(labelTimesBoughtTitle, 6, 0, 1, 1);
-   main_layout->addWidget(labelTimesBoughtInfo, 6, 1, 1, 1);
-   main_layout->itemAtPosition(6,1)->setAlignment(Qt::AlignRight);
-   main_layout->itemAtPosition(6,0)->setAlignment(Qt::AlignLeft);
+   main_layout->addWidget(labelTimesBoughtTitle, 6, 0);
+   main_layout->addWidget(labelTimesBoughtInfo, 6, 1);
    
    DecentTextEdit* description = new DecentTextEdit(this, DecentTextEdit::Info);
    description->setText(tr("Description") + "\n\n");
