@@ -42,6 +42,38 @@ QPushButton:!enabled
    background-color: rgb(180, 180, 180);
    color: rgb(30, 30, 30);
 }
+QPushButton[type='dialogaction']
+{
+   border: 0px;
+   background-color: rgb(27, 176, 104);
+   color: white;
+   width: 8.75em;
+   height: 2.5em;
+   max-width: 8.75em;
+   max-height: 2.5em;
+}
+QPushButton[type='dialogaction'][enabled=false]
+{
+   border: 0px;
+   background-color: rgb(180, 180, 180);
+   color: rgb(30, 30, 30);
+}
+QPushButton[type='dialogcancel']
+{
+   border: 1px solid rgb(143,143,143);
+   background-color: white;
+   color: black;
+   max-width: 8.75em;
+   max-height: 2.5em;
+   width: 8.75em;
+   height: 2.5em;
+}
+QPushButton[type='dialogcancel'][enabled=false]
+{
+   border: 1px solid rgb(143,143,143);
+   background-color: rgb(180, 180, 180);
+   color: rgb(30, 30, 30);
+}
 QPushButton[type='send']
 {
    border: 0px;
@@ -87,6 +119,12 @@ QPushButton[type='staricon']
 {
    border: 0px;
    background-color: white;
+
+   max-width: 1em;
+   max-height: 1em;
+   width: 1em;
+   height: 1em;
+
    qproperty-icon:   url(':/icon/images/green_asterix.png'),
                      url(':/icon/images/green_asterix.png') on,
                      url(':/icon/images/green_asterix.png') on disabled,
@@ -111,7 +149,7 @@ QMessageBox QPushButton, QFileDialog QPushButton
 QLineEdit
 {
    border: 1px solid rgb(143, 143, 143);
-   padding-left: 20px;
+   padding-left: 2em;
 }
 QLineEdit:!enabled
 {
@@ -121,7 +159,7 @@ QLineEdit:!enabled
 QLineEdit[type='tablesearch']
 {
    border: 0px;
-   padding-left: 10px;
+   padding-left: 1em;
 }
 QTextEdit[type='info']
 {
@@ -130,7 +168,7 @@ QTextEdit[type='info']
 QTextEdit[type='editor']
 {
    border: 1px solid gray;
-   padding 5px;
+   padding 0.5em;
 }
 QTextEdit QScrollBar:vertical
 {
