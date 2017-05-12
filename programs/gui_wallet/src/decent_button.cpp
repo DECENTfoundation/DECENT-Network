@@ -24,6 +24,9 @@ DecentButton::DecentButton(QWidget* pParent,
    case TableIcon:
       setProperty("type", "tableicon");
       break;
+   case StarIcon:
+      setProperty("type", "staricon");
+      break;
    case Default:
    default:
       break;

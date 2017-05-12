@@ -12,7 +12,8 @@ public:
    {
       Default,
       Send,
-      TableIcon
+      TableIcon,
+      StarIcon,
    };
 
    enum eName

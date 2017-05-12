@@ -26,6 +26,59 @@
 namespace gui_wallet
 {
 //
+// RatingWidget
+//
+RatingWidget::RatingWidget(QWidget* pParent)
+   : QWidget(pParent)
+   , m_bAutomation(false)
+{
+   QHBoxLayout* pMainLayout = new QHBoxLayout();
+
+   m_arr_p_rate.resize(size);
+   for (int index = 0; index < size; ++index)
+   {
+      m_arr_p_rate[index] = new DecentButton(this, DecentButton::StarIcon);
+      m_arr_p_rate[index]->setCheckable(true);
+
+      pMainLayout->addWidget(m_arr_p_rate[index]);
+
+      QObject::connect(m_arr_p_rate[index], &QPushButton::toggled,
+                       this, &RatingWidget::slot_rating);
+   }
+
+   pMainLayout->setSpacing(0);
+   pMainLayout->setContentsMargins(0, 0, 0, 0);
+
+   setLayout(pMainLayout);
+}
+
+void RatingWidget::setRating(int rating)
+{
+   for (int index = 0; index < size; ++index)
+   {
+      if (index < rating)
+         m_arr_p_rate[index]->setChecked(true);
+      else
+         m_arr_p_rate[index]->setChecked(false);
+   }
+
+   emit rated(rating);
+}
+
+void RatingWidget::slot_rating()
+{
+   if (m_bAutomation)
+      return;
+
+   m_bAutomation = true;
+   for (int index = 0; index < size; ++index)
+   {
+      if (m_arr_p_rate[index] == sender())
+         setRating(index + 1);
+   }
+   m_bAutomation = false;
+}
+//
 // TransferDialog
 //
 TransferDialog::TransferDialog(QWidget* parent, QString const& userName/* = QString()*/) : m_toUserName(userName)
