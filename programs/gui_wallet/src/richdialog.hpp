@@ -95,6 +95,15 @@ class BuyDialog : public QDialog
    Q_OBJECT
 public:
    BuyDialog(QWidget* parent, const SDigitalContent& a_cnt_details);
+   
+public slots:
+   void LabelPushCallbackGUI();
+public:
+signals:
+   void ContentWasBought();
+   
+private:
+   std::string m_URI;
 };
 
 }

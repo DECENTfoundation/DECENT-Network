@@ -13,13 +13,13 @@ QLabel[name='highlighted']
 QLabel[name='right']
 {
    padding-right: 2em;
-   qproperty-alignment: AlignRight;
+   qproperty-alignment: 'AlignRight | AlignVCenter';
 }
 QLabel[name='highlightedright']
 {
    padding-right: 2em;
    background-color: rgb(244, 244, 244);
-   qproperty-alignment: AlignRight;
+   qproperty-alignment: 'AlignRight | AlignVCenter';
 }
 QDialog, QMainWindow, QMessageBox
 {

@@ -322,11 +322,11 @@ UserInfoDialog::UserInfoDialog(QWidget* parent,
 //
 // BuyDialog
 //
-BuyDialog::BuyDialog(QWidget* parent, const SDigitalContent& a_cnt_details)
+   BuyDialog::BuyDialog(QWidget* parent, const SDigitalContent& a_cnt_details) : m_URI(a_cnt_details.URI)
 {
    QGridLayout* main_layout = new QGridLayout();
    main_layout->setSpacing(0);
-   main_layout->setContentsMargins(0, 0, 0, 0);
+   main_layout->setContentsMargins(0, 0, 0, 15);
 
    int iRowIndex = 0;
    // Author
@@ -402,6 +402,7 @@ BuyDialog::BuyDialog(QWidget* parent, const SDigitalContent& a_cnt_details)
    ++iRowIndex;
    
    DecentTextEdit* description = new DecentTextEdit(this, DecentTextEdit::Info);
+   description->setFixedSize(500, 200);
    description->setText(tr("Description") + "\n\n");
    description->setReadOnly(true);
    description->setFont(DescriptionDetailsFont());
@@ -418,11 +419,69 @@ BuyDialog::BuyDialog(QWidget* parent, const SDigitalContent& a_cnt_details)
    this->setWindowTitle(QString::fromStdString(title));
    description->setText(description->toPlainText() + QString::fromStdString(desc) + "\n");
    
-   //main_layout->addWidget(description, iRowIndex, 0, -1, 1);
+   main_layout->addWidget(description, iRowIndex, 0, 1, 2);
+   ++iRowIndex;
+   
+   DecentButton* getItButton = new DecentButton(this);
+   DecentButton* cancelButton = new DecentButton(this);
+   getItButton->setFixedSize(140,40);
+   cancelButton->setFixedSize(140,40);
+   getItButton->setText(tr("Get it!"));
+   cancelButton->setText(tr("Cancel"));
+   
+   connect(getItButton, &QPushButton::clicked, this, &BuyDialog::LabelPushCallbackGUI);
+   connect(cancelButton, &QPushButton::clicked, this, &QDialog::close);
+   
+   main_layout->addWidget(getItButton, iRowIndex, 0);
+   main_layout->addWidget(cancelButton, iRowIndex, 1);
    
    setFixedSize(500, 500);
    setLayout(main_layout);
 
+}
+   
+void BuyDialog::LabelPushCallbackGUI()
+{
+   QMessageBox* reply = new QMessageBox();
+   reply->setFixedSize(500, 400);
+   reply->setContentsMargins(0, 30, 80, 30);
+   reply->setWindowFlags(Qt::WindowTitleHint);
+   reply->QDialog::setWindowTitle(tr("DECENT-Blockchain Content Distribution"));
+   reply->setText("          " + tr("Are you sure you want to buy this content?"));
+   QPushButton* pButtonCancel = reply->addButton(tr("Cancel"), QMessageBox::YesRole);
+   QPushButton* pButtonOk = reply->addButton(tr("Get it"), QMessageBox::NoRole);
+   pButtonOk->setStyleSheet(d_pButtonOk);
+   pButtonCancel->setStyleSheet(d_pbuttonCancel);
+   pButtonOk->setFixedSize(100, 30);
+   pButtonCancel->setFixedSize(100, 30);
+   reply->exec();
+   if (reply->clickedButton()==pButtonCancel) {
+      return;
+   }
+   std::string downloadCommand = "download_content";
+   downloadCommand += " " + Globals::instance().getCurrentUser();       // consumer
+   downloadCommand += " \"" + m_URI + "\"";                             // URI
+   downloadCommand += " \"\"";                                          // region_code
+   downloadCommand += " true";                                          // broadcast
+   
+   std::string a_result;
+   
+   std::string str_error;
+   try
+   {
+      RunTask(downloadCommand, a_result);
+   }
+   catch(std::exception const& ex)
+   {
+      str_error = ex.what();
+   }
+   if (false == str_error.empty())
+      ALERT_DETAILS(tr("Failed to download content").toStdString(), str_error.c_str());
+   
+   
+   emit ContentWasBought();
+   close();
+   
 }
 
 }  // end namespace gui_wallet
