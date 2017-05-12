@@ -245,8 +245,11 @@ FC_REFLECT(graphene::chain::request_to_buy_operation,(fee)(URI)(consumer)(price)
 #else
 FC_REFLECT(graphene::chain::request_to_buy_operation,(fee)(URI)(consumer)(price)(pubKey))
 #endif
-//FC_REFLECT(graphene::chain::leave_rating_and_comment_operation,(fee)(URI)(consumer)(comment)(rating))
+#ifdef TESTNET_3
+FC_REFLECT(graphene::chain::leave_rating_and_comment_operation,(fee)(URI)(consumer)(comment)(rating))
+#else
 FC_REFLECT(graphene::chain::leave_rating_and_comment_operation,(fee)(URI)(consumer)(rating))
+#endif
 FC_REFLECT(graphene::chain::ready_to_publish_operation,(fee)(seeder)(space)(pubKey)(price_per_MByte)(ipfs_IDs))
 FC_REFLECT(graphene::chain::proof_of_custody_operation,(fee)(seeder)(URI)(proof))
 FC_REFLECT(graphene::chain::deliver_keys_operation,(fee)(seeder)(proof)(key)(buying))
