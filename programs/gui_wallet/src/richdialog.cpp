@@ -403,7 +403,6 @@ UserInfoDialog::UserInfoDialog(QWidget* parent,
    
    DecentTextEdit* description = new DecentTextEdit(this, DecentTextEdit::Info);
    description->setFixedSize(500, 200);
-   description->setText(tr("Description") + "\n\n");
    description->setReadOnly(true);
    description->setFont(DescriptionDetailsFont());
 
@@ -416,8 +415,8 @@ UserInfoDialog::UserInfoDialog(QWidget* parent,
    title = synopsis_parser.get<graphene::chain::ContentObjectTitle>();
    desc = synopsis_parser.get<graphene::chain::ContentObjectDescription>();
    
-   this->setWindowTitle(QString::fromStdString(title));
-   description->setText(description->toPlainText() + QString::fromStdString(desc) + "\n");
+   setWindowTitle(QString::fromStdString(title));
+   description->setText(QString::fromStdString(desc));
    
    main_layout->addWidget(description, iRowIndex, 0, 1, 2);
    ++iRowIndex;
@@ -427,7 +426,7 @@ UserInfoDialog::UserInfoDialog(QWidget* parent,
    getItButton->setFixedSize(140,40);
    cancelButton->setFixedSize(140,40);
    getItButton->setText(tr("Get it!"));
-   cancelButton->setText(tr("Cancel"));
+   cancelButton->setText(tr("Close"));
    
    connect(getItButton, &QPushButton::clicked, this, &BuyDialog::LabelPushCallbackGUI);
    connect(cancelButton, &QPushButton::clicked, this, &QDialog::close);
@@ -444,16 +443,16 @@ void BuyDialog::LabelPushCallbackGUI()
 {
    QMessageBox* reply = new QMessageBox();
    reply->setFixedSize(500, 400);
-   reply->setContentsMargins(0, 30, 80, 30);
+   reply->setContentsMargins(70, 30, 70, 30);
    reply->setWindowFlags(Qt::WindowTitleHint);
    reply->QDialog::setWindowTitle(tr("DECENT-Blockchain Content Distribution"));
-   reply->setText("          " + tr("Are you sure you want to buy this content?"));
+   reply->setText(tr("Are you sure you want to buy this content?"));
    QPushButton* pButtonCancel = reply->addButton(tr("Cancel"), QMessageBox::YesRole);
    QPushButton* pButtonOk = reply->addButton(tr("Get it"), QMessageBox::NoRole);
    pButtonOk->setStyleSheet(d_pButtonOk);
    pButtonCancel->setStyleSheet(d_pbuttonCancel);
-   pButtonOk->setFixedSize(100, 30);
-   pButtonCancel->setFixedSize(100, 30);
+   pButtonOk->setFixedSize(140, 40);
+   pButtonCancel->setFixedSize(140, 40);
    reply->exec();
    if (reply->clickedButton()==pButtonCancel) {
       return;
