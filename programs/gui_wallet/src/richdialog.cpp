@@ -1,13 +1,3 @@
-/*
- *
- *	File: richdialog.cpp
- *
- *	Created on: 27 Jan 2017
- *	Created by: Davit Kalantaryan (Email: davit.kalantaryan@desy.de)
- *
- *  This file implements ...
- *
- */
 #include "gui_wallet_global.hpp"
 #include <QIntValidator>
 #include <QMessageBox>
@@ -17,14 +7,23 @@
 #include "gui_design.hpp"
 #include <QKeyEvent>
 #include <QDateTime>
+#include <QVBoxLayout>
+#include <QHBoxLayout>
+#include <QPushButton>
+#include <QLineEdit>
+#include <QLocale>
+#include <QInputMethod>
+#include <QApplication>
+#include <vector>
+#include <string>
+#include "decent_button.hpp"
 
-using namespace gui_wallet;
 
-
-
-                  //Send Dialog
-/*********************************************************/
- 
+namespace gui_wallet
+{
+//
+// TransferDialog
+//
 TransferDialog::TransferDialog(QWidget* parent, QString const& userName/* = QString()*/) : m_toUserName(userName)
 {
    QVBoxLayout* mainLayout       = new QVBoxLayout();
@@ -130,16 +129,12 @@ void TransferDialog::Transfer()
       ShowMessageBox(tr("Error"), tr("Failed to transfer DCT"), message.c_str());
    }
 }
-
-/*********************************************************/
-
-
-                  //ImportDialog
-/*********************************************************/
-
-ImportDialog::ImportDialog(QWidget* parent)
+//
+// ImportKeyDialog
+//
+ImportKeyDialog::ImportKeyDialog(QWidget* parent)
 {
-   QObject::connect(this, &ImportDialog::signal_keyImported, &Globals::instance(), &Globals::slot_displayWalletContent);
+   QObject::connect(this, &ImportKeyDialog::signal_keyImported, &Globals::instance(), &Globals::slot_displayWalletContent);
    
    QVBoxLayout* mainLayout       = new QVBoxLayout();
    QVBoxLayout* lineEditsLayout  = new QVBoxLayout();
@@ -152,7 +147,7 @@ ImportDialog::ImportDialog(QWidget* parent)
    cancel->setText(tr("Cancel"));
    cancel->setFixedSize(140, 40);
    
-   QObject::connect(ok, &QPushButton::clicked, this, &ImportDialog::Import);
+   QObject::connect(ok, &QPushButton::clicked, this, &ImportKeyDialog::Import);
    QObject::connect(cancel, &QPushButton::clicked, this, &QDialog::close);
    
    QLineEdit* name = new QLineEdit(this);
@@ -161,12 +156,12 @@ ImportDialog::ImportDialog(QWidget* parent)
    name->setPlaceholderText(tr("Account"));
    name->setAttribute(Qt::WA_MacShowFocusRect, 0);
    name->setFixedSize(300, 44);
-   QObject::connect(name, &QLineEdit::textChanged, this, &ImportDialog::nameChanged);
+   QObject::connect(name, &QLineEdit::textChanged, this, &ImportKeyDialog::nameChanged);
    
    key->setPlaceholderText(tr("Key"));
    key->setAttribute(Qt::WA_MacShowFocusRect, 0);
    key->setFixedSize(300, 44);
-   QObject::connect(key, &QLineEdit::textChanged, this, &ImportDialog::keyChanged);
+   QObject::connect(key, &QLineEdit::textChanged, this, &ImportKeyDialog::keyChanged);
    
 
    
@@ -187,18 +182,17 @@ ImportDialog::ImportDialog(QWidget* parent)
    setFixedSize(380, 220);
 }
 
-void ImportDialog::nameChanged(const QString & name)
+void ImportKeyDialog::nameChanged(const QString & name)
 {
    m_userName = name;
 }
 
-void ImportDialog::keyChanged(const QString & key)
+void ImportKeyDialog::keyChanged(const QString & key)
 {
    m_key = key;
 }
 
-
-void ImportDialog::Import()
+void ImportKeyDialog::Import()
 {
    std::string message;
    std::string result;
@@ -219,13 +213,9 @@ void ImportDialog::Import()
       ShowMessageBox(tr("Error"), tr("Cannot import key."), message.c_str());
    }
 }
-
-/*********************************************************/
-
-
-                  //ZebraDialog
-/*********************************************************/
-
+//
+// UserInfoDialog
+//
 UserInfoDialog::UserInfoDialog(QWidget* parent,
                                const QString& registrar,
                                const QString& referrer,
@@ -276,13 +266,9 @@ UserInfoDialog::UserInfoDialog(QWidget* parent,
    setFixedSize(620,420);
    setLayout(main_layout);
 }
-
-
-/*********************************************************/
-
-       //BuyDialog
-/*********************************************************/
-
+//
+// BuyDialog
+//
 BuyDialog::BuyDialog(QWidget* parent, const SDigitalContent& a_cnt_details, bool bSilent)
 {
    QVBoxLayout* main_layout = new QVBoxLayout();
@@ -291,9 +277,8 @@ BuyDialog::BuyDialog(QWidget* parent, const SDigitalContent& a_cnt_details, bool
    
    setStyleSheet("background-color:white;");
    
-   
-                     //Author
-               /***********************/
+   // Author
+   //
    QWidget*     WidgetRegistrar = new QWidget(this);
    QHBoxLayout* LayoutRegistrar = new QHBoxLayout();
    LayoutRegistrar->setSpacing(0);
@@ -305,10 +290,9 @@ BuyDialog::BuyDialog(QWidget* parent, const SDigitalContent& a_cnt_details, bool
    LayoutRegistrar->addWidget(lblInfo);
    WidgetRegistrar->setLayout(LayoutRegistrar);
    main_layout->addWidget(WidgetRegistrar);
-               /***********************/
-   
-                     //Expiration
-               /***********************/
+
+   // Expiration
+   //
    QWidget*     WidgetReferrer = new QWidget(this);
    QHBoxLayout* LayoutReferrer = new QHBoxLayout();
    LayoutReferrer->setSpacing(0);
@@ -321,11 +305,9 @@ BuyDialog::BuyDialog(QWidget* parent, const SDigitalContent& a_cnt_details, bool
    LayoutReferrer->addWidget(lblInfo);
    WidgetReferrer->setLayout(LayoutReferrer);
    main_layout->addWidget(WidgetReferrer);
-               /***********************/
-   
-   
-                           //Uploaded
-                  /***********************/
+
+   // Uploaded
+   //
    QWidget*     WidgetLifetimeReferrer = new QWidget(this);
    QHBoxLayout* LayoutLifetimeReferrer = new QHBoxLayout();
    LayoutLifetimeReferrer->setSpacing(0);
@@ -337,11 +319,9 @@ BuyDialog::BuyDialog(QWidget* parent, const SDigitalContent& a_cnt_details, bool
    LayoutLifetimeReferrer->addWidget(lblInfo);
    WidgetLifetimeReferrer->setLayout(LayoutLifetimeReferrer);
    main_layout->addWidget(WidgetLifetimeReferrer);
-                  /***********************/
-   
-   
-                           //Amount
-                  /***********************/
+
+   // Amount
+   //
    QWidget*     WidgetNetworkFeePercentage = new QWidget(this);
    QHBoxLayout* LayoutNetworkFeePercentage = new QHBoxLayout();
    LayoutNetworkFeePercentage->setSpacing(0);
@@ -353,12 +333,9 @@ BuyDialog::BuyDialog(QWidget* parent, const SDigitalContent& a_cnt_details, bool
    LayoutNetworkFeePercentage->addWidget(lblInfo);
    WidgetNetworkFeePercentage->setLayout(LayoutNetworkFeePercentage);
    main_layout->addWidget(WidgetNetworkFeePercentage);
-                  /***********************/
-   
-   
-   
-                              //Average Rating
-                        /***********************/
+
+   // Average Rating
+   //
    QWidget*     WidgetLifetimeReferrerFeePercentage = new QWidget(this);
    QHBoxLayout* LifetimeReferrerFeePercentage = new QHBoxLayout();
    LifetimeReferrerFeePercentage->setSpacing(0);
@@ -386,12 +363,9 @@ BuyDialog::BuyDialog(QWidget* parent, const SDigitalContent& a_cnt_details, bool
    LifetimeReferrerFeePercentage->addWidget(lblInfo);
    WidgetLifetimeReferrerFeePercentage->setLayout(LifetimeReferrerFeePercentage);
    main_layout->addWidget(WidgetLifetimeReferrerFeePercentage);
-                     /***********************/
-   
-   
-   
-                              //Size
-                     /***********************/
+
+   // Size
+   //
 //   QWidget*     WidgetReferrerRewardsPercentage = new QWidget(this);
 //   QHBoxLayout* LayoutReferrerRewardsPercentage = new QHBoxLayout();
 //   LayoutReferrerRewardsPercentage->setSpacing(0);
@@ -424,9 +398,5 @@ BuyDialog::BuyDialog(QWidget* parent, const SDigitalContent& a_cnt_details, bool
 
 }
 
-
-/*********************************************************/
-
-
-
+}  // end namespace gui_wallet
 

@@ -1,33 +1,13 @@
-/*
- *	File: richdialog.hpp
- *
- *	Created on: 27 Jan 2017
- *	Created by: Davit Kalantaryan (Email: davit.kalantaryan@desy.de)
- *
- *  This file implements ...
- *
- */
-#ifndef RICHDIALOG_HPP
-#define RICHDIALOG_HPP
+#pragma once
 
 #include <QDialog>
-#include <QVBoxLayout>
-#include <QHBoxLayout>
-#include <QPushButton>
-#include <QLineEdit>
-#include <QLocale>
-#include <QInputMethod>
-#include <QApplication>
-#include <vector>
-#include <string>
-#include "decent_button.hpp"
 
-
-
-namespace gui_wallet {
-               //SendDialog
-/********************************************/
-   
+namespace gui_wallet
+{
+struct SDigitalContent;
+//
+// TransferDialog
+//
 class TransferDialog : public QDialog
 {
    Q_OBJECT
@@ -45,18 +25,14 @@ private:
    QString  m_memo;
    QString  m_fromUserName;
 };
-   
-/********************************************/
-   
-   
-            //ImportDialog
-/********************************************/
-
-class ImportDialog : public QDialog
+//
+// ImportKeyDialog
+//
+class ImportKeyDialog : public QDialog
 {
    Q_OBJECT
 public:
-   ImportDialog(QWidget* parent);
+   ImportKeyDialog(QWidget* parent);
    
    public slots:
    void nameChanged(const QString &);
@@ -69,15 +45,9 @@ private:
    QString  m_userName;
    QString  m_key;
 };
-
-/********************************************/
-   
-   
-   
-
-            //ZebraDialog
-/********************************************/
-
+//
+// UserInfoDialog
+//
 class UserInfoDialog : public QDialog
 {
    Q_OBJECT
@@ -94,14 +64,9 @@ public:
                );
 
 };
-
-/********************************************/
-
-
-struct SDigitalContent;
-            //BuyDialog
-/********************************************/
-
+//
+// BuyDialog
+//
 class BuyDialog : public QDialog
 {
    Q_OBJECT
@@ -109,7 +74,5 @@ public:
    BuyDialog(QWidget* parent, const SDigitalContent& a_cnt_details, bool bSilent = false);
 };
 
-/********************************************/
 }
 
-#endif // RICHDIALOG_HPP
