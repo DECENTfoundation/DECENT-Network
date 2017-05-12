@@ -456,7 +456,7 @@ void seeding_plugin::plugin_initialize( const boost::program_options::variables_
          free_space = options["free-space"].as<int>();
       else
          FC_THROW("missing free-space parameter");
-      
+
       ilog("starting service thread");
       my = unique_ptr<detail::seeding_plugin_impl>( new detail::seeding_plugin_impl( *this) );
       my->service_thread = std::make_shared<fc::thread>("seeding");
