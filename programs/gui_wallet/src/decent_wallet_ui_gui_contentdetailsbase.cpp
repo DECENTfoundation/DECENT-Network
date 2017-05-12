@@ -243,7 +243,7 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details, bool bSil
     
     if (a_cnt_details.type == DCT::GENERAL)
     {
-       m_commentWidget = new CommentWidget(this);
+       m_commentWidget = new CommentWidget(this, m_pContentInfo);
        m_main_layout.addWidget(m_commentWidget);
        for(i = 0; i < NUMBER_OF_SUB_LAYOUTS2;++i,nIndexZuyg+=2)
        {
@@ -454,16 +454,7 @@ void ContentDetailsBase::popup_for_purchased(int row_star)
 
    
     QHBoxLayout* desc_lay = new QHBoxLayout();
-    QHBoxLayout* comment_layout = new QHBoxLayout;
-    comment_layout->setAlignment(Qt::AlignRight);
-   
-    DecentButton* commentButton = new DecentButton(this);
-    commentButton->setText("Content Comments");
-    commentButton->setFixedHeight(30);
-    comment_layout->addWidget(commentButton);
-   
-    connect(commentButton, SIGNAL(clicked()), this, SLOT(commentWidgetSlot()));
-   
+
     m_desc->setText(tr("Description") + "\n\n");
     m_desc->setReadOnly(true);
     m_desc->setFont(DescriptionDetailsFont());
@@ -472,7 +463,6 @@ void ContentDetailsBase::popup_for_purchased(int row_star)
     desc_lay->addWidget(m_desc);
    
     m_main_layout.addLayout(desc_lay);
-    m_main_layout.addLayout(comment_layout);
    
     line = new QFrame(this);
     line->setFrameShape(QFrame::HLine); // Horizontal line
@@ -491,9 +481,13 @@ void ContentDetailsBase::commentWidgetSlot()
 }
 
 /* /////////////Comment Widget////////////////*/
-CommentWidget::CommentWidget(QWidget* parent)
-: QWidget(parent)
+CommentWidget::CommentWidget(QWidget* parent, const SDigitalContent* content_info)
+:  QWidget(parent),
+   m_comment_count(1)
 {
+   m_content_info = content_info->URI;
+   update_run_task();
+   
    QVBoxLayout* main_layout = new QVBoxLayout();
    QHBoxLayout* buttons = new QHBoxLayout();
    
@@ -520,29 +514,87 @@ CommentWidget::CommentWidget(QWidget* parent)
    setVisible(false);
 }
 
-void CommentWidget::nextButtonSlot()
+void CommentWidget::update_run_task()
 {
-   //
+   nlohmann::json comment;
+   try
+   {
+      comment = Globals::instance().runTaskParse("search_feedback "
+                                                 "\"" /*    empty user    */"\" "
+                                                 "\"" + m_content_info + "\" "
+                                                 "\"" + next_iterator()   + "\" " +
+                                                 std::to_string(m_comment_count + 1) );
+   }catch(...){}
+   
+   if(comment.size() > m_comment_count){
+      set_next_comment(comment[m_comment_count]["id"].get<std::string>());
+   }else{
+      set_next_comment(std::string());
+   }
+
 }
 
-void CommentWidget::previousButtonSlot()
+bool CommentWidget::next()
 {
-   //
+   if( is_last() )
+   {
+      return false;
+   }
+   m_iterators.push_back(m_next_itr);
+   update_run_task();
+   return true;
 }
 
-void CommentWidget::resetButtonSlot()
+bool CommentWidget::previous()
 {
-   //
+   if( is_last() )
+   {
+      return false;
+   }
+   
+   m_iterators.pop_back();
+   update_run_task();
+   return true;
 }
+
+void CommentWidget::reset()
+{
+   m_iterators.clear();
+   m_next_itr.clear();
+   update_run_task();
+}
+
+bool CommentWidget::is_first() const
+{
+   return m_iterators.empty();
+}
+
+bool CommentWidget::is_last() const
+{
+   return m_next_itr.empty();
+}
+
+void CommentWidget::set_next_comment(std::string const& last)
+{
+   m_next_itr = last;
+}
+
+std::string CommentWidget::next_iterator()
+{
+   if(!m_iterators.empty())
+   {
+      return m_iterators.back();
+   }
+   
+   return std::string();
+}
+void CommentWidget::nextButtonSlot(){}
+void CommentWidget::previousButtonSlot(){}
+void CommentWidget::resetButtonSlot(){}
 
 CommentWidget::~CommentWidget()
 {
-   //
+   
 }
-
-
-
-
-
 
 

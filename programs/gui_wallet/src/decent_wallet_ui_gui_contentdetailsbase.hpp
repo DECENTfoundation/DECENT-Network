@@ -24,20 +24,40 @@ namespace gui_wallet {
 struct SDigitalContent;
 class DecentTextEdit;
 
+   
+/// for content comments
 class CommentWidget : public QWidget
 {
    Q_OBJECT
+   friend class ContentDetailsBase;
 public:
-   CommentWidget(QWidget*);
+   CommentWidget(QWidget*, const SDigitalContent*);
    ~CommentWidget();
    
-   public slots:
+public:
+   bool        next();
+   bool        previous();
+   void        reset();
+   bool        is_last() const;
+   bool        is_first() const;
+   void        update_run_task();
+   void        set_next_comment(std::string const&);
+   std::string next_iterator();
+   
+public slots:
    void nextButtonSlot();
    void previousButtonSlot();
    void resetButtonSlot();
+   
 private:
-//   QLineEdit*  m_Name;
+   std::string                m_last_result;
+   std::string                m_next_itr;
+   std::vector<std::string>   m_iterators;
+   size_t                     m_comment_count;
+   std::string                m_content_info;
 };
+/////// *****/////
+   
    
 class ContentDetailsBase : public QDialog
 {
