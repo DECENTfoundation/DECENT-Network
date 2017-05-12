@@ -431,8 +431,8 @@ BuyDialog::BuyDialog(QWidget* parent, const SDigitalContent& a_cnt_details)
    connect(getItButton, &QPushButton::clicked, this, &BuyDialog::LabelPushCallbackGUI);
    connect(cancelButton, &QPushButton::clicked, this, &QDialog::close);
    
-   main_layout->addWidget(getItButton, iRowIndex, 0, Qt::AlignCenter);
-   main_layout->addWidget(cancelButton, iRowIndex, 1, Qt::AlignCenter);
+   main_layout->addWidget(getItButton, iRowIndex, 0, Qt::AlignRight);
+   main_layout->addWidget(cancelButton, iRowIndex, 1, Qt::AlignLeft);
    
    setFixedSize(500, 500);
    setLayout(main_layout);
