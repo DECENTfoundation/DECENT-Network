@@ -322,7 +322,8 @@ UserInfoDialog::UserInfoDialog(QWidget* parent,
 //
 // BuyDialog
 //
-   BuyDialog::BuyDialog(QWidget* parent, const SDigitalContent& a_cnt_details) : m_URI(a_cnt_details.URI)
+BuyDialog::BuyDialog(QWidget* parent, const SDigitalContent& a_cnt_details)
+: m_URI(a_cnt_details.URI)
 {
    QGridLayout* main_layout = new QGridLayout();
    main_layout->setSpacing(0);
@@ -430,14 +431,11 @@ UserInfoDialog::UserInfoDialog(QWidget* parent,
    connect(getItButton, &QPushButton::clicked, this, &BuyDialog::LabelPushCallbackGUI);
    connect(cancelButton, &QPushButton::clicked, this, &QDialog::close);
    
-   main_layout->addWidget(getItButton, iRowIndex, 0);
-   main_layout->addWidget(cancelButton, iRowIndex, 1);
-   main_layout->itemAtPosition(iRowIndex, 0)->setAlignment(Qt::AlignCenter);
-   main_layout->itemAtPosition(iRowIndex, 1)->setAlignment(Qt::AlignCenter);
+   main_layout->addWidget(getItButton, iRowIndex, 0, Qt::AlignCenter);
+   main_layout->addWidget(cancelButton, iRowIndex, 1, Qt::AlignCenter);
    
    setFixedSize(500, 500);
    setLayout(main_layout);
-
 }
    
 void BuyDialog::LabelPushCallbackGUI()
