@@ -243,16 +243,20 @@ UserInfoDialog::UserInfoDialog(QWidget* parent,
    referrerLabel->setText(tr("Referrer\n") + registrar);
    main_layout->addWidget(referrerLabel);
    
-   QLabel* lifetimeReferrerLabel = new QLabel((tr("Lifetime Referrer\n") + lifetime_referrer), this);
+   DecentLabel* lifetimeReferrerLabel = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
+   lifetimeReferrerLabel->setText((tr("Lifetime Referrer\n") + lifetime_referrer));
    main_layout->addWidget(lifetimeReferrerLabel);
    
-   QLabel* networkFeeLabel = new QLabel((tr("Network Fee Percentage\n") + network_fee_percentage), this);
+   DecentLabel* networkFeeLabel = new DecentLabel(this, DecentLabel::RowLabel);
+   networkFeeLabel->setText((tr("Network Fee Percentage\n") + network_fee_percentage));
    main_layout->addWidget(networkFeeLabel);
    
-   QLabel* lifetimeReferrerFeeLabel = new QLabel((tr("Lifetime Referrer Fee Percentage\n") + lifetime_referrer_fee_percentage), this);
+   DecentLabel* lifetimeReferrerFeeLabel = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
+   lifetimeReferrerFeeLabel->setText((tr("Lifetime Referrer Fee Percentage\n") + lifetime_referrer_fee_percentage));
    main_layout->addWidget(lifetimeReferrerFeeLabel);
    
-   QLabel* referrerRewardsPercentageLabel = new QLabel((tr("Referrer Rewards Percentage\n") + referrer_rewards_percentage), this);
+   DecentLabel* referrerRewardsPercentageLabel = new DecentLabel(this, DecentLabel::RowLabel);
+   referrerRewardsPercentageLabel->setText((tr("Referrer Rewards Percentage\n") + referrer_rewards_percentage));
    main_layout->addWidget(referrerRewardsPercentageLabel);
 
    setWindowTitle(name + " (" + id + ")");
