@@ -20,6 +20,8 @@ add_executable(DECENT MACOSX_BUNDLE
                src/browse_content_tab.hpp
                src/decent_button.cpp
                src/decent_button.hpp
+               src/decent_label.cpp
+               src/decent_label.hpp
                src/decent_line_edit.cpp
                src/decent_line_edit.hpp
                src/decent_text_edit.cpp

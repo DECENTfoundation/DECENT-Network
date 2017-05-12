@@ -1,6 +1,10 @@
-.QWidget[type="highlightedrow"]
+QLabel[type='rowlabel']
 {
-   background-color:rgb(244,244,244);
+   padding-left: 2em;
+}
+QLabel[name='highlighted']
+{
+   background-color: rgb(244, 244, 244);
 }
 QDialog, QMainWindow, QMessageBox
 {

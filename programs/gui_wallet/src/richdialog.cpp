@@ -1,10 +1,15 @@
 #include "gui_wallet_global.hpp"
-#include <QIntValidator>
-#include <QMessageBox>
 #include "richdialog.hpp"
-#include "gui_design.hpp"
+
+
+#include "decent_button.hpp"
+#include "decent_label.hpp"
 #include "gui_wallet_mainwindow.hpp"
 #include "gui_design.hpp"
+
+
+#include <QIntValidator>
+#include <QMessageBox>
 #include <QKeyEvent>
 #include <QDateTime>
 #include <QVBoxLayout>
@@ -16,7 +21,6 @@
 #include <QApplication>
 #include <vector>
 #include <string>
-#include "decent_button.hpp"
 
 
 namespace gui_wallet
@@ -229,41 +233,30 @@ UserInfoDialog::UserInfoDialog(QWidget* parent,
 {
    QVBoxLayout* main_layout = new QVBoxLayout();
    main_layout->setSpacing(0);
-   main_layout->setContentsMargins(45, 0, 45, 0);
+   main_layout->setContentsMargins(0, 0, 0, 0);
    
-   setStyleSheet("background-color:white;");
-   
-//   //QWidget* widgetRegistrar = new QWidget(this);
-//   QVBoxLayout* layoutRegistrar = new QVBoxLayout();
-//   //layoutRegistrar->setSpacing(0);
-//   //layoutRegistrar->setContentsMargins(45,3,0,3);
-//   //widgetRegistrar->setStyleSheet("background-color:rgb(244,244,244);");
-//   QLabel* lblInfo = new QLabel((tr("Registrar") + registrar), this);
-//   //layoutRegistrar->addWidget(lblInfo);
-//   main_layout->addWidget(lblInfo);
-//   //widgetRegistrar->setLayout(layoutRegistrar);
-//   //main_layout->addWidget(widgetRegistrar);
-   
-   QLabel* registrarLabel = new QLabel((tr("Registrar\n\n") + registrar), this);
+   DecentLabel* registrarLabel = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
+   registrarLabel->setText(tr("Registrar\n") + registrar);
    main_layout->addWidget(registrarLabel);
-   
-   QLabel* referrerLabel = new QLabel((tr("Referrer\n\n") + referrer), this);
+
+   DecentLabel* referrerLabel = new DecentLabel(this, DecentLabel::RowLabel);
+   referrerLabel->setText(tr("Referrer\n") + registrar);
    main_layout->addWidget(referrerLabel);
    
-   QLabel* lifetimeReferrerLabel = new QLabel((tr("Lifetime Referrer\n\n") + lifetime_referrer), this);
+   QLabel* lifetimeReferrerLabel = new QLabel((tr("Lifetime Referrer\n") + lifetime_referrer), this);
    main_layout->addWidget(lifetimeReferrerLabel);
    
-   QLabel* networkFeeLabel = new QLabel((tr("Network Fee Percentage\n\n") + network_fee_percentage), this);
+   QLabel* networkFeeLabel = new QLabel((tr("Network Fee Percentage\n") + network_fee_percentage), this);
    main_layout->addWidget(networkFeeLabel);
    
-   QLabel* lifetimeReferrerFeeLabel = new QLabel((tr("Lifetime Referrer Fee Percentage\n\n") + lifetime_referrer_fee_percentage), this);
+   QLabel* lifetimeReferrerFeeLabel = new QLabel((tr("Lifetime Referrer Fee Percentage\n") + lifetime_referrer_fee_percentage), this);
    main_layout->addWidget(lifetimeReferrerFeeLabel);
    
-   QLabel* referrerRewardsPercentageLabel = new QLabel((tr("Referrer Rewards Percentage\n\n") + referrer_rewards_percentage), this);
+   QLabel* referrerRewardsPercentageLabel = new QLabel((tr("Referrer Rewards Percentage\n") + referrer_rewards_percentage), this);
    main_layout->addWidget(referrerRewardsPercentageLabel);
 
    setWindowTitle(name + " (" + id + ")");
-   setFixedSize(620,420);
+   setFixedSize(300, 300);
    setLayout(main_layout);
 }
 //
