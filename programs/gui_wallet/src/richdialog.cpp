@@ -327,25 +327,22 @@ BuyDialog::BuyDialog(QWidget* parent, const SDigitalContent& a_cnt_details)
    QGridLayout* main_layout = new QGridLayout();
    main_layout->setSpacing(0);
    main_layout->setContentsMargins(0, 0, 0, 0);
-   
+
+   int iRowIndex = 0;
    // Author
    //
-   
    DecentLabel* labelAuthorTitle = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
-   DecentLabel* labelAuthorInfo = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
-   labelAuthorTitle->setFixedSize(250, 50);
-   labelAuthorInfo->setFixedSize(250, 50);
+   DecentLabel* labelAuthorInfo = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::HighlightedRight);
    labelAuthorTitle->setText(tr("Author"));
    labelAuthorInfo->setText(QString::fromStdString(a_cnt_details.author));
-   main_layout->addWidget(labelAuthorTitle, 0, 0, 1, 1);
-   main_layout->addWidget(labelAuthorInfo, 0, 1, 1, 1);
-   main_layout->itemAtPosition(0,1)->setAlignment(Qt::AlignRight);
-   main_layout->itemAtPosition(0,0)->setAlignment(Qt::AlignLeft);
+   main_layout->addWidget(labelAuthorTitle, iRowIndex, 0);
+   main_layout->addWidget(labelAuthorInfo, iRowIndex, 1);
+   ++iRowIndex;
 
    // Expiration
    //
    DecentLabel* labelExpirationTitle = new DecentLabel(this, DecentLabel::RowLabel);
-   DecentLabel* labelExpirationInfo = new DecentLabel(this, DecentLabel::RowLabel);
+   DecentLabel* labelExpirationInfo = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Right);
    labelExpirationTitle->setFixedSize(250, 50);
    labelExpirationInfo->setFixedSize(250, 50);
    QDateTime time = QDateTime::fromString(QString::fromStdString(a_cnt_details.expiration), "yyyy-MM-ddTHH:mm:ss");

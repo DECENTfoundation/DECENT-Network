@@ -17,7 +17,9 @@ namespace gui_wallet
       enum eName
       {
          None,
-         Highlighted
+         Highlighted,
+         Right,
+         HighlightedRight
       };
       
       DecentLabel(QWidget* pParent, eType enType = Default, eName = None);
