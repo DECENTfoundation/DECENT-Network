@@ -64,6 +64,21 @@ QPushButton[name='export']
 {
    qproperty-icon: url(':/icon/images/export1.png'), url(':/icon/images/export.png') disabled;
 }
+QPushButton[type='staricon']
+{
+   border: 0px;
+   background-color: white;
+   qproperty-icon:   url(':/icon/images/green_asterix.png'),
+                     url(':/icon/images/green_asterix.png') on,
+                     url(':/icon/images/green_asterix.png') on disabled,
+                     url(':/icon/images/white_asterix.png') off,
+                     url(':/icon/images/white_asterix.png') off disabled;
+}
+QPushButton[type='staricon'][enabled=false]
+{
+   border: 0px;
+   background-color: white;
+}
 QMessageBox QPushButton, QFileDialog QPushButton
 {
    border: 0px;

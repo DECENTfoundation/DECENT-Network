@@ -1,10 +1,33 @@
 #pragma once
 
 #include <QDialog>
+#include <QVector>
 
 namespace gui_wallet
 {
 struct SDigitalContent;
+class DecentButton;
+//
+// RatingWidget
+//
+class RatingWidget : public QWidget
+{
+   Q_OBJECT
+public:
+   RatingWidget(QWidget* pParent);
+
+public slots:
+   void setRating(int);
+signals:
+   void rated(int);
+protected slots:
+   void slot_rating();
+protected:
+   enum { size = 5 };
+   
+   bool m_bAutomation;
+   QVector<DecentButton*> m_arr_p_rate;
+};
 //
 // TransferDialog
 //
