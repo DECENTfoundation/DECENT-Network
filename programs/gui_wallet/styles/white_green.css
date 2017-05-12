@@ -1,3 +1,7 @@
+QTextEdit[type='info']
+{
+   padding: 2em;
+}
 QLabel[type='rowlabel']
 {
    padding-left: 2em;

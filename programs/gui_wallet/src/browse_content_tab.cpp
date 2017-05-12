@@ -149,12 +149,12 @@ void BrowseContentTab::slot_Details(int iIndex)
    BuyDialog* dialog = new BuyDialog(this, _digital_contents[iIndex]);
    dialog->setAttribute(Qt::WA_DeleteOnClose);
    dialog->open();
-//   ContentDetailsGeneral* pDetailsDialog = new ContentDetailsGeneral(nullptr);
-//   QObject::connect(pDetailsDialog, &ContentDetailsGeneral::ContentWasBought,
-//                    this, &BrowseContentTab::slot_Bought);
-//   pDetailsDialog->execCDD(_digital_contents[iIndex], true);
-//   pDetailsDialog->setAttribute(Qt::WA_DeleteOnClose);
-//   pDetailsDialog->open();
+   ContentDetailsGeneral* pDetailsDialog = new ContentDetailsGeneral(nullptr);
+   QObject::connect(pDetailsDialog, &ContentDetailsGeneral::ContentWasBought,
+                    this, &BrowseContentTab::slot_Bought);
+   pDetailsDialog->execCDD(_digital_contents[iIndex], true);
+   pDetailsDialog->setAttribute(Qt::WA_DeleteOnClose);
+   pDetailsDialog->open();
 }
 
 void BrowseContentTab::slot_Bought()

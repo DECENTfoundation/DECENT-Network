@@ -6,6 +6,8 @@
 #include "decent_label.hpp"
 #include "gui_wallet_mainwindow.hpp"
 #include "gui_design.hpp"
+#include "decent_text_edit.hpp"
+#include <graphene/chain/content_object.hpp>
 
 
 #include <QIntValidator>
@@ -33,6 +35,7 @@ RatingWidget::RatingWidget(QWidget* pParent)
    , m_bAutomation(false)
 {
    QHBoxLayout* pMainLayout = new QHBoxLayout();
+
 
    m_arr_p_rate.resize(size);
    for (int index = 0; index < size; ++index)
@@ -330,89 +333,116 @@ BuyDialog::BuyDialog(QWidget* parent, const SDigitalContent& a_cnt_details)
    
    DecentLabel* labelAuthorTitle = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
    DecentLabel* labelAuthorInfo = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
+   labelAuthorTitle->setFixedSize(250, 50);
+   labelAuthorInfo->setFixedSize(250, 50);
    labelAuthorTitle->setText(tr("Author"));
    labelAuthorInfo->setText(QString::fromStdString(a_cnt_details.author));
-   main_layout->addWidget(labelAuthorTitle, 0, 0);
-   main_layout->addWidget(labelAuthorInfo, 0, 1);
-   //main_layout->itemAtPosition(0,1)->setAlignment(Qt::AlignRight);
-   //main_layout->itemAtPosition(0,0)->setAlignment(Qt::AlignLeft);
+   main_layout->addWidget(labelAuthorTitle, 0, 0, 1, 1);
+   main_layout->addWidget(labelAuthorInfo, 0, 1, 1, 1);
+   main_layout->itemAtPosition(0,1)->setAlignment(Qt::AlignRight);
+   main_layout->itemAtPosition(0,0)->setAlignment(Qt::AlignLeft);
 
    // Expiration
    //
    DecentLabel* labelExpirationTitle = new DecentLabel(this, DecentLabel::RowLabel);
    DecentLabel* labelExpirationInfo = new DecentLabel(this, DecentLabel::RowLabel);
+   labelExpirationTitle->setFixedSize(250, 50);
+   labelExpirationInfo->setFixedSize(250, 50);
    QDateTime time = QDateTime::fromString(QString::fromStdString(a_cnt_details.expiration), "yyyy-MM-ddTHH:mm:ss");
    std::string e_str = CalculateRemainingTime(QDateTime::currentDateTime(), time);
    labelExpirationTitle->setText(tr("Expiration"));
    labelExpirationInfo->setText(QString::fromStdString(e_str));
-   main_layout->addWidget(labelExpirationTitle, 1, 0);
-   main_layout->addWidget(labelExpirationInfo, 1, 1);
+   main_layout->addWidget(labelExpirationTitle, 1, 0, 1, 1);
+   main_layout->addWidget(labelExpirationInfo, 1, 1, 1, 1);
+   main_layout->itemAtPosition(1,1)->setAlignment(Qt::AlignRight);
+   main_layout->itemAtPosition(1,0)->setAlignment(Qt::AlignLeft);
 
    // Uploaded
    //
    DecentLabel* labelUploadedTitle = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
    DecentLabel* labelUploadedInfo = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
+   labelUploadedTitle->setFixedSize(250, 50);
+   labelUploadedInfo->setFixedSize(250, 50);
    labelUploadedTitle->setText(tr("Uploaded"));
    labelUploadedInfo->setText(QString::fromStdString(a_cnt_details.created));
-   main_layout->addWidget(labelUploadedTitle, 2, 0);
-   main_layout->addWidget(labelUploadedInfo, 2, 1);
+   main_layout->addWidget(labelUploadedTitle, 2, 0, 1, 1);
+   main_layout->addWidget(labelUploadedInfo, 2, 1, 1, 1);
+   main_layout->itemAtPosition(2,1)->setAlignment(Qt::AlignRight);
+   main_layout->itemAtPosition(2,0)->setAlignment(Qt::AlignLeft);
 
-   // Amount
-   //
-   DecentLabel* labelAmountTitle = new DecentLabel(this, DecentLabel::RowLabel);
-   DecentLabel* labelAmountInfo = new DecentLabel(this, DecentLabel::RowLabel);
-   QString str_price = a_cnt_details.price.getString().c_str();
-   labelAmountTitle->setText(tr("Amount"));
-   labelAmountInfo->setText(str_price);
-   main_layout->addWidget(labelAmountTitle, 3, 0);
-   main_layout->addWidget(labelAmountInfo, 3, 1);
 
    // Average Rating
    //
-   DecentLabel* labelAverageRatingTitle = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
-   //DecentLabel* labelAverageRating = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
-//   
-//   QPixmap green_star(green_star_image);
-//   QPixmap white_star(white_star_image);
-//   
-//   white_star = white_star.scaled(QSize(20,20));
-//   green_star = green_star.scaled(QSize(20,20));
-   
+   DecentLabel* labelAverageRatingTitle = new DecentLabel(this, DecentLabel::RowLabel);
+   RatingWidget* averageRatingInfo = new RatingWidget(this);
+   labelAverageRatingTitle->setFixedSize(400, 50);
+   averageRatingInfo->setFixedSize(100, 50);
+   averageRatingInfo->setRating(a_cnt_details.AVG_rating);
    labelAverageRatingTitle->setText(tr("Average Rating"));
-   std::vector<DecentLabel*> stars;
-   main_layout->addWidget(labelAverageRatingTitle, 4, 0);
-   //main_layout->addWidget(labelAverageRatingTitle, 4, 1);
-//   for(int i = 0; i < a_cnt_details.AVG_rating; ++i) {
-//      stars.push_back(new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted));
-//      stars.back()->setPixmap(green_star);
-//      starLeyout->addWidget(stars[i]);
-//   }
-//   
-//   for(int i = a_cnt_details.AVG_rating; i < 5; ++i) {
-//      stars.push_back(new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted));
-//      stars.back()->setPixmap(white_star);
-//      starLeyout->addWidget(stars[i]);
-//   }
+   main_layout->addWidget(labelAverageRatingTitle, 3, 0, 1, 1);
+   main_layout->addWidget(averageRatingInfo, 3, 1, 1, 1);
+   main_layout->itemAtPosition(3,1)->setAlignment(Qt::AlignRight);
+   main_layout->itemAtPosition(3,0)->setAlignment(Qt::AlignLeft);
    
+   // Amount
+   //
+   DecentLabel* labelAmountTitle = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
+   DecentLabel* labelAmountInfo  = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
+   labelAmountTitle->setFixedSize(250, 50);
+   labelAmountInfo->setFixedSize(250, 50);
+   QString str_price = a_cnt_details.price.getString().c_str();
+   labelAmountTitle->setText(tr("Amount"));
+   labelAmountInfo->setText(str_price);
+   main_layout->addWidget(labelAmountTitle, 4, 0, 1, 1);
+   main_layout->addWidget(labelAmountInfo, 4, 1, 1, 1);
+   main_layout->itemAtPosition(4,1)->setAlignment(Qt::AlignRight);
+   main_layout->itemAtPosition(4,0)->setAlignment(Qt::AlignLeft);
+
    // Size
    //
    DecentLabel* labelSizeTitle = new DecentLabel(this, DecentLabel::RowLabel);
    DecentLabel* labelSizeInfo = new DecentLabel(this, DecentLabel::RowLabel);
+   labelSizeTitle->setFixedSize(250, 50);
+   labelSizeInfo->setFixedSize(250, 50);
    labelSizeTitle->setText(tr("Size"));
    labelSizeInfo->setText(QString::number(a_cnt_details.size) + " MB");
-   main_layout->addWidget(labelSizeTitle, 5, 0);
-   main_layout->addWidget(labelSizeInfo, 5, 1);
+   main_layout->addWidget(labelSizeTitle, 5, 0, 1, 1);
+   main_layout->addWidget(labelSizeInfo, 5, 1, 1, 1);
+   main_layout->itemAtPosition(5,1)->setAlignment(Qt::AlignRight);
+   main_layout->itemAtPosition(5,0)->setAlignment(Qt::AlignLeft);
  
    
    // Times Bought
    //
    DecentLabel* labelTimesBoughtTitle = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
    DecentLabel* labelTimesBoughtInfo = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
+   labelTimesBoughtTitle->setFixedSize(250, 50);
+   labelTimesBoughtInfo->setFixedSize(250, 50);
    labelTimesBoughtTitle->setText(tr("Times Bought"));
    labelTimesBoughtInfo->setText(QString::number(a_cnt_details.times_bought));
-   main_layout->addWidget(labelTimesBoughtTitle, 6, 0);
-   main_layout->addWidget(labelTimesBoughtInfo, 6, 1);
+   main_layout->addWidget(labelTimesBoughtTitle, 6, 0, 1, 1);
+   main_layout->addWidget(labelTimesBoughtInfo, 6, 1, 1, 1);
+   main_layout->itemAtPosition(6,1)->setAlignment(Qt::AlignRight);
+   main_layout->itemAtPosition(6,0)->setAlignment(Qt::AlignLeft);
+   
+   DecentTextEdit* description = new DecentTextEdit(this, DecentTextEdit::Info);
+   description->setText(tr("Description") + "\n\n");
+   description->setReadOnly(true);
+   description->setFont(DescriptionDetailsFont());
 
+   
+   std::string synopsis = a_cnt_details.synopsis;
+   std::string title;
+   std::string desc;
+   
+   graphene::chain::ContentObjectPropertyManager synopsis_parser(synopsis);
+   title = synopsis_parser.get<graphene::chain::ContentObjectTitle>();
+   desc = synopsis_parser.get<graphene::chain::ContentObjectDescription>();
+   
+   this->setWindowTitle(QString::fromStdString(title));
+   description->setText(description->toPlainText() + QString::fromStdString(desc) + "\n");
+   
+   main_layout->addWidget(description, 7, 0, -1, 1);
    
    setFixedSize(500, 500);
    setLayout(main_layout);
