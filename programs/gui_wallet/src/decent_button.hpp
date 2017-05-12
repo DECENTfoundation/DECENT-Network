@@ -14,6 +14,8 @@ public:
       Send,
       TableIcon,
       StarIcon,
+      DialogAction,
+      DialogCancel
    };
 
    enum eName

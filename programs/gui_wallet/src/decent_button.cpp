@@ -27,6 +27,12 @@ DecentButton::DecentButton(QWidget* pParent,
    case StarIcon:
       setProperty("type", "staricon");
       break;
+   case DialogAction:
+      setProperty("type", "dialogaction");
+      break;
+   case DialogCancel:
+      setProperty("type", "dialogcancel");
+      break;
    case Default:
    default:
       break;

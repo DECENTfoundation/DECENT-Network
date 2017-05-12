@@ -422,12 +422,10 @@ UserInfoDialog::UserInfoDialog(QWidget* parent,
    main_layout->addWidget(description, iRowIndex, 0, 1, 2);
    ++iRowIndex;
    
-   DecentButton* getItButton = new DecentButton(this);
-   DecentButton* cancelButton = new DecentButton(this);
-   getItButton->setFixedSize(140,40);
-   cancelButton->setFixedSize(140,40);
+   DecentButton* getItButton = new DecentButton(this, DecentButton::DialogAction);
+   DecentButton* cancelButton = new DecentButton(this, DecentButton::DialogCancel);
    getItButton->setText(tr("Get it!"));
-   cancelButton->setText(tr("Cancel"));
+   cancelButton->setText(tr("Close"));
    
    connect(getItButton, &QPushButton::clicked, this, &BuyDialog::LabelPushCallbackGUI);
    connect(cancelButton, &QPushButton::clicked, this, &QDialog::close);
