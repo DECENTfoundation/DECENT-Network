@@ -10,18 +10,15 @@ QLabel[type='rowlabel']
 }
 QLabel[name='highlighted']
 {
-   min-height: 3em;
    background-color: rgb(244, 244, 244);
 }
 QLabel[name='right']
 {
-   min-height: 3em;
    qproperty-alignment: 'AlignRight | AlignVCenter';
 }
 QLabel[name='highlightedright']
 {
    background-color: rgb(244, 244, 244);
-   min-height: 3em;
    qproperty-alignment: 'AlignRight | AlignVCenter';
 }
 QDialog, QMainWindow, QMessageBox

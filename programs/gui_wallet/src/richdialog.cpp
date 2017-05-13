@@ -27,6 +27,19 @@
 
 namespace gui_wallet
 {
+void PlaceInsideLabel(QWidget* pParent, QWidget* pChild)
+{
+   pParent->show();
+   QMargins margins = pParent->contentsMargins();
+
+   QHBoxLayout* pMainLayout = new QHBoxLayout;
+   pMainLayout->addWidget(pChild);
+
+   pMainLayout->setSizeConstraint(QLayout::SetFixedSize);
+   pMainLayout->setSpacing(0);
+   pMainLayout->setContentsMargins(0, 0, 0, 0);
+   pParent->setLayout(pMainLayout);
+}
 //
 // RatingWidget
 //
@@ -339,6 +352,7 @@ BuyDialog::BuyDialog(QWidget* parent, const SDigitalContent& a_cnt_details)
    main_layout->addWidget(labelAuthorTitle, iRowIndex, 0);
    main_layout->addWidget(labelAuthorInfo, iRowIndex, 1);
    ++iRowIndex;
+
    // Expiration
    //
    DecentLabel* labelExpirationTitle = new DecentLabel(this, DecentLabel::RowLabel);
@@ -364,12 +378,14 @@ BuyDialog::BuyDialog(QWidget* parent, const SDigitalContent& a_cnt_details)
    // Average Rating
    //
    DecentLabel* labelAverageRatingTitle = new DecentLabel(this, DecentLabel::RowLabel);
+   DecentLabel* labelAverageRatingInfoWrapper = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Right);
    RatingWidget* averageRatingInfo = new RatingWidget(this);
+   PlaceInsideLabel(labelAverageRatingInfoWrapper, averageRatingInfo);
    averageRatingInfo->setRating(a_cnt_details.AVG_rating);
    averageRatingInfo->setEnabled(false);
    labelAverageRatingTitle->setText(tr("Average Rating"));
    main_layout->addWidget(labelAverageRatingTitle, iRowIndex, 0);
-   main_layout->addWidget(averageRatingInfo, iRowIndex, 1, Qt::AlignCenter);
+   main_layout->addWidget(labelAverageRatingInfoWrapper, iRowIndex, 1, Qt::AlignRight);
    ++iRowIndex;
 
    // Amount
@@ -407,7 +423,6 @@ BuyDialog::BuyDialog(QWidget* parent, const SDigitalContent& a_cnt_details)
    description->setFixedSize(500, 200);
    description->setReadOnly(true);
    description->setFont(DescriptionDetailsFont());
-
    
    std::string synopsis = a_cnt_details.synopsis;
    std::string title;

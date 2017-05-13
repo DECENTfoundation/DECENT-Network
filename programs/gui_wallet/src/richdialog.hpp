@@ -8,6 +8,8 @@ namespace gui_wallet
 struct SDigitalContent;
 class DecentButton;
 //
+void PlaceInsideLabel(QWidget* pLabel, QWidget* pWidget);
+//
 // RatingWidget
 //
 class RatingWidget : public QWidget
@@ -105,6 +107,10 @@ signals:
 private:
    std::string m_URI;
 };
+//
+//
+//
+//
 
 }
 
