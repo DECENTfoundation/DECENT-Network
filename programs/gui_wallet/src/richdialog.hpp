@@ -108,7 +108,7 @@ signals:
    
 private:
    enum GetItOrPay {GetIt, Pay};
-   GetItOrPay getItOrPay;
+   GetItOrPay m_getItOrPay;
    std::string m_URI;
    QString m_amount;
 };
