@@ -343,9 +343,9 @@ void PurchasedTab::slot_Details(int iIndex)
       throw std::out_of_range("Content index is out of range");
 
    // content details dialog is ugly, needs to be rewritten
-   ContentReviewDialog* pDetailsDialog = new ContentReviewDialog(this, _current_content[iIndex]);
-   pDetailsDialog->setAttribute(Qt::WA_DeleteOnClose);
-   pDetailsDialog->open();
+//   ContentReviewDialog* pDetailsDialog = new ContentReviewDialog(this, _current_content[iIndex]);
+//   pDetailsDialog->setAttribute(Qt::WA_DeleteOnClose);
+//   pDetailsDialog->open();
    
    ContentDetailsBase* pDetailsDialog1 = new ContentDetailsBase(nullptr);
    pDetailsDialog1->execCDB(_current_content[iIndex], true);
