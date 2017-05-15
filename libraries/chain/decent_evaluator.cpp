@@ -181,7 +181,7 @@ namespace graphene { namespace chain {
                                     });
       }
 
-      graphene::chain::ContentObjectPropertyManager synopsis_parser(new_content_object.synopsis);
+      graphene::chain::ContentObjectPropertyManager synopsis_parser(o.synopsis);
       std::string title = synopsis_parser.get<graphene::chain::ContentObjectTitle>();
 
       auto& d = db();
