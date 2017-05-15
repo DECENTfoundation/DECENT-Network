@@ -21,10 +21,50 @@
 #include <vector>
 #include <string>
 #include "decent_button.hpp"
-
+#include "gui_wallet_global.hpp"
 
 
 namespace gui_wallet {
+   
+   /// **** Content comments **** ///
+   class CommentWidget : public QWidget
+   {
+      Q_OBJECT
+   public:
+      CommentWidget(QWidget*, const SDigitalContent*);
+      ~CommentWidget();
+      
+   public:
+      bool        next();
+      bool        previous();
+      void        reset();
+      bool        is_last() const;
+      bool        is_first() const;
+      
+   public:
+   signals:
+      void signal_SetNextPageDisabled(bool);
+      void signal_SetPreviousPageDisabled(bool);
+      
+      public slots:
+      void nextButtonSlot();
+      void previousButtonSlot();
+      void resetButtonSlot();
+      
+   private:
+      void        update_run_task();
+      void        set_next_comment(std::string const&);
+      void        controller();
+      std::string next_iterator();
+      
+      std::string                m_last_result;
+      std::string                m_next_itr;
+      std::vector<std::string>   m_iterators;
+      size_t                     m_comment_count;
+      std::string                m_content_uri;
+      
+   };
+   
                //SendDialog
 /********************************************/
    

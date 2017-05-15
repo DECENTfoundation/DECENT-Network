@@ -19,8 +19,6 @@
 
 using namespace gui_wallet;
 
-
-
                   //Send Dialog
 /*********************************************************/
  
@@ -247,5 +245,177 @@ ZebraDialog::ZebraDialog(QWidget* parent,
 /*********************************************************/
 
 
+/* /////////////Comment Widget////////////////*/
+CommentWidget::CommentWidget(QWidget* parent, const SDigitalContent* content_info)
+:  QWidget(parent),
+m_comment_count(1),
+m_content_uri(content_info->URI)
+{
+   setVisible(false);
+   update_run_task();
+}
 
+void CommentWidget::update_run_task()
+{
+   nlohmann::json comment;
+   try
+   {
+      comment = Globals::instance().runTaskParse("search_feedback "
+                                                 "\"" /*    empty user    */"\" "
+                                                 "\"" + m_content_uri + "\" "
+                                                 "\"" + next_iterator()   + "\" " +
+                                                 std::to_string(m_comment_count + 1) );
+   }catch(...){}
+   
+   QVBoxLayout* main_lay    = new QVBoxLayout();
+   
+   if(comment.empty())
+   {
+      QHBoxLayout* empty_comment_lay = new QHBoxLayout;
+      QLabel*      empty_text        = new QLabel;
+      
+      empty_text->setText(tr("Not comment(s) on this content"));
+      empty_comment_lay->addWidget(empty_text);
+      empty_comment_lay->setAlignment(Qt::AlignCenter);
+      main_lay->addLayout(empty_comment_lay);
+      setLayout(main_lay);
+      
+      return;
+   }
+   
+   if(comment.size() > m_comment_count){
+      set_next_comment(comment[m_comment_count]["id"].get<std::string>());
+   }else{
+      set_next_comment(std::string());
+   }
+   
+   QHBoxLayout* comment_lay = new QHBoxLayout();
+   QHBoxLayout* buttons_lay = new QHBoxLayout();
+   
+   DecentButton* next     = new DecentButton(this);
+   DecentButton* previous = new DecentButton(this);
+   DecentButton* reset    = new DecentButton(this);
+   
+   next->setText(tr("Next"));
+   previous->setText(tr("Previous"));
+   reset->setText(tr("First"));
+   
+   auto result = comment[0];
+   
+   QLabel* result_user     = new QLabel;
+   QLabel* result_comment  = new QLabel;
+   QLabel* result_rating   = new QLabel;
+   result_user->setText( QString::fromStdString(result["author"].get<std::string>()) );
+   //result_comment->setText( QString::fromStdString(result["comment"].get<std::string>()) );
+   result_rating->setText( QString::number( result["rating"].get<int>()) );
+   
+   comment_lay->addWidget(result_user);
+   comment_lay->addWidget(result_comment);
+   comment_lay->addWidget(result_rating);
+   
+   buttons_lay->addWidget(previous);
+   buttons_lay->addWidget(next);
+   buttons_lay->addWidget(reset);
+   buttons_lay->setAlignment(Qt::AlignBottom);
+   
+   connect(this, &CommentWidget::signal_SetNextPageDisabled, next, &QPushButton::setDisabled);
+   connect(this, &CommentWidget::signal_SetPreviousPageDisabled, previous, &QPushButton::setDisabled);
+   
+   connect(next, SIGNAL(clicked()), this, SLOT(nextButtonSlot()));
+   connect(previous, SIGNAL(clicked()), this, SLOT(previousButtonSlot()));
+   connect(reset, SIGNAL(clicked()), this, SLOT(resetButtonSlot()));
+   
+   controller();
+   
+   main_lay->addLayout(comment_lay);
+   main_lay->addLayout(buttons_lay);
+   main_lay->setContentsMargins(40, 0, 40, 5);
+   //main_lay->setAlignment(Qt::AlignCenter);
+   
+   setLayout(main_lay);
+}
+
+bool CommentWidget::next()
+{
+   if( is_last() )
+   {
+      return false;
+   }
+   m_iterators.push_back(m_next_itr);
+   update_run_task();
+   return true;
+}
+
+bool CommentWidget::previous()
+{
+   if( is_last() )
+   {
+      return false;
+   }
+   
+   m_iterators.pop_back();
+   update_run_task();
+   return true;
+}
+
+void CommentWidget::reset()
+{
+   m_iterators.clear();
+   m_next_itr.clear();
+   update_run_task();
+}
+
+bool CommentWidget::is_first() const
+{
+   return m_iterators.empty();
+}
+
+bool CommentWidget::is_last() const
+{
+   return m_next_itr.empty();
+}
+
+void CommentWidget::set_next_comment(std::string const& last)
+{
+   m_next_itr = last;
+}
+
+std::string CommentWidget::next_iterator()
+{
+   if( !m_iterators.empty() )
+   {
+      return m_iterators.back();
+   }
+   
+   return std::string();
+}
+
+void CommentWidget::controller()
+{
+   emit signal_SetNextPageDisabled(is_last());
+   emit signal_SetPreviousPageDisabled(is_first());
+}
+
+void CommentWidget::nextButtonSlot()
+{
+   next();
+   controller();
+}
+
+void CommentWidget::previousButtonSlot()
+{
+   previous();
+   controller();
+}
+
+void CommentWidget::resetButtonSlot()
+{
+   reset();
+   controller();
+}
+
+CommentWidget::~CommentWidget()
+{
+   
+}
 

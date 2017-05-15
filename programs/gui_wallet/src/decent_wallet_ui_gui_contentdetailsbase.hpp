@@ -16,48 +16,13 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QLabel>
-
+#include "richdialog.hpp"
 #include "decent_wallet_ui_gui_newcheckbox.hpp"
 
 namespace gui_wallet {
 
 struct SDigitalContent;
 class DecentTextEdit;
-
-   
-/// for content comments
-class CommentWidget : public QWidget
-{
-   Q_OBJECT
-public:
-   CommentWidget(QWidget*, const SDigitalContent*);
-   ~CommentWidget();
-   
-public:
-   bool        next();
-   bool        previous();
-   void        reset();
-   bool        is_last() const;
-   bool        is_first() const;
-   void        update_run_task();
-   void        set_next_comment(std::string const&);
-   void        controller();
-   std::string next_iterator();
-   
-public slots:
-   void nextButtonSlot();
-   void previousButtonSlot();
-   void resetButtonSlot();
-   
-private:
-   std::string                m_last_result;
-   std::string                m_next_itr;
-   std::vector<std::string>   m_iterators;
-   size_t                     m_comment_count;
-   std::string                m_content_uri;
-};
-/////// *****/////
-   
    
 class ContentDetailsBase : public QDialog
 {
