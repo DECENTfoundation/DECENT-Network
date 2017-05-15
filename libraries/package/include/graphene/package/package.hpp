@@ -277,7 +277,7 @@ namespace decent { namespace package {
         ~PackageManager();
 
         static PackageManager& instance() {
-            static PackageManager the_package_manager(graphene::utilities::decent_path_finder::instance().get_decent_data() / "packages");
+            static PackageManager the_package_manager(graphene::utilities::decent_path_finder::instance().get_decent_packages());
             return the_package_manager;
         }
 

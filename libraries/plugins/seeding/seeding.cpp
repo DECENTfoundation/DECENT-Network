@@ -526,6 +526,17 @@ void seeding_plugin::plugin_initialize( const boost::program_options::variables_
       else
          FC_THROW("missing free-space parameter");
 
+      if( options.count("packages-path")) {
+         try {
+            seeding_options.packages_path = boost::filesystem::path(options["packages-path"].as<string>());
+         } catch( ... ) {
+            FC_THROW("Invalid packages path ${path_string}",
+                     ("path_string", options["packages-path"].as<string>()));
+         }
+      } else {
+         FC_THROW("missing packages-path parameter");
+      }
+
       plugin_pre_startup( seeding_options );
    }
 
@@ -536,8 +547,14 @@ void seeding_plugin::plugin_pre_startup( const seeding_plugin_startup_options& s
 {
    if( my )
       return;
-   ilog("seeding plugin:  plugin_pre_startup() start");
 
+   ilog("seeding plugin:  plugin_pre_startup() start");
+   auto& dir_helper = graphene::utilities::decent_path_finder::instance();
+   if( seeding_options.packages_path != fc::path( "" ) )
+      dir_helper.set_packages_path( seeding_options.packages_path );
+   else
+      dir_helper.set_packages_path( dir_helper.get_decent_packages() / "seeding" );
+   
    ilog("starting service thread");
    my = unique_ptr<detail::seeding_plugin_impl>( new detail::seeding_plugin_impl( *this) );
    my->service_thread = std::make_shared<fc::thread>("seeding");
@@ -575,6 +592,7 @@ void seeding_plugin::plugin_set_program_options(
          ("seeder-private-key", bpo::value<string>(), "Private key of the account controlling this seeder")
          ("free-space", bpo::value<int>(), "Allocated disk space, in MegaBytes")
          ("seeding-price", bpo::value<int>(), "price per MegaBytes")
+         ("packages-path", bpo::value<string>(), "Packages storage path")
          ;
 }
 

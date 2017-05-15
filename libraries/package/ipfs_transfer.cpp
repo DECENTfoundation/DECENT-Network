@@ -81,7 +81,7 @@ namespace decent { namespace package {
                 {
                     const auto dir_name = dest_path / link.at("Name");
                     create_directories(dir_name);
-                     ipfs_recursive_get(link.at("Hash"), dir_name);
+                    ipfs_recursive_get(link.at("Hash"), dir_name);
                 }
                 if((int) link.at("Type") == 2 ) //file
                 {

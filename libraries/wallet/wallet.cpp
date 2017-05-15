@@ -2429,12 +2429,13 @@ public:
                          DInteger content_private_key,
                          string seeder_private_key,
                          uint64_t free_space,
-                         uint32_t seeding_price)
+                         uint32_t seeding_price,
+                         string packages_path)
    {
       account_id_type seeder = get_account_id( account_id_type_or_name );
       use_network_node_api();
       fc::ecc::private_key seeder_priv_key = *(wif_to_key(seeder_private_key));
-      (*_remote_net_node)->seeding_startup( seeder, content_private_key, seeder_priv_key, free_space, seeding_price );
+      (*_remote_net_node)->seeding_startup( seeder, content_private_key, seeder_priv_key, free_space, seeding_price, packages_path );
    }
 
    signed_transaction report_stats(string consumer,
@@ -3901,9 +3902,10 @@ signed_transaction wallet_api::leave_rating_and_comment(string consumer,
                                     DInteger content_private_key,
                                     string seeder_private_key,
                                     uint64_t free_space,
-                                    uint32_t seeding_price)
+                                    uint32_t seeding_price,
+                                    string packages_path)
    {
-      return my->seeding_startup(account_id_type_or_name, content_private_key, seeder_private_key, free_space, seeding_price);
+      return my->seeding_startup(account_id_type_or_name, content_private_key, seeder_private_key, free_space, seeding_price, packages_path);
    }
 
    signed_transaction wallet_api::report_stats(string consumer,

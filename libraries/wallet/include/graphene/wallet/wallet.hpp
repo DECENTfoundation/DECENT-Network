@@ -1591,7 +1591,8 @@ namespace graphene { namespace wallet {
                                DInteger content_private_key,
                                string seeder_private_key,
                                uint64_t free_space,
-                               uint32_t seeding_price);
+                               uint32_t seeding_price,
+                               string packages_path);
 
          /**
           * @brief Creates a subscription to author. This function is used by consumers.

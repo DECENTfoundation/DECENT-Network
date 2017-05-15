@@ -14,6 +14,7 @@ namespace decent { namespace seeding {
       fc::ecc::private_key seeder_private_key;
       uint64_t free_space;
       uint32_t seeding_price;
+      fc::path packages_path;
    };
 
    extern fc::promise<seeding_plugin_startup_options>::ptr seeding_promise;

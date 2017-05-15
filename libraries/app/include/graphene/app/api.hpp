@@ -244,7 +244,8 @@ namespace graphene { namespace app {
                               const DInteger& content_private_key,
                               const fc::ecc::private_key& seeder_private_key,
                               const uint64_t free_space,
-                              const uint32_t seeding_price);
+                              const uint32_t seeding_price,
+                              const string packages_path);
 
       private:
          application& _app;
