@@ -92,8 +92,6 @@ public:
 //
 // ContentInfoDialog
 //
-enum GetItOrPay {GetIt, Pay};
-   
 class ContentInfoDialog : public QDialog
 {
    Q_OBJECT
@@ -109,13 +107,10 @@ signals:
    void ContentWasBought();
    
 private:
+   enum GetItOrPay {GetIt, Pay};
    GetItOrPay getItOrPay;
    std::string m_URI;
+   QString m_amount;
 };
-//
-//
-//
-//
-
 }
 

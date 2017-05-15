@@ -336,7 +336,7 @@ UserInfoDialog::UserInfoDialog(QWidget* parent,
 // ContentInfoDialog
 //
 ContentInfoDialog::ContentInfoDialog(QWidget* parent, const SDigitalContent& a_cnt_details)
-   : m_URI(a_cnt_details.URI), getItOrPay(GetIt)
+   : m_URI(a_cnt_details.URI), m_amount(a_cnt_details.price.getString().c_str()), getItOrPay(GetIt)
 {
    QGridLayout* main_layout = new QGridLayout();
    main_layout->setSpacing(0);
@@ -459,7 +459,7 @@ void ContentInfoDialog::ButtonWasClicked()
    if(getItOrPay == GetIt)
    {
       getItOrPay = Pay;
-      button->setText(tr("Pay"));
+      button->setText((tr("Pay") + " " + m_amount));
    }
    else
    {
@@ -495,6 +495,5 @@ void ContentInfoDialog::LabelPushCallbackGUI()
    emit ContentWasBought();
    close();
 }
-
 }  // end namespace gui_wallet
 
