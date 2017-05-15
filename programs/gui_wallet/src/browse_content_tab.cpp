@@ -146,15 +146,11 @@ void BrowseContentTab::slot_Details(int iIndex)
     }
 
    // content details dialog is ugly, needs to be rewritten
-   BuyDialog* dialog = new BuyDialog(this, _digital_contents[iIndex]);
-   dialog->setAttribute(Qt::WA_DeleteOnClose);
-   dialog->open();
-   ContentDetailsGeneral* pDetailsDialog = new ContentDetailsGeneral(nullptr);
-   QObject::connect(dialog, &BuyDialog::ContentWasBought,
-                    this, &BrowseContentTab::slot_Bought);
-   pDetailsDialog->execCDD(_digital_contents[iIndex], true);
+   ContentInfoDialog* pDetailsDialog = new ContentInfoDialog(this, _digital_contents[iIndex]);
    pDetailsDialog->setAttribute(Qt::WA_DeleteOnClose);
    pDetailsDialog->open();
+   QObject::connect(pDetailsDialog, &ContentInfoDialog::ContentWasBought,
+                    this, &BrowseContentTab::slot_Bought);
 }
 
 void BrowseContentTab::slot_Bought()

@@ -333,10 +333,10 @@ UserInfoDialog::UserInfoDialog(QWidget* parent,
    setLayout(main_layout);
 }
 //
-// BuyDialog
+// ContentInfoDialog
 //
-BuyDialog::BuyDialog(QWidget* parent, const SDigitalContent& a_cnt_details)
-: m_URI(a_cnt_details.URI)
+ContentInfoDialog::ContentInfoDialog(QWidget* parent, const SDigitalContent& a_cnt_details)
+   : m_URI(a_cnt_details.URI), getItOrPay(GetIt)
 {
    QGridLayout* main_layout = new QGridLayout();
    main_layout->setSpacing(0);
@@ -443,7 +443,7 @@ BuyDialog::BuyDialog(QWidget* parent, const SDigitalContent& a_cnt_details)
    getItButton->setText(tr("Get it!"));
    cancelButton->setText(tr("Close"));
    
-   connect(getItButton, &QPushButton::clicked, this, &BuyDialog::LabelPushCallbackGUI);
+   connect(getItButton, &QPushButton::clicked, this, &ContentInfoDialog::ButtonWasClicked);
    connect(cancelButton, &QPushButton::clicked, this, &QDialog::close);
    
    main_layout->addWidget(getItButton, iRowIndex, 0, Qt::AlignRight);
@@ -453,24 +453,24 @@ BuyDialog::BuyDialog(QWidget* parent, const SDigitalContent& a_cnt_details)
    setLayout(main_layout);
 }
    
-void BuyDialog::LabelPushCallbackGUI()
+void ContentInfoDialog::ButtonWasClicked()
 {
-   QMessageBox* reply = new QMessageBox();
-   reply->setFixedSize(500, 400);
-   reply->setContentsMargins(70, 30, 70, 30);
-   reply->setWindowFlags(Qt::WindowTitleHint);
-   reply->QDialog::setWindowTitle(tr("DECENT-Blockchain Content Distribution"));
-   reply->setText(tr("Are you sure you want to buy this content?"));
-   QPushButton* pButtonCancel = reply->addButton(tr("Cancel"), QMessageBox::YesRole);
-   QPushButton* pButtonOk = reply->addButton(tr("Get it"), QMessageBox::NoRole);
-   pButtonOk->setStyleSheet(d_pButtonOk);
-   pButtonCancel->setStyleSheet(d_pbuttonCancel);
-   pButtonOk->setFixedSize(140, 40);
-   pButtonCancel->setFixedSize(140, 40);
-   reply->exec();
-   if (reply->clickedButton()==pButtonCancel) {
-      return;
+   QPushButton* button = (QPushButton *)sender();
+   if(getItOrPay == GetIt)
+   {
+      getItOrPay = Pay;
+      button->setText(tr("Pay"));
    }
+   else
+   {
+      getItOrPay = GetIt;
+      button->setText(tr("Get It!"));
+      LabelPushCallbackGUI();
+   }
+}
+   
+void ContentInfoDialog::LabelPushCallbackGUI()
+{
    std::string downloadCommand = "download_content";
    downloadCommand += " " + Globals::instance().getCurrentUser();       // consumer
    downloadCommand += " \"" + m_URI + "\"";                             // URI
@@ -478,8 +478,8 @@ void BuyDialog::LabelPushCallbackGUI()
    downloadCommand += " true";                                          // broadcast
    
    std::string a_result;
-   
    std::string str_error;
+   
    try
    {
       RunTask(downloadCommand, a_result);
@@ -489,12 +489,11 @@ void BuyDialog::LabelPushCallbackGUI()
       str_error = ex.what();
    }
    if (false == str_error.empty())
-      ALERT_DETAILS(tr("Failed to download content").toStdString(), str_error.c_str());
+      ShowMessageBox("", tr("Failed to download content"), QString::fromStdString(str_error));
    
    
    emit ContentWasBought();
    close();
-   
 }
 
 }  // end namespace gui_wallet

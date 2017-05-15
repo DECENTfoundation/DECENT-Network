@@ -90,21 +90,26 @@ public:
 
 };
 //
-// BuyDialog
+// ContentInfoDialog
 //
-class BuyDialog : public QDialog
+enum GetItOrPay {GetIt, Pay};
+   
+class ContentInfoDialog : public QDialog
 {
    Q_OBJECT
 public:
-   BuyDialog(QWidget* parent, const SDigitalContent& a_cnt_details);
+   ContentInfoDialog(QWidget* parent, const SDigitalContent& a_cnt_details);
+   
+   void LabelPushCallbackGUI();
    
 public slots:
-   void LabelPushCallbackGUI();
+   void ButtonWasClicked();
 public:
 signals:
    void ContentWasBought();
    
 private:
+   GetItOrPay getItOrPay;
    std::string m_URI;
 };
 //
