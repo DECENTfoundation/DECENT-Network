@@ -497,5 +497,138 @@ void ContentInfoDialog::LabelPushCallbackGUI()
    emit ContentWasBought();
    close();
 }
+
+//
+// PurchasedDialog
+//
+ContentReviewDialog::ContentReviewDialog(QWidget* parent, const SDigitalContent& a_cnt_details)
+: m_URI(a_cnt_details.URI)
+{
+   QGridLayout* main_layout = new QGridLayout();
+   main_layout->setSpacing(0);
+   main_layout->setContentsMargins(0, 0, 0, 15);
+   
+   int iRowIndex = 0;
+   // Author
+   //
+   DecentLabel* labelAuthorTitle = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
+   DecentLabel* labelAuthorInfo = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::HighlightedRight);
+   labelAuthorTitle->setText(tr("Author"));
+   labelAuthorInfo->setText(QString::fromStdString(a_cnt_details.author));
+   main_layout->addWidget(labelAuthorTitle, iRowIndex, 0);
+   main_layout->addWidget(labelAuthorInfo, iRowIndex, 1);
+   ++iRowIndex;
+   
+   // Created
+   //
+   DecentLabel* labelExpirationTitle = new DecentLabel(this, DecentLabel::RowLabel);
+   DecentLabel* labelExpirationInfo = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Right);
+   QDateTime time = QDateTime::fromString(QString::fromStdString(a_cnt_details.created), "yyyy-MM-ddTHH:mm:ss");
+   std::string e_str = CalculateRemainingTime(QDateTime::currentDateTime(), time);
+   labelExpirationTitle->setText(tr("Created"));
+   labelExpirationInfo->setText(QString::fromStdString(e_str));
+   main_layout->addWidget(labelExpirationTitle, iRowIndex, 0);
+   main_layout->addWidget(labelExpirationInfo, iRowIndex, 1);
+   ++iRowIndex;
+   
+   // Amount
+   //
+   DecentLabel* labelAmountTitle = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
+   DecentLabel* labelAmountInfo  = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::HighlightedRight);
+   QString str_price = a_cnt_details.price.getString().c_str();
+   labelAmountTitle->setText(tr("Amount"));
+   labelAmountInfo->setText(str_price);
+   main_layout->addWidget(labelAmountTitle, iRowIndex, 0);
+   main_layout->addWidget(labelAmountInfo, iRowIndex, 1);
+   ++iRowIndex;
+   
+   // Average Rating
+   //
+   DecentLabel* labelAverageRatingTitle = new DecentLabel(this, DecentLabel::RowLabel);
+   DecentLabel* labelAverageRatingInfoWrapper = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Right);
+   RatingWidget* averageRatingInfo = new RatingWidget(this);
+   PlaceInsideLabel(labelAverageRatingInfoWrapper, averageRatingInfo);
+   averageRatingInfo->setRating(a_cnt_details.AVG_rating);
+   averageRatingInfo->setEnabled(false);
+   labelAverageRatingTitle->setText(tr("Average Rating"));
+   main_layout->addWidget(labelAverageRatingTitle, iRowIndex, 0);
+   main_layout->addWidget(labelAverageRatingInfoWrapper, iRowIndex, 1, Qt::AlignRight);
+   ++iRowIndex;
+   
+   // Size
+   //
+   DecentLabel* labelSizeTitle = new DecentLabel(this, DecentLabel::RowLabel);
+   DecentLabel* labelSizeInfo = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Right);
+   labelSizeTitle->setText(tr("Size"));
+   labelSizeInfo->setText(QString::number(a_cnt_details.size) + " MB");
+   main_layout->addWidget(labelSizeTitle, iRowIndex, 0);
+   main_layout->addWidget(labelSizeInfo, iRowIndex, 1);
+   ++iRowIndex;
+   
+   // Times Bought
+   //
+   DecentLabel* labelTimesBoughtTitle = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
+   DecentLabel* labelTimesBoughtInfo = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::HighlightedRight);
+   labelTimesBoughtTitle->setText(tr("Times Bought"));
+   labelTimesBoughtInfo->setText(QString::number(a_cnt_details.times_bought));
+   main_layout->addWidget(labelTimesBoughtTitle, iRowIndex, 0);
+   main_layout->addWidget(labelTimesBoughtInfo, iRowIndex, 1);
+   ++iRowIndex;
+   
+   DecentTextEdit* description = new DecentTextEdit(this, DecentTextEdit::Info);
+   description->setFixedSize(500, 200);
+   description->setReadOnly(true);
+   description->setFont(DescriptionDetailsFont());
+   
+   std::string synopsis = a_cnt_details.synopsis;
+   std::string title;
+   std::string desc;
+   
+   graphene::chain::ContentObjectPropertyManager synopsis_parser(synopsis);
+   title = synopsis_parser.get<graphene::chain::ContentObjectTitle>();
+   desc = synopsis_parser.get<graphene::chain::ContentObjectDescription>();
+   
+   setWindowTitle(QString::fromStdString(title));
+   description->setText(QString::fromStdString(desc));
+   
+   main_layout->addWidget(description, iRowIndex, 0, 1, 2);
+   ++iRowIndex;
+
+   setFixedSize(500, 500);
+   setLayout(main_layout);
+}
+//
+// PurchasedDialog
+//
+NextPreviousWidget::NextPreviousWidget() : m_next_button(new DecentButton(this, DecentButton::TableIcon, DecentButton::Transaction))
+, m_previous_button(new DecentButton(this, DecentButton::TableIcon, DecentButton::Transfer))
+{
+   QHBoxLayout* main_layout = new QHBoxLayout();
+   QObject::connect(m_next_button, &QPushButton::clicked, this, &NextPreviousWidget::next);
+   QObject::connect(m_previous_button, &QPushButton::clicked, this, &NextPreviousWidget::previous);
+   
+   main_layout->addWidget(m_next_button);
+   main_layout->addWidget(m_previous_button);
+   setLayout(main_layout);
+}
+   
+void NextPreviousWidget::resete()
+{
+   m_next_button->setEnabled(true);
+   m_previous_button->setEnabled(true);
+}
+   
+void NextPreviousWidget::first()
+{
+   m_next_button->setEnabled(true);
+   m_previous_button->setEnabled(false);
+}
+   
+void NextPreviousWidget::last()
+{
+   m_next_button->setEnabled(false);
+   m_previous_button->setEnabled(true);
+}
+   
 }  // end namespace gui_wallet
 

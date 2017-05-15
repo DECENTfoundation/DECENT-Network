@@ -2,6 +2,7 @@
 
 #include <QDialog>
 #include <QVector>
+#include "decent_wallet_ui_gui_newcheckbox.hpp"
 
 namespace gui_wallet
 {
@@ -111,6 +112,37 @@ private:
    GetItOrPay m_getItOrPay;
    std::string m_URI;
    QString m_amount;
+};
+
+//
+// ContentReviewDialog
+//
+class ContentReviewDialog : public QDialog
+{
+   Q_OBJECT
+public:
+   ContentReviewDialog(QWidget* parent, const SDigitalContent& a_cnt_details);
+private:
+   std::string m_URI;
+   std::vector<NewCheckBox*> stars_labels;
+};
+   
+class NextPreviousWidget : public QWidget
+{
+   Q_OBJECT
+public:
+   NextPreviousWidget();
+
+signals:
+   void next();
+   void previous();
+public slots:
+   void resete();
+   void first();
+   void last();
+private:
+   DecentButton* m_next_button;
+   DecentButton* m_previous_button;
 };
 }
 
