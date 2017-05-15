@@ -2,7 +2,6 @@
 
 #include <QDialog>
 #include <QVector>
-#include "decent_wallet_ui_gui_newcheckbox.hpp"
 
 namespace gui_wallet
 {
@@ -124,7 +123,6 @@ public:
    ContentReviewDialog(QWidget* parent, const SDigitalContent& a_cnt_details);
 private:
    std::string m_URI;
-   std::vector<NewCheckBox*> stars_labels;
 };
    
 class NextPreviousWidget : public QWidget
@@ -137,7 +135,7 @@ signals:
    void next();
    void previous();
 public slots:
-   void resete();
+   void reset();
    void first();
    void last();
 private:

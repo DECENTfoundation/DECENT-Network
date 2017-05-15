@@ -329,7 +329,6 @@ UserInfoDialog::UserInfoDialog(QWidget* parent,
    main_layout->addWidget(referrerRewardsPercentageLabel);
 
    setWindowTitle(name + " (" + id + ")");
-   setFixedSize(300, 300);
    setLayout(main_layout);
 }
 //
@@ -451,7 +450,6 @@ ContentInfoDialog::ContentInfoDialog(QWidget* parent, const SDigitalContent& a_c
    main_layout->addWidget(getItButton, iRowIndex, 0, Qt::AlignRight);
    main_layout->addWidget(cancelButton, iRowIndex, 1, Qt::AlignLeft);
    
-   setFixedSize(500, 500);
    setLayout(main_layout);
 }
    
@@ -594,16 +592,16 @@ ContentReviewDialog::ContentReviewDialog(QWidget* parent, const SDigitalContent&
    main_layout->addWidget(description, iRowIndex, 0, 1, 2);
    ++iRowIndex;
 
-   setFixedSize(500, 500);
    setLayout(main_layout);
 }
 //
 // PurchasedDialog
 //
-NextPreviousWidget::NextPreviousWidget() : m_next_button(new DecentButton(this, DecentButton::TableIcon, DecentButton::Transaction))
+NextPreviousWidget::NextPreviousWidget() :
+  m_next_button(new DecentButton(this, DecentButton::TableIcon, DecentButton::Transaction))
 , m_previous_button(new DecentButton(this, DecentButton::TableIcon, DecentButton::Transfer))
 {
-   QHBoxLayout* main_layout = new QHBoxLayout();
+   QVBoxLayout* main_layout = new QVBoxLayout();
    QObject::connect(m_next_button, &QPushButton::clicked, this, &NextPreviousWidget::next);
    QObject::connect(m_previous_button, &QPushButton::clicked, this, &NextPreviousWidget::previous);
    
@@ -612,7 +610,7 @@ NextPreviousWidget::NextPreviousWidget() : m_next_button(new DecentButton(this, 
    setLayout(main_layout);
 }
    
-void NextPreviousWidget::resete()
+void NextPreviousWidget::reset()
 {
    m_next_button->setEnabled(true);
    m_previous_button->setEnabled(true);
