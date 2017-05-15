@@ -63,6 +63,7 @@ install:
   # Install macOS prerequisites.
   - if [ "$TRAVIS_OS_NAME" == "osx" ] ; then brew update && brew install doxygen && brew upgrade && brew cleanup && brew doctor && brew tap homebrew/versions && brew update && brew Install automake autoconf libtool cmake berkeley-db boost160 qt5 cryptopp doxygen byacc flex gettext git pbc gmp ipfs openssl readline && brew doctor ; fi
 
+
 script:
   - DECENT_CMAKE_TARGET_ALL="all"
   - DECENT_CMAKE_TARGET_INSTALL="install"
