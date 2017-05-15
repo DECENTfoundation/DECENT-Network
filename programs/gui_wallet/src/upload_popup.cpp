@@ -4,77 +4,42 @@
 #include "upload_popup.hpp"
 #include "decent_wallet_ui_gui_contentdetailsgeneral.hpp"
 #include "decent_button.hpp"
+#include "decent_text_edit.hpp"
+#include "decent_line_edit.hpp"
 #include "gui_design.hpp"
 
 #ifndef _MSC_VER
+#include <QLocale>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
-#include <QMessageBox>
 #include <QFileDialog>
+#include <QStringList>
 #include <QComboBox>
-#include <QStandardItemModel>
-#include <QStandardItem>
-#include <QCalendarWidget>
 #include <QDateTime>
 #include <QDate>
 #include <QTime>
 #include <QTimer>
 #include <QDateEdit>
-#include <QTextEdit>
-#include <QApplication>
 #include <QCheckBox>
 #include <QStyleFactory>
-#include <QInputMethod>
 #include <QSignalMapper>
 #include <QLocale>
-#include <QLabel>
-#include <QLineEdit>
 
 #include <graphene/chain/config.hpp>
 #include <graphene/chain/content_object.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/optional.hpp>
-
-#include <cryptopp/integer.h>
-#include <cryptopp/aes.h>
-#include <cryptopp/filters.h>
-#include <cryptopp/files.h>
-#include <cryptopp/ccm.h>
-#include <cryptopp/md5.h>
-#include <cryptopp/osrng.h>
-
-#include <QIcon>
-
-
-
-
-
-#include <QMouseEvent>
-
-
-
-
-#include <ctime>
-#include <limits>
-#include <iostream>
-#include <cmath>
-#include <algorithm>
-#include <graphene/chain/config.hpp>
-
-
-
-
-#include "json.hpp"
 #endif
 
 using string = std::string;
-using namespace gui_wallet;
-using namespace nlohmann;
+
+namespace gui_wallet
+{
 
 Upload_popup::Upload_popup(QWidget* pParent)
 : QDialog(pParent)
 , m_pStatusCheckTimer(new QTimer(this))
-, m_pDescriptionText(new QTextEdit(this))
+, m_pDescriptionText(new DecentTextEdit(this, DecentTextEdit::Editor))
 , m_pLifeTime(new QDateEdit(this))
 , m_iKeyParticles(2)
 , m_dPrice(-1)
@@ -86,12 +51,12 @@ Upload_popup::Upload_popup(QWidget* pParent)
       m_arrPublishers[iIndex].first = publishers[iIndex];
       m_arrPublishers[iIndex].second = false;
    }
-
-   _locale = ((QApplication*)QApplication::instance())->inputMethod()->locale();
+   //
+   setWindowTitle(tr("Upload new content"));
    //
    // Title field
    //
-   QLineEdit* pTitleText = new QLineEdit();
+   DecentLineEdit* pTitleText = new DecentLineEdit(this);
    pTitleText->setPlaceholderText(tr("Title"));
    pTitleText->setAttribute(Qt::WA_MacShowFocusRect, 0);
    pTitleText->setTextMargins(5, 5, 5, 5);
@@ -100,7 +65,6 @@ Upload_popup::Upload_popup(QWidget* pParent)
    // Description field
    //
    m_pDescriptionText->setPlaceholderText(tr("Description"));
-   m_pDescriptionText->setStyleSheet(d_desc);
    m_pDescriptionText->setMinimumHeight(160);
    m_pDescriptionText->setMinimumWidth(480);
    m_pDescriptionText->setTabChangesFocus(true);
@@ -108,8 +72,8 @@ Upload_popup::Upload_popup(QWidget* pParent)
    // Lifetime
    //
    QLabel* pLifeTimeLabel = new QLabel(this);
+   pLifeTimeLabel->setEnabled(false);
    pLifeTimeLabel->setText(tr("Expiration date"));
-   pLifeTimeLabel->setStyleSheet(d_label_v1);
    pLifeTimeLabel->setMinimumWidth(60);
    pLifeTimeLabel->setMinimumHeight(40);
 
@@ -124,14 +88,13 @@ Upload_popup::Upload_popup(QWidget* pParent)
    // Key particles
    //
    QLabel* pKeypartsLabel = new QLabel(this);
+   pKeypartsLabel->setEnabled(false);
    pKeypartsLabel->setText(tr("Key particles"));
-   pKeypartsLabel->setStyleSheet(d_label_v1);
    pKeypartsLabel->setMinimumWidth(60);
    pKeypartsLabel->setMinimumHeight(40);
 
    QComboBox* pKeypartsCombo = new QComboBox(this);
    pKeypartsCombo->setStyle(QStyleFactory::create("fusion"));
-   pKeypartsCombo->setStyleSheet(c_keyparts);
    pKeypartsCombo->setMinimumHeight(40);
    pKeypartsCombo->setFixedWidth(320);
 
@@ -142,30 +105,29 @@ Upload_popup::Upload_popup(QWidget* pParent)
    //
    // Price
    //
-   QLabel* priceLabel = new QLabel(this);
-   priceLabel->setText(tr("Price"));
-   priceLabel->setStyleSheet(d_label_v1);
-   priceLabel->setMinimumWidth(60);
-   priceLabel->setMinimumHeight(40);
+   QLabel* pPriceLabel = new QLabel(this);
+   pPriceLabel->setEnabled(false);
+   pPriceLabel->setText(tr("Price"));
+   pPriceLabel->setMinimumWidth(60);
+   pPriceLabel->setMinimumHeight(40);
 
-   QLineEdit* pPriceEditor = new QLineEdit();
-   
    QDoubleValidator* dblValidator = new QDoubleValidator(0.0001, 100000, 4, this);
-   dblValidator->setLocale(Globals::instance().m_locale);
-   pPriceEditor->setValidator(dblValidator);
+   dblValidator->setLocale(Globals::instance().locale());
 
+   DecentLineEdit* pPriceEditor = new DecentLineEdit(this);
+   pPriceEditor->setPlaceholderText(tr("Price"));
+   pPriceEditor->setValidator(dblValidator);
    pPriceEditor->setAttribute(Qt::WA_MacShowFocusRect, 0);
-   pPriceEditor->setStyleSheet(d_label_v2);
    pPriceEditor->setTextMargins(5, 5, 5, 5);
    pPriceEditor->setMinimumHeight(40);
    pPriceEditor->setFixedWidth(320);
    //
    // Seeders
    //
-   QLineEdit* pSeedersPath = new QLineEdit(tr("Seeders"));
+   DecentLineEdit* pSeedersPath = new DecentLineEdit(this);
+   pSeedersPath->setEnabled(false);
    pSeedersPath->setPlaceholderText(tr("Seeders"));
    pSeedersPath->setReadOnly(true);
-   pSeedersPath->setStyleSheet(d_label_v2);
    pSeedersPath->setTextMargins(5, 5, 5, 5);
    pSeedersPath->setMinimumWidth(100);
    pSeedersPath->setMinimumHeight(40);
@@ -180,93 +142,52 @@ Upload_popup::Upload_popup(QWidget* pParent)
    pSeedersButton->setFixedWidth(120);
 #endif
    pSeedersButton->setFixedHeight(40);
+   //
+   // Content path
+   //
+   DecentLineEdit* pContentPath = new DecentLineEdit(this);
+   pContentPath->setEnabled(false);
+   pContentPath->setPlaceholderText(tr("Content path"));
+   pContentPath->setReadOnly(true);
+   pContentPath->setMinimumHeight(40);
+   pContentPath->setTextMargins(5, 5, 5, 5);
 
+   DecentButton* pBrowseContentButton = new DecentButton(this);
+   pBrowseContentButton->setText(tr("Browse"));
+   pBrowseContentButton->setFont(PopupButtonRegularFont());
+   pBrowseContentButton->setMinimumWidth(120);
+   pBrowseContentButton->setFixedHeight(40);
+   //
+   // Samples path
+   //
+   DecentLineEdit* pSamplesPath = new DecentLineEdit(this);
+   pSamplesPath->setEnabled(false);
+   pSamplesPath->setPlaceholderText(tr("Samples (optional)"));
+   pSamplesPath->setReadOnly(true);
+   pSamplesPath->setMinimumHeight(40);
+   pSamplesPath->setTextMargins(5, 5, 5, 5);
 
-
-
-   ////////////////////////////////////////////////////////////////////////////
-   /// Content path
-   ////////////////////////////////////////////////////////////////////////////
-
-   QHBoxLayout* contentRow = new QHBoxLayout();
-
-   _contentPath = new QLineEdit(tr("Content path"));
-   _contentPath->setReadOnly(true);
-   _contentPath->setStyleSheet(d_label_v2);
-   _contentPath->setMinimumHeight(40);
-   _contentPath->setTextMargins(5, 5, 5, 5);
-
-   DecentButton* browseContentButton = new DecentButton(this);
-   browseContentButton->setText(tr("Browse"));
-   browseContentButton->setFont(PopupButtonRegularFont());
-
-   browseContentButton->setMinimumWidth(120);
-   browseContentButton->setFixedHeight(40);
-   connect(browseContentButton, SIGNAL(clicked()),this, SLOT(browseContent()));
-
-   contentRow->addWidget(_contentPath);
-   contentRow->addWidget(browseContentButton);
-
-
-
-   ////////////////////////////////////////////////////////////////////////////
-   /// Samples path
-   ////////////////////////////////////////////////////////////////////////////
-   QHBoxLayout* samplesRow = new QHBoxLayout();
-
-   _samplesPath = new QLineEdit(tr("Samples (optional)"));
-   _samplesPath->setReadOnly(true);
-   _samplesPath->setStyleSheet(d_label_v2);
-   _samplesPath->setMinimumHeight(40);
-   _samplesPath->setTextMargins(5, 5, 5, 5);
-
-
-   DecentButton* browseSamplesButton = new DecentButton(this);
-   browseSamplesButton->setText(tr("Browse"));
-   browseSamplesButton->setFont(PopupButtonRegularFont());
-
-   browseSamplesButton->setMinimumWidth(120);
-   browseSamplesButton->setFixedHeight(40);
-   connect(browseSamplesButton, SIGNAL(clicked()),this, SLOT(browseSamples()));
-
-   samplesRow->addWidget(_samplesPath);
-   samplesRow->addWidget(browseSamplesButton);
-
-
-
-   ////////////////////////////////////////////////////////////////////////////
-   /// Upload & Cancel
-   ////////////////////////////////////////////////////////////////////////////
-
-
-   QHBoxLayout* button = new QHBoxLayout;
-
-   button->setSpacing(20);
-   _upload_button = new DecentButton(this);
+   DecentButton* pBrowseSamplesButton = new DecentButton(this);
+   pBrowseSamplesButton->setText(tr("Browse"));
+   pBrowseSamplesButton->setFont(PopupButtonRegularFont());
+   pBrowseSamplesButton->setMinimumWidth(120);
+   pBrowseSamplesButton->setFixedHeight(40);
+   //
+   // Upload & Cancel
+   //
+   DecentButton* pUploadButton = new DecentButton(this);
    DecentButton* pCancelButton = new DecentButton(this);
 
    pCancelButton->setText(tr("Cancel"));
    pCancelButton->setFont(PopupButtonBigFont());
    pCancelButton->setMinimumHeight(50);
 
-
-   _upload_button->setText(tr("Publish"));
-   _upload_button->setFont(PopupButtonBigFont());
-   _upload_button->setMinimumHeight(50);
-
-   connect(_upload_button, SIGNAL(clicked()),this, SLOT(uploadContent()));
-   QObject::connect(pCancelButton, &QPushButton::clicked,
-                    this, &QDialog::close);
-
-   button->setContentsMargins(20, 20, 20, 20);
-   button->addWidget(_upload_button);
-   button->addWidget(pCancelButton);
-
-
-
-   setWindowTitle(tr("Upload new content"));
-
-
+   pUploadButton->setText(tr("Publish"));
+   pUploadButton->setFont(PopupButtonBigFont());
+   pUploadButton->setMinimumHeight(50);
+   //
+   // Layouts
+   //
    QHBoxLayout* pLifeTimeRow = new QHBoxLayout();
    pLifeTimeRow->addWidget(pLifeTimeLabel);
    pLifeTimeRow->addWidget(m_pLifeTime);
@@ -276,12 +197,26 @@ Upload_popup::Upload_popup(QWidget* pParent)
    pKeyRow->addWidget(pKeypartsCombo);
 
    QHBoxLayout* pPriceRow = new QHBoxLayout();
-   pPriceRow->addWidget(priceLabel);
+   pPriceRow->addWidget(pPriceLabel);
    pPriceRow->addWidget(pPriceEditor);
 
    QHBoxLayout* pSeedersRow = new QHBoxLayout();
    pSeedersRow->addWidget(pSeedersPath);
    pSeedersRow->addWidget(pSeedersButton);
+
+   QHBoxLayout* pContentRow = new QHBoxLayout();
+   pContentRow->addWidget(pContentPath);
+   pContentRow->addWidget(pBrowseContentButton);
+
+   QHBoxLayout* pSamplesRow = new QHBoxLayout();
+   pSamplesRow->addWidget(pSamplesPath);
+   pSamplesRow->addWidget(pBrowseSamplesButton);
+
+   QHBoxLayout* pButtonsLayout = new QHBoxLayout;
+   pButtonsLayout->setSpacing(20);
+   pButtonsLayout->setContentsMargins(20, 20, 20, 20);
+   pButtonsLayout->addWidget(pUploadButton);
+   pButtonsLayout->addWidget(pCancelButton);
 
    QVBoxLayout* pMainLayout = new QVBoxLayout;
    pMainLayout->addWidget(pTitleText);
@@ -290,30 +225,58 @@ Upload_popup::Upload_popup(QWidget* pParent)
    pMainLayout->addLayout(pKeyRow);
    pMainLayout->addLayout(pPriceRow);
    pMainLayout->addLayout(pSeedersRow);
-   pMainLayout->addLayout(contentRow);
-   pMainLayout->addLayout(samplesRow);
-   pMainLayout->addLayout(button);
+   pMainLayout->addLayout(pContentRow);
+   pMainLayout->addLayout(pSamplesRow);
+   pMainLayout->addLayout(pButtonsLayout);
    pMainLayout->setContentsMargins(10, 10, 10, 10);
    pMainLayout->setSpacing(5);
    setLayout(pMainLayout);
 
    slot_UpdateStatus();
-
+   //
+   // signal/slot conntections
+   //
    QObject::connect(pTitleText, &QLineEdit::textChanged,
                     this, &Upload_popup::slot_TitleChanged);
    QObject::connect(pTitleText, &QLineEdit::textChanged,
                     this, &Upload_popup::slot_UpdateStatus);
    QObject::connect(m_pDescriptionText, &QTextEdit::textChanged,
                     this, &Upload_popup::slot_UpdateStatus);
-   QObject::connect(pKeypartsCombo, (void (QComboBox::*)(QString const&))&QComboBox::activated,
-                    this, &Upload_popup::slot_KeyParticlesChanged);
    QObject::connect(pPriceEditor, &QLineEdit::textChanged,
                     this, &Upload_popup::slot_PriceChanged);
+
+   QObject::connect(pContentPath, &QLineEdit::textChanged,
+                    this, &Upload_popup::slot_ContentPathChanged);
+   QObject::connect(this, &Upload_popup::signal_ContentPathChange,
+                    pContentPath, &QLineEdit::setText);
+
+   QObject::connect(pSamplesPath, &QLineEdit::textChanged,
+                    this, &Upload_popup::slot_SamplesPathChanged);
+   QObject::connect(this, &Upload_popup::signal_SamplesPathChange,
+                    pSamplesPath, &QLineEdit::setText);
+
+   QObject::connect(pKeypartsCombo, (void (QComboBox::*)(QString const&))&QComboBox::activated,
+                    this, &Upload_popup::slot_KeyParticlesChanged);
+
    QObject::connect(pSeedersButton, &QPushButton::clicked,
                     this, &Upload_popup::slot_ChooseSeeders);
    QObject::connect(this, &Upload_popup::signal_SetSeedersText,
                     pSeedersPath, &QLineEdit::setText);
 
+   QObject::connect(pBrowseContentButton, &QPushButton::clicked,
+                    this, &Upload_popup::slot_BrowseContent);
+   QObject::connect(pBrowseSamplesButton, &QPushButton::clicked,
+                    this, &Upload_popup::slot_BrowseSamples);
+
+   QObject::connect(pUploadButton, &QPushButton::clicked,
+                    this, &Upload_popup::slot_UploadContent);
+   QObject::connect(pCancelButton, &QPushButton::clicked,
+                    this, &QDialog::close);
+
+   QObject::connect(this, &Upload_popup::signal_UploadButtonEnabled,
+                    pUploadButton, &QWidget::setEnabled);
+   QObject::connect(this, &Upload_popup::signal_UploadButtonSetText,
+                    pUploadButton, &QPushButton::setText);
 
    QObject::connect(m_pStatusCheckTimer, &QTimer::timeout,
                     this, &Upload_popup::slot_UpdateStatus);
@@ -459,16 +422,26 @@ void Upload_popup::slot_PriceChanged(QString const& strPrice)
    else
    {
       bool bPriceIsOK = false;
-      m_dPrice = _locale.toDouble(strPrice, &bPriceIsOK);
+      m_dPrice = Globals::instance().locale().toDouble(strPrice, &bPriceIsOK);
 
       if (false == bPriceIsOK)
          m_dPrice = -1;
    }
 }
 
+void Upload_popup::slot_ContentPathChanged(QString const& strContentPath)
+{
+   m_strContentPath = strContentPath;
+}
+
+void Upload_popup::slot_SamplesPathChanged(QString const& strSamplesPath)
+{
+   m_strSamplesPath = strSamplesPath;
+}
+
 void Upload_popup::slot_UpdateStatus()
 {
-   std::string path = _contentPath->text().toStdString();
+   std::string path = m_strContentPath.toStdString();
    //std::string samplesPath = _samplesPath->text().toStdString();
 
    QString strDescription = m_pDescriptionText->toPlainText();
@@ -502,8 +475,8 @@ void Upload_popup::slot_UpdateStatus()
        Globals::instance().getCurrentUser().empty() ||
        false == isPublishersValid)
    {
-      _upload_button->setText(tr("Publish"));
-      _upload_button->setEnabled(false);
+      emit signal_UploadButtonEnabled(false);
+      emit signal_UploadButtonSetText(tr("Publish"));
    }
    else
    {
@@ -514,36 +487,36 @@ void Upload_popup::slot_UpdateStatus()
       uint64_t totalPricePerDay = effectiveMB * publishingPrice;
       uint64_t totalPrice = days * totalPricePerDay;
 
-      _upload_button->setText(tr("Publish for") + " " + Globals::instance().asset(totalPrice).getString().c_str());
-      _upload_button->setEnabled(true);
+      emit signal_UploadButtonEnabled(true);
+      emit signal_UploadButtonSetText(tr("Publish for") + " " + Globals::instance().asset(totalPrice).getString().c_str());
    }
 }
 
-
-void Upload_popup::browseContent() {
+void Upload_popup::slot_BrowseContent()
+{
    QString contentPathSelected = QFileDialog::getOpenFileName(this, tr("Select content"), "~");
 
-   if (contentPathSelected.size() == 0) {
+   if (contentPathSelected.isEmpty())
       return;
-   }
+
    boost::system::error_code ec;
-   if (boost::filesystem::file_size(contentPathSelected.toStdString(), ec) > 100 * 1024 * 1024) {
-      ALERT("Content size is limited in Testnet 0.1 to 100MB");
+   if (boost::filesystem::file_size(contentPathSelected.toStdString(), ec) > 100 * 1024 * 1024)
+   {
+      ShowMessageBox("Error", "Content size is limited in Testnet 0.1 to 100MB");
       return;
    }
 
-   _contentPath->setText(contentPathSelected);
-   _contentPath->setProperty("path", contentPathSelected);
+   emit signal_ContentPathChange(contentPathSelected);
 }
 
-void Upload_popup::browseSamples() {
+void Upload_popup::slot_BrowseSamples()
+{
    QString sampleDir = QFileDialog::getExistingDirectory(this, tr("Select samples"), "~", QFileDialog::DontResolveSymlinks);
-   _samplesPath->setText(sampleDir);
-   _samplesPath->setProperty("path", sampleDir);
+
+   emit signal_SamplesPathChange(sampleDir);
 }
 
-
-void Upload_popup::uploadContent()
+void Upload_popup::slot_UploadContent()
 {
    std::string m_life_time = m_pLifeTime->text().toStdString();
    std::string str_keyparts = std::to_string(m_iKeyParticles);
@@ -552,28 +525,19 @@ void Upload_popup::uploadContent()
 
    std::string assetName = Globals::instance().asset(0).m_str_symbol;
 
-   std::string path = "";
-   if (_contentPath->property("path").isValid())
-      path = _contentPath->property("path").toString().toStdString();
+   std::string path = m_strContentPath.toStdString();
 
-
-   std::string samples_path = "";
-   if (_samplesPath->property("path").isValid())
-      samples_path = _samplesPath->property("path").toString().toStdString();
+   std::string samples_path = m_strSamplesPath.toStdString();
 
    std::string title = m_strTitle.toStdString();
    std::string desc = m_pDescriptionText->toPlainText().toStdString();
 
-   setEnabled(false);
-
-   json synopsis_obj;
-   synopsis_obj["title"] = title;
-   synopsis_obj["description"] = desc;
-
-   std::string synopsis = synopsis_obj.dump(4);
-
-
-
+   graphene::chain::ContentObjectPropertyManager synopsis_construct;
+   synopsis_construct.set<graphene::chain::ContentObjectApplication>(graphene::chain::EContentObjectApplication::DecentCore);
+   synopsis_construct.set<graphene::chain::ContentObjectType>(graphene::chain::EContentObjectType::None);
+   synopsis_construct.set<graphene::chain::ContentObjectTitle>(title);
+   synopsis_construct.set<graphene::chain::ContentObjectDescription>(desc);
+   std::string synopsis = synopsis_construct.m_str_synopsis;
 
    string str_seeders = getChosenPublishers().join(", ").toStdString();
 
@@ -606,22 +570,17 @@ void Upload_popup::uploadContent()
    catch (const std::exception& ex)
    {
       message = ex.what();
-      setEnabled(true);
    }
-   
-   
    
    if (message.empty())
    {
-      ShowMessageBox(tr("Content is being processed...") , tr("Success"));
-      
-      setEnabled(true);
-      
-      this->close();
+      close();
    }
    else
    {
       ShowMessageBox(tr("Error"), tr("Failed to submit content"), message.c_str());
    }
 }
+
+} // end namespace gui_wallet
 

@@ -1,33 +1,38 @@
-/*
- *	File: richdialog.hpp
- *
- *	Created on: 27 Jan 2017
- *	Created by: Davit Kalantaryan (Email: davit.kalantaryan@desy.de)
- *
- *  This file implements ...
- *
- */
-#ifndef RICHDIALOG_HPP
-#define RICHDIALOG_HPP
+#pragma once
 
 #include <QDialog>
-#include <QVBoxLayout>
-#include <QHBoxLayout>
-#include <QPushButton>
-#include <QLineEdit>
-#include <QLocale>
-#include <QInputMethod>
-#include <QApplication>
-#include <vector>
-#include <string>
-#include "decent_button.hpp"
+#include <QVector>
 
+namespace gui_wallet
+{
+struct SDigitalContent;
+class DecentButton;
+//
+void PlaceInsideLabel(QWidget* pLabel, QWidget* pWidget);
+//
+// RatingWidget
+//
+class RatingWidget : public QWidget
+{
+   Q_OBJECT
+public:
+   RatingWidget(QWidget* pParent);
 
-
-namespace gui_wallet {
-               //SendDialog
-/********************************************/
+public slots:
+   void setRating(int);
+signals:
+   void rated(int);
+protected slots:
+   void slot_rating();
+protected:
+   enum { size = 5 };
    
+   bool m_bAutomation;
+   QVector<DecentButton*> m_arr_p_rate;
+};
+//
+// TransferDialog
+//
 class TransferDialog : public QDialog
 {
    Q_OBJECT
@@ -45,18 +50,14 @@ private:
    QString  m_memo;
    QString  m_fromUserName;
 };
-   
-/********************************************/
-   
-   
-            //ImportDialog
-/********************************************/
-
-class ImportDialog : public QDialog
+//
+// ImportKeyDialog
+//
+class ImportKeyDialog : public QDialog
 {
    Q_OBJECT
 public:
-   ImportDialog(QWidget* parent);
+   ImportKeyDialog(QWidget* parent);
    
    public slots:
    void nameChanged(const QString &);
@@ -64,15 +65,52 @@ public:
    void Import();
 public:
 signals:
-   void isOk();
+   void signal_keyImported();
 private:
    QString  m_userName;
    QString  m_key;
 };
+//
+// UserInfoDialog
+//
+class UserInfoDialog : public QDialog
+{
+   Q_OBJECT
+public:
+   UserInfoDialog(QWidget* parent,
+               const QString& registrar,
+               const QString& referrer,
+               const QString& lifetime_referrer,
+               const QString& network_fee_percentage,
+               const QString& lifetime_referrer_fee_percentage,
+               const QString& referrer_rewards_percentage,
+               const QString& name,
+               const QString& id
+               );
 
-/********************************************/
+};
+//
+// ContentInfoDialog
+//
+class ContentInfoDialog : public QDialog
+{
+   Q_OBJECT
+public:
+   ContentInfoDialog(QWidget* parent, const SDigitalContent& a_cnt_details);
    
+   void LabelPushCallbackGUI();
+   
+public slots:
+   void ButtonWasClicked();
+public:
+signals:
+   void ContentWasBought();
+   
+private:
+   enum GetItOrPay {GetIt, Pay};
+   GetItOrPay m_getItOrPay;
+   std::string m_URI;
+   QString m_amount;
+};
 }
 
-
-#endif // RICHDIALOG_HPP

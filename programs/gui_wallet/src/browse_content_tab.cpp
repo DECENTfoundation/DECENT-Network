@@ -3,6 +3,9 @@
 #include "gui_wallet_global.hpp"
 #include "browse_content_tab.hpp"
 #include "decent_wallet_ui_gui_contentdetailsgeneral.hpp"
+#include "decent_line_edit.hpp"
+#include "decent_button.hpp"
+#include "richdialog.hpp"
 
 #ifndef _MSC_VER
 #include <QHBoxLayout>
@@ -50,17 +53,16 @@ BrowseContentTab::BrowseContentTab(QWidget* pParent)
    QPixmap px_search_icon(icon_search);
    pLabelSearchIcon->setPixmap(px_search_icon);
 
-   QLineEdit* pSearchTerm = new QLineEdit(this);
-   pSearchTerm->setPlaceholderText(tr("Search Content"));
-   pSearchTerm->setFixedHeight(54);
-   pSearchTerm->setStyleSheet(d_lineEdit);
-   pSearchTerm->setAttribute(Qt::WA_MacShowFocusRect, 0);
+   DecentLineEdit* pfilterLineEditor = new DecentLineEdit(this, DecentLineEdit::TableSearch);
+   pfilterLineEditor->setPlaceholderText(tr("Search Content"));
+   pfilterLineEditor->setFixedHeight(54);
+   pfilterLineEditor->setAttribute(Qt::WA_MacShowFocusRect, 0);
 
    QHBoxLayout* pSearchLayout = new QHBoxLayout();
 
    pSearchLayout->setContentsMargins(42, 0, 0, 0);
    pSearchLayout->addWidget(pLabelSearchIcon);
-   pSearchLayout->addWidget(pSearchTerm);
+   pSearchLayout->addWidget(pfilterLineEditor);
 
    QVBoxLayout* pMainLayout = new QVBoxLayout();
    pMainLayout->setContentsMargins(0, 0, 0, 0);
@@ -69,7 +71,7 @@ BrowseContentTab::BrowseContentTab(QWidget* pParent)
    pMainLayout->addWidget(m_pTableWidget);
    setLayout(pMainLayout);
 
-   QObject::connect(pSearchTerm, &QLineEdit::textChanged,
+   QObject::connect(pfilterLineEditor, &QLineEdit::textChanged,
                     this, &BrowseContentTab::slot_SearchTermChanged);
 
    QObject::connect(m_pTableWidget, &DecentTable::signal_SortingChanged,
@@ -143,13 +145,11 @@ void BrowseContentTab::slot_Details(int iIndex)
         throw std::out_of_range("Content index is out of range");
     }
 
-   // content details dialog is ugly, needs to be rewritten
-   ContentDetailsGeneral* pDetailsDialog = new ContentDetailsGeneral(nullptr);
-   QObject::connect(pDetailsDialog, &ContentDetailsGeneral::ContentWasBought,
-                    this, &BrowseContentTab::slot_Bought);
-   pDetailsDialog->execCDD(_digital_contents[iIndex], true);
+   ContentInfoDialog* pDetailsDialog = new ContentInfoDialog(this, _digital_contents[iIndex]);
    pDetailsDialog->setAttribute(Qt::WA_DeleteOnClose);
    pDetailsDialog->open();
+   QObject::connect(pDetailsDialog, &ContentInfoDialog::ContentWasBought,
+                    this, &BrowseContentTab::slot_Bought);
 }
 
 void BrowseContentTab::slot_Bought()

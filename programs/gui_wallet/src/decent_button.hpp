@@ -1,10 +1,9 @@
 #pragma once
 
-#include <QLabel>
 #include <QPushButton>
 
-namespace gui_wallet {
-
+namespace gui_wallet
+{
 class DecentButton : public QPushButton
 {
    Q_OBJECT
@@ -13,7 +12,10 @@ public:
    {
       Default,
       Send,
-      TableIcon
+      TableIcon,
+      StarIcon,
+      DialogAction,
+      DialogCancel
    };
 
    enum eName
@@ -24,8 +26,7 @@ public:
       Transfer,
       Export
    };
-   DecentButton(QWidget *parent, eType enType = Default, eName = None);
-
+   DecentButton(QWidget* pParent, eType enType = Default, eName = None);
 
 protected:
    virtual bool event(QEvent* event) override;

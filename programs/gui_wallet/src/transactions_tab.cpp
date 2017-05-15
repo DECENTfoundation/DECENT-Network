@@ -2,7 +2,7 @@
 
 #include "gui_wallet_global.hpp"
 #include "transactions_tab.hpp"
-
+#include "decent_line_edit.hpp"
 #include "gui_design.hpp"
 
 #ifndef _MSC_VER
@@ -39,8 +39,7 @@ TransactionsTab::TransactionsTab(QWidget* pParent)
       {tr("Description"), 25, "description"}
    });
 
-   QLineEdit* pfilterLineEditor = new QLineEdit(this);
-   pfilterLineEditor->setStyleSheet(d_lineEdit);
+   DecentLineEdit* pfilterLineEditor = new DecentLineEdit(this, DecentLineEdit::TableSearch);
    pfilterLineEditor->setPlaceholderText(tr("Enter user name to see transaction history"));
    pfilterLineEditor->setAttribute(Qt::WA_MacShowFocusRect, 0);
    pfilterLineEditor->setFixedHeight(54);

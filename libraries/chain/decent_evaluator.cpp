@@ -164,7 +164,7 @@ namespace graphene { namespace chain {
                                         co.created = db().head_block_time();
                                         co.times_bought = 0;
                                         co.AVG_rating = 0;
-                                        co.total_rating = 0;
+                                        co.num_of_ratings = 0;
                                      });
       }
 
@@ -339,7 +339,7 @@ namespace graphene { namespace chain {
       }
    }FC_CAPTURE_AND_RETHROW( (o) ) }
 
-   void_result leave_rating_evaluator::do_evaluate(const leave_rating_operation& o )
+   void_result leave_rating_evaluator::do_evaluate(const leave_rating_and_comment_operation& o )
    {try{
       //check in buying history if the object exists
       auto& idx = db().get_index_type<content_index>().indices().get<by_URI>();
@@ -348,11 +348,10 @@ namespace graphene { namespace chain {
       const auto& bo = bidx.find( std::make_tuple(o.consumer, o.URI) );
       FC_ASSERT( content != idx.end() && bo != bidx.end() );
       FC_ASSERT( bo->delivered, "not delivered" );
-      FC_ASSERT( !bo->rated, "already rated" );
-      FC_ASSERT( o.rating >= 0 && o.rating <=10 );
+      FC_ASSERT( !bo->rated_or_commented, "already rated or commented" );
    }FC_CAPTURE_AND_RETHROW( (o) ) }
    
-   void_result leave_rating_evaluator::do_apply(const leave_rating_operation& o )
+   void_result leave_rating_evaluator::do_apply(const leave_rating_and_comment_operation& o )
    {try{
       //create rating object and adjust content statistics
       auto& bidx = db().get_index_type<buying_index>().indices().get<by_consumer_URI>();
@@ -365,17 +364,20 @@ namespace graphene { namespace chain {
            ro.consumer = o.consumer;
            ro.URI = o.URI;
            ro.rating = o.rating;
+           ro.comment = o.comment;
       });
 
-      db().modify<buying_object>( *bo, [&]( buying_object& b ){ b.rated = true; });
-      db().modify<content_object> ( *content, [&](content_object& co){
+      db().modify<buying_object>( *bo, [&]( buying_object& b ){ b.rated_or_commented = true; });
 
-           if(co.total_rating == 0) {
+      if( o.rating != 0 )
+         db().modify<content_object> ( *content, [&](content_object& co){
+
+           if(co.num_of_ratings == 0) {
               co.AVG_rating = o.rating * 1000;
-              co.total_rating++;
+              co.num_of_ratings++;
            }
            else
-              co.AVG_rating = (co.AVG_rating * co.total_rating + o.rating * 1000) / (++co.total_rating);
+              co.AVG_rating = (co.AVG_rating * co.num_of_ratings + o.rating * 1000) / (++co.num_of_ratings);
       });
 
       auto& d = db();
