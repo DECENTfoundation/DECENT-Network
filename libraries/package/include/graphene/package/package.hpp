@@ -49,7 +49,7 @@ Quick package user guide
  be able to detect in current package root folder
  */
 
- 
+
 namespace decent { namespace package {
 
 
