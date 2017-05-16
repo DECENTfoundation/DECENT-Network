@@ -9,6 +9,8 @@
 #include "gui_design.hpp"
 #include "richdialog.hpp"
 
+#include <boost/algorithm/string/replace.hpp>
+
 #ifndef _MSC_VER
 #include <QHBoxLayout>
 #include <QVBoxLayout>
@@ -168,6 +170,12 @@ string Upload_tab::getUpdateCommand()
    string currentUserName = Globals::instance().getCurrentUser();
    if (currentUserName.empty())
       return string();
+
+   graphene::chain::ContentObjectPropertyManager type_composer;
+   graphene::chain::ContentObjectTypeValue type(graphene::chain::EContentObjectApplication::DecentCore);
+
+   type_composer.set<graphene::chain::ContentObjectType>(type);
+   boost::replace_all(type_composer.m_str_synopsis, "\"", "");   // a dirty hack
    
    return   "search_user_content "
             "\"" + currentUserName + "\" "
@@ -175,6 +183,7 @@ string Upload_tab::getUpdateCommand()
             "\"" + m_pTableWidget->getSortedColumn() + "\" "
             "\"\" "   // region_code
             "\"" + next_iterator() + "\" "
+            "\"" + type_composer.m_str_synopsis + "\" "
             + std::to_string(m_i_page_size + 1);
 }
 
