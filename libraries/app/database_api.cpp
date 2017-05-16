@@ -166,8 +166,7 @@ namespace graphene { namespace app {
       optional<buying_object> get_buying_by_consumer_URI( const account_id_type& consumer, const string& URI) const;
       vector<buying_object> get_buying_history_objects_by_consumer( const account_id_type& consumer )const;
       vector<buying_object> get_buying_objects_by_consumer( const account_id_type& consumer, const string& order, const object_id_type& id, const string& term, uint32_t count)const;
-      optional<uint64_t> get_rating_by_consumer_URI( const account_id_type& consumer, const string& URI )const;
-      optional<string> get_comment_by_consumer_URI( const account_id_type& consumer, const string& URI )const;
+      vector<rating_object> search_feedback(const string& user, const string& URI, const object_id_type& id, uint32_t count) const;
       optional<content_object> get_content( const string& URI )const;
       vector<content_object> list_content_by_author( const account_id_type& author )const;
       vector<content_summary> list_content( const string& URI_begin, uint32_t count)const;
@@ -1908,44 +1907,80 @@ namespace
       return optional<content_object>();
    }
 
-   optional<uint64_t> database_api::get_rating_by_consumer_URI( const account_id_type& consumer, const string& URI )const
+   vector<rating_object> database_api::search_feedback(const string& user,
+                                                       const string& URI,
+                                                       const object_id_type& id,
+                                                       uint32_t count) const
    {
-      return my->get_rating_by_consumer_URI( consumer, URI );
+      return my->search_feedback(user, URI, id, count);
    }
 
-   optional<uint64_t> database_api_impl::get_rating_by_consumer_URI( const account_id_type& consumer, const string& URI )const
-   {
-      try{
-         const auto & idx = _db.get_index_type<rating_index>().indices().get<by_consumer_URI>();
-         auto itr = idx.find(std::make_tuple(consumer, URI));
-         if(itr!=idx.end())
+   namespace {
+
+      template <bool is_ascending, class sort_tag>
+      void search_rating_template(graphene::chain::database& db,
+                                  uint32_t count,
+                                  const string& URI,
+                                  const object_id_type& id,
+                                  vector<rating_object>& result)
+      {
+         const auto& idx_by_sort_tag = db.get_index_type<rating_index>().indices().get<sort_tag>();
+
+         auto range_equal = idx_by_sort_tag.equal_range(URI);
+         auto range_begin = range_equal.first;
+         auto range_end = range_equal.second;
+
+//         if (range_begin == range_end ||
+//             range_begin == idx_by_sort_tag.end())
+//            return;
+
+         auto itr_begin = return_one<is_ascending>::choose(range_begin, boost::reverse_iterator<decltype(range_end)>(range_end));
+         auto itr_end = return_one<is_ascending>::choose(range_end, boost::reverse_iterator<decltype(range_begin)>(range_begin));
+
+         correct_iterator<rating_index, rating_object, sort_tag, decltype(itr_begin), is_ascending>(db, id, itr_begin);
+
+         const auto& idx_account = db.get_index_type<account_index>().indices().get<by_id>();
+
+         while (count && itr_begin != itr_end)
          {
-            if (0 < itr->rating)
-               return itr->rating;
+            const rating_object& rating_item = *itr_begin;
+            ++itr_begin;
+
+            result.push_back(rating_item);
+            count--;
          }
-         return optional<uint64_t>();
-
-      }FC_CAPTURE_AND_RETHROW( (consumer)(URI) );
+      }
    }
 
-   optional<string> database_api::get_comment_by_consumer_URI( const account_id_type& consumer, const string& URI )const
+   vector<rating_object> database_api_impl::search_feedback(const string& user,
+                                                            const string& URI,
+                                                            const object_id_type& id,
+                                                            uint32_t count) const
    {
-      return my->get_comment_by_consumer_URI( consumer, URI );
-   }
+      vector<rating_object> result;
 
-   optional<string> database_api_impl::get_comment_by_consumer_URI( const account_id_type& consumer, const string& URI )const
-   {
-      try{
-         const auto & idx = _db.get_index_type<rating_index>().indices().get<by_consumer_URI>();
-         auto itr = idx.find(std::make_tuple(consumer, URI));
-         if(itr!=idx.end())
+      try
+      {
+         const auto& idx_account = _db.get_index_type<account_index>().indices().get<by_name>();
+         const auto account_itr = idx_account.find(user);
+
+         if (false == user.empty())
          {
-            if (!itr->comment.empty())
-               return itr->comment;
+            if (account_itr != idx_account.end())
+            {
+               const auto& idx = _db.get_index_type<rating_index>().indices().get<by_consumer_URI>();
+               auto itr = idx.find(std::make_tuple(account_itr->id, URI));
+               if(itr != idx.end())
+                  result.push_back(*itr);
+            }
          }
-         return optional<string>();
+         else
+         {
+            search_rating_template<false, by_URI_time>(_db, count, URI, id, result);
+         }
+      }FC_CAPTURE_AND_RETHROW( (user)(URI) );
 
-      }FC_CAPTURE_AND_RETHROW( (consumer)(URI) );
+      return result;
    }
 
    optional<buying_object> database_api::get_buying_by_consumer_URI( const account_id_type& consumer, const string& URI )const
@@ -2201,10 +2236,10 @@ vector<content_summary> database_api_impl::list_content( const string& URI_begin
          
          while(count && itr_begin != itr_end)
          {
-            const auto& account = idx_account.find(itr_begin->author);
+            const auto account_itr = idx_account.find(itr_begin->author);
             if ( false == user.empty() )
             {
-               if ( account->name != user )
+               if ( account_itr->name != user )
                {
                   ++itr_begin;
                   continue;
@@ -2217,7 +2252,7 @@ vector<content_summary> database_api_impl::list_content( const string& URI_begin
                continue;
             }
 #endif
-            content.set( *itr_begin , *account, region_code );
+            content.set( *itr_begin , *account_itr, region_code );
             if (content.expiration > fc::time_point::now())
             {
                std::string term = search_term;

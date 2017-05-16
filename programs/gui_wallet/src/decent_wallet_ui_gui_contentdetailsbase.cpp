@@ -142,14 +142,25 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details, bool bSil
             }
         }
        
-       std::string comment_result;
+       /*std::string comment_result;
        try {
           RunTask("get_rating_and_comment \"" + Globals::instance().getCurrentUser() + "\" \"" + m_pContentInfo->URI + "\"", comment_result);
+
        } catch (...) { }
     
-       auto c_result = json::parse(comment_result);
-       int get_rating;
-       std::string get_comment;
+       auto c_result = json::parse(comment_result);*/
+
+       nlohmann::json c_result;
+
+       try
+       {
+          c_result = Globals::instance().runTaskParse("search_feedback "
+                                                         "\"" + Globals::instance().getCurrentUser() + "\" "
+                                                         "\"" + m_pContentInfo->URI + "\" "
+                                                         "\"" "\" "   // iterator id
+                                                         "1");
+       }
+       catch(...) {}
        
        QHBoxLayout* comment_status = new QHBoxLayout;
        QLabel*    m_commentOrRate_Text = new QLabel;
@@ -168,7 +179,7 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details, bool bSil
        m_main_layout.addLayout(comment_status);
        m_main_layout.addWidget(m_comment);
        
-       if ( is_empty(c_result, get_rating, get_comment) )
+       if ( c_result.empty() )
        {
           m_commentOrRate_Text->setText(tr("You can comment with your opinion on this item"));
           m_comment->setPlaceholderText(tr("Comment here..."));
@@ -187,9 +198,29 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details, bool bSil
           m_main_layout.addLayout(button);
           QObject::connect(leave_feedback_button, &QPushButton::clicked,
                            this, &ContentDetailsBase::LeaveComment);
-       }else{
+       }
+       else
+       {
+          std::string str_feedback;
+
+          for (size_t iIndex = 0; iIndex < c_result.size(); ++iIndex)
+          {
+             auto const& rating_item = c_result[iIndex];
+             str_feedback += "Author - ";
+             str_feedback += rating_item["author"].get<std::string>();
+             str_feedback += "\n";
+
+             str_feedback += "Comment - ";
+             str_feedback += rating_item["comment"].get<std::string>();
+             str_feedback += "\n";
+
+             str_feedback += "Rating - ";
+             str_feedback += std::to_string(rating_item["rating"].get<uint8_t>());
+             str_feedback += "\n";
+          }
+          m_currentMyRating = c_result[0]["rating"].get<int>();
           m_commentOrRate_Text->setText(tr("You have already commented"));
-          m_comment->setText( QString::fromStdString(get_comment) );
+          m_comment->setText( QString::fromStdString(str_feedback) );
           m_comment->setReadOnly(true);
        }
        
@@ -204,12 +235,10 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details, bool bSil
             }
         }
     }
-    
+   
     if (a_cnt_details.type == DCT::GENERAL) {
         m_main_layout.addLayout(&m_free_for_child);
     }
-   
-   setLayout(&m_main_layout);
    
     int i,nIndexZuyg(0);
     
@@ -228,6 +257,8 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details, bool bSil
       }
    }
    
+   setLayout(&m_main_layout);
+
     std::string e_str = "";
     if (a_cnt_details.type == DCT::BOUGHT || a_cnt_details.type == DCT::WAITING_DELIVERY) {
         e_str = (m_pContentInfo->expiration);
@@ -419,17 +450,18 @@ void ContentDetailsBase::popup_for_purchased(int row_star)
        line->setFixedHeight(1);
        m_main_layout.addWidget(line);
     }
-
    
     QHBoxLayout* desc_lay = new QHBoxLayout();
+
     m_desc->setText(tr("Description") + "\n\n");
     m_desc->setReadOnly(true);
     m_desc->setFont(DescriptionDetailsFont());
+   
     desc_lay->setContentsMargins(42, 17, 0, 3);
     desc_lay->addWidget(m_desc);
-    
+   
     m_main_layout.addLayout(desc_lay);
-    
+   
     line = new QFrame(this);
     line->setFrameShape(QFrame::HLine); // Horizontal line
     
@@ -437,12 +469,32 @@ void ContentDetailsBase::popup_for_purchased(int row_star)
     line->setStyleSheet(col_grey);
     line->setFixedHeight(1);
     m_main_layout.addWidget(line);
-    
+   
+   if (row_star == 9)
+   {
+      QHBoxLayout* comment_lay      = new QHBoxLayout;
+      QLabel*  comment_text         = new QLabel(tr("Content Comments"));
+      DecentButton* comment_button  = new DecentButton(this);
+      
+      QObject::connect(comment_button, SIGNAL(clicked()), this, SLOT(commentWidgetSlot()));
+      
+      comment_button->setText(tr("Comment(s)"));
+      comment_button->setFixedHeight(35);
+      comment_button->setFixedWidth(100);
+      
+      comment_lay->addWidget(comment_text);
+      comment_lay->addWidget(comment_button);
+      comment_lay->setContentsMargins(40, 5, 40, 20);
+      
+      m_commentWidget = new CommentWidget(this, m_pContentInfo->URI);
+      m_main_layout.addLayout(comment_lay);
+      m_main_layout.addWidget(m_commentWidget);
+   }
+   
     //setStyleSheet(d_qdialog);
 }
 
-
-
-
-
-
+void ContentDetailsBase::commentWidgetSlot()
+{
+   m_commentWidget->setVisible(!m_commentWidget->isVisible());
+}

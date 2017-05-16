@@ -3,10 +3,14 @@
 #include <QDialog>
 #include <QVector>
 
+class QTextEdit;
+
 namespace gui_wallet
 {
 struct SDigitalContent;
 class DecentButton;
+class DecentLabel;
+class RatingWidget;
 //
 void PlaceInsideLabel(QWidget* pLabel, QWidget* pWidget);
 //
@@ -17,7 +21,7 @@ class RatingWidget : public QWidget
    Q_OBJECT
 public:
    RatingWidget(QWidget* pParent);
-
+   
 public slots:
    void setRating(int);
 signals:
@@ -30,6 +34,7 @@ protected:
    bool m_bAutomation;
    QVector<DecentButton*> m_arr_p_rate;
 };
+    
 //
 // TransferDialog
 //
@@ -70,6 +75,7 @@ private:
    QString  m_userName;
    QString  m_key;
 };
+   
 //
 // UserInfoDialog
 //
@@ -89,6 +95,53 @@ public:
                );
 
 };
+   
+//
+// CommentWidget
+//
+class CommentWidget : public QWidget
+{
+   Q_OBJECT
+public:
+   CommentWidget(QWidget*,
+                 const std::string&,
+                 const QString& strUser = QString());
+   ~CommentWidget();
+   
+   void        update();
+   void        submit();
+   
+   bool        is_last() const;
+   bool        is_first() const;
+   void        set_next_comment(std::string const&);
+   void        controller();
+   std::string next_iterator();
+   
+signals:
+   void signal_SetNextPageDisabled(bool);
+   void signal_SetPreviousPageDisabled(bool);
+   void signal_lastComment();
+   void signal_firstComment();
+   
+public slots:
+   bool nextButtonSlot();
+   bool previousButtonSlot();
+   void resetButtonSlot();
+   void getRating(const int&);
+   
+private:
+   QTextEdit*                 m_pComment;
+   DecentLabel*               m_pLabelUserName;
+   RatingWidget*              m_pRatingWidget;
+   
+   std::string                m_next_itr;
+   std::vector<std::string>   m_iterators;
+   std::string                m_content_uri;
+   std::string                m_user;
+   uint32_t                   m_rating;
+};
+
+   
 //
 // ContentInfoDialog
 //
@@ -99,7 +152,7 @@ public:
    ContentInfoDialog(QWidget* parent, const SDigitalContent& a_cnt_details);
    
    void LabelPushCallbackGUI();
-   
+   CommentWidget* m_commentWidget;
 public slots:
    void ButtonWasClicked();
 public:
