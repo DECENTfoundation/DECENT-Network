@@ -832,6 +832,7 @@ bool CommentWidget::nextButtonSlot()
    if( is_last() )
    {
       emit signal_lastComment();
+      return false;
    }
    
    m_iterators.push_back(m_next_itr);
