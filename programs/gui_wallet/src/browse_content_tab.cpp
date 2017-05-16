@@ -7,6 +7,8 @@
 #include "decent_button.hpp"
 #include "richdialog.hpp"
 
+#include <boost/algorithm/string/replace.hpp>
+
 #ifndef _MSC_VER
 #include <QHBoxLayout>
 #include <QVBoxLayout>
@@ -130,12 +132,19 @@ void BrowseContentTab::timeToUpdate(const std::string& result) {
 
 std::string BrowseContentTab::getUpdateCommand()
 {
+   graphene::chain::ContentObjectPropertyManager type_composer;
+   graphene::chain::ContentObjectTypeValue type(graphene::chain::EContentObjectApplication::DecentCore);
+
+   type_composer.set<graphene::chain::ContentObjectType>(type);
+   boost::replace_all(type_composer.m_str_synopsis, "\"", "'");   // a dirty hack
+
    return   string("search_content ") +
             "\"" + m_strSearchTerm.toStdString() + "\" " +
             "\"" + m_pTableWidget->getSortedColumn() + "\" " +
             "\"\" " +   // user
             "\"\" " +   // region code
-            "\"" + next_iterator() + "\" " +
+            "\"" + next_iterator() + "\" "
+            "\"" + type_composer.m_str_synopsis + "\" " +
             std::to_string(m_i_page_size + 1);
 }
 

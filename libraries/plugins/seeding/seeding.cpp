@@ -298,26 +298,51 @@ seeding_plugin_impl::generate_por2(const my_seeding_object& mso, decent::package
       ilog("seeding plugin_impl: generate_por() - generating PoR");
 
       decent::encrypt::CustodyProof proof;
-
       auto dyn_props = db.get_dynamic_global_properties();
-      fc::ripemd160 b_id = dyn_props.head_block_id;
-      uint32_t b_num = dyn_props.head_block_number;
-      proof.reference_block = b_num;
-      for( int i = 0; i < 5; i++ )
-         proof.seed.data[i] = b_id._hash[i]; //use the block ID as source of entrophy
+#ifdef TESTNET_3
+      if(mso.cd){
+         fc::ripemd160 b_id = dyn_props.head_block_id;
+         uint32_t b_num = dyn_props.head_block_number;
+         proof.reference_block = b_num;
+         for( int i = 0; i < 5; i++ )
+            proof.seed.data[i] = b_id._hash[i]; //use the block ID as source of entrophy
 
-      if(package_handle->get_data_state() == decent::package::PackageInfo::DataState::CHECKED ) //files available on disk
-         package_handle->create_proof_of_custody(mso.cd, proof);
-      else{
-         package_handle->download(true);
-         package_handle->create_proof_of_custody(mso.cd, proof);
-         package_handle->remove(true);
+         if(package_handle->get_data_state() == decent::package::PackageInfo::DataState::CHECKED ) //files available on disk
+            package_handle->create_proof_of_custody(*mso.cd, proof);
+         else{
+            package_handle->download(true);
+            package_handle->create_proof_of_custody(*mso.cd, proof);
+            package_handle->remove(true);
+         }
       }
+#else
+      if(mso.cd.n > 0){
+
+         fc::ripemd160 b_id = dyn_props.head_block_id;
+         uint32_t b_num = dyn_props.head_block_number;
+         proof.reference_block = b_num;
+         for( int i = 0; i < 5; i++ )
+            proof.seed.data[i] = b_id._hash[i]; //use the block ID as source of entrophy
+
+         if(package_handle->get_data_state() == decent::package::PackageInfo::DataState::CHECKED ) //files available on disk
+            package_handle->create_proof_of_custody(mso.cd, proof);
+         else{
+            package_handle->download(true);
+            package_handle->create_proof_of_custody(mso.cd, proof);
+            package_handle->remove(true);
+         }
+      }
+#endif
       // issue PoR and plan periodic PoR generation
       proof_of_custody_operation op;
 
       op.seeder = mso.seeder;
+#ifdef TESTNET_3
+      if(mso.cd)
+         op.proof = proof;
+#else
       op.proof = proof;
+#endif
       op.URI = mso.URI;
 
       signed_transaction tx;
@@ -558,7 +583,7 @@ void seeding_plugin::plugin_set_program_options(
          ("seeder-private-key", bpo::value<string>(), "Private key of the account controlling this seeder")
          ("free-space", bpo::value<int>(), "Allocated disk space, in MegaBytes")
          ("packages-path", bpo::value<string>(), "Packages storage path")
-         ("seeding-price", bpo::value<int>(), "price per MegaBytes")
+         ("seeding-price", bpo::value<int>(), "Price per MegaBytes")
          ;
 }
 

@@ -35,6 +35,7 @@
 #include <boost/rational.hpp>
 #include <boost/multiprecision/cpp_int.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/replace.hpp>
 
 #include <cctype>
 
@@ -169,8 +170,20 @@ namespace graphene { namespace app {
       optional<content_object> get_content( const string& URI )const;
       vector<content_object> list_content_by_author( const account_id_type& author )const;
       vector<content_summary> list_content( const string& URI_begin, uint32_t count)const;
-      vector<content_summary> search_content( const string& term, const string& order, const string& user, const string& region_code, const object_id_type& id, uint32_t count)const;
-      vector<content_summary> search_user_content( const string& user, const string& term, const string& order, const string& region_code, const object_id_type& id, uint32_t count)const;
+      vector<content_summary> search_content(const string& term,
+                                             const string& order,
+                                             const string& user,
+                                             const string& region_code,
+                                             const object_id_type& id,
+                                             const string& type,
+                                             uint32_t count)const;
+      vector<content_summary> search_user_content(const string& user,
+                                                  const string& term,
+                                                  const string& order,
+                                                  const string& region_code,
+                                                  const object_id_type& id,
+                                                  const string& type,
+                                                  uint32_t count)const;
       vector<content_object> list_content_by_bought( const uint32_t count )const;
       vector<seeder_object> list_publishers_by_price( const uint32_t count )const;
       vector<uint64_t> get_content_ratings( const string& URI )const;
@@ -2138,9 +2151,10 @@ namespace
                                                         const string& user,
                                                         const string& region_code,
                                                         const object_id_type& id,
+                                                        const string& type,
                                                         uint32_t count)const
    {
-      return my->search_content(term, order, user, region_code, id, count);
+      return my->search_content(term, order, user, region_code, id, type, count);
    }
    
    
@@ -2149,9 +2163,10 @@ namespace
                                                              const string& order,
                                                              const string& region_code,
                                                              const object_id_type& id,
+                                                             const string& type,
                                                              uint32_t count)const
    {
-      return my->search_user_content( user, term, order, region_code, id, count);
+      return my->search_user_content( user, term, order, region_code, id, type, count);
    }
     
 vector<content_summary> database_api_impl::list_content( const string& URI_begin, uint32_t count)const
@@ -2185,9 +2200,10 @@ vector<content_summary> database_api_impl::list_content( const string& URI_begin
                                                                   const string& order,
                                                                   const string& region_code,
                                                                   const object_id_type& id,
+                                                                  const string& type,
                                                                   uint32_t count)const
    {
-      return search_content(search_term, order, user, region_code, id, count);
+      return search_content(search_term, order, user, region_code, id, type, count);
    }
    
    
@@ -2201,6 +2217,7 @@ vector<content_summary> database_api_impl::list_content( const string& URI_begin
                                    const string& user,
                                    const string& region_code,
                                    const object_id_type& id,
+                                   const string& type,
                                    vector<content_summary>& result)
       {
          const auto& idx_by_sort_tag = db.get_index_type<content_index>().indices().get<sort_tag>();
@@ -2212,6 +2229,10 @@ vector<content_summary> database_api_impl::list_content( const string& URI_begin
 
          content_summary content;
          const auto& idx_account = db.get_index_type<account_index>().indices().get<by_id>();
+
+         ContentObjectPropertyManager type_parser(type);
+         boost::replace_all(type_parser.m_str_synopsis, "'", "\"");   // a dirty hack, again
+         ContentObjectTypeValue filter_type = type_parser.get<ContentObjectType>();
          
          while(count && itr_begin != itr_end)
          {
@@ -2238,26 +2259,38 @@ vector<content_summary> database_api_impl::list_content( const string& URI_begin
                std::string title = content.synopsis;
                std::string desc = "";
                std::string author = content.author;
-               
+               ContentObjectTypeValue content_type;
+
+
                try {
-                  auto synopsis_parsed = nlohmann::json::parse(content.synopsis);
-                  title = synopsis_parsed["title"].get<std::string>();
-                  desc = synopsis_parsed["description"].get<std::string>();
+                  ContentObjectPropertyManager synopsis_parser(content.synopsis);
+                  title = synopsis_parser.get<ContentObjectTitle>();
+                  desc = synopsis_parser.get<ContentObjectDescription>();
+                  content_type = synopsis_parser.get<ContentObjectType>();
                } catch (...) {}
                
                boost::algorithm::to_lower(term);
                boost::algorithm::to_lower(title);
                boost::algorithm::to_lower(desc);
                boost::algorithm::to_lower(author);
-               
-               if (term.empty() ||
-                   author.find(term) != std::string::npos ||
-                   title.find(term) != std::string::npos ||
-                   desc.find(term) != std::string::npos)
+
+               if (false == term.empty() &&
+                   author.find(term) == std::string::npos &&
+                   title.find(term) == std::string::npos &&
+                   desc.find(term) == std::string::npos)
                {
-                  count--;
-                  result.push_back( content );
+                  ++itr_begin;
+                  continue;
                }
+
+               if (false == content_type.filter(filter_type))
+               {
+                  ++itr_begin;
+                  continue;
+               }
+
+               count--;
+               result.push_back( content );
             }
             
             ++itr_begin;
@@ -2272,6 +2305,7 @@ vector<content_summary> database_api_impl::list_content( const string& URI_begin
                                                              const string& user,
                                                              const string& region_code,
                                                              const object_id_type& id,
+                                                             const string& type,
                                                              uint32_t count)const
    {
       FC_ASSERT( count <= 100 );
@@ -2280,32 +2314,32 @@ vector<content_summary> database_api_impl::list_content( const string& URI_begin
       result.reserve( count );
       
       if (order == "+author")
-         search_content_template<true, by_author>(_db, search_term, count, user, region_code, id, result);
+         search_content_template<true, by_author>(_db, search_term, count, user, region_code, id, type, result);
       else if (order == "+rating")
-         search_content_template<true, by_AVG_rating>(_db, search_term, count, user, region_code, id, result);
+         search_content_template<true, by_AVG_rating>(_db, search_term, count, user, region_code, id, type, result);
       else if (order == "+size")
-         search_content_template<true, by_size>(_db, search_term, count, user, region_code, id, result);
+         search_content_template<true, by_size>(_db, search_term, count, user, region_code, id, type, result);
       else if (order == "+price")
-         search_content_template<true, by_price>(_db, search_term, count, user, region_code, id, result);
+         search_content_template<true, by_price>(_db, search_term, count, user, region_code, id, type, result);
       else if (order == "+created")
-         search_content_template<true, by_created>(_db, search_term, count, user, region_code, id, result);
+         search_content_template<true, by_created>(_db, search_term, count, user, region_code, id, type, result);
       else if (order == "+expiration")
-         search_content_template<true, by_expiration>(_db, search_term, count, user, region_code, id, result);
+         search_content_template<true, by_expiration>(_db, search_term, count, user, region_code, id, type, result);
       
       else if (order == "-author")
-         search_content_template<false, by_author>(_db, search_term, count, user, region_code, id, result);
+         search_content_template<false, by_author>(_db, search_term, count, user, region_code, id, type, result);
       else if (order == "-rating")
-         search_content_template<false, by_AVG_rating>(_db, search_term, count, user, region_code, id, result);
+         search_content_template<false, by_AVG_rating>(_db, search_term, count, user, region_code, id, type, result);
       else if (order == "-size")
-         search_content_template<false, by_size>(_db, search_term, count, user, region_code, id, result);
+         search_content_template<false, by_size>(_db, search_term, count, user, region_code, id, type, result);
       else if (order == "-price")
-         search_content_template<false, by_price>(_db, search_term, count, user, region_code, id, result);
+         search_content_template<false, by_price>(_db, search_term, count, user, region_code, id, type, result);
       else if (order == "-created")
-         search_content_template<false, by_created>(_db, search_term, count, user, region_code, id, result);
+         search_content_template<false, by_created>(_db, search_term, count, user, region_code, id, type, result);
       else if (order == "-expiration")
-         search_content_template<false, by_expiration>(_db, search_term, count, user, region_code, id, result);
+         search_content_template<false, by_expiration>(_db, search_term, count, user, region_code, id, type, result);
       else
-         search_content_template<true, by_URI>(_db, search_term, count, user, region_code, id, result);
+         search_content_template<true, by_URI>(_db, search_term, count, user, region_code, id, type, result);
       
       return result;
    }

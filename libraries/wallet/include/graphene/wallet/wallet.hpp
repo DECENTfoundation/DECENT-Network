@@ -1544,49 +1544,6 @@ namespace graphene { namespace wallet {
                                        bool broadcast = false);
 
          /**
-          * @brief This function is used to register a new seeder, modify the existing seeder or to extend seeder's lifetime.
-          * @param seeder The account becoming a seeder
-          * @param space Available space on seeder's disc dedicated to contents
-          * @param price_per_MByte The price charged to consumer for downloading 1 MB from seeder
-          * @param broadcast true to broadcast the transaction on the network
-          * @return The signed transaction registering or modifying the seeder
-          * @ingroup WalletCLI
-          */
-         signed_transaction ready_to_publish(string seeder,
-                                             uint64_t space,
-                                             uint32_t price_per_MByte,
-                                             vector<string> ipfs_IDs,
-                                             bool broadcast = false);
-
-         /**
-          * @brief
-          * @param seeder
-          * @param URI The URI of the content
-          * @param package
-          * @param broadcast true to broadcast the transaction on the network
-          * @return
-          * @ingroup WalletCLI
-          */
-         signed_transaction proof_of_custody(string seeder,
-                                             string URI,
-                                             string package,
-                                             bool broadcast = false);
-
-         /**
-          * @brief This function is used to send encrypted share of a content and proof of delivery to consumer.
-          * @param seeder The seeder of the content
-          * @param privKey Seeder's private key used to decrypt encrypted share of the content
-          * @param buying The buying object
-          * @param broadcast true to broadcast the transaction on the network
-          * @return The signed transaction delivering encrypted share from seeder to consumer
-          * @ingroup WalletCLI
-          */
-         signed_transaction deliver_keys(string seeder,
-                                         DInteger privKey,
-                                         buying_id_type buying,
-                                         bool broadcast = false);
-
-         /**
           * @brief Creates a subscription to author. This function is used by consumers.
           * @param from Account who wants subscription to author
           * @param to The author you wish to subscribe to
@@ -1816,6 +1773,7 @@ namespace graphene { namespace wallet {
           * @param user Content owner
           * @param region_code Two letter region code
           * @param id The id of content object to start searching from
+          * @param type the application and content type to be filtered
           * @param count Maximum number of contents to fetch (must not exceed 100)
           * @return The contents found
           * @ingroup WalletCLI
@@ -1825,6 +1783,7 @@ namespace graphene { namespace wallet {
                                                 const string& user,
                                                 const string& region_code,
                                                 const string& id,
+                                                const string& type,
                                                 uint32_t count )const;
          /**
           * @brief Get a list of contents ordered alphabetically by search term
@@ -1833,6 +1792,7 @@ namespace graphene { namespace wallet {
           * @param order Order field
           * @param region_code Two letter region code
           * @param id The id of content object to start searching from
+          * @param type the application and content type to be filtered
           * @param count Maximum number of contents to fetch (must not exceed 100)
           * @return The contents found
           * @ingroup WalletCLI
@@ -1842,6 +1802,7 @@ namespace graphene { namespace wallet {
                                                      const string& order,
                                                      const string& region_code,
                                                      const string& id,
+                                                     const string& type,
                                                      uint32_t count )const;
 
          /**
@@ -2120,9 +2081,6 @@ FC_API( graphene::wallet::wallet_api,
            (submit_content_new)
            (request_to_buy)
            (leave_rating_and_comment)
-           (ready_to_publish)
-           (proof_of_custody)
-           (deliver_keys)
            (restore_encryption_key)
            (generate_el_gamal_keys)
            (subscribe_to_author)

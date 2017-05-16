@@ -2335,102 +2335,6 @@ public:
       } FC_CAPTURE_AND_RETHROW( (consumer)(URI)(rating)(comment)(broadcast) )
    }
 
-   signed_transaction ready_to_publish(string seeder,
-                                       uint64_t space,
-                                       uint32_t price_per_MByte,
-                                       vector<string> ipfs_IDs,
-                                       bool broadcast/* = false */)
-   { try {
-      account_object seeder_account = get_account( seeder );
-
-      ready_to_publish_operation op;
-      op.seeder = seeder_account.id;
-      op.space = space;
-      op.price_per_MByte = price_per_MByte;
-      op.ipfs_IDs = ipfs_IDs;
-
-      //FC_ASSERT( _wallet.priv_el_gamal_key != decent::encrypt::DInteger::Zero(), "Private ElGamal key is not imported. " );
-      DInteger el_gamal_priv_key = generate_private_el_gamal_key_from_secret ( get_private_key_for_account(seeder_account).get_secret() );
-      op.pubKey = decent::encrypt::get_public_el_gamal_key( el_gamal_priv_key );
-
-
-      signed_transaction tx;
-      tx.operations.push_back( op );
-      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
-      tx.validate();
-
-      return sign_transaction( tx, broadcast );
-   } FC_CAPTURE_AND_RETHROW( (seeder)(space)(price_per_MByte)(ipfs_IDs)(broadcast) ) }
-
-   signed_transaction proof_of_custody(string seeder,
-                                       string URI,
-                                       string package,
-                                       bool broadcast/* = false */)
-   { try {
-      account_object seeder_account = get_account( seeder );
-      fc::ripemd160 hash(package);
-      auto po = PackageManager::instance().find_package(hash);
-      if (po == nullptr) {
-          FC_THROW("Invalid package hash");
-      }
-
-      decent::encrypt::CustodyProof proof;
-
-      auto dynamic_props = get_dynamic_global_properties();
-      proof.reference_block = dynamic_props.head_block_number;
-      block_id_type bl_id = dynamic_props.head_block_id;
-      for(int i=0;i<5;i++) proof.seed.data[i] = bl_id._hash[i];
-
-      auto co = _remote_db->get_content(URI);
-
-      FC_ASSERT(co, "content does not exist");
-
-      po->create_proof_of_custody(co->cd, proof);
-
-      proof_of_custody_operation op;
-      op.seeder = seeder_account.id;
-      op.URI = URI;
-      op.proof = proof;
-
-      signed_transaction tx;
-      tx.operations.push_back( op );
-      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
-      tx.validate();
-
-      return sign_transaction( tx, broadcast );
-   } FC_CAPTURE_AND_RETHROW( (seeder)(URI)(package)(broadcast) ) }
-
-   signed_transaction deliver_keys(string seeder,
-                                   DInteger privKey,
-                                   buying_id_type buying,
-                                   bool broadcast/* = false */)
-   { try {
-      account_object seeder_account = get_account( seeder );
-      const buying_object bo = get_object<buying_object>(buying);
-      const content_object co = *(_remote_db->get_content(bo.URI));
-
-      DInteger destPubKey = bo.pubKey;
-      decent::encrypt::Ciphertext orig = co.key_parts.at(seeder_account.id);
-      decent::encrypt::point message;
-      auto result = decent::encrypt::el_gamal_decrypt(orig, privKey, message);
-      FC_ASSERT(result == decent::encrypt::ok);
-      deliver_keys_operation op;
-      decent::encrypt::Ciphertext key;
-      decent::encrypt::DeliveryProof proof;
-      result = decent::encrypt::encrypt_with_proof( message, privKey, destPubKey, orig, key, proof );
-
-      op.key = key;
-      op.proof = proof;
-      op.seeder = seeder_account.id;
-
-      signed_transaction tx;
-      tx.operations.push_back( op );
-      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
-      tx.validate();
-
-      return sign_transaction( tx, broadcast );
-   } FC_CAPTURE_AND_RETHROW( (seeder)(privKey)(buying)(broadcast) ) }
-
    signed_transaction report_stats(string consumer,
                                    map<account_id_type,uint64_t> stats,
                                    bool broadcast/* = false */)
@@ -3866,31 +3770,6 @@ void wallet_api::leave_rating_and_comment(string consumer,
 //   }
 //>>>>>>> 4c1f30cb8000875a949c8819f1c860061a981e21
 
-   signed_transaction wallet_api::ready_to_publish(string seeder,
-                                                   uint64_t space,
-                                                   uint32_t price_per_MByte,
-                                                   vector<string> ipfs_IDs,
-                                                   bool broadcast)
-   {
-      return my->ready_to_publish(seeder, space, price_per_MByte, ipfs_IDs, broadcast);
-   }
-
-   signed_transaction wallet_api::proof_of_custody(string seeder,
-                                                   string URI,
-                                                   string package,
-                                                   bool broadcast)
-   {
-      return my->proof_of_custody(seeder, URI, package, broadcast);
-   }
-
-   signed_transaction wallet_api::deliver_keys(string seeder,
-                                               DInteger privKey,
-                                               buying_id_type buying,
-                                               bool broadcast)
-   {
-      return my->deliver_keys(seeder, privKey, buying, broadcast);
-   }
-
    signed_transaction wallet_api::report_stats(string consumer,
                                                map<account_id_type,uint64_t> stats,
                                                bool broadcast)
@@ -4018,9 +3897,10 @@ vector<content_summary> wallet_api::search_content(const string& term,
                                                    const string& user,
                                                    const string& region_code,
                                                    const string& id,
+                                                   const string& type,
                                                    uint32_t count)const
 {
-   return my->_remote_db->search_content(term, order, user, region_code, object_id_type(id), count);
+   return my->_remote_db->search_content(term, order, user, region_code, object_id_type(id), type, count);
 }
 
 vector<content_object> wallet_api::list_content_by_author( const string& account_id_or_name )const
@@ -4050,9 +3930,10 @@ map<string, string> wallet_api::get_content_comments( const string& URI )const
                                                            const string& order,
                                                            const string& region_code,
                                                            const string& id,
+                                                           const string& type,
                                                            uint32_t count)const
    {
-      vector<content_summary> result = my->_remote_db->search_user_content(user, term, order, region_code, object_id_type(id), count);
+      vector<content_summary> result = my->_remote_db->search_user_content(user, term, order, region_code, object_id_type(id), type, count);
 
       auto packages = PackageManager::instance().get_all_known_packages();
       for (auto package: packages) {
@@ -4266,7 +4147,7 @@ void graphene::wallet::detail::submit_transfer_listener::package_seed_complete()
    }
 
 
-   } } // graphene::wallet
+} } // graphene::wallet
 
 
 
