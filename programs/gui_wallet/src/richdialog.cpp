@@ -14,6 +14,7 @@
 #include <QMessageBox>
 #include <QKeyEvent>
 #include <QDateTime>
+#include <QTextEdit>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QPushButton>
@@ -628,5 +629,247 @@ void NextPreviousWidget::last()
    m_previous_button->setEnabled(true);
 }
    
-}  // end namespace gui_wallet
 
+//
+//CommentWidget
+//
+CommentWidget::CommentWidget(QWidget* parent,
+                             const std::string& content_info,
+                             const QString& strUser /*= QString()*/):
+QWidget(parent),
+m_content_uri(content_info),
+m_user(strUser.toStdString())
+{
+   enum mode { list_feedback, leave_feedback, view_feedback};
+   mode eMode;
+   nlohmann::json feedback;
+
+   if (strUser.isEmpty())
+   {
+      // will show all comments with pagination
+      eMode = list_feedback;
+   }
+   else
+   {
+      try
+      {
+         feedback = Globals::instance().runTaskParse("search_feedback "
+                                                     "\"" + m_user + "\" "
+                                                     "\"" + m_content_uri + "\" "
+                                                     "\"" + next_iterator()   + "\" " +
+                                                     "2" ) ;
+      }catch(...){}
+      
+      if (feedback.empty())
+      {
+         // will get feedback input
+         eMode = leave_feedback;
+      }
+      else
+      {
+         // will show the feedback this user has left
+         eMode = view_feedback;
+      }
+   }
+
+   m_pLabelUserName = new DecentLabel(this);
+   m_pRatingWidget = new RatingWidget(this);
+   m_pComment = new QTextEdit(this);
+   
+   NextPreviousWidget* pNextPreviousWidget = nullptr;
+   
+   if (eMode == list_feedback)
+   {
+      pNextPreviousWidget = new NextPreviousWidget();
+      
+      m_pLabelUserName->setText(strUser);
+      m_pRatingWidget->setRating(feedback[0]["rating"].get<int>());
+      m_pRatingWidget->setEnabled(false);
+   }
+   
+   DecentButton* pLeaveFeedbackButton = nullptr;
+   
+   if (eMode == leave_feedback)
+   {
+      pLeaveFeedbackButton = new DecentButton(this);
+      
+      m_pComment->setPlaceholderText("Comment here...");
+      pLeaveFeedbackButton->setText(tr("Leave Feedback"));
+      m_pLabelUserName->setText(strUser);
+   }
+   
+   if (eMode == view_feedback )
+   {
+      m_pComment->setText( QString::fromStdString(feedback[0]["comment"].get<std::string>()) );
+      
+      m_pLabelUserName->setText(QString::fromStdString(m_user));
+      m_pRatingWidget->setRating(feedback[0]["rating"].get<int>());
+      m_pRatingWidget->setEnabled(false);
+      
+      m_pComment->setReadOnly(true);
+   }
+   
+   // MainLayout
+   QVBoxLayout* pMainLayout = new QVBoxLayout();
+   QHBoxLayout* pRatingLayout = new QHBoxLayout();
+   
+   pRatingLayout->addWidget(m_pLabelUserName);
+   pRatingLayout->addWidget(m_pRatingWidget);
+   
+   pMainLayout->addLayout(pRatingLayout);
+   pMainLayout->addWidget(m_pComment);
+   
+   if (pLeaveFeedbackButton)
+   {
+      pMainLayout->addWidget(pLeaveFeedbackButton);
+      QObject::connect(pLeaveFeedbackButton, &DecentButton::clicked,
+                       this, &CommentWidget::submit);
+      QObject::connect(m_pRatingWidget, &RatingWidget::rated,
+                       this, &CommentWidget::getRating);
+   }
+   
+   if (pNextPreviousWidget)
+   {
+      pMainLayout->addWidget(pNextPreviousWidget);
+      QObject::connect(pNextPreviousWidget, &NextPreviousWidget::next,
+                       this, &CommentWidget::nextButtonSlot);
+      QObject::connect(pNextPreviousWidget, &NextPreviousWidget::previous,
+                       this, &CommentWidget::previousButtonSlot);
+      
+      QObject::connect(this, &CommentWidget::signal_lastComment,
+                       pNextPreviousWidget, &NextPreviousWidget::last);
+      QObject::connect(this, &CommentWidget::signal_firstComment,
+                       pNextPreviousWidget, &NextPreviousWidget::first);
+   }
+   
+}
+
+//Leave content feedback
+void CommentWidget::submit()
+{
+   if( m_rating == 0 || m_pComment->toPlainText().isEmpty() )
+   {
+      return;
+   }
+   
+   try
+   {
+      Globals::instance().runTaskParse("leave_rating_and_comment "
+                                       "\"" + m_user + "\" "
+                                       "\"" + m_content_uri + "\" "
+                                       "\"" + std::to_string(m_rating) + "\" "
+                                       "\"" + escape_string( m_pComment->toPlainText().toStdString() ) + "\" "
+                                       "true" );
+   }catch(...){}
+}
+   
+// update contentInfo
+void CommentWidget::update()
+{
+   nlohmann::json feedback;
+   try
+   {
+      feedback = Globals::instance().runTaskParse("search_feedback "
+                                                  "\"" /* empty user  */ "\" "
+                                                  "\"" + m_content_uri + "\" "
+                                                  "\"" + next_iterator()   + "\" " +
+                                                  "2" ) ;
+   }catch(...){}
+
+   if ( feedback.size() > 1)
+   {
+      set_next_comment(feedback[1]["id"].get<std::string>());
+   }
+   else
+   {
+      set_next_comment(std::string());
+   }
+   
+   m_pLabelUserName->setText(QString::fromStdString(feedback[0]["user"].get<std::string>()));
+   m_pComment->setText(QString::fromStdString(feedback[0]["comment"].get<std::string>()));
+   m_pRatingWidget->setRating(feedback[0]["rating"].get<int>());
+}
+
+void CommentWidget::getRating(const int& rated)
+{
+   m_rating = rated;
+}
+
+bool CommentWidget::is_first() const
+{
+   return m_iterators.empty();
+}
+
+bool CommentWidget::is_last() const
+{
+   return m_next_itr.empty();
+}
+
+void CommentWidget::set_next_comment(std::string const& last)
+{
+   m_next_itr = last;
+}
+
+std::string CommentWidget::next_iterator()
+{
+   if( !m_iterators.empty() )
+   {
+      return m_iterators.back();
+   }
+   
+   return std::string();
+}
+
+void CommentWidget::controller()
+{
+   emit signal_SetNextPageDisabled(is_last());
+   emit signal_SetPreviousPageDisabled(is_first());
+}
+
+bool CommentWidget::nextButtonSlot()
+{
+   //next();
+   if( is_last() )
+   {
+      emit signal_lastComment();
+      return false;
+   }
+   
+   m_iterators.push_back(m_next_itr);
+   update();
+   controller();
+   
+   return true;
+}
+
+bool CommentWidget::previousButtonSlot()
+{
+   //previous();
+   if( is_first() )
+   {
+      emit signal_firstComment();
+      return false;
+   }
+   
+   m_iterators.pop_back();
+   update();
+   controller();
+   
+   return true;
+}
+
+void CommentWidget::resetButtonSlot()
+{
+   //reset();
+   m_iterators.clear();
+   m_next_itr.clear();
+   update();
+   controller();
+}
+
+CommentWidget::~CommentWidget()
+{
+   
+}
+
+}  // end namespace gui_wallet

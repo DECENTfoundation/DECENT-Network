@@ -174,6 +174,13 @@ namespace graphene { namespace wallet {
          double              AVG_rating;
       };
 
+      struct rating_object_ex : public rating_object
+      {
+         rating_object_ex(rating_object const& ob)
+         : rating_object(ob) {}
+         std::string author;
+      };
+
 
       struct signed_block_with_info : public signed_block
       {
@@ -1528,14 +1535,13 @@ namespace graphene { namespace wallet {
           * @param rating Rating
           * @param comment Comment
           * @param broadcast true to broadcast the transaction on the network
-          * @return The signed transaction adding the rate to the content
           * @ingroup WalletCLI
           */
-         signed_transaction leave_rating_and_comment(string consumer,
-                                                     string URI,
-                                                     uint64_t rating,
-                                                     string comment,
-                                                     bool broadcast = false);
+         void leave_rating_and_comment(string consumer,
+                                       string URI,
+                                       uint64_t rating,
+                                       string comment,
+                                       bool broadcast = false);
 
          /**
           * @brief Creates a subscription to author. This function is used by consumers.
@@ -1722,31 +1728,18 @@ namespace graphene { namespace wallet {
          optional<buying_object> get_buying_by_consumer_URI( const string& account_id_or_name, const string & URI )const;
 
          /**
-          * @brief Get rating given by a consumer to a content
-          * @param consumer Consumer giving rating
-          * @param URI URI specifying the content
-          * @return Rating, if given, empty otherwise
+          * @brief Search for term in contents (author, title and description)
+          * @param user Feedback author
+          * @param URI the content object uri
+          * @param id The id of feedback object to start searching from
+          * @param count Maximum number of feedbacks to fetch
+          * @return The feedback found
           * @ingroup WalletCLI
           */
-         optional<uint64_t> get_rating( const string& consumer, const string & URI )const;
-
-         /**
-          * @brief Get comment given by a consumer to a content
-          * @param consumer Consumer giving comment
-          * @param URI URI specifying the content
-          * @return Comment, if given, empty otherwise
-          * @ingroup WalletCLI
-          */
-         optional<string> get_comment( const string& consumer, const string & URI )const;
-
-         /**
-          * @brief Get rating and/or comment given by a consumer to a content
-          * @param consumer Consumer giving rating and/or comment
-          * @param URI URI specifying the content
-          * @return Rating and/or comment, if given, empty otherwise
-          * @ingroup WalletCLI
-          */
-         std::pair<optional<uint64_t>, string> get_rating_and_comment( const string& consumer, const string& URI )const;
+         vector<rating_object_ex> search_feedback(const string& user,
+                                                  const string& URI,
+                                                  const string& id,
+                                                  uint32_t count) const;
 
          /**
           * @brief Get a content by URI
@@ -1780,6 +1773,7 @@ namespace graphene { namespace wallet {
           * @param user Content owner
           * @param region_code Two letter region code
           * @param id The id of content object to start searching from
+          * @param type the application and content type to be filtered
           * @param count Maximum number of contents to fetch (must not exceed 100)
           * @return The contents found
           * @ingroup WalletCLI
@@ -1789,6 +1783,7 @@ namespace graphene { namespace wallet {
                                                 const string& user,
                                                 const string& region_code,
                                                 const string& id,
+                                                const string& type,
                                                 uint32_t count )const;
          /**
           * @brief Get a list of contents ordered alphabetically by search term
@@ -1797,6 +1792,7 @@ namespace graphene { namespace wallet {
           * @param order Order field
           * @param region_code Two letter region code
           * @param id The id of content object to start searching from
+          * @param type the application and content type to be filtered
           * @param count Maximum number of contents to fetch (must not exceed 100)
           * @return The contents found
           * @ingroup WalletCLI
@@ -1806,6 +1802,7 @@ namespace graphene { namespace wallet {
                                                      const string& order,
                                                      const string& region_code,
                                                      const string& id,
+                                                     const string& type,
                                                      uint32_t count )const;
 
          /**
@@ -1988,6 +1985,12 @@ FC_REFLECT_DERIVED( graphene::wallet::buying_object_ex,
                    (hash)
                   )
 
+FC_REFLECT_DERIVED( graphene::wallet::rating_object_ex,
+                   (graphene::chain::rating_object),
+                   (author)
+                   )
+
+
 
 FC_API( graphene::wallet::wallet_api,
            (help)
@@ -2094,9 +2097,7 @@ FC_API( graphene::wallet::wallet_api,
            (get_buying_history_objects_by_consumer)
            (search_my_purchases)
            (get_buying_by_consumer_URI)
-           (get_rating)
-           (get_comment)
-           (get_rating_and_comment)
+           (search_feedback)
            (get_content)
            (get_real_supply)
            (list_content_by_author)

@@ -2,12 +2,11 @@
 
 #include <QFontDatabase>
 #include <QFont>
-#include <iostream>
 
 QFontDatabase FontVerdana()
 {
    QFontDatabase resourcesFont;
-   resourcesFont.addApplicationFont(":/fonts/font/Verdana.ttf");
+   resourcesFont.addApplicationFont(":/fonts/font/OpenSans-Regular.ttf");
    
    return resourcesFont;
 }
@@ -15,7 +14,7 @@ QFontDatabase FontVerdana()
 QFontDatabase FontVerdanaBold()
 {
    QFontDatabase resourcesFont;
-   resourcesFont.addApplicationFont(":/fonts/font/Verdana Bold.ttf");
+   resourcesFont.addApplicationFont(":/fonts/font/OpenSans-Bold.ttf");
    
    return resourcesFont;
 }
@@ -23,12 +22,12 @@ QFontDatabase FontVerdanaBold()
 
 QFont PaginationFont()
 {
-   return FontVerdana().font("Verdana", "Normal", 14);
+   return FontVerdana().font("Open Sans", "Normal", 14);
 }
 
 QFont TableHeaderFont()
 {
-   return FontVerdanaBold().font("Verdana", "Bold",
+   return FontVerdanaBold().font("Open Sans", "Bold",
 #ifdef WINDOWS_HIGH_DPI
       10
 #else
@@ -39,17 +38,17 @@ QFont TableHeaderFont()
 
 QFont AccountBalanceFont()
 {
-   return FontVerdana().font("Verdana", "Regular", 12);
+   return FontVerdana().font("Open Sans", "Regular", 12);
 }
 
 QFont DescriptionDetailsFont()
 {
-   return FontVerdana().font("Verdana", "Regular", 13);
+   return FontVerdana().font("Open Sans", "Regular", 13);
 }
 
 QFont PopupButtonRegularFont()
 {
-   return FontVerdana().font("Verdana", "Regular",
+   return FontVerdana().font("Open Sans", "Regular",
 #ifdef WINDOWS_HIGH_DPI
       8
 #else
@@ -60,7 +59,7 @@ QFont PopupButtonRegularFont()
 
 QFont PopupButtonBigFont()
 {
-   return FontVerdana().font("Verdana", "Regular",
+   return FontVerdana().font("Open Sans", "Regular",
 #ifdef WINDOWS_HIGH_DPI
       8
 #else
@@ -71,7 +70,7 @@ QFont PopupButtonBigFont()
 
 QFont TabButtonFont()
 {
-   return FontVerdana().font("Verdana", "Regular",
+   return FontVerdana().font("Open Sans", "Regular",
 #ifdef WINDOWS_HIGH_DPI
       8
 #else

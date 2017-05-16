@@ -532,9 +532,9 @@ void Upload_popup::slot_UploadContent()
    std::string title = m_strTitle.toStdString();
    std::string desc = m_pDescriptionText->toPlainText().toStdString();
 
+   graphene::chain::ContentObjectTypeValue content_type(graphene::chain::EContentObjectApplication::DecentCore);
    graphene::chain::ContentObjectPropertyManager synopsis_construct;
-   synopsis_construct.set<graphene::chain::ContentObjectApplication>(graphene::chain::EContentObjectApplication::DecentCore);
-   synopsis_construct.set<graphene::chain::ContentObjectType>(graphene::chain::EContentObjectType::None);
+   synopsis_construct.set<graphene::chain::ContentObjectType>(content_type);
    synopsis_construct.set<graphene::chain::ContentObjectTitle>(title);
    synopsis_construct.set<graphene::chain::ContentObjectDescription>(desc);
    std::string synopsis = synopsis_construct.m_str_synopsis;
