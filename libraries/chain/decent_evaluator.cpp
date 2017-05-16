@@ -32,15 +32,21 @@ namespace graphene { namespace chain {
       asset total_price_per_day;
       const auto& content_idx = db().get_index_type<content_index>().indices().get<by_URI>();
       auto content_itr = content_idx.find( o.URI );
-      if( content_itr != content_idx.end() ) // is resubmit
+      if( content_itr != content_idx.end() ) // is resubmit?
       {
          is_resubmit = true;
          FC_ASSERT( content_itr->author == o.author );
          FC_ASSERT( content_itr->size == o.size );
          FC_ASSERT( content_itr->_hash == o.hash );
          FC_ASSERT( content_itr->expiration <= o.expiration );
-         FC_ASSERT( content_itr->cd == o.cd);
+#ifdef TESTNET_3
+         FC_ASSERT( content_itr->cd == o.cd );
+         if( content_itr->cd )
+            FC_ASSERT( *(content_itr->cd) == *(o.cd));
 
+#else
+         FC_ASSERT( content_itr->cd == o.cd);
+#endif
          for ( auto &p : o.seeders ) //check if seeders exist and accumulate their prices
          {
             auto itr = idx.find( p );
@@ -449,7 +455,12 @@ namespace graphene { namespace chain {
       for(int i = 0; i < 5; i++)
          FC_ASSERT(bid._hash[i] == o.proof.seed.data[i],"Block ID does not match; wrong chain?");
       FC_ASSERT(db().head_block_num() <= o.proof.reference_block + 6,"Block reference is too old");
-      FC_ASSERT( _custody_utils.verify_by_miner( content->cd, o.proof ) == 0, "Invalid proof of delivery" );
+#ifdef TESTNET_3
+      FC_ASSERT( content->cd.valid() == o.proof.valid() );
+      FC_ASSERT( !(content->cd.valid() ) || _custody_utils.verify_by_miner( *(content->cd), *(o.proof) ) == 0, "Invalid proof of custody" );
+#else
+      FC_ASSERT( content->cd.n == 0 || _custody_utils.verify_by_miner( content->cd, o.proof ) == 0, "Invalid proof of custody" );
+#endif
       //ilog("proof_of_custody OK");
    }FC_CAPTURE_AND_RETHROW( (o) ) }
    

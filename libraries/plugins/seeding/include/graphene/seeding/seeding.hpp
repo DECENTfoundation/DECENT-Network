@@ -52,7 +52,11 @@ public:
    string URI; //<Content address
    fc::ripemd160 _hash; //<Content hash
    fc::time_point_sec expiration; //<Content expiration
+#ifdef TESTNET_3
+   fc::optional<decent::encrypt::CustodyData> cd; //<Content custody data
+#else
    decent::encrypt::CustodyData cd; //<Content custody data
+#endif
    account_id_type seeder; //<Seeder seeding this content managed by this plugin
    decent::encrypt::CiphertextString key; //<Decryption key part
 
