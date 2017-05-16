@@ -1823,6 +1823,7 @@ namespace graphene { namespace wallet {
           * @param user Content owner
           * @param region_code Two letter region code
           * @param id The id of content object to start searching from
+          * @param type the application and content type to be filtered
           * @param count Maximum number of contents to fetch (must not exceed 100)
           * @return The contents found
           * @ingroup WalletCLI
@@ -1832,6 +1833,7 @@ namespace graphene { namespace wallet {
                                                 const string& user,
                                                 const string& region_code,
                                                 const string& id,
+                                                const string& type,
                                                 uint32_t count )const;
          /**
           * @brief Get a list of contents ordered alphabetically by search term
@@ -1840,6 +1842,7 @@ namespace graphene { namespace wallet {
           * @param order Order field
           * @param region_code Two letter region code
           * @param id The id of content object to start searching from
+          * @param type the application and content type to be filtered
           * @param count Maximum number of contents to fetch (must not exceed 100)
           * @return The contents found
           * @ingroup WalletCLI
@@ -1849,6 +1852,7 @@ namespace graphene { namespace wallet {
                                                      const string& order,
                                                      const string& region_code,
                                                      const string& id,
+                                                     const string& type,
                                                      uint32_t count )const;
 
          /**
