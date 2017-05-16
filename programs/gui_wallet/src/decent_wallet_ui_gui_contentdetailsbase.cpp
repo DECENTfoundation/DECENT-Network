@@ -486,7 +486,7 @@ void ContentDetailsBase::popup_for_purchased(int row_star)
       comment_lay->addWidget(comment_button);
       comment_lay->setContentsMargins(40, 5, 40, 20);
       
-      m_commentWidget = new CommentWidget(this, m_pContentInfo);
+      m_commentWidget = new CommentWidget(this, m_pContentInfo->URI);
       m_main_layout.addLayout(comment_lay);
       m_main_layout.addWidget(m_commentWidget);
    }

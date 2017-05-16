@@ -104,7 +104,7 @@ class CommentWidget : public QWidget
    Q_OBJECT
 public:
    CommentWidget(QWidget*,
-                 const SDigitalContent*,
+                 const std::string&,
                  const QString& strUser = QString());
    ~CommentWidget();
    
@@ -125,7 +125,6 @@ public:
 signals:
    void signal_SetNextPageDisabled(bool);
    void signal_SetPreviousPageDisabled(bool);
-   void signal_textChanged(QString const&);
    void signal_lastComment();
    void signal_firstComment();
    

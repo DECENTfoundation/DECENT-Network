@@ -634,10 +634,10 @@ void NextPreviousWidget::last()
 //CommentWidget
 //
 CommentWidget::CommentWidget(QWidget* parent,
-                             const SDigitalContent* content_info,
+                             const std::string& content_info,
                              const QString& strUser /*= QString()*/):
 QWidget(parent),
-m_content_uri(content_info->URI),
+m_content_uri(content_info),
 m_user(strUser.toStdString())
 {
    enum mode { list_feedback, leave_feedback, view_feedback};
@@ -832,6 +832,7 @@ bool CommentWidget::nextButtonSlot()
    if( is_last() )
    {
       emit signal_lastComment();
+      return false;
    }
    
    m_iterators.push_back(m_next_itr);
