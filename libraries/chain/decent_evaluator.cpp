@@ -21,30 +21,71 @@ namespace graphene { namespace chain {
 
    void_result content_submit_evaluator::do_evaluate(const content_submit_operation& o )
    {try{
-      auto& idx = db().get_index_type<seeder_index>().indices().get<by_seeder>();
-      asset total_price_per_day;
-      for ( const auto &p : o.seeders ){ //check if seeders exist and accumulate their prices
-         const auto& itr = idx.find( p );
-         FC_ASSERT( itr != idx.end(), "seeder does not exist" );
-         FC_ASSERT( itr->free_space > o.size );
-         total_price_per_day += itr-> price.amount * o.size;
-      }
+      FC_ASSERT( o.seeders.size() > 0 );
       FC_ASSERT( o.seeders.size() == o.key_parts.size() );
       FC_ASSERT( db().head_block_time() <= o.expiration);
       fc::microseconds duration = (o.expiration - db().head_block_time() );
       uint64_t days = duration.to_seconds() / 3600 / 24;
+      FC_ASSERT( days != 0, "time to expiration has to be at least one day" );
 
-      FC_ASSERT( days*total_price_per_day <= o.publishing_fee );
-      //TODO_DECENT - what if it is resubmit? Drop 2
+      auto& idx = db().get_index_type<seeder_index>().indices().get<by_seeder>();
+      asset total_price_per_day;
+      const auto& content_idx = db().get_index_type<content_index>().indices().get<by_URI>();
+      auto content_itr = content_idx.find( o.URI );
+      if( content_itr != content_idx.end() ) // is resubmit
+      {
+         is_resubmit = true;
+         FC_ASSERT( content_itr->author == o.author );
+         FC_ASSERT( content_itr->size == o.size );
+         FC_ASSERT( content_itr->_hash == o.hash );
+         FC_ASSERT( content_itr->expiration <= o.expiration );
+         FC_ASSERT( content_itr->cd == o.cd);
+
+         for ( auto &p : o.seeders ) //check if seeders exist and accumulate their prices
+         {
+            auto itr = idx.find( p );
+            FC_ASSERT( itr != idx.end(), "seeder does not exist" );
+
+            auto itr2 = content_itr->key_parts.begin();
+            while( itr2 != content_itr->key_parts.end() )
+            {
+               if( itr2->first == p )
+               {
+                  break;
+               }
+               itr2++;
+            }
+            if( itr2 == content_itr->key_parts.end() )
+               FC_ASSERT( itr->free_space > o.size ); // only newly added seeders are tested against free space
+
+            total_price_per_day += itr-> price.amount * o.size;
+         }
+         FC_ASSERT( days * total_price_per_day <= o.publishing_fee + content_itr->publishing_fee_escrow );
+      }
+      else
+      {
+         for ( const auto &p : o.seeders ) //check if seeders exist and accumulate their prices
+         {
+            const auto& itr = idx.find( p );
+            FC_ASSERT( itr != idx.end(), "seeder does not exist" );
+            FC_ASSERT( itr->free_space > o.size );
+            total_price_per_day += itr-> price.amount * o.size;
+         }
+         FC_ASSERT( days * total_price_per_day <= o.publishing_fee );
+      }
+
    }FC_CAPTURE_AND_RETHROW( (o) ) }
    
    void_result content_submit_evaluator::do_apply(const content_submit_operation& o)
    {try{
-      content_object new_content_object = db().create<content_object>([&](content_object& co)
-                                  {  //create new content object and store all vaues from the operation
-                                     co.author = o.author;
+      if( is_resubmit )
+      {
+         auto& content_idx = db().get_index_type<content_index>().indices().get<by_URI>();
+         const auto& content_itr = content_idx.find( o.URI );
+         db().modify<content_object>(*content_itr,[&](content_object& co)
+                                     {
 #ifdef PRICE_REGIONS
-                                     map<uint32_t, asset> prices;
+                                        map<uint32_t, asset> prices;
                                      for (auto const& item : o.price)
                                      {
                                         prices.insert(std::make_pair(item.first, item.second));
@@ -61,29 +102,71 @@ namespace graphene { namespace chain {
                                         }
                                      }
 #else
-                                     co.price = o.price;
+                                        co.price = o.price;
 #endif
-                                     co.size = o.size;
-                                     co.synopsis = o.synopsis;
-                                     co.URI = o.URI;
-                                     co.publishing_fee_escrow = o.publishing_fee;
-                                     auto itr1 = o.seeders.begin();
-                                     auto itr2 = o.key_parts.begin();
-                                     while ( itr1 != o.seeders.end() && itr2 != o.key_parts.end() )
+                                        co.synopsis = o.synopsis;
+                                        co.publishing_fee_escrow += o.publishing_fee;
+                                        auto itr1 = o.seeders.begin();
+                                        auto itr2 = o.key_parts.begin();
+                                        co.key_parts.clear();
+                                        co.last_proof.clear();
+                                        while ( itr1 != o.seeders.end() && itr2 != o.key_parts.end() )
+                                        {
+                                           co.key_parts.emplace(std::make_pair( *itr1, *itr2 ));
+                                           itr1++;
+                                           itr2++;
+                                        }
+                                        co.quorum = o.quorum;
+                                        co.expiration = o.expiration;
+                                     });
+      }
+      else
+      {
+         db().create<content_object>([&](content_object& co)
+                                     {  //create new content object and store all vaues from the operation
+                                        co.author = o.author;
+#ifdef PRICE_REGIONS
+                                        map<uint32_t, asset> prices;
+                                     for (auto const& item : o.price)
                                      {
-                                        co.key_parts.emplace(std::make_pair( *itr1, *itr2 ));
-                                        itr1++;
-                                        itr2++;
+                                        prices.insert(std::make_pair(item.first, item.second));
                                      }
-                                     co._hash = o.hash;
-                                     co.cd = o.cd;
-                                     co.quorum = o.quorum;
-                                     co.expiration = o.expiration;
-                                     co.created = db().head_block_time();
-                                     co.times_bought = 0;
-                                     co.AVG_rating = 0;
-                                     co.num_of_ratings = 0;
-                                  });
+
+                                     auto it_no_regions = prices.find(RegionCodes::OO_none);
+                                     if (it_no_regions != prices.end())
+                                        co.price.SetSimplePrice(it_no_regions->second);
+                                     else
+                                     {
+                                        for (auto const& price_item : prices)
+                                        {
+                                           co.price.SetRegionPrice(price_item.first, price_item.second);
+                                        }
+                                     }
+#else
+                                        co.price = o.price;
+#endif
+                                        co.size = o.size;
+                                        co.synopsis = o.synopsis;
+                                        co.URI = o.URI;
+                                        co.publishing_fee_escrow = o.publishing_fee;
+                                        auto itr1 = o.seeders.begin();
+                                        auto itr2 = o.key_parts.begin();
+                                        while ( itr1 != o.seeders.end() && itr2 != o.key_parts.end() )
+                                        {
+                                           co.key_parts.emplace(std::make_pair( *itr1, *itr2 ));
+                                           itr1++;
+                                           itr2++;
+                                        }
+                                        co._hash = o.hash;
+                                        co.cd = o.cd;
+                                        co.quorum = o.quorum;
+                                        co.expiration = o.expiration;
+                                        co.created = db().head_block_time();
+                                        co.times_bought = 0;
+                                        co.AVG_rating = 0;
+                                        co.num_of_ratings = 0;
+                                     });
+      }
 
       db().adjust_balance(o.author,-o.publishing_fee);  //pay the escrow from author's account
       auto& idx = db().get_index_type<seeder_index>().indices().get<by_seeder>();
@@ -92,14 +175,13 @@ namespace graphene { namespace chain {
       for ( const auto &p : o.seeders )
       {
          const auto& itr = idx.find( p );
-         FC_ASSERT( itr != idx.end(), "seeder does not exist" );
          db().modify<seeder_object>( *itr, [&](seeder_object& so)
                                     {
                                        so.free_space -= o.size;
                                     });
       }
 
-      graphene::chain::ContentObjectPropertyManager synopsis_parser(new_content_object.synopsis);
+      graphene::chain::ContentObjectPropertyManager synopsis_parser(o.synopsis);
       std::string title = synopsis_parser.get<graphene::chain::ContentObjectTitle>();
 
       auto& d = db();

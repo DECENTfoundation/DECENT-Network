@@ -1430,7 +1430,8 @@ namespace graphene { namespace wallet {
          real_supply get_real_supply()const;
 
          /**
-          * @brief Submits content to the blockchain.
+          * @brief Submits or resubmits content to the blockchain. In a case of resubmit, price, seeders, quorum,
+          * expiration, publishing fee and synopsis fields can be modified, but expiration time can't be shortened.
           * @see submit_content_new()
           * @param author The author of the content
           * @param URI The URI of the content

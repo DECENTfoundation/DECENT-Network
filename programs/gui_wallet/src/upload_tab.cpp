@@ -7,6 +7,7 @@
 #include "decent_button.hpp"
 #include "decent_line_edit.hpp"
 #include "gui_design.hpp"
+#include "richdialog.hpp"
 
 #ifndef _MSC_VER
 #include <QHBoxLayout>
@@ -265,14 +266,13 @@ void Upload_tab::slot_ShowContentPopup(int iIndex)
    if (iIndex < 0 || iIndex >= _digital_contents.size())
       throw std::out_of_range("Content index is out of range");
 
-   ContentDetailsGeneral* pDetailsDialog = new ContentDetailsGeneral(nullptr);
-   QObject::connect(pDetailsDialog, &ContentDetailsGeneral::ContentWasBought,
-                    this, &Upload_tab::slot_Bought);
-   pDetailsDialog->execCDD(_digital_contents[iIndex], true);
+   ContentInfoDialog* pDetailsDialog = new ContentInfoDialog(this, _digital_contents[iIndex]);
    pDetailsDialog->setAttribute(Qt::WA_DeleteOnClose);
    pDetailsDialog->open();
+   QObject::connect(pDetailsDialog, &ContentInfoDialog::ContentWasBought,
+                    this, &Upload_tab::slot_Bought);
 }
-
+   
 void Upload_tab::slot_Bought()
 {
    Globals::instance().signal_showPurchasedTab();

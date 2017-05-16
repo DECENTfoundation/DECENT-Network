@@ -3,10 +3,14 @@
 #include <QDialog>
 #include <QVector>
 
+class QTextEdit;
+
 namespace gui_wallet
 {
 struct SDigitalContent;
 class DecentButton;
+class DecentLabel;
+class RatingWidget;
 //
 void PlaceInsideLabel(QWidget* pLabel, QWidget* pWidget);
 //
@@ -104,13 +108,13 @@ public:
                  const QString& strUser = QString());
    ~CommentWidget();
    
-protected:
+//protected:
    //
    // next, previous - list
    // one time from constructor - view
    //
    void update();
-   void submit(uint8_t, QString const& strComment);   // leave feedback from user
+   void submit();   // leave feedback from user
    
    bool        is_last() const;
    bool        is_first() const;
@@ -118,29 +122,28 @@ protected:
    void        controller();
    std::string next_iterator();
    
-   
-   
-public:
-   void get_content_feedback();  //ContentInfo
-   void leave_content_feedback();//Pourchased
-   
 signals:
    void signal_SetNextPageDisabled(bool);
    void signal_SetPreviousPageDisabled(bool);
    void signal_textChanged(QString const&);
+   void signal_lastComment();
+   void signal_firstComment();
    
 public slots:
    bool nextButtonSlot();
    bool previousButtonSlot();
    void resetButtonSlot();
+   void getRating(const int&);
    
 private:
-   std::string                m_last_result;
+   QTextEdit*                 m_pComment;
+   DecentLabel*               m_pLabelUserName;
+   RatingWidget*              m_pRatingWidget;
+   
    std::string                m_next_itr;
    std::vector<std::string>   m_iterators;
    std::string                m_content_uri;
    std::string                m_user;
-   QString                    m_strComment;
    uint32_t                   m_rating;
 };
 
@@ -169,5 +172,34 @@ private:
    QString m_amount;
 };
 
+//
+// ContentReviewDialog
+//
+class ContentReviewDialog : public QDialog
+{
+   Q_OBJECT
+public:
+   ContentReviewDialog(QWidget* parent, const SDigitalContent& a_cnt_details);
+private:
+   std::string m_URI;
+};
+   
+class NextPreviousWidget : public QWidget
+{
+   Q_OBJECT
+public:
+   NextPreviousWidget();
+
+signals:
+   void next();
+   void previous();
+public slots:
+   void reset();
+   void first();
+   void last();
+private:
+   DecentButton* m_next_button;
+   DecentButton* m_previous_button;
+};
 }
 
