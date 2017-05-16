@@ -23,6 +23,33 @@
 #include <thread>
 
 
+/*
+Quick package user guide
+1. you as before can't construct the PackageManager instance, but have to access the singleton via
+ `decent::package::PackageManager::instance();`
+2. you can't create package handlers manuall but have to ask package manager to allocate one for you via
+ `package_manager_instance.get_package(...)`
+3. package handlers are shared pointers around PackageInfo class
+4. package handlers can be explicitly released via `package_manager_instance.release_package(...)` but this is not
+ nececarry, unless you really need to free any unused resource and "unlock" the package data folder
+5. to perform a task, one of `create()`, `unpack()`, `download()`, `start_seeding()`, `stop_seeding()`, `check()`, and
+ `remove()` can be called on a valid package handle. Each of these can be either blocking or non-blocking
+6. you can wait for current (blocking or non-blocking) task completeion with `wait_for_current_task()` called on a
+ valid package handle
+7. you can cancel current task via `cancel_current_task()` called on a valid package handle (each task at certain
+ points check for cancellation request, hence some operations must finish to task be able to self-terminate)
+8. you can query data, transfer, and package manipulation states via `get_data_state()`, `get_transfer_state()`, and
+ `get_manipulation_state()` called on a valid package handle
+9. these and other task-related events are delivered to events listeners, that can be registered at package handle via
+ `add_event_listener()` (info that is delivered with each callbacks can and should be tuned in the code as required --
+ this is just a facility yet)
+10. `create()`, and `download()` can be called only on those handles which were created by the appropriate
+ `get_package()`
+11. `recover_all_packages()` called at package manager instance tries to create handles for each package that it will
+ be able to detect in current package root folder
+ */
+
+ 
 namespace decent { namespace package {
 
 
