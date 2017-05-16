@@ -108,13 +108,8 @@ public:
                  const QString& strUser = QString());
    ~CommentWidget();
    
-//protected:
-   //
-   // next, previous - list
-   // one time from constructor - view
-   //
-   void update();
-   void submit();   // leave feedback from user
+   void        update();
+   void        submit();
    
    bool        is_last() const;
    bool        is_first() const;
