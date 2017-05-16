@@ -451,7 +451,7 @@ ContentInfoDialog::ContentInfoDialog(QWidget* parent, const SDigitalContent& a_c
    main_layout->addWidget(getItButton, iRowIndex, 0, Qt::AlignRight);
    main_layout->addWidget(cancelButton, iRowIndex, 1, Qt::AlignLeft);
    
-   setFixedSize(500, 500);
+   setFixedSize(500, 800);
    setLayout(main_layout);
 }
    
@@ -498,17 +498,72 @@ void ContentInfoDialog::LabelPushCallbackGUI()
    close();
 }
 
-/* /////////////Comment Widget////////////////*/
-CommentWidget::CommentWidget(QWidget* parent, const SDigitalContent* content_info)
-:  QWidget(parent),
-m_comment_count(1),
+//
+//CommentWidget
+//
+CommentWidget::CommentWidget(QWidget* parent,
+                             const SDigitalContent* content_info,
+                             const QString& strUser /*= QString()*/):
+QWidget(parent),
 m_content_uri(content_info->URI)
 {
-   setVisible(false);
-   update_run_task();
+   enum mode { list_feedback, leave_feedback, view_feedback};
+   mode eMode;
+   if (strUser.isEmpty())
+   {
+      // will show all comments with pagination
+      eMode = list_feedback;
+   }
+   else
+   {
+      nlohmann::json feedback;
+      try
+      {
+         feedback = Globals::instance().runTaskParse("search_feedback "
+                                                     "\"" + strUser.toStdString() + "\" "
+                                                     "\"" + m_content_uri + "\" "
+                                                     "\"" + next_iterator()   + "\" " +
+                                                     std::to_string(2) );
+      }catch(...){}
+      
+      if (feedback.empty())
+      {
+         // will get feedback input
+         eMode = leave_feedback;
+      }
+      else
+      {
+         // will show the feedback this user has left
+         eMode = view_feedback;
+      }
+   }
+   
+   DecentLabel* pLabelUserName = new DecentLabel(this);
+   RatingWidget* pRating = new RatingWidget(this);
+   QTextEdit* pComment = new QTextEdit(this);
+   //NextPreviousWidget* pNextPreviousWidget = nullptr;
+   if (eMode == list_feedback)
+   {
+      // new next previouswidget
+   }
+   DecentButton* pLeaveFeedbackButton = nullptr;
+   if (eMode == leave_feedback)
+   {
+      pLeaveFeedbackButton = new DecentButton(this);
+      pLeaveFeedbackButton->setText(tr("Leave Feedback"));
+   }
+   
+   //
+   // MainLayout
+   //
+   
+   //
+   // QObject::connect
+   //
 }
 
-void CommentWidget::update_run_task()
+//ContentInfo
+void CommentWidget::get_content_feedback()
 {
    nlohmann::json comment;
    try
@@ -517,7 +572,7 @@ void CommentWidget::update_run_task()
                                                  "\"" /*    empty user    */"\" "
                                                  "\"" + m_content_uri + "\" "
                                                  "\"" + next_iterator()   + "\" " +
-                                                 std::to_string(m_comment_count + 1) );
+                                                 std::to_string(2) );
    }catch(...){}
    
    QVBoxLayout* main_lay    = new QVBoxLayout();
@@ -525,7 +580,7 @@ void CommentWidget::update_run_task()
    if(comment.empty())
    {
       QHBoxLayout* empty_comment_lay = new QHBoxLayout;
-      QLabel*      empty_text        = new QLabel;
+      DecentLabel* empty_text        = new DecentLabel(this);
       
       empty_text->setText(tr("Not comment(s) on this content"));
       empty_comment_lay->addWidget(empty_text);
@@ -536,9 +591,12 @@ void CommentWidget::update_run_task()
       return;
    }
    
-   if(comment.size() > m_comment_count){
-      set_next_comment(comment[m_comment_count]["id"].get<std::string>());
-   }else{
+   if(comment.size() > 1)
+   {
+      set_next_comment(comment[1]["id"].get<std::string>());
+   }
+   else
+   {
       set_next_comment(std::string());
    }
    
@@ -555,11 +613,12 @@ void CommentWidget::update_run_task()
    
    auto result = comment[0];
    
-   QLabel* result_user     = new QLabel;
-   QLabel* result_comment  = new QLabel;
-   QLabel* result_rating   = new QLabel;
+   
+   DecentLabel* result_comment  = new DecentLabel(this);//    mast be connects with labels for ubdating contents !!!!!!!!!!!
+   DecentLabel* result_rating   = new DecentLabel(this);
+   
    result_user->setText( QString::fromStdString(result["author"].get<std::string>()) );
-   //result_comment->setText( QString::fromStdString(result["comment"].get<std::string>()) );
+   result_comment->setText( QString::fromStdString(result["comment"].get<std::string>()) );
    result_rating->setText( QString::number( result["rating"].get<int>()) );
    
    comment_lay->addWidget(result_user);
@@ -569,55 +628,61 @@ void CommentWidget::update_run_task()
    buttons_lay->addWidget(previous);
    buttons_lay->addWidget(next);
    buttons_lay->addWidget(reset);
-   buttons_lay->setAlignment(Qt::AlignBottom);
    
+   //buttons disabled connects
    connect(this, &CommentWidget::signal_SetNextPageDisabled, next, &QPushButton::setDisabled);
    connect(this, &CommentWidget::signal_SetPreviousPageDisabled, previous, &QPushButton::setDisabled);
    
-   connect(next, SIGNAL(clicked()), this, SLOT(nextButtonSlot()));
-   connect(previous, SIGNAL(clicked()), this, SLOT(previousButtonSlot()));
-   connect(reset, SIGNAL(clicked()), this, SLOT(resetButtonSlot()));
+   //button clicked connects
+   connect(next, &DecentButton::clicked, this, &CommentWidget::nextButtonSlot );
+   connect(previous, &DecentButton::clicked, this, &CommentWidget::previousButtonSlot );
+   connect(reset, &DecentButton::clicked, this, &CommentWidget::resetButtonSlot );
+   
+   //label text change connects
+   connect(result_user, &CommentWidget::signal_textChanged, this, &CommentWidget::update);
+   connect(result_comment, &CommentWidget::signal_textChanged, this, &CommentWidget::update);
+   connect(result_rating, &CommentWidget::signal_textChanged, this, &CommentWidget::update);
    
    controller();
    
    main_lay->addLayout(comment_lay);
    main_lay->addLayout(buttons_lay);
-   main_lay->setContentsMargins(40, 0, 40, 5);
-   //main_lay->setAlignment(Qt::AlignCenter);
    
    setLayout(main_lay);
 }
 
-bool CommentWidget::next()
+//Leave content feedback
+void CommentWidget::leave_content_feedback()
 {
-   if( is_last() )
+   nlohmann::json c_result;
+   try
    {
-      return false;
+      c_result = Globals::instance().runTaskParse("search_feedback "
+                                                  "\"" + Globals::instance().getCurrentUser() + "\" "
+                                                  "\"" + m_content_uri + "\" "
+                                                  "\"" "\" "   // iterator id
+                                                  "1");
    }
-   m_iterators.push_back(m_next_itr);
-   update_run_task();
-   return true;
-}
-
-bool CommentWidget::previous()
-{
-   if( is_last() )
+   catch(...) {}
+   
+   if( c_result.empty() )
    {
-      return false;
+      DecentTextEdit* m_comment        = new DecentTextEdit(this);
+      DecentLabel*    m_commentOrRate  = new DecentLabel(this);
+      m_commentOrRate->setText(tr("You can comment with your opinion on this item"));
+      m_comment->setPlaceholderText(tr("Comment here..."));
+      DecentButton* leave_feedback_button = new DecentButton(this);
+      leave_feedback_button->setText(tr("Leave feedback"));
+      
    }
    
-   m_iterators.pop_back();
-   update_run_task();
-   return true;
 }
-
-void CommentWidget::reset()
+   
+void CommentWidget::update()
 {
-   m_iterators.clear();
-   m_next_itr.clear();
-   update_run_task();
+   
 }
-
+   
 bool CommentWidget::is_first() const
 {
    return m_iterators.empty();
@@ -649,21 +714,42 @@ void CommentWidget::controller()
    emit signal_SetPreviousPageDisabled(is_first());
 }
 
-void CommentWidget::nextButtonSlot()
+bool CommentWidget::nextButtonSlot()
 {
-   next();
+   //next();
+   if( is_last() )
+   {
+      return false;
+   }
+   
+   m_iterators.push_back(m_next_itr);
+   update();
    controller();
+   
+   return true;
 }
 
-void CommentWidget::previousButtonSlot()
+bool CommentWidget::previousButtonSlot()
 {
-   previous();
+   //previous();
+   if( is_first() )
+   {
+      return false;
+   }
+   
+   m_iterators.pop_back();
+   update();
    controller();
+   
+   return true;
 }
 
 void CommentWidget::resetButtonSlot()
 {
-   reset();
+   //reset();
+   m_iterators.clear();
+   m_next_itr.clear();
+   update();
    controller();
 }
 

@@ -31,45 +31,6 @@ protected:
    QVector<DecentButton*> m_arr_p_rate;
 };
     
-    /// **** Content comments **** ///
-    class CommentWidget : public QWidget
-    {
-        Q_OBJECT
-    public:
-        CommentWidget(QWidget*, const SDigitalContent*);
-        ~CommentWidget();
-        
-    public:
-        bool        next();
-        bool        previous();
-        void        reset();
-        bool        is_last() const;
-        bool        is_first() const;
-        
-    public:
-    signals:
-        void signal_SetNextPageDisabled(bool);
-        void signal_SetPreviousPageDisabled(bool);
-        
-        public slots:
-        void nextButtonSlot();
-        void previousButtonSlot();
-        void resetButtonSlot();
-        
-    private:
-        void        update_run_task();
-        void        set_next_comment(std::string const&);
-        void        controller();
-        std::string next_iterator();
-        
-        std::string                m_last_result;
-        std::string                m_next_itr;
-        std::vector<std::string>   m_iterators;
-        size_t                     m_comment_count;
-        std::string                m_content_uri;
-        
-    };
-    
 //
 // TransferDialog
 //
@@ -110,6 +71,7 @@ private:
    QString  m_userName;
    QString  m_key;
 };
+   
 //
 // UserInfoDialog
 //
@@ -129,6 +91,60 @@ public:
                );
 
 };
+   
+//
+// CommentWidget
+//
+class CommentWidget : public QWidget
+{
+   Q_OBJECT
+public:
+   CommentWidget(QWidget*,
+                 const SDigitalContent*,
+                 const QString& strUser = QString());
+   ~CommentWidget();
+   
+protected:
+   //
+   // next, previous - list
+   // one time from constructor - view
+   //
+   void update();
+   void submit(uint8_t, QString const& strComment);   // leave feedback from user
+   
+   bool        is_last() const;
+   bool        is_first() const;
+   void        set_next_comment(std::string const&);
+   void        controller();
+   std::string next_iterator();
+   
+   
+   
+public:
+   void get_content_feedback();  //ContentInfo
+   void leave_content_feedback();//Pourchased
+   
+signals:
+   void signal_SetNextPageDisabled(bool);
+   void signal_SetPreviousPageDisabled(bool);
+   void signal_textChanged(QString const&);
+   
+public slots:
+   bool nextButtonSlot();
+   bool previousButtonSlot();
+   void resetButtonSlot();
+   
+private:
+   std::string                m_last_result;
+   std::string                m_next_itr;
+   std::vector<std::string>   m_iterators;
+   std::string                m_content_uri;
+   std::string                m_user;
+   QString                    m_strComment;
+   uint32_t                   m_rating;
+};
+
+   
 //
 // ContentInfoDialog
 //
@@ -139,7 +155,7 @@ public:
    ContentInfoDialog(QWidget* parent, const SDigitalContent& a_cnt_details);
    
    void LabelPushCallbackGUI();
-   
+   CommentWidget* m_commentWidget;
 public slots:
    void ButtonWasClicked();
 public:
@@ -152,5 +168,6 @@ private:
    std::string m_URI;
    QString m_amount;
 };
+
 }
 
