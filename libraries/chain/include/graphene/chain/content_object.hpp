@@ -425,8 +425,11 @@ using namespace decent::encrypt;
       uint32_t num_of_ratings;
       uint32_t times_bought;
       asset publishing_fee_escrow;
+#ifdef TESTNET_3
+      fc::optional<decent::encrypt::CustodyData> cd;
+#else
       decent::encrypt::CustodyData cd;
-
+#endif
 
 #ifdef PRICE_REGIONS
       template <RegionCodes::RegionCode code>
