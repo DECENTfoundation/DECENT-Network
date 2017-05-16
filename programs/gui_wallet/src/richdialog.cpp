@@ -556,8 +556,8 @@ ContentReviewDialog::ContentReviewDialog(QWidget* parent, const SDigitalContent&
    
    // Size
    //
-   DecentLabel* labelSizeTitle = new DecentLabel(this, DecentLabel::RowLabel);
-   DecentLabel* labelSizeInfo = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Right);
+   DecentLabel* labelSizeTitle = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
+   DecentLabel* labelSizeInfo = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::HighlightedRight);
    labelSizeTitle->setText(tr("Size"));
    labelSizeInfo->setText(QString::number(a_cnt_details.size) + " MB");
    main_layout->addWidget(labelSizeTitle, iRowIndex, 0);
@@ -592,6 +592,8 @@ ContentReviewDialog::ContentReviewDialog(QWidget* parent, const SDigitalContent&
    
    main_layout->addWidget(description, iRowIndex, 0, 1, 2);
    ++iRowIndex;
+   
+   
 
    setLayout(main_layout);
 }
@@ -832,6 +834,7 @@ bool CommentWidget::nextButtonSlot()
    if( is_last() )
    {
       emit signal_lastComment();
+      return false;
    }
    
    m_iterators.push_back(m_next_itr);
