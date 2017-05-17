@@ -2,7 +2,6 @@
 
 #include "gui_wallet_global.hpp"
 #include "upload_popup.hpp"
-#include "decent_wallet_ui_gui_contentdetailsgeneral.hpp"
 #include "decent_button.hpp"
 #include "decent_text_edit.hpp"
 #include "decent_line_edit.hpp"

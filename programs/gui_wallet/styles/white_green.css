@@ -85,7 +85,23 @@ QPushButton[type='send'][enabled=false]
    background-color: white;
    color: black;
 }
-QPushButton[type='tableicon'][enabled=true]
+QPushButton[type='dialogtextbutton']
+{
+   height: 1em;
+   width: 4.5em;
+   max-height: 1em;
+   max-width: 4.5em;
+   border: 0px;
+   background-color: white;
+   color: rgb(27, 176, 104);
+}
+QPushButton[type='dialogtextbutton'][enabled=false]
+{
+   border: 0px;
+   background-color: white;
+   color: gray;
+}
+QPushButton[type='tableicon']
 {
    border: 0px;
    background-color: rgb(27, 176, 104);

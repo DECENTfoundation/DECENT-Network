@@ -107,7 +107,7 @@ class ContentInfoDialog : public QDialog
 public:
    ContentInfoDialog(QWidget* parent, const SDigitalContent& a_cnt_details);
    
-   void LabelPushCallbackGUI();
+   void Buy();
 public slots:
    void ButtonWasClicked();
 
@@ -132,25 +132,6 @@ public:
 private:
    std::string m_URI;
 };
-   
-class NextPreviousWidget : public QWidget
-{
-   Q_OBJECT
-public:
-   NextPreviousWidget(QWidget* pParent);
-
-signals:
-   void next();
-   void previous();
-public slots:
-   void reset();
-   void first();
-   void last();
-private:
-   DecentButton* m_next_button;
-   DecentButton* m_previous_button;
-};
-
 //
 // CommentWidget
 //
@@ -158,9 +139,12 @@ class CommentWidget : public QWidget
 {
    Q_OBJECT
 public:
-   CommentWidget(QWidget*,
-                 const std::string& strURI,
-                 const std::string& strUser = std::string());
+   CommentWidget(QWidget* pParent,
+                 uint32_t content_average_rating,
+                 const std::string& content_author,
+                 const std::string& content_uri,
+                 const std::string& content_description,
+                 const std::string& feedback_author = std::string());
 
    void update();
    void submit();
@@ -181,13 +165,18 @@ public slots:
 
 private:
    DecentTextEdit* m_pComment;
-   DecentLabel* m_pLabelUserName;
+   DecentLabel* m_pLabel;
    RatingWidget* m_pRatingWidget;
-   NextPreviousWidget* m_pNextPreviousWidget;
+
+   DecentButton* m_pPreviousButton;
+   DecentButton* m_pNextButton;
    DecentButton* m_pLeaveFeedbackButton;
 
+   uint32_t m_content_average_rating;
+   std::string m_content_author;
    std::string m_content_uri;
-   std::string m_user;
+   std::string m_content_description;
+   std::string m_feedback_author;
 
    std::string                m_next_itr;
    std::vector<std::string>   m_iterators;

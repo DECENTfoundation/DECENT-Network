@@ -19,6 +19,8 @@
 #include <iso646.h>
 #endif
 
+//#define SEPARATE_DECENT_DAEMON
+
 #define ALERT(message)                                  \
 {                                                       \
 QMessageBox* msgBox = new QMessageBox();                \
@@ -91,7 +93,7 @@ namespace gui_wallet
       WalletOperator();
       ~WalletOperator();
 
-      public slots:
+   public slots:
       void slot_connect();
    signals:
       void signal_connected(std::string const& str_error);

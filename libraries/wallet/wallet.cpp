@@ -3936,17 +3936,17 @@ map<string, string> wallet_api::get_content_comments( const string& URI )const
       vector<content_summary> result = my->_remote_db->search_user_content(user, term, order, region_code, object_id_type(id), type, count);
 
       auto packages = PackageManager::instance().get_all_known_packages();
-      for (auto package: packages) {
+      for (auto package: packages)
+      {
          auto state = package->get_manipulation_state();
 
-         if (package->get_data_state() == PackageInfo::CHECKED) {
+         if (package->get_data_state() == PackageInfo::CHECKED)
             continue;
-         }
-         
-         
-         for (auto listener: my->_package_manager_listeners) {
-            if (listener->get_hash() == package->get_hash()) {
 
+         for (auto listener: my->_package_manager_listeners)
+         {
+            if (listener->get_hash() == package->get_hash())
+            {
                content_summary newObject;
                newObject.synopsis = listener->op().synopsis;
                newObject.expiration = listener->op().expiration;
@@ -3961,10 +3961,8 @@ map<string, string> wallet_api::get_content_comments( const string& URI )const
                }
                
                result.insert(result.begin(), newObject);
-
             }
          }
-
       }
 
       return result;
