@@ -15,7 +15,8 @@ public:
       TableIcon,
       StarIcon,
       DialogAction,
-      DialogCancel
+      DialogCancel,
+      DialogTextButton
    };
 
    enum eName

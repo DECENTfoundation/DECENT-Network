@@ -72,6 +72,10 @@ RatingWidget::RatingWidget(QWidget* pParent)
 
 void RatingWidget::setRating(int rating)
 {
+   if (m_bAutomation)
+      return;
+
+   m_bAutomation = true;
    for (int index = 0; index < size; ++index)
    {
       if (index < rating)
@@ -79,6 +83,7 @@ void RatingWidget::setRating(int rating)
       else
          m_arr_p_rate[index]->setChecked(false);
    }
+   m_bAutomation = false;
 
    m_rating = rating;
    emit rated(rating);
@@ -86,16 +91,11 @@ void RatingWidget::setRating(int rating)
 
 void RatingWidget::slot_rating()
 {
-   if (m_bAutomation)
-      return;
-
-   m_bAutomation = true;
    for (int index = 0; index < size; ++index)
    {
       if (m_arr_p_rate[index] == sender())
          setRating(index + 1);
    }
-   m_bAutomation = false;
 }
 //
 // TransferDialog
@@ -349,8 +349,8 @@ ContentInfoDialog::ContentInfoDialog(QWidget* parent, const SDigitalContent& a_c
    int iRowIndex = 0;
    // Author
    //
-   DecentLabel* labelAuthorTitle = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
-   DecentLabel* labelAuthorInfo = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::HighlightedRight);
+   DecentLabel* labelAuthorTitle = new DecentLabel(this, DecentLabel::RowLabel);
+   DecentLabel* labelAuthorInfo = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Right);
    labelAuthorTitle->setText(tr("Author"));
    labelAuthorInfo->setText(QString::fromStdString(a_cnt_details.author));
    main_layout->addWidget(labelAuthorTitle, iRowIndex, 0);
@@ -359,8 +359,8 @@ ContentInfoDialog::ContentInfoDialog(QWidget* parent, const SDigitalContent& a_c
 
    // Expiration
    //
-   DecentLabel* labelExpirationTitle = new DecentLabel(this, DecentLabel::RowLabel);
-   DecentLabel* labelExpirationInfo = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Right);
+   DecentLabel* labelExpirationTitle = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
+   DecentLabel* labelExpirationInfo = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::HighlightedRight);
    QDateTime time = QDateTime::fromString(QString::fromStdString(a_cnt_details.expiration), "yyyy-MM-ddTHH:mm:ss");
    std::string e_str = CalculateRemainingTime(QDateTime::currentDateTime(), time);
    labelExpirationTitle->setText(tr("Expiration"));
@@ -371,25 +371,12 @@ ContentInfoDialog::ContentInfoDialog(QWidget* parent, const SDigitalContent& a_c
 
    // Uploaded
    //
-   DecentLabel* labelUploadedTitle = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
-   DecentLabel* labelUploadedInfo = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::HighlightedRight);
+   DecentLabel* labelUploadedTitle = new DecentLabel(this, DecentLabel::RowLabel);
+   DecentLabel* labelUploadedInfo = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Right);
    labelUploadedTitle->setText(tr("Uploaded"));
    labelUploadedInfo->setText(QString::fromStdString(a_cnt_details.created));
    main_layout->addWidget(labelUploadedTitle, iRowIndex, 0);
    main_layout->addWidget(labelUploadedInfo, iRowIndex, 1);
-   ++iRowIndex;
-
-   // Average Rating
-   //
-   DecentLabel* labelAverageRatingTitle = new DecentLabel(this, DecentLabel::RowLabel);
-   DecentLabel* labelAverageRatingInfoWrapper = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Right);
-   RatingWidget* averageRatingInfo = new RatingWidget(this);
-   PlaceInsideLabel(labelAverageRatingInfoWrapper, averageRatingInfo);
-   averageRatingInfo->setRating(a_cnt_details.AVG_rating);
-   averageRatingInfo->setEnabled(false);
-   labelAverageRatingTitle->setText(tr("Average Rating"));
-   main_layout->addWidget(labelAverageRatingTitle, iRowIndex, 0);
-   main_layout->addWidget(labelAverageRatingInfoWrapper, iRowIndex, 1, Qt::AlignRight);
    ++iRowIndex;
 
    // Amount
@@ -422,12 +409,6 @@ ContentInfoDialog::ContentInfoDialog(QWidget* parent, const SDigitalContent& a_c
    main_layout->addWidget(labelTimesBoughtTitle, iRowIndex, 0);
    main_layout->addWidget(labelTimesBoughtInfo, iRowIndex, 1);
    ++iRowIndex;
-
-   DecentLabel* labelDescriptionWrapper = new DecentLabel(this, DecentLabel::RowLabel);
-   DecentTextEdit* description = new DecentTextEdit(this, DecentTextEdit::Editor);
-   PlaceInsideLabel(labelDescriptionWrapper, description);
-   description->setReadOnly(true);
-   description->setFont(DescriptionDetailsFont());
    
    std::string synopsis = a_cnt_details.synopsis;
    std::string title;
@@ -436,16 +417,14 @@ ContentInfoDialog::ContentInfoDialog(QWidget* parent, const SDigitalContent& a_c
    graphene::chain::ContentObjectPropertyManager synopsis_parser(synopsis);
    title = synopsis_parser.get<graphene::chain::ContentObjectTitle>();
    desc = synopsis_parser.get<graphene::chain::ContentObjectDescription>();
-   
-   setWindowTitle(QString::fromStdString(title));
-   description->setText(QString::fromStdString(desc));
-   
-   main_layout->addWidget(labelDescriptionWrapper, iRowIndex, 0);
 
-   DecentLabel* labelCommentWidgetWrapper = new DecentLabel(this, DecentLabel::RowLabel);
-   CommentWidget* pCommentWidget = new CommentWidget(this, m_URI);
-   PlaceInsideLabel(labelCommentWidgetWrapper, pCommentWidget);
-   main_layout->addWidget(labelCommentWidgetWrapper, iRowIndex, 1);
+   CommentWidget* pCommentWidget = new CommentWidget(this,
+                                                     a_cnt_details.AVG_rating,
+                                                     a_cnt_details.author,
+                                                     a_cnt_details.URI,
+                                                     desc);
+
+   main_layout->addWidget(pCommentWidget, iRowIndex, 0, 1, 2);
    pCommentWidget->update();
    ++iRowIndex;
    
@@ -463,25 +442,28 @@ ContentInfoDialog::ContentInfoDialog(QWidget* parent, const SDigitalContent& a_c
    main_layout->addWidget(cancelButton, iRowIndex, 1, Qt::AlignLeft);
    
    setLayout(main_layout);
+
+   setWindowTitle(QString::fromStdString(title));
 }
    
 void ContentInfoDialog::ButtonWasClicked()
 {
-   QPushButton* button = (QPushButton *)sender();
-   if(m_getItOrPay == GetIt)
+   QPushButton* button = (QPushButton*) sender();
+   if (m_amount == "Free" ||
+       m_getItOrPay == Pay)
+   {
+      m_getItOrPay = GetIt;
+      button->setText(tr("Get It!"));
+      Buy();
+   }
+   else
    {
       m_getItOrPay = Pay;
       button->setText((tr("Pay") + " " + m_amount));
    }
-   else
-   {
-      m_getItOrPay = GetIt;
-      button->setText(tr("Get It!"));
-      LabelPushCallbackGUI();
-   }
 }
    
-void ContentInfoDialog::LabelPushCallbackGUI()
+void ContentInfoDialog::Buy()
 {
    std::string downloadCommand = "download_content";
    downloadCommand += " " + Globals::instance().getCurrentUser();       // consumer
@@ -533,10 +515,8 @@ ContentReviewDialog::ContentReviewDialog(QWidget* parent, const SDigitalContent&
    //
    DecentLabel* labelExpirationTitle = new DecentLabel(this, DecentLabel::RowLabel);
    DecentLabel* labelExpirationInfo = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Right);
-   QDateTime time = QDateTime::fromString(QString::fromStdString(a_cnt_details.created), "yyyy-MM-ddTHH:mm:ss");
-   std::string e_str = CalculateRemainingTime(QDateTime::currentDateTime(), time);
    labelExpirationTitle->setText(tr("Created"));
-   labelExpirationInfo->setText(QString::fromStdString(e_str));
+   labelExpirationInfo->setText(a_cnt_details.created.c_str());
    main_layout->addWidget(labelExpirationTitle, iRowIndex, 0);
    main_layout->addWidget(labelExpirationInfo, iRowIndex, 1);
    ++iRowIndex;
@@ -550,19 +530,6 @@ ContentReviewDialog::ContentReviewDialog(QWidget* parent, const SDigitalContent&
    labelAmountInfo->setText(str_price);
    main_layout->addWidget(labelAmountTitle, iRowIndex, 0);
    main_layout->addWidget(labelAmountInfo, iRowIndex, 1);
-   ++iRowIndex;
-   
-   // Average Rating
-   //
-   DecentLabel* labelAverageRatingTitle = new DecentLabel(this, DecentLabel::RowLabel);
-   DecentLabel* labelAverageRatingInfoWrapper = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Right);
-   RatingWidget* averageRatingInfo = new RatingWidget(this);
-   PlaceInsideLabel(labelAverageRatingInfoWrapper, averageRatingInfo);
-   averageRatingInfo->setRating(a_cnt_details.AVG_rating);
-   averageRatingInfo->setEnabled(false);
-   labelAverageRatingTitle->setText(tr("Average Rating"));
-   main_layout->addWidget(labelAverageRatingTitle, iRowIndex, 0);
-   main_layout->addWidget(labelAverageRatingInfoWrapper, iRowIndex, 1, Qt::AlignRight);
    ++iRowIndex;
    
    // Size
@@ -585,12 +552,6 @@ ContentReviewDialog::ContentReviewDialog(QWidget* parent, const SDigitalContent&
    main_layout->addWidget(labelTimesBoughtInfo, iRowIndex, 1);
    ++iRowIndex;
 
-   DecentLabel* labelDescriptionWrapper = new DecentLabel(this, DecentLabel::RowLabel);
-   DecentTextEdit* description = new DecentTextEdit(this, DecentTextEdit::Editor);
-   PlaceInsideLabel(labelDescriptionWrapper, description);
-   description->setReadOnly(true);
-   description->setFont(DescriptionDetailsFont());
-   
    std::string synopsis = a_cnt_details.synopsis;
    std::string title;
    std::string desc;
@@ -598,103 +559,80 @@ ContentReviewDialog::ContentReviewDialog(QWidget* parent, const SDigitalContent&
    graphene::chain::ContentObjectPropertyManager synopsis_parser(synopsis);
    title = synopsis_parser.get<graphene::chain::ContentObjectTitle>();
    desc = synopsis_parser.get<graphene::chain::ContentObjectDescription>();
-   
-   setWindowTitle(QString::fromStdString(title));
-   description->setText(QString::fromStdString(desc));
 
-   main_layout->addWidget(labelDescriptionWrapper, iRowIndex, 0);
 
-   DecentLabel* labelCommentWidgetWrapper = new DecentLabel(this, DecentLabel::RowLabel);
-   CommentWidget* pCommentWidget = new CommentWidget(this, m_URI, Globals::instance().getCurrentUser());
-   PlaceInsideLabel(labelCommentWidgetWrapper, pCommentWidget);
-   main_layout->addWidget(labelCommentWidgetWrapper, iRowIndex, 1);
+   CommentWidget* pCommentWidget = new CommentWidget(this,
+                                                     a_cnt_details.AVG_rating,
+                                                     a_cnt_details.author,
+                                                     a_cnt_details.URI,
+                                                     desc,
+                                                     Globals::instance().getCurrentUser());
+   main_layout->addWidget(pCommentWidget, iRowIndex, 0, 1, 2);
    pCommentWidget->update();
    ++iRowIndex;
 
    setLayout(main_layout);
-}
-//
-// PurchasedDialog
-//
-NextPreviousWidget::NextPreviousWidget(QWidget* pParent)
-: QWidget(pParent)
-, m_next_button(new DecentButton(this, DecentButton::DialogAction))
-, m_previous_button(new DecentButton(this, DecentButton::DialogAction))
-{
-   QVBoxLayout* pMainLayout = new QVBoxLayout();
-   QObject::connect(m_next_button, &QPushButton::clicked, this, &NextPreviousWidget::next);
-   QObject::connect(m_previous_button, &QPushButton::clicked, this, &NextPreviousWidget::previous);
 
-   pMainLayout->addWidget(m_previous_button);
-   pMainLayout->addWidget(m_next_button);
-
-   m_next_button->setText(tr("Next"));
-   m_previous_button->setText(tr("Previous"));
-
-   pMainLayout->setSizeConstraint(QLayout::SetFixedSize);
-   pMainLayout->setSpacing(0);
-   pMainLayout->setContentsMargins(0, 0, 0, 0);
-
-   setLayout(pMainLayout);
+   setWindowTitle(QString::fromStdString(title));
 }
-   
-void NextPreviousWidget::reset()
-{
-   m_next_button->setEnabled(true);
-   m_previous_button->setEnabled(true);
-}
-   
-void NextPreviousWidget::first()
-{
-   m_previous_button->setEnabled(false);
-}
-   
-void NextPreviousWidget::last()
-{
-   m_next_button->setEnabled(false);
-}
-   
-
 //
 //CommentWidget
 //
-CommentWidget::CommentWidget(QWidget* parent,
+CommentWidget::CommentWidget(QWidget* pParent,
+                             uint32_t content_average_rating,
+                             const std::string& content_author,
                              const std::string& content_uri,
-                             const std::string& strUser /*= std::string()*/)
-: QWidget(parent)
-, m_pComment(new DecentTextEdit(this, DecentTextEdit::Editor))
-, m_pLabelUserName(new DecentLabel(this))
+                             const std::string& content_description,
+                             const std::string& feedback_author/* = std::string()*/)
+: QWidget(pParent)
+, m_pComment(new DecentTextEdit(this, DecentTextEdit::Info))
+, m_pLabel(new DecentLabel(this, DecentLabel::RowLabel))
 , m_pRatingWidget(new RatingWidget(this))
-, m_pNextPreviousWidget(new NextPreviousWidget(this))
-, m_pLeaveFeedbackButton(new DecentButton(this, DecentButton::DialogAction))
+, m_pPreviousButton(new DecentButton(this, DecentButton::DialogTextButton))
+, m_pNextButton(new DecentButton(this, DecentButton::DialogTextButton))
+, m_pLeaveFeedbackButton(new DecentButton(this, DecentButton::DialogTextButton))
+, m_content_average_rating(content_average_rating)
+, m_content_author(content_author)
 , m_content_uri(content_uri)
-, m_user(strUser)
+, m_content_description(content_description)
+, m_feedback_author(feedback_author)
 {
-   m_pLeaveFeedbackButton->setText(tr("Leave Feedback"));
+   m_pLeaveFeedbackButton->setText(tr("submit"));
 
-   QVBoxLayout* pMainLayout = new QVBoxLayout;
-   QHBoxLayout* pRatingLayout = new QHBoxLayout;
-   QHBoxLayout* pCommentLayout = new QHBoxLayout;
+   QGridLayout* pMainLayout = new QGridLayout;
 
-   pRatingLayout->addWidget(m_pLabelUserName);
-   pRatingLayout->addWidget(m_pRatingWidget);
+   int iRowIndex = 0;
 
-   pCommentLayout->addWidget(m_pComment);
-   pCommentLayout->addWidget(m_pNextPreviousWidget, Qt::AlignRight);
+   DecentLabel* labelRatingInfoWrapper = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Right);
+   PlaceInsideLabel(labelRatingInfoWrapper, m_pRatingWidget);
 
-   pMainLayout->addLayout(pRatingLayout);
-   pMainLayout->addLayout(pCommentLayout);
-   pMainLayout->addWidget(m_pLeaveFeedbackButton, Qt::AlignCenter);
+   pMainLayout->addWidget(m_pLabel, iRowIndex, 0);
+   pMainLayout->addWidget(labelRatingInfoWrapper, iRowIndex, 1);
+   ++iRowIndex;
 
+   pMainLayout->addWidget(m_pComment, iRowIndex, 0, 1, 2);
+   ++iRowIndex;
+
+   QHBoxLayout* pButtonsLayout = new QHBoxLayout;
+   pButtonsLayout->addWidget(m_pPreviousButton);
+   pButtonsLayout->addWidget(m_pNextButton);
+   pButtonsLayout->addWidget(m_pLeaveFeedbackButton);
+   pButtonsLayout->setSizeConstraint(QLayout::SetFixedSize);
+   pButtonsLayout->setSpacing(0);
+   pButtonsLayout->setContentsMargins(0, 0, 0, 0);
+
+   pMainLayout->addLayout(pButtonsLayout, iRowIndex, 0, 1, 2, Qt::AlignCenter);
+   ++iRowIndex;
+
+
+   QObject::connect(m_pNextButton, &QPushButton::clicked,
+                    this, &CommentWidget::slot_Next);
+   QObject::connect(m_pPreviousButton, &QPushButton::clicked,
+                    this, &CommentWidget::slot_Previous);
    QObject::connect(m_pLeaveFeedbackButton, &DecentButton::clicked,
                     this, &CommentWidget::submit);
 
-   QObject::connect(m_pNextPreviousWidget, &NextPreviousWidget::next,
-                    this, &CommentWidget::slot_Next);
-   QObject::connect(m_pNextPreviousWidget, &NextPreviousWidget::previous,
-                    this, &CommentWidget::slot_Previous);
-
-   pMainLayout->setSizeConstraint(QLayout::SetFixedSize);
+   //pMainLayout->setSizeConstraint(QLayout::SetFixedSize);
    pMainLayout->setSpacing(0);
    pMainLayout->setContentsMargins(0, 0, 0, 0);
 
@@ -704,10 +642,8 @@ CommentWidget::CommentWidget(QWidget* parent,
 //Leave content feedback
 void CommentWidget::submit()
 {
-   if (m_pRatingWidget->m_rating == 0 || m_pComment->toPlainText().isEmpty())
-   {
+   if (m_pRatingWidget->m_rating == 0)
       return;
-   }
    
    try
    {
@@ -719,78 +655,150 @@ void CommentWidget::submit()
                                        "true" );
    }catch(...){}
 
-   update();
+   slot_Previous();
+   slot_Next();
 }
    
 // update contentInfo
 void CommentWidget::update()
 {
-   enum mode { list_feedback, leave_feedback, view_feedback};
+   enum mode {view_description, leave_feedback, view_my_feedback, view_others_feedback};
    mode eMode;
+
+   QString const cstrDescription = tr("description");
+
+   QString strFeedbackAuthor;
+   QString strFeedbackComment;
+   uint32_t feedback_rating;
+
+   std::string const c_str_hack = "hack_to_leave_comment";
+
    nlohmann::json feedback;
    try
    {
-      feedback = Globals::instance().runTaskParse("search_feedback "
-                                                  "\"" + m_user + "\" "
-                                                  "\"" + m_content_uri + "\" "
-                                                  "\"" + next_iterator()   + "\" " +
-                                                  "2" ) ;
+      std::string str_next_iterator = next_iterator();
+
+      if (str_next_iterator != c_str_hack)
+      {
+         feedback = Globals::instance().runTaskParse("search_feedback "
+                                                     "\"" + m_feedback_author + "\" "
+                                                     "\"" + m_content_uri + "\" "
+                                                     "\"" + str_next_iterator   + "\" " +
+                                                     "2") ;
+
+         if (feedback.size() > 0)
+         {
+            strFeedbackAuthor = feedback[0]["author"].get<std::string>().c_str();
+            strFeedbackComment = feedback[0]["comment"].get<std::string>().c_str();
+            feedback_rating = feedback[0]["rating"].get<int>();
+         }
+      }
    }catch(...){}
 
-   if (m_user.empty())
-      // will show all comments with pagination
-      eMode = list_feedback;
-   else if (feedback.empty())
-      // will get feedback input
-      eMode = leave_feedback;
-   else
-      // will show the feedback this user has left
-      eMode = view_feedback;
+   int test_count = 0;
 
-   if (eMode == list_feedback)
+   if (m_feedback_author.empty())
    {
-      m_pLeaveFeedbackButton->hide();
-      m_pRatingWidget->setEnabled(false);
-      m_pComment->setReadOnly(true);
-
-      if (feedback.size() > 1)
+      if (next_iterator().empty())
+         eMode = view_description;
+      else
       {
-         set_next_comment(feedback[1]["id"].get<std::string>());
+         eMode = view_others_feedback;
+         test_count = 1;
+      }
+   }
+   else
+   {
+      if (next_iterator() == c_str_hack)
+         eMode = leave_feedback;
+      else if (next_iterator().empty())
+      {
+         eMode = view_description;
+
+         if (feedback.empty())
+            test_count = -1;
       }
       else
       {
-         set_next_comment(std::string());
+         eMode = view_my_feedback;
+         test_count = 1;
+      }
+   }
+
+   if (-1 == test_count)
+      set_next_comment(c_str_hack);
+   else if (feedback.size() > test_count)
+      set_next_comment(feedback[test_count]["id"].get<std::string>());
+   else
+      set_next_comment(std::string());
+
+   m_pNextButton->setDisabled(is_last());
+   m_pPreviousButton->setDisabled(is_first());
+
+   if (is_last() && is_first())
+   {
+      m_pNextButton->hide();
+      m_pPreviousButton->hide();
+   }
+   else
+   {
+      m_pNextButton->show();
+      m_pPreviousButton->show();
+   }
+
+   m_pNextButton->setText(tr("next"));
+   m_pPreviousButton->setText(tr("previous"));
+
+   if (eMode == view_description)
+   {
+      m_pLabel->setText(tr("Average Rating"));
+      m_pComment->setText(m_content_description.c_str());
+      m_pComment->setPlaceholderText(QString());
+      m_pRatingWidget->setRating(m_content_average_rating);
+
+      if (false == m_feedback_author.empty())
+      {
+         m_pNextButton->setText(tr("feedback"));
+         m_pPreviousButton->hide();
       }
 
-      m_pNextPreviousWidget->reset();
-      if (is_last())
-         m_pNextPreviousWidget->last();
-
-      if (is_first())
-         m_pNextPreviousWidget->first();
-   }
-
-   if (eMode == leave_feedback)
-   {
-      m_pComment->setPlaceholderText("Comment here...");
-      m_pNextPreviousWidget->hide();
-      m_pComment->setReadOnly(false);
-      m_pLeaveFeedbackButton->show();
-   }
-
-   if (eMode == view_feedback)
-   {
-      m_pRatingWidget->setEnabled(false);
-      m_pComment->setReadOnly(true);
-      m_pNextPreviousWidget->hide();
       m_pLeaveFeedbackButton->hide();
+      m_pRatingWidget->setDisabled(true);
+      m_pComment->setReadOnly(true);
    }
-
-   if (false == feedback.empty())
+   else if (eMode == view_my_feedback ||
+            eMode == view_others_feedback)
    {
-      m_pLabelUserName->setText(QString::fromStdString(feedback[0]["author"].get<std::string>()));
-      m_pComment->setText(QString::fromStdString(feedback[0]["comment"].get<std::string>()));
-      m_pRatingWidget->setRating(feedback[0]["rating"].get<int>());
+      if (eMode == view_my_feedback)
+      {
+         m_pLabel->setText(tr("Your own feedback"));
+         m_pNextButton->hide();
+         m_pPreviousButton->setText(cstrDescription);
+      }
+      else
+         m_pLabel->setText(strFeedbackAuthor);
+
+      m_pComment->setText(strFeedbackComment);
+      m_pComment->setPlaceholderText(QString());
+      m_pRatingWidget->setRating(feedback_rating);
+
+      m_pLeaveFeedbackButton->hide();
+      m_pRatingWidget->setDisabled(true);
+      m_pComment->setReadOnly(true);
+   }
+   else
+   {
+      m_pNextButton->hide();
+      m_pPreviousButton->setText(cstrDescription);
+      m_pLabel->setText(tr("Leave your feedback here"));
+      m_pComment->setText(QString());
+      m_pComment->setPlaceholderText(tr("Any thoughts?"));
+      m_pRatingWidget->setRating(0);
+
+      m_pLeaveFeedbackButton->show();
+      m_pRatingWidget->setEnabled(true);
+      m_pComment->setReadOnly(false);
+      m_pNextButton->hide();
    }
 }
 

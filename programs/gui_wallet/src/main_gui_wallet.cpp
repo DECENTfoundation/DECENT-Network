@@ -20,6 +20,7 @@
 #include <fc/thread/thread.hpp>
 #endif
 
+#include "gui_wallet_global.hpp"
 #include "gui_wallet_mainwindow.hpp"
 
 #ifndef _MSC_VER
@@ -65,10 +66,8 @@ using string = std::string;
 
 #include "gui_design.hpp"
 
-
 int runDecentD(int argc, char** argv, fc::promise<void>::ptr& exit_promise);
 QProcess* run_ipfs_daemon(QObject* parent, QString app_dir);
-
 
 int main(int argc, char* argv[])
 {
@@ -130,10 +129,12 @@ int main(int argc, char* argv[])
    
 #endif
    
-   
+
+#ifndef SEPARATE_DECENT_DAEMON
    fc::future<int> future_decentd = thread_decentd.async([argc, argv, &exit_promise]() -> int {
       return runDecentD(argc, argv, exit_promise);
    });
+#endif
    
    
 #define SET_LIBRARY_PATHS
@@ -162,7 +163,9 @@ int main(int argc, char* argv[])
 
    exit_promise->set_value();
    daemon_process->terminate();
+#ifndef SEPARATE_DECENT_DAEMON
    future_decentd.wait();
+#endif
 
    return 0;
 }
