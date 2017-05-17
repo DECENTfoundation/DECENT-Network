@@ -335,4 +335,8 @@ namespace decent { namespace package { namespace detail {
     }
 
 
-} } } // namespace decent::package::detail
+}//namespace detail
+
+
+
+} } // namespace decent::package

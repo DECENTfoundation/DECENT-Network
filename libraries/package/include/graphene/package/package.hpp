@@ -66,6 +66,7 @@ namespace decent { namespace package {
     class TorrentDownloadPackageTask;
     class TorrentStartSeedingPackageTask;
     class TorrentStopSeedingPackageTask;
+    class LocalDownloadPackageTask;
 
 
     namespace detail {
@@ -122,6 +123,7 @@ namespace decent { namespace package {
         friend class IPFSDownloadPackageTask;
         friend class IPFSStartSeedingPackageTask;
         friend class IPFSStopSeedingPackageTask;
+        friend class LocalDownloadPackageTask;
         friend class TorrentPackageTask;
         friend class TorrentDownloadPackageTask;
         friend class TorrentStartSeedingPackageTask;
@@ -312,7 +314,7 @@ namespace decent { namespace package {
         package_handle_t get_package(const boost::filesystem::path& content_dir_path,
                                      const boost::filesystem::path& samples_dir_path,
                                      const fc::sha256& key);
-        package_handle_t get_package(const std::string& url);
+        package_handle_t get_package(const std::string& url, const fc::ripemd160&  hash);
         package_handle_t get_package(const fc::ripemd160& hash);
 
         package_handle_t find_package(const std::string& url);
@@ -336,6 +338,10 @@ namespace decent { namespace package {
         package_handle_set_t            _packages;
         proto_to_transfer_engine_map_t  _proto_transfer_engines;
     };
+
+
+
+
 
 
 } } // namespace decent::package

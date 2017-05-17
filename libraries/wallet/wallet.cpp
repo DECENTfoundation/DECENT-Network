@@ -2268,7 +2268,7 @@ public:
          //stats_listener.ipfs_IDs = list_seeders_ipfs_IDs( URI);
          auto& package_manager = decent::package::PackageManager::instance();
 
-         auto package = package_manager.get_package(URI);
+         auto package = package_manager.get_package( URI, content->_hash );
          package->download();
          
       } FC_CAPTURE_AND_RETHROW( (consumer)(URI)(broadcast) )
@@ -4128,9 +4128,9 @@ void graphene::wallet::detail::submit_transfer_listener::package_seed_complete()
       PackageManager::instance().release_package(fc::ripemd160(package_hash));
    }
 
-   void wallet_api::download_package(const std::string& url) const {
+   void wallet_api::download_package(const std::string& url, const string& hash) const {
       FC_ASSERT(!is_locked());
-      auto pack = PackageManager::instance().get_package(url);
+      auto pack = PackageManager::instance().get_package(url, fc::ripemd160(hash));
       pack->download(false);
    }
 

@@ -1890,7 +1890,7 @@ namespace graphene { namespace wallet {
           * @return nothing
           * @ingroup WalletCLI
           */
-         void download_package(const std::string& url) const;
+         void download_package(const std::string& url, const string& hash) const;
 
          /**
           * @brief Start uploading package

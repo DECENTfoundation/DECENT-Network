@@ -104,7 +104,7 @@ void seeding_plugin_impl::handle_content_submit(const operation_history_object &
                     active_downloads[id] = so_id;
                     */
                   auto& pm = decent::package::PackageManager::instance();
-                  auto package_handle = pm.get_package(cs_op.URI);
+                  auto package_handle = pm.get_package(cs_op.URI, mso._hash);
                   decent::package::event_listener_handle_t sl = std::make_shared<SeedingListener>(*this, mso , package_handle);
                   package_handle->remove_all_event_listeners();
                   package_handle->add_event_listener(sl);
@@ -150,7 +150,7 @@ void seeding_plugin_impl::handle_content_submit(const operation_history_object &
                         active_downloads[id] = so_id;
                          */
                         auto& pm = decent::package::PackageManager::instance();
-                        auto package_handle = pm.get_package(cs_op.URI);
+                        auto package_handle = pm.get_package(cs_op.URI, mso._hash);
                         decent::package::event_listener_handle_t sl = std::make_shared<SeedingListener>(*this, mso , package_handle);
                         package_handle->remove_all_event_listeners();
                         package_handle->add_event_listener(sl);
@@ -443,7 +443,7 @@ void seeding_plugin_impl::restart_downloads(){
               generate_por2( *citr, package_handle );
            }else{
               elog("restarting downloads, re-downloading package ${u}", ("u", citr->URI));
-              package_handle = pm.get_package(citr->URI);
+              package_handle = pm.get_package(citr->URI, citr->_hash);
               decent::package::event_listener_handle_t sl = std::make_shared<SeedingListener>(*this, *citr , package_handle);
               package_handle->add_event_listener(sl);
               package_handle->download(false);
