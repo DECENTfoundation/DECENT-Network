@@ -10,7 +10,7 @@ namespace gui_wallet
 struct SDigitalContent;
 class DecentButton;
 class DecentLabel;
-class RatingWidget;
+class DecentTextEdit;
 //
 void PlaceInsideLabel(QWidget* pLabel, QWidget* pWidget);
 //
@@ -33,6 +33,9 @@ protected:
    
    bool m_bAutomation;
    QVector<DecentButton*> m_arr_p_rate;
+
+public:
+   uint32_t m_rating;
 };
     
 //
@@ -95,53 +98,6 @@ public:
                );
 
 };
-   
-//
-// CommentWidget
-//
-class CommentWidget : public QWidget
-{
-   Q_OBJECT
-public:
-   CommentWidget(QWidget*,
-                 const std::string&,
-                 const QString& strUser = QString());
-   ~CommentWidget();
-   
-   void        update();
-   void        submit();
-   
-   bool        is_last() const;
-   bool        is_first() const;
-   void        set_next_comment(std::string const&);
-   void        controller();
-   std::string next_iterator();
-   
-signals:
-   void signal_SetNextPageDisabled(bool);
-   void signal_SetPreviousPageDisabled(bool);
-   void signal_lastComment();
-   void signal_firstComment();
-   
-public slots:
-   bool nextButtonSlot();
-   bool previousButtonSlot();
-   void resetButtonSlot();
-   void getRating(const int&);
-   
-private:
-   QTextEdit*                 m_pComment;
-   DecentLabel*               m_pLabelUserName;
-   RatingWidget*              m_pRatingWidget;
-   
-   std::string                m_next_itr;
-   std::vector<std::string>   m_iterators;
-   std::string                m_content_uri;
-   std::string                m_user;
-   uint32_t                   m_rating;
-};
-
-   
 //
 // ContentInfoDialog
 //
@@ -151,11 +107,10 @@ class ContentInfoDialog : public QDialog
 public:
    ContentInfoDialog(QWidget* parent, const SDigitalContent& a_cnt_details);
    
-   void LabelPushCallbackGUI();
-   CommentWidget* m_commentWidget;
+   void Buy();
 public slots:
    void ButtonWasClicked();
-public:
+
 signals:
    void ContentWasBought();
    
@@ -177,23 +132,54 @@ public:
 private:
    std::string m_URI;
 };
-   
-class NextPreviousWidget : public QWidget
+//
+// CommentWidget
+//
+class CommentWidget : public QWidget
 {
    Q_OBJECT
 public:
-   NextPreviousWidget();
+   CommentWidget(QWidget* pParent,
+                 uint32_t content_average_rating,
+                 const std::string& content_author,
+                 const std::string& content_uri,
+                 const std::string& content_description,
+                 const std::string& feedback_author = std::string());
+
+   void update();
+   void submit();
+
+   bool is_last() const;
+   bool is_first() const;
+
+   void set_next_comment(std::string const&);
+   std::string next_iterator();
 
 signals:
-   void next();
-   void previous();
+   void signal_lastComment();
+   void signal_firstComment();
+
 public slots:
-   void reset();
-   void first();
-   void last();
+   bool slot_Next();
+   bool slot_Previous();
+
 private:
-   DecentButton* m_next_button;
-   DecentButton* m_previous_button;
+   DecentTextEdit* m_pComment;
+   DecentLabel* m_pLabel;
+   RatingWidget* m_pRatingWidget;
+
+   DecentButton* m_pPreviousButton;
+   DecentButton* m_pNextButton;
+   DecentButton* m_pLeaveFeedbackButton;
+
+   uint32_t m_content_average_rating;
+   std::string m_content_author;
+   std::string m_content_uri;
+   std::string m_content_description;
+   std::string m_feedback_author;
+
+   std::string                m_next_itr;
+   std::vector<std::string>   m_iterators;
 };
 }
 

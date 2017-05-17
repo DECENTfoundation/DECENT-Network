@@ -3,6 +3,11 @@
 #include "gui_wallet_global.hpp"
 #include "richdialog.hpp"
 
+#ifdef SEPARATE_DECENT_DAEMON
+#include <thread>
+#include <chrono>
+#endif
+
 #ifndef _MSC_VER
 #include <QMessageBox>
 #include <QThread>
@@ -443,6 +448,9 @@ void WalletOperator::slot_connect()
    {
       str_error = ex.what();
    }
+#ifdef SEPARATE_DECENT_DAEMON
+   std::this_thread::sleep_for(std::chrono::seconds(1));
+#endif
    emit signal_connected(str_error);
 }
 //

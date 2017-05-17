@@ -2,7 +2,6 @@
 
 #include "gui_wallet_global.hpp"
 #include "purchased_tab.hpp"
-#include "decent_wallet_ui_gui_contentdetailsgeneral.hpp"
 #include "gui_design.hpp"
 #include "decent_line_edit.hpp"
 #include "decent_button.hpp"
@@ -342,15 +341,14 @@ void PurchasedTab::slot_Details(int iIndex)
    if (iIndex < 0 || iIndex >= _current_content.size())
       throw std::out_of_range("Content index is out of range");
 
-   // content details dialog is ugly, needs to be rewritten
-//   ContentReviewDialog* pDetailsDialog = new ContentReviewDialog(this, _current_content[iIndex]);
-//   pDetailsDialog->setAttribute(Qt::WA_DeleteOnClose);
-//   pDetailsDialog->open();
+   ContentReviewDialog* pDetailsDialog = new ContentReviewDialog(this, _current_content[iIndex]);
+   pDetailsDialog->setAttribute(Qt::WA_DeleteOnClose);
+   pDetailsDialog->open();
    
-   ContentDetailsBase* pDetailsDialog1 = new ContentDetailsBase(nullptr);
+   /*ContentDetailsBase* pDetailsDialog1 = new ContentDetailsBase(nullptr);
    pDetailsDialog1->execCDB(_current_content[iIndex], true);
    pDetailsDialog1->setAttribute(Qt::WA_DeleteOnClose);
-   pDetailsDialog1->open();
+   pDetailsDialog1->open();*/
 }
 
 void PurchasedTab::ShowMessageBox(std::string const& message)
