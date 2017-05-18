@@ -646,8 +646,12 @@ namespace decent { namespace package {
         std::lock_guard<std::recursive_mutex> guard(_task_mutex);
 
         if (!_download_task) {
-            _download_task = decent::package::PackageManager::instance().get_proto_transfer_engine("local").create_download_task(*this);
-            FC_THROW("package handle was not prepared for download");
+            if( _data_state == CHECKED ) {
+                _download_task = decent::package::PackageManager::instance().get_proto_transfer_engine(
+                      "local").create_download_task(*this);
+            }else {
+                FC_THROW("package handle was not prepared for download");
+            }
         }
 
         _download_task->stop(true);
@@ -880,6 +884,7 @@ namespace decent { namespace package {
         for (auto& package : _packages) {
             if (package) {
                 if (package->_hash == hash) {
+                    package->_url = url;
                     return package;
                 }
             }

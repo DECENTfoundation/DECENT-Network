@@ -1473,6 +1473,7 @@ namespace graphene { namespace wallet {
           * @see create_package()
           * @see upload_package()
           * @see submit_content()
+          * @param author The author of the cont
           * @param author The author of the content
           * @param content_dir Path to the directory containing all content that should be packed
           * @param samples_dir Path to the directory containing samples of content
