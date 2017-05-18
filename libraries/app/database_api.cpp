@@ -1876,6 +1876,10 @@ namespace
             search_buying_template<true, by_price>(_db, consumer, term, id, count, result);
          else if(order == "-price")
             search_buying_template<false, by_price>(_db, consumer, term, id, count, result);
+         else if(order == "+purchased")
+            search_buying_template<false, by_purchased>(_db, consumer, term, id, count, result);
+         else if(order == "-purchased")
+            search_buying_template<true, by_purchased>(_db, consumer, term, id, count, result);
          else if(order == "+created")
             search_buying_template<true, by_created>(_db, consumer, term, id, count, result);
          else if(order == "-created")
