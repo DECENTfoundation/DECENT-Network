@@ -511,12 +511,12 @@ ContentReviewDialog::ContentReviewDialog(QWidget* parent, const SDigitalContent&
    main_layout->addWidget(labelAuthorInfo, iRowIndex, 1);
    ++iRowIndex;
    
-   // Created
+   // Purchased
    //
    DecentLabel* labelExpirationTitle = new DecentLabel(this, DecentLabel::RowLabel);
    DecentLabel* labelExpirationInfo = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Right);
-   labelExpirationTitle->setText(tr("Created"));
-   labelExpirationInfo->setText(a_cnt_details.created.c_str());
+   labelExpirationTitle->setText(tr("Purchased"));
+   labelExpirationInfo->setText(a_cnt_details.purchased_time.c_str());
    main_layout->addWidget(labelExpirationTitle, iRowIndex, 0);
    main_layout->addWidget(labelExpirationInfo, iRowIndex, 1);
    ++iRowIndex;
