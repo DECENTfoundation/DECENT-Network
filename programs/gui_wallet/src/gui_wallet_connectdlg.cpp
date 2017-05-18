@@ -46,7 +46,9 @@ namespace gui_wallet
         QPalette plt_tbl = m_main_table.palette();
         plt_tbl.setColor(QPalette::Base, palette().color(QPalette::Window));
         m_main_table.setPalette(plt_tbl);*/
-        
+       
+        QLabel* text = new QLabel();
+        text->setText(tr("The password must be limited to 50 characters"));
         DecentButton* unlockButton = new DecentButton(this);
 
         if (isSet) {
@@ -61,21 +63,29 @@ namespace gui_wallet
         password_box.setAttribute(Qt::WA_MacShowFocusRect, 0);
         password_box.setPlaceholderText(QString(tr("Password")));
         password_box.setStyleSheet(d_pass);
+        password_box.setMaxLength(50);
        
         if (isSet) {
            setWindowTitle(tr("Set Password"));
         } else {
+           text->hide();
            setWindowTitle(tr("Unlock your wallet"));
         }
        
         //m_main_table.setCellWidget(0, 0, &password_box);
         QHBoxLayout* button_layout = new QHBoxLayout();
         button_layout->addWidget(unlockButton);
+        button_layout->setAlignment(Qt::AlignCenter);
+        QHBoxLayout* text_layout = new QHBoxLayout();
+        text_layout->addWidget(text);
+        text_layout->setAlignment(Qt::AlignCenter);
         connect(unlockButton, SIGNAL(clicked()), this, SLOT(unlock_slot()));
-        connect(&password_box, SIGNAL(returnPressed()), unlockButton, SIGNAL(clicked()));
-        m_main_layout.setContentsMargins(40, 40, 40, 40);
+        connect(&password_box, SIGNAL(returnPressed()), this, SLOT(unlock_slot()));
+        m_main_layout.setContentsMargins(40, 20, 40, 20);
+        m_main_layout.addLayout(text_layout);
         m_main_layout.addWidget(&password_box);
         m_main_layout.addLayout(button_layout);
+        m_main_layout.setAlignment(Qt::AlignCenter);
         setLayout(&m_main_layout);
         
         QTimer::singleShot(0, &password_box, SLOT(setFocus()));
