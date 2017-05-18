@@ -11,7 +11,8 @@ namespace gui_wallet
       enum eType
       {
          Default,
-         RowLabel
+         RowLabel,
+         ConnectingSplash
       };
 
       enum eName

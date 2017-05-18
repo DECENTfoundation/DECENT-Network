@@ -1,6 +1,16 @@
+QMainWindow
+{
+   color:black;
+   background-color:white;
+}
 QTextEdit[type='info']
 {
    padding: 2em;
+}
+QLabel[type='connectingsplash']
+{
+   font-size: 10px;
+   color: rgb(127, 138, 158);
 }
 QLabel[type='rowlabel']
 {
@@ -205,8 +215,28 @@ QTextEdit QScrollBar::add-line:vertical
 }
 QTextEdit QScrollBar::sub-line:vertical
 {
-   background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop: 0  rgb(180,180,180), stop: 0.5 rgb(180,180,180),  stop:1 rgb(180,180,180));"
+   background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop: 0  rgb(180,180,180), stop: 0.5 rgb(180,180,180),  stop:1 rgb(180,180,180));
    height: 0 px;
    subcontrol-position: top;
    subcontrol-origin: margin;
 }
+QProgressBar
+{
+   border-radius: 5px;
+   border: 1px;
+   height: 10px;
+   max-height: 10px;
+   width: 176px;
+   max-width: 176px;
+   background: rgb(224, 229, 235);
+   qproperty-textVisible: false;
+}
+QProgressBar:chunk
+{
+   border-radius: 5px;
+   border: 1px;
+   background: rgb(31, 218, 129);
+}
+
+
+

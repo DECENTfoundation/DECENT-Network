@@ -19,6 +19,9 @@ namespace gui_wallet
          case RowLabel:
             setProperty("type", "rowlabel");
             break;
+         case ConnectingSplash:
+            setProperty("type", "connectingsplash");
+            break;
          case Default:
          default:
             break;

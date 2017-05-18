@@ -18,6 +18,8 @@
 #include <map>
 #include <set>
 
+class QCloseEvent;
+
 namespace gui_wallet
 {
 class Asset;
@@ -44,6 +46,8 @@ public:
 protected:
    void CreateActions();
    void CreateMenues();
+
+   virtual void closeEvent(QCloseEvent *event) override;
    
 private:
    

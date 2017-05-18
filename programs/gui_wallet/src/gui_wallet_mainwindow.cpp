@@ -5,11 +5,13 @@
 #include <QMoveEvent>
 #include <QMessageBox>
 #include <QDateTime>
+#include <QProgressBar>
 #endif
 
 #include "gui_wallet_mainwindow.hpp"
 #include "gui_wallet_global.hpp"
 #include "gui_design.hpp"
+#include "decent_label.hpp"
 
 #ifndef _MSC_VER
 #include <stdio.h>
@@ -18,6 +20,8 @@
 #include <graphene/utilities/dirhelper.hpp>
 #include <graphene/wallet/wallet.hpp>
 #endif
+
+#include <QCloseEvent>
 
 #ifndef DEFAULT_WALLET_FILE_NAME
 #define DEFAULT_WALLET_FILE_NAME       "wallet.json"
@@ -62,7 +66,7 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
    CreateMenues();
    resize(900,550);
 
-   setCentralWidget(m_pCentralWidget);
+   //setCentralWidget(m_pCentralWidget);
 
    m_info_dialog.resize(0,0);
 
@@ -74,8 +78,6 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
 
    connect(pImportButton, SIGNAL(clicked()), this, SLOT(ImportKeySlot()));
 
-   centralWidget()->layout()->setContentsMargins(0, 0, 0, 0);
-   setStyleSheet(d_style);
 
    QObject::connect(&Globals::instance(), &Globals::walletConnected,
                     this, &Mainwindow_gui_wallet::slot_connected);
@@ -102,8 +104,7 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
 
    setWindowTitle(tr("DECENT - Blockchain Content Distribution"));
 
-   centralWidget()->layout()->setContentsMargins(0, 0, 0, 0);
-   setStyleSheet(d_style);
+   m_pCentralWidget->layout()->setContentsMargins(0, 0, 0, 0);
 
    _balanceUpdater.setSingleShot(false);
    _balanceUpdater.setInterval(10000);
@@ -111,6 +112,38 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
    _balanceUpdater.start();
 
    connect(m_pCentralWidget, SIGNAL(sendDCT()), this, SLOT(SendDCTSlot()));
+
+   // The blocking splash screen
+   //
+   {
+      QWidget* pSplashScreen = new QWidget(this);
+      QProgressBar* pConnectingProgress = new QProgressBar(pSplashScreen);
+      pConnectingProgress->setValue(70);
+      DecentLabel* pConnectingLabel = new DecentLabel(pSplashScreen, DecentLabel::ConnectingSplash);
+      pConnectingLabel->setText(tr("Please wait, we are syncing with network…"));
+
+      QHBoxLayout* pLayoutProgress = new QHBoxLayout;
+      QHBoxLayout* pLayoutLabel = new QHBoxLayout;
+      pLayoutProgress->addWidget(pConnectingProgress, Qt::AlignVCenter | Qt::AlignCenter);
+      pLayoutLabel->addWidget(pConnectingLabel, Qt::AlignVCenter | Qt::AlignCenter);
+
+      QVBoxLayout* pLayoutHolder = new QVBoxLayout;
+      pLayoutHolder->addLayout(pLayoutProgress);
+      pLayoutHolder->addLayout(pLayoutLabel);
+      pLayoutHolder->setSizeConstraint(QLayout::SetFixedSize);
+      pLayoutHolder->setSpacing(10);
+      pLayoutHolder->setContentsMargins(0, 0, 0, 0);
+
+      QWidget* pHolder = new QWidget(pSplashScreen);
+      pHolder->setLayout(pLayoutHolder);
+
+      QHBoxLayout* pLayoutSplash = new QHBoxLayout;
+      pLayoutSplash->addWidget(pHolder);
+
+      pSplashScreen->setLayout(pLayoutSplash);
+      
+      setCentralWidget(pSplashScreen);
+   }
 
 #ifdef _MSC_VER
     int height = style()->pixelMetric(QStyle::PM_TitleBarHeight);
@@ -126,6 +159,7 @@ Mainwindow_gui_wallet::~Mainwindow_gui_wallet()
 
 void Mainwindow_gui_wallet::slot_connected()
 {
+   setCentralWidget(m_pCentralWidget);
    _downloadChecker.setSingleShot(false);
    _downloadChecker.setInterval(5000);
    connect(&_downloadChecker, SIGNAL(timeout()), this, SLOT(CheckDownloads()));
@@ -685,5 +719,17 @@ void Mainwindow_gui_wallet::SetPassword()
 void Mainwindow_gui_wallet::GoToThisTab(int index , std::string)
 {
     m_pCentralWidget->SetMyCurrentTabIndex(index);
+}
+
+void Mainwindow_gui_wallet::closeEvent(QCloseEvent *event)
+{
+   if (centralWidget() == m_pCentralWidget)
+   {
+      event->accept();
+   }
+   else
+   {
+      event->ignore();
+   }
 }
 

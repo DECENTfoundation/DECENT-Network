@@ -153,4 +153,5 @@ QFont PopupButtonRegularFont();
 QFont PopupButtonBigFont();
 QFont TabButtonFont();
 QFont PaginationFont();
+QFont MainFont();
 
