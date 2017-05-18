@@ -38,7 +38,7 @@ namespace gui_wallet
         setFixedSize(380,180);
        
         QLabel* text = new QLabel();
-        text->setText("The password must be limited to 50 characters");
+        text->setText(tr("The password must be limited to 50 characters"));
         DecentButton* unlockButton = new DecentButton(this);
 
         if (isSet) {
