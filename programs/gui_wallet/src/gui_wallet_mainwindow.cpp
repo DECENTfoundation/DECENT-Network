@@ -1,15 +1,17 @@
 #include "stdafx.h"
 
+#include "gui_wallet_global.hpp"
+
 #ifndef _MSC_VER
 #include <QMenuBar>
 #include <QMoveEvent>
 #include <QMessageBox>
 #include <QDateTime>
 #include <QProgressBar>
+#include <QGridLayout>
 #endif
 
 #include "gui_wallet_mainwindow.hpp"
-#include "gui_wallet_global.hpp"
 #include "gui_design.hpp"
 #include "decent_label.hpp"
 
@@ -80,11 +82,8 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
    connect(pImportButton, SIGNAL(clicked()), this, SLOT(ImportKeySlot()));
 
 
-   QObject::connect(&Globals::instance(), &Globals::walletConnected,
-                    this, &Mainwindow_gui_wallet::slot_connected);
-
-   QObject::connect(&Globals::instance(), &Globals::connectingProgress,
-                    this, &Mainwindow_gui_wallet::slot_connecting_progress);
+   QObject::connect(&Globals::instance(), &Globals::walletConnectionStatusChanged,
+                    this, &Mainwindow_gui_wallet::slot_connection_status_changed);
 
    QObject::connect(&Globals::instance(), &Globals::signal_showPurchasedTab,
                     this, &Mainwindow_gui_wallet::slot_showPurchasedTab);
@@ -139,18 +138,11 @@ void Mainwindow_gui_wallet::SetSplash()
    pConnectingLabel->setText(tr("Please wait, we are syncing with network…"));
    StatusLabel* pSyncUpLabel = new StatusLabel(pSplashScreen);
 
-   QHBoxLayout* pLayoutProgress = new QHBoxLayout;
-   QHBoxLayout* pLayoutLabel = new QHBoxLayout;
-   QHBoxLayout* pLayoutStatus = new QHBoxLayout;
+   QGridLayout* pLayoutHolder = new QGridLayout;
+   pLayoutHolder->addWidget(pConnectingProgress, 0, 0, Qt::AlignVCenter | Qt::AlignCenter);
+   pLayoutHolder->addWidget(pConnectingLabel, 1, 0, Qt::AlignVCenter | Qt::AlignCenter);
+   pLayoutHolder->addWidget(pSyncUpLabel, 2, 0, Qt::AlignVCenter | Qt::AlignCenter);
 
-   pLayoutProgress->addWidget(pConnectingProgress, Qt::AlignVCenter | Qt::AlignCenter);
-   pLayoutLabel->addWidget(pConnectingLabel, Qt::AlignVCenter | Qt::AlignCenter);
-   pLayoutStatus->addWidget(pSyncUpLabel, Qt::AlignVCenter | Qt::AlignCenter);
-
-   QVBoxLayout* pLayoutHolder = new QVBoxLayout;
-   pLayoutHolder->addLayout(pLayoutProgress);
-   pLayoutHolder->addLayout(pLayoutLabel);
-   pLayoutHolder->addLayout(pLayoutStatus);
    pLayoutHolder->setSizeConstraint(QLayout::SetFixedSize);
    pLayoutHolder->setSpacing(10);
    pLayoutHolder->setContentsMargins(0, 0, 0, 0);
@@ -171,25 +163,9 @@ void Mainwindow_gui_wallet::SetSplash()
    setCentralWidget(pSplashScreen);
 }
 
-void Mainwindow_gui_wallet::slot_connected()
+void Mainwindow_gui_wallet::slot_connection_status_changed(Globals::ConnectionState from, Globals::ConnectionState to)
 {
-   QTimer* pTimerBlockChainQuery = new QTimer(this);
-   pTimerBlockChainQuery->start(1000);
-   QObject::connect(pTimerBlockChainQuery, &QTimer::timeout,
-                    this, &Mainwindow_gui_wallet::slot_query_blockchain);
-}
-
-void Mainwindow_gui_wallet::slot_query_blockchain()
-{
-   QDateTime qdt;
-   qdt.setTime_t(std::chrono::system_clock::to_time_t(Globals::instance().getWallet().HeadBlockTime()));
-   QString str_result = CalculateRemainingTime_Behind(qdt, QDateTime::currentDateTime());
-   std::string result = str_result.toStdString();
-   if (false == result.empty())
-   {
-      Globals::instance().statusShowMessage(result.c_str(), 5000);
-   }
-   else
+   if (Globals::ConnectionState::Up == to)
    {
       ++m_iSyncUpCount;
       if (1 == m_iSyncUpCount)
@@ -205,16 +181,6 @@ void Mainwindow_gui_wallet::slot_query_blockchain()
          DisplayWalletContentGUI(Globals::instance().getWallet().IsNew());
       }
    }
-}
-
-void Mainwindow_gui_wallet::slot_connecting_progress(std::string const& str_progress)
-{
-   if (false == str_progress.empty())
-   {
-      //Globals::instance().statusShowMessage(str_progress.c_str(), 5000);
-   }
-   else
-      slot_connected();
 }
 
 void Mainwindow_gui_wallet::currentUserBalanceUpdate()

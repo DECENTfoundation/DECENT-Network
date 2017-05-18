@@ -1,5 +1,5 @@
-
-#include "gui_wallet_mainwindow.hpp"
+#include "gui_wallet_global.hpp"
+#include "gui_wallet_tabcontentmanager.hpp"
 
 using string = std::string;
 
@@ -32,7 +32,7 @@ void TabContentManager::tryToUpdate() {
       
       std::string result;
       try {
-         RunTask(command, result);
+         result = Globals::instance().runTask(command);
       } catch (...) {
          result = "";
       }

@@ -61,6 +61,7 @@ namespace gui_wallet
 
    void StatusLabel::showMessage(QString const& str_message, int timeout)
    {
+      emit signal_removeTimers();
       setText(str_message);
 
       QTimer* pTimer = new QTimer(this);
@@ -73,7 +74,11 @@ namespace gui_wallet
       QObject::connect(pTimer, &QTimer::timeout,
                        pTimer, &QTimer::deleteLater);
 
+      QObject::connect(this, &StatusLabel::signal_removeTimers,
+                       pTimer, &QTimer::deleteLater);
+
    }
+
    void StatusLabel::clearMessage()
    {
       setText(QString());

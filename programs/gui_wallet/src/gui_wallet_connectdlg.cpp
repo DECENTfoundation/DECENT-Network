@@ -11,6 +11,7 @@
  */
 #include "stdafx.h"
 
+#include "gui_wallet_global.hpp"
 #include "gui_design.hpp"
 #include "gui_wallet_connectdlg.hpp"
 //#include "connected_api_instance.hpp"
@@ -88,7 +89,7 @@ namespace gui_wallet
         centerPosition.rx() -= size().width() / 2;
         centerPosition.ry() -= size().height() / 2;
         
-        QDialog::move(centerPosition);
+        //QDialog::move(centerPosition);
         QDialog::exec();
         pass = password_box.text().toStdString();
         password_box.setText("");

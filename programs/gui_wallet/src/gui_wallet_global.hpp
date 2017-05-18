@@ -137,10 +137,10 @@ namespace gui_wallet
       ~Globals();
       
    public:
+      enum class ConnectionState { Connecting, SyncingUp, Up };
       static Globals& instance();
 
       std::string getCurrentUser() const;
-      bool isConnected() const;
       WalletAPI& getWallet() const;
       void clear();
       Asset asset(uint64_t amount);
@@ -159,7 +159,6 @@ namespace gui_wallet
    public:
       void setCurrentUser(std::string const& user);
       void setWalletUnlocked();
-      void setWalletConnected();
       void setWalletError(std::string const& error);
       void showTransferDialog(std::string const& user);
       std::string getAccountName(std::string const& accountId);
@@ -177,13 +176,13 @@ namespace gui_wallet
       void walletUnlocked();
       
       void walletConnectionError(std::string const& message);
-      void walletConnected();
+      void walletConnectionStatusChanged(ConnectionState from, ConnectionState to);
       
    public slots:
       void slot_displayWalletContent();
 
    private:
-      bool m_connected;
+      ConnectionState m_connected_state;
       WalletOperator* m_p_wallet_operator;
       QThread* m_p_wallet_operator_thread;
       QTimer* m_p_timer;

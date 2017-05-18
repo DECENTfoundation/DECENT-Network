@@ -78,9 +78,7 @@ protected slots:
    void slot_showTransactionsTab(std::string const&);
    void slot_updateAccountBalance(Asset const&);
    
-   void slot_connected();
-   void slot_query_blockchain();
-   void slot_connecting_progress(std::string const&);
+   void slot_connection_status_changed(Globals::ConnectionState from, Globals::ConnectionState to);
    
    void slot_enableSendButton();
       

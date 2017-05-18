@@ -35,6 +35,9 @@ namespace gui_wallet
    public:
       StatusLabel(QWidget* pParent);
 
+   signals:
+      void signal_removeTimers();
+
    public slots:
       void showMessage(QString const& str_message, int timeout);
       void clearMessage();
