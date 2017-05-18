@@ -1876,16 +1876,16 @@ namespace
             search_buying_template<true, by_price>(_db, consumer, term, id, count, result);
          else if(order == "-price")
             search_buying_template<false, by_price>(_db, consumer, term, id, count, result);
-         else if(order == "+purchased")
-            search_buying_template<false, by_purchased>(_db, consumer, term, id, count, result);
          else if(order == "-purchased")
+            search_buying_template<false, by_purchased>(_db, consumer, term, id, count, result);
+         else if(order == "+purchased")
             search_buying_template<true, by_purchased>(_db, consumer, term, id, count, result);
          else if(order == "+created")
             search_buying_template<true, by_created>(_db, consumer, term, id, count, result);
          else if(order == "-created")
             search_buying_template<false, by_created>(_db, consumer, term, id, count, result);
          else
-            search_buying_template<true, by_created>(_db, consumer, term, id, count, result);
+            search_buying_template<false, by_purchased>(_db, consumer, term, id, count, result);
          
          return result;
       }
@@ -2343,7 +2343,7 @@ vector<content_summary> database_api_impl::list_content( const string& URI_begin
       else if (order == "-expiration")
          search_content_template<false, by_expiration>(_db, search_term, count, user, region_code, id, type, result);
       else
-         search_content_template<true, by_URI>(_db, search_term, count, user, region_code, id, type, result);
+         search_content_template<false, by_created>(_db, search_term, count, user, region_code, id, type, result);
       
       return result;
    }
