@@ -489,7 +489,7 @@ void Mainwindow_gui_wallet::UnlockSlot()
     m_ActionLock.setDisabled(true);
     m_ActionUnlock.setDisabled(true);
     
-    const std::string csPassLine = "unlock " + cvsPassword;
+    const std::string csPassLine = "unlock \"" + cvsPassword + "\"";
     json result;
    
     if (!RunTaskParse(csPassLine, result)) {
@@ -720,8 +720,8 @@ void Mainwindow_gui_wallet::SetPassword()
    
    if (m_SetPasswordDialog.execRD(thisPos, pcsPassword))
    {
-      const std::string setPassword = "set_password " + pcsPassword;
-      const std::string unlockTask = "unlock " + pcsPassword;
+      const std::string setPassword = "set_password \"" + pcsPassword + "\"";
+      const std::string unlockTask = "unlock \"" + pcsPassword + "\"";
       std::string result;
       
       try

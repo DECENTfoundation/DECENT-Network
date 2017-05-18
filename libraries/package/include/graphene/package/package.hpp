@@ -23,34 +23,38 @@
 #include <thread>
 
 
-/*
-Quick package user guide
-1. you as before can't construct the PackageManager instance, but have to access the singleton via
+
+
+namespace decent {
+/**
+ * @package PackageManager
+ * Quick package manager user guide
+ * 1. you as before can't construct the PackageManager instance, but have to access the singleton via
  `decent::package::PackageManager::instance();`
-2. you can't create package handlers manuall but have to ask package manager to allocate one for you via
+ * 2. you can't create package handlers manuall but have to ask package manager to allocate one for you via
  `package_manager_instance.get_package(...)`
-3. package handlers are shared pointers around PackageInfo class
-4. package handlers can be explicitly released via `package_manager_instance.release_package(...)` but this is not
+ * 3. package handlers are shared pointers around PackageInfo class
+ * 4. package handlers can be explicitly released via `package_manager_instance.release_package(...)` but this is not
  nececarry, unless you really need to free any unused resource and "unlock" the package data folder
-5. to perform a task, one of `create()`, `unpack()`, `download()`, `start_seeding()`, `stop_seeding()`, `check()`, and
+ * 5. to perform a task, one of `create()`, `unpack()`, `download()`, `start_seeding()`, `stop_seeding()`, `check()`, and
  `remove()` can be called on a valid package handle. Each of these can be either blocking or non-blocking
-6. you can wait for current (blocking or non-blocking) task completeion with `wait_for_current_task()` called on a
+ * 6. you can wait for current (blocking or non-blocking) task completeion with `wait_for_current_task()` called on a
  valid package handle
-7. you can cancel current task via `cancel_current_task()` called on a valid package handle (each task at certain
+ * 7. you can cancel current task via `cancel_current_task()` called on a valid package handle (each task at certain
  points check for cancellation request, hence some operations must finish to task be able to self-terminate)
-8. you can query data, transfer, and package manipulation states via `get_data_state()`, `get_transfer_state()`, and
+ * 8. you can query data, transfer, and package manipulation states via `get_data_state()`, `get_transfer_state()`, and
  `get_manipulation_state()` called on a valid package handle
-9. these and other task-related events are delivered to events listeners, that can be registered at package handle via
+ * 9. these and other task-related events are delivered to events listeners, that can be registered at package handle via
  `add_event_listener()` (info that is delivered with each callbacks can and should be tuned in the code as required --
  this is just a facility yet)
-10. `create()`, and `download()` can be called only on those handles which were created by the appropriate
+ * 10. `create()`, and `download()` can be called only on those handles which were created by the appropriate
  `get_package()`
-11. `recover_all_packages()` called at package manager instance tries to create handles for each package that it will
+ * 11. `recover_all_packages()` called at package manager instance tries to create handles for each package that it will
  be able to detect in current package root folder
+
  */
+namespace package {
 
-
-namespace decent { namespace package {
 
 
     class PackageManager;
@@ -89,9 +93,12 @@ namespace decent { namespace package {
     typedef std::shared_ptr<TransferEngineInterface>    transfer_engine_t;
     typedef std::map<std::string, transfer_engine_t>    proto_to_transfer_engine_map_t;
 
-
+    /*! PackageInfo class, holds information about the particular packages */
     class PackageInfo {
     public:
+        /**
+         * Enum holding possible data states
+         */
         enum DataState {
             DS_UNINITIALIZED = 0,
             INVALID,
@@ -99,13 +106,18 @@ namespace decent { namespace package {
             UNCHECKED,
             CHECKED
         };
-
+        /**
+         * Enum holding possible transfer states
+         */
         enum TransferState {
             TS_IDLE = 0,
             DOWNLOADING,
             SEEDING,
         };
 
+       /**
+         * Enum holding possible processing states
+         */
         enum ManipulationState {
             MS_IDLE = 0,
             PACKING,
@@ -134,14 +146,30 @@ namespace decent { namespace package {
         friend class detail::UnpackPackageTask;
         friend class detail::CheckPackageTask;
 
-
+        /**
+         * Creates new package from files on disk. Cannot be called directly, call PackageManager::get_package instead
+         * @param manager Reference to package manager
+         * @param content_dir_path Files with content
+         * @param samples_dir_path Files with samples
+         * @param key Encryption key
+         */
         PackageInfo(PackageManager& manager,
                     const boost::filesystem::path& content_dir_path,
                     const boost::filesystem::path& samples_dir_path,
                     const fc::sha256& key);
 
+        /**
+         * Re-reads package out of existing disk structure. Cannot be called directly, call PackageManager::get_package instead
+         * @param manager Reference to package manager
+         * @param package_hash Hash of the package
+         */
         PackageInfo(PackageManager& manager,const fc::ripemd160& package_hash);
 
+        /**
+         * Creates package based on url. The package is prepared for download. Cannot be called directly, call PackageManager::get_package instead
+         * @param manager Reference to package manager
+         * @param url URL of the package
+         */
         PackageInfo(PackageManager& manager, const std::string& url);
 
     public:
@@ -153,21 +181,61 @@ namespace decent { namespace package {
         ~PackageInfo();
 
     public:
+        /** Add an event listener, that will be called on state changes */
         void add_event_listener(const event_listener_handle_t& event_listener);
+        /** Remove the event listener */
         void remove_event_listener(const event_listener_handle_t& event_listener);
+        /** Remove all event listeners */
         void remove_all_event_listeners();
 
         DataState          get_data_state() const;
         TransferState      get_transfer_state() const;
         ManipulationState  get_manipulation_state() const;
 
+        /**
+         * Can be called only when new package was created from disk files
+         * @param block Blocking call?
+         */
         void create(bool block = false);
+        /**
+         * Unpack the package to the destination. Can be called only when DataState == checked
+         * @param dir_path Where to extract
+         * @param key Decryption key
+         * @param block Blocking call?
+         */
         void unpack(const boost::filesystem::path& dir_path, const fc::sha256& key, bool block = false);
+       /**
+        * Can be called only when new package was created from url
+        * @param block Blocking call?
+        */
         void download(bool block = false);
+        /**
+         * Start seeding the package. Can be called only when DataState == checked
+         * @param proto ipfs
+         * @param block Blocking call?
+         */
         void start_seeding(std::string proto = "", bool block = false);
+        /**
+         * Stop seeding the package.
+         * @param proto ipfs
+         * @param block Blocking call?
+         */
         void stop_seeding(std::string proto = "", bool block = false);
+        /**
+         * Verify integrity of the data
+         * @param block Blocking call?
+         */
         void check(bool block = false);
+        /**
+         * Remove the package and data files
+         * @param block Blocking call?
+         */
         void remove(bool block = false);
+        /**
+         * Create PoC
+         * @param cd Custody data (received from author)
+         * @param proof Calculated proof, shall be pre-filled
+         */
         void create_proof_of_custody(const decent::encrypt::CustodyData& cd, decent::encrypt::CustodyProof& proof)const;
 
         void wait_for_current_task();
@@ -240,7 +308,9 @@ namespace decent { namespace package {
         virtual void package_download_complete() {}
     };
 
-
+/**
+ * Base class for listeners
+ */
     class EventListenerInterface : public TransferListenerInterface {
     public:
         virtual ~EventListenerInterface() {}
@@ -270,7 +340,9 @@ namespace decent { namespace package {
         virtual void package_check_complete() {}
     };
 
-
+/**
+ * Base class for transfer engines
+ */
     class TransferEngineInterface {
     public:
         TransferEngineInterface(const TransferEngineInterface& orig)        = delete;
@@ -291,7 +363,9 @@ namespace decent { namespace package {
         fc::thread  _thread;
     };
 
-
+/**
+ * Main class in package management, manages all packages and transfer engines
+ */
     class PackageManager {
     private:
         explicit PackageManager(const boost::filesystem::path& packages_path);
@@ -305,16 +379,37 @@ namespace decent { namespace package {
 
         ~PackageManager();
 
+        /**
+         * Returns singleton instance. The instance is created when the method is called the first time
+         * @return singleton instance
+         */
         static PackageManager& instance() {
             static PackageManager the_package_manager(graphene::utilities::decent_path_finder::instance().get_decent_data() / "packages");
             return the_package_manager;
         }
 
     public:
+        /**
+         * Creates new package info out of disk files and returns handle to it. The package is ready to be created
+         * @param content_dir_path Files with content
+         * @param samples_dir_path Files with samples
+         * @param key Encryption key
+         */
         package_handle_t get_package(const boost::filesystem::path& content_dir_path,
                                      const boost::filesystem::path& samples_dir_path,
                                      const fc::sha256& key);
+        /**
+         * Creates package info out of the URL and returns handle to it. The package is ready for download.
+         * @param url URL of the package
+         * @param hash
+         * @return
+         */
         package_handle_t get_package(const std::string& url, const fc::ripemd160&  hash);
+        /**
+         * Re-reads existing package out of existing disk structure and returns handle to it.
+         * @param package_hash Hash of the package
+         * @return
+         */
         package_handle_t get_package(const fc::ripemd160& hash);
 
         package_handle_t find_package(const std::string& url);

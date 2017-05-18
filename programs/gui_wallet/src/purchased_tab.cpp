@@ -42,7 +42,7 @@ PurchasedTab::PurchasedTab(QWidget* pParent)
       {tr("Title"), 30},
       {tr("Size"), 15, "size"},
       {tr("Price"), 15, "price"},
-      {tr("Created"), 15, "created"},
+      {tr("Purchased"), 15, "purchased"},
       {tr("Status"), 20},
       {"", 5},
       {" ", 5}
@@ -131,6 +131,8 @@ void PurchasedTab::timeToUpdate(const std::string& result)
       contentObject.URI = content["URI"].get<std::string>();
       contentObject.created = content["created"].get<std::string>();
       contentObject.created = contentObject.created.substr(0, contentObject.created.find("T"));
+      contentObject.purchased_time = content["expiration_or_delivery_time"].get<std::string>();
+      contentObject.purchased_time = contentObject.purchased_time.substr(0, contentObject.purchased_time.find("T"));
       contentObject.expiration = content["expiration"].get<std::string>();
       contentObject.size = content["size"].get<int>();
       contentObject.id = content["id"].get<std::string>();
@@ -210,7 +212,7 @@ void PurchasedTab::ShowDigitalContentsGUI()
       m_pTableWidget->setItem(iIndex, 1, new QTableWidgetItem(QString::number(contentObject.size) + tr(" MB")));
       m_pTableWidget->setItem(iIndex, 2, new QTableWidgetItem(contentObject.price.getString().c_str()));
       
-      m_pTableWidget->setItem(iIndex, 3, new QTableWidgetItem(QString::fromStdString(contentObject.created)));
+      m_pTableWidget->setItem(iIndex, 3, new QTableWidgetItem(QString::fromStdString(contentObject.purchased_time)));
 
       uint32_t total_key_parts = contentObject.total_key_parts;
       uint32_t received_key_parts  = contentObject.received_key_parts;
