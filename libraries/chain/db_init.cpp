@@ -292,13 +292,9 @@ void database::init_genesis(const genesis_state_type& genesis_state)
    const asset_object& core_asset =
      create<asset_object>( [&]( asset_object& a ) {
          a.symbol = GRAPHENE_SYMBOL;
-         a.options.max_supply = genesis_state.max_core_supply;
+         a.max_supply = genesis_state.max_core_supply;
          a.precision = GRAPHENE_BLOCKCHAIN_PRECISION_DIGITS;
          a.issuer = GRAPHENE_NULL_ACCOUNT;
-         a.options.core_exchange_rate.base.amount = 1;
-         a.options.core_exchange_rate.base.asset_id = asset_id_type(0);
-         a.options.core_exchange_rate.quote.amount = 1;
-         a.options.core_exchange_rate.quote.asset_id = asset_id_type(0);
          a.dynamic_asset_data_id = dyn_asset.id;
       });
    assert( asset_id_type(core_asset.id) == asset().asset_id );
@@ -315,13 +311,10 @@ void database::init_genesis(const genesis_state_type& genesis_state)
          });
       const asset_object& asset_obj = create<asset_object>( [&]( asset_object& a ) {
          a.symbol = "SPECIAL" + std::to_string( id );
-         a.options.max_supply = 0;
+         a.max_supply = 0;
          a.precision = GRAPHENE_BLOCKCHAIN_PRECISION_DIGITS;
          a.issuer = GRAPHENE_NULL_ACCOUNT;
-         a.options.core_exchange_rate.base.amount = 1;
-         a.options.core_exchange_rate.base.asset_id = asset_id_type(0);
-         a.options.core_exchange_rate.quote.amount = 1;
-         a.options.core_exchange_rate.quote.asset_id = asset_id_type(0);
+
          a.dynamic_asset_data_id = dyn_asset.id;
       });
       FC_ASSERT( asset_obj.get_id() == asset_id_type(id) );
@@ -417,28 +410,29 @@ void database::init_genesis(const genesis_state_type& genesis_state)
    map<asset_id_type, share_type> total_supplies;
    map<asset_id_type, share_type> total_debts;
 
-   // Create initial assets
+   // Create initial assets. Only monitored assets are supported in genesis
    for( const genesis_state_type::initial_asset_type& asset : genesis_state.initial_assets )
    {
+
       asset_id_type new_asset_id = get_index_type<asset_index>().get_next_id();
       total_supplies[ new_asset_id ] = 0;
 
       asset_dynamic_data_id_type dynamic_data_id;
 
       dynamic_data_id = create<asset_dynamic_data_object>([&](asset_dynamic_data_object& d) {
-         d.accumulated_fees = asset.accumulated_fees;
+         d.accumulated_fees = 0;
       }).id;
 
-      total_supplies[ new_asset_id ] += asset.accumulated_fees;
-
       create<asset_object>([&](asset_object& a) {
+         monitored_asset_options mao;
+         a.monitored_asset_opts = mao;
          a.symbol = asset.symbol;
-         a.options.description = asset.description;
+         a.description = asset.description;
          a.precision = asset.precision;
          string issuer_name = asset.issuer_name;
          a.issuer = get_account_id(issuer_name);
-         a.options.max_supply = asset.max_supply;
-        a.dynamic_asset_data_id = dynamic_data_id;
+         a.max_supply = 0;
+         a.dynamic_asset_data_id = dynamic_data_id;
       });
    }
 
