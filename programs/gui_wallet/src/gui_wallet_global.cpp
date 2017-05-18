@@ -195,7 +195,7 @@ QString CalculateRemainingTime_Behind(QDateTime const& dt, QDateTime const& dtFu
          return QString();
       else
       {
-         str_result += QObject::tr("syncing up with blockchain: ");
+         //str_result += QObject::tr("syncing up with blockchain: ");
          str_result += arrParts[0];
 
          if (arrParts.size() > 1)

@@ -47,6 +47,8 @@ protected:
    void CreateActions();
    void CreateMenues();
 
+   void SetSplash();
+
    virtual void closeEvent(QCloseEvent *event) override;
    
 private:
@@ -86,6 +88,7 @@ protected:
    class QVBoxLayout*   m_pCentralAllLayout;
    class QHBoxLayout*   m_pMenuLayout;
    CentralWigdet*       m_pCentralWidget;
+   uint32_t             m_iSyncUpCount;
    
    QMenuBar *          m_barLeft;
    QMenuBar *          m_barRight;

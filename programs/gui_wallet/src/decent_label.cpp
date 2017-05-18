@@ -6,6 +6,7 @@
 #include <QEvent>
 #include <QStyle>
 #include <QVariant>
+#include <QTimer>
 
 namespace gui_wallet
 {
@@ -54,5 +55,28 @@ namespace gui_wallet
       QLabel::changeEvent(event);
    }
 
+   StatusLabel::StatusLabel(QWidget* pParent)
+   : gui_wallet::DecentLabel(pParent, DecentLabel::ConnectingSplash)
+   {}
+
+   void StatusLabel::showMessage(QString const& str_message, int timeout)
+   {
+      setText(str_message);
+
+      QTimer* pTimer = new QTimer(this);
+      pTimer->start(timeout);
+      pTimer->setSingleShot(true);
+
+      QObject::connect(pTimer, &QTimer::timeout,
+                       this, &StatusLabel::clearMessage);
+
+      QObject::connect(pTimer, &QTimer::timeout,
+                       pTimer, &QTimer::deleteLater);
+
+   }
+   void StatusLabel::clearMessage()
+   {
+      setText(QString());
+   }
 }
 

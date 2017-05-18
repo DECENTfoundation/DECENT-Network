@@ -46,6 +46,7 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
 , m_SetPasswordDialog(this, true)
 , m_UnlockDialog(this, false)
 {
+   m_iSyncUpCount = 0;
    m_barLeft = new QMenuBar;
    m_barRight = new QMenuBar;
 
@@ -115,35 +116,7 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
 
    // The blocking splash screen
    //
-   {
-      QWidget* pSplashScreen = new QWidget(this);
-      QProgressBar* pConnectingProgress = new QProgressBar(pSplashScreen);
-      pConnectingProgress->setValue(70);
-      DecentLabel* pConnectingLabel = new DecentLabel(pSplashScreen, DecentLabel::ConnectingSplash);
-      pConnectingLabel->setText(tr("Please wait, we are syncing with network…"));
-
-      QHBoxLayout* pLayoutProgress = new QHBoxLayout;
-      QHBoxLayout* pLayoutLabel = new QHBoxLayout;
-      pLayoutProgress->addWidget(pConnectingProgress, Qt::AlignVCenter | Qt::AlignCenter);
-      pLayoutLabel->addWidget(pConnectingLabel, Qt::AlignVCenter | Qt::AlignCenter);
-
-      QVBoxLayout* pLayoutHolder = new QVBoxLayout;
-      pLayoutHolder->addLayout(pLayoutProgress);
-      pLayoutHolder->addLayout(pLayoutLabel);
-      pLayoutHolder->setSizeConstraint(QLayout::SetFixedSize);
-      pLayoutHolder->setSpacing(10);
-      pLayoutHolder->setContentsMargins(0, 0, 0, 0);
-
-      QWidget* pHolder = new QWidget(pSplashScreen);
-      pHolder->setLayout(pLayoutHolder);
-
-      QHBoxLayout* pLayoutSplash = new QHBoxLayout;
-      pLayoutSplash->addWidget(pHolder);
-
-      pSplashScreen->setLayout(pLayoutSplash);
-      
-      setCentralWidget(pSplashScreen);
-   }
+   SetSplash();
 
 #ifdef _MSC_VER
     int height = style()->pixelMetric(QStyle::PM_TitleBarHeight);
@@ -157,22 +130,53 @@ Mainwindow_gui_wallet::~Mainwindow_gui_wallet()
    Globals::instance().clear();
 }
 
+void Mainwindow_gui_wallet::SetSplash()
+{
+   QWidget* pSplashScreen = new QWidget(this);
+   QProgressBar* pConnectingProgress = new QProgressBar(pSplashScreen);
+   pConnectingProgress->setValue(70);
+   DecentLabel* pConnectingLabel = new DecentLabel(pSplashScreen, DecentLabel::ConnectingSplash);
+   pConnectingLabel->setText(tr("Please wait, we are syncing with network…"));
+   StatusLabel* pSyncUpLabel = new StatusLabel(pSplashScreen);
+
+   QHBoxLayout* pLayoutProgress = new QHBoxLayout;
+   QHBoxLayout* pLayoutLabel = new QHBoxLayout;
+   QHBoxLayout* pLayoutStatus = new QHBoxLayout;
+
+   pLayoutProgress->addWidget(pConnectingProgress, Qt::AlignVCenter | Qt::AlignCenter);
+   pLayoutLabel->addWidget(pConnectingLabel, Qt::AlignVCenter | Qt::AlignCenter);
+   pLayoutStatus->addWidget(pSyncUpLabel, Qt::AlignVCenter | Qt::AlignCenter);
+
+   QVBoxLayout* pLayoutHolder = new QVBoxLayout;
+   pLayoutHolder->addLayout(pLayoutProgress);
+   pLayoutHolder->addLayout(pLayoutLabel);
+   pLayoutHolder->addLayout(pLayoutStatus);
+   pLayoutHolder->setSizeConstraint(QLayout::SetFixedSize);
+   pLayoutHolder->setSpacing(10);
+   pLayoutHolder->setContentsMargins(0, 0, 0, 0);
+
+   QWidget* pHolder = new QWidget(pSplashScreen);
+   pHolder->setLayout(pLayoutHolder);
+
+   QHBoxLayout* pLayoutSplash = new QHBoxLayout;
+   pLayoutSplash->addWidget(pHolder);
+
+   pSplashScreen->setLayout(pLayoutSplash);
+
+   QObject::connect(&Globals::instance(), &Globals::statusShowMessage,
+                    pSyncUpLabel, &StatusLabel::showMessage);
+   QObject::connect(&Globals::instance(), &Globals::statusClearMessage,
+                    pSyncUpLabel, &StatusLabel::clearMessage);
+
+   setCentralWidget(pSplashScreen);
+}
+
 void Mainwindow_gui_wallet::slot_connected()
 {
-   setCentralWidget(m_pCentralWidget);
-   _downloadChecker.setSingleShot(false);
-   _downloadChecker.setInterval(5000);
-   connect(&_downloadChecker, SIGNAL(timeout()), this, SLOT(CheckDownloads()));
-   _downloadChecker.start();
-
-   Globals::instance().statusClearMessage();
-
    QTimer* pTimerBlockChainQuery = new QTimer(this);
    pTimerBlockChainQuery->start(1000);
    QObject::connect(pTimerBlockChainQuery, &QTimer::timeout,
                     this, &Mainwindow_gui_wallet::slot_query_blockchain);
-
-   DisplayWalletContentGUI(Globals::instance().getWallet().IsNew());
 }
 
 void Mainwindow_gui_wallet::slot_query_blockchain()
@@ -182,13 +186,35 @@ void Mainwindow_gui_wallet::slot_query_blockchain()
    QString str_result = CalculateRemainingTime_Behind(qdt, QDateTime::currentDateTime());
    std::string result = str_result.toStdString();
    if (false == result.empty())
+   {
       Globals::instance().statusShowMessage(result.c_str(), 5000);
+   }
+   else
+   {
+      ++m_iSyncUpCount;
+      if (1 == m_iSyncUpCount)
+      {
+         setCentralWidget(m_pCentralWidget);
+         _downloadChecker.setSingleShot(false);
+         _downloadChecker.setInterval(5000);
+         connect(&_downloadChecker, SIGNAL(timeout()), this, SLOT(CheckDownloads()));
+         _downloadChecker.start();
+
+         Globals::instance().statusClearMessage();
+
+         DisplayWalletContentGUI(Globals::instance().getWallet().IsNew());
+      }
+   }
 }
 
 void Mainwindow_gui_wallet::slot_connecting_progress(std::string const& str_progress)
 {
    if (false == str_progress.empty())
-      Globals::instance().statusShowMessage(str_progress.c_str(), 5000);
+   {
+      //Globals::instance().statusShowMessage(str_progress.c_str(), 5000);
+   }
+   else
+      slot_connected();
 }
 
 void Mainwindow_gui_wallet::currentUserBalanceUpdate()

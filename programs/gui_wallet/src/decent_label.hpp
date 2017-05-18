@@ -28,4 +28,15 @@ namespace gui_wallet
    protected:
       virtual void changeEvent(QEvent* event) override;
    };
+
+   class StatusLabel : public DecentLabel
+   {
+      Q_OBJECT
+   public:
+      StatusLabel(QWidget* pParent);
+
+   public slots:
+      void showMessage(QString const& str_message, int timeout);
+      void clearMessage();
+   };
 }
