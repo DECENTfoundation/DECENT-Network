@@ -34,9 +34,7 @@ namespace gui_wallet
     : QDialog((QWidget*)pParent, Qt::Window | Qt::WindowTitleHint | Qt::CustomizeWindowHint | Qt::WindowCloseButtonHint)
     , ret_value()
     , m_pParent(pParent)
-    {
-        setFixedSize(380,180);
-       
+    {       
         QLabel* text = new QLabel(this);
         text->setText(tr("The password must be limited to 50 characters"));
         DecentButton* unlockButton = new DecentButton(this);
@@ -68,10 +66,11 @@ namespace gui_wallet
         text_layout->addWidget(text, Qt::AlignCenter);
         connect(unlockButton, SIGNAL(clicked()), this, SLOT(unlock_slot()));
         connect(&password_box, SIGNAL(returnPressed()), unlockButton, SIGNAL(clicked()));
-        m_main_layout.setContentsMargins(40, 20, 40, 20);
+        m_main_layout.setContentsMargins(40, 40, 40, 40);
         m_main_layout.addLayout(text_layout);
         m_main_layout.addWidget(&password_box);
         m_main_layout.addLayout(button_layout);
+        m_main_layout.setSizeConstraint(QLayout::SetFixedSize);
         setLayout(&m_main_layout);
         
         QTimer::singleShot(0, &password_box, SLOT(setFocus()));
