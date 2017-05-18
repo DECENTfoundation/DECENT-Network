@@ -179,8 +179,8 @@ namespace graphene { namespace chain {
             FC_ASSERT(cashback_vb);
             return db.get(*cashback_vb);
          }
-
          account_id_type get_id()const { return id; }
+
    };
 
    /**
@@ -267,6 +267,27 @@ namespace graphene { namespace chain {
 
    struct by_name{};
 
+   template <typename TAG, typename _t_object>
+   struct key_extractor;
+
+   template <>
+   struct key_extractor<by_id, account_object>
+   {
+      static object_id_type get(account_object const& ob)
+      {
+         return ob.id;
+      }
+   };
+
+   template <>
+   struct key_extractor<by_name, account_object>
+   {
+      static std::string get(account_object const& ob)
+      {
+         return ob.name;
+      }
+   };
+
    /**
     * @ingroup object_index
     */
@@ -274,7 +295,7 @@ namespace graphene { namespace chain {
       account_object,
       indexed_by<
          ordered_unique< tag<by_id>, member< object, object_id_type, &object::id > >,
-         ordered_unique< tag<by_name>, member<account_object, string, &account_object::name> >
+         ordered_unique< tag<by_name>, member<account_object, std::string, &account_object::name>  >
       >
    > account_multi_index_type;
 

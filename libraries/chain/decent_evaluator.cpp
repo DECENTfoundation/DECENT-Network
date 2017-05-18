@@ -11,98 +11,277 @@
 #include <graphene/chain/seeder_object.hpp>
 #include <graphene/chain/content_object.hpp>
 #include <graphene/chain/rating_object.hpp>
+#include <graphene/chain/subscription_object.hpp>
 #include <graphene/chain/seeding_statistics_object.hpp>
+#include <graphene/chain/transaction_detail_object.hpp>
 
 #include <decent/encrypt/encryptionutils.hpp>
 
 namespace graphene { namespace chain {
-  
+
    void_result content_submit_evaluator::do_evaluate(const content_submit_operation& o )
    {try{
-      auto& idx = db().get_index_type<seeder_index>().indices().get<by_seeder>();
-      asset total_price_per_day;
-      for ( const auto &p : o.seeders ){
-         const auto& itr = idx.find( p );
-         FC_ASSERT( itr != idx.end(), "seeder does not exist" );
-         FC_ASSERT( itr->free_space > o.size );
-         total_price_per_day += itr-> price.amount * o.size;
-      }
+      FC_ASSERT( o.seeders.size() > 0 );
       FC_ASSERT( o.seeders.size() == o.key_parts.size() );
       FC_ASSERT( db().head_block_time() <= o.expiration);
       fc::microseconds duration = (o.expiration - db().head_block_time() );
       uint64_t days = duration.to_seconds() / 3600 / 24;
+      FC_ASSERT( days != 0, "time to expiration has to be at least one day" );
 
-      FC_ASSERT( days*total_price_per_day <= o.publishing_fee );
-      //TODO_DECENT - URI check, synopsis check
-      //TODO_DECENT - what if it is resubmit? Drop 2
-   }FC_CAPTURE_AND_RETHROW( (o) ) }
-   
-   void_result content_submit_evaluator::do_apply(const content_submit_operation& o )
-   {try{
-      db().create<content_object>( [&](content_object& co){
-         co.author = o.author;
-         co.price = o.price;
-         co.size = o.size;
-         co.synopsis = o.synopsis;
-         co.URI = o.URI;
-         co.publishing_fee_escrow = o.publishing_fee;
-         auto itr1 = o.seeders.begin();
-         auto itr2 = o.key_parts.begin();
-         while ( itr1 != o.seeders.end() && itr2 != o.key_parts.end() )
-         {
-            co.key_parts.emplace(std::make_pair( *itr1, *itr2 ));
-            itr1++;
-            itr2++;
-         }
-         co._hash = o.hash;
-         co.cd = o.cd;
-         co.quorum = o.quorum;
-         co.expiration = o.expiration;
-         co.created = db().head_block_time();
-         co.times_bought = 0;
-         co.AVG_rating = 0;
-         co.total_rating = 0;
-      });
-      db().adjust_balance(o.author,-o.publishing_fee);
       auto& idx = db().get_index_type<seeder_index>().indices().get<by_seeder>();
-      //TODO_DECENT we should better reserve the disk space after the first PoC
-      for ( const auto &p : o.seeders ){
-         const auto& itr = idx.find( p );
-         FC_ASSERT( itr != idx.end(), "seeder does not exist" );
-         db().modify<seeder_object>( *itr, [&](seeder_object& so){
-              so.free_space -= o.size;
-         });
+      asset total_price_per_day;
+      const auto& content_idx = db().get_index_type<content_index>().indices().get<by_URI>();
+      auto content_itr = content_idx.find( o.URI );
+      if( content_itr != content_idx.end() ) // is resubmit?
+      {
+         is_resubmit = true;
+         FC_ASSERT( content_itr->author == o.author );
+         FC_ASSERT( content_itr->size == o.size );
+         FC_ASSERT( content_itr->_hash == o.hash );
+         FC_ASSERT( content_itr->expiration <= o.expiration );
+#ifdef TESTNET_3
+         FC_ASSERT( content_itr->cd == o.cd );
+         if( content_itr->cd )
+            FC_ASSERT( *(content_itr->cd) == *(o.cd));
+
+#else
+         FC_ASSERT( content_itr->cd == o.cd);
+#endif
+         for ( auto &p : o.seeders ) //check if seeders exist and accumulate their prices
+         {
+            auto itr = idx.find( p );
+            FC_ASSERT( itr != idx.end(), "seeder does not exist" );
+
+            auto itr2 = content_itr->key_parts.begin();
+            while( itr2 != content_itr->key_parts.end() )
+            {
+               if( itr2->first == p )
+               {
+                  break;
+               }
+               itr2++;
+            }
+            if( itr2 == content_itr->key_parts.end() )
+               FC_ASSERT( itr->free_space > o.size ); // only newly added seeders are tested against free space
+
+            total_price_per_day += itr-> price.amount * o.size;
+         }
+         FC_ASSERT( days * total_price_per_day <= o.publishing_fee + content_itr->publishing_fee_escrow );
+      }
+      else
+      {
+         for ( const auto &p : o.seeders ) //check if seeders exist and accumulate their prices
+         {
+            const auto& itr = idx.find( p );
+            FC_ASSERT( itr != idx.end(), "seeder does not exist" );
+            FC_ASSERT( itr->free_space > o.size );
+            total_price_per_day += itr-> price.amount * o.size;
+         }
+         FC_ASSERT( days * total_price_per_day <= o.publishing_fee );
       }
 
    }FC_CAPTURE_AND_RETHROW( (o) ) }
    
+   void_result content_submit_evaluator::do_apply(const content_submit_operation& o)
+   {try{
+      if( is_resubmit )
+      {
+         auto& content_idx = db().get_index_type<content_index>().indices().get<by_URI>();
+         const auto& content_itr = content_idx.find( o.URI );
+         db().modify<content_object>(*content_itr,[&](content_object& co)
+                                     {
+#ifdef PRICE_REGIONS
+                                        map<uint32_t, asset> prices;
+                                     for (auto const& item : o.price)
+                                     {
+                                        prices.insert(std::make_pair(item.first, item.second));
+                                     }
+
+                                     auto it_no_regions = prices.find(RegionCodes::OO_none);
+                                     if (it_no_regions != prices.end())
+                                        co.price.SetSimplePrice(it_no_regions->second);
+                                     else
+                                     {
+                                        for (auto const& price_item : prices)
+                                        {
+                                           co.price.SetRegionPrice(price_item.first, price_item.second);
+                                        }
+                                     }
+#else
+                                        co.price = o.price;
+#endif
+                                        co.synopsis = o.synopsis;
+                                        co.publishing_fee_escrow += o.publishing_fee;
+                                        auto itr1 = o.seeders.begin();
+                                        auto itr2 = o.key_parts.begin();
+                                        co.key_parts.clear();
+                                        co.last_proof.clear();
+                                        while ( itr1 != o.seeders.end() && itr2 != o.key_parts.end() )
+                                        {
+                                           co.key_parts.emplace(std::make_pair( *itr1, *itr2 ));
+                                           itr1++;
+                                           itr2++;
+                                        }
+                                        co.quorum = o.quorum;
+                                        co.expiration = o.expiration;
+                                     });
+      }
+      else
+      {
+         db().create<content_object>([&](content_object& co)
+                                     {  //create new content object and store all vaues from the operation
+                                        co.author = o.author;
+#ifdef PRICE_REGIONS
+                                        map<uint32_t, asset> prices;
+                                     for (auto const& item : o.price)
+                                     {
+                                        prices.insert(std::make_pair(item.first, item.second));
+                                     }
+
+                                     auto it_no_regions = prices.find(RegionCodes::OO_none);
+                                     if (it_no_regions != prices.end())
+                                        co.price.SetSimplePrice(it_no_regions->second);
+                                     else
+                                     {
+                                        for (auto const& price_item : prices)
+                                        {
+                                           co.price.SetRegionPrice(price_item.first, price_item.second);
+                                        }
+                                     }
+#else
+                                        co.price = o.price;
+#endif
+                                        co.size = o.size;
+                                        co.synopsis = o.synopsis;
+                                        co.URI = o.URI;
+                                        co.publishing_fee_escrow = o.publishing_fee;
+                                        auto itr1 = o.seeders.begin();
+                                        auto itr2 = o.key_parts.begin();
+                                        while ( itr1 != o.seeders.end() && itr2 != o.key_parts.end() )
+                                        {
+                                           co.key_parts.emplace(std::make_pair( *itr1, *itr2 ));
+                                           itr1++;
+                                           itr2++;
+                                        }
+                                        co._hash = o.hash;
+                                        co.cd = o.cd;
+                                        co.quorum = o.quorum;
+                                        co.expiration = o.expiration;
+                                        co.created = db().head_block_time();
+                                        co.times_bought = 0;
+                                        co.AVG_rating = 0;
+                                        co.num_of_ratings = 0;
+                                     });
+      }
+
+      db().adjust_balance(o.author,-o.publishing_fee);  //pay the escrow from author's account
+      auto& idx = db().get_index_type<seeder_index>().indices().get<by_seeder>();
+      // Reserve the space on seeder's boxes
+      // TODO_DECENT - we should better reserve the disk space after the first PoC
+      for ( const auto &p : o.seeders )
+      {
+         const auto& itr = idx.find( p );
+         db().modify<seeder_object>( *itr, [&](seeder_object& so)
+                                    {
+                                       so.free_space -= o.size;
+                                    });
+      }
+
+      graphene::chain::ContentObjectPropertyManager synopsis_parser(o.synopsis);
+      std::string title = synopsis_parser.get<graphene::chain::ContentObjectTitle>();
+
+      auto& d = db();
+      db().create<transaction_detail_object>([&o, &title, &d](transaction_detail_object& obj)
+                                             {
+                                                obj.m_operation_type = (uint8_t)transaction_detail_object::content_submit;
+
+                                                obj.m_from_account = o.author;
+                                                obj.m_to_account = account_id_type();
+                                                obj.m_transaction_amount = o.publishing_fee;
+                                                obj.m_transaction_fee = o.fee;
+                                                obj.m_str_description = title;
+                                                obj.m_timestamp = d.head_block_time();
+                                             });
+   }FC_CAPTURE_AND_RETHROW( (o) ) }
+
    void_result request_to_buy_evaluator::do_evaluate(const request_to_buy_operation& o )
    {try{
       auto& idx = db().get_index_type<content_index>().indices().get<by_URI>();
       const auto& content = idx.find( o.URI );
       FC_ASSERT( content!= idx.end() );
       FC_ASSERT( o.price <= db().get_balance( o.consumer, o.price.asset_id ) );
-      FC_ASSERT( o.price >= content->price );
+#ifdef PRICE_REGIONS
+      optional<asset> price = content->price.GetPrice(o.region_code_from);
+
+      auto &range = db().get_index_type<subscription_index>().indices().get<by_from_to>();
+      const auto &subscription = range.find(boost::make_tuple(o.consumer, content->author));
+
+      /// Check whether subscription exists. If so, consumer doesn't pay for content
+      if (subscription == range.end() || (subscription != range.end() && subscription->expiration < db().head_block_time()))
+         FC_ASSERT( price.valid() && o.price >= *price && o.price.asset_id == price->asset_id );
+
+#else
+      optional<asset> price = content->GetPrice(string());
+
+      if (subscription == range.end() || (subscription != range.end() && subscription->expiration < db().head_block_time()))
+         FC_ASSERT(o.price >= content->price && o.price.asset_id == content->price.asset_id);
+#endif
+
       FC_ASSERT( content->expiration > db().head_block_time() );
-      FC_ASSERT( o.price.asset_id == content->price.asset_id );
 
    }FC_CAPTURE_AND_RETHROW( (o) ) }
 
    void_result request_to_buy_evaluator::do_apply(const request_to_buy_operation& o )
    {try{
-      const auto& object = db().create<buying_object>([&](buying_object& bo){
-           bo.consumer = o.consumer;
-           bo.URI = o.URI;
-           bo.expiration_time = db().head_block_time() + 24*3600;
-           bo.pubKey = o.pubKey;
-           bo.price = o.price;
-      });
+      const auto& object = db().create<buying_object>([&](buying_object& bo)
+                                                      { //create new buying object
+                                                         bo.consumer = o.consumer;
+                                                         bo.URI = o.URI;
+                                                         bo.expiration_time = db().head_block_time() + 24*3600;
+                                                         bo.pubKey = o.pubKey;
+                                                         bo.price = o.price;
+                                                         bo.paid_price = o.price;
+
+                                                         {
+                                                            const auto& idx = db().get_index_type<content_index>().indices().get<by_URI>();
+                                                            auto itr = idx.find(o.URI);
+                                                            if (itr != idx.end())
+                                                            {
+                                                               bo.synopsis = itr->synopsis;
+                                                               bo.size = itr->size;
+                                                               bo.created = itr->created;
+                                                               bo.average_rating = itr->AVG_rating;
+                                                            }
+                                                         }
+#ifdef PRICE_REGIONS
+                                                         bo.region_code_from = o.region_code_from;
+#endif
+                                                      });
       db().adjust_balance( o.consumer, -o.price );
+
+      auto& d = db();
+      db().create<transaction_detail_object>([&o, &d](transaction_detail_object& obj)
+                                             {
+                                                obj.m_operation_type = (uint8_t)transaction_detail_object::content_buy;
+
+                                                const auto& idx = d.get_index_type<content_index>().indices().get<by_URI>();
+                                                auto itr = idx.find(o.URI);
+                                                if (itr != idx.end())
+                                                {
+                                                   obj.m_from_account = itr->author;
+                                                   graphene::chain::ContentObjectPropertyManager synopsis_parser(itr->synopsis);
+                                                   obj.m_str_description = synopsis_parser.get<graphene::chain::ContentObjectTitle>();
+                                                }
+
+                                                obj.m_to_account = o.consumer;
+                                                obj.m_transaction_amount = o.price;
+                                                obj.m_transaction_fee = o.fee;
+                                                obj.m_timestamp = d.head_block_time();
+                                             });
    }FC_CAPTURE_AND_RETHROW( (o) ) }
 
    void_result deliver_keys_evaluator::do_evaluate(const deliver_keys_operation& o )
    {try{
-      //TODO_DECENT rewrite the next statement!!!
       const auto& buying = db().get<buying_object>(o.buying);
       auto& idx = db().get_index_type<content_index>().indices().get<by_URI>();
 
@@ -117,17 +296,19 @@ namespace graphene { namespace chain {
       const auto& firstK = content->key_parts.at( o.seeder );
       const auto& secondK = o.key;
       const auto& proof = o.proof;
+
       FC_ASSERT( decent::encrypt::verify_delivery_proof( proof, firstK, secondK, seeder_pubKey, buyer_pubKey) );
    }FC_CAPTURE_AND_RETHROW( (o) ) }
 
    void_result deliver_keys_evaluator::do_apply(const deliver_keys_operation& o )
    {try{
+      //start with getting the buying and content objects...
       const auto& buying = db().get<buying_object>(o.buying);
       bool expired = ( buying.expiration_time < db().head_block_time() );
       auto& idx = db().get_index_type<content_index>().indices().get<by_URI>();
       const auto& content = idx.find( buying.URI );
       bool delivered;
-
+      // if the response (key particle) has not been seen before, note it
       if( std::find(buying.seeders_answered.begin(), buying.seeders_answered.end(), o.seeder) == buying.seeders_answered.end() )
          db().modify<buying_object>(buying, [&](buying_object& bo){
               bo.seeders_answered.push_back( o.seeder );
@@ -137,7 +318,7 @@ namespace graphene { namespace chain {
       //if the content has already been delivered or expired, just note the key particles and go on
       if( buying.delivered || buying.expired )
          return void_result();
-
+      //The content just has been successfuly delivered, take care of the payment
       if( delivered )
       {
          asset price = buying.price;
@@ -153,17 +334,18 @@ namespace graphene { namespace chain {
          finish_buying_operation op;
          op.author = content->author;
          op.payout = price;
+         op.consumer = buying.consumer;
          op.buying = buying.id;
          idump((op));
 
          db().push_applied_operation(op);
-      } else if (expired)
+      } else if (expired) //the content just expired, clean up
       {
          db().buying_expire(buying);
       }
    }FC_CAPTURE_AND_RETHROW( (o) ) }
 
-   void_result leave_rating_evaluator::do_evaluate(const leave_rating_operation& o )
+   void_result leave_rating_evaluator::do_evaluate(const leave_rating_and_comment_operation& o )
    {try{
       //check in buying history if the object exists
       auto& idx = db().get_index_type<content_index>().indices().get<by_URI>();
@@ -172,11 +354,10 @@ namespace graphene { namespace chain {
       const auto& bo = bidx.find( std::make_tuple(o.consumer, o.URI) );
       FC_ASSERT( content != idx.end() && bo != bidx.end() );
       FC_ASSERT( bo->delivered, "not delivered" );
-      FC_ASSERT( !bo->rated, "already rated" );
-      FC_ASSERT( o.rating >= 0 && o.rating <=10 );
+      FC_ASSERT( !bo->rated_or_commented, "already rated or commented" );
    }FC_CAPTURE_AND_RETHROW( (o) ) }
    
-   void_result leave_rating_evaluator::do_apply(const leave_rating_operation& o )
+   void_result leave_rating_evaluator::do_apply(const leave_rating_and_comment_operation& o )
    {try{
       //create rating object and adjust content statistics
       auto& bidx = db().get_index_type<buying_index>().indices().get<by_consumer_URI>();
@@ -189,18 +370,44 @@ namespace graphene { namespace chain {
            ro.consumer = o.consumer;
            ro.URI = o.URI;
            ro.rating = o.rating;
+           ro.comment = o.comment;
       });
 
-      db().modify<buying_object>( *bo, [&]( buying_object& b ){ b.rated = true; });
-      db().modify<content_object> ( *content, [&](content_object& co){
+      db().modify<buying_object>( *bo, [&]( buying_object& b ){ b.rated_or_commented = true; });
 
-           if(co.total_rating == 0) {
+      if( o.rating != 0 )
+         db().modify<content_object> ( *content, [&](content_object& co){
+
+           if(co.num_of_ratings == 0) {
               co.AVG_rating = o.rating * 1000;
-              co.total_rating++;
+              co.num_of_ratings++;
            }
            else
-              co.AVG_rating = (co.AVG_rating * co.total_rating + o.rating * 1000) / (++co.total_rating);
+              co.AVG_rating = (co.AVG_rating * co.num_of_ratings + o.rating * 1000) / (++co.num_of_ratings);
       });
+
+      auto& d = db();
+      db().create<transaction_detail_object>([&o, &d](transaction_detail_object& obj)
+                                             {
+                                                obj.m_operation_type = (uint8_t)transaction_detail_object::content_rate;
+
+                                                const auto& idx = d.get_index_type<content_index>().indices().get<by_URI>();
+                                                auto itr = idx.find(o.URI);
+                                                if (itr != idx.end())
+                                                {
+                                                   obj.m_to_account = itr->author;
+
+                                                   graphene::chain::ContentObjectPropertyManager synopsis_parser(itr->synopsis);
+                                                   obj.m_str_description = synopsis_parser.get<graphene::chain::ContentObjectTitle>();
+                                                }
+
+                                                obj.m_from_account = o.consumer;
+
+                                                obj.m_transaction_amount = asset();
+                                                obj.m_transaction_fee = o.fee;
+                                                obj.m_str_description = std::to_string(o.rating) + " (" + obj.m_str_description + ")";
+                                                obj.m_timestamp = d.head_block_time();
+                                             });
    }FC_CAPTURE_AND_RETHROW( (o) ) }
    
    void_result ready_to_publish_evaluator::do_evaluate(const ready_to_publish_operation& o )
@@ -211,7 +418,7 @@ namespace graphene { namespace chain {
    {try{
       auto& idx = db().get_index_type<seeder_index>().indices().get<by_seeder>();
       const auto& sor = idx.find( o.seeder );
-      if( sor == idx.end() ) {
+      if( sor == idx.end() ) { //this is initial publish request
          /*auto stats = db().create<seeding_statistics_object>([&](seeding_statistics_object &sso) {
               sso.seeder = o.seeder;
               sso.total_upload = 0;
@@ -225,7 +432,7 @@ namespace graphene { namespace chain {
               so.ipfs_IDs = o.ipfs_IDs;
               //so.stats = stats;
          });
-      } else{
+      } else{ //this is republish case
          db().modify<seeder_object>(*sor,[&](seeder_object &so) {
             so.free_space = o.space;
             so.price = asset(o.price_per_MByte);
@@ -248,30 +455,37 @@ namespace graphene { namespace chain {
       for(int i = 0; i < 5; i++)
          FC_ASSERT(bid._hash[i] == o.proof.seed.data[i],"Block ID does not match; wrong chain?");
       FC_ASSERT(db().head_block_num() <= o.proof.reference_block + 6,"Block reference is too old");
-      FC_ASSERT( _custody_utils.verify_by_miner( content->cd, o.proof ) == 0, "Invalid proof of delivery" );
+#ifdef TESTNET_3
+      FC_ASSERT( content->cd.valid() == o.proof.valid() );
+      FC_ASSERT( !(content->cd.valid() ) || _custody_utils.verify_by_miner( *(content->cd), *(o.proof) ) == 0, "Invalid proof of custody" );
+#else
+      FC_ASSERT( content->cd.n == 0 || _custody_utils.verify_by_miner( content->cd, o.proof ) == 0, "Invalid proof of custody" );
+#endif
       //ilog("proof_of_custody OK");
    }FC_CAPTURE_AND_RETHROW( (o) ) }
    
    void_result proof_of_custody_evaluator::do_apply(const proof_of_custody_operation& o )
    {try{
-      //pay the seeder
-      //ilog("proof_of_custody_evaluator::do_apply begin" );
+      //get the seeder and content
       auto& idx = db().get_index_type<content_index>().indices().get<by_URI>();
       const auto& content = idx.find( o.URI );
       const auto& sidx = db().get_index_type<seeder_index>().indices().get<by_seeder>();
       const auto& sitr = sidx.find(o.seeder);
       FC_ASSERT(sitr!=sidx.end(), "seeder not found");
       const seeder_object& seeder = *sitr;
+
       auto last_proof = content->last_proof.find( o.seeder );
-      if( last_proof == content->last_proof.end() )
+      if( last_proof == content->last_proof.end() ) //initial PoR
       {
          //the inital proof, no payments yet
-         //ilog("proof_of_custody_evaluator::do_apply initial proof, no payment" );
          db().modify<content_object>(*content, [&](content_object& co){
               co.last_proof.emplace(std::make_pair(o.seeder, db().head_block_time()));
          });
       }else{
-         //ilog("proof_of_custody_evaluator::do_apply payment proof" );
+         //recurrent PoR, calculate payment
+         //the PoR shall be ideally broadcasted once per 24h. if the seeder pushes them too often, he is penalized by a
+         // loss factor equal to one forth of the time remaining to 24h. E.g. by pushing it in 12h he is penalized by
+         // loss = (12/24)/4 = 12,5%; if it is pushed in 18h (i.e. 6 hours prematurely) the loss = (6/24)/4=6,25%.
          fc::microseconds diff = db().head_block_time() - last_proof->second;
          if( diff > fc::days( 1 ) )
             diff = fc::days( 1 ) ;
@@ -279,6 +493,7 @@ namespace graphene { namespace chain {
          uint64_t loss = ( 100 - ratio ) / 4;
          uint64_t total_reward_ratio = ( ratio * ( 100 - loss ) ) / 100;
          asset reward ( seeder.price.amount * total_reward_ratio * content->size / 100 );
+         //take care of the payment
          db().modify<content_object>( *content, [&] (content_object& co ){
               co.last_proof[o.seeder] = db().head_block_time();
               co.publishing_fee_escrow -= reward;

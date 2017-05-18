@@ -11,7 +11,9 @@ namespace graphene { namespace chain {
    {
    public:
       typedef content_submit_operation operation_type;
-      
+
+      bool is_resubmit = false;
+
       void_result do_evaluate( const content_submit_operation& o );
       void_result do_apply( const content_submit_operation& o );
    };
@@ -28,10 +30,10 @@ namespace graphene { namespace chain {
    class leave_rating_evaluator : public evaluator<leave_rating_evaluator>
    {
    public:
-      typedef leave_rating_operation operation_type;
+      typedef leave_rating_and_comment_operation operation_type;
       
-      void_result do_evaluate( const leave_rating_operation& o );
-      void_result do_apply( const leave_rating_operation& o );
+      void_result do_evaluate( const leave_rating_and_comment_operation& o );
+      void_result do_apply( const leave_rating_and_comment_operation& o );
    };
    
    class ready_to_publish_evaluator : public evaluator<ready_to_publish_evaluator>

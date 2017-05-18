@@ -1,0 +1,212 @@
+QTextEdit[type='info']
+{
+   padding: 2em;
+}
+QLabel[type='rowlabel']
+{
+   padding-left: 2em;
+   padding-right: 2em;
+   min-height: 3em;
+}
+QLabel[name='highlighted']
+{
+   background-color: rgb(244, 244, 244);
+}
+QLabel[name='right']
+{
+   qproperty-alignment: 'AlignRight | AlignVCenter';
+}
+QLabel[name='highlightedright']
+{
+   background-color: rgb(244, 244, 244);
+   qproperty-alignment: 'AlignRight | AlignVCenter';
+}
+QDialog, QMainWindow, QMessageBox
+{
+   color: black;
+   background-color: white;
+}
+QPushButton
+{
+   border: 0px;
+   background-color: rgb(27, 176, 104);
+   color: white;
+}
+QPushButton:!enabled
+{
+   border: 0px;
+   background-color: rgb(180, 180, 180);
+   color: rgb(30, 30, 30);
+}
+QPushButton[type='dialogaction']
+{
+   border: 0px;
+   background-color: rgb(27, 176, 104);
+   color: white;
+   width: 8.75em;
+   height: 2.5em;
+   max-width: 8.75em;
+   max-height: 2.5em;
+   margin: 1em;
+}
+QPushButton[type='dialogaction'][enabled=false]
+{
+   border: 0px;
+   background-color: rgb(180, 180, 180);
+   color: rgb(30, 30, 30);
+}
+QPushButton[type='dialogcancel']
+{
+   border: 1px solid rgb(143,143,143);
+   background-color: white;
+   color: black;
+   max-width: 8.75em;
+   max-height: 2.5em;
+   width: 8.75em;
+   height: 2.5em;
+   margin: 1em;
+}
+QPushButton[type='dialogcancel'][enabled=false]
+{
+   border: 1px solid rgb(143,143,143);
+   background-color: rgb(180, 180, 180);
+   color: rgb(30, 30, 30);
+}
+QPushButton[type='send']
+{
+   border: 0px;
+   background-color: white;
+   color: black;
+   qproperty-icon: url(':/icon/images/send.png'), url(':/icon/images/inactive_send.png') disabled;
+}
+QPushButton[type='send'][enabled=false]
+{
+   border: 0px;
+   background-color: white;
+   color: black;
+}
+QPushButton[type='dialogtextbutton']
+{
+   height: 1em;
+   width: 4.5em;
+   max-height: 1em;
+   max-width: 4.5em;
+   border: 0px;
+   background-color: white;
+   color: rgb(27, 176, 104);
+}
+QPushButton[type='dialogtextbutton'][enabled=false]
+{
+   border: 0px;
+   background-color: white;
+   color: gray;
+}
+QPushButton[type='tableicon']
+{
+   border: 0px;
+   background-color: rgb(27, 176, 104);
+   color: white;
+}
+QPushButton[type='tableicon'][enabled=false]
+{
+   border: 0px;
+   background-color: white;
+   color: black;
+}
+QPushButton[name='transaction']
+{
+   qproperty-icon: url(':/icon/images/transaction1.png'), url(':/icon/images/transaction.png') disabled;
+}
+QPushButton[name='detail']
+{
+   qproperty-icon: url(':/icon/images/pop_up1.png'), url(':/icon/images/pop_up.png') disabled;
+}
+QPushButton[name='transfer']
+{
+   qproperty-icon: url(':/icon/images/transfer1.png'), url(':/icon/images/transfer.png') disabled;
+}
+QPushButton[name='export']
+{
+   qproperty-icon: url(':/icon/images/export1.png'), url(':/icon/images/export.png') disabled;
+}
+QPushButton[type='staricon']
+{
+   border: 0px;
+   background-color: white;
+
+   max-width: 1em;
+   max-height: 1em;
+   width: 1em;
+   height: 1em;
+
+   qproperty-icon:   url(':/icon/images/green_asterix.png'),
+                     url(':/icon/images/green_asterix.png') on,
+                     url(':/icon/images/green_asterix.png') on disabled,
+                     url(':/icon/images/white_asterix.png') off,
+                     url(':/icon/images/white_asterix.png') off disabled;
+}
+QPushButton[type='staricon'][enabled=false]
+{
+   border: 0px;
+   background-color: white;
+}
+QMessageBox QPushButton, QFileDialog QPushButton
+{
+   border: 0px;
+   background-color: rgb(27, 176, 104);
+   color: white;
+   min-width: 100px;
+   min-height: 35px;
+   max-width: 200px;
+   max-height: 35px;
+}
+QLineEdit
+{
+   border: 1px solid rgb(143, 143, 143);
+   padding-left: 2em;
+}
+QLineEdit:!enabled
+{
+   border: 1px solid lightGray;
+   color: Gray;
+}
+QLineEdit[type='tablesearch']
+{
+   border: 0px;
+   padding-left: 1em;
+}
+QTextEdit[type='info']
+{
+   border: 0px;
+}
+QTextEdit[type='editor']
+{
+   border: 1px solid gray;
+   padding 0.5em;
+}
+QTextEdit QScrollBar:vertical
+{
+   border: 0px;
+   background:white;
+   width:7px;
+   margin: 0px 0px 0px 0px;
+}
+QTextEdit QScrollBar::handle:vertical
+{
+   background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop: 0 rgb(180,180,180), stop: 0.5 rgb(180,180,180), stop:1 rgb(180,180,180));
+   min-height: 0px;
+}
+QTextEdit QScrollBar::add-line:vertical
+{
+   background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop: 0 rgb(180,180,180), stop: 0.5 rgb(180,180,180),  stop:1 rgb(180,180,180));
+   height: 0px;
+   subcontrol-position: bottom;
+   subcontrol-origin: margin;
+}
+QTextEdit QScrollBar::sub-line:vertical
+{
+   background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop: 0  rgb(180,180,180), stop: 0.5 rgb(180,180,180),  stop:1 rgb(180,180,180));"
+   height: 0 px;
+   subcontrol-position: top;
+   subcontrol-origin: margin;
+}

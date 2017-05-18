@@ -14,69 +14,61 @@ set_source_files_properties(${GUI_WALLET_ICON} PROPERTIES
        MACOSX_PACKAGE_LOCATION "Resources")
 
 
-add_executable( DECENT MACOSX_BUNDLE
-                ${GUI_WALLET_ICON}
-                src/dgui/browse_content_tab.cpp
-                src/dgui/decent_gui_inguiloopcaller.cpp
-                src/dgui/decent_wallet_ui_gui_contentdetailsbase.cpp
-                src/dgui/decent_wallet_ui_gui_contentdetailsgeneral.cpp
-                src/dgui/decent_wallet_ui_gui_newcheckbox.cpp
-                src/dgui/decent_button.cpp
-                src/dgui/gui_wallet_application.cpp
-                src/dgui/gui_wallet_centralwidget.cpp
-                src/dgui/gui_wallet_connectdlg.cpp
-                src/dgui/gui_wallet_global.cpp
-                src/dgui/gui_wallet_mainwindow.cpp
-                src/dgui/main_gui_wallet.cpp
-                src/dgui/overview_tab.cpp
-                src/dgui/text_display_dialog.cpp
-                src/dgui/transactions_tab.cpp
-                src/dgui/purchased_tab.cpp
-                src/dgui/upload_tab.cpp
-                src/ui_wallet/fc_rpc_gui.cpp
-                src/ui_wallet/ui_wallet_functions.cpp
-                src/utils/decent_tools_rwlock.cpp
-                src/utils/richdialog.cpp
+add_executable(DECENT MACOSX_BUNDLE
+               ${GUI_WALLET_ICON}
+               src/browse_content_tab.cpp
+               src/browse_content_tab.hpp
+               src/decent_button.cpp
+               src/decent_button.hpp
+               src/decent_label.cpp
+               src/decent_label.hpp
+               src/decent_line_edit.cpp
+               src/decent_line_edit.hpp
+               src/decent_text_edit.cpp
+               src/decent_text_edit.hpp
+               src/gui_design.hpp
+               src/gui_design.cpp
+               src/gui_wallet_centralwidget.cpp
+               src/gui_wallet_centralwidget.hpp
+               src/gui_wallet_connectdlg.cpp
+               src/gui_wallet_connectdlg.hpp
+               src/gui_wallet_global.cpp
+               src/gui_wallet_global.hpp
+               src/gui_wallet_mainwindow.cpp
+               src/gui_wallet_mainwindow.hpp
+               src/gui_wallet_tabcontentmanager.cpp
+               src/gui_wallet_tabcontentmanager.hpp
+               src/main_gui_wallet.cpp
+               src/overview_tab.cpp
+               src/overview_tab.hpp
+               src/purchased_tab.cpp
+               src/purchased_tab.hpp
+               src/richdialog.cpp
+               src/richdialog.hpp
+               src/text_display_dialog.cpp
+               src/text_display_dialog.hpp
+               src/transactions_tab.cpp
+               src/transactions_tab.hpp
+               src/upload_popup.cpp
+               src/upload_popup.hpp
+               src/upload_tab.cpp
+               src/upload_tab.hpp
 
-                include/debug_decent_application.h
-                include/decent_gui_inguiloopcaller_glb.hpp
-                include/decent_tool_fifo.hpp
-                include/decent_tool_fifo.tos
-                include/richdialog.hpp
-                include/ui_wallet_functions.hpp
-                include/ui_wallet_functions_base.hpp
-                include/unnamedsemaphorelite.hpp
-                src/dgui/browse_content_tab.hpp
-                src/dgui/decent_gui_inguiloopcaller.hpp
-                src/dgui/decent_wallet_ui_gui_contentdetailsbase.hpp
-                src/dgui/decent_wallet_ui_gui_contentdetailsgeneral.hpp
-                src/dgui/decent_wallet_ui_gui_newcheckbox.hpp
-                src/dgui/decent_button.hpp
-                src/dgui/purchased_tab.hpp
-                src/dgui/gui_wallet_application.hpp
-                src/dgui/gui_wallet_centralwidget.hpp
-                src/dgui/gui_wallet_connectdlg.hpp
-                src/dgui/gui_wallet_global.hpp
-                src/dgui/gui_wallet_mainwindow.hpp
-                src/dgui/overview_tab.hpp
-                src/dgui/qt_commonheader.hpp
-                src/dgui/text_display_dialog.hpp
-                src/dgui/transactions_tab.hpp
-                src/dgui/upload_tab.hpp
-                src/ui_wallet/fc_rpc_gui.hpp
+               resources.qrc
+               desktop.icns
 
-                resources.qrc
-                desktop.icns
+               stdafx.h
              )
 
 
 
 target_include_directories( DECENT PUBLIC
                             include
+                            .
                           )
 
-target_link_libraries( DECENT PUBLIC
-                       Qt5::Core Qt5::Widgets Qt5::Svg graphene_app graphene_net graphene_chain  graphene_utilities graphene_wallet wallet_utility package_manager decent_encrypt pbc gmp graphene_account_history graphene_market_history decent_seeding graphene_witness graphene_debug_witness graphene_egenesis_decent fc ${CMAKE_DL_LIBS} ${PLATFORM_SPECIFIC_LIBS}
+target_link_libraries(  DECENT PUBLIC
+                        Qt5::Core Qt5::Widgets Qt5::Svg graphene_app graphene_net graphene_chain  graphene_utilities graphene_wallet wallet_utility package_manager decent_encrypt pbc gmp graphene_account_history graphene_market_history decent_seeding graphene_witness graphene_debug_witness graphene_egenesis_decent fc ${CMAKE_DL_LIBS} ${PLATFORM_SPECIFIC_LIBS}
                      )
 
 set_target_properties(DECENT PROPERTIES MACOSX_BUNDLE_BUNDLE_NAME "DECENT")

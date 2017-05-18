@@ -249,8 +249,8 @@ namespace graphene { namespace db {
                                std::ofstream::binary | std::ofstream::out | std::ofstream::trunc );
             FC_ASSERT( out );
             auto ver  = get_object_version();
-            fc::raw::pack( out, _next_id );
-            fc::raw::pack( out, ver );
+            //fc::raw::pack( out, _next_id );
+            //fc::raw::pack( out, ver );
             this->inspect_all_objects( [&]( const object& o ) {
                 auto vec = fc::raw::pack( static_cast<const object_type&>(o) );
                 auto packed_vec = fc::raw::pack( vec );
