@@ -126,4 +126,8 @@ namespace detail {
 
 
 
-} } } // namespace decent::package::detail
+}
+
+
+
+} } // namespace decent::package::detail
