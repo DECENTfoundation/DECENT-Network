@@ -483,6 +483,7 @@ void Mainwindow_gui_wallet::CheckDownloads()
    {
       auto content = contents[i];
       std::string URI = contents[i]["URI"].get<std::string>();
+      std::string hash = contents[i]["hash"].get<std::string>();
 
       if (URI == "")
          continue;
@@ -491,7 +492,8 @@ void Mainwindow_gui_wallet::CheckDownloads()
       {
          json ignore_result;
          if (RunTaskParse("download_package "
-                          "\"" + URI + "\" ",
+                          "\"" + URI + "\" "
+                          "\"" + hash + "\" ",
                           ignore_result))
          {
             _activeDownloads.insert(URI);
