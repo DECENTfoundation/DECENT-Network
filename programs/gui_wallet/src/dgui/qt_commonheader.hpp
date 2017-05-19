@@ -32,6 +32,7 @@ namespace gui_wallet {
       std::string   synopsis;
       std::string   URI;
       double        AVG_rating;
+      std::string   purchased_time;
       std::string   created;
       std::string   expiration;
       std::string   id;

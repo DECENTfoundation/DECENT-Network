@@ -118,7 +118,27 @@ public:
    QString curentName;
    
 };
-   
+
+//
+// PasswordDialog
+//
+class PasswordDialog : public QDialog
+{
+   Q_OBJECT
+public:
+   enum eType { eSetPassword, eUnlock };
+   PasswordDialog(QWidget* pParent, eType enType);
+
+protected slots:
+   void slot_action();
+   void slot_set_password(QString const&);
+
+private:
+   eType m_enType;
+   QLabel* m_pError;
+   QString m_strPassword;
+};
+
 }
 
 

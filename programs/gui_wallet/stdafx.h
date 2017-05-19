@@ -19,6 +19,8 @@
 #include <QMenuBar>
 #include <QMoveEvent>
 #include <QDir>
+#include <QProgressBar>
+#include <QGridLayout>
 #include <QCoreApplication>
 #include <QApplication>
 #include <QPixmap>

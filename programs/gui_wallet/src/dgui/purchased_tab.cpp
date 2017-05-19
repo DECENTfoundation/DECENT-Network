@@ -33,7 +33,7 @@ PurchasedTab::PurchasedTab(QWidget* pParent)
       {tr("Title"), 30},
       {tr("Size"), 15, "size"},
       {tr("Price"), 15, "price"},
-      {tr("Created"), 15, "created"},
+      {tr("Purchased"), 15, "purchased"},
       {tr("Status"), 20},
       {"", 5},
       {" ", 5}
@@ -123,6 +123,7 @@ void PurchasedTab::timeToUpdate(const std::string& result) {
       price /= GRAPHENE_BLOCKCHAIN_PRECISION;
       
       std::string expiration_or_delivery_time = content["expiration_or_delivery_time"].get<std::string>();
+      time = expiration_or_delivery_time;
       std::string URI = content["URI"].get<std::string>();
       
 
@@ -143,6 +144,8 @@ void PurchasedTab::timeToUpdate(const std::string& result) {
       contentObject.URI = content["URI"].get<std::string>();
       contentObject.created = content["created"].get<std::string>();
       contentObject.expiration = content["expiration"].get<std::string>();
+      contentObject.purchased_time = content["expiration_or_delivery_time"].get<std::string>();
+      contentObject.purchased_time = contentObject.purchased_time.substr(0, contentObject.purchased_time.find("T"));
       contentObject.size = content["size"].get<int>();
       contentObject.id = content["id"].get<std::string>();
       contentObject.hash = content["hash"].get<std::string>();

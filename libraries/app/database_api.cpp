@@ -1727,13 +1727,22 @@ namespace graphene { namespace app {
       try {
          vector<buying_object> result;
          
-         if(order == "+size") search_buying_template<true, by_size>(_db, consumer, result);
-         if(order == "-size") search_buying_template<false, by_size>(_db, consumer, result);
-         if(order == "+price") search_buying_template<true, by_price>(_db, consumer, result);
-         if(order == "-price") search_buying_template<false, by_price>(_db, consumer, result);
-         if(order == "+created") search_buying_template<true, by_created>(_db, consumer, result);
-         if(order == "-created") search_buying_template<false, by_created>(_db, consumer, result);
-         if(order == "") search_buying_template<true, by_consumer_open>(_db, consumer, result);
+         if(order == "+size")
+            search_buying_template<true, by_size>(_db, consumer, result);
+         else if(order == "-size")
+            search_buying_template<false, by_size>(_db, consumer, result);
+         else if(order == "+price")
+            search_buying_template<true, by_price>(_db, consumer, result);
+         else if(order == "-price")
+            search_buying_template<false, by_price>(_db, consumer, result);
+         else if(order == "+created")
+            search_buying_template<true, by_created>(_db, consumer, result);
+         else if(order == "-created")
+            search_buying_template<false, by_created>(_db, consumer, result);
+         else if(order == "+purchased")
+            search_buying_template<true, by_purchased>(_db, consumer, result);
+         else //if(order == "-purchased")
+            search_buying_template<false, by_purchased>(_db, consumer, result);
          
          return result;
       }
@@ -2084,21 +2093,30 @@ namespace graphene { namespace app {
       vector<content_summary> result;
       result.reserve( count );
       
-      if (order == "+author") search_content_template<true, by_author>(_db, search_term, count, user, region_code, result);
-      if (order == "+rating") search_content_template<true, by_AVG_rating>(_db, search_term, count, user, region_code, result);
-      if (order == "+size") search_content_template<true, by_size>(_db, search_term, count, user, region_code, result);
-      if (order == "+price") search_content_template<true, by_price>(_db, search_term, count, user, region_code, result);
-      if (order == "+created") search_content_template<true, by_created>(_db, search_term, count, user, region_code, result);
-      if (order == "+expiration") search_content_template<true, by_expiration>(_db, search_term, count, user, region_code, result);
-      
-      if (order == "-author") search_content_template<false, by_author>(_db, search_term, count, user, region_code, result);
-      if (order == "-rating") search_content_template<false, by_AVG_rating>(_db, search_term, count, user, region_code, result);
-      if (order == "-size") search_content_template<false, by_size>(_db, search_term, count, user, region_code, result);
-      if (order == "-price") search_content_template<false, by_price>(_db, search_term, count, user, region_code, result);
-      if (order == "-created") search_content_template<false, by_created>(_db, search_term, count, user, region_code, result);
-      if (order == "-expiration") search_content_template<false, by_expiration>(_db, search_term, count, user, region_code, result);
-      if (order == "") search_content_template<true, by_URI>(_db, search_term, count, user, region_code, result);
-      //   search_content_template<by_URI>(_db, search_term, count, true, region_code, result);
+      if (order == "+author")
+         search_content_template<true, by_author>(_db, search_term, count, user, region_code, result);
+      else if (order == "+rating")
+         search_content_template<true, by_AVG_rating>(_db, search_term, count, user, region_code, result);
+      else if (order == "+size")
+         search_content_template<true, by_size>(_db, search_term, count, user, region_code, result);
+      else if (order == "+price")
+         search_content_template<true, by_price>(_db, search_term, count, user, region_code, result);
+      else if (order == "+created")
+         search_content_template<true, by_created>(_db, search_term, count, user, region_code, result);
+      else if (order == "+expiration")
+         search_content_template<true, by_expiration>(_db, search_term, count, user, region_code, result);
+      else if (order == "-author")
+         search_content_template<false, by_author>(_db, search_term, count, user, region_code, result);
+      else if (order == "-rating")
+         search_content_template<false, by_AVG_rating>(_db, search_term, count, user, region_code, result);
+      else if (order == "-size")
+         search_content_template<false, by_size>(_db, search_term, count, user, region_code, result);
+      else if (order == "-price")
+         search_content_template<false, by_price>(_db, search_term, count, user, region_code, result);
+      else if (order == "-expiration")
+         search_content_template<false, by_expiration>(_db, search_term, count, user, region_code, result);
+      else// if (order == "-created")
+         search_content_template<false, by_created>(_db, search_term, count, user, region_code, result);
       
       return result;
    }

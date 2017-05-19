@@ -196,7 +196,7 @@ QString CalculateRemainingTime_Behind(QDateTime const& dt, QDateTime const& dtFu
          return QString();
       else
       {
-         str_result += QObject::tr("syncing up with blockchain: ");
+         //str_result += QObject::tr("syncing up with blockchain: ");
          str_result += arrParts[0];
 
          if (arrParts.size() > 1)
@@ -455,7 +455,7 @@ void WalletOperator::slot_connect()
 // Globals
 //
 Globals::Globals()
-: m_connected(false)
+: m_connected_state(ConnectionState::Connecting)
 , m_p_wallet_operator(new WalletOperator())
 , m_p_wallet_operator_thread(new QThread(this))
 , m_p_timer(new QTimer())
@@ -472,7 +472,6 @@ Globals::Globals()
 
    emit signal_connect();
 
-   m_p_timer->setSingleShot(true);
    m_p_timer->start(1000);
    QObject::connect(m_p_timer, &QTimer::timeout,
                     this, &Globals::slot_timer);
@@ -495,9 +494,9 @@ std::string Globals::getCurrentUser() const
    return m_str_currentUser;
 }
 
-bool Globals::isConnected() const
+bool Globals::connected() const
 {
-   return m_connected;
+   return m_connected_state != ConnectionState::Connecting;
 }
 
 WalletAPI& Globals::getWallet() const
@@ -534,12 +533,6 @@ void Globals::setWalletUnlocked()
    emit walletUnlocked();
 }
 
-void Globals::setWalletConnected()
-{
-   m_connected = true;
-   emit walletConnected();
-}
-
 void Globals::setWalletError(std::string const& error)
 {
    emit walletConnectionError(error);
@@ -547,9 +540,9 @@ void Globals::setWalletError(std::string const& error)
 
 void Globals::slot_connected(std::string const& str_error)
 {
-   m_connected = true;
+   m_connected_state = ConnectionState::SyncingUp;
    if (str_error.empty())
-      emit walletConnected();
+      emit walletConnectionStatusChanged(ConnectionState::Connecting, ConnectionState::SyncingUp);
    else
       emit walletConnectionError(str_error);
 }
@@ -558,7 +551,7 @@ void Globals::slot_timer()
 {
    auto duration = std::chrono::steady_clock::now() - m_tp_started;
 
-   if (false == m_connected)
+   if (ConnectionState::Connecting == m_connected_state)
    {
       if (duration > std::chrono::seconds(40))
          emit connectingProgress(tr("still connecting").toStdString());
@@ -568,11 +561,50 @@ void Globals::slot_timer()
          emit connectingProgress(tr("verifying the local database").toStdString());
       else
          emit connectingProgress(tr("connecting").toStdString());
-
-      m_p_timer->start(1000);
    }
    else
-      emit connectingProgress(std::string());
+   {
+      QDateTime qdt;
+      qdt.setTime_t(std::chrono::system_clock::to_time_t(Globals::instance().getWallet().HeadBlockTime()));
+      
+      CalendarDuration duration = CalculateCalendarDuration(qdt, QDateTime::currentDateTime());
+      if (duration.sign == CalendarDuration::sign_negative)
+            duration = CalendarDuration();
+      
+      QString str_result = CalculateRemainingTime_Behind(qdt, QDateTime::currentDateTime());
+      std::string result = str_result.toStdString();
+      if (false == result.empty())
+            emit statusShowMessage(result.c_str(), 5000);
+      
+      bool justbehind = false, farbehind = false;
+      if (duration.years == 0 &&
+          duration.months == 0 &&
+          duration.days == 0 &&
+          duration.hours == 0 &&
+          duration.minutes == 0 &&
+          duration.seconds < 30)
+         justbehind = true;
+
+      if (duration.minutes > 1 ||
+          duration.hours > 0 ||
+          duration.days > 0 ||
+          duration.months > 0 ||
+          duration.years > 0)
+         farbehind = true;
+
+      if (farbehind &&
+          m_connected_state == ConnectionState::Up)
+      {
+         m_connected_state = ConnectionState::SyncingUp;
+         emit walletConnectionStatusChanged(ConnectionState::Up, ConnectionState::SyncingUp);
+      }
+      else if (justbehind &&
+               m_connected_state == ConnectionState::SyncingUp)
+      {
+         m_connected_state = ConnectionState::Up;
+         emit walletConnectionStatusChanged(ConnectionState::SyncingUp, ConnectionState::Up);
+      }
+   }
 }
 //
 // DecentSmallButton

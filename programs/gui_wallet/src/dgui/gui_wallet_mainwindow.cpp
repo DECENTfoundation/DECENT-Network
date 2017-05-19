@@ -11,15 +11,18 @@
 
 #define     WALLET_CONNECT_CODE     ((void*)-2)
 
+#include <QCloseEvent>
 #ifndef _MSC_VER
 #include <QMenuBar>
 #include <QMoveEvent>
 #include <QMessageBox>
+#include <QProgressBar>
+#include <QGridLayout>
 #endif
 
 #include "qt_commonheader.hpp"
 #include "gui_wallet_mainwindow.hpp"
-#include "gui_wallet_global.hpp"
+
 #include "gui_design.hpp"
 
 #ifndef _MSC_VER
@@ -40,22 +43,48 @@ using namespace std;
 using namespace graphene;
 using namespace utilities;
 
+StatusLabel::StatusLabel(QWidget* pParent)
+: QLabel(pParent)
+{}
+
+void StatusLabel::showMessage(QString const& str_message, int timeout)
+{
+   emit signal_removeTimers();
+   setText(str_message);
+   
+   if (timeout > 0)
+   {
+      QTimer* pTimer = new QTimer(this);
+      pTimer->start(timeout);
+      pTimer->setSingleShot(true);
+   
+      QObject::connect(pTimer, &QTimer::timeout,
+                       this, &StatusLabel::clearMessage);
+   
+      QObject::connect(pTimer, &QTimer::timeout,
+                       pTimer, &QTimer::deleteLater);
+   
+      QObject::connect(this, &StatusLabel::signal_removeTimers,
+                       pTimer, &QTimer::deleteLater);
+   }
+}
+
+void StatusLabel::clearMessage()
+{
+   setText(QString());
+}
+
 Mainwindow_gui_wallet::Mainwindow_gui_wallet()
 : m_ActionExit(tr("&Exit"),this)
 , m_ActionAbout(tr("About"),this)
 , m_ActionInfo(tr("Info"),this)
 , m_ActionHelp(tr("Help"),this)
-, m_ActionLock(tr("Lock"),this)
-, m_ActionUnlock(tr("Unlock"),this)
 , m_ActionImportKey(tr("Import key"),this)
 , m_info_dialog()
-, m_locked(true)
 , m_sendDCT_dialog(nullptr)
 , m_import_key_dlg(nullptr)
-, m_nConnected(0)
-, m_SetPasswordDialog(this, true)
-, m_UnlockDialog(this, false)
 {
+   m_iSyncUpCount = 0;
    m_barLeft = new QMenuBar;
    m_barRight = new QMenuBar;
 
@@ -76,7 +105,7 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
    CreateMenues();
    resize(900,550);
 
-   setCentralWidget(m_pCentralWidget);
+   //setCentralWidget(m_pCentralWidget);
 
    m_info_dialog.resize(0,0);
 
@@ -91,21 +120,15 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
 
    setWindowTitle(tr("DECENT - Blockchain Content Distribution"));
 
-   centralWidget()->layout()->setContentsMargins(0, 0, 0, 0);
-   setStyleSheet(d_style);
-
-   QObject::connect(&Globals::instance(), &Globals::walletConnected,
-                    this, &Mainwindow_gui_wallet::slot_connected);
-
-   QObject::connect(&Globals::instance(), &Globals::connectingProgress,
-                    this, &Mainwindow_gui_wallet::slot_connecting_progress);
+   QObject::connect(&Globals::instance(), &Globals::walletConnectionStatusChanged,
+                    this, &Mainwindow_gui_wallet::slot_connection_status_changed);
 
    connect(pUsersCombo, SIGNAL(currentIndexChanged(const QString&)), this, SLOT(CurrentUserChangedSlot(const QString&)) );
 
 
    setWindowTitle(tr("DECENT - Blockchain Content Distribution"));
 
-   centralWidget()->layout()->setContentsMargins(0, 0, 0, 0);
+   m_pCentralWidget->layout()->setContentsMargins(0, 0, 0, 0);
    setStyleSheet(d_style);
 
    _balanceUpdater.setSingleShot(false);
@@ -114,6 +137,10 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
    _balanceUpdater.start();
 
    connect(m_pCentralWidget, SIGNAL(sendDCT()), this, SLOT(SendDCTSlot()));
+
+   // The blocking splash screen
+   //
+   SetSplash();
 
 #ifdef _MSC_VER
     int height = style()->pixelMetric(QStyle::PM_TitleBarHeight);
@@ -127,37 +154,154 @@ Mainwindow_gui_wallet::~Mainwindow_gui_wallet()
    Globals::instance().clear();
 }
 
-void Mainwindow_gui_wallet::slot_connected()
+void Mainwindow_gui_wallet::SetSplash()
 {
-   _downloadChecker.setSingleShot(false);
-   _downloadChecker.setInterval(5000);
-   connect(&_downloadChecker, SIGNAL(timeout()), this, SLOT(CheckDownloads()));
-   _downloadChecker.start();
+   QWidget* pSplashScreen = new QWidget(this);
+   QProgressBar* pConnectingProgress = new QProgressBar(pSplashScreen);
+   pConnectingProgress->setStyleSheet("QProgressBar"
+                                      "{"
+                                         "border-radius: 5px;"
+                                          "border: 1px;"
+                                          "height: 10px;"
+                                          "max-height: 10px;"
+                                          "width: 176px;"
+                                          "max-width: 176px;"
+                                          "background: rgb(224, 229, 235);"
+                                          "qproperty-textVisible: false;"
+                                      "}"
+                                      "QProgressBar:chunk"
+                                      "{"
+                                         "border-radius: 5px;"
+                                          "border: 1px;"
+                                          "background: rgb(31, 218, 129);"
+                                      "}");
+   pConnectingProgress->setValue(70);
+   QLabel* pConnectingLabel = new QLabel(pSplashScreen);
+   pConnectingLabel->setText(tr("Please wait, we are syncing with network…"));
+   StatusLabel* pSyncUpLabel = new StatusLabel(pSplashScreen);
+   DecentButton* pButton = new DecentButton(this);
 
-   Globals::instance().statusClearMessage();
-
-   QTimer* pTimerBlockChainQuery = new QTimer(this);
-   pTimerBlockChainQuery->start(1000);
-   QObject::connect(pTimerBlockChainQuery, &QTimer::timeout,
-                    this, &Mainwindow_gui_wallet::slot_query_blockchain);
-
-   DisplayWalletContentGUI(Globals::instance().getWallet().IsNew());
+   QString labelStyle =
+   "QLabel"
+   "{"
+      "font-size: 10px;"
+      "color: rgb(127, 138, 158);"
+   "}";
+   pConnectingLabel->setStyleSheet(labelStyle);
+   pSyncUpLabel->setStyleSheet(labelStyle);
+   pButton->setStyleSheet(
+                           "QPushButton"
+                           "{"
+                              "border: 0px;"
+                              "background-color: rgb(31, 218, 129);"
+                              "color: white;"
+                              "width: 5em;"
+                              "height: 1.5em;"
+                              "max-width: 5em;"
+                              "max-height: 1.5em;"
+                           "}"
+                          );
+   pButton->hide();
+   pButton->setText(tr("Proceed"));
+   
+   QGridLayout* pLayoutHolder = new QGridLayout;
+   pLayoutHolder->addWidget(pConnectingProgress, 0, 0, Qt::AlignVCenter | Qt::AlignCenter);
+   pLayoutHolder->addWidget(pConnectingLabel, 1, 0, Qt::AlignVCenter | Qt::AlignCenter);
+   pLayoutHolder->addWidget(pSyncUpLabel, 2, 0, Qt::AlignVCenter | Qt::AlignCenter);
+   pLayoutHolder->addWidget(pButton, 3, 0, Qt::AlignVCenter | Qt::AlignCenter);
+   
+   pLayoutHolder->setSizeConstraint(QLayout::SetFixedSize);
+   pLayoutHolder->setSpacing(10);
+   pLayoutHolder->setContentsMargins(0, 0, 0, 0);
+   
+   QWidget* pHolder = new QWidget(pSplashScreen);
+   pHolder->setLayout(pLayoutHolder);
+   
+   QHBoxLayout* pLayoutSplash = new QHBoxLayout;
+   pLayoutSplash->addWidget(pHolder);
+   
+   pSplashScreen->setLayout(pLayoutSplash);
+   
+   QObject::connect(&Globals::instance(), &Globals::statusShowMessage,
+                    pSyncUpLabel, &StatusLabel::showMessage);
+   QObject::connect(&Globals::instance(), &Globals::statusClearMessage,
+                    pSyncUpLabel, &StatusLabel::clearMessage);
+   
+   QObject::connect(this, &Mainwindow_gui_wallet::signal_setSplashMainText,
+                    pConnectingLabel, &QLabel::setText);
+   QObject::connect(this, &Mainwindow_gui_wallet::signal_setSplashMainText,
+                    pButton, &QWidget::show);
+   
+   QObject::connect(pButton, &QPushButton::clicked,
+                    this, &Mainwindow_gui_wallet::CloseSplash);
+   
+   setCentralWidget(pSplashScreen);
 }
 
-void Mainwindow_gui_wallet::slot_query_blockchain()
+void Mainwindow_gui_wallet::CloseSplash()
 {
-   QDateTime qdt;
-   qdt.setTime_t(std::chrono::system_clock::to_time_t(Globals::instance().getWallet().HeadBlockTime()));
-   QString str_result = CalculateRemainingTime_Behind(qdt, QDateTime::currentDateTime());
-   std::string result = str_result.toStdString();
-   if (false == result.empty())
-      Globals::instance().statusShowMessage(result.c_str(), 5000);
+   bool bImportKey = false;
+   QDialog* pDialog = nullptr;
+
+   signal_setSplashMainText(QString());
+   Globals::instance().statusShowMessage(QString());
+
+   if (Globals::instance().getWallet().IsNew())
+   {
+      pDialog = new PasswordDialog(nullptr, PasswordDialog::eSetPassword);
+      signal_setSplashMainText(tr("Please set a password to encrypt your wallet"));
+   }
+   else if (Globals::instance().getWallet().IsLocked())
+   {
+      pDialog = new PasswordDialog(nullptr, PasswordDialog::eUnlock);
+      signal_setSplashMainText(tr("Please unlock your wallet"));
+   }
+   else
+   {
+      json accounts;
+      RunTaskParse("list_my_accounts", accounts);
+      if (accounts.empty())
+      {
+         signal_setSplashMainText(tr("Please import your account in order to proceed"));
+         bImportKey = true;
+         ImportKeySlot();
+      }
+   }
+
+   if (pDialog)
+   {
+      QObject::connect(pDialog, &QDialog::accepted,
+                       this, &Mainwindow_gui_wallet::CloseSplash);
+      pDialog->setAttribute(Qt::WA_DeleteOnClose);
+      pDialog->open();
+   }
+   else if (false == bImportKey)
+   {
+      if (centralWidget() != m_pCentralWidget)  // because can also be called from import key functionality
+      {
+         setCentralWidget(m_pCentralWidget);
+         _downloadChecker.setSingleShot(false);
+         _downloadChecker.setInterval(5000);
+         connect(&_downloadChecker, SIGNAL(timeout()), this, SLOT(CheckDownloads()));
+         _downloadChecker.start();
+
+         Globals::instance().statusClearMessage();
+      }
+
+      DisplayWalletContentGUI();
+   }
 }
 
-void Mainwindow_gui_wallet::slot_connecting_progress(std::string const& str_progress)
+void Mainwindow_gui_wallet::slot_connection_status_changed(Globals::ConnectionState from, Globals::ConnectionState to)
 {
-   if (false == str_progress.empty())
-      Globals::instance().statusShowMessage(str_progress.c_str(), 5000);
+   if (Globals::ConnectionState::Up == to)
+   {
+      ++m_iSyncUpCount;
+      if (1 == m_iSyncUpCount)
+      {
+         CloseSplash();
+      }
+   }
 }
 
 void Mainwindow_gui_wallet::currentUserBalanceUpdate()
@@ -221,21 +365,10 @@ void Mainwindow_gui_wallet::CreateActions()
 
     m_ActionInfo.setStatusTip( tr("Info") );
     connect( &m_ActionInfo, SIGNAL(triggered()), this, SLOT(InfoSlot()) );
-   
-    m_ActionLock.setDisabled(m_locked);
-    m_ActionLock.setStatusTip( tr("Lock account") );
-    connect( &m_ActionLock, SIGNAL(triggered()), this, SLOT(LockSlot()) );
-
-    m_ActionUnlock.setEnabled(m_locked);
-    m_ActionUnlock.setStatusTip( tr("Unlock account") );
-    connect( &m_ActionUnlock, SIGNAL(triggered()), this, SLOT(UnlockSlot()) );
 
     m_ActionImportKey.setDisabled(true);
     m_ActionImportKey.setStatusTip( tr("Import key") );
     connect( &m_ActionImportKey, SIGNAL(triggered()), this, SLOT(ImportKeySlot()) );
-   
-
-
 }
 
 
@@ -245,8 +378,6 @@ void Mainwindow_gui_wallet::CreateMenues()
     QMenuBar* pMenuBar = m_barLeft;
     m_pMenuFile = pMenuBar->addMenu( tr("&File") );
     m_pMenuFile->addAction( &m_ActionExit );
-    m_pMenuFile->addAction( &m_ActionLock );
-    m_pMenuFile->addAction( &m_ActionUnlock );
     m_pMenuFile->addAction( &m_ActionImportKey );
 
 
@@ -382,88 +513,6 @@ void Mainwindow_gui_wallet::UpdateAccountBalances(const std::string& username) {
    
 }
 
-void Mainwindow_gui_wallet::LockSlot()
-{
-    m_ActionLock.setDisabled(true);
-    m_ActionUnlock.setDisabled(true);
-   
-    const std::string csLine = "lock";
-    std::string dummy;
-   
-    try {
-        RunTask(csLine, dummy);
-    } catch (std::exception& ex) {
-        ALERT_DETAILS(tr("Unable to lock the wallet").toStdString(), ex.what());
-    }
-    
-    UpdateLockedStatus();
-    
-}
-
-
-void Mainwindow_gui_wallet::UnlockSlot()
-{
-    
-    QPoint thisPos = pos();
-    thisPos.rx() += size().width() / 2;
-    thisPos.ry() += size().height() / 2;
-
-    
-    
-    std::string cvsPassword;
-    
-   if(!m_UnlockDialog.execRD(thisPos, cvsPassword)) {
-      UpdateLockedStatus();
-      return;
-   }
-   
-    m_ActionLock.setDisabled(true);
-    m_ActionUnlock.setDisabled(true);
-    
-    const std::string csPassLine = "unlock " + cvsPassword;
-    json result;
-   
-    if (!RunTaskParse(csPassLine, result)) {
-       ALERT_DETAILS(tr("Unable to unlock the wallet").toStdString(), result.get<std::string>().c_str());
-       return;
-    }
-    
-    UpdateLockedStatus();
-    m_pCentralWidget->getSendButton()->highlight();
-    m_pCentralWidget->getSendButton()->setStyleSheet("* { background-color: rgb(255,255,255); color : black; }");
-}
-
-
-void Mainwindow_gui_wallet::UpdateLockedStatus()
-{
-   const std::string csLine = "is_locked";
-   std::string a_result;
-
-   try
-   {
-      RunTask(csLine, a_result);
-      m_locked = (a_result == "true");
-
-      if (false == m_locked)
-         Globals::instance().setWalletUnlocked();
-
-   }
-   catch (const std::exception& ex)
-   {
-      ALERT_DETAILS(tr("Unable to get wallet lock status").toStdString(), ex.what());
-      m_locked = true;
-   }
-
-   m_ActionLock.setDisabled(m_locked);
-   m_ActionUnlock.setEnabled(m_locked);
-   if (m_locked)
-   {
-      UnlockSlot();
-   }
-}
-
-
-
 void Mainwindow_gui_wallet::CheckDownloads()
 {   
     auto& global_instance = gui_wallet::Globals::instance();
@@ -518,18 +567,11 @@ void Mainwindow_gui_wallet::DisplayConnectionError(std::string errorMessage) {
 }
 
 
-void Mainwindow_gui_wallet::DisplayWalletContentGUI(bool isNewWallet)
+void Mainwindow_gui_wallet::DisplayWalletContentGUI()
 {
-   if (isNewWallet)
-   {
-      SetPassword();
-   }
-
-   m_ActionLock.setDisabled(true);
-   m_ActionUnlock.setDisabled(true);
-   UpdateLockedStatus();
-
    m_ActionImportKey.setEnabled(true);
+   Globals::instance().setWalletUnlocked();
+   Globals::instance().getWallet().SaveWalletFile();
    QComboBox& userCombo = *m_pCentralWidget->usersCombo();
 
    try
@@ -607,7 +649,7 @@ void Mainwindow_gui_wallet::ImportKeySlot()
     if (hasError) {
         ALERT_DETAILS(tr("Cannot import key.").toStdString(), result.c_str());
     } else {
-        DisplayWalletContentGUI(false);
+        CloseSplash();
     }
     m_pCentralWidget->getSendButton()->highlight();
     m_pCentralWidget->getSendButton()->setStyleSheet("* { background-color: rgb(255,255,255); color : black; }");
@@ -685,35 +727,16 @@ void Mainwindow_gui_wallet::HelpSlot()
     }
 }
 
-void Mainwindow_gui_wallet::SetPassword()
+void Mainwindow_gui_wallet::closeEvent(QCloseEvent *event)
 {
-   std::string pcsPassword;
-   
-   QPoint thisPos = pos();
-   thisPos.rx() += this->size().width() / 2;
-   thisPos.ry() += this->size().height() / 2;
-   
-   if (m_SetPasswordDialog.execRD(thisPos, pcsPassword))
+   if (centralWidget() == m_pCentralWidget ||
+       Globals::instance().connected())
    {
-      const std::string setPassword = "set_password " + pcsPassword;
-      const std::string unlockTask = "unlock " + pcsPassword;
-      std::string result;
-      
-      try
-      {
-         RunTask(setPassword, result);
-         RunTask(unlockTask, result);
-
-         Globals::instance().getWallet().SaveWalletFile();
-         
-         m_ActionImportKey.setEnabled(true);
-         m_ActionUnlock.setEnabled(false);
-         m_ActionLock.setEnabled(true);
-      }
-      catch (const std::exception& ex)
-      {
-         ALERT_DETAILS(tr("Unable to unlock the wallet").toStdString(), ex.what());
-      }
+      event->accept();
+   }
+   else
+   {
+      event->ignore();
    }
 }
 

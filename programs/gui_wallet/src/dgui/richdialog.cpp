@@ -290,3 +290,106 @@ RET_TYPE SendDialog::execRD(const QPoint* a_pMove, std::vector<std::string>& a_c
    
    return rtReturn;
 }
+
+// PasswordDialog
+//
+PasswordDialog::PasswordDialog(QWidget* pParent, eType enType)
+: QDialog(pParent, Qt::Window | Qt::WindowTitleHint | Qt::CustomizeWindowHint | Qt::WindowCloseButtonHint)
+, m_enType(enType)
+, m_pError(new QLabel(this))
+{
+   QLabel* pLabel = new QLabel(this);
+   pLabel->setText(tr("The password must be limited to 50 characters"));
+   DecentButton* pButton = new DecentButton(this);
+   pButton->setFixedSize(140, 40);
+
+   m_pError->hide();
+
+   if (enType == eSetPassword)
+      pButton->setText(tr("Set Password"));
+   else
+      pButton->setText(tr("Unlock"));
+
+   QLineEdit* pEditPassword = new QLineEdit(this);
+   pEditPassword->setEchoMode(QLineEdit::Password);
+   pEditPassword->setAttribute(Qt::WA_MacShowFocusRect, 0);
+   pEditPassword->setPlaceholderText(QString(tr("Password")));
+   pEditPassword->setMaxLength(50);
+   pEditPassword->setFixedSize(300, 44);
+   pEditPassword->setStyleSheet(d_text_box);
+
+   if (enType == eSetPassword)
+      setWindowTitle(tr("Set Password"));
+   else
+   {
+      pLabel->hide();
+      setWindowTitle(tr("Unlock your wallet"));
+   }
+
+   int iRowIndex = 0;
+   QGridLayout* pMainLayout = new QGridLayout;
+   pMainLayout->addWidget(pLabel, iRowIndex++, 0, Qt::AlignCenter | Qt::AlignVCenter);
+   pMainLayout->addWidget(m_pError, iRowIndex++, 0, Qt::AlignCenter | Qt::AlignVCenter);
+   pMainLayout->addWidget(pEditPassword, iRowIndex++, 0, Qt::AlignCenter | Qt::AlignVCenter);
+   pMainLayout->addWidget(pButton, iRowIndex++, 0, Qt::AlignCenter | Qt::AlignVCenter);
+
+   pMainLayout->setSizeConstraint(QLayout::SetFixedSize);
+   pMainLayout->setSpacing(20);
+   pMainLayout->setContentsMargins(20, 20, 20, 20);
+
+   QObject::connect(pEditPassword, &QLineEdit::returnPressed,
+                    this, &PasswordDialog::slot_action);
+   QObject::connect(pButton, &QPushButton::clicked,
+                    this, &PasswordDialog::slot_action);
+   QObject::connect(pEditPassword, &QLineEdit::textChanged,
+                    this, &PasswordDialog::slot_set_password);
+
+   setLayout(pMainLayout);
+
+   //QTimer::singleShot(0, &password_box, SLOT(setFocus()));
+#ifdef _MSC_VER
+   int height = style()->pixelMetric(QStyle::PM_TitleBarHeight);
+   setWindowIcon(height > 32 ? QIcon(":/icon/images/windows_decent_icon_32x32.png")
+                 : QIcon(":/icon/images/windows_decent_icon_16x16.png"));
+#endif
+}
+
+void PasswordDialog::slot_set_password(QString const& strPassword)
+{
+   m_strPassword = strPassword;
+}
+
+void PasswordDialog::slot_action()
+{
+   if (m_strPassword.isEmpty())
+      return;
+
+   std::string ignore;
+   if (m_enType == eSetPassword)
+   {
+      try
+      {
+         RunTask("set_password \"" + m_strPassword.toStdString() + "\"", ignore);
+      }
+      catch(...)
+      {
+         m_pError->setText(tr("Cannot set this password"));
+         m_pError->show();
+         return;
+      }
+   }
+
+   try
+   {
+      RunTask("unlock \"" + m_strPassword.toStdString() + "\"", ignore);
+   }
+   catch(...)
+   {
+      m_pError->setText(tr("Cannot unlock the wallet"));
+      m_pError->show();
+      return;
+   }
+
+   close();
+   emit accepted();
+}

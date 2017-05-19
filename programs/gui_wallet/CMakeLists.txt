@@ -30,8 +30,6 @@ add_executable(DECENT MACOSX_BUNDLE
                src/dgui/gui_design.cpp
                src/dgui/gui_wallet_centralwidget.cpp
                src/dgui/gui_wallet_centralwidget.hpp
-               src/dgui/gui_wallet_connectdlg.cpp
-               src/dgui/gui_wallet_connectdlg.hpp
                src/dgui/gui_wallet_global.cpp
                src/dgui/gui_wallet_global.hpp
                src/dgui/gui_wallet_mainwindow.cpp
