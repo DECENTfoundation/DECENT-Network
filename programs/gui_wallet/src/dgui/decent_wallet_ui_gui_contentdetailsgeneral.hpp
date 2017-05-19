@@ -16,12 +16,11 @@
 
 namespace gui_wallet {
 
-
 class ContentDetailsGeneral : public ContentDetailsBase
 {
     Q_OBJECT
 public:
-    ContentDetailsGeneral();
+    ContentDetailsGeneral(QWidget* pParent);
 
     virtual void execCDD(const SDigitalContent& a_cnt_details);
 
@@ -35,8 +34,8 @@ protected slots:
 
 protected:
     DecentButton   m_label;
+    DecentButton   m_close;
 };
-
 }
 
 

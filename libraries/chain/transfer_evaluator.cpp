@@ -55,5 +55,4 @@ void_result transfer_evaluator::do_apply( const transfer_operation& o )
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (o) ) }
 
-
 } } // graphene::chain

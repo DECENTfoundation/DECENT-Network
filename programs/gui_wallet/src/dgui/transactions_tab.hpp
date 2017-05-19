@@ -26,11 +26,12 @@
 
 namespace gui_wallet
 {
+   class Mainwindow_gui_wallet;
    class TransactionsTab : public TabContentManager {
       
       Q_OBJECT
    public:
-      TransactionsTab();
+      TransactionsTab(QWidget* pParent);
       virtual void timeToUpdate(const std::string& result);
       virtual std::string getUpdateCommand();
 
@@ -47,14 +48,13 @@ namespace gui_wallet
       
    public slots:
       
-      void currentUserChanged(std::string user);
+      void currentUserChanged(std::string const&);
       
    private:
       QTimer   m_contentUpdateTimer;
       bool     m_doUpdate = true;
       
       std::map<std::string, std::string> _user_id_cache;
-      
    };
 }
 

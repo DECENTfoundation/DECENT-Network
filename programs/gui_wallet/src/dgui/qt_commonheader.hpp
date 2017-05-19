@@ -4,7 +4,6 @@
 #include <QObject>
 #include <stdio.h>
 #include <QMouseEvent>
-#include "ui_wallet_functions_base.hpp"
 #include <QTime>
 
 
@@ -17,26 +16,31 @@ namespace DCT {
 
 
 namespace gui_wallet {
-    
-    
-struct SDigitalContent{
-    DCT::DIG_CONT_TYPES  type = DCT::GENERAL;
-    std::string          author;
-    struct {
-        double      amount;
-        std::string asset_id;
-        std::string symbol;
-        std::string precision;
-    } price;
    
-    std::string   synopsis;
-    std::string   URI;
-    double        AVG_rating;
-    std::string   created;
-    std::string   expiration;
-    int           size;
-    int           times_bougth;
-};
+   struct SDigitalContent
+   {
+      DCT::DIG_CONT_TYPES  type = DCT::GENERAL;
+      std::string          author;
+      struct
+      {
+         double      amount;
+         std::string asset_id;
+         std::string symbol;
+         std::string precision;
+      } price;
+
+      std::string   synopsis;
+      std::string   URI;
+      double        AVG_rating;
+      std::string   purchased_time;
+      std::string   created;
+      std::string   expiration;
+      std::string   id;
+      std::string   hash;
+      std::string   status;
+      int           size;
+      int           times_bought;
+   };
 
 
 

@@ -1,42 +1,39 @@
-/*
- *	File: gui_wallet_centralwigdet.cpp
- *
- *	Created on: Nov 11, 2016
- *	Created by: Davit Kalantaryan (Email: davit.kalantaryan@desy.de)
- *
- *  This file implements ...
- *
- */
 
+#include "stdafx.h"
+
+#include "gui_design.hpp"
 #include "gui_wallet_centralwidget.hpp"
+
+
+#ifndef _MSC_VER
 #include <QMessageBox>
 #include <QTimer>
+#include <QStatusBar>
 #include <QHeaderView>
 #include <QResizeEvent>
 #include <QScrollBar>
+#endif
+
 #include "gui_wallet_global.hpp"
 #include "gui_wallet_mainwindow.hpp"
+
+#ifndef _MSC_VER
 #include <QSortFilterProxyModel>
 #include <QStyleFactory>
-
-
-#ifdef WIN32
-#include <direct.h>
-#ifndef getcwd
-#define getcwd _getcwd
 #endif
-#else
-#include <unistd.h>
-#endif
+
+#include "decent_wallet_ui_gui_newcheckbox.hpp"
+
+#define __SIZE_FOR_IMGS__   40
+#define __HEIGHT__  60
 
 
 using namespace gui_wallet;
 
-
 AccountBalanceWidget::AccountBalanceWidget() : m_nCurrentIndex(-1) {
    
-    m_amount_label.setStyleSheet("color:green;""background-color:white;");
-    m_asset_type_label.setStyleSheet("color:black;""background-color:white;");
+    m_amount_label.setStyleSheet(d_amount_label);
+    m_asset_type_label.setStyleSheet(d_label);
     m_amount_label.setAlignment(Qt::AlignRight|Qt::AlignVCenter);
     m_asset_type_label.setAlignment(Qt::AlignRight|Qt::AlignVCenter);
     m_main_layout.addWidget(&m_amount_label);
@@ -63,8 +60,8 @@ void AccountBalanceWidget::clear()
 {
     m_nCurrentIndex = -1;
     m_vBalances.clear();
-    m_amount_label.setText(tr(""));
-    m_asset_type_label.setText(tr(""));
+    m_amount_label.setText("");
+    m_asset_type_label.setText("");
 }
 
 
@@ -96,11 +93,15 @@ CentralWigdet::CentralWigdet(QBoxLayout* a_pAllLayout, Mainwindow_gui_wallet* a_
     : m_first_line_lbl(),
       m_parent_main_window(a_pPar),
       m_browse_cont_tab(a_pPar),
+      m_Overview_tab(a_pPar),
       m_Upload_tab(a_pPar),
-      m_Overview_tab(a_pPar)
-
+      m_Purchased_tab(a_pPar),
+      m_trans_tab(a_pPar),
+      sendButton(new DecentSmallButton(icon_inactive_send,icon_send))
 {
 
+
+         
     m_allTabs.push_back(&m_browse_cont_tab);
     m_allTabs.push_back(&m_trans_tab);
     m_allTabs.push_back(&m_Upload_tab);
@@ -108,27 +109,13 @@ CentralWigdet::CentralWigdet(QBoxLayout* a_pAllLayout, Mainwindow_gui_wallet* a_
     m_allTabs.push_back(&m_Purchased_tab);
     m_currentTab = -1;
 
-    
 
-    m_main_tabs.setStyleSheet("QTabBar::tab{"
-                              "font:bold;"
-                              " height: 40px; width: 181px;"
-                              "color:rgb(0,0,0);background-color:white;"
-                              "border-left: 0px;"
-                              "border-top: 1px solid rgb(240,240,240);"
-                              "border-bottom: 1px solid rgb(240,240,240);}"
-                              "QTabBar::tab:selected{"
-                              "color:rgb(27,176,104);"
-                              "border-bottom:3px solid rgb(27,176,104);"
-                              "border-top: 1px solid rgb(240,240,240);"
-                              "border-left:0px;"
-                              "border-right:0px;}"
-                               );
+
+    m_main_tabs.setStyleSheet(d_main_tabs);
 
     PrepareGUIprivate(a_pAllLayout);
-    
-    QTimer::singleShot(200, this, &CentralWigdet::initTabChanged);
 
+    QTimer::singleShot(200, this, SLOT(initTabChanged()));
 }
 
 void  CentralWigdet::initTabChanged() {
@@ -168,6 +155,15 @@ QComboBox* CentralWigdet::usersCombo()
     return (QComboBox*)GetWidgetFromTable5(USERNAME,1);
 }
 
+DecentButton* CentralWigdet::importButton()
+{
+   return (DecentButton*)GetWidgetFromTable5(USERNAME,2);
+}
+
+DecentSmallButton* CentralWigdet::getSendButton()
+{
+   return sendButton;
+}
 
 QWidget* CentralWigdet::GetWidgetFromTable5(int a_nColumn, int a_nWidget)
 {
@@ -176,16 +172,13 @@ QWidget* CentralWigdet::GetWidgetFromTable5(int a_nColumn, int a_nWidget)
 }
 
 
-#define __SIZE_FOR_IMGS__   40
-#define __HEIGHT__  60
-#include "decent_wallet_ui_gui_newcheckbox.hpp"
 
 void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
 {
-
+ 
     m_main_tabs.addTab(&m_browse_cont_tab,tr("Browse Content"));
     m_main_tabs.addTab(&m_trans_tab,tr("Transactions"));
-    m_main_tabs.addTab(&m_Upload_tab,tr("Upload"));
+    m_main_tabs.addTab(&m_Upload_tab,tr("Publish"));
     m_main_tabs.addTab(&m_Overview_tab,tr("Users"));
     m_main_tabs.addTab(&m_Purchased_tab,tr("Purchased"));
 
@@ -200,6 +193,7 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     QHBoxLayout *pHBoxLayoutTmp = nullptr;
     QComboBox* pComboTmp1 = nullptr;
     QFrame* line = nullptr;
+    DecentButton* importKeyButton = nullptr;
 
     AccountBalanceWidget* pCombo2;
 
@@ -209,10 +203,10 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     m_pDcLogoWgt = new QWidget;
 
     pHBoxLayoutTmp = new QHBoxLayout;
-    pLabelTmp = new QLabel(tr(""));
+    pLabelTmp = new QLabel("");
     pLabelTmp->setScaledContents(true);
 
-    QPixmap m_image1(":/icon/images/decent_logo.svg");
+    QPixmap m_image1(icon_decent);
     pHBoxLayoutTmp->setContentsMargins(0, 0, 0, 90);
     pLabelTmp->setPixmap(m_image1);
     pHBoxLayoutTmp->addWidget(pLabelTmp);
@@ -228,7 +222,7 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     line = new QFrame(this);
     line->setFrameShape(QFrame::VLine); // Horizontal line
     line->setLineWidth(1);
-    line->setStyleSheet("color: #f0f0f0");
+    line->setStyleSheet(d_color);
     line->setFixedHeight(68);
     m_first_line_lbl.addWidget(line);
 
@@ -239,60 +233,104 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     
     pHBoxLayoutTmp = new QHBoxLayout;
     
-    pLabelTmp = new QLabel(tr(""));
+    pLabelTmp = new QLabel("");
     
     pLabelTmp->setScaledContents(true);
 
-    QPixmap m_image2(":/icon/images/user.png");
+    QPixmap m_image2(icon_user);
     pLabelTmp->setPixmap(m_image2);
     pHBoxLayoutTmp->addWidget(pLabelTmp);
     pLabelTmp->setFixedSize(28,28);
     
     pComboTmp1 = new QComboBox;
-    //pComboTmp1->setStyleSheet("QWidget:item:selected{border: 0px solid #999900;background-color: rgb(27,176,104);}");
     pComboTmp1->setStyle(QStyleFactory::create("fusion"));
-   
+    importKeyButton = new DecentButton();
+
+    importKeyButton->setText(tr("Import Key"));
+#ifdef WINDOWS_HIGH_DPI
+    importKeyButton->setFixedSize(150, 30);
+#else
+    importKeyButton->setFixedSize(100, 25);
+#endif
     pHBoxLayoutTmp->addWidget(pComboTmp1);
+    pHBoxLayoutTmp->addWidget(importKeyButton);
     m_pUsernameWgt->setLayout(pHBoxLayoutTmp);
     m_first_line_lbl.addWidget(m_pUsernameWgt);
+#ifdef WINDOWS_HIGH_DPI
+    m_pUsernameWgt->setFixedHeight(100);
+    m_pUsernameWgt->setMaximumWidth(300);
+#else
     m_pUsernameWgt->setFixedHeight(__HEIGHT__);
     m_pUsernameWgt->setMaximumWidth(271);
-    
-    
+#endif
+   
     /*//////////////////////////////////////////*/
     line = new QFrame(this);
     line->setFrameShape(QFrame::VLine); // Horizontal line
     
     line->setLineWidth(1);
-    line->setStyleSheet("color: #ffffff");
+    line->setStyleSheet(c_line);
     line->setFixedHeight(68);
     m_first_line_lbl.addWidget(line);
 
     /*//////////////////////////////////////////*/
     m_pBalanceWgt1 = new QWidget;
     pHBoxLayoutTmp = new QHBoxLayout;
-    pLabelTmp = new QLabel(tr(""));
+    pLabelTmp = new QLabel("");
     pLabelTmp->setScaledContents(true);
 
-    QPixmap m_image3(":/icon/images/balance.png");
+    QPixmap m_image3(icon_balance);
     pLabelTmp->setPixmap(m_image3);
     pLabelTmp->setFixedSize(30,30);
     pHBoxLayoutTmp->addWidget(pLabelTmp);
-    
+    pHBoxLayoutTmp->setAlignment(Qt::AlignCenter);
+    pHBoxLayoutTmp->setSpacing(0);
+   
     pCombo2 = new AccountBalanceWidget;
-    
-    QFont f( "Myriad Pro Regular", 12, QFont::Bold);
-    pCombo2->setFont(f);
+
+    pCombo2->setFont(AccountBalanceFont());
     pHBoxLayoutTmp->addWidget(pCombo2);
     
     m_pBalanceWgt1->setLayout(pHBoxLayoutTmp);
     m_first_line_lbl.addWidget(m_pBalanceWgt1);
-    pHBoxLayoutTmp->setContentsMargins(400, 0, 0, 0);
+    pHBoxLayoutTmp->setContentsMargins(220, 0, 40, 0);
+#ifdef WINDOWS_HIGH_DPI
+    m_pBalanceWgt1->setFixedHeight(100);
+#else
     m_pBalanceWgt1->setFixedHeight(__HEIGHT__);
-    //m_pBalanceWgt1->setFixedWidth(m_pBalanceWgt1->size().width() - 30);
- 
-    
-    m_browse_cont_tab.setStyleSheet("color: black;""background-color:white;");
+#endif
+    m_browse_cont_tab.setStyleSheet(d_label);
+
+   /*//////////////////////////////////////////*/
+   line = new QFrame(this);
+   line->setFrameShape(QFrame::VLine); // Vertical line
+   
+   line->setLineWidth(1);
+   line->setStyleSheet(d_color);
+   line->setFixedHeight(68);
+   m_first_line_lbl.addWidget(line);
+   
+   /*//////////////////////////////////////////*/
+   m_pSendWgt1 = new QWidget;
+   pHBoxLayoutTmp = new QHBoxLayout;
+   sendButton->setScaledContents(true);
+   DecentButton* send_text = new DecentButton();
+   send_text->setText(tr("Send"));
+   send_text->setStyleSheet("border: 1px solid rgb(255, 255, 255); background-color :rgb(255,255,255); color: rgb(0,0,0);");
+
+   sendButton->setFixedSize(30,30);
+   connect(sendButton, SIGNAL(clicked()), this, SLOT(sendDCTSlot()));
+   connect(send_text, SIGNAL(clicked()), this, SLOT(sendDCTSlot()));
+   pHBoxLayoutTmp->setAlignment(Qt::AlignRight);
+   pHBoxLayoutTmp->addWidget(sendButton);
+   pHBoxLayoutTmp->addWidget(send_text);
+   
+   m_pSendWgt1->setLayout(pHBoxLayoutTmp);
+   m_first_line_lbl.addWidget(m_pSendWgt1);
+   pHBoxLayoutTmp->setContentsMargins(50, 0, 50, 0);
+   m_pSendWgt1->setFixedHeight(__HEIGHT__);
+   
+    m_browse_cont_tab.setStyleSheet(d_label);
     SetAccountBalancesFromStrGUI(std::vector<std::string>());
 
 
@@ -306,7 +344,7 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     line = new QFrame(this);
     line->setFrameShape(QFrame::HLine);
     line->setLineWidth(500);
-    line->setStyleSheet("color: #f0f0f0");
+    line->setStyleSheet(c_line);
     line->setFixedHeight(1);
 
     
@@ -318,12 +356,23 @@ void CentralWigdet::PrepareGUIprivate(class QBoxLayout* a_pAllLayout)
     m_main_layout.addLayout(tab_lay);
     //m_main_layout.addWidget(&m_main_tabs);
     
+   QStatusBar* status = new QStatusBar(this);
+   m_main_layout.addWidget(status);
+   QObject::connect(&Globals::instance(), &Globals::statusShowMessage,
+                    status, &QStatusBar::showMessage);
+   QObject::connect(&Globals::instance(), &Globals::statusClearMessage,
+                    status, &QStatusBar::clearMessage);
 
     a_pAllLayout->addLayout(&m_main_layout);
     
    connect(&m_main_tabs, SIGNAL(currentChanged(int)), this, SLOT(tabChanged(int)));
-   connect(&GlobalEvents::instance(), SIGNAL(walletUnlocked()), this, SLOT(walletUnlockedSlot()));
+   connect(&Globals::instance(), SIGNAL(walletUnlocked()), this, SLOT(walletUnlockedSlot()));
    
+}
+
+void CentralWigdet::sendDCTSlot()
+{
+   emit sendDCT();
 }
 
 
@@ -372,7 +421,7 @@ QString CentralWigdet::getFilterText()const
         break;
     }
 
-    return tr("");
+    return "";
 }
 
 
@@ -392,6 +441,9 @@ void CentralWigdet::resizeEvent ( QResizeEvent * a_event )
     {
         s = QString::number(each_width - 11);
         m_main_tabs.setStyleSheet("QTabBar::tab{"
+#ifdef WINDOWS_HIGH_DPI
+                                  "font-size: 10pt;"
+#endif
                                   "font:bold;"
                                   " height: 40px; width: " + s + "px;"
                                   "color:rgb(0,0,0);background-color:white;"
@@ -409,6 +461,9 @@ void CentralWigdet::resizeEvent ( QResizeEvent * a_event )
     else
     {
         m_main_tabs.setStyleSheet("QTabBar::tab{"
+#ifdef WINDOWS_HIGH_DPI
+                                 "font-size: 10pt;"
+#endif
                                   "font:bold;"
                                   " height: 40px; width: " + s + "px;"
                                   "color:rgb(0,0,0);background-color:white;"
@@ -423,22 +478,18 @@ void CentralWigdet::resizeEvent ( QResizeEvent * a_event )
                                   "border-right:0px;}"
                                   );
     }
-
-
-
-    //int nWidth_small (size().width()*13/100);
-    //int nWidth_big (size().width()*28/100);
-    //int nWidth_medium (size().width()*38/100);
-    //m_pDcLogoWgt->resize(nWidth_small,m_pDcLogoWgt->height());
-    //m_pUsernameWgt->resize(nWidth_big,m_pUsernameWgt->height());
-    //m_pBalanceWgt1->setMaximumSize(m_pBalanceWgt1->size().width() - 30,m_pBalanceWgt1->size().height());
-
 }
 
 void CentralWigdet::SetTransactionInfo(std::string info_from_other_tab)
 {
     m_trans_tab.set_user_filter(info_from_other_tab);
 }
+
+Overview_tab* CentralWigdet::getUsersTab()
+{
+   return &m_Overview_tab;
+}
+
 
 
 

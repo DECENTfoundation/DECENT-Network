@@ -46,9 +46,15 @@ public:
       
       setStyleSheet("background-color:white;");
       setLayout(&m_main_layout);
+
+#ifdef _MSC_VER
+      int height = style()->pixelMetric(QStyle::PM_TitleBarHeight);
+      setWindowIcon(height > 32 ? QIcon(":/icon/images/windows_decent_icon_32x32.png")
+         : QIcon(":/icon/images/windows_decent_icon_16x16.png"));
+#endif
    }
    
-   void AddInfo(std::string title, std::string info) {
+   void AddInfo(QString title, std::string info) {
       _subWidgets.push_back(new QWidget());
       _subLayouts.push_back(new QVBoxLayout());
       
@@ -58,7 +64,7 @@ public:
          _subWidgets.back()->setStyleSheet("background-color:rgb(255, 255, 255);");
       }
       
-      QLabel* lblTitle = new QLabel(QString::fromStdString(title));
+      QLabel* lblTitle = new QLabel((title));
       lblTitle->setStyleSheet("font-weight: bold");
       
       QLabel* lblInfo = new QLabel(QString::fromStdString(info));
@@ -138,7 +144,6 @@ namespace gui_wallet
    public slots:
       void buttonPressed();
       void transactionButtonPressed();
-      
       
    public:
       QLineEdit      search;

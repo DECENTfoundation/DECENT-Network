@@ -1,10 +1,7 @@
-
-#ifndef TAB_CONTENT_MANAGER_HPP
-#define TAB_CONTENT_MANAGER_HPP
-
+#pragma once
 
 #include <QWidget>
-#include "ui_wallet_functions.hpp"
+
 
 namespace gui_wallet {
    
@@ -12,6 +9,7 @@ namespace gui_wallet {
 class TabContentManager : public QWidget {
    
 public:
+   TabContentManager(QWidget* pParent = nullptr);
    virtual void contentActivated() {
       _lastResult = "";
    }
@@ -23,28 +21,8 @@ public:
    virtual std::string getUpdateCommand() = 0;
    
 public:
-   void tryToUpdate() {
-      try {
-         std::string command = getUpdateCommand();
-         if (command.empty()) {
-            timeToUpdate("");
-            return;
-         }
-         
-         std::string result;
-         try {
-            RunTask(command, result);
-         } catch (...) {
-            result = "";
-         }
-         if (result != _lastResult) {
-            _lastResult = result;
-            timeToUpdate(result);
-         }
-      } catch (...) {
-         
-      }
-   }
+   void tryToUpdate();
+   
 private:
    
    std::string _lastResult = "";
@@ -53,5 +31,3 @@ private:
    
 }
 
-
-#endif // TAB_CONTENT_MANAGER_HPP

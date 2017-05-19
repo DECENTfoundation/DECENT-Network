@@ -1,89 +1,45 @@
-//decent_wallet_ui_gui_purchasedtab
-/*
- *	File: decent_wallet_ui_gui_purchasedtab.hpp
- *
- *	Created on: 11 Feb 2017
- *	Created by: Davit Kalantaryan (Email: davit.kalantaryan@desy.de)
- *
- *  This file implements ...
- *
- */
+#pragma once
 
-#ifndef DECENT_WALLET_UI_GUI_PURCHASEDTAB_HPP
-#define DECENT_WALLET_UI_GUI_PURCHASEDTAB_HPP
-
-#include <QWidget>
-#include <QVBoxLayout>
-#include <QHBoxLayout>
-#include <QTableWidget>
-#include <QLabel>
-#include <QLineEdit>
-#include <QTimer>
-#include <QPushButton>
-#include <QFileDialog>
-#include <QMessageBox>
+#include <string>
 
 #include "qt_commonheader.hpp"
 #include "gui_wallet_tabcontentmanager.hpp"
-#include "gui_wallet_global.hpp"
-
-#include <string>
-#include <iostream>
 
 
-
+class QSignalMapper;
 
 namespace gui_wallet {
-   
 
-class ContentDetailsBase;
-
+class DecentTable;
 
 class PurchasedTab : public TabContentManager
 {
-   
-   Q_OBJECT;
-         
+   Q_OBJECT
+
 public:
-   PurchasedTab();
-   
-   void ShowDigitalContentsGUI(std::vector<SDigitalContent>& contents);
+   PurchasedTab(QWidget* pParent);
    
 public:
    virtual void timeToUpdate(const std::string& result);
    virtual std::string getUpdateCommand();
    
 protected:
-   void PrepareTableWidgetHeaderGUI();
-   
-   
-public slots:
-   void extractPackage();
-   void show_content_popup();
-   void showMessageBoxSlot(std::string message);
-   void extractionDirSelected(const QString& path);
-   
-signals:
-   void showMessageBox(std::string message);
+   void ShowMessageBox(std::string const& message);
+   void ShowDigitalContentsGUI(std::vector<SDigitalContent>& contents);
 
-private:
-   
-   std::vector<SDigitalContent>   _current_content;
+public slots:
+   void slot_ExtractPackage(int);
+   void slot_Details(int);
+
+   void slot_ExtractionDirSelected(QString const& path);
+   void slot_SearchTermChanged(QString const& strSearchTerm);
    
 protected:
-   QVBoxLayout             m_main_layout;
-   DecentTable             m_pTableWidget;
-   QLineEdit               m_filterLineEditer;
-   ContentDetailsBase*     _details_dialog = nullptr;
-   bool                    _isExtractingPackage;
-   QMessageBox             _msgBox;
-   QFileDialog             _fileDialog;
+   QSignalMapper*          m_pExtractSignalMapper;
+   QSignalMapper*          m_pDetailsSignalMapper;
+   DecentTable*            m_pTableWidget;
+   int                     m_iActiveItemIndex;
+   QString                 m_strSearchTerm;
+   std::vector<SDigitalContent>   _current_content;
 };
-   
-   
-   
-}
-
-
-
-#endif // DECENT_WALLET_UI_GUI_PURCHASEDTAB_HPP
+}//   end namespace gui_wallet

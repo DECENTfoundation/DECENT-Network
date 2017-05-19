@@ -81,8 +81,9 @@ public:
     
     QString getFilterText()const;
     QComboBox* usersCombo();
-    
-    
+    DecentButton* importButton();
+    DecentSmallButton* getSendButton();
+   
     int GetMyCurrentTabIndex()const {
         return m_main_tabs.currentIndex();
     }   
@@ -91,14 +92,20 @@ public:
         m_main_tabs.setCurrentIndex(index);
     }
    
-    void initTabChanged();
     void SetTransactionInfo(std::string info_from_other_tab);
    
+    Overview_tab* getUsersTab();
+   
 public slots:
+   void initTabChanged();
    void tabChanged(int index);
    void walletUnlockedSlot();
    void updateActiveTab();
-    
+   void sendDCTSlot();
+   
+public:
+signals:
+   void sendDCT();
 protected:
     virtual void showEvent ( QShowEvent * event ) ;
     virtual void resizeEvent ( QResizeEvent * event );
@@ -122,7 +129,9 @@ private:
     Upload_tab          m_Upload_tab;
     Overview_tab        m_Overview_tab;
     PurchasedTab        m_Purchased_tab;
-    
+   
+    DecentSmallButton*  sendButton;
+   
     std::vector<TabContentManager*>  m_allTabs;
     int                              m_currentTab = -1;
 
@@ -133,6 +142,7 @@ private:
     QWidget*            m_pDcLogoWgt;
     QWidget*            m_pUsernameWgt;
     QWidget*            m_pBalanceWgt1;
+    QWidget*            m_pSendWgt1;
 
     
 };

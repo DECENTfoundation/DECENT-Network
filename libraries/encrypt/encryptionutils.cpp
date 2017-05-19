@@ -2,6 +2,7 @@
 // Created by Josef Sevcik on 25/11/2016.
 //
 #include <decent/encrypt/encryptionutils.hpp>
+#define CRYPTOPP_ENABLE_NAMESPACE_WEAK 1
 
 #include <cryptopp/aes.h>
 #include <cryptopp/filters.h>
@@ -14,8 +15,12 @@
 #include <fstream>
 #include <streambuf>
 #include <fc/log/logger.hpp>
+#include <fc/crypto/sha512.hpp>
 #include <fc/exception/exception.hpp>
 #include <iostream>
+
+
+
 
 #ifdef _MSC_VER
 class RunCryptoPPTest
@@ -60,12 +65,10 @@ encryption_results AES_encrypt_file(const std::string &fileIn, const std::string
         byte iv[CryptoPP::AES::BLOCKSIZE];
         memset(iv, 0, sizeof(iv));
         CryptoPP::CBC_Mode<CryptoPP::AES>::Encryption e;
-        CryptoPP::FileSink fs(fileOut.c_str(), true);
         e.SetKeyWithIV(key.key_byte, CryptoPP::AES::MAX_KEYLENGTH, iv);
-        CryptoPP::StreamTransformationFilter* filter=new CryptoPP::StreamTransformationFilter(e, &fs);
-
-        const char* file_name = fileIn.c_str();
-        CryptoPP::FileSource* fsource= new CryptoPP::FileSource(file_name, true, filter);
+        CryptoPP::FileSource fsource(fileIn.c_str(), true,
+            new CryptoPP::StreamTransformationFilter(e,
+                new CryptoPP::FileSink(fileOut.c_str(), true)));
     } catch (const CryptoPP::Exception &e) {
         elog(e.GetWhat());
         switch (e.GetErrorType()) {
@@ -107,6 +110,14 @@ DInteger generate_private_el_gamal_key()
     CryptoPP::Integer im (rng, CryptoPP::Integer::One(), DECENT_EL_GAMAL_MODULUS_512 -1);
     DInteger key = im;
     return key;
+}
+
+DInteger generate_private_el_gamal_key_from_secret(fc::sha256 secret)
+{
+   fc::sha512 hash = fc::sha512::hash( (char*) secret._hash, 32 );
+   CryptoPP::Integer key( (byte*)hash._hash, 64 );
+   DInteger ret = key.Modulo( DECENT_EL_GAMAL_MODULUS_512 );
+   return key;
 }
 
 DInteger get_public_el_gamal_key(const DInteger &privateKey)

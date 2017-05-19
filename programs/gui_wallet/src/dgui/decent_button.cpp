@@ -7,29 +7,21 @@
  *  This file implements ...
  *
  */
+#include "stdafx.h"
 
+#include "gui_design.hpp"
 #include "decent_button.hpp"
-#include "debug_decent_application.h"
+
+#ifndef _MSC_VER
 #include <QGraphicsDropShadowEffect>
 #include <string>
-
+#endif
 
 using namespace gui_wallet;
 
-DecentButton::DecentButton()
-{
-    setAlignment(Qt::AlignCenter);
-    setStyleSheet("QLabel { background-color :rgb(27,176,104); color : white;}");
-    setScaledContents(true);
-    
-    //QGraphicsDropShadowEffect *effect = new QGraphicsDropShadowEffect(this);
-    //effect->setBlurRadius(20);
-    //effect->setOffset(2,2);
-    
-    //setGraphicsEffect(effect);
-}
 
-DecentButton::~DecentButton()
+DecentButton::DecentButton(QWidget *parent) : QPushButton(parent)
 {
-    
+   this->setStyleSheet("QPushButton{border: 0px ; background-color :rgb(27,176,104); color : white;}"
+                       "QPushButton:!enabled{background-color :rgb(180,180,180); color : rgb(30, 30, 30);}");
 }

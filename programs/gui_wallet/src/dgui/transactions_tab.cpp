@@ -7,8 +7,11 @@
 // *  This file implements ...
 // *
 // */
+#include "stdafx.h"
+
 #include "transactions_tab.hpp"
 
+#ifndef _MSC_VER
 #include <QHeaderView>
 #include <QFont>
 #include <QTableWidgetItem>
@@ -20,12 +23,15 @@
 #include <boost/algorithm/string/replace.hpp>
 
 #include <graphene/chain/config.hpp>
-
+#endif
 #include "gui_wallet_global.hpp"
 #include "qt_commonheader.hpp"
-#include "ui_wallet_functions.hpp"
+#include "gui_wallet_mainwindow.hpp"
+#include "gui_design.hpp"
 
+#ifndef _MSC_VER
 #include "json.hpp"
+#endif
 
 using namespace gui_wallet;
 using namespace nlohmann;
@@ -33,29 +39,31 @@ using namespace nlohmann;
 
 
 
-TransactionsTab::TransactionsTab() {
+TransactionsTab::TransactionsTab(QWidget* pParent)
+: TabContentManager(pParent)
+, tablewidget(this)
+{
 
    tablewidget.set_columns({
-      {"Time", 20},
-      {"Type", 10},
-      {"From", 20},
-      {"To", 20},
-      {"Amount", 10},
-      {"Fee", 10},
-      {"Description", 25}
+      {tr("Time"), 20, "time"},
+      {tr("Type"), 10, "type"},
+      {tr("From"), 20, "from"},
+      {tr("To")  , 20, "to"},
+      {tr("Price"), 10,"price"},
+      {tr("Fee"), 10,  "fee"},
+      {tr("Description"), 25, "description"}
    });
    
    
-   user.setStyleSheet("border: 0");
-   user.setPlaceholderText("Enter user name to see transaction history");
+   user.setStyleSheet(d_lineEdit);
+   user.setPlaceholderText(tr("Enter user name to see transaction history"));
    user.setAttribute(Qt::WA_MacShowFocusRect, 0);
-   user.setMaximumHeight(40);
-   user.setFixedHeight(40);
+   user.setFixedHeight(54);
    user.setFrame(false);
    
    
    QHBoxLayout* search_lay = new QHBoxLayout();
-   QPixmap image(":/icon/images/search.svg");
+   QPixmap image(icon_search);
    search_label.setSizeIncrement(100,40);
    search_label.setPixmap(image);
    
@@ -65,12 +73,14 @@ TransactionsTab::TransactionsTab() {
    
    tablewidget.horizontalHeader()->setStretchLastSection(true);
    main_layout.setContentsMargins(0, 0, 0, 0);
+   main_layout.setSpacing(0);
    main_layout.addLayout(search_lay);
    main_layout.addWidget(&tablewidget);
    setLayout(&main_layout);
    
-   
-   connect(&GlobalEvents::instance(), SIGNAL(currentUserChanged(std::string)), this, SLOT(currentUserChanged(std::string)));
+
+   QObject::connect(&Globals::instance(), &Globals::currentUserChanged,
+                    this, &TransactionsTab::currentUserChanged);
 
 }
 
@@ -81,7 +91,6 @@ void TransactionsTab::timeToUpdate(const std::string& result) {
    }
    
    auto contents = json::parse(result);
-   
    tablewidget.setRowCount(contents.size());
    
    for (int i = 0; i < contents.size(); ++i) {
@@ -114,15 +123,15 @@ void TransactionsTab::timeToUpdate(const std::string& result) {
       QString transaction_amount, transaction_fee;
       
       if (transaction_fee_js.is_number()) {
-         transaction_fee = QString::number(transaction_fee_js.get<double>() / GRAPHENE_BLOCKCHAIN_PRECISION) + tr(" DCT");
+         transaction_fee = QString::number(transaction_fee_js.get<double>() / GRAPHENE_BLOCKCHAIN_PRECISION , 'f', 4) + " DCT";
       } else {
-         transaction_fee = QString::number(std::stod(transaction_fee_js.get<std::string>()) / GRAPHENE_BLOCKCHAIN_PRECISION) + tr(" DCT");
+         transaction_fee = QString::number(std::stod(transaction_fee_js.get<std::string>()) / GRAPHENE_BLOCKCHAIN_PRECISION, 'f', 4) + " DCT";
       }
       
       if (transaction_amount_js.is_number()) {
-         transaction_amount = QString::number(transaction_amount_js.get<double>() / GRAPHENE_BLOCKCHAIN_PRECISION) + tr(" DCT");
+         transaction_amount = QString::number(transaction_amount_js.get<double>() / GRAPHENE_BLOCKCHAIN_PRECISION, 'f', 4) + " DCT";
       } else {
-         transaction_amount = QString::number(std::stod(transaction_amount_js.get<std::string>()) / GRAPHENE_BLOCKCHAIN_PRECISION) + tr(" DCT");
+         transaction_amount = QString::number(std::stod(transaction_amount_js.get<std::string>()) / GRAPHENE_BLOCKCHAIN_PRECISION, 'f', 4) + " DCT";
       }
       
       std::vector<QString> values = {  QString::fromStdString(timestamp),
@@ -148,7 +157,7 @@ void TransactionsTab::timeToUpdate(const std::string& result) {
 }
 
 
-void TransactionsTab::currentUserChanged(std::string userName) {
+void TransactionsTab::currentUserChanged(std::string const& userName) {
    user.setText(QString::fromStdString(userName));
 }
 
@@ -179,8 +188,8 @@ std::string TransactionsTab::getUpdateCommand() {
       return "";
    }
 
-   return "get_account_history \"" + user.text().toStdString() +"\" 100";
-   
+   return "get_account_history \"" + user.text().toStdString() + "\" \"" + tablewidget.getSortedColumn() + "\" 100";
+    
 }
 
 
@@ -188,5 +197,4 @@ std::string TransactionsTab::getUpdateCommand() {
 void TransactionsTab::set_user_filter(const std::string& user_name) {
    user.setText(QString::fromStdString(user_name));
 }
-
 

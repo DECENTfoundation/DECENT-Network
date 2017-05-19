@@ -54,6 +54,7 @@ add_library( graphene_chain
 
              protocol/vote.cpp
              protocol/decent.cpp
+             protocol/subscription.cpp
 
              genesis_state.cpp
              get_config.cpp
@@ -72,6 +73,7 @@ add_library( graphene_chain
              withdraw_permission_evaluator.cpp
              buyback.cpp
              decent_evaluator.cpp
+             subscription_evaluator.cpp
 
              account_object.cpp
              asset_object.cpp
@@ -87,8 +89,10 @@ add_library( graphene_chain
 
 add_dependencies( graphene_chain build_hardfork_hpp )
 target_link_libraries( graphene_chain fc graphene_db decent_encrypt pbc gmp )
-target_include_directories( graphene_chain
-                            PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" "${CMAKE_CURRENT_BINARY_DIR}/include" )
+target_include_directories(graphene_chain
+                           PUBLIC
+                           "${CMAKE_CURRENT_SOURCE_DIR}/include"
+                           "${CMAKE_CURRENT_BINARY_DIR}/include")
 
 if(MSVC)
   set_source_files_properties( db_init.cpp db_block.cpp database.cpp block_database.cpp PROPERTIES COMPILE_FLAGS "/bigobj" )

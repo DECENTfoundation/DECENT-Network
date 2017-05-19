@@ -7,43 +7,58 @@
  *  This file implements ...
  *
  */
+#include "stdafx.h"
 
+#include "gui_design.hpp"
 #include "decent_wallet_ui_gui_contentdetailsbase.hpp"
+
+#ifndef _MSC_VER
 #include <QDateTime>
+#endif
+
 #include "gui_wallet_global.hpp"
-#include "ui_wallet_functions.hpp"
+#include "gui_wallet_mainwindow.hpp"
+
+#ifndef _MSC_VER
 #include "json.hpp"
 #include <QFrame>
+#include <QObject>
+#include <graphene/chain/content_object.hpp>
+#endif
+
 using namespace nlohmann;
 using namespace gui_wallet;
 
-static const char* s_vcpcFieldsGeneral[NUMBER_OF_SUB_LAYOUTS2] = {
-    "Author", "Expiration","Created","Amount",
-    "Average Rating","Size","Times Bought" 
-};
 
-
-static const char* s_vcpcFieldsBougth[NUMBER_OF_SUB_LAYOUTS2 - 1] = {
-    "Author","Created","Amount",
-    "Average Rating","Size","Times Bought"
-};
-
-typedef const char* TypeCpcChar;
-typedef TypeCpcChar* NewType;
-
-static NewType  s_vFields[]={ s_vcpcFieldsGeneral, s_vcpcFieldsBougth, s_vcpcFieldsBougth };
-
-ContentDetailsBase::ContentDetailsBase(){}
-
-
-ContentDetailsBase::~ContentDetailsBase()
+ContentDetailsBase::ContentDetailsBase(QWidget* pParent)
+: QDialog(pParent)
 {
+   s_vcpcFieldsGeneral.push_back(tr("Author"));
+   s_vcpcFieldsGeneral.push_back(tr("Expiration"));
+   s_vcpcFieldsGeneral.push_back(tr("Uploaded"));
+   s_vcpcFieldsGeneral.push_back(tr("Amount"));
+   s_vcpcFieldsGeneral.push_back(tr("Average Rating"));
+   s_vcpcFieldsGeneral.push_back(tr("Size"));
+   s_vcpcFieldsGeneral.push_back(tr("Times Bought"));
+   
+   s_vcpcFieldsBougth.push_back(tr("Author"));
+   s_vcpcFieldsBougth.push_back(tr("Created"));
+   s_vcpcFieldsBougth.push_back(tr("Amount"));
+   s_vcpcFieldsBougth.push_back(tr("Average Rating"));
+   s_vcpcFieldsBougth.push_back(tr("Size"));
+   s_vcpcFieldsBougth.push_back(tr("Times Bought"));
+   
+#ifdef _MSC_VER
+   int height = style()->pixelMetric(QStyle::PM_TitleBarHeight);
+   setWindowIcon(height > 32 ? QIcon(":/icon/images/windows_decent_icon_32x32.png")
+      : QIcon(":/icon/images/windows_decent_icon_16x16.png"));
+#endif
 }
 
 // DCF stands for Digital Content Fields
 namespace DCF{enum{AMOUNT=9, TIMES_BOUGHT=15};}
 
-void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details)
+void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details, bool bSilent/* = false*/)
 {
     
     
@@ -61,28 +76,27 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details)
     
     std::string result;
     try {
-        RunTask("get_rating \"" + GlobalEvents::instance().getCurrentUser() + "\" \"" + m_pContentInfo->URI + "\"", result);
+        RunTask("get_rating \"" + Globals::instance().getCurrentUser() + "\" \"" + m_pContentInfo->URI + "\"", result);
         m_currentMyRating = QString::fromStdString(result).toInt(); // Returns 0 on fail so everything will work as intended
         
     } catch (...) {} // Ignore for now;
 
 
     
-//    if(a_cnt_details.type == DCT::BOUGHT) {m_main_layout.removeWidget(&m_vSub_Widgets[4]);
     if(a_cnt_details.type == DCT::BOUGHT) {
         
         if (stars_labels.size() == 0) {
             m_RateText = new QLabel;
             
             if (m_currentMyRating > 0) {
-                m_RateText->setText( tr("You rated:"));
+                m_RateText->setText( tr("You rated") + ":");
             } else {
-                m_RateText->setText( tr("Please Rate:"));
+                m_RateText->setText( tr("Please Rate") + ":");
             }
-            m_RateText->setStyleSheet("color:green;" "background-color:white;" "font-weight: bold");
+            m_RateText->setStyleSheet(m_RateText_design);
             
-            QPixmap green_star(":/icon/images/green_asterix.png");
-            QPixmap white_star(":/icon/images/white_asterix.png");
+            QPixmap green_star(green_star_image);
+            QPixmap white_star(white_star_image);
             
             white_star = white_star.scaled(QSize(20,20));
             green_star = green_star.scaled(QSize(20,20));
@@ -154,13 +168,21 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details)
     
     int i,nIndexZuyg(0);
     
-    NewType vNames = s_vFields[a_cnt_details.type];
-    
-    for(i = 0; i < NUMBER_OF_SUB_LAYOUTS2;++i,nIndexZuyg+=2)
+    if (a_cnt_details.type == DCT::GENERAL)
     {
-       m_vLabels[nIndexZuyg].setText(tr(vNames[i]));
+       for(i = 0; i < NUMBER_OF_SUB_LAYOUTS2;++i,nIndexZuyg+=2)
+       {
+          m_vLabels[nIndexZuyg].setText(s_vcpcFieldsGeneral[i]);
+       }
     }
-    
+   else
+   {
+      for(i = 0; i < NUMBER_OF_SUB_LAYOUTS2 - 1;++i,nIndexZuyg+=2)
+      {
+         m_vLabels[nIndexZuyg].setText(s_vcpcFieldsBougth[i]);
+      }
+   }
+   
     std::string e_str = "";
     if (a_cnt_details.type == DCT::BOUGHT || a_cnt_details.type == DCT::WAITING_DELIVERY) {
         e_str = (m_pContentInfo->expiration);
@@ -186,8 +208,8 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details)
         QString str_price = QString::number(a_cnt_details.price.amount) + " DCT";
         m_vLabels[7].setText(str_price);
         
-        QPixmap green_star(":/icon/images/green_asterix.png");
-        QPixmap white_star(":/icon/images/white_asterix.png");
+        QPixmap green_star(green_star_image);
+        QPixmap white_star(white_star_image);
         
         white_star = white_star.scaled(QSize(20,20));
         green_star = green_star.scaled(QSize(20,20));
@@ -202,10 +224,10 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details)
             m_stars[i].setPixmap(white_star);
         }
         
-        QString qsSizeTxt = QString::number(m_pContentInfo->size) + tr(" MB");
+        QString qsSizeTxt = QString::number(m_pContentInfo->size) + " MB";
         m_vLabels[11].setText(qsSizeTxt);
         
-        m_vLabels[13].setText(QString::number(a_cnt_details.times_bougth));
+        m_vLabels[13].setText(QString::number(a_cnt_details.times_bought));
     }
     else
     {
@@ -214,8 +236,8 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details)
         QString str_price = QString::number(a_cnt_details.price.amount) + " DCT";
         m_vLabels[5].setText(str_price);
         
-        QPixmap green_star(":/icon/images/green_asterix.png");
-        QPixmap white_star(":/icon/images/white_asterix.png");
+        QPixmap green_star(green_star_image);
+        QPixmap white_star(white_star_image);
         
         white_star = white_star.scaled(QSize(20,20));
         green_star = green_star.scaled(QSize(20,20));
@@ -230,33 +252,25 @@ void ContentDetailsBase::execCDB(const SDigitalContent& a_cnt_details)
             m_stars[i].setPixmap(white_star);
         }
         
-        QString qsSizeTxt = QString::number(m_pContentInfo->size) + tr(" MB");
+        QString qsSizeTxt = QString::number(m_pContentInfo->size) + " MB";
         m_vLabels[9].setText(qsSizeTxt);
         
-        m_vLabels[11].setText(QString::number(a_cnt_details.times_bougth));
+        m_vLabels[11].setText(QString::number(a_cnt_details.times_bought));
     }
-
-    
-    
-    
-    
-    
-    
    
     std::string synopsis = m_pContentInfo->synopsis;
-    std::string desc = "";
-    try {
-        auto synopsis_parsed = json::parse(m_pContentInfo->synopsis);
-        synopsis = synopsis_parsed["title"].get<std::string>();
-        desc = synopsis_parsed["description"].get<std::string>();
-        
-    } catch (...) {}
-    this->setWindowTitle(QString::fromStdString(synopsis));
-    m_desc.setText(m_desc.toPlainText() + QString::fromStdString(desc));
-    
-    setFixedSize(620,400);
+    std::string title;
+    std::string desc;
 
-    QDialog::exec();
+    graphene::chain::ContentObjectPropertyManager synopsis_parser(synopsis);
+    title = synopsis_parser.get<graphene::chain::ContentObjectTitle>();
+    desc = synopsis_parser.get<graphene::chain::ContentObjectDescription>();
+
+    this->setWindowTitle(QString::fromStdString(title));
+    m_desc.setText(m_desc.toPlainText() + QString::fromStdString(desc) + "\n");
+
+   if (false == bSilent)
+      QDialog::exec();
 }
 
 
@@ -266,7 +280,7 @@ void ContentDetailsBase::MouseClickedStar(int index) {
     
     std::string result;
     try {
-        RunTask("leave_rating \"" + GlobalEvents::instance().getCurrentUser() + "\" \"" + m_pContentInfo->URI + "\" " + std::to_string(index + 1) + " true", result);
+        RunTask("leave_rating \"" + Globals::instance().getCurrentUser() + "\" \"" + m_pContentInfo->URI + "\" " + std::to_string(index + 1) + " true", result);
         
         m_currentMyRating = (index + 1);
     } catch (...) {} // Ignore for now;
@@ -289,14 +303,20 @@ void ContentDetailsBase::popup_for_purchased(int row_star)
     
     for(i=0;i<row_count;++i,nIndexZuyg+=2,nIndexKent+=2)
     {
-        if(i%2==0){m_vSub_Widgets[i].setStyleSheet("background-color:rgb(244,244,244);");}
-        else{m_vSub_Widgets[i].setStyleSheet("background-color:white;");}
-        m_vLabels[nIndexKent].setStyleSheet("font-weight: bold");
-        m_vLabels[nIndexKent].setContentsMargins(0, 10, 50, 10);
+        if(i%2==0){m_vSub_Widgets[i].setStyleSheet(bg_color_grey);}
+        else{m_vSub_Widgets[i].setStyleSheet(bg_color_wgite);}
+        m_vLabels[nIndexKent].setStyleSheet(font_bold);
+        m_vLabels[nIndexKent].setContentsMargins(0, 17, 50, 17);
         m_vLabels[nIndexKent].setAlignment(Qt::AlignRight);
-        //m_vLabels[nIndexKent].setAlignment(Qt::AlignCenter);
+#ifdef WINDOWS_HIGH_DPI
+        m_vLabels[nIndexKent].setFixedHeight(70);
+        m_vLabels[nIndexZuyg].setFixedHeight(70);
+#else
+        m_vLabels[nIndexKent].setFixedHeight(54);
+        m_vLabels[nIndexZuyg].setFixedHeight(54);
+#endif
         m_vSub_layouts[i].setSpacing(0);
-        m_vSub_layouts[i].setContentsMargins(45,3,0,3);
+        m_vSub_layouts[i].setContentsMargins(45,0,0,0);
         
         if(nIndexKent == row_star)
         {
@@ -304,9 +324,10 @@ void ContentDetailsBase::popup_for_purchased(int row_star)
             QHBoxLayout* stars = new QHBoxLayout;
             QHBoxLayout* main_layout = new QHBoxLayout;
             
-            stars->setContentsMargins(250, 10, 50, 10);
+            stars->setContentsMargins(270, 0, 50, 0);
             text_layout->addWidget(&m_vLabels[nIndexZuyg]);
             stars->addWidget(&m_vLabels[nIndexKent]);
+            m_vLabels[nIndexKent].setContentsMargins(0, 19, 10, 19);
             for(int i = 0; i <5; ++i)
             {
                 stars->addWidget(&m_stars[i]);
@@ -326,26 +347,26 @@ void ContentDetailsBase::popup_for_purchased(int row_star)
         }
     }
     QFrame* line;
-    
-    line = new QFrame(this);
-    line->setFrameShape(QFrame::HLine); // Horizontal line
-    
-    line->setLineWidth(300);
-    line->setStyleSheet("color: rgb(193,192,193)");
-    line->setFixedHeight(1);
-    m_main_layout.addWidget(line);
-    
+    if(row_star == 7)
+    {
+       line = new QFrame(this);
+       line->setFrameShape(QFrame::HLine); // Horizontal line
+   
+       line->setLineWidth(300);
+       line->setStyleSheet(col_grey);
+       line->setFixedHeight(1);
+       m_main_layout.addWidget(line);
+    }
+
+   
     QHBoxLayout* desc_lay = new QHBoxLayout();
-    m_desc.setText("Description\n");
-    m_desc.setStyleSheet("border-top: 0px solid rgb(193,192,193); border-bottom: 0px solid rgb(193,192,193); border-left: 0px; border-right: 0px;");
+    m_desc.setText(tr("Description") + "\n\n");
+    m_desc.setStyleSheet(border_0);
     m_desc.setReadOnly(true);
     m_desc.setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    m_desc.setMinimumHeight(20);
-    m_desc.setMaximumHeight(50);
-    desc_lay->setContentsMargins(45, 3, 0, 3);
+    m_desc.setFont(DescriptionDetailsFont());
+    desc_lay->setContentsMargins(42, 17, 0, 3);
     desc_lay->addWidget(&m_desc);
-    
-    
     
     m_main_layout.addLayout(desc_lay);
     
@@ -353,12 +374,11 @@ void ContentDetailsBase::popup_for_purchased(int row_star)
     line->setFrameShape(QFrame::HLine); // Horizontal line
     
     line->setLineWidth(300);
-    line->setStyleSheet("color: rgb(193,192,193)");
+    line->setStyleSheet(col_grey);
     line->setFixedHeight(1);
     m_main_layout.addWidget(line);
-    //m_main_layout.addWidget(&m_desc);
     
-    setStyleSheet("background-color:white;");
+    setStyleSheet(d_qdialog);
 }
 
 
