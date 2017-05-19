@@ -174,7 +174,7 @@ namespace graphene { namespace chain {
       /// Price at which automatically exchanging this asset for CORE from fee pool occurs (used for paying fees)
       price core_exchange_rate;
 
-      void validate() const {};
+      void validate() const { FC_ASSERT( core_exchange_rate.quote.asset_id == asset_id_type(0) );};
       bool is_for( asset_id_type asset_id ) const;
    };
 
