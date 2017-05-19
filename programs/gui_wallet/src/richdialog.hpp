@@ -4,6 +4,7 @@
 #include <QVector>
 
 class QTextEdit;
+class QCloseEvent;
 
 namespace gui_wallet
 {
@@ -71,9 +72,7 @@ public:
    void nameChanged(const QString &);
    void keyChanged(const QString &);
    void Import();
-public:
-signals:
-   void signal_keyImported();
+
 private:
    QString  m_userName;
    QString  m_key;
@@ -120,7 +119,6 @@ private:
    std::string m_URI;
    QString m_amount;
 };
-
 //
 // ContentReviewDialog
 //
@@ -181,5 +179,25 @@ private:
    std::string                m_next_itr;
    std::vector<std::string>   m_iterators;
 };
+//
+// PasswordDialog
+//
+class PasswordDialog : public QDialog
+{
+   Q_OBJECT
+public:
+   enum eType { eSetPassword, eUnlock };
+   PasswordDialog(QWidget* pParent, eType enType);
+
+protected slots:
+   void slot_action();
+   void slot_set_password(QString const&);
+
+private:
+   eType m_enType;
+   QLabel* m_pError;
+   QString m_strPassword;
+};
+
 }
 

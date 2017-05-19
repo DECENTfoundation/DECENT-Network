@@ -622,6 +622,11 @@ QLocale& Globals::locale()
    return *m_p_locale;
 }
 
+bool Globals::connected() const
+{
+   return m_connected_state != ConnectionState::Connecting;
+}
+
 void Globals::setCurrentUser(std::string const& user)
 {
    m_str_currentUser = user;
@@ -646,11 +651,6 @@ void Globals::showTransferDialog(std::string const& user)
    TransferDialog* pTransferDialog = new TransferDialog(nullptr , QString::fromStdString(user));
    pTransferDialog->setAttribute(Qt::WA_DeleteOnClose);
    pTransferDialog->open();
-}
-   
-void Globals::slot_displayWalletContent()
-{
-   emit signal_keyImported(false);
 }
 
 string Globals::getAccountName(string const& accountId)

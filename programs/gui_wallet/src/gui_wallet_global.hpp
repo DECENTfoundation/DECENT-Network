@@ -149,12 +149,13 @@ namespace gui_wallet
       nlohmann::json runTaskParse(std::string const& str_command);
       std::vector<Publisher> getPublishers();
       QLocale& locale();
+      bool connected() const;
 
    signals:
       void signal_showPurchasedTab();
       void signal_showTransactionsTab(std::string const&);
       void signal_updateAccountBalance(Asset const&);
-      void signal_keyImported(bool);
+      void signal_keyImported();
 
    public:
       void setCurrentUser(std::string const& user);
@@ -177,9 +178,6 @@ namespace gui_wallet
       
       void walletConnectionError(std::string const& message);
       void walletConnectionStatusChanged(ConnectionState from, ConnectionState to);
-      
-   public slots:
-      void slot_displayWalletContent();
 
    private:
       ConnectionState m_connected_state;

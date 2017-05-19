@@ -5,9 +5,9 @@
 #include <QLineEdit>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
+#include <QTimer>
 
 #include "gui_wallet_centralwidget.hpp"
-#include "gui_wallet_connectdlg.hpp"
 #include "text_display_dialog.hpp"
 #include "richdialog.hpp"
 
@@ -50,17 +50,16 @@ protected:
    void SetSplash();
 
    virtual void closeEvent(QCloseEvent *event) override;
-   
-private:
-   
-   void UpdateLockedStatus();
-   void SetPassword();
-   
+protected slots:
+   void CloseSplash();
+
+signals:
+   void signal_setSplashMainText(QString const&);
    
 protected slots:
    void CurrentUserChangedSlot(const QString&);
    void CheckDownloads();
-   void DisplayWalletContentGUI(bool isNewWallet);
+   void DisplayWalletContentGUI();
    void DisplayConnectionError(std::string errorMessage);
    void currentUserBalanceUpdate();
    
@@ -70,8 +69,6 @@ protected slots:
    void ViewAction();
 
    void ImportKeySlot();
-   void LockSlot();
-   void UnlockSlot();
    void SendDCTSlot();
 
    void slot_showPurchasedTab();
@@ -101,15 +98,10 @@ protected:
    QAction             m_ActionAbout;
    QAction             m_ActionInfo;
    QAction             m_ActionHelp;
-   QAction             m_ActionLock;
-   QAction             m_ActionUnlock;
    QAction             m_ActionImportKey;
    TextDisplayDialog   m_info_dialog;
    
    QVBoxLayout                         m_main_layout;
-   bool                                m_locked;
-   PasswordDialog                      m_SetPasswordDialog;
-   PasswordDialog                      m_UnlockDialog;
    
    QTimer                              _downloadChecker;
    QTimer                              _balanceUpdater;

@@ -4,6 +4,7 @@
 
 #include "decent_button.hpp"
 #include "decent_label.hpp"
+#include "decent_line_edit.hpp"
 #include "decent_text_edit.hpp"
 #include "gui_wallet_mainwindow.hpp"
 #include "gui_design.hpp"
@@ -100,7 +101,9 @@ void RatingWidget::slot_rating()
 //
 // TransferDialog
 //
-TransferDialog::TransferDialog(QWidget* parent, QString const& userName/* = QString()*/) : m_toUserName(userName)
+TransferDialog::TransferDialog(QWidget* parent, QString const& userName/* = QString()*/)
+   : QDialog(parent)
+   , m_toUserName(userName)
 {
    QVBoxLayout* mainLayout       = new QVBoxLayout();
    QVBoxLayout* lineEditsLayout  = new QVBoxLayout();
@@ -209,8 +212,10 @@ void TransferDialog::Transfer()
 // ImportKeyDialog
 //
 ImportKeyDialog::ImportKeyDialog(QWidget* parent)
+: QDialog(parent)
 {
-   QObject::connect(this, &ImportKeyDialog::signal_keyImported, &Globals::instance(), &Globals::slot_displayWalletContent);
+   QObject::connect(this, &QDialog::accepted,
+                    &Globals::instance(), &Globals::signal_keyImported);
    
    QVBoxLayout* mainLayout       = new QVBoxLayout();
    QVBoxLayout* lineEditsLayout  = new QVBoxLayout();
@@ -223,8 +228,10 @@ ImportKeyDialog::ImportKeyDialog(QWidget* parent)
    cancel->setText(tr("Cancel"));
    cancel->setFixedSize(140, 40);
    
-   QObject::connect(ok, &QPushButton::clicked, this, &ImportKeyDialog::Import);
-   QObject::connect(cancel, &QPushButton::clicked, this, &QDialog::close);
+   QObject::connect(ok, &QPushButton::clicked,
+                    this, &ImportKeyDialog::Import);
+   QObject::connect(cancel, &QPushButton::clicked,
+                    this, &QDialog::close);
    
    QLineEdit* name = new QLineEdit(this);
    QLineEdit* key  = new QLineEdit(this);
@@ -232,15 +239,15 @@ ImportKeyDialog::ImportKeyDialog(QWidget* parent)
    name->setPlaceholderText(tr("Account"));
    name->setAttribute(Qt::WA_MacShowFocusRect, 0);
    name->setFixedSize(300, 44);
-   QObject::connect(name, &QLineEdit::textChanged, this, &ImportKeyDialog::nameChanged);
+   QObject::connect(name, &QLineEdit::textChanged,
+                    this, &ImportKeyDialog::nameChanged);
    
    key->setPlaceholderText(tr("Key"));
    key->setAttribute(Qt::WA_MacShowFocusRect, 0);
    key->setFixedSize(300, 44);
-   QObject::connect(key, &QLineEdit::textChanged, this, &ImportKeyDialog::keyChanged);
-   
+   QObject::connect(key, &QLineEdit::textChanged,
+                    this, &ImportKeyDialog::keyChanged);
 
-   
    lineEditsLayout->addWidget(name);
    lineEditsLayout->addWidget(key);
    
@@ -272,16 +279,21 @@ void ImportKeyDialog::Import()
 {
    std::string message;
    std::string result;
-   try {
+   try
+   {
       QString csTaskStr = "import_key "
       "\"" + m_userName + "\" "
       "\"" + m_key + "\" ";
       RunTask(csTaskStr.toStdString(), result);
-   } catch (const std::exception& ex) {
+   }
+   catch (const std::exception& ex)
+   {
       message = ex.what();
    }
-   if (message.empty()) {
-      emit signal_keyImported();
+
+   if (message.empty())
+   {
+      emit accepted();
       close();
    }
    else
@@ -302,6 +314,7 @@ UserInfoDialog::UserInfoDialog(QWidget* parent,
                                const QString& name,
                                const QString& id
                                )
+   : QDialog(parent)
 {
    QVBoxLayout* main_layout = new QVBoxLayout();
    main_layout->setSpacing(0);
@@ -338,7 +351,8 @@ UserInfoDialog::UserInfoDialog(QWidget* parent,
 // ContentInfoDialog
 //
 ContentInfoDialog::ContentInfoDialog(QWidget* parent, const SDigitalContent& a_cnt_details)
-   : m_URI(a_cnt_details.URI)
+   : QDialog(parent)
+   , m_URI(a_cnt_details.URI)
    , m_amount(a_cnt_details.price.getString().c_str())
    , m_getItOrPay(GetIt)
 {
@@ -494,7 +508,8 @@ void ContentInfoDialog::Buy()
 // PurchasedDialog
 //
 ContentReviewDialog::ContentReviewDialog(QWidget* parent, const SDigitalContent& a_cnt_details)
-: m_URI(a_cnt_details.URI)
+: QDialog(parent)
+, m_URI(a_cnt_details.URI)
 {
    QGridLayout* main_layout = new QGridLayout();
    main_layout->setSpacing(0);
@@ -847,6 +862,104 @@ bool CommentWidget::slot_Previous()
    update();
    
    return true;
+}
+// PasswordDialog
+//
+PasswordDialog::PasswordDialog(QWidget* pParent, eType enType)
+: QDialog(pParent, Qt::Window | Qt::WindowTitleHint | Qt::CustomizeWindowHint | Qt::WindowCloseButtonHint)
+, m_enType(enType)
+, m_pError(new QLabel(this))
+{
+   QLabel* pLabel = new QLabel(this);
+   pLabel->setText(tr("The password must be limited to 50 characters"));
+   DecentButton* pButton = new DecentButton(this, DecentButton::DialogAction);
+
+   m_pError->hide();
+
+   if (enType == eSetPassword)
+      pButton->setText(tr("Set Password"));
+   else
+      pButton->setText(tr("Unlock"));
+
+   DecentLineEdit* pEditPassword = new DecentLineEdit(this, DecentLineEdit::DialogLineEdit);
+   pEditPassword->setEchoMode(QLineEdit::Password);
+   pEditPassword->setAttribute(Qt::WA_MacShowFocusRect, 0);
+   pEditPassword->setPlaceholderText(QString(tr("Password")));
+   pEditPassword->setMaxLength(50);
+
+   if (enType == eSetPassword)
+      setWindowTitle(tr("Set Password"));
+   else
+   {
+      pLabel->hide();
+      setWindowTitle(tr("Unlock your wallet"));
+   }
+
+   int iRowIndex = 0;
+   QGridLayout* pMainLayout = new QGridLayout;
+   pMainLayout->addWidget(pLabel, iRowIndex++, 0, Qt::AlignCenter | Qt::AlignVCenter);
+   pMainLayout->addWidget(m_pError, iRowIndex++, 0, Qt::AlignCenter | Qt::AlignVCenter);
+   pMainLayout->addWidget(pEditPassword, iRowIndex++, 0, Qt::AlignCenter | Qt::AlignVCenter);
+   pMainLayout->addWidget(pButton, iRowIndex++, 0, Qt::AlignCenter | Qt::AlignVCenter);
+
+   pMainLayout->setSizeConstraint(QLayout::SetFixedSize);
+   pMainLayout->setSpacing(20);
+   pMainLayout->setContentsMargins(20, 20, 20, 20);
+
+   QObject::connect(pEditPassword, &QLineEdit::returnPressed,
+                    this, &PasswordDialog::slot_action);
+   QObject::connect(pButton, &QPushButton::clicked,
+                    this, &PasswordDialog::slot_action);
+   QObject::connect(pEditPassword, &QLineEdit::textChanged,
+                    this, &PasswordDialog::slot_set_password);
+
+   setLayout(pMainLayout);
+
+   //QTimer::singleShot(0, &password_box, SLOT(setFocus()));
+#ifdef _MSC_VER
+   int height = style()->pixelMetric(QStyle::PM_TitleBarHeight);
+   setWindowIcon(height > 32 ? QIcon(":/icon/images/windows_decent_icon_32x32.png")
+                 : QIcon(":/icon/images/windows_decent_icon_16x16.png"));
+#endif
+}
+
+void PasswordDialog::slot_set_password(QString const& strPassword)
+{
+   m_strPassword = strPassword;
+}
+
+void PasswordDialog::slot_action()
+{
+   if (m_strPassword.isEmpty())
+      return;
+
+   if (m_enType == eSetPassword)
+   {
+      try
+      {
+         Globals::instance().runTask("set_password \"" + m_strPassword.toStdString() + "\"");
+      }
+      catch(...)
+      {
+         m_pError->setText(tr("Cannot set this password"));
+         m_pError->show();
+         return;
+      }
+   }
+
+   try
+   {
+      Globals::instance().runTask("unlock \"" + m_strPassword.toStdString() + "\"");
+   }
+   catch(...)
+   {
+      m_pError->setText(tr("Cannot unlock the wallet"));
+      m_pError->show();
+      return;
+   }
+
+   emit accepted();
+   close();
 }
 
 

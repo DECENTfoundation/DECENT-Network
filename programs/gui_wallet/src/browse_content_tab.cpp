@@ -153,7 +153,7 @@ void BrowseContentTab::slot_Details(int iIndex)
         throw std::out_of_range("Content index is out of range");
     }
 
-   ContentInfoDialog* pDetailsDialog = new ContentInfoDialog(this, _digital_contents[iIndex]);
+   ContentInfoDialog* pDetailsDialog = new ContentInfoDialog(nullptr, _digital_contents[iIndex]);
    pDetailsDialog->setAttribute(Qt::WA_DeleteOnClose);
    pDetailsDialog->open();
    QObject::connect(pDetailsDialog, &ContentInfoDialog::ContentWasBought,

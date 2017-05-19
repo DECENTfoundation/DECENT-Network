@@ -64,18 +64,21 @@ namespace gui_wallet
       emit signal_removeTimers();
       setText(str_message);
 
-      QTimer* pTimer = new QTimer(this);
-      pTimer->start(timeout);
-      pTimer->setSingleShot(true);
+      if (timeout > 0)
+      {
+         QTimer* pTimer = new QTimer(this);
+         pTimer->start(timeout);
+         pTimer->setSingleShot(true);
 
-      QObject::connect(pTimer, &QTimer::timeout,
-                       this, &StatusLabel::clearMessage);
+         QObject::connect(pTimer, &QTimer::timeout,
+                          this, &StatusLabel::clearMessage);
 
-      QObject::connect(pTimer, &QTimer::timeout,
-                       pTimer, &QTimer::deleteLater);
+         QObject::connect(pTimer, &QTimer::timeout,
+                          pTimer, &QTimer::deleteLater);
 
-      QObject::connect(this, &StatusLabel::signal_removeTimers,
-                       pTimer, &QTimer::deleteLater);
+         QObject::connect(this, &StatusLabel::signal_removeTimers,
+                          pTimer, &QTimer::deleteLater);
+      }
 
    }
 

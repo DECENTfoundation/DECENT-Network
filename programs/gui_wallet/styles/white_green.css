@@ -185,6 +185,13 @@ QLineEdit[type='tablesearch']
    border: 0px;
    padding-left: 1em;
 }
+QLineEdit[type='dialoglineedit']
+{
+   min-width: 300px;
+   min-height: 44px;
+   max-width: 300px;
+   max-height: 44px;
+}
 QTextEdit[type='info']
 {
    border: 0px;
@@ -236,6 +243,16 @@ QProgressBar:chunk
    border-radius: 5px;
    border: 1px;
    background: rgb(31, 218, 129);
+}
+QPushButton[type='splashaction']
+{
+   border: 0px;
+   background-color: rgb(31, 218, 129);
+   color: white;
+   width: 5em;
+   height: 1.5em;
+   max-width: 5em;
+   max-height: 1.5em;
 }
 
 
