@@ -26,18 +26,10 @@ add_executable(DECENT MACOSX_BUNDLE
                src/decent_line_edit.hpp
                src/decent_text_edit.cpp
                src/decent_text_edit.hpp
-               src/decent_wallet_ui_gui_contentdetailsbase.cpp
-               src/decent_wallet_ui_gui_contentdetailsbase.hpp
-               src/decent_wallet_ui_gui_contentdetailsgeneral.cpp
-               src/decent_wallet_ui_gui_contentdetailsgeneral.hpp
-               src/decent_wallet_ui_gui_newcheckbox.cpp
-               src/decent_wallet_ui_gui_newcheckbox.hpp
                src/gui_design.hpp
                src/gui_design.cpp
                src/gui_wallet_centralwidget.cpp
                src/gui_wallet_centralwidget.hpp
-               src/gui_wallet_connectdlg.cpp
-               src/gui_wallet_connectdlg.hpp
                src/gui_wallet_global.cpp
                src/gui_wallet_global.hpp
                src/gui_wallet_mainwindow.cpp

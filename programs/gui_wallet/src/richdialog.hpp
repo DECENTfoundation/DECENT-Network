@@ -3,10 +3,15 @@
 #include <QDialog>
 #include <QVector>
 
+class QTextEdit;
+class QCloseEvent;
+
 namespace gui_wallet
 {
 struct SDigitalContent;
 class DecentButton;
+class DecentLabel;
+class DecentTextEdit;
 //
 void PlaceInsideLabel(QWidget* pLabel, QWidget* pWidget);
 //
@@ -17,7 +22,7 @@ class RatingWidget : public QWidget
    Q_OBJECT
 public:
    RatingWidget(QWidget* pParent);
-
+   
 public slots:
    void setRating(int);
 signals:
@@ -29,7 +34,11 @@ protected:
    
    bool m_bAutomation;
    QVector<DecentButton*> m_arr_p_rate;
+
+public:
+   uint32_t m_rating;
 };
+    
 //
 // TransferDialog
 //
@@ -63,13 +72,12 @@ public:
    void nameChanged(const QString &);
    void keyChanged(const QString &);
    void Import();
-public:
-signals:
-   void signal_keyImported();
+
 private:
    QString  m_userName;
    QString  m_key;
 };
+   
 //
 // UserInfoDialog
 //
@@ -98,11 +106,10 @@ class ContentInfoDialog : public QDialog
 public:
    ContentInfoDialog(QWidget* parent, const SDigitalContent& a_cnt_details);
    
-   void LabelPushCallbackGUI();
-   
+   void Buy();
 public slots:
    void ButtonWasClicked();
-public:
+
 signals:
    void ContentWasBought();
    
@@ -112,5 +119,85 @@ private:
    std::string m_URI;
    QString m_amount;
 };
+//
+// ContentReviewDialog
+//
+class ContentReviewDialog : public QDialog
+{
+   Q_OBJECT
+public:
+   ContentReviewDialog(QWidget* parent, const SDigitalContent& a_cnt_details);
+private:
+   std::string m_URI;
+};
+//
+// CommentWidget
+//
+class CommentWidget : public QWidget
+{
+   Q_OBJECT
+public:
+   CommentWidget(QWidget* pParent,
+                 uint32_t content_average_rating,
+                 const std::string& content_author,
+                 const std::string& content_uri,
+                 const std::string& content_description,
+                 const std::string& feedback_author = std::string());
+
+   void update();
+   void submit();
+
+   bool is_last() const;
+   bool is_first() const;
+
+   void set_next_comment(std::string const&);
+   std::string next_iterator();
+
+signals:
+   void signal_lastComment();
+   void signal_firstComment();
+
+public slots:
+   bool slot_Next();
+   bool slot_Previous();
+
+private:
+   DecentTextEdit* m_pComment;
+   DecentLabel* m_pLabel;
+   RatingWidget* m_pRatingWidget;
+
+   DecentButton* m_pPreviousButton;
+   DecentButton* m_pNextButton;
+   DecentButton* m_pLeaveFeedbackButton;
+
+   uint32_t m_content_average_rating;
+   std::string m_content_author;
+   std::string m_content_uri;
+   std::string m_content_description;
+   std::string m_feedback_author;
+
+   std::string                m_next_itr;
+   std::vector<std::string>   m_iterators;
+};
+//
+// PasswordDialog
+//
+class PasswordDialog : public QDialog
+{
+   Q_OBJECT
+public:
+   enum eType { eSetPassword, eUnlock };
+   PasswordDialog(QWidget* pParent, eType enType);
+
+protected slots:
+   void slot_action();
+   void slot_set_password(QString const&);
+
+private:
+   eType m_enType;
+   QLabel* m_pError;
+   QString m_strPassword;
+};
+
 }
 

@@ -696,22 +696,18 @@ namespace graphene { namespace app {
          optional<buying_object> get_buying_by_consumer_URI( const account_id_type& consumer, const string& URI )const;
 
          /**
-          * @brief Get rating given by the consumer to the content specified by it's URI
-          * @param consumer Consumer giving the rating
-          * @param URI Rated content
-          * @return Rating, if given
+          * @brief Search for term in contents (author, title and description)
+          * @param user Feedback author
+          * @param URI the content object uri
+          * @param id The id of feedback object to start searching from
+          * @param count Maximum number of feedbacks to fetch
+          * @return The feedback found
           * @ingroup DatabaseAPI
           */
-         optional<uint64_t> get_rating_by_consumer_URI( const account_id_type& consumer, const string& URI )const;
-
-         /**
-          * @brief Get comment given by the consumer to the content specified by it's URI
-          * @param consumer Consumer giving the comment
-          * @param URI Commented content
-          * @return Comment, if given
-          * @ingroup DatabaseAPI
-          */
-         optional<string> get_comment_by_consumer_URI( const account_id_type& consumer, const string& URI )const;
+         vector<rating_object> search_feedback(const string& user,
+                                               const string& URI,
+                                               const object_id_type& id,
+                                               uint32_t count) const;
 
          /**
           * @brief Get a content by URI
@@ -745,6 +741,7 @@ namespace graphene { namespace app {
           * @param user Content owner
           * @param region Two letter region code
           * @param id The id of content object to start searching from
+          * @param type the application and content type to be filtered
           * @param count Maximum number of contents to fetch (must not exceed 100)
           * @return The contents found
           * @ingroup DatabaseAPI
@@ -754,6 +751,7 @@ namespace graphene { namespace app {
                                                 const string& user,
                                                 const string& region_code,
                                                 const object_id_type& id,
+                                                const string& type,
                                                 uint32_t count )const;
          
          /**
@@ -763,6 +761,7 @@ namespace graphene { namespace app {
           * @param order Ordering field
           * @param region Two letter region code
           * @param id The id of content object to start searching from
+          * @param type the application and content type to be filtered
           * @param count Maximum number of contents to fetch (must not exceed 100)
           * @return The contents found
           * @ingroup DatabaseAPI
@@ -772,6 +771,7 @@ namespace graphene { namespace app {
                                                      const string& order,
                                                      const string& region_code,
                                                      const object_id_type& id,
+                                                     const string& type,
                                                      uint32_t count )const;
 
          /**
@@ -964,8 +964,7 @@ FC_API(graphene::app::database_api,
           (get_buying_by_consumer_URI)
           (get_buying_history_objects_by_consumer)
           (get_buying_objects_by_consumer)
-          (get_rating_by_consumer_URI)
-          (get_comment_by_consumer_URI)
+          (search_feedback)
           (get_content)
           (list_content_by_author)
           (list_content)

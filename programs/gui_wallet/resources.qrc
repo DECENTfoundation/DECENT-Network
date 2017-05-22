@@ -33,9 +33,7 @@
         <file>styles/white_green.css</file>
     </qresource>
     <qresource prefix="/fonts">
-        <file>font/Verdana Bold Italic.ttf</file>
-        <file>font/Verdana Bold.ttf</file>
-        <file>font/Verdana Italic.ttf</file>
-        <file>font/Verdana.ttf</file>
+        <file>font/OpenSans-Bold.ttf</file>
+        <file>font/OpenSans-Regular.ttf</file>
     </qresource>
 </RCC>

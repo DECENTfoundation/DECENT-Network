@@ -23,8 +23,6 @@
 #include <QStyleFactory>
 #endif
 
-#include "decent_wallet_ui_gui_newcheckbox.hpp"
-
 #define __SIZE_FOR_IMGS__   40
 #define __HEIGHT__  60
 

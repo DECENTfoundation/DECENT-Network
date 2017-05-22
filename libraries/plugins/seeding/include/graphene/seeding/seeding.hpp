@@ -52,7 +52,11 @@ public:
    string URI; //<Content address
    fc::ripemd160 _hash; //<Content hash
    fc::time_point_sec expiration; //<Content expiration
+#ifdef TESTNET_3
+   fc::optional<decent::encrypt::CustodyData> cd; //<Content custody data
+#else
    decent::encrypt::CustodyData cd; //<Content custody data
+#endif
    account_id_type seeder; //<Seeder seeding this content managed by this plugin
    decent::encrypt::CiphertextString key; //<Decryption key part
 
@@ -125,7 +129,7 @@ public:
    void generate_por2( const my_seeding_object& so, decent::package::package_handle_t package_handle );
 
    /**
-    * Handle newly submitted content. If it is content managed by one of our seeders, download it.
+    * Handle newly submitted or resubmitted content. If it is content managed by one of our seeders, download it.
     * @param op_obj The operation wrapper carrying content submit operation
     */
    void handle_content_submit(const operation_history_object &op_obj);

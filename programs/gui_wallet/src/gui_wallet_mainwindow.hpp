@@ -5,20 +5,20 @@
 #include <QLineEdit>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
+#include <QTimer>
 
 #include "gui_wallet_centralwidget.hpp"
-#include "gui_wallet_connectdlg.hpp"
 #include "text_display_dialog.hpp"
 #include "richdialog.hpp"
 
 #include "json.hpp"
 
-#include "decent_wallet_ui_gui_contentdetailsgeneral.hpp"
-
 #include <stdarg.h>
 #include <string>
 #include <map>
 #include <set>
+
+class QCloseEvent;
 
 namespace gui_wallet
 {
@@ -46,17 +46,20 @@ public:
 protected:
    void CreateActions();
    void CreateMenues();
-   
-private:
-   
-   void UpdateLockedStatus();
-   void SetPassword();
-   
+
+   void SetSplash();
+
+   virtual void closeEvent(QCloseEvent *event) override;
+protected slots:
+   void CloseSplash();
+
+signals:
+   void signal_setSplashMainText(QString const&);
    
 protected slots:
    void CurrentUserChangedSlot(const QString&);
    void CheckDownloads();
-   void DisplayWalletContentGUI(bool isNewWallet);
+   void DisplayWalletContentGUI();
    void DisplayConnectionError(std::string errorMessage);
    void currentUserBalanceUpdate();
    
@@ -66,17 +69,13 @@ protected slots:
    void ViewAction();
 
    void ImportKeySlot();
-   void LockSlot();
-   void UnlockSlot();
    void SendDCTSlot();
 
    void slot_showPurchasedTab();
    void slot_showTransactionsTab(std::string const&);
    void slot_updateAccountBalance(Asset const&);
    
-   void slot_connected();
-   void slot_query_blockchain();
-   void slot_connecting_progress(std::string const&);
+   void slot_connection_status_changed(Globals::ConnectionState from, Globals::ConnectionState to);
    
    void slot_enableSendButton();
       
@@ -84,6 +83,7 @@ protected:
    class QVBoxLayout*   m_pCentralAllLayout;
    class QHBoxLayout*   m_pMenuLayout;
    CentralWigdet*       m_pCentralWidget;
+   uint32_t             m_iSyncUpCount;
    
    QMenuBar *          m_barLeft;
    QMenuBar *          m_barRight;
@@ -98,15 +98,10 @@ protected:
    QAction             m_ActionAbout;
    QAction             m_ActionInfo;
    QAction             m_ActionHelp;
-   QAction             m_ActionLock;
-   QAction             m_ActionUnlock;
    QAction             m_ActionImportKey;
    TextDisplayDialog   m_info_dialog;
    
    QVBoxLayout                         m_main_layout;
-   bool                                m_locked;
-   PasswordDialog                      m_SetPasswordDialog;
-   PasswordDialog                      m_UnlockDialog;
    
    QTimer                              _downloadChecker;
    QTimer                              _balanceUpdater;

@@ -1,6 +1,16 @@
+QMainWindow
+{
+   color:black;
+   background-color:white;
+}
 QTextEdit[type='info']
 {
    padding: 2em;
+}
+QLabel[type='connectingsplash']
+{
+   font-size: 10px;
+   color: rgb(127, 138, 158);
 }
 QLabel[type='rowlabel']
 {
@@ -85,7 +95,23 @@ QPushButton[type='send'][enabled=false]
    background-color: white;
    color: black;
 }
-QPushButton[type='tableicon'][enabled=true]
+QPushButton[type='dialogtextbutton']
+{
+   height: 1em;
+   width: 4.5em;
+   max-height: 1em;
+   max-width: 4.5em;
+   border: 0px;
+   background-color: white;
+   color: rgb(27, 176, 104);
+}
+QPushButton[type='dialogtextbutton'][enabled=false]
+{
+   border: 0px;
+   background-color: white;
+   color: gray;
+}
+QPushButton[type='tableicon']
 {
    border: 0px;
    background-color: rgb(27, 176, 104);
@@ -159,6 +185,13 @@ QLineEdit[type='tablesearch']
    border: 0px;
    padding-left: 1em;
 }
+QLineEdit[type='dialoglineedit']
+{
+   min-width: 300px;
+   min-height: 44px;
+   max-width: 300px;
+   max-height: 44px;
+}
 QTextEdit[type='info']
 {
    border: 0px;
@@ -189,8 +222,38 @@ QTextEdit QScrollBar::add-line:vertical
 }
 QTextEdit QScrollBar::sub-line:vertical
 {
-   background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop: 0  rgb(180,180,180), stop: 0.5 rgb(180,180,180),  stop:1 rgb(180,180,180));"
+   background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop: 0  rgb(180,180,180), stop: 0.5 rgb(180,180,180),  stop:1 rgb(180,180,180));
    height: 0 px;
    subcontrol-position: top;
    subcontrol-origin: margin;
 }
+QProgressBar
+{
+   border-radius: 5px;
+   border: 1px;
+   height: 10px;
+   max-height: 10px;
+   width: 176px;
+   max-width: 176px;
+   background: rgb(224, 229, 235);
+   qproperty-textVisible: false;
+}
+QProgressBar:chunk
+{
+   border-radius: 5px;
+   border: 1px;
+   background: rgb(31, 218, 129);
+}
+QPushButton[type='splashaction']
+{
+   border: 0px;
+   background-color: rgb(31, 218, 129);
+   color: white;
+   width: 5em;
+   height: 1.5em;
+   max-width: 5em;
+   max-height: 1.5em;
+}
+
+
+

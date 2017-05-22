@@ -3,10 +3,12 @@
 #include "gui_wallet_global.hpp"
 #include "upload_tab.hpp"
 #include "upload_popup.hpp"
-#include "decent_wallet_ui_gui_contentdetailsgeneral.hpp"
 #include "decent_button.hpp"
 #include "decent_line_edit.hpp"
 #include "gui_design.hpp"
+#include "richdialog.hpp"
+
+#include <boost/algorithm/string/replace.hpp>
 
 #ifndef _MSC_VER
 #include <QHBoxLayout>
@@ -167,6 +169,12 @@ string Upload_tab::getUpdateCommand()
    string currentUserName = Globals::instance().getCurrentUser();
    if (currentUserName.empty())
       return string();
+
+   graphene::chain::ContentObjectPropertyManager type_composer;
+   graphene::chain::ContentObjectTypeValue type(graphene::chain::EContentObjectApplication::DecentCore);
+
+   type_composer.set<graphene::chain::ContentObjectType>(type);
+   boost::replace_all(type_composer.m_str_synopsis, "\"", "");   // a dirty hack
    
    return   "search_user_content "
             "\"" + currentUserName + "\" "
@@ -174,6 +182,7 @@ string Upload_tab::getUpdateCommand()
             "\"" + m_pTableWidget->getSortedColumn() + "\" "
             "\"\" "   // region_code
             "\"" + next_iterator() + "\" "
+            "\"" + type_composer.m_str_synopsis + "\" "
             + std::to_string(m_i_page_size + 1);
 }
 
@@ -265,14 +274,13 @@ void Upload_tab::slot_ShowContentPopup(int iIndex)
    if (iIndex < 0 || iIndex >= _digital_contents.size())
       throw std::out_of_range("Content index is out of range");
 
-   ContentDetailsGeneral* pDetailsDialog = new ContentDetailsGeneral(nullptr);
-   QObject::connect(pDetailsDialog, &ContentDetailsGeneral::ContentWasBought,
-                    this, &Upload_tab::slot_Bought);
-   pDetailsDialog->execCDD(_digital_contents[iIndex], true);
+   ContentInfoDialog* pDetailsDialog = new ContentInfoDialog(nullptr, _digital_contents[iIndex]);
    pDetailsDialog->setAttribute(Qt::WA_DeleteOnClose);
    pDetailsDialog->open();
+   QObject::connect(pDetailsDialog, &ContentInfoDialog::ContentWasBought,
+                    this, &Upload_tab::slot_Bought);
 }
-
+   
 void Upload_tab::slot_Bought()
 {
    Globals::instance().signal_showPurchasedTab();

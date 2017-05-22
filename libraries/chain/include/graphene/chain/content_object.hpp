@@ -250,44 +250,94 @@ using namespace decent::encrypt;
       DecentCore,
       DecentGo
    };
-   class ContentObjectApplication : public ContentObjectPropertyBase<EContentObjectApplication, ContentObjectApplication>
-   {
-   public:
-      using meta_default = bool;
-      using meta_unique = bool;
-
-      static string name()
-      {
-         return "application_id";
-      }
-
-      static void convert_from_string(string const& str_value, EContentObjectApplication& type)
-      {
-         type = EContentObjectApplication::DecentCore;
-         if (str_value.empty())
-            return;
-         size_t pos;
-         long long converted = std::stoll(str_value, &pos);
-         if (pos != str_value.length() ||
-             static_cast<long long>(EContentObjectApplication::DecentCore) > converted ||
-             static_cast<long long>(EContentObjectApplication::DecentGo) < converted)
-            throw std::runtime_error("ContentObjectApplication is in exceptional situation");
-         else
-            type = static_cast<EContentObjectApplication>(converted);
-      }
-      static void convert_to_string(EContentObjectApplication const& type, string& str_value)
-      {
-         str_value = std::to_string(static_cast<long long>(type));
-      }
-   };
-
    enum class EContentObjectType
    {
       None,
       Book
    };
 
-   class ContentObjectType : public ContentObjectPropertyBase<EContentObjectType, ContentObjectType>
+   class ContentObjectTypeValue
+   {
+   public:
+      ContentObjectTypeValue(EContentObjectApplication appID = EContentObjectApplication::DecentCore,
+                             EContentObjectType typeID = EContentObjectType::None)
+      {
+         init(appID, typeID);
+      }
+
+      void to_string(std::string& str_value) const
+      {
+         str_value.clear();
+         for (size_t index = 0; index < type.size(); ++index)
+         {
+            std::string strPart = std::to_string(type[index]);
+            str_value += strPart;
+            if (index < type.size() - 1)
+               str_value += ".";
+         }
+      }
+      void from_string(std::string str_value)
+      {
+         type.clear();
+         uint32_t iValue = 0;
+         size_t pos;
+         while (true)
+         {
+            if (str_value.empty())
+               break;
+            iValue = std::stol(str_value, &pos);
+
+            if (pos == 0)
+               break;
+
+            type.push_back(iValue);
+
+            if (pos == std::string::npos)
+               break;
+            else if (str_value[pos] != '.')
+               break;
+            else
+               str_value = str_value.substr(pos + 1);
+         }
+
+         init();
+      }
+
+      bool filter(ContentObjectTypeValue const& filter)
+      {
+         bool bRes = true;
+         if (filter.type.size() > type.size())
+            bRes = false;
+         else
+         {
+            for (size_t index = 0; index < filter.type.size(); ++index)
+            {
+               if (type[index] != filter.type[index])
+               {
+                  bRes = false;
+                  break;
+               }
+            }
+         }
+
+         return bRes;
+      }
+   private:
+      void init(EContentObjectApplication appID = EContentObjectApplication::DecentCore,
+                EContentObjectType typeID = EContentObjectType::None)
+      {
+         if (type.size() == 0)
+            type.push_back(static_cast<uint32_t>(appID));
+         if (type.size() == 1 &&
+             typeID != EContentObjectType::None)
+            type.push_back(static_cast<uint32_t>(typeID));
+      }
+
+   public:
+      std::vector<uint32_t> type;
+   };
+
+   class ContentObjectType : public ContentObjectPropertyBase<ContentObjectTypeValue, ContentObjectType>
    {
    public:
       using meta_default = bool;
@@ -295,26 +345,16 @@ using namespace decent::encrypt;
 
       static string name()
       {
-         return "content_id";
+         return "content_type_id";
       }
 
-      static void convert_from_string(string const& str_value, EContentObjectType& type)
+      static void convert_from_string(string const& str_value, ContentObjectTypeValue& type)
       {
-         type = EContentObjectType::None;
-         if (str_value.empty())
-            return;
-         size_t pos;
-         long long converted = std::stoll(str_value, &pos);
-         if (pos != str_value.length() ||
-             static_cast<long long>(EContentObjectType::None) > converted ||
-             static_cast<long long>(EContentObjectType::Book) < converted)
-            throw std::runtime_error("ContentObjectType is in exceptional situation");
-         else
-            type = static_cast<EContentObjectType>(converted);
+         type.from_string(str_value);
       }
-      static void convert_to_string(EContentObjectType const& type, string& str_value)
+      static void convert_to_string(ContentObjectTypeValue const& type, string& str_value)
       {
-         str_value = std::to_string(static_cast<long long>(type));
+         type.to_string(str_value);
       }
    };
 
@@ -425,8 +465,11 @@ using namespace decent::encrypt;
       uint32_t num_of_ratings;
       uint32_t times_bought;
       asset publishing_fee_escrow;
+#ifdef TESTNET_3
+      fc::optional<decent::encrypt::CustodyData> cd;
+#else
       decent::encrypt::CustodyData cd;
-
+#endif
 
 #ifdef PRICE_REGIONS
       template <RegionCodes::RegionCode code>
@@ -582,3 +625,4 @@ FC_REFLECT_DERIVED(graphene::chain::content_object,
 
 FC_REFLECT( graphene::chain::content_summary, (id)(author)(price)(synopsis)(status)(URI)(AVG_rating)(size)(expiration)(created)(times_bought) )
 FC_REFLECT( graphene::chain::PriceRegions, (map_price) )
+FC_REFLECT( graphene::chain::ContentObjectTypeValue, (type) )

@@ -81,8 +81,11 @@ namespace graphene { namespace chain {
       fc::time_point_sec expiration;
       asset publishing_fee; //< Fee must be greater than the sum of seeders' publishing prices * number of days
       string synopsis;
-      decent::encrypt::CustodyData cd;
-      
+#ifdef TESTNET_3
+      optional<decent::encrypt::CustodyData> cd; //< if cd.n == 0 then no custody is submitted, and simplified verification is done.
+#else
+      decent::encrypt::CustodyData cd; //< if cd.n == 0 then no custody is submitted, and simplified verification is done.
+#endif
       account_id_type fee_payer()const { return author; }
       void validate()const;
    };
@@ -159,9 +162,11 @@ namespace graphene { namespace chain {
       asset fee;
       account_id_type seeder;
       string URI;
-
+#ifdef TESTNET_3
+      fc::optional<decent::encrypt::CustodyProof> proof;
+#else
       decent::encrypt::CustodyProof proof;
-
+#endif
       account_id_type fee_payer()const { return seeder; }
       void validate()const;
    };

@@ -194,6 +194,11 @@ struct CustodyData{
    uint32_t n; //<number of signatures
    fc::array<int8_t,16> u_seed; //<generator for u's
    fc::array<uint8_t,DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED> pubKey; //<uploaders public key
+
+   bool operator==( const CustodyData& other)const
+   {
+      return n == other.n && u_seed == other.u_seed && pubKey == other.pubKey;
+   }
 };
 
 
