@@ -87,7 +87,8 @@ int main(int argc, char* argv[])
    if (translator->load("decent_en", ":/translations/languages")) {
       app.installTranslator(translator);
    }
-   
+
+   app.setFont(MainFont());
    
    gui_wallet::Mainwindow_gui_wallet aMainWindow;
    QProcess* daemon_process = nullptr;

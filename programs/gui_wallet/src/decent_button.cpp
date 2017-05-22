@@ -36,6 +36,9 @@ DecentButton::DecentButton(QWidget* pParent,
    case DialogTextButton:
       setProperty("type", "dialogtextbutton");
       break;
+   case SplashAction:
+      setProperty("type", "splashaction");
+      break;
    case Default:
    default:
       break;

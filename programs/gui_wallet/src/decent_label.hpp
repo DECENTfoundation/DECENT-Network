@@ -11,7 +11,8 @@ namespace gui_wallet
       enum eType
       {
          Default,
-         RowLabel
+         RowLabel,
+         ConnectingSplash
       };
 
       enum eName
@@ -26,5 +27,19 @@ namespace gui_wallet
 
    protected:
       virtual void changeEvent(QEvent* event) override;
+   };
+
+   class StatusLabel : public DecentLabel
+   {
+      Q_OBJECT
+   public:
+      StatusLabel(QWidget* pParent);
+
+   signals:
+      void signal_removeTimers();
+
+   public slots:
+      void showMessage(QString const& str_message, int timeout);
+      void clearMessage();
    };
 }

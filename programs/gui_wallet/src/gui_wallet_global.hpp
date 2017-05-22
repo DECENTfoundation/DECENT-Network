@@ -137,10 +137,10 @@ namespace gui_wallet
       ~Globals();
       
    public:
+      enum class ConnectionState { Connecting, SyncingUp, Up };
       static Globals& instance();
 
       std::string getCurrentUser() const;
-      bool isConnected() const;
       WalletAPI& getWallet() const;
       void clear();
       Asset asset(uint64_t amount);
@@ -149,17 +149,17 @@ namespace gui_wallet
       nlohmann::json runTaskParse(std::string const& str_command);
       std::vector<Publisher> getPublishers();
       QLocale& locale();
+      bool connected() const;
 
    signals:
       void signal_showPurchasedTab();
       void signal_showTransactionsTab(std::string const&);
       void signal_updateAccountBalance(Asset const&);
-      void signal_keyImported(bool);
+      void signal_keyImported();
 
    public:
       void setCurrentUser(std::string const& user);
       void setWalletUnlocked();
-      void setWalletConnected();
       void setWalletError(std::string const& error);
       void showTransferDialog(std::string const& user);
       std::string getAccountName(std::string const& accountId);
@@ -177,13 +177,10 @@ namespace gui_wallet
       void walletUnlocked();
       
       void walletConnectionError(std::string const& message);
-      void walletConnected();
-      
-   public slots:
-      void slot_displayWalletContent();
+      void walletConnectionStatusChanged(ConnectionState from, ConnectionState to);
 
    private:
-      bool m_connected;
+      ConnectionState m_connected_state;
       WalletOperator* m_p_wallet_operator;
       QThread* m_p_wallet_operator_thread;
       QTimer* m_p_timer;
@@ -283,6 +280,7 @@ namespace gui_wallet
       std::string   URI;
       double        AVG_rating;
       std::string   created;
+      std::string   purchased_time;
       std::string   expiration;
       std::string   id;
       std::string   hash;

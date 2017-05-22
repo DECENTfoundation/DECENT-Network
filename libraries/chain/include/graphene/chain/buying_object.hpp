@@ -61,6 +61,7 @@ using decent::encrypt::DInteger;
    struct by_size;
    struct by_price;
    struct by_created;
+   struct by_purchased;
 
    template <typename TAG, typename _t_object>
    struct key_extractor;
@@ -89,6 +90,15 @@ using decent::encrypt::DInteger;
       static time_point_sec get(buying_object const& ob)
       {
          return ob.created;
+      }
+   };
+   
+   template<>
+   struct key_extractor<by_purchased, buying_object>
+   {
+      static time_point_sec get(buying_object const& ob)
+      {
+         return ob.expiration_or_delivery_time;
       }
    };
 
@@ -154,6 +164,9 @@ using decent::encrypt::DInteger;
             >,
             ordered_non_unique< tag< by_created>,
                   member<buying_object, time_point_sec, &buying_object::created>
+            >,
+            ordered_non_unique< tag< by_purchased>,
+               member<buying_object, time_point_sec, &buying_object::expiration_or_delivery_time>
             >
          >
    >buying_object_multi_index_type;

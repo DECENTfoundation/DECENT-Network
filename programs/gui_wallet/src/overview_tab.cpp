@@ -194,7 +194,7 @@ void Overview_tab::slot_Details()
       std::string referrer_rewards_percentage = std::to_string(accountInfo["referrer_rewards_percentage"].get<int>());
       std::string name = accountInfo["name"].get<std::string>();
       
-      UserInfoDialog* dialog = new UserInfoDialog(this,
+      UserInfoDialog* dialog = new UserInfoDialog(nullptr,
                                                   QString::fromStdString(registrar),
                                                   QString::fromStdString(referrer),
                                                   QString::fromStdString(lifetime_referrer),
