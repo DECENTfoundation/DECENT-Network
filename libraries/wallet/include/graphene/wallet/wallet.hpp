@@ -1423,6 +1423,47 @@ namespace graphene { namespace wallet {
          real_supply get_real_supply()const;
 
          /**
+          * @brief This method is used to promote account to publishing manager.
+          * Such an account can grant or remove right to publish a content. Only DECENT account has permission to use this method.
+          * @see set_publishing_right()
+          * @param from Account ( DECENT account ) giving/removing status of the publishing manager.
+          * @param to List of accounts getting status of the publishing manager.
+          * @param is_allowed True to give the status, false to remove it
+          * @param broadcast True to broadcast the transaction on the network
+          * @return The signed transaction updating account status
+          * @ingroup WalletCLI
+          */
+         signed_transaction set_publishing_manager(const string from,
+                                                   const vector<string> to,
+                                                   bool is_allowed,
+                                                   bool broadcast);
+
+         /**
+          * @brief Allows account to publish a content. Only account with publishing manager status has permission to use this method.
+          * @see set_publishing_manager()
+          * @param from Account giving/removing right to publish a content.
+          * @param to List of accounts getting right to publish a content.
+          * @param is_allowed True to give the right, false to remove it
+          * @param broadcast True to broadcast the transaction on the network
+          * @return The signed transaction updating account status
+          * @ingroup WalletCLI
+          */
+         signed_transaction set_publishing_right(const string from,
+                                                 const vector<string> to,
+                                                 bool is_allowed,
+                                                 bool broadcast);
+
+         /**
+          * @brief Get a list of accounts holding publishing manager status.
+          * @param lower_bound_name The name of the first account to return.  If the named account does not exist,
+          * the list will start at the account that comes after \c lowerbound
+          * @param limit The maximum number of accounts to return (max: 100)
+          * @return List of accounts
+          * @ingroup WalletCLI
+          */
+         vector<account_id_type> list_publishing_managers( const string& lower_bound_name, uint32_t limit );
+
+         /**
           * @brief Submits content to the blockchain.
           * @see submit_content_new()
           * @param author The author of the content
@@ -2116,6 +2157,9 @@ FC_API( graphene::wallet::wallet_api,
            (get_order_book)
            (download_content)
            (get_download_status)
+           (set_publishing_manager)
+           (set_publishing_right)
+           (list_publishing_managers)
            (submit_content)
            (submit_content_new)
            (request_to_buy)

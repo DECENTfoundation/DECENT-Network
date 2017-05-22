@@ -72,6 +72,8 @@ namespace graphene { namespace chain {
             vesting_balance_withdraw_operation,
             custom_operation,
             assert_operation,
+            set_publishing_manager_operation,
+            set_publishing_right_operation,
             content_submit_operation,
             request_to_buy_operation,
             leave_rating_and_comment_operation,
