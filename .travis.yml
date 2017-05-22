@@ -41,12 +41,12 @@ before_install:
   - perl -pi -e 's/https\:\/\/github\.com\/DECENTfoundation\/pbc\.git/git\@github\.com\:DECENTfoundation\/pbc\.git/' .gitmodules
   - perl -pi -e 's/https\:\/\/github\.com\/DECENTfoundation\/DECENT-GUI\.git/git\@github\.com\:DECENTfoundation\/DECENT-GUI\.git/' .gitmodules
   - git submodule update --init --recursive
+  - if [ "$TRAVIS_OS_NAME" == "linux" ] ; then sudo add-apt-repository --yes ppa:ubuntu-sdk-team/ppa ; fi
 
 
 install:
   - env
   # FIXME: hardcoded assumption that we run on Ubuntu.
-  - if [ "$TRAVIS_OS_NAME" == "linux" ] ; then sudo add-apt-repository --yes ppa:ubuntu-sdk-team/ppa ; fi
   - if [ "$TRAVIS_OS_NAME" == "linux" ] ; then sudo apt-get update -qq && sudo apt-get install -qq build-essential autotools-dev automake autoconf libtool make cmake checkinstall realpath gcc g++ clang flex bison doxygen gettext git qt5-default libqt5svg5-dev libreadline-dev libcrypto++-dev libgmp-dev libdb-dev libdb++-dev libssl-dev libncurses5-dev libboost-all-dev libcurl4-openssl-dev python-dev libicu-dev libbz2-dev ; fi
   # FIXME: hardcoded assumption that we run on Ubuntu 14 so we build Boost and CMake.
   # Install and enable newer compilers, in Linux.
