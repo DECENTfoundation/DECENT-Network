@@ -8,7 +8,8 @@ os:
 
 osx_image: xcode8.2
 
-dist: xerus
+#dist: xerus - no Ubuntu 16 on travis-cl
+dist: trusty
 
 compiler:
   - gcc
