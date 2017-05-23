@@ -1,0 +1,324 @@
+{
+  "initial_timestamp": "2017-05-19T10:52:15",
+  "max_core_supply": "6000000000000000",
+  "initial_parameters": {
+    "current_fees": {
+      "parameters": [[
+          0,{
+            "fee": 10000000,
+            "price_per_kbyte": 1000000000
+          }
+        ],[
+          1,{
+            "fee": 10000000
+          }
+        ],[
+          2,{
+            "fee": 0
+          }
+        ],[
+          3,{}
+        ],[
+          4,{
+            "basic_fee": 500000000,
+            "premium_fee": 2000000000,
+            "price_per_kbyte": 100000000
+          }
+        ],[
+          5,{
+            "fee": 100000000,
+            "price_per_kbyte": 100000000
+          }
+        ],[
+          6,{
+            "fee": 500000000
+          }
+        ],[
+          7,{
+            "symbol3": 500000000,
+            "symbol4": 200000000,
+            "long_symbol": 50000000,
+            "price_per_kbyte": 10
+          }
+        ],[
+          8,{
+            "fee": 200000000,
+            "price_per_kbyte": 10
+          }
+        ],[
+          9,{
+            "fee": 10000000
+          }
+        ],[
+          10,{
+            "fee": 200000000,
+            "price_per_kbyte": 100000000
+          }
+        ],[
+          11,{
+            "fee": 1
+          }
+        ],[
+          12,{
+            "fee": "5000000000"
+          }
+        ],[
+          13,{
+            "fee": 200000000
+          }
+        ],[
+          14,{
+            "fee": 10
+          }
+        ],[
+          15,{
+            "fee": 10000000,
+            "price_per_kbyte": 10
+          }
+        ],[
+          16,{
+            "fee": 10000000,
+            "price_per_kbyte": 10
+          }
+        ],[
+          17,{
+            "fee": 10000000
+          }
+        ],[
+          18,{
+            "fee": 10000000
+          }
+        ],[
+          19,{
+            "fee": 10000000
+          }
+        ],[
+          20,{
+            "fee": 10000000,
+            "price_per_kbyte": 10
+          }
+        ],[
+          21,{
+            "fee": 0
+          }
+        ],[
+          22,{
+            "fee": 10000000
+          }
+        ],[
+          23,{
+            "fee": 10000000
+          }
+        ],[
+          24,{
+            "fee": 100000000,
+            "price_per_kbyte": 10
+          }
+        ],[
+          25,{
+            "fee": 100000000
+          }
+        ],[
+          26,{
+            "fee": 0
+          }
+        ],[
+          27,{
+            "fee": 0
+          }
+        ],[
+          28,{
+            "fee": 0
+          }
+        ],[
+          29,{
+            "fee": 0
+          }
+        ],[
+          30,{
+            "fee": 0
+          }
+        ],[
+          31,{
+            "fee": 0
+          }
+        ],[
+          32,{
+            "fee": 0
+          }
+        ],[
+          33,{
+            "fee": 0
+          }
+        ],[
+          34,{
+            "fee": 0
+          }
+        ],[
+          35,{
+            "fee": 0
+          }
+        ],[
+          36,{
+            "fee": 0
+          }
+        ],[
+          37,{
+            "fee": 0
+          }
+        ],[
+          38,{
+            "fee": 0
+          }
+        ],[
+          39,{
+            "fee": 0
+          }
+        ],[
+          40,{
+            "fee": 0
+          }
+        ],[
+          41,{
+            "fee": 0
+          }
+        ]
+      ],
+      "scale": 10000
+    },
+    "block_interval": 5,
+    "maintenance_interval": 1800,
+    "maintenance_skip_slots": 3,
+    "witness_proposal_review_period": 1209600,
+    "maximum_transaction_size": 2048,
+    "maximum_block_size": 20480000,
+    "maximum_time_until_expiration": 86400,
+    "maximum_proposal_lifetime": 2419200,
+    "maximum_asset_feed_publishers": 10,
+    "maximum_witness_count": 1001,
+    "maximum_authority_membership": 10,
+    "reserve_percent_of_fee": 2000,
+    "network_percent_of_fee": 2000,
+    "lifetime_referrer_percent_of_fee": 3000,
+    "cashback_vesting_period_seconds": 31536000,
+    "cashback_vesting_threshold": "10000000000",
+    "count_non_member_votes": true,
+    "allow_non_member_whitelists": false,
+    "max_predicate_opcode": 1,
+    "fee_liquidation_threshold": 100000000,
+    "accounts_per_fee_scale": 1000,
+    "account_fee_scale_bitshifts": 4,
+    "max_authority_depth": 2,
+    "extensions": []
+  },
+  "initial_accounts": [{
+      "name": "init0",
+      "owner_key": "DCT82MTCQVa9TDFmz3ZwaLzsFAmCLoJzrtFugpF72vsbuE1CpCwKy",
+      "active_key": "DCT82MTCQVa9TDFmz3ZwaLzsFAmCLoJzrtFugpF72vsbuE1CpCwKy"
+    },{
+      "name": "init1",
+      "owner_key": "DCT82MTCQVa9TDFmz3ZwaLzsFAmCLoJzrtFugpF72vsbuE1CpCwKy",
+      "active_key": "DCT82MTCQVa9TDFmz3ZwaLzsFAmCLoJzrtFugpF72vsbuE1CpCwKy"
+    },{
+      "name": "init2",
+      "owner_key": "DCT82MTCQVa9TDFmz3ZwaLzsFAmCLoJzrtFugpF72vsbuE1CpCwKy",
+      "active_key": "DCT82MTCQVa9TDFmz3ZwaLzsFAmCLoJzrtFugpF72vsbuE1CpCwKy"
+    },{
+      "name": "init3",
+      "owner_key": "DCT82MTCQVa9TDFmz3ZwaLzsFAmCLoJzrtFugpF72vsbuE1CpCwKy",
+      "active_key": "DCT82MTCQVa9TDFmz3ZwaLzsFAmCLoJzrtFugpF72vsbuE1CpCwKy"
+    },{
+      "name": "init4",
+      "owner_key": "DCT82MTCQVa9TDFmz3ZwaLzsFAmCLoJzrtFugpF72vsbuE1CpCwKy",
+      "active_key": "DCT82MTCQVa9TDFmz3ZwaLzsFAmCLoJzrtFugpF72vsbuE1CpCwKy"
+    },{
+      "name": "init5",
+      "owner_key": "DCT82MTCQVa9TDFmz3ZwaLzsFAmCLoJzrtFugpF72vsbuE1CpCwKy",
+      "active_key": "DCT82MTCQVa9TDFmz3ZwaLzsFAmCLoJzrtFugpF72vsbuE1CpCwKy"
+    },{
+      "name": "init6",
+      "owner_key": "DCT82MTCQVa9TDFmz3ZwaLzsFAmCLoJzrtFugpF72vsbuE1CpCwKy",
+      "active_key": "DCT82MTCQVa9TDFmz3ZwaLzsFAmCLoJzrtFugpF72vsbuE1CpCwKy"
+    },{
+      "name": "init7",
+      "owner_key": "DCT82MTCQVa9TDFmz3ZwaLzsFAmCLoJzrtFugpF72vsbuE1CpCwKy",
+      "active_key": "DCT82MTCQVa9TDFmz3ZwaLzsFAmCLoJzrtFugpF72vsbuE1CpCwKy"
+    },{
+      "name": "init8",
+      "owner_key": "DCT82MTCQVa9TDFmz3ZwaLzsFAmCLoJzrtFugpF72vsbuE1CpCwKy",
+      "active_key": "DCT82MTCQVa9TDFmz3ZwaLzsFAmCLoJzrtFugpF72vsbuE1CpCwKy"
+    },{
+      "name": "init9",
+      "owner_key": "DCT82MTCQVa9TDFmz3ZwaLzsFAmCLoJzrtFugpF72vsbuE1CpCwKy",
+      "active_key": "DCT82MTCQVa9TDFmz3ZwaLzsFAmCLoJzrtFugpF72vsbuE1CpCwKy"
+    },{
+      "name": "init10",
+      "owner_key": "DCT82MTCQVa9TDFmz3ZwaLzsFAmCLoJzrtFugpF72vsbuE1CpCwKy",
+      "active_key": "DCT82MTCQVa9TDFmz3ZwaLzsFAmCLoJzrtFugpF72vsbuE1CpCwKy"
+    },{
+      "name": "decent",
+      "owner_key": "DCT82MTCQVa9TDFmz3ZwaLzsFAmCLoJzrtFugpF72vsbuE1CpCwKy",
+      "active_key": "DCT82MTCQVa9TDFmz3ZwaLzsFAmCLoJzrtFugpF72vsbuE1CpCwKy"
+    }
+  ],
+  "initial_assets": [{
+     "symbol": "USD",
+     "issuer_name": "decent",
+     "description": "USD",
+     "precision": 4
+    },{
+     "symbol": "EUR",
+     "issuer_name": "decent",
+     "description": "EUR",
+     "precision": 4
+    }
+  ],
+  "initial_active_witnesses": 11,
+  "initial_witness_candidates": [{
+      "owner_name": "init0",
+      "block_signing_key": "DCT82MTCQVa9TDFmz3ZwaLzsFAmCLoJzrtFugpF72vsbuE1CpCwKy"
+    },{
+      "owner_name": "init1",
+      "block_signing_key": "DCT82MTCQVa9TDFmz3ZwaLzsFAmCLoJzrtFugpF72vsbuE1CpCwKy"
+    },{
+      "owner_name": "init2",
+      "block_signing_key": "DCT82MTCQVa9TDFmz3ZwaLzsFAmCLoJzrtFugpF72vsbuE1CpCwKy"
+    },{
+      "owner_name": "init3",
+      "block_signing_key": "DCT82MTCQVa9TDFmz3ZwaLzsFAmCLoJzrtFugpF72vsbuE1CpCwKy"
+    },{
+      "owner_name": "init4",
+      "block_signing_key": "DCT82MTCQVa9TDFmz3ZwaLzsFAmCLoJzrtFugpF72vsbuE1CpCwKy"
+    },{
+      "owner_name": "init5",
+      "block_signing_key": "DCT82MTCQVa9TDFmz3ZwaLzsFAmCLoJzrtFugpF72vsbuE1CpCwKy"
+    },{
+      "owner_name": "init6",
+      "block_signing_key": "DCT82MTCQVa9TDFmz3ZwaLzsFAmCLoJzrtFugpF72vsbuE1CpCwKy"
+    },{
+      "owner_name": "init7",
+      "block_signing_key": "DCT82MTCQVa9TDFmz3ZwaLzsFAmCLoJzrtFugpF72vsbuE1CpCwKy"
+    },{
+      "owner_name": "init8",
+      "block_signing_key": "DCT82MTCQVa9TDFmz3ZwaLzsFAmCLoJzrtFugpF72vsbuE1CpCwKy"
+    },{
+      "owner_name": "init9",
+      "block_signing_key": "DCT82MTCQVa9TDFmz3ZwaLzsFAmCLoJzrtFugpF72vsbuE1CpCwKy"
+    },{
+      "owner_name": "init10",
+      "block_signing_key": "DCT82MTCQVa9TDFmz3ZwaLzsFAmCLoJzrtFugpF72vsbuE1CpCwKy"
+    }
+  ],
+  "initial_chain_id": "9a5e5be357cdfa2c48dbe260f983a0109b52b9afdada705521cddad9243522f7",
+  "initial_balances": [{
+      "owner": "decent",
+      "asset_symbol": "DCT",
+      "amount": "4000000000000000"
+    }
+  ],
+  "immutable_parameters": {
+    "min_witness_count": 11,
+    "num_special_accounts": 0,
+    "num_special_assets": 0
+  }
+}

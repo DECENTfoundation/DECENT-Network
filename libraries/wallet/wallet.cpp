@@ -910,8 +910,7 @@ public:
       if( fee_asset_obj.get_id() != asset_id_type() )
       {
          for( auto& op : _builder_transactions[handle].operations )
-            total_fee += gprops.current_fees->set_fee( op, fee_asset_obj.options.core_exchange_rate );
-
+            total_fee += gprops.current_fees->set_fee( op );
       } else {
          for( auto& op : _builder_transactions[handle].operations )
             total_fee += gprops.current_fees->set_fee( op );
@@ -980,29 +979,18 @@ public:
                                        public_key_type owner,
                                        public_key_type active,
                                        string  registrar_account,
-                                       string  referrer_account,
-                                       uint32_t referrer_percent,
                                        bool broadcast = false)
    { try {
       FC_ASSERT( !self.is_locked() );
       FC_ASSERT( is_valid_name(name) );
       account_create_operation account_create_op;
 
-      // #449 referrer_percent is on 0-100 scale, if user has larger
-      // number it means their script is using GRAPHENE_100_PERCENT scale
-      // instead of 0-100 scale.
-      FC_ASSERT( referrer_percent <= 100 );
       // TODO:  process when pay_from_account is ID
 
       account_object registrar_account_object =
             this->get_account( registrar_account );
 
       account_id_type registrar_account_id = registrar_account_object.id;
-
-      account_object referrer_account_object =
-            this->get_account( referrer_account );
-      account_create_op.referrer = referrer_account_object.id;
-      account_create_op.referrer_percent = uint16_t( referrer_percent * GRAPHENE_1_PERCENT );
 
       account_create_op.registrar = registrar_account_id;
       account_create_op.name = name;
@@ -1041,7 +1029,7 @@ public:
       if( broadcast )
          _remote_net_broadcast->broadcast_transaction( tx );
       return tx;
-   } FC_CAPTURE_AND_RETHROW( (name)(owner)(active)(registrar_account)(referrer_account)(referrer_percent)(broadcast) ) }
+   } FC_CAPTURE_AND_RETHROW( (name)(owner)(active)(registrar_account)(broadcast) ) }
 
 
    // This function generates derived keys starting with index 0 and keeps incrementing
@@ -1082,7 +1070,6 @@ public:
    signed_transaction create_account_with_private_key(fc::ecc::private_key owner_privkey,
                                                       string account_name,
                                                       string registrar_account,
-                                                      string referrer_account,
                                                       bool broadcast = false,
                                                       bool save_wallet = true)
    { try {
@@ -1103,10 +1090,6 @@ public:
          account_object registrar_account_object = get_account( registrar_account );
 
          account_id_type registrar_account_id = registrar_account_object.id;
-
-         account_object referrer_account_object = get_account( referrer_account );
-         account_create_op.referrer = referrer_account_object.id;
-         account_create_op.referrer_percent = referrer_account_object.referrer_rewards_percentage;
 
          account_create_op.registrar = registrar_account_id;
          account_create_op.name = account_name;
@@ -1152,12 +1135,11 @@ public:
          if( broadcast )
             _remote_net_broadcast->broadcast_transaction( tx );
          return tx;
-   } FC_CAPTURE_AND_RETHROW( (account_name)(registrar_account)(referrer_account)(broadcast) ) }
+   } FC_CAPTURE_AND_RETHROW( (account_name)(registrar_account)(broadcast) ) }
 
    signed_transaction create_account_with_brain_key(string brain_key,
                                                     string account_name,
                                                     string registrar_account,
-                                                    string referrer_account,
                                                     bool broadcast = false,
                                                     bool save_wallet = true)
    { try {
@@ -1165,14 +1147,15 @@ public:
       string normalized_brain_key = normalize_brain_key( brain_key );
       // TODO:  scan blockchain for accounts that exist with same brain key
       fc::ecc::private_key owner_privkey = derive_private_key( normalized_brain_key, 0 );
-      return create_account_with_private_key(owner_privkey, account_name, registrar_account, referrer_account, broadcast, save_wallet);
-   } FC_CAPTURE_AND_RETHROW( (account_name)(registrar_account)(referrer_account) ) }
+      return create_account_with_private_key(owner_privkey, account_name, registrar_account, broadcast, save_wallet);
+   } FC_CAPTURE_AND_RETHROW( (account_name)(registrar_account) ) }
 
 
    signed_transaction create_asset(string issuer,
                                    string symbol,
                                    uint8_t precision,
-                                   asset_options common,
+                                   string description,
+                                   uint64_t max_supply,
                                    bool broadcast = false)
    { try {
       account_object issuer_account = get_account( issuer );
@@ -1182,7 +1165,8 @@ public:
       create_op.issuer = issuer_account.id;
       create_op.symbol = symbol;
       create_op.precision = precision;
-      create_op.common_options = common;
+      create_op.description = description;
+      create_op.max_supply = max_supply;
 
       signed_transaction tx;
       tx.operations.push_back( create_op );
@@ -1190,11 +1174,38 @@ public:
       tx.validate();
 
       return sign_transaction( tx, broadcast );
-   } FC_CAPTURE_AND_RETHROW( (issuer)(symbol)(precision)(common)(broadcast) ) }
+   } FC_CAPTURE_AND_RETHROW( (issuer)(symbol)(precision)(description)(max_supply)(broadcast) ) }
+
+   signed_transaction create_marked_issued_asset(string issuer,
+                                   string symbol,
+                                   uint8_t precision,
+                                   string description,
+                                   monitored_asset_options options,
+                                   bool broadcast = false)
+   { try {
+      account_object issuer_account = get_account( issuer );
+      FC_ASSERT(!find_asset(symbol).valid(), "Asset with that symbol already exists!");
+
+      asset_create_operation create_op;
+      create_op.issuer = issuer_account.id;
+      create_op.symbol = symbol;
+      create_op.precision = precision;
+      create_op.description = description;
+      create_op.max_supply = 0;
+      create_op.monitored_asset_opts = options;
+
+      signed_transaction tx;
+      tx.operations.push_back( create_op );
+      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
+      tx.validate();
+
+      return sign_transaction( tx, broadcast );
+   } FC_CAPTURE_AND_RETHROW( (issuer)(symbol)(precision)(description)(options)(broadcast) ) }
 
    signed_transaction update_asset(string symbol,
                                    optional<string> new_issuer,
-                                   asset_options new_options,
+                                   string description,
+                                   uint64_t max_supply,
                                    bool broadcast /* = false */)
    { try {
       optional<asset_object> asset_to_update = find_asset(symbol);
@@ -1211,7 +1222,8 @@ public:
       update_op.issuer = asset_to_update->issuer;
       update_op.asset_to_update = asset_to_update->id;
       update_op.new_issuer = new_issuer_account_id;
-      update_op.new_options = new_options;
+      update_op.new_description = description;
+      update_op.max_supply = max_supply;
 
       signed_transaction tx;
       tx.operations.push_back( update_op );
@@ -1219,7 +1231,7 @@ public:
       tx.validate();
 
       return sign_transaction( tx, broadcast );
-   } FC_CAPTURE_AND_RETHROW( (symbol)(new_issuer)(new_options)(broadcast) ) }
+   } FC_CAPTURE_AND_RETHROW( (symbol)(new_issuer)(description)(max_supply)(broadcast) ) }
 
    signed_transaction update_monitored_asset(string symbol,
                                       monitored_asset_options new_options,
@@ -2160,7 +2172,7 @@ public:
          package_handle->add_event_listener(listener_ptr);
          package_handle->create(false);
 
-     
+         //We end up here and return the  to the upper layer. The create method will continue in the background, and once finished, it will call the respective callback of submit_transfer_listener class
          return fc::ripemd160();
       }
       FC_CAPTURE_AND_RETHROW( (author)(content_dir)(samples_dir)(protocol)(price_asset_symbol)(price_amounts)(seeders)(expiration)(synopsis)(broadcast) )
@@ -2496,16 +2508,13 @@ public:
 
    void dbg_make_uia(string creator, string symbol)
    {
-      asset_options opts;
-      opts.core_exchange_rate = price(asset(1), asset(1,asset_id_type(1)));
-      create_asset(get_account(creator).name, symbol, 2, opts, true);
+      create_asset(get_account(creator).name, symbol, 2, "abcd", 1000000, true);
    }
 
    void dbg_make_mia(string creator, string symbol)
    {
-      asset_options opts;
-      opts.core_exchange_rate = price(asset(1), asset(1,asset_id_type(1)));
-      create_asset(get_account(creator).name, symbol, 2, opts, true);
+      monitored_asset_options mao;
+      create_marked_issued_asset(get_account(creator).name, symbol, 2, "abcd", mao, true);
    }
 
    void dbg_push_blocks( const std::string& src_filename, uint32_t count )
@@ -2615,7 +2624,7 @@ public:
          {
             std::ostringstream brain_key;
             brain_key << "brain key for account " << prefix << i;
-            signed_transaction trx = create_account_with_brain_key(brain_key.str(), prefix + fc::to_string(i), master.name, master.name, /* broadcast = */ true, /* save wallet = */ false);
+            signed_transaction trx = create_account_with_brain_key(brain_key.str(), prefix + fc::to_string(i), master.name, /* broadcast = */ true, /* save wallet = */ false);
          }
          fc::time_point end = fc::time_point::now();
          ilog("Created ${n} accounts in ${time} milliseconds",
@@ -2777,7 +2786,7 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
    std::string operation_printer::operator()(const asset_create_operation& op) const
    {
       out << "Create ";
-      if( op.common_options.monitored_asset_opts.valid() )
+      if( op.monitored_asset_opts.valid() )
          out << "BitAsset ";
       else
          out << "User-Issue Asset ";
@@ -3061,7 +3070,7 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
    {
       auto asset = get_asset(asset_name_or_id);
       FC_ASSERT(asset.is_monitored_asset() );
-      return *asset.options.monitored_asset_opts;
+      return *asset.monitored_asset_opts;
    }
 
    account_id_type wallet_api::get_account_id(string account_name_or_id) const
@@ -3240,19 +3249,18 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
                                                    public_key_type owner_pubkey,
                                                    public_key_type active_pubkey,
                                                    string  registrar_account,
-                                                   string  referrer_account,
-                                                   uint32_t referrer_percent,
                                                    bool broadcast)
    {
-      return my->register_account( name, owner_pubkey, active_pubkey, registrar_account, referrer_account, referrer_percent, broadcast );
+      return my->register_account( name, owner_pubkey, active_pubkey, registrar_account,  broadcast );
    }
+
    signed_transaction wallet_api::create_account_with_brain_key(string brain_key, string account_name,
                                                                 string registrar_account, string referrer_account,
                                                                 bool broadcast /* = false */)
    {
       return my->create_account_with_brain_key(
                brain_key, account_name, registrar_account,
-               referrer_account, broadcast
+               broadcast
                );
    }
    signed_transaction wallet_api::issue_asset(string to_account, string amount, string symbol,
@@ -3270,19 +3278,32 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
    signed_transaction wallet_api::create_asset(string issuer,
                                                string symbol,
                                                uint8_t precision,
-                                               asset_options common,
+                                               string description,
+                                               uint64_t max_supply,
                                                bool broadcast)
 
    {
-      return my->create_asset(issuer, symbol, precision, common, broadcast);
+      return my->create_asset(issuer, symbol, precision, description, max_supply, broadcast);
+   }
+
+   signed_transaction wallet_api::create_marked_issued_asset(string issuer,
+                                               string symbol,
+                                               uint8_t precision,
+                                               string description,
+                                               monitored_asset_options options,
+                                               bool broadcast)
+
+   {
+      return my->create_marked_issued_asset(issuer, symbol, precision, description, options, broadcast);
    }
 
    signed_transaction wallet_api::update_asset(string symbol,
                                                optional<string> new_issuer,
-                                               asset_options new_options,
+                                               string description,
+                                               uint64_t max_supply,
                                                bool broadcast /* = false */)
    {
-      return my->update_asset(symbol, new_issuer, new_options, broadcast);
+      return my->update_asset(symbol, new_issuer, description, max_supply, broadcast);
    }
 
    signed_transaction wallet_api::update_monitored_asset(string symbol,
@@ -3523,11 +3544,14 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
       {
          ss << "usage: ISSUER SYMBOL PRECISION_DIGITS OPTIONS BITASSET_OPTIONS BROADCAST\n\n";
          ss << "PRECISION_DIGITS: the number of digits after the decimal point\n\n";
-         ss << "Example value of OPTIONS: \n";
-         ss << fc::json::to_pretty_string( graphene::chain::asset_options() );
+      }
+      else if( method == "create_marked_issued_asset" )
+      {
+         ss << "usage: ISSUER SYMBOL PRECISION_DIGITS OPTIONS BITASSET_OPTIONS BROADCAST\n\n";
+         ss << "PRECISION_DIGITS: the number of digits after the decimal point\n\n";
+
          ss << "\nExample value of MONITORED ASSET_OPTIONS: \n";
          ss << fc::json::to_pretty_string( graphene::chain::monitored_asset_options() );
-         ss << "\nBITASSET_OPTIONS may be null\n";
       }
       else
       {
@@ -4126,9 +4150,11 @@ void graphene::wallet::detail::submit_transfer_listener::package_seed_complete()
       PackageManager::instance().release_package(fc::ripemd160(package_hash));
    }
 
-   void wallet_api::download_package(const std::string& url, const string& hash) const {
+   void wallet_api::download_package(const std::string& url) const {
       FC_ASSERT(!is_locked());
-      auto pack = PackageManager::instance().get_package(url, fc::ripemd160(hash));
+      auto content = get_content(url);
+      FC_ASSERT(content, "no such package in the system");
+      auto pack = PackageManager::instance().get_package(url, content->_hash );
       pack->download(false);
    }
 
