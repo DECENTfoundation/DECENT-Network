@@ -42,6 +42,7 @@ before_install:
   - perl -pi -e 's/https\:\/\/github\.com\/DECENTfoundation\/DECENT-GUI\.git/git\@github\.com\:DECENTfoundation\/DECENT-GUI\.git/' .gitmodules
   - git submodule update --init --recursive
   - if [ "$TRAVIS_OS_NAME" == "linux" ] ; then sudo add-apt-repository --yes ppa:ubuntu-sdk-team/ppa ; fi
+  - if [ "$TRAVIS_OS_NAME" == "linux" ] ; then sudo apt-get update -y; fi
   - if [ "$TRAVIS_OS_NAME" == "linux" ] ; then sudo add-apt-repository --yes universe ; fi
   - if [ "$TRAVIS_OS_NAME" == "linux" ] ; then sudo apt-get update -y; fi
   - if [ "$TRAVIS_OS_NAME" == "linux" ] ; then sudo apt-get install -y libqt5svg5-dev ; fi
