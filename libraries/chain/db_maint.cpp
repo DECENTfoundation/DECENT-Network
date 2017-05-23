@@ -376,22 +376,10 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
       }
       
    } tally_helper(*this, gpo);
-   struct process_fees_helper {
-      database& d;
-      const global_property_object& props;
-
-      process_fees_helper(database& d, const global_property_object& gpo)
-         : d(d), props(gpo) {}
-
-      void operator()(const account_object& a) {
-         a.statistics(d).process_fees(a, d);
-      }
-   } fee_helper(*this, gpo);
 
    perform_account_maintenance(std::tie(
-      tally_helper,
-      fee_helper
-      ));
+      tally_helper
+   ));
 
    struct clear_canary {
       clear_canary(vector<uint64_t>& target): target(target){}

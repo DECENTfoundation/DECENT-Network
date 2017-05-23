@@ -162,7 +162,6 @@ void database::initialize_indexes()
 
    auto acnt_index = add_index< primary_index<account_index> >();
    acnt_index->add_secondary_index<account_member_index>();
-   acnt_index->add_secondary_index<account_referrer_index>();
 
    add_index< primary_index<witness_index> >();
    add_index< primary_index<limit_order_index > >();
@@ -230,9 +229,8 @@ void database::init_genesis(const genesis_state_type& genesis_state)
        a.statistics = create<account_statistics_object>([&](account_statistics_object& s){s.owner = a.id;}).id;
        a.owner.weight_threshold = 1;
        a.active.weight_threshold = 1;
-       a.registrar = a.lifetime_referrer = a.referrer = GRAPHENE_WITNESS_ACCOUNT;
-       a.network_fee_percentage = GRAPHENE_DEFAULT_NETWORK_PERCENT_OF_FEE;
-       a.lifetime_referrer_fee_percentage = GRAPHENE_100_PERCENT - GRAPHENE_DEFAULT_NETWORK_PERCENT_OF_FEE;
+       a.registrar = GRAPHENE_WITNESS_ACCOUNT;
+
    }).get_id() == GRAPHENE_WITNESS_ACCOUNT);
 
    FC_ASSERT(create<account_object>([this](account_object& a) {
@@ -240,9 +238,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
        a.statistics = create<account_statistics_object>([&](account_statistics_object& s){s.owner = a.id;}).id;
        a.owner.weight_threshold = 1;
        a.active.weight_threshold = 1;
-       a.registrar = a.lifetime_referrer = a.referrer = GRAPHENE_NULL_ACCOUNT;
-       a.network_fee_percentage = 0;
-       a.lifetime_referrer_fee_percentage = GRAPHENE_100_PERCENT;
+       a.registrar = GRAPHENE_WITNESS_ACCOUNT;
    }).get_id() == GRAPHENE_NULL_ACCOUNT);
 
    FC_ASSERT(create<account_object>([this](account_object& a) {
@@ -250,9 +246,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
        a.statistics = create<account_statistics_object>([&](account_statistics_object& s){s.owner = a.id;}).id;
        a.owner.weight_threshold = 0;
        a.active.weight_threshold = 0;
-       a.registrar = a.lifetime_referrer = a.referrer = GRAPHENE_TEMP_ACCOUNT;
-       a.network_fee_percentage = GRAPHENE_DEFAULT_NETWORK_PERCENT_OF_FEE;
-       a.lifetime_referrer_fee_percentage = GRAPHENE_100_PERCENT - GRAPHENE_DEFAULT_NETWORK_PERCENT_OF_FEE;
+       a.registrar = GRAPHENE_WITNESS_ACCOUNT;
    }).get_id() == GRAPHENE_TEMP_ACCOUNT);
 
    FC_ASSERT(create<account_object>([this](account_object& a) {
@@ -260,9 +254,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
        a.statistics = create<account_statistics_object>([&](account_statistics_object& s){s.owner = a.id;}).id;
        a.owner.weight_threshold = 1;
        a.active.weight_threshold = 1;
-       a.registrar = a.lifetime_referrer = a.referrer = GRAPHENE_NULL_ACCOUNT;
-       a.network_fee_percentage = 0;
-       a.lifetime_referrer_fee_percentage = GRAPHENE_100_PERCENT;
+       a.registrar = GRAPHENE_WITNESS_ACCOUNT;
    }).get_id() == GRAPHENE_PROXY_TO_SELF_ACCOUNT);
 
    // Create more special accounts
@@ -276,9 +268,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
           a.statistics = create<account_statistics_object>([&](account_statistics_object& s){s.owner = a.id;}).id;
           a.owner.weight_threshold = 1;
           a.active.weight_threshold = 1;
-          a.registrar = a.lifetime_referrer = a.referrer = account_id_type(id);
-          a.network_fee_percentage = GRAPHENE_DEFAULT_NETWORK_PERCENT_OF_FEE;
-          a.lifetime_referrer_fee_percentage = GRAPHENE_100_PERCENT - GRAPHENE_DEFAULT_NETWORK_PERCENT_OF_FEE;
+          a.registrar = GRAPHENE_WITNESS_ACCOUNT;
       });
       FC_ASSERT( acct.get_id() == account_id_type(id) );
       remove( acct );
@@ -410,7 +400,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
    map<asset_id_type, share_type> total_supplies;
    map<asset_id_type, share_type> total_debts;
 
-   // Create initial assets. Only monitored assets are supported in genesis
+   // Create initial assets. Only monitored assets are supported in decent genesis
    for( const genesis_state_type::initial_asset_type& asset : genesis_state.initial_assets )
    {
 

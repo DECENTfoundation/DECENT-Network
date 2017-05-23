@@ -795,8 +795,6 @@ namespace graphene { namespace wallet {
                                              public_key_type owner,
                                              public_key_type active,
                                              string  registrar_account,
-                                             string  referrer_account,
-                                             uint32_t referrer_percent,
                                              bool broadcast = false);
 
          /**

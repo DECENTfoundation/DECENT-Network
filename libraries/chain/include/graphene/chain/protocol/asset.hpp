@@ -122,8 +122,6 @@ namespace graphene { namespace chain {
       static price max(asset_id_type base, asset_id_type quote );
       static price min(asset_id_type base, asset_id_type quote );
 
-      static price call_price(const asset& debt, const asset& collateral, uint16_t collateral_ratio);
-
       /// The unit price for an asset type A is defined to be a price such that for any asset m, m*A=m
       static price unit_price(asset_id_type a = asset_id_type()) { return price(asset(1, a), asset(1, a)); }
 
