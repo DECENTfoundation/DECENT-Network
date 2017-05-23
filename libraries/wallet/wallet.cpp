@@ -2193,7 +2193,7 @@ public:
             decent::encrypt::el_gamal_encrypt( p ,s->pubKey ,cp );
             submit_op.key_parts.push_back(cp);
          }
-         submit_op.author = aget_account( author );
+         submit_op.author = get_account_id( author );
          submit_content_utility(submit_op, price_amounts, price_asset_obj);
          submit_op.seeders = seeders;
          submit_op.quorum = quorum;

@@ -62,8 +62,7 @@ namespace graphene { namespace chain {
    void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_right_operation& o )
    {try{
          const auto& from_acc = db().get<account_object>(o.from);
-         FC_ASSERT( from_acc.rights_to_publish.is_publishing_manager
-                    || o.from == account_id_type(15), "Account does not have permission to give publishing rights" );
+         FC_ASSERT( from_acc.rights_to_publish.is_publishing_manager, "Account does not have permission to give publishing rights" );
       }FC_CAPTURE_AND_RETHROW( (o) ) }
 
    void_result set_publishing_right_evaluator::do_apply( const set_publishing_right_operation& o )
@@ -107,8 +106,7 @@ namespace graphene { namespace chain {
    void_result content_submit_evaluator::do_evaluate(const content_submit_operation& o )
    {try{
       const account_object& author_account = db().get<account_object>(o.author);
-      FC_ASSERT( !author_account.rights_to_publish.publishing_rights_received.empty()
-                 || author_account.id == account_id_type(15) , "Author does not have permission to publish a content" );
+      FC_ASSERT( !author_account.rights_to_publish.publishing_rights_received.empty(), "Author does not have permission to publish a content" );
 
       FC_ASSERT( o.seeders.size() > 0 );
       FC_ASSERT( o.seeders.size() == o.key_parts.size() );
