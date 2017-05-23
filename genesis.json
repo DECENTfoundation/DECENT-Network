@@ -264,12 +264,162 @@
   "initial_assets": [{
      "symbol": "USD",
      "issuer_name": "decent",
-     "description": "USD",
+     "description": "US dollar",
      "precision": 4
     },{
      "symbol": "EUR",
      "issuer_name": "decent",
-     "description": "EUR",
+     "description": "Euro",
+     "precision": 4
+    },{
+     "symbol": "JPY",
+     "issuer_name": "decent",
+     "description": "Japanese yen",
+     "precision": 4
+    },{
+     "symbol": "BGN",
+     "issuer_name": "decent",
+     "description": "Bulgarian lev",
+     "precision": 4
+    },{
+     "symbol": "CZK",
+     "issuer_name": "decent",
+     "description": "Czech koruna",
+     "precision": 4
+    },{
+     "symbol": "DKK",
+     "issuer_name": "decent",
+     "description": "Danish krone",
+     "precision": 4
+    },{
+     "symbol": "GBP",
+     "issuer_name": "decent",
+     "description": "Pound sterling",
+     "precision": 4
+    },{
+     "symbol": "HUF",
+     "issuer_name": "decent",
+     "description": "Hungarian forint",
+     "precision": 4
+    },{
+     "symbol": "PLN",
+     "issuer_name": "decent",
+     "description": "Polish zloty",
+     "precision": 4
+    },{
+     "symbol": "RON",
+     "issuer_name": "decent",
+     "description": "Romanian leu",
+     "precision": 4
+    },{
+     "symbol": "SEK",
+     "issuer_name": "decent",
+     "description": "Swedish krona",
+     "precision": 4
+    },{
+     "symbol": "CHF",
+     "issuer_name": "decent",
+     "description": "Swiss franc",
+     "precision": 4
+    },{
+     "symbol": "NOK",
+     "issuer_name": "decent",
+     "description": "Norwegian krone",
+     "precision": 4
+    },{
+     "symbol": "HRK",
+     "issuer_name": "decent",
+     "description": "Croatian kuna",
+     "precision": 4
+    },{
+     "symbol": "RUB",
+     "issuer_name": "decent",
+     "description": "Russian rouble",
+     "precision": 4
+    },{
+     "symbol": "TRY",
+     "issuer_name": "decent",
+     "description": "Turkish lira",
+     "precision": 4
+    },{
+     "symbol": "AUD",
+     "issuer_name": "decent",
+     "description": "Australian dollar",
+     "precision": 4
+    },{
+     "symbol": "BRL",
+     "issuer_name": "decent",
+     "description": "Brazilian real",
+     "precision": 4
+    },{
+     "symbol": "CAD",
+     "issuer_name": "decent",
+     "description": "Canadian dollar",
+     "precision": 4
+    },{
+     "symbol": "CNY",
+     "issuer_name": "decent",
+     "description": "Chinese yuan renminbi",
+     "precision": 4
+    },{
+     "symbol": "HKD",
+     "issuer_name": "decent",
+     "description": "Hong Kong dollar",
+     "precision": 4
+    },{
+     "symbol": "IDR",
+     "issuer_name": "decent",
+     "description": "Indonesian rupiah",
+     "precision": 4
+    },{
+     "symbol": "ILS",
+     "issuer_name": "decent",
+     "description": "Israeli shekel",
+     "precision": 4
+    },{
+     "symbol": "INR",
+     "issuer_name": "decent",
+     "description": "Indian rupee",
+     "precision": 4
+    },{
+     "symbol": "KRW",
+     "issuer_name": "decent",
+     "description": "South Korean won",
+     "precision": 4
+    },{
+     "symbol": "MXN",
+     "issuer_name": "decent",
+     "description": "Mexican peso",
+     "precision": 4
+    },{
+     "symbol": "MYR",
+     "issuer_name": "decent",
+     "description": "Malaysian ringgit",
+     "precision": 4
+    },{
+     "symbol": "NZD",
+     "issuer_name": "decent",
+     "description": "New Zealand dollar",
+     "precision": 4
+    },{
+     "symbol": "PHP",
+     "issuer_name": "decent",
+     "description": "Philippine peso",
+     "precision": 4
+    },{
+     "symbol": "SGD",
+     "issuer_name": "decent",
+     "description": "Singapore dollar",
+     "precision": 4
+    },{
+     "symbol": "THB",
+     "issuer_name": "decent",
+     "description": "Thai baht",
+     "precision": 4
+    },{
+     "symbol": "ZAR",
+     "issuer_name": "decent",
+     "description": "South African rand",
      "precision": 4
     }
   ],
