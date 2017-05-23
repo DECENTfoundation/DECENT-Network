@@ -57,6 +57,7 @@
 #include <fc/log/logger_config.hpp>
 
 #include <boost/range/adaptor/reversed.hpp>
+#include <decent/package/package_config.hpp>
 
 namespace graphene { namespace app {
 using net::item_hash_t;
@@ -142,6 +143,13 @@ namespace detail {
                _p2p_network->add_node(endpoint);
                _p2p_network->connect_to_endpoint(endpoint);
             }
+         }
+
+         if( _options->count("ipfs-api") ){
+            std::string api_string = _options->at("ipfs-api").as<std::string>();
+            fc::ip::endpoint api = fc::ip::endpoint::from_string( api_string );
+            fc::string api_host = api.get_address();
+            decent::package::PackageManagerConfigurator::instance().set_ipfs_endpoint(api_host, api.port());
          }
 
          if( _options->count("p2p-endpoint") )
@@ -930,6 +938,7 @@ void application::set_program_options(boost::program_options::options_descriptio
          ("genesis-json", bpo::value<boost::filesystem::path>(), "File to read Genesis State from")
          ("dbg-init-key", bpo::value<string>(), "Block signing key to use for init witnesses, overrides genesis file")
          ("api-access", bpo::value<boost::filesystem::path>(), "JSON file specifying API permissions")
+         ("ipfs-api", bpo::value<string>(), "IPFS control API")
          ;
    command_line_options.add(configuration_file_options);
    command_line_options.add_options()

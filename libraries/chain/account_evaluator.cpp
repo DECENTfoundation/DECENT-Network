@@ -106,16 +106,11 @@ object_id_type account_create_evaluator::do_apply( const account_create_operatio
 { try {
 
    database& d = db();
-   uint16_t referrer_percent = o.referrer_percent;
+
    const auto& new_acnt_object = db().create<account_object>( [&]( account_object& obj ){
          obj.registrar = o.registrar;
-         obj.referrer = o.referrer;
-         obj.lifetime_referrer = o.referrer(db()).lifetime_referrer;
 
          auto& params = db().get_global_properties().parameters;
-         obj.network_fee_percentage = params.network_percent_of_fee;
-         obj.lifetime_referrer_fee_percentage = params.lifetime_referrer_percent_of_fee;
-         obj.referrer_rewards_percentage = referrer_percent;
 
          obj.name             = o.name;
          obj.owner            = o.owner;

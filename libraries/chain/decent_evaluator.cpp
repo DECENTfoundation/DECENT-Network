@@ -297,15 +297,32 @@ namespace graphene { namespace chain {
       const auto& content = idx.find( o.URI );
       FC_ASSERT( content!= idx.end() );
       FC_ASSERT( o.price <= db().get_balance( o.consumer, o.price.asset_id ) );
+      FC_ASSERT( content->expiration > db().head_block_time() );
+      {
+         auto &range = db().get_index_type<subscription_index>().indices().get<by_from_to>();
+         const auto &subscription = range.find(boost::make_tuple(o.consumer, content->author));
+
+         /// Check whether subscription exists. If so, consumer doesn't pay for content
+         if (subscription != range.end() && subscription->expiration > db().head_block_time() )
+            return void_result();
+      }
 #ifdef PRICE_REGIONS
       optional<asset> price = content->price.GetPrice(o.region_code_from);
 
-      auto &range = db().get_index_type<subscription_index>().indices().get<by_from_to>();
-      const auto &subscription = range.find(boost::make_tuple(o.consumer, content->author));
+      FC_ASSERT( price.valid() );
 
-      /// Check whether subscription exists. If so, consumer doesn't pay for content
-      if (subscription == range.end() || (subscription != range.end() && subscription->expiration < db().head_block_time()))
-         FC_ASSERT( price.valid() && o.price >= *price && o.price.asset_id == price->asset_id );
+      auto ao = db().get( price->asset_id );
+      FC_ASSERT( price->asset_id == asset_id_type(0) || ao.is_monitored_asset() );
+
+      //if the price is in fiat, calculate price in DCT with current exchange rate...
+      if( ao.is_monitored_asset() ){
+         auto rate = ao.monitored_asset_opts->current_feed.core_exchange_rate;
+         FC_ASSERT(!rate.is_null(), "No price feed for this asset");
+         asset dct_price = *price * rate;
+         FC_ASSERT( o.price >= dct_price );
+      }else{
+         FC_ASSERT( o.price >= *price );
+      }
 
 #else
       optional<asset> price = content->GetPrice(string());
@@ -313,9 +330,6 @@ namespace graphene { namespace chain {
       if (subscription == range.end() || (subscription != range.end() && subscription->expiration < db().head_block_time()))
          FC_ASSERT(o.price >= content->price && o.price.asset_id == content->price.asset_id);
 #endif
-
-      FC_ASSERT( content->expiration > db().head_block_time() );
-
    }FC_CAPTURE_AND_RETHROW( (o) ) }
 
    void_result request_to_buy_evaluator::do_apply(const request_to_buy_operation& o )

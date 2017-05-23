@@ -5,7 +5,7 @@
 #include <graphene/db/object.hpp>
 #include <graphene/db/generic_index.hpp>
 #include <graphene/chain/protocol/types.hpp>
-#include <graphene/package/package.hpp>
+#include <decent/package/package.hpp>
 
 namespace decent { namespace seeding {
 

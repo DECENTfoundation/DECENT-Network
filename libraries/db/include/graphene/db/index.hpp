@@ -223,7 +223,7 @@ namespace graphene { namespace db {
          }
 
          virtual void open( const path& db )override
-         { 
+         { try{
             if( !fc::exists( db ) ) return;
             fc::file_mapping fm( db.generic_string().c_str(), fc::read_only );
             fc::mapped_region mr( fm, fc::read_only, 0, fc::file_size(db) );
@@ -241,7 +241,7 @@ namespace graphene { namespace db {
                   load( tmp );
                }
             } catch ( const fc::exception&  ){}
-         }
+         }FC_CAPTURE_AND_RETHROW((db))}
 
          virtual void save( const path& db ) override 
          {
@@ -249,8 +249,8 @@ namespace graphene { namespace db {
                                std::ofstream::binary | std::ofstream::out | std::ofstream::trunc );
             FC_ASSERT( out );
             auto ver  = get_object_version();
-            //fc::raw::pack( out, _next_id );
-            //fc::raw::pack( out, ver );
+            fc::raw::pack( out, _next_id );
+            fc::raw::pack( out, ver );
             this->inspect_all_objects( [&]( const object& o ) {
                 auto vec = fc::raw::pack( static_cast<const object_type&>(o) );
                 auto packed_vec = fc::raw::pack( vec );

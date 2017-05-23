@@ -96,12 +96,6 @@ namespace graphene { namespace chain {
       /// This account pays the fee. Must be a lifetime member.
       account_id_type registrar;
 
-      /// This account receives a portion of the fee split between registrar and referrer. Must be a member.
-      account_id_type referrer;
-      /// Of the fee split between registrar and referrer, this percentage goes to the referrer. The rest goes to the
-      /// registrar.
-      uint16_t        referrer_percent = 0;
-
       string          name;
       authority       owner;
       authority       active;
@@ -205,9 +199,7 @@ FC_REFLECT(graphene::chain::publishing_rights, (is_publishing_manager)(publishin
 
 FC_REFLECT(graphene::chain::account_create_operation::ext, (null_ext)(buyback_options))
 FC_REFLECT( graphene::chain::account_create_operation,
-            (fee)(registrar)
-            (referrer)(referrer_percent)
-            (name)(owner)(active)(options)(extensions)
+            (fee)(registrar)(name)(owner)(active)(options)(extensions)
           )
 
 FC_REFLECT(graphene::chain::account_update_operation::ext, (null_ext))

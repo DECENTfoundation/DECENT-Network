@@ -795,8 +795,6 @@ namespace graphene { namespace wallet {
                                              public_key_type owner,
                                              public_key_type active,
                                              string  registrar_account,
-                                             string  referrer_account,
-                                             uint32_t referrer_percent,
                                              bool broadcast = false);
 
          /**
@@ -987,6 +985,32 @@ namespace graphene { namespace wallet {
          signed_transaction cancel_order(object_id_type order_id, bool broadcast = false);
 
          /**
+          * @brief Creates a new user-issued
+          *
+          * Many options can be changed later using \c update_asset()
+          *
+          * Right now this function is difficult to use because you must provide raw JSON data
+          * structures for the options objects, and those include prices and asset ids.
+          *
+          * @param issuer the name or id of the account who will pay the fee and become the
+          *               issuer of the new asset.  This can be updated later
+          * @param symbol the ticker symbol of the new asset
+          * @param precision the number of digits of precision to the right of the decimal point,
+          *                  must be less than or equal to 12
+          * @param description asset description
+          * @param max_supply maximum amount of coins to be issued
+          * @param broadcast true to broadcast the transaction on the network
+          * @returns the signed transaction creating a new asset
+          * @ingroup WalletCLI
+          */
+         signed_transaction create_asset(string issuer,
+                                         string symbol,
+                                         uint8_t precision,
+                                         string description,
+                                         uint64_t max_supply,
+                                         bool broadcast = false);
+
+         /**
           * @brief Creates a new user-issued or market-issued asset.
           *
           * Many options can be changed later using \c update_asset()
@@ -999,19 +1023,17 @@ namespace graphene { namespace wallet {
           * @param symbol the ticker symbol of the new asset
           * @param precision the number of digits of precision to the right of the decimal point,
           *                  must be less than or equal to 12
-          * @param common asset options required for all new assets.
-          *               Note that core_exchange_rate technically needs to store the asset ID of
-          *               this new asset. Since this ID is not known at the time this operation is
-          *               created, create this price as though the new asset has instance ID 1, and
-          *               the chain will overwrite it with the new asset's ID.
+          * @param description asset description
+          * @param options MIA options
           * @param broadcast true to broadcast the transaction on the network
           * @returns the signed transaction creating a new asset
           * @ingroup WalletCLI
           */
-         signed_transaction create_asset(string issuer,
+         signed_transaction create_marked_issued_asset(string issuer,
                                          string symbol,
                                          uint8_t precision,
-                                         asset_options common,
+                                         string description,
+                                         monitored_asset_options options,
                                          bool broadcast = false);
 
          /**
@@ -1044,15 +1066,16 @@ namespace graphene { namespace wallet {
           * @param symbol the name or id of the asset to update
           * @param new_issuer if changing the asset's issuer, the name or id of the new issuer.
           *                   null if you wish to remain the issuer of the asset
-          * @param new_options the new asset_options object, which will entirely replace the existing
-          *                    options.
+          * @param description new asset description, replacing current one
+          * @param max_supply new supply limit, replacing current one
           * @param broadcast true to broadcast the transaction on the network
           * @returns the signed transaction updating the asset
           * @ingroup WalletCLI
           */
          signed_transaction update_asset(string symbol,
                                          optional<string> new_issuer,
-                                         asset_options new_options,
+                                         string description,
+                                         uint64_t max_supply,
                                          bool broadcast = false);
 
          /**
@@ -1932,7 +1955,7 @@ namespace graphene { namespace wallet {
           * @return nothing
           * @ingroup WalletCLI
           */
-         void download_package(const std::string& url, const string& hash) const;
+         void download_package(const std::string& url) const;
 
          /**
           * @brief Start uploading package
@@ -2071,11 +2094,12 @@ FC_API( graphene::wallet::wallet_api,
            (transfer)
            (transfer2)
            (get_transaction_id)
-           //(create_asset)
-           //(update_asset)
+           (create_asset)
+           (create_marked_issued_asset)
+           (update_asset)
            (update_monitored_asset)
            (publish_asset_feed)
-           //(issue_asset)
+           (issue_asset)
            (get_asset)
            (get_monitored_asset_data)
            (get_witness)
