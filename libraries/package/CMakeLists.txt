@@ -1,5 +1,5 @@
 
-file( GLOB HEADERS "*.hpp" "include/graphene/package/*.hpp" )
+file( GLOB HEADERS "*.hpp" "include/package/package/*.hpp" )
 
 add_library( package_manager
              package.cpp

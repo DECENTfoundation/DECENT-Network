@@ -4,7 +4,7 @@
 #include "local.hpp"
 
 #include <decent/encrypt/encryptionutils.hpp>
-#include <graphene/package/package.hpp>
+#include <decent/package/package.hpp>
 
 #include <fc/log/logger.hpp>
 #include <fc/thread/scoped_lock.hpp>

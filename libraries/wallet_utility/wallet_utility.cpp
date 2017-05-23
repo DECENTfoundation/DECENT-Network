@@ -5,7 +5,7 @@
 #include <fc/filesystem.hpp>
 #include <graphene/wallet/wallet.hpp>
 #include <fc/rpc/api_connection.hpp>
-#include <graphene/package/package.hpp>
+#include <decent/package/package.hpp>
 #include <iostream>
 
 namespace decent

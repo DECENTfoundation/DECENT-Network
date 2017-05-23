@@ -76,7 +76,7 @@
 #include <graphene/wallet/reflect_util.hpp>
 #include <graphene/debug_witness/debug_api.hpp>
 
-#include <graphene/package/package.hpp>
+#include <decent/package/package.hpp>
 
 #include <fc/smart_ref_impl.hpp>
 #include "json.hpp"
