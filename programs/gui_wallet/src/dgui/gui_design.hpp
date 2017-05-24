@@ -87,7 +87,11 @@ const char* const d_cancel_button          = "border: 1px solid rgb(143,143,143)
 const char* const d_text_box               = "border: 1px solid rgb(143,143,143);padding-left:25px;";
 
 //upload
+#ifdef WINDOWS_HIGH_DPI
+const char* const d_desc                = "border: 1 solid lightGray; padding 5px; font-size: 8pt;";
+#else
 const char* const d_desc                = "border: 1 solid lightGray; padding 5px;";
+#endif
 const char* const d_label_v1            = "QLabel { background-color : white; color: Gray}";
 const char* const d_label_v2            = "border:1px solid lightGray; color: Gray";
 const char* const d_upload_button_true  = "border: 0px ; background-color :rgb(27,176,104); color : white;";

@@ -209,9 +209,11 @@ namespace decent { namespace package {
         uint64_t                      _size;
         uint64_t                      _downloaded_size;
 
-
-        std::shared_ptr<boost::interprocess::file_lock> _file_lock;
-        std::shared_ptr<boost::interprocess::scoped_lock<boost::interprocess::file_lock>> _file_lock_guard;
+        // File lock is temporary commented because in current directory locking implementation it does nothing
+        // and I guess we dont need it.
+        // Does exist some reason to use locking on packages ?
+        //std::shared_ptr<boost::interprocess::file_lock> _file_lock;
+        //std::shared_ptr<boost::interprocess::scoped_lock<boost::interprocess::file_lock>> _file_lock_guard;
 
         mutable std::recursive_mutex  _event_mutex;
         event_listener_handle_list_t  _event_listeners;

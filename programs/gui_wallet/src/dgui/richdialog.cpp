@@ -301,6 +301,7 @@ PasswordDialog::PasswordDialog(QWidget* pParent, eType enType)
    QLabel* pLabel = new QLabel(this);
    pLabel->setText(tr("The password must be limited to 50 characters"));
    DecentButton* pButton = new DecentButton(this);
+
    pButton->setFixedSize(140, 40);
 
    m_pError->hide();
@@ -332,8 +333,11 @@ PasswordDialog::PasswordDialog(QWidget* pParent, eType enType)
    pMainLayout->addWidget(m_pError, iRowIndex++, 0, Qt::AlignCenter | Qt::AlignVCenter);
    pMainLayout->addWidget(pEditPassword, iRowIndex++, 0, Qt::AlignCenter | Qt::AlignVCenter);
    pMainLayout->addWidget(pButton, iRowIndex++, 0, Qt::AlignCenter | Qt::AlignVCenter);
-
+#ifndef WINDOWS_HIGH_DPI
    pMainLayout->setSizeConstraint(QLayout::SetFixedSize);
+#else
+   setFixedWidth(600);
+#endif
    pMainLayout->setSpacing(20);
    pMainLayout->setContentsMargins(20, 20, 20, 20);
 

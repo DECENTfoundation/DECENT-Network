@@ -39,14 +39,24 @@ void ShowMessageBox(QString const& strTitle,
    pOkButton->setText(QObject::tr("OK"));
    pOkButton->setFixedSize(140, 40);
    pOkButton->setFocus();
+
    QObject::connect(pOkButton, SIGNAL(clicked()), pDialog , SLOT(close()));
    
    main->addWidget(pText, 0, Qt::AlignCenter);
    main->addWidget(pOkButton, 0, Qt::AlignCenter);
    
    pDialog->setLayout(main);
+#ifdef WINDOWS_HIGH_DPI
+   pDialog->setFixedSize(450, 120);
+#else
    pDialog->setFixedSize(300, 100);
-   
+#endif
+
+#ifdef _MSC_VER
+   int height = pDialog->style()->pixelMetric(QStyle::PM_TitleBarHeight);
+   pDialog->setWindowIcon(height > 32 ? QIcon(":/icon/images/windows_decent_icon_32x32.png")
+      : QIcon(":/icon/images/windows_decent_icon_16x16.png"));
+#endif
    pDialog->open();
 }
    

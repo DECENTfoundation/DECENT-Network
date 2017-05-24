@@ -160,12 +160,21 @@ void Mainwindow_gui_wallet::SetSplash()
    QProgressBar* pConnectingProgress = new QProgressBar(pSplashScreen);
    pConnectingProgress->setStyleSheet("QProgressBar"
                                       "{"
+#ifdef WINDOWS_HIGH_DPI
+                                          "border-radius: 10px;"
+                                          "border: 1px;"
+                                          "height: 20px;"
+                                          "max-height: 20px;"
+                                          "width: 230px;"
+                                          "max-width: 230px;"
+#else
                                          "border-radius: 5px;"
                                           "border: 1px;"
                                           "height: 10px;"
                                           "max-height: 10px;"
                                           "width: 176px;"
                                           "max-width: 176px;"
+#endif
                                           "background: rgb(224, 229, 235);"
                                           "qproperty-textVisible: false;"
                                       "}"
@@ -184,7 +193,11 @@ void Mainwindow_gui_wallet::SetSplash()
    QString labelStyle =
    "QLabel"
    "{"
+#ifdef WINDOWS_HIGH_DPI
+      "font-size: 10pt;"
+#else
       "font-size: 10px;"
+#endif
       "color: rgb(127, 138, 158);"
    "}";
    pConnectingLabel->setStyleSheet(labelStyle);
