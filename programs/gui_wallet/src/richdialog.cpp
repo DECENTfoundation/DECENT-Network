@@ -902,7 +902,12 @@ PasswordDialog::PasswordDialog(QWidget* pParent, eType enType)
    pMainLayout->addWidget(pEditPassword, iRowIndex++, 0, Qt::AlignCenter | Qt::AlignVCenter);
    pMainLayout->addWidget(pButton, iRowIndex++, 0, Qt::AlignCenter | Qt::AlignVCenter);
 
+#ifndef WINDOWS_HIGH_DPI
    pMainLayout->setSizeConstraint(QLayout::SetFixedSize);
+#else
+   setFixedWidth(600);
+#endif
+
    pMainLayout->setSpacing(20);
    pMainLayout->setContentsMargins(20, 20, 20, 20);
 
