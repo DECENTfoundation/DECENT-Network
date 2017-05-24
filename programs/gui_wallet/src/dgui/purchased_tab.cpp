@@ -314,6 +314,12 @@ void PurchasedTab::slot_ExtractPackage(int iIndex) {
    pFileDialog->setAttribute(Qt::WA_DeleteOnClose);
    pFileDialog->setLabelText(QFileDialog::Accept, tr("Extract"));
 
+#ifdef _MSC_VER
+   int height = pFileDialog->style()->pixelMetric(QStyle::PM_TitleBarHeight);
+   pFileDialog->setWindowIcon(height > 32 ? QIcon(":/icon/images/windows_decent_icon_32x32.png")
+      : QIcon(":/icon/images/windows_decent_icon_16x16.png"));
+#endif
+
    pFileDialog->open();
 }
 

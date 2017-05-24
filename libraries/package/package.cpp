@@ -806,21 +806,21 @@ namespace decent { namespace package {
 
         detail::touch(get_lock_file_path());
 
-        _file_lock_guard.reset();
-        _file_lock.reset(new file_lock(get_lock_file_path().string().c_str()));
+        //_file_lock_guard.reset();
+        //_file_lock.reset(new file_lock(get_lock_file_path().string().c_str()));
 
-        if (!_file_lock->try_lock()) {
-            _file_lock.reset();
-            FC_THROW("Unable to lock package directory ${path} (lock file ${file})", ("path", get_package_dir().string()) ("file", get_lock_file_path().string()) );
-        }
+        //if (!_file_lock->try_lock()) {
+          //  _file_lock.reset();
+          //  FC_THROW("Unable to lock package directory ${path} (lock file ${file})", ("path", get_package_dir().string()) ("file", get_lock_file_path().string()) );
+        //}
 
-        _file_lock_guard.reset(new scoped_lock<file_lock>(*_file_lock, accept_ownership_type()));
+        //_file_lock_guard.reset(new scoped_lock<file_lock>(*_file_lock, accept_ownership_type()));
     }
 
     void PackageInfo::unlock_dir() {
         std::lock_guard<std::recursive_mutex> guard(_mutex);
-        _file_lock_guard.reset();
-        _file_lock.reset();
+        //_file_lock_guard.reset();
+        //_file_lock.reset();
     }
 
 /*

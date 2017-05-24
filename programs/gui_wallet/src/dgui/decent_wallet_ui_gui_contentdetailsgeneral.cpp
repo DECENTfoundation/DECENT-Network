@@ -52,6 +52,12 @@ void ContentDetailsGeneral::LabelPushCallbackGUI()
    reply->setWindowFlags(Qt::WindowTitleHint);
    reply->QDialog::setWindowTitle(tr("DECENT-Blockchain Content Distribution"));
    reply->setText("          " + tr("Are you sure you want to buy this content?"));
+#ifdef _MSC_VER
+   int height = reply->style()->pixelMetric(QStyle::PM_TitleBarHeight);
+   reply->setWindowIcon(height > 32 ? QIcon(":/icon/images/windows_decent_icon_32x32.png")
+      : QIcon(":/icon/images/windows_decent_icon_16x16.png"));
+   reply->setFixedWidth(300);
+#endif
    QPushButton* pButtonCancel = reply->addButton(tr("Cancel"), QMessageBox::YesRole);
    QPushButton* pButtonOk = reply->addButton(tr("Get it"), QMessageBox::NoRole);
    pButtonOk->setStyleSheet(d_pButtonOk);

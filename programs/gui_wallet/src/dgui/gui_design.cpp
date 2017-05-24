@@ -15,12 +15,20 @@ QFont TableHeaderFont()
 
 QFont AccountBalanceFont()
 {
+#ifdef WINDOWS_HIGH_DPI
+   return QFont("Myriad Pro Regular", 8, QFont::Bold);
+#else
    return QFont("Myriad Pro Regular", 12, QFont::Bold);
+#endif
 }
 
 QFont DescriptionDetailsFont()
 {
+#ifdef WINDOWS_HIGH_DPI
+   return QFont("Myriad Pro Regular", 8);
+#else
    return QFont("Myriad Pro Regular", 13);
+#endif
 }
 
 QFont PopupButtonRegularFont()
