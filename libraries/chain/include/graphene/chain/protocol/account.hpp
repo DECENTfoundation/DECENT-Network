@@ -38,7 +38,7 @@ namespace graphene { namespace chain {
       /// True if account can give or remove right to publish a content
       bool is_publishing_manager;
       /// Rights to publish a content received from publishing managers.
-      /// An account can publish a content if has at least one right, or has publishing manager status.
+      /// An account can publish a content if has at least one right from publishing managers.
       vector<account_id_type> publishing_rights_received;
       /// List of accounts that get publishing right from this account. This list is empty if account does not have publishing manager status.
       vector<account_id_type> publishing_rights_forwarded;

@@ -578,7 +578,7 @@ namespace graphene { namespace chain {
       auto last_proof = content->last_proof.find( o.seeder );
       if( last_proof == content->last_proof.end() ) //initial PoR
       {
-         //the inital proof, no payments yet
+         //the initial proof, no payments yet
          db().modify<content_object>(*content, [&](content_object& co){
               co.last_proof.emplace(std::make_pair(o.seeder, db().head_block_time()));
          });
