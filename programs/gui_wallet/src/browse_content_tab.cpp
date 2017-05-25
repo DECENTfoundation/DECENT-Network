@@ -38,7 +38,7 @@ BrowseContentTab::BrowseContentTab(QWidget* pParent)
       {tr("Author"), 15, "author"},
       {tr("Rating"), 5, "rating"},
       {tr("Size"), 5, "size"},
-      {tr("Price"), 5, "price"},
+      {tr("Price"), 6, "price"},
       {tr("Uploaded"), 7, "created"},
       {tr("Expiration"), 7, "expiration"},
       { " ",
@@ -116,7 +116,8 @@ void BrowseContentTab::timeToUpdate(const std::string& result) {
       }
       
       uint64_t iPrice = json_to_int64(json_item["price"]["amount"]);
-      cont.price = Globals::instance().asset(iPrice);
+      std::string iSymbolId = json_item["price"]["asset_id"];
+      cont.price = Globals::instance().asset(iPrice, iSymbolId);
 
       cont.AVG_rating = json_item["AVG_rating"].get<double>() / 1000;
    }
