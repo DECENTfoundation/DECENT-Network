@@ -1473,7 +1473,6 @@ namespace graphene { namespace wallet {
           * @see create_package()
           * @see upload_package()
           * @see submit_content()
-          * @param author The author of the cont
           * @param author The author of the content
           * @param content_dir Path to the directory containing all content that should be packed
           * @param samples_dir Path to the directory containing samples of content
@@ -1497,6 +1496,19 @@ namespace graphene { namespace wallet {
                                                fc::time_point_sec const& expiration,
                                                string const& synopsis,
                                                bool broadcast = false);
+
+         /**
+          * @brief This function can be used to cancel submitted content. This content is immediately not available to purchase.
+          * Seeders keep seeding this content in next 24 hours.
+          * @param author The author of the content
+          * @param URI The URI of the content
+          * @param broadcast True to broadcast the transaction on the network
+          * @ingroup WalletCLI
+          * @return signed transaction
+          */
+         signed_transaction content_cancellation(string author,
+                                                 string URI,
+                                                 bool broadcast);
 
          /**
           * @brief Downloads encrypted content specified by provided URI.
@@ -2080,6 +2092,7 @@ FC_API( graphene::wallet::wallet_api,
            (get_download_status)
            (submit_content)
            (submit_content_new)
+           (content_cancellation)
            (request_to_buy)
            (leave_rating_and_comment)
            (restore_encryption_key)

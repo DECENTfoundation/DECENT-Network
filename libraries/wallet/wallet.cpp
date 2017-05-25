@@ -2166,6 +2166,26 @@ public:
       FC_CAPTURE_AND_RETHROW( (author)(content_dir)(samples_dir)(protocol)(price_asset_symbol)(price_amounts)(seeders)(expiration)(synopsis)(broadcast) )
    }
 
+signed_transaction content_cancellation(string author,
+                                        string URI,
+                                        bool broadcast)
+{
+   try
+   {
+      FC_ASSERT(!is_locked());
+
+      content_cancellation_operation cc_op;
+      cc_op.author = get_account_id( author );
+      cc_op.URI = URI;
+
+      signed_transaction tx;
+      tx.operations.push_back( cc_op );
+      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
+      tx.validate();
+
+      return sign_transaction( tx, broadcast );
+   } FC_CAPTURE_AND_RETHROW( (author)(URI)(broadcast) )
+}
 
    optional<content_download_status> get_download_status(string consumer, string URI) const {
       try {
@@ -3716,6 +3736,13 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
                                   bool broadcast)
    {
       return my->submit_content_new(author, content_dir, samples_dir, protocol, price_asset_symbol, price_amounts, seeders, expiration, synopsis, broadcast);
+   }
+
+   signed_transaction wallet_api::content_cancellation(string author,
+                                                       string URI,
+                                                       bool broadcast)
+   {
+      return my->content_cancellation(author, URI, broadcast);
    }
 
    void

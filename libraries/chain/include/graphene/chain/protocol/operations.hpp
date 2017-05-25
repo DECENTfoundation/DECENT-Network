@@ -82,6 +82,7 @@ namespace graphene { namespace chain {
             subscribe_by_author_operation,
             automatic_renewal_of_subscription_operation,
             report_stats_operation,
+            content_cancellation_operation,
             disallow_automatic_renewal_of_subscription_operation,  // VIRTUAL
             return_escrow_submission_operation,                    // VIRTUAL
             return_escrow_buying_operation,                        // VIRTUAL

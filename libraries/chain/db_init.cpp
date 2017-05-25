@@ -136,6 +136,7 @@ void database::initialize_evaluators()
    register_evaluator<withdraw_permission_update_evaluator>();
    register_evaluator<withdraw_permission_delete_evaluator>();
    register_evaluator<content_submit_evaluator>();
+   register_evaluator<content_cancellation_evaluator>();
    register_evaluator<request_to_buy_evaluator>();
    register_evaluator<leave_rating_evaluator>();
    register_evaluator<ready_to_publish_evaluator>();

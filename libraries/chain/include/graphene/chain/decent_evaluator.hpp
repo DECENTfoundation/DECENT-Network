@@ -17,7 +17,16 @@ namespace graphene { namespace chain {
       void_result do_evaluate( const content_submit_operation& o );
       void_result do_apply( const content_submit_operation& o );
    };
-   
+
+   class content_cancellation_evaluator : public evaluator<content_cancellation_evaluator>
+   {
+   public:
+      typedef content_cancellation_operation operation_type;
+
+      void_result do_evaluate( const content_cancellation_operation& o );
+      void_result do_apply( const content_cancellation_operation& o );
+   };
+
    class request_to_buy_evaluator : public evaluator<request_to_buy_evaluator>
    {
    public:
