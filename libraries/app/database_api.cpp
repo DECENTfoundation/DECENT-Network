@@ -1878,7 +1878,7 @@ namespace
             search_buying_template<false, by_created>(_db, consumer, term, id, count, result);
          else if(order == "+purchased")
             search_buying_template<true, by_purchased>(_db, consumer, term, id, count, result);
-         else //if(order == "-purchased") // Default sorted by descending purchased time
+         else //if(order == "-purchased")
             search_buying_template<false, by_purchased>(_db, consumer, term, id, count, result);
          return result;
       }
@@ -2333,7 +2333,7 @@ vector<content_summary> database_api_impl::list_content( const string& URI_begin
          search_content_template<false, by_price>(_db, search_term, count, user, region_code, id, type, result);
       else if (order == "-expiration")
          search_content_template<false, by_expiration>(_db, search_term, count, user, region_code, id, type, result);
-      else// if (order == "-created") // Default sorted by descending created time
+      else// if (order == "-created")
          search_content_template<false, by_created>(_db, search_term, count, user, region_code, id, type, result);
       
       return result;
