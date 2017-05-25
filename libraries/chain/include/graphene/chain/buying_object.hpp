@@ -24,12 +24,12 @@ using decent::encrypt::DInteger;
 
       account_id_type consumer;
       string URI;
-      uint64_t size = uint64_t(-1); // initialized by content.size
-      uint64_t rating = uint64_t(-1);  // this is the user rating
-      uint64_t average_rating = uint64_t(-1);   // initialized by content_object.AVG_rating
-      asset price;  // initialized by request_to_buy_operation.price then reset to 0 for escrow system and inflation calculations
-      asset paid_price; // initialized by request_to_buy_operation.price
-      std::string synopsis;   // initialized by content.synopsis
+      uint64_t size = uint64_t(-1); //< initialized by content.size
+      uint64_t rating = uint64_t(-1);  //< this is the user rating
+      uint64_t average_rating = uint64_t(-1);   //< initialized by content_object.AVG_rating
+      asset price;  //< this is an escrow, initialized by request_to_buy_operation.price then reset to 0 for escrow system and inflation calculations
+      asset paid_price; //< initialized by request_to_buy_operation.price
+      std::string synopsis;   //< initialized by content.synopsis
       vector<account_id_type> seeders_answered;
       vector<decent::encrypt::CiphertextString> key_particles;
       DIntegerString pubKey;
@@ -40,8 +40,8 @@ using decent::encrypt::DInteger;
       // User can't add rating and comment in two time-separated steps. For example, if content is already rated by user, he is not
       // allowed to add comment later. If user wants to add both rating and comment, he has to do it in one step.
       bool rated_or_commented = false;
-      time_point_sec created; // initialized by content.created
-      time_point_sec expiration; // initialized by content.expiration
+      time_point_sec created; //< initialized by content.created
+      time_point_sec expiration; //< initialized by content.expiration
 #ifdef PRICE_REGIONS
       uint32_t region_code_from;
 #endif

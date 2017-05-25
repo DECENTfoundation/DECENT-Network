@@ -592,8 +592,6 @@ namespace graphene { namespace app {
          acnt.account = *account;
          acnt.statistics = account->statistics(_db);
          acnt.registrar_name = account->registrar(_db).name;
-         acnt.referrer_name = account->referrer(_db).name;
-         acnt.lifetime_referrer_name = account->lifetime_referrer(_db).name;
          acnt.votes = lookup_vote_ids( vector<vote_id_type>(account->options.votes.begin(),account->options.votes.end()) );
          
          // Add the account itself, its statistics object, cashback balance, and referral account names
@@ -1607,11 +1605,9 @@ namespace graphene { namespace app {
    {
       get_required_fees_helper(
                                const fee_schedule& _current_fee_schedule,
-                               const price& _core_exchange_rate,
                                uint32_t _max_recursion
                                )
       : current_fee_schedule(_current_fee_schedule),
-      core_exchange_rate(_core_exchange_rate),
       max_recursion(_max_recursion)
       {}
       
@@ -1623,6 +1619,7 @@ namespace graphene { namespace app {
          }
          else
          {
+            price core_exchange_rate( asset(1, asset_id_type()), asset(1, asset_id_type()));
             asset fee = current_fee_schedule.set_fee( op, core_exchange_rate );
             fc::variant result;
             fc::to_variant( fee, result );
@@ -1643,6 +1640,7 @@ namespace graphene { namespace app {
          }
          // we need to do this on the boxed version, which is why we use
          // two mutually recursive functions instead of a visitor
+         price core_exchange_rate( asset(1, asset_id_type()), asset(1, asset_id_type()));
          result.first = current_fee_schedule.set_fee( proposal_create_op, core_exchange_rate );
          fc::variant vresult;
          fc::to_variant( result, vresult );
@@ -1650,7 +1648,6 @@ namespace graphene { namespace app {
       }
       
       const fee_schedule& current_fee_schedule;
-      const price& core_exchange_rate;
       uint32_t max_recursion;
       uint32_t current_recursion = 0;
    };
@@ -1668,7 +1665,6 @@ namespace graphene { namespace app {
       const asset_object& a = id(_db);
       get_required_fees_helper helper(
                                       _db.current_fee_schedule(),
-                                      a.options.core_exchange_rate,
                                       GET_REQUIRED_FEES_MAX_RECURSION );
       for( operation& op : _ops )
       {

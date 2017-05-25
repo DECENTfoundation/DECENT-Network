@@ -85,7 +85,7 @@ namespace graphene { namespace chain {
          static bool is_valid_symbol( const string& symbol );
 
          /// @return true if this is monitored asset; false otherwise.
-         bool is_monitored_asset()const { return options.monitored_asset_opts.valid(); }
+         bool is_monitored_asset()const { return monitored_asset_opts.valid(); }
 
          /// Helper function to get an asset object with the given amount in this asset's type
          asset amount(share_type a)const { return asset(a, id); }
@@ -111,7 +111,15 @@ namespace graphene { namespace chain {
          /// ID of the account which issued this asset.
          account_id_type issuer;
 
-         asset_options options;
+         /// The meaning/purpose of this asset
+         string description;
+
+         /// The maximum supply of this asset which may exist at any given time. This can be as large as
+         /// GRAPHENE_MAX_SHARE_SUPPLY
+         share_type max_supply = GRAPHENE_MAX_SHARE_SUPPLY;
+
+         /// set for monitored assets
+         optional<monitored_asset_options> monitored_asset_opts;
 
 
          /// Current supply, fee pool, and collected fees are stored in a separate object as they change frequently.
@@ -132,7 +140,7 @@ namespace graphene { namespace chain {
           */
          template<class DB>
          share_type reserved( const DB& db )const
-         { return options.max_supply - dynamic_data(db).current_supply; }
+         { return max_supply - dynamic_data(db).current_supply; }
    };
 
    struct by_symbol;
@@ -161,7 +169,9 @@ FC_REFLECT_DERIVED( graphene::chain::asset_object, (graphene::db::object),
                     (symbol)
                     (precision)
                     (issuer)
-                    (options)
+                    (description)
+                    (max_supply)
+                    (monitored_asset_opts)
                     (dynamic_asset_data_id)
                     (buyback_account)
                   )

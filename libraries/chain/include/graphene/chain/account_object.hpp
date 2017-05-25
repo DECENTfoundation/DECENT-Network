@@ -59,10 +59,6 @@ namespace graphene { namespace chain {
           */
          share_type total_core_in_orders;
 
-         /**
-          * Tracks the total fees paid by this account for the purpose of calculating bulk discounts.
-          */
-         share_type lifetime_fees_paid;
 
          /**
           * Tracks the fees paid by this account which have not been disseminated to the various parties that receive
@@ -78,14 +74,11 @@ namespace graphene { namespace chain {
           * available for withdrawal) rather than requiring the normal vesting period.
           */
          share_type pending_vested_fees;
-
-         /// @brief Split up and pay out @ref pending_fees and @ref pending_vested_fees
-         void process_fees(const account_object& a, database& d) const;
-
          /**
           * Core fees are paid into the account_statistics_object by this method
           */
          void pay_fee( share_type core_fee, share_type cashback_vesting_threshold );
+
    };
 
    /**
@@ -126,18 +119,6 @@ namespace graphene { namespace chain {
 
          ///The account that paid the fee to register this account. Receives a percentage of referral rewards.
          account_id_type registrar;
-         /// The account credited as referring this account. Receives a percentage of referral rewards.
-         account_id_type referrer;
-         /// The lifetime member at the top of the referral tree. Receives a percentage of referral rewards.
-         account_id_type lifetime_referrer;
-
-         /// Percentage of fee which should go to network.
-         uint16_t network_fee_percentage = GRAPHENE_DEFAULT_NETWORK_PERCENT_OF_FEE;
-         /// Percentage of fee which should go to lifetime referrer.
-         uint16_t lifetime_referrer_fee_percentage = 0;
-         /// Percentage of referral rewards (leftover fee after paying network and lifetime referrer) which should go
-         /// to referrer. The remainder of referral rewards goes to the registrar.
-         uint16_t referrer_rewards_percentage = 0;
 
          /// The account's name. This name must be unique among all account names on the graph. May not be empty.
          string name;
@@ -153,7 +134,6 @@ namespace graphene { namespace chain {
          /// operations the account may perform.
          authority active;
 
-         typedef account_options  options_type;
          account_options options;
 
          /// The reference implementation records the account's statistics in a separate object. This field contains the
@@ -212,22 +192,6 @@ namespace graphene { namespace chain {
    };
 
 
-   /**
-    *  @brief This secondary index will allow a reverse lookup of all accounts that have been referred by
-    *  a particular account.
-    */
-   class account_referrer_index : public secondary_index
-   {
-      public:
-         virtual void object_inserted( const object& obj ) override;
-         virtual void object_removed( const object& obj ) override;
-         virtual void about_to_modify( const object& before ) override;
-         virtual void object_modified( const object& after  ) override;
-
-         /** maps the referrer to the set of accounts that they have referred */
-         map< account_id_type, set<account_id_type> > referred_by;
-   };
-
    struct by_account_asset;
    struct by_asset_balance;
    /**
@@ -265,7 +229,7 @@ namespace graphene { namespace chain {
     */
    typedef generic_index<account_balance_object, account_balance_object_multi_index_type> account_balance_index;
 
-   struct by_name{};
+   struct by_name;
 
    template <typename TAG, typename _t_object>
    struct key_extractor;
@@ -308,8 +272,7 @@ namespace graphene { namespace chain {
 
 FC_REFLECT_DERIVED( graphene::chain::account_object,
                     (graphene::db::object),
-                    (registrar)(referrer)(lifetime_referrer)
-                    (network_fee_percentage)(lifetime_referrer_fee_percentage)(referrer_rewards_percentage)
+                    (registrar)
                     (name)(owner)(active)(options)(statistics)
                     (cashback_vb)(top_n_control_flags)
                     )
@@ -323,8 +286,5 @@ FC_REFLECT_DERIVED( graphene::chain::account_statistics_object,
                     (owner)
                     (most_recent_op)
                     (total_ops)
-                    (total_core_in_orders)
-                    (lifetime_fees_paid)
-                    (pending_fees)(pending_vested_fees)
                   )
 
