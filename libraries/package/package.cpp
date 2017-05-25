@@ -581,6 +581,13 @@ namespace decent { namespace package {
             lock_dir();
 
             PACKAGE_INFO_CHANGE_DATA_STATE(UNCHECKED);
+            PACKAGE_INFO_CHANGE_MANIPULATION_STATE(CHECKING);
+            auto hash = detail::calculate_hash(get_content_file());
+
+            FC_ASSERT( hash == _hash, "Package is corrupted");
+            //TODO_DECENT - we should also check for coruption in all other files
+
+            PACKAGE_INFO_CHANGE_DATA_STATE(CHECKED);
             PACKAGE_INFO_CHANGE_MANIPULATION_STATE(MS_IDLE);
             PACKAGE_INFO_GENERATE_EVENT(package_restoration_complete, ( ) );
         }
@@ -645,12 +652,19 @@ namespace decent { namespace package {
     void PackageInfo::download(bool block) {
         std::lock_guard<std::recursive_mutex> guard(_task_mutex);
 
+        auto& manager = decent::package::PackageManager::instance();
         if (!_download_task) {
             if( _data_state == CHECKED ) {
-                _download_task = decent::package::PackageManager::instance().get_proto_transfer_engine(
+                _download_task = manager.get_proto_transfer_engine(
                       "local").create_download_task(*this);
-            }else {
-                FC_THROW("package handle was not prepared for download");
+            }else { //TODO_DECENT - this shall never happen!
+                if( !_url.empty() ){
+                    _data_state = DS_UNINITIALIZED;
+                    _transfer_state =TS_IDLE;
+                    _parent_dir = manager.get_packages_path();
+                    _download_task = manager.get_proto_transfer_engine(detail::get_proto(_url)).create_download_task(*this);
+                }else
+                    FC_THROW("package handle was not prepared for download");
             }
         }
 
@@ -882,11 +896,10 @@ namespace decent { namespace package {
     {
         std::lock_guard<std::recursive_mutex> guard(_mutex);
         for (auto& package : _packages) {
-            if (package) {
-                if (package->_hash == hash) {
-                    package->_url = url;
-                    return package;
-                }
+
+            if (package->_hash == hash && package->get_data_state() == decent::package::PackageInfo::CHECKED ) {
+                package->_url = url;
+                return package;
             }
         }
         package_handle_t package(new PackageInfo(*this, url));

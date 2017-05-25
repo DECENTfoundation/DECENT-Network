@@ -299,7 +299,6 @@ namespace wallet_utility
          future_load.wait();
       }
 
-
       auto& impl = *m_pimpl;
       if ( !impl.m_str_asset_symbol.empty() )
       {
