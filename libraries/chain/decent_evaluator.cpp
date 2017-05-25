@@ -478,7 +478,7 @@ namespace graphene { namespace chain {
       FC_ASSERT(db().head_block_num() <= proof.reference_block + 6,"Block reference is too old");
 #ifdef TESTNET_3
       }
-#else
+#endif
       //
 #ifdef TESTNET_3
       FC_ASSERT( content->cd.valid() == o.proof.valid() );
