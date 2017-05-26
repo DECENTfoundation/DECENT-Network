@@ -166,7 +166,7 @@ using decent::encrypt::DInteger;
                   member<buying_object, time_point_sec, &buying_object::created>
             >,
             ordered_non_unique< tag< by_purchased>,
-               member<buying_object, time_point_sec, &buying_object::expiration_or_delivery_time>
+                  member<buying_object, time_point_sec, &buying_object::expiration_or_delivery_time>
             >
          >
    >buying_object_multi_index_type;

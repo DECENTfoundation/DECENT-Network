@@ -129,45 +129,96 @@ void Mainwindow_gui_wallet::SetSplash()
 {
    QWidget* pSplashScreen = new QWidget(this);
    QProgressBar* pConnectingProgress = new QProgressBar(pSplashScreen);
+   pConnectingProgress->setStyleSheet("QProgressBar"
+                                      "{"
+#ifdef WINDOWS_HIGH_DPI
+                                          "border-radius: 10px;"
+                                          "border: 1px;"
+                                          "height: 20px;"
+                                          "max-height: 20px;"
+                                          "width: 230px;"
+                                          "max-width: 230px;"
+#else
+                                         "border-radius: 5px;"
+                                          "border: 1px;"
+                                          "height: 10px;"
+                                          "max-height: 10px;"
+                                          "width: 176px;"
+                                          "max-width: 176px;"
+#endif
+                                          "background: rgb(224, 229, 235);"
+                                          "qproperty-textVisible: false;"
+                                      "}"
+                                      "QProgressBar:chunk"
+                                      "{"
+                                         "border-radius: 5px;"
+                                          "border: 1px;"
+                                          "background: rgb(31, 218, 129);"
+                                      "}");
    pConnectingProgress->setValue(70);
-   DecentLabel* pConnectingLabel = new DecentLabel(pSplashScreen, DecentLabel::ConnectingSplash);
+   QLabel* pConnectingLabel = new QLabel(pSplashScreen);
    pConnectingLabel->setText(tr("Please wait, we are syncing with network…"));
    StatusLabel* pSyncUpLabel = new StatusLabel(pSplashScreen);
-   DecentButton* pButton = new DecentButton(this, DecentButton::SplashAction);
+   DecentButton* pButton = new DecentButton(this);
+
+   QString labelStyle =
+   "QLabel"
+   "{"
+#ifdef WINDOWS_HIGH_DPI
+      "font-size: 10pt;"
+#else
+      "font-size: 10px;"
+#endif
+      "color: rgb(127, 138, 158);"
+   "}";
+   pConnectingLabel->setStyleSheet(labelStyle);
+   pSyncUpLabel->setStyleSheet(labelStyle);
+   pButton->setStyleSheet(
+                           "QPushButton"
+                           "{"
+                              "border: 0px;"
+                              "background-color: rgb(31, 218, 129);"
+                              "color: white;"
+                              "width: 5em;"
+                              "height: 1.5em;"
+                              "max-width: 5em;"
+                              "max-height: 1.5em;"
+                           "}"
+                          );
    pButton->hide();
    pButton->setText(tr("Proceed"));
-
+   
    QGridLayout* pLayoutHolder = new QGridLayout;
    pLayoutHolder->addWidget(pConnectingProgress, 0, 0, Qt::AlignVCenter | Qt::AlignCenter);
    pLayoutHolder->addWidget(pConnectingLabel, 1, 0, Qt::AlignVCenter | Qt::AlignCenter);
    pLayoutHolder->addWidget(pSyncUpLabel, 2, 0, Qt::AlignVCenter | Qt::AlignCenter);
    pLayoutHolder->addWidget(pButton, 3, 0, Qt::AlignVCenter | Qt::AlignCenter);
-
+   
    pLayoutHolder->setSizeConstraint(QLayout::SetFixedSize);
    pLayoutHolder->setSpacing(10);
    pLayoutHolder->setContentsMargins(0, 0, 0, 0);
-
+   
    QWidget* pHolder = new QWidget(pSplashScreen);
    pHolder->setLayout(pLayoutHolder);
-
+   
    QHBoxLayout* pLayoutSplash = new QHBoxLayout;
    pLayoutSplash->addWidget(pHolder);
-
+   
    pSplashScreen->setLayout(pLayoutSplash);
-
+   
    QObject::connect(&Globals::instance(), &Globals::statusShowMessage,
                     pSyncUpLabel, &StatusLabel::showMessage);
    QObject::connect(&Globals::instance(), &Globals::statusClearMessage,
                     pSyncUpLabel, &StatusLabel::clearMessage);
-
+   
    QObject::connect(this, &Mainwindow_gui_wallet::signal_setSplashMainText,
                     pConnectingLabel, &QLabel::setText);
    QObject::connect(this, &Mainwindow_gui_wallet::signal_setSplashMainText,
                     pButton, &QWidget::show);
-
+   
    QObject::connect(pButton, &QPushButton::clicked,
                     this, &Mainwindow_gui_wallet::CloseSplash);
-
+   
    setCentralWidget(pSplashScreen);
 }
 
@@ -308,9 +359,6 @@ void Mainwindow_gui_wallet::CreateActions()
     m_ActionImportKey.setDisabled(true);
     m_ActionImportKey.setStatusTip( tr("Import key") );
     connect( &m_ActionImportKey, SIGNAL(triggered()), this, SLOT(ImportKeySlot()) );
-   
-
-
 }
 
 
