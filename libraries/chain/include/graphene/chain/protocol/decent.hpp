@@ -92,6 +92,22 @@ namespace graphene { namespace chain {
 
    /**
     * @ingroup transactions
+    * @brief This operation is used to cancel submitted content.
+    */
+   struct content_cancellation_operation : public base_operation
+   {
+      struct fee_parameters_type { uint64_t fee = 0; };
+
+      asset fee;
+      account_id_type author;
+      string URI;
+
+      account_id_type fee_payer()const { return author; }
+      void validate()const { FC_ASSERT( URI != "" ); };
+   };
+
+   /**
+    * @ingroup transactions
     * @brief This operation is used to send a request to buy a content.
     */
    struct request_to_buy_operation : public base_operation
@@ -284,6 +300,7 @@ namespace graphene { namespace chain {
 FC_REFLECT(graphene::chain::set_publishing_manager_operation,(fee)(from)(to)(can_create_publishers))
 FC_REFLECT(graphene::chain::set_publishing_right_operation,(fee)(from)(to)(is_publisher))
 FC_REFLECT(graphene::chain::content_submit_operation,(fee)(size)(author)(URI)(quorum)(price)(hash)(seeders)(key_parts)(expiration)(publishing_fee)(synopsis)(cd))
+FC_REFLECT(graphene::chain::content_cancellation_operation,(fee)(author)(URI))
 #ifdef PRICE_REGIONS
 FC_REFLECT(graphene::chain::request_to_buy_operation,(fee)(URI)(consumer)(price)(region_code_from)(pubKey))
 #else
@@ -307,6 +324,7 @@ FC_REFLECT(graphene::chain::finish_buying_operation,(fee)(payout)(author)(buying
 FC_REFLECT( graphene::chain::set_publishing_manager_operation::fee_parameters_type, ( fee ) )
 FC_REFLECT( graphene::chain::set_publishing_right_operation::fee_parameters_type, ( fee ) )
 FC_REFLECT( graphene::chain::content_submit_operation::fee_parameters_type, (fee) )
+FC_REFLECT( graphene::chain::content_cancellation_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::request_to_buy_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::leave_rating_and_comment_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::ready_to_publish_operation::fee_parameters_type, (fee) )

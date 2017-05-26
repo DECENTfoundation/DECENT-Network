@@ -291,6 +291,31 @@ namespace graphene { namespace chain {
                                              });
    }FC_CAPTURE_AND_RETHROW( (o) ) }
 
+   void_result content_cancellation_evaluator::do_evaluate(const content_cancellation_operation& o)
+   {
+      try {
+         auto& idx = db().get_index_type<content_index>().indices().get<by_URI>();
+         const auto& content_itr = idx.find( o.URI );
+         FC_ASSERT( content_itr != idx.end() );
+         FC_ASSERT( o.author == content_itr->author );
+         FC_ASSERT( content_itr->expiration > db().head_block_time() );
+         FC_ASSERT( !content_itr->is_blocked );
+      }FC_CAPTURE_AND_RETHROW((o))
+   }
+
+   void_result content_cancellation_evaluator::do_apply(const content_cancellation_operation& o)
+   {
+      try {
+         auto& idx = db().get_index_type<content_index>().indices().get<by_URI>();
+         const auto& content_itr = idx.find( o.URI );
+         db().modify<content_object>(*content_itr, [&](content_object &content_obj) {
+            content_obj.is_blocked = true;
+            if( content_obj.expiration > db().head_block_time() + (24 * 60 * 60) )
+               content_obj.expiration = db().head_block_time() + (24 * 60 * 60);
+         });
+      }FC_CAPTURE_AND_RETHROW((o))
+   }
+
    void_result request_to_buy_evaluator::do_evaluate(const request_to_buy_operation& o )
    {try{
       auto& idx = db().get_index_type<content_index>().indices().get<by_URI>();
@@ -298,6 +323,7 @@ namespace graphene { namespace chain {
       FC_ASSERT( content!= idx.end() );
       FC_ASSERT( o.price <= db().get_balance( o.consumer, o.price.asset_id ) );
       FC_ASSERT( content->expiration > db().head_block_time() );
+      FC_ASSERT( !content->is_blocked , "content has been canceled" );
       {
          auto &range = db().get_index_type<subscription_index>().indices().get<by_from_to>();
          const auto &subscription = range.find(boost::make_tuple(o.consumer, content->author));
