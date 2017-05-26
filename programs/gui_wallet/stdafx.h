@@ -13,6 +13,7 @@
 #include <QMessageBox>
 #include <QFileDialog>
 #include <QWidget>
+#include <QProgressBar>
 #include <QLineEdit>
 #include <QPushButton>
 #include <QComboBox>
@@ -20,6 +21,8 @@
 #include <QMenuBar>
 #include <QMoveEvent>
 #include <QDir>
+#include <QProgressBar>
+#include <QGridLayout>
 #include <QCoreApplication>
 #include <QApplication>
 #include <QPixmap>

@@ -1,9 +1,10 @@
 #include <cstddef>
 #include "torrent_transfer.hpp"
 #include "ipfs_transfer.hpp"
+#include "local.hpp"
 
 #include <decent/encrypt/encryptionutils.hpp>
-#include <graphene/package/package.hpp>
+#include <decent/package/package.hpp>
 
 #include <fc/log/logger.hpp>
 #include <fc/thread/scoped_lock.hpp>
@@ -483,7 +484,7 @@ namespace decent { namespace package {
 
         private:
             const boost::filesystem::path _target_dir;
-            const fc::sha256& _key;
+            const fc::sha256 _key;
         };
 
 
@@ -645,7 +646,12 @@ namespace decent { namespace package {
         std::lock_guard<std::recursive_mutex> guard(_task_mutex);
 
         if (!_download_task) {
-            FC_THROW("package handle was not prepared for download");
+            if( _data_state == CHECKED ) {
+                _download_task = decent::package::PackageManager::instance().get_proto_transfer_engine(
+                      "local").create_download_task(*this);
+            }else {
+                FC_THROW("package handle was not prepared for download");
+            }
         }
 
         _download_task->stop(true);
@@ -806,21 +812,21 @@ namespace decent { namespace package {
 
         detail::touch(get_lock_file_path());
 
-        _file_lock_guard.reset();
-        _file_lock.reset(new file_lock(get_lock_file_path().string().c_str()));
+        //_file_lock_guard.reset();
+        //_file_lock.reset(new file_lock(get_lock_file_path().string().c_str()));
 
-        if (!_file_lock->try_lock()) {
-            _file_lock.reset();
-            FC_THROW("Unable to lock package directory ${path} (lock file ${file})", ("path", get_package_dir().string()) ("file", get_lock_file_path().string()) );
-        }
+        //if (!_file_lock->try_lock()) {
+          //  _file_lock.reset();
+          //  FC_THROW("Unable to lock package directory ${path} (lock file ${file})", ("path", get_package_dir().string()) ("file", get_lock_file_path().string()) );
+        //}
 
-        _file_lock_guard.reset(new scoped_lock<file_lock>(*_file_lock, accept_ownership_type()));
+        //_file_lock_guard.reset(new scoped_lock<file_lock>(*_file_lock, accept_ownership_type()));
     }
 
     void PackageInfo::unlock_dir() {
         std::lock_guard<std::recursive_mutex> guard(_mutex);
-        _file_lock_guard.reset();
-        _file_lock.reset();
+        //_file_lock_guard.reset();
+        //_file_lock.reset();
     }
 
 /*
@@ -848,6 +854,7 @@ namespace decent { namespace package {
 
 //      _proto_transfer_engines["magnet"] = std::make_shared<TorrentTransferEngine>();
         _proto_transfer_engines["ipfs"] = std::make_shared<IPFSTransferEngine>();
+        _proto_transfer_engines["local"] = std::make_shared<LocalTransferEngine>();
 
         set_libtorrent_config(graphene::utilities::decent_path_finder::instance().get_decent_home() / "libtorrent.json");
 
@@ -871,9 +878,17 @@ namespace decent { namespace package {
         return *_packages.insert(package).first;
     }
 
-    package_handle_t PackageManager::get_package(const std::string& url)
+    package_handle_t PackageManager::get_package(const std::string& url, const fc::ripemd160&  hash)
     {
         std::lock_guard<std::recursive_mutex> guard(_mutex);
+        for (auto& package : _packages) {
+            if (package) {
+                if (package->_hash == hash) {
+                    package->_url = url;
+                    return package;
+                }
+            }
+        }
         package_handle_t package(new PackageInfo(*this, url));
         return *_packages.insert(package).first;
     }

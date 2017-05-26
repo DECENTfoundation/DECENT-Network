@@ -19,6 +19,9 @@ namespace gui_wallet
          case TableSearch:
             setProperty("type", "tablesearch");
             break;
+         case DialogLineEdit:
+            setProperty("type", "dialoglineedit");
+            break;
          case Default:
          default:
             break;

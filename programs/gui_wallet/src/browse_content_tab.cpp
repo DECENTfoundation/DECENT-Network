@@ -2,9 +2,11 @@
 
 #include "gui_wallet_global.hpp"
 #include "browse_content_tab.hpp"
-#include "decent_wallet_ui_gui_contentdetailsgeneral.hpp"
 #include "decent_line_edit.hpp"
 #include "decent_button.hpp"
+#include "richdialog.hpp"
+
+#include <boost/algorithm/string/replace.hpp>
 
 #ifndef _MSC_VER
 #include <QHBoxLayout>
@@ -129,12 +131,19 @@ void BrowseContentTab::timeToUpdate(const std::string& result) {
 
 std::string BrowseContentTab::getUpdateCommand()
 {
+   graphene::chain::ContentObjectPropertyManager type_composer;
+   graphene::chain::ContentObjectTypeValue type(graphene::chain::EContentObjectApplication::DecentCore);
+
+   type_composer.set<graphene::chain::ContentObjectType>(type);
+   boost::replace_all(type_composer.m_str_synopsis, "\"", "'");   // a dirty hack
+
    return   string("search_content ") +
             "\"" + m_strSearchTerm.toStdString() + "\" " +
             "\"" + m_pTableWidget->getSortedColumn() + "\" " +
             "\"\" " +   // user
             "\"\" " +   // region code
-            "\"" + next_iterator() + "\" " +
+            "\"" + next_iterator() + "\" "
+            "\"" + type_composer.m_str_synopsis + "\" " +
             std::to_string(m_i_page_size + 1);
 }
 
@@ -144,13 +153,11 @@ void BrowseContentTab::slot_Details(int iIndex)
         throw std::out_of_range("Content index is out of range");
     }
 
-   // content details dialog is ugly, needs to be rewritten
-   ContentDetailsGeneral* pDetailsDialog = new ContentDetailsGeneral(nullptr);
-   QObject::connect(pDetailsDialog, &ContentDetailsGeneral::ContentWasBought,
-                    this, &BrowseContentTab::slot_Bought);
-   pDetailsDialog->execCDD(_digital_contents[iIndex], true);
+   ContentInfoDialog* pDetailsDialog = new ContentInfoDialog(nullptr, _digital_contents[iIndex]);
    pDetailsDialog->setAttribute(Qt::WA_DeleteOnClose);
    pDetailsDialog->open();
+   QObject::connect(pDetailsDialog, &ContentInfoDialog::ContentWasBought,
+                    this, &BrowseContentTab::slot_Bought);
 }
 
 void BrowseContentTab::slot_Bought()

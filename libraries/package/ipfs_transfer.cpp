@@ -1,13 +1,14 @@
 
 #include "ipfs_transfer.hpp"
 
-#include <graphene/package/package.hpp>
+#include <decent/package/package.hpp>
+#include <decent/package/package_config.hpp>
 
 #include <boost/filesystem/path.hpp>
 #include <boost/algorithm/string/trim.hpp>
 
 #include <vector>
-
+#include <regex>
 
 namespace decent { namespace package {
 
@@ -32,7 +33,7 @@ namespace decent { namespace package {
 
     IPFSDownloadPackageTask::IPFSDownloadPackageTask(PackageInfo& package)
         : detail::PackageTask(package)
-        , _client("localhost", 5001)
+        , _client(PackageManagerConfigurator::instance().get_ipfs_host(), PackageManagerConfigurator::instance().get_ipfs_port())
     {
     }
 
@@ -183,7 +184,7 @@ namespace decent { namespace package {
 
     IPFSStartSeedingPackageTask::IPFSStartSeedingPackageTask(PackageInfo& package)
         : detail::PackageTask(package)
-        , _client("localhost", 5001)
+        , _client(PackageManagerConfigurator::instance().get_ipfs_host(), PackageManagerConfigurator::instance().get_ipfs_port())
     {
     }
 
@@ -205,9 +206,34 @@ namespace decent { namespace package {
             const auto package_base_path = _package._parent_dir.lexically_normal();
 
             for (auto& file : files) {
+#ifdef _MSC_VER 
+                std::string fileUnixPathDelim = file.string();
+                std::string::iterator iter = fileUnixPathDelim.begin();
+                while (iter != fileUnixPathDelim.end())
+                {
+                   if ((*iter) == '\\')
+                      (*iter) = '/';
+                   iter++;
+                }
+ 
                 const auto file_rel_path = detail::get_relative(package_base_path, file.lexically_normal());
-                files_to_add.push_back({ file_rel_path.string(), ipfs::http::FileUpload::Type::kFileName, file.string() });
+                
+                std::string file_relPath_UnixPathDelim = file_rel_path.string();
+                iter = file_relPath_UnixPathDelim.begin();
+                while (iter != file_relPath_UnixPathDelim.end())
+                {
+                   if ((*iter) == '\\')
+                      (*iter) = '/';
+                   iter++;
+                }
+                files_to_add.push_back({ file_relPath_UnixPathDelim, ipfs::http::FileUpload::Type::kFileName, fileUnixPathDelim });
+#else
+                const auto file_rel_path = detail::get_relative(package_base_path, file.lexically_normal());
+               files_to_add.push_back({ file_rel_path.string(), ipfs::http::FileUpload::Type::kFileName, file.string() });
+#endif
             }
+
+
 
             PACKAGE_INFO_CHANGE_TRANSFER_STATE(SEEDING);
 
@@ -256,7 +282,7 @@ namespace decent { namespace package {
 
     IPFSStopSeedingPackageTask::IPFSStopSeedingPackageTask(PackageInfo& package)
         : detail::PackageTask(package)
-        , _client("localhost", 5001)
+        , _client(PackageManagerConfigurator::instance().get_ipfs_host(), PackageManagerConfigurator::instance().get_ipfs_port())
     {
     }
 

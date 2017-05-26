@@ -74,17 +74,18 @@ share_type asset_issue_operation::calculate_fee(const fee_parameters_type& k)con
 share_type asset_create_operation::calculate_fee(const asset_create_operation::fee_parameters_type& param)const
 {
    auto core_fee_required = param.long_symbol; 
+   if( ! monitored_asset_opts )
 
-   switch(symbol.size()) {
-      case 3: core_fee_required = param.symbol3;
-          break;
-      case 4: core_fee_required = param.symbol4;
-          break;
-      default:
-          break;
-   }
+      switch(symbol.size()) {
+         case 3: core_fee_required = param.symbol3;
+             break;
+         case 4: core_fee_required = param.symbol4;
+             break;
+         default:
+             break;
+      }
 
-   // common_options contains several lists and a string. Charge fees for its size
+   // common options contains several lists and a string. Charge fees for its size
    core_fee_required += calculate_data_fee( fc::raw::pack_size(*this), param.price_per_kbyte );
 
    return core_fee_required;
@@ -94,10 +95,9 @@ void  asset_create_operation::validate()const
 {
    FC_ASSERT( fee.amount >= 0 );
    FC_ASSERT( is_valid_symbol(symbol) );
-   common_options.validate();
+   FC_ASSERT( max_supply > 0 );
+   FC_ASSERT( max_supply <= GRAPHENE_MAX_SHARE_SUPPLY );
 
-   asset dummy = asset(1) * common_options.core_exchange_rate;
-   FC_ASSERT(dummy.asset_id == asset_id_type(1));
    FC_ASSERT(precision <= 12);
 }
 
@@ -113,10 +113,8 @@ void asset_update_operation::validate()const
    FC_ASSERT( fee.amount >= 0 );
    if( new_issuer )
       FC_ASSERT(issuer != *new_issuer);
-   new_options.validate();
-
-   asset dummy = asset(1, asset_to_update) * new_options.core_exchange_rate;
-   FC_ASSERT(dummy.asset_id == asset_id_type());
+   FC_ASSERT( max_supply > 0 );
+   FC_ASSERT( max_supply <= GRAPHENE_MAX_SHARE_SUPPLY );
 }
 
 void asset_update_monitored_asset_operation::validate()const
@@ -138,14 +136,6 @@ void asset_issue_operation::validate()const
    FC_ASSERT( asset_to_issue.asset_id != asset_id_type(0) );
 }
 
-void asset_options::validate()const
-{
-   FC_ASSERT( max_supply > 0 );
-   FC_ASSERT( max_supply <= GRAPHENE_MAX_SHARE_SUPPLY );
-   core_exchange_rate.validate();
-   FC_ASSERT( core_exchange_rate.base.asset_id.instance.value == 0 ||
-              core_exchange_rate.quote.asset_id.instance.value == 0 );
-}
 
 void asset_publish_feed_operation::validate()const
 {

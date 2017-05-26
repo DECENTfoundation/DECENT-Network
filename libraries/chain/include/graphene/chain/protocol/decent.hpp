@@ -44,8 +44,11 @@ namespace graphene { namespace chain {
       fc::time_point_sec expiration;
       asset publishing_fee; //< Fee must be greater than the sum of seeders' publishing prices * number of days
       string synopsis;
-      decent::encrypt::CustodyData cd;
-      
+#ifdef TESTNET_3
+      optional<decent::encrypt::CustodyData> cd; //< if cd.n == 0 then no custody is submitted, and simplified verification is done.
+#else
+      decent::encrypt::CustodyData cd; //< if cd.n == 0 then no custody is submitted, and simplified verification is done.
+#endif
       account_id_type fee_payer()const { return author; }
       void validate()const;
    };
@@ -122,9 +125,11 @@ namespace graphene { namespace chain {
       asset fee;
       account_id_type seeder;
       string URI;
-
+#ifdef TESTNET_3
+      fc::optional<decent::encrypt::CustodyProof> proof;
+#else
       decent::encrypt::CustodyProof proof;
-
+#endif
       account_id_type fee_payer()const { return seeder; }
       void validate()const;
    };
@@ -245,7 +250,11 @@ FC_REFLECT(graphene::chain::request_to_buy_operation,(fee)(URI)(consumer)(price)
 #else
 FC_REFLECT(graphene::chain::request_to_buy_operation,(fee)(URI)(consumer)(price)(pubKey))
 #endif
+#ifdef TESTNET_3
 FC_REFLECT(graphene::chain::leave_rating_and_comment_operation,(fee)(URI)(consumer)(comment)(rating))
+#else
+FC_REFLECT(graphene::chain::leave_rating_and_comment_operation,(fee)(URI)(consumer)(rating))
+#endif
 FC_REFLECT(graphene::chain::ready_to_publish_operation,(fee)(seeder)(space)(pubKey)(price_per_MByte)(ipfs_IDs))
 FC_REFLECT(graphene::chain::proof_of_custody_operation,(fee)(seeder)(URI)(proof))
 FC_REFLECT(graphene::chain::deliver_keys_operation,(fee)(seeder)(proof)(key)(buying))

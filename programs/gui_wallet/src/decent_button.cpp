@@ -24,6 +24,21 @@ DecentButton::DecentButton(QWidget* pParent,
    case TableIcon:
       setProperty("type", "tableicon");
       break;
+   case StarIcon:
+      setProperty("type", "staricon");
+      break;
+   case DialogAction:
+      setProperty("type", "dialogaction");
+      break;
+   case DialogCancel:
+      setProperty("type", "dialogcancel");
+      break;
+   case DialogTextButton:
+      setProperty("type", "dialogtextbutton");
+      break;
+   case SplashAction:
+      setProperty("type", "splashaction");
+      break;
    case Default:
    default:
       break;

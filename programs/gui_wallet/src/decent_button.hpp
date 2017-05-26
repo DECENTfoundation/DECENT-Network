@@ -12,7 +12,12 @@ public:
    {
       Default,
       Send,
-      TableIcon
+      TableIcon,
+      StarIcon,
+      DialogAction,
+      DialogCancel,
+      DialogTextButton,
+      SplashAction
    };
 
    enum eName

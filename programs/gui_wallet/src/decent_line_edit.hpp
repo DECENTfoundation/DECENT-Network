@@ -11,7 +11,8 @@ namespace gui_wallet
       enum eType
       {
          Default,
-         TableSearch
+         TableSearch,
+         DialogLineEdit
       };
 
       enum eName

@@ -11,7 +11,9 @@ namespace graphene { namespace chain {
    {
    public:
       typedef content_submit_operation operation_type;
-      
+
+      bool is_resubmit = false;
+
       void_result do_evaluate( const content_submit_operation& o );
       void_result do_apply( const content_submit_operation& o );
    };

@@ -5,7 +5,7 @@
 #include <fc/filesystem.hpp>
 #include <graphene/wallet/wallet.hpp>
 #include <fc/rpc/api_connection.hpp>
-#include <graphene/package/package.hpp>
+#include <decent/package/package.hpp>
 #include <iostream>
 
 namespace decent
@@ -270,6 +270,7 @@ namespace wallet_utility
                        });
       return future_unlock.wait();
    }
+
    void WalletAPI::LoadAssetInfo(string& str_symbol, uint8_t& precision)
    {
       if (false == Connected())
@@ -286,8 +287,8 @@ namespace wallet_utility
                           {
                              vector<asset_object> assets = pimpl->m_ptr_wallet_api->list_assets(string(), 10);
 
-                             if (assets.size() != 1)
-                                throw wallet_exception("asset exception");
+                            // if (assets.size() != 1)
+                            //    throw wallet_exception("asset exception");
 
                              pimpl->m_str_asset_symbol = assets[0].symbol;
                              pimpl->m_asset_precision = assets[0].precision;
@@ -301,6 +302,7 @@ namespace wallet_utility
          precision = m_pimpl->m_asset_precision;
       }
    }
+
    void WalletAPI::SaveWalletFile()
    {
       if (false == Connected())
