@@ -2223,7 +2223,15 @@ public:
       } FC_CAPTURE_AND_RETHROW( (consumer)(URI) )
    }
 
-
+   asset price_to_dct(asset price){
+      if(price.asset_id == asset_id_type() )
+         return price;
+      auto asset = get_asset(price.asset_id);
+      FC_ASSERT(asset.is_monitored_asset(), "unable to determine DCT price for UIA");
+      auto current_price = asset.monitored_asset_opts->current_feed.core_exchange_rate;
+      FC_ASSERT(!current_price.is_null(), "unable to determine DCT price without price feeds");
+      return price * current_price;
+   }
 
    void download_content(string const& consumer, string const& URI, string const& str_region_code_from, bool broadcast)
    {
@@ -2265,7 +2273,7 @@ public:
 
          request_op.pubKey = decent::encrypt::get_public_el_gamal_key( el_gamal_priv_key );
 #ifdef PRICE_REGIONS
-         request_op.price = *op_price;
+         request_op.price = price_to_dct(*op_price);
          request_op.region_code_from = region_code_from;
 #else
          request_op.price = content->price;
@@ -3746,6 +3754,11 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
    wallet_api::download_content(string const& consumer, string const& URI, string const& region_code_from, bool broadcast)
    {
       return my->download_content(consumer, URI, region_code_from, broadcast);
+   }
+
+   asset wallet_api::price_to_dct(asset price)
+   {
+      return my->price_to_dct(price);
    }
 
 

@@ -72,7 +72,8 @@ set<public_key_type> account_member_index::get_key_members(const account_object&
       result.insert(auth.first);
    for( auto auth : a.active.key_auths )
       result.insert(auth.first);
-   result.insert( a.options.memo_key );
+   if(a.options.memo_key != public_key_type() )
+      result.insert( a.options.memo_key );
    return result;
 }
 

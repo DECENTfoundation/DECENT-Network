@@ -143,7 +143,7 @@ namespace gui_wallet
       std::string getCurrentUser() const;
       WalletAPI& getWallet() const;
       void clear();
-      Asset asset(uint64_t amount);
+      Asset asset(uint64_t amount, const std::string& symbol = "1.3.0");
       void updateAccountBalance();
       std::string runTask(std::string const& str_command);
       nlohmann::json runTaskParse(std::string const& str_command);

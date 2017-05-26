@@ -1098,6 +1098,13 @@ namespace graphene { namespace wallet {
                                                    bool broadcast = false);
 
 
+         /**
+          * @brief Converts price denominated in Monitored asset into DCT, using actual price feed.
+          * @param price Price in DCT or monitored asset
+          * @return Price in DCT
+          * @ingroup WalletCLI
+          */
+         asset price_to_dct(asset price);
 
          /**
           * @brief Publishes a price feed for the named asset.
@@ -2058,6 +2065,7 @@ FC_API( graphene::wallet::wallet_api,
            (update_asset)
            (update_monitored_asset)
            (publish_asset_feed)
+           (price_to_dct)
            (issue_asset)
            (get_asset)
            (get_monitored_asset_data)
