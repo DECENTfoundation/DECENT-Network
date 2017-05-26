@@ -64,6 +64,12 @@ namespace graphene { namespace wallet {
          public_key_type pub_key;
       };
 
+      struct regional_price_info
+      {
+         string region;
+         string amount;
+         string asset_symbol;
+      };
 
       struct wallet_data
       {
@@ -1484,8 +1490,7 @@ namespace graphene { namespace wallet {
          signed_transaction
          submit_content(string const& author,
                         string const& URI,
-                        string const& price_asset_name,
-                        vector <pair<string, string>> const& price_amounts,
+                        vector <regional_price_info> const& price_amounts,
                         uint64_t size,
                         fc::ripemd160 const& hash,
                         vector<account_id_type> const& seeders,
@@ -1517,16 +1522,12 @@ namespace graphene { namespace wallet {
           * @return The signed transaction submitting the content
           * @ingroup WalletCLI
           */
-         fc::ripemd160  submit_content_new(string const& author,
-                                               string const& content_dir,
-                                               string const& samples_dir,
-                                               string const& protocol,
-                                               string const& price_asset_symbol,
-                                               vector <pair<string, string>> const& price_amounts,
-                                               vector<account_id_type> const& seeders,
-                                               fc::time_point_sec const& expiration,
-                                               string const& synopsis,
-                                               bool broadcast = false);
+         fc::ripemd160 submit_content_new(string const &author, string const &content_dir, string const &samples_dir,
+                                          string const &protocol,
+                                          vector<regional_price_info> const &price_amounts,
+                                          vector<account_id_type> const &seeders,
+                                          fc::time_point_sec const &expiration, string const &synopsis,
+                                          bool broadcast);
 
          /**
           * @brief Downloads encrypted content specified by provided URI.
@@ -1976,6 +1977,12 @@ FC_REFLECT( graphene::wallet::brain_key_info,
             (brain_priv_key)
                (wif_priv_key)
                (pub_key)
+)
+
+FC_REFLECT( graphene::wallet::regional_price_info,
+             (region)
+             (amount)
+             (asset_symbol)
 )
 
 FC_REFLECT (graphene::wallet::content_download_status, 
