@@ -64,7 +64,7 @@ public:
 };
 
 typedef graphene::chain::object_id< SEEDING_PLUGIN_SPACE_ID, seeding_object_type,  my_seeding_object>     my_seeding_id_type;
-typedef graphene::chain::object_id< SEEDING_PLUGIN_SPACE_ID, seeding_object_type,  my_seeder_object>     my_seeder_id_type;
+typedef graphene::chain::object_id< SEEDING_PLUGIN_SPACE_ID, seeder_object_type,  my_seeder_object>     my_seeder_id_type;
 
 struct by_id;
 struct by_URI;

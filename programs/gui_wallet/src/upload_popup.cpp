@@ -545,7 +545,7 @@ void Upload_popup::slot_UploadContent()
    submitCommand += " \"" + path + "\"";                                // URI
    submitCommand += " \"" + samples_path + "\"";                        // Samples
    submitCommand += " \"ipfs\"";                                        // Protocol
-   submitCommand += " [[\"\", \"" + m_price + "\", \"" + assetName + "\" ]]";// price_amount
+   submitCommand += " [{\"region\" : \"\", \"amount\" : \"" + m_price + "\", \"asset_symbol\" : \"" + assetName + "\" }]";// price_amount
    submitCommand += " [" + str_seeders + "]";                           // seeders
    submitCommand += " \"" + m_life_time + "T23:59:59\"";                // expiration
    submitCommand += " \"" + escape_string(synopsis) + "\"";             // synopsis

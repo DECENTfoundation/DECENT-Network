@@ -90,6 +90,7 @@ void seeding_plugin_impl::handle_content_submit(const operation_history_object &
                      so.key = *k;
                   so.expiration = cs_op.expiration;
                   so.cd = cs_op.cd;
+                  so._hash = cs_op.hash;
                });
                auto so_id = mso.id;
                ilog("seeding plugin:  handle_content_submit() created new my_seeding_object ${s}",("s",so_id));

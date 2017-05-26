@@ -2141,9 +2141,10 @@ public:
          for( int i =0; i < seeders.size(); i++ )
          {
             const auto& s = _remote_db->get_seeder( seeders[i] );
+            FC_ASSERT( s, "seeder not found" );
             Ciphertext cp;
             point p = ss.split[i];
-            decent::encrypt::el_gamal_encrypt( p ,s->pubKey ,cp );
+            decent::encrypt::el_gamal_encrypt( p, s->pubKey ,cp );
             submit_op.key_parts.push_back(cp);
 
          }
