@@ -2021,6 +2021,59 @@ public:
       return sign_transaction(tx, broadcast);
    }
 
+   signed_transaction set_publishing_manager(const string from,
+                                            const vector<string> to,
+                                            bool is_allowed,
+                                            bool broadcast)
+   {
+      try
+      {
+         FC_ASSERT( !to.empty() );
+         set_publishing_manager_operation spm_op;
+         spm_op.from = get_account_id( from );
+         spm_op.can_create_publishers = is_allowed;
+
+         for( const auto& element : to )
+         {
+            spm_op.to.push_back( get_account_id( element ) );
+         }
+
+         signed_transaction tx;
+         tx.operations.push_back( spm_op );
+         set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
+         tx.validate();
+
+         return sign_transaction( tx, broadcast );
+      } FC_CAPTURE_AND_RETHROW( (from)(to)(is_allowed)(broadcast) )
+   }
+   signed_transaction set_publishing_right(const string from,
+                                            const vector<string> to,
+                                            bool is_allowed,
+                                            bool broadcast)
+   {
+      try
+      {
+         FC_ASSERT( !to.empty() );
+
+         set_publishing_right_operation spr_op;
+         spr_op.from = get_account_id( from );
+         spr_op.is_publisher = is_allowed;
+
+         for( const auto& element : to )
+         {
+            spr_op.to.push_back( get_account_id( element ) );
+         }
+
+         signed_transaction tx;
+         tx.operations.push_back( spr_op );
+         set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
+         tx.validate();
+
+         return sign_transaction( tx, broadcast );
+      } FC_CAPTURE_AND_RETHROW( (from)(to)(is_allowed)(broadcast) )
+   }
+
+
    static void submit_content_utility(content_submit_operation& submit_op,
                                       vector<pair<string, string>> const& price_amounts,
                                       fc::optional<asset_object> const& price_asset_obj)
@@ -2069,12 +2122,12 @@ public:
       try
       {
          FC_ASSERT(!is_locked());
-         account_object author_account = get_account( author );
 
          fc::optional<asset_object> price_asset_obj = get_asset(price_asset_symbol);
          fc::optional<asset_object> fee_asset_obj = get_asset(publishing_fee_symbol_name);
          FC_ASSERT(price_asset_obj, "Could not find asset matching ${asset}", ("asset", price_asset_symbol));
          FC_ASSERT(fee_asset_obj, "Could not find asset matching ${asset}", ("asset", publishing_fee_symbol_name));
+
          ShamirSecret ss(quorum, seeders.size(), secret);
          ss.calculate_split();
          content_submit_operation submit_op;
@@ -2087,7 +2140,7 @@ public:
             submit_op.key_parts.push_back(cp);
          }
 
-         submit_op.author = author_account.id;
+         submit_op.author = get_account_id( author );
          submit_op.URI = URI;
          submit_content_utility(submit_op, price_amounts, price_asset_obj);
          submit_op.hash = hash;
@@ -2126,8 +2179,6 @@ public:
       try
       {
          FC_ASSERT(!is_locked());
-         account_object author_account = get_account( author );
-
 
          fc::optional<asset_object> DTC_asset = get_asset("DCT");
          fc::optional<asset_object> price_asset_obj = get_asset(price_asset_symbol);
@@ -2135,10 +2186,6 @@ public:
          FC_ASSERT(false == price_amounts.empty());
          FC_ASSERT(time_point_sec(fc::time_point::now()) <= expiration);
 
-         
-         
-         
-         
          CryptoPP::Integer secret(randomGenerator, 256);
          fc::sha256 sha_key;
          secret.Encode((byte*)sha_key._hash, 32);
@@ -2158,7 +2205,7 @@ public:
             decent::encrypt::el_gamal_encrypt( p ,s->pubKey ,cp );
             submit_op.key_parts.push_back(cp);
          }
-         submit_op.author = author_account.id;
+         submit_op.author = get_account_id( author );
          submit_content_utility(submit_op, price_amounts, price_asset_obj);
          submit_op.seeders = seeders;
          submit_op.quorum = quorum;
@@ -3726,6 +3773,26 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
       return my->_remote_db->get_real_supply();
    }
 
+   signed_transaction wallet_api::set_publishing_manager(const string from,
+                                                         const vector<string> to,
+                                                         bool is_allowed,
+                                                         bool broadcast )
+   {
+      return my->set_publishing_manager( from, to, is_allowed, broadcast );
+   }
+
+   signed_transaction wallet_api::set_publishing_right(const string from,
+                                                       const vector<string> to,
+                                                       bool is_allowed,
+                                                       bool broadcast )
+   {
+      return my->set_publishing_right( from, to, is_allowed, broadcast );
+   }
+
+   vector<account_id_type> wallet_api::list_publishing_managers( const string& lower_bound_name, uint32_t limit )
+   {
+      return my->_remote_db->list_publishing_managers( lower_bound_name, limit );
+   }
 
    signed_transaction
    wallet_api::submit_content(string const& author,

@@ -108,8 +108,7 @@ void PurchasedTab::timeToUpdate(const std::string& result)
    for (int iIndex = 0; iIndex < iSize; ++iIndex)
    {
       auto content = contents[iIndex];
-      
-      std::string expiration_or_delivery_time = content["expiration_or_delivery_time"].get<std::string>();
+
       std::string URI = content["URI"].get<std::string>();
 
       // Create SDigitalContent object
@@ -134,6 +133,7 @@ void PurchasedTab::timeToUpdate(const std::string& result)
       contentObject.purchased_time = content["expiration_or_delivery_time"].get<std::string>();
       contentObject.purchased_time = contentObject.purchased_time.substr(0, contentObject.purchased_time.find("T"));
       contentObject.expiration = content["expiration"].get<std::string>();
+      
       contentObject.size = content["size"].get<int>();
       contentObject.id = content["id"].get<std::string>();
       contentObject.hash = content["hash"].get<std::string>();
@@ -334,6 +334,12 @@ void PurchasedTab::slot_ExtractPackage(int iIndex) {
    pFileDialog->setOptions(QFileDialog::DontUseNativeDialog);
    pFileDialog->setAttribute(Qt::WA_DeleteOnClose);
    pFileDialog->setLabelText(QFileDialog::Accept, tr("Extract"));
+
+#ifdef _MSC_VER
+   int height = pFileDialog->style()->pixelMetric(QStyle::PM_TitleBarHeight);
+   pFileDialog->setWindowIcon(height > 32 ? QIcon(":/icon/images/windows_decent_icon_32x32.png")
+      : QIcon(":/icon/images/windows_decent_icon_16x16.png"));
+#endif
 
    pFileDialog->open();
 }

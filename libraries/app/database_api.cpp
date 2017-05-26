@@ -160,6 +160,7 @@ namespace graphene { namespace app {
       // Blinded balances
       
       // Decent
+      vector<account_id_type> list_publishing_managers( const string& lower_bound_name, uint32_t limit )const;
       vector<buying_object> get_open_buyings()const;
       vector<buying_object> get_open_buyings_by_URI(const string& URI)const;
       vector<buying_object> get_open_buyings_by_consumer(const account_id_type& consumer)const;
@@ -1712,8 +1713,27 @@ namespace graphene { namespace app {
    {
       return my->_db.get_real_supply();
    }
-   
-   vector<buying_object> database_api::get_open_buyings()const
+
+   vector<account_id_type> database_api::list_publishing_managers( const string& lower_bound_name, uint32_t limit  )const
+   {
+      return my->list_publishing_managers( lower_bound_name, limit );
+   }
+
+   vector<account_id_type> database_api_impl::list_publishing_managers( const string& lower_bound_name, uint32_t limit  )const
+   {
+      FC_ASSERT( limit <= 100 );
+      const auto& idx = _db.get_index_type<account_index>().indices().get<by_publishing_manager_and_name>();
+      vector<account_id_type> result;
+
+      for( auto itr = idx.lower_bound( boost::make_tuple( true, lower_bound_name ) );
+           limit-- && itr->rights_to_publish.is_publishing_manager && itr != idx.end();
+           ++itr )
+         result.push_back(itr->id);
+
+      return result;
+   }
+
+      vector<buying_object> database_api::get_open_buyings()const
    {
       return my->get_open_buyings();
    }
@@ -1878,7 +1898,7 @@ namespace
             search_buying_template<false, by_created>(_db, consumer, term, id, count, result);
          else if(order == "+purchased")
             search_buying_template<true, by_purchased>(_db, consumer, term, id, count, result);
-         else //if(order == "-purchased") // Default sorted by descending purchased time
+         else //if(order == "-purchased")
             search_buying_template<false, by_purchased>(_db, consumer, term, id, count, result);
          return result;
       }
@@ -2339,7 +2359,7 @@ vector<content_summary> database_api_impl::list_content( const string& URI_begin
          search_content_template<false, by_price>(_db, search_term, count, user, region_code, id, type, result);
       else if (order == "-expiration")
          search_content_template<false, by_expiration>(_db, search_term, count, user, region_code, id, type, result);
-      else// if (order == "-created") // Default sorted by descending created time
+      else// if (order == "-created")
          search_content_template<false, by_created>(_db, search_term, count, user, region_code, id, type, result);
       
       return result;

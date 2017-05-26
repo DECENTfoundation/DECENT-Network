@@ -33,6 +33,17 @@ namespace graphene { namespace chain {
    bool is_valid_name( const string& s );
    bool is_cheap_name( const string& n );
 
+   struct publishing_rights
+   {
+      /// True if account can give or remove right to publish a content
+      bool is_publishing_manager;
+      /// Rights to publish a content received from publishing managers.
+      /// An account can publish a content if has at least one right from publishing managers.
+      vector<account_id_type> publishing_rights_received;
+      /// List of accounts that get publishing right from this account. This list is empty if account does not have publishing manager status.
+      vector<account_id_type> publishing_rights_forwarded;
+   };
+
    /// These are the fields which can be updated by the active authority.
    struct account_options
    {
@@ -183,6 +194,8 @@ namespace graphene { namespace chain {
 
 FC_REFLECT(graphene::chain::account_options, (memo_key)(voting_account)(num_witness)(votes)(extensions)
            (allow_subscription)(price_per_subscribe)(subscription_period))
+
+FC_REFLECT(graphene::chain::publishing_rights, (is_publishing_manager)(publishing_rights_received)(publishing_rights_forwarded))
 
 FC_REFLECT(graphene::chain::account_create_operation::ext, (null_ext)(buyback_options))
 FC_REFLECT( graphene::chain::account_create_operation,

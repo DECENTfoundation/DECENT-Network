@@ -151,6 +151,8 @@ void database::initialize_evaluators()
    register_evaluator<return_escrow_submission_evaluator>();
    register_evaluator<return_escrow_buying_evaluator>();
    register_evaluator<report_stats_evaluator>();
+   register_evaluator<set_publishing_manager_evaluator>();
+   register_evaluator<set_publishing_right_evaluator>();
 }
 
 void database::initialize_indexes()

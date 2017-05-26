@@ -38,12 +38,24 @@ QFont TableHeaderFont()
 
 QFont AccountBalanceFont()
 {
-   return FontVerdana().font("Open Sans", "Regular", 12);
+   return FontVerdana().font("Open Sans", "Regular",
+#ifdef WINDOWS_HIGH_DPI
+      8
+#else
+      12
+#endif
+      );
 }
 
 QFont DescriptionDetailsFont()
 {
-   return FontVerdana().font("Open Sans", "Regular", 13);
+   return FontVerdana().font("Open Sans", "Regular", 
+#ifdef WINDOWS_HIGH_DPI
+      8
+#else
+      13
+#endif
+      );
 }
 
 QFont PopupButtonRegularFont()
@@ -82,9 +94,9 @@ QFont MainFont()
 {
    return FontVerdana().font("Open Sans", "Regular",
 #ifdef WINDOWS_HIGH_DPI
-                             8
+      8
 #else
-                             12
+      12
 #endif
-                             );
+      );
 }

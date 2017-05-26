@@ -3,6 +3,19 @@
 
 namespace graphene { namespace chain {
 
+void set_publishing_manager_operation::validate()const
+{
+   FC_ASSERT( fee.amount >= 0 );
+   FC_ASSERT( to.size() > 0 );
+   FC_ASSERT( from == account_id_type(15), "Account does not have permission to this operation" );
+}
+
+void set_publishing_right_operation::validate()const
+{
+   FC_ASSERT( fee.amount >= 0 );
+   FC_ASSERT( to.size() > 0 );
+}
+
 void content_submit_operation::validate()const
 {
    FC_ASSERT( fee.amount >= 0 );
