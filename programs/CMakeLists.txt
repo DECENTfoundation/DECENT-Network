@@ -1,6 +1,7 @@
 add_subdirectory( build_helpers )
 add_subdirectory( cli_wallet )
 add_subdirectory( account_generator )
+add_subdirectory( account_creator )
 add_subdirectory( gui_wallet )
 #add_subdirectory( genesis_util )
 add_subdirectory(decentd)
