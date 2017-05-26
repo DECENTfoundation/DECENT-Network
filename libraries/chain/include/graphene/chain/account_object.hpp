@@ -135,6 +135,7 @@ namespace graphene { namespace chain {
          authority active;
 
          account_options options;
+         publishing_rights rights_to_publish;
 
          /// The reference implementation records the account's statistics in a separate object. This field contains the
          /// ID of that object.
@@ -160,6 +161,7 @@ namespace graphene { namespace chain {
             return db.get(*cashback_vb);
          }
          account_id_type get_id()const { return id; }
+         bool is_publishing_manager() const { return rights_to_publish.is_publishing_manager; }
 
    };
 
@@ -229,7 +231,9 @@ namespace graphene { namespace chain {
     */
    typedef generic_index<account_balance_object, account_balance_object_multi_index_type> account_balance_index;
 
+
    struct by_name;
+   struct by_publishing_manager_and_name;
 
    template <typename TAG, typename _t_object>
    struct key_extractor;
@@ -259,7 +263,13 @@ namespace graphene { namespace chain {
       account_object,
       indexed_by<
          ordered_unique< tag<by_id>, member< object, object_id_type, &object::id > >,
-         ordered_unique< tag<by_name>, member<account_object, std::string, &account_object::name>  >
+         ordered_unique< tag<by_name>, member<account_object, std::string, &account_object::name>  >,
+         ordered_unique< tag< by_publishing_manager_and_name>,
+            composite_key< account_object,
+               const_mem_fun<account_object, bool, &account_object::is_publishing_manager>,
+               member<account_object, string, &account_object::name>
+            >
+         >
       >
    > account_multi_index_type;
 
@@ -273,7 +283,7 @@ namespace graphene { namespace chain {
 FC_REFLECT_DERIVED( graphene::chain::account_object,
                     (graphene::db::object),
                     (registrar)
-                    (name)(owner)(active)(options)(statistics)
+                    (name)(owner)(active)(options)(rights_to_publish)(statistics)
                     (cashback_vb)(top_n_control_flags)
                     )
 
