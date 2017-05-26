@@ -49,7 +49,7 @@ QFont AccountBalanceFont()
 
 QFont DescriptionDetailsFont()
 {
-   return FontVerdana().font("Open Sans", "Regular", 13);
+   return FontVerdana().font("Open Sans", "Regular", 
 #ifdef WINDOWS_HIGH_DPI
       8
 #else
