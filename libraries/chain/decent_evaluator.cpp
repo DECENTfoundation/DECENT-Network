@@ -464,11 +464,22 @@ namespace graphene { namespace chain {
       const auto& content = idx.find( o.URI );
       FC_ASSERT( content != idx.end(), "content not found" );
       FC_ASSERT( content->expiration > db().head_block_time(), "content expired" );
-      //verify that the seed is not to old...
-      fc::ripemd160 bid = db().get_block_id_for_num(o.proof.reference_block);
+      //verify that the seed is not too old...
+#ifdef TESTNET_3
+      if (o.proof.valid())
+      {
+      auto& proof = *o.proof;
+#else
+      auto& proof = o.proof;
+#endif
+      fc::ripemd160 bid = db().get_block_id_for_num(proof.reference_block);
       for(int i = 0; i < 5; i++)
-         FC_ASSERT(bid._hash[i] == o.proof.seed.data[i],"Block ID does not match; wrong chain?");
-      FC_ASSERT(db().head_block_num() <= o.proof.reference_block + 6,"Block reference is too old");
+         FC_ASSERT(bid._hash[i] == proof.seed.data[i],"Block ID does not match; wrong chain?");
+      FC_ASSERT(db().head_block_num() <= proof.reference_block + 6,"Block reference is too old");
+#ifdef TESTNET_3
+      }
+#endif
+      //
 #ifdef TESTNET_3
       FC_ASSERT( content->cd.valid() == o.proof.valid() );
       FC_ASSERT( !(content->cd.valid() ) || _custody_utils.verify_by_miner( *(content->cd), *(o.proof) ) == 0, "Invalid proof of custody" );
