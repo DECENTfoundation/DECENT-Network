@@ -65,11 +65,11 @@ namespace graphene { namespace chain {
       extensions_type        extensions;
 
       /// True if account (author) allows subscription
-      bool allow_subscription;
+      bool allow_subscription = false;
       /// Price for subscription per one subscription period
       asset price_per_subscribe;
       /// Minimal duration of subscription in days
-      uint32_t subscription_period;
+      uint32_t subscription_period = 0;
 
       void validate()const;
    };

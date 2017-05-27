@@ -154,7 +154,7 @@ void account_options::validate() const
 
    FC_ASSERT( needed_witnesses == 0, "May not specify fewer witnesses than the number voted for.");
 
-   FC_ASSERT( subscription_period > 0 );
+   FC_ASSERT( subscription_period >= 0 );
    FC_ASSERT( price_per_subscribe.amount >= 0 );
 }
 
