@@ -3,7 +3,8 @@
 //
 
 #pragma once
-#if defined ( _MSC_VER )
+
+#if defined( _MSC_VER )
 #include <pbc.h>
 #else
 #include <pbc/pbc.h>
@@ -64,8 +65,15 @@ using namespace boost::filesystem;
 
 class CustodyUtils
 {
+private:
+
 public:
    CustodyUtils();
+   static CustodyUtils& instance(){
+      static CustodyUtils cu;
+      return cu;
+   };
+
    ~CustodyUtils();
 
     /**

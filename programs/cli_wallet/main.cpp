@@ -41,7 +41,7 @@
 #include <graphene/egenesis/egenesis.hpp>
 #include <graphene/utilities/key_conversion.hpp>
 #include <graphene/wallet/wallet.hpp>
-#include <graphene/package/package.hpp>
+#include <decent/package/package.hpp>
 #include <graphene/utilities/dirhelper.hpp>
 
 #include <fc/interprocess/signals.hpp>
@@ -62,7 +62,6 @@ using namespace graphene::app;
 using namespace graphene::chain;
 using namespace graphene::utilities;
 using namespace graphene::wallet;
-using namespace graphene::package;
 using namespace std;
 namespace bpo = boost::program_options;
 

@@ -7,15 +7,44 @@ namespace graphene { namespace chain {
 
    static decent::encrypt::CustodyUtils _custody_utils;
 
+   class set_publishing_manager_evaluator : public evaluator<set_publishing_manager_evaluator>
+   {
+   public:
+      typedef set_publishing_manager_operation operation_type;
+
+      void_result do_evaluate( const set_publishing_manager_operation& o );
+      void_result do_apply( const set_publishing_manager_operation& o );
+   };
+
+      class set_publishing_right_evaluator : public evaluator<set_publishing_right_evaluator>
+   {
+   public:
+      typedef set_publishing_right_operation operation_type;
+
+      void_result do_evaluate( const set_publishing_right_operation& o );
+      void_result do_apply( const set_publishing_right_operation& o );
+   };
+
    class content_submit_evaluator : public evaluator<content_submit_evaluator>
    {
    public:
       typedef content_submit_operation operation_type;
-      
+
+      bool is_resubmit = false;
+
       void_result do_evaluate( const content_submit_operation& o );
       void_result do_apply( const content_submit_operation& o );
    };
-   
+
+   class content_cancellation_evaluator : public evaluator<content_cancellation_evaluator>
+   {
+   public:
+      typedef content_cancellation_operation operation_type;
+
+      void_result do_evaluate( const content_cancellation_operation& o );
+      void_result do_apply( const content_cancellation_operation& o );
+   };
+
    class request_to_buy_evaluator : public evaluator<request_to_buy_evaluator>
    {
    public:
@@ -28,10 +57,10 @@ namespace graphene { namespace chain {
    class leave_rating_evaluator : public evaluator<leave_rating_evaluator>
    {
    public:
-      typedef leave_rating_operation operation_type;
+      typedef leave_rating_and_comment_operation operation_type;
       
-      void_result do_evaluate( const leave_rating_operation& o );
-      void_result do_apply( const leave_rating_operation& o );
+      void_result do_evaluate( const leave_rating_and_comment_operation& o );
+      void_result do_apply( const leave_rating_and_comment_operation& o );
    };
    
    class ready_to_publish_evaluator : public evaluator<ready_to_publish_evaluator>

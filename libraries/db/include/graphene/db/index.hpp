@@ -223,7 +223,7 @@ namespace graphene { namespace db {
          }
 
          virtual void open( const path& db )override
-         { 
+         { try{
             if( !fc::exists( db ) ) return;
             fc::file_mapping fm( db.generic_string().c_str(), fc::read_only );
             fc::mapped_region mr( fm, fc::read_only, 0, fc::file_size(db) );
@@ -241,7 +241,7 @@ namespace graphene { namespace db {
                   load( tmp );
                }
             } catch ( const fc::exception&  ){}
-         }
+         }FC_CAPTURE_AND_RETHROW((db))}
 
          virtual void save( const path& db ) override 
          {

@@ -115,7 +115,7 @@ void database::open(
 {
    try
    {
-      object_database::open(data_dir);
+      object_database::open(data_dir );
 
       _block_id_to_block.open(data_dir / "database" / "block_num_to_block");
 

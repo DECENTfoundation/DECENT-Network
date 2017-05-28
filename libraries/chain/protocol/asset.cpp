@@ -101,35 +101,6 @@ namespace graphene { namespace chain {
       price price::max( asset_id_type base, asset_id_type quote ) { return asset( share_type(GRAPHENE_MAX_SHARE_SUPPLY), base ) / asset( share_type(1), quote); }
       price price::min( asset_id_type base, asset_id_type quote ) { return asset( 1, base ) / asset( GRAPHENE_MAX_SHARE_SUPPLY, quote); }
 
-      /**
-       *  The black swan price is defined as debt/collateral, we want to perform a margin call
-       *  before debt == collateral.   Given a debt/collateral ratio of 1 USD / CORE and
-       *  a maintenance collateral requirement of 2x we can define the call price to be
-       *  2 USD / CORE.
-       *
-       *  This method divides the collateral by the maintenance collateral ratio to derive
-       *  a call price for the given black swan ratio.
-       *
-       *  There exists some cases where the debt and collateral values are so small that
-       *  dividing by the collateral ratio will result in a 0 price or really poor
-       *  rounding errors.   No matter what the collateral part of the price ratio can
-       *  never go to 0 and the debt can never go more than GRAPHENE_MAX_SHARE_SUPPLY
-       *
-       *  CR * DEBT/COLLAT or DEBT/(COLLAT/CR)
-       */
-      price price::call_price( const asset& debt, const asset& collateral, uint16_t collateral_ratio)
-      { try {
-         //wdump((debt)(collateral)(collateral_ratio));
-         boost::rational<int128_t> swan(debt.amount.value,collateral.amount.value);
-         boost::rational<int128_t> ratio( collateral_ratio, GRAPHENE_COLLATERAL_RATIO_DENOM );
-         auto cp = swan * ratio;
-
-         while( cp.numerator() > GRAPHENE_MAX_SHARE_SUPPLY || cp.denominator() > GRAPHENE_MAX_SHARE_SUPPLY )
-            cp = boost::rational<int128_t>( (cp.numerator() >> 1)+1, (cp.denominator() >> 1)+1 );
-
-         return ~(asset( cp.numerator().convert_to<int64_t>(), debt.asset_id ) / asset( cp.denominator().convert_to<int64_t>(), collateral.asset_id ));
-      } FC_CAPTURE_AND_RETHROW( (debt)(collateral)(collateral_ratio) ) }
-
       bool price::is_null() const { return *this == price(); }
 
       void price::validate() const

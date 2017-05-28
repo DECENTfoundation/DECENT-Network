@@ -3,7 +3,7 @@
  *
  * The MIT License
  *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * Permission is hereby granted, free of char§e, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
@@ -152,7 +152,10 @@ void account_options::validate() const
       if( id.type() == vote_id_type::witness && needed_witnesses )
          --needed_witnesses;
 
-   FC_ASSERT( needed_witnesses == 0, "May not specify fewer witnesses or committee members than the number voted for.");
+   FC_ASSERT( needed_witnesses == 0, "May not specify fewer witnesses than the number voted for.");
+
+   FC_ASSERT( subscription_period >= 0 );
+   FC_ASSERT( price_per_subscribe.amount >= 0 );
 }
 
 share_type account_create_operation::calculate_fee( const fee_parameters_type& k )const
@@ -169,12 +172,10 @@ share_type account_create_operation::calculate_fee( const fee_parameters_type& k
    return core_fee_required;
 }
 
-
 void account_create_operation::validate()const
 {
    FC_ASSERT( fee.amount >= 0 );
    FC_ASSERT( is_valid_name( name ) );
-   FC_ASSERT( referrer_percent <= GRAPHENE_100_PERCENT );
    FC_ASSERT( owner.num_auths() != 0 );
    FC_ASSERT( active.num_auths() != 0 );
    FC_ASSERT( !owner.is_impossible(), "cannot create an account with an imposible owner authority threshold" );

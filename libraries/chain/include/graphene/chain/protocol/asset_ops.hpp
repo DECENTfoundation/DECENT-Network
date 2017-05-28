@@ -56,44 +56,16 @@ namespace graphene { namespace chain {
    };
 
    /**
-    * @brief The asset_options struct contains options available on all assets in the network
-    *
-    * @note Changes to this struct will break protocol compatibility
-    */
-   struct asset_options {
-      /// The maximum supply of this asset which may exist at any given time. This can be as large as
-      /// GRAPHENE_MAX_SHARE_SUPPLY
-      share_type max_supply = GRAPHENE_MAX_SHARE_SUPPLY;
-
-      /// When a non-core asset is used to pay a fee, the blockchain must convert that asset to core asset in
-      /// order to accept the fee. If this asset's fee pool is funded, the chain will automatically deposite fees
-      /// in this asset to its accumulated fees, and withdraw from the fee pool the same amount as converted at
-      /// the core exchange rate.
-      price core_exchange_rate;
-
-      optional<monitored_asset_options> monitored_asset_opts;
-
-      /**
-       * data that describes the meaning/purpose of this asset, fee will be charged proportional to
-       * size of description.
-       */
-      string description;
-      extensions_type extensions;
-
-      /// Perform internal consistency checks.
-      /// @throws fc::exception if any check fails
-      void validate()const;
-   };
-
-   /**
     * @ingroup operations
+    * Creates an asset. If the asset is MUA, the operation may only be used in a proposed transaction, and a proposed transaction which contains this
+    * operation must have a review period specified in the current global parameters before it may be accepted.
     */
    struct asset_create_operation : public base_operation
    {
       struct fee_parameters_type { 
-         uint64_t symbol3        = 500 * GRAPHENE_BLOCKCHAIN_PRECISION;
-         uint64_t symbol4        = 200 * GRAPHENE_BLOCKCHAIN_PRECISION;
-         uint64_t long_symbol    = 5   * GRAPHENE_BLOCKCHAIN_PRECISION;
+         uint64_t symbol3        = 5 * GRAPHENE_BLOCKCHAIN_PRECISION;
+         uint64_t symbol4        = 2 * GRAPHENE_BLOCKCHAIN_PRECISION;
+         uint64_t long_symbol    = 5 * GRAPHENE_BLOCKCHAIN_PRECISION / 10;
          uint32_t price_per_kbyte = 10; /// only required for large memos.
       };
 
@@ -105,15 +77,21 @@ namespace graphene { namespace chain {
       /// Number of digits to the right of decimal point, must be less than or equal to 12
       uint8_t                 precision = 0;
 
-      /// Options common to all assets.
-      ///
-      /// @note common_options.core_exchange_rate technically needs to store the asset ID of this new asset. Since this
-      /// ID is not known at the time this operation is created, create this price as though the new asset has instance
-      /// ID 1, and the chain will overwrite it with the new asset's ID.
-      asset_options              common_options;
+      /**
+       * data that describes the meaning/purpose of this asset, fee will be charged proportional to
+       * size of description.
+       */
+      string description;
+
+      /// The maximum supply of this asset which may exist at any given time. This can be as large as
+      /// GRAPHENE_MAX_SHARE_SUPPLY
+      share_type max_supply = GRAPHENE_MAX_SHARE_SUPPLY;
+
+      optional<monitored_asset_options> monitored_asset_opts;
+
       extensions_type extensions;
 
-      account_id_type fee_payer()const { return issuer; }
+      account_id_type fee_payer()const { if(monitored_asset_opts) return account_id_type(); return issuer; }
       void            validate()const;
       share_type      calculate_fee( const fee_parameters_type& k )const;
    };
@@ -145,7 +123,8 @@ namespace graphene { namespace chain {
 
       /// If the asset is to be given a new issuer, specify his ID here.
       optional<account_id_type>   new_issuer;
-      asset_options               new_options;
+      string new_description;
+      share_type max_supply = GRAPHENE_MAX_SHARE_SUPPLY;
       extensions_type             extensions;
 
       account_id_type fee_payer()const { return issuer; }
@@ -158,17 +137,17 @@ namespace graphene { namespace chain {
        * @ingroup operations
        *
        * BitAssets have some options which are not relevant to other asset types. This operation is used to update those
-       * options an an existing BitAsset.
+       * options an an existing MonitoredAsset.
        *
        * @pre @ref issuer MUST be an existing account and MUST match asset_object::issuer on @ref asset_to_update
-       * @pre @ref asset_to_update MUST be a BitAsset, i.e. @ref asset_object::is_monitored_asset() returns true
+       * @pre @ref asset_to_update MUST be a MonitoredAsset, i.e. @ref asset_object::is_monitored_asset() returns true
        * @pre @ref fee MUST be nonnegative, and @ref issuer MUST have a sufficient balance to pay it
        * @pre @ref new_options SHALL be internally consistent, as verified by @ref validate()
-       * @post @ref asset_to_update will have BitAsset-specific options matching those of new_options
+       * @post @ref asset_to_update will have MonitoredAsset-specific options matching those of new_options
        */
       struct asset_update_monitored_asset_operation : public base_operation
       {
-         struct fee_parameters_type { uint64_t fee = 1 * GRAPHENE_BLOCKCHAIN_PRECISION; };
+         struct fee_parameters_type { uint64_t fee = 1 * GRAPHENE_BLOCKCHAIN_PRECISION/10; };
 
          asset           fee;
          account_id_type issuer;
@@ -241,14 +220,6 @@ namespace graphene { namespace chain {
 } } // graphene::chain
 
 
-FC_REFLECT( graphene::chain::asset_options,
-            (max_supply)
-            (core_exchange_rate)
-            (monitored_asset_opts)
-            (description)
-            (extensions)
-          )
-
 FC_REFLECT( graphene::chain::monitored_asset_options,
             (feeds)
             (current_feed)
@@ -268,7 +239,9 @@ FC_REFLECT( graphene::chain::asset_create_operation,
             (issuer)
             (symbol)
             (precision)
-            (common_options)
+            (description)
+            (max_supply)
+            (monitored_asset_opts)
             (extensions)
           )
 FC_REFLECT( graphene::chain::asset_update_operation,
@@ -276,7 +249,8 @@ FC_REFLECT( graphene::chain::asset_update_operation,
             (issuer)
             (asset_to_update)
             (new_issuer)
-            (new_options)
+            (new_description)
+            (max_supply)
             (extensions)
           )
 FC_REFLECT( graphene::chain::asset_issue_operation,

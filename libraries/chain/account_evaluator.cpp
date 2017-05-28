@@ -31,6 +31,7 @@
 #include <graphene/chain/exceptions.hpp>
 #include <graphene/chain/hardfork.hpp>
 #include <graphene/chain/internal_exceptions.hpp>
+#include <graphene/chain/transaction_detail_object.hpp>
 
 #include <algorithm>
 
@@ -105,16 +106,11 @@ object_id_type account_create_evaluator::do_apply( const account_create_operatio
 { try {
 
    database& d = db();
-   uint16_t referrer_percent = o.referrer_percent;
+
    const auto& new_acnt_object = db().create<account_object>( [&]( account_object& obj ){
          obj.registrar = o.registrar;
-         obj.referrer = o.referrer;
-         obj.lifetime_referrer = o.referrer(db()).lifetime_referrer;
 
          auto& params = db().get_global_properties().parameters;
-         obj.network_fee_percentage = params.network_percent_of_fee;
-         obj.lifetime_referrer_fee_percentage = params.lifetime_referrer_percent_of_fee;
-         obj.referrer_rewards_percentage = referrer_percent;
 
          obj.name             = o.name;
          obj.owner            = o.owner;
@@ -150,6 +146,18 @@ object_id_type account_create_evaluator::do_apply( const account_create_operatio
       } );
    }
 
+   db().create<transaction_detail_object>([&o, &new_acnt_object, &d](transaction_detail_object& obj)
+                                          {
+                                             obj.m_operation_type = (uint8_t)transaction_detail_object::account_create;
+
+                                             obj.m_from_account = o.registrar;
+                                             obj.m_to_account = new_acnt_object.id;
+                                             obj.m_transaction_amount = asset();
+                                             obj.m_transaction_fee = o.fee;
+                                             obj.m_str_description = string();
+                                             obj.m_timestamp = d.head_block_time();
+                                          });
+
    return new_acnt_object.id;
 } FC_CAPTURE_AND_RETHROW((o)) }
 
@@ -178,7 +186,6 @@ void_result account_update_evaluator::do_evaluate( const account_update_operatio
 void_result account_update_evaluator::do_apply( const account_update_operation& o )
 { try {
    database& d = db();
-   bool sa_before, sa_after;
    d.modify( *acnt, [&](account_object& a){
       if( o.owner )
       {
