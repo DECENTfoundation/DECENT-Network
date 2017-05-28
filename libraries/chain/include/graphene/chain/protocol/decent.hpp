@@ -65,11 +65,13 @@ namespace graphene { namespace chain {
 
       asset fee;
       account_id_type author;
+#ifdef DECENT_TESTNET2
       // optional parameter. If map is not empty, payout will be splitted
       // maps co-authors to split based on basis points
       // author can be included in co_authors map
       // max num of co-authors = 10
       map<account_id_type, uint32_t> co_authors;
+#endif
       string URI;
 #ifdef PRICE_REGIONS
       vector<pair<uint32_t, asset>> price;

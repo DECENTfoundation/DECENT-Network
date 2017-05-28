@@ -446,9 +446,11 @@ using namespace decent::encrypt;
       static const uint8_t type_id  = impl_content_object_type;
       
       account_id_type author;
+#ifdef DECENT_TESTNET2
       // if co_authors map is not empty, payout will be splitted
       // maps co-authors to split based on basis points
       map<account_id_type, uint32_t> co_authors;
+#endif
       time_point_sec expiration;
       time_point_sec created;
 #ifdef PRICE_REGIONS

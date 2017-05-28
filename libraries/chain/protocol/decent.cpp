@@ -20,6 +20,7 @@ void content_submit_operation::validate()const
 {
    FC_ASSERT( fee.amount >= 0 );
    FC_ASSERT( co_authors.size() <= 10 );
+
    uint32_t sum_of_splits = 0;
    for( auto const &element : co_authors )
    {
