@@ -630,6 +630,16 @@ namespace graphene { namespace app {
          real_supply get_real_supply()const;
 
          /**
+          * @brief Get a list of accounts holding publishing manager status.
+          * @param lower_bound_name The name of the first account to return.  If the named account does not exist,
+          * the list will start at the account that comes after \c lowerbound
+          * @param limit The maximum number of accounts to return (max: 100)
+          * @return List of accounts
+          * @ingroup DatabaseAPI
+          */
+         vector<account_id_type> list_publishing_managers( const string& lower_bound_name, uint32_t limit  )const;
+
+         /**
           * @brief Get a list of open buyings
           * @return The buying_objects
           * @ingroup DatabaseAPI
@@ -947,6 +957,7 @@ FC_API(graphene::app::database_api,
           (get_proposed_transactions)
 
           // Decent
+          (list_publishing_managers)
           (get_open_buyings)
           (get_open_buyings_by_URI)
           (get_open_buyings_by_consumer)

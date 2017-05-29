@@ -160,6 +160,7 @@ namespace graphene { namespace app {
       // Blinded balances
       
       // Decent
+      vector<account_id_type> list_publishing_managers( const string& lower_bound_name, uint32_t limit )const;
       vector<buying_object> get_open_buyings()const;
       vector<buying_object> get_open_buyings_by_URI(const string& URI)const;
       vector<buying_object> get_open_buyings_by_consumer(const account_id_type& consumer)const;
@@ -1712,8 +1713,27 @@ namespace graphene { namespace app {
    {
       return my->_db.get_real_supply();
    }
-   
-   vector<buying_object> database_api::get_open_buyings()const
+
+   vector<account_id_type> database_api::list_publishing_managers( const string& lower_bound_name, uint32_t limit  )const
+   {
+      return my->list_publishing_managers( lower_bound_name, limit );
+   }
+
+   vector<account_id_type> database_api_impl::list_publishing_managers( const string& lower_bound_name, uint32_t limit  )const
+   {
+      FC_ASSERT( limit <= 100 );
+      const auto& idx = _db.get_index_type<account_index>().indices().get<by_publishing_manager_and_name>();
+      vector<account_id_type> result;
+
+      for( auto itr = idx.lower_bound( boost::make_tuple( true, lower_bound_name ) );
+           limit-- && itr->rights_to_publish.is_publishing_manager && itr != idx.end();
+           ++itr )
+         result.push_back(itr->id);
+
+      return result;
+   }
+
+      vector<buying_object> database_api::get_open_buyings()const
    {
       return my->get_open_buyings();
    }
@@ -2249,6 +2269,12 @@ vector<content_summary> database_api_impl::list_content( const string& URI_begin
                continue;
             }
 #endif
+            if ( !itr_begin->is_blocked ) // Content can be cancelled by an author. In such a case content is not available to purchase.
+            {
+               ++itr_begin;
+               continue;
+            }
+
             content.set( *itr_begin , *account_itr, region_code );
             if (content.expiration > fc::time_point::now())
             {
@@ -2355,7 +2381,7 @@ vector<content_summary> database_api_impl::list_content( const string& URI_begin
       
       while(count-- && itr != idx.end())
       {
-         if( itr->expiration >= _db.head_block_time() )
+         if( itr->expiration >= _db.head_block_time() && !itr->is_blocked )
             result.emplace_back(*itr);
          else
             ++count;

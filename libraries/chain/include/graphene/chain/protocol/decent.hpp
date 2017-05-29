@@ -19,6 +19,43 @@
 namespace graphene { namespace chain {
 
    /**
+    * @ingroup transaction
+    * @brief This operation is used to promote account to publishing manager.
+    * Such an account can grant or remove right to publish a content. Only DECENT account has permission to use this method.
+    */
+   struct set_publishing_manager_operation : public base_operation
+   {
+      struct fee_parameters_type { uint64_t fee = 0; };
+
+      asset fee;
+      account_id_type from;
+      vector<account_id_type> to;
+      bool can_create_publishers;
+
+      account_id_type fee_payer()const { return from; }
+      void validate()const;
+
+      void get_required_active_authorities( flat_set<account_id_type>& a )const { a.insert( account_id_type(15) ); }
+   };
+
+   /**
+    * @ingroup transaction
+    * @brief Allows account to publish a content. Only account with publishing manager status has permission to use this method.
+    */
+   struct set_publishing_right_operation : public base_operation
+   {
+      struct fee_parameters_type { uint64_t fee = 0; };
+
+      asset fee;
+      account_id_type from;
+      vector<account_id_type> to;
+      bool is_publisher;
+
+      account_id_type fee_payer()const { return from; }
+      void validate()const;
+   };
+
+   /**
     * @ingroup transactions
     * @brief Submits content to the blockchain.
     */
@@ -28,6 +65,13 @@ namespace graphene { namespace chain {
 
       asset fee;
       account_id_type author;
+#ifdef DECENT_TESTNET2
+      // optional parameter. If map is not empty, payout will be splitted
+      // maps co-authors to split based on basis points
+      // author can be included in co_authors map
+      // max num of co-authors = 10
+      map<account_id_type, uint32_t> co_authors;
+#endif
       string URI;
 #ifdef PRICE_REGIONS
       vector<pair<uint32_t, asset>> price;
@@ -42,7 +86,7 @@ namespace graphene { namespace chain {
       /// Defines number of seeders needed to restore the encryption key
       uint32_t quorum;
       fc::time_point_sec expiration;
-      asset publishing_fee; //< Fee must be greater than the sum of seeders' publishing prices * number of days
+      asset publishing_fee; //< Fee must be greater than the sum of seeders' publishing prices * number of days. Is paid by author
       string synopsis;
 #ifdef TESTNET_3
       optional<decent::encrypt::CustodyData> cd; //< if cd.n == 0 then no custody is submitted, and simplified verification is done.
@@ -51,6 +95,22 @@ namespace graphene { namespace chain {
 #endif
       account_id_type fee_payer()const { return author; }
       void validate()const;
+   };
+
+   /**
+    * @ingroup transactions
+    * @brief This operation is used to cancel submitted content.
+    */
+   struct content_cancellation_operation : public base_operation
+   {
+      struct fee_parameters_type { uint64_t fee = 0; };
+
+      asset fee;
+      account_id_type author;
+      string URI;
+
+      account_id_type fee_payer()const { return author; }
+      void validate()const { FC_ASSERT( URI != "" ); };
    };
 
    /**
@@ -235,6 +295,7 @@ namespace graphene { namespace chain {
       asset payout;
       // do we need here region_code_from?
       account_id_type author;
+      map<account_id_type, uint32_t> co_authors;
       account_id_type consumer;
       buying_id_type buying;
 
@@ -244,7 +305,10 @@ namespace graphene { namespace chain {
 
 } } // graphene::chain
 
-FC_REFLECT(graphene::chain::content_submit_operation,(fee)(size)(author)(URI)(quorum)(price)(hash)(seeders)(key_parts)(expiration)(publishing_fee)(synopsis)(cd))
+FC_REFLECT(graphene::chain::content_submit_operation,(fee)(size)(author)(co_authors)(URI)(quorum)(price)(hash)(seeders)(key_parts)(expiration)(publishing_fee)(synopsis)(cd))
+FC_REFLECT(graphene::chain::set_publishing_manager_operation,(fee)(from)(to)(can_create_publishers))
+FC_REFLECT(graphene::chain::set_publishing_right_operation,(fee)(from)(to)(is_publisher))
+FC_REFLECT(graphene::chain::content_cancellation_operation,(fee)(author)(URI))
 #ifdef PRICE_REGIONS
 FC_REFLECT(graphene::chain::request_to_buy_operation,(fee)(URI)(consumer)(price)(region_code_from)(pubKey))
 #else
@@ -262,10 +326,12 @@ FC_REFLECT(graphene::chain::return_escrow_submission_operation,(fee)(author)(esc
 FC_REFLECT(graphene::chain::return_escrow_buying_operation,(fee)(consumer)(escrow)(buying))
 FC_REFLECT(graphene::chain::report_stats_operation,(fee)(consumer)(stats))
 FC_REFLECT(graphene::chain::pay_seeder_operation,(fee)(payout)(author)(seeder));
-FC_REFLECT(graphene::chain::finish_buying_operation,(fee)(payout)(author)(buying)(consumer));
+FC_REFLECT(graphene::chain::finish_buying_operation,(fee)(payout)(author)(co_authors)(buying)(consumer));
 
-
+FC_REFLECT( graphene::chain::set_publishing_manager_operation::fee_parameters_type, ( fee ) )
+FC_REFLECT( graphene::chain::set_publishing_right_operation::fee_parameters_type, ( fee ) )
 FC_REFLECT( graphene::chain::content_submit_operation::fee_parameters_type, (fee) )
+FC_REFLECT( graphene::chain::content_cancellation_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::request_to_buy_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::leave_rating_and_comment_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::ready_to_publish_operation::fee_parameters_type, (fee) )

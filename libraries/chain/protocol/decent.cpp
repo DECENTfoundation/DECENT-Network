@@ -3,9 +3,31 @@
 
 namespace graphene { namespace chain {
 
+void set_publishing_manager_operation::validate()const
+{
+   FC_ASSERT( fee.amount >= 0 );
+   FC_ASSERT( to.size() > 0 );
+   FC_ASSERT( from == account_id_type(15), "Account does not have permission to this operation" );
+}
+
+void set_publishing_right_operation::validate()const
+{
+   FC_ASSERT( fee.amount >= 0 );
+   FC_ASSERT( to.size() > 0 );
+}
+
 void content_submit_operation::validate()const
 {
    FC_ASSERT( fee.amount >= 0 );
+   FC_ASSERT( co_authors.size() <= 10 );
+
+   uint32_t sum_of_splits = 0;
+   for( auto const &element : co_authors )
+   {
+      FC_ASSERT( element.second >= 0 );
+      sum_of_splits += element.second;
+   }
+   FC_ASSERT( sum_of_splits <= 10000 );
 #ifdef PRICE_REGIONS
    FC_ASSERT(false == price.empty());
    for (auto const& item : price)

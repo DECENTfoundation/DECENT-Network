@@ -118,7 +118,7 @@ int main( int argc, char** argv )
       opts.add_options()
       ("help,h", "Print this help message and exit.")
       ("username", bpo::value<string>(), "User name.")
-      ("server-rpc-endpoint,s", bpo::value<string>()->implicit_value("ws://stage.decentgo.com:8090"), "Server websocket RPC endpoint")
+      ("server-rpc-endpoint,s", bpo::value<string>()->default_value("ws://stage.decentgo.com:8090"), "Server websocket RPC endpoint")
       ("server-rpc-user,u", bpo::value<string>(), "Server Username")
       ("server-rpc-password,p", bpo::value<string>(), "Server Password")
       ("rpc-endpoint,r", bpo::value<string>()->implicit_value("127.0.0.1:8091"), "Endpoint for wallet websocket RPC to listen on")
@@ -136,8 +136,10 @@ int main( int argc, char** argv )
       bpo::store( bpo::parse_command_line(argc, argv, opts), options );
       
       string str_password = "somepasswordthatwillbeuserdforwallet";
-      string str_registrar = "1.2.20";
-      string str_referrer = "1.2.20";
+      string str_registrar_accoount = "decent";
+      string str_registrar_accoount_key = "5JuJbrKZgAATcouJnwpaxPbHMAMDXSgUpQSfxTXzkSUufcnpTUa";
+
+
       string str_username;
       bool bool_override = false;
       
@@ -247,21 +249,20 @@ int main( int argc, char** argv )
                wapiptr->set_password(str_password);
                wapiptr->unlock(str_password);   //  throws if the password is wrong
                
-               wapiptr->import_key("decentdev-hayk", "5JRPoVy5ZUX4ZxDyec78Hb7GV1424XnoD3yDKEYTWMqS4JBMB9q");
+               wapiptr->import_key(str_registrar_accoount, str_registrar_accoount_key);
                wapiptr->save_wallet_file();
             } else {
                wapiptr->unlock(str_password);   //  throws if the password is wrong
             }
             
-            
-            account_object account_referrer = wapiptr->get_account(str_referrer);
-            account_object account_registrar = wapiptr->get_account(str_registrar);
+            account_object reg_account = wapiptr->get_account( str_registrar_accoount );
+
             
             auto keys = wapiptr->suggest_brain_key();
 
             string brain_key = keys.brain_priv_key;
             
-            wapiptr->create_account_with_brain_key(brain_key, str_username, str_registrar, str_referrer, true);
+            wapiptr->create_account_with_brain_key(brain_key, str_username, account_id(reg_account), account_id(reg_account), true);
             
             account_object new_account = wapiptr->get_account( str_username );
             
@@ -271,6 +272,7 @@ int main( int argc, char** argv )
             result["brain_key"] = brain_key;
             result["username"] = str_username;
             result["public_key"] = (std::string)keys.pub_key;
+            result["id"] = account_id(new_account);
             std::cout << result << std::endl;
             
          }

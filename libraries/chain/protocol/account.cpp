@@ -3,7 +3,7 @@
  *
  * The MIT License
  *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * Permission is hereby granted, free of char§e, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
@@ -154,8 +154,16 @@ void account_options::validate() const
 
    FC_ASSERT( needed_witnesses == 0, "May not specify fewer witnesses than the number voted for.");
 
-   FC_ASSERT( subscription_period > 0 );
-   FC_ASSERT( price_per_subscribe.amount >= 0 );
+   if( allow_subscription )
+   {
+      FC_ASSERT( subscription_period > 0 );
+      FC_ASSERT( price_per_subscribe.amount > 0 );
+   } else
+   {
+      FC_ASSERT( subscription_period >= 0 );
+      FC_ASSERT( price_per_subscribe.amount >= 0 );
+   }
+
 }
 
 share_type account_create_operation::calculate_fee( const fee_parameters_type& k )const
