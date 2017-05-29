@@ -446,6 +446,11 @@ using namespace decent::encrypt;
       static const uint8_t type_id  = impl_content_object_type;
       
       account_id_type author;
+#ifdef DECENT_TESTNET2
+      // if co_authors map is not empty, payout will be splitted
+      // maps co-authors to split based on basis points
+      map<account_id_type, uint32_t> co_authors;
+#endif
       time_point_sec expiration;
       time_point_sec created;
 #ifdef PRICE_REGIONS
@@ -620,7 +625,7 @@ using namespace decent::encrypt;
 
 FC_REFLECT_DERIVED(graphene::chain::content_object,
                    (graphene::db::object),
-                   (author)(expiration)(created)(price)(size)(synopsis)
+                   (author)(co_authors)(expiration)(created)(price)(size)(synopsis)
                    (URI)(quorum)(key_parts)(_hash)(last_proof)(is_blocked)
                    (AVG_rating)(num_of_ratings)(times_bought)(publishing_fee_escrow)(cd) )
 

@@ -1511,6 +1511,7 @@ namespace graphene { namespace wallet {
           * expiration, publishing fee and synopsis fields can be modified, but expiration time can't be shortened.
           * @see submit_content_new()
           * @param author The author of the content
+          * @param co_authors The co-authors' account name or ID mapped to corresponding payment split based on basis points
           * @param URI The URI of the content
           * @param price_asset_name Ticker symbol of the asset which will be used to buy content
           * @param price_amounts The price of the content per regions
@@ -1530,6 +1531,7 @@ namespace graphene { namespace wallet {
           */
          signed_transaction
          submit_content(string const& author,
+                        vector< pair< string, uint32_t>> co_authors,
                         string const& URI,
                         vector <regional_price_info> const& price_amounts,
                         uint64_t size,
@@ -1550,6 +1552,7 @@ namespace graphene { namespace wallet {
           * @see upload_package()
           * @see submit_content()
           * @param author The author of the content
+          * @param co_authors The co-authors' account name or ID mapped to corresponding payment split based on basis points
           * @param content_dir Path to the directory containing all content that should be packed
           * @param samples_dir Path to the directory containing samples of content
           * @param protocol Protocol for uploading package( magnet or IPFS)
@@ -1562,12 +1565,16 @@ namespace graphene { namespace wallet {
           * @return The signed transaction submitting the content
           * @ingroup WalletCLI
           */
-         fc::ripemd160 submit_content_new(string const &author, string const &content_dir, string const &samples_dir,
+
+         fc::ripemd160 submit_content_new(string const &author, 
+                                          vector< pair< string, uint32_t>> co_authors,
+                                          string const &content_dir, string const &samples_dir,
                                           string const &protocol,
                                           vector<regional_price_info> const &price_amounts,
                                           vector<account_id_type> const &seeders,
                                           fc::time_point_sec const &expiration, string const &synopsis,
                                           bool broadcast);
+
 
          /**
           * @brief This function can be used to cancel submitted content. This content is immediately not available to purchase.
@@ -1962,7 +1969,12 @@ namespace graphene { namespace wallet {
           */
          optional<vector<seeder_object>> list_seeders_by_upload( const uint32_t count )const;
 
-         
+         /**
+          * @brief Get author and list of co-authors of a content corresponding to the provided URI
+          * @param URI URI of the content
+          * @return The autor of the content and the list of co-authors, if provided
+          */
+         pair<account_id_type, vector<account_id_type>> get_author_and_co_authors_by_URI( const string& URI )const;
 
          /**
           * @brief Create package from selected files
@@ -2223,6 +2235,9 @@ FC_API( graphene::wallet::wallet_api,
            (get_content_ratings)
            (get_content_comments)
            (list_imported_ipfs_IDs)
+           (list_seeders_ipfs_IDs)
+           (list_seeders_by_upload)
+           (get_author_and_co_authors_by_URI)
            (create_package)
            (extract_package)
            (download_package)

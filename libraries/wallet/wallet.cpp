@@ -2107,6 +2107,7 @@ public:
    }
 
    signed_transaction submit_content(string const& author,
+                                     vector< pair< string, uint32_t>> co_authors,
                                      string const& URI,
                                      vector<regional_price_info> const& price_amounts,
                                      fc::ripemd160 const& hash,
@@ -2124,6 +2125,20 @@ public:
       try
       {
          FC_ASSERT(!is_locked());
+         account_id_type author_account = get_account_id( author );
+
+         map<account_id_type, uint32_t> co_authors_id_to_split;
+         if( !co_authors.empty() )
+         {
+            for( auto const& element : co_authors )
+            {
+               account_id_type co_author = get_account_id( element.first );
+               co_authors_id_to_split[ co_author ] = element.second;
+            }
+         }
+
+         // checking for duplicates
+         FC_ASSERT( co_authors.size() == co_authors_id_to_split.size(), "Duplicity in the list of co-authors is not allowed." );
 
          fc::optional<asset_object> fee_asset_obj = get_asset(publishing_fee_symbol_name);
          FC_ASSERT(fee_asset_obj, "Could not find asset matching ${asset}", ("asset", publishing_fee_symbol_name));
@@ -2140,7 +2155,8 @@ public:
             submit_op.key_parts.push_back(cp);
          }
 
-         submit_op.author = get_account_id( author );
+         submit_op.author = author_account;
+         submit_op.co_authors = co_authors_id_to_split;
          submit_op.URI = URI;
          submit_content_utility(submit_op, price_amounts);
          submit_op.hash = hash;
@@ -2161,24 +2177,37 @@ public:
       } FC_CAPTURE_AND_RETHROW( (author)(URI)(price_amounts)(hash)(seeders)(quorum)(expiration)(publishing_fee_symbol_name)(publishing_fee_amount)(synopsis)(secret)(broadcast) )
    }
 
-
    fc::ripemd160 submit_content_new(string const& author,
-                                         string const& content_dir,
-                                         string const& samples_dir,
-                                         string const& protocol,
-                                         vector<regional_price_info> const& price_amounts,
-                                         vector<account_id_type> const& seeders,
-                                         fc::time_point_sec const& expiration,
-                                         string const& synopsis,
-                                         bool broadcast/* = false */)
+
+                                    vector< pair< string, uint32_t>> co_authors,     
+                                    string const& content_dir,
+                                    string const& samples_dir,
+                                    string const& protocol,
+                                    vector<regional_price_info> const& price_amounts,
+                                    vector<account_id_type> const& seeders,
+                                    fc::time_point_sec const& expiration,
+                                    string const& synopsis,
+                                    bool broadcast/* = false */)
    {
       auto& package_manager = decent::package::PackageManager::instance();
 
-      
       try
       {
          FC_ASSERT(!is_locked());
          account_object author_account = get_account( author );
+
+         map<account_id_type, uint32_t> co_authors_id_to_split;
+         if( !co_authors.empty() )
+         {
+            for( auto const &element : co_authors )
+            {
+               account_id_type co_author = get_account_id( element.first );
+               co_authors_id_to_split[ co_author ] = element.second;
+            }
+         }
+
+         // checking for duplicates
+         FC_ASSERT( co_authors.size() == co_authors_id_to_split.size(), "Duplicity in the list of co-authors is not allowed." );
 
          FC_ASSERT(false == price_amounts.empty());
          FC_ASSERT(time_point_sec(fc::time_point::now()) <= expiration);
@@ -2205,6 +2234,7 @@ public:
          }
 
          submit_op.author = author_account.id;
+         submit_op.co_authors = co_authors_id_to_split;
          submit_content_utility(submit_op, price_amounts);
 
          submit_op.seeders = seeders;
@@ -2241,7 +2271,6 @@ signed_transaction content_cancellation(string author,
       tx.operations.push_back( cc_op );
       set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
       tx.validate();
-
       return sign_transaction( tx, broadcast );
    } FC_CAPTURE_AND_RETHROW( (author)(URI)(broadcast) )
 }
@@ -2583,7 +2612,7 @@ signed_transaction content_cancellation(string author,
    map<string, vector<string>> list_seeders_ipfs_IDs( const string& URI )const
    {
       fc::optional<content_object> co = _remote_db->get_content( URI );
-      FC_ASSERT( co.valid(), "content does not exist");
+      FC_ASSERT( co.valid(), "Content does not exist.");
       map<string, vector<string>> mapped_IDs;
       string account;
       for( const auto& item : co->key_parts )
@@ -2593,6 +2622,18 @@ signed_transaction content_cancellation(string author,
       }
       return mapped_IDs;
    }
+
+   pair<account_id_type, vector<account_id_type>> get_author_and_co_authors_by_URI( const string& URI )const
+   {
+      fc::optional<content_object> co = _remote_db->get_content( URI );
+      FC_ASSERT( co.valid(), "Content does not exist.");
+      pair<account_id_type, vector<account_id_type>> result;
+      result.first = co->author;
+      for( auto const& co_author : co->co_authors )
+         result.second.emplace_back( co_author.first );
+
+      return result;
+   };
 
    void dbg_make_uia(string creator, string symbol)
    {
@@ -3817,6 +3858,7 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
 
    signed_transaction
    wallet_api::submit_content(string const& author,
+                              vector< pair< string, uint32_t>> co_authors,
                               string const& URI,
                               vector <regional_price_info> const& price_amounts,
                               uint64_t size,
@@ -3831,18 +3873,20 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
                               decent::encrypt::CustodyData const& cd,
                               bool broadcast)
    {
-      return my->submit_content(author, URI, price_amounts, hash, size, seeders, quorum, expiration, publishing_fee_asset, publishing_fee_amount, synopsis, secret, cd, broadcast);
+      return my->submit_content(author, co_authors, URI, price_amounts, hash, size, seeders, quorum, expiration, publishing_fee_asset, publishing_fee_amount, synopsis, secret, cd, broadcast);
    }
 
    fc::ripemd160
-   wallet_api::submit_content_new(string const &author, string const &content_dir, string const &samples_dir,
+   wallet_api::submit_content_new(string const &author, vector< pair< string, uint32_t>> co_authors, 
+                                     string const &content_dir, string const &samples_dir,
                                      string const &protocol,
                                      vector<regional_price_info> const &price_amounts,
                                      vector<account_id_type> const &seeders,
                                      fc::time_point_sec const &expiration, string const &synopsis,
                                      bool broadcast)
    {
-      return my->submit_content_new(author, content_dir, samples_dir, protocol, price_amounts, seeders, expiration, synopsis, broadcast);
+      return my->submit_content_new(author, co_authors, content_dir, samples_dir, protocol, price_amounts, seeders, expiration, synopsis, broadcast);
+
    }
 
    signed_transaction wallet_api::content_cancellation(string author,
@@ -3862,7 +3906,6 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
    {
       return my->price_to_dct(price);
    }
-
 
 // HEAD
 optional<content_download_status> wallet_api::get_download_status(string consumer,
@@ -4116,6 +4159,11 @@ map<string, string> wallet_api::get_content_comments( const string& URI )const
 
       return result;
    }
+
+pair<account_id_type, vector<account_id_type>> wallet_api::get_author_and_co_authors_by_URI( const string& URI )const
+{
+   return my->get_author_and_co_authors_by_URI( URI );
+}
 
    vector<content_object> wallet_api::list_content_by_bought( uint32_t count)const
    {
