@@ -136,6 +136,7 @@ void database::initialize_evaluators()
    register_evaluator<withdraw_permission_update_evaluator>();
    register_evaluator<withdraw_permission_delete_evaluator>();
    register_evaluator<content_submit_evaluator>();
+   register_evaluator<content_cancellation_evaluator>();
    register_evaluator<request_to_buy_evaluator>();
    register_evaluator<leave_rating_evaluator>();
    register_evaluator<ready_to_publish_evaluator>();
@@ -150,6 +151,8 @@ void database::initialize_evaluators()
    register_evaluator<return_escrow_submission_evaluator>();
    register_evaluator<return_escrow_buying_evaluator>();
    register_evaluator<report_stats_evaluator>();
+   register_evaluator<set_publishing_manager_evaluator>();
+   register_evaluator<set_publishing_right_evaluator>();
 }
 
 void database::initialize_indexes()

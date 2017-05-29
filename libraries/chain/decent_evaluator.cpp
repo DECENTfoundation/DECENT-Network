@@ -19,8 +19,95 @@
 
 namespace graphene { namespace chain {
 
+   void_result set_publishing_manager_evaluator::do_evaluate( const set_publishing_manager_operation& o )
+   {try{
+      FC_ASSERT( o.from == account_id_type(15) , "This operation is permitted only to DECENT account");
+   }FC_CAPTURE_AND_RETHROW( (o) ) }
+
+   void_result set_publishing_manager_evaluator::do_apply( const set_publishing_manager_operation& o )
+   {try{
+      for( const account_id_type& element : o.to )
+      {
+         auto& to_acc = db().get<account_object>(element);
+         if( to_acc.rights_to_publish.is_publishing_manager )
+         {
+            if( o.can_create_publishers == false )
+            {
+               db().modify<account_object>(to_acc, [](account_object& ao){
+                  ao.rights_to_publish.is_publishing_manager = false;
+               });
+
+               for( const account_id_type& publisher : to_acc.rights_to_publish.publishing_rights_forwarded )
+               {
+                  auto& publisher_acc = db().get<account_object>(publisher);
+                  auto acc_itr = std::find( publisher_acc.rights_to_publish.publishing_rights_received.begin(), publisher_acc.rights_to_publish.publishing_rights_received.end(), to_acc.id );
+                  db().modify<account_object>(publisher_acc, [&acc_itr](account_object& ao){
+                     ao.rights_to_publish.publishing_rights_received.erase( acc_itr );
+                  });
+               }
+               db().modify<account_object>(to_acc, [](account_object& ao){
+                  ao.rights_to_publish.publishing_rights_forwarded.clear();
+               });
+            }
+         }
+         else
+            if( o.can_create_publishers == true )
+               db().modify<account_object>(to_acc, [](account_object& ao){
+                  ao.rights_to_publish.is_publishing_manager = true;
+               });
+      }
+
+}FC_CAPTURE_AND_RETHROW( (o) ) }
+
+   void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_right_operation& o )
+   {try{
+         const auto& from_acc = db().get<account_object>(o.from);
+         FC_ASSERT( from_acc.rights_to_publish.is_publishing_manager, "Account does not have permission to give publishing rights" );
+      }FC_CAPTURE_AND_RETHROW( (o) ) }
+
+   void_result set_publishing_right_evaluator::do_apply( const set_publishing_right_operation& o )
+   {try{
+         const auto& from_acc = db().get<account_object>(o.from);
+
+         for( const account_id_type& element : o.to )
+         {
+            auto from_acc_itr = std::find( from_acc.rights_to_publish.publishing_rights_forwarded.begin(), from_acc.rights_to_publish.publishing_rights_forwarded.end(), element );
+            if( from_acc_itr == from_acc.rights_to_publish.publishing_rights_forwarded.end() )
+            {
+               if( o.is_publisher == true )
+                  db().modify<account_object>(from_acc, [&element](account_object& ao){
+                     ao.rights_to_publish.publishing_rights_forwarded.push_back( element );
+                  });
+            }
+            else
+            if( o.is_publisher == false )
+               db().modify<account_object>(from_acc, [&from_acc_itr](account_object& ao){
+                  ao.rights_to_publish.publishing_rights_forwarded.erase( from_acc_itr );
+               });
+
+            auto& to_acc = db().get<account_object>(element);
+            auto to_acc_itr = std::find( to_acc.rights_to_publish.publishing_rights_received.begin(), to_acc.rights_to_publish.publishing_rights_received.end(), o.from );
+            if( to_acc_itr == to_acc.rights_to_publish.publishing_rights_received.end() )
+            {
+               if( o.is_publisher == true )
+                  db().modify<account_object>(to_acc, [&](account_object& ao){
+                     ao.rights_to_publish.publishing_rights_received.push_back( o.from );
+                  });
+            }
+            else
+            if( o.is_publisher == false )
+               db().modify<account_object>(to_acc, [&to_acc_itr](account_object& ao){
+                  ao.rights_to_publish.publishing_rights_received.erase( to_acc_itr );
+               });
+         }
+
+      }FC_CAPTURE_AND_RETHROW( (o) ) }
+
    void_result content_submit_evaluator::do_evaluate(const content_submit_operation& o )
    {try{
+      const account_object& author_account = db().get<account_object>(o.author);
+      FC_ASSERT( !author_account.rights_to_publish.publishing_rights_received.empty(), "Author does not have permission to publish a content" );
+
       FC_ASSERT( o.seeders.size() > 0 );
       FC_ASSERT( o.seeders.size() == o.key_parts.size() );
       FC_ASSERT( db().head_block_time() <= o.expiration);
@@ -204,6 +291,31 @@ namespace graphene { namespace chain {
                                              });
    }FC_CAPTURE_AND_RETHROW( (o) ) }
 
+   void_result content_cancellation_evaluator::do_evaluate(const content_cancellation_operation& o)
+   {
+      try {
+         auto& idx = db().get_index_type<content_index>().indices().get<by_URI>();
+         const auto& content_itr = idx.find( o.URI );
+         FC_ASSERT( content_itr != idx.end() );
+         FC_ASSERT( o.author == content_itr->author );
+         FC_ASSERT( content_itr->expiration > db().head_block_time() );
+         FC_ASSERT( !content_itr->is_blocked );
+      }FC_CAPTURE_AND_RETHROW((o))
+   }
+
+   void_result content_cancellation_evaluator::do_apply(const content_cancellation_operation& o)
+   {
+      try {
+         auto& idx = db().get_index_type<content_index>().indices().get<by_URI>();
+         const auto& content_itr = idx.find( o.URI );
+         db().modify<content_object>(*content_itr, [&](content_object &content_obj) {
+            content_obj.is_blocked = true;
+            if( content_obj.expiration > db().head_block_time() + (24 * 60 * 60) )
+               content_obj.expiration = db().head_block_time() + (24 * 60 * 60);
+         });
+      }FC_CAPTURE_AND_RETHROW((o))
+   }
+
    void_result request_to_buy_evaluator::do_evaluate(const request_to_buy_operation& o )
    {try{
       auto& idx = db().get_index_type<content_index>().indices().get<by_URI>();
@@ -211,6 +323,7 @@ namespace graphene { namespace chain {
       FC_ASSERT( content!= idx.end() );
       FC_ASSERT( o.price <= db().get_balance( o.consumer, o.price.asset_id ) );
       FC_ASSERT( content->expiration > db().head_block_time() );
+      FC_ASSERT( !content->is_blocked , "content has been canceled" );
       {
          auto &range = db().get_index_type<subscription_index>().indices().get<by_from_to>();
          const auto &subscription = range.find(boost::make_tuple(o.consumer, content->author));
@@ -502,7 +615,7 @@ namespace graphene { namespace chain {
       auto last_proof = content->last_proof.find( o.seeder );
       if( last_proof == content->last_proof.end() ) //initial PoR
       {
-         //the inital proof, no payments yet
+         //the initial proof, no payments yet
          db().modify<content_object>(*content, [&](content_object& co){
               co.last_proof.emplace(std::make_pair(o.seeder, db().head_block_time()));
          });

@@ -459,6 +459,7 @@ using namespace decent::encrypt;
       string URI;
       map<account_id_type, CiphertextString> key_parts;
       map<account_id_type, time_point_sec> last_proof;
+      bool is_blocked;
 
       fc::ripemd160 _hash;
       uint64_t AVG_rating;
@@ -620,7 +621,7 @@ using namespace decent::encrypt;
 FC_REFLECT_DERIVED(graphene::chain::content_object,
                    (graphene::db::object),
                    (author)(expiration)(created)(price)(size)(synopsis)
-                   (URI)(quorum)(key_parts)(_hash)(last_proof)
+                   (URI)(quorum)(key_parts)(_hash)(last_proof)(is_blocked)
                    (AVG_rating)(num_of_ratings)(times_bought)(publishing_fee_escrow)(cd) )
 
 FC_REFLECT( graphene::chain::content_summary, (id)(author)(price)(synopsis)(status)(URI)(AVG_rating)(size)(expiration)(created)(times_bought) )

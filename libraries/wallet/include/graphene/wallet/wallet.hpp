@@ -1466,6 +1466,47 @@ namespace graphene { namespace wallet {
          real_supply get_real_supply()const;
 
          /**
+          * @brief This method is used to promote account to publishing manager.
+          * Such an account can grant or remove right to publish a content. Only DECENT account has permission to use this method.
+          * @see set_publishing_right()
+          * @param from Account ( DECENT account ) giving/removing status of the publishing manager.
+          * @param to List of accounts getting status of the publishing manager.
+          * @param is_allowed True to give the status, false to remove it
+          * @param broadcast True to broadcast the transaction on the network
+          * @return The signed transaction updating account status
+          * @ingroup WalletCLI
+          */
+         signed_transaction set_publishing_manager(const string from,
+                                                   const vector<string> to,
+                                                   bool is_allowed,
+                                                   bool broadcast);
+
+         /**
+          * @brief Allows account to publish a content. Only account with publishing manager status has permission to use this method.
+          * @see set_publishing_manager()
+          * @param from Account giving/removing right to publish a content.
+          * @param to List of accounts getting right to publish a content.
+          * @param is_allowed True to give the right, false to remove it
+          * @param broadcast True to broadcast the transaction on the network
+          * @return The signed transaction updating account status
+          * @ingroup WalletCLI
+          */
+         signed_transaction set_publishing_right(const string from,
+                                                 const vector<string> to,
+                                                 bool is_allowed,
+                                                 bool broadcast);
+
+         /**
+          * @brief Get a list of accounts holding publishing manager status.
+          * @param lower_bound_name The name of the first account to return.  If the named account does not exist,
+          * the list will start at the account that comes after \c lowerbound
+          * @param limit The maximum number of accounts to return (max: 100)
+          * @return List of accounts
+          * @ingroup WalletCLI
+          */
+         vector<account_id_type> list_publishing_managers( const string& lower_bound_name, uint32_t limit );
+
+         /**
           * @brief Submits or resubmits content to the blockchain. In a case of resubmit, price, seeders, quorum,
           * expiration, publishing fee and synopsis fields can be modified, but expiration time can't be shortened.
           * @see submit_content_new()
@@ -1508,7 +1549,6 @@ namespace graphene { namespace wallet {
           * @see create_package()
           * @see upload_package()
           * @see submit_content()
-          * @param author The author of the cont
           * @param author The author of the content
           * @param content_dir Path to the directory containing all content that should be packed
           * @param samples_dir Path to the directory containing samples of content
@@ -1528,6 +1568,19 @@ namespace graphene { namespace wallet {
                                           vector<account_id_type> const &seeders,
                                           fc::time_point_sec const &expiration, string const &synopsis,
                                           bool broadcast);
+
+         /**
+          * @brief This function can be used to cancel submitted content. This content is immediately not available to purchase.
+          * Seeders keep seeding this content in next 24 hours.
+          * @param author The author of the content
+          * @param URI The URI of the content
+          * @param broadcast True to broadcast the transaction on the network
+          * @ingroup WalletCLI
+          * @return signed transaction
+          */
+         signed_transaction content_cancellation(string author,
+                                                 string URI,
+                                                 bool broadcast);
 
          /**
           * @brief Downloads encrypted content specified by provided URI.
@@ -2133,8 +2186,12 @@ FC_API( graphene::wallet::wallet_api,
            (get_order_book)
            (download_content)
            (get_download_status)
+           (set_publishing_manager)
+           (set_publishing_right)
+           (list_publishing_managers)
            (submit_content)
            (submit_content_new)
+           (content_cancellation)
            (request_to_buy)
            (leave_rating_and_comment)
            (seeding_startup)

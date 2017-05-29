@@ -19,6 +19,43 @@
 namespace graphene { namespace chain {
 
    /**
+    * @ingroup transaction
+    * @brief This operation is used to promote account to publishing manager.
+    * Such an account can grant or remove right to publish a content. Only DECENT account has permission to use this method.
+    */
+   struct set_publishing_manager_operation : public base_operation
+   {
+      struct fee_parameters_type { uint64_t fee = 0; };
+
+      asset fee;
+      account_id_type from;
+      vector<account_id_type> to;
+      bool can_create_publishers;
+
+      account_id_type fee_payer()const { return from; }
+      void validate()const;
+
+      void get_required_active_authorities( flat_set<account_id_type>& a )const { a.insert( account_id_type(15) ); }
+   };
+
+   /**
+    * @ingroup transaction
+    * @brief Allows account to publish a content. Only account with publishing manager status has permission to use this method.
+    */
+   struct set_publishing_right_operation : public base_operation
+   {
+      struct fee_parameters_type { uint64_t fee = 0; };
+
+      asset fee;
+      account_id_type from;
+      vector<account_id_type> to;
+      bool is_publisher;
+
+      account_id_type fee_payer()const { return from; }
+      void validate()const;
+   };
+
+   /**
     * @ingroup transactions
     * @brief Submits content to the blockchain.
     */
@@ -51,6 +88,22 @@ namespace graphene { namespace chain {
 #endif
       account_id_type fee_payer()const { return author; }
       void validate()const;
+   };
+
+   /**
+    * @ingroup transactions
+    * @brief This operation is used to cancel submitted content.
+    */
+   struct content_cancellation_operation : public base_operation
+   {
+      struct fee_parameters_type { uint64_t fee = 0; };
+
+      asset fee;
+      account_id_type author;
+      string URI;
+
+      account_id_type fee_payer()const { return author; }
+      void validate()const { FC_ASSERT( URI != "" ); };
    };
 
    /**
@@ -244,7 +297,10 @@ namespace graphene { namespace chain {
 
 } } // graphene::chain
 
+FC_REFLECT(graphene::chain::set_publishing_manager_operation,(fee)(from)(to)(can_create_publishers))
+FC_REFLECT(graphene::chain::set_publishing_right_operation,(fee)(from)(to)(is_publisher))
 FC_REFLECT(graphene::chain::content_submit_operation,(fee)(size)(author)(URI)(quorum)(price)(hash)(seeders)(key_parts)(expiration)(publishing_fee)(synopsis)(cd))
+FC_REFLECT(graphene::chain::content_cancellation_operation,(fee)(author)(URI))
 #ifdef PRICE_REGIONS
 FC_REFLECT(graphene::chain::request_to_buy_operation,(fee)(URI)(consumer)(price)(region_code_from)(pubKey))
 #else
@@ -265,7 +321,10 @@ FC_REFLECT(graphene::chain::pay_seeder_operation,(fee)(payout)(author)(seeder));
 FC_REFLECT(graphene::chain::finish_buying_operation,(fee)(payout)(author)(buying)(consumer));
 
 
+FC_REFLECT( graphene::chain::set_publishing_manager_operation::fee_parameters_type, ( fee ) )
+FC_REFLECT( graphene::chain::set_publishing_right_operation::fee_parameters_type, ( fee ) )
 FC_REFLECT( graphene::chain::content_submit_operation::fee_parameters_type, (fee) )
+FC_REFLECT( graphene::chain::content_cancellation_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::request_to_buy_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::leave_rating_and_comment_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::ready_to_publish_operation::fee_parameters_type, (fee) )
