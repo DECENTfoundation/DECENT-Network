@@ -2388,7 +2388,10 @@ public:
          subscribe_op.from = get_account_id( from );
          subscribe_op.to = get_account_id( to );
          subscribe_op.duration = duration;
-         subscribe_op.price = asset_obj->amount_from_string(price_amount);
+
+         asset op_price = asset_obj->amount_from_string(price_amount);
+         asset price = price_to_dct(op_price);
+         subscribe_op.price = price;
 
          signed_transaction tx;
          tx.operations.push_back( subscribe_op );

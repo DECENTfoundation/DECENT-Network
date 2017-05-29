@@ -88,8 +88,7 @@ namespace graphene { namespace chain {
       {
          auto& content_idx = db().get_index_type<content_index>().indices().get<by_URI>();
          const auto& content_itr = content_idx.find( o.URI );
-         db().modify<content_object>(*content_itr,[&](content_object& co)
-                                     {
+         db().modify<content_object>(*content_itr,[&](content_object& co) {
 #ifdef PRICE_REGIONS
                                         map<uint32_t, asset> prices;
                                      for (auto const& item : o.price)
