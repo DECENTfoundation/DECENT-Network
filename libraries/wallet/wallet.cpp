@@ -1822,9 +1822,7 @@ public:
             << orders.base << ' ' << setw( spacing ) << sum_stream.str()
             << "   " << setw( spacing + 1 ) << "Price" << setw( spacing ) << orders.quote << ' ' << setw( spacing )
             << orders.base << ' ' << setw( spacing ) << sum_stream.str()
-            << "\n
-           
-           ================================================================================"
+            << "\n"
             << "|=====================================================================================\n";
 
          for (int i = 0; i < bids.size() || i < asks.size() ; i++)
@@ -2077,7 +2075,7 @@ public:
    }
 
 
-   static void submit_content_utility(content_submit_operation& submit_op,
+   void submit_content_utility(content_submit_operation& submit_op,
                                       vector<regional_price_info> const& price_amounts)
    {
 #ifdef PRICE_REGIONS
