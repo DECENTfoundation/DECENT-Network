@@ -373,6 +373,18 @@ int runDecentD(int argc, char** argv, fc::promise<void>::ptr& exit_promise) {
       ilog("Started witness node on a chain with ${h} blocks.", ("h", node->chain_database()->head_block_num()));
       ilog("Chain ID is ${id}", ("id", node->chain_database()->get_chain_id()) );
 
+      if( !seeding_plug->my )
+      {
+         decent::seeding::seeding_promise = new fc::promise<decent::seeding::seeding_plugin_startup_options>("Seeding Promise");
+
+         while( !decent::seeding::seeding_promise->ready() && !exit_promise->ready() ){
+            fc::usleep(fc::microseconds(1000000));
+         }
+
+         if( decent::seeding::seeding_promise->ready() && !exit_promise->ready() ){
+            seeding_plug->plugin_pre_startup(decent::seeding::seeding_promise->wait(fc::microseconds(1)));
+         }
+      }
 
       exit_promise->wait();
       node->shutdown_plugins();

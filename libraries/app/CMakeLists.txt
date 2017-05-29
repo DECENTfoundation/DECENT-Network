@@ -16,6 +16,7 @@ target_link_libraries( graphene_app graphene_market_history graphene_account_his
 target_include_directories( graphene_app
                             PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include"
                             "${CMAKE_CURRENT_SOURCE_DIR}/../egenesis/include"
+                            "${CMAKE_CURRENT_SOURCE_DIR}/../plugins/seeding/include")
  )
 
 if(MSVC)

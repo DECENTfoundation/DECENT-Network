@@ -1561,6 +1561,22 @@ namespace graphene { namespace wallet {
          signed_transaction request_to_buy(string consumer, string URI, string price_asset_name, string price_amount, bool broadcast);
 
          /**
+          * @brief This method allows user to start seeding plugin from running application
+          * @param account_id_type_or_name Name or ID of account controlling this seeder
+          * @param content_private_key El Gamal content private key
+          * @param seeder_private_key Private key of the account controlling this seeder
+          * @param free_space Allocated disk space, in MegaBytes
+          * @param seeding_price price per MegaBytes
+          * @ingroup WalletCLI
+          */
+         void seeding_startup( string account_id_type_or_name,
+                               DInteger content_private_key,
+                               string seeder_private_key,
+                               uint64_t free_space,
+                               uint32_t seeding_price,
+                               string packages_path);
+
+         /**
           * @brief Rates and/or comments a content.
           * @param consumer Consumer giving the rating
           * @param URI The URI of the content
@@ -2121,6 +2137,7 @@ FC_API( graphene::wallet::wallet_api,
            (submit_content_new)
            (request_to_buy)
            (leave_rating_and_comment)
+           (seeding_startup)
            (restore_encryption_key)
            (generate_el_gamal_keys)
            (subscribe_to_author)
