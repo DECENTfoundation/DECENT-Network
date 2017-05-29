@@ -129,7 +129,8 @@ void Upload_tab::timeToUpdate(const string& result)
       content.type = DCT::GENERAL;
       content.author = json_content["author"].get<string>();
       uint64_t iPrice = json_to_int64(json_content["price"]["amount"]);
-      content.price = Globals::instance().asset(iPrice);
+      std::string iSymbolId = json_content["price"]["asset_id"];
+      content.price = Globals::instance().asset(iPrice, iSymbolId);
       content.synopsis = json_content["synopsis"].get<string>();
       content.URI = json_content["URI"].get<string>();
       content.created = json_content["created"].get<string>();

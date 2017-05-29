@@ -434,15 +434,16 @@ void Mainwindow_gui_wallet::CurrentUserChangedSlot(const QString& a_new_user)
 
 void Mainwindow_gui_wallet::UpdateAccountBalances(const std::string& username) {
 
-   
+   auto& global_instance = gui_wallet::Globals::instance();
+
    json allAssets;
    std::string getAssetsCommand = "list_assets \"\" 100";
    if (!RunTaskParse(getAssetsCommand, allAssets)) {
       ALERT_DETAILS(tr("Could not get account balances").toStdString(), allAssets.get<string>().c_str());
       return;
    }
-   
-   
+
+
    std::string csLineToRun = "list_account_balances " + username;
    json allBalances;
 
@@ -478,7 +479,7 @@ void Mainwindow_gui_wallet::UpdateAccountBalances(const std::string& username) {
       
       std::string assetName = "Unknown";
       int precision = 1;
-      
+
       for (int assInd = 0; assInd < allAssets.size(); ++assInd) {
          if (allAssets[assInd]["id"].get<std::string>() == allBalances[i]["asset_id"]) {
             assetName = allAssets[assInd]["symbol"].get<std::string>();
