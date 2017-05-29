@@ -101,12 +101,44 @@ namespace graphene { namespace chain {
                });
          }
 
-      }FC_CAPTURE_AND_RETHROW( (o) ) }
+      }FC_CAPTURE_AND_RETHROW( (o) )
+   }
 
    void_result content_submit_evaluator::do_evaluate(const content_submit_operation& o )
    {try{
       const account_object& author_account = db().get<account_object>(o.author);
       FC_ASSERT( !author_account.rights_to_publish.publishing_rights_received.empty(), "Author does not have permission to publish a content" );
+
+      if( !o.co_authors.empty() )
+      {
+         // sum of basis points
+         uint32_t sum_of_splits = 0;
+
+         for( auto const &element : o.co_authors )
+         {
+            // test whether co-autors exist
+            const auto& idx = db().get_index_type<account_index>().indices().get<by_id>();
+            auto itr = idx.find(element.first);
+            FC_ASSERT (itr != idx.end() , "Account ${account} doesn't exist.", ( "account", element.first ) );
+            sum_of_splits += element.second;
+         }
+
+         // author can have unassigned payout split value.
+         // In such a case, missing value is automatically calculated, and equals to remaining available basis points
+         // test whether the author is included as co-author
+         auto it = o.co_authors.find( o.author );
+
+         // if author is not included in co_authors map
+         if( it == o.co_authors.end() )
+         {
+            FC_ASSERT( sum_of_splits < 10000, "Sum of splits exceeds allowed limit ( no remaining basis points for author's payout split )." );
+         }
+            // if author is included in co_authors map
+         else
+         {
+            FC_ASSERT( sum_of_splits == 10000, "Sum of splits doesn't have required value ( 10000 basis points)." );
+         }
+      }
 
       FC_ASSERT( o.seeders.size() > 0 );
       FC_ASSERT( o.seeders.size() == o.key_parts.size() );
@@ -218,6 +250,7 @@ namespace graphene { namespace chain {
          db().create<content_object>([&](content_object& co)
                                      {  //create new content object and store all vaues from the operation
                                         co.author = o.author;
+                                        co.co_authors = o.co_authors;
 #ifdef PRICE_REGIONS
                                         map<uint32_t, asset> prices;
                                      for (auto const& item : o.price)
@@ -450,7 +483,23 @@ namespace graphene { namespace chain {
       {
          asset price = buying.price;
          db().modify<content_object>( *content, []( content_object& co ){ co.times_bought++; });
-         db().adjust_balance( content->author, price );
+
+         if( content->co_authors.empty() )
+            db().adjust_balance( content->author, price.amount );
+         else
+         {
+            share_type one_basis_point = price.amount / 10000;
+            for( auto const &element : content->co_authors )
+            {
+               db().adjust_balance( element.first, one_basis_point * element.second );
+               price.amount -= one_basis_point * element.second;
+            }
+
+            if( price.amount != 0 ) {
+               FC_ASSERT( price.amount > 0 );
+               db().adjust_balance(content->author, price.amount);
+            }
+         }
 
          db().modify<buying_object>(buying, [&](buying_object& bo){
               bo.price.amount = 0;
@@ -460,6 +509,7 @@ namespace graphene { namespace chain {
 
          finish_buying_operation op;
          op.author = content->author;
+         op.co_authors = content->co_authors;
          op.payout = price;
          op.consumer = buying.consumer;
          op.buying = buying.id;
