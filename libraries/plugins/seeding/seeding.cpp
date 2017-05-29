@@ -25,6 +25,77 @@ graphene::chain::database &seeding_plugin_impl::database()
    return _self.database();
 }
 
+void seeding_plugin_impl::handle_new_content(const content_object& co){
+   content_submit_operation op;
+   op.cd = co.cd;
+   op.expiration = co.expiration;
+   op.hash = co._hash;
+   op.size = co.size;
+   op.size = co.size;
+   op.URI = co.URI;
+   for( auto element : co.key_parts ){
+      op.seeders.push_back(element.first);
+      op.key_parts.push_back(element.second);
+   }
+   handle_new_content(op);
+}
+
+void seeding_plugin_impl::handle_new_content(const content_submit_operation& cs_op){
+   graphene::chain::database &db = database();
+   const auto &idx = db.get_index_type<my_seeder_index>().indices().get<by_seeder>();
+   auto seeder_itr = idx.begin();
+   while( seeder_itr != idx.end() )
+   {
+      //Check if the content is seeded by one of seeders managed by the plugin
+      if( std::find(cs_op.seeders.begin(), cs_op.seeders.end(), (seeder_itr->seeder)) != cs_op.seeders.end())
+      {
+         //Get the key particle assigned to this seeder
+         auto s = cs_op.seeders.begin();
+         auto k = cs_op.key_parts.begin();
+         while( *s != seeder_itr->seeder && s != cs_op.seeders.end())
+         {
+            ++s;
+            ++k;
+         }
+
+         ilog("seeding plugin:  handle_content_submit() handling new content by seeder ${s}",("s",seeder_itr->seeder));
+
+         // new content case, create the object in DB and download the package
+         const my_seeding_object& mso = db.create<my_seeding_object>([&](my_seeding_object &so) {
+              so.URI = cs_op.URI;
+              so.seeder = seeder_itr->seeder;
+              so.space = cs_op.size; //we allocate the whole megabytes per content
+              if( k != cs_op.key_parts.end())
+                 so.key = *k;
+              so.expiration = cs_op.expiration;
+              so.cd = cs_op.cd;
+              so._hash = cs_op.hash;
+         });
+         auto so_id = mso.id;
+         ilog("seeding plugin:  handle_content_submit() created new my_seeding_object ${s}",("s",so_id));
+         db.modify<my_seeder_object>(*seeder_itr, [&](my_seeder_object &mso) {
+              mso.free_space -= cs_op.size ; //we allocate the whole megabytes per content
+         });
+         ilog("seeding plugin:  handle_content_submit() my_seeder_object modified ${s}",("s",seeder_itr->id));
+         //if we run this in main thread it can crash _push_block
+         service_thread->async( [cs_op, this, mso](){
+              ilog("seeding plugin:  handle_content_submit() lambda called");
+              /*auto id = package_manager::instance().download_package(cs_op.URI, *this, empty_report_stats_listener::instance());
+              active_downloads[id] = so_id;
+              */
+              auto& pm = decent::package::PackageManager::instance();
+              auto package_handle = pm.get_package(cs_op.URI, mso._hash);
+              decent::package::event_listener_handle_t sl = std::make_shared<SeedingListener>(*this, mso , package_handle);
+              package_handle->remove_all_event_listeners();
+              package_handle->add_event_listener(sl);
+              package_handle->download(false);
+         });
+      }
+      ++seeder_itr;
+   }
+
+}
+
 void seeding_plugin_impl::handle_content_submit(const operation_history_object &op_obj)
 {
    graphene::chain::database &db = database();
@@ -40,129 +111,42 @@ void seeding_plugin_impl::handle_content_submit(const operation_history_object &
          return;
 
       const auto &idx = db.get_index_type<my_seeder_index>().indices().get<by_seeder>();
-      auto range = db.get_index_type<my_seeding_index>().indices().get<by_URI>().equal_range(cs_op.URI);
+      auto element = db.get_index_type<my_seeding_index>().indices().get<by_URI>().find(cs_op.URI);
       bool is_resubmit = false;
-      if( range.first != range.second )  // check whether a content is resubmited. If so, unnecessary my_seeding_objects are expired
+      if( element !=  db.get_index_type<my_seeding_index>().indices().get<by_URI>().end() )  // check whether a content is resubmited. If so, unnecessary my_seeding_objects are expired
       {
          is_resubmit = true;
 
-         std::for_each(range.first, range.second, [&](const my_seeding_object& element) {
-            if( std::find(cs_op.seeders.begin(), cs_op.seeders.end(), (element.seeder)) == cs_op.seeders.end())
-            {
-               db.modify<my_seeding_object>(element, [&](my_seeding_object &mso) {
-                  mso.expiration = fc::time_point::now();
-               });
-               ilog("seeding plugin:  handle_content_submit() my_seeding_object modified ${s}",("s",element.id));
-               auto seeder_itr = idx.find( element.seeder );
-               db.modify<my_seeder_object>(*seeder_itr, [&](my_seeder_object &mso) {
-                  mso.free_space += cs_op.size;
-               });
-               ilog("seeding plugin:  handle_content_submit() my_seeder_object modified ${s}",("s",seeder_itr->id));
-            }
-         });
-      }
-
-      auto seeder_itr = idx.begin();
-      while( seeder_itr != idx.end())
-      {
-         //Check if the content is seeded by one of seeders managed by the plugin
-         if( std::find(cs_op.seeders.begin(), cs_op.seeders.end(), (seeder_itr->seeder)) != cs_op.seeders.end())
+         if( std::find(cs_op.seeders.begin(), cs_op.seeders.end(), (element->seeder)) == cs_op.seeders.end())
          {
-            //Get the key particle assigned to this seeder
+            db.modify<my_seeding_object>(*element, [&](my_seeding_object &mso) {
+                  mso.expiration = fc::time_point::now();
+            });
+            ilog("seeding plugin:  handle_content_submit() my_seeding_object modified ${s}",("s",element->id));
+            auto seeder_itr = idx.find( element->seeder );
+            db.modify<my_seeder_object>(*seeder_itr, [&](my_seeder_object &mso) {
+                 mso.free_space += cs_op.size;
+            });
+            ilog("seeding plugin:  handle_content_submit() my_seeder_object modified ${s}",("s",seeder_itr->id));
+         }else{
             auto s = cs_op.seeders.begin();
             auto k = cs_op.key_parts.begin();
-            while( *s != seeder_itr->seeder && s != cs_op.seeders.end())
+            while( *s != element->seeder && s != cs_op.seeders.end())
             {
                ++s;
                ++k;
             }
-
-            if( !is_resubmit )
-            {
-               ilog("seeding plugin:  handle_content_submit() handling new content by seeder ${s}",("s",seeder_itr->seeder));
-
-               // new content case, create the object in DB and download the package
-               const my_seeding_object& mso = db.create<my_seeding_object>([&](my_seeding_object &so) {
-                  so.URI = cs_op.URI;
-                  so.seeder = seeder_itr->seeder;
-                  so.space = cs_op.size; //we allocate the whole megabytes per content
-                  if( k != cs_op.key_parts.end())
-                     so.key = *k;
-                  so.expiration = cs_op.expiration;
-                  so.cd = cs_op.cd;
-                  so._hash = cs_op.hash;
-               });
-               auto so_id = mso.id;
-               ilog("seeding plugin:  handle_content_submit() created new my_seeding_object ${s}",("s",so_id));
-               db.modify<my_seeder_object>(*seeder_itr, [&](my_seeder_object &mso) {
-                  mso.free_space -= cs_op.size ; //we allocate the whole megabytes per content
-               });
-               ilog("seeding plugin:  handle_content_submit() my_seeder_object modified ${s}",("s",seeder_itr->id));
-               //if we run this in main thread it can crash _push_block
-               service_thread->async( [cs_op, this, mso](){
-                    ilog("seeding plugin:  handle_content_submit() lambda called");
-                    /*auto id = package_manager::instance().download_package(cs_op.URI, *this, empty_report_stats_listener::instance());
-                    active_downloads[id] = so_id;
-                    */
-                  auto& pm = decent::package::PackageManager::instance();
-                  auto package_handle = pm.get_package(cs_op.URI, mso._hash);
-                  decent::package::event_listener_handle_t sl = std::make_shared<SeedingListener>(*this, mso , package_handle);
-                  package_handle->remove_all_event_listeners();
-                  package_handle->add_event_listener(sl);
-                  package_handle->download(false);
-               });
-            }
-            else // is resubmit
-            {
-               ilog("seeding plugin:  handle_content_submit() handling content resubmit by seeder ${s}",("s",seeder_itr->seeder));
-
-               std::for_each(range.first, range.second, [&](const my_seeding_object& element) {
-                  if( element.seeder == seeder_itr->seeder) // my_seeding_object already exists, but needs to be modified
-                  {
-                     db.modify<my_seeding_object>(element, [&](my_seeding_object &mso) {
-                        mso.expiration = cs_op.expiration;
-                        if( k != cs_op.key_parts.end())
-                           mso.key = *k;
-                     });
-                     ilog("seeding plugin:  handle_content_submit() my_seeding_object modified ${s}",("s",element.id));
-                  }
-                  else
-                  {
-                     // create the object in DB and download the package
-                     const my_seeding_object& mso = db.create<my_seeding_object>([&](my_seeding_object &so) {
-                        so.URI = cs_op.URI;
-                        so.expiration = cs_op.expiration;
-                        so.cd = cs_op.cd;
-                        so.seeder = seeder_itr->seeder;
-                        so.space = cs_op.size; //we allocate the whole megabytes per content
-                        if( k != cs_op.key_parts.end())
-                           so.key = *k;
-                     });
-                     auto so_id = mso.id;
-                     ilog("seeding plugin:  handle_content_submit() created new my_seeding_object ${s}",("s",so_id));
-                     db.modify<my_seeder_object>(*seeder_itr, [&](my_seeder_object &mso) {
-                        mso.free_space -= cs_op.size ; //we allocate the whole megabytes per content
-                     });
-                     ilog("seeding plugin:  handle_content_submit() my_seeder_object modified ${s}",("s",seeder_itr->id));
-                     //if we run this in main thread it can crash _push_block
-                     service_thread->async( [cs_op, this, mso](){
-                        ilog("seeding plugin:  handle_content_submit() lambda called");
-                        /*auto id = package_manager::instance().download_package(cs_op.URI, *this, empty_report_stats_listener::instance());
-                        active_downloads[id] = so_id;
-                         */
-                        auto& pm = decent::package::PackageManager::instance();
-                        auto package_handle = pm.get_package(cs_op.URI, mso._hash);
-                        decent::package::event_listener_handle_t sl = std::make_shared<SeedingListener>(*this, mso , package_handle);
-                        package_handle->remove_all_event_listeners();
-                        package_handle->add_event_listener(sl);
-                        package_handle->download(false);
-                     });
-                  }
-               });
-            }
+            db.modify<my_seeding_object>( *element, [&](my_seeding_object &mso) {
+                 mso.expiration = cs_op.expiration;
+                 mso.cd = cs_op.cd;
+                 if( k != cs_op.key_parts.end())
+                    mso.key = *k;
+            });
          }
-         ++seeder_itr;
+
+         return;
       }
+      handle_new_content(cs_op);
    }
 }
 
@@ -190,7 +174,7 @@ void seeding_plugin_impl::handle_request_to_buy(const operation_history_object &
    if( citr == cidx.end())
       FC_THROW("cannot find content by URI");
    const content_object &co = *citr;
-   if(co.expiration < fc::time_point::now() ){
+   if( co.expiration < fc::time_point::now() ){
       //if the content expired let the PoR generation cycle, return. PoR cycle will take care of the cleaning up...
       return;
    }
@@ -416,7 +400,6 @@ void seeding_plugin_impl::restart_downloads(){
         elog("restarting downloads, service thread");
 
         //We need to rebuild the list of downloaded packages and compare it to the list of my_seeding_objects.
-        // However, we can't rely on the
         //For the downloaded packages we can issue PoR right away, the others needs to be downloaded
         auto& pm = decent::package::PackageManager::instance();
         pm.recover_all_packages();
@@ -428,6 +411,22 @@ void seeding_plugin_impl::restart_downloads(){
         }
 
         packages = pm.get_all_known_packages();
+
+        { //remove all existing entries and start over
+           const auto& sidx = database().get_index_type<my_seeding_index>();
+           sidx.inspect_all_objects( [&](const object& o) {
+                database().remove(o);
+           });
+           //now rebuild the list of all packages we shall handle
+           const auto& cidx = database().get_index_type<content_index>().indices().get<by_expiration>();
+           auto citr = cidx.lower_bound(fc::time_point::now());
+           while( citr != cidx.end()){
+              handle_new_content(*citr);
+              citr++;
+           }
+
+        }
+
         const auto& cidx = database().get_index_type<my_seeding_index>().indices().get<by_URI>();
         auto citr = cidx.begin();
         while(citr!=cidx.end()) {

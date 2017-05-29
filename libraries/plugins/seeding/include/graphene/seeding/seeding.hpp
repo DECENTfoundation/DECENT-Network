@@ -129,6 +129,17 @@ public:
    void generate_por2( const my_seeding_object& so, decent::package::package_handle_t package_handle );
 
    /**
+    * Process new content, from content_object
+    * @param co Content object
+    */
+   void handle_new_content(const content_object& co);
+
+   /**
+    * Process new content, from operation. If the content is managed by local seeder, it is downloaded, and meta are stored in local db.
+    * @param cs_op
+    */
+   void handle_new_content(const content_submit_operation& cs_op);
+   /**
     * Handle newly submitted or resubmitted content. If it is content managed by one of our seeders, download it.
     * @param op_obj The operation wrapper carrying content submit operation
     */
@@ -184,7 +195,8 @@ public:
       //_my->database().remove(mso);
       elog("seeding plugin: package_download_error(): Failed downloading package ${s}", ("s", _url));
 
-      //auto& pm = decent::package::PackageManager::instance();
+      auto& pm = decent::package::PackageManager::instance();
+      _pi->download(false);
       //pm.release_package(_pi);
    };
 
