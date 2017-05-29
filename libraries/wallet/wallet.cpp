@@ -2414,6 +2414,19 @@ signed_transaction content_cancellation(string author,
       } FC_CAPTURE_AND_RETHROW( (consumer)(URI)(rating)(comment)(broadcast) )
    }
 
+   void seeding_startup( string account_id_type_or_name,
+                         DInteger content_private_key,
+                         string seeder_private_key,
+                         uint64_t free_space,
+                         uint32_t seeding_price,
+                         string packages_path)
+   {
+      account_id_type seeder = get_account_id( account_id_type_or_name );
+      use_network_node_api();
+      fc::ecc::private_key seeder_priv_key = *(wif_to_key(seeder_private_key));
+      (*_remote_net_node)->seeding_startup( seeder, content_private_key, seeder_priv_key, free_space, seeding_price, packages_path );
+   }
+
    signed_transaction report_stats(string consumer,
                                    map<account_id_type,uint64_t> stats,
                                    bool broadcast/* = false */)
@@ -3887,6 +3900,16 @@ void wallet_api::leave_rating_and_comment(string consumer,
 //      return my->leave_rating(consumer, URI, rating, broadcast);
 //   }
 //>>>>>>> 4c1f30cb8000875a949c8819f1c860061a981e21
+
+   void wallet_api::seeding_startup(string account_id_type_or_name,
+                                    DInteger content_private_key,
+                                    string seeder_private_key,
+                                    uint64_t free_space,
+                                    uint32_t seeding_price,
+                                    string packages_path)
+   {
+      return my->seeding_startup(account_id_type_or_name, content_private_key, seeder_private_key, free_space, seeding_price, packages_path);
+   }
 
    signed_transaction wallet_api::report_stats(string consumer,
                                                map<account_id_type,uint64_t> stats,

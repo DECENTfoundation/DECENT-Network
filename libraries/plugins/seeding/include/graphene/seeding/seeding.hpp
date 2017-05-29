@@ -5,6 +5,7 @@
 #include <graphene/db/object.hpp>
 #include <graphene/db/generic_index.hpp>
 #include <graphene/chain/protocol/types.hpp>
+#include <graphene/seeding/seeding_utility.hpp>
 #include <decent/package/package.hpp>
 
 namespace decent { namespace seeding {
@@ -132,13 +133,13 @@ public:
     * Handle newly submitted or resubmitted content. If it is content managed by one of our seeders, download it.
     * @param op_obj The operation wrapper carrying content submit operation
     */
-   void handle_content_submit(const operation_history_object &op_obj);
+   void handle_content_submit(const content_submit_operation &op);
 
    /**
     * Handle request to buy. If it is concerning one of content seeded by the plugin, provide decryption key parts in deliver key
     * @param op_obj The operation wrapper carrying content request to buy operation
     */
-   void handle_request_to_buy(const operation_history_object &op_obj);
+   void handle_request_to_buy(const request_to_buy_operation &op);
 
    /**
     * Called only after the highest known block has been applied. If it is request to buy or content submit, pass it to the corresponding handler
@@ -238,6 +239,11 @@ class seeding_plugin : public graphene::app::plugin
        * @param options
        */
       void plugin_initialize(const boost::program_options::variables_map& options) override;
+      /**
+       * Pre-startup step of the seeding plugin
+       * @param seeding_options
+       */
+      void plugin_pre_startup( const seeding_plugin_startup_options& seeding_options );
       /**
        * Start the plugin and begin work.
        */
