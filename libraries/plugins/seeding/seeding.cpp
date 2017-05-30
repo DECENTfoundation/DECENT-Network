@@ -390,10 +390,101 @@ void seeding_plugin_impl::send_ready_to_publish()
    ilog("seeding plugin_impl: send_ready_to_publish() end");
 }
 
-void seeding_plugin_impl::restart_downloads(){
-   elog("restarting downloads, main thread");
+void seeding_plugin_impl::restore_state(){
+
+   elog("restoring state, main thread");
    service_thread->async([this](){
+        if( std::abs( (fc::time_point::now() - database().head_block_time()).count() ) > int64_t( 10000000 ) )
+        {
+           ilog("seeding plugin:  restoring state() waiting for sync");
+           fc::usleep( fc::microseconds(1000000) );
+        }
         elog("restarting downloads, service thread");
+        //start with rebuilding my_seeding_object database
+        const auto& sidx = database().get_index_type<my_seeder_index>().indices().get<by_seeder>();
+        const auto& cidx = database().get_index_type<my_seeding_index>().indices().get<by_URI>();
+
+
+        const auto& c_idx = database().get_index_type<content_index>().indices().get<by_expiration>();
+        auto sitr = sidx.begin();
+        {//remove all existing entries and start over
+           const auto &sidx = database().get_index_type<my_seeding_index>();
+           sidx.inspect_all_objects([ & ](const object &o) {
+                database().remove(o);
+           });
+        }
+        while( sitr != sidx.end() )
+        {
+           auto content_itr = c_idx.end();
+           while( content_itr != c_idx.begin() )
+              // iterating backwards.
+              // Content objects are ordered increasingly by expiration time.
+              // This way we do not need to iterate over all ( expired ) objects
+           {
+              content_itr--;
+              if( content_itr->expiration < database().head_block_time() )
+                 break;
+              auto search_itr = content_itr->key_parts.find( sitr->seeder );
+              if( search_itr != content_itr->key_parts.end() )
+              {
+
+                 auto citr = cidx.find( content_itr->URI );
+                 if( citr == cidx.end() )
+                 {
+                    const my_seeding_object& mso = database().create<my_seeding_object>([&](my_seeding_object &so) {
+                         so.URI = content_itr->URI;
+                         so.seeder = sitr->seeder;
+                         so._hash = content_itr->_hash;
+                         so.space = content_itr->size; //we allocate the whole megabytes per content
+                         so.key = search_itr->second;
+                         so.expiration = content_itr->expiration;
+                         so.cd = content_itr->cd;
+                    });
+                    auto so_id = mso.id;
+                    ilog("seeding_plugin:  restore_state() creating my_seeding_object for unhandled content submit ${s}",("s",mso));
+                    database().modify<my_seeder_object>(*sitr, [&](my_seeder_object &mso) {
+                         mso.free_space -= content_itr->size ; //we allocate the whole megabytes per content
+                    });
+                 }
+              }
+           }
+           sitr++;
+        }
+        //Re-send all missing keys
+        const auto& buying_range = database().get_index_type<buying_index>().indices().get<by_open_expiration>().equal_range( true );
+        const auto& content_idx = database().get_index_type<content_index>().indices().get<graphene::chain::by_URI>();
+        sitr = sidx.begin();
+
+        while( sitr != sidx.end() )
+        {
+           std::for_each(buying_range.first, buying_range.second, [&](const buying_object &buying_element)
+           {
+                const auto& content_itr = content_idx.find( buying_element.URI );
+                if( content_itr != content_idx.end() && buying_element.expiration_time >= database().head_block_time() )
+                {
+                   for( const auto& seeder_element : content_itr->key_parts )
+                   {
+                      if( seeder_element.first == sitr->seeder &&
+                          std::find(buying_element.seeders_answered.begin(), buying_element.seeders_answered.end(), (sitr->seeder)) == buying_element.seeders_answered.end() )
+                      {
+                         request_to_buy_operation rtb_op;
+                         rtb_op.URI = buying_element.URI;
+                         rtb_op.consumer = buying_element.consumer;
+                         rtb_op.pubKey = buying_element.pubKey;
+                         rtb_op.price = buying_element.price;
+#ifdef PRICE_REGIONS
+                         rtb_op.region_code_from = buying_element.region_code_from;
+#endif
+                         ilog("seeding_plugin:  restore_state() processing unhandled request to buy ${s}",("s",rtb_op));
+                         handle_request_to_buy( rtb_op );
+                         break;
+                      }
+                   }
+                }
+           });
+           sitr++;
+        }
+
 
         //We need to rebuild the list of downloaded packages and compare it to the list of my_seeding_objects.
         //For the downloaded packages we can issue PoR right away, the others needs to be downloaded
@@ -408,7 +499,6 @@ void seeding_plugin_impl::restart_downloads(){
 
         packages = pm.get_all_known_packages();
 
-        const auto& cidx = database().get_index_type<my_seeding_index>().indices().get<by_URI>();
         auto citr = cidx.begin();
         while(citr!=cidx.end()) {
            elog("restarting downloads, dealing with package ${u}", ("u", citr->URI));
@@ -444,105 +534,13 @@ void seeding_plugin::plugin_startup()
 {
    if(!my)
       return;
-   const auto& sidx = database().get_index_type<my_seeder_index>().indices().get<by_seeder>();
-   const auto& cidx = database().get_index_type<my_seeding_index>().indices().get<by_URI>();
-   auto sitr = sidx.begin();
-   while(sitr!=sidx.end()){
-      idump((*sitr));
-      ++sitr;
-   }
+   graphene::chain::database &db = database();
 
    ilog("seeding plugin:  plugin_startup() start");
 
-   graphene::chain::database &db = database();
 
-   const auto& c_idx = db.get_index_type<content_index>().indices().get<by_expiration>();
-   sitr = sidx.begin();
-   {//remove all existing entries and start over
-      const auto &sidx = database().get_index_type<my_seeding_index>();
-      sidx.inspect_all_objects([ & ](const object &o) {
-           database().remove(o);
-      });
-   }
-   while( sitr != sidx.end() )
-   {
-      auto content_itr = c_idx.end();
-      while( content_itr != c_idx.begin() )
-         // iterating backwards.
-         // Content objects are ordered increasingly by expiration time.
-         // This way we do not need to iterate over all ( expired ) objects
-      {
-         content_itr--;
-         if( content_itr->expiration < db.head_block_time() )
-            break;
-         auto search_itr = content_itr->key_parts.find( sitr->seeder );
-         if( search_itr != content_itr->key_parts.end() )
-         {
 
-            auto citr = cidx.find( content_itr->URI );
-            if( citr == cidx.end() )
-            {
-               const my_seeding_object& mso = db.create<my_seeding_object>([&](my_seeding_object &so) {
-                  so.URI = content_itr->URI;
-                  so.seeder = sitr->seeder;
-                  so._hash = content_itr->_hash;
-                  so.space = content_itr->size; //we allocate the whole megabytes per content
-                  so.key = search_itr->second;
-                  so.expiration = content_itr->expiration;
-                  so.cd = content_itr->cd;
-               });
-               auto so_id = mso.id;
-               ilog("seeding_plugin:  plugin_startup() creating my_seeding_object for unhandled content submit ${s}",("s",mso));
-               db.modify<my_seeder_object>(*sitr, [&](my_seeder_object &mso) {
-                  mso.free_space -= content_itr->size ; //we allocate the whole megabytes per content
-               });
-            }
-         }
-      }
-      sitr++;
-   }
-
-   const auto& buying_range = db.get_index_type<buying_index>().indices().get<by_open_expiration>().equal_range( true );
-   const auto& content_idx = db.get_index_type<content_index>().indices().get<graphene::chain::by_URI>();
-   sitr = sidx.begin();
-
-   while( std::abs( (fc::time_point::now() - db.head_block_time()).count() ) > int64_t( 5000000 ) )
-   {
-      ilog("seeding plugin:  plugin_startup() waiting for sync");
-      fc::usleep( fc::microseconds(1000000) );
-   }
-
-   while( sitr != sidx.end() )
-   {
-      std::for_each(buying_range.first, buying_range.second, [&](const buying_object &buying_element)
-      {
-         const auto& content_itr = content_idx.find( buying_element.URI );
-         if( content_itr != content_idx.end() && buying_element.expiration_time >= db.head_block_time() )
-         {
-            for( const auto& seeder_element : content_itr->key_parts )
-            {
-               if( seeder_element.first == sitr->seeder &&
-                   std::find(buying_element.seeders_answered.begin(), buying_element.seeders_answered.end(), (sitr->seeder)) == buying_element.seeders_answered.end() )
-               {
-                  request_to_buy_operation rtb_op;
-                  rtb_op.URI = buying_element.URI;
-                  rtb_op.consumer = buying_element.consumer;
-                  rtb_op.pubKey = buying_element.pubKey;
-                  rtb_op.price = buying_element.price;
-#ifdef PRICE_REGIONS
-                  rtb_op.region_code_from = buying_element.region_code_from;
-#endif
-                  ilog("seeding_plugin:  plugin_startup() processing unhandled request to buy ${s}",("s",rtb_op));
-                  my->handle_request_to_buy( rtb_op );
-                  break;
-               }
-            }
-         }
-      });
-      sitr++;
-   }
-
-   my->restart_downloads();
+   my->restore_state();
    fc::time_point next_call = fc::time_point::now()  + fc::microseconds(30000000);
    elog("RtP planned at ${t}", ("t",next_call) );
    my->service_thread->schedule([this](){elog("generating first ready to publish");my->send_ready_to_publish(); }, next_call, "Seeding plugin RtP generate");

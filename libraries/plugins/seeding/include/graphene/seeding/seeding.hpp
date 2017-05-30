@@ -162,7 +162,7 @@ public:
    /**
     * Restarts all downloads and seeding upon application start
     */
-   void restart_downloads();
+   void restore_state();
 
    /**
     * Generates and broadcasts RtP operation
