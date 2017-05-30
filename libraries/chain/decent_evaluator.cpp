@@ -26,35 +26,34 @@ namespace graphene { namespace chain {
 
    void_result set_publishing_manager_evaluator::do_apply( const set_publishing_manager_operation& o )
    {try{
-      for( const account_id_type& element : o.to )
+      for( auto element : o.to )
       {
-         auto& to_acc = db().get<account_object>(element);
-         if( to_acc.rights_to_publish.is_publishing_manager )
-         {
-            if( o.can_create_publishers == false )
-            {
-               db().modify<account_object>(to_acc, [](account_object& ao){
-                  ao.rights_to_publish.is_publishing_manager = false;
-               });
+         const account_object& to_acc = db().get<account_object>(element);
 
+         if( o.can_create_publishers == true ) {
+            db().modify<account_object>(to_acc, [](account_object &ao) {
+                 ao.rights_to_publish.is_publishing_manager = true;
+            });
+         }
+         else
+         {
+            if( to_acc.rights_to_publish.is_publishing_manager )
+            {
                for( const account_id_type& publisher : to_acc.rights_to_publish.publishing_rights_forwarded )
                {
                   auto& publisher_acc = db().get<account_object>(publisher);
-                  auto acc_itr = std::find( publisher_acc.rights_to_publish.publishing_rights_received.begin(), publisher_acc.rights_to_publish.publishing_rights_received.end(), to_acc.id );
-                  db().modify<account_object>(publisher_acc, [&acc_itr](account_object& ao){
-                     ao.rights_to_publish.publishing_rights_received.erase( acc_itr );
+                  db().modify<account_object>( publisher_acc, [&](account_object& ao){
+                       ao.rights_to_publish.publishing_rights_received.erase( publisher );
                   });
                }
                db().modify<account_object>(to_acc, [](account_object& ao){
-                  ao.rights_to_publish.publishing_rights_forwarded.clear();
+                    ao.rights_to_publish.is_publishing_manager = false;
+                    ao.rights_to_publish.publishing_rights_forwarded.clear();
                });
             }
+
          }
-         else
-            if( o.can_create_publishers == true )
-               db().modify<account_object>(to_acc, [](account_object& ao){
-                  ao.rights_to_publish.is_publishing_manager = true;
-               });
+
       }
 
 }FC_CAPTURE_AND_RETHROW( (o) ) }
@@ -71,34 +70,24 @@ namespace graphene { namespace chain {
 
          for( const account_id_type& element : o.to )
          {
-            auto from_acc_itr = std::find( from_acc.rights_to_publish.publishing_rights_forwarded.begin(), from_acc.rights_to_publish.publishing_rights_forwarded.end(), element );
-            if( from_acc_itr == from_acc.rights_to_publish.publishing_rights_forwarded.end() )
-            {
-               if( o.is_publisher == true )
-                  db().modify<account_object>(from_acc, [&element](account_object& ao){
-                     ao.rights_to_publish.publishing_rights_forwarded.push_back( element );
-                  });
-            }
-            else
-            if( o.is_publisher == false )
-               db().modify<account_object>(from_acc, [&from_acc_itr](account_object& ao){
-                  ao.rights_to_publish.publishing_rights_forwarded.erase( from_acc_itr );
-               });
+            const auto& to_acc = db().get<account_object>( element );
 
-            auto& to_acc = db().get<account_object>(element);
-            auto to_acc_itr = std::find( to_acc.rights_to_publish.publishing_rights_received.begin(), to_acc.rights_to_publish.publishing_rights_received.end(), o.from );
-            if( to_acc_itr == to_acc.rights_to_publish.publishing_rights_received.end() )
+            if(o.is_publisher)
             {
-               if( o.is_publisher == true )
-                  db().modify<account_object>(to_acc, [&](account_object& ao){
-                     ao.rights_to_publish.publishing_rights_received.push_back( o.from );
-                  });
-            }
-            else
-            if( o.is_publisher == false )
-               db().modify<account_object>(to_acc, [&to_acc_itr](account_object& ao){
-                  ao.rights_to_publish.publishing_rights_received.erase( to_acc_itr );
+               db().modify<account_object>(from_acc, [&](account_object& ao){
+                    ao.rights_to_publish.publishing_rights_forwarded.insert( element );
                });
+               db().modify<account_object>(to_acc,[&](account_object& ao){
+                    ao.rights_to_publish.publishing_rights_received.insert( o.from );
+               });
+            } else {
+               db().modify<account_object>(from_acc, [&](account_object& ao){
+                    ao.rights_to_publish.publishing_rights_forwarded.erase( element );
+               });
+               db().modify<account_object>(to_acc,[&](account_object& ao){
+                    ao.rights_to_publish.publishing_rights_received.erase( o.from );
+               });
+            }
          }
 
       }FC_CAPTURE_AND_RETHROW( (o) )

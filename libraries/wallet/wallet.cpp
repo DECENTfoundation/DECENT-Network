@@ -1637,6 +1637,7 @@ public:
       {
          try
          {
+            elog("about to broadcast tx: ${t}", ("t", tx));
             _remote_net_broadcast->broadcast_transaction( tx );
          }
          catch (const fc::exception& e)
@@ -4143,10 +4144,13 @@ map<string, string> wallet_api::get_content_comments( const string& URI )const
                continue;
          }
 
+         bool cont = false;
          for (auto listener: my->_package_manager_listeners)
          {
+
             if (listener->get_hash() == package->get_hash())
             {
+               cont = true;
                content_summary newObject;
                newObject.synopsis = listener->op().synopsis;
                newObject.expiration = listener->op().expiration;
@@ -4158,12 +4162,14 @@ map<string, string> wallet_api::get_content_comments( const string& URI )const
                   newObject.status = "Encrypting";
                } else if (state == PackageInfo::STAGING) {
                   newObject.status = "Staging";
-               } else if (state == PackageInfo:: CHECKED )
+               } else if (state == PackageInfo:: MS_IDLE )
                   newObject.status = "Submission failed";
                
                result.insert(result.begin(), newObject);
             }
          }
+         if(cont)
+            continue;
       }
 
       return result;
@@ -4321,7 +4327,6 @@ void graphene::wallet::detail::submit_transfer_listener::package_seed_complete()
    _wallet.set_operation_fees( tx, _wallet._remote_db->get_global_properties().parameters.current_fees);
    tx.validate();
     _wallet.sign_transaction(tx, true);
-   //_wallet._remote_db->set_content_update_callback(  , _op.URI);
 }
 
 

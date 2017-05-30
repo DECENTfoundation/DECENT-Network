@@ -541,7 +541,7 @@ void Upload_popup::slot_UploadContent()
    string str_seeders = getChosenPublishers().join(", ").toStdString();
 
    std::string submitCommand = "submit_content_new";
-   submitCommand += " " + Globals::instance().getCurrentUser();         // author
+   submitCommand += " " + Globals::instance().getCurrentUser() + "[]";  // author
    submitCommand += " \"" + path + "\"";                                // URI
    submitCommand += " \"" + samples_path + "\"";                        // Samples
    submitCommand += " \"ipfs\"";                                        // Protocol
