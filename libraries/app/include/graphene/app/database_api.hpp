@@ -736,26 +736,6 @@ namespace graphene { namespace app {
                                                 const object_id_type& id,
                                                 const string& type,
                                                 uint32_t count )const;
-         
-         /**
-          * @brief Search for term in contents (author, title and description)
-          * @param user Content owner
-          * @param term Search term
-          * @param order Ordering field
-          * @param region Two letter region code
-          * @param id The id of content object to start searching from
-          * @param type the application and content type to be filtered
-          * @param count Maximum number of contents to fetch (must not exceed 100)
-          * @return The contents found
-          * @ingroup DatabaseAPI
-          */
-         vector<content_summary> search_user_content(const string& user,
-                                                     const string& term,
-                                                     const string& order,
-                                                     const string& region_code,
-                                                     const object_id_type& id,
-                                                     const string& type,
-                                                     uint32_t count )const;
 
          /**
           * @brief Get a list of seeders by price, in increasing order
@@ -942,7 +922,6 @@ FC_API(graphene::app::database_api,
           (search_feedback)
           (get_content)
           (search_content)
-          (search_user_content)
           (list_publishers_by_price)
           (get_content_ratings)
           (get_content_comments)

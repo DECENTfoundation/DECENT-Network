@@ -176,13 +176,6 @@ namespace graphene { namespace app {
                                              const object_id_type& id,
                                              const string& type,
                                              uint32_t count)const;
-      vector<content_summary> search_user_content(const string& user,
-                                                  const string& term,
-                                                  const string& order,
-                                                  const string& region_code,
-                                                  const object_id_type& id,
-                                                  const string& type,
-                                                  uint32_t count)const;
       vector<seeder_object> list_publishers_by_price( const uint32_t count )const;
       vector<uint64_t> get_content_ratings( const string& URI )const;
       map<string, string> get_content_comments( const string& URI )const;
@@ -2145,30 +2138,6 @@ namespace
    {
       return my->search_content(term, order, user, region_code, id, type, count);
    }
-   
-   
-   vector<content_summary> database_api::search_user_content(const string& user,
-                                                             const string& term,
-                                                             const string& order,
-                                                             const string& region_code,
-                                                             const object_id_type& id,
-                                                             const string& type,
-                                                             uint32_t count)const
-   {
-      return my->search_user_content( user, term, order, region_code, id, type, count);
-   }
-
-   vector<content_summary> database_api_impl::search_user_content(const string& user,
-                                                                  const string& search_term,
-                                                                  const string& order,
-                                                                  const string& region_code,
-                                                                  const object_id_type& id,
-                                                                  const string& type,
-                                                                  uint32_t count)const
-   {
-      return search_content(search_term, order, user, region_code, id, type, count);
-   }
-   
    
    
    namespace {

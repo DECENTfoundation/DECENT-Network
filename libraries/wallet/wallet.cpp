@@ -4081,7 +4081,7 @@ map<string, string> wallet_api::get_content_comments( const string& URI )const
                                                            const string& type,
                                                            uint32_t count)const
    {
-      vector<content_summary> result = my->_remote_db->search_user_content(user, term, order, region_code, object_id_type(id), type, count);
+      vector<content_summary> result = my->_remote_db->search_content(term, order, user, region_code, object_id_type(id), type, count);
 
       auto packages = PackageManager::instance().get_all_known_packages();
       for (auto package: packages)
