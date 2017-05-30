@@ -2282,7 +2282,7 @@ vector<content_summary> database_api_impl::list_content( const string& URI_begin
                continue;
             }
 #endif
-            if ( !itr_begin->is_blocked ) // Content can be cancelled by an author. In such a case content is not available to purchase.
+            if ( itr_begin->is_blocked ) // Content can be cancelled by an author. In such a case content is not available to purchase.
             {
                ++itr_begin;
                continue;

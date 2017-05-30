@@ -294,7 +294,6 @@ namespace decent { namespace package { namespace detail {
             }
 
             _running = false;
-            _thread.reset();
         };
 
         if (block) {
