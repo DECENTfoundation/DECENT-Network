@@ -509,7 +509,7 @@ void seeding_plugin::plugin_startup()
    while( std::abs( (fc::time_point::now() - db.head_block_time()).count() ) > int64_t( 5000000 ) )
    {
       ilog("seeding plugin:  plugin_startup() waiting for sync");
-      sleep( 1 );
+      fc::usleep( fc::microseconds(1000000) );
    }
 
    while( sitr != sidx.end() )
