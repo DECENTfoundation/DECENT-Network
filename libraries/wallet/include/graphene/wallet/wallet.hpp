@@ -1496,7 +1496,7 @@ namespace graphene { namespace wallet {
          /**
           * @brief Submits or resubmits content to the blockchain. In a case of resubmit, price, seeders, quorum,
           * expiration, publishing fee and synopsis fields can be modified, but expiration time can't be shortened.
-          * @see submit_content_new()
+          * @see submit_content_async()
           * @param author The author of the content
           * @param co_authors The co-authors' account name or ID mapped to corresponding payment split based on basis points
           * @param URI The URI of the content
@@ -1553,17 +1553,17 @@ namespace graphene { namespace wallet {
           * @return The signed transaction submitting the content
           * @ingroup WalletCLI
           */
-         fc::ripemd160  submit_content_new(string const& author,
-                                           vector< pair< string, uint32_t>> co_authors,
-                                           string const& content_dir,
-                                           string const& samples_dir,
-                                           string const& protocol,
-                                           string const& price_asset_symbol,
-                                           vector <pair<string, string>> const& price_amounts,
-                                           vector<account_id_type> const& seeders,
-                                           fc::time_point_sec const& expiration,
-                                           string const& synopsis,
-                                           bool broadcast = false);
+         fc::ripemd160  submit_content_async(string const& author,
+                                             vector< pair< string, uint32_t>> co_authors,
+                                             string const& content_dir,
+                                             string const& samples_dir,
+                                             string const& protocol,
+                                             string const& price_asset_symbol,
+                                             vector <pair<string, string>> const& price_amounts,
+                                             vector<account_id_type> const& seeders,
+                                             fc::time_point_sec const& expiration,
+                                             string const& synopsis,
+                                             bool broadcast = false);
 
          /**
           * @brief This function can be used to cancel submitted content. This content is immediately not available to purchase.
@@ -1829,23 +1829,6 @@ namespace graphene { namespace wallet {
           * @ingroup WalletCLI
           */
          optional<content_object> get_content( const string& URI )const;
-
-         /**
-          * @brief Get a list of contents by author
-          * @param author Author of the contents to retrieve
-          * @return The contents corresponding to the provided author
-          * @ingroup WalletCLI
-          */
-         vector<content_object> list_content_by_author( const string& account_id_or_name )const;
-
-         /**
-          * @brief Get a list of contents ordered alphabetically by URI string
-          * @param URI_begin Lower bound of URI strings to retrieve
-          * @param count Maximum number of contents to fetch (must not exceed 100)
-          * @return The contents found
-          * @ingroup WalletCLI
-          */
-         vector<content_summary> list_content( const string& URI_begin, uint32_t count )const;
          
          /**
           * @brief Get a list of contents ordered alphabetically by search term
@@ -1885,14 +1868,6 @@ namespace graphene { namespace wallet {
                                                      const string& id,
                                                      const string& type,
                                                      uint32_t count )const;
-
-         /**
-          * @brief Get a list of contents by times bought, in decreasing order
-          * @param count Maximum number of contents to retrieve
-          * @return The contents found
-          * @ingroup WalletCLI
-          */
-         vector<content_object> list_content_by_bought( uint32_t count )const;
 
          /**
           * @brief Get a list of seeders by price, in increasing order
@@ -2168,7 +2143,7 @@ FC_API( graphene::wallet::wallet_api,
            (set_publishing_right)
            (list_publishing_managers)
            (submit_content)
-           (submit_content_new)
+           (submit_content_async)
            (content_cancellation)
            (request_to_buy)
            (leave_rating_and_comment)
@@ -2191,11 +2166,8 @@ FC_API( graphene::wallet::wallet_api,
            (search_feedback)
            (get_content)
            (get_real_supply)
-           (list_content_by_author)
-           (list_content)
            (search_content)
            (search_user_content)
-           (list_content_by_bought)
            (list_publishers_by_price)
            (get_content_ratings)
            (get_content_comments)

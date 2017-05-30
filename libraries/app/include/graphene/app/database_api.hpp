@@ -716,23 +716,6 @@ namespace graphene { namespace app {
           * @ingroup DatabaseAPI
           */
          optional<content_object> get_content( const string& URI )const;
-
-         /**
-          * @brief Get a list of contents by author
-          * @param author Author of the contents to retrieve
-          * @return The contents corresponding to the provided author
-          * @ingroup DatabaseAPI
-          */
-         vector<content_object> list_content_by_author( const account_id_type& author )const;
-
-         /**
-          * @brief Get a list of contents ordered alphabetically by URI strings
-          * @param URI_begin Lower bound of URI strings to retrieve
-          * @param count Maximum number of contents to fetch (must not exceed 100)
-          * @return The contents found
-          * @ingroup DatabaseAPI
-          */
-         vector<content_summary> list_content( const string& URI_begin, uint32_t count )const;
          
          /**
           * @brief Search for term in contents (author, title and description)
@@ -773,14 +756,6 @@ namespace graphene { namespace app {
                                                      const object_id_type& id,
                                                      const string& type,
                                                      uint32_t count )const;
-
-         /**
-          * @brief Get a list of contents by times bought, in decreasing order
-          * @param count Maximum number of contents to retrieve
-          * @return The contents found
-          * @ingroup DatabaseAPI
-          */
-         vector<content_object> list_content_by_bought( uint32_t count )const;
 
          /**
           * @brief Get a list of seeders by price, in increasing order
@@ -966,11 +941,8 @@ FC_API(graphene::app::database_api,
           (get_buying_objects_by_consumer)
           (search_feedback)
           (get_content)
-          (list_content_by_author)
-          (list_content)
           (search_content)
           (search_user_content)
-          (list_content_by_bought)
           (list_publishers_by_price)
           (get_content_ratings)
           (get_content_comments)

@@ -169,8 +169,6 @@ namespace graphene { namespace app {
       vector<buying_object> get_buying_objects_by_consumer( const account_id_type& consumer, const string& order, const object_id_type& id, const string& term, uint32_t count)const;
       vector<rating_object> search_feedback(const string& user, const string& URI, const object_id_type& id, uint32_t count) const;
       optional<content_object> get_content( const string& URI )const;
-      vector<content_object> list_content_by_author( const account_id_type& author )const;
-      vector<content_summary> list_content( const string& URI_begin, uint32_t count)const;
       vector<content_summary> search_content(const string& term,
                                              const string& order,
                                              const string& user,
@@ -185,7 +183,6 @@ namespace graphene { namespace app {
                                                   const object_id_type& id,
                                                   const string& type,
                                                   uint32_t count)const;
-      vector<content_object> list_content_by_bought( const uint32_t count )const;
       vector<seeder_object> list_publishers_by_price( const uint32_t count )const;
       vector<uint64_t> get_content_ratings( const string& URI )const;
       map<string, string> get_content_comments( const string& URI )const;
@@ -2138,31 +2135,6 @@ namespace
       }FC_CAPTURE_AND_RETHROW( (account)(count) );
    }
    
-   vector<content_object> database_api::list_content_by_author( const account_id_type& author )const
-   {
-      return my->list_content_by_author( author );
-   }
-   
-   vector<content_object> database_api_impl::list_content_by_author( const account_id_type& author )const
-   {
-      try
-      {
-         vector<content_object> result;
-         auto range = _db.get_index_type<content_index>().indices().get<by_author>().equal_range(author);
-         std::for_each(range.first, range.second,
-                       [&result](const content_object& element) {
-                          result.emplace_back(element);
-                       });
-         return result;
-      }
-      FC_CAPTURE_AND_RETHROW( (author) );
-   }
-   
-   vector<content_summary> database_api::list_content( const string& URI_begin, uint32_t count)const
-   {
-      return my->list_content( URI_begin, count);
-   }
-   
    vector<content_summary> database_api::search_content(const string& term,
                                                         const string& order,
                                                         const string& user,
@@ -2185,32 +2157,6 @@ namespace
    {
       return my->search_user_content( user, term, order, region_code, id, type, count);
    }
-    
-vector<content_summary> database_api_impl::list_content( const string& URI_begin, uint32_t count)const
-{
-    FC_ASSERT( count <= 100 );
-    const auto& idx = _db.get_index_type<content_index>().indices().get<by_URI>();
-    
-    vector<content_summary> result;
-    result.reserve( count );
-    
-    auto itr = idx.lower_bound( URI_begin );
-    
-    if(URI_begin == "")
-        itr = idx.begin();
-    
-    content_summary content;
-    const auto& idx2 = _db.get_index_type<account_index>().indices().get<by_id>();
-    
-    while(count-- && itr != idx.end())
-    {
-        const auto& account = idx2.find(itr->author);
-        result.emplace_back( content.set( *itr , *account, RegionCodes::OO_none ) );
-        ++itr;
-    }
-    
-    return result;
-}
 
    vector<content_summary> database_api_impl::search_user_content(const string& user,
                                                                   const string& search_term,
@@ -2361,32 +2307,6 @@ vector<content_summary> database_api_impl::list_content( const string& URI_begin
          search_content_template<false, by_expiration>(_db, search_term, count, user, region_code, id, type, result);
       else// if (order == "-created")
          search_content_template<false, by_created>(_db, search_term, count, user, region_code, id, type, result);
-      
-      return result;
-   }
-   
-   vector<content_object> database_api::list_content_by_bought( uint32_t count )const
-   {
-      return my->list_content_by_bought( count );
-   }
-   
-   vector<content_object> database_api_impl::list_content_by_bought( uint32_t count )const
-{
-      FC_ASSERT( count <= 100 );
-      const auto& idx = _db.get_index_type<content_index>().indices().get<by_times_bought>();
-      vector<content_object> result;
-      result.reserve(count);
-      
-      auto itr = idx.begin();
-      
-      while(count-- && itr != idx.end())
-      {
-         if( itr->expiration >= _db.head_block_time() && !itr->is_blocked )
-            result.emplace_back(*itr);
-         else
-            ++count;
-         ++itr;
-      }
       
       return result;
    }
