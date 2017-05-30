@@ -4133,8 +4133,15 @@ map<string, string> wallet_api::get_content_comments( const string& URI )const
       {
          auto state = package->get_manipulation_state();
 
-         if (package->get_data_state() == PackageInfo::CHECKED)
-            continue;
+         if (package->get_data_state() == PackageInfo::CHECKED){
+            bool cont = false;
+            auto hash = package->get_hash();
+            for( const auto& item : result )
+               if( item._hash == hash )
+                  cont = true;
+            if(cont)
+               continue;
+         }
 
          for (auto listener: my->_package_manager_listeners)
          {
@@ -4151,7 +4158,8 @@ map<string, string> wallet_api::get_content_comments( const string& URI )const
                   newObject.status = "Encrypting";
                } else if (state == PackageInfo::STAGING) {
                   newObject.status = "Staging";
-               }
+               } else if (state == PackageInfo:: CHECKED )
+                  newObject.status = "Submission failed";
                
                result.insert(result.begin(), newObject);
             }
@@ -4313,8 +4321,11 @@ void graphene::wallet::detail::submit_transfer_listener::package_seed_complete()
    _wallet.set_operation_fees( tx, _wallet._remote_db->get_global_properties().parameters.current_fees);
    tx.validate();
     _wallet.sign_transaction(tx, true);
-    
+   //_wallet._remote_db->set_content_update_callback(  , _op.URI);
 }
+
+
+
    void wallet_api::remove_package(const std::string& package_hash) const {
       FC_ASSERT(!is_locked());
       PackageManager::instance().release_package(fc::ripemd160(package_hash));

@@ -155,6 +155,14 @@ namespace graphene { namespace app {
          void broadcast_transaction(const signed_transaction& trx);
 
          /**
+          *
+          * @brief This call will not return until the transaction is included in a block.
+          * @param trx The transaction to broadcast
+          * @ingroup Network_broadcastAPI
+          */
+         fc::variant broadcast_transaction_synchronous( const signed_transaction& trx);
+
+         /**
           * @brief This version of broadcast transaction registers a callback method that will be called when the transaction is
           * included into a block.  The callback method includes the transaction id, block number, and transaction number in the
           * block.
