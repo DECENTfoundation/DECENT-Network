@@ -280,7 +280,6 @@ seeding_plugin_impl::generate_por2(const my_seeding_object& mso, decent::package
 
       decent::encrypt::CustodyProof proof;
       auto dyn_props = db.get_dynamic_global_properties();
-#ifdef TESTNET_3
       if(mso.cd){
          ilog("seeding plugin_impl: generate_por() - calculating full PoR");
          fc::ripemd160 b_id = dyn_props.head_block_id;
@@ -297,35 +296,14 @@ seeding_plugin_impl::generate_por2(const my_seeding_object& mso, decent::package
             package_handle->remove(true);
          }
       }
-#else
-      if(mso.cd.n > 0){
-
-         fc::ripemd160 b_id = dyn_props.head_block_id;
-         uint32_t b_num = dyn_props.head_block_number;
-         proof.reference_block = b_num;
-         for( int i = 0; i < 5; i++ )
-            proof.seed.data[i] = b_id._hash[i]; //use the block ID as source of entrophy
-
-         if(package_handle->get_data_state() == decent::package::PackageInfo::DataState::CHECKED ) //files available on disk
-            package_handle->create_proof_of_custody(mso.cd, proof);
-         else{
-            package_handle->download(true);
-            package_handle->create_proof_of_custody(mso.cd, proof);
-            package_handle->remove(true);
-         }
-      }
-#endif
       // issue PoR and plan periodic PoR generation
       ilog("seeding plugin_impl: generate_por() - Creating operation");
       proof_of_custody_operation op;
 
       op.seeder = mso.seeder;
-#ifdef TESTNET_3
       if(mso.cd)
          op.proof = proof;
-#else
-      op.proof = proof;
-#endif
+
       op.URI = mso.URI;
 
       signed_transaction tx;
@@ -474,9 +452,7 @@ void seeding_plugin_impl::restore_state(){
                          rtb_op.consumer = buying_element.consumer;
                          rtb_op.pubKey = buying_element.pubKey;
                          rtb_op.price = buying_element.price;
-#ifdef PRICE_REGIONS
                          rtb_op.region_code_from = buying_element.region_code_from;
-#endif
                          ilog("seeding_plugin:  restore_state() processing unhandled request to buy ${s}",("s",rtb_op));
                          handle_request_to_buy( rtb_op );
                          break;

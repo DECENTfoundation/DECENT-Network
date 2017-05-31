@@ -65,19 +65,14 @@ namespace graphene { namespace chain {
 
       asset fee;
       account_id_type author;
-#ifdef DECENT_TESTNET2
       // optional parameter. If map is not empty, payout will be splitted
       // maps co-authors to split based on basis points
       // author can be included in co_authors map
       // max num of co-authors = 10
       map<account_id_type, uint32_t> co_authors;
-#endif
       string URI;
-#ifdef PRICE_REGIONS
       vector<pair<uint32_t, asset>> price;
-#else
-      asset price;
-#endif
+
       uint64_t size; //<Size of content, including samples, in megabytes
       fc::ripemd160 hash;
 
@@ -88,11 +83,8 @@ namespace graphene { namespace chain {
       fc::time_point_sec expiration;
       asset publishing_fee; //< Fee must be greater than the sum of seeders' publishing prices * number of days. Is paid by author
       string synopsis;
-#ifdef TESTNET_3
       optional<decent::encrypt::CustodyData> cd; //< if cd.n == 0 then no custody is submitted, and simplified verification is done.
-#else
-      decent::encrypt::CustodyData cd; //< if cd.n == 0 then no custody is submitted, and simplified verification is done.
-#endif
+
       account_id_type fee_payer()const { return author; }
       void validate()const;
    };
@@ -125,9 +117,8 @@ namespace graphene { namespace chain {
       string URI;
       account_id_type consumer;
       asset price;
-#ifdef PRICE_REGIONS
       uint32_t region_code_from;
-#endif
+
       /// Consumer's public key
       decent::encrypt::DIntegerString pubKey;
       
@@ -185,11 +176,8 @@ namespace graphene { namespace chain {
       asset fee;
       account_id_type seeder;
       string URI;
-#ifdef TESTNET_3
       fc::optional<decent::encrypt::CustodyProof> proof;
-#else
-      decent::encrypt::CustodyProof proof;
-#endif
+
       account_id_type fee_payer()const { return seeder; }
       void validate()const;
    };
@@ -309,16 +297,8 @@ FC_REFLECT(graphene::chain::content_submit_operation,(fee)(size)(author)(co_auth
 FC_REFLECT(graphene::chain::set_publishing_manager_operation,(fee)(from)(to)(can_create_publishers))
 FC_REFLECT(graphene::chain::set_publishing_right_operation,(fee)(from)(to)(is_publisher))
 FC_REFLECT(graphene::chain::content_cancellation_operation,(fee)(author)(URI))
-#ifdef PRICE_REGIONS
 FC_REFLECT(graphene::chain::request_to_buy_operation,(fee)(URI)(consumer)(price)(region_code_from)(pubKey))
-#else
-FC_REFLECT(graphene::chain::request_to_buy_operation,(fee)(URI)(consumer)(price)(pubKey))
-#endif
-#ifdef TESTNET_3
 FC_REFLECT(graphene::chain::leave_rating_and_comment_operation,(fee)(URI)(consumer)(comment)(rating))
-#else
-FC_REFLECT(graphene::chain::leave_rating_and_comment_operation,(fee)(URI)(consumer)(rating))
-#endif
 FC_REFLECT(graphene::chain::ready_to_publish_operation,(fee)(seeder)(space)(pubKey)(price_per_MByte)(ipfs_IDs))
 FC_REFLECT(graphene::chain::proof_of_custody_operation,(fee)(seeder)(URI)(proof))
 FC_REFLECT(graphene::chain::deliver_keys_operation,(fee)(seeder)(proof)(key)(buying))

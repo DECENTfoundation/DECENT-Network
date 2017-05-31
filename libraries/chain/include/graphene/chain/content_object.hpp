@@ -12,10 +12,7 @@
 #include <vector>
 #include <utility>
 
-#define DECENT_TESTNET2
-#ifdef DECENT_TESTNET2
-#define PRICE_REGIONS
-#endif
+
 
 namespace graphene { namespace chain {
 using namespace decent::encrypt;
@@ -447,18 +444,14 @@ using namespace decent::encrypt;
       static const uint8_t type_id  = impl_content_object_type;
       
       account_id_type author;
-#ifdef DECENT_TESTNET2
       // if co_authors map is not empty, payout will be splitted
       // maps co-authors to split based on basis points
       map<account_id_type, uint32_t> co_authors;
-#endif
+
       time_point_sec expiration;
       time_point_sec created;
-#ifdef PRICE_REGIONS
       PriceRegions price;
-#else
-      asset price;
-#endif
+
       string synopsis;
       uint64_t size;
       uint32_t quorum;
@@ -472,25 +465,15 @@ using namespace decent::encrypt;
       uint32_t num_of_ratings;
       uint32_t times_bought;
       asset publishing_fee_escrow;
-#ifdef TESTNET_3
       fc::optional<decent::encrypt::CustodyData> cd;
-#else
-      decent::encrypt::CustodyData cd;
-#endif
 
-#ifdef PRICE_REGIONS
       template <RegionCodes::RegionCode code>
       share_type get_price_amount_template() const
       {
          FC_ASSERT(price.Valid(code));
          return price.GetPrice(code)->amount;
       }
-#else
-      share_type get_price_amount() const
-      {
-         return price.amount;
-      }
-#endif
+
    };
    
    struct by_author;
@@ -546,11 +529,7 @@ using namespace decent::encrypt;
    {
       static share_type get(content_object const& ob)
       {
-#ifdef PRICE_REGIONS
          return ob.get_price_amount_template<RegionCodes::OO_none>();
-#else
-         return ob.get_price_amount();
-#endif
       }
    };
 
@@ -586,17 +565,9 @@ using namespace decent::encrypt;
             ordered_unique<tag<by_URI>,
                member<content_object, string, &content_object::URI>
             >,
-
-#ifdef PRICE_REGIONS
             ordered_non_unique<tag<by_price>,
             const_mem_fun<content_object, share_type, &content_object::get_price_amount_template<RegionCodes::OO_none>>
             >,
-#else
-            ordered_non_unique<tag<by_price>,
-            const_mem_fun<content_object, share_type, &content_object::get_price_amount>
-            >,
-#endif
-
             ordered_non_unique<tag<by_size>,
                member<content_object, uint64_t, &content_object::size>
             >,

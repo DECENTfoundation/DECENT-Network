@@ -86,13 +86,10 @@ namespace graphene { namespace chain {
    {
       this->id = string(co.id);
       this->author = ao.name;
-#ifdef PRICE_REGIONS
       optional<asset> op_price = co.price.GetPrice(region_code);
       FC_ASSERT(op_price.valid());
       this->price = *op_price;
-#else
-      this->price = co.price;
-#endif
+
       this->synopsis = co.synopsis;
       this->URI = co.URI;
       this->AVG_rating = co.AVG_rating;

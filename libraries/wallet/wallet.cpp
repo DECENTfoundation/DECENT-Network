@@ -2079,7 +2079,6 @@ public:
    void submit_content_utility(content_submit_operation& submit_op,
                                       vector<regional_price_info> const& price_amounts)
    {
-#ifdef PRICE_REGIONS
       vector<pair<uint32_t, asset>> arr_prices;
 
       for (auto const& item : price_amounts)
@@ -2100,9 +2099,6 @@ public:
       }
 
       submit_op.price = arr_prices;
-#else
-      submit_op.price = price_asset_obj->amount_from_string(price_amounts.front().second);
-#endif
    }
 
    signed_transaction submit_content(string const& author,
@@ -2341,7 +2337,7 @@ signed_transaction content_cancellation(string author,
          {
             FC_THROW("Invalid content URI");
          }
-#ifdef PRICE_REGIONS
+
          uint32_t region_code_from = RegionCodes::OO_none;
 
          auto it = RegionCodes::s_mapNameToCode.find(str_region_code_from);
@@ -2355,7 +2351,7 @@ signed_transaction content_cancellation(string author,
          optional<asset> op_price = content->price.GetPrice(region_code_from);
          if (!op_price)
             FC_THROW("content not available for this region");
-#endif
+
 
          request_to_buy_operation request_op;
          request_op.consumer = consumer_account.id;
@@ -2367,12 +2363,8 @@ signed_transaction content_cancellation(string author,
          //}
 
          request_op.pubKey = decent::encrypt::get_public_el_gamal_key( el_gamal_priv_key );
-#ifdef PRICE_REGIONS
          request_op.price = price_to_dct(*op_price);
          request_op.region_code_from = region_code_from;
-#else
-         request_op.price = content->price;
-#endif
 
          signed_transaction tx;
          tx.operations.push_back( request_op );
@@ -2927,11 +2919,8 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
 
    std::string operation_printer::operator()(const content_submit_operation& op) const
    {
-   #ifdef PRICE_REGIONS
       out << "Submit content by " << wallet.get_account(op.author).name << " -- URI: " << op.URI;
-   #else
-      out << "Submit content by " << wallet.get_account(op.author).name << " -- URI: " << op.URI << " -- Price: " << op.price.amount.value;
-   #endif
+
       return fee(op.fee);
    }
 
@@ -4004,15 +3993,12 @@ void wallet_api::leave_rating_and_comment(string consumer,
          optional<content_object> content = my->_remote_db->get_content( bobj.URI );
          if (!content)
             continue;
-#ifdef PRICE_REGIONS
          optional<asset> op_price = content->price.GetPrice(bobj.region_code_from);
          if (!op_price)
             continue;
 
          bobj.price = *op_price;
-#else
-         bobj.price = content->price;
-#endif
+
          bobj.size = content->size;
          bobj.rating = content->AVG_rating;
          bobj.synopsis = content->synopsis;

@@ -147,14 +147,11 @@ namespace graphene { namespace chain {
          FC_ASSERT( content_itr->size == o.size );
          FC_ASSERT( content_itr->_hash == o.hash );
          FC_ASSERT( content_itr->expiration <= o.expiration );
-#ifdef TESTNET_3
          FC_ASSERT( content_itr->cd == o.cd );
          if( content_itr->cd )
             FC_ASSERT( *(content_itr->cd) == *(o.cd));
 
-#else
-         FC_ASSERT( content_itr->cd == o.cd);
-#endif
+
          for ( auto &p : o.seeders ) //check if seeders exist and accumulate their prices
          {
             auto itr = idx.find( p );
@@ -197,7 +194,6 @@ namespace graphene { namespace chain {
          auto& content_idx = db().get_index_type<content_index>().indices().get<by_URI>();
          const auto& content_itr = content_idx.find( o.URI );
          db().modify<content_object>(*content_itr,[&](content_object& co) {
-#ifdef PRICE_REGIONS
                                         map<uint32_t, asset> prices;
                                      for (auto const& item : o.price)
                                      {
@@ -214,9 +210,7 @@ namespace graphene { namespace chain {
                                            co.price.SetRegionPrice(price_item.first, price_item.second);
                                         }
                                      }
-#else
-                                        co.price = o.price;
-#endif
+
                                         co.synopsis = o.synopsis;
                                         co.publishing_fee_escrow += o.publishing_fee;
                                         auto itr1 = o.seeders.begin();
@@ -239,7 +233,6 @@ namespace graphene { namespace chain {
                                      {  //create new content object and store all vaues from the operation
                                         co.author = o.author;
                                         co.co_authors = o.co_authors;
-#ifdef PRICE_REGIONS
                                         map<uint32_t, asset> prices;
                                      for (auto const& item : o.price)
                                      {
@@ -256,9 +249,7 @@ namespace graphene { namespace chain {
                                            co.price.SetRegionPrice(price_item.first, price_item.second);
                                         }
                                      }
-#else
-                                        co.price = o.price;
-#endif
+
                                         co.size = o.size;
                                         co.synopsis = o.synopsis;
                                         co.URI = o.URI;
@@ -353,7 +344,6 @@ namespace graphene { namespace chain {
          if (subscription != range.end() && subscription->expiration > db().head_block_time() )
             return void_result();
       }
-#ifdef PRICE_REGIONS
       optional<asset> price = content->price.GetPrice(o.region_code_from);
 
       FC_ASSERT( price.valid() );
@@ -371,12 +361,7 @@ namespace graphene { namespace chain {
          FC_ASSERT( o.price >= *price );
       }
 
-#else
-      optional<asset> price = content->GetPrice(string());
 
-      if (subscription == range.end() || (subscription != range.end() && subscription->expiration < db().head_block_time()))
-         FC_ASSERT(o.price >= content->price && o.price.asset_id == content->price.asset_id);
-#endif
    }FC_CAPTURE_AND_RETHROW( (o) ) }
 
    void_result request_to_buy_evaluator::do_apply(const request_to_buy_operation& o )
@@ -401,9 +386,7 @@ namespace graphene { namespace chain {
                                                                bo.average_rating = itr->AVG_rating;
                                                             }
                                                          }
-#ifdef PRICE_REGIONS
                                                          bo.region_code_from = o.region_code_from;
-#endif
                                                       });
       db().adjust_balance( o.consumer, -o.price );
 
@@ -616,27 +599,19 @@ namespace graphene { namespace chain {
       FC_ASSERT( content != idx.end(), "content not found" );
       FC_ASSERT( content->expiration > db().head_block_time(), "content expired" );
       //verify that the seed is not too old...
-#ifdef TESTNET_3
       if (o.proof.valid())
       {
       auto& proof = *o.proof;
-#else
-      auto& proof = o.proof;
-#endif
+
       fc::ripemd160 bid = db().get_block_id_for_num(proof.reference_block);
       for(int i = 0; i < 5; i++)
          FC_ASSERT(bid._hash[i] == proof.seed.data[i],"Block ID does not match; wrong chain?");
       FC_ASSERT(db().head_block_num() <= proof.reference_block + 6,"Block reference is too old");
-#ifdef TESTNET_3
       }
-#endif
       //
-#ifdef TESTNET_3
       FC_ASSERT( content->cd.valid() == o.proof.valid() );
       FC_ASSERT( !(content->cd.valid() ) || _custody_utils.verify_by_miner( *(content->cd), *(o.proof) ) == 0, "Invalid proof of custody" );
-#else
-      FC_ASSERT( content->cd.n == 0 || _custody_utils.verify_by_miner( content->cd, o.proof ) == 0, "Invalid proof of custody" );
-#endif
+
       //ilog("proof_of_custody OK");
    }FC_CAPTURE_AND_RETHROW( (o) ) }
    

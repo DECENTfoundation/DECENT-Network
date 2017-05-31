@@ -28,15 +28,12 @@ void content_submit_operation::validate()const
       sum_of_splits += element.second;
    }
    FC_ASSERT( sum_of_splits <= 10000 );
-#ifdef PRICE_REGIONS
    FC_ASSERT(false == price.empty());
    for (auto const& item : price)
    {
       FC_ASSERT(item.second.amount >= 0);
    }
-#else
-   FC_ASSERT( price.amount >= 0 );
-#endif
+
    FC_ASSERT( size > 0 && size <= 200 ); //TODO_DECENT - increase in testnet
    FC_ASSERT( seeders.size() > 0 );
    FC_ASSERT( seeders.size() == key_parts.size() );
