@@ -64,6 +64,12 @@ namespace graphene { namespace wallet {
          public_key_type pub_key;
       };
 
+      struct regional_price_info
+      {
+         string region;
+         string amount;
+         string asset_symbol;
+      };
 
       struct wallet_data
       {
@@ -1098,6 +1104,13 @@ namespace graphene { namespace wallet {
                                                    bool broadcast = false);
 
 
+         /**
+          * @brief Converts price denominated in Monitored asset into DCT, using actual price feed.
+          * @param price Price in DCT or monitored asset
+          * @return Price in DCT
+          * @ingroup WalletCLI
+          */
+         asset price_to_dct(asset price);
 
          /**
           * @brief Publishes a price feed for the named asset.
@@ -1520,8 +1533,7 @@ namespace graphene { namespace wallet {
          submit_content(string const& author,
                         vector< pair< string, uint32_t>> co_authors,
                         string const& URI,
-                        string const& price_asset_name,
-                        vector <pair<string, string>> const& price_amounts,
+                        vector <regional_price_info> const& price_amounts,
                         uint64_t size,
                         fc::ripemd160 const& hash,
                         vector<account_id_type> const& seeders,
@@ -1553,17 +1565,16 @@ namespace graphene { namespace wallet {
           * @return The signed transaction submitting the content
           * @ingroup WalletCLI
           */
-         fc::ripemd160  submit_content_new(string const& author,
-                                           vector< pair< string, uint32_t>> co_authors,
-                                           string const& content_dir,
-                                           string const& samples_dir,
-                                           string const& protocol,
-                                           string const& price_asset_symbol,
-                                           vector <pair<string, string>> const& price_amounts,
-                                           vector<account_id_type> const& seeders,
-                                           fc::time_point_sec const& expiration,
-                                           string const& synopsis,
-                                           bool broadcast = false);
+
+         fc::ripemd160 submit_content_new(string const &author, 
+                                          vector< pair< string, uint32_t>> co_authors,
+                                          string const &content_dir, string const &samples_dir,
+                                          string const &protocol,
+                                          vector<regional_price_info> const &price_amounts,
+                                          vector<account_id_type> const &seeders,
+                                          fc::time_point_sec const &expiration, string const &synopsis,
+                                          bool broadcast);
+
 
          /**
           * @brief This function can be used to cancel submitted content. This content is immediately not available to purchase.
@@ -1608,6 +1619,22 @@ namespace graphene { namespace wallet {
           * @ingroup WalletCLI
           */
          signed_transaction request_to_buy(string consumer, string URI, string price_asset_name, string price_amount, bool broadcast);
+
+         /**
+          * @brief This method allows user to start seeding plugin from running application
+          * @param account_id_type_or_name Name or ID of account controlling this seeder
+          * @param content_private_key El Gamal content private key
+          * @param seeder_private_key Private key of the account controlling this seeder
+          * @param free_space Allocated disk space, in MegaBytes
+          * @param seeding_price price per MegaBytes
+          * @ingroup WalletCLI
+          */
+         void seeding_startup( string account_id_type_or_name,
+                               DInteger content_private_key,
+                               string seeder_private_key,
+                               uint64_t free_space,
+                               uint32_t seeding_price,
+                               string packages_path);
 
          /**
           * @brief Rates and/or comments a content.
@@ -2033,6 +2060,12 @@ FC_REFLECT( graphene::wallet::brain_key_info,
                (pub_key)
 )
 
+FC_REFLECT( graphene::wallet::regional_price_info,
+             (region)
+             (amount)
+             (asset_symbol)
+)
+
 FC_REFLECT (graphene::wallet::content_download_status, 
               (total_key_parts)
               (received_key_parts)
@@ -2120,6 +2153,7 @@ FC_API( graphene::wallet::wallet_api,
            (update_asset)
            (update_monitored_asset)
            (publish_asset_feed)
+           (price_to_dct)
            (issue_asset)
            (get_asset)
            (get_monitored_asset_data)
@@ -2172,6 +2206,7 @@ FC_API( graphene::wallet::wallet_api,
            (content_cancellation)
            (request_to_buy)
            (leave_rating_and_comment)
+           (seeding_startup)
            (restore_encryption_key)
            (generate_el_gamal_keys)
            (subscribe_to_author)

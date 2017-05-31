@@ -96,12 +96,17 @@ namespace graphene { namespace chain {
       this->synopsis = co.synopsis;
       this->URI = co.URI;
       this->AVG_rating = co.AVG_rating;
-      
+      this->_hash = co._hash;
       this->size = co.size;
       this->expiration = co.expiration;
       this->created = co.created;
       this->times_bought = co.times_bought;
-       
+      if(co.last_proof.size() >= co.quorum)
+         this->status = "Uploaded";
+      else
+         this->status = "Uploading";
+      if(co.expiration <= time_point::now() )
+         this->status = "Expired";
       return *this;
    }
    content_summary& content_summary::set( const content_object& co, const account_object& ao, string const& region_code )

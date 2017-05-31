@@ -83,6 +83,7 @@ namespace graphene { namespace app {
       
       // Subscriptions
       void set_subscribe_callback( std::function<void(const variant&)> cb, bool clear_filter );
+      void set_content_update_callback( const string & URI, std::function<void()> cb );
       void set_pending_transaction_callback( std::function<void(const variant&)> cb );
       void set_block_applied_callback( std::function<void(const variant& block_id)> cb );
       void cancel_all_subscriptions();
@@ -238,7 +239,8 @@ namespace graphene { namespace app {
       boost::signals2::scoped_connection                                                                                           _applied_block_connection;
       boost::signals2::scoped_connection                                                                                           _pending_trx_connection;
       map< pair<asset_id_type,asset_id_type>, std::function<void(const variant&)> >      _market_subscriptions;
-      graphene::chain::database&                                                                                                            _db;
+      map< string, std::function<void()> >                              _content_subscriptions;
+      graphene::chain::database&                                                                                                   _db;
    };
    
    //////////////////////////////////////////////////////////////////////
@@ -338,7 +340,18 @@ namespace graphene { namespace app {
          _subscribe_filter = fc::bloom_filter(param);
       }
    }
-   
+
+
+   void database_api::set_content_update_callback( std::function<void()> cb, const string & URI )
+   {
+      my->set_content_update_callback(URI, cb);
+   }
+
+   void database_api_impl::set_content_update_callback( const string & URI, std::function<void()> cb )
+   {
+      _content_subscriptions[ URI ] = cb;
+   }
+
    void database_api::set_pending_transaction_callback( std::function<void(const variant&)> cb )
    {
       my->set_pending_transaction_callback( cb );
@@ -2269,7 +2282,7 @@ vector<content_summary> database_api_impl::list_content( const string& URI_begin
                continue;
             }
 #endif
-            if ( !itr_begin->is_blocked ) // Content can be cancelled by an author. In such a case content is not available to purchase.
+            if ( itr_begin->is_blocked ) // Content can be cancelled by an author. In such a case content is not available to purchase.
             {
                ++itr_begin;
                continue;
@@ -2544,6 +2557,7 @@ vector<content_summary> database_api_impl::list_content( const string& URI_begin
    {
       vector<variant>    updates;
       map< pair<asset_id_type, asset_id_type>,  vector<variant> > market_broadcast_queue;
+      vector< string > content_update_queue;
       
       for(auto id : ids)
       {
@@ -2576,6 +2590,19 @@ vector<content_summary> database_api_impl::list_content( const string& URI_begin
                }
             }
          }
+
+         if( _content_subscriptions.size() )
+         {
+            if( !_subscribe_callback )
+               obj = _db.find_object( id );
+            if( obj )
+            {
+               const content_object* content = dynamic_cast<const content_object*>(obj);
+               if(content && _content_subscriptions[ content->URI ] )
+                  content_update_queue.emplace_back( content->URI );
+            }
+
+         }
       }
       
       auto capture_this = shared_from_this();
@@ -2583,7 +2610,7 @@ vector<content_summary> database_api_impl::list_content( const string& URI_begin
       /// pushing the future back / popping the prior future if it is complete.
       /// if a connection hangs then this could get backed up and result in
       /// a failure to exit cleanly.
-      fc::async([capture_this,this,updates,market_broadcast_queue](){
+      fc::async([capture_this,this,updates,market_broadcast_queue, content_update_queue](){
          if( _subscribe_callback ) _subscribe_callback( updates );
          
          for( const auto& item : market_broadcast_queue )
@@ -2591,6 +2618,11 @@ vector<content_summary> database_api_impl::list_content( const string& URI_begin
             auto sub = _market_subscriptions.find(item.first);
             if( sub != _market_subscriptions.end() )
                sub->second( fc::variant(item.second ) );
+         }
+         for( const auto& item: content_update_queue )
+         {
+            _content_subscriptions[ item ]( );
+            _content_subscriptions.erase( item );
          }
       });
    }

@@ -17,7 +17,22 @@ void_result subscribe_evaluator::do_evaluate( const subscribe_operation& op )
       FC_ASSERT( to_account->options.allow_subscription , "Author does not allow subscription" );
       period_count = op.duration / to_account->options.subscription_period;
       FC_ASSERT( period_count >= 1 );
-      FC_ASSERT( op.price >= period_count * to_account->options.price_per_subscribe );
+
+      auto price = to_account->options.price_per_subscribe;
+      asset dct_price;
+      auto ao = db().get( price.asset_id );
+      FC_ASSERT( price.asset_id == asset_id_type(0) || ao.is_monitored_asset() );
+
+      //if the price is in fiat, calculate price in DCT with current exchange rate...
+      if( ao.is_monitored_asset() ){
+         auto rate = ao.monitored_asset_opts->current_feed.core_exchange_rate;
+         FC_ASSERT(!rate.is_null(), "No price feed for this asset");
+         dct_price = price * rate;
+      }else{
+         dct_price = price;
+      }
+
+      FC_ASSERT( op.price >= period_count * dct_price );
 
       return void_result();
    } FC_CAPTURE_AND_RETHROW( (op) )

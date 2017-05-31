@@ -427,6 +427,7 @@ using namespace decent::encrypt;
       string author;
       asset price;
       string synopsis;
+      fc::ripemd160 _hash;
       string status;
       string URI;
       uint32_t AVG_rating = 0;
@@ -577,15 +578,15 @@ using namespace decent::encrypt;
             ordered_unique< tag<by_id>,
                member< object, object_id_type, &object::id >
             >,
-   
-   
+
+
             ordered_non_unique<tag<by_author>,
                member<content_object, account_id_type, &content_object::author>
             >,
             ordered_unique<tag<by_URI>,
                member<content_object, string, &content_object::URI>
             >,
-   
+
 #ifdef PRICE_REGIONS
             ordered_non_unique<tag<by_price>,
             const_mem_fun<content_object, share_type, &content_object::get_price_amount_template<RegionCodes::OO_none>>
@@ -610,7 +611,7 @@ using namespace decent::encrypt;
             ordered_non_unique<tag<by_expiration>,
                member<content_object, time_point_sec, &content_object::expiration>
             >,
-   
+
             ordered_non_unique<tag<by_created>,
                member<content_object, time_point_sec, &content_object::created>
             >
@@ -629,6 +630,6 @@ FC_REFLECT_DERIVED(graphene::chain::content_object,
                    (URI)(quorum)(key_parts)(_hash)(last_proof)(is_blocked)
                    (AVG_rating)(num_of_ratings)(times_bought)(publishing_fee_escrow)(cd) )
 
-FC_REFLECT( graphene::chain::content_summary, (id)(author)(price)(synopsis)(status)(URI)(AVG_rating)(size)(expiration)(created)(times_bought) )
+FC_REFLECT( graphene::chain::content_summary, (id)(author)(price)(synopsis)(status)(URI)(_hash)(AVG_rating)(size)(expiration)(created)(times_bought) )
 FC_REFLECT( graphene::chain::PriceRegions, (map_price) )
 FC_REFLECT( graphene::chain::ContentObjectTypeValue, (type) )
