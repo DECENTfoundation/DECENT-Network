@@ -577,11 +577,10 @@ int CustodyUtils::create_custody_data(path content, uint32_t &n, char u_seed[], 
 int CustodyUtils::create_proof_of_custody(path content, const uint32_t n, const char u_seed[], unsigned char pubKey[],
                                            unsigned char sigma[], std::vector<std::string> &mus, mpz_t seed) {
    //open files
-   ilog("create_proof_of_custody: dealing with content ${p}",("p", content.c_str()));
    std::fstream infile(content.c_str(), std::fstream::binary | std::fstream::in);
    std::fstream cusfile((content.parent_path() / "content.cus").c_str(), std::fstream::binary | std::fstream::in);
    if( !infile.is_open() || !cusfile.is_open())
-      return -1;
+      return -10;
    cusfile.seekg(0);
    infile.seekg(0);
 
@@ -616,13 +615,16 @@ int CustodyUtils::create_proof_of_custody(path content, const uint32_t n, const 
    char buffer[DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED];
    try {
    for( int i = 0; i < n; i++ ) {
-      if(cusfile.readsome(buffer, DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED) != DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED )
-         return -1;
+      uint64_t pos = cusfile.tellg();
+      cusfile.read(&buffer[0], DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED);
+//      if(cusfile.readsome(buffer, DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED) != DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED )
+//         return -9;
       element_init_G1(sigmas[i], pairing);
       element_from_bytes_compressed(sigmas[i], (unsigned char *) buffer);
-   }
-   } catch (std::exception ){
-      return -1;
+   } 
+   } catch (std::exception e){
+      wlog("Exception caught: ${s}", ("s", e.what() )); 
+      return -8;
    }
 
    //read the file and get m's
@@ -631,7 +633,7 @@ int CustodyUtils::create_proof_of_custody(path content, const uint32_t n, const 
    nReal = get_n(infile);
    //split_file(infile, nReal, &m);
    if( nReal != n )
-      return -1;
+      return -7;
 
    //generate query
    unsigned int q = get_number_of_query(n);
