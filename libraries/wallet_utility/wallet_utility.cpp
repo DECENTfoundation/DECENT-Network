@@ -63,7 +63,7 @@ namespace wallet_utility
       public:
          WalletAPIHelper()
          : m_asset_precision(0)
-         , m_ptr_wallet_api(nullptr)
+         ,m_ptr_wallet_api(nullptr)
          , m_ptr_fc_api_connection(nullptr)
          {
             wallet_data wdata;
@@ -77,11 +77,11 @@ namespace wallet_utility
             //graphene::package::package_manager::instance().set_libtorrent_config(wdata.libtorrent_config_path);
 
             websocket_client_ptr ptr_ws_client(new websocket_client());
-            websocket_connection_ptr ptr_ws_connection = ptr_ws_client->connect(wdata.ws_server);
+               websocket_connection_ptr ptr_ws_connection = ptr_ws_client->connect(wdata.ws_server);
 
             //  capture ptr_ws_connection and ptr_ws_client own the lifetime
             websocket_api_connection_ptr ptr_api_connection =
-            websocket_api_connection_ptr(new websocket_api_connection(*ptr_ws_connection),
+               websocket_api_connection_ptr(new websocket_api_connection(*ptr_ws_connection),
                                          [ptr_ws_connection, ptr_ws_client](websocket_api_connection* &p_api_connection) mutable
                                          {
                                             delete p_api_connection;
@@ -91,7 +91,7 @@ namespace wallet_utility
                                          });
 
             fc_remote_api_ptr ptr_remote_api =
-            fc_remote_api_ptr(new fc_remote_api(ptr_api_connection->get_remote_api<graphene::app::login_api>(1)));
+               fc_remote_api_ptr(new fc_remote_api(ptr_api_connection->get_remote_api<graphene::app::login_api>(1)));
             if (false == (*ptr_remote_api)->login(wdata.ws_user, wdata.ws_password))
                throw wallet_exception("fc::api<graphene::app::login_api>::login");
 
@@ -124,9 +124,11 @@ namespace wallet_utility
          }
 
          uint8_t m_asset_precision;
+         std::map<graphene::chain::asset_id_type, std::string> m_asset_symbols;
+         std::map<std::string, uint8_t> m_asset_precisions;
          wallet_api_ptr m_ptr_wallet_api;
          WalletAPIConnectionPtr m_ptr_fc_api_connection;
-         string m_str_asset_symbol;
+         string m_str_asset_symbol; //<core asset
          std::map<string, std::function<string(fc::variant,const fc::variants&)> > m_result_formatters;
       };
    }
@@ -271,9 +273,9 @@ namespace wallet_utility
       return future_unlock.wait();
    }
 
-   void WalletAPI::LoadAssetInfo(string& str_symbol, uint8_t& precision)
+   void WalletAPI::LoadAssetInfo(string &str_symbol, uint8_t &precision, const graphene::chain::asset_id_type asset_id)
    {
-      if (false == Connected())
+      if ( !Connected() )
          throw wallet_exception("not yet connected");
 
       std::lock_guard<std::mutex> lock(m_mutex);
@@ -285,21 +287,28 @@ namespace wallet_utility
          fc::future<void> future_load =
          m_pthread->async([&pimpl] ()
                           {
-                             vector<asset_object> assets = pimpl->m_ptr_wallet_api->list_assets(string(), 10);
+                             vector<asset_object> assets = pimpl->m_ptr_wallet_api->list_assets(string(), 100);
 
-                            // if (assets.size() != 1)
-                            //    throw wallet_exception("asset exception");
-
+                             for( auto asset: assets ){
+                                pimpl->m_asset_precisions [asset.symbol] = asset.precision;
+                                pimpl->m_asset_symbols [ asset.id ] = asset.symbol;
+                             }
                              pimpl->m_str_asset_symbol = assets[0].symbol;
-                             pimpl->m_asset_precision = assets[0].precision;
+
                           });
          future_load.wait();
       }
 
-      if (false == m_pimpl->m_str_asset_symbol.empty())
+      auto& impl = *m_pimpl;
+      if ( !impl.m_str_asset_symbol.empty() )
       {
-         str_symbol = m_pimpl->m_str_asset_symbol;
-         precision = m_pimpl->m_asset_precision;
+         if( impl.m_asset_symbols.count( asset_id ) ) {
+            str_symbol = impl.m_asset_symbols[ asset_id ];
+            if( impl.m_asset_precisions.count(str_symbol))
+               precision = impl.m_asset_precisions[ str_symbol ];
+            else if( impl.m_asset_precisions.count(str_symbol))
+               precision = impl.m_asset_precisions[ impl.m_str_asset_symbol ];
+         }
       }
    }
 

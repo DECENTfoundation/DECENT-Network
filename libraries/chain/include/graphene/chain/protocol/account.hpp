@@ -27,6 +27,8 @@
 #include <graphene/chain/protocol/ext.hpp>
 #include <graphene/chain/protocol/types.hpp>
 #include <graphene/chain/protocol/vote.hpp>
+#include <set>
+
 
 namespace graphene { namespace chain {
 
@@ -39,9 +41,9 @@ namespace graphene { namespace chain {
       bool is_publishing_manager;
       /// Rights to publish a content received from publishing managers.
       /// An account can publish a content if has at least one right from publishing managers.
-      vector<account_id_type> publishing_rights_received;
+      std::set<account_id_type> publishing_rights_received;
       /// List of accounts that get publishing right from this account. This list is empty if account does not have publishing manager status.
-      vector<account_id_type> publishing_rights_forwarded;
+      std::set<account_id_type> publishing_rights_forwarded;
    };
 
    /// These are the fields which can be updated by the active authority.

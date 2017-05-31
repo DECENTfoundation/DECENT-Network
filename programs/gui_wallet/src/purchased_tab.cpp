@@ -124,7 +124,8 @@ void PurchasedTab::timeToUpdate(const std::string& result)
       
       contentObject.author = content["author_account"].get<std::string>();
       uint64_t iPrice = json_to_int64(content["price"]["amount"]);
-      contentObject.price = Globals::instance().asset(iPrice);
+      std::string iSymbolId = content["price"]["asset_id"];
+      contentObject.price = Globals::instance().asset(iPrice, iSymbolId);
 
       contentObject.synopsis = content["synopsis"].get<std::string>();
       contentObject.URI = content["URI"].get<std::string>();
