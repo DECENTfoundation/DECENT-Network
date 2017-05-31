@@ -577,6 +577,7 @@ int CustodyUtils::create_custody_data(path content, uint32_t &n, char u_seed[], 
 int CustodyUtils::create_proof_of_custody(path content, const uint32_t n, const char u_seed[], unsigned char pubKey[],
                                            unsigned char sigma[], std::vector<std::string> &mus, mpz_t seed) {
    //open files
+   ilog("create_proof_of_custody: dealing with content ${p}",("p", content.c_str()));
    std::fstream infile(content.c_str(), std::fstream::binary | std::fstream::in);
    std::fstream cusfile((content.parent_path() / "content.cus").c_str(), std::fstream::binary | std::fstream::in);
    if( !infile.is_open() || !cusfile.is_open())
