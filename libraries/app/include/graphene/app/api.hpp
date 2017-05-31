@@ -155,6 +155,14 @@ namespace graphene { namespace app {
          void broadcast_transaction(const signed_transaction& trx);
 
          /**
+          *
+          * @brief This call will not return until the transaction is included in a block.
+          * @param trx The transaction to broadcast
+          * @ingroup Network_broadcastAPI
+          */
+         fc::variant broadcast_transaction_synchronous( const signed_transaction& trx);
+
+         /**
           * @brief This version of broadcast transaction registers a callback method that will be called when the transaction is
           * included into a block.  The callback method includes the transaction id, block number, and transaction number in the
           * block.
@@ -230,6 +238,22 @@ namespace graphene { namespace app {
           * @ingroup Network_NodeAPI
           */
          std::vector<net::potential_peer_record> get_potential_peers() const;
+
+        /**
+         * @brief This method allows user to start seeding plugin from running application
+         * @param account_id ID of account controlling this seeder
+         * @param content_private_key El Gamal content private key
+         * @param seeder_private_key Private key of the account controlling this seeder
+         * @param free_space Allocated disk space, in MegaBytes
+         * @param seeding_price price per MegaBytes
+         * @ingroup Network_NodeAPI
+         */
+         void seeding_startup(const account_id_type& account_id,
+                              const DInteger& content_private_key,
+                              const fc::ecc::private_key& seeder_private_key,
+                              const uint64_t free_space,
+                              const uint32_t seeding_price,
+                              const string packages_path);
 
       private:
          application& _app;
@@ -374,6 +398,7 @@ FC_API(graphene::app::network_node_api,
        (get_potential_peers)
        (get_advanced_node_parameters)
        (set_advanced_node_parameters)
+       (seeding_startup)
      )
 FC_API(graphene::app::crypto_api,
        (blind_sign)

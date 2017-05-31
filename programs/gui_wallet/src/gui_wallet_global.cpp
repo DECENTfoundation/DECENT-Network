@@ -550,11 +550,15 @@ void Globals::clear()
    }
 }
 
-Asset Globals::asset(uint64_t amount)
+Asset Globals::asset(uint64_t amount, const std::string& symbol_id )
 {
    Asset ast_amount;
    uint8_t precision = 0;
-   getWallet().LoadAssetInfo(ast_amount.m_str_symbol, precision);
+
+   graphene::chain::asset_id_type asset_id;
+   fc::from_variant( symbol_id, asset_id );
+
+   getWallet().LoadAssetInfo(ast_amount.m_str_symbol, precision, asset_id);
    ast_amount.m_scale = pow(10, precision);
    ast_amount.m_amount = amount;
 

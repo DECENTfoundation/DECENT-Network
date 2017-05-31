@@ -167,6 +167,14 @@ namespace graphene { namespace app {
          void set_block_applied_callback( std::function<void(const variant& block_id)> cb );
 
          /**
+          *
+          * @param URI Content we are monitoring
+          * @param cb Callback
+          * @ingroup DatabaseAPI
+          */
+         void set_content_update_callback( std::function<void()>cb, const string & URI );
+
+         /**
           * @brief Stop receiving any notifications
           * @ingroup DatabaseAPI
           *
@@ -842,6 +850,7 @@ FC_API(graphene::app::database_api,
           (set_pending_transaction_callback)
           (set_block_applied_callback)
           (cancel_all_subscriptions)
+          (set_content_update_callback)
 
           // Blocks and transactions
           (get_block_header)

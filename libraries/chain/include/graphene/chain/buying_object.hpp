@@ -42,9 +42,8 @@ using decent::encrypt::DInteger;
       bool rated_or_commented = false;
       time_point_sec created; //< initialized by content.created
       time_point_sec expiration; //< initialized by content.expiration
-#ifdef PRICE_REGIONS
       uint32_t region_code_from;
-#endif
+#
 
       bool is_open() const { return !( expired || delivered ); }
       share_type get_price() const { return paid_price.amount; }
@@ -176,14 +175,7 @@ using decent::encrypt::DInteger;
 
 }}
 
-#ifdef PRICE_REGIONS
 FC_REFLECT_DERIVED(graphene::chain::buying_object,
                    (graphene::db::object),
                    (consumer)(URI)(synopsis)(price)(paid_price)(seeders_answered)(size)(rating)(average_rating)(expiration_time)(pubKey)(key_particles)
                    (expired)(delivered)(expiration_or_delivery_time)(rated_or_commented)(created)(expiration)(region_code_from) )
-#else
-FC_REFLECT_DERIVED(graphene::chain::buying_object,
-                   (graphene::db::object),
-                   (consumer)(URI)(synopsis)(price)(paid_price)(seeders_answered)(size)(rating)(average_rating)(expiration_time)(pubKey)(key_particles)
-                   (expired)(delivered)(expiration_or_delivery_time)(rated_or_commented)(created)(expiration) )
-#endif
