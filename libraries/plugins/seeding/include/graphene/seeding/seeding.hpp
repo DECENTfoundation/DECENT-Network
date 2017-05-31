@@ -219,7 +219,6 @@ public:
       //_pi->remove_event_listener(shared_from_this());
       _pi->start_seeding();
       //Don't block package manager thread for too long.
-      fc::url download_url(_url);
       _my->service_thread->async([ = ]() { _my->generate_por2(*mso_itr, _pi); });
    };
 };

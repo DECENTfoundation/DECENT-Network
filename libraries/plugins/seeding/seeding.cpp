@@ -235,7 +235,7 @@ void seeding_plugin_impl::handle_commited_operation(const operation_history_obje
 
 void
 seeding_plugin_impl::generate_por2(const my_seeding_object& mso, decent::package::package_handle_t package_handle)
-{
+{try{
    ilog("seeding plugin_impl:  generate_por() start");
    package_handle->remove_all_event_listeners();
    graphene::chain::database &db = database();
@@ -282,6 +282,7 @@ seeding_plugin_impl::generate_por2(const my_seeding_object& mso, decent::package
       auto dyn_props = db.get_dynamic_global_properties();
 #ifdef TESTNET_3
       if(mso.cd){
+         ilog("seeding plugin_impl: generate_por() - calculating full PoR");
          fc::ripemd160 b_id = dyn_props.head_block_id;
          uint32_t b_num = dyn_props.head_block_number;
          proof.reference_block = b_num;
@@ -315,6 +316,7 @@ seeding_plugin_impl::generate_por2(const my_seeding_object& mso, decent::package
       }
 #endif
       // issue PoR and plan periodic PoR generation
+      ilog("seeding plugin_impl: generate_por() - Creating operation");
       proof_of_custody_operation op;
 
       op.seeder = mso.seeder;
@@ -349,7 +351,7 @@ seeding_plugin_impl::generate_por2(const my_seeding_object& mso, decent::package
                             "Seeding plugin PoR generate");
 
    ilog("seeding plugin_impl:  generate_por() end");
-}
+}FC_CAPTURE_AND_RETHROW((mso))}
 
 
 void seeding_plugin_impl::send_ready_to_publish()
