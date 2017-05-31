@@ -2194,7 +2194,7 @@ public:
       try
       {
          FC_ASSERT(!is_locked());
-         account_id_type author_account = get_account_id( author );
+         //account_id_type author_account = get_account_id( author );
 
          map<account_id_type, uint32_t> co_authors_id_to_split;
          if( !co_authors.empty() )
