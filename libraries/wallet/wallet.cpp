@@ -2172,7 +2172,7 @@ public:
       } FC_CAPTURE_AND_RETHROW( (author)(URI)(price_amounts)(hash)(seeders)(quorum)(expiration)(publishing_fee_symbol_name)(publishing_fee_amount)(synopsis)(secret)(broadcast) )
    }
 
-   fc::ripemd160 submit_content_new(string const& author,
+   fc::ripemd160 submit_content_async(string const& author,
 
                                     vector< pair< string, uint32_t>> co_authors,     
                                     string const& content_dir,
@@ -3868,7 +3868,7 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
    }
 
    fc::ripemd160
-   wallet_api::submit_content_new(string const &author, vector< pair< string, uint32_t>> co_authors, 
+   wallet_api::submit_content_async(string const &author, vector< pair< string, uint32_t>> co_authors,
                                      string const &content_dir, string const &samples_dir,
                                      string const &protocol,
                                      vector<regional_price_info> const &price_amounts,
@@ -3876,7 +3876,7 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
                                      fc::time_point_sec const &expiration, string const &synopsis,
                                      bool broadcast)
    {
-      return my->submit_content_new(author, co_authors, content_dir, samples_dir, protocol, price_amounts, seeders, expiration, synopsis, broadcast);
+      return my->submit_content_async(author, co_authors, content_dir, samples_dir, protocol, price_amounts, seeders, expiration, synopsis, broadcast);
 
    }
 
@@ -4083,18 +4083,6 @@ vector<content_summary> wallet_api::search_content(const string& term,
    return my->_remote_db->search_content(term, order, user, region_code, object_id_type(id), type, count);
 }
 
-vector<content_object> wallet_api::list_content_by_author( const string& account_id_or_name )const
-{
-   account_id_type account = get_account( account_id_or_name ).id;
-   return my->_remote_db->list_content_by_author( account );
-}
-
-
-vector<content_summary> wallet_api::list_content( const string& URI, uint32_t count)const
-{
-    return my->_remote_db->list_content( URI, count );
-}
-
 map<string, string> wallet_api::get_content_comments( const string& URI )const
 {
    return my->_remote_db->get_content_comments( URI );
@@ -4113,7 +4101,7 @@ map<string, string> wallet_api::get_content_comments( const string& URI )const
                                                            const string& type,
                                                            uint32_t count)const
    {
-      vector<content_summary> result = my->_remote_db->search_user_content(user, term, order, region_code, object_id_type(id), type, count);
+      vector<content_summary> result = my->_remote_db->search_content(term, order, user, region_code, object_id_type(id), type, count);
 
       auto packages = PackageManager::instance().get_all_known_packages();
       for (auto package: packages)
@@ -4165,11 +4153,6 @@ pair<account_id_type, vector<account_id_type>> wallet_api::get_author_and_co_aut
 {
    return my->get_author_and_co_authors_by_URI( URI );
 }
-
-   vector<content_object> wallet_api::list_content_by_bought( uint32_t count)const
-   {
-      return my->_remote_db->list_content_by_bought( count );
-   }
 
    vector<seeder_object> wallet_api::list_publishers_by_price( uint32_t count )const
    {

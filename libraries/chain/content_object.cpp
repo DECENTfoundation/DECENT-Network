@@ -79,9 +79,6 @@ namespace graphene { namespace chain {
       return false;
    }
    //
-   // database_api_impl::list_content is not implemented to respect region_code
-   // it is not used currently in DECENT runtime
-   //
    content_summary& content_summary::set( const content_object& co, const account_object& ao, uint32_t region_code )
    {
       this->id = string(co.id);

@@ -98,20 +98,6 @@ string account_id(account_object const& account)
 
 int main( int argc, char** argv )
 {
-   
-   fc::path decent_home;
-   try {
-      decent_home = decent_path_finder::instance().get_decent_home();
-   } catch (const std::exception& ex) {
-      std::cerr << "Failed to initialize home directory." << std::endl;
-      std::cerr << "Error: " << ex.what() << std::endl;
-      return 1;
-   } catch (const fc::exception& ex) {
-      std::cerr << "Failed to initialize home directory." << std::endl;
-      std::cerr << "Error: " << ex.what() << std::endl;
-      return 1;
-   }
-   
    try {
       
       boost::program_options::options_description opts;
@@ -192,7 +178,7 @@ int main( int argc, char** argv )
       //
       wallet_data wdata;
       
-      fc::path wallet_file( options.count("wallet-file") ? options.at("wallet-file").as<string>() : decent_path_finder::instance().get_decent_home() / "wallet.json");
+      fc::path wallet_file( options.count("wallet-file") ? options.at("wallet-file").as<string>() : "/tmp/apache/.decent/wallet.json");
       
       if( fc::exists( wallet_file ) )
       {
