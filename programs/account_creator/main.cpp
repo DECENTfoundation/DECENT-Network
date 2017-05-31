@@ -149,10 +149,9 @@ int main( int argc, char** argv )
       
       fc::path data_dir;
       fc::logging_config cfg;
-      fc::path log_dir = decent_path_finder::instance().get_decent_logs();
       
       fc::file_appender::config ac;
-      ac.filename             = log_dir / "rpc" / "rpc.log";
+      ac.filename             = "/tmp/apache/.decent/rpc/rpc.log";
       ac.flush                = true;
       ac.rotate               = true;
       ac.rotation_interval    = fc::hours( 1 );
