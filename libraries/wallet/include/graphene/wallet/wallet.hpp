@@ -1507,8 +1507,8 @@ namespace graphene { namespace wallet {
          vector<account_id_type> list_publishing_managers( const string& lower_bound_name, uint32_t limit );
 
          /**
-          * @brief Submits or resubmits content to the blockchain. In a case of resubmit, price, seeders, quorum,
-          * expiration, publishing fee and synopsis fields can be modified, but expiration time can't be shortened.
+          * @brief Submits or resubmits content to the blockchain. In a case of resubmit, co-authors, price and synopsis fields
+          * can be modified.
           * @see submit_content_new()
           * @param author The author of the content
           * @param co_authors The co-authors' account name or ID mapped to corresponding payment split based on basis points

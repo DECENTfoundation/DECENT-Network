@@ -108,9 +108,10 @@ void seeding_plugin_impl::handle_content_submit(const content_submit_operation &
 
       const auto &idx = db.get_index_type<my_seeder_index>().indices().get<by_seeder>();
       auto element = db.get_index_type<my_seeding_index>().indices().get<by_URI>().find(cs_op.URI);
-      bool is_resubmit = false;
+      //bool is_resubmit = false;
       if( element !=  db.get_index_type<my_seeding_index>().indices().get<by_URI>().end() )  // check whether a content is resubmited. If so, unnecessary my_seeding_objects are expired
       {
+         /*
          is_resubmit = true;
 
          if( std::find(cs_op.seeders.begin(), cs_op.seeders.end(), (element->seeder)) == cs_op.seeders.end())
@@ -139,7 +140,7 @@ void seeding_plugin_impl::handle_content_submit(const content_submit_operation &
                     mso.key = *k;
             });
          }
-
+         */
          return;
       }
       handle_new_content(cs_op);

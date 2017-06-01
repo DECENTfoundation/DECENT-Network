@@ -146,12 +146,18 @@ namespace graphene { namespace chain {
          FC_ASSERT( content_itr->author == o.author );
          FC_ASSERT( content_itr->size == o.size );
          FC_ASSERT( content_itr->_hash == o.hash );
-         FC_ASSERT( content_itr->expiration <= o.expiration );
+         FC_ASSERT( content_itr->expiration == o.expiration );
          FC_ASSERT( content_itr->cd == o.cd );
+         FC_ASSERT( content_itr->quorum == o.quorum );
+         FC_ASSERT( content_itr->key_parts.size() == o.seeders.size() );
+         for( const auto& element : content_itr->key_parts )
+         {
+            FC_ASSERT( std::find(o.seeders.begin(), o.seeders.end(), element.first ) != o.seeders.end() );
+         }
          if( content_itr->cd )
             FC_ASSERT( *(content_itr->cd) == *(o.cd));
 
-
+         /*
          for ( auto &p : o.seeders ) //check if seeders exist and accumulate their prices
          {
             auto itr = idx.find( p );
@@ -171,9 +177,8 @@ namespace graphene { namespace chain {
 
             total_price_per_day += itr-> price.amount * o.size;
          }
-         FC_ASSERT( days * total_price_per_day <= o.publishing_fee + content_itr->publishing_fee_escrow );
-      }
-      else
+         FC_ASSERT( days * total_price_per_day <= o.publishing_fee + content_itr->publishing_fee_escrow );*/
+      } else
       {
          for ( const auto &p : o.seeders ) //check if seeders exist and accumulate their prices
          {
@@ -189,10 +194,24 @@ namespace graphene { namespace chain {
    
    void_result content_submit_evaluator::do_apply(const content_submit_operation& o)
    {try{
+      graphene::chain::ContentObjectPropertyManager synopsis_parser(o.synopsis);
+      std::string title = synopsis_parser.get<graphene::chain::ContentObjectTitle>();
+
       if( is_resubmit )
       {
          auto& content_idx = db().get_index_type<content_index>().indices().get<by_URI>();
          const auto& content_itr = content_idx.find( o.URI );
+
+         graphene::chain::ContentObjectPropertyManager old_synopsis_parser(content_itr->synopsis);
+         std::string old_title = old_synopsis_parser.get<graphene::chain::ContentObjectTitle>();
+         auto& transaction_detail_idx = db().get_index_type<transaction_detail_index>().indices().get<by_description>();
+         const auto& transaction_detail_itr = transaction_detail_idx.find( old_title );
+
+         db().modify<transaction_detail_object>(*transaction_detail_itr,[&](transaction_detail_object& tdo) {
+            tdo.m_str_description = title;
+            tdo.m_timestamp = db().head_block_time();
+         });
+
          db().modify<content_object>(*content_itr,[&](content_object& co) {
                                         map<uint32_t, asset> prices;
                                      for (auto const& item : o.price)
@@ -212,6 +231,8 @@ namespace graphene { namespace chain {
                                      }
 
                                         co.synopsis = o.synopsis;
+                                        co.co_authors = o.co_authors;
+                                        /*
                                         co.publishing_fee_escrow += o.publishing_fee;
                                         auto itr1 = o.seeders.begin();
                                         auto itr2 = o.key_parts.begin();
@@ -224,13 +245,13 @@ namespace graphene { namespace chain {
                                            itr2++;
                                         }
                                         co.quorum = o.quorum;
-                                        co.expiration = o.expiration;
+                                        co.expiration = o.expiration;*/
                                      });
       }
       else
       {
          db().create<content_object>([&](content_object& co)
-                                     {  //create new content object and store all vaues from the operation
+                                     {  //create new content object and store all values from the operation
                                         co.author = o.author;
                                         co.co_authors = o.co_authors;
                                         map<uint32_t, asset> prices;
@@ -271,36 +292,36 @@ namespace graphene { namespace chain {
                                         co.AVG_rating = 0;
                                         co.num_of_ratings = 0;
                                      });
+
+         db().adjust_balance(o.author,-o.publishing_fee);  //pay the escrow from author's account
+         auto& idx = db().get_index_type<seeder_index>().indices().get<by_seeder>();
+         // Reserve the space on seeder's boxes
+         // TODO_DECENT - we should better reserve the disk space after the first PoC
+         for ( const auto &p : o.seeders )
+         {
+            const auto& itr = idx.find( p );
+            db().modify<seeder_object>( *itr, [&](seeder_object& so)
+            {
+               so.free_space -= o.size;
+            });
+         }
+
+
+
+         auto& d = db();
+         db().create<transaction_detail_object>([&o, &title, &d](transaction_detail_object& obj)
+                                                {
+                                                   obj.m_operation_type = (uint8_t)transaction_detail_object::content_submit;
+
+                                                   obj.m_from_account = o.author;
+                                                   obj.m_to_account = account_id_type();
+                                                   obj.m_transaction_amount = o.publishing_fee;
+                                                   obj.m_transaction_fee = o.fee;
+                                                   obj.m_str_description = title;
+                                                   obj.m_timestamp = d.head_block_time();
+                                                });
       }
 
-      db().adjust_balance(o.author,-o.publishing_fee);  //pay the escrow from author's account
-      auto& idx = db().get_index_type<seeder_index>().indices().get<by_seeder>();
-      // Reserve the space on seeder's boxes
-      // TODO_DECENT - we should better reserve the disk space after the first PoC
-      for ( const auto &p : o.seeders )
-      {
-         const auto& itr = idx.find( p );
-         db().modify<seeder_object>( *itr, [&](seeder_object& so)
-                                    {
-                                       so.free_space -= o.size;
-                                    });
-      }
-
-      graphene::chain::ContentObjectPropertyManager synopsis_parser(o.synopsis);
-      std::string title = synopsis_parser.get<graphene::chain::ContentObjectTitle>();
-
-      auto& d = db();
-      db().create<transaction_detail_object>([&o, &title, &d](transaction_detail_object& obj)
-                                             {
-                                                obj.m_operation_type = (uint8_t)transaction_detail_object::content_submit;
-
-                                                obj.m_from_account = o.author;
-                                                obj.m_to_account = account_id_type();
-                                                obj.m_transaction_amount = o.publishing_fee;
-                                                obj.m_transaction_fee = o.fee;
-                                                obj.m_str_description = title;
-                                                obj.m_timestamp = d.head_block_time();
-                                             });
    }FC_CAPTURE_AND_RETHROW( (o) ) }
 
    void_result content_cancellation_evaluator::do_evaluate(const content_cancellation_operation& o)

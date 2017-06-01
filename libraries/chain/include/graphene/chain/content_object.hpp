@@ -444,8 +444,8 @@ using namespace decent::encrypt;
       static const uint8_t type_id  = impl_content_object_type;
       
       account_id_type author;
-      // if co_authors map is not empty, payout will be splitted
-      // maps co-authors to split based on basis points
+      // If co_authors map is not empty, payout will be splitted.
+      // Maps co-authors to split based on basis points.
       map<account_id_type, uint32_t> co_authors;
 
       time_point_sec expiration;
