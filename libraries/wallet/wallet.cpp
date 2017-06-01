@@ -4228,6 +4228,45 @@ pair<account_id_type, vector<account_id_type>> wallet_api::get_author_and_co_aut
       return my->_remote_db->list_active_subscriptions_by_author( account, count);
    }
 
+   std::string wallet_api::sign_buffer(std::string const& str_buffer,
+                                       std::string const& str_brainkey) const
+   {
+      if (str_buffer.empty() ||
+          str_brainkey.empty())
+         throw std::runtime_error("You need buffer and brainkey to sign");
+
+      string normalized_brain_key = normalize_brain_key( str_brainkey );
+      fc::ecc::private_key privkey = derive_private_key( normalized_brain_key, 0 );
+
+      fc::sha256 digest(str_buffer);
+
+      auto sign = privkey.sign_compact(digest);
+
+      return fc::to_hex((const char*)sign.begin(), sign.size());
+   }
+
+   bool wallet_api::verify_signature(std::string const& str_buffer,
+                                     std::string const& str_publickey,
+                                     std::string const& str_signature) const
+   {
+      if (str_buffer.empty() ||
+          str_publickey.empty() ||
+          str_signature.empty())
+         throw std::runtime_error("You need buffer, public key and signature to verify");
+
+      fc::ecc::compact_signature signature;
+      fc::from_hex(str_signature, (char*)signature.begin(), signature.size());
+      fc::sha256 digest(str_buffer);
+
+      fc::ecc::public_key pub_key(signature, digest);
+      public_key_type provided_key(str_publickey);
+
+      if (provided_key == pub_key)
+         return true;
+      else
+         return false;
+   }
+
    fc::time_point_sec wallet_api::head_block_time() const
    {
       return my->head_block_time();
