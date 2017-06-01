@@ -34,6 +34,7 @@
 #include <graphene/chain/transaction_detail_object.hpp>
 
 #include <algorithm>
+#include <graphene/chain/subscription_object.hpp>
 
 namespace graphene { namespace chain {
 
@@ -199,6 +200,21 @@ void_result account_update_evaluator::do_apply( const account_update_operation& 
       }
       if( o.new_options ){
          elog("setting up new options ${a} ${o}",("o", *o.new_options)("a", a ));
+
+         if( !o.new_options->allow_subscription || a.options.price_per_subscribe != o.new_options->price_per_subscribe
+             || a.options.subscription_period != o.new_options->subscription_period )
+         {
+            const auto& range = d.get_index_type<subscription_index>().indices().get<by_to_renewal>().equal_range( std::make_tuple( a.id, true ) );
+            std::for_each(range.first, range.second, [&](const subscription_object& element) {
+               disallow_automatic_renewal_of_subscription_operation op;
+               op.consumer = element.from;
+               op.subscription = element.id;
+               idump((op));
+
+               db().push_applied_operation(op);
+            });
+         }
+
          a.options = *o.new_options;
 
       }

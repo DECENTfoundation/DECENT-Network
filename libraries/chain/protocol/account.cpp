@@ -158,10 +158,6 @@ void account_options::validate() const
    {
       FC_ASSERT( subscription_period > 0 );
       FC_ASSERT( price_per_subscribe.amount > 0 );
-   } else
-   {
-      FC_ASSERT( subscription_period >= 0 );
-      FC_ASSERT( price_per_subscribe.amount >= 0 );
    }
 
 }

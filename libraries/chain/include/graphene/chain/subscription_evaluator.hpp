@@ -12,8 +12,6 @@ namespace graphene { namespace chain {
 
       void_result do_evaluate( const subscribe_operation& o );
       void_result do_apply( const subscribe_operation& o );
-   private:
-      uint32_t period_count;
    };
 
    class subscribe_by_author_evaluator : public evaluator< subscribe_by_author_evaluator >
@@ -23,8 +21,6 @@ namespace graphene { namespace chain {
 
       void_result do_evaluate( const subscribe_by_author_operation& o );
       void_result do_apply( const subscribe_by_author_operation& o );
-   private:
-      uint32_t period_count;
    };
 
    class automatic_renewal_of_subscription_evaluator : public evaluator<automatic_renewal_of_subscription_evaluator>

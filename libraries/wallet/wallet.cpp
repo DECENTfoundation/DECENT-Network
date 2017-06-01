@@ -2473,7 +2473,6 @@ signed_transaction content_cancellation(string author,
 
    signed_transaction subscribe_to_author( string from,
                                            string to,
-                                           uint32_t duration,
                                            string price_amount,
                                            string price_asset_symbol,
                                            bool broadcast/* = false */)
@@ -2484,7 +2483,6 @@ signed_transaction content_cancellation(string author,
          subscribe_operation subscribe_op;
          subscribe_op.from = get_account_id( from );
          subscribe_op.to = get_account_id( to );
-         subscribe_op.duration = duration;
 
          asset op_price = asset_obj->amount_from_string(price_amount);
          asset price = price_to_dct(op_price);
@@ -2496,17 +2494,15 @@ signed_transaction content_cancellation(string author,
          tx.validate();
 
          return sign_transaction( tx, broadcast );
-      } FC_CAPTURE_AND_RETHROW( (from)(to)(duration)(price_amount)(price_asset_symbol)(broadcast) ) }
+      } FC_CAPTURE_AND_RETHROW( (from)(to)(price_amount)(price_asset_symbol)(broadcast) ) }
 
    signed_transaction subscribe_by_author( string from,
                                            string to,
-                                           uint32_t duration,
                                            bool broadcast/* = false */)
    { try {
          subscribe_by_author_operation subscribe_op;
          subscribe_op.from = get_account_id( from );
          subscribe_op.to = get_account_id( to );
-         subscribe_op.duration = duration;
 
          signed_transaction tx;
          tx.operations.push_back( subscribe_op );
@@ -2514,7 +2510,7 @@ signed_transaction content_cancellation(string author,
          tx.validate();
 
          return sign_transaction( tx, broadcast );
-      } FC_CAPTURE_AND_RETHROW( (from)(to)(duration)(broadcast)) }
+      } FC_CAPTURE_AND_RETHROW( (from)(to)(broadcast)) }
 
    signed_transaction set_subscription( string account,
                                         bool allow_subscription,
@@ -4176,20 +4172,18 @@ pair<account_id_type, vector<account_id_type>> wallet_api::get_author_and_co_aut
    
    signed_transaction wallet_api::subscribe_to_author( string from,
                                                        string to,
-                                                       uint32_t duration,
                                                        string price_amount,
                                                        string price_asset_symbol,
                                                        bool broadcast/* = false */)
    {
-      return my->subscribe_to_author(from, to, duration, price_amount, price_asset_symbol, broadcast);
+      return my->subscribe_to_author(from, to, price_amount, price_asset_symbol, broadcast);
    }
 
    signed_transaction wallet_api::subscribe_by_author( string from,
                                                        string to,
-                                                       uint32_t duration,
                                                        bool broadcast/* = false */)
    {
-      return my->subscribe_by_author(from, to, duration, broadcast);
+      return my->subscribe_by_author(from, to, broadcast);
    }
 
    signed_transaction wallet_api::set_subscription( string account,

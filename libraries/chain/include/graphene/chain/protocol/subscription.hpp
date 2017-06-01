@@ -20,7 +20,6 @@ namespace graphene { namespace chain {
 
       account_id_type from;
       account_id_type to;
-      uint32_t duration;
       asset price;
 
       account_id_type fee_payer()const { return from; }
@@ -39,7 +38,6 @@ namespace graphene { namespace chain {
 
       account_id_type from;
       account_id_type to;
-      uint32_t duration;
 
       account_id_type fee_payer()const { return from; }
       void            validate()const;
@@ -66,7 +64,7 @@ namespace graphene { namespace chain {
    /**
     * @ingroup transactions
     * @brief This virtual operation disallows automatic renewal of subscription if consumer doesn't have enought balance to renew
-          * expired subscription
+    * expired subscription
     */
    struct disallow_automatic_renewal_of_subscription_operation : public base_operation
    {
@@ -98,8 +96,8 @@ namespace graphene { namespace chain {
 
 } } // graphene::chain
 
-FC_REFLECT(graphene::chain::subscribe_operation,(fee)(from)(to)(duration)(price))
-FC_REFLECT(graphene::chain::subscribe_by_author_operation,(fee)(from)(to)(duration))
+FC_REFLECT(graphene::chain::subscribe_operation,(fee)(from)(to)(price))
+FC_REFLECT(graphene::chain::subscribe_by_author_operation,(fee)(from)(to))
 FC_REFLECT(graphene::chain::automatic_renewal_of_subscription_operation,(fee)(consumer)(subscription)(automatic_renewal))
 FC_REFLECT(graphene::chain::disallow_automatic_renewal_of_subscription_operation,(fee)(consumer)(subscription))
 FC_REFLECT(graphene::chain::renewal_of_subscription_operation,(fee)(consumer)(subscription))

@@ -1655,7 +1655,6 @@ namespace graphene { namespace wallet {
           * @brief Creates a subscription to author. This function is used by consumers.
           * @param from Account who wants subscription to author
           * @param to The author you wish to subscribe to
-          * @param duration Duration of subscription in days
           * @param price_amount Price for the subscription
           * @param price_asset_symbol Ticker symbol of the asset which will be used to buy subscription
           * @param broadcast True if you wish to broadcast the transaction
@@ -1664,7 +1663,6 @@ namespace graphene { namespace wallet {
           */
          signed_transaction subscribe_to_author( string from,
                                                  string to,
-                                                 uint32_t duration,
                                                  string price_amount,
                                                  string price_asset_symbol,
                                                  bool broadcast/* = false */);
@@ -1673,14 +1671,12 @@ namespace graphene { namespace wallet {
           * @brief Creates a subscription to author. This function is used by author.
           * @param from The account obtaining subscription from the author
           * @param to The name or id of the author
-          * @param duration Duration of subscription in days
           * @param broadcast True if you wish to broadcast the transaction
           * @return The signed transaction subscribing the consumer to the author
           * @ingroup WalletCLI
           */
          signed_transaction subscribe_by_author( string from,
                                                  string to,
-                                                 uint32_t duration,
                                                  bool broadcast/* = false */);
 
          /**
