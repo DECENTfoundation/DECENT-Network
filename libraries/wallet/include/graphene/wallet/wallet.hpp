@@ -2002,6 +2002,28 @@ namespace graphene { namespace wallet {
          void set_transfer_logs(bool enable) const;
 
          /**
+          * @brief Sign a buffer
+          * @param str_buffer The buffer to be signed
+          * @param str_brainkey Derives the private key used for signature
+          * @return The signed buffer
+          * @ingroup WalletCLI
+          */
+         std::string sign_buffer(std::string const& str_buffer,
+                                 std::string const& str_brainkey) const;
+
+         /**
+          * @brief Verify if the signature is valid
+          * @param str_buffer The original buffer
+          * @param str_publickey The public key used for verification
+          * @param str_signature The signed buffer
+          * @return true if valid, otherwise false
+          * @ingroup WalletCLI
+          */
+         bool verify_signature(std::string const& str_buffer,
+                               std::string const& str_publickey,
+                               std::string const& str_signature) const;
+
+         /**
           * @brief Query the last local block
           * @return the block time
           */
@@ -2212,5 +2234,7 @@ FC_API( graphene::wallet::wallet_api,
            (upload_package)
            (remove_package)
            (set_transfer_logs)
+           (sign_buffer)
+           (verify_signature)
            (head_block_time)
 )
