@@ -355,7 +355,7 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
 
       optional<asset> price = content->price.GetPrice(o.region_code_from);
 
-      FC_ASSERT( price.valid() );
+      FC_ASSERT( price.valid(), "content not available for this region" );
 
       FC_ASSERT( !content->is_blocked , "content has been canceled" );
       {
@@ -364,27 +364,24 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
 
          /// Check whether subscription exists. If so, consumer doesn't need pay for content
          if (subscription != range.end() && subscription->expiration > db().head_block_time() )
-            is_subscriber = true;
+            return void_result(); 
       }
       
-      optional<asset> price = content->price.GetPrice(o.region_code_from);
-
-      FC_ASSERT( price.valid(), "content not available for this region" );
 
       auto ao = db().get( price->asset_id );
       FC_ASSERT( price->asset_id == asset_id_type(0) || ao.is_monitored_asset() );
 
+      asset dct_price;
       //if the price is in fiat, calculate price in DCT with current exchange rate...
       if( ao.is_monitored_asset() ){
          auto rate = ao.monitored_asset_opts->current_feed.core_exchange_rate;
          FC_ASSERT(!rate.is_null(), "No price feed for this asset");
-         asset dct_price = *price * rate;
-         if( !is_subscriber )
-            FC_ASSERT( o.price >= dct_price );
+         dct_price = *price * rate;
       }else{
-         if( !is_subscriber )
-            FC_ASSERT( o.price >= *price );
+         dct_price = *price;
       }
+      FC_ASSERT( o.price >= dct_price );
+      return void_result(); 
    }FC_CAPTURE_AND_RETHROW( (o) ) }
 
    void_result request_to_buy_evaluator::do_apply(const request_to_buy_operation& o )
