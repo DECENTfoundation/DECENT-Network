@@ -1618,7 +1618,12 @@ namespace graphene { namespace wallet {
           * @return The signed transaction requesting buying of the content
           * @ingroup WalletCLI
           */
-         signed_transaction request_to_buy(string consumer, string URI, string price_asset_name, string price_amount, bool broadcast);
+         signed_transaction request_to_buy(string consumer,
+                                           string URI,
+                                           string price_asset_name,
+                                           string price_amount,
+                                           string str_region_code_from,
+                                           bool broadcast);
 
          /**
           * @brief This method allows user to start seeding plugin from running application
