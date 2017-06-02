@@ -52,6 +52,8 @@ namespace graphene { namespace chain {
       
       void_result do_evaluate( const request_to_buy_operation& o );
       void_result do_apply( const request_to_buy_operation& o );
+   private:
+      bool is_subscriber = false;
    };
    
    class leave_rating_evaluator : public evaluator<leave_rating_evaluator>

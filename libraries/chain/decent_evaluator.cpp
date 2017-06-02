@@ -364,7 +364,10 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
 
          /// Check whether subscription exists. If so, consumer doesn't pay for content
          if (subscription != range.end() && subscription->expiration > db().head_block_time() )
+         {
+            is_subscriber = true;
             return void_result();
+         }
       }
 
       auto ao = db().get( price->asset_id );
@@ -389,7 +392,10 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
                                                          bo.URI = o.URI;
                                                          bo.expiration_time = db().head_block_time() + 24*3600;
                                                          bo.pubKey = o.pubKey;
-                                                         bo.price = o.price;
+                                                         if( is_subscriber )
+                                                            bo.price = asset();
+                                                         else
+                                                            bo.price = o.price;
                                                          bo.paid_price = o.price;
 
                                                          {
@@ -405,7 +411,8 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
                                                          }
                                                          bo.region_code_from = o.region_code_from;
                                                       });
-      db().adjust_balance( o.consumer, -o.price );
+      if( !is_subscriber )
+         db().adjust_balance( o.consumer, -o.price );
 
       auto& d = db();
       db().create<transaction_detail_object>([&o, &d](transaction_detail_object& obj)
