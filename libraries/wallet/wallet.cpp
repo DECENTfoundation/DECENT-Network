@@ -2344,7 +2344,7 @@ signed_transaction content_cancellation(string author,
          if (it != RegionCodes::s_mapNameToCode.end())
             region_code_from = it->second;
          //
-         // may want to throw here to forbid purchase form unknown region
+         // may want to throw here to forbid purchase from unknown region
          // but seems can also try to allow purchase if the content has default price
          //
 
@@ -2386,6 +2386,7 @@ signed_transaction content_cancellation(string author,
                                      string URI,
                                      string price_asset_symbol,
                                      string price_amount,
+                                     string str_region_code_from,
                                      bool broadcast/* = false */)
    { try {
       account_object consumer_account = get_account( consumer );
@@ -2401,6 +2402,18 @@ signed_transaction content_cancellation(string author,
       //FC_ASSERT( _wallet.priv_el_gamal_key != decent::encrypt::DInteger::Zero(), "Private ElGamal key is not imported. " );
       request_op.pubKey = decent::encrypt::get_public_el_gamal_key( el_gamal_priv_key );
 
+      optional<content_object> content = _remote_db->get_content( URI );
+      uint32_t region_code_from = RegionCodes::OO_none;
+
+      auto it = RegionCodes::s_mapNameToCode.find(str_region_code_from);
+      if (it != RegionCodes::s_mapNameToCode.end())
+         region_code_from = it->second;
+      //
+      // may want to throw here to forbid purchase from unknown region
+      // but seems can also try to allow purchase if the content has default price
+      //
+
+      request_op.region_code_from = region_code_from;
       request_op.price = asset_obj->amount_from_string(price_amount);
 
       signed_transaction tx;
@@ -3905,9 +3918,10 @@ signed_transaction wallet_api::request_to_buy(string consumer,
                                               string URI,
                                               string price_asset_name,
                                               string price_amount,
+                                              string str_region_code_from,
                                               bool broadcast)
 {
-   return my->request_to_buy(consumer, URI, price_asset_name, price_amount, broadcast);
+   return my->request_to_buy(consumer, URI, price_asset_name, price_amount, str_region_code_from, broadcast);
 }
 
 void wallet_api::leave_rating_and_comment(string consumer,

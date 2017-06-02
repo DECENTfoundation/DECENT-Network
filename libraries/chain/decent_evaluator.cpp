@@ -361,16 +361,13 @@ namespace graphene { namespace chain {
          auto &range = db().get_index_type<subscription_index>().indices().get<by_from_to>();
          const auto &subscription = range.find(boost::make_tuple(o.consumer, content->author));
 
-         /// Check whether subscription exists. If so, consumer doesn't pay for content
+         /// Check whether subscription exists. If so, consumer doesn't need pay for content
          if (subscription != range.end() && subscription->expiration > db().head_block_time() )
-         {
             is_subscriber = true;
-            return void_result();
-         }
       }
       optional<asset> price = content->price.GetPrice(o.region_code_from);
 
-      FC_ASSERT( price.valid() );
+      FC_ASSERT( price.valid(), "content not available for this region" );
 
       auto ao = db().get( price->asset_id );
       FC_ASSERT( price->asset_id == asset_id_type(0) || ao.is_monitored_asset() );
@@ -380,9 +377,11 @@ namespace graphene { namespace chain {
          auto rate = ao.monitored_asset_opts->current_feed.core_exchange_rate;
          FC_ASSERT(!rate.is_null(), "No price feed for this asset");
          asset dct_price = *price * rate;
-         FC_ASSERT( o.price >= dct_price );
+         if( !is_subscriber )
+            FC_ASSERT( o.price >= dct_price );
       }else{
-         FC_ASSERT( o.price >= *price );
+         if( !is_subscriber )
+            FC_ASSERT( o.price >= *price );
       }
 
 
@@ -396,10 +395,7 @@ namespace graphene { namespace chain {
                                                          bo.URI = o.URI;
                                                          bo.expiration_time = db().head_block_time() + 24*3600;
                                                          bo.pubKey = o.pubKey;
-                                                         if( is_subscriber )
-                                                            bo.price = asset();
-                                                         else
-                                                            bo.price = o.price;
+                                                         bo.price = o.price;
                                                          bo.paid_price = o.price;
 
                                                          {
@@ -415,8 +411,7 @@ namespace graphene { namespace chain {
                                                          }
                                                          bo.region_code_from = o.region_code_from;
                                                       });
-      if( !is_subscriber )
-         db().adjust_balance( o.consumer, -o.price );
+      db().adjust_balance( o.consumer, -o.price );
 
       auto& d = db();
       db().create<transaction_detail_object>([&o, &d](transaction_detail_object& obj)
