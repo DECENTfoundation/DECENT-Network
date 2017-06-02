@@ -105,6 +105,35 @@ namespace graphene { namespace chain {
       void validate()const { FC_ASSERT( URI != "" ); };
    };
 
+
+   class RegionCodes
+   {
+   public:
+      enum RegionCode
+      {
+         OO_none = 1,
+         OO_all,
+         US,
+         UK
+      };
+      static bool bAuxillary;
+      static map<uint32_t, string> s_mapCodeToName;
+      static map<string, uint32_t> s_mapNameToCode;
+
+      static bool InitCodeAndName();
+   };
+
+   struct PriceRegions
+   {
+      map<uint32_t, asset> map_price;
+
+      optional<asset> GetPrice(uint32_t region_code) const;
+      void SetSimplePrice(asset const& price);
+      void SetRegionPrice(uint32_t region_code, asset const& price);
+      bool Valid(uint32_t region_code) const;
+      bool Valid(string const& region_code) const;
+   };
+
    /**
     * @ingroup transactions
     * @brief This operation is used to send a request to buy a content.
@@ -117,7 +146,7 @@ namespace graphene { namespace chain {
       string URI;
       account_id_type consumer;
       asset price;
-      uint32_t region_code_from;
+      uint32_t region_code_from = RegionCodes::OO_none;
 
       /// Consumer's public key
       decent::encrypt::DIntegerString pubKey;
