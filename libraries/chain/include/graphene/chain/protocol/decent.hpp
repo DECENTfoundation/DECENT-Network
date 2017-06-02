@@ -2,7 +2,6 @@
 #include <graphene/chain/protocol/base.hpp>
 #include <graphene/chain/protocol/types.hpp>
 #include <graphene/chain/protocol/asset.hpp>
-#include <graphene/chain/content_object.hpp>
 #include <boost/preprocessor/seq/seq.hpp>
 
 

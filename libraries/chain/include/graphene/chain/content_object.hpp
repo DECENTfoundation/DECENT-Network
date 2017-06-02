@@ -1,6 +1,8 @@
 #pragma once
 #include <graphene/chain/protocol/types.hpp>
 #include <graphene/chain/protocol/asset.hpp>
+#include <graphene/chain/protocol/decent.hpp>
+
 #include <graphene/db/object.hpp>
 #include <graphene/db/generic_index.hpp>
 

@@ -32,7 +32,7 @@ using decent::encrypt::DInteger;
       std::string synopsis;   //< initialized by content.synopsis
       vector<account_id_type> seeders_answered;
       vector<decent::encrypt::CiphertextString> key_particles;
-      DIntegerString pubKey;
+      decent::encrypt::DIntegerString pubKey;
       time_point_sec expiration_time;
       bool expired = false;
       bool delivered = false;
