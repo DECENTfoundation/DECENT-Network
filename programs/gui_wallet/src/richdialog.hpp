@@ -1,7 +1,9 @@
 #pragma once
 
+#ifndef _MSC_VER
 #include <QDialog>
 #include <QVector>
+#endif
 
 class QTextEdit;
 class QCloseEvent;

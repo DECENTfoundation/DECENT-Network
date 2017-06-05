@@ -1,3 +1,5 @@
+#include "stdafx.h"
+
 #include "gui_wallet_global.hpp"
 #include "richdialog.hpp"
 
@@ -9,6 +11,8 @@
 #include "gui_wallet_mainwindow.hpp"
 #include "gui_design.hpp"
 #include "decent_text_edit.hpp"
+
+#ifndef _MSC_VER
 #include <graphene/chain/content_object.hpp>
 
 
@@ -26,6 +30,7 @@
 #include <QApplication>
 #include <vector>
 #include <string>
+#endif
 
 
 namespace gui_wallet

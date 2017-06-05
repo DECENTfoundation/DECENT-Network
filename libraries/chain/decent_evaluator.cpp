@@ -550,8 +550,11 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
               co.AVG_rating = o.rating * 1000;
               co.num_of_ratings++;
            }
-           else
-              co.AVG_rating = (co.AVG_rating * co.num_of_ratings + o.rating * 1000) / (++co.num_of_ratings);
+           else {
+              //co.AVG_rating = (co.AVG_rating * co.num_of_ratings + o.rating * 1000) / (++co.num_of_ratings); different result between ms compiler and clang, Bug - 35
+              co.AVG_rating = (co.AVG_rating * co.num_of_ratings + o.rating * 1000) / (co.num_of_ratings + 1);
+              co.num_of_ratings++;
+           }
       });
 
       auto& d = db();

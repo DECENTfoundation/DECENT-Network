@@ -25,8 +25,16 @@ public:
    virtual std::shared_ptr<detail::PackageTask> create_download_task(PackageInfo& package) override {
       return std::make_shared<LocalDownloadPackageTask>(package);
    };
-   virtual std::shared_ptr<detail::PackageTask> create_start_seeding_task(PackageInfo& package) override {};
-   virtual std::shared_ptr<detail::PackageTask> create_stop_seeding_task(PackageInfo& package) override {};
+   virtual std::shared_ptr<detail::PackageTask> create_start_seeding_task(PackageInfo& package) override 
+   {
+      std::shared_ptr<detail::PackageTask> result;
+      return result;
+   };
+   virtual std::shared_ptr<detail::PackageTask> create_stop_seeding_task(PackageInfo& package) override 
+   {
+      std::shared_ptr<detail::PackageTask> result;
+      return result;
+   };
 };
 
 }} //namespace

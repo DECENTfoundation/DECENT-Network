@@ -18,7 +18,7 @@
 #include "json.hpp"
 #endif
 
-using string = std::string;
+using std::string;
 
 namespace gui_wallet
 {

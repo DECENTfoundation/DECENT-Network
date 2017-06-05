@@ -29,6 +29,7 @@
 #include <QStackedWidget>
 #include <QRect>
 #include <QFont>
+#include <QFontDatabase>
 #include <QTableWidgetItem>
 #include <QResource>
 #include <QStringList>
