@@ -109,29 +109,27 @@ TransferDialog::TransferDialog(QWidget* parent, QString const& userName/* = QStr
    QVBoxLayout* lineEditsLayout  = new QVBoxLayout();
    QHBoxLayout* buttonsLayout    = new QHBoxLayout();
    
-   DecentButton* ok = new DecentButton(this);
+   DecentButton* ok = new DecentButton(this, DecentButton::DialogAction);
    ok->setText(tr("Send"));
-   ok->setFixedSize(140, 40);
-   DecentButton* cancel = new DecentButton(this);
+
+   DecentButton* cancel = new DecentButton(this, DecentButton::DialogCancel);
    cancel->setText(tr("Cancel"));
-   cancel->setFixedSize(140, 40);
    
    QObject::connect(ok, &QPushButton::clicked, this, &TransferDialog::Transfer);
    QObject::connect(cancel, &QPushButton::clicked, this, &QDialog::close);
    
-   QLineEdit* name = new QLineEdit(this);
-   QLineEdit* amount = new QLineEdit(this);
-   QLineEdit* memo = new QLineEdit(this);
+   DecentLineEdit* name = new DecentLineEdit(this, DecentLineEdit::DialogLineEdit);
+   DecentLineEdit* amount = new DecentLineEdit(this, DecentLineEdit::DialogLineEdit);
+   DecentLineEdit* memo = new DecentLineEdit(this, DecentLineEdit::DialogLineEdit);
    
    name->setPlaceholderText(tr("Account"));
    name->setAttribute(Qt::WA_MacShowFocusRect, 0);
-   name->setFixedSize(300, 44);
    name->setText(m_toUserName);
    QObject::connect(name, &QLineEdit::textChanged, this, &TransferDialog::nameChanged);
    
    amount->setPlaceholderText(tr("Amount"));
    amount->setAttribute(Qt::WA_MacShowFocusRect, 0);
-   amount->setFixedSize(300, 44);
+
    QDoubleValidator* dblValidator = new QDoubleValidator(0.0001, 100000, 4, this);
    dblValidator->setLocale(Globals::instance().locale());
    amount->setValidator(dblValidator);
@@ -139,14 +137,13 @@ TransferDialog::TransferDialog(QWidget* parent, QString const& userName/* = QStr
    
    memo->setPlaceholderText(tr("Memo"));
    memo->setAttribute(Qt::WA_MacShowFocusRect, 0);
-   memo->setFixedSize(300, 44);
    QObject::connect(memo, &QLineEdit::textChanged, this, &TransferDialog::memoChanged);
    
    lineEditsLayout->addWidget(name);
    lineEditsLayout->addWidget(amount);
    lineEditsLayout->addWidget(memo);
    
-   buttonsLayout->setSpacing(20);
+//   buttonsLayout->setSpacing(20);
    buttonsLayout->addWidget(ok);
    buttonsLayout->addWidget(cancel);
    
@@ -156,8 +153,6 @@ TransferDialog::TransferDialog(QWidget* parent, QString const& userName/* = QStr
    mainLayout->addLayout(buttonsLayout);
    
    setLayout(mainLayout);
-   
-   setFixedSize(380, 220);
 }
 
 void TransferDialog::nameChanged(const QString & name)
