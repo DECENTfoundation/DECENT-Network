@@ -28,8 +28,15 @@ QFont PaginationFont()
 QFont TableHeaderFont()
 {
    return FontVerdanaBold().font("Open Sans", "Bold",
-#ifdef WINDOWS_HIGH_DPI
+
+#if defined (_WIN32)
+      14
+#elif defined(WINDOWS_HIGH_DPI)
       10
+#elif __APPLE__
+      14
+#elif __linux__
+      8
 #else
       14
 #endif
@@ -39,10 +46,14 @@ QFont TableHeaderFont()
 QFont AccountBalanceFont()
 {
    return FontVerdana().font("Open Sans", "Regular",
-#ifdef WINDOWS_HIGH_DPI
+#if defined(_WIN32)
+      14
+#elif WINDOWS_HIGH_DPI
       8
-#else
+#elif __APPLE__
       12
+#elif __linux__
+      8
 #endif
       );
 }
@@ -93,10 +104,16 @@ QFont TabButtonFont()
 QFont MainFont()
 {
    return FontVerdana().font("Open Sans", "Regular",
-#ifdef WINDOWS_HIGH_DPI
+#if defined(_WIN32)
+      14
+#elif WINDOWS_HIGH_DPI
       8
-#else
+#elif __linux__
+      10
+#elif __APPLE__
       12
+#else
+      14
 #endif
       );
 }

@@ -221,30 +221,30 @@ ImportKeyDialog::ImportKeyDialog(QWidget* parent)
    QVBoxLayout* lineEditsLayout  = new QVBoxLayout();
    QHBoxLayout* buttonsLayout    = new QHBoxLayout();
    
-   DecentButton* ok = new DecentButton(this);
+   DecentButton* ok = new DecentButton(this, DecentButton::DialogAction);
    ok->setText(tr("Ok"));
-   ok->setFixedSize(140, 40);
-   DecentButton* cancel = new DecentButton(this);
+//   ok->setFixedSize(140, 40);
+   DecentButton* cancel = new DecentButton(this, DecentButton::DialogCancel);
    cancel->setText(tr("Cancel"));
-   cancel->setFixedSize(140, 40);
+//   cancel->setFixedSize(140, 40);
    
    QObject::connect(ok, &QPushButton::clicked,
                     this, &ImportKeyDialog::Import);
    QObject::connect(cancel, &QPushButton::clicked,
                     this, &QDialog::close);
    
-   QLineEdit* name = new QLineEdit(this);
-   QLineEdit* key  = new QLineEdit(this);
+   DecentLineEdit* name = new DecentLineEdit(this, DecentLineEdit::DialogLineEdit);
+   DecentLineEdit* key  = new DecentLineEdit(this, DecentLineEdit::DialogLineEdit);
    
    name->setPlaceholderText(tr("Account"));
    name->setAttribute(Qt::WA_MacShowFocusRect, 0);
-   name->setFixedSize(300, 44);
+//   name->setFixedSize(300, 44);
    QObject::connect(name, &QLineEdit::textChanged,
                     this, &ImportKeyDialog::nameChanged);
    
    key->setPlaceholderText(tr("Key"));
    key->setAttribute(Qt::WA_MacShowFocusRect, 0);
-   key->setFixedSize(300, 44);
+//   key->setFixedSize(300, 44);
    QObject::connect(key, &QLineEdit::textChanged,
                     this, &ImportKeyDialog::keyChanged);
 
@@ -262,7 +262,7 @@ ImportKeyDialog::ImportKeyDialog(QWidget* parent)
    
    setLayout(mainLayout);
    
-   setFixedSize(380, 220);
+//   setFixedSize(380, 220);
 }
 
 void ImportKeyDialog::nameChanged(const QString & name)
