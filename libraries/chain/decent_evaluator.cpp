@@ -19,50 +19,46 @@
 
 namespace graphene { namespace chain {
 
-   void_result set_publishing_manager_evaluator::do_evaluate( const set_publishing_manager_operation& o )
-   {try{
-      FC_ASSERT( o.from == account_id_type(15) , "This operation is permitted only to DECENT account");
-   }FC_CAPTURE_AND_RETHROW( (o) ) }
-
-   void_result set_publishing_manager_evaluator::do_apply( const set_publishing_manager_operation& o )
-   {try{
-      for( auto element : o.to )
-      {
-         const account_object& to_acc = db().get<account_object>(element);
-
-         if( o.can_create_publishers == true ) {
-            db().modify<account_object>(to_acc, [](account_object &ao) {
-                 ao.rights_to_publish.is_publishing_manager = true;
-            });
-         }
-         else
-         {
-            if( to_acc.rights_to_publish.is_publishing_manager )
-            {
-               for( const account_id_type& publisher : to_acc.rights_to_publish.publishing_rights_forwarded )
-               {
-                  auto& publisher_acc = db().get<account_object>(publisher);
-                  db().modify<account_object>( publisher_acc, [&](account_object& ao){
-                       ao.rights_to_publish.publishing_rights_received.erase( publisher );
-                  });
-               }
-               db().modify<account_object>(to_acc, [](account_object& ao){
-                    ao.rights_to_publish.is_publishing_manager = false;
-                    ao.rights_to_publish.publishing_rights_forwarded.clear();
-               });
-            }
-
-         }
-
-      }
-
+void_result set_publishing_manager_evaluator::do_evaluate( const set_publishing_manager_operation& o )
+{try{
+   for( const auto id : o.to )
+      FC_ASSERT (db().find_object(id), "Account does not exist");
+   FC_ASSERT( o.from == account_id_type(15) , "This operation is permitted only to DECENT account");
 }FC_CAPTURE_AND_RETHROW( (o) ) }
 
-   void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_right_operation& o )
-   {try{
-         const auto& from_acc = db().get<account_object>(o.from);
-         FC_ASSERT( from_acc.rights_to_publish.is_publishing_manager, "Account does not have permission to give publishing rights" );
-      }FC_CAPTURE_AND_RETHROW( (o) ) }
+void_result set_publishing_manager_evaluator::do_apply( const set_publishing_manager_operation& o )
+{try{
+   for( auto to_id : o.to )
+   {
+      const account_object& to_acc = to_id(db());
+
+      if( o.can_create_publishers == true ) {
+         db().modify<account_object>(to_acc, [](account_object &ao) {
+              ao.rights_to_publish.is_publishing_manager = true;
+         });
+      }
+      else
+      {
+         for( const account_id_type& publisher : to_acc.rights_to_publish.publishing_rights_forwarded )
+         {
+            auto& publisher_acc = db().get<account_object>(publisher);
+            db().modify<account_object>( publisher_acc, [&](account_object& ao){
+                 ao.rights_to_publish.publishing_rights_received.erase( publisher );
+            });
+         }
+         db().modify<account_object>(to_acc, [](account_object& ao){
+              ao.rights_to_publish.is_publishing_manager = false;
+              ao.rights_to_publish.publishing_rights_forwarded.clear();
+         });
+      }
+   }
+}FC_CAPTURE_AND_RETHROW( (o) ) }
+
+void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_right_operation& o )
+{try{
+    const auto& from_acc = db().get<account_object>(o.from);
+    FC_ASSERT( from_acc.rights_to_publish.is_publishing_manager, "Account does not have permission to give publishing rights" );
+}FC_CAPTURE_AND_RETHROW( (o) ) }
 
    void_result set_publishing_right_evaluator::do_apply( const set_publishing_right_operation& o )
    {try{
@@ -356,36 +352,36 @@ namespace graphene { namespace chain {
       FC_ASSERT( content!= idx.end() );
       FC_ASSERT( o.price <= db().get_balance( o.consumer, o.price.asset_id ) );
       FC_ASSERT( content->expiration > db().head_block_time() );
+
+      optional<asset> price = content->price.GetPrice(o.region_code_from);
+
+      FC_ASSERT( price.valid(), "content not available for this region" );
+
       FC_ASSERT( !content->is_blocked , "content has been canceled" );
       {
          auto &range = db().get_index_type<subscription_index>().indices().get<by_from_to>();
          const auto &subscription = range.find(boost::make_tuple(o.consumer, content->author));
 
-         /// Check whether subscription exists. If so, consumer doesn't pay for content
+         /// Check whether subscription exists. If so, consumer doesn't need pay for content
          if (subscription != range.end() && subscription->expiration > db().head_block_time() )
-         {
-            is_subscriber = true;
-            return void_result();
-         }
+            return void_result(); 
       }
-      optional<asset> price = content->price.GetPrice(o.region_code_from);
-
-      FC_ASSERT( price.valid() );
+      
 
       auto ao = db().get( price->asset_id );
       FC_ASSERT( price->asset_id == asset_id_type(0) || ao.is_monitored_asset() );
 
+      asset dct_price;
       //if the price is in fiat, calculate price in DCT with current exchange rate...
       if( ao.is_monitored_asset() ){
          auto rate = ao.monitored_asset_opts->current_feed.core_exchange_rate;
          FC_ASSERT(!rate.is_null(), "No price feed for this asset");
-         asset dct_price = *price * rate;
-         FC_ASSERT( o.price >= dct_price );
+         dct_price = *price * rate;
       }else{
-         FC_ASSERT( o.price >= *price );
+         dct_price = *price;
       }
-
-
+      FC_ASSERT( o.price >= dct_price );
+      return void_result(); 
    }FC_CAPTURE_AND_RETHROW( (o) ) }
 
    void_result request_to_buy_evaluator::do_apply(const request_to_buy_operation& o )
@@ -396,10 +392,7 @@ namespace graphene { namespace chain {
                                                          bo.URI = o.URI;
                                                          bo.expiration_time = db().head_block_time() + 24*3600;
                                                          bo.pubKey = o.pubKey;
-                                                         if( is_subscriber )
-                                                            bo.price = asset();
-                                                         else
-                                                            bo.price = o.price;
+                                                         bo.price = o.price;
                                                          bo.paid_price = o.price;
 
                                                          {
@@ -415,8 +408,7 @@ namespace graphene { namespace chain {
                                                          }
                                                          bo.region_code_from = o.region_code_from;
                                                       });
-      if( !is_subscriber )
-         db().adjust_balance( o.consumer, -o.price );
+      db().adjust_balance( o.consumer, -o.price );
 
       auto& d = db();
       db().create<transaction_detail_object>([&o, &d](transaction_detail_object& obj)

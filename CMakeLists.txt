@@ -54,11 +54,8 @@ endif()
 
 set( CMAKE_EXPORT_COMPILE_COMMANDS YES )
 set( ENABLE_INSTALLER YES )
-#set( USE_PCH YES )
 
-if( USE_PCH )
-    include( cotire )
-endif()
+include( cotire )
 
 list( APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/libraries/contrib/fc/CMakeModules" )
 list( APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/libraries/contrib/fc/GitVersionGen" )

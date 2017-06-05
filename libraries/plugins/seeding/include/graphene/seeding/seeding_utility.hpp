@@ -10,7 +10,7 @@ namespace decent { namespace seeding {
    struct seeding_plugin_startup_options
    {
       graphene::chain::account_id_type seeder;
-      graphene::chain::DInteger content_private_key;
+      decent::encrypt::DInteger content_private_key;
       fc::ecc::private_key seeder_private_key;
       uint64_t free_space;
       uint32_t seeding_price;
