@@ -87,7 +87,7 @@ QFont MainFont()
 #elif __APPLE__
       12
 #else
-      14
+      12
 #endif
       );
 }
