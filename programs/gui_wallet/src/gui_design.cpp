@@ -31,7 +31,7 @@ QFont PaginationFont()
 #elif WINDOWS_HIGH_DPI
         8
 #elif __APPLE__
-        14
+        12
 #elif   __linux__
         10
 #else
@@ -69,6 +69,8 @@ QFont AccountBalanceFont()
       12
 #elif __linux__
       10
+#else 
+      14
 #endif
       );
 }
@@ -79,7 +81,7 @@ QFont DescriptionDetailsFont()
 #ifdef WINDOWS_HIGH_DPI
       8
 #else
-      13
+      14
 #endif
       );
 }
@@ -87,10 +89,16 @@ QFont DescriptionDetailsFont()
 QFont PopupButtonRegularFont()
 {
    return FontVerdana().font("Open Sans", "Regular",
-#ifdef WINDOWS_HIGH_DPI
+#if defined (_WIN32)
       8
+#elif WINDOWS_HIGH_DPI
+      8
+#elif __APPLE__
+      12
+#elif __linux__
+      10
 #else
-      13
+      14
 #endif
       );
 }
@@ -98,10 +106,16 @@ QFont PopupButtonRegularFont()
 QFont PopupButtonBigFont()
 {
    return FontVerdana().font("Open Sans", "Regular",
-#ifdef WINDOWS_HIGH_DPI
+#if defined (_WIN32)
       8
+#elif WINDOWS_HIGH_DPI
+      8
+#elif __APPLE__
+      12
+#elif __linux__
+      10
 #else
-      15
+      14
 #endif
       );
 }
@@ -122,6 +136,7 @@ QFont TabButtonFont()
 #endif
       );
 }
+
 QFont MainFont()
 {
    return FontVerdana().font("Open Sans", "Regular",
@@ -134,7 +149,7 @@ QFont MainFont()
 #elif __APPLE__
       12
 #else
-      10
+      14
 #endif
       );
 }
