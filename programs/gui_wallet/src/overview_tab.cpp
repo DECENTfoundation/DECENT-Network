@@ -25,7 +25,7 @@
 //#include <QPainter>
 //#include <QSvgWidget>
 
-using string = std::string;
+using std::string;
 
 namespace gui_wallet
 {

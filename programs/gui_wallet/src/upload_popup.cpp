@@ -30,7 +30,7 @@
 #include <boost/optional.hpp>
 #endif
 
-using string = std::string;
+using std::string;
 
 namespace gui_wallet
 {

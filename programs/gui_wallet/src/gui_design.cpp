@@ -1,7 +1,10 @@
-#include "gui_design.hpp"
+#include "stdafx.h"
 
+#include "gui_design.hpp"
+#ifndef _MSC_VER
 #include <QFontDatabase>
 #include <QFont>
+#endif
 
 QFontDatabase FontVerdana()
 {
