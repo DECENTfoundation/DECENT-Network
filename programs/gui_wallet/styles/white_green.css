@@ -9,7 +9,7 @@ QTextEdit[type='info']
 }
 QLabel[type='connectingsplash']
 {
-   font-size: 10px;
+   font-size: 0.625em;
    color: rgb(127, 138, 158);
 }
 QLabel[type='rowlabel']
@@ -53,15 +53,15 @@ QPushButton[type='dialogaction']
    border: 0px;
    background-color: rgb(27, 176, 104);
    color: white;
-   width: 8.75em;
-   height: 2.5em;
-   max-width: 8.75em;
-   max-height: 2.5em;
-   margin: 1em;
+   width: 8.25em;
+   height: 2.25em;
+   max-width: 8.25em;
+   max-height: 2.25em;
+   margin: 0px;
 }
 QPushButton[type='dialogaction'][enabled=false]
 {
-   border: 0px;
+   border: 0em;
    background-color: rgb(180, 180, 180);
    color: rgb(30, 30, 30);
 }
@@ -70,11 +70,11 @@ QPushButton[type='dialogcancel']
    border: 1px solid rgb(143,143,143);
    background-color: white;
    color: black;
-   max-width: 8.75em;
-   max-height: 2.5em;
-   width: 8.75em;
-   height: 2.5em;
-   margin: 1em;
+   max-width: 8.25em;
+   max-height: 2.25em;
+   width: 8.25em;
+   height: 2.25em;
+   margin: 0px;
 }
 QPushButton[type='dialogcancel'][enabled=false]
 {
@@ -84,14 +84,14 @@ QPushButton[type='dialogcancel'][enabled=false]
 }
 QPushButton[type='send']
 {
-   border: 0px;
+   border: 0em;
    background-color: white;
    color: black;
    qproperty-icon: url(':/icon/images/send.png'), url(':/icon/images/inactive_send.png') disabled;
 }
 QPushButton[type='send'][enabled=false]
 {
-   border: 0px;
+   border: 0em;
    background-color: white;
    color: black;
 }
@@ -165,10 +165,10 @@ QMessageBox QPushButton, QFileDialog QPushButton
    border: 0px;
    background-color: rgb(27, 176, 104);
    color: white;
-   min-width: 100px;
-   min-height: 35px;
-   max-width: 200px;
-   max-height: 35px;
+   min-width: 6em;
+   min-height: 2em;
+   max-width: 10em;
+   max-height: 2em;
 }
 QLineEdit
 {
@@ -182,15 +182,15 @@ QLineEdit:!enabled
 }
 QLineEdit[type='tablesearch']
 {
-   border: 0px;
+   border: 0em;
    padding-left: 1em;
 }
 QLineEdit[type='dialoglineedit']
 {
-   min-width: 300px;
-   min-height: 44px;
-   max-width: 300px;
-   max-height: 44px;
+   min-width: 15.5em;
+   min-height: 2.5em;
+   max-width: 15.5em;
+   max-height: 2.5em;
 }
 QTextEdit[type='info']
 {
@@ -199,7 +199,7 @@ QTextEdit[type='info']
 QTextEdit[type='editor']
 {
    border: 1px solid gray;
-   padding 0.5em;
+   padding: 0.5em;
 }
 QTextEdit QScrollBar:vertical
 {
