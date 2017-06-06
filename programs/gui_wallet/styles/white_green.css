@@ -7,11 +7,6 @@ QTextEdit[type='info']
 {
    padding: 2em;
 }
-QLabel[type='connectingsplash']
-{
-   font-size: 10px;
-   color: rgb(127, 138, 158);
-}
 QLabel[type='rowlabel']
 {
    padding-left: 2em;
@@ -53,11 +48,11 @@ QPushButton[type='dialogaction']
    border: 0px;
    background-color: rgb(27, 176, 104);
    color: white;
-   width: 8.75em;
-   height: 2.5em;
-   max-width: 8.75em;
-   max-height: 2.5em;
-   margin: 1em;
+   width: 8.25em;
+   height: 2.25em;
+   max-width: 8.25em;
+   max-height: 2.25em;
+   margin: 0px;
 }
 QPushButton[type='dialogaction'][enabled=false]
 {
@@ -70,11 +65,11 @@ QPushButton[type='dialogcancel']
    border: 1px solid rgb(143,143,143);
    background-color: white;
    color: black;
-   max-width: 8.75em;
-   max-height: 2.5em;
-   width: 8.75em;
-   height: 2.5em;
-   margin: 1em;
+   max-width: 8.25em;
+   max-height: 2.25em;
+   width: 8.25em;
+   height: 2.25em;
+   margin: 0px;
 }
 QPushButton[type='dialogcancel'][enabled=false]
 {
@@ -84,7 +79,7 @@ QPushButton[type='dialogcancel'][enabled=false]
 }
 QPushButton[type='send']
 {
-   border: 0px;
+   border: 0em;
    background-color: white;
    color: black;
    qproperty-icon: url(':/icon/images/send.png'), url(':/icon/images/inactive_send.png') disabled;
@@ -165,10 +160,10 @@ QMessageBox QPushButton, QFileDialog QPushButton
    border: 0px;
    background-color: rgb(27, 176, 104);
    color: white;
-   min-width: 100px;
-   min-height: 35px;
-   max-width: 200px;
-   max-height: 35px;
+   min-width: 6em;
+   min-height: 2em;
+   max-width: 10em;
+   max-height: 2em;
 }
 QLineEdit
 {
@@ -187,10 +182,10 @@ QLineEdit[type='tablesearch']
 }
 QLineEdit[type='dialoglineedit']
 {
-   min-width: 300px;
-   min-height: 44px;
-   max-width: 300px;
-   max-height: 44px;
+   min-width: 15.5em;
+   min-height: 2.5em;
+   max-width: 15.5em;
+   max-height: 2.5em;
 }
 QTextEdit[type='info']
 {
@@ -199,7 +194,7 @@ QTextEdit[type='info']
 QTextEdit[type='editor']
 {
    border: 1px solid gray;
-   padding 0.5em;
+   padding: 0.5em;
 }
 QTextEdit QScrollBar:vertical
 {
