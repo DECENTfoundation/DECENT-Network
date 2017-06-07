@@ -21,21 +21,29 @@ namespace graphene { namespace chain {
 
 void_result set_publishing_manager_evaluator::do_evaluate( const set_publishing_manager_operation& o )
 {try{
+   ilog("set publishing manager operation evaluation started");
    for( const auto id : o.to )
       FC_ASSERT (db().find_object(id), "Account does not exist");
    FC_ASSERT( o.from == account_id_type(15) , "This operation is permitted only to DECENT account");
+   ilog("set publishing manager operation evaluated");
 }FC_CAPTURE_AND_RETHROW( (o) ) }
 
 void_result set_publishing_manager_evaluator::do_apply( const set_publishing_manager_operation& o )
 {try{
    for( auto to_id : o.to )
    {
+      ilog("set_publishing_manager_evaluator::do_apply processing id ${i}", ("i", to_id));
       const account_object& to_acc = to_id(db());
+      idump((to_acc));
+      idump((o));
 
       if( o.can_create_publishers == true ) {
          db().modify<account_object>(to_acc, [](account_object &ao) {
               ao.rights_to_publish.is_publishing_manager = true;
+              ilog("set_publishing_manager_evaluator::do_apply rights modified");
+              idump((ao));
          });
+         return void_result();
       }
       else
       {
