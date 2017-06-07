@@ -40,7 +40,17 @@ protected:
 public:
    uint32_t m_rating;
 };
-    
+//
+class StackLayerWidget: public QWidget
+{
+   Q_OBJECT
+public:
+   StackLayerWidget(QWidget* pParent);
+
+signals:
+   void accepted();
+   void closed();
+};
 //
 // TransferDialog
 //
@@ -62,15 +72,15 @@ private:
    QString  m_fromUserName;
 };
 //
-// ImportKeyDialog
+// ImportKeyWidget
 //
-class ImportKeyDialog : public QDialog
+class ImportKeyWidget : public StackLayerWidget
 {
    Q_OBJECT
 public:
-   ImportKeyDialog(QWidget* parent);
+   ImportKeyWidget(QWidget* parent);
    
-   public slots:
+public slots:
    void nameChanged(const QString &);
    void keyChanged(const QString &);
    void Import();
@@ -79,7 +89,6 @@ private:
    QString  m_userName;
    QString  m_key;
 };
-   
 //
 // UserInfoDialog
 //
@@ -100,20 +109,17 @@ public:
 
 };
 //
-// ContentInfoDialog
+// ContentInfoWidget
 //
-class ContentInfoDialog : public QDialog
+class ContentInfoWidget : public StackLayerWidget
 {
    Q_OBJECT
 public:
-   ContentInfoDialog(QWidget* parent, const SDigitalContent& a_cnt_details);
+   ContentInfoWidget(QWidget* parent, const SDigitalContent& a_cnt_details);
    
    void Buy();
 public slots:
    void ButtonWasClicked();
-
-signals:
-   void ContentWasBought();
    
 private:
    enum GetItOrPay {GetIt, Pay};
@@ -182,14 +188,14 @@ private:
    std::vector<std::string>   m_iterators;
 };
 //
-// PasswordDialog
+// PasswordWidget
 //
-class PasswordDialog : public QDialog
+class PasswordWidget : public StackLayerWidget
 {
    Q_OBJECT
 public:
    enum eType { eSetPassword, eUnlock };
-   PasswordDialog(QWidget* pParent, eType enType);
+   PasswordWidget(QWidget* pParent, eType enType);
 
 protected slots:
    void slot_action();

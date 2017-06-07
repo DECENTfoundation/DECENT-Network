@@ -38,7 +38,6 @@ namespace gui_wallet
 void PlaceInsideLabel(QWidget* pParent, QWidget* pChild)
 {
    pParent->show();
-   QMargins margins = pParent->contentsMargins();
 
    QHBoxLayout* pMainLayout = new QHBoxLayout;
    pMainLayout->addWidget(pChild);
@@ -102,6 +101,15 @@ void RatingWidget::slot_rating()
       if (m_arr_p_rate[index] == sender())
          setRating(index + 1);
    }
+}
+//
+// StackLayerWidget
+//
+StackLayerWidget::StackLayerWidget(QWidget* pParent)
+: QWidget(pParent)
+{
+   QObject::connect(this, &StackLayerWidget::accepted,
+                    this, &StackLayerWidget::closed);
 }
 //
 // TransferDialog
@@ -209,12 +217,12 @@ void TransferDialog::Transfer()
    }
 }
 //
-// ImportKeyDialog
+// ImportKeyWidget
 //
-ImportKeyDialog::ImportKeyDialog(QWidget* parent)
-: QDialog(parent)
+ImportKeyWidget::ImportKeyWidget(QWidget* parent)
+: StackLayerWidget(parent)
 {
-   QObject::connect(this, &QDialog::accepted,
+   QObject::connect(this, &StackLayerWidget::accepted,
                     &Globals::instance(), &Globals::signal_keyImported);
    
    QVBoxLayout* mainLayout       = new QVBoxLayout();
@@ -223,30 +231,26 @@ ImportKeyDialog::ImportKeyDialog(QWidget* parent)
    
    DecentButton* ok = new DecentButton(this, DecentButton::DialogAction);
    ok->setText(tr("Ok"));
-//   ok->setFixedSize(140, 40);
    DecentButton* cancel = new DecentButton(this, DecentButton::DialogCancel);
    cancel->setText(tr("Cancel"));
-//   cancel->setFixedSize(140, 40);
    
    QObject::connect(ok, &QPushButton::clicked,
-                    this, &ImportKeyDialog::Import);
+                    this, &ImportKeyWidget::Import);
    QObject::connect(cancel, &QPushButton::clicked,
-                    this, &QDialog::close);
+                    this, &StackLayerWidget::closed);
    
    DecentLineEdit* name = new DecentLineEdit(this, DecentLineEdit::DialogLineEdit);
    DecentLineEdit* key  = new DecentLineEdit(this, DecentLineEdit::DialogLineEdit);
    
    name->setPlaceholderText(tr("Account"));
    name->setAttribute(Qt::WA_MacShowFocusRect, 0);
-//   name->setFixedSize(300, 44);
    QObject::connect(name, &QLineEdit::textChanged,
-                    this, &ImportKeyDialog::nameChanged);
+                    this, &ImportKeyWidget::nameChanged);
    
    key->setPlaceholderText(tr("Key"));
    key->setAttribute(Qt::WA_MacShowFocusRect, 0);
-//   key->setFixedSize(300, 44);
    QObject::connect(key, &QLineEdit::textChanged,
-                    this, &ImportKeyDialog::keyChanged);
+                    this, &ImportKeyWidget::keyChanged);
 
    lineEditsLayout->addWidget(name);
    lineEditsLayout->addWidget(key);
@@ -254,28 +258,25 @@ ImportKeyDialog::ImportKeyDialog(QWidget* parent)
    buttonsLayout->setSpacing(20);
    buttonsLayout->addWidget(ok);
    buttonsLayout->addWidget(cancel);
-   
-   
+
    mainLayout->setContentsMargins(40, 10, 40, 10);
    mainLayout->addLayout(lineEditsLayout);
    mainLayout->addLayout(buttonsLayout);
    
    setLayout(mainLayout);
-   
-//   setFixedSize(380, 220);
 }
 
-void ImportKeyDialog::nameChanged(const QString & name)
+void ImportKeyWidget::nameChanged(const QString & name)
 {
    m_userName = name;
 }
 
-void ImportKeyDialog::keyChanged(const QString & key)
+void ImportKeyWidget::keyChanged(const QString & key)
 {
    m_key = key;
 }
 
-void ImportKeyDialog::Import()
+void ImportKeyWidget::Import()
 {
    std::string message;
    std::string result;
@@ -294,7 +295,6 @@ void ImportKeyDialog::Import()
    if (message.empty())
    {
       emit accepted();
-      close();
    }
    else
    {
@@ -348,10 +348,10 @@ UserInfoDialog::UserInfoDialog(QWidget* parent,
    setLayout(main_layout);
 }
 //
-// ContentInfoDialog
+// ContentInfoWidget
 //
-ContentInfoDialog::ContentInfoDialog(QWidget* parent, const SDigitalContent& a_cnt_details)
-   : QDialog(parent)
+ContentInfoWidget::ContentInfoWidget(QWidget* parent, const SDigitalContent& a_cnt_details)
+   : StackLayerWidget(parent)
    , m_URI(a_cnt_details.URI)
    , m_amount(a_cnt_details.price.getString().c_str())
    , m_getItOrPay(GetIt)
@@ -448,9 +448,9 @@ ContentInfoDialog::ContentInfoDialog(QWidget* parent, const SDigitalContent& a_c
    cancelButton->setText(tr("Close"));
    
    QObject::connect(getItButton, &QPushButton::clicked,
-                    this, &ContentInfoDialog::ButtonWasClicked);
+                    this, &ContentInfoWidget::ButtonWasClicked);
    QObject::connect(cancelButton, &QPushButton::clicked,
-                    this, &QDialog::close);
+                    this, &StackLayerWidget::closed);
    
    main_layout->addWidget(getItButton, iRowIndex, 0, Qt::AlignRight);
    main_layout->addWidget(cancelButton, iRowIndex, 1, Qt::AlignLeft);
@@ -460,7 +460,7 @@ ContentInfoDialog::ContentInfoDialog(QWidget* parent, const SDigitalContent& a_c
    setWindowTitle(QString::fromStdString(title));
 }
    
-void ContentInfoDialog::ButtonWasClicked()
+void ContentInfoWidget::ButtonWasClicked()
 {
    QPushButton* button = (QPushButton*) sender();
    if (m_amount == "Free" ||
@@ -477,7 +477,7 @@ void ContentInfoDialog::ButtonWasClicked()
    }
 }
    
-void ContentInfoDialog::Buy()
+void ContentInfoWidget::Buy()
 {
    std::string downloadCommand = "download_content";
    downloadCommand += " " + Globals::instance().getCurrentUser();       // consumer
@@ -499,9 +499,7 @@ void ContentInfoDialog::Buy()
    if (false == str_error.empty())
       ShowMessageBox("", tr("Failed to download content"), QString::fromStdString(str_error));
    
-   
-   emit ContentWasBought();
-   close();
+   emit accepted();
 }
 
 //
@@ -863,10 +861,10 @@ bool CommentWidget::slot_Previous()
    
    return true;
 }
-// PasswordDialog
+// PasswordWidget
 //
-PasswordDialog::PasswordDialog(QWidget* pParent, eType enType)
-: QDialog(pParent, Qt::Window | Qt::WindowTitleHint | Qt::CustomizeWindowHint | Qt::WindowCloseButtonHint)
+PasswordWidget::PasswordWidget(QWidget* pParent, eType enType)
+: StackLayerWidget(pParent)
 , m_enType(enType)
 , m_pError(new QLabel(this))
 {
@@ -902,38 +900,27 @@ PasswordDialog::PasswordDialog(QWidget* pParent, eType enType)
    pMainLayout->addWidget(pEditPassword, iRowIndex++, 0, Qt::AlignCenter | Qt::AlignVCenter);
    pMainLayout->addWidget(pButton, iRowIndex++, 0, Qt::AlignCenter | Qt::AlignVCenter);
 
-#ifndef WINDOWS_HIGH_DPI
    pMainLayout->setSizeConstraint(QLayout::SetFixedSize);
-#else
-   setFixedWidth(600);
-#endif
 
    pMainLayout->setSpacing(20);
    pMainLayout->setContentsMargins(20, 20, 20, 20);
 
    QObject::connect(pEditPassword, &QLineEdit::returnPressed,
-                    this, &PasswordDialog::slot_action);
+                    this, &PasswordWidget::slot_action);
    QObject::connect(pButton, &QPushButton::clicked,
-                    this, &PasswordDialog::slot_action);
+                    this, &PasswordWidget::slot_action);
    QObject::connect(pEditPassword, &QLineEdit::textChanged,
-                    this, &PasswordDialog::slot_set_password);
+                    this, &PasswordWidget::slot_set_password);
 
    setLayout(pMainLayout);
-
-   //QTimer::singleShot(0, &password_box, SLOT(setFocus()));
-#ifdef _MSC_VER
-   int height = style()->pixelMetric(QStyle::PM_TitleBarHeight);
-   setWindowIcon(height > 32 ? QIcon(":/icon/images/windows_decent_icon_32x32.png")
-                 : QIcon(":/icon/images/windows_decent_icon_16x16.png"));
-#endif
 }
 
-void PasswordDialog::slot_set_password(QString const& strPassword)
+void PasswordWidget::slot_set_password(QString const& strPassword)
 {
    m_strPassword = strPassword;
 }
 
-void PasswordDialog::slot_action()
+void PasswordWidget::slot_action()
 {
    if (m_strPassword.isEmpty())
       return;
@@ -964,7 +951,6 @@ void PasswordDialog::slot_action()
    }
 
    emit accepted();
-   close();
 }
 
 

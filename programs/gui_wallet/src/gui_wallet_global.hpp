@@ -71,6 +71,7 @@ class QTimer;
 
 namespace gui_wallet
 {
+   class StackLayerWidget;
    std::string CalculateRemainingTime(QDateTime const& dt, QDateTime const& dtFuture);
    QString CalculateRemainingTime_Behind(QDateTime const& dt, QDateTime const& dtFuture);
    
@@ -152,6 +153,7 @@ namespace gui_wallet
       bool connected() const;
 
    signals:
+      void signal_stackWidgetPush(gui_wallet::StackLayerWidget*);
       void signal_showPurchasedTab();
       void signal_showTransactionsTab(std::string const&);
       void signal_updateAccountBalance(Asset const&);
