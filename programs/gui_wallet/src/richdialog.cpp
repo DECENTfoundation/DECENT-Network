@@ -223,10 +223,8 @@ ImportKeyDialog::ImportKeyDialog(QWidget* parent)
    
    DecentButton* ok = new DecentButton(this, DecentButton::DialogAction);
    ok->setText(tr("Ok"));
-//   ok->setFixedSize(140, 40);
    DecentButton* cancel = new DecentButton(this, DecentButton::DialogCancel);
    cancel->setText(tr("Cancel"));
-//   cancel->setFixedSize(140, 40);
    
    QObject::connect(ok, &QPushButton::clicked,
                     this, &ImportKeyDialog::Import);
@@ -238,13 +236,11 @@ ImportKeyDialog::ImportKeyDialog(QWidget* parent)
    
    name->setPlaceholderText(tr("Account"));
    name->setAttribute(Qt::WA_MacShowFocusRect, 0);
-//   name->setFixedSize(300, 44);
    QObject::connect(name, &QLineEdit::textChanged,
                     this, &ImportKeyDialog::nameChanged);
    
    key->setPlaceholderText(tr("Key"));
    key->setAttribute(Qt::WA_MacShowFocusRect, 0);
-//   key->setFixedSize(300, 44);
    QObject::connect(key, &QLineEdit::textChanged,
                     this, &ImportKeyDialog::keyChanged);
 
@@ -260,9 +256,7 @@ ImportKeyDialog::ImportKeyDialog(QWidget* parent)
    mainLayout->addLayout(lineEditsLayout);
    mainLayout->addLayout(buttonsLayout);
    
-   setLayout(mainLayout);
-   
-//   setFixedSize(380, 220);
+   setLayout(mainLayout);   
 }
 
 void ImportKeyDialog::nameChanged(const QString & name)
@@ -300,6 +294,44 @@ void ImportKeyDialog::Import()
    {
       ShowMessageBox(tr("Error"), tr("Cannot import key."), message.c_str());
    }
+}
+//
+//ChnageUserInfoDialog
+//
+   
+ChangeUserInfoDialog::ChangeUserInfoDialog(QWidget* parent,
+                     const bool&    is_publishing_manager,
+                     const bool is_publishing_rights_received,
+                     const QString& registrar,
+                     const QString& name,
+                     const QString& id
+                     )
+   : QDialog(parent)
+{
+   QVBoxLayout* main_layout = new QVBoxLayout();
+   main_layout->setSpacing(0);
+   main_layout->setContentsMargins(0, 0, 0, 0);
+   
+   DecentLabel* registrarLabel = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
+   registrarLabel->setText(tr("Registrar\n") + registrar);
+   main_layout->addWidget(registrarLabel);
+   
+   DecentLabel* managerIsPublishingLabel = new DecentLabel(this, DecentLabel::RowLabel);
+   if(is_publishing_manager)
+      managerIsPublishingLabel->setText((tr("Manager is publishing")));
+   else
+      managerIsPublishingLabel->setText((tr("manager isn't publishing")));
+   main_layout->addWidget(managerIsPublishingLabel);
+   
+   DecentLabel* isPublishingRightsReceivedLabel = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
+   if(is_publishing_rights_received)
+      isPublishingRightsReceivedLabel->setText((tr("Publishing rights received")));
+   else
+      isPublishingRightsReceivedLabel->setText((tr("Publishing rights don't received")));
+   main_layout->addWidget(isPublishingRightsReceivedLabel);
+   
+   setWindowTitle(name + " (" + id + ")");
+   setLayout(main_layout);
 }
 //
 // UserInfoDialog

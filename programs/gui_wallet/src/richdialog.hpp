@@ -100,6 +100,22 @@ public:
 
 };
 //
+// UserInfoDialog
+//
+class ChangeUserInfoDialog : public QDialog
+{
+   Q_OBJECT
+public:
+   ChangeUserInfoDialog(QWidget* parent,
+                  const bool&    is_publishing_manager,
+                  const bool is_publishing_rights_received,
+                  const QString& registrar,
+                  const QString& name,
+                  const QString& id
+                  );
+   
+};
+//
 // ContentInfoDialog
 //
 class ContentInfoDialog : public QDialog
