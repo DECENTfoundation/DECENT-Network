@@ -606,8 +606,8 @@ public:
    }
    account_object get_account(account_id_type id) const
    {
-      if( _wallet.my_accounts.get<by_id>().count(id) )
-         return *_wallet.my_accounts.get<by_id>().find(id);
+      //if( _wallet.my_accounts.get<by_id>().count(id) )
+      //   return *_wallet.my_accounts.get<by_id>().find(id);
       auto rec = _remote_db->get_accounts({id}).front();
       FC_ASSERT(rec);
       return *rec;
@@ -632,7 +632,8 @@ public:
             if (local_account.name != blockchain_account->name)
                elog("my account name ${id} different from blockchain name ${id2}", ("id", local_account.name)("id2", blockchain_account->name));
 
-            return *_wallet.my_accounts.get<by_name>().find(account_name_or_id);
+            //return *_wallet.my_accounts.get<by_name>().find(account_name_or_id);
+            return *blockchain_account;
          }
          auto rec = _remote_db->lookup_account_names({account_name_or_id}).front();
          FC_ASSERT( rec && rec->name == account_name_or_id );
@@ -3106,12 +3107,18 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
       return result;
    }
 
-   el_gamal_key_pair wallet_api::generate_el_gamal_keys()
+   el_gamal_key_pair wallet_api::generate_el_gamal_keys() const
    {
       el_gamal_key_pair ret;
       ret.private_key = decent::encrypt::generate_private_el_gamal_key();
       ret.public_key = decent::encrypt::get_public_el_gamal_key( ret.private_key );
       return ret;
+   }
+
+   DInteger wallet_api::generate_encryption_key() const
+   {
+      CryptoPP::Integer secret(randomGenerator, 256);
+      return secret;
    }
 
    string wallet_api::serialize_transaction( signed_transaction tx )const
