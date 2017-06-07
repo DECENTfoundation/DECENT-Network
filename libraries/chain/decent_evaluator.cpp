@@ -36,6 +36,7 @@ void_result set_publishing_manager_evaluator::do_apply( const set_publishing_man
          db().modify<account_object>(to_acc, [](account_object &ao) {
               ao.rights_to_publish.is_publishing_manager = true;
          });
+         return void_result();
       }
       else
       {
