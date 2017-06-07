@@ -112,10 +112,10 @@ StackLayerWidget::StackLayerWidget(QWidget* pParent)
                     this, &StackLayerWidget::closed);
 }
 //
-// TransferDialog
+// TransferWidget
 //
-TransferDialog::TransferDialog(QWidget* parent, QString const& userName/* = QString()*/)
-   : QDialog(parent)
+TransferWidget::TransferWidget(QWidget* parent, QString const& userName/* = QString()*/)
+   : StackLayerWidget(parent)
    , m_toUserName(userName)
 {
    QVBoxLayout* mainLayout       = new QVBoxLayout();
@@ -126,10 +126,12 @@ TransferDialog::TransferDialog(QWidget* parent, QString const& userName/* = QStr
    ok->setText(tr("Send"));
 
    DecentButton* cancel = new DecentButton(this, DecentButton::DialogCancel);
-   cancel->setText(tr("Cancel"));
+   cancel->setText(tr("Back"));
    
-   QObject::connect(ok, &QPushButton::clicked, this, &TransferDialog::Transfer);
-   QObject::connect(cancel, &QPushButton::clicked, this, &QDialog::close);
+   QObject::connect(ok, &QPushButton::clicked,
+                    this, &TransferWidget::Transfer);
+   QObject::connect(cancel, &QPushButton::clicked,
+                    this, &StackLayerWidget::closed);
    
    DecentLineEdit* name = new DecentLineEdit(this, DecentLineEdit::DialogLineEdit);
    DecentLineEdit* amount = new DecentLineEdit(this, DecentLineEdit::DialogLineEdit);
@@ -138,7 +140,8 @@ TransferDialog::TransferDialog(QWidget* parent, QString const& userName/* = QStr
    name->setPlaceholderText(tr("Account"));
    name->setAttribute(Qt::WA_MacShowFocusRect, 0);
    name->setText(m_toUserName);
-   QObject::connect(name, &QLineEdit::textChanged, this, &TransferDialog::nameChanged);
+   QObject::connect(name, &QLineEdit::textChanged,
+                    this, &TransferWidget::nameChanged);
    
    amount->setPlaceholderText(tr("Amount"));
    amount->setAttribute(Qt::WA_MacShowFocusRect, 0);
@@ -146,17 +149,18 @@ TransferDialog::TransferDialog(QWidget* parent, QString const& userName/* = QStr
    QDoubleValidator* dblValidator = new QDoubleValidator(0.0001, 100000, 4, this);
    dblValidator->setLocale(Globals::instance().locale());
    amount->setValidator(dblValidator);
-   QObject::connect(amount, &QLineEdit::textChanged, this, &TransferDialog::amountChanged);
+   QObject::connect(amount, &QLineEdit::textChanged,
+                    this, &TransferWidget::amountChanged);
    
    memo->setPlaceholderText(tr("Memo"));
    memo->setAttribute(Qt::WA_MacShowFocusRect, 0);
-   QObject::connect(memo, &QLineEdit::textChanged, this, &TransferDialog::memoChanged);
+   QObject::connect(memo, &QLineEdit::textChanged,
+                    this, &TransferWidget::memoChanged);
    
    lineEditsLayout->addWidget(name);
    lineEditsLayout->addWidget(amount);
    lineEditsLayout->addWidget(memo);
-   
-//   buttonsLayout->setSpacing(20);
+
    buttonsLayout->addWidget(ok);
    buttonsLayout->addWidget(cancel);
    
@@ -168,22 +172,22 @@ TransferDialog::TransferDialog(QWidget* parent, QString const& userName/* = QStr
    setLayout(mainLayout);
 }
 
-void TransferDialog::nameChanged(const QString & name)
+void TransferWidget::nameChanged(const QString & name)
 {
    m_toUserName = name;
 }
 
-void TransferDialog::amountChanged(const QString & amount)
+void TransferWidget::amountChanged(const QString & amount)
 {
    m_amount = amount.toDouble();
 }
 
-void TransferDialog::memoChanged(const QString & memo)
+void TransferWidget::memoChanged(const QString & memo)
 {
    m_memo = memo;
 }
 
-void TransferDialog::Transfer()
+void TransferWidget::Transfer()
 {
    std::string a_result;
    std::string message;
@@ -209,7 +213,7 @@ void TransferDialog::Transfer()
    
    if (message.empty())
    {
-      close();
+      emit accepted();
    }
    else
    {
@@ -232,7 +236,7 @@ ImportKeyWidget::ImportKeyWidget(QWidget* parent)
    DecentButton* ok = new DecentButton(this, DecentButton::DialogAction);
    ok->setText(tr("Ok"));
    DecentButton* cancel = new DecentButton(this, DecentButton::DialogCancel);
-   cancel->setText(tr("Cancel"));
+   cancel->setText(tr("Back"));
    
    QObject::connect(ok, &QPushButton::clicked,
                     this, &ImportKeyWidget::Import);
@@ -445,7 +449,7 @@ ContentInfoWidget::ContentInfoWidget(QWidget* parent, const SDigitalContent& a_c
    DecentButton* getItButton = new DecentButton(this, DecentButton::DialogAction);
    DecentButton* cancelButton = new DecentButton(this, DecentButton::DialogCancel);
    getItButton->setText(tr("Get it!"));
-   cancelButton->setText(tr("Close"));
+   cancelButton->setText(tr("Back"));
    
    QObject::connect(getItButton, &QPushButton::clicked,
                     this, &ContentInfoWidget::ButtonWasClicked);
@@ -503,10 +507,10 @@ void ContentInfoWidget::Buy()
 }
 
 //
-// PurchasedDialog
+// ContentReviewWidget
 //
-ContentReviewDialog::ContentReviewDialog(QWidget* parent, const SDigitalContent& a_cnt_details)
-: QDialog(parent)
+ContentReviewWidget::ContentReviewWidget(QWidget* parent, const SDigitalContent& a_cnt_details)
+: StackLayerWidget(parent)
 , m_URI(a_cnt_details.URI)
 {
    QGridLayout* main_layout = new QGridLayout();
@@ -583,6 +587,14 @@ ContentReviewDialog::ContentReviewDialog(QWidget* parent, const SDigitalContent&
    main_layout->addWidget(pCommentWidget, iRowIndex, 0, 1, 2);
    pCommentWidget->update();
    ++iRowIndex;
+
+   DecentButton* cancelButton = new DecentButton(this, DecentButton::DialogCancel);
+   cancelButton->setText(tr("Back"));
+
+   QObject::connect(cancelButton, &QPushButton::clicked,
+                    this, &StackLayerWidget::closed);
+
+   main_layout->addWidget(cancelButton, iRowIndex, 0, 1, 2, Qt::AlignCenter);
 
    setLayout(main_layout);
 

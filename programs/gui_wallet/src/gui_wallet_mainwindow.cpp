@@ -656,11 +656,8 @@ void Mainwindow_gui_wallet::SendDCTSlot()
    
    DecentButton* button = (DecentButton*)sender();
    QString accountName = button->property("accountName").toString();
-   
 
-   TransferDialog* transfer_dialog = new TransferDialog(nullptr, accountName);
-   transfer_dialog->setAttribute(Qt::WA_DeleteOnClose);
-   transfer_dialog->open();
+   Globals::instance().showTransferDialog(accountName.toStdString());
 }
 
 void Mainwindow_gui_wallet::InfoSlot()

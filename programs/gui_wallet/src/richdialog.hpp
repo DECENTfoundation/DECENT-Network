@@ -52,13 +52,13 @@ signals:
    void closed();
 };
 //
-// TransferDialog
+// TransferWidget
 //
-class TransferDialog : public QDialog
+class TransferWidget : public StackLayerWidget
 {
    Q_OBJECT
 public:
-   TransferDialog(QWidget* parent, QString const& userName = QString());
+   TransferWidget(QWidget* parent, QString const& userName = QString());
    
 public slots:
    void nameChanged(const QString &);
@@ -128,13 +128,13 @@ private:
    QString m_amount;
 };
 //
-// ContentReviewDialog
+// ContentReviewWidget
 //
-class ContentReviewDialog : public QDialog
+class ContentReviewWidget : public StackLayerWidget
 {
    Q_OBJECT
 public:
-   ContentReviewDialog(QWidget* parent, const SDigitalContent& a_cnt_details);
+   ContentReviewWidget(QWidget* parent, const SDigitalContent& a_cnt_details);
 private:
    std::string m_URI;
 };
