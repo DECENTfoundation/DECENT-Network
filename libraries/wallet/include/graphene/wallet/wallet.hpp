@@ -1778,7 +1778,14 @@ namespace graphene { namespace wallet {
           * @return Pair of ElGamal keys
           * @ingroup WalletCLI
           */
-         el_gamal_key_pair generate_el_gamal_keys();
+         el_gamal_key_pair generate_el_gamal_keys() const;
+
+         /**
+          * @brief Generates AES encryption key.
+          * @return Random encryption key
+          * @ingroup WalletCLI
+          */
+         DInteger generate_encryption_key() const;
 
          /**
           * @brief Get a list of open buyings
