@@ -215,9 +215,8 @@ void database::process_budget()
 
       share_type witness_budget = get_witness_budget();
       rec.requested_witness_budget = witness_budget;
-      if( witness_budget == 0 )
-         witness_budget = rec.total_budget;
-      rec.witness_budget = witness_budget;
+
+      rec.witness_budget = witness_budget + rec.from_accumulated_fees;
 
       rec.supply_delta = rec.witness_budget
          - rec.from_accumulated_fees

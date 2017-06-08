@@ -66,10 +66,10 @@ database& generic_evaluator::db()const { return trx_state->db(); }
    { try {
       if( !trx_state->skip_fee ) {
          database& d = db();
-         /// TODO: db().pay_fee( account_id, core_fee );
-         d.modify(*fee_paying_account_statistics, [&]( account_statistics_object& s )
-         {
-            s.pay_fee( core_fee_paid, d.get_global_properties().parameters.cashback_vesting_threshold );
+         const asset_object& core = asset_id_type(0)(d);
+         const asset_dynamic_data_object& core_dd = core.dynamic_asset_data_id(d);
+         d.modify( core_dd, [&](asset_dynamic_data_object& addo){
+              addo.accumulated_fees += core_fee_paid;
          });
       }
    } FC_CAPTURE_AND_RETHROW() }

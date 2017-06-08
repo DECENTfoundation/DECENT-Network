@@ -106,7 +106,7 @@ void database::update_signing_witness(const witness_object& signing_witness, con
    uint64_t new_block_aslot = dpo.current_aslot + get_slot_at_time( new_block.timestamp );
 
    share_type witness_pay = dpo.witness_budget * gpo.parameters.block_interval;
-   witness_pay /= ( 24 * 3600 ) ;
+   witness_pay /= ( gpo.parameters.maintenance_interval ) ;
 
    modify( dpo, [&]( dynamic_global_property_object& _dpo )
    {

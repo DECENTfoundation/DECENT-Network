@@ -136,19 +136,26 @@ void database::decent_housekeeping()
 
 share_type database::get_witness_budget()
 {
-   //get age in years
-   auto now = head_block_time();
-   auto start_time = fetch_block_by_number(1)->timestamp;
-   uint32_t age = fc::microseconds(now - start_time).to_seconds() / 3600 / 24 / 365;
-   if ( age <=5 )
-      return DECENT_REWARDS_YEAR_1 / 365;
-   if ( age <=10 )
-      return DECENT_REWARDS_YEAR_6 / 365;
-   if ( age <=15 )
-      return DECENT_REWARDS_YEAR_11 / 365;
-   if ( age <=20 )
-      return DECENT_REWARDS_YEAR_16 / 365;
-   return 0;
+   //get age in blocks
+   auto now = head_block_num();
+
+   const global_property_object& gpo = get_global_properties();
+
+   uint64_t block_reward;
+   if( now < DECENT_SPLIT_1 )
+      block_reward = DECENT_BLOCK_REWARD_1;
+   else if( now < DECENT_SPLIT_2 )
+      block_reward = DECENT_BLOCK_REWARD_2;
+   else if( now < DECENT_SPLIT_3 )
+      block_reward = DECENT_BLOCK_REWARD_3;
+   else if( now < DECENT_SPLIT_4 )
+      block_reward = DECENT_BLOCK_REWARD_4;
+   else
+      block_reward = DECENT_BLOCK_REWARD_5;
+
+   uint64_t blocks_per_maintenance_interval = gpo.parameters.maintenance_interval / gpo.parameters.block_interval;
+
+   return blocks_per_maintenance_interval * block_reward;
 }
 
 real_supply database::get_real_supply()const
