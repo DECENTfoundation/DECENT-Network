@@ -10,6 +10,7 @@
 #include <QDateTime>
 #include <QProgressBar>
 #include <QGridLayout>
+#include <QStackedWidget>
 #endif
 
 #include "gui_wallet_mainwindow.hpp"
@@ -37,7 +38,8 @@ using namespace graphene;
 using namespace utilities;
 
 Mainwindow_gui_wallet::Mainwindow_gui_wallet()
-: m_ActionExit(tr("&Exit"),this)
+: m_pStackedWidget(new QStackedWidget(this))
+, m_ActionExit(tr("&Exit"),this)
 , m_ActionAbout(tr("About"),this)
 , m_ActionInfo(tr("Info"),this)
 , m_ActionHelp(tr("Help"),this)
@@ -81,6 +83,9 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
    QObject::connect(&Globals::instance(), &Globals::walletConnectionStatusChanged,
                     this, &Mainwindow_gui_wallet::slot_connection_status_changed);
 
+   QObject::connect(&Globals::instance(), &Globals::signal_stackWidgetPush,
+                    this, &Mainwindow_gui_wallet::slot_stackWidgetPush);
+
    QObject::connect(&Globals::instance(), &Globals::signal_showPurchasedTab,
                     this, &Mainwindow_gui_wallet::slot_showPurchasedTab);
 
@@ -109,6 +114,9 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
 
    connect(m_pCentralWidget, SIGNAL(sendDCT()), this, SLOT(SendDCTSlot()));
 
+   setCentralWidget(m_pStackedWidget);
+   m_pStackedWidget->addWidget(m_pCentralWidget);
+   //
    // The blocking splash screen
    //
    SetSplash();
@@ -127,7 +135,7 @@ Mainwindow_gui_wallet::~Mainwindow_gui_wallet()
 
 void Mainwindow_gui_wallet::SetSplash()
 {
-   QWidget* pSplashScreen = new QWidget(this);
+   StackLayerWidget* pSplashScreen = new StackLayerWidget(this);
    QProgressBar* pConnectingProgress = new QProgressBar(pSplashScreen);
    pConnectingProgress->setStyleSheet("QProgressBar"
                                       "{"
@@ -188,21 +196,15 @@ void Mainwindow_gui_wallet::SetSplash()
    pButton->hide();
    pButton->setText(tr("Proceed"));
    
-   QGridLayout* pLayoutHolder = new QGridLayout;
-   pLayoutHolder->addWidget(pConnectingProgress, 0, 0, Qt::AlignVCenter | Qt::AlignCenter);
-   pLayoutHolder->addWidget(pConnectingLabel, 1, 0, Qt::AlignVCenter | Qt::AlignCenter);
-   pLayoutHolder->addWidget(pSyncUpLabel, 2, 0, Qt::AlignVCenter | Qt::AlignCenter);
-   pLayoutHolder->addWidget(pButton, 3, 0, Qt::AlignVCenter | Qt::AlignCenter);
+   QGridLayout* pLayoutSplash = new QGridLayout;
+   pLayoutSplash->addWidget(pConnectingProgress, 0, 0, Qt::AlignVCenter | Qt::AlignCenter);
+   pLayoutSplash->addWidget(pConnectingLabel, 1, 0, Qt::AlignVCenter | Qt::AlignCenter);
+   pLayoutSplash->addWidget(pSyncUpLabel, 2, 0, Qt::AlignVCenter | Qt::AlignCenter);
+   pLayoutSplash->addWidget(pButton, 3, 0, Qt::AlignVCenter | Qt::AlignCenter);
    
-   pLayoutHolder->setSizeConstraint(QLayout::SetFixedSize);
-   pLayoutHolder->setSpacing(10);
-   pLayoutHolder->setContentsMargins(0, 0, 0, 0);
-   
-   QWidget* pHolder = new QWidget(pSplashScreen);
-   pHolder->setLayout(pLayoutHolder);
-   
-   QHBoxLayout* pLayoutSplash = new QHBoxLayout;
-   pLayoutSplash->addWidget(pHolder);
+   pLayoutSplash->setSizeConstraint(QLayout::SetFixedSize);
+   pLayoutSplash->setSpacing(10);
+   pLayoutSplash->setContentsMargins(0, 0, 0, 0);
    
    pSplashScreen->setLayout(pLayoutSplash);
    
@@ -218,25 +220,25 @@ void Mainwindow_gui_wallet::SetSplash()
    
    QObject::connect(pButton, &QPushButton::clicked,
                     this, &Mainwindow_gui_wallet::CloseSplash);
-   
-   setCentralWidget(pSplashScreen);
+
+   slot_stackWidgetPush(pSplashScreen);
 }
 
 void Mainwindow_gui_wallet::CloseSplash()
 {
-   QDialog* pDialog = nullptr;
+   StackLayerWidget* pLayer = nullptr;
 
    signal_setSplashMainText(QString());
    Globals::instance().statusShowMessage(QString());
 
    if (Globals::instance().getWallet().IsNew())
    {
-      pDialog = new PasswordDialog(nullptr, PasswordDialog::eSetPassword);
+      pLayer = new PasswordWidget(nullptr, PasswordWidget::eSetPassword);
       signal_setSplashMainText(tr("Please set a password to encrypt your wallet"));
    }
    else if (Globals::instance().getWallet().IsLocked())
    {
-      pDialog = new PasswordDialog(nullptr, PasswordDialog::eUnlock);
+      pLayer = new PasswordWidget(nullptr, PasswordWidget::eUnlock);
       signal_setSplashMainText(tr("Please unlock your wallet"));
    }
    else
@@ -244,21 +246,20 @@ void Mainwindow_gui_wallet::CloseSplash()
       auto accounts = Globals::instance().runTaskParse("list_my_accounts");
       if (accounts.empty())
       {
-         pDialog = new ImportKeyDialog(nullptr);
+         pLayer = new ImportKeyWidget(nullptr);
          signal_setSplashMainText(tr("Please import your account in order to proceed"));
       }
    }
 
-   if (pDialog)
+   if (pLayer)
    {
-      QObject::connect(pDialog, &QDialog::accepted,
+      slot_stackWidgetPush(pLayer);
+      QObject::connect(pLayer, &StackLayerWidget::accepted,
                        this, &Mainwindow_gui_wallet::CloseSplash);
-      pDialog->setAttribute(Qt::WA_DeleteOnClose);
-      pDialog->open();
    }
    else
    {
-      setCentralWidget(m_pCentralWidget);
+      slot_stackWidgetPop();
       _downloadChecker.setSingleShot(false);
       _downloadChecker.setInterval(5000);
       connect(&_downloadChecker, SIGNAL(timeout()), this, SLOT(CheckDownloads()));
@@ -307,6 +308,43 @@ void Mainwindow_gui_wallet::slot_showTransactionsTab(std::string const& account_
 {
    GoToThisTab(1, std::string());
    m_pCentralWidget->SetTransactionInfo(account_name);
+}
+
+void Mainwindow_gui_wallet::slot_stackWidgetPush(StackLayerWidget* pWidget)
+{
+   QObject::connect(pWidget, &StackLayerWidget::closed,
+                    this, &Mainwindow_gui_wallet::slot_stackWidgetPop);
+
+   QWidget* pLayer = new QWidget(nullptr);
+   QGridLayout* pLayoutHolder = new QGridLayout;
+   pLayoutHolder->addWidget(pWidget, 0, 0, Qt::AlignVCenter | Qt::AlignCenter);
+
+   pLayoutHolder->setSizeConstraint(QLayout::SetFixedSize);
+   pLayoutHolder->setSpacing(0);
+   pLayoutHolder->setContentsMargins(0, 0, 0, 0);
+
+   QWidget* pHolder = new QWidget(pLayer);
+   pHolder->setLayout(pLayoutHolder);
+
+   QHBoxLayout* pLayoutLayer = new QHBoxLayout;
+   pLayoutLayer->addWidget(pHolder);
+
+   pLayer->setLayout(pLayoutLayer);
+
+   m_pStackedWidget->addWidget(pLayer);
+   m_pStackedWidget->setCurrentWidget(pLayer);
+}
+
+void Mainwindow_gui_wallet::slot_stackWidgetPop()
+{
+   int iCount = m_pStackedWidget->count();
+   if (iCount > 1)
+   {
+      QWidget* pWidget = m_pStackedWidget->widget(iCount - 1);
+      m_pStackedWidget->removeWidget(pWidget);
+      pWidget->deleteLater();
+      m_pStackedWidget->setCurrentIndex(iCount - 2);
+   }
 }
 
 void Mainwindow_gui_wallet::slot_updateAccountBalance(Asset const& balance)
@@ -606,10 +644,8 @@ void Mainwindow_gui_wallet::DisplayWalletContentGUI()
 
 void Mainwindow_gui_wallet::ImportKeySlot()
 {
-   ImportKeyDialog*  import_key_dlg = new ImportKeyDialog(nullptr);
-   
-   import_key_dlg->setAttribute(Qt::WA_DeleteOnClose);
-   import_key_dlg->open();
+   ImportKeyWidget* import_key = new ImportKeyWidget(nullptr);
+   slot_stackWidgetPush(import_key);
 }
 
 
@@ -620,11 +656,8 @@ void Mainwindow_gui_wallet::SendDCTSlot()
    
    DecentButton* button = (DecentButton*)sender();
    QString accountName = button->property("accountName").toString();
-   
 
-   TransferDialog* transfer_dialog = new TransferDialog(nullptr, accountName);
-   transfer_dialog->setAttribute(Qt::WA_DeleteOnClose);
-   transfer_dialog->open();
+   Globals::instance().showTransferDialog(accountName.toStdString());
 }
 
 void Mainwindow_gui_wallet::InfoSlot()
@@ -684,8 +717,7 @@ void Mainwindow_gui_wallet::GoToThisTab(int index , std::string)
 
 void Mainwindow_gui_wallet::closeEvent(QCloseEvent *event)
 {
-   if (centralWidget() == m_pCentralWidget ||
-       Globals::instance().connected())
+   if (Globals::instance().connected())
    {
       event->accept();
    }

@@ -350,9 +350,8 @@ void PurchasedTab::slot_Details(int iIndex)
    if (iIndex < 0 || iIndex >= _current_content.size())
       throw std::out_of_range("Content index is out of range");
 
-   ContentReviewDialog* pDetailsDialog = new ContentReviewDialog(nullptr, _current_content[iIndex]);
-   pDetailsDialog->setAttribute(Qt::WA_DeleteOnClose);
-   pDetailsDialog->open();
+   ContentReviewWidget* pDetailsDialog = new ContentReviewWidget(nullptr, _current_content[iIndex]);
+   Globals::instance().signal_stackWidgetPush(pDetailsDialog);
 }
 
 void PurchasedTab::ShowMessageBox(std::string const& message)

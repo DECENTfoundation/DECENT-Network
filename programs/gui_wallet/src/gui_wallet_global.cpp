@@ -652,9 +652,8 @@ void Globals::showTransferDialog(std::string const& user)
    if(getCurrentUser().empty())
       return;
    
-   TransferDialog* pTransferDialog = new TransferDialog(nullptr , QString::fromStdString(user));
-   pTransferDialog->setAttribute(Qt::WA_DeleteOnClose);
-   pTransferDialog->open();
+   TransferWidget* pTransferDialog = new TransferWidget(nullptr , QString::fromStdString(user));
+   signal_stackWidgetPush(pTransferDialog);
 }
 
 string Globals::getAccountName(string const& accountId)

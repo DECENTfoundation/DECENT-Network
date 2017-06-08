@@ -187,6 +187,7 @@ QLineEdit[type='dialoglineedit']
    max-width: 25em;
    max-height: 2.5em;
    padding-left: 0.5em;
+   padding-right: 0.5em;
 }
 QTextEdit[type='info']
 {
