@@ -57,8 +57,10 @@ void_result asset_create_evaluator::do_evaluate( const asset_create_operation& o
 
    core_fee_paid -= core_fee_paid.value/2;
 
-   if(op.common_options.monitored_asset_opts.valid())
-      op.common_options.monitored_asset_opts->validate();
+   if(op.monitored_asset_opts.valid()) {
+      op.monitored_asset_opts->validate();
+      FC_ASSERT( op.max_supply == 0 );
+   }
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
@@ -76,11 +78,10 @@ object_id_type asset_create_evaluator::do_apply( const asset_create_operation& o
          a.issuer = op.issuer;
          a.symbol = op.symbol;
          a.precision = op.precision;
-         a.options = op.common_options;
-         if( a.options.core_exchange_rate.base.asset_id.instance.value == 0 )
-            a.options.core_exchange_rate.quote.asset_id = next_asset_id;
-         else
-            a.options.core_exchange_rate.base.asset_id = next_asset_id;
+         a.description = op.description;
+         a.monitored_asset_opts = op.monitored_asset_opts;
+         a.max_supply = op.max_supply;
+
          a.dynamic_asset_data_id = dyn_asset.id;
       });
    assert( new_asset.id == next_asset_id );
@@ -97,7 +98,7 @@ void_result asset_issue_evaluator::do_evaluate( const asset_issue_operation& o )
    FC_ASSERT( !a.is_monitored_asset(), "Cannot manually issue a market-issued asset." );
 
    asset_dyn_data = &a.dynamic_asset_data_id(d);
-   FC_ASSERT( (asset_dyn_data->current_supply + o.asset_to_issue.amount) <= a.options.max_supply );
+   FC_ASSERT( (asset_dyn_data->current_supply + o.asset_to_issue.amount) <= a.max_supply );
 
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (o) ) }
@@ -121,7 +122,8 @@ void_result asset_update_evaluator::do_evaluate(const asset_update_operation& o)
 
    const asset_object& a = o.asset_to_update(d);
    auto a_copy = a;
-   a_copy.options = o.new_options;
+   a_copy.description = o.new_description;
+   a_copy.max_supply = o.max_supply;
    a_copy.validate();
 
    if( o.new_issuer )
@@ -139,7 +141,8 @@ void_result asset_update_evaluator::do_apply(const asset_update_operation& o)
    d.modify(*asset_to_update, [&](asset_object& a) {
       if( o.new_issuer )
          a.issuer = *o.new_issuer;
-      a.options = o.new_options;
+      a.description = o.new_description;
+      a.max_supply = o.max_supply;
    });
 
    return void_result();
@@ -166,14 +169,14 @@ void_result asset_update_monitored_asset_evaluator::do_apply(const asset_update_
       const auto &ao = idx.find(o.asset_to_update);
 
       // If the minimum number of feeds to calculate a median has changed, we need to recalculate the median
-      if( o.new_options.minimum_feeds != ao->options.monitored_asset_opts->minimum_feeds )
+      if( o.new_options.minimum_feeds != ao->monitored_asset_opts->minimum_feeds )
          should_update_feeds = true;
 
       db().modify(*ao, [&](asset_object& b) {
-         b.options.monitored_asset_opts = o.new_options;
+         b.monitored_asset_opts = o.new_options;
 
          if( should_update_feeds )
-            b.options.monitored_asset_opts->update_median_feeds(db().head_block_time());
+            b.monitored_asset_opts->update_median_feeds(db().head_block_time());
       });
 
       return void_result();
@@ -200,11 +203,11 @@ void_result asset_publish_feeds_evaluator::do_apply(const asset_publish_feed_ope
    database& d = db();
 
    const asset_object& base = o.asset_id(d);
-   auto old_feed =  base.options.monitored_asset_opts->current_feed;
+   auto old_feed =  base.monitored_asset_opts->current_feed;
    // Store medians for this asset
    d.modify(base , [&o,&d](asset_object& a) {
-      a.options.monitored_asset_opts->feeds[o.publisher] = make_pair(d.head_block_time(), o.feed);
-      a.options.monitored_asset_opts->update_median_feeds(d.head_block_time());
+      a.monitored_asset_opts->feeds[o.publisher] = make_pair(d.head_block_time(), o.feed);
+      a.monitored_asset_opts->update_median_feeds(d.head_block_time());
    });
 
    return void_result();

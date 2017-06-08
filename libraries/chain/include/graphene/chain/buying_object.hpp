@@ -24,25 +24,26 @@ using decent::encrypt::DInteger;
 
       account_id_type consumer;
       string URI;
-      uint64_t size = uint64_t(-1); // initialized by content.size
-      uint64_t rating = uint64_t(-1);  // this is the user rating
-      uint64_t average_rating = uint64_t(-1);   // initialized by content_object.AVG_rating
-      asset price;  // initialized by request_to_buy_operation.price then reset to 0 for escrow system and inflation calculations
-      asset paid_price; // initialized by request_to_buy_operation.price
-      std::string synopsis;   // initialized by content.synopsis
+      uint64_t size = uint64_t(-1); //< initialized by content.size
+      uint64_t rating = uint64_t(-1);  //< this is the user rating
+      uint64_t average_rating = uint64_t(-1);   //< initialized by content_object.AVG_rating
+      asset price;  //< this is an escrow, initialized by request_to_buy_operation.price then reset to 0 for escrow system and inflation calculations
+      asset paid_price; //< initialized by request_to_buy_operation.price
+      std::string synopsis;   //< initialized by content.synopsis
       vector<account_id_type> seeders_answered;
       vector<decent::encrypt::CiphertextString> key_particles;
-      DIntegerString pubKey;
+      decent::encrypt::DIntegerString pubKey;
       time_point_sec expiration_time;
       bool expired = false;
       bool delivered = false;
       time_point_sec expiration_or_delivery_time;
-      bool rated = false;
-      time_point_sec created; // initialized by content.created
-      time_point_sec expiration; // initialized by content.expiration
-#ifdef PRICE_REGIONS
+      // User can't add rating and comment in two time-separated steps. For example, if content is already rated by user, he is not
+      // allowed to add comment later. If user wants to add both rating and comment, he has to do it in one step.
+      bool rated_or_commented = false;
+      time_point_sec created; //< initialized by content.created
+      time_point_sec expiration; //< initialized by content.expiration
       uint32_t region_code_from;
-#endif
+#
 
       bool is_open() const { return !( expired || delivered ); }
       share_type get_price() const { return paid_price.amount; }
@@ -60,6 +61,54 @@ using decent::encrypt::DInteger;
    struct by_price;
    struct by_created;
    struct by_purchased;
+
+   template <typename TAG, typename _t_object>
+   struct key_extractor;
+
+   template <>
+   struct key_extractor<by_size, buying_object>
+   {
+      static uint64_t get(buying_object const& ob)
+      {
+         return ob.size;
+      }
+   };
+
+   template <>
+   struct key_extractor<by_price, buying_object>
+   {
+      static share_type get(buying_object const& ob)
+      {
+         return ob.get_price();
+      }
+   };
+
+   template <>
+   struct key_extractor<by_created, buying_object>
+   {
+      static time_point_sec get(buying_object const& ob)
+      {
+         return ob.created;
+      }
+   };
+   
+   template<>
+   struct key_extractor<by_purchased, buying_object>
+   {
+      static time_point_sec get(buying_object const& ob)
+      {
+         return ob.expiration_or_delivery_time;
+      }
+   };
+
+   template <>
+   struct key_extractor<by_consumer_open, buying_object>
+   {
+      static boost::tuple<account_id_type, bool> get(buying_object const& ob)
+      {
+         return boost::make_tuple(ob.consumer, ob.is_open());
+      }
+   };
 
    typedef multi_index_container<
       buying_object,
@@ -126,14 +175,7 @@ using decent::encrypt::DInteger;
 
 }}
 
-#ifdef PRICE_REGIONS
 FC_REFLECT_DERIVED(graphene::chain::buying_object,
                    (graphene::db::object),
                    (consumer)(URI)(synopsis)(price)(paid_price)(seeders_answered)(size)(rating)(average_rating)(expiration_time)(pubKey)(key_particles)
-                   (expired)(delivered)(expiration_or_delivery_time)(rated)(created)(expiration)(region_code_from) )
-#else
-FC_REFLECT_DERIVED(graphene::chain::buying_object,
-                   (graphene::db::object),
-                   (consumer)(URI)(synopsis)(price)(paid_price)(seeders_answered)(size)(rating)(average_rating)(expiration_time)(pubKey)(key_particles)
-                   (expired)(delivered)(expiration_or_delivery_time)(rated)(created)(expiration) )
-#endif
+                   (expired)(delivered)(expiration_or_delivery_time)(rated_or_commented)(created)(expiration)(region_code_from) )

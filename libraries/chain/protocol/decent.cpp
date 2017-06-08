@@ -3,19 +3,38 @@
 
 namespace graphene { namespace chain {
 
+void set_publishing_manager_operation::validate()const
+{
+   FC_ASSERT( fee.amount >= 0 );
+   FC_ASSERT( to.size() > 0 );
+   FC_ASSERT( from == account_id_type(15), "Account does not have permission to this operation" );
+}
+
+void set_publishing_right_operation::validate()const
+{
+   FC_ASSERT( fee.amount >= 0 );
+   FC_ASSERT( to.size() > 0 );
+}
+
 void content_submit_operation::validate()const
 {
    FC_ASSERT( fee.amount >= 0 );
-#ifdef PRICE_REGIONS
+   FC_ASSERT( co_authors.size() <= 10 );
+
+   uint32_t sum_of_splits = 0;
+   for( auto const &element : co_authors )
+   {
+      FC_ASSERT( element.second >= 0 );
+      sum_of_splits += element.second;
+   }
+   FC_ASSERT( sum_of_splits <= 10000 );
    FC_ASSERT(false == price.empty());
    for (auto const& item : price)
    {
       FC_ASSERT(item.second.amount >= 0);
    }
-#else
-   FC_ASSERT( price.amount >= 0 );
-#endif
-   FC_ASSERT( size > 0 && size <= 100 ); //TODO_DECENT - increase in testnet
+
+   FC_ASSERT( size > 0 && size <= 200 ); //TODO_DECENT - increase in testnet
    FC_ASSERT( seeders.size() > 0 );
    FC_ASSERT( seeders.size() == key_parts.size() );
    FC_ASSERT( quorum >= 1 && quorum < UINT32_MAX); // TODO_DECENT  quorum >= 2. See also wallet_api::submit_content_new
@@ -32,10 +51,10 @@ void request_to_buy_operation::validate()const
    FC_ASSERT( price.amount >= 0 );
 }
 
-void leave_rating_operation::validate()const
+void leave_rating_and_comment_operation::validate()const
 {
    FC_ASSERT( fee.amount >= 0 );
-   FC_ASSERT( rating >= 0 && rating <= UINT64_MAX );
+   FC_ASSERT( ( rating >= 0 && rating <= 5 ) || ( comment.length() <= 100 && !comment.empty() ) );
 }
 
 void ready_to_publish_operation::validate()const

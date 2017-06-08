@@ -54,11 +54,8 @@ endif()
 
 set( CMAKE_EXPORT_COMPILE_COMMANDS YES )
 set( ENABLE_INSTALLER YES )
-#set( USE_PCH YES )
 
-if( USE_PCH )
-    include( cotire )
-endif()
+include( cotire )
 
 list( APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/libraries/contrib/fc/CMakeModules" )
 list( APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/libraries/contrib/fc/GitVersionGen" )
@@ -125,11 +122,11 @@ if( WIN32 )
 
 else() # Apple and Linux
 
-    #find_library( READLINE_LIBRARIES NAMES readline )
-    #find_path( READLINE_INCLUDE_DIR "readline/readline.h" )
-#    if( NOT READLINE_INCLUDE_DIR OR NOT READLINE_LIBRARIES )
-#        message(FATAL_ERROR "Readline not found")
-#    endif()
+    find_library( READLINE_LIBRARIES NAMES readline )
+    find_path( READLINE_INCLUDE_DIR "readline/readline.h" )
+    if( NOT READLINE_INCLUDE_DIR OR NOT READLINE_LIBRARIES )
+        message(FATAL_ERROR "Readline not found")
+    endif()
 
     if( APPLE )
         # Apple Specific Options Here

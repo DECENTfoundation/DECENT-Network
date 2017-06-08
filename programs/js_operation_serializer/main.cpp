@@ -32,6 +32,7 @@
 #include <graphene/chain/withdraw_permission_object.hpp>
 #include <graphene/chain/witness_object.hpp>
 #include <graphene/chain/buying_object.hpp>
+#include <graphene/chain/content_object.hpp>
 
 #include <graphene/chain/subscription_object.hpp>
 

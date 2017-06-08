@@ -27,11 +27,24 @@
 #include <graphene/chain/protocol/ext.hpp>
 #include <graphene/chain/protocol/types.hpp>
 #include <graphene/chain/protocol/vote.hpp>
+#include <set>
+
 
 namespace graphene { namespace chain {
 
    bool is_valid_name( const string& s );
    bool is_cheap_name( const string& n );
+
+   struct publishing_rights
+   {
+      /// True if account can give or remove right to publish a content
+      bool is_publishing_manager = false;
+      /// Rights to publish a content received from publishing managers.
+      /// An account can publish a content if has at least one right from publishing managers.
+      std::set<account_id_type> publishing_rights_received;
+      /// List of accounts that get publishing right from this account. This list is empty if account does not have publishing manager status.
+      std::set<account_id_type> publishing_rights_forwarded;
+   };
 
    /// These are the fields which can be updated by the active authority.
    struct account_options
@@ -54,11 +67,11 @@ namespace graphene { namespace chain {
       extensions_type        extensions;
 
       /// True if account (author) allows subscription
-      bool allow_subscription;
+      bool allow_subscription = false;
       /// Price for subscription per one subscription period
       asset price_per_subscribe;
       /// Minimal duration of subscription in days
-      uint32_t subscription_period;
+      uint32_t subscription_period = 0;
 
       void validate()const;
    };
@@ -84,12 +97,6 @@ namespace graphene { namespace chain {
       asset           fee;
       /// This account pays the fee. Must be a lifetime member.
       account_id_type registrar;
-
-      /// This account receives a portion of the fee split between registrar and referrer. Must be a member.
-      account_id_type referrer;
-      /// Of the fee split between registrar and referrer, this percentage goes to the referrer. The rest goes to the
-      /// registrar.
-      uint16_t        referrer_percent = 0;
 
       string          name;
       authority       owner;
@@ -190,11 +197,11 @@ namespace graphene { namespace chain {
 FC_REFLECT(graphene::chain::account_options, (memo_key)(voting_account)(num_witness)(votes)(extensions)
            (allow_subscription)(price_per_subscribe)(subscription_period))
 
+FC_REFLECT(graphene::chain::publishing_rights, (is_publishing_manager)(publishing_rights_received)(publishing_rights_forwarded))
+
 FC_REFLECT(graphene::chain::account_create_operation::ext, (null_ext)(buyback_options))
 FC_REFLECT( graphene::chain::account_create_operation,
-            (fee)(registrar)
-            (referrer)(referrer_percent)
-            (name)(owner)(active)(options)(extensions)
+            (fee)(registrar)(name)(owner)(active)(options)(extensions)
           )
 
 FC_REFLECT(graphene::chain::account_update_operation::ext, (null_ext))

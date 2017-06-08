@@ -55,7 +55,6 @@ struct get_impacted_account_visitor
    void operator()( const account_create_operation& op )
    {
       _impacted.insert( op.registrar );
-      _impacted.insert( op.referrer );
       add_authority_accounts( _impacted, op.owner );
       add_authority_accounts( _impacted, op.active );
    }
@@ -139,9 +138,12 @@ struct get_impacted_account_visitor
    void operator()( const vesting_balance_withdraw_operation& op ) {}
    void operator()( const custom_operation& op ) {}
    void operator()( const assert_operation& op ) {}
+   void operator()( const set_publishing_manager_operation& op ) { _impacted.insert( op.from ); }
+   void operator()( const set_publishing_right_operation& op ) { _impacted.insert( op.from ); }
    void operator()( const content_submit_operation& op) { _impacted.insert(op.author); }
+   void operator()( const content_cancellation_operation& op) { _impacted.insert(op.author); }
    void operator()( const request_to_buy_operation& op) { _impacted.insert(op.consumer); }
-   void operator()( const leave_rating_operation& op) { _impacted.insert(op.consumer);}
+   void operator()( const leave_rating_and_comment_operation& op) { _impacted.insert(op.consumer);}
    void operator()( const ready_to_publish_operation& op) { _impacted.insert(op.seeder); }
    void operator()( const proof_of_custody_operation& op) { _impacted.insert(op.seeder);}
    void operator()( const deliver_keys_operation& op) {  _impacted.insert(op.seeder);}

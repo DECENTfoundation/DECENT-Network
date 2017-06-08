@@ -74,7 +74,7 @@ namespace graphene { namespace chain {
             assert_operation,
             content_submit_operation,
             request_to_buy_operation,
-            leave_rating_operation,
+            leave_rating_and_comment_operation,
             ready_to_publish_operation,
             proof_of_custody_operation,
             deliver_keys_operation,
@@ -82,6 +82,9 @@ namespace graphene { namespace chain {
             subscribe_by_author_operation,
             automatic_renewal_of_subscription_operation,
             report_stats_operation,
+            set_publishing_manager_operation,
+            set_publishing_right_operation,
+            content_cancellation_operation,
             disallow_automatic_renewal_of_subscription_operation,  // VIRTUAL
             return_escrow_submission_operation,                    // VIRTUAL
             return_escrow_buying_operation,                        // VIRTUAL

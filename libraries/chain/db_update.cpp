@@ -224,25 +224,18 @@ void database::update_expired_feeds()
 {
    auto& asset_idx = get_index_type<asset_index>().indices().get<by_type>();
    auto itr = asset_idx.lower_bound( true /** market issued */ );
-   while( itr != asset_idx.end() )
-   {
-      const asset_object& a = *itr;
+   while( itr != asset_idx.end() ) {
+      const asset_object &a = *itr;
       ++itr;
-      assert( a.is_monitored_asset() );
+      assert(a.is_monitored_asset());
 
       bool feed_is_expired;
-      feed_is_expired = a.options.monitored_asset_opts->feed_is_expired( head_block_time() );
-      if( feed_is_expired )
-      {
-         modify(a, [this](asset_object& ao) {
-            ao.options.monitored_asset_opts->update_median_feeds(head_block_time());
+      feed_is_expired = a.monitored_asset_opts->feed_is_expired(head_block_time());
+      if( feed_is_expired ) {
+         modify(a, [ this ](asset_object &ao) {
+              ao.monitored_asset_opts->update_median_feeds(head_block_time());
          });
       }
-      if( !a.options.monitored_asset_opts->current_feed.core_exchange_rate.is_null() &&
-          a.options.core_exchange_rate != a.options.monitored_asset_opts->current_feed.core_exchange_rate )
-         modify(a, [](asset_object& a) {
-            a.options.core_exchange_rate = a.options.monitored_asset_opts->current_feed.core_exchange_rate;
-         });
    }
 }
 

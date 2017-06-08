@@ -1,6 +1,6 @@
 #include <cstddef>
 
-#include <graphene/package/package.hpp>
+#include <decent/package/package.hpp>
 
 #include <boost/interprocess/sync/named_recursive_mutex.hpp>
 
@@ -148,7 +148,7 @@ void pm_sandbox()
         package_manager.release_package(package_handle);
 
 
-        package_handle = package_manager.get_package("/ipfs/QmWgZbg73wrgicmPradJcK51nY99o2fX8dt7pBJ8rUaurJ");
+        package_handle = package_manager.get_package("/ipfs/QmWgZbg73wrgicmPradJcK51nY99o2fX8dt7pBJ8rUaurJ", fc::ripemd160());
         package_handle->add_event_listener(std::make_shared<MyEventListener>());
 
         {

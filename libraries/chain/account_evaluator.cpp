@@ -31,8 +31,10 @@
 #include <graphene/chain/exceptions.hpp>
 #include <graphene/chain/hardfork.hpp>
 #include <graphene/chain/internal_exceptions.hpp>
+#include <graphene/chain/transaction_detail_object.hpp>
 
 #include <algorithm>
+#include <graphene/chain/subscription_object.hpp>
 
 namespace graphene { namespace chain {
 
@@ -105,16 +107,11 @@ object_id_type account_create_evaluator::do_apply( const account_create_operatio
 { try {
 
    database& d = db();
-   uint16_t referrer_percent = o.referrer_percent;
+
    const auto& new_acnt_object = db().create<account_object>( [&]( account_object& obj ){
          obj.registrar = o.registrar;
-         obj.referrer = o.referrer;
-         obj.lifetime_referrer = o.referrer(db()).lifetime_referrer;
 
          auto& params = db().get_global_properties().parameters;
-         obj.network_fee_percentage = params.network_percent_of_fee;
-         obj.lifetime_referrer_fee_percentage = params.lifetime_referrer_percent_of_fee;
-         obj.referrer_rewards_percentage = referrer_percent;
 
          obj.name             = o.name;
          obj.owner            = o.owner;
@@ -149,6 +146,18 @@ object_id_type account_create_evaluator::do_apply( const account_create_operatio
          a.buyback_account = new_acnt_object.id;
       } );
    }
+
+   db().create<transaction_detail_object>([&o, &new_acnt_object, &d](transaction_detail_object& obj)
+                                          {
+                                             obj.m_operation_type = (uint8_t)transaction_detail_object::account_create;
+
+                                             obj.m_from_account = o.registrar;
+                                             obj.m_to_account = new_acnt_object.id;
+                                             obj.m_transaction_amount = asset();
+                                             obj.m_transaction_fee = o.fee;
+                                             obj.m_str_description = string();
+                                             obj.m_timestamp = d.head_block_time();
+                                          });
 
    return new_acnt_object.id;
 } FC_CAPTURE_AND_RETHROW((o)) }
@@ -191,6 +200,21 @@ void_result account_update_evaluator::do_apply( const account_update_operation& 
       }
       if( o.new_options ){
          elog("setting up new options ${a} ${o}",("o", *o.new_options)("a", a ));
+
+         if( !o.new_options->allow_subscription || a.options.price_per_subscribe != o.new_options->price_per_subscribe
+             || a.options.subscription_period != o.new_options->subscription_period )
+         {
+            const auto& range = d.get_index_type<subscription_index>().indices().get<by_to_renewal>().equal_range( std::make_tuple( a.id, true ) );
+            std::for_each(range.first, range.second, [&](const subscription_object& element) {
+               disallow_automatic_renewal_of_subscription_operation op;
+               op.consumer = element.from;
+               op.subscription = element.id;
+               idump((op));
+
+               db().push_applied_operation(op);
+            });
+         }
+
          a.options = *o.new_options;
 
       }

@@ -26,6 +26,7 @@
 #include <graphene/app/api.hpp>
 #include <graphene/utilities/key_conversion.hpp>
 #include <decent/encrypt/encryptionutils.hpp>
+#include <graphene/chain/transaction_detail_object.hpp>
 
 
 using namespace graphene::app;
@@ -63,6 +64,12 @@ namespace graphene { namespace wallet {
          public_key_type pub_key;
       };
 
+      struct regional_price_info
+      {
+         string region;
+         string amount;
+         string asset_symbol;
+      };
 
       struct wallet_data
       {
@@ -163,12 +170,21 @@ namespace graphene { namespace wallet {
             // but the GUI relies on buying_object_ex::price
             // so overwrite as a quick fix
             price = paid_price;
+            this->id = std::string(obj.id);
          }
          
+         std::string         id;
          std::string         author_account;
          uint32_t            times_bought;
          fc::ripemd160       hash;
          double              AVG_rating;
+      };
+
+      struct rating_object_ex : public rating_object
+      {
+         rating_object_ex(rating_object const& ob)
+         : rating_object(ob) {}
+         std::string author;
       };
 
 
@@ -201,17 +217,6 @@ namespace graphene { namespace wallet {
       namespace detail {
          class wallet_api_impl;
       }
-   
-   struct operation_detail {
-      account_id_type             from_account;
-      account_id_type             to_account;
-      string                      operation_type;
-      asset                       transaction_amount;
-      asset                       transaction_fee;
-      string                      description;
-      fc::time_point_sec          timestamp;
-      operation_history_object    op;
-   };
    
    
    
@@ -302,10 +307,12 @@ namespace graphene { namespace wallet {
           * @brief Get names and IDs for registered accounts that match search term
           * @param term will try to partially match account name or id
           * @param limit Maximum number of results to return -- must not exceed 1000
+          * @param order Sort data by field
+          * @param id object_id to start searching from
           * @return Map of account names to corresponding IDs
           * @ingroup WalletCLI
           */
-         vector<account_object>       search_accounts(const string& term, const string order, uint32_t limit);
+         vector<account_object>       search_accounts(const string& term, const string& order, const string& id, uint32_t limit);
 
          /**
           * @brief List the balances of an account.
@@ -332,18 +339,21 @@ namespace graphene { namespace wallet {
          vector<asset_object>              list_assets(const string& lowerbound, uint32_t limit)const;
 
          /**
-          * @brief Returns the most recent operations on the named account.
+          * @brief Returns the operations on the named account.
           *
-          * This returns a list of operation history objects, which describe activity on the account.
+          * This returns a list of transaction detail object, which describe activity on the account.
           *
-          * @note this API doesn't give a way to retrieve more than the most recent 100 transactions,
-          *       you can interface directly with the blockchain to get more history
-          * @param name the name or id of the account
+          * @param account_name the name or id of the account
+          * @param order Sort data by field
+          * @param id object_id to start searching from
           * @param limit the number of entries to return (starting from the most recent) (max 100)
-          * @returns a list of \c operation_history_objects
+          * @returns a list of \c transaction_detail_object
           * @ingroup WalletCLI
           */
-         vector<operation_detail>  get_account_history(string name, const string& order, int limit)const;
+         vector<class transaction_detail_object> search_account_history(string const& account_name,
+                                                                        string const& order,
+                                                                        string const& id,
+                                                                        int limit) const;
 
          /**
           *
@@ -791,8 +801,6 @@ namespace graphene { namespace wallet {
                                              public_key_type owner,
                                              public_key_type active,
                                              string  registrar_account,
-                                             string  referrer_account,
-                                             uint32_t referrer_percent,
                                              bool broadcast = false);
 
          /**
@@ -983,6 +991,32 @@ namespace graphene { namespace wallet {
          signed_transaction cancel_order(object_id_type order_id, bool broadcast = false);
 
          /**
+          * @brief Creates a new user-issued
+          *
+          * Many options can be changed later using \c update_asset()
+          *
+          * Right now this function is difficult to use because you must provide raw JSON data
+          * structures for the options objects, and those include prices and asset ids.
+          *
+          * @param issuer the name or id of the account who will pay the fee and become the
+          *               issuer of the new asset.  This can be updated later
+          * @param symbol the ticker symbol of the new asset
+          * @param precision the number of digits of precision to the right of the decimal point,
+          *                  must be less than or equal to 12
+          * @param description asset description
+          * @param max_supply maximum amount of coins to be issued
+          * @param broadcast true to broadcast the transaction on the network
+          * @returns the signed transaction creating a new asset
+          * @ingroup WalletCLI
+          */
+         signed_transaction create_asset(string issuer,
+                                         string symbol,
+                                         uint8_t precision,
+                                         string description,
+                                         uint64_t max_supply,
+                                         bool broadcast = false);
+
+         /**
           * @brief Creates a new user-issued or market-issued asset.
           *
           * Many options can be changed later using \c update_asset()
@@ -995,19 +1029,17 @@ namespace graphene { namespace wallet {
           * @param symbol the ticker symbol of the new asset
           * @param precision the number of digits of precision to the right of the decimal point,
           *                  must be less than or equal to 12
-          * @param common asset options required for all new assets.
-          *               Note that core_exchange_rate technically needs to store the asset ID of
-          *               this new asset. Since this ID is not known at the time this operation is
-          *               created, create this price as though the new asset has instance ID 1, and
-          *               the chain will overwrite it with the new asset's ID.
+          * @param description asset description
+          * @param options MIA options
           * @param broadcast true to broadcast the transaction on the network
           * @returns the signed transaction creating a new asset
           * @ingroup WalletCLI
           */
-         signed_transaction create_asset(string issuer,
+         signed_transaction create_marked_issued_asset(string issuer,
                                          string symbol,
                                          uint8_t precision,
-                                         asset_options common,
+                                         string description,
+                                         monitored_asset_options options,
                                          bool broadcast = false);
 
          /**
@@ -1040,15 +1072,16 @@ namespace graphene { namespace wallet {
           * @param symbol the name or id of the asset to update
           * @param new_issuer if changing the asset's issuer, the name or id of the new issuer.
           *                   null if you wish to remain the issuer of the asset
-          * @param new_options the new asset_options object, which will entirely replace the existing
-          *                    options.
+          * @param description new asset description, replacing current one
+          * @param max_supply new supply limit, replacing current one
           * @param broadcast true to broadcast the transaction on the network
           * @returns the signed transaction updating the asset
           * @ingroup WalletCLI
           */
          signed_transaction update_asset(string symbol,
                                          optional<string> new_issuer,
-                                         asset_options new_options,
+                                         string description,
+                                         uint64_t max_supply,
                                          bool broadcast = false);
 
          /**
@@ -1071,6 +1104,13 @@ namespace graphene { namespace wallet {
                                                    bool broadcast = false);
 
 
+         /**
+          * @brief Converts price denominated in Monitored asset into DCT, using actual price feed.
+          * @param price Price in DCT or monitored asset
+          * @return Price in DCT
+          * @ingroup WalletCLI
+          */
+         asset price_to_dct(asset price);
 
          /**
           * @brief Publishes a price feed for the named asset.
@@ -1426,9 +1466,52 @@ namespace graphene { namespace wallet {
          real_supply get_real_supply()const;
 
          /**
-          * @brief Submits content to the blockchain.
+          * @brief This method is used to promote account to publishing manager.
+          * Such an account can grant or remove right to publish a content. Only DECENT account has permission to use this method.
+          * @see set_publishing_right()
+          * @param from Account ( DECENT account ) giving/removing status of the publishing manager.
+          * @param to List of accounts getting status of the publishing manager.
+          * @param is_allowed True to give the status, false to remove it
+          * @param broadcast True to broadcast the transaction on the network
+          * @return The signed transaction updating account status
+          * @ingroup WalletCLI
+          */
+         signed_transaction set_publishing_manager(const string from,
+                                                   const vector<string> to,
+                                                   bool is_allowed,
+                                                   bool broadcast);
+
+         /**
+          * @brief Allows account to publish a content. Only account with publishing manager status has permission to use this method.
+          * @see set_publishing_manager()
+          * @param from Account giving/removing right to publish a content.
+          * @param to List of accounts getting right to publish a content.
+          * @param is_allowed True to give the right, false to remove it
+          * @param broadcast True to broadcast the transaction on the network
+          * @return The signed transaction updating account status
+          * @ingroup WalletCLI
+          */
+         signed_transaction set_publishing_right(const string from,
+                                                 const vector<string> to,
+                                                 bool is_allowed,
+                                                 bool broadcast);
+
+         /**
+          * @brief Get a list of accounts holding publishing manager status.
+          * @param lower_bound_name The name of the first account to return.  If the named account does not exist,
+          * the list will start at the account that comes after \c lowerbound
+          * @param limit The maximum number of accounts to return (max: 100)
+          * @return List of accounts
+          * @ingroup WalletCLI
+          */
+         vector<account_id_type> list_publishing_managers( const string& lower_bound_name, uint32_t limit );
+
+         /**
+          * @brief Submits or resubmits content to the blockchain. In a case of resubmit, co-authors, price and synopsis fields
+          * can be modified.
           * @see submit_content_new()
           * @param author The author of the content
+          * @param co_authors The co-authors' account name or ID mapped to corresponding payment split based on basis points
           * @param URI The URI of the content
           * @param price_asset_name Ticker symbol of the asset which will be used to buy content
           * @param price_amounts The price of the content per regions
@@ -1448,9 +1531,9 @@ namespace graphene { namespace wallet {
           */
          signed_transaction
          submit_content(string const& author,
+                        vector< pair< string, uint32_t>> co_authors,
                         string const& URI,
-                        string const& price_asset_name,
-                        vector <pair<string, string>> const& price_amounts,
+                        vector <regional_price_info> const& price_amounts,
                         uint64_t size,
                         fc::ripemd160 const& hash,
                         vector<account_id_type> const& seeders,
@@ -1469,6 +1552,7 @@ namespace graphene { namespace wallet {
           * @see upload_package()
           * @see submit_content()
           * @param author The author of the content
+          * @param co_authors The co-authors' account name or ID mapped to corresponding payment split based on basis points
           * @param content_dir Path to the directory containing all content that should be packed
           * @param samples_dir Path to the directory containing samples of content
           * @param protocol Protocol for uploading package( magnet or IPFS)
@@ -1481,16 +1565,29 @@ namespace graphene { namespace wallet {
           * @return The signed transaction submitting the content
           * @ingroup WalletCLI
           */
-         fc::ripemd160  submit_content_new(string const& author,
-                                               string const& content_dir,
-                                               string const& samples_dir,
-                                               string const& protocol,
-                                               string const& price_asset_symbol,
-                                               vector <pair<string, string>> const& price_amounts,
-                                               vector<account_id_type> const& seeders,
-                                               fc::time_point_sec const& expiration,
-                                               string const& synopsis,
-                                               bool broadcast = false);
+
+         fc::ripemd160 submit_content_async(string const &author,
+                                          vector< pair< string, uint32_t>> co_authors,
+                                          string const &content_dir, string const &samples_dir,
+                                          string const &protocol,
+                                          vector<regional_price_info> const &price_amounts,
+                                          vector<account_id_type> const &seeders,
+                                          fc::time_point_sec const &expiration, string const &synopsis,
+                                          bool broadcast);
+
+
+         /**
+          * @brief This function can be used to cancel submitted content. This content is immediately not available to purchase.
+          * Seeders keep seeding this content in next 24 hours.
+          * @param author The author of the content
+          * @param URI The URI of the content
+          * @param broadcast True to broadcast the transaction on the network
+          * @ingroup WalletCLI
+          * @return signed transaction
+          */
+         signed_transaction content_cancellation(string author,
+                                                 string URI,
+                                                 bool broadcast);
 
          /**
           * @brief Downloads encrypted content specified by provided URI.
@@ -1521,70 +1618,48 @@ namespace graphene { namespace wallet {
           * @return The signed transaction requesting buying of the content
           * @ingroup WalletCLI
           */
-         signed_transaction request_to_buy(string consumer, string URI, string price_asset_name, string price_amount, bool broadcast);
+         signed_transaction request_to_buy(string consumer,
+                                           string URI,
+                                           string price_asset_name,
+                                           string price_amount,
+                                           string str_region_code_from,
+                                           bool broadcast);
 
          /**
-          * @brief Rates a content.
+          * @brief This method allows user to start seeding plugin from running application
+          * @param account_id_type_or_name Name or ID of account controlling this seeder
+          * @param content_private_key El Gamal content private key
+          * @param seeder_private_key Private key of the account controlling this seeder
+          * @param free_space Allocated disk space, in MegaBytes
+          * @param seeding_price price per MegaBytes
+          * @ingroup WalletCLI
+          */
+         void seeding_startup( string account_id_type_or_name,
+                               DInteger content_private_key,
+                               string seeder_private_key,
+                               uint64_t free_space,
+                               uint32_t seeding_price,
+                               string packages_path);
+
+         /**
+          * @brief Rates and/or comments a content.
           * @param consumer Consumer giving the rating
           * @param URI The URI of the content
           * @param rating Rating
+          * @param comment Comment
           * @param broadcast true to broadcast the transaction on the network
-          * @return The signed transaction adding the rate to the content
           * @ingroup WalletCLI
           */
-         signed_transaction leave_rating(string consumer,
-                                         string URI,
-                                         uint64_t rating,
-                                         bool broadcast = false);
-
-         /**
-          * @brief This function is used to register a new seeder, modify the existing seeder or to extend seeder's lifetime.
-          * @param seeder The account becoming a seeder
-          * @param space Available space on seeder's disc dedicated to contents
-          * @param price_per_MByte The price charged to consumer for downloading 1 MB from seeder
-          * @param broadcast true to broadcast the transaction on the network
-          * @return The signed transaction registering or modifying the seeder
-          * @ingroup WalletCLI
-          */
-         signed_transaction ready_to_publish(string seeder,
-                                             uint64_t space,
-                                             uint32_t price_per_MByte,
-                                             vector<string> ipfs_IDs,
-                                             bool broadcast = false);
-
-         /**
-          * @brief
-          * @param seeder
-          * @param URI The URI of the content
-          * @param package
-          * @param broadcast true to broadcast the transaction on the network
-          * @return
-          * @ingroup WalletCLI
-          */
-         signed_transaction proof_of_custody(string seeder,
-                                             string URI,
-                                             string package,
-                                             bool broadcast = false);
-
-         /**
-          * @brief This function is used to send encrypted share of a content and proof of delivery to consumer.
-          * @param seeder The seeder of the content
-          * @param privKey Seeder's private key used to decrypt encrypted share of the content
-          * @param buying The buying object
-          * @param broadcast true to broadcast the transaction on the network
-          * @return The signed transaction delivering encrypted share from seeder to consumer
-          * @ingroup WalletCLI
-          */
-         signed_transaction deliver_keys(string seeder,
-                                         DInteger privKey,
-                                         buying_id_type buying,
-                                         bool broadcast = false);
+         void leave_rating_and_comment(string consumer,
+                                       string URI,
+                                       uint64_t rating,
+                                       string comment,
+                                       bool broadcast = false);
 
          /**
           * @brief Creates a subscription to author. This function is used by consumers.
           * @param from Account who wants subscription to author
           * @param to The author you wish to subscribe to
-          * @param duration Duration of subscription in days
           * @param price_amount Price for the subscription
           * @param price_asset_symbol Ticker symbol of the asset which will be used to buy subscription
           * @param broadcast True if you wish to broadcast the transaction
@@ -1593,7 +1668,6 @@ namespace graphene { namespace wallet {
           */
          signed_transaction subscribe_to_author( string from,
                                                  string to,
-                                                 uint32_t duration,
                                                  string price_amount,
                                                  string price_asset_symbol,
                                                  bool broadcast/* = false */);
@@ -1602,14 +1676,12 @@ namespace graphene { namespace wallet {
           * @brief Creates a subscription to author. This function is used by author.
           * @param from The account obtaining subscription from the author
           * @param to The name or id of the author
-          * @param duration Duration of subscription in days
           * @param broadcast True if you wish to broadcast the transaction
           * @return The signed transaction subscribing the consumer to the author
           * @ingroup WalletCLI
           */
          signed_transaction subscribe_by_author( string from,
                                                  string to,
-                                                 uint32_t duration,
                                                  bool broadcast/* = false */);
 
          /**
@@ -1706,7 +1778,14 @@ namespace graphene { namespace wallet {
           * @return Pair of ElGamal keys
           * @ingroup WalletCLI
           */
-         el_gamal_key_pair generate_el_gamal_keys();
+         el_gamal_key_pair generate_el_gamal_keys() const;
+
+         /**
+          * @brief Generates AES encryption key.
+          * @return Random encryption key
+          * @ingroup WalletCLI
+          */
+         DInteger generate_encryption_key() const;
 
          /**
           * @brief Get a list of open buyings
@@ -1744,10 +1823,16 @@ namespace graphene { namespace wallet {
           * @param account_id_or_name Consumer of the buyings to retrieve
           * @param term Search term to look up in Title and Description
           * @param order Sort data by field
+          * @param id object_id to start searching from
+          * @param count Maximum number of contents to fetch (must not exceed 100)
           * @return History buying objects corresponding to the provided consumer and matching search term
           * @ingroup WalletCLI
           */
-         vector<buying_object_ex> search_my_purchases( const string& account_id_or_name, const string& term, const string& order )const;
+         vector<buying_object_ex> search_my_purchases(const string& account_id_or_name,
+                                                      const string& term,
+                                                      const string& order,
+                                                      const string& id,
+                                                      uint32_t count) const;
 
          /**
          * @brief Get buying (open or history) by consumer and URI
@@ -1759,13 +1844,18 @@ namespace graphene { namespace wallet {
          optional<buying_object> get_buying_by_consumer_URI( const string& account_id_or_name, const string & URI )const;
 
          /**
-          * @brief Get rating given by a consumer to a content
-          * @param consumer Consumer giving rating
-          * @param URI URI specifying the content
-          * @return Rating, if given, empty otherwise
+          * @brief Search for term in contents (author, title and description)
+          * @param user Feedback author
+          * @param URI the content object uri
+          * @param id The id of feedback object to start searching from
+          * @param count Maximum number of feedbacks to fetch
+          * @return The feedback found
           * @ingroup WalletCLI
           */
-         optional<uint64_t> get_rating( const string& consumer, const string & URI )const;
+         vector<rating_object_ex> search_feedback(const string& user,
+                                                  const string& URI,
+                                                  const string& id,
+                                                  uint32_t count) const;
 
          /**
           * @brief Get a content by URI
@@ -1774,23 +1864,6 @@ namespace graphene { namespace wallet {
           * @ingroup WalletCLI
           */
          optional<content_object> get_content( const string& URI )const;
-
-         /**
-          * @brief Get a list of contents by author
-          * @param author Author of the contents to retrieve
-          * @return The contents corresponding to the provided author
-          * @ingroup WalletCLI
-          */
-         vector<content_object> list_content_by_author( const string& account_id_or_name )const;
-
-         /**
-          * @brief Get a list of contents ordered alphabetically by URI string
-          * @param URI_begin Lower bound of URI strings to retrieve
-          * @param count Maximum number of contents to fetch (must not exceed 100)
-          * @return The contents found
-          * @ingroup WalletCLI
-          */
-         vector<content_summary> list_content( const string& URI_begin, uint32_t count )const;
          
          /**
           * @brief Get a list of contents ordered alphabetically by search term
@@ -1798,30 +1871,38 @@ namespace graphene { namespace wallet {
           * @param order Order field
           * @param user Content owner
           * @param region_code Two letter region code
+          * @param id The id of content object to start searching from
+          * @param type the application and content type to be filtered
           * @param count Maximum number of contents to fetch (must not exceed 100)
           * @return The contents found
           * @ingroup WalletCLI
           */
-         vector<content_summary> search_content( const string& term, const string& order, const string& user, const string& region_code, uint32_t count )const;
+         vector<content_summary> search_content(const string& term,
+                                                const string& order,
+                                                const string& user,
+                                                const string& region_code,
+                                                const string& id,
+                                                const string& type,
+                                                uint32_t count )const;
          /**
           * @brief Get a list of contents ordered alphabetically by search term
           * @param user Content owner
           * @param term seach term
           * @param order Order field
           * @param region_code Two letter region code
+          * @param id The id of content object to start searching from
+          * @param type the application and content type to be filtered
           * @param count Maximum number of contents to fetch (must not exceed 100)
           * @return The contents found
           * @ingroup WalletCLI
           */
-         vector<content_summary> search_user_content( const string& user, const string& term, const string& order, const string& region_code, uint32_t count )const;
-
-         /**
-          * @brief Get a list of contents by times bought, in decreasing order
-          * @param count Maximum number of contents to retrieve
-          * @return The contents found
-          * @ingroup WalletCLI
-          */
-         vector<content_object> list_content_by_bought( uint32_t count )const;
+         vector<content_summary> search_user_content(const string& user,
+                                                     const string& term,
+                                                     const string& order,
+                                                     const string& region_code,
+                                                     const string& id,
+                                                     const string& type,
+                                                     uint32_t count )const;
 
          /**
           * @brief Get a list of seeders by price, in increasing order
@@ -1833,11 +1914,19 @@ namespace graphene { namespace wallet {
 
          /**
           * @brief Get a list of content ratings corresponding to the provided URI
-          * @param URI URI of the content ratings to retrieve
+          * @param URI URI of the content
           * @return The ratings of the content
           * @ingroup WalletCLI
           */
          vector<uint64_t> get_content_ratings( const string& URI )const;
+
+         /**
+          * @brief Get a list of content comments corresponding to the provided URI
+          * @param URI URI of the content
+          * @return Map of accounts to corresponding comments
+          * @ingroup WalletCLI
+          */
+         map<string, string> get_content_comments( const string& URI )const;
 
          /**
           * @brief Get a list of IPFS IDs imported by a seeder
@@ -1863,7 +1952,12 @@ namespace graphene { namespace wallet {
           */
          optional<vector<seeder_object>> list_seeders_by_upload( const uint32_t count )const;
 
-         
+         /**
+          * @brief Get author and list of co-authors of a content corresponding to the provided URI
+          * @param URI URI of the content
+          * @return The autor of the content and the list of co-authors, if provided
+          */
+         pair<account_id_type, vector<account_id_type>> get_author_and_co_authors_by_URI( const string& URI )const;
 
          /**
           * @brief Create package from selected files
@@ -1920,6 +2014,28 @@ namespace graphene { namespace wallet {
          void set_transfer_logs(bool enable) const;
 
          /**
+          * @brief Sign a buffer
+          * @param str_buffer The buffer to be signed
+          * @param str_brainkey Derives the private key used for signature
+          * @return The signed buffer
+          * @ingroup WalletCLI
+          */
+         std::string sign_buffer(std::string const& str_buffer,
+                                 std::string const& str_brainkey) const;
+
+         /**
+          * @brief Verify if the signature is valid
+          * @param str_buffer The original buffer
+          * @param str_publickey The public key used for verification
+          * @param str_signature The signed buffer
+          * @return true if valid, otherwise false
+          * @ingroup WalletCLI
+          */
+         bool verify_signature(std::string const& str_buffer,
+                               std::string const& str_publickey,
+                               std::string const& str_signature) const;
+
+         /**
           * @brief Query the last local block
           * @return the block time
           */
@@ -1947,6 +2063,12 @@ FC_REFLECT( graphene::wallet::brain_key_info,
             (brain_priv_key)
                (wif_priv_key)
                (pub_key)
+)
+
+FC_REFLECT( graphene::wallet::regional_price_info,
+             (region)
+             (amount)
+             (asset_symbol)
 )
 
 FC_REFLECT (graphene::wallet::content_download_status, 
@@ -1980,23 +2102,19 @@ FC_REFLECT_DERIVED( graphene::wallet::vesting_balance_object_with_info, (graphen
 FC_REFLECT_DERIVED( graphene::wallet::buying_object_ex,
                    (graphene::chain::buying_object)
                    (graphene::wallet::content_download_status),
+                   (id)
                    (author_account)
                    (AVG_rating)
                    (times_bought)
                    (hash)
                   )
 
+FC_REFLECT_DERIVED( graphene::wallet::rating_object_ex,
+                   (graphene::chain::rating_object),
+                   (author)
+                   )
 
-FC_REFLECT( graphene::wallet::operation_detail,
-           (from_account)
-           (to_account)
-           (operation_type)
-           (transaction_amount)
-           (transaction_fee)
-           (description)
-           (timestamp)
-           (op)
-        )
+
 
 FC_API( graphene::wallet::wallet_api,
            (help)
@@ -2035,11 +2153,13 @@ FC_API( graphene::wallet::wallet_api,
            (transfer)
            (transfer2)
            (get_transaction_id)
-           //(create_asset)
-           //(update_asset)
+           (create_asset)
+           (create_marked_issued_asset)
+           (update_asset)
            (update_monitored_asset)
            (publish_asset_feed)
-           //(issue_asset)
+           (price_to_dct)
+           (issue_asset)
            (get_asset)
            (get_monitored_asset_data)
            (get_witness)
@@ -2055,7 +2175,7 @@ FC_API( graphene::wallet::wallet_api,
            (get_account_id)
            (get_block)
            (get_account_count)
-           (get_account_history)
+           (search_account_history)
            (get_market_history)
            (get_global_properties)
            (get_dynamic_global_properties)
@@ -2083,13 +2203,15 @@ FC_API( graphene::wallet::wallet_api,
            (get_order_book)
            (download_content)
            (get_download_status)
+           (set_publishing_manager)
+           (set_publishing_right)
+           (list_publishing_managers)
            (submit_content)
-           (submit_content_new)
+           (submit_content_async)
+           (content_cancellation)
            (request_to_buy)
-           (leave_rating)
-           (ready_to_publish)
-           (proof_of_custody)
-           (deliver_keys)
+           (leave_rating_and_comment)
+           (seeding_startup)
            (restore_encryption_key)
            (generate_el_gamal_keys)
            (subscribe_to_author)
@@ -2106,22 +2228,25 @@ FC_API( graphene::wallet::wallet_api,
            (get_buying_history_objects_by_consumer)
            (search_my_purchases)
            (get_buying_by_consumer_URI)
-           (get_rating)
+           (search_feedback)
            (get_content)
            (get_real_supply)
-           (list_content_by_author)
-           (list_content)
            (search_content)
            (search_user_content)
-           (list_content_by_bought)
            (list_publishers_by_price)
            (get_content_ratings)
+           (get_content_comments)
            (list_imported_ipfs_IDs)
+           (list_seeders_ipfs_IDs)
+           (list_seeders_by_upload)
+           (get_author_and_co_authors_by_URI)
            (create_package)
            (extract_package)
            (download_package)
            (upload_package)
            (remove_package)
            (set_transfer_logs)
+           (sign_buffer)
+           (verify_signature)
            (head_block_time)
 )

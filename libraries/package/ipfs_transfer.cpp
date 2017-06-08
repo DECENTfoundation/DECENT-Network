@@ -1,7 +1,8 @@
 
 #include "ipfs_transfer.hpp"
 
-#include <graphene/package/package.hpp>
+#include <decent/package/package.hpp>
+#include <decent/package/package_config.hpp>
 
 #include <boost/filesystem/path.hpp>
 #include <boost/algorithm/string/trim.hpp>
@@ -32,7 +33,7 @@ namespace decent { namespace package {
 
     IPFSDownloadPackageTask::IPFSDownloadPackageTask(PackageInfo& package)
         : detail::PackageTask(package)
-        , _client("localhost", 5001)
+        , _client(PackageManagerConfigurator::instance().get_ipfs_host(), PackageManagerConfigurator::instance().get_ipfs_port())
     {
     }
 
@@ -81,7 +82,7 @@ namespace decent { namespace package {
                 {
                     const auto dir_name = dest_path / link.at("Name");
                     create_directories(dir_name);
-                     ipfs_recursive_get(link.at("Hash"), dir_name);
+                    ipfs_recursive_get(link.at("Hash"), dir_name);
                 }
                 if((int) link.at("Type") == 2 ) //file
                 {
@@ -183,7 +184,7 @@ namespace decent { namespace package {
 
     IPFSStartSeedingPackageTask::IPFSStartSeedingPackageTask(PackageInfo& package)
         : detail::PackageTask(package)
-        , _client("localhost", 5001)
+        , _client(PackageManagerConfigurator::instance().get_ipfs_host(), PackageManagerConfigurator::instance().get_ipfs_port())
     {
     }
 
@@ -281,7 +282,7 @@ namespace decent { namespace package {
 
     IPFSStopSeedingPackageTask::IPFSStopSeedingPackageTask(PackageInfo& package)
         : detail::PackageTask(package)
-        , _client("localhost", 5001)
+        , _client(PackageManagerConfigurator::instance().get_ipfs_host(), PackageManagerConfigurator::instance().get_ipfs_port())
     {
     }
 

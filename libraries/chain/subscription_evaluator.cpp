@@ -15,9 +15,22 @@ void_result subscribe_evaluator::do_evaluate( const subscribe_operation& op )
       FC_ASSERT( to_account != idx.end() , "Author does not exist" );
 
       FC_ASSERT( to_account->options.allow_subscription , "Author does not allow subscription" );
-      period_count = op.duration / to_account->options.subscription_period;
-      FC_ASSERT( period_count >= 1 );
-      FC_ASSERT( op.price >= period_count * to_account->options.price_per_subscribe );
+
+      auto price = to_account->options.price_per_subscribe;
+      asset dct_price;
+      auto ao = db().get( price.asset_id );
+      FC_ASSERT( price.asset_id == asset_id_type(0) || ao.is_monitored_asset() );
+
+      //if the price is in fiat, calculate price in DCT with current exchange rate...
+      if( ao.is_monitored_asset() ){
+         auto rate = ao.monitored_asset_opts->current_feed.core_exchange_rate;
+         FC_ASSERT(!rate.is_null(), "No price feed for this asset");
+         dct_price = price * rate;
+      }else{
+         dct_price = price;
+      }
+
+      FC_ASSERT( op.price >= dct_price );
 
       return void_result();
    } FC_CAPTURE_AND_RETHROW( (op) )
@@ -41,12 +54,12 @@ void_result subscribe_evaluator::do_apply( const subscribe_operation& op )
          if (subscription->expiration < db().head_block_time())
             db().modify<subscription_object>(*subscription, [&](subscription_object &so)
             {
-               so.expiration = time_point_sec( head_block_time_rounded_to_days ) + period_count * to_account->options.subscription_period * 24 * 3600; // seconds
+               so.expiration = time_point_sec( head_block_time_rounded_to_days ) + to_account->options.subscription_period * 24 * 3600; // seconds
             });
          else
             db().modify<subscription_object>(*subscription, [&](subscription_object &so)
             {
-               so.expiration += period_count * to_account->options.subscription_period * 24 * 3600; // seconds
+               so.expiration += to_account->options.subscription_period * 24 * 3600; // seconds
             });
       }
       else
@@ -55,10 +68,13 @@ void_result subscribe_evaluator::do_apply( const subscribe_operation& op )
          {
             so.from = op.from;
             so.to = op.to;
-            so.expiration = time_point_sec( head_block_time_rounded_to_days ) + period_count * to_account->options.subscription_period * 24 * 3600; // seconds
+            so.expiration = time_point_sec( head_block_time_rounded_to_days ) + to_account->options.subscription_period * 24 * 3600; // seconds
             so.automatic_renewal = false;
          });
       }
+
+      db().adjust_balance( op.from, -to_account->options.price_per_subscribe );
+      db().adjust_balance( op.to, to_account->options.price_per_subscribe );
 
       return void_result();
    } FC_CAPTURE_AND_RETHROW( (op) )
@@ -74,8 +90,6 @@ void_result subscribe_by_author_evaluator::do_evaluate( const subscribe_by_autho
       FC_ASSERT(to_account != idx.end(), "Author does not exist");
 
       FC_ASSERT(to_account->options.allow_subscription, "Author does not allow subscription");
-      period_count = op.duration / to_account->options.subscription_period;
-      FC_ASSERT(period_count >= 1);
 
       return void_result();
    } FC_CAPTURE_AND_RETHROW( (op) )
@@ -99,12 +113,12 @@ void_result subscribe_by_author_evaluator::do_apply( const subscribe_by_author_o
          if (subscription->expiration < db().head_block_time())
             db().modify<subscription_object>(*subscription, [&](subscription_object &so)
             {
-               so.expiration = time_point_sec( head_block_time_rounded_to_days ) + period_count * to_account->options.subscription_period * 24 * 3600; // seconds
+               so.expiration = time_point_sec( head_block_time_rounded_to_days ) + to_account->options.subscription_period * 24 * 3600; // seconds
             });
          else
             db().modify<subscription_object>(*subscription, [&](subscription_object &so)
             {
-               so.expiration += period_count * to_account->options.subscription_period * 24 * 3600; // seconds
+               so.expiration += to_account->options.subscription_period * 24 * 3600; // seconds
             });
       }
       else
@@ -113,7 +127,7 @@ void_result subscribe_by_author_evaluator::do_apply( const subscribe_by_author_o
          {
             so.from = op.from;
             so.to = op.to;
-            so.expiration = time_point_sec( head_block_time_rounded_to_days ) + period_count * to_account->options.subscription_period * 24 * 3600; // seconds
+            so.expiration = time_point_sec( head_block_time_rounded_to_days ) + to_account->options.subscription_period * 24 * 3600; // seconds
             so.automatic_renewal = false;
          });
       }

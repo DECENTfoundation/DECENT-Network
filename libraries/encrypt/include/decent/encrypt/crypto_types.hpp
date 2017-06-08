@@ -42,13 +42,10 @@
 #include <fc/io/raw_fwd.hpp>
 #include <fc/array.hpp>
 
-#define DECENT_TESTNET2
-#ifdef DECENT_TESTNET2
+
 #define DECENT_LONG_SHAMIR
 #define DECENT_SECTORS 100
-#else
-#define DECENT_SECTORS 32
-#endif
+
 
 #define SHORT_CURVE 1
 #ifdef SHORT_CURVE
@@ -194,6 +191,11 @@ struct CustodyData{
    uint32_t n; //<number of signatures
    fc::array<int8_t,16> u_seed; //<generator for u's
    fc::array<uint8_t,DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED> pubKey; //<uploaders public key
+
+   bool operator==( const CustodyData& other)const
+   {
+      return n == other.n && u_seed == other.u_seed && pubKey == other.pubKey;
+   }
 };
 
 

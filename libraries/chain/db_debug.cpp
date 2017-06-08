@@ -46,17 +46,11 @@ void database::debug_dump()
    map<asset_id_type,share_type> total_balances;
    map<asset_id_type,share_type> total_debts;
    share_type core_in_orders;
-   share_type reported_core_in_orders;
 
    for( const account_balance_object& a : balance_index )
    {
     //  idump(("balance")(a));
       total_balances[a.asset_type] += a.balance;
-   }
-   for( const account_statistics_object& s : statistics_index )
-   {
-    //  idump(("statistics")(s));
-      reported_core_in_orders += s.total_core_in_orders;
    }
    for( const limit_order_object& o : db.get_index_type<limit_order_index>().indices() )
    {

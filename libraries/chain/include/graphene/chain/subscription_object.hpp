@@ -31,6 +31,7 @@ namespace graphene { namespace chain {
    struct by_from_expiration;
    struct by_to_expiration;
    struct by_renewal;
+   struct by_to_renewal;
 
    typedef multi_index_container<
       subscription_object,
@@ -65,7 +66,7 @@ namespace graphene { namespace chain {
             >,
             ordered_unique< tag< by_to_expiration>,
                composite_key< subscription_object,
-                  member<subscription_object, account_id_type, &subscription_object::from>,
+                  member<subscription_object, account_id_type, &subscription_object::to>,
                   member<subscription_object, time_point_sec, &subscription_object::expiration>
                >,
                composite_key_compare<
@@ -75,6 +76,12 @@ namespace graphene { namespace chain {
             >,
             ordered_non_unique< tag< by_renewal>,
                member<subscription_object, bool, &subscription_object::automatic_renewal>, std::greater<bool>
+            >,
+            ordered_non_unique< tag< by_to_renewal>,
+               composite_key< subscription_object,
+                  member<subscription_object, account_id_type, &subscription_object::to>,
+                  member<subscription_object, bool, &subscription_object::automatic_renewal>
+               >
             >
          >
    >subscription_object_multi_index_type;

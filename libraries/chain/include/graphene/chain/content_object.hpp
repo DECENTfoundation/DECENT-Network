@@ -1,6 +1,8 @@
 #pragma once
 #include <graphene/chain/protocol/types.hpp>
 #include <graphene/chain/protocol/asset.hpp>
+#include <graphene/chain/protocol/decent.hpp>
+
 #include <graphene/db/object.hpp>
 #include <graphene/db/generic_index.hpp>
 
@@ -12,41 +14,11 @@
 #include <vector>
 #include <utility>
 
-#define DECENT_TESTNET2
-#ifdef DECENT_TESTNET2
-#define PRICE_REGIONS
-#endif
+
 
 namespace graphene { namespace chain {
 using namespace decent::encrypt;
 
-   class RegionCodes
-   {
-   public:
-      enum RegionCode
-      {
-         OO_none = 1,
-         OO_all,
-         US,
-         UK
-      };
-      static bool bAuxillary;
-      static map<uint32_t, string> s_mapCodeToName;
-      static map<string, uint32_t> s_mapNameToCode;
-
-      static bool InitCodeAndName();
-   };
-
-   struct PriceRegions
-   {
-      map<uint32_t, asset> map_price;
-
-      optional<asset> GetPrice(uint32_t region_code) const;
-      void SetSimplePrice(asset const& price);
-      void SetRegionPrice(uint32_t region_code, asset const& price);
-      bool Valid(uint32_t region_code) const;
-      bool Valid(string const& region_code) const;
-   };
 
    template <typename basic_type, typename Derived>
    class ContentObjectPropertyBase
@@ -245,13 +217,99 @@ using namespace decent::encrypt;
       vector<value_type> m_arrValues;
    };
 
+   enum class EContentObjectApplication
+   {
+      DecentCore,
+      DecentGo
+   };
    enum class EContentObjectType
    {
-      GUI,
+      None,
       Book
    };
 
-   class ContentObjectType : public ContentObjectPropertyBase<EContentObjectType, ContentObjectType>
+   class ContentObjectTypeValue
+   {
+   public:
+      ContentObjectTypeValue(EContentObjectApplication appID = EContentObjectApplication::DecentCore,
+                             EContentObjectType typeID = EContentObjectType::None)
+      {
+         init(appID, typeID);
+      }
+
+      void to_string(std::string& str_value) const
+      {
+         str_value.clear();
+         for (size_t index = 0; index < type.size(); ++index)
+         {
+            std::string strPart = std::to_string(type[index]);
+            str_value += strPart;
+            if (index < type.size() - 1)
+               str_value += ".";
+         }
+      }
+      void from_string(std::string str_value)
+      {
+         type.clear();
+         uint32_t iValue = 0;
+         size_t pos;
+         while (true)
+         {
+            if (str_value.empty())
+               break;
+            iValue = std::stol(str_value, &pos);
+
+            if (pos == 0)
+               break;
+
+            type.push_back(iValue);
+
+            if (pos == std::string::npos)
+               break;
+            else if (str_value[pos] != '.')
+               break;
+            else
+               str_value = str_value.substr(pos + 1);
+         }
+
+         init();
+      }
+
+      bool filter(ContentObjectTypeValue const& filter)
+      {
+         bool bRes = true;
+         if (filter.type.size() > type.size())
+            bRes = false;
+         else
+         {
+            for (size_t index = 0; index < filter.type.size(); ++index)
+            {
+               if (type[index] != filter.type[index])
+               {
+                  bRes = false;
+                  break;
+               }
+            }
+         }
+
+         return bRes;
+      }
+   private:
+      void init(EContentObjectApplication appID = EContentObjectApplication::DecentCore,
+                EContentObjectType typeID = EContentObjectType::None)
+      {
+         if (type.size() == 0)
+            type.push_back(static_cast<uint32_t>(appID));
+         if (type.size() == 1 &&
+             typeID != EContentObjectType::None)
+            type.push_back(static_cast<uint32_t>(typeID));
+      }
+
+   public:
+      std::vector<uint32_t> type;
+   };
+
+   class ContentObjectType : public ContentObjectPropertyBase<ContentObjectTypeValue, ContentObjectType>
    {
    public:
       using meta_default = bool;
@@ -259,33 +317,19 @@ using namespace decent::encrypt;
 
       static string name()
       {
-         return "type";
+         return "content_type_id";
       }
 
-      static void convert_from_string(string const& str_value, EContentObjectType& type)
+      static void convert_from_string(string const& str_value, ContentObjectTypeValue& type)
       {
-         if (str_value == "GUI")
-            type = EContentObjectType::GUI;
-         else if (str_value == "Book")
-            type = EContentObjectType::Book;
-         else if (str_value == "")
-            type = EContentObjectType::GUI;
-         else
-            throw std::runtime_error("EContentObjectType is in exceptional situation");
+         type.from_string(str_value);
       }
-      static void convert_to_string(EContentObjectType const& type, string& str_value)
+      static void convert_to_string(ContentObjectTypeValue const& type, string& str_value)
       {
-         switch (type)
-         {
-         case EContentObjectType::GUI:
-            str_value = "GUI";
-            break;
-         case EContentObjectType::Book:
-            str_value = "Book";
-            break;
-         }
+         type.to_string(str_value);
       }
    };
+
    class ContentObjectTitle : public ContentObjectPropertyBase<string, ContentObjectTitle>
    {
    public:
@@ -351,9 +395,11 @@ using namespace decent::encrypt;
 
    struct content_summary
    {
+      string id;
       string author;
       asset price;
       string synopsis;
+      fc::ripemd160 _hash;
       string status;
       string URI;
       uint32_t AVG_rating = 0;
@@ -373,41 +419,36 @@ using namespace decent::encrypt;
       static const uint8_t type_id  = impl_content_object_type;
       
       account_id_type author;
+      // If co_authors map is not empty, payout will be splitted.
+      // Maps co-authors to split based on basis points.
+      map<account_id_type, uint32_t> co_authors;
+
       time_point_sec expiration;
       time_point_sec created;
-#ifdef PRICE_REGIONS
       PriceRegions price;
-#else
-      asset price;
-#endif
+
       string synopsis;
       uint64_t size;
       uint32_t quorum;
       string URI;
       map<account_id_type, CiphertextString> key_parts;
       map<account_id_type, time_point_sec> last_proof;
+      bool is_blocked = false;
 
       fc::ripemd160 _hash;
-      uint64_t AVG_rating;
-      uint32_t total_rating;
-      uint32_t times_bought;
+      uint64_t AVG_rating = 0;
+      uint32_t num_of_ratings = 0;
+      uint32_t times_bought = 0;
       asset publishing_fee_escrow;
-      decent::encrypt::CustodyData cd;
+      fc::optional<decent::encrypt::CustodyData> cd;
 
-
-#ifdef PRICE_REGIONS
       template <RegionCodes::RegionCode code>
       share_type get_price_amount_template() const
       {
          FC_ASSERT(price.Valid(code));
          return price.GetPrice(code)->amount;
       }
-#else
-      share_type get_price_amount() const
-      {
-         return price.amount;
-      }
-#endif
+
    };
    
    struct by_author;
@@ -418,33 +459,90 @@ using namespace decent::encrypt;
    struct by_times_bought;
    struct by_expiration;
    struct by_created;
-   
-   
+
+   template <typename TAG, typename _t_object>
+   struct key_extractor;
+
+   template <>
+   struct key_extractor<by_author, content_object>
+   {
+      static account_id_type get(content_object const& ob)
+      {
+         return ob.author;
+      }
+   };
+
+   template <>
+   struct key_extractor<by_URI, content_object>
+   {
+      static std::string get(content_object const& ob)
+      {
+         return ob.URI;
+      }
+   };
+
+   template <>
+   struct key_extractor<by_AVG_rating, content_object>
+   {
+      static uint64_t get(content_object const& ob)
+      {
+         return ob.AVG_rating;
+      }
+   };
+
+   template <>
+   struct key_extractor<by_size, content_object>
+   {
+      static uint64_t get(content_object const& ob)
+      {
+         return ob.size;
+      }
+   };
+
+   template <>
+   struct key_extractor<by_price, content_object>
+   {
+      static share_type get(content_object const& ob)
+      {
+         return ob.get_price_amount_template<RegionCodes::OO_none>();
+      }
+   };
+
+   template <>
+   struct key_extractor<by_expiration, content_object>
+   {
+      static time_point_sec get(content_object const& ob)
+      {
+         return ob.expiration;
+      }
+   };
+
+   template <>
+   struct key_extractor<by_created, content_object>
+   {
+      static time_point_sec get(content_object const& ob)
+      {
+         return ob.created;
+      }
+   };
+
    typedef multi_index_container<
       content_object,
          indexed_by<
             ordered_unique< tag<by_id>,
                member< object, object_id_type, &object::id >
             >,
-   
-   
+
+
             ordered_non_unique<tag<by_author>,
                member<content_object, account_id_type, &content_object::author>
             >,
             ordered_unique<tag<by_URI>,
                member<content_object, string, &content_object::URI>
             >,
-   
-#ifdef PRICE_REGIONS
             ordered_non_unique<tag<by_price>,
             const_mem_fun<content_object, share_type, &content_object::get_price_amount_template<RegionCodes::OO_none>>
             >,
-#else
-            ordered_non_unique<tag<by_price>,
-            const_mem_fun<content_object, share_type, &content_object::get_price_amount>
-            >,
-#endif
-
             ordered_non_unique<tag<by_size>,
                member<content_object, uint64_t, &content_object::size>
             >,
@@ -459,7 +557,7 @@ using namespace decent::encrypt;
             ordered_non_unique<tag<by_expiration>,
                member<content_object, time_point_sec, &content_object::expiration>
             >,
-   
+
             ordered_non_unique<tag<by_created>,
                member<content_object, time_point_sec, &content_object::created>
             >
@@ -474,9 +572,10 @@ using namespace decent::encrypt;
 
 FC_REFLECT_DERIVED(graphene::chain::content_object,
                    (graphene::db::object),
-                   (author)(expiration)(created)(price)(size)(synopsis)
-                   (URI)(quorum)(key_parts)(_hash)(last_proof)
-                   (AVG_rating)(total_rating)(times_bought)(publishing_fee_escrow)(cd) )
+                   (author)(co_authors)(expiration)(created)(price)(size)(synopsis)
+                   (URI)(quorum)(key_parts)(_hash)(last_proof)(is_blocked)
+                   (AVG_rating)(num_of_ratings)(times_bought)(publishing_fee_escrow)(cd) )
 
-FC_REFLECT( graphene::chain::content_summary, (author)(price)(synopsis)(status)(URI)(AVG_rating)(size)(expiration)(created)(times_bought) )
+FC_REFLECT( graphene::chain::content_summary, (id)(author)(price)(synopsis)(status)(URI)(_hash)(AVG_rating)(size)(expiration)(created)(times_bought) )
 FC_REFLECT( graphene::chain::PriceRegions, (map_price) )
+FC_REFLECT( graphene::chain::ContentObjectTypeValue, (type) )

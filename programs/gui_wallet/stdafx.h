@@ -6,6 +6,7 @@
 #include <QHeaderView>
 #include <QLabel>
 #include <QMouseEvent>
+#include <QStackedWidget>
 #include <QGraphicsDropShadowEffect>
 #include <QDateTime>
 #include <QFrame>
@@ -13,8 +14,10 @@
 #include <QMessageBox>
 #include <QFileDialog>
 #include <QWidget>
+#include <QProgressBar>
 #include <QLineEdit>
 #include <QPushButton>
+#include <QComboBox>
 #include <QHeaderView>
 #include <QMenuBar>
 #include <QMoveEvent>
@@ -27,6 +30,7 @@
 #include <QStackedWidget>
 #include <QRect>
 #include <QFont>
+#include <QFontDatabase>
 #include <QTableWidgetItem>
 #include <QResource>
 #include <QStringList>
@@ -45,6 +49,10 @@
 #include <QStatusBar>
 #include <QSignalMapper>
 #include <Qtimer>
+#include <QHBoxLayout>
+#include <QVBoxLayout>
+#include <QTextStream>
+#include <QLocale>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -91,7 +99,6 @@
 #include <graphene/chain/content_object.hpp>
 #include <graphene/wallet/wallet.hpp>
 #include <graphene/utilities/dirhelper.hpp>
-#include <graphene/chain/config.hpp>
 
 #include <cryptopp/integer.h>
 #include <cryptopp/aes.h>

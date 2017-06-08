@@ -34,9 +34,14 @@
 #include <graphene/chain/market_object.hpp>
 #include <graphene/chain/transaction_object.hpp>
 #include <graphene/chain/withdraw_permission_object.hpp>
+#include <graphene/seeding/seeding_utility.hpp>
 
 #include <fc/crypto/hex.hpp>
 #include <fc/smart_ref_impl.hpp>
+
+namespace decent { namespace seeding {
+      fc::promise<decent::seeding::seeding_plugin_startup_options>::ptr seeding_promise;
+}}
 
 namespace graphene { namespace app {
 
@@ -135,6 +140,15 @@ namespace graphene { namespace app {
        _app.p2p_node()->broadcast_transaction(trx);
     }
 
+    fc::variant network_broadcast_api::broadcast_transaction_synchronous(const signed_transaction& trx)
+    {
+       fc::promise<fc::variant>::ptr pr( new fc::promise<fc::variant>() );
+       broadcast_transaction_with_callback( [=]( const fc::variant& v ){
+            pr->set_value(v);
+       }, trx );
+       return fc::future<fc::variant>(pr).wait();
+    }
+
     void network_broadcast_api::broadcast_block( const signed_block& b )
     {
        _app.chain_database()->push_block(b, 0, false);
@@ -183,6 +197,26 @@ namespace graphene { namespace app {
     void network_node_api::set_advanced_node_parameters(const fc::variant_object& params)
     {
        return _app.p2p_node()->set_advanced_node_parameters(params);
+    }
+
+    void network_node_api::seeding_startup(const account_id_type& account_id,
+                                           const DInteger& content_private_key,
+                                           const fc::ecc::private_key& seeder_private_key,
+                                           const uint64_t free_space,
+                                           const uint32_t seeding_price,
+                                           const string packages_path)
+    {
+       FC_ASSERT( free_space > 0 );
+       FC_ASSERT( seeding_price >= 0 );
+
+       decent::seeding::seeding_plugin_startup_options seeding_options;
+       seeding_options.seeder = account_id;
+       seeding_options.content_private_key = content_private_key;
+       seeding_options.seeder_private_key = seeder_private_key;
+       seeding_options.free_space = free_space;
+       seeding_options.seeding_price = seeding_price;
+       seeding_options.packages_path = packages_path;
+       decent::seeding::seeding_promise->set_value( seeding_options );
     }
 
     fc::api<network_broadcast_api> login_api::network_broadcast()const

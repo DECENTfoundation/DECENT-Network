@@ -41,7 +41,7 @@
 #include <graphene/egenesis/egenesis.hpp>
 #include <graphene/utilities/key_conversion.hpp>
 #include <graphene/wallet/wallet.hpp>
-#include <graphene/package/package.hpp>
+#include <decent/package/package.hpp>
 #include <graphene/utilities/dirhelper.hpp>
 
 #include <fc/interprocess/signals.hpp>
@@ -188,6 +188,7 @@ int main( int argc, char** argv )
        ("wallet-file,w", bpo::value<string>()->implicit_value("wallet.json"), "wallet to load")
        ("chain-id", bpo::value<string>(), "chain ID to connect to")
        ("skip", bpo::value<size_t>(), "skip accounts")
+       ("testnet", bpo::value<size_t>(), "testnet version 1 or 2")
        ;
 
       bpo::variables_map options;
@@ -331,11 +332,19 @@ int main( int argc, char** argv )
            
            size_t i_users_get = 100;
            size_t i_users_got = 0;
+           size_t i_testnet = 1;
            
            if( options.count("skip") )
            {
                i_users_got = options.at("skip").as<size_t>();
            }
+           
+           // specify testnet version
+           if( options.count("testnet") )
+           {
+               i_testnet = options.at("testnet").as<size_t>();
+           }
+           
 
            
            bool b_all_accounts_have_right_amount = true;
@@ -346,6 +355,8 @@ int main( int argc, char** argv )
            {
                string str_response;
                curl_test_func("https://api.decent.ch/v1.0/subscribers/" +
+                              std::to_string(i_testnet) +
+                              "/" +
                               std::to_string(i_users_got) +
                               "/" +
                               std::to_string(i_users_get) +

@@ -1,7 +1,7 @@
 #include "torrent_transfer.hpp"
 
 #include <decent/encrypt/encryptionutils.hpp>
-#include <graphene/package/package.hpp>
+#include <decent/package/package.hpp>
 #include <graphene/utilities/dirhelper.hpp>
 
 #include <libtorrent/alert_types.hpp>

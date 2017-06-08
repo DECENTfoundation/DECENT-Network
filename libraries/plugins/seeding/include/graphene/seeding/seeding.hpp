@@ -5,7 +5,8 @@
 #include <graphene/db/object.hpp>
 #include <graphene/db/generic_index.hpp>
 #include <graphene/chain/protocol/types.hpp>
-#include <graphene/package/package.hpp>
+#include <graphene/seeding/seeding_utility.hpp>
+#include <decent/package/package.hpp>
 
 namespace decent { namespace seeding {
 
@@ -52,7 +53,8 @@ public:
    string URI; //<Content address
    fc::ripemd160 _hash; //<Content hash
    fc::time_point_sec expiration; //<Content expiration
-   decent::encrypt::CustodyData cd; //<Content custody data
+   fc::optional<decent::encrypt::CustodyData> cd; //<Content custody data
+
    account_id_type seeder; //<Seeder seeding this content managed by this plugin
    decent::encrypt::CiphertextString key; //<Decryption key part
 
@@ -60,7 +62,7 @@ public:
 };
 
 typedef graphene::chain::object_id< SEEDING_PLUGIN_SPACE_ID, seeding_object_type,  my_seeding_object>     my_seeding_id_type;
-typedef graphene::chain::object_id< SEEDING_PLUGIN_SPACE_ID, seeding_object_type,  my_seeder_object>     my_seeder_id_type;
+typedef graphene::chain::object_id< SEEDING_PLUGIN_SPACE_ID, seeder_object_type,  my_seeder_object>     my_seeder_id_type;
 
 struct by_id;
 struct by_URI;
@@ -125,16 +127,27 @@ public:
    void generate_por2( const my_seeding_object& so, decent::package::package_handle_t package_handle );
 
    /**
-    * Handle newly submitted content. If it is content managed by one of our seeders, download it.
+    * Process new content, from content_object
+    * @param co Content object
+    */
+   void handle_new_content(const content_object& co);
+
+   /**
+    * Process new content, from operation. If the content is managed by local seeder, it is downloaded, and meta are stored in local db.
+    * @param cs_op
+    */
+   void handle_new_content(const content_submit_operation& cs_op);
+   /**
+    * Handle newly submitted or resubmitted content. If it is content managed by one of our seeders, download it.
     * @param op_obj The operation wrapper carrying content submit operation
     */
-   void handle_content_submit(const operation_history_object &op_obj);
+   void handle_content_submit(const content_submit_operation &op);
 
    /**
     * Handle request to buy. If it is concerning one of content seeded by the plugin, provide decryption key parts in deliver key
     * @param op_obj The operation wrapper carrying content request to buy operation
     */
-   void handle_request_to_buy(const operation_history_object &op_obj);
+   void handle_request_to_buy(const request_to_buy_operation &op);
 
    /**
     * Called only after the highest known block has been applied. If it is request to buy or content submit, pass it to the corresponding handler
@@ -146,7 +159,7 @@ public:
    /**
     * Restarts all downloads and seeding upon application start
     */
-   void restart_downloads();
+   void restore_state();
 
    /**
     * Generates and broadcasts RtP operation
@@ -180,7 +193,8 @@ public:
       //_my->database().remove(mso);
       elog("seeding plugin: package_download_error(): Failed downloading package ${s}", ("s", _url));
 
-      //auto& pm = decent::package::PackageManager::instance();
+      auto& pm = decent::package::PackageManager::instance();
+      _pi->download(false);
       //pm.release_package(_pi);
    };
 
@@ -202,7 +216,6 @@ public:
       //_pi->remove_event_listener(shared_from_this());
       _pi->start_seeding();
       //Don't block package manager thread for too long.
-      fc::url download_url(_url);
       _my->service_thread->async([ = ]() { _my->generate_por2(*mso_itr, _pi); });
    };
 };
@@ -234,6 +247,11 @@ class seeding_plugin : public graphene::app::plugin
        * @param options
        */
       void plugin_initialize(const boost::program_options::variables_map& options) override;
+      /**
+       * Pre-startup step of the seeding plugin
+       * @param seeding_options
+       */
+      void plugin_pre_startup( const seeding_plugin_startup_options& seeding_options );
       /**
        * Start the plugin and begin work.
        */

@@ -42,6 +42,7 @@
 #include <graphene/chain/withdraw_permission_object.hpp>
 #include <graphene/chain/witness_object.hpp>
 #include <graphene/chain/witness_schedule_object.hpp>
+#include <graphene/chain/transaction_detail_object.hpp>
 
 #include <graphene/chain/account_evaluator.hpp>
 #include <graphene/chain/asset_evaluator.hpp>
@@ -135,6 +136,7 @@ void database::initialize_evaluators()
    register_evaluator<withdraw_permission_update_evaluator>();
    register_evaluator<withdraw_permission_delete_evaluator>();
    register_evaluator<content_submit_evaluator>();
+   register_evaluator<content_cancellation_evaluator>();
    register_evaluator<request_to_buy_evaluator>();
    register_evaluator<leave_rating_evaluator>();
    register_evaluator<ready_to_publish_evaluator>();
@@ -149,6 +151,8 @@ void database::initialize_evaluators()
    register_evaluator<return_escrow_submission_evaluator>();
    register_evaluator<return_escrow_buying_evaluator>();
    register_evaluator<report_stats_evaluator>();
+   register_evaluator<set_publishing_manager_evaluator>();
+   register_evaluator<set_publishing_right_evaluator>();
 }
 
 void database::initialize_indexes()
@@ -161,7 +165,6 @@ void database::initialize_indexes()
 
    auto acnt_index = add_index< primary_index<account_index> >();
    acnt_index->add_secondary_index<account_member_index>();
-   acnt_index->add_secondary_index<account_referrer_index>();
 
    add_index< primary_index<witness_index> >();
    add_index< primary_index<limit_order_index > >();
@@ -189,6 +192,7 @@ void database::initialize_indexes()
    add_index< primary_index< content_index                                > >();
    add_index< primary_index< buying_index                                 > >();
    add_index< primary_index< subscription_index                                 > >();
+   add_index< primary_index< transaction_detail_index                     > >();
 }
 
 void database::init_genesis(const genesis_state_type& genesis_state)
@@ -228,9 +232,8 @@ void database::init_genesis(const genesis_state_type& genesis_state)
        a.statistics = create<account_statistics_object>([&](account_statistics_object& s){s.owner = a.id;}).id;
        a.owner.weight_threshold = 1;
        a.active.weight_threshold = 1;
-       a.registrar = a.lifetime_referrer = a.referrer = GRAPHENE_WITNESS_ACCOUNT;
-       a.network_fee_percentage = GRAPHENE_DEFAULT_NETWORK_PERCENT_OF_FEE;
-       a.lifetime_referrer_fee_percentage = GRAPHENE_100_PERCENT - GRAPHENE_DEFAULT_NETWORK_PERCENT_OF_FEE;
+       a.registrar = GRAPHENE_WITNESS_ACCOUNT;
+
    }).get_id() == GRAPHENE_WITNESS_ACCOUNT);
 
    FC_ASSERT(create<account_object>([this](account_object& a) {
@@ -238,9 +241,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
        a.statistics = create<account_statistics_object>([&](account_statistics_object& s){s.owner = a.id;}).id;
        a.owner.weight_threshold = 1;
        a.active.weight_threshold = 1;
-       a.registrar = a.lifetime_referrer = a.referrer = GRAPHENE_NULL_ACCOUNT;
-       a.network_fee_percentage = 0;
-       a.lifetime_referrer_fee_percentage = GRAPHENE_100_PERCENT;
+       a.registrar = GRAPHENE_WITNESS_ACCOUNT;
    }).get_id() == GRAPHENE_NULL_ACCOUNT);
 
    FC_ASSERT(create<account_object>([this](account_object& a) {
@@ -248,9 +249,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
        a.statistics = create<account_statistics_object>([&](account_statistics_object& s){s.owner = a.id;}).id;
        a.owner.weight_threshold = 0;
        a.active.weight_threshold = 0;
-       a.registrar = a.lifetime_referrer = a.referrer = GRAPHENE_TEMP_ACCOUNT;
-       a.network_fee_percentage = GRAPHENE_DEFAULT_NETWORK_PERCENT_OF_FEE;
-       a.lifetime_referrer_fee_percentage = GRAPHENE_100_PERCENT - GRAPHENE_DEFAULT_NETWORK_PERCENT_OF_FEE;
+       a.registrar = GRAPHENE_WITNESS_ACCOUNT;
    }).get_id() == GRAPHENE_TEMP_ACCOUNT);
 
    FC_ASSERT(create<account_object>([this](account_object& a) {
@@ -258,9 +257,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
        a.statistics = create<account_statistics_object>([&](account_statistics_object& s){s.owner = a.id;}).id;
        a.owner.weight_threshold = 1;
        a.active.weight_threshold = 1;
-       a.registrar = a.lifetime_referrer = a.referrer = GRAPHENE_NULL_ACCOUNT;
-       a.network_fee_percentage = 0;
-       a.lifetime_referrer_fee_percentage = GRAPHENE_100_PERCENT;
+       a.registrar = GRAPHENE_WITNESS_ACCOUNT;
    }).get_id() == GRAPHENE_PROXY_TO_SELF_ACCOUNT);
 
    // Create more special accounts
@@ -274,9 +271,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
           a.statistics = create<account_statistics_object>([&](account_statistics_object& s){s.owner = a.id;}).id;
           a.owner.weight_threshold = 1;
           a.active.weight_threshold = 1;
-          a.registrar = a.lifetime_referrer = a.referrer = account_id_type(id);
-          a.network_fee_percentage = GRAPHENE_DEFAULT_NETWORK_PERCENT_OF_FEE;
-          a.lifetime_referrer_fee_percentage = GRAPHENE_100_PERCENT - GRAPHENE_DEFAULT_NETWORK_PERCENT_OF_FEE;
+          a.registrar = GRAPHENE_WITNESS_ACCOUNT;
       });
       FC_ASSERT( acct.get_id() == account_id_type(id) );
       remove( acct );
@@ -290,13 +285,9 @@ void database::init_genesis(const genesis_state_type& genesis_state)
    const asset_object& core_asset =
      create<asset_object>( [&]( asset_object& a ) {
          a.symbol = GRAPHENE_SYMBOL;
-         a.options.max_supply = genesis_state.max_core_supply;
+         a.max_supply = genesis_state.max_core_supply;
          a.precision = GRAPHENE_BLOCKCHAIN_PRECISION_DIGITS;
          a.issuer = GRAPHENE_NULL_ACCOUNT;
-         a.options.core_exchange_rate.base.amount = 1;
-         a.options.core_exchange_rate.base.asset_id = asset_id_type(0);
-         a.options.core_exchange_rate.quote.amount = 1;
-         a.options.core_exchange_rate.quote.asset_id = asset_id_type(0);
          a.dynamic_asset_data_id = dyn_asset.id;
       });
    assert( asset_id_type(core_asset.id) == asset().asset_id );
@@ -313,13 +304,10 @@ void database::init_genesis(const genesis_state_type& genesis_state)
          });
       const asset_object& asset_obj = create<asset_object>( [&]( asset_object& a ) {
          a.symbol = "SPECIAL" + std::to_string( id );
-         a.options.max_supply = 0;
+         a.max_supply = 0;
          a.precision = GRAPHENE_BLOCKCHAIN_PRECISION_DIGITS;
          a.issuer = GRAPHENE_NULL_ACCOUNT;
-         a.options.core_exchange_rate.base.amount = 1;
-         a.options.core_exchange_rate.base.asset_id = asset_id_type(0);
-         a.options.core_exchange_rate.quote.amount = 1;
-         a.options.core_exchange_rate.quote.asset_id = asset_id_type(0);
+
          a.dynamic_asset_data_id = dyn_asset.id;
       });
       FC_ASSERT( asset_obj.get_id() == asset_id_type(id) );
@@ -415,28 +403,29 @@ void database::init_genesis(const genesis_state_type& genesis_state)
    map<asset_id_type, share_type> total_supplies;
    map<asset_id_type, share_type> total_debts;
 
-   // Create initial assets
+   // Create initial assets. Only monitored assets are supported in decent genesis
    for( const genesis_state_type::initial_asset_type& asset : genesis_state.initial_assets )
    {
+
       asset_id_type new_asset_id = get_index_type<asset_index>().get_next_id();
       total_supplies[ new_asset_id ] = 0;
 
       asset_dynamic_data_id_type dynamic_data_id;
 
       dynamic_data_id = create<asset_dynamic_data_object>([&](asset_dynamic_data_object& d) {
-         d.accumulated_fees = asset.accumulated_fees;
+         d.accumulated_fees = 0;
       }).id;
 
-      total_supplies[ new_asset_id ] += asset.accumulated_fees;
-
       create<asset_object>([&](asset_object& a) {
+         monitored_asset_options mao;
+         a.monitored_asset_opts = mao;
          a.symbol = asset.symbol;
-         a.options.description = asset.description;
+         a.description = asset.description;
          a.precision = asset.precision;
          string issuer_name = asset.issuer_name;
          a.issuer = get_account_id(issuer_name);
-         a.options.max_supply = asset.max_supply;
-        a.dynamic_asset_data_id = dynamic_data_id;
+         a.max_supply = 0;
+         a.dynamic_asset_data_id = dynamic_data_id;
       });
    }
 

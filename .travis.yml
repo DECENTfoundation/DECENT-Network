@@ -8,7 +8,8 @@ os:
 
 osx_image: xcode8.2
 
-dist: xerus
+#dist: xerus - no Ubuntu 16 on travis-cl
+dist: trusty
 
 compiler:
   - gcc
@@ -17,17 +18,19 @@ compiler:
 env:
   - DECENT_CMAKE_GENERATOR="Unix Makefiles" DECENT_CMAKE_BUILD_TYPE="Release"
 #  - DECENT_CMAKE_GENERATOR="Unix Makefiles" DECENT_CMAKE_BUILD_TYPE="Debug"
-  - DECENT_CMAKE_GENERATOR="Xcode" DECENT_CMAKE_BUILD_TYPE="Release"
+##  - DECENT_CMAKE_GENERATOR="Xcode" DECENT_CMAKE_BUILD_TYPE="Release"
 #  - DECENT_CMAKE_GENERATOR="Xcode" DECENT_CMAKE_BUILD_TYPE="Debug"
 
 matrix:
   exclude:
     - os: osx
       compiler: gcc
+##    - os: linux
+##      env: DECENT_CMAKE_GENERATOR="Xcode" DECENT_CMAKE_BUILD_TYPE="Release"
+##    - os: linux
+##      env: DECENT_CMAKE_GENERATOR="Xcode" DECENT_CMAKE_BUILD_TYPE="Debug"
     - os: linux
-      env: DECENT_CMAKE_GENERATOR="Xcode" DECENT_CMAKE_BUILD_TYPE="Release"
-    - os: linux
-      env: DECENT_CMAKE_GENERATOR="Xcode" DECENT_CMAKE_BUILD_TYPE="Debug"
+      compiler: clang
 
 
 
@@ -41,7 +44,12 @@ before_install:
   - perl -pi -e 's/https\:\/\/github\.com\/DECENTfoundation\/pbc\.git/git\@github\.com\:DECENTfoundation\/pbc\.git/' .gitmodules
   - perl -pi -e 's/https\:\/\/github\.com\/DECENTfoundation\/DECENT-GUI\.git/git\@github\.com\:DECENTfoundation\/DECENT-GUI\.git/' .gitmodules
   - git submodule update --init --recursive
-
+#- if [ "$TRAVIS_OS_NAME" == "linux" ] ; then lsb_release -a ; fi
+#- if [ "$TRAVIS_OS_NAME" == "linux" ] ; then sudo add-apt-repository --yes ppa:ubuntu-sdk-team/ppa ; fi
+#- if [ "$TRAVIS_OS_NAME" == "linux" ] ; then sudo apt-get update -y; fi
+#- if [ "$TRAVIS_OS_NAME" == "linux" ] ; then sudo add-apt-repository --yes universe ; fi
+#- if [ "$TRAVIS_OS_NAME" == "linux" ] ; then sudo apt-get update -y; fi
+#- if [ "$TRAVIS_OS_NAME" == "linux" ] ; then sudo apt-get install -y libqt5svg5-dev ; fi
 
 
 install:
@@ -61,6 +69,7 @@ install:
   - if [ "$TRAVIS_OS_NAME" == "linux" ] ; then mkdir -p $TRAVIS_BUILD_DIR/../third-party && cd $TRAVIS_BUILD_DIR/../third-party && wget https://sourceforge.net/projects/boost/files/boost/1.60.0/boost_1_60_0.tar.gz && tar xf boost_1_60_0.tar.gz && mkdir boost-1.60.0_prefix && cd boost_1_60_0 && export BOOST_ROOT=$(realpath ../boost-1.60.0_prefix) && ./bootstrap.sh --prefix=$BOOST_ROOT && ( ./b2 install | sed -u -n '1~50{p}' | sed -u -e 's/^.*$//' | nl -ba ) && cd .. && rm -rf boost_1_60_0 boost_1_60_0.tar.gz ; fi
   # Install macOS prerequisites.
   - if [ "$TRAVIS_OS_NAME" == "osx" ] ; then brew update && brew install doxygen && brew upgrade && brew cleanup && brew doctor && brew tap homebrew/versions && brew update && brew Install automake autoconf libtool cmake berkeley-db boost160 qt5 cryptopp doxygen byacc flex gettext git pbc gmp ipfs openssl readline && brew doctor ; fi
+
 
 script:
   - DECENT_CMAKE_TARGET_ALL="all"
