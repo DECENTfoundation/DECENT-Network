@@ -90,23 +90,20 @@ private:
    QString  m_key;
 };
 //
-// UserInfoDialog
+// UserInfoWidget
 //
-class UserInfoDialog : public QDialog
+class UserInfoWidget : public StackLayerWidget
 {
    Q_OBJECT
 public:
-   UserInfoDialog(QWidget* parent,
-               const QString& registrar,
-               const QString& referrer,
-               const QString& lifetime_referrer,
-               const QString& network_fee_percentage,
-               const QString& lifetime_referrer_fee_percentage,
-               const QString& referrer_rewards_percentage,
-               const QString& name,
-               const QString& id
-               );
-
+   UserInfoWidget(QWidget* parent,
+                  const bool&    is_publishing_manager,
+                  const bool is_publishing_rights_received,
+                  const QString& registrar,
+                  const QString& name,
+                  const QString& id
+                  );
+   
 };
 //
 // ContentInfoWidget

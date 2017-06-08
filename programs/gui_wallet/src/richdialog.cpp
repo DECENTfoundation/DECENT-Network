@@ -306,48 +306,56 @@ void ImportKeyWidget::Import()
    }
 }
 //
-// UserInfoDialog
+//UserInfoWidget
 //
-UserInfoDialog::UserInfoDialog(QWidget* parent,
-                               const QString& registrar,
-                               const QString& referrer,
-                               const QString& lifetime_referrer,
-                               const QString& network_fee_percentage,
-                               const QString& lifetime_referrer_fee_percentage,
-                               const QString& referrer_rewards_percentage,
-                               const QString& name,
-                               const QString& id
-                               )
-   : QDialog(parent)
+   
+UserInfoWidget::UserInfoWidget(QWidget* parent,
+                     const bool&    is_publishing_manager,
+                     const bool     is_publishing_rights_received,
+                     const QString& registrar,
+                     const QString& name,
+                     const QString& id
+                     )
+   : StackLayerWidget(parent)
 {
+   int labelCount = 0;
    QVBoxLayout* main_layout = new QVBoxLayout();
    main_layout->setSpacing(0);
    main_layout->setContentsMargins(0, 0, 0, 0);
    
    DecentLabel* registrarLabel = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
+   ++labelCount;
    registrarLabel->setText(tr("Registrar\n") + registrar);
    main_layout->addWidget(registrarLabel);
-
-   DecentLabel* referrerLabel = new DecentLabel(this, DecentLabel::RowLabel);
-   referrerLabel->setText(tr("Referrer\n") + registrar);
-   main_layout->addWidget(referrerLabel);
    
-   DecentLabel* lifetimeReferrerLabel = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
-   lifetimeReferrerLabel->setText((tr("Lifetime Referrer\n") + lifetime_referrer));
-   main_layout->addWidget(lifetimeReferrerLabel);
+   if(is_publishing_manager)
+   {
+      DecentLabel* managerIsPublishingLabel = new DecentLabel(this, DecentLabel::RowLabel);
+      ++labelCount;
+      managerIsPublishingLabel->setText((tr("Publishing manager")));
+      main_layout->addWidget(managerIsPublishingLabel);
+   }
    
-   DecentLabel* networkFeeLabel = new DecentLabel(this, DecentLabel::RowLabel);
-   networkFeeLabel->setText((tr("Network Fee Percentage\n") + network_fee_percentage));
-   main_layout->addWidget(networkFeeLabel);
+   if(is_publishing_rights_received)
+   {
+      DecentLabel* isPublishingRightsReceivedLabel;
+      if(labelCount % 2 == 0)
+         isPublishingRightsReceivedLabel = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
+      else
+         isPublishingRightsReceivedLabel = new DecentLabel(this, DecentLabel::RowLabel);
+      ++labelCount;
+      isPublishingRightsReceivedLabel->setText((tr("Have rights to publish")));
+      main_layout->addWidget(isPublishingRightsReceivedLabel);
+   }
    
-   DecentLabel* lifetimeReferrerFeeLabel = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
-   lifetimeReferrerFeeLabel->setText((tr("Lifetime Referrer Fee Percentage\n") + lifetime_referrer_fee_percentage));
-   main_layout->addWidget(lifetimeReferrerFeeLabel);
+   DecentButton* backButton = new DecentButton(this, DecentButton::DialogCancel);
+   backButton->setText("Back");
+   QHBoxLayout* buttonLayout = new QHBoxLayout();
+   buttonLayout->addWidget(backButton, Qt::AlignCenter);
+   buttonLayout->setContentsMargins(0, 20, 0, 0);
+   main_layout->addLayout(buttonLayout);
+   QObject::connect(backButton, &QPushButton::clicked, this, &StackLayerWidget::closed);
    
-   DecentLabel* referrerRewardsPercentageLabel = new DecentLabel(this, DecentLabel::RowLabel);
-   referrerRewardsPercentageLabel->setText((tr("Referrer Rewards Percentage\n") + referrer_rewards_percentage));
-   main_layout->addWidget(referrerRewardsPercentageLabel);
-
    setWindowTitle(name + " (" + id + ")");
    setLayout(main_layout);
 }
