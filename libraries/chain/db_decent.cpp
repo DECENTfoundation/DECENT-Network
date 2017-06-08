@@ -134,12 +134,10 @@ void database::decent_housekeeping()
    }
 }
 
-share_type database::get_witness_budget()
+share_type database::get_new_asset_per_block()
 {
    //get age in blocks
    auto now = head_block_num();
-
-   const global_property_object& gpo = get_global_properties();
 
    uint64_t block_reward;
    if( now < DECENT_SPLIT_1 )
@@ -152,6 +150,16 @@ share_type database::get_witness_budget()
       block_reward = DECENT_BLOCK_REWARD_4;
    else
       block_reward = DECENT_BLOCK_REWARD_5;
+
+   return block_reward;
+}
+
+share_type database::get_witness_budget()
+{
+
+   const global_property_object& gpo = get_global_properties();
+
+   share_type block_reward = get_new_asset_per_block();
 
    uint64_t blocks_per_maintenance_interval = gpo.parameters.maintenance_interval / gpo.parameters.block_interval;
 

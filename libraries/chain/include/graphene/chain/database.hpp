@@ -361,6 +361,7 @@ namespace graphene { namespace chain {
           */
          void disallow_automatic_renewal_of_subscription(const subscription_object& subscription);
          void decent_housekeeping();
+         share_type get_new_asset_per_block();
          share_type get_witness_budget();
 
          real_supply get_real_supply()const;

@@ -105,8 +105,14 @@ void database::update_signing_witness(const witness_object& signing_witness, con
    const dynamic_global_property_object& dpo = get_dynamic_global_properties();
    uint64_t new_block_aslot = dpo.current_aslot + get_slot_at_time( new_block.timestamp );
 
+   fc::time_point_sec now = fc::time_point::now();
+   fc::time_point_sec next_maintenance_time = dpo.next_maintenance_time;
+
+   uint32_t blocks_remaining = ( next_maintenance_time.sec_since_epoch() - now.sec_since_epoch() ) / gpo.parameters.block_interval;
+
+
    share_type witness_pay = dpo.witness_budget * gpo.parameters.block_interval;
-   witness_pay /= ( gpo.parameters.maintenance_interval ) ;
+   witness_pay /= ( blocks_remaining );
 
    modify( dpo, [&]( dynamic_global_property_object& _dpo )
    {
