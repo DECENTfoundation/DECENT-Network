@@ -110,9 +110,7 @@ void database::update_signing_witness(const witness_object& signing_witness, con
 
    uint32_t blocks_remaining = ( next_maintenance_time.sec_since_epoch() - now.sec_since_epoch() ) / gpo.parameters.block_interval;
 
-
-   share_type witness_pay = dpo.witness_budget * gpo.parameters.block_interval;
-   witness_pay /= ( blocks_remaining );
+   share_type witness_pay = dpo.witness_budget / blocks_remaining;
 
    modify( dpo, [&]( dynamic_global_property_object& _dpo )
    {
