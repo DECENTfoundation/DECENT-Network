@@ -193,21 +193,12 @@ void Overview_tab::slot_Details()
       int size = accountInfo["rights_to_publish"]["publishing_rights_received"].size();
       bool is_publishing_rights_received = size;
       
-      ChangeUserInfoDialog* dialog = new ChangeUserInfoDialog(nullptr,
-                                                              is_publishing_manager,
-                                                              is_publishing_rights_received,
-                                                              QString::fromStdString(registrar),
-                                                              QString::fromStdString(name),
-                                                              QString::fromStdString(id));
-//      UserInfoDialog* dialog = new UserInfoDialog(nullptr,
-//                                                  QString::fromStdString(registrar),
-//                                                  QString::fromStdString(referrer),
-//                                                  QString::fromStdString(lifetime_referrer),
-//                                                  QString::fromStdString(network_fee_percentage),
-//                                                  QString::fromStdString(lifetime_referrer_fee_percentage),
-//                                                  QString::fromStdString(referrer_rewards_percentage),
-//                                                  QString::fromStdString(name),
-//                                                  QString::fromStdString(id));
+      UserInfoDialog* dialog = new UserInfoDialog(nullptr,
+                                                  is_publishing_manager,
+                                                  is_publishing_rights_received,
+                                                  QString::fromStdString(registrar),
+                                                  QString::fromStdString(name),
+                                                  QString::fromStdString(id));
       dialog->setAttribute(Qt::WA_DeleteOnClose);
       dialog->open();
    } catch(...) {

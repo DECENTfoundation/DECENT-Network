@@ -306,10 +306,10 @@ void ImportKeyWidget::Import()
    }
 }
 //
-//ChnageUserInfoDialog
+//UserInfoDialog
 //
    
-ChangeUserInfoDialog::ChangeUserInfoDialog(QWidget* parent,
+UserInfoDialog::UserInfoDialog(QWidget* parent,
                      const bool&    is_publishing_manager,
                      const bool is_publishing_rights_received,
                      const QString& registrar,
@@ -326,66 +326,20 @@ ChangeUserInfoDialog::ChangeUserInfoDialog(QWidget* parent,
    registrarLabel->setText(tr("Registrar\n") + registrar);
    main_layout->addWidget(registrarLabel);
    
-   DecentLabel* managerIsPublishingLabel = new DecentLabel(this, DecentLabel::RowLabel);
    if(is_publishing_manager)
-      managerIsPublishingLabel->setText((tr("Manager is publishing")));
-   else
-      managerIsPublishingLabel->setText((tr("manager isn't publishing")));
-   main_layout->addWidget(managerIsPublishingLabel);
+   {
+      DecentLabel* managerIsPublishingLabel = new DecentLabel(this, DecentLabel::RowLabel);
+      managerIsPublishingLabel->setText((tr("Publishing manager")));
+      main_layout->addWidget(managerIsPublishingLabel);
+   }
    
-   DecentLabel* isPublishingRightsReceivedLabel = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
    if(is_publishing_rights_received)
-      isPublishingRightsReceivedLabel->setText((tr("Publishing rights received")));
-   else
-      isPublishingRightsReceivedLabel->setText((tr("Publishing rights don't received")));
-   main_layout->addWidget(isPublishingRightsReceivedLabel);
+   {
+      DecentLabel* isPublishingRightsReceivedLabel = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
+      isPublishingRightsReceivedLabel->setText((tr("Have rights to publish")));
+      main_layout->addWidget(isPublishingRightsReceivedLabel);
+   }
    
-   setWindowTitle(name + " (" + id + ")");
-   setLayout(main_layout);
-}
-//
-// UserInfoDialog
-//
-UserInfoDialog::UserInfoDialog(QWidget* parent,
-                               const QString& registrar,
-                               const QString& referrer,
-                               const QString& lifetime_referrer,
-                               const QString& network_fee_percentage,
-                               const QString& lifetime_referrer_fee_percentage,
-                               const QString& referrer_rewards_percentage,
-                               const QString& name,
-                               const QString& id
-                               )
-   : QDialog(parent)
-{
-   QVBoxLayout* main_layout = new QVBoxLayout();
-   main_layout->setSpacing(0);
-   main_layout->setContentsMargins(0, 0, 0, 0);
-   
-   DecentLabel* registrarLabel = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
-   registrarLabel->setText(tr("Registrar\n") + registrar);
-   main_layout->addWidget(registrarLabel);
-
-   DecentLabel* referrerLabel = new DecentLabel(this, DecentLabel::RowLabel);
-   referrerLabel->setText(tr("Referrer\n") + registrar);
-   main_layout->addWidget(referrerLabel);
-   
-   DecentLabel* lifetimeReferrerLabel = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
-   lifetimeReferrerLabel->setText((tr("Lifetime Referrer\n") + lifetime_referrer));
-   main_layout->addWidget(lifetimeReferrerLabel);
-   
-   DecentLabel* networkFeeLabel = new DecentLabel(this, DecentLabel::RowLabel);
-   networkFeeLabel->setText((tr("Network Fee Percentage\n") + network_fee_percentage));
-   main_layout->addWidget(networkFeeLabel);
-   
-   DecentLabel* lifetimeReferrerFeeLabel = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
-   lifetimeReferrerFeeLabel->setText((tr("Lifetime Referrer Fee Percentage\n") + lifetime_referrer_fee_percentage));
-   main_layout->addWidget(lifetimeReferrerFeeLabel);
-   
-   DecentLabel* referrerRewardsPercentageLabel = new DecentLabel(this, DecentLabel::RowLabel);
-   referrerRewardsPercentageLabel->setText((tr("Referrer Rewards Percentage\n") + referrer_rewards_percentage));
-   main_layout->addWidget(referrerRewardsPercentageLabel);
-
    setWindowTitle(name + " (" + id + ")");
    setLayout(main_layout);
 }

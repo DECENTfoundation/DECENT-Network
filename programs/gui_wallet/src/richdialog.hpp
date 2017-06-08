@@ -97,25 +97,6 @@ class UserInfoDialog : public QDialog
    Q_OBJECT
 public:
    UserInfoDialog(QWidget* parent,
-               const QString& registrar,
-               const QString& referrer,
-               const QString& lifetime_referrer,
-               const QString& network_fee_percentage,
-               const QString& lifetime_referrer_fee_percentage,
-               const QString& referrer_rewards_percentage,
-               const QString& name,
-               const QString& id
-               );
-
-};
-//
-// UserInfoDialog
-//
-class ChangeUserInfoDialog : public QDialog
-{
-   Q_OBJECT
-public:
-   ChangeUserInfoDialog(QWidget* parent,
                   const bool&    is_publishing_manager,
                   const bool is_publishing_rights_received,
                   const QString& registrar,
