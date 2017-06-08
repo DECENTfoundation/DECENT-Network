@@ -225,7 +225,14 @@ using namespace decent::encrypt;
    enum class EContentObjectType
    {
       None,
-      Book
+      Music,
+      Movie,
+      Book,
+      AudioBook,
+      Software,
+      Game,
+      Picture,
+      Document
    };
 
    class ContentObjectTypeValue
