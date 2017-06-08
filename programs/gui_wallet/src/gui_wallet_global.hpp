@@ -141,6 +141,8 @@ namespace gui_wallet
       enum class ConnectionState { Connecting, SyncingUp, Up };
       static Globals& instance();
 
+      void startDaemons(bool replay_blockchain);
+      void stopDaemons();
       std::string getCurrentUser() const;
       WalletAPI& getWallet() const;
       void clear();
@@ -187,6 +189,7 @@ namespace gui_wallet
       QThread* m_p_wallet_operator_thread;
       QTimer* m_p_timer;
       QLocale* m_p_locale;
+      class DaemonDetails* m_p_daemon_details;
       std::string m_str_currentUser;
       std::chrono::steady_clock::time_point m_tp_started;
       std::map<std::string, std::string> m_map_user_id_cache;

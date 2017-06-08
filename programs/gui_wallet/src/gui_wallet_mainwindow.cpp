@@ -44,9 +44,9 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
 , m_ActionInfo(tr("Info"),this)
 , m_ActionHelp(tr("Help"),this)
 , m_ActionImportKey(tr("Import key"),this)
+, m_ActionReplayBlockchain(tr("Replay Blockchain"), this)
 , m_info_dialog()
 {
-   m_iSyncUpCount = 0;
    m_barLeft = new QMenuBar;
    m_barRight = new QMenuBar;
 
@@ -110,7 +110,9 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
    _balanceUpdater.setSingleShot(false);
    _balanceUpdater.setInterval(10000);
    connect(&_balanceUpdater, SIGNAL(timeout()), this, SLOT( currentUserBalanceUpdate() ));
-   _balanceUpdater.start();
+
+   _downloadChecker.setInterval(5000);
+   connect(&_downloadChecker, SIGNAL(timeout()), this, SLOT(CheckDownloads()));
 
    connect(m_pCentralWidget, SIGNAL(sendDCT()), this, SLOT(SendDCTSlot()));
 
@@ -130,7 +132,6 @@ Mainwindow_gui_wallet::Mainwindow_gui_wallet()
 
 Mainwindow_gui_wallet::~Mainwindow_gui_wallet()
 {
-   Globals::instance().clear();
 }
 
 void Mainwindow_gui_wallet::SetSplash()
@@ -260,10 +261,6 @@ void Mainwindow_gui_wallet::CloseSplash()
    else
    {
       slot_stackWidgetPop();
-      _downloadChecker.setSingleShot(false);
-      _downloadChecker.setInterval(5000);
-      connect(&_downloadChecker, SIGNAL(timeout()), this, SLOT(CheckDownloads()));
-      _downloadChecker.start();
 
       Globals::instance().statusClearMessage();
 
@@ -275,11 +272,18 @@ void Mainwindow_gui_wallet::slot_connection_status_changed(Globals::ConnectionSt
 {
    if (Globals::ConnectionState::Up == to)
    {
-      ++m_iSyncUpCount;
-      if (1 == m_iSyncUpCount)
-      {
-         CloseSplash();
-      }
+      CloseSplash();
+
+      _balanceUpdater.start();
+      _downloadChecker.start();
+   }
+   else if (Globals::ConnectionState::Up != to)
+   {
+      _balanceUpdater.stop();
+      _downloadChecker.stop();
+
+      if (from == Globals::ConnectionState::Up)
+         SetSplash();
    }
 }
 
@@ -288,15 +292,10 @@ void Mainwindow_gui_wallet::currentUserBalanceUpdate()
    std::string userBalanceUpdate = Globals::instance().getCurrentUser();
 
    if (userBalanceUpdate.empty())
-   {
-      m_pCentralWidget->getSendButton()->setEnabled(false);
       return;
-   }
    else
-   {
       UpdateAccountBalances(userBalanceUpdate);
-      m_pCentralWidget->getSendButton()->setEnabled(true);
-   }
+//      m_pCentralWidget->getSendButton()->setEnabled(true);
 }
 
 void Mainwindow_gui_wallet::slot_showPurchasedTab()
@@ -382,21 +381,23 @@ bool Mainwindow_gui_wallet::RunTaskParseImpl(std::string const& str_command, nlo
 
 void Mainwindow_gui_wallet::CreateActions()
 {
-    m_ActionExit.setStatusTip( tr("Exit Program") );
-    connect( &m_ActionExit, SIGNAL(triggered()), this, SLOT(close()) );
+   m_ActionExit.setStatusTip( tr("Exit Program") );
+   connect( &m_ActionExit, SIGNAL(triggered()), this, SLOT(close()) );
 
-    m_ActionAbout.setStatusTip( tr("About") );
-    connect( &m_ActionAbout, SIGNAL(triggered()), this, SLOT(AboutSlot()) );
+   m_ActionAbout.setStatusTip( tr("About") );
+   connect( &m_ActionAbout, SIGNAL(triggered()), this, SLOT(AboutSlot()) );
 
-    m_ActionHelp.setStatusTip( tr("Help") );
-    connect( &m_ActionHelp, SIGNAL(triggered()), this, SLOT(HelpSlot()) );
+   m_ActionHelp.setStatusTip( tr("Help") );
+   connect( &m_ActionHelp, SIGNAL(triggered()), this, SLOT(HelpSlot()) );
 
-    m_ActionInfo.setStatusTip( tr("Info") );
-    connect( &m_ActionInfo, SIGNAL(triggered()), this, SLOT(InfoSlot()) );
+   m_ActionInfo.setStatusTip( tr("Info") );
+   connect( &m_ActionInfo, SIGNAL(triggered()), this, SLOT(InfoSlot()) );
 
-    m_ActionImportKey.setDisabled(true);
-    m_ActionImportKey.setStatusTip( tr("Import key") );
-    connect( &m_ActionImportKey, SIGNAL(triggered()), this, SLOT(ImportKeySlot()) );
+   m_ActionImportKey.setDisabled(true);
+   m_ActionImportKey.setStatusTip( tr("Import key") );
+   connect( &m_ActionImportKey, SIGNAL(triggered()), this, SLOT(ImportKeySlot()) );
+
+   connect( &m_ActionReplayBlockchain, SIGNAL(triggered()), this, SLOT(ReplayBlockChainSlot()) );
 }
 
 
@@ -407,6 +408,7 @@ void Mainwindow_gui_wallet::CreateMenues()
     m_pMenuFile = pMenuBar->addMenu( tr("&File") );
     m_pMenuFile->addAction( &m_ActionExit );
     m_pMenuFile->addAction( &m_ActionImportKey );
+   m_pMenuFile->addAction( &m_ActionReplayBlockchain );
 
 
 
@@ -470,8 +472,8 @@ void Mainwindow_gui_wallet::CurrentUserChangedSlot(const QString& a_new_user)
 }
 
 
-void Mainwindow_gui_wallet::UpdateAccountBalances(const std::string& username) {
-
+void Mainwindow_gui_wallet::UpdateAccountBalances(const std::string& username)
+{
    auto& global_instance = gui_wallet::Globals::instance();
 
    json allAssets;
@@ -648,6 +650,11 @@ void Mainwindow_gui_wallet::ImportKeySlot()
    slot_stackWidgetPush(import_key);
 }
 
+void Mainwindow_gui_wallet::ReplayBlockChainSlot()
+{
+   Globals::instance().stopDaemons();
+   Globals::instance().startDaemons(true);
+}
 
 void Mainwindow_gui_wallet::SendDCTSlot()
 {
