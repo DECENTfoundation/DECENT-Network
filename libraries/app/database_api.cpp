@@ -2175,9 +2175,8 @@ namespace
          content_summary content;
          const auto& idx_account = db.get_index_type<account_index>().indices().get<by_id>();
 
-         ContentObjectPropertyManager type_parser(type);
-         boost::replace_all(type_parser.m_str_synopsis, "'", "\"");   // a dirty hack, again
-         ContentObjectTypeValue filter_type = type_parser.get<ContentObjectType>();
+         ContentObjectTypeValue filter_type;
+         filter_type.from_string(type);
          
          while(count && itr_begin != itr_end)
          {

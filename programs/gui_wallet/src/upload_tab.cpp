@@ -173,17 +173,16 @@ string Upload_tab::getUpdateCommand()
 
    graphene::chain::ContentObjectPropertyManager type_composer;
    graphene::chain::ContentObjectTypeValue type(graphene::chain::EContentObjectApplication::DecentCore);
+   string str_type;
+   type.to_string(str_type);
 
-   type_composer.set<graphene::chain::ContentObjectType>(type);
-   boost::replace_all(type_composer.m_str_synopsis, "\"", "");   // a dirty hack
-   
    return   "search_user_content "
             "\"" + currentUserName + "\" "
             "\"" + m_strSearchTerm.toStdString() + "\" "
             "\"" + m_pTableWidget->getSortedColumn() + "\" "
             "\"\" "   // region_code
             "\"" + next_iterator() + "\" "
-            "\"" + type_composer.m_str_synopsis + "\" "
+            "\"" + str_type + "\" "
             + std::to_string(m_i_page_size + 1);
 }
 
