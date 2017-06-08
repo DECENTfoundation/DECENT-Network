@@ -168,7 +168,6 @@ QMessageBox QPushButton, QFileDialog QPushButton
 QLineEdit
 {
    border: 1px solid rgb(143, 143, 143);
-   padding-left: 0.5em;
 }
 QLineEdit:!enabled
 {

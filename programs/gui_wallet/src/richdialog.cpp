@@ -306,17 +306,17 @@ void ImportKeyWidget::Import()
    }
 }
 //
-//UserInfoDialog
+//UserInfoWidget
 //
    
-UserInfoDialog::UserInfoDialog(QWidget* parent,
+UserInfoWidget::UserInfoWidget(QWidget* parent,
                      const bool&    is_publishing_manager,
                      const bool     is_publishing_rights_received,
                      const QString& registrar,
                      const QString& name,
                      const QString& id
                      )
-   : QDialog(parent)
+   : StackLayerWidget(parent)
 {
    int labelCount = 0;
    QVBoxLayout* main_layout = new QVBoxLayout();
@@ -347,6 +347,14 @@ UserInfoDialog::UserInfoDialog(QWidget* parent,
       isPublishingRightsReceivedLabel->setText((tr("Have rights to publish")));
       main_layout->addWidget(isPublishingRightsReceivedLabel);
    }
+   
+   DecentButton* backButton = new DecentButton(this, DecentButton::DialogCancel);
+   backButton->setText("Back");
+   QHBoxLayout* buttonLayout = new QHBoxLayout();
+   buttonLayout->addWidget(backButton, Qt::AlignCenter);
+   buttonLayout->setContentsMargins(0, 20, 0, 0);
+   main_layout->addLayout(buttonLayout);
+   QObject::connect(backButton, &QPushButton::clicked, this, &StackLayerWidget::closed);
    
    setWindowTitle(name + " (" + id + ")");
    setLayout(main_layout);

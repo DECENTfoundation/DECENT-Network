@@ -193,14 +193,14 @@ void Overview_tab::slot_Details()
       int size = accountInfo["rights_to_publish"]["publishing_rights_received"].size();
       bool is_publishing_rights_received = size;
       
-      UserInfoDialog* dialog = new UserInfoDialog(nullptr,
+      UserInfoWidget* userInfoWidget = new UserInfoWidget(nullptr,
                                                   is_publishing_manager,
                                                   is_publishing_rights_received,
                                                   QString::fromStdString(registrar),
                                                   QString::fromStdString(name),
                                                   QString::fromStdString(id));
-      dialog->setAttribute(Qt::WA_DeleteOnClose);
-      dialog->open();
+      
+      Globals::instance().signal_stackWidgetPush(userInfoWidget);
    } catch(...) {
       // Ignore for now
    }

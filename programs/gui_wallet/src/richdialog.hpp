@@ -90,13 +90,13 @@ private:
    QString  m_key;
 };
 //
-// UserInfoDialog
+// UserInfoWidget
 //
-class UserInfoDialog : public QDialog
+class UserInfoWidget : public StackLayerWidget
 {
    Q_OBJECT
 public:
-   UserInfoDialog(QWidget* parent,
+   UserInfoWidget(QWidget* parent,
                   const bool&    is_publishing_manager,
                   const bool is_publishing_rights_received,
                   const QString& registrar,
