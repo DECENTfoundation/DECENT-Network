@@ -311,31 +311,39 @@ void ImportKeyWidget::Import()
    
 UserInfoDialog::UserInfoDialog(QWidget* parent,
                      const bool&    is_publishing_manager,
-                     const bool is_publishing_rights_received,
+                     const bool     is_publishing_rights_received,
                      const QString& registrar,
                      const QString& name,
                      const QString& id
                      )
    : QDialog(parent)
 {
+   int labelCount = 0;
    QVBoxLayout* main_layout = new QVBoxLayout();
    main_layout->setSpacing(0);
    main_layout->setContentsMargins(0, 0, 0, 0);
    
    DecentLabel* registrarLabel = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
+   ++labelCount;
    registrarLabel->setText(tr("Registrar\n") + registrar);
    main_layout->addWidget(registrarLabel);
    
    if(is_publishing_manager)
    {
       DecentLabel* managerIsPublishingLabel = new DecentLabel(this, DecentLabel::RowLabel);
+      ++labelCount;
       managerIsPublishingLabel->setText((tr("Publishing manager")));
       main_layout->addWidget(managerIsPublishingLabel);
    }
    
    if(is_publishing_rights_received)
    {
-      DecentLabel* isPublishingRightsReceivedLabel = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
+      DecentLabel* isPublishingRightsReceivedLabel;
+      if(labelCount % 2 == 0)
+         isPublishingRightsReceivedLabel = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
+      else
+         isPublishingRightsReceivedLabel = new DecentLabel(this, DecentLabel::RowLabel);
+      ++labelCount;
       isPublishingRightsReceivedLabel->setText((tr("Have rights to publish")));
       main_layout->addWidget(isPublishingRightsReceivedLabel);
    }
