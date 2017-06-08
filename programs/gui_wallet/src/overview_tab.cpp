@@ -18,7 +18,6 @@
 #include "json.hpp"
 #endif
 
-#include <graphene/chain/protocol/types.hpp>
 #include "gui_design.hpp"
 
 // these were included in hpp, let's have these around when needed
