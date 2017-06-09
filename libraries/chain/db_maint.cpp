@@ -135,7 +135,7 @@ void database::initialize_budget_record( fc::time_point_sec now, budget_record& 
    const asset_dynamic_data_object& core_dd = core.dynamic_asset_data_id(*this);
 
    rec.from_initial_reserve = core.reserved(*this);
-   rec.from_accumulated_fees = core_dd.accumulated_fees;
+   rec.from_accumulated_fees = core_dd.accumulated_fees + dpo.witness_budget_from_fees;
    rec.from_unused_witness_budget = dpo.witness_budget;
 
    rec._real_supply = get_real_supply();
@@ -144,6 +144,7 @@ void database::initialize_budget_record( fc::time_point_sec now, budget_record& 
        || (now <= dpo.last_budget_time) )
    {
       rec.time_since_last_budget = 0;
+      rec.witness_budget = rec.from_initial_reserve;
       return;
    }
 
@@ -197,14 +198,13 @@ void database::process_budget()
       budget_record rec;
       initialize_budget_record( now, rec );
 
-      share_type witness_budget = get_witness_budget() ;
+      share_type witness_budget = get_witness_budget(blocks_to_maint) ;
       rec.requested_witness_budget = witness_budget;
 
-      witness_budget = std::min( rec.witness_budget,  witness_budget + rec.from_accumulated_fees);
+      witness_budget = std::min( rec.witness_budget,  witness_budget);
       rec.witness_budget = witness_budget;
 
       rec.supply_delta = rec.witness_budget
-         - rec.from_accumulated_fees
          - rec.from_unused_witness_budget;
 
       modify(core, [&]( asset_dynamic_data_object& _core )
@@ -213,7 +213,6 @@ void database::process_budget()
 
          assert( rec.supply_delta ==
                                    rec.witness_budget
-                                 - _core.accumulated_fees
                                  - dpo.witness_budget
                                 );
          _core.accumulated_fees = 0;
@@ -225,7 +224,8 @@ void database::process_budget()
          // available_funds, we replace it with witness_budget
          // instead of adding it.
          _dpo.witness_budget = witness_budget;
-         _dpo.allocated_witness_budget = witness_budget;
+         _dpo.witness_budget_from_fees = rec.from_accumulated_fees;
+         _dpo.allocated_witness_budget = witness_budget + rec.from_accumulated_fees;
          _dpo.last_budget_time = now;
       });
 

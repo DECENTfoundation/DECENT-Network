@@ -105,18 +105,24 @@ void database::update_signing_witness(const witness_object& signing_witness, con
    const dynamic_global_property_object& dpo = get_dynamic_global_properties();
    uint64_t new_block_aslot = dpo.current_aslot + get_slot_at_time( new_block.timestamp );
 
-   fc::time_point_sec now = fc::time_point::now();
-   fc::time_point_sec next_maintenance_time = dpo.next_maintenance_time;
+   int64_t time_to_maint = (dpo.next_maintenance_time - dpo.last_budget_time ).to_seconds();
+   uint32_t blocks_in_interval = ( uint64_t(time_to_maint) + gpo.parameters.block_interval - 1 ) / gpo.parameters.block_interval;
+   //uint32_t blocks_in_interval = ( gpo.parameters.maintenance_interval ) / gpo.parameters.block_interval;
 
-   uint32_t blocks_in_interval = ( gpo.parameters.maintenance_interval ) / gpo.parameters.block_interval;
+   share_type witness_pay;
+   share_type witness_pay_from_fees;
 
-   share_type witness_pay = dpo.allocated_witness_budget / blocks_in_interval;
+   if( blocks_in_interval ) {
+      witness_pay = dpo.allocated_witness_budget / blocks_in_interval;
+      witness_pay_from_fees = witness_pay - get_new_asset_per_block();
+   }
 
-   ilog("calculating witness pay; witness budget = ${b}, block to main: ${r}, witness pay = ${p}",("b", dpo.witness_budget)("r", blocks_in_interval)("p", witness_pay));
+   ilog("calculating witness pay; witness budget = ${b}, from fees = ${f}, allocated budget = ${a}, blocks: ${r}, witness pay = ${p}",("b", dpo.witness_budget)("f", dpo.witness_budget_from_fees)("a", dpo.allocated_witness_budget )("r", blocks_in_interval)("p", witness_pay));
 
    modify( dpo, [&]( dynamic_global_property_object& _dpo )
    {
-      _dpo.witness_budget -= witness_pay;
+      _dpo.witness_budget -= get_new_asset_per_block();
+      _dpo.witness_budget_from_fees -= witness_pay_from_fees;
    } );
 
    deposit_witness_pay( signing_witness, witness_pay );

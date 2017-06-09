@@ -143,7 +143,7 @@ bool database::is_reward_switch_time() const
 share_type database::get_new_asset_per_block()
 {
    //get age in blocks
-   auto now = head_block_num()+1;
+   auto now = head_block_num();
 
    uint64_t block_reward;
    if( now < DECENT_SPLIT_1 )
@@ -160,16 +160,16 @@ share_type database::get_new_asset_per_block()
    return block_reward;
 }
 
-share_type database::get_witness_budget()
+share_type database::get_witness_budget(uint32_t blocks_to_maint)
 {
 
    const global_property_object& gpo = get_global_properties();
 
    share_type block_reward = get_new_asset_per_block();
 
-   uint64_t blocks_per_maintenance_interval = gpo.parameters.maintenance_interval / gpo.parameters.block_interval;
+   //uint64_t blocks_per_maintenance_interval = gpo.parameters.maintenance_interval / gpo.parameters.block_interval;
 
-   return blocks_per_maintenance_interval * block_reward;
+   return blocks_to_maint * block_reward;
 }
 
 real_supply database::get_real_supply()const
