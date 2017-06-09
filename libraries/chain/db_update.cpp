@@ -113,9 +113,9 @@ void database::update_signing_witness(const witness_object& signing_witness, con
    share_type witness_pay_from_fees;
 
    if( blocks_in_interval ) {
-      witness_pay = dpo.allocated_witness_budget / blocks_in_interval;
+      witness_pay = dpo.allocated_witness_budget / (blocks_in_interval - gpo.parameters.maintenance_skip_slots);
       witness_pay_from_fees = witness_pay - get_new_asset_per_block();
-   }
+   } 
 
    ilog("calculating witness pay; witness budget = ${b}, from fees = ${f}, allocated budget = ${a}, blocks: ${r}, witness pay = ${p}",("b", dpo.witness_budget)("f", dpo.witness_budget_from_fees)("a", dpo.allocated_witness_budget )("r", blocks_in_interval)("p", witness_pay));
 
