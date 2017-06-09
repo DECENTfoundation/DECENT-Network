@@ -366,6 +366,8 @@ namespace graphene { namespace chain {
 
          real_supply get_real_supply()const;
 
+         bool is_reward_switch_time() const;
+
          //////////////////// db_market.cpp ////////////////////
 
          /// @{ @group Market Helpers

@@ -211,7 +211,7 @@ void database::process_budget()
          _core.current_supply = (_core.current_supply + rec.supply_delta );
 
          assert( rec.supply_delta ==
-                                   witness_budget
+                                   rec.witness_budget
                                  - _core.accumulated_fees
                                  - dpo.witness_budget
                                 );

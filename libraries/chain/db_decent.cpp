@@ -134,6 +134,12 @@ void database::decent_housekeeping()
    }
 }
 
+bool database::is_reward_switch_time() const
+{
+   auto now = head_block_num();
+   return ( now == DECENT_SPLIT_1 || now == DECENT_SPLIT_2 || now == DECENT_SPLIT_3 || now == DECENT_SPLIT_4 );
+}
+
 share_type database::get_new_asset_per_block()
 {
    //get age in blocks

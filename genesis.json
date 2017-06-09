@@ -1,6 +1,6 @@
 {
   "initial_timestamp": "2017-05-19T10:52:15",
-  "max_core_supply": "6000000000000000",
+  "max_core_supply": "7318418937456890",
   "initial_parameters": {
     "current_fees": {
       "parameters": [[
@@ -463,7 +463,7 @@
   "initial_balances": [{
       "owner": "decent",
       "asset_symbol": "DCT",
-      "amount": "4000000000000000"
+      "amount": "7319777577456890"
     }
   ],
   "immutable_parameters": {
