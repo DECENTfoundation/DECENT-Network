@@ -240,6 +240,7 @@ void database::process_budget()
          // available_funds, we replace it with witness_budget
          // instead of adding it.
          _dpo.witness_budget = witness_budget;
+         _dpo.allocated_witness_budget = witness_budget;
          _dpo.last_budget_time = now;
       });
 

@@ -108,9 +108,9 @@ void database::update_signing_witness(const witness_object& signing_witness, con
    fc::time_point_sec now = fc::time_point::now();
    fc::time_point_sec next_maintenance_time = dpo.next_maintenance_time;
 
-   uint32_t blocks_remaining = ( next_maintenance_time.sec_since_epoch() - now.sec_since_epoch() ) / gpo.parameters.block_interval;
+   uint32_t blocks_in_interval = ( gpo.parameters.maintenance_interval ) / gpo.parameters.block_interval;
 
-   share_type witness_pay = dpo.witness_budget / blocks_remaining;
+   share_type witness_pay = dpo.allocated_witness_budget / blocks_in_interval;
 
    modify( dpo, [&]( dynamic_global_property_object& _dpo )
    {
