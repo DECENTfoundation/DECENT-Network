@@ -2213,6 +2213,7 @@ FC_API( graphene::wallet::wallet_api,
            (leave_rating_and_comment)
            (seeding_startup)
            (restore_encryption_key)
+           (generate_encryption_key)
            (generate_el_gamal_keys)
            (subscribe_to_author)
            (subscribe_by_author)

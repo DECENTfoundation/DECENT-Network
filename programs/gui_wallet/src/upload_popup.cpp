@@ -23,6 +23,7 @@
 #include <QStyleFactory>
 #include <QSignalMapper>
 #include <QLocale>
+#include <QFileInfo>
 
 #include <graphene/chain/config.hpp>
 #include <graphene/chain/content_object.hpp>
@@ -485,10 +486,11 @@ void Upload_popup::slot_UpdateStatus()
       uint64_t effectiveMB = std::max(1.0, *fileSizeMBytes + 1 - 1.0 / 1024 / 1024);
       uint64_t totalPricePerDay = effectiveMB * publishingPrice;
       uint64_t totalPrice = days * totalPricePerDay;
-
+      m_feePrice = std::to_string(totalPrice);
+      
       emit signal_UploadButtonEnabled(true);
       emit signal_UploadButtonSetText(tr("Publish for") + " " + Globals::instance().asset(totalPrice).getString().c_str());
-   }
+   };
 }
 
 void Upload_popup::slot_BrowseContent()
@@ -540,6 +542,60 @@ void Upload_popup::slot_UploadContent()
 
    string str_seeders = getChosenPublishers().join(", ").toStdString();
 
+   
+   try
+   {
+      QFileInfo file(QString::fromStdString(path));
+      std::string str_file_size = std::to_string(file.size());
+      
+      //create package
+      std::string str_AES_key    = Globals::instance().runTask("generate_encryption_key");
+      nlohmann::json pair   = Globals::instance().runTaskParse("create_package"
+                                                                       " \"" + path + "\""
+                                                                       " \"" + samples_path + "\""
+                                                                       " "   + str_AES_key);
+      
+      std::string str_pair = pair[0].get<std::string>();
+//      str_pair += "[\""           + pair[0].get<std::string>() + "\",{";
+//      str_pair += " \"n\": "        + std::to_string( pair[1]["n"].get<uint>() ) + ",";
+//      str_pair += " \"u_seed\": \"" + pair[1]["u_seed"].get<std::string>() + "\",";
+//      str_pair += " \"pubKey\": \"" + pair[1]["pubKey"].get<std::string>() + "\"}]";
+//      std::cout << "~pair\n" << str_pair << std::endl;
+      
+      //cd
+      std::string cd;
+      cd += "{";
+      cd += " \"n\": "        + std::to_string( pair[1]["n"].get<uint>() ) + ",";
+      cd += " \"u_seed\": \"" + pair[1]["u_seed"].get<std::string>() + "\",";
+      cd += " \"pubKey\": \"" + pair[1]["pubKey"].get<std::string>() + "\"}";
+//      std::cout << "~cd\n" << cd << std::endl;
+      
+      //upload
+      Globals::instance().runTask("upload_package"
+                                          " \"" + str_pair + "\""
+                                          " \"" + "ipfs" + "\"");
+      //submit content
+      std::string _submitCommand = "submit_content";
+      _submitCommand += " " + Globals::instance().getCurrentUser() + "[]";//author
+      _submitCommand += " \"\"";                                            //empty co-author
+      _submitCommand += " \"" + path + "\"";                                //URI
+      _submitCommand += " [{\"region\" : \"\", \"amount\" : \"" + m_price + "\", \"asset_symbol\" : \"" + assetName + "\" }]";//price
+      _submitCommand += " " + str_file_size + "";                           //file size
+      _submitCommand += " {" + str_pair + "}";                              //hash of package
+      _submitCommand += " [" + str_seeders + "]";                          //seeders
+      _submitCommand += " " + std::to_string(m_iKeyParticles) + "";         //quorum
+      _submitCommand += " \"" + m_life_time + "T23:59:59\"";                //expiration
+      _submitCommand += " \"DCT\"";                                         //fee asset
+      _submitCommand += " \"" + m_feePrice + "\"";                          //fee price
+      _submitCommand += " \"" + escape_string(synopsis) + "\"";             //synopsis
+      _submitCommand += " {" + str_AES_key  + "}";                          //AES key
+      _submitCommand += " " + cd + "";                                      //cd
+      _submitCommand += " true";
+      
+      std::cout << "_Submit \n" << _submitCommand << std::endl;
+      std::string res = Globals::instance().runTask(_submitCommand);
+   }catch(...){}
+   
    std::string submitCommand = "submit_content_async";
    submitCommand += " " + Globals::instance().getCurrentUser() + "[]";  // author
    submitCommand += " \"" + path + "\"";                                // URI
@@ -550,10 +606,12 @@ void Upload_popup::slot_UploadContent()
    submitCommand += " \"" + m_life_time + "T23:59:59\"";                // expiration
    submitCommand += " \"" + escape_string(synopsis) + "\"";             // synopsis
    submitCommand += " true";                                            // broadcast
-
+   
+   std::cout << "Submit \n " << submitCommand << std::endl;
+   
    // this is an example how price per regions will be used
    // submitCommand += " [[\"default\", \"0\"], [\"US\", \"10\"]]";
-
+   
    std::string a_result;
    std::string message;
 

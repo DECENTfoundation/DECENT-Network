@@ -46,6 +46,7 @@ namespace gui_wallet
       QDateEdit* m_pLifeTime;
       uint32_t m_iKeyParticles;
       double m_dPrice;
+      std::string m_feePrice;
       QString m_strTitle;
       QString m_strContentPath;
       QString m_strSamplesPath;
