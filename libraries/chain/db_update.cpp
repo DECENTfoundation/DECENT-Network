@@ -106,7 +106,7 @@ void database::update_signing_witness(const witness_object& signing_witness, con
    uint64_t new_block_aslot = dpo.current_aslot + get_slot_at_time( new_block.timestamp );
 
    int64_t time_to_maint = (dpo.next_maintenance_time - dpo.last_budget_time ).to_seconds();
-   uint32_t blocks_in_interval = ( uint64_t(time_to_maint) + gpo.parameters.block_interval - 1 ) / gpo.parameters.block_interval;
+   uint32_t blocks_in_interval = ( uint64_t(time_to_maint) + gpo.parameters.block_interval - 1 ) / gpo.parameters.block_interval - gpo.parameters.maintenance_skip_slots ;
    //uint32_t blocks_in_interval = ( gpo.parameters.maintenance_interval ) / gpo.parameters.block_interval;
 
    share_type witness_pay;
