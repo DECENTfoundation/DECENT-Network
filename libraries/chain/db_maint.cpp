@@ -150,31 +150,15 @@ void database::initialize_budget_record( fc::time_point_sec now, budget_record& 
    int64_t dt = (now - dpo.last_budget_time).to_seconds();
    rec.time_since_last_budget = uint64_t( dt );
 
-   if( rec.from_initial_reserve < 0 ) //this should never happen but better check than sorry
+   rec.witness_budget = rec.from_initial_reserve + rec.from_accumulated_fees + rec.from_unused_witness_budget;
+
+   if( rec.witness_budget < 0 ) //this should never happen but better check than sorry
    {
       elog("from_initial_reserve is negative!");
-      rec.total_budget = 0;
+      rec.witness_budget = 0;
       return;
    }
-   // We'll consider accumulated_fees to be reserved at the BEGINNING
-   // of the maintenance interval.  However, for speed we only
-   // call modify() on the asset_dynamic_data_object once at the
-   // end of the maintenance interval.  Thus the accumulated_fees
-   // are available for the budget at this point, but not included
-   // in core.reserved().
-   share_type reserve = rec.from_initial_reserve + core_dd.accumulated_fees;
-   // Similarly, we consider leftover witness_budget to be burned
-   // at the BEGINNING of the maintenance interval.
-   reserve += dpo.witness_budget;
 
-   //we allocate at most 5% of the reserve per year to witness budget.
-   // This is used iff we don't generate new coins anymore.
-
-   fc::uint128_t budget_u128 = reserve.value;
-   budget_u128 *= 5;
-   budget_u128 /= 100 * 365;
-
-   rec.total_budget = share_type(budget_u128.to_uint64());
 
    return;
 }
@@ -216,7 +200,7 @@ void database::process_budget()
       share_type witness_budget = get_witness_budget();
       rec.requested_witness_budget = witness_budget;
 
-      rec.witness_budget = witness_budget + rec.from_accumulated_fees;
+      rec.witness_budget = std::min( rec.witness_budget,  witness_budget + rec.from_accumulated_fees);
 
       rec.supply_delta = rec.witness_budget
          - rec.from_accumulated_fees
