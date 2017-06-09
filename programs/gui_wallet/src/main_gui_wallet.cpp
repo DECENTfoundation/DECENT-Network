@@ -16,7 +16,7 @@
 #endif
 
 #include "gui_wallet_global.hpp"
-#include "gui_wallet_mainwindow.hpp"
+#include "mainwindow.hpp"
 
 #ifdef _MSC_VER
 #include <Windows.h>
@@ -49,7 +49,7 @@ int main(int argc, char* argv[])
 
    app.setFont(MainFont());
    
-   gui_wallet::Mainwindow_gui_wallet aMainWindow;
+   gui_wallet::MainWindow aMainWindow;
 
    try {
       gui_wallet::Globals::instance().startDaemons(false);

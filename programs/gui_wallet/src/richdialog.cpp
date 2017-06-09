@@ -8,7 +8,6 @@
 #include "decent_label.hpp"
 #include "decent_line_edit.hpp"
 #include "decent_text_edit.hpp"
-#include "gui_wallet_mainwindow.hpp"
 #include "gui_design.hpp"
 #include "decent_text_edit.hpp"
 
@@ -189,7 +188,6 @@ void TransferWidget::memoChanged(const QString & memo)
 
 void TransferWidget::Transfer()
 {
-   std::string a_result;
    std::string message;
    
    if(m_fromUserName.isEmpty())
@@ -206,7 +204,7 @@ void TransferWidget::Transfer()
       "\"" + strAssetSymbol + "\" "
       "\"" + m_memo + "\" "
       "\"true\"";
-      RunTask(run_str.toStdString(), a_result);
+      Globals::instance().runTask(run_str.toStdString());
    } catch(const std::exception& ex){
       message = ex.what();
    }
@@ -283,13 +281,13 @@ void ImportKeyWidget::keyChanged(const QString & key)
 void ImportKeyWidget::Import()
 {
    std::string message;
-   std::string result;
+
    try
    {
       QString csTaskStr = "import_key "
       "\"" + m_userName + "\" "
       "\"" + m_key + "\" ";
-      RunTask(csTaskStr.toStdString(), result);
+      Globals::instance().runTask(csTaskStr.toStdString());
    }
    catch (const std::exception& ex)
    {
@@ -496,13 +494,12 @@ void ContentInfoWidget::Buy()
    downloadCommand += " \"" + m_URI + "\"";                             // URI
    downloadCommand += " \"\"";                                          // region_code
    downloadCommand += " true";                                          // broadcast
-   
-   std::string a_result;
+
    std::string str_error;
    
    try
    {
-      RunTask(downloadCommand, a_result);
+      Globals::instance().runTask(downloadCommand);
    }
    catch(std::exception const& ex)
    {
