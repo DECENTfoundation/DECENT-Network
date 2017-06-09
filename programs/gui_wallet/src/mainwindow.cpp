@@ -48,7 +48,7 @@ MainWindow::MainWindow()
    pMainLayout->setContentsMargins(0,0,0,0);
    pMainLayout->setSpacing(0);
 #ifdef _MSC_VER
-   pCentralLayout->addWidget(pMenuBar);
+   pMainLayout->addWidget(pMenuBar);
 #endif
    pMainLayout->addWidget(m_pStackedWidget);
    pMainWidget->setLayout(pMainLayout);
@@ -67,10 +67,10 @@ MainWindow::MainWindow()
       QObject::connect(pActionImportKey, &QAction::triggered,
                        this, &MainWindow::ImportKeySlot);
 
-      connect(pActionReplayBlockchain, &QAction::triggered,
-              this, &MainWindow::ReplayBlockChainSlot);
+      QObject::connect(pActionReplayBlockchain, &QAction::triggered,
+                       this, &MainWindow::ReplayBlockChainSlot);
 
-      QMenu* pMenuFile = pMenuBar->addMenu( tr("&File") );
+      QMenu* pMenuFile = pMenuBar->addMenu(tr("&File"));
       pMenuFile->addAction(pActionExit);
       pMenuFile->addAction(pActionImportKey);
       pMenuFile->addAction(pActionReplayBlockchain);
