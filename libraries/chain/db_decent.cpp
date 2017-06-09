@@ -173,14 +173,15 @@ share_type database::get_new_asset_per_block()
    //get age in blocks
    auto now = head_block_num();
 
+   //this method is called BEFORE the maintenance, so we add +1 to avoid unpredictable results
    uint64_t block_reward;
-   if( now <= DECENT_SPLIT_1 )
+   if( now <= DECENT_SPLIT_1 +1 )
       block_reward = DECENT_BLOCK_REWARD_1;
-   else if( now <= DECENT_SPLIT_2 )
+   else if( now <= DECENT_SPLIT_2 +1)
       block_reward = DECENT_BLOCK_REWARD_2;
-   else if( now <= DECENT_SPLIT_3 )
+   else if( now <= DECENT_SPLIT_3 +1)
       block_reward = DECENT_BLOCK_REWARD_3;
-   else if( now <= DECENT_SPLIT_4 )
+   else if( now <= DECENT_SPLIT_4 +1)
       block_reward = DECENT_BLOCK_REWARD_4;
    else
       block_reward = DECENT_BLOCK_REWARD_5;
