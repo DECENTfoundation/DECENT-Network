@@ -6,6 +6,7 @@
 #include <QHeaderView>
 #include <QLabel>
 #include <QMouseEvent>
+#include <QStackedWidget>
 #include <QGraphicsDropShadowEffect>
 #include <QDateTime>
 #include <QFrame>

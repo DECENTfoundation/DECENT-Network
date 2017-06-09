@@ -55,17 +55,14 @@ Upload_popup::Upload_popup(QWidget* pParent)
    //
    // Title field
    //
-   DecentLineEdit* pTitleText = new DecentLineEdit(this);
+   DecentLineEdit* pTitleText = new DecentLineEdit(this, DecentLineEdit::DialogLineEdit);
    pTitleText->setPlaceholderText(tr("Title"));
    pTitleText->setAttribute(Qt::WA_MacShowFocusRect, 0);
    pTitleText->setTextMargins(5, 5, 5, 5);
-   pTitleText->setMinimumHeight(40);
    //
    // Description field
    //
    m_pDescriptionText->setPlaceholderText(tr("Description"));
-   m_pDescriptionText->setMinimumHeight(160);
-   m_pDescriptionText->setMinimumWidth(480);
    m_pDescriptionText->setTabChangesFocus(true);
    //
    // Lifetime
@@ -73,29 +70,21 @@ Upload_popup::Upload_popup(QWidget* pParent)
    QLabel* pLifeTimeLabel = new QLabel(this);
    pLifeTimeLabel->setEnabled(false);
    pLifeTimeLabel->setText(tr("Expiration date"));
-   pLifeTimeLabel->setMinimumWidth(60);
-   pLifeTimeLabel->setMinimumHeight(40);
 
    m_pLifeTime->setDate(QDate::currentDate().addMonths(1));
    m_pLifeTime->setDisplayFormat("yyyy-MM-dd");
    m_pLifeTime->setCalendarPopup(true);
    m_pLifeTime->setMinimumDate(QDate::currentDate().addDays(1));
    m_pLifeTime->setStyle(QStyleFactory::create("fusion"));
-   m_pLifeTime->setMinimumHeight(40);
-   m_pLifeTime->setFixedWidth(320);
    //
    // Key particles
    //
    QLabel* pKeypartsLabel = new QLabel(this);
    pKeypartsLabel->setEnabled(false);
    pKeypartsLabel->setText(tr("Key particles"));
-   pKeypartsLabel->setMinimumWidth(60);
-   pKeypartsLabel->setMinimumHeight(40);
 
    QComboBox* pKeypartsCombo = new QComboBox(this);
    pKeypartsCombo->setStyle(QStyleFactory::create("fusion"));
-   pKeypartsCombo->setMinimumHeight(40);
-   pKeypartsCombo->setFixedWidth(320);
 
    for (int r = 2; r <= 7; ++r) {
       QString val = QString::fromStdString(std::to_string(r));
@@ -107,83 +96,63 @@ Upload_popup::Upload_popup(QWidget* pParent)
    QLabel* pPriceLabel = new QLabel(this);
    pPriceLabel->setEnabled(false);
    pPriceLabel->setText(tr("Price"));
-   pPriceLabel->setMinimumWidth(60);
-   pPriceLabel->setMinimumHeight(40);
 
    QDoubleValidator* dblValidator = new QDoubleValidator(0.0001, 100000, 4, this);
    dblValidator->setLocale(Globals::instance().locale());
 
-   DecentLineEdit* pPriceEditor = new DecentLineEdit(this);
+   DecentLineEdit* pPriceEditor = new DecentLineEdit(this, DecentLineEdit::DialogLineEdit);
    pPriceEditor->setPlaceholderText(tr("Price"));
    pPriceEditor->setValidator(dblValidator);
    pPriceEditor->setAttribute(Qt::WA_MacShowFocusRect, 0);
    pPriceEditor->setTextMargins(5, 5, 5, 5);
-   pPriceEditor->setMinimumHeight(40);
-   pPriceEditor->setFixedWidth(320);
    //
    // Seeders
    //
-   DecentLineEdit* pSeedersPath = new DecentLineEdit(this);
+   DecentLineEdit* pSeedersPath = new DecentLineEdit(this, DecentLineEdit::DialogLineEdit);
    pSeedersPath->setEnabled(false);
    pSeedersPath->setPlaceholderText(tr("Seeders"));
    pSeedersPath->setReadOnly(true);
    pSeedersPath->setTextMargins(5, 5, 5, 5);
-   pSeedersPath->setMinimumWidth(100);
-   pSeedersPath->setMinimumHeight(40);
 
-   DecentButton* pSeedersButton = new DecentButton(this);
+   DecentButton* pSeedersButton = new DecentButton(this, DecentButton::DialogAction);
 
    pSeedersButton->setText(tr("Select Seeders"));
    pSeedersButton->setFont(PopupButtonRegularFont());
-#ifdef WINDOWS_HIGH_DPI
-   pSeedersButton->setFixedWidth(240);
-#else
-   pSeedersButton->setFixedWidth(120);
-#endif
-   pSeedersButton->setFixedHeight(40);
    //
    // Content path
    //
-   DecentLineEdit* pContentPath = new DecentLineEdit(this);
+   DecentLineEdit* pContentPath = new DecentLineEdit(this, DecentLineEdit::DialogLineEdit);
    pContentPath->setEnabled(false);
    pContentPath->setPlaceholderText(tr("Content path"));
    pContentPath->setReadOnly(true);
-   pContentPath->setMinimumHeight(40);
    pContentPath->setTextMargins(5, 5, 5, 5);
 
-   DecentButton* pBrowseContentButton = new DecentButton(this);
+   DecentButton* pBrowseContentButton = new DecentButton(this, DecentButton::DialogAction);
    pBrowseContentButton->setText(tr("Browse"));
    pBrowseContentButton->setFont(PopupButtonRegularFont());
-   pBrowseContentButton->setMinimumWidth(120);
-   pBrowseContentButton->setFixedHeight(40);
    //
    // Samples path
    //
-   DecentLineEdit* pSamplesPath = new DecentLineEdit(this);
+   DecentLineEdit* pSamplesPath = new DecentLineEdit(this, DecentLineEdit::DialogLineEdit);
    pSamplesPath->setEnabled(false);
    pSamplesPath->setPlaceholderText(tr("Samples (optional)"));
    pSamplesPath->setReadOnly(true);
-   pSamplesPath->setMinimumHeight(40);
    pSamplesPath->setTextMargins(5, 5, 5, 5);
 
-   DecentButton* pBrowseSamplesButton = new DecentButton(this);
+   DecentButton* pBrowseSamplesButton = new DecentButton(this, DecentButton::DialogAction);
    pBrowseSamplesButton->setText(tr("Browse"));
    pBrowseSamplesButton->setFont(PopupButtonRegularFont());
-   pBrowseSamplesButton->setMinimumWidth(120);
-   pBrowseSamplesButton->setFixedHeight(40);
    //
    // Upload & Cancel
    //
-   DecentButton* pUploadButton = new DecentButton(this);
-   DecentButton* pCancelButton = new DecentButton(this);
+   DecentButton* pUploadButton = new DecentButton(this, DecentButton::DialogAction);
+   DecentButton* pCancelButton = new DecentButton(this, DecentButton::DialogCancel);
 
    pCancelButton->setText(tr("Cancel"));
    pCancelButton->setFont(PopupButtonBigFont());
-   pCancelButton->setMinimumHeight(50);
 
    pUploadButton->setText(tr("Publish"));
    pUploadButton->setFont(PopupButtonBigFont());
-   pUploadButton->setMinimumHeight(50);
    //
    // Layouts
    //
@@ -212,7 +181,6 @@ Upload_popup::Upload_popup(QWidget* pParent)
    pSamplesRow->addWidget(pBrowseSamplesButton);
 
    QHBoxLayout* pButtonsLayout = new QHBoxLayout;
-   pButtonsLayout->setSpacing(20);
    pButtonsLayout->setContentsMargins(20, 20, 20, 20);
    pButtonsLayout->addWidget(pUploadButton);
    pButtonsLayout->addWidget(pCancelButton);
@@ -228,7 +196,6 @@ Upload_popup::Upload_popup(QWidget* pParent)
    pMainLayout->addLayout(pSamplesRow);
    pMainLayout->addLayout(pButtonsLayout);
    pMainLayout->setContentsMargins(10, 10, 10, 10);
-   pMainLayout->setSpacing(5);
    setLayout(pMainLayout);
 
    slot_UpdateStatus();
@@ -312,7 +279,6 @@ void Upload_popup::slot_ChooseSeeders()
    pDialog->setAttribute(Qt::WA_DeleteOnClose);
    pDialog->setWindowTitle(tr("Seeders"));
    pDialog->setContentsMargins(0, 0, 0, 0);
-   pDialog->resize(450, 250);
 
    DecentTable* pSeedersTable = new DecentTable(pDialog);
    pSeedersTable->set_columns({
@@ -322,10 +288,8 @@ void Upload_popup::slot_ChooseSeeders()
       {tr("Size") ,  10, "size"}
    });
 
-   DecentButton* pOKButton = new DecentButton(pDialog);
+   DecentButton* pOKButton = new DecentButton(pDialog, DecentButton::DialogAction);
    pOKButton->setText(tr("OK"));
-   pOKButton->setFixedHeight(50);
-   pOKButton->setFixedWidth(100);
    pOKButton->setFont(TabButtonFont());
 
    QHBoxLayout* pButtonsLayout = new QHBoxLayout;
@@ -336,7 +300,6 @@ void Upload_popup::slot_ChooseSeeders()
    QVBoxLayout* pMainLayout = new QVBoxLayout;
    pMainLayout->setContentsMargins(0, 0, 0, 0);
    pMainLayout->setMargin(0);
-   pMainLayout->setSpacing(0);
    pMainLayout->addWidget(pSeedersTable);
    pMainLayout->addLayout(pButtonsLayout);
 

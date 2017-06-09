@@ -134,9 +134,8 @@ std::string BrowseContentTab::getUpdateCommand()
 {
    graphene::chain::ContentObjectPropertyManager type_composer;
    graphene::chain::ContentObjectTypeValue type(graphene::chain::EContentObjectApplication::DecentCore);
-
-   type_composer.set<graphene::chain::ContentObjectType>(type);
-   boost::replace_all(type_composer.m_str_synopsis, "\"", "'");   // a dirty hack
+   string str_type;
+   type.to_string(str_type);
 
    return   string("search_content ") +
             "\"" + m_strSearchTerm.toStdString() + "\" " +
@@ -144,7 +143,7 @@ std::string BrowseContentTab::getUpdateCommand()
             "\"\" " +   // user
             "\"\" " +   // region code
             "\"" + next_iterator() + "\" "
-            "\"" + type_composer.m_str_synopsis + "\" " +
+            "\"" + str_type + "\" " +
             std::to_string(m_i_page_size + 1);
 }
 
@@ -154,10 +153,10 @@ void BrowseContentTab::slot_Details(int iIndex)
         throw std::out_of_range("Content index is out of range");
     }
 
-   ContentInfoDialog* pDetailsDialog = new ContentInfoDialog(nullptr, _digital_contents[iIndex]);
-   pDetailsDialog->setAttribute(Qt::WA_DeleteOnClose);
-   pDetailsDialog->open();
-   QObject::connect(pDetailsDialog, &ContentInfoDialog::ContentWasBought,
+   ContentInfoWidget* pDetailsDialog = new ContentInfoWidget(nullptr, _digital_contents[iIndex]);
+   Globals::instance().signal_stackWidgetPush(pDetailsDialog);
+
+   QObject::connect(pDetailsDialog, &ContentInfoWidget::accepted,
                     this, &BrowseContentTab::slot_Bought);
 }
 
