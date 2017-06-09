@@ -363,6 +363,8 @@ namespace graphene { namespace chain {
          void decent_housekeeping();
          share_type get_new_asset_per_block();
          share_type get_witness_budget(uint32_t blocks);
+         bool is_reward_switch_in_interval(uint64_t a, uint64_t b)const;
+         uint64_t get_next_reward_switch_block(uint64_t start)const;
 
          real_supply get_real_supply()const;
 

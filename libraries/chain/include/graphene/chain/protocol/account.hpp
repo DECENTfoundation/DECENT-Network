@@ -89,9 +89,7 @@ namespace graphene { namespace chain {
 
       struct fee_parameters_type
       {
-         uint64_t basic_fee      = 5*GRAPHENE_BLOCKCHAIN_PRECISION; ///< the cost to register the cheapest non-free account
-         uint64_t premium_fee    = 20*GRAPHENE_BLOCKCHAIN_PRECISION; ///< the cost to register the cheapest non-free account
-         uint32_t price_per_kbyte = GRAPHENE_BLOCKCHAIN_PRECISION;
+         uint64_t basic_fee      = 1*GRAPHENE_BLOCKCHAIN_PRECISION/1000; ///< the cost to register the cheapest non-free account
       };
 
       asset           fee;
@@ -134,8 +132,7 @@ namespace graphene { namespace chain {
 
       struct fee_parameters_type
       {
-         share_type fee             = 1 * GRAPHENE_BLOCKCHAIN_PRECISION;
-         uint32_t   price_per_kbyte = GRAPHENE_BLOCKCHAIN_PRECISION;
+         share_type fee             = 1 * GRAPHENE_BLOCKCHAIN_PRECISION/1000;
       };
 
       asset fee;
@@ -209,8 +206,8 @@ FC_REFLECT( graphene::chain::account_update_operation,
             (fee)(account)(owner)(active)(new_options)(extensions)
           )
 
-FC_REFLECT( graphene::chain::account_create_operation::fee_parameters_type, (basic_fee)(premium_fee)(price_per_kbyte) )
-FC_REFLECT( graphene::chain::account_update_operation::fee_parameters_type, (fee)(price_per_kbyte) )
+FC_REFLECT( graphene::chain::account_create_operation::fee_parameters_type, (basic_fee) )
+FC_REFLECT( graphene::chain::account_update_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::account_transfer_operation::fee_parameters_type, (fee) )
 
 FC_REFLECT( graphene::chain::account_transfer_operation, (fee)(account_id)(new_owner)(extensions) )

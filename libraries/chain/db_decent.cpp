@@ -140,19 +140,47 @@ bool database::is_reward_switch_time() const
    return ( now == DECENT_SPLIT_1 || now == DECENT_SPLIT_2 || now == DECENT_SPLIT_3 || now == DECENT_SPLIT_4 );
 }
 
+bool database::is_reward_switch_in_interval(uint64_t a, uint64_t b)const
+{
+   if(a>=b)
+      return false;
+   if (a <= DECENT_SPLIT_1 && b >= DECENT_SPLIT_1)
+      return true;
+   if (a <= DECENT_SPLIT_1 && b >= DECENT_SPLIT_2)
+      return true;
+   if (a <= DECENT_SPLIT_1 && b >= DECENT_SPLIT_3)
+      return true;
+   if (a <= DECENT_SPLIT_1 && b >= DECENT_SPLIT_4)
+      return true;
+   return false;
+}
+
+uint64_t database::get_next_reward_switch_block(uint64_t start)const
+{
+   if(start <= DECENT_SPLIT_1 )
+      return DECENT_SPLIT_1;
+   if(start <= DECENT_SPLIT_2 )
+      return DECENT_SPLIT_2;
+   if(start <= DECENT_SPLIT_3 )
+      return DECENT_SPLIT_3;
+   if(start <= DECENT_SPLIT_4 )
+      return DECENT_SPLIT_4;
+   return 0;
+}
+
 share_type database::get_new_asset_per_block()
 {
    //get age in blocks
    auto now = head_block_num();
 
    uint64_t block_reward;
-   if( now < DECENT_SPLIT_1 )
+   if( now <= DECENT_SPLIT_1 )
       block_reward = DECENT_BLOCK_REWARD_1;
-   else if( now < DECENT_SPLIT_2 )
+   else if( now <= DECENT_SPLIT_2 )
       block_reward = DECENT_BLOCK_REWARD_2;
-   else if( now < DECENT_SPLIT_3 )
+   else if( now <= DECENT_SPLIT_3 )
       block_reward = DECENT_BLOCK_REWARD_3;
-   else if( now < DECENT_SPLIT_4 )
+   else if( now <= DECENT_SPLIT_4 )
       block_reward = DECENT_BLOCK_REWARD_4;
    else
       block_reward = DECENT_BLOCK_REWARD_5;

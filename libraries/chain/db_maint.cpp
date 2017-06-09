@@ -190,7 +190,7 @@ void database::process_budget()
       //    voting on changes to block interval).
       //
       assert( gpo.parameters.block_interval > 0 );
-      uint64_t blocks_to_maint = (uint64_t(time_to_maint) + gpo.parameters.block_interval - 1) / gpo.parameters.block_interval;
+      uint64_t blocks_to_maint = (uint64_t(time_to_maint) + gpo.parameters.block_interval - 1) / gpo.parameters.block_interval - gpo.parameters.maintenance_skip_slots;
 
       // blocks_to_maint > 0 because time_to_maint > 0,
       // which means numerator is at least equal to block_interval
@@ -379,12 +379,6 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
    decent_housekeeping();
 
    modify(gpo, [this](global_property_object& p) {
-      // Remove scaling of account registration fee
-        //TODO_DECENT rework
-      const auto& dgpo = get_dynamic_global_properties();
-      p.parameters.current_fees->get<account_create_operation>().basic_fee >>= p.parameters.account_fee_scale_bitshifts *
-            (dgpo.accounts_registered_this_interval / p.parameters.accounts_per_fee_scale);
-
       if( p.pending_parameters )
       {
          p.parameters = std::move(*p.pending_parameters);
@@ -394,6 +388,9 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
 
    auto next_maintenance_time = get<dynamic_global_property_object>(dynamic_global_property_id_type()).next_maintenance_time;
    auto maintenance_interval = gpo.parameters.maintenance_interval;
+   uint32_t maintenance_interval_in_blocks = 0;
+   if( gpo.parameters.block_interval )
+      maintenance_interval_in_blocks = maintenance_interval / gpo.parameters.block_interval;
 
    if( next_maintenance_time <= next_block.timestamp )
    {
