@@ -143,7 +143,7 @@ bool database::is_reward_switch_time() const
 share_type database::get_new_asset_per_block()
 {
    //get age in blocks
-   auto now = head_block_num();
+   auto now = head_block_num()+1;
 
    uint64_t block_reward;
    if( now < DECENT_SPLIT_1 )

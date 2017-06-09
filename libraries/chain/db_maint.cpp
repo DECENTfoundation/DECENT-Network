@@ -197,10 +197,11 @@ void database::process_budget()
       budget_record rec;
       initialize_budget_record( now, rec );
 
-      share_type witness_budget = get_witness_budget();
+      share_type witness_budget = get_witness_budget() ;
       rec.requested_witness_budget = witness_budget;
 
-      rec.witness_budget = std::min( rec.witness_budget,  witness_budget + rec.from_accumulated_fees);
+      witness_budget = std::min( rec.witness_budget,  witness_budget + rec.from_accumulated_fees);
+      rec.witness_budget = witness_budget;
 
       rec.supply_delta = rec.witness_budget
          - rec.from_accumulated_fees

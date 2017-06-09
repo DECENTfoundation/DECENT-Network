@@ -112,6 +112,8 @@ void database::update_signing_witness(const witness_object& signing_witness, con
 
    share_type witness_pay = dpo.allocated_witness_budget / blocks_in_interval;
 
+   ilog("calculating witness pay; witness budget = ${b}, block to main: ${r}, witness pay = ${p}",("b", dpo.witness_budget)("r", blocks_in_interval)("p", witness_pay));
+
    modify( dpo, [&]( dynamic_global_property_object& _dpo )
    {
       _dpo.witness_budget -= witness_pay;

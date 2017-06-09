@@ -463,7 +463,7 @@
   "initial_balances": [{
       "owner": "decent",
       "asset_symbol": "DCT",
-      "amount": "7319777577456890"
+      "amount": "5130608937456890"
     }
   ],
   "immutable_parameters": {
