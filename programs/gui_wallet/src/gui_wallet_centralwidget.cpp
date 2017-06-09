@@ -15,7 +15,6 @@
 #endif
 
 #include "gui_wallet_global.hpp"
-#include "gui_wallet_mainwindow.hpp"
 
 
 #ifndef _MSC_VER
@@ -88,16 +87,18 @@ void AccountBalanceWidget::setCurrentIndex(int a_nIndex)
 
 /*//////////////////////////////////////////////////*/
 
-CentralWigdet::CentralWigdet(QBoxLayout* a_pAllLayout, Mainwindow_gui_wallet* a_pPar)
+CentralWigdet::CentralWigdet(QWidget* pParent)
     : m_first_line_lbl(),
-      m_parent_main_window(a_pPar),
-      m_browse_cont_tab(a_pPar),
-      m_Overview_tab(a_pPar),
-      m_Upload_tab(a_pPar),
-      m_Purchased_tab(a_pPar),
-      m_trans_tab(a_pPar),
+      m_parent_main_window(pParent),
+      m_browse_cont_tab(this),
+      m_Overview_tab(this),
+      m_Upload_tab(this),
+      m_Purchased_tab(this),
+      m_trans_tab(this),
       sendButton(new DecentButton(this, DecentButton::Send))
 {
+   QVBoxLayout* pMainLayout = new QVBoxLayout;
+   pMainLayout->setContentsMargins(0, 0, 0, 0);
          
     m_allTabs.push_back(&m_browse_cont_tab);
     m_allTabs.push_back(&m_trans_tab);
@@ -110,9 +111,11 @@ CentralWigdet::CentralWigdet(QBoxLayout* a_pAllLayout, Mainwindow_gui_wallet* a_
 
     m_main_tabs.setStyleSheet(d_main_tabs);
 
-    PrepareGUIprivate(a_pAllLayout);
+    PrepareGUIprivate(pMainLayout);
 
     QTimer::singleShot(200, this, SLOT(initTabChanged()));
+
+   setLayout(pMainLayout);
 }
 
 void  CentralWigdet::initTabChanged() {

@@ -1,17 +1,4 @@
-/*
- *	File: gui_wallet_centralwigdet.h
- *
- *	Created on: Nov 11, 2016
- *	Created by: Davit Kalantaryan (Email: davit.kalantaryan@desy.de)
- *
- *  This file implements ...
- *
- */
-#ifndef CENTRALWIGDET_GUI_WALLET_H
-#define CENTRALWIGDET_GUI_WALLET_H
-
-//#define USE_TABLE_FOR_FIRST_LINE
-#define API_SHOULD_BE_DEFINED
+#pragma once
 
 
 #include <QWidget>
@@ -63,10 +50,9 @@ private:
     
 class CentralWigdet : public QWidget
 {
-    friend class Mainwindow_gui_wallet;
     Q_OBJECT
 public:
-    CentralWigdet(class QBoxLayout* pAllLayout, class Mainwindow_gui_wallet* a_pPar);
+    CentralWigdet(QWidget* pParent);
     virtual ~CentralWigdet(); /* virtual because may be this class will be */
                               /* used by inheritance */
 
@@ -126,7 +112,7 @@ private:
     QHBoxLayout         m_first_line_lbl;
 
     
-    Mainwindow_gui_wallet* m_parent_main_window;
+    QWidget* m_parent_main_window;
     
     QTabWidget          m_main_tabs;
     
@@ -156,4 +142,3 @@ private:
 }
 
 
-#endif // CENTRALWIGDET_GUI_WALLET_H
