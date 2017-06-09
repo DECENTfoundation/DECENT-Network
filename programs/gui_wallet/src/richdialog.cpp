@@ -38,7 +38,6 @@ namespace gui_wallet
 void PlaceInsideLabel(QWidget* pParent, QWidget* pChild)
 {
    pParent->show();
-   QMargins margins = pParent->contentsMargins();
 
    QHBoxLayout* pMainLayout = new QHBoxLayout;
    pMainLayout->addWidget(pChild);
@@ -104,10 +103,19 @@ void RatingWidget::slot_rating()
    }
 }
 //
-// TransferDialog
+// StackLayerWidget
 //
-TransferDialog::TransferDialog(QWidget* parent, QString const& userName/* = QString()*/)
-   : QDialog(parent)
+StackLayerWidget::StackLayerWidget(QWidget* pParent)
+: QWidget(pParent)
+{
+   QObject::connect(this, &StackLayerWidget::accepted,
+                    this, &StackLayerWidget::closed);
+}
+//
+// TransferWidget
+//
+TransferWidget::TransferWidget(QWidget* parent, QString const& userName/* = QString()*/)
+   : StackLayerWidget(parent)
    , m_toUserName(userName)
 {
    QVBoxLayout* mainLayout       = new QVBoxLayout();
@@ -118,10 +126,12 @@ TransferDialog::TransferDialog(QWidget* parent, QString const& userName/* = QStr
    ok->setText(tr("Send"));
 
    DecentButton* cancel = new DecentButton(this, DecentButton::DialogCancel);
-   cancel->setText(tr("Cancel"));
+   cancel->setText(tr("Back"));
    
-   QObject::connect(ok, &QPushButton::clicked, this, &TransferDialog::Transfer);
-   QObject::connect(cancel, &QPushButton::clicked, this, &QDialog::close);
+   QObject::connect(ok, &QPushButton::clicked,
+                    this, &TransferWidget::Transfer);
+   QObject::connect(cancel, &QPushButton::clicked,
+                    this, &StackLayerWidget::closed);
    
    DecentLineEdit* name = new DecentLineEdit(this, DecentLineEdit::DialogLineEdit);
    DecentLineEdit* amount = new DecentLineEdit(this, DecentLineEdit::DialogLineEdit);
@@ -130,7 +140,8 @@ TransferDialog::TransferDialog(QWidget* parent, QString const& userName/* = QStr
    name->setPlaceholderText(tr("Account"));
    name->setAttribute(Qt::WA_MacShowFocusRect, 0);
    name->setText(m_toUserName);
-   QObject::connect(name, &QLineEdit::textChanged, this, &TransferDialog::nameChanged);
+   QObject::connect(name, &QLineEdit::textChanged,
+                    this, &TransferWidget::nameChanged);
    
    amount->setPlaceholderText(tr("Amount"));
    amount->setAttribute(Qt::WA_MacShowFocusRect, 0);
@@ -138,17 +149,18 @@ TransferDialog::TransferDialog(QWidget* parent, QString const& userName/* = QStr
    QDoubleValidator* dblValidator = new QDoubleValidator(0.0001, 100000, 4, this);
    dblValidator->setLocale(Globals::instance().locale());
    amount->setValidator(dblValidator);
-   QObject::connect(amount, &QLineEdit::textChanged, this, &TransferDialog::amountChanged);
+   QObject::connect(amount, &QLineEdit::textChanged,
+                    this, &TransferWidget::amountChanged);
    
    memo->setPlaceholderText(tr("Memo"));
    memo->setAttribute(Qt::WA_MacShowFocusRect, 0);
-   QObject::connect(memo, &QLineEdit::textChanged, this, &TransferDialog::memoChanged);
+   QObject::connect(memo, &QLineEdit::textChanged,
+                    this, &TransferWidget::memoChanged);
    
    lineEditsLayout->addWidget(name);
    lineEditsLayout->addWidget(amount);
    lineEditsLayout->addWidget(memo);
-   
-//   buttonsLayout->setSpacing(20);
+
    buttonsLayout->addWidget(ok);
    buttonsLayout->addWidget(cancel);
    
@@ -160,22 +172,22 @@ TransferDialog::TransferDialog(QWidget* parent, QString const& userName/* = QStr
    setLayout(mainLayout);
 }
 
-void TransferDialog::nameChanged(const QString & name)
+void TransferWidget::nameChanged(const QString & name)
 {
    m_toUserName = name;
 }
 
-void TransferDialog::amountChanged(const QString & amount)
+void TransferWidget::amountChanged(const QString & amount)
 {
    m_amount = amount.toDouble();
 }
 
-void TransferDialog::memoChanged(const QString & memo)
+void TransferWidget::memoChanged(const QString & memo)
 {
    m_memo = memo;
 }
 
-void TransferDialog::Transfer()
+void TransferWidget::Transfer()
 {
    std::string a_result;
    std::string message;
@@ -201,7 +213,7 @@ void TransferDialog::Transfer()
    
    if (message.empty())
    {
-      close();
+      emit accepted();
    }
    else
    {
@@ -209,12 +221,12 @@ void TransferDialog::Transfer()
    }
 }
 //
-// ImportKeyDialog
+// ImportKeyWidget
 //
-ImportKeyDialog::ImportKeyDialog(QWidget* parent)
-: QDialog(parent)
+ImportKeyWidget::ImportKeyWidget(QWidget* parent)
+: StackLayerWidget(parent)
 {
-   QObject::connect(this, &QDialog::accepted,
+   QObject::connect(this, &StackLayerWidget::accepted,
                     &Globals::instance(), &Globals::signal_keyImported);
    
    QVBoxLayout* mainLayout       = new QVBoxLayout();
@@ -223,30 +235,26 @@ ImportKeyDialog::ImportKeyDialog(QWidget* parent)
    
    DecentButton* ok = new DecentButton(this, DecentButton::DialogAction);
    ok->setText(tr("Ok"));
-//   ok->setFixedSize(140, 40);
    DecentButton* cancel = new DecentButton(this, DecentButton::DialogCancel);
-   cancel->setText(tr("Cancel"));
-//   cancel->setFixedSize(140, 40);
+   cancel->setText(tr("Back"));
    
    QObject::connect(ok, &QPushButton::clicked,
-                    this, &ImportKeyDialog::Import);
+                    this, &ImportKeyWidget::Import);
    QObject::connect(cancel, &QPushButton::clicked,
-                    this, &QDialog::close);
+                    this, &StackLayerWidget::closed);
    
    DecentLineEdit* name = new DecentLineEdit(this, DecentLineEdit::DialogLineEdit);
    DecentLineEdit* key  = new DecentLineEdit(this, DecentLineEdit::DialogLineEdit);
    
    name->setPlaceholderText(tr("Account"));
    name->setAttribute(Qt::WA_MacShowFocusRect, 0);
-//   name->setFixedSize(300, 44);
    QObject::connect(name, &QLineEdit::textChanged,
-                    this, &ImportKeyDialog::nameChanged);
+                    this, &ImportKeyWidget::nameChanged);
    
    key->setPlaceholderText(tr("Key"));
    key->setAttribute(Qt::WA_MacShowFocusRect, 0);
-//   key->setFixedSize(300, 44);
    QObject::connect(key, &QLineEdit::textChanged,
-                    this, &ImportKeyDialog::keyChanged);
+                    this, &ImportKeyWidget::keyChanged);
 
    lineEditsLayout->addWidget(name);
    lineEditsLayout->addWidget(key);
@@ -254,28 +262,25 @@ ImportKeyDialog::ImportKeyDialog(QWidget* parent)
    buttonsLayout->setSpacing(20);
    buttonsLayout->addWidget(ok);
    buttonsLayout->addWidget(cancel);
-   
-   
+
    mainLayout->setContentsMargins(40, 10, 40, 10);
    mainLayout->addLayout(lineEditsLayout);
    mainLayout->addLayout(buttonsLayout);
    
    setLayout(mainLayout);
-   
-//   setFixedSize(380, 220);
 }
 
-void ImportKeyDialog::nameChanged(const QString & name)
+void ImportKeyWidget::nameChanged(const QString & name)
 {
    m_userName = name;
 }
 
-void ImportKeyDialog::keyChanged(const QString & key)
+void ImportKeyWidget::keyChanged(const QString & key)
 {
    m_key = key;
 }
 
-void ImportKeyDialog::Import()
+void ImportKeyWidget::Import()
 {
    std::string message;
    std::string result;
@@ -294,7 +299,6 @@ void ImportKeyDialog::Import()
    if (message.empty())
    {
       emit accepted();
-      close();
    }
    else
    {
@@ -302,56 +306,64 @@ void ImportKeyDialog::Import()
    }
 }
 //
-// UserInfoDialog
+//UserInfoWidget
 //
-UserInfoDialog::UserInfoDialog(QWidget* parent,
-                               const QString& registrar,
-                               const QString& referrer,
-                               const QString& lifetime_referrer,
-                               const QString& network_fee_percentage,
-                               const QString& lifetime_referrer_fee_percentage,
-                               const QString& referrer_rewards_percentage,
-                               const QString& name,
-                               const QString& id
-                               )
-   : QDialog(parent)
+   
+UserInfoWidget::UserInfoWidget(QWidget* parent,
+                     const bool&    is_publishing_manager,
+                     const bool     is_publishing_rights_received,
+                     const QString& registrar,
+                     const QString& name,
+                     const QString& id
+                     )
+   : StackLayerWidget(parent)
 {
+   int labelCount = 0;
    QVBoxLayout* main_layout = new QVBoxLayout();
    main_layout->setSpacing(0);
    main_layout->setContentsMargins(0, 0, 0, 0);
    
    DecentLabel* registrarLabel = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
+   ++labelCount;
    registrarLabel->setText(tr("Registrar\n") + registrar);
    main_layout->addWidget(registrarLabel);
-
-   DecentLabel* referrerLabel = new DecentLabel(this, DecentLabel::RowLabel);
-   referrerLabel->setText(tr("Referrer\n") + registrar);
-   main_layout->addWidget(referrerLabel);
    
-   DecentLabel* lifetimeReferrerLabel = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
-   lifetimeReferrerLabel->setText((tr("Lifetime Referrer\n") + lifetime_referrer));
-   main_layout->addWidget(lifetimeReferrerLabel);
+   if(is_publishing_manager)
+   {
+      DecentLabel* managerIsPublishingLabel = new DecentLabel(this, DecentLabel::RowLabel);
+      ++labelCount;
+      managerIsPublishingLabel->setText((tr("Publishing manager")));
+      main_layout->addWidget(managerIsPublishingLabel);
+   }
    
-   DecentLabel* networkFeeLabel = new DecentLabel(this, DecentLabel::RowLabel);
-   networkFeeLabel->setText((tr("Network Fee Percentage\n") + network_fee_percentage));
-   main_layout->addWidget(networkFeeLabel);
+   if(is_publishing_rights_received)
+   {
+      DecentLabel* isPublishingRightsReceivedLabel;
+      if(labelCount % 2 == 0)
+         isPublishingRightsReceivedLabel = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
+      else
+         isPublishingRightsReceivedLabel = new DecentLabel(this, DecentLabel::RowLabel);
+      ++labelCount;
+      isPublishingRightsReceivedLabel->setText((tr("Have rights to publish")));
+      main_layout->addWidget(isPublishingRightsReceivedLabel);
+   }
    
-   DecentLabel* lifetimeReferrerFeeLabel = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
-   lifetimeReferrerFeeLabel->setText((tr("Lifetime Referrer Fee Percentage\n") + lifetime_referrer_fee_percentage));
-   main_layout->addWidget(lifetimeReferrerFeeLabel);
+   DecentButton* backButton = new DecentButton(this, DecentButton::DialogCancel);
+   backButton->setText("Back");
+   QHBoxLayout* buttonLayout = new QHBoxLayout();
+   buttonLayout->addWidget(backButton, Qt::AlignCenter);
+   buttonLayout->setContentsMargins(0, 20, 0, 0);
+   main_layout->addLayout(buttonLayout);
+   QObject::connect(backButton, &QPushButton::clicked, this, &StackLayerWidget::closed);
    
-   DecentLabel* referrerRewardsPercentageLabel = new DecentLabel(this, DecentLabel::RowLabel);
-   referrerRewardsPercentageLabel->setText((tr("Referrer Rewards Percentage\n") + referrer_rewards_percentage));
-   main_layout->addWidget(referrerRewardsPercentageLabel);
-
    setWindowTitle(name + " (" + id + ")");
    setLayout(main_layout);
 }
 //
-// ContentInfoDialog
+// ContentInfoWidget
 //
-ContentInfoDialog::ContentInfoDialog(QWidget* parent, const SDigitalContent& a_cnt_details)
-   : QDialog(parent)
+ContentInfoWidget::ContentInfoWidget(QWidget* parent, const SDigitalContent& a_cnt_details)
+   : StackLayerWidget(parent)
    , m_URI(a_cnt_details.URI)
    , m_amount(a_cnt_details.price.getString().c_str())
    , m_getItOrPay(GetIt)
@@ -445,12 +457,12 @@ ContentInfoDialog::ContentInfoDialog(QWidget* parent, const SDigitalContent& a_c
    DecentButton* getItButton = new DecentButton(this, DecentButton::DialogAction);
    DecentButton* cancelButton = new DecentButton(this, DecentButton::DialogCancel);
    getItButton->setText(tr("Get it!"));
-   cancelButton->setText(tr("Close"));
+   cancelButton->setText(tr("Back"));
    
    QObject::connect(getItButton, &QPushButton::clicked,
-                    this, &ContentInfoDialog::ButtonWasClicked);
+                    this, &ContentInfoWidget::ButtonWasClicked);
    QObject::connect(cancelButton, &QPushButton::clicked,
-                    this, &QDialog::close);
+                    this, &StackLayerWidget::closed);
    
    main_layout->addWidget(getItButton, iRowIndex, 0, Qt::AlignRight);
    main_layout->addWidget(cancelButton, iRowIndex, 1, Qt::AlignLeft);
@@ -460,7 +472,7 @@ ContentInfoDialog::ContentInfoDialog(QWidget* parent, const SDigitalContent& a_c
    setWindowTitle(QString::fromStdString(title));
 }
    
-void ContentInfoDialog::ButtonWasClicked()
+void ContentInfoWidget::ButtonWasClicked()
 {
    QPushButton* button = (QPushButton*) sender();
    if (m_amount == "Free" ||
@@ -477,7 +489,7 @@ void ContentInfoDialog::ButtonWasClicked()
    }
 }
    
-void ContentInfoDialog::Buy()
+void ContentInfoWidget::Buy()
 {
    std::string downloadCommand = "download_content";
    downloadCommand += " " + Globals::instance().getCurrentUser();       // consumer
@@ -499,16 +511,14 @@ void ContentInfoDialog::Buy()
    if (false == str_error.empty())
       ShowMessageBox("", tr("Failed to download content"), QString::fromStdString(str_error));
    
-   
-   emit ContentWasBought();
-   close();
+   emit accepted();
 }
 
 //
-// PurchasedDialog
+// ContentReviewWidget
 //
-ContentReviewDialog::ContentReviewDialog(QWidget* parent, const SDigitalContent& a_cnt_details)
-: QDialog(parent)
+ContentReviewWidget::ContentReviewWidget(QWidget* parent, const SDigitalContent& a_cnt_details)
+: StackLayerWidget(parent)
 , m_URI(a_cnt_details.URI)
 {
    QGridLayout* main_layout = new QGridLayout();
@@ -585,6 +595,14 @@ ContentReviewDialog::ContentReviewDialog(QWidget* parent, const SDigitalContent&
    main_layout->addWidget(pCommentWidget, iRowIndex, 0, 1, 2);
    pCommentWidget->update();
    ++iRowIndex;
+
+   DecentButton* cancelButton = new DecentButton(this, DecentButton::DialogCancel);
+   cancelButton->setText(tr("Back"));
+
+   QObject::connect(cancelButton, &QPushButton::clicked,
+                    this, &StackLayerWidget::closed);
+
+   main_layout->addWidget(cancelButton, iRowIndex, 0, 1, 2, Qt::AlignCenter);
 
    setLayout(main_layout);
 
@@ -863,10 +881,10 @@ bool CommentWidget::slot_Previous()
    
    return true;
 }
-// PasswordDialog
+// PasswordWidget
 //
-PasswordDialog::PasswordDialog(QWidget* pParent, eType enType)
-: QDialog(pParent, Qt::Window | Qt::WindowTitleHint | Qt::CustomizeWindowHint | Qt::WindowCloseButtonHint)
+PasswordWidget::PasswordWidget(QWidget* pParent, eType enType)
+: StackLayerWidget(pParent)
 , m_enType(enType)
 , m_pError(new QLabel(this))
 {
@@ -902,38 +920,27 @@ PasswordDialog::PasswordDialog(QWidget* pParent, eType enType)
    pMainLayout->addWidget(pEditPassword, iRowIndex++, 0, Qt::AlignCenter | Qt::AlignVCenter);
    pMainLayout->addWidget(pButton, iRowIndex++, 0, Qt::AlignCenter | Qt::AlignVCenter);
 
-#ifndef WINDOWS_HIGH_DPI
    pMainLayout->setSizeConstraint(QLayout::SetFixedSize);
-#else
-   setFixedWidth(600);
-#endif
 
    pMainLayout->setSpacing(20);
    pMainLayout->setContentsMargins(20, 20, 20, 20);
 
    QObject::connect(pEditPassword, &QLineEdit::returnPressed,
-                    this, &PasswordDialog::slot_action);
+                    this, &PasswordWidget::slot_action);
    QObject::connect(pButton, &QPushButton::clicked,
-                    this, &PasswordDialog::slot_action);
+                    this, &PasswordWidget::slot_action);
    QObject::connect(pEditPassword, &QLineEdit::textChanged,
-                    this, &PasswordDialog::slot_set_password);
+                    this, &PasswordWidget::slot_set_password);
 
    setLayout(pMainLayout);
-
-   //QTimer::singleShot(0, &password_box, SLOT(setFocus()));
-#ifdef _MSC_VER
-   int height = style()->pixelMetric(QStyle::PM_TitleBarHeight);
-   setWindowIcon(height > 32 ? QIcon(":/icon/images/windows_decent_icon_32x32.png")
-                 : QIcon(":/icon/images/windows_decent_icon_16x16.png"));
-#endif
 }
 
-void PasswordDialog::slot_set_password(QString const& strPassword)
+void PasswordWidget::slot_set_password(QString const& strPassword)
 {
    m_strPassword = strPassword;
 }
 
-void PasswordDialog::slot_action()
+void PasswordWidget::slot_action()
 {
    if (m_strPassword.isEmpty())
       return;
@@ -964,7 +971,6 @@ void PasswordDialog::slot_action()
    }
 
    emit accepted();
-   close();
 }
 
 

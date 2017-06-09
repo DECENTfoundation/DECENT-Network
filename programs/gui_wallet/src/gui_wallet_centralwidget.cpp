@@ -442,6 +442,9 @@ void CentralWigdet::walletUnlockedSlot() {
 
 
 void CentralWigdet::updateActiveTab() {
+   if (false == Globals::instance().connected())
+      return;
+
    if (m_currentTab >= 0) {
       m_allTabs[m_currentTab]->tryToUpdate();
 

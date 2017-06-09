@@ -19,6 +19,7 @@
 #include <set>
 
 class QCloseEvent;
+class QStackedWidget;
 
 namespace gui_wallet
 {
@@ -69,10 +70,13 @@ protected slots:
    void ViewAction();
 
    void ImportKeySlot();
+   void ReplayBlockChainSlot();
    void SendDCTSlot();
 
    void slot_showPurchasedTab();
    void slot_showTransactionsTab(std::string const&);
+   void slot_stackWidgetPush(StackLayerWidget* pWidget);
+   void slot_stackWidgetPop();
    void slot_updateAccountBalance(Asset const&);
    
    void slot_connection_status_changed(Globals::ConnectionState from, Globals::ConnectionState to);
@@ -80,10 +84,10 @@ protected slots:
    void slot_enableSendButton();
       
 protected:
+   QStackedWidget*   m_pStackedWidget;
    class QVBoxLayout*   m_pCentralAllLayout;
    class QHBoxLayout*   m_pMenuLayout;
    CentralWigdet*       m_pCentralWidget;
-   uint32_t             m_iSyncUpCount;
    
    QMenuBar *          m_barLeft;
    QMenuBar *          m_barRight;
@@ -99,6 +103,7 @@ protected:
    QAction             m_ActionInfo;
    QAction             m_ActionHelp;
    QAction             m_ActionImportKey;
+   QAction             m_ActionReplayBlockchain;
    TextDisplayDialog   m_info_dialog;
    
    QVBoxLayout                         m_main_layout;
