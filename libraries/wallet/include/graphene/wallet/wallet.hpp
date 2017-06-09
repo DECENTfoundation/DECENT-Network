@@ -1513,7 +1513,6 @@ namespace graphene { namespace wallet {
           * @param author The author of the content
           * @param co_authors The co-authors' account name or ID mapped to corresponding payment split based on basis points
           * @param URI The URI of the content
-          * @param price_asset_name Ticker symbol of the asset which will be used to buy content
           * @param price_amounts The price of the content per regions
           * @param size The size of the content
           * @param hash The Hash of the package
@@ -1556,7 +1555,6 @@ namespace graphene { namespace wallet {
           * @param content_dir Path to the directory containing all content that should be packed
           * @param samples_dir Path to the directory containing samples of content
           * @param protocol Protocol for uploading package( magnet or IPFS)
-          * @param price_asset_symbol Ticker symbol of the asset which will be used to buy content
           * @param price_amounts The prices of the content per regions
           * @param seeders List of the seeders, which will publish the content
           * @param expiration The expiration time of the content. The content is available to buy till it's expiration time
@@ -1566,14 +1564,16 @@ namespace graphene { namespace wallet {
           * @ingroup WalletCLI
           */
 
-         fc::ripemd160 submit_content_async(string const &author,
-                                          vector< pair< string, uint32_t>> co_authors,
-                                          string const &content_dir, string const &samples_dir,
-                                          string const &protocol,
-                                          vector<regional_price_info> const &price_amounts,
-                                          vector<account_id_type> const &seeders,
-                                          fc::time_point_sec const &expiration, string const &synopsis,
-                                          bool broadcast);
+         fc::ripemd160 submit_content_async( string const &author,
+                                             vector< pair< string, uint32_t>> co_authors,
+                                             string const &content_dir,
+                                             string const &samples_dir,
+                                             string const &protocol,
+                                             vector<regional_price_info> const &price_amounts,
+                                             vector<account_id_type> const &seeders,
+                                             fc::time_point_sec const &expiration,
+                                             string const &synopsis,
+                                             bool broadcast);
 
 
          /**

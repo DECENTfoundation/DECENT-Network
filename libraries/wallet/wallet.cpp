@@ -2173,17 +2173,16 @@ public:
       } FC_CAPTURE_AND_RETHROW( (author)(URI)(price_amounts)(hash)(seeders)(quorum)(expiration)(publishing_fee_symbol_name)(publishing_fee_amount)(synopsis)(secret)(broadcast) )
    }
 
-   fc::ripemd160 submit_content_async(string const& author,
-
-                                    vector< pair< string, uint32_t>> co_authors,     
-                                    string const& content_dir,
-                                    string const& samples_dir,
-                                    string const& protocol,
-                                    vector<regional_price_info> const& price_amounts,
-                                    vector<account_id_type> const& seeders,
-                                    fc::time_point_sec const& expiration,
-                                    string const& synopsis,
-                                    bool broadcast/* = false */)
+   fc::ripemd160 submit_content_async( string const& author,
+                                       vector< pair< string, uint32_t>> co_authors,
+                                       string const& content_dir,
+                                       string const& samples_dir,
+                                       string const& protocol,
+                                       vector<regional_price_info> const& price_amounts,
+                                       vector<account_id_type> const& seeders,
+                                       fc::time_point_sec const& expiration,
+                                       string const& synopsis,
+                                       bool broadcast/* = false */)
    {
       auto& package_manager = decent::package::PackageManager::instance();
 

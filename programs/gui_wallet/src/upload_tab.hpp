@@ -28,7 +28,8 @@ namespace gui_wallet
       void slot_UpdateContents();
       void slot_Bought();
       void slot_ShowContentPopup(int);
-      void slot_UploadPopup();
+      void slot_UploadPopup(const QString& content);
+      void slot_UploadPopup_defoult();
 
    signals:
       void signal_setEnabledUpload(bool);

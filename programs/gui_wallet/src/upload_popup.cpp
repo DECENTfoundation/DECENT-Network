@@ -36,7 +36,7 @@ using std::string;
 namespace gui_wallet
 {
 
-Upload_popup::Upload_popup(QWidget* pParent)
+Upload_popup::Upload_popup(QWidget* pParent, const std::string content)
 : QDialog(pParent)
 , m_pStatusCheckTimer(new QTimer(this))
 , m_pDescriptionText(new DecentTextEdit(this, DecentTextEdit::Editor))
@@ -51,6 +51,7 @@ Upload_popup::Upload_popup(QWidget* pParent)
       m_arrPublishers[iIndex].first = publishers[iIndex];
       m_arrPublishers[iIndex].second = false;
    }
+   
    //
    setWindowTitle(tr("Upload new content"));
    //
@@ -58,6 +59,8 @@ Upload_popup::Upload_popup(QWidget* pParent)
    //
    DecentLineEdit* pTitleText = new DecentLineEdit(this, DecentLineEdit::DialogLineEdit);
    pTitleText->setPlaceholderText(tr("Title"));
+   pTitleText->setText(QString::fromStdString(content));
+   pTitleText->setReadOnly( !content.empty() );
    pTitleText->setAttribute(Qt::WA_MacShowFocusRect, 0);
    pTitleText->setTextMargins(5, 5, 5, 5);
    //
@@ -517,13 +520,8 @@ void Upload_popup::slot_UploadContent()
                                                                        " \"" + path + "\""
                                                                        " \"" + samples_path + "\""
                                                                        " "   + str_AES_key);
-      
+      //hash
       std::string str_pair = pair[0].get<std::string>();
-//      str_pair += "[\""           + pair[0].get<std::string>() + "\",{";
-//      str_pair += " \"n\": "        + std::to_string( pair[1]["n"].get<uint>() ) + ",";
-//      str_pair += " \"u_seed\": \"" + pair[1]["u_seed"].get<std::string>() + "\",";
-//      str_pair += " \"pubKey\": \"" + pair[1]["pubKey"].get<std::string>() + "\"}]";
-//      std::cout << "~pair\n" << str_pair << std::endl;
       
       //cd
       std::string cd;
@@ -531,7 +529,6 @@ void Upload_popup::slot_UploadContent()
       cd += " \"n\": "        + std::to_string( pair[1]["n"].get<uint>() ) + ",";
       cd += " \"u_seed\": \"" + pair[1]["u_seed"].get<std::string>() + "\",";
       cd += " \"pubKey\": \"" + pair[1]["pubKey"].get<std::string>() + "\"}";
-//      std::cout << "~cd\n" << cd << std::endl;
       
       //upload
       Globals::instance().runTask("upload_package"
@@ -540,7 +537,6 @@ void Upload_popup::slot_UploadContent()
       //submit content
       std::string _submitCommand = "submit_content";
       _submitCommand += " " + Globals::instance().getCurrentUser() + "[]";//author
-      _submitCommand += " \"\"";                                            //empty co-author
       _submitCommand += " \"" + path + "\"";                                //URI
       _submitCommand += " [{\"region\" : \"\", \"amount\" : \"" + m_price + "\", \"asset_symbol\" : \"" + assetName + "\" }]";//price
       _submitCommand += " " + str_file_size + "";                           //file size

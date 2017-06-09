@@ -47,6 +47,7 @@ Upload_tab::Upload_tab(QWidget* pParent)
 #ifdef WINDOWS_HIGH_DPI
       { " ", -80 }
 #else
+      {" ", -50},
       {" ", -50}
 #endif
    });
@@ -79,7 +80,14 @@ Upload_tab::Upload_tab(QWidget* pParent)
    pMainLayout->addLayout(pSearchLayout);
    pMainLayout->addWidget(m_pTableWidget);
    setLayout(pMainLayout);
-
+   
+//   if (m_pDetailsSignalMapper)
+//      delete m_pDetailsSignalMapper;
+//   m_pDetailsSignalMapper = new QSignalMapper(this);
+//   
+//   QObject::connect(m_pDetailsSignalMapper, SIGNAL(mapped(const QString &)),
+//           this, SIGNAL(clicked(const QString &)));
+   
    QObject::connect(&Globals::instance(), &Globals::currentUserChanged,
                     this, &Upload_tab::slot_UpdateContents);
    QObject::connect(this, &Upload_tab::signal_setEnabledUpload,
@@ -89,7 +97,7 @@ Upload_tab::Upload_tab(QWidget* pParent)
    QObject::connect(pfilterLineEditor, &QLineEdit::textChanged,
                     this, &Upload_tab::slot_SearchTermChanged);
    QObject::connect(pUploadButton, &QPushButton::clicked,
-                    this, &Upload_tab::slot_UploadPopup);
+                    this, &Upload_tab::slot_UploadPopup_defoult);
 
    slot_UpdateContents();
 }
@@ -190,13 +198,15 @@ void Upload_tab::ShowDigitalContentsGUI()
 {
    m_pTableWidget->setRowCount(_digital_contents.size());
 
-   enum {eTitle, eRating, eSize, ePrice, eCreated, eRemaining, eStatus, eIcon};
+   enum {eTitle, eRating, eSize, ePrice, eCreated, eRemaining, eStatus, eIcon, eResubmit};
 
    if (m_pDetailsSignalMapper)
       delete m_pDetailsSignalMapper;
    m_pDetailsSignalMapper = new QSignalMapper(this);  // similar to extract signal handler
    QObject::connect(m_pDetailsSignalMapper, (void (QSignalMapper::*)(int))&QSignalMapper::mapped,
                     this, &Upload_tab::slot_ShowContentPopup);
+   QObject::connect(m_pDetailsSignalMapper, (void (QSignalMapper::*)(const QString&))&QSignalMapper::mapped,
+                    this, &Upload_tab::slot_UploadPopup);
 
    for (size_t iIndex = 0; iIndex < _digital_contents.size(); ++iIndex)
    {
@@ -253,22 +263,47 @@ void Upload_tab::ShowDigitalContentsGUI()
       info_icon->setEnabled(false);
       info_icon->setIconSize(QSize(40,40));
       m_pTableWidget->setCellWidget(iIndex, eIcon, info_icon);
+      
+      // Resubmit
+      DecentButton* resubmit_button = new DecentButton(m_pTableWidget);
+      resubmit_button->setText("Resubmit");
+      m_pTableWidget->setCellWidget(iIndex, 8, resubmit_button);
 
       QObject::connect(info_icon, &DecentButton::clicked,
                        m_pDetailsSignalMapper, (void (QSignalMapper::*)())&QSignalMapper::map);
+//      QObject::connect(info_icon, &DecentButton::clicked,
+//                       this, &Upload_tab::slot_ShowContentPopup);
       m_pDetailsSignalMapper->setMapping(info_icon, iIndex);
+      
+      
+      QObject::connect(resubmit_button, &DecentButton::clicked,
+                       m_pDetailsSignalMapper, (void (QSignalMapper::*)())&QSignalMapper::map);
+      
+//      QObject::connect(resubmit_button, &DecentButton::clicked,
+//                       this, &Upload_tab::slot_UploadPopup);
+      m_pDetailsSignalMapper->setMapping(resubmit_button, QString::fromStdString(title));
    }
 }
 
-void Upload_tab::slot_UploadPopup()
+void Upload_tab::slot_UploadPopup(const QString& content)
 {
    if (false == Globals::instance().getCurrentUser().empty())
    {
-      Upload_popup popup(this);
+      Upload_popup popup(this, content.toStdString());
+      popup.setWindowTitle("Resubmit " + content + " content");
       popup.exec();
    }
 }
 
+void Upload_tab::slot_UploadPopup_defoult()
+{
+   if (false == Globals::instance().getCurrentUser().empty())
+   {
+      Upload_popup popup(this, std::string());
+      popup.exec();
+   }
+}
+   
 void Upload_tab::slot_ShowContentPopup(int iIndex)
 {
    if (iIndex < 0 || iIndex >= _digital_contents.size())

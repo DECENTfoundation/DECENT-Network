@@ -15,7 +15,7 @@ namespace gui_wallet
    {
       Q_OBJECT
    public:
-      Upload_popup(QWidget* pParent);
+      Upload_popup(QWidget* pParent, const std::string);
       ~Upload_popup();
 
    public slots:
