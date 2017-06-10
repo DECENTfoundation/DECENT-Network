@@ -7,8 +7,10 @@
 #include <graphene/chain/buying_object.hpp>
 #include <graphene/utilities/key_conversion.hpp>
 #include <decent/package/package.hpp>
+#include <decent/package/package_config.hpp>
 #include <fc/smart_ref_impl.hpp>
 #include <algorithm>
+#include <ipfs/client.h>
 
 namespace decent { namespace seeding {
 namespace bpo = boost::program_options;
@@ -339,6 +341,9 @@ void seeding_plugin_impl::send_ready_to_publish()
    const auto &sidx = database().get_index_type<my_seeder_index>().indices().get<by_seeder>();
    auto sritr = sidx.begin();
    graphene::chain::database &db = database();
+   ipfs::Client ipfs_client(decent::package::PackageManagerConfigurator::instance().get_ipfs_host(), decent::package::PackageManagerConfigurator::instance().get_ipfs_port());
+   ipfs::Json json;
+   ipfs_client.Id( &json );
 
    while(sritr != sidx.end() ){
       ready_to_publish_operation op;
@@ -346,6 +351,7 @@ void seeding_plugin_impl::send_ready_to_publish()
       op.space = sritr->free_space;
       op.price_per_MByte = sritr->price;
       op.pubKey = get_public_el_gamal_key(sritr->content_privKey);
+      op.ipfs_ID = json["ID"];
       signed_transaction tx;
       tx.operations.push_back(op);
 
@@ -536,7 +542,8 @@ void seeding_plugin::plugin_initialize( const boost::program_options::variables_
    fc::optional<fc::ecc::private_key> private_key;
    seeding_plugin_startup_options seeding_options;
 
-   if( options.count("seeder-private-key") || options.count("content-private-key") || options.count("seeder") || options.count("free-space") || options.count("seeding-price") ) {
+   if( options.count("seeder-private-key") || options.count("content-private-key") || options.count("seeder")
+       || options.count("free-space") || options.count("seeding-price") ) { // minimum required parameters to run seeding plugin
       if( options.count("seeder-private-key")) {
          private_key = graphene::utilities::wif_to_key(options["seeder-private-key"].as<std::string>());
          if( !private_key )
@@ -568,6 +575,7 @@ void seeding_plugin::plugin_initialize( const boost::program_options::variables_
       } else{
          FC_THROW("missing seeding-price parameter");
       }
+
       if( options.count("seeder"))
          seeding_options.seeder = fc::variant(options["seeder"].as<string>()).as<account_id_type>();
       else
@@ -630,6 +638,7 @@ void seeding_plugin::plugin_pre_startup( const seeding_plugin_startup_options& s
          mso.content_privKey = seeding_options.content_private_key;
          mso.privKey = seeding_options.seeder_private_key;
          mso.price = seeding_options.seeding_price;
+
       });
    }catch(...){}
    ilog("seeding plugin:  plugin_pre_startup() end");
