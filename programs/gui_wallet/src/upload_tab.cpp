@@ -173,17 +173,16 @@ string Upload_tab::getUpdateCommand()
 
    graphene::chain::ContentObjectPropertyManager type_composer;
    graphene::chain::ContentObjectTypeValue type(graphene::chain::EContentObjectApplication::DecentCore);
+   string str_type;
+   type.to_string(str_type);
 
-   type_composer.set<graphene::chain::ContentObjectType>(type);
-   boost::replace_all(type_composer.m_str_synopsis, "\"", "");   // a dirty hack
-   
    return   "search_user_content "
             "\"" + currentUserName + "\" "
             "\"" + m_strSearchTerm.toStdString() + "\" "
             "\"" + m_pTableWidget->getSortedColumn() + "\" "
             "\"\" "   // region_code
             "\"" + next_iterator() + "\" "
-            "\"" + type_composer.m_str_synopsis + "\" "
+            "\"" + str_type + "\" "
             + std::to_string(m_i_page_size + 1);
 }
 
@@ -275,10 +274,10 @@ void Upload_tab::slot_ShowContentPopup(int iIndex)
    if (iIndex < 0 || iIndex >= _digital_contents.size())
       throw std::out_of_range("Content index is out of range");
 
-   ContentInfoDialog* pDetailsDialog = new ContentInfoDialog(nullptr, _digital_contents[iIndex]);
-   pDetailsDialog->setAttribute(Qt::WA_DeleteOnClose);
-   pDetailsDialog->open();
-   QObject::connect(pDetailsDialog, &ContentInfoDialog::ContentWasBought,
+   ContentInfoWidget* pDetailsDialog = new ContentInfoWidget(nullptr, _digital_contents[iIndex]);
+   Globals::instance().signal_stackWidgetPush(pDetailsDialog);
+
+   QObject::connect(pDetailsDialog, &ContentInfoWidget::accepted,
                     this, &Upload_tab::slot_Bought);
 }
    

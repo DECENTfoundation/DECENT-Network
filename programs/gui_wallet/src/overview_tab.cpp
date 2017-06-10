@@ -187,24 +187,19 @@ void Overview_tab::slot_Details()
       
       std::string id = accountInfo["id"].get<std::string>();
       std::string registrar = accountInfo["registrar"].get<std::string>();
-      std::string referrer = accountInfo["referrer"].get<std::string>();
-      std::string lifetime_referrer = accountInfo["lifetime_referrer"].get<std::string>();
-      std::string network_fee_percentage = std::to_string(accountInfo["network_fee_percentage"].get<int>());
-      std::string lifetime_referrer_fee_percentage = std::to_string(accountInfo["lifetime_referrer_fee_percentage"].get<int>());
-      std::string referrer_rewards_percentage = std::to_string(accountInfo["referrer_rewards_percentage"].get<int>());
+      bool is_publishing_manager = accountInfo["rights_to_publish"]["is_publishing_manager"].get<bool>();
       std::string name = accountInfo["name"].get<std::string>();
+      int size = accountInfo["rights_to_publish"]["publishing_rights_received"].size();
+      bool is_publishing_rights_received = size;
       
-      UserInfoDialog* dialog = new UserInfoDialog(nullptr,
+      UserInfoWidget* userInfoWidget = new UserInfoWidget(nullptr,
+                                                  is_publishing_manager,
+                                                  is_publishing_rights_received,
                                                   QString::fromStdString(registrar),
-                                                  QString::fromStdString(referrer),
-                                                  QString::fromStdString(lifetime_referrer),
-                                                  QString::fromStdString(network_fee_percentage),
-                                                  QString::fromStdString(lifetime_referrer_fee_percentage),
-                                                  QString::fromStdString(referrer_rewards_percentage),
                                                   QString::fromStdString(name),
                                                   QString::fromStdString(id));
-      dialog->setAttribute(Qt::WA_DeleteOnClose);
-      dialog->open();
+      
+      Globals::instance().signal_stackWidgetPush(userInfoWidget);
    } catch(...) {
       // Ignore for now
    }

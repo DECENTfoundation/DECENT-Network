@@ -71,6 +71,7 @@ class QTimer;
 
 namespace gui_wallet
 {
+   class StackLayerWidget;
    std::string CalculateRemainingTime(QDateTime const& dt, QDateTime const& dtFuture);
    QString CalculateRemainingTime_Behind(QDateTime const& dt, QDateTime const& dtFuture);
    
@@ -140,6 +141,8 @@ namespace gui_wallet
       enum class ConnectionState { Connecting, SyncingUp, Up };
       static Globals& instance();
 
+      void startDaemons(bool replay_blockchain);
+      void stopDaemons();
       std::string getCurrentUser() const;
       WalletAPI& getWallet() const;
       void clear();
@@ -152,6 +155,7 @@ namespace gui_wallet
       bool connected() const;
 
    signals:
+      void signal_stackWidgetPush(gui_wallet::StackLayerWidget*);
       void signal_showPurchasedTab();
       void signal_showTransactionsTab(std::string const&);
       void signal_updateAccountBalance(Asset const&);
@@ -185,6 +189,7 @@ namespace gui_wallet
       QThread* m_p_wallet_operator_thread;
       QTimer* m_p_timer;
       QLocale* m_p_locale;
+      class DaemonDetails* m_p_daemon_details;
       std::string m_str_currentUser;
       std::chrono::steady_clock::time_point m_tp_started;
       std::map<std::string, std::string> m_map_user_id_cache;

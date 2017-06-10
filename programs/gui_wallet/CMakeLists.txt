@@ -32,19 +32,17 @@ add_executable(DECENT MACOSX_BUNDLE
                src/gui_wallet_centralwidget.hpp
                src/gui_wallet_global.cpp
                src/gui_wallet_global.hpp
-               src/gui_wallet_mainwindow.cpp
-               src/gui_wallet_mainwindow.hpp
                src/gui_wallet_tabcontentmanager.cpp
                src/gui_wallet_tabcontentmanager.hpp
                src/main_gui_wallet.cpp
+               src/mainwindow.cpp
+               src/mainwindow.hpp
                src/overview_tab.cpp
                src/overview_tab.hpp
                src/purchased_tab.cpp
                src/purchased_tab.hpp
                src/richdialog.cpp
                src/richdialog.hpp
-               src/text_display_dialog.cpp
-               src/text_display_dialog.hpp
                src/transactions_tab.cpp
                src/transactions_tab.hpp
                src/upload_popup.cpp
