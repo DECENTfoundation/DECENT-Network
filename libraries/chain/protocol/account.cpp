@@ -178,17 +178,6 @@ void account_create_operation::validate()const
    FC_ASSERT( !owner.is_impossible(), "cannot create an account with an imposible owner authority threshold" );
    FC_ASSERT( !active.is_impossible(), "cannot create an account with an imposible active authority threshold" );
    options.validate();
-   if( extensions.value.buyback_options.valid() )
-   {
-      FC_ASSERT( owner == authority::null_authority() );
-      FC_ASSERT( active == authority::null_authority() );
-      size_t n_markets = extensions.value.buyback_options->markets.size();
-      FC_ASSERT( n_markets > 0 );
-      for( const asset_id_type m : extensions.value.buyback_options->markets )
-      {
-         FC_ASSERT( m != extensions.value.buyback_options->asset_to_buy );
-      }
-   }
 }
 
 

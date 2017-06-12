@@ -44,8 +44,7 @@ namespace graphene { namespace chain {
    struct transfer_operation : public base_operation
    {
       struct fee_parameters_type {
-      uint64_t fee       = GRAPHENE_BLOCKCHAIN_PRECISION / 10;
-      uint32_t price_per_kbyte = 10 * GRAPHENE_BLOCKCHAIN_PRECISION; /// only required for large memos.
+      uint64_t fee       = GRAPHENE_BLOCKCHAIN_PRECISION / 1000;
    };
 
       asset            fee;
@@ -62,10 +61,9 @@ namespace graphene { namespace chain {
 
       account_id_type fee_payer()const { return from; }
       void            validate()const;
-      share_type      calculate_fee(const fee_parameters_type& k)const;
    };
 
 }} // graphene::chain
 
-FC_REFLECT( graphene::chain::transfer_operation::fee_parameters_type, (fee)(price_per_kbyte) )
+FC_REFLECT( graphene::chain::transfer_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::transfer_operation, (fee)(from)(to)(amount)(memo)(extensions) )

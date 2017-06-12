@@ -178,6 +178,8 @@
 #define GRAPHENE_TEMP_ACCOUNT (graphene::chain::account_id_type(2))
 /// Represents the canonical account for specifying you will vote directly (as opposed to a proxy)
 #define GRAPHENE_PROXY_TO_SELF_ACCOUNT (graphene::chain::account_id_type(3))
+/// DECENT maintenance account
+
 /// Sentinel value used in the scheduler.
 #define GRAPHENE_NULL_WITNESS (graphene::chain::witness_id_type(0))
 ///@}

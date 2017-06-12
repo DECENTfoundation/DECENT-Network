@@ -1664,48 +1664,6 @@ public:
       return tx;
    }
 
-   signed_transaction sell_asset(string seller_account,
-                                 string amount_to_sell,
-                                 string symbol_to_sell,
-                                 string min_to_receive,
-                                 string symbol_to_receive,
-                                 uint32_t timeout_sec = 0,
-                                 bool   fill_or_kill = false,
-                                 bool   broadcast = false)
-   {
-      account_object seller   = get_account( seller_account );
-
-      limit_order_create_operation op;
-      op.seller = seller.id;
-      op.amount_to_sell = get_asset(symbol_to_sell).amount_from_string(amount_to_sell);
-      op.min_to_receive = get_asset(symbol_to_receive).amount_from_string(min_to_receive);
-      if( timeout_sec )
-         op.expiration = fc::time_point::now() + fc::seconds(timeout_sec);
-      op.fill_or_kill = fill_or_kill;
-
-      signed_transaction tx;
-      tx.operations.push_back(op);
-      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
-      tx.validate();
-
-      return sign_transaction( tx, broadcast );
-   }
-
-   signed_transaction cancel_order(object_id_type order_id, bool broadcast = false)
-   { try {
-         FC_ASSERT(!is_locked());
-         FC_ASSERT(order_id.space() == protocol_ids, "Invalid order ID ${id}", ("id", order_id));
-         signed_transaction trx;
-
-         limit_order_cancel_operation op;
-         op.fee_paying_account = get_object<limit_order_object>(order_id).seller;
-         op.order = order_id;
-         trx.operations = {op};
-         set_operation_fees( trx, _remote_db->get_global_properties().parameters.current_fees);
-
-         trx.validate();
-         return sign_transaction(trx, broadcast);
-   } FC_CAPTURE_AND_RETHROW((order_id)) }
 
    signed_transaction transfer(string from, string to, string amount,
                                string asset_symbol, string memo, bool broadcast = false)
@@ -1742,35 +1700,6 @@ public:
       return sign_transaction(tx, broadcast);
    } FC_CAPTURE_AND_RETHROW( (from)(to)(amount)(asset_symbol)(memo)(broadcast) ) }
 
-   signed_transaction issue_asset(string to_account, string amount, string symbol,
-                                  string memo, bool broadcast = false)
-   {
-      auto asset_obj = get_asset(symbol);
-
-      account_object to = get_account(to_account);
-      account_object issuer = get_account(asset_obj.issuer);
-
-      asset_issue_operation issue_op;
-      issue_op.issuer           = asset_obj.issuer;
-      issue_op.asset_to_issue   = asset_obj.amount_from_string(amount);
-      issue_op.issue_to_account = to.id;
-
-      if( memo.size() )
-      {
-         issue_op.memo = memo_data();
-         issue_op.memo->from = issuer.options.memo_key;
-         issue_op.memo->to = to.options.memo_key;
-         issue_op.memo->set_message(get_private_key(issuer.options.memo_key),
-                                    to.options.memo_key, memo);
-      }
-
-      signed_transaction tx;
-      tx.operations.push_back(issue_op);
-      set_operation_fees(tx,_remote_db->get_global_properties().parameters.current_fees);
-      tx.validate();
-
-      return sign_transaction(tx, broadcast);
-   }
 
    std::map<string,std::function<string(fc::variant,const fc::variants&)>> get_result_formatters() const
    {
@@ -2765,14 +2694,7 @@ signed_transaction content_cancellation(string author,
          ilog("Transferred to ${n} accounts in ${time} milliseconds",
               ("n", number_of_accounts*2)("time", (end - start).count() / 1000));
 
-         start = fc::time_point::now();
-         for( int i = 0; i < number_of_accounts; ++i )
-         {
-            signed_transaction trx = issue_asset(prefix + fc::to_string(i), "1000", "SHILL", "", true);
-         }
-         end = fc::time_point::now();
-         ilog("Issued to ${n} accounts in ${time} milliseconds",
-              ("n", number_of_accounts)("time", (end - start).count() / 1000));
+
       }
       catch (...)
       {
@@ -2912,10 +2834,8 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
    std::string operation_printer::operator()(const asset_create_operation& op) const
    {
       out << "Create ";
-      if( op.monitored_asset_opts.valid() )
-         out << "BitAsset ";
-      else
-         out << "User-Issue Asset ";
+      out << "Monitored Asset ";
+
       out << "'" << op.symbol << "' with issuer " << wallet.get_account(op.issuer).name;
       return fee(op.fee);
    }
@@ -3140,10 +3060,7 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
       return my->_remote_db->list_assets( lowerbound, limit );
    }
 
-   vector<bucket_object> wallet_api::get_market_history( string symbol1, string symbol2, uint32_t bucket )const
-   {
-      return my->_remote_hist->get_market_history( get_asset_id(symbol1), get_asset_id(symbol2), bucket, fc::time_point_sec(), fc::time_point::now() );
-   }
+
 
    vector<transaction_detail_object> wallet_api::search_account_history(string const& account_name,
                                                                         string const& order,
@@ -3183,11 +3100,6 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
       catch(...){}
 
       return result;
-   }
-
-   vector<limit_order_object> wallet_api::get_limit_orders(string a, string b, uint32_t limit)const
-   {
-      return my->_remote_db->get_limit_orders(get_asset(a).id, get_asset(b).id, limit);
    }
 
    brain_key_info wallet_api::suggest_brain_key()const
@@ -3512,11 +3424,7 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
                broadcast
                );
    }
-   signed_transaction wallet_api::issue_asset(string to_account, string amount, string symbol,
-                                              string memo, bool broadcast)
-   {
-      return my->issue_asset(to_account, amount, symbol, memo, broadcast);
-   }
+
 
    signed_transaction wallet_api::transfer(string from, string to, string amount,
                                            string asset_symbol, string memo, bool broadcast /* = false */)
@@ -3524,18 +3432,7 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
       return my->transfer(from, to, amount, asset_symbol, memo, broadcast);
    }
 
-   signed_transaction wallet_api::create_asset(string issuer,
-                                               string symbol,
-                                               uint8_t precision,
-                                               string description,
-                                               uint64_t max_supply,
-                                               bool broadcast)
-
-   {
-      return my->create_asset(issuer, symbol, precision, description, max_supply, broadcast);
-   }
-
-   signed_transaction wallet_api::create_marked_issued_asset(string issuer,
+   signed_transaction wallet_api::create_monitored_asset(string issuer,
                                                string symbol,
                                                uint8_t precision,
                                                string description,
@@ -3544,15 +3441,6 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
 
    {
       return my->create_marked_issued_asset(issuer, symbol, precision, description, options, broadcast);
-   }
-
-   signed_transaction wallet_api::update_asset(string symbol,
-                                               optional<string> new_issuer,
-                                               string description,
-                                               uint64_t max_supply,
-                                               bool broadcast /* = false */)
-   {
-      return my->update_asset(symbol, new_issuer, description, max_supply, broadcast);
    }
 
    signed_transaction wallet_api::update_monitored_asset(string symbol,
@@ -3645,12 +3533,6 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
    operation wallet_api::get_prototype_operation(string operation_name)
    {
       return my->get_prototype_operation( operation_name );
-   }
-
-   void wallet_api::dbg_make_uia(string creator, string symbol)
-   {
-      FC_ASSERT(!is_locked());
-      my->dbg_make_uia(creator, symbol);
    }
 
    void wallet_api::dbg_make_mia(string creator, string symbol)
@@ -3881,56 +3763,10 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
       return my->_keys;
    }
 
-   signed_transaction wallet_api::sell_asset(string seller_account,
-                                             string amount_to_sell,
-                                             string symbol_to_sell,
-                                             string min_to_receive,
-                                             string symbol_to_receive,
-                                             uint32_t expiration,
-                                             bool   fill_or_kill,
-                                             bool   broadcast)
-   {
-      return my->sell_asset(seller_account, amount_to_sell, symbol_to_sell, min_to_receive,
-                            symbol_to_receive, expiration, fill_or_kill, broadcast);
-   }
-
-   signed_transaction wallet_api::sell( string seller_account,
-                                        string base,
-                                        string quote,
-                                        double rate,
-                                        double amount,
-                                        bool broadcast )
-   {
-      return my->sell_asset( seller_account, std::to_string( amount ), base,
-                             std::to_string( rate * amount ), quote, 0, false, broadcast );
-   }
-
-   signed_transaction wallet_api::buy( string buyer_account,
-                                       string base,
-                                       string quote,
-                                       double rate,
-                                       double amount,
-                                       bool broadcast )
-   {
-      return my->sell_asset( buyer_account, std::to_string( rate * amount ), quote,
-                             std::to_string( amount ), base, 0, false, broadcast );
-   }
-
-   signed_transaction wallet_api::cancel_order(object_id_type order_id, bool broadcast)
-   {
-      FC_ASSERT(!is_locked());
-      return my->cancel_order(order_id, broadcast);
-   }
 
    string wallet_api::get_private_key( public_key_type pubkey )const
    {
       return key_to_wif( my->get_private_key( pubkey ) );
-   }
-
-
-   order_book wallet_api::get_order_book( const string& base, const string& quote, unsigned limit )
-   {
-      return( my->_remote_db->get_order_book( base, quote, limit ) );
    }
 
    signed_block_with_info::signed_block_with_info( const signed_block& block )

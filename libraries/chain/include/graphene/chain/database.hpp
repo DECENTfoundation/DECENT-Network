@@ -370,50 +370,7 @@ namespace graphene { namespace chain {
 
          bool is_reward_switch_time() const;
 
-         //////////////////// db_market.cpp ////////////////////
 
-         /// @{ @group Market Helpers
-         void cancel_order(const limit_order_object& order, bool create_virtual_op = true);
-
-         /**
-          * @brief Process a new limit order through the markets
-          * @param order The new order to process
-          * @return true if order was completely filled; false otherwise
-          *
-          * This function takes a new limit order, and runs the markets attempting to match it with existing orders
-          * already on the books.
-          */
-         bool apply_order(const limit_order_object& new_order_object );
-
-         /**
-          * Matches the two orders,
-          *
-          * @return a bit field indicating which orders were filled (and thus removed)
-          *
-          * 0 - no orders were matched
-          * 1 - bid was filled
-          * 2 - ask was filled
-          * 3 - both were filled
-          */
-         ///@{
-         template<typename OrderType>
-         int match( const limit_order_object& bid, const OrderType& ask, const price& match_price );
-         int match( const limit_order_object& bid, const limit_order_object& ask, const price& trade_price );
-         ///@}
-
-         /**
-          * @return true if the order was completely filled and thus freed.
-          */
-         bool fill_order( const limit_order_object& order, const asset& pays, const asset& receives, bool cull_if_small );
-
-         // helpers to fill_order
-         void pay_order( const account_object& receiver, const asset& receives, const asset& pays );
-
-         asset calculate_market_fee(const asset_object& recv_asset, const asset& trade_amount);
-         asset pay_market_fees( const asset_object& recv_asset, const asset& receives );
-
-
-         ///@}
          /**
           *  This method validates transactions without adding it to the pending state.
           *  @return true if the transaction would validate
@@ -470,7 +427,6 @@ namespace graphene { namespace chain {
          void update_last_irreversible_block();
          void clear_expired_transactions();
          void clear_expired_proposals();
-         void clear_expired_orders();
          void update_expired_feeds();
          void update_maintenance_flag( bool new_maintenance_flag );
          void update_withdraw_permissions();

@@ -32,7 +32,6 @@
 #include <graphene/chain/account_object.hpp>
 #include <graphene/chain/asset_object.hpp>
 #include <graphene/chain/chain_property_object.hpp>
-#include <graphene/chain/market_object.hpp>
 #include <graphene/chain/operation_history_object.hpp>
 #include <graphene/chain/proposal_object.hpp>
 #include <graphene/chain/witness_object.hpp>
@@ -43,8 +42,6 @@
 #include <graphene/chain/budget_record_object.hpp>
 #include <graphene/chain/subscription_object.hpp>
 #include <graphene/chain/transaction_detail_object.hpp>
-
-#include <graphene/market_history/market_history_plugin.hpp>
 
 #include <fc/api.hpp>
 #include <fc/optional.hpp>
@@ -65,7 +62,6 @@
 namespace graphene { namespace app {
 
       using namespace graphene::chain;
-      using namespace graphene::market_history;
       using namespace std;
 
       class database_api_impl;
@@ -426,80 +422,6 @@ namespace graphene { namespace app {
           * This function has semantics identical to @ref get_objects
           */
          vector<optional<asset_object>> lookup_asset_symbols(const vector<string>& symbols_or_ids)const;
-
-         /////////////////////
-         // Markets / feeds //
-         /////////////////////
-
-         /**
-          * @brief Get limit orders in a given market
-          * @param base ID of asset being sold
-          * @param quote ID of asset being purchased
-          * @param limit Maximum number of orders to retrieve
-          * @return The limit orders, ordered from least price to greatest
-          * @ingroup DatabaseAPI
-          */
-         vector<limit_order_object> get_limit_orders(asset_id_type base, asset_id_type quote, uint32_t limit)const;
-
-         /**
-          * @brief Subscribe to updates to a given market
-          * @param callback Callback function
-          * @param base First asset ID
-          * @param quote Second asset ID
-          * @ingroup DatabaseAPI
-          */
-         void subscribe_to_market(std::function<void(const variant&)> callback,
-                                  asset_id_type base, asset_id_type quote);
-
-         /**
-          * @brief Unsubscribe from updates to a given market
-          * @param base First asset ID
-          * @param quote Second asset ID
-          * @ingroup DatabaseAPI
-          */
-         void unsubscribe_from_market( asset_id_type base, asset_id_type quote );
-
-         /**
-          * @brief Returns the ticker for the market assetA:assetB
-          * @param base String name of the first asset
-          * @param quote String name of the second asset
-          * @return The market ticker for the past 24 hours.
-          * @ingroup DatabaseAPI
-          */
-         market_ticker get_ticker( const string& base, const string& quote )const;
-
-         /**
-          * @brief Returns the 24 hour volume for the market assetA:assetB
-          * @param base String name of the first asset
-          * @param quote String name of the second asset
-          * @return The market volume over the past 24 hours
-          * @ingroup DatabaseAPI
-          */
-         market_volume get_24_volume( const string& base, const string& quote )const;
-
-         /**
-          * @brief Returns the order book for the market base:quote
-          * @param base String name of the first asset
-          * @param quote String name of the second asset
-          * @param limit Depth of the order book. Up to depth of each asks and bids, capped at 50. Prioritizes most moderate of each
-          * @return Order book of the market
-          * @ingroup DatabaseAPI
-          */
-         order_book get_order_book( const string& base, const string& quote, unsigned limit = 50 )const;
-
-         /**
-          * @brief Returns recent trades for the market assetA:assetB
-          * Note: Currentlt, timezone offsets are not supported. The time must be UTC.
-          * @param base String name of the first asset
-          * @param quote String name of the second asset
-          * @param start Start time as a UNIX timestamp
-          * @param stop Stop time as a UNIX timestamp
-          * @param limit Number of trasactions to retrieve, capped at 100
-          * @return Recent transactions in the market
-          * @ingroup DatabaseAPI
-          */
-         vector<market_trade> get_trade_history( const string& base, const string& quote, fc::time_point_sec start, fc::time_point_sec stop, unsigned limit = 100 )const;
-
 
 
          ///////////////
@@ -889,15 +811,6 @@ FC_API(graphene::app::database_api,
           (get_assets)
           (list_assets)
           (lookup_asset_symbols)
-
-          // Markets / feeds
-          (get_order_book)
-          (get_limit_orders)
-          (subscribe_to_market)
-          (unsubscribe_from_market)
-          (get_ticker)
-          (get_24_volume)
-          (get_trade_history)
 
           // Witnesses
           (get_witnesses)

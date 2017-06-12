@@ -27,7 +27,6 @@
 #include <graphene/chain/protocol/assert.hpp>
 #include <graphene/chain/protocol/asset_ops.hpp>
 #include <graphene/chain/protocol/custom.hpp>
-#include <graphene/chain/protocol/market.hpp>
 #include <graphene/chain/protocol/proposal.hpp>
 #include <graphene/chain/protocol/transfer.hpp>
 #include <graphene/chain/protocol/vesting.hpp>
@@ -45,9 +44,6 @@ namespace graphene { namespace chain {
     */
    typedef fc::static_variant<
             transfer_operation,
-            limit_order_create_operation,
-            limit_order_cancel_operation,
-            fill_order_operation,           // VIRTUAL
             account_create_operation,
             account_update_operation,
             account_transfer_operation,
@@ -55,7 +51,6 @@ namespace graphene { namespace chain {
 
             asset_update_operation,
             asset_update_monitored_asset_operation,
-            asset_issue_operation,
             asset_publish_feed_operation,
             witness_create_operation,
 

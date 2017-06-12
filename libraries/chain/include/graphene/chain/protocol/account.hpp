@@ -23,7 +23,6 @@
  */
 #pragma once
 #include <graphene/chain/protocol/base.hpp>
-#include <graphene/chain/protocol/buyback.hpp>
 #include <graphene/chain/protocol/ext.hpp>
 #include <graphene/chain/protocol/types.hpp>
 #include <graphene/chain/protocol/vote.hpp>
@@ -84,7 +83,6 @@ namespace graphene { namespace chain {
       struct ext
       {
          optional< void_t >            null_ext;
-         optional< buyback_account_options > buyback_options;
       };
 
       struct fee_parameters_type
@@ -111,8 +109,6 @@ namespace graphene { namespace chain {
       {
          // registrar should be required anyway as it is the fee_payer(), but we insert it here just to be sure
          a.insert( registrar );
-         if( extensions.value.buyback_options.valid() )
-            a.insert( extensions.value.buyback_options->asset_to_buy_issuer );
       }
    };
 
@@ -196,7 +192,7 @@ FC_REFLECT(graphene::chain::account_options, (memo_key)(voting_account)(num_witn
 
 FC_REFLECT(graphene::chain::publishing_rights, (is_publishing_manager)(publishing_rights_received)(publishing_rights_forwarded))
 
-FC_REFLECT(graphene::chain::account_create_operation::ext, (null_ext)(buyback_options))
+FC_REFLECT(graphene::chain::account_create_operation::ext, (null_ext))
 FC_REFLECT( graphene::chain::account_create_operation,
             (fee)(registrar)(name)(owner)(active)(options)(extensions)
           )
