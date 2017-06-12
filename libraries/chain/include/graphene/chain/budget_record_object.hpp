@@ -41,15 +41,9 @@ struct budget_record
    // sources of budget
    share_type from_initial_reserve = 0;
    share_type from_accumulated_fees = 0;
-   share_type from_unused_witness_budget = 0;
 
-   // witness budget requested by the committee
-   share_type requested_witness_budget = 0;
-
-   // sinks of budget, should sum up to total_budget
-   share_type witness_budget = 0;
-
-
+   share_type planned_for_mining = 0;
+   share_type generated_in_last_interval = 0;
    // change in supply due to budget operations
    share_type supply_delta = 0;
 
@@ -75,9 +69,8 @@ FC_REFLECT(
    (time_since_last_budget)
    (from_initial_reserve)
    (from_accumulated_fees)
-   (from_unused_witness_budget)
-   (requested_witness_budget)
-   (witness_budget)
+   (planned_for_mining)
+   (generated_in_last_interval)
    (supply_delta)
    (_real_supply)
 )

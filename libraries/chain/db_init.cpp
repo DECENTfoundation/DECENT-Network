@@ -316,7 +316,10 @@ void database::init_genesis(const genesis_state_type& genesis_state)
    create<dynamic_global_property_object>([&](dynamic_global_property_object& p) {
       p.time = genesis_state.initial_timestamp;
       p.dynamic_flags = 0;
-      p.witness_budget = 0;
+      p.witness_budget_from_fees = 0;
+      p.witness_budget_from_rewards = 0;
+      p.unspent_fee_budget = 0;
+      p.mined_rewards = 0;
       p.recent_slots_filled = fc::uint128::max_value();
    });
 

@@ -175,13 +175,13 @@ share_type database::get_new_asset_per_block()
 
    //this method is called BEFORE the maintenance, so we add +1 to avoid unpredictable results
    uint64_t block_reward;
-   if( now <= DECENT_SPLIT_1 +1 )
+   if( now < DECENT_SPLIT_1  )
       block_reward = DECENT_BLOCK_REWARD_1;
-   else if( now <= DECENT_SPLIT_2 +1)
+   else if( now < DECENT_SPLIT_2 )
       block_reward = DECENT_BLOCK_REWARD_2;
-   else if( now <= DECENT_SPLIT_3 +1)
+   else if( now < DECENT_SPLIT_3 )
       block_reward = DECENT_BLOCK_REWARD_3;
-   else if( now <= DECENT_SPLIT_4 +1)
+   else if( now < DECENT_SPLIT_4 )
       block_reward = DECENT_BLOCK_REWARD_4;
    else
       block_reward = DECENT_BLOCK_REWARD_5;
@@ -194,11 +194,14 @@ share_type database::get_witness_budget(uint32_t blocks_to_maint)
 
    const global_property_object& gpo = get_global_properties();
 
-   share_type block_reward = get_new_asset_per_block();
+   uint64_t next_switch = get_next_reward_switch_block( head_block_num() );
+   if( head_block_num()+1 + blocks_to_maint >= next_switch )
+   {
+      uint64_t to_switch = next_switch - head_block_num() - 1;
+      return get_new_asset_per_block() * to_switch + get_new_asset_per_block() / 2 * ( blocks_to_maint - to_switch );
+   }
 
-   //uint64_t blocks_per_maintenance_interval = gpo.parameters.maintenance_interval / gpo.parameters.block_interval;
-
-   return blocks_to_maint * block_reward;
+   return blocks_to_maint * get_new_asset_per_block();
 }
 
 real_supply database::get_real_supply()const

@@ -108,26 +108,27 @@ void database::update_signing_witness(const witness_object& signing_witness, con
    uint32_t blocks_in_interval = ( uint64_t(time_to_maint) + gpo.parameters.block_interval - 1 ) / gpo.parameters.block_interval - gpo.parameters.maintenance_skip_slots ;
    //uint32_t blocks_in_interval = ( gpo.parameters.maintenance_interval ) / gpo.parameters.block_interval;
 
-   share_type witness_pay;
-   share_type witness_pay_from_fees;
+   share_type witness_pay_from_reward = 0;
+   share_type witness_pay_from_fees = 0;
 
    if( blocks_in_interval ) {
-      witness_pay = dpo.allocated_witness_budget / (blocks_in_interval - gpo.parameters.maintenance_skip_slots);
-      witness_pay_from_fees = witness_pay - get_new_asset_per_block();
+      witness_pay_from_fees = dpo.witness_budget_from_fees / (blocks_in_interval - gpo.parameters.maintenance_skip_slots);
    }
+   witness_pay_from_reward = get_new_asset_per_block();
+
    //this should never happen, but better check.
    if(witness_pay_from_fees < share_type(0))
       witness_pay_from_fees = share_type(0);
 
-   //ilog("calculating witness pay; witness budget = ${b}, from fees = ${f}, allocated budget = ${a}, blocks: ${r}, witness pay = ${p}",("b", dpo.witness_budget)("f", dpo.witness_budget_from_fees)("a", dpo.allocated_witness_budget )("r", blocks_in_interval)("p", witness_pay));
+   ilog("calculating witness pay; witness budget = ${b}, from fees = ${f}, blocks: ${r}, witness pay = ${p}",("b", dpo.witness_budget_from_rewards)("f", dpo.witness_budget_from_fees)("r", blocks_in_interval)("p", witness_pay_from_fees+witness_pay_from_reward));
 
    modify( dpo, [&]( dynamic_global_property_object& _dpo )
    {
-      _dpo.witness_budget -= get_new_asset_per_block();
-      _dpo.witness_budget_from_fees -= witness_pay_from_fees;
+      _dpo.mined_rewards += get_new_asset_per_block();
+      _dpo.unspent_fee_budget -= witness_pay_from_fees;
    } );
 
-   deposit_witness_pay( signing_witness, witness_pay );
+   deposit_witness_pay( signing_witness, witness_pay_from_fees + witness_pay_from_reward );
 
    modify( signing_witness, [&]( witness_object& _wit )
    {

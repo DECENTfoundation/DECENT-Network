@@ -126,41 +126,6 @@ void database::update_active_witnesses()
 
 } FC_CAPTURE_AND_RETHROW() }
 
-void database::initialize_budget_record( fc::time_point_sec now, budget_record& rec )const
-{
-   const dynamic_global_property_object& dpo = get_dynamic_global_properties();
-   const asset_object& core = asset_id_type(0)(*this);
-   const asset_dynamic_data_object& core_dd = core.dynamic_asset_data_id(*this);
-
-   rec.from_initial_reserve = core.reserved(*this);
-   rec.from_accumulated_fees = core_dd.accumulated_fees + dpo.witness_budget_from_fees;
-   rec.from_unused_witness_budget = dpo.witness_budget;
-
-   rec._real_supply = get_real_supply();
-
-   if(    (dpo.last_budget_time == fc::time_point_sec())
-       || (now <= dpo.last_budget_time) )
-   {
-      rec.time_since_last_budget = 0;
-      rec.witness_budget = rec.from_initial_reserve;
-      return;
-   }
-
-   int64_t dt = (now - dpo.last_budget_time).to_seconds();
-   rec.time_since_last_budget = uint64_t( dt );
-
-   rec.witness_budget = rec.from_initial_reserve + rec.from_accumulated_fees + rec.from_unused_witness_budget;
-
-   if( rec.witness_budget < 0 ) //this should never happen but better check than sorry
-   {
-      elog("from_initial_reserve is negative!");
-      rec.witness_budget = 0;
-      return;
-   }
-
-
-   return;
-}
 
 /**
  * Update the budget for witnesses and workers.
@@ -194,25 +159,32 @@ void database::process_budget()
       // which means numerator is at least equal to block_interval
 
       budget_record rec;
-      initialize_budget_record( now, rec );
+      {
+         const asset_object& core_asset = asset_id_type(0)(*this);
+         rec.from_initial_reserve = core_asset.reserved(*this);
+         rec.from_accumulated_fees = core.accumulated_fees + dpo.witness_budget_from_fees;
+         rec._real_supply = get_real_supply();
+         if(    (dpo.last_budget_time == fc::time_point_sec())
+                || (now <= dpo.last_budget_time) )
+         {
+            rec.time_since_last_budget = 0;
+         }else{
+            rec.time_since_last_budget = uint64_t( (now - dpo.last_budget_time).to_seconds() );
+         }
+      }
 
-      share_type witness_budget = get_witness_budget(blocks_to_maint) ;
-      rec.requested_witness_budget = witness_budget;
+      share_type planned_for_mining = get_witness_budget(blocks_to_maint) ;
+      rec.planned_for_mining = planned_for_mining + rec.from_accumulated_fees;
+      rec.generated_in_last_interval = dpo.mined_rewards + dpo.witness_budget_from_fees - dpo.unspent_fee_budget;
 
-      witness_budget = std::min( rec.witness_budget,  witness_budget);
-      rec.witness_budget = witness_budget;
-
-      rec.supply_delta = rec.witness_budget
-         - rec.from_unused_witness_budget;
+      rec.supply_delta = rec.generated_in_last_interval - rec.from_accumulated_fees;
 
       modify(core, [&]( asset_dynamic_data_object& _core )
       {
          _core.current_supply = (_core.current_supply + rec.supply_delta );
 
-         assert( rec.supply_delta ==
-                                   rec.witness_budget
-                                 - dpo.witness_budget
-                                );
+         assert( _core.current_supply == get_real_supply() );
+
          _core.accumulated_fees = 0;
       });
 
@@ -221,9 +193,10 @@ void database::process_budget()
          // Since initial witness_budget was rolled into
          // available_funds, we replace it with witness_budget
          // instead of adding it.
-         _dpo.witness_budget = witness_budget;
          _dpo.witness_budget_from_fees = rec.from_accumulated_fees;
-         _dpo.allocated_witness_budget = witness_budget + rec.from_accumulated_fees;
+         _dpo.witness_budget_from_rewards = planned_for_mining;
+         _dpo.unspent_fee_budget = _dpo.witness_budget_from_fees;
+         _dpo.mined_rewards = 0;
          _dpo.last_budget_time = now;
       });
 

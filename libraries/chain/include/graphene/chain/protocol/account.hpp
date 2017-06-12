@@ -158,31 +158,6 @@ namespace graphene { namespace chain {
       { if( !is_owner_update() ) a.insert( account ); }
    };
 
-   /**
-    * @brief transfers the account to another account while clearing the white list
-    * @ingroup operations
-    *
-    * In theory an account can be transferred by simply updating the authorities, but that kind
-    * of transfer lacks semantic meaning and is more often done to rotate keys without transferring
-    * ownership.   This operation is used to indicate the legal transfer of title to this account and
-    * a break in the operation history.
-    *
-    * The account_id's owner/active/voting/memo authority should be set to new_owner
-    *
-    * This operation will clear the account's whitelist statuses, but not the blacklist statuses.
-    */
-   struct account_transfer_operation : public base_operation
-   {
-      struct fee_parameters_type { uint64_t fee = 5 * GRAPHENE_BLOCKCHAIN_PRECISION; };
-
-      asset           fee;
-      account_id_type account_id;
-      account_id_type new_owner;
-      extensions_type extensions;
-
-      account_id_type fee_payer()const { return account_id; }
-      void        validate()const;
-   };
 
 } } // graphene::chain
 
@@ -204,6 +179,4 @@ FC_REFLECT( graphene::chain::account_update_operation,
 
 FC_REFLECT( graphene::chain::account_create_operation::fee_parameters_type, (basic_fee) )
 FC_REFLECT( graphene::chain::account_update_operation::fee_parameters_type, (fee) )
-FC_REFLECT( graphene::chain::account_transfer_operation::fee_parameters_type, (fee) )
 
-FC_REFLECT( graphene::chain::account_transfer_operation, (fee)(account_id)(new_owner)(extensions) )

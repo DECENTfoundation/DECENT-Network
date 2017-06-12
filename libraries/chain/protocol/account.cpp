@@ -218,10 +218,6 @@ void account_update_operation::validate()const
       new_options->validate();
 }
 
-void account_transfer_operation::validate()const
-{
-   FC_ASSERT( fee.amount >= 0 );
-}
 
 
 } } // graphene::chain

@@ -512,7 +512,7 @@ void database::_apply_block( const signed_block& next_block )
    const witness_object& signing_witness = validate_block_header(skip, next_block);
    const auto& global_props = get_global_properties();
    const auto& dynamic_global_props = get<dynamic_global_property_object>(dynamic_global_property_id_type());
-   bool maint_needed = (dynamic_global_props.next_maintenance_time <= next_block.timestamp) || is_reward_switch_time() ;
+   bool maint_needed = (dynamic_global_props.next_maintenance_time <= next_block.timestamp)  ;
 
    _current_block_num    = next_block_num;
    _current_trx_in_block = 0;
