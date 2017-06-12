@@ -100,6 +100,7 @@ namespace graphene { namespace wallet {
 
 namespace detail {
 
+// this class helps to gather seeding statistics. Tracks seeders currently in use.
 class seeders_tracker{
 public:
    seeders_tracker(wallet_api_impl& wallet):_wallet(wallet) {};
