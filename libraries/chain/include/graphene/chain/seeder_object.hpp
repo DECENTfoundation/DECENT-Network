@@ -24,7 +24,9 @@ namespace graphene { namespace chain {
       decent::encrypt::DIntegerString pubKey;
 
       string ipfs_ID;
+      // seeding stats used to compute seeder's rating
       seeding_statistics_id_type stats;
+      // seeder's rating
       uint32_t rating = 0;
    };
    

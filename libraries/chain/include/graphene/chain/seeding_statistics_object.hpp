@@ -16,6 +16,7 @@ namespace graphene { namespace chain {
          static const uint8_t type_id  = impl_publisher_object_type;
 
          account_id_type seeder;
+         // total bytes uploaded to consumers through ipfs
          uint64_t total_upload = 0;
       };
 
