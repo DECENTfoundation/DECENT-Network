@@ -350,8 +350,6 @@ namespace graphene { namespace app {
                   break;
                  case impl_budget_record_object_type:
                   break;
-                 case impl_buyback_object_type:
-                  break;
                  case impl_buying_object_type:{
                   const auto& bobj = dynamic_cast<const buying_object*>(obj);
                   assert( bobj != nullptr );
