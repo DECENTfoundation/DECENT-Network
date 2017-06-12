@@ -34,24 +34,43 @@ using namespace graphene;
 using namespace utilities;
 
 MainWindow::MainWindow()
-: m_pStackedWidget(new QStackedWidget(this))
-
+: QMainWindow()
+, m_pStackedWidget(new QStackedWidget(this))
 {
    setWindowTitle(tr("DECENT - Blockchain Content Distribution"));
 
-   QWidget* pMainWidget = new QWidget(this);
-   QMenuBar* pMenuBar = new QMenuBar(this);
+   QWidget* pContainerWidget = new QWidget(this);
+   QMenuBar* pMenuBar = new QMenuBar(pContainerWidget);
+   QWidget* pMainWidget = new QWidget(pContainerWidget);
+   //DecentLabel* pDecentLogo = new DecentLabel(this, DecentLabel::DecentLogo);
+   //pDecentLogo->setText("alsdkmalsd");
 
-   m_pCentralWidget = new CentralWigdet(this);
+   m_pCentralWidget = new CentralWigdet(pMainWidget);
 
    QVBoxLayout* pMainLayout = new QVBoxLayout;
-   pMainLayout->setContentsMargins(0,0,0,0);
-   pMainLayout->setSpacing(0);
-#ifdef _MSC_VER
-   pMainLayout->addWidget(pMenuBar);
-#endif
-   pMainLayout->addWidget(m_pStackedWidget);
+   pMainLayout->setContentsMargins(0, 0, 0, 0);
+   //pMainLayout->setSpacing(1);
+   //pMainLayout->addWidget(pDecentLogo);
+   pMainLayout->addWidget(m_pCentralWidget);
    pMainWidget->setLayout(pMainLayout);
+
+   QVBoxLayout* pContainerLayout = new QVBoxLayout;
+   pContainerLayout->setContentsMargins(0, 0, 0, 0);
+   pContainerLayout->setSpacing(0);
+#ifdef _MSC_VER
+   pContainerLayout->addWidget(pMenuBar);
+#endif
+   pContainerLayout->addWidget(m_pStackedWidget);
+   pContainerWidget->setLayout(pContainerLayout);
+
+   setCentralWidget(pContainerWidget);
+   m_pStackedWidget->addWidget(pMainWidget);
+   //
+   // The blocking splash screen
+   //
+   SetSplash();
+
+   setUnifiedTitleAndToolBarOnMac(false);
    
    {
       QAction* pActionExit = new QAction(tr("&Exit"), this);
@@ -75,15 +94,6 @@ MainWindow::MainWindow()
       pMenuFile->addAction(pActionImportKey);
       pMenuFile->addAction(pActionReplayBlockchain);
    }
-
-   setCentralWidget(pMainWidget);
-   m_pStackedWidget->addWidget(m_pCentralWidget);
-   //
-   // The blocking splash screen
-   //
-   SetSplash();
-
-   setUnifiedTitleAndToolBarOnMac(false);
 
    QComboBox*   pUsersCombo = m_pCentralWidget->usersCombo();
    DecentButton* pImportButton = m_pCentralWidget->importButton();

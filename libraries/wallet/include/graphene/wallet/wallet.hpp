@@ -1929,22 +1929,6 @@ namespace graphene { namespace wallet {
          map<string, string> get_content_comments( const string& URI )const;
 
          /**
-          * @brief Get a list of IPFS IDs imported by a seeder
-          * @param seeder Seeder, whose IPFS IDs should be retrieved
-          * @return List of IPFS IDs
-          * @ingroup WalletCLI
-          */
-         vector<string> list_imported_ipfs_IDs( const string& seeder )const;
-
-         /**
-          * @brief Get seeders and corresponding lists of IPFS IDs that are used by seeders to publish content provided by URI
-          * @param URI URI of the content
-          * @return Map of seeders to corresponding lists of IPFS IDs
-          * @ingroup WalletCLI
-          */
-         map<string, vector<string>> list_seeders_ipfs_IDs( const string& URI )const;
-
-         /**
           * @brief Get a list of seeders ordered by total upload, in decreasing order
           * @param count Maximum number of seeders to retrieve
           * @return The seeders found
@@ -2236,8 +2220,6 @@ FC_API( graphene::wallet::wallet_api,
            (list_publishers_by_price)
            (get_content_ratings)
            (get_content_comments)
-           (list_imported_ipfs_IDs)
-           (list_seeders_ipfs_IDs)
            (list_seeders_by_upload)
            (get_author_and_co_authors_by_URI)
            (create_package)

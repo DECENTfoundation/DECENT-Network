@@ -187,7 +187,7 @@ namespace graphene { namespace chain {
       uint64_t space;
       /// The price charged to author for seeding 1 MB per day
       uint32_t price_per_MByte;
-      vector<string> ipfs_IDs;
+      string ipfs_ID;
       
       account_id_type fee_payer()const { return seeder; }
       void validate()const;
@@ -327,7 +327,7 @@ FC_REFLECT(graphene::chain::set_publishing_right_operation,(fee)(from)(to)(is_pu
 FC_REFLECT(graphene::chain::content_cancellation_operation,(fee)(author)(URI))
 FC_REFLECT(graphene::chain::request_to_buy_operation,(fee)(URI)(consumer)(price)(region_code_from)(pubKey))
 FC_REFLECT(graphene::chain::leave_rating_and_comment_operation,(fee)(URI)(consumer)(comment)(rating))
-FC_REFLECT(graphene::chain::ready_to_publish_operation,(fee)(seeder)(space)(pubKey)(price_per_MByte)(ipfs_IDs))
+FC_REFLECT(graphene::chain::ready_to_publish_operation,(fee)(seeder)(space)(pubKey)(price_per_MByte)(ipfs_ID))
 FC_REFLECT(graphene::chain::proof_of_custody_operation,(fee)(seeder)(URI)(proof))
 FC_REFLECT(graphene::chain::deliver_keys_operation,(fee)(seeder)(proof)(key)(buying))
 FC_REFLECT(graphene::chain::return_escrow_submission_operation,(fee)(author)(escrow)(content))

@@ -23,6 +23,8 @@ namespace gui_wallet
          case ConnectingSplash:
             setProperty("type", "connectingsplash");
             break;
+         case DecentLogo:
+            setProperty("type", "decentlogo");
          case Default:
          default:
             break;
