@@ -18,11 +18,6 @@
 #include "gui_wallet_global.hpp"
 #include "mainwindow.hpp"
 
-#ifdef _MSC_VER
-#include <Windows.h>
-#endif
-
-#include <signal.h>
 #include <QTranslator>
 
 #include "gui_design.hpp"

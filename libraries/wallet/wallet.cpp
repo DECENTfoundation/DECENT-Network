@@ -80,6 +80,8 @@
 
 #include <fc/smart_ref_impl.hpp>
 #include "json.hpp"
+#include "ipfs/client.h"
+#include <decent/package/package_config.hpp>
 
 #ifndef WIN32
 # include <sys/types.h>
@@ -98,10 +100,42 @@ namespace graphene { namespace wallet {
 
 namespace detail {
 
-   
+// this class helps to gather seeding statistics. Tracks seeders currently in use.
+class seeders_tracker{
+public:
+   seeders_tracker(wallet_api_impl& wallet):_wallet(wallet) {};
+   vector<account_id_type> track_content(const string URI);
+   vector<account_id_type> untrack_content(const string URI);
+   bool is_empty() { return seeder_to_content.empty(); };
+   vector<account_id_type> get_unfinished_seeders();
+   void set_initial_stats( const account_id_type& seeder, const uint64_t amount );
+   uint64_t get_final_stats( const account_id_type& seeder, const uint64_t amount );
+   void remove_stats( const account_id_type& seeder );
+private:
+   wallet_api_impl& _wallet;
+   multimap<account_id_type, content_id_type> seeder_to_content;
+   map<account_id_type, uint64_t> initial_stats;
+};
+
+struct ipfs_stats_listener : public EventListenerInterface{
+
+   ipfs_stats_listener(string URI, wallet_api_impl& api, account_id_type consumer):_URI(URI), _wallet(api), _consumer(consumer),
+      _ipfs_client(PackageManagerConfigurator::instance().get_ipfs_host(), PackageManagerConfigurator::instance().get_ipfs_port()){}
+
+   virtual void package_download_start();
+   virtual void package_download_complete();
+
+private:
+   string            _URI;
+   wallet_api_impl&  _wallet;
+   account_id_type   _consumer;
+   ipfs::Client      _ipfs_client;
+};
+
 struct submit_transfer_listener : public EventListenerInterface {
    
-   submit_transfer_listener(wallet_api_impl& wallet, shared_ptr<PackageInfo> info, const content_submit_operation& op, const std::string& protocol) : _wallet(wallet), _info(info), _op(op), _protocol(protocol) {
+   submit_transfer_listener(wallet_api_impl& wallet, shared_ptr<PackageInfo> info, const content_submit_operation& op, const std::string& protocol)
+      : _wallet(wallet), _info(info), _op(op), _protocol(protocol) {
    }
    
    virtual void package_seed_complete();
@@ -116,27 +150,6 @@ private:
    content_submit_operation  _op;
    std::string               _protocol;
 };
-
-
-/*   
-class report_stats_listener:public report_stats_listener_base{
-   public:
-      string URI;
-      wallet_api& _wallet_api;
-      string consumer;
-      report_stats_listener(string URI, wallet_api& api):URI(URI), _wallet_api(api){}
-      virtual void report_stats( map<string,uint64_t> stats){
-         map<account_id_type,uint64_t> stats2;
-         account_id_type acc;
-         for( const auto& item : stats )
-         {
-            acc = _wallet_api.get_account_id( item.first );
-            stats2[ acc ] = item.second;
-         }
-         _wallet_api.report_stats( consumer, stats2, true);
-      }
-};
-*/
 
 struct operation_result_printer
 {
@@ -433,7 +446,8 @@ public:
         _remote_api(rapi),
         _remote_db(rapi->database()),
         _remote_net_broadcast(rapi->network_broadcast()),
-        _remote_hist(rapi->history())
+        _remote_hist(rapi->history()),
+        _seeders_tracker(*this)
    {
       chain_id_type remote_chain_id = _remote_db->get_chain_id();
       if( remote_chain_id != _chain_id && _chain_id != chain_id_type ("0000000000000000000000000000000000000000000000000000000000000000") )
@@ -2374,8 +2388,9 @@ signed_transaction content_cancellation(string author,
          //detail::report_stats_listener stats_listener( URI, self);
          //stats_listener.ipfs_IDs = list_seeders_ipfs_IDs( URI);
          auto& package_manager = decent::package::PackageManager::instance();
-
          auto package = package_manager.get_package( URI, content->_hash );
+         shared_ptr<ipfs_stats_listener> listener_ptr = std::make_shared<ipfs_stats_listener>( URI, *this, consumer_account.id );
+         package->add_event_listener( listener_ptr );
          package->download();
          
       } FC_CAPTURE_AND_RETHROW( (consumer)(URI)(broadcast) )
@@ -2465,7 +2480,7 @@ signed_transaction content_cancellation(string author,
       account_id_type seeder = get_account_id( account_id_type_or_name );
       use_network_node_api();
       fc::ecc::private_key seeder_priv_key = *(wif_to_key(seeder_private_key));
-      (*_remote_net_node)->seeding_startup( seeder, content_private_key, seeder_priv_key, free_space, seeding_price, packages_path );
+      (*_remote_net_node)->seeding_startup( seeder, content_private_key, seeder_priv_key, free_space, seeding_price, packages_path);
    }
 
    signed_transaction report_stats(string consumer,
@@ -2602,28 +2617,6 @@ signed_transaction content_cancellation(string author,
       FC_ASSERT( ss.resolvable() );
       ss.calculate_secret();
       return ss.secret;
-   }
-
-   vector<string> list_imported_ipfs_IDs( const string& seeder )const
-   {
-      account_id_type aid = get_account_id( seeder );
-      fc::optional<seeder_object> so = _remote_db->get_seeder( aid );
-      FC_ASSERT(so.valid(), "Seeder does not exist");
-      return so->ipfs_IDs;
-   }
-
-   map<string, vector<string>> list_seeders_ipfs_IDs( const string& URI )const
-   {
-      fc::optional<content_object> co = _remote_db->get_content( URI );
-      FC_ASSERT( co.valid(), "Content does not exist.");
-      map<string, vector<string>> mapped_IDs;
-      string account;
-      for( const auto& item : co->key_parts )
-      {
-         string account = static_cast<string>(static_cast<object_id_type>(item.first));
-         mapped_IDs[account] = list_imported_ipfs_IDs(account);
-      }
-      return mapped_IDs;
    }
 
    pair<account_id_type, vector<account_id_type>> get_author_and_co_authors_by_URI( const string& URI )const
@@ -2826,6 +2819,7 @@ signed_transaction content_cancellation(string author,
 
    mutable map<asset_id_type, asset_object> _asset_cache;
    vector<shared_ptr<graphene::wallet::detail::submit_transfer_listener>> _package_manager_listeners;
+   seeders_tracker _seeders_tracker;
 };
 
    std::string operation_printer::fee(const asset& a)const {
@@ -2966,6 +2960,126 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
       return _wallet.get_asset(a.asset_id).amount_to_pretty_string(a);
    }
 
+   vector<account_id_type> seeders_tracker::track_content(const string URI)
+   {
+      optional<content_object> content = _wallet._remote_db->get_content( URI );
+      FC_ASSERT( content );
+      vector<account_id_type> new_seeders;
+      for( const auto& element : content->key_parts )
+      {
+         auto range = seeder_to_content.equal_range( element.first );
+         auto& itr = range.first;
+         if( range.first == range.second)
+            new_seeders.push_back( element.first );
+
+         while( itr != range.second )
+         {
+            if( itr->second == content->id )
+               break;
+            itr++;
+         }
+         if( itr == range.second )
+            seeder_to_content.insert(pair<account_id_type, content_id_type>( element.first, content->id ));
+      }
+      return new_seeders;
+   }
+
+   vector<account_id_type> seeders_tracker::untrack_content(const string URI)
+   {
+      optional<content_object> content = _wallet._remote_db->get_content( URI );
+      FC_ASSERT( content );
+      vector<account_id_type> finished_seeders;
+      for( auto& element : content->key_parts )
+      {
+         auto range = seeder_to_content.equal_range( element.first );
+         auto& itr = range.first;
+         while( itr != range.second )
+         {
+            if( itr->second == content->id )
+            {
+               seeder_to_content.erase(itr);
+               break;
+            }
+            itr++;
+         }
+         if( seeder_to_content.count( element.first ) == 0 )
+            finished_seeders.push_back( element.first );
+      }
+      return finished_seeders;
+   }
+
+   vector<account_id_type> seeders_tracker::get_unfinished_seeders()
+   {
+      vector<account_id_type> result;
+      for( const auto& element : initial_stats )
+      {
+         result.push_back( element.first );
+      }
+      return result;
+   }
+
+   void seeders_tracker::set_initial_stats( const account_id_type& seeder, const uint64_t amount)
+   {
+      FC_ASSERT( initial_stats.count(seeder) == 0 );
+      initial_stats.emplace( seeder, amount );
+   }
+
+   uint64_t seeders_tracker::get_final_stats( const account_id_type& seeder, const uint64_t amount )
+   {
+      FC_ASSERT( initial_stats.count(seeder) == 1 );
+      return initial_stats[seeder] - amount;
+   }
+
+   void seeders_tracker::remove_stats( const account_id_type& seeder )
+   {
+      FC_ASSERT( initial_stats.erase( seeder ) == 1 );
+   }
+
+   void ipfs_stats_listener::package_download_start()
+   {
+      vector<account_id_type> new_seeders = _wallet._seeders_tracker.track_content( _URI);
+      if( !new_seeders.empty() )
+      {
+         for( const auto& element : new_seeders )
+         {
+            const string ipfs_ID = _wallet._remote_db->get_seeder( element )->ipfs_ID;
+            ipfs::Json json;
+            _ipfs_client.BitswapLedger( ipfs_ID, &json );
+            uint64_t received = json["Recv"];
+            _wallet._seeders_tracker.set_initial_stats( element, received );
+         }
+      }
+   }
+
+   void ipfs_stats_listener::package_download_complete()
+   {
+      vector<account_id_type> finished_seeders = _wallet._seeders_tracker.untrack_content( _URI);
+      if( !finished_seeders.empty() )
+      {
+         uint64_t difference;
+         map<account_id_type,uint64_t> stats;
+         for( const auto& element : finished_seeders )
+         {
+            const string ipfs_ID = _wallet._remote_db->get_seeder( element )->ipfs_ID;
+            ipfs::Json json;
+            _ipfs_client.BitswapLedger( ipfs_ID, &json );
+            uint64_t received = json["Recv"];
+            difference = _wallet._seeders_tracker.get_final_stats( element, received );
+            stats.emplace( element, received );
+
+            _wallet._seeders_tracker.remove_stats( element );
+         }
+
+         report_stats_operation op;
+         op.consumer = _consumer;
+         op.stats = stats;
+         signed_transaction tx;
+         tx.operations.push_back( op );
+         _wallet.set_operation_fees( tx, _wallet._remote_db->get_global_properties().parameters.current_fees);
+         tx.validate();
+         _wallet.sign_transaction(tx, true);
+      }
+   }
 
    }}}
 
@@ -4103,11 +4217,6 @@ map<string, string> wallet_api::get_content_comments( const string& URI )const
 {
    return my->_remote_db->get_content_comments( URI );
 }
-       
-       vector<string> wallet_api::list_imported_ipfs_IDs( const string& seeder)const
-       {
-           return my->list_imported_ipfs_IDs( seeder );
-       }
 
    vector<content_summary> wallet_api::search_user_content(const string& user,
                                                            const string& term,
@@ -4178,11 +4287,6 @@ pair<account_id_type, vector<account_id_type>> wallet_api::get_author_and_co_aut
    vector<uint64_t> wallet_api::get_content_ratings( const string& URI )const
    {
       return my->_remote_db->get_content_ratings( URI );
-   }
-
-   map<string, vector<string>> wallet_api::list_seeders_ipfs_IDs( const string& URI)const
-   {
-      return my->list_seeders_ipfs_IDs( URI );
    }
 
    optional<vector<seeder_object>> wallet_api::list_seeders_by_upload( const uint32_t count )const

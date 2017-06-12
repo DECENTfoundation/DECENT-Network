@@ -26,6 +26,10 @@ QLabel[name='highlightedright']
    background-color: rgb(244, 244, 244);
    qproperty-alignment: 'AlignRight | AlignVCenter';
 }
+QLabel[type='decentlogo']
+{
+   background-image: url(':/icon/images/decent_logo.svg');
+}
 QDialog, QMainWindow, QMessageBox
 {
    color: black;

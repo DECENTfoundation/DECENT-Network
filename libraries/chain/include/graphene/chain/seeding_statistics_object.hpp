@@ -13,10 +13,11 @@ namespace graphene { namespace chain {
       {
       public:
          static const uint8_t space_id = implementation_ids;
-         static const uint8_t type_id  = impl_publisher_object_type;
+         static const uint8_t type_id  = impl_seeding_statistics_object_type;
 
          account_id_type seeder;
-         uint64_t total_upload;
+         // total bytes uploaded to consumers through ipfs
+         uint64_t total_upload = 0;
       };
 
       struct by_seeder;

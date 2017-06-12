@@ -22,4 +22,4 @@ namespace decent { namespace seeding {
 }
 
 FC_REFLECT(decent::seeding::seeding_plugin_startup_options,
-           (seeder)(content_private_key)(seeder_private_key)(free_space)(seeding_price))
+           (seeder)(content_private_key)(seeder_private_key)(free_space)(seeding_price)(packages_path))

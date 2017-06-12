@@ -52,7 +52,11 @@
 // //
 #endif
 
+#ifdef _MSC_VER
+#include <Windows.h>
+#endif
 
+#include <signal.h>
 
 int runDecentD(bool replay_blockchain, fc::promise<void>::ptr& exit_promise);
 QProcess* run_ipfs_daemon(QObject* parent, QString app_dir);
