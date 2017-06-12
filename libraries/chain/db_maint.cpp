@@ -183,7 +183,7 @@ void database::process_budget()
       {
          _core.current_supply = (_core.current_supply + rec.supply_delta );
 
-         assert( _core.current_supply == get_real_supply() );
+         assert( _core.current_supply == rec._real_supply.total() );
 
          _core.accumulated_fees = 0;
       });
