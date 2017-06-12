@@ -162,7 +162,7 @@ void database::process_budget()
       {
          const asset_object& core_asset = asset_id_type(0)(*this);
          rec.from_initial_reserve = core_asset.reserved(*this);
-         rec.from_accumulated_fees = core.accumulated_fees + dpo.witness_budget_from_fees;
+         rec.from_accumulated_fees = core.accumulated_fees + dpo.unspent_fee_budget;
          rec._real_supply = get_real_supply();
          if(    (dpo.last_budget_time == fc::time_point_sec())
                 || (now <= dpo.last_budget_time) )
