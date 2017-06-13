@@ -43,6 +43,7 @@ Upload_popup::Upload_popup(QWidget* pParent, const std::string content)
 , m_pLifeTime(new QDateEdit(this))
 , m_iKeyParticles(2)
 , m_dPrice(-1)
+, m_resubmit_content(content)
 {
    std::vector<Publisher> publishers = Globals::instance().getPublishers();
    m_arrPublishers.resize(publishers.size());
@@ -514,6 +515,13 @@ void Upload_popup::slot_UploadContent()
       QFileInfo file(QString::fromStdString(path));
       std::string str_file_size = std::to_string(file.size());
       
+      string search_comand = "search_content ";
+      search_comand += " \"" + m_resubmit_content + "\"";
+      search_comand += " \"\" \"\" \"\" \"\" \"0\" 4";
+      
+      nlohmann::json contents = Globals::instance().runTaskParse(search_comand);
+      std::string str_URI = contents[0]["URI"].get<std::string>();
+      
       //create package
       std::string str_AES_key    = Globals::instance().runTask("generate_encryption_key");
       nlohmann::json pair   = Globals::instance().runTaskParse("create_package"
@@ -536,19 +544,19 @@ void Upload_popup::slot_UploadContent()
                                           " \"" + "ipfs" + "\"");
       //submit content
       std::string _submitCommand = "submit_content";
-      _submitCommand += " " + Globals::instance().getCurrentUser() + "[]";//author
-      _submitCommand += " \"" + path + "\"";                                //URI
+      _submitCommand += " " + Globals::instance().getCurrentUser() + "[]"; //author
+      _submitCommand += " \"" + str_URI + "\"";                            //URI
       _submitCommand += " [{\"region\" : \"\", \"amount\" : \"" + m_price + "\", \"asset_symbol\" : \"" + assetName + "\" }]";//price
-      _submitCommand += " " + str_file_size + "";                           //file size
-      _submitCommand += " {" + str_pair + "}";                              //hash of package
+      _submitCommand += " " + str_file_size + "";                          //file size
+      _submitCommand += " {" + str_pair + "}";                             //hash of package
       _submitCommand += " [" + str_seeders + "]";                          //seeders
-      _submitCommand += " " + std::to_string(m_iKeyParticles) + "";         //quorum
-      _submitCommand += " \"" + m_life_time + "T23:59:59\"";                //expiration
-      _submitCommand += " \"DCT\"";                                         //fee asset
-      _submitCommand += " \"" + m_feePrice + "\"";                          //fee price
-      _submitCommand += " \"" + escape_string(synopsis) + "\"";             //synopsis
-      _submitCommand += " {" + str_AES_key  + "}";                          //AES key
-      _submitCommand += " " + cd + "";                                      //cd
+      _submitCommand += " " + std::to_string(m_iKeyParticles) + "";        //quorum
+      _submitCommand += " \"" + m_life_time + "T23:59:59\"";               //expiration
+      _submitCommand += " \"DCT\"";                                        //fee asset
+      _submitCommand += " \"" + m_feePrice + "\"";                         //fee price
+      _submitCommand += " \"" + escape_string(synopsis) + "\"";            //synopsis
+      _submitCommand += " {" + str_AES_key  + "}";                         //AES key
+      _submitCommand += " " + cd + "";                                     //cd
       _submitCommand += " true";
       
       std::cout << "_Submit \n" << _submitCommand << std::endl;

@@ -271,16 +271,10 @@ void Upload_tab::ShowDigitalContentsGUI()
 
       QObject::connect(info_icon, &DecentButton::clicked,
                        m_pDetailsSignalMapper, (void (QSignalMapper::*)())&QSignalMapper::map);
-//      QObject::connect(info_icon, &DecentButton::clicked,
-//                       this, &Upload_tab::slot_ShowContentPopup);
       m_pDetailsSignalMapper->setMapping(info_icon, iIndex);
-      
       
       QObject::connect(resubmit_button, &DecentButton::clicked,
                        m_pDetailsSignalMapper, (void (QSignalMapper::*)())&QSignalMapper::map);
-      
-//      QObject::connect(resubmit_button, &DecentButton::clicked,
-//                       this, &Upload_tab::slot_UploadPopup);
       m_pDetailsSignalMapper->setMapping(resubmit_button, QString::fromStdString(title));
    }
 }

@@ -47,6 +47,7 @@ namespace gui_wallet
       uint32_t m_iKeyParticles;
       double m_dPrice;
       std::string m_feePrice;
+      std::string m_resubmit_content;
       QString m_strTitle;
       QString m_strContentPath;
       QString m_strSamplesPath;
