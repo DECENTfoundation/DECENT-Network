@@ -2386,8 +2386,6 @@ signed_transaction content_cancellation(string author,
          set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
          tx.validate();
          sign_transaction( tx, broadcast );
-         //detail::report_stats_listener stats_listener( URI, self);
-         //stats_listener.ipfs_IDs = list_seeders_ipfs_IDs( URI);
          auto& package_manager = decent::package::PackageManager::instance();
          auto package = package_manager.get_package( URI, content->_hash );
          shared_ptr<ipfs_stats_listener> listener_ptr = std::make_shared<ipfs_stats_listener>( URI, *this, consumer_account.id );
@@ -2483,22 +2481,6 @@ signed_transaction content_cancellation(string author,
       fc::ecc::private_key seeder_priv_key = *(wif_to_key(seeder_private_key));
       (*_remote_net_node)->seeding_startup( seeder, content_private_key, seeder_priv_key, free_space, seeding_price, packages_path);
    }
-
-   signed_transaction report_stats(string consumer,
-                                   map<account_id_type,uint64_t> stats,
-                                   bool broadcast/* = false */)
-   { try {
-         report_stats_operation report_stats_op;
-         report_stats_op.consumer = get_account_id(consumer);
-         report_stats_op.stats = stats;
-
-         signed_transaction tx;
-         tx.operations.push_back( report_stats_op );
-         set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
-         tx.validate();
-
-         return sign_transaction( tx, broadcast );
-      } FC_CAPTURE_AND_RETHROW( (stats)(broadcast) ) }
 
    signed_transaction subscribe_to_author( string from,
                                            string to,
@@ -4082,13 +4064,6 @@ void wallet_api::leave_rating_and_comment(string consumer,
                                     string packages_path)
    {
       return my->seeding_startup(account_id_type_or_name, content_private_key, seeder_private_key, free_space, seeding_price, packages_path);
-   }
-
-   signed_transaction wallet_api::report_stats(string consumer,
-                                               map<account_id_type,uint64_t> stats,
-                                               bool broadcast)
-   {
-      return my->report_stats(consumer, stats, broadcast);
    }
 
    DInteger wallet_api::restore_encryption_key(string consumer, buying_id_type buying)

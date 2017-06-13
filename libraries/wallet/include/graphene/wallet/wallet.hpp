@@ -1752,18 +1752,6 @@ namespace graphene { namespace wallet {
           */
          vector< subscription_object > list_subscriptions_by_author( const string& account_id_or_name, const uint32_t count)const;
 
-          /**
-           * @brief This function is used to report stats. These stats are later used to rate seeders.
-           * @param consumer The consumer of the content
-           * @param stats The final stats about single download process. Map of seeders to amount they uploaded
-           * @param broadcast true to broadcast the transaction on the network
-           * @return The signed transaction reporting the stats
-           * @ingroup WalletCLI
-           */
-         signed_transaction report_stats(string consumer,
-                                         map<account_id_type,uint64_t> stats,
-                                         bool broadcast = false);
-
          /**
           * @brief Restores AES key( used to encrypt and decrypt a content) from key particles stored in a buying object
           * @param account consumers account id or name

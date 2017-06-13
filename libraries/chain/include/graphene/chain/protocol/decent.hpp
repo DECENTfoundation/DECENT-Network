@@ -272,7 +272,7 @@ namespace graphene { namespace chain {
       struct fee_parameters_type { uint64_t fee = 0; };
 
       asset fee;
-      /// The final stats about single download process. Map of seeders to amount they uploaded
+      /// Map of seeders to amount they uploaded
       map<account_id_type,uint64_t> stats;
       account_id_type consumer;
 
