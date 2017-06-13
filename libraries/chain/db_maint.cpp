@@ -177,7 +177,7 @@ void database::process_budget()
       rec.planned_for_mining = planned_for_mining + rec.from_accumulated_fees;
       rec.generated_in_last_interval = dpo.mined_rewards + dpo.witness_budget_from_fees - dpo.unspent_fee_budget;
 
-      rec.supply_delta = rec.generated_in_last_interval - rec.from_accumulated_fees;
+      rec.supply_delta = rec.generated_in_last_interval - core.accumulated_fees;
 
       modify(core, [&]( asset_dynamic_data_object& _core )
       {

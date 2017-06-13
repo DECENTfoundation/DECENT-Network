@@ -182,6 +182,7 @@ void database::initialize_indexes()
    add_index< primary_index< buying_index                                 > >();
    add_index< primary_index< subscription_index                                 > >();
    add_index< primary_index< transaction_detail_index                     > >();
+   add_index< primary_index< seeding_statistics_index                     > >();
 }
 
 void database::init_genesis(const genesis_state_type& genesis_state)
