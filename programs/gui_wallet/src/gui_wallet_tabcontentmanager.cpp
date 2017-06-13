@@ -1,7 +1,7 @@
 #include "gui_wallet_global.hpp"
 #include "gui_wallet_tabcontentmanager.hpp"
 
-using string = std::string;
+using std::string;
 
 namespace gui_wallet
 {

@@ -85,6 +85,12 @@ namespace graphene { namespace chain {
    typedef fc::ecc::private_key        private_key_type;
    typedef fc::sha256 chain_id_type;
 
+   typedef decent::encrypt::CustodyData custody_data_type;
+   typedef decent::encrypt::CustodyProof custody_proof_type;
+   typedef decent::encrypt::DIntegerString bigint_type;
+   typedef decent::encrypt::CiphertextString ciphertext_type;
+   typedef decent::encrypt::DeliveryProofString delivery_proof_type;
+
    enum reserved_spaces
    {
       relative_protocol_ids = 0,
@@ -108,7 +114,6 @@ namespace graphene { namespace chain {
       account_object_type,
       asset_object_type,
       witness_object_type,
-      limit_order_object_type,
       custom_object_type,
       proposal_object_type,
       operation_history_object_type,
@@ -131,7 +136,6 @@ namespace graphene { namespace chain {
       impl_chain_property_object_type,
       impl_witness_schedule_object_type,
       impl_budget_record_object_type,
-      impl_buyback_object_type,
       impl_buying_object_type,
       impl_content_object_type,
       impl_publisher_object_type,
@@ -147,7 +151,6 @@ namespace graphene { namespace chain {
    class committee_member_object;
    class witness_object;
    class asset_object;
-   class limit_order_object;
    class custom_object;
    class proposal_object;
    class operation_history_object;
@@ -157,7 +160,6 @@ namespace graphene { namespace chain {
    typedef object_id< protocol_ids, account_object_type,            account_object>               account_id_type;
    typedef object_id< protocol_ids, asset_object_type,              asset_object>                 asset_id_type;
    typedef object_id< protocol_ids, witness_object_type,            witness_object>               witness_id_type;
-   typedef object_id< protocol_ids, limit_order_object_type,        limit_order_object>           limit_order_id_type;
    typedef object_id< protocol_ids, custom_object_type,             custom_object>                custom_id_type;
    typedef object_id< protocol_ids, proposal_object_type,           proposal_object>              proposal_id_type;
    typedef object_id< protocol_ids, operation_history_object_type,  operation_history_object>     operation_history_id_type;
@@ -176,7 +178,6 @@ namespace graphene { namespace chain {
    class chain_property_object;
    class witness_schedule_object;
    class budget_record_object;
-   class buyback_object;
    class buying_object;
    class content_object;
    class seeder_object;
@@ -199,7 +200,6 @@ namespace graphene { namespace chain {
    typedef object_id< implementation_ids, impl_chain_property_object_type,   chain_property_object>                     chain_property_id_type;
    typedef object_id< implementation_ids, impl_witness_schedule_object_type, witness_schedule_object>                   witness_schedule_id_type;
    typedef object_id< implementation_ids, impl_budget_record_object_type, budget_record_object >                        budget_record_id_type;
-   typedef object_id< implementation_ids, impl_buyback_object_type, buyback_object >                                    buyback_id_type;
    typedef object_id< implementation_ids, impl_buying_object_type, buying_object >                                      buying_id_type;
    typedef object_id< implementation_ids, impl_content_object_type, content_object >                                    content_id_type;
    typedef object_id< implementation_ids, impl_publisher_object_type, seeder_object >                                   publisher_id_type;
@@ -322,7 +322,6 @@ FC_REFLECT_ENUM( graphene::chain::object_type,
                  (account_object_type)
                  (asset_object_type)
                  (witness_object_type)
-                 (limit_order_object_type)
                  (custom_object_type)
                  (proposal_object_type)
                  (operation_history_object_type)
@@ -343,7 +342,6 @@ FC_REFLECT_ENUM( graphene::chain::impl_object_type,
                  (impl_chain_property_object_type)
                  (impl_witness_schedule_object_type)
                  (impl_budget_record_object_type)
-                 (impl_buyback_object_type)
                  (impl_buying_object_type)
                  (impl_content_object_type)
                  (impl_publisher_object_type)
@@ -358,7 +356,6 @@ FC_REFLECT_TYPENAME( graphene::chain::share_type )
 FC_REFLECT_TYPENAME( graphene::chain::account_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::asset_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::witness_id_type )
-FC_REFLECT_TYPENAME( graphene::chain::limit_order_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::custom_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::proposal_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::operation_history_id_type )
@@ -373,7 +370,6 @@ FC_REFLECT_TYPENAME( graphene::chain::transaction_obj_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::block_summary_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::account_transaction_history_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::budget_record_id_type )
-FC_REFLECT_TYPENAME( graphene::chain::buyback_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::buying_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::content_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::publisher_id_type )

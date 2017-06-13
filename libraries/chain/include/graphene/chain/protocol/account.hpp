@@ -23,7 +23,6 @@
  */
 #pragma once
 #include <graphene/chain/protocol/base.hpp>
-#include <graphene/chain/protocol/buyback.hpp>
 #include <graphene/chain/protocol/ext.hpp>
 #include <graphene/chain/protocol/types.hpp>
 #include <graphene/chain/protocol/vote.hpp>
@@ -84,14 +83,11 @@ namespace graphene { namespace chain {
       struct ext
       {
          optional< void_t >            null_ext;
-         optional< buyback_account_options > buyback_options;
       };
 
       struct fee_parameters_type
       {
-         uint64_t basic_fee      = 5*GRAPHENE_BLOCKCHAIN_PRECISION; ///< the cost to register the cheapest non-free account
-         uint64_t premium_fee    = 20*GRAPHENE_BLOCKCHAIN_PRECISION; ///< the cost to register the cheapest non-free account
-         uint32_t price_per_kbyte = GRAPHENE_BLOCKCHAIN_PRECISION;
+         uint64_t basic_fee      = 1*GRAPHENE_BLOCKCHAIN_PRECISION/1000; ///< the cost to register the cheapest non-free account
       };
 
       asset           fee;
@@ -113,8 +109,6 @@ namespace graphene { namespace chain {
       {
          // registrar should be required anyway as it is the fee_payer(), but we insert it here just to be sure
          a.insert( registrar );
-         if( extensions.value.buyback_options.valid() )
-            a.insert( extensions.value.buyback_options->asset_to_buy_issuer );
       }
    };
 
@@ -134,8 +128,7 @@ namespace graphene { namespace chain {
 
       struct fee_parameters_type
       {
-         share_type fee             = 1 * GRAPHENE_BLOCKCHAIN_PRECISION;
-         uint32_t   price_per_kbyte = GRAPHENE_BLOCKCHAIN_PRECISION;
+         share_type fee             = 1 * GRAPHENE_BLOCKCHAIN_PRECISION/1000;
       };
 
       asset fee;
@@ -165,31 +158,6 @@ namespace graphene { namespace chain {
       { if( !is_owner_update() ) a.insert( account ); }
    };
 
-   /**
-    * @brief transfers the account to another account while clearing the white list
-    * @ingroup operations
-    *
-    * In theory an account can be transferred by simply updating the authorities, but that kind
-    * of transfer lacks semantic meaning and is more often done to rotate keys without transferring
-    * ownership.   This operation is used to indicate the legal transfer of title to this account and
-    * a break in the operation history.
-    *
-    * The account_id's owner/active/voting/memo authority should be set to new_owner
-    *
-    * This operation will clear the account's whitelist statuses, but not the blacklist statuses.
-    */
-   struct account_transfer_operation : public base_operation
-   {
-      struct fee_parameters_type { uint64_t fee = 5 * GRAPHENE_BLOCKCHAIN_PRECISION; };
-
-      asset           fee;
-      account_id_type account_id;
-      account_id_type new_owner;
-      extensions_type extensions;
-
-      account_id_type fee_payer()const { return account_id; }
-      void        validate()const;
-   };
 
 } } // graphene::chain
 
@@ -199,7 +167,7 @@ FC_REFLECT(graphene::chain::account_options, (memo_key)(voting_account)(num_witn
 
 FC_REFLECT(graphene::chain::publishing_rights, (is_publishing_manager)(publishing_rights_received)(publishing_rights_forwarded))
 
-FC_REFLECT(graphene::chain::account_create_operation::ext, (null_ext)(buyback_options))
+FC_REFLECT(graphene::chain::account_create_operation::ext, (null_ext))
 FC_REFLECT( graphene::chain::account_create_operation,
             (fee)(registrar)(name)(owner)(active)(options)(extensions)
           )
@@ -209,8 +177,6 @@ FC_REFLECT( graphene::chain::account_update_operation,
             (fee)(account)(owner)(active)(new_options)(extensions)
           )
 
-FC_REFLECT( graphene::chain::account_create_operation::fee_parameters_type, (basic_fee)(premium_fee)(price_per_kbyte) )
-FC_REFLECT( graphene::chain::account_update_operation::fee_parameters_type, (fee)(price_per_kbyte) )
-FC_REFLECT( graphene::chain::account_transfer_operation::fee_parameters_type, (fee) )
+FC_REFLECT( graphene::chain::account_create_operation::fee_parameters_type, (basic_fee) )
+FC_REFLECT( graphene::chain::account_update_operation::fee_parameters_type, (fee) )
 
-FC_REFLECT( graphene::chain::account_transfer_operation, (fee)(account_id)(new_owner)(extensions) )

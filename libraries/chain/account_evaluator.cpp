@@ -25,8 +25,7 @@
 #include <fc/smart_ref_impl.hpp>
 
 #include <graphene/chain/account_evaluator.hpp>
-#include <graphene/chain/buyback.hpp>
-#include <graphene/chain/buyback_object.hpp>
+
 #include <graphene/chain/database.hpp>
 #include <graphene/chain/exceptions.hpp>
 #include <graphene/chain/hardfork.hpp>
@@ -89,9 +88,6 @@ void_result account_create_evaluator::do_evaluate( const account_create_operatio
    GRAPHENE_RECODE_EXC( internal_verify_auth_max_auth_exceeded, account_create_max_auth_exceeded )
    GRAPHENE_RECODE_EXC( internal_verify_auth_account_not_found, account_create_auth_account_not_found )
 
-   if( op.extensions.value.buyback_options.valid() )
-      evaluate_buyback_account_options( d, *op.extensions.value.buyback_options );
-   verify_account_votes( d, op.options );
 
    auto& acnt_indx = d.get_index_type<account_index>();
    if( op.name.size() )
@@ -131,21 +127,6 @@ object_id_type account_create_evaluator::do_apply( const account_create_operatio
       db().modify(global_properties, [&dynamic_properties](global_property_object& p) {
          p.parameters.current_fees->get<account_create_operation>().basic_fee <<= p.parameters.account_fee_scale_bitshifts;
       });
-
-   if( o.extensions.value.buyback_options.valid() )
-   {
-      asset_id_type asset_to_buy = o.extensions.value.buyback_options->asset_to_buy;
-
-      d.create< buyback_object >( [&]( buyback_object& bo )
-      {
-         bo.asset_to_buy = asset_to_buy;
-      } );
-
-      d.modify( asset_to_buy(d), [&]( asset_object& a )
-      {
-         a.buyback_account = new_acnt_object.id;
-      } );
-   }
 
    db().create<transaction_detail_object>([&o, &new_acnt_object, &d](transaction_detail_object& obj)
                                           {

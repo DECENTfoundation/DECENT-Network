@@ -26,7 +26,6 @@
 
 #include <graphene/chain/account_object.hpp>
 #include <graphene/chain/asset_object.hpp>
-#include <graphene/chain/market_object.hpp>
 #include <graphene/chain/vesting_balance_object.hpp>
 #include <graphene/chain/witness_object.hpp>
 
@@ -51,13 +50,6 @@ void database::debug_dump()
    {
     //  idump(("balance")(a));
       total_balances[a.asset_type] += a.balance;
-   }
-   for( const limit_order_object& o : db.get_index_type<limit_order_index>().indices() )
-   {
- //     idump(("limit_order")(o));
-      auto for_sale = o.amount_for_sale();
-      if( for_sale.asset_id == asset_id_type() ) core_in_orders += for_sale.amount;
-      total_balances[for_sale.asset_id] += for_sale.amount;
    }
    for( const asset_object& asset_obj : db.get_index_type<asset_index>().indices() )
    {

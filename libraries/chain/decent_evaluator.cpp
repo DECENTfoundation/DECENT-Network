@@ -217,10 +217,10 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
          });
 
          db().modify<content_object>(*content_itr,[&](content_object& co) {
-                                        map<uint32_t, asset> prices;
+                                     map<uint32_t, asset> prices;
                                      for (auto const& item : o.price)
                                      {
-                                        prices.insert(std::make_pair(item.first, item.second));
+                                        prices[item.region] = item.price;
                                      }
 
                                      auto it_no_regions = prices.find(RegionCodes::OO_none);
@@ -261,7 +261,7 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
                                         map<uint32_t, asset> prices;
                                      for (auto const& item : o.price)
                                      {
-                                        prices.insert(std::make_pair(item.first, item.second));
+                                        prices[item.region] = item.price;
                                      }
 
                                      auto it_no_regions = prices.find(RegionCodes::OO_none);

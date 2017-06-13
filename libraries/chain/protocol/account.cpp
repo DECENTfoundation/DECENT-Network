@@ -166,13 +166,6 @@ share_type account_create_operation::calculate_fee( const fee_parameters_type& k
 {
    auto core_fee_required = k.basic_fee;
 
-   if( !is_cheap_name(name) )
-      core_fee_required = k.premium_fee;
-
-   // Authorities and vote lists can be arbitrarily large, so charge a data fee for big ones
-   auto data_fee =  calculate_data_fee( fc::raw::pack_size(*this), k.price_per_kbyte ); 
-   core_fee_required += data_fee;
-
    return core_fee_required;
 }
 
@@ -185,17 +178,6 @@ void account_create_operation::validate()const
    FC_ASSERT( !owner.is_impossible(), "cannot create an account with an imposible owner authority threshold" );
    FC_ASSERT( !active.is_impossible(), "cannot create an account with an imposible active authority threshold" );
    options.validate();
-   if( extensions.value.buyback_options.valid() )
-   {
-      FC_ASSERT( owner == authority::null_authority() );
-      FC_ASSERT( active == authority::null_authority() );
-      size_t n_markets = extensions.value.buyback_options->markets.size();
-      FC_ASSERT( n_markets > 0 );
-      for( const asset_id_type m : extensions.value.buyback_options->markets )
-      {
-         FC_ASSERT( m != extensions.value.buyback_options->asset_to_buy );
-      }
-   }
 }
 
 
@@ -204,8 +186,6 @@ void account_create_operation::validate()const
 share_type account_update_operation::calculate_fee( const fee_parameters_type& k )const
 {
    auto core_fee_required = k.fee;  
-   if( new_options )
-      core_fee_required += calculate_data_fee( fc::raw::pack_size(*this), k.price_per_kbyte );
    return core_fee_required;
 }
 
@@ -238,10 +218,6 @@ void account_update_operation::validate()const
       new_options->validate();
 }
 
-void account_transfer_operation::validate()const
-{
-   FC_ASSERT( fee.amount >= 0 );
-}
 
 
 } } // graphene::chain

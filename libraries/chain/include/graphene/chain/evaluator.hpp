@@ -51,7 +51,7 @@ namespace graphene { namespace chain {
 
       /**
        * Routes the fee to where it needs to go.  The default implementation
-       * routes the fee to the account_statistics_object of the fee_paying_account.
+       * routes the fee to the asset accumulated_fees.
        *
        * Before pay_fee() is called, the fee is computed by prepare_fee() and has been
        * moved out of the fee_paying_account and (if paid in a non-CORE asset) converted
@@ -59,9 +59,6 @@ namespace graphene { namespace chain {
        *
        * Therefore, when pay_fee() is called, the fee only exists in this->core_fee_paid.
        * So pay_fee() need only increment the receiving balance.
-       *
-       * The default implementation simply calls account_statistics_object->pay_fee() to
-       * increment pending_fees or pending_vested_fees.
        */
       virtual void pay_fee();
 

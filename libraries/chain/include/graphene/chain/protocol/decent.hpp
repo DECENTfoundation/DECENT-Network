@@ -54,6 +54,11 @@ namespace graphene { namespace chain {
       void validate()const;
    };
 
+   struct regional_price
+   {
+      uint32_t region;
+      asset    price;
+   };
    /**
     * @ingroup transactions
     * @brief Submits content to the blockchain.
@@ -70,19 +75,19 @@ namespace graphene { namespace chain {
       // max num of co-authors = 10
       map<account_id_type, uint32_t> co_authors;
       string URI;
-      vector<pair<uint32_t, asset>> price;
+      vector<regional_price> price;
 
       uint64_t size; //<Size of content, including samples, in megabytes
       fc::ripemd160 hash;
 
       vector<account_id_type> seeders; //<List of selected seeders
-      vector<decent::encrypt::CiphertextString> key_parts; //<Key particles, each assigned to one of the seeders, encrypted with his key
+      vector<ciphertext_type> key_parts; //<Key particles, each assigned to one of the seeders, encrypted with his key
       /// Defines number of seeders needed to restore the encryption key
       uint32_t quorum;
       fc::time_point_sec expiration;
       asset publishing_fee; //< Fee must be greater than the sum of seeders' publishing prices * number of days. Is paid by author
       string synopsis;
-      optional<decent::encrypt::CustodyData> cd; //< if cd.n == 0 then no custody is submitted, and simplified verification is done.
+      optional<custody_data_type> cd; //< if cd.n == 0 then no custody is submitted, and simplified verification is done.
 
       account_id_type fee_payer()const { return author; }
       void validate()const;
@@ -148,7 +153,7 @@ namespace graphene { namespace chain {
       uint32_t region_code_from = RegionCodes::OO_none;
 
       /// Consumer's public key
-      decent::encrypt::DIntegerString pubKey;
+      bigint_type pubKey;
       
       account_id_type fee_payer()const { return consumer; }
       void validate()const;
@@ -182,7 +187,7 @@ namespace graphene { namespace chain {
       
       asset fee;
       account_id_type seeder;
-      decent::encrypt::DIntegerString pubKey;
+      bigint_type pubKey;
       /// Available space on seeder's disc dedicated to contents, in MBs
       uint64_t space;
       /// The price charged to author for seeding 1 MB per day
@@ -204,7 +209,7 @@ namespace graphene { namespace chain {
       asset fee;
       account_id_type seeder;
       string URI;
-      fc::optional<decent::encrypt::CustodyProof> proof;
+      fc::optional<custody_proof_type> proof;
 
       account_id_type fee_payer()const { return seeder; }
       void validate()const;
@@ -222,8 +227,8 @@ namespace graphene { namespace chain {
       account_id_type seeder;
       buying_id_type buying;
 
-      decent::encrypt::DeliveryProofString proof;
-      decent::encrypt::CiphertextString key;
+      delivery_proof_type proof;
+      ciphertext_type key;
       
       account_id_type fee_payer()const { return seeder; }
       void validate()const;
@@ -272,7 +277,7 @@ namespace graphene { namespace chain {
       struct fee_parameters_type { uint64_t fee = 0; };
 
       asset fee;
-      /// The final stats about single download process. Map of seeders to amount they uploaded
+      /// Map of seeders to amount they uploaded
       map<account_id_type,uint64_t> stats;
       account_id_type consumer;
 
@@ -320,6 +325,8 @@ namespace graphene { namespace chain {
    };
 
 } } // graphene::chain
+
+FC_REFLECT(graphene::chain::regional_price,(region)(price))
 
 FC_REFLECT(graphene::chain::content_submit_operation,(fee)(size)(author)(co_authors)(URI)(quorum)(price)(hash)(seeders)(key_parts)(expiration)(publishing_fee)(synopsis)(cd))
 FC_REFLECT(graphene::chain::set_publishing_manager_operation,(fee)(from)(to)(can_create_publishers))

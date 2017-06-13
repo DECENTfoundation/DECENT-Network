@@ -21,7 +21,7 @@
 #include <QTranslator>
 
 #include "gui_design.hpp"
-using string = std::string;
+using std::string;
 
 int main(int argc, char* argv[])
 {

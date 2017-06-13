@@ -27,7 +27,6 @@
 #include <graphene/witness/witness.hpp>
 #include <graphene/seeding/seeding.hpp>
 #include <graphene/account_history/account_history_plugin.hpp>
-#include <graphene/market_history/market_history_plugin.hpp>
 #include <graphene/utilities/dirhelper.hpp>
 
 #include <fc/exception/exception.hpp>
@@ -78,6 +77,11 @@ void ShowMessageBox(QString const& strTitle,
    pMessageBox->open();
    // alternatively can connect to delete later as below
    //pMessageBox->open(pMessageBox, SLOT(deleteLater()));
+#ifdef _MSC_VER
+   int height = pMessageBox->style()->pixelMetric(QStyle::PM_TitleBarHeight);
+   pMessageBox->setWindowIcon(height > 32 ? QIcon(":/icon/images/windows_decent_icon_32x32.png")
+      : QIcon(":/icon/images/windows_decent_icon_16x16.png"));
+#endif
 }
 
 uint64_t json_to_int64(nlohmann::json const& o)
@@ -1150,7 +1154,6 @@ int runDecentD(bool replay_blockchain, fc::promise<void>::ptr& exit_promise)
       auto witness_plug = node->register_plugin<witness_plugin::witness_plugin>();
       auto history_plug = node->register_plugin<account_history::account_history_plugin>();
       auto seeding_plug = node->register_plugin<decent::seeding::seeding_plugin>();
-      auto market_history_plug = node->register_plugin<market_history::market_history_plugin>();
 
       try
       {

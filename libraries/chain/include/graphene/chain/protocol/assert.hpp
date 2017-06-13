@@ -90,7 +90,7 @@ namespace graphene { namespace chain {
     */
    struct assert_operation : public base_operation
    {
-      struct fee_parameters_type { uint64_t fee = GRAPHENE_BLOCKCHAIN_PRECISION; };
+      struct fee_parameters_type { uint64_t fee = GRAPHENE_BLOCKCHAIN_PRECISION/100; };
 
       asset                      fee;
       account_id_type            fee_paying_account;

@@ -134,21 +134,74 @@ void database::decent_housekeeping()
    }
 }
 
-share_type database::get_witness_budget()
+bool database::is_reward_switch_time() const
 {
-   //get age in years
-   auto now = head_block_time();
-   auto start_time = fetch_block_by_number(1)->timestamp;
-   uint32_t age = fc::microseconds(now - start_time).to_seconds() / 3600 / 24 / 365;
-   if ( age <=5 )
-      return DECENT_REWARDS_YEAR_1 / 365;
-   if ( age <=10 )
-      return DECENT_REWARDS_YEAR_6 / 365;
-   if ( age <=15 )
-      return DECENT_REWARDS_YEAR_11 / 365;
-   if ( age <=20 )
-      return DECENT_REWARDS_YEAR_16 / 365;
+   auto now = head_block_num();
+   return ( now == DECENT_SPLIT_1 || now == DECENT_SPLIT_2 || now == DECENT_SPLIT_3 || now == DECENT_SPLIT_4 );
+}
+
+bool database::is_reward_switch_in_interval(uint64_t a, uint64_t b)const
+{
+   if(a>=b)
+      return false;
+   if (a <= DECENT_SPLIT_1 && b >= DECENT_SPLIT_1)
+      return true;
+   if (a <= DECENT_SPLIT_1 && b >= DECENT_SPLIT_2)
+      return true;
+   if (a <= DECENT_SPLIT_1 && b >= DECENT_SPLIT_3)
+      return true;
+   if (a <= DECENT_SPLIT_1 && b >= DECENT_SPLIT_4)
+      return true;
+   return false;
+}
+
+uint64_t database::get_next_reward_switch_block(uint64_t start)const
+{
+   if(start <= DECENT_SPLIT_1 )
+      return DECENT_SPLIT_1;
+   if(start <= DECENT_SPLIT_2 )
+      return DECENT_SPLIT_2;
+   if(start <= DECENT_SPLIT_3 )
+      return DECENT_SPLIT_3;
+   if(start <= DECENT_SPLIT_4 )
+      return DECENT_SPLIT_4;
    return 0;
+}
+
+share_type database::get_new_asset_per_block()
+{
+   //get age in blocks
+   auto now = head_block_num();
+
+   //this method is called BEFORE the maintenance, so we add +1 to avoid unpredictable results
+   uint64_t block_reward;
+   if( now < DECENT_SPLIT_1  )
+      block_reward = DECENT_BLOCK_REWARD_1;
+   else if( now < DECENT_SPLIT_2 )
+      block_reward = DECENT_BLOCK_REWARD_2;
+   else if( now < DECENT_SPLIT_3 )
+      block_reward = DECENT_BLOCK_REWARD_3;
+   else if( now < DECENT_SPLIT_4 )
+      block_reward = DECENT_BLOCK_REWARD_4;
+   else
+      block_reward = DECENT_BLOCK_REWARD_5;
+
+   return block_reward;
+}
+
+share_type database::get_witness_budget(uint32_t blocks_to_maint)
+{
+
+   const global_property_object& gpo = get_global_properties();
+
+   uint64_t next_switch = get_next_reward_switch_block( head_block_num() );
+   if( head_block_num()+1 + blocks_to_maint >= next_switch )
+   {
+      uint64_t to_switch = next_switch - head_block_num() - 1;
+      return get_new_asset_per_block() * to_switch + get_new_asset_per_block() / 2 * ( blocks_to_maint - to_switch );
+   }
+
+   return blocks_to_maint * get_new_asset_per_block();
 }
 
 real_supply database::get_real_supply()const

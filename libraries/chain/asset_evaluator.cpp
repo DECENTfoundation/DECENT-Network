@@ -24,7 +24,6 @@
 #include <graphene/chain/asset_evaluator.hpp>
 #include <graphene/chain/asset_object.hpp>
 #include <graphene/chain/account_object.hpp>
-#include <graphene/chain/market_object.hpp>
 #include <graphene/chain/database.hpp>
 #include <graphene/chain/exceptions.hpp>
 #include <graphene/chain/hardfork.hpp>
@@ -57,10 +56,9 @@ void_result asset_create_evaluator::do_evaluate( const asset_create_operation& o
 
    core_fee_paid -= core_fee_paid.value/2;
 
-   if(op.monitored_asset_opts.valid()) {
-      op.monitored_asset_opts->validate();
-      FC_ASSERT( op.max_supply == 0 );
-   }
+   op.monitored_asset_opts.validate();
+   FC_ASSERT( op.max_supply == 0 );
+
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
@@ -88,33 +86,6 @@ object_id_type asset_create_evaluator::do_apply( const asset_create_operation& o
 
    return new_asset.id;
 } FC_CAPTURE_AND_RETHROW( (op) ) }
-
-void_result asset_issue_evaluator::do_evaluate( const asset_issue_operation& o )
-{ try {
-   const database& d = db();
-
-   const asset_object& a = o.asset_to_issue.asset_id(d);
-   FC_ASSERT( o.issuer == a.issuer );
-   FC_ASSERT( !a.is_monitored_asset(), "Cannot manually issue a market-issued asset." );
-
-   asset_dyn_data = &a.dynamic_asset_data_id(d);
-   FC_ASSERT( (asset_dyn_data->current_supply + o.asset_to_issue.amount) <= a.max_supply );
-
-   return void_result();
-} FC_CAPTURE_AND_RETHROW( (o) ) }
-
-void_result asset_issue_evaluator::do_apply( const asset_issue_operation& o )
-{ try {
-   db().adjust_balance( o.issue_to_account, o.asset_to_issue );
-
-   db().modify( *asset_dyn_data, [&]( asset_dynamic_data_object& data ){
-        data.current_supply += o.asset_to_issue.amount;
-   });
-
-   return void_result();
-} FC_CAPTURE_AND_RETHROW( (o) ) }
-
-
 
 void_result asset_update_evaluator::do_evaluate(const asset_update_operation& o)
 { try {
