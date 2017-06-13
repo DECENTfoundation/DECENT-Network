@@ -16,8 +16,9 @@ unset( PBC_INCLUDE_DIR )
 # Locate GMP.
 #message( STATUS "Looking for GMP" )
 if( WIN32 )
-  set( GMP_INCLUDE_DIR $ENV{GENERATEDGMP})
-  set( GMP_LIBRARIES $ENV{GENERATEDGMP})
+  set( GMP_INCLUDE_DIR "${GENERATEDGMP}")
+  set( GMP_LIBRARIES "${GENERATEDGMP}/mpir.lib")
+  find_library( GMP_LIBRARIES NAMES "mpir.lib" )
 else()
    find_library( GMP_LIBRARIES NAMES "gmp" )
    find_path( GMP_INCLUDE_DIR "gmp.h" )
@@ -45,8 +46,8 @@ endif()
 if( NOT PBC_LIBRARIES OR NOT PBC_INCLUDE_DIR )
     if( WIN32 )
 
-        set( PBC_INCLUDE_DIR $ENV{PBCROOT}include )
-        set( PBC_LIBRARIES $ENV{PBCROOT}pbcwin/lib/x64/Debug/pbclib.lib )
+        set( PBC_INCLUDE_DIR ${PBCROOT}/include )
+        set( PBC_LIBRARIES ${PBCROOT}/pbcwin/lib/x64/Release/pbclib.lib )
 
     else()
 

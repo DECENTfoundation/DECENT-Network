@@ -349,6 +349,11 @@ void Upload_popup::slot_ChooseSeeders()
                     pDialog, &QDialog::close);
 
    pDialog->open();
+#ifdef _MSC_VER
+   int height = pDialog->style()->pixelMetric(QStyle::PM_TitleBarHeight);
+   pDialog->setWindowIcon(height > 32 ? QIcon(":/icon/images/windows_decent_icon_32x32.png")
+      : QIcon(":/icon/images/windows_decent_icon_16x16.png"));
+#endif
 }
 
 void Upload_popup::slot_SeederChanged(int iIndex)

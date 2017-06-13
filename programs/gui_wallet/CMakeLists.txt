@@ -57,15 +57,26 @@ add_executable(DECENT MACOSX_BUNDLE
              )
 
 
-
 target_include_directories( DECENT PUBLIC
-                            include
+                            include                          
                             .
                           )
 
-target_link_libraries(  DECENT PUBLIC
-                        Qt5::Core Qt5::Widgets Qt5::Svg graphene_app graphene_net graphene_chain  graphene_utilities graphene_wallet wallet_utility package_manager decent_encrypt pbc gmp graphene_account_history decent_seeding graphene_witness graphene_debug_witness graphene_egenesis_decent fc ${CMAKE_DL_LIBS} ${PLATFORM_SPECIFIC_LIBS}
+if( WIN32 )
+  target_link_libraries(  DECENT PUBLIC
+                        Qt5::Core Qt5::Widgets Qt5::Svg graphene_app graphene_net graphene_chain graphene_utilities graphene_wallet wallet_utility package_manager decent_encrypt pbc gmp graphene_account_history decent_seeding graphene_witness graphene_debug_witness graphene_egenesis_decent fc ${CMAKE_DL_LIBS} ${PLATFORM_SPECIFIC_LIBS}
                      )
+  target_sources(DECENT PUBLIC
+               stdafx.cpp
+             )
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Yustdafx.h /FIstdafx.h")
+  set_source_files_properties(stdafx.cpp PROPERTIES COMPILE_FLAGS "/Ycstdafx.h")
+else()                     
+  target_link_libraries(  DECENT PUBLIC
+                        Qt5::Core Qt5::Widgets Qt5::Svg graphene_app graphene_net graphene_chain graphene_utilities graphene_wallet wallet_utility package_manager decent_encrypt pbc gmp graphene_account_history decent_seeding graphene_witness graphene_debug_witness graphene_egenesis_decent fc ${CMAKE_DL_LIBS} ${PLATFORM_SPECIFIC_LIBS}
+                     )                     
+
+endif()
 
 set_target_properties(DECENT PROPERTIES MACOSX_BUNDLE_BUNDLE_NAME "DECENT")
 set_target_properties(DECENT PROPERTIES MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/Info.plist.in")
@@ -80,3 +91,5 @@ install( TARGETS
    LIBRARY DESTINATION lib
    ARCHIVE DESTINATION lib
 )
+
+

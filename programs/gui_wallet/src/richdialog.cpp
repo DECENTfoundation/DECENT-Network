@@ -169,6 +169,12 @@ TransferWidget::TransferWidget(QWidget* parent, QString const& userName/* = QStr
    mainLayout->addLayout(buttonsLayout);
    
    setLayout(mainLayout);
+
+#ifdef _MSC_VER
+   int height = style()->pixelMetric(QStyle::PM_TitleBarHeight);
+   setWindowIcon(height > 32 ? QIcon(":/icon/images/windows_decent_icon_32x32.png")
+      : QIcon(":/icon/images/windows_decent_icon_16x16.png"));
+#endif
 }
 
 void TransferWidget::nameChanged(const QString & name)
@@ -468,6 +474,12 @@ ContentInfoWidget::ContentInfoWidget(QWidget* parent, const SDigitalContent& a_c
    setLayout(main_layout);
 
    setWindowTitle(QString::fromStdString(title));
+
+#ifdef _MSC_VER
+   int height = style()->pixelMetric(QStyle::PM_TitleBarHeight);
+   setWindowIcon(height > 32 ? QIcon(":/icon/images/windows_decent_icon_32x32.png")
+      : QIcon(":/icon/images/windows_decent_icon_16x16.png"));
+#endif
 }
    
 void ContentInfoWidget::ButtonWasClicked()
