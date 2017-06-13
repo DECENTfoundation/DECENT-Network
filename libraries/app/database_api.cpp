@@ -127,16 +127,7 @@ namespace graphene { namespace app {
       vector<optional<asset_object>> get_assets(const vector<asset_id_type>& asset_ids)const;
       vector<asset_object>           list_assets(const string& lower_bound_symbol, uint32_t limit)const;
       vector<optional<asset_object>> lookup_asset_symbols(const vector<string>& symbols_or_ids)const;
-      
-      // Markets / feeds
-      vector<limit_order_object>         get_limit_orders(asset_id_type a, asset_id_type b, uint32_t limit)const;
-      void subscribe_to_market(std::function<void(const variant&)> callback, asset_id_type a, asset_id_type b);
-      void unsubscribe_from_market(asset_id_type a, asset_id_type b);
-      market_ticker                      get_ticker( const string& base, const string& quote )const;
-      market_volume                      get_24_volume( const string& base, const string& quote )const;
-      order_book                         get_order_book( const string& base, const string& quote, unsigned limit = 50 )const;
-      vector<market_trade>               get_trade_history( const string& base, const string& quote, fc::time_point_sec start, fc::time_point_sec stop, unsigned limit = 100 )const;
-      
+
       // Witnesses
       vector<optional<witness_object>> get_witnesses(const vector<witness_id_type>& witness_ids)const;
       fc::optional<witness_object> get_witness_by_account(account_id_type account)const;
@@ -228,7 +219,6 @@ namespace graphene { namespace app {
       boost::signals2::scoped_connection                                                                                           _removed_connection;
       boost::signals2::scoped_connection                                                                                           _applied_block_connection;
       boost::signals2::scoped_connection                                                                                           _pending_trx_connection;
-      map< pair<asset_id_type,asset_id_type>, std::function<void(const variant&)> >      _market_subscriptions;
       map< string, std::function<void()> >                              _content_subscriptions;
       graphene::chain::database&                                                                                                   _db;
    };
@@ -370,7 +360,6 @@ namespace graphene { namespace app {
    void database_api_impl::cancel_all_subscriptions()
    {
       set_subscribe_callback( std::function<void(const fc::variant&)>(), true);
-      _market_subscriptions.clear();
    }
    
    //////////////////////////////////////////////////////////////////////
@@ -636,12 +625,6 @@ namespace graphene { namespace app {
                           acnt.vesting_balances.emplace_back(balance);
                        });
          
-         // Add the account's orders
-         auto order_range = _db.get_index_type<limit_order_index>().indices().get<by_account>().equal_range(account->id);
-         std::for_each(order_range.first, order_range.second,
-                       [&acnt] (const limit_order_object& order) {
-                          acnt.limit_orders.emplace_back(order);
-                       });
          results[account_name_or_id] = acnt;
       }
       return results;
@@ -1052,314 +1035,7 @@ namespace graphene { namespace app {
       return result;
    }
    
-   //////////////////////////////////////////////////////////////////////
-   //                                                                  //
-   // Markets / feeds                                                  //
-   //                                                                  //
-   //////////////////////////////////////////////////////////////////////
-   
-   vector<limit_order_object> database_api::get_limit_orders(asset_id_type a, asset_id_type b, uint32_t limit)const
-   {
-      return my->get_limit_orders( a, b, limit );
-   }
-   
-   /**
-    *  @return the limit orders for both sides of the book for the two assets specified up to limit number on each side.
-    */
-   vector<limit_order_object> database_api_impl::get_limit_orders(asset_id_type a, asset_id_type b, uint32_t limit)const
-   {
-      const auto& limit_order_idx = _db.get_index_type<limit_order_index>();
-      const auto& limit_price_idx = limit_order_idx.indices().get<by_price>();
-      
-      vector<limit_order_object> result;
-      
-      uint32_t count = 0;
-      auto limit_itr = limit_price_idx.lower_bound(price::max(a,b));
-      auto limit_end = limit_price_idx.upper_bound(price::min(a,b));
-      while(limit_itr != limit_end && count < limit)
-      {
-         result.push_back(*limit_itr);
-         ++limit_itr;
-         ++count;
-      }
-      count = 0;
-      limit_itr = limit_price_idx.lower_bound(price::max(b,a));
-      limit_end = limit_price_idx.upper_bound(price::min(b,a));
-      while(limit_itr != limit_end && count < limit)
-      {
-         result.push_back(*limit_itr);
-         ++limit_itr;
-         ++count;
-      }
-      
-      return result;
-   }
-   
-   void database_api::subscribe_to_market(std::function<void(const variant&)> callback, asset_id_type a, asset_id_type b)
-   {
-      my->subscribe_to_market( callback, a, b );
-   }
-   
-   void database_api_impl::subscribe_to_market(std::function<void(const variant&)> callback, asset_id_type a, asset_id_type b)
-   {
-      if(a > b) std::swap(a,b);
-      FC_ASSERT(a != b);
-      _market_subscriptions[ std::make_pair(a,b) ] = callback;
-   }
-   
-   void database_api::unsubscribe_from_market(asset_id_type a, asset_id_type b)
-   {
-      my->unsubscribe_from_market( a, b );
-   }
-   
-   void database_api_impl::unsubscribe_from_market(asset_id_type a, asset_id_type b)
-   {
-      if(a > b) std::swap(a,b);
-      FC_ASSERT(a != b);
-      _market_subscriptions.erase(std::make_pair(a,b));
-   }
-   
-   market_ticker database_api::get_ticker( const string& base, const string& quote )const
-   {
-      return my->get_ticker( base, quote );
-   }
-   
-   market_ticker database_api_impl::get_ticker( const string& base, const string& quote )const
-   {
-      auto assets = lookup_asset_symbols( {base, quote} );
-      FC_ASSERT( assets[0], "Invalid base asset symbol: ${s}", ("s",base) );
-      FC_ASSERT( assets[1], "Invalid quote asset symbol: ${s}", ("s",quote) );
-      
-      auto base_id = assets[0]->id;
-      auto quote_id = assets[1]->id;
-      
-      market_ticker result;
-      
-      result.base = base;
-      result.quote = quote;
-      result.base_volume = 0;
-      result.quote_volume = 0;
-      result.percent_change = 0;
-      result.lowest_ask = 0;
-      result.highest_bid = 0;
-      
-      auto price_to_real = [&]( const share_type a, int p ) { return double( a.value ) / pow( 10, p ); };
-      
-      try {
-         if( base_id > quote_id ) std::swap(base_id, quote_id);
-         
-         uint32_t day = 86400;
-         auto now = fc::time_point_sec( fc::time_point::now() );
-         auto orders = get_order_book( base, quote, 1 );
-         auto trades = get_trade_history( base, quote, now, fc::time_point_sec( now.sec_since_epoch() - day ), 100 );
-         
-         result.latest = trades[0].price;
-         
-         for ( market_trade t: trades )
-         {
-            result.base_volume += t.value;
-            result.quote_volume += t.amount;
-         }
-         
-         while (trades.size() == 100)
-         {
-            trades = get_trade_history( base, quote, trades[99].date, fc::time_point_sec( now.sec_since_epoch() - day ), 100 );
-            
-            for ( market_trade t: trades )
-            {
-               result.base_volume += t.value;
-               result.quote_volume += t.amount;
-            }
-         }
-         
-         trades = get_trade_history( base, quote, trades.back().date, fc::time_point_sec(), 1 );
-         result.percent_change = trades.size() > 0 ? ( ( result.latest / trades.back().price ) - 1 ) * 100 : 0;
-         
-         //if (assets[0]->id == base_id)
-         {
-            result.lowest_ask = orders.asks[0].price;
-            result.highest_bid = orders.bids[0].price;
-         }
-         
-         return result;
-      } FC_CAPTURE_AND_RETHROW( (base)(quote) )
-   }
-   
-   market_volume database_api::get_24_volume( const string& base, const string& quote )const
-   {
-      return my->get_24_volume( base, quote );
-   }
-   
-   market_volume database_api_impl::get_24_volume( const string& base, const string& quote )const
-   {
-      auto assets = lookup_asset_symbols( {base, quote} );
-      FC_ASSERT( assets[0], "Invalid base asset symbol: ${s}", ("s",base) );
-      FC_ASSERT( assets[1], "Invalid quote asset symbol: ${s}", ("s",quote) );
-      
-      auto base_id = assets[0]->id;
-      auto quote_id = assets[1]->id;
-      
-      market_volume result;
-      result.base = base;
-      result.quote = quote;
-      result.base_volume = 0;
-      result.quote_volume = 0;
-      
-      try {
-         if( base_id > quote_id ) std::swap(base_id, quote_id);
-         
-         uint32_t bucket_size = 86400;
-         auto now = fc::time_point_sec( fc::time_point::now() );
-         
-         auto trades = get_trade_history( base, quote, now, fc::time_point_sec( now.sec_since_epoch() - bucket_size ), 100 );
-         
-         for ( market_trade t: trades )
-         {
-            result.base_volume += t.value;
-            result.quote_volume += t.amount;
-         }
-         
-         while (trades.size() == 100)
-         {
-            trades = get_trade_history( base, quote, trades[99].date, fc::time_point_sec( now.sec_since_epoch() - bucket_size ), 100 );
-            
-            for ( market_trade t: trades )
-            {
-               result.base_volume += t.value;
-               result.quote_volume += t.amount;
-            }
-         }
-         
-         return result;
-      } FC_CAPTURE_AND_RETHROW( (base)(quote) )
-   }
-   
-   order_book database_api::get_order_book( const string& base, const string& quote, unsigned limit )const
-   {
-      return my->get_order_book( base, quote, limit);
-   }
-   
-   order_book database_api_impl::get_order_book( const string& base, const string& quote, unsigned limit )const
-   {
-      using boost::multiprecision::uint128_t;
-      FC_ASSERT( limit <= 50 );
-      
-      order_book result;
-      result.base = base;
-      result.quote = quote;
-      
-      auto assets = lookup_asset_symbols( {base, quote} );
-      FC_ASSERT( assets[0], "Invalid base asset symbol: ${s}", ("s",base) );
-      FC_ASSERT( assets[1], "Invalid quote asset symbol: ${s}", ("s",quote) );
-      
-      auto base_id = assets[0]->id;
-      auto quote_id = assets[1]->id;
-      auto orders = get_limit_orders( base_id, quote_id, limit );
-      
-      
-      auto asset_to_real = [&]( const asset& a, int p ) { return double(a.amount.value)/pow( 10, p ); };
-      auto price_to_real = [&]( const price& p )
-      {
-         if( p.base.asset_id == base_id )
-            return asset_to_real( p.base, assets[0]->precision ) / asset_to_real( p.quote, assets[1]->precision );
-         else
-            return asset_to_real( p.quote, assets[0]->precision ) / asset_to_real( p.base, assets[1]->precision );
-      };
-      
-      for( const auto& o : orders )
-      {
-         if( o.sell_price.base.asset_id == base_id )
-         {
-            order ord;
-            ord.price = price_to_real( o.sell_price );
-            ord.quote = asset_to_real( share_type( ( uint128_t( o.for_sale.value ) * o.sell_price.quote.amount.value ) / o.sell_price.base.amount.value ), assets[1]->precision );
-            ord.base = asset_to_real( o.for_sale, assets[0]->precision );
-            result.bids.push_back( ord );
-         }
-         else
-         {
-            order ord;
-            ord.price = price_to_real( o.sell_price );
-            ord.quote = asset_to_real( o.for_sale, assets[1]->precision );
-            ord.base = asset_to_real( share_type( ( uint64_t( o.for_sale.value ) * o.sell_price.quote.amount.value ) / o.sell_price.base.amount.value ), assets[0]->precision );
-            result.asks.push_back( ord );
-         }
-      }
-      
-      return result;
-   }
-   
-   vector<market_trade> database_api::get_trade_history( const string& base,
-                                                        const string& quote,
-                                                        fc::time_point_sec start,
-                                                        fc::time_point_sec stop,
-                                                        unsigned limit )const
-   {
-      return my->get_trade_history( base, quote, start, stop, limit );
-   }
-   
-   vector<market_trade> database_api_impl::get_trade_history( const string& base,
-                                                             const string& quote,
-                                                             fc::time_point_sec start,
-                                                             fc::time_point_sec stop,
-                                                             unsigned limit )const
-   {
-      FC_ASSERT( limit <= 100 );
-      
-      auto assets = lookup_asset_symbols( {base, quote} );
-      FC_ASSERT( assets[0], "Invalid base asset symbol: ${s}", ("s",base) );
-      FC_ASSERT( assets[1], "Invalid quote asset symbol: ${s}", ("s",quote) );
-      
-      auto base_id = assets[0]->id;
-      auto quote_id = assets[1]->id;
-      
-      if( base_id > quote_id ) std::swap( base_id, quote_id );
-      const auto& history_idx = _db.get_index_type<graphene::market_history::history_index>().indices().get<by_key>();
-      history_key hkey;
-      hkey.base = base_id;
-      hkey.quote = quote_id;
-      hkey.sequence = std::numeric_limits<int64_t>::min();
-      
-      auto price_to_real = [&]( const share_type a, int p ) { return double( a.value ) / pow( 10, p ); };
-      
-      if ( start.sec_since_epoch() == 0 )
-         start = fc::time_point_sec( fc::time_point::now() );
-      
-      uint32_t count = 0;
-      auto itr = history_idx.lower_bound( hkey );
-      vector<market_trade> result;
-      
-      while( itr != history_idx.end() && count < limit && !( itr->key.base != base_id || itr->key.quote != quote_id || itr->time < stop ) )
-      {
-         if( itr->time < start )
-         {
-            market_trade trade;
-            
-            if( assets[0]->id == itr->op.receives.asset_id )
-            {
-               trade.amount = price_to_real( itr->op.pays.amount, assets[1]->precision );
-               trade.value = price_to_real( itr->op.receives.amount, assets[0]->precision );
-            }
-            else
-            {
-               trade.amount = price_to_real( itr->op.receives.amount, assets[1]->precision );
-               trade.value = price_to_real( itr->op.pays.amount, assets[0]->precision );
-            }
-            
-            trade.date = itr->time;
-            trade.price = trade.value / trade.amount;
-            
-            result.push_back( trade );
-            ++count;
-         }
-         
-         // Trades are tracked in each direction.
-         ++itr;
-         ++itr;
-      }
-      
-      return result;
-   }
+
    
    //////////////////////////////////////////////////////////////////////
    //                                                                  //
@@ -2412,39 +2088,12 @@ namespace
             updates.emplace_back( obj->id );
          broadcast_updates( updates );
       }
-      
-      if( _market_subscriptions.size() )
-      {
-         map< pair<asset_id_type, asset_id_type>, vector<variant> > broadcast_queue;
-         for( const auto& obj : objs )
-         {
-            const limit_order_object* order = dynamic_cast<const limit_order_object*>(obj);
-            if( order )
-            {
-               auto sub = _market_subscriptions.find( order->get_market() );
-               if( sub != _market_subscriptions.end() )
-                  broadcast_queue[order->get_market()].emplace_back( order->id );
-            }
-         }
-         if( broadcast_queue.size() )
-         {
-            auto capture_this = shared_from_this();
-            fc::async([capture_this,this,broadcast_queue](){
-               for( const auto& item : broadcast_queue )
-               {
-                  auto sub = _market_subscriptions.find(item.first);
-                  if( sub != _market_subscriptions.end() )
-                     sub->second( fc::variant(item.second ) );
-               }
-            });
-         }
-      }
+
    }
    
    void database_api_impl::on_objects_changed(const vector<object_id_type>& ids)
    {
       vector<variant>    updates;
-      map< pair<asset_id_type, asset_id_type>,  vector<variant> > market_broadcast_queue;
       vector< string > content_update_queue;
       
       for(auto id : ids)
@@ -2460,22 +2109,6 @@ namespace
             else
             {
                updates.emplace_back(id); // send just the id to indicate removal
-            }
-         }
-         
-         if( _market_subscriptions.size() )
-         {
-            if( !_subscribe_callback )
-               obj = _db.find_object( id );
-            if( obj )
-            {
-               const limit_order_object* order = dynamic_cast<const limit_order_object*>(obj);
-               if( order )
-               {
-                  auto sub = _market_subscriptions.find( order->get_market() );
-                  if( sub != _market_subscriptions.end() )
-                     market_broadcast_queue[order->get_market()].emplace_back( order->id );
-               }
             }
          }
 
@@ -2498,15 +2131,9 @@ namespace
       /// pushing the future back / popping the prior future if it is complete.
       /// if a connection hangs then this could get backed up and result in
       /// a failure to exit cleanly.
-      fc::async([capture_this,this,updates,market_broadcast_queue, content_update_queue](){
+      fc::async([capture_this,this,updates, content_update_queue](){
          if( _subscribe_callback ) _subscribe_callback( updates );
          
-         for( const auto& item : market_broadcast_queue )
-         {
-            auto sub = _market_subscriptions.find(item.first);
-            if( sub != _market_subscriptions.end() )
-               sub->second( fc::variant(item.second ) );
-         }
          for( const auto& item: content_update_queue )
          {
             _content_subscriptions[ item ]( );
@@ -2528,47 +2155,6 @@ namespace
             _block_applied_callback(fc::variant(block_id));
          });
       }
-      
-      if(_market_subscriptions.size() == 0)
-         return;
-      
-      const auto& ops = _db.get_applied_operations();
-      map< std::pair<asset_id_type,asset_id_type>, vector<pair<operation, operation_result>> > subscribed_markets_ops;
-      for(const optional< operation_history_object >& o_op : ops)
-      {
-         if( !o_op.valid() )
-            continue;
-         const operation_history_object& op = *o_op;
-         
-         std::pair<asset_id_type,asset_id_type> market;
-         switch(op.op.which())
-         {
-               /*  This is sent via the object_changed callback
-                case operation::tag<limit_order_create_operation>::value:
-                market = op.op.get<limit_order_create_operation>().get_market();
-                break;
-                */
-            case operation::tag<fill_order_operation>::value:
-               market = op.op.get<fill_order_operation>().get_market();
-               break;
-               /*
-                case operation::tag<limit_order_cancel_operation>::value:
-                */
-            default: break;
-         }
-         if(_market_subscriptions.count(market))
-            subscribed_markets_ops[market].push_back(std::make_pair(op.op, op.result));
-      }
-      /// we need to ensure the database_api is not deleted for the life of the async operation
-      auto capture_this = shared_from_this();
-      fc::async([this,capture_this,subscribed_markets_ops](){
-         for(auto item : subscribed_markets_ops)
-         {
-            auto itr = _market_subscriptions.find(item.first);
-            if(itr != _market_subscriptions.end())
-               itr->second(fc::variant(item.second));
-         }
-      });
    }
    
 } } // graphene::app

@@ -27,12 +27,10 @@
 #include <graphene/chain/asset_object.hpp>
 #include <graphene/chain/block_summary_object.hpp>
 #include <graphene/chain/budget_record_object.hpp>
-#include <graphene/chain/buyback_object.hpp>
 #include <graphene/chain/buying_object.hpp>
 #include <graphene/chain/chain_property_object.hpp>
 #include <graphene/chain/content_object.hpp>
 #include <graphene/chain/global_property_object.hpp>
-#include <graphene/chain/market_object.hpp>
 #include <graphene/chain/operation_history_object.hpp>
 #include <graphene/chain/proposal_object.hpp>
 #include <graphene/chain/rating_object.hpp>
@@ -49,7 +47,6 @@
 #include <graphene/chain/assert_evaluator.hpp>
 #include <graphene/chain/custom_evaluator.hpp>
 #include <graphene/chain/decent_evaluator.hpp>
-#include <graphene/chain/market_evaluator.hpp>
 #include <graphene/chain/proposal_evaluator.hpp>
 #include <graphene/chain/transfer_evaluator.hpp>
 #include <graphene/chain/vesting_balance_evaluator.hpp>
@@ -88,9 +85,6 @@ const uint8_t block_summary_object::type_id;
 const uint8_t global_property_object::space_id;
 const uint8_t global_property_object::type_id;
 
-const uint8_t limit_order_object::space_id;
-const uint8_t limit_order_object::type_id;
-
 const uint8_t operation_history_object::space_id;
 const uint8_t operation_history_object::type_id;
 
@@ -117,11 +111,8 @@ void database::initialize_evaluators()
    register_evaluator<account_update_evaluator>();
    register_evaluator<custom_evaluator>();
    register_evaluator<asset_create_evaluator>();
-   register_evaluator<asset_issue_evaluator>();
    register_evaluator<asset_update_evaluator>();
    register_evaluator<assert_evaluator>();
-   register_evaluator<limit_order_create_evaluator>();
-   register_evaluator<limit_order_cancel_evaluator>();
    register_evaluator<transfer_evaluator>();
    register_evaluator<proposal_create_evaluator>();
    register_evaluator<proposal_update_evaluator>();
@@ -167,7 +158,6 @@ void database::initialize_indexes()
    acnt_index->add_secondary_index<account_member_index>();
 
    add_index< primary_index<witness_index> >();
-   add_index< primary_index<limit_order_index > >();
 
    auto prop_index = add_index< primary_index<proposal_index > >();
    prop_index->add_secondary_index<required_approval_index>();
@@ -186,7 +176,6 @@ void database::initialize_indexes()
    add_index< primary_index<simple_index<chain_property_object          > > >();
    add_index< primary_index<simple_index<witness_schedule_object        > > >();
    add_index< primary_index<simple_index<budget_record_object           > > >();
-   add_index< primary_index< buyback_index                                > >();
    add_index< primary_index< seeder_index                                 > >();
    add_index< primary_index< rating_index                                 > >();
    add_index< primary_index< content_index                                > >();
@@ -328,7 +317,10 @@ void database::init_genesis(const genesis_state_type& genesis_state)
    create<dynamic_global_property_object>([&](dynamic_global_property_object& p) {
       p.time = genesis_state.initial_timestamp;
       p.dynamic_flags = 0;
-      p.witness_budget = 0;
+      p.witness_budget_from_fees = 0;
+      p.witness_budget_from_rewards = 0;
+      p.unspent_fee_budget = 0;
+      p.mined_rewards = 0;
       p.recent_slots_filled = fc::uint128::max_value();
    });
 

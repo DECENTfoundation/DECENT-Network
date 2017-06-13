@@ -37,7 +37,7 @@ namespace graphene { namespace chain {
    struct custom_operation : public base_operation
    {
       struct fee_parameters_type { 
-         uint64_t fee = GRAPHENE_BLOCKCHAIN_PRECISION; 
+         uint64_t fee = GRAPHENE_BLOCKCHAIN_PRECISION/1000;
          uint32_t price_per_kbyte = 10;
       };
 

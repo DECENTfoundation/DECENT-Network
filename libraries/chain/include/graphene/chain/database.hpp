@@ -361,54 +361,16 @@ namespace graphene { namespace chain {
           */
          void disallow_automatic_renewal_of_subscription(const subscription_object& subscription);
          void decent_housekeeping();
-         share_type get_witness_budget();
+         share_type get_new_asset_per_block();
+         share_type get_witness_budget(uint32_t blocks);
+         bool is_reward_switch_in_interval(uint64_t a, uint64_t b)const;
+         uint64_t get_next_reward_switch_block(uint64_t start)const;
 
          real_supply get_real_supply()const;
 
-         //////////////////// db_market.cpp ////////////////////
-
-         /// @{ @group Market Helpers
-         void cancel_order(const limit_order_object& order, bool create_virtual_op = true);
-
-         /**
-          * @brief Process a new limit order through the markets
-          * @param order The new order to process
-          * @return true if order was completely filled; false otherwise
-          *
-          * This function takes a new limit order, and runs the markets attempting to match it with existing orders
-          * already on the books.
-          */
-         bool apply_order(const limit_order_object& new_order_object );
-
-         /**
-          * Matches the two orders,
-          *
-          * @return a bit field indicating which orders were filled (and thus removed)
-          *
-          * 0 - no orders were matched
-          * 1 - bid was filled
-          * 2 - ask was filled
-          * 3 - both were filled
-          */
-         ///@{
-         template<typename OrderType>
-         int match( const limit_order_object& bid, const OrderType& ask, const price& match_price );
-         int match( const limit_order_object& bid, const limit_order_object& ask, const price& trade_price );
-         ///@}
-
-         /**
-          * @return true if the order was completely filled and thus freed.
-          */
-         bool fill_order( const limit_order_object& order, const asset& pays, const asset& receives, bool cull_if_small );
-
-         // helpers to fill_order
-         void pay_order( const account_object& receiver, const asset& receives, const asset& pays );
-
-         asset calculate_market_fee(const asset_object& recv_asset, const asset& trade_amount);
-         asset pay_market_fees( const asset_object& recv_asset, const asset& receives );
+         bool is_reward_switch_time() const;
 
 
-         ///@}
          /**
           *  This method validates transactions without adding it to the pending state.
           *  @return true if the transaction would validate
@@ -465,7 +427,6 @@ namespace graphene { namespace chain {
          void update_last_irreversible_block();
          void clear_expired_transactions();
          void clear_expired_proposals();
-         void clear_expired_orders();
          void update_expired_feeds();
          void update_maintenance_flag( bool new_maintenance_flag );
          void update_withdraw_permissions();
@@ -476,7 +437,6 @@ namespace graphene { namespace chain {
 
          //////////////////// db_maint.cpp ////////////////////
 
-         void initialize_budget_record( fc::time_point_sec now, budget_record& rec )const;
          void process_budget();
          void perform_chain_maintenance(const signed_block& next_block, const global_property_object& global_props);
          void update_active_witnesses();
