@@ -93,7 +93,6 @@
 #include <graphene/witness/witness.hpp>
 #include <graphene/seeding/seeding.hpp>
 #include <graphene/account_history/account_history_plugin.hpp>
-#include <graphene/market_history/market_history_plugin.hpp>
 #include <graphene/utilities/dirhelper.hpp>
 #include <graphene/chain/config.hpp>
 #include <graphene/chain/content_object.hpp>

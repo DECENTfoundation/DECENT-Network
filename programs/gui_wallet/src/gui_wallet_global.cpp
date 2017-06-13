@@ -77,6 +77,11 @@ void ShowMessageBox(QString const& strTitle,
    pMessageBox->open();
    // alternatively can connect to delete later as below
    //pMessageBox->open(pMessageBox, SLOT(deleteLater()));
+#ifdef _MSC_VER
+   int height = pMessageBox->style()->pixelMetric(QStyle::PM_TitleBarHeight);
+   pMessageBox->setWindowIcon(height > 32 ? QIcon(":/icon/images/windows_decent_icon_32x32.png")
+      : QIcon(":/icon/images/windows_decent_icon_16x16.png"));
+#endif
 }
 
 uint64_t json_to_int64(nlohmann::json const& o)

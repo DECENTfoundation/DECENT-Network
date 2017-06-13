@@ -13,7 +13,11 @@ add_library( decent_encrypt
 target_link_libraries( decent_encrypt
     PUBLIC fc pbc cryptopp )
 
-target_link_libraries( test_encrypt pbc decent_encrypt gmp )
+if( WIN32 )
+  target_link_libraries( test_encrypt pbc decent_encrypt ${GMP_LIBRARIES} )
+else()
+  target_link_libraries( test_encrypt pbc decent_encrypt gmp )
+endif()
 #target_link_libraries( test_pbc_benchmark pbc decent_encrypt gmp )
 target_include_directories( decent_encrypt
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" "${CMAKE_CURRENT_BINARY_DIR}/include" )

@@ -26,6 +26,10 @@
 #include <graphene/wallet/wallet.hpp>
 #include <graphene/wallet/api_documentation.hpp>
 
+#ifdef _MSC_VER
+#include <sstream>
+#endif
+
 namespace graphene { namespace wallet {
    namespace detail {
       namespace
