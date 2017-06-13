@@ -13,7 +13,10 @@ namespace gui_wallet
          Default,
          RowLabel,
          ConnectingSplash,
-         DecentLogo
+         DecentLogo,
+         Account,
+         Row1Spacer,
+         Balance
       };
 
       enum eName

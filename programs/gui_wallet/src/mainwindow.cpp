@@ -11,6 +11,8 @@
 #include <QProgressBar>
 #include <QGridLayout>
 #include <QStackedWidget>
+#include <QComboBox>
+#include <QStyleFactory>
 #endif
 
 #include "mainwindow.hpp"
@@ -42,15 +44,38 @@ MainWindow::MainWindow()
    QWidget* pContainerWidget = new QWidget(this);
    QMenuBar* pMenuBar = new QMenuBar(pContainerWidget);
    QWidget* pMainWidget = new QWidget(pContainerWidget);
-   //DecentLabel* pDecentLogo = new DecentLabel(this, DecentLabel::DecentLogo);
-   //pDecentLogo->setText("alsdkmalsd");
+   /*DecentLabel* pDecentLogo = new DecentLabel(pMainWidget, DecentLabel::DecentLogo);
+   DecentLabel* pAccount = new DecentLabel(pMainWidget, DecentLabel::Account);
+   DecentLabel* pRow1Spacer = new DecentLabel(pMainWidget, DecentLabel::Row1Spacer);
+   QComboBox* pAccountList = new QComboBox(pMainWidget);
+   pAccountList->setStyle(QStyleFactory::create("fusion"));
+   DecentLabel* pBalance = new DecentLabel(pMainWidget, DecentLabel::Balance);
+   pBalance->setText("0 DCT");
+   DecentButton* pSendButton = new DecentButton(pMainWidget, DecentButton::Send);*/
 
    m_pCentralWidget = new CentralWigdet(pMainWidget);
 
+   /*QHBoxLayout* pSpacerLayout = new QHBoxLayout;
+   pSpacerLayout->addWidget(pAccountList, Qt::AlignLeft);
+   pSpacerLayout->addStretch();
+   pRow1Spacer->setLayout(pSpacerLayout);
+   pSpacerLayout->setSpacing(0);
+   pSpacerLayout->setContentsMargins(0, 0, 0, 0);
+
+   QHBoxLayout* pRow1Layout = new QHBoxLayout;
+   pRow1Layout->addWidget(pDecentLogo, Qt::AlignLeft);
+   pRow1Layout->addWidget(pAccount, Qt::AlignLeft);
+   pRow1Layout->addWidget(pRow1Spacer, Qt::AlignLeft);
+   pRow1Layout->addWidget(pBalance, Qt::AlignRight);
+   pRow1Layout->addWidget(pSendButton, Qt::AlignRight);*/
+
+
+
    QVBoxLayout* pMainLayout = new QVBoxLayout;
    pMainLayout->setContentsMargins(0, 0, 0, 0);
-   //pMainLayout->setSpacing(1);
-   //pMainLayout->addWidget(pDecentLogo);
+   pMainLayout->setSpacing(0);
+
+   //pMainLayout->addLayout(pRow1Layout, Qt::AlignLeft);
    pMainLayout->addWidget(m_pCentralWidget);
    pMainWidget->setLayout(pMainLayout);
 
