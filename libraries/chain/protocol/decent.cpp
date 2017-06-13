@@ -31,7 +31,7 @@ void content_submit_operation::validate()const
    FC_ASSERT(false == price.empty());
    for (auto const& item : price)
    {
-      FC_ASSERT(item.second.amount >= 0);
+      FC_ASSERT(item.price.amount >= 0);
    }
 
    FC_ASSERT( size > 0 && size <= 200 ); //TODO_DECENT - increase in testnet

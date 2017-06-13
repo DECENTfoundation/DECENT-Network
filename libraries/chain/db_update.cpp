@@ -28,7 +28,6 @@
 #include <graphene/chain/asset_object.hpp>
 #include <graphene/chain/global_property_object.hpp>
 #include <graphene/chain/hardfork.hpp>
-#include <graphene/chain/market_object.hpp>
 #include <graphene/chain/proposal_object.hpp>
 #include <graphene/chain/transaction_object.hpp>
 #include <graphene/chain/withdraw_permission_object.hpp>
@@ -105,15 +104,31 @@ void database::update_signing_witness(const witness_object& signing_witness, con
    const dynamic_global_property_object& dpo = get_dynamic_global_properties();
    uint64_t new_block_aslot = dpo.current_aslot + get_slot_at_time( new_block.timestamp );
 
-   share_type witness_pay = dpo.witness_budget * gpo.parameters.block_interval;
-   witness_pay /= ( 24 * 3600 ) ;
+   int64_t time_to_maint = (dpo.next_maintenance_time - dpo.last_budget_time ).to_seconds();
+   uint32_t blocks_in_interval = ( uint64_t(time_to_maint) + gpo.parameters.block_interval - 1 ) / gpo.parameters.block_interval;
+   //uint32_t blocks_in_interval = ( gpo.parameters.maintenance_interval ) / gpo.parameters.block_interval;
+
+   share_type witness_pay_from_reward = 0;
+   share_type witness_pay_from_fees = 0;
+
+   if( blocks_in_interval > 0 ) {
+      witness_pay_from_fees = dpo.witness_budget_from_fees / blocks_in_interval ;
+   }
+   witness_pay_from_reward = get_new_asset_per_block();
+
+   //this should never happen, but better check.
+   if(witness_pay_from_fees < share_type(0))
+      witness_pay_from_fees = share_type(0);
+
+   //ilog("calculating witness pay; witness budget = ${b}, from fees = ${f}, blocks: ${r}, witness pay = ${p}",("b", dpo.witness_budget_from_rewards)("f", dpo.unspent_fee_budget)("r", blocks_in_interval)("p", witness_pay_from_fees+witness_pay_from_reward));
 
    modify( dpo, [&]( dynamic_global_property_object& _dpo )
    {
-      _dpo.witness_budget -= witness_pay;
+      _dpo.mined_rewards += get_new_asset_per_block();
+      _dpo.unspent_fee_budget -= witness_pay_from_fees;
    } );
 
-   deposit_witness_pay( signing_witness, witness_pay );
+   deposit_witness_pay( signing_witness, witness_pay_from_fees + witness_pay_from_reward );
 
    modify( signing_witness, [&]( witness_object& _wit )
    {
@@ -188,37 +203,6 @@ void database::clear_expired_proposals()
       remove(proposal);
    }
 }
-
-void database::clear_expired_orders()
-{ try {
-   detail::with_skip_flags( *this,
-      get_node_properties().skip_flags | skip_authority_check, [&](){
-         transaction_evaluation_state cancel_context(this);
-
-         //Cancel expired limit orders
-         auto& limit_index = get_index_type<limit_order_index>().indices().get<by_expiration>();
-         while( !limit_index.empty() && limit_index.begin()->expiration <= head_block_time() )
-         {
-            limit_order_cancel_operation canceler;
-            const limit_order_object& order = *limit_index.begin();
-            canceler.fee_paying_account = order.seller;
-            canceler.order = order.id;
-            canceler.fee = current_fee_schedule().calculate_fee( canceler );
-            if( canceler.fee.amount > order.deferred_fee )
-            {
-               // Cap auto-cancel fees at deferred_fee; see #549
-               wlog( "At block ${b}, fee for clearing expired order ${oid} was capped at deferred_fee ${fee}", ("b", head_block_num())("oid", order.id)("fee", order.deferred_fee) );
-               canceler.fee = asset( order.deferred_fee, asset_id_type() );
-            }
-            // we know the fee for this op is set correctly since it is set by the chain.
-            // this allows us to avoid a hung chain:
-            // - if #549 case above triggers
-            // - if the fee is incorrect, which may happen due to #435 (although since cancel is a fixed-fee op, it shouldn't)
-            cancel_context.skip_fee_schedule_check = true;
-            apply_operation(cancel_context, canceler);
-         }
-     });
-} FC_CAPTURE_AND_RETHROW() }
 
 void database::update_expired_feeds()
 {

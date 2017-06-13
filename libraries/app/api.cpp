@@ -31,7 +31,6 @@
 #include <graphene/chain/get_config.hpp>
 #include <graphene/utilities/key_conversion.hpp>
 #include <graphene/chain/protocol/fee_schedule.hpp>
-#include <graphene/chain/market_object.hpp>
 #include <graphene/chain/transaction_object.hpp>
 #include <graphene/chain/withdraw_permission_object.hpp>
 #include <graphene/seeding/seeding_utility.hpp>
@@ -279,11 +278,6 @@ namespace graphene { namespace app {
                assert( aobj != nullptr );
                result.push_back( aobj->witness_account );
                break;
-            } case limit_order_object_type:{
-               const auto& aobj = dynamic_cast<const limit_order_object*>(obj);
-               assert( aobj != nullptr );
-               result.push_back( aobj->seller );
-               break;
             } case custom_object_type:{
               break;
             } case proposal_object_type:{
@@ -356,8 +350,6 @@ namespace graphene { namespace app {
                   break;
                  case impl_budget_record_object_type:
                   break;
-                 case impl_buyback_object_type:
-                  break;
                  case impl_buying_object_type:{
                   const auto& bobj = dynamic_cast<const buying_object*>(obj);
                   assert( bobj != nullptr );
@@ -388,30 +380,7 @@ namespace graphene { namespace app {
        return result;
     } // end get_relevant_accounts( obj )
 
-    vector<order_history_object> history_api::get_fill_order_history( asset_id_type a, asset_id_type b, uint32_t limit  )const
-    {
-       FC_ASSERT(_app.chain_database());
-       const auto& db = *_app.chain_database();
-       if( a > b ) std::swap(a,b);
-       const auto& history_idx = db.get_index_type<graphene::market_history::history_index>().indices().get<by_key>();
-       history_key hkey;
-       hkey.base = a;
-       hkey.quote = b;
-       hkey.sequence = std::numeric_limits<int64_t>::min();
 
-       uint32_t count = 0;
-       auto itr = history_idx.lower_bound( hkey );
-       vector<order_history_object> result;
-       while( itr != history_idx.end() && count < limit)
-       {
-          if( itr->key.base != a || itr->key.quote != b ) break;
-          result.push_back( *itr );
-          ++itr;
-          ++count;
-       }
-
-       return result;
-    }
 
     vector<operation_history_object> history_api::get_account_history( account_id_type account,
                                                                        const string& order,
@@ -468,39 +437,6 @@ namespace graphene { namespace app {
        
        return result;
     }
-
-    flat_set<uint32_t> history_api::get_market_history_buckets()const
-    {
-       auto hist = _app.get_plugin<market_history_plugin>( "market_history" );
-       FC_ASSERT( hist );
-       return hist->tracked_buckets();
-    }
-
-    vector<bucket_object> history_api::get_market_history( asset_id_type a, asset_id_type b,
-                                                           uint32_t bucket_seconds, fc::time_point_sec start, fc::time_point_sec end )const
-    { try {
-       FC_ASSERT(_app.chain_database());
-       const auto& db = *_app.chain_database();
-       vector<bucket_object> result;
-       result.reserve(200);
-
-       if( a > b ) std::swap(a,b);
-
-       const auto& bidx = db.get_index_type<bucket_index>();
-       const auto& by_key_idx = bidx.indices().get<by_key>();
-
-       auto itr = by_key_idx.lower_bound( bucket_key( a, b, bucket_seconds, start ) );
-       while( itr != by_key_idx.end() && itr->key.open <= end && result.size() < 200 )
-       {
-          if( !(itr->key.base == a && itr->key.quote == b && itr->key.seconds == bucket_seconds) )
-          {
-            return result;
-          }
-          result.push_back(*itr);
-          ++itr;
-       }
-       return result;
-    } FC_CAPTURE_AND_RETHROW( (a)(b)(bucket_seconds)(start)(end) ) }
     
     crypto_api::crypto_api(){};
     

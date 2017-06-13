@@ -32,10 +32,8 @@
 #include <graphene/chain/account_object.hpp>
 #include <graphene/chain/asset_object.hpp>
 #include <graphene/chain/budget_record_object.hpp>
-#include <graphene/chain/buyback_object.hpp>
 #include <graphene/chain/chain_property_object.hpp>
 #include <graphene/chain/global_property_object.hpp>
-#include <graphene/chain/market_object.hpp>
 #include <graphene/chain/vesting_balance_object.hpp>
 #include <graphene/chain/vote_count.hpp>
 #include <graphene/chain/witness_object.hpp>
@@ -128,56 +126,6 @@ void database::update_active_witnesses()
 
 } FC_CAPTURE_AND_RETHROW() }
 
-void database::initialize_budget_record( fc::time_point_sec now, budget_record& rec )const
-{
-   const dynamic_global_property_object& dpo = get_dynamic_global_properties();
-   const asset_object& core = asset_id_type(0)(*this);
-   const asset_dynamic_data_object& core_dd = core.dynamic_asset_data_id(*this);
-
-   rec.from_initial_reserve = core.reserved(*this);
-   rec.from_accumulated_fees = core_dd.accumulated_fees;
-   rec.from_unused_witness_budget = dpo.witness_budget;
-
-   rec._real_supply = get_real_supply();
-
-   if(    (dpo.last_budget_time == fc::time_point_sec())
-       || (now <= dpo.last_budget_time) )
-   {
-      rec.time_since_last_budget = 0;
-      return;
-   }
-
-   int64_t dt = (now - dpo.last_budget_time).to_seconds();
-   rec.time_since_last_budget = uint64_t( dt );
-
-   if( rec.from_initial_reserve < 0 ) //this should never happen but better check than sorry
-   {
-      elog("from_initial_reserve is negative!");
-      rec.total_budget = 0;
-      return;
-   }
-   // We'll consider accumulated_fees to be reserved at the BEGINNING
-   // of the maintenance interval.  However, for speed we only
-   // call modify() on the asset_dynamic_data_object once at the
-   // end of the maintenance interval.  Thus the accumulated_fees
-   // are available for the budget at this point, but not included
-   // in core.reserved().
-   share_type reserve = rec.from_initial_reserve + core_dd.accumulated_fees;
-   // Similarly, we consider leftover witness_budget to be burned
-   // at the BEGINNING of the maintenance interval.
-   reserve += dpo.witness_budget;
-
-   //we allocate at most 5% of the reserve per year to witness budget.
-   // This is used iff we don't generate new coins anymore.
-
-   fc::uint128_t budget_u128 = reserve.value;
-   budget_u128 *= 5;
-   budget_u128 /= 100 * 365;
-
-   rec.total_budget = share_type(budget_u128.to_uint64());
-
-   return;
-}
 
 /**
  * Update the budget for witnesses and workers.
@@ -205,33 +153,38 @@ void database::process_budget()
       //    voting on changes to block interval).
       //
       assert( gpo.parameters.block_interval > 0 );
-      uint64_t blocks_to_maint = (uint64_t(time_to_maint) + gpo.parameters.block_interval - 1) / gpo.parameters.block_interval;
+      uint64_t blocks_to_maint = (uint64_t(time_to_maint) + gpo.parameters.block_interval - 1) / gpo.parameters.block_interval - gpo.parameters.maintenance_skip_slots;
 
       // blocks_to_maint > 0 because time_to_maint > 0,
       // which means numerator is at least equal to block_interval
 
       budget_record rec;
-      initialize_budget_record( now, rec );
+      {
+         const asset_object& core_asset = asset_id_type(0)(*this);
+         rec.from_initial_reserve = core_asset.reserved(*this);
+         rec.from_accumulated_fees = core.accumulated_fees + dpo.unspent_fee_budget;
+         rec._real_supply = get_real_supply();
+         if(    (dpo.last_budget_time == fc::time_point_sec())
+                || (now <= dpo.last_budget_time) )
+         {
+            rec.time_since_last_budget = 0;
+         }else{
+            rec.time_since_last_budget = uint64_t( (now - dpo.last_budget_time).to_seconds() );
+         }
+      }
 
-      share_type witness_budget = get_witness_budget();
-      rec.requested_witness_budget = witness_budget;
-      if( witness_budget == 0 )
-         witness_budget = rec.total_budget;
-      rec.witness_budget = witness_budget;
+      share_type planned_for_mining = get_witness_budget(blocks_to_maint) ;
+      rec.planned_for_mining = planned_for_mining + rec.from_accumulated_fees;
+      rec.generated_in_last_interval = dpo.mined_rewards + dpo.witness_budget_from_fees - dpo.unspent_fee_budget;
 
-      rec.supply_delta = rec.witness_budget
-         - rec.from_accumulated_fees
-         - rec.from_unused_witness_budget;
+      rec.supply_delta = rec.generated_in_last_interval - core.accumulated_fees;
 
       modify(core, [&]( asset_dynamic_data_object& _core )
       {
          _core.current_supply = (_core.current_supply + rec.supply_delta );
 
-         assert( rec.supply_delta ==
-                                   witness_budget
-                                 - _core.accumulated_fees
-                                 - dpo.witness_budget
-                                );
+         assert( _core.current_supply == rec._real_supply.total() );
+
          _core.accumulated_fees = 0;
       });
 
@@ -240,7 +193,10 @@ void database::process_budget()
          // Since initial witness_budget was rolled into
          // available_funds, we replace it with witness_budget
          // instead of adding it.
-         _dpo.witness_budget = witness_budget;
+         _dpo.witness_budget_from_fees = rec.from_accumulated_fees;
+         _dpo.witness_budget_from_rewards = planned_for_mining;
+         _dpo.unspent_fee_budget = _dpo.witness_budget_from_fees;
+         _dpo.mined_rewards = 0;
          _dpo.last_budget_time = now;
       });
 
@@ -256,77 +212,10 @@ void database::process_budget()
    FC_CAPTURE_AND_RETHROW()
 }
 
-void create_buyback_orders( database& db )
-{
-   const auto& bbo_idx = db.get_index_type< buyback_index >().indices().get<by_id>();
-   const auto& bal_idx = db.get_index_type< account_balance_index >().indices().get< by_account_asset >();
-
-   for( const buyback_object& bbo : bbo_idx )
-   {
-      const asset_object& asset_to_buy = bbo.asset_to_buy(db);
-      assert( asset_to_buy.buyback_account.valid() );
-
-      const account_object& buyback_account = (*(asset_to_buy.buyback_account))(db);
-      asset_id_type next_asset = asset_id_type();
-
-      while( true )
-      {
-         auto it = bal_idx.lower_bound( boost::make_tuple( buyback_account.id, next_asset ) );
-         if( it == bal_idx.end() )
-            break;
-         if( it->owner != buyback_account.id )
-            break;
-         asset_id_type asset_to_sell = it->asset_type;
-         share_type amount_to_sell = it->balance;
-         next_asset = asset_to_sell + 1;
-         if( asset_to_sell == asset_to_buy.id )
-            continue;
-         if( amount_to_sell == 0 )
-            continue;
-
-         try
-         {
-            transaction_evaluation_state buyback_context(&db);
-            buyback_context.skip_fee_schedule_check = true;
-
-            limit_order_create_operation create_vop;
-            create_vop.fee = asset( 0, asset_id_type() );
-            create_vop.seller = buyback_account.id;
-            create_vop.amount_to_sell = asset( amount_to_sell, asset_to_sell );
-            create_vop.min_to_receive = asset( 1, asset_to_buy.id );
-            create_vop.expiration = time_point_sec::maximum();
-            create_vop.fill_or_kill = false;
-
-            limit_order_id_type order_id = db.apply_operation( buyback_context, create_vop ).get< object_id_type >();
-
-            if( db.find( order_id ) != nullptr )
-            {
-               limit_order_cancel_operation cancel_vop;
-               cancel_vop.fee = asset( 0, asset_id_type() );
-               cancel_vop.order = order_id;
-               cancel_vop.fee_paying_account = buyback_account.id;
-
-               db.apply_operation( buyback_context, cancel_vop );
-            }
-         }
-         catch( const fc::exception& e )
-         {
-            // we can in fact get here, e.g. if asset issuer of buy/sell asset blacklists/whitelists the buyback account
-            wlog( "Skipping buyback processing selling ${as} for ${ab} for buyback account ${b} at block ${n}; exception was ${e}",
-                  ("as", asset_to_sell)("ab", asset_to_buy)("b", buyback_account)("n", db.head_block_num())("e", e.to_detail_string()) );
-            continue;
-         }
-      }
-   }
-   return;
-}
-
 
 void database::perform_chain_maintenance(const signed_block& next_block, const global_property_object& global_props)
 {
    const auto& gpo = get_global_properties();
-
-   create_buyback_orders(*this);
 
    struct vote_tally_helper {
       database& d;
@@ -394,12 +283,6 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
    decent_housekeeping();
 
    modify(gpo, [this](global_property_object& p) {
-      // Remove scaling of account registration fee
-        //TODO_DECENT rework
-      const auto& dgpo = get_dynamic_global_properties();
-      p.parameters.current_fees->get<account_create_operation>().basic_fee >>= p.parameters.account_fee_scale_bitshifts *
-            (dgpo.accounts_registered_this_interval / p.parameters.accounts_per_fee_scale);
-
       if( p.pending_parameters )
       {
          p.parameters = std::move(*p.pending_parameters);
@@ -409,6 +292,9 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
 
    auto next_maintenance_time = get<dynamic_global_property_object>(dynamic_global_property_id_type()).next_maintenance_time;
    auto maintenance_interval = gpo.parameters.maintenance_interval;
+   uint32_t maintenance_interval_in_blocks = 0;
+   if( gpo.parameters.block_interval )
+      maintenance_interval_in_blocks = maintenance_interval / gpo.parameters.block_interval;
 
    if( next_maintenance_time <= next_block.timestamp )
    {

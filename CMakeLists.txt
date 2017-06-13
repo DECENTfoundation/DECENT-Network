@@ -119,6 +119,9 @@ if( WIN32 )
 
     set( TCL_LIBS "${TCL_LIBS}${TCL_LIB_PATH}/${TCL_LIB_NAME}g${TCL_LIB_EXT}" )
     set( TCL_LIBRARY ${TCL_LIBS} )
+    
+    add_definitions(-D_WIN32_WINNT=0x0601)
+    add_definitions(-DCRYPTOPP_IMPORTS)
 
 else() # Apple and Linux
 
