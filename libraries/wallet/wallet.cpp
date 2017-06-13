@@ -2023,7 +2023,7 @@ public:
    void submit_content_utility(content_submit_operation& submit_op,
                                       vector<regional_price_info> const& price_amounts)
    {
-      vector<pair<uint32_t, asset>> arr_prices;
+      vector<regional_price> arr_prices;
 
       for (auto const& item : price_amounts)
       {
@@ -2039,7 +2039,7 @@ public:
          fc::optional<asset_object> currency = find_asset(item.asset_symbol);
          FC_ASSERT(currency, "Unknown symbol");
 
-         arr_prices.push_back(std::make_pair(region_code_for, currency->amount_from_string(item.amount)));
+         arr_prices.push_back({region_code_for, currency->amount_from_string(item.amount)});
       }
 
       submit_op.price = arr_prices;

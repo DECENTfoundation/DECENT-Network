@@ -85,6 +85,12 @@ namespace graphene { namespace chain {
    typedef fc::ecc::private_key        private_key_type;
    typedef fc::sha256 chain_id_type;
 
+   typedef decent::encrypt::CustodyData custody_data_type;
+   typedef decent::encrypt::CustodyProof custody_proof_type;
+   typedef decent::encrypt::DIntegerString bigint_type;
+   typedef decent::encrypt::CiphertextString ciphertext_type;
+   typedef decent::encrypt::DeliveryProofString delivery_proof_type;
+
    enum reserved_spaces
    {
       relative_protocol_ids = 0,
