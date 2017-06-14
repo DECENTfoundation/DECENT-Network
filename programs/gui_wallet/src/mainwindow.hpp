@@ -34,7 +34,6 @@ public:
    virtual ~MainWindow(); 
    
    void GoToThisTab(int index, std::string info);
-   void UpdateAccountBalances(const std::string& username);
    
 public:
    
@@ -58,7 +57,7 @@ protected slots:
    void CheckDownloads();
    void DisplayWalletContentGUI();
    void DisplayConnectionError(std::string errorMessage);
-   void currentUserBalanceUpdate();
+   //void currentUserBalanceUpdate();
 
    void ImportKeySlot();
    void ReplayBlockChainSlot();

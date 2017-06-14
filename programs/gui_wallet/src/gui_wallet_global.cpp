@@ -720,7 +720,7 @@ Asset Globals::asset(uint64_t amount, const std::string& symbol_id )
    return ast_amount;
 }
 
-void Globals::updateAccountBalance()
+void Globals::slot_updateAccountBalance()
 {
    if (false == m_str_currentUser.empty())
    {
@@ -790,7 +790,7 @@ void Globals::setCurrentUser(std::string const& user)
 {
    m_str_currentUser = user;
    emit currentUserChanged(m_str_currentUser.c_str());
-   updateAccountBalance();
+   slot_updateAccountBalance();
 }
 
 void Globals::setWalletUnlocked()

@@ -148,7 +148,6 @@ namespace gui_wallet
       WalletAPI& getWallet() const;
       void clear();
       Asset asset(uint64_t amount, const std::string& symbol = "1.3.0");
-      void updateAccountBalance();
       std::string runTask(std::string const& str_command);
       nlohmann::json runTaskParse(std::string const& str_command);
       std::vector<Publisher> getPublishers();
@@ -161,6 +160,9 @@ namespace gui_wallet
       void signal_showTransactionsTab(std::string const&);
       void signal_updateAccountBalance(Asset const&);
       void signal_keyImported();
+
+   public slots:
+      void slot_updateAccountBalance();
 
    public:
       void setCurrentUser(std::string const& user);

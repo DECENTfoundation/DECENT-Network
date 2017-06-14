@@ -163,7 +163,7 @@ void BrowseContentTab::slot_Details(int iIndex)
 void BrowseContentTab::slot_Bought()
 {
    Globals::instance().signal_showPurchasedTab();
-   Globals::instance().updateAccountBalance();
+   Globals::instance().slot_updateAccountBalance();
 }
 
 void BrowseContentTab::ShowDigitalContentsGUI() {

@@ -74,7 +74,7 @@ QLabel[type='row1spacer']
 QLabel[type='balance']
 {
    image: url(':/icon/images/balance.png');
-   image-position: left;
+   image-position: right;
    padding-top: 1.3em;
    padding-bottom: 1.3em;
    padding-left: 1em;
@@ -88,7 +88,7 @@ QLabel[type='balance']
    border-left: 0px;
    border-top: 0px;
    color: rgb(27, 176, 104);
-   qproperty-alignment: 'AlignRight | AlignVCenter';
+   qproperty-alignment: 'AlignLeft | AlignVCenter';
 }
 QLabel QComboBox
 {

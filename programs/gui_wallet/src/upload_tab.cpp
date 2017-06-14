@@ -284,7 +284,7 @@ void Upload_tab::slot_ShowContentPopup(int iIndex)
 void Upload_tab::slot_Bought()
 {
    Globals::instance().signal_showPurchasedTab();
-   Globals::instance().updateAccountBalance();
+   Globals::instance().slot_updateAccountBalance();
 }
 
 void Upload_tab::slot_SortingChanged(int index)

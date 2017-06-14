@@ -218,7 +218,7 @@ void TransferWidget::Transfer()
    if (message.empty())
    {
       emit accepted();
-      Globals::instance().updateAccountBalance();
+      Globals::instance().slot_updateAccountBalance();
    }
    else
    {

@@ -125,12 +125,6 @@ MainWindow::MainWindow()
       pMenuFile->addAction(pActionReplayBlockchain);
    }
 
-   QComboBox*   pUsersCombo = m_pCentralWidget->usersCombo();
-   DecentButton* pImportButton = m_pCentralWidget->importButton();
-   pUsersCombo->hide();
-
-   connect(pImportButton, SIGNAL(clicked()), this, SLOT(ImportKeySlot()));
-
 
    QObject::connect(&Globals::instance(), &Globals::walletConnectionStatusChanged,
                     this, &MainWindow::slot_connection_status_changed);
@@ -152,11 +146,10 @@ MainWindow::MainWindow()
    QObject::connect(&Globals::instance(), &Globals::signal_keyImported,
                     this, &MainWindow::slot_enableSendButton);
 
-   connect(pUsersCombo, SIGNAL(currentIndexChanged(const QString&)), this, SLOT(CurrentUserChangedSlot(const QString&)) );
-
    _balanceUpdater.setSingleShot(false);
    _balanceUpdater.setInterval(10000);
-   connect(&_balanceUpdater, SIGNAL(timeout()), this, SLOT( currentUserBalanceUpdate() ));
+   QObject::connect(&_balanceUpdater, &QTimer::timeout,
+                    &Globals::instance(), &Globals::slot_updateAccountBalance);
 
    _downloadChecker.setInterval(5000);
    connect(&_downloadChecker, SIGNAL(timeout()), this, SLOT(CheckDownloads()));
@@ -328,7 +321,7 @@ void MainWindow::slot_connection_status_changed(Globals::ConnectionState from, G
    }
 }
 
-void MainWindow::currentUserBalanceUpdate()
+/*void MainWindow::currentUserBalanceUpdate()
 {
    std::string userBalanceUpdate = Globals::instance().getCurrentUser();
 
@@ -337,7 +330,7 @@ void MainWindow::currentUserBalanceUpdate()
    else
       UpdateAccountBalances(userBalanceUpdate);
 //      m_pCentralWidget->getSendButton()->setEnabled(true);
-}
+}*/
 
 void MainWindow::slot_showPurchasedTab()
 {
@@ -390,7 +383,7 @@ void MainWindow::slot_stackWidgetPop()
 void MainWindow::slot_updateAccountBalance(Asset const& balance)
 {
    // use old function needs to be reviewed
-   UpdateAccountBalances(Globals::instance().getCurrentUser());   // get rid of this one later
+   //UpdateAccountBalances(Globals::instance().getCurrentUser());   // get rid of this one later
    m_pBalance->setText(balance.getStringBalance().c_str());
 }
 
@@ -416,79 +409,6 @@ bool MainWindow::RunTaskParseImpl(std::string const& str_command, nlohmann::json
 void MainWindow::CurrentUserChangedSlot(const QString& a_new_user)
 {
    Globals::instance().setCurrentUser(a_new_user.toStdString());
-}
-
-
-void MainWindow::UpdateAccountBalances(const std::string& username)
-{
-   auto& global_instance = gui_wallet::Globals::instance();
-
-   json allAssets;
-   std::string getAssetsCommand = "list_assets \"\" 100";
-   if (!RunTaskParse(getAssetsCommand, allAssets)) {
-      ALERT_DETAILS(tr("Could not get account balances").toStdString(), allAssets.get<string>().c_str());
-      return;
-   }
-
-
-   std::string csLineToRun = "list_account_balances " + username;
-   json allBalances;
-
-   if (!RunTaskParse(csLineToRun, allBalances)) {
-      ALERT_DETAILS(tr("Could not get account balances").toStdString(), allBalances.get<string>().c_str());
-      return;
-   }
-   
-   if(!allBalances.size())
-   {
-      m_pCentralWidget->usersCombo()->hide();
-      m_pCentralWidget->importButton()->show();
-   }
-   else
-   {
-      m_pCentralWidget->importButton()->hide();
-      m_pCentralWidget->usersCombo()->show();
-   }
-   if(!m_pCentralWidget->usersCombo()->count())
-   {
-      m_pCentralWidget->usersCombo()->hide();
-      m_pCentralWidget->importButton()->show();
-   }
-   else
-   {
-      m_pCentralWidget->importButton()->hide();
-      m_pCentralWidget->usersCombo()->show();
-   }
-
-   
-   std::vector<std::string> balances;
-   for (int i = 0; i < allBalances.size(); ++i) {
-      
-      std::string assetName = "Unknown";
-      int precision = 1;
-
-      for (int assInd = 0; assInd < allAssets.size(); ++assInd) {
-         if (allAssets[assInd]["id"].get<std::string>() == allBalances[i]["asset_id"]) {
-            assetName = allAssets[assInd]["symbol"].get<std::string>();
-            precision = allAssets[assInd]["precision"].get<int>();
-            break;
-         }
-      }
-      
-      double amount = 0;
-      if (allBalances[i]["amount"].is_number()) {
-         amount = allBalances[i]["amount"].get<double>();
-      } else {
-         amount = std::stod(allBalances[i]["amount"].get<std::string>());
-      }
-      amount = amount / pow(10, precision);
-      
-      QString str = QString::number(amount) + " " + QString::fromStdString(assetName);
-      
-      balances.push_back(str.toStdString());
-   }
-   m_pCentralWidget->SetAccountBalancesFromStrGUI(balances);
-   
 }
 
 void MainWindow::CheckDownloads()
@@ -558,13 +478,12 @@ void MainWindow::DisplayWalletContentGUI()
 {
    Globals::instance().setWalletUnlocked();
    Globals::instance().getWallet().SaveWalletFile();
-   QComboBox& userCombo = *m_pCentralWidget->usersCombo();
 
    try
    {
       std::string a_result;
       RunTask("list_my_accounts", a_result);
-      userCombo.clear();
+
       m_pAccountList->clear();
       
       auto accs = json::parse(a_result);
@@ -573,16 +492,13 @@ void MainWindow::DisplayWalletContentGUI()
       {
          std::string id = accs[i]["id"].get<std::string>();
          std::string name = accs[i]["name"].get<std::string>();
-         
-         userCombo.addItem(tr(name.c_str()));
+
          m_pAccountList->addItem(name.c_str());
       }
 
       if (accs.size() > 0)
       {
-         userCombo.setCurrentIndex(0);
          m_pAccountList->setCurrentIndex(0);
-         UpdateAccountBalances(userCombo.itemText(0).toStdString());
       }
    }
    catch (const std::exception& ex)
@@ -607,13 +523,7 @@ void MainWindow::ReplayBlockChainSlot()
 
 void MainWindow::SendDCTSlot()
 {
-   if(!m_pCentralWidget->usersCombo()->count())
-      return;
-   
-   DecentButton* button = (DecentButton*)sender();
-   QString accountName = button->property("accountName").toString();
-
-   Globals::instance().showTransferDialog(accountName.toStdString());
+   Globals::instance().showTransferDialog(string());
 }
 
 void MainWindow::GoToThisTab(int index , std::string)
