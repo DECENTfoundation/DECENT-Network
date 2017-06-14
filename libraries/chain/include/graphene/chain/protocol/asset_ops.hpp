@@ -34,7 +34,7 @@ namespace graphene { namespace chain {
       /// Feeds published for this asset. If issuer is not committee, the keys in this map are the feed publishing
       /// accounts; otherwise, the feed publishers are the currently active committee_members and witnesses and this map
       /// should be treated as an implementation detail. The timestamp on each feed is the time it was published.
-      flat_map<account_id_type, pair<time_point_sec,price_feed>> feeds;
+      flat_map<account_id_type, pair<time_point_sec, price_feed>> feeds;
       /// This is the currently active price feed, calculated as the median of values from the currently active
       /// feeds.
       price_feed current_feed;
@@ -54,6 +54,7 @@ namespace graphene { namespace chain {
 
       void validate()const;
    };
+
 
    /**
     * @ingroup operations
@@ -84,7 +85,10 @@ namespace graphene { namespace chain {
       /// GRAPHENE_MAX_SHARE_SUPPLY
       share_type max_supply = GRAPHENE_MAX_SHARE_SUPPLY;
 
-      monitored_asset_options monitored_asset_opts;
+      /// Time before a price feed expires
+      uint32_t feed_lifetime_sec = GRAPHENE_DEFAULT_PRICE_FEED_LIFETIME;
+      /// Minimum number of unexpired feeds required to extract a median feed from
+      uint8_t minimum_feeds = 1;
 
       extensions_type extensions;
 
@@ -119,42 +123,19 @@ namespace graphene { namespace chain {
 
       /// If the asset is to be given a new issuer, specify his ID here.
       optional<account_id_type>   new_issuer;
-      string new_description;
       share_type max_supply = GRAPHENE_MAX_SHARE_SUPPLY;
+      string new_description;
+      /// Time before a price feed expires
+      uint32_t new_feed_lifetime_sec = 0;
+      /// Minimum number of unexpired feeds required to extract a median feed from
+      uint8_t new_minimum_feeds = 0;
+
       extensions_type             extensions;
 
       account_id_type fee_payer()const { return issuer; }
       void            validate()const;
       share_type      calculate_fee(const fee_parameters_type& k)const;
    };
-
-      /**
-       * @brief Update options specific to BitAssets
-       * @ingroup operations
-       *
-       * BitAssets have some options which are not relevant to other asset types. This operation is used to update those
-       * options an an existing MonitoredAsset.
-       *
-       * @pre @ref issuer MUST be an existing account and MUST match asset_object::issuer on @ref asset_to_update
-       * @pre @ref asset_to_update MUST be a MonitoredAsset, i.e. @ref asset_object::is_monitored_asset() returns true
-       * @pre @ref fee MUST be nonnegative, and @ref issuer MUST have a sufficient balance to pay it
-       * @pre @ref new_options SHALL be internally consistent, as verified by @ref validate()
-       * @post @ref asset_to_update will have MonitoredAsset-specific options matching those of new_options
-       */
-      struct asset_update_monitored_asset_operation : public base_operation
-      {
-         struct fee_parameters_type { uint64_t fee = 1 * GRAPHENE_BLOCKCHAIN_PRECISION/1000; };
-
-         asset           fee;
-         account_id_type issuer;
-         asset_id_type   asset_to_update;
-
-         monitored_asset_options new_options;
-         extensions_type  extensions;
-
-         account_id_type fee_payer()const { return issuer; }
-         void            validate()const;
-      };
 
    /**
     * @brief Publish price feeds for market-issued assets
@@ -200,7 +181,6 @@ FC_REFLECT( graphene::chain::monitored_asset_options,
 FC_REFLECT( graphene::chain::asset_create_operation::fee_parameters_type, (basic_fee) )
 FC_REFLECT( graphene::chain::asset_update_operation::fee_parameters_type, (basic_fee) )
 FC_REFLECT( graphene::chain::asset_publish_feed_operation::fee_parameters_type, (fee) )
-FC_REFLECT( graphene::chain::asset_update_monitored_asset_operation::fee_parameters_type, (fee) )
 
 FC_REFLECT( graphene::chain::asset_create_operation,
             (fee)
@@ -209,7 +189,8 @@ FC_REFLECT( graphene::chain::asset_create_operation,
             (precision)
             (description)
             (max_supply)
-            (monitored_asset_opts)
+            (feed_lifetime_sec)
+            (minimum_feeds)
             (extensions)
           )
 FC_REFLECT( graphene::chain::asset_update_operation,
@@ -218,10 +199,11 @@ FC_REFLECT( graphene::chain::asset_update_operation,
             (asset_to_update)
             (new_issuer)
             (new_description)
+            (new_feed_lifetime_sec)
+            (new_minimum_feeds)
             (max_supply)
             (extensions)
           )
 
 FC_REFLECT( graphene::chain::asset_publish_feed_operation,
             (fee)(publisher)(asset_id)(feed)(extensions) )
-FC_REFLECT( graphene::chain::asset_update_monitored_asset_operation, (fee)(issuer)(asset_to_update)(new_options)(extensions) )

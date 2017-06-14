@@ -882,11 +882,12 @@ namespace graphene { namespace wallet {
           * @ingroup WalletCLI
           */
          signed_transaction create_monitored_asset(string issuer,
-                                         string symbol,
-                                         uint8_t precision,
-                                         string description,
-                                         monitored_asset_options options,
-                                         bool broadcast = false);
+                                                   string symbol,
+                                                   uint8_t precision,
+                                                   string description,
+                                                   uint32_t feed_lifetime_sec,
+                                                   uint8_t minimum_feeds,
+                                                   bool broadcast = false);
 
 
 
@@ -906,7 +907,10 @@ namespace graphene { namespace wallet {
           * @ingroup WalletCLI
           */
          signed_transaction update_monitored_asset(string symbol,
-                                                   monitored_asset_options new_options,
+                                                   string new_issuer,
+                                                   string description,
+                                                   uint32_t feed_lifetime_sec,
+                                                   uint8_t minimum_feeds,
                                                    bool broadcast = false);
 
 

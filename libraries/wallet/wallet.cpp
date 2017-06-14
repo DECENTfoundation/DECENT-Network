@@ -1192,12 +1192,13 @@ public:
       return sign_transaction( tx, broadcast );
    } FC_CAPTURE_AND_RETHROW( (issuer)(symbol)(precision)(description)(max_supply)(broadcast) ) }
 
-   signed_transaction create_marked_issued_asset(string issuer,
-                                   string symbol,
-                                   uint8_t precision,
-                                   string description,
-                                   monitored_asset_options options,
-                                   bool broadcast = false)
+   signed_transaction create_monitored_asset(string issuer,
+                                             string symbol,
+                                             uint8_t precision,
+                                             string description,
+                                             uint32_t feed_lifetime_sec,
+                                             uint8_t minimum_feeds,
+                                             bool broadcast = false)
    { try {
       account_object issuer_account = get_account( issuer );
       FC_ASSERT(!find_asset(symbol).valid(), "Asset with that symbol already exists!");
@@ -1208,7 +1209,8 @@ public:
       create_op.precision = precision;
       create_op.description = description;
       create_op.max_supply = 0;
-      create_op.monitored_asset_opts = options;
+      create_op.feed_lifetime_sec = feed_lifetime_sec;
+      create_op.minimum_feeds = minimum_feeds;
 
       signed_transaction tx;
       tx.operations.push_back( create_op );
@@ -1216,30 +1218,31 @@ public:
       tx.validate();
 
       return sign_transaction( tx, broadcast );
-   } FC_CAPTURE_AND_RETHROW( (issuer)(symbol)(precision)(description)(options)(broadcast) ) }
+   } FC_CAPTURE_AND_RETHROW( (issuer)(symbol)(precision)(description)(feed_lifetime_sec)(minimum_feeds)(broadcast) ) }
 
-   signed_transaction update_asset(string symbol,
-                                   optional<string> new_issuer,
-                                   string description,
-                                   uint64_t max_supply,
-                                   bool broadcast /* = false */)
+   signed_transaction update_monitored_asset(string symbol,
+                                             string new_issuer,
+                                             string description,
+                                             uint32_t feed_lifetime_sec,
+                                             uint8_t minimum_feeds,
+                                             bool broadcast /* = false */)
    { try {
       optional<asset_object> asset_to_update = find_asset(symbol);
       if (!asset_to_update)
         FC_THROW("No asset with that symbol exists!");
-      optional<account_id_type> new_issuer_account_id;
-      if (new_issuer)
-      {
-        account_object new_issuer_account = get_account(*new_issuer);
-        new_issuer_account_id = new_issuer_account.id;
-      }
 
       asset_update_operation update_op;
       update_op.issuer = asset_to_update->issuer;
+      if(new_issuer.size()) {
+         auto ni = get_account_id(new_issuer);
+         update_op.new_issuer = ni;
+      }
       update_op.asset_to_update = asset_to_update->id;
-      update_op.new_issuer = new_issuer_account_id;
+
       update_op.new_description = description;
-      update_op.max_supply = max_supply;
+      update_op.max_supply = 0;
+      update_op.new_feed_lifetime_sec = feed_lifetime_sec;
+      update_op.new_minimum_feeds = minimum_feeds;
 
       signed_transaction tx;
       tx.operations.push_back( update_op );
@@ -1247,28 +1250,7 @@ public:
       tx.validate();
 
       return sign_transaction( tx, broadcast );
-   } FC_CAPTURE_AND_RETHROW( (symbol)(new_issuer)(description)(max_supply)(broadcast) ) }
-
-   signed_transaction update_monitored_asset(string symbol,
-                                      monitored_asset_options new_options,
-                                      bool broadcast /* = false */)
-   { try {
-      optional<asset_object> asset_to_update = find_asset(symbol);
-      if (!asset_to_update)
-        FC_THROW("No asset with that symbol exists!");
-
-      asset_update_monitored_asset_operation update_op;
-      update_op.issuer = asset_to_update->issuer;
-      update_op.asset_to_update = asset_to_update->id;
-      update_op.new_options = new_options;
-
-      signed_transaction tx;
-      tx.operations.push_back( update_op );
-      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
-      tx.validate();
-
-      return sign_transaction( tx, broadcast );
-   } FC_CAPTURE_AND_RETHROW( (symbol)(new_options)(broadcast) ) }
+   } FC_CAPTURE_AND_RETHROW( (symbol)(new_issuer)(description)(feed_lifetime_sec)(minimum_feeds)(broadcast) ) }
 
    signed_transaction publish_asset_feed(string publishing_account,
                                          string symbol,
@@ -2543,15 +2525,9 @@ signed_transaction content_cancellation(string author,
       return result;
    };
 
-   void dbg_make_uia(string creator, string symbol)
-   {
-      create_asset(get_account(creator).name, symbol, 2, "abcd", 1000000, true);
-   }
-
    void dbg_make_mia(string creator, string symbol)
    {
-      monitored_asset_options mao;
-      create_marked_issued_asset(get_account(creator).name, symbol, 2, "abcd", mao, true);
+      create_monitored_asset(get_account(creator).name, symbol, 2, "abcd", 3600, 1, true);
    }
 
    void dbg_push_blocks( const std::string& src_filename, uint32_t count )
@@ -3413,21 +3389,25 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
    }
 
    signed_transaction wallet_api::create_monitored_asset(string issuer,
-                                               string symbol,
-                                               uint8_t precision,
-                                               string description,
-                                               monitored_asset_options options,
-                                               bool broadcast)
+                                                         string symbol,
+                                                         uint8_t precision,
+                                                         string description,
+                                                         uint32_t feed_lifetime_sec,
+                                                         uint8_t minimum_feeds,
+                                                         bool broadcast)
 
    {
-      return my->create_marked_issued_asset(issuer, symbol, precision, description, options, broadcast);
+      return my->create_monitored_asset(issuer, symbol, precision, description, feed_lifetime_sec, minimum_feeds, broadcast);
    }
 
    signed_transaction wallet_api::update_monitored_asset(string symbol,
-                                                  monitored_asset_options new_options,
-                                                  bool broadcast /* = false */)
+                                                         string new_issuer,
+                                                         string description,
+                                                         uint32_t feed_lifetime_sec,
+                                                         uint8_t minimum_feeds,
+                                                         bool broadcast /* = false */)
    {
-      return my->update_monitored_asset(symbol, new_options, broadcast);
+      return my->update_monitored_asset(symbol, new_issuer, description, feed_lifetime_sec, minimum_feeds, broadcast);
    }
 
    signed_transaction wallet_api::publish_asset_feed(string publishing_account,
@@ -3656,7 +3636,7 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
          ss << "usage: ISSUER SYMBOL PRECISION_DIGITS OPTIONS BITASSET_OPTIONS BROADCAST\n\n";
          ss << "PRECISION_DIGITS: the number of digits after the decimal point\n\n";
       }
-      else if( method == "create_marked_issued_asset" )
+      else if( method == "create_monitored_asset" )
       {
          ss << "usage: ISSUER SYMBOL PRECISION_DIGITS OPTIONS BITASSET_OPTIONS BROADCAST\n\n";
          ss << "PRECISION_DIGITS: the number of digits after the decimal point\n\n";

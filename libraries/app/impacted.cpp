@@ -65,8 +65,6 @@ struct get_impacted_account_visitor
          _impacted.insert( *(op.new_issuer) );
    }
 
-   void operator()( const asset_update_monitored_asset_operation& op ) {}
-
    void operator()( const asset_publish_feed_operation& op ) {}
    void operator()( const witness_create_operation& op )
    {
