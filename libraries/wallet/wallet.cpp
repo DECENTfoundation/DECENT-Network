@@ -2648,13 +2648,10 @@ signed_transaction content_cancellation(string author,
    {
       try
       {
-         const account_object& master = *_wallet.my_accounts.get<by_name>().lower_bound("import");
-         int number_of_accounts = number_of_transactions / 3;
+         const account_object& master = *_wallet.my_accounts.get<by_name>().lower_bound("decent");
+         int number_of_accounts = number_of_transactions / 2;
          number_of_transactions -= number_of_accounts;
          //auto key = derive_private_key("floodshill", 0);
-         try {
-            dbg_make_uia(master.name, "SHILL");
-         } catch(...) {/* Ignore; the asset probably already exists.*/}
 
          fc::time_point start = fc::time_point::now();
          for( int i = 0; i < number_of_accounts; ++i )
@@ -2670,8 +2667,8 @@ signed_transaction content_cancellation(string author,
          start = fc::time_point::now();
          for( int i = 0; i < number_of_accounts; ++i )
          {
-            signed_transaction trx = transfer(master.name, prefix + fc::to_string(i), "10", "CORE", "", true);
-            trx = transfer(master.name, prefix + fc::to_string(i), "1", "CORE", "", true);
+            signed_transaction trx = transfer(master.name, prefix + fc::to_string(i), "0.1", "DCT", "", true);
+            trx = transfer(master.name, prefix + fc::to_string(i), "0.09", "DCT", "", true);
          }
          end = fc::time_point::now();
          ilog("Transferred to ${n} accounts in ${time} milliseconds",

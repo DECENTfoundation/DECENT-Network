@@ -1,5 +1,5 @@
 #include <cstddef>
-#include "torrent_transfer.hpp"
+//#include "torrent_transfer.hpp"
 #include "ipfs_transfer.hpp"
 #include "local.hpp"
 
@@ -872,7 +872,7 @@ namespace decent { namespace package {
         _proto_transfer_engines["ipfs"] = std::make_shared<IPFSTransferEngine>();
         _proto_transfer_engines["local"] = std::make_shared<LocalTransferEngine>();
 
-        set_libtorrent_config(graphene::utilities::decent_path_finder::instance().get_decent_home() / "libtorrent.json");
+        //set_libtorrent_config(graphene::utilities::decent_path_finder::instance().get_decent_home() / "libtorrent.json");
 
         // TODO: restore anything?
     }
@@ -1034,7 +1034,7 @@ namespace decent { namespace package {
         return _packages_path;
     }
 
-    void PackageManager::set_libtorrent_config(const boost::filesystem::path& libtorrent_config_file) {
+    /*void PackageManager::set_libtorrent_config(const boost::filesystem::path& libtorrent_config_file) {
         std::lock_guard<std::recursive_mutex> guard(_mutex);
 
         for(auto& proto_transfer_engine : _proto_transfer_engines) {
@@ -1049,7 +1049,7 @@ namespace decent { namespace package {
                 }
             }
         }
-    }
+    }*/
 
     TransferEngineInterface& PackageManager::get_proto_transfer_engine(const std::string& proto) const {
         std::lock_guard<std::recursive_mutex> guard(_mutex);
