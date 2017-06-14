@@ -207,7 +207,7 @@ void Overview_tab::slot_Details()
 
 void Overview_tab::slot_Transfer()
 {
-   Globals::instance().showTransferDialog(m_strSelectedAccount.toStdString());
+   Globals::instance().slot_showTransferDialog(m_strSelectedAccount);
 }
 
 void Overview_tab::slot_SearchTermChanged(QString const& strSearchTerm)

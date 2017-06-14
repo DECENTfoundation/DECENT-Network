@@ -13,11 +13,14 @@
 #include <QStackedWidget>
 #include <QComboBox>
 #include <QStyleFactory>
+#include <QTimer>
 #endif
 
 #include "mainwindow.hpp"
 #include "gui_design.hpp"
 #include "decent_label.hpp"
+#include "richdialog.hpp"
+#include "gui_wallet_centralwidget.hpp"
 
 #ifndef _MSC_VER
 #include <stdio.h>
@@ -37,6 +40,8 @@ using namespace utilities;
 
 MainWindow::MainWindow()
 : QMainWindow()
+, m_pTimerDownloads(new QTimer(this))
+, m_pTimerBalance(new QTimer(this))
 , m_pStackedWidget(new QStackedWidget(this))
 , m_pAccountList(nullptr)
 , m_pBalance(nullptr)
@@ -93,14 +98,14 @@ MainWindow::MainWindow()
    //
    // The blocking splash screen
    //
-   SetSplash();
+   slot_setSplash();
 
    setUnifiedTitleAndToolBarOnMac(false);
 
    QObject::connect(m_pAccountList, (void(QComboBox::*)(QString const&))&QComboBox::currentIndexChanged,
-                    this, &MainWindow::CurrentUserChangedSlot);
+                    &Globals::instance(), &Globals::slot_setCurrentUser);
    QObject::connect(pTransferButton, &QPushButton::clicked,
-                    this, &MainWindow::SendDCTSlot);
+                    &Globals::instance(), (void(Globals::*)())&Globals::slot_showTransferDialog);
    
    {
       QAction* pActionExit = new QAction(tr("&Exit"), this);
@@ -114,10 +119,10 @@ MainWindow::MainWindow()
                        this, &QMainWindow::close);
 
       QObject::connect(pActionImportKey, &QAction::triggered,
-                       this, &MainWindow::ImportKeySlot);
+                       this, &MainWindow::slot_importKey);
 
       QObject::connect(pActionReplayBlockchain, &QAction::triggered,
-                       this, &MainWindow::ReplayBlockChainSlot);
+                       this, &MainWindow::slot_replayBlockChain);
 
       QMenu* pMenuFile = pMenuBar->addMenu(tr("&File"));
       pMenuFile->addAction(pActionExit);
@@ -127,7 +132,7 @@ MainWindow::MainWindow()
 
 
    QObject::connect(&Globals::instance(), &Globals::walletConnectionStatusChanged,
-                    this, &MainWindow::slot_connection_status_changed);
+                    this, &MainWindow::slot_connectionStatusChanged);
 
    QObject::connect(&Globals::instance(), &Globals::signal_stackWidgetPush,
                     this, &MainWindow::slot_stackWidgetPush);
@@ -143,18 +148,17 @@ MainWindow::MainWindow()
    
    QObject::connect(&Globals::instance(), &Globals::signal_keyImported,
                     this, &MainWindow::DisplayWalletContentGUI);
-   QObject::connect(&Globals::instance(), &Globals::signal_keyImported,
-                    this, &MainWindow::slot_enableSendButton);
 
-   _balanceUpdater.setSingleShot(false);
-   _balanceUpdater.setInterval(10000);
-   QObject::connect(&_balanceUpdater, &QTimer::timeout,
+
+   m_pTimerBalance->setSingleShot(false);
+   m_pTimerBalance->setInterval(10000);
+   QObject::connect(m_pTimerBalance, &QTimer::timeout,
                     &Globals::instance(), &Globals::slot_updateAccountBalance);
 
-   _downloadChecker.setInterval(5000);
-   connect(&_downloadChecker, SIGNAL(timeout()), this, SLOT(CheckDownloads()));
 
-   connect(m_pCentralWidget, SIGNAL(sendDCT()), this, SLOT(SendDCTSlot()));
+   m_pTimerDownloads->setInterval(5000);
+   QObject::connect(m_pTimerDownloads, &QTimer::timeout,
+                    this, &MainWindow::slot_checkDownloads);
 
 
 #ifdef _MSC_VER
@@ -168,7 +172,7 @@ MainWindow::~MainWindow()
 {
 }
 
-void MainWindow::SetSplash()
+void MainWindow::slot_setSplash()
 {
    StackLayerWidget* pSplashScreen = new StackLayerWidget(this);
    QProgressBar* pConnectingProgress = new QProgressBar(pSplashScreen);
@@ -254,12 +258,15 @@ void MainWindow::SetSplash()
                     pButton, &QWidget::show);
    
    QObject::connect(pButton, &QPushButton::clicked,
-                    this, &MainWindow::CloseSplash);
+                    this, &MainWindow::slot_closeSplash);
 
    slot_stackWidgetPush(pSplashScreen);
+
+   m_pTimerBalance->stop();
+   m_pTimerDownloads->stop();
 }
 
-void MainWindow::CloseSplash()
+void MainWindow::slot_closeSplash()
 {
    StackLayerWidget* pLayer = nullptr;
 
@@ -290,7 +297,7 @@ void MainWindow::CloseSplash()
    {
       slot_stackWidgetPush(pLayer);
       QObject::connect(pLayer, &StackLayerWidget::accepted,
-                       this, &MainWindow::CloseSplash);
+                       this, &MainWindow::slot_closeSplash);
    }
    else
    {
@@ -299,38 +306,24 @@ void MainWindow::CloseSplash()
       Globals::instance().statusClearMessage();
 
       DisplayWalletContentGUI();
+
+      m_pTimerBalance->start();
+      m_pTimerDownloads->start();
    }
 }
 
-void MainWindow::slot_connection_status_changed(Globals::ConnectionState from, Globals::ConnectionState to)
+void MainWindow::slot_connectionStatusChanged(Globals::ConnectionState from, Globals::ConnectionState to)
 {
    if (Globals::ConnectionState::Up == to)
    {
-      CloseSplash();
-
-      _balanceUpdater.start();
-      _downloadChecker.start();
+      slot_closeSplash();
    }
    else if (Globals::ConnectionState::Up != to)
    {
-      _balanceUpdater.stop();
-      _downloadChecker.stop();
-
       if (from == Globals::ConnectionState::Up)
-         SetSplash();
+         slot_setSplash();
    }
 }
-
-/*void MainWindow::currentUserBalanceUpdate()
-{
-   std::string userBalanceUpdate = Globals::instance().getCurrentUser();
-
-   if (userBalanceUpdate.empty())
-      return;
-   else
-      UpdateAccountBalances(userBalanceUpdate);
-//      m_pCentralWidget->getSendButton()->setEnabled(true);
-}*/
 
 void MainWindow::slot_showPurchasedTab()
 {
@@ -382,9 +375,19 @@ void MainWindow::slot_stackWidgetPop()
 
 void MainWindow::slot_updateAccountBalance(Asset const& balance)
 {
-   // use old function needs to be reviewed
-   //UpdateAccountBalances(Globals::instance().getCurrentUser());   // get rid of this one later
    m_pBalance->setText(balance.getStringBalance().c_str());
+}
+
+void MainWindow::slot_replayBlockChain()
+{
+   Globals::instance().stopDaemons();
+   Globals::instance().startDaemons(true);
+}
+
+void MainWindow::slot_importKey()
+{
+   ImportKeyWidget* import_key = new ImportKeyWidget(nullptr);
+   slot_stackWidgetPush(import_key);
 }
 
 void MainWindow::RunTaskImpl(std::string const& str_command, std::string& str_result)
@@ -406,12 +409,7 @@ bool MainWindow::RunTaskParseImpl(std::string const& str_command, nlohmann::json
    return false;
 }
 
-void MainWindow::CurrentUserChangedSlot(const QString& a_new_user)
-{
-   Globals::instance().setCurrentUser(a_new_user.toStdString());
-}
-
-void MainWindow::CheckDownloads()
+void MainWindow::slot_checkDownloads()
 {
    auto& global_instance = gui_wallet::Globals::instance();
    std::string str_current_username = global_instance.getCurrentUser();
@@ -464,14 +462,6 @@ void MainWindow::CheckDownloads()
 }
 
 
-void MainWindow::DisplayConnectionError(std::string errorMessage) {
-   ALERT_DETAILS(tr("Could not connect to wallet").toStdString(), errorMessage.c_str());
-}
-
-void MainWindow::slot_enableSendButton()
-{
-   //m_pCentralWidget->getSendButton()->setEnabled(true);
-}
 
 
 void MainWindow::DisplayWalletContentGUI()
@@ -509,22 +499,8 @@ void MainWindow::DisplayWalletContentGUI()
 }
 
 
-void MainWindow::ImportKeySlot()
-{
-   ImportKeyWidget* import_key = new ImportKeyWidget(nullptr);
-   slot_stackWidgetPush(import_key);
-}
 
-void MainWindow::ReplayBlockChainSlot()
-{
-   Globals::instance().stopDaemons();
-   Globals::instance().startDaemons(true);
-}
 
-void MainWindow::SendDCTSlot()
-{
-   Globals::instance().showTransferDialog(string());
-}
 
 void MainWindow::GoToThisTab(int index , std::string)
 {

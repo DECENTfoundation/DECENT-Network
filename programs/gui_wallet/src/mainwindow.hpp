@@ -1,37 +1,61 @@
 #pragma once
 
 #include <QMainWindow>
-#include <QAction>
-#include <QLineEdit>
-#include <QHBoxLayout>
-#include <QVBoxLayout>
-#include <QTimer>
-
-#include "gui_wallet_centralwidget.hpp"
-#include "richdialog.hpp"
-
-#include "json.hpp"
-
-#include <stdarg.h>
 #include <string>
-#include <map>
 #include <set>
 
 class QCloseEvent;
 class QStackedWidget;
 class QComboBox;
+class QTimer;
 
 namespace gui_wallet
 {
 class Asset;
 class DecentLabel;
+class CentralWigdet;
 
 class MainWindow : public QMainWindow
 {
    Q_OBJECT
 public:
    MainWindow();
-   virtual ~MainWindow(); 
+   virtual ~MainWindow();
+
+protected slots:
+   void slot_setSplash();
+   void slot_closeSplash();
+   void slot_showPurchasedTab();
+   void slot_showTransactionsTab(std::string const&);
+   void slot_stackWidgetPush(StackLayerWidget* pWidget);
+   void slot_stackWidgetPop();
+   void slot_updateAccountBalance(Asset const&);
+   void slot_connectionStatusChanged(Globals::ConnectionState from, Globals::ConnectionState to);
+   void slot_replayBlockChain();
+   void slot_importKey();
+   void slot_checkDownloads();
+
+   void DisplayWalletContentGUI();
+
+signals:
+   void signal_setSplashMainText(QString const&);
+
+protected:
+   virtual void closeEvent(QCloseEvent* event) override;
+
+
+protected:
+   QTimer* m_pTimerDownloads;
+   QTimer* m_pTimerBalance;
+   QStackedWidget* m_pStackedWidget;
+   QComboBox* m_pAccountList;
+   DecentLabel* m_pBalance;
+   CentralWigdet*       m_pCentralWidget;
+
+   std::set<std::string>               _activeDownloads;
+
+
+public:
    
    void GoToThisTab(int index, std::string info);
    
@@ -40,48 +64,6 @@ public:
    static void RunTaskImpl(std::string const& str_command, std::string& str_result);
    static bool RunTaskParseImpl(std::string const& str_command, nlohmann::json& json_result);
 
-   
-protected:
-
-   void SetSplash();
-
-   virtual void closeEvent(QCloseEvent *event) override;
-protected slots:
-   void CloseSplash();
-
-signals:
-   void signal_setSplashMainText(QString const&);
-   
-protected slots:
-   void CurrentUserChangedSlot(const QString&);
-   void CheckDownloads();
-   void DisplayWalletContentGUI();
-   void DisplayConnectionError(std::string errorMessage);
-   //void currentUserBalanceUpdate();
-
-   void ImportKeySlot();
-   void ReplayBlockChainSlot();
-   void SendDCTSlot();
-
-   void slot_showPurchasedTab();
-   void slot_showTransactionsTab(std::string const&);
-   void slot_stackWidgetPush(StackLayerWidget* pWidget);
-   void slot_stackWidgetPop();
-   void slot_updateAccountBalance(Asset const&);
-   
-   void slot_connection_status_changed(Globals::ConnectionState from, Globals::ConnectionState to);
-   
-   void slot_enableSendButton();
-      
-protected:
-   QStackedWidget* m_pStackedWidget;
-   QComboBox* m_pAccountList;
-   DecentLabel* m_pBalance;
-   CentralWigdet*       m_pCentralWidget;
-   
-   QTimer                              _downloadChecker;
-   QTimer                              _balanceUpdater;
-   std::set<std::string>               _activeDownloads;
 };
 
    

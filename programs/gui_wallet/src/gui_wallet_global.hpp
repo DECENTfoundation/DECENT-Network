@@ -147,12 +147,18 @@ namespace gui_wallet
       std::string getCurrentUser() const;
       WalletAPI& getWallet() const;
       void clear();
-      Asset asset(uint64_t amount, const std::string& symbol = "1.3.0");
+      Asset asset(uint64_t amount, const std::string& symbol = std::string());
       std::string runTask(std::string const& str_command);
       nlohmann::json runTaskParse(std::string const& str_command);
       std::vector<Publisher> getPublishers();
       QLocale& locale();
       bool connected() const;
+
+   public slots:
+      void slot_updateAccountBalance();
+      void slot_setCurrentUser(QString const& user);
+      void slot_showTransferDialog(QString const& user);
+      void slot_showTransferDialog();
 
    signals:
       void signal_stackWidgetPush(gui_wallet::StackLayerWidget*);
@@ -161,14 +167,10 @@ namespace gui_wallet
       void signal_updateAccountBalance(Asset const&);
       void signal_keyImported();
 
-   public slots:
-      void slot_updateAccountBalance();
-
    public:
-      void setCurrentUser(std::string const& user);
       void setWalletUnlocked();
       void setWalletError(std::string const& error);
-      void showTransferDialog(std::string const& user);
+
       std::string getAccountName(std::string const& accountId);
    signals:
       void signal_connect();  // for internal use
