@@ -60,12 +60,12 @@ QLabel[type='account']
 }
 QLabel[type='row1spacer']
 {
-   padding-top: 0.4em;
-   padding-bottom: 0.4em;
+   padding-top: 1.3em;
+   padding-bottom: 1.3em;
    max-width: 100em;
-   max-height: 3.6em;
+   max-height: 1.9em;
    min-width: 3.5em;
-   min-height: 3.6em;
+   min-height: 1.9em;
    border-bottom: 1px solid rgb(240, 240, 240);
    border-right: 0;
    border-left: 0px;
@@ -75,17 +75,17 @@ QLabel[type='balance']
 {
    image: url(':/icon/images/balance.png');
    image-position: left;
-   padding-top: 1.4em;
-   padding-bottom: 1.4em;
+   padding-top: 1.3em;
+   padding-bottom: 1.3em;
    padding-left: 1em;
    padding-right: 1em;
-   max-width: 6em;
-   max-height: 1.6em;
-   min-width: 6em;
-   min-height: 1.6em;
+   max-width: 10em;
+   max-height: 1.9em;
+   min-width: 10em;
+   min-height: 1.9em;
    border-bottom: 1px solid rgb(240, 240, 240);
    border-right: 1px solid rgb(240, 240, 240);
-   border-left: 1px solid rgb(240, 240, 240);
+   border-left: 0px;
    border-top: 0px;
    color: rgb(27, 176, 104);
    qproperty-alignment: 'AlignRight | AlignVCenter';
@@ -150,9 +150,9 @@ QPushButton[type='dialogcancel'][enabled=false]
 QPushButton[type='send']
 {
    background-color: white;
-   color: black;
-   qproperty-icon: url(':/icon/images/send.png'), url(':/icon/images/inactive_send.png') disabled;
-   /*image: url(':/icon/images/send.png');
+   /*color: black;
+   qproperty-icon: url(':/icon/images/send.png'), url(':/icon/images/inactive_send.png') disabled;*/
+   image: url(':/icon/images/send.png');
 
    padding-top: 1.3em;
    padding-bottom: 1.3em;
@@ -166,7 +166,6 @@ QPushButton[type='send']
    border-right: 0px;
    border-left: 0px;
    border-top: 0px;
-   color: rgb(27, 176, 104);*/
 }
 QPushButton[type='send'][enabled=false]
 {

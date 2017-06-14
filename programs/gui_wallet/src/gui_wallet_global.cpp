@@ -517,6 +517,11 @@ string Asset::getString() const
    else
       return "Free";
 }
+
+string Asset::getStringBalance() const
+{
+   return QString::number(double(*this), 'f' , 4).toStdString() + " " + m_str_symbol;
+}
 //
 // DaemonDetails
 //
@@ -785,6 +790,7 @@ void Globals::setCurrentUser(std::string const& user)
 {
    m_str_currentUser = user;
    emit currentUserChanged(m_str_currentUser.c_str());
+   updateAccountBalance();
 }
 
 void Globals::setWalletUnlocked()

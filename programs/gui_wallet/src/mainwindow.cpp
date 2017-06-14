@@ -38,25 +38,26 @@ using namespace utilities;
 MainWindow::MainWindow()
 : QMainWindow()
 , m_pStackedWidget(new QStackedWidget(this))
+, m_pAccountList(nullptr)
+, m_pBalance(nullptr)
 {
    setWindowTitle(tr("DECENT - Blockchain Content Distribution"));
 
    QWidget* pContainerWidget = new QWidget(this);
    QMenuBar* pMenuBar = new QMenuBar(pContainerWidget);
    QWidget* pMainWidget = new QWidget(pContainerWidget);
-   /*DecentLabel* pDecentLogo = new DecentLabel(pMainWidget, DecentLabel::DecentLogo);
+   DecentLabel* pDecentLogo = new DecentLabel(pMainWidget, DecentLabel::DecentLogo);
    DecentLabel* pAccount = new DecentLabel(pMainWidget, DecentLabel::Account);
    DecentLabel* pRow1Spacer = new DecentLabel(pMainWidget, DecentLabel::Row1Spacer);
-   QComboBox* pAccountList = new QComboBox(pMainWidget);
-   pAccountList->setStyle(QStyleFactory::create("fusion"));
-   DecentLabel* pBalance = new DecentLabel(pMainWidget, DecentLabel::Balance);
-   pBalance->setText("0 DCT");
-   DecentButton* pSendButton = new DecentButton(pMainWidget, DecentButton::Send);*/
+   m_pAccountList = new QComboBox(pMainWidget);
+   m_pAccountList->setStyle(QStyleFactory::create("fusion"));
+   m_pBalance = new DecentLabel(pMainWidget, DecentLabel::Balance);
+   DecentButton* pTransferButton = new DecentButton(pMainWidget, DecentButton::Send);
 
    m_pCentralWidget = new CentralWigdet(pMainWidget);
 
-   /*QHBoxLayout* pSpacerLayout = new QHBoxLayout;
-   pSpacerLayout->addWidget(pAccountList, Qt::AlignLeft);
+   QHBoxLayout* pSpacerLayout = new QHBoxLayout;
+   pSpacerLayout->addWidget(m_pAccountList, Qt::AlignLeft);
    pSpacerLayout->addStretch();
    pRow1Spacer->setLayout(pSpacerLayout);
    pSpacerLayout->setSpacing(0);
@@ -66,16 +67,15 @@ MainWindow::MainWindow()
    pRow1Layout->addWidget(pDecentLogo, Qt::AlignLeft);
    pRow1Layout->addWidget(pAccount, Qt::AlignLeft);
    pRow1Layout->addWidget(pRow1Spacer, Qt::AlignLeft);
-   pRow1Layout->addWidget(pBalance, Qt::AlignRight);
-   pRow1Layout->addWidget(pSendButton, Qt::AlignRight);*/
-
+   pRow1Layout->addWidget(m_pBalance, Qt::AlignRight);
+   pRow1Layout->addWidget(pTransferButton, Qt::AlignRight);
 
 
    QVBoxLayout* pMainLayout = new QVBoxLayout;
    pMainLayout->setContentsMargins(0, 0, 0, 0);
    pMainLayout->setSpacing(0);
 
-   //pMainLayout->addLayout(pRow1Layout, Qt::AlignLeft);
+   pMainLayout->addLayout(pRow1Layout, Qt::AlignLeft);
    pMainLayout->addWidget(m_pCentralWidget);
    pMainWidget->setLayout(pMainLayout);
 
@@ -96,6 +96,11 @@ MainWindow::MainWindow()
    SetSplash();
 
    setUnifiedTitleAndToolBarOnMac(false);
+
+   QObject::connect(m_pAccountList, (void(QComboBox::*)(QString const&))&QComboBox::currentIndexChanged,
+                    this, &MainWindow::CurrentUserChangedSlot);
+   QObject::connect(pTransferButton, &QPushButton::clicked,
+                    this, &MainWindow::SendDCTSlot);
    
    {
       QAction* pActionExit = new QAction(tr("&Exit"), this);
@@ -385,7 +390,8 @@ void MainWindow::slot_stackWidgetPop()
 void MainWindow::slot_updateAccountBalance(Asset const& balance)
 {
    // use old function needs to be reviewed
-   UpdateAccountBalances(Globals::instance().getCurrentUser());
+   UpdateAccountBalances(Globals::instance().getCurrentUser());   // get rid of this one later
+   m_pBalance->setText(balance.getStringBalance().c_str());
 }
 
 void MainWindow::RunTaskImpl(std::string const& str_command, std::string& str_result)
@@ -409,11 +415,7 @@ bool MainWindow::RunTaskParseImpl(std::string const& str_command, nlohmann::json
 
 void MainWindow::CurrentUserChangedSlot(const QString& a_new_user)
 {
-   if(m_pCentralWidget->usersCombo()->count())
-   {
-      Globals::instance().setCurrentUser(a_new_user.toStdString());
-      UpdateAccountBalances(a_new_user.toStdString());
-   }
+   Globals::instance().setCurrentUser(a_new_user.toStdString());
 }
 
 
@@ -563,6 +565,7 @@ void MainWindow::DisplayWalletContentGUI()
       std::string a_result;
       RunTask("list_my_accounts", a_result);
       userCombo.clear();
+      m_pAccountList->clear();
       
       auto accs = json::parse(a_result);
       
@@ -572,11 +575,13 @@ void MainWindow::DisplayWalletContentGUI()
          std::string name = accs[i]["name"].get<std::string>();
          
          userCombo.addItem(tr(name.c_str()));
+         m_pAccountList->addItem(name.c_str());
       }
 
       if (accs.size() > 0)
       {
          userCombo.setCurrentIndex(0);
+         m_pAccountList->setCurrentIndex(0);
          UpdateAccountBalances(userCombo.itemText(0).toStdString());
       }
    }

@@ -19,10 +19,12 @@
 
 class QCloseEvent;
 class QStackedWidget;
+class QComboBox;
 
 namespace gui_wallet
 {
 class Asset;
+class DecentLabel;
 
 class MainWindow : public QMainWindow
 {
@@ -73,8 +75,9 @@ protected slots:
    void slot_enableSendButton();
       
 protected:
-   QStackedWidget*   m_pStackedWidget;
-   
+   QStackedWidget* m_pStackedWidget;
+   QComboBox* m_pAccountList;
+   DecentLabel* m_pBalance;
    CentralWigdet*       m_pCentralWidget;
    
    QTimer                              _downloadChecker;

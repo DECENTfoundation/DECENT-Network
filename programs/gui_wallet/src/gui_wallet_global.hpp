@@ -110,6 +110,7 @@ namespace gui_wallet
       operator double() const;
       operator std::string() const;
       std::string getString() const;
+      std::string getStringBalance() const;
       uint64_t m_amount = 0;
       uint64_t m_scale = 1;
       std::string m_str_symbol;
