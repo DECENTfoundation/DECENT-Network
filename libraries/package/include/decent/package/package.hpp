@@ -425,7 +425,7 @@ namespace package {
         bool release_package(package_handle_t& package);
 
         boost::filesystem::path get_packages_path() const;
-        void set_libtorrent_config(const boost::filesystem::path& libtorrent_config_file);
+        //void set_libtorrent_config(const boost::filesystem::path& libtorrent_config_file);
 
         TransferEngineInterface& get_proto_transfer_engine(const std::string& proto) const;
 
