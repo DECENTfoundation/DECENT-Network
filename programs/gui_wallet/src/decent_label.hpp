@@ -16,7 +16,8 @@ namespace gui_wallet
          DecentLogo,
          Account,
          Row1Spacer,
-         Balance
+         Balance,
+         TableSearch
       };
 
       enum eName

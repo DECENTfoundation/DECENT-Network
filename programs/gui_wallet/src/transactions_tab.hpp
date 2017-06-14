@@ -7,11 +7,14 @@
 namespace gui_wallet
 {
 class DecentTable;
+class DecentLineEdit;
+   
 class TransactionsTab : public TabContentManager
 {
    Q_OBJECT
 public:
-   TransactionsTab(QWidget* pParent);
+   TransactionsTab(QWidget* pParent,
+                   DecentLineEdit* pFilterLineEdit);
    virtual void timeToUpdate(const std::string& result) override;
    virtual std::string getUpdateCommand() override;
 

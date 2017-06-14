@@ -28,7 +28,8 @@
 
 namespace gui_wallet
 {
-BrowseContentTab::BrowseContentTab(QWidget* pParent)
+BrowseContentTab::BrowseContentTab(QWidget* pParent,
+                                   DecentLineEdit* pFilterLineEdit)
 : TabContentManager(pParent)
 , m_pTableWidget(new DecentTable(this))
 , m_pDetailsSignalMapper(nullptr)
@@ -50,36 +51,21 @@ BrowseContentTab::BrowseContentTab(QWidget* pParent)
       },
    });
 
-   QLabel* pLabelSearchIcon = new QLabel(this);
-   QPixmap px_search_icon(icon_search);
-   pLabelSearchIcon->setPixmap(px_search_icon);
-
-   DecentLineEdit* pfilterLineEditor = new DecentLineEdit(this, DecentLineEdit::TableSearch);
-   pfilterLineEditor->setPlaceholderText(tr("Search Content"));
-   pfilterLineEditor->setFixedHeight(54);
-   pfilterLineEditor->setAttribute(Qt::WA_MacShowFocusRect, 0);
-
-   QHBoxLayout* pSearchLayout = new QHBoxLayout();
-
-   pSearchLayout->setContentsMargins(42, 0, 0, 0);
-   pSearchLayout->addWidget(pLabelSearchIcon);
-   pSearchLayout->addWidget(pfilterLineEditor);
-
    QVBoxLayout* pMainLayout = new QVBoxLayout();
    pMainLayout->setContentsMargins(0, 0, 0, 0);
    pMainLayout->setSpacing(0);
-   pMainLayout->addLayout(pSearchLayout);
    pMainLayout->addWidget(m_pTableWidget);
    setLayout(pMainLayout);
 
-   QObject::connect(pfilterLineEditor, &QLineEdit::textChanged,
+   QObject::connect(pFilterLineEdit, &QLineEdit::textChanged,
                     this, &BrowseContentTab::slot_SearchTermChanged);
 
    QObject::connect(m_pTableWidget, &DecentTable::signal_SortingChanged,
                     this, &BrowseContentTab::slot_SortingChanged);
 }
 
-void BrowseContentTab::timeToUpdate(const std::string& result) {
+void BrowseContentTab::timeToUpdate(const std::string& result)
+{
    _digital_contents.clear();
    
    if (result.empty()) {

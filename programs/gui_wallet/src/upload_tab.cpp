@@ -31,7 +31,9 @@ using std::string;
 namespace gui_wallet
 {
 
-Upload_tab::Upload_tab(QWidget* pParent)
+Upload_tab::Upload_tab(QWidget* pParent,
+                       DecentLineEdit* pFilterLineEdit,
+                       DecentButton* pUploadButton)
 : TabContentManager(pParent)
 , m_pTableWidget(new DecentTable(this))
 , m_pDetailsSignalMapper(nullptr)
@@ -51,61 +53,26 @@ Upload_tab::Upload_tab(QWidget* pParent)
 #endif
    });
 
-   DecentButton* pUploadButton = new DecentButton(this);
-   pUploadButton->setFont(TabButtonFont());
-   pUploadButton->setText(tr("Publish"));
-   pUploadButton->setMinimumWidth(102);
-   pUploadButton->setMinimumHeight(54);
-
-   QLabel* pSearchLabel = new QLabel(this);
-   QPixmap image(icon_search);
-   pSearchLabel->setPixmap(image);
-
-   DecentLineEdit* pfilterLineEditor = new DecentLineEdit(this, DecentLineEdit::TableSearch);
-   pfilterLineEditor->setPlaceholderText(tr("Search Content"));
-   pfilterLineEditor->setFixedHeight(54);
-   pfilterLineEditor->setAttribute(Qt::WA_MacShowFocusRect, 0);
-
-   QHBoxLayout* pSearchLayout = new QHBoxLayout;
-   pSearchLayout->setContentsMargins(42, 0, 0, 0);
-   pSearchLayout->addWidget(pSearchLabel);
-   pSearchLayout->addWidget(pfilterLineEditor);
-   pSearchLayout->addWidget(pUploadButton);
-   //pSearchLayout->addWidget(pUploadButton, 0 , Qt::AlignBottom);
-
    QVBoxLayout* pMainLayout = new QVBoxLayout;
    pMainLayout->setContentsMargins(0, 0, 0, 0);
    pMainLayout->setSpacing(0);
-   pMainLayout->addLayout(pSearchLayout);
    pMainLayout->addWidget(m_pTableWidget);
    setLayout(pMainLayout);
 
-   QObject::connect(&Globals::instance(), &Globals::currentUserChanged,
-                    this, &Upload_tab::slot_UpdateContents);
-   QObject::connect(this, &Upload_tab::signal_setEnabledUpload,
-                    pUploadButton, &QWidget::setEnabled);
    QObject::connect(m_pTableWidget, &DecentTable::signal_SortingChanged,
                     this, &Upload_tab::slot_SortingChanged);
-   QObject::connect(pfilterLineEditor, &QLineEdit::textChanged,
+
+   QObject::connect(pFilterLineEdit, &QLineEdit::textChanged,
                     this, &Upload_tab::slot_SearchTermChanged);
+
    QObject::connect(pUploadButton, &QPushButton::clicked,
                     this, &Upload_tab::slot_UploadPopup);
 
-   slot_UpdateContents();
 }
 
 // when class has forward declared members
 // this becomes necessary
 Upload_tab::~Upload_tab() = default;
-
-void Upload_tab::slot_UpdateContents()
-{
-   string currentUserName = Globals::instance().getCurrentUser();
-   if(currentUserName.empty())
-      emit signal_setEnabledUpload(false);
-   else
-      emit signal_setEnabledUpload(true);
-}
 
 void Upload_tab::timeToUpdate(const string& result)
 {

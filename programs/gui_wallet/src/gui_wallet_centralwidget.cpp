@@ -1,4 +1,4 @@
-
+#if 0
 #include "stdafx.h"
 
 #include "gui_design.hpp"
@@ -31,11 +31,11 @@ using namespace gui_wallet;
 
 CentralWigdet::CentralWigdet(QWidget* pParent)
     : m_parent_main_window(pParent),
-      m_browse_cont_tab(this),
-      m_Overview_tab(this),
-      m_Upload_tab(this),
-      m_Purchased_tab(this),
-      m_trans_tab(this)
+      m_browse_cont_tab(this, nullptr),
+      m_Overview_tab(this, nullptr),
+      m_Upload_tab(this, nullptr, nullptr),
+      m_Purchased_tab(this, nullptr),
+      m_trans_tab(this, nullptr)
 {
    QVBoxLayout* pMainLayout = new QVBoxLayout;
    pMainLayout->setContentsMargins(0, 0, 0, 0);
@@ -303,6 +303,6 @@ Overview_tab* CentralWigdet::getUsersTab()
    return &m_Overview_tab;
 }
 
-
+#endif
 
 

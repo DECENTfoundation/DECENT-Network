@@ -8,12 +8,15 @@ class QCloseEvent;
 class QStackedWidget;
 class QComboBox;
 class QTimer;
+class QAction;
 
 namespace gui_wallet
 {
 class Asset;
 class DecentLabel;
-class CentralWigdet;
+class DecentLineEdit;
+class DecentButton;
+class TabContentManager;
 
 class MainWindow : public QMainWindow
 {
@@ -34,6 +37,15 @@ protected slots:
    void slot_replayBlockChain();
    void slot_importKey();
    void slot_checkDownloads();
+   void slot_getContents();
+   void slot_PreviousPage();
+   void slot_ResetPage();
+   void slot_NextPage();
+   void slot_BrowseToggled(bool toggled);
+   void slot_TransactionsToggled(bool toggled);
+   void slot_PublishToggled(bool toggled);
+   void slot_UsersToggled(bool toggled);
+   void slot_PurchasedToggled(bool toggled);
 
    void DisplayWalletContentGUI();
 
@@ -42,40 +54,46 @@ signals:
 
 protected:
    virtual void closeEvent(QCloseEvent* event) override;
+   TabContentManager* activeTable() const;
 
 
 protected:
    QTimer* m_pTimerDownloads;
    QTimer* m_pTimerBalance;
+   QTimer* m_pTimerContents;
    QStackedWidget* m_pStackedWidget;
    QComboBox* m_pAccountList;
    DecentLabel* m_pBalance;
-   CentralWigdet*       m_pCentralWidget;
 
-   std::set<std::string>               _activeDownloads;
+   DecentButton* m_pButtonBrowse;
+   DecentButton* m_pButtonTransactions;
+   DecentButton* m_pButtonPublish;
+   DecentButton* m_pButtonUsers;
+   DecentButton* m_pButtonPurchased;
 
-
-public:
+   DecentButton* m_pPreviousPage;
+   DecentButton* m_pResetPage;
+   DecentButton* m_pNextPage;
    
-   void GoToThisTab(int index, std::string info);
-   
-public:
-   
-   static void RunTaskImpl(std::string const& str_command, std::string& str_result);
-   static bool RunTaskParseImpl(std::string const& str_command, nlohmann::json& json_result);
+   DecentLineEdit* m_pFilterBrowse;
+   DecentLineEdit* m_pFilterTransactions;
+   DecentLineEdit* m_pFilterPublish;
+   DecentLineEdit* m_pFilterUsers;
+   DecentLineEdit* m_pFilterPurchased;
 
+   DecentButton* m_pPublish;
+
+   TabContentManager* m_pTabBrowse;
+   TabContentManager* m_pTabTransactions;
+   TabContentManager* m_pTabPublish;
+   TabContentManager* m_pTabUsers;
+   TabContentManager* m_pTabPurchased;
+
+   QAction* m_pActionImportKey;
+   QAction* m_pActionReplayBlockchain;
+
+   std::set<std::string> m_activeDownloads;
 };
 
-   
 }
-
-inline void RunTask(std::string const& str_command, std::string& str_result)
-{
-   gui_wallet::MainWindow::RunTaskImpl(str_command, str_result);
-}
-inline bool RunTaskParse(std::string const& str_command, nlohmann::json& json_result)
-{
-   return gui_wallet::MainWindow::RunTaskParseImpl(str_command, json_result);
-}
-
 

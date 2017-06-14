@@ -90,6 +90,20 @@ QLabel[type='balance']
    color: rgb(27, 176, 104);
    qproperty-alignment: 'AlignLeft | AlignVCenter';
 }
+QLabel[type='tablesearch']
+{
+   image: url(':/icon/images/search.svg');
+   padding-top: 1em;
+   padding-bottom: 1em;
+   padding-left: 1em;
+   padding-right: 1em;
+   max-width: 1em;
+   max-height: 1em;
+   min-width: 1em;
+   min-height: 1em;
+   border: 0px;
+}
+
 QLabel QComboBox
 {
    /*applies to users combo*/
@@ -113,6 +127,7 @@ QPushButton:!enabled
    background-color: rgb(180, 180, 180);
    color: rgb(30, 30, 30);
 }
+
 QPushButton[type='dialogaction']
 {
    border: 0px;
@@ -238,6 +253,23 @@ QPushButton[type='staricon'][enabled=false]
    border: 0px;
    background-color: white;
 }
+QPushButton[type='tabchoice']
+{
+   border: 0px;
+   background-color: white;
+   min-height: 2.5em;
+   max-height: 2.5em;
+   color: rgb(27, 176, 104);
+   border-bottom: 0.2em solid rgb(27, 176, 104);
+   border-right: 0px;
+   border-left: 0px;
+   border-top: 0px;
+}
+QPushButton[type='tabchoice'][checked=false]
+{
+   color: black;
+   border-bottom: 1px solid rgb(240, 240, 240);
+}
 QMessageBox QPushButton, QFileDialog QPushButton
 {
    border: 0px;
@@ -261,6 +293,11 @@ QLineEdit[type='tablesearch']
 {
    border: 0px;
    padding-left: 1em;
+   padding-right: 1em;
+   padding-top: 0em;
+   padding-bottom: 0em;
+   min-height: 1em;
+   max-height: 1em;
 }
 QLineEdit[type='dialoglineedit']
 {

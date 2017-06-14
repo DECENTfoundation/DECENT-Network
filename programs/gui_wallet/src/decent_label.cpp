@@ -35,6 +35,9 @@ namespace gui_wallet
          case Balance:
             setProperty("type", "balance");
             break;
+         case TableSearch:
+            setProperty("type", "tablesearch");
+            break;
          case Default:
          default:
             break;

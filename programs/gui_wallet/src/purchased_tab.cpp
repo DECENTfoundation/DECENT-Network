@@ -31,7 +31,8 @@ struct SDigitalContentPurchase : public SDigitalContent
    QString status_text;
 };
    
-PurchasedTab::PurchasedTab(QWidget* pParent)
+PurchasedTab::PurchasedTab(QWidget* pParent,
+                           DecentLineEdit* pFilterLineEdit)
 : TabContentManager(pParent)
 , m_pExtractSignalMapper(nullptr)
 , m_pDetailsSignalMapper(nullptr)
@@ -48,36 +49,16 @@ PurchasedTab::PurchasedTab(QWidget* pParent)
       {" ", 5}
    });
 
-   // search layout
-   //
-   QHBoxLayout* search_layout = new QHBoxLayout();
-
-   DecentLineEdit* pfilterLineEditor = new DecentLineEdit(this, DecentLineEdit::TableSearch);
-   pfilterLineEditor->setPlaceholderText(QString(tr("Search Content")));
-   pfilterLineEditor->setFixedHeight(54);
-   pfilterLineEditor->setAttribute(Qt::WA_MacShowFocusRect, 0);
-   
-   QPixmap image(icon_search);
-   
-   QLabel* search_label = new QLabel(this);
-   search_label->setSizeIncrement(100,40);
-   search_label->setPixmap(image);
-
-   search_layout->setContentsMargins(40, 0, 0, 0);
-   search_layout->addWidget(search_label);
-   search_layout->addWidget(pfilterLineEditor);
-
    // the main layout
    //
    QVBoxLayout* pMainLayout = new QVBoxLayout(this);
    pMainLayout->setContentsMargins(0, 0, 0, 0);
    pMainLayout->setSpacing(0);
-   pMainLayout->addLayout(search_layout);
    pMainLayout->addWidget(m_pTableWidget);
 
    setLayout(pMainLayout);
 
-   QObject::connect(pfilterLineEditor, &QLineEdit::textChanged,
+   QObject::connect(pFilterLineEdit, &QLineEdit::textChanged,
                     this, &PurchasedTab::slot_SearchTermChanged);
 
    QObject::connect(m_pTableWidget, &DecentTable::signal_SortingChanged,

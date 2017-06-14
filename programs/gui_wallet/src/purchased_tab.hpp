@@ -11,13 +11,15 @@ namespace gui_wallet
 {
 class DecentTable;
 struct SDigitalContentPurchase;
+class DecentLineEdit;
 
 class PurchasedTab : public TabContentManager
 {
    Q_OBJECT
 
 public:
-   PurchasedTab(QWidget* pParent);
+   PurchasedTab(QWidget* pParent,
+                DecentLineEdit* pFilterLineEdit);
    ~PurchasedTab();
    
 public:

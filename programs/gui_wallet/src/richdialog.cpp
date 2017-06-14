@@ -330,7 +330,7 @@ UserInfoWidget::UserInfoWidget(QWidget* parent,
    
    DecentLabel* registrarLabel = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
    ++labelCount;
-   registrarLabel->setText(tr("Registrar\n") + registrar);
+   registrarLabel->setText(tr("Registrar - ") + registrar);
    main_layout->addWidget(registrarLabel);
    
    if(is_publishing_manager)
@@ -349,7 +349,7 @@ UserInfoWidget::UserInfoWidget(QWidget* parent,
       else
          isPublishingRightsReceivedLabel = new DecentLabel(this, DecentLabel::RowLabel);
       ++labelCount;
-      isPublishingRightsReceivedLabel->setText((tr("Have rights to publish")));
+      isPublishingRightsReceivedLabel->setText((tr("Has rights to publish")));
       main_layout->addWidget(isPublishingRightsReceivedLabel);
    }
    

@@ -14,13 +14,24 @@
 #include <QComboBox>
 #include <QStyleFactory>
 #include <QTimer>
+#include <QButtonGroup>
 #endif
 
 #include "mainwindow.hpp"
 #include "gui_design.hpp"
 #include "decent_label.hpp"
+#include "decent_button.hpp"
+#include "decent_line_edit.hpp"
 #include "richdialog.hpp"
+#include "browse_content_tab.hpp"
+#include "transactions_tab.hpp"
+#include "upload_tab.hpp"
+#include "overview_tab.hpp"
+#include "purchased_tab.hpp"
+
 #include "gui_wallet_centralwidget.hpp"
+
+#include "json.hpp"
 
 #ifndef _MSC_VER
 #include <stdio.h>
@@ -42,15 +53,35 @@ MainWindow::MainWindow()
 : QMainWindow()
 , m_pTimerDownloads(new QTimer(this))
 , m_pTimerBalance(new QTimer(this))
+, m_pTimerContents(new QTimer(this))
 , m_pStackedWidget(new QStackedWidget(this))
 , m_pAccountList(nullptr)
 , m_pBalance(nullptr)
+, m_pPreviousPage(nullptr)
+, m_pResetPage(nullptr)
+, m_pNextPage(nullptr)
+, m_pFilterBrowse(nullptr)
+, m_pFilterTransactions(nullptr)
+, m_pFilterPublish(nullptr)
+, m_pFilterUsers(nullptr)
+, m_pFilterPurchased(nullptr)
+, m_pPublish(nullptr)
+, m_pTabBrowse(nullptr)
+, m_pTabTransactions(nullptr)
+, m_pTabPublish(nullptr)
+, m_pTabUsers(nullptr)
+, m_pTabPurchased(nullptr)
+, m_pActionImportKey(new QAction(tr("Import key"), this))
+, m_pActionReplayBlockchain(new QAction(tr("Replay Blockchain"), this))
 {
    setWindowTitle(tr("DECENT - Blockchain Content Distribution"));
 
    QWidget* pContainerWidget = new QWidget(this);
    QMenuBar* pMenuBar = new QMenuBar(pContainerWidget);
    QWidget* pMainWidget = new QWidget(pContainerWidget);
+   //
+   // 1st row controls
+   //
    DecentLabel* pDecentLogo = new DecentLabel(pMainWidget, DecentLabel::DecentLogo);
    DecentLabel* pAccount = new DecentLabel(pMainWidget, DecentLabel::Account);
    DecentLabel* pRow1Spacer = new DecentLabel(pMainWidget, DecentLabel::Row1Spacer);
@@ -58,9 +89,87 @@ MainWindow::MainWindow()
    m_pAccountList->setStyle(QStyleFactory::create("fusion"));
    m_pBalance = new DecentLabel(pMainWidget, DecentLabel::Balance);
    DecentButton* pTransferButton = new DecentButton(pMainWidget, DecentButton::Send);
+   //
+   // 2nd row controls
+   //
+   m_pButtonBrowse = new DecentButton(pMainWidget, DecentButton::TabChoice);
+   m_pButtonBrowse->setText(tr("Browse Content"));
+   m_pButtonBrowse->setCheckable(true);
+   m_pButtonBrowse->setChecked(true);
 
-   m_pCentralWidget = new CentralWigdet(pMainWidget);
+   m_pButtonTransactions = new DecentButton(pMainWidget, DecentButton::TabChoice);
+   m_pButtonTransactions->setText(tr("Transactions"));
+   m_pButtonTransactions->setCheckable(true);
 
+   m_pButtonPublish = new DecentButton(pMainWidget, DecentButton::TabChoice);
+   m_pButtonPublish->setText(tr("Publish"));
+   m_pButtonPublish->setCheckable(true);
+
+   m_pButtonUsers = new DecentButton(pMainWidget, DecentButton::TabChoice);
+   m_pButtonUsers->setText(tr("Users"));
+   m_pButtonUsers->setCheckable(true);
+
+   m_pButtonPurchased = new DecentButton(pMainWidget, DecentButton::TabChoice);
+   m_pButtonPurchased->setText(tr("Purchased"));
+   m_pButtonPurchased->setCheckable(true);
+
+   QButtonGroup* pGroup = new QButtonGroup(pMainWidget);
+   pGroup->addButton(m_pButtonBrowse);
+   pGroup->addButton(m_pButtonTransactions);
+   pGroup->addButton(m_pButtonPublish);
+   pGroup->addButton(m_pButtonUsers);
+   pGroup->addButton(m_pButtonPurchased);
+   //
+   // 3rd row controls
+   //
+   m_pPreviousPage = new DecentButton(pMainWidget, DecentButton::DialogTextButton);
+   m_pPreviousPage->setText(tr("Previous"));
+   m_pResetPage = new DecentButton(pMainWidget, DecentButton::DialogTextButton);
+   m_pResetPage->setText(tr("Reset"));
+   m_pNextPage = new DecentButton(pMainWidget, DecentButton::DialogTextButton);
+   m_pNextPage->setText(tr("Next"));
+
+   DecentLabel* pSearchLabel = new DecentLabel(pMainWidget, DecentLabel::TableSearch);
+
+   m_pFilterBrowse = new DecentLineEdit(pMainWidget, DecentLineEdit::TableSearch);
+   m_pFilterBrowse->setAttribute(Qt::WA_MacShowFocusRect, 0);
+   m_pFilterBrowse->setPlaceholderText(tr("Content path"));
+   m_pFilterTransactions = new DecentLineEdit(pMainWidget, DecentLineEdit::TableSearch);
+   m_pFilterTransactions->setAttribute(Qt::WA_MacShowFocusRect, 0);
+   m_pFilterTransactions->setPlaceholderText(tr("Enter user name to see transaction history"));
+   m_pFilterTransactions->hide();
+   m_pFilterPublish = new DecentLineEdit(pMainWidget, DecentLineEdit::TableSearch);
+   m_pFilterPublish->setAttribute(Qt::WA_MacShowFocusRect, 0);
+   m_pFilterPublish->setPlaceholderText(tr("Search Content"));
+   m_pFilterPublish->hide();
+   m_pFilterUsers = new DecentLineEdit(pMainWidget, DecentLineEdit::TableSearch);
+   m_pFilterUsers->setAttribute(Qt::WA_MacShowFocusRect, 0);
+   m_pFilterUsers->setPlaceholderText(tr("Search"));
+   m_pFilterUsers->hide();
+   m_pFilterPurchased = new DecentLineEdit(pMainWidget, DecentLineEdit::TableSearch);
+   m_pFilterPurchased->setAttribute(Qt::WA_MacShowFocusRect, 0);
+   m_pFilterPurchased->setPlaceholderText(tr("Search Content"));
+   m_pFilterPurchased->hide();
+
+   m_pPublish = new DecentButton(pMainWidget, DecentButton::DialogAction);
+   m_pPublish->setText(tr("Publish"));
+   m_pPublish->hide();
+   //
+   // 4th row controls
+   //
+   m_pTabBrowse = new BrowseContentTab(pMainWidget, m_pFilterBrowse);
+   m_pTabBrowse->show();
+   m_pTabTransactions = new TransactionsTab(pMainWidget, m_pFilterTransactions);
+   m_pTabTransactions->hide();
+   m_pTabPublish = new Upload_tab(pMainWidget, m_pFilterPublish, m_pPublish);
+   m_pTabPublish->hide();
+   m_pTabUsers = new Overview_tab(pMainWidget, m_pFilterUsers);
+   m_pTabUsers->hide();
+   m_pTabPurchased = new PurchasedTab(pMainWidget, m_pFilterPurchased);
+   m_pTabPurchased->hide();
+   //
+   // 1st row layout
+   //
    QHBoxLayout* pSpacerLayout = new QHBoxLayout;
    pSpacerLayout->addWidget(m_pAccountList, Qt::AlignLeft);
    pSpacerLayout->addStretch();
@@ -74,14 +183,51 @@ MainWindow::MainWindow()
    pRow1Layout->addWidget(pRow1Spacer, Qt::AlignLeft);
    pRow1Layout->addWidget(m_pBalance, Qt::AlignRight);
    pRow1Layout->addWidget(pTransferButton, Qt::AlignRight);
-
-
+   //
+   // 2nd row layout
+   //
+   QHBoxLayout* pRow2Layout = new QHBoxLayout;
+   pRow2Layout->addWidget(m_pButtonBrowse);
+   pRow2Layout->addWidget(m_pButtonTransactions);
+   pRow2Layout->addWidget(m_pButtonPublish);
+   pRow2Layout->addWidget(m_pButtonUsers);
+   pRow2Layout->addWidget(m_pButtonPurchased);
+   //
+   // 3rd row layout
+   //
+   QHBoxLayout* pRow3Layout = new QHBoxLayout;
+   pRow3Layout->addWidget(m_pPreviousPage);
+   pRow3Layout->addWidget(m_pResetPage);
+   pRow3Layout->addWidget(m_pNextPage);
+   pRow3Layout->addWidget(pSearchLabel);
+   pRow3Layout->addWidget(m_pFilterBrowse);
+   pRow3Layout->addWidget(m_pFilterTransactions);
+   pRow3Layout->addWidget(m_pFilterPublish);
+   pRow3Layout->addWidget(m_pFilterUsers);
+   pRow3Layout->addWidget(m_pFilterPurchased);
+   pRow3Layout->addWidget(m_pPublish);
+   pRow3Layout->setContentsMargins(5, 0, 5, 0);
+   //
+   // 4th row layout
+   //
+   QHBoxLayout* pRow4Layout = new QHBoxLayout;
+   pRow4Layout->addWidget(m_pTabBrowse);
+   pRow4Layout->addWidget(m_pTabTransactions);
+   pRow4Layout->addWidget(m_pTabPublish);
+   pRow4Layout->addWidget(m_pTabUsers);
+   pRow4Layout->addWidget(m_pTabPurchased);
+   pRow4Layout->setSpacing(0);
+   pRow4Layout->setContentsMargins(5, 0, 5, 5);
+   //
+   //
    QVBoxLayout* pMainLayout = new QVBoxLayout;
    pMainLayout->setContentsMargins(0, 0, 0, 0);
    pMainLayout->setSpacing(0);
 
    pMainLayout->addLayout(pRow1Layout, Qt::AlignLeft);
-   pMainLayout->addWidget(m_pCentralWidget);
+   pMainLayout->addLayout(pRow2Layout, Qt::AlignLeft);
+   pMainLayout->addLayout(pRow3Layout, Qt::AlignLeft);
+   pMainLayout->addLayout(pRow4Layout, Qt::AlignLeft);
    pMainWidget->setLayout(pMainLayout);
 
    QVBoxLayout* pContainerLayout = new QVBoxLayout;
@@ -104,30 +250,48 @@ MainWindow::MainWindow()
 
    QObject::connect(m_pAccountList, (void(QComboBox::*)(QString const&))&QComboBox::currentIndexChanged,
                     &Globals::instance(), &Globals::slot_setCurrentUser);
+   QObject::connect(m_pAccountList, (void(QComboBox::*)(QString const&))&QComboBox::currentIndexChanged,
+                    this, &MainWindow::slot_getContents);
    QObject::connect(pTransferButton, &QPushButton::clicked,
                     &Globals::instance(), (void(Globals::*)())&Globals::slot_showTransferDialog);
+
+   QObject::connect(m_pButtonBrowse, &QPushButton::toggled,
+                    this, &MainWindow::slot_BrowseToggled);
+   QObject::connect(m_pButtonTransactions, &QPushButton::toggled,
+                    this, &MainWindow::slot_TransactionsToggled);
+   QObject::connect(m_pButtonPublish, &QPushButton::toggled,
+                    this, &MainWindow::slot_PublishToggled);
+   QObject::connect(m_pButtonUsers, &QPushButton::toggled,
+                    this, &MainWindow::slot_UsersToggled);
+   QObject::connect(m_pButtonPurchased, &QPushButton::toggled,
+                    this, &MainWindow::slot_PurchasedToggled);
+
+   QObject::connect(m_pPreviousPage, &QPushButton::clicked,
+                     this, &MainWindow::slot_PreviousPage);
+   QObject::connect(m_pResetPage, &QPushButton::clicked,
+                     this, &MainWindow::slot_ResetPage);
+   QObject::connect(m_pNextPage, &QPushButton::clicked,
+                     this, &MainWindow::slot_NextPage);
    
    {
       QAction* pActionExit = new QAction(tr("&Exit"), this);
-      QAction* pActionImportKey = new QAction(tr("Import key"), this);
-      QAction* pActionReplayBlockchain = new QAction(tr("Replay Blockchain"), this);
 
       pActionExit->setStatusTip(tr("Exit Program"));
-      pActionImportKey->setStatusTip(tr("Import key"));
+      m_pActionImportKey->setStatusTip(tr("Import key"));
 
       QObject::connect(pActionExit, &QAction::triggered,
                        this, &QMainWindow::close);
 
-      QObject::connect(pActionImportKey, &QAction::triggered,
+      QObject::connect(m_pActionImportKey, &QAction::triggered,
                        this, &MainWindow::slot_importKey);
 
-      QObject::connect(pActionReplayBlockchain, &QAction::triggered,
+      QObject::connect(m_pActionReplayBlockchain, &QAction::triggered,
                        this, &MainWindow::slot_replayBlockChain);
 
       QMenu* pMenuFile = pMenuBar->addMenu(tr("&File"));
       pMenuFile->addAction(pActionExit);
-      pMenuFile->addAction(pActionImportKey);
-      pMenuFile->addAction(pActionReplayBlockchain);
+      pMenuFile->addAction(m_pActionImportKey);
+      pMenuFile->addAction(m_pActionReplayBlockchain);
    }
 
 
@@ -150,7 +314,6 @@ MainWindow::MainWindow()
                     this, &MainWindow::DisplayWalletContentGUI);
 
 
-   m_pTimerBalance->setSingleShot(false);
    m_pTimerBalance->setInterval(10000);
    QObject::connect(m_pTimerBalance, &QTimer::timeout,
                     &Globals::instance(), &Globals::slot_updateAccountBalance);
@@ -159,6 +322,12 @@ MainWindow::MainWindow()
    m_pTimerDownloads->setInterval(5000);
    QObject::connect(m_pTimerDownloads, &QTimer::timeout,
                     this, &MainWindow::slot_checkDownloads);
+
+   m_pTimerContents->setInterval(1000);
+   QObject::connect(m_pTimerContents, &QTimer::timeout,
+                    this, &MainWindow::slot_getContents);
+
+   resize(900, 600);
 
 
 #ifdef _MSC_VER
@@ -264,6 +433,10 @@ void MainWindow::slot_setSplash()
 
    m_pTimerBalance->stop();
    m_pTimerDownloads->stop();
+   m_pTimerContents->stop();
+
+   m_pActionImportKey->setDisabled(true);
+   m_pActionReplayBlockchain->setDisabled(true);
 }
 
 void MainWindow::slot_closeSplash()
@@ -309,6 +482,14 @@ void MainWindow::slot_closeSplash()
 
       m_pTimerBalance->start();
       m_pTimerDownloads->start();
+      m_pTimerContents->start();
+
+      m_pActionImportKey->setEnabled(true);
+      m_pActionReplayBlockchain->setEnabled(true);
+
+      Globals::instance().slot_updateAccountBalance();
+      slot_checkDownloads();
+      slot_getContents();
    }
 }
 
@@ -327,13 +508,15 @@ void MainWindow::slot_connectionStatusChanged(Globals::ConnectionState from, Glo
 
 void MainWindow::slot_showPurchasedTab()
 {
-   GoToThisTab(4, std::string());
+   m_pButtonPurchased->setChecked(true);
+   slot_getContents();
 }
 
 void MainWindow::slot_showTransactionsTab(std::string const& account_name)
 {
-   GoToThisTab(1, std::string());
-   m_pCentralWidget->SetTransactionInfo(account_name);
+   m_pButtonTransactions->setChecked(true);
+   m_pFilterTransactions->setText(account_name.c_str());
+   slot_getContents();
 }
 
 void MainWindow::slot_stackWidgetPush(StackLayerWidget* pWidget)
@@ -390,23 +573,111 @@ void MainWindow::slot_importKey()
    slot_stackWidgetPush(import_key);
 }
 
-void MainWindow::RunTaskImpl(std::string const& str_command, std::string& str_result)
+void MainWindow::slot_BrowseToggled(bool toggled)
 {
-   str_result = Globals::instance().runTask(str_command);
+   QWidget* pSender = qobject_cast<QWidget*>(sender());
+   //
+   // really a stupid hack to have the state change visible
+   pSender->setEnabled(false);
+   pSender->setEnabled(true);
+   //
+   if (toggled)
+   {
+      m_pFilterBrowse->show();
+      m_pTabBrowse->show();
+      slot_getContents();
+   }
+   else
+   {
+      m_pFilterBrowse->hide();
+      m_pTabBrowse->hide();
+   }
 }
 
-bool MainWindow::RunTaskParseImpl(std::string const& str_command, nlohmann::json& json_result) {
-   try {
-      std::string str_result;
-      MainWindow::RunTaskImpl(str_command, str_result);
-      json_result = json::parse(str_result);
-      return true;
-   } catch (const std::exception& ex) {
-      json_result = json(ex.what());
-   } catch (...) {
-      json_result = json("Unhandled exception");
+void MainWindow::slot_TransactionsToggled(bool toggled)
+{
+   QWidget* pSender = qobject_cast<QWidget*>(sender());
+   //
+   // really a stupid hack to have the state change visible
+   pSender->setEnabled(false);
+   pSender->setEnabled(true);
+   //
+   if (toggled)
+   {
+      m_pFilterTransactions->show();
+      m_pTabTransactions->show();
+      slot_getContents();
    }
-   return false;
+   else
+   {
+      m_pFilterTransactions->hide();
+      m_pTabTransactions->hide();
+   }
+}
+
+void MainWindow::slot_PublishToggled(bool toggled)
+{
+   QWidget* pSender = qobject_cast<QWidget*>(sender());
+   //
+   // really a stupid hack to have the state change visible
+   pSender->setEnabled(false);
+   pSender->setEnabled(true);
+   //
+   if (toggled)
+   {
+      m_pFilterPublish->show();
+      m_pTabPublish->show();
+      m_pPublish->show();
+      slot_getContents();
+   }
+   else
+   {
+      m_pFilterPublish->hide();
+      m_pTabPublish->hide();
+      m_pPublish->hide();
+   }
+}
+
+void MainWindow::slot_UsersToggled(bool toggled)
+{
+   QWidget* pSender = qobject_cast<QWidget*>(sender());
+   //
+   // really a stupid hack to have the state change visible
+   pSender->setEnabled(false);
+   pSender->setEnabled(true);
+   //
+   if (toggled)
+   {
+      m_pFilterUsers->show();
+      m_pTabUsers->show();
+      slot_getContents();
+   }
+   else
+   {
+      m_pFilterUsers->hide();
+      m_pTabUsers->hide();
+   }
+}
+
+void MainWindow::slot_PurchasedToggled(bool toggled)
+{
+   QWidget* pSender = qobject_cast<QWidget*>(sender());
+   //
+   // really a stupid hack to have the state change visible
+   pSender->setEnabled(false);
+   pSender->setEnabled(true);
+   //
+   if (toggled)
+   {
+      m_pFilterPurchased->show();
+      m_pTabPurchased->show();
+      slot_getContents();
+   }
+   else
+   {
+      m_pFilterPurchased->hide();
+      m_pTabPurchased->hide();
+   }
 }
 
 void MainWindow::slot_checkDownloads()
@@ -414,55 +685,132 @@ void MainWindow::slot_checkDownloads()
    auto& global_instance = gui_wallet::Globals::instance();
    std::string str_current_username = global_instance.getCurrentUser();
 
-   if (str_current_username == "") {
-      _activeDownloads.clear();
+   if (str_current_username.empty())
+   {
+      m_activeDownloads.clear();
       return;
    }
 
    json contents;
-   if (!RunTaskParse("search_my_purchases "
-                     "\"" + str_current_username + "\" "
-                     "\"\" "
-                     "\"\" "
-                     "\"\" "
-                     "\"-1\" ",
-                     contents))
+
+   try
    {
-      std::cout << contents.get<string>() << std::endl;
+      contents = Globals::instance().runTaskParse("search_my_purchases "
+                                                  "\"" + str_current_username + "\" "
+                                                  "\"\" "
+                                                  "\"\" "
+                                                  "\"\" "
+                                                  "\"-1\" ");
+   }
+   catch(...)
+   {
       return;
    }
 
-
-   for (int i = 0; i < contents.size(); ++i)
+   for (size_t i = 0; i < contents.size(); ++i)
    {
-      auto content = contents[i];
+      auto const& content = contents[i];
       std::string URI = contents[i]["URI"].get<std::string>();
       std::string hash = contents[i]["hash"].get<std::string>();
 
-      if (URI == "")
+      if (URI.empty())
          continue;
 
-      if (_activeDownloads.find(URI) == _activeDownloads.end())
+      if (m_activeDownloads.find(URI) == m_activeDownloads.end())
       {
-         json ignore_result;
-         if (RunTaskParse("download_package "
-                          "\"" + URI + "\" "
-                          "\"" + hash + "\" ",
-                          ignore_result))
+         try
          {
-            _activeDownloads.insert(URI);
+            Globals::instance().runTask("download_package "
+                                        "\"" + URI + "\" "
+                                        "\"" + hash + "\" ");
+
+            m_activeDownloads.insert(URI);
          }
-         else
+         catch(...)
          {
             std::cout << "Cannot resume download: " << URI << std::endl;
-            std::cout << "Error: " << ignore_result.get<string>() << std::endl;
          }
       }
    }
 }
 
+void MainWindow::slot_getContents()
+{
+   TabContentManager* pTab = activeTable();
 
+   if (pTab)
+   {
+      pTab->m_i_page_size = pTab->size().height() / 35;
 
+      pTab->tryToUpdate();
+
+      if (pTab->is_first())
+      {
+         m_pPreviousPage->setDisabled(true);
+         m_pResetPage->setDisabled(true);
+      }
+      else
+      {
+         m_pPreviousPage->setEnabled(true);
+         m_pResetPage->setEnabled(true);
+      }
+      if (pTab->is_last())
+         m_pNextPage->setDisabled(true);
+      else
+         m_pNextPage->setEnabled(true);
+   }
+}
+
+void MainWindow::slot_PreviousPage()
+{
+   TabContentManager* pTab = activeTable();
+
+   if (pTab)
+   {
+      pTab->previous();
+      pTab->tryToUpdate();
+   }
+}
+
+void MainWindow::slot_ResetPage()
+{
+   TabContentManager* pTab = activeTable();
+
+   if (pTab)
+   {
+      pTab->reset();
+      pTab->tryToUpdate();
+   }
+}
+
+void MainWindow::slot_NextPage()
+{
+   TabContentManager* pTab = activeTable();
+
+   if (pTab)
+   {
+      pTab->next();
+      pTab->tryToUpdate();
+   }
+}
+
+TabContentManager* MainWindow::activeTable() const
+{
+   TabContentManager* pTab = nullptr;
+
+   if (m_pTabBrowse->isVisible())
+      pTab = m_pTabBrowse;
+   else if (m_pTabTransactions->isVisible())
+      pTab = m_pTabTransactions;
+   else if (m_pTabPublish->isVisible())
+      pTab = m_pTabPublish;
+   else if (m_pTabUsers->isVisible())
+      pTab = m_pTabUsers;
+   else if (m_pTabPurchased->isVisible())
+      pTab = m_pTabPurchased;
+
+   return pTab;
+}
 
 void MainWindow::DisplayWalletContentGUI()
 {
@@ -471,12 +819,8 @@ void MainWindow::DisplayWalletContentGUI()
 
    try
    {
-      std::string a_result;
-      RunTask("list_my_accounts", a_result);
-
+      auto accs = Globals::instance().runTaskParse("list_my_accounts");
       m_pAccountList->clear();
-      
-      auto accs = json::parse(a_result);
       
       for (int i = 0; i < accs.size(); ++i)
       {
@@ -499,15 +843,7 @@ void MainWindow::DisplayWalletContentGUI()
 }
 
 
-
-
-
-void MainWindow::GoToThisTab(int index , std::string)
-{
-    m_pCentralWidget->SetMyCurrentTabIndex(index);
-}
-
-void MainWindow::closeEvent(QCloseEvent *event)
+void MainWindow::closeEvent(QCloseEvent* event)
 {
    if (Globals::instance().connected())
    {

@@ -1,5 +1,6 @@
 #pragma once
 
+#if 0
 
 #include <QWidget>
 #include <QVBoxLayout>
@@ -123,3 +124,4 @@ private:
 }
 
 
+#endif

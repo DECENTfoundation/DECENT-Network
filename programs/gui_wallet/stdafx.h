@@ -22,6 +22,7 @@
 #include <QMenuBar>
 #include <QMoveEvent>
 #include <QDir>
+#include <QButtonGroup>
 #include <QProgressBar>
 #include <QGridLayout>
 #include <QCoreApplication>

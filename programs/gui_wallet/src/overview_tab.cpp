@@ -20,17 +20,13 @@
 
 #include "gui_design.hpp"
 
-// these were included in hpp, let's have these around when needed
-//#include <QtSvg/QSvgRenderer>
-//#include <QPainter>
-//#include <QSvgWidget>
-
 using std::string;
 
 namespace gui_wallet
 {
 
-Overview_tab::Overview_tab(QWidget* pParent)
+Overview_tab::Overview_tab(QWidget* pParent,
+                           DecentLineEdit* pFilterLineEdit)
 : TabContentManager(pParent)
 , m_pAccountSignalMapper(nullptr)
 , m_pTableWidget(new DecentTable(this))
@@ -43,34 +39,16 @@ Overview_tab::Overview_tab(QWidget* pParent)
       {"", 10}
    });
 
-   DecentLineEdit* pfilterLineEditor = new DecentLineEdit(this, DecentLineEdit::TableSearch);
-   pfilterLineEditor->setPlaceholderText(QString(tr("Search")));
-   pfilterLineEditor->setAttribute(Qt::WA_MacShowFocusRect, 0);
-   pfilterLineEditor->setFixedHeight(54);
-
-   QPixmap image(icon_search);
-
-   QLabel* pSearchLabel = new QLabel(this);
-   pSearchLabel->setSizeIncrement(100,40);
-   pSearchLabel->setPixmap(image);
-
-   QHBoxLayout* pSearchLayout = new QHBoxLayout();
-   pSearchLayout->setMargin(0);
-   pSearchLayout->setContentsMargins(0,0,0,0);
-   pSearchLayout->setContentsMargins(42, 0, 0, 0);
-   pSearchLayout->addWidget(pSearchLabel);
-   pSearchLayout->addWidget(pfilterLineEditor);
-
    QVBoxLayout* pMainLayout = new QVBoxLayout();
    pMainLayout->setContentsMargins(0, 5, 0, 0);
    pMainLayout->setMargin(0);
-   pMainLayout->addLayout(pSearchLayout);
    pMainLayout->addWidget(m_pTableWidget);
    pMainLayout->setSpacing(0);
     
    setLayout(pMainLayout);
 
-   QObject::connect(pfilterLineEditor, &QLineEdit::textChanged,
+   if (pFilterLineEdit)
+   QObject::connect(pFilterLineEdit, &QLineEdit::textChanged,
                     this, &Overview_tab::slot_SearchTermChanged);
 
    QObject::connect(m_pTableWidget, &DecentTable::signal_SortingChanged,
