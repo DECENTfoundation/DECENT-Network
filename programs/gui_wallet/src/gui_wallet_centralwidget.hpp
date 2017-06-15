@@ -1,5 +1,6 @@
 #pragma once
 
+#if 0
 
 #include <QWidget>
 #include <QVBoxLayout>
@@ -29,22 +30,7 @@ enum FRST_LINE_ELEMS{DECENT_LOGO,USERNAME,BALANCE,SEND_,NUMBER_OF_FRST_LINE_ELEM
 enum MAIN_TABS_ENM{BROWSE_CONTENT,TRANSACTIONS,UPLOAD,OVERVIEW,PURCHASED};
 
 
-class AccountBalanceWidget : public QWidget
-{
-public:
-    AccountBalanceWidget();
-    void addItem(const std::string& a_balance);
-    void clear();
-    void setCurrentIndex(int index);
-private:
-    void SetAccountBalanceFromStringGUIprivate(const std::string& a_balance);
-private:
-    QHBoxLayout m_main_layout;
-    QLabel      m_amount_label;
-    QLabel      m_asset_type_label;
-    std::vector<std::string> m_vBalances;
-    int                 m_nCurrentIndex;
-};
+
 
 
     
@@ -67,9 +53,6 @@ public:
 
    
     QString getFilterText()const;
-    QComboBox* usersCombo();
-    DecentButton* importButton();
-    DecentButton* getSendButton();
    
     int GetMyCurrentTabIndex()const {
         return m_main_tabs.currentIndex();
@@ -105,11 +88,10 @@ protected:
 
 private:
     void PrepareGUIprivate(class QBoxLayout* pAllLayout);
-    QWidget* GetWidgetFromTable5(int column, int widget);
+    
 
 private:
     QVBoxLayout         m_main_layout;
-    QHBoxLayout         m_first_line_lbl;
 
     
     QWidget* m_parent_main_window;
@@ -122,7 +104,7 @@ private:
     Overview_tab        m_Overview_tab;
     PurchasedTab        m_Purchased_tab;
    
-    DecentButton*  sendButton;
+   
    
     std::vector<TabContentManager*>  m_allTabs;
     int                              m_currentTab = -1;
@@ -142,3 +124,4 @@ private:
 }
 
 
+#endif

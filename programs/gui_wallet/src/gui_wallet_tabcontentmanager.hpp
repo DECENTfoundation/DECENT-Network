@@ -9,9 +9,7 @@ namespace gui_wallet {
 class TabContentManager : public QWidget
 {
 public:
-   TabContentManager(QWidget* pParent = nullptr);
-   virtual void contentActivated();
-   virtual void contentDeactivated();
+   TabContentManager(QWidget* pParent);
 
    virtual void timeToUpdate(const std::string& result) = 0;
    virtual std::string getUpdateCommand() = 0;

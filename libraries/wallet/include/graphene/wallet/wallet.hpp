@@ -101,9 +101,6 @@ namespace graphene { namespace wallet {
             }
          }
 
-         /* private el gamal key */
-         DInteger priv_el_gamal_key;
-
          /** encrypted keys */
          vector<char>              cipher_keys;
 
@@ -707,17 +704,6 @@ namespace graphene { namespace wallet {
           * @ingroup WalletCLI
           */
          bool import_key(string account_name_or_id, string wif_key);
-
-         /**
-          * @brief Imports the private el gamal key into cli_wallet configuration file (wallet.json).
-          *
-          * @see generate_el_gamal_keys()
-          *
-          * @param privKey Private el gamal key
-          * @returns true if the key was imported
-          * @ingroup WalletCLI
-          */
-         void import_el_gamal_key(DInteger privKey );
 
          /**
           * @brief Imports accounts from the other wallet file
@@ -1814,7 +1800,6 @@ FC_REFLECT( graphene::wallet::el_gamal_key_pair, (private_key)(public_key) )
 FC_REFLECT( graphene::wallet::wallet_data,
             (chain_id)
                (my_accounts)
-               (priv_el_gamal_key)
                (cipher_keys)
                (extra_keys)
                (pending_account_registrations)(pending_witness_registrations)
@@ -1904,7 +1889,6 @@ FC_API( graphene::wallet::wallet_api,
            (list_account_balances)
            (list_assets)
            (import_key)
-           (import_el_gamal_key)
            (import_accounts)
            (import_account_keys)
            (suggest_brain_key)

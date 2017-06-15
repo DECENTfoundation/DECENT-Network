@@ -25,6 +25,19 @@ namespace gui_wallet
             break;
          case DecentLogo:
             setProperty("type", "decentlogo");
+            break;
+         case Account:
+            setProperty("type", "account");
+            break;
+         case Row1Spacer:
+            setProperty("type", "row1spacer");
+            break;
+         case Balance:
+            setProperty("type", "balance");
+            break;
+         case TableSearch:
+            setProperty("type", "tablesearch");
+            break;
          case Default:
          default:
             break;

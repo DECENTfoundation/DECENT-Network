@@ -9,12 +9,14 @@ class QSignalMapper;
 namespace gui_wallet
 {
    class DecentTable;
+   class DecentLineEdit;
 
    class Overview_tab : public TabContentManager
    {
       Q_OBJECT
    public:
-      Overview_tab(QWidget* pParent);
+      Overview_tab(QWidget* pParent,
+                   DecentLineEdit* pFilterLineEdit);
       void CreateTable();
       void ArrangeSize();
       

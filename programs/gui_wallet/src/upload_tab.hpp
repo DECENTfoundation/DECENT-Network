@@ -8,13 +8,17 @@ class QSignalMapper;
 namespace gui_wallet
 {
    class DecentTable;
+   class DecentLineEdit;
+   class DecentButton;
    struct SDigitalContent;
 
    class Upload_tab : public TabContentManager
    {
       Q_OBJECT
    public:
-      Upload_tab(QWidget* pParent);
+      Upload_tab(QWidget* pParent,
+                 DecentLineEdit* pFilterLineEdit,
+                 DecentButton* pUploadButton);
       ~Upload_tab();
    public:
       virtual void timeToUpdate(const std::string& result) override;
@@ -25,13 +29,10 @@ namespace gui_wallet
    public slots:
       void slot_SearchTermChanged(QString const& strSearchTerm);
       void slot_SortingChanged(int);
-      void slot_UpdateContents();
       void slot_Bought();
       void slot_ShowContentPopup(int);
       void slot_UploadPopup();
 
-   signals:
-      void signal_setEnabledUpload(bool);
 
    protected:
       DecentTable* m_pTableWidget;

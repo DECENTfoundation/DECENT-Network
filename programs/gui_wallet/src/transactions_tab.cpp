@@ -25,7 +25,8 @@ using std::string;
 
 namespace gui_wallet
 {
-TransactionsTab::TransactionsTab(QWidget* pParent)
+TransactionsTab::TransactionsTab(QWidget* pParent,
+                                 DecentLineEdit* pFilterLineEdit)
 : TabContentManager(pParent)
 , m_pTableWidget(new DecentTable(this))
 {
@@ -38,39 +39,22 @@ TransactionsTab::TransactionsTab(QWidget* pParent)
       {tr("Fee"), 10,  "fee"},
       {tr("Description"), 25, "description"}
    });
-
-   DecentLineEdit* pfilterLineEditor = new DecentLineEdit(this, DecentLineEdit::TableSearch);
-   pfilterLineEditor->setPlaceholderText(tr("Enter user name to see transaction history"));
-   pfilterLineEditor->setAttribute(Qt::WA_MacShowFocusRect, 0);
-   pfilterLineEditor->setFixedHeight(54);
-   pfilterLineEditor->setFrame(false);
-
-   QPixmap image(icon_search);
-   QLabel* pSearchLabel = new QLabel(this);
-   pSearchLabel->setSizeIncrement(100,40);
-   pSearchLabel->setPixmap(image);
-
-   QHBoxLayout* search_layout = new QHBoxLayout();
-   search_layout->setContentsMargins(42, 0, 0, 0);
-   search_layout->addWidget(pSearchLabel);
-   search_layout->addWidget(pfilterLineEditor);
    
    m_pTableWidget->horizontalHeader()->setStretchLastSection(true);
 
    QVBoxLayout* pMainLayout = new QVBoxLayout();
    pMainLayout->setContentsMargins(0, 0, 0, 0);
    pMainLayout->setSpacing(0);
-   pMainLayout->addLayout(search_layout);
    pMainLayout->addWidget(m_pTableWidget);
    setLayout(pMainLayout);
 
    QObject::connect(&Globals::instance(), &Globals::currentUserChanged,
-                    pfilterLineEditor, &QLineEdit::setText);
+                    pFilterLineEdit, &QLineEdit::setText);
 
    QObject::connect(this, &TransactionsTab::signal_setUserFilter,
-                    pfilterLineEditor, &QLineEdit::setText);
+                    pFilterLineEdit, &QLineEdit::setText);
 
-   QObject::connect(pfilterLineEditor, &QLineEdit::textChanged,
+   QObject::connect(pFilterLineEdit, &QLineEdit::textChanged,
                     this, &TransactionsTab::slot_SearchTermChanged);
 
    QObject::connect(m_pTableWidget, &DecentTable::signal_SortingChanged,

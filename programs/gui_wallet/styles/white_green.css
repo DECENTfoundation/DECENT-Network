@@ -28,7 +28,87 @@ QLabel[name='highlightedright']
 }
 QLabel[type='decentlogo']
 {
-   background-image: url(':/icon/images/decent_logo.svg');
+   image: url(':/icon/images/decent_logo.svg');
+   padding-top: 0.6em;
+   padding-bottom: 0.6em;
+   padding-left: 0;
+   padding-right: 0;
+   max-width: 5em;
+   max-height: 3.3em;
+   min-width: 1.5em;
+   min-height: 3.3em;
+   border-bottom: 1px solid rgb(240, 240, 240);
+   border-right: 1px solid rgb(240, 240, 240);
+   border-left: 0px;
+   border-top: 0px;
+}
+QLabel[type='account']
+{
+   image: url(':/icon/images/user.png');
+   padding-top: 1.3em;
+   padding-bottom: 1.3em;
+   padding-left: 1em;
+   padding-right: 1em;
+   max-width: 1.5em;
+   max-height: 1.9em;
+   min-width: 1.5em;
+   min-height: 1.9em;
+   border-bottom: 1px solid rgb(240, 240, 240);
+   border-right: 0px;
+   border-left: 0px;
+   border-top: 0px;
+}
+QLabel[type='row1spacer']
+{
+   padding-top: 1.3em;
+   padding-bottom: 1.3em;
+   max-width: 100em;
+   max-height: 1.9em;
+   min-width: 3.5em;
+   min-height: 1.9em;
+   border-bottom: 1px solid rgb(240, 240, 240);
+   border-right: 0;
+   border-left: 0px;
+   border-top: 0px;
+}
+QLabel[type='balance']
+{
+   image: url(':/icon/images/balance.png');
+   image-position: right;
+   padding-top: 1.3em;
+   padding-bottom: 1.3em;
+   padding-left: 1em;
+   padding-right: 1em;
+   max-width: 10em;
+   max-height: 1.9em;
+   min-width: 10em;
+   min-height: 1.9em;
+   border-bottom: 1px solid rgb(240, 240, 240);
+   border-right: 1px solid rgb(240, 240, 240);
+   border-left: 0px;
+   border-top: 0px;
+   color: rgb(27, 176, 104);
+   qproperty-alignment: 'AlignLeft | AlignVCenter';
+}
+QLabel[type='tablesearch']
+{
+   image: url(':/icon/images/search.svg');
+   padding-top: 1em;
+   padding-bottom: 1em;
+   padding-left: 1em;
+   padding-right: 1em;
+   max-width: 1em;
+   max-height: 1em;
+   min-width: 1em;
+   min-height: 1em;
+   border: 0px;
+}
+
+QLabel QComboBox
+{
+   /*applies to users combo*/
+   max-width: 7em;
+   max-height: 1em;
 }
 QDialog, QMainWindow, QMessageBox
 {
@@ -47,6 +127,7 @@ QPushButton:!enabled
    background-color: rgb(180, 180, 180);
    color: rgb(30, 30, 30);
 }
+
 QPushButton[type='dialogaction']
 {
    border: 0px;
@@ -83,10 +164,23 @@ QPushButton[type='dialogcancel'][enabled=false]
 }
 QPushButton[type='send']
 {
-   border: 0em;
    background-color: white;
-   color: black;
-   qproperty-icon: url(':/icon/images/send.png'), url(':/icon/images/inactive_send.png') disabled;
+   /*color: black;
+   qproperty-icon: url(':/icon/images/send.png'), url(':/icon/images/inactive_send.png') disabled;*/
+   image: url(':/icon/images/send.png');
+
+   padding-top: 1.3em;
+   padding-bottom: 1.3em;
+   padding-left: 0em;
+   padding-right: 0em;
+   max-width: 5em;
+   max-height: 1.9em;
+   min-width: 5em;
+   min-height: 1.9em;
+   border-bottom: 1px solid rgb(240, 240, 240);
+   border-right: 0px;
+   border-left: 0px;
+   border-top: 0px;
 }
 QPushButton[type='send'][enabled=false]
 {
@@ -159,6 +253,23 @@ QPushButton[type='staricon'][enabled=false]
    border: 0px;
    background-color: white;
 }
+QPushButton[type='tabchoice']
+{
+   border: 0px;
+   background-color: white;
+   min-height: 2.5em;
+   max-height: 2.5em;
+   color: rgb(27, 176, 104);
+   border-bottom: 0.2em solid rgb(27, 176, 104);
+   border-right: 0px;
+   border-left: 0px;
+   border-top: 0px;
+}
+QPushButton[type='tabchoice'][checked=false]
+{
+   color: black;
+   border-bottom: 1px solid rgb(240, 240, 240);
+}
 QMessageBox QPushButton, QFileDialog QPushButton
 {
    border: 0px;
@@ -182,6 +293,11 @@ QLineEdit[type='tablesearch']
 {
    border: 0px;
    padding-left: 1em;
+   padding-right: 1em;
+   padding-top: 0em;
+   padding-bottom: 0em;
+   min-height: 1em;
+   max-height: 1em;
 }
 QLineEdit[type='dialoglineedit']
 {

@@ -517,6 +517,11 @@ string Asset::getString() const
    else
       return "Free";
 }
+
+string Asset::getStringBalance() const
+{
+   return QString::number(double(*this), 'f' , 4).toStdString() + " " + m_str_symbol;
+}
 //
 // DaemonDetails
 //
@@ -700,45 +705,23 @@ void Globals::clear()
    }
 }
 
-Asset Globals::asset(uint64_t amount, const std::string& symbol_id )
+Asset Globals::asset(uint64_t amount, const string& symbol_id/* = string()*/)
 {
+   string str_symbol_id = symbol_id;
+   if (str_symbol_id.empty())
+      str_symbol_id = "1.3.0";
+
    Asset ast_amount;
    uint8_t precision = 0;
 
    graphene::chain::asset_id_type asset_id;
-   fc::from_variant( symbol_id, asset_id );
+   fc::from_variant( str_symbol_id, asset_id );
 
    getWallet().LoadAssetInfo(ast_amount.m_str_symbol, precision, asset_id);
    ast_amount.m_scale = pow(10, precision);
    ast_amount.m_amount = amount;
 
    return ast_amount;
-}
-
-void Globals::updateAccountBalance()
-{
-   if (false == m_str_currentUser.empty())
-   {
-      nlohmann::json allBalances = runTaskParse("list_account_balances " + m_str_currentUser);
-
-      if (allBalances.empty())
-         emit signal_updateAccountBalance(asset(0));
-      else if (allBalances.size() != 1)
-         throw std::runtime_error("an account cannot have more than one balance");
-      else
-      {
-         auto const& json_balance = allBalances[0]["amount"];
-
-         Asset ast_balance = asset(0);
-
-         if (json_balance.is_number())
-            ast_balance.m_amount = json_balance.get<uint64_t>();
-         else
-            ast_balance.m_amount = std::stoll(json_balance.get<string>());
-
-         emit signal_updateAccountBalance(ast_balance);
-      }
-   }
 }
 
 string Globals::runTask(string const& str_command)
@@ -781,12 +764,6 @@ bool Globals::connected() const
    return m_connected_state != ConnectionState::Connecting;
 }
 
-void Globals::setCurrentUser(std::string const& user)
-{
-   m_str_currentUser = user;
-   emit currentUserChanged(m_str_currentUser.c_str());
-}
-
 void Globals::setWalletUnlocked()
 {
    emit walletUnlocked();
@@ -795,15 +772,6 @@ void Globals::setWalletUnlocked()
 void Globals::setWalletError(std::string const& error)
 {
    emit walletConnectionError(error);
-}
-
-void Globals::showTransferDialog(std::string const& user)
-{
-   if(getCurrentUser().empty())
-      return;
-   
-   TransferWidget* pTransferDialog = new TransferWidget(nullptr , QString::fromStdString(user));
-   signal_stackWidgetPush(pTransferDialog);
 }
 
 string Globals::getAccountName(string const& accountId)
@@ -822,6 +790,57 @@ string Globals::getAccountName(string const& accountId)
    }
 
    return search->second;
+}
+
+void Globals::slot_updateAccountBalance()
+{
+   if (false == m_str_currentUser.empty())
+   {
+      nlohmann::json allBalances = runTaskParse("list_account_balances " + m_str_currentUser);
+
+      if (allBalances.empty())
+         emit signal_updateAccountBalance(asset(0));
+      else if (allBalances.size() != 1)
+         throw std::runtime_error("an account cannot have more than one balance");
+      else
+      {
+         auto const& json_balance = allBalances[0]["amount"];
+
+         Asset ast_balance = asset(0);
+
+         if (json_balance.is_number())
+            ast_balance.m_amount = json_balance.get<uint64_t>();
+         else
+            ast_balance.m_amount = std::stoll(json_balance.get<string>());
+         
+         emit signal_updateAccountBalance(ast_balance);
+      }
+   }
+}
+
+void Globals::slot_setCurrentUser(QString const& user)
+{
+   m_str_currentUser = user.toStdString();
+   emit currentUserChanged(m_str_currentUser.c_str());
+   slot_updateAccountBalance();
+}
+
+void Globals::slot_showTransferDialog(QString const& user)
+{
+   if(getCurrentUser().empty())
+      return;
+
+   TransferWidget* pTransferDialog = new TransferWidget(nullptr, user);
+   signal_stackWidgetPush(pTransferDialog);
+}
+
+void Globals::slot_showTransferDialog()
+{
+   if(getCurrentUser().empty())
+      return;
+
+   TransferWidget* pTransferDialog = new TransferWidget(nullptr);
+   signal_stackWidgetPush(pTransferDialog);
 }
 
 void Globals::slot_connected(std::string const& str_error)

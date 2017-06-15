@@ -13,15 +13,6 @@ TabContentManager::TabContentManager(QWidget* pParent/* = nullptr*/)
 {
 }
 
-void TabContentManager::contentActivated()
-{
-   m_last_result = "";
-}
-void TabContentManager::contentDeactivated()
-{
-
-}
-
 void TabContentManager::tryToUpdate() {
    try {
       std::string command = getUpdateCommand();

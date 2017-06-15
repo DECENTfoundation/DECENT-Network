@@ -785,13 +785,6 @@ public:
       return all_keys_for_account.find(wif_pub_key) != all_keys_for_account.end();
    }
 
-   void import_el_gamal_key( DInteger privKey )
-   {
-      FC_ASSERT(!self.is_locked());
-      _wallet.priv_el_gamal_key = privKey;
-      save_wallet_file();
-   }
-
    bool load_wallet_file(string wallet_filename = "")
    {
       // TODO:  Merge imported wallet with existing wallet,
@@ -2284,9 +2277,6 @@ signed_transaction content_cancellation(string author,
          request_op.URI = URI;
 
          DInteger el_gamal_priv_key = generate_private_el_gamal_key_from_secret ( get_private_key_for_account(consumer_account).get_secret() );
-         //if (_wallet.priv_el_gamal_key == decent::encrypt::DInteger::Zero()) { // Generate key if it does not exist
-         //    import_el_gamal_key(decent::encrypt::generate_private_el_gamal_key());
-         //}
 
          request_op.pubKey = decent::encrypt::get_public_el_gamal_key( el_gamal_priv_key );
          request_op.price = price_to_dct(*op_price);
@@ -2323,8 +2313,6 @@ signed_transaction content_cancellation(string author,
       request_op.URI = URI;
 
       DInteger el_gamal_priv_key = generate_private_el_gamal_key_from_secret ( get_private_key_for_account(consumer_account).get_secret() );
-
-      //FC_ASSERT( _wallet.priv_el_gamal_key != decent::encrypt::DInteger::Zero(), "Private ElGamal key is not imported. " );
       request_op.pubKey = decent::encrypt::get_public_el_gamal_key( el_gamal_priv_key );
 
       optional<content_object> content = _remote_db->get_content( URI );
@@ -2495,11 +2483,6 @@ signed_transaction content_cancellation(string author,
       decent::encrypt::point message;
 
       DInteger el_gamal_priv_key = generate_private_el_gamal_key_from_secret ( get_private_key_for_account(buyer_account).get_secret() );
-
-//       if (_wallet.priv_el_gamal_key == decent::encrypt::DInteger::Zero()) { // Generate key if it does not exist
-//           import_el_gamal_key(decent::encrypt::generate_private_el_gamal_key());
-//       }
-//      FC_ASSERT( _wallet.priv_el_gamal_key != decent::encrypt::DInteger::Zero(), "Private ElGamal key is not imported. " );
 
       for( const auto key_particle : bo.key_particles )
       {
@@ -3218,12 +3201,6 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
       }
       return false;
    }
-
-   void wallet_api::import_el_gamal_key( DInteger privKey )
-      {
-         FC_ASSERT( !is_locked() );
-         my->import_el_gamal_key( privKey );
-      }
 
    map<string, bool> wallet_api::import_accounts( string filename, string password )
    {
