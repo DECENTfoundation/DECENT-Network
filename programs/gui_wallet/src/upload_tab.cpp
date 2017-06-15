@@ -218,7 +218,6 @@ void Upload_tab::ShowDigitalContentsGUI()
       // Icon
       DecentButton* info_icon = new DecentButton(m_pTableWidget, DecentButton::TableIcon, DecentButton::Detail);
       info_icon->setEnabled(false);
-      info_icon->setIconSize(QSize(40,40));
       m_pTableWidget->setCellWidget(iIndex, eIcon, info_icon);
 
       QObject::connect(info_icon, &DecentButton::clicked,

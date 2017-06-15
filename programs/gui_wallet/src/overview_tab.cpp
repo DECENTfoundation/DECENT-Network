@@ -88,7 +88,6 @@ void Overview_tab::timeToUpdate(const std::string& result) {
       // Transaction Button
       //
       DecentButton* pTransactionButton = new DecentButton(m_pTableWidget, DecentButton::TableIcon, DecentButton::Transaction);
-      pTransactionButton->setIconSize(QSize(40,40));
       pTransactionButton->setEnabled(false);
       
       QObject::connect(pTransactionButton, &DecentButton::clicked,
@@ -102,7 +101,6 @@ void Overview_tab::timeToUpdate(const std::string& result) {
       // Details Button
       //
       DecentButton* pDetailsButton = new DecentButton(m_pTableWidget, DecentButton::TableIcon, DecentButton::Detail);
-      pDetailsButton->setIconSize(QSize(40,40));
       pDetailsButton->setEnabled(false);
       m_pTableWidget->setCellWidget(iIndex, 4, pDetailsButton);
 
@@ -115,7 +113,6 @@ void Overview_tab::timeToUpdate(const std::string& result) {
       // Transfer Button
       //
       DecentButton* pTransferButton = new DecentButton(m_pTableWidget, DecentButton::TableIcon, DecentButton::Transfer);
-      pTransferButton->setIconSize(QSize(40,40));
       pTransferButton->setEnabled(false);
       m_pTableWidget->setCellWidget(iIndex, 3, pTransferButton);
             

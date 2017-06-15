@@ -44,7 +44,7 @@ QLabel[type='decentlogo']
 }
 QLabel[type='account']
 {
-   image: url(':/icon/images/user.png');
+   image: url(':/icon/images/user.svg');
    padding-top: 1.3em;
    padding-bottom: 1.3em;
    padding-left: 1em;
@@ -73,7 +73,7 @@ QLabel[type='row1spacer']
 }
 QLabel[type='balance']
 {
-   image: url(':/icon/images/balance.png');
+   image: url(':/icon/images/balance.svg');
    image-position: right;
    padding-top: 1.3em;
    padding-bottom: 1.3em;
@@ -88,7 +88,7 @@ QLabel[type='balance']
    border-left: 0px;
    border-top: 0px;
    color: rgb(27, 176, 104);
-   qproperty-alignment: 'AlignLeft | AlignVCenter';
+   /*qproperty-alignment: 'AlignLeft | AlignVCenter';*/
 }
 QLabel[type='tablesearch']
 {
@@ -167,7 +167,7 @@ QPushButton[type='send']
    background-color: white;
    /*color: black;
    qproperty-icon: url(':/icon/images/send.png'), url(':/icon/images/inactive_send.png') disabled;*/
-   image: url(':/icon/images/send.png');
+   image: url(':/icon/images/send.svg');
 
    padding-top: 1.3em;
    padding-bottom: 1.3em;
@@ -209,6 +209,7 @@ QPushButton[type='tableicon']
    border: 0px;
    background-color: rgb(27, 176, 104);
    color: white;
+   padding: 0.3em;
 }
 QPushButton[type='tableicon'][enabled=false]
 {
@@ -218,19 +219,35 @@ QPushButton[type='tableicon'][enabled=false]
 }
 QPushButton[name='transaction']
 {
-   qproperty-icon: url(':/icon/images/transaction1.png'), url(':/icon/images/transaction.png') disabled;
+   image: url(':/icon/images/transaction_enabled.svg');
+}
+QPushButton[name='transaction'][enabled=false]
+{
+   image: url(':/icon/images/transaction_disabled.svg');
 }
 QPushButton[name='detail']
 {
-   qproperty-icon: url(':/icon/images/pop_up1.png'), url(':/icon/images/pop_up.png') disabled;
+   image: url(':/icon/images/details_enabled.svg');
+}
+QPushButton[name='detail'][enabled=false]
+{
+   image: url(':/icon/images/details_disabled.svg');
 }
 QPushButton[name='transfer']
 {
-   qproperty-icon: url(':/icon/images/transfer1.png'), url(':/icon/images/transfer.png') disabled;
+   image: url(':/icon/images/transfer_enabled.svg');
+}
+QPushButton[name='transfer'][enabled=false]
+{
+   image: url(':/icon/images/transfer_disabled.svg');
 }
 QPushButton[name='export']
 {
-   qproperty-icon: url(':/icon/images/export1.png'), url(':/icon/images/export.png') disabled;
+   image: url(':/icon/images/export_enabled.svg');
+}
+QPushButton[name='export'][enabled=false]
+{
+   image: url(':/icon/images/export_disabled.svg');
 }
 QPushButton[type='staricon']
 {
