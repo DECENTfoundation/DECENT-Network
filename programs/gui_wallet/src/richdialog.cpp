@@ -82,15 +82,23 @@ void RatingWidget::setRating(int rating)
    m_bAutomation = true;
    for (int index = 0; index < size; ++index)
    {
+      QPushButton* pItem = m_arr_p_rate[index];
       if (index < rating)
-         m_arr_p_rate[index]->setChecked(true);
+         pItem->setChecked(true);
       else
-         m_arr_p_rate[index]->setChecked(false);
+         pItem->setChecked(false);
    }
    m_bAutomation = false;
 
    m_rating = rating;
    emit rated(rating);
+
+   //
+   // again, this is a trick to let styles refresh after a toggle
+   //
+   bool enabled = isEnabled();
+   setDisabled(enabled);
+   setEnabled(enabled);
 }
 
 void RatingWidget::slot_rating()

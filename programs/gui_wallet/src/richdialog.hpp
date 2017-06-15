@@ -35,7 +35,7 @@ protected:
    enum { size = 5 };
    
    bool m_bAutomation;
-   QVector<DecentButton*> m_arr_p_rate;
+   QVector<QPushButton*> m_arr_p_rate;
 
 public:
    uint32_t m_rating;

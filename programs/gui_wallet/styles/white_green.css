@@ -259,11 +259,16 @@ QPushButton[type='staricon']
    width: 1em;
    height: 1em;
 
-   qproperty-icon:   url(':/icon/images/green_asterix.png'),
+   image: url(':/icon/images/green_asterix.svg');
+   /*qproperty-icon:   url(':/icon/images/green_asterix.png'),
                      url(':/icon/images/green_asterix.png') on,
                      url(':/icon/images/green_asterix.png') on disabled,
                      url(':/icon/images/white_asterix.png') off,
-                     url(':/icon/images/white_asterix.png') off disabled;
+                     url(':/icon/images/white_asterix.png') off disabled;*/
+}
+QPushButton[type='staricon'][checked=false]
+{
+   image: url(':/icon/images/white_asterix.svg');
 }
 QPushButton[type='staricon'][enabled=false]
 {
