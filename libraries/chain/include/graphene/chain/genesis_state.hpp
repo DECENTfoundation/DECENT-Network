@@ -48,7 +48,13 @@ struct genesis_state_type {
       {}
       string name;
       public_key_type owner_key;
+      optional<public_key_type> owner_key2;
+      optional<public_key_type> owner_key3;
+      optional<uint32_t> owner_threshold;
       public_key_type active_key;
+      optional<public_key_type> active_key2;
+      optional<public_key_type> active_key3;
+      optional<uint32_t> active_threshold;
    };
    struct initial_asset_type {
 

@@ -339,7 +339,17 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       account_create_operation cop;
       cop.name = account.name;
       cop.registrar = GRAPHENE_TEMP_ACCOUNT;
-      cop.owner = authority(1, account.owner_key, 1);
+      uint32_t owner_threshold = 1;
+      if(account.owner_threshold)
+         owner_threshold = *account.owner_threshold;
+      if(account.owner_key2 && account.owner_key3 ){
+         FC_ASSERT ( owner_threshold <= 3 );
+         cop.owner = authority(owner_threshold, account.owner_key, 1, *account.owner_key2, 1, *account.owner_key3, 1 );
+      }else if(account.owner_key2){
+         FC_ASSERT ( owner_threshold <= 2 );
+         cop.owner = authority(owner_threshold, account.owner_key, 1, *account.owner_key2, 1 );
+      }else
+         cop.owner = authority(1, account.owner_key, 1);
       if( account.active_key == public_key_type() )
       {
          cop.active = cop.owner;
@@ -347,7 +357,17 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       }
       else
       {
-         cop.active = authority(1, account.active_key, 1);
+         uint32_t active_threshold = 1;
+         if(account.active_threshold)
+            active_threshold = *account.active_threshold;
+         if(account.active_key2 && account.active_key3 ){
+            FC_ASSERT ( active_threshold <= 3 );
+            cop.active = authority(active_threshold, account.active_key, 1, *account.active_key2, 1, *account.active_key3, 1 );
+         }else if(account.active_key2){
+            FC_ASSERT ( active_threshold <= 2 );
+            cop.active = authority(active_threshold, account.active_key, 1, *account.active_key2, 1 );
+         }else
+            cop.active = authority(1, account.active_key, 1);
          cop.options.memo_key = account.active_key;
       }
       account_id_type account_id(apply_operation(genesis_eval_state, cop).get<object_id_type>());
