@@ -284,7 +284,7 @@ void Upload_tab::slot_UploadPopup(const QString& content)
    if (false == Globals::instance().getCurrentUser().empty())
    {
       Upload_popup popup(this, content.toStdString());
-      popup.setWindowTitle("Resubmit " + content + " content");
+      popup.setWindowTitle("Resubmit content " +  content);
       popup.exec();
    }
 }
