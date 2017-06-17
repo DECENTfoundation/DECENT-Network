@@ -648,6 +648,17 @@ namespace graphene { namespace app {
          optional<content_object> get_content( const string& URI )const;
          
          /**
+          * @brief Generate keys for new content submission
+          * @param seeders list of seeder account IDs
+          * @return generated key and key parts
+          * @ingroup DatabaseAPI
+          */
+         content_keys generate_content_keys(vector<account_id_type> const& seeders)const;
+         
+
+
+
+         /**
           * @brief Search for term in contents (author, title and description)
           * @param term Search term
           * @param order Ordering field
@@ -843,6 +854,7 @@ FC_API(graphene::app::database_api,
           (get_buying_objects_by_consumer)
           (search_feedback)
           (get_content)
+          (generate_content_keys)
           (search_content)
           (list_publishers_by_price)
           (get_content_ratings)
