@@ -536,6 +536,7 @@ void Upload_popup::slot_UploadContent()
    std::string _submitCommand;
    std::string submitCommand;
    std::string res;
+   
    if( !m_resubmit_content.empty() )
       try
       {
@@ -580,7 +581,7 @@ void Upload_popup::slot_UploadContent()
          _submitCommand += " " + str_quorum + "";                             //quorum
          _submitCommand += " \"" + str_expiration + "\"";                     //expiration
          _submitCommand += " \"DCT\"";                                        //fee asset
-         _submitCommand += " \"" + str_fee + "\"";                         //fee price
+         _submitCommand += " \"" + str_fee + "\"";                            //fee price
          _submitCommand += " \"" + escape_string(synopsis) + "\"";            //synopsis
          _submitCommand += " {" + str_AES_key  + "}";                         //AES key
          _submitCommand += cd;                                                //cd
