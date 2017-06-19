@@ -74,11 +74,6 @@ namespace graphene { namespace chain {
           * available for withdrawal) rather than requiring the normal vesting period.
           */
          share_type pending_vested_fees;
-         /**
-          * Core fees are paid into the account_statistics_object by this method
-          */
-         void pay_fee( share_type core_fee, share_type cashback_vesting_threshold );
-
    };
 
    /**
@@ -296,5 +291,8 @@ FC_REFLECT_DERIVED( graphene::chain::account_statistics_object,
                     (owner)
                     (most_recent_op)
                     (total_ops)
+                    (total_core_in_orders)
+                    (pending_fees)
+                    (pending_vested_fees)
                   )
 

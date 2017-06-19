@@ -151,7 +151,6 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
          FC_ASSERT( content_itr->size == o.size );
          FC_ASSERT( content_itr->_hash == o.hash );
          FC_ASSERT( content_itr->expiration == o.expiration );
-         FC_ASSERT( content_itr->cd == o.cd );
          FC_ASSERT( content_itr->quorum == o.quorum );
          FC_ASSERT( content_itr->key_parts.size() == o.seeders.size() );
          for( const auto& element : content_itr->key_parts )
@@ -217,22 +216,22 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
          });
 
          db().modify<content_object>(*content_itr,[&](content_object& co) {
-                                     map<uint32_t, asset> prices;
-                                     for (auto const& item : o.price)
-                                     {
-                                        prices[item.region] = item.price;
-                                     }
-
-                                     auto it_no_regions = prices.find(RegionCodes::OO_none);
-                                     if (it_no_regions != prices.end())
-                                        co.price.SetSimplePrice(it_no_regions->second);
-                                     else
-                                     {
-                                        for (auto const& price_item : prices)
+                                        map<uint32_t, asset> prices;
+                                        for (auto const& item : o.price)
                                         {
-                                           co.price.SetRegionPrice(price_item.first, price_item.second);
+                                           prices[item.region] = item.price;
                                         }
-                                     }
+
+                                        auto it_no_regions = prices.find(RegionCodes::OO_none);
+                                        if (it_no_regions != prices.end())
+                                           co.price.SetSimplePrice(it_no_regions->second);
+                                        else
+                                        {
+                                           for (auto const& price_item : prices)
+                                           {
+                                              co.price.SetRegionPrice(price_item.first, price_item.second);
+                                           }
+                                        }
 
                                         co.synopsis = o.synopsis;
                                         co.co_authors = o.co_authors;
@@ -259,21 +258,21 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
                                         co.author = o.author;
                                         co.co_authors = o.co_authors;
                                         map<uint32_t, asset> prices;
-                                     for (auto const& item : o.price)
-                                     {
-                                        prices[item.region] = item.price;
-                                     }
-
-                                     auto it_no_regions = prices.find(RegionCodes::OO_none);
-                                     if (it_no_regions != prices.end())
-                                        co.price.SetSimplePrice(it_no_regions->second);
-                                     else
-                                     {
-                                        for (auto const& price_item : prices)
+                                        for (auto const& item : o.price)
                                         {
-                                           co.price.SetRegionPrice(price_item.first, price_item.second);
+                                           prices[item.region] = item.price;
                                         }
-                                     }
+
+                                        auto it_no_regions = prices.find(RegionCodes::OO_none);
+                                        if (it_no_regions != prices.end())
+                                           co.price.SetSimplePrice(it_no_regions->second);
+                                        else
+                                        {
+                                           for (auto const& price_item : prices)
+                                           {
+                                              co.price.SetRegionPrice(price_item.first, price_item.second);
+                                           }
+                                        }
 
                                         co.size = o.size;
                                         co.synopsis = o.synopsis;

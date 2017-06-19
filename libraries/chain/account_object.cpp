@@ -48,14 +48,6 @@ void account_balance_object::adjust_balance(const asset& delta)
    balance += delta.amount;
 }
 
-void account_statistics_object::pay_fee( share_type core_fee, share_type cashback_vesting_threshold )
-{
-   if( core_fee > cashback_vesting_threshold )
-      pending_fees += core_fee;
-   else
-      pending_vested_fees += core_fee;
-}
-
 set<account_id_type> account_member_index::get_account_members(const account_object& a)const
 {
    set<account_id_type> result;
