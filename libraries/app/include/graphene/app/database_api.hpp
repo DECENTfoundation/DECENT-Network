@@ -655,6 +655,8 @@ namespace graphene { namespace app {
           */
          content_keys generate_content_keys(vector<account_id_type> const& seeders)const;
          
+         fc::sha256 restore_encryption_key(DIntegerString el_gamal_priv_key_string, buying_id_type buying ) const;
+
 
 
 
@@ -855,6 +857,7 @@ FC_API(graphene::app::database_api,
           (search_feedback)
           (get_content)
           (generate_content_keys)
+          (restore_encryption_key)
           (search_content)
           (list_publishers_by_price)
           (get_content_ratings)

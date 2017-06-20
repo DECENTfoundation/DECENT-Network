@@ -47,7 +47,7 @@ void_result subscribe_evaluator::do_apply( const subscribe_operation& op )
 
       // head_block_time rounded up to midnight
       uint32_t head_block_time_rounded_to_days = db().head_block_time().sec_since_epoch() / ( 24 * 3600 );
-      head_block_time_rounded_to_days += 24 * 3600;
+      head_block_time_rounded_to_days++;
 
       if (subscription != idx2.end())
       {
