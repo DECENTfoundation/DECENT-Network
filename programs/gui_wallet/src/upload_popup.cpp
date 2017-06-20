@@ -533,33 +533,24 @@ void Upload_popup::slot_UploadContent()
    std::string synopsis = synopsis_construct.m_str_synopsis;
 
    string str_seeders = getChosenPublishers().join(", ").toStdString();
-   std::string _submitCommand;
+
    std::string submitCommand;
-   std::string res;
    
    if( !m_resubmit_content.empty() )
       try
       {
-         //QFileInfo file(QString::fromStdString(path));
-         //std::string str_file_size = std::to_string(file.size());
-         
          string search_command = "search_user_content";
          search_command += " \"" + Globals::instance().getCurrentUser() + "\"";
          search_command += " \"" + m_resubmit_content + "\"";
          search_command += " \"\" \"\" \"\" \"0\" 1";
          
-         std::string contents = Globals::instance().runTask(search_command);
-        
-         std::cout << contents << std::endl;
-         
-         nlohmann::json parse = nlohmann::json::parse(contents);
+         std::string content = Globals::instance().runTask(search_command);
+         nlohmann::json parse = nlohmann::json::parse(content);
          std::string str_URI = parse[0]["URI"].get<std::string>();
          
          //content info
          std::string info = Globals::instance().runTask("get_content \"" + str_URI + "\"");
          nlohmann::json jsp = nlohmann::json::parse(info);
-         
-         std::cout << info << std::endl;
          
          std::string _hash = jsp["_hash"].get<std::string>();
          std::string str_expiration = jsp["expiration"].get<std::string>();
@@ -576,27 +567,23 @@ void Upload_popup::slot_UploadContent()
          std::string str_AES_key    = Globals::instance().runTask("generate_encryption_key");
          
          //submit content
-         _submitCommand = "submit_content";
-         _submitCommand += " " + Globals::instance().getCurrentUser() + " []"; //author
-         _submitCommand += " \"" + str_URI + "\"";                            //URI
-         _submitCommand += " [{\"region\" : \"\", \"amount\" : \"" + m_price + "\", \"asset_symbol\" : \"" + assetName + "\" }]";//price
-         _submitCommand += " " + str_size + "";                               //file size
-         _submitCommand += " {\"_hash\": \"" + _hash + "\"}";                                //hash of package
-         _submitCommand += " [" + str_seeders + "]";                          //seeders
-         _submitCommand += " " + str_quorum + "";                             //quorum
-         _submitCommand += " \"" + str_expiration + "\"";                     //expiration
-         _submitCommand += " \"DCT\"";                                        //fee asset
-         _submitCommand += " \"" + str_fee + "\"";                            //fee price
-         _submitCommand += " \"" + escape_string(synopsis) + "\"";            //synopsis
-         _submitCommand += " {" + str_AES_key  + "}";                         //AES key
-         _submitCommand += cd;                                                //cd
-         _submitCommand += " true";
+         submitCommand = "submit_content";
+         submitCommand += " " + Globals::instance().getCurrentUser() + " []";//author
+         submitCommand += " \"" + str_URI + "\"";                            //URI
+         submitCommand += " [{\"region\" : \"\", \"amount\" : \"" + m_price + "\", \"asset_symbol\" : \"" + assetName + "\" }]";//price
+         submitCommand += " " + str_size + "";                               //file size
+         submitCommand += " \"" + _hash + "\"";                              //hash of package
+         submitCommand += " [" + str_seeders + "]";                          //seeders
+         submitCommand += " " + str_quorum + "";                             //quorum
+         submitCommand += " \"" + str_expiration + "\"";                     //expiration
+         submitCommand += " \"DCT\"";                                        //fee asset
+         submitCommand += " \"" + str_fee + "\"";                            //fee price
+         submitCommand += " \"" + escape_string(synopsis) + "\"";            //synopsis
+         submitCommand += " " + str_AES_key  + "";                           //AES key
+         submitCommand += cd;                                                //cd
+         submitCommand += " true";
          
-         res = Globals::instance().runTask(_submitCommand);
-      }catch(...)
-   {
-      std::cout << res << std::endl;
-   }
+      }catch(...){}
    else
    {
       submitCommand = "submit_content_async";
@@ -612,6 +599,8 @@ void Upload_popup::slot_UploadContent()
       
       // this is an example how price per regions will be used
       // submitCommand += " [[\"default\", \"0\"], [\"US\", \"10\"]]";
+   }//if-else end
+
       std::string a_result;
       std::string message;
       try
@@ -635,7 +624,6 @@ void Upload_popup::slot_UploadContent()
       {
          ShowMessageBox(tr("Error"), tr("Failed to submit content"), message.c_str());
       }
-   }//else case
 
 }
 
