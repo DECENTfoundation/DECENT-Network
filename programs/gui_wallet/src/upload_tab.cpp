@@ -226,6 +226,7 @@ void Upload_tab::ShowDigitalContentsGUI()
       // Resubmit
       DecentButton* resubmit_button = new DecentButton(m_pTableWidget, DecentButton::TableIcon);
       resubmit_button->setText("Resubmit");
+      resubmit_button->setEnabled(false);
       m_pTableWidget->setCellWidget(iIndex, 8, resubmit_button);
 
       QObject::connect(info_icon, &DecentButton::clicked,
