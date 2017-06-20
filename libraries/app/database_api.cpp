@@ -1594,6 +1594,39 @@ namespace
    {
       return my->get_content( URI );
    }
+   
+   fc::sha256 database_api::restore_encryption_key(DIntegerString el_gamal_priv_key_string, buying_id_type buying ) const {
+      auto objects = get_objects({buying});
+      FC_ASSERT (objects.size() > 0);
+      
+      const buying_object bo = objects.front().template as<buying_object>();
+      auto content = get_content(bo.URI);
+      
+      FC_ASSERT(content);
+      
+      const content_object co = *content;
+      
+      decent::encrypt::ShamirSecret ss( co.quorum, co.key_parts.size() );
+      decent::encrypt::point message;
+      
+      DInteger el_gamal_priv_key = el_gamal_priv_key_string;
+      
+      for( const auto key_particle : bo.key_particles )
+      {
+         auto result = decent::encrypt::el_gamal_decrypt( decent::encrypt::Ciphertext( key_particle ), el_gamal_priv_key, message );
+         FC_ASSERT(result == decent::encrypt::ok);
+         ss.add_point( message );
+      }
+      
+      FC_ASSERT( ss.resolvable() );
+      ss.calculate_secret();
+      
+      fc::sha256 key;
+      ss.secret.Encode((byte*)key._hash, 32);
+      return key;
+   }
+   
+
 
    content_keys database_api::generate_content_keys(vector<account_id_type> const& seeders) const {
 
@@ -1821,7 +1854,9 @@ namespace
 
       }FC_CAPTURE_AND_RETHROW( (account)(count) );
    }
-
+   
+   
+   
    vector< subscription_object > database_api::list_subscriptions_by_author( const account_id_type& account, const uint32_t count)const
    {
       return my->list_subscriptions_by_author( account, count );

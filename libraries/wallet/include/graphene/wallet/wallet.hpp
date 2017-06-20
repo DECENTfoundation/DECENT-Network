@@ -138,6 +138,14 @@ namespace graphene { namespace wallet {
          DInteger private_key;
          DInteger public_key;
       };
+   
+      struct el_gamal_key_pair_str
+      {
+         DIntegerString private_key;
+         DIntegerString public_key;
+      };
+   
+   
 
       struct approval_delta
       {
@@ -545,6 +553,11 @@ namespace graphene { namespace wallet {
           * @ingroup WalletCLI
           */
          void remove_builder_transaction(transaction_handle_type handle);
+
+         /**
+          * Get list of proposed transactions
+          */
+         vector<proposal_object> get_proposed_transactions( string account_or_id )const;
 
          /**
           * @brief Checks whether the wallet has just been created and has not yet had a password set.
@@ -1545,6 +1558,14 @@ namespace graphene { namespace wallet {
           * @ingroup WalletCLI
           */
          el_gamal_key_pair generate_el_gamal_keys() const;
+         
+         /**
+          * @brief Gets unique ElGamal key pair for consumer.
+          * @return Pair of ElGamal keys
+          * @ingroup WalletCLI
+          */
+         el_gamal_key_pair_str get_el_gammal_key(string const& consumer) const;
+
 
          /**
           * @brief Generates AES encryption key.
@@ -1797,6 +1818,7 @@ namespace graphene { namespace wallet {
 
 FC_REFLECT( graphene::wallet::plain_keys, (keys)(checksum) )
 FC_REFLECT( graphene::wallet::el_gamal_key_pair, (private_key)(public_key) )
+FC_REFLECT( graphene::wallet::el_gamal_key_pair_str, (private_key)(public_key) )
 FC_REFLECT( graphene::wallet::wallet_data,
             (chain_id)
                (my_accounts)
@@ -1952,6 +1974,7 @@ FC_API( graphene::wallet::wallet_api,
            (restore_encryption_key)
            (generate_encryption_key)
            (generate_el_gamal_keys)
+           (get_el_gammal_key)
            (subscribe_to_author)
            (subscribe_by_author)
            (set_subscription)
@@ -1985,4 +2008,5 @@ FC_API( graphene::wallet::wallet_api,
            (sign_buffer)
            (verify_signature)
            (head_block_time)
+           (get_proposed_transactions)
 )

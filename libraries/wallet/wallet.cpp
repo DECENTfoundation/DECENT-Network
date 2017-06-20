@@ -3077,6 +3077,8 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
       ret.public_key = decent::encrypt::get_public_el_gamal_key( ret.private_key );
       return ret;
    }
+      
+   
 
    DInteger wallet_api::generate_encryption_key() const
    {
@@ -3117,6 +3119,12 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
    asset wallet_api::set_fees_on_builder_transaction(transaction_handle_type handle, string fee_asset)
    {
       return my->set_fees_on_builder_transaction(handle, fee_asset);
+   }
+
+   vector<proposal_object> wallet_api::get_proposed_transactions( string account_or_id )const
+   {
+      account_id_type id = get_account_id(account_or_id);
+      return my->_remote_db->get_proposed_transactions( id );
    }
 
    transaction wallet_api::preview_builder_transaction(transaction_handle_type handle)
@@ -4128,6 +4136,20 @@ pair<account_id_type, vector<account_id_type>> wallet_api::get_author_and_co_aut
       return fc::to_hex((const char*)sign.begin(), sign.size());
    }
 
+   el_gamal_key_pair_str wallet_api::get_el_gammal_key(string const& consumer) const {
+      try
+      {
+         FC_ASSERT( !is_locked() );
+         
+         account_object consumer_account = get_account( consumer );
+         el_gamal_key_pair_str res;
+         
+         res.private_key = generate_private_el_gamal_key_from_secret ( my->get_private_key_for_account(consumer_account).get_secret() );
+         res.public_key = decent::encrypt::get_public_el_gamal_key( res.private_key );
+         return res;
+      } FC_CAPTURE_AND_RETHROW( (consumer) )
+   }
+      
    bool wallet_api::verify_signature(std::string const& str_buffer,
                                      std::string const& str_publickey,
                                      std::string const& str_signature) const
