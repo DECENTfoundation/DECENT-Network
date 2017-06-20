@@ -547,6 +547,11 @@ namespace graphene { namespace wallet {
          void remove_builder_transaction(transaction_handle_type handle);
 
          /**
+          * Get list of proposed transactions
+          */
+         vector<proposal_object> get_proposed_transactions( string account_or_id )const;
+
+         /**
           * @brief Checks whether the wallet has just been created and has not yet had a password set.
           *
           * Calling \c set_password will transition the wallet to the locked state.
@@ -1984,4 +1989,5 @@ FC_API( graphene::wallet::wallet_api,
            (sign_buffer)
            (verify_signature)
            (head_block_time)
+           (get_proposed_transactions)
 )

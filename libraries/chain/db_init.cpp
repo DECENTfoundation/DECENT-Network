@@ -336,6 +336,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
    // Create initial accounts
    for( const auto& account : genesis_state.initial_accounts )
    {
+      idump((account));
       account_create_operation cop;
       cop.name = account.name;
       cop.registrar = GRAPHENE_TEMP_ACCOUNT;

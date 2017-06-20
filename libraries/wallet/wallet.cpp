@@ -3120,6 +3120,12 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
       return my->set_fees_on_builder_transaction(handle, fee_asset);
    }
 
+   vector<proposal_object> wallet_api::get_proposed_transactions( string account_or_id )const
+   {
+      account_id_type id = get_account_id(account_or_id);
+      return my->_remote_db->get_proposed_transactions( id );
+   }
+
    transaction wallet_api::preview_builder_transaction(transaction_handle_type handle)
    {
       return my->preview_builder_transaction(handle);
