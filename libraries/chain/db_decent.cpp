@@ -137,26 +137,30 @@ void database::decent_housekeeping()
 bool database::is_reward_switch_time() const
 {
    auto now = head_block_num();
-   return ( now == DECENT_SPLIT_1 || now == DECENT_SPLIT_2 || now == DECENT_SPLIT_3 || now == DECENT_SPLIT_4 );
+   return ( now == DECENT_SPLIT_0 || now == DECENT_SPLIT_1 || now == DECENT_SPLIT_2 || now == DECENT_SPLIT_3 || now == DECENT_SPLIT_4 );
 }
 
 bool database::is_reward_switch_in_interval(uint64_t a, uint64_t b)const
 {
    if(a>=b)
       return false;
+   if (a <= DECENT_SPLIT_0 && b >= DECENT_SPLIT_0)
+      return true;
    if (a <= DECENT_SPLIT_1 && b >= DECENT_SPLIT_1)
       return true;
-   if (a <= DECENT_SPLIT_1 && b >= DECENT_SPLIT_2)
+   if (a <= DECENT_SPLIT_2 && b >= DECENT_SPLIT_2)
       return true;
-   if (a <= DECENT_SPLIT_1 && b >= DECENT_SPLIT_3)
+   if (a <= DECENT_SPLIT_3 && b >= DECENT_SPLIT_3)
       return true;
-   if (a <= DECENT_SPLIT_1 && b >= DECENT_SPLIT_4)
+   if (a <= DECENT_SPLIT_4 && b >= DECENT_SPLIT_4)
       return true;
    return false;
 }
 
 uint64_t database::get_next_reward_switch_block(uint64_t start)const
 {
+   if(start <= DECENT_SPLIT_0 )
+      return DECENT_SPLIT_0;
    if(start <= DECENT_SPLIT_1 )
       return DECENT_SPLIT_1;
    if(start <= DECENT_SPLIT_2 )
@@ -175,7 +179,9 @@ share_type database::get_new_asset_per_block()
 
    //this method is called BEFORE the maintenance, so we add +1 to avoid unpredictable results
    uint64_t block_reward;
-   if( now < DECENT_SPLIT_1  )
+   if( now < DECENT_SPLIT_0  )
+      block_reward = DECENT_BLOCK_REWARD_0;
+   else if( now < DECENT_SPLIT_1  )
       block_reward = DECENT_BLOCK_REWARD_1;
    else if( now < DECENT_SPLIT_2 )
       block_reward = DECENT_BLOCK_REWARD_2;
