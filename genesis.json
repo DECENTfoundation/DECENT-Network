@@ -233,8 +233,15 @@
       "active_key": "DCT82MTCQVa9TDFmz3ZwaLzsFAmCLoJzrtFugpF72vsbuE1CpCwKy"
     },{
       "name": "decent",
-      "owner_key": "DCT82MTCQVa9TDFmz3ZwaLzsFAmCLoJzrtFugpF72vsbuE1CpCwKy",
-      "active_key": "DCT82MTCQVa9TDFmz3ZwaLzsFAmCLoJzrtFugpF72vsbuE1CpCwKy"
+      "active_threshold": "2",
+      "owner_key": "DCT5iY4Hdj9oaJY6vGqRSMc2vqyKzrocN4o5ze8BrYBsaQC3CeAjw",
+      "active_key": "DCT82MTCQVa9TDFmz3ZwaLzsFAmCLoJzrtFugpF72vsbuE1CpCwKy",
+      "active_key2": "DCT556r9dwc98LF3EjSTH3GXtUSQorcbgkKaYvND7RRfKPqCKG7dv",
+      "active_key3": "DCT5qbepojx4qATs12JT1e42Auhq457gaHSrZX2AJrmw3zBu9TUvy"
+    },{
+      "name": "ejossev",
+      "owner_key": "DCT7YJyCq2VSza6BA78dzFepK3SBjW6PHBZutSRsPeddHwahTu4cy",
+      "active_key": "DCT7YJyCq2VSza6BA78dzFepK3SBjW6PHBZutSRsPeddHwahTu4cy"
     }
   ],
   "initial_assets": [{
@@ -437,9 +444,13 @@
   ],
   "initial_chain_id": "9a5e5be357cdfa2c48dbe260f983a0109b52b9afdada705521cddad9243522f7",
   "initial_balances": [{
+      "owner": "ejossev",
+      "asset_symbol": "DCT",
+      "amount": "4130608937456890"
+    },{
       "owner": "decent",
       "asset_symbol": "DCT",
-      "amount": "5130608937456890"
+      "amount": "1000000000000000"
     }
   ],
   "immutable_parameters": {
