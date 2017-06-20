@@ -100,7 +100,8 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
    void_result content_submit_evaluator::do_evaluate(const content_submit_operation& o )
    {try{
       const account_object& author_account = db().get<account_object>(o.author);
-      FC_ASSERT( !author_account.rights_to_publish.publishing_rights_received.empty(), "Author does not have permission to publish a content" );
+      //Submission rights feature is disabled
+      //FC_ASSERT( !author_account.rights_to_publish.publishing_rights_received.empty(), "Author does not have permission to publish a content" );
 
       if( !o.co_authors.empty() )
       {
@@ -160,7 +161,27 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
          if( content_itr->cd )
             FC_ASSERT( *(content_itr->cd) == *(o.cd));
 
-         /*
+         /* Resubmit that changes other stuff is not supported.
+         for ( auto &p : o.seeders ) //check if seeders exist and accumulate their prices
+         {
+            auto itr = idx.find( p );
+            FC_ASSERT( itr != idx.end(), "seeder does not exist" );
+
+            auto itr2 = content_itr->key_parts.begin();
+            while( itr2 != content_itr->key_parts.end() )
+            {
+               if( itr2->first == p )
+               {
+                  break;
+               }
+               itr2++;
+            }
+            if( itr2 == content_itr->key_parts.end() )
+               FC_ASSERT( itr->free_space > o.size ); // only newly added seeders are tested against free space
+
+            total_price_per_day += itr-> price.amount * o.size;
+         }
+         FC_ASSERT( days * total_price_per
          for ( auto &p : o.seeders ) //check if seeders exist and accumulate their prices
          {
             auto itr = idx.find( p );
