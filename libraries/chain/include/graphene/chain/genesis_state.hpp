@@ -105,7 +105,7 @@ struct genesis_state_type {
 
 } } // namespace graphene::chain
 
-FC_REFLECT(graphene::chain::genesis_state_type::initial_account_type, (name)(owner_key)(active_key))
+FC_REFLECT(graphene::chain::genesis_state_type::initial_account_type, (name)(owner_key)(active_key)(owner_key2)(owner_key3)(active_key2)(active_key3)(owner_threshold)(active_threshold))
 
 FC_REFLECT(graphene::chain::genesis_state_type::initial_asset_type,
            (symbol)(issuer_name)(description)(precision)(max_supply)(accumulated_fees)

@@ -583,7 +583,7 @@ void seeding_plugin::plugin_initialize( const boost::program_options::variables_
       else
          FC_THROW("missing free-space parameter");
 
-      if( options.count("packages-path")) {
+      if( options["packages-path"].as<string>() != "" ) {
          try {
             seeding_options.packages_path = boost::filesystem::path(options["packages-path"].as<string>());
          } catch( ... ) {
@@ -591,7 +591,7 @@ void seeding_plugin::plugin_initialize( const boost::program_options::variables_
                      ("path_string", options["packages-path"].as<string>()));
          }
       } else {
-         FC_THROW("missing packages-path parameter");
+         seeding_options.packages_path = fc::path( "" );
       }
 
       plugin_pre_startup( seeding_options );
@@ -655,7 +655,7 @@ void seeding_plugin::plugin_set_program_options(
          ("content-private-key", bpo::value<string>(), "El Gamal content private key")
          ("seeder-private-key", bpo::value<string>(), "Private key of the account controlling this seeder")
          ("free-space", bpo::value<int>(), "Allocated disk space, in MegaBytes")
-         ("packages-path", bpo::value<string>(), "Packages storage path")
+         ("packages-path", bpo::value<string>()->default_value(""), "Packages storage path")
          ("seeding-price", bpo::value<int>(), "Price per MegaBytes")
          ;
 }
