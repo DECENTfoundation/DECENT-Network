@@ -82,15 +82,23 @@ void RatingWidget::setRating(int rating)
    m_bAutomation = true;
    for (int index = 0; index < size; ++index)
    {
+      QPushButton* pItem = m_arr_p_rate[index];
       if (index < rating)
-         m_arr_p_rate[index]->setChecked(true);
+         pItem->setChecked(true);
       else
-         m_arr_p_rate[index]->setChecked(false);
+         pItem->setChecked(false);
    }
    m_bAutomation = false;
 
    m_rating = rating;
    emit rated(rating);
+
+   //
+   // again, this is a trick to let styles refresh after a toggle
+   //
+   bool enabled = isEnabled();
+   setDisabled(enabled);
+   setEnabled(enabled);
 }
 
 void RatingWidget::slot_rating()
@@ -218,6 +226,7 @@ void TransferWidget::Transfer()
    if (message.empty())
    {
       emit accepted();
+      Globals::instance().slot_updateAccountBalance();
    }
    else
    {
@@ -329,7 +338,7 @@ UserInfoWidget::UserInfoWidget(QWidget* parent,
    
    DecentLabel* registrarLabel = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
    ++labelCount;
-   registrarLabel->setText(tr("Registrar\n") + registrar);
+   registrarLabel->setText(tr("Registrar - ") + registrar);
    main_layout->addWidget(registrarLabel);
    
    if(is_publishing_manager)
@@ -348,7 +357,7 @@ UserInfoWidget::UserInfoWidget(QWidget* parent,
       else
          isPublishingRightsReceivedLabel = new DecentLabel(this, DecentLabel::RowLabel);
       ++labelCount;
-      isPublishingRightsReceivedLabel->setText((tr("Have rights to publish")));
+      isPublishingRightsReceivedLabel->setText((tr("Has rights to publish")));
       main_layout->addWidget(isPublishingRightsReceivedLabel);
    }
    

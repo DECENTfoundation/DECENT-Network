@@ -20,17 +20,13 @@
 
 #include "gui_design.hpp"
 
-// these were included in hpp, let's have these around when needed
-//#include <QtSvg/QSvgRenderer>
-//#include <QPainter>
-//#include <QSvgWidget>
-
 using std::string;
 
 namespace gui_wallet
 {
 
-Overview_tab::Overview_tab(QWidget* pParent)
+Overview_tab::Overview_tab(QWidget* pParent,
+                           DecentLineEdit* pFilterLineEdit)
 : TabContentManager(pParent)
 , m_pAccountSignalMapper(nullptr)
 , m_pTableWidget(new DecentTable(this))
@@ -43,34 +39,16 @@ Overview_tab::Overview_tab(QWidget* pParent)
       {"", 10}
    });
 
-   DecentLineEdit* pfilterLineEditor = new DecentLineEdit(this, DecentLineEdit::TableSearch);
-   pfilterLineEditor->setPlaceholderText(QString(tr("Search")));
-   pfilterLineEditor->setAttribute(Qt::WA_MacShowFocusRect, 0);
-   pfilterLineEditor->setFixedHeight(54);
-
-   QPixmap image(icon_search);
-
-   QLabel* pSearchLabel = new QLabel(this);
-   pSearchLabel->setSizeIncrement(100,40);
-   pSearchLabel->setPixmap(image);
-
-   QHBoxLayout* pSearchLayout = new QHBoxLayout();
-   pSearchLayout->setMargin(0);
-   pSearchLayout->setContentsMargins(0,0,0,0);
-   pSearchLayout->setContentsMargins(42, 0, 0, 0);
-   pSearchLayout->addWidget(pSearchLabel);
-   pSearchLayout->addWidget(pfilterLineEditor);
-
    QVBoxLayout* pMainLayout = new QVBoxLayout();
    pMainLayout->setContentsMargins(0, 5, 0, 0);
    pMainLayout->setMargin(0);
-   pMainLayout->addLayout(pSearchLayout);
    pMainLayout->addWidget(m_pTableWidget);
    pMainLayout->setSpacing(0);
     
    setLayout(pMainLayout);
 
-   QObject::connect(pfilterLineEditor, &QLineEdit::textChanged,
+   if (pFilterLineEdit)
+   QObject::connect(pFilterLineEdit, &QLineEdit::textChanged,
                     this, &Overview_tab::slot_SearchTermChanged);
 
    QObject::connect(m_pTableWidget, &DecentTable::signal_SortingChanged,
@@ -110,7 +88,6 @@ void Overview_tab::timeToUpdate(const std::string& result) {
       // Transaction Button
       //
       DecentButton* pTransactionButton = new DecentButton(m_pTableWidget, DecentButton::TableIcon, DecentButton::Transaction);
-      pTransactionButton->setIconSize(QSize(40,40));
       pTransactionButton->setEnabled(false);
       
       QObject::connect(pTransactionButton, &DecentButton::clicked,
@@ -124,7 +101,6 @@ void Overview_tab::timeToUpdate(const std::string& result) {
       // Details Button
       //
       DecentButton* pDetailsButton = new DecentButton(m_pTableWidget, DecentButton::TableIcon, DecentButton::Detail);
-      pDetailsButton->setIconSize(QSize(40,40));
       pDetailsButton->setEnabled(false);
       m_pTableWidget->setCellWidget(iIndex, 4, pDetailsButton);
 
@@ -137,7 +113,6 @@ void Overview_tab::timeToUpdate(const std::string& result) {
       // Transfer Button
       //
       DecentButton* pTransferButton = new DecentButton(m_pTableWidget, DecentButton::TableIcon, DecentButton::Transfer);
-      pTransferButton->setIconSize(QSize(40,40));
       pTransferButton->setEnabled(false);
       m_pTableWidget->setCellWidget(iIndex, 3, pTransferButton);
             
@@ -207,7 +182,7 @@ void Overview_tab::slot_Details()
 
 void Overview_tab::slot_Transfer()
 {
-   Globals::instance().showTransferDialog(m_strSelectedAccount.toStdString());
+   Globals::instance().slot_showTransferDialog(m_strSelectedAccount);
 }
 
 void Overview_tab::slot_SearchTermChanged(QString const& strSearchTerm)

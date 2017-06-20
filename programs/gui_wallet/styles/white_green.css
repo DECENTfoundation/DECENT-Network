@@ -28,7 +28,87 @@ QLabel[name='highlightedright']
 }
 QLabel[type='decentlogo']
 {
-   background-image: url(':/icon/images/decent_logo.svg');
+   image: url(':/icon/images/decent_logo.svg');
+   padding-top: 0.6em;
+   padding-bottom: 0.6em;
+   padding-left: 0;
+   padding-right: 0;
+   max-width: 5em;
+   max-height: 3.3em;
+   min-width: 1.5em;
+   min-height: 3.3em;
+   border-bottom: 1px solid rgb(240, 240, 240);
+   border-right: 1px solid rgb(240, 240, 240);
+   border-left: 0px;
+   border-top: 0px;
+}
+QLabel[type='account']
+{
+   image: url(':/icon/images/user.svg');
+   padding-top: 1.3em;
+   padding-bottom: 1.3em;
+   padding-left: 1em;
+   padding-right: 1em;
+   max-width: 1.5em;
+   max-height: 1.9em;
+   min-width: 1.5em;
+   min-height: 1.9em;
+   border-bottom: 1px solid rgb(240, 240, 240);
+   border-right: 0px;
+   border-left: 0px;
+   border-top: 0px;
+}
+QLabel[type='row1spacer']
+{
+   padding-top: 1.3em;
+   padding-bottom: 1.3em;
+   max-width: 100em;
+   max-height: 1.9em;
+   min-width: 3.5em;
+   min-height: 1.9em;
+   border-bottom: 1px solid rgb(240, 240, 240);
+   border-right: 0;
+   border-left: 0px;
+   border-top: 0px;
+}
+QLabel[type='balance']
+{
+   image: url(':/icon/images/balance.svg');
+   image-position: right;
+   padding-top: 1.3em;
+   padding-bottom: 1.3em;
+   padding-left: 1em;
+   padding-right: 1em;
+   max-width: 10em;
+   max-height: 1.9em;
+   min-width: 10em;
+   min-height: 1.9em;
+   border-bottom: 1px solid rgb(240, 240, 240);
+   border-right: 1px solid rgb(240, 240, 240);
+   border-left: 0px;
+   border-top: 0px;
+   color: rgb(27, 176, 104);
+   /*qproperty-alignment: 'AlignLeft | AlignVCenter';*/
+}
+QLabel[type='tablesearch']
+{
+   image: url(':/icon/images/search.svg');
+   padding-top: 1em;
+   padding-bottom: 1em;
+   padding-left: 1em;
+   padding-right: 1em;
+   max-width: 1em;
+   max-height: 1em;
+   min-width: 1em;
+   min-height: 1em;
+   border: 0px;
+}
+
+QLabel QComboBox
+{
+   /*applies to users combo*/
+   max-width: 7em;
+   max-height: 1em;
 }
 QDialog, QMainWindow, QMessageBox
 {
@@ -47,6 +127,7 @@ QPushButton:!enabled
    background-color: rgb(180, 180, 180);
    color: rgb(30, 30, 30);
 }
+
 QPushButton[type='dialogaction']
 {
    border: 0px;
@@ -83,10 +164,23 @@ QPushButton[type='dialogcancel'][enabled=false]
 }
 QPushButton[type='send']
 {
-   border: 0em;
    background-color: white;
-   color: black;
-   qproperty-icon: url(':/icon/images/send.png'), url(':/icon/images/inactive_send.png') disabled;
+   /*color: black;
+   qproperty-icon: url(':/icon/images/send.png'), url(':/icon/images/inactive_send.png') disabled;*/
+   image: url(':/icon/images/send.svg');
+
+   padding-top: 1.3em;
+   padding-bottom: 1.3em;
+   padding-left: 0em;
+   padding-right: 0em;
+   max-width: 5em;
+   max-height: 1.9em;
+   min-width: 5em;
+   min-height: 1.9em;
+   border-bottom: 1px solid rgb(240, 240, 240);
+   border-right: 0px;
+   border-left: 0px;
+   border-top: 0px;
 }
 QPushButton[type='send'][enabled=false]
 {
@@ -115,6 +209,7 @@ QPushButton[type='tableicon']
    border: 0px;
    background-color: rgb(27, 176, 104);
    color: white;
+   padding: 0.3em;
 }
 QPushButton[type='tableicon'][enabled=false]
 {
@@ -124,19 +219,35 @@ QPushButton[type='tableicon'][enabled=false]
 }
 QPushButton[name='transaction']
 {
-   qproperty-icon: url(':/icon/images/transaction1.png'), url(':/icon/images/transaction.png') disabled;
+   image: url(':/icon/images/transaction_enabled.svg');
+}
+QPushButton[name='transaction'][enabled=false]
+{
+   image: url(':/icon/images/transaction_disabled.svg');
 }
 QPushButton[name='detail']
 {
-   qproperty-icon: url(':/icon/images/pop_up1.png'), url(':/icon/images/pop_up.png') disabled;
+   image: url(':/icon/images/details_enabled.svg');
+}
+QPushButton[name='detail'][enabled=false]
+{
+   image: url(':/icon/images/details_disabled.svg');
 }
 QPushButton[name='transfer']
 {
-   qproperty-icon: url(':/icon/images/transfer1.png'), url(':/icon/images/transfer.png') disabled;
+   image: url(':/icon/images/transfer_enabled.svg');
+}
+QPushButton[name='transfer'][enabled=false]
+{
+   image: url(':/icon/images/transfer_disabled.svg');
 }
 QPushButton[name='export']
 {
-   qproperty-icon: url(':/icon/images/export1.png'), url(':/icon/images/export.png') disabled;
+   image: url(':/icon/images/export_enabled.svg');
+}
+QPushButton[name='export'][enabled=false]
+{
+   image: url(':/icon/images/export_disabled.svg');
 }
 QPushButton[type='staricon']
 {
@@ -148,16 +259,38 @@ QPushButton[type='staricon']
    width: 1em;
    height: 1em;
 
-   qproperty-icon:   url(':/icon/images/green_asterix.png'),
+   image: url(':/icon/images/green_asterix.svg');
+   /*qproperty-icon:   url(':/icon/images/green_asterix.png'),
                      url(':/icon/images/green_asterix.png') on,
                      url(':/icon/images/green_asterix.png') on disabled,
                      url(':/icon/images/white_asterix.png') off,
-                     url(':/icon/images/white_asterix.png') off disabled;
+                     url(':/icon/images/white_asterix.png') off disabled;*/
+}
+QPushButton[type='staricon'][checked=false]
+{
+   image: url(':/icon/images/white_asterix.svg');
 }
 QPushButton[type='staricon'][enabled=false]
 {
    border: 0px;
    background-color: white;
+}
+QPushButton[type='tabchoice']
+{
+   border: 0px;
+   background-color: white;
+   min-height: 2.5em;
+   max-height: 2.5em;
+   color: rgb(27, 176, 104);
+   border-bottom: 0.2em solid rgb(27, 176, 104);
+   border-right: 0px;
+   border-left: 0px;
+   border-top: 0px;
+}
+QPushButton[type='tabchoice'][checked=false]
+{
+   color: black;
+   border-bottom: 1px solid rgb(240, 240, 240);
 }
 QMessageBox QPushButton, QFileDialog QPushButton
 {
@@ -182,6 +315,11 @@ QLineEdit[type='tablesearch']
 {
    border: 0px;
    padding-left: 1em;
+   padding-right: 1em;
+   padding-top: 0em;
+   padding-bottom: 0em;
+   min-height: 1em;
+   max-height: 1em;
 }
 QLineEdit[type='dialoglineedit']
 {

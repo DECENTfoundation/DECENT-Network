@@ -11,13 +11,15 @@ class QSignalMapper;
 namespace gui_wallet
 {
    class DecentTable;
+   class DecentLineEdit;
    struct SDigitalContent;
 
    class BrowseContentTab : public TabContentManager
    {
       Q_OBJECT
    public:
-      BrowseContentTab(QWidget* pParent);
+      BrowseContentTab(QWidget* pParent,
+                       DecentLineEdit* pFilterLineEdit);
       
       void ShowDigitalContentsGUI();
       

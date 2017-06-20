@@ -49,14 +49,13 @@ namespace graphene { namespace chain {
             asset_create_operation,
 
             asset_update_operation,
-            asset_update_monitored_asset_operation,
             asset_publish_feed_operation,
             witness_create_operation,
 
             witness_update_operation,
             witness_update_global_parameters_operation,
-            proposal_create_operation, //10
-            proposal_update_operation,
+            proposal_create_operation,
+            proposal_update_operation, //10
             proposal_delete_operation,
             withdraw_permission_create_operation,
             withdraw_permission_update_operation,
@@ -65,8 +64,8 @@ namespace graphene { namespace chain {
             vesting_balance_create_operation,
             vesting_balance_withdraw_operation,
             custom_operation,
-            assert_operation, //20
-            content_submit_operation,
+            assert_operation,
+            content_submit_operation,//20
             request_to_buy_operation,
             leave_rating_and_comment_operation,
             ready_to_publish_operation,

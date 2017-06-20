@@ -419,6 +419,11 @@ using namespace decent::encrypt;
       content_summary& set( const content_object& co, const account_object& ao, string const& region_code );
    };
 
+   struct content_keys {
+       fc::sha256                 key;
+       vector<ciphertext_type>    parts;
+   };
+
    class content_object : public graphene::db::abstract_object<content_object>
    {
    public:
@@ -586,3 +591,5 @@ FC_REFLECT_DERIVED(graphene::chain::content_object,
 FC_REFLECT( graphene::chain::content_summary, (id)(author)(price)(synopsis)(status)(URI)(_hash)(AVG_rating)(size)(expiration)(created)(times_bought) )
 FC_REFLECT( graphene::chain::PriceRegions, (map_price) )
 FC_REFLECT( graphene::chain::ContentObjectTypeValue, (type) )
+
+FC_REFLECT( graphene::chain::content_keys, (key)(parts) )

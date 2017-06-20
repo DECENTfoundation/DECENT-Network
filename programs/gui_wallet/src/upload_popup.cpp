@@ -549,12 +549,17 @@ void Upload_popup::slot_UploadContent()
          search_command += " \"\" \"\" \"\" \"0\" 1";
          
          std::string contents = Globals::instance().runTask(search_command);
+        
+         std::cout << contents << std::endl;
+         
          nlohmann::json parse = nlohmann::json::parse(contents);
          std::string str_URI = parse[0]["URI"].get<std::string>();
          
          //content info
          std::string info = Globals::instance().runTask("get_content \"" + str_URI + "\"");
          nlohmann::json jsp = nlohmann::json::parse(info);
+         
+         std::cout << info << std::endl;
          
          std::string _hash = jsp["_hash"].get<std::string>();
          std::string str_expiration = jsp["expiration"].get<std::string>();
@@ -576,7 +581,7 @@ void Upload_popup::slot_UploadContent()
          _submitCommand += " \"" + str_URI + "\"";                            //URI
          _submitCommand += " [{\"region\" : \"\", \"amount\" : \"" + m_price + "\", \"asset_symbol\" : \"" + assetName + "\" }]";//price
          _submitCommand += " " + str_size + "";                               //file size
-         _submitCommand += " {" + _hash + "}";                                //hash of package
+         _submitCommand += " {\"_hash\": \"" + _hash + "\"}";                                //hash of package
          _submitCommand += " [" + str_seeders + "]";                          //seeders
          _submitCommand += " " + str_quorum + "";                             //quorum
          _submitCommand += " \"" + str_expiration + "\"";                     //expiration

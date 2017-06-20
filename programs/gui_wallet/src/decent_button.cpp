@@ -39,6 +39,9 @@ DecentButton::DecentButton(QWidget* pParent,
    case SplashAction:
       setProperty("type", "splashaction");
       break;
+   case TabChoice:
+      setProperty("type", "tabchoice");
+      break;
    case Default:
    default:
       break;
@@ -79,6 +82,7 @@ void DecentButton::changeEvent(QEvent* event)
       style()->unpolish(this);
       style()->polish(this);
    }
+
    QPushButton::changeEvent(event);
 }
 }

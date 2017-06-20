@@ -62,4 +62,4 @@ namespace graphene { namespace chain {
 
 FC_REFLECT_DERIVED(graphene::chain::seeder_object,
                    (graphene::db::object),
-                   (seeder)(free_space)(expiration)(price)(pubKey)(ipfs_ID) )
+                   (seeder)(free_space)(price)(expiration)(pubKey)(ipfs_ID)(stats)(rating) )

@@ -101,9 +101,6 @@ namespace graphene { namespace wallet {
             }
          }
 
-         /* private el gamal key */
-         DInteger priv_el_gamal_key;
-
          /** encrypted keys */
          vector<char>              cipher_keys;
 
@@ -709,17 +706,6 @@ namespace graphene { namespace wallet {
          bool import_key(string account_name_or_id, string wif_key);
 
          /**
-          * @brief Imports the private el gamal key into cli_wallet configuration file (wallet.json).
-          *
-          * @see generate_el_gamal_keys()
-          *
-          * @param privKey Private el gamal key
-          * @returns true if the key was imported
-          * @ingroup WalletCLI
-          */
-         void import_el_gamal_key(DInteger privKey );
-
-         /**
           * @brief Imports accounts from the other wallet file
           * @param filename The filename of the wallet JSON file
           * @param password User's password to the wallet
@@ -882,11 +868,12 @@ namespace graphene { namespace wallet {
           * @ingroup WalletCLI
           */
          signed_transaction create_monitored_asset(string issuer,
-                                         string symbol,
-                                         uint8_t precision,
-                                         string description,
-                                         monitored_asset_options options,
-                                         bool broadcast = false);
+                                                   string symbol,
+                                                   uint8_t precision,
+                                                   string description,
+                                                   uint32_t feed_lifetime_sec,
+                                                   uint8_t minimum_feeds,
+                                                   bool broadcast = false);
 
 
 
@@ -906,7 +893,10 @@ namespace graphene { namespace wallet {
           * @ingroup WalletCLI
           */
          signed_transaction update_monitored_asset(string symbol,
-                                                   monitored_asset_options new_options,
+                                                   string new_issuer,
+                                                   string description,
+                                                   uint32_t feed_lifetime_sec,
+                                                   uint8_t minimum_feeds,
                                                    bool broadcast = false);
 
 
@@ -1810,7 +1800,6 @@ FC_REFLECT( graphene::wallet::el_gamal_key_pair, (private_key)(public_key) )
 FC_REFLECT( graphene::wallet::wallet_data,
             (chain_id)
                (my_accounts)
-               (priv_el_gamal_key)
                (cipher_keys)
                (extra_keys)
                (pending_account_registrations)(pending_witness_registrations)
@@ -1900,7 +1889,6 @@ FC_API( graphene::wallet::wallet_api,
            (list_account_balances)
            (list_assets)
            (import_key)
-           (import_el_gamal_key)
            (import_accounts)
            (import_account_keys)
            (suggest_brain_key)

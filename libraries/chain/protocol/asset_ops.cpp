@@ -75,10 +75,12 @@ void  asset_create_operation::validate()const
 {
    FC_ASSERT( fee.amount >= 0 );
    FC_ASSERT( is_valid_symbol(symbol) );
-   FC_ASSERT( max_supply > 0 );
+   FC_ASSERT( max_supply >= 0 );
    FC_ASSERT( max_supply <= GRAPHENE_MAX_SHARE_SUPPLY );
 
    FC_ASSERT(precision <= 12);
+   FC_ASSERT( feed_lifetime_sec > 0 );
+   FC_ASSERT( minimum_feeds > 0 );
 }
 
 void monitored_asset_options::validate()const
@@ -93,15 +95,12 @@ void asset_update_operation::validate()const
    FC_ASSERT( fee.amount >= 0 );
    if( new_issuer )
       FC_ASSERT(issuer != *new_issuer);
-   FC_ASSERT( max_supply > 0 );
+   FC_ASSERT( max_supply >= 0 );
    FC_ASSERT( max_supply <= GRAPHENE_MAX_SHARE_SUPPLY );
+   FC_ASSERT( new_feed_lifetime_sec >= 0 );
+   FC_ASSERT( new_minimum_feeds >= 0 );
 }
 
-void asset_update_monitored_asset_operation::validate()const
-{
-   FC_ASSERT( fee.amount >= 0 );
-   new_options.validate();
-}
 
 share_type asset_update_operation::calculate_fee(const asset_update_operation::fee_parameters_type& param)const
 {

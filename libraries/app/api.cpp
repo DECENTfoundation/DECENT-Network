@@ -126,7 +126,10 @@ namespace graphene { namespace app {
              {
                 auto block_num = b.block_num();
                 auto& callback = _callbacks.find(id)->second;
-                fc::async( [capture_this,this,id,block_num,trx_num,trx,callback](){ callback( fc::variant(transaction_confirmation{ id, block_num, trx_num, trx}) ); } );
+                transaction_confirmation conf{ id, block_num, trx_num, trx};
+                fc::variant confv(conf);
+                
+                fc::async( [capture_this,this,confv, callback](){ callback( confv ); } );
              }
           }
        }

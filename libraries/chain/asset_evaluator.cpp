@@ -56,8 +56,7 @@ void_result asset_create_evaluator::do_evaluate( const asset_create_operation& o
 
    core_fee_paid -= core_fee_paid.value/2;
 
-   op.monitored_asset_opts.validate();
-   FC_ASSERT( op.max_supply == 0 );
+   FC_ASSERT( op.max_supply == 0, "User issued assets are not supported" );
 
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
@@ -77,7 +76,8 @@ object_id_type asset_create_evaluator::do_apply( const asset_create_operation& o
          a.symbol = op.symbol;
          a.precision = op.precision;
          a.description = op.description;
-         a.monitored_asset_opts = op.monitored_asset_opts;
+         a.monitored_asset_opts->feed_lifetime_sec = op.feed_lifetime_sec;
+         a.monitored_asset_opts->minimum_feeds = op.minimum_feeds;
          a.max_supply = op.max_supply;
 
          a.dynamic_asset_data_id = dyn_asset.id;
@@ -101,7 +101,7 @@ void_result asset_update_evaluator::do_evaluate(const asset_update_operation& o)
       FC_ASSERT(d.find_object(*o.new_issuer));
    asset_to_update = &a;
    FC_ASSERT( o.issuer == a.issuer, "", ("o.issuer", o.issuer)("a.issuer", a.issuer) );
-
+   FC_ASSERT( o.max_supply == 0, "User issued assets are not supported" );
    return void_result();
 } FC_CAPTURE_AND_RETHROW((o)) }
 
@@ -114,45 +114,14 @@ void_result asset_update_evaluator::do_apply(const asset_update_operation& o)
          a.issuer = *o.new_issuer;
       a.description = o.new_description;
       a.max_supply = o.max_supply;
+      if(o.new_feed_lifetime_sec)
+         a.monitored_asset_opts->feed_lifetime_sec = o.new_feed_lifetime_sec;
+      if(o.new_minimum_feeds)
+         a.monitored_asset_opts->minimum_feeds = o.new_minimum_feeds;
    });
 
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (o) ) }
-
-void_result asset_update_monitored_asset_evaluator::do_evaluate(const asset_update_monitored_asset_operation& o)
-{ try {
-      database& d = db();
-
-      const asset_object& a = o.asset_to_update(d);
-
-      FC_ASSERT(a.is_monitored_asset(), "Cannot update MonitoredAsset-specific settings on a user issued asset.");
-
-      FC_ASSERT( o.issuer == a.issuer, "", ("o.issuer", o.issuer)("a.issuer", a.issuer) );
-
-      return void_result();
-   } FC_CAPTURE_AND_RETHROW( (o) ) }
-
-void_result asset_update_monitored_asset_evaluator::do_apply(const asset_update_monitored_asset_operation& o)
-{ try {
-      bool should_update_feeds = false;
-
-      auto &idx = db().get_index_type<asset_index>().indices().get<by_id>();
-      const auto &ao = idx.find(o.asset_to_update);
-
-      // If the minimum number of feeds to calculate a median has changed, we need to recalculate the median
-      if( o.new_options.minimum_feeds != ao->monitored_asset_opts->minimum_feeds )
-         should_update_feeds = true;
-
-      db().modify(*ao, [&](asset_object& b) {
-         b.monitored_asset_opts = o.new_options;
-
-         if( should_update_feeds )
-            b.monitored_asset_opts->update_median_feeds(db().head_block_time());
-      });
-
-      return void_result();
-   } FC_CAPTURE_AND_RETHROW( (o) ) }
-
 
 void_result asset_publish_feeds_evaluator::do_evaluate(const asset_publish_feed_operation& o)
 { try {

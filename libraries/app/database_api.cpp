@@ -37,6 +37,9 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/replace.hpp>
 
+#include <decent/encrypt/custodyutils.hpp>
+#include <decent/encrypt/encryptionutils.hpp>
+
 #include <cctype>
 
 #include <cfenv>
@@ -45,6 +48,9 @@
 
 #define GET_REQUIRED_FEES_MAX_RECURSION 4
 
+namespace {
+      CryptoPP::AutoSeededRandomPool randomGenerator;
+}
 
 namespace {
    
@@ -1587,6 +1593,31 @@ namespace
    optional<content_object> database_api::get_content(const string& URI)const
    {
       return my->get_content( URI );
+   }
+
+   content_keys database_api::generate_content_keys(vector<account_id_type> const& seeders) const {
+
+         content_keys keys;
+
+         CryptoPP::Integer secret(randomGenerator, 256);
+         secret.Encode((byte*)keys.key._hash, 32);
+
+         uint32_t quorum = std::max((vector<account_id_type>::size_type)1, seeders.size()/3); // TODO_DECENT - quorum >= 2 see also content_submit_operation::validate
+         ShamirSecret ss(quorum, seeders.size(), secret);
+         ss.calculate_split();
+         
+
+         for( int i =0; i < seeders.size(); i++ )
+         {
+            const auto& s = my->get_seeder( seeders[i] );
+            FC_ASSERT( s, "seeder not found" );
+            Ciphertext cp;
+            point p = ss.split[i];
+            decent::encrypt::el_gamal_encrypt( p, s->pubKey ,cp );
+            keys.parts.push_back(cp);
+         }
+
+         return keys;
    }
    
    optional<seeder_object> database_api::get_seeder(account_id_type aid) const

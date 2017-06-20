@@ -77,17 +77,5 @@ QFont TabButtonFont()
 
 QFont MainFont()
 {
-   return FontVerdana().font("Open Sans", "Regular",
-#if defined(_WIN32)
-      14
-#elif defined (WINDOWS_HIGH_DPI)
-      8
-#elif __linux__
-      10
-#elif __APPLE__
-      12
-#else
-      12
-#endif
-      );
+   return FontVerdana().font("Open Sans", "Regular", FontSize());
 }
