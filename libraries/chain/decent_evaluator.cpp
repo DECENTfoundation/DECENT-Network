@@ -17,6 +17,8 @@
 
 #include <decent/encrypt/encryptionutils.hpp>
 
+#include <boost/multiprecision/cpp_int.hpp>
+
 namespace graphene { namespace chain {
 
 void_result set_publishing_manager_evaluator::do_evaluate( const set_publishing_manager_operation& o )
@@ -507,11 +509,12 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
             db().adjust_balance( content->author, price.amount );
          else
          {
-            share_type one_basis_point = price.amount / 10000;
+            boost::multiprecision::int128_t price_for_co_author;
             for( auto const &element : content->co_authors )
             {
-               db().adjust_balance( element.first, one_basis_point * element.second );
-               price.amount -= one_basis_point * element.second;
+               price_for_co_author = ( price.amount.value * element.second ) / 10000ll ;
+               db().adjust_balance( element.first, static_cast<share_type>(price_for_co_author) );
+               price.amount -= price_for_co_author;
             }
 
             if( price.amount != 0 ) {
