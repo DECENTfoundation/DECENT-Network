@@ -31,7 +31,8 @@ namespace gui_wallet
       void slot_SortingChanged(int);
       void slot_Bought();
       void slot_ShowContentPopup(int);
-      void slot_UploadPopup();
+      void slot_UploadPopup(const QString& content);
+      void slot_UploadPopup_defoult();
 
 
    protected:
