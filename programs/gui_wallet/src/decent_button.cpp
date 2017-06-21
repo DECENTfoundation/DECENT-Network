@@ -61,6 +61,9 @@ DecentButton::DecentButton(QWidget* pParent,
       case Export:
          setProperty("name", "export");
          break;
+      case Resubmit:
+         setProperty("name", "resubmit");
+         break;
       case None:
       default:
          break;

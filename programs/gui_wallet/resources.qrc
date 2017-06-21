@@ -18,6 +18,8 @@
         <file>images/transaction_enabled.svg</file>
         <file>images/transfer_disabled.svg</file>
         <file>images/transfer_enabled.svg</file>
+        <file>images/resubmit_green.svg</file>
+        <file>images/resubmit_white.svg</file>
         <file>images/windows_decent_icon_16x16.png</file>
         <file>images/windows_decent_icon_32x32.png</file>
     </qresource>

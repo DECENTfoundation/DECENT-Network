@@ -27,7 +27,8 @@ public:
       Transaction,
       Detail,
       Transfer,
-      Export
+      Export,
+      Resubmit
    };
    DecentButton(QWidget* pParent, eType enType = Default, eName = None);
 

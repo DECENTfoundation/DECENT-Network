@@ -217,6 +217,14 @@ QPushButton[type='tableicon'][enabled=false]
    background-color: white;
    color: black;
 }
+QPushButton[name='resubmit']
+{
+   image: url(':/icon/images/resubmit_white.svg');
+}
+QPushButton[name='resubmit'][enabled=false]
+{
+   image: url(':/icon/images/resubmit_green.svg');
+}
 QPushButton[name='transaction']
 {
    image: url(':/icon/images/transaction_enabled.svg');

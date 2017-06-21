@@ -50,7 +50,7 @@ Upload_tab::Upload_tab(QWidget* pParent,
       { " ", -80 }
 #else
       {" ", -50},
-      {" ", -90}
+      {" ", -50}
 #endif
    });
 
@@ -224,9 +224,9 @@ void Upload_tab::ShowDigitalContentsGUI()
       m_pTableWidget->setCellWidget(iIndex, eIcon, info_icon);
       
       // Resubmit
-      DecentButton* resubmit_button = new DecentButton(m_pTableWidget, DecentButton::TableIcon);
-      resubmit_button->setText("Resubmit");
+      DecentButton* resubmit_button = new DecentButton(m_pTableWidget, DecentButton::TableIcon, DecentButton::Resubmit);
       resubmit_button->setEnabled(false);
+//      resubmit_button->setText("res");
       m_pTableWidget->setCellWidget(iIndex, 8, resubmit_button);
 
       QObject::connect(info_icon, &DecentButton::clicked,
