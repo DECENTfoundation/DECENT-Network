@@ -122,13 +122,6 @@ MainWindow::MainWindow()
    //
    // 3rd row controls
    //
-   m_pPreviousPage = new DecentButton(pMainWidget, DecentButton::DialogTextButton);
-   m_pPreviousPage->setText(tr("Previous"));
-   m_pResetPage = new DecentButton(pMainWidget, DecentButton::DialogTextButton);
-   m_pResetPage->setText(tr("Reset"));
-   m_pNextPage = new DecentButton(pMainWidget, DecentButton::DialogTextButton);
-   m_pNextPage->setText(tr("Next"));
-
    DecentLabel* pSearchLabel = new DecentLabel(pMainWidget, DecentLabel::TableSearch);
 
    m_pFilterBrowse = new DecentLineEdit(pMainWidget, DecentLineEdit::TableSearch);
@@ -168,6 +161,15 @@ MainWindow::MainWindow()
    m_pTabPurchased = new PurchasedTab(pMainWidget, m_pFilterPurchased);
    m_pTabPurchased->hide();
    //
+   // 5th row controls
+   //
+   m_pPreviousPage = new DecentButton(pMainWidget, DecentButton::DialogTextButton);
+   m_pPreviousPage->setText(tr("Previous"));
+   m_pResetPage = new DecentButton(pMainWidget, DecentButton::DialogTextButton);
+   m_pResetPage->setText(tr("First page"));
+   m_pNextPage = new DecentButton(pMainWidget, DecentButton::DialogTextButton);
+   m_pNextPage->setText(tr("Next"));
+   //
    // 1st row layout
    //
    QHBoxLayout* pSpacerLayout = new QHBoxLayout;
@@ -196,15 +198,20 @@ MainWindow::MainWindow()
    // 3rd row layout
    //
    QHBoxLayout* pRow3Layout = new QHBoxLayout;
-   pRow3Layout->addWidget(m_pPreviousPage);
-   pRow3Layout->addWidget(m_pResetPage);
-   pRow3Layout->addWidget(m_pNextPage);
-   pRow3Layout->addWidget(pSearchLabel);
-   pRow3Layout->addWidget(m_pFilterBrowse);
-   pRow3Layout->addWidget(m_pFilterTransactions);
-   pRow3Layout->addWidget(m_pFilterPublish);
-   pRow3Layout->addWidget(m_pFilterUsers);
-   pRow3Layout->addWidget(m_pFilterPurchased);
+   DecentLabel* pRow3_LabelSearchFrame = new DecentLabel(pMainWidget, DecentLabel::TableSearchFrame);
+   QHBoxLayout* pRow3_SearchLabelLayout = new QHBoxLayout;
+   pRow3_LabelSearchFrame->setLayout(pRow3_SearchLabelLayout);
+   pRow3_SearchLabelLayout->addWidget(pSearchLabel);
+   pRow3_SearchLabelLayout->addWidget(m_pFilterBrowse);
+   pRow3_SearchLabelLayout->addWidget(m_pFilterTransactions);
+   pRow3_SearchLabelLayout->addWidget(m_pFilterPublish);
+   pRow3_SearchLabelLayout->addWidget(m_pFilterUsers);
+   pRow3_SearchLabelLayout->addWidget(m_pFilterPurchased);
+   pRow3_SearchLabelLayout->setSpacing(0);
+   pRow3_SearchLabelLayout->setContentsMargins(0, 0, 0, 0);
+
+   pRow3Layout->addWidget(pRow3_LabelSearchFrame);
+   pRow3Layout->addStretch();
    pRow3Layout->addWidget(m_pPublish);
    pRow3Layout->setContentsMargins(5, 0, 5, 0);
    //
@@ -217,7 +224,21 @@ MainWindow::MainWindow()
    pRow4Layout->addWidget(m_pTabUsers);
    pRow4Layout->addWidget(m_pTabPurchased);
    pRow4Layout->setSpacing(0);
-   pRow4Layout->setContentsMargins(5, 0, 5, 5);
+   pRow4Layout->setContentsMargins(5, 0, 5, 0);
+   //
+   // 5th row layout
+   //
+   QHBoxLayout* pRow5Layout = new QHBoxLayout;
+   QHBoxLayout* pRow5NestedLayout = new QHBoxLayout;
+   pRow5NestedLayout->addWidget(m_pResetPage);
+   pRow5NestedLayout->addWidget(m_pPreviousPage);
+   pRow5NestedLayout->addWidget(m_pNextPage);
+   pRow5NestedLayout->setSpacing(0);
+   pRow5NestedLayout->setContentsMargins(0, 0, 0, 0);
+   pRow5Layout->setSpacing(0);
+   pRow5Layout->setContentsMargins(5, 0, 5, 20);
+   pRow5Layout->setSizeConstraint(QLayout::SetFixedSize);
+   pRow5Layout->addLayout(pRow5NestedLayout);
    //
    //
    QVBoxLayout* pMainLayout = new QVBoxLayout;
@@ -228,6 +249,7 @@ MainWindow::MainWindow()
    pMainLayout->addLayout(pRow2Layout, Qt::AlignLeft);
    pMainLayout->addLayout(pRow3Layout, Qt::AlignLeft);
    pMainLayout->addLayout(pRow4Layout, Qt::AlignLeft);
+   pMainLayout->addLayout(pRow5Layout, Qt::AlignLeft);
    pMainWidget->setLayout(pMainLayout);
 
    QVBoxLayout* pContainerLayout = new QVBoxLayout;
@@ -766,10 +788,9 @@ void MainWindow::slot_PreviousPage()
    TabContentManager* pTab = activeTable();
 
    if (pTab)
-   {
       pTab->previous();
-      pTab->tryToUpdate();
-   }
+
+   slot_getContents();
 }
 
 void MainWindow::slot_ResetPage()
@@ -777,10 +798,9 @@ void MainWindow::slot_ResetPage()
    TabContentManager* pTab = activeTable();
 
    if (pTab)
-   {
       pTab->reset();
-      pTab->tryToUpdate();
-   }
+
+   slot_getContents();
 }
 
 void MainWindow::slot_NextPage()
@@ -788,10 +808,9 @@ void MainWindow::slot_NextPage()
    TabContentManager* pTab = activeTable();
 
    if (pTab)
-   {
       pTab->next();
-      pTab->tryToUpdate();
-   }
+
+   slot_getContents();
 }
 
 TabContentManager* MainWindow::activeTable() const

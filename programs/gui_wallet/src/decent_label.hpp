@@ -17,7 +17,8 @@ namespace gui_wallet
          Account,
          Row1Spacer,
          Balance,
-         TableSearch
+         TableSearch,
+         TableSearchFrame
       };
 
       enum eName

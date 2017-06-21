@@ -38,6 +38,9 @@ namespace gui_wallet
          case TableSearch:
             setProperty("type", "tablesearch");
             break;
+         case TableSearchFrame:
+            setProperty("type", "tablesearchframe");
+            break;
          case Default:
          default:
             break;
