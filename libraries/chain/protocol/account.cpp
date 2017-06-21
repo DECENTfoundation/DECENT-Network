@@ -156,7 +156,7 @@ void account_options::validate() const
 
    if( allow_subscription )
    {
-      FC_ASSERT( subscription_period > 0 );
+      FC_ASSERT( subscription_period > 0 && subscription_period <= 365,"maximal length of subscription period is one year");
       FC_ASSERT( price_per_subscribe.amount > 0 );
    }
 

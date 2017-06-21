@@ -90,13 +90,25 @@ QLabel[type='balance']
    color: rgb(27, 176, 104);
    /*qproperty-alignment: 'AlignLeft | AlignVCenter';*/
 }
+QLabel[type='tablesearchframe']
+{
+   padding: 0em;
+   max-width: 20em;
+   max-height: 2em;
+   min-width: 6em;
+   min-height: 2em;
+   margin-top: 0.5em;
+   margin-bottom: 0.5em;
+   border: 1px solid rgb(240, 240, 240);
+   border-radius: 0.2em;
+}
 QLabel[type='tablesearch']
 {
    image: url(':/icon/images/search.svg');
-   padding-top: 1em;
-   padding-bottom: 1em;
-   padding-left: 1em;
-   padding-right: 1em;
+   padding-top: 0em;
+   padding-bottom: 0em;
+   padding-left: 0.5em;
+   padding-right: 0.5em;
    max-width: 1em;
    max-height: 1em;
    min-width: 1em;
@@ -322,8 +334,8 @@ QLineEdit:!enabled
 QLineEdit[type='tablesearch']
 {
    border: 0px;
-   padding-left: 1em;
-   padding-right: 1em;
+   padding-left: 0em;
+   padding-right: 0.5em;
    padding-top: 0em;
    padding-bottom: 0em;
    min-height: 1em;
