@@ -509,14 +509,12 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
             db().adjust_balance( content->author, price.amount );
          else
          {
-            share_type rrr;
-            rrr = 1;
             boost::multiprecision::int128_t price_for_co_author;
             for( auto const &element : content->co_authors )
             {
                price_for_co_author = ( price.amount.value * element.second ) / 10000ll ;
                db().adjust_balance( element.first, static_cast<share_type>(price_for_co_author) );
-               price.amount -= price_for_co_author * element.second;
+               price.amount -= price_for_co_author;
             }
 
             if( price.amount != 0 ) {
