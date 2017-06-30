@@ -20,7 +20,7 @@ In order to use DECENT CORE, you need to (a) be 21 or older (please note that in
 
 ## 3	ASSUMPTION OF RISK AND LIMITATIONS ON LIABILITY
 
-3.1	You understand that DECENT CORE, Digital Cryptocurrency Tokens (“DCT”), blockchain technology and other associated and related technologies may be effected by adverse changes in the market, force majeure or other negative consequences, which are outside the control of DECENT Services.
+3.1	You understand that DECENT CORE, Digital Content Tokens (“DCT”), blockchain technology and other associated and related technologies may be effected by adverse changes in the market, force majeure or other negative consequences, which are outside the control of DECENT Services.
 
 3.2	DECENT CORE is published as an open source software under GNU General Public License version 3. You acknowledge that there are following risks associated with utilizing DECENT CORE including:
 
