@@ -1,0 +1,513 @@
+{
+  "initial_timestamp": "2017-06-30T10:00:15",
+  "max_core_supply": "7319777577456900",
+  "initial_parameters": {
+    "current_fees": {
+      "parameters": [[
+        0,{
+          "fee": 500000
+        }
+      ],[
+        1,{
+          "basic_fee": 500000
+        }
+      ],[
+        2,{
+          "fee": 500000
+        }
+      ],[
+        3,{
+          "basic_fee": 500000
+        }
+      ],[
+        4,{
+          "basic_fee": 500000
+        }
+      ],[
+        5,{
+          "fee": 10
+        }
+      ],[
+        6,{
+          "fee": 50000000
+        }
+      ],[
+        7,{
+          "fee": 500000
+        }
+      ],[
+        8,{
+          "fee": 10
+        }
+      ],[
+        9,{
+          "fee": 500000,
+          "price_per_kbyte": 10
+        }
+      ],[
+        10,{
+          "fee": 500000,
+          "price_per_kbyte": 10
+        }
+      ],[
+        11,{
+          "fee": 500000
+        }
+      ],[
+        12,{
+          "fee": 500000
+        }
+      ],[
+        13,{
+          "fee": 500000
+        }
+      ],[
+        14,{
+          "fee": 500000,
+          "price_per_kbyte": 10
+        }
+      ],[
+        15,{
+          "fee": 0
+        }
+      ],[
+        16,{
+          "fee": 500000
+        }
+      ],[
+        17,{
+          "fee": 500000
+        }
+      ],[
+        18,{
+          "fee": 500000,
+          "price_per_kbyte": 10
+        }
+      ],[
+        19,{
+          "fee": 5000000
+        }
+      ],[
+        20,{
+          "fee": 0
+        }
+      ],[
+        21,{
+          "fee": 0
+        }
+      ],[
+        22,{
+          "fee": 0
+        }
+      ],[
+        23,{
+          "fee": 0
+        }
+      ],[
+        24,{
+          "fee": 0
+        }
+      ],[
+        25,{
+          "fee": 0
+        }
+      ],[
+        26,{
+          "fee": 0
+        }
+      ],[
+        27,{
+          "fee": 0
+        }
+      ],[
+        28,{
+          "fee": 0
+        }
+      ],[
+        29,{
+          "fee": 0
+        }
+      ],[
+        30,{
+          "fee": 0
+        }
+      ],[
+        31,{
+          "fee": 0
+        }
+      ],[
+        32,{
+          "fee": 0
+        }
+      ],[
+        33,{
+          "fee": 0
+        }
+      ],[
+        34,{
+          "fee": 0
+        }
+      ],[
+        35,{
+          "fee": 0
+        }
+      ],[
+        36,{
+          "fee": 0
+        }
+      ],[
+        37,{
+          "fee": 0
+        }
+      ],[
+        38,{
+          "fee": 0
+        }
+      ]
+      ],
+      "scale": 10000
+    },
+    "block_interval": 5,
+    "maintenance_interval": 86400,
+    "maintenance_skip_slots": 3,
+    "miner_proposal_review_period": 1209600,
+    "maximum_transaction_size": 4096,
+    "maximum_block_size": 2048000,
+    "maximum_time_until_expiration": 86400,
+    "maximum_proposal_lifetime": 2419200,
+    "maximum_asset_feed_publishers": 10,
+    "maximum_miner_count": 1001,
+    "maximum_authority_membership": 10,
+    "cashback_vesting_period_seconds": 31536000,
+    "cashback_vesting_threshold": "1000000000",
+    "max_predicate_opcode": 1,
+    "max_authority_depth": 2,
+    "extensions": []
+  },
+  "initial_accounts": [{
+      "name": "init0",
+      "owner_key": "DCT7WajG3BUdorEndqQLtWvYM3xyGjtE9yhxhNDFGqsBoSDc1s35g",
+      "active_key": "DCT7WajG3BUdorEndqQLtWvYM3xyGjtE9yhxhNDFGqsBoSDc1s35g"
+    },{
+      "name": "init1",
+      "owner_key": "DCT7WajG3BUdorEndqQLtWvYM3xyGjtE9yhxhNDFGqsBoSDc1s35g",
+      "active_key": "DCT7WajG3BUdorEndqQLtWvYM3xyGjtE9yhxhNDFGqsBoSDc1s35g"
+    },{
+      "name": "init2",
+      "owner_key": "DCT7WajG3BUdorEndqQLtWvYM3xyGjtE9yhxhNDFGqsBoSDc1s35g",
+      "active_key": "DCT7WajG3BUdorEndqQLtWvYM3xyGjtE9yhxhNDFGqsBoSDc1s35g"
+    },{
+      "name": "init3",
+      "owner_key": "DCT7WajG3BUdorEndqQLtWvYM3xyGjtE9yhxhNDFGqsBoSDc1s35g",
+      "active_key": "DCT7WajG3BUdorEndqQLtWvYM3xyGjtE9yhxhNDFGqsBoSDc1s35g"
+    },{
+      "name": "init4",
+      "owner_key": "DCT7WajG3BUdorEndqQLtWvYM3xyGjtE9yhxhNDFGqsBoSDc1s35g",
+      "active_key": "DCT7WajG3BUdorEndqQLtWvYM3xyGjtE9yhxhNDFGqsBoSDc1s35g"
+    },{
+      "name": "init5",
+      "owner_key": "DCT7WajG3BUdorEndqQLtWvYM3xyGjtE9yhxhNDFGqsBoSDc1s35g",
+      "active_key": "DCT7WajG3BUdorEndqQLtWvYM3xyGjtE9yhxhNDFGqsBoSDc1s35g"
+    },{
+      "name": "init6",
+      "owner_key": "DCT7WajG3BUdorEndqQLtWvYM3xyGjtE9yhxhNDFGqsBoSDc1s35g",
+      "active_key": "DCT7WajG3BUdorEndqQLtWvYM3xyGjtE9yhxhNDFGqsBoSDc1s35g"
+    },{
+      "name": "init7",
+      "owner_key": "DCT7WajG3BUdorEndqQLtWvYM3xyGjtE9yhxhNDFGqsBoSDc1s35g",
+      "active_key": "DCT7WajG3BUdorEndqQLtWvYM3xyGjtE9yhxhNDFGqsBoSDc1s35g"
+    },{
+      "name": "init8",
+      "owner_key": "DCT7WajG3BUdorEndqQLtWvYM3xyGjtE9yhxhNDFGqsBoSDc1s35g",
+      "active_key": "DCT7WajG3BUdorEndqQLtWvYM3xyGjtE9yhxhNDFGqsBoSDc1s35g"
+    },{
+      "name": "init9",
+      "owner_key": "DCT7WajG3BUdorEndqQLtWvYM3xyGjtE9yhxhNDFGqsBoSDc1s35g",
+      "active_key": "DCT7WajG3BUdorEndqQLtWvYM3xyGjtE9yhxhNDFGqsBoSDc1s35g"
+    },{
+      "name": "init10",
+      "owner_key": "DCT7WajG3BUdorEndqQLtWvYM3xyGjtE9yhxhNDFGqsBoSDc1s35g",
+      "active_key": "DCT7WajG3BUdorEndqQLtWvYM3xyGjtE9yhxhNDFGqsBoSDc1s35g"
+    },{
+      "name": "decent1",
+      "owner_threshold": "2",
+      "active_threshold": "2",
+      "owner_key": "DCT7X3p8jBvzQKGYRNf7MiMeYEqGuSvxYiG69Q9rmq7ePPvNiBpkn",
+      "owner_key2": "DCT6cUwL96JBvdbaHuLEL5C1U4NG3YZ4f1kojsgwv3U4acqDGex73",
+      "owner_key3": "DCT6W5H1n1uYNWh8aYFWNGMgftzJe9sSPcDhz9A66HgykoRirBSgK",
+      "active_key": "DCT7X3p8jBvzQKGYRNf7MiMeYEqGuSvxYiG69Q9rmq7ePPvNiBpkn",
+      "active_key2": "DCT6cUwL96JBvdbaHuLEL5C1U4NG3YZ4f1kojsgwv3U4acqDGex73",
+      "active_key3": "DCT6W5H1n1uYNWh8aYFWNGMgftzJe9sSPcDhz9A66HgykoRirBSgK"
+    },{
+      "name": "decent2",
+      "owner_threshold": "2",
+      "active_threshold": "2",
+      "owner_key": "DCT7kz1uHqFADuYvxZFVERePt42KgbrDDyzSpEKEZvbdh5sDSKdg9",
+      "owner_key2": "DCT6FcaUNaRYkry5KZrbq8UFyDdrK3McJYqfjPErCXbyHPTofZm85",
+      "owner_key3": "DCT6KQTcigHMgbRxMWCeTSJ16TkPa18d7tBVinvh5BKyGt1rs3NVm",
+      "active_key": "DCT7kz1uHqFADuYvxZFVERePt42KgbrDDyzSpEKEZvbdh5sDSKdg9",
+      "active_key2": "DCT6FcaUNaRYkry5KZrbq8UFyDdrK3McJYqfjPErCXbyHPTofZm85",
+      "active_key3": "DCT6KQTcigHMgbRxMWCeTSJ16TkPa18d7tBVinvh5BKyGt1rs3NVm"
+    },{
+      "name": "decent3",
+      "owner_threshold": "2",
+      "active_threshold": "2",
+      "owner_key": "DCT5RMT8nsKWHxRg8PgoykdQx1tPbxkE4jaae6bc83ex91ZLDYaik",
+      "owner_key2": "DCT8E3zfwT5FMpfxNt5NgEPEs4yTaztmD5J56ofCHe36NDMhEDbQq",
+      "owner_key3": "DCT6yvsCotr2WX43xmSbP26c8EkxfXhpqcUs2i5jowmgMmxXMLnSG",
+      "active_key": "DCT5RMT8nsKWHxRg8PgoykdQx1tPbxkE4jaae6bc83ex91ZLDYaik",
+      "active_key2": "DCT8E3zfwT5FMpfxNt5NgEPEs4yTaztmD5J56ofCHe36NDMhEDbQq",
+      "active_key3": "DCT6yvsCotr2WX43xmSbP26c8EkxfXhpqcUs2i5jowmgMmxXMLnSG"
+    },{
+      "name": "decent4",
+      "owner_threshold": "2",
+      "active_threshold": "2",
+      "owner_key": "DCT6t3nPF5r8L33JcHtwLXbcF8jwQFC21vbg4MTRvrj2teygWtEkV",
+      "owner_key2": "DCT6XzirCjGXT4SddeDwtTo3UXgN14awuCycCMd6zxxiDkKbZbuF9",
+      "owner_key3": "DCT699xpPeThFD4XZ6LSxYS49Mwin6BWdvHMbFUuYsYXAyA42RF6t",
+      "active_key": "DCT6t3nPF5r8L33JcHtwLXbcF8jwQFC21vbg4MTRvrj2teygWtEkV",
+      "active_key2": "DCT6XzirCjGXT4SddeDwtTo3UXgN14awuCycCMd6zxxiDkKbZbuF9",
+      "active_key3": "DCT699xpPeThFD4XZ6LSxYS49Mwin6BWdvHMbFUuYsYXAyA42RF6t"
+    },{
+      "name": "decent5",
+      "owner_threshold": "2",
+      "active_threshold": "2",
+      "owner_key": "DCT6ybRW4X9HNC8CJ8Z3q5MyMhqkPPDMPZK219XmAK3x1ruU9ruNv",
+      "owner_key2": "DCT6WzvR5D8Z6eWGvZCUx2ASDPd6zXzDorRhWncua2hAEA8Jdd8jX",
+      "owner_key3": "DCT5bKoB2szHJGMHT97B71VMTjZPjJMF3mnvw5AMsofb48KNh3vB1",
+      "active_key": "DCT6ybRW4X9HNC8CJ8Z3q5MyMhqkPPDMPZK219XmAK3x1ruU9ruNv",
+      "active_key2": "DCT6WzvR5D8Z6eWGvZCUx2ASDPd6zXzDorRhWncua2hAEA8Jdd8jX",
+      "active_key3": "DCT5bKoB2szHJGMHT97B71VMTjZPjJMF3mnvw5AMsofb48KNh3vB1"
+    },{
+      "name": "decent6",
+      "owner_key": "DCT7WajG3BUdorEndqQLtWvYM3xyGjtE9yhxhNDFGqsBoSDc1s35g",
+      "active_key": "DCT7WajG3BUdorEndqQLtWvYM3xyGjtE9yhxhNDFGqsBoSDc1s35g"
+    }
+  ],
+  "initial_assets": [{
+     "symbol": "USD",
+     "issuer_name": "decent6",
+     "description": "US dollar",
+     "precision": 4
+    },{
+     "symbol": "EUR",
+     "issuer_name": "decent6",
+     "description": "Euro",
+     "precision": 4
+    },{
+     "symbol": "JPY",
+     "issuer_name": "decent6",
+     "description": "Japanese yen",
+     "precision": 4
+    },{
+     "symbol": "BGN",
+     "issuer_name": "decent6",
+     "description": "Bulgarian lev",
+     "precision": 4
+    },{
+     "symbol": "CZK",
+     "issuer_name": "decent6",
+     "description": "Czech koruna",
+     "precision": 4
+    },{
+     "symbol": "DKK",
+     "issuer_name": "decent6",
+     "description": "Danish krone",
+     "precision": 4
+    },{
+     "symbol": "GBP",
+     "issuer_name": "decent6",
+     "description": "Pound sterling",
+     "precision": 4
+    },{
+     "symbol": "HUF",
+     "issuer_name": "decent6",
+     "description": "Hungarian forint",
+     "precision": 4
+    },{
+     "symbol": "PLN",
+     "issuer_name": "decent6",
+     "description": "Polish zloty",
+     "precision": 4
+    },{
+     "symbol": "RON",
+     "issuer_name": "decent6",
+     "description": "Romanian leu",
+     "precision": 4
+    },{
+     "symbol": "SEK",
+     "issuer_name": "decent6",
+     "description": "Swedish krona",
+     "precision": 4
+    },{
+     "symbol": "CHF",
+     "issuer_name": "decent6",
+     "description": "Swiss franc",
+     "precision": 4
+    },{
+     "symbol": "NOK",
+     "issuer_name": "decent6",
+     "description": "Norwegian krone",
+     "precision": 4
+    },{
+     "symbol": "HRK",
+     "issuer_name": "decent6",
+     "description": "Croatian kuna",
+     "precision": 4
+    },{
+     "symbol": "RUB",
+     "issuer_name": "decent6",
+     "description": "Russian rouble",
+     "precision": 4
+    },{
+     "symbol": "TRY",
+     "issuer_name": "decent6",
+     "description": "Turkish lira",
+     "precision": 4
+    },{
+     "symbol": "AUD",
+     "issuer_name": "decent6",
+     "description": "Australian dollar",
+     "precision": 4
+    },{
+     "symbol": "BRL",
+     "issuer_name": "decent6",
+     "description": "Brazilian real",
+     "precision": 4
+    },{
+     "symbol": "CAD",
+     "issuer_name": "decent6",
+     "description": "Canadian dollar",
+     "precision": 4
+    },{
+     "symbol": "CNY",
+     "issuer_name": "decent6",
+     "description": "Chinese yuan renminbi",
+     "precision": 4
+    },{
+     "symbol": "HKD",
+     "issuer_name": "decent6",
+     "description": "Hong Kong dollar",
+     "precision": 4
+    },{
+     "symbol": "IDR",
+     "issuer_name": "decent6",
+     "description": "Indonesian rupiah",
+     "precision": 4
+    },{
+     "symbol": "ILS",
+     "issuer_name": "decent6",
+     "description": "Israeli shekel",
+     "precision": 4
+    },{
+     "symbol": "INR",
+     "issuer_name": "decent6",
+     "description": "Indian rupee",
+     "precision": 4
+    },{
+     "symbol": "KRW",
+     "issuer_name": "decent6",
+     "description": "South Korean won",
+     "precision": 4
+    },{
+     "symbol": "MXN",
+     "issuer_name": "decent6",
+     "description": "Mexican peso",
+     "precision": 4
+    },{
+     "symbol": "MYR",
+     "issuer_name": "decent6",
+     "description": "Malaysian ringgit",
+     "precision": 4
+    },{
+     "symbol": "NZD",
+     "issuer_name": "decent6",
+     "description": "New Zealand dollar",
+     "precision": 4
+    },{
+     "symbol": "PHP",
+     "issuer_name": "decent6",
+     "description": "Philippine peso",
+     "precision": 4
+    },{
+     "symbol": "SGD",
+     "issuer_name": "decent6",
+     "description": "Singapore dollar",
+     "precision": 4
+    },{
+     "symbol": "THB",
+     "issuer_name": "decent6",
+     "description": "Thai baht",
+     "precision": 4
+    },{
+     "symbol": "ZAR",
+     "issuer_name": "decent6",
+     "description": "South African rand",
+     "precision": 4
+    }
+  ],
+  "initial_active_miners": 11,
+  "initial_miner_candidates": [{
+      "owner_name": "init0",
+      "block_signing_key": "DCT7WajG3BUdorEndqQLtWvYM3xyGjtE9yhxhNDFGqsBoSDc1s35g"
+    },{
+      "owner_name": "init1",
+      "block_signing_key": "DCT7WajG3BUdorEndqQLtWvYM3xyGjtE9yhxhNDFGqsBoSDc1s35g"
+    },{
+      "owner_name": "init2",
+      "block_signing_key": "DCT7WajG3BUdorEndqQLtWvYM3xyGjtE9yhxhNDFGqsBoSDc1s35g"
+    },{
+      "owner_name": "init3",
+      "block_signing_key": "DCT7WajG3BUdorEndqQLtWvYM3xyGjtE9yhxhNDFGqsBoSDc1s35g"
+    },{
+      "owner_name": "init4",
+      "block_signing_key": "DCT7WajG3BUdorEndqQLtWvYM3xyGjtE9yhxhNDFGqsBoSDc1s35g"
+    },{
+      "owner_name": "init5",
+      "block_signing_key": "DCT7WajG3BUdorEndqQLtWvYM3xyGjtE9yhxhNDFGqsBoSDc1s35g"
+    },{
+      "owner_name": "init6",
+      "block_signing_key": "DCT7WajG3BUdorEndqQLtWvYM3xyGjtE9yhxhNDFGqsBoSDc1s35g"
+    },{
+      "owner_name": "init7",
+      "block_signing_key": "DCT7WajG3BUdorEndqQLtWvYM3xyGjtE9yhxhNDFGqsBoSDc1s35g"
+    },{
+      "owner_name": "init8",
+      "block_signing_key": "DCT7WajG3BUdorEndqQLtWvYM3xyGjtE9yhxhNDFGqsBoSDc1s35g"
+    },{
+      "owner_name": "init9",
+      "block_signing_key": "DCT7WajG3BUdorEndqQLtWvYM3xyGjtE9yhxhNDFGqsBoSDc1s35g"
+    },{
+      "owner_name": "init10",
+      "block_signing_key": "DCT7WajG3BUdorEndqQLtWvYM3xyGjtE9yhxhNDFGqsBoSDc1s35g"
+    }
+  ],
+  "initial_chain_id": "9a5e5be357cdfa2c48dbe260f983a0109b52b9afdada705521cddad9243522f7",
+  "initial_balances": [{
+      "owner": "decent1",
+      "asset_symbol": "DCT",
+      "amount": "732894133922417"
+    },{
+      "owner": "decent2",
+      "asset_symbol": "DCT",
+      "amount": "3851075976750000"
+    },{
+      "owner": "decent3",
+      "asset_symbol": "DCT",
+      "amount": "146588826784483"
+    },{
+      "owner": "decent4",
+      "asset_symbol": "DCT",
+      "amount": "400000000000000"
+    },{
+      "owner": "decent6",
+      "asset_symbol": "DCT",
+      "amount": "50000000000"
+    }
+  ],
+  "immutable_parameters": {
+    "min_miner_count": 11,
+    "num_special_accounts": 0,
+    "num_special_assets": 0
+  }
+}
