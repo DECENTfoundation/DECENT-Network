@@ -636,13 +636,17 @@ void Globals::startDaemons(bool replay_blockchain)
    
 void Globals::stopDaemons()
 {
+   bool bConnected = connected();
+
    auto backup_state = m_connected_state;
    m_connected_state = ConnectionState::Connecting;
    emit walletConnectionStatusChanged(backup_state, m_connected_state);
 
    if (m_p_wallet_operator)
    {
-      m_p_wallet_operator->m_wallet_api.SaveWalletFile();
+      if (bConnected)
+         m_p_wallet_operator->m_wallet_api.SaveWalletFile();
+
       delete m_p_wallet_operator;
       m_p_wallet_operator = nullptr;
    }
@@ -688,7 +692,9 @@ void Globals::clear()
 
    if (m_p_wallet_operator)
    {
-      m_p_wallet_operator->m_wallet_api.SaveWalletFile();
+      if (connected())
+         m_p_wallet_operator->m_wallet_api.SaveWalletFile();
+
       delete m_p_wallet_operator;
       m_p_wallet_operator = nullptr;
    }

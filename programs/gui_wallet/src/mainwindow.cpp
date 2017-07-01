@@ -928,14 +928,9 @@ void MainWindow::closeEvent(QCloseEvent* event)
    }
 
 #endif
-   if (Globals::instance().connected())
-   {
-      event->accept();
-   }
-   else
-   {
-      event->ignore();
-   }
+   // now we better move everything out of this function
+   // and delete this
+   event->accept();
 }
 
 
