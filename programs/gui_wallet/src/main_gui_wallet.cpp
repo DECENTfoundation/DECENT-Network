@@ -48,7 +48,7 @@ int main(int argc, char* argv[])
    gui_wallet::MainWindow aMainWindow;
 
    try {
-      gui_wallet::Globals::instance().startDaemons(false);
+      gui_wallet::Globals::instance().startDaemons(gui_wallet::BlockChainStartType::Simple);
    } catch (const std::exception& ex) {
       QMessageBox* msgBox = new QMessageBox();
       msgBox->setWindowTitle("Error");

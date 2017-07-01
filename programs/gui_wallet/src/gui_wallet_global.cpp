@@ -58,7 +58,7 @@
 
 #include <signal.h>
 
-int runDecentD(bool replay_blockchain, fc::promise<void>::ptr& exit_promise);
+int runDecentD(gui_wallet::BlockChainStartType type, fc::promise<void>::ptr& exit_promise);
 QProcess* run_ipfs_daemon(QObject* parent, QString app_dir);
 
 using  std::string;
@@ -580,7 +580,7 @@ Globals& Globals::instance()
    return theOne;
 }
 
-void Globals::startDaemons(bool replay_blockchain)
+void Globals::startDaemons(BlockChainStartType type)
 {
    if (m_p_daemon_details ||
        m_p_wallet_operator)
@@ -624,13 +624,14 @@ void Globals::startDaemons(bool replay_blockchain)
 #endif
 
 #ifndef SEPARATE_DECENT_DAEMON
-   m_p_daemon_details->future_decentd = thread_decentd.async([replay_blockchain, &exit_promise]() -> int
+   m_p_daemon_details->future_decentd = thread_decentd.async([type, &exit_promise]() -> int
                                                             {
-                                                               return ::runDecentD(replay_blockchain, exit_promise);
+                                                               return ::runDecentD(type, exit_promise);
                                                             });
 #endif
 
    m_tp_started = std::chrono::steady_clock::now();
+
    emit signal_connect();
 }
    
@@ -1163,7 +1164,7 @@ QProcess* run_ipfs_daemon(QObject* parent, QString app_dir)
 }
 
 
-int runDecentD(bool replay_blockchain, fc::promise<void>::ptr& exit_promise)
+int runDecentD(gui_wallet::BlockChainStartType type, fc::promise<void>::ptr& exit_promise)
 {
    app::application* node = new app::application();
    fc::oexception unhandled_exception;
@@ -1191,15 +1192,22 @@ int runDecentD(bool replay_blockchain, fc::promise<void>::ptr& exit_promise)
          int argc = 1;
          char str_dummy[] = "dummy";
          char str_replay[] = "--replay-blockchain";
+         char str_resync[] = "--resync-blockchain";
 
          char* argvEmpty[] = {str_dummy};
-         char* argvRestart[] = {str_dummy, str_replay};
+         char* argvReplay[] = {str_dummy, str_replay};
+         char* argvResync[] = {str_dummy, str_resync};
          char** argv = argvEmpty;
 
-         if (replay_blockchain)
+         if (type == gui_wallet::BlockChainStartType::Replay)
          {
             argc = 2;
-            argv = argvRestart;
+            argv = argvReplay;
+         }
+         else if (type == gui_wallet::BlockChainStartType::Resync)
+         {
+            argc = 2;
+            argv = argvResync;
          }
 
          bpo::store(bpo::parse_command_line(argc, argv, app_options), options);
