@@ -38,6 +38,7 @@ protected slots:
    void slot_updateAccountBalance(Asset const&);
    void slot_connectionStatusChanged(Globals::ConnectionState from, Globals::ConnectionState to);
    void slot_replayBlockChain();
+   void slot_resyncBlockChain();
    void slot_importKey();
    void slot_checkDownloads();
    void slot_getContents();
@@ -56,10 +57,12 @@ signals:
    void signal_setSplashMainText(QString const&);
 
 protected:
+   void closeSplash(bool bGonnaCoverAgain);
    virtual void closeEvent(QCloseEvent* event) override;
    TabContentManager* activeTable() const;
 
 protected:
+   size_t m_iSplashWidgetIndex;
    QTimer* m_pTimerDownloads;
    QTimer* m_pTimerBalance;
    QTimer* m_pTimerContents;
@@ -94,10 +97,11 @@ protected:
 
    QAction* m_pActionImportKey;
    QAction* m_pActionReplayBlockchain;
+   QAction* m_pActionResyncBlockchain;
 
    std::set<std::string> m_activeDownloads;
    
-   // updating:
+   // updating:   this needs to go to separate class
 public:
    void EmitStartRevHistoryDlg(const std::string& revHistory, uint32_t& returnValue); 
    void EmitProgBarSetPos(int pos);

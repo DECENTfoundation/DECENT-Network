@@ -127,6 +127,8 @@ namespace gui_wallet
       Asset m_price;
    };
    //
+   enum class BlockChainStartType { Simple, Replay, Resync };
+   //
    // Globals
    //
    class Globals : public QObject
@@ -143,7 +145,7 @@ namespace gui_wallet
       enum class ConnectionState { Connecting, SyncingUp, Up };
       static Globals& instance();
 
-      void startDaemons(bool replay_blockchain);
+      void startDaemons(BlockChainStartType type);
       void stopDaemons();
       std::string getCurrentUser() const;
       WalletAPI& getWallet() const;
