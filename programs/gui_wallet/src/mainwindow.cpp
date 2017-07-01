@@ -513,7 +513,6 @@ void MainWindow::slot_setSplash()
    m_pTimerUpdateProxy->stop();
 
    m_pActionImportKey->setDisabled(true);
-   m_pActionReplayBlockchain->setDisabled(true);
 }
 
 void MainWindow::slot_closeSplash()
@@ -562,7 +561,6 @@ void MainWindow::slot_closeSplash()
       m_pTimerContents->start();
 
       m_pActionImportKey->setEnabled(true);
-      m_pActionReplayBlockchain->setEnabled(true);
 
       Globals::instance().slot_updateAccountBalance();
       slot_checkDownloads();
