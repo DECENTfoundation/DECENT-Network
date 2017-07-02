@@ -344,7 +344,7 @@ MainWindow::MainWindow()
       pMenuFile->addAction(pActionExit);
       pMenuFile->addAction(m_pActionImportKey);
       pMenuFile->addAction(m_pActionReplayBlockchain);
-      //pMenuFile->addAction(m_pActionResyncBlockchain); // just in case it might be useful
+      pMenuFile->addAction(m_pActionResyncBlockchain);
    }
 
 
