@@ -69,6 +69,7 @@ using namespace utilities;
 
 MainWindow::MainWindow()
 : QMainWindow()
+, m_iSplashWidgetIndex(0)
 , m_pTimerDownloads(new QTimer(this))
 , m_pTimerBalance(new QTimer(this))
 , m_pTimerContents(new QTimer(this))
@@ -92,6 +93,7 @@ MainWindow::MainWindow()
 , m_pTabPurchased(nullptr)
 , m_pActionImportKey(new QAction(tr("Import key"), this))
 , m_pActionReplayBlockchain(new QAction(tr("Replay Blockchain"), this))
+, m_pActionResyncBlockchain(new QAction(tr("Resync Blockchain"), this))
 , m_updateProgBarCreate(false)         // updating
 , m_proxyUpdateProgBarUpperBorder(0)   // updating
 , m_proxyUpdateProgBarAbort(nullptr)   // updating
@@ -102,7 +104,7 @@ MainWindow::MainWindow()
    setWindowTitle(tr("DECENT - Blockchain Content Distribution"));
 
    QWidget* pContainerWidget = new QWidget(this);
-   QMenuBar* pMenuBar = new QMenuBar(pContainerWidget);
+   //QMenuBar* pMenuBar = new QMenuBar(pContainerWidget);
    QWidget* pMainWidget = new QWidget(pContainerWidget);
    //
    // 1st row controls
@@ -280,9 +282,9 @@ MainWindow::MainWindow()
    QVBoxLayout* pContainerLayout = new QVBoxLayout;
    pContainerLayout->setContentsMargins(0, 0, 0, 0);
    pContainerLayout->setSpacing(0);
-#ifdef _MSC_VER
+/*#ifdef _MSC_VER // let's check if this really is needed
    pContainerLayout->addWidget(pMenuBar);
-#endif
+#endif*/
    pContainerLayout->addWidget(m_pStackedWidget);
    pContainerWidget->setLayout(pContainerLayout);
 
@@ -335,10 +337,14 @@ MainWindow::MainWindow()
       QObject::connect(m_pActionReplayBlockchain, &QAction::triggered,
                        this, &MainWindow::slot_replayBlockChain);
 
-      QMenu* pMenuFile = pMenuBar->addMenu(tr("&File"));
+      QObject::connect(m_pActionResyncBlockchain, &QAction::triggered,
+                       this, &MainWindow::slot_resyncBlockChain);
+
+      QMenu* pMenuFile = menuBar()->addMenu(tr("&File"));
       pMenuFile->addAction(pActionExit);
       pMenuFile->addAction(m_pActionImportKey);
       pMenuFile->addAction(m_pActionReplayBlockchain);
+      pMenuFile->addAction(m_pActionResyncBlockchain);
    }
 
 
@@ -419,6 +425,10 @@ MainWindow::~MainWindow()
 
 void MainWindow::slot_setSplash()
 {
+   Q_ASSERT(0 == m_iSplashWidgetIndex);
+
+   m_iSplashWidgetIndex = m_pStackedWidget->count();
+
    StackLayerWidget* pSplashScreen = new StackLayerWidget(this);
    QProgressBar* pConnectingProgress = new QProgressBar(pSplashScreen);
    pConnectingProgress->setStyleSheet("QProgressBar"
@@ -513,37 +523,53 @@ void MainWindow::slot_setSplash()
    m_pTimerUpdateProxy->stop();
 
    m_pActionImportKey->setDisabled(true);
-   m_pActionReplayBlockchain->setDisabled(true);
 }
 
 void MainWindow::slot_closeSplash()
 {
+   closeSplash(false);
+}
+
+void MainWindow::closeSplash(bool bGonnaCoverAgain)
+{
+   Q_ASSERT(m_iSplashWidgetIndex);
+
    StackLayerWidget* pLayer = nullptr;
 
    signal_setSplashMainText(QString());
    Globals::instance().statusShowMessage(QString());
 
-   if (Globals::instance().getWallet().IsNew())
+   if (false == bGonnaCoverAgain)
    {
-      pLayer = new PasswordWidget(nullptr, PasswordWidget::eSetPassword);
-      signal_setSplashMainText(tr("Please set a password to encrypt your wallet"));
-   }
-   else if (Globals::instance().getWallet().IsLocked())
-   {
-      pLayer = new PasswordWidget(nullptr, PasswordWidget::eUnlock);
-      signal_setSplashMainText(tr("Please unlock your wallet"));
-   }
-   else
-   {
-      auto accounts = Globals::instance().runTaskParse("list_my_accounts");
-      if (accounts.empty())
+      if (Globals::instance().getWallet().IsNew())
       {
-         pLayer = new ImportKeyWidget(nullptr);
-         signal_setSplashMainText(tr("Please import your account in order to proceed"));
+         pLayer = new PasswordWidget(nullptr, PasswordWidget::eSetPassword);
+         signal_setSplashMainText(tr("Please set a password to encrypt your wallet"));
+      }
+      else if (Globals::instance().getWallet().IsLocked())
+      {
+         pLayer = new PasswordWidget(nullptr, PasswordWidget::eUnlock);
+         signal_setSplashMainText(tr("Please unlock your wallet"));
+      }
+      else
+      {
+         auto accounts = Globals::instance().runTaskParse("list_my_accounts");
+         if (accounts.empty())
+         {
+            pLayer = new ImportKeyWidget(nullptr);
+            signal_setSplashMainText(tr("Please import your account in order to proceed"));
+         }
       }
    }
 
-   if (pLayer)
+   if (bGonnaCoverAgain)
+   {
+      while (m_pStackedWidget->count() > m_iSplashWidgetIndex)
+         slot_stackWidgetPop();
+
+      m_iSplashWidgetIndex = 0;
+   }
+   else if (pLayer)
    {
       slot_stackWidgetPush(pLayer);
       QObject::connect(pLayer, &StackLayerWidget::accepted,
@@ -551,6 +577,8 @@ void MainWindow::slot_closeSplash()
    }
    else
    {
+      m_iSplashWidgetIndex = 0;
+
       slot_stackWidgetPop();
 
       Globals::instance().statusClearMessage();
@@ -562,7 +590,6 @@ void MainWindow::slot_closeSplash()
       m_pTimerContents->start();
 
       m_pActionImportKey->setEnabled(true);
-      m_pActionReplayBlockchain->setEnabled(true);
 
       Globals::instance().slot_updateAccountBalance();
       slot_checkDownloads();
@@ -579,7 +606,16 @@ void MainWindow::slot_connectionStatusChanged(Globals::ConnectionState from, Glo
    else if (Globals::ConnectionState::Up != to)
    {
       if (from == Globals::ConnectionState::Up)
+      {
+         if (m_iSplashWidgetIndex)
+         {
+            // this happens when need to set a fresh splash
+            // but there already is a splash
+            closeSplash(true);
+         }
+         
          slot_setSplash();
+      }
    }
 }
 
@@ -641,7 +677,13 @@ void MainWindow::slot_updateAccountBalance(Asset const& balance)
 void MainWindow::slot_replayBlockChain()
 {
    Globals::instance().stopDaemons();
-   Globals::instance().startDaemons(true);
+   Globals::instance().startDaemons(BlockChainStartType::Replay);
+}
+
+void MainWindow::slot_resyncBlockChain()
+{
+   Globals::instance().stopDaemons();
+   Globals::instance().startDaemons(BlockChainStartType::Resync);
 }
 
 void MainWindow::slot_importKey()
@@ -928,14 +970,9 @@ void MainWindow::closeEvent(QCloseEvent* event)
    }
 
 #endif
-   if (Globals::instance().connected())
-   {
-      event->accept();
-   }
-   else
-   {
-      event->ignore();
-   }
+   // now we better move everything out of this function
+   // and delete this
+   event->accept();
 }
 
 

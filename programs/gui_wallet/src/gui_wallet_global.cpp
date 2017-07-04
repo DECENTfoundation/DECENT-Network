@@ -58,7 +58,7 @@
 
 #include <signal.h>
 
-int runDecentD(bool replay_blockchain, fc::promise<void>::ptr& exit_promise);
+int runDecentD(gui_wallet::BlockChainStartType type, fc::promise<void>::ptr& exit_promise);
 QProcess* run_ipfs_daemon(QObject* parent, QString app_dir);
 
 using  std::string;
@@ -580,20 +580,25 @@ Globals& Globals::instance()
    return theOne;
 }
 
-void Globals::startDaemons(bool replay_blockchain)
+void Globals::startDaemons(BlockChainStartType type)
 {
-   if (m_p_daemon_details ||
-       m_p_wallet_operator)
+   if (m_p_daemon_details)
       return;
 
    m_p_daemon_details = new DaemonDetails();
 
-   m_p_wallet_operator = new WalletOperator();
-   m_p_wallet_operator->moveToThread(m_p_wallet_operator_thread);
-   QObject::connect(this, &Globals::signal_connect,
-                    m_p_wallet_operator, &WalletOperator::slot_connect);
-   QObject::connect(m_p_wallet_operator, &WalletOperator::signal_connected,
-                    this, &Globals::slot_connected);
+   bool bNeedNewConnection = false;
+
+   if (nullptr == m_p_wallet_operator)
+   {
+      bNeedNewConnection = true;
+      m_p_wallet_operator = new WalletOperator();
+      m_p_wallet_operator->moveToThread(m_p_wallet_operator_thread);
+      QObject::connect(this, &Globals::signal_connect,
+                       m_p_wallet_operator, &WalletOperator::slot_connect);
+      QObject::connect(m_p_wallet_operator, &WalletOperator::signal_connected,
+                       this, &Globals::slot_connected);
+   }
 
    fc::thread& thread_decentd = m_p_daemon_details->thread_decentd;
 
@@ -624,25 +629,31 @@ void Globals::startDaemons(bool replay_blockchain)
 #endif
 
 #ifndef SEPARATE_DECENT_DAEMON
-   m_p_daemon_details->future_decentd = thread_decentd.async([replay_blockchain, &exit_promise]() -> int
+   m_p_daemon_details->future_decentd = thread_decentd.async([type, &exit_promise]() -> int
                                                             {
-                                                               return ::runDecentD(replay_blockchain, exit_promise);
+                                                               return ::runDecentD(type, exit_promise);
                                                             });
 #endif
 
    m_tp_started = std::chrono::steady_clock::now();
-   emit signal_connect();
+
+   if (bNeedNewConnection)
+      emit signal_connect();
 }
    
 void Globals::stopDaemons()
 {
+   bool bConnected = connected();
+
    auto backup_state = m_connected_state;
    m_connected_state = ConnectionState::Connecting;
-   emit walletConnectionStatusChanged(backup_state, m_connected_state);
+   if (backup_state != m_connected_state)
+      emit walletConnectionStatusChanged(backup_state, m_connected_state);
 
-   if (m_p_wallet_operator)
+   if (m_p_wallet_operator && bConnected)
    {
       m_p_wallet_operator->m_wallet_api.SaveWalletFile();
+
       delete m_p_wallet_operator;
       m_p_wallet_operator = nullptr;
    }
@@ -688,7 +699,9 @@ void Globals::clear()
 
    if (m_p_wallet_operator)
    {
-      m_p_wallet_operator->m_wallet_api.SaveWalletFile();
+      if (connected())
+         m_p_wallet_operator->m_wallet_api.SaveWalletFile();
+
       delete m_p_wallet_operator;
       m_p_wallet_operator = nullptr;
    }
@@ -1157,7 +1170,7 @@ QProcess* run_ipfs_daemon(QObject* parent, QString app_dir)
 }
 
 
-int runDecentD(bool replay_blockchain, fc::promise<void>::ptr& exit_promise)
+int runDecentD(gui_wallet::BlockChainStartType type, fc::promise<void>::ptr& exit_promise)
 {
    app::application* node = new app::application();
    fc::oexception unhandled_exception;
@@ -1185,15 +1198,22 @@ int runDecentD(bool replay_blockchain, fc::promise<void>::ptr& exit_promise)
          int argc = 1;
          char str_dummy[] = "dummy";
          char str_replay[] = "--replay-blockchain";
+         char str_resync[] = "--resync-blockchain";
 
          char* argvEmpty[] = {str_dummy};
-         char* argvRestart[] = {str_dummy, str_replay};
+         char* argvReplay[] = {str_dummy, str_replay};
+         char* argvResync[] = {str_dummy, str_resync};
          char** argv = argvEmpty;
 
-         if (replay_blockchain)
+         if (type == gui_wallet::BlockChainStartType::Replay)
          {
             argc = 2;
-            argv = argvRestart;
+            argv = argvReplay;
+         }
+         else if (type == gui_wallet::BlockChainStartType::Resync)
+         {
+            argc = 2;
+            argv = argvResync;
          }
 
          bpo::store(bpo::parse_command_line(argc, argv, app_options), options);
