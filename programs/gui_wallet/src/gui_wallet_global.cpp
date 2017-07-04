@@ -582,18 +582,23 @@ Globals& Globals::instance()
 
 void Globals::startDaemons(BlockChainStartType type)
 {
-   if (m_p_daemon_details ||
-       m_p_wallet_operator)
+   if (m_p_daemon_details)
       return;
 
    m_p_daemon_details = new DaemonDetails();
 
-   m_p_wallet_operator = new WalletOperator();
-   m_p_wallet_operator->moveToThread(m_p_wallet_operator_thread);
-   QObject::connect(this, &Globals::signal_connect,
-                    m_p_wallet_operator, &WalletOperator::slot_connect);
-   QObject::connect(m_p_wallet_operator, &WalletOperator::signal_connected,
-                    this, &Globals::slot_connected);
+   bool bNeedNewConnection = false;
+
+   if (nullptr == m_p_wallet_operator)
+   {
+      bNeedNewConnection = true;
+      m_p_wallet_operator = new WalletOperator();
+      m_p_wallet_operator->moveToThread(m_p_wallet_operator_thread);
+      QObject::connect(this, &Globals::signal_connect,
+                       m_p_wallet_operator, &WalletOperator::slot_connect);
+      QObject::connect(m_p_wallet_operator, &WalletOperator::signal_connected,
+                       this, &Globals::slot_connected);
+   }
 
    fc::thread& thread_decentd = m_p_daemon_details->thread_decentd;
 
@@ -632,7 +637,8 @@ void Globals::startDaemons(BlockChainStartType type)
 
    m_tp_started = std::chrono::steady_clock::now();
 
-   emit signal_connect();
+   if (bNeedNewConnection)
+      emit signal_connect();
 }
    
 void Globals::stopDaemons()
@@ -641,12 +647,12 @@ void Globals::stopDaemons()
 
    auto backup_state = m_connected_state;
    m_connected_state = ConnectionState::Connecting;
-   emit walletConnectionStatusChanged(backup_state, m_connected_state);
+   if (backup_state != m_connected_state)
+      emit walletConnectionStatusChanged(backup_state, m_connected_state);
 
-   if (m_p_wallet_operator)
+   if (m_p_wallet_operator && bConnected)
    {
-      if (bConnected)
-         m_p_wallet_operator->m_wallet_api.SaveWalletFile();
+      m_p_wallet_operator->m_wallet_api.SaveWalletFile();
 
       delete m_p_wallet_operator;
       m_p_wallet_operator = nullptr;
