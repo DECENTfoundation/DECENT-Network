@@ -72,7 +72,15 @@ namespace graphene { namespace db {
                }
                void commit() { _apply_undo = false; _db.commit();  }
                void undo()   { if( _apply_undo ) _db.undo(); _apply_undo = false; }
-               void merge()  { if( _apply_undo ) _db.merge(); _apply_undo = false; }
+               void merge()  {
+                  if( _apply_undo ) {
+                     if( _disable_on_exit )
+                        _db.commit();
+                     else
+                        _db.merge();
+                  }
+                  _apply_undo = false;
+               }
 
                session& operator = ( session&& mv )
                { try {
