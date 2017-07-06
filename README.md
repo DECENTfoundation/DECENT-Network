@@ -11,63 +11,63 @@ Building Decent [![Build Status](https://travis-ci.com/DECENTfoundation/DECENT-N
 
 For Ubuntu 16.04 LTS (for extra actions needed for 14.04 LTS, 14.10, or 16.10 see notes below), execute in console:
 
-    $ sudo apt-get update
-    $ sudo apt-get install build-essential autotools-dev automake autoconf libtool make cmake checkinstall realpath gcc g++ clang flex bison doxygen gettext git qt5-default libqt5svg5-dev libreadline-dev libcrypto++-dev libgmp-dev libdb-dev libdb++-dev libssl-dev libncurses5-dev libboost-all-dev libcurl4-openssl-dev python-dev libicu-dev libbz2-dev
+     sudo apt-get update
+     sudo apt-get install build-essential autotools-dev automake autoconf libtool make cmake checkinstall realpath gcc g++ clang flex bison doxygen gettext git qt5-default libqt5svg5-dev libreadline-dev libcrypto++-dev libgmp-dev libdb-dev libdb++-dev libssl-dev libncurses5-dev libboost-all-dev libcurl4-openssl-dev python-dev libicu-dev libbz2-dev
 
 (Ubuntu 16.10 only) Note, that the default version of Boost installed in Ubuntu 16.10 is too high and not supported. In order to install a supported one, in addition to the common commands above, execute the following in console:
 
     # Uninstall the default Boost and install Boost 1.60.0
-    $ sudo apt-get remove libboost-all-dev
-    $ sudo apt-get autoremove
-    $ sudo apt-get install libboost1.60-all-dev
+     sudo apt-get remove libboost-all-dev
+     sudo apt-get autoremove
+     sudo apt-get install libboost1.60-all-dev
 
 (Ubuntu 14.04 LTS and 14.10 only; and only boost part for Ubuntu 16.04 LTS case) Note, that the default versions of GCC, CMake, and Boost installed in Ubuntu 14.04 LTS or 14.10 are too old and not supported. In order to install and use the supported ones, in addition to the common commands above, execute the following in console (in the same shell session, where you are going to build Decent itself):
 
     # Install GCC 5 and Clang 3.5
-    $ sudo add-apt-repository ppa:ubuntu-toolchain-r/test
-    $ sudo apt-get update
-    $ sudo apt-get install gcc-5 g++-5 clang-3.5
+     sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+     sudo apt-get update
+     sudo apt-get install gcc-5 g++-5 clang-3.5
     # Now use either gcc-5 and g++-5, or clang-3.5 and clang++-3.5 as C and C++ compilers.
-    $ export CC=gcc-5
-    $ export CXX=g++-5
+     export CC=gcc-5
+     export CXX=g++-5
 
     # Download and build CMake 3.7.2
-    $ mkdir -p ~/dev/DECENTfoundation/DECENT-Network-third-party
-    $ cd ~/dev/DECENTfoundation/DECENT-Network-third-party
-    $ rm -rf cmake-3.7.2*
-    $ wget https://cmake.org/files/v3.7/cmake-3.7.2.tar.gz
-    $ tar xvf cmake-3.7.2.tar.gz
-    $ mkdir cmake-3.7.2_prefix
-    $ cd cmake-3.7.2
-    $ CMAKE_ROOT=$(realpath ../cmake-3.7.2_prefix)
-    $ ./configure --prefix=$CMAKE_ROOT
-    $ make
-    $ make install
-    $ cd ..
-    $ rm -rf cmake-3.7.2 cmake-3.7.2.tar.gz
-    $ export PATH=$CMAKE_ROOT/bin:$PATH
+     mkdir -p ~/dev/DECENTfoundation/DECENT-Network-third-party
+     cd ~/dev/DECENTfoundation/DECENT-Network-third-party
+     rm -rf cmake-3.7.2*
+     wget https://cmake.org/files/v3.7/cmake-3.7.2.tar.gz
+     tar xvf cmake-3.7.2.tar.gz
+     mkdir cmake-3.7.2_prefix
+     cd cmake-3.7.2
+     CMAKE_ROOT=$(realpath ../cmake-3.7.2_prefix)
+     ./configure --prefix=$CMAKE_ROOT
+     make
+     make install
+     cd ..
+     rm -rf cmake-3.7.2 cmake-3.7.2.tar.gz
+     export PATH=$CMAKE_ROOT/bin:$PATH
 
     # Download and build Boost 1.60.0
-    $ mkdir -p ~/dev/DECENTfoundation/DECENT-Network-third-party
-    $ cd ~/dev/DECENTfoundation/DECENT-Network-third-party
-    $ rm -rf boost_1_60_0* boost-1.60.0*
-    $ wget https://sourceforge.net/projects/boost/files/boost/1.60.0/boost_1_60_0.tar.gz
-    $ tar xvf boost_1_60_0.tar.gz
-    $ mkdir boost-1.60.0_prefix
-    $ cd boost_1_60_0
-    $ export BOOST_ROOT=$(realpath ../boost-1.60.0_prefix)
-    $ ./bootstrap.sh --prefix=$BOOST_ROOT
-    $ ./b2 install
-    $ cd ..
-    $ rm -rf boost_1_60_0 boost_1_60_0.tar.gz
+     mkdir -p ~/dev/DECENTfoundation/DECENT-Network-third-party
+     cd ~/dev/DECENTfoundation/DECENT-Network-third-party
+     rm -rf boost_1_60_0* boost-1.60.0*
+     wget https://sourceforge.net/projects/boost/files/boost/1.60.0/boost_1_60_0.tar.gz
+     tar xvf boost_1_60_0.tar.gz
+     mkdir boost-1.60.0_prefix
+     cd boost_1_60_0
+     export BOOST_ROOT=$(realpath ../boost-1.60.0_prefix)
+     ./bootstrap.sh --prefix=$BOOST_ROOT
+     ./b2 install
+     cd ..
+     rm -rf boost_1_60_0 boost_1_60_0.tar.gz
 
 At this point, `$CC` and `$CXX` should be set to your compilers, `cmake` command should be picked up from `$CMAKE_ROOT/bin`, and CMake configure should find the Boost distribution in the exported `$BOOST_ROOT`.
 
 
 For Fedora 24 or later, execute in console:
 
-    $ sudo dnf clean metadata
-    $ sudo dnf install automake autoconf libtool make cmake gcc clang flex bison doxygen gettext-devel git qt5-qtbase-devel qt5-qtsvg-devel readline-devel cryptopp-devel gmp-devel libdb-devel libdb-cxx-devel openssl-devel libcurl-devel ncurses-devel boost-devel boost-static python-devel libicu-devel bzip2-devel
+     sudo dnf clean metadata
+     sudo dnf install automake autoconf libtool make cmake gcc clang flex bison doxygen gettext-devel git qt5-qtbase-devel qt5-qtsvg-devel readline-devel cryptopp-devel gmp-devel libdb-devel libdb-cxx-devel openssl-devel libcurl-devel ncurses-devel boost-devel boost-static python-devel libicu-devel bzip2-devel
 
 ### Installing prerequisites in macOS
 
@@ -86,18 +86,18 @@ Then, execute in console:
 After all the prerequisites are installed, execute the following commands in console, in order to clone the repo, build, and install/stage Decent:
 
     # Clone the repo.
-    $ mkdir -p ~/dev/DECENTfoundation
-    $ cd ~/dev/DECENTfoundation
-    $ git clone git@github.com:DECENTfoundation/DECENT-Network.git
-    $ cd DECENT-Network
-    $ git submodule update --init --recursive
+     mkdir -p ~/dev/DECENTfoundation
+     cd ~/dev/DECENTfoundation
+     git clone https://github.com/DECENTfoundation/DECENT-Network.git
+     cd DECENT-Network
+     git submodule update --init --recursive
 
     # Build and install Decent.
-    $ mkdir -p ~/dev/DECENTfoundation/DECENT-Network-build
-    $ cd ~/dev/DECENTfoundation/DECENT-Network-build
-    $ cmake -G "Unix Makefiles" -D CMAKE_BUILD_TYPE=Debug ~/dev/DECENTfoundation/DECENT-Network
-    $ cmake --build . --target all -- -j -l 3.0
-    $ cmake --build . --target install
+     mkdir -p ~/dev/DECENTfoundation/DECENT-Network-build
+     cd ~/dev/DECENTfoundation/DECENT-Network-build
+     cmake -G "Unix Makefiles" -D CMAKE_BUILD_TYPE=Debug ~/dev/DECENTfoundation/DECENT-Network
+     cmake --build . --target all -- -j -l 3.0
+     cmake --build . --target install
 
 > Note that, in case of "Unix Makefiles" CMake generator, the last two commands are equivalent to:
 > 
