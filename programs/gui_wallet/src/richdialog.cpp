@@ -477,9 +477,13 @@ ContentInfoWidget::ContentInfoWidget(QWidget* parent, const SDigitalContent& a_c
                     this, &ContentInfoWidget::ButtonWasClicked);
    QObject::connect(cancelButton, &QPushButton::clicked,
                     this, &StackLayerWidget::closed);
-   
-   main_layout->addWidget(getItButton, iRowIndex, 0, Qt::AlignRight);
-   main_layout->addWidget(cancelButton, iRowIndex, 1, Qt::AlignLeft);
+
+   QHBoxLayout* pButtonsLayout = new QHBoxLayout();
+   // keeping buttons directly inside gridlayout cells leads to assymetry
+   // so use hboxlayout
+   pButtonsLayout->addWidget(getItButton);
+   pButtonsLayout->addWidget(cancelButton);
+   main_layout->addLayout(pButtonsLayout, iRowIndex, 0, 1, 2);
    
    setLayout(main_layout);
 

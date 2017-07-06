@@ -42,6 +42,9 @@ namespace gui_wallet
          case TableSearchFrame:
             setProperty("type", "tablesearchframe");
             break;
+         case SplashInfo:
+            setProperty("type", "splashinfo");
+            break;
          case Default:
          default:
             break;
@@ -74,8 +77,10 @@ namespace gui_wallet
       QLabel::changeEvent(event);
    }
 
-   StatusLabel::StatusLabel(QWidget* pParent)
-   : gui_wallet::DecentLabel(pParent, DecentLabel::ConnectingSplash)
+   StatusLabel::StatusLabel(QWidget* pParent,
+                            DecentLabel::eType enType/* = DecentLabel::Default*/,
+                            DecentLabel::eName enName/* = DecentLabel::None*/)
+   : gui_wallet::DecentLabel(pParent, enType, enName)
    {}
 
    void StatusLabel::showMessage(QString const& str_message, int timeout)

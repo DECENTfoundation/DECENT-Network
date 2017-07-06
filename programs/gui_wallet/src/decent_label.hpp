@@ -19,7 +19,8 @@ namespace gui_wallet
          Row1Spacer,
          Balance,
          TableSearch,
-         TableSearchFrame
+         TableSearchFrame,
+         SplashInfo
       };
 
       enum eName
@@ -30,7 +31,7 @@ namespace gui_wallet
          HighlightedRight
       };
       
-      DecentLabel(QWidget* pParent, eType enType = Default, eName = None);
+      DecentLabel(QWidget* pParent, eType enType = Default, eName enName = None);
 
    protected:
       virtual void changeEvent(QEvent* event) override;
@@ -40,7 +41,9 @@ namespace gui_wallet
    {
       Q_OBJECT
    public:
-      StatusLabel(QWidget* pParent);
+      StatusLabel(QWidget* pParent,
+                  DecentLabel::eType enType = DecentLabel::Default,
+                  DecentLabel::eName enName = DecentLabel::None);
 
    signals:
       void signal_removeTimers();

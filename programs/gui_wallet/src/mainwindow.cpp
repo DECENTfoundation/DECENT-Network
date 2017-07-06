@@ -263,7 +263,7 @@ MainWindow::MainWindow()
    pRow5NestedLayout->setSpacing(0);
    pRow5NestedLayout->setContentsMargins(0, 0, 0, 0);
    pRow5Layout->setSpacing(0);
-   pRow5Layout->setContentsMargins(5, 0, 5, 20);
+   pRow5Layout->setContentsMargins(5, 0, 5, 0);
    pRow5Layout->setSizeConstraint(QLayout::SetFixedSize);
    pRow5Layout->addLayout(pRow5NestedLayout);
    //
@@ -431,62 +431,12 @@ void MainWindow::slot_setSplash()
 
    StackLayerWidget* pSplashScreen = new StackLayerWidget(this);
    QProgressBar* pConnectingProgress = new QProgressBar(pSplashScreen);
-   pConnectingProgress->setStyleSheet("QProgressBar"
-                                      "{"
-#ifdef WINDOWS_HIGH_DPI
-                                          "border-radius: 10px;"
-                                          "border: 1px;"
-                                          "height: 20px;"
-                                          "max-height: 20px;"
-                                          "width: 230px;"
-                                          "max-width: 230px;"
-#else
-                                         "border-radius: 5px;"
-                                          "border: 1px;"
-                                          "height: 10px;"
-                                          "max-height: 10px;"
-                                          "width: 176px;"
-                                          "max-width: 176px;"
-#endif
-                                          "background: rgb(224, 229, 235);"
-                                          "qproperty-textVisible: false;"
-                                      "}"
-                                      "QProgressBar:chunk"
-                                      "{"
-                                         "border-radius: 5px;"
-                                          "border: 1px;"
-                                          "background: rgb(31, 218, 129);"
-                                      "}");
    pConnectingProgress->setValue(70);
-   QLabel* pConnectingLabel = new QLabel(pSplashScreen);
+   DecentLabel* pConnectingLabel = new DecentLabel(pSplashScreen, DecentLabel::SplashInfo);
    pConnectingLabel->setText(tr("Please wait, we are syncing with network…"));
-   StatusLabel* pSyncUpLabel = new StatusLabel(pSplashScreen);
-   DecentButton* pButton = new DecentButton(this);
+   StatusLabel* pSyncUpLabel = new StatusLabel(pSplashScreen, DecentLabel::SplashInfo);
+   DecentButton* pButton = new DecentButton(this, DecentButton::SplashAction);
 
-   QString labelStyle =
-   "QLabel"
-   "{"
-#ifdef WINDOWS_HIGH_DPI
-      "font-size: 10pt;"
-#else
-      "font-size: 10px;"
-#endif
-      "color: rgb(127, 138, 158);"
-   "}";
-   pConnectingLabel->setStyleSheet(labelStyle);
-   pSyncUpLabel->setStyleSheet(labelStyle);
-   pButton->setStyleSheet(
-                           "QPushButton"
-                           "{"
-                              "border: 0px;"
-                              "background-color: rgb(31, 218, 129);"
-                              "color: white;"
-                              "width: 5em;"
-                              "height: 1.5em;"
-                              "max-width: 5em;"
-                              "max-height: 1.5em;"
-                           "}"
-                          );
    pButton->hide();
    pButton->setText(tr("Proceed"));
    
