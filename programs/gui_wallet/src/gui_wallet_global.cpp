@@ -4,11 +4,6 @@
 #include "gui_wallet_global.hpp"
 #include "richdialog.hpp"
 
-#ifdef SEPARATE_DECENT_DAEMON
-#include <thread>
-#include <chrono>
-#endif
-
 #ifndef _MSC_VER
 #include <QMessageBox>
 #include <QThread>
@@ -491,9 +486,7 @@ void WalletOperator::slot_connect()
    {
       str_error = ex.what();
    }
-#ifdef SEPARATE_DECENT_DAEMON
-   std::this_thread::sleep_for(std::chrono::seconds(1));
-#endif
+
    emit signal_connected(str_error);
 }
 //
@@ -628,12 +621,10 @@ void Globals::startDaemons(BlockChainStartType type)
 
 #endif
 
-#ifndef SEPARATE_DECENT_DAEMON
    m_p_daemon_details->future_decentd = thread_decentd.async([type, &exit_promise]() -> int
                                                             {
                                                                return ::runDecentD(type, exit_promise);
                                                             });
-#endif
 
    m_tp_started = std::chrono::steady_clock::now();
 
@@ -661,9 +652,7 @@ void Globals::stopDaemons()
    fc::promise<void>::ptr& exit_promise = m_p_daemon_details->exit_promise;
    exit_promise->set_value();
 
-#ifndef SEPARATE_DECENT_DAEMON
    m_p_daemon_details->future_decentd.wait();
-#endif
 
    if (m_p_daemon_details->ipfs_process)
       m_p_daemon_details->ipfs_process->terminate();

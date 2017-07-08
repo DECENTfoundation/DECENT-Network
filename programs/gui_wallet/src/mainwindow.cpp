@@ -21,14 +21,6 @@
 
 #endif
 
-//#define UPDATE_MANAGER
-
-#ifdef UPDATE_MANAGER
-#include "update_callbacks.hpp"
-#include "../../update/update.h"
-#include "../../update/updatethread.h"
-#include "rev_history_dlg.hpp"
-#endif
 
 #include "mainwindow.hpp"
 #include "gui_design.hpp"
@@ -56,16 +48,15 @@
 
 #include <QCloseEvent>
 
+#ifdef UPDATE_MANAGER
+#include "update_manager.hpp"
+#endif
+
 using namespace nlohmann;
 using namespace gui_wallet;
 using namespace std;
 using namespace graphene;
 using namespace utilities;
-
-#ifdef UPDATE_MANAGER
-#include "rev_history_dlg.hpp"
-#include "update_prog_bar.hpp"
-#endif
 
 MainWindow::MainWindow()
 : QMainWindow()
@@ -73,7 +64,6 @@ MainWindow::MainWindow()
 , m_pTimerDownloads(new QTimer(this))
 , m_pTimerBalance(new QTimer(this))
 , m_pTimerContents(new QTimer(this))
-, m_pTimerUpdateProxy(new QTimer(this))
 , m_pStackedWidget(new QStackedWidget(this))
 , m_pAccountList(nullptr)
 , m_pBalance(nullptr)
@@ -94,12 +84,11 @@ MainWindow::MainWindow()
 , m_pActionImportKey(new QAction(tr("Import key"), this))
 , m_pActionReplayBlockchain(new QAction(tr("Replay Blockchain"), this))
 , m_pActionResyncBlockchain(new QAction(tr("Resync Blockchain"), this))
-, m_updateProgBarCreate(false)         // updating
-, m_proxyUpdateProgBarUpperBorder(0)   // updating
-, m_proxyUpdateProgBarAbort(nullptr)   // updating
-, m_updateProgBarDestroy(false)        // updating
-, m_progBar(nullptr)                   // updating
-, m_updateThreadParams(nullptr)        // updating
+#ifdef UPDATE_MANAGER
+, m_pUpdateManager(new UpdateManager())
+#else
+, m_pUpdateManager(nullptr)
+#endif
 {
    setWindowTitle(tr("DECENT - Blockchain Content Distribution"));
 
@@ -380,12 +369,6 @@ MainWindow::MainWindow()
    QObject::connect(m_pTimerContents, &QTimer::timeout,
                     this, &MainWindow::slot_getContents);
 
-   m_pTimerUpdateProxy->setInterval(200);
-   QObject::connect(m_pTimerUpdateProxy, &QTimer::timeout,
-      this, &MainWindow::slot_updateProxy);
-
-   m_pTimerUpdateProxy->start();
-
    resize(900, 600);
 
 
@@ -394,33 +377,11 @@ MainWindow::MainWindow()
     setWindowIcon(height > 32 ? QIcon(":/icon/images/windows_decent_icon_32x32.png")
          : QIcon(":/icon/images/windows_decent_icon_16x16.png"));
 #endif 
-    // updates:
-#ifdef UPDATE_MANAGER
-    m_updateThreadParams = new CDetectUpdateThreadParams;
-    m_updateThreadParams->m_runUpdateEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
-    m_updateThreadParams->m_stopUpdateThread = CreateEvent(NULL, FALSE, FALSE, NULL);
-    m_updateThreadParams->m_licenseUserID = 0x1111111111111111ULL;
-
-    
-    Update::g_fn_StartRevHistoryDlg = StartRevHistoryDlg;
-    Update::g_fn_CreateProgBar = CreateProgBar;
-    Update::g_fn_SetProgBarTitle = SetProgBarTitle;
-    Update::g_fn_SetProgBarPos = SetProgBarPos;
-    Update::g_fn_DestroyProgBar = DestroyProgBar;
-    
-    uint32_t tid = 0;
-    SetEvent(m_updateThreadParams->m_runUpdateEvent);
-    m_updateThread = MpThreadCreate(m_updateThreadParams, DetectUpdateThread, &tid); 
-
-    bool connected = false;
-    connected = QObject::connect(this, SIGNAL(signal_progBarSetPos(int)), this, SLOT(slot_progBarSetPos(int)), Qt::QueuedConnection);
-    connected = QObject::connect(this, SIGNAL(signal_startRevHistoryDlg(const QString&, long*)), this, SLOT(slot_startRevHistoryDlg(const QString&, long*)), Qt::BlockingQueuedConnection);
-   
-#endif
 }
 
 MainWindow::~MainWindow()
 {
+   delete m_pUpdateManager;
 }
 
 void MainWindow::slot_setSplash()
@@ -470,7 +431,6 @@ void MainWindow::slot_setSplash()
    m_pTimerBalance->stop();
    m_pTimerDownloads->stop();
    m_pTimerContents->stop();
-   m_pTimerUpdateProxy->stop();
 
    m_pActionImportKey->setDisabled(true);
 }
@@ -909,132 +869,3 @@ void MainWindow::DisplayWalletContentGUI()
 }
 
 
-void MainWindow::closeEvent(QCloseEvent* event)
-{
-#ifdef UPDATE_MANAGER
-   if (m_updateThread) 
-   {
-      SetEvent(m_updateThreadParams->m_stopUpdateThread);
-      m_updateThreadParams->m_abort = 1;
-      AbortUpdate(nullptr, m_updateThreadParams->m_curlSession);
-   }
-
-#endif
-   // now we better move everything out of this function
-   // and delete this
-   event->accept();
-}
-
-
-// support for updating:
-void MainWindow::EmitStartRevHistoryDlg(const std::string& revHistory, uint32_t& returnValue)
-{
-   const QString s(revHistory.c_str());
-   long returnVal = 0;
-   emit signal_startRevHistoryDlg(s, &returnVal);
-   returnValue = returnVal;
-}
-
-void MainWindow::EmitProgBarSetPos(int pos)
-{
-   emit signal_progBarSetPos(pos);
-}
-
-void MainWindow::EmitProgBarDestroy(void)
-{
-   
-}
-
-void MainWindow::ProxyCreateProgBar(int upperBorder, uint32_t* abort)
-{
-   m_proxyUpdateProgBarUpperBorder = upperBorder;
-   m_proxyUpdateProgBarAbort = abort;
-   m_updateProgBarCreate = true;
-}
-
-void MainWindow::ProxyDestroyProgBar(void)
-{
-   m_updateProgBarDestroy = true;
-}
-
-void MainWindow::ProxySetProgBarTitle(const QString& title)
-{
-   m_proxyUpdateProgBarSetTitle = title;
-}
-
-void MainWindow::slot_updateProxy()
-{
-   if (m_updateProgBarCreate)
-   {
-      m_updateProgBarCreate = false;
-      progBarCreate(m_proxyUpdateProgBarUpperBorder, m_proxyUpdateProgBarAbort);
-   }
-   if (m_updateProgBarDestroy)
-   {
-      m_updateProgBarDestroy = false;
-      progBarDestroy();
-   }
-   if (m_proxyUpdateProgBarSetTitle.length())
-   {
-      progBarSetTitle(m_proxyUpdateProgBarSetTitle);
-      m_proxyUpdateProgBarSetTitle = "";
-   }
-}
-
-void MainWindow::progBarCreate(int upperBorder, uint32_t* abort)
-{
-#ifdef UPDATE_MANAGER
-   CProgBar* progBar = nullptr;
-   if (m_progBar)
-      delete m_progBar;
-   m_progBar = nullptr;
-
-   progBar = new CProgBar(100, QString(""), false, true, this);
-   progBar->Init(upperBorder, "", abort, this);
-   progBar->SetMyStandardSize();
-   progBar->Show();// ked je tu toto taksa prejavi zmena velkosti, inak nie
-   progBar->Raise();
-   //progBar->activateWindow();
-   //QApplication::setActiveWindow(progBar);
-
-   progBar->EnableCancel(true);
-
-   m_progBar = progBar;
-#endif
-}
-
-void MainWindow::progBarDestroy(void)
-{
-#ifdef UPDATE_MANAGER
-   if (m_progBar) 
-   {
-      m_progBar->Hide();
-      delete m_progBar;
-   }
-   m_progBar = nullptr;
-#endif
-}
-
-void MainWindow::slot_startRevHistoryDlg(const QString& revHistory, long* returnValue)
-{
-#ifdef UPDATE_MANAGER
-   Rev_history_dlg revHistDlg(revHistory, nullptr);
-   *returnValue = revHistDlg.exec();
-#endif
-}
-
-void MainWindow::progBarSetTitle(const QString& title)
-{
-#ifdef UPDATE_MANAGER
-   if (m_progBar)
-      m_progBar->SetLabelText(title);
-#endif
-}
-
-void MainWindow::slot_progBarSetPos(int pos)
-{
-#ifdef UPDATE_MANAGER
-   if (m_progBar)
-      m_progBar->SetValue(pos);
-#endif
-}

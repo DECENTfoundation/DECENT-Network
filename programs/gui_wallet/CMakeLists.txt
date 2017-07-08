@@ -45,6 +45,8 @@ add_executable(DECENT MACOSX_BUNDLE
                src/richdialog.hpp
                src/transactions_tab.cpp
                src/transactions_tab.hpp
+               src/update_manager.cpp
+               src/update_manager.hpp
                src/upload_popup.cpp
                src/upload_popup.hpp
                src/upload_tab.cpp
