@@ -20,7 +20,7 @@
 #include <iso646.h>
 #endif
 
-//#define SEPARATE_DECENT_DAEMON
+//#define UPDATE_MANAGER
 
 #define ALERT(message)                                  \
 {                                                       \

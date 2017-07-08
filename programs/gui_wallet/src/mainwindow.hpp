@@ -5,13 +5,11 @@
 #include <string>
 #include <set>
 
-class QCloseEvent;
 class QStackedWidget;
 class QComboBox;
 class QTimer;
 class QAction;
-class CProgBar;// updating
-class CDetectUpdateThreadParams;// updating
+class UpdateManager;
 
 namespace gui_wallet
 {
@@ -58,7 +56,6 @@ signals:
 
 protected:
    void closeSplash(bool bGonnaCoverAgain);
-   virtual void closeEvent(QCloseEvent* event) override;
    TabContentManager* activeTable() const;
 
 protected:
@@ -99,41 +96,9 @@ protected:
    QAction* m_pActionReplayBlockchain;
    QAction* m_pActionResyncBlockchain;
 
+   UpdateManager* m_pUpdateManager;
+
    std::set<std::string> m_activeDownloads;
-   
-   // updating:   this needs to go to separate class
-public:
-   void EmitStartRevHistoryDlg(const std::string& revHistory, uint32_t& returnValue); 
-   void EmitProgBarSetPos(int pos);
-   void EmitProgBarDestroy(void);
-   void ProxyCreateProgBar(int upperBorder, uint32_t* abort); 
-   void ProxyDestroyProgBar(void);
-   void ProxySetProgBarTitle(const QString& title);
-
-protected:
-   bool m_updateProgBarCreate;
-   bool m_updateProgBarDestroy;
-   int m_proxyUpdateProgBarUpperBorder;
-   QString m_proxyUpdateProgBarSetTitle;
-   uint32_t* m_proxyUpdateProgBarAbort;
-   CProgBar* m_progBar;
-   CDetectUpdateThreadParams* m_updateThreadParams;
-   void* m_updateThread;
-   QTimer* m_pTimerUpdateProxy;
-
-   void progBarCreate(int upperBorder, uint32_t* abort);
-   void progBarSetTitle(const QString& title);
-   void progBarDestroy(void);
-
-signals:
-   void signal_startRevHistoryDlg(const QString& revHistory, long* returnValue);
-   void signal_progBarSetPos(int pos);
-
-protected slots:
-   void slot_startRevHistoryDlg(const QString& revHistory, long* returnValue); 
-   void slot_updateProxy();
-   void slot_progBarSetPos(int pos);
-
 };
 
 }
