@@ -53,3 +53,12 @@ rm -rf boost_1_60_0 boost_1_60_0.tar.gz
  cmake -G "Unix Makefiles" -D CMAKE_BUILD_TYPE=Debug ~/dev/DECENTfoundation/DECENT-Network
  cmake --build . --target all -- -j -l 3.0
  cmake --build . --target install
+ 
+cd ~/dev/DECENTfoundation/DECENT-Network/programs
+mkdir ~/decent
+cp ./cli_wallet/cli_wallet ~/decent/
+cp ./decentd/decentd ~/decent
+cd ~/decent
+ls
+echo "all done!"
+
