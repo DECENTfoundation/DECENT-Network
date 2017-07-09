@@ -54,10 +54,8 @@ rm -rf boost_1_60_0 boost_1_60_0.tar.gz
  cmake --build . --target all -- -j -l 3.0
  cmake --build . --target install
  
-cd ~/dev/DECENTfoundation/DECENT-Network/programs
 mkdir ~/decent
-cp ./cli_wallet/cli_wallet ~/decent/
-cp ./decentd/decentd ~/decent
+cp ~/dev/DECENTfoundation/DECENT-Network-build/artifacts/prefix/bin/* ~/decent/
 cd ~/decent
 ls
 echo "all done!"
