@@ -50,6 +50,8 @@ struct budget_record
    share_type supply_delta = 0;
 
    real_supply _real_supply;
+   time_point_sec next_maintenance_time;
+   int8_t block_interval;
 };
 
 class budget_record_object;
@@ -64,7 +66,34 @@ class budget_record_object : public graphene::db::abstract_object<budget_record_
       budget_record record;
 };
 
+struct by_time;
+
+typedef multi_index_container<
+   budget_record_object,
+   indexed_by<
+      ordered_unique< tag<by_id>, member< object, object_id_type, &object::id > >,
+      ordered_unique< tag<by_time>, member< budget_record_object, time_point_sec, &budget_record_object::time > >
+   >
+> budget_record_object_multi_index_type;
+
+
+typedef generic_index< budget_record_object, budget_record_object_multi_index_type > budget_record_index;
+
+struct miner_reward_input
+{
+   int64_t time_to_maint;
+   share_type from_accumulated_fees;
+   int8_t block_interval;
+};
+
 } }
+
+FC_REFLECT(
+   graphene::chain::miner_reward_input,
+   (time_to_maint)
+   (from_accumulated_fees)
+   (block_interval)
+)
 
 FC_REFLECT(
    graphene::chain::budget_record,
@@ -75,6 +104,8 @@ FC_REFLECT(
    (generated_in_last_interval)
    (supply_delta)
    (_real_supply)
+   (next_maintenance_time)
+   (block_interval)
 )
 
 FC_REFLECT(

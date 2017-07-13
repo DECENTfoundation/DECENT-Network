@@ -200,27 +200,33 @@ uint64_t database::get_next_reward_switch_block(uint64_t start)const
    return 0;
 }
 
-share_type database::get_new_asset_per_block()
+share_type database::get_asset_per_block_by_block_num(uint32_t block_num)
 {
-   //get age in blocks
-   auto now = head_block_num();
-
-   //this method is called AFTER the update of head_block_num in gpo.
+   //this method is called AFTER the update of head_block_num in gpo or when user calls get_block.
+   //If user calls get_block calculation of miner_reward needs to search backward for block_reward. 
    uint64_t block_reward;
-   if( now < DECENT_SPLIT_0  )
+   if (block_num < DECENT_SPLIT_0)
       block_reward = DECENT_BLOCK_REWARD_0;
-   else if( now < DECENT_SPLIT_1  )
+   else if (block_num < DECENT_SPLIT_1)
       block_reward = DECENT_BLOCK_REWARD_1;
-   else if( now < DECENT_SPLIT_2 )
+   else if (block_num < DECENT_SPLIT_2)
       block_reward = DECENT_BLOCK_REWARD_2;
-   else if( now < DECENT_SPLIT_3 )
+   else if (block_num < DECENT_SPLIT_3)
       block_reward = DECENT_BLOCK_REWARD_3;
-   else if( now < DECENT_SPLIT_4 )
+   else if (block_num < DECENT_SPLIT_4)
       block_reward = DECENT_BLOCK_REWARD_4;
    else
       block_reward = DECENT_BLOCK_REWARD_5;
 
    return block_reward;
+}
+
+share_type database::get_new_asset_per_block()
+{
+   //get age in blocks
+   auto now = head_block_num();
+
+   return get_asset_per_block_by_block_num(now);
 }
 
 share_type database::get_miner_budget(uint32_t blocks_to_maint)
