@@ -172,6 +172,8 @@ void database::process_budget()
          }else{
             rec.time_since_last_budget = uint64_t( (now - dpo.last_budget_time).to_seconds() );
          }
+         rec.next_maintenance_time = dpo.next_maintenance_time;
+         rec.block_interval = gpo.parameters.block_interval;
       }
 
       share_type planned_for_mining = get_miner_budget(blocks_to_maint) ;
