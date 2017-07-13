@@ -19,7 +19,7 @@
 namespace graphene { namespace chain {
 
    /**
-    * @ingroup transaction
+    * @ingroup operations
     * @brief This operation is used to promote account to publishing manager.
     * Such an account can grant or remove right to publish a content. Only DECENT account has permission to use this method.
     */
@@ -39,7 +39,7 @@ namespace graphene { namespace chain {
    };
 
    /**
-    * @ingroup transaction
+    * @ingroup operations
     * @brief Allows account to publish a content. Only account with publishing manager status has permission to use this method.
     */
    struct set_publishing_right_operation : public base_operation
@@ -61,7 +61,7 @@ namespace graphene { namespace chain {
       asset    price;
    };
    /**
-    * @ingroup transactions
+    * @ingroup operations
     * @brief Submits content to the blockchain.
     */
    struct content_submit_operation : public base_operation
@@ -69,33 +69,30 @@ namespace graphene { namespace chain {
       struct fee_parameters_type { uint64_t fee = 0; };
 
       asset fee;
-      account_id_type author;
-      // optional parameter. If map is not empty, payout will be splitted
-      // maps co-authors to split based on basis points
-      // author can be included in co_authors map
-      // max num of co-authors = 10
-      map<account_id_type, uint32_t> co_authors;
-      string URI;
-      vector<regional_price> price;
+      account_id_type author; ///<author of the content. If co-authors is not filled, this account will receive full payout
 
-      uint64_t size; //<Size of content, including samples, in megabytes
-      fc::ripemd160 hash;
+      map<account_id_type, uint32_t> co_authors; ///<Optional parameter. If map is not empty, payout will be splitted - the parameter maps co-authors to basis points split, e.g. author1:9000 (bp), auhtor2:1000 (bp)
+      string URI; ///<URI where the content can be found
+      vector<regional_price> price; ///<list of regional prices
 
-      vector<account_id_type> seeders; //<List of selected seeders
-      vector<ciphertext_type> key_parts; //<Key particles, each assigned to one of the seeders, encrypted with his key
+      uint64_t size; ///<Size of content, including samples, in megabytes
+      fc::ripemd160 hash; ///<hash of the content
+
+      vector<account_id_type> seeders; ///<List of selected seeders
+      vector<ciphertext_type> key_parts; ///< Key particles, each assigned to one of the seeders, encrypted with his key
       /// Defines number of seeders needed to restore the encryption key
-      uint32_t quorum;
+      uint32_t quorum; ///< How many seeders needs to cooperate to recover the key
       fc::time_point_sec expiration;
-      asset publishing_fee; //< Fee must be greater than the sum of seeders' publishing prices * number of days. Is paid by author
-      string synopsis;
-      optional<custody_data_type> cd; //< if cd.n == 0 then no custody is submitted, and simplified verification is done.
+      asset publishing_fee; ///< Fee must be greater than the sum of seeders' publishing prices * number of days. Is paid by author
+      string synopsis; ///<JSON formatted structure containing content information
+      optional<custody_data_type> cd; ///< if cd.n == 0 then no custody is submitted, and simplified verification is done.
 
       account_id_type fee_payer()const { return author; }
       void validate()const;
    };
 
    /**
-    * @ingroup transactions
+    * @ingroup operations
     * @brief This operation is used to cancel submitted content.
     */
    struct content_cancellation_operation : public base_operation
@@ -140,7 +137,7 @@ namespace graphene { namespace chain {
    };
 
    /**
-    * @ingroup transactions
+    * @ingroup operations
     * @brief This operation is used to send a request to buy a content.
     */
    struct request_to_buy_operation : public base_operation
@@ -148,10 +145,10 @@ namespace graphene { namespace chain {
       struct fee_parameters_type { uint64_t fee = 0; };
       
       asset fee;
-      string URI;
-      account_id_type consumer;
-      asset price;
-      uint32_t region_code_from = RegionCodes::OO_none;
+      string URI; ///<Reference to the content beuing bought
+      account_id_type consumer; ///< Who is buying (and paying)
+      asset price; ///< Has to be equal or greater than the price defined in content
+      uint32_t region_code_from = RegionCodes::OO_none; ///< Location of the consumer
 
       /// Consumer's public key
       bigint_type pubKey;
@@ -161,7 +158,7 @@ namespace graphene { namespace chain {
    };
 
    /**
-    * @ingroup transactions
+    * @ingroup operations
     * @brief Rates a content.
     */
    struct leave_rating_and_comment_operation : public base_operation
@@ -171,15 +168,15 @@ namespace graphene { namespace chain {
       asset fee;
       string URI;
       account_id_type consumer;
-      uint64_t rating; //<1-5
-      string comment; // up to 1000 characters
+      uint64_t rating; ///<1-5 stars
+      string comment; ///< up to 500 characters
       
       account_id_type fee_payer()const { return consumer; }
       void validate()const;
    };
 
    /**
-    * @ingroup transactions
+    * @ingroup operations
     * @brief This operation is used to register a new seeder, modify the existing seeder or to extend seeder's lifetime.
     */
    struct ready_to_publish_operation : public base_operation
@@ -200,7 +197,7 @@ namespace graphene { namespace chain {
    };
 
    /**
-    * @ingroup transactions
+    * @ingroup operations
     * @brief Seeders have to periodically prove that they hold the content.
     */
    struct proof_of_custody_operation : public base_operation
@@ -217,7 +214,7 @@ namespace graphene { namespace chain {
    };
 
    /**
-    * @ingroup transactions
+    * @ingroup operations
     * @brief This operation is used to send encrypted share of a content and proof of delivery to consumer.
     */
    struct deliver_keys_operation : public base_operation
@@ -236,7 +233,7 @@ namespace graphene { namespace chain {
    };
 
    /**
-    * @ingroup transactions
+    * @ingroup operations
     * @brief This is a virtual operation emitted for the purpose of returning escrow to author
     */
    struct return_escrow_submission_operation : public base_operation
@@ -253,7 +250,7 @@ namespace graphene { namespace chain {
    };
 
    /**
-    * @ingroup transactions
+    * @ingroup operations
     * @brief This is a virtual operation emitted for the purpose of returning escrow to consumer
     */
    struct return_escrow_buying_operation : public base_operation
@@ -270,7 +267,7 @@ namespace graphene { namespace chain {
    };
 
    /**
-    * @ingroup transactions
+    * @ingroup operations
     * @brief This operation is used to report stats. These stats are later used to rate seeders.
     */
    struct report_stats_operation : public base_operation
@@ -287,8 +284,8 @@ namespace graphene { namespace chain {
    };
 
    /**
-    * @ingroup transactions
-    * @brief
+    * @ingroup operations
+    * @brief This is a virtual operation
     */
    struct pay_seeder_operation : public base_operation
    {
@@ -305,8 +302,8 @@ namespace graphene { namespace chain {
    };
 
    /**
-    * @ingroup transactions
-    * @brief
+    * @ingroup operations
+    * @brief This is a virtual operation
     */
    struct finish_buying_operation : public base_operation
    {

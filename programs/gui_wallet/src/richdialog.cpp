@@ -303,7 +303,10 @@ void ImportKeyWidget::Import()
       QString csTaskStr = "import_key "
       "\"" + m_userName + "\" "
       "\"" + m_key + "\" ";
-      Globals::instance().runTask(csTaskStr.toStdString());
+      auto result = Globals::instance().runTaskParse(csTaskStr.toStdString());
+      bool tf = result.get<bool>();
+      if(tf == false)
+         message = "Invalid key";
    }
    catch (const std::exception& ex)
    {
