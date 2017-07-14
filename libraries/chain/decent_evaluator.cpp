@@ -11,7 +11,6 @@
 #include <graphene/chain/buying_object.hpp>
 #include <graphene/chain/seeder_object.hpp>
 #include <graphene/chain/content_object.hpp>
-#include <graphene/chain/rating_object.hpp>
 #include <graphene/chain/subscription_object.hpp>
 #include <graphene/chain/seeding_statistics_object.hpp>
 #include <graphene/chain/transaction_detail_object.hpp>
@@ -557,27 +556,19 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
    
    void_result leave_rating_evaluator::do_apply(const leave_rating_and_comment_operation& o )
    {try{
-      //create rating object and adjust content statistics
+      //adjust content statistics
       auto& bidx = db().get_index_type<buying_index>().indices().get<by_consumer_URI>();
       const auto& bo = bidx.find( std::make_tuple(o.consumer, o.URI) );
       auto& idx = db().get_index_type<content_index>().indices().get<by_URI>();
       const auto& content = idx.find( o.URI );
 
-      db().create<rating_object>([&]( rating_object& ro ){
-           ro.buying = bo->id;
-           ro.consumer = o.consumer;
-           ro.URI = o.URI;
-           ro.rating = o.rating;
-           ro.comment = o.comment;
-      });
-
       db().modify<buying_object>( *bo, [&]( buying_object& b ){
            b.rated_or_commented = true;
            b.rating = o.rating;
+           b.comment = o.comment;
       });
 
       db().modify<content_object> ( *content, [&](content_object& co){
-
            if(co.num_of_ratings == 0) {
               co.AVG_rating = o.rating * 1000;
               co.num_of_ratings++;

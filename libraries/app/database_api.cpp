@@ -166,7 +166,7 @@ namespace graphene { namespace app {
       optional<buying_object> get_buying_by_consumer_URI( const account_id_type& consumer, const string& URI) const;
       vector<buying_object> get_buying_history_objects_by_consumer( const account_id_type& consumer )const;
       vector<buying_object> get_buying_objects_by_consumer( const account_id_type& consumer, const string& order, const object_id_type& id, const string& term, uint32_t count)const;
-      vector<rating_object> search_feedback(const string& user, const string& URI, const object_id_type& id, uint32_t count) const;
+      vector<buying_object> search_feedback(const string& user, const string& URI, const object_id_type& id, uint32_t count) const;
       optional<content_object> get_content( const string& URI )const;
       vector<content_summary> search_content(const string& term,
                                              const string& order,
@@ -176,8 +176,6 @@ namespace graphene { namespace app {
                                              const string& type,
                                              uint32_t count)const;
       vector<seeder_object> list_publishers_by_price( const uint32_t count )const;
-      vector<uint64_t> get_content_ratings( const string& URI )const;
-      map<string, string> get_content_comments( const string& URI )const;
       optional<seeder_object> get_seeder(account_id_type) const;
       optional<vector<seeder_object>> list_seeders_by_upload( const uint32_t count )const;
       vector<subscription_object> list_active_subscriptions_by_consumer( const account_id_type& account, const uint32_t count )const;
@@ -1668,7 +1666,7 @@ namespace
       return optional<content_object>();
    }
 
-   vector<rating_object> database_api::search_feedback(const string& user,
+   vector<buying_object> database_api::search_feedback(const string& user,
                                                        const string& URI,
                                                        const object_id_type& id,
                                                        uint32_t count) const
@@ -1683,28 +1681,22 @@ namespace
                                   uint32_t count,
                                   const string& URI,
                                   const object_id_type& id,
-                                  vector<rating_object>& result)
+                                  vector<buying_object>& result)
       {
-         const auto& idx_by_sort_tag = db.get_index_type<rating_index>().indices().get<sort_tag>();
-
-         auto range_equal = idx_by_sort_tag.equal_range(URI);
+         const auto& range_equal = db.get_index_type<buying_index>().indices().get<sort_tag>().equal_range(std::make_tuple( URI, true ));
          auto range_begin = range_equal.first;
          auto range_end = range_equal.second;
-
-//         if (range_begin == range_end ||
-//             range_begin == idx_by_sort_tag.end())
-//            return;
 
          auto itr_begin = return_one<is_ascending>::choose(range_begin, boost::reverse_iterator<decltype(range_end)>(range_end));
          auto itr_end = return_one<is_ascending>::choose(range_end, boost::reverse_iterator<decltype(range_begin)>(range_begin));
 
-         correct_iterator<rating_index, rating_object, sort_tag, decltype(itr_begin), is_ascending>(db, id, itr_begin);
+         correct_iterator<buying_index, buying_object, sort_tag, decltype(itr_begin), is_ascending>(db, id, itr_begin);
 
          const auto& idx_account = db.get_index_type<account_index>().indices().get<by_id>();
 
          while (count && itr_begin != itr_end)
          {
-            const rating_object& rating_item = *itr_begin;
+            const buying_object& rating_item = *itr_begin;
             ++itr_begin;
 
             result.push_back(rating_item);
@@ -1713,12 +1705,12 @@ namespace
       }
    }
 
-   vector<rating_object> database_api_impl::search_feedback(const string& user,
+   vector<buying_object> database_api_impl::search_feedback(const string& user,
                                                             const string& URI,
                                                             const object_id_type& id,
                                                             uint32_t count) const
    {
-      vector<rating_object> result;
+      vector<buying_object> result;
 
       try
       {
@@ -1729,15 +1721,15 @@ namespace
          {
             if (account_itr != idx_account.end())
             {
-               const auto& idx = _db.get_index_type<rating_index>().indices().get<by_consumer_URI>();
+               const auto& idx = _db.get_index_type<buying_index>().indices().get<by_consumer_URI>();
                auto itr = idx.find(std::make_tuple(account_itr->id, URI));
-               if(itr != idx.end())
+               if(itr != idx.end() && itr->rated_or_commented)
                   result.push_back(*itr);
             }
          }
          else
          {
-            search_rating_template<false, by_URI_time>(_db, count, URI, id, result);
+            search_rating_template<false, by_URI_rated>(_db, count, URI, id, result);
          }
       }FC_CAPTURE_AND_RETHROW( (user)(URI) );
 
@@ -2071,47 +2063,6 @@ namespace
       return result;
    }
 
-   map<string, string> database_api::get_content_comments( const string& URI)const
-   {
-      return my->get_content_comments( URI );
-   }
-
-   map<string, string> database_api_impl::get_content_comments( const string& URI)const
-   {
-      try
-      {
-         auto range = _db.get_index_type<rating_index>().indices().get<by_URI_consumer>().equal_range(URI);
-         map<string, string> result;
-         std::for_each(range.first, range.second, [&result](const rating_object& element) {
-            if( !element.comment.empty() )
-              result[ std::string( object_id_type ( element.consumer ) ) ] = element.comment;
-            });
-         return result;
-      }
-      FC_CAPTURE_AND_RETHROW( (URI) );
-   }
-   
-   vector<uint64_t> database_api::get_content_ratings( const string& URI)const
-   {
-      return my->get_content_ratings( URI );
-   }
-   
-   vector<uint64_t> database_api_impl::get_content_ratings( const string& URI)const
-   {
-      try
-      {
-         auto range = _db.get_index_type<rating_index>().indices().get<by_URI_consumer>().equal_range(URI);
-         vector<uint64_t> result;
-         result.reserve(distance(range.first, range.second));
-         std::for_each(range.first, range.second,
-                       [&result](const rating_object& element) {
-                          result.emplace_back(element.rating);
-                       });
-         return result;
-      }
-      FC_CAPTURE_AND_RETHROW( (URI) );
-   }
-   
    optional<vector<seeder_object>> database_api::list_seeders_by_upload( uint32_t count )const
    {
       return my->list_seeders_by_upload( count );

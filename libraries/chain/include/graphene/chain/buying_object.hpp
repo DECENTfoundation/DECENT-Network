@@ -27,6 +27,7 @@ using decent::encrypt::DInteger;
       string URI;
       uint64_t size = uint64_t(-1); //< initialized by content.size
       uint64_t rating = uint64_t(-1);  //< this is the user rating
+      string comment;
       uint64_t average_rating = uint64_t(-1);   //< initialized by content_object.AVG_rating
       asset price;  //< this is an escrow, initialized by request_to_buy_operation.price then reset to 0 for escrow system and inflation calculations
       asset paid_price; //< initialized by request_to_buy_operation.price
@@ -47,6 +48,7 @@ using decent::encrypt::DInteger;
 #
 
       bool is_open() const { return !( expired || delivered ); }
+      bool is_rated() const { return rated_or_commented; }
       share_type get_price() const { return paid_price.amount; }
    };
 
@@ -56,6 +58,7 @@ using decent::encrypt::DInteger;
    struct by_expiration_time;
    struct by_consumer_time;
    struct by_URI_open;
+   struct by_URI_rated;
    struct by_open_expiration;
    struct by_consumer_open;
    struct by_size;
@@ -111,6 +114,15 @@ using decent::encrypt::DInteger;
       }
    };
 
+   template <>
+   struct key_extractor<by_URI_rated, buying_object>
+   {
+      static std::tuple<string, uint64_t> get(buying_object const& ob)
+      {
+         return std::make_tuple(ob.URI, ob.rating);
+      }
+   };
+
    typedef multi_index_container<
       buying_object,
          indexed_by<
@@ -142,6 +154,12 @@ using decent::encrypt::DInteger;
                composite_key< buying_object,
                   member<buying_object, string, &buying_object::URI>,
                   const_mem_fun<buying_object, bool, &buying_object::is_open>
+               >
+            >,
+            ordered_non_unique< tag< by_URI_rated>,
+               composite_key< buying_object,
+                  member<buying_object, string, &buying_object::URI>,
+                  const_mem_fun<buying_object, bool, &buying_object::is_rated>
                >
             >,
             ordered_non_unique< tag< by_open_expiration>,
@@ -178,5 +196,5 @@ using decent::encrypt::DInteger;
 
 FC_REFLECT_DERIVED(graphene::chain::buying_object,
                    (graphene::db::object),
-                   (consumer)(URI)(synopsis)(price)(paid_price)(seeders_answered)(size)(rating)(average_rating)(expiration_time)(pubKey)(key_particles)
+                   (consumer)(URI)(synopsis)(price)(paid_price)(seeders_answered)(size)(rating)(comment)(average_rating)(expiration_time)(pubKey)(key_particles)
                    (expired)(delivered)(expiration_or_delivery_time)(rated_or_commented)(created)(expiration)(region_code_from) )

@@ -193,10 +193,10 @@ namespace graphene { namespace wallet {
          double              AVG_rating;
       };
 
-      struct rating_object_ex : public rating_object
+      struct rating_object_ex : public buying_object
       {
-         rating_object_ex(rating_object const& ob)
-         : rating_object(ob) {}
+         rating_object_ex( const buying_object& buying, string author )
+         : buying_object( buying ), author(author) {}
          std::string author;
       };
 
@@ -1741,22 +1741,6 @@ namespace graphene { namespace wallet {
          vector<seeder_object> list_publishers_by_price( uint32_t count )const;
 
          /**
-          * @brief Get a list of content ratings corresponding to the provided URI
-          * @param URI URI of the content
-          * @return The ratings of the content
-          * @ingroup WalletCLI
-          */
-         vector<uint64_t> get_content_ratings( const string& URI )const;
-
-         /**
-          * @brief Get a list of content comments corresponding to the provided URI
-          * @param URI URI of the content
-          * @return Map of accounts to corresponding comments
-          * @ingroup WalletCLI
-          */
-         map<string, string> get_content_comments( const string& URI )const;
-
-         /**
           * @brief Get a list of seeders ordered by total upload, in decreasing order
           * @param count Maximum number of seeders to retrieve
           * @return The seeders found
@@ -1917,9 +1901,7 @@ FC_REFLECT_DERIVED( graphene::wallet::buying_object_ex,
                   )
 
 FC_REFLECT_DERIVED( graphene::wallet::rating_object_ex,
-                   (graphene::chain::rating_object),
-                   (author)
-                   )
+                    (graphene::chain::buying_object),(author) )
 
 
 FC_REFLECT( graphene::wallet::operation_detail,
@@ -2036,8 +2018,6 @@ FC_API( graphene::wallet::wallet_api,
            (search_content)
            (search_user_content)
            (list_publishers_by_price)
-           (get_content_ratings)
-           (get_content_comments)
            (list_seeders_by_upload)
            (get_author_and_co_authors_by_URI)
            (create_package)
