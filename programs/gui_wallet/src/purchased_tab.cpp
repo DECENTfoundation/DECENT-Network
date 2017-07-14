@@ -3,7 +3,6 @@
 
 #include "gui_wallet_global.hpp"
 #include "purchased_tab.hpp"
-#include "gui_design.hpp"
 #include "decent_line_edit.hpp"
 #include "decent_button.hpp"
 #include "richdialog.hpp"

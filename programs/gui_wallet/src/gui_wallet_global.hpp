@@ -13,7 +13,6 @@
 #include <decent/wallet_utility/wallet_utility.hpp>
 
 #include "json.hpp"
-#include "gui_design.hpp"
 
 #include <numeric>
 #if defined( _MSC_VER )
@@ -302,6 +301,15 @@ namespace gui_wallet
       int           times_bought;
    };
 
+   QFont TableHeaderFont();
+   QFont AccountBalanceFont();
+   QFont DescriptionDetailsFont();
+   QFont PopupButtonRegularFont();
+   QFont PopupButtonBigFont();
+   QFont TabButtonFont();
+   QFont PaginationFont();
+   QFont ProgressInfoFont();
+   QFont MainFont();
 
 }
 

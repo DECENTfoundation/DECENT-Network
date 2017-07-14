@@ -17,6 +17,7 @@
 #include <QVBoxLayout>
 #include <QLocale>
 #include <QApplication>
+#include <QFont>
 
 // used for running daemons
 //
@@ -1421,3 +1422,91 @@ fc::optional<fc::logging_config> load_logging_config_from_ini_file(const fc::pat
    }
    FC_RETHROW_EXCEPTIONS(warn, "")
 }
+
+
+qreal FontSize(qreal size)
+{
+   //
+   // this function in theory can
+   // translate font sizes not only based on static conditions
+   //
+   return
+#if defined(_WIN32)
+   size / 12 * 8
+#elif defined (WINDOWS_HIGH_DPI)
+   size / 12 * 8
+#elif __APPLE__
+   size / 12 * 12
+#elif __linux__
+   size / 12 * 10
+#else
+   size / 12 * 12
+#endif
+   ;
+}
+
+
+QFont gui_wallet::PaginationFont()
+{
+   QFont font("Open Sans");
+   font.setPointSizeF(FontSize(12));
+   return font;
+}
+
+QFont gui_wallet::TableHeaderFont()
+{
+   QFont font("Open Sans");
+   font.setPointSizeF(FontSize(12));
+   font.setBold(true);
+   return font;
+}
+
+QFont gui_wallet::AccountBalanceFont()
+{
+   QFont font("Open Sans");
+   font.setPointSizeF(FontSize(12));
+   return font;
+}
+
+QFont gui_wallet::DescriptionDetailsFont()
+{
+   QFont font("Open Sans");
+   font.setPointSizeF(FontSize(12));
+   return font;
+}
+
+QFont gui_wallet::PopupButtonRegularFont()
+{
+   QFont font("Open Sans");
+   font.setPointSizeF(FontSize(12));
+   return font;
+}
+
+QFont gui_wallet::PopupButtonBigFont()
+{
+   QFont font("Open Sans");
+   font.setPointSizeF(FontSize(12));
+   return font;
+}
+
+QFont gui_wallet::TabButtonFont()
+{
+   QFont font("Open Sans");
+   font.setPointSizeF(FontSize(12));
+   return font;
+}
+
+QFont gui_wallet::ProgressInfoFont()
+{
+   QFont font("Open Sans");
+   font.setPointSizeF(FontSize(10));
+   return font;
+}
+
+QFont gui_wallet::MainFont()
+{
+   QFont font("Open Sans");
+   font.setPointSizeF(FontSize(12));
+   return font;
+}
+

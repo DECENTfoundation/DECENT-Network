@@ -20,7 +20,6 @@
 #include <graphene/chain/config.hpp>
 #include <graphene/chain/content_object.hpp>
 #include <graphene/wallet/wallet.hpp>
-#include "gui_design.hpp"
 
 #include <QDateTime>
 #include <QDate>

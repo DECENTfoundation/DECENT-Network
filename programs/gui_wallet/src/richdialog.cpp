@@ -9,8 +9,6 @@
 #include "decent_label.hpp"
 #include "decent_line_edit.hpp"
 #include "decent_text_edit.hpp"
-#include "gui_design.hpp"
-#include "decent_text_edit.hpp"
 
 #ifndef _MSC_VER
 #include <graphene/chain/content_object.hpp>

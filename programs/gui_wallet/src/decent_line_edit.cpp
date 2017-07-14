@@ -1,7 +1,6 @@
 /* (c) 2016, 2017 DECENT Services. For details refers to LICENSE.txt */
 #include "stdafx.h"
 
-#include "gui_design.hpp"
 #include "decent_line_edit.hpp"
 
 #include <QEvent>

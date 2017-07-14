@@ -6,7 +6,6 @@
 #include "upload_popup.hpp"
 #include "decent_button.hpp"
 #include "decent_line_edit.hpp"
-#include "gui_design.hpp"
 #include "richdialog.hpp"
 
 #include <boost/algorithm/string/replace.hpp>

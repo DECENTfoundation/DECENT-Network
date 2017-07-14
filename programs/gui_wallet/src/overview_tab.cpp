@@ -19,8 +19,6 @@
 #include "json.hpp"
 #endif
 
-#include "gui_design.hpp"
-
 using std::string;
 
 namespace gui_wallet

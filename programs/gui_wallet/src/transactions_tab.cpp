@@ -4,7 +4,6 @@
 #include "gui_wallet_global.hpp"
 #include "transactions_tab.hpp"
 #include "decent_line_edit.hpp"
-#include "gui_design.hpp"
 
 #ifndef _MSC_VER
 #include <QHeaderView>
