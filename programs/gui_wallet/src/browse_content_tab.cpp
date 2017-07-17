@@ -42,13 +42,7 @@ BrowseContentTab::BrowseContentTab(QWidget* pParent,
       {tr("Price"), 6, "price"},
       {tr("Uploaded"), 7, "created"},
       {tr("Expiration"), 7, "expiration"},
-      { " ",
-#ifdef WINDOWS_HIGH_DPI
-           -90
-#else
-           -50
-#endif
-      },
+      { " ", 4 }
    });
 
    QVBoxLayout* pMainLayout = new QVBoxLayout();

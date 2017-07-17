@@ -768,7 +768,7 @@ void MainWindow::slot_getContents()
 
    if (pTab)
    {
-      pTab->m_i_page_size = pTab->size().height() / 35;
+      pTab->m_i_page_size = pTab->size().height() / 30 / gui_wallet::scale() - 1;
 
       pTab->tryToUpdate();
 

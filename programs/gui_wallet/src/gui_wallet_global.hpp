@@ -254,6 +254,7 @@ namespace gui_wallet
       int getCurrentHighlightedRow() const;
       std::string getSortedColumn() const;
       void set_columns(const std::vector<DecentColumn>& cols);
+      void setRowCount(int rows);
 
    signals:
       void signal_SortingChanged(int);
@@ -301,7 +302,8 @@ namespace gui_wallet
       int           times_bought;
    };
 
-   QFont TableHeaderFont();
+   qreal scale();
+
    QFont AccountBalanceFont();
    QFont DescriptionDetailsFont();
    QFont PopupButtonRegularFont();

@@ -937,11 +937,11 @@ DecentTable::DecentTable(QWidget* pParent)
 {
    //horizontalHeader()->setStretchLastSection(true);
    setSelectionMode(QAbstractItemView::NoSelection);
-   setStyleSheet("QTableView{border : 0px}");
    setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
    setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
    verticalHeader()->hide();
+
    setMouseTracking(true);
 
    connect(this->horizontalHeader(), SIGNAL(sectionClicked(int)), this, SLOT(sectionClicked(int)));
@@ -964,17 +964,14 @@ void DecentTable::set_columns(const std::vector<DecentColumn>& cols)
 {
    _cols = cols;
 
-   this->setColumnCount(cols.size());
-
-   this->horizontalHeader()->setDefaultSectionSize(300);
-   this->setRowHeight(0,35);
+   setColumnCount(cols.size());
 
    QStringList columns;
    for (int i = 0; i < cols.size(); ++i) {
       this->horizontalHeader()->setSectionResizeMode(i, QHeaderView::Fixed);
       columns << cols[i].title;
    }
-   this->setHorizontalHeaderLabels(columns);
+   setHorizontalHeaderLabels(columns);
 
    _sum_weights = std::accumulate(_cols.begin(), _cols.end(),
                                   0, [](int sum, const DecentColumn& col) {
@@ -985,18 +982,16 @@ void DecentTable::set_columns(const std::vector<DecentColumn>& cols)
                                    0, [](int sum, const DecentColumn& col) {
                                       return (col.size > 0) ? sum : sum - col.size;
                                    });
+}
 
-#ifdef WINDOWS_HIGH_DPI
-   this->horizontalHeader()->setFixedHeight(45);
-#else
-   this->horizontalHeader()->setFixedHeight(35);
-#endif
-   this->horizontalHeader()->setFont(TableHeaderFont());
+void DecentTable::setRowCount(int rows)
+{
+   QTableWidget::setRowCount(rows);
 
-   this->horizontalHeader()->setStyleSheet("QHeaderView::section {"
-                                           "border-right: 1px solid rgb(193,192,193);"
-                                           "border-bottom: 0px;"
-                                           "border-top: 0px;}");
+   for(int i = 0; i < rowCount(); ++i)
+   {
+      setRowHeight(i, 30 * gui_wallet::scale());
+   }
 }
 
 void DecentTable::sectionClicked(int index)
@@ -1021,9 +1016,9 @@ void DecentTable::resizeEvent(QResizeEvent * a_event)
 
    for(int i = 0; i < _cols.size(); ++i) {
       if (_cols[i].size > 0) {
-         this->setColumnWidth(i, width * _cols[i].size / _sum_weights);
+         setColumnWidth(i, width * _cols[i].size / _sum_weights);
       } else {
-         this->setColumnWidth(i, -_cols[i].size);
+         setColumnWidth(i, -_cols[i].size);
       }
    }
 }
@@ -1046,7 +1041,7 @@ void DecentTable::mouseMoveEvent(QMouseEvent * event)
 
    }
 
-   int row = this->rowAt(event->pos().y());
+   int row = rowAt(event->pos().y());
 
    if(row < 0) {
       _current_highlighted_row = -1;
@@ -1423,26 +1418,38 @@ fc::optional<fc::logging_config> load_logging_config_from_ini_file(const fc::pat
    FC_RETHROW_EXCEPTIONS(warn, "")
 }
 
-
-qreal FontSize(qreal size)
+qreal gui_wallet::scale()
 {
    //
    // this function in theory can
-   // translate font sizes not only based on static conditions
+   // get scale not only based on static conditions
    //
+   // this is the single place defining the scale
+   // of all controls and fonts. this is supporting
+   // different dpi settings
+   // all controls use "em" unit that follow font sizes
+   // and behave this scale
+   // only exception is the shfitty qtablewidget
+   //
+   qreal local_scale = 1;
    return
 #if defined(_WIN32)
-   size / 12 * 8
+   local_scale / 12 * 8
 #elif defined (WINDOWS_HIGH_DPI)
-   size / 12 * 8
+   local_scale / 12 * 8
 #elif __APPLE__
-   size / 12 * 12
+   local_scale / 12 * 12
 #elif __linux__
-   size / 12 * 10
+   local_scale / 12 * 10
 #else
-   size / 12 * 12
+   local_scale / 12 * 12
 #endif
    ;
+}
+
+qreal FontSize(qreal size)
+{
+   return size * gui_wallet::scale();
 }
 
 
@@ -1450,14 +1457,6 @@ QFont gui_wallet::PaginationFont()
 {
    QFont font("Open Sans");
    font.setPointSizeF(FontSize(12));
-   return font;
-}
-
-QFont gui_wallet::TableHeaderFont()
-{
-   QFont font("Open Sans");
-   font.setPointSizeF(FontSize(12));
-   font.setBold(true);
    return font;
 }
 

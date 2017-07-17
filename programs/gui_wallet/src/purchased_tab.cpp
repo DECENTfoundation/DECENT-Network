@@ -45,7 +45,7 @@ PurchasedTab::PurchasedTab(QWidget* pParent,
       {tr("Price"), 15, "price"},
       {tr("Purchased"), 15, "purchased"},
       {tr("Status"), 20},
-      {"", 5},
+      {" ", 5},
       {" ", 5}
    });
 

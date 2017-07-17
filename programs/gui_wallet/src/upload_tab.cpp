@@ -47,12 +47,8 @@ Upload_tab::Upload_tab(QWidget* pParent,
       {tr("Published"), 10, "created"},
       {tr("Expiration"), 10, "expiration"},
       {tr("Status"), 10},
-#ifdef WINDOWS_HIGH_DPI
-      { " ", -80 }
-#else
-      {" ", -50},
-      {" ", -50}
-#endif
+      {" ", 4},
+      {" ", 4}
    });
 
    QVBoxLayout* pMainLayout = new QVBoxLayout;
