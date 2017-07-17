@@ -150,7 +150,12 @@ namespace detail {
                "66.70.188.105:40000"             // # decentspace (CA)
             };
             for( const string& endpoint_string : seeds ){
-               std::vector<fc::ip::endpoint> endpoints = resolve_string_to_ip_endpoints(endpoint_string);
+               std::vector<fc::ip::endpoint> endpoints;
+               try{
+                   endpoints = resolve_string_to_ip_endpoints(endpoint_string);
+               } catch (...) {
+                  continue;
+               }
                for (const fc::ip::endpoint& endpoint : endpoints)
                {
                   ilog("Adding seed node ${endpoint}", ("endpoint", endpoint));
