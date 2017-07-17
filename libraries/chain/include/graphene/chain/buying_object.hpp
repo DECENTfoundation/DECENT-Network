@@ -28,7 +28,6 @@ using decent::encrypt::DInteger;
       uint64_t size = uint64_t(-1); //< initialized by content.size
       uint64_t rating = uint64_t(-1);  //< this is the user rating
       string comment;
-      uint64_t average_rating = uint64_t(-1);   //< initialized by content_object.AVG_rating
       asset price;  //< this is an escrow, initialized by request_to_buy_operation.price then reset to 0 for escrow system and inflation calculations
       asset paid_price; //< initialized by request_to_buy_operation.price
       std::string synopsis;   //< initialized by content.synopsis
@@ -43,7 +42,6 @@ using decent::encrypt::DInteger;
       // allowed to add comment later. If user wants to add both rating and comment, he has to do it in one step.
       bool rated_or_commented = false;
       time_point_sec created; //< initialized by content.created
-      time_point_sec expiration; //< initialized by content.expiration
       uint32_t region_code_from;
 #
 
@@ -196,5 +194,5 @@ using decent::encrypt::DInteger;
 
 FC_REFLECT_DERIVED(graphene::chain::buying_object,
                    (graphene::db::object),
-                   (consumer)(URI)(synopsis)(price)(paid_price)(seeders_answered)(size)(rating)(comment)(average_rating)(expiration_time)(pubKey)(key_particles)
-                   (expired)(delivered)(expiration_or_delivery_time)(rated_or_commented)(created)(expiration)(region_code_from) )
+                   (consumer)(URI)(synopsis)(price)(paid_price)(seeders_answered)(size)(rating)(comment)(expiration_time)(pubKey)(key_particles)
+                   (expired)(delivered)(expiration_or_delivery_time)(rated_or_commented)(created)(region_code_from) )

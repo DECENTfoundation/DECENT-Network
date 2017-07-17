@@ -190,7 +190,7 @@ namespace graphene { namespace wallet {
          std::string         author_account;
          uint32_t            times_bought;
          fc::ripemd160       hash;
-         double              AVG_rating;
+         uint64_t            AVG_rating;
       };
 
       struct rating_object_ex : public buying_object

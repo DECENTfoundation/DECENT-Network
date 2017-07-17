@@ -4099,7 +4099,6 @@ void wallet_api::leave_rating_and_comment(string consumer,
          bobj.hash = content->_hash;
          bobj.AVG_rating = content->AVG_rating;
          bobj.rating = content->AVG_rating;
-         bobj.average_rating = content->AVG_rating;
       }
 
       return result;

@@ -432,7 +432,6 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
                                                                bo.synopsis = itr->synopsis;
                                                                bo.size = itr->size;
                                                                bo.created = itr->created;
-                                                               bo.average_rating = itr->AVG_rating;
                                                             }
                                                          }
                                                          bo.region_code_from = o.region_code_from;
