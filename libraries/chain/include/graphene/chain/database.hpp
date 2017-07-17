@@ -362,6 +362,7 @@ namespace graphene { namespace chain {
           * @param subscription Expired subscription object
           */
          void disallow_automatic_renewal_of_subscription(const subscription_object& subscription);
+         void set_and_reset_seeding_stats();
          void decent_housekeeping();
          share_type get_new_asset_per_block();
          share_type get_miner_budget(uint32_t blocks);

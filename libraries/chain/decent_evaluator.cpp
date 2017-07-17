@@ -326,7 +326,14 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
             });
          }
 
-
+         const auto& idx2 = db().get_index_type<seeding_statistics_index>().indices().get<by_seeder>();
+         for( const auto& element : o.seeders )
+         {
+            const auto& stats = idx2.find( element );
+            db().modify<seeding_statistics_object>( *stats, [](seeding_statistics_object& so){
+               so.total_content_requested_to_seed++;
+            });
+         }
 
          auto& d = db();
          db().create<transaction_detail_object>([&o, &title, &d](transaction_detail_object& obj)
@@ -438,6 +445,17 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
                                                       });
       db().adjust_balance( o.consumer, -price );
 
+      const auto& idx = db().get_index_type<content_index>().indices().get<by_URI>();
+      const auto& content = idx.find( o.URI );
+      const auto& idx2 = db().get_index_type<seeding_statistics_index>().indices().get<by_seeder>();
+      for( auto& element : content->key_parts )
+      {
+         const auto& stats = idx2.find( element.first );
+         db().modify<seeding_statistics_object>( *stats, [](seeding_statistics_object& so){
+            so.missed_delivered_keys++;
+         });
+      }
+
       auto& d = db();
       db().create<transaction_detail_object>([&o, &d, &price](transaction_detail_object& obj)
                                              {
@@ -489,10 +507,19 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
       bool delivered;
       // if the response (key particle) has not been seen before, note it
       if( std::find(buying.seeders_answered.begin(), buying.seeders_answered.end(), o.seeder) == buying.seeders_answered.end() )
+      {
          db().modify<buying_object>(buying, [&](buying_object& bo){
-              bo.seeders_answered.push_back( o.seeder );
-              bo.key_particles.push_back( decent::encrypt::Ciphertext(o.key) );
+            bo.seeders_answered.push_back( o.seeder );
+            bo.key_particles.push_back( decent::encrypt::Ciphertext(o.key) );
          });
+
+         const auto& idx2 = db().get_index_type<seeding_statistics_index>().indices().get<by_seeder>();
+         const auto& stats = idx2.find( o.seeder );
+         db().modify<seeding_statistics_object>( *stats, [](seeding_statistics_object& so){
+            so.missed_delivered_keys--;
+            so.total_delivered_keys++;
+         } );
+      }
       delivered = buying.seeders_answered.size() >= content->quorum;
       //if the content has already been delivered or expired, just note the key particles and go on
       if( buying.delivered || buying.expired )
@@ -676,7 +703,20 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
          db().modify<content_object>(*content, [&](content_object& co){
               co.last_proof.emplace(std::make_pair(o.seeder, db().head_block_time()));
          });
+
+         const auto& idx2 = db().get_index_type<seeding_statistics_index>().indices().get<by_seeder>();
+         const auto& stats = idx2.find( o.seeder );
+         db().modify<seeding_statistics_object>( *stats, [&content](seeding_statistics_object& so){
+            so.total_content_seeded += ( content->size * 1000 * 1000 ) / content->key_parts.size();
+            so.num_of_content_seeded++;
+            so.total_content_requested_to_seed--;
+         });
       }else{
+         const auto& idx2 = db().get_index_type<seeding_statistics_index>().indices().get<by_seeder>();
+         const auto& stats = idx2.find( o.seeder );
+         db().modify<seeding_statistics_object>( *stats, [&content](seeding_statistics_object& so){
+            so.num_of_pors++;
+         });
          //recurrent PoR, calculate payment
          //the PoR shall be ideally broadcasted once per 24h. if the seeder pushes them too often, he is penalized by a
          // loss factor equal to one forth of the time remaining to 24h. E.g. by pushing it in 12h he is penalized by
