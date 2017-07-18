@@ -13,7 +13,6 @@
 #include <decent/wallet_utility/wallet_utility.hpp>
 
 #include "json.hpp"
-#include "gui_design.hpp"
 
 #include <numeric>
 #if defined( _MSC_VER )
@@ -255,6 +254,7 @@ namespace gui_wallet
       int getCurrentHighlightedRow() const;
       std::string getSortedColumn() const;
       void set_columns(const std::vector<DecentColumn>& cols);
+      void setRowCount(int rows);
 
    signals:
       void signal_SortingChanged(int);
@@ -302,6 +302,16 @@ namespace gui_wallet
       int           times_bought;
    };
 
+   qreal scale();
+
+   QFont AccountBalanceFont();
+   QFont DescriptionDetailsFont();
+   QFont PopupButtonRegularFont();
+   QFont PopupButtonBigFont();
+   QFont TabButtonFont();
+   QFont PaginationFont();
+   QFont ProgressInfoFont();
+   QFont MainFont();
 
 }
 

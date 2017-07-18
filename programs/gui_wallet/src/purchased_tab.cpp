@@ -3,7 +3,6 @@
 
 #include "gui_wallet_global.hpp"
 #include "purchased_tab.hpp"
-#include "gui_design.hpp"
 #include "decent_line_edit.hpp"
 #include "decent_button.hpp"
 #include "richdialog.hpp"
@@ -46,7 +45,7 @@ PurchasedTab::PurchasedTab(QWidget* pParent,
       {tr("Price"), 15, "price"},
       {tr("Purchased"), 15, "purchased"},
       {tr("Status"), 20},
-      {"", 5},
+      {" ", 5},
       {" ", 5}
    });
 

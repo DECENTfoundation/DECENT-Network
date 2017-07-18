@@ -16,14 +16,13 @@
 #include <QStyleFactory>
 #include <QTimer>
 #include <QButtonGroup>
-
+#include <QFontDatabase>
 #else
 
 #endif
 
 
 #include "mainwindow.hpp"
-#include "gui_design.hpp"
 #include "decent_label.hpp"
 #include "decent_button.hpp"
 #include "decent_line_edit.hpp"
@@ -33,8 +32,6 @@
 #include "upload_tab.hpp"
 #include "overview_tab.hpp"
 #include "purchased_tab.hpp"
-
-#include "gui_wallet_centralwidget.hpp"
 
 #include "json.hpp"
 
@@ -92,8 +89,10 @@ MainWindow::MainWindow()
 {
    setWindowTitle(tr("DECENT - Blockchain Content Distribution"));
 
+   QFontDatabase::addApplicationFont(":/fonts/font/OpenSans-Bold.ttf");
+   QFontDatabase::addApplicationFont(":/fonts/font/OpenSans-Regular.ttf");
+
    QWidget* pContainerWidget = new QWidget(this);
-   //QMenuBar* pMenuBar = new QMenuBar(pContainerWidget);
    QWidget* pMainWidget = new QWidget(pContainerWidget);
    //
    // 1st row controls
@@ -271,9 +270,7 @@ MainWindow::MainWindow()
    QVBoxLayout* pContainerLayout = new QVBoxLayout;
    pContainerLayout->setContentsMargins(0, 0, 0, 0);
    pContainerLayout->setSpacing(0);
-/*#ifdef _MSC_VER // let's check if this really is needed
-   pContainerLayout->addWidget(pMenuBar);
-#endif*/
+
    pContainerLayout->addWidget(m_pStackedWidget);
    pContainerWidget->setLayout(pContainerLayout);
 
@@ -371,7 +368,6 @@ MainWindow::MainWindow()
 
    resize(900, 600);
 
-
 #ifdef _MSC_VER
     int height = style()->pixelMetric(QStyle::PM_TitleBarHeight);
     setWindowIcon(height > 32 ? QIcon(":/icon/images/windows_decent_icon_32x32.png")
@@ -397,6 +393,9 @@ void MainWindow::slot_setSplash()
    pConnectingLabel->setText(tr("Please wait, we are syncing with network…"));
    StatusLabel* pSyncUpLabel = new StatusLabel(pSplashScreen, DecentLabel::SplashInfo);
    DecentButton* pButton = new DecentButton(this, DecentButton::SplashAction);
+
+   pConnectingLabel->setFont(gui_wallet::ProgressInfoFont());
+   pSyncUpLabel->setFont(gui_wallet::ProgressInfoFont());
 
    pButton->hide();
    pButton->setText(tr("Proceed"));
@@ -769,7 +768,7 @@ void MainWindow::slot_getContents()
 
    if (pTab)
    {
-      pTab->m_i_page_size = pTab->size().height() / 35;
+      pTab->m_i_page_size = pTab->size().height() / 30 / gui_wallet::scale() - 1;
 
       pTab->tryToUpdate();
 

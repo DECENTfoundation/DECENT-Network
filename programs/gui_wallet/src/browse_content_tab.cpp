@@ -20,7 +20,6 @@
 #include <graphene/chain/config.hpp>
 #include <graphene/chain/content_object.hpp>
 #include <graphene/wallet/wallet.hpp>
-#include "gui_design.hpp"
 
 #include <QDateTime>
 #include <QDate>
@@ -43,13 +42,7 @@ BrowseContentTab::BrowseContentTab(QWidget* pParent,
       {tr("Price"), 6, "price"},
       {tr("Uploaded"), 7, "created"},
       {tr("Expiration"), 7, "expiration"},
-      { " ",
-#ifdef WINDOWS_HIGH_DPI
-           -90
-#else
-           -50
-#endif
-      },
+      { " ", 4 }
    });
 
    QVBoxLayout* pMainLayout = new QVBoxLayout();

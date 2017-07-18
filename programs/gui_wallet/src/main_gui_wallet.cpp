@@ -21,7 +21,6 @@
 
 #include <QTranslator>
 
-#include "gui_design.hpp"
 using std::string;
 
 int main(int argc, char* argv[])
@@ -43,7 +42,7 @@ int main(int argc, char* argv[])
       app.installTranslator(translator);
    }
 
-   app.setFont(MainFont());
+   app.setFont(gui_wallet::MainFont());
    
    gui_wallet::MainWindow aMainWindow;
 

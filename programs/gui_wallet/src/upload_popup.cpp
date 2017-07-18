@@ -6,7 +6,6 @@
 #include "decent_button.hpp"
 #include "decent_text_edit.hpp"
 #include "decent_line_edit.hpp"
-#include "gui_design.hpp"
 
 #ifndef _MSC_VER
 #include <QLocale>

@@ -119,14 +119,13 @@ QLabel[type='tablesearch']
 }
 QLabel[type='splashinfo']
 {
-   font-size: 10px;
    color: rgb(127, 138, 158);
 }
 
 QLabel QComboBox
 {
    /*applies to users combo*/
-   max-width: 7em;
+   max-width: 15em;
    max-height: 1em;
 }
 QDialog, QMainWindow, QMessageBox
@@ -404,7 +403,7 @@ QTextEdit QScrollBar::sub-line:vertical
 }
 QProgressBar
 {
-   border-radius: 0.28em;
+   border-radius: 0.27em;
    max-height: 0.56em;
    min-height: 0.56em;
    width: 9.86em;
@@ -414,9 +413,27 @@ QProgressBar
 }
 QProgressBar:chunk
 {
-   border-radius: 0.28em;
+   border-radius: 0.27em;
    background: rgb(31, 218, 129);
 }
-
-
-
+QTableView
+{
+   border : 0px
+}
+QTableView QHeaderView::section
+{
+   border-right: 1px solid rgb(193,192,193);
+   border-left: 0px;
+   border-bottom: 0px;
+   border-top: 0px;
+   font-weight: bold;
+}
+QTableView QHeaderView::section::horizontal
+{
+   max-height: 2em;
+   min-height: 2em;
+}
+QTableView QHeaderView::section::horizontal::first
+{
+   border-left: 1px solid rgb(193,192,193);
+}

@@ -19,8 +19,6 @@
 #include "json.hpp"
 #endif
 
-#include "gui_design.hpp"
-
 using std::string;
 
 namespace gui_wallet
@@ -35,9 +33,9 @@ Overview_tab::Overview_tab(QWidget* pParent,
    m_pTableWidget->set_columns({
       {tr("Account ID"), 20, "id"},
       {tr("Account"), 50, "name"},
-      {"", 10},
-      {"", 10},
-      {"", 10}
+      {"", 5},
+      {"", 5},
+      {"", 5}
    });
 
    QVBoxLayout* pMainLayout = new QVBoxLayout();
