@@ -446,7 +446,6 @@ namespace detail {
             wild_access.allowed_apis.push_back( "network_broadcast_api" );
             wild_access.allowed_apis.push_back( "history_api" );
             wild_access.allowed_apis.push_back( "crypto_api" );
-            wild_access.allowed_apis.push_back( "network_node_api" );
             _apiaccess.permission_map["*"] = wild_access;
          }
 
