@@ -141,7 +141,7 @@ void PurchasedTab::timeToUpdate(const std::string& result)
          contentObject.times_bought = 0;
       }
 
-      contentObject.AVG_rating = content["average_rating"].get<double>() / 1000;
+      contentObject.AVG_rating = content["AVG_rating"].get<uint64_t>() / 1000;
    }
 
 
