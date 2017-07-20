@@ -182,6 +182,8 @@ void database::set_and_reset_seeding_stats()
          so.seeding_abs_ratio = seeding_abs_ratio;
          so.missed_ratio = missed_ratio;
       });
+
+      itr++;
    }
 }
 
