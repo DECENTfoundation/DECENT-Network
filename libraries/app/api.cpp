@@ -374,12 +374,6 @@ namespace graphene { namespace app {
                     result.push_back( sobj->seeder );
                     break;
                  }
-                 case impl_rating_object_type:{
-                    const auto& robj = dynamic_cast<const rating_object*>(obj);
-                    assert( robj != nullptr );
-                    result.push_back( robj->consumer );
-                    break;
-                 }
           }
        }
        return result;

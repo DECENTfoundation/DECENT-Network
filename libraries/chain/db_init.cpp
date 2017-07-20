@@ -34,7 +34,6 @@
 #include <graphene/chain/global_property_object.hpp>
 #include <graphene/chain/operation_history_object.hpp>
 #include <graphene/chain/proposal_object.hpp>
-#include <graphene/chain/rating_object.hpp>
 #include <graphene/chain/seeder_object.hpp>
 #include <graphene/chain/transaction_object.hpp>
 #include <graphene/chain/vesting_balance_object.hpp>
@@ -178,7 +177,6 @@ void database::initialize_indexes()
    add_index< primary_index<simple_index<miner_schedule_object        > > >();
    add_index< primary_index<simple_index<budget_record_object           > > >();
    add_index< primary_index< seeder_index                                 > >();
-   add_index< primary_index< rating_index                                 > >();
    add_index< primary_index< content_index                                > >();
    add_index< primary_index< buying_index                                 > >();
    add_index< primary_index< subscription_index                                 > >();

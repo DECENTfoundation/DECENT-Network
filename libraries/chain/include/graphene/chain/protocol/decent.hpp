@@ -169,7 +169,7 @@ namespace graphene { namespace chain {
       string URI;
       account_id_type consumer;
       uint64_t rating; ///<1-5 stars
-      string comment; ///< up to 500 characters
+      string comment; /// DECENT_MAX_COMMENT_SIZE
       
       account_id_type fee_payer()const { return consumer; }
       void validate()const;

@@ -39,7 +39,6 @@
 #include <graphene/chain/buying_object.hpp>
 #include <graphene/chain/content_object.hpp>
 #include <graphene/chain/seeder_object.hpp>
-#include <graphene/chain/rating_object.hpp>
 #include <graphene/chain/budget_record_object.hpp>
 #include <graphene/chain/subscription_object.hpp>
 #include <graphene/chain/transaction_detail_object.hpp>
@@ -635,7 +634,7 @@ namespace graphene { namespace app {
           * @return The feedback found
           * @ingroup DatabaseAPI
           */
-         vector<rating_object> search_feedback(const string& user,
+         vector<buying_object> search_feedback(const string& user,
                                                const string& URI,
                                                const object_id_type& id,
                                                uint32_t count) const;
@@ -696,22 +695,6 @@ namespace graphene { namespace app {
           * @ingroup DatabaseAPI
           */
          optional<seeder_object> get_seeder(account_id_type aid) const;
-
-         /**
-          * @brief Get a list of content ratings corresponding to the provided URI
-          * @param URI URI of the content ratings to retrieve
-          * @return The ratings of the content
-          * @ingroup DatabaseAPI
-          */
-         vector<uint64_t> get_content_ratings( const string& URI )const;
-
-         /**
-          * @brief Get a list of content comments corresponding to the provided URI
-          * @param URI URI of the content
-          * @return Map of accounts to corresponding comments
-          * @ingroup DatabaseAPI
-          */
-         map<string, string> get_content_comments( const string& URI )const;
 
          /**
           * @brief Get a list of seeders by total upload, in decreasing order
@@ -861,8 +844,6 @@ FC_API(graphene::app::database_api,
           (restore_encryption_key)
           (search_content)
           (list_publishers_by_price)
-          (get_content_ratings)
-          (get_content_comments)
           (list_seeders_by_upload)
           (get_seeder)
           (get_real_supply)

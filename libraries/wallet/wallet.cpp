@@ -4099,7 +4099,6 @@ void wallet_api::leave_rating_and_comment(string consumer,
          bobj.hash = content->_hash;
          bobj.AVG_rating = content->AVG_rating;
          bobj.rating = content->AVG_rating;
-         bobj.average_rating = content->AVG_rating;
       }
 
       return result;
@@ -4111,13 +4110,10 @@ vector<rating_object_ex> wallet_api::search_feedback(const string& user,
                                                      uint32_t count) const
 {
    vector<rating_object_ex> result;
-   vector<rating_object> temp = my->_remote_db->search_feedback(user, URI, object_id_type(id), count);
+   vector<buying_object> temp = my->_remote_db->search_feedback(user, URI, object_id_type(id), count);
 
    for (auto const& item : temp)
-   {
-      result.push_back(rating_object_ex(item));
-      result.back().author = get_account(string(object_id_type(item.consumer))).name;
-   }
+      result.push_back(rating_object_ex( item, get_account(string(object_id_type(item.consumer))).name ));
 
    return result;
 }
@@ -4142,11 +4138,6 @@ vector<content_summary> wallet_api::search_content(const string& term,
                                                    uint32_t count)const
 {
    return my->_remote_db->search_content(term, order, user, region_code, object_id_type(id), type, count);
-}
-
-map<string, string> wallet_api::get_content_comments( const string& URI )const
-{
-   return my->_remote_db->get_content_comments( URI );
 }
 
    vector<content_summary> wallet_api::search_user_content(const string& user,
@@ -4213,11 +4204,6 @@ pair<account_id_type, vector<account_id_type>> wallet_api::get_author_and_co_aut
    vector<seeder_object> wallet_api::list_publishers_by_price( uint32_t count )const
    {
       return my->_remote_db->list_publishers_by_price( count );
-   }
-
-   vector<uint64_t> wallet_api::get_content_ratings( const string& URI )const
-   {
-      return my->_remote_db->get_content_ratings( URI );
    }
 
    optional<vector<seeder_object>> wallet_api::list_seeders_by_upload( const uint32_t count )const
