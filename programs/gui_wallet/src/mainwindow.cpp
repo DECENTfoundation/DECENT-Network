@@ -93,7 +93,6 @@ MainWindow::MainWindow()
    setWindowTitle(tr("DECENT - Blockchain Content Distribution"));
 
    QWidget* pContainerWidget = new QWidget(this);
-   //QMenuBar* pMenuBar = new QMenuBar(pContainerWidget);
    QWidget* pMainWidget = new QWidget(pContainerWidget);
    //
    // 1st row controls
@@ -271,9 +270,7 @@ MainWindow::MainWindow()
    QVBoxLayout* pContainerLayout = new QVBoxLayout;
    pContainerLayout->setContentsMargins(0, 0, 0, 0);
    pContainerLayout->setSpacing(0);
-/*#ifdef _MSC_VER // let's check if this really is needed
-   pContainerLayout->addWidget(pMenuBar);
-#endif*/
+
    pContainerLayout->addWidget(m_pStackedWidget);
    pContainerWidget->setLayout(pContainerLayout);
 
@@ -381,7 +378,8 @@ MainWindow::MainWindow()
 
 MainWindow::~MainWindow()
 {
-   delete m_pUpdateManager;
+   if(m_pUpdateManager)
+      delete m_pUpdateManager;
 }
 
 void MainWindow::slot_setSplash()
