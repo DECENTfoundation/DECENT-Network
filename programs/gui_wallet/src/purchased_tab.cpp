@@ -115,7 +115,6 @@ void PurchasedTab::timeToUpdate(const std::string& result)
       contentObject.created = contentObject.created.substr(0, contentObject.created.find("T"));
       contentObject.purchased_time = content["expiration_or_delivery_time"].get<std::string>();
       contentObject.purchased_time = contentObject.purchased_time.substr(0, contentObject.purchased_time.find("T"));
-      contentObject.expiration = content["expiration"].get<std::string>();
       
       contentObject.size = content["size"].get<int>();
       contentObject.id = content["id"].get<std::string>();
