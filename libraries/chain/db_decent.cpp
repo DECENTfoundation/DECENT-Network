@@ -47,7 +47,18 @@ void database::buying_expire(const buying_object& buying){
 }
 
 void database::content_expire(const content_object& content){
-   adjust_balance( content.author, content.publishing_fee_escrow );
+   if( content.publishing_fee_escrow.amount >= 0 )
+      adjust_balance( content.author, content.publishing_fee_escrow );
+   else //workaround due to block halt at #404726- this should never happen but if it does again, the remaining amount shall be paid by someone else, in this case by accumulated fees
+   {
+      elog("applying woekaround in content_expire to content ${s}",("s",content.URI));
+      const asset_dynamic_data_object& core =
+            asset_id_type(0)(*this).dynamic_asset_data_id(*this);
+      modify(core, [&]( asset_dynamic_data_object& _core )
+      {
+          _core.accumulated_fees += content.publishing_fee_escrow.amount;
+      });
+   }
    modify<content_object>(content, [&](content_object& co){
         co.publishing_fee_escrow.amount = 0;
    });

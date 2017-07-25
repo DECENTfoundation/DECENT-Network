@@ -738,6 +738,11 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
          uint64_t loss = ( 10000 - ratio ) / 4;
          uint64_t total_reward_ratio = ( ratio * ( 10000 - loss ) ) / 10000;
          asset reward ( seeder.price.amount * total_reward_ratio * content->size / 10000 );
+         //Fix due to block halt at #404726
+         if( db().head_block_num() > 404727 && reward.amount > content->publishing_fee_escrow.amount ) {
+            reward = std::max(0, content->publishing_fee_escrow);
+            elog("publishing reward adjusted, something wrong with content ${s}", ("s",content->URI));
+         }
          //take care of the payment
          db().modify<content_object>( *content, [&] (content_object& co ){
               co.last_proof[o.seeder] = db().head_block_time();
