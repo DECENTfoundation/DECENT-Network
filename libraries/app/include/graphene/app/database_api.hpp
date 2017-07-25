@@ -423,6 +423,9 @@ namespace graphene { namespace app {
           */
          vector<optional<asset_object>> lookup_asset_symbols(const vector<string>& symbols_or_ids)const;
 
+         share_type get_new_asset_per_block() const;
+         share_type get_asset_per_block_by_block_num(uint32_t block_num) const;
+
 
          ///////////////
          // Miners //
@@ -748,6 +751,8 @@ namespace graphene { namespace app {
           */
          vector<subscription_object> list_subscriptions_by_author( const account_id_type& account, const uint32_t count )const;
 
+         miner_reward_input get_time_to_maint_by_block_time(fc::time_point_sec block_time) const;
+
       private:
          std::shared_ptr< database_api_impl > my;
       };
@@ -777,6 +782,9 @@ FC_API(graphene::app::database_api,
           (get_transaction)
           (head_block_time)
           (get_recent_transaction_by_id)
+          (get_new_asset_per_block)
+          (get_asset_per_block_by_block_num)
+          (get_time_to_maint_by_block_time)
 
           // Globals
           (get_chain_properties)

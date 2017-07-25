@@ -27,6 +27,7 @@
 #include <graphene/chain/node_property_object.hpp>
 #include <graphene/chain/account_object.hpp>
 #include <graphene/chain/asset_object.hpp>
+#include <graphene/chain/budget_record_object.hpp>
 #include <graphene/chain/fork_database.hpp>
 #include <graphene/chain/block_database.hpp>
 #include <graphene/chain/genesis_state.hpp>
@@ -365,6 +366,8 @@ namespace graphene { namespace chain {
          void set_and_reset_seeding_stats();
          void decent_housekeeping();
          share_type get_new_asset_per_block();
+         share_type get_asset_per_block_by_block_num(uint32_t block_num);
+         graphene::chain::miner_reward_input get_time_to_maint_by_block_time(fc::time_point_sec block_time);
          share_type get_miner_budget(uint32_t blocks);
          bool is_reward_switch_in_interval(uint64_t a, uint64_t b)const;
          uint64_t get_next_reward_switch_block(uint64_t start)const;

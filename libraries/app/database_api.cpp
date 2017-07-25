@@ -100,6 +100,7 @@ namespace graphene { namespace app {
       optional<signed_block> get_block(uint32_t block_num)const;
       processed_transaction get_transaction( uint32_t block_num, uint32_t trx_in_block )const;
       fc::time_point_sec head_block_time()const;
+      miner_reward_input get_time_to_maint_by_block_time(fc::time_point_sec block_time) const;
       
       // Globals
       chain_property_object get_chain_properties()const;
@@ -134,6 +135,8 @@ namespace graphene { namespace app {
       vector<optional<asset_object>> get_assets(const vector<asset_id_type>& asset_ids)const;
       vector<asset_object>           list_assets(const string& lower_bound_symbol, uint32_t limit)const;
       vector<optional<asset_object>> lookup_asset_symbols(const vector<string>& symbols_or_ids)const;
+      share_type get_new_asset_per_block() const;
+      share_type get_asset_per_block_by_block_num(uint32_t block_num) const;
 
       // Miners
       vector<optional<miner_object>> get_miners(const vector<miner_id_type>& miner_ids)const;
@@ -2087,6 +2090,50 @@ namespace
       
       return result;
    }
+
+   miner_reward_input database_api_impl::get_time_to_maint_by_block_time(fc::time_point_sec block_time) const
+   {
+      const auto& idx = _db.get_index_type<budget_record_index>().indices().get<by_time>();
+      graphene::chain::miner_reward_input miner_reward_input;
+      memset(&miner_reward_input, 0, sizeof(miner_reward_input));
+
+      auto itr = idx.begin();
+  
+      int64_t time_to_maint = -1;
+      fc::time_point_sec next_time = (fc::time_point_sec)0;
+      fc::time_point_sec prev_time = (fc::time_point_sec)0;
+
+      for (itr = itr; (itr != idx.end()) && (next_time == (fc::time_point_sec)0); ++itr)
+      {
+         budget_record_object bro = (*itr);
+         if (itr->record.next_maintenance_time > block_time)
+         {
+            next_time = itr->record.next_maintenance_time;
+            miner_reward_input.from_accumulated_fees = itr->record.from_accumulated_fees;
+            miner_reward_input.block_interval = itr->record.block_interval;
+         }
+      }
+
+      FC_ASSERT(next_time != (fc::time_point_sec)0);
+      
+      itr--;
+      
+      if (itr == idx.begin())
+      {
+         fc::optional<signed_block> first_block = get_block(1);
+         prev_time = first_block->timestamp;
+         miner_reward_input.time_to_maint = (next_time - prev_time).to_seconds();
+
+         return miner_reward_input;
+      }
+
+      itr--;
+      
+      prev_time = (*itr).record.next_maintenance_time;
+      miner_reward_input.time_to_maint = (next_time - prev_time).to_seconds();
+      
+      return miner_reward_input;
+   }
    
    //////////////////////////////////////////////////////////////////////
    //                                                                  //
@@ -2183,6 +2230,31 @@ namespace
             _block_applied_callback(fc::variant(block_id));
          });
       }
+   }
+
+   share_type database_api::get_new_asset_per_block()const
+   {
+      return my->get_new_asset_per_block();
+   }
+
+   share_type database_api_impl::get_new_asset_per_block() const
+   {
+      return _db.get_new_asset_per_block();
+   }
+
+   share_type database_api::get_asset_per_block_by_block_num(uint32_t block_num) const
+   {
+      return my->get_asset_per_block_by_block_num(block_num);
+   }
+
+   share_type database_api_impl::get_asset_per_block_by_block_num(uint32_t block_num) const
+   {
+      return _db.get_asset_per_block_by_block_num(block_num);
+   }
+
+   miner_reward_input database_api::get_time_to_maint_by_block_time(fc::time_point_sec block_time) const
+   {
+      return my->get_time_to_maint_by_block_time(block_time);
    }
    
 } } // graphene::app
