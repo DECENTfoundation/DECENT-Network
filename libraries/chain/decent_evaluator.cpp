@@ -271,7 +271,7 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
       }
       else
       {
-         db().create<content_object>([&](content_object& co)
+         const auto& content = db().create<content_object>([&](content_object& co)
                                      {  //create new content object and store all values from the operation
                                         co.author = o.author;
                                         co.co_authors = o.co_authors;
@@ -324,6 +324,9 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
             db().modify<seeder_object>( *itr, [&](seeder_object& so)
             {
                so.free_space -= o.size;
+            });
+            db().modify<content_object>(content, [&](content_object& co){
+                 co.seeder_price.emplace(std::make_pair(p, itr->price.amount));
             });
          }
 
@@ -697,7 +700,19 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
          uint64_t ratio = 10000 * diff.count() / fc::days( 1 ).count();
          uint64_t loss = ( 10000 - ratio ) / 4;
          uint64_t total_reward_ratio = ( ratio * ( 10000 - loss ) ) / 10000;
-         asset reward ( seeder.price.amount * total_reward_ratio * content->size / 10000 );
+         asset reward (0);
+         //Fix due to block halt at #404726
+
+         if (db().head_block_num() > 404727) {
+            const auto& itr = content->seeder_price.find(o.seeder);
+            FC_ASSERT(itr != content->seeder_price.end());
+            reward.amount = itr->second;
+         }else
+            reward.amount = seeder.price.amount * total_reward_ratio * content->size / 10000 ;
+         //Fix due to block halt at #404726
+         if( db().head_block_num() > 404727 && reward.amount > content->publishing_fee_escrow.amount ) {
+            reward.amount = std::max(0ll, content->publishing_fee_escrow.amount.value );
+         }
          //take care of the payment
          db().modify<content_object>( *content, [&] (content_object& co ){
               co.last_proof[o.seeder] = db().head_block_time();

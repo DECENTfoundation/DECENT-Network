@@ -45,7 +45,13 @@ void database::buying_expire(const buying_object& buying){
 }
 
 void database::content_expire(const content_object& content){
-   adjust_balance( content.author, content.publishing_fee_escrow );
+   if( content.publishing_fee_escrow.amount >= 0)
+      adjust_balance( content.author, content.publishing_fee_escrow );
+   else //workaround due to block halt at #404726- this should never happen but if it does again, the remaining amount shall be paid by someone else, in this case by decent6 fees
+   {
+      elog("applying woekaround in content_expire to content ${s}",("s",content.URI));
+      adjust_balance(account_id_type(20),content.publishing_fee_escrow );
+   }
    modify<content_object>(content, [&](content_object& co){
         co.publishing_fee_escrow.amount = 0;
    });
