@@ -12,3 +12,4 @@ cd ~/decent
 ls
 ./decentd --replay-blockchain
 echo "all updated!"
+
