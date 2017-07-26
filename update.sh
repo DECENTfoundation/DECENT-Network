@@ -1,3 +1,4 @@
+echo "please vote phinx!"
 cd ~/dev/DECENTfoundation/DECENT-Network
 git pull
 cd ~/dev/DECENTfoundation/DECENT-Network-build
