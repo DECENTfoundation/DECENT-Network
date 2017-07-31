@@ -142,7 +142,7 @@ namespace detail {
                "seed3.decentgo.com:40000",
                "decent.roelandp.nl:40000",       // # roelandp (DE)
                "5.9.18.213:40000", 		          // # pfunk (DE)
-               "45.32.154.218:40000",            // # rondonson (DE)
+               "decent.rondonson.com:40000",     // # rondonson (DE)
                "52.10.121.79:40000",             // # liberosist (US) 
                "decent.theprophet0.com:40000",   // # theprophet0 (US)
                "decent.agoric.systems:46023",    // # agoric.systems / robrigo (BR)
