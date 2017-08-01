@@ -734,13 +734,13 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
          if (db().head_block_num() > 404727) {
             const auto& itr = content->seeder_price.find(o.seeder);
             FC_ASSERT(itr != content->seeder_price.end());
-            reward.amount = itr->second;
+            reward.amount = itr->second * total_reward_ratio * content->size / 10000;
          }
          else
             reward.amount = seeder.price.amount * total_reward_ratio * content->size / 10000 ;
          //Fix due to block halt at #404726
          if( db().head_block_num() > 404727 && reward.amount > content->publishing_fee_escrow.amount ) {
-            reward.amount = std::max(0l, content->publishing_fee_escrow.amount.value );
+            reward.amount = std::max(int64_t(0), content->publishing_fee_escrow.amount.value );
          }
          //take care of the payment
          db().modify<content_object>( *content, [&] (content_object& co ){

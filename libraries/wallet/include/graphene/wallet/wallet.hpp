@@ -1391,11 +1391,10 @@ namespace graphene { namespace wallet {
           * @param expiration The expiration time of the content. The content is available to buy till it's expiration time
           * @param synopsis The description of the content
           * @param broadcast true to broadcast the transaction on the network
-          * @return The signed transaction submitting the content
           * @ingroup WalletCLI
           */
 
-         fc::ripemd160 submit_content_async( string const &author,
+         void submit_content_async( string const &author,
                                              vector< pair< string, uint32_t>> co_authors,
                                              string const &content_dir,
                                              string const &samples_dir,
