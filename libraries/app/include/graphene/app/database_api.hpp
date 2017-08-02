@@ -39,7 +39,6 @@
 #include <graphene/chain/buying_object.hpp>
 #include <graphene/chain/content_object.hpp>
 #include <graphene/chain/seeder_object.hpp>
-#include <graphene/chain/rating_object.hpp>
 #include <graphene/chain/budget_record_object.hpp>
 #include <graphene/chain/subscription_object.hpp>
 #include <graphene/chain/transaction_detail_object.hpp>
@@ -424,6 +423,9 @@ namespace graphene { namespace app {
           */
          vector<optional<asset_object>> lookup_asset_symbols(const vector<string>& symbols_or_ids)const;
 
+         share_type get_new_asset_per_block() const;
+         share_type get_asset_per_block_by_block_num(uint32_t block_num) const;
+
 
          ///////////////
          // Miners //
@@ -635,7 +637,7 @@ namespace graphene { namespace app {
           * @return The feedback found
           * @ingroup DatabaseAPI
           */
-         vector<rating_object> search_feedback(const string& user,
+         vector<buying_object> search_feedback(const string& user,
                                                const string& URI,
                                                const object_id_type& id,
                                                uint32_t count) const;
@@ -698,22 +700,6 @@ namespace graphene { namespace app {
          optional<seeder_object> get_seeder(account_id_type aid) const;
 
          /**
-          * @brief Get a list of content ratings corresponding to the provided URI
-          * @param URI URI of the content ratings to retrieve
-          * @return The ratings of the content
-          * @ingroup DatabaseAPI
-          */
-         vector<uint64_t> get_content_ratings( const string& URI )const;
-
-         /**
-          * @brief Get a list of content comments corresponding to the provided URI
-          * @param URI URI of the content
-          * @return Map of accounts to corresponding comments
-          * @ingroup DatabaseAPI
-          */
-         map<string, string> get_content_comments( const string& URI )const;
-
-         /**
           * @brief Get a list of seeders by total upload, in decreasing order
           * @param count Maximum number of seeders to retrieve
           * @return The seeders found
@@ -765,6 +751,8 @@ namespace graphene { namespace app {
           */
          vector<subscription_object> list_subscriptions_by_author( const account_id_type& account, const uint32_t count )const;
 
+         miner_reward_input get_time_to_maint_by_block_time(fc::time_point_sec block_time) const;
+
       private:
          std::shared_ptr< database_api_impl > my;
       };
@@ -794,6 +782,9 @@ FC_API(graphene::app::database_api,
           (get_transaction)
           (head_block_time)
           (get_recent_transaction_by_id)
+          (get_new_asset_per_block)
+          (get_asset_per_block_by_block_num)
+          (get_time_to_maint_by_block_time)
 
           // Globals
           (get_chain_properties)
@@ -861,8 +852,6 @@ FC_API(graphene::app::database_api,
           (restore_encryption_key)
           (search_content)
           (list_publishers_by_price)
-          (get_content_ratings)
-          (get_content_comments)
           (list_seeders_by_upload)
           (get_seeder)
           (get_real_supply)

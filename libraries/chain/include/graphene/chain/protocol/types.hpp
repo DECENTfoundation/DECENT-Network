@@ -140,7 +140,6 @@ namespace graphene { namespace chain {
       impl_buying_object_type,
       impl_content_object_type,
       impl_publisher_object_type,
-      impl_rating_object_type,
       impl_subscription_object_type,
       impl_seeding_statistics_object_type,
       impl_transaction_detail_object_type
@@ -182,7 +181,6 @@ namespace graphene { namespace chain {
    class buying_object;
    class content_object;
    class seeder_object;
-   class rating_object;
    class subscription_object;
    class seeding_statistics_object;
    class transaction_detail_object;
@@ -204,7 +202,6 @@ namespace graphene { namespace chain {
    typedef object_id< implementation_ids, impl_buying_object_type, buying_object >                                      buying_id_type;
    typedef object_id< implementation_ids, impl_content_object_type, content_object >                                    content_id_type;
    typedef object_id< implementation_ids, impl_publisher_object_type, seeder_object >                                   publisher_id_type;
-   typedef object_id< implementation_ids, impl_rating_object_type, rating_object >                                      rating_id_type;
    typedef object_id< implementation_ids, impl_subscription_object_type, subscription_object >                          subscription_id_type;
    typedef object_id< implementation_ids, impl_seeding_statistics_object_type, seeding_statistics_object >              seeding_statistics_id_type;
    typedef object_id< implementation_ids, impl_transaction_detail_object_type, transaction_detail_object >              transaction_detail_id_type;
@@ -346,7 +343,6 @@ FC_REFLECT_ENUM( graphene::chain::impl_object_type,
                  (impl_buying_object_type)
                  (impl_content_object_type)
                  (impl_publisher_object_type)
-                 (impl_rating_object_type)
                  (impl_subscription_object_type)
                  (impl_seeding_statistics_object_type)
                  (impl_transaction_detail_object_type)
@@ -374,7 +370,6 @@ FC_REFLECT_TYPENAME( graphene::chain::budget_record_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::buying_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::content_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::publisher_id_type )
-FC_REFLECT_TYPENAME( graphene::chain::rating_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::subscription_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::seeding_statistics_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::transaction_detail_id_type )

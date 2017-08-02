@@ -3095,7 +3095,30 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
 
    optional<signed_block_with_info> wallet_api::get_block(uint32_t num)
    {
-      return my->_remote_db->get_block(num);
+      optional<signed_block_with_info> result = my->_remote_db->get_block(num);
+
+      const global_property_object& gpo = my->_remote_db->get_global_properties();
+      const dynamic_global_property_object& dpo = my->_remote_db->get_dynamic_global_properties();
+      share_type miner_pay_from_reward = 0;
+      share_type miner_pay_from_fees = 0;
+
+      //int64_t time_to_maint = my->_remote_db->get_time_to_maint_by_block_time(result->timestamp);//(dpo.next_maintenance_time - dpo.last_budget_time).to_seconds();
+      miner_reward_input mri = my->_remote_db->get_time_to_maint_by_block_time(result->timestamp);
+      int64_t time_to_maint = mri.time_to_maint;
+      uint32_t blocks_in_interval = (uint64_t(time_to_maint) + mri.block_interval - 1) / mri.block_interval;
+
+      if (blocks_in_interval > 0) {
+         miner_pay_from_fees = mri.from_accumulated_fees / blocks_in_interval;
+      }
+      miner_pay_from_reward = my->_remote_db->get_asset_per_block_by_block_num(num);
+
+      //this should never happen, but better check.
+      if (miner_pay_from_fees < share_type(0))
+         miner_pay_from_fees = share_type(0);
+
+      result->miner_reward = miner_pay_from_fees + miner_pay_from_reward;
+
+      return result;
    }
 
    uint64_t wallet_api::get_account_count() const
@@ -4099,7 +4122,6 @@ void wallet_api::leave_rating_and_comment(string consumer,
          bobj.hash = content->_hash;
          bobj.AVG_rating = content->AVG_rating;
          bobj.rating = content->AVG_rating;
-         bobj.average_rating = content->AVG_rating;
       }
 
       return result;
@@ -4111,13 +4133,10 @@ vector<rating_object_ex> wallet_api::search_feedback(const string& user,
                                                      uint32_t count) const
 {
    vector<rating_object_ex> result;
-   vector<rating_object> temp = my->_remote_db->search_feedback(user, URI, object_id_type(id), count);
+   vector<buying_object> temp = my->_remote_db->search_feedback(user, URI, object_id_type(id), count);
 
    for (auto const& item : temp)
-   {
-      result.push_back(rating_object_ex(item));
-      result.back().author = get_account(string(object_id_type(item.consumer))).name;
-   }
+      result.push_back(rating_object_ex( item, get_account(string(object_id_type(item.consumer))).name ));
 
    return result;
 }
@@ -4142,11 +4161,6 @@ vector<content_summary> wallet_api::search_content(const string& term,
                                                    uint32_t count)const
 {
    return my->_remote_db->search_content(term, order, user, region_code, object_id_type(id), type, count);
-}
-
-map<string, string> wallet_api::get_content_comments( const string& URI )const
-{
-   return my->_remote_db->get_content_comments( URI );
 }
 
    vector<content_summary> wallet_api::search_user_content(const string& user,
@@ -4213,11 +4227,6 @@ pair<account_id_type, vector<account_id_type>> wallet_api::get_author_and_co_aut
    vector<seeder_object> wallet_api::list_publishers_by_price( uint32_t count )const
    {
       return my->_remote_db->list_publishers_by_price( count );
-   }
-
-   vector<uint64_t> wallet_api::get_content_ratings( const string& URI )const
-   {
-      return my->_remote_db->get_content_ratings( URI );
    }
 
    optional<vector<seeder_object>> wallet_api::list_seeders_by_upload( const uint32_t count )const

@@ -190,13 +190,13 @@ namespace graphene { namespace wallet {
          std::string         author_account;
          uint32_t            times_bought;
          fc::ripemd160       hash;
-         double              AVG_rating;
+         uint64_t            AVG_rating;
       };
 
-      struct rating_object_ex : public rating_object
+      struct rating_object_ex : public buying_object
       {
-         rating_object_ex(rating_object const& ob)
-         : rating_object(ob) {}
+         rating_object_ex( const buying_object& buying, string author )
+         : buying_object( buying ), author(author) {}
          std::string author;
       };
 
@@ -209,6 +209,7 @@ namespace graphene { namespace wallet {
          block_id_type block_id;
          public_key_type signing_key;
          vector< transaction_id_type > transaction_ids;
+         graphene::chain::share_type miner_reward;
       };
 
       struct vesting_balance_object_with_info : public vesting_balance_object
@@ -1741,22 +1742,6 @@ namespace graphene { namespace wallet {
          vector<seeder_object> list_publishers_by_price( uint32_t count )const;
 
          /**
-          * @brief Get a list of content ratings corresponding to the provided URI
-          * @param URI URI of the content
-          * @return The ratings of the content
-          * @ingroup WalletCLI
-          */
-         vector<uint64_t> get_content_ratings( const string& URI )const;
-
-         /**
-          * @brief Get a list of content comments corresponding to the provided URI
-          * @param URI URI of the content
-          * @return Map of accounts to corresponding comments
-          * @ingroup WalletCLI
-          */
-         map<string, string> get_content_comments( const string& URI )const;
-
-         /**
           * @brief Get a list of seeders ordered by total upload, in decreasing order
           * @param count Maximum number of seeders to retrieve
           * @return The seeders found
@@ -1900,7 +1885,7 @@ FC_REFLECT( graphene::wallet::approval_delta,
 )
 
 FC_REFLECT_DERIVED( graphene::wallet::signed_block_with_info, (graphene::chain::signed_block),
-                    (block_id)(signing_key)(transaction_ids) )
+                    (block_id)(signing_key)(transaction_ids)(miner_reward) )
 
 FC_REFLECT_DERIVED( graphene::wallet::vesting_balance_object_with_info, (graphene::chain::vesting_balance_object),
                     (allowed_withdraw)(allowed_withdraw_time) )
@@ -1917,9 +1902,7 @@ FC_REFLECT_DERIVED( graphene::wallet::buying_object_ex,
                   )
 
 FC_REFLECT_DERIVED( graphene::wallet::rating_object_ex,
-                   (graphene::chain::rating_object),
-                   (author)
-                   )
+                    (graphene::chain::buying_object),(author) )
 
 
 FC_REFLECT( graphene::wallet::operation_detail,
@@ -2036,8 +2019,6 @@ FC_API( graphene::wallet::wallet_api,
            (search_content)
            (search_user_content)
            (list_publishers_by_price)
-           (get_content_ratings)
-           (get_content_comments)
            (list_seeders_by_upload)
            (get_author_and_co_authors_by_URI)
            (create_package)

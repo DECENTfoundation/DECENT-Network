@@ -136,9 +136,26 @@ namespace detail {
                }
             }
          }else { 
-            vector<string> seeds = { "seed1.decentgo.com:40000", "seed2.decentgo.com:40000", "seed3.decentgo.com:40000" };
+            vector<string> seeds = { 
+               "seed1.decentgo.com:40000", 
+               "seed2.decentgo.com:40000", 
+               "seed3.decentgo.com:40000",
+               "decent.roelandp.nl:40000",       // # roelandp (DE)
+               "5.9.18.213:40000", 		          // # pfunk (DE)
+               "45.32.154.218:40000",            // # rondonson (DE)
+               "52.10.121.79:40000",             // # liberosist (US) 
+               "decent.theprophet0.com:40000",   // # theprophet0 (US)
+               "decent.agoric.systems:46023",    // # agoric.systems / robrigo (BR)
+               "45.124.64.161:40000",            // # nuevax (HK)
+               "66.70.188.105:40000"             // # decentspace (CA)
+            };
             for( const string& endpoint_string : seeds ){
-               std::vector<fc::ip::endpoint> endpoints = resolve_string_to_ip_endpoints(endpoint_string);
+               std::vector<fc::ip::endpoint> endpoints;
+               try{
+                   endpoints = resolve_string_to_ip_endpoints(endpoint_string);
+               } catch (...) {
+                  continue;
+               }
                for (const fc::ip::endpoint& endpoint : endpoints)
                {
                   ilog("Adding seed node ${endpoint}", ("endpoint", endpoint));
@@ -429,7 +446,6 @@ namespace detail {
             wild_access.allowed_apis.push_back( "network_broadcast_api" );
             wild_access.allowed_apis.push_back( "history_api" );
             wild_access.allowed_apis.push_back( "crypto_api" );
-            wild_access.allowed_apis.push_back( "network_node_api" );
             _apiaccess.permission_map["*"] = wild_access;
          }
 
