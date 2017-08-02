@@ -271,7 +271,7 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
       }
       else
       {
-         db().create<content_object>([&](content_object& co)
+         const auto& content = db().create<content_object>([&](content_object& co)
                                      {  //create new content object and store all values from the operation
                                         co.author = o.author;
                                         co.co_authors = o.co_authors;
@@ -325,6 +325,9 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
             {
                so.free_space -= o.size;
             });
+            db().modify<content_object>(content, [&](content_object& co){
+               co.seeder_price.emplace(std::make_pair(p, itr->price.amount));
+            });
          }
 
          const auto& idx2 = db().get_index_type<seeding_statistics_index>().indices().get<by_seeder>();
@@ -332,7 +335,7 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
          {
             const auto& stats = idx2.find( element );
             db().modify<seeding_statistics_object>( *stats, [](seeding_statistics_object& so){
-               so.total_content_requested_to_seed++;
+               so.total_content_requested_to_seed += 1;
             });
          }
 
@@ -649,7 +652,7 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
       auto& idx = db().get_index_type<seeder_index>().indices().get<by_seeder>();
       const auto& sor = idx.find( o.seeder );
       if( sor == idx.end() ) { //this is initial publish request
-         auto stats = db().create<seeding_statistics_object>([&](seeding_statistics_object &sso) {
+         auto stats = db().create<seeding_statistics_object>([&o](seeding_statistics_object &sso) {
               sso.seeder = o.seeder;
               sso.total_upload = 0;
          }).id;
@@ -719,12 +722,13 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
          db().modify<seeding_statistics_object>( *stats, [&content](seeding_statistics_object& so){
             so.total_content_seeded += ( content->size * 1000 * 1000 ) / content->key_parts.size();
             so.num_of_content_seeded++;
-            so.total_content_requested_to_seed--;
+            if( so.total_content_requested_to_seed > 0 )
+               so.total_content_requested_to_seed -= 1;
          });
       }else{
          const auto& idx2 = db().get_index_type<seeding_statistics_index>().indices().get<by_seeder>();
          const auto& stats = idx2.find( o.seeder );
-         db().modify<seeding_statistics_object>( *stats, [&content](seeding_statistics_object& so){
+         db().modify<seeding_statistics_object>( *stats, [](seeding_statistics_object& so){
             so.num_of_pors++;
          });
          //recurrent PoR, calculate payment
@@ -737,7 +741,19 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
          uint64_t ratio = 10000 * diff.count() / fc::days( 1 ).count();
          uint64_t loss = ( 10000 - ratio ) / 4;
          uint64_t total_reward_ratio = ( ratio * ( 10000 - loss ) ) / 10000;
-         asset reward ( seeder.price.amount * total_reward_ratio * content->size / 10000 );
+         asset reward (0);
+         //Fix due to block halt at #404726
+
+         if (db().head_block_num() > 404727) {
+            const auto& itr = content->seeder_price.find(o.seeder);
+            FC_ASSERT(itr != content->seeder_price.end());
+            reward.amount = itr->second * total_reward_ratio * content->size / 10000;
+         }else
+            reward.amount = seeder.price.amount * total_reward_ratio * content->size / 10000 ;
+         //Fix due to block halt at #404726
+         if( db().head_block_num() > 404727 && reward.amount > content->publishing_fee_escrow.amount ) {
+            reward.amount = std::max(int64_t(0), content->publishing_fee_escrow.amount.value );
+         }
          //take care of the payment
          db().modify<content_object>( *content, [&] (content_object& co ){
               co.last_proof[o.seeder] = db().head_block_time();
@@ -780,7 +796,7 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
          for (const auto& item : o.stats)
          {
             const auto &so = idx.find(item.first);
-            db().modify<seeding_statistics_object>(*so, [&](seeding_statistics_object &sso) {
+            db().modify<seeding_statistics_object>(*so, [&item](seeding_statistics_object &sso) {
                sso.total_upload += item.second;
             });
          }

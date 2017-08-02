@@ -47,7 +47,13 @@ void database::buying_expire(const buying_object& buying){
 }
 
 void database::content_expire(const content_object& content){
-   adjust_balance( content.author, content.publishing_fee_escrow );
+   if( content.publishing_fee_escrow.amount >= 0)
+      adjust_balance( content.author, content.publishing_fee_escrow );
+   else //workaround due to block halt at #404726- this should never happen but if it does again, the remaining amount shall be paid by someone else, in this case by decent6 fees
+   {
+      elog("applying workaround in content_expire to content ${s}",("s",content.URI));
+      adjust_balance(account_id_type(20),content.publishing_fee_escrow );
+   }
    modify<content_object>(content, [&](content_object& co){
         co.publishing_fee_escrow.amount = 0;
    });
@@ -58,14 +64,14 @@ void database::content_expire(const content_object& content){
       const auto& stats = idx.find( element.first );
       if( content.last_proof.count( element.first ) )
       {
-         modify<seeding_statistics_object>( *stats, [&content]( seeding_statistics_object& so){
+         modify<seeding_statistics_object>( *stats, [&element,&content]( seeding_statistics_object& so){
             so.total_content_seeded -= ( content.size * 1000 * 1000 ) / content.key_parts.size();
             so.num_of_content_seeded--;
          });
       }
-      else
+      else if(stats->total_content_requested_to_seed > 0)
       {
-         modify<seeding_statistics_object>( *stats, [&content]( seeding_statistics_object& so){
+         modify<seeding_statistics_object>( *stats, []( seeding_statistics_object& so){
             so.total_content_requested_to_seed--;
          });
       }
@@ -124,14 +130,15 @@ void database::set_and_reset_seeding_stats()
    uint32_t avg_buying_ratio;
    uint32_t seeding_rel_ratio;
    uint32_t seeding_abs_ratio;
+   uint32_t num_of_content;
    uint32_t missed_ratio;
 
    auto itr = idx.begin();
    while( itr != idx.end() )
    {
       const seeding_statistics_object& stats = get<seeding_statistics_object>( itr->stats );
-      num_of_requests_to_buy = stats.total_delivered_keys + stats.missed_delivered_keys;
 
+      num_of_requests_to_buy = stats.total_delivered_keys + stats.missed_delivered_keys;
       // interval [0,1]->[0,10000]
       if( num_of_requests_to_buy > 0 )
          key_delivery_ratio = ( stats.total_delivered_keys * 10000 ) / num_of_requests_to_buy;
@@ -151,16 +158,20 @@ void database::set_and_reset_seeding_stats()
          avg_buying_ratio = ( stats.avg_buying_ratio * 7 ) / 10;
 
       // multiplied by 10000
-      if( avg_buying_ratio > 0 )
+      if( avg_buying_ratio > 0 && upload_to_data_recent > 0)
          seeding_rel_ratio = ( 3 * 10000 * upload_to_data_recent / avg_buying_ratio ) / 10 + ( stats.seeding_rel_ratio * 7 ) / 10;
       else
-         seeding_rel_ratio = ( stats.seeding_rel_ratio * 7 ) / 10;
+         seeding_rel_ratio = stats.seeding_rel_ratio;
 
-      seeding_abs_ratio = ( 3 * upload_to_data_recent ) / 10 + ( stats.seeding_abs_ratio * 7 ) / 10;
+      if( upload_to_data_recent > 0 )
+         seeding_abs_ratio = ( 3 * upload_to_data_recent ) / 10 + ( stats.seeding_abs_ratio * 7 ) / 10;
+      else
+         seeding_abs_ratio = stats.seeding_abs_ratio;
 
-      // multiplied by 10000
-      if( stats.num_of_content_seeded > 0 )
-         missed_ratio = ( ( 3 * stats.total_content_requested_to_seed * 10000 ) / stats.num_of_content_seeded ) / 10 + ( stats.missed_ratio * 7 ) / 10;
+      num_of_content = stats.total_content_requested_to_seed + stats.num_of_content_seeded;
+      // [0,1]->10000
+      if( num_of_content > 0 )
+         missed_ratio = ( ( 3 * stats.num_of_content_seeded * 10000 ) / num_of_content ) / 10 + ( stats.missed_ratio * 7 ) / 10;
       else
          missed_ratio = ( stats.missed_ratio * 7 ) / 10;
 
@@ -175,8 +186,8 @@ void database::set_and_reset_seeding_stats()
          so.uploaded_till_last_maint = so.total_upload;
          so.missed_delivered_keys = 0;
          so.total_delivered_keys = 0;
-         so.num_of_pors = 0;
          so.total_content_requested_to_seed = 0;
+         so.num_of_pors = 0;
          so.avg_buying_ratio = avg_buying_ratio;
          so.seeding_rel_ratio = seeding_rel_ratio;
          so.seeding_abs_ratio = seeding_abs_ratio;
@@ -192,7 +203,7 @@ void database::decent_housekeeping()
    set_and_reset_seeding_stats();
 
    const auto& cidx = get_index_type<content_index>().indices().get<by_expiration>();
-   auto citr = cidx.begin();
+   auto citr = cidx.lower_bound( get_dynamic_global_properties().last_budget_time + get_global_properties().parameters.block_interval );
    while( citr != cidx.end() && citr->expiration <= head_block_time() )
    {
       return_escrow_submission_operation resop;
@@ -208,7 +219,7 @@ void database::decent_housekeeping()
    }
 
    const auto& bidx = get_index_type<buying_index>().indices().get<by_expiration_time>();
-   auto bitr = bidx.begin();
+   auto bitr = bidx.lower_bound( get_dynamic_global_properties().last_budget_time + get_global_properties().parameters.block_interval );
    while( bitr != bidx.end() && bitr->expiration_time <= head_block_time() )
    {
       if(!bitr->delivered) {
@@ -224,12 +235,34 @@ void database::decent_housekeeping()
       ++bitr;
    }
 
+
+   // we need to know the next_maintenance_time
+   const auto& dpo = get_dynamic_global_properties();
+   time_point_sec next_maintenance_time = dpo.next_maintenance_time;
+
+   const auto& gpo = get_global_properties();
+   uint32_t maintenance_interval;
+   if( gpo.pending_parameters )
+      maintenance_interval = gpo.pending_parameters->maintenance_interval;
+   else
+      maintenance_interval = gpo.parameters.maintenance_interval;
+
+   if( dpo.head_block_number == 1 )
+      next_maintenance_time = time_point_sec() +
+         (((head_block_time().sec_since_epoch() / maintenance_interval) + 1) * maintenance_interval);
+   else
+   {
+      auto y = (head_block_time() - next_maintenance_time).to_seconds() / maintenance_interval;
+      next_maintenance_time += (y+1) * maintenance_interval;
+   }
+
    const auto& sidx = get_index_type<subscription_index>().indices().get<by_renewal>();
    const auto& aidx = get_index_type<account_index>().indices().get<by_id>();
+
    auto sitr = sidx.begin();
    while( sitr != sidx.end() && sitr->automatic_renewal )
    {
-      if(sitr->expiration <= head_block_time()) {
+      if(sitr->expiration <= next_maintenance_time) {
          const auto &author = aidx.find(sitr->to);
 
          try {
