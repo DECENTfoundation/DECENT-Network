@@ -1072,9 +1072,12 @@ public:
       }
    }
 
+//#define DECENTGO
+
    signed_transaction create_account_with_private_key(fc::ecc::private_key owner_privkey,
                                                       string account_name,
                                                       string registrar_account,
+                                                      bool import,
                                                       bool broadcast = false,
                                                       bool save_wallet = true)
    { try {
@@ -1099,8 +1102,13 @@ public:
          account_create_op.registrar = registrar_account_id;
          account_create_op.name = account_name;
          account_create_op.owner = authority(1, owner_pubkey, 1);
+#ifdef DECENTGO
+         account_create_op.active = authority(1, owner_pubkey, 1);
+         account_create_op.options.memo_key = owner_pubkey;
+#else
          account_create_op.active = authority(1, active_pubkey, 1);
          account_create_op.options.memo_key = memo_pubkey;
+#endif
 
          // current_fee_schedule()
          // find_account(pay_from_account)
@@ -1133,8 +1141,11 @@ public:
 
          // we do not insert owner_privkey here because
          //    it is intended to only be used for key recovery
-         _wallet.pending_account_registrations[account_name].push_back(key_to_wif( active_privkey ));
-         _wallet.pending_account_registrations[account_name].push_back(key_to_wif( memo_privkey ));
+         if (import)
+         {
+            _wallet.pending_account_registrations[account_name].push_back(key_to_wif( active_privkey ));
+            _wallet.pending_account_registrations[account_name].push_back(key_to_wif( memo_privkey ));
+         }
          if( save_wallet )
             save_wallet_file();
          if( broadcast )
@@ -1145,6 +1156,7 @@ public:
    signed_transaction create_account_with_brain_key(string brain_key,
                                                     string account_name,
                                                     string registrar_account,
+                                                    bool import,
                                                     bool broadcast = false,
                                                     bool save_wallet = true)
    { try {
@@ -1153,7 +1165,7 @@ public:
       string normalized_brain_key = normalize_brain_key( brain_key );
       // TODO:  scan blockchain for accounts that exist with same brain key
       fc::ecc::private_key owner_privkey = derive_private_key( normalized_brain_key, 0 );
-      return create_account_with_private_key(owner_privkey, account_name, registrar_account, broadcast, save_wallet);
+      return create_account_with_private_key(owner_privkey, account_name, registrar_account, import, broadcast, save_wallet);
    } FC_CAPTURE_AND_RETHROW( (account_name)(registrar_account) ) }
 
 
@@ -2659,7 +2671,10 @@ signed_transaction content_cancellation(string author,
          {
             std::ostringstream brain_key;
             brain_key << "brain key for account " << prefix << i;
-            signed_transaction trx = create_account_with_brain_key(brain_key.str(), prefix + fc::to_string(i), master.name, /* broadcast = */ true, /* save wallet = */ false);
+            signed_transaction trx = create_account_with_brain_key(brain_key.str(), prefix + fc::to_string(i), master.name,
+                                                                   /* import = */ true,
+                                                                   /* broadcast = */ true,
+                                                                   /* save wallet = */ false);
          }
          fc::time_point end = fc::time_point::now();
          ilog("Created ${n} accounts in ${time} milliseconds",
@@ -3555,9 +3570,20 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
                                                                 bool broadcast /* = false */)
    {
       return my->create_account_with_brain_key(
-               brain_key, account_name, registrar_account,
+               brain_key, account_name, registrar_account, true,
                broadcast
                );
+   }
+
+   signed_transaction wallet_api::create_account_with_brain_key_noimport(string brain_key,
+                                                                         string account_name,
+                                                                         string registrar_account,
+                                                                         bool broadcast /* = false */)
+   {
+      return my->create_account_with_brain_key(
+                                               brain_key, account_name, registrar_account, false,
+                                               broadcast
+                                               );
    }
 
 

@@ -827,6 +827,25 @@ namespace graphene { namespace wallet {
                                                           string account_name,
                                                           string registrar_account,
                                                           bool broadcast = false);
+         /**
+          * @brief Creates a new account and registers it on the blockchain, but does not import the key to wallet.
+          *
+          * @see suggest_brain_key()
+          * @see register_account()
+          *
+          * @param brain_key the brain key used for generating the account's private keys
+          * @param account_name the name of the account, must be unique on the blockchain.  Shorter names
+          *                     are more expensive to register; the rules are still in flux, but in general
+          *                     names of more than 8 characters with at least one digit will be cheap.
+          * @param registrar_account the account which will pay the fee to register the user
+          * @param broadcast true to broadcast the transaction on the network
+          * @returns the signed transaction registering the account
+          * @ingroup WalletCLI
+          */
+         signed_transaction create_account_with_brain_key_noimport(string brain_key,
+                                                                   string account_name,
+                                                                   string registrar_account,
+                                                                   bool broadcast = false);
 
          /** @brief Transfer an amount from one account to another.
           * @param from the name or id of the account sending the funds
@@ -1938,6 +1957,7 @@ FC_API( graphene::wallet::wallet_api,
            (get_brain_key_info)
            (register_account)
            (create_account_with_brain_key)
+           (create_account_with_brain_key_noimport)
            (transfer)
            (transfer2)
            (propose_transfer)
