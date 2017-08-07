@@ -68,7 +68,8 @@ install:
   # Build Boost.
   - if [ "$TRAVIS_OS_NAME" == "linux" ] ; then mkdir -p $TRAVIS_BUILD_DIR/../third-party && cd $TRAVIS_BUILD_DIR/../third-party && wget https://sourceforge.net/projects/boost/files/boost/1.60.0/boost_1_60_0.tar.gz && tar xf boost_1_60_0.tar.gz && mkdir boost-1.60.0_prefix && cd boost_1_60_0 && export BOOST_ROOT=$(realpath ../boost-1.60.0_prefix) && ./bootstrap.sh --prefix=$BOOST_ROOT && ( ./b2 install | sed -u -n '1~50{p}' | sed -u -e 's/^.*$//' | nl -ba ) && cd .. && rm -rf boost_1_60_0 boost_1_60_0.tar.gz ; fi
   # Install macOS prerequisites.
-  - if [ "$TRAVIS_OS_NAME" == "osx" ] ; then brew update && brew install doxygen && brew upgrade && brew cleanup && brew unlink dirmngr && brew doctor && brew tap homebrew/versions && brew update && brew Install automake autoconf libtool cmake berkeley-db boost160 qt5 cryptopp doxygen byacc flex gettext git pbc gmp ipfs openssl readline && brew doctor ; fi
+  - if [ "$TRAVIS_OS_NAME" == "osx" ] ; then brew update && brew upgrade && brew cleanup && brew unlink dirmngr ; fi
+  - if [ "$TRAVIS_OS_NAME" == "osx" ] ; then brew doctor && brew tap homebrew/versions && brew update && brew Install automake autoconf libtool cmake berkeley-db boost160 qt5 cryptopp doxygen byacc flex gettext git pbc gmp ipfs openssl readline && brew doctor ; fi
 
 
 script:
