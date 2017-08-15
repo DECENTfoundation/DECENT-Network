@@ -3442,6 +3442,19 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
       return result;
    }
 
+   pair<brain_key_info, el_gamal_key_pair> wallet_api::generate_brain_key_el_gamal_key() const
+   {
+      pair<brain_key_info, el_gamal_key_pair> ret;
+      ret.first = suggest_brain_key();
+
+      fc::optional<fc::ecc::private_key> op_private_key = wif_to_key(ret.first.wif_priv_key);
+      FC_ASSERT(op_private_key);
+      ret.second.private_key = generate_private_el_gamal_key_from_secret ( op_private_key->get_secret() );
+      ret.second.public_key = decent::encrypt::get_public_el_gamal_key( ret.second.private_key );
+
+      return ret;
+   }
+
    brain_key_info wallet_api::get_brain_key_info(string const& brain_key) const
    {
       brain_key_info result;

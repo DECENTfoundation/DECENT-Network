@@ -713,6 +713,18 @@ namespace graphene { namespace wallet {
          brain_key_info suggest_brain_key()const;
 
          /**
+          * @brief Suggests a safe brain key to use for creating your account also 
+          * generates the el_gamal_key_pair corresponding to the brain key
+          * \c create_account_with_brain_key() requires you to specify a 'brain key',
+          * a long passphrase that provides enough entropy to generate cyrptographic
+          * keys.  This function will suggest a suitably random string that should
+          * be easy to write down (and, with effort, memorize).
+          * @returns a suggested brain_key
+          * @ingroup WalletCLI
+          */
+         pair<brain_key_info, el_gamal_key_pair> generate_brain_key_el_gamal_key() const;
+
+         /**
           * @brief Calculates the private key and public key corresponding to any brain key
           * @param brain_key the brain key to be used for calculation
           * @returns the corresponding brain_key_info
@@ -2083,6 +2095,7 @@ FC_API( graphene::wallet::wallet_api,
            (import_accounts)
            (import_account_keys)
            (suggest_brain_key)
+           (generate_brain_key_el_gamal_key)
            (get_brain_key_info)
            (register_account)
            (create_account_with_brain_key)
