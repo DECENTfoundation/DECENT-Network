@@ -1169,11 +1169,12 @@ public:
    } FC_CAPTURE_AND_RETHROW( (account_name)(registrar_account) ) }
 
 
-   signed_transaction create_asset(string issuer,
+   signed_transaction create_user_issued_asset(string issuer,
                                    string symbol,
                                    uint8_t precision,
                                    string description,
                                    uint64_t max_supply,
+                                   price core_exchange_rate,
                                    bool broadcast = false)
    { try {
       account_object issuer_account = get_account( issuer );
@@ -1184,7 +1185,11 @@ public:
       create_op.symbol = symbol;
       create_op.precision = precision;
       create_op.description = description;
-      create_op.max_supply = max_supply;
+      asset_options opts;
+      opts.max_supply = max_supply;
+      opts.core_exchange_rate = core_exchange_rate;
+      create_op.options = opts;
+      create_op.monitored_asset_opts = optional<monitored_asset_options>();
 
       signed_transaction tx;
       tx.operations.push_back( create_op );
@@ -1193,6 +1198,138 @@ public:
 
       return sign_transaction( tx, broadcast );
    } FC_CAPTURE_AND_RETHROW( (issuer)(symbol)(precision)(description)(max_supply)(broadcast) ) }
+
+   signed_transaction issue_asset(string to_account, string amount, string symbol,
+                                  string memo, bool broadcast = false)
+   {
+      auto asset_obj = get_asset(symbol);
+
+      account_object to = get_account(to_account);
+      account_object issuer = get_account(asset_obj.issuer);
+
+      asset_issue_operation issue_op;
+      issue_op.issuer           = asset_obj.issuer;
+      issue_op.asset_to_issue   = asset_obj.amount_from_string(amount);
+      issue_op.issue_to_account = to.id;
+
+      if( memo.size() )
+      {
+         issue_op.memo = memo_data();
+         issue_op.memo->from = issuer.options.memo_key;
+         issue_op.memo->to = to.options.memo_key;
+         issue_op.memo->set_message(get_private_key(issuer.options.memo_key),
+                                    to.options.memo_key, memo);
+      }
+
+      signed_transaction tx;
+      tx.operations.push_back(issue_op);
+      set_operation_fees(tx,_remote_db->get_global_properties().parameters.current_fees);
+      tx.validate();
+
+      return sign_transaction(tx, broadcast);
+   }
+
+   signed_transaction update_user_issued_asset(string symbol,
+                                               string new_issuer,
+                                               string description,
+                                               uint64_t max_supply,
+                                               price core_exchange_rate,
+                                               bool broadcast = false)
+   { try {
+         optional<asset_object> asset_to_update = find_asset(symbol);
+         if (!asset_to_update)
+            FC_THROW("No asset with that symbol exists!");
+
+         update_user_issued_asset_operation update_op;
+         update_op.issuer = asset_to_update->issuer;
+         update_op.asset_to_update = asset_to_update->id;
+         update_op.new_description = description;
+         update_op.max_supply = max_supply;
+         update_op.core_exchange_rate = core_exchange_rate;
+
+         optional<account_id_type> new_issuer_account_id;
+         if( new_issuer != "" )
+         {
+            account_object new_issuer_account = get_account(new_issuer);
+            new_issuer_account_id = new_issuer_account.id;
+         }
+         update_op.new_issuer = new_issuer_account_id;
+
+         signed_transaction tx;
+         tx.operations.push_back( update_op );
+         set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
+         tx.validate();
+
+         return sign_transaction( tx, broadcast );
+      } FC_CAPTURE_AND_RETHROW( (symbol)(new_issuer)(description)(max_supply)(core_exchange_rate)(broadcast) ) }
+
+      signed_transaction fund_asset_fee_pool(string from,
+                                             string amount,
+                                             string symbol,
+                                             bool broadcast /* = false */)
+      { try {
+            account_object from_account = get_account(from);
+            optional<asset_object> asset_to_fund = find_asset(symbol);
+            if (!asset_to_fund)
+               FC_THROW("No asset with that symbol exists!");
+            asset_object core_asset = get_asset(asset_id_type());
+
+            asset_fund_fee_pool_operation fund_op;
+            fund_op.from_account = from_account.id;
+            fund_op.asset_id = asset_to_fund->id;
+            fund_op.amount = core_asset.amount_from_string(amount).amount;
+
+            signed_transaction tx;
+            tx.operations.push_back( fund_op );
+            set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
+            tx.validate();
+
+            return sign_transaction( tx, broadcast );
+         } FC_CAPTURE_AND_RETHROW( (from)(symbol)(amount)(broadcast) ) }
+
+   signed_transaction reserve_asset(string from,
+                                    string amount,
+                                    string symbol,
+                                    bool broadcast /* = false */)
+   { try {
+         account_object from_account = get_account(from);
+         optional<asset_object> asset_to_reserve = find_asset(symbol);
+         if (!asset_to_reserve)
+            FC_THROW("No asset with that symbol exists!");
+
+         asset_reserve_operation reserve_op;
+         reserve_op.payer = from_account.id;
+         reserve_op.amount_to_reserve = asset_to_reserve->amount_from_string(amount);
+
+         signed_transaction tx;
+         tx.operations.push_back( reserve_op );
+         set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
+         tx.validate();
+
+         return sign_transaction( tx, broadcast );
+      } FC_CAPTURE_AND_RETHROW( (from)(amount)(symbol)(broadcast) ) }
+
+   signed_transaction claim_fees(string from,
+                                 string amount,
+                                 string symbol,
+                                 bool broadcast /* = false */)
+   { try {
+         account_object from_account = get_account(from);
+         optional<asset_object> asset_to_claim = find_asset(symbol);
+         if (!asset_to_claim)
+            FC_THROW("No asset with that symbol exists!");
+
+         asset_claim_fees_operation claim_fees_op;
+         claim_fees_op.issuer = asset_to_claim->issuer;
+         claim_fees_op.amount_to_claim = asset_to_claim->amount_from_string(amount);
+
+         signed_transaction tx;
+         tx.operations.push_back( claim_fees_op );
+         set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
+         tx.validate();
+
+         return sign_transaction( tx, broadcast );
+      } FC_CAPTURE_AND_RETHROW( (from)(amount)(symbol)(broadcast) ) }
 
    signed_transaction create_monitored_asset(string issuer,
                                              string symbol,
@@ -1210,9 +1347,15 @@ public:
       create_op.symbol = symbol;
       create_op.precision = precision;
       create_op.description = description;
-      create_op.max_supply = 0;
-      create_op.feed_lifetime_sec = feed_lifetime_sec;
-      create_op.minimum_feeds = minimum_feeds;
+
+      asset_options opts;
+      opts.max_supply = 0;
+      create_op.options = opts;
+
+      monitored_asset_options m_opts;
+      m_opts.feed_lifetime_sec = feed_lifetime_sec;
+      m_opts.minimum_feeds = minimum_feeds;
+      create_op.monitored_asset_opts = m_opts;
 
       signed_transaction tx;
       tx.operations.push_back( create_op );
@@ -1223,7 +1366,6 @@ public:
    } FC_CAPTURE_AND_RETHROW( (issuer)(symbol)(precision)(description)(feed_lifetime_sec)(minimum_feeds)(broadcast) ) }
 
    signed_transaction update_monitored_asset(string symbol,
-                                             string new_issuer,
                                              string description,
                                              uint32_t feed_lifetime_sec,
                                              uint8_t minimum_feeds,
@@ -1233,16 +1375,10 @@ public:
       if (!asset_to_update)
         FC_THROW("No asset with that symbol exists!");
 
-      asset_update_operation update_op;
+      update_monitored_asset_operation update_op;
       update_op.issuer = asset_to_update->issuer;
-      if(new_issuer.size()) {
-         auto ni = get_account_id(new_issuer);
-         update_op.new_issuer = ni;
-      }
       update_op.asset_to_update = asset_to_update->id;
-
       update_op.new_description = description;
-      update_op.max_supply = 0;
       update_op.new_feed_lifetime_sec = feed_lifetime_sec;
       update_op.new_minimum_feeds = minimum_feeds;
 
@@ -1252,7 +1388,7 @@ public:
       tx.validate();
 
       return sign_transaction( tx, broadcast );
-   } FC_CAPTURE_AND_RETHROW( (symbol)(new_issuer)(description)(feed_lifetime_sec)(minimum_feeds)(broadcast) ) }
+   } FC_CAPTURE_AND_RETHROW( (symbol)(description)(feed_lifetime_sec)(minimum_feeds)(broadcast) ) }
 
    signed_transaction publish_asset_feed(string publishing_account,
                                          string symbol,
@@ -1684,6 +1820,45 @@ public:
 
       return sign_transaction(tx, broadcast);
    } FC_CAPTURE_AND_RETHROW( (from)(to)(amount)(asset_symbol)(memo)(broadcast) ) }
+
+      signed_transaction transfer_with_fees(string from, string to, string amount,
+                                  string asset_symbol, string memo,string fee, string asset, bool broadcast = false)
+      { try {
+            FC_ASSERT( !self.is_locked() );
+            fc::optional<asset_object> asset_obj = get_asset(asset_symbol);
+            FC_ASSERT(asset_obj, "Could not find asset matching ${asset}", ("asset", asset_symbol));
+
+            account_object from_account = get_account(from);
+            account_object to_account = get_account(to);
+            account_id_type from_id = from_account.id;
+            account_id_type to_id = get_account_id(to);
+
+            transfer_operation xfer_op;
+
+            xfer_op.from = from_id;
+            xfer_op.to = to_id;
+            xfer_op.amount = asset_obj->amount_from_string(amount);
+
+            if( memo.size() )
+            {
+               xfer_op.memo = memo_data();
+               xfer_op.memo->from = from_account.options.memo_key;
+               xfer_op.memo->to = to_account.options.memo_key;
+               xfer_op.memo->set_message(get_private_key(from_account.options.memo_key),
+                                         to_account.options.memo_key, memo);
+            }
+
+            signed_transaction tx;
+
+            asset_object asset_obj2 = get_asset(asset);
+            xfer_op.fee=asset_obj2.amount_from_string(fee);
+
+            tx.operations.push_back(xfer_op);
+            //set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
+            tx.validate();
+
+            return sign_transaction(tx, broadcast);
+         } FC_CAPTURE_AND_RETHROW( (from)(to)(amount)(asset_symbol)(memo)(fee)(asset)(broadcast) ) }
 
    void propose_transfer(string proposer,
                          string from,
@@ -3593,6 +3768,12 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
       return my->transfer(from, to, amount, asset_symbol, memo, broadcast);
    }
 
+         signed_transaction wallet_api::transfer_with_fees(string from, string to, string amount,
+                                                 string asset_symbol, string memo,string fee,string asset, bool broadcast /* = false */)
+         {
+            return my->transfer_with_fees(from, to, amount, asset_symbol, memo, fee, asset, broadcast);
+         }
+
    signed_transaction wallet_api::create_monitored_asset(string issuer,
                                                          string symbol,
                                                          uint8_t precision,
@@ -3617,13 +3798,12 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
    }
 
    signed_transaction wallet_api::update_monitored_asset(string symbol,
-                                                         string new_issuer,
                                                          string description,
                                                          uint32_t feed_lifetime_sec,
                                                          uint8_t minimum_feeds,
                                                          bool broadcast /* = false */)
    {
-      return my->update_monitored_asset(symbol, new_issuer, description, feed_lifetime_sec, minimum_feeds, broadcast);
+      return my->update_monitored_asset(symbol, description, feed_lifetime_sec, minimum_feeds, broadcast);
    }
 
    signed_transaction wallet_api::publish_asset_feed(string publishing_account,
@@ -3632,6 +3812,57 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
                                                      bool broadcast /* = false */)
    {
       return my->publish_asset_feed(publishing_account, symbol, feed, broadcast);
+   }
+
+   signed_transaction wallet_api::create_user_issued_asset(string issuer,
+                                                           string symbol,
+                                                           uint8_t precision,
+                                                           string description,
+                                                           uint64_t max_supply,
+                                                           price core_exchange_rate,
+                                                           bool broadcast /* = false */)
+   {
+      return my->create_user_issued_asset(issuer, symbol, precision, description, max_supply, core_exchange_rate, broadcast);
+   }
+
+   signed_transaction wallet_api::issue_asset(string to_account, string amount, string symbol,
+                                              string memo, bool broadcast)
+   {
+      return my->issue_asset(to_account, amount, symbol, memo, broadcast);
+   }
+
+   signed_transaction wallet_api::update_user_issued_asset(string symbol,
+                                                           string new_issuer,
+                                                           string description,
+                                                           uint64_t max_supply,
+                                                           price core_exchange_rate,
+                                                           bool broadcast /* = false */)
+   {
+      return my->update_user_issued_asset(symbol, new_issuer, description, max_supply, core_exchange_rate, broadcast);
+   }
+
+   signed_transaction wallet_api::fund_asset_fee_pool(string from,
+                                                      string amount,
+                                                      string symbol,
+                                                      bool broadcast /* = false */)
+   {
+      return my->fund_asset_fee_pool(from, amount, symbol, broadcast);
+   }
+
+   signed_transaction wallet_api::reserve_asset(string from,
+                                                string amount,
+                                                string symbol,
+                                                bool broadcast /* = false */)
+   {
+      return my->reserve_asset(from, amount, symbol, broadcast);
+   }
+
+   signed_transaction wallet_api::claim_fees(string from,
+                                             string amount,
+                                             string symbol,
+                                             bool broadcast /* = false */)
+   {
+      return my->claim_fees(from, amount, symbol, broadcast);
    }
 
    map<string,miner_id_type> wallet_api::list_miners(const string& lowerbound, uint32_t limit)

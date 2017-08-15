@@ -135,9 +135,9 @@ namespace detail {
                   _p2p_network->connect_to_endpoint(endpoint);
                }
             }
-         }else { 
+         }/*else {
             vector<string> seeds = { 
-               "seed1.decentgo.com:40000", 
+               "seed1.decentgo.com:40000",
                "seed2.decentgo.com:40000", 
                "seed3.decentgo.com:40000",
                "decent.roelandp.nl:40000",       // # roelandp (DE)
@@ -163,7 +163,7 @@ namespace detail {
                   _p2p_network->connect_to_endpoint(endpoint);
                }
             }
-         }
+         }*/
 
          if( _options->count("ipfs-api") ){
             std::string api_string = _options->at("ipfs-api").as<std::string>();

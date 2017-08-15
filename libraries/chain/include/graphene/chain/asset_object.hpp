@@ -52,9 +52,9 @@ namespace graphene { namespace chain {
          static const uint8_t type_id  = impl_asset_dynamic_data_type;
 
          /// The number of shares currently in existence
-         share_type current_supply;
-         share_type confidential_supply; ///< total asset held in confidential balances
-         share_type accumulated_fees; ///< fees accumulate to be paid out over time
+         share_type current_supply = 0;
+         share_type accumulated_fees = 0; ///< fees accumulate to be paid out over time
+         share_type fee_pool = 0;         ///< in core asset
    };
 
    /**
@@ -105,18 +105,14 @@ namespace graphene { namespace chain {
          /// The meaning/purpose of this asset
          string description;
 
-         /// The maximum supply of this asset which may exist at any given time. This can be as large as
-         /// GRAPHENE_MAX_SHARE_SUPPLY
-         share_type max_supply = GRAPHENE_MAX_SHARE_SUPPLY;
-
          /// set for monitored assets
          optional<monitored_asset_options> monitored_asset_opts;
 
+         /// set for user issued asset
+         asset_options options;
 
          /// Current supply, fee pool, and collected fees are stored in a separate object as they change frequently.
          asset_dynamic_data_id_type  dynamic_asset_data_id;
-
-         optional<account_id_type> buyback_account;
 
          asset_id_type get_id()const { return id; }
 
@@ -131,7 +127,7 @@ namespace graphene { namespace chain {
           */
          template<class DB>
          share_type reserved( const DB& db )const
-         { return max_supply - dynamic_data(db).current_supply; }
+         { return options.max_supply - dynamic_data(db).current_supply; }
    };
 
    struct by_symbol;
@@ -154,15 +150,14 @@ namespace graphene { namespace chain {
 } } // graphene::chain
 
 FC_REFLECT_DERIVED( graphene::chain::asset_dynamic_data_object, (graphene::db::object),
-                    (current_supply)(confidential_supply)(accumulated_fees) )
+                    (current_supply)(accumulated_fees)(fee_pool) )
 
 FC_REFLECT_DERIVED( graphene::chain::asset_object, (graphene::db::object),
                     (symbol)
                     (precision)
                     (issuer)
                     (description)
-                    (max_supply)
                     (monitored_asset_opts)
+                    (options)
                     (dynamic_asset_data_id)
-                    (buyback_account)
                   )

@@ -889,6 +889,28 @@ namespace graphene { namespace wallet {
             return std::make_pair(trx.id(),trx);
          }
 
+         /** @brief Transfer an amount from one account to another.
+          * @param from the name or id of the account sending the funds
+          * @param to the name or id of the account receiving the funds
+          * @param amount the amount to send (in nominal units -- to send half of a BTS, specify 0.5)
+          * @param asset_symbol the symbol or id of the asset to send
+          * @param memo a memo to attach to the transaction.  The memo will be encrypted in the
+          *             transaction and readable for the receiver.  There is no length limit
+          *             other than the limit imposed by maximum transaction size, but transaction
+          *             increase with transaction size
+          * @param broadcast true to broadcast the transaction on the network
+          * @returns the signed transaction transferring funds
+          * @ingroup WalletCLI
+          */
+         signed_transaction transfer_with_fees(string from,
+                                     string to,
+                                     string amount,
+                                     string asset_symbol,
+                                     string memo,
+                                               string fee,
+                                               string asset,
+                                     bool broadcast = false);
+
         /**
          * @brief Encapsulates begin_builder_transaction(), add_operation_to_builder_transaction(),
          * propose_builder_transaction2(), set_fees_on_builder_transaction() functions for transfer operation
@@ -924,60 +946,164 @@ namespace graphene { namespace wallet {
 
 
 
-         /**
-          * @brief Creates a new user-issued or market-issued asset.
-          *
-          * Many options can be changed later using \c update_asset()
-          *
-          * Right now this function is difficult to use because you must provide raw JSON data
-          * structures for the options objects, and those include prices and asset ids.
-          *
-          * @param issuer the name or id of the account who will pay the fee and become the
-          *               issuer of the new asset.  This can be updated later
-          * @param symbol the ticker symbol of the new asset
-          * @param precision the number of digits of precision to the right of the decimal point,
-          *                  must be less than or equal to 12
-          * @param description asset description
-          * @param feed_lifetime_sec time before a price feed expires
-          * @param minimum_feeds minimum number of unexpired feeds required to extract a median feed from
-          * @param broadcast true to broadcast the transaction on the network
-          * @returns the signed transaction creating a new asset
-          * @ingroup WalletCLI
-          */
-         signed_transaction create_monitored_asset(string issuer,
-                                                   string symbol,
-                                                   uint8_t precision,
-                                                   string description,
-                                                   uint32_t feed_lifetime_sec,
-                                                   uint8_t minimum_feeds,
-                                                   bool broadcast = false);
+      /**
+       * @brief Creates a new monitored asset.
+       *
+       * Options can be changed later using \c update_monitored_asset()
+       *
+       * @param issuer the name or id of the account who will pay the fee and become the
+       *               issuer of the new asset.  This can be updated later
+       * @param symbol the ticker symbol of the new asset
+       * @param precision the number of digits of precision to the right of the decimal point,
+       *                  must be less than or equal to 12
+       * @param description asset description
+       * @param feed_lifetime_sec time before a price feed expires
+       * @param minimum_feeds minimum number of unexpired feeds required to extract a median feed from
+       * @param broadcast true to broadcast the transaction on the network
+       * @returns the signed transaction creating a new asset
+       * @ingroup WalletCLI
+       */
+      signed_transaction create_monitored_asset(string issuer,
+                                                string symbol,
+                                                uint8_t precision,
+                                                string description,
+                                                uint32_t feed_lifetime_sec,
+                                                uint8_t minimum_feeds,
+                                                bool broadcast = false);
 
+      /**
+       * @brief Update the options specific to a monitored asset.
+       *
+       * Monitored assets have some options which are not relevant to other asset types. This operation is used to update those
+       * options and an existing monitored asset.
+       *
+       * @param symbol the name or id of the asset to update, which must be a market-issued asset
+       * @param description asset description
+       * @param feed_lifetime_sec time before a price feed expires
+       * @param minimum_feeds minimum number of unexpired feeds required to extract a median feed from
+       * @param broadcast true to broadcast the transaction on the network
+       * @returns the signed transaction updating the bitasset
+       * @ingroup WalletCLI
+       */
+      signed_transaction update_monitored_asset(string symbol,
+                                                string description,
+                                                uint32_t feed_lifetime_sec,
+                                                uint8_t minimum_feeds,
+                                                bool broadcast = false);
 
+      /**
+       * @brief Creates a new user-issued asset.
+       *
+       * Options can be changed later using \c update_asset()
+       *
+       * @param issuer the name or id of the account who will pay the fee and become the
+       *               issuer of the new asset.  This can be updated later
+       * @param symbol the ticker symbol of the new asset
+       * @param precision the number of digits of precision to the right of the decimal point,
+       *                  must be less than or equal to 12
+       * @param description asset description
+       * @param max_supply the maximum supply of this asset which may exist at any given time
+       * @param core_exchange_rate Core_exchange_rate technically needs to store the asset ID of
+       *               this new asset. Since this ID is not known at the time this operation is
+       *               created, create this price as though the new asset has instance ID 1, and
+       *               the chain will overwrite it with the new asset's ID.
+       * @param broadcast true to broadcast the transaction on the network
+       * @returns the signed transaction creating a new asset
+       * @ingroup WalletCLI
+       */
+      signed_transaction create_user_issued_asset(string issuer,
+                                                  string symbol,
+                                                  uint8_t precision,
+                                                  string description,
+                                                  uint64_t max_supply,
+                                                  price core_exchange_rate,
+                                                  bool broadcast = false);
 
+      /** Issue new shares of an asset.
+       *
+       * @param to_account the name or id of the account to receive the new shares
+       * @param amount the amount to issue, in nominal units
+       * @param symbol the ticker symbol of the asset to issue
+       * @param memo a memo to include in the transaction, readable by the recipient
+       * @param broadcast true to broadcast the transaction on the network
+       * @returns the signed transaction issuing the new shares
+       */
+         signed_transaction issue_asset(string to_account,
+                                        string amount,
+                                        string symbol,
+                                        string memo,
+                                        bool broadcast = false);
 
-         /**
-          * @brief Update the options specific to a BitAsset.
-          *
-          * BitAssets have some options which are not relevant to other asset types. This operation is used to update those
-          * options an an existing BitAsset.
-          *
-          *
-          * @param symbol the name or id of the asset to update, which must be a market-issued asset
-          * @param new_issuer if the asset is to be given a new issuer, specify his ID here
-          * @param description asset description
-          * @param feed_lifetime_sec time before a price feed expires
-          * @param minimum_feeds minimum number of unexpired feeds required to extract a median feed from
-          * @param broadcast true to broadcast the transaction on the network
-          * @returns the signed transaction updating the bitasset
-          * @ingroup WalletCLI
-          */
-         signed_transaction update_monitored_asset(string symbol,
-                                                   string new_issuer,
-                                                   string description,
-                                                   uint32_t feed_lifetime_sec,
-                                                   uint8_t minimum_feeds,
-                                                   bool broadcast = false);
+      /**
+       * @brief Update the options specific to a user issued asset.
+       *
+       * User issued assets have some options which are not relevant to other asset types. This operation is used to update those
+       * options an an existing user issues asset.
+       *
+       *
+       * @param symbol the name or id of the asset to update, which must be a market-issued asset
+       * @param new_issuer if the asset is to be given a new issuer, specify his ID here
+       * @param description asset description
+       * @param max_supply The maximum supply of this asset which may exist at any given time
+       * @param core_exchange_rate Price used to convert non-core asset to core asset
+       * @param broadcast true to broadcast the transaction on the network
+       * @returns the signed transaction updating the bitasset
+       * @ingroup WalletCLI
+       */
+      signed_transaction update_user_issued_asset(string symbol,
+                                                  string new_issuer,
+                                                  string description,
+                                                  uint64_t max_supply,
+                                                  price core_exchange_rate,
+                                                  bool broadcast = false);
 
+      /** Pay into the fee pool for the given asset.
+       *
+       * User-issued assets can optionally have a pool of the core asset which is
+       * automatically used to pay transaction fees for any transaction using that
+       * asset (using the asset's core exchange rate).
+       *
+       * This command allows anyone to deposit the core asset into this fee pool.
+       *
+       * @param from the name or id of the account sending the core asset
+       * @param symbol the name or id of the asset whose fee pool you wish to fund
+       * @param amount the amount of the core asset to deposit
+       * @param broadcast true to broadcast the transaction on the network
+       * @returns the signed transaction funding the fee pool
+       */
+      signed_transaction fund_asset_fee_pool(string from,
+                                             string amount,
+                                             string symbol,
+                                             bool broadcast = false);
+
+      /** Burns the given user-issued asset.
+       *
+       * This command burns the user-issued asset to reduce the amount in circulation.
+       * @note you cannot burn market-issued assets.
+       * @param from the account containing the asset you wish to burn
+       * @param amount the amount to burn, in nominal units
+       * @param symbol the name or id of the asset to burn
+       * @param broadcast true to broadcast the transaction on the network
+       * @returns the signed transaction burning the asset
+       */
+      signed_transaction reserve_asset(string from,
+                                       string amount,
+                                       string symbol,
+                                       bool broadcast = false);
+
+      /** Transfers accumulated fees back to the issuer's balance.
+       *
+       * @note you cannot claim fees from market-issued asset.
+       * @param from the account containing the asset you wish to burn
+       * @param amount the amount to burn, in nominal units
+       * @param symbol the name or id of the asset to burn
+       * @param broadcast true to broadcast the transaction on the network
+       * @returns the signed transaction burning the asset
+       */
+      signed_transaction claim_fees(string from,
+                                    string amount,
+                                    string symbol,
+                                    bool broadcast = false);
 
          /**
           * @brief Converts price denominated in Monitored asset into DCT, using actual price feed.
@@ -1227,6 +1353,9 @@ namespace graphene { namespace wallet {
             bool broadcast = false);
 
          /**
+          *
+          *
+          *
           * @brief Approve or disapprove a proposal.
           *
           * @param fee_paying_account The account paying the fee for the op.
@@ -1960,11 +2089,18 @@ FC_API( graphene::wallet::wallet_api,
            (create_account_with_brain_key_noimport)
            (transfer)
            (transfer2)
+              (transfer_with_fees)
            (propose_transfer)
            (get_transaction_id)
            (create_monitored_asset)
            (update_monitored_asset)
            (publish_asset_feed)
+           (create_user_issued_asset)
+           (update_user_issued_asset)
+           (issue_asset)
+           (fund_asset_fee_pool)
+           (reserve_asset)
+           (claim_fees)
            (price_to_dct)
            (get_asset)
            (get_monitored_asset_data)
