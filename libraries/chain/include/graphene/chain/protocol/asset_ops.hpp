@@ -313,7 +313,7 @@ FC_REFLECT( graphene::chain::asset_options,
             (extensions)
 )
 
-FC_REFLECT( graphene::chain::asset_create_operation::fee_parameters_type, (basic_fee) )
+FC_REFLECT( graphene::chain::asset_create_operation::fee_parameters_type, (basic_fee)(symbol3)(symbol4)(long_symbol) )
 FC_REFLECT( graphene::chain::asset_issue_operation::fee_parameters_type, (fee)(price_per_kbyte) )
 FC_REFLECT( graphene::chain::update_monitored_asset_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::update_user_issued_asset_operation::fee_parameters_type, (fee) )
@@ -364,11 +364,31 @@ FC_REFLECT( graphene::chain::update_user_issued_asset_operation,
           )
 
 FC_REFLECT( graphene::chain::asset_reserve_operation,
-            (fee)(payer)(amount_to_reserve)(extensions) )
+            (fee)
+            (payer)
+            (amount_to_reserve)
+            (extensions)
+          )
 
-FC_REFLECT( graphene::chain::asset_fund_fee_pool_operation, (fee)(from_account)(asset_id)(amount)(extensions) )
+FC_REFLECT( graphene::chain::asset_fund_fee_pool_operation,
+            (fee)
+            (from_account)
+            (asset_id)
+            (amount)
+            (extensions)
+          )
 
-FC_REFLECT( graphene::chain::asset_claim_fees_operation, (fee)(issuer)(amount_to_claim)(extensions) )
+FC_REFLECT( graphene::chain::asset_claim_fees_operation,
+            (fee)
+            (issuer)
+            (amount_to_claim)
+            (extensions)
+          )
 
 FC_REFLECT( graphene::chain::asset_publish_feed_operation,
-            (fee)(publisher)(asset_id)(feed)(extensions) )
+            (fee)
+            (publisher)
+            (asset_id)
+            (feed)
+            (extensions)
+          )

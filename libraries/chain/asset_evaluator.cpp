@@ -99,7 +99,6 @@ void_result asset_issue_evaluator::do_evaluate( const asset_issue_operation& o )
       FC_ASSERT( o.issuer == a.issuer );
       FC_ASSERT( !a.is_monitored_asset(), "Cannot manually issue a market-issued asset." );
 
-      to_account = &o.issue_to_account(d);
       asset_dyn_data = &a.dynamic_asset_data_id(d);
       FC_ASSERT( (asset_dyn_data->current_supply + o.asset_to_issue.amount) <= a.options.max_supply );
 
@@ -119,9 +118,7 @@ void_result asset_issue_evaluator::do_apply( const asset_issue_operation& o )
 
 void_result monitored_asset_update_evaluator::do_evaluate(const update_monitored_asset_operation& o)
 { try {
-   database& d = db();
-
-   const asset_object& a = o.asset_to_update(d);
+   const asset_object& a = o.asset_to_update(db());
    FC_ASSERT( a.is_monitored_asset() );
 
    asset_to_update = &a;
@@ -131,9 +128,7 @@ void_result monitored_asset_update_evaluator::do_evaluate(const update_monitored
 
 void_result monitored_asset_update_evaluator::do_apply(const update_monitored_asset_operation& o)
 { try {
-   database& d = db();
-
-   d.modify(*asset_to_update, [&](asset_object& a) {
+   db().modify(*asset_to_update, [&](asset_object& a) {
       if( o.new_description != "" )
          a.description = o.new_description;
       if(o.new_feed_lifetime_sec)
@@ -189,8 +184,6 @@ void_result asset_reserve_evaluator::do_evaluate( const asset_reserve_operation&
          "Cannot reserve ${sym} because it is a monitored asset",
          ("sym", a.symbol)
       );
-
-      from_account = &o.payer(d);
 
       asset_dyn_data = &a.dynamic_asset_data_id(d);
       FC_ASSERT( (asset_dyn_data->current_supply - o.amount_to_reserve.amount) >= 0 );

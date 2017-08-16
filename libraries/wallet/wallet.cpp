@@ -1309,12 +1309,10 @@ public:
          return sign_transaction( tx, broadcast );
       } FC_CAPTURE_AND_RETHROW( (from)(amount)(symbol)(broadcast) ) }
 
-   signed_transaction claim_fees(string from,
-                                 string amount,
+   signed_transaction claim_fees(string amount,
                                  string symbol,
                                  bool broadcast /* = false */)
    { try {
-         account_object from_account = get_account(from);
          optional<asset_object> asset_to_claim = find_asset(symbol);
          if (!asset_to_claim)
             FC_THROW("No asset with that symbol exists!");
@@ -1329,7 +1327,7 @@ public:
          tx.validate();
 
          return sign_transaction( tx, broadcast );
-      } FC_CAPTURE_AND_RETHROW( (from)(amount)(symbol)(broadcast) ) }
+      } FC_CAPTURE_AND_RETHROW( (amount)(symbol)(broadcast) ) }
 
    signed_transaction create_monitored_asset(string issuer,
                                              string symbol,
@@ -1820,45 +1818,6 @@ public:
 
       return sign_transaction(tx, broadcast);
    } FC_CAPTURE_AND_RETHROW( (from)(to)(amount)(asset_symbol)(memo)(broadcast) ) }
-
-      signed_transaction transfer_with_fees(string from, string to, string amount,
-                                  string asset_symbol, string memo,string fee, string asset, bool broadcast = false)
-      { try {
-            FC_ASSERT( !self.is_locked() );
-            fc::optional<asset_object> asset_obj = get_asset(asset_symbol);
-            FC_ASSERT(asset_obj, "Could not find asset matching ${asset}", ("asset", asset_symbol));
-
-            account_object from_account = get_account(from);
-            account_object to_account = get_account(to);
-            account_id_type from_id = from_account.id;
-            account_id_type to_id = get_account_id(to);
-
-            transfer_operation xfer_op;
-
-            xfer_op.from = from_id;
-            xfer_op.to = to_id;
-            xfer_op.amount = asset_obj->amount_from_string(amount);
-
-            if( memo.size() )
-            {
-               xfer_op.memo = memo_data();
-               xfer_op.memo->from = from_account.options.memo_key;
-               xfer_op.memo->to = to_account.options.memo_key;
-               xfer_op.memo->set_message(get_private_key(from_account.options.memo_key),
-                                         to_account.options.memo_key, memo);
-            }
-
-            signed_transaction tx;
-
-            asset_object asset_obj2 = get_asset(asset);
-            xfer_op.fee=asset_obj2.amount_from_string(fee);
-
-            tx.operations.push_back(xfer_op);
-            //set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
-            tx.validate();
-
-            return sign_transaction(tx, broadcast);
-         } FC_CAPTURE_AND_RETHROW( (from)(to)(amount)(asset_symbol)(memo)(fee)(asset)(broadcast) ) }
 
    void propose_transfer(string proposer,
                          string from,
@@ -3781,12 +3740,6 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
       return my->transfer(from, to, amount, asset_symbol, memo, broadcast);
    }
 
-         signed_transaction wallet_api::transfer_with_fees(string from, string to, string amount,
-                                                 string asset_symbol, string memo,string fee,string asset, bool broadcast /* = false */)
-         {
-            return my->transfer_with_fees(from, to, amount, asset_symbol, memo, fee, asset, broadcast);
-         }
-
    signed_transaction wallet_api::create_monitored_asset(string issuer,
                                                          string symbol,
                                                          uint8_t precision,
@@ -3870,12 +3823,11 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
       return my->reserve_asset(from, amount, symbol, broadcast);
    }
 
-   signed_transaction wallet_api::claim_fees(string from,
-                                             string amount,
+   signed_transaction wallet_api::claim_fees(string amount,
                                              string symbol,
                                              bool broadcast /* = false */)
    {
-      return my->claim_fees(from, amount, symbol, broadcast);
+      return my->claim_fees( amount, symbol, broadcast);
    }
 
    map<string,miner_id_type> wallet_api::list_miners(const string& lowerbound, uint32_t limit)

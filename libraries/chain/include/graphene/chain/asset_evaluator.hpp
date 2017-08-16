@@ -46,7 +46,6 @@ namespace graphene { namespace chain {
       void_result do_apply( const asset_issue_operation& o );
 
       const asset_dynamic_data_object* asset_dyn_data = nullptr;
-      const account_object*            to_account = nullptr;
    };
 
    class monitored_asset_update_evaluator : public evaluator<monitored_asset_update_evaluator>
@@ -90,7 +89,6 @@ namespace graphene { namespace chain {
       void_result do_apply( const asset_reserve_operation& o );
 
       const asset_dynamic_data_object* asset_dyn_data = nullptr;
-      const account_object*            from_account = nullptr;
    };
 
    class asset_claim_fees_evaluator : public evaluator<asset_claim_fees_evaluator>

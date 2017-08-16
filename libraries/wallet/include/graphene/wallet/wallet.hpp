@@ -901,28 +901,6 @@ namespace graphene { namespace wallet {
             return std::make_pair(trx.id(),trx);
          }
 
-         /** @brief Transfer an amount from one account to another.
-          * @param from the name or id of the account sending the funds
-          * @param to the name or id of the account receiving the funds
-          * @param amount the amount to send (in nominal units -- to send half of a BTS, specify 0.5)
-          * @param asset_symbol the symbol or id of the asset to send
-          * @param memo a memo to attach to the transaction.  The memo will be encrypted in the
-          *             transaction and readable for the receiver.  There is no length limit
-          *             other than the limit imposed by maximum transaction size, but transaction
-          *             increase with transaction size
-          * @param broadcast true to broadcast the transaction on the network
-          * @returns the signed transaction transferring funds
-          * @ingroup WalletCLI
-          */
-         signed_transaction transfer_with_fees(string from,
-                                     string to,
-                                     string amount,
-                                     string asset_symbol,
-                                     string memo,
-                                               string fee,
-                                               string asset,
-                                     bool broadcast = false);
-
         /**
          * @brief Encapsulates begin_builder_transaction(), add_operation_to_builder_transaction(),
          * propose_builder_transaction2(), set_fees_on_builder_transaction() functions for transfer operation
@@ -968,7 +946,7 @@ namespace graphene { namespace wallet {
        * @param symbol the ticker symbol of the new asset
        * @param precision the number of digits of precision to the right of the decimal point,
        *                  must be less than or equal to 12
-       * @param description asset description
+       * @param description asset description. Maximal length is 1000 chars.
        * @param feed_lifetime_sec time before a price feed expires
        * @param minimum_feeds minimum number of unexpired feeds required to extract a median feed from
        * @param broadcast true to broadcast the transaction on the network
@@ -1013,7 +991,7 @@ namespace graphene { namespace wallet {
        * @param symbol the ticker symbol of the new asset
        * @param precision the number of digits of precision to the right of the decimal point,
        *                  must be less than or equal to 12
-       * @param description asset description
+       * @param description asset description. Maximal length is 1000 chars.
        * @param max_supply the maximum supply of this asset which may exist at any given time
        * @param core_exchange_rate Core_exchange_rate technically needs to store the asset ID of
        *               this new asset. Since this ID is not known at the time this operation is
@@ -1106,14 +1084,12 @@ namespace graphene { namespace wallet {
       /** Transfers accumulated fees back to the issuer's balance.
        *
        * @note you cannot claim fees from market-issued asset.
-       * @param from the account containing the asset you wish to burn
-       * @param amount the amount to burn, in nominal units
-       * @param symbol the name or id of the asset to burn
+       * @param amount the amount to claim, in nominal units
+       * @param symbol the name or id of the asset to claim
        * @param broadcast true to broadcast the transaction on the network
-       * @returns the signed transaction burning the asset
+       * @returns the signed transaction claiming the fees
        */
-      signed_transaction claim_fees(string from,
-                                    string amount,
+      signed_transaction claim_fees(string amount,
                                     string symbol,
                                     bool broadcast = false);
 
@@ -2102,7 +2078,6 @@ FC_API( graphene::wallet::wallet_api,
            (create_account_with_brain_key_noimport)
            (transfer)
            (transfer2)
-              (transfer_with_fees)
            (propose_transfer)
            (get_transaction_id)
            (create_monitored_asset)

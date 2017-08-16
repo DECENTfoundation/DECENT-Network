@@ -54,9 +54,8 @@ namespace graphene { namespace chain {
             asset_claim_fees_operation,
             update_user_issued_asset_operation,
             update_monitored_asset_operation,
-            asset_publish_feed_operation,
+            asset_publish_feed_operation,           // 10
             miner_create_operation,
-
             miner_update_operation,
             miner_update_global_parameters_operation,
             proposal_create_operation,
@@ -65,7 +64,7 @@ namespace graphene { namespace chain {
             withdraw_permission_create_operation,
             withdraw_permission_update_operation,
             withdraw_permission_claim_operation,
-            withdraw_permission_delete_operation,
+            withdraw_permission_delete_operation,   //20
             vesting_balance_create_operation,
             vesting_balance_withdraw_operation,
             custom_operation,
@@ -75,7 +74,7 @@ namespace graphene { namespace chain {
             leave_rating_and_comment_operation,
             ready_to_publish_operation,
             proof_of_custody_operation,
-            deliver_keys_operation,
+            deliver_keys_operation,                 //30
             subscribe_operation,
             subscribe_by_author_operation,
             automatic_renewal_of_subscription_operation,
