@@ -2131,7 +2131,7 @@ public:
       } FC_CAPTURE_AND_RETHROW( (author)(URI)(price_amounts)(hash)(seeders)(quorum)(expiration)(publishing_fee_symbol_name)(publishing_fee_amount)(synopsis)(secret)(broadcast) )
    }
 
-   fc::ripemd160 submit_content_async( string const& author,
+   void submit_content_async( string const& author,
                                        vector< pair< string, uint32_t>> co_authors,
                                        string const& content_dir,
                                        string const& samples_dir,
@@ -2216,7 +2216,7 @@ public:
          package_handle->create(false);
 
          //We end up here and return the  to the upper layer. The create method will continue in the background, and once finished, it will call the respective callback of submit_transfer_listener class
-         return fc::ripemd160();
+         return ;
       }
       FC_CAPTURE_AND_RETHROW( (author)(content_dir)(samples_dir)(protocol)(price_amounts)(seeders)(expiration)(synopsis)(broadcast) )
    }
@@ -4016,7 +4016,7 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
       return my->submit_content(author, co_authors, URI, price_amounts, hash, size, seeders, quorum, expiration, publishing_fee_asset, publishing_fee_amount, synopsis, secret, cd, broadcast);
    }
 
-   fc::ripemd160
+   void
    wallet_api::submit_content_async(string const &author, vector< pair< string, uint32_t>> co_authors,
                                      string const &content_dir, string const &samples_dir,
                                      string const &protocol,
@@ -4025,7 +4025,7 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
                                      fc::time_point_sec const &expiration, string const &synopsis,
                                      bool broadcast)
    {
-      return my->submit_content_async(author, co_authors, content_dir, samples_dir, protocol, price_amounts, seeders, expiration, synopsis, broadcast);
+      my->submit_content_async(author, co_authors, content_dir, samples_dir, protocol, price_amounts, seeders, expiration, synopsis, broadcast);
 
    }
 

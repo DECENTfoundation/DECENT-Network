@@ -289,7 +289,10 @@ void test_generator(){
 int main(int argc, char**argv)
 {
 
-//  decent::encrypt::AesKey k;
+   decent::encrypt::AesKey k;
+   for (int i=0; i<CryptoPP::AES::MAX_KEYLENGTH; i++)
+      k.key_byte[i] = '\x00';
+   test_aes(k);
 
 //   for (int i=0; i<CryptoPP::AES::MAX_KEYLENGTH; i++)
 //      k.key_byte[i]=i;
@@ -302,5 +305,5 @@ int main(int argc, char**argv)
 //   test_shamir(secret);
 //   generate_params();
 //   test_generator();
-  test_custody();
+//  test_custody();
 }
