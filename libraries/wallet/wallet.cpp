@@ -4272,7 +4272,12 @@ pair<account_id_type, vector<account_id_type>> wallet_api::get_author_and_co_aut
    {
       return my->_remote_db->list_seeders_by_upload( count );
    }
-   
+
+   vector<seeder_object> wallet_api::list_seeders_by_rating( const uint32_t count )const
+   {
+      return my->_remote_db->list_seeders_by_rating( count );
+   }
+
    signed_transaction wallet_api::subscribe_to_author( string from,
                                                        string to,
                                                        string price_amount,

@@ -35,6 +35,7 @@ namespace graphene { namespace chain {
    struct by_free_space;
    struct by_price;
    struct by_expiration;
+   struct by_rating;
    
    typedef multi_index_container<
       seeder_object,
@@ -53,6 +54,9 @@ namespace graphene { namespace chain {
             >,
             ordered_non_unique< tag<by_expiration>,
                member<seeder_object, time_point_sec, &seeder_object::expiration>
+            >,
+            ordered_non_unique< tag<by_rating>,
+               member<seeder_object, uint32_t, &seeder_object::rating>,std::greater<uint32_t>
             >
          >
    >seeder_object_multi_index_type;
