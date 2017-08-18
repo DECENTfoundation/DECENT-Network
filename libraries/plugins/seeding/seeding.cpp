@@ -350,6 +350,7 @@ void seeding_plugin_impl::send_ready_to_publish()
       op.price_per_MByte = sritr->price;
       op.pubKey = get_public_el_gamal_key(sritr->content_privKey);
       op.ipfs_ID = json["ID"];
+      op.region_code = sritr->region_code;
       signed_transaction tx;
       tx.operations.push_back(op);
 
@@ -607,6 +608,13 @@ void seeding_plugin::plugin_initialize( const boost::program_options::variables_
          seeding_options.packages_path = fc::path( "" );
       }
 
+      const auto region_code_itr = RegionCodes::s_mapNameToCode.find( options["region-code"].as<string>() );
+
+      if( region_code_itr != RegionCodes::s_mapNameToCode.end() && region_code_itr->second != RegionCodes::OO_all )
+         seeding_options.region_code = region_code_itr->first;
+      else
+         FC_THROW("invalid country-code parameter");
+
       plugin_pre_startup( seeding_options );
    }
 
@@ -649,6 +657,7 @@ void seeding_plugin::plugin_pre_startup( const seeding_plugin_startup_options& s
          mso.content_privKey = seeding_options.content_private_key;
          mso.privKey = seeding_options.seeder_private_key;
          mso.price = seeding_options.seeding_price;
+         mso.region_code = seeding_options.region_code;
 
       });
    }catch(...){}
@@ -671,6 +680,7 @@ void seeding_plugin::plugin_set_program_options(
          ("free-space", bpo::value<int>(), "Allocated disk space, in MegaBytes")
          ("packages-path", bpo::value<string>()->default_value(""), "Packages storage path")
          ("seeding-price", bpo::value<int>(), "Price per MegaBytes")
+         ("region-code", bpo::value<string>()->default_value(""), "Optional ISO 3166-1 alpha-2 two-letter region code")
          ;
 }
 

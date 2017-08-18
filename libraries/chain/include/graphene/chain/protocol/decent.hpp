@@ -107,22 +107,50 @@ namespace graphene { namespace chain {
       void validate()const { FC_ASSERT( URI != "" ); };
    };
 
+// ISO 3166-1 alpha-2 two-letter region codes ( num of codes = 249 )
+#define COUNTRY_CODES (AD)(AE)(AF)(AG)(AI)(AL)(AM)(AO)(AQ)(AR)(AS)(AT)(AU)(AW)(AX)(AZ)(BA)(BB)(BD)(BE) \
+                      (BF)(BG)(BH)(BI)(BJ)(BL)(BM)(BN)(BO)(BQ)(BR)(BS)(BT)(BV)(BW)(BY)(BZ)(CA)(CC)(CD) \
+                      (CF)(CG)(CH)(CI)(CK)(CL)(CM)(CN)(CO)(CR)(CU)(CV)(CW)(CX)(CY)(CZ)(DE)(DJ)(DK)(DM) \
+                      (DO)(DZ)(EC)(EE)(EG)(EH)(ER)(ES)(ET)(FI)(FJ)(FK)(FM)(FO)(FR)(GA)(GB)(GD)(GE)(GF) \
+                      (GG)(GH)(GI)(GL)(GM)(GN)(GP)(GQ)(GR)(GS)(GT)(GU)(GW)(GY)(HK)(HM)(HN)(HR)(HT)(HU) \
+                      (ID)(IE)(IL)(IM)(IN)(IO)(IQ)(IR)(IS)(IT)(JE)(JM)(JO)(JP)(KE)(KG)(KH)(KI)(KM)(KN) \
+                      (KP)(KR)(KW)(KY)(KZ)(LA)(LB)(LC)(LI)(LK)(LR)(LS)(LT)(LU)(LV)(LY)(MA)(MC)(MD)(ME) \
+                      (MF)(MG)(MH)(MK)(ML)(MM)(MN)(MO)(MP)(MQ)(MR)(MS)(MT)(MU)(MV)(MW)(MX)(MY)(MZ)(NA) \
+                      (NC)(NE)(NF)(NG)(NI)(NL)(NO)(NP)(NR)(NU)(NZ)(OM)(PA)(PE)(PF)(PG)(PH)(PK)(PL)(PM) \
+                      (PN)(PR)(PS)(PT)(PW)(PY)(QA)(RE)(RO)(RS)(RU)(RW)(SA)(SB)(SC)(SD)(SE)(SG)(SH)(SI) \
+                      (SJ)(SK)(SL)(SM)(SN)(SO)(SR)(SS)(ST)(SV)(SX)(SY)(SZ)(TC)(TD)(TF)(TG)(TH)(TJ)(TK) \
+                      (TL)(TM)(TN)(TO)(TR)(TT)(TV)(TW)(TZ)(UA)(UG)(UM)(US)(UY)(UZ)(VA)(VC)(VE)(VG)(VI) \
+                      (VN)(VU)(WF)(WS)(YE)(YT)(ZA)(ZM)(ZW)
+
+#define INNER_MACRO(r, data, elem) elem,
+#define INNER_MACRO2(r, data, elem) std::make_pair(uint32_t(RegionCodes::elem), BOOST_PP_STRINGIZE(elem)),
+#define MY_MACRO( ENUM, FIELDS ) \
+enum ENUM{ \
+ OO_none = 1,\
+ OO_all,\
+ BOOST_PP_SEQ_FOR_EACH(INNER_MACRO, _, FIELDS) \
+}; \
+static bool InitCodeAndName() { \
+   vector<pair<uint32_t, string>> arr { \
+      std::make_pair(uint32_t(RegionCodes::OO_none), ""), \
+      std::make_pair(uint32_t(RegionCodes::OO_all), "default"), \
+      BOOST_PP_SEQ_FOR_EACH(INNER_MACRO2, _, FIELDS) \
+   }; \
+   for (auto const& item : arr) \
+   { \
+      s_mapCodeToName.insert(std::make_pair(item.first, item.second)); \
+      s_mapNameToCode.insert(std::make_pair(item.second, item.first)); \
+   } \
+   return true; \
+}
 
    class RegionCodes
    {
    public:
-      enum RegionCode
-      {
-         OO_none = 1,
-         OO_all,
-         US,
-         UK
-      };
+      MY_MACRO( RegionCode, COUNTRY_CODES ) // enum + InitCodeAndName
       static bool bAuxillary;
       static map<uint32_t, string> s_mapCodeToName;
       static map<string, uint32_t> s_mapNameToCode;
-
-      static bool InitCodeAndName();
    };
 
    struct PriceRegions
@@ -191,6 +219,8 @@ namespace graphene { namespace chain {
       /// The price charged to author for seeding 1 MB per day
       uint32_t price_per_MByte;
       string ipfs_ID;
+      /// Optional ISO 3166-1 alpha-2 two-letter region code
+      optional<string> region_code;
       
       account_id_type fee_payer()const { return seeder; }
       void validate()const;
@@ -332,7 +362,7 @@ FC_REFLECT(graphene::chain::set_publishing_right_operation,(fee)(from)(to)(is_pu
 FC_REFLECT(graphene::chain::content_cancellation_operation,(fee)(author)(URI))
 FC_REFLECT(graphene::chain::request_to_buy_operation,(fee)(URI)(consumer)(price)(region_code_from)(pubKey))
 FC_REFLECT(graphene::chain::leave_rating_and_comment_operation,(fee)(URI)(consumer)(comment)(rating))
-FC_REFLECT(graphene::chain::ready_to_publish_operation,(fee)(seeder)(space)(pubKey)(price_per_MByte)(ipfs_ID))
+FC_REFLECT(graphene::chain::ready_to_publish_operation,(fee)(seeder)(space)(pubKey)(price_per_MByte)(ipfs_ID)(region_code))
 FC_REFLECT(graphene::chain::proof_of_custody_operation,(fee)(seeder)(URI)(proof))
 FC_REFLECT(graphene::chain::deliver_keys_operation,(fee)(seeder)(proof)(key)(buying))
 FC_REFLECT(graphene::chain::return_escrow_submission_operation,(fee)(author)(escrow)(content))

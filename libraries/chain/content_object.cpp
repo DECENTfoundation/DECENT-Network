@@ -10,24 +10,6 @@ namespace graphene { namespace chain {
 
    bool RegionCodes::bAuxillary = RegionCodes::InitCodeAndName();
 
-   bool RegionCodes::InitCodeAndName()
-   {
-      vector<pair<uint32_t, string>> arr
-      {
-         std::make_pair(uint32_t(RegionCodes::OO_none), ""),
-         std::make_pair(uint32_t(RegionCodes::OO_all), "default"),
-         std::make_pair(uint32_t(RegionCodes::US), "US"),
-         std::make_pair(uint32_t(RegionCodes::UK), "UK")
-      };
-
-      for (auto const& item : arr)
-      {
-         s_mapCodeToName.insert(std::make_pair(item.first, item.second));
-         s_mapNameToCode.insert(std::make_pair(item.second, item.first));
-      }
-      return true;
-   }
-
    optional<asset> PriceRegions::GetPrice(uint32_t region_code) const
    {
       optional<asset> op_price;

@@ -654,6 +654,7 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
               so.expiration = db().head_block_time() + 24 * 3600;
               so.ipfs_ID = o.ipfs_ID;
               so.stats = stats;
+              so.region_code = *o.region_code;
          });
       } else{ //this is republish case
          db().modify<seeder_object>(*sor,[&](seeder_object &so) {
@@ -662,6 +663,7 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
             so.pubKey = o.pubKey;
             so.expiration = db().head_block_time() + 24 * 3600;
             so.ipfs_ID = o.ipfs_ID;
+            so.region_code = *o.region_code;
          });
       }
    }FC_CAPTURE_AND_RETHROW( (o) ) }

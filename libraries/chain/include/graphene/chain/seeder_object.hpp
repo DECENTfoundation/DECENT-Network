@@ -29,12 +29,15 @@ namespace graphene { namespace chain {
       seeding_statistics_id_type stats;
       // seeder's rating
       uint32_t rating = 0;
+      // optional ISO 3166-1 alpha-2 two-letter region code
+      string region_code;
    };
    
    struct by_seeder;
    struct by_free_space;
    struct by_price;
    struct by_expiration;
+   struct by_region;
    
    typedef multi_index_container<
       seeder_object,
@@ -53,6 +56,9 @@ namespace graphene { namespace chain {
             >,
             ordered_non_unique< tag<by_expiration>,
                member<seeder_object, time_point_sec, &seeder_object::expiration>
+            >,
+            ordered_non_unique< tag<by_region>,
+               member<seeder_object, string, &seeder_object::region_code>
             >
          >
    >seeder_object_multi_index_type;
@@ -63,4 +69,4 @@ namespace graphene { namespace chain {
 
 FC_REFLECT_DERIVED(graphene::chain::seeder_object,
                    (graphene::db::object),
-                   (seeder)(free_space)(price)(expiration)(pubKey)(ipfs_ID)(stats)(rating) )
+                   (seeder)(free_space)(price)(expiration)(pubKey)(ipfs_ID)(stats)(rating)(region_code) )

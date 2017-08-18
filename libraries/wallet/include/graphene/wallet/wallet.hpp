@@ -1493,8 +1493,9 @@ namespace graphene { namespace wallet {
           * @param content_private_key El Gamal content private key
           * @param seeder_private_key Private key of the account controlling this seeder
           * @param free_space Allocated disk space, in MegaBytes
-          * @param seeding_price price per MegaBytes
+          * @param seeding_price price per MegaByte
           * @param packages_path Packages storage path
+          * @param region_code Optional ISO 3166-1 alpha-2 two-letter region code
           * @ingroup WalletCLI
           */
          void seeding_startup( string account_id_type_or_name,
@@ -1502,7 +1503,8 @@ namespace graphene { namespace wallet {
                                string seeder_private_key,
                                uint64_t free_space,
                                uint32_t seeding_price,
-                               string packages_path);
+                               string packages_path,
+                               string region_code = "" );
 
          /**
           * @brief Rates and comments a content.
@@ -1780,6 +1782,14 @@ namespace graphene { namespace wallet {
          optional<vector<seeder_object>> list_seeders_by_upload( const uint32_t count )const;
 
          /**
+          * @brief Get a list of seeders by region code
+          * @param region_code Region code of seeders to retrieve
+          * @return The seeders found
+          * @ingroup WalletCLI
+          */
+         vector<seeder_object> list_seeders_by_region( const string region_code )const;
+
+         /**
           * @brief Get author and list of co-authors of a content corresponding to the provided URI
           * @param URI URI of the content
           * @return The autor of the content and the list of co-authors, if provided
@@ -2052,6 +2062,7 @@ FC_API( graphene::wallet::wallet_api,
            (search_user_content)
            (list_publishers_by_price)
            (list_seeders_by_upload)
+           (list_seeders_by_region)
            (get_author_and_co_authors_by_URI)
            (create_package)
            (extract_package)

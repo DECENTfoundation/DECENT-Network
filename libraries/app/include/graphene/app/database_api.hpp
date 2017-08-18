@@ -708,6 +708,14 @@ namespace graphene { namespace app {
          optional<vector<seeder_object>> list_seeders_by_upload( const uint32_t count )const;
 
          /**
+          * @brief Get a list of seeders by region code
+          * @param region_code Region code of seeders to retrieve
+          * @return The seeders found
+          * @ingroup DatabaseAPI
+          */
+         vector<seeder_object> list_seeders_by_region( const string region_code )const;
+
+         /**
           * @brief Get a subscription object by ID
           * @param sid ID of the subscription to retrieve
           * @return The subscription object corresponding to the provided ID, or null if no matching subscription was found
@@ -853,6 +861,7 @@ FC_API(graphene::app::database_api,
           (search_content)
           (list_publishers_by_price)
           (list_seeders_by_upload)
+          (list_seeders_by_region)
           (get_seeder)
           (get_real_supply)
           (get_subscription)
