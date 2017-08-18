@@ -325,7 +325,7 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
                so.free_space -= o.size;
             });
             db().modify<content_object>(content, [&](content_object& co){
-                 co.seeder_price.emplace(std::make_pair(p, itr->price.amount));
+               co.seeder_price.emplace(std::make_pair(p, itr->price.amount));
             });
          }
 
@@ -334,7 +334,7 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
          {
             const auto& stats = idx2.find( element );
             db().modify<seeding_statistics_object>( *stats, [](seeding_statistics_object& so){
-               so.total_content_requested_to_seed++;
+               so.total_content_requested_to_seed += 1;
             });
          }
 
@@ -642,7 +642,7 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
       auto& idx = db().get_index_type<seeder_index>().indices().get<by_seeder>();
       const auto& sor = idx.find( o.seeder );
       if( sor == idx.end() ) { //this is initial publish request
-         auto stats = db().create<seeding_statistics_object>([&](seeding_statistics_object &sso) {
+         auto stats = db().create<seeding_statistics_object>([&o](seeding_statistics_object &sso) {
               sso.seeder = o.seeder;
               sso.total_upload = 0;
          }).id;
@@ -727,12 +727,13 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
          db().modify<seeding_statistics_object>( *stats, [&content](seeding_statistics_object& so){
             so.total_content_seeded += ( content->size * 1000 * 1000 ) / content->key_parts.size();
             so.num_of_content_seeded++;
-            so.total_content_requested_to_seed--;
+            if( so.total_content_requested_to_seed > 0 )
+               so.total_content_requested_to_seed -= 1;
          });
       }else{
          const auto& idx2 = db().get_index_type<seeding_statistics_index>().indices().get<by_seeder>();
          const auto& stats = idx2.find( o.seeder );
-         db().modify<seeding_statistics_object>( *stats, [&content](seeding_statistics_object& so){
+         db().modify<seeding_statistics_object>( *stats, [](seeding_statistics_object& so){
             so.num_of_pors++;
          });
          //recurrent PoR, calculate payment
@@ -759,8 +760,8 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
          }
          //take care of the payment
          db().modify<content_object>( *content, [&] (content_object& co ){
-              co.last_proof[o.seeder] = db().head_block_time();
-              co.publishing_fee_escrow -= reward;
+            co.last_proof[o.seeder] = db().head_block_time();
+            co.publishing_fee_escrow -= reward;
          });
          db().adjust_balance(seeder.seeder, reward );
          pay_seeder_operation op;
@@ -799,7 +800,7 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
          for (const auto& item : o.stats)
          {
             const auto &so = idx.find(item.first);
-            db().modify<seeding_statistics_object>(*so, [&](seeding_statistics_object &sso) {
+            db().modify<seeding_statistics_object>(*so, [&item](seeding_statistics_object &sso) {
                sso.total_upload += item.second;
             });
          }

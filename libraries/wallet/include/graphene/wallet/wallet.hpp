@@ -1790,6 +1790,14 @@ namespace graphene { namespace wallet {
          vector<seeder_object> list_seeders_by_region( const string region_code )const;
 
          /**
+          * @brief Get a list of seeders ordered by rating, in decreasing order
+          * @param count Maximum number of seeders to retrieve
+          * @return The seeders found
+          * @ingroup WalletCLI
+          */
+         vector<seeder_object> list_seeders_by_rating( const uint32_t count )const;
+
+         /**
           * @brief Get author and list of co-authors of a content corresponding to the provided URI
           * @param URI URI of the content
           * @return The autor of the content and the list of co-authors, if provided
@@ -2063,6 +2071,7 @@ FC_API( graphene::wallet::wallet_api,
            (list_publishers_by_price)
            (list_seeders_by_upload)
            (list_seeders_by_region)
+           (list_seeders_by_rating)
            (get_author_and_co_authors_by_URI)
            (create_package)
            (extract_package)
