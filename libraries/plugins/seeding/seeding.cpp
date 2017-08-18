@@ -111,36 +111,6 @@ void seeding_plugin_impl::handle_content_submit(const content_submit_operation &
       //bool is_resubmit = false;
       if( element !=  db.get_index_type<my_seeding_index>().indices().get<by_URI>().end() )  // check whether a content is resubmited. If so, unnecessary my_seeding_objects are expired
       {
-         /*
-         is_resubmit = true;
-
-         if( std::find(cs_op.seeders.begin(), cs_op.seeders.end(), (element->seeder)) == cs_op.seeders.end())
-         {
-            db.modify<my_seeding_object>(*element, [&](my_seeding_object &mso) {
-                  mso.expiration = fc::time_point::now();
-            });
-            ilog("seeding plugin:  handle_content_submit() my_seeding_object modified ${s}",("s",element->id));
-            auto seeder_itr = idx.find( element->seeder );
-            db.modify<my_seeder_object>(*seeder_itr, [&](my_seeder_object &mso) {
-                 mso.free_space += cs_op.size;
-            });
-            ilog("seeding plugin:  handle_content_submit() my_seeder_object modified ${s}",("s",seeder_itr->id));
-         }else{
-            auto s = cs_op.seeders.begin();
-            auto k = cs_op.key_parts.begin();
-            while( *s != element->seeder && s != cs_op.seeders.end())
-            {
-               ++s;
-               ++k;
-            }
-            db.modify<my_seeding_object>( *element, [&](my_seeding_object &mso) {
-                 mso.expiration = cs_op.expiration;
-                 mso.cd = cs_op.cd;
-                 if( k != cs_op.key_parts.end())
-                    mso.key = *k;
-            });
-         }
-         */
          return;
       }
       handle_new_content(cs_op);
@@ -233,10 +203,59 @@ void seeding_plugin_impl::handle_commited_operation(const operation_history_obje
    }
 }
 
+void
+seeding_plugin_impl::generate_por_int(const my_seeding_object &mso, decent::package::package_handle_t package_handle, fc::ecc::private_key privKey)
+{try {
+   graphene::chain::database &db = database();
+   ilog("seeding plugin_impl: generate_por() - Creating operation");
+   proof_of_custody_operation op;
+   decent::encrypt::CustodyProof proof;
+   auto dyn_props = db.get_dynamic_global_properties();
+   if(mso.cd){
+      ilog("seeding plugin_impl: generate_por() - calculating full PoR");
+      fc::ripemd160 b_id = dyn_props.head_block_id;
+      uint32_t b_num = dyn_props.head_block_number;
+      proof.reference_block = b_num;
+      for( int i = 0; i < 5; i++ )
+         proof.seed.data[i] = b_id._hash[i]; //use the block ID as source of entrophy
+
+      if(package_handle->get_data_state() == decent::package::PackageInfo::DataState::CHECKED ) //files available on disk
+         package_handle->create_proof_of_custody(*mso.cd, proof);
+      else{
+         package_handle->download(true);
+         package_handle->create_proof_of_custody(*mso.cd, proof);
+      }
+   }
+   op.seeder = mso.seeder;
+   if(mso.cd)
+      op.proof = proof;
+
+   op.URI = mso.URI;
+
+   signed_transaction tx;
+   tx.operations.push_back(op);
+
+   tx.set_reference_block(dyn_props.head_block_id);
+   tx.set_expiration(dyn_props.time + fc::seconds(30));
+   tx.validate();
+
+   chain_id_type _chain_id = db.get_chain_id();
+
+   tx.sign(privKey, _chain_id);
+   idump((tx));
+
+   main_thread->async([this, tx]() { database().push_transaction(tx); });
+
+   ilog("broadcasting out PoR");
+   _self.p2p_node().broadcast_transaction(tx);
+}FC_CAPTURE_AND_RETHROW((mso))}
 
 void
-seeding_plugin_impl::generate_por2(const my_seeding_object& mso, decent::package::package_handle_t package_handle)
+seeding_plugin_impl::generate_por(const my_seeding_object &mso, decent::package::package_handle_t package_handle)
 {try{
+   /*
+    * Generate_por just generates the POR. The checking when and if have to be perfomed at upper layer.
+    */
    ilog("seeding plugin_impl:  generate_por() start");
    package_handle->remove_all_event_listeners();
    graphene::chain::database &db = database();
@@ -255,6 +274,7 @@ seeding_plugin_impl::generate_por2(const my_seeding_object& mso, decent::package
       ilog("seeding plugin_impl:  generate_por() - content expired, cleaning up");
       auto& pm = decent::package::PackageManager::instance();
       package_handle->stop_seeding();
+      package_handle->remove(true);
       pm.release_package(package_handle);
       return;
    }
@@ -277,56 +297,11 @@ seeding_plugin_impl::generate_por2(const my_seeding_object& mso, decent::package
    //If we are about to generate PoR, generate it.
    if( fc::time_point(generate_time) - fc::seconds(POR_WAKEUP_INTERVAL_SEC) <= ( fc::time_point::now() ) )
    {
-      ilog("seeding plugin_impl: generate_por() - generating PoR");
-
-      decent::encrypt::CustodyProof proof;
-      auto dyn_props = db.get_dynamic_global_properties();
-      if(mso.cd){
-         ilog("seeding plugin_impl: generate_por() - calculating full PoR");
-         fc::ripemd160 b_id = dyn_props.head_block_id;
-         uint32_t b_num = dyn_props.head_block_number;
-         proof.reference_block = b_num;
-         for( int i = 0; i < 5; i++ )
-            proof.seed.data[i] = b_id._hash[i]; //use the block ID as source of entrophy
-
-         if(package_handle->get_data_state() == decent::package::PackageInfo::DataState::CHECKED ) //files available on disk
-            package_handle->create_proof_of_custody(*mso.cd, proof);
-         else{
-            package_handle->download(true);
-            package_handle->create_proof_of_custody(*mso.cd, proof);
-            package_handle->remove(true);
-         }
-      }
-      // issue PoR and plan periodic PoR generation
-      ilog("seeding plugin_impl: generate_por() - Creating operation");
-      proof_of_custody_operation op;
-
-      op.seeder = mso.seeder;
-      if(mso.cd)
-         op.proof = proof;
-
-      op.URI = mso.URI;
-
-      signed_transaction tx;
-      tx.operations.push_back(op);
-
-      tx.set_reference_block(dyn_props.head_block_id);
-      tx.set_expiration(dyn_props.time + fc::seconds(30));
-      tx.validate();
-
-      chain_id_type _chain_id = db.get_chain_id();
-
-      tx.sign(sritr->privKey, _chain_id);
-      idump((tx));
-
-      main_thread->async([this, tx]() { database().push_transaction(tx); });
-
-      ilog("broadcasting out PoR");
-      _self.p2p_node().broadcast_transaction(tx);
+      generate_por_int(mso, package_handle, sritr->privKey);
    }
 
    ilog("seeding plugin_impl:  generate_por() - planning next wake-up at ${t}",("t", next_wakeup) );
-   service_thread->schedule([this, mso, package_handle]() { generate_por2(mso, package_handle); }, next_wakeup,
+   service_thread->schedule([this, mso, package_handle]() { generate_por(mso, package_handle); }, next_wakeup,
                             "Seeding plugin PoR generate");
 
    ilog("seeding plugin_impl:  generate_por() end");
@@ -507,7 +482,7 @@ void seeding_plugin_impl::restore_state(){
               }
 
            if(already_have){
-              generate_por2( *citr, package_handle );
+              generate_por(*citr, package_handle);
            }else{
               elog("restarting downloads, re-downloading package ${u}", ("u", citr->URI));
               package_handle = pm.get_package(citr->URI, citr->_hash);
@@ -673,5 +648,40 @@ void seeding_plugin::plugin_set_program_options(
          ("seeding-price", bpo::value<int>(), "Price per MegaBytes")
          ;
 }
+
+void detail::SeedingListener::package_download_error(const std::string & error) {
+   elog("seeding plugin: package_download_error(): Failed downloading package ${s}, ${e}", ("s", _url)("e", error));
+   decent::package::package_handle_t pi;
+   auto& pm = decent::package::PackageManager::instance();
+
+   pi = _pi;
+   //we want to restart the download; however, this method is being called from pi->_download_task::Task method, so we can't restart directly.
+   // We will start asynchronously
+   fc::thread::current().schedule([pi](){ pi->download(true);}, fc::time_point::now() + fc::seconds(60) );
+};
+
+void detail::SeedingListener::package_download_complete() {
+   ilog("seeding plugin: package_download_complete(): Finished downloading package${u}", ("u", _url));
+   auto &pm = decent::package::PackageManager::instance();
+   const auto &mso_idx = _my->database().get_index_type<my_seeding_index>().indices().get<by_URI>();
+   const auto &mso_itr = mso_idx.find(_url);
+
+   decent::package::package_handle_t pi = _pi;
+
+   size_t size = (_pi->get_size() + 1024 * 1024 - 1) / (1024 * 1024);
+   if( size > mso_itr->space ) {
+      ilog("seeding plugin: package_download_complete(): Fraud detected: real content size is greater than propagated in blockchain; deleting...");
+      //changing DB outside the main thread does not work properly, let's delete it from there
+      _my->main_thread->async([ &mso_itr, &pi, &pm ]() { pm.release_package(pi); database().remove(*mso_itr); });
+      _pi.reset();
+      return;
+   }
+   //_pi->remove_event_listener(shared_from_this());
+   _pi->start_seeding();
+   //Don't block package manager thread for too long.
+   seeding_plugin_impl *my = _my;
+   _my->service_thread->async([ my, &mso_itr, pi ]() { my->generate_por(*mso_itr, pi); });
+};
+
 
 }}

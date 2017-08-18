@@ -3,6 +3,7 @@
 
 #include <graphene/app/plugin.hpp>
 #include <graphene/chain/database.hpp>
+#include <graphene/chain/protocol/decent.hpp>
 #include <graphene/db/object.hpp>
 #include <graphene/db/generic_index.hpp>
 #include <graphene/chain/protocol/types.hpp>
@@ -125,7 +126,9 @@ public:
     * @param so_id ID of the my_seeding_object
     * @param downloaded_package Downloaded package object
     */
-   void generate_por2( const my_seeding_object& so, decent::package::package_handle_t package_handle );
+   void generate_por(const my_seeding_object &so, decent::package::package_handle_t package_handle);
+
+   void generate_por_int(const my_seeding_object &so, decent::package::package_handle_t package_handle, fc::ecc::private_key privKey);
 
    /**
     * Process new content, from content_object
@@ -196,38 +199,9 @@ public:
 
    ~SeedingListener() {};
 
-   virtual void package_download_error(const std::string &) {
-      elog("seeding plugin: package_download_error(): Failed downloading package ${s}", ("s", _url));
-      decent::package::package_handle_t pi;
-      auto& pm = decent::package::PackageManager::instance();
+   virtual void package_download_error(const std::string &);
 
-      pi = _pi;
-      //we want to restart the download; however, this method is being called from pi->_download_task::Task method, so we can't restart directly, so we will start asynchronously
-      fc::thread::current().async([pi](){ pi->download(true);});
-   };
-
-   virtual void package_download_complete() {
-      ilog("seeding plugin: package_download_complete(): Finished downloading package${u}", ("u", _url));
-      auto &pm = decent::package::PackageManager::instance();
-      const auto &mso_idx = _my->database().get_index_type<my_seeding_index>().indices().get<by_URI>();
-      const auto &mso_itr = mso_idx.find(_url);
-
-      decent::package::package_handle_t pi = _pi;
-
-      size_t size = (_pi->get_size() + 1024 * 1024 - 1) / (1024 * 1024);
-      if( size > mso_itr->space ) {
-         ilog("seeding plugin: package_download_complete(): Fraud detected: real content size is greater than propagated in blockchain; deleting...");
-         //changing DB outside the main thread does not work properly, let's delete it from there
-         _my->main_thread->async([ &mso_itr, &pi, &pm ]() { pm.release_package(pi); database().remove(*mso_itr); });
-         _pi.reset();
-         return;
-      }
-      //_pi->remove_event_listener(shared_from_this());
-      _pi->start_seeding();
-      //Don't block package manager thread for too long.
-      seeding_plugin_impl *my = _my;
-      _my->service_thread->async([ my, &mso_itr, pi ]() { my->generate_por2( *mso_itr, pi); });
-   };
+   virtual void package_download_complete();
 };
 
 } //namespace detail
