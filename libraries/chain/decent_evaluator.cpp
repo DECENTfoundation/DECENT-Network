@@ -654,16 +654,29 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
               so.expiration = db().head_block_time() + 24 * 3600;
               so.ipfs_ID = o.ipfs_ID;
               so.stats = stats;
-              so.region_code = *o.region_code;
+              if ( true ) // TODO_DECENT add HARDFORK variable
+              {
+                 if( o.region_code.valid() )
+                    so.region_code = *o.region_code;
+                 else
+                    so.region_code = "";
+              }
          });
-      } else{ //this is republish case
+      } else
+      { //this is republish case
          db().modify<seeder_object>(*sor,[&](seeder_object &so) {
             so.free_space = o.space;
             so.price = asset(o.price_per_MByte);
             so.pubKey = o.pubKey;
             so.expiration = db().head_block_time() + 24 * 3600;
             so.ipfs_ID = o.ipfs_ID;
-            so.region_code = *o.region_code;
+            if ( true ) // TODO_DECENT add HARDFORK variable
+            {
+               if( o.region_code.valid() )
+                  so.region_code = *o.region_code;
+               else
+                  so.region_code = "";
+           }
          });
       }
    }FC_CAPTURE_AND_RETHROW( (o) ) }
@@ -677,12 +690,12 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
       //verify that the seed is not too old...
       if (o.proof.valid())
       {
-      auto& proof = *o.proof;
+         auto& proof = *o.proof;
 
-      fc::ripemd160 bid = db().get_block_id_for_num(proof.reference_block);
-      for(int i = 0; i < 5; i++)
-         FC_ASSERT(bid._hash[i] == proof.seed.data[i],"Block ID does not match; wrong chain?");
-      FC_ASSERT(db().head_block_num() <= proof.reference_block + 6,"Block reference is too old");
+         fc::ripemd160 bid = db().get_block_id_for_num(proof.reference_block);
+         for(int i = 0; i < 5; i++)
+            FC_ASSERT(bid._hash[i] == proof.seed.data[i],"Block ID does not match; wrong chain?");
+         FC_ASSERT(db().head_block_num() <= proof.reference_block + 6,"Block reference is too old");
       }
       //
       FC_ASSERT( content->cd.valid() == o.proof.valid() );
