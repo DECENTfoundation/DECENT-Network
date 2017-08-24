@@ -71,6 +71,7 @@ add_library( graphene_chain
              withdraw_permission_evaluator.cpp
         decent_evaluator.cpp
              subscription_evaluator.cpp
+             custom_evaluator.cpp
 
              account_object.cpp
              asset_object.cpp
