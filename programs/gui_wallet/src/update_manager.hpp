@@ -1,6 +1,6 @@
 /* (c) 2016, 2017 DECENT Services. For details refers to LICENSE.txt */
 
-#define UPDATE_MANAGER
+//#define UPDATE_MANAGER
 #ifdef UPDATE_MANAGER
 class CProgBar;
 class CDetectUpdateThreadParams;

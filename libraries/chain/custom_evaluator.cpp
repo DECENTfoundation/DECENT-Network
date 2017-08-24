@@ -26,7 +26,7 @@ void_result custom_operation_interpreter_messaging::do_apply(const custom_operat
 };
 
 
-std::map<custom_operation_subtype, std::unique_ptr<custom_operation_interpreter>> create_callbacks_map()
+std::map<custom_operation_subtype, std::unique_ptr<custom_operation_interpreter>> custom_evaluator::create_callbacks_map()
 {
    std::map<custom_operation_subtype, std::unique_ptr<custom_operation_interpreter>> m;
    m[custom_operation_subtype::custom_operation_subtype_messaging] = std::unique_ptr<custom_operation_interpreter>(new custom_operation_interpreter_messaging);
