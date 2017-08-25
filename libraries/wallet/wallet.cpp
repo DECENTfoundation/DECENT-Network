@@ -3112,8 +3112,6 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
    {
       optional<signed_block_with_info> result = my->_remote_db->get_block(num);
 
-      const global_property_object& gpo = my->_remote_db->get_global_properties();
-      const dynamic_global_property_object& dpo = my->_remote_db->get_dynamic_global_properties();
       share_type miner_pay_from_reward = 0;
       share_type miner_pay_from_fees = 0;
 

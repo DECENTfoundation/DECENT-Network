@@ -1351,7 +1351,7 @@ namespace graphene { namespace app {
       
       vector< fc::variant > result;
       result.reserve(ops.size());
-      const asset_object& a = id(_db);
+      id(_db);
       get_required_fees_helper helper(
                                       _db.current_fee_schedule(),
                                       GET_REQUIRED_FEES_MAX_RECURSION );
@@ -1695,8 +1695,6 @@ namespace
          auto itr_end = return_one<is_ascending>::choose(range_end, boost::reverse_iterator<decltype(range_begin)>(range_begin));
 
          correct_iterator<buying_index, buying_object, sort_tag, decltype(itr_begin), is_ascending>(db, id, itr_begin);
-
-         const auto& idx_account = db.get_index_type<account_index>().indices().get<by_id>();
 
          while (count && itr_begin != itr_end)
          {
@@ -2128,7 +2126,6 @@ namespace
 
       auto itr = idx.begin();
   
-      int64_t time_to_maint = -1;
       fc::time_point_sec next_time = (fc::time_point_sec)0;
       fc::time_point_sec prev_time = (fc::time_point_sec)0;
 

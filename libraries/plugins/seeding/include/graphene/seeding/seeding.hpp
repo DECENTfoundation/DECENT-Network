@@ -199,7 +199,6 @@ public:
    virtual void package_download_error(const std::string &) {
       elog("seeding plugin: package_download_error(): Failed downloading package ${s}", ("s", _url));
       decent::package::package_handle_t pi;
-      auto& pm = decent::package::PackageManager::instance();
 
       pi = _pi;
       //we want to restart the download; however, this method is being called from pi->_download_task::Task method, so we can't restart directly, so we will start asynchronously

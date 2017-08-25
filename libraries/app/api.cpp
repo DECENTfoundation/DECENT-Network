@@ -361,7 +361,6 @@ namespace graphene { namespace app {
                   result.push_back( bobj->consumer );
                   break;
                  }
-
                  case impl_content_object_type:{
                     const auto& cobj = dynamic_cast<const content_object*>(obj);
                     assert( cobj != nullptr );
@@ -374,6 +373,21 @@ namespace graphene { namespace app {
                     result.push_back( sobj->seeder );
                     break;
                  }
+                case impl_subscription_object_type:{
+                   const auto& sobj = dynamic_cast<const subscription_object*>(obj);
+                   assert( sobj != nullptr );
+                   result.push_back( sobj->from );
+                   result.push_back( sobj->to );
+                   break;
+                }
+                case impl_seeding_statistics_object_type:{
+                   const auto& ssobj = dynamic_cast<const seeding_statistics_object*>(obj);
+                   assert( ssobj != nullptr );
+                   result.push_back( ssobj->seeder );
+                   break;
+                }
+                case impl_transaction_detail_object_type:
+                   break;
           }
        }
        return result;

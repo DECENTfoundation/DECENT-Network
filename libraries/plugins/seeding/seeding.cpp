@@ -106,7 +106,6 @@ void seeding_plugin_impl::handle_content_submit(const content_submit_operation &
       if(cs_op.expiration < fc::time_point::now())
          return;
 
-      const auto &idx = db.get_index_type<my_seeder_index>().indices().get<by_seeder>();
       auto element = db.get_index_type<my_seeding_index>().indices().get<by_URI>().find(cs_op.URI);
       //bool is_resubmit = false;
       if( element !=  db.get_index_type<my_seeding_index>().indices().get<by_URI>().end() )  // check whether a content is resubmited. If so, unnecessary my_seeding_objects are expired
@@ -213,8 +212,6 @@ void seeding_plugin_impl::handle_request_to_buy(const request_to_buy_operation &
 
 void seeding_plugin_impl::handle_commited_operation(const operation_history_object &op_obj, bool sync_mode)
 {
-   graphene::chain::database &db = database();
-
    if( op_obj.op.which() == operation::tag<request_to_buy_operation>::value ) {
       if( sync_mode ) {
          ilog("seeding_plugin_impl::handle_commited_operation exiting, not producing yet");
@@ -338,7 +335,6 @@ void seeding_plugin_impl::send_ready_to_publish()
    ilog("seeding plugin_impl: send_ready_to_publish() begin");
    const auto &sidx = database().get_index_type<my_seeder_index>().indices().get<by_seeder>();
    auto sritr = sidx.begin();
-   graphene::chain::database &db = database();
    ipfs::Client ipfs_client(decent::package::PackageManagerConfigurator::instance().get_ipfs_host(), decent::package::PackageManagerConfigurator::instance().get_ipfs_port());
    ipfs::Json json;
    ipfs_client.Id( &json );
@@ -469,7 +465,6 @@ void seeding_plugin_impl::restore_state(){
                          so.expiration = content_itr->expiration;
                          so.cd = content_itr->cd;
                     });
-                    auto so_id = mso.id;
                     ilog("seeding_plugin:  restore_state() creating my_seeding_object for unhandled content submit ${s}",("s",mso));
                     database().modify<my_seeder_object>(*sitr, [&](my_seeder_object &mso) {
                          mso.free_space -= content_itr->size ; //we allocate the whole megabytes per content
@@ -530,7 +525,6 @@ void seeding_plugin::plugin_startup()
 {
    if(!my)
       return;
-   graphene::chain::database &db = database();
 
    ilog("seeding plugin:  plugin_startup() start");
 

@@ -737,7 +737,6 @@ void MainWindow::slot_checkDownloads()
 
    for (size_t i = 0; i < contents.size(); ++i)
    {
-      auto const& content = contents[i];
       std::string URI = contents[i]["URI"].get<std::string>();
       std::string hash = contents[i]["hash"].get<std::string>();
 

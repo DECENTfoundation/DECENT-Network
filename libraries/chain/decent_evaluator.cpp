@@ -26,6 +26,8 @@ void_result set_publishing_manager_evaluator::do_evaluate( const set_publishing_
    for( const auto id : o.to )
       FC_ASSERT (db().find_object(id), "Account does not exist");
    FC_ASSERT( o.from == account_id_type(15) , "This operation is permitted only to DECENT account");
+
+   return void_result();
 }FC_CAPTURE_AND_RETHROW( (o) ) }
 
 void_result set_publishing_manager_evaluator::do_apply( const set_publishing_manager_operation& o )
@@ -56,46 +58,51 @@ void_result set_publishing_manager_evaluator::do_apply( const set_publishing_man
          });
       }
    }
+
+   return void_result();
 }FC_CAPTURE_AND_RETHROW( (o) ) }
 
 void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_right_operation& o )
 {try{
     const auto& from_acc = db().get<account_object>(o.from);
     FC_ASSERT( from_acc.rights_to_publish.is_publishing_manager, "Account does not have permission to give publishing rights" );
+
+    return void_result();
 }FC_CAPTURE_AND_RETHROW( (o) ) }
 
    void_result set_publishing_right_evaluator::do_apply( const set_publishing_right_operation& o )
    {try{
-         const auto& from_acc = db().get<account_object>(o.from);
+      const auto& from_acc = db().get<account_object>(o.from);
 
-         for( const account_id_type& element : o.to )
+      for( const account_id_type& element : o.to )
+      {
+         const auto& to_acc = db().get<account_object>( element );
+
+         if(o.is_publisher)
          {
-            const auto& to_acc = db().get<account_object>( element );
-
-            if(o.is_publisher)
-            {
-               db().modify<account_object>(from_acc, [&](account_object& ao){
-                    ao.rights_to_publish.publishing_rights_forwarded.insert( element );
-               });
-               db().modify<account_object>(to_acc,[&](account_object& ao){
-                    ao.rights_to_publish.publishing_rights_received.insert( o.from );
-               });
-            } else {
-               db().modify<account_object>(from_acc, [&](account_object& ao){
-                    ao.rights_to_publish.publishing_rights_forwarded.erase( element );
-               });
-               db().modify<account_object>(to_acc,[&](account_object& ao){
-                    ao.rights_to_publish.publishing_rights_received.erase( o.from );
-               });
-            }
+            db().modify<account_object>(from_acc, [&](account_object& ao){
+                 ao.rights_to_publish.publishing_rights_forwarded.insert( element );
+            });
+            db().modify<account_object>(to_acc,[&](account_object& ao){
+                 ao.rights_to_publish.publishing_rights_received.insert( o.from );
+            });
+         } else {
+            db().modify<account_object>(from_acc, [&](account_object& ao){
+                 ao.rights_to_publish.publishing_rights_forwarded.erase( element );
+            });
+            db().modify<account_object>(to_acc,[&](account_object& ao){
+                 ao.rights_to_publish.publishing_rights_received.erase( o.from );
+            });
          }
+      }
 
+      return void_result();
       }FC_CAPTURE_AND_RETHROW( (o) )
    }
 
    void_result content_submit_evaluator::do_evaluate(const content_submit_operation& o )
    {try{
-      const account_object& author_account = db().get<account_object>(o.author);
+      db().get<account_object>(o.author);
       //Submission rights feature is disabled
       //FC_ASSERT( !author_account.rights_to_publish.publishing_rights_received.empty(), "Author does not have permission to publish a content" );
 
@@ -210,6 +217,7 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
          FC_ASSERT( days * total_price_per_day <= o.publishing_fee );
       }
 
+      return void_result();
    }FC_CAPTURE_AND_RETHROW( (o) ) }
    
    void_result content_submit_evaluator::do_apply(const content_submit_operation& o)
@@ -352,6 +360,7 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
                                                 });
       }
 
+      return void_result();
    }FC_CAPTURE_AND_RETHROW( (o) ) }
 
    void_result content_cancellation_evaluator::do_evaluate(const content_cancellation_operation& o)
@@ -363,6 +372,8 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
          FC_ASSERT( o.author == content_itr->author );
          FC_ASSERT( content_itr->expiration > db().head_block_time() );
          FC_ASSERT( !content_itr->is_blocked );
+
+         return void_result();
       }FC_CAPTURE_AND_RETHROW((o))
    }
 
@@ -376,6 +387,8 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
             if( content_obj.expiration > db().head_block_time() + (24 * 60 * 60) )
                content_obj.expiration = db().head_block_time() + (24 * 60 * 60);
          });
+
+         return void_result();
       }FC_CAPTURE_AND_RETHROW((o))
    }
 
@@ -425,27 +438,28 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
       asset price = o.price;
       if( is_subscriber ) //if it is subscription, price is ignored
          price = asset();
-      const auto& object = db().create<buying_object>([&](buying_object& bo)
-                                                      { //create new buying object
-                                                         bo.consumer = o.consumer;
-                                                         bo.URI = o.URI;
-                                                         bo.expiration_time = db().head_block_time() + 24*3600;
-                                                         bo.pubKey = o.pubKey;
-                                                         bo.price = price;
-                                                         bo.paid_price = price;
+      db().create<buying_object>([&](buying_object& bo)
+                                 { //create new buying object
+                                    bo.consumer = o.consumer;
+                                    bo.URI = o.URI;
+                                    bo.expiration_time = db().head_block_time() + 24*3600;
+                                    bo.pubKey = o.pubKey;
+                                    bo.price = price;
+                                    bo.paid_price = price;
 
-                                                         {
-                                                            const auto& idx = db().get_index_type<content_index>().indices().get<by_URI>();
-                                                            auto itr = idx.find(o.URI);
-                                                            if (itr != idx.end())
-                                                            {
-                                                               bo.synopsis = itr->synopsis;
-                                                               bo.size = itr->size;
-                                                               bo.created = itr->created;
-                                                            }
-                                                         }
-                                                         bo.region_code_from = o.region_code_from;
-                                                      });
+                                    {
+                                       const auto& idx = db().get_index_type<content_index>().indices().get<by_URI>();
+                                       auto itr = idx.find(o.URI);
+                                       if (itr != idx.end())
+                                       {
+                                          bo.synopsis = itr->synopsis;
+                                          bo.size = itr->size;
+                                          bo.created = itr->created;
+                                       }
+                                    }
+                                    bo.region_code_from = o.region_code_from;
+                                 });
+
       db().adjust_balance( o.consumer, -price );
 
       const auto& idx = db().get_index_type<content_index>().indices().get<by_URI>();
@@ -478,6 +492,8 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
                                                 obj.m_transaction_fee = o.fee;
                                                 obj.m_timestamp = d.head_block_time();
                                              });
+
+      return void_result();
    }FC_CAPTURE_AND_RETHROW( (o) ) }
 
    void_result deliver_keys_evaluator::do_evaluate(const deliver_keys_operation& o )
@@ -498,6 +514,8 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
       const auto& proof = o.proof;
 
       FC_ASSERT( decent::encrypt::verify_delivery_proof( proof, firstK, secondK, seeder_pubKey, buyer_pubKey) );
+
+      return void_result();
    }FC_CAPTURE_AND_RETHROW( (o) ) }
 
    void_result deliver_keys_evaluator::do_apply(const deliver_keys_operation& o )
@@ -569,6 +587,8 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
       {
          db().buying_expire(buying);
       }
+
+      return void_result();
    }FC_CAPTURE_AND_RETHROW( (o) ) }
 
    void_result leave_rating_evaluator::do_evaluate(const leave_rating_and_comment_operation& o )
@@ -581,6 +601,8 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
       FC_ASSERT( content != idx.end() && bo != bidx.end() );
       FC_ASSERT( bo->delivered, "not delivered" );
       FC_ASSERT( !bo->rated_or_commented, "already rated or commented" );
+
+      return void_result();
    }FC_CAPTURE_AND_RETHROW( (o) ) }
    
    void_result leave_rating_evaluator::do_apply(const leave_rating_and_comment_operation& o )
@@ -631,11 +653,14 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
                                                 obj.m_str_description = std::to_string(o.rating) + " (" + obj.m_str_description + ")";
                                                 obj.m_timestamp = d.head_block_time();
                                              });
+
+      return void_result();
    }FC_CAPTURE_AND_RETHROW( (o) ) }
    
    void_result ready_to_publish_evaluator::do_evaluate(const ready_to_publish_operation& o )
-   {try{
-   }FC_CAPTURE_AND_RETHROW( (o) ) }
+   {
+      return void_result();
+   }
    
    void_result ready_to_publish_evaluator::do_apply(const ready_to_publish_operation& o )
    {try{
@@ -664,6 +689,8 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
             so.ipfs_ID = o.ipfs_ID;
          });
       }
+
+      return void_result();
    }FC_CAPTURE_AND_RETHROW( (o) ) }
    
    void_result proof_of_custody_evaluator::do_evaluate(const proof_of_custody_operation& o )
@@ -687,6 +714,8 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
       FC_ASSERT( !(content->cd.valid() ) || _custody_utils.verify_by_miner( *(content->cd), *(o.proof) ) == 0, "Invalid proof of custody" );
 
       //ilog("proof_of_custody OK");
+
+      return void_result();
    }FC_CAPTURE_AND_RETHROW( (o) ) }
    
    void_result proof_of_custody_evaluator::do_apply(const proof_of_custody_operation& o )
@@ -755,6 +784,8 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
          op.payout = reward;
          db().push_applied_operation(op);
       }
+
+      return void_result();
    }FC_CAPTURE_AND_RETHROW( (o) ) }
 
    void_result return_escrow_submission_evaluator::do_evaluate(const return_escrow_submission_operation& o )

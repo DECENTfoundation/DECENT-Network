@@ -364,9 +364,6 @@ share_type database::get_new_asset_per_block()
 
 share_type database::get_miner_budget(uint32_t blocks_to_maint)
 {
-
-   const global_property_object& gpo = get_global_properties();
-
    uint64_t next_switch = get_next_reward_switch_block( head_block_num() );
    if( head_block_num()+1 + blocks_to_maint >= next_switch )
    {

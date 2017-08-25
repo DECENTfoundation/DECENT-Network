@@ -95,10 +95,7 @@ void test_el_gamal(decent::encrypt::AesKey k)
    cout <<"recovered secret is "<<received_secret.first.to_string()<<" "<<received_secret.second.to_string() <<"\n";
 
    for (int i=0; i<1; i++)
-      bool ret_val = decent::encrypt::verify_delivery_proof(proof, ct1,ct2,pubk1,pubk2);
-   /*if(ret_val)
-      cout<< "everything OK!\n";*/
-
+      decent::encrypt::verify_delivery_proof(proof, ct1,ct2,pubk1,pubk2);
 }
 
 void test_shamir(decent::encrypt::DInteger secret)

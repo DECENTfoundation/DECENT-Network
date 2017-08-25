@@ -106,10 +106,7 @@ object_id_type account_create_evaluator::do_apply( const account_create_operatio
    database& d = db();
 
    const auto& new_acnt_object = db().create<account_object>( [&]( account_object& obj ){
-         obj.registrar = o.registrar;
-
-         auto& params = db().get_global_properties().parameters;
-
+         obj.registrar        = o.registrar;
          obj.name             = o.name;
          obj.owner            = o.owner;
          obj.active           = o.active;
@@ -121,8 +118,6 @@ object_id_type account_create_evaluator::do_apply( const account_create_operatio
    db().modify(dynamic_properties, [](dynamic_global_property_object& p) {
       ++p.accounts_registered_this_interval;
    });
-
-   const auto& global_properties = db().get_global_properties();
 
    db().create<transaction_detail_object>([&o, &new_acnt_object, &d](transaction_detail_object& obj)
                                           {

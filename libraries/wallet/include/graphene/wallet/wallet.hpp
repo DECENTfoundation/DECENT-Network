@@ -238,7 +238,7 @@ namespace graphene { namespace wallet {
  * This wallet assumes it is connected to the database server with a high-bandwidth, low-latency connection and
  * performs minimal caching. This API could be provided locally to be used by a web interface.
  *
- * @defgroup WalletCLI
+ * @defgroup WalletCLI WalletCLI
  */
       class wallet_api
       {
