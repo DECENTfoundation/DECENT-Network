@@ -264,13 +264,11 @@ seeding_plugin_impl::generate_por(const my_seeding_object &mso, decent::package:
    const auto &sidx = db.get_index_type<my_seeder_index>().indices().get<by_seeder>();
    const auto &sritr = sidx.find(mso.seeder);
    FC_ASSERT(sritr != sidx.end());
-   const auto& cidx = db.get_index_type<content_index>().indices().get<graphene::chain::by_URI>();
-   const auto& citr = cidx.find(mso.URI);
+   const auto& content = mso.get_content(db);
 
    ilog("seeding plugin_impl:  generate_por() processing content ${c}",("c", mso.URI));
 
-   FC_ASSERT(citr != cidx.end());
-   if( citr->expiration < fc::time_point::now() ){
+   if( content.expiration < fc::time_point::now() ){
       ilog("seeding plugin_impl:  generate_por() - content expired, cleaning up");
       auto& pm = decent::package::PackageManager::instance();
       package_handle->stop_seeding();
@@ -283,10 +281,10 @@ seeding_plugin_impl::generate_por(const my_seeding_object &mso, decent::package:
    fc::time_point_sec generate_time;
 
    try {
-      fc::time_point_sec last_proof_time = citr->last_proof.at(mso.seeder);
+      fc::time_point_sec last_proof_time = content.last_proof.at(mso.seeder);
       generate_time = last_proof_time + fc::seconds(24*60*60) - fc::seconds(POR_WAKEUP_INTERVAL_SEC/2);
-      if( generate_time > citr->expiration )
-         generate_time = citr->expiration - fc::seconds(POR_WAKEUP_INTERVAL_SEC);
+      if( generate_time > content.expiration )
+         generate_time = content.expiration - fc::seconds(POR_WAKEUP_INTERVAL_SEC);
    }catch (std::out_of_range e){
       //no proof has been delivered by us yet...
       generate_time = fc::time_point::now();

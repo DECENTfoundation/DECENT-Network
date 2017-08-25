@@ -3,6 +3,8 @@
 
 #include <graphene/app/plugin.hpp>
 #include <graphene/chain/database.hpp>
+#include <graphene/chain/content_object.hpp>
+
 #include <graphene/chain/protocol/decent.hpp>
 #include <graphene/db/object.hpp>
 #include <graphene/db/generic_index.hpp>
@@ -61,6 +63,12 @@ public:
    decent::encrypt::CiphertextString key; //<Decryption key part
 
    uint32_t space;
+   const content_object& get_content(database &db)const{
+      const auto& cidx = db.get_index_type<content_index>().indices().get<graphene::chain::by_URI>();
+      const auto& citr = cidx.find(URI);
+      FC_ASSERT(citr!=cidx.end());
+      return *citr;
+   };
 };
 
 typedef graphene::chain::object_id< SEEDING_PLUGIN_SPACE_ID, seeding_object_type,  my_seeding_object>     my_seeding_id_type;
