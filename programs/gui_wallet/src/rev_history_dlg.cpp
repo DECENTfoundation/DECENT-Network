@@ -2,7 +2,7 @@
 
 #include "rev_history_dlg.hpp"
 #include "decent_button.hpp"
-#include "gui_design.hpp"
+#include "gui_wallet_global.hpp"
 
 using namespace gui_wallet;
 

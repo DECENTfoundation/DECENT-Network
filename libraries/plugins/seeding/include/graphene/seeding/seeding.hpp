@@ -125,7 +125,7 @@ public:
     * @param so_id ID of the my_seeding_object
     * @param downloaded_package Downloaded package object
     */
-   void generate_por2( const my_seeding_object& so, decent::package::package_handle_t package_handle );
+   void generate_por2( const my_seeding_object so, decent::package::package_handle_t package_handle );
 
    /**
     * Process new content, from content_object

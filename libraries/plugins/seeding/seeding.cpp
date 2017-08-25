@@ -232,7 +232,7 @@ void seeding_plugin_impl::handle_commited_operation(const operation_history_obje
 
 
 void
-seeding_plugin_impl::generate_por2(const my_seeding_object& mso, decent::package::package_handle_t package_handle)
+seeding_plugin_impl::generate_por2(const my_seeding_object mso, decent::package::package_handle_t package_handle)
 {try{
    ilog("seeding plugin_impl:  generate_por() start");
    package_handle->remove_all_event_listeners();

@@ -28,12 +28,36 @@
 
 namespace graphene { namespace chain {
 
+   enum custom_operation_subtype
+   {
+      custom_operation_subtype_messaging = 0,
+      custom_operation_subtype_max,
+   };
+
+   class custom_operation_interpreter
+   {
+   public:
+      virtual void_result do_evaluate(const custom_operation& o) = 0;
+      virtual void_result do_apply(const custom_operation& o) = 0;
+   };
+
+   class custom_operation_interpreter_messaging : public custom_operation_interpreter
+   {
+   public:
+      void_result do_evaluate(const custom_operation& o) override;// { return void_result(); };
+   
+      void_result do_apply(const custom_operation& o) override;// { return void_result(); };
+   };
+
    class custom_evaluator : public evaluator<custom_evaluator>
    {
       public:
          typedef custom_operation operation_type;
 
-         void_result do_evaluate( const custom_operation& o ){ return void_result(); }
-         void_result do_apply( const custom_operation& o ){ return void_result(); }
+         void_result do_evaluate(const custom_operation& o);
+         void_result do_apply(const custom_operation& o);
+   private:
+         static std::map<custom_operation_subtype, std::unique_ptr<custom_operation_interpreter>> create_callbacks_map();
+         static std::map<custom_operation_subtype, std::unique_ptr<custom_operation_interpreter>> operation_subtypes;
    };
 } }
