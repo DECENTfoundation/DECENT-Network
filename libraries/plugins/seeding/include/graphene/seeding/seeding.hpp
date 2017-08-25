@@ -40,6 +40,7 @@ public:
    fc::ecc::private_key privKey;
    uint64_t free_space;
    uint32_t price;
+   string region_code;
 };
 
 /**
@@ -273,6 +274,6 @@ class seeding_plugin : public graphene::app::plugin
 
 }}
 
-FC_REFLECT_DERIVED( decent::seeding::my_seeder_object, (graphene::db::object), (seeder)(content_privKey)(privKey)(free_space) );
+FC_REFLECT_DERIVED( decent::seeding::my_seeder_object, (graphene::db::object), (seeder)(content_privKey)(privKey)(free_space)(region_code) );
 FC_REFLECT_DERIVED( decent::seeding::my_seeding_object, (graphene::db::object), (URI)(expiration)(cd)(seeder)(key)(space) );
 

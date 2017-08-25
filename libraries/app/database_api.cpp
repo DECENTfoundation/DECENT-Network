@@ -181,6 +181,7 @@ namespace graphene { namespace app {
       vector<seeder_object> list_publishers_by_price( const uint32_t count )const;
       optional<seeder_object> get_seeder(account_id_type) const;
       optional<vector<seeder_object>> list_seeders_by_upload( const uint32_t count )const;
+      vector<seeder_object> list_seeders_by_region( const string region_code )const;
       vector<seeder_object> list_seeders_by_rating( const uint32_t count )const;
       vector<subscription_object> list_active_subscriptions_by_consumer( const account_id_type& account, const uint32_t count )const;
       vector<subscription_object> list_subscriptions_by_consumer( const account_id_type& account, const uint32_t count )const;
@@ -2091,6 +2092,29 @@ namespace
       return result;
    }
 
+   vector<seeder_object> database_api::list_seeders_by_region( const string region_code )const
+   {
+      return my->list_seeders_by_region( region_code );
+   }
+
+   vector<seeder_object> database_api_impl::list_seeders_by_region( const string region_code )const
+   {
+      const auto& range = _db.get_index_type<seeder_index>().indices().get<by_region>().equal_range( region_code );
+      vector<seeder_object> result;
+
+      time_point_sec now = head_block_time();
+      auto itr = range.first;
+
+      while(itr != range.second )
+      {
+         if( itr->expiration > now )
+            result.emplace_back(*itr);
+         ++itr;
+      }
+
+      return result;
+   }
+
    vector<seeder_object> database_api::list_seeders_by_rating( uint32_t count )const
    {
       return my->list_seeders_by_rating( count );
@@ -2108,7 +2132,7 @@ namespace
 
       while(count-- && itr != idx.end())
       {
-         if( itr->expiration >= now )
+         if( itr->expiration > now )
             result.emplace_back(*itr);
          else
             ++count;
