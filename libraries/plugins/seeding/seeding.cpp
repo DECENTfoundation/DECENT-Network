@@ -203,6 +203,15 @@ void seeding_plugin_impl::handle_commited_operation(const operation_history_obje
    }
 }
 
+
+void
+seeding_plugin_impl::generate_por_int(const my_seeding_object &mso, decent::package::package_handle_t package_handle)
+{try{
+      const auto& sidx = database().get_index_type<my_seeder_index>().indices().get<by_seeder>();
+      const auto& seeder = sidx.find(mso.seeder);
+      generate_por_int(mso, package_handle, seeder->privKey);
+}FC_CAPTURE_AND_RETHROW((mso))}
+
 void
 seeding_plugin_impl::generate_por_int(const my_seeding_object &mso, decent::package::package_handle_t package_handle, fc::ecc::private_key privKey)
 {try {
@@ -250,60 +259,79 @@ seeding_plugin_impl::generate_por_int(const my_seeding_object &mso, decent::pack
    _self.p2p_node().broadcast_transaction(tx);
 }FC_CAPTURE_AND_RETHROW((mso))}
 
+void seeding_plugin_impl::release_package(const my_seeding_object &mso, decent::package::package_handle_t package_handle){
+   ilog("seeding plugin_impl:  generate_por() - content expired, cleaning up");
+   auto& pm = decent::package::PackageManager::instance();
+   package_handle->stop_seeding();
+   package_handle->remove(true);
+   pm.release_package(package_handle);
+   database().remove(mso);
+   return;
+}
+
 void
-seeding_plugin_impl::generate_por(const my_seeding_object &mso, decent::package::package_handle_t package_handle)
+seeding_plugin_impl::generate_pors()
 {try{
    /*
     * Generate_por just generates the POR. The checking when and if have to be perfomed at upper layer.
     */
-   ilog("seeding plugin_impl:  generate_por() start");
-   package_handle->remove_all_event_listeners();
    graphene::chain::database &db = database();
-
-   //Collect data first...
    const auto &sidx = db.get_index_type<my_seeder_index>().indices().get<by_seeder>();
-   const auto &sritr = sidx.find(mso.seeder);
-   FC_ASSERT(sritr != sidx.end());
-   const auto& content = mso.get_content(db);
+   const auto &seeding_idx = db.get_index_type<my_seeding_index>().indices().get<by_id>();
+   ilog("seeding plugin_impl:  generate_pors() start");
+   auto& pm = decent::package::PackageManager::instance();
 
-   ilog("seeding plugin_impl:  generate_por() processing content ${c}",("c", mso.URI));
+   for (const auto& mso : seeding_idx ) {
+      //Collect data first...
+      if(!mso.downloaded)
+         continue;
+      auto package_handle = pm.get_package(mso.URI, mso._hash);
+      package_handle->remove_all_event_listeners();
 
-   if( content.expiration < fc::time_point::now() ){
-      ilog("seeding plugin_impl:  generate_por() - content expired, cleaning up");
-      auto& pm = decent::package::PackageManager::instance();
-      package_handle->stop_seeding();
-      package_handle->remove(true);
-      pm.release_package(package_handle);
-      return;
+      const auto &sritr = sidx.find(mso.seeder);
+      FC_ASSERT(sritr != sidx.end());
+      const auto &content = mso.get_content(db);
+
+      ilog("seeding plugin_impl:  generate_pors() processing content ${c}", ("c", mso.URI));
+
+      if( content.expiration < fc::time_point::now()) {
+         release_package(mso, package_handle);
+         continue;
+      }
+
+      /*
+       * calculate time when next PoR has to be sent out. The time shall be:
+       * 1. now after submitting the new content (generate_por_int is called directly from the callback, so not handled here);
+       * 2. 23:55 after the last PoR
+       * 3. 5m before the expiration time
+       */
+
+      fc::time_point_sec generate_time;
+
+      try {
+         fc::time_point_sec last_proof_time = content.last_proof.at(mso.seeder);
+         generate_time = std::min(last_proof_time + fc::seconds(24 * 60 * 60 - POR_WAKEUP_INTERVAL_SEC),
+                                  content.expiration - fc::seconds(POR_WAKEUP_INTERVAL_SEC));
+      } catch( std::out_of_range e ) {
+         //no proof has been delivered by us yet...
+         generate_time = fc::time_point::now();
+      }
+
+      ilog("seeding plugin_impl:  generate_por() - generate time for this content is planned at ${t}",
+           ("t", generate_time));
+      //If we are about to generate PoR, generate it.
+      if( fc::time_point(generate_time) >= fc::time_point::now() && fc::time_point(generate_time) < fc::time_point::now() + fc::seconds(POR_WAKEUP_INTERVAL_SEC) ){
+         generate_por_int(mso, package_handle, sritr->privKey);
+      }
    }
+   fc::time_point next_wakeup( fc::time_point::now() + fc::seconds(POR_WAKEUP_INTERVAL_SEC ));
 
-   //calculate time when next PoR has to be sent out
-   fc::time_point_sec generate_time;
-
-   try {
-      fc::time_point_sec last_proof_time = content.last_proof.at(mso.seeder);
-      generate_time = last_proof_time + fc::seconds(24*60*60) - fc::seconds(POR_WAKEUP_INTERVAL_SEC/2);
-      if( generate_time > content.expiration )
-         generate_time = content.expiration - fc::seconds(POR_WAKEUP_INTERVAL_SEC);
-   }catch (std::out_of_range e){
-      //no proof has been delivered by us yet...
-      generate_time = fc::time_point::now();
-   }
-
-   ilog("seeding plugin_impl:  generate_por() - generate time for this content is planned at ${t}",("t", generate_time) );
-   fc::time_point next_wakeup( fc::time_point::now() + fc::microseconds(POR_WAKEUP_INTERVAL_SEC * 1000000 ));
-   //If we are about to generate PoR, generate it.
-   if( fc::time_point(generate_time) - fc::seconds(POR_WAKEUP_INTERVAL_SEC) <= ( fc::time_point::now() ) )
-   {
-      generate_por_int(mso, package_handle, sritr->privKey);
-   }
-
-   ilog("seeding plugin_impl:  generate_por() - planning next wake-up at ${t}",("t", next_wakeup) );
-   service_thread->schedule([this, mso, package_handle]() { generate_por(mso, package_handle); }, next_wakeup,
+   ilog("seeding plugin_impl:  generate_pors() - planning next wake-up at ${t}",("t", next_wakeup) );
+   service_thread->schedule([this]() { generate_pors(); }, next_wakeup,
                             "Seeding plugin PoR generate");
 
-   ilog("seeding plugin_impl:  generate_por() end");
-}FC_CAPTURE_AND_RETHROW((mso))}
+   ilog("seeding plugin_impl:  generate_pors() end");
+}FC_CAPTURE_AND_RETHROW(())}
 
 
 void seeding_plugin_impl::send_ready_to_publish()
@@ -350,9 +378,10 @@ void seeding_plugin_impl::send_ready_to_publish()
       main_thread->async( [this, tx](){ilog("seeding plugin_impl:  send_ready_to_publish lambda - pushing transaction"); database().push_transaction(tx);} );
       ilog("seeding plugin_impl: send_ready_to_publish() broadcasting");
       _self.p2p_node().broadcast_transaction(tx);
+      fc::usleep(fc::microseconds(1000000));
       sritr++;
    }
-   fc::time_point next_wakeup(fc::time_point::now() + fc::microseconds( (uint64_t) 1000000 * (60 * 60)));
+   fc::time_point next_wakeup(fc::time_point::now() + fc::microseconds( (uint64_t) 1000000 * (60 * 60))); //let's send PoR every hour
    ilog("seeding plugin_impl: planning next send_ready_to_publish at ${t}",("t",next_wakeup ));
    service_thread->schedule([=](){ send_ready_to_publish();}, next_wakeup, "Seeding plugin RtP generate" );
    ilog("seeding plugin_impl: send_ready_to_publish() end");
@@ -463,8 +492,6 @@ void seeding_plugin_impl::restore_state(){
            sitr++;
         }
 
-
-
         //We need to rebuild the list of downloaded packages and compare it to the list of my_seeding_objects.
         //For the downloaded packages we can issue PoR right away, the others needs to be downloaded
         auto& pm = decent::package::PackageManager::instance();
@@ -490,7 +517,7 @@ void seeding_plugin_impl::restore_state(){
               }
 
            if(already_have){
-              generate_por(*citr, package_handle);
+              database().modify<my_seeding_object>(*citr, [](my_seeding_object so){so.downloaded = true;});
            }else{
               elog("restarting downloads, re-downloading package ${u}", ("u", citr->URI));
               package_handle = pm.get_package(citr->URI, citr->_hash);
@@ -502,6 +529,7 @@ void seeding_plugin_impl::restore_state(){
            ++citr;
         }
         elog("restarting downloads, service thread end");
+        generate_pors();
    });
 }
 }// end namespace detail
@@ -678,8 +706,10 @@ void detail::SeedingListener::package_download_error(const std::string & error) 
 void detail::SeedingListener::package_download_complete() {
    ilog("seeding plugin: package_download_complete(): Finished downloading package${u}", ("u", _url));
    auto &pm = decent::package::PackageManager::instance();
-   const auto &mso_idx = _my->database().get_index_type<my_seeding_index>().indices().get<by_URI>();
+   const auto& db = _my->database();
+   const auto &mso_idx = db.get_index_type<my_seeding_index>().indices().get<by_URI>();
    const auto &mso_itr = mso_idx.find(_url);
+   const auto& mso = *mso_itr;
 
    decent::package::package_handle_t pi = _pi;
 
@@ -687,15 +717,15 @@ void detail::SeedingListener::package_download_complete() {
    if( size > mso_itr->space ) {
       ilog("seeding plugin: package_download_complete(): Fraud detected: real content size is greater than propagated in blockchain; deleting...");
       //changing DB outside the main thread does not work properly, let's delete it from there
-      _my->main_thread->async([ &mso_itr, &pi, &pm ]() { pm.release_package(pi); database().remove(*mso_itr); });
+      _my->main_thread->async([ & ]() { _my->release_package(mso, pi); });
       _pi.reset();
       return;
    }
-   //_pi->remove_event_listener(shared_from_this());
    _pi->start_seeding();
    //Don't block package manager thread for too long.
    seeding_plugin_impl *my = _my;
-   _my->service_thread->async([ my, &mso_itr, pi ]() { my->generate_por(*mso_itr, pi); });
+   _my->database().modify<my_seeding_object>(mso, [](my_seeding_object so){so.downloaded = true;});
+   _my->service_thread->async([ & ]() { _my->generate_por_int(mso, pi); });
 };
 
 

@@ -44,6 +44,7 @@ public:
    uint64_t free_space;
    uint32_t price;
    string symbol;
+
 };
 
 /**
@@ -64,6 +65,7 @@ public:
    decent::encrypt::CiphertextString key; //<Decryption key part
 
    uint32_t space;
+   bool downloaded = false;
    const content_object& get_content(database &db)const{
       const auto& cidx = db.get_index_type<content_index>().indices().get<graphene::chain::by_URI>();
       const auto& citr = cidx.find(URI);
@@ -135,16 +137,22 @@ public:
     * @param so_id ID of the my_seeding_object
     * @param downloaded_package Downloaded package object
     */
-   void generate_por(const my_seeding_object &so, decent::package::package_handle_t package_handle);
+   void generate_pors();
 
    void generate_por_int(const my_seeding_object &so, decent::package::package_handle_t package_handle, fc::ecc::private_key privKey);
-
+   void generate_por_int(const my_seeding_object &so, decent::package::package_handle_t package_handle);
    /**
     * Process new content, from content_object
     * @param co Content object
     */
    void handle_new_content(const content_object& co);
 
+   /**
+    * Delete data and database object related to a package. Called e.g. on package expiration
+    * @param mso database object
+    * @param package_handle package handle
+    */
+   void release_package(const my_seeding_object &mso, decent::package::package_handle_t package_handle);
    /**
     * Process new content, from operation. If the content is managed by local seeder, it is downloaded, and meta are stored in local db.
     * @param cs_op
@@ -257,6 +265,6 @@ class seeding_plugin : public graphene::app::plugin
 
 }}
 
-FC_REFLECT_DERIVED( decent::seeding::my_seeder_object, (graphene::db::object), (seeder)(content_privKey)(privKey)(free_space) );
-FC_REFLECT_DERIVED( decent::seeding::my_seeding_object, (graphene::db::object), (URI)(expiration)(cd)(seeder)(key)(space) );
+FC_REFLECT_DERIVED( decent::seeding::my_seeder_object, (graphene::db::object), (seeder)(content_privKey)(privKey)(free_space)(price)(symbol) );
+FC_REFLECT_DERIVED( decent::seeding::my_seeding_object, (graphene::db::object), (URI)(expiration)(cd)(seeder)(key)(space)(downloaded)(_hash) );
 
