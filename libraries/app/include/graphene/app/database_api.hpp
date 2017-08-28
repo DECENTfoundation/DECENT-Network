@@ -465,6 +465,17 @@ namespace graphene { namespace app {
           */
          uint64_t get_miner_count()const;
 
+         /**
+          * @brief Get a list of published price feeds by a miner.
+          *
+          * @param account_id id of the account
+          * @param count Maximum number of price feeds to fetch (must not exceed 100)
+          * @returns list of price feeds published by the miner
+          * @ingroup WalletCLI
+          */
+         multimap< time_point_sec, price_feed> get_feeds_by_miner(const account_id_type account_id,
+                                                                  const uint32_t count)const;
+
          ///////////
          // Votes //
          ///////////
@@ -839,6 +850,7 @@ FC_API(graphene::app::database_api,
           (get_miner_by_account)
           (lookup_miner_accounts)
           (get_miner_count)
+          (get_feeds_by_miner)
 
           // Votes
           (lookup_vote_ids)

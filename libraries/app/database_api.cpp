@@ -143,6 +143,7 @@ namespace graphene { namespace app {
       fc::optional<miner_object> get_miner_by_account(account_id_type account)const;
       map<string, miner_id_type> lookup_miner_accounts(const string& lower_bound_name, uint32_t limit)const;
       uint64_t get_miner_count()const;
+      multimap< time_point_sec, price_feed> get_feeds_by_miner( const account_id_type account_id, uint32_t count)const;
       
       // Votes
       vector<variant> lookup_vote_ids( const vector<vote_id_type>& votes )const;
@@ -1122,7 +1123,34 @@ namespace graphene { namespace app {
    {
       return _db.get_index_type<miner_index>().indices().size();
    }
-   
+
+   multimap< time_point_sec, price_feed> database_api::get_feeds_by_miner(const account_id_type account_id, const uint32_t count)const
+   {
+      return my->get_feeds_by_miner( account_id, count);
+   }
+
+   multimap< time_point_sec, price_feed> database_api_impl::get_feeds_by_miner(const account_id_type account_id, uint32_t count)const
+   {
+      FC_ASSERT( count <= 100 );
+      auto& asset_idx = _db.get_index_type<asset_index>().indices().get<by_type>();
+      auto mia_itr = asset_idx.lower_bound(true);
+
+      multimap< time_point_sec, price_feed> result;
+
+      while( mia_itr != asset_idx.end() && count-- )
+      {
+         const auto& itr = mia_itr->monitored_asset_opts->feeds.find(account_id);
+         if( itr != mia_itr->monitored_asset_opts->feeds.end() )
+            result.emplace( itr->second.first, itr->second.second );
+         else
+            count++;
+
+         mia_itr++;
+      }
+
+      return result;
+   }
+
    //////////////////////////////////////////////////////////////////////
    //                                                                  //
    // Votes                                                            //
