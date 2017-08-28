@@ -317,10 +317,20 @@ void seeding_plugin_impl::send_ready_to_publish()
    ipfs_client.Id( &json );
 
    while(sritr != sidx.end() ){
+      const auto& assets_by_symbol = database().get_index_type<asset_index>().indices().get<by_symbol>();
+      auto itr = assets_by_symbol.find(sritr->symbol);
+      asset_object ao =  (itr == assets_by_symbol.end()? asset_object() : *itr);
+      if ( !ao.is_monitored_asset() || ao.monitored_asset_opts->current_feed.core_exchange_rate.is_null() )
+         ao = asset_object();
+
+      asset dct_price (sritr->price, ao.id);
+      if ( ao.id != asset_id_type() ) //core asset
+         dct_price = dct_price * ao.monitored_asset_opts->current_feed.core_exchange_rate;
+
       ready_to_publish_operation op;
       op.seeder = sritr->seeder;
       op.space = sritr->free_space;
-      op.price_per_MByte = sritr->price;
+      op.price_per_MByte = dct_price.amount.value;
       op.pubKey = get_public_el_gamal_key(sritr->content_privKey);
       op.ipfs_ID = json["ID"];
       signed_transaction tx;
@@ -559,6 +569,12 @@ void seeding_plugin::plugin_initialize( const boost::program_options::variables_
          FC_THROW("missing seeding-price parameter");
       }
 
+      if( options.count("seeding-symbol")) {
+         seeding_options.seeding_symbol = options["seeding-symbol"].as<string>();
+      } else{
+         seeding_options.seeding_symbol = "DCT";
+      }
+
       if( options.count("seeder"))
          seeding_options.seeder = fc::variant(options["seeder"].as<string>()).as<account_id_type>();
       else
@@ -622,7 +638,7 @@ void seeding_plugin::plugin_pre_startup( const seeding_plugin_startup_options& s
          mso.content_privKey = seeding_options.content_private_key;
          mso.privKey = seeding_options.seeder_private_key;
          mso.price = seeding_options.seeding_price;
-
+         mso.symbol = seeding_options.seeding_symbol;
       });
    }catch(...){}
    ilog("seeding plugin:  plugin_pre_startup() end");
@@ -643,7 +659,8 @@ void seeding_plugin::plugin_set_program_options(
          ("seeder-private-key", bpo::value<string>(), "Private key of the account controlling this seeder")
          ("free-space", bpo::value<int>(), "Allocated disk space, in MegaBytes")
          ("packages-path", bpo::value<string>()->default_value(""), "Packages storage path")
-         ("seeding-price", bpo::value<int>(), "Price per MegaBytes")
+         ("seeding-price", bpo::value<int>(), "Price amount per MegaBytes")
+         ("seeding-symbol", bpo::value<string>()->default_value("DCT"), "Seeding price asset, e.g. DCT" )
          ;
 }
 

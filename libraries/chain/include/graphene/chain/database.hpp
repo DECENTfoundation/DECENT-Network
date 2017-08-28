@@ -508,3 +508,5 @@ namespace graphene { namespace chain {
    }
 
 } }
+
+FC_REFLECT(graphene::chain::database::votes_gained, (account_name)(votes))

@@ -43,6 +43,7 @@ public:
    fc::ecc::private_key privKey;
    uint64_t free_space;
    uint32_t price;
+   string symbol;
 };
 
 /**

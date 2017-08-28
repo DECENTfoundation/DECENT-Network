@@ -16,6 +16,7 @@ namespace decent { namespace seeding {
       uint64_t free_space;
       uint32_t seeding_price;
       fc::path packages_path;
+      std::string seeding_symbol;
 
    };
 

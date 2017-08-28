@@ -11,13 +11,13 @@ if( GRAPHENE_DISABLE_UNITY_BUILD )
    set( GRAPHENE_DB_FILES
         db_balance.cpp
         db_block.cpp
-        db_decent.cpp
         db_debug.cpp
         db_getter.cpp
         db_init.cpp
         db_maint.cpp
         db_management.cpp
-           db_update.cpp
+        db_decent.cpp
+        db_update.cpp
         db_miner_schedule.cpp
       )
    message( STATUS "Graphene database unity build disabled" )
@@ -71,6 +71,7 @@ add_library( graphene_chain
              withdraw_permission_evaluator.cpp
         decent_evaluator.cpp
              subscription_evaluator.cpp
+             custom_evaluator.cpp
 
              account_object.cpp
              asset_object.cpp
