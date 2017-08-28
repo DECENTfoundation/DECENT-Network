@@ -347,11 +347,12 @@ void seeding_plugin_impl::send_ready_to_publish()
    while(sritr != sidx.end() ){
       const auto& assets_by_symbol = database().get_index_type<asset_index>().indices().get<by_symbol>();
       auto itr = assets_by_symbol.find(sritr->symbol);
-      asset_object ao =  (itr == assets_by_symbol.end()? asset_object() : *itr);
-      if ( !ao.is_monitored_asset() || ao.monitored_asset_opts->current_feed.core_exchange_rate.is_null() )
-         ao = asset_object();
 
-      asset dct_price (sritr->price, ao.id);
+      if(itr == assets_by_symbol.end() || !itr->is_monitored_asset() || !itr->monitored_asset_opts->current_feed.core_exchange_rate.is_null() )
+         itr = assets_by_symbol.find("DCT");
+      const asset_object& ao = *itr;
+
+      asset dct_price  = ao.amount_from_string(sritr->price);
       if ( ao.id != asset_id_type() ) //core asset
          dct_price = dct_price * ao.monitored_asset_opts->current_feed.core_exchange_rate;
 
@@ -378,7 +379,7 @@ void seeding_plugin_impl::send_ready_to_publish()
       main_thread->async( [this, tx](){ilog("seeding plugin_impl:  send_ready_to_publish lambda - pushing transaction"); database().push_transaction(tx);} );
       ilog("seeding plugin_impl: send_ready_to_publish() broadcasting");
       _self.p2p_node().broadcast_transaction(tx);
-      fc::usleep(fc::microseconds(1000000));
+      //fc::usleep(fc::microseconds(1000000));
       sritr++;
    }
    fc::time_point next_wakeup(fc::time_point::now() + fc::microseconds( (uint64_t) 1000000 * (60 * 60))); //let's send PoR every hour
@@ -592,7 +593,7 @@ void seeding_plugin::plugin_initialize( const boost::program_options::variables_
       }
 
       if( options.count("seeding-price")) {
-         seeding_options.seeding_price = options["seeding-price"].as<int>();
+         seeding_options.seeding_price = options["seeding-price"].as<string>();
       } else{
          FC_THROW("missing seeding-price parameter");
       }
@@ -687,7 +688,7 @@ void seeding_plugin::plugin_set_program_options(
          ("seeder-private-key", bpo::value<string>(), "Private key of the account controlling this seeder")
          ("free-space", bpo::value<int>(), "Allocated disk space, in MegaBytes")
          ("packages-path", bpo::value<string>()->default_value(""), "Packages storage path")
-         ("seeding-price", bpo::value<int>(), "Price amount per MegaBytes")
+         ("seeding-price", bpo::value<string>(), "Price amount per MegaBytes")
          ("seeding-symbol", bpo::value<string>()->default_value("DCT"), "Seeding price asset, e.g. DCT" )
          ;
 }
