@@ -1637,9 +1637,14 @@ namespace
          content_keys keys;
 
          CryptoPP::Integer secret(randomGenerator, 256);
+         while( secret >= DECENT_SHAMIR_ORDER ){
+            CryptoPP::Integer tmp(randomGenerator, 256);
+            secret = tmp;
+         }
          secret.Encode((byte*)keys.key._hash, 32);
 
          uint32_t quorum = std::max((vector<account_id_type>::size_type)1, seeders.size()/3); // TODO_DECENT - quorum >= 2 see also content_submit_operation::validate
+
          ShamirSecret ss(quorum, seeders.size(), secret);
          ss.calculate_split();
          
