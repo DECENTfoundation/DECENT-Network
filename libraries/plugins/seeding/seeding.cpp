@@ -283,8 +283,10 @@ seeding_plugin_impl::generate_pors()
 
    for (const auto& mso : seeding_idx ) {
       //Collect data first...
+      ilog("seeding plugin_impl:  generate_pors() processing content ${c}, object ${o}", ("c", mso.URI)("o",mso));
       if(!mso.downloaded)
          continue;
+      ilog("seeding plugin_impl:  generate_pors() content ${c} downloaded, continue processing", ("c", mso.URI));
       auto package_handle = pm.get_package(mso.URI, mso._hash);
       package_handle->remove_all_event_listeners();
 
@@ -292,12 +294,13 @@ seeding_plugin_impl::generate_pors()
       FC_ASSERT(sritr != sidx.end());
       const auto &content = mso.get_content(db);
 
-      ilog("seeding plugin_impl:  generate_pors() processing content ${c}", ("c", mso.URI));
 
       if( content.expiration < fc::time_point::now()) {
+         ilog("seeding plugin_impl:  generate_pors() content ${c} expired, clenaing up", ("c", mso.URI));
          release_package(mso, package_handle);
          continue;
       }
+
 
       /*
        * calculate time when next PoR has to be sent out. The time shall be:
@@ -310,17 +313,18 @@ seeding_plugin_impl::generate_pors()
 
       try {
          fc::time_point_sec last_proof_time = content.last_proof.at(mso.seeder);
+
          generate_time = std::min(last_proof_time + fc::seconds(24 * 60 * 60 - POR_WAKEUP_INTERVAL_SEC),
                                   content.expiration - fc::seconds(POR_WAKEUP_INTERVAL_SEC));
       } catch( std::out_of_range e ) {
          //no proof has been delivered by us yet...
-         generate_time = fc::time_point::now();
+         generate_time = fc::time_point::now() + fc::seconds(1);
       }
 
       ilog("seeding plugin_impl:  generate_por() - generate time for this content is planned at ${t}",
            ("t", generate_time));
       //If we are about to generate PoR, generate it.
-      if( fc::time_point(generate_time) >= fc::time_point::now() && fc::time_point(generate_time) < fc::time_point::now() + fc::seconds(POR_WAKEUP_INTERVAL_SEC) ){
+      if( fc::time_point(generate_time) < fc::time_point::now() + fc::seconds(POR_WAKEUP_INTERVAL_SEC) ){
          generate_por_int(mso, package_handle, sritr->privKey);
       }
    }
@@ -518,7 +522,12 @@ void seeding_plugin_impl::restore_state(){
               }
 
            if(already_have){
-              database().modify<my_seeding_object>(*citr, [](my_seeding_object so){so.downloaded = true;});
+              database().modify<my_seeding_object>(*citr, [](my_seeding_object& so){
+                   elog("setting object ${o} to downloaded",("o", so));
+                   so.downloaded = true;
+                   elog("setting object ${o} to downloaded",("o", so));
+
+              });
            }else{
               elog("restarting downloads, re-downloading package ${u}", ("u", citr->URI));
               package_handle = pm.get_package(citr->URI, citr->_hash);
@@ -725,7 +734,7 @@ void detail::SeedingListener::package_download_complete() {
    _pi->start_seeding();
    //Don't block package manager thread for too long.
    seeding_plugin_impl *my = _my;
-   _my->database().modify<my_seeding_object>(mso, [](my_seeding_object so){so.downloaded = true;});
+   _my->database().modify<my_seeding_object>(mso, [](my_seeding_object& so){so.downloaded = true;});
    _my->service_thread->async([ & ]() { _my->generate_por_int(mso, pi); });
 };
 

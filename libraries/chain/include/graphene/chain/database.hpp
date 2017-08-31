@@ -375,7 +375,11 @@ namespace graphene { namespace chain {
          real_supply get_real_supply()const;
 
          bool is_reward_switch_time() const;
-
+         struct votes_gained{
+            string account_name;
+            uint64_t votes;
+         };
+         vector<votes_gained> get_actual_votes() const;
 
          /**
           *  This method validates transactions without adding it to the pending state.
@@ -509,3 +513,4 @@ namespace graphene { namespace chain {
 
 } }
 
+FC_REFLECT(graphene::chain::database::votes_gained, (account_name)(votes))
