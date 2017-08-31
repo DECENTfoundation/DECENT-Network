@@ -3608,6 +3608,13 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
       return my->publish_asset_feed(publishing_account, symbol, feed, broadcast);
    }
 
+   multimap<time_point_sec, price_feed> wallet_api::get_feeds_by_miner(const string& account_name_or_id,
+                                                                     const uint32_t count)
+   {
+      account_id_type account_id = get_account( account_name_or_id ).id;
+      return my->_remote_db->get_feeds_by_miner( account_id, count );
+   }
+
    map<string,miner_id_type> wallet_api::list_miners(const string& lowerbound, uint32_t limit)
    {
       return my->_remote_db->lookup_miner_accounts(lowerbound, limit);
