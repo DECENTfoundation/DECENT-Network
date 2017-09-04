@@ -24,7 +24,6 @@ namespace gui_wallet
       void slot_ChooseSeeders();
       void slot_SeederChanged(int);
       void slot_TitleChanged(QString const&);
-      void slot_KeyParticlesChanged(QString const&);
       void slot_ContentPathChanged(QString const&);
       void slot_SamplesPathChanged(QString const&);
       void slot_PriceChanged(QString const&);
@@ -58,7 +57,6 @@ namespace gui_wallet
       QTimer* m_pStatusCheckTimer;
       DecentTextEdit* m_pDescriptionText;
       QDateEdit* m_pLifeTime;
-      uint32_t m_iKeyParticles;
       double m_dPrice;
       std::string m_id_modify;
       QString m_strTitle;
