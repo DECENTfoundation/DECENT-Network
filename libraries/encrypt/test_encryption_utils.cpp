@@ -54,6 +54,24 @@ void test_aes(decent::encrypt::AesKey k)
 
 }
 
+
+void test_error(DInteger c1,  DInteger d1, DInteger c2,  DInteger d2, DInteger private_key1, DInteger private_key2){
+   decent::encrypt::point res1, res2;
+   decent::encrypt::Ciphertext c;
+   c.C1 = c1;
+   c.D1 = d1;
+   decent::encrypt::el_gamal_decrypt(c, private_key1, res1);
+   c.C1 = c2;
+   c.D1 = d2;
+   decent::encrypt::el_gamal_decrypt(c, private_key2, res2);
+   decent::encrypt::ShamirSecret rs(2,2);
+   rs.add_point(res1);
+   rs.add_point(res2);
+   rs.calculate_secret();
+   cout << "Reconstructed_secret: "<<rs.secret.to_string() <<"\n";
+}
+
+
 void test_el_gamal(decent::encrypt::AesKey k)
 {
    cout<<"Catchpoint 0 \n";
@@ -67,8 +85,8 @@ void test_el_gamal(decent::encrypt::AesKey k)
    cout <<"pk2 = " << pk2.to_string();
    cout<<"Catchpoint 1 \n";
    decent::encrypt::point secret;
-   secret.first = DInteger(10000);
-   secret.second = DInteger(1000000000);
+   secret.first = DInteger::from_string("3753781940345059298360143488380748929209408819299122330328197765019443571320784453881873108825176798807325307402190629518795905674110213792436991007994661.");
+   secret.second = DInteger::from_string("6150238297251271928694890791409056510038340763977226411974716493986944739963530357933074189042201657156013270586708959730664948722142451112475228688926049.");
 
    cout<<"Catchpoint 2 \n";
    decent::encrypt::Ciphertext ct1, ct2;
@@ -94,7 +112,7 @@ void test_el_gamal(decent::encrypt::AesKey k)
 
    cout <<"recovered secret is "<<received_secret.first.to_string()<<" "<<received_secret.second.to_string() <<"\n";
 
-   for (int i=0; i<1; i++)
+   for (int i=0; i<10000; i++)
       decent::encrypt::verify_delivery_proof(proof, ct1,ct2,pubk1,pubk2);
 }
 
@@ -140,10 +158,13 @@ void test_custody(){
    std::cout <<"done creating proof of custody \n";
    cout<<"\n\n";
   // fc::raw::pack(cout, mus);
+
    if(c.verify_by_miner(cd, proof))
       std::cout <<"Something wrong during verification...\n";
    else
       std::cout <<"Verify sucessful!\n";
+   for(int i=0;i<1000; i++)
+      c.verify_by_miner(cd, proof);
 }
 
 void generate_params(){
@@ -287,20 +308,19 @@ int main(int argc, char**argv)
 {
 
    decent::encrypt::AesKey k;
-   for (int i=0; i<CryptoPP::AES::MAX_KEYLENGTH; i++)
-      k.key_byte[i] = '\x00';
-   test_aes(k);
+   char a[32] =  {'\xbd','\xc2','\xa9','\x99','\x02','\x49','\x6d','\xc9','\xd8','\x45','\x84','\x2a','\x76','\xa7','\x56','\x7f','\x11','\x3c','\xb7','\xb8','\x6b','\x21','\x6a','\xf6','\x09','\x75','\x5e','\xaf','\x3b','\x72','\x55','\x19'};
 
-//   for (int i=0; i<CryptoPP::AES::MAX_KEYLENGTH; i++)
-//      k.key_byte[i]=i;
- //  test_aes(k);
-//   cout<<"AES finished \n";
-//   test_key_manipulation();
+   for(int i = 0; i<32; i++)
+      k.key_byte[i] = a[i];
 
- //  test_el_gamal(k);
- //  const CryptoPP::Integer secret("123433334548654864334348647431133987884123665444598978777891235468864444444445445556666666987455334678979464");
-//   test_shamir(secret);
-//   generate_params();
-//   test_generator();
-//  test_custody();
+   /*const DInteger c1 = DInteger::from_string ("3753781940345059298360143488380748929209408819299122330328197765019443571320784453881873108825176798807325307402190629518795905674110213792436991007994661.");
+   const DInteger d1 = DInteger::from_string ("8327387353421100422521994827124448737458747206440780818052722617480522584880803729995415201134924038772572670813321522560105207509245319477733327751643653.");
+   const DInteger c2 = DInteger::from_string ("6439215123412037383634161022059296473309688019085388262708767278591608626331235361430298420330807213853023718338401985232454662182321453942292277787614081.");
+   const DInteger d2 = DInteger::from_string ("6150238297251271928694890791409056510038340763977226411974716493986944739963530357933074189042201657156013270586708959730664948722142451112475228688926049.");
+   const DInteger p1 = DInteger::from_string ("4552966642289943752640139232245127335536558251273133109673952378569772643429762810120715497929318574556685638980709088312249289863769364119777637389637979.");
+   const DInteger p2 = DInteger::from_string ("1364111319222919217074399880562794833581206542497791097565234649549381509182965872210230775307650002716355113187369371153093376018775840025820279947420599.");
+
+   test_error(c1,d1,c2,d2,p2, p1);*/
+   //test_el_gamal(k);
+   test_custody();
 }

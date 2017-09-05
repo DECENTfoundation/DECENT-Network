@@ -471,9 +471,13 @@ int CustodyUtils::verify_by_miner(const uint32_t &n, const char *u_seed, unsigne
    element_init_G1(_sigma, pairing);
    element_from_bytes_compressed(_sigma, sigma);
 
-   for( int i = 0; i < DECENT_SECTORS; i++ ) {
-      element_init_Zr(mu[i], pairing);
-      unsigned char buffer[DECENT_SIZE_OF_MU];
+   element_init_Zr(mu[0], pairing);
+   unsigned char buffer[DECENT_SIZE_OF_MU];
+   string_to_bytes(mus[0], buffer, DECENT_SIZE_OF_MU);
+   element_from_bytes(mu[0], buffer);
+
+   for( int i = 1; i < DECENT_SECTORS; i++ ) {
+      element_init_same_as(mu[i], mu[0]);
       string_to_bytes(mus[i], buffer, DECENT_SIZE_OF_MU);
       element_from_bytes(mu[i], buffer);
    }
