@@ -28,6 +28,7 @@
 
 namespace graphene { namespace chain { 
 
+   enum custom_operation_subtype : int;
    /**
     * @brief provides a generic way to add higher level protocols on top of miner consensus
     * @ingroup operations
@@ -51,6 +52,9 @@ namespace graphene { namespace chain {
       account_id_type   fee_payer()const { return payer; }
       void              validate()const;
       share_type        calculate_fee(const fee_parameters_type& k)const;
+      custom_operation_subtype  subtype;
+      account_id_type           from;
+      account_id_type           to;
    };
 
 } } // namespace graphene::chain

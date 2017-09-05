@@ -26,11 +26,18 @@
 #include <graphene/chain/evaluator.hpp>
 #include <graphene/chain/database.hpp>
 
+
+namespace decent {
+   namespace messaging {
+      class messaging_plugin;
+   }
+}
 namespace graphene { namespace chain {
 
-   enum custom_operation_subtype
+   enum custom_operation_subtype : int
    {
-      custom_operation_subtype_messaging = 0,
+      custom_operation_subtype_undefined = 0,
+      custom_operation_subtype_messaging,
       custom_operation_subtype_max,
    };
 
@@ -41,14 +48,6 @@ namespace graphene { namespace chain {
       virtual void_result do_apply(const custom_operation& o) = 0;
    };
 
-   class custom_operation_interpreter_messaging : public custom_operation_interpreter
-   {
-   public:
-      void_result do_evaluate(const custom_operation& o) override;// { return void_result(); };
-   
-      void_result do_apply(const custom_operation& o) override;// { return void_result(); };
-   };
-
    class custom_evaluator : public evaluator<custom_evaluator>
    {
       public:
@@ -56,8 +55,10 @@ namespace graphene { namespace chain {
 
          void_result do_evaluate(const custom_operation& o);
          void_result do_apply(const custom_operation& o);
+
+         static void register_callback(custom_operation_subtype s, custom_operation_interpreter* i);
+         static void unregister_callback(custom_operation_subtype s);
    private:
-         static std::map<custom_operation_subtype, std::unique_ptr<custom_operation_interpreter>> create_callbacks_map();
-         static std::map<custom_operation_subtype, std::unique_ptr<custom_operation_interpreter>> operation_subtypes;
+      static std::map<custom_operation_subtype, custom_operation_interpreter*> operation_subtypes;
    };
 } }

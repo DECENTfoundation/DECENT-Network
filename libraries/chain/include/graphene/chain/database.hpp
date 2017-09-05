@@ -287,6 +287,11 @@ namespace graphene { namespace chain {
                operation::tag<typename EvaluatorType::operation_type>::value].reset( new op_evaluator_impl<EvaluatorType>() );
          }
 
+         const vector< unique_ptr<op_evaluator> > & get_operation_evaluators() const
+         {       
+            return _operation_evaluators;
+         }
+
          //////////////////// db_balance.cpp ////////////////////
 
          /**

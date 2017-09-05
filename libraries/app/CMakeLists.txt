@@ -17,6 +17,7 @@ target_include_directories( graphene_app
                             PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include"
                             "${CMAKE_CURRENT_SOURCE_DIR}/../egenesis/include"
                             "${CMAKE_CURRENT_SOURCE_DIR}/../plugins/seeding/include"
+                            "${CMAKE_CURRENT_SOURCE_DIR}/../plugins/messaging/include"
  )
 
 if(MSVC)
