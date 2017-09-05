@@ -3,6 +3,9 @@
 
 #include <graphene/app/plugin.hpp>
 #include <graphene/chain/database.hpp>
+#include <graphene/chain/content_object.hpp>
+
+#include <graphene/chain/protocol/decent.hpp>
 #include <graphene/db/object.hpp>
 #include <graphene/db/generic_index.hpp>
 #include <graphene/chain/protocol/types.hpp>
@@ -39,7 +42,9 @@ public:
 
    fc::ecc::private_key privKey;
    uint64_t free_space;
-   uint32_t price;
+   string price;
+   string symbol;
+
 };
 
 /**
@@ -60,6 +65,13 @@ public:
    decent::encrypt::CiphertextString key; //<Decryption key part
 
    uint32_t space;
+   bool downloaded = false;
+   const content_object& get_content(database &db)const{
+      const auto& cidx = db.get_index_type<content_index>().indices().get<graphene::chain::by_URI>();
+      const auto& citr = cidx.find(URI);
+      FC_ASSERT(citr!=cidx.end());
+      return *citr;
+   };
 };
 
 typedef graphene::chain::object_id< SEEDING_PLUGIN_SPACE_ID, seeding_object_type,  my_seeding_object>     my_seeding_id_type;
@@ -125,14 +137,22 @@ public:
     * @param so_id ID of the my_seeding_object
     * @param downloaded_package Downloaded package object
     */
-   void generate_por2( const my_seeding_object so, decent::package::package_handle_t package_handle );
+   void generate_pors();
 
+   void generate_por_int(const my_seeding_object &so, decent::package::package_handle_t package_handle, fc::ecc::private_key privKey);
+   void generate_por_int(const my_seeding_object &so, decent::package::package_handle_t package_handle);
    /**
     * Process new content, from content_object
     * @param co Content object
     */
    void handle_new_content(const content_object& co);
 
+   /**
+    * Delete data and database object related to a package. Called e.g. on package expiration
+    * @param mso database object
+    * @param package_handle package handle
+    */
+   void release_package(const my_seeding_object &mso, decent::package::package_handle_t package_handle);
    /**
     * Process new content, from operation. If the content is managed by local seeder, it is downloaded, and meta are stored in local db.
     * @param cs_op
@@ -196,37 +216,8 @@ public:
 
    ~SeedingListener() {};
 
-   virtual void package_download_error(const std::string &) {
-      elog("seeding plugin: package_download_error(): Failed downloading package ${s}", ("s", _url));
-      decent::package::package_handle_t pi;
-
-      pi = _pi;
-      //we want to restart the download; however, this method is being called from pi->_download_task::Task method, so we can't restart directly, so we will start asynchronously
-      fc::thread::current().async([pi](){ pi->download(true);});
-   };
-
-   virtual void package_download_complete() {
-      ilog("seeding plugin: package_download_complete(): Finished downloading package${u}", ("u", _url));
-      auto &pm = decent::package::PackageManager::instance();
-      const auto &mso_idx = _my->database().get_index_type<my_seeding_index>().indices().get<by_URI>();
-      const auto &mso_itr = mso_idx.find(_url);
-
-      decent::package::package_handle_t pi = _pi;
-
-      size_t size = (_pi->get_size() + 1024 * 1024 - 1) / (1024 * 1024);
-      if( size > mso_itr->space ) {
-         ilog("seeding plugin: package_download_complete(): Fraud detected: real content size is greater than propagated in blockchain; deleting...");
-         //changing DB outside the main thread does not work properly, let's delete it from there
-         _my->main_thread->async([ &mso_itr, &pi, &pm ]() { pm.release_package(pi); database().remove(*mso_itr); });
-         _pi.reset();
-         return;
-      }
-      //_pi->remove_event_listener(shared_from_this());
-      _pi->start_seeding();
-      //Don't block package manager thread for too long.
-      seeding_plugin_impl *my = _my;
-      _my->service_thread->async([ my, &mso_itr, pi ]() { my->generate_por2( *mso_itr, pi); });
-   };
+   virtual void package_download_error(const std::string &);
+   virtual void package_download_complete();
 };
 
 } //namespace detail
@@ -273,6 +264,6 @@ class seeding_plugin : public graphene::app::plugin
 
 }}
 
-FC_REFLECT_DERIVED( decent::seeding::my_seeder_object, (graphene::db::object), (seeder)(content_privKey)(privKey)(free_space) );
-FC_REFLECT_DERIVED( decent::seeding::my_seeding_object, (graphene::db::object), (URI)(expiration)(cd)(seeder)(key)(space) );
+FC_REFLECT_DERIVED( decent::seeding::my_seeder_object, (graphene::db::object), (seeder)(content_privKey)(privKey)(free_space)(price)(symbol) );
+FC_REFLECT_DERIVED( decent::seeding::my_seeding_object, (graphene::db::object), (URI)(expiration)(cd)(seeder)(key)(space)(downloaded)(_hash) );
 

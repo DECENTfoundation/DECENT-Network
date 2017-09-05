@@ -84,6 +84,7 @@ public:
       mpz_t s;
       mpz_init(s);
       mpz_import(s, 5, 1, sizeof(uint32_t), 0, 0, proof.seed.data);
+      FC_ASSERT( proof.mus.size() == DECENT_SECTORS_BIG || proof.mus.size() == DECENT_SECTORS );
       int ret=verify_by_miner(cd.n, (char*)cd.u_seed.data, cd.pubKey.data, proof.sigma.data, proof.mus, s);
       mpz_clear(s);
       return ret;
@@ -165,9 +166,8 @@ private:
    int compute_mu(std::fstream& file, unsigned int q, uint64_t indices[], element_t v[], element_t mu[]);
    int compute_sigma(element_t *sigmas, unsigned int q, uint64_t *indices, element_t *v, element_t &sigma);
    int get_sigma( uint64_t pidx, mpz_t mi[], element_pp_t u_pp[], element_t pk, element_t out[]);
-   int verify(element_t sigma, unsigned int q, uint64_t *indices, element_t *v, element_t *u, element_t *mu, element_t pubk);
+   int verify(element_t sigma, unsigned int q, uint64_t *indices, element_t *v, element_t *u, element_t *mu, element_t pubk, uint32_t size);
    int clear_elements(element_t *array, int size);
-   int unpack_proof(valtype proof, element_t &sigma, element_t **mu);
    int get_number_of_query(int blocks);
    int get_n(std::fstream &file);
    inline int get_m(std::fstream &file, uint32_t i, uint32_t j, mpz_t& out);
