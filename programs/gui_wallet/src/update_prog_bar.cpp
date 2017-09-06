@@ -1,4 +1,9 @@
 #include "stdafx.h"
+
+#ifndef _MSC_VER
+#include <QCloseEvent>
+#endif
+
 #include "update_prog_bar.hpp"
 #include "decent_button.hpp"
 
