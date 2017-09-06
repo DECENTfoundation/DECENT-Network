@@ -5,6 +5,10 @@
 class CProgBar;
 class CDetectUpdateThreadParams;
 
+#ifndef __cdecl
+#define __cdecl __attribute__((cdecl))
+#endif
+
 // class UpdateManager
 // This class can be optionally added to GUI application with help of 
 // #define UPDATE_MANAGER
