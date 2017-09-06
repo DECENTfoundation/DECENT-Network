@@ -293,6 +293,18 @@ namespace graphene { namespace app {
    };
 
    /**
+   * @brief The messaging_api class implements instant messaging
+   */
+   class messaging_api
+   {
+   public:
+      messaging_api(application& a);
+      ~messaging_api();
+   private:
+      application& _app;
+   };
+
+   /**
     * @brief The login_api class implements the bottom layer of the RPC API
     *
     * All other APIs must be requested from this API.
@@ -341,6 +353,11 @@ namespace graphene { namespace app {
           */
          fc::api<crypto_api> crypto()const;
          /**
+         * @brief Retrieve the messaging API
+         * @ingroup LoginAPI
+         */
+         fc::api<messaging_api> messaging()const;
+         /**
           * @brief Retrieve the debug API (if available)
           * @ingroup LoginAPI
           */
@@ -360,6 +377,7 @@ namespace graphene { namespace app {
          optional< fc::api<network_node_api> > _network_node_api;
          optional< fc::api<history_api> >  _history_api;
          optional< fc::api<crypto_api> > _crypto_api;
+         optional< fc::api<messaging_api> > _messaging_api;
          optional< fc::api<graphene::debug_miner::debug_api> > _debug_api;
    };
 
@@ -402,6 +420,8 @@ FC_API(graphene::app::crypto_api,
        (range_proof_sign)
        (verify_range_proof_rewind)
        (range_get_info)
+     )
+FC_API(graphene::app::messaging_api
      )
 FC_API(graphene::app::login_api,
        (login)
