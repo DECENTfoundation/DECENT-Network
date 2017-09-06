@@ -2,11 +2,19 @@
 
 //#define UPDATE_MANAGER
 #ifdef UPDATE_MANAGER
+
+#ifndef _MSC_VER
+#include <QObject>
+#endif
+
+class QTimer;
 class CProgBar;
 class CDetectUpdateThreadParams;
 
+#ifdef __GNUC__
 #ifndef __cdecl
 #define __cdecl __attribute__((cdecl))
+#endif
 #endif
 
 // class UpdateManager

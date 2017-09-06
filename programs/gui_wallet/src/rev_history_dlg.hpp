@@ -1,5 +1,8 @@
 #pragma once
 
+#ifndef _MSC_VER
+#include <QDialog>
+#endif
 
 class Rev_history_dlg : public QDialog
 {
