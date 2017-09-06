@@ -14,8 +14,10 @@ namespace decent { namespace seeding {
       decent::encrypt::DInteger content_private_key;
       fc::ecc::private_key seeder_private_key;
       uint64_t free_space;
-      uint32_t seeding_price;
+      std::string seeding_price;
       fc::path packages_path;
+      std::string seeding_symbol;
+
    };
 
    extern fc::promise<seeding_plugin_startup_options>::ptr seeding_promise;

@@ -314,7 +314,7 @@ int CustodyUtils::generate_query_from_seed(mpz_t seed, unsigned int q, unsigned 
 
 
 int CustodyUtils::verify(element_t sigma, unsigned int q, uint64_t *indices, element_t *v, element_t *u, element_t *mu,
-                          element_t pubk) {
+                          element_t pubk, uint32_t size) {
    element_t res1;
    element_init_GT(res1, pairing);
    element_pairing(res1, sigma, generator);
@@ -352,7 +352,7 @@ int CustodyUtils::verify(element_t sigma, unsigned int q, uint64_t *indices, ele
    element_t multi2;
    element_init_G1(multi2, pairing);
 
-   for( int i = 0; i < DECENT_SECTORS; i++ ) {
+   for( int i = 0; i < size; i++ ) {
       element_pow_zn(temp, u[i], mu[i]);
 #ifdef _CUSTODY_STATS
       pow++;
@@ -396,7 +396,7 @@ int CustodyUtils::clear_elements(element_t *array, int size) {
    return 0;
 }
 
-int CustodyUtils::unpack_proof(valtype proof, element_t &sigma, element_t **mu) {
+/*int CustodyUtils::unpack_proof(valtype proof, element_t &sigma, element_t **mu) {
    int pointer = 0;
    element_init_G1(sigma, pairing);
    element_from_bytes_compressed(sigma, proof.data() + pointer);
@@ -410,7 +410,7 @@ int CustodyUtils::unpack_proof(valtype proof, element_t &sigma, element_t **mu) 
    }
    *mu = ret;
    return 0;
-}
+}*/
 
 int
 CustodyUtils::compute_sigma(element_t sigmas[], unsigned int q, uint64_t indices[], element_t v[], element_t &sigma) {
@@ -448,7 +448,7 @@ int CustodyUtils::verify_by_miner(const uint32_t &n, const char *u_seed, unsigne
    element_t public_key;
    element_init_G1(public_key, pairing);
    element_from_bytes_compressed(public_key, pubKey);
-   element_t u[DECENT_SECTORS];
+   element_t * u = new element_t[mus.size()];
 
    mpz_t seedForU;
 
@@ -466,14 +466,18 @@ int CustodyUtils::verify_by_miner(const uint32_t &n, const char *u_seed, unsigne
 
    //prepare sigma and mu
    element_t _sigma;
-   element_t mu[DECENT_SECTORS];
+   element_t *mu = new element_t[mus.size()];
 
    element_init_G1(_sigma, pairing);
    element_from_bytes_compressed(_sigma, sigma);
 
-   for( int i = 0; i < DECENT_SECTORS; i++ ) {
-      element_init_Zr(mu[i], pairing);
-      unsigned char buffer[DECENT_SIZE_OF_MU];
+   element_init_Zr(mu[0], pairing);
+   unsigned char buffer[DECENT_SIZE_OF_MU];
+   string_to_bytes(mus[0], buffer, DECENT_SIZE_OF_MU);
+   element_from_bytes(mu[0], buffer);
+
+   for( int i = 1; i < mus.size(); i++ ) {
+      element_init_same_as(mu[i], mu[0]);
       string_to_bytes(mus[i], buffer, DECENT_SIZE_OF_MU);
       element_from_bytes(mu[i], buffer);
    }
@@ -484,16 +488,18 @@ int CustodyUtils::verify_by_miner(const uint32_t &n, const char *u_seed, unsigne
 
    generate_query_from_seed(seed, q, n, indices, &v);
 
-   int res = verify(_sigma, q, indices, v, u, mu, public_key);
+   int res = verify(_sigma, q, indices, v, u, mu, public_key, mus.size());
 
-   clear_elements(u, DECENT_SECTORS);
-   clear_elements(mu, DECENT_SECTORS);
+   clear_elements(u, mus.size());
+   clear_elements(mu, mus.size());
    clear_elements(v, q);
    element_clear(public_key);
    mpz_clear(seedForU);
    element_clear(_sigma);
    delete[](v);
    delete[](indices);
+   delete[](mu);
+   delete[](u);
    return res;
 }
 
