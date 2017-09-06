@@ -421,7 +421,7 @@ FC_API(graphene::app::crypto_api,
        (verify_range_proof_rewind)
        (range_get_info)
      )
-FC_API(graphene::app::messaging_api
+FC_API(graphene::app::messaging_api,
      )
 FC_API(graphene::app::login_api,
        (login)
