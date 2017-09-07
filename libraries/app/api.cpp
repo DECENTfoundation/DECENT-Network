@@ -36,6 +36,7 @@
 #include <graphene/chain/transaction_object.hpp>
 #include <graphene/chain/withdraw_permission_object.hpp>
 #include <graphene/seeding/seeding_utility.hpp>
+#include <graphene/chain/message_object.hpp>
 
 #include <fc/crypto/hex.hpp>
 #include <fc/smart_ref_impl.hpp>
@@ -98,6 +99,10 @@ namespace graphene { namespace app {
        else if( api_name == "crypto_api" )
        {
           _crypto_api = std::make_shared< crypto_api >();
+       }
+       else if (api_name == "messaging")
+       {
+          _messaging_api = std::make_shared< messaging_api >( std::ref(_app) );
        }
        else if( api_name == "debug_api" )
        {
@@ -519,6 +524,29 @@ namespace graphene { namespace app {
     range_proof_info crypto_api::range_get_info( const std::vector<char>& proof )
     {
        return fc::ecc::range_get_info( proof );
+    }
+
+    messaging_api::messaging_api(application& a) : _app(a)
+    {
+    }
+
+    vector<message_object> messaging_api::get_messages_for_receiver(account_id_type id)
+    {
+       FC_ASSERT(_app.chain_database());
+       const auto& db = *_app.chain_database();
+       const auto& range = db.get_index_type<message_index>().indices().get<by_receiver>().equal_range(id);
+       vector<message_object> result;
+       result.reserve(distance(range.first, range.second));
+       std::for_each(range.first, range.second, [&](const message_object &element) {
+         result.emplace_back(element);
+       });
+       
+       return result;
+    }
+
+    void messaging_api::put_message(account_id_type sender, account_id_type receiver, std::string text)
+    {
+
     }
 
 } } // graphene::app

@@ -37,11 +37,14 @@ namespace graphene {
       static const uint8_t type_id = impl_messaging_object_type;
 
       fc::time_point_sec created;
-      account_id_type account;
+      account_id_type sender;
+      account_id_type receiver;
+      std::string msg_text;
 
    };
 
-   struct by_account;
+   struct by_sender;
+   struct by_receiver;
    struct by_created;
    
    typedef multi_index_container<
@@ -49,7 +52,8 @@ namespace graphene {
       indexed_by<
       ordered_unique< tag<by_id>, member< object, object_id_type, &object::id > >,
       ordered_non_unique< tag<by_created>, member< message_object, time_point_sec, &message_object::created > >,
-      ordered_non_unique< tag<by_account>, member< message_object, account_id_type, &message_object::account > >
+      ordered_non_unique< tag<by_sender>, member< message_object, account_id_type, &message_object::sender > >,
+      ordered_non_unique< tag<by_receiver>, member< message_object, account_id_type, &message_object::receiver > >
       >
    > message_multi_index_type;
 
@@ -61,5 +65,6 @@ FC_REFLECT_DERIVED(
    graphene::chain::message_object,
    (graphene::db::object),
    (created)
-   (account)
+   (sender)
+   (receiver)
 )

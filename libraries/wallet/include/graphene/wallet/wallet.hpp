@@ -1870,6 +1870,18 @@ namespace graphene { namespace wallet {
           * @return the block time
           */
          fc::time_point_sec head_block_time() const;
+
+         /**
+         * @brief Send message
+         * @return success/fail
+         */
+         bool wallet_api::put_message(string from, string to, string text);
+
+         /**
+         * @brief Receives messages by receiver
+         * @return vector of messages
+         */
+         vector<message_object> wallet_api::get_messages_by_receiver(string receiver);
       };
 
    } }
