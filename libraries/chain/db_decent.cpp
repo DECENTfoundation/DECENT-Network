@@ -34,6 +34,7 @@
 #include <graphene/chain/seeder_object.hpp>
 #include <graphene/chain/transaction_detail_object.hpp>
 #include <graphene/chain/vesting_balance_object.hpp>
+#include <graphene/chain/miner_object.hpp>
 
 #include <algorithm>
 
