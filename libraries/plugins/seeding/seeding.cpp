@@ -348,8 +348,10 @@ void seeding_plugin_impl::send_ready_to_publish()
       const auto& assets_by_symbol = database().get_index_type<asset_index>().indices().get<by_symbol>();
       auto itr = assets_by_symbol.find(sritr->symbol);
 
-      if(itr == assets_by_symbol.end() || !itr->is_monitored_asset() || !itr->monitored_asset_opts->current_feed.core_exchange_rate.is_null() )
+      if(itr == assets_by_symbol.end() || !itr->is_monitored_asset() || itr->monitored_asset_opts->current_feed.core_exchange_rate.is_null() ) {
          itr = assets_by_symbol.find("DCT");
+      }
+
       const asset_object& ao = *itr;
 
       asset dct_price  = ao.amount_from_string(sritr->price);
