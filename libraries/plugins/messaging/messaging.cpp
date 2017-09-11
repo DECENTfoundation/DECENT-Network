@@ -64,6 +64,7 @@ void messaging_plugin::plugin_shutdown()
 
 void_result messaging_plugin::do_evaluate(const custom_operation& o) 
 { 
+   // check: if receiver exist, maximum message size etc.
    return void_result(); 
 };
 
@@ -73,7 +74,8 @@ void_result messaging_plugin::do_apply(const custom_operation& o)
 
    database().create<message_object>([&o, &d](message_object& obj)
    {
-      obj.account  = o.from;
+      obj.sender  = o.from;
+      obj.receiver = o.to;
       obj.created = d.head_block_time();
    });
    return void_result(); 

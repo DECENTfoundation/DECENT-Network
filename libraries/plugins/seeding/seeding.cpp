@@ -1,4 +1,5 @@
 /* (c) 2016, 2017 DECENT Services. For details refers to LICENSE.txt */
+
 #include <graphene/seeding/seeding.hpp>
 #include <graphene/chain/operation_history_object.hpp>
 #include <graphene/chain/database.hpp>
@@ -12,6 +13,7 @@
 #include <fc/smart_ref_impl.hpp>
 #include <algorithm>
 #include <ipfs/client.h>
+
 
 namespace decent { namespace seeding {
 namespace bpo = boost::program_options;
@@ -332,7 +334,7 @@ seeding_plugin_impl::generate_pors()
                             "Seeding plugin PoR generate");
 
    ilog("seeding plugin_impl:  generate_pors() end");
-}FC_CAPTURE_AND_RETHROW(())}
+}FC_CAPTURE_AND_RETHROW()}
 
 
 void seeding_plugin_impl::send_ready_to_publish()

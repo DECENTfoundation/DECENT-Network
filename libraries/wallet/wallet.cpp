@@ -4478,6 +4478,18 @@ void graphene::wallet::detail::submit_transfer_listener::package_seed_complete()
    // FC_ASSERT(!is_locked());
    }
 
+   bool wallet_api::put_message(string from, string to, string text)
+   {
+      //return my->transfer(from, to, amount, asset_symbol, memo, broadcast);
+      return true;
+   }
+
+   vector<message_object> wallet_api::get_messages_by_receiver(string receiver)
+   {
+      vector<message_object> result;
+      return result;
+   }
+
 
 } } // graphene::wallet
 

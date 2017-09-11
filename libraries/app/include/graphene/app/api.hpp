@@ -31,6 +31,7 @@
 #include <graphene/debug_miner/debug_api.hpp>
 
 #include <graphene/net/node.hpp>
+#include <graphene/chain/message_object.hpp>
 
 #include <fc/api.hpp>
 #include <fc/optional.hpp>
@@ -295,11 +296,14 @@ namespace graphene { namespace app {
    /**
    * @brief The messaging_api class implements instant messaging
    */
+
+   
    class messaging_api
    {
    public:
       messaging_api(application& a);
-      ~messaging_api();
+      vector<message_object> get_messages_for_receiver(account_id_type id);
+      void put_message(account_id_type sender, account_id_type receiver, std::string text);
    private:
       application& _app;
    };
@@ -422,6 +426,8 @@ FC_API(graphene::app::crypto_api,
        (range_get_info)
      )
 FC_API(graphene::app::messaging_api,
+      (get_messages_for_receiver)
+      (put_message)
      )
 FC_API(graphene::app::login_api,
        (login)
