@@ -39,7 +39,7 @@ namespace graphene {
       fc::time_point_sec created;
       account_id_type sender;
       account_id_type receiver;
-      std::string msg_text;
+      std::string text;
 
    };
 
@@ -67,4 +67,5 @@ FC_REFLECT_DERIVED(
    (created)
    (sender)
    (receiver)
+   (text)
 )

@@ -76,6 +76,7 @@
 #include <graphene/wallet/api_documentation.hpp>
 #include <graphene/wallet/reflect_util.hpp>
 #include <graphene/debug_miner/debug_api.hpp>
+#include <graphene/chain/custom_evaluator.hpp>
 
 #include <decent/package/package.hpp>
 
@@ -2562,6 +2563,13 @@ signed_transaction content_cancellation(string author,
       return result;
    };
 
+   vector<message_object> get_message_objects_for_receiver(account_id_type id)const
+   {
+      auto& mapi = _remote_api->messaging();
+      vector<message_object> result = mapi->get_message_objects_for_receiver(id);
+      return result;
+   }
+
    void dbg_make_mia(string creator, string symbol)
    {
       create_monitored_asset(get_account(creator).name, symbol, 2, "abcd", 3600, 1, true);
@@ -4478,16 +4486,68 @@ void graphene::wallet::detail::submit_transfer_listener::package_seed_complete()
    // FC_ASSERT(!is_locked());
    }
 
-   bool wallet_api::put_message(string from, string to, string text)
+   bool wallet_api::put_message(string from, string to, string text) const
    {
-      //return my->transfer(from, to, amount, asset_symbol, memo, broadcast);
-      return true;
+      //try {
+         //FC_ASSERT(!is_locked());
+         //fc::optional<asset_object> asset_obj = get_asset(asset_symbol);
+         //FC_ASSERT(asset_obj, "Could not find asset matching ${asset}", ("asset", asset_symbol));
+
+      
+         account_object from_account = get_account(from);
+         account_object to_account = get_account(to);
+         account_id_type from_id = from_account.id;
+         account_id_type to_id = get_account_id(to);
+
+         custom_operation cust_op;
+         message_payload pl;
+
+         cust_op.id = graphene::chain::custom_operation_subtype_messaging;
+         cust_op.payer = from_id;
+
+         pl.from = from_id;
+         pl.to = to_id;
+         pl.data = std::vector<char>(text.begin(), text.end());
+         
+         cust_op.set_payload(pl);
+         
+         signed_transaction tx;
+         tx.operations.push_back(cust_op);
+         
+         my->set_operation_fees(tx, my->_remote_db->get_global_properties().parameters.current_fees);
+         tx.validate();
+         my->sign_transaction(tx, true);
+         
+         //int propose_num = my->begin_builder_transaction();
+        
+        
+         //fc::optional<asset_object> asset_obj = get_asset(asset_symbol);
+         //FC_ASSERT(asset_obj, "Could not find asset matching ${asset}", ("asset", asset_symbol));
+         /*op.amount = asset_obj->amount_from_string(amount);
+         if (memo.size())
+         {
+            op.memo = memo_data();
+            op.memo->from = from_account.options.memo_key;
+            op.memo->to = to_account.options.memo_key;
+            op.memo->set_message(get_private_key(from_account.options.memo_key),
+               to_account.options.memo_key, memo);
+         }
+
+         my->add_operation_to_builder_transaction(propose_num, cust_op);
+         my->set_fees_on_builder_transaction(propose_num);
+         const auto& global_parameters = my->_remote_db->get_global_properties().parameters;
+         my->propose_builder_transaction2(propose_num, from, head_block_time() + global_parameters.maximum_proposal_lifetime - 1);
+         */
+         //return sign_transaction(tx, broadcast);
+         return true;
+     // } FC_CAPTURE_AND_RETHROW((from)(to)(text))
    }
 
-   vector<message_object> wallet_api::get_messages_by_receiver(string receiver)
+   vector<message_object> wallet_api::get_message_objects_for_receiver(string receiver) const
    {
-      vector<message_object> result;
-      return result;
+      
+      auto& receiver_id = get_account_id(receiver);
+      return my->get_message_objects_for_receiver(receiver_id);
    }
 
 

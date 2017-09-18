@@ -1875,13 +1875,13 @@ namespace graphene { namespace wallet {
          * @brief Send message
          * @return success/fail
          */
-         bool wallet_api::put_message(string from, string to, string text);
+         bool put_message(string from, string to, string text) const;
 
          /**
          * @brief Receives messages by receiver
          * @return vector of messages
          */
-         vector<message_object> wallet_api::get_messages_by_receiver(string receiver);
+         vector<message_object> wallet_api::get_message_objects_for_receiver(string receiver) const;
       };
 
    } }
@@ -2084,4 +2084,6 @@ FC_API( graphene::wallet::wallet_api,
            (verify_signature)
            (head_block_time)
            (get_proposed_transactions)
+           (put_message)
+           (get_message_objects_for_receiver)
 )
