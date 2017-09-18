@@ -163,7 +163,7 @@ void database::process_budget()
       {
          const asset_object& core_asset = asset_id_type(0)(*this);
          rec.from_initial_reserve = core_asset.reserved(*this);
-         rec.from_accumulated_fees = core.accumulated_fees + dpo.unspent_fee_budget;
+         rec.from_accumulated_fees = core.asset_pool + dpo.unspent_fee_budget;
          rec._real_supply = get_real_supply();
          if(    (dpo.last_budget_time == fc::time_point_sec())
                 || (now <= dpo.last_budget_time) )
@@ -180,7 +180,7 @@ void database::process_budget()
       rec.planned_for_mining = planned_for_mining + rec.from_accumulated_fees;
       rec.generated_in_last_interval = dpo.mined_rewards + dpo.miner_budget_from_fees - dpo.unspent_fee_budget;
 
-      rec.supply_delta = rec.generated_in_last_interval - core.accumulated_fees;
+      rec.supply_delta = rec.generated_in_last_interval - core.asset_pool;
 
       modify(core, [&]( asset_dynamic_data_object& _core )
       {
@@ -188,7 +188,7 @@ void database::process_budget()
 
          assert( _core.current_supply == rec._real_supply.total() );
 
-         _core.accumulated_fees = 0;
+         _core.asset_pool = 0;
       });
 
       modify(dpo, [&]( dynamic_global_property_object& _dpo )

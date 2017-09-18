@@ -67,7 +67,7 @@ struct get_impacted_account_visitor
          _impacted.insert( *(op.new_issuer) );
    }
    void operator()( const asset_issue_operation& op ) { _impacted.insert( op.issuer ); _impacted.insert( op.issue_to_account ); }
-   void operator()( const asset_fund_fee_pool_operation& op ) { _impacted.insert( op.from_account ); }
+   void operator()( const asset_fund_pools_operation& op ) { _impacted.insert( op.from_account ); }
    void operator()( const asset_reserve_operation& op ) { _impacted.insert( op.payer ); }
    void operator()( const asset_claim_fees_operation& op ) { _impacted.insert( op.issuer ); }
 

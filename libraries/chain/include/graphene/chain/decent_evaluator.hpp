@@ -2,6 +2,7 @@
 #pragma once
 #include <graphene/chain/evaluator.hpp>
 #include <decent/encrypt/custodyutils.hpp>
+#include <graphene/chain/asset_object.hpp>
 // return type?
 
 namespace graphene { namespace chain {
@@ -17,7 +18,7 @@ namespace graphene { namespace chain {
       void_result do_apply( const set_publishing_manager_operation& o );
    };
 
-      class set_publishing_right_evaluator : public evaluator<set_publishing_right_evaluator>
+   class set_publishing_right_evaluator : public evaluator<set_publishing_right_evaluator>
    {
    public:
       typedef set_publishing_right_operation operation_type;
@@ -55,6 +56,13 @@ namespace graphene { namespace chain {
       void_result do_apply( const request_to_buy_operation& o );
    private:
       bool is_subscriber = false;
+      bool skip_exchange = false;
+      asset_object payment_o;
+      asset_object price_o;
+      // Checks whether payment is greater or equal to price of a content
+      bool is_price_sufficient( const asset& payment, const asset& price );
+      // Takes care of payment and exchange between assets if needed
+      void process_payment_and_exchange( const account_id_type& payer, const asset& payment, const asset& price );
    };
    
    class leave_rating_evaluator : public evaluator<leave_rating_evaluator>

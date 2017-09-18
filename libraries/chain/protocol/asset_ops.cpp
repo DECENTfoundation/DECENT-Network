@@ -154,16 +154,18 @@ void asset_reserve_operation::validate()const
    FC_ASSERT( amount_to_reserve.amount.value > 0 );
 }
 
-void asset_fund_fee_pool_operation::validate() const
+void asset_fund_pools_operation::validate() const
 {
    FC_ASSERT( fee.amount >= 0 );
    FC_ASSERT( fee.asset_id == asset_id_type() );
-   FC_ASSERT( amount > 0 );
+   FC_ASSERT( uia_asset.amount >= 0 && dct_asset.amount >= 0 ); // are not negative
+   FC_ASSERT( uia_asset.amount > 0 || dct_asset.amount > 0 );   // at least one amount must be greater than zero
 }
 
 void asset_claim_fees_operation::validate()const {
    FC_ASSERT( fee.amount >= 0 );
-   FC_ASSERT( amount_to_claim.amount > 0 );
+   FC_ASSERT( uia_asset.amount >= 0 && dct_asset.amount >= 0 ); // are not negative
+   FC_ASSERT( uia_asset.amount > 0 || dct_asset.amount > 0 );   // at least one amount must be greater than zero
 }
 
 void asset_publish_feed_operation::validate()const

@@ -54,7 +54,7 @@ void database::debug_dump()
    }
    for( const asset_object& asset_obj : db.get_index_type<asset_index>().indices() )
    {
-      total_balances[asset_obj.id] += asset_obj.dynamic_asset_data_id(db).accumulated_fees;
+      total_balances[asset_obj.id] += asset_obj.dynamic_asset_data_id(db).asset_pool;
 //      edump((total_balances[asset_obj.id])(asset_obj.dynamic_asset_data_id(db).current_supply ) );
    }
 

@@ -426,6 +426,13 @@ namespace graphene { namespace app {
          share_type get_new_asset_per_block() const;
          share_type get_asset_per_block_by_block_num(uint32_t block_num) const;
 
+         /**
+          * @brief Converts asset into DCT, using actual price feed.
+          * @param price asset in DCT, monitored asset or user issued asset
+          * @return price in DCT
+          * @ingroup DatabaseAPI
+          */
+         asset price_to_dct( asset price )const;
 
          ///////////////
          // Miners //
@@ -816,6 +823,7 @@ FC_API(graphene::app::database_api,
           (get_assets)
           (list_assets)
           (lookup_asset_symbols)
+          (price_to_dct)
 
           // Miners
           (get_miners)

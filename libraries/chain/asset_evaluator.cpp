@@ -71,7 +71,7 @@ object_id_type asset_create_evaluator::do_apply( const asset_create_operation& o
    const asset_dynamic_data_object& dyn_asset =
       db().create<asset_dynamic_data_object>( [&]( asset_dynamic_data_object& a ) {
          a.current_supply = 0;
-         a.fee_pool = core_fee_paid; //op.calculate_fee(db().current_fee_schedule()).value / 2;
+         a.core_pool = core_fee_paid; //op.calculate_fee(db().current_fee_schedule()).value / 2;
       });
 
    auto next_asset_id = db().get_index_type<asset_index>().get_next_id();
@@ -168,6 +168,7 @@ void_result user_issued_asset_update_evaluator::do_apply(const update_user_issue
             a.description = o.new_description;
          a.options.max_supply = o.max_supply;
          a.options.core_exchange_rate = o.core_exchange_rate;
+         a.options.is_exchangeable = o.is_exchangeable;
       });
 
       return void_result();
@@ -202,31 +203,61 @@ void_result asset_reserve_evaluator::do_apply( const asset_reserve_operation& o 
       return void_result();
    } FC_CAPTURE_AND_RETHROW( (o) ) }
 
-void_result asset_fund_fee_pool_evaluator::do_evaluate(const asset_fund_fee_pool_operation& o)
+void_result asset_fund_pools_evaluator::do_evaluate(const asset_fund_pools_operation& o)
 { try {
       database& d = db();
 
-      const asset_object& a = o.asset_id(d);
-      FC_ASSERT( !a.is_monitored_asset() );
-      asset_dyn_data = &a.dynamic_asset_data_id(d);
+      const asset_object& uia_o = o.uia_asset.asset_id(d);
+
+      FC_ASSERT( !uia_o.is_monitored_asset() );
+      asset_dyn_data = &uia_o.dynamic_data(d);
+
+      FC_ASSERT( o.dct_asset.asset_id == asset_id_type() );
+      FC_ASSERT( o.uia_asset <= db().get_balance( o.from_account, o.uia_asset.asset_id ), "insufficient balance of ${uia}'s.",("uia",uia_o.symbol) );
+      FC_ASSERT( o.dct_asset <= db().get_balance( o.from_account, asset_id_type() ), "insufficient balance of DCT's." );
 
       return void_result();
    } FC_CAPTURE_AND_RETHROW( (o) ) }
 
-void_result asset_fund_fee_pool_evaluator::do_apply(const asset_fund_fee_pool_operation& o)
+void_result asset_fund_pools_evaluator::do_apply(const asset_fund_pools_operation& o)
 { try {
-      db().adjust_balance(o.from_account, -o.amount);
+      database& d = db();
+      if( o.uia_asset.amount > 0)
+      {
+         d.adjust_balance(o.from_account, -o.uia_asset );
+         d.modify( *asset_dyn_data, [&]( asset_dynamic_data_object& data ) {
+            data.asset_pool += o.uia_asset.amount;
+         });
+      }
 
-      db().modify( *asset_dyn_data, [&]( asset_dynamic_data_object& data ) {
-         data.fee_pool += o.amount;
-      });
+      if( o.dct_asset.amount > 0)
+      {
+         d.adjust_balance(o.from_account, -o.dct_asset );
+         d.modify( *asset_dyn_data, [&]( asset_dynamic_data_object& data ) {
+            data.core_pool += o.dct_asset.amount;
+         });
+      }
 
       return void_result();
    } FC_CAPTURE_AND_RETHROW( (o) ) }
 
 void_result asset_claim_fees_evaluator::do_evaluate( const asset_claim_fees_operation& o )
 { try {
-      FC_ASSERT( o.amount_to_claim.asset_id(db()).issuer == o.issuer, "Asset fees may only be claimed by the issuer" );
+      database& d = db();
+      optional<asset_object> uia_ao = o.uia_asset.asset_id(d);
+      optional<asset_object> dct_ao = o.dct_asset.asset_id(d);
+      FC_ASSERT( uia_ao.valid(), "Asset does not exist.");
+      FC_ASSERT( dct_ao.valid(), "Asset does not exist.");
+      FC_ASSERT( uia_ao->issuer == o.issuer, "Asset fees may only be claimed by the issuer" );
+      FC_ASSERT( dct_ao->id == asset_id_type() );
+
+      asset_dyn_data = &uia_ao->dynamic_data(d);
+      FC_ASSERT( o.uia_asset.amount <= asset_dyn_data->asset_pool, "Attempt to claim more ${uia}'s than have accumulated", ("uia",uia_ao->symbol) );
+      FC_ASSERT( o.dct_asset.amount <= asset_dyn_data->core_pool, "Attempt to claim more ${dct}'s than have accumulated", ("dct",dct_ao->symbol) );
+
+      FC_ASSERT( o.uia_asset <= d.get_balance( o.issuer, o.uia_asset.asset_id ), "insufficient balance of ${uia} asset.",("uia",uia_ao->symbol) );
+      FC_ASSERT( o.dct_asset <= d.get_balance( o.issuer, o.dct_asset.asset_id ), "insufficient balance of ${dct} asset.",("dct",dct_ao->symbol) );
+
       return void_result();
    } FC_CAPTURE_AND_RETHROW( (o) ) }
 
@@ -235,15 +266,21 @@ void_result asset_claim_fees_evaluator::do_apply( const asset_claim_fees_operati
 { try {
       database& d = db();
 
-      const asset_object& a = o.amount_to_claim.asset_id(d);
-      const asset_dynamic_data_object& addo = a.dynamic_asset_data_id(d);
-      FC_ASSERT( o.amount_to_claim.amount <= addo.accumulated_fees, "Attempt to claim more fees than have accumulated", ("addo",addo) );
+      if( o.uia_asset.amount > 0 )
+      {
+         d.adjust_balance( o.issuer, o.uia_asset );
+         d.modify( *asset_dyn_data, [&]( asset_dynamic_data_object& _addo  ) {
+            _addo.asset_pool -= o.uia_asset.amount;
+         });
+      }
 
-      d.modify( addo, [&]( asset_dynamic_data_object& _addo  ) {
-         _addo.accumulated_fees -= o.amount_to_claim.amount;
-      });
-
-      d.adjust_balance( o.issuer, o.amount_to_claim );
+      if( o.dct_asset.amount > 0 )
+      {
+         d.adjust_balance( o.issuer, o.dct_asset );
+         d.modify( *asset_dyn_data, [&]( asset_dynamic_data_object& _addo  ) {
+            _addo.core_pool -= o.dct_asset.amount;
+         });
+      }
 
       return void_result();
    } FC_CAPTURE_AND_RETHROW( (o) ) }

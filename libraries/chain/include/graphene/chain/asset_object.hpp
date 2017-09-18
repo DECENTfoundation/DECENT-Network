@@ -53,8 +53,8 @@ namespace graphene { namespace chain {
 
          /// The number of shares currently in existence
          share_type current_supply = 0;
-         share_type accumulated_fees = 0; ///< fees accumulate to be paid out over time
-         share_type fee_pool = 0;         ///< in core asset
+         share_type asset_pool = 0; ///< pool for this asset
+         share_type core_pool = 0;  ///< pool for core asset
    };
 
    /**
@@ -150,7 +150,7 @@ namespace graphene { namespace chain {
 } } // graphene::chain
 
 FC_REFLECT_DERIVED( graphene::chain::asset_dynamic_data_object, (graphene::db::object),
-                    (current_supply)(accumulated_fees)(fee_pool) )
+                    (current_supply)(asset_pool)(core_pool) )
 
 FC_REFLECT_DERIVED( graphene::chain::asset_object, (graphene::db::object),
                     (symbol)

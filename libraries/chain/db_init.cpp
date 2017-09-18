@@ -114,7 +114,7 @@ void database::initialize_evaluators()
    register_evaluator<asset_issue_evaluator>();
    register_evaluator<monitored_asset_update_evaluator>();
    register_evaluator<user_issued_asset_update_evaluator>();
-   register_evaluator<asset_fund_fee_pool_evaluator>();
+   register_evaluator<asset_fund_pools_evaluator>();
    register_evaluator<asset_reserve_evaluator>();
    register_evaluator<asset_claim_fees_evaluator>();
    register_evaluator<assert_evaluator>();
@@ -435,7 +435,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       asset_dynamic_data_id_type dynamic_data_id;
 
       dynamic_data_id = create<asset_dynamic_data_object>([&](asset_dynamic_data_object& d) {
-         d.accumulated_fees = 0;
+         d.asset_pool = 0;
       }).id;
 
       create<asset_object>([&](asset_object& a) {

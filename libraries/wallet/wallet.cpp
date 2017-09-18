@@ -1170,12 +1170,13 @@ public:
 
 
    signed_transaction create_user_issued_asset(string issuer,
-                                   string symbol,
-                                   uint8_t precision,
-                                   string description,
-                                   uint64_t max_supply,
-                                   price core_exchange_rate,
-                                   bool broadcast = false)
+                                               string symbol,
+                                               uint8_t precision,
+                                               string description,
+                                               uint64_t max_supply,
+                                               price core_exchange_rate,
+                                               bool is_exchangeable,
+                                               bool broadcast = false)
    { try {
       account_object issuer_account = get_account( issuer );
       FC_ASSERT(!find_asset(symbol).valid(), "Asset with that symbol already exists!");
@@ -1188,6 +1189,7 @@ public:
       asset_options opts;
       opts.max_supply = max_supply;
       opts.core_exchange_rate = core_exchange_rate;
+      opts.is_exchangeable = is_exchangeable;
       create_op.options = opts;
       create_op.monitored_asset_opts = optional<monitored_asset_options>();
 
@@ -1197,7 +1199,7 @@ public:
       tx.validate();
 
       return sign_transaction( tx, broadcast );
-   } FC_CAPTURE_AND_RETHROW( (issuer)(symbol)(precision)(description)(max_supply)(broadcast) ) }
+   } FC_CAPTURE_AND_RETHROW( (issuer)(symbol)(precision)(description)(max_supply)(is_exchangeable)(broadcast) ) }
 
    signed_transaction issue_asset(string to_account, string amount, string symbol,
                                   string memo, bool broadcast = false)
@@ -1234,6 +1236,7 @@ public:
                                                string description,
                                                uint64_t max_supply,
                                                price core_exchange_rate,
+                                               bool is_exchangeable,
                                                bool broadcast = false)
    { try {
          optional<asset_object> asset_to_update = find_asset(symbol);
@@ -1246,6 +1249,7 @@ public:
          update_op.new_description = description;
          update_op.max_supply = max_supply;
          update_op.core_exchange_rate = core_exchange_rate;
+         update_op.is_exchangeable = is_exchangeable;
 
          optional<account_id_type> new_issuer_account_id;
          if( new_issuer != "" )
@@ -1261,23 +1265,26 @@ public:
          tx.validate();
 
          return sign_transaction( tx, broadcast );
-      } FC_CAPTURE_AND_RETHROW( (symbol)(new_issuer)(description)(max_supply)(core_exchange_rate)(broadcast) ) }
+      } FC_CAPTURE_AND_RETHROW( (symbol)(new_issuer)(description)(max_supply)(core_exchange_rate)(is_exchangeable)(broadcast) ) }
 
-      signed_transaction fund_asset_fee_pool(string from,
-                                             string amount,
-                                             string symbol,
-                                             bool broadcast /* = false */)
+      signed_transaction fund_asset_pools(string from,
+                                          string uia_amount,
+                                          string uia_symbol,
+                                          string DCT_amount,
+                                          string DCT_symbol,
+                                          bool broadcast /* = false */)
       { try {
             account_object from_account = get_account(from);
-            optional<asset_object> asset_to_fund = find_asset(symbol);
-            if (!asset_to_fund)
-               FC_THROW("No asset with that symbol exists!");
-            asset_object core_asset = get_asset(asset_id_type());
+            optional<asset_object> uia_asset_to_fund = find_asset(uia_symbol);
+            FC_ASSERT( uia_asset_to_fund.valid() , "Asset ${uia} does not exist.", ("uia", uia_asset_to_fund->symbol));
 
-            asset_fund_fee_pool_operation fund_op;
+            optional<asset_object> dct_asset_to_fund = find_asset(DCT_symbol);
+            FC_ASSERT( dct_asset_to_fund.valid() ,"Asset ${dct} does not exist.", ("dct", dct_asset_to_fund->symbol));
+
+            asset_fund_pools_operation fund_op;
             fund_op.from_account = from_account.id;
-            fund_op.asset_id = asset_to_fund->id;
-            fund_op.amount = core_asset.amount_from_string(amount).amount;
+            fund_op.uia_asset = uia_asset_to_fund->amount_from_string(uia_amount);
+            fund_op.dct_asset = dct_asset_to_fund->amount_from_string(DCT_amount);
 
             signed_transaction tx;
             tx.operations.push_back( fund_op );
@@ -1285,7 +1292,7 @@ public:
             tx.validate();
 
             return sign_transaction( tx, broadcast );
-         } FC_CAPTURE_AND_RETHROW( (from)(symbol)(amount)(broadcast) ) }
+         } FC_CAPTURE_AND_RETHROW( (from)(uia_amount)(uia_symbol)(DCT_amount)(DCT_symbol)(broadcast) ) }
 
    signed_transaction reserve_asset(string from,
                                     string amount,
@@ -1309,17 +1316,24 @@ public:
          return sign_transaction( tx, broadcast );
       } FC_CAPTURE_AND_RETHROW( (from)(amount)(symbol)(broadcast) ) }
 
-   signed_transaction claim_fees(string amount,
-                                 string symbol,
+   signed_transaction claim_fees(string uia_amount,
+                                 string uia_symbol,
+                                 string dct_amount,
+                                 string dct_symbol,
                                  bool broadcast /* = false */)
    { try {
-         optional<asset_object> asset_to_claim = find_asset(symbol);
-         if (!asset_to_claim)
+         optional<asset_object> uia_asset_to_claim = find_asset(uia_symbol);
+         if (!uia_asset_to_claim)
             FC_THROW("No asset with that symbol exists!");
+         optional<asset_object> dct_asset_to_claim = find_asset(dct_symbol);
+         if (!dct_asset_to_claim)
+            FC_THROW("No asset with that symbol exists!");
+         FC_ASSERT( dct_asset_to_claim->id == asset_id_type() );
 
          asset_claim_fees_operation claim_fees_op;
-         claim_fees_op.issuer = asset_to_claim->issuer;
-         claim_fees_op.amount_to_claim = asset_to_claim->amount_from_string(amount);
+         claim_fees_op.issuer = uia_asset_to_claim->issuer;
+         claim_fees_op.uia_asset = uia_asset_to_claim->amount_from_string(uia_amount);
+         claim_fees_op.dct_asset = dct_asset_to_claim->amount_from_string(dct_amount);
 
          signed_transaction tx;
          tx.operations.push_back( claim_fees_op );
@@ -1327,7 +1341,7 @@ public:
          tx.validate();
 
          return sign_transaction( tx, broadcast );
-      } FC_CAPTURE_AND_RETHROW( (amount)(symbol)(broadcast) ) }
+      } FC_CAPTURE_AND_RETHROW( (uia_amount)(uia_symbol)(dct_amount)(dct_symbol)(broadcast) ) }
 
    signed_transaction create_monitored_asset(string issuer,
                                              string symbol,
@@ -2273,8 +2287,7 @@ public:
                                        vector<regional_price_info> const& price_amounts,
                                        vector<account_id_type> const& seeders,
                                        fc::time_point_sec const& expiration,
-                                       string const& synopsis,
-                                       bool broadcast/* = false */)
+                                       string const& synopsis)
    {
       auto& package_manager = decent::package::PackageManager::instance();
 
@@ -2307,8 +2320,6 @@ public:
 
          fc::sha256 sha_key;
          secret.Encode((byte*)sha_key._hash, 32);
-
-         elog("the encryption key is: ${k}", ("k", sha_key));
 
          uint32_t quorum = std::max((vector<account_id_type>::size_type)2, seeders.size()/3);
          ShamirSecret ss(quorum, seeders.size(), secret);
@@ -2352,7 +2363,7 @@ public:
          //We end up here and return the  to the upper layer. The create method will continue in the background, and once finished, it will call the respective callback of submit_transfer_listener class
          return fc::ripemd160();
       }
-      FC_CAPTURE_AND_RETHROW( (author)(content_dir)(samples_dir)(protocol)(price_amounts)(seeders)(expiration)(synopsis)(broadcast) )
+      FC_CAPTURE_AND_RETHROW( (author)(content_dir)(samples_dir)(protocol)(price_amounts)(seeders)(expiration)(synopsis) )
    }
 
 signed_transaction content_cancellation(string author,
@@ -2420,13 +2431,7 @@ signed_transaction content_cancellation(string author,
    }
 
    asset price_to_dct(asset price){
-      if(price.asset_id == asset_id_type() )
-         return price;
-      auto asset = get_asset(price.asset_id);
-      FC_ASSERT(asset.is_monitored_asset(), "unable to determine DCT price for UIA");
-      auto current_price = asset.monitored_asset_opts->current_feed.core_exchange_rate;
-      FC_ASSERT(!current_price.is_null(), "unable to determine DCT price without price feeds");
-      return price * current_price;
+      return _remote_db->price_to_dct(price);
    }
 
    void download_content(string const& consumer, string const& URI, string const& str_region_code_from, bool broadcast)
@@ -3786,9 +3791,10 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
                                                            string description,
                                                            uint64_t max_supply,
                                                            price core_exchange_rate,
+                                                           bool is_exchangeable,
                                                            bool broadcast /* = false */)
    {
-      return my->create_user_issued_asset(issuer, symbol, precision, description, max_supply, core_exchange_rate, broadcast);
+      return my->create_user_issued_asset(issuer, symbol, precision, description, max_supply, core_exchange_rate, is_exchangeable, broadcast);
    }
 
    signed_transaction wallet_api::issue_asset(string to_account, string amount, string symbol,
@@ -3802,17 +3808,20 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
                                                            string description,
                                                            uint64_t max_supply,
                                                            price core_exchange_rate,
+                                                           bool is_exchangeable,
                                                            bool broadcast /* = false */)
    {
-      return my->update_user_issued_asset(symbol, new_issuer, description, max_supply, core_exchange_rate, broadcast);
+      return my->update_user_issued_asset(symbol, new_issuer, description, max_supply, core_exchange_rate, is_exchangeable, broadcast);
    }
 
-   signed_transaction wallet_api::fund_asset_fee_pool(string from,
-                                                      string amount,
-                                                      string symbol,
-                                                      bool broadcast /* = false */)
+   signed_transaction wallet_api::fund_asset_pools(string from,
+                                                   string uia_amount,
+                                                   string uia_symbol,
+                                                   string DCT_amount,
+                                                   string DCT_symbol,
+                                                   bool broadcast /* = false */)
    {
-      return my->fund_asset_fee_pool(from, amount, symbol, broadcast);
+      return my->fund_asset_pools(from, uia_amount, uia_symbol, DCT_amount, DCT_symbol, broadcast);
    }
 
    signed_transaction wallet_api::reserve_asset(string from,
@@ -3823,11 +3832,13 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
       return my->reserve_asset(from, amount, symbol, broadcast);
    }
 
-   signed_transaction wallet_api::claim_fees(string amount,
-                                             string symbol,
+   signed_transaction wallet_api::claim_fees(string uia_amount,
+                                             string uia_symbol,
+                                             string dct_amount,
+                                             string dct_symbol,
                                              bool broadcast /* = false */)
    {
-      return my->claim_fees( amount, symbol, broadcast);
+      return my->claim_fees( uia_amount, uia_symbol, dct_amount, dct_symbol, broadcast);
    }
 
    map<string,miner_id_type> wallet_api::list_miners(const string& lowerbound, uint32_t limit)
@@ -4205,10 +4216,9 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
                                      string const &protocol,
                                      vector<regional_price_info> const &price_amounts,
                                      vector<account_id_type> const &seeders,
-                                     fc::time_point_sec const &expiration, string const &synopsis,
-                                     bool broadcast)
+                                     fc::time_point_sec const &expiration, string const &synopsis)
    {
-      return my->submit_content_async(author, co_authors, content_dir, samples_dir, protocol, price_amounts, seeders, expiration, synopsis, broadcast);
+      return my->submit_content_async(author, co_authors, content_dir, samples_dir, protocol, price_amounts, seeders, expiration, synopsis);
 
    }
 
