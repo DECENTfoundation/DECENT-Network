@@ -206,11 +206,9 @@ void_result asset_fund_pools_evaluator::do_evaluate(const asset_fund_pools_opera
       database& d = db();
 
       const asset_object& uia_o = o.uia_asset.asset_id(d);
-
       FC_ASSERT( !uia_o.is_monitored_asset() );
-      asset_dyn_data = &uia_o.dynamic_data(d);
 
-      FC_ASSERT( o.dct_asset.asset_id == asset_id_type() );
+      asset_dyn_data = &uia_o.dynamic_data(d);
       FC_ASSERT( o.uia_asset <= db().get_balance( o.from_account, o.uia_asset.asset_id ), "insufficient balance of ${uia}'s.",("uia",uia_o.symbol) );
       FC_ASSERT( o.dct_asset <= db().get_balance( o.from_account, asset_id_type() ), "insufficient balance of DCT's." );
 
@@ -242,19 +240,13 @@ void_result asset_fund_pools_evaluator::do_apply(const asset_fund_pools_operatio
 void_result asset_claim_fees_evaluator::do_evaluate( const asset_claim_fees_operation& o )
 { try {
       database& d = db();
-      optional<asset_object> uia_ao = o.uia_asset.asset_id(d);
-      optional<asset_object> dct_ao = o.dct_asset.asset_id(d);
-      FC_ASSERT( uia_ao.valid(), "Asset does not exist.");
-      FC_ASSERT( dct_ao.valid(), "Asset does not exist.");
-      FC_ASSERT( uia_ao->issuer == o.issuer, "Asset fees may only be claimed by the issuer" );
-      FC_ASSERT( dct_ao->id == asset_id_type() );
+      const asset_object& uia_ao = o.uia_asset.asset_id(d);
+      FC_ASSERT( uia_ao.issuer == o.issuer, "Asset fees may only be claimed by the issuer" );
+      FC_ASSERT( !uia_ao.is_monitored_asset() );
 
-      asset_dyn_data = &uia_ao->dynamic_data(d);
-      FC_ASSERT( o.uia_asset.amount <= asset_dyn_data->asset_pool, "Attempt to claim more ${uia}'s than have accumulated", ("uia",uia_ao->symbol) );
-      FC_ASSERT( o.dct_asset.amount <= asset_dyn_data->core_pool, "Attempt to claim more ${dct}'s than have accumulated", ("dct",dct_ao->symbol) );
-
-      FC_ASSERT( o.uia_asset <= d.get_balance( o.issuer, o.uia_asset.asset_id ), "insufficient balance of ${uia} asset.",("uia",uia_ao->symbol) );
-      FC_ASSERT( o.dct_asset <= d.get_balance( o.issuer, o.dct_asset.asset_id ), "insufficient balance of ${dct} asset.",("dct",dct_ao->symbol) );
+      asset_dyn_data = &uia_ao.dynamic_data(d);
+      FC_ASSERT( o.uia_asset.amount <= asset_dyn_data->asset_pool, "Attempt to claim more ${uia}'s than have accumulated", ("uia",uia_ao.symbol) );
+      FC_ASSERT( o.dct_asset.amount <= asset_dyn_data->core_pool, "Attempt to claim more DCT's than have accumulated");
 
       return void_result();
    } FC_CAPTURE_AND_RETHROW( (o) ) }

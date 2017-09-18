@@ -1997,7 +1997,7 @@ namespace graphene { namespace wallet {
          * @brief Receives messages by receiver
          * @return vector of messages
          */
-         vector<message_object> wallet_api::get_message_objects_for_receiver(string receiver) const;
+         vector<message_object> get_message_objects_for_receiver(string receiver) const;
       };
 
    } }

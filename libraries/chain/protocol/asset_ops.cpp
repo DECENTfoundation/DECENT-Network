@@ -158,12 +158,14 @@ void asset_fund_pools_operation::validate() const
 {
    FC_ASSERT( fee.amount >= 0 );
    FC_ASSERT( fee.asset_id == asset_id_type() );
+   FC_ASSERT( dct_asset.asset_id == asset_id_type() );
    FC_ASSERT( uia_asset.amount >= 0 && dct_asset.amount >= 0 ); // are not negative
    FC_ASSERT( uia_asset.amount > 0 || dct_asset.amount > 0 );   // at least one amount must be greater than zero
 }
 
 void asset_claim_fees_operation::validate()const {
    FC_ASSERT( fee.amount >= 0 );
+   FC_ASSERT( dct_asset.asset_id == asset_id_type() );
    FC_ASSERT( uia_asset.amount >= 0 && dct_asset.amount >= 0 ); // are not negative
    FC_ASSERT( uia_asset.amount > 0 || dct_asset.amount > 0 );   // at least one amount must be greater than zero
 }
