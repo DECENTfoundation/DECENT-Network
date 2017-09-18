@@ -2565,7 +2565,7 @@ signed_transaction content_cancellation(string author,
 
    vector<message_object> get_message_objects_for_receiver(account_id_type id)const
    {
-      auto& mapi = _remote_api->messaging();
+      const auto& mapi = _remote_api->messaging();
       vector<message_object> result = mapi->get_message_objects_for_receiver(id);
       return result;
    }
@@ -4546,7 +4546,7 @@ void graphene::wallet::detail::submit_transfer_listener::package_seed_complete()
    vector<message_object> wallet_api::get_message_objects_for_receiver(string receiver) const
    {
       
-      auto& receiver_id = get_account_id(receiver);
+      const auto& receiver_id = get_account_id(receiver);
       return my->get_message_objects_for_receiver(receiver_id);
    }
 
