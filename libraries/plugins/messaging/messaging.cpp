@@ -74,9 +74,14 @@ void_result messaging_plugin::do_apply(const custom_operation& o)
 
    database().create<message_object>([&o, &d](message_object& obj)
    {
-      obj.sender  = o.from;
-      obj.receiver = o.to;
+      message_payload pl;
+
+      ((graphene::chain::custom_operation&)o).get_payload(pl);
+      obj.sender  = pl.from;
+      obj.receiver = pl.to;
       obj.created = d.head_block_time();
+      if(pl.data.size())
+         obj.text = std::string(pl.data.begin(), pl.data.end());
    });
    return void_result(); 
 };

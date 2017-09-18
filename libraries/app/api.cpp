@@ -100,7 +100,7 @@ namespace graphene { namespace app {
        {
           _crypto_api = std::make_shared< crypto_api >();
        }
-       else if (api_name == "messaging")
+       else if (api_name == "messaging_api")
        {
           _messaging_api = std::make_shared< messaging_api >( std::ref(_app) );
        }
@@ -262,6 +262,12 @@ namespace graphene { namespace app {
     {
        FC_ASSERT(_debug_api);
        return *_debug_api;
+    }
+
+    fc::api<graphene::app::messaging_api> login_api::messaging() const
+    {
+       FC_ASSERT(_messaging_api);
+       return *_messaging_api;
     }
 
     vector<account_id_type> get_relevant_accounts( const object* obj )
@@ -530,7 +536,7 @@ namespace graphene { namespace app {
     {
     }
 
-    vector<message_object> messaging_api::get_messages_for_receiver(account_id_type id)
+    vector<message_object> messaging_api::get_message_objects_for_receiver(account_id_type id) const
     {
        FC_ASSERT(_app.chain_database());
        const auto& db = *_app.chain_database();
@@ -542,11 +548,6 @@ namespace graphene { namespace app {
        });
        
        return result;
-    }
-
-    void messaging_api::put_message(account_id_type sender, account_id_type receiver, std::string text)
-    {
-
     }
 
 } } // graphene::app

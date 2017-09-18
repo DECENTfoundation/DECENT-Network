@@ -228,7 +228,8 @@ CustodyUtils::get_sigmas(std::fstream &file, const unsigned int n, element_t *u,
          get_data(file, idx, buffer, size);
          //and distribute the tasks
          fut[k] = t[k].async([=]() {
-              mpz_t m[size];
+
+              mpz_t * m = new mpz_t[size];
               for( int i = 0; i < size; ++i ) {
                  mpz_init2(m[i], DECENT_SIZE_OF_NUMBER_IN_THE_FIELD * 8);
                  //mpz_import is too slow for our purposes - since we don't care about the exact parameters as much as about the uniqueness of the import, let's replace it with memcpy
@@ -238,7 +239,9 @@ CustodyUtils::get_sigmas(std::fstream &file, const unsigned int n, element_t *u,
                  //mpz_import(m[i], DECENT_SIZE_OF_NUMBER_IN_THE_FIELD, 1, 1, 1, 0, buffer + i * DECENT_SIZE_OF_NUMBER_IN_THE_FIELD);
               }
               delete[] buffer;
-              return get_sigma(idx, m, u_pp, pk, ret, 0);
+              int retval =  get_sigma(idx, m, u_pp, pk, ret, 0);
+              delete[]m;
+              return retval;
          });
       }
    }
@@ -460,13 +463,10 @@ int CustodyUtils::verify_by_miner(const uint32_t &n, const char *u_seed, unsigne
    element_init_G1(_sigma, pairing);
    element_from_bytes_compressed(_sigma, sigma);
 
-   element_init_Zr(mu[0], pairing);
    unsigned char buffer[DECENT_SIZE_OF_MU];
-   string_to_bytes(mus[0], buffer, DECENT_SIZE_OF_MU);
-   element_from_bytes(mu[0], buffer);
 
-   for( int i = 1; i < mus.size(); i++ ) {
-      element_init_same_as(mu[i], mu[0]);
+   for( int i = 0; i < mus.size(); i++ ) {
+      element_init_Zr(mu[i], pairing);
       string_to_bytes(mus[i], buffer, DECENT_SIZE_OF_MU);
       element_from_bytes(mu[i], buffer);
    }
