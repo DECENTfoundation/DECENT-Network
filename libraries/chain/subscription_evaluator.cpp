@@ -46,31 +46,26 @@ void_result subscribe_evaluator::do_apply( const subscribe_operation& op )
 
       auto &idx2 = db().get_index_type<subscription_index>().indices().get<by_from_to>();
       const auto &subscription = idx2.find(boost::make_tuple(op.from, op.to));
-
-      // head_block_time rounded up to midnight
-      uint32_t head_block_time_rounded_to_days = db().head_block_time().sec_since_epoch() / ( 24 * 3600 );
-      head_block_time_rounded_to_days++;
+      uint32_t subscription_period_in_secs = to_account->options.subscription_period * 24 * 3600;
+      time_point_sec now = db().head_block_time();
 
       if (subscription != idx2.end())
       {
-         if (subscription->expiration < db().head_block_time())
-            db().modify<subscription_object>(*subscription, [&](subscription_object &so)
-            {
-               so.expiration = time_point_sec( ( head_block_time_rounded_to_days + to_account->options.subscription_period ) * 24 * 3600 ); // seconds
-            });
-         else
-            db().modify<subscription_object>(*subscription, [&](subscription_object &so)
-            {
-               so.expiration += to_account->options.subscription_period * 24 * 3600; // seconds
-            });
+         db().modify<subscription_object>(*subscription, [&subscription_period_in_secs, &now](subscription_object &so)
+         {
+            if (so.expiration < now)
+               so.expiration = now + subscription_period_in_secs;
+            else
+               so.expiration += subscription_period_in_secs;
+         });
       }
       else
       {
-         db().create<subscription_object>([&](subscription_object &so)
+         db().create<subscription_object>([&subscription_period_in_secs, &now, &op](subscription_object &so)
          {
             so.from = op.from;
             so.to = op.to;
-            so.expiration = time_point_sec( ( head_block_time_rounded_to_days + to_account->options.subscription_period ) * 24 * 3600 ); // seconds
+            so.expiration = now + subscription_period_in_secs;
             so.automatic_renewal = false;
          });
       }
@@ -120,31 +115,26 @@ void_result subscribe_by_author_evaluator::do_apply( const subscribe_by_author_o
 
       auto &idx2 = db().get_index_type<subscription_index>().indices().get<by_from_to>();
       const auto &subscription = idx2.find(boost::make_tuple(op.from, op.to));
-
-      // head_block_time rounded up to midnight
-      uint32_t head_block_time_rounded_to_days = db().head_block_time().sec_since_epoch() / ( 24 * 3600 );
-      head_block_time_rounded_to_days++;
+      uint32_t subscription_period_in_secs = to_account->options.subscription_period * 24 * 3600;
+      time_point_sec now = db().head_block_time();
 
       if (subscription != idx2.end())
       {
-         if (subscription->expiration < db().head_block_time())
-            db().modify<subscription_object>(*subscription, [&](subscription_object &so)
-            {
-               so.expiration = time_point_sec( ( head_block_time_rounded_to_days + to_account->options.subscription_period ) * 24 * 3600 ); // seconds
-            });
-         else
-            db().modify<subscription_object>(*subscription, [&](subscription_object &so)
-            {
-               so.expiration += to_account->options.subscription_period * 24 * 3600; // seconds
-            });
+         db().modify<subscription_object>(*subscription, [&subscription_period_in_secs, &now](subscription_object &so)
+         {
+            if (so.expiration < now)
+               so.expiration = now + subscription_period_in_secs;
+            else
+               so.expiration += subscription_period_in_secs;
+         });
       }
       else
       {
-         db().create<subscription_object>([&](subscription_object &so)
+         db().create<subscription_object>([&subscription_period_in_secs, &now, &op](subscription_object &so)
          {
             so.from = op.from;
             so.to = op.to;
-            so.expiration = time_point_sec( ( head_block_time_rounded_to_days + to_account->options.subscription_period ) * 24 * 3600 ); // seconds
+            so.expiration = now + subscription_period_in_secs;
             so.automatic_renewal = false;
          });
       }

@@ -36,6 +36,7 @@
 #include <graphene/chain/transaction_object.hpp>
 #include <graphene/chain/withdraw_permission_object.hpp>
 #include <graphene/seeding/seeding_utility.hpp>
+#include <graphene/chain/message_object.hpp>
 
 #include <fc/crypto/hex.hpp>
 #include <fc/smart_ref_impl.hpp>
@@ -98,6 +99,10 @@ namespace graphene { namespace app {
        else if( api_name == "crypto_api" )
        {
           _crypto_api = std::make_shared< crypto_api >();
+       }
+       else if (api_name == "messaging")
+       {
+          _messaging_api = std::make_shared< messaging_api >( std::ref(_app) );
        }
        else if( api_name == "debug_api" )
        {
@@ -361,7 +366,6 @@ namespace graphene { namespace app {
                   result.push_back( bobj->consumer );
                   break;
                  }
-
                  case impl_content_object_type:{
                     const auto& cobj = dynamic_cast<const content_object*>(obj);
                     assert( cobj != nullptr );
@@ -374,6 +378,21 @@ namespace graphene { namespace app {
                     result.push_back( sobj->seeder );
                     break;
                  }
+                case impl_subscription_object_type:{
+                   const auto& sobj = dynamic_cast<const subscription_object*>(obj);
+                   assert( sobj != nullptr );
+                   result.push_back( sobj->from );
+                   result.push_back( sobj->to );
+                   break;
+                }
+                case impl_seeding_statistics_object_type:{
+                   const auto& ssobj = dynamic_cast<const seeding_statistics_object*>(obj);
+                   assert( ssobj != nullptr );
+                   result.push_back( ssobj->seeder );
+                   break;
+                }
+                case impl_transaction_detail_object_type:
+                   break;
           }
        }
        return result;
@@ -505,6 +524,29 @@ namespace graphene { namespace app {
     range_proof_info crypto_api::range_get_info( const std::vector<char>& proof )
     {
        return fc::ecc::range_get_info( proof );
+    }
+
+    messaging_api::messaging_api(application& a) : _app(a)
+    {
+    }
+
+    vector<message_object> messaging_api::get_messages_for_receiver(account_id_type id)
+    {
+       FC_ASSERT(_app.chain_database());
+       const auto& db = *_app.chain_database();
+       const auto& range = db.get_index_type<message_index>().indices().get<by_receiver>().equal_range(id);
+       vector<message_object> result;
+       result.reserve(distance(range.first, range.second));
+       std::for_each(range.first, range.second, [&](const message_object &element) {
+         result.emplace_back(element);
+       });
+       
+       return result;
+    }
+
+    void messaging_api::put_message(account_id_type sender, account_id_type receiver, std::string text)
+    {
+
     }
 
 } } // graphene::app

@@ -3,6 +3,7 @@ file(GLOB HEADERS "include/graphene/seeding/*.hpp")
 
 add_library( decent_seeding 
              seeding.cpp
+             ${HEADERS}
            )
 
 target_link_libraries( decent_seeding graphene_chain graphene_app graphene_time decent_encrypt package_manager fc )

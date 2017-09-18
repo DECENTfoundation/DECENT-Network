@@ -238,7 +238,7 @@ namespace graphene { namespace wallet {
  * This wallet assumes it is connected to the database server with a high-bandwidth, low-latency connection and
  * performs minimal caching. This API could be provided locally to be used by a web interface.
  *
- * @defgroup WalletCLI
+ * @defgroup WalletCLI WalletCLI
  */
       class wallet_api
       {
@@ -1542,7 +1542,7 @@ namespace graphene { namespace wallet {
           * @ingroup WalletCLI
           */
 
-         fc::ripemd160 submit_content_async( string const &author,
+         void submit_content_async( string const &author,
                                              vector< pair< string, uint32_t>> co_authors,
                                              string const &content_dir,
                                              string const &samples_dir,
@@ -1896,6 +1896,14 @@ namespace graphene { namespace wallet {
          optional<vector<seeder_object>> list_seeders_by_upload( const uint32_t count )const;
 
          /**
+          * @brief Get a list of seeders ordered by rating, in decreasing order
+          * @param count Maximum number of seeders to retrieve
+          * @return The seeders found
+          * @ingroup WalletCLI
+          */
+         vector<seeder_object> list_seeders_by_rating( const uint32_t count )const;
+
+         /**
           * @brief Get author and list of co-authors of a content corresponding to the provided URI
           * @param URI URI of the content
           * @return The autor of the content and the list of co-authors, if provided
@@ -1978,6 +1986,18 @@ namespace graphene { namespace wallet {
           * @return the block time
           */
          fc::time_point_sec head_block_time() const;
+
+         /**
+         * @brief Send message
+         * @return success/fail
+         */
+         bool wallet_api::put_message(string from, string to, string text);
+
+         /**
+         * @brief Receives messages by receiver
+         * @return vector of messages
+         */
+         vector<message_object> wallet_api::get_messages_by_receiver(string receiver);
       };
 
    } }
@@ -2174,6 +2194,7 @@ FC_API( graphene::wallet::wallet_api,
            (search_user_content)
            (list_publishers_by_price)
            (list_seeders_by_upload)
+           (list_seeders_by_rating)
            (get_author_and_co_authors_by_URI)
            (create_package)
            (extract_package)

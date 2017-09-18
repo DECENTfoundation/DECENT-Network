@@ -67,10 +67,9 @@ void_result withdraw_permission_claim_evaluator::do_evaluate(const withdraw_perm
    FC_ASSERT(op.amount_to_withdraw <= permit.available_this_period( d.head_block_time() ) );
    FC_ASSERT(d.get_balance(op.withdraw_from_account, op.amount_to_withdraw.asset_id) >= op.amount_to_withdraw);
 
-   const asset_object& _asset = op.amount_to_withdraw.asset_id(d);
-
-   const account_object& from  = op.withdraw_to_account(d);
-   const account_object& to    = permit.authorized_account(d);
+   op.amount_to_withdraw.asset_id(d);
+   op.withdraw_to_account(d);
+   permit.authorized_account(d);
 
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }

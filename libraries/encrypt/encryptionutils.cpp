@@ -181,7 +181,6 @@ encryption_results el_gamal_decrypt(const Ciphertext &input, const DInteger &pri
 
         CryptoPP::Integer s = mr.Exponentiate(input.D1, privateKey);
         CryptoPP::Integer m = mr.Multiply(input.C1, mr.MultiplicativeInverse(s));
-        size_t size = m.MinEncodedSize();
 
         m.Encode(recovered, DECENT_EL_GAMAL_GROUP_ELEMENT_SIZE);
 

@@ -182,6 +182,7 @@ namespace graphene { namespace app {
       vector<seeder_object> list_publishers_by_price( const uint32_t count )const;
       optional<seeder_object> get_seeder(account_id_type) const;
       optional<vector<seeder_object>> list_seeders_by_upload( const uint32_t count )const;
+      vector<seeder_object> list_seeders_by_rating( const uint32_t count )const;
       vector<subscription_object> list_active_subscriptions_by_consumer( const account_id_type& account, const uint32_t count )const;
       vector<subscription_object> list_subscriptions_by_consumer( const account_id_type& account, const uint32_t count )const;
       vector<subscription_object> list_active_subscriptions_by_author( const account_id_type& account, const uint32_t count )const;
@@ -1359,7 +1360,7 @@ namespace graphene { namespace app {
       
       vector< fc::variant > result;
       result.reserve(ops.size());
-      const asset_object& a = id(_db);
+      id(_db);
       get_required_fees_helper helper(
                                       _db.current_fee_schedule(),
                                       GET_REQUIRED_FEES_MAX_RECURSION );
@@ -1644,6 +1645,10 @@ namespace
          content_keys keys;
 
          CryptoPP::Integer secret(randomGenerator, 256);
+         while( secret >= DECENT_SHAMIR_ORDER ){
+            CryptoPP::Integer tmp(randomGenerator, 256);
+            secret = tmp;
+         }
          secret.Encode((byte*)keys.key._hash, 32);
 
          uint32_t quorum = std::max((vector<account_id_type>::size_type)1, seeders.size()/3); // TODO_DECENT - quorum >= 2 see also content_submit_operation::validate
@@ -1703,8 +1708,6 @@ namespace
          auto itr_end = return_one<is_ascending>::choose(range_end, boost::reverse_iterator<decltype(range_begin)>(range_begin));
 
          correct_iterator<buying_index, buying_object, sort_tag, decltype(itr_begin), is_ascending>(db, id, itr_begin);
-
-         const auto& idx_account = db.get_index_type<account_index>().indices().get<by_id>();
 
          while (count && itr_begin != itr_end)
          {
@@ -2058,6 +2061,7 @@ namespace
    {
       FC_ASSERT( count <= 100 );
       const auto& idx = _db.get_index_type<seeder_index>().indices().get<by_price>();
+      time_point_sec now = _db.head_block_time();
       vector<seeder_object> result;
       result.reserve(count);
       
@@ -2065,7 +2069,7 @@ namespace
       
       while(count-- && itr != idx.end())
       {
-         if( itr->expiration >= _db.head_block_time() )
+         if( itr->expiration >= now )
             result.emplace_back(*itr);
          else
             ++count;
@@ -2100,6 +2104,33 @@ namespace
       return result;
    }
 
+   vector<seeder_object> database_api::list_seeders_by_rating( uint32_t count )const
+   {
+      return my->list_seeders_by_rating( count );
+   }
+
+   vector<seeder_object> database_api_impl::list_seeders_by_rating( uint32_t count )const
+   {
+      FC_ASSERT( count <= 100 );
+      const auto& idx = _db.get_index_type<seeder_index>().indices().get<by_rating>();
+      time_point_sec now = _db.head_block_time();
+      vector<seeder_object> result;
+      result.reserve(count);
+
+      auto itr = idx.begin();
+
+      while(count-- && itr != idx.end())
+      {
+         if( itr->expiration >= now )
+            result.emplace_back(*itr);
+         else
+            ++count;
+         ++itr;
+      }
+
+      return result;
+   }
+
    miner_reward_input database_api_impl::get_time_to_maint_by_block_time(fc::time_point_sec block_time) const
    {
       const auto& idx = _db.get_index_type<budget_record_index>().indices().get<by_time>();
@@ -2108,7 +2139,6 @@ namespace
 
       auto itr = idx.begin();
   
-      int64_t time_to_maint = -1;
       fc::time_point_sec next_time = (fc::time_point_sec)0;
       fc::time_point_sec prev_time = (fc::time_point_sec)0;
 
@@ -2265,5 +2295,9 @@ namespace
    {
       return my->get_time_to_maint_by_block_time(block_time);
    }
-   
+
+   vector<database::votes_gained> database_api::get_actual_votes() const{
+      return my->_db.get_actual_votes();
+   }
+
 } } // graphene::app

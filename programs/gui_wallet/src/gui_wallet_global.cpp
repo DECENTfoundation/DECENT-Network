@@ -1303,7 +1303,6 @@ int runDecentD(gui_wallet::BlockChainStartType type, fc::promise<void>::ptr& exi
       node->shutdown_plugins();
       node->shutdown();
       delete node;
-      return 0;
    } catch( const fc::exception& e ) {
       // deleting the node can yield, so do this outside the exception handler
       unhandled_exception = e;
@@ -1316,6 +1315,8 @@ int runDecentD(gui_wallet::BlockChainStartType type, fc::promise<void>::ptr& exi
       delete node;
       return 1;
    }
+   else
+      return 0;
 }
 
 void write_default_logging_config_to_stream(std::ostream& out)

@@ -38,8 +38,6 @@ void_result asset_create_evaluator::do_evaluate( const asset_create_operation& o
 
    database& d = db();
 
-   const auto& chain_parameters = d.get_global_properties().parameters;
-
    auto& asset_indx = d.get_index_type<asset_index>().indices().get<by_symbol>();
    auto asset_symbol_itr = asset_indx.find( op.symbol );
    FC_ASSERT( asset_symbol_itr == asset_indx.end() );
@@ -59,7 +57,7 @@ void_result asset_create_evaluator::do_evaluate( const asset_create_operation& o
 
    if( op.monitored_asset_opts.valid() )
    {
-      FC_ASSERT( op.monitored_asset_opts->feed_lifetime_sec > chain_parameters.block_interval );
+      FC_ASSERT( op.monitored_asset_opts->feed_lifetime_sec > d.get_global_properties().parameters.block_interval );
       FC_ASSERT( op.options.max_supply == 0, );
    }
 

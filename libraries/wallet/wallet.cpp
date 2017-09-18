@@ -2279,7 +2279,7 @@ public:
       } FC_CAPTURE_AND_RETHROW( (author)(URI)(price_amounts)(hash)(seeders)(quorum)(expiration)(publishing_fee_symbol_name)(publishing_fee_amount)(synopsis)(secret)(broadcast) )
    }
 
-   fc::ripemd160 submit_content_async( string const& author,
+   void submit_content_async( string const& author,
                                        vector< pair< string, uint32_t>> co_authors,
                                        string const& content_dir,
                                        string const& samples_dir,
@@ -2361,7 +2361,7 @@ public:
          package_handle->create(false);
 
          //We end up here and return the  to the upper layer. The create method will continue in the background, and once finished, it will call the respective callback of submit_transfer_listener class
-         return fc::ripemd160();
+         return ;
       }
       FC_CAPTURE_AND_RETHROW( (author)(content_dir)(samples_dir)(protocol)(price_amounts)(seeders)(expiration)(synopsis) )
    }
@@ -3251,8 +3251,6 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
    {
       optional<signed_block_with_info> result = my->_remote_db->get_block(num);
 
-      const global_property_object& gpo = my->_remote_db->get_global_properties();
-      const dynamic_global_property_object& dpo = my->_remote_db->get_dynamic_global_properties();
       share_type miner_pay_from_reward = 0;
       share_type miner_pay_from_fees = 0;
 
@@ -4210,7 +4208,7 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
       return my->submit_content(author, co_authors, URI, price_amounts, hash, size, seeders, quorum, expiration, publishing_fee_asset, publishing_fee_amount, synopsis, secret, cd, broadcast);
    }
 
-   fc::ripemd160
+   void
    wallet_api::submit_content_async(string const &author, vector< pair< string, uint32_t>> co_authors,
                                      string const &content_dir, string const &samples_dir,
                                      string const &protocol,
@@ -4465,7 +4463,12 @@ pair<account_id_type, vector<account_id_type>> wallet_api::get_author_and_co_aut
    {
       return my->_remote_db->list_seeders_by_upload( count );
    }
-   
+
+   vector<seeder_object> wallet_api::list_seeders_by_rating( const uint32_t count )const
+   {
+      return my->_remote_db->list_seeders_by_rating( count );
+   }
+
    signed_transaction wallet_api::subscribe_to_author( string from,
                                                        string to,
                                                        string price_amount,
@@ -4666,6 +4669,18 @@ void graphene::wallet::detail::submit_transfer_listener::package_seed_complete()
 
    void wallet_api::set_transfer_logs(bool enable) const {
    // FC_ASSERT(!is_locked());
+   }
+
+   bool wallet_api::put_message(string from, string to, string text)
+   {
+      //return my->transfer(from, to, amount, asset_symbol, memo, broadcast);
+      return true;
+   }
+
+   vector<message_object> wallet_api::get_messages_by_receiver(string receiver)
+   {
+      vector<message_object> result;
+      return result;
    }
 
 

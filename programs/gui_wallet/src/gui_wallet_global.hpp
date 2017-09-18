@@ -19,8 +19,6 @@
 #include <iso646.h>
 #endif
 
-//#define UPDATE_MANAGER
-
 #define ALERT(message)                                  \
 {                                                       \
 QMessageBox* msgBox = new QMessageBox();                \

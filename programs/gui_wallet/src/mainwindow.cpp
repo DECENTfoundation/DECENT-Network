@@ -45,9 +45,7 @@
 
 #include <QCloseEvent>
 
-#ifdef UPDATE_MANAGER
 #include "update_manager.hpp"
-#endif
 
 using namespace nlohmann;
 using namespace gui_wallet;
@@ -377,7 +375,8 @@ MainWindow::MainWindow()
 
 MainWindow::~MainWindow()
 {
-   delete m_pUpdateManager;
+   if(m_pUpdateManager)
+      delete m_pUpdateManager;
 }
 
 void MainWindow::slot_setSplash()
@@ -737,7 +736,6 @@ void MainWindow::slot_checkDownloads()
 
    for (size_t i = 0; i < contents.size(); ++i)
    {
-      auto const& content = contents[i];
       std::string URI = contents[i]["URI"].get<std::string>();
       std::string hash = contents[i]["hash"].get<std::string>();
 

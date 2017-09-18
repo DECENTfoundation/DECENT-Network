@@ -26,14 +26,39 @@
 #include <graphene/chain/evaluator.hpp>
 #include <graphene/chain/database.hpp>
 
+
+namespace decent {
+   namespace messaging {
+      class messaging_plugin;
+   }
+}
 namespace graphene { namespace chain {
+
+   enum custom_operation_subtype : int
+   {
+      custom_operation_subtype_undefined = 0,
+      custom_operation_subtype_messaging,
+      custom_operation_subtype_max,
+   };
+
+   class custom_operation_interpreter
+   {
+   public:
+      virtual void_result do_evaluate(const custom_operation& o) = 0;
+      virtual void_result do_apply(const custom_operation& o) = 0;
+   };
 
    class custom_evaluator : public evaluator<custom_evaluator>
    {
       public:
          typedef custom_operation operation_type;
 
-         void_result do_evaluate( const custom_operation& o ){ return void_result(); }
-         void_result do_apply( const custom_operation& o ){ return void_result(); }
+         void_result do_evaluate(const custom_operation& o);
+         void_result do_apply(const custom_operation& o);
+
+         static void register_callback(custom_operation_subtype s, custom_operation_interpreter* i);
+         static void unregister_callback(custom_operation_subtype s);
+   private:
+      static std::map<custom_operation_subtype, custom_operation_interpreter*> operation_subtypes;
    };
 } }

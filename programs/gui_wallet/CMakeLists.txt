@@ -62,8 +62,9 @@ target_include_directories( DECENT PUBLIC
 
 if( WIN32 )
   target_link_libraries(  DECENT PUBLIC
-                        Qt5::Core Qt5::Widgets Qt5::Svg graphene_app graphene_net graphene_chain graphene_utilities graphene_wallet wallet_utility package_manager decent_encrypt pbc ${GMP_LIBRARIES} graphene_account_history decent_seeding graphene_miner graphene_debug_miner graphene_egenesis_decent fc msi ${CMAKE_DL_LIBS} ${PLATFORM_SPECIFIC_LIBS}
+                        Qt5::Core Qt5::Widgets Qt5::Svg graphene_app graphene_net graphene_chain graphene_utilities graphene_wallet wallet_utility package_manager decent_encrypt pbc ${GMP_LIBRARIES} graphene_account_history decent_seeding graphene_miner graphene_debug_miner graphene_egenesis_decent fc msi update ${CMAKE_DL_LIBS} ${PLATFORM_SPECIFIC_LIBS}
                      )
+  
   target_sources(DECENT PUBLIC
                src/rev_history_dlg.cpp
                src/rev_history_dlg.hpp
@@ -78,8 +79,15 @@ if( WIN32 )
   set_source_files_properties(stdafx.cpp PROPERTIES COMPILE_FLAGS "/Ycstdafx.h")
 else()                     
   target_link_libraries(  DECENT PUBLIC
-                        Qt5::Core Qt5::Widgets Qt5::Svg graphene_app graphene_net graphene_chain graphene_utilities graphene_wallet wallet_utility package_manager decent_encrypt pbc gmp graphene_account_history decent_seeding graphene_miner graphene_debug_miner graphene_egenesis_decent fc ${CMAKE_DL_LIBS} ${PLATFORM_SPECIFIC_LIBS}
-                     )                     
+                        Qt5::Core Qt5::Widgets Qt5::Svg graphene_app graphene_net graphene_chain graphene_utilities graphene_wallet wallet_utility package_manager decent_encrypt pbc gmp graphene_account_history decent_seeding graphene_miner graphene_debug_miner graphene_egenesis_decent fc update ${CMAKE_DL_LIBS} ${PLATFORM_SPECIFIC_LIBS}
+                     )  
+  target_sources(DECENT PUBLIC
+               src/rev_history_dlg.cpp
+               src/rev_history_dlg.hpp
+
+               src/update_prog_bar.cpp
+               src/update_prog_bar.hpp
+             )                    
 
 endif()
 

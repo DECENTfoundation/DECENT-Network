@@ -32,6 +32,9 @@
 #include <graphene/chain/buying_object.hpp>
 #include <graphene/chain/subscription_object.hpp>
 #include <graphene/chain/seeder_object.hpp>
+#include <graphene/chain/transaction_detail_object.hpp>
+#include <graphene/chain/vesting_balance_object.hpp>
+#include <graphene/chain/miner_object.hpp>
 
 #include <algorithm>
 
@@ -50,7 +53,6 @@ void database::content_expire(const content_object& content){
    if( content.publishing_fee_escrow.amount >= 0 )
       adjust_balance( content.author, content.publishing_fee_escrow );
    else //workaround due to block halt at #404726- this should never happen but if it does again, the remaining amount shall be paid by someone else, in this case by decent6
-
    {
       elog("applying workaround in content_expire to content ${s}",("s",content.URI));
       adjust_balance(account_id_type(20),content.publishing_fee_escrow );
@@ -66,14 +68,14 @@ void database::content_expire(const content_object& content){
       const auto& stats = idx.find( element.first );
       if( content.last_proof.count( element.first ) )
       {
-         modify<seeding_statistics_object>( *stats, [&content]( seeding_statistics_object& so){
+         modify<seeding_statistics_object>( *stats, [&element,&content]( seeding_statistics_object& so){
             so.total_content_seeded -= ( content.size * 1000 * 1000 ) / content.key_parts.size();
             so.num_of_content_seeded--;
          });
       }
-      else
+      else if(stats->total_content_requested_to_seed > 0)
       {
-         modify<seeding_statistics_object>( *stats, [&content]( seeding_statistics_object& so){
+         modify<seeding_statistics_object>( *stats, []( seeding_statistics_object& so){
             so.total_content_requested_to_seed--;
          });
       }
@@ -132,14 +134,15 @@ void database::set_and_reset_seeding_stats()
    uint32_t avg_buying_ratio;
    uint32_t seeding_rel_ratio;
    uint32_t seeding_abs_ratio;
+   uint32_t num_of_content;
    uint32_t missed_ratio;
 
    auto itr = idx.begin();
    while( itr != idx.end() )
    {
       const seeding_statistics_object& stats = get<seeding_statistics_object>( itr->stats );
-      num_of_requests_to_buy = stats.total_delivered_keys + stats.missed_delivered_keys;
 
+      num_of_requests_to_buy = stats.total_delivered_keys + stats.missed_delivered_keys;
       // interval [0,1]->[0,10000]
       if( num_of_requests_to_buy > 0 )
          key_delivery_ratio = ( stats.total_delivered_keys * 10000 ) / num_of_requests_to_buy;
@@ -159,16 +162,20 @@ void database::set_and_reset_seeding_stats()
          avg_buying_ratio = ( stats.avg_buying_ratio * 7 ) / 10;
 
       // multiplied by 10000
-      if( avg_buying_ratio > 0 )
+      if( avg_buying_ratio > 0 && upload_to_data_recent > 0)
          seeding_rel_ratio = ( 3 * 10000 * upload_to_data_recent / avg_buying_ratio ) / 10 + ( stats.seeding_rel_ratio * 7 ) / 10;
       else
-         seeding_rel_ratio = ( stats.seeding_rel_ratio * 7 ) / 10;
+         seeding_rel_ratio = stats.seeding_rel_ratio;
 
-      seeding_abs_ratio = ( 3 * upload_to_data_recent ) / 10 + ( stats.seeding_abs_ratio * 7 ) / 10;
+      if( upload_to_data_recent > 0 )
+         seeding_abs_ratio = ( 3 * upload_to_data_recent ) / 10 + ( stats.seeding_abs_ratio * 7 ) / 10;
+      else
+         seeding_abs_ratio = stats.seeding_abs_ratio;
 
-      // multiplied by 10000
-      if( stats.num_of_content_seeded > 0 )
-         missed_ratio = ( ( 3 * stats.total_content_requested_to_seed * 10000 ) / stats.num_of_content_seeded ) / 10 + ( stats.missed_ratio * 7 ) / 10;
+      num_of_content = stats.total_content_requested_to_seed + stats.num_of_content_seeded;
+      // [0,1]->10000
+      if( num_of_content > 0 )
+         missed_ratio = ( ( 3 * stats.num_of_content_seeded * 10000 ) / num_of_content ) / 10 + ( stats.missed_ratio * 7 ) / 10;
       else
          missed_ratio = ( stats.missed_ratio * 7 ) / 10;
 
@@ -183,8 +190,8 @@ void database::set_and_reset_seeding_stats()
          so.uploaded_till_last_maint = so.total_upload;
          so.missed_delivered_keys = 0;
          so.total_delivered_keys = 0;
-         so.num_of_pors = 0;
          so.total_content_requested_to_seed = 0;
+         so.num_of_pors = 0;
          so.avg_buying_ratio = avg_buying_ratio;
          so.seeding_rel_ratio = seeding_rel_ratio;
          so.seeding_abs_ratio = seeding_abs_ratio;
@@ -200,7 +207,7 @@ void database::decent_housekeeping()
    set_and_reset_seeding_stats();
 
    const auto& cidx = get_index_type<content_index>().indices().get<by_expiration>();
-   auto citr = cidx.begin();
+   auto citr = cidx.lower_bound( get_dynamic_global_properties().last_budget_time + get_global_properties().parameters.block_interval );
    while( citr != cidx.end() && citr->expiration <= head_block_time() )
    {
       return_escrow_submission_operation resop;
@@ -216,7 +223,7 @@ void database::decent_housekeeping()
    }
 
    const auto& bidx = get_index_type<buying_index>().indices().get<by_expiration_time>();
-   auto bitr = bidx.begin();
+   auto bitr = bidx.lower_bound( get_dynamic_global_properties().last_budget_time + get_global_properties().parameters.block_interval );
    while( bitr != bidx.end() && bitr->expiration_time <= head_block_time() )
    {
       if(!bitr->delivered) {
@@ -232,12 +239,34 @@ void database::decent_housekeeping()
       ++bitr;
    }
 
+
+   // we need to know the next_maintenance_time
+   const auto& dpo = get_dynamic_global_properties();
+   time_point_sec next_maintenance_time = dpo.next_maintenance_time;
+
+   const auto& gpo = get_global_properties();
+   uint32_t maintenance_interval;
+   if( gpo.pending_parameters )
+      maintenance_interval = gpo.pending_parameters->maintenance_interval;
+   else
+      maintenance_interval = gpo.parameters.maintenance_interval;
+
+   if( dpo.head_block_number == 1 )
+      next_maintenance_time = time_point_sec() +
+         (((head_block_time().sec_since_epoch() / maintenance_interval) + 1) * maintenance_interval);
+   else
+   {
+      auto y = (head_block_time() - next_maintenance_time).to_seconds() / maintenance_interval;
+      next_maintenance_time += (y+1) * maintenance_interval;
+   }
+
    const auto& sidx = get_index_type<subscription_index>().indices().get<by_renewal>();
    const auto& aidx = get_index_type<account_index>().indices().get<by_id>();
+
    auto sitr = sidx.begin();
    while( sitr != sidx.end() && sitr->automatic_renewal )
    {
-      if(sitr->expiration <= head_block_time()) {
+      if(sitr->expiration <= next_maintenance_time) {
          const auto &author = aidx.find(sitr->to);
 
          try {
@@ -337,9 +366,6 @@ share_type database::get_new_asset_per_block()
 
 share_type database::get_miner_budget(uint32_t blocks_to_maint)
 {
-
-   const global_property_object& gpo = get_global_properties();
-
    uint64_t next_switch = get_next_reward_switch_block( head_block_num() );
    if( head_block_num()+1 + blocks_to_maint >= next_switch )
    {
@@ -397,6 +423,40 @@ real_supply database::get_real_supply()const
       ++bitr;
    }
    return total;
+}
+
+vector<database::votes_gained> database::get_actual_votes() const
+{
+   vector<uint64_t> vote_tally_buffer;
+   vector<database::votes_gained> res;
+   const auto& props = get_global_properties();
+   vote_tally_buffer.resize(props.next_available_vote_id);
+   const auto& aidx = get_index_type<account_index>().indices().get<by_id>();
+   for( const auto& a : aidx ){
+      const account_object& opinion_account = (a.options.voting_account == GRAPHENE_PROXY_TO_SELF_ACCOUNT) ? a : get(a.options.voting_account);
+      const auto& stats = a.statistics(*this);
+      uint64_t voting_stake = stats.total_core_in_orders.value
+                              + (a.cashback_vb.valid() ? (*a.cashback_vb)(*this).balance.amount.value: 0)
+                              + get_balance(a.get_id(), asset_id_type()).amount.value;
+      for( vote_id_type id : opinion_account.options.votes )
+      {
+         uint32_t offset = id.instance();
+         // if they somehow managed to specify an illegal offset, ignore it.
+         if( offset < vote_tally_buffer.size() )
+            vote_tally_buffer[offset] += voting_stake;
+      }
+   }
+
+   const auto& all_miners = get_index_type<miner_index>().indices();
+   for( const miner_object& wit : all_miners )
+   {
+      database::votes_gained vg;
+      vg.votes = vote_tally_buffer[wit.vote_id];
+      vg.account_name = wit.miner_account(*this).name;
+      res.push_back(vg);
+   }
+   std::sort(res.begin(), res.end(), [](database::votes_gained a, database::votes_gained b)-> bool{return a.votes > b.votes;});
+   return res;
 }
 
 }

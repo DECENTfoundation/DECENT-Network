@@ -13,3 +13,5 @@ add_subdirectory( package )
 add_subdirectory( plugins )
 add_subdirectory( wallet )
 add_subdirectory( wallet_utility )
+add_subdirectory( update )
+
