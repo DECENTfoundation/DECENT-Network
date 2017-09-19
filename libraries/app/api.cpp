@@ -536,7 +536,7 @@ namespace graphene { namespace app {
     {
     }
 
-    vector<message_object> messaging_api::get_message_objects_for_receiver(account_id_type id) const
+    vector<message_object> messaging_api::get_message_objects(account_id_type id) const
     {
        FC_ASSERT(_app.chain_database());
        const auto& db = *_app.chain_database();

@@ -27,6 +27,7 @@
 #include <graphene/db/generic_index.hpp>
 #include <boost/multi_index/composite_key.hpp>
 
+
 namespace graphene {
    namespace chain {
 
@@ -39,7 +40,11 @@ namespace graphene {
       fc::time_point_sec created;
       account_id_type sender;
       account_id_type receiver;
-      std::string text;
+      public_key_type sender_pubkey;
+      public_key_type receiver_pubkey;
+      uint64_t nonce = 0;
+      std::vector<char> data;
+      std::string text;// decrypted text
 
    };
 
@@ -67,5 +72,9 @@ FC_REFLECT_DERIVED(
    (created)
    (sender)
    (receiver)
+   (sender_pubkey)
+   (receiver_pubkey)
+   (nonce)
+   (data)
    (text)
 )
