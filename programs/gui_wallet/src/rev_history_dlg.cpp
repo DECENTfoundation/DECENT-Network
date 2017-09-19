@@ -1,8 +1,18 @@
 #include "stdafx.h"
 
+
+#ifndef _MSC_VER
+#include <QPlainTextEdit>
+#include <QHBoxLayout>
+#include <QVBoxLayout>
+#endif
+
 #include "rev_history_dlg.hpp"
 #include "decent_button.hpp"
 #include "gui_wallet_global.hpp"
+
+
+
 
 using namespace gui_wallet;
 

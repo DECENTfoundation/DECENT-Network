@@ -379,9 +379,9 @@ UserInfoWidget::UserInfoWidget(QWidget* parent,
 //
 ContentInfoWidget::ContentInfoWidget(QWidget* parent, const SDigitalContent& a_cnt_details)
    : StackLayerWidget(parent)
+   , m_getItOrPay(GetIt)
    , m_URI(a_cnt_details.URI)
    , m_amount(a_cnt_details.price.getString().c_str())
-   , m_getItOrPay(GetIt)
 {
    QGridLayout* main_layout = new QGridLayout();
    main_layout->setSpacing(0);

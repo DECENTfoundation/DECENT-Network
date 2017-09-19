@@ -430,7 +430,6 @@ signed_block database::_generate_block(
  */
 void database::pop_block()
 { try {
-   auto current_block_no = head_block_num();
    _pending_tx_session.reset();
    auto head_id = head_block_id();
    optional<signed_block> head_block = fetch_block_by_id( head_id );

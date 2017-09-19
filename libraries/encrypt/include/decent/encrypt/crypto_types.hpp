@@ -45,7 +45,7 @@
 
 
 #define DECENT_SECTORS 100
-
+#define DECENT_SECTORS_BIG 100
 
 #define SHORT_CURVE 1
 #ifdef SHORT_CURVE

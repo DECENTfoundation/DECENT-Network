@@ -1,4 +1,5 @@
 /* (c) 2016, 2017 DECENT Services. For details refers to LICENSE.txt */
+
 #include <graphene/seeding/seeding.hpp>
 #include <graphene/chain/operation_history_object.hpp>
 #include <graphene/chain/database.hpp>
@@ -13,6 +14,7 @@
 #include <algorithm>
 #include <ipfs/client.h>
 #include <graphene/chain/hardfork.hpp>
+
 
 namespace decent { namespace seeding {
 namespace bpo = boost::program_options;
@@ -107,7 +109,6 @@ void seeding_plugin_impl::handle_content_submit(const content_submit_operation &
       if(cs_op.expiration < fc::time_point::now())
          return;
 
-      const auto &idx = db.get_index_type<my_seeder_index>().indices().get<by_seeder>();
       auto element = db.get_index_type<my_seeding_index>().indices().get<by_URI>().find(cs_op.URI);
       //bool is_resubmit = false;
       if( element !=  db.get_index_type<my_seeding_index>().indices().get<by_URI>().end() )  // check whether a content is resubmited. If so, unnecessary my_seeding_objects are expired
@@ -184,8 +185,6 @@ void seeding_plugin_impl::handle_request_to_buy(const request_to_buy_operation &
 
 void seeding_plugin_impl::handle_commited_operation(const operation_history_object &op_obj, bool sync_mode)
 {
-   graphene::chain::database &db = database();
-
    if( op_obj.op.which() == operation::tag<request_to_buy_operation>::value ) {
       if( sync_mode ) {
          ilog("seeding_plugin_impl::handle_commited_operation exiting, not producing yet");
@@ -284,7 +283,8 @@ seeding_plugin_impl::generate_pors()
 
    for (const auto& mso : seeding_idx ) {
       //Collect data first...
-      ilog("seeding plugin_impl:  generate_pors() processing content ${c}", ("c", mso.URI));
+
+      ilog("seeding plugin_impl:  generate_pors() processing content ${c}, object ${o}", ("c", mso.URI)("o",mso));
       if(!mso.downloaded)
          continue;
       ilog("seeding plugin_impl:  generate_pors() content ${c} downloaded, continue processing", ("c", mso.URI));
@@ -295,13 +295,13 @@ seeding_plugin_impl::generate_pors()
       FC_ASSERT(sritr != sidx.end());
       const auto &content = mso.get_content(db);
 
-      ilog("seeding plugin_impl:  generate_pors() processing content ${c}", ("c", mso.URI));
 
       if( content.expiration < fc::time_point::now()) {
          ilog("seeding plugin_impl:  generate_pors() content ${c} expired, clenaing up", ("c", mso.URI));
          release_package(mso, package_handle);
          continue;
       }
+
 
       /*
        * calculate time when next PoR has to be sent out. The time shall be:
@@ -314,17 +314,18 @@ seeding_plugin_impl::generate_pors()
 
       try {
          fc::time_point_sec last_proof_time = content.last_proof.at(mso.seeder);
+
          generate_time = std::min(last_proof_time + fc::seconds(24 * 60 * 60 - POR_WAKEUP_INTERVAL_SEC),
                                   content.expiration - fc::seconds(POR_WAKEUP_INTERVAL_SEC));
       } catch( std::out_of_range e ) {
          //no proof has been delivered by us yet...
-         generate_time = fc::time_point::now();
+         generate_time = fc::time_point::now() + fc::seconds(1);
       }
 
       ilog("seeding plugin_impl:  generate_por() - generate time for this content is planned at ${t}",
            ("t", generate_time));
       //If we are about to generate PoR, generate it.
-      if( fc::time_point(generate_time) >= fc::time_point::now() && fc::time_point(generate_time) < fc::time_point::now() + fc::seconds(POR_WAKEUP_INTERVAL_SEC) ){
+      if( fc::time_point(generate_time) < fc::time_point::now() + fc::seconds(POR_WAKEUP_INTERVAL_SEC) ){
          generate_por_int(mso, package_handle, sritr->privKey);
       }
    }
@@ -335,7 +336,7 @@ seeding_plugin_impl::generate_pors()
                             "Seeding plugin PoR generate");
 
    ilog("seeding plugin_impl:  generate_pors() end");
-}FC_CAPTURE_AND_RETHROW(())}
+}FC_CAPTURE_AND_RETHROW()}
 
 
 void seeding_plugin_impl::send_ready_to_publish()
@@ -343,7 +344,6 @@ void seeding_plugin_impl::send_ready_to_publish()
    ilog("seeding plugin_impl: send_ready_to_publish() begin");
    const auto &sidx = database().get_index_type<my_seeder_index>().indices().get<by_seeder>();
    auto sritr = sidx.begin();
-   graphene::chain::database &db = database();
    ipfs::Client ipfs_client(decent::package::PackageManagerConfigurator::instance().get_ipfs_host(), decent::package::PackageManagerConfigurator::instance().get_ipfs_port());
    ipfs::Json json;
    ipfs_client.Id( &json );
@@ -351,11 +351,14 @@ void seeding_plugin_impl::send_ready_to_publish()
    while(sritr != sidx.end() ){
       const auto& assets_by_symbol = database().get_index_type<asset_index>().indices().get<by_symbol>();
       auto itr = assets_by_symbol.find(sritr->symbol);
-      asset_object ao =  (itr == assets_by_symbol.end()? asset_object() : *itr);
-      if ( !ao.is_monitored_asset() || ao.monitored_asset_opts->current_feed.core_exchange_rate.is_null() )
-         ao = asset_object();
 
-      asset dct_price (sritr->price, ao.id);
+      if(itr == assets_by_symbol.end() || !itr->is_monitored_asset() || itr->monitored_asset_opts->current_feed.core_exchange_rate.is_null() ) {
+         itr = assets_by_symbol.find("DCT");
+      }
+
+      const asset_object& ao = *itr;
+
+      asset dct_price  = ao.amount_from_string(sritr->price);
       if ( ao.id != asset_id_type() ) //core asset
          dct_price = dct_price * ao.monitored_asset_opts->current_feed.core_exchange_rate;
 
@@ -397,7 +400,7 @@ void seeding_plugin_impl::send_ready_to_publish()
       main_thread->async( [this, tx](){ilog("seeding plugin_impl:  send_ready_to_publish lambda - pushing transaction"); database().push_transaction(tx);} );
       ilog("seeding plugin_impl: send_ready_to_publish() broadcasting");
       _self.p2p_node().broadcast_transaction(tx);
-      fc::usleep(fc::microseconds(1000000));
+      //fc::usleep(fc::microseconds(1000000));
       sritr++;
    }
    fc::time_point next_wakeup(fc::time_point::now() + fc::microseconds( (uint64_t) 1000000 * (60 * 60))); //let's send PoR every hour
@@ -500,7 +503,6 @@ void seeding_plugin_impl::restore_state(){
                          so.expiration = content_itr->expiration;
                          so.cd = content_itr->cd;
                     });
-                    auto so_id = mso.id;
                     ilog("seeding_plugin:  restore_state() creating my_seeding_object for unhandled content submit ${s}",("s",mso));
                     database().modify<my_seeder_object>(*sitr, [&](my_seeder_object &mso) {
                          mso.free_space -= content_itr->size ; //we allocate the whole megabytes per content
@@ -537,6 +539,7 @@ void seeding_plugin_impl::restore_state(){
 
            if(already_have){
               database().modify<my_seeding_object>(*citr, [](my_seeding_object& so){so.downloaded = true;});
+
            }else{
               elog("restarting downloads, re-downloading package ${u}", ("u", citr->URI));
               package_handle = pm.get_package(citr->URI, citr->_hash);
@@ -560,7 +563,6 @@ void seeding_plugin::plugin_startup()
 {
    if(!my)
       return;
-   graphene::chain::database &db = database();
 
    ilog("seeding plugin:  plugin_startup() start");
 
@@ -611,7 +613,7 @@ void seeding_plugin::plugin_initialize( const boost::program_options::variables_
       }
 
       if( options.count("seeding-price")) {
-         seeding_options.seeding_price = options["seeding-price"].as<int>();
+         seeding_options.seeding_price = options["seeding-price"].as<string>();
       } else{
          FC_THROW("missing seeding-price parameter");
       }
@@ -716,7 +718,7 @@ void seeding_plugin::plugin_set_program_options(
          ("free-space", bpo::value<int>(), "Allocated disk space, in MegaBytes")
          ("packages-path", bpo::value<string>()->default_value(""), "Packages storage path")
 
-         ("seeding-price", bpo::value<int>(), "Price amount per MegaBytes")
+         ("seeding-price", bpo::value<string>(), "Price amount per MegaBytes")
          ("seeding-symbol", bpo::value<string>()->default_value("DCT"), "Seeding price asset, e.g. DCT" )
          ("region-code", bpo::value<string>()->default_value(""), "Optional ISO 3166-1 alpha-2 two-letter region code")
          ;

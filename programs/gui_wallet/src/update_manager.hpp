@@ -1,9 +1,21 @@
 /* (c) 2016, 2017 DECENT Services. For details refers to LICENSE.txt */
 
-//#define UPDATE_MANAGER
+#define UPDATE_MANAGER
 #ifdef UPDATE_MANAGER
+
+#ifndef _MSC_VER
+#include <QObject>
+#endif
+
+class QTimer;
 class CProgBar;
 class CDetectUpdateThreadParams;
+
+#ifdef __GNUC__
+#ifndef __cdecl
+#define __cdecl __attribute__((cdecl))
+#endif
+#endif
 
 // class UpdateManager
 // This class can be optionally added to GUI application with help of 
@@ -25,11 +37,11 @@ public:
    // callbacks
    // They are called from inside of update library.
    // Callbacks are assigned in csontructor
-   static uint32_t _cdecl StartRevHistoryDlg(const std::string& revHistory);
-   static void _cdecl CreateProgBar(int upperBorder, uint32_t* abort);
-   static void _cdecl DestroyProgBar(void);
-   static void _cdecl SetProgBarPos(int pos);
-   static void _cdecl SetProgBarTitle(const char* title);
+   static uint32_t __cdecl StartRevHistoryDlg(const std::string& revHistory);
+   static void __cdecl CreateProgBar(int upperBorder, uint32_t* abort);
+   static void __cdecl DestroyProgBar(void);
+   static void __cdecl SetProgBarPos(int pos);
+   static void __cdecl SetProgBarTitle(const char* title);
 
 protected:
    bool m_updateProgBarCreate;

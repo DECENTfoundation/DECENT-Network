@@ -3113,8 +3113,6 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
    {
       optional<signed_block_with_info> result = my->_remote_db->get_block(num);
 
-      const global_property_object& gpo = my->_remote_db->get_global_properties();
-      const dynamic_global_property_object& dpo = my->_remote_db->get_dynamic_global_properties();
       share_type miner_pay_from_reward = 0;
       share_type miner_pay_from_fees = 0;
 
@@ -4492,6 +4490,18 @@ void graphene::wallet::detail::submit_transfer_listener::package_seed_complete()
 
    void wallet_api::set_transfer_logs(bool enable) const {
    // FC_ASSERT(!is_locked());
+   }
+
+   bool wallet_api::put_message(string from, string to, string text)
+   {
+      //return my->transfer(from, to, amount, asset_symbol, memo, broadcast);
+      return true;
+   }
+
+   vector<message_object> wallet_api::get_messages_by_receiver(string receiver)
+   {
+      vector<message_object> result;
+      return result;
    }
 
 

@@ -780,6 +780,7 @@ namespace graphene { namespace app {
 
          miner_reward_input get_time_to_maint_by_block_time(fc::time_point_sec block_time) const;
 
+         vector<database::votes_gained> get_actual_votes() const;
       private:
          std::shared_ptr< database_api_impl > my;
       };
@@ -890,4 +891,5 @@ FC_API(graphene::app::database_api,
           (list_subscriptions_by_consumer)
           (list_active_subscriptions_by_author)
           (list_subscriptions_by_author)
+          (get_actual_votes)
 )

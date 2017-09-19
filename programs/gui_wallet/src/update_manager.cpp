@@ -3,6 +3,7 @@
 
 #include "stdafx.h"
 
+
 #include "update_manager.hpp"
 #ifdef UPDATE_MANAGER
 
@@ -10,6 +11,14 @@
 #include "../../update/include/updatethread.h"
 #include "rev_history_dlg.hpp"
 #include "update_prog_bar.hpp"
+
+#ifndef _MSC_VER
+#include <QTimer>
+#include <QApplication>
+#include <pthread.h>
+
+typedef void* DCTHANDLE;
+#endif
 
 #include <QMainWindow>
 
@@ -37,10 +46,10 @@ MPHANDLE MpThreadCreate(void* params, MP_THREAD_FUNCTION threadProc, uint32_t* t
    if (rc)
       return NULL;  // EINVAL, ENOMEM
 
-   int stacksize = 0xfffff;
-   rc = pthread_attr_setstacksize(&attr, stacksize);
-   if (rc)
-      return NULL;   // EINVAL, ENOSYS
+   //int stacksize = 0xfffff;
+   //rc = pthread_attr_setstacksize(&attr, stacksize);
+   //if (rc)
+     // return NULL;   // EINVAL, ENOSYS
 
    rc = pthread_create(&threadId, &attr, (void*(*)(void*))threadProc, params);
    pthread_attr_destroy(&attr);
@@ -197,7 +206,7 @@ void UpdateManager::slot_progBarSetPos(int pos)
       m_progBar->SetValue(pos);
 }
 
-uint32_t _cdecl UpdateManager::StartRevHistoryDlg(const std::string& revHistory)
+uint32_t __cdecl UpdateManager::StartRevHistoryDlg(const std::string& revHistory)
 {
    uint32_t returnValue = 0;
 
@@ -205,22 +214,22 @@ uint32_t _cdecl UpdateManager::StartRevHistoryDlg(const std::string& revHistory)
    return returnValue;
 }
 
-void _cdecl UpdateManager::CreateProgBar(int upperBorder, uint32_t* abort)
+void __cdecl UpdateManager::CreateProgBar(int upperBorder, uint32_t* abort)
 {
    s_updateManager->ProxyCreateProgBar(upperBorder, abort);
 }
 
-void _cdecl UpdateManager::DestroyProgBar(void)
+void __cdecl UpdateManager::DestroyProgBar(void)
 {
    s_updateManager->ProxyDestroyProgBar();
 }
 
-void _cdecl UpdateManager::SetProgBarPos(int pos)
+void __cdecl UpdateManager::SetProgBarPos(int pos)
 {
    s_updateManager->EmitProgBarSetPos(pos);
 }
 
-void _cdecl UpdateManager::SetProgBarTitle(const char* title)
+void __cdecl UpdateManager::SetProgBarTitle(const char* title)
 {
    QString t(title);
    s_updateManager->ProxySetProgBarTitle(t);

@@ -238,7 +238,7 @@ namespace graphene { namespace wallet {
  * This wallet assumes it is connected to the database server with a high-bandwidth, low-latency connection and
  * performs minimal caching. This API could be provided locally to be used by a web interface.
  *
- * @defgroup WalletCLI
+ * @defgroup WalletCLI WalletCLI
  */
       class wallet_api
       {
@@ -1891,6 +1891,18 @@ namespace graphene { namespace wallet {
           * @return the block time
           */
          fc::time_point_sec head_block_time() const;
+
+         /**
+         * @brief Send message
+         * @return success/fail
+         */
+         bool wallet_api::put_message(string from, string to, string text);
+
+         /**
+         * @brief Receives messages by receiver
+         * @return vector of messages
+         */
+         vector<message_object> wallet_api::get_messages_by_receiver(string receiver);
       };
 
    } }

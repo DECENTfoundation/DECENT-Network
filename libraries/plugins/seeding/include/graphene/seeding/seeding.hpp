@@ -42,8 +42,8 @@ public:
 
    fc::ecc::private_key privKey;
    uint64_t free_space;
-   uint32_t price;
    string region_code;
+   string price;
    string symbol;
 
 };
@@ -218,7 +218,6 @@ public:
    ~SeedingListener() {};
 
    virtual void package_download_error(const std::string &);
-
    virtual void package_download_complete();
 };
 
