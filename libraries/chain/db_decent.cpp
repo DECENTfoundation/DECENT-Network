@@ -32,6 +32,8 @@
 #include <graphene/chain/buying_object.hpp>
 #include <graphene/chain/subscription_object.hpp>
 #include <graphene/chain/seeder_object.hpp>
+#include <graphene/chain/transaction_detail_object.hpp>
+#include <graphene/chain/vesting_balance_object.hpp>
 
 #include <algorithm>
 
@@ -50,7 +52,6 @@ void database::content_expire(const content_object& content){
    if( content.publishing_fee_escrow.amount >= 0 )
       adjust_balance( content.author, content.publishing_fee_escrow );
    else //workaround due to block halt at #404726- this should never happen but if it does again, the remaining amount shall be paid by someone else, in this case by decent6
-
    {
       elog("applying workaround in content_expire to content ${s}",("s",content.URI));
       adjust_balance(account_id_type(20),content.publishing_fee_escrow );
@@ -425,6 +426,7 @@ real_supply database::get_real_supply()const
    }
    return total;
 }
+
 
 }
 }

@@ -17,6 +17,8 @@ namespace decent { namespace seeding {
       uint32_t seeding_price;
       fc::path packages_path;
       std::string region_code;
+      std::string seeding_symbol;
+
    };
 
    extern fc::promise<seeding_plugin_startup_options>::ptr seeding_promise;

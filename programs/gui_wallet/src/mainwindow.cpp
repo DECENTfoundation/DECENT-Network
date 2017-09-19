@@ -45,9 +45,7 @@
 
 #include <QCloseEvent>
 
-#ifdef UPDATE_MANAGER
 #include "update_manager.hpp"
-#endif
 
 using namespace nlohmann;
 using namespace gui_wallet;
@@ -377,7 +375,8 @@ MainWindow::MainWindow()
 
 MainWindow::~MainWindow()
 {
-   delete m_pUpdateManager;
+   if(m_pUpdateManager)
+      delete m_pUpdateManager;
 }
 
 void MainWindow::slot_setSplash()
