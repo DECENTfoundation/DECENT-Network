@@ -756,25 +756,6 @@ public:
       std::vector<public_key_type> active_keys = account.active.get_keys();
       std::vector<public_key_type> owner_keys = account.owner.get_keys();
 
-      if( std::find( owner_keys.begin(), owner_keys.end(), wif_pub_key ) !=owner_keys.end() )
-      {
-         //we have the owner keys
-         int active_key_index = find_first_unused_derived_key_index( *optional_private_key );
-         fc::ecc::private_key active_privkey = derive_private_key( wif_key, active_key_index);
-
-         int memo_key_index = find_first_unused_derived_key_index(active_privkey);
-         fc::ecc::private_key memo_privkey = derive_private_key( key_to_wif(active_privkey), memo_key_index);
-
-         graphene::chain::public_key_type active_pubkey = active_privkey.get_public_key();
-         graphene::chain::public_key_type memo_pubkey = memo_privkey.get_public_key();
-         _keys[active_pubkey] = key_to_wif( active_privkey );
-         _keys[memo_pubkey] = key_to_wif( memo_privkey );
-
-         _wallet.extra_keys[account.id].insert( active_pubkey );
-         _wallet.extra_keys[account.id].insert( memo_pubkey );
-
-      }
-
       std::copy(active_keys.begin(), active_keys.end(), std::inserter(all_keys_for_account, all_keys_for_account.end()));
       std::copy(owner_keys.begin(), owner_keys.end(), std::inserter(all_keys_for_account, all_keys_for_account.end()));
       all_keys_for_account.insert(account.options.memo_key);
@@ -3425,7 +3406,7 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
       fc::optional<fc::ecc::private_key> optional_private_key = wif_to_key(wif_key);
       if (!optional_private_key)
          FC_THROW("Invalid private key");
-      string base58_public_key = optional_private_key->get_public_key().to_base58();
+   //   string base58_public_key = optional_private_key->get_public_key().to_base58();
    //   copy_wallet_file( "before-import-key-" + base58_public_key );
 
       if( my->import_key(account_name_or_id, wif_key) )
