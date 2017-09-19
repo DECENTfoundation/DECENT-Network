@@ -654,6 +654,42 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
               so.expiration = db().head_block_time() + 24 * 3600;
               so.ipfs_ID = o.ipfs_ID;
               so.stats = stats;
+         });
+      } else
+      { //this is republish case
+         db().modify<seeder_object>(*sor,[&](seeder_object &so) {
+            so.free_space = o.space;
+            so.price = asset(o.price_per_MByte);
+            so.pubKey = o.pubKey;
+            so.expiration = db().head_block_time() + 24 * 3600;
+            so.ipfs_ID = o.ipfs_ID;
+
+         });
+      }
+   }FC_CAPTURE_AND_RETHROW( (o) ) }
+
+   void_result ready_to_publish2_evaluator::do_evaluate(const ready_to_publish2_operation& o )
+   {try{
+         //FC_ASSERT(db().head_block_time() >= 0 ); //TODO_DECENT HARDFORK reference
+   }FC_CAPTURE_AND_RETHROW( (o) ) }
+
+   void_result ready_to_publish2_evaluator::do_apply(const ready_to_publish2_operation& o )
+   {try{
+      auto& idx = db().get_index_type<seeder_index>().indices().get<by_seeder>();
+      const auto& sor = idx.find( o.seeder );
+      if( sor == idx.end() ) { //this is initial publish request
+         auto stats = db().create<seeding_statistics_object>([&o](seeding_statistics_object &sso) {
+              sso.seeder = o.seeder;
+              sso.total_upload = 0;
+         }).id;
+         db().create<seeder_object>([&](seeder_object& so) {
+              so.seeder = o.seeder;
+              so.free_space = o.space;
+              so.pubKey = o.pubKey;
+              so.price = asset(o.price_per_MByte);
+              so.expiration = db().head_block_time() + 24 * 3600;
+              so.ipfs_ID = o.ipfs_ID;
+              so.stats = stats;
               if ( true ) // TODO_DECENT add HARDFORK variable
               {
                  if( o.region_code.valid() )
@@ -665,18 +701,18 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
       } else
       { //this is republish case
          db().modify<seeder_object>(*sor,[&](seeder_object &so) {
-            so.free_space = o.space;
-            so.price = asset(o.price_per_MByte);
-            so.pubKey = o.pubKey;
-            so.expiration = db().head_block_time() + 24 * 3600;
-            so.ipfs_ID = o.ipfs_ID;
-            if ( true ) // TODO_DECENT add HARDFORK variable
-            {
-               if( o.region_code.valid() )
-                  so.region_code = *o.region_code;
-               else
-                  so.region_code = "";
-           }
+              so.free_space = o.space;
+              so.price = asset(o.price_per_MByte);
+              so.pubKey = o.pubKey;
+              so.expiration = db().head_block_time() + 24 * 3600;
+              so.ipfs_ID = o.ipfs_ID;
+              if ( true ) // TODO_DECENT add HARDFORK variable
+              {
+                 if( o.region_code.valid() )
+                    so.region_code = *o.region_code;
+                 else
+                    so.region_code = "";
+              }
          });
       }
    }FC_CAPTURE_AND_RETHROW( (o) ) }

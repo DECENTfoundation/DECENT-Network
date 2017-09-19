@@ -131,6 +131,7 @@ void database::initialize_evaluators()
    register_evaluator<request_to_buy_evaluator>();
    register_evaluator<leave_rating_evaluator>();
    register_evaluator<ready_to_publish_evaluator>();
+   register_evaluator<ready_to_publish2_evaluator>();
    register_evaluator<deliver_keys_evaluator>();
    register_evaluator<proof_of_custody_evaluator>();
    register_evaluator<subscribe_evaluator>();

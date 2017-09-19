@@ -12,6 +12,7 @@
 #include <fc/smart_ref_impl.hpp>
 #include <algorithm>
 #include <ipfs/client.h>
+#include <graphene/chain/hardfork.hpp>
 
 namespace decent { namespace seeding {
 namespace bpo = boost::program_options;
@@ -344,18 +345,32 @@ void seeding_plugin_impl::send_ready_to_publish()
    ipfs_client.Id( &json );
 
    while(sritr != sidx.end() ){
-      ready_to_publish_operation op;
-      op.seeder = sritr->seeder;
-      op.space = sritr->free_space;
-      op.price_per_MByte = sritr->price;
-      op.pubKey = get_public_el_gamal_key(sritr->content_privKey);
-      op.ipfs_ID = json["ID"];
-      op.region_code = sritr->region_code;
       signed_transaction tx;
-      tx.operations.push_back(op);
+      if( db.head_block_time()  < HARDFORK_1_TIME ) {
+         ready_to_publish_operation op;
+         op.seeder = sritr->seeder;
+         op.space = sritr->free_space;
+         op.price_per_MByte = sritr->price;
+         op.pubKey = get_public_el_gamal_key(sritr->content_privKey);
+         op.ipfs_ID = json[ "ID" ];
 
-      idump((op));
+         tx.operations.push_back(op);
 
+         idump((op));
+      } else {
+         ready_to_publish2_operation op;
+         op.seeder = sritr->seeder;
+         op.space = sritr->free_space;
+         op.price_per_MByte = sritr->price;
+         op.pubKey = get_public_el_gamal_key(sritr->content_privKey);
+         op.ipfs_ID = json[ "ID" ];
+         op.region_code = sritr->region_code;
+
+         tx.operations.push_back(op);
+
+         idump((op));
+
+      }
       auto dyn_props = database().get_dynamic_global_properties();
       tx.set_reference_block(dyn_props.head_block_id);
       tx.set_expiration(dyn_props.time + fc::seconds(30));

@@ -68,6 +68,14 @@ void ready_to_publish_operation::validate()const
    FC_ASSERT( !ipfs_ID.empty() );
 }
 
+void ready_to_publish2_operation::validate()const
+{
+   FC_ASSERT( fee.amount >= 0 );
+   FC_ASSERT( space > 0 && space <= UINT64_MAX );
+   FC_ASSERT( price_per_MByte >= 0 && price_per_MByte <= UINT32_MAX );
+   FC_ASSERT( !ipfs_ID.empty() );
+}
+
 void proof_of_custody_operation::validate()const
 {
    FC_ASSERT( fee.amount >= 0 );
