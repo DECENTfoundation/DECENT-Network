@@ -41,7 +41,6 @@ Upload_popup::Upload_popup(QWidget* pParent, const std::string& id_modify/* = st
 , m_pStatusCheckTimer(new QTimer(this))
 , m_pDescriptionText(new DecentTextEdit(this, DecentTextEdit::Editor))
 , m_pLifeTime(new QDateEdit(this))
-, m_iKeyParticles(2)
 , m_dPrice(-1)
 , m_id_modify(id_modify)
 {
@@ -80,20 +79,6 @@ Upload_popup::Upload_popup(QWidget* pParent, const std::string& id_modify/* = st
    m_pLifeTime->setCalendarPopup(true);
    m_pLifeTime->setMinimumDate(QDate::currentDate().addDays(1));
    m_pLifeTime->setStyle(QStyleFactory::create("fusion"));
-   //
-   // Key particles
-   //
-   QLabel* pKeypartsLabel = new QLabel(this);
-   pKeypartsLabel->setEnabled(false);
-   pKeypartsLabel->setText(tr("Key particles"));
-
-   QComboBox* pKeypartsCombo = new QComboBox(this);
-   pKeypartsCombo->setStyle(QStyleFactory::create("fusion"));
-
-   for (int r = 2; r <= 7; ++r) {
-      QString val = QString::fromStdString(std::to_string(r));
-      pKeypartsCombo->addItem(val, val);
-   }
    //
    // Price
    //
@@ -162,7 +147,6 @@ Upload_popup::Upload_popup(QWidget* pParent, const std::string& id_modify/* = st
    if (false == m_id_modify.empty())
    {
       m_pLifeTime->setReadOnly(true);
-      pKeypartsCombo->setDisabled(true);
       pBrowseContentButton->setDisabled(true);
       pBrowseSamplesButton->setDisabled(true);
       pSeedersButton->setDisabled(true);
@@ -173,10 +157,6 @@ Upload_popup::Upload_popup(QWidget* pParent, const std::string& id_modify/* = st
    QHBoxLayout* pLifeTimeRow = new QHBoxLayout();
    pLifeTimeRow->addWidget(pLifeTimeLabel);
    pLifeTimeRow->addWidget(m_pLifeTime);
-
-   QHBoxLayout* pKeyRow = new QHBoxLayout();
-   pKeyRow->addWidget(pKeypartsLabel);
-   pKeyRow->addWidget(pKeypartsCombo);
 
    QHBoxLayout* pPriceRow = new QHBoxLayout();
    pPriceRow->addWidget(pPriceLabel);
@@ -203,7 +183,6 @@ Upload_popup::Upload_popup(QWidget* pParent, const std::string& id_modify/* = st
    pMainLayout->addWidget(pTitleText);
    pMainLayout->addWidget(m_pDescriptionText);
    pMainLayout->addLayout(pLifeTimeRow);
-   pMainLayout->addLayout(pKeyRow);
    pMainLayout->addLayout(pPriceRow);
    pMainLayout->addLayout(pSeedersRow);
    pMainLayout->addLayout(pContentRow);
@@ -234,9 +213,6 @@ Upload_popup::Upload_popup(QWidget* pParent, const std::string& id_modify/* = st
                     this, &Upload_popup::slot_SamplesPathChanged);
    QObject::connect(this, &Upload_popup::signal_SamplesPathChange,
                     pSamplesPath, &QLineEdit::setText);
-
-   QObject::connect(pKeypartsCombo, (void (QComboBox::*)(QString const&))&QComboBox::activated,
-                    this, &Upload_popup::slot_KeyParticlesChanged);
 
    QObject::connect(pSeedersButton, &QPushButton::clicked,
                     this, &Upload_popup::slot_ChooseSeeders);
@@ -406,11 +382,6 @@ void Upload_popup::slot_SeederChanged(int iIndex)
 void Upload_popup::slot_TitleChanged(QString const& strTitle)
 {
    m_strTitle = strTitle;
-}
-
-void Upload_popup::slot_KeyParticlesChanged(QString const& strKeyParticles)
-{
-   m_iKeyParticles = strKeyParticles.toLongLong();
 }
 
 void Upload_popup::slot_PriceChanged(QString const& strPrice)
@@ -630,7 +601,6 @@ void Upload_popup::getContents(string const& id,
 void Upload_popup::slot_UploadContent()
 {
    std::string m_life_time = m_pLifeTime->text().toStdString();
-   std::string str_keyparts = std::to_string(m_iKeyParticles);
 
    std::string m_price = QString::number(m_dPrice).toStdString();
 
