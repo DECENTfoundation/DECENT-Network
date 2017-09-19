@@ -1020,6 +1020,17 @@ namespace graphene { namespace wallet {
                                                bool broadcast = false);
 
          /**
+          * @brief Get a list of published price feeds by a miner.
+          *
+          * @param account_name_or_id the name or id of the account
+          * @param count Maximum number of price feeds to fetch (must not exceed 100)
+          * @returns list of price feeds published by the miner
+          * @ingroup WalletCLI
+          */
+         multimap<time_point_sec, price_feed> get_feeds_by_miner(const string& account_name_or_id,
+                                                               const uint32_t count);
+
+         /**
           * @brief Lists all miners registered in the blockchain.
           * This returns a list of all account names that own miners, and the associated miner id,
           * sorted by name.  This lists miners whether they are currently voted in or not.
@@ -1995,6 +2006,7 @@ FC_API( graphene::wallet::wallet_api,
            (create_monitored_asset)
            (update_monitored_asset)
            (publish_asset_feed)
+           (get_feeds_by_miner)
            (price_to_dct)
            (get_asset)
            (get_monitored_asset_data)

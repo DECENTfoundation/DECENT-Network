@@ -692,12 +692,9 @@ void seeding_plugin::plugin_pre_startup( const seeding_plugin_startup_options& s
          mso.content_privKey = seeding_options.content_private_key;
          mso.privKey = seeding_options.seeder_private_key;
          mso.price = seeding_options.seeding_price;
-<<<<<<< HEAD
          mso.region_code = seeding_options.region_code;
 
-=======
          mso.symbol = seeding_options.seeding_symbol;
->>>>>>> origin/seeding_plugin_refactor
       });
    }catch(...){}
    ilog("seeding plugin:  plugin_pre_startup() end");
@@ -718,13 +715,10 @@ void seeding_plugin::plugin_set_program_options(
          ("seeder-private-key", bpo::value<string>(), "Private key of the account controlling this seeder")
          ("free-space", bpo::value<int>(), "Allocated disk space, in MegaBytes")
          ("packages-path", bpo::value<string>()->default_value(""), "Packages storage path")
-<<<<<<< HEAD
-         ("seeding-price", bpo::value<int>(), "Price per MegaBytes")
-         ("region-code", bpo::value<string>()->default_value(""), "Optional ISO 3166-1 alpha-2 two-letter region code")
-=======
+
          ("seeding-price", bpo::value<int>(), "Price amount per MegaBytes")
          ("seeding-symbol", bpo::value<string>()->default_value("DCT"), "Seeding price asset, e.g. DCT" )
->>>>>>> origin/seeding_plugin_refactor
+         ("region-code", bpo::value<string>()->default_value(""), "Optional ISO 3166-1 alpha-2 two-letter region code")
          ;
 }
 

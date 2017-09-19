@@ -1,5 +1,0 @@
-/Users/richardroznovjak/DCT/DECENT-Network/artifacts/prefix/bin/cli_wallet
-/Users/richardroznovjak/DCT/DECENT-Network/artifacts/prefix/bin/DECENT.app/Contents/Info.plist
-/Users/richardroznovjak/DCT/DECENT-Network/artifacts/prefix/bin/DECENT.app/Contents/MacOS/DECENT
-/Users/richardroznovjak/DCT/DECENT-Network/artifacts/prefix/bin/DECENT.app/Contents/Resources/desktop.icns
-/Users/richardroznovjak/DCT/DECENT-Network/artifacts/prefix/bin/decentd
