@@ -48,30 +48,33 @@ namespace graphene { namespace chain {
             account_create_operation,
             account_update_operation,
             asset_create_operation,
-
-            asset_update_operation,
-            asset_publish_feed_operation,
+            asset_issue_operation,
+            asset_fund_fee_pool_operation,
+            asset_reserve_operation,
+            asset_claim_fees_operation,
+            update_user_issued_asset_operation,
+            update_monitored_asset_operation,
+            asset_publish_feed_operation,           // 10
             miner_create_operation,
-
             miner_update_operation,
             miner_update_global_parameters_operation,
             proposal_create_operation,
-            proposal_update_operation, //10
+            proposal_update_operation,
             proposal_delete_operation,
             withdraw_permission_create_operation,
             withdraw_permission_update_operation,
             withdraw_permission_claim_operation,
-            withdraw_permission_delete_operation,
+            withdraw_permission_delete_operation,   //20
             vesting_balance_create_operation,
             vesting_balance_withdraw_operation,
             custom_operation,
             assert_operation,
-            content_submit_operation,//20
+            content_submit_operation,
             request_to_buy_operation,
             leave_rating_and_comment_operation,
             ready_to_publish_operation,
             proof_of_custody_operation,
-            deliver_keys_operation,
+            deliver_keys_operation,                 //30
             subscribe_operation,
             subscribe_by_author_operation,
             automatic_renewal_of_subscription_operation,

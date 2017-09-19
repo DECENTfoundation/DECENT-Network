@@ -363,7 +363,7 @@ void seeding_plugin_impl::send_ready_to_publish()
          dct_price = dct_price * ao.monitored_asset_opts->current_feed.core_exchange_rate;
 
       signed_transaction tx;
-      if( db.head_block_time()  < HARDFORK_1_TIME ) {
+      if( database().head_block_time()  < HARDFORK_1_TIME ) {
          ready_to_publish_operation op;
          op.seeder = sritr->seeder;
          op.space = sritr->free_space;
