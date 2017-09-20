@@ -347,6 +347,7 @@ FC_REFLECT_ENUM( graphene::chain::impl_object_type,
                  (impl_subscription_object_type)
                  (impl_seeding_statistics_object_type)
                  (impl_transaction_detail_object_type)
+                 (impl_messaging_object_type)
                )
 
 FC_REFLECT_TYPENAME( graphene::chain::share_type )

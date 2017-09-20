@@ -304,8 +304,7 @@ namespace graphene { namespace app {
    {
    public:
       messaging_api(application& a);
-      vector<message_object> get_messages_for_receiver(account_id_type id);
-      void put_message(account_id_type sender, account_id_type receiver, std::string text);
+      vector<message_object> get_message_objects(account_id_type id) const;
    private:
       application& _app;
    };
@@ -428,8 +427,7 @@ FC_API(graphene::app::crypto_api,
        (range_get_info)
      )
 FC_API(graphene::app::messaging_api,
-      (get_messages_for_receiver)
-      (put_message)
+      (get_message_objects)
      )
 FC_API(graphene::app::login_api,
        (login)
@@ -439,4 +437,5 @@ FC_API(graphene::app::login_api,
        (network_node)
        (crypto)
        (debug)
+       (messaging)
      )

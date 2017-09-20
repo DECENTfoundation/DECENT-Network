@@ -31,7 +31,6 @@ void messaging_plugin::plugin_initialize(const boost::program_options::variables
       ilog("messaging plugin:  plugin_initialize() begin");
       database().add_index< graphene::db::primary_index < message_index > >();
       _options = &options;
-      //LOAD_VALUE_SET(options, "miner-id", _miners, chain::miner_id_type)
 
       ilog("messaging plugin:  plugin_initialize() end");
    } FC_LOG_AND_RETHROW()
@@ -42,13 +41,6 @@ void messaging_plugin::plugin_startup()
    try {
       ilog("messaging plugin:  plugin_startup() begin");
       graphene::chain::database& d = database();
-
-      //graphene::chain::custom_operation o;
-      //graphene::chain::operation op = o;
-      
-      //const std::vector< std::unique_ptr<graphene::chain::op_evaluator> >& evals = d.get_operation_evaluators();
-      //int which = op.which();
-      //const std::unique_ptr<graphene::chain::op_evaluator>& eval = evals[which];
       
       graphene::chain::custom_evaluator::register_callback(graphene::chain::custom_operation_subtype_messaging, dynamic_cast<custom_operation_interpreter*>(this));
       
@@ -58,14 +50,17 @@ void messaging_plugin::plugin_startup()
 
 void messaging_plugin::plugin_shutdown()
 {
-   
    return;
 }
 
 void_result messaging_plugin::do_evaluate(const custom_operation& o) 
 { 
-   // check: if receiver exist, maximum message size etc.
-   return void_result(); 
+   try {
+      graphene::chain::message_payload pl;
+      o.get_payload(pl);
+      FC_ASSERT(pl.from == o.payer, "Invalid sender in custom operation payload.");
+      return void_result(); 
+   } FC_CAPTURE_AND_RETHROW((o))
 };
 
 void_result messaging_plugin::do_apply(const custom_operation& o) 
@@ -74,9 +69,17 @@ void_result messaging_plugin::do_apply(const custom_operation& o)
 
    database().create<message_object>([&o, &d](message_object& obj)
    {
-      obj.sender  = o.from;
-      obj.receiver = o.to;
+      message_payload pl;
+
+      ((graphene::chain::custom_operation&)o).get_payload(pl);
+      obj.sender  = pl.from;
+      obj.receiver = pl.to;
       obj.created = d.head_block_time();
+      obj.sender_pubkey = pl.pub_from;
+      obj.receiver_pubkey = pl.pub_to;
+      obj.nonce = pl.nonce;
+      obj.data = pl.data;
+      
    });
    return void_result(); 
 };

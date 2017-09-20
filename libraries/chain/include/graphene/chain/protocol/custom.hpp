@@ -25,9 +25,25 @@
 
 #pragma once
 #include <graphene/chain/protocol/base.hpp>
+#include <fc/io/json.hpp>
 
 namespace graphene { namespace chain { 
+   struct message_payload {
+      account_id_type from;
+      account_id_type to;
+      int subtype;
+      std::vector<char> data;
 
+      public_key_type pub_from;
+      public_key_type pub_to;
+      uint64_t nonce = 0;
+
+      void set_message(const fc::ecc::private_key& priv, const fc::ecc::public_key& pub,
+         const string& msg, uint64_t custom_nonce);
+
+      static void get_message(const fc::ecc::private_key& priv,
+         const fc::ecc::public_key& pub, const std::vector<char>& data, std::string& text, uint64_t nonce);
+   };
    enum custom_operation_subtype : int;
    /**
     * @brief provides a generic way to add higher level protocols on top of miner consensus
@@ -52,12 +68,27 @@ namespace graphene { namespace chain {
       account_id_type   fee_payer()const { return payer; }
       void              validate()const;
       share_type        calculate_fee(const fee_parameters_type& k)const;
-      custom_operation_subtype  subtype;
-      account_id_type           from;
-      account_id_type           to;
+
+      void get_payload(message_payload& pl) const
+      {
+         // evaluate() must prohibit empty data
+         FC_ASSERT(data.size());
+         variant tmp = fc::json::from_string(&data[0]);
+         fc::from_variant(tmp, pl);
+      }
+
+      void set_payload(const message_payload& pl)
+      {
+         variant tmp;
+         fc::to_variant(pl, tmp);
+         std::string s = fc::json::to_string(tmp);
+         data = std::vector<char>(s.begin(), s.end());
+      }
    };
 
+   
 } } // namespace graphene::chain
 
+FC_REFLECT( graphene::chain::message_payload, (from)(to)(subtype)(data)(pub_from)(pub_to)(nonce) )
 FC_REFLECT( graphene::chain::custom_operation::fee_parameters_type, (fee)(price_per_kbyte) )
 FC_REFLECT( graphene::chain::custom_operation, (fee)(payer)(required_auths)(id)(data) )

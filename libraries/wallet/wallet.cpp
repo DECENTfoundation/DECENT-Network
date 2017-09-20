@@ -76,6 +76,7 @@
 #include <graphene/wallet/api_documentation.hpp>
 #include <graphene/wallet/reflect_util.hpp>
 #include <graphene/debug_miner/debug_api.hpp>
+#include <graphene/chain/custom_evaluator.hpp>
 
 #include <decent/package/package.hpp>
 
@@ -2703,6 +2704,71 @@ signed_transaction content_cancellation(string author,
       return result;
    };
 
+   vector<message_object> get_message_objects(account_id_type id)const
+   {
+      try {
+         FC_ASSERT(!is_locked());
+         const auto& mapi = _remote_api->messaging();
+         vector<message_object> objects = mapi->get_message_objects(id);
+
+         for (message_object& obj : objects) {
+
+            try {
+               message_payload::get_message(get_private_key(obj.receiver_pubkey), obj.receiver_pubkey, obj.data, obj.text, obj.nonce);
+            }
+            catch (fc::exception& e)
+            {
+               std::cout << "Cannot decrypt message." << std::endl;
+               std::cout << "Error: " << e.what() << std::endl;
+            }
+            catch (...) {
+               std::cout << "Unknown exception in decrypting message" << std::endl;
+            }
+         }
+         return objects;
+      } FC_CAPTURE_AND_RETHROW((id))
+   }
+
+   void put_message(string from, string to, string text)
+   {
+      try {
+      FC_ASSERT(!is_locked());
+      
+      account_object from_account = get_account(from);
+      account_object to_account = get_account(to);
+      account_id_type from_id = from_account.id;
+      account_id_type to_id = get_account_id(to);
+
+      custom_operation cust_op;
+      message_payload pl;
+
+      cust_op.id = graphene::chain::custom_operation_subtype_messaging;
+      cust_op.payer = from_id;
+
+      pl.from = from_id;
+      pl.to = to_id;
+
+      pl.pub_from = from_account.options.memo_key;
+      pl.pub_to = to_account.options.memo_key;
+      if (text.size()) {
+         pl.data = std::vector<char>(text.begin(), text.end());
+         pl.set_message(get_private_key(from_account.options.memo_key),
+            to_account.options.memo_key, text, 0);
+      }
+
+      cust_op.set_payload(pl);
+
+      signed_transaction tx;
+      tx.operations.push_back(cust_op);
+
+      set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees);
+      tx.validate();
+
+      sign_transaction(tx, true);
+
+   } FC_CAPTURE_AND_RETHROW((from)(to)(text)) 
+   }
+
    void dbg_make_mia(string creator, string symbol)
    {
       create_monitored_asset(get_account(creator).name, symbol, 2, "abcd", 3600, 1, true);
@@ -4686,16 +4752,16 @@ void graphene::wallet::detail::submit_transfer_listener::package_seed_complete()
    // FC_ASSERT(!is_locked());
    }
 
-   bool wallet_api::put_message(string from, string to, string text)
+   void wallet_api::put_message(string from, string to, string text)
    {
-      //return my->transfer(from, to, amount, asset_symbol, memo, broadcast);
-      return true;
+      my->put_message(from, to, text);
    }
 
-   vector<message_object> wallet_api::get_messages_by_receiver(string receiver)
+   vector<message_object> wallet_api::get_message_objects(string receiver) const
    {
-      vector<message_object> result;
-      return result;
+      
+      const auto& receiver_id = get_account_id(receiver);
+      return my->get_message_objects(receiver_id);
    }
 
 
