@@ -343,7 +343,7 @@ private:
       FC_ASSERT(miner_private_key);
 
       auto pub_key = miner_private_key->get_public_key();
-      _keys[pub_key] = wif_key;
+      _account_keys[pub_key] = wif_key;
       _wallet.pending_miner_registrations.erase(iter);
    }
 
@@ -494,7 +494,8 @@ public:
       if( !is_locked() )
       {
          plain_keys data;
-         data.keys = _keys;
+         data.account_keys = _account_keys;
+         data.el_gamal_keys = _el_gamal_keys;
          data.checksum = _checksum;
          auto plain_txt = fc::raw::pack(data);
          _wallet.cipher_keys = fc::aes_encrypt( data.checksum, plain_txt );
@@ -721,8 +722,8 @@ public:
 
    fc::ecc::private_key              get_private_key(const public_key_type& id)const
    {
-      auto it = _keys.find(id);
-      FC_ASSERT( it != _keys.end() );
+      auto it = _account_keys.find(id);
+      FC_ASSERT( it != _account_keys.end() );
 
       fc::optional< fc::ecc::private_key > privkey = wif_to_key( it->second );
       FC_ASSERT( privkey );
@@ -760,13 +761,33 @@ public:
       std::copy(owner_keys.begin(), owner_keys.end(), std::inserter(all_keys_for_account, all_keys_for_account.end()));
       all_keys_for_account.insert(account.options.memo_key);
 
-      _keys[wif_pub_key] = wif_key;
+      _account_keys[wif_pub_key] = wif_key;
 
       _wallet.update_account(account);
 
       _wallet.extra_keys[account.id].insert(wif_pub_key);
 
       return all_keys_for_account.find(wif_pub_key) != all_keys_for_account.end();
+   }
+
+   bool import_el_gamal_key( string wif_key )
+   {
+      fc::optional<fc::ecc::private_key> optional_private_key = wif_to_key(wif_key);
+      if (!optional_private_key)
+         FC_THROW("Invalid private key");
+
+      DInteger priv_el_gamal_key = decent::encrypt::generate_private_el_gamal_key_from_secret( optional_private_key->get_secret() );
+      DInteger pub_el_gamal_key = decent::encrypt::get_public_el_gamal_key( priv_el_gamal_key );
+
+      DIntegerString pub_el_gamal_key_str = DIntegerString(pub_el_gamal_key);
+      if( _el_gamal_keys.count( pub_el_gamal_key_str ) )
+      {
+         ilog( "the ElGamal key is already imported" );
+         return false;
+      }
+      _el_gamal_keys[ pub_el_gamal_key_str ] = DIntegerString(priv_el_gamal_key);
+      ilog( "importing ElGamal key" );
+      return true;
    }
 
    bool load_wallet_file(string wallet_filename = "")
@@ -1001,13 +1022,13 @@ public:
 
       for( public_key_type& key : paying_keys )
       {
-         auto it = _keys.find(key);
-         if( it != _keys.end() )
+         auto it = _account_keys.find(key);
+         if( it != _account_keys.end() )
          {
             fc::optional< fc::ecc::private_key > privkey = wif_to_key( it->second );
             if( !privkey.valid() )
             {
-               FC_ASSERT( false, "Malformed private key in _keys" );
+               FC_ASSERT( false, "Malformed private key in _account_keys" );
             }
             tx.sign( *privkey, _chain_id );
          }
@@ -1031,7 +1052,7 @@ public:
       {
          fc::ecc::private_key derived_private_key = derive_private_key(key_to_wif(parent_key), key_index);
          graphene::chain::public_key_type derived_public_key = derived_private_key.get_public_key();
-         if( _keys.find(derived_public_key) == _keys.end() )
+         if( _account_keys.find(derived_public_key) == _account_keys.end() )
          {
             if (number_of_consecutive_unused_keys)
             {
@@ -1112,11 +1133,11 @@ public:
 
          for( public_key_type& key : paying_keys )
          {
-            auto it = _keys.find(key);
-            if( it != _keys.end() )
+            auto it = _account_keys.find(key);
+            if( it != _account_keys.end() )
             {
                fc::optional< fc::ecc::private_key > privkey = wif_to_key( it->second );
-               FC_ASSERT( privkey.valid(), "Malformed private key in _keys" );
+               FC_ASSERT( privkey.valid(), "Malformed private key in _account_keys" );
                tx.sign( *privkey, _chain_id );
             }
          }
@@ -1585,11 +1606,11 @@ public:
 
          for( public_key_type& key : approving_key_set )
          {
-            auto it = _keys.find(key);
-            if( it != _keys.end() )
+            auto it = _account_keys.find(key);
+            if( it != _account_keys.end() )
             {
                fc::optional<fc::ecc::private_key> privkey = wif_to_key( it->second );
-               FC_ASSERT( privkey.valid(), "Malformed private key in _keys" );
+               FC_ASSERT( privkey.valid(), "Malformed private key in _account_keys" );
                tx.sign( *privkey, _chain_id );
             }
             /// TODO: if transaction has enough signatures to be "valid" don't add any more,
@@ -2511,7 +2532,9 @@ signed_transaction content_cancellation(string author,
       decent::encrypt::ShamirSecret ss( co.quorum, co.key_parts.size() );
       decent::encrypt::point message;
 
-      DInteger el_gamal_priv_key = generate_private_el_gamal_key_from_secret ( get_private_key_for_account(buyer_account).get_secret() );
+      const auto& itr_el_gamal = _el_gamal_keys.find( bo.pubKey );
+      FC_ASSERT( itr_el_gamal != _el_gamal_keys.end(), "wallet does not contain appropriate El Gamal key" );
+      const DInteger& el_gamal_priv_key = itr_el_gamal->second;
 
       int i=0;
       for( const auto key_particle : bo.key_particles )
@@ -2704,7 +2727,8 @@ signed_transaction content_cancellation(string author,
    string                  _wallet_filename;
    wallet_data             _wallet;
 
-   map<public_key_type,string> _keys;
+   map<public_key_type,string> _account_keys;
+   map<DIntegerString, DIntegerString> _el_gamal_keys;
    fc::sha512                  _checksum;
 
    chain_id_type           _chain_id;
@@ -2772,20 +2796,20 @@ signed_transaction content_cancellation(string author,
          } else {
             try {
 
-               FC_ASSERT(wallet._keys.count(op.memo->to) || wallet._keys.count(op.memo->from), "Memo is encrypted to a key ${to} or ${from} not in this wallet.", ("to", op.memo->to)("from",op.memo->from));
-               if( wallet._keys.count(op.memo->to) ) {
+               FC_ASSERT(wallet._account_keys.count(op.memo->to) || wallet._account_keys.count(op.memo->from), "Memo is encrypted to a key ${to} or ${from} not in this wallet.", ("to", op.memo->to)("from",op.memo->from));
+               if( wallet._account_keys.count(op.memo->to) ) {
                   vector<fc::ecc::private_key> keys_to_try_to;
-                  auto my_memo_key = wif_to_key(wallet._keys.at(op.memo->to));
+                  auto my_memo_key = wif_to_key(wallet._account_keys.at(op.memo->to));
 
                   FC_ASSERT(my_memo_key, "Unable to recover private key to decrypt memo. Wallet may be corrupted.");
                   keys_to_try_to.push_back(*my_memo_key);
                   for( auto k: to_account.active.key_auths ) {
-                     auto my_key = wif_to_key(wallet._keys.at(k.first));
+                     auto my_key = wif_to_key(wallet._account_keys.at(k.first));
                      if(my_key)
                         keys_to_try_to.push_back(*my_key);
                   }
                   for( auto k: to_account.owner.key_auths ) {
-                     auto my_key = wif_to_key(wallet._keys.at(k.first));
+                     auto my_key = wif_to_key(wallet._account_keys.at(k.first));
                      if(my_key)
                         keys_to_try_to.push_back(*my_key);
                   }
@@ -2821,17 +2845,17 @@ signed_transaction content_cancellation(string author,
 
                } else {
                   vector<fc::ecc::private_key> keys_to_try_from;
-                  auto my_memo_key = wif_to_key(wallet._keys.at(op.memo->from));
+                  auto my_memo_key = wif_to_key(wallet._account_keys.at(op.memo->from));
 
                   FC_ASSERT(my_memo_key, "Unable to recover private key to decrypt memo. Wallet may be corrupted.");
                   keys_to_try_from.push_back(*my_memo_key);
                   for( auto k: from_account.active.key_auths ) {
-                     auto my_key = wif_to_key(wallet._keys.at(k.first));
+                     auto my_key = wif_to_key(wallet._account_keys.at(k.first));
                      if(my_key)
                         keys_to_try_from.push_back(*my_key);
                   }
                   for( auto k: from_account.owner.key_auths ) {
-                     auto my_key = wif_to_key(wallet._keys.at(k.first));
+                     auto my_key = wif_to_key(wallet._account_keys.at(k.first));
                      if(my_key)
                         keys_to_try_from.push_back(*my_key);
                   }
@@ -3201,8 +3225,8 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
             if (memo)
             {
                item.m_str_description += " - ";
-               auto it = my->_keys.find(memo->to);
-               if (it == my->_keys.end())
+               auto it = my->_account_keys.find(memo->to);
+               if (it == my->_account_keys.end())
                   // memo is encrypted for someone else
                   item.m_str_description += "{encrypted}";
                else
@@ -3278,16 +3302,6 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
       result.pub_key = priv_key.get_public_key();
       return result;
    }
-
-   el_gamal_key_pair wallet_api::generate_el_gamal_keys() const
-   {
-      el_gamal_key_pair ret;
-      ret.private_key = decent::encrypt::generate_private_el_gamal_key();
-      ret.public_key = decent::encrypt::get_public_el_gamal_key( ret.private_key );
-      return ret;
-   }
-      
-   
 
    DInteger wallet_api::generate_encryption_key() const
    {
@@ -3406,13 +3420,23 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
       fc::optional<fc::ecc::private_key> optional_private_key = wif_to_key(wif_key);
       if (!optional_private_key)
          FC_THROW("Invalid private key");
-   //   string base58_public_key = optional_private_key->get_public_key().to_base58();
-   //   copy_wallet_file( "before-import-key-" + base58_public_key );
 
       if( my->import_key(account_name_or_id, wif_key) )
       {
+         my->import_el_gamal_key( wif_key );
+         save_wallet_file(); // import_el_gamal_key saves wallet file
+         return true;
+      }
+      return false;
+   }
+
+   bool wallet_api::import_el_gamal_key( string wif_key )
+   {
+      FC_ASSERT(!is_locked());
+
+      if( my->import_el_gamal_key( wif_key ))
+      {
          save_wallet_file();
-   //      copy_wallet_file( "after-import-key-" + base58_public_key );
          return true;
       }
       return false;
@@ -3901,9 +3925,12 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
    { try {
       FC_ASSERT( !is_locked() );
       encrypt_keys();
-      for( auto & key : my->_keys )
+      for( auto & key : my->_account_keys )
          key.second = key_to_wif(fc::ecc::private_key());
-      my->_keys.clear();
+      for( auto & key : my->_el_gamal_keys )
+         key.second = key_to_wif(fc::ecc::private_key());
+      my->_account_keys.clear();
+      my->_el_gamal_keys.clear();
       my->_checksum = fc::sha512();
       my->self.lock_changed(true);
    } FC_CAPTURE_AND_RETHROW() }
@@ -3915,7 +3942,8 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
       vector<char> decrypted = fc::aes_decrypt(pw, my->_wallet.cipher_keys);
       auto pk = fc::raw::unpack<plain_keys>(decrypted);
       FC_ASSERT(pk.checksum == pw);
-      my->_keys = std::move(pk.keys);
+      my->_account_keys = std::move(pk.account_keys);
+      my->_el_gamal_keys = std::move(pk.el_gamal_keys);
       my->_checksum = pk.checksum;
       my->self.lock_changed(false);
    } FC_CAPTURE_AND_RETHROW() }
@@ -3931,9 +3959,26 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
    map<public_key_type, string> wallet_api::dump_private_keys()
    {
       FC_ASSERT(!is_locked());
-      return my->_keys;
+      return my->_account_keys;
    }
 
+   vector<el_gamal_key_pair_str> wallet_api::dump_el_gamal_keys()
+   {
+      FC_ASSERT( !is_locked() );
+
+      el_gamal_key_pair_str el_gamal_pair;
+      vector<el_gamal_key_pair_str> result;
+      result.reserve( my->_el_gamal_keys.size() );
+
+      for( auto& element : my->_el_gamal_keys )
+      {
+         el_gamal_pair.public_key = element.first;
+         el_gamal_pair.private_key = element.second;
+         result.push_back( el_gamal_pair );
+      }
+
+      return result;
+   }
 
    string wallet_api::get_private_key( public_key_type pubkey )const
    {
@@ -4332,20 +4377,6 @@ pair<account_id_type, vector<account_id_type>> wallet_api::get_author_and_co_aut
       auto sign = privkey.sign_compact(digest);
 
       return fc::to_hex((const char*)sign.begin(), sign.size());
-   }
-
-   el_gamal_key_pair_str wallet_api::get_el_gammal_key(string const& consumer) const {
-      try
-      {
-         FC_ASSERT( !is_locked() );
-         
-         account_object consumer_account = get_account( consumer );
-         el_gamal_key_pair_str res;
-         
-         res.private_key = generate_private_el_gamal_key_from_secret ( my->get_private_key_for_account(consumer_account).get_secret() );
-         res.public_key = decent::encrypt::get_public_el_gamal_key( res.private_key );
-         return res;
-      } FC_CAPTURE_AND_RETHROW( (consumer) )
    }
       
    bool wallet_api::verify_signature(std::string const& str_buffer,

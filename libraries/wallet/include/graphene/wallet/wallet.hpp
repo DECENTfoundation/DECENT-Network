@@ -54,8 +54,9 @@ namespace graphene { namespace wallet {
 
       struct plain_keys
       {
-         map<public_key_type, string>  keys;
-         fc::sha512                    checksum;
+         map<public_key_type, string>              account_keys;
+         map<DIntegerString, DIntegerString>       el_gamal_keys;
+         fc::sha512                                checksum;
       };
 
       struct brain_key_info
@@ -640,6 +641,13 @@ namespace graphene { namespace wallet {
           */
          map<public_key_type, string> dump_private_keys();
 
+/**
+          * @brief Dumps all ElGamal keys imported in the wallet.
+          * @returns a list of pairs of ElGamal keys, indexed by public ElGamal key
+          * @ingroup WalletCLI
+          */
+         vector<el_gamal_key_pair_str> dump_el_gamal_keys();
+
          /**
           * @brief Returns a list of all commands supported by the wallet API.
           *
@@ -759,6 +767,14 @@ namespace graphene { namespace wallet {
           * @ingroup WalletCLI
           */
          bool import_key(string account_name_or_id, string wif_key);
+
+         /**
+          * @brief Imports the El Gamal key derived from private key.
+          *
+          * @param wif_key the private key in WIF format
+          * @ingroup WalletCLI
+          */
+         bool import_el_gamal_key( string wif_key );
 
          /**
           * @brief Imports accounts from the other wallet file
@@ -1625,21 +1641,6 @@ namespace graphene { namespace wallet {
          DInteger restore_encryption_key(std::string account, buying_id_type buying);
 
          /**
-          * @brief Generates private ElGamal key and corresponding public key.
-          * @return Pair of ElGamal keys
-          * @ingroup WalletCLI
-          */
-         el_gamal_key_pair generate_el_gamal_keys() const;
-         
-         /**
-          * @brief Gets unique ElGamal key pair for consumer.
-          * @return Pair of ElGamal keys
-          * @ingroup WalletCLI
-          */
-         el_gamal_key_pair_str get_el_gammal_key(string const& consumer) const;
-
-
-         /**
           * @brief Generates AES encryption key.
           * @return Random encryption key
           * @ingroup WalletCLI
@@ -1881,13 +1882,13 @@ namespace graphene { namespace wallet {
          * @brief Receives messages by receiver
          * @return vector of messages
          */
-         vector<message_object> wallet_api::get_message_objects_for_receiver(string receiver) const;
+         vector<message_object> get_message_objects_for_receiver(string receiver) const;
       };
 
    } }
 
 
-FC_REFLECT( graphene::wallet::plain_keys, (keys)(checksum) )
+FC_REFLECT( graphene::wallet::plain_keys, (account_keys)(el_gamal_keys)(checksum) )
 FC_REFLECT( graphene::wallet::el_gamal_key_pair, (private_key)(public_key) )
 FC_REFLECT( graphene::wallet::el_gamal_key_pair_str, (private_key)(public_key) )
 FC_REFLECT( graphene::wallet::wallet_data,
@@ -1976,12 +1977,14 @@ FC_API( graphene::wallet::wallet_api,
            (is_locked)
            (lock)(unlock)(set_password)
            (dump_private_keys)
+           (dump_el_gamal_keys)
            (list_my_accounts)
            (list_accounts)
            (search_accounts)
            (list_account_balances)
            (list_assets)
            (import_key)
+           (import_el_gamal_key)
            (import_accounts)
            (import_account_keys)
            (suggest_brain_key)
@@ -2049,8 +2052,6 @@ FC_API( graphene::wallet::wallet_api,
            (seeding_startup)
            (restore_encryption_key)
            (generate_encryption_key)
-           (generate_el_gamal_keys)
-           (get_el_gammal_key)
            (subscribe_to_author)
            (subscribe_by_author)
            (set_subscription)

@@ -82,12 +82,14 @@ public:
    DIntegerString(const DIntegerString& _s) {s = _s.s; };
    /* Default constuctor, initializes to zero value */
    DIntegerString();
-   /* Comparision operator */
+   /* Assignment operator */
    DIntegerString& operator=(const std::string& _s) { s=_s; return *this; };
-   /* Comparision operator */
+   /* Assignment operator */
    DIntegerString& operator=(const DInteger& d);
-   /* Comparision operator */
+   /* Assignment operator */
    DIntegerString& operator=(const DIntegerString& _s) { s = _s.s; return *this;};
+   /* Comparison operator */
+   bool operator<(const DIntegerString& _s)const { return s < _s.s; };
 };
 
 /*****
