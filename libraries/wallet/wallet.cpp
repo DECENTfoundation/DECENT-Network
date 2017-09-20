@@ -4762,9 +4762,9 @@ void graphene::wallet::detail::submit_transfer_listener::package_seed_complete()
    // FC_ASSERT(!is_locked());
    }
 
-   void wallet_api::send_message(const std::string& from, string to, string text)
+   signed_transaction wallet_api::send_message(const std::string& from, string to, string text, bool broadcast)
    {
-      my->send_message(from, to, text);
+      return my->send_message(from, to, text, broadcast);
    }
 
    vector<message_object> wallet_api::get_message_objects(const std::string& receiver, uint32_t max_count) const
