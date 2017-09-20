@@ -41,6 +41,8 @@
 #include <fc/crypto/hex.hpp>
 #include <fc/smart_ref_impl.hpp>
 
+#include <boost/spirit/home/support/container.hpp>
+
 namespace decent { namespace seeding {
       fc::promise<decent::seeding::seeding_plugin_startup_options>::ptr seeding_promise;
 }}
@@ -536,18 +538,26 @@ namespace graphene { namespace app {
     {
     }
 
-    vector<message_object> messaging_api::get_message_objects_for_receiver(account_id_type id) const
+    vector<message_object> messaging_api::get_message_objects(account_id_type id, uint32_t max_count) const
     {
        FC_ASSERT(_app.chain_database());
        const auto& db = *_app.chain_database();
        const auto& range = db.get_index_type<message_index>().indices().get<by_receiver>().equal_range(id);
+       const auto& index_by_receiver = db.get_index_type<message_index>().indices().get<by_receiver>();
+       auto itr = index_by_receiver.lower_bound(id);
+       itr = range.first;
+
        vector<message_object> result;
-       result.reserve(distance(range.first, range.second));
-       std::for_each(range.first, range.second, [&](const message_object &element) {
-         result.emplace_back(element);
-       });
+       int count = distance(range.first, range.second);
+       if(count)  {
+           result.reserve(count);
+       
+          while (itr != range.second && result.size() < max_count) {
+             result.emplace_back(*itr);
+             itr++;
+          }
+       }
        
        return result;
     }
-
 } } // graphene::app

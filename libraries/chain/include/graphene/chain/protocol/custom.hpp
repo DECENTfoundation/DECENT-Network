@@ -32,7 +32,17 @@ namespace graphene { namespace chain {
       account_id_type from;
       account_id_type to;
       int subtype;
-      vector<char> data;
+      std::vector<char> data;
+
+      public_key_type pub_from;
+      public_key_type pub_to;
+      uint64_t nonce = 0;
+
+      void set_message(const fc::ecc::private_key& priv, const fc::ecc::public_key& pub,
+         const string& msg, uint64_t custom_nonce);
+
+      static void get_message(const fc::ecc::private_key& priv,
+         const fc::ecc::public_key& pub, const std::vector<char>& data, std::string& text, uint64_t nonce);
    };
    enum custom_operation_subtype : int;
    /**
@@ -59,7 +69,7 @@ namespace graphene { namespace chain {
       void              validate()const;
       share_type        calculate_fee(const fee_parameters_type& k)const;
 
-      void get_payload(message_payload& pl)
+      void get_payload(message_payload& pl) const
       {
          // evaluate() must prohibit empty data
          FC_ASSERT(data.size());
@@ -79,6 +89,6 @@ namespace graphene { namespace chain {
    
 } } // namespace graphene::chain
 
-FC_REFLECT( graphene::chain::message_payload, (from)(to)(subtype)(data))
+FC_REFLECT( graphene::chain::message_payload, (from)(to)(subtype)(data)(pub_from)(pub_to)(nonce) )
 FC_REFLECT( graphene::chain::custom_operation::fee_parameters_type, (fee)(price_per_kbyte) )
 FC_REFLECT( graphene::chain::custom_operation, (fee)(payer)(required_auths)(id)(data) )
