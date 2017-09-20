@@ -177,11 +177,13 @@ namespace decent { namespace package {
                               PackageManager& manager,
                               const boost::filesystem::path& content_dir_path,
                               const boost::filesystem::path& samples_dir_path,
-                              const fc::sha256& key)
+                              const fc::sha256& key,
+                              const uint32_t custody_sectors)
                 : PackageTask(package)
                 , _content_dir_path(content_dir_path)
                 , _samples_dir_path(samples_dir_path)
                 , _key(key)
+                , _sectors(custody_sectors)
             {
             }
 
@@ -275,7 +277,7 @@ namespace decent { namespace package {
                         _package._hash = detail::calculate_hash(aes_file_path);
                         PACKAGE_TASK_EXIT_IF_REQUESTED;
                         //calculate custody...
-                        decent::encrypt::CustodyUtils::instance().create_custody_data(aes_file_path, _package._custody_data);
+                        decent::encrypt::CustodyUtils::instance().create_custody_data(aes_file_path, _package._custody_data, _sectors);
                         size += file_size( aes_file_path );
                         const auto cus_file_path = temp_dir_path / "content.cus";
                         size += file_size( cus_file_path );
@@ -366,6 +368,7 @@ namespace decent { namespace package {
             const boost::filesystem::path  _content_dir_path;
             const boost::filesystem::path  _samples_dir_path;
             const fc::sha256               _key;
+            const uint32_t                 _sectors;
         };
 
 
@@ -572,12 +575,12 @@ namespace decent { namespace package {
     PackageInfo::PackageInfo(PackageManager& manager,
                              const boost::filesystem::path& content_dir_path,
                              const boost::filesystem::path& samples_dir_path,
-                             const fc::sha256& key)
+                             const fc::sha256& key, uint32_t custody_sectors)
         : _data_state(DS_UNINITIALIZED)
         , _transfer_state(TS_IDLE)
         , _manipulation_state(MS_IDLE)
         , _parent_dir(manager.get_packages_path())
-        , _create_task(std::make_shared<detail::CreatePackageTask>(*this, manager, content_dir_path, samples_dir_path, key))
+        , _create_task(std::make_shared<detail::CreatePackageTask>(*this, manager, content_dir_path, samples_dir_path, key, custody_sectors))
     {
     }
 
@@ -911,10 +914,10 @@ namespace decent { namespace package {
 
     package_handle_t PackageManager::get_package(const boost::filesystem::path& content_dir_path,
                                                  const boost::filesystem::path& samples_dir_path,
-                                                 const fc::sha256& key)
+                                                 const fc::sha256& key, uint32_t custody_sectors)
     {
         std::lock_guard<std::recursive_mutex> guard(_mutex);
-        package_handle_t package(new PackageInfo(*this, content_dir_path, samples_dir_path, key));
+        package_handle_t package(new PackageInfo(*this, content_dir_path, samples_dir_path, key, custody_sectors));
         return *_packages.insert(package).first;
     }
 

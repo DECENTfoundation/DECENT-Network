@@ -106,7 +106,7 @@ void pm_sandbox()
 
 
     {
-        auto package_handle = package_manager.get_package(content_dir, samples_dir, key);
+        auto package_handle = package_manager.get_package(content_dir, samples_dir, key, DECENT_SECTORS);
         package_handle->add_event_listener(std::make_shared<MyEventListener>());
 
         {

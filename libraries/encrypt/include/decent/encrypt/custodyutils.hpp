@@ -95,8 +95,8 @@ public:
     * @param cd Generated custody data
     * @return
     */
-   int create_custody_data(boost::filesystem::path content, CustodyData & cd){
-      return create_custody_data(content, cd.n, (char*)cd.u_seed.data, cd.pubKey.data);
+   int create_custody_data(boost::filesystem::path content, CustodyData & cd, int sectors){
+      return create_custody_data(content, cd.n, (char*)cd.u_seed.data, cd.pubKey.data, sectors);
    }
 
    /**
@@ -134,7 +134,7 @@ public:
     * @param pubKey is generated public key. There must be at least DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED bytes allocated in the pubKey
     * @return 0 if success
     */
-   int create_custody_data(boost::filesystem::path content, uint32_t& n, char u_seed[], unsigned char pubKey[]);
+   int create_custody_data(boost::filesystem::path content, uint32_t& n, char u_seed[], unsigned char pubKey[], uint32_t sectors);
    /**
     * Create proof of custody out of content.zip stored in path. content.cus must exist in the same directory
     * @param content path to content.zip

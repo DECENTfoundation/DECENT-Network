@@ -83,6 +83,7 @@
 #include "json.hpp"
 #include "ipfs/client.h"
 #include <decent/package/package_config.hpp>
+#include <graphene/chain/hardfork.hpp>
 
 #ifndef WIN32
 # include <sys/types.h>
@@ -2342,7 +2343,12 @@ public:
          submit_op.expiration = expiration;
          submit_op.synopsis = synopsis;
 
-         auto package_handle = package_manager.get_package(content_dir, samples_dir, sha_key);
+         uint32_t sectors;
+         if(head_block_time()>HARDFORK_1_TIME )
+            sectors = DECENT_SECTORS;
+         else
+            sectors = DECENT_SECTORS_BIG;
+         auto package_handle = package_manager.get_package(content_dir, samples_dir, sha_key, sectors);
          shared_ptr<submit_transfer_listener> listener_ptr = std::make_shared<submit_transfer_listener>(*this, package_handle, submit_op, protocol);
          _package_manager_listeners.push_back(listener_ptr);
          
@@ -4594,7 +4600,12 @@ pair<account_id_type, vector<account_id_type>> wallet_api::get_author_and_co_aut
       fc::sha256 key1;
       aes_key.Encode((byte*)key1._hash, 32);
 
-      auto pack = PackageManager::instance().get_package(content_dir, samples_dir, key1);
+      uint32_t sectors;
+      if(my->head_block_time()>HARDFORK_1_TIME)
+         sectors = DECENT_SECTORS;
+      else
+         sectors = DECENT_SECTORS_BIG;
+      auto pack = PackageManager::instance().get_package(content_dir, samples_dir, key1, sectors);
       decent::encrypt::CustodyData cd = pack->get_custody_data();
       return std::pair<string, decent::encrypt::CustodyData>(pack->get_hash().str(), cd);
    }

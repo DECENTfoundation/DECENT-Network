@@ -695,7 +695,7 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
 
    void_result ready_to_publish2_evaluator::do_evaluate(const ready_to_publish2_operation& o )
    {try{
-         //FC_ASSERT(db().head_block_time() >= 0 ); //TODO_DECENT HARDFORK reference
+         FC_ASSERT(db().head_block_time() >= HARDFORK_1_TIME ); //TODO_DECENT HARDFORK reference
    }FC_CAPTURE_AND_RETHROW( (o) ) }
 
    void_result ready_to_publish2_evaluator::do_apply(const ready_to_publish2_operation& o )
@@ -715,13 +715,10 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
               so.expiration = db().head_block_time() + 24 * 3600;
               so.ipfs_ID = o.ipfs_ID;
               so.stats = stats;
-              if ( true ) // TODO_DECENT add HARDFORK variable
-              {
-                 if( o.region_code.valid() )
-                    so.region_code = *o.region_code;
-                 else
-                    so.region_code = "";
-              }
+              if( o.region_code.valid() )
+                 so.region_code = *o.region_code;
+              else
+                 so.region_code = "";
          });
       } else
       { //this is republish case
@@ -731,13 +728,11 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
               so.pubKey = o.pubKey;
               so.expiration = db().head_block_time() + 24 * 3600;
               so.ipfs_ID = o.ipfs_ID;
-              if ( true ) // TODO_DECENT add HARDFORK variable
-              {
-                 if( o.region_code.valid() )
-                    so.region_code = *o.region_code;
-                 else
-                    so.region_code = "";
-              }
+
+              if( o.region_code.valid() )
+                 so.region_code = *o.region_code;
+              else
+                 so.region_code = "";
          });
       }
 

@@ -492,7 +492,7 @@ int CustodyUtils::verify_by_miner(const uint32_t &n, const char *u_seed, unsigne
    return res;
 }
 
-int CustodyUtils::create_custody_data(path content, uint32_t &n, char u_seed[], unsigned char pubKey[]) {
+int CustodyUtils::create_custody_data(path content, uint32_t &n, char u_seed[], unsigned char pubKey[], uint32_t sectors) {
    //prepare the files
    std::fstream infile(content.c_str(), std::fstream::binary | std::fstream::in);
    std::ofstream outfile((content.parent_path() / "content.cus").c_str(), std::fstream::binary | std::ios_base::trunc);
@@ -502,7 +502,7 @@ int CustodyUtils::create_custody_data(path content, uint32_t &n, char u_seed[], 
 
    //prepare elements _u, m, seedForU and keys
 
-   element_t u[DECENT_SECTORS]; //TODO_DECENT - HARDFORK_1
+   element_t* u = new element_t[sectors];
    element_t private_key, public_key;
    element_t *sigmas;  //TODO_DECENT
    mpz_t seedForU;
@@ -525,7 +525,7 @@ int CustodyUtils::create_custody_data(path content, uint32_t &n, char u_seed[], 
    mpz_init_set_str(seedForU, buf_str, 16);
    free(buf_str);
 
-   get_u_from_seed(seedForU, u, DECENT_SECTORS);
+   get_u_from_seed(seedForU, u, sectors);
 
 
    element_random(private_key);
@@ -537,9 +537,9 @@ int CustodyUtils::create_custody_data(path content, uint32_t &n, char u_seed[], 
    //create the actual signatures in sigmas
 
    //split_file(infile, n, &m);
-   n = get_n(infile, DECENT_SECTORS);
+   n = get_n(infile, sectors);
 
-   get_sigmas(infile, n, u, private_key, &sigmas, DECENT_SECTORS);
+   get_sigmas(infile, n, u, private_key, &sigmas, sectors);
 
    //save the values to u_seed and pubKey
    element_to_bytes_compressed(pubKey, public_key);
@@ -551,7 +551,8 @@ int CustodyUtils::create_custody_data(path content, uint32_t &n, char u_seed[], 
       outfile.write(buffer, DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED);
    }
 
-   clear_elements(u, DECENT_SECTORS);
+   clear_elements(u, sectors);
+   delete[](u);
    element_clear(private_key);
    element_clear(public_key);
    clear_elements(sigmas, n);
