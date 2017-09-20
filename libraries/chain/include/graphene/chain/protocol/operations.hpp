@@ -49,39 +49,39 @@ namespace graphene { namespace chain {
             account_update_operation,
             asset_create_operation,
             asset_issue_operation,
-            asset_fund_pools_operation,
-            asset_reserve_operation,
-            asset_claim_fees_operation,
-            update_user_issued_asset_operation,
-            update_monitored_asset_operation,
-            asset_publish_feed_operation,           // 10
+            asset_publish_feed_operation,
             miner_create_operation,
             miner_update_operation,
             miner_update_global_parameters_operation,
             proposal_create_operation,
-            proposal_update_operation,
+            proposal_update_operation,      //10
             proposal_delete_operation,
             withdraw_permission_create_operation,
             withdraw_permission_update_operation,
             withdraw_permission_claim_operation,
-            withdraw_permission_delete_operation,   //20
+            withdraw_permission_delete_operation,   //15
             vesting_balance_create_operation,
             vesting_balance_withdraw_operation,
             custom_operation,
             assert_operation,
-            content_submit_operation,
+            content_submit_operation,       //20
             request_to_buy_operation,
             leave_rating_and_comment_operation,
             ready_to_publish_operation,
             proof_of_custody_operation,
-            deliver_keys_operation,                 //30
+            deliver_keys_operation,                 //25
             subscribe_operation,
             subscribe_by_author_operation,
             automatic_renewal_of_subscription_operation,
             report_stats_operation,
-            set_publishing_manager_operation,
+            set_publishing_manager_operation, //30
             set_publishing_right_operation,
             content_cancellation_operation,
+            asset_fund_pools_operation,
+            asset_reserve_operation,
+            asset_claim_fees_operation,     //35
+            update_user_issued_asset_operation,
+            update_monitored_asset_operation,
             ready_to_publish2_operation,
             disallow_automatic_renewal_of_subscription_operation,  // VIRTUAL
             return_escrow_submission_operation,                    // VIRTUAL
