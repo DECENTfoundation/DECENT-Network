@@ -2000,15 +2000,13 @@ namespace graphene { namespace wallet {
          /**
          * @brief Send text message
          */
-
-         void put_message(string from, string to, string text);
+         signed_transaction send_message(const std::string& from, string to, string text, bool broadcast);
 
          /**
          * @brief Receives message objects by receiver
          * @return vector of message objects
          */
-         vector<message_object> get_messages_by_receiver(string receiver);
-
+         vector<message_object> wallet_api::get_message_objects(const std::string& receiver, uint32_t max_count) const;
       };
 
    } }
@@ -2219,6 +2217,6 @@ FC_API( graphene::wallet::wallet_api,
            (verify_signature)
            (head_block_time)
            (get_proposed_transactions)
-           (put_message)
+           (send_message)
            (get_message_objects)
 )

@@ -2704,12 +2704,12 @@ signed_transaction content_cancellation(string author,
       return result;
    };
 
-   vector<message_object> get_message_objects(account_id_type id)const
+   vector<message_object> get_message_objects(account_id_type id, uint32_t max_count)const
    {
       try {
          FC_ASSERT(!is_locked());
          const auto& mapi = _remote_api->messaging();
-         vector<message_object> objects = mapi->get_message_objects(id);
+         vector<message_object> objects = mapi->get_message_objects(id, max_count);
 
          for (message_object& obj : objects) {
 
@@ -2729,7 +2729,7 @@ signed_transaction content_cancellation(string author,
       } FC_CAPTURE_AND_RETHROW((id))
    }
 
-   void put_message(string from, string to, string text)
+   signed_transaction send_message(string from, string to, string text, bool broadcast)
    {
       try {
       FC_ASSERT(!is_locked());
@@ -2764,9 +2764,9 @@ signed_transaction content_cancellation(string author,
       set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees);
       tx.validate();
 
-      sign_transaction(tx, true);
+      return sign_transaction(tx, broadcast);
 
-   } FC_CAPTURE_AND_RETHROW((from)(to)(text)) 
+   } FC_CAPTURE_AND_RETHROW((from)(to)(text)(broadcast))
    }
 
    void dbg_make_mia(string creator, string symbol)
@@ -4752,16 +4752,16 @@ void graphene::wallet::detail::submit_transfer_listener::package_seed_complete()
    // FC_ASSERT(!is_locked());
    }
 
-   void wallet_api::put_message(string from, string to, string text)
+   void wallet_api::send_message(const std::string& from, string to, string text)
    {
-      my->put_message(from, to, text);
+      my->send_message(from, to, text);
    }
 
-   vector<message_object> wallet_api::get_message_objects(string receiver) const
+   vector<message_object> wallet_api::get_message_objects(const std::string& receiver, uint32_t max_count) const
    {
       
       const auto& receiver_id = get_account_id(receiver);
-      return my->get_message_objects(receiver_id);
+      return my->get_message_objects(receiver_id, max_count);
    }
 
 
