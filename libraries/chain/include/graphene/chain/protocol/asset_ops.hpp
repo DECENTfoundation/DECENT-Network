@@ -30,28 +30,31 @@ namespace graphene { namespace chain {
 
    bool is_valid_symbol( const string& symbol );
 
-      /**
-       * @brief The asset_options struct contains options available on all assets in the network
-       *
-       * @note Changes to this struct will break protocol compatibility
-       */
-      struct asset_options {
-         /// The maximum supply of this asset which may exist at any given time. This can be as large as
-         /// GRAPHENE_MAX_SHARE_SUPPLY
-         share_type max_supply = GRAPHENE_MAX_SHARE_SUPPLY;
+   /**
+    * @brief The asset_options struct contains options available on all assets in the network
+    *
+    * @note Changes to this struct will break protocol compatibility
+    */
+   struct asset_options {
+      /// The maximum supply of this asset which may exist at any given time. This can be as large as
+      /// GRAPHENE_MAX_SHARE_SUPPLY
+      share_type max_supply = GRAPHENE_MAX_SHARE_SUPPLY;
 
-         /// When a non-core asset is used to pay a fee, the blockchain must convert that asset to core asset in
-         /// order to accept the fee. If this asset's fee pool is funded, the chain will automatically deposite fees
-         /// in this asset to its accumulated fees, and withdraw from the fee pool the same amount as converted at
-         /// the core exchange rate.
-         price core_exchange_rate;
+      /// When a non-core asset is used to pay a fee, the blockchain must convert that asset to core asset in
+      /// order to accept the fee. If this asset's fee pool is funded, the chain will automatically deposite fees
+      /// in this asset to its accumulated fees, and withdraw from the fee pool the same amount as converted at
+      /// the core exchange rate.
+      price core_exchange_rate;
 
-         extensions_type extensions;
+      /// True to allow implicit conversion of this asset to/from core asset.
+      bool is_exchangeable = true;
 
-         /// Perform internal consistency checks.
-         /// @throws fc::exception if any check fails
-         void validate()const;
-      };
+      extensions_type extensions;
+
+      /// Perform internal consistency checks.
+      /// @throws fc::exception if any check fails
+      void validate()const;
+   };
 
    struct monitored_asset_options
    {
@@ -109,6 +112,9 @@ namespace graphene { namespace chain {
       asset_options options;
 
       optional<monitored_asset_options> monitored_asset_opts;
+
+      /// True to allow implicit conversion of this asset to/from core asset.
+      bool is_exchangeable = true;
 
       extensions_type extensions;
 
@@ -169,6 +175,8 @@ namespace graphene { namespace chain {
       optional<account_id_type>   new_issuer;
       uint64_t max_supply;
       price core_exchange_rate;
+      /// True to allow implicit conversion of this asset to/from core asset.
+      bool is_exchangeable;
 
       extensions_type             extensions;
 
@@ -179,14 +187,14 @@ namespace graphene { namespace chain {
     /**
     * @ingroup operations
     */
-   struct asset_fund_fee_pool_operation : public base_operation
+   struct asset_fund_pools_operation : public base_operation
    {
       struct fee_parameters_type { uint64_t fee =  5*GRAPHENE_BLOCKCHAIN_PRECISION/1000; };
 
       asset           fee; ///< core asset
       account_id_type from_account;
-      asset_id_type   asset_id;
-      share_type      amount; ///< core asset
+      asset           uia_asset; ///< this asset
+      asset           dct_asset; ///< core asset
       extensions_type extensions;
 
       account_id_type fee_payer()const { return from_account; }
@@ -223,7 +231,8 @@ namespace graphene { namespace chain {
 
       asset           fee;
       account_id_type issuer;
-      asset           amount_to_claim; /// amount_to_claim.asset_id->issuer must == issuer
+      asset           uia_asset; /// uia_asset.asset_id->issuer must == issuer
+      asset           dct_asset;
       extensions_type extensions;
 
       account_id_type fee_payer()const { return issuer; }
@@ -310,6 +319,7 @@ FC_REFLECT( graphene::chain::monitored_asset_options,
 FC_REFLECT( graphene::chain::asset_options,
             (max_supply)
             (core_exchange_rate)
+            (is_exchangeable)
             (extensions)
 )
 
@@ -317,7 +327,7 @@ FC_REFLECT( graphene::chain::asset_create_operation::fee_parameters_type, (basic
 FC_REFLECT( graphene::chain::asset_issue_operation::fee_parameters_type, (fee)(price_per_kbyte) )
 FC_REFLECT( graphene::chain::update_monitored_asset_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::update_user_issued_asset_operation::fee_parameters_type, (fee) )
-FC_REFLECT( graphene::chain::asset_fund_fee_pool_operation::fee_parameters_type, (fee) )
+FC_REFLECT( graphene::chain::asset_fund_pools_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::asset_reserve_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::asset_publish_feed_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::asset_claim_fees_operation::fee_parameters_type, (fee) )
@@ -330,6 +340,7 @@ FC_REFLECT( graphene::chain::asset_create_operation,
             (description)
             (options)
             (monitored_asset_opts)
+            (is_exchangeable)
             (extensions)
           )
 
@@ -360,6 +371,7 @@ FC_REFLECT( graphene::chain::update_user_issued_asset_operation,
             (new_issuer)
             (max_supply)
             (core_exchange_rate)
+            (is_exchangeable)
             (extensions)
           )
 
@@ -370,18 +382,19 @@ FC_REFLECT( graphene::chain::asset_reserve_operation,
             (extensions)
           )
 
-FC_REFLECT( graphene::chain::asset_fund_fee_pool_operation,
+FC_REFLECT( graphene::chain::asset_fund_pools_operation,
             (fee)
             (from_account)
-            (asset_id)
-            (amount)
+            (uia_asset)
+            (dct_asset)
             (extensions)
           )
 
 FC_REFLECT( graphene::chain::asset_claim_fees_operation,
             (fee)
             (issuer)
-            (amount_to_claim)
+            (uia_asset)
+            (dct_asset)
             (extensions)
           )
 

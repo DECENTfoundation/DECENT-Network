@@ -70,13 +70,13 @@ namespace graphene { namespace chain {
       const asset_object* asset_to_update = nullptr;
    };
 
-   class asset_fund_fee_pool_evaluator : public evaluator<asset_fund_fee_pool_evaluator>
+   class asset_fund_pools_evaluator : public evaluator<asset_fund_pools_evaluator>
    {
    public:
-      typedef asset_fund_fee_pool_operation operation_type;
+      typedef asset_fund_pools_operation operation_type;
 
-      void_result do_evaluate(const asset_fund_fee_pool_operation& op);
-      void_result do_apply(const asset_fund_fee_pool_operation& op);
+      void_result do_evaluate(const asset_fund_pools_operation& op);
+      void_result do_apply(const asset_fund_pools_operation& op);
 
       const asset_dynamic_data_object* asset_dyn_data = nullptr;
    };
@@ -98,6 +98,7 @@ namespace graphene { namespace chain {
 
       void_result do_evaluate( const asset_claim_fees_operation& o );
       void_result do_apply( const asset_claim_fees_operation& o );
+      const asset_dynamic_data_object* asset_dyn_data = nullptr;
    };
 
    class asset_publish_feeds_evaluator : public evaluator<asset_publish_feeds_evaluator>

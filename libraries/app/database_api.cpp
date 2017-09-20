@@ -136,7 +136,8 @@ namespace graphene { namespace app {
       vector<asset_object>           list_assets(const string& lower_bound_symbol, uint32_t limit)const;
       vector<optional<asset_object>> lookup_asset_symbols(const vector<string>& symbols_or_ids)const;
       share_type get_new_asset_per_block() const;
-      share_type get_asset_per_block_by_block_num(uint32_t block_num) const;
+      share_type get_asset_per_block_by_block_num(uint32_t block_num)const;
+      asset price_to_dct( asset price )const;
 
       // Miners
       vector<optional<miner_object>> get_miners(const vector<miner_id_type>& miner_ids)const;
@@ -1045,12 +1046,20 @@ namespace graphene { namespace app {
                      });
       return result;
    }
-   
 
+   asset database_api::price_to_dct( asset price )const
+   {
+      return my->price_to_dct( price );
+   }
+
+   asset database_api_impl::price_to_dct( asset price )const
+   {
+      return _db.price_to_dct( price );
+   }
    
    //////////////////////////////////////////////////////////////////////
    //                                                                  //
-   // Miners                                                        //
+   // Miners                                                           //
    //                                                                  //
    //////////////////////////////////////////////////////////////////////
    
@@ -1606,9 +1615,9 @@ namespace
          else if(order == "-size")
             search_buying_template<false, by_size>(_db, consumer, term, id, count, result);
          else if(order == "+price")
-            search_buying_template<true, by_price>(_db, consumer, term, id, count, result);
+            search_buying_template<true, by_price_before_exchange>(_db, consumer, term, id, count, result);
          else if(order == "-price")
-            search_buying_template<false, by_price>(_db, consumer, term, id, count, result);
+            search_buying_template<false, by_price_before_exchange>(_db, consumer, term, id, count, result);
          else if(order == "+created")
             search_buying_template<true, by_created>(_db, consumer, term, id, count, result);
          else if(order == "-created")

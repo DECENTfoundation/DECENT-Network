@@ -29,7 +29,8 @@ using decent::encrypt::DInteger;
       uint64_t rating = uint64_t(-1);  //< this is the user rating
       string comment;
       asset price;  //< this is an escrow, initialized by request_to_buy_operation.price then reset to 0 for escrow system and inflation calculations
-      asset paid_price; //< initialized by request_to_buy_operation.price
+      asset paid_price_before_exchange; //< initialized by request_to_buy_operation.price
+      asset paid_price_after_exchange;
       std::string synopsis;   //< initialized by content.synopsis
       vector<account_id_type> seeders_answered;
       vector<decent::encrypt::CiphertextString> key_particles;
@@ -43,11 +44,10 @@ using decent::encrypt::DInteger;
       bool rated_or_commented = false;
       time_point_sec created; //< initialized by content.created
       uint32_t region_code_from;
-#
 
       bool is_open() const { return !( expired || delivered ); }
       bool is_rated() const { return rated_or_commented; }
-      share_type get_price() const { return paid_price.amount; }
+      share_type get_price_before_exchange() const { return paid_price_before_exchange.amount; }
    };
 
 
@@ -60,7 +60,7 @@ using decent::encrypt::DInteger;
    struct by_open_expiration;
    struct by_consumer_open;
    struct by_size;
-   struct by_price;
+   struct by_price_before_exchange;
    struct by_created;
    struct by_purchased;
 
@@ -77,11 +77,11 @@ using decent::encrypt::DInteger;
    };
 
    template <>
-   struct key_extractor<by_price, buying_object>
+   struct key_extractor<by_price_before_exchange, buying_object>
    {
       static share_type get(buying_object const& ob)
       {
-         return ob.get_price();
+         return ob.get_price_before_exchange();
       }
    };
 
@@ -175,8 +175,8 @@ using decent::encrypt::DInteger;
             ordered_non_unique< tag< by_size>,
                   member<buying_object, uint64_t, &buying_object::size>
             >,
-            ordered_non_unique< tag< by_price>,
-                  const_mem_fun<buying_object, share_type, &buying_object::get_price>
+            ordered_non_unique< tag< by_price_before_exchange>,
+                  const_mem_fun<buying_object, share_type, &buying_object::get_price_before_exchange>
             >,
             ordered_non_unique< tag< by_created>,
                   member<buying_object, time_point_sec, &buying_object::created>
@@ -194,5 +194,5 @@ using decent::encrypt::DInteger;
 
 FC_REFLECT_DERIVED(graphene::chain::buying_object,
                    (graphene::db::object),
-                   (consumer)(URI)(synopsis)(price)(paid_price)(seeders_answered)(size)(rating)(comment)(expiration_time)(pubKey)(key_particles)
+                   (consumer)(URI)(synopsis)(price)(paid_price_before_exchange)(paid_price_after_exchange)(seeders_answered)(size)(rating)(comment)(expiration_time)(pubKey)(key_particles)
                    (expired)(delivered)(expiration_or_delivery_time)(rated_or_commented)(created)(region_code_from) )

@@ -186,4 +186,49 @@ void database::deposit_miner_pay(const miner_object& wit, share_type amount)
    return;
 }
 
+asset database::price_to_dct(asset price){
+   if(price.asset_id == asset_id_type() )
+      return price;
+
+   asset_object ao = price.asset_id(*this);
+   graphene::chain::price exchange_rate;
+
+   if(ao.is_monitored_asset())
+   {
+      exchange_rate = ao.monitored_asset_opts->current_feed.core_exchange_rate;
+      FC_ASSERT(!exchange_rate.is_null(), "unable to determine DCT price without price feeds");
+   }
+   else
+   {
+      exchange_rate = ao.options.core_exchange_rate;
+   }
+
+   asset price_in_dct = price * exchange_rate;
+   FC_ASSERT( price_in_dct.asset_id == asset_id_type() );
+
+   return price_in_dct;
+}
+
+bool database::are_assets_exchangeable( const asset_object& payment, const asset_object& price )
+{
+   // DCT -> DCT  ok
+   // DCT -> MIA  ok
+   // DCT -> UIA  must be exchangeable
+
+   // MIA -> DCT | UIA | MIA not allowed
+
+   // UIA -> DCT  must be exchangeable
+   // UIA -> MIA  must be exchangeable
+   // UIA -> UIA  ok
+
+   if( payment.is_monitored_asset() )
+      return false;
+   else if( payment.id == price.id )
+      return true;
+   else if( payment.options.is_exchangeable && price.options.is_exchangeable ) // DCT and MIA assets are always exchangeable
+      return true;
+   else
+      return false;
+}
+
 } }

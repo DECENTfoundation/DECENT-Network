@@ -182,7 +182,7 @@ namespace graphene { namespace wallet {
             // buying_object price is used for other purposes
             // but the GUI relies on buying_object_ex::price
             // so overwrite as a quick fix
-            price = paid_price;
+            price = paid_price_before_exchange;
             this->id = std::string(obj.id);
          }
          
@@ -991,12 +991,13 @@ namespace graphene { namespace wallet {
        * @param symbol the ticker symbol of the new asset
        * @param precision the number of digits of precision to the right of the decimal point,
        *                  must be less than or equal to 12
-       * @param description asset description. Maximal length is 1000 chars.
+       * @param description asset description. Maximal length is 1000 chars
        * @param max_supply the maximum supply of this asset which may exist at any given time
        * @param core_exchange_rate Core_exchange_rate technically needs to store the asset ID of
        *               this new asset. Since this ID is not known at the time this operation is
        *               created, create this price as though the new asset has instance ID 1, and
-       *               the chain will overwrite it with the new asset's ID.
+       *               the chain will overwrite it with the new asset's ID
+       * @param is_exchangeable True to allow implicit conversion of this asset to/from core asset
        * @param broadcast true to broadcast the transaction on the network
        * @returns the signed transaction creating a new asset
        * @ingroup WalletCLI
@@ -1007,6 +1008,7 @@ namespace graphene { namespace wallet {
                                                   string description,
                                                   uint64_t max_supply,
                                                   price core_exchange_rate,
+                                                  bool is_exchangeable,
                                                   bool broadcast = false);
 
       /** Issue new shares of an asset.
@@ -1036,6 +1038,7 @@ namespace graphene { namespace wallet {
        * @param description asset description
        * @param max_supply The maximum supply of this asset which may exist at any given time
        * @param core_exchange_rate Price used to convert non-core asset to core asset
+       * @param is_exchangeable True to allow implicit conversion of this asset to/from core asset
        * @param broadcast true to broadcast the transaction on the network
        * @returns the signed transaction updating the bitasset
        * @ingroup WalletCLI
@@ -1045,26 +1048,32 @@ namespace graphene { namespace wallet {
                                                   string description,
                                                   uint64_t max_supply,
                                                   price core_exchange_rate,
+                                                  bool is_exchangeable,
                                                   bool broadcast = false);
 
-      /** Pay into the fee pool for the given asset.
+      /** Pay into the pools for the given asset.
        *
        * User-issued assets can optionally have a pool of the core asset which is
        * automatically used to pay transaction fees for any transaction using that
        * asset (using the asset's core exchange rate).
        *
-       * This command allows anyone to deposit the core asset into this fee pool.
+       * Allows anyone to deposit core/asset into pools.
+       * This pool are used when conversion between assets is needed (paying fees, paying for a content in different asset).
        *
        * @param from the name or id of the account sending the core asset
-       * @param symbol the name or id of the asset whose fee pool you wish to fund
-       * @param amount the amount of the core asset to deposit
+       * @param uia_amount the amount of "this" asset to deposit
+       * @param uia_symbol the name or id of the asset whose pool you wish to fund
+       * @param dct_amount the amount of the core asset to deposit
+       * @param dct_symbol the name or id of the DCT asset
        * @param broadcast true to broadcast the transaction on the network
        * @returns the signed transaction funding the fee pool
        */
-      signed_transaction fund_asset_fee_pool(string from,
-                                             string amount,
-                                             string symbol,
-                                             bool broadcast = false);
+      signed_transaction fund_asset_pools(string from,
+                                          string uia_amount,
+                                          string uia_symbol,
+                                          string dct_amount,
+                                          string dct_symbol,
+                                          bool broadcast = false);
 
       /** Burns the given user-issued asset.
        *
@@ -1081,23 +1090,26 @@ namespace graphene { namespace wallet {
                                        string symbol,
                                        bool broadcast = false);
 
-      /** Transfers accumulated fees back to the issuer's balance.
+      /** Transfers accumulated assets from pools back to the issuer's balance.
        *
-       * @note you cannot claim fees from market-issued asset.
-       * @param amount the amount to claim, in nominal units
-       * @param symbol the name or id of the asset to claim
+       * @note you cannot claim assets from pools of market-issued asset.
+       * @param uia_amount the amount of "this" asset to claim, in nominal units
+       * @param uia_symbol the name or id of the asset to claim
+       * @param dct_amount the amount of DCT asset to claim, in nominal units
+       * @param dct_symbol the name or id of the DCT asset to claim
        * @param broadcast true to broadcast the transaction on the network
        * @returns the signed transaction claiming the fees
        */
-      signed_transaction claim_fees(string amount,
-                                    string symbol,
+      signed_transaction claim_fees(string uia_amount,
+                                    string uia_symbol,
+                                    string dct_amount,
+                                    string dct_symbol,
                                     bool broadcast = false);
 
          /**
-          * @brief Converts price denominated in Monitored asset into DCT, using actual price feed.
-          * @param price price in DCT or monitored asset
+          * @brief Converts asset into DCT, using actual price feed.
+          * @param price asset in DCT, monitored asset or user issued asset
           * @return price in DCT
-          * @ingroup WalletCLI
           */
          asset price_to_dct(asset price);
 
@@ -1537,7 +1549,7 @@ namespace graphene { namespace wallet {
           * @param seeders List of the seeders, which will publish the content
           * @param expiration The expiration time of the content. The content is available to buy till it's expiration time
           * @param synopsis The description of the content
-          * @param broadcast true to broadcast the transaction on the network
+          * @return The signed transaction submitting the content
           * @ingroup WalletCLI
           */
 
@@ -1549,8 +1561,7 @@ namespace graphene { namespace wallet {
                                              vector<regional_price_info> const &price_amounts,
                                              vector<account_id_type> const &seeders,
                                              fc::time_point_sec const &expiration,
-                                             string const &synopsis,
-                                             bool broadcast);
+                                             string const &synopsis);
 
 
          /**
@@ -2006,7 +2017,8 @@ namespace graphene { namespace wallet {
          * @brief Receives message objects by receiver
          * @return vector of message objects
          */
-         vector<message_object> wallet_api::get_message_objects(const std::string& receiver, uint32_t max_count) const;
+         vector<message_object> get_message_objects(const std::string& receiver, uint32_t max_count) const;
+
       };
 
    } }
@@ -2126,7 +2138,7 @@ FC_API( graphene::wallet::wallet_api,
            (create_user_issued_asset)
            (update_user_issued_asset)
            (issue_asset)
-           (fund_asset_fee_pool)
+           (fund_asset_pools)
            (reserve_asset)
            (claim_fees)
            (price_to_dct)

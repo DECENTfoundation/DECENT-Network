@@ -137,6 +137,14 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
          }
       }
 
+      const auto& idx_asset = db().get_index_type<asset_index>().indices().get<by_id>();
+      for( const auto& element : o.price )
+      {
+         const auto& itr_asset = idx_asset.find( element.price.asset_id );
+         FC_ASSERT( itr_asset != idx_asset.end(), "Asset ${a} does not exist",("a",element.price) );
+         FC_ASSERT( RegionCodes::s_mapCodeToName.count( element.region ) , "Invalid region code" );
+      }
+
       FC_ASSERT( o.seeders.size() > 0 );
       FC_ASSERT( o.seeders.size() == o.key_parts.size() );
       FC_ASSERT( db().head_block_time() <= o.expiration);
@@ -392,89 +400,152 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
       }FC_CAPTURE_AND_RETHROW((o))
    }
 
+   bool request_to_buy_evaluator::is_price_sufficient( const asset& payment, const asset& price )
+   {
+      database& d = db();
+
+      asset payment_in_dct = d.price_to_dct( payment );
+      asset price_in_dct = d.price_to_dct( price );
+
+      return payment_in_dct >= price_in_dct;
+   }
+
    void_result request_to_buy_evaluator::do_evaluate(const request_to_buy_operation& o )
    {try{
-      auto& idx = db().get_index_type<content_index>().indices().get<by_URI>();
+      database& d = db();
+
+      auto& idx = d.get_index_type<content_index>().indices().get<by_URI>();
       const auto& content = idx.find( o.URI );
-      FC_ASSERT( content!= idx.end() );
-      FC_ASSERT( o.price <= db().get_balance( o.consumer, o.price.asset_id ) );
+      FC_ASSERT( content != idx.end() );
+      FC_ASSERT( o.price <= d.get_balance( o.consumer, o.price.asset_id ) );
       FC_ASSERT( content->expiration > db().head_block_time() );
 
       optional<asset> price = content->price.GetPrice(o.region_code_from);
 
-      FC_ASSERT( price.valid(), "content not available for this region" );
+      FC_ASSERT( price.valid(), "content is not available for this region" );
 
       FC_ASSERT( !content->is_blocked , "content has been canceled" );
       {
-         auto &range = db().get_index_type<subscription_index>().indices().get<by_from_to>();
+         auto &range = d.get_index_type<subscription_index>().indices().get<by_from_to>();
          const auto &subscription = range.find(boost::make_tuple(o.consumer, content->author));
 
          /// Check whether subscription exists. If so, consumer doesn't need pay for content
-         if (subscription != range.end() && subscription->expiration > db().head_block_time() )
+         if (subscription != range.end() && subscription->expiration > d.head_block_time() )
             is_subscriber = true;
       }
-      
 
-      auto ao = db().get( price->asset_id );
-      FC_ASSERT( price->asset_id == asset_id_type(0) || ao.is_monitored_asset() );
+      asset_object payment_o = d.get( o.price.asset_id );
+      asset_object price_o = d.get( price->asset_id );
+      FC_ASSERT( d.are_assets_exchangeable( payment_o, price_o ), "price for the content and price of the content are not exchangeable");
 
-      asset dct_price;
-      //if the price is in fiat, calculate price in DCT with current exchange rate...
-      if( ao.is_monitored_asset() ){
-         auto rate = ao.monitored_asset_opts->current_feed.core_exchange_rate;
-         FC_ASSERT(!rate.is_null(), "No price feed for this asset");
-         dct_price = *price * rate;
-      }else{
-         dct_price = *price;
+      skip_exchange = (o.price.asset_id == price->asset_id) || ( o.price.asset_id == asset_id_type() && price_o.is_monitored_asset() );
+      if( !is_subscriber && !skip_exchange )
+      {
+         FC_ASSERT( is_price_sufficient( o.price, *price ) );
+
+         if( o.price.asset_id == asset_id_type() )    // payment in DCT's, price in UIA's
+         {
+            asset payment_in_uia = o.price * price_o.options.core_exchange_rate;
+            const asset_dynamic_data_object& addo = price_o.dynamic_data(d);
+            FC_ASSERT( o.price.amount <= addo.core_pool , "Asset ${uia} does not have enough balance in core_pool",("uia",price_o.symbol));
+            FC_ASSERT( payment_in_uia.amount <= addo.asset_pool , "Asset ${uia} does not have enough balance in asset_pool",("uia",price_o.symbol));
+         }
+         else                                         // payment in UIA's, price in DCT's or in MIA's
+         {
+            asset payment_in_dct = o.price * payment_o.options.core_exchange_rate;
+            const asset_dynamic_data_object& addo = payment_o.dynamic_data(d);
+            FC_ASSERT( payment_in_dct.amount <= addo.core_pool , "Asset ${uia} does not have enough balance in core_pool",("uia",payment_o.symbol));
+            FC_ASSERT( o.price.amount <= addo.asset_pool , "Asset ${uia} does not have enough balance in asset_pool",("uia",payment_o.symbol));
+         }
       }
 
-      if( !is_subscriber )
-      FC_ASSERT( o.price >= dct_price );
       return void_result(); 
    }FC_CAPTURE_AND_RETHROW( (o) ) }
 
+   void request_to_buy_evaluator::process_payment_and_exchange( const account_id_type& payer, const asset& payment, const asset& price )
+   {
+      database& d = db();
+
+      if( !is_subscriber && !skip_exchange )
+      {
+         if( payment.asset_id == asset_id_type() ) //payment in DCT's, price in UIA's
+         {
+            asset_object ao_price = price.asset_id(d);
+            asset_dynamic_data_object addo = ao_price.dynamic_data(d);
+            d.modify<asset_dynamic_data_object>( addo, [&payment, &ao_price]( asset_dynamic_data_object& _addo ){
+               _addo.core_pool += payment.amount;
+               _addo.asset_pool -= (payment * ao_price.options.core_exchange_rate).amount;
+            });
+         }
+         else // payment in UIA's, price in DCT's or in MIA's
+         {
+            asset_object ao_payment = payment.asset_id(d);
+            asset_dynamic_data_object addo = ao_payment.dynamic_data(d);
+            d.modify<asset_dynamic_data_object>( addo, [&payment, &ao_payment]( asset_dynamic_data_object& _addo ){
+               _addo.asset_pool += payment.amount;
+               _addo.core_pool -= (payment * ao_payment.options.core_exchange_rate).amount;
+            });
+         }
+      }
+
+      d.adjust_balance( payer, -payment );
+   }
+
    void_result request_to_buy_evaluator::do_apply(const request_to_buy_operation& o )
    {try{
-      asset price = o.price;
-      if( is_subscriber ) //if it is subscription, price is ignored
-         price = asset();
-      db().create<buying_object>([&](buying_object& bo)
-                                 { //create new buying object
-                                    bo.consumer = o.consumer;
-                                    bo.URI = o.URI;
-                                    bo.expiration_time = db().head_block_time() + 24*3600;
-                                    bo.pubKey = o.pubKey;
-                                    bo.price = price;
-                                    bo.paid_price = price;
+      database& d = db();
 
-                                    {
-                                       const auto& idx = db().get_index_type<content_index>().indices().get<by_URI>();
-                                       auto itr = idx.find(o.URI);
-                                       if (itr != idx.end())
-                                       {
-                                          bo.synopsis = itr->synopsis;
-                                          bo.size = itr->size;
-                                          bo.created = itr->created;
-                                       }
-                                    }
-                                    bo.region_code_from = o.region_code_from;
-                                 });
-
-      db().adjust_balance( o.consumer, -price );
-
-      const auto& idx = db().get_index_type<content_index>().indices().get<by_URI>();
+      const auto& idx = d.get_index_type<content_index>().indices().get<by_URI>();
       const auto& content = idx.find( o.URI );
-      const auto& idx2 = db().get_index_type<seeding_statistics_index>().indices().get<by_seeder>();
+
+      asset payment_before_exchange = o.price;
+      asset payment_after_exchange = o.price;
+
+      // calculates payment_after_exchange. If exchange is not needed ( payment and price are in the same asset ),
+      // payment_before_exchange == payment_after_exchange
+      if( !skip_exchange )
+      {
+         if( payment_before_exchange.asset_id == asset_id_type() )   // payment in DCT's, price in UIA's
+            payment_after_exchange = payment_after_exchange * price_o.options.core_exchange_rate;
+         else                                                        // payment in UIA's, price in DCT's or in MIA's
+            payment_after_exchange = payment_after_exchange * payment_o.options.core_exchange_rate;
+      }
+
+      if( is_subscriber ) //if it is subscription, price is ignored
+      {
+         payment_before_exchange = asset( 0, payment_before_exchange.asset_id );
+         payment_after_exchange = asset( 0, payment_after_exchange.asset_id );
+      }
+
+      const auto& object = db().create<buying_object>([&](buying_object& bo)
+                                                      { //create new buying object
+                                                         bo.consumer = o.consumer;
+                                                         bo.URI = o.URI;
+                                                         bo.expiration_time = d.head_block_time() + 24*3600;
+                                                         bo.pubKey = o.pubKey;
+
+                                                         bo.price = payment_after_exchange; // escrow, will be reset to zero
+                                                         bo.paid_price_before_exchange = payment_before_exchange;
+                                                         bo.paid_price_after_exchange = payment_after_exchange;
+
+                                                         bo.synopsis = content->synopsis;
+                                                         bo.size = content->size;
+                                                         bo.created = content->created;
+                                                         bo.region_code_from = o.region_code_from;
+                                                      });
+
+      process_payment_and_exchange( o.consumer, payment_before_exchange, *(content->price.GetPrice(o.region_code_from)) );
+
+      const auto& idx2 = d.get_index_type<seeding_statistics_index>().indices().get<by_seeder>();
       for( auto& element : content->key_parts )
       {
          const auto& stats = idx2.find( element.first );
-         db().modify<seeding_statistics_object>( *stats, [](seeding_statistics_object& so){
+         d.modify<seeding_statistics_object>( *stats, [](seeding_statistics_object& so){
             so.missed_delivered_keys++;
          });
       }
 
-      auto& d = db();
-      db().create<transaction_detail_object>([&o, &d, &price](transaction_detail_object& obj)
+      db().create<transaction_detail_object>([&o, &d, &payment_before_exchange](transaction_detail_object& obj)
                                              {
                                                 obj.m_operation_type = (uint8_t)transaction_detail_object::content_buy;
 
@@ -488,7 +559,7 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
                                                 }
 
                                                 obj.m_to_account = o.consumer;
-                                                obj.m_transaction_amount = price;
+                                                obj.m_transaction_amount = payment_before_exchange;
                                                 obj.m_transaction_fee = o.fee;
                                                 obj.m_timestamp = d.head_block_time();
                                              });
@@ -552,20 +623,20 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
          db().modify<content_object>( *content, []( content_object& co ){ co.times_bought++; });
 
          if( content->co_authors.empty() )
-            db().adjust_balance( content->author, price.amount );
+            db().adjust_balance( content->author, price );
          else
          {
             boost::multiprecision::int128_t price_for_co_author;
             for( auto const &element : content->co_authors )
             {
                price_for_co_author = ( price.amount.value * element.second ) / 10000ll ;
-               db().adjust_balance( element.first, static_cast<share_type>(price_for_co_author) );
+               db().adjust_balance( element.first, asset( static_cast<share_type>(price_for_co_author), price.asset_id) );
                price.amount -= price_for_co_author;
             }
 
             if( price.amount != 0 ) {
                FC_ASSERT( price.amount > 0 );
-               db().adjust_balance(content->author, price.amount);
+               db().adjust_balance(content->author, price);
             }
          }
 

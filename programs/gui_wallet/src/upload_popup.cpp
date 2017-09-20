@@ -666,7 +666,6 @@ void Upload_popup::slot_UploadContent()
       submitCommand += " [" + str_seeders + "]";                           // seeders
       submitCommand += " \"" + m_life_time + "T23:59:59\"";                // expiration
       submitCommand += " \"" + escape_string(synopsis) + "\"";             // synopsis
-      submitCommand += " true";                                            // broadcast
       
       // this is an example how price per regions will be used
       // submitCommand += " [[\"default\", \"0\"], [\"US\", \"10\"]]";

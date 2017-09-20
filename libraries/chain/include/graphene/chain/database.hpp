@@ -265,7 +265,7 @@ namespace graphene { namespace chain {
          time_point_sec   head_block_time()const;
          uint32_t         head_block_num()const;
          block_id_type    head_block_id()const;
-         miner_id_type  head_block_miner()const;
+         miner_id_type    head_block_miner()const;
 
          decltype( chain_parameters::block_interval ) block_interval( )const;
 
@@ -335,6 +335,22 @@ namespace graphene { namespace chain {
          void deposit_cashback(const account_object& acct, share_type amount, bool require_vesting = true);
          // helper to handle miner pay
          void deposit_miner_pay(const miner_object& wit, share_type amount);
+
+         /**
+          * @brief Converts asset into DCT, using actual price feed.
+          * @param price asset in DCT, monitored asset or user issued asset
+          * @return price in DCT
+          */
+         asset price_to_dct( asset price );
+
+         /**
+          * @brief Tests whether two assets are exchangeable
+          * This method does not check balance of asset pools
+          * @param payment Asset
+          * @param price Price of a content
+          * @return true if the assets are exhangeable, false otherwise
+          */
+         bool are_assets_exchangeable( const asset_object& payment, const asset_object& price );
 
          //////////////////// db_debug.cpp ////////////////////
 
