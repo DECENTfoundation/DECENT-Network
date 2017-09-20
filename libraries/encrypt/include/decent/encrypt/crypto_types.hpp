@@ -89,7 +89,7 @@ public:
    /* Assignment operator */
    DIntegerString& operator=(const DIntegerString& _s) { s = _s.s; return *this;};
    /* Comparison operator */
-   bool operator<(const DIntegerString& _s)const { return s < _s.s; };
+   bool operator<(const DIntegerString& _s)const;
 };
 
 /*****

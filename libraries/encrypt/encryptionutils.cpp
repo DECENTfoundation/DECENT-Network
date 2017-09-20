@@ -45,6 +45,14 @@ DIntegerString::DIntegerString(const DInteger& d) { s = d.to_string(); };
 DIntegerString& DIntegerString::operator=(const DInteger& d) { s = d.to_string();return *this;};
 DIntegerString::DIntegerString() { DInteger a=CryptoPP::Integer::Zero();s = a.to_string(); };
 
+bool DIntegerString::operator<(const DIntegerString& _s)const
+{
+   if( s.length() != _s.s.length() )
+      return s.length() < _s.s.length();
+   
+   return s < _s.s;
+}
+
 std::string DInteger::to_string() const
 {
    std::ostringstream oss;
