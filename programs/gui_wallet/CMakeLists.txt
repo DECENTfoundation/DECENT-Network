@@ -77,10 +77,16 @@ if( WIN32 )
              ) 
   set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Yustdafx.h /FIstdafx.h")
   set_source_files_properties(stdafx.cpp PROPERTIES COMPILE_FLAGS "/Ycstdafx.h")
-else()                     
-  target_link_libraries(  DECENT PUBLIC
+else()   
+  if( UPDATE_MANAGER )
+    target_link_libraries(  DECENT PUBLIC
                         Qt5::Core Qt5::Widgets Qt5::Svg graphene_app graphene_net graphene_chain graphene_utilities graphene_wallet wallet_utility package_manager decent_encrypt pbc gmp graphene_account_history decent_seeding graphene_miner graphene_debug_miner graphene_egenesis_decent fc update ${CMAKE_DL_LIBS} ${PLATFORM_SPECIFIC_LIBS}
-                     )  
+                     )
+  else()                  
+    target_link_libraries(  DECENT PUBLIC
+                        Qt5::Core Qt5::Widgets Qt5::Svg graphene_app graphene_net graphene_chain graphene_utilities graphene_wallet wallet_utility package_manager decent_encrypt pbc gmp graphene_account_history decent_seeding graphene_miner graphene_debug_miner graphene_egenesis_decent fc ${CMAKE_DL_LIBS} ${PLATFORM_SPECIFIC_LIBS}
+                     )
+  endif()  
   target_sources(DECENT PUBLIC
                src/rev_history_dlg.cpp
                src/rev_history_dlg.hpp
