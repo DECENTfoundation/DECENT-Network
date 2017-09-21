@@ -57,7 +57,7 @@ void_result messaging_plugin::do_evaluate(const custom_operation& o)
 { 
    try {
       graphene::chain::message_payload pl;
-      o.get_payload(pl);
+      o.get_messaging_payload(pl);
       FC_ASSERT(pl.from == o.payer, "Invalid sender in custom operation payload.");
       return void_result(); 
    } FC_CAPTURE_AND_RETHROW((o))
@@ -71,7 +71,7 @@ void_result messaging_plugin::do_apply(const custom_operation& o)
    {
       message_payload pl;
 
-      ((graphene::chain::custom_operation&)o).get_payload(pl);
+      ((graphene::chain::custom_operation&)o).get_messaging_payload(pl);
       obj.sender  = pl.from;
       obj.receiver = pl.to;
       obj.created = d.head_block_time();
