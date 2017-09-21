@@ -2573,7 +2573,7 @@ signed_transaction content_cancellation(string author,
          for (message_object& obj : objects) {
 
             try {
-               message_payload::get_message(get_private_key(obj.receiver_pubkey), obj.receiver_pubkey, obj.data, obj.text, obj.nonce);
+               message_payload::get_message(get_private_key(obj.receiver_pubkey), obj.sender_pubkey, obj.data, obj.text, obj.nonce);
             }
             catch (fc::exception& e)
             {
