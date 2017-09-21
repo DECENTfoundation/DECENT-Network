@@ -1880,7 +1880,7 @@ namespace graphene { namespace wallet {
          * @brief Receives message objects by receiver
          * @return vector of message objects
          */
-         vector<message_object> wallet_api::get_message_objects(const std::string& receiver, uint32_t max_count) const;
+         vector<message_object> get_message_objects(const std::string& receiver, uint32_t max_count) const;
       };
 
    } }
