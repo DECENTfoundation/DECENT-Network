@@ -113,7 +113,7 @@ FC_REFLECT(
       graphene::chain::real_supply,
       (account_balances)
       (vesting_balances)
-      (escrows)
+      (escrows)(pools)
 )
 FC_REFLECT_DERIVED(
    graphene::chain::budget_record_object,

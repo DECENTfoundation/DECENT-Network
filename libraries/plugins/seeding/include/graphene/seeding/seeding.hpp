@@ -67,6 +67,7 @@ public:
 
    uint32_t space;
    bool downloaded = false;
+   bool deleted = false;
    const content_object& get_content(database &db)const{
       const auto& cidx = db.get_index_type<content_index>().indices().get<graphene::chain::by_URI>();
       const auto& citr = cidx.find(URI);
@@ -266,6 +267,6 @@ class seeding_plugin : public graphene::app::plugin
 }}
 
 FC_REFLECT_DERIVED( decent::seeding::my_seeder_object, (graphene::db::object), (seeder)(content_privKey)(privKey)(free_space)(region_code)(price)(symbol) );
-FC_REFLECT_DERIVED( decent::seeding::my_seeding_object, (graphene::db::object), (URI)(expiration)(cd)(seeder)(key)(space)(downloaded)(_hash) );
+FC_REFLECT_DERIVED( decent::seeding::my_seeding_object, (graphene::db::object), (URI)(expiration)(cd)(seeder)(key)(space)(downloaded)(deleted)(_hash) );
 
 

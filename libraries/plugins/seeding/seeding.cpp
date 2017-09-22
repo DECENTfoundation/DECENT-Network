@@ -265,7 +265,7 @@ void seeding_plugin_impl::release_package(const my_seeding_object &mso, decent::
    package_handle->stop_seeding();
    package_handle->remove(true);
    pm.release_package(package_handle);
-   database().remove(mso);
+   database().modify<my_seeding_object>(mso,[](my_seeding_object& _mso){_mso.deleted = true;});
    return;
 }
 
@@ -284,8 +284,7 @@ seeding_plugin_impl::generate_pors()
    for (const auto& mso : seeding_idx ) {
       //Collect data first...
 
-      ilog("seeding plugin_impl:  generate_pors() processing content ${c}, object ${o}", ("c", mso.URI)("o",mso));
-      if(!mso.downloaded)
+      if(!mso.downloaded || mso.deleted )
          continue;
       ilog("seeding plugin_impl:  generate_pors() content ${c} downloaded, continue processing", ("c", mso.URI));
       auto package_handle = pm.get_package(mso.URI, mso._hash);
