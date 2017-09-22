@@ -19,7 +19,7 @@ public:
 protected:
    virtual void task() override;
 private:
-   virtual bool is_base_class(){return false;};
+   virtual bool is_base_class() override {return false;};
 };
 
 class LocalTransferEngine : public TransferEngineInterface {

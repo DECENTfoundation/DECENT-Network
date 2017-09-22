@@ -187,7 +187,10 @@ namespace decent { namespace package {
             {
             }
 
+        private:
+            virtual bool is_base_class()override{return false;};
         protected:
+
             virtual void task() override {
                 PACKAGE_INFO_GENERATE_EVENT(package_creation_start, ( ) );
 
@@ -378,7 +381,8 @@ namespace decent { namespace package {
                 : PackageTask(package)
             {
             }
-
+        private:
+           virtual bool is_base_class() override{return false;};
         protected:
             virtual void task() override {
                 PACKAGE_TASK_EXIT_IF_REQUESTED;
@@ -403,6 +407,9 @@ namespace decent { namespace package {
             {
             }
 
+
+        private:
+            virtual bool is_base_class() override {return false;};
         protected:
             virtual void task() override {
                 PACKAGE_INFO_GENERATE_EVENT(package_extraction_start, ( ) );
@@ -521,8 +528,10 @@ namespace decent { namespace package {
                 : PackageTask(package)
             {
             }
-
+        private:
+           virtual bool is_base_class()override{return false;};
         protected:
+
             virtual void task() override {
                 PACKAGE_INFO_GENERATE_EVENT(package_check_start, ( ) );
 
