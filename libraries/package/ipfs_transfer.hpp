@@ -26,6 +26,7 @@ namespace decent { namespace package {
 
     private:
         uint64_t ipfs_recursive_get_size(const std::string &url);
+        virtual bool is_base_class(){return false;};
         void     ipfs_recursive_get(const std::string &url, const boost::filesystem::path &dest_path);
         ipfs::Client _client;
     };
@@ -39,6 +40,7 @@ namespace decent { namespace package {
         virtual void task() override;
 
     private:
+        virtual bool is_base_class(){return false;};
         ipfs::Client _client;
     };
 
@@ -52,6 +54,7 @@ namespace decent { namespace package {
 
     private:
         ipfs::Client _client;
+        virtual bool is_base_class(){return false;};
     };
 
 

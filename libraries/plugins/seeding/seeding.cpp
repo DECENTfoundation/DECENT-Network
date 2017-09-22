@@ -298,9 +298,10 @@ seeding_plugin_impl::generate_pors()
       if( content.expiration < fc::time_point::now()) {
          ilog("seeding plugin_impl:  generate_pors() content ${c} expired, clenaing up", ("c", mso.URI));
          release_package(mso, package_handle);
+         ilog("seeding plugin_impl:  generate_pors() content cleaned, continue");
          continue;
       }
-
+      ilog("seeding plugin_impl:  generate_pors() content is ok, processing");
 
       /*
        * calculate time when next PoR has to be sent out. The time shall be:
