@@ -262,7 +262,7 @@ seeding_plugin_impl::generate_por_int(const my_seeding_object &mso, decent::pack
 void seeding_plugin_impl::release_package(const my_seeding_object &mso, decent::package::package_handle_t package_handle){
    ilog("seeding plugin_impl:  generate_por() - content expired, cleaning up");
    auto& pm = decent::package::PackageManager::instance();
-   package_handle->stop_seeding();
+   package_handle->stop_seeding("", true);
    package_handle->remove(true);
    pm.release_package(package_handle);
    database().modify<my_seeding_object>(mso,[](my_seeding_object& _mso){_mso.deleted = true;});
