@@ -398,7 +398,8 @@ real_supply database::get_real_supply()const
    const auto& abidx = get_index_type<account_balance_index>().indices().get<by_id>();
    auto abitr = abidx.begin();
    while( abitr != abidx.end() ){
-      total.account_balances += abitr->balance;
+      if( abitr->asset_type == asset_id_type() )
+         total.account_balances += abitr->balance;
       ++abitr;
    }
 
@@ -421,6 +422,12 @@ real_supply database::get_real_supply()const
    while( bitr != bidx.end() ){
       total.escrows += bitr->price.amount;
       ++bitr;
+   }
+
+   const auto& aidx = get_index_type<asset_index>().indices().get<by_id>();
+   for(const auto& a: aidx){
+      const auto& ad = a.dynamic_asset_data_id(*this);
+      total.pools += ad.core_pool;
    }
    return total;
 }

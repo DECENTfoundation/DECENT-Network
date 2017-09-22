@@ -739,6 +739,7 @@ namespace decent { namespace package {
             FC_THROW("seeding protocol of the package must be '${proto}'", ("proto", proto) );
         }
 
+
         _current_task = PackageManager::instance().get_proto_transfer_engine(proto).create_stop_seeding_task(*this);
         _current_task->start(block);
     }
