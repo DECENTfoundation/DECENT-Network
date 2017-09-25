@@ -1878,9 +1878,19 @@ namespace graphene { namespace wallet {
 
          /**
          * @brief Receives message objects by receiver
+         * @param reveiver Name of message receiver
+         * @param max_count Maximal number of last messages to be displayed
          * @return vector of message objects
          */
          vector<message_object> get_message_objects(const std::string& receiver, uint32_t max_count) const;
+
+         /**
+         * @brief Receives messages by receiver
+         * @param reveiver Name of message receiver
+         * @param max_count Maximal number of last messages to be displayed
+         * @return vector of message objects
+         */
+         vector<text_message> get_messages(const std::string& receiver, uint32_t max_count) const;
       };
 
    } }
@@ -2085,4 +2095,5 @@ FC_API( graphene::wallet::wallet_api,
            (get_proposed_transactions)
            (send_message)
            (get_message_objects)
+           (get_messages)
 )
