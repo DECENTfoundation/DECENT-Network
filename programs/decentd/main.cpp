@@ -81,8 +81,39 @@ DWORD WINAPI StopFromGUIThreadProc(void* params)
    s_exit_promise->set_value(SIGTERM);
    return 0;
 }
+BOOL WINAPI HandlerRoutine(_In_ DWORD dwCtrlType) {
+   switch (dwCtrlType)
+   {
+   case CTRL_C_EVENT:
+      elog("Caught stop by Ctrl+C to exit cleanly");
+      s_exit_promise->set_value(SIGTERM);
+      return TRUE;
+   case CTRL_BREAK_EVENT:
+      elog("Caught stop by Ctrl+break to exit cleanly");
+      s_exit_promise->set_value(SIGTERM);
+      return TRUE;
+   case CTRL_CLOSE_EVENT:
+      elog("Caught stop by closing console window to exit cleanly");
+      s_exit_promise->set_value(SIGTERM);
+      return TRUE;
+   case CTRL_LOGOFF_EVENT:
+      elog("Caught stop by logoff event to exit cleanly");
+      s_exit_promise->set_value(SIGTERM);
+      return TRUE;
+   case CTRL_SHUTDOWN_EVENT:
+      elog("Caught stop by shutdown event to exit cleanly");
+      s_exit_promise->set_value(SIGTERM);
+      return TRUE;
+   default:
+      return FALSE;
+   }
+}
+
 #endif
 int main(int argc, char** argv) {
+#ifdef _MSC_VER
+   SetConsoleCtrlHandler(HandlerRoutine, TRUE);
+#endif
    app::application* node = new app::application();
    fc::oexception unhandled_exception;
    try {
