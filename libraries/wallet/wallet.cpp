@@ -2588,6 +2588,29 @@ signed_transaction content_cancellation(string author,
       } FC_CAPTURE_AND_RETHROW((id))
    }
 
+   vector<text_message> get_messages(const std::string& receiver, uint32_t max_count)const
+   {
+         FC_ASSERT(!is_locked());
+         const auto& mapi = _remote_api->messaging();
+         const auto& receiver_id = get_account_id(receiver);
+         vector<message_object> objects = get_message_objects(receiver_id, max_count);
+         vector<text_message> messages;
+
+         for (message_object& obj : objects) {
+            graphene::chain::text_message msg;
+            
+
+            msg.created = obj.created;
+            account_object account_sender = get_account(obj.sender);
+            msg.from = account_sender.name;
+            msg.to = receiver;
+            msg.text = obj.text;
+
+            messages.push_back(msg);
+         }
+         return messages;
+   }
+
    void send_message(string from, string to, string text)
    {
       try {
@@ -4554,6 +4577,11 @@ void graphene::wallet::detail::submit_transfer_listener::package_seed_complete()
       
       const auto& receiver_id = get_account_id(receiver);
       return my->get_message_objects(receiver_id, max_count);
+   }
+
+   vector<text_message> wallet_api::get_messages(const std::string& receiver, uint32_t max_count) const
+   {
+      return my->get_messages(receiver, max_count);
    }
 
 

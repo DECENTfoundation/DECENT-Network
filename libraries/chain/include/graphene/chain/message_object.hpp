@@ -48,6 +48,17 @@ namespace graphene {
 
    };
 
+   class text_message
+   {
+   public:
+      
+      fc::time_point_sec created;
+      std::string from;
+      std::string to;
+      std::string text;// decrypted text
+
+   };
+
    struct by_sender;
    struct by_receiver;
    struct by_created;
@@ -76,5 +87,13 @@ FC_REFLECT_DERIVED(
    (receiver_pubkey)
    (nonce)
    (data)
+   (text)
+)
+
+FC_REFLECT(
+   graphene::chain::text_message,
+   (created)
+   (from)
+   (to)
    (text)
 )
