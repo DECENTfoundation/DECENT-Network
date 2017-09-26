@@ -35,7 +35,6 @@ namespace graphene { namespace chain {
 
 void_result asset_create_evaluator::do_evaluate( const asset_create_operation& op )
 { try {
-
    database& d = db();
 
    auto& asset_indx = d.get_index_type<asset_index>().indices().get<by_symbol>();
@@ -76,13 +75,19 @@ object_id_type asset_create_evaluator::do_apply( const asset_create_operation& o
 
    const asset_object& new_asset =
      db().create<asset_object>( [&]( asset_object& a ) {
-         a.issuer = op.issuer;
-         a.symbol = op.symbol;
-         a.precision = op.precision;
-         a.description = op.description;
-         a.options = op.options;
-         a.monitored_asset_opts = op.monitored_asset_opts;
-         a.dynamic_asset_data_id = dyn_asset.id;
+        a.issuer = op.issuer;
+        a.symbol = op.symbol;
+        a.precision = op.precision;
+        a.description = op.description;
+        a.options = op.options;
+
+        if( a.options.core_exchange_rate.base.asset_id.instance.value == 0 )
+           a.options.core_exchange_rate.quote.asset_id = next_asset_id;
+        else
+           a.options.core_exchange_rate.base.asset_id = next_asset_id;
+        
+        a.monitored_asset_opts = op.monitored_asset_opts;
+        a.dynamic_asset_data_id = dyn_asset.id;
       });
    assert( new_asset.id == next_asset_id );
 
