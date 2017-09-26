@@ -25,6 +25,7 @@
 #include <graphene/seeding/seeding.hpp>
 #include <graphene/account_history/account_history_plugin.hpp>
 #include <graphene/utilities/dirhelper.hpp>
+#include <graphene/messaging/messaging.hpp>
 
 #include <fc/exception/exception.hpp>
 #include <fc/log/console_appender.hpp>
@@ -1172,6 +1173,7 @@ int runDecentD(gui_wallet::BlockChainStartType type, fc::promise<void>::ptr& exi
       auto miner_plug = node->register_plugin<miner_plugin::miner_plugin>();
       auto history_plug = node->register_plugin<account_history::account_history_plugin>();
       auto seeding_plug = node->register_plugin<decent::seeding::seeding_plugin>();
+      auto messaging_plug = node->register_plugin<decent::messaging::messaging_plugin>();
 
       try
       {
