@@ -69,15 +69,14 @@ namespace graphene { namespace chain {
       void              validate()const;
       share_type        calculate_fee(const fee_parameters_type& k)const;
 
-      void get_payload(message_payload& pl) const
+      void get_messaging_payload(message_payload& pl) const
       {
-         // evaluate() must prohibit empty data
          FC_ASSERT(data.size());
          variant tmp = fc::json::from_string(&data[0]);
          fc::from_variant(tmp, pl);
       }
 
-      void set_payload(const message_payload& pl)
+      void set_messaging_payload(const message_payload& pl)
       {
          variant tmp;
          fc::to_variant(pl, tmp);

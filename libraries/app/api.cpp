@@ -553,10 +553,12 @@ namespace graphene { namespace app {
        int count = distance(range.first, range.second);
        if(count)  {
            result.reserve(count);
-       
+           int counter = 0;
           while (itr != range.second && result.size() < max_count) {
-             result.emplace_back(*itr);
+             if(count - counter <= max_count)
+               result.emplace_back(*itr);
              itr++;
+             counter++;
           }
        }
        

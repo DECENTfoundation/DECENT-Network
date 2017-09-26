@@ -2719,7 +2719,7 @@ signed_transaction content_cancellation(string author,
          for (message_object& obj : objects) {
 
             try {
-               message_payload::get_message(get_private_key(obj.receiver_pubkey), obj.receiver_pubkey, obj.data, obj.text, obj.nonce);
+               message_payload::get_message(get_private_key(obj.receiver_pubkey), obj.sender_pubkey, obj.data, obj.text, obj.nonce);
             }
             catch (fc::exception& e)
             {
@@ -2761,7 +2761,7 @@ signed_transaction content_cancellation(string author,
             to_account.options.memo_key, text, 0);
       }
 
-      cust_op.set_payload(pl);
+      cust_op.set_messaging_payload(pl);
 
       signed_transaction tx;
       tx.operations.push_back(cust_op);
