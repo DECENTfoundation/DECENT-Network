@@ -85,7 +85,7 @@ object_id_type asset_create_evaluator::do_apply( const asset_create_operation& o
            a.options.core_exchange_rate.quote.asset_id = next_asset_id;
         else
            a.options.core_exchange_rate.base.asset_id = next_asset_id;
-        
+
         a.monitored_asset_opts = op.monitored_asset_opts;
         a.dynamic_asset_data_id = dyn_asset.id;
       });
@@ -149,7 +149,7 @@ void_result user_issued_asset_update_evaluator::do_evaluate(const update_user_is
 
       const asset_object& a = o.asset_to_update(d);
       FC_ASSERT( !a.is_monitored_asset() && a.id != asset_id_type() );
-      FC_ASSERT( a.options.max_supply >= a.dynamic_asset_data_id(d).current_supply );
+      FC_ASSERT( o.max_supply >= a.dynamic_asset_data_id(d).current_supply );
 
       if( o.new_issuer )
          FC_ASSERT(d.find_object(*o.new_issuer));
