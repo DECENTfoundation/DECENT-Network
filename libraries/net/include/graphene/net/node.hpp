@@ -108,7 +108,7 @@ namespace graphene { namespace net {
           */
          virtual std::vector<item_hash_t> get_block_ids(const std::vector<item_hash_t>& blockchain_synopsis,
                                                         uint32_t& remaining_item_count,
-                                                        uint32_t limit = 2000) = 0;
+                                                        uint32_t limit = 5000) = 0;
 
          /**
           *  Given the hash of the requested data, fetch the body.
