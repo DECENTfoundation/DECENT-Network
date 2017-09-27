@@ -14,12 +14,7 @@ void_result custom_evaluator::do_evaluate(const custom_operation& o)
       std::map<custom_operation_subtype, custom_operation_interpreter*>::const_iterator iter = operation_subtypes.find((custom_operation_subtype)o.id);
       //FC_ASSERT(iter != operation_subtypes.end(), "Messaging plugin not registered.");
       if (iter == operation_subtypes.end()) {
-         if ((custom_operation_subtype)o.id == custom_operation_subtype_messaging) {
-            std::cout << "Warning: Messaging plugin not registered." << std::endl;
-         }
-         else {
-            std::cout << "Warning: plugin for custom operation subtype: " << o.id << std::endl;
-         }
+         // leave it unprocessed
          return void_result();
       }
       (*iter).second->do_evaluate(o);
