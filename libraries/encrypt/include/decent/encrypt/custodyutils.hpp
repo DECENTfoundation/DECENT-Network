@@ -84,7 +84,6 @@ public:
       mpz_t s;
       mpz_init(s);
       mpz_import(s, 5, 1, sizeof(uint32_t), 0, 0, proof.seed.data);
-      FC_ASSERT( proof.mus.size() == DECENT_SECTORS_BIG || proof.mus.size() == DECENT_SECTORS );
       int ret=verify_by_miner(cd.n, (char*)cd.u_seed.data, cd.pubKey.data, proof.sigma.data, proof.mus, s);
       mpz_clear(s);
       return ret;
@@ -95,7 +94,7 @@ public:
     * @param cd Generated custody data
     * @return
     */
-   int create_custody_data(boost::filesystem::path content, CustodyData & cd, int sectors){
+   int create_custody_data(boost::filesystem::path content, CustodyData & cd, uint32_t sectors){
       return create_custody_data(content, cd.n, (char*)cd.u_seed.data, cd.pubKey.data, sectors);
    }
 
@@ -157,24 +156,21 @@ private:
     * Calculate sigmas based on formula
     * TODO_DECENT rework to stram version
     */
-   int get_sigmas(std::fstream &file, const unsigned int n, element_t *u, element_t pk, element_t **sigmas,
-                  uint32_t size);
+   int get_sigmas(std::fstream &file, const unsigned int n, element_t *u, element_t pk, element_t **sigmas, uint32_t sectors);
    /*
     * Generates u from seed seedU. The array must be initalized to at least DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED elements
     */
-   int get_u_from_seed(const mpz_t &seedU, element_s out[][1], uint32_t size);
+   int get_u_from_seed(const mpz_t &seedU, element_t out[], uint32_t sectors);
    int generate_query_from_seed(mpz_t seed, unsigned int q, unsigned int n, uint64_t indices[], element_t* v[]);
-   int compute_mu(std::fstream &file, unsigned int q, uint64_t indices[], element_s v[][1], element_s mu[][1],
-                     uint32_t size);
+   int compute_mu(std::fstream& file, unsigned int q, uint64_t indices[], element_t v[], element_t mu[], uint32_t sectors);
    int compute_sigma(element_t *sigmas, unsigned int q, uint64_t *indices, element_t *v, element_t &sigma);
-   int get_sigma(uint64_t pidx, __mpz_struct mi[][1], element_pp_s u_pp[][1], element_s *pk, element_s out[][1],
-                    uint32_t size);
-   int verify(element_t sigma, unsigned int q, uint64_t *indices, element_t *v, element_t *u, element_t *mu, element_t pubk, uint32_t size);
+   int get_sigma( uint64_t pidx, mpz_t mi[], element_pp_t u_pp[], element_t pk, element_t out[], uint32_t sectors);
+   int verify(element_t sigma, unsigned int q, uint64_t *indices, element_t *v, element_t *u, element_t *mu, element_t pubk, uint32_t sectors);
    int clear_elements(element_t *array, int size);
    int get_number_of_query(int blocks);
-   int get_n(std::fstream &file, uint32_t size);
-   inline int get_m(std::fstream &file, uint32_t i, uint32_t j, mpz_t &out, uint32_t size);
-   inline int get_data(std::fstream &file, uint32_t i, char buffer[], uint32_t size);
+   int get_n(std::fstream &file, uint32_t sectors);
+   inline int get_m(std::fstream &file, uint32_t i, uint32_t j, mpz_t& out, uint32_t sectors);
+   inline int get_data(std::fstream &file, uint32_t i, char buffer[], uint32_t sectors);
 };
 
 
