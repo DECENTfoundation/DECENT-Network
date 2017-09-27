@@ -388,7 +388,7 @@ namespace graphene { namespace net { namespace detail {
       void handle_transaction( const graphene::net::trx_message& transaction_message ) override;
       std::vector<item_hash_t> get_block_ids(const std::vector<item_hash_t>& blockchain_synopsis,
                                              uint32_t& remaining_item_count,
-                                             uint32_t limit = 2000) override;
+                                             uint32_t limit = 5000) override;
       message get_item( const item_id& id ) override;
       chain_id_type get_chain_id() const override;
       std::vector<item_hash_t> get_blockchain_synopsis(const item_hash_t& reference_point, 

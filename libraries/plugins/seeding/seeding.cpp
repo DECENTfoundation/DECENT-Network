@@ -470,12 +470,6 @@ void seeding_plugin_impl::restore_state(){
 
         const auto& c_idx = database().get_index_type<content_index>().indices().get<by_expiration>();
         auto sitr = sidx.begin();
-        {//remove all existing entries and start over
-           const auto &sidx = database().get_index_type<my_seeding_index>();
-           sidx.inspect_all_objects([ & ](const object &o) {
-                database().remove(o);
-           });
-        }
         while( sitr != sidx.end() )
         {
            auto content_itr = c_idx.end();

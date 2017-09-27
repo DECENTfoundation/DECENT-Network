@@ -805,19 +805,17 @@ void Globals::slot_updateAccountBalance()
 
       if (allBalances.empty())
          emit signal_updateAccountBalance(asset(0));
-      else if (allBalances.size() != 1)
-         throw std::runtime_error("an account cannot have more than one balance");
       else
       {
-         auto const& json_balance = allBalances[0]["amount"];
-
          Asset ast_balance = asset(0);
-
-         if (json_balance.is_number())
-            ast_balance.m_amount = json_balance.get<uint64_t>();
-         else
-            ast_balance.m_amount = std::stoll(json_balance.get<string>());
-         
+         for ( auto balance:allBalances ){
+            if(balance["asset_id"].get<string>() == "1.3.0") {
+               if( balance[ "amount" ].is_number())
+                  ast_balance.m_amount = balance[ "amount" ].get<uint64_t>();
+               else
+                  ast_balance.m_amount = std::stoll(balance[ "amount" ].get<string>());
+            }
+         }
          emit signal_updateAccountBalance(ast_balance);
       }
    }
