@@ -260,7 +260,7 @@ seeding_plugin_impl::generate_por_int(const my_seeding_object &mso, decent::pack
 }FC_CAPTURE_AND_RETHROW((mso))}
 
 void seeding_plugin_impl::release_package(const my_seeding_object &mso, decent::package::package_handle_t package_handle){
-   ilog("seeding plugin_impl:  generate_por() - content expired, cleaning up");
+   ilog("seeding plugin_impl:  release_package() - content expired, cleaning up");
    auto& pm = decent::package::PackageManager::instance();
    package_handle->stop_seeding("", true);
    package_handle->remove(true);
@@ -326,7 +326,9 @@ seeding_plugin_impl::generate_pors()
            ("t", generate_time));
       //If we are about to generate PoR, generate it.
       if( fc::time_point(generate_time) < fc::time_point::now() + fc::seconds(POR_WAKEUP_INTERVAL_SEC) ){
-         generate_por_int(mso, package_handle, sritr->privKey);
+         try {
+            generate_por_int(mso, package_handle, sritr->privKey);
+         }catch(...){}
       }
    }
    fc::time_point next_wakeup( fc::time_point::now() + fc::seconds(POR_WAKEUP_INTERVAL_SEC ));
