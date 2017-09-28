@@ -434,8 +434,8 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
             is_subscriber = true;
       }
 
-      asset_object payment_o = d.get( o.price.asset_id );
-      asset_object price_o = d.get( price->asset_id );
+      payment_o = d.get( o.price.asset_id );
+      price_o = d.get( price->asset_id );
       FC_ASSERT( d.are_assets_exchangeable( payment_o, price_o ), "price for the content and price of the content are not exchangeable");
 
       skip_exchange = (o.price.asset_id == price->asset_id) || ( o.price.asset_id == asset_id_type() && price_o.is_monitored_asset() );

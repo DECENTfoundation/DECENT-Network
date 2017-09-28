@@ -56,7 +56,7 @@ database& generic_evaluator::db()const { return trx_state->db(); }
       fee_paying_account_statistics = &fee_paying_account->statistics(d);
 
       fee_asset = &fee.asset_id(d);
-      FC_ASSERT( fee_asset->options.is_exchangeable, "It's not allowed to convert ${a} to another asset",("a",fee_asset->symbol));
+      FC_ASSERT( fee.asset_id == asset_id_type() || fee_asset->options.is_exchangeable, "It's not allowed to convert ${a} to another asset",("a",fee_asset->symbol));
       fee_asset_dyn_data = &fee_asset->dynamic_asset_data_id(d);
 
       if( fee_from_account.asset_id == asset_id_type() )

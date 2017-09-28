@@ -211,7 +211,7 @@ void_result asset_fund_pools_evaluator::do_evaluate(const asset_fund_pools_opera
       database& d = db();
 
       const asset_object& uia_o = o.uia_asset.asset_id(d);
-      FC_ASSERT( !uia_o.is_monitored_asset() );
+      FC_ASSERT( !uia_o.is_monitored_asset() /*&& o.uia_asset.asset_id != asset_id_type()*/ ); //TODO_UPDATE_1
 
       asset_dyn_data = &uia_o.dynamic_data(d);
       FC_ASSERT( o.uia_asset <= db().get_balance( o.from_account, o.uia_asset.asset_id ), "insufficient balance of ${uia}'s.",("uia",uia_o.symbol) );
