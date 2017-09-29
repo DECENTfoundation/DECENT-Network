@@ -83,7 +83,7 @@ namespace graphene { namespace chain {
       void_result do_apply( const ready_to_publish_operation& o );
    };
 
-   class ready_to_publish2_evaluator : public evaluator<ready_to_publish_evaluator>
+   class ready_to_publish2_evaluator : public evaluator<ready_to_publish2_evaluator>
    {
    public:
       typedef ready_to_publish2_operation operation_type;
