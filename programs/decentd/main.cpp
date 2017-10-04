@@ -313,11 +313,11 @@ void write_default_logging_config_to_stream(std::ostream& out)
           "appenders=stderr\n\n"
           "# route messages sent to the \"p2p\" logger to the p2p appender declared above\n"
           "[logger.p2p]\n"
-          "level=debug\n"
+          "level=info\n"
           "appenders=p2p\n\n"
           "# route messages sent to the \"transfer\" logger to the transfer appender declared above\n"
           "[logger.transfer]\n"
-          "level=debug\n"
+          "level=info\n"
           "appenders=transfer\n\n";
 }
 // Log ini parser. It is needed to use small adjustment because original boost ini parser throw exception when reads the same key again.
