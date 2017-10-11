@@ -177,6 +177,7 @@ namespace graphene { namespace net {
       void cache_message( const message& message_to_cache, const message_hash_type& hash_of_message_to_cache,
                         const message_propagation_data& propagation_data, const fc::uint160_t& message_content_hash );
       message get_message( const message_hash_type& hash_of_message_to_lookup );
+      const message* get_message_ptr(const message_hash_type& hash_of_message_to_lookup);
       message_propagation_data get_message_propagation_data( const fc::uint160_t& hash_of_message_contents_to_lookup ) const;
       size_t size() const { return _message_cache.size(); }
     };
@@ -208,6 +209,16 @@ namespace graphene { namespace net {
       if( iter != _message_cache.get<message_hash_index>().end() )
         return iter->message_body;
       FC_THROW_EXCEPTION(  fc::key_not_found_exception, "Requested message not in cache" );
+    }
+
+    const message* blockchain_tied_message_cache::get_message_ptr(const message_hash_type& hash_of_message_to_lookup)
+    {
+       message_cache_container::index<message_hash_index>::type::const_iterator iter =
+          _message_cache.get<message_hash_index>().find(hash_of_message_to_lookup);
+       if (iter != _message_cache.get<message_hash_index>().end()) {
+          return &(iter->message_body);
+       }
+       return nullptr;
     }
 
     message_propagation_data blockchain_tied_message_cache::get_message_propagation_data( const fc::uint160_t& hash_of_message_contents_to_lookup ) const
@@ -1784,8 +1795,8 @@ namespace graphene { namespace net { namespace detail {
         on_blockchain_item_ids_inventory_message(originating_peer, received_message.as<blockchain_item_ids_inventory_message>());
         break;
       case core_message_type_enum::fetch_items_message_type:
-        on_fetch_items_message(originating_peer, received_message.as<fetch_items_message>());
-        break;
+         on_fetch_items_message(originating_peer, received_message.as<fetch_items_message>());
+         break;
       case core_message_type_enum::item_not_available_message_type:
         on_item_not_available_message(originating_peer, received_message.as<item_not_available_message>());
         break;
@@ -2735,24 +2746,21 @@ namespace graphene { namespace net { namespace detail {
       fc::optional<message> last_block_message_sent;
 
       std::list<message> reply_messages;
+      
       for (const item_hash_t& item_hash : fetch_items_message_received.items_to_fetch)
-      {
-        try
-        {
-          message requested_message = _message_cache.get_message(item_hash);
-          dlog("received item request for item ${id} from peer ${endpoint}, returning the item from my message cache",
-               ("endpoint", originating_peer->get_remote_endpoint())
-               ("id", requested_message.id()));
-          reply_messages.push_back(requested_message);
+      {  
+        const message* requested_message_from_cache = _message_cache.get_message_ptr(item_hash);
+        if (requested_message_from_cache) {
+           dlog("received item request for item ${id} from peer ${endpoint}, returning the item from my message cache",
+             ("endpoint", originating_peer->get_remote_endpoint())
+             ("id", requested_message_from_cache->id()));
+                        
+          reply_messages.push_back(*requested_message_from_cache);
           if (fetch_items_message_received.item_type == block_message_type)
-            last_block_message_sent = requested_message;
+            last_block_message_sent = *requested_message_from_cache;
           continue;
         }
-        catch (fc::key_not_found_exception&)
-        {
-           // it wasn't in our local cache, that's ok ask the client
-        }
-
+         
         item_id item_to_fetch(fetch_items_message_received.item_type, item_hash);
         try
         {
@@ -2764,6 +2772,7 @@ namespace graphene { namespace net { namespace detail {
           reply_messages.push_back(requested_message);
           if (fetch_items_message_received.item_type == block_message_type)
             last_block_message_sent = requested_message;
+          
           continue;
         }
         catch (fc::key_not_found_exception&)
@@ -2781,14 +2790,14 @@ namespace graphene { namespace net { namespace detail {
         originating_peer->last_block_delegate_has_seen = block.block_id;
         originating_peer->last_block_time_delegate_has_seen = _delegate->get_block_time(block.block_id);
       }
-
+      
       for (const message& reply : reply_messages)
       {
         if (reply.msg_type == block_message_type)
           originating_peer->send_item(item_id(block_message_type, reply.as<graphene::net::block_message>().block_id));
         else
           originating_peer->send_message(reply);
-      }
+      } 
     }
 
     void node_impl::on_item_not_available_message( peer_connection* originating_peer, const item_not_available_message& item_not_available_message_received )
