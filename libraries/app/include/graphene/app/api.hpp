@@ -302,7 +302,7 @@ namespace graphene { namespace app {
    {
    public:
       messaging_api(application& a);
-      vector<message_object> get_message_objects(account_id_type id, uint32_t max_count) const;
+      vector<message_object> get_message_objects(optional<account_id_type> sender, optional<account_id_type> receiver, uint32_t max_count) const;
    private:
       application& _app;
    };

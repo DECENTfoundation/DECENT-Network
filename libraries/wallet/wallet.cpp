@@ -2563,17 +2563,37 @@ signed_transaction content_cancellation(string author,
       return result;
    };
 
-   vector<message_object> get_message_objects(account_id_type id, uint32_t max_count)const
+   vector<message_object> get_message_objects(optional<account_id_type> sender, optional<account_id_type> receiver, uint32_t max_count)const
    {
       try {
          FC_ASSERT(!is_locked());
          const auto& mapi = _remote_api->messaging();
-         vector<message_object> objects = mapi->get_message_objects(id, max_count);
+         vector<message_object> objects = mapi->get_message_objects(sender, receiver, max_count);
 
          for (message_object& obj : objects) {
 
             try {
-               message_payload::get_message(get_private_key(obj.receiver_pubkey), obj.sender_pubkey, obj.data, obj.text, obj.nonce);
+               auto it = _keys.find(obj.receiver_pubkey);
+               if (it != _keys.end()) {
+                  fc::optional< fc::ecc::private_key > privkey = wif_to_key(it->second);
+                  if (privkey) 
+                     message_payload::get_message(*privkey, obj.sender_pubkey, obj.data, obj.text, obj.nonce);
+                  else
+                     std::cout << "Cannot decrypt message." << std::endl;
+               }
+               else {
+                  it = _keys.find(obj.sender_pubkey);
+                  if (it != _keys.end()) {
+                     fc::optional< fc::ecc::private_key > privkey = wif_to_key(it->second);
+                     if (privkey)
+                        message_payload::get_message(*privkey, obj.receiver_pubkey, obj.data, obj.text, obj.nonce);
+                     else
+                        std::cout << "Cannot decrypt message." << std::endl;
+                  }
+                  else {
+                     std::cout << "Cannot decrypt message." << std::endl;
+                  }
+               }
             }
             catch (fc::exception& e)
             {
@@ -2585,7 +2605,7 @@ signed_transaction content_cancellation(string author,
             }
          }
          return objects;
-      } FC_CAPTURE_AND_RETHROW((id))
+      } FC_CAPTURE_AND_RETHROW((sender)(receiver))
    }
 
    vector<text_message> get_messages(const std::string& receiver, uint32_t max_count)const
@@ -2593,13 +2613,17 @@ signed_transaction content_cancellation(string author,
          FC_ASSERT(!is_locked());
          const auto& mapi = _remote_api->messaging();
          const auto& receiver_id = get_account_id(receiver);
-         vector<message_object> objects = get_message_objects(receiver_id, max_count);
+         auto itr = _wallet.my_accounts.get<by_id>().find(receiver_id);
+         if (itr == _wallet.my_accounts.get<by_id>().end()) 
+            return vector<text_message>();
+         
+         optional<account_id_type> sender_id;
+         vector<message_object> objects = get_message_objects(sender_id, optional<account_id_type>(receiver_id), max_count);
          vector<text_message> messages;
 
          for (message_object& obj : objects) {
             graphene::chain::text_message msg;
             
-
             msg.created = obj.created;
             account_object account_sender = get_account(obj.sender);
             msg.from = account_sender.name;
@@ -2609,6 +2633,34 @@ signed_transaction content_cancellation(string author,
             messages.push_back(msg);
          }
          return messages;
+   }
+
+   vector<text_message> get_sent_messages(const std::string& sender, uint32_t max_count)const
+   {
+      FC_ASSERT(!is_locked());
+      const auto& mapi = _remote_api->messaging();
+      const auto& sender_id = get_account_id(sender);
+      auto itr = _wallet.my_accounts.get<by_id>().find(sender_id);
+      if (itr == _wallet.my_accounts.get<by_id>().end())
+         return vector<text_message>();
+
+      optional<account_id_type> receiver_id;
+      vector<message_object> objects = get_message_objects(optional<account_id_type>(sender_id), receiver_id, max_count);
+      vector<text_message> messages;
+
+      for (message_object& obj : objects) {
+         graphene::chain::text_message msg;
+
+         msg.created = obj.created;
+         account_object account_sender = get_account(obj.sender);
+         account_object account_receiver = get_account(obj.receiver);
+         msg.from = account_sender.name;
+         msg.to = account_receiver.name;
+         msg.text = obj.text;
+
+         messages.push_back(msg);
+      }
+      return messages;
    }
 
    void send_message(string from, string to, string text)
@@ -4572,16 +4624,25 @@ void graphene::wallet::detail::submit_transfer_listener::package_seed_complete()
       my->send_message(from, to, text);
    }
 
-   vector<message_object> wallet_api::get_message_objects(const std::string& receiver, uint32_t max_count) const
+   vector<message_object> wallet_api::get_message_objects(const std::string& sender, const std::string& receiver, uint32_t max_count) const
    {
-      
-      const auto& receiver_id = get_account_id(receiver);
-      return my->get_message_objects(receiver_id, max_count);
+      optional<account_id_type> receiver_id;
+      if(receiver.size())
+         receiver_id = get_account_id(receiver);
+      optional<account_id_type> sender_id;
+      if(sender.size())
+         sender_id = get_account_id(sender);
+      return my->get_message_objects(sender_id, receiver_id, max_count);
    }
 
    vector<text_message> wallet_api::get_messages(const std::string& receiver, uint32_t max_count) const
    {
       return my->get_messages(receiver, max_count);
+   }
+
+   vector<text_message> wallet_api::get_sent_messages(const std::string& sender, uint32_t max_count) const
+   {
+      return my->get_sent_messages(sender, max_count);
    }
 
 

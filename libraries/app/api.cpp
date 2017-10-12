@@ -538,25 +538,68 @@ namespace graphene { namespace app {
     {
     }
 
-    vector<message_object> messaging_api::get_message_objects(account_id_type id, uint32_t max_count) const
+    vector<message_object> messaging_api::get_message_objects(optional<account_id_type> sender, optional<account_id_type> receiver, uint32_t max_count) const
     {
        FC_ASSERT(_app.chain_database());
        const auto& db = *_app.chain_database();
-       const auto& range = db.get_index_type<message_index>().indices().get<by_receiver>().equal_range(id);
-       const auto& index_by_receiver = db.get_index_type<message_index>().indices().get<by_receiver>();
-       auto itr = index_by_receiver.lower_bound(id);
-       itr = range.first;
-
        vector<message_object> result;
-       int count = distance(range.first, range.second);
-       if(count)  {
-           result.reserve(count);
-           int counter = 0;
-          while (itr != range.second && result.size() < max_count) {
-             if(count - counter <= max_count)
-               result.emplace_back(*itr);
-             itr++;
-             counter++;
+
+       if (receiver) {
+        
+          const auto& range = db.get_index_type<message_index>().indices().get<by_receiver>().equal_range(*receiver);
+          const auto& index_by_receiver = db.get_index_type<message_index>().indices().get<by_receiver>();
+          auto itr = index_by_receiver.lower_bound(*receiver);
+          itr = range.first;
+
+          int count = distance(range.first, range.second);
+          if (count) {
+             result.reserve(count);
+             int counter = 0;
+             if (sender) {
+                while (itr != range.second && result.size() < max_count) {
+                   if (count - counter <= max_count && (*itr).sender == *sender)
+                      result.emplace_back(*itr);
+                   itr++;
+                   counter++;
+                }
+             }
+             else {
+                while (itr != range.second && result.size() < max_count) {
+                   if (count - counter <= max_count)
+                      result.emplace_back(*itr);
+                   itr++;
+                   counter++;
+                }
+             }
+          }
+       }
+       else 
+       if(sender) {
+          const auto& range = db.get_index_type<message_index>().indices().get<by_sender>().equal_range(*sender);
+          const auto& index_by_sender = db.get_index_type<message_index>().indices().get<by_sender>();
+          auto itr = index_by_sender.lower_bound(*sender);
+          itr = range.first;
+
+          int count = distance(range.first, range.second);
+          if (count) {
+             result.reserve(count);
+             int counter = 0;
+             if (receiver) {
+                while (itr != range.second && result.size() < max_count) {
+                   if (count - counter <= max_count && (*itr).sender == *receiver)
+                      result.emplace_back(*itr);
+                   itr++;
+                   counter++;
+                }
+             }
+             else {
+                while (itr != range.second && result.size() < max_count) {
+                   if (count - counter <= max_count)
+                      result.emplace_back(*itr);
+                   itr++;
+                   counter++;
+                }
+             }
           }
        }
        
