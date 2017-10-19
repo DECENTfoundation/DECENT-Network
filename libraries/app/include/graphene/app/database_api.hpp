@@ -678,9 +678,6 @@ namespace graphene { namespace app {
          
          fc::sha256 restore_encryption_key(DIntegerString el_gamal_priv_key_string, buying_id_type buying ) const;
 
-
-
-
          /**
           * @brief Search for term in contents (author, title and description)
           * @param term Search term
