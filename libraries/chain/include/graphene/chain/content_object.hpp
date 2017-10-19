@@ -221,7 +221,8 @@ using namespace decent::encrypt;
    enum class EContentObjectApplication
    {
       DecentCore,
-      DecentGo
+      DecentGo,
+      Alax
    };
    enum class EContentObjectType
    {
