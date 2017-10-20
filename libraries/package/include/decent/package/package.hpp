@@ -129,6 +129,7 @@ namespace package {
             UNPACKING,
             DELETTING
         };
+       bool is_virtual = false;
 
     private:
         friend class PackageManager;
@@ -171,7 +172,7 @@ namespace package {
          * @param manager Reference to package manager
          * @param url URL of the package
          */
-        PackageInfo(PackageManager& manager, const std::string& url);
+        PackageInfo(PackageManager& manager, const std::string& url, bool is_virtual = false);
 
     public:
         PackageInfo(const PackageInfo&)             = delete;
@@ -407,7 +408,7 @@ namespace package {
          * @param hash
          * @return
          */
-        package_handle_t get_package(const std::string& url, const fc::ripemd160&  hash);
+        package_handle_t get_package(const std::string& url, const fc::ripemd160&  hash, bool is_virtual = false);
         /**
          * Re-reads existing package out of existing disk structure and returns handle to it.
          * @param package_hash Hash of the package

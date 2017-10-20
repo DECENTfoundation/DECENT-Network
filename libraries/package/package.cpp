@@ -650,14 +650,18 @@ namespace decent { namespace package {
         }
     }
 
-    PackageInfo::PackageInfo(PackageManager& manager, const std::string& url)
-        : _data_state(DS_UNINITIALIZED)
-        , _transfer_state(TS_IDLE)
+     PackageInfo::PackageInfo(PackageManager& manager, const std::string& url, bool is_virtual )
+        : _transfer_state(TS_IDLE)
         , _manipulation_state(MS_IDLE)
         , _url(url)
         , _parent_dir(manager.get_packages_path())
-        , _download_task(manager.get_proto_transfer_engine(detail::get_proto(url)).create_download_task(*this))
     {
+       if(!is_virtual) {
+          _download_task = manager.get_proto_transfer_engine(detail::get_proto(url)).create_download_task(*this);
+          _data_state = DS_UNINITIALIZED;
+       }else
+          _data_state = CHECKED;
+       this->is_virtual = is_virtual;
     }
 
     PackageInfo::~PackageInfo() {
@@ -711,6 +715,8 @@ namespace decent { namespace package {
     }
 
     void PackageInfo::start_seeding(std::string proto, bool block) {
+        if(is_virtual)
+           return;
         std::lock_guard<std::recursive_mutex> guard(_task_mutex);
 
         const std::string url_proto = detail::get_proto(_url);
@@ -732,6 +738,8 @@ namespace decent { namespace package {
     }
 
     void PackageInfo::stop_seeding(std::string proto, bool block) {
+        if(is_virtual)
+           return;
         std::lock_guard<std::recursive_mutex> guard(_task_mutex);
 
         const std::string url_proto = detail::get_proto(_url);
@@ -754,6 +762,7 @@ namespace decent { namespace package {
     }
 
     void PackageInfo::check(bool block) {
+
         std::lock_guard<std::recursive_mutex> guard(_task_mutex);
 
         _current_task.reset(new detail::CheckPackageTask(*this));
@@ -761,6 +770,8 @@ namespace decent { namespace package {
     }
 
     void PackageInfo::remove(bool block) {
+        if(is_virtual)
+           return;
         std::lock_guard<std::recursive_mutex> guard(_task_mutex);
 
         _current_task.reset(new detail::RemovePackageTask(*this));
@@ -769,6 +780,8 @@ namespace decent { namespace package {
 
     void PackageInfo::create_proof_of_custody(const decent::encrypt::CustodyData& cd, decent::encrypt::CustodyProof& proof)const {
        //assume the data are downloaded and available
+       if(is_virtual)
+          return;
        FC_ASSERT(cd.n < 10000000 );
        int ret = decent::encrypt::CustodyUtils::instance().create_proof_of_custody(get_content_file(), cd, proof);
        if( ret != 0 ) {
@@ -845,6 +858,8 @@ namespace decent { namespace package {
     }
    
    uint64_t PackageInfo::get_size() const {
+      if(is_virtual)
+         return 0;
       size_t size=0;
       for(recursive_directory_iterator it( get_package_dir() );
           it != recursive_directory_iterator();
@@ -931,7 +946,7 @@ namespace decent { namespace package {
         return *_packages.insert(package).first;
     }
 
-    package_handle_t PackageManager::get_package(const std::string& url, const fc::ripemd160&  hash)
+    package_handle_t PackageManager::get_package(const std::string& url, const fc::ripemd160&  hash, bool is_virtual)
     {
         std::lock_guard<std::recursive_mutex> guard(_mutex);
         for (auto& package : _packages) {
@@ -942,6 +957,7 @@ namespace decent { namespace package {
             }
         }
         package_handle_t package(new PackageInfo(*this, url));
+        package->is_virtual = is_virtual;
         return *_packages.insert(package).first;
     }
 

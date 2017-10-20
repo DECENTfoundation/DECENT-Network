@@ -817,7 +817,7 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
       FC_ASSERT( content != idx.end(), "content not found" );
       FC_ASSERT( content->expiration > db().head_block_time(), "content expired" );
       //verify that the seed is not too old...
-      if (o.proof.valid())
+      if (o.proof.valid() )
       {
          auto& proof = *o.proof;
 

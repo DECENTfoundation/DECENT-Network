@@ -13,8 +13,6 @@ namespace decent { namespace package {
 void LocalDownloadPackageTask::task() {
    PACKAGE_INFO_GENERATE_EVENT(package_download_start, ( ) );
 
-   PACKAGE_TASK_EXIT_IF_REQUESTED;
-
    PACKAGE_INFO_CHANGE_TRANSFER_STATE(DOWNLOADING);
 
    PACKAGE_INFO_CHANGE_DATA_STATE(PARTIAL);
