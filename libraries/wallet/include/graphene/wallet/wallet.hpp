@@ -1108,10 +1108,11 @@ namespace graphene { namespace wallet {
 
          /**
           * @brief Converts asset into DCT, using actual price feed.
-          * @param price asset in DCT, monitored asset or user issued asset
+          * @param amount the amount to convert in nominal units
+          * @param asset_symbol the symbol or id of the asset to convert
           * @return price in DCT
           */
-         asset price_to_dct(asset price);
+         string price_to_dct(const string& amount, const string& asset_symbol_or_id);
 
          /**
           * @brief Publishes a price feed for the named asset.

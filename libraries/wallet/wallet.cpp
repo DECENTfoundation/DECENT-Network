@@ -2437,8 +2437,12 @@ signed_transaction content_cancellation(string author,
       } FC_CAPTURE_AND_RETHROW( (consumer)(URI) )
    }
 
-   asset price_to_dct(asset price){
-      return _remote_db->price_to_dct(price);
+   string price_to_dct(const string& amount, const string& asset_symbol_or_id)
+   {
+      asset_object price_o = get_asset(asset_symbol_or_id);
+      asset price = price_o.amount_from_string(amount);
+      asset result = _remote_db->price_to_dct(price);
+      return to_string(result.amount.value);
    }
 
    void download_content(string const& consumer, string const& URI, string const& str_region_code_from, bool broadcast)
@@ -2477,7 +2481,7 @@ signed_transaction content_cancellation(string author,
          DInteger el_gamal_priv_key = generate_private_el_gamal_key_from_secret ( get_private_key_for_account(consumer_account).get_secret() );
 
          request_op.pubKey = decent::encrypt::get_public_el_gamal_key( el_gamal_priv_key );
-         request_op.price = price_to_dct(*op_price);
+         request_op.price = _remote_db->price_to_dct(*op_price);
          request_op.region_code_from = region_code_from;
 
          signed_transaction tx;
@@ -4336,9 +4340,9 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
       return my->download_content(consumer, URI, region_code_from, broadcast);
    }
 
-   asset wallet_api::price_to_dct(asset price)
+   string wallet_api::price_to_dct(const string& amount, const string& asset_symbol_or_id)
    {
-      return my->price_to_dct(price);
+      return my->price_to_dct(amount, asset_symbol_or_id );
    }
 
 // HEAD
