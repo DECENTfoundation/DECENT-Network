@@ -248,6 +248,9 @@ void Upload_tab::slot_UploadPopupResubmit(int iIndex)
 
    if (false == Globals::instance().getCurrentUser().empty())
    {
+      if (_digital_contents[iIndex].status == "Uploading")
+         return;
+
       Upload_popup* pUploadWidget = new Upload_popup(nullptr, _digital_contents[iIndex].id);
       Globals::instance().signal_stackWidgetPush(pUploadWidget);
    }
