@@ -1874,7 +1874,7 @@ namespace graphene { namespace wallet {
          /**
          * @brief Send text message
          */
-         void send_message(const std::string& from, string to, string text);
+         void send_message(const std::string& from, std::vector<string> to, string text);
 
          /**
          * @brief Receives message objects by sender and/or receiver

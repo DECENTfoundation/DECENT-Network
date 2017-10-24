@@ -31,6 +31,15 @@
 namespace graphene {
    namespace chain {
 
+   class message_object_receivers_data
+   {
+   public:
+      account_id_type receiver;
+      public_key_type receiver_pubkey;
+      uint64_t nonce = 0;
+      std::vector<char> data;
+   };
+
    class message_object : public graphene::db::abstract_object<message_object>
    {
    public:
@@ -39,14 +48,27 @@ namespace graphene {
 
       fc::time_point_sec created;
       account_id_type sender;
-      account_id_type receiver;
       public_key_type sender_pubkey;
-      public_key_type receiver_pubkey;
-      uint64_t nonce = 0;
-      std::vector<char> data;
-      std::string text;// decrypted text
 
+      std::vector<message_object_receivers_data> receivers_data;
+      
+      std::string text;// decrypted text
    };
+
+   class message_receiver_index : public secondary_index
+   {
+   public:
+      virtual void object_inserted(const object& obj) override;
+      virtual void object_removed(const object& obj) override;
+      virtual void about_to_modify(const object& before) override;
+      virtual void object_modified(const object& after) override;
+
+      std::map< account_id_type, set<object_id_type> > message_to_receiver_memberships;
+
+   protected:
+      set<account_id_type> get_key_recipients(const message_object& a)const;
+   };
+
 
    class text_message
    {
@@ -54,7 +76,7 @@ namespace graphene {
       
       fc::time_point_sec created;
       std::string from;
-      std::string to;
+      std::vector<std::string> to;
       std::string text;// decrypted text
 
    };
@@ -68,8 +90,7 @@ namespace graphene {
       indexed_by<
       ordered_unique< tag<by_id>, member< object, object_id_type, &object::id > >,
       ordered_non_unique< tag<by_created>, member< message_object, time_point_sec, &message_object::created > >,
-      ordered_non_unique< tag<by_sender>, member< message_object, account_id_type, &message_object::sender > >,
-      ordered_non_unique< tag<by_receiver>, member< message_object, account_id_type, &message_object::receiver > >
+      ordered_non_unique< tag<by_sender>, member< message_object, account_id_type, &message_object::sender > >
       >
    > message_multi_index_type;
 
@@ -77,16 +98,21 @@ namespace graphene {
    }
 } // namespaces
 
+FC_REFLECT(
+   graphene::chain::message_object_receivers_data,
+   (receiver)
+   (receiver_pubkey)
+   (nonce)
+   (data)
+)
+
 FC_REFLECT_DERIVED(
    graphene::chain::message_object,
    (graphene::db::object),
    (created)
    (sender)
-   (receiver)
    (sender_pubkey)
-   (receiver_pubkey)
-   (nonce)
-   (data)
+   (receivers_data)
    (text)
 )
 

@@ -29,7 +29,8 @@ void messaging_plugin::plugin_initialize(const boost::program_options::variables
 {
    try {
       ilog("messaging plugin:  plugin_initialize() begin");
-      database().add_index< graphene::db::primary_index < message_index > >();
+      auto indx = database().add_index< graphene::db::primary_index < message_index > >();
+      indx->add_secondary_index<message_receiver_index>();
       _options = &options;
 
       ilog("messaging plugin:  plugin_initialize() end");
@@ -73,13 +74,63 @@ void_result messaging_plugin::do_apply(const custom_operation& o)
 
       ((graphene::chain::custom_operation&)o).get_messaging_payload(pl);
       obj.sender  = pl.from;
-      obj.receiver = pl.to;
+
+      for(message_payload_receivers_data& receivers_data : pl.receivers_data)
+      {
+         message_object_receivers_data item;
+         item.receiver = receivers_data.to;
+         item.receiver_pubkey = receivers_data.pub_to;
+         item.nonce = receivers_data.nonce;
+         item.data = receivers_data.data;
+
+         obj.receivers_data.push_back(item);
+      }
+
       obj.created = d.head_block_time();
       obj.sender_pubkey = pl.pub_from;
-      obj.receiver_pubkey = pl.pub_to;
-      obj.nonce = pl.nonce;
-      obj.data = pl.data;
       
    });
    return void_result(); 
 };
+
+void message_receiver_index::object_inserted(const object& obj)
+{
+   assert(dynamic_cast<const message_object*>(&obj)); // for debug only
+   const message_object& a = static_cast<const message_object&>(obj);
+
+   auto recipients = get_key_recipients(a);
+   
+   for (auto& item : recipients) {
+      message_to_receiver_memberships[item].insert(obj.id);
+   }
+}
+
+void message_receiver_index::object_removed(const object& obj)
+{
+   assert(dynamic_cast<const message_object*>(&obj)); // for debug only
+   const message_object& a = static_cast<const message_object&>(obj);
+
+   auto recipients = get_key_recipients(a);
+
+   for (auto& item : recipients) {
+      message_to_receiver_memberships[item].erase(obj.id);
+   }
+}
+
+void message_receiver_index::about_to_modify(const object& before)
+{
+}
+
+void message_receiver_index::object_modified(const object& after)
+{
+}
+
+set<account_id_type> message_receiver_index::get_key_recipients(const message_object& a)const
+{
+   set<account_id_type> result;
+   for (auto item : a.receivers_data)
+      result.insert(item.receiver);
+
+   return result;
+}
+
