@@ -2012,23 +2012,33 @@ namespace graphene { namespace wallet {
          /**
          * @brief Send text message
          */
-         signed_transaction send_message(const std::string& from, string to, string text, bool broadcast);
+
+         void send_message(const std::string& from, std::vector<string> to, string text);
 
          /**
-         * @brief Receives message objects by receiver
-         * @param reveiver Name of message receiver
+         * @brief Receives message objects by sender and/or receiver
+         * @param reveiver Name of message sender. If you dont want to filter by sender then let it empty.
+         * @param reveiver Name of message receiver. If you dont want to filter by receiver then let it empty.
          * @param max_count Maximal number of last messages to be displayed
          * @return vector of message objects
          */
-         vector<message_object> get_message_objects(const std::string& receiver, uint32_t max_count) const;
+         vector<message_object> get_message_objects(const std::string& sender, const std::string& receiver, uint32_t max_count) const;
 
          /**
          * @brief Receives messages by receiver
-         * @param reveiver Name of message receiver
+         * @param reveiver Name of message receiver which must be imported to caller's wallet
          * @param max_count Maximal number of last messages to be displayed
          * @return vector of message objects
          */
          vector<text_message> get_messages(const std::string& receiver, uint32_t max_count) const;
+
+         /**
+         * @brief Receives sent messages by sender
+         * @param sender Name of message sender which must be imported to caller's wallet
+         * @param max_count Maximal number of last messages to be displayed
+         * @return vector of message objects
+         */
+         vector<text_message> get_sent_messages(const std::string& sender, uint32_t max_count) const;
       };
 
    } }
@@ -2242,4 +2252,5 @@ FC_API( graphene::wallet::wallet_api,
            (send_message)
            (get_message_objects)
            (get_messages)
+           (get_sent_messages)
 )

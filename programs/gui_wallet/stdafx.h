@@ -100,6 +100,7 @@
 #include <graphene/chain/content_object.hpp>
 #include <graphene/wallet/wallet.hpp>
 #include <graphene/utilities/dirhelper.hpp>
+#include <graphene/messaging/messaging.hpp>
 
 #include <cryptopp/integer.h>
 #include <cryptopp/aes.h>

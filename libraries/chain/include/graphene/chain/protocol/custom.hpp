@@ -28,18 +28,21 @@
 #include <fc/io/json.hpp>
 
 namespace graphene { namespace chain { 
-   struct message_payload {
-      account_id_type from;
-      account_id_type to;
-      int subtype;
-      std::vector<char> data;
 
-      public_key_type pub_from;
+   struct message_payload_receivers_data {
+      account_id_type to;
       public_key_type pub_to;
       uint64_t nonce = 0;
+      std::vector<char> data;
+   };
+   struct message_payload {
+      account_id_type from;
+      public_key_type pub_from;
 
+      std::vector<message_payload_receivers_data> receivers_data;
+      
       void set_message(const fc::ecc::private_key& priv, const fc::ecc::public_key& pub,
-         const string& msg, uint64_t custom_nonce);
+         const string& msg, message_payload_receivers_data& receivers_data);
 
       static void get_message(const fc::ecc::private_key& priv,
          const fc::ecc::public_key& pub, const std::vector<char>& data, std::string& text, uint64_t nonce);
@@ -88,6 +91,7 @@ namespace graphene { namespace chain {
    
 } } // namespace graphene::chain
 
-FC_REFLECT( graphene::chain::message_payload, (from)(to)(subtype)(data)(pub_from)(pub_to)(nonce) )
+FC_REFLECT( graphene::chain::message_payload_receivers_data, (to)(pub_to)(nonce)(data) )
+FC_REFLECT( graphene::chain::message_payload, (from)(pub_from)(receivers_data) )
 FC_REFLECT( graphene::chain::custom_operation::fee_parameters_type, (fee)(price_per_kbyte) )
 FC_REFLECT( graphene::chain::custom_operation, (fee)(payer)(required_auths)(id)(data) )
