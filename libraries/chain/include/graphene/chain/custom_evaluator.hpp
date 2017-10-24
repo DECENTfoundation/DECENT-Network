@@ -48,17 +48,32 @@ namespace graphene { namespace chain {
       virtual void_result do_apply(const custom_operation& o) = 0;
    };
 
+   //registrator for custom_evaluator
+   class custom_evaluator_register
+   {
+   public:
+       static custom_evaluator_register* instance();
+
+       void register_callback(custom_operation_subtype s, custom_operation_interpreter* i);
+       void unregister_callback(custom_operation_subtype s);
+       void unregister_all();
+
+       std::shared_ptr<custom_operation_interpreter> find(custom_operation_subtype subtype);
+
+   private:
+       custom_evaluator_register() {}
+
+   private:
+       std::map<custom_operation_subtype, std::shared_ptr<custom_operation_interpreter> > m_operation_subtypes;
+   };
+
    class custom_evaluator : public evaluator<custom_evaluator>
    {
-      public:
-         typedef custom_operation operation_type;
+   public:
+        typedef custom_operation operation_type;
 
-         void_result do_evaluate(const custom_operation& o);
-         void_result do_apply(const custom_operation& o);
-
-         static void register_callback(custom_operation_subtype s, custom_operation_interpreter* i);
-         static void unregister_callback(custom_operation_subtype s);
-   private:
-      static std::map<custom_operation_subtype, custom_operation_interpreter*> operation_subtypes;
+        void_result do_evaluate(const custom_operation& o);
+        void_result do_apply(const custom_operation& o);
    };
+
 } }

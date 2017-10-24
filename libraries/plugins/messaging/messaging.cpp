@@ -41,17 +41,17 @@ void messaging_plugin::plugin_startup()
 {
    try {
       ilog("messaging plugin:  plugin_startup() begin");
-      graphene::chain::database& d = database();
-      
-      graphene::chain::custom_evaluator::register_callback(graphene::chain::custom_operation_subtype_messaging, dynamic_cast<custom_operation_interpreter*>(this));
-      
+
+      graphene::chain::custom_evaluator_register::instance()->register_callback(graphene::chain::custom_operation_subtype_messaging,
+                                                                                static_cast<custom_operation_interpreter*>(this));
+
       ilog("messaging plugin:  plugin_startup() end");
    } FC_CAPTURE_AND_RETHROW()
 }
 
 void messaging_plugin::plugin_shutdown()
 {
-   return;
+   graphene::chain::custom_evaluator_register::instance()->unregister_callback(graphene::chain::custom_operation_subtype_messaging);
 }
 
 void_result messaging_plugin::do_evaluate(const custom_operation& o) 

@@ -63,10 +63,10 @@ namespace graphene {
       virtual void about_to_modify(const object& before) override;
       virtual void object_modified(const object& after) override;
 
-      std::map< account_id_type, set<object_id_type> > message_to_receiver_memberships;
+      std::map< account_id_type, std::set<object_id_type> > message_to_receiver_memberships;
 
    protected:
-      set<account_id_type> get_key_recipients(const message_object& a)const;
+      std::set<account_id_type> get_key_recipients(const message_object& a)const;
    };
 
 
