@@ -24,4 +24,44 @@
 */
 #include <graphene/chain/message_object.hpp>
 
+namespace graphene{
+namespace chain {
 
+
+void message_receiver_index::object_inserted(const object &obj) {
+   assert(dynamic_cast<const message_object *>(&obj)); // for debug only
+   const message_object &a = static_cast<const message_object &>(obj);
+
+   auto recipients = get_key_recipients(a);
+
+   for( auto &item : recipients ) {
+      message_to_receiver_memberships[ item ].insert(obj.id);
+   }
+}
+
+void message_receiver_index::object_removed(const object &obj) {
+   assert(dynamic_cast<const message_object *>(&obj)); // for debug only
+   const message_object &a = static_cast<const message_object &>(obj);
+
+   auto recipients = get_key_recipients(a);
+
+   for( auto &item : recipients ) {
+      message_to_receiver_memberships[ item ].erase(obj.id);
+   }
+}
+
+void message_receiver_index::about_to_modify(const object &before) {
+}
+
+void message_receiver_index::object_modified(const object &after) {
+}
+
+set<account_id_type> message_receiver_index::get_key_recipients(const message_object &a) const {
+   set<account_id_type> result;
+   for( auto item : a.receivers_data )
+      result.insert(item.receiver);
+
+   return result;
+}
+
+}}//namespace

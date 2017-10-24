@@ -36,7 +36,7 @@
 #include <graphene/chain/transaction_object.hpp>
 #include <graphene/chain/withdraw_permission_object.hpp>
 #include <graphene/seeding/seeding_utility.hpp>
-#include <graphene/chain/message_object.hpp>
+
 
 #include <fc/crypto/hex.hpp>
 #include <fc/smart_ref_impl.hpp>
