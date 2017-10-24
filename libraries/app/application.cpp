@@ -122,21 +122,19 @@ namespace detail {
          _p2p_network->load_configuration(data_dir / "p2p");
          _p2p_network->set_node_delegate(this);
 
+         vector<string> seeds;
          if( _options->count("seed-node") )
          {
-            auto seeds = _options->at("seed-node").as<vector<string>>();
-            for( const string& endpoint_string : seeds )
-            {
-               std::vector<fc::ip::endpoint> endpoints = resolve_string_to_ip_endpoints(endpoint_string);
-               for (const fc::ip::endpoint& endpoint : endpoints)
-               {
-                  ilog("Adding seed node ${endpoint}", ("endpoint", endpoint));
-                  _p2p_network->add_node(endpoint);
-                  _p2p_network->connect_to_endpoint(endpoint);
-               }
-            }
-         }else {
-            vector<string> seeds = { 
+             vector<string> seeds_list = _options->at("seed-node").as<vector<string>>();
+             for(const string& seed_string : seeds_list) {
+                 if (std::find(seeds.begin(), seeds.end(), seed_string) != seeds.end())
+                     continue;
+
+                 seeds.push_back(seed_string);
+             }
+
+         } else {
+             vector<string> base_seeds_list = {
                "seed1.decentgo.com:40000",
                "seed2.decentgo.com:40000", 
                "seed3.decentgo.com:40000",
@@ -148,20 +146,23 @@ namespace detail {
                "45.124.64.161:40000",            // # nuevax (HK)
                "66.70.188.105:40000"             // # decentspace (CA)
             };
-            for( const string& endpoint_string : seeds ){
-               std::vector<fc::ip::endpoint> endpoints;
-               try{
-                   endpoints = resolve_string_to_ip_endpoints(endpoint_string);
-               } catch (...) {
-                  continue;
-               }
-               for (const fc::ip::endpoint& endpoint : endpoints)
-               {
-                  ilog("Adding seed node ${endpoint}", ("endpoint", endpoint));
-                  _p2p_network->add_node(endpoint);
-                  _p2p_network->connect_to_endpoint(endpoint);
-               }
-            }
+
+            seeds = base_seeds_list;
+         }
+
+         for( const string& endpoint_string : seeds ) {
+             std::vector<fc::ip::endpoint> endpoints;
+             try{
+                 endpoints = resolve_string_to_ip_endpoints(endpoint_string);
+             } catch (...) {
+                 continue;
+             }
+             for (const fc::ip::endpoint& endpoint : endpoints)
+             {
+                 ilog("Adding seed node ${endpoint}", ("endpoint", endpoint));
+                 _p2p_network->add_node(endpoint);
+                 _p2p_network->connect_to_endpoint(endpoint);
+             }
          }
 
          if( _options->count("ipfs-api") ){
