@@ -546,29 +546,41 @@ namespace graphene { namespace app {
 
        if (receiver) {
         
-          const auto& range = db.get_index_type<message_index>().indices().get<by_receiver>().equal_range(*receiver);
-          const auto& index_by_receiver = db.get_index_type<message_index>().indices().get<by_receiver>();
-          auto itr = index_by_receiver.lower_bound(*receiver);
-          itr = range.first;
+          const auto& idx = db.get_index_type<message_index>();
+          const auto& aidx = dynamic_cast<const primary_index<message_index>&>(idx);
+          const auto& refs = aidx.get_secondary_index<graphene::chain::message_receiver_index>();
+          auto itr = refs.message_to_receiver_memberships.find(*receiver);
 
-          int count = distance(range.first, range.second);
-          if (count) {
-             result.reserve(count);
+          if (itr != refs.message_to_receiver_memberships.end())
+          {
+             result.reserve(itr->second.size());
+             int count = itr->second.size();
              int counter = 0;
              if (sender) {
-                while (itr != range.second && result.size() < max_count) {
-                   if (count - counter <= max_count && (*itr).sender == *sender)
-                      result.emplace_back(*itr);
-                   itr++;
-                   counter++;
+                for (const object_id_type& item : itr->second) {
+                   if (result.size() >= max_count)
+                      break;
+                   auto msg_itr = db.get_index_type<message_index>().indices().get<by_id>().find(item);
+                   if (msg_itr != db.get_index_type<message_index>().indices().get<by_id>().end()) {
+                      message_object o = *msg_itr;
+                      if (count - counter <= max_count && (*msg_itr).sender == *sender)
+                        result.emplace_back(o);
+                      counter++;
+                   }
                 }
              }
-             else {
-                while (itr != range.second && result.size() < max_count) {
-                   if (count - counter <= max_count)
-                      result.emplace_back(*itr);
-                   itr++;
-                   counter++;
+             else
+             {
+                for (const object_id_type& item : itr->second) {
+                   if (result.size() >= max_count)
+                      break;
+                   auto msg_itr = db.get_index_type<message_index>().indices().get<by_id>().find(item);
+                   if (msg_itr != db.get_index_type<message_index>().indices().get<by_id>().end()) {
+                      message_object o = *msg_itr;
+                      if (count - counter <= max_count)
+                        result.emplace_back(o);
+                      counter++;
+                   }
                 }
              }
           }
@@ -584,21 +596,12 @@ namespace graphene { namespace app {
           if (count) {
              result.reserve(count);
              int counter = 0;
-             if (receiver) {
-                while (itr != range.second && result.size() < max_count) {
-                   if (count - counter <= max_count && (*itr).sender == *receiver)
-                      result.emplace_back(*itr);
-                   itr++;
-                   counter++;
-                }
-             }
-             else {
-                while (itr != range.second && result.size() < max_count) {
-                   if (count - counter <= max_count)
-                      result.emplace_back(*itr);
-                   itr++;
-                   counter++;
-                }
+            
+             while (itr != range.second && result.size() < max_count) {
+               if (count - counter <= max_count)
+                  result.emplace_back(*itr);
+               itr++;
+               counter++;
              }
           }
        }
