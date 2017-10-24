@@ -411,7 +411,6 @@ namespace graphene { namespace app {
 
 
     vector<operation_history_object> history_api::get_account_history( account_id_type account,
-                                                                       const string& order,
                                                                        operation_history_id_type stop,
                                                                        unsigned limit, 
                                                                        operation_history_id_type start ) const

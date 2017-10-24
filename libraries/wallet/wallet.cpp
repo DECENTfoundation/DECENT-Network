@@ -3486,7 +3486,7 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
          }
 
 
-         vector<operation_history_object> current = my->_remote_hist->get_account_history(account_id, "", operation_history_id_type(), std::min(100,limit), start);
+         vector<operation_history_object> current = my->_remote_hist->get_account_history(account_id, operation_history_id_type(), std::min(100,limit), start);
          for( auto& o : current ) {
             std::stringstream ss;
             auto memo = o.op.visit(detail::operation_printer(ss, *my, o.result));
