@@ -439,23 +439,27 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
       FC_ASSERT( d.are_assets_exchangeable( payment_o, price_o ), "price for the content and price of the content are not exchangeable");
 
       skip_exchange = (o.price.asset_id == price->asset_id) || ( o.price.asset_id == asset_id_type() && price_o.is_monitored_asset() );
-      if( !is_subscriber && !skip_exchange )
+
+      if( !is_subscriber )
       {
          FC_ASSERT( is_price_sufficient( o.price, *price ) );
 
-         if( o.price.asset_id == asset_id_type() )    // payment in DCT's, price in UIA's
+         if( !skip_exchange )
          {
-            asset payment_in_uia = o.price * price_o.options.core_exchange_rate;
-            const asset_dynamic_data_object& addo = price_o.dynamic_data(d);
-            FC_ASSERT( o.price.amount <= addo.core_pool , "Asset ${uia} does not have enough balance in core_pool",("uia",price_o.symbol));
-            FC_ASSERT( payment_in_uia.amount <= addo.asset_pool , "Asset ${uia} does not have enough balance in asset_pool",("uia",price_o.symbol));
-         }
-         else                                         // payment in UIA's, price in DCT's or in MIA's
-         {
-            asset payment_in_dct = o.price * payment_o.options.core_exchange_rate;
-            const asset_dynamic_data_object& addo = payment_o.dynamic_data(d);
-            FC_ASSERT( payment_in_dct.amount <= addo.core_pool , "Asset ${uia} does not have enough balance in core_pool",("uia",payment_o.symbol));
-            FC_ASSERT( o.price.amount <= addo.asset_pool , "Asset ${uia} does not have enough balance in asset_pool",("uia",payment_o.symbol));
+            if( o.price.asset_id == asset_id_type() )    // payment in DCT's, price in UIA's
+            {
+               asset payment_in_uia = o.price * price_o.options.core_exchange_rate;
+               const asset_dynamic_data_object& addo = price_o.dynamic_data(d);
+               FC_ASSERT( o.price.amount <= addo.core_pool , "Asset ${uia} does not have enough balance in core_pool",("uia",price_o.symbol));
+               FC_ASSERT( payment_in_uia.amount <= addo.asset_pool , "Asset ${uia} does not have enough balance in asset_pool",("uia",price_o.symbol));
+            }
+            else                                         // payment in UIA's, price in DCT's or in MIA's
+            {
+               asset payment_in_dct = o.price * payment_o.options.core_exchange_rate;
+               const asset_dynamic_data_object& addo = payment_o.dynamic_data(d);
+               FC_ASSERT( payment_in_dct.amount <= addo.core_pool , "Asset ${uia} does not have enough balance in core_pool",("uia",payment_o.symbol));
+               FC_ASSERT( o.price.amount <= addo.asset_pool , "Asset ${uia} does not have enough balance in asset_pool",("uia",payment_o.symbol));
+            }
          }
       }
 
