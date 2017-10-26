@@ -56,18 +56,19 @@
 #include <signal.h>
 
 int runDecentD(gui_wallet::BlockChainStartType type, fc::promise<void>::ptr& exit_promise);
-QProcess* run_ipfs_daemon(QObject* parent, QString app_dir);
+QProcess* run_ipfs_daemon(QObject* parent, const QString& app_dir);
 
 using  std::string;
 
 namespace gui_wallet
 {
    
-void ShowMessageBox(QString const& strTitle,
-                    QString const& strMessage,
-                    QString const& strDetailedText/* = QString()*/)
+void ShowMessageBox(const QString& strTitle,
+                    const QString& strMessage,
+                    const QString& strDetailedText/* = QString()*/,
+                    QWidget* parent)
 {
-   QMessageBox* pMessageBox = new QMessageBox(nullptr);
+   QMessageBox* pMessageBox = new QMessageBox(parent);
    pMessageBox->setWindowTitle(strTitle); // funny MacOS ignores the title
    pMessageBox->setText(strMessage);
    pMessageBox->setDetailedText(strDetailedText);
@@ -462,6 +463,27 @@ std::string escape_string(const std::string& s)
    return result;
 }
 
+QString convertDateToLocale(const std::string& s)
+{
+   QDate time = QDate::fromString(QString::fromStdString(s), "yyyy-MM-dd");
+   if (!time.isValid()) {
+      return QString("EEE");
+   }
+
+   return Globals::instance().locale().toString(time, QLocale::ShortFormat);
+}
+
+QString convertDateTimeToLocale(const std::string& s)
+{
+   QDateTime time = QDateTime::fromString(QString::fromStdString(s), "yyyy-MM-dd hh:mm:ss");
+   if (!time.isValid()) {
+      return QString("EEE");
+   }
+
+   return Globals::instance().locale().toString(time, QLocale::ShortFormat);
+}
+
+
 //
 // WalletOperator
 //
@@ -494,29 +516,36 @@ void WalletOperator::slot_connect()
 //
 // Asset
 //
-Asset::operator double() const
+
+double Asset::to_value() const
 {
    uint64_t amount = m_amount / m_scale;
    double tail = double(m_amount % m_scale) / m_scale;
    return amount + tail;
 }
 
-Asset::operator string() const
+bool Asset::hasDecimals() const
 {
-   return std::to_string(double(*this));
+   return double(m_amount % m_scale) > 0.0;
 }
 
-string Asset::getString() const
+QString Asset::getString() const
 {
-   if (m_amount)
-      return QString::number(double(*this), 'f' , 4).toStdString() + " " + m_str_symbol;
-   else
-      return "Free";
+   if (m_amount > 0) {
+
+      if (hasDecimals())
+         return QString::number(to_value(), 'f' , 8) + " " + QString::fromStdString(m_str_symbol);
+      else
+         return QString::number((int)to_value()) + " " + QString::fromStdString(m_str_symbol);
+   }
+   else {
+      return QString("Free");
+   }
 }
 
-string Asset::getStringBalance() const
+QString Asset::getStringBalance() const
 {
-   return QString::number(double(*this), 'f' , 4).toStdString() + " " + m_str_symbol;
+   return QString::number(to_value(), 'f' , 8) + " " + QString::fromStdString(m_str_symbol);
 }
 //
 // DaemonDetails
@@ -560,7 +589,9 @@ Globals::Globals()
    QObject::connect(m_p_timer, &QTimer::timeout,
                     this, &Globals::slot_timer);
 
-   *m_p_locale = ((QApplication*)QApplication::instance())->inputMethod()->locale();
+   QLocale::setDefault(*m_p_locale);
+
+//   *m_p_locale = ((QApplication*)QApplication::instance())->inputMethod()->locale();
 }
 
 Globals::~Globals()
@@ -745,6 +776,7 @@ std::vector<Publisher> Globals::getPublishers()
    auto publishers = runTaskParse("list_publishers_by_price 100");
    std::vector<Publisher> result;
 
+   result.reserve(publishers.size());
    for (int iIndex = 0; iIndex < publishers.size(); ++iIndex)
    {
       result.push_back(Publisher());
@@ -757,11 +789,6 @@ std::vector<Publisher> Globals::getPublishers()
    }
 
    return result;
-}
-
-QLocale& Globals::locale()
-{
-   return *m_p_locale;
 }
 
 bool Globals::connected() const
@@ -779,15 +806,15 @@ void Globals::setWalletError(std::string const& error)
    emit walletConnectionError(error);
 }
 
-string Globals::getAccountName(string const& accountId)
+std::string Globals::getAccountName(string const& accountId)
 {
    auto search = m_map_user_id_cache.find(accountId);
    if (search == m_map_user_id_cache.end())
    {
-      string accountName = "Unknown";
+      std::string accountName("Unknown");
       nlohmann::json accountInfoParsed = runTaskParse("get_object \"" + accountId + "\"");
 
-      if (false == accountInfoParsed.empty())
+      if (!accountInfoParsed.empty())
          accountName = accountInfoParsed[0]["name"].get<std::string>();
 
       auto pair_value = m_map_user_id_cache.insert(std::make_pair(accountId, accountName));
@@ -799,7 +826,7 @@ string Globals::getAccountName(string const& accountId)
 
 void Globals::slot_updateAccountBalance()
 {
-   if (false == m_str_currentUser.empty())
+   if (!m_str_currentUser.empty())
    {
       nlohmann::json allBalances = runTaskParse("list_account_balances " + m_str_currentUser);
 
@@ -821,14 +848,14 @@ void Globals::slot_updateAccountBalance()
    }
 }
 
-void Globals::slot_setCurrentUser(QString const& user)
+void Globals::slot_setCurrentUser(const QString& user)
 {
    m_str_currentUser = user.toStdString();
-   emit currentUserChanged(m_str_currentUser.c_str());
+   emit currentUserChanged(user);
    slot_updateAccountBalance();
 }
 
-void Globals::slot_showTransferDialog(QString const& user)
+void Globals::slot_showTransferDialog(const QString& user)
 {
    if(getCurrentUser().empty())
       return;
@@ -881,7 +908,7 @@ void Globals::slot_timer()
 
       QString str_result = CalculateRemainingTime_Behind(qdt, QDateTime::currentDateTime());
       std::string result = str_result.toStdString();
-      if (false == result.empty())
+      if (!result.empty())
          emit statusShowMessage(result.c_str(), 5000);
 
       bool justbehind = false, farbehind = false;
@@ -924,7 +951,7 @@ void Globals::slot_timer()
 // DecentColumn
 //
 
-DecentColumn::DecentColumn(QString title, int size, std::string const& sortid/* = std::string()*/)
+DecentColumn::DecentColumn(const QString& title, int size, std::string const& sortid/* = std::string()*/)
 : title(title)
 , size(size)
 , sortid(sortid) {}
@@ -963,7 +990,7 @@ void DecentTable::set_columns(const std::vector<DecentColumn>& cols)
 {
    _cols = cols;
 
-   setColumnCount(cols.size());
+   setColumnCount(static_cast<int>(cols.size()));
 
    QStringList columns;
    for (int i = 0; i < cols.size(); ++i) {
@@ -1029,7 +1056,7 @@ void DecentTable::mouseMoveEvent(QMouseEvent * event)
          QTableWidgetItem* cell = this->item(_current_highlighted_row, i);
          QWidget* cell_widget = this->cellWidget(_current_highlighted_row, i);
 
-         if(cell != NULL) {
+         if(cell != nullptr) {
             cell->setBackgroundColor(QColor(255,255,255));
             cell->setForeground(QColor::fromRgb(0,0,0));
          }
@@ -1051,7 +1078,7 @@ void DecentTable::mouseMoveEvent(QMouseEvent * event)
       QTableWidgetItem* cell = this->item(row, i);
       QWidget* cell_widget = this->cellWidget(row, i);
 
-      if (cell != NULL) {
+      if (cell != nullptr) {
          cell->setBackgroundColor(QColor(27,176,104));
          cell->setForeground(QColor::fromRgb(255,255,255));
       }
@@ -1075,7 +1102,7 @@ void write_default_logging_config_to_stream(std::ostream& out);
 fc::optional<fc::logging_config> load_logging_config_from_ini_file(const fc::path& config_ini_filename);
 
 
-bool check_for_ipfs(QObject* parent, QString program) {
+bool check_for_ipfs(QObject* parent, const QString& program) {
 
    QProcess *checkProcess = new QProcess(parent);
    checkProcess->start(program, QStringList("version"));
@@ -1092,7 +1119,7 @@ bool check_for_ipfs(QObject* parent, QString program) {
    return true;
 }
 
-QString get_ipfs_path(QObject* parent, QString app_dir)
+QString get_ipfs_path(QObject* parent, const QString& app_dir)
 {
    QString ipfs_bin = QString::fromStdString(utilities::decent_path_finder::instance().get_ipfs_bin().string());
    QString ipfs_path_bin = QString::fromStdString((utilities::decent_path_finder::instance().get_ipfs_path() / "ipfs").string());
@@ -1121,17 +1148,15 @@ QString get_ipfs_path(QObject* parent, QString app_dir)
       return ipfs_path_next_to_bin_exe;
    }
 
-
    if (check_for_ipfs(parent, "ipfs")) {
       return "ipfs";
    }
 
-
-   return "";
+   return QString();
 }
 
 
-QProcess* run_ipfs_daemon(QObject* parent, QString app_dir)
+QProcess* run_ipfs_daemon(QObject* parent, const QString& app_dir)
 {
    QString program = get_ipfs_path(parent, app_dir);
 

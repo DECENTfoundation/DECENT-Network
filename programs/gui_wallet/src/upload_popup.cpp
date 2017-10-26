@@ -144,7 +144,7 @@ Upload_popup::Upload_popup(QWidget* pParent, const std::string& id_modify/* = st
    pUploadButton->setFont(PopupButtonBigFont());
    
    //resubmit layout type
-   if (false == m_id_modify.empty())
+   if (!m_id_modify.empty())
    {
       m_pLifeTime->setReadOnly(true);
       pBrowseContentButton->setDisabled(true);
@@ -238,7 +238,7 @@ Upload_popup::Upload_popup(QWidget* pParent, const std::string& id_modify/* = st
                     this, &Upload_popup::slot_UpdateStatus);
    m_pStatusCheckTimer->start(500);
 
-   if (false == m_id_modify.empty())
+   if (!m_id_modify.empty())
    {
       string title, description, price, expiration;
       getContents(m_id_modify, title, description, price, expiration);
@@ -324,7 +324,7 @@ void Upload_popup::slot_ChooseSeeders()
       Publisher const& seeder = seederItem.first;
 
       int free_space = seeder.m_storage_size;
-      QString pubFreeSpace = std::to_string(free_space).c_str();
+      QString pubFreeSpace = QString::number(free_space);
       pubFreeSpace += " MB free";
       if (free_space > 800)
          pubFreeSpace = QString::number(free_space / 1024.0, 'f', 2) + " GB free";
@@ -332,7 +332,7 @@ void Upload_popup::slot_ChooseSeeders()
       EventPassthrough<QCheckBox>* pCheckBox = new EventPassthrough<QCheckBox>(pSeedersTable);
       pSeedersTable->setCellWidget(iIndex, eCheckBox, pCheckBox);
       pSeedersTable->setItem(iIndex, eName, new QTableWidgetItem(QString::fromStdString(seeder.m_str_name)));
-      pSeedersTable->setItem(iIndex, ePrice, new QTableWidgetItem(seeder.m_price.getString().c_str()));
+      pSeedersTable->setItem(iIndex, ePrice, new QTableWidgetItem(seeder.m_price.getString()));
       pSeedersTable->setItem(iIndex, eSpace, new QTableWidgetItem(pubFreeSpace));
 
       for (size_t iColIndex = eName; iColIndex < eSpace; ++iColIndex)
@@ -379,12 +379,12 @@ void Upload_popup::slot_SeederChanged(int iIndex)
    emit signal_SetSeedersText(strSummary);
 }
 
-void Upload_popup::slot_TitleChanged(QString const& strTitle)
+void Upload_popup::slot_TitleChanged(const QString& strTitle)
 {
    m_strTitle = strTitle;
 }
 
-void Upload_popup::slot_PriceChanged(QString const& strPrice)
+void Upload_popup::slot_PriceChanged(const QString& strPrice)
 {
    if (strPrice.isEmpty())
       m_dPrice = -1;
@@ -393,7 +393,7 @@ void Upload_popup::slot_PriceChanged(QString const& strPrice)
       bool bPriceIsOK = false;
       m_dPrice = Globals::instance().locale().toDouble(strPrice, &bPriceIsOK);
 
-      if (false == bPriceIsOK)
+      if (!bPriceIsOK)
          m_dPrice = -1;
    }
 }
@@ -417,18 +417,18 @@ void Upload_popup::slot_UpdateStatus()
 
    boost::system::error_code ec;
    boost::optional<double> fileSizeGBytes;
-   if (false == path.empty())
+   if (!path.empty())
       fileSizeGBytes = boost::filesystem::file_size(path, ec) / 1024.0 / 1024.0 / 1024.0;
 
    bool isPublishersValid = false;
    uint64_t publishingPrice = 0;
 
-   for (size_t iSeederIndex = 0; iSeederIndex < m_arrPublishers.size(); ++iSeederIndex)
+   for(size_t iSeederIndex = 0; iSeederIndex < m_arrPublishers.size(); ++iSeederIndex)
    {
       auto const& seederItem = m_arrPublishers[iSeederIndex];
       Publisher const& seeder = seederItem.first;
 
-      if (false == seederItem.second)
+      if (!seederItem.second)
          continue;
 
       isPublishersValid = true;
@@ -444,7 +444,7 @@ void Upload_popup::slot_UpdateStatus()
           m_strTitle.isEmpty() ||
           strDescription.isEmpty() ||
           Globals::instance().getCurrentUser().empty() ||
-          false == isPublishersValid)
+          !isPublishersValid)
       {
          emit signal_UploadButtonEnabled(false);
          emit signal_UploadButtonSetText(tr("Publish"));
@@ -452,14 +452,14 @@ void Upload_popup::slot_UpdateStatus()
       else
       {
          std::string lifeTime = m_pLifeTime->text().toStdString();
-         int days = QDate::currentDate().daysTo(m_pLifeTime->date());
+         int64_t days = QDate::currentDate().daysTo(m_pLifeTime->date());
 
          uint64_t effectiveMB = std::max(1.0, (*fileSizeGBytes) * 1024.0 + 1 - 1.0 / 1024 / 1024);
          uint64_t totalPricePerDay = effectiveMB * publishingPrice;
          uint64_t totalPrice = days * totalPricePerDay;
          
          emit signal_UploadButtonEnabled(true);
-         emit signal_UploadButtonSetText(tr("Publish for") + " " + Globals::instance().asset(totalPrice).getString().c_str());
+         emit signal_UploadButtonSetText(tr("Publish for") + " " + Globals::instance().asset(totalPrice).getString());
       }
    }
    else
@@ -468,7 +468,7 @@ void Upload_popup::slot_UpdateStatus()
           strDescription.isEmpty() ||
           m_strTitle.isEmpty() ||
           Globals::instance().getCurrentUser().empty() ||
-          false == isPublishersValid)
+          !isPublishersValid)
       {
          emit signal_UploadButtonEnabled(false);
       }
@@ -481,10 +481,7 @@ void Upload_popup::slot_UpdateStatus()
 
 void Upload_popup::slot_BrowseContent()
 {
-   QString contentPathSelected = QFileDialog::getOpenFileName(this, tr(
-
-
-         "Select content"), "~");
+   QString contentPathSelected = QFileDialog::getOpenFileName(this, tr("Select content"), "~");
 
    if (contentPathSelected.isEmpty())
       return;
@@ -570,7 +567,7 @@ void Upload_popup::getContents(string const& id,
       uint64_t iPrice = json_to_int64(content_summary["price"]["amount"]);
       string iSymbolId = content_summary["price"]["asset_id"];
       Asset asset_price = Globals::instance().asset(iPrice, iSymbolId);
-      price = std::to_string(double(asset_price));
+      price = std::to_string(asset_price.to_value());
       str_expiration = content_summary["expiration"].get<string>();
       string uri = content_summary["URI"];
 
@@ -624,7 +621,7 @@ void Upload_popup::slot_UploadContent()
 
    std::string submitCommand;
    
-   if (false == m_id_modify.empty())
+   if (!m_id_modify.empty())
    {
       string hash;
       string str_expiration;

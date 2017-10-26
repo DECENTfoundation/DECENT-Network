@@ -179,6 +179,7 @@ void PurchasedTab::ShowDigitalContentsGUI()
       std::string title = synopsis_parser.get<graphene::chain::ContentObjectTitle>();
 
       DecentButton* info_icon = new DecentButton(m_pTableWidget, DecentButton::TableIcon, DecentButton::Detail);
+      info_icon->setToolTip(tr("Details"));
       info_icon->setEnabled(false);
       //info_icon->setAlignment(Qt::AlignCenter);
       m_pTableWidget->setCellWidget(iIndex, 6, info_icon);
@@ -190,9 +191,9 @@ void PurchasedTab::ShowDigitalContentsGUI()
 
       m_pTableWidget->setItem(iIndex, 0, new QTableWidgetItem(QString::fromStdString(title)));
       m_pTableWidget->setItem(iIndex, 1, new QTableWidgetItem(QString::number(contentObject.size) + tr(" MB")));
-      m_pTableWidget->setItem(iIndex, 2, new QTableWidgetItem(contentObject.price.getString().c_str()));
+      m_pTableWidget->setItem(iIndex, 2, new QTableWidgetItem(contentObject.price.getString()));
       
-      m_pTableWidget->setItem(iIndex, 3, new QTableWidgetItem(QString::fromStdString(contentObject.purchased_time)));
+      m_pTableWidget->setItem(iIndex, 3, new QTableWidgetItem(convertDateToLocale(contentObject.purchased_time)));
 
       uint32_t total_key_parts = contentObject.total_key_parts;
       uint32_t received_key_parts  = contentObject.received_key_parts;
@@ -223,6 +224,7 @@ void PurchasedTab::ShowDigitalContentsGUI()
       } else {
 
          DecentButton* extract_icon = new DecentButton(m_pTableWidget, DecentButton::TableIcon, DecentButton::Export);
+         extract_icon->setToolTip(tr("Download content"));
          extract_icon->setEnabled(false);
          //extract_icon->setAlignment(Qt::AlignCenter);
 
@@ -247,11 +249,11 @@ void PurchasedTab::ShowDigitalContentsGUI()
 std::string PurchasedTab::getUpdateCommand()
 {
    auto& global_instance = gui_wallet::Globals::instance();
-   std::string str_current_username = global_instance.getCurrentUser();
+   const std::string& str_current_username = global_instance.getCurrentUser();
 
-   if ( str_current_username == "" )
+   if ( str_current_username.empty() )
    {
-      return "";
+      return std::string();
    } // if key not imported
 
    return   "search_my_purchases "
@@ -291,7 +293,7 @@ void PurchasedTab::slot_ExtractionDirSelected(QString const& path) {
    ShowMessageBox(message);
 }
 
-void PurchasedTab::slot_SearchTermChanged(QString const& strSearchTerm)
+void PurchasedTab::slot_SearchTermChanged(const QString& strSearchTerm)
 {
    m_strSearchTerm = strSearchTerm;
    reset(false);
@@ -332,7 +334,7 @@ void PurchasedTab::slot_Details(int iIndex)
    Globals::instance().signal_stackWidgetPush(pDetailsDialog);
 }
 
-void PurchasedTab::ShowMessageBox(std::string const& message)
+void PurchasedTab::ShowMessageBox(const std::string& message)
 {
    if (message.empty())
       gui_wallet::ShowMessageBox(tr("Success"),
@@ -347,6 +349,7 @@ void PurchasedTab::slot_SortingChanged(int index)
 {
    reset();
 }
+
 }  // end namespace gui_wallet
 
 

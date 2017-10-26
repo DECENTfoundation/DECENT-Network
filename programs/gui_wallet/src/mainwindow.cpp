@@ -102,6 +102,8 @@ MainWindow::MainWindow()
    m_pAccountList->setStyle(QStyleFactory::create("fusion"));
    m_pBalance = new DecentLabel(pMainWidget, DecentLabel::Balance);
    DecentButton* pTransferButton = new DecentButton(pMainWidget, DecentButton::Send);
+   pTransferButton->setToolTip("Transfer DCT to account");
+
    //
    // 2nd row controls
    //
@@ -375,8 +377,10 @@ MainWindow::MainWindow()
 
 MainWindow::~MainWindow()
 {
+#ifdef UPDATE_MANAGER
    if(m_pUpdateManager)
       delete m_pUpdateManager;
+#endif
 }
 
 void MainWindow::slot_setSplash()
@@ -447,7 +451,7 @@ void MainWindow::closeSplash(bool bGonnaCoverAgain)
    signal_setSplashMainText(QString());
    Globals::instance().statusShowMessage(QString());
 
-   if (false == bGonnaCoverAgain)
+   if (!bGonnaCoverAgain)
    {
       if (Globals::instance().getWallet().IsNew())
       {
@@ -579,7 +583,7 @@ void MainWindow::slot_stackWidgetPop()
 
 void MainWindow::slot_updateAccountBalance(Asset const& balance)
 {
-   m_pBalance->setText(balance.getStringBalance().c_str());
+   m_pBalance->setText(balance.getStringBalance());
 }
 
 void MainWindow::slot_replayBlockChain()

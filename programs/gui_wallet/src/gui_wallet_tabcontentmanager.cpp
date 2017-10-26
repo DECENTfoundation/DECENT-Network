@@ -18,7 +18,7 @@ void TabContentManager::tryToUpdate() {
    try {
       std::string command = getUpdateCommand();
       if (command.empty()) {
-         timeToUpdate("");
+         timeToUpdate(std::string());
          return;
       }
       
@@ -26,7 +26,7 @@ void TabContentManager::tryToUpdate() {
       try {
          result = Globals::instance().runTask(command);
       } catch (...) {
-         result = "";
+         result.clear();
       }
       if (result != m_last_result) {
          m_last_result = result;
@@ -76,9 +76,7 @@ bool TabContentManager::is_first() const
 
 bool TabContentManager::is_last() const
 {
-      if (m_next_iterator.empty())
-         return true;
-      return false;
+   return m_next_iterator.empty();
 }
 
 void TabContentManager::set_next_page_iterator(string const& iterator)
@@ -89,7 +87,7 @@ void TabContentManager::set_next_page_iterator(string const& iterator)
 std::string TabContentManager::next_iterator() const
 {
    string str_iterator;
-   if (false == m_iterators.empty())
+   if (!m_iterators.empty())
       str_iterator = m_iterators.back();
 
    return str_iterator;

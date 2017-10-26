@@ -201,14 +201,14 @@ void BrowseContentTab::ShowDigitalContentsGUI() {
       
       // Price
       colIndex++;
-      m_pTableWidget->setItem(index, colIndex, new QTableWidgetItem(item.price.getString().c_str()));
+      m_pTableWidget->setItem(index, colIndex, new QTableWidgetItem(item.price.getString()));
 
       m_pTableWidget->item(index, colIndex)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
       m_pTableWidget->item(index, colIndex)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
 
       // Uploaded
       colIndex++;
-      m_pTableWidget->setItem(index, colIndex, new QTableWidgetItem(QString::fromStdString(item.created)));
+      m_pTableWidget->setItem(index, colIndex, new QTableWidgetItem(convertDateToLocale(item.created)));
       m_pTableWidget->item(index, colIndex)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
       m_pTableWidget->item(index, colIndex)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
       
@@ -225,6 +225,7 @@ void BrowseContentTab::ShowDigitalContentsGUI() {
       colIndex++;
       DecentButton* info_icon = new DecentButton(m_pTableWidget, DecentButton::TableIcon, DecentButton::Detail);
       info_icon->setEnabled(false);
+      info_icon->setToolTip(tr("Details"));
 
       QObject::connect(info_icon, &DecentButton::clicked,
                        m_pDetailsSignalMapper, (void (QSignalMapper::*)())&QSignalMapper::map);
