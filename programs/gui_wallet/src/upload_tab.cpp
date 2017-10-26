@@ -200,10 +200,10 @@ void Upload_tab::ShowDigitalContentsGUI()
       m_pTableWidget->setItem(iIndex, eSize, new QTableWidgetItem(QString::number(sizeAdjusted, 'f', 2) + unit));
 
       // Price
-      m_pTableWidget->setItem(iIndex, ePrice, new QTableWidgetItem(content.price.getString().c_str()));
+      m_pTableWidget->setItem(iIndex, ePrice, new QTableWidgetItem(content.price.getString()));
 
       // Created
-      m_pTableWidget->setItem(iIndex, eCreated, new QTableWidgetItem(QString::fromStdString(content.created)));
+      m_pTableWidget->setItem(iIndex, eCreated, new QTableWidgetItem(convertDateToLocale(content.created)));
 
       QDateTime time = QDateTime::fromString(QString::fromStdString(content.expiration), "yyyy-MM-ddTHH:mm:ss");
 
@@ -223,11 +223,13 @@ void Upload_tab::ShowDigitalContentsGUI()
       // Icon
       DecentButton* info_icon = new DecentButton(m_pTableWidget, DecentButton::TableIcon, DecentButton::Detail);
       info_icon->setEnabled(false);
+      info_icon->setToolTip(tr("Details"));
       m_pTableWidget->setCellWidget(iIndex, eIcon, info_icon);
       
       // Resubmit
       DecentButton* resubmit_button = new DecentButton(m_pTableWidget, DecentButton::TableIcon, DecentButton::Resubmit);
       resubmit_button->setEnabled(false);
+      resubmit_button->setToolTip(tr("Publish"));
 //      resubmit_button->setText("res");
       m_pTableWidget->setCellWidget(iIndex, 8, resubmit_button);
 
@@ -246,7 +248,7 @@ void Upload_tab::slot_UploadPopupResubmit(int iIndex)
    if (iIndex < 0 || iIndex >= _digital_contents.size())
       throw std::out_of_range("Content index is out of range");
 
-   if (false == Globals::instance().getCurrentUser().empty())
+   if (!Globals::instance().getCurrentUser().empty())
    {
       if (_digital_contents[iIndex].status == "Uploading")
          return;
@@ -258,7 +260,7 @@ void Upload_tab::slot_UploadPopupResubmit(int iIndex)
 
 void Upload_tab::slot_UploadPopup()
 {
-   if (false == Globals::instance().getCurrentUser().empty())
+   if (!Globals::instance().getCurrentUser().empty())
    {
       Upload_popup* pUploadWidget = new Upload_popup(nullptr);
       Globals::instance().signal_stackWidgetPush(pUploadWidget);

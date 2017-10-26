@@ -87,6 +87,7 @@ void Overview_tab::timeToUpdate(const std::string& result) {
       // Transaction Button
       //
       DecentButton* pTransactionButton = new DecentButton(m_pTableWidget, DecentButton::TableIcon, DecentButton::Transaction);
+      pTransactionButton->setToolTip(tr("Transactions"));
       pTransactionButton->setEnabled(false);
       
       QObject::connect(pTransactionButton, &DecentButton::clicked,
@@ -100,10 +101,11 @@ void Overview_tab::timeToUpdate(const std::string& result) {
       // Details Button
       //
       DecentButton* pDetailsButton = new DecentButton(m_pTableWidget, DecentButton::TableIcon, DecentButton::Detail);
+      pDetailsButton->setToolTip(tr("Details"));
       pDetailsButton->setEnabled(false);
       m_pTableWidget->setCellWidget(iIndex, 4, pDetailsButton);
 
-      m_pAccountSignalMapper->setMapping(pDetailsButton, name.c_str());
+      m_pAccountSignalMapper->setMapping(pDetailsButton, QString::fromStdString(name));
       QObject::connect(pDetailsButton, &DecentButton::clicked,
                        m_pAccountSignalMapper, (void (QSignalMapper::*)())&QSignalMapper::map);
       QObject::connect(pDetailsButton, &DecentButton::clicked,
@@ -112,11 +114,12 @@ void Overview_tab::timeToUpdate(const std::string& result) {
       // Transfer Button
       //
       DecentButton* pTransferButton = new DecentButton(m_pTableWidget, DecentButton::TableIcon, DecentButton::Transfer);
+      pTransferButton->setToolTip(tr("Transfer"));
       pTransferButton->setEnabled(false);
       m_pTableWidget->setCellWidget(iIndex, 3, pTransferButton);
             
 
-      m_pAccountSignalMapper->setMapping(pTransferButton, name.c_str());
+      m_pAccountSignalMapper->setMapping(pTransferButton, QString::fromStdString(name));
       QObject::connect(pTransferButton, &DecentButton::clicked,
                        m_pAccountSignalMapper, (void (QSignalMapper::*)())&QSignalMapper::map);
       QObject::connect(pTransferButton, &DecentButton::clicked,
