@@ -27,12 +27,12 @@ CProgBar::CProgBar(int maximum, const QString& text, bool modal, bool hasCancel,
     //resize(300, 40);
     setWindowTitle("DECENT update");
     //setModal(modal);
-    bool connected = connect(this, SIGNAL(canceled(void)), SLOT(progCanceled_slot(void)));
-    connected;
+    QObject::connect(this, SIGNAL(canceled(void)), SLOT(progCanceled_slot(void)));
+
     Qt::WindowFlags flags = windowFlags();
     Qt::WindowFlags helpFlag = Qt::WindowContextHelpButtonHint;
     flags = flags & (~helpFlag);
-    if(hasCancel == false)
+    if(!hasCancel)
         flags = flags & ~Qt::WindowCloseButtonHint;
     setWindowFlags(flags);
 
@@ -69,31 +69,31 @@ void CProgBar::EnableCancel(bool enable)
     Qt::WindowFlags flags = windowFlags();
     Qt::WindowFlags helpFlag = Qt::WindowContextHelpButtonHint;
     flags = flags & (~helpFlag);
-    if(m_hasCancel == false)
+    if(!m_hasCancel)
         flags = flags & ~Qt::WindowCloseButtonHint;
     else
         flags |= Qt::WindowCloseButtonHint;
 
     setWindowFlags(flags);
 }
-void CProgBar::progCanceled_slot(void)
+void CProgBar::progCanceled_slot()
 {
     if(m_abort)
         *m_abort = 1;
     hide();
 }
 
-void CProgBar::Show(void)
+void CProgBar::Show()
 {
     QProgressDialog::show();
 }
-void CProgBar::Raise(void)
+void CProgBar::Raise()
 {
     QProgressDialog::raise();
 }
 void CProgBar::SetValue(int pos)
 {
-    if(isVisible() == false)    // setValues() vyvolava show() ! tym sa po cancelovani a naslednom volani setValue() "bliklo" pred delete (timerEvent())
+    if(!isVisible())    // setValues() vyvolava show() ! tym sa po cancelovani a naslednom volani setValue() "bliklo" pred delete (timerEvent())
         return;
     if(pos < maximum())
         setValue(pos);
@@ -103,7 +103,7 @@ void CProgBar::SetLabelText(const QString& title)
 {
     setLabelText(title);
 }
-void CProgBar::Hide(void)
+void CProgBar::Hide()
 {
     QProgressDialog::setVisible(false);
     //hide();
@@ -112,12 +112,12 @@ void CProgBar::SetMaximum(int max)
 {
     QProgressDialog::setMaximum(max);
 }
-bool CProgBar::WasCanceled(void) const
+bool CProgBar::WasCanceled() const
 {
     return ((QProgressDialog*)this)->wasCanceled();
 }
 
-void CProgBar::SetMyStandardSize(void)
+void CProgBar::SetMyStandardSize()
 {
    /*
    QString t;
@@ -179,7 +179,7 @@ void CProgBar::timerEvent(QTimerEvent *event)
 
 void CProgBar::closeEvent(QCloseEvent* e)
 {
-    if(m_hasCancel == false)  {
+    if(!m_hasCancel)  {
         e->ignore();
     } else
         QProgressDialog::closeEvent(e);

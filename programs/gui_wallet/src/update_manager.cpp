@@ -161,13 +161,14 @@ void UpdateManager::slot_updateProxy()
 void UpdateManager::progBarCreate(int upperBorder, uint32_t* abort)
 {
    CProgBar* progBar = nullptr;
-   if (m_progBar)
-      delete m_progBar;
-   m_progBar = nullptr;
+   if (m_progBar) {
+       delete m_progBar;
+       m_progBar = nullptr;
+   }
 
    QMainWindow* w = getMainWindow();
-   progBar = new CProgBar(100, QString(""), false, true, w);
-   progBar->Init(upperBorder, "", abort, w);
+   progBar = new CProgBar(100, QString(), false, true, w);
+   progBar->Init(upperBorder, QString(), abort, w);
    progBar->SetMyStandardSize();
    progBar->Show();// to apply change of size
    progBar->Raise();

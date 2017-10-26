@@ -381,7 +381,7 @@ ContentInfoWidget::ContentInfoWidget(QWidget* parent, const SDigitalContent& a_c
    : StackLayerWidget(parent)
    , m_getItOrPay(GetIt)
    , m_URI(a_cnt_details.URI)
-   , m_amount(a_cnt_details.price.getString().c_str())
+   , m_amount(a_cnt_details.price.getString())
 {
    QGridLayout* main_layout = new QGridLayout();
    main_layout->setSpacing(0);
@@ -424,7 +424,7 @@ ContentInfoWidget::ContentInfoWidget(QWidget* parent, const SDigitalContent& a_c
    //
    DecentLabel* labelAmountTitle = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
    DecentLabel* labelAmountInfo  = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::HighlightedRight);
-   QString str_price = a_cnt_details.price.getString().c_str();
+   QString str_price = a_cnt_details.price.getString();
    labelAmountTitle->setText(tr("Amount"));
    labelAmountInfo->setText(str_price);
    main_layout->addWidget(labelAmountTitle, iRowIndex, 0);
@@ -532,7 +532,7 @@ void ContentInfoWidget::Buy()
    {
       str_error = ex.what();
    }
-   if (false == str_error.empty())
+   if (!str_error.empty())
       ShowMessageBox("", tr("Failed to download content"), QString::fromStdString(str_error));
    
    emit accepted();
@@ -574,7 +574,7 @@ ContentReviewWidget::ContentReviewWidget(QWidget* parent, const SDigitalContent&
    //
    DecentLabel* labelAmountTitle = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
    DecentLabel* labelAmountInfo  = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::HighlightedRight);
-   QString str_price = a_cnt_details.price.getString().c_str();
+   QString str_price = a_cnt_details.price.getString();
    labelAmountTitle->setText(tr("Amount"));
    labelAmountInfo->setText(str_price);
    main_layout->addWidget(labelAmountTitle, iRowIndex, 0);
@@ -813,7 +813,7 @@ void CommentWidget::update()
       m_pComment->setPlaceholderText(QString());
       m_pRatingWidget->setRating(m_content_average_rating);
 
-      if (false == m_feedback_author.empty())
+      if (!m_feedback_author.empty())
       {
          m_pNextButton->setText(tr("feedback"));
          m_pPreviousButton->hide();

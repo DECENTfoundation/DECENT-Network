@@ -112,12 +112,12 @@ void TransactionsTab::timeToUpdate(const string& result)
 
       std::vector<QString> values =
       {
-         QString::fromStdString(timestamp),
+         convertDateTimeToLocale(timestamp),
          str_operation_type,
          QString::fromStdString(from_account),
          QString::fromStdString(to_account),
-         transaction_amount_ast.getString().c_str(),
-         transaction_fee_ast.getString().c_str(),
+         transaction_amount_ast.getString(),
+         transaction_fee_ast.getString(),
          QString::fromStdString(description)
       };
 
