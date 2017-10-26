@@ -468,9 +468,12 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
 
    void request_to_buy_evaluator::process_payment_and_exchange( const account_id_type& payer, const asset& payment, const asset& price )
    {
+      if( is_subscriber )
+         return;
+      
       database& d = db();
 
-      if( !is_subscriber && !skip_exchange )
+      if( !skip_exchange )
       {
          if( payment.asset_id == asset_id_type() ) //payment in DCT's, price in UIA's
          {
