@@ -137,6 +137,11 @@ Upload_popup::Upload_popup(QWidget* pParent, const std::string& id_modify/* = st
    DecentButton* pBrowseSamplesButton = new DecentButton(this, DecentButton::DialogAction);
    pBrowseSamplesButton->setText(tr("Browse"));
    pBrowseSamplesButton->setFont(PopupButtonRegularFont());
+
+   m_pTotalPriceLabel = new QLabel(this);
+   m_pTotalPriceLabel->setVisible(false);
+   m_pTotalPriceLabel->setText(tr("Price"));
+
    //
    // Upload & Cancel
    //
@@ -148,6 +153,7 @@ Upload_popup::Upload_popup(QWidget* pParent, const std::string& id_modify/* = st
 
    pUploadButton->setText(tr("Publish"));
    pUploadButton->setFont(PopupButtonBigFont());
+   pUploadButton->setEnabled(false);
    
    //resubmit layout type
    if (!m_id_modify.empty())
@@ -180,6 +186,9 @@ Upload_popup::Upload_popup(QWidget* pParent, const std::string& id_modify/* = st
    pSamplesRow->addWidget(pSamplesPath);
    pSamplesRow->addWidget(pBrowseSamplesButton);
 
+   QHBoxLayout* pPublishTextRow = new QHBoxLayout();
+   pPublishTextRow->addWidget(m_pTotalPriceLabel);
+
    QHBoxLayout* pButtonsLayout = new QHBoxLayout;
    pButtonsLayout->setContentsMargins(20, 20, 20, 20);
    pButtonsLayout->addWidget(pUploadButton);
@@ -193,6 +202,7 @@ Upload_popup::Upload_popup(QWidget* pParent, const std::string& id_modify/* = st
    pMainLayout->addLayout(pSeedersRow);
    pMainLayout->addLayout(pContentRow);
    pMainLayout->addLayout(pSamplesRow);
+   pMainLayout->addLayout(pPublishTextRow);
    pMainLayout->addLayout(pButtonsLayout);
    pMainLayout->setContentsMargins(10, 10, 10, 10);
    setLayout(pMainLayout);
@@ -237,8 +247,6 @@ Upload_popup::Upload_popup(QWidget* pParent, const std::string& id_modify/* = st
 
    QObject::connect(this, &Upload_popup::signal_UploadButtonEnabled,
                     pUploadButton, &QWidget::setEnabled);
-   QObject::connect(this, &Upload_popup::signal_UploadButtonSetText,
-                    pUploadButton, &QPushButton::setText);
 
    QObject::connect(m_pStatusCheckTimer, &QTimer::timeout,
                     this, &Upload_popup::slot_UpdateStatus);
@@ -454,8 +462,8 @@ void Upload_popup::slot_UpdateStatus()
           Globals::instance().getCurrentUser().empty() ||
           !isPublishersValid)
       {
+         m_pTotalPriceLabel->setVisible(false);
          emit signal_UploadButtonEnabled(false);
-         emit signal_UploadButtonSetText(tr("Publish"));
       }
       else
       {
@@ -465,9 +473,11 @@ void Upload_popup::slot_UpdateStatus()
          uint64_t effectiveMB = std::max(1.0, (*fileSizeGBytes) * 1024.0 + 1 - 1.0 / 1024 / 1024);
          uint64_t totalPricePerDay = effectiveMB * publishingPrice;
          uint64_t totalPrice = days * totalPricePerDay;
-         
+
+         m_pTotalPriceLabel->setText(tr("Publish for") + " " + Globals::instance().asset(totalPrice).getString());
+         m_pTotalPriceLabel->setVisible(true);
+
          emit signal_UploadButtonEnabled(true);
-         emit signal_UploadButtonSetText(tr("Publish for") + " " + Globals::instance().asset(totalPrice).getString());
       }
    }
    else
@@ -478,6 +488,7 @@ void Upload_popup::slot_UpdateStatus()
           Globals::instance().getCurrentUser().empty() ||
           !isPublishersValid)
       {
+         m_pTotalPriceLabel->setVisible(false);
          emit signal_UploadButtonEnabled(false);
       }
       else

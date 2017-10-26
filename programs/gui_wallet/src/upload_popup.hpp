@@ -24,19 +24,18 @@ namespace gui_wallet
       void slot_UpdateStatus();
       void slot_ChooseSeeders();
       void slot_SeederChanged(int);
-      void slot_TitleChanged(QString const&);
-      void slot_ContentPathChanged(QString const&);
-      void slot_SamplesPathChanged(QString const&);
-      void slot_PriceChanged(QString const&);
+      void slot_TitleChanged(const QString&);
+      void slot_ContentPathChanged(const QString&);
+      void slot_SamplesPathChanged(const QString&);
+      void slot_PriceChanged(const QString&);
       void slot_BrowseContent();
       void slot_BrowseSamples();
       void slot_UploadContent();
    signals:
-      void signal_SetSeedersText(QString const&);
-      void signal_ContentPathChange(QString const&);
-      void signal_SamplesPathChange(QString const&);
+      void signal_SetSeedersText(const QString&);
+      void signal_ContentPathChange(const QString&);
+      void signal_SamplesPathChange(const QString&);
       void signal_UploadButtonEnabled(bool);
-      void signal_UploadButtonSetText(QString const&);
 
    protected:
       QStringList getChosenPublishers() const;
@@ -58,6 +57,7 @@ namespace gui_wallet
       QTimer* m_pStatusCheckTimer;
       DecentTextEdit* m_pDescriptionText;
       DecentLineEdit* m_pPriceEditor;
+      QLabel* m_pTotalPriceLabel;
       QDateEdit* m_pLifeTime;
       double m_dPrice;
       std::string m_id_modify;
