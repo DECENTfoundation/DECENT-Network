@@ -70,6 +70,8 @@ class QTimer;
 
 namespace gui_wallet
 {
+   const int g_max_number_of_decimal_places = 8;   //number of decimal places showed in asset price
+
    class StackLayerWidget;
    std::string CalculateRemainingTime(QDateTime const& dt, QDateTime const& dtFuture);
    QString CalculateRemainingTime_Behind(QDateTime const& dt, QDateTime const& dtFuture);
@@ -86,7 +88,6 @@ namespace gui_wallet
    std::string escape_string(const std::string& s);
    QString convertDateToLocale(const std::string& s);
    QString convertDateTimeToLocale(const std::string& s);
-
 
    using WalletAPI = decent::wallet_utility::WalletAPI;
 

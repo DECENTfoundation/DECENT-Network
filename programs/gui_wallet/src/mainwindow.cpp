@@ -515,7 +515,7 @@ void MainWindow::slot_connectionStatusChanged(Globals::ConnectionState from, Glo
    {
       slot_closeSplash();
    }
-   else if (Globals::ConnectionState::Up != to)
+   else
    {
       if (from == Globals::ConnectionState::Up)
       {
@@ -733,6 +733,11 @@ void MainWindow::slot_checkDownloads()
                                                   "\"\" "
                                                   "\"-1\" ");
    }
+   catch(const std::exception& ex)
+   {
+      std::cout << "runTaskParse() " << ex.what() << std::endl;
+      return;
+   }
    catch(...)
    {
       return;
@@ -755,6 +760,10 @@ void MainWindow::slot_checkDownloads()
                                         "\"" + hash + "\" ");
 
             m_activeDownloads.insert(URI);
+         }
+         catch(const std::exception& ex)
+         {
+            std::cout << "runTask('download_package') " << ex.what() << std::endl;
          }
          catch(...)
          {

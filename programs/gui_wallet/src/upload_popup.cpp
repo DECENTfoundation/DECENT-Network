@@ -75,7 +75,7 @@ Upload_popup::Upload_popup(QWidget* pParent, const std::string& id_modify/* = st
    pLifeTimeLabel->setText(tr("Expiration date"));
 
    m_pLifeTime->setDate(QDate::currentDate().addMonths(1));
-   m_pLifeTime->setDisplayFormat("yyyy-MM-dd");
+   m_pLifeTime->setDisplayFormat(Globals::instance().locale().dateFormat(QLocale::ShortFormat));  //  "yyyy-MM-dd"
    m_pLifeTime->setCalendarPopup(true);
    m_pLifeTime->setMinimumDate(QDate::currentDate().addDays(1));
    m_pLifeTime->setStyle(QStyleFactory::create("fusion"));
@@ -86,14 +86,20 @@ Upload_popup::Upload_popup(QWidget* pParent, const std::string& id_modify/* = st
    pPriceLabel->setEnabled(false);
    pPriceLabel->setText(tr("Price"));
 
-   QDoubleValidator* dblValidator = new QDoubleValidator(0.0001, 100000, 4, this);
+   Asset min_price_asset = Globals::instance().asset(1);
+   double min_price = min_price_asset.to_value();
+
+   Asset max_price_asset = Globals::instance().asset(100000 * pow(10, g_max_number_of_decimal_places));
+   double max_price = max_price_asset.to_value();
+
+   QDoubleValidator* dblValidator = new QDoubleValidator(min_price, max_price, g_max_number_of_decimal_places, this);
    dblValidator->setLocale(Globals::instance().locale());
 
-   DecentLineEdit* pPriceEditor = new DecentLineEdit(this, DecentLineEdit::DialogLineEdit);
-   pPriceEditor->setPlaceholderText(tr("Price"));
-   pPriceEditor->setValidator(dblValidator);
-   pPriceEditor->setAttribute(Qt::WA_MacShowFocusRect, 0);
-   pPriceEditor->setTextMargins(5, 5, 5, 5);
+   m_pPriceEditor = new DecentLineEdit(this, DecentLineEdit::DialogLineEdit);
+   m_pPriceEditor->setPlaceholderText(tr("Price"));
+   m_pPriceEditor->setValidator(dblValidator);
+   m_pPriceEditor->setAttribute(Qt::WA_MacShowFocusRect, 0);
+   m_pPriceEditor->setTextMargins(5, 5, 5, 5);
    //
    // Seeders
    //
@@ -160,7 +166,7 @@ Upload_popup::Upload_popup(QWidget* pParent, const std::string& id_modify/* = st
 
    QHBoxLayout* pPriceRow = new QHBoxLayout();
    pPriceRow->addWidget(pPriceLabel);
-   pPriceRow->addWidget(pPriceEditor);
+   pPriceRow->addWidget(m_pPriceEditor);
 
    QHBoxLayout* pSeedersRow = new QHBoxLayout();
    pSeedersRow->addWidget(pSeedersPath);
@@ -201,7 +207,7 @@ Upload_popup::Upload_popup(QWidget* pParent, const std::string& id_modify/* = st
                     this, &Upload_popup::slot_UpdateStatus);
    QObject::connect(m_pDescriptionText, &QTextEdit::textChanged,
                     this, &Upload_popup::slot_UpdateStatus);
-   QObject::connect(pPriceEditor, &QLineEdit::textChanged,
+   QObject::connect(m_pPriceEditor, &QLineEdit::textChanged,
                     this, &Upload_popup::slot_PriceChanged);
 
    QObject::connect(pContentPath, &QLineEdit::textChanged,
@@ -246,9 +252,9 @@ Upload_popup::Upload_popup(QWidget* pParent, const std::string& id_modify/* = st
       QDateTime time = QDateTime::fromString(QString::fromStdString(expiration), "yyyy-MM-ddTHH:mm:ss");
 
       m_pLifeTime->setDate(time.date());
-      pTitleText->setText(title.c_str());
-      m_pDescriptionText->setText(description.c_str());
-      pPriceEditor->setText(price.c_str());
+      pTitleText->setText(QString::fromStdString(title));
+      m_pDescriptionText->setText(QString::fromStdString(description));
+      m_pPriceEditor->setText(QString::fromStdString(price));
       slot_SeederChanged(-1);
    }
 
@@ -390,8 +396,10 @@ void Upload_popup::slot_PriceChanged(const QString& strPrice)
       m_dPrice = -1;
    else
    {
-      bool bPriceIsOK = false;
-      m_dPrice = Globals::instance().locale().toDouble(strPrice, &bPriceIsOK);
+      bool bPriceIsOK = m_pPriceEditor->hasAcceptableInput();
+      if (bPriceIsOK) {
+         m_dPrice = Globals::instance().locale().toDouble(strPrice, &bPriceIsOK);
+      }
 
       if (!bPriceIsOK)
          m_dPrice = -1;

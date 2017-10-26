@@ -506,7 +506,7 @@ void WalletOperator::slot_connect()
    {
       m_wallet_api.Connent();
    }
-   catch(std::exception const& ex)
+   catch(const std::exception& ex)
    {
       str_error = ex.what();
    }
@@ -533,10 +533,12 @@ QString Asset::getString() const
 {
    if (m_amount > 0) {
 
+      QLocale& locale = Globals::instance().locale();
+
       if (hasDecimals())
-         return QString::number(to_value(), 'f' , 8) + " " + QString::fromStdString(m_str_symbol);
+         return locale.toString(to_value(), 'f', g_max_number_of_decimal_places) + " " + QString::fromStdString(m_str_symbol);
       else
-         return QString::number((int)to_value()) + " " + QString::fromStdString(m_str_symbol);
+         return locale.toString((int)to_value()) + " " + QString::fromStdString(m_str_symbol);
    }
    else {
       return QString("Free");
@@ -545,7 +547,8 @@ QString Asset::getString() const
 
 QString Asset::getStringBalance() const
 {
-   return QString::number(to_value(), 'f' , 8) + " " + QString::fromStdString(m_str_symbol);
+   QLocale& locale = Globals::instance().locale();
+   return locale.toString(to_value(), 'f' , g_max_number_of_decimal_places) + " " + QString::fromStdString(m_str_symbol);
 }
 //
 // DaemonDetails

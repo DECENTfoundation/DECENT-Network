@@ -11,6 +11,7 @@ namespace gui_wallet
    class Publisher;
    class DecentButton;
    class DecentTextEdit;
+   class DecentLineEdit;
 
    class Upload_popup : public StackLayerWidget
    {
@@ -56,6 +57,7 @@ namespace gui_wallet
    private:
       QTimer* m_pStatusCheckTimer;
       DecentTextEdit* m_pDescriptionText;
+      DecentLineEdit* m_pPriceEditor;
       QDateEdit* m_pLifeTime;
       double m_dPrice;
       std::string m_id_modify;
