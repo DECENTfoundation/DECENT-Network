@@ -219,12 +219,15 @@ bool database::are_assets_exchangeable( const asset_object& payment, const asset
 
    // UIA -> DCT  must be exchangeable
    // UIA -> MIA  must be exchangeable
-   // UIA -> UIA  ok
+   // UIA -> UIA  ok, but UIAs must be the same
 
    if( payment.is_monitored_asset() )
       return false;
    else if( payment.id == price.id )
       return true;
+   else if( !payment.is_monitored_asset() && !price.is_monitored_asset() &&
+            payment.id != asset_id_type() && price.id != asset_id_type() ) // exchange between two different UIAs is not allowed
+      return false;
    else if( payment.options.is_exchangeable && price.options.is_exchangeable ) // DCT and MIA assets are always exchangeable
       return true;
    else
