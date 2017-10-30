@@ -7,6 +7,7 @@
 #include <QWidget>
 #include <QLabel>
 #include <QTableWidget>
+#include <QString>
 #include <chrono>
 #include <vector>
 
@@ -69,19 +70,24 @@ class QTimer;
 
 namespace gui_wallet
 {
+   const int g_max_number_of_decimal_places = 8;   //number of decimal places showed in asset price
+
    class StackLayerWidget;
    std::string CalculateRemainingTime(QDateTime const& dt, QDateTime const& dtFuture);
    QString CalculateRemainingTime_Behind(QDateTime const& dt, QDateTime const& dtFuture);
    
    void ShowMessageBox(QString const& strTitle,
                         QString const& strMessage,
-                        QString const& strDetailedText = QString());
+                        QString const& strDetailedText = QString(),
+                        QWidget* parent = nullptr);
 
    uint64_t json_to_int64(nlohmann::json const& o);
     
    std::size_t extra_space(const std::string& s) noexcept;
    std::string unescape_string(const std::string& s);
    std::string escape_string(const std::string& s);
+   QString convertDateToLocale(const std::string& s);
+   QString convertDateTimeToLocale(const std::string& s);
 
    using WalletAPI = decent::wallet_utility::WalletAPI;
 
@@ -90,7 +96,7 @@ namespace gui_wallet
       Q_OBJECT
    public:
       WalletOperator();
-      ~WalletOperator();
+      ~WalletOperator() override;
 
    public slots:
       void slot_connect();
@@ -98,21 +104,25 @@ namespace gui_wallet
       void signal_connected(std::string const& str_error);
    public:
       WalletAPI m_wallet_api;
-   };   
+   };
+
    // Asset
    //
    // use Globals.asset to get a valid one
    class Asset
    {
    public:
-      operator double() const;
-      operator std::string() const;
-      std::string getString() const;
-      std::string getStringBalance() const;
+      double to_value() const;
+      bool hasDecimals() const;
+
+      QString getString() const;
+      QString getStringBalance() const;
+
       uint64_t m_amount = 0;
       uint64_t m_scale = 1;
       std::string m_str_symbol;
    };
+
    //
    // Publisher
    //
@@ -151,13 +161,13 @@ namespace gui_wallet
       std::string runTask(std::string const& str_command);
       nlohmann::json runTaskParse(std::string const& str_command);
       std::vector<Publisher> getPublishers();
-      QLocale& locale();
+      QLocale& locale() { return *m_p_locale; }
       bool connected() const;
 
    public slots:
       void slot_updateAccountBalance();
-      void slot_setCurrentUser(QString const& user);
-      void slot_showTransferDialog(QString const& user);
+      void slot_setCurrentUser(const QString& user);
+      void slot_showTransferDialog(const QString& user);
       void slot_showTransferDialog();
 
    signals:
@@ -171,7 +181,7 @@ namespace gui_wallet
       void setWalletUnlocked();
       void setWalletError(std::string const& error);
 
-      std::string getAccountName(std::string const& accountId);
+      std::string getAccountName(const std::string& accountId);
    signals:
       void signal_connect();  // for internal use
    private slots:
@@ -234,7 +244,7 @@ namespace gui_wallet
 
    struct DecentColumn
    {
-      DecentColumn(QString title, int size, std::string const& sortid = std::string());
+      DecentColumn(const QString& title, int size, std::string const& sortid = std::string());
       
       QString title;
       int size; // Negative value of size means absolute value of width, positive is weighted value

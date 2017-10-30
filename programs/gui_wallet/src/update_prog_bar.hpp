@@ -11,22 +11,23 @@ public:
     void Init(int maximum, const QString& title, uint32_t* abort, QWidget* parent);
     void EnableCancel(bool enable);
 
-    void Show(void);
-    void Raise(void);
-    void Hide(void);
+    void Show();
+    void Raise();
+    void Hide();
     void SetValue(int pos);
     void SetLabelText(const QString& title);
     void SetMaximum(int max);
-    bool WasCanceled(void) const;
-    void SetMyStandardSize(void);
+    bool WasCanceled() const;
+    void SetMyStandardSize();
     void SetAutoClose(bool autoclose);
 
     //virtual void setVisible(bool visible);
 
 signals:
-    void progCanceled(void);
+    void progCanceled();
 public slots:
-    void progCanceled_slot(void);
+    void progCanceled_slot();
+
 private:
     bool m_modal;
     uint32_t* m_abort;
