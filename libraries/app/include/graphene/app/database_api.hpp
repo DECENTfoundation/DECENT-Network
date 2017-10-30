@@ -705,6 +705,14 @@ namespace graphene { namespace app {
           * @return The seeders found
           * @ingroup DatabaseAPI
           */
+         vector<seeder_object> list_seeders_by_price( uint32_t count )const;
+
+         /**
+          * @brief Get a list of seeders by price, in increasing order. Same method as list_seeders_by_price, kept for compatibility
+          * @param count Maximum number of seeders to retrieve
+          * @return The seeders found
+          * @ingroup DatabaseAPI
+          */
          vector<seeder_object> list_publishers_by_price( uint32_t count )const;
 
          /**
@@ -886,7 +894,7 @@ FC_API(graphene::app::database_api,
           (generate_content_keys)
           (restore_encryption_key)
           (search_content)
-          (list_publishers_by_price)
+          (list_seeders_by_price)
           (list_seeders_by_upload)
           (list_seeders_by_region)
           (list_seeders_by_rating)

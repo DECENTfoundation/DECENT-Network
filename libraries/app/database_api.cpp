@@ -180,7 +180,7 @@ namespace graphene { namespace app {
                                              const object_id_type& id,
                                              const string& type,
                                              uint32_t count)const;
-      vector<seeder_object> list_publishers_by_price( const uint32_t count )const;
+      vector<seeder_object> list_seeders_by_price( const uint32_t count )const;
       optional<seeder_object> get_seeder(account_id_type) const;
       optional<vector<seeder_object>> list_seeders_by_upload( const uint32_t count )const;
       vector<seeder_object> list_seeders_by_region( const string region_code )const;
@@ -2082,12 +2082,16 @@ namespace
       return result;
    }
    
+   vector<seeder_object> database_api::list_seeders_by_price( uint32_t count )const
+   {
+      return my->list_seeders_by_price( count );
+   }
    vector<seeder_object> database_api::list_publishers_by_price( uint32_t count )const
    {
-      return my->list_publishers_by_price( count );
+      return my->list_seeders_by_price( count );
    }
-   
-   vector<seeder_object> database_api_impl::list_publishers_by_price( uint32_t count )const
+    
+   vector<seeder_object> database_api_impl::list_seeders_by_price( uint32_t count )const
    {
       FC_ASSERT( count <= 100 );
       const auto& idx = _db.get_index_type<seeder_index>().indices().get<by_price>();

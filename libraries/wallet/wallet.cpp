@@ -4628,9 +4628,9 @@ pair<account_id_type, vector<account_id_type>> wallet_api::get_author_and_co_aut
    return my->get_author_and_co_authors_by_URI( URI );
 }
 
-   vector<seeder_object> wallet_api::list_publishers_by_price( uint32_t count )const
+   vector<seeder_object> wallet_api::list_seeders_by_price( uint32_t count )const
    {
-      return my->_remote_db->list_publishers_by_price( count );
+      return my->_remote_db->list_seeders_by_price( count );
    }
 
    optional<vector<seeder_object>> wallet_api::list_seeders_by_upload( const uint32_t count )const

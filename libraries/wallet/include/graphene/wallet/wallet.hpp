@@ -1899,7 +1899,7 @@ namespace graphene { namespace wallet {
           * @return The seeders found
           * @ingroup WalletCLI
           */
-         vector<seeder_object> list_publishers_by_price( uint32_t count )const;
+         vector<seeder_object> list_seeders_by_price( uint32_t count )const;
 
          /**
           * @brief Get a list of seeders ordered by total upload, in decreasing order
@@ -2234,7 +2234,7 @@ FC_API( graphene::wallet::wallet_api,
            (get_real_supply)
            (search_content)
            (search_user_content)
-           (list_publishers_by_price)
+           (list_seeders_by_price)
            (list_seeders_by_upload)
            (list_seeders_by_region)
            (list_seeders_by_rating)
