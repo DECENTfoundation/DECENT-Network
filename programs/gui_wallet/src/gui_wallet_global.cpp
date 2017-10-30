@@ -776,7 +776,7 @@ nlohmann::json Globals::runTaskParse(string const& str_command)
 
 std::vector<Publisher> Globals::getPublishers()
 {
-   auto publishers = runTaskParse("list_publishers_by_price 100");
+   auto publishers = runTaskParse("list_seeders_by_price 100");
    std::vector<Publisher> result;
 
    result.reserve(publishers.size());
