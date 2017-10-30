@@ -149,7 +149,7 @@ void_result user_issued_asset_update_evaluator::do_evaluate(const update_user_is
 
       const asset_object& a = o.asset_to_update(d);
       FC_ASSERT( !a.is_monitored_asset() && a.id != asset_id_type() );
-      //FC_ASSERT( o.max_supply >= a.dynamic_asset_data_id(d).current_supply );
+      FC_ASSERT( o.max_supply >= a.dynamic_asset_data_id(d).current_supply );
 
       if( o.new_issuer )
          FC_ASSERT(d.find_object(*o.new_issuer));
@@ -211,7 +211,7 @@ void_result asset_fund_pools_evaluator::do_evaluate(const asset_fund_pools_opera
       database& d = db();
 
       const asset_object& uia_o = o.uia_asset.asset_id(d);
-      FC_ASSERT( !uia_o.is_monitored_asset() /*&& o.uia_asset.asset_id != asset_id_type()*/ ); //TODO_UPDATE_1
+      FC_ASSERT( !uia_o.is_monitored_asset() && o.uia_asset.asset_id != asset_id_type() );
 
       asset_dyn_data = &uia_o.dynamic_data(d);
       FC_ASSERT( o.uia_asset <= db().get_balance( o.from_account, o.uia_asset.asset_id ), "insufficient balance of ${uia}'s.",("uia",uia_o.symbol) );
