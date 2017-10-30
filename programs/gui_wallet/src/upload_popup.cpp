@@ -616,7 +616,9 @@ void Upload_popup::getContents(string const& id,
 
 void Upload_popup::slot_UploadContent()
 {
-   std::string m_life_time = m_pLifeTime->text().toStdString();
+   QLocale& locale = Globals::instance().locale();
+
+   std::string m_life_time = locale.toString(m_pLifeTime->date(), "yyyy-MM-dd").toStdString();
 
    std::string m_price = QString::number(m_dPrice).toStdString();
 
