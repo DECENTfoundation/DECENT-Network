@@ -852,7 +852,8 @@ void MainWindow::DisplayWalletContentGUI()
 {
    Globals::instance().setWalletUnlocked();
    Globals::instance().getWallet().SaveWalletFile();
-
+   bool display_error_box = false;
+   std::string exception_text;
    try
    {
       auto accs = Globals::instance().runTaskParse("list_my_accounts");
@@ -873,9 +874,15 @@ void MainWindow::DisplayWalletContentGUI()
    }
    catch (const std::exception& ex)
    {
-      //ALERT_DETAILS("Failed to get account information", ex.what());
-      QMessageBox::critical(this, "Error", QString(tr("Failed to get account information - %1")).arg(ex.what()));
+      exception_text = ex.what();
+      display_error_box = true;
    }
+
+   if (display_error_box) {
+      //ALERT_DETAILS("Failed to get account information", ex.what());
+      QMessageBox::critical(this, "Error", QString(tr("Failed to get account information - %1")).arg(QString::fromStdString(exception_text)));
+   }
+
 }
 
 
