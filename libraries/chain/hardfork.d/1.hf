@@ -1,4 +1,4 @@
 // #1 - UIA introduced; seeder regions; instant messaging.
 #ifndef HARDFORK_1_TIME
-#define HARDFORK_1_TIME (fc::time_point_sec( 1506584000 ))
+#define HARDFORK_1_TIME (fc::time_point_sec( 1510228800 ))
 #endif

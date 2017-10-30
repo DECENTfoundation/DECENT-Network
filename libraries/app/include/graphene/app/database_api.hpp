@@ -894,6 +894,7 @@ FC_API(graphene::app::database_api,
           (generate_content_keys)
           (restore_encryption_key)
           (search_content)
+          (list_publishers_by_price)
           (list_seeders_by_price)
           (list_seeders_by_upload)
           (list_seeders_by_region)
