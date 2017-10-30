@@ -69,15 +69,16 @@ bool is_valid_symbol( const string& symbol )
 
 share_type asset_create_operation::calculate_fee(const asset_create_operation::fee_parameters_type& param)const
 {
+
    if( monitored_asset_opts.valid() )
       return param.basic_fee;
 
-   auto fee = param.long_symbol;
+   auto fee = 5 * param.basic_fee;
 
    switch(symbol.size()) {
-      case 3: fee = param.symbol3;
+      case 3: fee = param.basic_fee * 5000;
          break;
-      case 4: fee = param.symbol4;
+      case 4: fee = param.basic_fee * 200;
          break;
       default:
          break;
@@ -101,7 +102,7 @@ void  asset_create_operation::validate()const
 
 share_type asset_issue_operation::calculate_fee(const fee_parameters_type& k)const
 {
-   return k.fee + calculate_data_fee( fc::raw::pack_size(memo), k.price_per_kbyte );
+   return k.fee + calculate_data_fee( fc::raw::pack_size(memo), k.fee );
 }
 
 void asset_issue_operation::validate()const {

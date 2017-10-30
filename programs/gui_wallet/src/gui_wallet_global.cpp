@@ -1167,17 +1167,11 @@ QProcess* run_ipfs_daemon(QObject* parent, const QString& app_dir)
       throw std::runtime_error("Cannot find IPFS executable. Please export IPFS_BIN or IPFS_PATH environment variables");
    }
 
-   QProcess *initProcess = new QProcess(parent);
-   initProcess->start(program, QStringList("init"));
-
-   // If init timeout throw something
-   if (!initProcess->waitForFinished(2000)) {
-      throw std::runtime_error("Timeout while initializing ipfs");
-   }
-
    // Run daemon
    QProcess *daemonProcess = new QProcess(parent);
-   daemonProcess->start(program, QStringList("daemon"));
+   QStringList params;
+   params << "daemon" << "--init" << "--migrate";
+   daemonProcess->start(program, params);
    return daemonProcess;
 }
 
