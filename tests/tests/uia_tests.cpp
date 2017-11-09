@@ -49,9 +49,9 @@ BOOST_AUTO_TEST_CASE( create_advanced_uia )
       creator.issuer = account_id_type();
       creator.fee = asset();
       creator.symbol = "ADVANCED";
-      creator.common_options.max_supply = 100000000;
+      creator.options.max_supply = 100000000;
       creator.precision = 2;
-      creator.common_options.core_exchange_rate = price({asset(2),asset(1,asset_id_type(1))});
+      creator.options.core_exchange_rate = price({asset(2),asset(1, asset_id_type(1))});
       trx.operations.push_back(std::move(creator));
       PUSH_TX( db, trx, ~0 );
 
@@ -59,11 +59,11 @@ BOOST_AUTO_TEST_CASE( create_advanced_uia )
       BOOST_CHECK(test_asset.symbol == "ADVANCED");
       BOOST_CHECK(asset(1, test_asset_id) * test_asset.options.core_exchange_rate == asset(2));
       BOOST_CHECK(test_asset.options.max_supply == 100000000);
-      BOOST_CHECK(!test_asset.options.monitored_asset_opts.valid());
+      BOOST_CHECK(!test_asset.monitored_asset_opts.valid());
 
       const asset_dynamic_data_object& test_asset_dynamic_data = test_asset.dynamic_asset_data_id(db);
       BOOST_CHECK(test_asset_dynamic_data.current_supply == 0);
-      BOOST_CHECK(test_asset_dynamic_data.accumulated_fees == 0);
+
    } catch(fc::exception& e) {
       edump((e.to_detail_string()));
       throw;
@@ -74,7 +74,8 @@ BOOST_AUTO_TEST_CASE( asset_name_test )
 {
    try
    {
-      ACTORS( (alice)(bob) );
+      //names must be at least 5 characters long...
+      ACTORS( (alice)(bobian) );
 
       auto has_asset = [&]( std::string symbol ) -> bool
       {
@@ -88,13 +89,13 @@ BOOST_AUTO_TEST_CASE( asset_name_test )
       BOOST_CHECK(  has_asset("ALPHA") );    BOOST_CHECK( !has_asset("ALPHA.ONE") );
 
       // Nobody can create another asset named ALPHA
-      GRAPHENE_REQUIRE_THROW( create_user_issued_asset( "ALPHA",   bob_id(db) ), fc::exception );
+      GRAPHENE_REQUIRE_THROW( create_user_issued_asset( "ALPHA",   bobian_id(db) ), fc::exception );
       BOOST_CHECK(  has_asset("ALPHA") );    BOOST_CHECK( !has_asset("ALPHA.ONE") );
       GRAPHENE_REQUIRE_THROW( create_user_issued_asset( "ALPHA", alice_id(db) ), fc::exception );
       BOOST_CHECK(  has_asset("ALPHA") );    BOOST_CHECK( !has_asset("ALPHA.ONE") );
 
       // Bob can't create ALPHA.ONE
-      GRAPHENE_REQUIRE_THROW( create_user_issued_asset( "ALPHA.ONE", bob_id(db) ), fc::exception );
+      GRAPHENE_REQUIRE_THROW( create_user_issued_asset( "ALPHA.ONE", bobian_id(db) ), fc::exception );
       BOOST_CHECK(  has_asset("ALPHA") );    BOOST_CHECK( !has_asset("ALPHA.ONE") );
      // Alice can create it
       create_user_issued_asset( "ALPHA.ONE", alice_id(db) );

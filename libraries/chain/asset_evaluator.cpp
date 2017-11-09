@@ -57,7 +57,7 @@ void_result asset_create_evaluator::do_evaluate( const asset_create_operation& o
    if( op.monitored_asset_opts.valid() )
    {
       FC_ASSERT( op.monitored_asset_opts->feed_lifetime_sec > d.get_global_properties().parameters.block_interval );
-      FC_ASSERT( op.options.max_supply == 0, );
+      FC_ASSERT( op.options.max_supply == 0 );
    }
 
    return void_result();
