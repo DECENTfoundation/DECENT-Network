@@ -18,6 +18,7 @@ set(TEST_FILES_LIST
     tests/operation_tests.cpp
     tests/operation_tests2.cpp
     tests/authority_tests.cpp
+    tests/fee_tests.cpp
 
     tests/uia_tests.cpp
     tests/main.cpp

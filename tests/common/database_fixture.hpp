@@ -237,6 +237,10 @@ struct database_fixture {
    void issue_uia( const account_object& recipient, asset amount );
    void issue_uia( account_id_type recipient_id, asset amount );
 
+   void publish_feed(asset_id_type mia, account_id_type by, const price_feed& f)
+   { publish_feed(mia(db), by(db), f); }
+   void publish_feed(const asset_object& mia, const account_object& by, const price_feed& f);
+
 
 
 
@@ -273,17 +277,13 @@ struct database_fixture {
    static void verify_asset_supplies( const database& db );
    void verify_account_history_plugin_index( )const;
 
-
-   void publish_feed(asset_id_type mia, account_id_type by, const price_feed& f)
-   { publish_feed(mia(db), by(db), f); }
-   void publish_feed(const asset_object& mia, const account_object& by, const price_feed& f);
+   const limit_order_object* create_sell_order( account_id_type user, const asset& amount, const asset& recv );
+   const limit_order_object* create_sell_order( const account_object& user, const asset& amount, const asset& recv );
 
 
 
 
 
-   //const limit_order_object* create_sell_order( account_id_type user, const asset& amount, const asset& recv );
-   //const limit_order_object* create_sell_order( const account_object& user, const asset& amount, const asset& recv );
    //asset cancel_limit_order( const limit_order_object& order );
    void fund_fee_pool( const account_object& from, const asset_object& asset_to_fund, const share_type amount );
    //void change_fees( const flat_set< fee_parameters >& new_params, uint32_t new_scale = 0 );

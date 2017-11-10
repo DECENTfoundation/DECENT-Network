@@ -563,14 +563,33 @@ void database_fixture::issue_uia( account_id_type recipient_id, asset amount )
   issue_uia( recipient_id(db), amount );
 }
 
+void database_fixture::publish_feed( const asset_object& mia, const account_object& by, const price_feed& f )
+{
+  set_expiration( db, trx );
+  trx.operations.clear();
+
+  asset_publish_feed_operation op;
+  op.publisher = by.id;
+  op.asset_id = mia.id;
+  op.feed = f;
+  if( op.feed.core_exchange_rate.is_null() )
+     op.feed.core_exchange_rate = price(asset(1, op.feed.core_exchange_rate.base.asset_id), asset(1, op.feed.core_exchange_rate.quote.asset_id));
+  trx.operations.emplace_back( std::move(op) );
+
+  for( auto& op : trx.operations ) db.current_fee_schedule().set_fee(op);
+  trx.validate();
+  db.push_transaction(trx, ~0);
+  trx.operations.clear();
+  verify_asset_supplies(db);
+}
+
+
 
 
 
 
 
 #if 0  ///////////////////////////////////////////////////////////////////////////////////////
-
-
 
 
 
@@ -598,7 +617,29 @@ void database_fixture::verify_account_history_plugin_index( )const
    return;
 }
 
+const limit_order_object*database_fixture::create_sell_order(account_id_type user, const asset& amount, const asset& recv)
+{
+  auto r =  create_sell_order(user(db), amount, recv);
+  verify_asset_supplies(db);
+  return r;
+}
 
+const limit_order_object* database_fixture::create_sell_order( const account_object& user, const asset& amount, const asset& recv )
+{
+  //wdump((amount)(recv));
+  limit_order_create_operation buy_order;
+  buy_order.seller = user.id;
+  buy_order.amount_to_sell = amount;
+  buy_order.min_to_receive = recv;
+  trx.operations.push_back(buy_order);
+  for( auto& op : trx.operations ) db.current_fee_schedule().set_fee(op);
+  trx.validate();
+  auto processed = db.push_transaction(trx, ~0);
+  trx.operations.clear();
+  verify_asset_supplies(db);
+  //wdump((processed));
+  return db.find<limit_order_object>( processed.operation_results[0].get<object_id_type>() );
+}
 
 
 
@@ -636,29 +677,7 @@ void database_fixture::change_fees(
    });
 }
 
-const limit_order_object*database_fixture::create_sell_order(account_id_type user, const asset& amount, const asset& recv)
-{
-   auto r =  create_sell_order(user(db), amount, recv);
-   verify_asset_supplies(db);
-   return r;
-}
 
-const limit_order_object* database_fixture::create_sell_order( const account_object& user, const asset& amount, const asset& recv )
-{
-   //wdump((amount)(recv));
-   limit_order_create_operation buy_order;
-   buy_order.seller = user.id;
-   buy_order.amount_to_sell = amount;
-   buy_order.min_to_receive = recv;
-   trx.operations.push_back(buy_order);
-   for( auto& op : trx.operations ) db.current_fee_schedule().set_fee(op);
-   trx.validate();
-   auto processed = db.push_transaction(trx, ~0);
-   trx.operations.clear();
-   verify_asset_supplies(db);
-   //wdump((processed));
-   return db.find<limit_order_object>( processed.operation_results[0].get<object_id_type>() );
-}
 
 asset database_fixture::cancel_limit_order( const limit_order_object& order )
 {
@@ -676,25 +695,6 @@ asset database_fixture::cancel_limit_order( const limit_order_object& order )
 
 
 
-void database_fixture::publish_feed( const asset_object& mia, const account_object& by, const price_feed& f )
-{
-   set_expiration( db, trx );
-   trx.operations.clear();
-
-   asset_publish_feed_operation op;
-   op.publisher = by.id;
-   op.asset_id = mia.id;
-   op.feed = f;
-   if( op.feed.core_exchange_rate.is_null() )
-      op.feed.core_exchange_rate = price(asset(1, op.feed.core_exchange_rate.base.asset_id), asset(1, op.feed.core_exchange_rate.quote.asset_id));
-   trx.operations.emplace_back( std::move(op) );
-
-   for( auto& op : trx.operations ) db.current_fee_schedule().set_fee(op);
-   trx.validate();
-   db.push_transaction(trx, ~0);
-   trx.operations.clear();
-   verify_asset_supplies(db);
-}
 
 void database_fixture::print_market( const string& syma, const string& symb )const
 {
