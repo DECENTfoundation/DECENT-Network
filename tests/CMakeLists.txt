@@ -19,7 +19,6 @@ set(TEST_FILES_LIST
     tests/operation_tests2.cpp
     tests/authority_tests.cpp
     tests/fee_tests.cpp
-
     tests/uia_tests.cpp
     tests/main.cpp
 )
@@ -30,6 +29,30 @@ if(MSVC)
   set_source_files_properties( tests/serialization_tests.cpp PROPERTIES COMPILE_FLAGS "/bigobj" )
 endif(MSVC)
 
+#/////////////////////////////////////////////////////////////////////
+
+set(APP_TEST_FILES
+    common/tempdir.hpp
+    common/tempdir.cpp
+    app/main.cpp
+)
+
+add_executable( app_test ${APP_TEST_FILES} )
+target_link_libraries( app_test graphene_app graphene_account_history graphene_net graphene_chain graphene_time graphene_egenesis_none fc ${PLATFORM_SPECIFIC_LIBS} )
+
+#/////////////////////////////////////////////////////////////////////
+
+set(PACKAGE_TEST_FILES
+#        common/tempdir.hpp
+#        common/tempdir.cpp
+    package/main.cpp
+)
+
+add_executable( package_test ${PACKAGE_TEST_FILES} )
+target_link_libraries( package_test package_manager   graphene_app graphene_account_history graphene_net graphene_chain graphene_time graphene_egenesis_none fc ${PLATFORM_SPECIFIC_LIBS} )
+
+
+
 #
 #file(GLOB PERFORMANCE_TESTS "performance/*.cpp")
 #add_executable( performance_test ${PERFORMANCE_TESTS} ${COMMON_SOURCES} )
@@ -38,10 +61,6 @@ endif(MSVC)
 #file(GLOB BENCH_MARKS "benchmarks/*.cpp")
 #add_executable( chain_bench ${BENCH_MARKS} ${COMMON_SOURCES} )
 #target_link_libraries( chain_bench graphene_chain graphene_app graphene_account_history graphene_time graphene_egenesis_none fc ${PLATFORM_SPECIFIC_LIBS} )
-#
-#file(GLOB APP_SOURCES "app/*.cpp")
-#add_executable( app_test ${APP_SOURCES} )
-#target_link_libraries( app_test graphene_app graphene_account_history graphene_net graphene_chain graphene_time graphene_egenesis_none fc ${PLATFORM_SPECIFIC_LIBS} )
 #
 #file(GLOB INTENSE_SOURCES "intense/*.cpp")
 #add_executable( intense_test ${INTENSE_SOURCES} ${COMMON_SOURCES} )
