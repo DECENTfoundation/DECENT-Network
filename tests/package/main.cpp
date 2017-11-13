@@ -209,7 +209,7 @@ BOOST_AUTO_TEST_CASE( package_create_test )
       std::this_thread::sleep_for(std::chrono::seconds(10));
 
       {
-         package_handle->stop_seeding("ipfs");
+         package_handle->stop_seeding();
          package_handle->wait_for_current_task();
          BOOST_CHECK(package_handle->get_task_last_error() == nullptr);
 
@@ -274,6 +274,43 @@ BOOST_AUTO_TEST_CASE( package_download_and_unpack_test )
       BOOST_CHECK(check_fake_content(dest_dir));
 
       boost::filesystem::remove_all(dest_dir);
+
+   } FC_LOG_AND_RETHROW()
+
+   package_manager.release_all_packages();
+}
+
+BOOST_AUTO_TEST_CASE( package_remove_test )
+{
+
+   if (g_test_packagename.empty()) {
+      return;
+   }
+
+   auto& package_manager = decent::package::PackageManager::instance();
+
+   try {
+
+      {
+         auto package_handle = package_manager.get_package(g_test_packagename, fc::ripemd160());
+         BOOST_CHECK(package_handle.get() != nullptr);
+         package_handle->add_event_listener(std::make_shared<MyEventListener>());
+
+         package_handle->stop_seeding();
+         package_handle->wait_for_current_task();
+         BOOST_CHECK(package_handle->get_task_last_error() == nullptr);
+
+
+         package_handle->remove(true);
+         package_handle->wait_for_current_task();
+         BOOST_CHECK(package_handle->get_task_last_error() == nullptr);
+
+         BOOST_CHECK(package_manager.release_package(package_handle));
+
+         //now the package should be gone.. but IPFS.
+      }
+
+
 
    } FC_LOG_AND_RETHROW()
 
