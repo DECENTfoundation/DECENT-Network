@@ -116,19 +116,44 @@ void create_fake_content(boost::filesystem::path& content_path, boost::filesyste
 {
    fc::path temp_dir = fc::temp_directory_path() / "decent_fake_content";
 
+   boost::filesystem::create_directories(boost::filesystem::path(temp_dir.string()) );
 
+   content_path = temp_dir / "content";
+   samples_path = temp_dir / "samples";
 
+   boost::filesystem::create_directories(content_path);
+   boost::filesystem::create_directories(samples_path);
 
+   boost::filesystem::ofstream content_file(content_path / "fake_content.txt" );
+   content_file << "Heloo world of DECENT.";
+   content_file.close();
+
+   boost::filesystem::ofstream sample_file(samples_path / "fake_sample.txt" );
+   sample_file << "Sample file...";
+   sample_file.close();
 }
 
-void delete_fake_content(const std::string& dir_folder)
+bool check_fake_content(const boost::filesystem::path& base_dir)
 {
+   boost::filesystem::path filename = base_dir / "fake_content.txt";
+   return boost::filesystem::exists(filename);
+}
 
+void create_unpack_folder(boost::filesystem::path& content_path)
+{
+   fc::path temp_dir = fc::temp_directory_path() / "decent_fake_content";
 
+   boost::filesystem::create_directories(boost::filesystem::path(temp_dir.string()) );
 
+   content_path = temp_dir / "unpack";
+   boost::filesystem::create_directories(content_path);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
+// run IPFS daemon before this test...
+
+std::string g_test_packagename;
+std::string g_test_string_as_key = "some_string_to_use_as_a_key";
 
 boost::unit_test::test_suite* init_unit_test_suite(int argc, char* argv[]) {
 
@@ -150,7 +175,7 @@ BOOST_AUTO_TEST_CASE( package_create_test )
 
    package_manager.recover_all_packages();
 
-   const fc::sha256 key = fc::sha256::hash(std::string("some_string_to_use_as_a_key"));
+   const fc::sha256 key = fc::sha256::hash(g_test_string_as_key);
    const bool block = false;
 
    boost::filesystem::path content_dir;   // =  "/tmp/test/test1_content";
@@ -184,16 +209,20 @@ BOOST_AUTO_TEST_CASE( package_create_test )
       std::this_thread::sleep_for(std::chrono::seconds(10));
 
       {
-         package_handle->stop_seeding();
+         package_handle->stop_seeding("ipfs");
          package_handle->wait_for_current_task();
          BOOST_CHECK(package_handle->get_task_last_error() == nullptr);
 
       }
 
       const boost::filesystem::path package_dir = package_handle->get_package_dir();
-      const std::string url = package_handle->get_url();
+
+      g_test_packagename = package_handle->get_url();
 
       package_manager.release_package(package_handle);
+
+      boost::filesystem::remove_all(content_dir);
+      boost::filesystem::remove_all(samples_dir);
 
 
    } FC_LOG_AND_RETHROW()
@@ -205,14 +234,22 @@ BOOST_AUTO_TEST_CASE( package_create_test )
 BOOST_AUTO_TEST_CASE( package_download_and_unpack_test )
 {
    const bool block = false;
-   const boost::filesystem::path dest_dir = "/tmp/test/test1_unpacked";
-   const fc::sha256 key = fc::sha256::hash(std::string("some_string_to_use_as_a_key"));
 
+   if (g_test_packagename.empty()) {
+      return;
+   }
+
+   boost::filesystem::path dest_dir;
+   create_unpack_folder(dest_dir);
+
+   const fc::sha256 key = fc::sha256::hash(g_test_string_as_key);
 
    auto& package_manager = decent::package::PackageManager::instance();
 
    try {
-      auto package_handle = package_manager.get_package("/ipfs/QmWgZbg73wrgicmPradJcK51nY99o2fX8dt7pBJ8rUaurJ", fc::ripemd160());
+      //    "/ipfs/QmWgZbg73wrgicmPradJcK51nY99o2fX8dt7pBJ8rUaurJ"
+      auto package_handle = package_manager.get_package(g_test_packagename, fc::ripemd160());
+      BOOST_CHECK(package_handle.get() != nullptr);
       package_handle->add_event_listener(std::make_shared<MyEventListener>());
 
       {
@@ -232,6 +269,11 @@ BOOST_AUTO_TEST_CASE( package_download_and_unpack_test )
          package_handle->wait_for_current_task();
          BOOST_CHECK(package_handle->get_task_last_error() == nullptr);
       }
+
+      //check if file exists...
+      BOOST_CHECK(check_fake_content(dest_dir));
+
+      boost::filesystem::remove_all(dest_dir);
 
    } FC_LOG_AND_RETHROW()
 
