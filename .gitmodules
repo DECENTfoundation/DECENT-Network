@@ -14,6 +14,6 @@
 [submodule "libraries/contrib/pbc"]
 	path = libraries/contrib/pbc
 	url = https://github.com/DECENTfoundation/pbc
-[submodule "update"]
+[submodule "libraries/update"]
 	path = libraries/update
 	url = https://github.com/DECENTfoundation/updatemanager.git
