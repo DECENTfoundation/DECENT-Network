@@ -178,12 +178,11 @@ BOOST_AUTO_TEST_CASE( package_create_test )
    const fc::sha256 key = fc::sha256::hash(g_test_string_as_key);
    const bool block = false;
 
-   boost::filesystem::path content_dir;   // =  "/tmp/test/test1_content";
-   boost::filesystem::path samples_dir;   // = "/tmp/test/test1_samples";
+   boost::filesystem::path content_dir;
+   boost::filesystem::path samples_dir;
 
    //create some fake content...
    create_fake_content(content_dir, samples_dir);
-
 
    try {
       auto package_handle = package_manager.get_package(content_dir, samples_dir, key, DECENT_SECTORS);
@@ -202,18 +201,8 @@ BOOST_AUTO_TEST_CASE( package_create_test )
       package_handle->wait_for_current_task();
       BOOST_CHECK(package_handle->get_task_last_error() == nullptr);
 
-//         std::cerr << "started seeding" << std::endl;
-//         std::cerr << "Package url:" << package_handle->get_url() << std::endl;
-
       // It is assumed that the package is now available for download from elsewhere.
       std::this_thread::sleep_for(std::chrono::seconds(10));
-
-      {
-         package_handle->stop_seeding();
-         package_handle->wait_for_current_task();
-         BOOST_CHECK(package_handle->get_task_last_error() == nullptr);
-
-      }
 
       const boost::filesystem::path package_dir = package_handle->get_package_dir();
 
@@ -309,7 +298,6 @@ BOOST_AUTO_TEST_CASE( package_remove_test )
 
          //now the package should be gone.. but IPFS.
       }
-
 
 
    } FC_LOG_AND_RETHROW()
