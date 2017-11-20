@@ -88,7 +88,6 @@ database_fixture::database_fixture()
      }
      genesis_state.initial_parameters.current_fees->zero_all_fees();
      open_database();
-
      // app.initialize();
      ahplugin->plugin_set_app(&app);
      ahplugin->plugin_initialize(options);
@@ -480,6 +479,22 @@ const account_object& database_fixture::get_account( const string& name )const
   const auto itr = idx.find(name);
   assert( itr != idx.end() );
   return *itr;
+}
+
+const miner_object& database_fixture::get_miner(account_id_type id)const
+{
+   //const auto& idx = db.get_index_type<miner_index>().indices().get<by_name>();
+   //const auto itr = idx.find(name);
+   //assert(itr != idx.end());
+   //return *itr;
+   const auto& all_miners = db.get_index_type<miner_index>().indices();
+   for (const miner_object& wit : all_miners)
+   {
+      if (id == wit.miner_account)
+         return wit;
+   }
+   assert(0);// not found
+   return miner_object();
 }
 
 void database_fixture::sign(signed_transaction& trx, const fc::ecc::private_key& key)

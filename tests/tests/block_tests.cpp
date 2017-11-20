@@ -43,6 +43,8 @@
 using namespace graphene::chain;
 using namespace graphene::chain::test;
 
+
+
 genesis_state_type make_genesis() {
    genesis_state_type genesis_state;
 
@@ -53,6 +55,7 @@ genesis_state_type make_genesis() {
    for( int i = 0; i < genesis_state.initial_active_miners; ++i )
    {
       auto name = "init"+fc::to_string(i);
+      
       genesis_state.initial_accounts.emplace_back(name,
                                                   init_account_priv_key.get_public_key(),
                                                   init_account_priv_key.get_public_key());
@@ -801,7 +804,7 @@ BOOST_FIXTURE_TEST_CASE( double_sign_check, database_fixture )
 
 } FC_LOG_AND_RETHROW() }
 
-#if 0 //update_proposal need votes from miners..
+
 BOOST_FIXTURE_TEST_CASE( change_block_interval, database_fixture )
 { try {
    generate_block();
@@ -810,67 +813,96 @@ BOOST_FIXTURE_TEST_CASE( change_block_interval, database_fixture )
       p.parameters.miner_proposal_review_period = fc::hours(1).to_seconds();
    });
 
+   const uint8_t new_block_interval = 1;
+   fc::time_point_sec maintenence_time2;
+
    BOOST_TEST_MESSAGE( "Creating a proposal to change the block_interval to 1 second" );
    {
+      const account_object& nathan = create_account("nathan");
+      time_point_sec now0 = db.head_block_time();
+      
+      transfer(account_id_type()(db), nathan, asset(5000000));
+
+      account_update_operation op;
+      op.account = nathan.id;
+      op.new_options = nathan.options;
+      auto init0_miner_member = get_miner(get_account("init0").get_id());
+
+      op.new_options->votes.insert(init0_miner_member.vote_id);
+      trx.operations.push_back(op);
+      PUSH_TX(db, trx, ~0);
+      trx.operations.clear();
+      generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
+
       proposal_create_operation cop = proposal_create_operation::miner_proposal(db.get_global_properties().parameters, db.head_block_time());
-      cop.fee_paying_account = GRAPHENE_TEMP_ACCOUNT;
-      cop.expiration_time = db.head_block_time() + *cop.review_period_seconds + 10;
+      cop.fee_paying_account = get_account("init0").get_id();
+      cop.expiration_time = db.head_block_time() + *cop.review_period_seconds + 100;
+      fc::time_point_sec maintenence_time = db.get_dynamic_global_properties().next_maintenance_time;
+
       miner_update_global_parameters_operation uop;
-      uop.new_parameters.block_interval = 1;
+      uop.new_parameters.block_interval = new_block_interval;
       cop.proposed_ops.emplace_back(uop);
+
       trx.operations.push_back(cop);
+      
+      trx.expiration = db.head_block_time() + 100;
+      sign(trx, init_account_priv_key);
+      
       db.push_transaction(trx);
    }
    BOOST_TEST_MESSAGE( "Updating proposal by signing with the miner private key" );
    {
       proposal_update_operation uop;
-      uop.fee_paying_account = GRAPHENE_TEMP_ACCOUNT;
+      uop.fee_paying_account = get_account("init0").get_id();
       uop.fee = asset();
       uop.active_approvals_to_add = {get_account("init0").get_id(), get_account("init1").get_id(),
                                      get_account("init2").get_id(), get_account("init3").get_id(),
                                      get_account("init4").get_id(), get_account("init5").get_id(),
                                      get_account("init6").get_id(), get_account("init7").get_id()};
+      trx.clear();
       trx.operations.push_back(uop);
-      sign( trx, init_account_priv_key );
-      /*
-      sign( trx, get_account("init1" ).active.get_keys().front(),init_account_priv_key);
-      sign( trx, get_account("init2" ).active.get_keys().front(),init_account_priv_key);
-      sign( trx, get_account("init3" ).active.get_keys().front(),init_account_priv_key);
-      sign( trx, get_account("init4" ).active.get_keys().front(),init_account_priv_key);
-      sign( trx, get_account("init5" ).active.get_keys().front(),init_account_priv_key);
-      sign( trx, get_account("init6" ).active.get_keys().front(),init_account_priv_key);
-      sign( trx, get_account("init7" ).active.get_keys().front(),init_account_priv_key);
-      */
+
+      auto& active_miners = db.get_global_properties().active_miners;
+
+      fc::time_point_sec maintenence_time = db.get_dynamic_global_properties().next_maintenance_time;
+      trx.expiration = db.head_block_time() + 100;
+      sign(trx, init_account_priv_key);
+
       db.push_transaction(trx);
-      BOOST_CHECK(proposal_id_type()(db).is_authorized_to_execute(db));
+      
+      generate_blocks(maintenence_time + 5);
+      
+      maintenence_time2 = db.get_dynamic_global_properties().next_maintenance_time;
    }
+   generate_block();
    BOOST_TEST_MESSAGE( "Verifying that the interval didn't change immediately" );
 
    BOOST_CHECK_EQUAL(db.get_global_properties().parameters.block_interval, 5);
    auto past_time = db.head_block_time().sec_since_epoch();
    generate_block();
+   auto past_time2 = db.head_block_time().sec_since_epoch();
    BOOST_CHECK_EQUAL(db.head_block_time().sec_since_epoch() - past_time, 5);
    generate_block();
    BOOST_CHECK_EQUAL(db.head_block_time().sec_since_epoch() - past_time, 10);
 
-   BOOST_TEST_MESSAGE( "Generating blocks until proposal expires" );
-   generate_blocks(proposal_id_type()(db).expiration_time + 5);
    BOOST_TEST_MESSAGE( "Verify that the block interval is still 5 seconds" );
    BOOST_CHECK_EQUAL(db.get_global_properties().parameters.block_interval, 5);
 
    BOOST_TEST_MESSAGE( "Generating blocks until next maintenance interval" );
-   generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
+
+   generate_blocks(maintenence_time2);
    generate_block();   // get the maintenance skip slots out of the way
 
    BOOST_TEST_MESSAGE( "Verify that the new block interval is 1 second" );
    BOOST_CHECK_EQUAL(db.get_global_properties().parameters.block_interval, 1);
    past_time = db.head_block_time().sec_since_epoch();
    generate_block();
+   uint32_t head_time = db.head_block_time().sec_since_epoch();
    BOOST_CHECK_EQUAL(db.head_block_time().sec_since_epoch() - past_time, 1);
    generate_block();
    BOOST_CHECK_EQUAL(db.head_block_time().sec_since_epoch() - past_time, 2);
 } FC_LOG_AND_RETHROW() }
-#endif
+
 
 BOOST_FIXTURE_TEST_CASE( pop_block_twice, database_fixture )
 {

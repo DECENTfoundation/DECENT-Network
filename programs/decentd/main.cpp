@@ -309,7 +309,7 @@ void write_default_logging_config_to_stream(std::ostream& out)
           "# route any messages logged to the default logger to the \"stderr\" logger we\n"
           "# declared above, if they are info level are higher\n"
           "[logger.default]\n"
-          "level=info\n"
+          "level=error\n"
           "appenders=stderr\n\n"
           "# route messages sent to the \"p2p\" logger to the p2p appender declared above\n"
           "[logger.p2p]\n"

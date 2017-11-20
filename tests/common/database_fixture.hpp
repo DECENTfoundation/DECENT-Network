@@ -228,6 +228,7 @@ struct database_fixture {
 
    const asset_object& get_asset( const string& symbol )const;
    const account_object& get_account( const string& name )const;
+   const miner_object& get_miner(account_id_type id)const;
 
    void enable_fees();
 
@@ -240,7 +241,6 @@ struct database_fixture {
    void publish_feed(asset_id_type mia, account_id_type by, const price_feed& f)
    { publish_feed(mia(db), by(db), f); }
    void publish_feed(const asset_object& mia, const account_object& by, const price_feed& f);
-
 
 
 
