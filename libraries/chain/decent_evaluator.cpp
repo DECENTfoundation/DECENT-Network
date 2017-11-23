@@ -145,15 +145,13 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
          FC_ASSERT( RegionCodes::s_mapCodeToName.count( element.region ) , "Invalid region code" );
       }
 
-      FC_ASSERT( o.seeders.size() > 0 );
-      FC_ASSERT( o.seeders.size() == o.key_parts.size() );
       FC_ASSERT( db().head_block_time() <= o.expiration);
       fc::microseconds duration = (o.expiration - db().head_block_time() );
       uint64_t days = duration.to_seconds() / 3600 / 24;
       FC_ASSERT( days != 0, "time to expiration has to be at least one day" );
 
       auto& idx = db().get_index_type<seeder_index>().indices().get<by_seeder>();
-      asset total_price_per_day;
+
       const auto& content_idx = db().get_index_type<content_index>().indices().get<by_URI>();
       auto content_itr = content_idx.find( o.URI );
       if( content_itr != content_idx.end() ) // is resubmit?
@@ -215,6 +213,7 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
          FC_ASSERT( days * total_price_per_day <= o.publishing_fee + content_itr->publishing_fee_escrow );*/
       } else
       {
+         asset total_price_per_day;
          for ( const auto &p : o.seeders ) //check if seeders exist and accumulate their prices
          {
             const auto& itr = idx.find( p );
@@ -400,16 +399,6 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
       }FC_CAPTURE_AND_RETHROW((o))
    }
 
-   bool request_to_buy_evaluator::is_price_sufficient( const asset& payment, const asset& price )
-   {
-      database& d = db();
-
-      asset payment_in_dct = d.price_to_dct( payment );
-      asset price_in_dct = d.price_to_dct( price );
-
-      return payment_in_dct >= price_in_dct;
-   }
-
    void_result request_to_buy_evaluator::do_evaluate(const request_to_buy_operation& o )
    {try{
       database& d = db();
@@ -420,81 +409,46 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
       FC_ASSERT( o.price <= d.get_balance( o.consumer, o.price.asset_id ) );
       FC_ASSERT( content->expiration > db().head_block_time() );
 
-      optional<asset> price = content->price.GetPrice(o.region_code_from);
+      optional<asset> content_price_got = content->price.GetPrice(o.region_code_from);
 
-      FC_ASSERT( price.valid(), "content is not available for this region" );
+      FC_ASSERT( content_price_got.valid(), "content is not available for this region" );
+      content_price = *content_price_got;
 
       FC_ASSERT( !content->is_blocked , "content has been canceled" );
-      {
-         auto &range = d.get_index_type<subscription_index>().indices().get<by_from_to>();
-         const auto &subscription = range.find(boost::make_tuple(o.consumer, content->author));
 
-         /// Check whether subscription exists. If so, consumer doesn't need pay for content
-         if (subscription != range.end() && subscription->expiration > d.head_block_time() )
-            is_subscriber = true;
+      auto &range = d.get_index_type<subscription_index>().indices().get<by_from_to>();
+      const auto &subscription = range.find(boost::make_tuple(o.consumer, content->author));
+
+      /// Check whether subscription exists. If so, consumer doesn't need pay for content
+      if (subscription != range.end() && subscription->expiration > d.head_block_time() )
+         is_subscriber = true;
+      return void_result();
+
+      FC_ASSERT( d.are_assets_exchangeable( o.price.asset_id(d), content_price.asset_id(d) ), "price for the content and price of the content are not exchangeable");
+
+      /*
+       * Case 1: paid in some asset, price in the same asset
+       * Case 2: paid in DCT, price in MIA
+       * Case 3: paid in DCT, price in UIA
+       * Case 4: paid in UIA, price in DCT
+       * Case 5: paid in UIA, price in MIA
+       */
+
+      paid_price = o.price;
+
+      if( content_price.asset_id == o.price.asset_id ){ // no need to convert
+         paid_price_after_conversion = paid_price;
+         FC_ASSERT(paid_price_after_conversion >= content_price );
+         return void_result();
       }
 
-      payment_o = d.get( o.price.asset_id );
-      price_o = d.get( price->asset_id );
-      FC_ASSERT( d.are_assets_exchangeable( payment_o, price_o ), "price for the content and price of the content are not exchangeable");
-
-      skip_exchange = (o.price.asset_id == price->asset_id) || ( o.price.asset_id == asset_id_type() && price_o.is_monitored_asset() );
-
-      if( !is_subscriber )
-      {
-         FC_ASSERT( is_price_sufficient( o.price, *price ) );
-
-         if( !skip_exchange )
-         {
-            if( o.price.asset_id == asset_id_type() )    // payment in DCT's, price in UIA's
-            {
-               asset payment_in_uia = o.price * price_o.options.core_exchange_rate;
-               const asset_dynamic_data_object& addo = price_o.dynamic_data(d);
-               FC_ASSERT( payment_in_uia.amount <= addo.asset_pool , "Asset ${uia} does not have enough balance in asset_pool",("uia",price_o.symbol));
-            }
-            else                                         // payment in UIA's, price in DCT's or in MIA's
-            {
-               asset payment_in_dct = o.price * payment_o.options.core_exchange_rate;
-               const asset_dynamic_data_object& addo = payment_o.dynamic_data(d);
-               FC_ASSERT( payment_in_dct.amount <= addo.core_pool , "Asset ${uia} does not have enough balance in core_pool",("uia",payment_o.symbol));
-            }
-         }
-      }
+      asset paid_price_in_dct;
+      FC_ASSERT( paid_price.asset_id(d).can_convert(paid_price, paid_price_in_dct, d) && paid_price_in_dct.asset_id == asset_id_type() );
+      FC_ASSERT( content_price.asset_id(d).can_convert(paid_price_in_dct, paid_price_after_conversion, d) && paid_price_after_conversion.asset_id == content_price.asset_id );
+      FC_ASSERT( paid_price_after_conversion >= content_price );
 
       return void_result(); 
    }FC_CAPTURE_AND_RETHROW( (o) ) }
-
-   void request_to_buy_evaluator::process_payment_and_exchange( const account_id_type& payer, const asset& payment, const asset& price )
-   {
-      if( is_subscriber )
-         return;
-      
-      database& d = db();
-
-      if( !skip_exchange )
-      {
-         if( payment.asset_id == asset_id_type() ) //payment in DCT's, price in UIA's
-         {
-            asset_object ao_price = price.asset_id(d);
-            asset_dynamic_data_object addo = ao_price.dynamic_data(d);
-            d.modify<asset_dynamic_data_object>( addo, [&payment, &ao_price]( asset_dynamic_data_object& _addo ){
-               _addo.core_pool += payment.amount;
-               _addo.asset_pool -= (payment * ao_price.options.core_exchange_rate).amount;
-            });
-         }
-         else // payment in UIA's, price in DCT's or in MIA's
-         {
-            asset_object ao_payment = payment.asset_id(d);
-            asset_dynamic_data_object addo = ao_payment.dynamic_data(d);
-            d.modify<asset_dynamic_data_object>( addo, [&payment, &ao_payment]( asset_dynamic_data_object& _addo ){
-               _addo.asset_pool += payment.amount;
-               _addo.core_pool -= (payment * ao_payment.options.core_exchange_rate).amount;
-            });
-         }
-      }
-
-      d.adjust_balance( payer, -payment );
-   }
 
    void_result request_to_buy_evaluator::do_apply(const request_to_buy_operation& o )
    {try{
@@ -503,23 +457,23 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
       const auto& idx = d.get_index_type<content_index>().indices().get<by_URI>();
       const auto& content = idx.find( o.URI );
 
-      asset payment_before_exchange = o.price;
-      asset payment_after_exchange = o.price;
-
-      // calculates payment_after_exchange. If exchange is not needed ( payment and price are in the same asset ),
-      // payment_before_exchange == payment_after_exchange
-      if( !skip_exchange )
-      {
-         if( payment_before_exchange.asset_id == asset_id_type() )   // payment in DCT's, price in UIA's
-            payment_after_exchange = payment_after_exchange * price_o.options.core_exchange_rate;
-         else                                                        // payment in UIA's, price in DCT's or in MIA's
-            payment_after_exchange = payment_after_exchange * payment_o.options.core_exchange_rate;
-      }
-
       if( is_subscriber ) //if it is subscription, price is ignored
       {
-         payment_before_exchange = asset( 0, payment_before_exchange.asset_id );
-         payment_after_exchange = asset( 0, payment_after_exchange.asset_id );
+         paid_price = asset( 0 );
+         paid_price_after_conversion = asset( 0 );
+      }
+
+      if( content->key_parts.size() == 0 ){ //simplified content buying - TODO
+
+
+         return void_result();
+      }
+
+      if( content_price.asset_id == o.price.asset_id ){ // no need to convert
+         paid_price_after_conversion = paid_price;
+      }else {
+         asset paid_price_in_dct = paid_price.asset_id(d).convert(paid_price, d);
+         paid_price_after_conversion = content_price.asset_id(d).convert(paid_price_in_dct, d);
       }
 
       const auto& object = db().create<buying_object>([&](buying_object& bo)
@@ -529,17 +483,15 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
                                                          bo.expiration_time = d.head_block_time() + 24*3600;
                                                          bo.pubKey = o.pubKey;
 
-                                                         bo.price = payment_after_exchange; // escrow, will be reset to zero
-                                                         bo.paid_price_before_exchange = payment_before_exchange;
-                                                         bo.paid_price_after_exchange = payment_after_exchange;
+                                                         bo.price = paid_price_after_conversion; // escrow, will be reset to zero
+                                                         bo.paid_price_before_exchange = paid_price;
+                                                         bo.paid_price_after_exchange = paid_price_after_conversion;
 
                                                          bo.synopsis = content->synopsis;
                                                          bo.size = content->size;
                                                          bo.created = content->created;
                                                          bo.region_code_from = o.region_code_from;
                                                       });
-
-      process_payment_and_exchange( o.consumer, payment_before_exchange, *(content->price.GetPrice(o.region_code_from)) );
 
       const auto& idx2 = d.get_index_type<seeding_statistics_index>().indices().get<by_seeder>();
       for( auto& element : content->key_parts )
@@ -550,7 +502,7 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
          });
       }
 
-      db().create<transaction_detail_object>([&o, &d, &payment_before_exchange](transaction_detail_object& obj)
+      db().create<transaction_detail_object>([&](transaction_detail_object& obj)
                                              {
                                                 obj.m_operation_type = (uint8_t)transaction_detail_object::content_buy;
 
@@ -564,7 +516,7 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
                                                 }
 
                                                 obj.m_to_account = o.consumer;
-                                                obj.m_transaction_amount = payment_before_exchange;
+                                                obj.m_transaction_amount = paid_price;
                                                 obj.m_transaction_fee = o.fee;
                                                 obj.m_timestamp = d.head_block_time();
                                              });

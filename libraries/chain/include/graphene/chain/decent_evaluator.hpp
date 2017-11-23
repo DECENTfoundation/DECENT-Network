@@ -57,12 +57,10 @@ namespace graphene { namespace chain {
    private:
       bool is_subscriber = false;
       bool skip_exchange = false;
-      asset_object payment_o;
-      asset_object price_o;
-      // Checks whether payment is greater or equal to price of a content
-      bool is_price_sufficient( const asset& payment, const asset& price );
-      // Takes care of payment and exchange between assets if needed
-      void process_payment_and_exchange( const account_id_type& payer, const asset& payment, const asset& price );
+      asset paid_price;
+      asset paid_price_after_conversion;
+      asset content_price;
+
    };
    
    class leave_rating_evaluator : public evaluator<leave_rating_evaluator>

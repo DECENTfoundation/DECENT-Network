@@ -118,6 +118,125 @@ namespace graphene { namespace chain {
 
          void validate()const {}
 
+         /*
+          * converts asset of ID type to core asset or vice versa. Pools are adjusted accordingly.
+          *
+          *
+          */
+         template<class DB>
+         asset convert( asset from, DB& db )const{
+            const auto& ao = db.template get<asset_object>(id);
+
+            if( id == asset_id_type() )
+            {
+               FC_ASSERT(from.asset_id == asset_id_type(), "Convert can't be called on DCT");
+               return from;
+            }
+
+            if( ao.is_monitored_asset() )
+               return convert_mia(from, db);
+            return convert_uia(from, db);
+         };
+
+         template<class DB>
+         asset convert_uia( asset from, DB& db ) const{
+            asset to;
+            const auto& add = db.template get<asset_dynamic_data_object>(dynamic_asset_data_id);
+            const auto& ao = db.template get<asset_object>(id);
+            FC_ASSERT(ao.options.is_exchangeable && !ao.options.core_exchange_rate.is_null());
+
+            asset core_pool_diff;
+            asset asset_pool_diff;
+            price rate = ao.options.core_exchange_rate;
+
+
+            if( from.asset_id == id ){
+               to.asset_id = asset_id_type();
+               to = from * rate;
+
+               core_pool_diff = -to;
+               asset_pool_diff = from;
+
+            }else{
+               FC_ASSERT(from.asset_id == asset_id_type(), "Unsupported conversion");
+
+               to.asset_id = id;
+               to = from * rate;
+
+               core_pool_diff = -from;
+               asset_pool_diff = to;
+            }
+
+            FC_ASSERT( add.asset_pool + asset_pool_diff.amount >= share_type(0), "Insufficient funds in asset pool to perform conversion" );
+            FC_ASSERT( add.core_pool + core_pool_diff.amount >= share_type(0), "Insufficient funds in core pool to perform conversion"  );
+
+            db.template modify<asset_dynamic_data_object>(add,[&](asset_dynamic_data_object& ado){
+                 ado.asset_pool +=asset_pool_diff.amount;
+                 ado.core_pool +=core_pool_diff.amount;
+            });
+            return to;
+         };
+
+         template<class DB>
+         asset convert_mia( asset from, DB& db ) const{
+            const auto& ao = db.template get<asset_object>(id);
+            FC_ASSERT( ao.is_monitored_asset() && ao.monitored_asset_opts->feed_is_valid(db.head_block_time()) );
+            FC_ASSERT( from.asset_id == asset_id_type() || from.asset_id == id );
+
+            return from * ao.monitored_asset_opts->current_feed.core_exchange_rate;
+         };
+
+         template<class DB>
+         bool can_convert( asset from, asset& to, const DB& db ) const{
+            const auto& add = db.template get<asset_dynamic_data_object>(dynamic_asset_data_id);
+            const auto& ao = db.template get<asset_object>(id);
+
+            if( id == asset_id_type() ) {
+               if( from.asset_id == asset_id_type()) {
+                  to = from;
+                  return true;
+               }
+               return false;
+            }
+
+            if(!ao.options.is_exchangeable || ao.options.core_exchange_rate.is_null())
+               return false;
+
+            if( ao.is_monitored_asset()  ){
+               if( ao.monitored_asset_opts->feed_is_valid(db.head_block_time()) && ( from.asset_id == asset_id_type() || from.asset_id == id )){
+                  to = from * ao.monitored_asset_opts->current_feed.core_exchange_rate;
+                  return true;
+               }
+               return false;
+            }
+
+            asset core_pool_diff;
+            asset asset_pool_diff;
+            price rate = ao.options.core_exchange_rate;
+            if( from.asset_id == id ){
+               to.asset_id = asset_id_type();
+               to = from * rate;
+
+               core_pool_diff = -to;
+               asset_pool_diff = from;
+            }else{
+               if ( from.asset_id != asset_id_type() ) //unknown conversion
+                  return false;
+               to.asset_id = id;
+               to = from * rate;
+
+               core_pool_diff = -from;
+               asset_pool_diff = to;
+            }
+
+            if ( add.asset_pool + asset_pool_diff.amount < share_type(0) || add.core_pool + core_pool_diff.amount < share_type(0) ) {
+               return false;
+            }
+
+            return true;
+
+         };
+
          template<class DB>
          const asset_dynamic_data_object& dynamic_data(const DB& db)const
          { return db.get(dynamic_asset_data_id); }
