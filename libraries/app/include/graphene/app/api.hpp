@@ -86,12 +86,12 @@ namespace graphene { namespace app {
          history_api(application& app):_app(app){}
 
          /**
-          * @brief Get operations relevant to the specificed account
-          * @param account The account whose history should be queried
+          * @brief Get operations relevant to the specificed account.
+          * @param account the account whose history should be queried
           * @param stop ID of the earliest operation to retrieve
-          * @param limit Maximum number of operations to retrieve (must not exceed 100)
+          * @param limit maximum number of operations to retrieve (must not exceed 100)
           * @param start ID of the most recent operation to retrieve
-          * @return A list of operations performed by account, ordered from most recent to oldest.
+          * @return a list of operations performed by account, ordered from most recent to oldest
           * @ingroup HistoryAPI
           */
          vector<operation_history_object> get_account_history(account_id_type account,
@@ -99,16 +99,16 @@ namespace graphene { namespace app {
                                                               unsigned limit = 100,
                                                               operation_history_id_type start = operation_history_id_type())const;
          /**
-          * @breif Get operations relevant to the specified account referenced
+          * @brief Get operations relevant to the specified account referenced.
           * by an event numbering specific to the account. The current number of operations
           * for the account can be found in the account statistics (or use 0 for start).
-          * @param account The account whose history should be queried
-          * @param stop Sequence number of earliest operation. 0 is default and will
-          * query 'limit' number of operations.
-          * @param limit Maximum number of operations to retrieve (must not exceed 100)
-          * @param start Sequence number of the most recent operation to retrieve.
-          * 0 is default, which will start querying from the most recent operation.
-          * @return A list of operations performed by account, ordered from most recent to oldest.
+          * @param account the account whose history should be queried
+          * @param stop sequence number of earliest operation. 0 is default and will
+          * query 'limit' number of operations
+          * @param limit maximum number of operations to retrieve (must not exceed 100)
+          * @param start sequence number of the most recent operation to retrieve.
+          * 0 is default, which will start querying from the most recent operation
+          * @return a list of operations performed by account, ordered from most recent to oldest
           * @ingroup HistoryAPI
           */
          vector<operation_history_object> get_relative_account_history( account_id_type account,
@@ -139,11 +139,10 @@ namespace graphene { namespace app {
          typedef std::function<void(variant/*transaction_confirmation*/)> confirmation_callback;
 
          /**
-          * @brief Broadcast a transaction to the network
-          * @param trx The transaction to broadcast
-          *
-          * The transaction will be checked for validity in the local database prior to broadcasting. If it fails to
-          * apply locally, an error will be thrown and the transaction will not be broadcast.
+          * @brief Broadcast a transaction to the network.
+          * @param trx the transaction to broadcast
+          * @note the transaction will be checked for validity in the local database prior to broadcasting. If it fails to
+          * apply locally, an error will be thrown and the transaction will not be broadcast
           * @ingroup Network_broadcastAPI
           */
          void broadcast_transaction(const signed_transaction& trx);
@@ -151,7 +150,7 @@ namespace graphene { namespace app {
          /**
           *
           * @brief This call will not return until the transaction is included in a block.
-          * @param trx The transaction to broadcast
+          * @param trx the transaction to broadcast
           * @ingroup Network_broadcastAPI
           */
          fc::variant broadcast_transaction_synchronous( const signed_transaction& trx);
@@ -160,22 +159,26 @@ namespace graphene { namespace app {
           * @brief This version of broadcast transaction registers a callback method that will be called when the transaction is
           * included into a block.  The callback method includes the transaction id, block number, and transaction number in the
           * block.
-          * @param cb Callback function
-          * @param trx
+          * @param cb callback function
+          * @param trx the transaction to broadcast
           * @ingroup Network_broadcastAPI
           */
          void broadcast_transaction_with_callback( confirmation_callback cb, const signed_transaction& trx);
 
+         /**
+          * @brief Broadcast a block to the network.
+          * @param block the signed block to broadcast
+          * @ingroup Network_broadcastAPI
+          */
          void broadcast_block( const signed_block& block );
 
          /**
           * @brief Not reflected, thus not accessible to API clients.
-          *
           * This function is registered to receive the applied_block
           * signal from the chain database when a block is received.
           * It then dispatches callbacks to clients who have requested
           * to be notified when a particular txid is included in a block.
-          * @param b The signed block
+          * @param b the signed block
           * @ingroup Network_broadcastAPI
           */
          void on_applied_block( const signed_block& b );
@@ -194,54 +197,56 @@ namespace graphene { namespace app {
          network_node_api(application& a);
 
          /**
-          * @brief Return general network information, such as p2p port
+          * @brief Returns general network information, such as p2p port.
+          * @return general network information
           * @ingroup Network_NodeAPI
           */
          fc::variant_object get_info() const;
 
          /**
-          * @brief add_node Connect to a new peer
-          * @param ep The IP/Port of the peer to connect to
+          * @brief Connects to a new peer.
+          * @param ep the IP/Port of the peer to connect to
           * @ingroup Network_NodeAPI
           */
          void add_node(const fc::ip::endpoint& ep);
 
          /**
-          * @brief Get status of all current connections to peers
+          * @brief Get status of all current connections to peers.
+          * @return status of all connected peers
           * @ingroup Network_NodeAPI
           */
          std::vector<net::peer_status> get_connected_peers() const;
 
          /**
-          * @brief Get advanced node parameters, such as desired and max
-          *        number of connections
+          * @brief Get advanced node parameters, such as desired and max number of connections.
+          * @return advanced node parameters
           * @ingroup Network_NodeAPI
           */
          fc::variant_object get_advanced_node_parameters() const;
 
          /**
-          * @brief Set advanced node parameters, such as desired and max
-          *        number of connections
+          * @brief Set advanced node parameters, such as desired and max number of connections.
           * @param params a JSON object containing the name/value pairs for the parameters to set
           * @ingroup Network_NodeAPI
           */
          void set_advanced_node_parameters(const fc::variant_object& params);
 
          /**
-          * @brief Return list of potential peers
+          * @brief Get a list of potential peers we can connect to.
+          * @return a list of potential peers
           * @ingroup Network_NodeAPI
           */
          std::vector<net::potential_peer_record> get_potential_peers() const;
 
         /**
-         * @brief This method allows user to start seeding plugin from running application
-         * @param account_id ID of account controlling this seeder
+         * @brief This method allows user to start seeding plugin from running application.
+         * @param account_id ID of the account controlling this seeder
          * @param content_private_key El Gamal content private key
-         * @param seeder_private_key Private key of the account controlling this seeder
-         * @param free_space Allocated disk space, in MegaBytes
-         * @param seeding_price Price per MegaBytes
-         * @param packages_path Packages storage path
-         * @param region_code Optional ISO 3166-1 alpha-2 two-letter region code
+         * @param seeder_private_key private key of the account controlling this seeder
+         * @param free_space allocated disk space, in MegaBytes
+         * @param seeding_price price per MegaBytes
+         * @param packages_path packages storage path
+         * @param region_code optional ISO 3166-1 alpha-2 two-letter region code
          * @ingroup Network_NodeAPI
          */
          void seeding_startup(const account_id_type& account_id,
@@ -320,49 +325,48 @@ namespace graphene { namespace app {
          ~login_api();
 
          /**
-          * @brief Authenticate to the RPC server
-          * @param user Username to login with
-          * @param password Password to login with
-          * @return True if logged in successfully; false otherwise
-          *
+          * @brief Authenticate to the RPC server.
           * @note This must be called prior to requesting other APIs. Other APIs may not be accessible until the client
           * has sucessfully authenticated.
+          * @param user username to login with
+          * @param password password to login with
+          * @return \c true if logged in successfully, \c false otherwise
           * @ingroup LoginAPI
           */
          bool login(const string& user, const string& password);
 
          /**
-          * @brief Retrieve the network broadcast API
+          * @brief Retrieve the network broadcast API.
           * @ingroup LoginAPI
           */
          fc::api<network_broadcast_api> network_broadcast()const;
          /**
-          * @brief Retrieve the database API
+          * @brief Retrieve the database API.
           * @ingroup LoginAPI
           */
          fc::api<database_api> database()const;
          /**
-          * @brief Retrieve the history API
+          * @brief Retrieve the history API.
           * @ingroup LoginAPI
           */
          fc::api<history_api> history()const;
          /**
-          * @brief Retrieve the network node API
+          * @brief Retrieve the network node API.
           * @ingroup LoginAPI
           */
          fc::api<network_node_api> network_node()const;
          /**
-          * @brief Retrieve the cryptography API
+          * @brief Retrieve the cryptography API.
           * @ingroup LoginAPI
           */
          fc::api<crypto_api> crypto()const;
          /**
-         * @brief Retrieve the messaging API
+         * @brief Retrieve the messaging API.
          * @ingroup LoginAPI
          */
          fc::api<messaging_api> messaging()const;
          /**
-          * @brief Retrieve the debug API (if available)
+          * @brief Retrieve the debug API (if available).
           * @ingroup LoginAPI
           */
          fc::api<graphene::debug_miner::debug_api> debug()const;
@@ -370,7 +374,7 @@ namespace graphene { namespace app {
       private:
          /**
           * @brief Called to enable an API, not reflected.
-          * @param api_name
+          * @param api_name name of the API we are trying to enable
           * @ingroup LoginAPI
           */
          void enable_api( const string& api_name );
