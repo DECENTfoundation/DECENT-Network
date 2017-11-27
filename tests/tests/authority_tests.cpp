@@ -396,7 +396,6 @@ BOOST_AUTO_TEST_CASE( committee_authority )
 { try {
    fc::ecc::private_key nathan_key = fc::ecc::private_key::generate();
    fc::ecc::private_key voter_key = fc::ecc::private_key::generate();
-   voter_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("null_key")));
    fc::ecc::private_key miner_key = init_account_priv_key;
    const account_object nathan = create_account("nathan", nathan_key.get_public_key());
    trx.clear();
