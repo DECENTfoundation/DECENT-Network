@@ -21,6 +21,34 @@
 
 namespace graphene { namespace chain {
 
+namespace {
+
+void content_payout(database& db, asset price, const content_object& content){
+   if( content.co_authors.empty() )
+      db.adjust_balance( content.author, price );
+   else
+   {
+      boost::multiprecision::int128_t price_for_co_author;
+      for( auto const &element : content.co_authors )
+      {
+         price_for_co_author = ( price.amount.value * element.second ) / 10000ll ;
+         db.adjust_balance( element.first, asset( static_cast<share_type>(price_for_co_author), price.asset_id) );
+         price.amount -= price_for_co_author;
+      }
+
+      if( price.amount != 0 ) {
+         FC_ASSERT( price.amount > 0 );
+         db.adjust_balance(content.author, price);
+      }
+   }
+};
+
+
+}
+
+
+
+
 void_result set_publishing_manager_evaluator::do_evaluate( const set_publishing_manager_operation& o )
 {try{
    for( const auto id : o.to )
@@ -420,10 +448,10 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
       const auto &subscription = range.find(boost::make_tuple(o.consumer, content->author));
 
       /// Check whether subscription exists. If so, consumer doesn't need pay for content
-      if (subscription != range.end() && subscription->expiration > d.head_block_time() )
+      if (subscription != range.end() && subscription->expiration > d.head_block_time() ) {
          is_subscriber = true;
-      return void_result();
-
+         return void_result();
+      }
       FC_ASSERT( d.are_assets_exchangeable( o.price.asset_id(d), content_price.asset_id(d) ), "price for the content and price of the content are not exchangeable");
 
       /*
@@ -463,17 +491,21 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
          paid_price_after_conversion = asset( 0 );
       }
 
-      if( content->key_parts.size() == 0 ){ //simplified content buying - TODO
 
-
-         return void_result();
-      }
 
       if( content_price.asset_id == o.price.asset_id ){ // no need to convert
          paid_price_after_conversion = paid_price;
       }else {
          asset paid_price_in_dct = paid_price.asset_id(d).convert(paid_price, d);
          paid_price_after_conversion = content_price.asset_id(d).convert(paid_price_in_dct, d);
+      }
+
+      bool delivered = false;
+      asset escrow = paid_price_after_conversion;
+      if( content->key_parts.size() == 0 ){ //simplified content buying - TODO
+         FC_ASSERT(d.head_block_time() >= HARDFORK_2_TIME);
+         delivered = true;
+         escrow = asset(0);
       }
 
       const auto& object = db().create<buying_object>([&](buying_object& bo)
@@ -483,16 +515,23 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
                                                          bo.expiration_time = d.head_block_time() + 24*3600;
                                                          bo.pubKey = o.pubKey;
 
-                                                         bo.price = paid_price_after_conversion; // escrow, will be reset to zero
+                                                         bo.price = escrow; // escrow, will be reset to zero
                                                          bo.paid_price_before_exchange = paid_price;
                                                          bo.paid_price_after_exchange = paid_price_after_conversion;
 
                                                          bo.synopsis = content->synopsis;
                                                          bo.size = content->size;
                                                          bo.created = content->created;
+                                                         bo.delivered = delivered;
                                                          bo.region_code_from = o.region_code_from;
+                                                         bo.expiration_or_delivery_time = db().head_block_time();
                                                       });
 
+      d.adjust_balance( o.consumer, -paid_price );
+      if(delivered) {
+         content_payout(d, paid_price_after_conversion, *content);
+         d.modify<content_object>( *content, []( content_object& co ){ co.times_bought++; });
+      }
       const auto& idx2 = d.get_index_type<seeding_statistics_index>().indices().get<by_seeder>();
       for( auto& element : content->key_parts )
       {
@@ -579,23 +618,7 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
          asset price = buying.price;
          db().modify<content_object>( *content, []( content_object& co ){ co.times_bought++; });
 
-         if( content->co_authors.empty() )
-            db().adjust_balance( content->author, price );
-         else
-         {
-            boost::multiprecision::int128_t price_for_co_author;
-            for( auto const &element : content->co_authors )
-            {
-               price_for_co_author = ( price.amount.value * element.second ) / 10000ll ;
-               db().adjust_balance( element.first, asset( static_cast<share_type>(price_for_co_author), price.asset_id) );
-               price.amount -= price_for_co_author;
-            }
-
-            if( price.amount != 0 ) {
-               FC_ASSERT( price.amount > 0 );
-               db().adjust_balance(content->author, price);
-            }
-         }
+         content_payout(db(), price, *content);
 
          db().modify<buying_object>(buying, [&](buying_object& bo){
               bo.price.amount = 0;
