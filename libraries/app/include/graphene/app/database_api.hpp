@@ -658,7 +658,7 @@ namespace graphene { namespace app {
          /**
           * @brief Get buying objects (open or history) by consumer.
           * @param consumer consumer of the buyings to retrieve
-          * @param order ordering field
+          * @param order ordering field. Available options are defined in 'database_api.cpp'
           * @param id the id of buying object to start searching from
           * @param term search term
           * @param count maximum number of contents to fetch (must not exceed 100)
@@ -722,7 +722,7 @@ namespace graphene { namespace app {
          /**
           * @brief Search for term in contents (author, title and description).
           * @param term search term
-          * @param order ordering field
+          * @param order ordering field. Available options are defined in 'database_api.cpp'
           * @param user content owner
           * @param region_code two letter region code
           * @param id the id of content object to start searching from

@@ -376,7 +376,7 @@ void seeding_plugin_impl::send_ready_to_publish()
             ready_to_publish_operation op;
             op.seeder = sritr->seeder;
             op.space = sritr->free_space;
-            op.price_per_MByte = dct_price.amount.value;;
+            op.price_per_MByte = dct_price.amount.value;
             op.pubKey = get_public_el_gamal_key(sritr->content_privKey);
             op.ipfs_ID = json[ "ID" ];
 
@@ -387,7 +387,7 @@ void seeding_plugin_impl::send_ready_to_publish()
             ready_to_publish2_operation op;
             op.seeder = sritr->seeder;
             op.space = sritr->free_space;
-            op.price_per_MByte = dct_price.amount.value;;
+            op.price_per_MByte = dct_price.amount.value;
             op.pubKey = get_public_el_gamal_key(sritr->content_privKey);
             op.ipfs_ID = json[ "ID" ];
             op.region_code = sritr->region_code;

@@ -1734,8 +1734,8 @@ namespace graphene { namespace wallet {
           * @brief Get history buying objects by consumer that match search term.
           * @param account_id_or_name consumer of the buyings to retrieve
           * @param term search term to look up in \c title and \c description
-          * @param order sort data by field
-          * @param id object id to start searching from
+          * @param order sort data by field. Available options are defined in 'database_api.cpp'
+          * @param id the id of buying object to start searching from
           * @param count maximum number of contents to fetch (must not exceed 100)
           * @return a list of history buying objects corresponding to the provided consumer and matching search term
           * @ingroup WalletAPI_Content
@@ -1780,11 +1780,12 @@ namespace graphene { namespace wallet {
          /**
           * @brief Get a list of contents ordered alphabetically by search term.
           * @param term search term
-          * @param order order field
+          * @param order order field. Available options are defined in 'database_api.cpp'
           * @param user content owner
           * @param region_code two letter region code
           * @param id the id of content object to start searching from
-          * @param type the application and content type to be filtered
+          * @param type the application and content type to be filtered, separated by comma.
+          * Available options are defined in 'content_object.hpp'
           * @param count maximum number of contents to fetch (must not exceed 100)
           * @return the contents found
           * @ingroup WalletAPI_Content
@@ -1799,11 +1800,12 @@ namespace graphene { namespace wallet {
          /**
           * @brief Get a list of contents ordered alphabetically by search term.
           * @param user content owner
-          * @param term search term
+          * @param term search term. Available options are defined in 'database_api.cpp'
           * @param order order field
           * @param region_code two letter region code
           * @param id the id of content object to start searching from
-          * @param type the application and content type to be filtered
+          * @param type the application and content type to be filtered, separated by comma.
+          * Available options are defined in 'content_object.hpp'
           * @param count maximum number of contents to fetch (must not exceed 100)
           * @return the contents found
           * @ingroup WalletAPI_Content
