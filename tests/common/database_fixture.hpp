@@ -228,6 +228,7 @@ struct database_fixture {
 
    const asset_object& get_asset( const string& symbol )const;
    const account_object& get_account( const string& name )const;
+   const account_object& get_account_by_id(account_id_type id)const;
    const miner_object& get_miner(account_id_type id)const;
 
    void enable_fees();
@@ -250,6 +251,7 @@ struct database_fixture {
    genesis_state_type genesis_state;
    chain::database &db;
    signed_transaction trx;
+   signed_transaction trx2;
    fc::ecc::private_key private_key = fc::ecc::private_key::generate();
    fc::ecc::private_key init_account_priv_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("null_key")) );
    public_key_type init_account_pub_key;

@@ -481,6 +481,14 @@ const account_object& database_fixture::get_account( const string& name )const
   return *itr;
 }
 
+const account_object& database_fixture::get_account_by_id(account_id_type id)const
+{
+   const auto& idx = db.get_index_type<account_index>().indices().get<by_id>();
+   const auto itr = idx.find(id);
+   assert(itr != idx.end());
+   return *itr;
+}
+
 const miner_object& database_fixture::get_miner(account_id_type id)const
 {
    //const auto& idx = db.get_index_type<miner_index>().indices().get<by_name>();

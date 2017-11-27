@@ -391,24 +391,34 @@ BOOST_AUTO_TEST_CASE( proposed_single_account )
    }
 }
 
-/// Verify that miner authority cannot be invoked in a normal transaction
+//// Verify that miner authority cannot be invoked in a normal transaction
 BOOST_AUTO_TEST_CASE( committee_authority )
 { try {
    fc::ecc::private_key nathan_key = fc::ecc::private_key::generate();
+   fc::ecc::private_key voter_key = fc::ecc::private_key::generate();
+   voter_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("null_key")));
    fc::ecc::private_key miner_key = init_account_priv_key;
    const account_object nathan = create_account("nathan", nathan_key.get_public_key());
+   trx.clear();
+   generate_block();
+   const account_object voter = create_account("voter", voter_key.get_public_key());
    const auto& global_params = db.get_global_properties().parameters;
 
    generate_block();
 
-   // Signatures are for suckers.
    db.modify(db.get_global_properties(), [](global_property_object& p) {
       // Turn the review period WAY down, so it doesn't take long to produce blocks to that point in simulated time.
       p.parameters.miner_proposal_review_period = fc::days(1).to_seconds();
    });
 
+   const account_object init0_account = get_account("init0");
+   const account_object graphene_miner_account = get_account_by_id(account_id_type());
+   
+   transfer(account_id_type()(db), get_account("voter"), asset(5000000));
+
    BOOST_TEST_MESSAGE( "transfering 100000 CORE to nathan, signing with miner key should fail because this requires it to be part of a proposal" );
    transfer_operation top;
+   
    top.to = nathan.id;
    top.amount = asset(100000);
    trx.operations.push_back(top);
@@ -417,26 +427,47 @@ BOOST_AUTO_TEST_CASE( committee_authority )
 
    auto _sign = [&] { trx.signatures.clear(); sign( trx, nathan_key ); };
 
+   // We must vote 
+   fc::time_point_sec now = db.head_block_time();
+   account_update_operation op;
+   op.account = voter.id;
+   op.new_options = voter.options;
+
+   auto init0_miner_member = get_miner(get_account("init0").get_id());
+   op.new_options->votes.insert(init0_miner_member.vote_id);
+   trx2.operations.push_back(op);
+   trx2.expiration = now + global_params.maximum_time_until_expiration;
+   PUSH_TX(db, trx2, ~0);
+   generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
+
+   // Create proposal
+   now = db.head_block_time();
    proposal_create_operation pop;
    pop.proposed_ops.push_back({trx.operations.front()});
    pop.expiration_time = db.head_block_time() + global_params.miner_proposal_review_period*2;
    pop.fee_paying_account = nathan.id;
    trx.operations = {pop};
+   
+   trx.expiration = now + global_params.maximum_time_until_expiration;
    _sign();
 
    // The review period isn't set yet. Make sure it throws.
    GRAPHENE_REQUIRE_THROW( PUSH_TX( db, trx ), proposal_create_review_period_required );
+
    pop.review_period_seconds = global_params.miner_proposal_review_period / 2;
    trx.operations.back() = pop;
    _sign();
+
    // The review period is too short. Make sure it throws.
    GRAPHENE_REQUIRE_THROW( PUSH_TX( db, trx ), proposal_create_review_period_insufficient );
+
    pop.review_period_seconds = global_params.miner_proposal_review_period;
    trx.operations.back() = pop;
    _sign();
+
    proposal_object prop = db.get<proposal_object>(PUSH_TX( db, trx ).operation_results.front().get<object_id_type>());
    BOOST_REQUIRE(db.find_object(prop.id));
-
+   
    BOOST_CHECK(prop.expiration_time == pop.expiration_time);
    BOOST_CHECK(prop.review_period_time && *prop.review_period_time == pop.expiration_time - *pop.review_period_seconds);
    BOOST_CHECK(prop.proposed_transaction.operations.size() == 1);
@@ -451,35 +482,32 @@ BOOST_AUTO_TEST_CASE( committee_authority )
    BOOST_REQUIRE(!db.get<proposal_object>(prop.id).is_authorized_to_execute(db));
    trx.operations.clear();
    trx.signatures.clear();
-   proposal_update_operation uop;
-   uop.fee_paying_account = GRAPHENE_TEMP_ACCOUNT;
-   uop.proposal = prop.id;
 
-   uop.key_approvals_to_add.emplace(miner_key.get_public_key());
-   /*
-   uop.key_approvals_to_add.emplace(1);
-   uop.key_approvals_to_add.emplace(2);
-   uop.key_approvals_to_add.emplace(3);
-   uop.key_approvals_to_add.emplace(4);
-   uop.key_approvals_to_add.emplace(5);
-   uop.key_approvals_to_add.emplace(6);
+   // Update proposal
+   proposal_update_operation uop;
+   uop.fee_paying_account = get_account("init0").get_id();
+   uop.fee == asset();
+   uop.proposal = prop.id;
+   uop.key_approvals_to_add.emplace(miner_key.get_public_key()); 
+   /* we can use also active_approvals_to_add:
+   uop.active_approvals_to_add = { get_account("init0").get_id(), get_account("init1").get_id(),
+      get_account("init2").get_id(), get_account("init3").get_id(),
+      get_account("init4").get_id(), get_account("init5").get_id(),
+      get_account("init6").get_id(), get_account("init7").get_id() };
    */
    trx.operations.push_back(uop);
    sign( trx, miner_key );
    db.push_transaction(trx);
+
    BOOST_CHECK_EQUAL(get_balance(nathan, asset_id_type()(db)), 0);
    BOOST_CHECK(db.get<proposal_object>(prop.id).is_authorized_to_execute(db));
 
-   trx.signatures.clear();
-   generate_blocks(*prop.review_period_time);
-   uop.key_approvals_to_add.clear();
-   uop.key_approvals_to_add.insert(miner_key.get_public_key()); // was 7
-   trx.operations.back() = uop;
-   sign( trx,  miner_key );
-   // Should throw because the transaction is now in review.
-   GRAPHENE_CHECK_THROW(PUSH_TX( db, trx ), fc::exception);
-
-   generate_blocks(prop.expiration_time);
+   fc::time_point_sec maintenence_time = db.get_dynamic_global_properties().next_maintenance_time;   
+   generate_blocks(maintenence_time);
+   maintenence_time = db.get_dynamic_global_properties().next_maintenance_time;
+   generate_blocks(maintenence_time);
+   
+   auto bn = get_balance(nathan, asset_id_type()(db));
    BOOST_CHECK_EQUAL(get_balance(nathan, asset_id_type()(db)), 100000);
 } FC_LOG_AND_RETHROW() }
 
