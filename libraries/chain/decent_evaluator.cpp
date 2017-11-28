@@ -588,8 +588,10 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
       const auto& firstK = content->key_parts.at( o.seeder );
       const auto& secondK = o.key;
       const auto& proof = o.proof;
-
-      FC_ASSERT( decent::encrypt::verify_delivery_proof( proof, firstK, secondK, seeder_pubKey, buyer_pubKey) );
+      if(!(db().get_node_properties().skip_flags&db().skip_validate)) {
+         FC_ASSERT(decent::encrypt::verify_delivery_proof(proof, firstK, secondK, seeder_pubKey, buyer_pubKey));
+      }else{
+      }
 
       return void_result();
    }FC_CAPTURE_AND_RETHROW( (o) ) }
