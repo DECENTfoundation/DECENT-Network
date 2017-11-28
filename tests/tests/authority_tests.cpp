@@ -391,24 +391,33 @@ BOOST_AUTO_TEST_CASE( proposed_single_account )
    }
 }
 
-/// Verify that miner authority cannot be invoked in a normal transaction
+//// Verify that miner authority cannot be invoked in a normal transaction
 BOOST_AUTO_TEST_CASE( committee_authority )
 { try {
    fc::ecc::private_key nathan_key = fc::ecc::private_key::generate();
+   fc::ecc::private_key voter_key = fc::ecc::private_key::generate();
    fc::ecc::private_key miner_key = init_account_priv_key;
    const account_object nathan = create_account("nathan", nathan_key.get_public_key());
+   trx.clear();
+   generate_block();
+   const account_object voter = create_account("voter", voter_key.get_public_key());
    const auto& global_params = db.get_global_properties().parameters;
 
    generate_block();
 
-   // Signatures are for suckers.
    db.modify(db.get_global_properties(), [](global_property_object& p) {
       // Turn the review period WAY down, so it doesn't take long to produce blocks to that point in simulated time.
       p.parameters.miner_proposal_review_period = fc::days(1).to_seconds();
    });
 
+   const account_object init0_account = get_account("init0");
+   const account_object graphene_miner_account = get_account_by_id(account_id_type());
+   
+   transfer(account_id_type()(db), get_account("voter"), asset(5000000));
+
    BOOST_TEST_MESSAGE( "transfering 100000 CORE to nathan, signing with miner key should fail because this requires it to be part of a proposal" );
    transfer_operation top;
+   
    top.to = nathan.id;
    top.amount = asset(100000);
    trx.operations.push_back(top);
@@ -417,26 +426,47 @@ BOOST_AUTO_TEST_CASE( committee_authority )
 
    auto _sign = [&] { trx.signatures.clear(); sign( trx, nathan_key ); };
 
+   // We must vote 
+   fc::time_point_sec now = db.head_block_time();
+   account_update_operation op;
+   op.account = voter.id;
+   op.new_options = voter.options;
+
+   auto init0_miner_member = get_miner(get_account("init0").get_id());
+   op.new_options->votes.insert(init0_miner_member.vote_id);
+   trx2.operations.push_back(op);
+   trx2.expiration = now + global_params.maximum_time_until_expiration;
+   PUSH_TX(db, trx2, ~0);
+   generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
+
+   // Create proposal
+   now = db.head_block_time();
    proposal_create_operation pop;
    pop.proposed_ops.push_back({trx.operations.front()});
    pop.expiration_time = db.head_block_time() + global_params.miner_proposal_review_period*2;
    pop.fee_paying_account = nathan.id;
    trx.operations = {pop};
+   
+   trx.expiration = now + global_params.maximum_time_until_expiration;
    _sign();
 
    // The review period isn't set yet. Make sure it throws.
    GRAPHENE_REQUIRE_THROW( PUSH_TX( db, trx ), proposal_create_review_period_required );
+
    pop.review_period_seconds = global_params.miner_proposal_review_period / 2;
    trx.operations.back() = pop;
    _sign();
+
    // The review period is too short. Make sure it throws.
    GRAPHENE_REQUIRE_THROW( PUSH_TX( db, trx ), proposal_create_review_period_insufficient );
+
    pop.review_period_seconds = global_params.miner_proposal_review_period;
    trx.operations.back() = pop;
    _sign();
+
    proposal_object prop = db.get<proposal_object>(PUSH_TX( db, trx ).operation_results.front().get<object_id_type>());
    BOOST_REQUIRE(db.find_object(prop.id));
-
+   
    BOOST_CHECK(prop.expiration_time == pop.expiration_time);
    BOOST_CHECK(prop.review_period_time && *prop.review_period_time == pop.expiration_time - *pop.review_period_seconds);
    BOOST_CHECK(prop.proposed_transaction.operations.size() == 1);
@@ -451,35 +481,32 @@ BOOST_AUTO_TEST_CASE( committee_authority )
    BOOST_REQUIRE(!db.get<proposal_object>(prop.id).is_authorized_to_execute(db));
    trx.operations.clear();
    trx.signatures.clear();
-   proposal_update_operation uop;
-   uop.fee_paying_account = GRAPHENE_TEMP_ACCOUNT;
-   uop.proposal = prop.id;
 
-   uop.key_approvals_to_add.emplace(miner_key.get_public_key());
-   /*
-   uop.key_approvals_to_add.emplace(1);
-   uop.key_approvals_to_add.emplace(2);
-   uop.key_approvals_to_add.emplace(3);
-   uop.key_approvals_to_add.emplace(4);
-   uop.key_approvals_to_add.emplace(5);
-   uop.key_approvals_to_add.emplace(6);
+   // Update proposal
+   proposal_update_operation uop;
+   uop.fee_paying_account = get_account("init0").get_id();
+   uop.fee == asset();
+   uop.proposal = prop.id;
+   uop.key_approvals_to_add.emplace(miner_key.get_public_key()); 
+   /* we can use also active_approvals_to_add:
+   uop.active_approvals_to_add = { get_account("init0").get_id(), get_account("init1").get_id(),
+      get_account("init2").get_id(), get_account("init3").get_id(),
+      get_account("init4").get_id(), get_account("init5").get_id(),
+      get_account("init6").get_id(), get_account("init7").get_id() };
    */
    trx.operations.push_back(uop);
    sign( trx, miner_key );
    db.push_transaction(trx);
+
    BOOST_CHECK_EQUAL(get_balance(nathan, asset_id_type()(db)), 0);
    BOOST_CHECK(db.get<proposal_object>(prop.id).is_authorized_to_execute(db));
 
-   trx.signatures.clear();
-   generate_blocks(*prop.review_period_time);
-   uop.key_approvals_to_add.clear();
-   uop.key_approvals_to_add.insert(miner_key.get_public_key()); // was 7
-   trx.operations.back() = uop;
-   sign( trx,  miner_key );
-   // Should throw because the transaction is now in review.
-   GRAPHENE_CHECK_THROW(PUSH_TX( db, trx ), fc::exception);
-
-   generate_blocks(prop.expiration_time);
+   fc::time_point_sec maintenence_time = db.get_dynamic_global_properties().next_maintenance_time;   
+   generate_blocks(maintenence_time);
+   maintenence_time = db.get_dynamic_global_properties().next_maintenance_time;
+   generate_blocks(maintenence_time);
+   
+   auto bn = get_balance(nathan, asset_id_type()(db));
    BOOST_CHECK_EQUAL(get_balance(nathan, asset_id_type()(db)), 100000);
 } FC_LOG_AND_RETHROW() }
 
@@ -591,9 +618,9 @@ BOOST_FIXTURE_TEST_CASE( proposal_two_accounts, database_fixture )
    generate_block();
 
    auto nathan_key = generate_private_key("nathan");
-   auto dan_key = generate_private_key("dan");
+   auto dan_key = generate_private_key("danian");
    const account_object& nathan = create_account("nathan", nathan_key.get_public_key() );
-   const account_object& dan = create_account("dan", dan_key.get_public_key() );
+   const account_object& dan = create_account("danian", dan_key.get_public_key() );
 
    transfer(account_id_type()(db), nathan, asset(100000));
    transfer(account_id_type()(db), dan, asset(100000));
@@ -652,9 +679,9 @@ BOOST_FIXTURE_TEST_CASE( proposal_delete, database_fixture )
    generate_block();
 
    auto nathan_key = generate_private_key("nathan");
-   auto dan_key = generate_private_key("dan");
+   auto dan_key = generate_private_key("danian");
    const account_object& nathan = create_account("nathan", nathan_key.get_public_key() );
-   const account_object& dan = create_account("dan", dan_key.get_public_key() );
+   const account_object& dan = create_account("danian", dan_key.get_public_key() );
 
    transfer(account_id_type()(db), nathan, asset(100000));
    transfer(account_id_type()(db), dan, asset(100000));
@@ -723,16 +750,16 @@ BOOST_FIXTURE_TEST_CASE( proposal_owner_authority_delete, database_fixture )
    generate_block();
 
    auto nathan_key = generate_private_key("nathan");
-   auto dan_key = generate_private_key("dan");
+   auto danian_key = generate_private_key("danian");
    const account_object& nathan = create_account("nathan", nathan_key.get_public_key() );
-   const account_object& dan = create_account("dan", dan_key.get_public_key() );
+   const account_object& danian = create_account("danian", danian_key.get_public_key() );
 
    transfer(account_id_type()(db), nathan, asset(100000));
-   transfer(account_id_type()(db), dan, asset(100000));
+   transfer(account_id_type()(db), danian, asset(100000));
 
    {
       transfer_operation top;
-      top.from = dan.get_id();
+      top.from = danian.get_id();
       top.to = nathan.get_id();
       top.amount = asset(500);
 
@@ -800,16 +827,16 @@ BOOST_FIXTURE_TEST_CASE( proposal_owner_authority_complete, database_fixture )
    generate_block();
 
    auto nathan_key = generate_private_key("nathan");
-   auto dan_key = generate_private_key("dan");
+   auto danian_key = generate_private_key("danian");
    const account_object& nathan = create_account("nathan", nathan_key.get_public_key() );
-   const account_object& dan = create_account("dan", dan_key.get_public_key() );
+   const account_object& danian = create_account("danian", danian_key.get_public_key() );
 
    transfer(account_id_type()(db), nathan, asset(100000));
-   transfer(account_id_type()(db), dan, asset(100000));
+   transfer(account_id_type()(db), danian, asset(100000));
 
    {
       transfer_operation top;
-      top.from = dan.get_id();
+      top.from = danian.get_id();
       top.to = nathan.get_id();
       top.amount = asset(500);
 
@@ -842,11 +869,11 @@ BOOST_FIXTURE_TEST_CASE( proposal_owner_authority_complete, database_fixture )
       proposal_update_operation uop;
       uop.fee_paying_account = nathan.get_id();
       uop.proposal = prop.id;
-      uop.key_approvals_to_add.insert(dan.active.key_auths.begin()->first);
+      uop.key_approvals_to_add.insert(danian.active.key_auths.begin()->first);
       trx.operations.push_back(uop);
       set_expiration( db, trx );
       sign( trx, nathan_key );
-      sign( trx, dan_key );
+      sign( trx, danian_key );
       PUSH_TX( db, trx );
       trx.clear();
       BOOST_CHECK(!prop.is_authorized_to_execute(db));
@@ -856,7 +883,7 @@ BOOST_FIXTURE_TEST_CASE( proposal_owner_authority_complete, database_fixture )
       trx.operations.push_back(uop);
       trx.expiration += fc::seconds(1);  // Survive trx dupe check
       sign( trx, nathan_key );
-      sign( trx, dan_key );
+      sign( trx, danian_key );
       PUSH_TX( db, trx );
       trx.clear();
       BOOST_CHECK(!prop.is_authorized_to_execute(db));
@@ -866,7 +893,7 @@ BOOST_FIXTURE_TEST_CASE( proposal_owner_authority_complete, database_fixture )
       trx.operations.push_back(uop);
       trx.expiration += fc::seconds(1);  // Survive trx dupe check
       sign( trx, nathan_key );
-      sign( trx, dan_key );
+      sign( trx, danian_key );
       PUSH_TX( db, trx );
       trx.clear();
       BOOST_CHECK(!prop.is_authorized_to_execute(db));
@@ -899,9 +926,9 @@ BOOST_FIXTURE_TEST_CASE( max_authority_membership, database_fixture )
 
       private_key_type miner_key = init_account_priv_key;
       // Sam is the creator of accounts
-      private_key_type sam_key = generate_private_key("sam");
+      private_key_type samian_key = generate_private_key("samian");
 
-      account_object sam_account_object = create_account( "sam", sam_key );
+      account_object sam_account_object = create_account( "samian", samian_key );
       account_object miner_account_object = miner_account(db);
 
       const asset_object& core = asset_id_type()(db);
@@ -985,12 +1012,12 @@ BOOST_FIXTURE_TEST_CASE( bogus_signature, database_fixture )
       private_key_type miner_key = init_account_priv_key;
       // Sam is the creator of accounts
       private_key_type alice_key = generate_private_key("alice");
-      private_key_type bob_key = generate_private_key("bob");
+      private_key_type bobian_key = generate_private_key("bobian");
       private_key_type charlie_key = generate_private_key("charlie");
 
       account_object miner_account_object = miner_account(db);
       account_object alice_account_object = create_account( "alice", alice_key );
-      account_object bob_account_object = create_account( "bob", bob_key );
+      account_object bobian_account_object = create_account( "bobian", bobian_key );
       account_object charlie_account_object = create_account( "charlie", charlie_key );
 
       // unneeded, comment it out to silence compiler warning
@@ -1005,7 +1032,7 @@ BOOST_FIXTURE_TEST_CASE( bogus_signature, database_fixture )
 
       transfer_operation xfer_op;
       xfer_op.from = alice_account_object.id;
-      xfer_op.to = bob_account_object.id;
+      xfer_op.to = bobian_account_object.id;
       xfer_op.amount = core.amount(5000);
       xfer_op.fee = db.current_fee_schedule().calculate_fee( xfer_op );
 
@@ -1114,9 +1141,9 @@ BOOST_FIXTURE_TEST_CASE( get_required_signatures_test, database_fixture )
    try
    {
       ACTORS(
-              (alice)(bob)(cindy)(dan)(edy)
-              (mega)(nova)(odle)(poxx)
-              (well)(xylo)(yaya)(zyzz)
+              (alice)(bobian)(cindy)(danian)(edyian)
+              (megan)(novam)(odlem)(poxxx)
+              (wello)(xyloo)(yayat)(zyzzz)
             );
 
       auto set_auth = [&](
@@ -1160,46 +1187,46 @@ BOOST_FIXTURE_TEST_CASE( get_required_signatures_test, database_fixture )
          return result_set == ref_set;
       } ;
 
-      set_auth( well_id, authority( 60, alice_id, 50, bob_id, 50 ) );
-      set_auth( xylo_id, authority( 40, alice_id, 30, cindy_id, 50 ) );
-      set_auth( yaya_id, authority( 20, bob_id, 10, dan_id, 10, edy_id, 10 ) );
-      set_auth( zyzz_id, authority( 40, dan_id, 50 ) );
+      set_auth( wello_id, authority( 60, alice_id, 50, bobian_id, 50 ) );
+      set_auth( xyloo_id, authority( 40, alice_id, 30, cindy_id, 50 ) );
+      set_auth( yayat_id, authority( 20, bobian_id, 10, danian_id, 10, edyian_id, 10 ) );
+      set_auth( zyzzz_id, authority( 40, danian_id, 50 ) );
 
-      set_auth( mega_id, authority( 40, well_id, 30, yaya_id, 30 ) );
-      set_auth( nova_id, authority( 20, alice_id, 10, well_id, 10 ) );
-      set_auth( odle_id, authority( 20, dan_id, 10, yaya_id, 10, zyzz_id, 10 ) );
-      set_auth( poxx_id, authority( 40, well_id, 10, xylo_id, 10, yaya_id, 20, zyzz_id, 20 ) );
+      set_auth( megan_id, authority( 40, wello_id, 30, yayat_id, 30 ) );
+      set_auth( novam_id, authority( 20, alice_id, 10, wello_id, 10 ) );
+      set_auth( odlem_id, authority( 20, danian_id, 10, yayat_id, 10, zyzzz_id, 10 ) );
+      set_auth( poxxx_id, authority( 40, wello_id, 10, xyloo_id, 10, yayat_id, 20, zyzzz_id, 20 ) );
 
       signed_transaction tx;
       flat_set< public_key_type > all_keys
-         { alice_public_key, bob_public_key, cindy_public_key, dan_public_key, edy_public_key };
+         { alice_public_key, bobian_public_key, cindy_public_key, danian_public_key, edyian_public_key };
 
       tx.operations.push_back( transfer_operation() );
       transfer_operation& op = tx.operations.back().get<transfer_operation>();
-      op.to = edy_id;
+      op.to = edyian_id;
       op.amount = asset(1);
 
       op.from = alice_id;
       BOOST_CHECK( chk( tx, all_keys, { alice_public_key } ) );
-      op.from = bob_id;
-      BOOST_CHECK( chk( tx, all_keys, { bob_public_key } ) );
-      op.from = well_id;
-      BOOST_CHECK( chk( tx, all_keys, { alice_public_key, bob_public_key } ) );
-      op.from = xylo_id;
+      op.from = bobian_id;
+      BOOST_CHECK( chk( tx, all_keys, { bobian_public_key } ) );
+      op.from = wello_id;
+      BOOST_CHECK( chk( tx, all_keys, { alice_public_key, bobian_public_key } ) );
+      op.from = xyloo_id;
       BOOST_CHECK( chk( tx, all_keys, { alice_public_key, cindy_public_key } ) );
-      op.from = yaya_id;
-      BOOST_CHECK( chk( tx, all_keys, { bob_public_key, dan_public_key } ) );
-      op.from = zyzz_id;
-      BOOST_CHECK( chk( tx, all_keys, { dan_public_key } ) );
+      op.from = yayat_id;
+      BOOST_CHECK( chk( tx, all_keys, { bobian_public_key, danian_public_key } ) );
+      op.from = zyzzz_id;
+      BOOST_CHECK( chk( tx, all_keys, { danian_public_key } ) );
 
-      op.from = mega_id;
-      BOOST_CHECK( chk( tx, all_keys, { alice_public_key, bob_public_key, dan_public_key } ) );
-      op.from = nova_id;
-      BOOST_CHECK( chk( tx, all_keys, { alice_public_key, bob_public_key } ) );
-      op.from = odle_id;
-      BOOST_CHECK( chk( tx, all_keys, { bob_public_key, dan_public_key } ) );
-      op.from = poxx_id;
-      BOOST_CHECK( chk( tx, all_keys, { alice_public_key, bob_public_key, cindy_public_key, dan_public_key } ) );
+      op.from = megan_id;
+      BOOST_CHECK( chk( tx, all_keys, { alice_public_key, bobian_public_key, danian_public_key } ) );
+      op.from = novam_id;
+      BOOST_CHECK( chk( tx, all_keys, { alice_public_key, bobian_public_key } ) );
+      op.from = odlem_id;
+      BOOST_CHECK( chk( tx, all_keys, { bobian_public_key, danian_public_key } ) );
+      op.from = poxxx_id;
+      BOOST_CHECK( chk( tx, all_keys, { alice_public_key, bobian_public_key, cindy_public_key, danian_public_key } ) );
 
       // TODO:  Add sigs to tx, then check
       // TODO:  Check removing sigs      
@@ -1228,9 +1255,9 @@ BOOST_FIXTURE_TEST_CASE( nonminimal_sig_test, database_fixture )
    try
    {
       ACTORS(
-         (alice)(bob)
-         (roco)
-         (styx)(thud)
+         (alice)(bobian)
+         (rocon)
+         (styxn)(thudn)
          );
 
       auto set_auth = [&](
@@ -1286,19 +1313,19 @@ BOOST_FIXTURE_TEST_CASE( nonminimal_sig_test, database_fixture )
          return result_set == ref_set;
       } ;
 
-      set_auth( roco_id, authority( 2, styx_id, 1, thud_id, 2 ) );
-      set_auth( styx_id, authority( 2, alice_id, 1, bob_id, 1 ) );
-      set_auth( thud_id, authority( 1, alice_id, 1 ) );
+      set_auth( rocon_id, authority( 2, styxn_id, 1, thudn_id, 2 ) );
+      set_auth( styxn_id, authority( 2, alice_id, 1, bobian_id, 1 ) );
+      set_auth( thudn_id, authority( 1, alice_id, 1 ) );
 
       signed_transaction tx;
       transfer_operation op;
-      op.from = roco_id;
-      op.to = bob_id;
+      op.from = rocon_id;
+      op.to = bobian_id;
       op.amount = asset(1);
       tx.operations.push_back( op );
 
-      BOOST_CHECK( chk( tx, { alice_public_key, bob_public_key }, { alice_public_key, bob_public_key } ) );
-      BOOST_CHECK( chk_min( tx, { alice_public_key, bob_public_key }, { alice_public_key } ) );
+      BOOST_CHECK( chk( tx, { alice_public_key, bobian_public_key }, { alice_public_key, bobian_public_key } ) );
+      BOOST_CHECK( chk_min( tx, { alice_public_key, bobian_public_key }, { alice_public_key } ) );
 
       GRAPHENE_REQUIRE_THROW( tx.verify_authority( db.get_chain_id(), get_active, get_owner ), fc::exception );
       sign( tx, alice_private_key );
