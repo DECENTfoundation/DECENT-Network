@@ -243,6 +243,12 @@ bool database::_push_block(const signed_block &new_block, bool sync_mode)
 processed_transaction database::push_transaction( const signed_transaction& trx, uint32_t skip )
 { try {
    processed_transaction result;
+   size_t tx_size = fc::raw::pack_size( trx );
+   auto maximum_tx_size = get_global_properties().parameters.maximum_transaction_size;
+
+   if(tx_size > maximum_tx_size)
+      elog("Tx too big");
+   FC_ASSERT(tx_size <= maximum_tx_size, "Transaction size is too big");
    detail::with_skip_flags( *this, skip, [&]()
    {
       result = _push_transaction( trx );
@@ -364,7 +370,8 @@ signed_block database::_generate_block(
    // pop pending state (reset to head block state)
    for( const processed_transaction& tx : _pending_tx )
    {
-      size_t new_total_size = total_block_size + fc::raw::pack_size( tx );
+      size_t tx_size = fc::raw::pack_size( tx );
+      size_t new_total_size = total_block_size + tx_size;
 
       // postpone transaction if it would make block too big
       if( new_total_size >= maximum_block_size )
