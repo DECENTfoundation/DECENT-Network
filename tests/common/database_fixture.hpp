@@ -243,6 +243,10 @@ struct database_fixture {
    { publish_feed(mia(db), by(db), f); }
    void publish_feed(const asset_object& mia, const account_object& by, const price_feed& f);
 
+   void fill_pools(asset_id_type uia, account_id_type by, asset to_core_pool, asset to_asset_pool);
+
+   void create_content(account_id_type by, string url, asset price);
+   void buy_content(account_id_type by, string url, asset price);
 
 
    // the reason we use an app is to exercise the indexes of built-in

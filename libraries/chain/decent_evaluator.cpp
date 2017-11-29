@@ -472,7 +472,8 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
 
       asset paid_price_in_dct;
       FC_ASSERT( paid_price.asset_id(d).can_convert(paid_price, paid_price_in_dct, d) && paid_price_in_dct.asset_id == asset_id_type() );
-      FC_ASSERT( content_price.asset_id(d).can_convert(paid_price_in_dct, paid_price_after_conversion, d) && paid_price_after_conversion.asset_id == content_price.asset_id );
+      FC_ASSERT( content_price.asset_id(d).can_convert(paid_price_in_dct, paid_price_after_conversion, d), "cannot convert ${f} to ${t}");
+      FC_ASSERT( paid_price_after_conversion.asset_id == content_price.asset_id );
       FC_ASSERT( paid_price_after_conversion >= content_price );
 
       return void_result(); 

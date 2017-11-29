@@ -149,7 +149,6 @@ namespace graphene { namespace chain {
             asset asset_pool_diff;
             price rate = ao.options.core_exchange_rate;
 
-
             if( from.asset_id == id ){
                to.asset_id = asset_id_type();
                to = from * rate;
@@ -157,14 +156,18 @@ namespace graphene { namespace chain {
                core_pool_diff = -to;
                asset_pool_diff = from;
 
+               ilog("changes in core pool: ${c}",("c", -to));
+               ilog("changes in asset pool: ${c}",("c", from));
             }else{
                FC_ASSERT(from.asset_id == asset_id_type(), "Unsupported conversion");
 
                to.asset_id = id;
                to = from * rate;
 
-               core_pool_diff = -from;
-               asset_pool_diff = to;
+               core_pool_diff = from;
+               asset_pool_diff = -to;
+               ilog("changes in core pool: ${c}",("c", from));
+               ilog("changes in asset pool: ${c}",("c", -to));
             }
 
             FC_ASSERT( add.asset_pool + asset_pool_diff.amount >= share_type(0), "Insufficient funds in asset pool to perform conversion" );
@@ -225,8 +228,8 @@ namespace graphene { namespace chain {
                to.asset_id = id;
                to = from * rate;
 
-               core_pool_diff = -from;
-               asset_pool_diff = to;
+               core_pool_diff = from;
+               asset_pool_diff = -to;
             }
 
             if ( add.asset_pool + asset_pool_diff.amount < share_type(0) || add.core_pool + core_pool_diff.amount < share_type(0) ) {
