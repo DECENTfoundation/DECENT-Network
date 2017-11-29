@@ -140,10 +140,17 @@ void database_fixture::verify_asset_supplies( const database& db )
 
   const simple_index<account_statistics_object>& statistics_index = db.get_index_type<simple_index<account_statistics_object>>();
   const auto& balance_index = db.get_index_type<account_balance_index>().indices();
+  const auto& asset_idx = db.get_index_type<asset_index>().indices().get<by_id>();
   map<asset_id_type,share_type> total_balances;
   map<asset_id_type,share_type> total_debts;
   share_type core_in_orders;
   share_type reported_core_in_orders;
+
+  for (const asset_object& a : asset_idx) {
+     const auto& ad = a.dynamic_asset_data_id(db);
+     total_balances[asset_id_type()] += ad.core_pool;
+     total_balances[a.get_id()] += ad.asset_pool;
+  }
 
   for( const account_balance_object& b : balance_index )
      total_balances[b.asset_type] += b.balance;
@@ -176,6 +183,7 @@ void database_fixture::verify_asset_supplies( const database& db )
   }
 
   BOOST_CHECK_EQUAL( core_in_orders.value , reported_core_in_orders.value );
+  int64_t v = total_balances[asset_id_type()].value;
   BOOST_CHECK_EQUAL( total_balances[asset_id_type()].value , core_asset_data.current_supply.value);
 //   wlog("***  End  asset supply verification ***");
 }

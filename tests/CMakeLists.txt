@@ -20,11 +20,12 @@ set(TEST_FILES_LIST
     tests/authority_tests.cpp
     tests/fee_tests.cpp
     tests/uia_tests.cpp
+    tests/messaging_tests.cpp
     tests/main.cpp
 )
 
 add_executable( chain_test ${TEST_FILES_LIST} )
-target_link_libraries( chain_test graphene_chain graphene_app graphene_account_history graphene_egenesis_none fc ${PLATFORM_SPECIFIC_LIBS} )
+target_link_libraries( chain_test graphene_chain graphene_app graphene_account_history graphene_egenesis_none decent_messaging fc ${PLATFORM_SPECIFIC_LIBS} )
 if(MSVC)
   set_source_files_properties( tests/serialization_tests.cpp PROPERTIES COMPILE_FLAGS "/bigobj" )
 endif(MSVC)
