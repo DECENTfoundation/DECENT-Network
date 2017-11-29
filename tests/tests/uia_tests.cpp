@@ -180,7 +180,7 @@ BOOST_AUTO_TEST_CASE( asset_content_in_uia_test )
    try
    {
       //names must be at least 5 characters long...
-      ACTORS( (alice)(bobian)(cecil) );
+      ACTORS( (alice)(bobian)(cecil)(david) );
       transfer( miner_account, alice_id, asset(400000000) );
       transfer( miner_account, cecil_id, asset(400000000) );
 
@@ -211,15 +211,25 @@ BOOST_AUTO_TEST_CASE( asset_content_in_uia_test )
       fill_pools(alpha_asset_id, alice_id, asset(50000000), asset(50000000, alpha_asset_id));
 
 
-      ilog("Alice has ${s} DCTs, ",("s",get_balance(alice_id, asset_id_type())));
-      ilog("Alice has ${s} ALPHAs, ",("s",get_balance(alice_id, alpha_asset_id)));
-      idump((alpha_asset_id(db).dynamic_asset_data_id(db)));
+      BOOST_CHECK(get_balance(alice_id, asset_id_type()) == 350000000);
+      BOOST_CHECK(get_balance(alice_id, alpha_asset_id ) == 200000000);
+      BOOST_CHECK(get_balance(cecil_id, asset_id_type()) == 400000000);
+      BOOST_CHECK(get_balance(bobian_id, alpha_asset_id ) == 100000000);
+      BOOST_CHECK(alpha_asset_id(db).dynamic_asset_data_id(db).asset_pool == 50000000);
+      BOOST_CHECK(alpha_asset_id(db).dynamic_asset_data_id(db).core_pool == 50000000);
 
       buy_content(bobian_id, "http://abcd", asset(100, alpha_asset_id));
       buy_content(cecil_id, "http://abcd", asset(100));
-      ilog("Alice has ${s} DCTs, ",("s",get_balance(alice_id, asset_id_type())));
-      ilog("Alice has ${s} ALPHAs, ",("s",get_balance(alice_id, alpha_asset_id)));
-      idump((alpha_asset_id(db).dynamic_asset_data_id(db)));
+      GRAPHENE_REQUIRE_THROW(buy_content(david_id, "http://abcd", asset(100, alpha_asset_id)), fc::exception);
+      GRAPHENE_REQUIRE_THROW(buy_content(david_id, "http://abcd", asset(100)), fc::exception);
+
+      BOOST_CHECK(get_balance(alice_id, asset_id_type()) == 350000000);
+      BOOST_CHECK(get_balance(alice_id, alpha_asset_id ) == 200000200);
+      BOOST_CHECK(get_balance(cecil_id, asset_id_type()) == 399999900);
+      BOOST_CHECK(get_balance(bobian_id, alpha_asset_id ) == 99999900);
+      BOOST_CHECK(alpha_asset_id(db).dynamic_asset_data_id(db).asset_pool == 49999900);
+      BOOST_CHECK(alpha_asset_id(db).dynamic_asset_data_id(db).core_pool == 50000100);
+
    }
    catch(fc::exception& e)
    {
@@ -234,10 +244,9 @@ BOOST_AUTO_TEST_CASE( asset_content_in_dct_test )
    try
    {
       //names must be at least 5 characters long...
-      ACTORS( (alice)(bobian)(cecil) );
+      ACTORS( (alice)(bobian)(cecil)(david)  );
       transfer( miner_account, alice_id, asset(400000000) );
       transfer( miner_account, cecil_id, asset(400000000) );
-
 
       auto has_asset = [&]( std::string symbol ) -> bool
       {
@@ -265,16 +274,24 @@ BOOST_AUTO_TEST_CASE( asset_content_in_dct_test )
       //Fill the pools
       fill_pools(alpha_asset_id, alice_id, asset(50000000), asset(50000000, alpha_asset_id));
 
-
-      ilog("Alice has ${s} DCTs, ",("s",get_balance(alice_id, asset_id_type())));
-      ilog("Alice has ${s} ALPHAs, ",("s",get_balance(alice_id, alpha_asset_id)));
-      idump((alpha_asset_id(db).dynamic_asset_data_id(db)));
+      BOOST_CHECK(get_balance(alice_id, asset_id_type()) == 350000000);
+      BOOST_CHECK(get_balance(alice_id, alpha_asset_id ) == 200000000);
+      BOOST_CHECK(get_balance(cecil_id, asset_id_type()) == 400000000);
+      BOOST_CHECK(get_balance(bobian_id, alpha_asset_id ) == 100000000);
+      BOOST_CHECK(alpha_asset_id(db).dynamic_asset_data_id(db).asset_pool == 50000000);
+      BOOST_CHECK(alpha_asset_id(db).dynamic_asset_data_id(db).core_pool == 50000000);
 
       buy_content(bobian_id, "http://abcd", asset(100, alpha_asset_id));
       buy_content(cecil_id, "http://abcd", asset(100));
-      ilog("Alice has ${s} DCTs, ",("s",get_balance(alice_id, asset_id_type())));
-      ilog("Alice has ${s} ALPHAs, ",("s",get_balance(alice_id, alpha_asset_id)));
-      idump((alpha_asset_id(db).dynamic_asset_data_id(db)));
+      GRAPHENE_REQUIRE_THROW(buy_content(david_id, "http://abcd", asset(100, alpha_asset_id)), fc::exception);
+      GRAPHENE_REQUIRE_THROW(buy_content(david_id, "http://abcd", asset(100)), fc::exception);
+
+      BOOST_CHECK(get_balance(alice_id, asset_id_type()) == 350000200);
+      BOOST_CHECK(get_balance(alice_id, alpha_asset_id ) == 200000000);
+      BOOST_CHECK(get_balance(cecil_id, asset_id_type()) == 399999900);
+      BOOST_CHECK(get_balance(bobian_id, alpha_asset_id ) == 99999900);
+      BOOST_CHECK(alpha_asset_id(db).dynamic_asset_data_id(db).asset_pool == 50000100);
+      BOOST_CHECK(alpha_asset_id(db).dynamic_asset_data_id(db).core_pool == 49999900);
    }
    catch(fc::exception& e)
    {
