@@ -46,9 +46,6 @@ void content_payout(database& db, asset price, const content_object& content){
 
 }
 
-
-
-
 void_result set_publishing_manager_evaluator::do_evaluate( const set_publishing_manager_operation& o )
 {try{
    for( const auto id : o.to )
