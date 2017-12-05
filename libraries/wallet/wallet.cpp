@@ -3096,12 +3096,18 @@ signed_transaction content_cancellation(string author,
                   FC_ASSERT(my_memo_key, "Unable to recover private key to decrypt memo. Wallet may be corrupted.");
                   keys_to_try_to.push_back(*my_memo_key);
                   for( auto k: to_account.active.key_auths ) {
-                     auto my_key = wif_to_key(wallet._keys.at(k.first));
+                     auto key_itr = wallet._keys.find(k.first);
+                     if( key_itr == wallet._keys.end() )
+                        continue;
+                     auto my_key = wif_to_key(key_itr->second);
                      if(my_key)
                         keys_to_try_to.push_back(*my_key);
                   }
                   for( auto k: to_account.owner.key_auths ) {
-                     auto my_key = wif_to_key(wallet._keys.at(k.first));
+                     auto key_itr = wallet._keys.find(k.first);
+                     if( key_itr == wallet._keys.end() )
+                        continue;
+                     auto my_key = wif_to_key(key_itr->second);
                      if(my_key)
                         keys_to_try_to.push_back(*my_key);
                   }
@@ -3142,12 +3148,18 @@ signed_transaction content_cancellation(string author,
                   FC_ASSERT(my_memo_key, "Unable to recover private key to decrypt memo. Wallet may be corrupted.");
                   keys_to_try_from.push_back(*my_memo_key);
                   for( auto k: from_account.active.key_auths ) {
-                     auto my_key = wif_to_key(wallet._keys.at(k.first));
+                     auto key_itr = wallet._keys.find(k.first);
+                     if( key_itr == wallet._keys.end() )
+                        continue;
+                     auto my_key = wif_to_key(key_itr->second);
                      if(my_key)
                         keys_to_try_from.push_back(*my_key);
                   }
                   for( auto k: from_account.owner.key_auths ) {
-                     auto my_key = wif_to_key(wallet._keys.at(k.first));
+                     auto key_itr = wallet._keys.find(k.first);
+                     if( key_itr == wallet._keys.end() )
+                        continue;
+                     auto my_key = wif_to_key(key_itr->second);
                      if(my_key)
                         keys_to_try_from.push_back(*my_key);
                   }
