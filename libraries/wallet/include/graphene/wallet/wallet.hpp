@@ -1777,6 +1777,14 @@ namespace graphene { namespace wallet {
          DInteger generate_encryption_key() const;
 
          /**
+          * @brief Generate keys for new content submission
+          * @param seeders list of seeder account IDs
+          * @return generated key and key parts
+          * @ingroup WalletCLI
+          */
+         content_keys generate_content_keys(vector<account_id_type> const& seeders)const;
+
+         /**
           * @brief Get a list of open buyings
           * @return Open buying objects
           * @ingroup WalletCLI
@@ -2253,4 +2261,5 @@ FC_API( graphene::wallet::wallet_api,
            (get_message_objects)
            (get_messages)
            (get_sent_messages)
+           (generate_content_keys)
 )

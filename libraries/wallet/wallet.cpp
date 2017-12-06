@@ -4881,6 +4881,10 @@ void graphene::wallet::detail::submit_transfer_listener::package_seed_complete()
       return my->get_sent_messages(sender, max_count);
    }
 
+   content_keys wallet_api::generate_content_keys(vector<account_id_type> const& seeders)const
+   {
+      return my->_remote_db->generate_content_keys(seeders);
+   }
 
 } } // graphene::wallet
 
