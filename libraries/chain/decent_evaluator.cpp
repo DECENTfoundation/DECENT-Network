@@ -577,9 +577,8 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
       const auto& firstK = content->key_parts.at( o.seeder );
       const auto& secondK = o.key;
       const auto& proof = o.proof;
-      if(!(db().get_node_properties().skip_flags&db().skip_validate)) {
+      if(!(db().get_node_properties().skip_flags&db().skip_undo_history_check)) {
          FC_ASSERT(decent::encrypt::verify_delivery_proof(proof, firstK, secondK, seeder_pubKey, buyer_pubKey));
-      }else{
       }
 
       return void_result();
@@ -808,8 +807,10 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
       }
       //
       FC_ASSERT( content->cd.valid() == o.proof.valid() );
-      FC_ASSERT( !(content->cd.valid() ) || _custody_utils.verify_by_miner( *(content->cd), *(o.proof) ) == 0, "Invalid proof of custody" );
 
+      if(!(db().get_node_properties().skip_flags&db().skip_validate)) {
+         FC_ASSERT( !(content->cd.valid() ) || _custody_utils.verify_by_miner( *(content->cd), *(o.proof) ) == 0, "Invalid proof of custody" );
+      }
       //ilog("proof_of_custody OK");
 
       return void_result();
