@@ -300,4 +300,85 @@ BOOST_AUTO_TEST_CASE( asset_content_in_dct_test )
    }
 }
 
+BOOST_AUTO_TEST_CASE( payment_splitting_test )
+{
+   try
+   {
+      ilog("payment_splitting_test start");
+      //names must be at least 5 characters long...
+      ACTORS( (alice)(bobian)(cecil)(david)  );
+      fund( alice_id(db), asset(107) );
+
+      auto has_asset = [&]( std::string symbol ) -> bool
+      {
+         const auto& assets_by_symbol = db.get_index_type<asset_index>().indices().get<by_symbol>();
+         return assets_by_symbol.find( symbol ) != assets_by_symbol.end();
+      };
+
+      //create content
+      map<account_id_type, uint32_t> co_authors;
+      // bobian 70%
+      co_authors[cecil_id]=2000; // 20%
+      co_authors[david_id]=1000; // 10%
+      create_content(bobian_id, "http://abcd1", asset(100), co_authors);
+
+      BOOST_CHECK(get_balance( alice_id, asset_id_type()) == 107);
+      BOOST_CHECK(get_balance(bobian_id, asset_id_type()) == 0);
+      BOOST_CHECK(get_balance( cecil_id, asset_id_type()) == 0);
+      BOOST_CHECK(get_balance( david_id, asset_id_type()) == 0);
+
+      buy_content(alice_id, "http://abcd1", asset(100));
+
+      BOOST_CHECK(get_balance( alice_id, asset_id_type()) == 7);
+      BOOST_CHECK(get_balance(bobian_id, asset_id_type()) == 70);
+      BOOST_CHECK(get_balance( cecil_id, asset_id_type()) == 20);
+      BOOST_CHECK(get_balance( david_id, asset_id_type()) == 10);
+
+      //create content, shares are indivisible
+      co_authors[cecil_id] =3000; // 30%
+      co_authors[bobian_id]=5000; // 50%
+      co_authors[david_id] =2000; // 20%
+      create_content(bobian_id, "http://abcd2", asset(7), co_authors);
+
+      buy_content(alice_id, "http://abcd2", asset(7));
+
+      BOOST_CHECK(get_balance( alice_id, asset_id_type()) == 0);
+      BOOST_CHECK(get_balance(bobian_id, asset_id_type()) == 70+4);
+      BOOST_CHECK(get_balance( cecil_id, asset_id_type()) == 20+2);
+      BOOST_CHECK(get_balance( david_id, asset_id_type()) == 10+1);
+
+
+      BOOST_CHECK( !has_asset("UIA") );
+      asset_id_type uia_asset_id = db.get_index<asset_object>().get_next_id();
+      create_user_issued_asset( "UIA", alice_id(db) );
+      BOOST_CHECK(  has_asset("UIA") );
+      issue_uia( alice_id(db), asset(100, uia_asset_id));
+
+      //create content, price in UIA
+      co_authors[bobian_id]=7000; // 50% + 20%
+      co_authors[cecil_id] =2000; // 20%
+      co_authors[david_id] =1000; // 10%
+      create_content(bobian_id, "http://abcd3", asset(100,uia_asset_id), co_authors);
+
+      BOOST_CHECK(get_balance( alice_id, uia_asset_id) == 100);
+      BOOST_CHECK(get_balance(bobian_id, uia_asset_id) == 0);
+      BOOST_CHECK(get_balance( cecil_id, uia_asset_id) == 0);
+      BOOST_CHECK(get_balance( david_id, uia_asset_id) == 0);
+
+      buy_content(alice_id, "http://abcd3", asset(100,uia_asset_id));
+
+      BOOST_CHECK(get_balance( alice_id, uia_asset_id) == 0);
+      BOOST_CHECK(get_balance(bobian_id, uia_asset_id) == 70);
+      BOOST_CHECK(get_balance( cecil_id, uia_asset_id) == 20);
+      BOOST_CHECK(get_balance( david_id, uia_asset_id) == 10);
+
+      ilog("payment_splitting_test end");
+   }
+   catch(fc::exception& e)
+   {
+      edump((e.to_detail_string()));
+      throw;
+   }
+}
+
 BOOST_AUTO_TEST_SUITE_END()

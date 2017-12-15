@@ -245,7 +245,7 @@ struct database_fixture {
 
    void fill_pools(asset_id_type uia, account_id_type by, asset to_core_pool, asset to_asset_pool);
 
-   void create_content(account_id_type by, string url, asset price);
+   void create_content(account_id_type by, string url, asset price, map<account_id_type, uint32_t> co_authors={});
    void buy_content(account_id_type by, string url, asset price);
 
 
