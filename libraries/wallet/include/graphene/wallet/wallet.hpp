@@ -280,8 +280,9 @@ namespace graphene { namespace wallet {
          fc::ecc::private_key derive_private_key(const std::string& prefix_string, int sequence_number) const;
 
          /**
-          * @brief Lists all available commands.
-          * @return a list of all available commands
+          * @brief Get information about current state of the blockchain,
+          * such as head block number, chain_id, list of active miners,...
+          * @return information about current state of the blockchain
           * @ingroup WalletAPI_General
           */
          variant                           info();
