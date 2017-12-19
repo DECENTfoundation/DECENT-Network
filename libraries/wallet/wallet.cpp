@@ -2185,7 +2185,7 @@ public:
    }
 
 
-   void submit_content_utility(content_submit_operation& submit_op,
+   void                                submit_content_utility(content_submit_operation& submit_op,
                                       vector<regional_price_info> const& price_amounts)
    {
       vector<regional_price> arr_prices;
@@ -3096,12 +3096,18 @@ signed_transaction content_cancellation(string author,
                   FC_ASSERT(my_memo_key, "Unable to recover private key to decrypt memo. Wallet may be corrupted.");
                   keys_to_try_to.push_back(*my_memo_key);
                   for( auto k: to_account.active.key_auths ) {
-                     auto my_key = wif_to_key(wallet._keys.at(k.first));
+                     auto key_itr = wallet._keys.find(k.first);
+                     if( key_itr == wallet._keys.end() )
+                        continue;
+                     auto my_key = wif_to_key(key_itr->second);
                      if(my_key)
                         keys_to_try_to.push_back(*my_key);
                   }
                   for( auto k: to_account.owner.key_auths ) {
-                     auto my_key = wif_to_key(wallet._keys.at(k.first));
+                     auto key_itr = wallet._keys.find(k.first);
+                     if( key_itr == wallet._keys.end() )
+                        continue;
+                     auto my_key = wif_to_key(key_itr->second);
                      if(my_key)
                         keys_to_try_to.push_back(*my_key);
                   }
@@ -3142,12 +3148,18 @@ signed_transaction content_cancellation(string author,
                   FC_ASSERT(my_memo_key, "Unable to recover private key to decrypt memo. Wallet may be corrupted.");
                   keys_to_try_from.push_back(*my_memo_key);
                   for( auto k: from_account.active.key_auths ) {
-                     auto my_key = wif_to_key(wallet._keys.at(k.first));
+                     auto key_itr = wallet._keys.find(k.first);
+                     if( key_itr == wallet._keys.end() )
+                        continue;
+                     auto my_key = wif_to_key(key_itr->second);
                      if(my_key)
                         keys_to_try_from.push_back(*my_key);
                   }
                   for( auto k: from_account.owner.key_auths ) {
-                     auto my_key = wif_to_key(wallet._keys.at(k.first));
+                     auto key_itr = wallet._keys.find(k.first);
+                     if( key_itr == wallet._keys.end() )
+                        continue;
+                     auto my_key = wif_to_key(key_itr->second);
                      if(my_key)
                         keys_to_try_from.push_back(*my_key);
                   }
@@ -3495,6 +3507,24 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
          if( current.size() < std::min(100,limit) )
             break;
          limit -= current.size();
+      }
+
+      return result;
+   }
+
+   vector<operation_detail> wallet_api::get_relative_account_history(string name,
+                                                                     uint32_t stop,
+                                                                     int limit,
+                                                                     uint32_t start)const
+   {
+      vector<operation_detail> result;
+      auto account_id = get_account_id(name);
+
+      vector<operation_history_object> current = my->_remote_hist->get_relative_account_history(account_id, stop, limit, start);
+      for( auto& o : current ) {
+         std::stringstream ss;
+         auto memo = o.op.visit(detail::operation_printer(ss, *my, o.result));
+         result.push_back( operation_detail{ memo, ss.str(), o } );
       }
 
       return result;

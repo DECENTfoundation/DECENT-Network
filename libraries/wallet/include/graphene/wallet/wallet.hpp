@@ -382,6 +382,23 @@ namespace graphene { namespace wallet {
           */
          vector<operation_detail>  get_account_history(string name, int limit)const;
 
+         /**
+          * @breif Get operations relevant to the specified account referenced
+          * by an event numbering specific to the account. The current number of operations
+          * for the account can be found in the account statistics (or use 0 for start).
+          * @param account The account whose history should be queried
+          * @param stop Sequence number of earliest operation. 0 is default and will
+          * query 'limit' number of operations.
+          * @param limit Maximum number of operations to retrieve (must not exceed 100)
+          * @param start Sequence number of the most recent operation to retrieve.
+          * 0 is default, which will start querying from the most recent operation.
+          * @return A list of operations performed by account, ordered from most recent to oldest.
+          * @ingroup WalletCLI
+          */
+         vector<operation_detail>  get_relative_account_history(string name,
+                                                                uint32_t stop,
+                                                                int limit,
+                                                                uint32_t start)const;
 
          /**
           * @brief Returns the block chain's slowly-changing settings.
@@ -2186,6 +2203,7 @@ FC_API( graphene::wallet::wallet_api,
            (get_block)
            (get_account_count)
            (get_account_history)
+           (get_relative_account_history)
            (search_account_history)
            (get_global_properties)
            (get_dynamic_global_properties)
