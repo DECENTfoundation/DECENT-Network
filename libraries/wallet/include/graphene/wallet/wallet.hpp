@@ -112,6 +112,7 @@ namespace graphene { namespace wallet {
          /** encrypted keys */
          vector<char>              cipher_keys;
 
+
          /** map an account to a set of extra keys that have been imported for that account */
          map<account_id_type, set<public_key_type> >  extra_keys;
 
