@@ -625,7 +625,7 @@ void database_fixture::publish_feed( const asset_object& mia, const account_obje
   verify_asset_supplies(db);
 }
 
-void database_fixture::create_content(account_id_type by, string url, asset price)
+void database_fixture::create_content(account_id_type by, string url, asset price, map<account_id_type, uint32_t> co_authors)
 {
    set_expiration( db, trx );
    trx.operations.clear();
@@ -634,6 +634,7 @@ void database_fixture::create_content(account_id_type by, string url, asset pric
    op.size = 100;
    op.price.push_back({RegionCodes::OO_none, price});
    op.author = by;
+   op.co_authors = co_authors;
    op.URI = url;
    op.hash = fc::ripemd160::hash(url);
    op.expiration = fc::time_point::now()+fc::microseconds(10000000000);

@@ -41,15 +41,28 @@
 namespace graphene { namespace chain {
 
 void database::buying_expire(const buying_object& buying){
+
+   return_escrow_buying_operation rebop;
+   rebop.escrow = buying.price;
+   rebop.consumer = buying.consumer;
+   rebop.buying = buying.id;
+
    adjust_balance( buying.consumer, buying.price );
    modify<buying_object>(buying, [&](buying_object& bo){
         bo.price.amount = 0;
         bo.expired = true;
         bo.expiration_or_delivery_time = head_block_time();
    });
+
+   push_applied_operation(rebop);
 }
 
 void database::content_expire(const content_object& content){
+   return_escrow_submission_operation resop;
+   resop.escrow = content.publishing_fee_escrow;
+   resop.author = content.author;
+   resop.content = content.id;
+
    if( content.publishing_fee_escrow.amount >= 0 )
       adjust_balance( content.author, content.publishing_fee_escrow );
    else //workaround due to block halt at #404726- this should never happen but if it does again, the remaining amount shall be paid by someone else, in this case by decent6
@@ -80,6 +93,8 @@ void database::content_expire(const content_object& content){
          });
       }
    }
+
+   push_applied_operation( resop );
 }
 
 void database::renew_subscription(const subscription_object& subscription, const uint32_t subscription_period, const asset price){
@@ -210,15 +225,7 @@ void database::decent_housekeeping()
    auto citr = cidx.lower_bound( get_dynamic_global_properties().last_budget_time + get_global_properties().parameters.block_interval );
    while( citr != cidx.end() && citr->expiration <= head_block_time() )
    {
-      return_escrow_submission_operation resop;
-      resop.escrow = citr->publishing_fee_escrow;
-
       content_expire(*citr);
-
-      resop.author = citr->author;
-      resop.content = citr->id;
-      push_applied_operation( resop );
-
       ++citr;
    }
 
@@ -226,17 +233,9 @@ void database::decent_housekeeping()
    auto bitr = bidx.lower_bound( get_dynamic_global_properties().last_budget_time + get_global_properties().parameters.block_interval );
    while( bitr != bidx.end() && bitr->expiration_time <= head_block_time() )
    {
-      if(!bitr->delivered) {
-         return_escrow_buying_operation rebop;
-         rebop.escrow = bitr->price;
-
+      if(!bitr->delivered)
          buying_expire(*bitr);
 
-         rebop.consumer = bitr->consumer;
-         rebop.buying = bitr->id;
-         push_applied_operation(rebop);
-
-      }
       ++bitr;
    }
 
