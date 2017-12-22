@@ -240,6 +240,7 @@ namespace graphene { namespace app {
          * @param seeder_private_key Private key of the account controlling this seeder
          * @param free_space Allocated disk space, in MegaBytes
          * @param seeding_price Price per MegaBytes
+         * @param seeding_symbol seeding price asset, e.g. DCT
          * @param packages_path Packages storage path
          * @param region_code Optional ISO 3166-1 alpha-2 two-letter region code
          * @ingroup Network_NodeAPI
@@ -249,6 +250,7 @@ namespace graphene { namespace app {
                               const fc::ecc::private_key& seeder_private_key,
                               const uint64_t free_space,
                               const uint32_t seeding_price,
+                              const string seeding_symbol,
                               const string packages_path,
                               const string region_code = "" );
 

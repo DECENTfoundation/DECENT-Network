@@ -1639,6 +1639,7 @@ namespace graphene { namespace wallet {
           * @param seeder_private_key Private key of the account controlling this seeder
           * @param free_space Allocated disk space, in MegaBytes
           * @param seeding_price price per MegaByte
+          * @param seeding_symbol seeding price asset, e.g. DCT
           * @param packages_path Packages storage path
           * @param region_code Optional ISO 3166-1 alpha-2 two-letter region code
           * @ingroup WalletCLI
@@ -1648,6 +1649,7 @@ namespace graphene { namespace wallet {
                                string seeder_private_key,
                                uint64_t free_space,
                                uint32_t seeding_price,
+                               string seeding_symbol,
                                string packages_path,
                                string region_code = "" );
 

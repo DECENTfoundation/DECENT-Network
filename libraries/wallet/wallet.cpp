@@ -2573,13 +2573,14 @@ signed_transaction content_cancellation(string author,
                          string seeder_private_key,
                          uint64_t free_space,
                          uint32_t seeding_price,
+                         string seeding_symbol,
                          string packages_path,
                          string region_code)
    {
       account_id_type seeder = get_account_id( account_id_type_or_name );
       use_network_node_api();
       fc::ecc::private_key seeder_priv_key = *(wif_to_key(seeder_private_key));
-      (*_remote_net_node)->seeding_startup( seeder, content_private_key, seeder_priv_key, free_space, seeding_price, packages_path, region_code);
+      (*_remote_net_node)->seeding_startup( seeder, content_private_key, seeder_priv_key, free_space, seeding_price, seeding_symbol, packages_path, region_code);
    }
 
    signed_transaction subscribe_to_author( string from,
@@ -4472,10 +4473,11 @@ void wallet_api::leave_rating_and_comment(string consumer,
                                     string seeder_private_key,
                                     uint64_t free_space,
                                     uint32_t seeding_price,
+                                    string seeding_symbol,
                                     string packages_path,
                                     string region_code)
    {
-      return my->seeding_startup(account_id_type_or_name, content_private_key, seeder_private_key, free_space, seeding_price, packages_path, region_code);
+      return my->seeding_startup(account_id_type_or_name, content_private_key, seeder_private_key, free_space, seeding_price, seeding_symbol, packages_path, region_code);
    }
 
    DInteger wallet_api::restore_encryption_key(string consumer, buying_id_type buying)

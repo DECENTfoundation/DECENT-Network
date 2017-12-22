@@ -65,6 +65,7 @@
 #define DECENT_MAX_FILE_SIZE 10000 /// MBs, aka: 10 GBs
 #define DECENT_MAX_COMMENT_SIZE 100 /// chars
 #define DECENT_MAX_SUBSCRIPTION_PERIOD 365 /// days, aka: 1 year
+#define DECENT_MAX_SEEDING_PRICE 100000000 /// 1 DCT per MB
 /**
  * Don't allow the committee_members to publish a limit that would
  * make the network unable to operate.

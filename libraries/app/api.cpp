@@ -215,6 +215,7 @@ namespace graphene { namespace app {
                                            const fc::ecc::private_key& seeder_private_key,
                                            const uint64_t free_space,
                                            const uint32_t seeding_price,
+                                           const string seeding_symbol,
                                            const string packages_path,
                                            const string region_code)
     {
@@ -227,6 +228,7 @@ namespace graphene { namespace app {
        seeding_options.seeder_private_key = seeder_private_key;
        seeding_options.free_space = free_space;
        seeding_options.seeding_price = seeding_price;
+       seeding_options.seeding_symbol = seeding_symbol;
        seeding_options.packages_path = packages_path;
        seeding_options.region_code = region_code;
        decent::seeding::seeding_promise->set_value( seeding_options );
