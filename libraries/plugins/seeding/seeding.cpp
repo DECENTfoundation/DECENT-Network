@@ -366,17 +366,23 @@ void seeding_plugin_impl::send_ready_to_publish()
          }
 
          const asset_object &ao = *itr;
-
          asset dct_price = ao.amount_from_string(sritr->price);
          if( ao.id != asset_id_type()) //core asset
-            dct_price = dct_price * ao.monitored_asset_opts->current_feed.core_exchange_rate;
+            dct_price = database().price_to_dct( dct_price );
+
+         if( dct_price.amount.value > DECENT_MAX_SEEDING_PRICE)
+         {
+            const auto& dct_ao = database().get(asset_id_type());
+            ilog("Seeding price limit ${limit} DCT exceeded.",("limit",dct_ao.amount_to_string(DECENT_MAX_SEEDING_PRICE)));
+            FC_THROW("");
+         }
 
          signed_transaction tx;
          if( database().head_block_time() < HARDFORK_1_TIME) {
             ready_to_publish_operation op;
             op.seeder = sritr->seeder;
             op.space = sritr->free_space;
-            op.price_per_MByte = dct_price.amount.value;;
+            op.price_per_MByte = dct_price.amount.value;
             op.pubKey = get_public_el_gamal_key(sritr->content_privKey);
             op.ipfs_ID = json[ "ID" ];
 
@@ -387,7 +393,7 @@ void seeding_plugin_impl::send_ready_to_publish()
             ready_to_publish2_operation op;
             op.seeder = sritr->seeder;
             op.space = sritr->free_space;
-            op.price_per_MByte = dct_price.amount.value;;
+            op.price_per_MByte = dct_price.amount.value;
             op.pubKey = get_public_el_gamal_key(sritr->content_privKey);
             op.ipfs_ID = json[ "ID" ];
             op.region_code = sritr->region_code;
@@ -415,7 +421,7 @@ void seeding_plugin_impl::send_ready_to_publish()
          //fc::usleep(fc::microseconds(1000000));
          sritr++;
       }
-   }catch(...){};
+   }catch(...){elog("Didn't send out RtP.");};
    fc::time_point next_wakeup(fc::time_point::now() + fc::microseconds( (uint64_t) 1000000 * (DECENT_RTP_VALIDITY / 2 ))); //let's send PoR every hour
    ilog("seeding plugin_impl: planning next send_ready_to_publish at ${t}",("t",next_wakeup ));
    service_thread->schedule([=](){ send_ready_to_publish();}, next_wakeup, "Seeding plugin RtP generate" );
@@ -676,7 +682,7 @@ void seeding_plugin::plugin_pre_startup( const seeding_plugin_startup_options& s
       dir_helper.set_packages_path( seeding_options.packages_path );
    else
       dir_helper.set_packages_path( dir_helper.get_decent_packages() / "seeding" );
-   
+
    ilog("starting service thread");
    my = unique_ptr<detail::seeding_plugin_impl>( new detail::seeding_plugin_impl( *this) );
    my->service_thread = std::make_shared<fc::thread>("seeding");
@@ -702,7 +708,6 @@ void seeding_plugin::plugin_pre_startup( const seeding_plugin_startup_options& s
          mso.privKey = seeding_options.seeder_private_key;
          mso.price = seeding_options.seeding_price;
          mso.region_code = seeding_options.region_code;
-
          mso.symbol = seeding_options.seeding_symbol;
       });
    }catch(...){}
