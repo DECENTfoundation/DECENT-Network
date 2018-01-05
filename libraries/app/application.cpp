@@ -138,12 +138,8 @@ namespace detail {
                "seed1.decentgo.com:40000",
                "seed2.decentgo.com:40000", 
                "seed3.decentgo.com:40000",
-               "decent.roelandp.nl:40000",       // # roelandp (DE)
-               "5.9.18.213:40000",           // # pfunk (DE)
-               "decent.rondonson.com:40000",     // # rondonson (DE)
                "52.10.121.79:40000",             // # liberosist (US) 
                "decent.agoric.systems:46023",    // # agoric.systems / robrigo (BR)
-               "45.124.64.161:40000",            // # nuevax (HK)
                "66.70.188.105:40000"             // # decentspace (CA)
             };
 
