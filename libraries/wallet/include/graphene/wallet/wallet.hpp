@@ -247,14 +247,6 @@ namespace graphene { namespace wallet {
          virtual ~wallet_api();
 
          /**
-          * @brief Copy wallet file to a new file
-          * @param destination_filename
-          * @return true if the wallet is copied, false otherwise
-          * @ingroup WalletCLI
-          */
-         bool copy_wallet_file( string destination_filename );
-
-         /**
           * @brief Derive private key from given prefix and sequence
           * @param prefix_string
           * @param sequence_number
@@ -447,22 +439,6 @@ namespace graphene { namespace wallet {
           * @ingroup WalletCLI
           */
          monitored_asset_options        get_monitored_asset_data(string asset_name_or_id)const;
-
-         /**
-          * @brief Lookup the id of a named account.
-          * @param account_name_or_id the name of the account to look up
-          * @returns the id of the named account
-          * @ingroup WalletCLI
-          */
-         account_id_type                   get_account_id(string account_name_or_id) const;
-
-         /**
-          * @brief Lookup the id of a named asset.
-          * @param asset_name_or_id the symbol of an asset to look up
-          * @returns the id of the given asset
-          * @ingroup WalletCLI
-          */
-         asset_id_type                     get_asset_id(string asset_name_or_id) const;
 
          /**
           * @brief Returns the blockchain object corresponding to the given id.
@@ -778,26 +754,6 @@ namespace graphene { namespace wallet {
          bool import_key(string account_name_or_id, string wif_key);
 
          /**
-          * @brief Imports accounts from the other wallet file
-          * @param filename The filename of the wallet JSON file
-          * @param password User's password to the wallet
-          * @return mapped account names to boolean values indicating whether the account was successfully imported
-          * @ingroup WalletCLI
-          */
-         map<string, bool> import_accounts( string filename, string password );
-
-         /**
-          * @brief Imports account keys from particular account from another wallet file to desired account located in wallet file currently used
-          * @param filename The filename of the wallet JSON file
-          * @param password User's password to the wallet
-          * @param src_account_name Name of the source account
-          * @param dest_account_name Name of the destination account
-          * @return true if the keys were imported
-          * @ingroup WalletCLI
-          */
-         bool import_account_keys( string filename, string password, string src_account_name, string dest_account_name );
-
-         /**
           * @brief Transforms a brain key to reduce the chance of errors when re-entering the key from memory.
           *
           * This takes a user-supplied brain key and normalizes it into the form used
@@ -856,25 +812,6 @@ namespace graphene { namespace wallet {
                                                           string account_name,
                                                           string registrar_account,
                                                           bool broadcast = false);
-         /**
-          * @brief Creates a new account and registers it on the blockchain, but does not import the key to wallet.
-          *
-          * @see suggest_brain_key()
-          * @see register_account()
-          *
-          * @param brain_key the brain key used for generating the account's private keys
-          * @param account_name the name of the account, must be unique on the blockchain.  Shorter names
-          *                     are more expensive to register; the rules are still in flux, but in general
-          *                     names of more than 8 characters with at least one digit will be cheap.
-          * @param registrar_account the account which will pay the fee to register the user
-          * @param broadcast true to broadcast the transaction on the network
-          * @returns the signed transaction registering the account
-          * @ingroup WalletCLI
-          */
-         signed_transaction create_account_with_brain_key_noimport(string brain_key,
-                                                                   string account_name,
-                                                                   string registrar_account,
-                                                                   bool broadcast = false);
 
          /** @brief Transfer an amount from one account to another.
           * @param from the name or id of the account sending the funds
@@ -895,28 +832,6 @@ namespace graphene { namespace wallet {
                                      string asset_symbol,
                                      string memo,
                                      bool broadcast = false);
-
-         /**
-          *  @brief This method works just like transfer, except it always broadcasts and
-          *  returns the transaction ID along with the signed transaction.
-          *  @param from the name or id of the account sending the funds
-          *  @param to the name or id of the account receiving the funds
-          *  @param amount the amount to send (in nominal units -- to send half of a BTS, specify 0.5)
-          *  @param asset_symbol the symbol or id of the asset to send
-          *  @param memo a memo to attach to the transaction.  The memo will be encrypted in the
-          *             transaction and readable for the receiver.  There is no length limit
-          *             other than the limit imposed by maximum transaction size, but transaction
-          *             increase with transaction size
-          *  @ingroup WalletCLI
-          */
-         pair<transaction_id_type,signed_transaction> transfer2(string from,
-                                                                string to,
-                                                                string amount,
-                                                                string asset_symbol,
-                                                                string memo ) {
-            auto trx = transfer( from, to, amount, asset_symbol, memo, true );
-            return std::make_pair(trx.id(),trx);
-         }
 
         /**
          * @brief Encapsulates begin_builder_transaction(), add_operation_to_builder_transaction(),
@@ -943,15 +858,6 @@ namespace graphene { namespace wallet {
                                time_point_sec expiration
          );
          
-         /**
-          * @brief This method is used to convert a JSON transaction to its transaction ID.
-          * @param trx Signed transaction
-          * @return
-          * @ingroup WalletCLI
-          */
-         transaction_id_type get_transaction_id( const signed_transaction& trx )const { return trx.id(); }
-
-
 
       /**
        * @brief Creates a new monitored asset.
@@ -1472,47 +1378,6 @@ namespace graphene { namespace wallet {
           * @ingroup WalletCLI
           */
          real_supply get_real_supply()const;
-
-         /**
-          * @brief This method is used to promote account to publishing manager.
-          * Such an account can grant or remove right to publish a content. Only DECENT account has permission to use this method.
-          * @see set_publishing_right()
-          * @param from Account ( DECENT account ) giving/removing status of the publishing manager.
-          * @param to List of accounts getting status of the publishing manager.
-          * @param is_allowed True to give the status, false to remove it
-          * @param broadcast True to broadcast the transaction on the network
-          * @return The signed transaction updating account status
-          * @ingroup WalletCLI
-          */
-         signed_transaction set_publishing_manager(const string from,
-                                                   const vector<string> to,
-                                                   bool is_allowed,
-                                                   bool broadcast);
-
-         /**
-          * @brief Allows account to publish a content. Only account with publishing manager status has permission to use this method.
-          * @see set_publishing_manager()
-          * @param from Account giving/removing right to publish a content.
-          * @param to List of accounts getting right to publish a content.
-          * @param is_allowed True to give the right, false to remove it
-          * @param broadcast True to broadcast the transaction on the network
-          * @return The signed transaction updating account status
-          * @ingroup WalletCLI
-          */
-         signed_transaction set_publishing_right(const string from,
-                                                 const vector<string> to,
-                                                 bool is_allowed,
-                                                 bool broadcast);
-
-         /**
-          * @brief Get a list of accounts holding publishing manager status.
-          * @param lower_bound_name The name of the first account to return.  If the named account does not exist,
-          * the list will start at the account that comes after \c lowerbound
-          * @param limit The maximum number of accounts to return (max: 100)
-          * @return List of accounts
-          * @ingroup WalletCLI
-          */
-         vector<account_id_type> list_publishing_managers( const string& lower_bound_name, uint32_t limit );
 
          /**
           * @brief Submits or resubmits content to the blockchain. In a case of resubmit, co-authors, price and synopsis fields
@@ -2158,18 +2023,13 @@ FC_API( graphene::wallet::wallet_api,
            (list_account_balances)
            (list_assets)
            (import_key)
-           (import_accounts)
-           (import_account_keys)
            (suggest_brain_key)
            (generate_brain_key_el_gamal_key)
            (get_brain_key_info)
            (register_account)
            (create_account_with_brain_key)
-           (create_account_with_brain_key_noimport)
            (transfer)
-           (transfer2)
            (propose_transfer)
-           (get_transaction_id)
            (create_monitored_asset)
            (update_monitored_asset)
            (publish_asset_feed)
@@ -2193,7 +2053,6 @@ FC_API( graphene::wallet::wallet_api,
            (set_voting_proxy)
            (set_desired_miner_count)
            (get_account)
-           (get_account_id)
            (get_block)
            (get_account_count)
            (get_account_history)
@@ -2222,9 +2081,6 @@ FC_API( graphene::wallet::wallet_api,
            (network_get_connected_peers)
            (download_content)
            (get_download_status)
-           (set_publishing_manager)
-           (set_publishing_right)
-           (list_publishing_managers)
            (submit_content)
            (submit_content_async)
            (content_cancellation)
