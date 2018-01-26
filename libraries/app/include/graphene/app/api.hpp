@@ -49,6 +49,8 @@
  * @defgroup HistoryAPI History API
  * @defgroup Network_broadcastAPI Network broadcastAPI
  * @defgroup Network_NodeAPI Network NodeAPI
+ * @defgroup CryptoAPI Crypto API
+ * @defgroup MessagingAPI Messaging API
  * @defgroup LoginAPI LoginAPI
  */
 namespace graphene { namespace app {
@@ -260,28 +262,76 @@ namespace graphene { namespace app {
       private:
          application& _app;
    };
-   
+
+   /**
+    *
+    */
    class crypto_api
    {
       public:
          crypto_api();
-         
+
+         /**
+          * @param key
+          * @param hash
+          * @param i
+          * @ingroup CryptoAPI
+          */
          fc::ecc::blind_signature blind_sign( const extended_private_key_type& key, const fc::ecc::blinded_hash& hash, int i );
-         
+
+         /**
+          * @param key
+          * @param bob
+          * @param sig
+          * @param hash
+          * @param i
+          * @ingroup CryptoAPI
+          */
          signature_type unblind_signature( const extended_private_key_type& key,
                                               const extended_public_key_type& bob,
                                               const fc::ecc::blind_signature& sig,
                                               const fc::sha256& hash,
                                               int i );
-                                                                  
+
+         /**
+          * @param blind
+          * @param value
+          * @ingroup CryptoAPI
+          */
          fc::ecc::commitment_type blind( const fc::ecc::blind_factor_type& blind, uint64_t value );
-         
+
+         /**
+          * @param blinds_in
+          * @param non_neg
+          * @param CryptoAPI
+          */
          fc::ecc::blind_factor_type blind_sum( const std::vector<blind_factor_type>& blinds_in, uint32_t non_neg );
-         
+
+         /**
+          * @param commits_in
+          * @param neg_commits_in
+          * @param excess
+          * @ingroup CryptoAPI
+          */
          bool verify_sum( const std::vector<commitment_type>& commits_in, const std::vector<commitment_type>& neg_commits_in, int64_t excess );
-         
+
+         /**
+          * @param commit
+          * @param proof
+          * @ingroup CryptoAPI
+          */
          verify_range_result verify_range( const fc::ecc::commitment_type& commit, const std::vector<char>& proof );
-         
+
+         /**
+          * @param min_value
+          * @param commit
+          * @param commit_blind
+          * @param nonce
+          * @param base10_exp
+          * @param min_bits
+          * @param actual_value
+          * @ingroup CryptoAPI
+          */
          std::vector<char> range_proof_sign( uint64_t min_value, 
                                              const commitment_type& commit, 
                                              const blind_factor_type& commit_blind, 
@@ -290,24 +340,37 @@ namespace graphene { namespace app {
                                              uint8_t min_bits,
                                              uint64_t actual_value );
                                        
-         
+         /**
+          * @param nonce
+          * @param commit
+          * @param proof
+          * @ingroup CryptoAPI
+          */
          verify_range_proof_rewind_result verify_range_proof_rewind( const blind_factor_type& nonce,
                                                                      const fc::ecc::commitment_type& commit, 
                                                                      const std::vector<char>& proof );
          
-                                         
+         /**
+          * @param proof
+          * @ingroup CryptoAPI
+          */
          range_proof_info range_get_info( const std::vector<char>& proof );
    };
 
    /**
    * @brief The messaging_api class implements instant messaging
    */
-
-   
    class messaging_api
    {
    public:
       messaging_api(application& a);
+
+      /**
+       * @param sender
+       * @param receiver
+       * @param max_count
+       * @ingroup MessagingAPI
+       */
       vector<message_object> get_message_objects(optional<account_id_type> sender, optional<account_id_type> receiver, uint32_t max_count) const;
    private:
       application& _app;

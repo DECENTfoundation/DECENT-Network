@@ -2055,7 +2055,7 @@ FC_REFLECT( graphene::wallet::operation_detail,
 
 FC_API( graphene::wallet::wallet_api,
            (help)
-           (gethelp)
+           (get_help)
            (info)
            (about)
            (begin_builder_transaction)
