@@ -85,6 +85,7 @@
 #include "ipfs/client.h"
 #include <decent/package/package_config.hpp>
 #include <graphene/chain/hardfork.hpp>
+#include <graphene/wallet/internal.hpp>
 
 #ifndef WIN32
 # include <sys/types.h>
@@ -1164,7 +1165,7 @@ public:
    { try {
 
       FC_ASSERT( !self.is_locked() );
-      string normalized_brain_key = normalize_brain_key( brain_key );
+      string normalized_brain_key = detail::normalize_brain_key( brain_key );
       // TODO:  scan blockchain for accounts that exist with same brain key
       fc::ecc::private_key owner_privkey = derive_private_key( normalized_brain_key, 0 );
       return create_account_with_private_key(owner_privkey, account_name, registrar_account, import, broadcast, save_wallet);
@@ -3536,7 +3537,7 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
          brain_key += graphene::words::word_list[ choice.to_int64() ];
       }
 
-      brain_key = normalize_brain_key(brain_key);
+      brain_key = detail::normalize_brain_key(brain_key);
       fc::ecc::private_key priv_key = derive_private_key( brain_key, 0 );
       result.brain_priv_key = brain_key;
       result.wif_priv_key = key_to_wif( priv_key );
@@ -3561,7 +3562,7 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
    {
       brain_key_info result;
 
-      string str_brain_key = normalize_brain_key(brain_key);
+      string str_brain_key = detail::normalize_brain_key(brain_key);
       fc::ecc::private_key priv_key = derive_private_key( str_brain_key, 0 );
       result.brain_priv_key = str_brain_key;
       result.wif_priv_key = key_to_wif( priv_key );
@@ -3696,11 +3697,6 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
          return true;
       }
       return false;
-   }
-
-   string wallet_api::normalize_brain_key(string s) const
-   {
-      return detail::normalize_brain_key( s );
    }
 
    variant wallet_api::info()
@@ -3923,32 +3919,6 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
    operation wallet_api::get_prototype_operation(string operation_name)
    {
       return my->get_prototype_operation( operation_name );
-   }
-
-   void wallet_api::dbg_make_mia(string creator, string symbol)
-   {
-      FC_ASSERT(!is_locked());
-      my->dbg_make_mia(creator, symbol);
-   }
-
-   void wallet_api::dbg_push_blocks( std::string src_filename, uint32_t count )
-   {
-      my->dbg_push_blocks( src_filename, count );
-   }
-
-   void wallet_api::dbg_generate_blocks( std::string debug_wif_key, uint32_t count )
-   {
-      my->dbg_generate_blocks( debug_wif_key, count );
-   }
-
-   void wallet_api::dbg_stream_json_objects( const std::string& filename )
-   {
-      my->dbg_stream_json_objects( filename );
-   }
-
-   void wallet_api::dbg_update_object( fc::variant_object update )
-   {
-      my->dbg_update_object( update );
    }
 
    void wallet_api::network_add_nodes( const vector<string>& nodes )
@@ -4516,23 +4486,6 @@ pair<account_id_type, vector<account_id_type>> wallet_api::get_author_and_co_aut
       return my->_remote_db->list_active_subscriptions_by_author( account, count);
    }
 
-   std::string wallet_api::sign_buffer(std::string const& str_buffer,
-                                       std::string const& str_brainkey) const
-   {
-      if (str_buffer.empty() ||
-          str_brainkey.empty())
-         throw std::runtime_error("You need buffer and brainkey to sign");
-
-      string normalized_brain_key = normalize_brain_key( str_brainkey );
-      fc::ecc::private_key privkey = derive_private_key( normalized_brain_key, 0 );
-
-      fc::sha256 digest(str_buffer);
-
-      auto sign = privkey.sign_compact(digest);
-
-      return fc::to_hex((const char*)sign.begin(), sign.size());
-   }
-
    el_gamal_key_pair_str wallet_api::get_el_gammal_key(string const& consumer) const {
       try
       {
@@ -4547,27 +4500,6 @@ pair<account_id_type, vector<account_id_type>> wallet_api::get_author_and_co_aut
       } FC_CAPTURE_AND_RETHROW( (consumer) )
    }
       
-   bool wallet_api::verify_signature(std::string const& str_buffer,
-                                     std::string const& str_publickey,
-                                     std::string const& str_signature) const
-   {
-      if (str_buffer.empty() ||
-          str_publickey.empty() ||
-          str_signature.empty())
-         throw std::runtime_error("You need buffer, public key and signature to verify");
-
-      fc::ecc::compact_signature signature;
-      fc::from_hex(str_signature, (char*)signature.begin(), signature.size());
-      fc::sha256 digest(str_buffer);
-
-      fc::ecc::public_key pub_key(signature, digest);
-      public_key_type provided_key(str_publickey);
-
-      if (provided_key == pub_key)
-         return true;
-      else
-         return false;
-   }
 
    fc::time_point_sec wallet_api::head_block_time() const
    {
@@ -4666,11 +4598,6 @@ void graphene::wallet::detail::submit_transfer_listener::package_seed_complete()
       return package->get_url();
    }
 
-
-   void wallet_api::set_transfer_logs(bool enable) const {
-   // FC_ASSERT(!is_locked());
-   }
-
    void wallet_api::send_message(const std::string& from, std::vector<string> to, string text)
    {
       return my->send_message(from, to, text);
@@ -4698,8 +4625,82 @@ void graphene::wallet::detail::submit_transfer_listener::package_seed_complete()
    }
 
 
-} } // graphene::wallet
+   namespace internal {
 
+       std::string sign_buffer(std::string const& str_buffer,
+                                           std::string const& str_brainkey)
+       {
+          if (str_buffer.empty() ||
+              str_brainkey.empty())
+             throw std::runtime_error("You need buffer and brainkey to sign");
+
+          string normalized_brain_key = detail::normalize_brain_key( str_brainkey );
+          fc::ecc::private_key privkey = detail::derive_private_key( normalized_brain_key, 0 );
+
+          fc::sha256 digest(str_buffer);
+
+          auto sign = privkey.sign_compact(digest);
+
+          return fc::to_hex((const char*)sign.begin(), sign.size());
+       }
+
+       bool verify_signature(std::string const& str_buffer,
+                                         std::string const& str_publickey,
+                                         std::string const& str_signature)
+       {
+          if (str_buffer.empty() ||
+              str_publickey.empty() ||
+              str_signature.empty())
+             throw std::runtime_error("You need buffer, public key and signature to verify");
+
+          fc::ecc::compact_signature signature;
+          fc::from_hex(str_signature, (char*)signature.begin(), signature.size());
+          fc::sha256 digest(str_buffer);
+
+          fc::ecc::public_key pub_key(signature, digest);
+          public_key_type provided_key(str_publickey);
+
+          if (provided_key == pub_key)
+             return true;
+          else
+             return false;
+       }
+
+
+#if 0
+   void wallet_api::dbg_make_mia(string creator, string symbol)
+   {
+      FC_ASSERT(!is_locked());
+      my->dbg_make_mia(creator, symbol);
+   }
+
+   void wallet_api::dbg_push_blocks( std::string src_filename, uint32_t count )
+   {
+      my->dbg_push_blocks( src_filename, count );
+   }
+
+   void wallet_api::dbg_generate_blocks( std::string debug_wif_key, uint32_t count )
+   {
+      my->dbg_generate_blocks( debug_wif_key, count );
+   }
+
+   void wallet_api::dbg_stream_json_objects( const std::string& filename )
+   {
+      my->dbg_stream_json_objects( filename );
+   }
+
+   void wallet_api::dbg_update_object( fc::variant_object update )
+   {
+      my->dbg_update_object( update );
+   }
+#endif
+
+
+   }
+
+
+
+} } // graphene::wallet
 
 
 void fc::to_variant(const account_multi_index_type& accts, fc::variant& vo)
@@ -4712,5 +4713,6 @@ void fc::from_variant(const fc::variant& var, account_multi_index_type& vo)
    const vector<account_object>& v = var.as<vector<account_object>>();
    vo = account_multi_index_type(v.begin(), v.end());
 }
+
 
 

@@ -753,19 +753,7 @@ namespace graphene { namespace wallet {
           */
          bool import_key(string account_name_or_id, string wif_key);
 
-         /**
-          * @brief Transforms a brain key to reduce the chance of errors when re-entering the key from memory.
-          *
-          * This takes a user-supplied brain key and normalizes it into the form used
-          * for generating private keys.  In particular, this upper-cases all ASCII characters
-          * and collapses multiple spaces into one.
-          * @param s the brain key as supplied by the user
-          * @returns the brain key in its normalized form
-          * @ingroup WalletCLI
-          */
-         string normalize_brain_key(string s) const;
-
-         /**
+        /**
           * @brief Registers a third party's account on the blockckain.
           *
           * This function is used to register an account for which you do not own the private keys.
@@ -1307,43 +1295,6 @@ namespace graphene { namespace wallet {
             bool broadcast /* = false */
          );
 
-         /**
-          *
-          * @param creator
-          * @param symbol
-          * @ingroup WalletCLI
-          */
-         void dbg_make_mia(string creator, string symbol);
-
-         /**
-          *
-          * @param src_filename
-          * @param count
-          * @ingroup WalletCLI
-          */
-         void dbg_push_blocks( std::string src_filename, uint32_t count );
-
-         /**
-          *
-          * @param debug_wif_key
-          * @param count
-          * @ingroup WalletCLI
-          */
-         void dbg_generate_blocks( std::string debug_wif_key, uint32_t count );
-
-         /**
-          *
-          * @param filename
-          * @ingroup WalletCLI
-          */
-         void dbg_stream_json_objects( const std::string& filename );
-
-         /**
-          *
-          * @param update
-          * @ingroup WalletCLI
-          */
-         void dbg_update_object( fc::variant_object update );
 
          /**
           *
@@ -1859,35 +1810,6 @@ namespace graphene { namespace wallet {
          void remove_package(const std::string& package_hash) const;
 
          /**
-          * @brief Print statuses of all active transfers
-          * @ingroup WalletCLI
-          */
-
-         void set_transfer_logs(bool enable) const;
-
-         /**
-          * @brief Sign a buffer
-          * @param str_buffer The buffer to be signed
-          * @param str_brainkey Derives the private key used for signature
-          * @return The signed buffer
-          * @ingroup WalletCLI
-          */
-         std::string sign_buffer(std::string const& str_buffer,
-                                 std::string const& str_brainkey) const;
-
-         /**
-          * @brief Verify if the signature is valid
-          * @param str_buffer The original buffer
-          * @param str_publickey The public key used for verification
-          * @param str_signature The signed buffer
-          * @return true if valid, otherwise false
-          * @ingroup WalletCLI
-          */
-         bool verify_signature(std::string const& str_buffer,
-                               std::string const& str_publickey,
-                               std::string const& str_signature) const;
-
-         /**
           * @brief Query the last local block
           * @return the block time
           */
@@ -2063,7 +1985,6 @@ FC_API( graphene::wallet::wallet_api,
            (get_object)
            (get_private_key)
            (load_wallet_file)
-           (normalize_brain_key)
            (save_wallet_file)
            (serialize_transaction)
            (sign_transaction)
@@ -2071,11 +1992,6 @@ FC_API( graphene::wallet::wallet_api,
            (propose_parameter_change)
            (propose_fee_change)
            (approve_proposal)
-           (dbg_make_mia)
-           (dbg_push_blocks)
-           (dbg_generate_blocks)
-           (dbg_stream_json_objects)
-           (dbg_update_object)
            (flood_network)
            (network_add_nodes)
            (network_get_connected_peers)
@@ -2120,9 +2036,6 @@ FC_API( graphene::wallet::wallet_api,
            (download_package)
            (upload_package)
            (remove_package)
-           (set_transfer_logs)
-           (sign_buffer)
-           (verify_signature)
            (head_block_time)
            (get_proposed_transactions)
            (send_message)
