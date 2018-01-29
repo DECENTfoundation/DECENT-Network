@@ -6,8 +6,9 @@
 #pragma once
 
 #if defined( _MSC_VER )
-#include <pbc_vc_compat.win32.h>
+#define __attribute__(X)
 #include <pbc.h>
+#undef __attribute__
 #else
 #include <pbc/pbc.h>
 #endif
