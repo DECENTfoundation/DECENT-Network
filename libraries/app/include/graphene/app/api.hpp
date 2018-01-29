@@ -366,9 +366,11 @@ namespace graphene { namespace app {
       messaging_api(application& a);
 
       /**
-       * @param sender
-       * @param receiver
-       * @param max_count
+       * @brief Receives message objects by sender and/or receiver.
+       * @param sender name of message sender. If you dont want to filter by sender then let it empty
+       * @param receiver name of message receiver. If you dont want to filter by receiver then let it empty
+       * @param max_count maximal number of last messages to be displayed
+       * @return a vector of message objects
        * @ingroup MessagingAPI
        */
       vector<message_object> get_message_objects(optional<account_id_type> sender, optional<account_id_type> receiver, uint32_t max_count) const;
