@@ -6,6 +6,7 @@
 #pragma once
 
 #if defined( _MSC_VER )
+#include <pbc_vc_compat.win32.h>
 #include <pbc.h>
 #else
 #include <pbc/pbc.h>
