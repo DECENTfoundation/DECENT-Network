@@ -88,6 +88,13 @@ public:
    DIntegerString& operator=(const DInteger& d);
    /* Comparision operator */
    DIntegerString& operator=(const DIntegerString& _s) { s = _s.s; return *this;};
+
+   bool operator<(const DIntegerString& b) const
+   {
+      if( this->s.length() < b.s.length() )
+         return true;
+      return this->s < b.s;
+   }
 };
 
 /*****

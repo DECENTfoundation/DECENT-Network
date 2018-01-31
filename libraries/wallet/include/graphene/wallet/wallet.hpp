@@ -52,10 +52,41 @@ namespace graphene { namespace wallet {
 
       object* create_object( const variant& v );
 
+      struct el_gamal_key_pair
+      {
+         DInteger private_key;
+         DInteger public_key;
+      };
+
+      struct el_gamal_key_pair_str
+      {
+         DIntegerString private_key;
+         DIntegerString public_key;
+      };
+
+      /**
+       * Needed for backward compatibility. Old wallet json files use this struct to store encrypted ec keys.
+       */
       struct plain_keys
       {
-         map<public_key_type, string>  keys;
+         map<public_key_type, string>  ec_keys;
          fc::sha512                    checksum;
+      };
+
+      /**
+       * New wallet json files store encrypted ec keys along with derived el gamal keys.
+       */
+      struct plain_ec_and_el_gamal_keys : public plain_keys
+      {
+         plain_ec_and_el_gamal_keys& operator=( const plain_keys& pk )
+         {
+            ec_keys = pk.ec_keys;
+            checksum = pk.checksum;
+            return *this;
+         }
+
+         plain_ec_and_el_gamal_keys() = default;
+         vector<el_gamal_key_pair_str> el_gamal_keys;
       };
 
       struct brain_key_info
@@ -140,20 +171,6 @@ namespace graphene { namespace wallet {
          fc::sha512 password_checksum;
          vector<exported_account_keys> account_keys;
       };
-
-      struct el_gamal_key_pair
-      {
-         DInteger private_key;
-         DInteger public_key;
-      };
-   
-      struct el_gamal_key_pair_str
-      {
-         DIntegerString private_key;
-         DIntegerString public_key;
-      };
-   
-   
 
       struct approval_delta
       {
@@ -655,7 +672,7 @@ namespace graphene { namespace wallet {
           * @returns a map containing the private keys, indexed by their public key
           * @ingroup WalletCLI
           */
-         map<public_key_type, string> dump_private_keys();
+         variant dump_private_keys();
 
          /**
           * @brief Returns a list of all commands supported by the wallet API.
@@ -1619,6 +1636,7 @@ namespace graphene { namespace wallet {
           * @param consumer Consumer of the content
           * @param URI The URI of the content
           * @param price_asset_name Ticker symbol of the asset which will be used to buy content
+
           * @param price_amount The price of the content
           * @param str_region_code_from Two letter region code
           * @param broadcast true to broadcast the transaction on the network
@@ -2063,7 +2081,9 @@ namespace graphene { namespace wallet {
    } }
 
 
-FC_REFLECT( graphene::wallet::plain_keys, (keys)(checksum) )
+FC_REFLECT( graphene::wallet::plain_keys, (ec_keys)(checksum) )
+FC_REFLECT_DERIVED( graphene::wallet::plain_ec_and_el_gamal_keys, (graphene::wallet::plain_keys),
+                    (el_gamal_keys) )
 FC_REFLECT( graphene::wallet::el_gamal_key_pair, (private_key)(public_key) )
 FC_REFLECT( graphene::wallet::el_gamal_key_pair_str, (private_key)(public_key) )
 FC_REFLECT( graphene::wallet::wallet_data,
