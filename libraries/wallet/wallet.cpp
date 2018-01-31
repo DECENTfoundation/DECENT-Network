@@ -494,8 +494,11 @@ public:
    {
       if( !is_locked() )
       {
-         plain_keys data;
-         data.keys = _keys;
+         plain_ec_and_el_gamal_keys data;
+         data.ec_keys = _keys;
+         std::transform( _el_gamal_keys.begin(), _el_gamal_keys.end(), std::back_inserter( data.el_gamal_keys ),
+            [](const std::pair<DInteger,DInteger> el_gamal_pair) {
+               return el_gamal_key_pair_str {el_gamal_pair.first, el_gamal_pair.second}; });
          data.checksum = _checksum;
          auto plain_txt = fc::raw::pack(data);
          _wallet.cipher_keys = fc::aes_encrypt( data.checksum, plain_txt );
@@ -781,6 +784,8 @@ public:
       all_keys_for_account.insert(account.options.memo_key);
 
       _keys[wif_pub_key] = wif_key;
+      DInteger el_gamal_priv_key = generate_private_el_gamal_key_from_secret( optional_private_key->get_secret() );
+      _el_gamal_keys[get_public_el_gamal_key( el_gamal_priv_key )] = el_gamal_priv_key;
 
       _wallet.update_account(account);
 
@@ -3021,8 +3026,9 @@ signed_transaction content_cancellation(string author,
    string                  _wallet_filename;
    wallet_data             _wallet;
 
-   map<public_key_type,string> _keys;
-   fc::sha512                  _checksum;
+   map<public_key_type,string>      _keys;
+   map<DInteger, DInteger>          _el_gamal_keys;
+   fc::sha512                       _checksum;
 
    chain_id_type           _chain_id;
    fc::api<login_api>      _remote_api;
@@ -3749,20 +3755,14 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
    bool wallet_api::import_key(string account_name_or_id, string wif_key)
    {
       FC_ASSERT(!is_locked());
-      // backup wallet
       fc::optional<fc::ecc::private_key> optional_private_key = wif_to_key(wif_key);
       if (!optional_private_key)
          FC_THROW("Invalid private key");
-      string base58_public_key = optional_private_key->get_public_key().to_base58();
-   //   copy_wallet_file( "before-import-key-" + base58_public_key );
 
-      if( my->import_key(account_name_or_id, wif_key) )
-      {
-         save_wallet_file();
-   //      copy_wallet_file( "after-import-key-" + base58_public_key );
-         return true;
-      }
-      return false;
+      bool result = my->import_key(account_name_or_id, wif_key);
+      save_wallet_file();
+
+      return result;
    }
 
    map<string, bool> wallet_api::import_accounts( string filename, string password )
@@ -4313,6 +4313,7 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
       for( auto & key : my->_keys )
          key.second = key_to_wif(fc::ecc::private_key());
       my->_keys.clear();
+      my->_el_gamal_keys.clear();
       my->_checksum = fc::sha512();
       my->self.lock_changed(true);
    } FC_CAPTURE_AND_RETHROW() }
@@ -4322,10 +4323,35 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
       FC_ASSERT(password.size() > 0);
       auto pw = fc::sha512::hash(password.c_str(), password.size());
       vector<char> decrypted = fc::aes_decrypt(pw, my->_wallet.cipher_keys);
-      auto pk = fc::raw::unpack<plain_keys>(decrypted);
+      plain_ec_and_el_gamal_keys pk;
+      bool update_wallet_file = false;
+
+      // supporting backward compatibility of wallet json file
+      try {
+         pk = fc::raw::unpack<plain_ec_and_el_gamal_keys>(decrypted);
+      }
+      catch(const fc::exception&){
+         pk = fc::raw::unpack<plain_keys>(decrypted);
+         // wallet file is in old format, derive corresponding el gamal keys from private keys
+         for( const auto& element : pk.ec_keys )
+         {
+            el_gamal_key_pair_str el_gamal_keys_str;
+            el_gamal_keys_str.private_key = generate_private_el_gamal_key_from_secret( wif_to_key( element.second )->get_secret() );
+            el_gamal_keys_str.public_key = get_public_el_gamal_key( el_gamal_keys_str.private_key );
+            pk.el_gamal_keys.push_back( el_gamal_keys_str );
+         }
+         update_wallet_file = true;
+      }
       FC_ASSERT(pk.checksum == pw);
-      my->_keys = std::move(pk.keys);
+      my->_keys = std::move(pk.ec_keys);
+      if( !pk.el_gamal_keys.empty() )
+         std::transform( pk.el_gamal_keys.begin(), pk.el_gamal_keys.end(), std::inserter( my->_el_gamal_keys, my->_el_gamal_keys.end() ),
+            []( const el_gamal_key_pair_str el_gamal_pair ){ return std::make_pair(DInteger(el_gamal_pair.private_key),DInteger(el_gamal_pair.public_key)); });
       my->_checksum = pk.checksum;
+
+      if( update_wallet_file ) // upgrade structure for storing keys to new format
+         save_wallet_file();
+
       my->self.lock_changed(false);
    } FC_CAPTURE_AND_RETHROW() }
 
@@ -4337,10 +4363,13 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
       lock();
    }
 
-   map<public_key_type, string> wallet_api::dump_private_keys()
+   variant wallet_api::dump_private_keys()
    {
       FC_ASSERT(!is_locked());
-      return my->_keys;
+      fc::mutable_variant_object result;
+      result["ec_keys"] = my->_keys;
+      result["el_gamal_keys"] = my->_el_gamal_keys;
+      return result;
    }
 
 
