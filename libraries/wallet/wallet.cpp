@@ -508,39 +508,6 @@ public:
       fc::async([this]{resync();}, "Resync after block");
    }
 
-   bool copy_wallet_file( string destination_filename )
-   {
-      fc::path src_path = get_wallet_filename();
-      if( !fc::exists( src_path ) )
-         return false;
-      fc::path dest_path = destination_filename + _wallet_filename_extension;
-      int suffix = 0;
-      while( fc::exists(dest_path) )
-      {
-         ++suffix;
-         dest_path = destination_filename + "-" + to_string( suffix ) + _wallet_filename_extension;
-      }
-      wlog( "backing up wallet ${src} to ${dest}",
-            ("src", src_path)
-            ("dest", dest_path) );
-
-      fc::path dest_parent = fc::absolute(dest_path).parent_path();
-      try
-      {
-         enable_umask_protection();
-         if( !fc::exists( dest_parent ) )
-            fc::create_directories( dest_parent );
-         fc::copy( src_path, dest_path );
-         disable_umask_protection();
-      }
-      catch(...)
-      {
-         disable_umask_protection();
-         throw;
-      }
-      return true;
-   }
-
    bool is_locked()const
    {
       return _checksum == fc::sha512();
@@ -702,19 +669,6 @@ public:
       FC_ASSERT(opt);
       return *opt;
    }
-
-#if 0
-   asset_id_type get_asset_id(string asset_symbol_or_id) const
-   {
-      FC_ASSERT( asset_symbol_or_id.size() > 0 );
-      vector<optional<asset_object>> opt_asset;
-      if( std::isdigit( asset_symbol_or_id.front() ) )
-         return fc::variant(asset_symbol_or_id).as<asset_id_type>();
-      opt_asset = _remote_db->lookup_asset_symbols( {asset_symbol_or_id} );
-      FC_ASSERT( (opt_asset.size() > 0) && (opt_asset[0].valid()) );
-      return opt_asset[0]->id;
-   }
-#endif
 
    string                            get_wallet_filename() const
    {
