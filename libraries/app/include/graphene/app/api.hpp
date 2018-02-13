@@ -254,6 +254,11 @@ namespace graphene { namespace app {
                               const string packages_path,
                               const string region_code = "" );
 
+         std::vector<std::string> get_running_plugins() const;
+
+         void start_content_seeding(const std::string& url) const;
+         void stop_content_seeding(const std::string& url) const;
+
       private:
          application& _app;
    };
@@ -415,6 +420,9 @@ FC_API(graphene::app::network_node_api,
        (get_advanced_node_parameters)
        (set_advanced_node_parameters)
        (seeding_startup)
+       (get_running_plugins)
+       (start_content_seeding)
+       (stop_content_seeding)
      )
 FC_API(graphene::app::crypto_api,
        (blind_sign)

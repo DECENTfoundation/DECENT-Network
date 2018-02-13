@@ -87,6 +87,15 @@ class abstract_plugin
          boost::program_options::options_description& command_line_options,
          boost::program_options::options_description& config_file_options
          ) = 0;
+
+      /**
+      * @brief Returns plugin state.
+      *
+      * This method retruns plugin state
+      * @return true if plugin_startup() was finished without exceptions. It returns
+      * false if plugin_shutdown() was called or if plugin_startup() throws some exception.
+      */
+      virtual bool plugin_is_running() const = 0;
 };
 
 /**
@@ -111,8 +120,10 @@ class plugin : public abstract_plugin
 
       chain::database& database() { return *app().chain_database(); }
       application& app()const { assert(_app); return *_app; }
+      bool plugin_is_running()const override { return _running; }
    protected:
       net::node& p2p_node() { return *app().p2p_node(); }
+      bool _running = false;
 
    private:
       application* _app = nullptr;
