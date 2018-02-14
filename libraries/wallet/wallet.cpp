@@ -507,39 +507,6 @@ public:
       fc::async([this]{resync();}, "Resync after block");
    }
 
-   bool copy_wallet_file( string destination_filename )
-   {
-      fc::path src_path = get_wallet_filename();
-      if( !fc::exists( src_path ) )
-         return false;
-      fc::path dest_path = destination_filename + _wallet_filename_extension;
-      int suffix = 0;
-      while( fc::exists(dest_path) )
-      {
-         ++suffix;
-         dest_path = destination_filename + "-" + to_string( suffix ) + _wallet_filename_extension;
-      }
-      wlog( "backing up wallet ${src} to ${dest}",
-            ("src", src_path)
-            ("dest", dest_path) );
-
-      fc::path dest_parent = fc::absolute(dest_path).parent_path();
-      try
-      {
-         enable_umask_protection();
-         if( !fc::exists( dest_parent ) )
-            fc::create_directories( dest_parent );
-         fc::copy( src_path, dest_path );
-         disable_umask_protection();
-      }
-      catch(...)
-      {
-         disable_umask_protection();
-         throw;
-      }
-      return true;
-   }
-
    bool is_locked()const
    {
       return _checksum == fc::sha512();
@@ -657,10 +624,6 @@ public:
          FC_ASSERT( rec && rec->name == account_name_or_id );
          return *rec;
       }
-   }
-   account_id_type get_account_id(string account_name_or_id) const
-   {
-      return get_account(account_name_or_id).get_id();
    }
    optional<asset_object> find_asset(asset_id_type id)const
    {
@@ -1414,7 +1377,7 @@ public:
         FC_THROW("No asset with that symbol exists!");
 
       asset_publish_feed_operation publish_op;
-      publish_op.publisher = get_account_id(publishing_account);
+      publish_op.publisher = get_account(publishing_account).get_id();
       publish_op.asset_id = asset_to_update->id;
       publish_op.feed = feed;
 
@@ -1446,7 +1409,7 @@ public:
             // then maybe it's the owner account
             try
             {
-               account_id_type owner_account_id = get_account_id(owner_account);
+               account_id_type owner_account_id = get_account(owner_account).get_id();
                fc::optional<miner_object> miner = _remote_db->get_miner_by_account(owner_account_id);
                if (miner)
                   return *miner;
@@ -1580,7 +1543,7 @@ public:
                                         bool broadcast /* = false */)
    { try {
       account_object voting_account_object = get_account(voting_account);
-      account_id_type miner_owner_account_id = get_account_id(miner);
+      account_id_type miner_owner_account_id = get_account(miner).get_id();
       fc::optional<miner_object> miner_obj = _remote_db->get_miner_by_account(miner_owner_account_id);
       if (!miner_obj)
          FC_THROW("Account ${miner} is not registered as a miner", ("miner", miner));
@@ -1615,7 +1578,7 @@ public:
       account_object account_object_to_modify = get_account(account_to_modify);
       if (voting_account)
       {
-         account_id_type new_voting_account_id = get_account_id(*voting_account);
+         account_id_type new_voting_account_id = get_account(*voting_account).get_id();
          if (account_object_to_modify.options.voting_account == new_voting_account_id)
             FC_THROW("Voting proxy for ${account} is already set to ${voter}", ("account", account_to_modify)("voter", *voting_account));
          account_object_to_modify.options.voting_account = new_voting_account_id;
@@ -1810,7 +1773,7 @@ public:
       account_object from_account = get_account(from);
       account_object to_account = get_account(to);
       account_id_type from_id = from_account.id;
-      account_id_type to_id = get_account_id(to);
+      account_id_type to_id = get_account(to).get_id();
 
       transfer_operation xfer_op;
 
@@ -2141,12 +2104,12 @@ public:
       {
          FC_ASSERT( !to.empty() );
          set_publishing_manager_operation spm_op;
-         spm_op.from = get_account_id( from );
+         spm_op.from = get_account( from ).get_id();
          spm_op.can_create_publishers = is_allowed;
 
          for( const auto& element : to )
          {
-            spm_op.to.push_back( get_account_id( element ) );
+            spm_op.to.push_back( get_account( element ).get_id() );
          }
 
          signed_transaction tx;
@@ -2167,12 +2130,12 @@ public:
          FC_ASSERT( !to.empty() );
 
          set_publishing_right_operation spr_op;
-         spr_op.from = get_account_id( from );
+         spr_op.from = get_account( from ).get_id();
          spr_op.is_publisher = is_allowed;
 
          for( const auto& element : to )
          {
-            spr_op.to.push_back( get_account_id( element ) );
+            spr_op.to.push_back( get_account( element ).get_id() );
          }
 
          signed_transaction tx;
@@ -2229,14 +2192,14 @@ public:
       try
       {
          FC_ASSERT(!is_locked());
-         account_id_type author_account = get_account_id( author );
+         account_id_type author_account = get_account( author ).get_id();
 
          map<account_id_type, uint32_t> co_authors_id_to_split;
          if( !co_authors.empty() )
          {
             for( auto const& element : co_authors )
             {
-               account_id_type co_author = get_account_id( element.first );
+               account_id_type co_author = get_account( element.first ).get_id();
                co_authors_id_to_split[ co_author ] = element.second;
             }
          }
@@ -2303,7 +2266,7 @@ public:
          {
             for( auto const &element : co_authors )
             {
-               account_id_type co_author = get_account_id( element.first );
+               account_id_type co_author = get_account( element.first ).get_id();
                co_authors_id_to_split[ co_author ] = element.second;
             }
          }
@@ -2382,7 +2345,7 @@ signed_transaction content_cancellation(string author,
       FC_ASSERT(!is_locked());
 
       content_cancellation_operation cc_op;
-      cc_op.author = get_account_id( author );
+      cc_op.author = get_account( author ).get_id();
       cc_op.URI = URI;
 
       signed_transaction tx;
@@ -2577,7 +2540,7 @@ signed_transaction content_cancellation(string author,
                          string packages_path,
                          string region_code)
    {
-      account_id_type seeder = get_account_id( account_id_type_or_name );
+      account_id_type seeder = get_account( account_id_type_or_name ).get_id();
       use_network_node_api();
       fc::ecc::private_key seeder_priv_key = *(wif_to_key(seeder_private_key));
       (*_remote_net_node)->seeding_startup( seeder, content_private_key, seeder_priv_key, free_space, seeding_price, seeding_symbol, packages_path, region_code);
@@ -2593,8 +2556,8 @@ signed_transaction content_cancellation(string author,
          FC_ASSERT( asset_obj->id == asset_id_type() );
 
          subscribe_operation subscribe_op;
-         subscribe_op.from = get_account_id( from );
-         subscribe_op.to = get_account_id( to );
+         subscribe_op.from = get_account( from ).get_id();
+         subscribe_op.to = get_account( to ).get_id();
          subscribe_op.price = asset_obj->amount_from_string(price_amount);
 
          signed_transaction tx;
@@ -2610,8 +2573,8 @@ signed_transaction content_cancellation(string author,
                                            bool broadcast/* = false */)
    { try {
          subscribe_by_author_operation subscribe_op;
-         subscribe_op.from = get_account_id( from );
-         subscribe_op.to = get_account_id( to );
+         subscribe_op.from = get_account( from ).get_id();
+         subscribe_op.to = get_account( to ).get_id();
 
          signed_transaction tx;
          tx.operations.push_back( subscribe_op );
@@ -2655,7 +2618,7 @@ signed_transaction content_cancellation(string author,
    {
       try {
 
-         account_id_type account = get_account_id( account_id_or_name );
+         account_id_type account = get_account( account_id_or_name ).get_id();
          fc::optional<subscription_object> subscription_obj = _remote_db->get_subscription(subscription_id);
          FC_ASSERT(subscription_obj, "Could not find subscription matching ${subscription}", ("subscription", subscription_id));
 
@@ -2767,7 +2730,7 @@ signed_transaction content_cancellation(string author,
    {
          FC_ASSERT(!is_locked());
          const auto& mapi = _remote_api->messaging();
-         const auto& receiver_id = get_account_id(receiver);
+         const auto& receiver_id = get_account(receiver).get_id();
          auto itr = _wallet.my_accounts.get<by_id>().find(receiver_id);
          if (itr == _wallet.my_accounts.get<by_id>().end()) 
             return vector<text_message>();
@@ -2797,7 +2760,7 @@ signed_transaction content_cancellation(string author,
    {
       FC_ASSERT(!is_locked());
       const auto& mapi = _remote_api->messaging();
-      const auto& sender_id = get_account_id(sender);
+      const auto& sender_id = get_account(sender).get_id();
       auto itr = _wallet.my_accounts.get<by_id>().find(sender_id);
       if (itr == _wallet.my_accounts.get<by_id>().end())
          return vector<text_message>();
@@ -2838,7 +2801,7 @@ signed_transaction content_cancellation(string author,
       for (auto& receiver : to) {
          account_object to_account = get_account(receiver);
          message_payload_receivers_data receivers_data_item;
-         receivers_data_item.to = get_account_id(receiver);
+         receivers_data_item.to = get_account(receiver).get_id();
 
          if (text.size()) {
             pl.set_message(get_private_key(from_account.options.memo_key),
@@ -3421,11 +3384,6 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
    {
    }
 
-   bool wallet_api::copy_wallet_file(string destination_filename)
-   {
-      return my->copy_wallet_file(destination_filename);
-   }
-
    optional<signed_block_with_info> wallet_api::get_block(uint32_t num)
    {
       optional<signed_block_with_info> result = my->_remote_db->get_block(num);
@@ -3519,7 +3477,7 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
                                                                      uint32_t start)const
    {
       vector<operation_detail> result;
-      auto account_id = get_account_id(name);
+      auto account_id = get_account(name).get_id();
 
       vector<operation_history_object> current = my->_remote_hist->get_relative_account_history(account_id, stop, limit, start);
       for( auto& o : current ) {
@@ -3593,7 +3551,7 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
          brain_key += graphene::words::word_list[ choice.to_int64() ];
       }
 
-      brain_key = normalize_brain_key(brain_key);
+      brain_key = detail::normalize_brain_key(brain_key);
       fc::ecc::private_key priv_key = derive_private_key( brain_key, 0 );
       result.brain_priv_key = brain_key;
       result.wif_priv_key = key_to_wif( priv_key );
@@ -3618,7 +3576,7 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
    {
       brain_key_info result;
 
-      string str_brain_key = normalize_brain_key(brain_key);
+      string str_brain_key = detail::normalize_brain_key(brain_key);
       fc::ecc::private_key priv_key = derive_private_key( str_brain_key, 0 );
       result.brain_priv_key = str_brain_key;
       result.wif_priv_key = key_to_wif( priv_key );
@@ -3679,7 +3637,7 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
 
    vector<proposal_object> wallet_api::get_proposed_transactions( string account_or_id )const
    {
-      account_id_type id = get_account_id(account_or_id);
+      account_id_type id = get_account(account_or_id).get_id();
       return my->_remote_db->get_proposed_transactions( id );
    }
 
@@ -3734,11 +3692,6 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
       auto asset = get_asset(asset_name_or_id);
       FC_ASSERT(asset.is_monitored_asset() );
       return *asset.monitored_asset_opts;
-   }
-
-   account_id_type wallet_api::get_account_id(string account_name_or_id) const
-   {
-      return my->get_account_id(account_name_or_id);
    }
 
    asset_id_type wallet_api::get_asset_id(string asset_symbol_or_id) const
@@ -3882,11 +3835,6 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
       return false;
    }
 
-   string wallet_api::normalize_brain_key(string s) const
-   {
-      return detail::normalize_brain_key( s );
-   }
-
    variant wallet_api::info()
    {
       return my->info();
@@ -3921,18 +3869,6 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
                broadcast
                );
    }
-
-   signed_transaction wallet_api::create_account_with_brain_key_noimport(string brain_key,
-                                                                         string account_name,
-                                                                         string registrar_account,
-                                                                         bool broadcast /* = false */)
-   {
-      return my->create_account_with_brain_key(
-                                               brain_key, account_name, registrar_account, false,
-                                               broadcast
-                                               );
-   }
-
 
    signed_transaction wallet_api::transfer(string from, string to, string amount,
                                            string asset_symbol, string memo, bool broadcast /* = false */)
@@ -4120,6 +4056,7 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
       return my->get_prototype_operation( operation_name );
    }
 
+#if 0
    void wallet_api::dbg_make_mia(string creator, string symbol)
    {
       FC_ASSERT(!is_locked());
@@ -4145,6 +4082,8 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
    {
       my->dbg_update_object( update );
    }
+#endif
+
 
    void wallet_api::network_add_nodes( const vector<string>& nodes )
    {
@@ -4154,12 +4093,6 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
    vector< variant > wallet_api::network_get_connected_peers()
    {
       return my->network_get_connected_peers();
-   }
-
-   void wallet_api::flood_network(string prefix, uint32_t number_of_transactions)
-   {
-      FC_ASSERT(!is_locked());
-      my->flood_network(prefix, number_of_transactions);
    }
 
    signed_transaction wallet_api::propose_parameter_change(
@@ -4369,27 +4302,6 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
    real_supply wallet_api::get_real_supply()const
    {
       return my->_remote_db->get_real_supply();
-   }
-
-   signed_transaction wallet_api::set_publishing_manager(const string from,
-                                                         const vector<string> to,
-                                                         bool is_allowed,
-                                                         bool broadcast )
-   {
-      return my->set_publishing_manager( from, to, is_allowed, broadcast );
-   }
-
-   signed_transaction wallet_api::set_publishing_right(const string from,
-                                                       const vector<string> to,
-                                                       bool is_allowed,
-                                                       bool broadcast )
-   {
-      return my->set_publishing_right( from, to, is_allowed, broadcast );
-   }
-
-   vector<account_id_type> wallet_api::list_publishing_managers( const string& lower_bound_name, uint32_t limit )
-   {
-      return my->_remote_db->list_publishing_managers( lower_bound_name, limit );
    }
 
    signed_transaction
@@ -4739,7 +4651,7 @@ pair<account_id_type, vector<account_id_type>> wallet_api::get_author_and_co_aut
           str_brainkey.empty())
          throw std::runtime_error("You need buffer and brainkey to sign");
 
-      string normalized_brain_key = normalize_brain_key( str_brainkey );
+      string normalized_brain_key = detail::normalize_brain_key( str_brainkey );
       fc::ecc::private_key privkey = derive_private_key( normalized_brain_key, 0 );
 
       fc::sha256 digest(str_buffer);
@@ -4762,7 +4674,7 @@ pair<account_id_type, vector<account_id_type>> wallet_api::get_author_and_co_aut
          return res;
       } FC_CAPTURE_AND_RETHROW( (consumer) )
    }
-      
+
    bool wallet_api::verify_signature(std::string const& str_buffer,
                                      std::string const& str_publickey,
                                      std::string const& str_signature) const
@@ -4882,11 +4794,6 @@ void graphene::wallet::detail::submit_transfer_listener::package_seed_complete()
       return package->get_url();
    }
 
-
-   void wallet_api::set_transfer_logs(bool enable) const {
-   // FC_ASSERT(!is_locked());
-   }
-
    void wallet_api::send_message(const std::string& from, std::vector<string> to, string text)
    {
       return my->send_message(from, to, text);
@@ -4896,10 +4803,10 @@ void graphene::wallet::detail::submit_transfer_listener::package_seed_complete()
    {
       optional<account_id_type> receiver_id;
       if(receiver.size())
-         receiver_id = get_account_id(receiver);
+         receiver_id = get_account(receiver).get_id();
       optional<account_id_type> sender_id;
       if(sender.size())
-         sender_id = get_account_id(sender);
+         sender_id = get_account(sender).get_id();
       return my->get_message_objects(sender_id, receiver_id, max_count);
    }
 
