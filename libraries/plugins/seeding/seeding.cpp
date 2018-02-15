@@ -8,7 +8,6 @@
 #include <graphene/chain/account_object.hpp>
 #include <graphene/chain/buying_object.hpp>
 #include <graphene/utilities/key_conversion.hpp>
-#include <decent/package/package.hpp>
 #include <decent/package/package_config.hpp>
 #include <fc/smart_ref_impl.hpp>
 #include <algorithm>
@@ -578,8 +577,6 @@ void seeding_plugin::plugin_startup()
       return;
 
    ilog("seeding plugin:  plugin_startup() start");
-
-
    my->restore_state();
    fc::time_point next_call = fc::time_point::now()  + fc::microseconds(30000000);
    elog("RtP planned at ${t}", ("t",next_call) );
@@ -685,6 +682,22 @@ void seeding_plugin::plugin_pre_startup( const seeding_plugin_startup_options& s
 
    ilog("starting service thread");
    my = unique_ptr<detail::seeding_plugin_impl>( new detail::seeding_plugin_impl( *this) );
+
+   // load blacklist
+   fc::path seeder_blacklist_path = graphene::utilities::decent_path_finder::instance().get_decent_home();
+   seeder_blacklist_path = seeder_blacklist_path / "seeder";
+   if (!fc::exists(seeder_blacklist_path))
+      fc::create_directories(seeder_blacklist_path);
+
+   seeder_blacklist_path = seeder_blacklist_path / "blacklist.json";
+   std::string string_path = seeder_blacklist_path.string();
+   try {
+      if (fc::exists(seeder_blacklist_path)) {
+         variant tmp = fc::json::from_file(seeder_blacklist_path);
+         my->seeder_cfg = tmp.as<seeder_blacklist_cfg>();
+      }
+   } FC_CAPTURE_AND_LOG((string_path));
+
    my->service_thread = std::make_shared<fc::thread>("seeding");
    my->main_thread = &fc::thread::current();
 

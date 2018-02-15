@@ -76,6 +76,12 @@ public:
    };
 };
 
+struct seeder_blacklist_cfg
+{
+   std::vector<std::string> content_blacklist;
+};
+
+
 typedef graphene::chain::object_id< SEEDING_PLUGIN_SPACE_ID, seeding_object_type,  my_seeding_object>     my_seeding_id_type;
 typedef graphene::chain::object_id< SEEDING_PLUGIN_SPACE_ID, seeder_object_type,  my_seeder_object>     my_seeder_id_type;
 
@@ -200,6 +206,7 @@ public:
 //   std::map<package_transfer_interface::transfer_id, my_seeding_id_type> active_downloads; //<List of active downloads for whose we are expecting on_download_finished callback to be called
    std::shared_ptr<fc::thread> service_thread; //The thread where the computation shall happen
    fc::thread* main_thread; //The main thread, used mainly for DB modifications
+   seeder_blacklist_cfg seeder_cfg;
 
 };
 
@@ -268,5 +275,6 @@ class seeding_plugin : public graphene::app::plugin
 
 FC_REFLECT_DERIVED( decent::seeding::my_seeder_object, (graphene::db::object), (seeder)(content_privKey)(privKey)(free_space)(region_code)(price)(symbol) );
 FC_REFLECT_DERIVED( decent::seeding::my_seeding_object, (graphene::db::object), (URI)(expiration)(cd)(seeder)(key)(space)(downloaded)(deleted)(_hash) );
+FC_REFLECT(decent::seeding::seeder_blacklist_cfg, (content_blacklist));
 
 
