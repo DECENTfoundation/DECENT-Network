@@ -136,6 +136,7 @@ void miner_plugin::plugin_startup()
          _production_skip_flags |= graphene::chain::database::skip_undo_history_check;
       }
       schedule_production_loop();
+      _running = true;
    } else
       elog("No miners configured! Please add miner IDs and private keys to configuration.");
    ilog("miner plugin:  plugin_startup() end");
@@ -144,6 +145,7 @@ void miner_plugin::plugin_startup()
 void miner_plugin::plugin_shutdown()
 {
    graphene::time::shutdown_ntp_time();
+   _running = false;
    return;
 }
 

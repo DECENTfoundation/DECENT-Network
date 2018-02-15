@@ -2058,6 +2058,26 @@ namespace graphene { namespace wallet {
          * @return vector of message objects
          */
          vector<text_message> get_sent_messages(const std::string& sender, uint32_t max_count) const;
+
+         /**
+         * @brief Starts locally seeding of content by URL previously stopped by stop_content_seeding
+         * @param url of content
+         * @return vector of message objects
+         */
+         void start_content_seeding(const std::string& url) const;
+
+         /**
+         * @brief Stops locally seeding of content by URL
+         * @param url of content
+         * @return vector of message objects
+         */
+         void stop_content_seeding(const std::string& url) const;
+
+         /**
+         * @brief Returns list of running plugins
+         * @return vector of running plugins 
+         */
+         std::vector<std::string> get_running_plugins() const;
       };
 
    } }
@@ -2273,4 +2293,7 @@ FC_API( graphene::wallet::wallet_api,
            (get_message_objects)
            (get_messages)
            (get_sent_messages)
+           (start_content_seeding)
+           (stop_content_seeding)
+           (get_running_plugins)
 )

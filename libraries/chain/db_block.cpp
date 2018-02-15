@@ -596,7 +596,7 @@ processed_transaction database::apply_transaction(const signed_transaction& trx,
    });
    return result;
 }
-
+#pragma optimize("",off)
 processed_transaction database::_apply_transaction(const signed_transaction& trx)
 { try {
    uint32_t skip = get_node_properties().skip_flags;
@@ -652,6 +652,7 @@ processed_transaction database::_apply_transaction(const signed_transaction& trx
 
    //Finally process the operations
    processed_transaction ptrx(trx);
+   int rbn = trx.ref_block_num;
    _current_op_in_trx = 0;
    for( const auto& op : ptrx.operations )
    {
@@ -667,7 +668,7 @@ processed_transaction database::_apply_transaction(const signed_transaction& trx
 
    return ptrx;
 } FC_CAPTURE_AND_RETHROW( (trx) ) }
-
+#pragma optimize("",on)
 operation_result database::apply_operation(transaction_evaluation_state& eval_state, const operation& op)
 { try {
    int i_which = op.which();

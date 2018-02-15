@@ -201,6 +201,16 @@ public:
     */
    void send_ready_to_publish();
 
+   /**
+   * Starts seeding of specified content
+   */
+   void start_content_seeding(const std::string& url);
+
+   /**
+   * Stops seeding of specified content
+   */
+   void stop_content_seeding(const std::string& url);
+
    std::vector<SeedingListener> listeners;
    seeding_plugin& _self;
 //   std::map<package_transfer_interface::transfer_id, my_seeding_id_type> active_downloads; //<List of active downloads for whose we are expecting on_download_finished callback to be called
@@ -265,6 +275,10 @@ class seeding_plugin : public graphene::app::plugin
        * Start the plugin and begin work.
        */
       void plugin_startup() override;
+
+      void start_content_seeding(const std::string& url);
+
+      void stop_content_seeding(const std::string& url);
 
 
       friend class detail::seeding_plugin_impl;
