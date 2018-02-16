@@ -4220,7 +4220,7 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
       return ss.str();
    }
 
-   string wallet_api::gethelp(const string& method)const
+   string wallet_api::get_help(const string& method)const
    {
       fc::api<wallet_api> tmp;
       std::stringstream ss;
