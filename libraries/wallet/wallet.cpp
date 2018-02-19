@@ -3486,7 +3486,7 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
          fc::bigint entropy(entropy1);
          entropy <<= 8 * sha_entropy1.data_size();
          entropy += entropy2;
-         brain_key = "" ;
+         brain_key.clear();
          for (int i = 0; i < BRAIN_KEY_WORD_COUNT; i++) {
             fc::bigint choice = entropy % graphene::words::word_list_size;
             entropy /= graphene::words::word_list_size;
@@ -3501,11 +3501,10 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
          result.wif_priv_key = key_to_wif( priv_key );
          try {
             result.pub_key = priv_key.get_public_key();
-         }catch(fc::assert_exception ae) {
+         } catch(const fc::assert_exception& ae) {
             cont = true;
          }
-      }
-      while (cont);
+      } while (cont);
 
       return result;
    }
