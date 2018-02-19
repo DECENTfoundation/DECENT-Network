@@ -3387,6 +3387,7 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
 #include "wallet_assets.inl"
 #include "wallet_transaction_builder.inl"
 #include "wallet_mining.inl"
+#include "wallet_seeding.inl"
 #include "wallet_proposals.inl"
 #include "wallet_content.inl"
 #include "wallet_subscription.inl"
@@ -3451,30 +3452,6 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
       allowed_withdraw = get_allowed_withdraw( now );
       allowed_withdraw_time = now;
    }
-
-
-
-
-   vector<seeder_object> wallet_api::list_seeders_by_price( uint32_t count )const
-   {
-      return my->_remote_db->list_seeders_by_price( count );
-   }
-
-   optional<vector<seeder_object>> wallet_api::list_seeders_by_upload( const uint32_t count )const
-   {
-      return my->_remote_db->list_seeders_by_upload( count );
-   }
-
-   vector<seeder_object> wallet_api::list_seeders_by_region( const string region_code )const
-   {
-      return my->_remote_db->list_seeders_by_region( region_code );
-   }
-
-   vector<seeder_object> wallet_api::list_seeders_by_rating( const uint32_t count )const
-   {
-      return my->_remote_db->list_seeders_by_rating( count );
-   }
-
 
 
 
