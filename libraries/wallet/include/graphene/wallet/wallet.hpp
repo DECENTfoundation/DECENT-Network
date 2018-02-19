@@ -231,14 +231,29 @@ namespace graphene { namespace wallet {
       namespace detail {
          class wallet_api_impl;
       }
-   
-   
-   
+
+
+
 /**
  * This wallet assumes it is connected to the database server with a high-bandwidth, low-latency connection and
  * performs minimal caching. This API could be provided locally to be used by a web interface.
  *
- * @defgroup WalletCLI WalletCLI
+ * @defgroup WalletCLI CLI Wallet
+ * @{
+ * @defgroup WalletAPI_Wallet Wallet
+ * @defgroup WalletAPI_General General
+ * @defgroup WalletAPI_Account Account
+ * @defgroup WalletAPI_Asset Asset
+ * @defgroup WalletAPI_Subscription Subscription
+ * @defgroup WalletAPI_Content Content
+ * @defgroup WalletAPI_Messaging Messaging
+ * @defgroup WalletAPI_Seeding Seeding
+ * @defgroup WalletAPI_Mining Mining
+ * @defgroup WalletAPI_Proposals Proposals
+ * @defgroup WalletAPI_TransactionBuilder Transaction Builder
+ * @defgroup WalletAPI_Network Network
+ * @defgroup WalletAPI_Debug Debug
+ * @}
  */
       class wallet_api
       {
@@ -259,46 +274,6 @@ namespace graphene { namespace wallet {
 #include "subscription.hpp"
 #include "messaging.hpp"
 
-
-#if 0
-         /**
-          *
-          * @param creator
-          * @param symbol
-          * @ingroup WalletCLI
-          */
-         void dbg_make_mia(string creator, string symbol);
-
-         /**
-          *
-          * @param src_filename
-          * @param count
-          * @ingroup WalletCLI
-          */
-         void dbg_push_blocks( std::string src_filename, uint32_t count );
-
-         /**
-          *
-          * @param debug_wif_key
-          * @param count
-          * @ingroup WalletCLI
-          */
-         void dbg_generate_blocks( std::string debug_wif_key, uint32_t count );
-
-         /**
-          *
-          * @param filename
-          * @ingroup WalletCLI
-          */
-         void dbg_stream_json_objects( const std::string& filename );
-
-         /**
-          *
-          * @param update
-          * @ingroup WalletCLI
-          */
-         void dbg_update_object( fc::variant_object update );
-#endif
 
          std::map<string,std::function<string(fc::variant,const fc::variants&)>> get_result_formatters() const;
 
