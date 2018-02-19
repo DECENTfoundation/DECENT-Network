@@ -3473,29 +3473,40 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
    {
       brain_key_info result;
       // create a private key for secure entropy
-      fc::sha256 sha_entropy1 = fc::ecc::private_key::generate().get_secret();
-      fc::sha256 sha_entropy2 = fc::ecc::private_key::generate().get_secret();
-      fc::bigint entropy1( sha_entropy1.data(), sha_entropy1.data_size() );
-      fc::bigint entropy2( sha_entropy2.data(), sha_entropy2.data_size() );
-      fc::bigint entropy(entropy1);
-      entropy <<= 8*sha_entropy1.data_size();
-      entropy += entropy2;
-      string brain_key = "";
+      string brain_key;
+      bool cont;
+      fc::ecc::private_key priv_key;
 
-      for( int i=0; i<BRAIN_KEY_WORD_COUNT; i++ )
-      {
-         fc::bigint choice = entropy % graphene::words::word_list_size;
-         entropy /= graphene::words::word_list_size;
-         if( i > 0 )
-            brain_key += " ";
-         brain_key += graphene::words::word_list[ choice.to_int64() ];
+      do {
+         cont = false;
+         fc::sha256 sha_entropy1 = fc::ecc::private_key::generate().get_secret();
+         fc::sha256 sha_entropy2 = fc::ecc::private_key::generate().get_secret();
+         fc::bigint entropy1(sha_entropy1.data(), sha_entropy1.data_size());
+         fc::bigint entropy2(sha_entropy2.data(), sha_entropy2.data_size());
+         fc::bigint entropy(entropy1);
+         entropy <<= 8 * sha_entropy1.data_size();
+         entropy += entropy2;
+         brain_key = "" ;
+         for (int i = 0; i < BRAIN_KEY_WORD_COUNT; i++) {
+            fc::bigint choice = entropy % graphene::words::word_list_size;
+            entropy /= graphene::words::word_list_size;
+            if (i > 0)
+               brain_key += " ";
+            brain_key += graphene::words::word_list[choice.to_int64()];
+         }
+
+         brain_key = detail::normalize_brain_key(brain_key);
+         priv_key = derive_private_key(brain_key, 0);
+         result.brain_priv_key = brain_key;
+         result.wif_priv_key = key_to_wif( priv_key );
+         try {
+            result.pub_key = priv_key.get_public_key();
+         }catch(fc::assert_exception ae) {
+            cont = true;
+         }
       }
+      while (cont);
 
-      brain_key = detail::normalize_brain_key(brain_key);
-      fc::ecc::private_key priv_key = derive_private_key( brain_key, 0 );
-      result.brain_priv_key = brain_key;
-      result.wif_priv_key = key_to_wif( priv_key );
-      result.pub_key = priv_key.get_public_key();
       return result;
    }
 
@@ -3949,7 +3960,7 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
       return ss.str();
    }
 
-   string wallet_api::gethelp(const string& method)const
+   string wallet_api::get_help(const string& method)const
    {
       fc::api<wallet_api> tmp;
       std::stringstream ss;
@@ -4453,7 +4464,7 @@ pair<account_id_type, vector<account_id_type>> wallet_api::get_author_and_co_aut
          return res;
       } FC_CAPTURE_AND_RETHROW( (consumer) )
    }
-      
+
 
    fc::time_point_sec wallet_api::head_block_time() const
    {
@@ -4655,6 +4666,7 @@ void graphene::wallet::detail::submit_transfer_listener::package_seed_complete()
 
 
 } } // graphene::wallet
+
 
 
 void fc::to_variant(const account_multi_index_type& accts, fc::variant& vo)

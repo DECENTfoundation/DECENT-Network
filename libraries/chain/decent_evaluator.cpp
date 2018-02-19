@@ -626,17 +626,17 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
       //The content just has been successfuly delivered, take care of the payment
       if( delivered )
       {
-         asset price = buying.price;
          db().modify<content_object>( *content, []( content_object& co ){ co.times_bought++; });
 
          if( content->co_authors.empty() )
-            db().adjust_balance( content->author, price );
+            db().adjust_balance( content->author, buying.paid_price_after_exchange );
          else
          {
+            asset price = buying.paid_price_after_exchange;
             boost::multiprecision::int128_t price_for_co_author;
             for( auto const &element : content->co_authors )
             {
-               price_for_co_author = ( price.amount.value * element.second ) / 10000ll ;
+               price_for_co_author = ( buying.paid_price_after_exchange.amount.value * element.second ) / 10000ll ;
                db().adjust_balance( element.first, asset( static_cast<share_type>(price_for_co_author), price.asset_id) );
                price.amount -= price_for_co_author;
             }
@@ -656,7 +656,7 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
          finish_buying_operation op;
          op.author = content->author;
          op.co_authors = content->co_authors;
-         op.payout = price;
+         op.payout = buying.paid_price_after_exchange;
          op.consumer = buying.consumer;
          op.buying = buying.id;
 
