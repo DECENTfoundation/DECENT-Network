@@ -369,7 +369,7 @@ FC_API( graphene::wallet::wallet_api,
         (get_object)
         (info)
         (help)
-        (gethelp)
+        (get_help)
         (head_block_time)
         (network_add_nodes)
         (network_get_connected_peers)
