@@ -93,8 +93,8 @@ namespace graphene { namespace wallet {
                            [](const account_object& ao) { return ao.id; });
             return ids;
          }
-         /// Add acct to @ref my_accounts, or update it if it is already in @ref my_accounts
-         /// @return true if the account was newly inserted; false if it was only updated
+         /// @brief Add acct to @ref my_accounts, or update it if it is already in @ref my_accounts
+         /// @return \c true if the account was newly inserted; \c false if it was only updated
          bool update_account(const account_object& acct)
          {
             auto& idx = my_accounts.get<by_id>();
@@ -231,9 +231,9 @@ namespace graphene { namespace wallet {
       namespace detail {
          class wallet_api_impl;
       }
-
-
-
+   
+   
+   
 /**
  * This wallet assumes it is connected to the database server with a high-bandwidth, low-latency connection and
  * performs minimal caching. This API could be provided locally to be used by a web interface.
@@ -255,6 +255,7 @@ namespace graphene { namespace wallet {
  * @defgroup WalletAPI_Debug Debug
  * @}
  */
+
       class wallet_api
       {
       public:

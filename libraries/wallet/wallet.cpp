@@ -632,6 +632,7 @@ public:
          _asset_cache[id] = *rec;
       return rec;
    }
+
    optional<asset_object> find_asset(string asset_symbol_or_id)const
    {
       FC_ASSERT( asset_symbol_or_id.size() > 0 );
@@ -665,17 +666,6 @@ public:
       auto opt = find_asset(asset_symbol_or_id);
       FC_ASSERT(opt);
       return *opt;
-   }
-
-   asset_id_type get_asset_id(string asset_symbol_or_id) const
-   {
-      FC_ASSERT( asset_symbol_or_id.size() > 0 );
-      vector<optional<asset_object>> opt_asset;
-      if( std::isdigit( asset_symbol_or_id.front() ) )
-         return fc::variant(asset_symbol_or_id).as<asset_id_type>();
-      opt_asset = _remote_db->lookup_asset_symbols( {asset_symbol_or_id} );
-      FC_ASSERT( (opt_asset.size() > 0) && (opt_asset[0].valid()) );
-      return opt_asset[0]->id;
    }
 
    string                            get_wallet_filename() const
@@ -1127,7 +1117,7 @@ public:
    { try {
 
       FC_ASSERT( !self.is_locked() );
-      string normalized_brain_key = normalize_brain_key( brain_key );
+      string normalized_brain_key = detail::normalize_brain_key( brain_key );
       // TODO:  scan blockchain for accounts that exist with same brain key
       fc::ecc::private_key owner_privkey = derive_private_key( normalized_brain_key, 0 );
       return create_account_with_private_key(owner_privkey, account_name, registrar_account, import, broadcast, save_wallet);
@@ -2095,58 +2085,6 @@ public:
       return sign_transaction(tx, broadcast);
    }
 
-   signed_transaction set_publishing_manager(const string from,
-                                            const vector<string> to,
-                                            bool is_allowed,
-                                            bool broadcast)
-   {
-      try
-      {
-         FC_ASSERT( !to.empty() );
-         set_publishing_manager_operation spm_op;
-         spm_op.from = get_account( from ).get_id();
-         spm_op.can_create_publishers = is_allowed;
-
-         for( const auto& element : to )
-         {
-            spm_op.to.push_back( get_account( element ).get_id() );
-         }
-
-         signed_transaction tx;
-         tx.operations.push_back( spm_op );
-         set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
-         tx.validate();
-
-         return sign_transaction( tx, broadcast );
-      } FC_CAPTURE_AND_RETHROW( (from)(to)(is_allowed)(broadcast) )
-   }
-   signed_transaction set_publishing_right(const string from,
-                                            const vector<string> to,
-                                            bool is_allowed,
-                                            bool broadcast)
-   {
-      try
-      {
-         FC_ASSERT( !to.empty() );
-
-         set_publishing_right_operation spr_op;
-         spr_op.from = get_account( from ).get_id();
-         spr_op.is_publisher = is_allowed;
-
-         for( const auto& element : to )
-         {
-            spr_op.to.push_back( get_account( element ).get_id() );
-         }
-
-         signed_transaction tx;
-         tx.operations.push_back( spr_op );
-         set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
-         tx.validate();
-
-         return sign_transaction( tx, broadcast );
-      } FC_CAPTURE_AND_RETHROW( (from)(to)(is_allowed)(broadcast) )
-   }
-
 
    void                                submit_content_utility(content_submit_operation& submit_op,
                                       vector<regional_price_info> const& price_amounts)
@@ -2665,7 +2603,7 @@ signed_transaction content_cancellation(string author,
       return ss.secret;
    }
 
-   pair<account_id_type, vector<account_id_type>> get_author_and_co_authors_by_URI( const string& URI ) const
+   pair<account_id_type, vector<account_id_type>> get_author_and_co_authors_by_URI( const string& URI )const
    {
       fc::optional<content_object> co = _remote_db->get_content( URI );
       FC_ASSERT( co.valid(), "Content does not exist.");
@@ -2677,7 +2615,7 @@ signed_transaction content_cancellation(string author,
       return result;
    };
 
-   vector<message_object> get_message_objects(optional<account_id_type> sender, optional<account_id_type> receiver, uint32_t max_count) const
+   vector<message_object> get_message_objects(optional<account_id_type> sender, optional<account_id_type> receiver, uint32_t max_count)const
    {
       try {
          FC_ASSERT(!is_locked());
@@ -3370,6 +3308,9 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
    }}}
 
 
+
+
+
    namespace graphene { namespace wallet {
 
    wallet_api::wallet_api(const wallet_data& initial_data, fc::api<login_api> rapi)
@@ -3393,6 +3334,8 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
 #include "wallet_subscription.inl"
 #include "wallet_messaging.inl"
 
+      return result;
+   }
 
 
 

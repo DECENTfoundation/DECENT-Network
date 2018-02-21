@@ -88,7 +88,7 @@ namespace graphene { namespace chain {
 
       struct fee_parameters_type
       {
-         uint64_t basic_fee      = 1*GRAPHENE_BLOCKCHAIN_PRECISION/1000; ///< the cost to register the cheapest non-free account
+         uint64_t basic_fee      = 1*GRAPHENE_BLOCKCHAIN_PRECISION/1000; ///< the cost to register an account
       };
 
       asset           fee;

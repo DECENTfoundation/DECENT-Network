@@ -59,6 +59,19 @@
 
 /**
  * @defgroup DatabaseAPI Database API
+ * @{
+ * @defgroup DatabaseAPI_Subscription Subscription
+ * @defgroup DatabaseAPI_BlockTx Blocks and Transactions
+ * @defgroup DatabaseAPI_Globals Globals
+ * @defgroup DatabaseAPI_Key Key
+ * @defgroup DatabaseAPI_Account Account
+ * @defgroup DatabaseAPI_Balance Balance
+ * @defgroup DatabaseAPI_Asset Asset
+ * @defgroup DatabaseAPI_Mining Mining
+ * @defgroup DatabaseAPI_AuthValidation Authority and Validation
+ * @defgroup DatabaseAPI_Proposals Proposals
+ * @defgroup DatabaseAPI_Decent Decent
+ * @}
  */
 namespace graphene { namespace app {
 
@@ -115,7 +128,7 @@ namespace graphene { namespace app {
  *
  * This API exposes accessors on the database which query state tracked by a blockchain validating node. This API is
  * read-only; all modifications to the database must be performed via transactions. Transactions are broadcast via
- * the @ref network_broadcast_api.
+ * the \c network_broadcast_api.
  */
       class database_api
       {
@@ -128,12 +141,11 @@ namespace graphene { namespace app {
          /////////////
 
          /**
-          * @brief Get the objects corresponding to the provided IDs
+          * @brief Get the objects corresponding to the provided IDs.
+          * @note If any of the provided IDs does not map to an object, a null variant is returned in its position.
           * @param ids IDs of the objects to retrieve
-          * @return The objects retrieved, in the order they are mentioned in ids
-          * @ingroup DatabaseAPI
-          *
-          * If any of the provided IDs does not map to an object, a null variant is returned in its position.
+          * @return the objects retrieved, in the order they are mentioned in ids
+          * @ingroup DatabaseAPI_Globals
           */
          fc::variants get_objects(const vector<object_id_type>& ids)const;
 
@@ -145,37 +157,36 @@ namespace graphene { namespace app {
           *
           * @param cb
           * @param clear_filter
-          * @ingroup DatabaseAPI
+          * @ingroup DatabaseAPI_Subscription
           */
          void set_subscribe_callback( std::function<void(const variant&)> cb, bool clear_filter );
 
          /**
           *
           * @param cb
-          * @ingroup DatabaseAPI
+          * @ingroup DatabaseAPI_Subscription
           */
          void set_pending_transaction_callback( std::function<void(const variant&)> cb );
 
          /**
           *
           * @param cb
-          * @ingroup DatabaseAPI
+          * @ingroup DatabaseAPI_Subscription
           */
          void set_block_applied_callback( std::function<void(const variant& block_id)> cb );
 
          /**
           *
-          * @param URI Content we are monitoring
-          * @param cb Callback
-          * @ingroup DatabaseAPI
+          * @param URI content we are monitoring
+          * @param cb callback
+          * @ingroup DatabaseAPI_Subscription
           */
          void set_content_update_callback( std::function<void()>cb, const string & URI );
 
          /**
-          * @brief Stop receiving any notifications
-          * @ingroup DatabaseAPI
-          *
-          * This unsubscribes from all subscribed markets and objects.
+          * @brief Stop receiving any notifications.
+          * @note This unsubscribes from all subscribed objects.
+          * @ingroup DatabaseAPI_Subscription
           */
          void cancel_all_subscriptions();
 
@@ -184,41 +195,43 @@ namespace graphene { namespace app {
          /////////////////////////////
 
          /**
-          * @brief Retrieve a block header
-          * @param block_num Height of the block whose header should be returned
-          * @return header of the referenced block, or null if no matching block was found
-          * @ingroup DatabaseAPI
+          * @brief Retrieve a block header.
+          * @param block_num height of the block whose header should be returned
+          * @return header of the referenced block, or \c null if no matching block was found
+          * @ingroup DatabaseAPI_BlockTx
           */
          optional<block_header> get_block_header(uint32_t block_num)const;
 
          /**
-          * @brief Retrieve a full, signed block
-          * @param block_num Height of the block to be returned
-          * @return the referenced block, or null if no matching block was found
-          * @ingroup DatabaseAPI
+          * @brief Retrieve a full, signed block.
+          * @param block_num height of the block to be returned
+          * @return the referenced block, or \c null if no matching block was found
+          * @ingroup DatabaseAPI_BlockTx
           */
          optional<signed_block> get_block(uint32_t block_num)const;
 
          /**
-          * @brief used to fetch an individual transaction.
+          * @brief Used to fetch an individual transaction.
           * @param block_num id of the block
-          * @param trx_in_block Specifies the position of the transaction within the block
-          * @ingroup DatabaseAPI
+          * @param trx_in_block specifies the position of the transaction within the block
+          * @return the transaction
+          * @ingroup DatabaseAPI_BlockTx
           */
          processed_transaction get_transaction( uint32_t block_num, uint32_t trx_in_block )const;
 
          /**
-          * @brief Query the last local block
+          * @brief Query the last local block.
           * @return the block time
+          * @ingroup DatabaseAPI_BlockTx
           */
          fc::time_point_sec head_block_time()const;
 
          /**
           * @brief If the transaction has not expired, this method will return the transaction for the given ID or
-          * it will return NULL if it is not known.  Just because it is not known does not mean it wasn't
+          * it will return \c null if it is not known. Just because it is not known does not mean it wasn't
           * included in the blockchain.
           * @param id ID of the transaction to retrieve
-          * @ingroup DatabaseAPI
+          * @ingroup DatabaseAPI_BlockTx
           */
          optional<signed_transaction> get_recent_transaction_by_id( const transaction_id_type& id )const;
 
@@ -227,32 +240,40 @@ namespace graphene { namespace app {
          /////////////
 
          /**
-          * @brief Retrieve the @ref chain_property_object associated with the chain
-          * @ingroup DatabaseAPI
+          * @brief Retrieve the \c chain_property_object associated with the chain.
+          * @return chain id and immutable chain parameters
+          * @ingroup DatabaseAPI_Globals
           */
          chain_property_object get_chain_properties()const;
 
          /**
-          * @brief Retrieve the current @ref global_property_object
-          * @ingroup DatabaseAPI
+          * @brief Retrieve the current \c global_property_object. This object contains all of the properties
+          * of the blockchain that are fixed or that change only once per maintenance interval such as the current
+          * list of miners, block interval, etc.
+          * @return the global properties
+          * @ingroup DatabaseAPI_Globals
           */
          global_property_object get_global_properties()const;
 
          /**
-          * @brief Retrieve compile-time constants
-          * @ingroup DatabaseAPI
+          * @brief Retrieve compile-time constants.
+          * @return configured constants
+          * @ingroup DatabaseAPI_Globals
           */
          fc::variant_object get_config()const;
 
          /**
           * @brief Get the chain ID
-          * @ingroup DatabaseAPI
+          * @return the chain ID identifying blockchain network
+          * @ingroup DatabaseAPI_Globals
           */
          chain_id_type get_chain_id()const;
 
          /**
-          * @brief Retrieve the current @ref dynamic_global_property_object
-          * @ingroup DatabaseAPI
+          * @brief Retrieve the current dynamic_global_property_object. The returned object contains information
+          * that changes every block interval such as the head block number, the next miner, etc.
+          * @return the dynamic properties
+          * @ingroup DatabaseAPI_Globals
           */
          dynamic_global_property_object get_dynamic_global_properties()const;
 
@@ -261,10 +282,10 @@ namespace graphene { namespace app {
          //////////
 
          /**
-          * @brief Get all accounts that refer to the key in their owner or active authorities
-          * @param key List of public keys
-          * @return List of lists of account IDs. One list of account IDs per public key
-          * @ingroup DatabaseAPI
+          * @brief Get all accounts that refer to the key in their owner or active authorities.
+          * @param key list of public keys
+          * @return list of lists of account IDs. One list of account IDs per public key
+          * @ingroup DatabaseAPI_Key
           */
          vector<vector<account_id_type>> get_key_references( vector<public_key_type> key )const;
 
@@ -273,83 +294,80 @@ namespace graphene { namespace app {
          //////////////
 
          /**
-          * @brief Get a list of accounts by ID
+          * @brief Get a list of accounts by ID.
+          * @note This function has semantics identical to \c get_objects().
           * @param account_ids IDs of the accounts to retrieve
-          * @return The accounts corresponding to the provided IDs
-          * @ingroup DatabaseAPI
-          *
-          * This function has semantics identical to @ref get_objects
+          * @return the accounts corresponding to the provided IDs
+          * @ingroup DatabaseAPI_Account
           */
          vector<optional<account_object>> get_accounts(const vector<account_id_type>& account_ids)const;
 
          /**
-          * @brief Fetch all objects relevant to the specified accounts and subscribe to updates
-          * @param subscribe true to subscribe to updates
-          * @param names_or_ids Each item must be the name or ID of an account to retrieve
-          * @return Map of string from @ref names_or_ids to the corresponding account
-          * @ingroup DatabaseAPI
-          *
-          * This function fetches all relevant objects for the given accounts, and subscribes to updates to the given
-          * accounts. If any of the strings in @ref names_or_ids cannot be tied to an account, that input will be
+          * @brief Fetch all objects relevant to the specified accounts and subscribe to updates.
+          * @note This function fetches all relevant objects for the given accounts, and subscribes to updates to the given
+          * accounts. If any of the \c strings in \c names_or_ids cannot be tied to an account, that input will be
           * ignored. All other accounts will be retrieved and subscribed.
+          * @param subscribe \c true to subscribe to updates
+          * @param names_or_ids each item must be the name or ID of an account to retrieve
+          * @return map of \c string from \c names_or_ids to the corresponding account
+          * @ingroup DatabaseAPI_Account
           */
          std::map<string,full_account> get_full_accounts( const vector<string>& names_or_ids, bool subscribe );
 
          /**
-          * @brief Get an account by name
-          * @param name Name of the account to retrieve
-          * @return The @ref account_object corresponding to the provided name, or null if no matching content was found
-          * @ingroup DatabaseAPI
+          * @brief Get an account by name.
+          * @param name name of the account to retrieve
+          * @return the \c account_object corresponding to the provided \c name, or \c null if no matching content was found
+          * @ingroup DatabaseAPI_Account
           */
          optional<account_object> get_account_by_name( string name )const;
 
          /**
-          * @brief Get all accounts that refer to the account id in their owner or active authorities
-          * @param account_id
-          * @return List of account IDs
-          * @ingroup DatabaseAPI
+          * @brief Get all accounts that refer to the account id in their owner or active authorities.
+          * @param account_id ID of the account
+          * @return a list of account IDs
+          * @ingroup DatabaseAPI_Account
           */
          vector<account_id_type> get_account_references( account_id_type account_id )const;
 
          /**
-          * @brief Get a list of accounts by name
-          * @param account_names Names of the accounts to retrieve
-          * @return The accounts holding the provided names
-          * @ingroup DatabaseAPI
-          *
-          * This function has semantics identical to @ref get_objects
+          * @brief Get a list of accounts by name.
+          * @note This function has semantics identical to \c get_objects().
+          * @param account_names names of the accounts to retrieve
+          * @return the accounts holding the provided names
+          * @ingroup DatabaseAPI_Account
           */
          vector<optional<account_object>> lookup_account_names(const vector<string>& account_names)const;
 
          /**
-          * @brief Get names and IDs for registered accounts
-          * @param lower_bound_name Lower bound of the first name to return
-          * @param limit Maximum number of results to return -- must not exceed 1000
-          * @return Map of account names to corresponding IDs
-          * @ingroup DatabaseAPI
+          * @brief Get names and IDs for registered accounts.
+          * @param lower_bound_name lower bound of the first name to return
+          * @param limit maximum number of results to return ( must not exceed 1000 )
+          * @return map of account names to corresponding IDs
+          * @ingroup DatabaseAPI_Account
           */
          map<string,account_id_type> lookup_accounts(const string& lower_bound_name, uint32_t limit)const;
 
          /**
-          * @brief Get names and IDs for registered accounts that match search term
+          * @brief Get names and IDs for registered accounts that match search term.
           * @param search_term will try to partially match account name or id
-          * @param limit Maximum number of results to return -- must not exceed 1000
-          * @return Map of account names to corresponding IDs
-          * @ingroup DatabaseAPI
+          * @param order sort data by field
+          * @param id \c object_id to start searching from
+          * @param limit maximum number of results to return ( must not exceed 1000 )
+          * @return map of account names to corresponding IDs
+          * @ingroup DatabaseAPI_Account
           */
          vector<account_object> search_accounts(const string& search_term, const string order, const object_id_type& id, uint32_t limit) const;
 
          /**
           * @brief Returns the operations on the named account.
-          *
-          * This returns a list of transaction detail object, which describe activity on the account.
-          *
+          * @note This returns a list of transaction detail objects, which describe activity on the account.
           * @param account the account to search
-          * @param order Sort data by field
-          * @param id object_id to start searching from
+          * @param order sort data by field
+          * @param id \c object_id to start searching from
           * @param limit the number of entries to return (starting from the most recent) (max 100)
-          * @returns a list of \c transaction_detail_object
-          * @ingroup DatabaseAPI
+          * @return a list of transaction detail objects
+          * @ingroup DatabaseAPI_Account
           */
          vector<class transaction_detail_object> search_account_history(account_id_type const& account,
                                                                         string const& order,
@@ -361,33 +379,35 @@ namespace graphene { namespace app {
          //////////////
 
          /**
-          * @brief Get an account's balances in various assets
+          * @brief Get an account's balances in various assets.
           * @param id ID of the account to get balances for
           * @param assets IDs of the assets to get balances of; if empty, get all assets account has a balance in
-          * @return Balances of the account
-          * @ingroup DatabaseAPI
+          * @return a list of the given account's balances
+          * @ingroup DatabaseAPI_Balance
           */
          vector<asset> get_account_balances(account_id_type id, const flat_set<asset_id_type>& assets)const;
 
          /**
-          * @brief Semantically equivalent to @ref get_account_balances, but takes a name instead of an ID.
-          * @param name of the account to get balances for
-          * @assets IDs of the assets to get balances of; if empty, get all assets account has a balance in
-          * @ingroup DatabaseAPI
+          * @brief Semantically equivalent to \c get_account_balances(), but takes a name instead of an ID.
+          * @param name the name of the account to get balances for
+          * @param assets IDs of the assets to get balances of; if empty, get all assets account has a balance in
+          * @return a list of the given account's balances
+          * @ingroup DatabaseAPI_Balance
           */
          vector<asset> get_named_account_balances(const std::string& name, const flat_set<asset_id_type>& assets)const;
 
          /**
           * @brief Get information about a vesting balance object.
-          *
-          * @param account_id An account ID.
-          * @ingroup DatabaseAPI
+          * @param account_id an account ID
+          * @return a list of vesting balances with additional information
+          * @ingroup DatabaseAPI_Balance
           */
          vector<vesting_balance_object> get_vesting_balances( account_id_type account_id )const;
 
          /**
-          * @brief Get the total number of accounts registered with the blockchain
-          * @ingroup DatabaseAPI
+          * @brief Get the total number of accounts registered on the blockchain.
+          * @return the total number of registered accounts
+          * @ingroup DatabaseAPI_Account
           */
          uint64_t get_account_count()const;
 
@@ -396,42 +416,53 @@ namespace graphene { namespace app {
          ////////////
 
          /**
-          * @brief Get a list of assets by ID
+          * @brief Get a list of assets by ID.
+          * @note This function has semantics identical to \c get_objects().
           * @param asset_ids IDs of the assets to retrieve
-          * @return The assets corresponding to the provided IDs
-          * @ingroup DatabaseAPI
-          *
-          * This function has semantics identical to @ref get_objects
+          * @return the assets corresponding to the provided IDs
+          * @ingroup DatabaseAPI_Asset
           */
          vector<optional<asset_object>> get_assets(const vector<asset_id_type>& asset_ids)const;
 
          /**
-          * @brief Get assets alphabetically by symbol name
-          * @param lower_bound_symbol Lower bound of symbol names to retrieve
-          * @param limit Maximum number of assets to fetch (must not exceed 100)
-          * @return The assets found
-          * @ingroup DatabaseAPI
+          * @brief Get assets alphabetically by symbol name.
+          * @param lower_bound_symbol lower bound of symbol names to retrieve
+          * @param limit maximum number of assets to fetch (must not exceed 100)
+          * @return the assets found
+          * @ingroup DatabaseAPI_Asset
           */
          vector<asset_object> list_assets(const string& lower_bound_symbol, uint32_t limit)const;
 
          /**
-          * @brief Get a list of assets by symbol
-          * @param symbols_or_ids Symbols or stringified IDs of the assets to retrieve
-          * @return The assets corresponding to the provided symbols or IDs
-          * @ingroup DatabaseAPI
-          *
-          * This function has semantics identical to @ref get_objects
+          * @brief Get a list of assets by symbol.
+          * @note This function has semantics identical to \c get_objects().
+          * @param symbols_or_ids symbols or stringified IDs of the assets to retrieve
+          * @return the assets corresponding to the provided symbols or IDs
+          * @ingroup DatabaseAPI_Asset
           */
          vector<optional<asset_object>> lookup_asset_symbols(const vector<string>& symbols_or_ids)const;
 
+         /**
+          * @brief Returns a reward for a miner from the most recent block.
+          * @return amount of newly generated DCT
+          * @ingroup DatabaseAPI_Mining
+          */
          share_type get_new_asset_per_block() const;
+
+         /**
+          * @brief Returns a reward for a miner from a specified block.
+          * @note A reward from transaction fees is not included.
+          * @param block_num the block number
+          * @return amount of newly generated DCT
+          * @ingroup DatabaseAPI_Mining
+          */
          share_type get_asset_per_block_by_block_num(uint32_t block_num) const;
 
          /**
           * @brief Converts asset into DCT, using actual price feed.
           * @param price asset in DCT, monitored asset or user issued asset
           * @return price in DCT
-          * @ingroup DatabaseAPI
+          * @ingroup DatabaseAPI_Asset
           */
          asset price_to_dct( asset price )const;
 
@@ -440,45 +471,44 @@ namespace graphene { namespace app {
          ///////////////
 
          /**
-          * @brief Get a list of miners by ID
+          * @brief Get a list of miners by ID.
+          * @note This function has semantics identical to \c get_objects().
           * @param miner_ids IDs of the miners to retrieve
-          * @return The miners corresponding to the provided IDs
-          * @ingroup DatabaseAPI
-          *
-          * This function has semantics identical to @ref get_objects
+          * @return the miners corresponding to the provided IDs
+          * @ingroup DatabaseAPI_Mining
           */
          vector<optional<miner_object>> get_miners(const vector<miner_id_type>& miner_ids)const;
 
          /**
-          * @brief Get the miner owned by a given account
-          * @param account The ID of the account whose miner should be retrieved
-          * @return The miner object, or null if the account does not have a miner
-          * @ingroup DatabaseAPI
+          * @brief Get the miner owned by a given account.
+          * @param account the ID of the account whose miner should be retrieved
+          * @return the miner object, or \c null if the account does not have a miner
+          * @ingroup DatabaseAPI_Mining
           */
          fc::optional<miner_object> get_miner_by_account(account_id_type account)const;
 
          /**
-          * @brief Get names and IDs for registered miners
-          * @param lower_bound_name Lower bound of the first name to return
-          * @param limit Maximum number of results to return -- must not exceed 1000
-          * @return Map of miner names to corresponding IDs
-          * @ingroup DatabaseAPI
+          * @brief Get names and IDs for registered miners.
+          * @param lower_bound_name lower bound of the first name to return
+          * @param limit maximum number of results to return ( must not exceed 1000 )
+          * @return map of miner names to corresponding IDs
+          * @ingroup DatabaseAPI_Mining
           */
          map<string, miner_id_type> lookup_miner_accounts(const string& lower_bound_name, uint32_t limit)const;
 
          /**
-          * @brief Get the total number of miners registered with the blockchain
-          * @ingroup DatabaseAPI
+          * @brief Get the total number of miners registered with the blockchain.
+          * @return the total number of registered miners
+          * @ingroup DatabaseAPI_Mining
           */
          uint64_t get_miner_count()const;
 
          /**
           * @brief Get a list of published price feeds by a miner.
-          *
           * @param account_id id of the account
-          * @param count Maximum number of price feeds to fetch (must not exceed 100)
-          * @returns list of price feeds published by the miner
-          * @ingroup DatabaseAPI
+          * @param count maximum number of price feeds to fetch (must not exceed 100)
+          * @returns a list of price feeds published by the miner
+          * @ingroup DatabaseAPI_Mining
           */
          multimap< time_point_sec, price_feed> get_feeds_by_miner(const account_id_type account_id,
                                                                   const uint32_t count)const;
@@ -488,11 +518,11 @@ namespace graphene { namespace app {
          ///////////
 
          /**
-          *  @brief Given a set of votes, return the objects they are voting for.
-          *  @ingroup DatabaseAPI
-          *  @param votes Set of votes
-          *  The results will be in the same order as the votes.  Null will be returned for
-          *  any vote ids that are not found.
+          * @brief Given a set of votes, return the objects they are voting for.
+          * @note The results will be in the same order as the votes. \c null will be returned for
+          * any vote ids that are not found.
+          * @param votes set of votes
+          * @ingroup DatabaseAPI_Mining
           */
          vector<variant> lookup_vote_ids( const vector<vote_id_type>& votes )const;
 
@@ -501,59 +531,62 @@ namespace graphene { namespace app {
          ////////////////////////////
 
          /**
-          * @brief Get a hexdump of the serialized binary form of a transaction
-          * @param trx
-          * @return
-          * @ingroup DatabaseAPI
+          * @brief Get a hexdump of the serialized binary form of a transaction.
+          * @param trx the signed transaction
+          * @return hexadecimal string
+          * @ingroup DatabaseAPI_AuthValidation
           */
          std::string get_transaction_hex(const signed_transaction& trx)const;
 
          /**
           *  @brief This API will take a partially signed transaction and a set of public keys that the owner has the ability to sign for
           *  and return the minimal subset of public keys that should add signatures to the transaction.
-          *  @param trx
-          *  @param available_keys Set of available public keys
-          *  @ingroup DatabaseAPI
+          *  @param trx the signed transaction
+          *  @param available_keys set of available public keys
+          *  @ingroup DatabaseAPI_AuthValidation
           */
          set<public_key_type> get_required_signatures( const signed_transaction& trx, const flat_set<public_key_type>& available_keys )const;
 
          /**
-          *  @brief This method will return the set of all public keys that could possibly sign for a given transaction.  This call can
-          *  be used by wallets to filter their set of public keys to just the relevant subset prior to calling @ref get_required_signatures
+          *  @brief This method will return the set of all public keys that could possibly sign for a given transaction. This call can
+          *  be used by wallets to filter their set of public keys to just the relevant subset prior to calling \c get_required_signatures()
           *  to get the minimum subset.
-          *  @param trx
-          *  @ingroup DatabaseAPI
+          *  @param trx the signed transaction
+          *  @ingroup DatabaseAPI_AuthValidation
           */
          set<public_key_type> get_potential_signatures( const signed_transaction& trx )const;
 
          /**
-          * @return true if the @ref trx has all of the required signatures, otherwise throws an exception
-          * @ingroup DatabaseAPI
-          * @param trx
+          * @brief Verifies required signatures of a transaction.
+          * @param trx the signed transaction
+          * @return \c true if the \c trx has all of the required signatures, otherwise throws an exception
+          * @ingroup DatabaseAPI_AuthValidation
           */
          bool           verify_authority( const signed_transaction& trx )const;
 
          /**
-          * @return true if the signers have enough authority to authorize an account
-          * @ingroup DatabaseAPI
-          * @param name_or_id The name or id of the account
-          * @param signers Set of public keys
+          * @brief Verifies if the signers have enough authority to authorize an account.
+          * @param name_or_id the name or id of the account
+          * @param signers set of public keys
+          * @return \c true if the signers have enough authority
+          * @ingroup DatabaseAPI_AuthValidation
           */
          bool           verify_account_authority( const string& name_or_id, const flat_set<public_key_type>& signers )const;
 
          /**
           *  @brief Validates a transaction against the current state without broadcasting it on the network.
-          *  @param trx
-          *  @ingroup DatabaseAPI
+          *  @param trx the signed transaction
+          *  @ingroup DatabaseAPI_AuthValidation
           */
          processed_transaction validate_transaction( const signed_transaction& trx )const;
 
          /**
           *  @brief For each operation calculate the required fee in the specified asset type. If the asset type does
-          *  not have a valid core_exchange_rate
-          *  @param ops The set of operations
-          *  @param id  The asset ID
-          *  @ingroup DatabaseAPI
+          *  not have a valid core_exchange_rate.
+          *  @param ops the set of operations
+          *  @param id the asset ID
+          *  @return the required fees
+          *  @ingroup DatabaseAPI_AuthValidation
           */
          vector< fc::variant > get_required_fees( const vector<operation>& ops, asset_id_type id )const;
 
@@ -562,10 +595,10 @@ namespace graphene { namespace app {
          ///////////////////////////
 
          /**
-          * @brief Get the set of proposed transactions relevant to the specified account id
-          * @param id The account ID
-          * @return Set of proposed transactions
-          * @ingroup DatabaseAPI
+          * @brief Get the set of proposed transactions relevant to the specified account id.
+          * @param id the account ID
+          * @return a set of proposed transactions
+          * @ingroup DatabaseAPI_Proposals
           */
          vector<proposal_object> get_proposed_transactions( account_id_type id )const;
 
@@ -575,62 +608,62 @@ namespace graphene { namespace app {
 
 
          /**
-          * @brief Return current core asset supply
+          * @brief Return current core asset supply.
           * @return current supply
-          * @ingroup DatabaseAPI
+          * @ingroup DatabaseAPI_Asset
           */
          real_supply get_real_supply()const;
 
          /**
           * @brief Get a list of accounts holding publishing manager status.
-          * @param lower_bound_name The name of the first account to return.  If the named account does not exist,
+          * @param lower_bound_name the name of the first account to return. If the named account does not exist,
           * the list will start at the account that comes after \c lowerbound
-          * @param limit The maximum number of accounts to return (max: 100)
-          * @return List of accounts
-          * @ingroup DatabaseAPI
+          * @param limit the maximum number of accounts to return (max: 100)
+          * @return a list of publishing managers
+          * @ingroup DatabaseAPI_Decent
           */
          vector<account_id_type> list_publishing_managers( const string& lower_bound_name, uint32_t limit  )const;
 
          /**
-          * @brief Get a list of open buyings
-          * @return The buying_objects
-          * @ingroup DatabaseAPI
+          * @brief Get a list of open buyings.
+          * @return a list of buying objects
+          * @ingroup DatabaseAPI_Decent
           */
          vector<buying_object> get_open_buyings()const;
 
          /**
-          * @brief Get a list of open buyings by URI
+          * @brief Get a list of open buyings by URI.
           * @param URI URI of the buyings to retrieve
-          * @return The buyings corresponding to the provided URI
-          * @ingroup DatabaseAPI
+          * @return a list of buyings corresponding to the provided URI
+          * @ingroup DatabaseAPI_Decent
           */
          vector<buying_object> get_open_buyings_by_URI( const string& URI )const;
 
          /**
-          * @brief Get a list of open buyings by consumer
-          * @param consumer Consumer of the buyings to retrieve
-          * @return The buyings corresponding to the provided consumer
-          * @ingroup DatabaseAPI
+          * @brief Get a list of open buyings by consumer.
+          * @param consumer consumer of the buyings to retrieve
+          * @return a list of buyings corresponding to the provided consumer
+          * @ingroup DatabaseAPI_Decent
           */
          vector<buying_object> get_open_buyings_by_consumer( const account_id_type& consumer )const;
 
          /**
-          * @brief Get history buying objects by consumer
-          * @param consumer Consumer of the history buyings to retrieve
-          * @return History buying objects corresponding to the provided consumer
-          * @ingroup DatabaseAPI
+          * @brief Get history buying objects by consumer.
+          * @param consumer consumer of the history buyings to retrieve
+          * @return history buying objects corresponding to the provided consumer
+          * @ingroup DatabaseAPI_Decent
           */
          vector<buying_object> get_buying_history_objects_by_consumer( const account_id_type& consumer )const;
 
          /**
-          * @brief Get buying objects (open or history) by consumer
-          * @param consumer Consumer of the buyings to retrieve
-          * @param order Ordering field
-          * @param id The id of buying object to start searching from
-          * @param term Search term
-          * @param count Maximum number of contents to fetch (must not exceed 100)
-          * @return Buying objects corresponding to the provided consumer
-          * @ingroup DatabaseAPI
+          * @brief Get buying objects (open or history) by consumer.
+          * @param consumer consumer of the buyings to retrieve
+          * @param order ordering field. Available options are defined in 'database_api.cpp'
+          * @param id the id of buying object to start searching from
+          * @param term search term
+          * @param count maximum number of contents to fetch (must not exceed 100)
+          * @return buying objects corresponding to the provided consumer
+          * @ingroup DatabaseAPI_Decent
           */
          vector<buying_object> get_buying_objects_by_consumer(const account_id_type& consumer,
                                                               const string& order,
@@ -639,22 +672,22 @@ namespace graphene { namespace app {
                                                               uint32_t count)const;
 
          /**
-          * @brief Get buying (open or history) by consumer and URI
-          * @param consumer Consumer of the buying to retrieve
+          * @brief Get buying (open or history) by consumer and URI.
+          * @param consumer consumer of the buying to retrieve
           * @param URI URI of the buying to retrieve
-          * @return Buying object corresponding to the provided consumer and URI
-          * @ingroup DatabaseAPI
+          * @return buying object corresponding to the provided consumer and URI
+          * @ingroup DatabaseAPI_Decent
           */
          optional<buying_object> get_buying_by_consumer_URI( const account_id_type& consumer, const string& URI )const;
 
          /**
-          * @brief Search for term in contents (author, title and description)
-          * @param user Feedback author
+          * @brief Search for term in contents (author, title and description).
+          * @param user feedback author
           * @param URI the content object uri
-          * @param id The id of feedback object to start searching from
-          * @param count Maximum number of feedbacks to fetch
-          * @return The feedback found
-          * @ingroup DatabaseAPI
+          * @param id the id of feedback object to start searching from
+          * @param count maximum number of feedbacks to fetch
+          * @return the feedback found
+          * @ingroup DatabaseAPI_Decent
           */
          vector<buying_object> search_feedback(const string& user,
                                                const string& URI,
@@ -662,34 +695,41 @@ namespace graphene { namespace app {
                                                uint32_t count) const;
 
          /**
-          * @brief Get a content by URI
+          * @brief Get a content by URI.
           * @param URI URI of the content to retrieve
-          * @return The content corresponding to the provided URI, or null if no matching content was found
-          * @ingroup DatabaseAPI
+          * @return the content corresponding to the provided URI, or \c null if no matching content was found
+          * @ingroup DatabaseAPI_Decent
           */
          optional<content_object> get_content( const string& URI )const;
          
          /**
-          * @brief Generate keys for new content submission
+          * @brief Generate keys for new content submission.
           * @param seeders list of seeder account IDs
           * @return generated key and key parts
-          * @ingroup DatabaseAPI
+          * @ingroup DatabaseAPI_Decent
           */
          content_keys generate_content_keys(vector<account_id_type> const& seeders)const;
          
+         /**
+          * @brief Restores encryption key from key parts stored in buying object.
+          * @param el_gamal_priv_key_string the private El Gamal key
+          * @param buying the buying object
+          * @return AES encryption key
+          * @ingroup DatabaseAPI_Decent
+          */
          fc::sha256 restore_encryption_key(DIntegerString el_gamal_priv_key_string, buying_id_type buying ) const;
 
          /**
-          * @brief Search for term in contents (author, title and description)
-          * @param term Search term
-          * @param order Ordering field
-          * @param user Content owner
-          * @param region Two letter region code
-          * @param id The id of content object to start searching from
+          * @brief Search for term in contents (author, title and description).
+          * @param term search term
+          * @param order ordering field. Available options are defined in 'database_api.cpp'
+          * @param user content owner
+          * @param region_code two letter region code
+          * @param id the id of content object to start searching from
           * @param type the application and content type to be filtered
-          * @param count Maximum number of contents to fetch (must not exceed 100)
-          * @return The contents found
-          * @ingroup DatabaseAPI
+          * @param count maximum number of contents to fetch (must not exceed 100)
+          * @return the contents found
+          * @ingroup DatabaseAPI_Decent
           */
          vector<content_summary> search_content(const string& term,
                                                 const string& order,
@@ -700,100 +740,112 @@ namespace graphene { namespace app {
                                                 uint32_t count )const;
 
          /**
-          * @brief Get a list of seeders by price, in increasing order
-          * @param count Maximum number of seeders to retrieve
-          * @return The seeders found
-          * @ingroup DatabaseAPI
+          * @brief Get a list of seeders by price, in increasing order.
+          * @param count maximum number of seeders to retrieve
+          * @return the seeders found
+          * @ingroup DatabaseAPI_Decent
           */
          vector<seeder_object> list_seeders_by_price( uint32_t count )const;
 
          /**
-          * @brief Get a list of seeders by price, in increasing order. Same method as list_seeders_by_price, kept for compatibility
-          * @param count Maximum number of seeders to retrieve
-          * @return The seeders found
-          * @ingroup DatabaseAPI
+          * @brief Get a list of seeders by price, in increasing order. Same method as list_seeders_by_price, kept for compatibility.
+          * @param count maximum number of seeders to retrieve
+          * @return the seeders found
+          * @ingroup DatabaseAPI_Decent
           */
          vector<seeder_object> list_publishers_by_price( uint32_t count )const;
 
          /**
-          * @brief Get a seeder by ID
-          * @param ID ID of the seeder to retrieve
-          * @return The seeder corresponding to the provided ID, or null if no matching content was found
-          * @ingroup DatabaseAPI
+          * @brief Get a seeder by ID.
+          * @param aid ID of the seeder to retrieve
+          * @return the seeder corresponding to the provided ID, or \c null if no matching content was found
+          * @ingroup DatabaseAPI_Decent
           */
          optional<seeder_object> get_seeder(account_id_type aid) const;
 
          /**
-          * @brief Get a list of seeders by total upload, in decreasing order
-          * @param count Maximum number of seeders to retrieve
-          * @return The seeders found
-          * @ingroup DatabaseAPI
+          * @brief Get a list of seeders by total upload, in decreasing order.
+          * @param count maximum number of seeders to retrieve
+          * @return the seeders found
+          * @ingroup DatabaseAPI_Decent
           */
          optional<vector<seeder_object>> list_seeders_by_upload( const uint32_t count )const;
 
          /**
-          * @brief Get a list of seeders by region code
-          * @param region_code Region code of seeders to retrieve
-          * @return The seeders found
-          * @ingroup DatabaseAPI
+          * @brief Get a list of seeders by region code.
+          * @param region_code region code of seeders to retrieve
+          * @return the seeders found
+          * @ingroup DatabaseAPI_Decent
           */
          vector<seeder_object> list_seeders_by_region( const string region_code )const;
 
          /**
-          * @brief Get a list of seeders by rating, in decreasing order
-          * @param count Maximum number of seeders to retrieve
-          * @return The seeders found
-          * @ingroup DatabaseAPI
+          * @brief Get a list of seeders by rating, in decreasing order.
+          * @param count maximum number of seeders to retrieve
+          * @return the seeders found
+          * @ingroup DatabaseAPI_Decent
           */
          vector<seeder_object> list_seeders_by_rating( const uint32_t count )const;
 
          /**
-          * @brief Get a subscription object by ID
+          * @brief Get a subscription object by ID.
           * @param sid ID of the subscription to retrieve
-          * @return The subscription object corresponding to the provided ID, or null if no matching subscription was found
-          * @ingroup DatabaseAPI
+          * @return the subscription object corresponding to the provided ID, or null if no matching subscription was found
+          * @ingroup DatabaseAPI_Decent
           */
          optional<subscription_object> get_subscription( const subscription_id_type& sid)const;
 
          /**
-          * @brief Get a list of active (not expired) subscriptions subscribed by account (consumer)
-          * @param URI_begin Lower bound of URI strings to retrieve
-          * @param count Maximum number of subscription objects to fetch (must not exceed 100)
-          * @return The list of subscription objects corresponding to the provided consumer
-          * @ingroup DatabaseAPI
+          * @brief Get a list of active (not expired) subscriptions subscribed by account (consumer).
+          * @param account ID of the account to get subscriptions for
+          * @param count maximum number of subscription objects to fetch (must not exceed 100)
+          * @return a list of subscription objects corresponding to the provided consumer
+          * @ingroup DatabaseAPI_Decent
           */
          vector<subscription_object> list_active_subscriptions_by_consumer( const account_id_type& account, const uint32_t count )const;
 
          /**
-          * @brief Get a list of subscriptions subscribed by account (consumer)
-          * @param URI_begin Lower bound of URI strings to retrieve
-          * @param count Maximum number of subscription objects to fetch (must not exceed 100)
-          * @return The contents found
-          * @ingroup DatabaseAPI
+          * @brief Get a list of subscriptions subscribed by account (consumer).
+          * @param account ID of the account to get subscriptions for
+          * @param count maximum number of subscription objects to fetch (must not exceed 100)
+          * @return the contents found
+          * @ingroup DatabaseAPI_Decent
           */
          vector<subscription_object> list_subscriptions_by_consumer( const account_id_type& account, const uint32_t count )const;
 
          /**
-          * @brief Get a list of active (not expired) subscriptions to account (author)
-          * @param URI_begin Lower bound of URI strings to retrieve
-          * @param count Maximum number of subscription objects to fetch (must not exceed 100)
-          * @return The contents found
-          * @ingroup DatabaseAPI
+          * @brief Get a list of active (not expired) subscriptions to account (author).
+          * @param account ID of the account to get subscriptions for
+          * @param count maximum number of subscription objects to fetch (must not exceed 100)
+          * @return the contents found
+          * @ingroup DatabaseAPI_Decent
           */
          vector<subscription_object> list_active_subscriptions_by_author( const account_id_type& account, const uint32_t count )const;
 
          /**
-          * @brief Get a list of  subscriptions subscribed to account (author)
-          * @param URI_begin Lower bound of URI strings to retrieve
-          * @param count Maximum number of subscription objects to fetch (must not exceed 100)
-          * @return The contents found
-          * @ingroup DatabaseAPI
+          * @brief Get a list of  subscriptions subscribed to account (author).
+          * @param account ID of the account to get subscriptions for
+          * @param count maximum number of subscription objects to fetch (must not exceed 100)
+          * @return the contents found
+          * @ingroup DatabaseAPI_Decent
           */
          vector<subscription_object> list_subscriptions_by_author( const account_id_type& account, const uint32_t count )const;
 
+         /**
+          * @brief Get remaining time to next maintenance interval from given time.
+          * @param block_time reference time
+          * @return remaining time to next maintenance interval along with some additional data
+          * @ingroup DatabaseAPI_Globals
+          */
          miner_reward_input get_time_to_maint_by_block_time(fc::time_point_sec block_time) const;
 
+         /**
+          * @brief Get the number of votes each miner actually has.
+          * @return a list mapping account names to the number of votes
+          * @ingroup DatabaseAPI_Mining
+          */
          vector<database::votes_gained> get_actual_votes() const;
+
       private:
          std::shared_ptr< database_api_impl > my;
       };
