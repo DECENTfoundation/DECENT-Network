@@ -3334,10 +3334,6 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
 #include "wallet_subscription.inl"
 #include "wallet_messaging.inl"
 
-      return result;
-   }
-
-
 
 #if 0
    void wallet_api::dbg_make_mia(string creator, string symbol)
