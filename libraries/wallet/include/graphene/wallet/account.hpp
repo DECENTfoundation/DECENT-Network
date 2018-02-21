@@ -78,9 +78,9 @@ vector<asset>                     list_account_balances(const string& id);
  * @return a list of transaction detail objects
  * @ingroup WalletAPI_Account
  */
-vector<class transaction_detail_object> search_account_history(string const& account_name,
-                                                               string const& order,
-                                                               string const& id,
+vector<class transaction_detail_object> search_account_history(const string& account_name,
+                                                               const string& order,
+                                                               const string& id,
                                                                int limit) const;
 
 
@@ -93,25 +93,25 @@ vector<class transaction_detail_object> search_account_history(string const& acc
  * @return a list of operation history objects
  * @ingroup WalletAPI_Account
  */
-vector<operation_detail>  get_account_history(string name, int limit)const;
+vector<operation_detail>  get_account_history(const string& name, int limit) const;
 
 /**
  * @breif Get operations relevant to the specified account referenced
  * by an event numbering specific to the account. The current number of operations
  * for the account can be found in the account statistics (or use 0 for start).
- * @param account The account whose history should be queried
+ * @param name The account whose history should be queried
  * @param stop Sequence number of earliest operation. 0 is default and will
  * query 'limit' number of operations.
  * @param limit Maximum number of operations to retrieve (must not exceed 100)
  * @param start Sequence number of the most recent operation to retrieve.
  * 0 is default, which will start querying from the most recent operation.
  * @return A list of operations performed by account, ordered from most recent to oldest.
- * @ingroup WalletCLI
+ * @ingroup WalletAPI_Account
  */
-vector<operation_detail>  get_relative_account_history(string name,
+vector<operation_detail>  get_relative_account_history(const string& name,
                                                        uint32_t stop,
                                                        int limit,
-                                                       uint32_t start)const;
+                                                       uint32_t start) const;
 
 
 /**
@@ -121,7 +121,7 @@ vector<operation_detail>  get_relative_account_history(string name,
  * @return the public account data stored in the blockchain
  * @ingroup WalletAPI_Account
  */
-account_object                    get_account(string account_name_or_id) const;
+account_object                    get_account(const string& account_name_or_id) const;
 
 /**
  * @brief Derive private key from given prefix and sequence.
@@ -141,7 +141,7 @@ fc::ecc::private_key derive_private_key(const std::string& prefix_string, int se
  * @return a suggested brain key
  * @ingroup WalletAPI_Account
  */
-brain_key_info suggest_brain_key()const;
+brain_key_info suggest_brain_key() const;
 
 /**
  * @brief Calculates the private key and public key corresponding to any brain key
@@ -149,7 +149,7 @@ brain_key_info suggest_brain_key()const;
  * @return the corresponding \c brain_key_info
  * @ingroup WalletAPI_Account
  */
-brain_key_info get_brain_key_info(string const& brain_key) const;
+brain_key_info get_brain_key_info(const string& brain_key) const;
 
 /**
  * @brief Suggests a safe brain key to use for creating your account. This funcion also
@@ -182,10 +182,10 @@ pair<brain_key_info, el_gamal_key_pair> generate_brain_key_el_gamal_key() const;
  * @return the signed transaction registering the account
  * @ingroup WalletAPI_Account
  */
-signed_transaction register_account(string name,
+signed_transaction register_account(const string& name,
                                     public_key_type owner,
                                     public_key_type active,
-                                    string  registrar_account,
+                                    const string& registrar_account,
                                     bool broadcast = false);
 
 /**
@@ -199,9 +199,9 @@ signed_transaction register_account(string name,
  * @return the signed transaction registering the account
  * @ingroup WalletAPI_Account
  */
-signed_transaction create_account_with_brain_key(string brain_key,
-                                                 string account_name,
-                                                 string registrar_account,
+signed_transaction create_account_with_brain_key(const string& brain_key,
+                                                 const string& account_name,
+                                                 const string& registrar_account,
                                                  bool broadcast = false);
 
 /**
@@ -216,13 +216,13 @@ signed_transaction create_account_with_brain_key(string brain_key,
  * @note transaction fee is fixed and does not depend on the length of the memo
  * @param broadcast \c true to broadcast the transaction on the network
  * @return the signed transaction transferring funds
- * @ingroup WalletAPI_General
+ * @ingroup WalletAPI_Account
  */
-signed_transaction transfer(string from,
-                            string to,
-                            string amount,
-                            string asset_symbol,
-                            string memo,
+signed_transaction transfer(const string& from,
+                            const string& to,
+                            const string& amount,
+                            const string& asset_symbol,
+                            const string& memo,
                             bool broadcast = false);
 
 /**
@@ -237,7 +237,7 @@ el_gamal_key_pair generate_el_gamal_keys() const;
  * @return pair of El Gamal keys
  * @ingroup WalletAPI_Account
  */
-el_gamal_key_pair_str get_el_gammal_key(string const& consumer) const;
+el_gamal_key_pair_str get_el_gammal_key(const string& consumer) const;
 
 
 #endif //DECENT_WALLET_ACCOUNT_H

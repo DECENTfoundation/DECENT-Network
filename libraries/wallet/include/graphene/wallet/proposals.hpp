@@ -32,7 +32,7 @@
  * @return a list of proposed transactions
  * @ingroup WalletAPI_Proposals
  */
-vector<proposal_object> get_proposed_transactions( string account_or_id ) const;
+vector<proposal_object> get_proposed_transactions( const string& account_or_id ) const;
 
 /**
  * @brief Encapsulates begin_builder_transaction(), add_operation_to_builder_transaction(),
@@ -48,12 +48,12 @@ vector<proposal_object> get_proposed_transactions( string account_or_id ) const;
  * @param expiration expiration time
  * @ingroup WalletAPI_Proposals
  */
-void propose_transfer(string proposer,
-                      string from,
-                      string to,
-                      string amount,
-                      string asset_symbol,
-                      string memo,
+void propose_transfer(const string& proposer,
+                      const string& from,
+                      const string& to,
+                      const string& amount,
+                      const string& asset_symbol,
+                      const string& memo,
                       time_point_sec expiration);
 
 /**

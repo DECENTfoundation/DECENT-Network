@@ -27,21 +27,13 @@
 #define DECENT_WALLET_WALLET_FILE_H
 
 /**
- * @brief Copy wallet file to a new file.
- * @param destination_filename
- * @return \c true if the wallet is copied,\c false otherwise
- * @ingroup WalletAPI_Wallet
- */
-bool copy_wallet_file( string destination_filename );  //obsolete
-
-/**
  * @brief Lists all accounts controlled by this wallet.
  * This returns a list of the full account objects for all accounts whose private keys
  * we possess.
  * @return a list of accounts imported in the wallet
  * @ingroup WalletAPI_Wallet
  */
-vector<account_object>            list_my_accounts();
+vector<account_object> list_my_accounts();
 
 /** @brief Returns the current wallet filename.
  * @note This is the filename that will be used when automatically saving the wallet.
@@ -49,7 +41,7 @@ vector<account_object>            list_my_accounts();
  * @return the wallet filename
  * @ingroup WalletAPI_Wallet
  */
-string                            get_wallet_filename() const;
+string get_wallet_filename() const;
 
 /**
  * @brief Get the WIF private key corresponding to a public key.  The
@@ -58,7 +50,7 @@ string                            get_wallet_filename() const;
  * @return WIF private key corresponding to a public key
  * @ingroup WalletAPI_Wallet
  */
-string                            get_private_key( public_key_type pubkey) const;
+string get_private_key( public_key_type pubkey) const;
 
 /**
  * @brief Checks whether the wallet has just been created and has not yet had a password set.
@@ -66,7 +58,7 @@ string                            get_private_key( public_key_type pubkey) const
  * @return \c true if the wallet is new
  * @ingroup WalletAPI_Wallet
  */
-bool    is_new()const;
+bool is_new() const;
 
 /**
  * @brief Checks whether the wallet is locked (is unable to use its private keys).
@@ -75,14 +67,14 @@ bool    is_new()const;
  * @return \c true if the wallet is locked
  * @ingroup WalletAPI_Wallet
  */
-bool    is_locked()const;
+bool is_locked() const;
 
 /**
  * @brief Locks the wallet immediately.
  * @see \c unlock()
  * @ingroup WalletAPI_Wallet
  */
-void    lock();
+void lock();
 
 /**
  * @brief Unlocks the wallet.
@@ -91,7 +83,7 @@ void    lock();
  * @param password the password previously set with \c set_password()
  * @ingroup WalletAPI_Wallet
  */
-void    unlock(string password);
+void unlock(const string& password);
 
 /**
  * @brief Sets a new password on the wallet.
@@ -99,7 +91,7 @@ void    unlock(string password);
  * @param password
  * @ingroup WalletAPI_Wallet
  */
-void    set_password(string password);
+void set_password(const string& password);
 
 /**
  * @brief Loads a specified wallet file.
@@ -113,7 +105,7 @@ void    set_password(string password);
  * @return \c true if the specified wallet is loaded
  * @ingroup WalletAPI_Wallet
  */
-bool    load_wallet_file(string wallet_filename = "");
+bool load_wallet_file(const string& wallet_filename = string());
 
 /**
  * @brief Saves the current wallet to the given filename.
@@ -126,7 +118,7 @@ bool    load_wallet_file(string wallet_filename = "");
  *                        save to the current filename.
  * @ingroup WalletAPI_Wallet
  */
-void    save_wallet_file(string wallet_filename = "");
+void save_wallet_file(const string& wallet_filename = string());
 
 /**
  * @brief Sets the wallet filename used for future writes.
@@ -135,7 +127,7 @@ void    save_wallet_file(string wallet_filename = "");
  * @param wallet_filename the new filename to use for future saves
  * @ingroup WalletAPI_Wallet
  */
-void    set_wallet_filename(string wallet_filename);
+void set_wallet_filename(const string& wallet_filename);
 
 /**
  * @brief Imports the private key for an existing account.
@@ -148,27 +140,7 @@ void    set_wallet_filename(string wallet_filename);
  * @return \c true if the key was imported
  * @ingroup WalletAPI_Wallet
  */
-bool import_key(string account_name_or_id, string wif_key);
-
-/**
- * @brief Imports accounts from the other wallet file.
- * @param filename the filename of the wallet JSON file
- * @param password user's password to the wallet
- * @return mapped account names to boolean values indicating whether the account was successfully imported
- * @ingroup WalletAPI_Wallet
- */
-map<string, bool> import_accounts( string filename, string password );   //obsolete
-
-/**
- * @brief Imports account keys from particular account from another wallet file to desired account located in wallet file currently used.
- * @param filename the filename of the wallet JSON file
- * @param password user's password to the wallet
- * @param src_account_name name of the source account
- * @param dest_account_name name of the destination account
- * @return \c true if the keys were imported
- * @ingroup WalletAPI_Wallet
- */
-bool import_account_keys( string filename, string password, string src_account_name, string dest_account_name );   //obsolete
+bool import_key(const string& account_name_or_id, const string& wif_key);
 
 /**
  * @brief Dumps all private keys successfully imported in the wallet.

@@ -113,8 +113,8 @@ string  get_help(const string& method) const;
  * @return the signed buffer
  * @ingroup WalletAPI_General
  */
-std::string sign_buffer(std::string const& str_buffer,
-                        std::string const& str_brainkey) const;
+std::string sign_buffer(const std::string& str_buffer,
+                        const std::string& str_brainkey) const;
 
 /**
  * @brief Verify if the signature is valid.
@@ -124,9 +124,9 @@ std::string sign_buffer(std::string const& str_buffer,
  * @return \c true if valid, otherwise \c false
  * @ingroup WalletAPI_General
  */
-bool verify_signature(std::string const& str_buffer,
-                      std::string const& str_publickey,
-                      std::string const& str_signature) const;
+bool verify_signature(const std::string& str_buffer,
+                      const std::string& str_publickey,
+                      const std::string& str_signature) const;
 
 /**
  * @brief

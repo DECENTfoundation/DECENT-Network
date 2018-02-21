@@ -36,10 +36,10 @@
  * @return the signed transaction subscribing the consumer to the author
  * @ingroup WalletAPI_Subscription
  */
-signed_transaction subscribe_to_author( string from,
-                                        string to,
-                                        string price_amount,
-                                        string price_asset_symbol,
+signed_transaction subscribe_to_author( const string& from,
+                                        const string& to,
+                                        const string& price_amount,
+                                        const string& price_asset_symbol,
                                         bool broadcast/* = false */);
 
 /**
@@ -50,8 +50,8 @@ signed_transaction subscribe_to_author( string from,
  * @return the signed transaction subscribing the consumer to the author
  * @ingroup WalletAPI_Subscription
  */
-signed_transaction subscribe_by_author( string from,
-                                        string to,
+signed_transaction subscribe_by_author( const string& from,
+                                        const string& to,
                                         bool broadcast/* = false */);
 
 /**
@@ -65,11 +65,11 @@ signed_transaction subscribe_by_author( string from,
  * @return the signed transaction updating the account
  * @ingroup WalletAPI_Subscription
  */
-signed_transaction set_subscription( string account,
+signed_transaction set_subscription( const string& account,
                                      bool allow_subscription,
                                      uint32_t subscription_period,
-                                     string price_amount,
-                                     string price_asset_symbol,
+                                     const string& price_amount,
+                                     const string& price_asset_symbol,
                                      bool broadcast/* = false */);
 
 /**
@@ -81,7 +81,7 @@ signed_transaction set_subscription( string account,
  * @return the signed transaction allowing/disallowing renewal of the subscription
  * @ingroup WalletAPI_Subscription
  */
-signed_transaction set_automatic_renewal_of_subscription( string account_id_or_name,
+signed_transaction set_automatic_renewal_of_subscription( const string& account_id_or_name,
                                                           subscription_id_type subscription_id,
                                                           bool automatic_renewal,
                                                           bool broadcast/* = false */);

@@ -1,31 +1,31 @@
 
-signed_transaction wallet_api::subscribe_to_author( string from,
-                                                    string to,
-                                                    string price_amount,
-                                                    string price_asset_symbol,
+signed_transaction wallet_api::subscribe_to_author( const string& from,
+                                                    const string& to,
+                                                    const string& price_amount,
+                                                    const string& price_asset_symbol,
                                                     bool broadcast/* = false */)
 {
    return my->subscribe_to_author(from, to, price_amount, price_asset_symbol, broadcast);
 }
 
-signed_transaction wallet_api::subscribe_by_author( string from,
-                                                    string to,
+signed_transaction wallet_api::subscribe_by_author( const string& from,
+                                                    const string& to,
                                                     bool broadcast/* = false */)
 {
    return my->subscribe_by_author(from, to, broadcast);
 }
 
-signed_transaction wallet_api::set_subscription( string account,
+signed_transaction wallet_api::set_subscription( const string& account,
                                                  bool allow_subscription,
                                                  uint32_t subscription_period,
-                                                 string price_amount,
-                                                 string price_asset_symbol,
+                                                 const string& price_amount,
+                                                 const string& price_asset_symbol,
                                                  bool broadcast/* = false */)
 {
    return my->set_subscription(account, allow_subscription, subscription_period, price_amount, price_asset_symbol, broadcast);
 }
 
-signed_transaction wallet_api::set_automatic_renewal_of_subscription( string account_id_or_name,
+signed_transaction wallet_api::set_automatic_renewal_of_subscription( const string& account_id_or_name,
                                                           subscription_id_type subscription_id,
                                                           bool automatic_renewal,
                                                           bool broadcast/* = false */)

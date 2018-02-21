@@ -33,7 +33,7 @@
  * @param text the body of the message
  * @ingroup WalletAPI_Messaging
  */
-void send_message(const std::string& from, std::vector<string> to, string text);
+void send_message(const std::string& from, const std::vector<string>& to, const string& text);
 
 /**
  * @brief Receives message objects by sender and/or receiver.

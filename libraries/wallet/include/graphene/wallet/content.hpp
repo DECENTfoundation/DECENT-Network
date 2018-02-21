@@ -50,7 +50,7 @@
  * @ingroup WalletAPI_Content
  */
 signed_transaction submit_content(const string& author,
-                                  vector< pair< string, uint32_t>> co_authors,
+                                  const vector< pair< string, uint32_t>>& co_authors,
                                   const string& URI,
                                   const vector <regional_price_info>& price_amounts,
                                   uint64_t size,
@@ -81,15 +81,15 @@ signed_transaction submit_content(const string& author,
  * @param synopsis the description of the content
  * @ingroup WalletAPI_Content
  */
-void submit_content_async( string const &author,
-                           vector< pair< string, uint32_t>> co_authors,
-                           string const &content_dir,
-                           string const &samples_dir,
-                           string const &protocol,
-                           vector<regional_price_info> const &price_amounts,
-                           vector<account_id_type> const &seeders,
-                           fc::time_point_sec const &expiration,
-                           string const &synopsis);
+void submit_content_async( const string& author,
+                           const vector< pair< string, uint32_t>>& co_authors,
+                           const string& content_dir,
+                           const string& samples_dir,
+                           const string& protocol,
+                           const vector<regional_price_info>& price_amounts,
+                           const vector<account_id_type>& seeders,
+                           const fc::time_point_sec& expiration,
+                           const string& synopsis);
 
 /**
  * @brief This function can be used to cancel submitted content. This content is immediately not available to purchase.
@@ -100,8 +100,8 @@ void submit_content_async( string const &author,
  * @return the signed transaction cancelling the content
  * @ingroup WalletAPI_Content
  */
-signed_transaction content_cancellation(string author,
-                                        string URI,
+signed_transaction content_cancellation(const string& author,
+                                        const string& URI,
                                         bool broadcast);
 
 /**
@@ -112,7 +112,7 @@ signed_transaction content_cancellation(string author,
  * @param broadcast \c true to broadcast the transaction on the network
  * @ingroup WalletAPI_Content
  */
-void download_content(string const& consumer, string const& URI, string const& region_code_from, bool broadcast = false);
+void download_content(const string& consumer, const string& URI, const string& region_code_from, bool broadcast = false);
 
 /**
  * @brief Get status about particular download process specified by provided URI.
@@ -121,7 +121,7 @@ void download_content(string const& consumer, string const& URI, string const& r
  * @return download status, or \c null if no matching download process was found
  * @ingroup WalletAPI_Content
  */
-optional<content_download_status> get_download_status(string consumer, string URI) const;
+optional<content_download_status> get_download_status(const string& consumer, const string& URI) const;
 
 /**
  * @brief This function is used to send a request to buy a content. This request is caught by seeders.
@@ -134,11 +134,11 @@ optional<content_download_status> get_download_status(string consumer, string UR
  * @return the signed transaction requesting buying of the content
  * @ingroup WalletAPI_Content
  */
-signed_transaction request_to_buy(string consumer,
-                                  string URI,
-                                  string price_asset_name,
-                                  string price_amount,
-                                  string str_region_code_from,
+signed_transaction request_to_buy(const string& consumer,
+                                  const string& URI,
+                                  const string& price_asset_name,
+                                  const string& price_amount,
+                                  const string& str_region_code_from,
                                   bool broadcast);
 
 /**
@@ -153,14 +153,14 @@ signed_transaction request_to_buy(string consumer,
  * @param region_code optional ISO 3166-1 alpha-2 two-letter region code
  * @ingroup WalletAPI_Seeding
  */
-void seeding_startup( string account_id_type_or_name,
+void seeding_startup( const string& account_id_type_or_name,
                       DInteger content_private_key,
-                      string seeder_private_key,
+                      const string& seeder_private_key,
                       uint64_t free_space,
                       uint32_t seeding_price,
-                      string seeding_symbol,
-                      string packages_path,
-                      string region_code = string() );
+                      const string& seeding_symbol,
+                      const string& packages_path,
+                      const string& region_code = string() );
 
 /**
  * @brief Rates and comments a content.
@@ -171,10 +171,10 @@ void seeding_startup( string account_id_type_or_name,
  * @param broadcast \c true to broadcast the transaction on the network
  * @ingroup WalletAPI_Content
  */
-void leave_rating_and_comment(string consumer,
-                              string URI,
+void leave_rating_and_comment(const string& consumer,
+                              const string& URI,
                               uint64_t rating,
-                              string comment,
+                              const string& comment,
                               bool broadcast = false);
 
 /**
@@ -314,7 +314,9 @@ pair<account_id_type, vector<account_id_type>> get_author_and_co_authors_by_URI(
  * @return the package hash and content custody data
  * @ingroup WalletAPI_Content
  */
-std::pair<string, decent::encrypt::CustodyData> create_package(const std::string& content_dir, const std::string& samples_dir, const DInteger& aes_key) const;
+std::pair<string, decent::encrypt::CustodyData> create_package(const std::string& content_dir,
+                                                               const std::string& samples_dir,
+                                                               const DInteger& aes_key) const;
 
 /**
  * @brief Extracts selected package.
@@ -357,7 +359,7 @@ void remove_package(const std::string& package_hash) const;
  * @return restored AES key from key particles
  * @ingroup WalletAPI_Content
  */
-DInteger restore_encryption_key(std::string account, buying_id_type buying);
+DInteger restore_encryption_key(const string& account, buying_id_type buying);
 
 /**
  * @brief Generates AES encryption key.

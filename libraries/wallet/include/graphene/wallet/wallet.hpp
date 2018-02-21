@@ -383,8 +383,6 @@ FC_API( graphene::wallet::wallet_api,
         (load_wallet_file)
         (save_wallet_file)
         (import_key)
-        (import_accounts)  //obsolete
-        (import_account_keys) //obsolete
         (dump_private_keys)
 
         //Account
@@ -396,11 +394,9 @@ FC_API( graphene::wallet::wallet_api,
         (get_account_history)
         (get_relative_account_history)
         (get_account)
-//        (get_account_id)  //obsolete
         (suggest_brain_key)
         (register_account)
         (create_account_with_brain_key)
-//        (create_account_with_brain_key_noimport)
         (transfer)
         (generate_el_gamal_keys)
         (get_el_gammal_key)

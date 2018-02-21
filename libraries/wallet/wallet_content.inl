@@ -1,84 +1,90 @@
 
-signed_transaction wallet_api::submit_content(string const& author,
-                           vector< pair< string, uint32_t>> co_authors,
-                           string const& URI,
-                           vector <regional_price_info> const& price_amounts,
-                           uint64_t size,
-                           fc::ripemd160 const& hash,
-                           vector<account_id_type> const& seeders,
-                           uint32_t quorum,
-                           fc::time_point_sec const& expiration,
-                           string const& publishing_fee_asset,
-                           string const& publishing_fee_amount,
-                           string const& synopsis,
-                           DInteger const& secret,
-                           decent::encrypt::CustodyData const& cd,
-                           bool broadcast)
+signed_transaction wallet_api::submit_content(const string& author,
+                                              const vector< pair< string, uint32_t>>& co_authors,
+                                              const string& URI,
+                                              const vector <regional_price_info>& price_amounts,
+                                              uint64_t size,
+                                              const fc::ripemd160& hash,
+                                              const vector<account_id_type>& seeders,
+                                              uint32_t quorum,
+                                              const fc::time_point_sec& expiration,
+                                              const string& publishing_fee_asset,
+                                              const string& publishing_fee_amount,
+                                              const string& synopsis,
+                                              const DInteger& secret,
+                                              const decent::encrypt::CustodyData& cd,
+                                              bool broadcast)
 {
-   return my->submit_content(author, co_authors, URI, price_amounts, hash, size, seeders, quorum, expiration, publishing_fee_asset, publishing_fee_amount, synopsis, secret, cd, broadcast);
+   return my->submit_content(author, co_authors, URI, price_amounts, hash, size,
+                             seeders, quorum, expiration, publishing_fee_asset, publishing_fee_amount,
+                             synopsis, secret, cd, broadcast);
 }
 
-void wallet_api::submit_content_async(string const &author, vector< pair< string, uint32_t>> co_authors,
-                                  string const &content_dir, string const &samples_dir,
-                                  string const &protocol,
-                                  vector<regional_price_info> const &price_amounts,
-                                  vector<account_id_type> const &seeders,
-                                  fc::time_point_sec const &expiration, string const &synopsis)
+void wallet_api::submit_content_async(const string& author,
+                                      const vector< pair< string, uint32_t>>& co_authors,
+                                      const string& content_dir,
+                                      const string& samples_dir,
+                                      const string& protocol,
+                                      const vector<regional_price_info>& price_amounts,
+                                      const vector<account_id_type>& seeders,
+                                      const fc::time_point_sec& expiration,
+                                      const string& synopsis)
 {
    return my->submit_content_async(author, co_authors, content_dir, samples_dir, protocol, price_amounts, seeders, expiration, synopsis);
 
 }
 
-signed_transaction wallet_api::content_cancellation(string author,
-                                                    string URI,
+signed_transaction wallet_api::content_cancellation(const string& author,
+                                                    const string& URI,
                                                     bool broadcast)
 {
    return my->content_cancellation(author, URI, broadcast);
 }
 
-void wallet_api::download_content(string const& consumer, string const& URI, string const& region_code_from, bool broadcast)
+void wallet_api::download_content(const string& consumer, const string& URI, const string& region_code_from, bool broadcast)
 {
    return my->download_content(consumer, URI, region_code_from, broadcast);
 }
 
-optional<content_download_status> wallet_api::get_download_status(string consumer,
-                                                                  string URI) const
+optional<content_download_status> wallet_api::get_download_status(const string& consumer,
+                                                                  const string& URI) const
 {
    return my->get_download_status(consumer, URI);
 }
 
-signed_transaction wallet_api::request_to_buy(string consumer,
-                                              string URI,
-                                              string price_asset_name,
-                                              string price_amount,
-                                              string str_region_code_from,
+signed_transaction wallet_api::request_to_buy(const string& consumer,
+                                              const string& URI,
+                                              const string& price_asset_name,
+                                              const string& price_amount,
+                                              const string& str_region_code_from,
                                               bool broadcast)
 {
    return my->request_to_buy(consumer, URI, price_asset_name, price_amount, str_region_code_from, broadcast);
 }
 
-void wallet_api::seeding_startup(string account_id_type_or_name,
-                                DInteger content_private_key,
-                                string seeder_private_key,
-                                uint64_t free_space,
-                                uint32_t seeding_price,
-                                string seeding_symbol,
-                                string packages_path,
-                                string region_code)
+void wallet_api::seeding_startup(const string& account_id_type_or_name,
+                                 DInteger content_private_key,
+                                 const string& seeder_private_key,
+                                 uint64_t free_space,
+                                 uint32_t seeding_price,
+                                 const string& seeding_symbol,
+                                 const string& packages_path,
+                                 const string& region_code)
 {
-  return my->seeding_startup(account_id_type_or_name, content_private_key, seeder_private_key, free_space, seeding_price, seeding_symbol, packages_path, region_code);
+  return my->seeding_startup(account_id_type_or_name, content_private_key, seeder_private_key,
+                             free_space, seeding_price, seeding_symbol, packages_path, region_code);
 }
 
-void wallet_api::leave_rating_and_comment(string consumer,
-                                          string URI,
+void wallet_api::leave_rating_and_comment(const string& consumer,
+                                          const string& URI,
                                           uint64_t rating,
-                                          string comment,
+                                          const string& comment,
                                           bool broadcast)
 {
    return my->leave_rating_and_comment(consumer, URI, rating, comment, broadcast);
 }
 
-DInteger wallet_api::restore_encryption_key(string consumer, buying_id_type buying)
+DInteger wallet_api::restore_encryption_key(const string& consumer, buying_id_type buying)
 {
    return my->restore_encryption_key(consumer, buying);
 }
@@ -90,23 +96,23 @@ DInteger wallet_api::generate_encryption_key() const
 }
 
 
-vector<buying_object> wallet_api::get_open_buyings()const
+vector<buying_object> wallet_api::get_open_buyings() const
 {
    return my->_remote_db->get_open_buyings();
 }
 
-vector<buying_object> wallet_api::get_open_buyings_by_URI( const string& URI )const
+vector<buying_object> wallet_api::get_open_buyings_by_URI( const string& URI ) const
 {
    return my->_remote_db->get_open_buyings_by_URI( URI );
 }
 
-vector<buying_object> wallet_api::get_open_buyings_by_consumer( const string& account_id_or_name )const
+vector<buying_object> wallet_api::get_open_buyings_by_consumer( const string& account_id_or_name ) const
 {
    account_id_type consumer = get_account( account_id_or_name ).id;
    return my->_remote_db->get_open_buyings_by_consumer( consumer );
 }
 
-vector<buying_object> wallet_api::get_buying_history_objects_by_consumer( const string& account_id_or_name )const
+vector<buying_object> wallet_api::get_buying_history_objects_by_consumer( const string& account_id_or_name ) const
 {
    account_id_type consumer = get_account( account_id_or_name ).id;
    vector<buying_object> result = my->_remote_db->get_buying_history_objects_by_consumer( consumer );
@@ -137,7 +143,7 @@ vector<buying_object_ex> wallet_api::search_my_purchases(const string& account_i
                                                          const string& term,
                                                          const string& order,
                                                          const string& id,
-                                                         uint32_t count)const
+                                                         uint32_t count) const
 {
    account_id_type consumer = get_account( account_id_or_name ).id;
    vector<buying_object> bobjects = my->_remote_db->get_buying_objects_by_consumer(consumer, order, object_id_type(id), term, count );
@@ -168,7 +174,7 @@ vector<buying_object_ex> wallet_api::search_my_purchases(const string& account_i
    return result;
 }
 
-optional<buying_object> wallet_api::get_buying_by_consumer_URI( const string& account_id_or_name, const string & URI )const
+optional<buying_object> wallet_api::get_buying_by_consumer_URI( const string& account_id_or_name, const string& URI ) const
 {
    account_id_type account = get_account( account_id_or_name ).id;
    return my->_remote_db->get_buying_by_consumer_URI( account, URI );
@@ -188,7 +194,7 @@ vector<rating_object_ex> wallet_api::search_feedback(const string& user,
     return result;
 }
 
-optional<content_object> wallet_api::get_content( const string& URI )const
+optional<content_object> wallet_api::get_content( const string& URI ) const
 {
     return my->_remote_db->get_content( URI );
 }
@@ -266,7 +272,9 @@ pair<account_id_type, vector<account_id_type>> wallet_api::get_author_and_co_aut
    return my->get_author_and_co_authors_by_URI( URI );
 }
 
-std::pair<string, decent::encrypt::CustodyData>  wallet_api::create_package(const std::string& content_dir, const std::string& samples_dir, const DInteger& aes_key) const
+std::pair<string, decent::encrypt::CustodyData>  wallet_api::create_package(const std::string& content_dir,
+                                                                            const std::string& samples_dir,
+                                                                            const DInteger& aes_key) const
 {
    FC_ASSERT(!is_locked());
    fc::sha256 key1;

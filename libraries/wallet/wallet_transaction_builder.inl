@@ -65,7 +65,7 @@ signed_transaction wallet_api::sign_transaction(signed_transaction tx, bool broa
     } FC_CAPTURE_AND_RETHROW( (tx) )
 }
 
-operation wallet_api::get_prototype_operation(string operation_name)
+operation wallet_api::get_prototype_operation(const string& operation_name)
 {
    return my->get_prototype_operation( operation_name );
 }

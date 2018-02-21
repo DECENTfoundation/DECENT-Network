@@ -48,7 +48,7 @@ optional<vector<seeder_object>> list_seeders_by_upload( const uint32_t count )co
  * @return a list of seeders
  * @ingroup WalletAPI_Seeding
  */
-vector<seeder_object> list_seeders_by_region( const string region_code )const;
+vector<seeder_object> list_seeders_by_region( const string& region_code )const;
 
 /**
  * @brief Get a list of seeders ordered by rating, in decreasing order.

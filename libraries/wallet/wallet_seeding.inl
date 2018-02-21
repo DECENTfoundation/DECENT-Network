@@ -9,7 +9,7 @@ optional<vector<seeder_object>> wallet_api::list_seeders_by_upload( const uint32
    return my->_remote_db->list_seeders_by_upload( count );
 }
 
-vector<seeder_object> wallet_api::list_seeders_by_region( const string region_code )const
+vector<seeder_object> wallet_api::list_seeders_by_region( const string& region_code )const
 {
    return my->_remote_db->list_seeders_by_region( region_code );
 }

@@ -26,7 +26,7 @@ vector<asset> wallet_api::list_account_balances(const string& id)
    return my->_remote_db->get_account_balances(get_account(id).id, flat_set<asset_id_type>());
 }
 
-vector<operation_detail> wallet_api::get_account_history(string name, int limit)const
+vector<operation_detail> wallet_api::get_account_history(const string& name, int limit)const
 {
    vector<operation_detail> result;
    auto account_id = get_account(name).get_id();
@@ -55,7 +55,7 @@ vector<operation_detail> wallet_api::get_account_history(string name, int limit)
    return result;
 }
 
-vector<operation_detail> wallet_api::get_relative_account_history(string name,
+vector<operation_detail> wallet_api::get_relative_account_history(const string& name,
                                                                   uint32_t stop,
                                                                   int limit,
                                                                   uint32_t start)const
@@ -113,12 +113,12 @@ vector<transaction_detail_object> wallet_api::search_account_history(string cons
    return result;
 }
 
-account_object wallet_api::get_account(string account_name_or_id) const
+account_object wallet_api::get_account(const string& account_name_or_id) const
 {
    return my->get_account(account_name_or_id);
 }
 
-brain_key_info wallet_api::suggest_brain_key()const
+brain_key_info wallet_api::suggest_brain_key() const
 {
    brain_key_info result;
    // create a private key for secure entropy
@@ -149,18 +149,18 @@ brain_key_info wallet_api::suggest_brain_key()const
 }
 
 
-signed_transaction wallet_api::register_account(string name,
+signed_transaction wallet_api::register_account(const string& name,
                                                 public_key_type owner_pubkey,
                                                 public_key_type active_pubkey,
-                                                string  registrar_account,
+                                                const string& registrar_account,
                                                 bool broadcast)
 {
    return my->register_account( name, owner_pubkey, active_pubkey, registrar_account,  broadcast );
 }
 
-signed_transaction wallet_api::create_account_with_brain_key(string brain_key,
-                                                             string account_name,
-                                                             string registrar_account,
+signed_transaction wallet_api::create_account_with_brain_key(const string& brain_key,
+                                                             const string& account_name,
+                                                             const string& registrar_account,
                                                              bool broadcast /* = false */)
 {
    return my->create_account_with_brain_key(
@@ -216,8 +216,11 @@ brain_key_info wallet_api::get_brain_key_info(string const& brain_key) const
    return result;
 }
 
-signed_transaction wallet_api::transfer(string from, string to, string amount,
-                                        string asset_symbol, string memo, bool broadcast /* = false */)
+signed_transaction wallet_api::transfer(const string& from, const string& to,
+                                        const string& amount,
+                                        const string& asset_symbol,
+                                        const string& memo,
+                                        bool broadcast /* = false */)
 {
    return my->transfer(from, to, amount, asset_symbol, memo, broadcast);
 }

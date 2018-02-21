@@ -1,5 +1,5 @@
 
-void wallet_api::send_message(const std::string& from, std::vector<string> to, string text)
+void wallet_api::send_message(const std::string& from, const std::vector<string>& to, const string& text)
 {
    return my->send_message(from, to, text);
 }

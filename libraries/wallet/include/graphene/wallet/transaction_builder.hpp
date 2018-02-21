@@ -155,7 +155,7 @@ signed_transaction sign_transaction(signed_transaction tx, bool broadcast = fals
  * @return a default-constructed operation of the given type
  * @ingroup WalletAPI_TransactionBuilder
  */
-operation get_prototype_operation(string operation_type);
+operation get_prototype_operation(const string& operation_type);
 
 
 #endif //DECENT_TRANSACTION_BUILDER_H

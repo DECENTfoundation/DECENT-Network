@@ -2665,7 +2665,7 @@ signed_transaction content_cancellation(string author,
       return ss.secret;
    }
 
-   pair<account_id_type, vector<account_id_type>> get_author_and_co_authors_by_URI( const string& URI )const
+   pair<account_id_type, vector<account_id_type>> get_author_and_co_authors_by_URI( const string& URI ) const
    {
       fc::optional<content_object> co = _remote_db->get_content( URI );
       FC_ASSERT( co.valid(), "Content does not exist.");
@@ -2677,7 +2677,7 @@ signed_transaction content_cancellation(string author,
       return result;
    };
 
-   vector<message_object> get_message_objects(optional<account_id_type> sender, optional<account_id_type> receiver, uint32_t max_count)const
+   vector<message_object> get_message_objects(optional<account_id_type> sender, optional<account_id_type> receiver, uint32_t max_count) const
    {
       try {
          FC_ASSERT(!is_locked());

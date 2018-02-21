@@ -52,7 +52,7 @@ variant wallet_api::info()
 }
 
 
-string wallet_api::help()const
+string wallet_api::help() const
 {
    std::vector<std::string> method_names = my->method_documentation.get_method_names();
    std::stringstream ss;
@@ -143,8 +143,8 @@ vector< variant > wallet_api::network_get_connected_peers()
 }
 
 
-std::string wallet_api::sign_buffer(std::string const& str_buffer,
-                                    std::string const& str_brainkey) const
+std::string wallet_api::sign_buffer(const std::string& str_buffer,
+                                    const std::string& str_brainkey) const
 {
    if (str_buffer.empty() ||
        str_brainkey.empty())
@@ -161,9 +161,9 @@ std::string wallet_api::sign_buffer(std::string const& str_buffer,
 }
 
 
-bool wallet_api::verify_signature(std::string const& str_buffer,
-                                  std::string const& str_publickey,
-                                  std::string const& str_signature) const
+bool wallet_api::verify_signature(const std::string& str_buffer,
+                                  const std::string& str_publickey,
+                                  const std::string& str_signature) const
 {
    if (str_buffer.empty() ||
        str_publickey.empty() ||
@@ -177,10 +177,7 @@ bool wallet_api::verify_signature(std::string const& str_buffer,
    fc::ecc::public_key pub_key(signature, digest);
    public_key_type provided_key(str_publickey);
 
-   if (provided_key == pub_key)
-      return true;
-   else
-      return false;
+   return (provided_key == pub_key);
 }
 
 
