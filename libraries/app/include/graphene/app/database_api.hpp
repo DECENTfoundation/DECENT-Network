@@ -349,7 +349,7 @@ namespace graphene { namespace app {
           * @param id object_id to start searching from
           * @param limit the number of entries to return (starting from the most recent) (max 100)
           * @returns a list of \c transaction_detail_object
-          * @ingroup WalletCLI
+          * @ingroup DatabaseAPI
           */
          vector<class transaction_detail_object> search_account_history(account_id_type const& account,
                                                                         string const& order,
@@ -478,7 +478,7 @@ namespace graphene { namespace app {
           * @param account_id id of the account
           * @param count Maximum number of price feeds to fetch (must not exceed 100)
           * @returns list of price feeds published by the miner
-          * @ingroup WalletCLI
+          * @ingroup DatabaseAPI
           */
          multimap< time_point_sec, price_feed> get_feeds_by_miner(const account_id_type account_id,
                                                                   const uint32_t count)const;
