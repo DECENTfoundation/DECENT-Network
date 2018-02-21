@@ -108,6 +108,7 @@ namespace graphene { namespace chain {
 
          /**
           * @brief wipe Delete database from disk, and potentially the raw chain as well.
+          * @param data_dir
           * @param include_blocks If true, delete the raw chain as well as the database.
           *
           * Will close the database before wiping. Database will be closed when this function returns.

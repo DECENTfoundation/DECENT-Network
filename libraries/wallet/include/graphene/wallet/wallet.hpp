@@ -251,8 +251,6 @@ namespace graphene { namespace wallet {
  * @defgroup WalletAPI_Mining Mining
  * @defgroup WalletAPI_Proposals Proposals
  * @defgroup WalletAPI_TransactionBuilder Transaction Builder
- * @defgroup WalletAPI_Network Network
- * @defgroup WalletAPI_Debug Debug
  * @}
  */
 

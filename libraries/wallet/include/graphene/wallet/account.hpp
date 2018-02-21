@@ -96,7 +96,7 @@ vector<class transaction_detail_object> search_account_history(const string& acc
 vector<operation_detail>  get_account_history(const string& name, int limit) const;
 
 /**
- * @breif Get operations relevant to the specified account referenced
+ * @brief Get operations relevant to the specified account referenced
  * by an event numbering specific to the account. The current number of operations
  * for the account can be found in the account statistics (or use 0 for start).
  * @param name The account whose history should be queried
