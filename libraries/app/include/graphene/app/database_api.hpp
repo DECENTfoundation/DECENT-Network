@@ -247,8 +247,8 @@ namespace graphene { namespace app {
          chain_property_object get_chain_properties()const;
 
          /**
-          * @brief Retrieve the current \c global_property_object. This object contains all of the properties 
-          * of the blockchain that are fixed or that change only once per maintenance interval such as the current 
+          * @brief Retrieve the current \c global_property_object. This object contains all of the properties
+          * of the blockchain that are fixed or that change only once per maintenance interval such as the current
           * list of miners, block interval, etc.
           * @return the global properties
           * @ingroup DatabaseAPI_Globals
