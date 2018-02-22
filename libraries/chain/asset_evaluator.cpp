@@ -154,6 +154,9 @@ void_result user_issued_asset_update_evaluator::do_evaluate(const update_user_is
       if( o.new_issuer )
          FC_ASSERT(d.find_object(*o.new_issuer));
 
+      if (a.options.is_fixed_max_supply)
+         FC_ASSERT(o.max_supply == a.options.max_supply);
+
       asset_to_update = &a;
       FC_ASSERT( o.issuer == a.issuer, "", ("o.issuer", o.issuer)("a.issuer", a.issuer) );
 

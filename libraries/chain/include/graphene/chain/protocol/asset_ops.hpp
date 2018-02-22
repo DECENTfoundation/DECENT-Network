@@ -48,6 +48,8 @@ namespace graphene { namespace chain {
 
       /// True to allow implicit conversion of this asset to/from core asset.
       bool is_exchangeable = true;
+      /// False when issuer can change max_supply, otherwise false
+      bool is_fixed_max_supply = false;
 
       extensions_type extensions;
 

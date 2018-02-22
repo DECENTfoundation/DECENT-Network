@@ -109,6 +109,7 @@ signed_transaction update_monitored_asset(const string& symbol,
  *               created, create this price as though the new asset has instance ID 1, and
  *               the chain will overwrite it with the new asset's ID
  * @param is_exchangeable \c true to allow implicit conversion of this asset to/from core asset
+ * @param is_fixed_max_supply
  * @param broadcast \c true to broadcast the transaction on the network
  * @return the signed transaction creating a new asset
  * @ingroup WalletAPI_Asset
@@ -120,6 +121,7 @@ signed_transaction create_user_issued_asset(const string& issuer,
                                             uint64_t max_supply,
                                             price core_exchange_rate,
                                             bool is_exchangeable,
+                                            bool is_fixed_max_supply,
                                             bool broadcast = false);
 
 /**

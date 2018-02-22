@@ -1131,6 +1131,7 @@ public:
                                                uint64_t max_supply,
                                                price core_exchange_rate,
                                                bool is_exchangeable,
+                                               bool is_fixed_max_supply,
                                                bool broadcast = false)
    { try {
       account_object issuer_account = get_account( issuer );
@@ -1145,6 +1146,7 @@ public:
       opts.max_supply = max_supply;
       opts.core_exchange_rate = core_exchange_rate;
       opts.is_exchangeable = is_exchangeable;
+      opts.is_fixed_max_supply = is_fixed_max_supply;
       create_op.options = opts;
       create_op.monitored_asset_opts = optional<monitored_asset_options>();
 
