@@ -107,8 +107,8 @@ namespace detail {
 class seeders_tracker{
 public:
    seeders_tracker(wallet_api_impl& wallet):_wallet(wallet) {};
-   vector<account_id_type> track_content(const string URI);
-   vector<account_id_type> untrack_content(const string URI);
+   vector<account_id_type> track_content(const string& URI);
+   vector<account_id_type> untrack_content(const string& URI);
    bool is_empty() { return seeder_to_content.empty(); };
    vector<account_id_type> get_unfinished_seeders();
    void set_initial_stats( const account_id_type& seeder, const uint64_t amount );
@@ -122,7 +122,7 @@ private:
 
 struct ipfs_stats_listener : public EventListenerInterface{
 
-   ipfs_stats_listener(string URI, wallet_api_impl& api, account_id_type consumer):_URI(URI), _wallet(api), _consumer(consumer),
+   ipfs_stats_listener(const string& URI, wallet_api_impl& api, account_id_type consumer) : _URI(URI), _wallet(api), _consumer(consumer),
       _ipfs_client(PackageManagerConfigurator::instance().get_ipfs_host(), PackageManagerConfigurator::instance().get_ipfs_port()){}
 
    virtual void package_download_start();
@@ -225,7 +225,7 @@ fc::ecc::private_key derive_private_key( const std::string& prefix_string,
    return derived_key;
 }
 
-string normalize_brain_key( string s )
+string normalize_brain_key(const string& s )
 {
    size_t i = 0, n = s.length();
    std::string result;
@@ -597,7 +597,7 @@ public:
       FC_ASSERT(rec);
       return *rec;
    }
-   account_object get_account(string account_name_or_id) const
+   account_object get_account(const string& account_name_or_id) const
    {
       FC_ASSERT( account_name_or_id.size() > 0 );
 
@@ -633,7 +633,7 @@ public:
       return rec;
    }
 
-   optional<asset_object> find_asset(string asset_symbol_or_id)const
+   optional<asset_object> find_asset(const string& asset_symbol_or_id) const
    {
       FC_ASSERT( asset_symbol_or_id.size() > 0 );
 
@@ -661,19 +661,19 @@ public:
       return *opt;
    }
 
-   asset_object get_asset(string asset_symbol_or_id)const
+   asset_object get_asset(const string& asset_symbol_or_id) const
    {
       auto opt = find_asset(asset_symbol_or_id);
       FC_ASSERT(opt);
       return *opt;
    }
 
-   string                            get_wallet_filename() const
+   string get_wallet_filename() const
    {
       return _wallet_filename;
    }
 
-   fc::ecc::private_key              get_private_key(const public_key_type& id)const
+   fc::ecc::private_key get_private_key(const public_key_type& id)const
    {
       auto it = _keys.find(id);
       FC_ASSERT( it != _keys.end() );
@@ -695,7 +695,7 @@ public:
    // given account name.
    // @returns true if the key matches a current active/owner/memo key for the named
    //          account, false otherwise (but it is stored either way)
-   bool import_key(string account_name_or_id, string wif_key)
+   bool import_key(const string& account_name_or_id, const string& wif_key)
    {
       fc::optional<fc::ecc::private_key> optional_private_key = wif_to_key(wif_key);
       if (!optional_private_key)
@@ -742,11 +742,11 @@ public:
       return all_keys_for_account.find(wif_pub_key) != all_keys_for_account.end();
    }
 
-   bool load_wallet_file(string wallet_filename = "")
+   bool load_wallet_file(string wallet_filename = string())
    {
       // TODO:  Merge imported wallet with existing wallet,
       //        instead of replacing it
-      if( wallet_filename == "" )
+      if( wallet_filename.empty() )
          wallet_filename = _wallet_filename;
 
       if( ! fc::exists( wallet_filename ) )
@@ -804,7 +804,7 @@ public:
 
       return true;
    }
-   void save_wallet_file(string wallet_filename = "")
+   void save_wallet_file(string wallet_filename = string() )
    {
       //
       // Serialize in memory, then save to disk
@@ -815,7 +815,7 @@ public:
 
       encrypt_keys();
 
-      if( wallet_filename == "" )
+      if( wallet_filename.empty() )
          wallet_filename = _wallet_filename;
 
       wlog( "saving wallet to file ${fn}", ("fn", wallet_filename) );
@@ -864,7 +864,7 @@ public:
       FC_ASSERT( operation_index < trx.operations.size());
       trx.operations[operation_index] = new_op;
    }
-   asset set_fees_on_builder_transaction(transaction_handle_type handle, string fee_asset = GRAPHENE_SYMBOL)
+   asset set_fees_on_builder_transaction(transaction_handle_type handle, const string& fee_asset = string(GRAPHENE_SYMBOL))
    {
       FC_ASSERT(_builder_transactions.count(handle));
       FC_ASSERT( fee_asset == GRAPHENE_SYMBOL, "fees can be paid in core asset");
@@ -910,7 +910,7 @@ public:
 
    signed_transaction propose_builder_transaction2(
       transaction_handle_type handle,
-      string account_name_or_id,
+      const string& account_name_or_id,
       time_point_sec expiration = time_point::now() + fc::minutes(1),
       uint32_t review_period_seconds = 0, bool broadcast = true)
    {
@@ -935,10 +935,10 @@ public:
    }
 
 
-   signed_transaction register_account(string name,
+   signed_transaction register_account(const string& name,
                                        public_key_type owner,
                                        public_key_type active,
-                                       string  registrar_account,
+                                       const string&  registrar_account,
                                        bool broadcast = false)
    { try {
       FC_ASSERT( !self.is_locked() );
@@ -1030,8 +1030,8 @@ public:
 //#define DECENTGO
 
    signed_transaction create_account_with_private_key(fc::ecc::private_key owner_privkey,
-                                                      string account_name,
-                                                      string registrar_account,
+                                                      const string& account_name,
+                                                      const string& registrar_account,
                                                       bool import,
                                                       bool broadcast = false,
                                                       bool save_wallet = true)
@@ -1108,9 +1108,9 @@ public:
          return tx;
    } FC_CAPTURE_AND_RETHROW( (account_name)(registrar_account)(broadcast) ) }
 
-   signed_transaction create_account_with_brain_key(string brain_key,
-                                                    string account_name,
-                                                    string registrar_account,
+   signed_transaction create_account_with_brain_key(const string& brain_key,
+                                                    const string& account_name,
+                                                    const string& registrar_account,
                                                     bool import,
                                                     bool broadcast = false,
                                                     bool save_wallet = true)
@@ -1124,10 +1124,10 @@ public:
    } FC_CAPTURE_AND_RETHROW( (account_name)(registrar_account) ) }
 
 
-   signed_transaction create_user_issued_asset(string issuer,
-                                               string symbol,
+   signed_transaction create_user_issued_asset(const string& issuer,
+                                               const string& symbol,
                                                uint8_t precision,
-                                               string description,
+                                               const string& description,
                                                uint64_t max_supply,
                                                price core_exchange_rate,
                                                bool is_exchangeable,
@@ -1156,8 +1156,11 @@ public:
       return sign_transaction( tx, broadcast );
    } FC_CAPTURE_AND_RETHROW( (issuer)(symbol)(precision)(description)(max_supply)(is_exchangeable)(broadcast) ) }
 
-   signed_transaction issue_asset(string to_account, string amount, string symbol,
-                                  string memo, bool broadcast = false)
+   signed_transaction issue_asset(const string& to_account,
+                                  const string& amount,
+                                  const string& symbol,
+                                  const string& memo,
+                                  bool broadcast = false)
    {
       auto asset_obj = get_asset(symbol);
 
@@ -1186,9 +1189,9 @@ public:
       return sign_transaction(tx, broadcast);
    }
 
-   signed_transaction update_user_issued_asset(string symbol,
-                                               string new_issuer,
-                                               string description,
+   signed_transaction update_user_issued_asset(const string& symbol,
+                                               const string& new_issuer,
+                                               const string& description,
                                                uint64_t max_supply,
                                                price core_exchange_rate,
                                                bool is_exchangeable,
@@ -1207,7 +1210,7 @@ public:
          update_op.is_exchangeable = is_exchangeable;
 
          optional<account_id_type> new_issuer_account_id;
-         if( new_issuer != "" )
+         if( !new_issuer.empty() )
          {
             account_object new_issuer_account = get_account(new_issuer);
             new_issuer_account_id = new_issuer_account.id;
@@ -1222,11 +1225,11 @@ public:
          return sign_transaction( tx, broadcast );
       } FC_CAPTURE_AND_RETHROW( (symbol)(new_issuer)(description)(max_supply)(core_exchange_rate)(is_exchangeable)(broadcast) ) }
 
-      signed_transaction fund_asset_pools(string from,
-                                          string uia_amount,
-                                          string uia_symbol,
-                                          string DCT_amount,
-                                          string DCT_symbol,
+      signed_transaction fund_asset_pools(const string& from,
+                                          const string& uia_amount,
+                                          const string& uia_symbol,
+                                          const string& DCT_amount,
+                                          const string& DCT_symbol,
                                           bool broadcast /* = false */)
       { try {
             account_object from_account = get_account(from);
@@ -1249,9 +1252,9 @@ public:
             return sign_transaction( tx, broadcast );
          } FC_CAPTURE_AND_RETHROW( (from)(uia_amount)(uia_symbol)(DCT_amount)(DCT_symbol)(broadcast) ) }
 
-   signed_transaction reserve_asset(string from,
-                                    string amount,
-                                    string symbol,
+   signed_transaction reserve_asset(const string& from,
+                                    const string& amount,
+                                    const string& symbol,
                                     bool broadcast /* = false */)
    { try {
          account_object from_account = get_account(from);
@@ -1271,10 +1274,10 @@ public:
          return sign_transaction( tx, broadcast );
       } FC_CAPTURE_AND_RETHROW( (from)(amount)(symbol)(broadcast) ) }
 
-   signed_transaction claim_fees(string uia_amount,
-                                 string uia_symbol,
-                                 string dct_amount,
-                                 string dct_symbol,
+   signed_transaction claim_fees(const string& uia_amount,
+                                 const string& uia_symbol,
+                                 const string& dct_amount,
+                                 const string& dct_symbol,
                                  bool broadcast /* = false */)
    { try {
          optional<asset_object> uia_asset_to_claim = find_asset(uia_symbol);
@@ -1298,10 +1301,10 @@ public:
          return sign_transaction( tx, broadcast );
       } FC_CAPTURE_AND_RETHROW( (uia_amount)(uia_symbol)(dct_amount)(dct_symbol)(broadcast) ) }
 
-   signed_transaction create_monitored_asset(string issuer,
-                                             string symbol,
+   signed_transaction create_monitored_asset(const string& issuer,
+                                             const string& symbol,
                                              uint8_t precision,
-                                             string description,
+                                             const string& description,
                                              uint32_t feed_lifetime_sec,
                                              uint8_t minimum_feeds,
                                              bool broadcast = false)
@@ -1332,8 +1335,8 @@ public:
       return sign_transaction( tx, broadcast );
    } FC_CAPTURE_AND_RETHROW( (issuer)(symbol)(precision)(description)(feed_lifetime_sec)(minimum_feeds)(broadcast) ) }
 
-   signed_transaction update_monitored_asset(string symbol,
-                                             string description,
+   signed_transaction update_monitored_asset(const string& symbol,
+                                             const string& description,
                                              uint32_t feed_lifetime_sec,
                                              uint8_t minimum_feeds,
                                              bool broadcast /* = false */)
@@ -1357,8 +1360,8 @@ public:
       return sign_transaction( tx, broadcast );
    } FC_CAPTURE_AND_RETHROW( (symbol)(description)(feed_lifetime_sec)(minimum_feeds)(broadcast) ) }
 
-   signed_transaction publish_asset_feed(string publishing_account,
-                                         string symbol,
+   signed_transaction publish_asset_feed(const string& publishing_account,
+                                         const string& symbol,
                                          price_feed feed,
                                          bool broadcast /* = false */)
    { try {
@@ -1380,7 +1383,7 @@ public:
    } FC_CAPTURE_AND_RETHROW( (publishing_account)(symbol)(feed)(broadcast) ) }
 
 
-   miner_object get_miner(string owner_account)
+   miner_object get_miner(const string& owner_account)
    {
       try
       {
@@ -1415,9 +1418,9 @@ public:
       FC_CAPTURE_AND_RETHROW( (owner_account) )
    }
 
-   signed_transaction create_miner(string owner_account,
-                                     string url,
-                                     bool broadcast /* = false */)
+   signed_transaction create_miner(const string& owner_account,
+                                   const string& url,
+                                   bool broadcast /* = false */)
    { try {
       account_object miner_account = get_account(owner_account);
       fc::ecc::private_key active_private_key = get_private_key_for_account(miner_account);
@@ -1443,10 +1446,10 @@ public:
       return sign_transaction( tx, broadcast );
    } FC_CAPTURE_AND_RETHROW( (owner_account)(broadcast) ) }
 
-   signed_transaction update_miner(string miner_name,
-                                     string url,
-                                     string block_signing_key,
-                                     bool broadcast /* = false */)
+   signed_transaction update_miner(const string& miner_name,
+                                   const string& url,
+                                   const string& block_signing_key,
+                                   bool broadcast /* = false */)
    { try {
       miner_object miner = get_miner(miner_name);
       account_object miner_account = get_account( miner.miner_account );
@@ -1455,9 +1458,9 @@ public:
       miner_update_operation miner_update_op;
       miner_update_op.miner = miner.id;
       miner_update_op.miner_account = miner_account.id;
-      if( url != "" )
+      if( !url.empty() )
          miner_update_op.new_url = url;
-      if( block_signing_key != "" )
+      if( !block_signing_key.empty() )
          miner_update_op.new_signing_key = public_key_type( block_signing_key );
 
       signed_transaction tx;
@@ -1468,7 +1471,7 @@ public:
       return sign_transaction( tx, broadcast );
    } FC_CAPTURE_AND_RETHROW( (miner_name)(url)(block_signing_key)(broadcast) ) }
 
-   vector< vesting_balance_object_with_info > get_vesting_balances( string account_name )
+   vector< vesting_balance_object_with_info > get_vesting_balances( const string& account_name )
    { try {
       fc::optional<vesting_balance_id_type> vbid = maybe_id<vesting_balance_id_type>( account_name );
       std::vector<vesting_balance_object_with_info> result;
@@ -1496,11 +1499,10 @@ public:
    } FC_CAPTURE_AND_RETHROW( (account_name) )
    }
 
-   signed_transaction withdraw_vesting(
-      string miner_name,
-      string amount,
-      string asset_symbol,
-      bool broadcast = false )
+   signed_transaction withdraw_vesting(const string& miner_name,
+                                       const string& amount,
+                                       const string& asset_symbol,
+                                       bool broadcast = false )
    { try {
       asset_object asset_obj = get_asset( asset_symbol );
       fc::optional<vesting_balance_id_type> vbid = maybe_id<vesting_balance_id_type>(miner_name);
@@ -1527,10 +1529,10 @@ public:
    } FC_CAPTURE_AND_RETHROW( (miner_name)(amount) )
    }
 
-   signed_transaction vote_for_miner(string voting_account,
-                                        string miner,
-                                        bool approve,
-                                        bool broadcast /* = false */)
+   signed_transaction vote_for_miner(const string& voting_account,
+                                     const string& miner,
+                                     bool approve,
+                                     bool broadcast /* = false */)
    { try {
       account_object voting_account_object = get_account(voting_account);
       account_id_type miner_owner_account_id = get_account(miner).get_id();
@@ -1561,7 +1563,7 @@ public:
       return sign_transaction( tx, broadcast );
    } FC_CAPTURE_AND_RETHROW( (voting_account)(miner)(approve)(broadcast) ) }
 
-   signed_transaction set_voting_proxy(string account_to_modify,
+   signed_transaction set_voting_proxy(const string& account_to_modify,
                                        optional<string> voting_account,
                                        bool broadcast /* = false */)
    { try {
@@ -1592,9 +1594,9 @@ public:
       return sign_transaction( tx, broadcast );
    } FC_CAPTURE_AND_RETHROW( (account_to_modify)(voting_account)(broadcast) ) }
 
-   signed_transaction set_desired_miner_count(string account_to_modify,
-                                                             uint16_t desired_number_of_miners,
-                                                             bool broadcast /* = false */)
+   signed_transaction set_desired_miner_count(const string& account_to_modify,
+                                              uint16_t desired_number_of_miners,
+                                              bool broadcast /* = false */)
    { try {
       account_object account_object_to_modify = get_account(account_to_modify);
 
@@ -1753,8 +1755,12 @@ public:
    }
 
 
-   signed_transaction transfer(string from, string to, string amount,
-                               string asset_symbol, string memo, bool broadcast = false)
+   signed_transaction transfer(const string& from,
+                               const string& to,
+                               const string& amount,
+                               const string& asset_symbol,
+                               const string& memo,
+                               bool broadcast = false)
    { try {
       FC_ASSERT( !self.is_locked() );
       fc::optional<asset_object> asset_obj = get_asset(asset_symbol);
@@ -1788,12 +1794,12 @@ public:
       return sign_transaction(tx, broadcast);
    } FC_CAPTURE_AND_RETHROW( (from)(to)(amount)(asset_symbol)(memo)(broadcast) ) }
 
-   void propose_transfer(string proposer,
-                         string from,
-                         string to,
-                         string amount,
-                         string asset_symbol,
-                         string memo,
+   void propose_transfer(const string& proposer,
+                         const string& from,
+                         const string& to,
+                         const string& amount,
+                         const string& asset_symbol,
+                         const string& memo,
                          time_point_sec expiration)
    {
       int propose_num = begin_builder_transaction();
@@ -2274,8 +2280,8 @@ public:
       FC_CAPTURE_AND_RETHROW( (author)(content_dir)(samples_dir)(protocol)(price_amounts)(seeders)(expiration)(synopsis) )
    }
 
-signed_transaction content_cancellation(string author,
-                                        string URI,
+signed_transaction content_cancellation(const string& author,
+                                        const string& URI,
                                         bool broadcast)
 {
    try
@@ -2294,7 +2300,7 @@ signed_transaction content_cancellation(string author,
    } FC_CAPTURE_AND_RETHROW( (author)(URI)(broadcast) )
 }
 
-   optional<content_download_status> get_download_status(string consumer, string URI) const {
+   optional<content_download_status> get_download_status(const string& consumer, const string& URI) const {
       try {
 
          account_id_type acc = get_account(consumer).id;
@@ -2400,11 +2406,11 @@ signed_transaction content_cancellation(string author,
    }
 
 
-   signed_transaction request_to_buy(string consumer,
-                                     string URI,
-                                     string price_asset_symbol,
-                                     string price_amount,
-                                     string str_region_code_from,
+   signed_transaction request_to_buy(const string& consumer,
+                                     const string& URI,
+                                     const string& price_asset_symbol,
+                                     const string& price_amount,
+                                     const string& str_region_code_from,
                                      bool broadcast/* = false */)
    { try {
       account_object consumer_account = get_account( consumer );
@@ -2441,10 +2447,10 @@ signed_transaction content_cancellation(string author,
       } FC_CAPTURE_AND_RETHROW( (consumer)(URI)(price_asset_symbol)(price_amount)(broadcast) )
    }
 
-   void leave_rating_and_comment(string consumer,
-                                 string URI,
+   void leave_rating_and_comment(const string& consumer,
+                                 const string& URI,
                                  uint64_t rating,
-                                 string comment,
+                                 const string& comment,
                                  bool broadcast/* = false */)
    {
       try
@@ -2469,14 +2475,14 @@ signed_transaction content_cancellation(string author,
       } FC_CAPTURE_AND_RETHROW( (consumer)(URI)(rating)(comment)(broadcast) )
    }
 
-   void seeding_startup( string account_id_type_or_name,
+   void seeding_startup( const string& account_id_type_or_name,
                          DInteger content_private_key,
-                         string seeder_private_key,
+                         const string& seeder_private_key,
                          uint64_t free_space,
                          uint32_t seeding_price,
-                         string seeding_symbol,
-                         string packages_path,
-                         string region_code)
+                         const string& seeding_symbol,
+                         const string& packages_path,
+                         const string& region_code)
    {
       account_id_type seeder = get_account( account_id_type_or_name ).get_id();
       use_network_node_api();
@@ -2484,10 +2490,10 @@ signed_transaction content_cancellation(string author,
       (*_remote_net_node)->seeding_startup( seeder, content_private_key, seeder_priv_key, free_space, seeding_price, seeding_symbol, packages_path, region_code);
    }
 
-   signed_transaction subscribe_to_author( string from,
-                                           string to,
-                                           string price_amount,
-                                           string price_asset_symbol,
+   signed_transaction subscribe_to_author( const string& from,
+                                           const string& to,
+                                           const string& price_amount,
+                                           const string& price_asset_symbol,
                                            bool broadcast/* = false */)
    { try {
          fc::optional<asset_object> asset_obj = get_asset(price_asset_symbol);
@@ -2506,8 +2512,8 @@ signed_transaction content_cancellation(string author,
          return sign_transaction( tx, broadcast );
       } FC_CAPTURE_AND_RETHROW( (from)(to)(price_amount)(price_asset_symbol)(broadcast) ) }
 
-   signed_transaction subscribe_by_author( string from,
-                                           string to,
+   signed_transaction subscribe_by_author( const string& from,
+                                           const string& to,
                                            bool broadcast/* = false */)
    { try {
          subscribe_by_author_operation subscribe_op;
@@ -2522,11 +2528,11 @@ signed_transaction content_cancellation(string author,
          return sign_transaction( tx, broadcast );
       } FC_CAPTURE_AND_RETHROW( (from)(to)(broadcast)) }
 
-   signed_transaction set_subscription( string account,
+   signed_transaction set_subscription( const string& account,
                                         bool allow_subscription,
                                         uint32_t subscription_period,
-                                        string price_amount,
-                                        string price_asset_symbol,
+                                        const string& price_amount,
+                                        const string& price_asset_symbol,
                                         bool broadcast/* = false */)
    { try {
          fc::optional<asset_object> asset_obj = get_asset(price_asset_symbol);
@@ -2549,7 +2555,7 @@ signed_transaction content_cancellation(string author,
          return sign_transaction( tx, broadcast );
       } FC_CAPTURE_AND_RETHROW( (account)(allow_subscription)(subscription_period)(price_amount)(price_asset_symbol)(broadcast) ) }
 
-   signed_transaction set_automatic_renewal_of_subscription( string account_id_or_name,
+   signed_transaction set_automatic_renewal_of_subscription( const string& account_id_or_name,
                                                              subscription_id_type subscription_id,
                                                              bool automatic_renewal,
                                                              bool broadcast/* = false */)
@@ -2573,7 +2579,7 @@ signed_transaction content_cancellation(string author,
          return sign_transaction( tx, broadcast );
       } FC_CAPTURE_AND_RETHROW( (account_id_or_name)(subscription_id)(automatic_renewal)(broadcast) ) }
 
-   DInteger restore_encryption_key(std::string account, buying_id_type buying )
+   DInteger restore_encryption_key(const string& account, buying_id_type buying )
    {
       account_object buyer_account = get_account( account );
       const buying_object bo = get_object<buying_object>(buying);
@@ -2664,7 +2670,7 @@ signed_transaction content_cancellation(string author,
       } FC_CAPTURE_AND_RETHROW((sender)(receiver))
    }
 
-   vector<text_message> get_messages(const std::string& receiver, uint32_t max_count)const
+   vector<text_message> get_messages(const std::string& receiver, uint32_t max_count) const
    {
          FC_ASSERT(!is_locked());
          const auto& mapi = _remote_api->messaging();
@@ -2724,7 +2730,7 @@ signed_transaction content_cancellation(string author,
       return messages;
    }
 
-   void send_message(string from, std::vector<string> to, string text)
+   void send_message(const string& from, const std::vector<string>& to, const string& text)
 
    {
       try {
@@ -2769,7 +2775,7 @@ signed_transaction content_cancellation(string author,
    } FC_CAPTURE_AND_RETHROW((from)(to)(text))
    }
 
-   void dbg_make_mia(string creator, string symbol)
+   void dbg_make_mia(const string& creator, const string& symbol)
    {
       create_monitored_asset(get_account(creator).name, symbol, 2, "abcd", 3600, 1, true);
    }
@@ -2864,7 +2870,7 @@ signed_transaction content_cancellation(string author,
       return result;
    }
 
-   void flood_network(string prefix, uint32_t number_of_transactions)
+   void flood_network(const string& prefix, uint32_t number_of_transactions)
    {
       try
       {
@@ -2906,7 +2912,7 @@ signed_transaction content_cancellation(string author,
 
    }
 
-   operation get_prototype_operation( string operation_name )
+   operation get_prototype_operation( const string& operation_name )
    {
       auto it = _prototype_ops.find( operation_name );
       if( it == _prototype_ops.end() )
@@ -2949,7 +2955,7 @@ signed_transaction content_cancellation(string author,
 
    std::string operation_printer::fee(const asset& a)const {
       out << "   (Fee: " << wallet.get_asset(a.asset_id).amount_to_pretty_string(a) << ")";
-      return "";
+      return std::string();
    }
 
    template<typename T>
@@ -2968,11 +2974,11 @@ signed_transaction content_cancellation(string author,
       out << payer.name << " fee: " << a.amount_to_pretty_string( op.fee );
       operation_result_printer rprinter(wallet);
       std::string str_result = result.visit(rprinter);
-      if( str_result != "" )
+      if( !str_result.empty() )
       {
          out << "   result: " << str_result;
       }
-      return "";
+      return std::string();
    }
 
    string operation_printer::operator()(const transfer_operation& op) const
@@ -3159,7 +3165,7 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
 
    std::string operation_result_printer::operator()(const void_result& x) const
    {
-      return "";
+      return std::string();
    }
 
    std::string operation_result_printer::operator()(const object_id_type& oid)
@@ -3172,7 +3178,7 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
       return _wallet.get_asset(a.asset_id).amount_to_pretty_string(a);
    }
 
-   vector<account_id_type> seeders_tracker::track_content(const string URI)
+   vector<account_id_type> seeders_tracker::track_content(const string& URI)
    {
       optional<content_object> content = _wallet._remote_db->get_content( URI );
       FC_ASSERT( content );
@@ -3196,7 +3202,7 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
       return new_seeders;
    }
 
-   vector<account_id_type> seeders_tracker::untrack_content(const string URI)
+   vector<account_id_type> seeders_tracker::untrack_content(const string& URI)
    {
       optional<content_object> content = _wallet._remote_db->get_content( URI );
       FC_ASSERT( content );
@@ -3295,7 +3301,7 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
       }
    }
 
-   void ipfs_stats_listener:: package_download_error(const std::string&)
+   void ipfs_stats_listener:: package_download_error(const std::string& )
    {
       vector<account_id_type> finished_seeders = _wallet._seeders_tracker.untrack_content( _URI);
       for( const auto& element : finished_seeders )

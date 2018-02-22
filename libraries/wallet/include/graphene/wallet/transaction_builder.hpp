@@ -62,7 +62,7 @@ void replace_operation_in_builder_transaction(transaction_handle_type handle,
  * @return total fee in specified asset
  * @ingroup WalletAPI_TransactionBuilder
  */
-asset set_fees_on_builder_transaction(transaction_handle_type handle, string fee_asset = GRAPHENE_SYMBOL);
+asset set_fees_on_builder_transaction(transaction_handle_type handle, const string& fee_asset = string(GRAPHENE_SYMBOL));
 
 /**
  * @brief Previews a transaction from transaction builder.
@@ -109,7 +109,7 @@ signed_transaction propose_builder_transaction(transaction_handle_type handle,
  * @ingroup WalletAPI_TransactionBuilder
  */
 signed_transaction propose_builder_transaction2(transaction_handle_type handle,
-                                                string account_name_or_id,
+                                                const string& account_name_or_id,
                                                 time_point_sec expiration = time_point::now() + fc::minutes(1),
                                                 uint32_t review_period_seconds = 0,
                                                 bool broadcast = true);
