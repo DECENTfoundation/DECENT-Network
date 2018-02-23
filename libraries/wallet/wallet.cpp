@@ -498,7 +498,7 @@ public:
          data.ec_keys = _keys;
          std::transform( _el_gamal_keys.begin(), _el_gamal_keys.end(), std::back_inserter( data.el_gamal_keys ),
             [](const std::pair<DInteger,DInteger> el_gamal_pair) {
-               return el_gamal_key_pair_str {el_gamal_pair.first, el_gamal_pair.second}; });
+               return el_gamal_key_pair_str {el_gamal_pair.second, el_gamal_pair.first}; });
          data.checksum = _checksum;
          auto plain_txt = fc::raw::pack(data);
          _wallet.cipher_keys = fc::aes_encrypt( data.checksum, plain_txt );
@@ -3027,7 +3027,7 @@ signed_transaction content_cancellation(string author,
    wallet_data             _wallet;
 
    map<public_key_type,string>      _keys;
-   map<DInteger, DInteger>          _el_gamal_keys;
+   map<DInteger, DInteger>          _el_gamal_keys;   // public_key/private_key
    fc::sha512                       _checksum;
 
    chain_id_type           _chain_id;
@@ -4346,7 +4346,7 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
       my->_keys = std::move(pk.ec_keys);
       if( !pk.el_gamal_keys.empty() )
          std::transform( pk.el_gamal_keys.begin(), pk.el_gamal_keys.end(), std::inserter( my->_el_gamal_keys, my->_el_gamal_keys.end() ),
-            []( const el_gamal_key_pair_str el_gamal_pair ){ return std::make_pair(DInteger(el_gamal_pair.private_key),DInteger(el_gamal_pair.public_key)); });
+            []( const el_gamal_key_pair_str el_gamal_pair ){ return std::make_pair(DInteger(el_gamal_pair.public_key),DInteger(el_gamal_pair.private_key)); });
       my->_checksum = pk.checksum;
 
       if( update_wallet_file ) // upgrade structure for storing keys to new format
@@ -4368,7 +4368,7 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
       FC_ASSERT(!is_locked());
       fc::mutable_variant_object result;
       result["ec_keys"] = my->_keys;
-      result["el_gamal_keys"] = my->_el_gamal_keys;
+      result["el_gamal_keys"] = my->_el_gamal_keys;   // map of public keys to private keys
       return result;
    }
 
