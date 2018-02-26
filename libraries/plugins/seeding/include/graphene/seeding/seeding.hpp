@@ -202,6 +202,16 @@ public:
    void send_ready_to_publish();
 
    /**
+   * Loads blacklist configuration from file
+   */
+   seeder_blacklist_cfg load_blacklist_cfg();
+   
+   /**
+   * Saves seeder blacklist configuration to file
+   */
+   void save_blacklist_cfg(const seeder_blacklist_cfg& cfg);
+   
+   /**
    * Starts seeding of specified content
    */
    void start_content_seeding(const std::string& url);

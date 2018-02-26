@@ -499,6 +499,11 @@ void seeding_plugin_impl::restore_state(){
               content_itr--;
               if( content_itr->expiration < database().head_block_time() )
                  break;
+
+              auto url_iter = std::find(seeder_cfg.content_blacklist.begin(), seeder_cfg.content_blacklist.end(), content_itr->URI);
+              if (url_iter != seeder_cfg.content_blacklist.end())
+                 break;
+
               auto search_itr = content_itr->key_parts.find( sitr->seeder );
               if( search_itr != content_itr->key_parts.end() )
               {
@@ -553,12 +558,14 @@ void seeding_plugin_impl::restore_state(){
               database().modify<my_seeding_object>(*citr, [](my_seeding_object& so){so.downloaded = true;});
 
            }else{
-              elog("restarting downloads, re-downloading package ${u}", ("u", citr->URI));
-              package_handle = pm.get_package(citr->URI, citr->_hash);
-              decent::package::event_listener_handle_t sl = std::make_shared<SeedingListener>(*this, *citr , package_handle);
-              package_handle->remove_all_event_listeners();
-              package_handle->add_event_listener(sl);
-              package_handle->download(false);
+              if (std::find(seeder_cfg.content_blacklist.begin(), seeder_cfg.content_blacklist.end(), citr->URI) == seeder_cfg.content_blacklist.end()) {
+                 elog("restarting downloads, re-downloading package ${u}", ("u", citr->URI));
+                 package_handle = pm.get_package(citr->URI, citr->_hash);
+                 decent::package::event_listener_handle_t sl = std::make_shared<SeedingListener>(*this, *citr, package_handle);
+                 package_handle->remove_all_event_listeners();
+                 package_handle->add_event_listener(sl);
+                 package_handle->download(false);
+              }
            }
            ++citr;
         }
@@ -671,6 +678,12 @@ void seeding_plugin_impl::start_content_seeding(const std::string& url)
          }
          elog("restarting downloads, service thread end");
          generate_pors();
+         // remove from blacklist
+         auto url_iter = std::find(seeder_cfg.content_blacklist.begin(), seeder_cfg.content_blacklist.end(), url);
+         if (url_iter != seeder_cfg.content_blacklist.end())
+            seeder_cfg.content_blacklist.erase(url_iter);
+         // save blacklist
+         save_blacklist_cfg(seeder_cfg);
       });
    } FC_CAPTURE_AND_RETHROW()
 }
@@ -709,13 +722,51 @@ void seeding_plugin_impl::stop_content_seeding(const std::string& url)
             seeder_object.free_space += mso.space;
          });
 
+         std::string hash = package_handle->get_hash().str();
          release_package(mso, package_handle);
          db.remove(mso);
+         
+         // store to blacklist
+         auto found_iter = std::find(seeder_cfg.content_blacklist.begin(), seeder_cfg.content_blacklist.end(), url);
+         if(found_iter == seeder_cfg.content_blacklist.end())
+            seeder_cfg.content_blacklist.push_back(url);
+         // save blacklist
+         save_blacklist_cfg(seeder_cfg);
          ilog("seeding plugin_impl:  stop_content_seeding() content cleaned, continue");
          break;
       }
       ilog("seeding plugin_impl:  stop_content_seeding() end");
    }FC_CAPTURE_AND_RETHROW()
+}
+
+seeder_blacklist_cfg seeding_plugin_impl::load_blacklist_cfg()
+{
+   fc::path seeder_blacklist_path = graphene::utilities::decent_path_finder::instance().get_decent_home();
+   seeder_blacklist_path = seeder_blacklist_path / "seeder";
+   if (!fc::exists(seeder_blacklist_path))
+      fc::create_directories(seeder_blacklist_path);
+
+   seeder_blacklist_path = seeder_blacklist_path / "blacklist.json";
+   std::string string_path = seeder_blacklist_path.string();
+   try {
+      if (fc::exists(seeder_blacklist_path)) {
+         variant tmp = fc::json::from_file(seeder_blacklist_path);
+         return tmp.as<seeder_blacklist_cfg>();
+      }
+   } FC_CAPTURE_AND_LOG((string_path));
+}
+
+void seeding_plugin_impl::save_blacklist_cfg(const seeder_blacklist_cfg& cfg)
+{
+   fc::path seeder_blacklist_path = graphene::utilities::decent_path_finder::instance().get_decent_home();
+   seeder_blacklist_path = seeder_blacklist_path / "seeder";
+   if (!fc::exists(seeder_blacklist_path))
+      fc::create_directories(seeder_blacklist_path);
+
+   seeder_blacklist_path = seeder_blacklist_path / "blacklist.json";
+   fc::variant tmp;
+   fc::to_variant(cfg, tmp);
+   fc::json::save_to_file(tmp, seeder_blacklist_path);
 }
 
 }// end namespace detail
@@ -837,19 +888,7 @@ void seeding_plugin::plugin_pre_startup( const seeding_plugin_startup_options& s
    my = unique_ptr<detail::seeding_plugin_impl>( new detail::seeding_plugin_impl( *this) );
 
    // load blacklist
-   fc::path seeder_blacklist_path = graphene::utilities::decent_path_finder::instance().get_decent_home();
-   seeder_blacklist_path = seeder_blacklist_path / "seeder";
-   if (!fc::exists(seeder_blacklist_path))
-      fc::create_directories(seeder_blacklist_path);
-
-   seeder_blacklist_path = seeder_blacklist_path / "blacklist.json";
-   std::string string_path = seeder_blacklist_path.string();
-   try {
-      if (fc::exists(seeder_blacklist_path)) {
-         variant tmp = fc::json::from_file(seeder_blacklist_path);
-         my->seeder_cfg = tmp.as<seeder_blacklist_cfg>();
-      }
-   } FC_CAPTURE_AND_LOG((string_path));
+   my->seeder_cfg = my->load_blacklist_cfg();
 
    my->service_thread = std::make_shared<fc::thread>("seeding");
    my->main_thread = &fc::thread::current();
