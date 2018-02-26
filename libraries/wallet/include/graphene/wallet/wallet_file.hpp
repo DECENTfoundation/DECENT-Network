@@ -149,7 +149,7 @@ bool import_key(const string& account_name_or_id, const string& wif_key);
  * @return a map containing the private keys and corresponding public keys
  * @ingroup WalletAPI_Wallet
  */
-map<public_key_type, string> dump_private_keys();
+variant dump_private_keys();
 
 
 #endif //DECENT_WALLET_WALLET_FILE_H
