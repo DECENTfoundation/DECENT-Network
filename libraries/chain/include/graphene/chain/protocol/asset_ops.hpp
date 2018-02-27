@@ -319,6 +319,7 @@ FC_REFLECT( graphene::chain::asset_options,
             (max_supply)
             (core_exchange_rate)
             (is_exchangeable)
+            (is_fixed_max_supply)
             (extensions)
 )
 
