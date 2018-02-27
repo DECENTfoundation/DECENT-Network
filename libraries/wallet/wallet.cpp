@@ -2780,7 +2780,40 @@ signed_transaction content_cancellation(const string& author,
    } FC_CAPTURE_AND_RETHROW((from)(to)(text))
    }
 
-   void dbg_make_mia(const string& creator, const string& symbol)
+   std::vector<std::string> get_running_plugins()
+   {
+      try {
+         FC_ASSERT(!is_locked());
+
+         use_network_node_api();
+         return (*_remote_net_node)->get_running_plugins();
+
+      } FC_CAPTURE_AND_RETHROW()
+   }
+
+   void start_content_seeding(const std::string& url)
+   {
+      try {
+         FC_ASSERT(!is_locked());
+
+         use_network_node_api();
+         (*_remote_net_node)->start_content_seeding(url);
+
+      } FC_CAPTURE_AND_RETHROW((url))
+   }
+
+   void stop_content_seeding(const std::string& url)
+   {
+      try {
+         FC_ASSERT(!is_locked());
+
+         use_network_node_api();
+         (*_remote_net_node)->stop_content_seeding(url);
+
+      } FC_CAPTURE_AND_RETHROW((url))
+   }
+
+   void dbg_make_mia(string creator, string symbol)
    {
       create_monitored_asset(get_account(creator).name, symbol, 2, "abcd", 3600, 1, true);
    }
@@ -3432,6 +3465,20 @@ signed_transaction content_cancellation(const string& author,
        _wallet.sign_transaction(tx, true);
    }
 
+   std::vector<std::string> wallet_api::get_running_plugins() const
+   {
+      return my->get_running_plugins();
+   }
+
+   void wallet_api::stop_content_seeding(const std::string& url) const
+   {
+      my->stop_content_seeding(url);
+   }
+
+   void wallet_api::start_content_seeding(const std::string& url) const
+   {
+      my->start_content_seeding(url);
+   }
 
 } } // graphene::wallet
 

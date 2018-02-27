@@ -375,6 +375,7 @@ FC_API( graphene::wallet::wallet_api,
         (head_block_time)
         (network_add_nodes)
         (network_get_connected_peers)
+        (get_running_plugins)
 
         //Wallet file
         (list_my_accounts)
@@ -452,6 +453,8 @@ FC_API( graphene::wallet::wallet_api,
         (list_seeders_by_upload)
         (list_seeders_by_region)
         (list_seeders_by_rating)
+        (start_content_seeding)
+        (stop_content_seeding)
 
         //Proposals
         (get_proposed_transactions)
@@ -503,7 +506,9 @@ FC_API( graphene::wallet::wallet_api,
         (get_message_objects)
         (get_messages)
         (get_sent_messages)
-#if 0
+           )
+
+#if 0 
         //Debug
         (dbg_make_mia)
         (dbg_push_blocks)
@@ -517,6 +522,5 @@ FC_API( graphene::wallet::wallet_api,
         //Network
         (flood_network)
 #endif
-
-
-)
+           
+       
