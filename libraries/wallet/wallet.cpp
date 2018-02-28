@@ -2815,7 +2815,7 @@ signed_transaction content_cancellation(const string& author,
       } FC_CAPTURE_AND_RETHROW((url))
    }
 
-   void dbg_make_mia(string creator, string symbol)
+   void dbg_make_mia(const std::string& creator, const std::string& symbol)
    {
       create_monitored_asset(get_account(creator).name, symbol, 2, "abcd", 3600, 1, true);
    }
