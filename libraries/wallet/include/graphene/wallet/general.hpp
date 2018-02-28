@@ -141,5 +141,11 @@ void network_add_nodes( const vector<string>& nodes );
  */
 vector< variant > network_get_connected_peers();
 
+/**
+* @brief Returns list of running plugins
+* @return vector of running plugins
+*/
+std::vector<std::string> get_running_plugins() const;
+
 
 #endif //DECENT_WALLET_GENERAL_H

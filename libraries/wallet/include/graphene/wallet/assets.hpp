@@ -104,11 +104,13 @@ signed_transaction update_monitored_asset(const string& symbol,
  *               must be less than or equal to 12
  * @param description asset description. Maximal length is 1000 chars
  * @param max_supply the maximum supply of this asset which may exist at any given time
- * @param core_exchange_rate core_exchange_rate technically needs to store the asset ID of
- *               this new asset. Since this ID is not known at the time this operation is
- *               created, create this price as though the new asset has instance ID 1, and
- *               the chain will overwrite it with the new asset's ID
- * @param is_exchangeable \c true to allow implicit conversion of this asset to/from core asset
+ * @param core_exchange_rate core_exchange_rate is a price struct which consist from base asset
+ *               and quote asset (see price). One of the asset has to be core asset.
+ *               Technically core_exchange_rate needs to store the asset id of
+ *               this new asset. Since this id is not known at the time this operation is
+ *               created, create this price as though the new asset id has instance 1, and
+ *               the chain will overwrite it with the new asset's id
+ * @param is_exchangeable \c true to allow implicit conversion when buing content of this asset to/from core asset
  * @param is_fixed_max_supply
  * @param broadcast \c true to broadcast the transaction on the network
  * @return the signed transaction creating a new asset

@@ -52,33 +52,6 @@ namespace graphene { namespace wallet {
 
       object* create_object( const variant& v );
 
-      struct plain_keys
-      {
-         map<public_key_type, string>  keys;
-         fc::sha512                    checksum;
-      };
-
-      struct brain_key_info
-      {
-         string brain_priv_key;
-         string wif_priv_key;
-         public_key_type pub_key;
-      };
-
-      struct regional_price_info
-      {
-         string region;
-         string amount;
-         string asset_symbol;
-      };
-
-
-      struct operation_detail {
-         string                   memo;
-         string                   description;
-         operation_history_object op;
-      };
-
       struct wallet_data
       {
          /** Chain ID this wallet is used with */
@@ -128,6 +101,50 @@ namespace graphene { namespace wallet {
          string                    libtorrent_config_path;
       };
 
+      struct el_gamal_key_pair
+      {
+         DInteger private_key;
+         DInteger public_key;
+      };
+
+      struct el_gamal_key_pair_str
+      {
+         DIntegerString private_key;
+         DIntegerString public_key;
+      };
+
+      /**
+       * Needed for backward compatibility. Old wallet json files use this struct to store encrypted ec keys.
+       */
+      struct plain_keys
+      {
+         map<public_key_type, string>  ec_keys;
+         fc::sha512                    checksum;
+      };
+
+      /**
+       * New wallet json files store encrypted ec keys along with derived el gamal keys.
+       */
+      struct plain_ec_and_el_gamal_keys : public plain_keys
+      {
+         plain_ec_and_el_gamal_keys& operator=( const plain_keys& pk )
+         {
+            ec_keys = pk.ec_keys;
+            checksum = pk.checksum;
+            return *this;
+         }
+
+         plain_ec_and_el_gamal_keys() = default;
+         vector<el_gamal_key_pair_str> el_gamal_keys;
+      };
+
+      struct brain_key_info
+      {
+         string brain_priv_key;
+         string wif_priv_key;
+         public_key_type pub_key;
+      };
+
       struct exported_account_keys
       {
          string account_name;
@@ -141,20 +158,6 @@ namespace graphene { namespace wallet {
          vector<exported_account_keys> account_keys;
       };
 
-      struct el_gamal_key_pair
-      {
-         DInteger private_key;
-         DInteger public_key;
-      };
-   
-      struct el_gamal_key_pair_str
-      {
-         DIntegerString private_key;
-         DIntegerString public_key;
-      };
-   
-   
-
       struct approval_delta
       {
          vector<string> active_approvals_to_add;
@@ -165,6 +168,13 @@ namespace graphene { namespace wallet {
          vector<string> key_approvals_to_remove;
       };
 
+      struct regional_price_info
+      {
+         string region;
+         string amount;
+         string asset_symbol;
+      };
+
       struct content_download_status
       {
          int          total_key_parts;
@@ -173,7 +183,12 @@ namespace graphene { namespace wallet {
          int          received_download_bytes;
          std::string  status_text;
       };
-   
+
+      struct operation_detail {
+         string                   memo;
+         string                   description;
+         operation_history_object op;
+      };
    
       struct buying_object_ex : public buying_object, public content_download_status {
          buying_object_ex(const buying_object& obj, const content_download_status& status)
@@ -199,7 +214,6 @@ namespace graphene { namespace wallet {
          : buying_object( buying ), author(author) {}
          std::string author;
       };
-
 
       struct signed_block_with_info : public signed_block
       {
@@ -231,8 +245,7 @@ namespace graphene { namespace wallet {
       namespace detail {
          class wallet_api_impl;
       }
-   
-   
+
    
 /**
  * This wallet assumes it is connected to the database server with a high-bandwidth, low-latency connection and
@@ -275,52 +288,35 @@ namespace graphene { namespace wallet {
 
 
          std::map<string,std::function<string(fc::variant,const fc::variants&)>> get_result_formatters() const;
+         void encrypt_keys();
 
          fc::signal<void(bool)> lock_changed;
          std::shared_ptr<detail::wallet_api_impl> my;
-         void encrypt_keys();
-
-
-
 
       };
-
    } }
 
 
-FC_REFLECT( graphene::wallet::plain_keys, (keys)(checksum) )
-FC_REFLECT( graphene::wallet::el_gamal_key_pair, (private_key)(public_key) )
-FC_REFLECT( graphene::wallet::el_gamal_key_pair_str, (private_key)(public_key) )
 FC_REFLECT( graphene::wallet::wallet_data,
             (chain_id)
-               (my_accounts)
-               (cipher_keys)
-               (extra_keys)
-               (pending_account_registrations)(pending_miner_registrations)
-               (ws_server)
-               (ws_user)
-               (ws_password)
-)
+            (my_accounts)
+            (cipher_keys)
+            (extra_keys)
+            (pending_account_registrations)(pending_miner_registrations)
+            (ws_server)
+            (ws_user)
+            (ws_password)
+          )
 
-FC_REFLECT( graphene::wallet::brain_key_info,
-            (brain_priv_key)
-               (wif_priv_key)
-               (pub_key)
-)
+FC_REFLECT( graphene::wallet::el_gamal_key_pair, (private_key)(public_key) )
 
-FC_REFLECT( graphene::wallet::regional_price_info,
-             (region)
-             (amount)
-             (asset_symbol)
-)
+FC_REFLECT( graphene::wallet::el_gamal_key_pair_str, (private_key)(public_key) )
 
-FC_REFLECT (graphene::wallet::content_download_status, 
-              (total_key_parts)
-              (received_key_parts)
-              (total_download_bytes)
-              (received_download_bytes)
-              (status_text)
-            )
+FC_REFLECT( graphene::wallet::plain_keys, (ec_keys)(checksum) )
+
+FC_REFLECT_DERIVED( graphene::wallet::plain_ec_and_el_gamal_keys, (graphene::wallet::plain_keys), (el_gamal_keys) )
+
+FC_REFLECT( graphene::wallet::brain_key_info, (brain_priv_key)(wif_priv_key)(pub_key) )
 
 FC_REFLECT( graphene::wallet::exported_account_keys, (account_name)(encrypted_private_keys)(public_keys) )
 
@@ -328,12 +324,36 @@ FC_REFLECT( graphene::wallet::exported_keys, (password_checksum)(account_keys) )
 
 FC_REFLECT( graphene::wallet::approval_delta,
             (active_approvals_to_add)
-               (active_approvals_to_remove)
-               (owner_approvals_to_add)
-               (owner_approvals_to_remove)
-               (key_approvals_to_add)
-               (key_approvals_to_remove)
-)
+            (active_approvals_to_remove)
+            (owner_approvals_to_add)
+            (owner_approvals_to_remove)
+            (key_approvals_to_add)
+            (key_approvals_to_remove)
+          )
+
+FC_REFLECT( graphene::wallet::regional_price_info, (region)(amount)(asset_symbol) )
+
+FC_REFLECT( graphene::wallet::content_download_status,
+            (total_key_parts)
+            (received_key_parts)
+            (total_download_bytes)
+            (received_download_bytes)
+            (status_text)
+          )
+
+FC_REFLECT( graphene::wallet::operation_detail, (memo)(description)(op) )
+
+FC_REFLECT_DERIVED( graphene::wallet::buying_object_ex,
+                    (graphene::chain::buying_object)
+                    (graphene::wallet::content_download_status),
+                    (id)
+                    (author_account)
+                    (AVG_rating)
+                    (times_bought)
+                    (hash)
+                  )
+
+FC_REFLECT_DERIVED( graphene::wallet::rating_object_ex, (graphene::chain::buying_object),(author) )
 
 FC_REFLECT_DERIVED( graphene::wallet::signed_block_with_info, (graphene::chain::signed_block),
                     (block_id)(signing_key)(transaction_ids)(miner_reward) )
@@ -341,23 +361,6 @@ FC_REFLECT_DERIVED( graphene::wallet::signed_block_with_info, (graphene::chain::
 FC_REFLECT_DERIVED( graphene::wallet::vesting_balance_object_with_info, (graphene::chain::vesting_balance_object),
                     (allowed_withdraw)(allowed_withdraw_time) )
 
-
-FC_REFLECT_DERIVED( graphene::wallet::buying_object_ex,
-                   (graphene::chain::buying_object)
-                   (graphene::wallet::content_download_status),
-                   (id)
-                   (author_account)
-                   (AVG_rating)
-                   (times_bought)
-                   (hash)
-                  )
-
-FC_REFLECT_DERIVED( graphene::wallet::rating_object_ex,
-                    (graphene::chain::buying_object),(author) )
-
-
-FC_REFLECT( graphene::wallet::operation_detail,
-            (memo)(description)(op) )
 
 FC_API( graphene::wallet::wallet_api,
         //General
@@ -372,6 +375,7 @@ FC_API( graphene::wallet::wallet_api,
         (head_block_time)
         (network_add_nodes)
         (network_get_connected_peers)
+        (get_running_plugins)
 
         //Wallet file
         (list_my_accounts)
@@ -449,6 +453,8 @@ FC_API( graphene::wallet::wallet_api,
         (list_seeders_by_upload)
         (list_seeders_by_region)
         (list_seeders_by_rating)
+        (start_content_seeding)
+        (stop_content_seeding)
 
         //Proposals
         (get_proposed_transactions)
@@ -500,7 +506,9 @@ FC_API( graphene::wallet::wallet_api,
         (get_message_objects)
         (get_messages)
         (get_sent_messages)
-#if 0
+           )
+
+#if 0 
         //Debug
         (dbg_make_mia)
         (dbg_push_blocks)
@@ -514,6 +522,5 @@ FC_API( graphene::wallet::wallet_api,
         //Network
         (flood_network)
 #endif
-
-
-)
+           
+       

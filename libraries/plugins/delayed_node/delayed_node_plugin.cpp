@@ -145,6 +145,7 @@ void delayed_node_plugin::plugin_startup()
       {
          fc::from_variant( block_id, my->last_received_remote_head );
       } );
+      _running = true;
       return;
    }
    catch (const fc::exception& e)

@@ -494,8 +494,11 @@ public:
    {
       if( !is_locked() )
       {
-         plain_keys data;
-         data.keys = _keys;
+         plain_ec_and_el_gamal_keys data;
+         data.ec_keys = _keys;
+         std::transform( _el_gamal_keys.begin(), _el_gamal_keys.end(), std::back_inserter( data.el_gamal_keys ),
+            [](const std::pair<DInteger,DInteger> el_gamal_pair) {
+               return el_gamal_key_pair_str {el_gamal_pair.second, el_gamal_pair.first}; });
          data.checksum = _checksum;
          auto plain_txt = fc::raw::pack(data);
          _wallet.cipher_keys = fc::aes_encrypt( data.checksum, plain_txt );
@@ -734,6 +737,8 @@ public:
       all_keys_for_account.insert(account.options.memo_key);
 
       _keys[wif_pub_key] = wif_key;
+      DInteger el_gamal_priv_key = generate_private_el_gamal_key_from_secret( optional_private_key->get_secret() );
+      _el_gamal_keys[get_public_el_gamal_key( el_gamal_priv_key )] = el_gamal_priv_key;
 
       _wallet.update_account(account);
 
@@ -2590,12 +2595,13 @@ signed_transaction content_cancellation(const string& author,
       decent::encrypt::ShamirSecret ss( co.quorum, co.key_parts.size() );
       decent::encrypt::point message;
 
-      DInteger el_gamal_priv_key = generate_private_el_gamal_key_from_secret ( get_private_key_for_account(buyer_account).get_secret() );
+      const auto& el_gamal_priv_key = _el_gamal_keys.find( bo.pubKey );
+      FC_ASSERT( el_gamal_priv_key != _el_gamal_keys.end(), "Wallet does not contain required ElGamal key" );
 
       int i=0;
       for( const auto key_particle : bo.key_particles )
       {
-         auto result = decent::encrypt::el_gamal_decrypt( decent::encrypt::Ciphertext( key_particle ), el_gamal_priv_key, message );
+         auto result = decent::encrypt::el_gamal_decrypt( decent::encrypt::Ciphertext( key_particle ), el_gamal_priv_key->second, message );
          FC_ASSERT(result == decent::encrypt::ok);
 
          decent::encrypt::DIntegerString a(message.first);
@@ -2733,7 +2739,6 @@ signed_transaction content_cancellation(const string& author,
    }
 
    void send_message(const string& from, const std::vector<string>& to, const string& text)
-
    {
       try {
       FC_ASSERT(!is_locked());
@@ -2777,7 +2782,40 @@ signed_transaction content_cancellation(const string& author,
    } FC_CAPTURE_AND_RETHROW((from)(to)(text))
    }
 
-   void dbg_make_mia(const string& creator, const string& symbol)
+   std::vector<std::string> get_running_plugins()
+   {
+      try {
+         FC_ASSERT(!is_locked());
+
+         use_network_node_api();
+         return (*_remote_net_node)->get_running_plugins();
+
+      } FC_CAPTURE_AND_RETHROW()
+   }
+
+   void start_content_seeding(const std::string& url)
+   {
+      try {
+         FC_ASSERT(!is_locked());
+
+         use_network_node_api();
+         (*_remote_net_node)->start_content_seeding(url);
+
+      } FC_CAPTURE_AND_RETHROW((url))
+   }
+
+   void stop_content_seeding(const std::string& url)
+   {
+      try {
+         FC_ASSERT(!is_locked());
+
+         use_network_node_api();
+         (*_remote_net_node)->stop_content_seeding(url);
+
+      } FC_CAPTURE_AND_RETHROW((url))
+   }
+
+   void dbg_make_mia(string creator, string symbol)
    {
       create_monitored_asset(get_account(creator).name, symbol, 2, "abcd", 3600, 1, true);
    }
@@ -2931,6 +2969,7 @@ signed_transaction content_cancellation(const string& author,
    wallet_data             _wallet;
 
    map<public_key_type,string> _keys;
+   map<DInteger, DInteger>     _el_gamal_keys;   // public_key/private_key
    fc::sha512                  _checksum;
 
    chain_id_type           _chain_id;
@@ -2960,8 +2999,7 @@ signed_transaction content_cancellation(const string& author,
       return std::string();
    }
 
-   template<typename T>
-   std::string operation_printer::operator()(const T& op)const
+   template<typename T> std::string operation_printer::operator()(const T& op)const
    {
       //balance_accumulator acc;
       //op.get_balance_delta( acc, result );
@@ -3112,17 +3150,17 @@ signed_transaction content_cancellation(const string& author,
       return memo;
    }
 
-std::string operation_printer::operator()(const leave_rating_and_comment_operation& op) const
-{
-   out << wallet.get_account(op.consumer).name;
-   if( op.comment.empty() )
-      out << " rated " << op.URI << " -- Rating: " << op.rating;
-   else if( op.rating == 0 )
-      out << " commented " << op.URI << " -- Comment: " << op.comment;
-   else
-      out << " rated and commented " << op.URI << " -- Rating: " << op.rating << " -- Comment: " << op.comment;
-   return fee(op.fee);
-}
+   std::string operation_printer::operator()(const leave_rating_and_comment_operation& op) const
+   {
+      out << wallet.get_account(op.consumer).name;
+      if( op.comment.empty() )
+         out << " rated " << op.URI << " -- Rating: " << op.rating;
+      else if( op.rating == 0 )
+         out << " commented " << op.URI << " -- Comment: " << op.comment;
+      else
+         out << " rated and commented " << op.URI << " -- Rating: " << op.rating << " -- Comment: " << op.comment;
+      return fee(op.fee);
+   }
 
 
    std::string operation_printer::operator()(const account_create_operation& op) const
@@ -3317,8 +3355,6 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
 
 
 
-
-
    namespace graphene { namespace wallet {
 
    wallet_api::wallet_api(const wallet_data& initial_data, fc::api<login_api> rapi)
@@ -3371,8 +3407,7 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
    }
 #endif
 
-   std::map<string,std::function<string(fc::variant,const fc::variants&)> >
-   wallet_api::get_result_formatters() const
+   std::map<string,std::function<string(fc::variant,const fc::variants&)> > wallet_api::get_result_formatters() const
    {
       return my->get_result_formatters();
    }
@@ -3382,9 +3417,7 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
       my->encrypt_keys();
    }
 
-
-   signed_block_with_info::signed_block_with_info( const signed_block& block )
-      : signed_block( block )
+   signed_block_with_info::signed_block_with_info( const signed_block& block ) : signed_block( block )
    {
       block_id = id();
       signing_key = signee();
@@ -3400,44 +3433,56 @@ std::string operation_printer::operator()(const leave_rating_and_comment_operati
       allowed_withdraw_time = now;
    }
 
-
-
-
-void graphene::wallet::detail::submit_transfer_listener::package_creation_complete() {
-   uint64_t size = std::max((uint64_t)1, ( _info->get_size() + (1024 * 1024) -1 ) / (1024 * 1024));
-   
-   asset total_price_per_day;
-   for( int i =0; i < _op.seeders.size(); i++ )
+   void graphene::wallet::detail::submit_transfer_listener::package_creation_complete()
    {
-      const auto& s = _wallet._remote_db->get_seeder( _op.seeders[i] );
-      total_price_per_day += s->price.amount * size;
+      uint64_t size = std::max((uint64_t)1, ( _info->get_size() + (1024 * 1024) -1 ) / (1024 * 1024));
+
+      asset total_price_per_day;
+      for( int i =0; i < _op.seeders.size(); i++ )
+      {
+         const auto& s = _wallet._remote_db->get_seeder( _op.seeders[i] );
+         total_price_per_day += s->price.amount * size;
+      }
+
+      fc::microseconds duration = (_op.expiration - fc::time_point::now());
+      uint64_t days = (duration.to_seconds()+3600*24-1) / 3600 / 24;
+
+      _op.hash = _info->get_hash();
+      _op.size = size;
+      _op.publishing_fee = days * total_price_per_day;
+      _op.cd = _info->get_custody_data();
+
+      _info->start_seeding(_protocol, false);
    }
 
-   fc::microseconds duration = (_op.expiration - fc::time_point::now());
-   uint64_t days = (duration.to_seconds()+3600*24-1) / 3600 / 24;
+   void graphene::wallet::detail::submit_transfer_listener::package_seed_complete()
+   {
 
-   _op.hash = _info->get_hash();
-   _op.size = size;
-   _op.publishing_fee = days * total_price_per_day;
-   _op.cd = _info->get_custody_data();
+      _op.URI = _info->get_url();
 
-   _info->start_seeding(_protocol, false);
-}
+      signed_transaction tx;
+      tx.operations.push_back( _op );
+      _wallet.set_operation_fees( tx, _wallet._remote_db->get_global_properties().parameters.current_fees);
+      tx.validate();
+       _wallet.sign_transaction(tx, true);
+   }
 
-void graphene::wallet::detail::submit_transfer_listener::package_seed_complete() {
-   
-   _op.URI = _info->get_url();
-   
-   signed_transaction tx;
-   tx.operations.push_back( _op );
-   _wallet.set_operation_fees( tx, _wallet._remote_db->get_global_properties().parameters.current_fees);
-   tx.validate();
-    _wallet.sign_transaction(tx, true);
-}
+   std::vector<std::string> wallet_api::get_running_plugins() const
+   {
+      return my->get_running_plugins();
+   }
 
+   void wallet_api::stop_content_seeding(const std::string& url) const
+   {
+      my->stop_content_seeding(url);
+   }
+
+   void wallet_api::start_content_seeding(const std::string& url) const
+   {
+      my->start_content_seeding(url);
+   }
 
 } } // graphene::wallet
-
 
 
 void fc::to_variant(const account_multi_index_type& accts, fc::variant& vo)
