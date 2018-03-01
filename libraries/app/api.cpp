@@ -257,7 +257,7 @@ namespace graphene { namespace app {
        FC_ASSERT(p);
        bool running = p->plugin_is_running();
        FC_ASSERT(running, "Seeding plugin is not running");
-       //p->start_content_seeding(url);
+       p->start_content_seeding(url);
     }
 
     void network_node_api::stop_content_seeding(const std::string& url) const
@@ -266,7 +266,7 @@ namespace graphene { namespace app {
        FC_ASSERT(p);
        bool running = p->plugin_is_running();
        FC_ASSERT(running, "Seeding plugin is not running");
-       //p->stop_content_seeding(url);
+       p->stop_content_seeding(url);
     }
 
     fc::api<network_broadcast_api> login_api::network_broadcast()const
