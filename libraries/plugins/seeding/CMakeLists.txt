@@ -8,7 +8,9 @@ add_library( decent_seeding
 
 target_link_libraries( decent_seeding graphene_chain graphene_app graphene_time decent_encrypt package_manager fc )
 target_include_directories( decent_seeding
-                            PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" )
+                            PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include"
+                            "${CMAKE_CURRENT_SOURCE_DIR}/../plugins/messaging/include"
+)
 
 #install( TARGETS
 #   decent_seeding
