@@ -8,6 +8,8 @@ variant_object wallet_api::about() const
 optional<signed_block_with_info> wallet_api::get_block(uint32_t num)
 {
    optional<signed_block_with_info> result = my->_remote_db->get_block(num);
+   if( !result )
+      return optional<signed_block_with_info>();
 
    share_type miner_pay_from_reward = 0;
    share_type miner_pay_from_fees = 0;
