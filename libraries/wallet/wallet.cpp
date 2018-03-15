@@ -1136,6 +1136,7 @@ public:
                                                uint64_t max_supply,
                                                price core_exchange_rate,
                                                bool is_exchangeable,
+                                               bool is_fixed_max_supply,
                                                bool broadcast = false)
    { try {
       account_object issuer_account = get_account( issuer );
@@ -1150,6 +1151,7 @@ public:
       opts.max_supply = max_supply;
       opts.core_exchange_rate = core_exchange_rate;
       opts.is_exchangeable = is_exchangeable;
+      opts.is_fixed_max_supply = is_fixed_max_supply;
       create_op.options = opts;
       create_op.monitored_asset_opts = optional<monitored_asset_options>();
 
@@ -2813,7 +2815,7 @@ signed_transaction content_cancellation(const string& author,
       } FC_CAPTURE_AND_RETHROW((url))
    }
 
-   void dbg_make_mia(string creator, string symbol)
+   void dbg_make_mia(const std::string& creator, const std::string& symbol)
    {
       create_monitored_asset(get_account(creator).name, symbol, 2, "abcd", 3600, 1, true);
    }
