@@ -560,7 +560,13 @@ void Upload_popup::getContents(string const& id,
       str_cd += " \"u_seed\": \"" + cd["u_seed"].get<string>() + "\",";
       str_cd += " \"pubKey\": \"" + cd["pubKey"].get<string>() + "\"}";
    }
-   catch(...) {}
+   catch(const std::exception& ex) {
+      std::cout << "Upload_popup::getContents " << ex.what() << std::endl;
+   }
+   catch(const fc::exception& ex) {
+      std::cout << "Upload_popup::getContents " << ex.what() << std::endl;
+   }
+
 }
 void Upload_popup::getContents(string const& id,
                                string& title,
@@ -611,7 +617,13 @@ void Upload_popup::getContents(string const& id,
          }
       }
    }
-   catch(...) {}
+   catch(const std::exception& ex) {
+      std::cout << "Upload_popup::getContents " << ex.what() << std::endl;
+   }
+   catch(const fc::exception& ex) {
+      std::cout << "Upload_popup::getContents " << ex.what() << std::endl;
+   }
+
 }
 
 void Upload_popup::slot_UploadContent()

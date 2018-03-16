@@ -573,24 +573,23 @@ public:
    fc::thread thread_decentd;
    fc::future<int> future_decentd;
 };
+
 //
 // Globals
 //
-Globals::Globals()
-: m_connected_state(ConnectionState::Connecting)
+Globals::Globals() : QObject()
+, m_connected_state(ConnectionState::Connecting)
 , m_p_wallet_operator(nullptr)
-, m_p_wallet_operator_thread(new QThread(this))
+, m_p_wallet_operator_thread(nullptr)
 , m_p_timer(new QTimer(this))
 , m_p_locale(new QLocale())
 , m_p_daemon_details(nullptr)
 , m_str_currentUser()
 , m_tp_started(std::chrono::steady_clock::now())
 {
-   m_p_wallet_operator_thread->start();
 
    m_p_timer->start(1000);
-   QObject::connect(m_p_timer, &QTimer::timeout,
-                    this, &Globals::slot_timer);
+   QObject::connect(m_p_timer, &QTimer::timeout, this, &Globals::slot_timer);
 
    QLocale::setDefault(*m_p_locale);
 
@@ -620,6 +619,10 @@ void Globals::startDaemons(BlockChainStartType type)
 
    if (nullptr == m_p_wallet_operator)
    {
+      Q_ASSERT(m_p_wallet_operator_thread == nullptr);
+      m_p_wallet_operator_thread = new QThread(this);
+
+
       bNeedNewConnection = true;
       m_p_wallet_operator = new WalletOperator();
       m_p_wallet_operator->moveToThread(m_p_wallet_operator_thread);
@@ -627,13 +630,16 @@ void Globals::startDaemons(BlockChainStartType type)
                        m_p_wallet_operator, &WalletOperator::slot_connect);
       QObject::connect(m_p_wallet_operator, &WalletOperator::signal_connected,
                        this, &Globals::slot_connected);
+
+      connect(m_p_wallet_operator_thread, SIGNAL(finished()), m_p_wallet_operator_thread, SLOT(deleteLater()));
+      m_p_wallet_operator_thread->start();
    }
 
    fc::thread& thread_decentd = m_p_daemon_details->thread_decentd;
 
    fc::promise<void>::ptr& exit_promise = m_p_daemon_details->exit_promise;
 
-   QProcess* daemon_process = nullptr;
+   QProcess* daemon_process;
    daemon_process = run_ipfs_daemon(qApp, qApp->applicationDirPath());
    m_p_daemon_details->ipfs_process = daemon_process;
 
@@ -690,10 +696,13 @@ void Globals::stopDaemons()
 
    m_p_daemon_details->future_decentd.wait();
 
-   if (m_p_daemon_details->ipfs_process)
+   if (m_p_daemon_details->ipfs_process) {
       m_p_daemon_details->ipfs_process->terminate();
-   delete m_p_daemon_details->ipfs_process;
-   m_p_daemon_details->ipfs_process = nullptr;
+      m_p_daemon_details->ipfs_process->waitForFinished();
+
+      delete m_p_daemon_details->ipfs_process;
+      m_p_daemon_details->ipfs_process = nullptr;
+   }
 
    if (m_p_daemon_details)
    {
@@ -984,7 +993,7 @@ int DecentTable::getCurrentHighlightedRow() const
 std::string DecentTable::getSortedColumn() const
 {
    if (_current_sort_index < 0)
-      return "";
+      return std::string();
 
    return  (_is_ascending ? "+" : "-") + _cols[_current_sort_index].sortid;
 }

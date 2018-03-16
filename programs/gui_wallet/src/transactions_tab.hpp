@@ -20,9 +20,9 @@ public:
    virtual std::string getUpdateCommand() override;
 
 signals:
-   void signal_setUserFilter(QString const& user_name);
+   void signal_setUserFilter(const QString & user_name);
 public slots:
-   void slot_SearchTermChanged(QString const& strSearchTerm);
+   void slot_SearchTermChanged(const QString & strSearchTerm);
    void slot_SortingChanged(int);
    
 public:

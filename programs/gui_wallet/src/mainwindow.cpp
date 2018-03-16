@@ -733,13 +733,12 @@ void MainWindow::slot_checkDownloads()
                                                   "\"\" "
                                                   "\"-1\" ");
    }
-   catch(const std::exception& ex)
-   {
+   catch(const std::exception& ex) {
       std::cout << "runTaskParse() " << ex.what() << std::endl;
       return;
    }
-   catch(...)
-   {
+   catch(const fc::exception& ex) {
+      std::cout << "runTaskParse() " << ex.what() << std::endl;
       return;
    }
 
@@ -763,11 +762,11 @@ void MainWindow::slot_checkDownloads()
          }
          catch(const std::exception& ex)
          {
-            std::cout << "runTask('download_package') " << ex.what() << std::endl;
+            std::cout << "runTask('download_package') URI:" << URI << "Ex:" << ex.what() << std::endl;
          }
-         catch(...)
+         catch(const fc::exception& ex)
          {
-            std::cout << "Cannot resume download: " << URI << std::endl;
+            std::cout << "runTask('download_package') URI:" << URI << "Ex:" << ex.what() << std::endl;
          }
       }
    }

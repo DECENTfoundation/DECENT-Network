@@ -286,7 +286,11 @@ void PurchasedTab::slot_ExtractionDirSelected(QString const& path) {
       if (dummy.find("exception:") != std::string::npos) {
          message = dummy;
       }
-   } catch (const std::exception& ex) {
+   }
+   catch (const std::exception& ex) {
+      message = ex.what();
+   }
+   catch(const fc::exception& ex) {
       message = ex.what();
    }
 

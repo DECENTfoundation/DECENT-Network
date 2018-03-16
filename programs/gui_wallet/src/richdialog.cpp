@@ -48,8 +48,7 @@ void PlaceInsideLabel(QWidget* pParent, QWidget* pChild)
 //
 // RatingWidget
 //
-RatingWidget::RatingWidget(QWidget* pParent)
-   : QWidget(pParent)
+RatingWidget::RatingWidget(QWidget* pParent) : QWidget(pParent)
    , m_bAutomation(false)
 {
    QHBoxLayout* pMainLayout = new QHBoxLayout();
@@ -111,8 +110,7 @@ void RatingWidget::slot_rating()
 //
 // StackLayerWidget
 //
-StackLayerWidget::StackLayerWidget(QWidget* pParent)
-: QWidget(pParent)
+StackLayerWidget::StackLayerWidget(QWidget* pParent) : QWidget(pParent)
 {
    QObject::connect(this, &StackLayerWidget::accepted,
                     this, &StackLayerWidget::closed);
@@ -120,8 +118,7 @@ StackLayerWidget::StackLayerWidget(QWidget* pParent)
 //
 // TransferWidget
 //
-TransferWidget::TransferWidget(QWidget* parent, QString const& userName/* = QString()*/)
-   : StackLayerWidget(parent)
+TransferWidget::TransferWidget(QWidget* parent, QString const& userName) : StackLayerWidget(parent)
    , m_toUserName(userName)
 {
    QVBoxLayout* mainLayout       = new QVBoxLayout();
@@ -235,8 +232,7 @@ void TransferWidget::Transfer()
 //
 // ImportKeyWidget
 //
-ImportKeyWidget::ImportKeyWidget(QWidget* parent)
-: StackLayerWidget(parent)
+ImportKeyWidget::ImportKeyWidget(QWidget* parent) : StackLayerWidget(parent)
 {
    QObject::connect(this, &StackLayerWidget::accepted,
                     &Globals::instance(), &Globals::signal_keyImported);
@@ -374,6 +370,7 @@ UserInfoWidget::UserInfoWidget(QWidget* parent,
    setWindowTitle(name + " (" + id + ")");
    setLayout(main_layout);
 }
+
 //
 // ContentInfoWidget
 //
@@ -640,8 +637,7 @@ CommentWidget::CommentWidget(QWidget* pParent,
                              const std::string& content_author,
                              const std::string& content_uri,
                              const std::string& content_description,
-                             const std::string& feedback_author/* = std::string()*/)
-: QWidget(pParent)
+                             const std::string& feedback_author) : QWidget(pParent)
 , m_pComment(new DecentTextEdit(this, DecentTextEdit::Info))
 , m_pLabel(new DecentLabel(this, DecentLabel::RowLabel))
 , m_pRatingWidget(new RatingWidget(this))
@@ -702,15 +698,20 @@ void CommentWidget::submit()
    if (m_pRatingWidget->m_rating == 0)
       return;
    
-   try
-   {
+   try {
       Globals::instance().runTaskParse("leave_rating_and_comment "
-                                       "\"" + Globals::instance().getCurrentUser() + "\" "
-                                       "\"" + m_content_uri + "\" "
-                                       "\"" + std::to_string(m_pRatingWidget->m_rating) + "\" "
-                                       "\"" + escape_string(m_pComment->toPlainText().toStdString() ) + "\" "
-                                       "true" );
-   }catch(...){}
+                                             "\"" + Globals::instance().getCurrentUser() + "\" "
+                                             "\"" + m_content_uri + "\" "
+                                             "\"" + std::to_string(m_pRatingWidget->m_rating) + "\" "
+                                             "\"" + escape_string(m_pComment->toPlainText().toStdString()) + "\" "
+                                             "true");
+   }
+   catch(const std::exception& ex) {
+      std::cout << "CommentWidget::submit " << ex.what() << std::endl;
+   }
+   catch(const fc::exception& ex) {
+      std::cout << "CommentWidget::submit " << ex.what() << std::endl;
+   }
 
    slot_Previous();
    slot_Next();
@@ -750,7 +751,13 @@ void CommentWidget::update()
             feedback_rating = feedback[0]["rating"].get<int>();
          }
       }
-   }catch(...){}
+   }
+   catch(const std::exception& ex) {
+      std::cout << "CommentWidget::update " << ex.what() << std::endl;
+   }
+   catch(const fc::exception& ex) {
+      std::cout << "CommentWidget::update " << ex.what() << std::endl;
+   }
 
    int test_count = 0;
 
@@ -907,8 +914,7 @@ bool CommentWidget::slot_Previous()
 }
 // PasswordWidget
 //
-PasswordWidget::PasswordWidget(QWidget* pParent, eType enType)
-: StackLayerWidget(pParent)
+PasswordWidget::PasswordWidget(QWidget* pParent, eType enType) : StackLayerWidget(pParent)
 , m_enType(enType)
 , m_pError(new QLabel(this))
 {
@@ -959,7 +965,7 @@ PasswordWidget::PasswordWidget(QWidget* pParent, eType enType)
    setLayout(pMainLayout);
 }
 
-void PasswordWidget::slot_set_password(QString const& strPassword)
+void PasswordWidget::slot_set_password(const QString& strPassword)
 {
    m_strPassword = strPassword;
 }
@@ -969,14 +975,21 @@ void PasswordWidget::slot_action()
    if (m_strPassword.isEmpty())
       return;
 
+   QString error;
    if (m_enType == eSetPassword)
    {
       try
       {
          Globals::instance().runTask("set_password \"" + m_strPassword.toStdString() + "\"");
       }
-      catch(...)
-      {
+      catch(const std::exception& ex) {
+         error = ex.what();
+      }
+      catch(const fc::exception& ex) {
+         error = ex.what();
+      }
+
+      if (!error.isEmpty()) {
          m_pError->setText(tr("Cannot set this password"));
          m_pError->show();
          return;
@@ -987,8 +1000,14 @@ void PasswordWidget::slot_action()
    {
       Globals::instance().runTask("unlock \"" + m_strPassword.toStdString() + "\"");
    }
-   catch(...)
-   {
+   catch(const std::exception& ex) {
+      error = ex.what();
+   }
+   catch(const fc::exception& ex) {
+      error = ex.what();
+   }
+
+   if (!error.isEmpty()) {
       m_pError->setText(tr("Cannot unlock the wallet"));
       m_pError->show();
       return;
