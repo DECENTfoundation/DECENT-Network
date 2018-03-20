@@ -44,6 +44,7 @@
 using namespace graphene::chain;
 using namespace graphene::db;
 
+
 BOOST_FIXTURE_TEST_SUITE( basic_tests, database_fixture )
 
 /**
@@ -64,17 +65,18 @@ BOOST_AUTO_TEST_CASE( valid_name_test )
    BOOST_CHECK( !is_valid_name( "a." ) );
    BOOST_CHECK( !is_valid_name( "a-" ) );
 
-   BOOST_CHECK( is_valid_name( "aaa" ) );
-   BOOST_CHECK( !is_valid_name( "aAa" ) );
-   BOOST_CHECK( is_valid_name( "a0a" ) );
-   BOOST_CHECK( !is_valid_name( "a.a" ) );
-   BOOST_CHECK( is_valid_name( "a-a" ) );
+   //this is depend on GRAPHENE_MIN_ACCOUNT_NAME_LENGTH
+   BOOST_CHECK( is_valid_name( "aaaaa" ) );
+   BOOST_CHECK( !is_valid_name( "aaaAa" ) );
+   BOOST_CHECK( is_valid_name( "aaa0a" ) );
+   BOOST_CHECK( !is_valid_name( "aaa.a" ) );
+   BOOST_CHECK( is_valid_name( "aaa-a" ) );
 
-   BOOST_CHECK( is_valid_name( "aa0" ) );
-   BOOST_CHECK( !is_valid_name( "aA0" ) );
-   BOOST_CHECK( is_valid_name( "a00" ) );
-   BOOST_CHECK( !is_valid_name( "a.0" ) );
-   BOOST_CHECK( is_valid_name( "a-0" ) );
+   BOOST_CHECK( is_valid_name( "aaaa0" ) );
+   BOOST_CHECK( !is_valid_name( "aaaA0" ) );
+   BOOST_CHECK( is_valid_name( "aaa00" ) );
+   BOOST_CHECK( !is_valid_name( "aaa.0" ) );
+   BOOST_CHECK( is_valid_name( "aaa-0" ) );
 
    BOOST_CHECK(  is_valid_name( "aaa-bbb-ccc" ) );
    BOOST_CHECK(  is_valid_name( "aaa-bbb.ccc" ) );

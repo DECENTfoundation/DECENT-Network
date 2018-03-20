@@ -32,9 +32,9 @@
 #include <graphene/chain/asset_object.hpp>
 #include <graphene/chain/miner_object.hpp>
 #include <graphene/chain/proposal_object.hpp>
-#include <graphene/chain/market_object.hpp>
+//#include <graphene/chain/market_object.hpp>
 
-#include <graphene/utilities/tempdir.hpp>
+#include "../common/tempdir.hpp"
 
 #include <fc/crypto/digest.hpp>
 
@@ -42,6 +42,8 @@
 
 using namespace graphene::chain;
 using namespace graphene::chain::test;
+
+
 
 genesis_state_type make_genesis() {
    genesis_state_type genesis_state;
@@ -53,6 +55,7 @@ genesis_state_type make_genesis() {
    for( int i = 0; i < genesis_state.initial_active_miners; ++i )
    {
       auto name = "init"+fc::to_string(i);
+      
       genesis_state.initial_accounts.emplace_back(name,
                                                   init_account_priv_key.get_public_key(),
                                                   init_account_priv_key.get_public_key());
@@ -601,7 +604,7 @@ BOOST_FIXTURE_TEST_CASE( optional_tapos, database_fixture )
 {
    try
    {
-      ACTORS( (alice)(bob) );
+      ACTORS( (alice)(bobian) );
 
       generate_block();
 
@@ -610,7 +613,7 @@ BOOST_FIXTURE_TEST_CASE( optional_tapos, database_fixture )
       transfer( account_id_type(), alice_id, asset( 1000000 ) );
       transfer_operation op;
       op.from = alice_id;
-      op.to = bob_id;
+      op.to = bobian_id;
       op.amount = asset( 1000 );
       signed_transaction tx;
       tx.operations.push_back( op );
@@ -710,7 +713,7 @@ BOOST_FIXTURE_TEST_CASE( maintenance_interval, database_fixture )
    }
 }
 
-
+#if 0 //NOT
 BOOST_FIXTURE_TEST_CASE( limit_order_expiration, database_fixture )
 { try {
    //Get a sane head block time
@@ -753,18 +756,19 @@ BOOST_FIXTURE_TEST_CASE( limit_order_expiration, database_fixture )
    BOOST_CHECK(db.find_object(id) == nullptr);
    BOOST_CHECK_EQUAL( get_balance(*nathan, *core), 50000 );
 } FC_LOG_AND_RETHROW() }
+#endif
 
 BOOST_FIXTURE_TEST_CASE( double_sign_check, database_fixture )
 { try {
    generate_block();
    const auto& alice = account_id_type()(db);
-   ACTOR(bob);
+   ACTOR(bobian);
    asset amount(1000);
 
    set_expiration( db, trx );
    transfer_operation t;
    t.from = alice.id;
-   t.to = bob.id;
+   t.to = bobian.id;
    t.amount = amount;
    trx.operations.push_back(t);
    for( auto& op : trx.operations ) db.current_fee_schedule().set_fee(op);
@@ -773,7 +777,7 @@ BOOST_FIXTURE_TEST_CASE( double_sign_check, database_fixture )
    db.push_transaction(trx, ~0);
 
    trx.operations.clear();
-   t.from = bob.id;
+   t.from = bobian.id;
    t.to = alice.id;
    t.amount = amount;
    trx.operations.push_back(t);
@@ -784,8 +788,8 @@ BOOST_FIXTURE_TEST_CASE( double_sign_check, database_fixture )
    GRAPHENE_REQUIRE_THROW( db.push_transaction(trx, 0), fc::exception );
 
    BOOST_TEST_MESSAGE( "Verify that double-signing causes an exception" );
-   sign( trx, bob_private_key );
-   sign( trx, bob_private_key );
+   sign( trx, bobian_private_key );
+   sign( trx, bobian_private_key );
    GRAPHENE_REQUIRE_THROW( db.push_transaction(trx, 0), tx_duplicate_sig );
 
    BOOST_TEST_MESSAGE( "Verify that signing with an extra, unused key fails" );
@@ -796,9 +800,10 @@ BOOST_FIXTURE_TEST_CASE( double_sign_check, database_fixture )
    BOOST_TEST_MESSAGE( "Verify that signing once with the proper key passes" );
    trx.signatures.pop_back();
    db.push_transaction(trx, 0);
-   sign( trx, bob_private_key );
+   sign( trx, bobian_private_key );
 
 } FC_LOG_AND_RETHROW() }
+
 
 BOOST_FIXTURE_TEST_CASE( change_block_interval, database_fixture )
 { try {
@@ -808,65 +813,96 @@ BOOST_FIXTURE_TEST_CASE( change_block_interval, database_fixture )
       p.parameters.miner_proposal_review_period = fc::hours(1).to_seconds();
    });
 
+   const uint8_t new_block_interval = 1;
+   fc::time_point_sec maintenence_time2;
+
    BOOST_TEST_MESSAGE( "Creating a proposal to change the block_interval to 1 second" );
    {
+      const account_object& nathan = create_account("nathan");
+      time_point_sec now0 = db.head_block_time();
+      
+      transfer(account_id_type()(db), nathan, asset(5000000));
+
+      account_update_operation op;
+      op.account = nathan.id;
+      op.new_options = nathan.options;
+      auto init0_miner_member = get_miner(get_account("init0").get_id());
+
+      op.new_options->votes.insert(init0_miner_member.vote_id);
+      trx.operations.push_back(op);
+      PUSH_TX(db, trx, ~0);
+      trx.operations.clear();
+      generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
+
       proposal_create_operation cop = proposal_create_operation::miner_proposal(db.get_global_properties().parameters, db.head_block_time());
-      cop.fee_paying_account = GRAPHENE_TEMP_ACCOUNT;
-      cop.expiration_time = db.head_block_time() + *cop.review_period_seconds + 10;
+      cop.fee_paying_account = get_account("init0").get_id();
+      cop.expiration_time = db.head_block_time() + *cop.review_period_seconds + 100;
+      fc::time_point_sec maintenence_time = db.get_dynamic_global_properties().next_maintenance_time;
+
       miner_update_global_parameters_operation uop;
-      uop.new_parameters.block_interval = 1;
+      uop.new_parameters.block_interval = new_block_interval;
       cop.proposed_ops.emplace_back(uop);
+
       trx.operations.push_back(cop);
+      
+      trx.expiration = db.head_block_time() + 100;
+      sign(trx, init_account_priv_key);
+      
       db.push_transaction(trx);
    }
    BOOST_TEST_MESSAGE( "Updating proposal by signing with the miner private key" );
    {
       proposal_update_operation uop;
-      uop.fee_paying_account = GRAPHENE_TEMP_ACCOUNT;
+      uop.fee_paying_account = get_account("init0").get_id();
+      uop.fee = asset();
       uop.active_approvals_to_add = {get_account("init0").get_id(), get_account("init1").get_id(),
                                      get_account("init2").get_id(), get_account("init3").get_id(),
                                      get_account("init4").get_id(), get_account("init5").get_id(),
                                      get_account("init6").get_id(), get_account("init7").get_id()};
+      trx.clear();
       trx.operations.push_back(uop);
-      sign( trx, init_account_priv_key );
-      /*
-      sign( trx, get_account("init1" ).active.get_keys().front(),init_account_priv_key);
-      sign( trx, get_account("init2" ).active.get_keys().front(),init_account_priv_key);
-      sign( trx, get_account("init3" ).active.get_keys().front(),init_account_priv_key);
-      sign( trx, get_account("init4" ).active.get_keys().front(),init_account_priv_key);
-      sign( trx, get_account("init5" ).active.get_keys().front(),init_account_priv_key);
-      sign( trx, get_account("init6" ).active.get_keys().front(),init_account_priv_key);
-      sign( trx, get_account("init7" ).active.get_keys().front(),init_account_priv_key);
-      */
+
+      auto& active_miners = db.get_global_properties().active_miners;
+
+      fc::time_point_sec maintenence_time = db.get_dynamic_global_properties().next_maintenance_time;
+      trx.expiration = db.head_block_time() + 100;
+      sign(trx, init_account_priv_key);
+
       db.push_transaction(trx);
-      BOOST_CHECK(proposal_id_type()(db).is_authorized_to_execute(db));
+      
+      generate_blocks(maintenence_time + 5);
+      
+      maintenence_time2 = db.get_dynamic_global_properties().next_maintenance_time;
    }
+   generate_block();
    BOOST_TEST_MESSAGE( "Verifying that the interval didn't change immediately" );
 
    BOOST_CHECK_EQUAL(db.get_global_properties().parameters.block_interval, 5);
    auto past_time = db.head_block_time().sec_since_epoch();
    generate_block();
+   auto past_time2 = db.head_block_time().sec_since_epoch();
    BOOST_CHECK_EQUAL(db.head_block_time().sec_since_epoch() - past_time, 5);
    generate_block();
    BOOST_CHECK_EQUAL(db.head_block_time().sec_since_epoch() - past_time, 10);
 
-   BOOST_TEST_MESSAGE( "Generating blocks until proposal expires" );
-   generate_blocks(proposal_id_type()(db).expiration_time + 5);
    BOOST_TEST_MESSAGE( "Verify that the block interval is still 5 seconds" );
    BOOST_CHECK_EQUAL(db.get_global_properties().parameters.block_interval, 5);
 
    BOOST_TEST_MESSAGE( "Generating blocks until next maintenance interval" );
-   generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
+
+   generate_blocks(maintenence_time2);
    generate_block();   // get the maintenance skip slots out of the way
 
    BOOST_TEST_MESSAGE( "Verify that the new block interval is 1 second" );
    BOOST_CHECK_EQUAL(db.get_global_properties().parameters.block_interval, 1);
    past_time = db.head_block_time().sec_since_epoch();
    generate_block();
+   uint32_t head_time = db.head_block_time().sec_since_epoch();
    BOOST_CHECK_EQUAL(db.head_block_time().sec_since_epoch() - past_time, 1);
    generate_block();
    BOOST_CHECK_EQUAL(db.head_block_time().sec_since_epoch() - past_time, 2);
 } FC_LOG_AND_RETHROW() }
+
 
 BOOST_FIXTURE_TEST_CASE( pop_block_twice, database_fixture )
 {
@@ -882,8 +918,8 @@ BOOST_FIXTURE_TEST_CASE( pop_block_twice, database_fixture )
 
       // Sam is the creator of accounts
       private_key_type miner_key = init_account_priv_key;
-      private_key_type sam_key = generate_private_key("sam");
-      account_object sam_account_object = create_account("sam", sam_key);
+      private_key_type sam_key = generate_private_key("samian");
+      account_object sam_account_object = create_account("samian", sam_key);
 
       //Get a sane head block time
       generate_block( skip_flags );
@@ -903,7 +939,7 @@ BOOST_FIXTURE_TEST_CASE( pop_block_twice, database_fixture )
 
       create_account("alice");
       generate_block(skip_flags);
-      create_account("bob");
+      create_account("bobian");
       generate_block(skip_flags);
 
       db.pop_block();
@@ -1042,7 +1078,7 @@ BOOST_FIXTURE_TEST_CASE( transaction_invalidated_in_cache, database_fixture )
 {
    try
    {
-      ACTORS( (alice)(bob) );
+      ACTORS( (alice)(bobian) );
 
       auto generate_block = [&]( database& d, uint32_t skip ) -> signed_block
       {
@@ -1065,18 +1101,18 @@ BOOST_FIXTURE_TEST_CASE( transaction_invalidated_in_cache, database_fixture )
          db2.push_block(*b, database::skip_miner_signature);
       }
       BOOST_CHECK( db2.get( alice_id ).name == "alice" );
-      BOOST_CHECK( db2.get( bob_id ).name == "bob" );
+      BOOST_CHECK( db2.get( bobian_id ).name == "bobian" );
 
       db2.push_block(generate_block(db, database::skip_nothing));
       transfer( account_id_type(), alice_id, asset( 1000 ) );
-      transfer( account_id_type(),   bob_id, asset( 1000 ) );
+      transfer( account_id_type(),   bobian_id, asset( 1000 ) );
       // need to skip authority check here as well for same reason as above
       db2.push_block(generate_block(db, database::skip_authority_check), database::skip_authority_check);
 
       BOOST_CHECK_EQUAL(db.get_balance(alice_id, asset_id_type()).amount.value, 1000);
-      BOOST_CHECK_EQUAL(db.get_balance(  bob_id, asset_id_type()).amount.value, 1000);
+      BOOST_CHECK_EQUAL(db.get_balance(bobian_id, asset_id_type()).amount.value, 1000);
       BOOST_CHECK_EQUAL(db2.get_balance(alice_id, asset_id_type()).amount.value, 1000);
-      BOOST_CHECK_EQUAL(db2.get_balance(  bob_id, asset_id_type()).amount.value, 1000);
+      BOOST_CHECK_EQUAL(db2.get_balance(bobian_id, asset_id_type()).amount.value, 1000);
 
       auto generate_and_send = [&]( int n )
       {
@@ -1100,11 +1136,11 @@ BOOST_FIXTURE_TEST_CASE( transaction_invalidated_in_cache, database_fixture )
          if( from == alice_id )
             sign( tx, alice_private_key );
          else
-            sign( tx, bob_private_key );
+            sign( tx, bobian_private_key );
          return tx;
       };
 
-      signed_transaction tx = generate_xfer_tx( alice_id, bob_id, 1000, 2 );
+      signed_transaction tx = generate_xfer_tx( alice_id, bobian_id, 1000, 2 );
       tx.set_expiration( db.head_block_time() + 2 * db.get_global_properties().parameters.block_interval );
       tx.signatures.clear();
       sign( tx, alice_private_key );
@@ -1112,18 +1148,18 @@ BOOST_FIXTURE_TEST_CASE( transaction_invalidated_in_cache, database_fixture )
       PUSH_TX( db, tx );
 
       BOOST_CHECK_EQUAL(db.get_balance(alice_id, asset_id_type()).amount.value,    0);
-      BOOST_CHECK_EQUAL(db.get_balance(  bob_id, asset_id_type()).amount.value, 2000);
+      BOOST_CHECK_EQUAL(db.get_balance(  bobian_id, asset_id_type()).amount.value, 2000);
 
       // generate some blocks with db2, make tx expire in db's cache
       generate_and_send(3);
 
       BOOST_CHECK_EQUAL(db.get_balance(alice_id, asset_id_type()).amount.value, 1000);
-      BOOST_CHECK_EQUAL(db.get_balance(  bob_id, asset_id_type()).amount.value, 1000);
+      BOOST_CHECK_EQUAL(db.get_balance(  bobian_id, asset_id_type()).amount.value, 1000);
 
       // generate a block with db and ensure we don't somehow apply it
       PUSH_BLOCK(db2, generate_block(db, database::skip_nothing));
       BOOST_CHECK_EQUAL(db.get_balance(alice_id, asset_id_type()).amount.value, 1000);
-      BOOST_CHECK_EQUAL(db.get_balance(  bob_id, asset_id_type()).amount.value, 1000);
+      BOOST_CHECK_EQUAL(db.get_balance(  bobian_id, asset_id_type()).amount.value, 1000);
 
       // now the tricky part...
       // (A) Bob sends 1000 to Alice
@@ -1138,24 +1174,24 @@ BOOST_FIXTURE_TEST_CASE( transaction_invalidated_in_cache, database_fixture )
       // This needs to occur while switching to a fork.
       //
 
-      signed_transaction tx_a = generate_xfer_tx( bob_id, alice_id, 1000, 2 );
-      signed_transaction tx_b = generate_xfer_tx( alice_id, bob_id, 2000, 10 );
-      signed_transaction tx_c = generate_xfer_tx( alice_id, bob_id,  500, 10 );
+      signed_transaction tx_a = generate_xfer_tx( bobian_id, alice_id, 1000, 2 );
+      signed_transaction tx_b = generate_xfer_tx( alice_id, bobian_id, 2000, 10 );
+      signed_transaction tx_c = generate_xfer_tx( alice_id, bobian_id,  500, 10 );
 
       generate_block( db, database::skip_nothing );
 
       PUSH_TX( db, tx_a );
       BOOST_CHECK_EQUAL(db.get_balance(alice_id, asset_id_type()).amount.value, 2000);
-      BOOST_CHECK_EQUAL(db.get_balance(  bob_id, asset_id_type()).amount.value,    0);
+      BOOST_CHECK_EQUAL(db.get_balance(  bobian_id, asset_id_type()).amount.value,    0);
 
       PUSH_TX( db, tx_b );
       PUSH_TX( db2, tx_c );
 
       BOOST_CHECK_EQUAL(db.get_balance(alice_id, asset_id_type()).amount.value, 0);
-      BOOST_CHECK_EQUAL(db.get_balance(  bob_id, asset_id_type()).amount.value, 2000);
+      BOOST_CHECK_EQUAL(db.get_balance(bobian_id, asset_id_type()).amount.value, 2000);
 
       BOOST_CHECK_EQUAL(db2.get_balance(alice_id, asset_id_type()).amount.value, 500);
-      BOOST_CHECK_EQUAL(db2.get_balance(  bob_id, asset_id_type()).amount.value, 1500);
+      BOOST_CHECK_EQUAL(db2.get_balance(bobian_id, asset_id_type()).amount.value, 1500);
 
       // generate enough blocks on db2 to cause db to switch forks
       generate_and_send(2);
@@ -1163,19 +1199,19 @@ BOOST_FIXTURE_TEST_CASE( transaction_invalidated_in_cache, database_fixture )
       // db should invalidate B, but still be applying A, so the states don't agree
 
       BOOST_CHECK_EQUAL(db.get_balance(alice_id, asset_id_type()).amount.value, 1500);
-      BOOST_CHECK_EQUAL(db.get_balance(  bob_id, asset_id_type()).amount.value, 500);
+      BOOST_CHECK_EQUAL(db.get_balance(bobian_id, asset_id_type()).amount.value, 500);
 
       BOOST_CHECK_EQUAL(db2.get_balance(alice_id, asset_id_type()).amount.value, 500);
-      BOOST_CHECK_EQUAL(db2.get_balance(  bob_id, asset_id_type()).amount.value, 1500);
+      BOOST_CHECK_EQUAL(db2.get_balance(bobian_id, asset_id_type()).amount.value, 1500);
 
       // This will cause A to expire in db
       generate_and_send(1);
 
       BOOST_CHECK_EQUAL(db.get_balance(alice_id, asset_id_type()).amount.value, 500);
-      BOOST_CHECK_EQUAL(db.get_balance(  bob_id, asset_id_type()).amount.value, 1500);
+      BOOST_CHECK_EQUAL(db.get_balance(bobian_id, asset_id_type()).amount.value, 1500);
 
       BOOST_CHECK_EQUAL(db2.get_balance(alice_id, asset_id_type()).amount.value, 500);
-      BOOST_CHECK_EQUAL(db2.get_balance(  bob_id, asset_id_type()).amount.value, 1500);
+      BOOST_CHECK_EQUAL(db2.get_balance(bobian_id, asset_id_type()).amount.value, 1500);
 
       // Make sure we can generate and accept a plain old empty block on top of all this!
       generate_and_send(1);
