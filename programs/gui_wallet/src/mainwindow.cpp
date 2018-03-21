@@ -198,7 +198,6 @@ MainWindow::MainWindow()
    //
    QHBoxLayout* pSpacerLayout = new QHBoxLayout;
    pSpacerLayout->addWidget(m_pAccountList, Qt::AlignLeft);
-   pSpacerLayout->addWidget(m_pAccountList, Qt::AlignLeft);
    pSpacerLayout->addStretch();
    pRow1Spacer->setLayout(pSpacerLayout);
    pSpacerLayout->setSpacing(0);

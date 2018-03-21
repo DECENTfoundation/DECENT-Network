@@ -40,7 +40,7 @@ MinerVotingTab::MinerVotingTab(QWidget *pParent, DecentLineEdit *pFilterLineEdit
    m_pTableWidget->set_columns({
                                    {tr("Miner"),             15, "name"},
                                    {tr("Link to proposal"),  30, "link"},
-                                   {tr("Votes"),            -50, "votes"},
+                                   {tr("Votes"),            -150, "votes"},
                                    {" ",                      5},
                              });
 
@@ -82,47 +82,61 @@ void MinerVotingTab::timeToUpdate(const std::string& result)
    m_buttonsToIndex.clear();
    m_pTableWidget->setRowCount(iSize);
 
-   for (size_t iIndex = 0; iIndex < iSize; ++iIndex) {
-      auto const &content = contents[iIndex];
+   try {
 
-      string name = content["name"].get<string>();
-      string url  = content["url"].get<string>();
-      uint64_t total_votes = content["total_votes"].get<uint64_t>();
-      bool voted = content["voted"].get<bool>();
+      for (size_t iIndex = 0; iIndex < iSize; ++iIndex) {
+         auto const &content = contents[iIndex];
 
-      QTableWidgetItem* tabItem;
-      tabItem = new QTableWidgetItem(QString::fromStdString(name));
-      tabItem->setTextAlignment(Qt::AlignHCenter);
-      m_pTableWidget->setItem(iIndex, 0, tabItem);
+         string name = content["name"].get<string>();
+         string url = content["url"].get<string>();
+         uint64_t total_votes;
+         if (content["total_votes"].is_string() ) {
+            total_votes = std::stoull(content["total_votes"].get<string>());
+         }
+         else {
+            total_votes = content["total_votes"].get<uint64_t>();
+         }
+         bool voted = content["voted"].get<bool>();
 
-      tabItem = new QTableWidgetItem(QString::fromStdString(url));
-      tabItem->setTextAlignment(Qt::AlignHCenter);
-      m_pTableWidget->setItem(iIndex, 1, tabItem);
+         QTableWidgetItem *tabItem;
+         tabItem = new QTableWidgetItem(QString::fromStdString(name));
+         tabItem->setTextAlignment(Qt::AlignHCenter);
+         m_pTableWidget->setItem(iIndex, 0, tabItem);
 
-      tabItem = new QTableWidgetItem(QString::number(total_votes));
-      tabItem->setTextAlignment(Qt::AlignRight);
-      m_pTableWidget->setItem(iIndex, 2, tabItem);
+         tabItem = new QTableWidgetItem(QString::fromStdString(url));
+         tabItem->setTextAlignment(Qt::AlignHCenter);
+         m_pTableWidget->setItem(iIndex, 1, tabItem);
 
-      // Vote Button
-      //
-      DecentButton* pVoteButton = new DecentButton(m_pTableWidget);
-      pVoteButton->setEnabled(false);
-      if (!voted) {
-         pVoteButton->setText(tr("Vote"));
-         pVoteButton->setStyleSheet("");
+         tabItem = new QTableWidgetItem(QString::number(total_votes));
+         tabItem->setTextAlignment(Qt::AlignRight);
+         m_pTableWidget->setItem(iIndex, 2, tabItem);
+
+         // Vote Button
+         //
+         DecentButton* pVoteButton = new DecentButton(m_pTableWidget);
+         pVoteButton->setEnabled(false);
+         if (!voted) {
+            pVoteButton->setText(tr("Vote"));
+            pVoteButton->setStyleSheet("");
+         }
+         else {
+            pVoteButton->setText(tr("Un-vote"));
+            pVoteButton->setStyleSheet(" QPushButton:disabled { background-color: #E6A900 } ");
+         }
+         pVoteButton->setProperty(g_vote_state_id, QVariant(voted));
+
+
+         m_pTableWidget->setCellWidget(iIndex, 3, pVoteButton);
+         m_buttonsToIndex.insert(pVoteButton, iIndex);
+
+         QObject::connect(pVoteButton, &DecentButton::clicked, this, &MinerVotingTab::slot_MinerVote);
+
       }
-      else {
-         pVoteButton->setText(tr("Un-vote"));
-         pVoteButton->setStyleSheet(" QPushButton:disabled { background-color: #E6A900 } ");
-      }
-      pVoteButton->setProperty(g_vote_state_id, QVariant(voted));
-
-
-      m_pTableWidget->setCellWidget(iIndex, 3, pVoteButton);
-      m_buttonsToIndex.insert(pVoteButton, iIndex);
-
-      QObject::connect(pVoteButton, &DecentButton::clicked, this, &MinerVotingTab::slot_MinerVote);
    }
+   catch(const std::exception& ex) {
+      //TODO.. handle error
+   }
+
 
    if (contents.size() > m_i_page_size)
       set_next_page_iterator(contents[m_i_page_size]["id"].get<string>());

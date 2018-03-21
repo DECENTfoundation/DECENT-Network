@@ -661,12 +661,10 @@ void Globals::startDaemons(BlockChainStartType type)
 
 #endif
 
-#if 0
    m_p_daemon_details->future_decentd = thread_decentd.async([type, &exit_promise]() -> int
                                                             {
                                                                return ::runDecentD(type, exit_promise);
                                                             });
-#endif
 
    m_tp_started = std::chrono::steady_clock::now();
 
