@@ -398,6 +398,7 @@ namespace package {
          * @param content_dir_path Files with content
          * @param samples_dir_path Files with samples
          * @param key Encryption key
+         * @param custody_sectors
          */
         package_handle_t get_package(const boost::filesystem::path& content_dir_path,
                                      const boost::filesystem::path& samples_dir_path,
@@ -406,6 +407,7 @@ namespace package {
          * Creates package info out of the URL and returns handle to it. The package is ready for download.
          * @param url URL of the package
          * @param hash
+         * @param is_virtual
          * @return
          */
         package_handle_t get_package(const std::string& url, const fc::ripemd160&  hash, bool is_virtual = false);
@@ -416,8 +418,14 @@ namespace package {
          */
         package_handle_t get_package(const fc::ripemd160& hash);
 
+       /**
+        * search for existing package and returns handle to it or nullptr.
+        * @param package_hash Hash of the package
+        * @return
+        */
         package_handle_t find_package(const std::string& url);
         package_handle_t find_package(const fc::ripemd160& hash);
+
 
         package_handle_set_t get_all_known_packages() const;
         void recover_all_packages(const event_listener_handle_t& event_listener = event_listener_handle_t());

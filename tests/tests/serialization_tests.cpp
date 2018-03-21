@@ -122,6 +122,7 @@ BOOST_AUTO_TEST_CASE( extended_public_key_type_test )
    }
 }
 
+#if 0
 BOOST_AUTO_TEST_CASE( extension_serialization_test )
 {
    try
@@ -147,5 +148,6 @@ BOOST_AUTO_TEST_CASE( extension_serialization_test )
       throw;
    }
 }
+#endif
 
 BOOST_AUTO_TEST_SUITE_END()
