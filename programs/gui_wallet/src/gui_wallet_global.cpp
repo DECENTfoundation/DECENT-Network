@@ -487,9 +487,7 @@ QString convertDateTimeToLocale(const std::string& s)
 //
 // WalletOperator
 //
-WalletOperator::WalletOperator()
-: QObject(nullptr)
-, m_wallet_api()
+WalletOperator::WalletOperator() : QObject(nullptr), m_wallet_api()
 {
 
 }
@@ -579,15 +577,13 @@ public:
 Globals::Globals()
 : m_connected_state(ConnectionState::Connecting)
 , m_p_wallet_operator(nullptr)
-, m_p_wallet_operator_thread(new QThread(this))
+, m_p_wallet_operator_thread(nullptr)
 , m_p_timer(new QTimer(this))
 , m_p_locale(new QLocale())
 , m_p_daemon_details(nullptr)
 , m_str_currentUser()
 , m_tp_started(std::chrono::steady_clock::now())
 {
-   m_p_wallet_operator_thread->start();
-
    m_p_timer->start(1000);
    QObject::connect(m_p_timer, &QTimer::timeout,
                     this, &Globals::slot_timer);
@@ -620,6 +616,10 @@ void Globals::startDaemons(BlockChainStartType type)
 
    if (nullptr == m_p_wallet_operator)
    {
+      Q_ASSERT(m_p_wallet_operator_thread == nullptr);
+      m_p_wallet_operator_thread = new QThread(this);
+
+
       bNeedNewConnection = true;
       m_p_wallet_operator = new WalletOperator();
       m_p_wallet_operator->moveToThread(m_p_wallet_operator_thread);
@@ -627,6 +627,10 @@ void Globals::startDaemons(BlockChainStartType type)
                        m_p_wallet_operator, &WalletOperator::slot_connect);
       QObject::connect(m_p_wallet_operator, &WalletOperator::signal_connected,
                        this, &Globals::slot_connected);
+
+      connect(m_p_wallet_operator_thread, SIGNAL(finished()), m_p_wallet_operator_thread, SLOT(deleteLater()));
+
+      m_p_wallet_operator_thread->start();
    }
 
    fc::thread& thread_decentd = m_p_daemon_details->thread_decentd;
@@ -657,10 +661,12 @@ void Globals::startDaemons(BlockChainStartType type)
 
 #endif
 
+#if 0
    m_p_daemon_details->future_decentd = thread_decentd.async([type, &exit_promise]() -> int
                                                             {
                                                                return ::runDecentD(type, exit_promise);
                                                             });
+#endif
 
    m_tp_started = std::chrono::steady_clock::now();
 
@@ -690,10 +696,15 @@ void Globals::stopDaemons()
 
    m_p_daemon_details->future_decentd.wait();
 
-   if (m_p_daemon_details->ipfs_process)
+   if (m_p_daemon_details->ipfs_process) {
       m_p_daemon_details->ipfs_process->terminate();
-   delete m_p_daemon_details->ipfs_process;
-   m_p_daemon_details->ipfs_process = nullptr;
+      if (!m_p_daemon_details->ipfs_process->waitForFinished()) {
+         m_p_daemon_details->ipfs_process->kill();
+      }
+
+      delete m_p_daemon_details->ipfs_process;
+      m_p_daemon_details->ipfs_process = nullptr;
+   }
 
    if (m_p_daemon_details)
    {
@@ -717,7 +728,9 @@ void Globals::clear()
    if (m_p_wallet_operator_thread)
    {
       m_p_wallet_operator_thread->quit();
-      m_p_wallet_operator_thread->wait();
+      if (m_p_wallet_operator_thread->isRunning()) {
+         m_p_wallet_operator_thread->wait();
+      }
       delete m_p_wallet_operator_thread;
       m_p_wallet_operator_thread = nullptr;
    }

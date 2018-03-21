@@ -242,6 +242,15 @@ namespace graphene { namespace wallet {
          fc::time_point_sec allowed_withdraw_time;
       };
 
+      struct miner_voting_info
+      {
+          miner_id_type id;
+          string name;
+          string url;
+          uint64_t total_votes;
+          bool voted;
+      };
+        
       namespace detail {
          class wallet_api_impl;
       }
@@ -361,6 +370,7 @@ FC_REFLECT_DERIVED( graphene::wallet::signed_block_with_info, (graphene::chain::
 FC_REFLECT_DERIVED( graphene::wallet::vesting_balance_object_with_info, (graphene::chain::vesting_balance_object),
                     (allowed_withdraw)(allowed_withdraw_time) )
 
+FC_REFLECT( graphene::wallet::miner_voting_info, (id)(name)(url)(total_votes)(voted) )
 
 FC_API( graphene::wallet::wallet_api,
         //General
@@ -447,6 +457,7 @@ FC_API( graphene::wallet::wallet_api,
         (vote_for_miner)
         (set_voting_proxy)
         (set_desired_miner_count)
+        (search_miner_voting)
 
         //Seeding
         (list_seeders_by_price)

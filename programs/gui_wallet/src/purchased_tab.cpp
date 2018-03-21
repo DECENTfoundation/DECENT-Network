@@ -60,6 +60,7 @@ PurchasedTab::PurchasedTab(QWidget* pParent,
 
    QObject::connect(pFilterLineEdit, &QLineEdit::textChanged,
                     this, &PurchasedTab::slot_SearchTermChanged);
+   setFilterWidget(pFilterLineEdit);
 
    QObject::connect(m_pTableWidget, &DecentTable::signal_SortingChanged,
                     this, &PurchasedTab::slot_SortingChanged);

@@ -21,19 +21,29 @@ void TabContentManager::tryToUpdate() {
          timeToUpdate(std::string());
          return;
       }
-      
-      std::string result;
+
+      std::string result, error;
       try {
          result = Globals::instance().runTask(command);
-      } catch (...) {
-         result.clear();
       }
+      catch (std::exception &ex) {
+         error = ex.what();
+
+      }
+      catch (fc::exception& ex) {
+         error = ex.what();
+
+      }
+//    catch (...) {
+//         result.clear();
+//      }
+
       if (result != m_last_result) {
          m_last_result = result;
          timeToUpdate(result);
       }
    } catch (...) {
-      
+
    }
 }
 
@@ -92,5 +102,11 @@ std::string TabContentManager::next_iterator() const
 
    return str_iterator;
 }
+
+void TabContentManager::setFilterWidget(QWidget* pWidget)
+{
+   m_pFilterWidget = pWidget;
+}
+
 
 }  // namespace gui_wallet

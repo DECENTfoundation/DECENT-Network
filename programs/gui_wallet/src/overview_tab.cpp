@@ -46,9 +46,11 @@ Overview_tab::Overview_tab(QWidget* pParent,
     
    setLayout(pMainLayout);
 
-   if (pFilterLineEdit)
-   QObject::connect(pFilterLineEdit, &QLineEdit::textChanged,
-                    this, &Overview_tab::slot_SearchTermChanged);
+   if (pFilterLineEdit) {
+      QObject::connect(pFilterLineEdit, &QLineEdit::textChanged,
+                       this, &Overview_tab::slot_SearchTermChanged);
+      setFilterWidget(pFilterLineEdit);
+   }
 
    QObject::connect(m_pTableWidget, &DecentTable::signal_SortingChanged,
                     this, &Overview_tab::slot_SortingChanged);
@@ -95,7 +97,7 @@ void Overview_tab::timeToUpdate(const std::string& result) {
       QObject::connect(pTransactionButton, &DecentButton::clicked,
                        this, &Overview_tab::slot_Transactions);
       
-      m_pAccountSignalMapper->setMapping(pTransactionButton, name.c_str());
+      m_pAccountSignalMapper->setMapping(pTransactionButton, QString::fromStdString(name));
       m_pTableWidget->setCellWidget(iIndex, 2, pTransactionButton);
 
       // Details Button

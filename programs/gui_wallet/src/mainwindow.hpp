@@ -48,6 +48,7 @@ protected slots:
    void slot_PublishToggled(bool toggled);
    void slot_UsersToggled(bool toggled);
    void slot_PurchasedToggled(bool toggled);
+   void slot_MinerVotingToggled(bool toggled);
    
    void DisplayWalletContentGUI();
 
@@ -73,6 +74,7 @@ protected:
    DecentButton* m_pButtonPublish;
    DecentButton* m_pButtonUsers;
    DecentButton* m_pButtonPurchased;
+   DecentButton* m_pButtonMinerVoting;
 
    DecentButton* m_pPreviousPage;
    DecentButton* m_pResetPage;
@@ -91,6 +93,7 @@ protected:
    TabContentManager* m_pTabPublish;
    TabContentManager* m_pTabUsers;
    TabContentManager* m_pTabPurchased;
+   TabContentManager* m_pTabMinerVoting;
 
    QAction* m_pActionImportKey;
    QAction* m_pActionReplayBlockchain;

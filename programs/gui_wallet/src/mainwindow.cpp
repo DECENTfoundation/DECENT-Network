@@ -32,6 +32,7 @@
 #include "upload_tab.hpp"
 #include "overview_tab.hpp"
 #include "purchased_tab.hpp"
+#include "mining_vote_tab.hpp"
 
 #include "json.hpp"
 
@@ -128,12 +129,17 @@ MainWindow::MainWindow()
    m_pButtonPurchased->setText(tr("Purchased"));
    m_pButtonPurchased->setCheckable(true);
 
+   m_pButtonMinerVoting = new DecentButton(pMainWidget, DecentButton::TabChoice);
+   m_pButtonMinerVoting->setText(tr("Miner Voting"));
+   m_pButtonMinerVoting->setCheckable(true);
+
    QButtonGroup* pGroup = new QButtonGroup(pMainWidget);
    pGroup->addButton(m_pButtonBrowse);
    pGroup->addButton(m_pButtonTransactions);
    pGroup->addButton(m_pButtonPublish);
    pGroup->addButton(m_pButtonUsers);
    pGroup->addButton(m_pButtonPurchased);
+   pGroup->addButton(m_pButtonMinerVoting);
    //
    // 3rd row controls
    //
@@ -175,6 +181,9 @@ MainWindow::MainWindow()
    m_pTabUsers->hide();
    m_pTabPurchased = new PurchasedTab(pMainWidget, m_pFilterPurchased);
    m_pTabPurchased->hide();
+   m_pTabMinerVoting = new MinerVotingTab(pMainWidget, m_pFilterUsers);
+   m_pTabMinerVoting->hide();
+
    //
    // 5th row controls
    //
@@ -188,6 +197,7 @@ MainWindow::MainWindow()
    // 1st row layout
    //
    QHBoxLayout* pSpacerLayout = new QHBoxLayout;
+   pSpacerLayout->addWidget(m_pAccountList, Qt::AlignLeft);
    pSpacerLayout->addWidget(m_pAccountList, Qt::AlignLeft);
    pSpacerLayout->addStretch();
    pRow1Spacer->setLayout(pSpacerLayout);
@@ -209,6 +219,7 @@ MainWindow::MainWindow()
    pRow2Layout->addWidget(m_pButtonPublish);
    pRow2Layout->addWidget(m_pButtonUsers);
    pRow2Layout->addWidget(m_pButtonPurchased);
+   pRow2Layout->addWidget(m_pButtonMinerVoting);
    //
    // 3rd row layout
    //
@@ -238,6 +249,7 @@ MainWindow::MainWindow()
    pRow4Layout->addWidget(m_pTabPublish);
    pRow4Layout->addWidget(m_pTabUsers);
    pRow4Layout->addWidget(m_pTabPurchased);
+   pRow4Layout->addWidget(m_pTabMinerVoting);
    pRow4Layout->setSpacing(0);
    pRow4Layout->setContentsMargins(5, 0, 5, 0);
    //
@@ -300,6 +312,8 @@ MainWindow::MainWindow()
                     this, &MainWindow::slot_UsersToggled);
    QObject::connect(m_pButtonPurchased, &QPushButton::toggled,
                     this, &MainWindow::slot_PurchasedToggled);
+   QObject::connect(m_pButtonMinerVoting, &QPushButton::toggled,
+                    this, &MainWindow::slot_MinerVotingToggled);
 
    QObject::connect(m_pPreviousPage, &QPushButton::clicked,
                      this, &MainWindow::slot_PreviousPage);
@@ -540,7 +554,7 @@ void MainWindow::slot_showPurchasedTab()
 void MainWindow::slot_showTransactionsTab(std::string const& account_name)
 {
    m_pButtonTransactions->setChecked(true);
-   m_pFilterTransactions->setText(account_name.c_str());
+   m_pFilterTransactions->setText(QString::fromStdString(account_name));
    slot_getContents();
 }
 
@@ -632,16 +646,17 @@ void MainWindow::slot_TransactionsToggled(bool toggled)
    // really a stupid hack to have the state change visible
    pSender->setEnabled(false);
    pSender->setEnabled(true);
+
+   QWidget* pFilter = m_pTabTransactions->getFilterWidget();
+   Q_ASSERT(pFilter);
+   pFilter->setHidden(!toggled);
+
    //
-   if (toggled)
-   {
-      m_pFilterTransactions->show();
+   if (toggled) {
       m_pTabTransactions->show();
       slot_getContents();
    }
-   else
-   {
-      m_pFilterTransactions->hide();
+   else {
       m_pTabTransactions->hide();
    }
 }
@@ -653,17 +668,19 @@ void MainWindow::slot_PublishToggled(bool toggled)
    // really a stupid hack to have the state change visible
    pSender->setEnabled(false);
    pSender->setEnabled(true);
+
+   QWidget* pFilter = m_pTabPublish->getFilterWidget();
+   Q_ASSERT(pFilter);
+   pFilter->setHidden(!toggled);
+
    //
-   if (toggled)
-   {
-      m_pFilterPublish->show();
+   if (toggled) {
       m_pTabPublish->show();
       m_pPublish->show();
       slot_getContents();
    }
    else
    {
-      m_pFilterPublish->hide();
       m_pTabPublish->hide();
       m_pPublish->hide();
    }
@@ -676,16 +693,17 @@ void MainWindow::slot_UsersToggled(bool toggled)
    // really a stupid hack to have the state change visible
    pSender->setEnabled(false);
    pSender->setEnabled(true);
+
+   QWidget* pFilter = m_pTabUsers->getFilterWidget();
+   Q_ASSERT(pFilter);
+   pFilter->setHidden(!toggled);
+
    //
-   if (toggled)
-   {
-      m_pFilterUsers->show();
+   if (toggled) {
       m_pTabUsers->show();
       slot_getContents();
    }
-   else
-   {
-      m_pFilterUsers->hide();
+   else {
       m_pTabUsers->hide();
    }
 }
@@ -697,18 +715,42 @@ void MainWindow::slot_PurchasedToggled(bool toggled)
    // really a stupid hack to have the state change visible
    pSender->setEnabled(false);
    pSender->setEnabled(true);
+
+   QWidget* pFilter = m_pTabPurchased->getFilterWidget();
+   Q_ASSERT(pFilter);
+   pFilter->setHidden(!toggled);
+
    //
-   if (toggled)
-   {
-      m_pFilterPurchased->show();
+   if (toggled) {
       m_pTabPurchased->show();
       slot_getContents();
    }
-   else
-   {
-      m_pFilterPurchased->hide();
+   else {
       m_pTabPurchased->hide();
    }
+}
+
+void MainWindow::slot_MinerVotingToggled(bool toggled)
+{
+   QWidget* pSender = qobject_cast<QWidget*>(sender());
+   //
+   // really a stupid hack to have the state change visible
+   pSender->setEnabled(false);
+   pSender->setEnabled(true);
+
+   QWidget* pFilter = m_pTabMinerVoting->getFilterWidget();
+   Q_ASSERT(pFilter);
+   pFilter->setHidden(!toggled);
+
+   //
+   if (toggled) {
+      m_pTabMinerVoting->show();
+      slot_getContents();
+   }
+   else {
+      m_pTabMinerVoting->hide();
+   }
+
 }
 
 void MainWindow::slot_checkDownloads()
@@ -844,6 +886,8 @@ TabContentManager* MainWindow::activeTable() const
       pTab = m_pTabUsers;
    else if (m_pTabPurchased->isVisible())
       pTab = m_pTabPurchased;
+   else if (m_pTabMinerVoting->isVisible())
+      pTab = m_pTabMinerVoting;
 
    return pTab;
 }

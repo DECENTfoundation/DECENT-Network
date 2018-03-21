@@ -1622,6 +1622,72 @@ public:
       return sign_transaction( tx, broadcast );
    } FC_CAPTURE_AND_RETHROW( (account_to_modify)(desired_number_of_miners)(broadcast) ) }
 
+   vector<miner_voting_info> search_miner_voting(const string& term,
+                                                      const string& order,
+                                                      const string& account_id,
+                                                      const string& id,
+                                                      uint32_t count ) const
+   {
+      optional<account_object> acc_obj = _remote_db->get_account_by_name(account_id);
+      if (!acc_obj) {
+          FC_THROW("unknown account or invalid account name");
+      }
+
+      const auto& acc_votes = acc_obj->options.votes;
+
+      map<string,miner_id_type> miners = _remote_db->lookup_miner_accounts("", 1000);
+
+      vector<miner_voting_info> result;
+      result.reserve(miners.size());
+      for(auto item : miners) {
+
+         miner_voting_info info;
+         info.id = item.second;
+         info.name = item.first;
+
+         if (!term.empty() && item.first.find(term) == std::string::npos ) {
+             continue;
+         }
+
+         miner_object obj = this->get_object<miner_object>(item.second);
+
+         info.url = obj.url;
+         info.total_votes = obj.total_votes;
+         info.voted = acc_votes.find(obj.vote_id) != acc_votes.end();
+
+         result.push_back(info);
+      }
+
+      struct miner_sorter {
+          miner_sorter(const string& sort) : sort_(sort) {}
+
+          bool operator()(const miner_voting_info& lhs, const miner_voting_info& rhs) const {
+             if (sort_ == "+name")
+                 return lhs.name.compare(rhs.name) < 0;
+             else if (sort_ == "-name")
+                return rhs.name.compare(lhs.name) < 0;
+             else if (sort_ == "+link")
+                return lhs.url.compare(rhs.url) < 0;
+             else if (sort_ == "-link")
+                return rhs.url.compare(lhs.url) < 0;
+             else if (sort_ == "+votes")
+                return lhs.total_votes < rhs.total_votes;
+             else if (sort_ == "-votes")
+                return rhs.total_votes < lhs.total_votes;
+
+             return false;
+          }
+
+          string sort_;
+      };
+
+      if (!order.empty()) {
+         std::sort(result.begin(), result.end(), miner_sorter(order));
+      }
+
+      return result;
+   }
+
    signed_transaction sign_transaction(signed_transaction tx, bool broadcast = false)
    {
       flat_set<account_id_type> req_active_approvals;
