@@ -36,8 +36,7 @@ using std::string;
 namespace gui_wallet
 {
 
-Upload_popup::Upload_popup(QWidget* pParent, const std::string& id_modify/* = string()*/)
-: StackLayerWidget(pParent)
+Upload_popup::Upload_popup(QWidget* pParent, const std::string& id_modify/* = string()*/) : StackLayerWidget(pParent)
 , m_pStatusCheckTimer(new QTimer(this))
 , m_pDescriptionText(new DecentTextEdit(this, DecentTextEdit::Editor))
 , m_pLifeTime(new QDateEdit(this))
@@ -96,7 +95,7 @@ Upload_popup::Upload_popup(QWidget* pParent, const std::string& id_modify/* = st
    dblValidator->setLocale(Globals::instance().locale());
 
    m_pPriceEditor = new DecentLineEdit(this, DecentLineEdit::DialogLineEdit);
-   m_pPriceEditor->setPlaceholderText(tr("Price"));
+   m_pPriceEditor->setPlaceholderText(QString(tr("Price in %1")).arg(Globals::instance().getAssetName()) );
    m_pPriceEditor->setValidator(dblValidator);
    m_pPriceEditor->setAttribute(Qt::WA_MacShowFocusRect, 0);
    m_pPriceEditor->setTextMargins(5, 5, 5, 5);
@@ -166,6 +165,10 @@ Upload_popup::Upload_popup(QWidget* pParent, const std::string& id_modify/* = st
    //
    // Layouts
    //
+   QVBoxLayout* pFirstRow = new QVBoxLayout();
+   pFirstRow->addWidget(pTitleText);
+   pFirstRow->addWidget(m_pDescriptionText);
+
    QHBoxLayout* pLifeTimeRow = new QHBoxLayout();
    pLifeTimeRow->addWidget(pLifeTimeLabel);
    pLifeTimeRow->addWidget(m_pLifeTime);
@@ -195,8 +198,7 @@ Upload_popup::Upload_popup(QWidget* pParent, const std::string& id_modify/* = st
    pButtonsLayout->addWidget(pCancelButton);
 
    QVBoxLayout* pMainLayout = new QVBoxLayout;
-   pMainLayout->addWidget(pTitleText);
-   pMainLayout->addWidget(m_pDescriptionText);
+   pMainLayout->addLayout(pFirstRow);
    pMainLayout->addLayout(pLifeTimeRow);
    pMainLayout->addLayout(pPriceRow);
    pMainLayout->addLayout(pSeedersRow);
@@ -206,6 +208,12 @@ Upload_popup::Upload_popup(QWidget* pParent, const std::string& id_modify/* = st
    pMainLayout->addLayout(pButtonsLayout);
    pMainLayout->setContentsMargins(10, 10, 10, 10);
    setLayout(pMainLayout);
+
+   QWidget::setTabOrder(pTitleText, m_pDescriptionText);
+   QWidget::setTabOrder(m_pDescriptionText, m_pLifeTime);
+   QWidget::setTabOrder(m_pLifeTime, m_pPriceEditor);
+
+
 
    slot_UpdateStatus();
    //
@@ -251,6 +259,11 @@ Upload_popup::Upload_popup(QWidget* pParent, const std::string& id_modify/* = st
    QObject::connect(m_pStatusCheckTimer, &QTimer::timeout,
                     this, &Upload_popup::slot_UpdateStatus);
    m_pStatusCheckTimer->start(500);
+
+   pTitleText->show();
+   pTitleText->setFocus();
+
+
 
    if (!m_id_modify.empty())
    {

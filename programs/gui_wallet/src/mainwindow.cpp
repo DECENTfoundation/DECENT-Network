@@ -100,6 +100,7 @@ MainWindow::MainWindow()
    DecentLabel* pRow1Spacer = new DecentLabel(pMainWidget, DecentLabel::Row1Spacer);
    m_pAccountList = new QComboBox(pMainWidget);
    m_pAccountList->setStyle(QStyleFactory::create("fusion"));
+   m_pAccountList->setMinimumContentsLength(70);
    m_pBalance = new DecentLabel(pMainWidget, DecentLabel::Balance);
    DecentButton* pTransferButton = new DecentButton(pMainWidget, DecentButton::Send);
    pTransferButton->setToolTip("Transfer DCT to account");
@@ -390,24 +391,33 @@ void MainWindow::slot_setSplash()
    m_iSplashWidgetIndex = m_pStackedWidget->count();
 
    StackLayerWidget* pSplashScreen = new StackLayerWidget(this);
-   QProgressBar* pConnectingProgress = new QProgressBar(pSplashScreen);
-   pConnectingProgress->setValue(70);
-   DecentLabel* pConnectingLabel = new DecentLabel(pSplashScreen, DecentLabel::SplashInfo);
-   pConnectingLabel->setText(tr("Please wait, we are syncing with network…"));
+   m_pConnectingProgress = new QProgressBar(pSplashScreen);
+   m_pConnectingProgress->setFont(gui_wallet::ProgressInfoFont());
+   m_pConnectingProgress->setFormat("%d%%");
+
+   DecentLabel* pPleaseWaitLabel = new DecentLabel(pSplashScreen, DecentLabel::SplashInfo);
+   pPleaseWaitLabel->setFont(gui_wallet::ProgressInfoFont());
+   pPleaseWaitLabel->setText(tr("Please wait..."));
+
+   //pConnectingProgress->setValue(70);
+   m_pConnectingLabel = new DecentLabel(pSplashScreen, DecentLabel::SplashInfo);
+   //pConnectingLabel->setText(QString(tr("Please wait, currently synchronized block is %1 old.")).arg(""));
+   m_pConnectingLabel->setFont(gui_wallet::ProgressInfoFont());
+
    StatusLabel* pSyncUpLabel = new StatusLabel(pSplashScreen, DecentLabel::SplashInfo);
    DecentButton* pButton = new DecentButton(this, DecentButton::SplashAction);
 
-   pConnectingLabel->setFont(gui_wallet::ProgressInfoFont());
    pSyncUpLabel->setFont(gui_wallet::ProgressInfoFont());
 
    pButton->hide();
    pButton->setText(tr("Proceed"));
    
    QGridLayout* pLayoutSplash = new QGridLayout;
-   pLayoutSplash->addWidget(pConnectingProgress, 0, 0, Qt::AlignVCenter | Qt::AlignCenter);
-   pLayoutSplash->addWidget(pConnectingLabel, 1, 0, Qt::AlignVCenter | Qt::AlignCenter);
-   pLayoutSplash->addWidget(pSyncUpLabel, 2, 0, Qt::AlignVCenter | Qt::AlignCenter);
-   pLayoutSplash->addWidget(pButton, 3, 0, Qt::AlignVCenter | Qt::AlignCenter);
+   pLayoutSplash->addWidget(m_pConnectingProgress, 0, 0, Qt::AlignVCenter | Qt::AlignCenter);
+   pLayoutSplash->addWidget(pPleaseWaitLabel,  1, 0, Qt::AlignVCenter | Qt::AlignCenter);
+   pLayoutSplash->addWidget(m_pConnectingLabel, 2, 0, Qt::AlignVCenter | Qt::AlignCenter);
+   pLayoutSplash->addWidget(pSyncUpLabel, 3, 0, Qt::AlignVCenter | Qt::AlignCenter);
+   pLayoutSplash->addWidget(pButton, 4, 0, Qt::AlignVCenter | Qt::AlignCenter);
    
    pLayoutSplash->setSizeConstraint(QLayout::SetFixedSize);
    pLayoutSplash->setSpacing(10);
@@ -416,12 +426,14 @@ void MainWindow::slot_setSplash()
    pSplashScreen->setLayout(pLayoutSplash);
    
    QObject::connect(&Globals::instance(), &Globals::statusShowMessage,
-                    pSyncUpLabel, &StatusLabel::showMessage);
+                    this, &MainWindow::slot_ConnectingUpdate);
    QObject::connect(&Globals::instance(), &Globals::statusClearMessage,
                     pSyncUpLabel, &StatusLabel::clearMessage);
+   QObject::connect(&Globals::instance(), &Globals::updateProgress,
+                     this, &MainWindow::slot_BlockchainUpdate);
    
-   QObject::connect(this, &MainWindow::signal_setSplashMainText,
-                    pConnectingLabel, &QLabel::setText);
+//   QObject::connect(this, &MainWindow::signal_setSplashMainText,
+//                    pConnectingLabel, &QLabel::setText);
    QObject::connect(this, &MainWindow::signal_setSplashMainText,
                     pButton, &QWidget::show);
    
@@ -529,6 +541,18 @@ void MainWindow::slot_connectionStatusChanged(Globals::ConnectionState from, Glo
          slot_setSplash();
       }
    }
+}
+
+void MainWindow::slot_ConnectingUpdate(const QString& time_text, int)
+{
+   Q_ASSERT(m_pConnectingLabel);
+   m_pConnectingLabel->setText(QString(tr("currently synchronized block is %1 old.")).arg(time_text));
+}
+
+void MainWindow::slot_BlockchainUpdate(int value, int max)
+{
+   m_pConnectingProgress->setMaximum(max);
+   m_pConnectingProgress->setValue(value);
 }
 
 void MainWindow::slot_showPurchasedTab()

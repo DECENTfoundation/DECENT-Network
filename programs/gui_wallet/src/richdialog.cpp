@@ -135,18 +135,21 @@ TransferWidget::TransferWidget(QWidget* parent, QString const& userName) : Stack
                     this, &TransferWidget::Transfer);
    QObject::connect(cancel, &QPushButton::clicked,
                     this, &StackLayerWidget::closed);
-   
+
+   QLabel* pLabel = new QLabel(this);
+   pLabel->setText(tr("Transfer of funds"));
+
    DecentLineEdit* name = new DecentLineEdit(this, DecentLineEdit::DialogLineEdit);
    DecentLineEdit* amount = new DecentLineEdit(this, DecentLineEdit::DialogLineEdit);
    DecentLineEdit* memo = new DecentLineEdit(this, DecentLineEdit::DialogLineEdit);
    
-   name->setPlaceholderText(tr("Account"));
+   name->setPlaceholderText(tr("Reciever account name"));
    name->setAttribute(Qt::WA_MacShowFocusRect, 0);
    name->setText(m_toUserName);
    QObject::connect(name, &QLineEdit::textChanged,
                     this, &TransferWidget::nameChanged);
    
-   amount->setPlaceholderText(tr("Amount"));
+   amount->setPlaceholderText(QString(tr("Amount of %1")).arg(Globals::instance().getAssetName())  );
    amount->setAttribute(Qt::WA_MacShowFocusRect, 0);
 
    QDoubleValidator* dblValidator = new QDoubleValidator(0.0001, 100000, 4, this);
@@ -155,11 +158,12 @@ TransferWidget::TransferWidget(QWidget* parent, QString const& userName) : Stack
    QObject::connect(amount, &QLineEdit::textChanged,
                     this, &TransferWidget::amountChanged);
    
-   memo->setPlaceholderText(tr("Memo"));
+   memo->setPlaceholderText(tr("Memo (optional)"));
    memo->setAttribute(Qt::WA_MacShowFocusRect, 0);
    QObject::connect(memo, &QLineEdit::textChanged,
                     this, &TransferWidget::memoChanged);
-   
+
+   lineEditsLayout->addWidget(pLabel);
    lineEditsLayout->addWidget(name);
    lineEditsLayout->addWidget(amount);
    lineEditsLayout->addWidget(memo);
@@ -173,6 +177,8 @@ TransferWidget::TransferWidget(QWidget* parent, QString const& userName) : Stack
    mainLayout->addLayout(buttonsLayout);
    
    setLayout(mainLayout);
+
+   name->setFocus();
 
 #ifdef _MSC_VER
    int height = style()->pixelMetric(QStyle::PM_TitleBarHeight);
@@ -236,7 +242,11 @@ ImportKeyWidget::ImportKeyWidget(QWidget* parent) : StackLayerWidget(parent)
 {
    QObject::connect(this, &StackLayerWidget::accepted,
                     &Globals::instance(), &Globals::signal_keyImported);
-   
+
+   DecentLabel* pLabel = new DecentLabel(this);
+   pLabel->setFont(gui_wallet::MainFont());
+   pLabel->setText(tr("Import account"));
+
    QVBoxLayout* mainLayout       = new QVBoxLayout();
    QVBoxLayout* lineEditsLayout  = new QVBoxLayout();
    QHBoxLayout* buttonsLayout    = new QHBoxLayout();
@@ -244,7 +254,7 @@ ImportKeyWidget::ImportKeyWidget(QWidget* parent) : StackLayerWidget(parent)
    DecentButton* ok = new DecentButton(this, DecentButton::DialogAction);
    ok->setText(tr("Ok"));
    DecentButton* cancel = new DecentButton(this, DecentButton::DialogCancel);
-   cancel->setText(tr("Back"));
+   cancel->setText(tr("Cancel"));
    
    QObject::connect(ok, &QPushButton::clicked,
                     this, &ImportKeyWidget::Import);
@@ -254,16 +264,17 @@ ImportKeyWidget::ImportKeyWidget(QWidget* parent) : StackLayerWidget(parent)
    DecentLineEdit* name = new DecentLineEdit(this, DecentLineEdit::DialogLineEdit);
    DecentLineEdit* key  = new DecentLineEdit(this, DecentLineEdit::DialogLineEdit);
    
-   name->setPlaceholderText(tr("Account"));
+   name->setPlaceholderText(tr("Account name"));
    name->setAttribute(Qt::WA_MacShowFocusRect, 0);
    QObject::connect(name, &QLineEdit::textChanged,
                     this, &ImportKeyWidget::nameChanged);
    
-   key->setPlaceholderText(tr("Key"));
+   key->setPlaceholderText(tr("Private Key"));
    key->setAttribute(Qt::WA_MacShowFocusRect, 0);
    QObject::connect(key, &QLineEdit::textChanged,
                     this, &ImportKeyWidget::keyChanged);
 
+   lineEditsLayout->addWidget(pLabel);
    lineEditsLayout->addWidget(name);
    lineEditsLayout->addWidget(key);
    
@@ -914,73 +925,110 @@ bool CommentWidget::slot_Previous()
 }
 // PasswordWidget
 //
+
+const int g_maxPasswordLen = 50;
+
 PasswordWidget::PasswordWidget(QWidget* pParent, eType enType) : StackLayerWidget(pParent)
 , m_enType(enType)
 , m_pError(new QLabel(this))
 {
-   QLabel* pLabel = new QLabel(this);
-   pLabel->setText(tr("The password must be limited to 50 characters"));
-   DecentButton* pButton = new DecentButton(this, DecentButton::DialogAction);
-
    m_pError->hide();
 
-   if (enType == eSetPassword)
-      pButton->setText(tr("Set Password"));
-   else
-      pButton->setText(tr("Unlock"));
+   QLabel* pLabel = new QLabel(this);
+   m_pButton = new DecentButton(this, DecentButton::DialogAction);
 
-   DecentLineEdit* pEditPassword = new DecentLineEdit(this, DecentLineEdit::DialogLineEdit);
-   pEditPassword->setEchoMode(QLineEdit::Password);
-   pEditPassword->setAttribute(Qt::WA_MacShowFocusRect, 0);
-   pEditPassword->setPlaceholderText(QString(tr("Password")));
-   pEditPassword->setMaxLength(50);
-
-   if (enType == eSetPassword)
-      setWindowTitle(tr("Set Password"));
-   else
-   {
-      pLabel->hide();
-      setWindowTitle(tr("Unlock your wallet"));
+   if (enType == eSetPassword) {
+      pLabel->setText(tr("Setup your password for DECENT wallet"));
+      m_pButton->setText(tr("Set Password"));
    }
+   else {
+      pLabel->setText(tr("Unlock your DECENT wallet"));
+      m_pButton->setText(tr("Unlock"));
+   }
+
+   m_line1Edit = new DecentLineEdit(this, DecentLineEdit::DialogLineEdit);
+   m_line1Edit->setEchoMode(QLineEdit::Password);
+   m_line1Edit->setAttribute(Qt::WA_MacShowFocusRect, 0);
+   if (enType == eSetPassword) {
+      m_line1Edit->setPlaceholderText(QString(tr("New password")));
+   }
+   else {
+      m_line1Edit->setPlaceholderText(QString(tr("Password")));
+   }
+   m_line1Edit->setMaxLength(g_maxPasswordLen);
+   m_line1Edit->setToolTip(tr("The password must be limited to 50 characters"));
+
+   m_line2Edit = new DecentLineEdit(this, DecentLineEdit::DialogLineEdit);
+   m_line2Edit->setEchoMode(QLineEdit::Password);
+   m_line2Edit->setAttribute(Qt::WA_MacShowFocusRect, 0);
+   m_line2Edit->setPlaceholderText(QString(tr("Reenter password")));
+   m_line2Edit->setMaxLength(g_maxPasswordLen);
+   m_line2Edit->setToolTip(tr("The password must be limited to 50 characters"));
 
    int iRowIndex = 0;
    QGridLayout* pMainLayout = new QGridLayout;
    pMainLayout->addWidget(pLabel, iRowIndex++, 0, Qt::AlignCenter | Qt::AlignVCenter);
    pMainLayout->addWidget(m_pError, iRowIndex++, 0, Qt::AlignCenter | Qt::AlignVCenter);
-   pMainLayout->addWidget(pEditPassword, iRowIndex++, 0, Qt::AlignCenter | Qt::AlignVCenter);
-   pMainLayout->addWidget(pButton, iRowIndex++, 0, Qt::AlignCenter | Qt::AlignVCenter);
+   pMainLayout->addWidget(m_line1Edit, iRowIndex++, 0, Qt::AlignCenter | Qt::AlignVCenter);
+   if (enType == eSetPassword) {
+      pMainLayout->addWidget(m_line2Edit, iRowIndex++, 0, Qt::AlignCenter | Qt::AlignVCenter);
+      m_pButton->setEnabled(false);
+   }
+   else {
+      m_line2Edit->hide();
+   }
+   pMainLayout->addWidget(m_pButton, iRowIndex++, 0, Qt::AlignCenter | Qt::AlignVCenter);
 
    pMainLayout->setSizeConstraint(QLayout::SetFixedSize);
 
    pMainLayout->setSpacing(20);
    pMainLayout->setContentsMargins(20, 20, 20, 20);
 
-   QObject::connect(pEditPassword, &QLineEdit::returnPressed,
+   QObject::connect(m_pButton, &QPushButton::clicked,
                     this, &PasswordWidget::slot_action);
-   QObject::connect(pButton, &QPushButton::clicked,
-                    this, &PasswordWidget::slot_action);
-   QObject::connect(pEditPassword, &QLineEdit::textChanged,
-                    this, &PasswordWidget::slot_set_password);
+   if (enType == eUnlock) {
+      QObject::connect(m_line1Edit, &QLineEdit::returnPressed,
+                       this, &PasswordWidget::slot_action);
+   }
+   QObject::connect(m_line1Edit, &QLineEdit::textChanged,
+                    this, &PasswordWidget::slot_textChanged);
+   QObject::connect(m_line2Edit, &QLineEdit::textChanged,
+                    this, &PasswordWidget::slot_textChanged);
 
    setLayout(pMainLayout);
 }
 
-void PasswordWidget::slot_set_password(const QString& strPassword)
+void PasswordWidget::slot_textChanged(const QString& )
 {
-   m_strPassword = strPassword;
+   if (m_enType == eSetPassword) {
+      bool enabled = (!m_line1Edit->text().isEmpty() && !m_line2Edit->text().isEmpty());
+      m_pButton->setEnabled(enabled);
+   }
+   else {
+      bool enabled = !m_line1Edit->text().isEmpty();
+      m_pButton->setEnabled(enabled);
+   }
 }
 
 void PasswordWidget::slot_action()
 {
-   if (m_strPassword.isEmpty())
-      return;
+   const QString& pass1 = m_line1Edit->text();
+   const QString& pass2 = m_line2Edit->text();
+
+   if (m_enType == eSetPassword) {
+      if (pass1 != pass2) {
+         m_pError->setText(tr("Passwords are not equal"));
+         m_pError->show();
+         return;
+      }
+   }
 
    QString error;
    if (m_enType == eSetPassword)
    {
       try
       {
-         Globals::instance().runTask("set_password \"" + m_strPassword.toStdString() + "\"");
+         Globals::instance().runTask("set_password \"" + pass1.toStdString() + "\"");
       }
       catch(const std::exception& ex) {
          error = ex.what();
@@ -998,7 +1046,7 @@ void PasswordWidget::slot_action()
 
    try
    {
-      Globals::instance().runTask("unlock \"" + m_strPassword.toStdString() + "\"");
+      Globals::instance().runTask("unlock \"" + pass1.toStdString() + "\"");
    }
    catch(const std::exception& ex) {
       error = ex.what();
