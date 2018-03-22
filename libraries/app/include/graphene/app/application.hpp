@@ -67,7 +67,6 @@ namespace graphene { namespace app {
             return plug;
          }
          std::shared_ptr<abstract_plugin> get_plugin( const string& name )const;
-         std::shared_ptr<abstract_plugin> get_plugin_by_index(int index)const;
 
          template<typename PluginType>
          std::shared_ptr<PluginType> get_plugin( const string& name ) const

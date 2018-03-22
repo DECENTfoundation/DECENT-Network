@@ -192,7 +192,6 @@ void account_history_plugin::plugin_initialize(const boost::program_options::var
 
 void account_history_plugin::plugin_startup()
 {
-   _running = true;
 }
 
 flat_set<account_id_type> account_history_plugin::tracked_accounts() const

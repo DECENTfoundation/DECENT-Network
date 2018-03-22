@@ -35,7 +35,6 @@
 #include <graphene/chain/protocol/fee_schedule.hpp>
 #include <graphene/chain/transaction_object.hpp>
 #include <graphene/chain/withdraw_permission_object.hpp>
-#include <graphene/seeding/seeding.hpp>
 #include <graphene/seeding/seeding_utility.hpp>
 
 
@@ -233,40 +232,6 @@ namespace graphene { namespace app {
        seeding_options.packages_path = packages_path;
        seeding_options.region_code = region_code;
        decent::seeding::seeding_promise->set_value( seeding_options );
-    }
-
-    std::vector<std::string> network_node_api::get_running_plugins() const
-    {
-       std::vector<std::string> roles;
-       int index = 0;
-       std::shared_ptr<abstract_plugin> p = _app.get_plugin_by_index(index);
-
-       while(p != nullptr) {
-          if(p->plugin_is_running())
-            roles.push_back(p->plugin_name());
-          index++;
-          p = _app.get_plugin_by_index(index);
-       }
-
-       return roles;
-    }
-
-    void network_node_api::start_content_seeding(const std::string& url) const
-    {
-       shared_ptr<decent::seeding::seeding_plugin> p = _app.get_plugin<decent::seeding::seeding_plugin>("seeding");
-       FC_ASSERT(p);
-       bool running = p->plugin_is_running();
-       FC_ASSERT(running, "Seeding plugin is not running");
-       p->start_content_seeding(url);
-    }
-
-    void network_node_api::stop_content_seeding(const std::string& url) const
-    {
-       shared_ptr<decent::seeding::seeding_plugin> p = _app.get_plugin<decent::seeding::seeding_plugin>("seeding");
-       FC_ASSERT(p);
-       bool running = p->plugin_is_running();
-       FC_ASSERT(running, "Seeding plugin is not running");
-       p->stop_content_seeding(url);
     }
 
     fc::api<network_broadcast_api> login_api::network_broadcast()const

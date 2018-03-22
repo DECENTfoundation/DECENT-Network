@@ -101,7 +101,6 @@ void debug_miner_plugin::plugin_startup()
    _applied_block_conn  = db.applied_block.connect([this](const graphene::chain::signed_block& b){ on_applied_block(b); });
    _changed_objects_conn = db.changed_objects.connect([this](const std::vector<graphene::db::object_id_type>& ids){ on_changed_objects(ids); });
    _removed_objects_conn = db.removed_objects.connect([this](const std::vector<const graphene::db::object*>& objs){ on_removed_objects(objs); });
-   _running = true;
 
    return;
 }
@@ -170,6 +169,5 @@ void debug_miner_plugin::plugin_shutdown()
       _json_object_stream->close();
       _json_object_stream.reset();
    }
-   _running = false;
    return;
 }
