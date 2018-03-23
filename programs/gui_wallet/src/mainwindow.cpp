@@ -100,7 +100,7 @@ MainWindow::MainWindow()
    DecentLabel* pRow1Spacer = new DecentLabel(pMainWidget, DecentLabel::Row1Spacer);
    m_pAccountList = new QComboBox(pMainWidget);
    m_pAccountList->setStyle(QStyleFactory::create("fusion"));
-   m_pAccountList->setMinimumContentsLength(70);
+   m_pAccountList->setMinimumContentsLength(40);
    m_pBalance = new DecentLabel(pMainWidget, DecentLabel::Balance);
    DecentButton* pTransferButton = new DecentButton(pMainWidget, DecentButton::Send);
    pTransferButton->setToolTip("Transfer DCT to account");
@@ -607,7 +607,13 @@ void MainWindow::slot_stackWidgetPop()
 
 void MainWindow::slot_updateAccountBalance(Asset const& balance)
 {
-   m_pBalance->setText(balance.getStringBalance());
+   QString blalanceText = balance.getStringBalance();
+
+   QFontMetrics fm(m_pBalance->font());
+   int pxWidth = fm.width(blalanceText);
+
+   m_pBalance->setMinimumWidth(pxWidth + 10);  //10 is border..
+   m_pBalance->setText(blalanceText);
 }
 
 void MainWindow::slot_replayBlockChain()
