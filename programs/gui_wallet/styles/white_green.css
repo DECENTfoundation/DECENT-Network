@@ -405,6 +405,7 @@ QProgressBar
    width: 23.86em;
    max-width: 23.86em;
    background: rgb(224, 229, 235);
+   text-align: center;
 }
 QProgressBar:chunk
 {

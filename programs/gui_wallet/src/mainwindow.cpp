@@ -393,15 +393,13 @@ void MainWindow::slot_setSplash()
    StackLayerWidget* pSplashScreen = new StackLayerWidget(this);
    m_pConnectingProgress = new QProgressBar(pSplashScreen);
    m_pConnectingProgress->setFont(gui_wallet::ProgressInfoFont());
-   m_pConnectingProgress->setFormat("%d%%");
 
    DecentLabel* pPleaseWaitLabel = new DecentLabel(pSplashScreen, DecentLabel::SplashInfo);
    pPleaseWaitLabel->setFont(gui_wallet::ProgressInfoFont());
    pPleaseWaitLabel->setText(tr("Please wait..."));
 
-   //pConnectingProgress->setValue(70);
    m_pConnectingLabel = new DecentLabel(pSplashScreen, DecentLabel::SplashInfo);
-   //pConnectingLabel->setText(QString(tr("Please wait, currently synchronized block is %1 old.")).arg(""));
+   m_pConnectingLabel->setText(tr("Connecting..."));
    m_pConnectingLabel->setFont(gui_wallet::ProgressInfoFont());
 
    StatusLabel* pSyncUpLabel = new StatusLabel(pSplashScreen, DecentLabel::SplashInfo);
@@ -413,8 +411,8 @@ void MainWindow::slot_setSplash()
    pButton->setText(tr("Proceed"));
    
    QGridLayout* pLayoutSplash = new QGridLayout;
-   pLayoutSplash->addWidget(m_pConnectingProgress, 0, 0, Qt::AlignVCenter | Qt::AlignCenter);
-   pLayoutSplash->addWidget(pPleaseWaitLabel,  1, 0, Qt::AlignVCenter | Qt::AlignCenter);
+   pLayoutSplash->addWidget(pPleaseWaitLabel,  0, 0, Qt::AlignVCenter | Qt::AlignCenter);
+   pLayoutSplash->addWidget(m_pConnectingProgress, 1, 0, Qt::AlignVCenter | Qt::AlignCenter);
    pLayoutSplash->addWidget(m_pConnectingLabel, 2, 0, Qt::AlignVCenter | Qt::AlignCenter);
    pLayoutSplash->addWidget(pSyncUpLabel, 3, 0, Qt::AlignVCenter | Qt::AlignCenter);
    pLayoutSplash->addWidget(pButton, 4, 0, Qt::AlignVCenter | Qt::AlignCenter);
