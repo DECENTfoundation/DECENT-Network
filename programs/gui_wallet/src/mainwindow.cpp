@@ -45,6 +45,7 @@
 #endif
 
 #include <QCloseEvent>
+#include <QMessageBox>
 
 #include "update_manager.hpp"
 
@@ -60,6 +61,7 @@ MainWindow::MainWindow()
 , m_pTimerDownloads(new QTimer(this))
 , m_pTimerBalance(new QTimer(this))
 , m_pTimerContents(new QTimer(this))
+, m_pTimerVoting(new QTimer(this))
 , m_pStackedWidget(new QStackedWidget(this))
 , m_pAccountList(nullptr)
 , m_pBalance(nullptr)
@@ -378,6 +380,10 @@ MainWindow::MainWindow()
    m_pTimerContents->setInterval(1000);
    QObject::connect(m_pTimerContents, &QTimer::timeout,
                     this, &MainWindow::slot_getContents);
+
+//   m_pTimerVoting->setInterval(5000);
+//   QObject::connect(m_pTimerVoting, &QTimer::timeout,
+//                    this, &MainWindow::slot_getContents);
 
    resize(900, 600);
 
@@ -743,6 +749,13 @@ void MainWindow::slot_MinerVotingToggled(bool toggled)
 
    //
    if (toggled) {
+
+      QMessageBox info(this);
+      info.setIcon(QMessageBox::Information);
+      info.setText(QString(tr("For every vote or unvote opeation you will pay %1 fee")).arg("xyz DCT") );  //TODO: add fee price
+      info.exec();
+
+
       m_pTabMinerVoting->show();
       slot_getContents();
    }

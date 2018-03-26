@@ -1622,7 +1622,7 @@ public:
       return sign_transaction( tx, broadcast );
    } FC_CAPTURE_AND_RETHROW( (account_to_modify)(desired_number_of_miners)(broadcast) ) }
 
-   vector<miner_voting_info> search_miner_voting(const string& term,
+   vector<miner_voting_info> search_miner_voting(const string& filter,
                                                       const string& order,
                                                       const string& account_id,
                                                       const string& id,
@@ -1637,15 +1637,15 @@ public:
 
       map<string,miner_id_type> miners = _remote_db->lookup_miner_accounts("", 1000);
 
-      vector<miner_voting_info> result;
-      result.reserve(miners.size());
+      vector<miner_voting_info> miners_info;
+      miners_info.reserve(miners.size());
       for(auto item : miners) {
 
          miner_voting_info info;
          info.id = item.second;
          info.name = item.first;
 
-         if (!term.empty() && item.first.find(term) == std::string::npos ) {
+         if (!filter.empty() && item.first.find(filter) == std::string::npos ) {
              continue;
          }
 
@@ -1655,7 +1655,7 @@ public:
          info.total_votes = obj.total_votes;
          info.voted = acc_votes.find(obj.vote_id) != acc_votes.end();
 
-         result.push_back(info);
+         miners_info.push_back(info);
       }
 
       struct miner_sorter {
@@ -1682,7 +1682,30 @@ public:
       };
 
       if (!order.empty()) {
-         std::sort(result.begin(), result.end(), miner_sorter(order));
+         std::sort(miners_info.begin(), miners_info.end(), miner_sorter(order));
+      }
+
+      struct miner_search {
+          miner_search(const string& search_id) : search_id_(search_id) {}
+
+          bool operator()(const miner_voting_info& info) const {
+              return info.id == search_id_;
+          }
+
+          object_id_type search_id_;
+      };
+
+      vector<miner_voting_info> result;
+      result.reserve(count);
+
+      auto it = miners_info.begin();
+      if (!id.empty()) {
+         it = std::find_if(miners_info.begin(), miners_info.end(), miner_search(id));
+      }
+
+      while(count && it != miners_info.end()) {
+         count--;
+         result.push_back(*it); ++it;
       }
 
       return result;
@@ -3559,5 +3582,4 @@ void fc::from_variant(const fc::variant& var, account_multi_index_type& vo)
    const vector<account_object>& v = var.as<vector<account_object>>();
    vo = account_multi_index_type(v.begin(), v.end());
 }
-
 
