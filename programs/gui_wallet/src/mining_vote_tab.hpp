@@ -28,6 +28,7 @@ namespace gui_wallet
     public slots:
        void slot_SearchTermChanged(QString const& strSearchTerm);
        void slot_SortingChanged(int index);
+       void slot_cellClicked(int row, int col);
        void slot_MinerVote();
 
     private:
@@ -38,5 +39,6 @@ namespace gui_wallet
        QString m_strSearchTerm;
 
        QMap<QWidget*, int> m_buttonsToIndex;
+       QMap<int, QString> m_indexToUrl;
     };
 }

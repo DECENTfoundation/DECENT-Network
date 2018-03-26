@@ -18,8 +18,7 @@
 #include <QSignalMapper>
 #include <QLabel>
 #include <QLineEdit>
-#include <QPalette>
-#include <QDebug>
+#include <QDesktopServices>
 
 #include <graphene/chain/content_object.hpp>
 
@@ -100,15 +99,18 @@ void MinerVotingTab::timeToUpdate(const std::string& result)
 
          QTableWidgetItem *tabItem;
          tabItem = new QTableWidgetItem(QString::fromStdString(name));
-         tabItem->setTextAlignment(Qt::AlignHCenter);
+         tabItem->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
          m_pTableWidget->setItem(iIndex, 0, tabItem);
 
          tabItem = new QTableWidgetItem(QString::fromStdString(url));
-         tabItem->setTextAlignment(Qt::AlignHCenter);
+         tabItem->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
          m_pTableWidget->setItem(iIndex, 1, tabItem);
+         if (!url.empty()) {
+            m_indexToUrl.insert(iIndex, QString::fromStdString(url));
+         }
 
          tabItem = new QTableWidgetItem(QString::number(total_votes));
-         tabItem->setTextAlignment(Qt::AlignRight);
+         tabItem->setTextAlignment(Qt::AlignRight|Qt::AlignVCenter);
          m_pTableWidget->setItem(iIndex, 2, tabItem);
 
          // Vote Button
@@ -137,6 +139,7 @@ void MinerVotingTab::timeToUpdate(const std::string& result)
       //TODO.. handle error
    }
 
+   QObject::connect(m_pTableWidget, &DecentTable::cellClicked, this, &MinerVotingTab::slot_cellClicked);
 
    if (contents.size() > m_i_page_size)
       set_next_page_iterator(contents[m_i_page_size]["id"].get<string>());
@@ -173,6 +176,17 @@ void MinerVotingTab::slot_SearchTermChanged(const QString& strSearchTerm)
 void MinerVotingTab::slot_SortingChanged(int index)
 {
    reset();
+}
+
+void MinerVotingTab::slot_cellClicked(int row, int col)
+{
+   if (col != 1)
+      return;
+
+   auto find = m_indexToUrl.find(row);
+   if (find != m_indexToUrl.end()) {
+      QDesktopServices::openUrl(QUrl(find.value()));
+   }
 }
 
 void MinerVotingTab::slot_MinerVote()
