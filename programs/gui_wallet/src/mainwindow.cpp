@@ -750,9 +750,11 @@ void MainWindow::slot_MinerVotingToggled(bool toggled)
    //
    if (toggled) {
 
+      Asset opFee = Globals::instance().getDCoreFees(2);  //account_update_operation
+
       QMessageBox info(this);
       info.setIcon(QMessageBox::Information);
-      info.setText(QString(tr("For every vote or unvote opeation you will pay %1 fee")).arg("xyz DCT") );  //TODO: add fee price
+      info.setText(QString(tr("For every vote or unvote opeation you will pay %1 fee")).arg(opFee.getString()) );
       info.exec();
 
 

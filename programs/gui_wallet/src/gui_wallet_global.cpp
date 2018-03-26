@@ -534,7 +534,7 @@ QString Asset::getString() const
       QLocale& locale = Globals::instance().locale();
 
       if (hasDecimals())
-         return locale.toString(to_value(), 'f', g_max_number_of_decimal_places) + " " + QString::fromStdString(m_str_symbol);
+         return locale.toString(to_value(), 'g', g_max_number_of_decimal_places) + " " + QString::fromStdString(m_str_symbol);
       else
          return locale.toString((int)to_value()) + " " + QString::fromStdString(m_str_symbol);
    }
@@ -546,7 +546,7 @@ QString Asset::getString() const
 QString Asset::getStringBalance() const
 {
    QLocale& locale = Globals::instance().locale();
-   return locale.toString(to_value(), 'f' , g_max_number_of_decimal_places) + " " + QString::fromStdString(m_str_symbol);
+   return locale.toString(to_value(), 'g' , g_max_number_of_decimal_places) + " " + QString::fromStdString(m_str_symbol);
 }
 //
 // DaemonDetails
@@ -840,6 +840,15 @@ std::string Globals::getAccountName(string const& accountId)
    }
 
    return search->second;
+}
+
+Asset Globals::getDCoreFees(int iOperation)
+{
+   nlohmann::json global_prop_info = runTaskParse("get_global_properties");
+   nlohmann::json param = global_prop_info["parameters"]["current_fees"]["parameters"];
+   nlohmann::json curr_fee = param[iOperation];  //account_update_operation
+
+   return asset(curr_fee[1]["fee"].get<uint64_t>() );
 }
 
 void Globals::slot_updateAccountBalance()
