@@ -15,7 +15,6 @@
 #include <QDate>
 #include <QTime>
 #include <QTimer>
-#include <QSignalMapper>
 #include <QLabel>
 #include <QLineEdit>
 #include <QCheckBox>
@@ -26,8 +25,6 @@
 #include "json.hpp"
 
 #endif
-
-using std::string;
 
 namespace gui_wallet {
 
@@ -103,11 +100,11 @@ void MinerVotingTab::timeToUpdate(const std::string& result)
       for (size_t iIndex = 0; iIndex < iSize; ++iIndex) {
          auto const &content = contents[iIndex];
 
-         string name = content["name"].get<string>();
-         string url = content["url"].get<string>();
+         std::string name = content["name"].get<std::string>();
+         std::string url = content["url"].get<std::string>();
          uint64_t total_votes;
          if (content["total_votes"].is_string() ) {
-            total_votes = std::stoull(content["total_votes"].get<string>());
+            total_votes = std::stoull(content["total_votes"].get<std::string>());
          }
          else {
             total_votes = content["total_votes"].get<uint64_t>();
@@ -117,10 +114,12 @@ void MinerVotingTab::timeToUpdate(const std::string& result)
          QTableWidgetItem *tabItem;
          tabItem = new QTableWidgetItem(QString::fromStdString(name));
          tabItem->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+         tabItem->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
          m_pTableWidget->setItem(iIndex, 0, tabItem);
 
          tabItem = new QTableWidgetItem(QString::fromStdString(url));
          tabItem->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+         tabItem->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
          m_pTableWidget->setItem(iIndex, 1, tabItem);
          if (!url.empty()) {
             m_indexToUrl.insert(iIndex, QString::fromStdString(url));
@@ -128,6 +127,7 @@ void MinerVotingTab::timeToUpdate(const std::string& result)
 
          tabItem = new QTableWidgetItem(QString::number(total_votes));
          tabItem->setTextAlignment(Qt::AlignRight|Qt::AlignVCenter);
+         tabItem->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
          m_pTableWidget->setItem(iIndex, 2, tabItem);
 
          // Vote Button
@@ -159,21 +159,21 @@ void MinerVotingTab::timeToUpdate(const std::string& result)
    QObject::connect(m_pTableWidget, &DecentTable::cellClicked, this, &MinerVotingTab::slot_cellClicked);
 
    if (contents.size() > m_i_page_size)
-      set_next_page_iterator(contents[m_i_page_size]["id"].get<string>());
+      set_next_page_iterator(contents[m_i_page_size]["id"].get<std::string>());
    else
-      set_next_page_iterator(string());
+      set_next_page_iterator(std::string());
 
 }
 
 std::string MinerVotingTab::getUpdateCommand()
 {
-   string currentUserName = Globals::instance().getCurrentUser();
+   std::string currentUserName = Globals::instance().getCurrentUser();
    if (currentUserName.empty())
-      return string();
+      return std::string();
 
    graphene::chain::ContentObjectPropertyManager type_composer;
    graphene::chain::ContentObjectTypeValue type(graphene::chain::EContentObjectApplication::DecentCore);
-   string str_type;
+   std::string str_type;
    type.to_string(str_type);
 
    return "search_miner_voting "
