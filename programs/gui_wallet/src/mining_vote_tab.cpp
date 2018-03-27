@@ -18,6 +18,7 @@
 #include <QSignalMapper>
 #include <QLabel>
 #include <QLineEdit>
+#include <QCheckBox>
 #include <QDesktopServices>
 
 #include <graphene/chain/content_object.hpp>
@@ -33,8 +34,10 @@ namespace gui_wallet {
 const char* g_vote_state_id = "vote-state";
 
 
-MinerVotingTab::MinerVotingTab(QWidget *pParent, DecentLineEdit *pFilterLineEdit) : TabContentManager(pParent),
-       m_pTableWidget(new DecentTable(this))
+MinerVotingTab::MinerVotingTab(QWidget *pParent, DecentLineEdit *pFilterLineEdit, QCheckBox* pOnlyMyVotes)
+      : TabContentManager(pParent),
+      m_pTableWidget(new DecentTable(this)),
+      m_onlyMyVotes(false)
 {
    m_pTableWidget->set_columns({
                                    {tr("Miner"),             15, "name"},
@@ -58,6 +61,11 @@ MinerVotingTab::MinerVotingTab(QWidget *pParent, DecentLineEdit *pFilterLineEdit
       this->setFilterWidget(pFilterLineEdit);
    }
 
+   if (pOnlyMyVotes) {
+      QObject::connect(pOnlyMyVotes, &QCheckBox::stateChanged, this, &MinerVotingTab::slot_onlyMyVotes);
+
+   }
+
    QObject::connect(m_pTableWidget, &DecentTable::signal_SortingChanged,
                     this, &MinerVotingTab::slot_SortingChanged);
 
@@ -69,7 +77,9 @@ MinerVotingTab::~MinerVotingTab() = default;
 void MinerVotingTab::timeToUpdate(const std::string& result)
 {
    if (result.empty()) {
-      m_pTableWidget->setRowCount(0);
+      while(m_pTableWidget->rowCount() > 0) {
+         m_pTableWidget->removeRow(0);
+      }
       return;
    }
 
@@ -79,9 +89,16 @@ void MinerVotingTab::timeToUpdate(const std::string& result)
       iSize = m_i_page_size;
 
    m_buttonsToIndex.clear();
-   m_pTableWidget->setRowCount(iSize);
+   m_indexToUrl.clear();
+
+   //clear table
+   while(m_pTableWidget->rowCount() > 0) {
+      m_pTableWidget->removeRow(0);
+   }
 
    try {
+
+      m_pTableWidget->setRowCount(iSize);
 
       for (size_t iIndex = 0; iIndex < iSize; ++iIndex) {
          auto const &content = contents[iIndex];
@@ -161,6 +178,7 @@ std::string MinerVotingTab::getUpdateCommand()
 
    return "search_miner_voting "
                   "\"" + m_strSearchTerm.toStdString() + "\" "
+                  + (m_onlyMyVotes ? "true " : "false ") +
                   "\"" + m_pTableWidget->getSortedColumn() + "\" "
                   "\"" + currentUserName + "\" "
                   "\"" + next_iterator() + "\" "
@@ -187,6 +205,12 @@ void MinerVotingTab::slot_cellClicked(int row, int col)
    if (find != m_indexToUrl.end()) {
       QDesktopServices::openUrl(QUrl(find.value()));
    }
+}
+
+void MinerVotingTab::slot_onlyMyVotes(int state)
+{
+   m_onlyMyVotes = (state == Qt::Checked);
+   reset(true);
 }
 
 void MinerVotingTab::slot_MinerVote()

@@ -60,10 +60,11 @@ signed_transaction wallet_api::set_desired_miner_count(const string& account_to_
 }
 
 vector<miner_voting_info> wallet_api::search_miner_voting(const string& term,
-                                                   const string& order,
-                                                   const string& account_id,
-                                                   const string& id,
-                                                   uint32_t count ) const
+                                                          bool only_my_votes,
+                                                          const string& order,
+                                                          const string& account_id,
+                                                          const string& id,
+                                                          uint32_t count ) const
 {
-   return my->search_miner_voting(term, order, account_id, id, count);
+   return my->search_miner_voting(term, only_my_votes, order, account_id, id, count);
 }

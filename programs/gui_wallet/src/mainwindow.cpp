@@ -46,6 +46,7 @@
 
 #include <QCloseEvent>
 #include <QMessageBox>
+#include <QCheckBox>
 
 #include "update_manager.hpp"
 
@@ -74,6 +75,7 @@ MainWindow::MainWindow()
 , m_pFilterUsers(nullptr)
 , m_pFilterPurchased(nullptr)
 , m_pPublish(nullptr)
+, m_pOnlyMyVotes(nullptr)
 , m_pTabBrowse(nullptr)
 , m_pTabTransactions(nullptr)
 , m_pTabPublish(nullptr)
@@ -170,6 +172,10 @@ MainWindow::MainWindow()
    m_pPublish = new DecentButton(pMainWidget, DecentButton::DialogAction);
    m_pPublish->setText(tr("Publish"));
    m_pPublish->hide();
+
+   m_pOnlyMyVotes = new QCheckBox(tr("Only my votes"), pMainWidget);
+   m_pOnlyMyVotes->hide();
+
    //
    // 4th row controls
    //
@@ -183,7 +189,7 @@ MainWindow::MainWindow()
    m_pTabUsers->hide();
    m_pTabPurchased = new PurchasedTab(pMainWidget, m_pFilterPurchased);
    m_pTabPurchased->hide();
-   m_pTabMinerVoting = new MinerVotingTab(pMainWidget, m_pFilterUsers);
+   m_pTabMinerVoting = new MinerVotingTab(pMainWidget, m_pFilterUsers, m_pOnlyMyVotes);
    m_pTabMinerVoting->hide();
 
    //
@@ -240,6 +246,7 @@ MainWindow::MainWindow()
    pRow3Layout->addWidget(pRow3_LabelSearchFrame);
    pRow3Layout->addStretch();
    pRow3Layout->addWidget(m_pPublish);
+   pRow3Layout->addWidget(m_pOnlyMyVotes);
    pRow3Layout->setContentsMargins(5, 0, 5, 0);
    //
    // 4th row layout
@@ -757,11 +764,12 @@ void MainWindow::slot_MinerVotingToggled(bool toggled)
       info.setText(QString(tr("For every vote or unvote opeation you will pay %1 fee")).arg(opFee.getString()) );
       info.exec();
 
-
+      m_pOnlyMyVotes->show();
       m_pTabMinerVoting->show();
       slot_getContents();
    }
    else {
+      m_pOnlyMyVotes->hide();
       m_pTabMinerVoting->hide();
    }
 

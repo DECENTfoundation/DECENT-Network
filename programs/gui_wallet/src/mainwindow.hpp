@@ -7,6 +7,7 @@
 
 class QStackedWidget;
 class QComboBox;
+class QCheckBox;
 class QTimer;
 class QAction;
 class UpdateManager;
@@ -88,6 +89,7 @@ protected:
    DecentLineEdit* m_pFilterPurchased;
 
    DecentButton* m_pPublish;
+   QCheckBox* m_pOnlyMyVotes;
 
    TabContentManager* m_pTabBrowse;
    TabContentManager* m_pTabTransactions;

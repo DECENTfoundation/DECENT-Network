@@ -1623,10 +1623,11 @@ public:
    } FC_CAPTURE_AND_RETHROW( (account_to_modify)(desired_number_of_miners)(broadcast) ) }
 
    vector<miner_voting_info> search_miner_voting(const string& filter,
-                                                      const string& order,
-                                                      const string& account_id,
-                                                      const string& id,
-                                                      uint32_t count ) const
+                                                 bool only_my_votes,
+                                                 const string& order,
+                                                 const string& account_id,
+                                                 const string& id,
+                                                 uint32_t count ) const
    {
       optional<account_object> acc_obj = _remote_db->get_account_by_name(account_id);
       if (!acc_obj) {
@@ -1654,6 +1655,9 @@ public:
          info.url = obj.url;
          info.total_votes = obj.total_votes;
          info.voted = acc_votes.find(obj.vote_id) != acc_votes.end();
+
+         if (only_my_votes && !info.voted)
+            continue;
 
          miners_info.push_back(info);
       }

@@ -161,6 +161,7 @@ signed_transaction set_desired_miner_count(const string& account_to_modify,
 /**
  * @brief
  * @param term search term
+ * @param only_my_votes
  * @param order order field. Available options are defined in 'database_api.cpp'
  * @param id the id of content object to start searching from
  * @param count maximum number of contents to fetch (must not exceed 1000)
@@ -168,10 +169,11 @@ signed_transaction set_desired_miner_count(const string& account_to_modify,
  * @ingroup WalletAPI_Mining
  */
 vector<miner_voting_info> search_miner_voting(const string& term,
-                                  const string& order,
-                                  const string& account_id,
-                                  const string& id,
-                                  uint32_t count ) const;
+                                              bool only_my_votes,
+                                              const string& order,
+                                              const string& account_id,
+                                              const string& id,
+                                              uint32_t count ) const;
 
 
 #endif //DECENT_﻿WALLET_MINING_H

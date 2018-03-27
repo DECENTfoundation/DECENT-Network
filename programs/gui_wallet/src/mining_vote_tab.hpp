@@ -8,6 +8,7 @@
 
 class QSignalMapper;
 class QWidget;
+class QCheckBox;
 
 namespace gui_wallet
 {
@@ -19,7 +20,7 @@ namespace gui_wallet
     class MinerVotingTab : public TabContentManager {
     Q_OBJECT
     public:
-       MinerVotingTab(QWidget *pParent, DecentLineEdit *pFilterLineEdit);
+       MinerVotingTab(QWidget *pParent, DecentLineEdit *pFilterLineEdit, QCheckBox* pOnlyMyVotes);
        ~MinerVotingTab();
 
        virtual void timeToUpdate(const std::string& result);
@@ -30,6 +31,7 @@ namespace gui_wallet
        void slot_SortingChanged(int index);
        void slot_cellClicked(int row, int col);
        void slot_MinerVote();
+       void slot_onlyMyVotes(int state);
 
     private:
        void submit_vote(const std::string& miner_name, bool voteFlag);
@@ -37,6 +39,7 @@ namespace gui_wallet
     public:
        DecentTable* m_pTableWidget;
        QString m_strSearchTerm;
+       bool m_onlyMyVotes;
 
        QMap<QWidget*, int> m_buttonsToIndex;
        QMap<int, QString> m_indexToUrl;
