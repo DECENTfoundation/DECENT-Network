@@ -83,6 +83,7 @@ namespace graphene { namespace chain {
             update_user_issued_asset_operation,
             update_monitored_asset_operation,
             ready_to_publish2_operation,
+            transfer2_operation,
             disallow_automatic_renewal_of_subscription_operation,  // VIRTUAL
             return_escrow_submission_operation,                    // VIRTUAL
             return_escrow_buying_operation,                        // VIRTUAL

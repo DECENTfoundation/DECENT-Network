@@ -64,7 +64,31 @@ namespace graphene { namespace chain {
       void            validate()const;
    };
 
+   struct transfer2_operation : public base_operation
+   {
+      struct fee_parameters_type {
+         uint64_t fee       = GRAPHENE_BLOCKCHAIN_PRECISION / 1000;
+      };
+
+      asset            fee;
+      /// Account to transfer asset from
+      account_id_type  from;
+      /// Account to transfer asset to
+      object_id_type  to;
+      /// The amount of asset to transfer from @ref from to @ref to
+      asset            amount;
+
+      /// User provided data encrypted to the memo key of the "to" account
+      optional<memo_data> memo;
+      extensions_type   extensions;
+
+      account_id_type fee_payer()const { return from; }
+      void            validate()const;
+   };
+
 }} // graphene::chain
 
 FC_REFLECT( graphene::chain::transfer_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::transfer_operation, (fee)(from)(to)(amount)(memo)(extensions) )
+FC_REFLECT( graphene::chain::transfer2_operation::fee_parameters_type, (fee) )
+FC_REFLECT( graphene::chain::transfer2_operation, (fee)(from)(to)(amount)(memo)(extensions) )

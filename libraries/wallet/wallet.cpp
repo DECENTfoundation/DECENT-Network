@@ -1770,18 +1770,30 @@ public:
                                bool broadcast = false)
    { try {
       FC_ASSERT( !self.is_locked() );
+
+      account_object from_account = get_account(from);
+      account_id_type from_id = from_account.id;
+
       fc::optional<asset_object> asset_obj = get_asset(asset_symbol);
       FC_ASSERT(asset_obj, "Could not find asset matching ${asset}", ("asset", asset_symbol));
 
-      account_object from_account = get_account(from);
-      account_object to_account = get_account(to);
-      account_id_type from_id = from_account.id;
-      account_id_type to_id = get_account(to).get_id();
+      account_object to_account;
+      object_id_type to_obj_id;
 
-      transfer_operation xfer_op;
+      try {
+         to_account = get_account(to);
+         to_obj_id = object_id_type(to_account.id);
+      }
+      catch ( fc::exception& e )
+      {
+         to_obj_id = object_id_type(to);
+         to_account = get_account( get_object(to_obj_id.as<content_id_type>()).author);
+      }
+
+      transfer2_operation xfer_op;
 
       xfer_op.from = from_id;
-      xfer_op.to = to_id;
+      xfer_op.to = to_obj_id;
       xfer_op.amount = asset_obj->amount_from_string(amount);
 
       if( memo.size() )

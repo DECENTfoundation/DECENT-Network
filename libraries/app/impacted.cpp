@@ -43,6 +43,11 @@ struct get_impacted_account_visitor
       _impacted.insert( op.to );
    }
 
+   void operator()( const transfer2_operation& op )
+   {
+      _impacted.insert( op.from );
+   }
+
    void operator()( const account_create_operation& op )
    {
       _impacted.insert( op.registrar );
