@@ -66,7 +66,7 @@ MinerVotingTab::MinerVotingTab(QWidget *pParent, DecentLineEdit *pFilterLineEdit
    QObject::connect(m_pTableWidget, &DecentTable::signal_SortingChanged,
                     this, &MinerVotingTab::slot_SortingChanged);
 
-
+   setRefreshTimer(5000);
 }
 
 MinerVotingTab::~MinerVotingTab() = default;
@@ -228,6 +228,8 @@ void MinerVotingTab::slot_MinerVote()
    std::string miner_name = item->text().toStdString();
 
    submit_vote(miner_name, !voteFlag);
+
+   reset(true);
 }
 
 void MinerVotingTab::submit_vote(const std::string& miner_name, bool voteFlag)

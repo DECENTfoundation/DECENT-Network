@@ -64,6 +64,8 @@ PurchasedTab::PurchasedTab(QWidget* pParent,
 
    QObject::connect(m_pTableWidget, &DecentTable::signal_SortingChanged,
                     this, &PurchasedTab::slot_SortingChanged);
+
+   setRefreshTimer(5000);
 }
 
 //

@@ -5,6 +5,8 @@
 #include <string>
 #include <vector>
 
+class QTimer;
+
 namespace gui_wallet {
 
 class TabContentManager : public QWidget
@@ -17,6 +19,9 @@ public:
 
    void setFilterWidget(QWidget* pWidget);
    virtual QWidget* getFilterWidget() const { return m_pFilterWidget; }
+
+   void setRefreshTimer(int msec);
+   QTimer* getRefreshTimer() const { return m_pRefreshTimer; }
 
 public:
    void tryToUpdate();
@@ -36,6 +41,7 @@ private:
    std::vector<std::string> m_iterators;
 
    QWidget* m_pFilterWidget;
+   QTimer* m_pRefreshTimer;
 };
 
    

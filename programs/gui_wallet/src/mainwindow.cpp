@@ -59,10 +59,7 @@ using namespace utilities;
 MainWindow::MainWindow()
 : QMainWindow()
 , m_iSplashWidgetIndex(0)
-, m_pTimerDownloads(new QTimer(this))
 , m_pTimerBalance(new QTimer(this))
-, m_pTimerContents(new QTimer(this))
-, m_pTimerVoting(new QTimer(this))
 , m_pStackedWidget(new QStackedWidget(this))
 , m_pAccountList(nullptr)
 , m_pBalance(nullptr)
@@ -380,13 +377,13 @@ MainWindow::MainWindow()
                     &Globals::instance(), &Globals::slot_updateAccountBalance);
 
 
-   m_pTimerDownloads->setInterval(5000);
-   QObject::connect(m_pTimerDownloads, &QTimer::timeout,
-                    this, &MainWindow::slot_checkDownloads);
+//   m_pTimerDownloads->setInterval(5000);
+//   QObject::connect(m_pTimerDownloads, &QTimer::timeout,
+//                    this, &MainWindow::slot_checkDownloads);
 
-   m_pTimerContents->setInterval(1000);
-   QObject::connect(m_pTimerContents, &QTimer::timeout,
-                    this, &MainWindow::slot_getContents);
+//   m_pTimerContents->setInterval(1000);
+//   QObject::connect(m_pTimerContents, &QTimer::timeout,
+//                    this, &MainWindow::slot_getContents);
 
 //   m_pTimerVoting->setInterval(5000);
 //   QObject::connect(m_pTimerVoting, &QTimer::timeout,
@@ -456,10 +453,6 @@ void MainWindow::slot_setSplash()
 
    slot_stackWidgetPush(pSplashScreen);
 
-   m_pTimerBalance->stop();
-   m_pTimerDownloads->stop();
-   m_pTimerContents->stop();
-
    m_pActionImportKey->setDisabled(true);
 }
 
@@ -524,14 +517,13 @@ void MainWindow::closeSplash(bool bGonnaCoverAgain)
       DisplayWalletContentGUI();
 
       m_pTimerBalance->start();
-      m_pTimerDownloads->start();
-      m_pTimerContents->start();
 
       m_pActionImportKey->setEnabled(true);
 
       Globals::instance().slot_updateAccountBalance();
+      slot_BrowseToggled(true);
       slot_checkDownloads();
-      slot_getContents();
+      updateActiveTable();
    }
 }
 
@@ -637,17 +629,37 @@ void MainWindow::slot_BrowseToggled(bool toggled)
    // really a stupid hack to have the state change visible
    pSender->setEnabled(false);
    pSender->setEnabled(true);
+
+   TabContentManager* pActiveTab = m_pTabBrowse;
+   Q_ASSERT(pActiveTab);
+
+   QWidget* pFilter = pActiveTab->getFilterWidget();
+   Q_ASSERT(pFilter);
+   pFilter->setHidden(!toggled);
+
    //
    if (toggled)
    {
-      m_pFilterBrowse->show();
-      m_pTabBrowse->show();
-      slot_getContents();
+//      m_pFilterBrowse->show();
+      pActiveTab->show();
+      updateActiveTable();
+
+      QTimer* pTimer = pActiveTab->getRefreshTimer();
+      if (pTimer) {
+         QObject::connect(pTimer, &QTimer::timeout, this, &MainWindow::slot_getContents);
+         pTimer->start();
+      }
    }
    else
    {
-      m_pFilterBrowse->hide();
-      m_pTabBrowse->hide();
+//      m_pFilterBrowse->hide();
+      pActiveTab->hide();
+
+      QTimer* pTimer = pActiveTab->getRefreshTimer();
+      if (pTimer) {
+         pTimer->stop();
+         QObject::disconnect(pTimer);
+      }
    }
 }
 
@@ -659,17 +671,20 @@ void MainWindow::slot_TransactionsToggled(bool toggled)
    pSender->setEnabled(false);
    pSender->setEnabled(true);
 
-   QWidget* pFilter = m_pTabTransactions->getFilterWidget();
+   TabContentManager* pActiveTab = m_pTabTransactions;
+   Q_ASSERT(pActiveTab);
+
+   QWidget* pFilter = pActiveTab->getFilterWidget();
    Q_ASSERT(pFilter);
    pFilter->setHidden(!toggled);
 
    //
    if (toggled) {
-      m_pTabTransactions->show();
-      slot_getContents();
+      pActiveTab->show();
+      updateActiveTable();
    }
    else {
-      m_pTabTransactions->hide();
+      pActiveTab->hide();
    }
 }
 
@@ -681,19 +696,22 @@ void MainWindow::slot_PublishToggled(bool toggled)
    pSender->setEnabled(false);
    pSender->setEnabled(true);
 
-   QWidget* pFilter = m_pTabPublish->getFilterWidget();
+   TabContentManager* pActiveTab = m_pTabPublish;
+   Q_ASSERT(pActiveTab);
+
+   QWidget* pFilter = pActiveTab->getFilterWidget();
    Q_ASSERT(pFilter);
    pFilter->setHidden(!toggled);
 
    //
    if (toggled) {
-      m_pTabPublish->show();
+      pActiveTab->show();
       m_pPublish->show();
-      slot_getContents();
+      updateActiveTable();
    }
    else
    {
-      m_pTabPublish->hide();
+      pActiveTab->hide();
       m_pPublish->hide();
    }
 }
@@ -706,17 +724,20 @@ void MainWindow::slot_UsersToggled(bool toggled)
    pSender->setEnabled(false);
    pSender->setEnabled(true);
 
-   QWidget* pFilter = m_pTabUsers->getFilterWidget();
+   TabContentManager* pActiveTab = m_pTabUsers;
+   Q_ASSERT(pActiveTab);
+
+   QWidget* pFilter = pActiveTab->getFilterWidget();
    Q_ASSERT(pFilter);
    pFilter->setHidden(!toggled);
 
    //
    if (toggled) {
-      m_pTabUsers->show();
-      slot_getContents();
+      pActiveTab->show();
+      updateActiveTable();
    }
    else {
-      m_pTabUsers->hide();
+      pActiveTab->hide();
    }
 }
 
@@ -728,17 +749,32 @@ void MainWindow::slot_PurchasedToggled(bool toggled)
    pSender->setEnabled(false);
    pSender->setEnabled(true);
 
-   QWidget* pFilter = m_pTabPurchased->getFilterWidget();
+   TabContentManager* pActiveTab = m_pTabPurchased;
+   Q_ASSERT(pActiveTab);
+
+   QWidget* pFilter = pActiveTab->getFilterWidget();
    Q_ASSERT(pFilter);
    pFilter->setHidden(!toggled);
 
    //
    if (toggled) {
-      m_pTabPurchased->show();
-      slot_getContents();
+      pActiveTab->show();
+      updateActiveTable();
+
+      QTimer* pTimer = pActiveTab->getRefreshTimer();
+      if (pTimer) {
+         QObject::connect(pTimer, &QTimer::timeout, this, &MainWindow::slot_getContents);
+         pTimer->start();
+      }
    }
    else {
-      m_pTabPurchased->hide();
+      pActiveTab->hide();
+
+      QTimer* pTimer = pActiveTab->getRefreshTimer();
+      if (pTimer) {
+         pTimer->stop();
+         QObject::disconnect(pTimer);
+      }
    }
 }
 
@@ -750,7 +786,10 @@ void MainWindow::slot_MinerVotingToggled(bool toggled)
    pSender->setEnabled(false);
    pSender->setEnabled(true);
 
-   QWidget* pFilter = m_pTabMinerVoting->getFilterWidget();
+   TabContentManager* pActiveTab = m_pTabMinerVoting;
+   Q_ASSERT(pActiveTab);
+
+   QWidget* pFilter = pActiveTab->getFilterWidget();
    Q_ASSERT(pFilter);
    pFilter->setHidden(!toggled);
 
@@ -765,12 +804,24 @@ void MainWindow::slot_MinerVotingToggled(bool toggled)
       info.exec();
 
       m_pOnlyMyVotes->show();
-      m_pTabMinerVoting->show();
-      slot_getContents();
+      pActiveTab->show();
+      updateActiveTable();
+
+      QTimer* pTimer = pActiveTab->getRefreshTimer();
+      if (pTimer) {
+         QObject::connect(pTimer, &QTimer::timeout, this, &MainWindow::slot_getContents);
+         pTimer->start();
+      }
    }
    else {
       m_pOnlyMyVotes->hide();
-      m_pTabMinerVoting->hide();
+      pActiveTab->hide();
+
+      QTimer* pTimer = pActiveTab->getRefreshTimer();
+      if (pTimer) {
+         pTimer->stop();
+         QObject::disconnect(pTimer);
+      }
    }
 
 }
@@ -839,6 +890,11 @@ void MainWindow::slot_checkDownloads()
 
 void MainWindow::slot_getContents()
 {
+   updateActiveTable();
+}
+
+void MainWindow::updateActiveTable()
+{
    TabContentManager* pTab = activeTable();
 
    if (pTab)
@@ -871,7 +927,7 @@ void MainWindow::slot_PreviousPage()
    if (pTab)
       pTab->previous();
 
-   slot_getContents();
+   updateActiveTable();
 }
 
 void MainWindow::slot_ResetPage()
@@ -881,7 +937,7 @@ void MainWindow::slot_ResetPage()
    if (pTab)
       pTab->reset();
 
-   slot_getContents();
+   updateActiveTable();
 }
 
 void MainWindow::slot_NextPage()
@@ -891,7 +947,7 @@ void MainWindow::slot_NextPage()
    if (pTab)
       pTab->next();
 
-   slot_getContents();
+   updateActiveTable();
 }
 
 TabContentManager* MainWindow::activeTable() const

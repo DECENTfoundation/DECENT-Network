@@ -57,6 +57,8 @@ BrowseContentTab::BrowseContentTab(QWidget* pParent,
 
    QObject::connect(m_pTableWidget, &DecentTable::signal_SortingChanged,
                     this, &BrowseContentTab::slot_SortingChanged);
+
+   setRefreshTimer(3000);
 }
 
 void BrowseContentTab::timeToUpdate(const std::string& result)
