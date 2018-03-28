@@ -625,10 +625,12 @@ void MainWindow::slot_importKey()
 void MainWindow::slot_BrowseToggled(bool toggled)
 {
    QWidget* pSender = qobject_cast<QWidget*>(sender());
-   //
-   // really a stupid hack to have the state change visible
-   pSender->setEnabled(false);
-   pSender->setEnabled(true);
+   if (pSender) {
+      //
+      // really a stupid hack to have the state change visible
+      pSender->setEnabled(false);
+      pSender->setEnabled(true);
+   }
 
    TabContentManager* pActiveTab = m_pTabBrowse;
    Q_ASSERT(pActiveTab);
