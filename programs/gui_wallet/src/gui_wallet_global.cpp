@@ -485,16 +485,18 @@ QString convertDateTimeToLocale(const std::string& s)
 //
 // WalletOperator
 //
-WalletOperator::WalletOperator()
-: QObject(nullptr)
+WalletOperator::WalletOperator() : QObject()
 , m_wallet_api()
 {
-
 }
 
 WalletOperator::~WalletOperator()
 {
+}
 
+void WalletOperator::cancel()
+{
+   m_cancellation_token = true;
 }
 
 void WalletOperator::slot_connect()
@@ -502,7 +504,7 @@ void WalletOperator::slot_connect()
    std::string str_error;
    try
    {
-      m_wallet_api.Connent();
+      m_wallet_api.Connent(m_cancellation_token);
    }
    catch(const std::exception& ex)
    {
@@ -511,10 +513,10 @@ void WalletOperator::slot_connect()
 
    emit signal_connected(str_error);
 }
+
 //
 // Asset
 //
-
 double Asset::to_value() const
 {
    uint64_t amount = m_amount / m_scale;
@@ -682,9 +684,15 @@ void Globals::stopDaemons()
    if (backup_state != m_connected_state)
       emit walletConnectionStatusChanged(backup_state, m_connected_state);
 
-   if (m_p_wallet_operator && bConnected)
+   if (m_p_wallet_operator)
    {
-      m_p_wallet_operator->m_wallet_api.SaveWalletFile();
+      if (bConnected) {
+         m_p_wallet_operator->m_wallet_api.SaveWalletFile();
+      }
+      else {
+         m_p_wallet_operator->cancel();
+         m_p_wallet_operator_thread->quit();
+      }
 
       delete m_p_wallet_operator;
       m_p_wallet_operator = nullptr;

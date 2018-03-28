@@ -98,12 +98,15 @@ namespace gui_wallet
       WalletOperator();
       ~WalletOperator() override;
 
+      void cancel();
+
    public slots:
       void slot_connect();
    signals:
       void signal_connected(std::string const& str_error);
    public:
       WalletAPI m_wallet_api;
+      std::atomic_bool m_cancellation_token;
    };
 
    // Asset

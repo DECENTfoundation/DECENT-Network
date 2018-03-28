@@ -147,7 +147,7 @@ namespace wallet_utility
    {
    }
 
-   void WalletAPI::Connent()
+   void WalletAPI::Connent(std::atomic_bool& cancellation_token)
    {
       if (Connected())
          throw wallet_exception("already connected");
@@ -158,9 +158,10 @@ namespace wallet_utility
 
       auto& pimpl = m_pimpl;
       fc::future<string> future_connect =
-      m_pthread->async([&pimpl] () -> string
+      m_pthread->async([&pimpl, &cancellation_token] () -> string
                        {
-                          while (true)
+                          std::string error;
+                          while (! cancellation_token)
                           {
                              try
                              {
@@ -173,21 +174,26 @@ namespace wallet_utility
                              }
                              catch(fc::exception const& ex)
                              {
-                                std::string error = ex.what();
+                                error = ex.what();
                              }
                              catch(std::exception const& ex)
                              {
-                                std::string error = ex.what();
+                                error = ex.what();
                              }
-                             catch(...)
-                             {
 
+                             if (!error.empty()) {
+                                //log error ??
                              }
                           }
+
+                          if (cancellation_token) {
+                             std::cout << "cancelation_token" << std::endl;
+                          }
+
                           return string();
                        });
       string str_result = future_connect.wait();
-      if (false == str_result.empty())
+      if (!str_result.empty())
          throw wallet_exception(str_result);
    }
 
@@ -199,7 +205,7 @@ namespace wallet_utility
 
    bool WalletAPI::IsNew()
    {
-      if (false == Connected())
+      if (!Connected())
          throw wallet_exception("not yet connected");
 
       std::lock_guard<std::mutex> lock(m_mutex);
@@ -214,7 +220,7 @@ namespace wallet_utility
    }
    bool WalletAPI::IsLocked()
    {
-      if (false == Connected())
+      if (!Connected())
          throw wallet_exception("not yet connected");
 
       std::lock_guard<std::mutex> lock(m_mutex);
@@ -229,7 +235,7 @@ namespace wallet_utility
    }
    std::chrono::system_clock::time_point WalletAPI::HeadBlockTime()
    {
-      if (false == Connected())
+      if (!Connected())
          throw wallet_exception("not yet connected");
 
       std::lock_guard<std::mutex> lock(m_mutex);
@@ -245,7 +251,7 @@ namespace wallet_utility
    }
    void WalletAPI::SetPassword(string const& str_password)
    {
-      if (false == Connected())
+      if (!Connected())
          throw wallet_exception("not yet connected");
 
       std::lock_guard<std::mutex> lock(m_mutex);
@@ -260,7 +266,7 @@ namespace wallet_utility
    }
    void WalletAPI::Unlock(string const& str_password)
    {
-      if (false == Connected())
+      if (!Connected())
          throw wallet_exception("not yet connected");
 
       std::lock_guard<std::mutex> lock(m_mutex);
@@ -315,7 +321,7 @@ namespace wallet_utility
 
    void WalletAPI::SaveWalletFile()
    {
-      if (false == Connected())
+      if (!Connected())
          throw wallet_exception("not yet connected");
 
       fc::path wallet_file(decent_path_finder::instance().get_decent_home() / "wallet.json");
