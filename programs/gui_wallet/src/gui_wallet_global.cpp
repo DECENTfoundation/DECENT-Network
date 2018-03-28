@@ -171,11 +171,11 @@ static CalendarDuration CalculateCalendarDuration(QDateTime const& dt, QDateTime
    }
 }
 
-std::string CalculateRemainingTime(QDateTime const& dt, QDateTime const& dtFuture)
+QString CalculateRemainingTime(const QDateTime& dt, const QDateTime& dtFuture)
 {
    CalendarDuration duration = CalculateCalendarDuration(dt, dtFuture);
    if (duration.sign == CalendarDuration::sign_negative)
-      return "expired";
+      return QString(QObject::tr("expired"));
    else
    {
       std::vector<std::string> arrParts;
@@ -191,15 +191,17 @@ std::string CalculateRemainingTime(QDateTime const& dt, QDateTime const& dtFutur
       if (duration.minutes)
          arrParts.push_back(std::to_string(duration.minutes) + " min");
 
-      std::string str_result;
+      QString str_result;
       if (arrParts.empty())
-         str_result = "expiring in a minute";
+         str_result = QString(QObject::tr("expiring in a minute"));
       else
       {
-         str_result = arrParts.front();
+         str_result = QString::fromStdString( arrParts.front());
          
-         if (arrParts.size() > 1)
-            str_result += " " + arrParts[1];
+         if (arrParts.size() > 1) {
+            str_result.append(" ");
+            str_result.append(QString::fromStdString(arrParts[1]));
+         }
       }
       
       return str_result;
@@ -471,6 +473,11 @@ QString convertDateToLocale(const std::string& s)
    return Globals::instance().locale().toString(time, QLocale::ShortFormat);
 }
 
+QDateTime convertStringToDateTime(const std::string& s)
+{
+   return QDateTime::fromString(QString::fromStdString(s), "yyyy-MM-ddTHH:mm:ss");
+}
+
 QString convertDateTimeToLocale(const std::string& s)
 {
    QDateTime time = QDateTime::fromString(QString::fromStdString(s), "yyyy-MM-dd hh:mm:ss");
@@ -480,7 +487,15 @@ QString convertDateTimeToLocale(const std::string& s)
 
    return Globals::instance().locale().toString(time, QLocale::ShortFormat);
 }
+QString convertDateTimeToLocale2(const std::string& s)
+{
+   QDateTime time = convertStringToDateTime(s);
+   if (!time.isValid()) {
+      return QString("EEE");
+   }
 
+   return Globals::instance().locale().toString(time, QLocale::ShortFormat);
+}
 
 //
 // WalletOperator

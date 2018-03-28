@@ -73,7 +73,7 @@ namespace gui_wallet
    const int g_max_number_of_decimal_places = 8;   //number of decimal places showed in asset price
 
    class StackLayerWidget;
-   std::string CalculateRemainingTime(QDateTime const& dt, QDateTime const& dtFuture);
+   QString CalculateRemainingTime(const QDateTime& dt, const QDateTime& dtFuture);
    QString CalculateRemainingTime_Behind(QDateTime const& dt, QDateTime const& dtFuture);
    
    void ShowMessageBox(QString const& strTitle,
@@ -86,8 +86,11 @@ namespace gui_wallet
    std::size_t extra_space(const std::string& s) noexcept;
    std::string unescape_string(const std::string& s);
    std::string escape_string(const std::string& s);
+   QDateTime convertStringToDateTime(const std::string& s);
    QString convertDateToLocale(const std::string& s);
    QString convertDateTimeToLocale(const std::string& s);
+   QString convertDateTimeToLocale2(const std::string& s);
+
 
    using WalletAPI = decent::wallet_utility::WalletAPI;
 

@@ -29,6 +29,8 @@ namespace gui_wallet
 
       switch (enName)
       {
+         case DlgImport:
+            setProperty("name", "import_dlg");
          case None:
          default:
             break;

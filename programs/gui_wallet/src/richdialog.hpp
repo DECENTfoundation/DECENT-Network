@@ -8,6 +8,7 @@
 
 class QTextEdit;
 class QCloseEvent;
+class QPushButton;
 
 namespace gui_wallet
 {
@@ -120,7 +121,7 @@ public slots:
    void ButtonWasClicked();
    
 private:
-   enum GetItOrPay {GetIt, Pay};
+   enum GetItOrPay { PayAndDownload, Download };
    GetItOrPay m_getItOrPay;
    std::string m_URI;
    QString m_amount;

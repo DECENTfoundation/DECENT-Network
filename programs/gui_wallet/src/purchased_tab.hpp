@@ -35,6 +35,7 @@ public slots:
    void slot_ExtractPackage(int);
    void slot_Details(int);
    void slot_SortingChanged(int);
+   void slot_cellClicked(int row, int col);
 
    void slot_ExtractionDirSelected(QString const& path);
    void slot_SearchTermChanged(QString const& strSearchTerm);

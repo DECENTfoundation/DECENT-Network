@@ -458,7 +458,7 @@ void MainWindow::closeSplash(bool bGonnaCoverAgain)
 
    StackLayerWidget* pLayer = nullptr;
 
-   signal_setSplashMainText(QString());
+   emit signal_setSplashMainText(QString());
    Globals::instance().statusShowMessage(QString());
 
    if (!bGonnaCoverAgain)
@@ -466,12 +466,12 @@ void MainWindow::closeSplash(bool bGonnaCoverAgain)
       if (Globals::instance().getWallet().IsNew())
       {
          pLayer = new PasswordWidget(nullptr, PasswordWidget::eSetPassword);
-         signal_setSplashMainText(tr("Please set a password to encrypt your wallet"));
+         emit signal_setSplashMainText(tr("Please set a password to encrypt your wallet"));
       }
       else if (Globals::instance().getWallet().IsLocked())
       {
          pLayer = new PasswordWidget(nullptr, PasswordWidget::eUnlock);
-         signal_setSplashMainText(tr("Please unlock your wallet"));
+         emit signal_setSplashMainText(tr("Please unlock your wallet"));
       }
       else
       {
@@ -479,7 +479,7 @@ void MainWindow::closeSplash(bool bGonnaCoverAgain)
          if (accounts.empty())
          {
             pLayer = new ImportKeyWidget(nullptr);
-            signal_setSplashMainText(tr("Please import your account in order to proceed"));
+            emit signal_setSplashMainText(tr("Please import your account in order to proceed"));
          }
       }
    }

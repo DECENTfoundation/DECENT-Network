@@ -362,6 +362,15 @@ QLineEdit[type='dialoglineedit']
    padding-left: 0.5em;
    padding-right: 0.5em;
 }
+QLineEdit[type='dialoglineedit'][name='import_dlg']
+{
+   min-width: 22.0em;
+   min-height: 2.5em;
+   max-width: 25em;
+   max-height: 2.5em;
+   padding-left: 0.5em;
+   padding-right: 0.5em;
+}
 QTextEdit[type='info']
 {
    border: 0px;

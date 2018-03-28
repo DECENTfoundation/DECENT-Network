@@ -56,6 +56,10 @@ BrowseContentTab::BrowseContentTab(QWidget* pParent,
 
    QObject::connect(m_pTableWidget, &DecentTable::signal_SortingChanged,
                     this, &BrowseContentTab::slot_SortingChanged);
+
+   QObject::connect(m_pTableWidget, &DecentTable::cellClicked,
+                    this, &BrowseContentTab::slot_cellClicked);
+
 }
 
 void BrowseContentTab::timeToUpdate(const std::string& result)
@@ -85,7 +89,6 @@ void BrowseContentTab::timeToUpdate(const std::string& result)
       cont.synopsis = json_item["synopsis"].get<std::string>();
       cont.URI = json_item["URI"].get<std::string>();
       cont.created = json_item["created"].get<std::string>();
-      cont.created = cont.created.substr(0, cont.created.find("T"));
       cont.expiration = json_item["expiration"].get<std::string>();
       cont.size = json_item["size"].get<int>();
       
@@ -138,6 +141,15 @@ void BrowseContentTab::slot_Details(int iIndex)
 
    QObject::connect(pDetailsDialog, &ContentInfoWidget::accepted,
                     this, &BrowseContentTab::slot_Bought);
+}
+
+void BrowseContentTab::slot_cellClicked(int row, int /*col*/)
+{
+   if (row < 0 || row >= _digital_contents.size()) {
+      throw std::out_of_range("Content index is out of range");
+   }
+
+   slot_Details(row);
 }
 
 void BrowseContentTab::slot_Bought()
@@ -208,16 +220,17 @@ void BrowseContentTab::ShowDigitalContentsGUI() {
 
       // Uploaded
       colIndex++;
-      m_pTableWidget->setItem(index, colIndex, new QTableWidgetItem(convertDateToLocale(item.created)));
+      std::string created_date = item.created.substr(0, item.created.find("T"));
+      m_pTableWidget->setItem(index, colIndex, new QTableWidgetItem(convertDateToLocale(created_date)));
       m_pTableWidget->item(index, colIndex)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
       m_pTableWidget->item(index, colIndex)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
       
       // Expiration
       colIndex++;
-      QDateTime time = QDateTime::fromString(QString::fromStdString(item.expiration), "yyyy-MM-ddTHH:mm:ss");
-      std::string e_str = CalculateRemainingTime(QDateTime::currentDateTime(), time);
+      QDateTime time = convertStringToDateTime(item.expiration);
+      QString e_str = CalculateRemainingTime(QDateTime::currentDateTime(), time);
       
-      m_pTableWidget->setItem(index, colIndex, new QTableWidgetItem(QString::fromStdString(e_str)));
+      m_pTableWidget->setItem(index, colIndex, new QTableWidgetItem(e_str));
       m_pTableWidget->item(index, colIndex)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
       m_pTableWidget->item(index, colIndex)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
 

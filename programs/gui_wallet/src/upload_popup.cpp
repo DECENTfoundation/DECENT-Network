@@ -6,6 +6,7 @@
 #include "decent_button.hpp"
 #include "decent_text_edit.hpp"
 #include "decent_line_edit.hpp"
+#include "decent_label.hpp"
 
 #ifndef _MSC_VER
 #include <QLocale>
@@ -52,7 +53,9 @@ Upload_popup::Upload_popup(QWidget* pParent, const std::string& id_modify/* = st
    }
    
    //
-   setWindowTitle(tr("Upload new content"));
+   DecentLabel* pTitleLabel = new DecentLabel(this);
+   pTitleLabel->setText(tr("Upload new content"));
+
    //
    // Title field
    //
@@ -86,7 +89,7 @@ Upload_popup::Upload_popup(QWidget* pParent, const std::string& id_modify/* = st
    pPriceLabel->setText(tr("Price"));
 
    Asset min_price_asset = Globals::instance().asset(1);
-   double min_price = min_price_asset.to_value();
+   double min_price = 0; //min_price_asset.to_value();
 
    Asset max_price_asset = Globals::instance().asset(100000 * pow(10, g_max_number_of_decimal_places));
    double max_price = max_price_asset.to_value();
@@ -166,6 +169,7 @@ Upload_popup::Upload_popup(QWidget* pParent, const std::string& id_modify/* = st
    // Layouts
    //
    QVBoxLayout* pFirstRow = new QVBoxLayout();
+   pFirstRow->addWidget(pTitleLabel);
    pFirstRow->addWidget(pTitleText);
    pFirstRow->addWidget(m_pDescriptionText);
 
@@ -298,7 +302,7 @@ QStringList Upload_popup::getChosenPublishers() const
       Publisher const& seeder = seederItem.first;
 
       if (seederItem.second)
-         lstSummary << seeder.m_str_name.c_str();
+         lstSummary << QString::fromStdString(seeder.m_str_name);
    }
 
    return lstSummary;

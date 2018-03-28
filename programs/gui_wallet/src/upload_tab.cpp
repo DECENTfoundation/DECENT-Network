@@ -205,12 +205,11 @@ void Upload_tab::ShowDigitalContentsGUI()
       // Created
       m_pTableWidget->setItem(iIndex, eCreated, new QTableWidgetItem(convertDateToLocale(content.created)));
 
-      QDateTime time = QDateTime::fromString(QString::fromStdString(content.expiration), "yyyy-MM-ddTHH:mm:ss");
-
-      std::string e_str = CalculateRemainingTime(QDateTime::currentDateTime(), time);
+      QDateTime time = convertStringToDateTime(content.expiration);
+      QString e_str = CalculateRemainingTime(QDateTime::currentDateTime(), time);
 
       // Remaining
-      m_pTableWidget->setItem(iIndex, eRemaining, new QTableWidgetItem(QString::fromStdString(e_str)));
+      m_pTableWidget->setItem(iIndex, eRemaining, new QTableWidgetItem(e_str));
 
       // Status
       m_pTableWidget->setItem(iIndex, eStatus, new QTableWidgetItem(QString::fromStdString(content.status)));

@@ -261,9 +261,9 @@ ImportKeyWidget::ImportKeyWidget(QWidget* parent) : StackLayerWidget(parent)
    QObject::connect(cancel, &QPushButton::clicked,
                     this, &StackLayerWidget::closed);
    
-   DecentLineEdit* name = new DecentLineEdit(this, DecentLineEdit::DialogLineEdit);
-   DecentLineEdit* key  = new DecentLineEdit(this, DecentLineEdit::DialogLineEdit);
-   
+   DecentLineEdit* name = new DecentLineEdit(this, DecentLineEdit::DialogLineEdit, DecentLineEdit::DlgImport);
+   DecentLineEdit* key  = new DecentLineEdit(this, DecentLineEdit::DialogLineEdit, DecentLineEdit::DlgImport);
+
    name->setPlaceholderText(tr("Account name"));
    name->setAttribute(Qt::WA_MacShowFocusRect, 0);
    QObject::connect(name, &QLineEdit::textChanged,
@@ -387,7 +387,7 @@ UserInfoWidget::UserInfoWidget(QWidget* parent,
 //
 ContentInfoWidget::ContentInfoWidget(QWidget* parent, const SDigitalContent& a_cnt_details)
    : StackLayerWidget(parent)
-   , m_getItOrPay(GetIt)
+   , m_getItOrPay(Download)
    , m_URI(a_cnt_details.URI)
    , m_amount(a_cnt_details.price.getString())
 {
@@ -396,6 +396,13 @@ ContentInfoWidget::ContentInfoWidget(QWidget* parent, const SDigitalContent& a_c
    main_layout->setContentsMargins(0, 0, 0, 15);
 
    int iRowIndex = 0;
+   // Title
+   //
+   DecentLabel* pTitleLabel = new DecentLabel(this, DecentLabel::RowLabel);
+   pTitleLabel->setText(tr("Details of content"));
+   main_layout->addWidget(pTitleLabel, iRowIndex, 0);
+   ++iRowIndex;
+
    // Author
    //
    DecentLabel* labelAuthorTitle = new DecentLabel(this, DecentLabel::RowLabel);
@@ -410,10 +417,10 @@ ContentInfoWidget::ContentInfoWidget(QWidget* parent, const SDigitalContent& a_c
    //
    DecentLabel* labelExpirationTitle = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
    DecentLabel* labelExpirationInfo = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::HighlightedRight);
-   QDateTime time = QDateTime::fromString(QString::fromStdString(a_cnt_details.expiration), "yyyy-MM-ddTHH:mm:ss");
-   std::string e_str = CalculateRemainingTime(QDateTime::currentDateTime(), time);
+   QDateTime time = convertStringToDateTime(a_cnt_details.expiration);
+   QString e_str = CalculateRemainingTime(QDateTime::currentDateTime(), time);
    labelExpirationTitle->setText(tr("Expiration"));
-   labelExpirationInfo->setText(QString::fromStdString(e_str));
+   labelExpirationInfo->setText(e_str);
    main_layout->addWidget(labelExpirationTitle, iRowIndex, 0);
    main_layout->addWidget(labelExpirationInfo, iRowIndex, 1);
    ++iRowIndex;
@@ -423,7 +430,7 @@ ContentInfoWidget::ContentInfoWidget(QWidget* parent, const SDigitalContent& a_c
    DecentLabel* labelUploadedTitle = new DecentLabel(this, DecentLabel::RowLabel);
    DecentLabel* labelUploadedInfo = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Right);
    labelUploadedTitle->setText(tr("Uploaded"));
-   labelUploadedInfo->setText(QString::fromStdString(a_cnt_details.created));
+   labelUploadedInfo->setText(convertDateTimeToLocale2(a_cnt_details.created));
    main_layout->addWidget(labelUploadedTitle, iRowIndex, 0);
    main_layout->addWidget(labelUploadedInfo, iRowIndex, 1);
    ++iRowIndex;
@@ -433,7 +440,7 @@ ContentInfoWidget::ContentInfoWidget(QWidget* parent, const SDigitalContent& a_c
    DecentLabel* labelAmountTitle = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
    DecentLabel* labelAmountInfo  = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::HighlightedRight);
    QString str_price = a_cnt_details.price.getString();
-   labelAmountTitle->setText(tr("Amount"));
+   labelAmountTitle->setText(tr("Price"));
    labelAmountInfo->setText(str_price);
    main_layout->addWidget(labelAmountTitle, iRowIndex, 0);
    main_layout->addWidget(labelAmountInfo, iRowIndex, 1);
@@ -479,7 +486,16 @@ ContentInfoWidget::ContentInfoWidget(QWidget* parent, const SDigitalContent& a_c
    
    DecentButton* getItButton = new DecentButton(this, DecentButton::DialogAction);
    DecentButton* cancelButton = new DecentButton(this, DecentButton::DialogCancel);
-   getItButton->setText(tr("Get it!"));
+
+   if (a_cnt_details.price.m_amount == 0) {
+      m_getItOrPay = Download;
+      getItButton->setText(tr("Download"));
+   }
+   else {
+      m_getItOrPay = PayAndDownload;
+      getItButton->setText(tr("Buy && Download"));
+   }
+
    cancelButton->setText(tr("Back"));
    
    QObject::connect(getItButton, &QPushButton::clicked,
@@ -507,18 +523,16 @@ ContentInfoWidget::ContentInfoWidget(QWidget* parent, const SDigitalContent& a_c
    
 void ContentInfoWidget::ButtonWasClicked()
 {
-   QPushButton* button = (QPushButton*) sender();
-   if (m_amount == "Free" ||
-       m_getItOrPay == Pay)
-   {
-      m_getItOrPay = GetIt;
-      button->setText(tr("Get It!"));
-      Buy();
+   QPushButton* pButton = qobject_cast<QPushButton*>(sender());
+   Q_ASSERT(pButton);
+
+   if (m_getItOrPay == PayAndDownload) {
+      m_getItOrPay = Download;
+      pButton->setText(tr("Download"));
    }
-   else
-   {
-      m_getItOrPay = Pay;
-      button->setText((tr("Pay") + " " + m_amount));
+   else if (m_getItOrPay == Download) {
+
+      Buy();
    }
 }
    
@@ -558,6 +572,13 @@ ContentReviewWidget::ContentReviewWidget(QWidget* parent, const SDigitalContent&
    main_layout->setContentsMargins(0, 0, 0, 15);
    
    int iRowIndex = 0;
+   // Title
+   //
+   DecentLabel* pTitleLabel = new DecentLabel(this, DecentLabel::RowLabel);
+   pTitleLabel->setText(tr("Details of content"));
+   main_layout->addWidget(pTitleLabel, iRowIndex, 0);
+   ++iRowIndex;
+
    // Author
    //
    DecentLabel* labelAuthorTitle = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
@@ -573,7 +594,7 @@ ContentReviewWidget::ContentReviewWidget(QWidget* parent, const SDigitalContent&
    DecentLabel* labelExpirationTitle = new DecentLabel(this, DecentLabel::RowLabel);
    DecentLabel* labelExpirationInfo = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Right);
    labelExpirationTitle->setText(tr("Purchased"));
-   labelExpirationInfo->setText(a_cnt_details.purchased_time.c_str());
+   labelExpirationInfo->setText(convertDateTimeToLocale2(a_cnt_details.purchased_time));
    main_layout->addWidget(labelExpirationTitle, iRowIndex, 0);
    main_layout->addWidget(labelExpirationInfo, iRowIndex, 1);
    ++iRowIndex;
@@ -583,7 +604,7 @@ ContentReviewWidget::ContentReviewWidget(QWidget* parent, const SDigitalContent&
    DecentLabel* labelAmountTitle = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
    DecentLabel* labelAmountInfo  = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::HighlightedRight);
    QString str_price = a_cnt_details.price.getString();
-   labelAmountTitle->setText(tr("Amount"));
+   labelAmountTitle->setText(tr("Price"));
    labelAmountInfo->setText(str_price);
    main_layout->addWidget(labelAmountTitle, iRowIndex, 0);
    main_layout->addWidget(labelAmountInfo, iRowIndex, 1);
