@@ -430,7 +430,11 @@ ContentInfoWidget::ContentInfoWidget(QWidget* parent, const SDigitalContent& a_c
    DecentLabel* labelUploadedTitle = new DecentLabel(this, DecentLabel::RowLabel);
    DecentLabel* labelUploadedInfo = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Right);
    labelUploadedTitle->setText(tr("Uploaded"));
-   labelUploadedInfo->setText(convertDateTimeToLocale2(a_cnt_details.created));
+   std::string created_date;
+   if (a_cnt_details.created != "1970-01-01") {
+      created_date = a_cnt_details.created;
+   }
+   labelUploadedInfo->setText(convertDateTimeToLocale2(created_date));
    main_layout->addWidget(labelUploadedTitle, iRowIndex, 0);
    main_layout->addWidget(labelUploadedInfo, iRowIndex, 1);
    ++iRowIndex;

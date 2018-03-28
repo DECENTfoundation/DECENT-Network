@@ -489,6 +489,10 @@ QString convertDateTimeToLocale(const std::string& s)
 }
 QString convertDateTimeToLocale2(const std::string& s)
 {
+   if (s.empty()) {
+      return QString();
+   }
+
    QDateTime time = convertStringToDateTime(s);
    if (!time.isValid()) {
       return QString("EEE");
