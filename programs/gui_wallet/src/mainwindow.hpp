@@ -50,6 +50,7 @@ protected slots:
    void slot_UsersToggled(bool toggled);
    void slot_PurchasedToggled(bool toggled);
    void slot_MinerVotingToggled(bool toggled);
+   void slot_advancedMinerVoting();
    
    void DisplayWalletContentGUI();
 
@@ -99,6 +100,7 @@ protected:
    QAction* m_pActionImportKey;
    QAction* m_pActionReplayBlockchain;
    QAction* m_pActionResyncBlockchain;
+   QAction* m_pAdvancedMinerVoting;
 
    UpdateManager* m_pUpdateManager;
 

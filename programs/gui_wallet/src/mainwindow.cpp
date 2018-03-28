@@ -33,6 +33,7 @@
 #include "overview_tab.hpp"
 #include "purchased_tab.hpp"
 #include "mining_vote_tab.hpp"
+#include "mining_vote_popup.hpp"
 
 #include "json.hpp"
 
@@ -81,6 +82,7 @@ MainWindow::MainWindow()
 , m_pActionImportKey(new QAction(tr("Import key"), this))
 , m_pActionReplayBlockchain(new QAction(tr("Replay Blockchain"), this))
 , m_pActionResyncBlockchain(new QAction(tr("Resync Blockchain"), this))
+, m_pAdvancedMinerVoting(new QAction(tr("Advanced MinerVoting"), this))
 #ifdef UPDATE_MANAGER
 , m_pUpdateManager(new UpdateManager())
 #else
@@ -345,11 +347,17 @@ MainWindow::MainWindow()
       QObject::connect(m_pActionResyncBlockchain, &QAction::triggered,
                        this, &MainWindow::slot_resyncBlockChain);
 
+      QObject::connect(m_pAdvancedMinerVoting, &QAction::triggered,
+                       this, &MainWindow::slot_advancedMinerVoting);
+
       QMenu* pMenuFile = menuBar()->addMenu(tr("&File"));
       pMenuFile->addAction(pActionExit);
       pMenuFile->addAction(m_pActionImportKey);
       pMenuFile->addAction(m_pActionReplayBlockchain);
       pMenuFile->addAction(m_pActionResyncBlockchain);
+      pMenuFile->addAction(m_pAdvancedMinerVoting);
+
+      m_pAdvancedMinerVoting->setDisabled(true);
    }
 
 
@@ -622,6 +630,12 @@ void MainWindow::slot_importKey()
    slot_stackWidgetPush(import_key);
 }
 
+void MainWindow::slot_advancedMinerVoting()
+{
+   MiningVotePopup* mining_vote = new MiningVotePopup(nullptr);
+   slot_stackWidgetPush(mining_vote);
+}
+
 void MainWindow::slot_BrowseToggled(bool toggled)
 {
    QWidget* pSender = qobject_cast<QWidget*>(sender());
@@ -794,6 +808,8 @@ void MainWindow::slot_MinerVotingToggled(bool toggled)
    QWidget* pFilter = pActiveTab->getFilterWidget();
    Q_ASSERT(pFilter);
    pFilter->setHidden(!toggled);
+
+   m_pAdvancedMinerVoting->setEnabled(toggled);
 
    //
    if (toggled) {

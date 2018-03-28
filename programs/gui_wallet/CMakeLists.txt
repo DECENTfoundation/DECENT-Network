@@ -49,6 +49,9 @@ add_executable(DECENT MACOSX_BUNDLE
                src/upload_tab.hpp
                src/mining_vote_tab.cpp
                src/mining_vote_tab.hpp
+               src/mining_vote_popup.cpp
+               src/mining_vote_popup.hpp
+
                resources.qrc
                desktop.icns
 
