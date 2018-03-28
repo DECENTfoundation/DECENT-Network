@@ -55,6 +55,7 @@
 #include <QTextStream>
 #include <QLocale>
 #include <QPlainTextEdit>
+#include <QDesktopServices>
 
 #include <stdio.h>
 #include <stdlib.h>
