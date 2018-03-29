@@ -56,6 +56,7 @@ TransactionsTab::TransactionsTab(QWidget* pParent,
 
    QObject::connect(pFilterLineEdit, &QLineEdit::textChanged,
                     this, &TransactionsTab::slot_SearchTermChanged);
+   setFilterWidget(pFilterLineEdit);
 
    QObject::connect(m_pTableWidget, &DecentTable::signal_SortingChanged,
                     this, &TransactionsTab::slot_SortingChanged);

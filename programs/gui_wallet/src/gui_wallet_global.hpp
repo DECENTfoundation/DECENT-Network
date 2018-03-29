@@ -191,6 +191,8 @@ namespace gui_wallet
       std::string getAccountName(const std::string& accountId);
       void setCurrentAccount(const QString& account_name);
 
+      Asset getDCoreFees(int iOperation);
+
    signals:
       void signal_connect();  // for internal use
    private slots:

@@ -32,6 +32,8 @@
 #include "upload_tab.hpp"
 #include "overview_tab.hpp"
 #include "purchased_tab.hpp"
+#include "mining_vote_tab.hpp"
+#include "mining_vote_popup.hpp"
 
 #include "json.hpp"
 
@@ -44,6 +46,8 @@
 #endif
 
 #include <QCloseEvent>
+#include <QMessageBox>
+#include <QCheckBox>
 
 #include "update_manager.hpp"
 
@@ -56,9 +60,7 @@ using namespace utilities;
 MainWindow::MainWindow()
 : QMainWindow()
 , m_iSplashWidgetIndex(0)
-, m_pTimerDownloads(new QTimer(this))
 , m_pTimerBalance(new QTimer(this))
-, m_pTimerContents(new QTimer(this))
 , m_pStackedWidget(new QStackedWidget(this))
 , m_pAccountList(nullptr)
 , m_pBalance(nullptr)
@@ -71,6 +73,7 @@ MainWindow::MainWindow()
 , m_pFilterUsers(nullptr)
 , m_pFilterPurchased(nullptr)
 , m_pPublish(nullptr)
+, m_pOnlyMyVotes(nullptr)
 , m_pTabBrowse(nullptr)
 , m_pTabTransactions(nullptr)
 , m_pTabPublish(nullptr)
@@ -79,6 +82,7 @@ MainWindow::MainWindow()
 , m_pActionImportKey(new QAction(tr("Import key"), this))
 , m_pActionReplayBlockchain(new QAction(tr("Replay Blockchain"), this))
 , m_pActionResyncBlockchain(new QAction(tr("Resync Blockchain"), this))
+, m_pAdvancedMinerVoting(new QAction(tr("Advanced MinerVoting"), this))
 #ifdef UPDATE_MANAGER
 , m_pUpdateManager(new UpdateManager())
 #else
@@ -129,12 +133,17 @@ MainWindow::MainWindow()
    m_pButtonPurchased->setText(tr("Purchased"));
    m_pButtonPurchased->setCheckable(true);
 
+   m_pButtonMinerVoting = new DecentButton(pMainWidget, DecentButton::TabChoice);
+   m_pButtonMinerVoting->setText(tr("Miner Voting"));
+   m_pButtonMinerVoting->setCheckable(true);
+
    QButtonGroup* pGroup = new QButtonGroup(pMainWidget);
    pGroup->addButton(m_pButtonBrowse);
    pGroup->addButton(m_pButtonTransactions);
    pGroup->addButton(m_pButtonPublish);
    pGroup->addButton(m_pButtonUsers);
    pGroup->addButton(m_pButtonPurchased);
+   pGroup->addButton(m_pButtonMinerVoting);
    //
    // 3rd row controls
    //
@@ -163,6 +172,10 @@ MainWindow::MainWindow()
    m_pPublish = new DecentButton(pMainWidget, DecentButton::DialogAction);
    m_pPublish->setText(tr("Publish"));
    m_pPublish->hide();
+
+   m_pOnlyMyVotes = new QCheckBox(tr("My votes"), pMainWidget);
+   m_pOnlyMyVotes->hide();
+
    //
    // 4th row controls
    //
@@ -176,6 +189,9 @@ MainWindow::MainWindow()
    m_pTabUsers->hide();
    m_pTabPurchased = new PurchasedTab(pMainWidget, m_pFilterPurchased);
    m_pTabPurchased->hide();
+   m_pTabMinerVoting = new MinerVotingTab(pMainWidget, m_pFilterUsers, m_pOnlyMyVotes);
+   m_pTabMinerVoting->hide();
+
    //
    // 5th row controls
    //
@@ -210,6 +226,7 @@ MainWindow::MainWindow()
    pRow2Layout->addWidget(m_pButtonPublish);
    pRow2Layout->addWidget(m_pButtonUsers);
    pRow2Layout->addWidget(m_pButtonPurchased);
+   pRow2Layout->addWidget(m_pButtonMinerVoting);
    //
    // 3rd row layout
    //
@@ -229,6 +246,7 @@ MainWindow::MainWindow()
    pRow3Layout->addWidget(pRow3_LabelSearchFrame);
    pRow3Layout->addStretch();
    pRow3Layout->addWidget(m_pPublish);
+   pRow3Layout->addWidget(m_pOnlyMyVotes);
    pRow3Layout->setContentsMargins(5, 0, 5, 0);
    //
    // 4th row layout
@@ -239,6 +257,7 @@ MainWindow::MainWindow()
    pRow4Layout->addWidget(m_pTabPublish);
    pRow4Layout->addWidget(m_pTabUsers);
    pRow4Layout->addWidget(m_pTabPurchased);
+   pRow4Layout->addWidget(m_pTabMinerVoting);
    pRow4Layout->setSpacing(0);
    pRow4Layout->setContentsMargins(5, 0, 5, 0);
    //
@@ -301,6 +320,8 @@ MainWindow::MainWindow()
                     this, &MainWindow::slot_UsersToggled);
    QObject::connect(m_pButtonPurchased, &QPushButton::toggled,
                     this, &MainWindow::slot_PurchasedToggled);
+   QObject::connect(m_pButtonMinerVoting, &QPushButton::toggled,
+                    this, &MainWindow::slot_MinerVotingToggled);
 
    QObject::connect(m_pPreviousPage, &QPushButton::clicked,
                      this, &MainWindow::slot_PreviousPage);
@@ -327,11 +348,17 @@ MainWindow::MainWindow()
       QObject::connect(m_pActionResyncBlockchain, &QAction::triggered,
                        this, &MainWindow::slot_resyncBlockChain);
 
+      QObject::connect(m_pAdvancedMinerVoting, &QAction::triggered,
+                       this, &MainWindow::slot_advancedMinerVoting);
+
       QMenu* pMenuFile = menuBar()->addMenu(tr("&File"));
       pMenuFile->addAction(pActionExit);
       pMenuFile->addAction(m_pActionImportKey);
       pMenuFile->addAction(m_pActionReplayBlockchain);
       pMenuFile->addAction(m_pActionResyncBlockchain);
+      pMenuFile->addAction(m_pAdvancedMinerVoting);
+
+      m_pAdvancedMinerVoting->setDisabled(true);
    }
 
 
@@ -359,13 +386,17 @@ MainWindow::MainWindow()
                     &Globals::instance(), &Globals::slot_updateAccountBalance);
 
 
-   m_pTimerDownloads->setInterval(5000);
-   QObject::connect(m_pTimerDownloads, &QTimer::timeout,
-                    this, &MainWindow::slot_checkDownloads);
+//   m_pTimerDownloads->setInterval(5000);
+//   QObject::connect(m_pTimerDownloads, &QTimer::timeout,
+//                    this, &MainWindow::slot_checkDownloads);
 
-   m_pTimerContents->setInterval(1000);
-   QObject::connect(m_pTimerContents, &QTimer::timeout,
-                    this, &MainWindow::slot_getContents);
+//   m_pTimerContents->setInterval(1000);
+//   QObject::connect(m_pTimerContents, &QTimer::timeout,
+//                    this, &MainWindow::slot_getContents);
+
+//   m_pTimerVoting->setInterval(5000);
+//   QObject::connect(m_pTimerVoting, &QTimer::timeout,
+//                    this, &MainWindow::slot_getContents);
 
    resize(900, 600);
 
@@ -429,7 +460,7 @@ void MainWindow::slot_setSplash()
                     pSyncUpLabel, &StatusLabel::clearMessage);
    QObject::connect(&Globals::instance(), &Globals::updateProgress,
                      this, &MainWindow::slot_BlockchainUpdate);
-   
+
 //   QObject::connect(this, &MainWindow::signal_setSplashMainText,
 //                    pConnectingLabel, &QLabel::setText);
    QObject::connect(this, &MainWindow::signal_setSplashMainText,
@@ -439,10 +470,6 @@ void MainWindow::slot_setSplash()
                     this, &MainWindow::slot_closeSplash);
 
    slot_stackWidgetPush(pSplashScreen);
-
-   m_pTimerBalance->stop();
-   m_pTimerDownloads->stop();
-   m_pTimerContents->stop();
 
    m_pActionImportKey->setDisabled(true);
 }
@@ -508,14 +535,13 @@ void MainWindow::closeSplash(bool bGonnaCoverAgain)
       DisplayWalletContentGUI();
 
       m_pTimerBalance->start();
-      m_pTimerDownloads->start();
-      m_pTimerContents->start();
 
       m_pActionImportKey->setEnabled(true);
 
       Globals::instance().slot_updateAccountBalance();
+      slot_BrowseToggled(true);
       slot_checkDownloads();
-      slot_getContents();
+      updateActiveTable();
    }
 }
 
@@ -562,7 +588,7 @@ void MainWindow::slot_showPurchasedTab()
 void MainWindow::slot_showTransactionsTab(std::string const& account_name)
 {
    m_pButtonTransactions->setChecked(true);
-   m_pFilterTransactions->setText(account_name.c_str());
+   m_pFilterTransactions->setText(QString::fromStdString(account_name));
    slot_getContents();
 }
 
@@ -640,24 +666,52 @@ void MainWindow::slot_currentAccountChanged(int iIndex)
    slot_getContents();
 }
 
+void MainWindow::slot_advancedMinerVoting()
+{
+   MiningVotePopup* mining_vote = new MiningVotePopup(nullptr);
+   slot_stackWidgetPush(mining_vote);
+}
+
 void MainWindow::slot_BrowseToggled(bool toggled)
 {
    QWidget* pSender = qobject_cast<QWidget*>(sender());
-   //
-   // really a stupid hack to have the state change visible
-   pSender->setEnabled(false);
-   pSender->setEnabled(true);
+   if (pSender) {
+      //
+      // really a stupid hack to have the state change visible
+      pSender->setEnabled(false);
+      pSender->setEnabled(true);
+   }
+
+   TabContentManager* pActiveTab = m_pTabBrowse;
+   Q_ASSERT(pActiveTab);
+
+   QWidget* pFilter = pActiveTab->getFilterWidget();
+   Q_ASSERT(pFilter);
+   pFilter->setHidden(!toggled);
+
    //
    if (toggled)
    {
-      m_pFilterBrowse->show();
-      m_pTabBrowse->show();
-      slot_getContents();
+//      m_pFilterBrowse->show();
+      pActiveTab->show();
+      updateActiveTable();
+
+      QTimer* pTimer = pActiveTab->getRefreshTimer();
+      if (pTimer) {
+         QObject::connect(pTimer, &QTimer::timeout, this, &MainWindow::slot_getContents);
+         pTimer->start();
+      }
    }
    else
    {
-      m_pFilterBrowse->hide();
-      m_pTabBrowse->hide();
+//      m_pFilterBrowse->hide();
+      pActiveTab->hide();
+
+      QTimer* pTimer = pActiveTab->getRefreshTimer();
+      if (pTimer) {
+         pTimer->stop();
+         QObject::disconnect(pTimer);
+      }
    }
 }
 
@@ -668,17 +722,21 @@ void MainWindow::slot_TransactionsToggled(bool toggled)
    // really a stupid hack to have the state change visible
    pSender->setEnabled(false);
    pSender->setEnabled(true);
+
+   TabContentManager* pActiveTab = m_pTabTransactions;
+   Q_ASSERT(pActiveTab);
+
+   QWidget* pFilter = pActiveTab->getFilterWidget();
+   Q_ASSERT(pFilter);
+   pFilter->setHidden(!toggled);
+
    //
-   if (toggled)
-   {
-      m_pFilterTransactions->show();
-      m_pTabTransactions->show();
-      slot_getContents();
+   if (toggled) {
+      pActiveTab->show();
+      updateActiveTable();
    }
-   else
-   {
-      m_pFilterTransactions->hide();
-      m_pTabTransactions->hide();
+   else {
+      pActiveTab->hide();
    }
 }
 
@@ -689,18 +747,23 @@ void MainWindow::slot_PublishToggled(bool toggled)
    // really a stupid hack to have the state change visible
    pSender->setEnabled(false);
    pSender->setEnabled(true);
+
+   TabContentManager* pActiveTab = m_pTabPublish;
+   Q_ASSERT(pActiveTab);
+
+   QWidget* pFilter = pActiveTab->getFilterWidget();
+   Q_ASSERT(pFilter);
+   pFilter->setHidden(!toggled);
+
    //
-   if (toggled)
-   {
-      m_pFilterPublish->show();
-      m_pTabPublish->show();
+   if (toggled) {
+      pActiveTab->show();
       m_pPublish->show();
-      slot_getContents();
+      updateActiveTable();
    }
    else
    {
-      m_pFilterPublish->hide();
-      m_pTabPublish->hide();
+      pActiveTab->hide();
       m_pPublish->hide();
    }
 }
@@ -712,17 +775,21 @@ void MainWindow::slot_UsersToggled(bool toggled)
    // really a stupid hack to have the state change visible
    pSender->setEnabled(false);
    pSender->setEnabled(true);
+
+   TabContentManager* pActiveTab = m_pTabUsers;
+   Q_ASSERT(pActiveTab);
+
+   QWidget* pFilter = pActiveTab->getFilterWidget();
+   Q_ASSERT(pFilter);
+   pFilter->setHidden(!toggled);
+
    //
-   if (toggled)
-   {
-      m_pFilterUsers->show();
-      m_pTabUsers->show();
-      slot_getContents();
+   if (toggled) {
+      pActiveTab->show();
+      updateActiveTable();
    }
-   else
-   {
-      m_pFilterUsers->hide();
-      m_pTabUsers->hide();
+   else {
+      pActiveTab->hide();
    }
 }
 
@@ -733,18 +800,84 @@ void MainWindow::slot_PurchasedToggled(bool toggled)
    // really a stupid hack to have the state change visible
    pSender->setEnabled(false);
    pSender->setEnabled(true);
+
+   TabContentManager* pActiveTab = m_pTabPurchased;
+   Q_ASSERT(pActiveTab);
+
+   QWidget* pFilter = pActiveTab->getFilterWidget();
+   Q_ASSERT(pFilter);
+   pFilter->setHidden(!toggled);
+
    //
-   if (toggled)
-   {
-      m_pFilterPurchased->show();
-      m_pTabPurchased->show();
-      slot_getContents();
+   if (toggled) {
+      pActiveTab->show();
+      updateActiveTable();
+
+      QTimer* pTimer = pActiveTab->getRefreshTimer();
+      if (pTimer) {
+         QObject::connect(pTimer, &QTimer::timeout, this, &MainWindow::slot_getContents);
+         pTimer->start();
+      }
    }
-   else
-   {
-      m_pFilterPurchased->hide();
-      m_pTabPurchased->hide();
+   else {
+      pActiveTab->hide();
+
+      QTimer* pTimer = pActiveTab->getRefreshTimer();
+      if (pTimer) {
+         pTimer->stop();
+         QObject::disconnect(pTimer);
+      }
    }
+}
+
+void MainWindow::slot_MinerVotingToggled(bool toggled)
+{
+   QWidget* pSender = qobject_cast<QWidget*>(sender());
+   //
+   // really a stupid hack to have the state change visible
+   pSender->setEnabled(false);
+   pSender->setEnabled(true);
+
+   TabContentManager* pActiveTab = m_pTabMinerVoting;
+   Q_ASSERT(pActiveTab);
+
+   QWidget* pFilter = pActiveTab->getFilterWidget();
+   Q_ASSERT(pFilter);
+   pFilter->setHidden(!toggled);
+
+   m_pAdvancedMinerVoting->setEnabled(toggled);
+
+   //
+   if (toggled) {
+
+      Asset opFee = Globals::instance().getDCoreFees(2);  //account_update_operation
+
+      QMessageBox info(this);
+      info.setIcon(QMessageBox::Information);
+      info.setText(QString(tr("For every vote or unvote opeation you will pay %1 fee")).arg(opFee.getString()) );
+      info.exec();
+
+      m_pOnlyMyVotes->show();
+      pActiveTab->show();
+      updateActiveTable();
+
+      QTimer* pTimer = pActiveTab->getRefreshTimer();
+      if (pTimer) {
+         QObject::connect(pTimer, &QTimer::timeout, this, &MainWindow::slot_getContents);
+         pTimer->start();
+      }
+   }
+   else {
+      m_pOnlyMyVotes->hide();
+      pActiveTab->hide();
+
+      QTimer* pTimer = pActiveTab->getRefreshTimer();
+      if (pTimer) {
+         pTimer->stop();
+         QObject::disconnect(pTimer);
+      }
+   }
+
 }
 
 void MainWindow::slot_checkDownloads()
@@ -810,6 +943,11 @@ void MainWindow::slot_checkDownloads()
 
 void MainWindow::slot_getContents()
 {
+   updateActiveTable();
+}
+
+void MainWindow::updateActiveTable()
+{
    TabContentManager* pTab = activeTable();
 
    if (pTab)
@@ -842,7 +980,7 @@ void MainWindow::slot_PreviousPage()
    if (pTab)
       pTab->previous();
 
-   slot_getContents();
+   updateActiveTable();
 }
 
 void MainWindow::slot_ResetPage()
@@ -852,7 +990,7 @@ void MainWindow::slot_ResetPage()
    if (pTab)
       pTab->reset();
 
-   slot_getContents();
+   updateActiveTable();
 }
 
 void MainWindow::slot_NextPage()
@@ -862,7 +1000,7 @@ void MainWindow::slot_NextPage()
    if (pTab)
       pTab->next();
 
-   slot_getContents();
+   updateActiveTable();
 }
 
 TabContentManager* MainWindow::activeTable() const
@@ -879,6 +1017,8 @@ TabContentManager* MainWindow::activeTable() const
       pTab = m_pTabUsers;
    else if (m_pTabPurchased->isVisible())
       pTab = m_pTabPurchased;
+   else if (m_pTabMinerVoting->isVisible())
+      pTab = m_pTabMinerVoting;
 
    return pTab;
 }

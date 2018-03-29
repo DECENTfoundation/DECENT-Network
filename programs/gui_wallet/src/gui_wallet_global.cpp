@@ -882,6 +882,15 @@ void Globals::setCurrentAccount(const QString& account_name)
    m_str_currentUser = account_name.toStdString();
 }
 
+Asset Globals::getDCoreFees(int iOperation)
+{
+   nlohmann::json global_prop_info = runTaskParse("get_global_properties");
+   nlohmann::json param = global_prop_info["parameters"]["current_fees"]["parameters"];
+   nlohmann::json curr_fee = param[iOperation];  //account_update_operation
+
+   return asset(curr_fee[1]["fee"].get<uint64_t>() );
+}
+
 void Globals::slot_updateAccountBalance()
 {
    if (!m_str_currentUser.empty())

@@ -60,12 +60,15 @@ PurchasedTab::PurchasedTab(QWidget* pParent,
 
    QObject::connect(pFilterLineEdit, &QLineEdit::textChanged,
                     this, &PurchasedTab::slot_SearchTermChanged);
+   setFilterWidget(pFilterLineEdit);
 
    QObject::connect(m_pTableWidget, &DecentTable::signal_SortingChanged,
                     this, &PurchasedTab::slot_SortingChanged);
 
    QObject::connect(m_pTableWidget, &DecentTable::cellClicked,
                     this, &PurchasedTab::slot_cellClicked);
+
+   setRefreshTimer(5000);
 }
 
 //
