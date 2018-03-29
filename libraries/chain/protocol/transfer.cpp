@@ -37,6 +37,7 @@ void transfer_operation::validate()const
 void transfer2_operation::validate()const
 {
    FC_ASSERT( fee.amount >= 0 );
+   FC_ASSERT( to.is<account_id_type>() || to.is<content_id_type>() );
    FC_ASSERT( from != to );
    FC_ASSERT( amount.amount > 0 );
 }

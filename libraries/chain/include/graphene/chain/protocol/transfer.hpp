@@ -64,6 +64,22 @@ namespace graphene { namespace chain {
       void            validate()const;
    };
 
+   /**
+    * @ingroup operations
+    *
+    * @brief Transfers an amount of one asset from one account to another account or to content.
+    * In the case of transferring to a content, amount is transferred to author and co-authors of the content,
+    * if they are specified.
+    *
+    *  Fees are paid by the "from" account
+    *
+    *  @pre amount.amount > 0
+    *  @pre fee.amount >= 0
+    *  @pre from != to
+    *  @post from account's balance will be reduced by fee and amount
+    *  @post to account's balance will be increased by amount
+    *  @return n/a
+    */
    struct transfer2_operation : public base_operation
    {
       struct fee_parameters_type {
@@ -73,7 +89,7 @@ namespace graphene { namespace chain {
       asset            fee;
       /// Account to transfer asset from
       account_id_type  from;
-      /// Account to transfer asset to
+      /// Account or content to transfer asset to
       object_id_type  to;
       /// The amount of asset to transfer from @ref from to @ref to
       asset            amount;
