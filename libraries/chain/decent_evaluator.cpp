@@ -128,6 +128,10 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
 
    void_result content_submit_evaluator::do_evaluate(const content_submit_operation& o )
    {try{
+
+      if( o.key_parts.size() == 0 ) //simplified content - TODO
+         FC_ASSERT(db().head_block_time() >= HARDFORK_2_TIME);
+
       db().get<account_object>(o.author);
       //Submission rights feature is disabled
       //FC_ASSERT( !author_account.rights_to_publish.publishing_rights_received.empty(), "Author does not have permission to publish a content" );
@@ -435,6 +439,9 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
       FC_ASSERT( o.price <= d.get_balance( o.consumer, o.price.asset_id ) );
       FC_ASSERT( content->expiration > db().head_block_time() );
 
+      if( content->key_parts.size() == 0 ) //simplified content buying - TODO
+         FC_ASSERT(d.head_block_time() >= HARDFORK_2_TIME);
+
       optional<asset> content_price_got = content->price.GetPrice(o.region_code_from);
 
       FC_ASSERT( content_price_got.valid(), "content is not available for this region" );
@@ -490,8 +497,6 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
          paid_price_after_conversion = asset( 0 );
       }
 
-
-
       if( content_price.asset_id == o.price.asset_id ){ // no need to convert
          paid_price_after_conversion = paid_price;
       }else {
@@ -502,7 +507,6 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
       bool delivered = false;
       asset escrow = paid_price_after_conversion;
       if( content->key_parts.size() == 0 ){ //simplified content buying - TODO
-         FC_ASSERT(d.head_block_time() >= HARDFORK_2_TIME);
          delivered = true;
          escrow = asset(0);
       }
