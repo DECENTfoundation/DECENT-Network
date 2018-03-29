@@ -556,7 +556,7 @@ QString Asset::getString() const
       QLocale& locale = Globals::instance().locale();
 
       if (hasDecimals())
-         return locale.toString(to_value(), 'f', g_max_number_of_decimal_places) + " " + QString::fromStdString(m_str_symbol);
+         return locale.toString(to_value(), 'g', g_max_number_of_decimal_places) + " " + QString::fromStdString(m_str_symbol);
       else
          return locale.toString((int)to_value()) + " " + QString::fromStdString(m_str_symbol);
    }
@@ -568,7 +568,7 @@ QString Asset::getString() const
 QString Asset::getStringBalance() const
 {
    QLocale& locale = Globals::instance().locale();
-   return locale.toString(to_value(), 'f' , g_max_number_of_decimal_places) + " " + QString::fromStdString(m_str_symbol);
+   return locale.toString(to_value(), 'g' , g_max_number_of_decimal_places) + " " + QString::fromStdString(m_str_symbol);
 }
 //
 // DaemonDetails
@@ -654,10 +654,6 @@ void Globals::startDaemons(BlockChainStartType type)
 
    QObject::connect(this, &Globals::walletConnectionStatusChanged, this, &Globals::slot_ConnectionStatusChange);
 
-   fc::thread& thread_decentd = m_p_daemon_details->thread_decentd;
-
-   fc::promise<void>::ptr& exit_promise = m_p_daemon_details->exit_promise;
-
    QProcess* daemon_process;
    daemon_process = run_ipfs_daemon(qApp, qApp->applicationDirPath());
    m_p_daemon_details->ipfs_process = daemon_process;
@@ -683,6 +679,10 @@ void Globals::startDaemons(BlockChainStartType type)
 #endif
 
 #if !defined(DECENT_WITHOUT_DAEMON)
+   fc::thread& thread_decentd = m_p_daemon_details->thread_decentd;
+
+   fc::promise<void>::ptr& exit_promise = m_p_daemon_details->exit_promise;
+
    m_p_daemon_details->future_decentd = thread_decentd.async([type, &exit_promise]() -> int
                                                             {
                                                                return ::runDecentD(type, exit_promise);
