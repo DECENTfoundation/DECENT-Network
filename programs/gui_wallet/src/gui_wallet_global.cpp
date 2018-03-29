@@ -506,12 +506,11 @@ QString convertDateTimeToLocale2(const std::string& s)
 //
 WalletOperator::WalletOperator() : QObject()
 , m_wallet_api()
+, m_cancellation_token(false)
 {
 }
 
-WalletOperator::~WalletOperator()
-{
-}
+WalletOperator::~WalletOperator() = default
 
 void WalletOperator::cancel()
 {
