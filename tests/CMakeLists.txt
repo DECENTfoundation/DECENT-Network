@@ -11,14 +11,14 @@ set(TEST_FILES_LIST
     common/database_fixture.cpp
     common/tempdir.hpp
     common/tempdir.cpp
-    tests/basic_tests.cpp
-    tests/block_tests.cpp
-    tests/database_tests.cpp
-    tests/serialization_tests.cpp
-    tests/operation_tests.cpp
-    tests/operation_tests2.cpp
-    tests/authority_tests.cpp
-    tests/fee_tests.cpp
+#    tests/basic_tests.cpp
+#    tests/block_tests.cpp
+#    tests/database_tests.cpp
+#    tests/serialization_tests.cpp
+#    tests/operation_tests.cpp
+#    tests/operation_tests2.cpp
+#    tests/authority_tests.cpp
+#    tests/fee_tests.cpp
     tests/uia_tests.cpp
     tests/messaging_tests.cpp
     tests/main.cpp

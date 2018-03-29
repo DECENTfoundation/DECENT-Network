@@ -1,0 +1,6 @@
+// #2 - simple buying
+
+#ifndef HARDFORK_2_TIME
+#define HARDFORK_2_TIME (fc::time_point_sec( 1410238800 ))
+#endif
+

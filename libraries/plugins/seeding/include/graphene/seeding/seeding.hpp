@@ -208,6 +208,7 @@ private:
    string _url;
    decent::package::package_handle_t _pi;
    seeding_plugin_impl *_my;
+   int failed=0;
 public:
    SeedingListener(seeding_plugin_impl &impl, const my_seeding_object &mso,
                    const decent::package::package_handle_t pi) {

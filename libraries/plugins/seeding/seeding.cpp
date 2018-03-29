@@ -738,13 +738,24 @@ void seeding_plugin::plugin_set_program_options(
 
 void detail::SeedingListener::package_download_error(const std::string & error) {
    elog("seeding plugin: package_download_error(): Failed downloading package ${s}, ${e}", ("s", _url)("e", error));
+   failed++;
    decent::package::package_handle_t pi;
    auto& pm = decent::package::PackageManager::instance();
 
    pi = _pi;
-   //we want to restart the download; however, this method is being called from pi->_download_task::Task method, so we can't restart directly.
-   // We will start asynchronously
-   fc::thread::current().schedule([pi](){ pi->download(true);}, fc::time_point::now() + fc::seconds(60) );
+
+   if(failed < 5) {
+      //we want to restart the download; however, this method is being called from pi->_download_task::Task method, so we can't restart directly.
+      // We will start asynchronously
+      fc::thread::current().schedule([ pi ]() { pi->download(true); }, fc::time_point::now() + fc::seconds(60));
+   }
+   else{
+      const auto& db = _my->database();
+      const auto &mso_idx = db.get_index_type<my_seeding_index>().indices().get<by_URI>();
+      const auto &mso_itr = mso_idx.find(_url);
+      const auto& mso = *mso_itr;
+      _my->release_package(mso, pi);
+   }
 };
 
 void detail::SeedingListener::package_download_complete() {

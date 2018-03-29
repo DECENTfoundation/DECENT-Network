@@ -146,7 +146,7 @@ void database_fixture::verify_asset_supplies( const database& db )
   share_type core_in_orders;
   share_type reported_core_in_orders;
 
-  for (const asset_object& a : asset_idx) {
+  for( const asset_object& a : asset_idx ) {
      const auto& ad = a.dynamic_asset_data_id(db);
      total_balances[asset_id_type()] += ad.core_pool;
      total_balances[a.get_id()] += ad.asset_pool;
@@ -430,7 +430,6 @@ const asset_object& database_fixture::create_user_issued_asset( const string& na
   creator.issuer = issuer.id;
   creator.fee = asset();
   creator.symbol = name;
-  creator.options.max_supply = 0;
   creator.precision = 2;
   creator.options.core_exchange_rate = price({asset(1,asset_id_type(1)),asset(1)});
   creator.options.max_supply = GRAPHENE_MAX_SHARE_SUPPLY;
@@ -538,6 +537,7 @@ void database_fixture::transfer(
   {
      set_expiration( db, trx );
      transfer_operation trans;
+     trans.fee = fee;
      trans.from = from.id;
      trans.to   = to.id;
      trans.amount = amount;
@@ -594,6 +594,19 @@ void database_fixture::issue_uia( account_id_type recipient_id, asset amount )
   issue_uia( recipient_id(db), amount );
 }
 
+void database_fixture::fill_pools(asset_id_type uia, account_id_type by, asset to_core_pool, asset to_asset_pool)
+{
+   set_expiration( db, trx );
+   trx.operations.clear();
+   asset_fund_pools_operation filler;
+   filler.dct_asset = to_core_pool;
+   filler.from_account = by;
+   filler.uia_asset = to_asset_pool;
+   trx.operations.push_back(std::move(filler));
+   db.push_transaction( trx, ~0 );
+   trx.operations.clear();
+}
+
 void database_fixture::publish_feed( const asset_object& mia, const account_object& by, const price_feed& f )
 {
   set_expiration( db, trx );
@@ -614,10 +627,43 @@ void database_fixture::publish_feed( const asset_object& mia, const account_obje
   verify_asset_supplies(db);
 }
 
+void database_fixture::create_content(account_id_type by, string url, asset price, map<account_id_type, uint32_t> co_authors)
+{
+   set_expiration( db, trx );
+   trx.operations.clear();
 
+   content_submit_operation op;
+   op.size = 100;
+   op.price.push_back({RegionCodes::OO_none, price});
+   op.author = by;
+   op.co_authors = co_authors;
+   op.URI = url;
+   op.hash = fc::ripemd160::hash(url);
+   op.expiration = fc::time_point::now()+fc::microseconds(10000000000);
+   op.publishing_fee = asset(0);
+   op.quorum = 0;
+   op.synopsis = "{\"title\":\"abcd\"}";
+   trx.operations.emplace_back( std::move(op) );
 
+   db.push_transaction(trx, ~0);
+   trx.operations.clear();
+}
 
+void database_fixture::buy_content(account_id_type by, string url, asset price)
+{
+   set_expiration( db, trx );
+   trx.operations.clear();
 
+   request_to_buy_operation op;
+   op.URI = url;
+   op.price = price;
+   op.consumer = by;
+
+   trx.operations.emplace_back( std::move(op) );
+
+   db.push_transaction(trx, ~0);
+   trx.operations.clear();
+}
 
 
 #if 0  ///////////////////////////////////////////////////////////////////////////////////////
@@ -838,6 +884,7 @@ processed_transaction _push_transaction( database& db, const signed_transaction&
    database_fixture::verify_asset_supplies(db);
    return pt;
 } FC_CAPTURE_AND_RETHROW((tx)) }
+
 
 
 } // graphene::chain::test

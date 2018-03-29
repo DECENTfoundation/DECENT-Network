@@ -368,5 +368,12 @@ DInteger restore_encryption_key(const string& account, buying_id_type buying);
  */
 DInteger generate_encryption_key() const;
 
+/**
+ * @brief Generate keys for new content submission
+ * @param seeders list of seeder account IDs
+ * @return generated key and key parts
+ * @ingroup WalletCLI
+ */
+content_keys generate_content_keys(vector<account_id_type> const& seeders) const;
 
 #endif //DECENT_WALLET_CONTENT_H

@@ -3434,7 +3434,6 @@ signed_transaction content_cancellation(const string& author,
        _wallet.sign_transaction(tx, true);
    }
 
-
 } } // graphene::wallet
 
 
