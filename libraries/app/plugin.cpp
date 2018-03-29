@@ -55,7 +55,6 @@ void plugin::plugin_startup()
 
 void plugin::plugin_shutdown()
 {
-   _running = false;
    return;
 }
 

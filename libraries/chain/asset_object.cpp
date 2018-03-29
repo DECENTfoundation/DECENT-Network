@@ -214,3 +214,18 @@ void graphene::chain::monitored_asset_options::update_median_feeds(time_point_se
 
    current_feed = median_feed;
 }
+
+//template<class DB>
+//asset asset_object::convert_uia( asset from, const DB& db )const
+
+
+//template<class DB>
+//asset asset_object::convert_mia( asset from, const DB& db ) const
+
+
+//template<class DB>
+//asset asset_object::convert( asset from, const DB& db ) const
+
+
+//template<class DB>
+//bool asset_object::can_convert( asset from, asset& to, const DB& db ) const

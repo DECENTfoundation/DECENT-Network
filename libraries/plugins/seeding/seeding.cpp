@@ -8,6 +8,7 @@
 #include <graphene/chain/account_object.hpp>
 #include <graphene/chain/buying_object.hpp>
 #include <graphene/utilities/key_conversion.hpp>
+#include <decent/package/package.hpp>
 #include <decent/package/package_config.hpp>
 #include <fc/smart_ref_impl.hpp>
 #include <algorithm>
@@ -499,11 +500,6 @@ void seeding_plugin_impl::restore_state(){
               content_itr--;
               if( content_itr->expiration < database().head_block_time() )
                  break;
-
-              auto url_iter = std::find(seeder_cfg.content_blacklist.begin(), seeder_cfg.content_blacklist.end(), content_itr->URI);
-              if (url_iter != seeder_cfg.content_blacklist.end())
-                 break;
-
               auto search_itr = content_itr->key_parts.find( sitr->seeder );
               if( search_itr != content_itr->key_parts.end() )
               {
@@ -558,14 +554,12 @@ void seeding_plugin_impl::restore_state(){
               database().modify<my_seeding_object>(*citr, [](my_seeding_object& so){so.downloaded = true;});
 
            }else{
-              if (std::find(seeder_cfg.content_blacklist.begin(), seeder_cfg.content_blacklist.end(), citr->URI) == seeder_cfg.content_blacklist.end()) {
-                 elog("restarting downloads, re-downloading package ${u}", ("u", citr->URI));
-                 package_handle = pm.get_package(citr->URI, citr->_hash);
-                 decent::package::event_listener_handle_t sl = std::make_shared<SeedingListener>(*this, *citr, package_handle);
-                 package_handle->remove_all_event_listeners();
-                 package_handle->add_event_listener(sl);
-                 package_handle->download(false);
-              }
+              elog("restarting downloads, re-downloading package ${u}", ("u", citr->URI));
+              package_handle = pm.get_package(citr->URI, citr->_hash);
+              decent::package::event_listener_handle_t sl = std::make_shared<SeedingListener>(*this, *citr , package_handle);
+              package_handle->remove_all_event_listeners();
+              package_handle->add_event_listener(sl);
+              package_handle->download(false);
            }
            ++citr;
         }
@@ -573,202 +567,6 @@ void seeding_plugin_impl::restore_state(){
         generate_pors();
    });
 }
-
-void seeding_plugin_impl::start_content_seeding(const std::string& url)
-{
-   try {
-      graphene::chain::database &db = database();
-
-      elog("start_content_seeding, main thread");
-      service_thread->async([this, url]() {
-         if (std::abs((fc::time_point::now() - database().head_block_time()).count()) > int64_t(10000000))
-         {
-            ilog("seeding plugin:  start_content_seeding, waiting for sync");
-            fc::usleep(fc::microseconds(1000000));
-         }
-         elog("starting download of stopped content seeding, service thread");
-         //start with rebuilding my_seeding_object database
-         const auto& sidx = database().get_index_type<my_seeder_index>().indices().get<by_seeder>();
-         const auto& cidx = database().get_index_type<my_seeding_index>().indices().get<by_URI>();
-
-
-         const auto& c_idx = database().get_index_type<content_index>().indices().get<by_expiration>();
-         auto sitr = sidx.begin();
-         while (sitr != sidx.end())
-         {
-            auto content_itr = c_idx.end();
-            while (content_itr != c_idx.begin())
-               // iterating backwards.
-               // Content objects are ordered increasingly by expiration time.
-               // This way we do not need to iterate over all ( expired ) objects
-            {
-               content_itr--;
-               if (content_itr->URI != url)
-                  continue;
-               if (content_itr->expiration < database().head_block_time())
-                  break;
-               auto search_itr = content_itr->key_parts.find(sitr->seeder);
-               if (search_itr != content_itr->key_parts.end())
-               {
-
-                  auto citr = cidx.find(content_itr->URI);
-                  if (citr == cidx.end())
-                  {
-                     const my_seeding_object& mso = database().create<my_seeding_object>([&](my_seeding_object &so) {
-                        so.URI = content_itr->URI;
-                        so.seeder = sitr->seeder;
-                        so._hash = content_itr->_hash;
-                        so.space = content_itr->size; //we allocate the whole megabytes per content
-                        so.key = search_itr->second;
-                        so.expiration = content_itr->expiration;
-                        so.cd = content_itr->cd;
-                     });
-                     ilog("seeding_plugin:  restore_state() creating seeding object for ${s}", ("s", mso));
-                     database().modify<my_seeder_object>(*sitr, [&](my_seeder_object &mso) {
-                        mso.free_space -= content_itr->size; //we allocate the whole megabytes per content
-                     });
-                     sitr = sidx.end();
-                     break;
-                  }
-                  else {
-                     ilog("seeding_plugin:  content is already seeded");
-                  }
-               }
-            }
-            sitr++;
-         }
-
-         //We need to rebuild the list of downloaded packages and compare it to the list of my_seeding_objects.
-         //For the downloaded packages we can issue PoR right away, the others needs to be downloaded
-         auto& pm = decent::package::PackageManager::instance();
-         pm.recover_all_packages();
-         auto packages = pm.get_all_known_packages();
-         for (decent::package::package_handle_t package : packages) {
-            package->check(true);
-            if (package->get_data_state() != decent::package::PackageInfo::CHECKED)
-               pm.release_package(package);
-         }
-
-         packages = pm.get_all_known_packages();
-
-         auto citr = cidx.begin();
-         while (citr != cidx.end()) {
-            elog("restarting downloads, dealing with package ${u}", ("u", citr->URI));
-            bool already_have = false;
-            decent::package::package_handle_t package_handle(0);
-            for (auto package : packages)
-               if (package->get_hash() == citr->_hash) {
-                  already_have = true;
-                  package_handle = package;
-               }
-
-            if (already_have) {
-               database().modify<my_seeding_object>(*citr, [](my_seeding_object& so) {so.downloaded = true; });
-
-            }
-            else {
-               elog("restarting downloads, re-downloading package ${u}", ("u", citr->URI));
-               package_handle = pm.get_package(citr->URI, citr->_hash);
-               decent::package::event_listener_handle_t sl = std::make_shared<SeedingListener>(*this, *citr, package_handle);
-               package_handle->remove_all_event_listeners();
-               package_handle->add_event_listener(sl);
-               package_handle->download(false);
-            }
-            ++citr;
-         }
-         elog("restarting downloads, service thread end");
-         generate_pors();
-         // remove from blacklist
-         auto url_iter = std::find(seeder_cfg.content_blacklist.begin(), seeder_cfg.content_blacklist.end(), url);
-         if (url_iter != seeder_cfg.content_blacklist.end())
-            seeder_cfg.content_blacklist.erase(url_iter);
-         // save blacklist
-         save_blacklist_cfg(seeder_cfg);
-      });
-   } FC_CAPTURE_AND_RETHROW()
-}
-
-void seeding_plugin_impl::stop_content_seeding(const std::string& url)
-{
-   try {
-      graphene::chain::database &db = database();
-      const auto &sidx = db.get_index_type<my_seeder_index>().indices().get<by_seeder>();
-      const auto &seeding_idx = db.get_index_type<my_seeding_index>().indices().get<by_id>();
-      ilog("seeding plugin_impl:  stop_content_seeding() start");
-      auto& pm = decent::package::PackageManager::instance();
-
-      for (const auto& mso : seeding_idx) {
-
-         if (!mso.downloaded || mso.deleted)
-            continue;
-
-         if (mso.URI != url)
-            continue;
-
-         auto package_handle = pm.get_package(mso.URI, mso._hash);
-         package_handle->remove_all_event_listeners();
-
-         const auto &sritr = sidx.find(mso.seeder);
-         FC_ASSERT(sritr != sidx.end());
-         const auto &content = mso.get_content(db);
-
-         ilog("seeding plugin_impl:  stop_content_seeding() content ${c} expired, clenaing up", ("c", mso.URI));
-         
-
-         const auto &idx = db.get_index_type<my_seeder_index>().indices().get<by_seeder>();
-         auto seeder_itr = idx.begin();
-         FC_ASSERT(seeder_itr != idx.end());
-         db.modify<my_seeder_object>(*seeder_itr, [&](my_seeder_object &seeder_object) {
-            seeder_object.free_space += mso.space;
-         });
-
-         std::string hash = package_handle->get_hash().str();
-         release_package(mso, package_handle);
-         db.remove(mso);
-         
-         // store to blacklist
-         auto found_iter = std::find(seeder_cfg.content_blacklist.begin(), seeder_cfg.content_blacklist.end(), url);
-         if(found_iter == seeder_cfg.content_blacklist.end())
-            seeder_cfg.content_blacklist.push_back(url);
-         // save blacklist
-         save_blacklist_cfg(seeder_cfg);
-         ilog("seeding plugin_impl:  stop_content_seeding() content cleaned, continue");
-         break;
-      }
-      ilog("seeding plugin_impl:  stop_content_seeding() end");
-   }FC_CAPTURE_AND_RETHROW()
-}
-
-void seeding_plugin_impl::load_blacklist_cfg(seeder_blacklist_cfg& cfg)
-{
-   fc::path seeder_blacklist_path = graphene::utilities::decent_path_finder::instance().get_decent_home();
-   seeder_blacklist_path = seeder_blacklist_path / "seeder";
-   if (!fc::exists(seeder_blacklist_path))
-      fc::create_directories(seeder_blacklist_path);
-
-   seeder_blacklist_path = seeder_blacklist_path / "blacklist.json";
-   std::string string_path = seeder_blacklist_path.string();
-   try {
-      if (fc::exists(seeder_blacklist_path)) {
-         variant tmp = fc::json::from_file(seeder_blacklist_path);
-         cfg = tmp.as<seeder_blacklist_cfg>();
-      }
-   } FC_CAPTURE_AND_LOG((string_path));
-}
-
-void seeding_plugin_impl::save_blacklist_cfg(const seeder_blacklist_cfg& cfg)
-{
-   fc::path seeder_blacklist_path = graphene::utilities::decent_path_finder::instance().get_decent_home();
-   seeder_blacklist_path = seeder_blacklist_path / "seeder";
-   if (!fc::exists(seeder_blacklist_path))
-      fc::create_directories(seeder_blacklist_path);
-
-   seeder_blacklist_path = seeder_blacklist_path / "blacklist.json";
-   fc::variant tmp;
-   fc::to_variant(cfg, tmp);
-   fc::json::save_to_file(tmp, seeder_blacklist_path);
-}
-
 }// end namespace detail
 
 
@@ -780,11 +578,12 @@ void seeding_plugin::plugin_startup()
       return;
 
    ilog("seeding plugin:  plugin_startup() start");
+
+
    my->restore_state();
    fc::time_point next_call = fc::time_point::now()  + fc::microseconds(30000000);
    elog("RtP planned at ${t}", ("t",next_call) );
    my->service_thread->schedule([this](){elog("generating first ready to publish");my->send_ready_to_publish(); }, next_call, "Seeding plugin RtP generate");
-   _running = true;
    ilog("seeding plugin:  plugin_startup() end");
 }
 
@@ -886,10 +685,6 @@ void seeding_plugin::plugin_pre_startup( const seeding_plugin_startup_options& s
 
    ilog("starting service thread");
    my = unique_ptr<detail::seeding_plugin_impl>( new detail::seeding_plugin_impl( *this) );
-
-   // load blacklist
-   my->load_blacklist_cfg(my->seeder_cfg);
-
    my->service_thread = std::make_shared<fc::thread>("seeding");
    my->main_thread = &fc::thread::current();
 
@@ -924,16 +719,6 @@ std::string seeding_plugin::plugin_name()const
    return "seeding";
 }
 
-void seeding_plugin::start_content_seeding(const std::string& url)
-{
-   my->start_content_seeding(url);
-}
-
-void seeding_plugin::stop_content_seeding(const std::string& url)
-{
-   my->stop_content_seeding(url);
-}
-
 void seeding_plugin::plugin_set_program_options(
         boost::program_options::options_description& cli,
         boost::program_options::options_description& cfg)
@@ -953,13 +738,24 @@ void seeding_plugin::plugin_set_program_options(
 
 void detail::SeedingListener::package_download_error(const std::string & error) {
    elog("seeding plugin: package_download_error(): Failed downloading package ${s}, ${e}", ("s", _url)("e", error));
+   failed++;
    decent::package::package_handle_t pi;
    auto& pm = decent::package::PackageManager::instance();
 
    pi = _pi;
-   //we want to restart the download; however, this method is being called from pi->_download_task::Task method, so we can't restart directly.
-   // We will start asynchronously
-   fc::thread::current().schedule([pi](){ pi->download(true);}, fc::time_point::now() + fc::seconds(60) );
+
+   if(failed < 5) {
+      //we want to restart the download; however, this method is being called from pi->_download_task::Task method, so we can't restart directly.
+      // We will start asynchronously
+      fc::thread::current().schedule([ pi ]() { pi->download(true); }, fc::time_point::now() + fc::seconds(60));
+   }
+   else{
+      const auto& db = _my->database();
+      const auto &mso_idx = db.get_index_type<my_seeding_index>().indices().get<by_URI>();
+      const auto &mso_itr = mso_idx.find(_url);
+      const auto& mso = *mso_itr;
+      _my->release_package(mso, pi);
+   }
 };
 
 void detail::SeedingListener::package_download_complete() {
@@ -971,14 +767,12 @@ void detail::SeedingListener::package_download_complete() {
    const auto& mso = *mso_itr;
 
    decent::package::package_handle_t pi = _pi;
-   if (pi == nullptr) {
-      int a = 0;
-   }
+
    size_t size = (_pi->get_size() + 1024 * 1024 - 1) / (1024 * 1024);
    if( size > mso_itr->space ) {
       ilog("seeding plugin: package_download_complete(): Fraud detected: real content size is greater than propagated in blockchain; deleting...");
       //changing DB outside the main thread does not work properly, let's delete it from there
-      _my->main_thread->async([ this, &mso, pi ]() { _my->release_package(mso, pi); });
+      _my->main_thread->async([ & ]() { _my->release_package(mso, pi); });
       _pi.reset();
       return;
    }
@@ -986,7 +780,7 @@ void detail::SeedingListener::package_download_complete() {
    //Don't block package manager thread for too long.
    seeding_plugin_impl *my = _my;
    _my->database().modify<my_seeding_object>(mso, [](my_seeding_object& so){so.downloaded = true;});
-   _my->service_thread->async([ this, &mso, pi ]() { _my->generate_por_int(mso, pi); });
+   _my->service_thread->async([ & ]() { _my->generate_por_int(mso, pi); });
 };
 
 

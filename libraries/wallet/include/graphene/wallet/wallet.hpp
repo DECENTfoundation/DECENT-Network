@@ -85,6 +85,7 @@ namespace graphene { namespace wallet {
          /** encrypted keys */
          vector<char>              cipher_keys;
 
+
          /** map an account to a set of extra keys that have been imported for that account */
          map<account_id_type, set<public_key_type> >  extra_keys;
 
@@ -355,6 +356,7 @@ FC_REFLECT_DERIVED( graphene::wallet::buying_object_ex,
 
 FC_REFLECT_DERIVED( graphene::wallet::rating_object_ex, (graphene::chain::buying_object),(author) )
 
+
 FC_REFLECT_DERIVED( graphene::wallet::signed_block_with_info, (graphene::chain::signed_block),
                     (block_id)(signing_key)(transaction_ids)(miner_reward) )
 
@@ -375,7 +377,6 @@ FC_API( graphene::wallet::wallet_api,
         (head_block_time)
         (network_add_nodes)
         (network_get_connected_peers)
-        (get_running_plugins)
 
         //Wallet file
         (list_my_accounts)
@@ -453,8 +454,6 @@ FC_API( graphene::wallet::wallet_api,
         (list_seeders_by_upload)
         (list_seeders_by_region)
         (list_seeders_by_rating)
-        (start_content_seeding)
-        (stop_content_seeding)
 
         //Proposals
         (get_proposed_transactions)
@@ -490,6 +489,7 @@ FC_API( graphene::wallet::wallet_api,
         (download_package)
         (upload_package)
         (remove_package)
+        (generate_content_keys)
 
         //Subsctiption
         (subscribe_to_author)

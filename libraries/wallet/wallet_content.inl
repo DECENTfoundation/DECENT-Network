@@ -330,3 +330,7 @@ void wallet_api::remove_package(const std::string& package_hash) const
    PackageManager::instance().release_package(fc::ripemd160(package_hash));
 }
 
+content_keys wallet_api::generate_content_keys(vector<account_id_type> const& seeders) const
+{
+   return my->_remote_db->generate_content_keys(seeders);
+}
