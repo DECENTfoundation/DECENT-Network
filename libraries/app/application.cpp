@@ -1022,17 +1022,6 @@ std::shared_ptr<abstract_plugin> application::get_plugin(const string& name) con
    return my->_plugins[name];
 }
 
-std::shared_ptr<abstract_plugin> application::get_plugin_by_index(int index) const
-{
-   std::map<string, std::shared_ptr<abstract_plugin>>::iterator iter;
-   int cur_index = 0;
-   for (iter = my->_plugins.begin(); iter != my->_plugins.end(); ++iter, cur_index++) {
-      if (cur_index == index)
-         return (*iter).second;
-   }
-   return nullptr;
-}
-
 net::node_ptr application::p2p_node()
 {
    return my->_p2p_network;

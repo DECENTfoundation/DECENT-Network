@@ -146,30 +146,51 @@ extern uint32_t GRAPHENE_TESTING_GENESIS_TIMESTAMP;
 namespace graphene { namespace chain {
 
 struct database_fixture {
-   // the reason we use an app is to exercise the indexes of built-in
-   //   plugins
-   graphene::app::application app;
-   genesis_state_type genesis_state;
-   chain::database &db;
-   signed_transaction trx;
-   public_key_type miner_key;
-   account_id_type miner_account;
-   fc::ecc::private_key private_key = fc::ecc::private_key::generate();
-   fc::ecc::private_key init_account_priv_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("null_key")) );
-   public_key_type init_account_pub_key;
-
-   optional<fc::temp_directory> data_dir;
-   bool skip_key_index_test = false;
-   uint32_t anon_acct_count;
 
    database_fixture();
    ~database_fixture();
 
    static fc::ecc::private_key generate_private_key(string seed);
-   string generate_anon_acct_name();
    static void verify_asset_supplies( const database& db );
-   void verify_account_history_plugin_index( )const;
+
+   digest_type digest( const transaction& tx );
+
+   const account_object& create_account(
+         const string& name,
+         const public_key_type& key = public_key_type()
+   );
+
+   const account_object& create_account(
+         const string& name,
+         const account_object& registrar,
+         const account_object& referrer,
+         uint8_t referrer_percent = 100,
+         const public_key_type& key = public_key_type()
+   );
+
+   const account_object& create_account(
+         const string& name,
+         const private_key_type& key,
+         const account_id_type& registrar_id = account_id_type(),
+         const account_id_type& referrer_id = account_id_type(),
+         uint8_t referrer_percent = 100
+   );
+
+   account_create_operation make_account(
+         const std::string& name = "nathan",
+         public_key_type = public_key_type()
+   );
+
+   account_create_operation make_account(
+         const std::string& name,
+         const account_object& registrar,
+         const account_object& referrer,
+         uint8_t referrer_percent = 100,
+         public_key_type key = public_key_type()
+   );
+
    void open_database();
+
    signed_block generate_block(uint32_t skip = ~0,
                                const fc::ecc::private_key& key = generate_private_key("null_key"),
                                int miss_blocks = 0);
@@ -186,77 +207,102 @@ struct database_fixture {
     */
    void generate_blocks(fc::time_point_sec timestamp, bool miss_intermediate_blocks = true, uint32_t skip = ~0);
 
-   account_create_operation make_account(
-      const std::string& name = "nathan",
-      public_key_type = public_key_type()
-      );
 
-   account_create_operation make_account(
-      const std::string& name,
-      const account_object& registrar,
-      const account_object& referrer,
-      uint8_t referrer_percent = 100,
-      public_key_type key = public_key_type()
-      );
+   const asset_object& create_user_issued_asset( const string& name );
+   const asset_object& create_user_issued_asset( const string& name,
+                                                 const account_object& issuer );
+   const asset_object& create_monitored_asset(const string& name,
+                                              account_id_type issuer = GRAPHENE_MINER_ACCOUNT );
+
+   void transfer( account_id_type from, account_id_type to, const asset& amount, const asset& fee = asset() );
+   void transfer( const account_object& from, const account_object& to, const asset& amount, const asset& fee = asset() );
+   void sign( signed_transaction& trx, const fc::ecc::private_key& key );
+
+   const miner_object& create_miner(account_id_type owner,
+                                    const fc::ecc::private_key& signing_private_key = generate_private_key("null_key"));
+   const miner_object& create_miner(const account_object& owner,
+                                    const fc::ecc::private_key& signing_private_key = generate_private_key("null_key"));
+
+   int64_t get_balance( account_id_type account, asset_id_type a )const;
+   int64_t get_balance( const account_object& account, const asset_object& a )const;
+
+   const asset_object& get_asset( const string& symbol )const;
+   const account_object& get_account( const string& name )const;
+   const account_object& get_account_by_id(account_id_type id)const;
+   const miner_object& get_miner(account_id_type id)const;
+
+   void enable_fees();
+
+   uint64_t fund( const account_object& account, const asset& amount = asset(500000) );
+   string generate_anon_acct_name();
+
+   void issue_uia( const account_object& recipient, asset amount );
+   void issue_uia( account_id_type recipient_id, asset amount );
 
    void publish_feed(asset_id_type mia, account_id_type by, const price_feed& f)
    { publish_feed(mia(db), by(db), f); }
    void publish_feed(const asset_object& mia, const account_object& by, const price_feed& f);
 
-   const asset_object& get_asset( const string& symbol )const;
-   const account_object& get_account( const string& name )const;
-   const asset_object& create_monitored_asset(const string& name,
-                                       account_id_type issuer = GRAPHENE_MINER_ACCOUNT );
-   const asset_object& create_user_issued_asset( const string& name );
-   const asset_object& create_user_issued_asset( const string& name,
-                                                 const account_object& issuer );
-   void issue_uia( const account_object& recipient, asset amount );
-   void issue_uia( account_id_type recipient_id, asset amount );
+   void fill_pools(asset_id_type uia, account_id_type by, asset to_core_pool, asset to_asset_pool);
 
-   const account_object& create_account(
-      const string& name,
-      const public_key_type& key = public_key_type()
-      );
+   void create_content(account_id_type by, string url, asset price, map<account_id_type, uint32_t> co_authors={});
+   void buy_content(account_id_type by, string url, asset price);
 
-   const account_object& create_account(
-      const string& name,
-      const account_object& registrar,
-      const account_object& referrer,
-      uint8_t referrer_percent = 100,
-      const public_key_type& key = public_key_type()
-      );
 
-   const account_object& create_account(
-      const string& name,
-      const private_key_type& key,
-      const account_id_type& registrar_id = account_id_type(),
-      const account_id_type& referrer_id = account_id_type(),
-      uint8_t referrer_percent = 100
-      );
+   // the reason we use an app is to exercise the indexes of built-in
+   //   plugins
+   graphene::app::application app;
+   genesis_state_type genesis_state;
+   chain::database &db;
+   signed_transaction trx;
+   signed_transaction trx2;
+   fc::ecc::private_key private_key = fc::ecc::private_key::generate();
+   fc::ecc::private_key init_account_priv_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("null_key")) );
+   public_key_type init_account_pub_key;
 
-   const miner_object& create_miner(account_id_type owner,
-                                        const fc::ecc::private_key& signing_private_key = generate_private_key("null_key"));
-   const miner_object& create_miner(const account_object& owner,
-                                        const fc::ecc::private_key& signing_private_key = generate_private_key("null_key"));
-   uint64_t fund( const account_object& account, const asset& amount = asset(500000) );
-   digest_type digest( const transaction& tx );
-   void sign( signed_transaction& trx, const fc::ecc::private_key& key );
+   public_key_type miner_key;
+   account_id_type miner_account;
+   uint32_t anon_acct_count;
+
+   optional<fc::temp_directory> data_dir;
+
+
+#if 0  //OLD CODE..
+
+
+
+
+   bool skip_key_index_test = false;
+
+
+   database_fixture();
+   ~database_fixture();
+
+   static fc::ecc::private_key generate_private_key(string seed);
+
+   static void verify_asset_supplies( const database& db );
+   void verify_account_history_plugin_index( )const;
+
    const limit_order_object* create_sell_order( account_id_type user, const asset& amount, const asset& recv );
    const limit_order_object* create_sell_order( const account_object& user, const asset& amount, const asset& recv );
-   asset cancel_limit_order( const limit_order_object& order );
-   void transfer( account_id_type from, account_id_type to, const asset& amount, const asset& fee = asset() );
-   void transfer( const account_object& from, const account_object& to, const asset& amount, const asset& fee = asset() );
+
+
+
+
+
+   //asset cancel_limit_order( const limit_order_object& order );
    void fund_fee_pool( const account_object& from, const asset_object& asset_to_fund, const share_type amount );
-   void enable_fees();
-   void change_fees( const flat_set< fee_parameters >& new_params, uint32_t new_scale = 0 );
+   //void change_fees( const flat_set< fee_parameters >& new_params, uint32_t new_scale = 0 );
    void print_market( const string& syma, const string& symb )const;
    string pretty( const asset& a )const;
-   void print_limit_order( const limit_order_object& cur )const;
+   //void print_limit_order( const limit_order_object& cur )const;
    void print_joint_market( const string& syma, const string& symb )const;
-   int64_t get_balance( account_id_type account, asset_id_type a )const;
-   int64_t get_balance( const account_object& account, const asset_object& a )const;
-   vector< operation_history_object > get_operation_history( account_id_type account_id )const;
+   //vector< operation_history_object > get_operation_history( account_id_type account_id )const;
+#endif
+
 };
+
+
 
 namespace test {
 /// set a reasonable expiration time for the transaction

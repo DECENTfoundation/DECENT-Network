@@ -22,54 +22,18 @@
  * THE SOFTWARE.
  */
 
-#include <graphene/app/plugin.hpp>
-#include <graphene/chain/protocol/fee_schedule.hpp>
+#include "tempdir.hpp"
 
-namespace graphene { namespace app {
+#include <cstdlib>
 
-plugin::plugin()
+namespace graphene { namespace utilities {
+
+fc::path temp_directory_path()
 {
-   _app = nullptr;
-   return;
+   const char* graphene_tempdir = getenv("GRAPHENE_TEMPDIR");
+   if( graphene_tempdir != nullptr )
+      return fc::path( graphene_tempdir );
+   return fc::temp_directory_path() / "graphene-tmp";
 }
 
-plugin::~plugin()
-{
-   return;
-}
-
-std::string plugin::plugin_name()const
-{
-   return "<unknown plugin>";
-}
-
-void plugin::plugin_initialize( const boost::program_options::variables_map& options )
-{
-   return;
-}
-
-void plugin::plugin_startup()
-{
-   return;
-}
-
-void plugin::plugin_shutdown()
-{
-   return;
-}
-
-void plugin::plugin_set_app( application* app )
-{
-   _app = app;
-   return;
-}
-
-void plugin::plugin_set_program_options(
-   boost::program_options::options_description& command_line_options,
-   boost::program_options::options_description& config_file_options
-)
-{
-   return;
-}
-
-} } // graphene::app
+} } // graphene::utilities

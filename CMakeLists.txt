@@ -196,7 +196,12 @@ endif()
 
 add_subdirectory( libraries )
 add_subdirectory( programs )
-#add_subdirectory( tests )
+
+set(DECENT_NETWORK_TESTS true)
+
+if(DECENT_NETWORK_TESTS)
+    add_subdirectory( tests )
+endif()
 
 
 if( ENABLE_INSTALLER )

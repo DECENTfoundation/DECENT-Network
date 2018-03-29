@@ -28,7 +28,7 @@
 
 #include <graphene/time/time.hpp>
 
-#include <graphene/utilities/tempdir.hpp>
+#include "../common/tempdir.hpp"
 
 #include <graphene/account_history/account_history_plugin.hpp>
 

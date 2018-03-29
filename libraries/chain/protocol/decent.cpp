@@ -36,10 +36,13 @@ void content_submit_operation::validate()const
    }
 
    FC_ASSERT( size > 0 && size <= DECENT_MAX_FILE_SIZE, "max file size limit exceeded" );
-   FC_ASSERT( seeders.size() > 0 );
    FC_ASSERT( seeders.size() == key_parts.size() );
-   FC_ASSERT( quorum >= 2 && quorum < UINT32_MAX, "At least two seeders are needed to reconstruct the key");
-   FC_ASSERT( seeders.size() >= quorum );
+   if(seeders.size() == 0){ //simplified content
+      FC_ASSERT(quorum == 0);
+   }else {
+      FC_ASSERT(quorum >= 2 && quorum < UINT32_MAX, "At least two seeders are needed to reconstruct the key");
+      FC_ASSERT(seeders.size() >= quorum);
+   }
    FC_ASSERT( expiration <= fc::time_point_sec::maximum() );
    FC_ASSERT( publishing_fee.amount >= 0);
    fc::url _url( URI );

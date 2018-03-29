@@ -58,18 +58,4 @@ vector<seeder_object> list_seeders_by_region( const string& region_code )const;
  */
 vector<seeder_object> list_seeders_by_rating( const uint32_t count )const;
 
-/**
-* @brief Starts locally seeding of content by URL previously stopped by stop_content_seeding
-* @param url of content
-* @return vector of message objects
-*/
-void start_content_seeding(const std::string& url) const;
-
-/**
-* @brief Stops locally seeding of content by URL
-* @param url of content
-* @return vector of message objects
-*/
-void stop_content_seeding(const std::string& url) const;
-
 #endif //DECENT_WALLET_SEEDING_H

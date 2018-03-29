@@ -48,6 +48,8 @@ namespace graphene { namespace chain {
 
       /// True to allow implicit conversion of this asset to/from core asset.
       bool is_exchangeable = true;
+      /// False when issuer can change max_supply, otherwise false
+      bool is_fixed_max_supply = false;
 
       extensions_type extensions;
 
@@ -78,6 +80,13 @@ namespace graphene { namespace chain {
       bool feed_is_expired(time_point_sec current_time)const
          { return feed_expiration_time() <= current_time; }
       void update_median_feeds(time_point_sec current_time);
+      bool feed_is_valid(time_point_sec current_time) const{
+         if(feed_is_expired(current_time))
+            return false;
+         if(current_feed.core_exchange_rate.is_null())
+            return false;
+         return true;
+      }
 
       void validate()const;
    };
@@ -317,6 +326,7 @@ FC_REFLECT( graphene::chain::asset_options,
             (max_supply)
             (core_exchange_rate)
             (is_exchangeable)
+            (is_fixed_max_supply)
             (extensions)
 )
 

@@ -40,7 +40,8 @@
 
 namespace graphene { namespace chain {
 
-void database::buying_expire(const buying_object& buying){
+void database::buying_expire(const buying_object& buying)
+{
    return_escrow_buying_operation rebop;
    rebop.escrow = buying.price;
    rebop.consumer = buying.consumer;
@@ -56,7 +57,8 @@ void database::buying_expire(const buying_object& buying){
    push_applied_operation(rebop);
 }
 
-void database::content_expire(const content_object& content){
+void database::content_expire(const content_object& content)
+{
    return_escrow_submission_operation resop;
    resop.escrow = content.publishing_fee_escrow;
    resop.author = content.author;

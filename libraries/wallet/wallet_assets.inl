@@ -46,9 +46,10 @@ signed_transaction wallet_api::create_user_issued_asset(const string& issuer,
                                                         uint64_t max_supply,
                                                         price core_exchange_rate,
                                                         bool is_exchangeable,
+                                                        bool is_fixed_max_supply,
                                                         bool broadcast /* = false */)
 {
-   return my->create_user_issued_asset(issuer, symbol, precision, description, max_supply, core_exchange_rate, is_exchangeable, broadcast);
+   return my->create_user_issued_asset(issuer, symbol, precision, description, max_supply, core_exchange_rate, is_exchangeable, is_fixed_max_supply, broadcast);
 }
 
 signed_transaction wallet_api::issue_asset(const string& to_account,

@@ -31,7 +31,7 @@
 
 #include <graphene/chain/account_object.hpp>
 #include <graphene/chain/asset_object.hpp>
-#include <graphene/chain/market_object.hpp>
+//#include <graphene/chain/market_object.hpp>
 #include <graphene/chain/vesting_balance_object.hpp>
 #include <graphene/chain/withdraw_permission_object.hpp>
 #include <graphene/chain/miner_object.hpp>
@@ -45,6 +45,7 @@ using namespace graphene::chain::test;
 
 BOOST_FIXTURE_TEST_SUITE( operation_tests, database_fixture )
 
+#if 0 //NOT
 BOOST_AUTO_TEST_CASE( feed_limit_logic_test )
 {
    try {
@@ -74,6 +75,7 @@ BOOST_AUTO_TEST_CASE( feed_limit_logic_test )
       throw;
    }
 }
+#endif
 
 BOOST_AUTO_TEST_CASE( create_account_test )
 {
@@ -237,22 +239,24 @@ BOOST_AUTO_TEST_CASE( update_mia )
       generate_block();
       const asset_object& bit_usd = get_asset("USDBIT");
 
-      asset_update_operation op;
+      update_monitored_asset_operation op;
+      op.fee = asset();
       op.issuer = bit_usd.issuer;
       op.asset_to_update = bit_usd.id;
-      op.new_options = bit_usd.options;
+      //op.new_options = bit_usd.options;
       trx.operations.emplace_back(op);
 
       trx.operations.back() = op;
       PUSH_TX( db, trx, ~0 );
-      op.new_issuer = account_id_type();
+      //op.new_issuer = account_id_type();
       trx.operations.back() = op;
       PUSH_TX( db, trx, ~0 );
 
+#if 0
       {
          asset_publish_feed_operation pop;
          pop.asset_id = bit_usd.get_id();
-         pop.publisher = get_account("init0").get_id();
+         pop.publisher = GRAPHENE_MINER_ACCOUNT;  //get_account("init0").get_id();
          price_feed feed;
          feed.core_exchange_rate = price(bit_usd.amount(5), bit_usd.amount(5));
          REQUIRE_THROW_WITH_VALUE(pop, feed, feed);
@@ -263,27 +267,15 @@ BOOST_AUTO_TEST_CASE( update_mia )
          trx.operations.back() = pop;
          PUSH_TX( db, trx, ~0 );
       }
+#endif
 
-      trx.operations.clear();
-      auto nathan = create_account("nathan");
-      op.issuer = account_id_type();
-      op.new_issuer = nathan.id;
-      trx.operations.emplace_back(op);
-      PUSH_TX( db, trx, ~0 );
-      BOOST_CHECK(bit_usd.issuer == nathan.id);
-
-      op.issuer = nathan.id;
-      op.new_issuer = account_id_type();
-      trx.operations.back() = op;
-      PUSH_TX( db, trx, ~0 );
-      BOOST_CHECK(bit_usd.issuer == account_id_type());
    } catch ( const fc::exception& e ) {
       elog( "${e}", ("e", e.to_detail_string() ) );
       throw;
    }
 }
 
-
+#if 0
 BOOST_AUTO_TEST_CASE( create_uia )
 {
    try {
@@ -292,7 +284,6 @@ BOOST_AUTO_TEST_CASE( create_uia )
       creator.issuer = account_id_type();
       creator.fee = asset();
       creator.symbol = "TEST";
-      creator.common_options.max_supply = 100000000;
       creator.precision = 2;
       creator.common_options.core_exchange_rate = price({asset(2),asset(1,asset_id_type(1))});
       trx.operations.push_back(std::move(creator));
@@ -328,7 +319,9 @@ BOOST_AUTO_TEST_CASE( create_uia )
       throw;
    }
 }
+#endif
 
+#if 0
 BOOST_AUTO_TEST_CASE( update_uia )
 {
    using namespace graphene;
@@ -439,8 +432,9 @@ BOOST_AUTO_TEST_CASE( transfer_uia )
       throw;
    }
 }
+#endif
 
-
+#if 0
 BOOST_AUTO_TEST_CASE( create_buy_uia_multiple_match_new )
 { try {
    INVOKE( issue_uia );
@@ -604,8 +598,9 @@ BOOST_AUTO_TEST_CASE( create_buy_uia_multiple_match_new_reverse_fract )
     throw;
  }
 }
+#endif
 
-
+#if 0
 BOOST_AUTO_TEST_CASE( uia_fees )
 {
    try {
@@ -685,7 +680,9 @@ BOOST_AUTO_TEST_CASE( cancel_limit_order_test )
     throw;
  }
 }
+#endif
 
+#if 0
 BOOST_AUTO_TEST_CASE( miner_feeds )
 {
    using namespace graphene::chain;
@@ -734,6 +731,7 @@ BOOST_AUTO_TEST_CASE( miner_feeds )
       throw;
    }
 }
+#endif
 
 /**
  *  Create an order such that when the trade executes at the
@@ -742,6 +740,7 @@ BOOST_AUTO_TEST_CASE( miner_feeds )
  * I am unable to actually create such an order; I'm not sure it's possible. What I have done is create an order which
  * broke an assert in the matching algorithm.
  */
+#if 0
 BOOST_AUTO_TEST_CASE( trade_amount_equals_zero )
 {
    try {
@@ -1071,6 +1070,8 @@ BOOST_AUTO_TEST_CASE( vesting_balance_withdraw_test )
    }
    // TODO:  Test with non-core asset and Bob account
 } FC_LOG_AND_RETHROW() }
+
+#endif
 
 // TODO:  Write linear VBO tests
 
