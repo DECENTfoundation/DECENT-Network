@@ -19,10 +19,14 @@ namespace gui_wallet {
     private slots:
        void slot_MinersNumVoteChanged(const QString& value);
        void slot_voteClicked();
+       void slot_voteResetClicked();
 
     private:
        uint getNumberOfActualMiners();
        void getMinerVotesForAccount(const std::string& account_name);
+
+       std::string setDesiredNumOfMiners(const std::string& account_name, uint number);
+
     private:
 
        uint m_minersVotedNum;

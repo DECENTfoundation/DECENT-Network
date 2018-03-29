@@ -20,17 +20,14 @@ MiningVotePopup::MiningVotePopup(QWidget *pParent) : StackLayerWidget(pParent)
    uint numOfActiveMiners = getNumberOfActualMiners();
    getMinerVotesForAccount(Globals::instance().getCurrentUser() );
 
-   m_minersVotedNum = 2;
-
-
    QLabel* pInfoTextLabel = new QLabel(this);
    pInfoTextLabel->setText(tr("bla bla bla blaaaa...blaaaa.. blaaaa"));
 
 
    QLabel* pMinersVoteNumLabel = new QLabel(this);
-   pMinersVoteNumLabel->setText(tr("Number of miners you vote for"));
+   pMinersVoteNumLabel->setText(tr("Set desired number of miners"));
 
-   QIntValidator* numValidator = new QIntValidator(0, 1001, this);
+   QIntValidator* numValidator = new QIntValidator(1, 1001, this);
 
    m_pMinersNumVote = new DecentLineEdit(this, DecentLineEdit::DialogLineEdit);
    m_pMinersNumVote->setValidator(numValidator);
@@ -39,10 +36,13 @@ MiningVotePopup::MiningVotePopup(QWidget *pParent) : StackLayerWidget(pParent)
    if (m_minersVotedNum > 0) {
       m_pMinersNumVote->setText(QString::number(m_minersVotedNum));
    }
+   else {
+      m_pMinersNumVote->setPlaceholderText(QString(tr("Actual miners count is %1")).arg(numOfActiveMiners) );
+   }
 
    // Info
    QLabel* pUserCurrVotesLabel = new QLabel(this);
-   pUserCurrVotesLabel->setText(QString(tr("Your miner votes count is %1.")).arg(m_curMinersVotedFor) );
+   pUserCurrVotesLabel->setText(QString(tr("You have voted for %1 miners.")).arg(m_curMinersVotedFor) );
 
    m_pVoteButton = new DecentButton(this, DecentButton::DialogAction);
    m_pResetButton = new DecentButton(this, DecentButton::DialogAction);
@@ -97,9 +97,11 @@ MiningVotePopup::MiningVotePopup(QWidget *pParent) : StackLayerWidget(pParent)
    QObject::connect(m_pMinersNumVote, &DecentLineEdit::textChanged,
                     this, &MiningVotePopup::slot_MinersNumVoteChanged);
 
-   QObject::connect(m_pVoteButton, &QPushButton::clicked,
+   QObject::connect(m_pVoteButton, &DecentButton::clicked,
                     this, &MiningVotePopup::slot_voteClicked);
 
+   QObject::connect(m_pResetButton, &DecentButton::clicked,
+                    this, &MiningVotePopup::slot_voteResetClicked);
 
 }
 
@@ -140,10 +142,47 @@ void MiningVotePopup::slot_voteClicked()
 {
    uint numMiners = m_pMinersNumVote->text().toUInt();
 
-   //TODO: apply number of miners..
+   std::string ret = setDesiredNumOfMiners(Globals::instance().getCurrentUser(), numMiners);
+   if (!ret.empty()) {
+      ShowMessageBox(tr("Error"), tr("Failed to vote for miners"), QString::fromStdString(ret));
+   }
 
+   closed();  //close the popup
 }
 
+void MiningVotePopup::slot_voteResetClicked()
+{
+   std::string ret = setDesiredNumOfMiners(Globals::instance().getCurrentUser(), 0);
+   if (!ret.empty()) {
+      ShowMessageBox(tr("Error"), tr("Failed to vote for miners"), QString::fromStdString(ret));
+   }
+
+   closed();  //close the popup
+}
+
+std::string MiningVotePopup::setDesiredNumOfMiners(const std::string& account_name, uint numMiners)
+{
+   std::string command = "set_desired_miner_count ";
+   command += account_name + " ";
+   command += std::to_string(numMiners);
+   command += " true";
+
+   std::string a_result, message;
+   try
+   {
+      a_result = Globals::instance().runTask(command);
+      if (a_result.find("exception:") != std::string::npos)
+      {
+         message = a_result;
+      }
+   }
+   catch (const std::exception& ex)
+   {
+      message = ex.what();
+   }
+
+   return message;
+}
 
 
 }
