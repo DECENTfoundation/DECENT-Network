@@ -510,7 +510,7 @@ WalletOperator::WalletOperator() : QObject()
 {
 }
 
-WalletOperator::~WalletOperator() = default
+WalletOperator::~WalletOperator() = default;
 
 void WalletOperator::cancel()
 {
