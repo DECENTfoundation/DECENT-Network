@@ -16,18 +16,18 @@ MiningVotePopup::MiningVotePopup(QWidget *pParent) : StackLayerWidget(pParent)
 , m_minersVotedNum(0)
 , m_curMinersVotedFor(0)
 {
+   const std::string& account_name = Globals::instance().getCurrentUser();
 
    uint numOfActiveMiners = getNumberOfActualMiners();
-   getMinerVotesForAccount(Globals::instance().getCurrentUser() );
+   getMinerVotesForAccount(account_name);
 
    QLabel* pInfoTextLabel = new QLabel(this);
-   pInfoTextLabel->setText(tr("bla bla bla blaaaa...blaaaa.. blaaaa"));
-
+   pInfoTextLabel->setText(tr("The number of active miners this account votes the blockchain should appoint"));
 
    QLabel* pMinersVoteNumLabel = new QLabel(this);
    pMinersVoteNumLabel->setText(tr("Set desired number of miners"));
 
-   QIntValidator* numValidator = new QIntValidator(1, 1001, this);
+   QIntValidator* numValidator = new QIntValidator(1, 1001, this);   //TODO: make max value read from global_properties
 
    m_pMinersNumVote = new DecentLineEdit(this, DecentLineEdit::DialogLineEdit);
    m_pMinersNumVote->setValidator(numValidator);
@@ -41,8 +41,16 @@ MiningVotePopup::MiningVotePopup(QWidget *pParent) : StackLayerWidget(pParent)
    }
 
    // Info
+   QLabel* pInfoLabel = new QLabel(this);
+   pInfoLabel->setText(QString(tr("This number must not exceed the actual number of miners voted for in %1 account votes"))
+                             .arg(QString::fromStdString(account_name)));
+
+   Asset opFee = Globals::instance().getDCoreFees(2);
+
    QLabel* pUserCurrVotesLabel = new QLabel(this);
-   pUserCurrVotesLabel->setText(QString(tr("You have voted for %1 miners.")).arg(m_curMinersVotedFor) );
+   pUserCurrVotesLabel->setText(QString(tr("You have voted for %1 miners. You will pay %2 fee for voting."))
+                                      .arg(m_curMinersVotedFor)
+                                      .arg(opFee.getString()) );
 
    m_pVoteButton = new DecentButton(this, DecentButton::DialogAction);
    m_pResetButton = new DecentButton(this, DecentButton::DialogAction);
@@ -67,6 +75,7 @@ MiningVotePopup::MiningVotePopup(QWidget *pParent) : StackLayerWidget(pParent)
    pRow2Layout->addWidget(m_pMinersNumVote);
 
    QHBoxLayout* pRow3Layout = new QHBoxLayout;
+   pRow3Layout->addWidget(pInfoLabel);
    pRow3Layout->addWidget(pUserCurrVotesLabel);
 
    QHBoxLayout* pButtonsLayout = new QHBoxLayout;
@@ -134,8 +143,7 @@ void MiningVotePopup::getMinerVotesForAccount(const std::string& account_name)
 void MiningVotePopup::slot_MinersNumVoteChanged(const QString& value)
 {
    uint numMiners = value.toUInt();
-
-   m_pVoteButton->setEnabled(numMiners > 0);
+   m_pVoteButton->setEnabled(numMiners > 0 && numMiners <= m_curMinersVotedFor);
 }
 
 void MiningVotePopup::slot_voteClicked()
@@ -146,6 +154,9 @@ void MiningVotePopup::slot_voteClicked()
    if (!ret.empty()) {
       ShowMessageBox(tr("Error"), tr("Failed to vote for miners"), QString::fromStdString(ret));
    }
+   else {
+      ShowMessageBox(tr("Info"), tr("Your vote was accepted. Thank you"));
+   }
 
    closed();  //close the popup
 }
@@ -155,6 +166,9 @@ void MiningVotePopup::slot_voteResetClicked()
    std::string ret = setDesiredNumOfMiners(Globals::instance().getCurrentUser(), 0);
    if (!ret.empty()) {
       ShowMessageBox(tr("Error"), tr("Failed to vote for miners"), QString::fromStdString(ret));
+   }
+   else {
+      ShowMessageBox(tr("Info"), tr("Your vote was accepted. Thank you"));
    }
 
    closed();  //close the popup
