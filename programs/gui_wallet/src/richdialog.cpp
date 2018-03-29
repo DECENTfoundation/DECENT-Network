@@ -48,8 +48,7 @@ void PlaceInsideLabel(QWidget* pParent, QWidget* pChild)
 //
 // RatingWidget
 //
-RatingWidget::RatingWidget(QWidget* pParent)
-   : QWidget(pParent)
+RatingWidget::RatingWidget(QWidget* pParent) : QWidget(pParent)
    , m_bAutomation(false)
 {
    QHBoxLayout* pMainLayout = new QHBoxLayout();
@@ -111,8 +110,7 @@ void RatingWidget::slot_rating()
 //
 // StackLayerWidget
 //
-StackLayerWidget::StackLayerWidget(QWidget* pParent)
-: QWidget(pParent)
+StackLayerWidget::StackLayerWidget(QWidget* pParent) : QWidget(pParent)
 {
    QObject::connect(this, &StackLayerWidget::accepted,
                     this, &StackLayerWidget::closed);
@@ -120,8 +118,7 @@ StackLayerWidget::StackLayerWidget(QWidget* pParent)
 //
 // TransferWidget
 //
-TransferWidget::TransferWidget(QWidget* parent, QString const& userName/* = QString()*/)
-   : StackLayerWidget(parent)
+TransferWidget::TransferWidget(QWidget* parent, QString const& userName) : StackLayerWidget(parent)
    , m_toUserName(userName)
 {
    QVBoxLayout* mainLayout       = new QVBoxLayout();
@@ -138,18 +135,21 @@ TransferWidget::TransferWidget(QWidget* parent, QString const& userName/* = QStr
                     this, &TransferWidget::Transfer);
    QObject::connect(cancel, &QPushButton::clicked,
                     this, &StackLayerWidget::closed);
-   
+
+   QLabel* pLabel = new QLabel(this);
+   pLabel->setText(tr("Transfer of funds"));
+
    DecentLineEdit* name = new DecentLineEdit(this, DecentLineEdit::DialogLineEdit);
    DecentLineEdit* amount = new DecentLineEdit(this, DecentLineEdit::DialogLineEdit);
    DecentLineEdit* memo = new DecentLineEdit(this, DecentLineEdit::DialogLineEdit);
    
-   name->setPlaceholderText(tr("Account"));
+   name->setPlaceholderText(tr("Reciever account name"));
    name->setAttribute(Qt::WA_MacShowFocusRect, 0);
    name->setText(m_toUserName);
    QObject::connect(name, &QLineEdit::textChanged,
                     this, &TransferWidget::nameChanged);
    
-   amount->setPlaceholderText(tr("Amount"));
+   amount->setPlaceholderText(QString(tr("Amount of %1")).arg(Globals::instance().getAssetName())  );
    amount->setAttribute(Qt::WA_MacShowFocusRect, 0);
 
    QDoubleValidator* dblValidator = new QDoubleValidator(0.0001, 100000, 4, this);
@@ -158,11 +158,12 @@ TransferWidget::TransferWidget(QWidget* parent, QString const& userName/* = QStr
    QObject::connect(amount, &QLineEdit::textChanged,
                     this, &TransferWidget::amountChanged);
    
-   memo->setPlaceholderText(tr("Memo"));
+   memo->setPlaceholderText(tr("Memo (optional)"));
    memo->setAttribute(Qt::WA_MacShowFocusRect, 0);
    QObject::connect(memo, &QLineEdit::textChanged,
                     this, &TransferWidget::memoChanged);
-   
+
+   lineEditsLayout->addWidget(pLabel);
    lineEditsLayout->addWidget(name);
    lineEditsLayout->addWidget(amount);
    lineEditsLayout->addWidget(memo);
@@ -176,6 +177,8 @@ TransferWidget::TransferWidget(QWidget* parent, QString const& userName/* = QStr
    mainLayout->addLayout(buttonsLayout);
    
    setLayout(mainLayout);
+
+   name->setFocus();
 
 #ifdef _MSC_VER
    int height = style()->pixelMetric(QStyle::PM_TitleBarHeight);
@@ -235,12 +238,15 @@ void TransferWidget::Transfer()
 //
 // ImportKeyWidget
 //
-ImportKeyWidget::ImportKeyWidget(QWidget* parent)
-: StackLayerWidget(parent)
+ImportKeyWidget::ImportKeyWidget(QWidget* parent) : StackLayerWidget(parent)
 {
    QObject::connect(this, &StackLayerWidget::accepted,
                     &Globals::instance(), &Globals::signal_keyImported);
-   
+
+   DecentLabel* pLabel = new DecentLabel(this);
+   pLabel->setFont(gui_wallet::MainFont());
+   pLabel->setText(tr("Import account"));
+
    QVBoxLayout* mainLayout       = new QVBoxLayout();
    QVBoxLayout* lineEditsLayout  = new QVBoxLayout();
    QHBoxLayout* buttonsLayout    = new QHBoxLayout();
@@ -248,26 +254,27 @@ ImportKeyWidget::ImportKeyWidget(QWidget* parent)
    DecentButton* ok = new DecentButton(this, DecentButton::DialogAction);
    ok->setText(tr("Ok"));
    DecentButton* cancel = new DecentButton(this, DecentButton::DialogCancel);
-   cancel->setText(tr("Back"));
+   cancel->setText(tr("Cancel"));
    
    QObject::connect(ok, &QPushButton::clicked,
                     this, &ImportKeyWidget::Import);
    QObject::connect(cancel, &QPushButton::clicked,
                     this, &StackLayerWidget::closed);
    
-   DecentLineEdit* name = new DecentLineEdit(this, DecentLineEdit::DialogLineEdit);
-   DecentLineEdit* key  = new DecentLineEdit(this, DecentLineEdit::DialogLineEdit);
-   
-   name->setPlaceholderText(tr("Account"));
+   DecentLineEdit* name = new DecentLineEdit(this, DecentLineEdit::DialogLineEdit, DecentLineEdit::DlgImport);
+   DecentLineEdit* key  = new DecentLineEdit(this, DecentLineEdit::DialogLineEdit, DecentLineEdit::DlgImport);
+
+   name->setPlaceholderText(tr("Account name"));
    name->setAttribute(Qt::WA_MacShowFocusRect, 0);
    QObject::connect(name, &QLineEdit::textChanged,
                     this, &ImportKeyWidget::nameChanged);
    
-   key->setPlaceholderText(tr("Key"));
+   key->setPlaceholderText(tr("Private Key"));
    key->setAttribute(Qt::WA_MacShowFocusRect, 0);
    QObject::connect(key, &QLineEdit::textChanged,
                     this, &ImportKeyWidget::keyChanged);
 
+   lineEditsLayout->addWidget(pLabel);
    lineEditsLayout->addWidget(name);
    lineEditsLayout->addWidget(key);
    
@@ -374,12 +381,13 @@ UserInfoWidget::UserInfoWidget(QWidget* parent,
    setWindowTitle(name + " (" + id + ")");
    setLayout(main_layout);
 }
+
 //
 // ContentInfoWidget
 //
 ContentInfoWidget::ContentInfoWidget(QWidget* parent, const SDigitalContent& a_cnt_details)
    : StackLayerWidget(parent)
-   , m_getItOrPay(GetIt)
+   , m_getItOrPay(Download)
    , m_URI(a_cnt_details.URI)
    , m_amount(a_cnt_details.price.getString())
 {
@@ -388,6 +396,13 @@ ContentInfoWidget::ContentInfoWidget(QWidget* parent, const SDigitalContent& a_c
    main_layout->setContentsMargins(0, 0, 0, 15);
 
    int iRowIndex = 0;
+   // Title
+   //
+   DecentLabel* pTitleLabel = new DecentLabel(this, DecentLabel::RowLabel);
+   pTitleLabel->setText(tr("Details of content"));
+   main_layout->addWidget(pTitleLabel, iRowIndex, 0);
+   ++iRowIndex;
+
    // Author
    //
    DecentLabel* labelAuthorTitle = new DecentLabel(this, DecentLabel::RowLabel);
@@ -402,10 +417,10 @@ ContentInfoWidget::ContentInfoWidget(QWidget* parent, const SDigitalContent& a_c
    //
    DecentLabel* labelExpirationTitle = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
    DecentLabel* labelExpirationInfo = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::HighlightedRight);
-   QDateTime time = QDateTime::fromString(QString::fromStdString(a_cnt_details.expiration), "yyyy-MM-ddTHH:mm:ss");
-   std::string e_str = CalculateRemainingTime(QDateTime::currentDateTime(), time);
+   QDateTime time = convertStringToDateTime(a_cnt_details.expiration);
+   QString e_str = CalculateRemainingTime(QDateTime::currentDateTime(), time);
    labelExpirationTitle->setText(tr("Expiration"));
-   labelExpirationInfo->setText(QString::fromStdString(e_str));
+   labelExpirationInfo->setText(e_str);
    main_layout->addWidget(labelExpirationTitle, iRowIndex, 0);
    main_layout->addWidget(labelExpirationInfo, iRowIndex, 1);
    ++iRowIndex;
@@ -415,7 +430,11 @@ ContentInfoWidget::ContentInfoWidget(QWidget* parent, const SDigitalContent& a_c
    DecentLabel* labelUploadedTitle = new DecentLabel(this, DecentLabel::RowLabel);
    DecentLabel* labelUploadedInfo = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Right);
    labelUploadedTitle->setText(tr("Uploaded"));
-   labelUploadedInfo->setText(QString::fromStdString(a_cnt_details.created));
+   std::string created_date;
+   if (a_cnt_details.created != "1970-01-01") {
+      created_date = a_cnt_details.created;
+   }
+   labelUploadedInfo->setText(convertDateTimeToLocale2(created_date));
    main_layout->addWidget(labelUploadedTitle, iRowIndex, 0);
    main_layout->addWidget(labelUploadedInfo, iRowIndex, 1);
    ++iRowIndex;
@@ -425,7 +444,7 @@ ContentInfoWidget::ContentInfoWidget(QWidget* parent, const SDigitalContent& a_c
    DecentLabel* labelAmountTitle = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
    DecentLabel* labelAmountInfo  = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::HighlightedRight);
    QString str_price = a_cnt_details.price.getString();
-   labelAmountTitle->setText(tr("Amount"));
+   labelAmountTitle->setText(tr("Price"));
    labelAmountInfo->setText(str_price);
    main_layout->addWidget(labelAmountTitle, iRowIndex, 0);
    main_layout->addWidget(labelAmountInfo, iRowIndex, 1);
@@ -471,7 +490,16 @@ ContentInfoWidget::ContentInfoWidget(QWidget* parent, const SDigitalContent& a_c
    
    DecentButton* getItButton = new DecentButton(this, DecentButton::DialogAction);
    DecentButton* cancelButton = new DecentButton(this, DecentButton::DialogCancel);
-   getItButton->setText(tr("Get it!"));
+
+   if (a_cnt_details.price.m_amount == 0) {
+      m_getItOrPay = Download;
+      getItButton->setText(tr("Download"));
+   }
+   else {
+      m_getItOrPay = PayAndDownload;
+      getItButton->setText(tr("Buy && Download"));
+   }
+
    cancelButton->setText(tr("Back"));
    
    QObject::connect(getItButton, &QPushButton::clicked,
@@ -499,18 +527,16 @@ ContentInfoWidget::ContentInfoWidget(QWidget* parent, const SDigitalContent& a_c
    
 void ContentInfoWidget::ButtonWasClicked()
 {
-   QPushButton* button = (QPushButton*) sender();
-   if (m_amount == "Free" ||
-       m_getItOrPay == Pay)
-   {
-      m_getItOrPay = GetIt;
-      button->setText(tr("Get It!"));
-      Buy();
+   QPushButton* pButton = qobject_cast<QPushButton*>(sender());
+   Q_ASSERT(pButton);
+
+   if (m_getItOrPay == PayAndDownload) {
+      m_getItOrPay = Download;
+      pButton->setText(tr("Download"));
    }
-   else
-   {
-      m_getItOrPay = Pay;
-      button->setText((tr("Pay") + " " + m_amount));
+   else if (m_getItOrPay == Download) {
+
+      Buy();
    }
 }
    
@@ -550,6 +576,13 @@ ContentReviewWidget::ContentReviewWidget(QWidget* parent, const SDigitalContent&
    main_layout->setContentsMargins(0, 0, 0, 15);
    
    int iRowIndex = 0;
+   // Title
+   //
+   DecentLabel* pTitleLabel = new DecentLabel(this, DecentLabel::RowLabel);
+   pTitleLabel->setText(tr("Details of content"));
+   main_layout->addWidget(pTitleLabel, iRowIndex, 0);
+   ++iRowIndex;
+
    // Author
    //
    DecentLabel* labelAuthorTitle = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
@@ -565,7 +598,7 @@ ContentReviewWidget::ContentReviewWidget(QWidget* parent, const SDigitalContent&
    DecentLabel* labelExpirationTitle = new DecentLabel(this, DecentLabel::RowLabel);
    DecentLabel* labelExpirationInfo = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Right);
    labelExpirationTitle->setText(tr("Purchased"));
-   labelExpirationInfo->setText(a_cnt_details.purchased_time.c_str());
+   labelExpirationInfo->setText(convertDateTimeToLocale2(a_cnt_details.purchased_time));
    main_layout->addWidget(labelExpirationTitle, iRowIndex, 0);
    main_layout->addWidget(labelExpirationInfo, iRowIndex, 1);
    ++iRowIndex;
@@ -575,7 +608,7 @@ ContentReviewWidget::ContentReviewWidget(QWidget* parent, const SDigitalContent&
    DecentLabel* labelAmountTitle = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
    DecentLabel* labelAmountInfo  = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::HighlightedRight);
    QString str_price = a_cnt_details.price.getString();
-   labelAmountTitle->setText(tr("Amount"));
+   labelAmountTitle->setText(tr("Price"));
    labelAmountInfo->setText(str_price);
    main_layout->addWidget(labelAmountTitle, iRowIndex, 0);
    main_layout->addWidget(labelAmountInfo, iRowIndex, 1);
@@ -640,8 +673,7 @@ CommentWidget::CommentWidget(QWidget* pParent,
                              const std::string& content_author,
                              const std::string& content_uri,
                              const std::string& content_description,
-                             const std::string& feedback_author/* = std::string()*/)
-: QWidget(pParent)
+                             const std::string& feedback_author) : QWidget(pParent)
 , m_pComment(new DecentTextEdit(this, DecentTextEdit::Info))
 , m_pLabel(new DecentLabel(this, DecentLabel::RowLabel))
 , m_pRatingWidget(new RatingWidget(this))
@@ -702,15 +734,20 @@ void CommentWidget::submit()
    if (m_pRatingWidget->m_rating == 0)
       return;
    
-   try
-   {
+   try {
       Globals::instance().runTaskParse("leave_rating_and_comment "
-                                       "\"" + Globals::instance().getCurrentUser() + "\" "
-                                       "\"" + m_content_uri + "\" "
-                                       "\"" + std::to_string(m_pRatingWidget->m_rating) + "\" "
-                                       "\"" + escape_string(m_pComment->toPlainText().toStdString() ) + "\" "
-                                       "true" );
-   }catch(...){}
+                                             "\"" + Globals::instance().getCurrentUser() + "\" "
+                                             "\"" + m_content_uri + "\" "
+                                             "\"" + std::to_string(m_pRatingWidget->m_rating) + "\" "
+                                             "\"" + escape_string(m_pComment->toPlainText().toStdString()) + "\" "
+                                             "true");
+   }
+   catch(const std::exception& ex) {
+      std::cout << "CommentWidget::submit " << ex.what() << std::endl;
+   }
+   catch(const fc::exception& ex) {
+      std::cout << "CommentWidget::submit " << ex.what() << std::endl;
+   }
 
    slot_Previous();
    slot_Next();
@@ -750,7 +787,13 @@ void CommentWidget::update()
             feedback_rating = feedback[0]["rating"].get<int>();
          }
       }
-   }catch(...){}
+   }
+   catch(const std::exception& ex) {
+      std::cout << "CommentWidget::update " << ex.what() << std::endl;
+   }
+   catch(const fc::exception& ex) {
+      std::cout << "CommentWidget::update " << ex.what() << std::endl;
+   }
 
    int test_count = 0;
 
@@ -907,76 +950,119 @@ bool CommentWidget::slot_Previous()
 }
 // PasswordWidget
 //
-PasswordWidget::PasswordWidget(QWidget* pParent, eType enType)
-: StackLayerWidget(pParent)
+
+const int g_maxPasswordLen = 50;
+
+PasswordWidget::PasswordWidget(QWidget* pParent, eType enType) : StackLayerWidget(pParent)
 , m_enType(enType)
 , m_pError(new QLabel(this))
 {
-   QLabel* pLabel = new QLabel(this);
-   pLabel->setText(tr("The password must be limited to 50 characters"));
-   DecentButton* pButton = new DecentButton(this, DecentButton::DialogAction);
-
    m_pError->hide();
 
-   if (enType == eSetPassword)
-      pButton->setText(tr("Set Password"));
-   else
-      pButton->setText(tr("Unlock"));
+   QLabel* pLabel = new QLabel(this);
+   m_pButton = new DecentButton(this, DecentButton::DialogAction);
 
-   DecentLineEdit* pEditPassword = new DecentLineEdit(this, DecentLineEdit::DialogLineEdit);
-   pEditPassword->setEchoMode(QLineEdit::Password);
-   pEditPassword->setAttribute(Qt::WA_MacShowFocusRect, 0);
-   pEditPassword->setPlaceholderText(QString(tr("Password")));
-   pEditPassword->setMaxLength(50);
-
-   if (enType == eSetPassword)
-      setWindowTitle(tr("Set Password"));
-   else
-   {
-      pLabel->hide();
-      setWindowTitle(tr("Unlock your wallet"));
+   if (enType == eSetPassword) {
+      pLabel->setText(tr("Setup your password for DECENT wallet"));
+      m_pButton->setText(tr("Set Password"));
    }
+   else {
+      pLabel->setText(tr("Unlock your DECENT wallet"));
+      m_pButton->setText(tr("Unlock"));
+   }
+
+   m_line1Edit = new DecentLineEdit(this, DecentLineEdit::DialogLineEdit);
+   m_line1Edit->setEchoMode(QLineEdit::Password);
+   m_line1Edit->setAttribute(Qt::WA_MacShowFocusRect, 0);
+   if (enType == eSetPassword) {
+      m_line1Edit->setPlaceholderText(QString(tr("New password")));
+   }
+   else {
+      m_line1Edit->setPlaceholderText(QString(tr("Password")));
+   }
+   m_line1Edit->setMaxLength(g_maxPasswordLen);
+   m_line1Edit->setToolTip(tr("The password must be limited to 50 characters"));
+
+   m_line2Edit = new DecentLineEdit(this, DecentLineEdit::DialogLineEdit);
+   m_line2Edit->setEchoMode(QLineEdit::Password);
+   m_line2Edit->setAttribute(Qt::WA_MacShowFocusRect, 0);
+   m_line2Edit->setPlaceholderText(QString(tr("Reenter password")));
+   m_line2Edit->setMaxLength(g_maxPasswordLen);
+   m_line2Edit->setToolTip(tr("The password must be limited to 50 characters"));
 
    int iRowIndex = 0;
    QGridLayout* pMainLayout = new QGridLayout;
    pMainLayout->addWidget(pLabel, iRowIndex++, 0, Qt::AlignCenter | Qt::AlignVCenter);
    pMainLayout->addWidget(m_pError, iRowIndex++, 0, Qt::AlignCenter | Qt::AlignVCenter);
-   pMainLayout->addWidget(pEditPassword, iRowIndex++, 0, Qt::AlignCenter | Qt::AlignVCenter);
-   pMainLayout->addWidget(pButton, iRowIndex++, 0, Qt::AlignCenter | Qt::AlignVCenter);
+   pMainLayout->addWidget(m_line1Edit, iRowIndex++, 0, Qt::AlignCenter | Qt::AlignVCenter);
+   if (enType == eSetPassword) {
+      pMainLayout->addWidget(m_line2Edit, iRowIndex++, 0, Qt::AlignCenter | Qt::AlignVCenter);
+      m_pButton->setEnabled(false);
+   }
+   else {
+      m_line2Edit->hide();
+   }
+   pMainLayout->addWidget(m_pButton, iRowIndex++, 0, Qt::AlignCenter | Qt::AlignVCenter);
 
    pMainLayout->setSizeConstraint(QLayout::SetFixedSize);
 
    pMainLayout->setSpacing(20);
    pMainLayout->setContentsMargins(20, 20, 20, 20);
 
-   QObject::connect(pEditPassword, &QLineEdit::returnPressed,
+   QObject::connect(m_pButton, &QPushButton::clicked,
                     this, &PasswordWidget::slot_action);
-   QObject::connect(pButton, &QPushButton::clicked,
-                    this, &PasswordWidget::slot_action);
-   QObject::connect(pEditPassword, &QLineEdit::textChanged,
-                    this, &PasswordWidget::slot_set_password);
+   if (enType == eUnlock) {
+      QObject::connect(m_line1Edit, &QLineEdit::returnPressed,
+                       this, &PasswordWidget::slot_action);
+   }
+   QObject::connect(m_line1Edit, &QLineEdit::textChanged,
+                    this, &PasswordWidget::slot_textChanged);
+   QObject::connect(m_line2Edit, &QLineEdit::textChanged,
+                    this, &PasswordWidget::slot_textChanged);
 
    setLayout(pMainLayout);
 }
 
-void PasswordWidget::slot_set_password(QString const& strPassword)
+void PasswordWidget::slot_textChanged(const QString& )
 {
-   m_strPassword = strPassword;
+   if (m_enType == eSetPassword) {
+      bool enabled = (!m_line1Edit->text().isEmpty() && !m_line2Edit->text().isEmpty());
+      m_pButton->setEnabled(enabled);
+   }
+   else {
+      bool enabled = !m_line1Edit->text().isEmpty();
+      m_pButton->setEnabled(enabled);
+   }
 }
 
 void PasswordWidget::slot_action()
 {
-   if (m_strPassword.isEmpty())
-      return;
+   const QString& pass1 = m_line1Edit->text();
+   const QString& pass2 = m_line2Edit->text();
 
+   if (m_enType == eSetPassword) {
+      if (pass1 != pass2) {
+         m_pError->setText(tr("Passwords are not equal"));
+         m_pError->show();
+         return;
+      }
+   }
+
+   QString error;
    if (m_enType == eSetPassword)
    {
       try
       {
-         Globals::instance().runTask("set_password \"" + m_strPassword.toStdString() + "\"");
+         Globals::instance().runTask("set_password \"" + pass1.toStdString() + "\"");
       }
-      catch(...)
-      {
+      catch(const std::exception& ex) {
+         error = ex.what();
+      }
+      catch(const fc::exception& ex) {
+         error = ex.what();
+      }
+
+      if (!error.isEmpty()) {
          m_pError->setText(tr("Cannot set this password"));
          m_pError->show();
          return;
@@ -985,10 +1071,16 @@ void PasswordWidget::slot_action()
 
    try
    {
-      Globals::instance().runTask("unlock \"" + m_strPassword.toStdString() + "\"");
+      Globals::instance().runTask("unlock \"" + pass1.toStdString() + "\"");
    }
-   catch(...)
-   {
+   catch(const std::exception& ex) {
+      error = ex.what();
+   }
+   catch(const fc::exception& ex) {
+      error = ex.what();
+   }
+
+   if (!error.isEmpty()) {
       m_pError->setText(tr("Cannot unlock the wallet"));
       m_pError->show();
       return;

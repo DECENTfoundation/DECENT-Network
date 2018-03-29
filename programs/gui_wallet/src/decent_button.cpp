@@ -9,10 +9,7 @@
 
 namespace gui_wallet
 {
-DecentButton::DecentButton(QWidget* pParent,
-                           eType enType/* = Default*/,
-                           eName enName/* = None*/)
-: QPushButton(pParent)
+DecentButton::DecentButton(QWidget* pParent, eType enType, eName enName) : QPushButton(pParent)
 {
    setMouseTracking(true);
 

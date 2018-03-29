@@ -18,7 +18,8 @@ namespace gui_wallet
 
       enum eName
       {
-         None
+         None,
+         DlgImport
       };
       
       DecentLineEdit(QWidget* pParent, eType enType = Default, eName = None);

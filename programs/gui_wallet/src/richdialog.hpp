@@ -8,6 +8,7 @@
 
 class QTextEdit;
 class QCloseEvent;
+class QPushButton;
 
 namespace gui_wallet
 {
@@ -120,7 +121,7 @@ public slots:
    void ButtonWasClicked();
    
 private:
-   enum GetItOrPay {GetIt, Pay};
+   enum GetItOrPay { PayAndDownload, Download };
    GetItOrPay m_getItOrPay;
    std::string m_URI;
    QString m_amount;
@@ -188,6 +189,9 @@ private:
 //
 // PasswordWidget
 //
+
+class DecentLineEdit;
+
 class PasswordWidget : public StackLayerWidget
 {
    Q_OBJECT
@@ -197,12 +201,15 @@ public:
 
 protected slots:
    void slot_action();
-   void slot_set_password(QString const&);
+   void slot_textChanged(const QString& );
 
 private:
    eType m_enType;
    QLabel* m_pError;
-   QString m_strPassword;
+
+   DecentLineEdit* m_line1Edit;
+   DecentLineEdit* m_line2Edit;
+   DecentButton* m_pButton;
 };
 
 }

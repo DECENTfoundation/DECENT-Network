@@ -100,7 +100,6 @@ void Upload_tab::timeToUpdate(const string& result)
       content.synopsis = json_content["synopsis"].get<string>();
       content.URI = json_content["URI"].get<string>();
       content.created = json_content["created"].get<string>();
-      content.created = content.created.substr(0, content.created.find("T"));
       content.expiration = json_content["expiration"].get<string>();
       content.size = json_content["size"].get<int>();
       content.status = json_content["status"].get<string>();
@@ -204,14 +203,18 @@ void Upload_tab::ShowDigitalContentsGUI()
       m_pTableWidget->setItem(iIndex, ePrice, new QTableWidgetItem(content.price.getString()));
 
       // Created
-      m_pTableWidget->setItem(iIndex, eCreated, new QTableWidgetItem(convertDateToLocale(content.created)));
+      std::string created_date;
+      if (content.created != "1970-01-01") {
+         created_date = content.created.substr(0, content.created.find("T"));
+      }
 
-      QDateTime time = QDateTime::fromString(QString::fromStdString(content.expiration), "yyyy-MM-ddTHH:mm:ss");
+      m_pTableWidget->setItem(iIndex, eCreated, new QTableWidgetItem(convertDateToLocale(created_date)));
 
-      std::string e_str = CalculateRemainingTime(QDateTime::currentDateTime(), time);
+      QDateTime time = convertStringToDateTime(content.expiration);
+      QString e_str = CalculateRemainingTime(QDateTime::currentDateTime(), time);
 
       // Remaining
-      m_pTableWidget->setItem(iIndex, eRemaining, new QTableWidgetItem(QString::fromStdString(e_str)));
+      m_pTableWidget->setItem(iIndex, eRemaining, new QTableWidgetItem(e_str));
 
       // Status
       m_pTableWidget->setItem(iIndex, eStatus, new QTableWidgetItem(QString::fromStdString(content.status)));

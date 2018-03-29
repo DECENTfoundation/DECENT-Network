@@ -10,6 +10,7 @@
 #include <QString>
 #include <chrono>
 #include <vector>
+#include <atomic>
 
 #include <decent/wallet_utility/wallet_utility.hpp>
 
@@ -73,7 +74,7 @@ namespace gui_wallet
    const int g_max_number_of_decimal_places = 8;   //number of decimal places showed in asset price
 
    class StackLayerWidget;
-   std::string CalculateRemainingTime(QDateTime const& dt, QDateTime const& dtFuture);
+   QString CalculateRemainingTime(const QDateTime& dt, const QDateTime& dtFuture);
    QString CalculateRemainingTime_Behind(QDateTime const& dt, QDateTime const& dtFuture);
    
    void ShowMessageBox(QString const& strTitle,
@@ -86,8 +87,11 @@ namespace gui_wallet
    std::size_t extra_space(const std::string& s) noexcept;
    std::string unescape_string(const std::string& s);
    std::string escape_string(const std::string& s);
+   QDateTime convertStringToDateTime(const std::string& s);
    QString convertDateToLocale(const std::string& s);
    QString convertDateTimeToLocale(const std::string& s);
+   QString convertDateTimeToLocale2(const std::string& s);
+
 
    using WalletAPI = decent::wallet_utility::WalletAPI;
 
@@ -98,12 +102,15 @@ namespace gui_wallet
       WalletOperator();
       ~WalletOperator() override;
 
+      void cancel();
+
    public slots:
       void slot_connect();
    signals:
       void signal_connected(std::string const& str_error);
    public:
       WalletAPI m_wallet_api;
+      std::atomic_bool m_cancellation_token;
    };
 
    // Asset
@@ -163,6 +170,7 @@ namespace gui_wallet
       std::vector<Publisher> getPublishers();
       QLocale& locale() { return *m_p_locale; }
       bool connected() const;
+      QString getAssetName() const;
 
    public slots:
       void slot_updateAccountBalance();
@@ -181,6 +189,8 @@ namespace gui_wallet
       void setWalletUnlocked();
       void setWalletError(std::string const& error);
       std::string getAccountName(const std::string& accountId);
+      void setCurrentAccount(const QString& account_name);
+
       Asset getDCoreFees(int iOperation);
 
    signals:
@@ -188,11 +198,13 @@ namespace gui_wallet
    private slots:
       void slot_connected(std::string const& str_error);
       void slot_timer();
+      void slot_ConnectionStatusChange(ConnectionState from, ConnectionState to);
 
    signals:
-      void connectingProgress(std::string const& str_progress);
-      void currentUserChanged(QString const& user);
-      void statusShowMessage(QString const& str_message, int timeout = 0);
+      void connectingProgress(const QString& str_progress);
+      void currentUserChanged(const QString& user);
+      void statusShowMessage(const QString& str_message, int timeout = 0);
+      void updateProgress(int value, int maxVal);
       void statusClearMessage();
       void walletUnlocked();
       
@@ -208,6 +220,9 @@ namespace gui_wallet
       class DaemonDetails* m_p_daemon_details;
       std::string m_str_currentUser;
       std::chrono::steady_clock::time_point m_tp_started;
+      std::chrono::system_clock::time_point m_blockStart;
+
+
       std::map<std::string, std::string> m_map_user_id_cache;
    };
 

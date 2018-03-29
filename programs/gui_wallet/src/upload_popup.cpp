@@ -6,6 +6,7 @@
 #include "decent_button.hpp"
 #include "decent_text_edit.hpp"
 #include "decent_line_edit.hpp"
+#include "decent_label.hpp"
 
 #ifndef _MSC_VER
 #include <QLocale>
@@ -36,8 +37,7 @@ using std::string;
 namespace gui_wallet
 {
 
-Upload_popup::Upload_popup(QWidget* pParent, const std::string& id_modify/* = string()*/)
-: StackLayerWidget(pParent)
+Upload_popup::Upload_popup(QWidget* pParent, const std::string& id_modify/* = string()*/) : StackLayerWidget(pParent)
 , m_pStatusCheckTimer(new QTimer(this))
 , m_pDescriptionText(new DecentTextEdit(this, DecentTextEdit::Editor))
 , m_pLifeTime(new QDateEdit(this))
@@ -53,7 +53,9 @@ Upload_popup::Upload_popup(QWidget* pParent, const std::string& id_modify/* = st
    }
    
    //
-   setWindowTitle(tr("Upload new content"));
+   DecentLabel* pTitleLabel = new DecentLabel(this);
+   pTitleLabel->setText(tr("Upload new content"));
+
    //
    // Title field
    //
@@ -87,7 +89,7 @@ Upload_popup::Upload_popup(QWidget* pParent, const std::string& id_modify/* = st
    pPriceLabel->setText(tr("Price"));
 
    Asset min_price_asset = Globals::instance().asset(1);
-   double min_price = min_price_asset.to_value();
+   double min_price = 0; //min_price_asset.to_value();
 
    Asset max_price_asset = Globals::instance().asset(100000 * pow(10, g_max_number_of_decimal_places));
    double max_price = max_price_asset.to_value();
@@ -96,7 +98,7 @@ Upload_popup::Upload_popup(QWidget* pParent, const std::string& id_modify/* = st
    dblValidator->setLocale(Globals::instance().locale());
 
    m_pPriceEditor = new DecentLineEdit(this, DecentLineEdit::DialogLineEdit);
-   m_pPriceEditor->setPlaceholderText(tr("Price"));
+   m_pPriceEditor->setPlaceholderText(QString(tr("Price in %1")).arg(Globals::instance().getAssetName()) );
    m_pPriceEditor->setValidator(dblValidator);
    m_pPriceEditor->setAttribute(Qt::WA_MacShowFocusRect, 0);
    m_pPriceEditor->setTextMargins(5, 5, 5, 5);
@@ -166,6 +168,11 @@ Upload_popup::Upload_popup(QWidget* pParent, const std::string& id_modify/* = st
    //
    // Layouts
    //
+   QVBoxLayout* pFirstRow = new QVBoxLayout();
+   pFirstRow->addWidget(pTitleLabel);
+   pFirstRow->addWidget(pTitleText);
+   pFirstRow->addWidget(m_pDescriptionText);
+
    QHBoxLayout* pLifeTimeRow = new QHBoxLayout();
    pLifeTimeRow->addWidget(pLifeTimeLabel);
    pLifeTimeRow->addWidget(m_pLifeTime);
@@ -195,8 +202,7 @@ Upload_popup::Upload_popup(QWidget* pParent, const std::string& id_modify/* = st
    pButtonsLayout->addWidget(pCancelButton);
 
    QVBoxLayout* pMainLayout = new QVBoxLayout;
-   pMainLayout->addWidget(pTitleText);
-   pMainLayout->addWidget(m_pDescriptionText);
+   pMainLayout->addLayout(pFirstRow);
    pMainLayout->addLayout(pLifeTimeRow);
    pMainLayout->addLayout(pPriceRow);
    pMainLayout->addLayout(pSeedersRow);
@@ -206,6 +212,12 @@ Upload_popup::Upload_popup(QWidget* pParent, const std::string& id_modify/* = st
    pMainLayout->addLayout(pButtonsLayout);
    pMainLayout->setContentsMargins(10, 10, 10, 10);
    setLayout(pMainLayout);
+
+   QWidget::setTabOrder(pTitleText, m_pDescriptionText);
+   QWidget::setTabOrder(m_pDescriptionText, m_pLifeTime);
+   QWidget::setTabOrder(m_pLifeTime, m_pPriceEditor);
+
+
 
    slot_UpdateStatus();
    //
@@ -252,6 +264,11 @@ Upload_popup::Upload_popup(QWidget* pParent, const std::string& id_modify/* = st
                     this, &Upload_popup::slot_UpdateStatus);
    m_pStatusCheckTimer->start(500);
 
+   pTitleText->show();
+   pTitleText->setFocus();
+
+
+
    if (!m_id_modify.empty())
    {
       string title, description, price, expiration;
@@ -285,7 +302,7 @@ QStringList Upload_popup::getChosenPublishers() const
       Publisher const& seeder = seederItem.first;
 
       if (seederItem.second)
-         lstSummary << seeder.m_str_name.c_str();
+         lstSummary << QString::fromStdString(seeder.m_str_name);
    }
 
    return lstSummary;
@@ -560,7 +577,13 @@ void Upload_popup::getContents(string const& id,
       str_cd += " \"u_seed\": \"" + cd["u_seed"].get<string>() + "\",";
       str_cd += " \"pubKey\": \"" + cd["pubKey"].get<string>() + "\"}";
    }
-   catch(...) {}
+   catch(const std::exception& ex) {
+      std::cout << "Upload_popup::getContents " << ex.what() << std::endl;
+   }
+   catch(const fc::exception& ex) {
+      std::cout << "Upload_popup::getContents " << ex.what() << std::endl;
+   }
+
 }
 void Upload_popup::getContents(string const& id,
                                string& title,
@@ -611,7 +634,13 @@ void Upload_popup::getContents(string const& id,
          }
       }
    }
-   catch(...) {}
+   catch(const std::exception& ex) {
+      std::cout << "Upload_popup::getContents " << ex.what() << std::endl;
+   }
+   catch(const fc::exception& ex) {
+      std::cout << "Upload_popup::getContents " << ex.what() << std::endl;
+   }
+
 }
 
 void Upload_popup::slot_UploadContent()

@@ -75,22 +75,18 @@ QLabel[type='row1spacer']
 }
 QLabel[type='balance']
 {
-   image: url(':/icon/images/balance.svg');
-   image-position: right;
    padding-top: 1.3em;
    padding-bottom: 1.3em;
-   padding-left: 1em;
-   padding-right: 1em;
    max-width: 10em;
    max-height: 1.9em;
-   min-width: 10em;
+   min-width: 5em;
    min-height: 1.9em;
    border-bottom: 1px solid rgb(240, 240, 240);
    border-right: 1px solid rgb(240, 240, 240);
    border-left: 0px;
    border-top: 0px;
    color: rgb(27, 176, 104);
-   /*qproperty-alignment: 'AlignLeft | AlignVCenter';*/
+   qproperty-alignment: 'AlignRight | AlignVCenter';
 }
 QLabel[type='tablesearchframe']
 {
@@ -366,6 +362,15 @@ QLineEdit[type='dialoglineedit']
    padding-left: 0.5em;
    padding-right: 0.5em;
 }
+QLineEdit[type='dialoglineedit'][name='import_dlg']
+{
+   min-width: 22.0em;
+   min-height: 2.5em;
+   max-width: 25em;
+   max-height: 2.5em;
+   padding-left: 0.5em;
+   padding-right: 0.5em;
+}
 QTextEdit[type='info']
 {
    border: 0px;
@@ -404,12 +409,12 @@ QTextEdit QScrollBar::sub-line:vertical
 QProgressBar
 {
    border-radius: 0.27em;
-   max-height: 0.56em;
-   min-height: 0.56em;
-   width: 9.86em;
-   max-width: 9.86em;
+   max-height: 0.86em;
+   min-height: 0.86em;
+   width: 23.86em;
+   max-width: 23.86em;
    background: rgb(224, 229, 235);
-   qproperty-textVisible: false;
+   text-align: center;
 }
 QProgressBar:chunk
 {

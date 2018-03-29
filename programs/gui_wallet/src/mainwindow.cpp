@@ -104,6 +104,7 @@ MainWindow::MainWindow()
    DecentLabel* pRow1Spacer = new DecentLabel(pMainWidget, DecentLabel::Row1Spacer);
    m_pAccountList = new QComboBox(pMainWidget);
    m_pAccountList->setStyle(QStyleFactory::create("fusion"));
+   m_pAccountList->setMinimumContentsLength(40);
    m_pBalance = new DecentLabel(pMainWidget, DecentLabel::Balance);
    DecentButton* pTransferButton = new DecentButton(pMainWidget, DecentButton::Send);
    pTransferButton->setToolTip("Transfer DCT to account");
@@ -302,10 +303,10 @@ MainWindow::MainWindow()
 
    setUnifiedTitleAndToolBarOnMac(false);
 
-   QObject::connect(m_pAccountList, (void(QComboBox::*)(QString const&))&QComboBox::currentIndexChanged,
-                    &Globals::instance(), &Globals::slot_setCurrentUser);
-   QObject::connect(m_pAccountList, (void(QComboBox::*)(QString const&))&QComboBox::currentIndexChanged,
-                    this, &MainWindow::slot_getContents);
+//   QObject::connect(m_pAccountList, QOverload<const QString&>::of(&QComboBox::currentIndexChanged),
+//                    &Globals::instance(), &Globals::slot_setCurrentUser);
+   QObject::connect(m_pAccountList, QOverload<int>::of(&QComboBox::currentIndexChanged),
+                    this, &MainWindow::slot_currentAccountChanged);
    QObject::connect(pTransferButton, &QPushButton::clicked,
                     &Globals::instance(), (void(Globals::*)())&Globals::slot_showTransferDialog);
 
@@ -421,24 +422,31 @@ void MainWindow::slot_setSplash()
    m_iSplashWidgetIndex = m_pStackedWidget->count();
 
    StackLayerWidget* pSplashScreen = new StackLayerWidget(this);
-   QProgressBar* pConnectingProgress = new QProgressBar(pSplashScreen);
-   pConnectingProgress->setValue(70);
-   DecentLabel* pConnectingLabel = new DecentLabel(pSplashScreen, DecentLabel::SplashInfo);
-   pConnectingLabel->setText(tr("Please wait, we are syncing with network…"));
+   m_pConnectingProgress = new QProgressBar(pSplashScreen);
+   m_pConnectingProgress->setFont(gui_wallet::ProgressInfoFont());
+
+   DecentLabel* pPleaseWaitLabel = new DecentLabel(pSplashScreen, DecentLabel::SplashInfo);
+   pPleaseWaitLabel->setFont(gui_wallet::ProgressInfoFont());
+   pPleaseWaitLabel->setText(tr("Please wait..."));
+
+   m_pConnectingLabel = new DecentLabel(pSplashScreen, DecentLabel::SplashInfo);
+   m_pConnectingLabel->setText(tr("Connecting..."));
+   m_pConnectingLabel->setFont(gui_wallet::ProgressInfoFont());
+
    StatusLabel* pSyncUpLabel = new StatusLabel(pSplashScreen, DecentLabel::SplashInfo);
    DecentButton* pButton = new DecentButton(this, DecentButton::SplashAction);
 
-   pConnectingLabel->setFont(gui_wallet::ProgressInfoFont());
    pSyncUpLabel->setFont(gui_wallet::ProgressInfoFont());
 
    pButton->hide();
    pButton->setText(tr("Proceed"));
    
    QGridLayout* pLayoutSplash = new QGridLayout;
-   pLayoutSplash->addWidget(pConnectingProgress, 0, 0, Qt::AlignVCenter | Qt::AlignCenter);
-   pLayoutSplash->addWidget(pConnectingLabel, 1, 0, Qt::AlignVCenter | Qt::AlignCenter);
-   pLayoutSplash->addWidget(pSyncUpLabel, 2, 0, Qt::AlignVCenter | Qt::AlignCenter);
-   pLayoutSplash->addWidget(pButton, 3, 0, Qt::AlignVCenter | Qt::AlignCenter);
+   pLayoutSplash->addWidget(pPleaseWaitLabel,  0, 0, Qt::AlignVCenter | Qt::AlignCenter);
+   pLayoutSplash->addWidget(m_pConnectingProgress, 1, 0, Qt::AlignVCenter | Qt::AlignCenter);
+   pLayoutSplash->addWidget(m_pConnectingLabel, 2, 0, Qt::AlignVCenter | Qt::AlignCenter);
+   pLayoutSplash->addWidget(pSyncUpLabel, 3, 0, Qt::AlignVCenter | Qt::AlignCenter);
+   pLayoutSplash->addWidget(pButton, 4, 0, Qt::AlignVCenter | Qt::AlignCenter);
    
    pLayoutSplash->setSizeConstraint(QLayout::SetFixedSize);
    pLayoutSplash->setSpacing(10);
@@ -447,12 +455,14 @@ void MainWindow::slot_setSplash()
    pSplashScreen->setLayout(pLayoutSplash);
    
    QObject::connect(&Globals::instance(), &Globals::statusShowMessage,
-                    pSyncUpLabel, &StatusLabel::showMessage);
+                    this, &MainWindow::slot_ConnectingUpdate);
    QObject::connect(&Globals::instance(), &Globals::statusClearMessage,
                     pSyncUpLabel, &StatusLabel::clearMessage);
-   
-   QObject::connect(this, &MainWindow::signal_setSplashMainText,
-                    pConnectingLabel, &QLabel::setText);
+   QObject::connect(&Globals::instance(), &Globals::updateProgress,
+                     this, &MainWindow::slot_BlockchainUpdate);
+
+//   QObject::connect(this, &MainWindow::signal_setSplashMainText,
+//                    pConnectingLabel, &QLabel::setText);
    QObject::connect(this, &MainWindow::signal_setSplashMainText,
                     pButton, &QWidget::show);
    
@@ -475,7 +485,7 @@ void MainWindow::closeSplash(bool bGonnaCoverAgain)
 
    StackLayerWidget* pLayer = nullptr;
 
-   signal_setSplashMainText(QString());
+   emit signal_setSplashMainText(QString());
    Globals::instance().statusShowMessage(QString());
 
    if (!bGonnaCoverAgain)
@@ -483,12 +493,12 @@ void MainWindow::closeSplash(bool bGonnaCoverAgain)
       if (Globals::instance().getWallet().IsNew())
       {
          pLayer = new PasswordWidget(nullptr, PasswordWidget::eSetPassword);
-         signal_setSplashMainText(tr("Please set a password to encrypt your wallet"));
+         emit signal_setSplashMainText(tr("Please set a password to encrypt your wallet"));
       }
       else if (Globals::instance().getWallet().IsLocked())
       {
          pLayer = new PasswordWidget(nullptr, PasswordWidget::eUnlock);
-         signal_setSplashMainText(tr("Please unlock your wallet"));
+         emit signal_setSplashMainText(tr("Please unlock your wallet"));
       }
       else
       {
@@ -496,7 +506,7 @@ void MainWindow::closeSplash(bool bGonnaCoverAgain)
          if (accounts.empty())
          {
             pLayer = new ImportKeyWidget(nullptr);
-            signal_setSplashMainText(tr("Please import your account in order to proceed"));
+            emit signal_setSplashMainText(tr("Please import your account in order to proceed"));
          }
       }
    }
@@ -557,6 +567,18 @@ void MainWindow::slot_connectionStatusChanged(Globals::ConnectionState from, Glo
    }
 }
 
+void MainWindow::slot_ConnectingUpdate(const QString& time_text, int)
+{
+   Q_ASSERT(m_pConnectingLabel);
+   m_pConnectingLabel->setText(QString(tr("currently synchronized block is %1 old.")).arg(time_text));
+}
+
+void MainWindow::slot_BlockchainUpdate(int value, int max)
+{
+   m_pConnectingProgress->setMaximum(max);
+   m_pConnectingProgress->setValue(value);
+}
+
 void MainWindow::slot_showPurchasedTab()
 {
    m_pButtonPurchased->setChecked(true);
@@ -609,7 +631,13 @@ void MainWindow::slot_stackWidgetPop()
 
 void MainWindow::slot_updateAccountBalance(Asset const& balance)
 {
-   m_pBalance->setText(balance.getStringBalance());
+   QString blalanceText = balance.getStringBalance();
+
+   QFontMetrics fm(m_pBalance->font());
+   int pxWidth = fm.width(blalanceText);
+
+   m_pBalance->setMinimumWidth(pxWidth + 10);  //10 is border..
+   m_pBalance->setText(blalanceText);
 }
 
 void MainWindow::slot_replayBlockChain()
@@ -628,6 +656,14 @@ void MainWindow::slot_importKey()
 {
    ImportKeyWidget* import_key = new ImportKeyWidget(nullptr);
    slot_stackWidgetPush(import_key);
+}
+
+void MainWindow::slot_currentAccountChanged(int iIndex)
+{
+   QString account = m_pAccountList->itemText(iIndex);
+   Globals::instance().setCurrentAccount(account);
+
+   slot_getContents();
 }
 
 void MainWindow::slot_advancedMinerVoting()
@@ -866,13 +902,12 @@ void MainWindow::slot_checkDownloads()
                                                   "\"\" "
                                                   "\"-1\" ");
    }
-   catch(const std::exception& ex)
-   {
+   catch(const std::exception& ex) {
       std::cout << "runTaskParse() " << ex.what() << std::endl;
       return;
    }
-   catch(...)
-   {
+   catch(const fc::exception& ex) {
+      std::cout << "runTaskParse() " << ex.what() << std::endl;
       return;
    }
 
@@ -896,11 +931,11 @@ void MainWindow::slot_checkDownloads()
          }
          catch(const std::exception& ex)
          {
-            std::cout << "runTask('download_package') " << ex.what() << std::endl;
+            std::cout << "runTask('download_package') URI:" << URI << "Ex:" << ex.what() << std::endl;
          }
-         catch(...)
+         catch(const fc::exception& ex)
          {
-            std::cout << "Cannot resume download: " << URI << std::endl;
+            std::cout << "runTask('download_package') URI:" << URI << "Ex:" << ex.what() << std::endl;
          }
       }
    }
@@ -998,22 +1033,25 @@ void MainWindow::DisplayWalletContentGUI()
    {
       auto accs = Globals::instance().runTaskParse("list_my_accounts");
       m_pAccountList->clear();
-      
+
+      std::string id, name;
       for (int i = 0; i < accs.size(); ++i)
       {
-         std::string id = accs[i]["id"].get<std::string>();
-         std::string name = accs[i]["name"].get<std::string>();
+         id = accs[i]["id"].get<std::string>();
+         name = accs[i]["name"].get<std::string>();
 
-         m_pAccountList->addItem(name.c_str());
+         m_pAccountList->insertItem(i, QString::fromStdString(name));
       }
 
-      if (accs.size() > 0)
-      {
+      if (accs.size() > 0) {
          m_pAccountList->setCurrentIndex(0);
       }
    }
-   catch (const std::exception& ex)
-   {
+   catch (const std::exception& ex) {
+      exception_text = ex.what();
+      display_error_box = true;
+   }
+   catch (const fc::assert_exception& ex) {
       exception_text = ex.what();
       display_error_box = true;
    }

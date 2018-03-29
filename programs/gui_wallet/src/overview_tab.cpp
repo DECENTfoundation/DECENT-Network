@@ -163,24 +163,28 @@ void Overview_tab::slot_Details()
 {
    try {
       auto accountInfo = Globals::instance().runTaskParse("get_account " + m_strSelectedAccount.toStdString());
-      
+
       std::string id = accountInfo["id"].get<std::string>();
       std::string registrar = accountInfo["registrar"].get<std::string>();
       bool is_publishing_manager = accountInfo["rights_to_publish"]["is_publishing_manager"].get<bool>();
       std::string name = accountInfo["name"].get<std::string>();
       int size = accountInfo["rights_to_publish"]["publishing_rights_received"].size();
       bool is_publishing_rights_received = size;
-      
-      UserInfoWidget* userInfoWidget = new UserInfoWidget(nullptr,
-                                                  is_publishing_manager,
-                                                  is_publishing_rights_received,
-                                                  QString::fromStdString(registrar),
-                                                  QString::fromStdString(name),
-                                                  QString::fromStdString(id));
-      
+
+      UserInfoWidget *userInfoWidget = new UserInfoWidget(nullptr,
+                                                          is_publishing_manager,
+                                                          is_publishing_rights_received,
+                                                          QString::fromStdString(registrar),
+                                                          QString::fromStdString(name),
+                                                          QString::fromStdString(id));
+
       Globals::instance().signal_stackWidgetPush(userInfoWidget);
-   } catch(...) {
-      // Ignore for now
+   }
+   catch(const std::exception& ex) {
+      std::cout << "slot_Details('Overview_tab') " << ex.what() << std::endl;
+   }
+   catch(const fc::exception& ex) {
+      std::cout << "slot_Details('Overview_tab') " << ex.what() << std::endl;
    }
 }
 

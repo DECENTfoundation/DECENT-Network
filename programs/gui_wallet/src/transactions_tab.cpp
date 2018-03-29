@@ -153,7 +153,7 @@ void TransactionsTab::slot_SortingChanged(int index)
    reset();
 }
 
-void TransactionsTab::slot_SearchTermChanged(QString const& strSearchTerm)
+void TransactionsTab::slot_SearchTermChanged(const QString& strSearchTerm)
 {
    m_strSearchTerm = strSearchTerm;
    reset(false);

@@ -10,6 +10,7 @@ class QComboBox;
 class QCheckBox;
 class QTimer;
 class QAction;
+class QProgressBar;
 class UpdateManager;
 
 namespace gui_wallet
@@ -19,6 +20,7 @@ class DecentLabel;
 class DecentLineEdit;
 class DecentButton;
 class TabContentManager;
+
 
 class MainWindow : public QMainWindow
 {
@@ -49,13 +51,16 @@ protected slots:
    void slot_PublishToggled(bool toggled);
    void slot_UsersToggled(bool toggled);
    void slot_PurchasedToggled(bool toggled);
+   void slot_ConnectingUpdate(const QString& time_text, int);
+   void slot_BlockchainUpdate(int value, int max);
+   void slot_currentAccountChanged(int iIndex);
    void slot_MinerVotingToggled(bool toggled);
    void slot_advancedMinerVoting();
-   
+
    void DisplayWalletContentGUI();
 
 signals:
-   void signal_setSplashMainText(QString const&);
+   void signal_setSplashMainText(const QString & );
 
 protected:
    void closeSplash(bool bGonnaCoverAgain);
@@ -105,6 +110,10 @@ protected:
    UpdateManager* m_pUpdateManager;
 
    std::set<std::string> m_activeDownloads;
+
+   QProgressBar* m_pConnectingProgress;
+   DecentLabel* m_pConnectingLabel;
+
 };
 
 }

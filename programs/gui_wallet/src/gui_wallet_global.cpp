@@ -53,6 +53,8 @@
 #include <Windows.h>
 #endif
 
+#define DECENT_WITHOUT_DAEMON
+
 #include <signal.h>
 
 int runDecentD(gui_wallet::BlockChainStartType type, fc::promise<void>::ptr& exit_promise);
@@ -171,11 +173,11 @@ static CalendarDuration CalculateCalendarDuration(QDateTime const& dt, QDateTime
    }
 }
 
-std::string CalculateRemainingTime(QDateTime const& dt, QDateTime const& dtFuture)
+QString CalculateRemainingTime(const QDateTime& dt, const QDateTime& dtFuture)
 {
    CalendarDuration duration = CalculateCalendarDuration(dt, dtFuture);
    if (duration.sign == CalendarDuration::sign_negative)
-      return "expired";
+      return QString(QObject::tr("expired"));
    else
    {
       std::vector<std::string> arrParts;
@@ -191,15 +193,17 @@ std::string CalculateRemainingTime(QDateTime const& dt, QDateTime const& dtFutur
       if (duration.minutes)
          arrParts.push_back(std::to_string(duration.minutes) + " min");
 
-      std::string str_result;
+      QString str_result;
       if (arrParts.empty())
-         str_result = "expiring in a minute";
+         str_result = QString(QObject::tr("expiring in a minute"));
       else
       {
-         str_result = arrParts.front();
+         str_result = QString::fromStdString( arrParts.front());
          
-         if (arrParts.size() > 1)
-            str_result += " " + arrParts[1];
+         if (arrParts.size() > 1) {
+            str_result.append(" ");
+            str_result.append(QString::fromStdString(arrParts[1]));
+         }
       }
       
       return str_result;
@@ -241,8 +245,6 @@ QString CalculateRemainingTime_Behind(QDateTime const& dt, QDateTime const& dtFu
 
          if (arrParts.size() > 1)
             str_result += " " + QObject::tr("and") + " " + arrParts[1];
-
-         str_result += " " + QObject::tr("to go");
       }
 
       return str_result;
@@ -473,6 +475,11 @@ QString convertDateToLocale(const std::string& s)
    return Globals::instance().locale().toString(time, QLocale::ShortFormat);
 }
 
+QDateTime convertStringToDateTime(const std::string& s)
+{
+   return QDateTime::fromString(QString::fromStdString(s), "yyyy-MM-ddTHH:mm:ss");
+}
+
 QString convertDateTimeToLocale(const std::string& s)
 {
    QDateTime time = QDateTime::fromString(QString::fromStdString(s), "yyyy-MM-dd hh:mm:ss");
@@ -482,19 +489,34 @@ QString convertDateTimeToLocale(const std::string& s)
 
    return Globals::instance().locale().toString(time, QLocale::ShortFormat);
 }
+QString convertDateTimeToLocale2(const std::string& s)
+{
+   if (s.empty()) {
+      return QString();
+   }
 
+   QDateTime time = convertStringToDateTime(s);
+   if (!time.isValid()) {
+      return QString("EEE");
+   }
+
+   return Globals::instance().locale().toString(time, QLocale::ShortFormat);
+}
 
 //
 // WalletOperator
 //
-WalletOperator::WalletOperator() : QObject(nullptr), m_wallet_api()
+WalletOperator::WalletOperator() : QObject()
+, m_wallet_api()
+, m_cancellation_token(false)
 {
-
 }
 
-WalletOperator::~WalletOperator()
-{
+WalletOperator::~WalletOperator() = default;
 
+void WalletOperator::cancel()
+{
+   m_cancellation_token = true;
 }
 
 void WalletOperator::slot_connect()
@@ -502,7 +524,7 @@ void WalletOperator::slot_connect()
    std::string str_error;
    try
    {
-      m_wallet_api.Connent();
+      m_wallet_api.Connent(m_cancellation_token);
    }
    catch(const std::exception& ex)
    {
@@ -511,10 +533,10 @@ void WalletOperator::slot_connect()
 
    emit signal_connected(str_error);
 }
+
 //
 // Asset
 //
-
 double Asset::to_value() const
 {
    uint64_t amount = m_amount / m_scale;
@@ -571,11 +593,12 @@ public:
    fc::thread thread_decentd;
    fc::future<int> future_decentd;
 };
+
 //
 // Globals
 //
-Globals::Globals()
-: m_connected_state(ConnectionState::Connecting)
+Globals::Globals() : QObject()
+, m_connected_state(ConnectionState::Connecting)
 , m_p_wallet_operator(nullptr)
 , m_p_wallet_operator_thread(nullptr)
 , m_p_timer(new QTimer(this))
@@ -584,9 +607,6 @@ Globals::Globals()
 , m_str_currentUser()
 , m_tp_started(std::chrono::steady_clock::now())
 {
-   m_p_timer->start(1000);
-   QObject::connect(m_p_timer, &QTimer::timeout,
-                    this, &Globals::slot_timer);
 
    QLocale::setDefault(*m_p_locale);
 
@@ -629,15 +649,12 @@ void Globals::startDaemons(BlockChainStartType type)
                        this, &Globals::slot_connected);
 
       connect(m_p_wallet_operator_thread, SIGNAL(finished()), m_p_wallet_operator_thread, SLOT(deleteLater()));
-
       m_p_wallet_operator_thread->start();
    }
 
-   fc::thread& thread_decentd = m_p_daemon_details->thread_decentd;
+   QObject::connect(this, &Globals::walletConnectionStatusChanged, this, &Globals::slot_ConnectionStatusChange);
 
-   fc::promise<void>::ptr& exit_promise = m_p_daemon_details->exit_promise;
-
-   QProcess* daemon_process = nullptr;
+   QProcess* daemon_process;
    daemon_process = run_ipfs_daemon(qApp, qApp->applicationDirPath());
    m_p_daemon_details->ipfs_process = daemon_process;
 
@@ -661,7 +678,11 @@ void Globals::startDaemons(BlockChainStartType type)
 
 #endif
 
-#if 0
+#if !defined(DECENT_WITHOUT_DAEMON)
+   fc::thread& thread_decentd = m_p_daemon_details->thread_decentd;
+
+   fc::promise<void>::ptr& exit_promise = m_p_daemon_details->exit_promise;
+
    m_p_daemon_details->future_decentd = thread_decentd.async([type, &exit_promise]() -> int
                                                             {
                                                                return ::runDecentD(type, exit_promise);
@@ -683,15 +704,21 @@ void Globals::stopDaemons()
    if (backup_state != m_connected_state)
       emit walletConnectionStatusChanged(backup_state, m_connected_state);
 
-   if (m_p_wallet_operator && bConnected)
+   if (m_p_wallet_operator)
    {
-      m_p_wallet_operator->m_wallet_api.SaveWalletFile();
+      if (bConnected) {
+         m_p_wallet_operator->m_wallet_api.SaveWalletFile();
+      }
+      else {
+         m_p_wallet_operator->cancel();
+         m_p_wallet_operator_thread->quit();
+      }
 
       delete m_p_wallet_operator;
       m_p_wallet_operator = nullptr;
    }
 
-#if 0
+#if !defined(DECENT_WITHOUT_DAEMON)
    fc::promise<void>::ptr& exit_promise = m_p_daemon_details->exit_promise;
    exit_promise->set_value();
 
@@ -700,9 +727,7 @@ void Globals::stopDaemons()
 
    if (m_p_daemon_details->ipfs_process) {
       m_p_daemon_details->ipfs_process->terminate();
-      if (!m_p_daemon_details->ipfs_process->waitForFinished()) {
-         m_p_daemon_details->ipfs_process->kill();
-      }
+      m_p_daemon_details->ipfs_process->waitForFinished();
 
       delete m_p_daemon_details->ipfs_process;
       m_p_daemon_details->ipfs_process = nullptr;
@@ -730,9 +755,7 @@ void Globals::clear()
    if (m_p_wallet_operator_thread)
    {
       m_p_wallet_operator_thread->quit();
-      if (m_p_wallet_operator_thread->isRunning()) {
-         m_p_wallet_operator_thread->wait();
-      }
+      m_p_wallet_operator_thread->wait();
       delete m_p_wallet_operator_thread;
       m_p_wallet_operator_thread = nullptr;
    }
@@ -814,6 +837,18 @@ bool Globals::connected() const
    return m_connected_state != ConnectionState::Connecting;
 }
 
+QString Globals::getAssetName() const
+{
+   uint8_t precision = 0;
+   std::string assetName;
+
+   graphene::chain::asset_id_type asset_id;
+   fc::from_variant("1.3.0", asset_id );
+   getWallet().LoadAssetInfo(assetName, precision, asset_id);
+
+   return QString::fromStdString(assetName);
+}
+
 void Globals::setWalletUnlocked()
 {
    emit walletUnlocked();
@@ -840,6 +875,11 @@ std::string Globals::getAccountName(string const& accountId)
    }
 
    return search->second;
+}
+
+void Globals::setCurrentAccount(const QString& account_name)
+{
+   m_str_currentUser = account_name.toStdString();
 }
 
 Asset Globals::getDCoreFees(int iOperation)
@@ -903,10 +943,28 @@ void Globals::slot_showTransferDialog()
 void Globals::slot_connected(std::string const& str_error)
 {
    m_connected_state = ConnectionState::SyncingUp;
-   if (str_error.empty())
+   if (str_error.empty()) {
       emit walletConnectionStatusChanged(ConnectionState::Connecting, ConnectionState::SyncingUp);
+
+      m_blockStart = getWallet().HeadBlockTime();
+   }
    else
       emit walletConnectionError(str_error);
+}
+
+void Globals::slot_ConnectionStatusChange(ConnectionState from, ConnectionState to)
+{
+   if (ConnectionState::Connecting == from) {
+
+      m_p_timer->start(1000);
+      QObject::connect(m_p_timer, &QTimer::timeout, this, &Globals::slot_timer);
+   }
+   else if (ConnectionState::SyncingUp == from && ConnectionState::Up == to) {
+      m_p_timer->stop();
+   }
+
+
+
 }
 
 void Globals::slot_timer()
@@ -918,25 +976,31 @@ void Globals::slot_timer()
    if (ConnectionState::Connecting == m_connected_state)
    {
       if (duration > std::chrono::seconds(40))
-         emit connectingProgress(tr("still connecting").toStdString());
+         emit connectingProgress(tr("still connecting"));
       else if (duration > std::chrono::seconds(20))
-         emit connectingProgress(tr("verifying the local database").toStdString());
+         emit connectingProgress(tr("verifying the local database"));
       else
-         emit connectingProgress(tr("connecting").toStdString());
+         emit connectingProgress(tr("connecting"));
    }
    else
    {
+      auto currBlockTime = Globals::instance().getWallet().HeadBlockTime();
+      uint64_t value = std::chrono::duration_cast<std::chrono::seconds>(currBlockTime - m_blockStart).count();
+      uint64_t maxValue = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now() - m_blockStart).count();
+
+      emit updateProgress(value, maxValue);
+
       QDateTime qdt;
-      qdt.setTime_t(std::chrono::system_clock::to_time_t(Globals::instance().getWallet().HeadBlockTime()));
+      qdt.setTime_t(std::chrono::system_clock::to_time_t(currBlockTime));
 
       CalendarDuration duration = CalculateCalendarDuration(qdt, QDateTime::currentDateTime());
       if (duration.sign == CalendarDuration::sign_negative)
          duration = CalendarDuration();
 
       QString str_result = CalculateRemainingTime_Behind(qdt, QDateTime::currentDateTime());
-      std::string result = str_result.toStdString();
-      if (!result.empty())
-         emit statusShowMessage(result.c_str(), 5000);
+      if (!str_result.isEmpty()) {
+         emit statusShowMessage(str_result, 5000);
+      }
 
       bool justbehind = false, farbehind = false;
       if (duration.years == 0 &&
@@ -1008,7 +1072,7 @@ int DecentTable::getCurrentHighlightedRow() const
 std::string DecentTable::getSortedColumn() const
 {
    if (_current_sort_index < 0)
-      return "";
+      return std::string();
 
    return  (_is_ascending ? "+" : "-") + _cols[_current_sort_index].sortid;
 }

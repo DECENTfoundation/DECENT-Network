@@ -65,6 +65,9 @@ PurchasedTab::PurchasedTab(QWidget* pParent,
    QObject::connect(m_pTableWidget, &DecentTable::signal_SortingChanged,
                     this, &PurchasedTab::slot_SortingChanged);
 
+   QObject::connect(m_pTableWidget, &DecentTable::cellClicked,
+                    this, &PurchasedTab::slot_cellClicked);
+
    setRefreshTimer(5000);
 }
 
@@ -116,8 +119,7 @@ void PurchasedTab::timeToUpdate(const std::string& result)
       contentObject.created = content["created"].get<std::string>();
       contentObject.created = contentObject.created.substr(0, contentObject.created.find("T"));
       contentObject.purchased_time = content["expiration_or_delivery_time"].get<std::string>();
-      contentObject.purchased_time = contentObject.purchased_time.substr(0, contentObject.purchased_time.find("T"));
-      
+
       contentObject.size = content["size"].get<int>();
       contentObject.id = content["id"].get<std::string>();
       contentObject.hash = content["hash"].get<std::string>();
@@ -195,8 +197,9 @@ void PurchasedTab::ShowDigitalContentsGUI()
       m_pTableWidget->setItem(iIndex, 0, new QTableWidgetItem(QString::fromStdString(title)));
       m_pTableWidget->setItem(iIndex, 1, new QTableWidgetItem(QString::number(contentObject.size) + tr(" MB")));
       m_pTableWidget->setItem(iIndex, 2, new QTableWidgetItem(contentObject.price.getString()));
-      
-      m_pTableWidget->setItem(iIndex, 3, new QTableWidgetItem(convertDateToLocale(contentObject.purchased_time)));
+
+      std::string purchase_date = contentObject.purchased_time.substr(0, contentObject.purchased_time.find("T"));
+      m_pTableWidget->setItem(iIndex, 3, new QTableWidgetItem(convertDateToLocale(purchase_date)));
 
       uint32_t total_key_parts = contentObject.total_key_parts;
       uint32_t received_key_parts  = contentObject.received_key_parts;
@@ -289,7 +292,11 @@ void PurchasedTab::slot_ExtractionDirSelected(QString const& path) {
       if (dummy.find("exception:") != std::string::npos) {
          message = dummy;
       }
-   } catch (const std::exception& ex) {
+   }
+   catch (const std::exception& ex) {
+      message = ex.what();
+   }
+   catch(const fc::exception& ex) {
       message = ex.what();
    }
 
@@ -335,6 +342,15 @@ void PurchasedTab::slot_Details(int iIndex)
 
    ContentReviewWidget* pDetailsDialog = new ContentReviewWidget(nullptr, _current_content[iIndex]);
    Globals::instance().signal_stackWidgetPush(pDetailsDialog);
+}
+
+void PurchasedTab::slot_cellClicked(int row, int /*col*/)
+{
+   if (row < 0 || row >= _current_content.size()) {
+      throw std::out_of_range("Content index is out of range");
+   }
+
+   slot_Details(row);
 }
 
 void PurchasedTab::ShowMessageBox(const std::string& message)
