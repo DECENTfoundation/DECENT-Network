@@ -10,6 +10,7 @@
 #include <QString>
 #include <chrono>
 #include <vector>
+#include <atomic>
 
 #include <decent/wallet_utility/wallet_utility.hpp>
 

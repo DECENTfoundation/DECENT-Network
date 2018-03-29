@@ -8,6 +8,7 @@
 #include <vector>
 #include <chrono>
 #include <graphene/chain/protocol/types.hpp>
+#include <atomic>
 
 namespace graphene
 {
