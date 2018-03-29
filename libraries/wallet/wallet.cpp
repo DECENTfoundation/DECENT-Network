@@ -1790,13 +1790,16 @@ public:
          to_account = get_account( get_object(to_obj_id.as<content_id_type>()).author);
       }
 
-      transfer2_operation xfer_op;
+      signed_transaction tx;
+      if( head_block_time() >= HARDFORK_2_TIME )
+      {
+         transfer2_operation xfer_op;
 
-      xfer_op.from = from_id;
-      xfer_op.to = to_obj_id;
-      xfer_op.amount = asset_obj->amount_from_string(amount);
+         xfer_op.from = from_id;
+         xfer_op.to = to_obj_id;
+         xfer_op.amount = asset_obj->amount_from_string(amount);
 
-      if( memo.size() )
+         if( memo.size() )
          {
             xfer_op.memo = memo_data();
             xfer_op.memo->from = from_account.options.memo_key;
@@ -1805,8 +1808,28 @@ public:
                                       to_account.options.memo_key, memo);
          }
 
-      signed_transaction tx;
-      tx.operations.push_back(xfer_op);
+         tx.operations.push_back(xfer_op);
+      }
+      else
+      {
+         transfer_operation xfer_op;
+
+         xfer_op.from = from_id;
+         xfer_op.to = to_obj_id;
+         xfer_op.amount = asset_obj->amount_from_string(amount);
+
+         if( memo.size() )
+         {
+            xfer_op.memo = memo_data();
+            xfer_op.memo->from = from_account.options.memo_key;
+            xfer_op.memo->to = to_account.options.memo_key;
+            xfer_op.memo->set_message(get_private_key(from_account.options.memo_key),
+                                      to_account.options.memo_key, memo);
+         }
+
+         tx.operations.push_back(xfer_op);
+      }
+
       set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
       tx.validate();
 
