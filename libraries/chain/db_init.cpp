@@ -119,6 +119,7 @@ void database::initialize_evaluators()
    register_evaluator<asset_claim_fees_evaluator>();
    register_evaluator<assert_evaluator>();
    register_evaluator<transfer_evaluator>();
+   register_evaluator<transfer2_evaluator>();
    register_evaluator<proposal_create_evaluator>();
    register_evaluator<proposal_update_evaluator>();
    register_evaluator<proposal_delete_evaluator>();

@@ -205,9 +205,11 @@ signed_transaction create_account_with_brain_key(const string& brain_key,
                                                  bool broadcast = false);
 
 /**
- * @brief Transfer an amount from one account to another.
+ * @brief Transfer an amount from one account to another account or to content.
+ * In the case of transferring to a content, amount is transferred to author and co-authors of the content,
+ * if they are specified.
  * @param from the name or id of the account sending the funds
- * @param to the name or id of the account receiving the funds
+ * @param to the name or id of the account or id of the content receiving the funds
  * @param amount the amount to send (in nominal units -- to send half of a DCT, specify 0.5)
  * @param asset_symbol the symbol or id of the asset to send
  * @param memo a memo to attach to the transaction.  The memo will be encrypted in the

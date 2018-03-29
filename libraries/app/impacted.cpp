@@ -43,6 +43,12 @@ struct get_impacted_account_visitor
       _impacted.insert( op.to );
    }
 
+   void operator()( const transfer2_operation& op )
+   {
+      if( op.to.is<account_id_type>() )
+         _impacted.insert( op.to.as<account_id_type>() );
+   }
+
    void operator()( const account_create_operation& op )
    {
       _impacted.insert( op.registrar );
