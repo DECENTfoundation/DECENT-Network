@@ -439,9 +439,6 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
       FC_ASSERT( o.price <= d.get_balance( o.consumer, o.price.asset_id ) );
       FC_ASSERT( content->expiration > db().head_block_time() );
 
-      if( content->key_parts.size() == 0 ) //simplified content buying - TODO
-         FC_ASSERT(d.head_block_time() >= HARDFORK_2_TIME);
-
       optional<asset> content_price_got = content->price.GetPrice(o.region_code_from);
 
       FC_ASSERT( content_price_got.valid(), "content is not available for this region" );
