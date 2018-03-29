@@ -35,11 +35,14 @@ namespace gui_wallet
 
     private:
        void submit_vote(const std::string& miner_name, bool voteFlag);
+       void getDesiredMinersCount();
 
     public:
        DecentTable* m_pTableWidget;
        QString m_strSearchTerm;
        bool m_onlyMyVotes;
+       uint m_minersVotedNum;
+       uint m_curMinersVotedFor;
 
        QMap<QWidget*, int> m_buttonsToIndex;
        QMap<int, QString> m_indexToUrl;

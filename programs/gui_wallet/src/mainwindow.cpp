@@ -172,7 +172,7 @@ MainWindow::MainWindow()
    m_pPublish->setText(tr("Publish"));
    m_pPublish->hide();
 
-   m_pOnlyMyVotes = new QCheckBox(tr("Only my votes"), pMainWidget);
+   m_pOnlyMyVotes = new QCheckBox(tr("My votes"), pMainWidget);
    m_pOnlyMyVotes->hide();
 
    //

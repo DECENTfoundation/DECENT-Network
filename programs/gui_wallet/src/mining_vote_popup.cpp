@@ -42,14 +42,13 @@ MiningVotePopup::MiningVotePopup(QWidget *pParent) : StackLayerWidget(pParent)
 
    // Info
    QLabel* pInfoLabel = new QLabel(this);
-   pInfoLabel->setText(QString(tr("This number must not exceed the actual number of miners voted for in %1 account votes"))
-                             .arg(QString::fromStdString(account_name)));
+   pInfoLabel->setText(QString(tr("The desired miners count you are voting for must be equal to or less than %1 because \nthe number of miners you voted for is %1 (see My votes on the main screen)."))
+                             .arg(m_curMinersVotedFor));
 
    Asset opFee = Globals::instance().getDCoreFees(2);
 
-   QLabel* pUserCurrVotesLabel = new QLabel(this);
-   pUserCurrVotesLabel->setText(QString(tr("You have voted for %1 miners. You will pay %2 fee for voting."))
-                                      .arg(m_curMinersVotedFor)
+   QLabel* pFeeInfoLabel = new QLabel(this);
+   pFeeInfoLabel->setText(QString(tr("You will pay %1 fee for voting."))
                                       .arg(opFee.getString()) );
 
    m_pVoteButton = new DecentButton(this, DecentButton::DialogAction);
@@ -76,7 +75,9 @@ MiningVotePopup::MiningVotePopup(QWidget *pParent) : StackLayerWidget(pParent)
 
    QHBoxLayout* pRow3Layout = new QHBoxLayout;
    pRow3Layout->addWidget(pInfoLabel);
-   pRow3Layout->addWidget(pUserCurrVotesLabel);
+
+   QHBoxLayout* pRow4Layout = new QHBoxLayout;
+   pRow4Layout->addWidget(pFeeInfoLabel);
 
    QHBoxLayout* pButtonsLayout = new QHBoxLayout;
    pButtonsLayout->setContentsMargins(20, 20, 20, 20);
@@ -96,6 +97,7 @@ MiningVotePopup::MiningVotePopup(QWidget *pParent) : StackLayerWidget(pParent)
    pMainLayout->addLayout(pRow1Layout);
    pMainLayout->addLayout(pRow2Layout);
    pMainLayout->addLayout(pRow3Layout);
+   pMainLayout->addLayout(pRow4Layout);
    pMainLayout->addLayout(pButtonsLayout);
    pMainLayout->setContentsMargins(10, 10, 10, 10);
    setLayout(pMainLayout);
@@ -137,7 +139,6 @@ void MiningVotePopup::getMinerVotesForAccount(const std::string& account_name)
 
    m_minersVotedNum = account_obj["options"]["num_miner"].get<uint>();
    m_curMinersVotedFor = account_obj["options"]["votes"].size();
-
 }
 
 void MiningVotePopup::slot_MinersNumVoteChanged(const QString& value)

@@ -32,9 +32,11 @@ const char* g_vote_state_id = "vote-state";
 
 
 MinerVotingTab::MinerVotingTab(QWidget *pParent, DecentLineEdit *pFilterLineEdit, QCheckBox* pOnlyMyVotes)
-      : TabContentManager(pParent),
-      m_pTableWidget(new DecentTable(this)),
-      m_onlyMyVotes(false)
+      : TabContentManager(pParent)
+      , m_pTableWidget(new DecentTable(this))
+      , m_onlyMyVotes(false)
+      , m_minersVotedNum(0)
+      , m_curMinersVotedFor(0)
 {
    m_pTableWidget->set_columns({
                                    {tr("Miner"),             15, "name"},
@@ -67,6 +69,7 @@ MinerVotingTab::MinerVotingTab(QWidget *pParent, DecentLineEdit *pFilterLineEdit
                     this, &MinerVotingTab::slot_SortingChanged);
 
    setRefreshTimer(5000);
+
 }
 
 MinerVotingTab::~MinerVotingTab() = default;
@@ -227,6 +230,17 @@ void MinerVotingTab::slot_MinerVote()
    QTableWidgetItem* item = m_pTableWidget->item(iIndex, 0);
    std::string miner_name = item->text().toStdString();
 
+   if (voteFlag) {
+      getDesiredMinersCount();
+
+      if (m_minersVotedNum != 0 && (m_curMinersVotedFor-1) < m_minersVotedNum) {
+         ShowMessageBox(tr("Error"),
+                        QString(tr("You have set desired miners count to %1, number of miners you vote for can't be less than desired miners count."))
+                                    .arg(m_minersVotedNum));
+         return;
+      }
+   }
+
    submit_vote(miner_name, !voteFlag);
 
    reset(true);
@@ -259,7 +273,19 @@ void MinerVotingTab::submit_vote(const std::string& miner_name, bool voteFlag)
 
 }
 
+void MinerVotingTab::getDesiredMinersCount()
+{
+   std::string cmd = "get_account ";
+   cmd += Globals::instance().getCurrentUser();
 
+   nlohmann::json account_obj = Globals::instance().runTaskParse(cmd);
+
+   std::cout << account_obj["options"] << std::endl;
+
+   m_minersVotedNum = account_obj["options"]["num_miner"].get<uint>();
+   m_curMinersVotedFor = account_obj["options"]["votes"].size();
+
+}
 
 
 
