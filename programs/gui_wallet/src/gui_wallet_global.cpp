@@ -53,7 +53,7 @@
 #include <Windows.h>
 #endif
 
-#define DECENT_WITHOUT_DAEMON
+//#define DECENT_WITHOUT_DAEMON
 
 #include <signal.h>
 
