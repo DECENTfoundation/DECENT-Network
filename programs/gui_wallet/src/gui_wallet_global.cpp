@@ -487,9 +487,7 @@ QString convertDateTimeToLocale(const std::string& s)
 //
 // WalletOperator
 //
-WalletOperator::WalletOperator()
-: QObject(nullptr)
-, m_wallet_api()
+WalletOperator::WalletOperator() : QObject(nullptr), m_wallet_api()
 {
 
 }
@@ -536,7 +534,7 @@ QString Asset::getString() const
       QLocale& locale = Globals::instance().locale();
 
       if (hasDecimals())
-         return locale.toString(to_value(), 'f', g_max_number_of_decimal_places) + " " + QString::fromStdString(m_str_symbol);
+         return locale.toString(to_value(), 'g', g_max_number_of_decimal_places) + " " + QString::fromStdString(m_str_symbol);
       else
          return locale.toString((int)to_value()) + " " + QString::fromStdString(m_str_symbol);
    }
@@ -548,7 +546,7 @@ QString Asset::getString() const
 QString Asset::getStringBalance() const
 {
    QLocale& locale = Globals::instance().locale();
-   return locale.toString(to_value(), 'f' , g_max_number_of_decimal_places) + " " + QString::fromStdString(m_str_symbol);
+   return locale.toString(to_value(), 'g' , g_max_number_of_decimal_places) + " " + QString::fromStdString(m_str_symbol);
 }
 //
 // DaemonDetails
@@ -579,15 +577,13 @@ public:
 Globals::Globals()
 : m_connected_state(ConnectionState::Connecting)
 , m_p_wallet_operator(nullptr)
-, m_p_wallet_operator_thread(new QThread(this))
+, m_p_wallet_operator_thread(nullptr)
 , m_p_timer(new QTimer(this))
 , m_p_locale(new QLocale())
 , m_p_daemon_details(nullptr)
 , m_str_currentUser()
 , m_tp_started(std::chrono::steady_clock::now())
 {
-   m_p_wallet_operator_thread->start();
-
    m_p_timer->start(1000);
    QObject::connect(m_p_timer, &QTimer::timeout,
                     this, &Globals::slot_timer);
@@ -620,6 +616,10 @@ void Globals::startDaemons(BlockChainStartType type)
 
    if (nullptr == m_p_wallet_operator)
    {
+      Q_ASSERT(m_p_wallet_operator_thread == nullptr);
+      m_p_wallet_operator_thread = new QThread(this);
+
+
       bNeedNewConnection = true;
       m_p_wallet_operator = new WalletOperator();
       m_p_wallet_operator->moveToThread(m_p_wallet_operator_thread);
@@ -627,6 +627,10 @@ void Globals::startDaemons(BlockChainStartType type)
                        m_p_wallet_operator, &WalletOperator::slot_connect);
       QObject::connect(m_p_wallet_operator, &WalletOperator::signal_connected,
                        this, &Globals::slot_connected);
+
+      connect(m_p_wallet_operator_thread, SIGNAL(finished()), m_p_wallet_operator_thread, SLOT(deleteLater()));
+
+      m_p_wallet_operator_thread->start();
    }
 
    fc::thread& thread_decentd = m_p_daemon_details->thread_decentd;
@@ -657,10 +661,12 @@ void Globals::startDaemons(BlockChainStartType type)
 
 #endif
 
+#if 0
    m_p_daemon_details->future_decentd = thread_decentd.async([type, &exit_promise]() -> int
                                                             {
                                                                return ::runDecentD(type, exit_promise);
                                                             });
+#endif
 
    m_tp_started = std::chrono::steady_clock::now();
 
@@ -685,15 +691,22 @@ void Globals::stopDaemons()
       m_p_wallet_operator = nullptr;
    }
 
+#if 0
    fc::promise<void>::ptr& exit_promise = m_p_daemon_details->exit_promise;
    exit_promise->set_value();
 
    m_p_daemon_details->future_decentd.wait();
+#endif
 
-   if (m_p_daemon_details->ipfs_process)
+   if (m_p_daemon_details->ipfs_process) {
       m_p_daemon_details->ipfs_process->terminate();
-   delete m_p_daemon_details->ipfs_process;
-   m_p_daemon_details->ipfs_process = nullptr;
+      if (!m_p_daemon_details->ipfs_process->waitForFinished()) {
+         m_p_daemon_details->ipfs_process->kill();
+      }
+
+      delete m_p_daemon_details->ipfs_process;
+      m_p_daemon_details->ipfs_process = nullptr;
+   }
 
    if (m_p_daemon_details)
    {
@@ -717,7 +730,9 @@ void Globals::clear()
    if (m_p_wallet_operator_thread)
    {
       m_p_wallet_operator_thread->quit();
-      m_p_wallet_operator_thread->wait();
+      if (m_p_wallet_operator_thread->isRunning()) {
+         m_p_wallet_operator_thread->wait();
+      }
       delete m_p_wallet_operator_thread;
       m_p_wallet_operator_thread = nullptr;
    }
@@ -825,6 +840,15 @@ std::string Globals::getAccountName(string const& accountId)
    }
 
    return search->second;
+}
+
+Asset Globals::getDCoreFees(int iOperation)
+{
+   nlohmann::json global_prop_info = runTaskParse("get_global_properties");
+   nlohmann::json param = global_prop_info["parameters"]["current_fees"]["parameters"];
+   nlohmann::json curr_fee = param[iOperation];  //account_update_operation
+
+   return asset(curr_fee[1]["fee"].get<uint64_t>() );
 }
 
 void Globals::slot_updateAccountBalance()

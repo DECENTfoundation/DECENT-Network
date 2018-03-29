@@ -180,8 +180,9 @@ namespace gui_wallet
    public:
       void setWalletUnlocked();
       void setWalletError(std::string const& error);
-
       std::string getAccountName(const std::string& accountId);
+      Asset getDCoreFees(int iOperation);
+
    signals:
       void signal_connect();  // for internal use
    private slots:

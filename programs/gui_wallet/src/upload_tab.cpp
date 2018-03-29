@@ -62,6 +62,7 @@ Upload_tab::Upload_tab(QWidget* pParent,
 
    QObject::connect(pFilterLineEdit, &QLineEdit::textChanged,
                     this, &Upload_tab::slot_SearchTermChanged);
+   setFilterWidget(pFilterLineEdit);
 
    QObject::connect(pUploadButton, &QPushButton::clicked,
                     this, &Upload_tab::slot_UploadPopup);

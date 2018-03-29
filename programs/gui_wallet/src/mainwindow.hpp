@@ -7,6 +7,7 @@
 
 class QStackedWidget;
 class QComboBox;
+class QCheckBox;
 class QTimer;
 class QAction;
 class UpdateManager;
@@ -48,6 +49,8 @@ protected slots:
    void slot_PublishToggled(bool toggled);
    void slot_UsersToggled(bool toggled);
    void slot_PurchasedToggled(bool toggled);
+   void slot_MinerVotingToggled(bool toggled);
+   void slot_advancedMinerVoting();
    
    void DisplayWalletContentGUI();
 
@@ -57,13 +60,12 @@ signals:
 protected:
    void closeSplash(bool bGonnaCoverAgain);
    TabContentManager* activeTable() const;
+   void updateActiveTable();
 
 protected:
    size_t m_iSplashWidgetIndex;
-   QTimer* m_pTimerDownloads;
    QTimer* m_pTimerBalance;
-   QTimer* m_pTimerContents;
-   
+
    QStackedWidget* m_pStackedWidget;
    QComboBox* m_pAccountList;
    DecentLabel* m_pBalance;
@@ -73,6 +75,7 @@ protected:
    DecentButton* m_pButtonPublish;
    DecentButton* m_pButtonUsers;
    DecentButton* m_pButtonPurchased;
+   DecentButton* m_pButtonMinerVoting;
 
    DecentButton* m_pPreviousPage;
    DecentButton* m_pResetPage;
@@ -85,16 +88,19 @@ protected:
    DecentLineEdit* m_pFilterPurchased;
 
    DecentButton* m_pPublish;
+   QCheckBox* m_pOnlyMyVotes;
 
    TabContentManager* m_pTabBrowse;
    TabContentManager* m_pTabTransactions;
    TabContentManager* m_pTabPublish;
    TabContentManager* m_pTabUsers;
    TabContentManager* m_pTabPurchased;
+   TabContentManager* m_pTabMinerVoting;
 
    QAction* m_pActionImportKey;
    QAction* m_pActionReplayBlockchain;
    QAction* m_pActionResyncBlockchain;
+   QAction* m_pAdvancedMinerVoting;
 
    UpdateManager* m_pUpdateManager;
 

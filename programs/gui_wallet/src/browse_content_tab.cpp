@@ -53,9 +53,12 @@ BrowseContentTab::BrowseContentTab(QWidget* pParent,
 
    QObject::connect(pFilterLineEdit, &QLineEdit::textChanged,
                     this, &BrowseContentTab::slot_SearchTermChanged);
+   setFilterWidget(pFilterLineEdit);
 
    QObject::connect(m_pTableWidget, &DecentTable::signal_SortingChanged,
                     this, &BrowseContentTab::slot_SortingChanged);
+
+   setRefreshTimer(3000);
 }
 
 void BrowseContentTab::timeToUpdate(const std::string& result)

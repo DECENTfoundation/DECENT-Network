@@ -47,13 +47,16 @@ add_executable(DECENT MACOSX_BUNDLE
                src/upload_popup.hpp
                src/upload_tab.cpp
                src/upload_tab.hpp
+               src/mining_vote_tab.cpp
+               src/mining_vote_tab.hpp
+               src/mining_vote_popup.cpp
+               src/mining_vote_popup.hpp
 
                resources.qrc
                desktop.icns
 
                stdafx.h
              )
-
 
 target_include_directories( DECENT PUBLIC
                             include                          
