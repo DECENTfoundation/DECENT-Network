@@ -1770,21 +1770,36 @@ public:
                                bool broadcast = false)
    { try {
       FC_ASSERT( !self.is_locked() );
+
+      account_object from_account = get_account(from);
+      account_id_type from_id = from_account.id;
+
       fc::optional<asset_object> asset_obj = get_asset(asset_symbol);
       FC_ASSERT(asset_obj, "Could not find asset matching ${asset}", ("asset", asset_symbol));
 
-      account_object from_account = get_account(from);
-      account_object to_account = get_account(to);
-      account_id_type from_id = from_account.id;
-      account_id_type to_id = get_account(to).get_id();
+      account_object to_account;
+      object_id_type to_obj_id;
 
-      transfer_operation xfer_op;
+      try {
+         to_account = get_account(to);
+         to_obj_id = object_id_type(to_account.id);
+      }
+      catch ( fc::exception& e )
+      {
+         to_obj_id = object_id_type(to);
+         to_account = get_account( get_object(to_obj_id.as<content_id_type>()).author);
+      }
 
-      xfer_op.from = from_id;
-      xfer_op.to = to_id;
-      xfer_op.amount = asset_obj->amount_from_string(amount);
+      signed_transaction tx;
+      if( head_block_time() >= HARDFORK_2_TIME )
+      {
+         transfer2_operation xfer_op;
 
-      if( memo.size() )
+         xfer_op.from = from_id;
+         xfer_op.to = to_obj_id;
+         xfer_op.amount = asset_obj->amount_from_string(amount);
+
+         if( memo.size() )
          {
             xfer_op.memo = memo_data();
             xfer_op.memo->from = from_account.options.memo_key;
@@ -1793,8 +1808,28 @@ public:
                                       to_account.options.memo_key, memo);
          }
 
-      signed_transaction tx;
-      tx.operations.push_back(xfer_op);
+         tx.operations.push_back(xfer_op);
+      }
+      else
+      {
+         transfer_operation xfer_op;
+
+         xfer_op.from = from_id;
+         xfer_op.to = to_obj_id;
+         xfer_op.amount = asset_obj->amount_from_string(amount);
+
+         if( memo.size() )
+         {
+            xfer_op.memo = memo_data();
+            xfer_op.memo->from = from_account.options.memo_key;
+            xfer_op.memo->to = to_account.options.memo_key;
+            xfer_op.memo->set_message(get_private_key(from_account.options.memo_key),
+                                      to_account.options.memo_key, memo);
+         }
+
+         tx.operations.push_back(xfer_op);
+      }
+
       set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
       tx.validate();
 

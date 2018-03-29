@@ -1,4 +1,4 @@
-file(GLOB HEADERS "include/graphene/wallet/*.hpp")
+file(GLOB HEADERS "include/graphene/wallet/*.hpp" "*.inl")
 
 find_package( Perl )
 find_package( Doxygen )

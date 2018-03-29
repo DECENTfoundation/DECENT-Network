@@ -111,6 +111,7 @@ namespace graphene { namespace chain {
    enum object_type
    {
       null_object_type,
+      base_object_type,
       account_object_type,
       asset_object_type,
       miner_object_type,
@@ -316,6 +317,7 @@ FC_REFLECT( graphene::chain::extended_private_key_type::binary_key, (check)(data
 
 FC_REFLECT_ENUM( graphene::chain::object_type,
                  (null_object_type)
+                 (base_object_type)
                  (account_object_type)
                  (asset_object_type)
                  (miner_object_type)

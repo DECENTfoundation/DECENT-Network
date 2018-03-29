@@ -284,6 +284,7 @@ namespace graphene { namespace app {
           switch( (object_type)obj->id.type() )
           {
             case null_object_type:
+            case base_object_type:
             case OBJECT_TYPE_COUNT:
                return result;
             case account_object_type:{
