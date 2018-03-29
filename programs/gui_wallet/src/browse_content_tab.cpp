@@ -70,46 +70,56 @@ void BrowseContentTab::timeToUpdate(const std::string& result)
       ShowDigitalContentsGUI();
       return;
    }
-   
-   auto contents = nlohmann::json::parse(result);
-   size_t iSize = contents.size();
-   if (iSize > m_i_page_size)
-      iSize = m_i_page_size;
-   
-   _digital_contents.resize(iSize);
-   
-   for (size_t iIndex = 0; iIndex < iSize; ++iIndex)
-   {
-      SDigitalContent& cont = _digital_contents[iIndex];
-      auto const& json_item = contents[iIndex];
-      
-      cont.type = DCT::GENERAL;
-      cont.author = json_item["author"].get<std::string>();
 
-      cont.synopsis = json_item["synopsis"].get<std::string>();
-      cont.URI = json_item["URI"].get<std::string>();
-      cont.created = json_item["created"].get<std::string>();
-      cont.expiration = json_item["expiration"].get<std::string>();
-      cont.size = json_item["size"].get<int>();
-      
-      if (json_item["times_bought"].is_number()) {
-         cont.times_bought = json_item["times_bought"].get<int>();
-      } else {
-         cont.times_bought = 0;
+   try {
+
+      auto contents = nlohmann::json::parse(result);
+      size_t iSize = contents.size();
+      if (iSize > m_i_page_size)
+         iSize = m_i_page_size;
+
+      _digital_contents.resize(iSize);
+
+      for (size_t iIndex = 0; iIndex < iSize; ++iIndex) {
+         SDigitalContent &cont = _digital_contents[iIndex];
+         auto const &json_item = contents[iIndex];
+
+         cont.type = DCT::GENERAL;
+         cont.author = json_item["author"].get<std::string>();
+
+         cont.synopsis = json_item["synopsis"].get<std::string>();
+         cont.URI = json_item["URI"].get<std::string>();
+         cont.created = json_item["created"].get<std::string>();
+         cont.expiration = json_item["expiration"].get<std::string>();
+         cont.size = json_item["size"].get<int>();
+
+         if (json_item["times_bought"].is_number()) {
+            cont.times_bought = json_item["times_bought"].get<int>();
+         } else {
+            cont.times_bought = 0;
+         }
+
+         uint64_t iPrice = json_to_int64(json_item["price"]["amount"]);
+         std::string iSymbolId = json_item["price"]["asset_id"];
+         cont.price = Globals::instance().asset(iPrice, iSymbolId);
+
+         cont.AVG_rating = json_item["AVG_rating"].get<double>() / 1000;
       }
-      
-      uint64_t iPrice = json_to_int64(json_item["price"]["amount"]);
-      std::string iSymbolId = json_item["price"]["asset_id"];
-      cont.price = Globals::instance().asset(iPrice, iSymbolId);
 
-      cont.AVG_rating = json_item["AVG_rating"].get<double>() / 1000;
+      if (contents.size() > m_i_page_size)
+         set_next_page_iterator(contents[m_i_page_size]["id"].get<std::string>());
+      else
+         set_next_page_iterator(string());
+   }
+   catch(const std::exception& ex) {
+      //TODO: exception...
+      std::cout << "exception:" << ex.what() << std::endl;
+   }
+   catch(const fc::exception& ex) {
+      //TODO: exception...
+      std::cout << "exception:" << ex.what() << std::endl;
    }
 
-   if (contents.size() > m_i_page_size)
-      set_next_page_iterator(contents[m_i_page_size]["id"].get<std::string>());
-   else
-      set_next_page_iterator(string());
-   
    ShowDigitalContentsGUI();
 }
 

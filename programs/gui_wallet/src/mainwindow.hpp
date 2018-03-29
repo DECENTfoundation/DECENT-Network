@@ -52,11 +52,12 @@ protected slots:
    void slot_PurchasedToggled(bool toggled);
    void slot_ConnectingUpdate(const QString& time_text, int);
    void slot_BlockchainUpdate(int value, int max);
+   void slot_currentAccountChanged(int iIndex);
    
    void DisplayWalletContentGUI();
 
 signals:
-   void signal_setSplashMainText(QString const&);
+   void signal_setSplashMainText(const QString & );
 
 protected:
    void closeSplash(bool bGonnaCoverAgain);

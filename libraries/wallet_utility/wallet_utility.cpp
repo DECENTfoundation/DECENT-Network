@@ -186,9 +186,9 @@ namespace wallet_utility
                              }
                           }
 
-                          if (cancellation_token) {
-                             std::cout << "cancelation_token" << std::endl;
-                          }
+//                          if (cancellation_token) {
+//                             std::cout << "cancelation_token" << std::endl;
+//                          }
 
                           return string();
                        });

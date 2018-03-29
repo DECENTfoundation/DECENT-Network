@@ -53,6 +53,8 @@
 #include <Windows.h>
 #endif
 
+#define DECENT_WITHOUT_DAEMON
+
 #include <signal.h>
 
 int runDecentD(gui_wallet::BlockChainStartType type, fc::promise<void>::ptr& exit_promise);
@@ -680,10 +682,12 @@ void Globals::startDaemons(BlockChainStartType type)
 
 #endif
 
+#if !defined(DECENT_WITHOUT_DAEMON)
    m_p_daemon_details->future_decentd = thread_decentd.async([type, &exit_promise]() -> int
                                                             {
                                                                return ::runDecentD(type, exit_promise);
                                                             });
+#endif
 
    m_tp_started = std::chrono::steady_clock::now();
 
@@ -714,10 +718,12 @@ void Globals::stopDaemons()
       m_p_wallet_operator = nullptr;
    }
 
+#if !defined(DECENT_WITHOUT_DAEMON)
    fc::promise<void>::ptr& exit_promise = m_p_daemon_details->exit_promise;
    exit_promise->set_value();
 
    m_p_daemon_details->future_decentd.wait();
+#endif
 
    if (m_p_daemon_details->ipfs_process) {
       m_p_daemon_details->ipfs_process->terminate();
@@ -869,6 +875,11 @@ std::string Globals::getAccountName(string const& accountId)
    }
 
    return search->second;
+}
+
+void Globals::setCurrentAccount(const QString& account_name)
+{
+   m_str_currentUser = account_name.toStdString();
 }
 
 void Globals::slot_updateAccountBalance()

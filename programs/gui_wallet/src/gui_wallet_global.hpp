@@ -188,8 +188,9 @@ namespace gui_wallet
    public:
       void setWalletUnlocked();
       void setWalletError(std::string const& error);
-
       std::string getAccountName(const std::string& accountId);
+      void setCurrentAccount(const QString& account_name);
+
    signals:
       void signal_connect();  // for internal use
    private slots:

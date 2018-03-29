@@ -284,10 +284,10 @@ MainWindow::MainWindow()
 
    setUnifiedTitleAndToolBarOnMac(false);
 
-   QObject::connect(m_pAccountList, (void(QComboBox::*)(QString const&))&QComboBox::currentIndexChanged,
-                    &Globals::instance(), &Globals::slot_setCurrentUser);
-   QObject::connect(m_pAccountList, (void(QComboBox::*)(QString const&))&QComboBox::currentIndexChanged,
-                    this, &MainWindow::slot_getContents);
+//   QObject::connect(m_pAccountList, QOverload<const QString&>::of(&QComboBox::currentIndexChanged),
+//                    &Globals::instance(), &Globals::slot_setCurrentUser);
+   QObject::connect(m_pAccountList, QOverload<int>::of(&QComboBox::currentIndexChanged),
+                    this, &MainWindow::slot_currentAccountChanged);
    QObject::connect(pTransferButton, &QPushButton::clicked,
                     &Globals::instance(), (void(Globals::*)())&Globals::slot_showTransferDialog);
 
@@ -632,6 +632,14 @@ void MainWindow::slot_importKey()
    slot_stackWidgetPush(import_key);
 }
 
+void MainWindow::slot_currentAccountChanged(int iIndex)
+{
+   QString account = m_pAccountList->itemText(iIndex);
+   Globals::instance().setCurrentAccount(account);
+
+   slot_getContents();
+}
+
 void MainWindow::slot_BrowseToggled(bool toggled)
 {
    QWidget* pSender = qobject_cast<QWidget*>(sender());
@@ -885,22 +893,25 @@ void MainWindow::DisplayWalletContentGUI()
    {
       auto accs = Globals::instance().runTaskParse("list_my_accounts");
       m_pAccountList->clear();
-      
+
+      std::string id, name;
       for (int i = 0; i < accs.size(); ++i)
       {
-         std::string id = accs[i]["id"].get<std::string>();
-         std::string name = accs[i]["name"].get<std::string>();
+         id = accs[i]["id"].get<std::string>();
+         name = accs[i]["name"].get<std::string>();
 
-         m_pAccountList->addItem(name.c_str());
+         m_pAccountList->insertItem(i, QString::fromStdString(name));
       }
 
-      if (accs.size() > 0)
-      {
+      if (accs.size() > 0) {
          m_pAccountList->setCurrentIndex(0);
       }
    }
-   catch (const std::exception& ex)
-   {
+   catch (const std::exception& ex) {
+      exception_text = ex.what();
+      display_error_box = true;
+   }
+   catch (const fc::assert_exception& ex) {
       exception_text = ex.what();
       display_error_box = true;
    }
