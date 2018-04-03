@@ -662,6 +662,7 @@ void MainWindow::slot_currentAccountChanged(int iIndex)
 {
    QString account = m_pAccountList->itemText(iIndex);
    Globals::instance().setCurrentAccount(account);
+   Globals::instance().slot_updateAccountBalance();
 
    slot_getContents();
 }
