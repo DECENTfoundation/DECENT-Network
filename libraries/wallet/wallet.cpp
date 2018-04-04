@@ -1873,14 +1873,23 @@ public:
       account_object to_account;
       object_id_type to_obj_id;
 
+      bool is_account = true;
+
       try {
          to_account = get_account(to);
          to_obj_id = object_id_type(to_account.id);
       }
-      catch ( fc::exception& e )
+      catch ( const fc::exception& e )
+      {
+         is_account = false;
+      }
+
+      if( !is_account )
       {
          to_obj_id = object_id_type(to);
-         to_account = get_account( get_object(to_obj_id.as<content_id_type>()).author);
+         content_id_type content_id = to_obj_id.as<content_id_type>();
+         const content_object content_obj = get_object<content_object>(content_id);
+         to_account = get_account( content_obj.author);
       }
 
       signed_transaction tx;
