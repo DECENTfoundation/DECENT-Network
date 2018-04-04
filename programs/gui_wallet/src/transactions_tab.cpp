@@ -138,7 +138,7 @@ void TransactionsTab::timeToUpdate(const string& result)
 
 string TransactionsTab::getUpdateCommand()
 {
-   if (m_strSearchTerm.toStdString().empty())
+   if (m_strSearchTerm.isEmpty())
       return string();
 
    return   "search_account_history "
@@ -156,6 +156,6 @@ void TransactionsTab::slot_SortingChanged(int index)
 void TransactionsTab::slot_SearchTermChanged(const QString& strSearchTerm)
 {
    m_strSearchTerm = strSearchTerm;
-   reset(false);
+   reset(true);
 }
 }  // end namespace gui_wallet

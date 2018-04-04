@@ -662,7 +662,6 @@ void MainWindow::slot_currentAccountChanged(int iIndex)
 {
    QString account = m_pAccountList->itemText(iIndex);
    Globals::instance().setCurrentAccount(account);
-   Globals::instance().slot_updateAccountBalance();
 
    slot_getContents();
 }
@@ -711,7 +710,7 @@ void MainWindow::slot_BrowseToggled(bool toggled)
       QTimer* pTimer = pActiveTab->getRefreshTimer();
       if (pTimer) {
          pTimer->stop();
-         QObject::disconnect(pTimer);
+         pTimer->disconnect();
       }
    }
 }
@@ -761,11 +760,23 @@ void MainWindow::slot_PublishToggled(bool toggled)
       pActiveTab->show();
       m_pPublish->show();
       updateActiveTable();
+
+      QTimer* pTimer = pActiveTab->getRefreshTimer();
+      if (pTimer) {
+         QObject::connect(pTimer, &QTimer::timeout, this, &MainWindow::slot_getContents);
+         pTimer->start();
+      }
    }
    else
    {
       pActiveTab->hide();
       m_pPublish->hide();
+
+      QTimer* pTimer = pActiveTab->getRefreshTimer();
+      if (pTimer) {
+         pTimer->stop();
+         pTimer->disconnect();
+      }
    }
 }
 
@@ -826,7 +837,7 @@ void MainWindow::slot_PurchasedToggled(bool toggled)
       QTimer* pTimer = pActiveTab->getRefreshTimer();
       if (pTimer) {
          pTimer->stop();
-         QObject::disconnect(pTimer);
+         pTimer->disconnect();
       }
    }
 }
@@ -875,7 +886,7 @@ void MainWindow::slot_MinerVotingToggled(bool toggled)
       QTimer* pTimer = pActiveTab->getRefreshTimer();
       if (pTimer) {
          pTimer->stop();
-         QObject::disconnect(pTimer);
+         pTimer->disconnect();
       }
    }
 

@@ -53,7 +53,7 @@
 #include <Windows.h>
 #endif
 
-//#define DECENT_WITHOUT_DAEMON
+#define DECENT_WITHOUT_DAEMON
 
 #include <signal.h>
 
@@ -880,6 +880,9 @@ std::string Globals::getAccountName(string const& accountId)
 void Globals::setCurrentAccount(const QString& account_name)
 {
    m_str_currentUser = account_name.toStdString();
+   emit currentUserChanged(account_name);
+
+   slot_updateAccountBalance();
 }
 
 Asset Globals::getDCoreFees(int iOperation)
@@ -902,7 +905,7 @@ void Globals::slot_updateAccountBalance()
       else
       {
          Asset ast_balance = asset(0);
-         for ( auto balance:allBalances ){
+         for ( auto balance : allBalances ) {
             if(balance["asset_id"].get<string>() == "1.3.0") {
                if( balance[ "amount" ].is_number())
                   ast_balance.m_amount = balance[ "amount" ].get<uint64_t>();
@@ -913,13 +916,6 @@ void Globals::slot_updateAccountBalance()
          emit signal_updateAccountBalance(ast_balance);
       }
    }
-}
-
-void Globals::slot_setCurrentUser(const QString& user)
-{
-   m_str_currentUser = user.toStdString();
-   emit currentUserChanged(user);
-   slot_updateAccountBalance();
 }
 
 void Globals::slot_showTransferDialog(const QString& user)

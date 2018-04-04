@@ -193,12 +193,13 @@ void Overview_tab::slot_Transfer()
    Globals::instance().slot_showTransferDialog(m_strSelectedAccount);
 }
 
-void Overview_tab::slot_SearchTermChanged(QString const& strSearchTerm)
+void Overview_tab::slot_SearchTermChanged(const QString& strSearchTerm)
 {
    m_strSearchTerm = strSearchTerm;
-   reset(false);
+   reset(true);
 }
-void Overview_tab::slot_AccountChanged(QString const& strAccountName)
+
+void Overview_tab::slot_AccountChanged(const QString& strAccountName)
 {
    m_strSelectedAccount = strAccountName;
 }
@@ -207,4 +208,5 @@ void Overview_tab::slot_SortingChanged(int index)
 {
    reset();
 }
+
 }//   end namespace gui_wallet

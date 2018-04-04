@@ -174,7 +174,6 @@ namespace gui_wallet
 
    public slots:
       void slot_updateAccountBalance();
-      void slot_setCurrentUser(const QString& user);
       void slot_showTransferDialog(const QString& user);
       void slot_showTransferDialog();
 

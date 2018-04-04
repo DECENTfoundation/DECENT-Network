@@ -1,7 +1,7 @@
 /* (c) 2016, 2017 DECENT Services. For details refers to LICENSE.txt */
 #pragma once
 
-#include <QLineEdit>
+#include <QString>
 
 #include "gui_wallet_tabcontentmanager.hpp"
 
@@ -29,8 +29,8 @@ namespace gui_wallet
       void slot_Details();
       void slot_Transactions();
       void slot_Transfer();
-      void slot_SearchTermChanged(QString const& strSearchTerm);
-      void slot_AccountChanged(QString const& strAccountName);
+      void slot_SearchTermChanged(const QString& strSearchTerm);
+      void slot_AccountChanged(const QString& strAccountName);
       void slot_SortingChanged(int index);
 
    public:
