@@ -180,10 +180,10 @@ std::string MinerVotingTab::getUpdateCommand()
    type.to_string(str_type);
 
    return "search_miner_voting "
+                  "\"" + currentUserName + "\" "
                   "\"" + m_strSearchTerm.toStdString() + "\" "
                   + (m_onlyMyVotes ? "true " : "false ") +
                   "\"" + m_pTableWidget->getSortedColumn() + "\" "
-                  "\"" + currentUserName + "\" "
                   "\"" + next_iterator() + "\" "
                   + std::to_string(m_i_page_size + 1);
 }

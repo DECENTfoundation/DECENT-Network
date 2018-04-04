@@ -1624,10 +1624,10 @@ public:
       return sign_transaction( tx, broadcast );
    } FC_CAPTURE_AND_RETHROW( (account_to_modify)(desired_number_of_miners)(broadcast) ) }
 
-   vector<miner_voting_info> search_miner_voting(const string& filter,
+   vector<miner_voting_info> search_miner_voting(const string& account_id,
+                                                 const string& filter,
                                                  bool only_my_votes,
                                                  const string& order,
-                                                 const string& account_id,
                                                  const string& id,
                                                  uint32_t count ) const
    {
