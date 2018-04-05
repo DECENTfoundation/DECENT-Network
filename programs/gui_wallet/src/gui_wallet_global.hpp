@@ -172,6 +172,11 @@ namespace gui_wallet
       bool connected() const;
       QString getAssetName() const;
 
+      //functions
+      std::string ImportAccount(const std::string& name, const std::string& key);
+      std::string TransferFunds(const std::string& from, const std::string to,
+                                double amount, const std::string& asset_symbol, const std::string& memo);
+
    public slots:
       void slot_updateAccountBalance();
       void slot_showTransferDialog(const QString& user);

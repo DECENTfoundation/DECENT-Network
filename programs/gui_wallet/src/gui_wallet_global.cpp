@@ -918,6 +918,62 @@ void Globals::slot_updateAccountBalance()
    }
 }
 
+std::string Globals::ImportAccount(const std::string& name, const std::string& key)
+{
+   std::string message;
+
+   try
+   {
+      std::string command = "import_key ";
+      command += "\"" + name + "\" ";
+      command += "\"" + key + "\" ";
+      auto result = Globals::instance().runTaskParse(command);
+      bool tf = result.get<bool>();
+      if (!tf) {
+         message = "Invalid key";
+      }
+   }
+   catch (const std::exception& ex)
+   {
+      message = ex.what();
+   }
+   catch (const fc::exception& ex)
+   {
+      message = ex.what();
+   }
+
+   return message;
+}
+
+std::string Globals::TransferFunds(const std::string& from, const std::string to,
+                                   double amount, const std::string& asset_symbol, const std::string& memo)
+{
+   std::string result;
+   try {
+      std::string command = "transfer ";
+      command += "\"" + from + "\" ";
+      command += "\"" + to + "\" ";
+      command += "\"" + std::to_string(amount) + "\" " + asset_symbol + " ";
+      command += "\"" + memo + "\"";
+      command += " true";
+
+      std::string dummy = runTask(command);
+      if (dummy.find("exception:") != std::string::npos) {
+         result = dummy;
+      }
+   }
+   catch(const std::exception& ex)
+   {
+      result = ex.what();
+   }
+   catch(const fc::exception& ex)
+   {
+      result = ex.what();
+   }
+
+   return result;
+}
+
 void Globals::slot_showTransferDialog(const QString& user)
 {
    if(getCurrentUser().empty())

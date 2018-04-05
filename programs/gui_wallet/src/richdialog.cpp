@@ -118,7 +118,7 @@ StackLayerWidget::StackLayerWidget(QWidget* pParent) : QWidget(pParent)
 //
 // TransferWidget
 //
-TransferWidget::TransferWidget(QWidget* parent, QString const& userName) : StackLayerWidget(parent)
+TransferWidget::TransferWidget(QWidget* parent, const QString & userName) : StackLayerWidget(parent)
    , m_toUserName(userName)
 {
    QVBoxLayout* mainLayout       = new QVBoxLayout();
@@ -131,10 +131,8 @@ TransferWidget::TransferWidget(QWidget* parent, QString const& userName) : Stack
    DecentButton* cancel = new DecentButton(this, DecentButton::DialogCancel);
    cancel->setText(tr("Back"));
    
-   QObject::connect(ok, &QPushButton::clicked,
-                    this, &TransferWidget::Transfer);
-   QObject::connect(cancel, &QPushButton::clicked,
-                    this, &StackLayerWidget::closed);
+   QObject::connect(ok, &QPushButton::clicked, this, &TransferWidget::Transfer);
+   QObject::connect(cancel, &QPushButton::clicked, this, &StackLayerWidget::closed);
 
    QLabel* pLabel = new QLabel(this);
    pLabel->setText(tr("Transfer of funds"));
@@ -152,7 +150,13 @@ TransferWidget::TransferWidget(QWidget* parent, QString const& userName) : Stack
    amount->setPlaceholderText(QString(tr("Amount of %1")).arg(Globals::instance().getAssetName())  );
    amount->setAttribute(Qt::WA_MacShowFocusRect, 0);
 
-   QDoubleValidator* dblValidator = new QDoubleValidator(0.0001, 100000, 4, this);
+   Asset min_price_asset = Globals::instance().asset(1);
+   double min_price = min_price_asset.to_value();
+
+   Asset max_price_asset = Globals::instance().asset(100000 * pow(10, g_max_number_of_decimal_places));
+   double max_price = max_price_asset.to_value();
+
+   QDoubleValidator* dblValidator = new QDoubleValidator(min_price, max_price, g_max_number_of_decimal_places, this);
    dblValidator->setLocale(Globals::instance().locale());
    amount->setValidator(dblValidator);
    QObject::connect(amount, &QLineEdit::textChanged,
@@ -204,35 +208,24 @@ void TransferWidget::memoChanged(const QString & memo)
 
 void TransferWidget::Transfer()
 {
-   std::string message;
-   
-   if(m_fromUserName.isEmpty())
+   if (m_fromUserName.isEmpty())
        m_fromUserName = Globals::instance().getCurrentUser().c_str();
-   
-   
-   QString strAssetSymbol = Globals::instance().asset(0).m_str_symbol.c_str();
 
-   try {
-      QString run_str = "transfer "
-      "\"" + m_fromUserName + "\" "
-      "\"" + m_toUserName + "\" "
-      "\"" + QString::number(m_amount) + "\""
-      "\"" + strAssetSymbol + "\" "
-      "\"" + m_memo + "\" "
-      "\"true\"";
-      Globals::instance().runTask(run_str.toStdString());
-   } catch(const std::exception& ex){
-      message = ex.what();
-   }
-   
-   if (message.empty())
+   std::string strAssetSymbol = Globals::instance().asset(0).m_str_symbol;
+
+   auto result = Globals::instance().TransferFunds(m_fromUserName.toStdString(),
+                                                   m_toUserName.toStdString(),
+                                                   m_amount, strAssetSymbol,
+                                                   m_memo.toStdString());
+
+   if (result.empty())
    {
       emit accepted();
       Globals::instance().slot_updateAccountBalance();
    }
    else
    {
-      ShowMessageBox(tr("Error"), tr("Failed to transfer DCT"), message.c_str());
+      ShowMessageBox(tr("Error"), tr("Failed to transfer DCT"), QString::fromStdString(result));
    }
 }
 //
@@ -301,30 +294,12 @@ void ImportKeyWidget::keyChanged(const QString & key)
 
 void ImportKeyWidget::Import()
 {
-   std::string message;
-
-   try
-   {
-      QString csTaskStr = "import_key "
-      "\"" + m_userName + "\" "
-      "\"" + m_key + "\" ";
-      auto result = Globals::instance().runTaskParse(csTaskStr.toStdString());
-      bool tf = result.get<bool>();
-      if(tf == false)
-         message = "Invalid key";
-   }
-   catch (const std::exception& ex)
-   {
-      message = ex.what();
-   }
-
-   if (message.empty())
-   {
+   std::string result = Globals::instance().ImportAccount(m_userName.toStdString(), m_key.toStdString());
+   if (result.empty()) {
       emit accepted();
    }
-   else
-   {
-      ShowMessageBox(tr("Error"), tr("Cannot import key."), message.c_str());
+   else {
+      ShowMessageBox(tr("Error"), tr("Cannot import key."), QString::fromStdString(result));
    }
 }
 //
@@ -542,8 +517,8 @@ void ContentInfoWidget::ButtonWasClicked()
    
 void ContentInfoWidget::Buy()
 {
-   std::string downloadCommand = "download_content";
-   downloadCommand += " " + Globals::instance().getCurrentUser();       // consumer
+   std::string downloadCommand = "download_content ";
+   downloadCommand += Globals::instance().getCurrentUser();             // consumer
    downloadCommand += " \"" + m_URI + "\"";                             // URI
    downloadCommand += " \"\"";                                          // region_code
    downloadCommand += " true";                                          // broadcast
@@ -963,8 +938,8 @@ PasswordWidget::PasswordWidget(QWidget* pParent, eType enType) : StackLayerWidge
    m_pButton = new DecentButton(this, DecentButton::DialogAction);
 
    if (enType == eSetPassword) {
-      pLabel->setText(tr("Setup your password for DECENT wallet"));
-      m_pButton->setText(tr("Set Password"));
+      pLabel->setText(tr("Create your password for DECENT wallet"));
+      m_pButton->setText(tr("Create Password"));
    }
    else {
       pLabel->setText(tr("Unlock your DECENT wallet"));
@@ -986,7 +961,7 @@ PasswordWidget::PasswordWidget(QWidget* pParent, eType enType) : StackLayerWidge
    m_line2Edit = new DecentLineEdit(this, DecentLineEdit::DialogLineEdit);
    m_line2Edit->setEchoMode(QLineEdit::Password);
    m_line2Edit->setAttribute(Qt::WA_MacShowFocusRect, 0);
-   m_line2Edit->setPlaceholderText(QString(tr("Reenter password")));
+   m_line2Edit->setPlaceholderText(QString(tr("Re-enter password")));
    m_line2Edit->setMaxLength(g_maxPasswordLen);
    m_line2Edit->setToolTip(tr("The password must be limited to 50 characters"));
 

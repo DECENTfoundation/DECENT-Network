@@ -60,7 +60,7 @@ class TransferWidget : public StackLayerWidget
 {
    Q_OBJECT
 public:
-   TransferWidget(QWidget* parent, QString const& userName = QString());
+   TransferWidget(QWidget* parent, const QString & userName = QString());
    
 public slots:
    void nameChanged(const QString &);

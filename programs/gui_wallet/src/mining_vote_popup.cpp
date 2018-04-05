@@ -21,11 +21,8 @@ MiningVotePopup::MiningVotePopup(QWidget *pParent) : StackLayerWidget(pParent)
    uint numOfActiveMiners = getNumberOfActualMiners();
    getMinerVotesForAccount(account_name);
 
-   QLabel* pInfoTextLabel = new QLabel(this);
-   pInfoTextLabel->setText(tr("The number of active miners this account votes the blockchain should appoint"));
-
    QLabel* pMinersVoteNumLabel = new QLabel(this);
-   pMinersVoteNumLabel->setText(tr("Set desired number of miners"));
+   pMinersVoteNumLabel->setText(tr("Vote for number of miners"));
 
    QIntValidator* numValidator = new QIntValidator(1, 1001, this);   //TODO: make max value read from global_properties
 
@@ -40,26 +37,28 @@ MiningVotePopup::MiningVotePopup(QWidget *pParent) : StackLayerWidget(pParent)
       m_pMinersNumVote->setPlaceholderText(QString(tr("Actual miners count is %1")).arg(numOfActiveMiners) );
    }
 
-   // Info
-   QLabel* pInfoLabel = new QLabel(this);
-   pInfoLabel->setText(QString(tr("The desired miners count you are voting for must be equal to or less than %1 because \nthe number of miners you voted for is %1 (see My votes on the main screen)."))
-                             .arg(m_curMinersVotedFor));
-
    Asset opFee = Globals::instance().getDCoreFees(2);
 
-   QLabel* pFeeInfoLabel = new QLabel(this);
-   pFeeInfoLabel->setText(QString(tr("You will pay %1 fee for voting."))
-                                      .arg(opFee.getString()) );
+   // Info
+   QLabel* pInfoLabel = new QLabel(this);
+   pInfoLabel->setText(QString(tr("Number of miners should be smaller or equal to number of votes you have given (%1)\n"
+                                  "You will be charged %2 for this operation"))
+                                  .arg(m_curMinersVotedFor)
+                                  .arg(opFee.getString()));
+
+//   QLabel* pFeeInfoLabel = new QLabel(this);
+//   pFeeInfoLabel->setText(QString(tr("You will pay %1 fee for voting."))
+//                                      .arg() );
 
    m_pVoteButton = new DecentButton(this, DecentButton::DialogAction);
    m_pResetButton = new DecentButton(this, DecentButton::DialogAction);
    DecentButton* pCancelButton = new DecentButton(this, DecentButton::DialogCancel);
 
-   m_pVoteButton->setText(tr("Apply Vote"));
+   m_pVoteButton->setText(tr("Vote"));
    m_pVoteButton->setFont(PopupButtonBigFont());
    m_pVoteButton->setEnabled(false);
 
-   m_pResetButton->setText(tr("Reset Vote"));
+   m_pResetButton->setText(tr("Un-vote"));
    m_pResetButton->setFont(PopupButtonBigFont());
    m_pResetButton->setEnabled(m_minersVotedNum > 0);
 
@@ -67,17 +66,14 @@ MiningVotePopup::MiningVotePopup(QWidget *pParent) : StackLayerWidget(pParent)
    pCancelButton->setFont(PopupButtonBigFont());
 
    QHBoxLayout* pRow1Layout = new QHBoxLayout;
-   pRow1Layout->addWidget(pInfoTextLabel);
+   pRow1Layout->addWidget(pMinersVoteNumLabel);
+   pRow1Layout->addWidget(m_pMinersNumVote);
 
    QHBoxLayout* pRow2Layout = new QHBoxLayout;
-   pRow2Layout->addWidget(pMinersVoteNumLabel);
-   pRow2Layout->addWidget(m_pMinersNumVote);
+   pRow2Layout->addWidget(pInfoLabel);
 
-   QHBoxLayout* pRow3Layout = new QHBoxLayout;
-   pRow3Layout->addWidget(pInfoLabel);
-
-   QHBoxLayout* pRow4Layout = new QHBoxLayout;
-   pRow4Layout->addWidget(pFeeInfoLabel);
+//   QHBoxLayout* pRow3Layout = new QHBoxLayout;
+//   pRow3Layout->addWidget(pFeeInfoLabel);
 
    QHBoxLayout* pButtonsLayout = new QHBoxLayout;
    pButtonsLayout->setContentsMargins(20, 20, 20, 20);
@@ -86,18 +82,9 @@ MiningVotePopup::MiningVotePopup(QWidget *pParent) : StackLayerWidget(pParent)
    pButtonsLayout->addWidget(pCancelButton);
 
    QVBoxLayout* pMainLayout = new QVBoxLayout;
-//   pMainLayout->addWidget(pTitleText);
-//   pMainLayout->addWidget(m_pDescriptionText);
-//   pMainLayout->addLayout(pLifeTimeRow);
-//   pMainLayout->addLayout(pPriceRow);
-//   pMainLayout->addLayout(pSeedersRow);
-//   pMainLayout->addLayout(pContentRow);
-//   pMainLayout->addLayout(pSamplesRow);
-//   pMainLayout->addLayout(pPublishTextRow);
    pMainLayout->addLayout(pRow1Layout);
    pMainLayout->addLayout(pRow2Layout);
-   pMainLayout->addLayout(pRow3Layout);
-   pMainLayout->addLayout(pRow4Layout);
+//   pMainLayout->addLayout(pRow3Layout);
    pMainLayout->addLayout(pButtonsLayout);
    pMainLayout->setContentsMargins(10, 10, 10, 10);
    setLayout(pMainLayout);
@@ -122,8 +109,21 @@ MiningVotePopup::~MiningVotePopup()
 
 uint MiningVotePopup::getNumberOfActualMiners()
 {
-   nlohmann::json global_prop_info = Globals::instance().runTaskParse("get_global_properties");
-   nlohmann::json active_miners = global_prop_info["active_miners"];
+   nlohmann::json active_miners;
+   try
+   {
+      nlohmann::json global_prop_info = Globals::instance().runTaskParse("get_global_properties");
+      active_miners = global_prop_info["active_miners"];
+
+   }
+   catch (const std::exception& ex)
+   {
+      std::cout << "Error:" << ex.what() << std::endl;
+   }
+   catch (const fc::exception& ex)
+   {
+      std::cout << "Error:" << ex.what() << std::endl;
+   }
 
    return active_miners.size();
 }
@@ -133,12 +133,22 @@ void MiningVotePopup::getMinerVotesForAccount(const std::string& account_name)
    std::string cmd = "get_account ";
    cmd += account_name;
 
-   nlohmann::json account_obj = Globals::instance().runTaskParse(cmd);
+   nlohmann::json account_obj;
+   try
+   {
+      account_obj = Globals::instance().runTaskParse(cmd);
 
-   std::cout << account_obj["options"] << std::endl;
-
-   m_minersVotedNum = account_obj["options"]["num_miner"].get<uint>();
-   m_curMinersVotedFor = account_obj["options"]["votes"].size();
+      m_minersVotedNum = account_obj["options"]["num_miner"].get<uint>();
+      m_curMinersVotedFor = account_obj["options"]["votes"].size();
+   }
+   catch (const std::exception& ex)
+   {
+      std::cout << "Error:" << ex.what() << std::endl;
+   }
+   catch (const fc::exception& ex)
+   {
+      std::cout << "Error:" << ex.what() << std::endl;
+   }
 }
 
 void MiningVotePopup::slot_MinersNumVoteChanged(const QString& value)
@@ -192,6 +202,10 @@ std::string MiningVotePopup::setDesiredNumOfMiners(const std::string& account_na
       }
    }
    catch (const std::exception& ex)
+   {
+      message = ex.what();
+   }
+   catch (const fc::exception& ex)
    {
       message = ex.what();
    }

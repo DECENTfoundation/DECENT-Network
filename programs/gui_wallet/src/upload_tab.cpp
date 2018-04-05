@@ -60,6 +60,9 @@ Upload_tab::Upload_tab(QWidget* pParent,
    QObject::connect(m_pTableWidget, &DecentTable::signal_SortingChanged,
                     this, &Upload_tab::slot_SortingChanged);
 
+   QObject::connect(m_pTableWidget, &DecentTable::cellClicked,
+                    this, &Upload_tab::slot_cellClicked);
+
    QObject::connect(pFilterLineEdit, &QLineEdit::textChanged,
                     this, &Upload_tab::slot_SearchTermChanged);
    setFilterWidget(pFilterLineEdit);
@@ -299,6 +302,17 @@ void Upload_tab::slot_SearchTermChanged(QString const& strSearchTerm)
    m_strSearchTerm = strSearchTerm;
    reset(false);
 }
+
+void Upload_tab::slot_cellClicked(int row, int /*col*/)
+{
+   if (row < 0 || row >= _digital_contents.size()) {
+      throw std::out_of_range("Content index is out of range");
+   }
+
+   slot_ShowContentPopup(row);
+}
+
+
 
 }  // end namespace gui_wallet
 

@@ -82,7 +82,7 @@ MainWindow::MainWindow()
 , m_pActionImportKey(new QAction(tr("Import key"), this))
 , m_pActionReplayBlockchain(new QAction(tr("Replay Blockchain"), this))
 , m_pActionResyncBlockchain(new QAction(tr("Resync Blockchain"), this))
-, m_pAdvancedMinerVoting(new QAction(tr("Advanced MinerVoting"), this))
+, m_pAdvancedMinerVoting(new QAction(tr("Advanced Voting"), this))
 #ifdef UPDATE_MANAGER
 , m_pUpdateManager(new UpdateManager())
 #else
@@ -134,7 +134,7 @@ MainWindow::MainWindow()
    m_pButtonPurchased->setCheckable(true);
 
    m_pButtonMinerVoting = new DecentButton(pMainWidget, DecentButton::TabChoice);
-   m_pButtonMinerVoting->setText(tr("Miner Voting"));
+   m_pButtonMinerVoting->setText(tr("Voting"));
    m_pButtonMinerVoting->setCheckable(true);
 
    QButtonGroup* pGroup = new QButtonGroup(pMainWidget);
@@ -861,13 +861,6 @@ void MainWindow::slot_MinerVotingToggled(bool toggled)
 
    //
    if (toggled) {
-
-      Asset opFee = Globals::instance().getDCoreFees(2);  //account_update_operation
-
-      QMessageBox info(this);
-      info.setIcon(QMessageBox::Information);
-      info.setText(QString(tr("For every vote or unvote opeation you will pay %1 fee")).arg(opFee.getString()) );
-      info.exec();
 
       m_pOnlyMyVotes->show();
       pActiveTab->show();

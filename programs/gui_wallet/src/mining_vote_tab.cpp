@@ -8,6 +8,8 @@
 
 #include <boost/algorithm/string/replace.hpp>
 
+#include <QMessageBox>
+
 #ifndef _MSC_VER
 #include <QHBoxLayout>
 #include <QVBoxLayout>
@@ -225,6 +227,18 @@ void MinerVotingTab::slot_MinerVote()
    }
 
    bool voteFlag = sender()->property(g_vote_state_id).toBool();
+   Asset opFee = Globals::instance().getDCoreFees(2);  //account_update_operation
+
+   QMessageBox info(this);
+   info.setIcon(QMessageBox::Information);
+   info.setText(QString(tr("For every vote or unvote opeation you will pay %1 fee")).arg(opFee.getString()) );
+   info.addButton( !voteFlag ? tr("Vote") : tr("Un-vote"),  QMessageBox::AcceptRole);
+   info.addButton( tr("Cancel"), QMessageBox::RejectRole);
+   int result = info.exec();
+   if (result != QMessageBox::AcceptRole) {
+      return;
+   }
+
    int iIndex = find.value();
 
    QTableWidgetItem* item = m_pTableWidget->item(iIndex, 0);
@@ -235,8 +249,11 @@ void MinerVotingTab::slot_MinerVote()
 
       if (m_minersVotedNum != 0 && (m_curMinersVotedFor-1) < m_minersVotedNum) {
          ShowMessageBox(tr("Error"),
-                        QString(tr("You have set desired miners count to %1, number of miners you vote for can't be less than desired miners count."))
-                                    .arg(m_minersVotedNum));
+                        QString(tr("Your vote for number of miners (%1) should be equal or smaller to number of votes you have given (%2)\n"
+                                   "\n"
+                                   "In order to un-vote, please change your vote for number of miners"))
+                              .arg(m_minersVotedNum)
+                              .arg(m_curMinersVotedFor));
          return;
       }
    }
