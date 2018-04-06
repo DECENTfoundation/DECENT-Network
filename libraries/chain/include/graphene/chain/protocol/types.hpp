@@ -115,7 +115,7 @@ namespace graphene { namespace chain {
       account_object_type,
       asset_object_type,
       miner_object_type,
-      custom_object_type,
+      custom_object_type,           // 5
       proposal_object_type,
       operation_history_object_type,
       withdraw_permission_object_type,
@@ -130,17 +130,17 @@ namespace graphene { namespace chain {
       impl_reserved0_object_type,      // formerly index_meta_object_type, TODO: delete me
       impl_asset_dynamic_data_type,
       impl_account_balance_object_type,
-      impl_account_statistics_object_type,
+      impl_account_statistics_object_type,         // 5
       impl_transaction_object_type,
       impl_block_summary_object_type,
       impl_account_transaction_history_object_type,
       impl_chain_property_object_type,
-      impl_miner_schedule_object_type,
+      impl_miner_schedule_object_type,             // 10
       impl_budget_record_object_type,
       impl_buying_object_type,
       impl_content_object_type,
       impl_publisher_object_type,
-      impl_subscription_object_type,
+      impl_subscription_object_type,               // 15
       impl_seeding_statistics_object_type,
       impl_transaction_detail_object_type,
       impl_messaging_object_type

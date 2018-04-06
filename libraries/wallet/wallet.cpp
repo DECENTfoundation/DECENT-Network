@@ -190,6 +190,7 @@ public:
    std::string operator()(const T& op)const;
 
    std::string operator()(const transfer_operation& op)const;
+   std::string operator()(const transfer2_operation& op)const;
    std::string operator()(const account_create_operation& op)const;
    std::string operator()(const account_update_operation& op)const;
    std::string operator()(const asset_create_operation& op)const;
@@ -1970,6 +1971,103 @@ public:
       propose_builder_transaction2(propose_num, proposer, expiration);
    }
 
+   std::string decrypt_memo( const memo_data& memo, const account_object& from_account, const account_object& to_account ) const
+   {
+      FC_ASSERT(_keys.count(memo.to) || _keys.count(memo.from), "Memo is encrypted to a key ${to} or ${from} not in this wallet.", ("to", memo.to)("from",memo.from));
+      std::string memo_result;
+      if( _keys.count(memo.to) ) {
+         vector<fc::ecc::private_key> keys_to_try_to;
+         auto my_memo_key = wif_to_key(_keys.at(memo.to));
+
+         FC_ASSERT(my_memo_key, "Unable to recover private key to decrypt memo. Wallet may be corrupted.");
+         keys_to_try_to.push_back(*my_memo_key);
+         for( auto k: to_account.active.key_auths ) {
+            auto key_itr = _keys.find(k.first);
+            if( key_itr == _keys.end() )
+               continue;
+            auto my_key = wif_to_key(key_itr->second);
+            if(my_key)
+               keys_to_try_to.push_back(*my_key);
+         }
+         for( auto k: to_account.owner.key_auths ) {
+            auto key_itr = _keys.find(k.first);
+            if( key_itr == _keys.end() )
+               continue;
+            auto my_key = wif_to_key(key_itr->second);
+            if(my_key)
+               keys_to_try_to.push_back(*my_key);
+         }
+
+         for( auto k : keys_to_try_to ){
+            try{
+               memo_result = memo.get_message(k, memo.from);
+               return memo_result;
+            }catch(...){}
+         }
+
+         vector<public_key_type> keys_to_try_from;
+         for( auto k : from_account.active.key_auths ){
+            keys_to_try_from.push_back(k.first);
+         }
+         for( auto k : from_account.owner.key_auths ){
+            keys_to_try_from.push_back(k.first);
+         }
+         for( auto k : keys_to_try_from ){
+            try{
+               memo_result = memo.get_message(*my_memo_key, k);
+               return memo_result;
+            }catch(...){}
+         }
+
+      } else {
+         vector<fc::ecc::private_key> keys_to_try_from;
+         auto my_memo_key = wif_to_key(_keys.at(memo.from));
+
+         FC_ASSERT(my_memo_key, "Unable to recover private key to decrypt memo. Wallet may be corrupted.");
+         keys_to_try_from.push_back(*my_memo_key);
+         for( auto k: from_account.active.key_auths ) {
+            auto key_itr = _keys.find(k.first);
+            if( key_itr == _keys.end() )
+               continue;
+            auto my_key = wif_to_key(key_itr->second);
+            if(my_key)
+               keys_to_try_from.push_back(*my_key);
+         }
+         for( auto k: from_account.owner.key_auths ) {
+            auto key_itr = _keys.find(k.first);
+            if( key_itr == _keys.end() )
+               continue;
+            auto my_key = wif_to_key(key_itr->second);
+            if(my_key)
+               keys_to_try_from.push_back(*my_key);
+         }
+
+         for( auto k : keys_to_try_from ){
+            try{
+               memo_result = memo.get_message(k, memo.to);
+               return memo_result;
+            }catch(...){}
+         }
+
+         vector<public_key_type> keys_to_try_to;
+         for( auto k : to_account.active.key_auths ) {
+            keys_to_try_to.push_back(k.first);
+         }
+         for( auto k : to_account.owner.key_auths ) {
+            keys_to_try_to.push_back(k.first);
+         }
+         for( auto k : keys_to_try_to ) {
+            try {
+               memo_result = memo.get_message(*my_memo_key, k);
+               return memo_result;
+            } catch( ... ) {}
+         }
+
+      }
+
+      FC_ASSERT(false);
+   }
+
    std::map<string,std::function<string(fc::variant,const fc::variants&)>> get_result_formatters() const
    {
       std::map<string,std::function<string(fc::variant,const fc::variants&)> > m;
@@ -3137,114 +3235,47 @@ signed_transaction content_cancellation(const string& author,
          if( wallet.is_locked() )
          {
             out << " -- Unlock wallet to see memo.";
-         } else {
-            try {
+         }
+         else
+         {
+            try
+            {
+               memo = wallet.decrypt_memo( *op.memo, from_account, to_account );
+               out << " -- Memo: " << memo;
+            }
+            catch (const fc::exception& e)
+            {
+               out << " -- could not decrypt memo";
+               elog("Error when decrypting memo: ${e}", ("e", e.to_detail_string()));
+            }
+         }
+      }
+      fee(op.fee);
+      return memo;
+   }
 
-               FC_ASSERT(wallet._keys.count(op.memo->to) || wallet._keys.count(op.memo->from), "Memo is encrypted to a key ${to} or ${from} not in this wallet.", ("to", op.memo->to)("from",op.memo->from));
-               if( wallet._keys.count(op.memo->to) ) {
-                  vector<fc::ecc::private_key> keys_to_try_to;
-                  auto my_memo_key = wif_to_key(wallet._keys.at(op.memo->to));
-
-                  FC_ASSERT(my_memo_key, "Unable to recover private key to decrypt memo. Wallet may be corrupted.");
-                  keys_to_try_to.push_back(*my_memo_key);
-                  for( auto k: to_account.active.key_auths ) {
-                     auto key_itr = wallet._keys.find(k.first);
-                     if( key_itr == wallet._keys.end() )
-                        continue;
-                     auto my_key = wif_to_key(key_itr->second);
-                     if(my_key)
-                        keys_to_try_to.push_back(*my_key);
-                  }
-                  for( auto k: to_account.owner.key_auths ) {
-                     auto key_itr = wallet._keys.find(k.first);
-                     if( key_itr == wallet._keys.end() )
-                        continue;
-                     auto my_key = wif_to_key(key_itr->second);
-                     if(my_key)
-                        keys_to_try_to.push_back(*my_key);
-                  }
-
-                  bool found = false;
-                  for( auto k : keys_to_try_to ){
-                     try{
-                           memo = op.memo->get_message(k, op.memo->from);
-                           out << " -- Memo: " << memo;
-                           found = true;
-                           break;
-
-                     }catch(...){}
-                  }
-                  if(!found){
-                     vector<public_key_type> keys_to_try_from;
-                     for( auto k : from_account.active.key_auths ){
-                        keys_to_try_from.push_back(k.first);
-                     }
-                     for( auto k : from_account.owner.key_auths ){
-                        keys_to_try_from.push_back(k.first);
-                     }
-                     for( auto k : keys_to_try_from ){
-                        try{
-                           memo = op.memo->get_message(*my_memo_key, k);
-                           out << " -- Memo: " << memo;
-                           found = true;
-                           break;
-                        }catch(...){}
-                     }
-                  }
-                  FC_ASSERT(found);
-
-               } else {
-                  vector<fc::ecc::private_key> keys_to_try_from;
-                  auto my_memo_key = wif_to_key(wallet._keys.at(op.memo->from));
-
-                  FC_ASSERT(my_memo_key, "Unable to recover private key to decrypt memo. Wallet may be corrupted.");
-                  keys_to_try_from.push_back(*my_memo_key);
-                  for( auto k: from_account.active.key_auths ) {
-                     auto key_itr = wallet._keys.find(k.first);
-                     if( key_itr == wallet._keys.end() )
-                        continue;
-                     auto my_key = wif_to_key(key_itr->second);
-                     if(my_key)
-                        keys_to_try_from.push_back(*my_key);
-                  }
-                  for( auto k: from_account.owner.key_auths ) {
-                     auto key_itr = wallet._keys.find(k.first);
-                     if( key_itr == wallet._keys.end() )
-                        continue;
-                     auto my_key = wif_to_key(key_itr->second);
-                     if(my_key)
-                        keys_to_try_from.push_back(*my_key);
-                  }
-
-                  bool found = false;
-                  for( auto k : keys_to_try_from ){
-                     try{
-                        memo = op.memo->get_message(k, op.memo->to);
-                        out << " -- Memo: " << memo;
-                        found = true;
-                        break;
-                     }catch(...){}
-                  }
-                  if(!found) {
-                     vector<public_key_type> keys_to_try_to;
-                     for( auto k : to_account.active.key_auths ) {
-                        keys_to_try_to.push_back(k.first);
-                     }
-                     for( auto k : to_account.owner.key_auths ) {
-                        keys_to_try_to.push_back(k.first);
-                     }
-                     for( auto k : keys_to_try_to ) {
-                        try {
-                           memo = op.memo->get_message(*my_memo_key, k);
-                           out << " -- Memo: " << memo;
-                           found = true;
-                           break;
-
-                        } catch( ... ) {}
-                     }
-                  }
-               }
-            } catch (const fc::exception& e) {
+   string operation_printer::operator()(const transfer2_operation& op) const
+   {
+      const auto& from_account = wallet.get_account(op.from);
+      const auto& to_account = wallet.get_account(op.to);
+      out << "Transfer " << wallet.get_asset(op.amount.asset_id).amount_to_pretty_string(op.amount)
+          << " from " << from_account.name << " to " << to_account.name;
+      std::string memo;
+      if( op.memo )
+      {
+         if( wallet.is_locked() )
+         {
+            out << " -- Unlock wallet to see memo.";
+         }
+         else
+         {
+            try
+            {
+               memo = wallet.decrypt_memo( *op.memo, from_account, to_account );
+               out << " -- Memo: " << memo;
+            }
+            catch (const fc::exception& e)
+            {
                out << " -- could not decrypt memo";
                elog("Error when decrypting memo: ${e}", ("e", e.to_detail_string()));
             }
