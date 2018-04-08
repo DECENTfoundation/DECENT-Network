@@ -79,7 +79,7 @@ void_result transfer2_evaluator::do_evaluate( const transfer2_operation& op )
 { try {
       const database& d = db();
 
-      FC_ASSERT(db().head_block_time() >= HARDFORK_2_TIME );
+      FC_ASSERT(db().head_block_time() > HARDFORK_2_TIME );
       const account_object& from_account        = op.from(d);
       const asset_object&   asset_type          = op.amount.asset_id(d);
 

@@ -91,7 +91,7 @@ void  asset_create_operation::validate()const
 {
    FC_ASSERT( fee.amount >= 0 );
    FC_ASSERT( is_valid_symbol(symbol) );
-   FC_ASSERT(precision <= 12);
+   FC_ASSERT( precision <= 12 );
    FC_ASSERT( description.length() <= 1000 );
 
    if( monitored_asset_opts.valid() ) {

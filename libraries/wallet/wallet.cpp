@@ -1152,7 +1152,7 @@ public:
       opts.max_supply = max_supply;
       opts.core_exchange_rate = core_exchange_rate;
       opts.is_exchangeable = is_exchangeable;
-      opts.is_fixed_max_supply = is_fixed_max_supply;
+         opts.extensions.insert(asset_options::fixed_max_supply_struct(is_fixed_max_supply));
       create_op.options = opts;
       create_op.monitored_asset_opts = optional<monitored_asset_options>();
 
@@ -1894,7 +1894,7 @@ public:
       }
 
       signed_transaction tx;
-      if( head_block_time() >= HARDFORK_2_TIME )
+      if( head_block_time() > HARDFORK_2_TIME )
       {
          transfer2_operation xfer_op;
 

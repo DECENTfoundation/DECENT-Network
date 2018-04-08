@@ -49,7 +49,7 @@ namespace graphene { namespace chain {
             account_update_operation,
             asset_create_operation,
             asset_issue_operation,
-            asset_publish_feed_operation,
+            asset_publish_feed_operation,   //5
             miner_create_operation,
             miner_update_operation,
             miner_update_global_parameters_operation,
@@ -84,12 +84,12 @@ namespace graphene { namespace chain {
             update_monitored_asset_operation,
             ready_to_publish2_operation,
             transfer2_operation,
-            disallow_automatic_renewal_of_subscription_operation,  // VIRTUAL
+            disallow_automatic_renewal_of_subscription_operation,  // VIRTUAL   //40
             return_escrow_submission_operation,                    // VIRTUAL
             return_escrow_buying_operation,                        // VIRTUAL
             pay_seeder_operation,                                  // VIRTUAL
             finish_buying_operation,                               // VIRTUAL
-            renewal_of_subscription_operation                      // VIRTUAL
+            renewal_of_subscription_operation                      // VIRTUAL   //45
          > operation;
 
    /// @} // operations group

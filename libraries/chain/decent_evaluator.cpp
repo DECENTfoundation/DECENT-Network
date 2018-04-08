@@ -129,8 +129,8 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
    void_result content_submit_evaluator::do_evaluate(const content_submit_operation& o )
    {try{
 
-      if( o.key_parts.size() == 0 ) //simplified content - TODO
-         FC_ASSERT(db().head_block_time() >= HARDFORK_2_TIME);
+      if( o.key_parts.size() == 0 ) //simplified content
+         FC_ASSERT(db().head_block_time() > HARDFORK_2_TIME);
 
       db().get<account_object>(o.author);
       //Submission rights feature is disabled
@@ -503,7 +503,7 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
 
       bool delivered = false;
       asset escrow = paid_price_after_conversion;
-      if( content->key_parts.size() == 0 ){ //simplified content buying - TODO
+      if( content->key_parts.size() == 0 ){ //simplified content buying
          delivered = true;
          escrow = asset(0);
       }
