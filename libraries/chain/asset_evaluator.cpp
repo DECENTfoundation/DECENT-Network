@@ -54,15 +54,22 @@ void_result asset_create_evaluator::do_evaluate( const asset_create_operation& o
 
    core_fee_paid -= core_fee_paid.value/2;
 
-   bool is_fixed_max_supply = op.options.extensions.count( asset_options::fixed_max_supply_struct(true) );
+   bool count_fixed_max_supply_ext = op.options.extensions.count( asset_options::fixed_max_supply_struct() );
 
    if( op.monitored_asset_opts.valid() )
    {
       FC_ASSERT( op.monitored_asset_opts->feed_lifetime_sec > d.get_global_properties().parameters.block_interval );
       FC_ASSERT( op.options.max_supply == 0 );
+      FC_ASSERT( !count_fixed_max_supply_ext );
+   }
+   else // UIA
+   {
+      if( d.head_block_time() > HARDFORK_2_TIME )
+         FC_ASSERT( count_fixed_max_supply_ext );
+      else
+         FC_ASSERT( !count_fixed_max_supply_ext );
    }
 
-   FC_ASSERT( d.head_block_time()>HARDFORK_2_TIME || !is_fixed_max_supply );
 
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
@@ -158,7 +165,11 @@ void_result user_issued_asset_update_evaluator::do_evaluate(const update_user_is
       if( o.new_issuer )
          FC_ASSERT(d.find_object(*o.new_issuer));
 
-      if( a.options.extensions.count( asset_options::fixed_max_supply_struct(true) ))
+      auto itr = a.options.extensions.find( asset_options::fixed_max_supply_struct() );
+      bool is_fixed_max_supply = false;
+      if( itr != a.options.extensions.end() )
+         is_fixed_max_supply = itr->get<asset_options::fixed_max_supply_struct>().is_fixed_max_supply;
+      if( is_fixed_max_supply )
          FC_ASSERT(o.max_supply == a.options.max_supply, "Asset ${uia} has fixed max supply.", ("uia", a.symbol) );
 
       asset_to_update = &a;

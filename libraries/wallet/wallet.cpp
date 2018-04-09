@@ -1152,7 +1152,14 @@ public:
       opts.max_supply = max_supply;
       opts.core_exchange_rate = core_exchange_rate;
       opts.is_exchangeable = is_exchangeable;
+
+      if( head_block_time() > HARDFORK_2_TIME )
+      {
          opts.extensions.insert(asset_options::fixed_max_supply_struct(is_fixed_max_supply));
+      }
+      else
+         FC_ASSERT( !is_fixed_max_supply );
+
       create_op.options = opts;
       create_op.monitored_asset_opts = optional<monitored_asset_options>();
 
