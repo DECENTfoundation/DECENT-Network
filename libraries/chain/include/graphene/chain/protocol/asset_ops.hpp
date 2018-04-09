@@ -48,10 +48,18 @@ namespace graphene { namespace chain {
 
       /// True to allow implicit conversion of this asset to/from core asset.
       bool is_exchangeable = true;
-      /// False when issuer can change max_supply, otherwise false
-      bool is_fixed_max_supply = false;
 
-      extensions_type extensions;
+      /// Extensions
+
+      /// False when issuer can change max_supply, otherwise false
+      struct fixed_max_supply_struct{
+         bool is_fixed_max_supply;
+         fixed_max_supply_struct(bool is_fixed=false) : is_fixed_max_supply{ is_fixed } {};
+      };
+
+      typedef static_variant<void_t, fixed_max_supply_struct>     asset_options_extensions;
+      typedef flat_set<asset_options_extensions> asset_options_extensions_type;
+      asset_options_extensions_type extensions;
 
       /// Perform internal consistency checks.
       /// @throws fc::exception if any check fails
@@ -322,11 +330,12 @@ FC_REFLECT( graphene::chain::monitored_asset_options,
             (minimum_feeds)
 )
 
+FC_REFLECT( graphene::chain::asset_options::fixed_max_supply_struct, (is_fixed_max_supply) )
+FC_REFLECT_TYPENAME( graphene::chain::asset_options::asset_options_extensions )
 FC_REFLECT( graphene::chain::asset_options,
             (max_supply)
             (core_exchange_rate)
             (is_exchangeable)
-            (is_fixed_max_supply)
             (extensions)
 )
 

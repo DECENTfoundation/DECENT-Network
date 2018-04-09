@@ -66,7 +66,7 @@ namespace graphene { namespace chain {
     */
    struct content_submit_operation : public base_operation
    {
-      struct fee_parameters_type { uint64_t fee = GRAPHENE_BLOCKCHAIN_PRECISION / 1000; };
+      struct fee_parameters_type { uint64_t fee = GRAPHENE_BLOCKCHAIN_PRECISION / 100; };
 
       asset fee;
       account_id_type author; ///<author of the content. If co-authors is not filled, this account will receive full payout
