@@ -100,6 +100,7 @@ void_result transfer2_evaluator::do_apply( const transfer2_operation& o )
       account_id_type to_acc;
 
       d.adjust_balance( o.from, -o.amount );
+      string suffix;
 
       if( o.to.is<account_id_type>() )
       {
@@ -124,6 +125,7 @@ void_result transfer2_evaluator::do_apply( const transfer2_operation& o )
          }
 
          to_acc = content_itr->author;
+         suffix = " to content " + std::string(content_itr->id);
 
          if( amount.amount != 0 ) {
             FC_ASSERT( amount.amount > 0 );
@@ -131,7 +133,7 @@ void_result transfer2_evaluator::do_apply( const transfer2_operation& o )
          }
       }
 
-      d.create<transaction_detail_object>([&o, &d, &to_acc](transaction_detail_object& obj)
+      d.create<transaction_detail_object>([&o, &d, &to_acc, &suffix](transaction_detail_object& obj)
                                              {
                                                 obj.m_operation_type = (uint8_t)transaction_detail_object::transfer;
 
@@ -140,7 +142,7 @@ void_result transfer2_evaluator::do_apply( const transfer2_operation& o )
                                                 obj.m_transaction_amount = o.amount;
                                                 obj.m_transaction_fee = o.fee;
                                                 obj.m_transaction_encrypted_memo = o.memo;
-                                                obj.m_str_description = "transfer";
+                                                obj.m_str_description = "transfer" + suffix;
                                                 obj.m_timestamp = d.head_block_time();
                                              });
       return void_result();
