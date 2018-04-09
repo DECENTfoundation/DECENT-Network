@@ -122,7 +122,7 @@ MainWindow::MainWindow()
    m_pButtonTransactions->setCheckable(true);
 
    m_pButtonPublish = new DecentButton(pMainWidget, DecentButton::TabChoice);
-   m_pButtonPublish->setText(tr("Publish"));
+   m_pButtonPublish->setText(tr("Items Published"));
    m_pButtonPublish->setCheckable(true);
 
    m_pButtonUsers = new DecentButton(pMainWidget, DecentButton::TabChoice);
@@ -130,7 +130,7 @@ MainWindow::MainWindow()
    m_pButtonUsers->setCheckable(true);
 
    m_pButtonPurchased = new DecentButton(pMainWidget, DecentButton::TabChoice);
-   m_pButtonPurchased->setText(tr("Purchased"));
+   m_pButtonPurchased->setText(tr("Items Purchased"));
    m_pButtonPurchased->setCheckable(true);
 
    m_pButtonMinerVoting = new DecentButton(pMainWidget, DecentButton::TabChoice);

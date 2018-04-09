@@ -22,7 +22,7 @@ MiningVotePopup::MiningVotePopup(QWidget *pParent) : StackLayerWidget(pParent)
    getMinerVotesForAccount(account_name);
 
    QLabel* pMinersVoteNumLabel = new QLabel(this);
-   pMinersVoteNumLabel->setText(tr("Vote for number of miners"));
+   pMinersVoteNumLabel->setText(tr("Propose number of miners in mining pool"));
 
    QIntValidator* numValidator = new QIntValidator(1, 1001, this);   //TODO: make max value read from global_properties
 
@@ -34,15 +34,15 @@ MiningVotePopup::MiningVotePopup(QWidget *pParent) : StackLayerWidget(pParent)
       m_pMinersNumVote->setText(QString::number(m_minersVotedNum));
    }
    else {
-      m_pMinersNumVote->setPlaceholderText(QString(tr("Actual miners count is %1")).arg(numOfActiveMiners) );
+      m_pMinersNumVote->setPlaceholderText(QString(tr("Current miner pool size is %1")).arg(numOfActiveMiners) );
    }
 
    Asset opFee = Globals::instance().getDCoreFees(2);
 
    // Info
    QLabel* pInfoLabel = new QLabel(this);
-   pInfoLabel->setText(QString(tr("Number of miners should be smaller or equal to number of votes you have given (%1)\n"
-                                  "You will be charged %2 for this operation"))
+   pInfoLabel->setText(QString(tr("You cannot propose a pool size larger than the number of miners you have currently voted for (%1)\n"
+                                  "This operation will cost %2"))
                                   .arg(m_curMinersVotedFor)
                                   .arg(opFee.getString()));
 

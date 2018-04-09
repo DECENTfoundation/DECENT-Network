@@ -938,11 +938,11 @@ PasswordWidget::PasswordWidget(QWidget* pParent, eType enType) : StackLayerWidge
    m_pButton = new DecentButton(this, DecentButton::DialogAction);
 
    if (enType == eSetPassword) {
-      pLabel->setText(tr("Create your password for DECENT wallet"));
+      pLabel->setText(tr("Create your password for DECENT Wallet"));
       m_pButton->setText(tr("Create Password"));
    }
    else {
-      pLabel->setText(tr("Unlock your DECENT wallet"));
+      pLabel->setText(tr("Unlock your DECENT Wallet"));
       m_pButton->setText(tr("Unlock"));
    }
 
@@ -956,7 +956,7 @@ PasswordWidget::PasswordWidget(QWidget* pParent, eType enType) : StackLayerWidge
       m_line1Edit->setPlaceholderText(QString(tr("Password")));
    }
    m_line1Edit->setMaxLength(g_maxPasswordLen);
-   m_line1Edit->setToolTip(tr("The password must be limited to 50 characters"));
+   m_line1Edit->setToolTip(tr("The password is limited to a maximum of 50 characters "));
 
    m_line2Edit = new DecentLineEdit(this, DecentLineEdit::DialogLineEdit);
    m_line2Edit->setEchoMode(QLineEdit::Password);
