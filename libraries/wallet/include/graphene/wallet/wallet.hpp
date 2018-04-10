@@ -54,6 +54,7 @@ namespace graphene { namespace wallet {
 
       struct wallet_data
       {
+         int version = 0;
          /** Chain ID this wallet is used with */
          chain_id_type chain_id;
          account_multi_index_type my_accounts;
@@ -100,6 +101,7 @@ namespace graphene { namespace wallet {
          string                    ws_password;
          string                    packages_path = "./packages/";
          string                    libtorrent_config_path;
+         string                    update_time;
       };
 
       struct el_gamal_key_pair
@@ -299,6 +301,7 @@ namespace graphene { namespace wallet {
 
          std::map<string,std::function<string(fc::variant,const fc::variants&)>> get_result_formatters() const;
          void encrypt_keys();
+         void encrypt_keys2();
 
          fc::signal<void(bool)> lock_changed;
          std::shared_ptr<detail::wallet_api_impl> my;
