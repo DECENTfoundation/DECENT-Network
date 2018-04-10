@@ -305,8 +305,6 @@ MainWindow::MainWindow()
 
    setUnifiedTitleAndToolBarOnMac(false);
 
-//   QObject::connect(m_pAccountList, QOverload<const QString&>::of(&QComboBox::currentIndexChanged),
-//                    &Globals::instance(), &Globals::slot_setCurrentUser);
    QObject::connect<void(QComboBox::*)(int)>(m_pAccountList, &QComboBox::currentIndexChanged,
                     this, &MainWindow::slot_currentAccountChanged);
    QObject::connect(pTransferButton, &QPushButton::clicked,
@@ -363,7 +361,6 @@ MainWindow::MainWindow()
       m_pAdvancedMinerVoting->setDisabled(true);
    }
 
-
    QObject::connect(&Globals::instance(), &Globals::walletConnectionStatusChanged,
                     this, &MainWindow::slot_connectionStatusChanged);
 
@@ -391,19 +388,6 @@ MainWindow::MainWindow()
    m_pOneShotUpdateTimer->setSingleShot(true);
    QObject::connect(m_pOneShotUpdateTimer, &QTimer::timeout,
                     this, &MainWindow::slot_getContents);
-
-
-//   m_pTimerDownloads->setInterval(5000);
-//   QObject::connect(m_pTimerDownloads, &QTimer::timeout,
-//                    this, &MainWindow::slot_checkDownloads);
-
-//   m_pTimerContents->setInterval(1000);
-//   QObject::connect(m_pTimerContents, &QTimer::timeout,
-//                    this, &MainWindow::slot_getContents);
-
-//   m_pTimerVoting->setInterval(5000);
-//   QObject::connect(m_pTimerVoting, &QTimer::timeout,
-//                    this, &MainWindow::slot_getContents);
 
    resize(900, 600);
 
@@ -468,8 +452,6 @@ void MainWindow::slot_setSplash()
    QObject::connect(&Globals::instance(), &Globals::updateProgress,
                      this, &MainWindow::slot_BlockchainUpdate);
 
-//   QObject::connect(this, &MainWindow::signal_setSplashMainText,
-//                    pConnectingLabel, &QLabel::setText);
    QObject::connect(this, &MainWindow::signal_setSplashMainText,
                     pButton, &QWidget::show);
    
@@ -699,7 +681,6 @@ void MainWindow::slot_BrowseToggled(bool toggled)
    //
    if (toggled)
    {
-//      m_pFilterBrowse->show();
       pActiveTab->show();
       updateActiveTable();
 
@@ -711,7 +692,6 @@ void MainWindow::slot_BrowseToggled(bool toggled)
    }
    else
    {
-//      m_pFilterBrowse->hide();
       pActiveTab->hide();
 
       QTimer* pTimer = pActiveTab->getRefreshTimer();
