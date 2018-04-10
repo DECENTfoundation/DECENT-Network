@@ -36,6 +36,7 @@ namespace gui_wallet
     private:
        void submit_vote(const std::string& miner_name, bool voteFlag);
        void getDesiredMinersCount();
+       QString getVotesText(uint64_t total_votes);
 
     public:
        DecentTable* m_pTableWidget;
