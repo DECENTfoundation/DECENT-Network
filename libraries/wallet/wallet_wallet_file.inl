@@ -49,6 +49,8 @@ void wallet_api::unlock(const string& password)
       // supporting backward compatibility of wallet json file
       try {
          pk = fc::raw::unpack<plain_ec_and_el_gamal_keys>(decrypted);
+
+         update_wallet_file = true;
       }
       catch(const fc::exception&)
       {
@@ -79,9 +81,13 @@ void wallet_api::unlock(const string& password)
 
    FC_ASSERT(pk.checksum == pw);
    my->_keys = std::move(pk.ec_keys);
-   if( !pk.el_gamal_keys.empty() )
-      std::transform( pk.el_gamal_keys.begin(), pk.el_gamal_keys.end(), std::inserter( my->_el_gamal_keys, my->_el_gamal_keys.end() ),
-         []( const el_gamal_key_pair_str el_gamal_pair ){ return std::make_pair(DInteger(el_gamal_pair.public_key),DInteger(el_gamal_pair.private_key)); });
+   if( !pk.el_gamal_keys.empty() ) {
+      std::transform(pk.el_gamal_keys.begin(), pk.el_gamal_keys.end(),
+                     std::inserter(my->_el_gamal_keys, my->_el_gamal_keys.end()),
+                     [](const el_gamal_key_pair_str el_gamal_pair) {
+                         return std::make_pair(DInteger(el_gamal_pair.public_key), DInteger(el_gamal_pair.private_key));
+                     });
+   }
    my->_checksum = pk.checksum;
 
    if( update_wallet_file ) // upgrade structure for storing keys to new format
