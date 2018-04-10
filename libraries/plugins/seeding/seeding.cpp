@@ -772,7 +772,7 @@ void detail::SeedingListener::package_download_complete() {
    if( size > mso_itr->space ) {
       ilog("seeding plugin: package_download_complete(): Fraud detected: real content size is greater than propagated in blockchain; deleting...");
       //changing DB outside the main thread does not work properly, let's delete it from there
-      _my->main_thread->async([ & ]() { _my->release_package(mso, pi); });
+      _my->main_thread->async([ this, &mso, pi ]() { _my->release_package(mso, pi); });
       _pi.reset();
       return;
    }
@@ -780,7 +780,7 @@ void detail::SeedingListener::package_download_complete() {
    //Don't block package manager thread for too long.
    seeding_plugin_impl *my = _my;
    _my->database().modify<my_seeding_object>(mso, [](my_seeding_object& so){so.downloaded = true;});
-   _my->service_thread->async([ & ]() { _my->generate_por_int(mso, pi); });
+   _my->service_thread->async([ this, &mso, pi ]() { _my->generate_por_int(mso, pi); });
 };
 
 
