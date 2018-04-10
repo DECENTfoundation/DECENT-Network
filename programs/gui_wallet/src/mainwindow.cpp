@@ -62,6 +62,7 @@ MainWindow::MainWindow()
 : QMainWindow()
 , m_iSplashWidgetIndex(0)
 , m_pTimerBalance(new QTimer(this))
+, m_pOneShotUpdateTimer(new QTimer(this))
 , m_pStackedWidget(new QStackedWidget(this))
 , m_pAccountList(nullptr)
 , m_pBalance(nullptr)
@@ -385,6 +386,11 @@ MainWindow::MainWindow()
    m_pTimerBalance->setInterval(10000);
    QObject::connect(m_pTimerBalance, &QTimer::timeout,
                     &Globals::instance(), &Globals::slot_updateAccountBalance);
+
+   m_pOneShotUpdateTimer->setInterval(1000);
+   m_pOneShotUpdateTimer->setSingleShot(true);
+   QObject::connect(m_pOneShotUpdateTimer, &QTimer::timeout,
+                    this, &MainWindow::slot_getContents);
 
 
 //   m_pTimerDownloads->setInterval(5000);
@@ -1027,6 +1033,13 @@ TabContentManager* MainWindow::activeTable() const
       pTab = m_pTabMinerVoting;
 
    return pTab;
+}
+
+void MainWindow::resizeEvent(QResizeEvent* event)
+{
+   QMainWindow::resizeEvent(event);
+
+   m_pOneShotUpdateTimer->start();
 }
 
 void MainWindow::DisplayWalletContentGUI()

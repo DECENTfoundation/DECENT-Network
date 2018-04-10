@@ -67,9 +67,12 @@ protected:
    TabContentManager* activeTable() const;
    void updateActiveTable();
 
+   void resizeEvent(QResizeEvent* event) override;
+
 protected:
    size_t m_iSplashWidgetIndex;
    QTimer* m_pTimerBalance;
+   QTimer* m_pOneShotUpdateTimer;
 
    QStackedWidget* m_pStackedWidget;
    QComboBox* m_pAccountList;

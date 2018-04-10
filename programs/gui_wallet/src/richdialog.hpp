@@ -114,8 +114,8 @@ class ContentInfoWidget : public StackLayerWidget
 {
    Q_OBJECT
 public:
-   ContentInfoWidget(QWidget* parent, const SDigitalContent& a_cnt_details);
-   
+   ContentInfoWidget(QWidget* parent, const SDigitalContent& a_cnt_details, bool bRemoveBuyButton = false);
+
    void Buy();
 public slots:
    void ButtonWasClicked();

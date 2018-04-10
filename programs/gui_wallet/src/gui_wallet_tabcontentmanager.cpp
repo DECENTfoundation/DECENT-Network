@@ -49,8 +49,12 @@ void TabContentManager::tryToUpdate() {
 
       QApplication::restoreOverrideCursor();
 
-   } catch (...) {
-
+   }
+   catch (const std::exception& ex) {
+      std::cout << "Exception:" << ex.what() << std::endl;
+   }
+   catch (const fc::exception& ex) {
+      std::cout << "Exception:" << ex.what() << std::endl;
    }
 }
 
