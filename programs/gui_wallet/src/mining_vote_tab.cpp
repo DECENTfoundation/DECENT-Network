@@ -70,6 +70,8 @@ MinerVotingTab::MinerVotingTab(QWidget *pParent, DecentLineEdit *pFilterLineEdit
    QObject::connect(m_pTableWidget, &DecentTable::signal_SortingChanged,
                     this, &MinerVotingTab::slot_SortingChanged);
 
+   QObject::connect(m_pTableWidget, &DecentTable::cellClicked, this, &MinerVotingTab::slot_cellClicked);
+
    setRefreshTimer(5000);
 
 }
@@ -160,8 +162,6 @@ void MinerVotingTab::timeToUpdate(const std::string& result)
    catch(const std::exception& ex) {
       //TODO.. handle error
    }
-
-   QObject::connect(m_pTableWidget, &DecentTable::cellClicked, this, &MinerVotingTab::slot_cellClicked);
 
    if (contents.size() > m_i_page_size)
       set_next_page_iterator(contents[m_i_page_size]["id"].get<std::string>());

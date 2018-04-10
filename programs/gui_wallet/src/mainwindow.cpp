@@ -48,6 +48,7 @@
 #include <QCloseEvent>
 #include <QMessageBox>
 #include <QCheckBox>
+#include <QtGlobal>
 
 #include "update_manager.hpp"
 
