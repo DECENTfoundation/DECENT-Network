@@ -31,10 +31,10 @@ namespace graphene { namespace chain {
    /**
     * @ingroup operations
     *
-    * @brief Transfers an amount of one asset from one account to another
+    * @brief Transfers an amount of one asset from one account to another.
+    * Fees are paid by the "from" account.
     *
-    *  Fees are paid by the "from" account
-    *
+    *  @warning Obsolete operation. Use \c transfer2_operation instead.
     *  @pre amount.amount > 0
     *  @pre fee.amount >= 0
     *  @pre from != to

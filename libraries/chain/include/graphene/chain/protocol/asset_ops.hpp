@@ -128,7 +128,7 @@ namespace graphene { namespace chain {
 
       optional<monitored_asset_options> monitored_asset_opts;
 
-      /// True to allow implicit conversion of this asset to/from core asset.
+      /// WARNING! Duplicate variable. Do no use it. It does not have any effect.
       bool is_exchangeable = true;
 
       extensions_type extensions;
