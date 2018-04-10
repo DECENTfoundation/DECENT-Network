@@ -307,7 +307,7 @@ MainWindow::MainWindow()
 
 //   QObject::connect(m_pAccountList, QOverload<const QString&>::of(&QComboBox::currentIndexChanged),
 //                    &Globals::instance(), &Globals::slot_setCurrentUser);
-   QObject::connect(m_pAccountList, QOverload<int>::of(&QComboBox::currentIndexChanged),
+   QObject::connect<void(QComboBox::*)(int)>(m_pAccountList, &QComboBox::currentIndexChanged,
                     this, &MainWindow::slot_currentAccountChanged);
    QObject::connect(pTransferButton, &QPushButton::clicked,
                     &Globals::instance(), (void(Globals::*)())&Globals::slot_showTransferDialog);
