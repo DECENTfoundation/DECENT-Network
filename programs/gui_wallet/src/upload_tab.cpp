@@ -279,7 +279,7 @@ void Upload_tab::slot_ShowContentPopup(int iIndex)
    if (iIndex < 0 || iIndex >= _digital_contents.size())
       throw std::out_of_range("Content index is out of range");
 
-   ContentInfoWidget* pDetailsDialog = new ContentInfoWidget(nullptr, _digital_contents[iIndex]);
+   ContentInfoWidget* pDetailsDialog = new ContentInfoWidget(nullptr, _digital_contents[iIndex], true);
    Globals::instance().signal_stackWidgetPush(pDetailsDialog);
 
    QObject::connect(pDetailsDialog, &ContentInfoWidget::accepted,

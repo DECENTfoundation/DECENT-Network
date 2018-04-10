@@ -70,11 +70,54 @@ MinerVotingTab::MinerVotingTab(QWidget *pParent, DecentLineEdit *pFilterLineEdit
    QObject::connect(m_pTableWidget, &DecentTable::signal_SortingChanged,
                     this, &MinerVotingTab::slot_SortingChanged);
 
+   QObject::connect(m_pTableWidget, &DecentTable::cellClicked, this, &MinerVotingTab::slot_cellClicked);
+
    setRefreshTimer(5000);
 
 }
 
 MinerVotingTab::~MinerVotingTab() = default;
+
+QString MinerVotingTab::getVotesText(uint64_t total_votes)
+{
+   double votes = total_votes;
+
+   int iCount = 0;
+   while(votes >= 1000.0) {
+      votes /= 1000.0;
+      iCount++;
+
+      if (votes < 500000.0)
+         break;
+   }
+
+   QString result = QString::number(votes);
+   result += ' ';
+
+   switch(iCount)
+   {
+      case 1:
+         result += "kV";  //Kilo Votes
+         break;
+      case 2:
+         result += "MV";  //Mega Votes
+         break;
+      case 3:
+         result += "GV";  //Giga Votes
+         break;
+      case 4:
+         result += "TV";  //Tera Votes
+         break;
+      case 5:
+         result += "PV";  //Penta Votes
+         break;
+      case 6:
+         result += "EV";  //Exa Votes
+         break;
+   }
+
+   return result;
+}
 
 void MinerVotingTab::timeToUpdate(const std::string& result)
 {
@@ -94,9 +137,9 @@ void MinerVotingTab::timeToUpdate(const std::string& result)
    m_indexToUrl.clear();
 
    //clear table
-   while(m_pTableWidget->rowCount() > 0) {
-      m_pTableWidget->removeRow(0);
-   }
+//   while(m_pTableWidget->rowCount() > 0) {
+//      m_pTableWidget->removeRow(0);
+//   }
 
    try {
 
@@ -130,7 +173,8 @@ void MinerVotingTab::timeToUpdate(const std::string& result)
             m_indexToUrl.insert(iIndex, QString::fromStdString(url));
          }
 
-         tabItem = new QTableWidgetItem(QString::number(total_votes));
+         tabItem = new QTableWidgetItem(getVotesText(total_votes));
+         tabItem->setToolTip(QString::number(total_votes));
          tabItem->setTextAlignment(Qt::AlignRight|Qt::AlignVCenter);
          tabItem->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
          m_pTableWidget->setItem(iIndex, 2, tabItem);
@@ -160,8 +204,6 @@ void MinerVotingTab::timeToUpdate(const std::string& result)
    catch(const std::exception& ex) {
       //TODO.. handle error
    }
-
-   QObject::connect(m_pTableWidget, &DecentTable::cellClicked, this, &MinerVotingTab::slot_cellClicked);
 
    if (contents.size() > m_i_page_size)
       set_next_page_iterator(contents[m_i_page_size]["id"].get<std::string>());

@@ -360,7 +360,7 @@ UserInfoWidget::UserInfoWidget(QWidget* parent,
 //
 // ContentInfoWidget
 //
-ContentInfoWidget::ContentInfoWidget(QWidget* parent, const SDigitalContent& a_cnt_details)
+ContentInfoWidget::ContentInfoWidget(QWidget* parent, const SDigitalContent& a_cnt_details, bool bRemoveBuyButton)
    : StackLayerWidget(parent)
    , m_getItOrPay(Download)
    , m_URI(a_cnt_details.URI)
@@ -462,30 +462,36 @@ ContentInfoWidget::ContentInfoWidget(QWidget* parent, const SDigitalContent& a_c
    main_layout->addWidget(pCommentWidget, iRowIndex, 0, 1, 2);
    pCommentWidget->update();
    ++iRowIndex;
-   
-   DecentButton* getItButton = new DecentButton(this, DecentButton::DialogAction);
+
    DecentButton* cancelButton = new DecentButton(this, DecentButton::DialogCancel);
-
-   if (a_cnt_details.price.m_amount == 0) {
-      m_getItOrPay = Download;
-      getItButton->setText(tr("Download"));
-   }
-   else {
-      m_getItOrPay = PayAndDownload;
-      getItButton->setText(tr("Buy && Download"));
-   }
-
    cancelButton->setText(tr("Back"));
-   
-   QObject::connect(getItButton, &QPushButton::clicked,
-                    this, &ContentInfoWidget::ButtonWasClicked);
+
    QObject::connect(cancelButton, &QPushButton::clicked,
                     this, &StackLayerWidget::closed);
+
+   DecentButton* getItButton = nullptr;
+   if (!bRemoveBuyButton) {
+      getItButton = new DecentButton(this, DecentButton::DialogAction);
+
+      if (a_cnt_details.price.m_amount == 0) {
+         m_getItOrPay = Download;
+         getItButton->setText(tr("Download"));
+      }
+      else {
+         m_getItOrPay = PayAndDownload;
+         getItButton->setText(tr("Buy && Download"));
+      }
+
+      QObject::connect(getItButton, &QPushButton::clicked,
+                       this, &ContentInfoWidget::ButtonWasClicked);
+   }
 
    QHBoxLayout* pButtonsLayout = new QHBoxLayout();
    // keeping buttons directly inside gridlayout cells leads to assymetry
    // so use hboxlayout
-   pButtonsLayout->addWidget(getItButton);
+   if (getItButton) {
+      pButtonsLayout->addWidget(getItButton);
+   }
    pButtonsLayout->addWidget(cancelButton);
    main_layout->addLayout(pButtonsLayout, iRowIndex, 0, 1, 2);
    

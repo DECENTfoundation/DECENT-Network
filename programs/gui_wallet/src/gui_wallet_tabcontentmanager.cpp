@@ -3,6 +3,7 @@
 #include "gui_wallet_tabcontentmanager.hpp"
 
 #include <QTimer>
+#include <QApplication>
 
 using std::string;
 
@@ -19,9 +20,14 @@ TabContentManager::TabContentManager(QWidget* pParent/* = nullptr*/) : QWidget(p
 
 void TabContentManager::tryToUpdate() {
    try {
+
+      QApplication::setOverrideCursor(Qt::WaitCursor);
+
       std::string command = getUpdateCommand();
       if (command.empty()) {
          timeToUpdate(std::string());
+
+         QApplication::restoreOverrideCursor();
          return;
       }
 
@@ -31,19 +37,24 @@ void TabContentManager::tryToUpdate() {
       }
       catch (std::exception &ex) {
          error = ex.what();
-
       }
       catch (fc::exception& ex) {
          error = ex.what();
-
       }
 
       if (result != m_last_result) {
          m_last_result = result;
          timeToUpdate(result);
       }
-   } catch (...) {
 
+      QApplication::restoreOverrideCursor();
+
+   }
+   catch (const std::exception& ex) {
+      std::cout << "Exception:" << ex.what() << std::endl;
+   }
+   catch (const fc::exception& ex) {
+      std::cout << "Exception:" << ex.what() << std::endl;
    }
 }
 

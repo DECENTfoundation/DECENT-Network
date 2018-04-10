@@ -506,6 +506,24 @@ public:
       }
    }
 
+   void encrypt_keys2()
+   {
+      if( !is_locked() )
+      {
+         plain_ec_and_el_gamal_keys data;
+         data.ec_keys = _keys;
+         std::transform( _el_gamal_keys.begin(), _el_gamal_keys.end(), std::back_inserter( data.el_gamal_keys ),
+                         [](const std::pair<DInteger,DInteger> el_gamal_pair) {
+                             return el_gamal_key_pair_str {el_gamal_pair.second, el_gamal_pair.first}; });
+         data.checksum = _checksum;
+         auto data_string = fc::json::to_string(data);
+         vector<char> plain_txt;
+         plain_txt.resize(data_string.length());
+         memcpy(plain_txt.data(), data_string.data(), data_string.length());
+         _wallet.cipher_keys = fc::aes_encrypt( data.checksum, plain_txt );
+      }
+   }
+
    void on_block_applied( const variant& block_id )
    {
       fc::async([this]{resync();}, "Resync after block");
@@ -748,6 +766,50 @@ public:
       return all_keys_for_account.find(wif_pub_key) != all_keys_for_account.end();
    }
 
+   int get_wallet_file_version(const fc::variant& data)
+   {
+      try {
+         variant_object vo;
+         fc::from_variant( data, vo );
+         return vo["version"].as<int>();
+      }
+      catch (const fc::exception& ex) {
+         return 0;
+      }
+   }
+
+   bool load_old_wallet_file(const fc::variant& data, wallet_data& result)
+   {
+       bool ret;
+       try {
+           result = data.as<wallet_data>();
+           ret = true;
+       }
+       catch (const fc::exception& ex) {
+           ret = false;
+       }
+       return ret;
+   }
+
+   bool load_new_wallet_file(const fc::variant& data, wallet_data& result)
+   {
+      bool ret;
+      try {
+         result = data.as<wallet_data>();
+
+         const variant_object& vo = data.get_object();
+         result.version = vo["version"].as<int>();
+         result.update_time = vo["update_time"].as_string();
+
+         ret = true;
+      }
+      catch (const fc::exception& ex) {
+         ret = false;
+      }
+      return ret;
+   }
+
+
    bool load_wallet_file(string wallet_filename = string())
    {
       // TODO:  Merge imported wallet with existing wallet,
@@ -758,11 +820,28 @@ public:
       if( ! fc::exists( wallet_filename ) )
          return false;
 
-      _wallet = fc::json::from_file( wallet_filename ).as< wallet_data >();
-      if( _wallet.chain_id != _chain_id )
-         FC_THROW( "Wallet chain ID does not match",
-            ("wallet.chain_id", _wallet.chain_id)
-            ("chain_id", _chain_id) );
+      fc::variant v = fc::json::from_file(wallet_filename);
+      int version = get_wallet_file_version(v);
+
+      bool ret;
+      wallet_data load_data;
+      if (version == 0) {
+          ret = load_old_wallet_file(v, load_data);
+      }
+      else {
+          ret = load_new_wallet_file(v, load_data);
+      }
+
+      if (!ret) {
+         return false;
+      }
+
+      _wallet = load_data;
+      if( _wallet.chain_id != _chain_id ) {
+         FC_THROW("Wallet chain ID does not match",
+                  ("wallet.chain_id", _wallet.chain_id)
+                        ("chain_id", _chain_id));
+      }
 
       size_t account_pagination = 100;
       vector< account_id_type > account_ids_to_send;
@@ -810,6 +889,31 @@ public:
 
       return true;
    }
+
+   string save_old_wallet(const wallet_data& data)
+   {
+      return fc::json::to_pretty_string( _wallet );
+   }
+
+   string save_new_wallet(const wallet_data& data)
+   {
+      fc::mutable_variant_object mvo;
+      mvo["version"] = fc::variant(data.version);
+      mvo["update_time"] = fc::variant(data.update_time);
+      mvo["chain_id"] = fc::variant(data.chain_id);
+      mvo["my_accounts"] = fc::variant(data.my_accounts);
+      mvo["cipher_keys"] = fc::variant(data.cipher_keys);
+      mvo["extra_keys"] = fc::variant(data.extra_keys);
+      mvo["pending_account_registrations"] = fc::variant(data.pending_account_registrations);
+      mvo["pending_miner_registrations"] = fc::variant(data.pending_miner_registrations);
+      mvo["ws_server"] = fc::variant(data.ws_server);
+      mvo["ws_user"] = fc::variant(data.ws_user);
+      mvo["ws_password"] = fc::variant(data.ws_password);
+
+      fc::variant v(mvo);
+      return fc::json::to_pretty_string( v );
+   }
+
    void save_wallet_file(string wallet_filename = string() )
    {
       //
@@ -819,14 +923,24 @@ public:
       // if exceptions are thrown in serialization
       //
 
-      encrypt_keys();
+      //allways save in new format
+      _wallet.version = 1;
+      _wallet.update_time = fc::time_point::now();
+      encrypt_keys2();
 
       if( wallet_filename.empty() )
          wallet_filename = _wallet_filename;
 
       wlog( "saving wallet to file ${fn}", ("fn", wallet_filename) );
 
-      string data = fc::json::to_pretty_string( _wallet );
+      string data;
+      if (_wallet.version == 0) {
+         data = save_old_wallet( _wallet );
+      }
+      else {
+         data = save_new_wallet( _wallet );
+      }
+
       try
       {
          enable_umask_protection();
