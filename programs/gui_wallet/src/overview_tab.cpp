@@ -46,9 +46,11 @@ Overview_tab::Overview_tab(QWidget* pParent,
     
    setLayout(pMainLayout);
 
-   if (pFilterLineEdit)
-   QObject::connect(pFilterLineEdit, &QLineEdit::textChanged,
-                    this, &Overview_tab::slot_SearchTermChanged);
+   if (pFilterLineEdit) {
+      QObject::connect(pFilterLineEdit, &QLineEdit::textChanged,
+                       this, &Overview_tab::slot_SearchTermChanged);
+      setFilterWidget(pFilterLineEdit);
+   }
 
    QObject::connect(m_pTableWidget, &DecentTable::signal_SortingChanged,
                     this, &Overview_tab::slot_SortingChanged);
@@ -95,7 +97,7 @@ void Overview_tab::timeToUpdate(const std::string& result) {
       QObject::connect(pTransactionButton, &DecentButton::clicked,
                        this, &Overview_tab::slot_Transactions);
       
-      m_pAccountSignalMapper->setMapping(pTransactionButton, name.c_str());
+      m_pAccountSignalMapper->setMapping(pTransactionButton, QString::fromStdString(name));
       m_pTableWidget->setCellWidget(iIndex, 2, pTransactionButton);
 
       // Details Button
@@ -161,24 +163,28 @@ void Overview_tab::slot_Details()
 {
    try {
       auto accountInfo = Globals::instance().runTaskParse("get_account " + m_strSelectedAccount.toStdString());
-      
+
       std::string id = accountInfo["id"].get<std::string>();
       std::string registrar = accountInfo["registrar"].get<std::string>();
       bool is_publishing_manager = accountInfo["rights_to_publish"]["is_publishing_manager"].get<bool>();
       std::string name = accountInfo["name"].get<std::string>();
       int size = accountInfo["rights_to_publish"]["publishing_rights_received"].size();
       bool is_publishing_rights_received = size;
-      
-      UserInfoWidget* userInfoWidget = new UserInfoWidget(nullptr,
-                                                  is_publishing_manager,
-                                                  is_publishing_rights_received,
-                                                  QString::fromStdString(registrar),
-                                                  QString::fromStdString(name),
-                                                  QString::fromStdString(id));
-      
+
+      UserInfoWidget *userInfoWidget = new UserInfoWidget(nullptr,
+                                                          is_publishing_manager,
+                                                          is_publishing_rights_received,
+                                                          QString::fromStdString(registrar),
+                                                          QString::fromStdString(name),
+                                                          QString::fromStdString(id));
+
       Globals::instance().signal_stackWidgetPush(userInfoWidget);
-   } catch(...) {
-      // Ignore for now
+   }
+   catch(const std::exception& ex) {
+      std::cout << "slot_Details('Overview_tab') " << ex.what() << std::endl;
+   }
+   catch(const fc::exception& ex) {
+      std::cout << "slot_Details('Overview_tab') " << ex.what() << std::endl;
    }
 }
 
@@ -187,12 +193,13 @@ void Overview_tab::slot_Transfer()
    Globals::instance().slot_showTransferDialog(m_strSelectedAccount);
 }
 
-void Overview_tab::slot_SearchTermChanged(QString const& strSearchTerm)
+void Overview_tab::slot_SearchTermChanged(const QString& strSearchTerm)
 {
    m_strSearchTerm = strSearchTerm;
-   reset(false);
+   reset(true);
 }
-void Overview_tab::slot_AccountChanged(QString const& strAccountName)
+
+void Overview_tab::slot_AccountChanged(const QString& strAccountName)
 {
    m_strSelectedAccount = strAccountName;
 }
@@ -201,4 +208,5 @@ void Overview_tab::slot_SortingChanged(int index)
 {
    reset();
 }
+
 }//   end namespace gui_wallet

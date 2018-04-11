@@ -8,6 +8,7 @@
 #include <vector>
 #include <chrono>
 #include <graphene/chain/protocol/types.hpp>
+#include <atomic>
 
 namespace graphene
 {
@@ -40,7 +41,7 @@ namespace wallet_utility
       WalletAPI();
       ~WalletAPI();
 
-      void Connent();
+      void Connent(std::atomic_bool& cancellation_token);
       bool Connected();
       bool IsNew();
       bool IsLocked();

@@ -31,10 +31,10 @@ namespace graphene { namespace chain {
    /**
     * @ingroup operations
     *
-    * @brief Transfers an amount of one asset from one account to another
+    * @brief Transfers an amount of one asset from one account to another.
+    * Fees are paid by the "from" account.
     *
-    *  Fees are paid by the "from" account
-    *
+    *  @warning Obsolete operation. Use \c transfer2_operation instead.
     *  @pre amount.amount > 0
     *  @pre fee.amount >= 0
     *  @pre from != to
@@ -64,7 +64,47 @@ namespace graphene { namespace chain {
       void            validate()const;
    };
 
+   /**
+    * @ingroup operations
+    *
+    * @brief Transfers an amount of one asset from one account to another account or to content.
+    * In the case of transferring to a content, amount is transferred to author and co-authors of the content,
+    * if they are specified.
+    *
+    *  Fees are paid by the "from" account
+    *
+    *  @pre amount.amount > 0
+    *  @pre fee.amount >= 0
+    *  @pre from != to
+    *  @post from account's balance will be reduced by fee and amount
+    *  @post to account's balance will be increased by amount
+    *  @return n/a
+    */
+   struct transfer2_operation : public base_operation
+   {
+      struct fee_parameters_type {
+         uint64_t fee       = GRAPHENE_BLOCKCHAIN_PRECISION / 1000;
+      };
+
+      asset            fee;
+      /// Account to transfer asset from
+      account_id_type  from;
+      /// Account or content to transfer asset to
+      object_id_type  to;
+      /// The amount of asset to transfer from @ref from to @ref to
+      asset            amount;
+
+      /// User provided data encrypted to the memo key of the "to" account
+      optional<memo_data> memo;
+      extensions_type   extensions;
+
+      account_id_type fee_payer()const { return from; }
+      void            validate()const;
+   };
+
 }} // graphene::chain
 
 FC_REFLECT( graphene::chain::transfer_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::transfer_operation, (fee)(from)(to)(amount)(memo)(extensions) )
+FC_REFLECT( graphene::chain::transfer2_operation::fee_parameters_type, (fee) )
+FC_REFLECT( graphene::chain::transfer2_operation, (fee)(from)(to)(amount)(memo)(extensions) )

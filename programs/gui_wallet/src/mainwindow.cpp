@@ -32,6 +32,8 @@
 #include "upload_tab.hpp"
 #include "overview_tab.hpp"
 #include "purchased_tab.hpp"
+#include "mining_vote_tab.hpp"
+#include "mining_vote_popup.hpp"
 
 #include "json.hpp"
 
@@ -41,9 +43,12 @@
 
 #include <graphene/utilities/dirhelper.hpp>
 #include <graphene/wallet/wallet.hpp>
-#endif
 
 #include <QCloseEvent>
+#include <QMessageBox>
+#include <QCheckBox>
+#include <QtGlobal>
+#endif
 
 #include "update_manager.hpp"
 
@@ -56,9 +61,8 @@ using namespace utilities;
 MainWindow::MainWindow()
 : QMainWindow()
 , m_iSplashWidgetIndex(0)
-, m_pTimerDownloads(new QTimer(this))
 , m_pTimerBalance(new QTimer(this))
-, m_pTimerContents(new QTimer(this))
+, m_pOneShotUpdateTimer(new QTimer(this))
 , m_pStackedWidget(new QStackedWidget(this))
 , m_pAccountList(nullptr)
 , m_pBalance(nullptr)
@@ -71,6 +75,7 @@ MainWindow::MainWindow()
 , m_pFilterUsers(nullptr)
 , m_pFilterPurchased(nullptr)
 , m_pPublish(nullptr)
+, m_pOnlyMyVotes(nullptr)
 , m_pTabBrowse(nullptr)
 , m_pTabTransactions(nullptr)
 , m_pTabPublish(nullptr)
@@ -79,6 +84,7 @@ MainWindow::MainWindow()
 , m_pActionImportKey(new QAction(tr("Import key"), this))
 , m_pActionReplayBlockchain(new QAction(tr("Replay Blockchain"), this))
 , m_pActionResyncBlockchain(new QAction(tr("Resync Blockchain"), this))
+, m_pAdvancedMinerVoting(new QAction(tr("Advanced Voting"), this))
 #ifdef UPDATE_MANAGER
 , m_pUpdateManager(new UpdateManager())
 #else
@@ -100,6 +106,7 @@ MainWindow::MainWindow()
    DecentLabel* pRow1Spacer = new DecentLabel(pMainWidget, DecentLabel::Row1Spacer);
    m_pAccountList = new QComboBox(pMainWidget);
    m_pAccountList->setStyle(QStyleFactory::create("fusion"));
+   m_pAccountList->setMinimumContentsLength(40);
    m_pBalance = new DecentLabel(pMainWidget, DecentLabel::Balance);
    DecentButton* pTransferButton = new DecentButton(pMainWidget, DecentButton::Send);
    pTransferButton->setToolTip("Transfer DCT to account");
@@ -117,7 +124,7 @@ MainWindow::MainWindow()
    m_pButtonTransactions->setCheckable(true);
 
    m_pButtonPublish = new DecentButton(pMainWidget, DecentButton::TabChoice);
-   m_pButtonPublish->setText(tr("Publish"));
+   m_pButtonPublish->setText(tr("Items Published"));
    m_pButtonPublish->setCheckable(true);
 
    m_pButtonUsers = new DecentButton(pMainWidget, DecentButton::TabChoice);
@@ -125,8 +132,12 @@ MainWindow::MainWindow()
    m_pButtonUsers->setCheckable(true);
 
    m_pButtonPurchased = new DecentButton(pMainWidget, DecentButton::TabChoice);
-   m_pButtonPurchased->setText(tr("Purchased"));
+   m_pButtonPurchased->setText(tr("Items Purchased"));
    m_pButtonPurchased->setCheckable(true);
+
+   m_pButtonMinerVoting = new DecentButton(pMainWidget, DecentButton::TabChoice);
+   m_pButtonMinerVoting->setText(tr("Voting"));
+   m_pButtonMinerVoting->setCheckable(true);
 
    QButtonGroup* pGroup = new QButtonGroup(pMainWidget);
    pGroup->addButton(m_pButtonBrowse);
@@ -134,6 +145,7 @@ MainWindow::MainWindow()
    pGroup->addButton(m_pButtonPublish);
    pGroup->addButton(m_pButtonUsers);
    pGroup->addButton(m_pButtonPurchased);
+   pGroup->addButton(m_pButtonMinerVoting);
    //
    // 3rd row controls
    //
@@ -162,6 +174,10 @@ MainWindow::MainWindow()
    m_pPublish = new DecentButton(pMainWidget, DecentButton::DialogAction);
    m_pPublish->setText(tr("Publish"));
    m_pPublish->hide();
+
+   m_pOnlyMyVotes = new QCheckBox(tr("My votes"), pMainWidget);
+   m_pOnlyMyVotes->hide();
+
    //
    // 4th row controls
    //
@@ -175,6 +191,9 @@ MainWindow::MainWindow()
    m_pTabUsers->hide();
    m_pTabPurchased = new PurchasedTab(pMainWidget, m_pFilterPurchased);
    m_pTabPurchased->hide();
+   m_pTabMinerVoting = new MinerVotingTab(pMainWidget, m_pFilterUsers, m_pOnlyMyVotes);
+   m_pTabMinerVoting->hide();
+
    //
    // 5th row controls
    //
@@ -209,6 +228,7 @@ MainWindow::MainWindow()
    pRow2Layout->addWidget(m_pButtonPublish);
    pRow2Layout->addWidget(m_pButtonUsers);
    pRow2Layout->addWidget(m_pButtonPurchased);
+   pRow2Layout->addWidget(m_pButtonMinerVoting);
    //
    // 3rd row layout
    //
@@ -228,6 +248,7 @@ MainWindow::MainWindow()
    pRow3Layout->addWidget(pRow3_LabelSearchFrame);
    pRow3Layout->addStretch();
    pRow3Layout->addWidget(m_pPublish);
+   pRow3Layout->addWidget(m_pOnlyMyVotes);
    pRow3Layout->setContentsMargins(5, 0, 5, 0);
    //
    // 4th row layout
@@ -238,6 +259,7 @@ MainWindow::MainWindow()
    pRow4Layout->addWidget(m_pTabPublish);
    pRow4Layout->addWidget(m_pTabUsers);
    pRow4Layout->addWidget(m_pTabPurchased);
+   pRow4Layout->addWidget(m_pTabMinerVoting);
    pRow4Layout->setSpacing(0);
    pRow4Layout->setContentsMargins(5, 0, 5, 0);
    //
@@ -283,10 +305,8 @@ MainWindow::MainWindow()
 
    setUnifiedTitleAndToolBarOnMac(false);
 
-   QObject::connect(m_pAccountList, (void(QComboBox::*)(QString const&))&QComboBox::currentIndexChanged,
-                    &Globals::instance(), &Globals::slot_setCurrentUser);
-   QObject::connect(m_pAccountList, (void(QComboBox::*)(QString const&))&QComboBox::currentIndexChanged,
-                    this, &MainWindow::slot_getContents);
+   QObject::connect<void(QComboBox::*)(int)>(m_pAccountList, &QComboBox::currentIndexChanged,
+                    this, &MainWindow::slot_currentAccountChanged);
    QObject::connect(pTransferButton, &QPushButton::clicked,
                     &Globals::instance(), (void(Globals::*)())&Globals::slot_showTransferDialog);
 
@@ -300,6 +320,8 @@ MainWindow::MainWindow()
                     this, &MainWindow::slot_UsersToggled);
    QObject::connect(m_pButtonPurchased, &QPushButton::toggled,
                     this, &MainWindow::slot_PurchasedToggled);
+   QObject::connect(m_pButtonMinerVoting, &QPushButton::toggled,
+                    this, &MainWindow::slot_MinerVotingToggled);
 
    QObject::connect(m_pPreviousPage, &QPushButton::clicked,
                      this, &MainWindow::slot_PreviousPage);
@@ -326,13 +348,18 @@ MainWindow::MainWindow()
       QObject::connect(m_pActionResyncBlockchain, &QAction::triggered,
                        this, &MainWindow::slot_resyncBlockChain);
 
+      QObject::connect(m_pAdvancedMinerVoting, &QAction::triggered,
+                       this, &MainWindow::slot_advancedMinerVoting);
+
       QMenu* pMenuFile = menuBar()->addMenu(tr("&File"));
       pMenuFile->addAction(pActionExit);
       pMenuFile->addAction(m_pActionImportKey);
       pMenuFile->addAction(m_pActionReplayBlockchain);
       pMenuFile->addAction(m_pActionResyncBlockchain);
-   }
+      pMenuFile->addAction(m_pAdvancedMinerVoting);
 
+      m_pAdvancedMinerVoting->setDisabled(true);
+   }
 
    QObject::connect(&Globals::instance(), &Globals::walletConnectionStatusChanged,
                     this, &MainWindow::slot_connectionStatusChanged);
@@ -357,13 +384,9 @@ MainWindow::MainWindow()
    QObject::connect(m_pTimerBalance, &QTimer::timeout,
                     &Globals::instance(), &Globals::slot_updateAccountBalance);
 
-
-   m_pTimerDownloads->setInterval(5000);
-   QObject::connect(m_pTimerDownloads, &QTimer::timeout,
-                    this, &MainWindow::slot_checkDownloads);
-
-   m_pTimerContents->setInterval(1000);
-   QObject::connect(m_pTimerContents, &QTimer::timeout,
+   m_pOneShotUpdateTimer->setInterval(1000);
+   m_pOneShotUpdateTimer->setSingleShot(true);
+   QObject::connect(m_pOneShotUpdateTimer, &QTimer::timeout,
                     this, &MainWindow::slot_getContents);
 
    resize(900, 600);
@@ -390,24 +413,31 @@ void MainWindow::slot_setSplash()
    m_iSplashWidgetIndex = m_pStackedWidget->count();
 
    StackLayerWidget* pSplashScreen = new StackLayerWidget(this);
-   QProgressBar* pConnectingProgress = new QProgressBar(pSplashScreen);
-   pConnectingProgress->setValue(70);
-   DecentLabel* pConnectingLabel = new DecentLabel(pSplashScreen, DecentLabel::SplashInfo);
-   pConnectingLabel->setText(tr("Please wait, we are syncing with network…"));
+   m_pConnectingProgress = new QProgressBar(pSplashScreen);
+   m_pConnectingProgress->setFont(gui_wallet::ProgressInfoFont());
+
+   DecentLabel* pPleaseWaitLabel = new DecentLabel(pSplashScreen, DecentLabel::SplashInfo);
+   pPleaseWaitLabel->setFont(gui_wallet::ProgressInfoFont());
+   pPleaseWaitLabel->setText(tr("Please wait..."));
+
+   m_pConnectingLabel = new DecentLabel(pSplashScreen, DecentLabel::SplashInfo);
+   m_pConnectingLabel->setText(tr("Connecting..."));
+   m_pConnectingLabel->setFont(gui_wallet::ProgressInfoFont());
+
    StatusLabel* pSyncUpLabel = new StatusLabel(pSplashScreen, DecentLabel::SplashInfo);
    DecentButton* pButton = new DecentButton(this, DecentButton::SplashAction);
 
-   pConnectingLabel->setFont(gui_wallet::ProgressInfoFont());
    pSyncUpLabel->setFont(gui_wallet::ProgressInfoFont());
 
    pButton->hide();
    pButton->setText(tr("Proceed"));
    
    QGridLayout* pLayoutSplash = new QGridLayout;
-   pLayoutSplash->addWidget(pConnectingProgress, 0, 0, Qt::AlignVCenter | Qt::AlignCenter);
-   pLayoutSplash->addWidget(pConnectingLabel, 1, 0, Qt::AlignVCenter | Qt::AlignCenter);
-   pLayoutSplash->addWidget(pSyncUpLabel, 2, 0, Qt::AlignVCenter | Qt::AlignCenter);
-   pLayoutSplash->addWidget(pButton, 3, 0, Qt::AlignVCenter | Qt::AlignCenter);
+   pLayoutSplash->addWidget(pPleaseWaitLabel,  0, 0, Qt::AlignVCenter | Qt::AlignCenter);
+   pLayoutSplash->addWidget(m_pConnectingProgress, 1, 0, Qt::AlignVCenter | Qt::AlignCenter);
+   pLayoutSplash->addWidget(m_pConnectingLabel, 2, 0, Qt::AlignVCenter | Qt::AlignCenter);
+   pLayoutSplash->addWidget(pSyncUpLabel, 3, 0, Qt::AlignVCenter | Qt::AlignCenter);
+   pLayoutSplash->addWidget(pButton, 4, 0, Qt::AlignVCenter | Qt::AlignCenter);
    
    pLayoutSplash->setSizeConstraint(QLayout::SetFixedSize);
    pLayoutSplash->setSpacing(10);
@@ -416,12 +446,12 @@ void MainWindow::slot_setSplash()
    pSplashScreen->setLayout(pLayoutSplash);
    
    QObject::connect(&Globals::instance(), &Globals::statusShowMessage,
-                    pSyncUpLabel, &StatusLabel::showMessage);
+                    this, &MainWindow::slot_ConnectingUpdate);
    QObject::connect(&Globals::instance(), &Globals::statusClearMessage,
                     pSyncUpLabel, &StatusLabel::clearMessage);
-   
-   QObject::connect(this, &MainWindow::signal_setSplashMainText,
-                    pConnectingLabel, &QLabel::setText);
+   QObject::connect(&Globals::instance(), &Globals::updateProgress,
+                     this, &MainWindow::slot_BlockchainUpdate);
+
    QObject::connect(this, &MainWindow::signal_setSplashMainText,
                     pButton, &QWidget::show);
    
@@ -429,10 +459,6 @@ void MainWindow::slot_setSplash()
                     this, &MainWindow::slot_closeSplash);
 
    slot_stackWidgetPush(pSplashScreen);
-
-   m_pTimerBalance->stop();
-   m_pTimerDownloads->stop();
-   m_pTimerContents->stop();
 
    m_pActionImportKey->setDisabled(true);
 }
@@ -448,7 +474,7 @@ void MainWindow::closeSplash(bool bGonnaCoverAgain)
 
    StackLayerWidget* pLayer = nullptr;
 
-   signal_setSplashMainText(QString());
+   emit signal_setSplashMainText(QString());
    Globals::instance().statusShowMessage(QString());
 
    if (!bGonnaCoverAgain)
@@ -456,12 +482,12 @@ void MainWindow::closeSplash(bool bGonnaCoverAgain)
       if (Globals::instance().getWallet().IsNew())
       {
          pLayer = new PasswordWidget(nullptr, PasswordWidget::eSetPassword);
-         signal_setSplashMainText(tr("Please set a password to encrypt your wallet"));
+         emit signal_setSplashMainText(tr("Please set a password to encrypt your wallet"));
       }
       else if (Globals::instance().getWallet().IsLocked())
       {
          pLayer = new PasswordWidget(nullptr, PasswordWidget::eUnlock);
-         signal_setSplashMainText(tr("Please unlock your wallet"));
+         emit signal_setSplashMainText(tr("Please unlock your wallet"));
       }
       else
       {
@@ -469,7 +495,7 @@ void MainWindow::closeSplash(bool bGonnaCoverAgain)
          if (accounts.empty())
          {
             pLayer = new ImportKeyWidget(nullptr);
-            signal_setSplashMainText(tr("Please import your account in order to proceed"));
+            emit signal_setSplashMainText(tr("Please import your account in order to proceed"));
          }
       }
    }
@@ -498,14 +524,13 @@ void MainWindow::closeSplash(bool bGonnaCoverAgain)
       DisplayWalletContentGUI();
 
       m_pTimerBalance->start();
-      m_pTimerDownloads->start();
-      m_pTimerContents->start();
 
       m_pActionImportKey->setEnabled(true);
 
       Globals::instance().slot_updateAccountBalance();
+      slot_BrowseToggled(true);
       slot_checkDownloads();
-      slot_getContents();
+      updateActiveTable();
    }
 }
 
@@ -531,6 +556,18 @@ void MainWindow::slot_connectionStatusChanged(Globals::ConnectionState from, Glo
    }
 }
 
+void MainWindow::slot_ConnectingUpdate(const QString& time_text, int)
+{
+   Q_ASSERT(m_pConnectingLabel);
+   m_pConnectingLabel->setText(QString(tr("currently synchronized block is %1 old.")).arg(time_text));
+}
+
+void MainWindow::slot_BlockchainUpdate(int value, int max)
+{
+   m_pConnectingProgress->setMaximum(max);
+   m_pConnectingProgress->setValue(value);
+}
+
 void MainWindow::slot_showPurchasedTab()
 {
    m_pButtonPurchased->setChecked(true);
@@ -540,7 +577,7 @@ void MainWindow::slot_showPurchasedTab()
 void MainWindow::slot_showTransactionsTab(std::string const& account_name)
 {
    m_pButtonTransactions->setChecked(true);
-   m_pFilterTransactions->setText(account_name.c_str());
+   m_pFilterTransactions->setText(QString::fromStdString(account_name));
    slot_getContents();
 }
 
@@ -583,7 +620,13 @@ void MainWindow::slot_stackWidgetPop()
 
 void MainWindow::slot_updateAccountBalance(Asset const& balance)
 {
-   m_pBalance->setText(balance.getStringBalance());
+   QString blalanceText = balance.getStringBalance();
+
+   QFontMetrics fm(m_pBalance->font());
+   int pxWidth = fm.width(blalanceText);
+
+   m_pBalance->setMinimumWidth(pxWidth + 10);  //10 is border..
+   m_pBalance->setText(blalanceText);
 }
 
 void MainWindow::slot_replayBlockChain()
@@ -604,24 +647,58 @@ void MainWindow::slot_importKey()
    slot_stackWidgetPush(import_key);
 }
 
+void MainWindow::slot_currentAccountChanged(int iIndex)
+{
+   QString account = m_pAccountList->itemText(iIndex);
+   Globals::instance().setCurrentAccount(account);
+
+   slot_getContents();
+}
+
+void MainWindow::slot_advancedMinerVoting()
+{
+   MiningVotePopup* mining_vote = new MiningVotePopup(nullptr);
+   slot_stackWidgetPush(mining_vote);
+}
+
 void MainWindow::slot_BrowseToggled(bool toggled)
 {
    QWidget* pSender = qobject_cast<QWidget*>(sender());
-   //
-   // really a stupid hack to have the state change visible
-   pSender->setEnabled(false);
-   pSender->setEnabled(true);
+   if (pSender) {
+      //
+      // really a stupid hack to have the state change visible
+      pSender->setEnabled(false);
+      pSender->setEnabled(true);
+   }
+
+   TabContentManager* pActiveTab = m_pTabBrowse;
+   Q_ASSERT(pActiveTab);
+
+   QWidget* pFilter = pActiveTab->getFilterWidget();
+   Q_ASSERT(pFilter);
+   pFilter->setHidden(!toggled);
+
    //
    if (toggled)
    {
-      m_pFilterBrowse->show();
-      m_pTabBrowse->show();
-      slot_getContents();
+      pActiveTab->show();
+      updateActiveTable();
+
+      QTimer* pTimer = pActiveTab->getRefreshTimer();
+      if (pTimer) {
+         QObject::connect(pTimer, &QTimer::timeout, this, &MainWindow::slot_getContents);
+         pTimer->start();
+      }
    }
    else
    {
-      m_pFilterBrowse->hide();
-      m_pTabBrowse->hide();
+      pActiveTab->hide();
+
+      QTimer* pTimer = pActiveTab->getRefreshTimer();
+      if (pTimer) {
+         pTimer->stop();
+         pTimer->disconnect();
+      }
    }
 }
 
@@ -632,17 +709,21 @@ void MainWindow::slot_TransactionsToggled(bool toggled)
    // really a stupid hack to have the state change visible
    pSender->setEnabled(false);
    pSender->setEnabled(true);
+
+   TabContentManager* pActiveTab = m_pTabTransactions;
+   Q_ASSERT(pActiveTab);
+
+   QWidget* pFilter = pActiveTab->getFilterWidget();
+   Q_ASSERT(pFilter);
+   pFilter->setHidden(!toggled);
+
    //
-   if (toggled)
-   {
-      m_pFilterTransactions->show();
-      m_pTabTransactions->show();
-      slot_getContents();
+   if (toggled) {
+      pActiveTab->show();
+      updateActiveTable();
    }
-   else
-   {
-      m_pFilterTransactions->hide();
-      m_pTabTransactions->hide();
+   else {
+      pActiveTab->hide();
    }
 }
 
@@ -653,19 +734,36 @@ void MainWindow::slot_PublishToggled(bool toggled)
    // really a stupid hack to have the state change visible
    pSender->setEnabled(false);
    pSender->setEnabled(true);
+
+   TabContentManager* pActiveTab = m_pTabPublish;
+   Q_ASSERT(pActiveTab);
+
+   QWidget* pFilter = pActiveTab->getFilterWidget();
+   Q_ASSERT(pFilter);
+   pFilter->setHidden(!toggled);
+
    //
-   if (toggled)
-   {
-      m_pFilterPublish->show();
-      m_pTabPublish->show();
+   if (toggled) {
+      pActiveTab->show();
       m_pPublish->show();
-      slot_getContents();
+      updateActiveTable();
+
+      QTimer* pTimer = pActiveTab->getRefreshTimer();
+      if (pTimer) {
+         QObject::connect(pTimer, &QTimer::timeout, this, &MainWindow::slot_getContents);
+         pTimer->start();
+      }
    }
    else
    {
-      m_pFilterPublish->hide();
-      m_pTabPublish->hide();
+      pActiveTab->hide();
       m_pPublish->hide();
+
+      QTimer* pTimer = pActiveTab->getRefreshTimer();
+      if (pTimer) {
+         pTimer->stop();
+         pTimer->disconnect();
+      }
    }
 }
 
@@ -676,17 +774,21 @@ void MainWindow::slot_UsersToggled(bool toggled)
    // really a stupid hack to have the state change visible
    pSender->setEnabled(false);
    pSender->setEnabled(true);
+
+   TabContentManager* pActiveTab = m_pTabUsers;
+   Q_ASSERT(pActiveTab);
+
+   QWidget* pFilter = pActiveTab->getFilterWidget();
+   Q_ASSERT(pFilter);
+   pFilter->setHidden(!toggled);
+
    //
-   if (toggled)
-   {
-      m_pFilterUsers->show();
-      m_pTabUsers->show();
-      slot_getContents();
+   if (toggled) {
+      pActiveTab->show();
+      updateActiveTable();
    }
-   else
-   {
-      m_pFilterUsers->hide();
-      m_pTabUsers->hide();
+   else {
+      pActiveTab->hide();
    }
 }
 
@@ -697,18 +799,77 @@ void MainWindow::slot_PurchasedToggled(bool toggled)
    // really a stupid hack to have the state change visible
    pSender->setEnabled(false);
    pSender->setEnabled(true);
+
+   TabContentManager* pActiveTab = m_pTabPurchased;
+   Q_ASSERT(pActiveTab);
+
+   QWidget* pFilter = pActiveTab->getFilterWidget();
+   Q_ASSERT(pFilter);
+   pFilter->setHidden(!toggled);
+
    //
-   if (toggled)
-   {
-      m_pFilterPurchased->show();
-      m_pTabPurchased->show();
-      slot_getContents();
+   if (toggled) {
+      pActiveTab->show();
+      updateActiveTable();
+
+      QTimer* pTimer = pActiveTab->getRefreshTimer();
+      if (pTimer) {
+         QObject::connect(pTimer, &QTimer::timeout, this, &MainWindow::slot_getContents);
+         pTimer->start();
+      }
    }
-   else
-   {
-      m_pFilterPurchased->hide();
-      m_pTabPurchased->hide();
+   else {
+      pActiveTab->hide();
+
+      QTimer* pTimer = pActiveTab->getRefreshTimer();
+      if (pTimer) {
+         pTimer->stop();
+         pTimer->disconnect();
+      }
    }
+}
+
+void MainWindow::slot_MinerVotingToggled(bool toggled)
+{
+   QWidget* pSender = qobject_cast<QWidget*>(sender());
+   //
+   // really a stupid hack to have the state change visible
+   pSender->setEnabled(false);
+   pSender->setEnabled(true);
+
+   TabContentManager* pActiveTab = m_pTabMinerVoting;
+   Q_ASSERT(pActiveTab);
+
+   QWidget* pFilter = pActiveTab->getFilterWidget();
+   Q_ASSERT(pFilter);
+   pFilter->setHidden(!toggled);
+
+   m_pAdvancedMinerVoting->setEnabled(toggled);
+
+   //
+   if (toggled) {
+
+      m_pOnlyMyVotes->show();
+      pActiveTab->show();
+      updateActiveTable();
+
+      QTimer* pTimer = pActiveTab->getRefreshTimer();
+      if (pTimer) {
+         QObject::connect(pTimer, &QTimer::timeout, this, &MainWindow::slot_getContents);
+         pTimer->start();
+      }
+   }
+   else {
+      m_pOnlyMyVotes->hide();
+      pActiveTab->hide();
+
+      QTimer* pTimer = pActiveTab->getRefreshTimer();
+      if (pTimer) {
+         pTimer->stop();
+         pTimer->disconnect();
+      }
+   }
+
 }
 
 void MainWindow::slot_checkDownloads()
@@ -733,13 +894,12 @@ void MainWindow::slot_checkDownloads()
                                                   "\"\" "
                                                   "\"-1\" ");
    }
-   catch(const std::exception& ex)
-   {
+   catch(const std::exception& ex) {
       std::cout << "runTaskParse() " << ex.what() << std::endl;
       return;
    }
-   catch(...)
-   {
+   catch(const fc::exception& ex) {
+      std::cout << "runTaskParse() " << ex.what() << std::endl;
       return;
    }
 
@@ -763,17 +923,22 @@ void MainWindow::slot_checkDownloads()
          }
          catch(const std::exception& ex)
          {
-            std::cout << "runTask('download_package') " << ex.what() << std::endl;
+            std::cout << "runTask('download_package') URI:" << URI << "Ex:" << ex.what() << std::endl;
          }
-         catch(...)
+         catch(const fc::exception& ex)
          {
-            std::cout << "Cannot resume download: " << URI << std::endl;
+            std::cout << "runTask('download_package') URI:" << URI << "Ex:" << ex.what() << std::endl;
          }
       }
    }
 }
 
 void MainWindow::slot_getContents()
+{
+   updateActiveTable();
+}
+
+void MainWindow::updateActiveTable()
 {
    TabContentManager* pTab = activeTable();
 
@@ -807,7 +972,7 @@ void MainWindow::slot_PreviousPage()
    if (pTab)
       pTab->previous();
 
-   slot_getContents();
+   updateActiveTable();
 }
 
 void MainWindow::slot_ResetPage()
@@ -817,7 +982,7 @@ void MainWindow::slot_ResetPage()
    if (pTab)
       pTab->reset();
 
-   slot_getContents();
+   updateActiveTable();
 }
 
 void MainWindow::slot_NextPage()
@@ -827,7 +992,7 @@ void MainWindow::slot_NextPage()
    if (pTab)
       pTab->next();
 
-   slot_getContents();
+   updateActiveTable();
 }
 
 TabContentManager* MainWindow::activeTable() const
@@ -844,8 +1009,17 @@ TabContentManager* MainWindow::activeTable() const
       pTab = m_pTabUsers;
    else if (m_pTabPurchased->isVisible())
       pTab = m_pTabPurchased;
+   else if (m_pTabMinerVoting->isVisible())
+      pTab = m_pTabMinerVoting;
 
    return pTab;
+}
+
+void MainWindow::resizeEvent(QResizeEvent* event)
+{
+   QMainWindow::resizeEvent(event);
+
+   m_pOneShotUpdateTimer->start();
 }
 
 void MainWindow::DisplayWalletContentGUI()
@@ -858,22 +1032,25 @@ void MainWindow::DisplayWalletContentGUI()
    {
       auto accs = Globals::instance().runTaskParse("list_my_accounts");
       m_pAccountList->clear();
-      
+
+      std::string id, name;
       for (int i = 0; i < accs.size(); ++i)
       {
-         std::string id = accs[i]["id"].get<std::string>();
-         std::string name = accs[i]["name"].get<std::string>();
+         id = accs[i]["id"].get<std::string>();
+         name = accs[i]["name"].get<std::string>();
 
-         m_pAccountList->addItem(name.c_str());
+         m_pAccountList->insertItem(i, QString::fromStdString(name));
       }
 
-      if (accs.size() > 0)
-      {
+      if (accs.size() > 0) {
          m_pAccountList->setCurrentIndex(0);
       }
    }
-   catch (const std::exception& ex)
-   {
+   catch (const std::exception& ex) {
+      exception_text = ex.what();
+      display_error_box = true;
+   }
+   catch (const fc::assert_exception& ex) {
       exception_text = ex.what();
       display_error_box = true;
    }

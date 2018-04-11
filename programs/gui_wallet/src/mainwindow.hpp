@@ -7,8 +7,10 @@
 
 class QStackedWidget;
 class QComboBox;
+class QCheckBox;
 class QTimer;
 class QAction;
+class QProgressBar;
 class UpdateManager;
 
 namespace gui_wallet
@@ -18,6 +20,7 @@ class DecentLabel;
 class DecentLineEdit;
 class DecentButton;
 class TabContentManager;
+
 
 class MainWindow : public QMainWindow
 {
@@ -48,22 +51,29 @@ protected slots:
    void slot_PublishToggled(bool toggled);
    void slot_UsersToggled(bool toggled);
    void slot_PurchasedToggled(bool toggled);
-   
+   void slot_ConnectingUpdate(const QString& time_text, int);
+   void slot_BlockchainUpdate(int value, int max);
+   void slot_currentAccountChanged(int iIndex);
+   void slot_MinerVotingToggled(bool toggled);
+   void slot_advancedMinerVoting();
+
    void DisplayWalletContentGUI();
 
 signals:
-   void signal_setSplashMainText(QString const&);
+   void signal_setSplashMainText(const QString & );
 
 protected:
    void closeSplash(bool bGonnaCoverAgain);
    TabContentManager* activeTable() const;
+   void updateActiveTable();
+
+   void resizeEvent(QResizeEvent* event) override;
 
 protected:
    size_t m_iSplashWidgetIndex;
-   QTimer* m_pTimerDownloads;
    QTimer* m_pTimerBalance;
-   QTimer* m_pTimerContents;
-   
+   QTimer* m_pOneShotUpdateTimer;
+
    QStackedWidget* m_pStackedWidget;
    QComboBox* m_pAccountList;
    DecentLabel* m_pBalance;
@@ -73,6 +83,7 @@ protected:
    DecentButton* m_pButtonPublish;
    DecentButton* m_pButtonUsers;
    DecentButton* m_pButtonPurchased;
+   DecentButton* m_pButtonMinerVoting;
 
    DecentButton* m_pPreviousPage;
    DecentButton* m_pResetPage;
@@ -85,20 +96,27 @@ protected:
    DecentLineEdit* m_pFilterPurchased;
 
    DecentButton* m_pPublish;
+   QCheckBox* m_pOnlyMyVotes;
 
    TabContentManager* m_pTabBrowse;
    TabContentManager* m_pTabTransactions;
    TabContentManager* m_pTabPublish;
    TabContentManager* m_pTabUsers;
    TabContentManager* m_pTabPurchased;
+   TabContentManager* m_pTabMinerVoting;
 
    QAction* m_pActionImportKey;
    QAction* m_pActionReplayBlockchain;
    QAction* m_pActionResyncBlockchain;
+   QAction* m_pAdvancedMinerVoting;
 
    UpdateManager* m_pUpdateManager;
 
    std::set<std::string> m_activeDownloads;
+
+   QProgressBar* m_pConnectingProgress;
+   DecentLabel* m_pConnectingLabel;
+
 };
 
 }

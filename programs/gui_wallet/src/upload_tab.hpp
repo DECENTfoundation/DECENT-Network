@@ -34,7 +34,7 @@ namespace gui_wallet
       void slot_ShowContentPopup(int);
       void slot_UploadPopupResubmit(int);
       void slot_UploadPopup();
-
+      void slot_cellClicked(int row, int col);
 
    protected:
       DecentTable* m_pTableWidget;

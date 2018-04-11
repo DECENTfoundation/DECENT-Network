@@ -143,6 +143,15 @@ void database::update_last_irreversible_block()
    const global_property_object& gpo = get_global_properties();
    const dynamic_global_property_object& dpo = get_dynamic_global_properties();
 
+   if(get_node_properties().skip_flags&skip_undo_history_check)
+   {
+      modify( dpo, [&]( dynamic_global_property_object& _dpo )
+      {
+           _dpo.last_irreversible_block_num = head_block_num();
+      } );
+      return;
+   }
+
    vector< const miner_object* > wit_objs;
    wit_objs.reserve( gpo.active_miners.size() );
    for( const miner_id_type& wid : gpo.active_miners )

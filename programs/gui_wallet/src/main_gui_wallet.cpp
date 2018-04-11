@@ -72,15 +72,26 @@ int main(int argc, char* argv[])
 
 #endif
 
+   try {
+
+      qRegisterMetaType<string>( "std::string" );
+      qRegisterMetaType<int64_t>( "int64_t" );
+      app.setApplicationDisplayName("DECENT");
 
 
-   qRegisterMetaType<string>( "std::string" );
-   qRegisterMetaType<int64_t>( "int64_t" );
-   app.setApplicationDisplayName("DECENT");
-
-   aMainWindow.show();
-   //aMainWindow.StartUpdateThread();
-   app.exec();
+      aMainWindow.show();
+      //aMainWindow.StartUpdateThread();
+      app.exec();
+   }
+   catch(const std::exception& ex) {
+      std::cout << "exception:" << ex.what() << std::endl;
+   }
+   catch(const fc::exception& ex) {
+      std::cout << "exception:" << ex.what() << std::endl;
+   }
+   catch(...) {
+      std::cout << "yay! exception..." << std::endl;
+   }
 
    gui_wallet::Globals::instance().stopDaemons();
    gui_wallet::Globals::instance().clear();

@@ -16,8 +16,7 @@
 
 using namespace gui_wallet;
 
-Rev_history_dlg::Rev_history_dlg(const QString& revHistory, QWidget* pParent)
-   : QDialog(pParent)
+Rev_history_dlg::Rev_history_dlg(const QString& revHistory, QWidget* pParent) : QDialog(pParent)
    , m_revHistory(revHistory)
 {
    

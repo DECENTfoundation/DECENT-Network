@@ -56,9 +56,12 @@ TransactionsTab::TransactionsTab(QWidget* pParent,
 
    QObject::connect(pFilterLineEdit, &QLineEdit::textChanged,
                     this, &TransactionsTab::slot_SearchTermChanged);
+   setFilterWidget(pFilterLineEdit);
 
    QObject::connect(m_pTableWidget, &DecentTable::signal_SortingChanged,
                     this, &TransactionsTab::slot_SortingChanged);
+
+   setRefreshTimer(5000);
 }
 
 void TransactionsTab::timeToUpdate(const string& result)
@@ -137,7 +140,7 @@ void TransactionsTab::timeToUpdate(const string& result)
 
 string TransactionsTab::getUpdateCommand()
 {
-   if (m_strSearchTerm.toStdString().empty())
+   if (m_strSearchTerm.isEmpty())
       return string();
 
    return   "search_account_history "
@@ -152,9 +155,9 @@ void TransactionsTab::slot_SortingChanged(int index)
    reset();
 }
 
-void TransactionsTab::slot_SearchTermChanged(QString const& strSearchTerm)
+void TransactionsTab::slot_SearchTermChanged(const QString& strSearchTerm)
 {
    m_strSearchTerm = strSearchTerm;
-   reset(false);
+   reset(true);
 }
 }  // end namespace gui_wallet

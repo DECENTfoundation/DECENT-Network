@@ -366,17 +366,23 @@ void seeding_plugin_impl::send_ready_to_publish()
          }
 
          const asset_object &ao = *itr;
-
          asset dct_price = ao.amount_from_string(sritr->price);
          if( ao.id != asset_id_type()) //core asset
-            dct_price = dct_price * ao.monitored_asset_opts->current_feed.core_exchange_rate;
+            dct_price = database().price_to_dct( dct_price );
+
+         if( dct_price.amount.value > DECENT_MAX_SEEDING_PRICE)
+         {
+            const auto& dct_ao = database().get(asset_id_type());
+            ilog("Seeding price limit ${limit} DCT exceeded.",("limit",dct_ao.amount_to_string(DECENT_MAX_SEEDING_PRICE)));
+            FC_THROW("");
+         }
 
          signed_transaction tx;
          if( database().head_block_time() < HARDFORK_1_TIME) {
             ready_to_publish_operation op;
             op.seeder = sritr->seeder;
             op.space = sritr->free_space;
-            op.price_per_MByte = dct_price.amount.value;;
+            op.price_per_MByte = dct_price.amount.value;
             op.pubKey = get_public_el_gamal_key(sritr->content_privKey);
             op.ipfs_ID = json[ "ID" ];
 
@@ -387,7 +393,7 @@ void seeding_plugin_impl::send_ready_to_publish()
             ready_to_publish2_operation op;
             op.seeder = sritr->seeder;
             op.space = sritr->free_space;
-            op.price_per_MByte = dct_price.amount.value;;
+            op.price_per_MByte = dct_price.amount.value;
             op.pubKey = get_public_el_gamal_key(sritr->content_privKey);
             op.ipfs_ID = json[ "ID" ];
             op.region_code = sritr->region_code;
@@ -415,7 +421,7 @@ void seeding_plugin_impl::send_ready_to_publish()
          //fc::usleep(fc::microseconds(1000000));
          sritr++;
       }
-   }catch(...){};
+   }catch(...){elog("Didn't send out RtP.");};
    fc::time_point next_wakeup(fc::time_point::now() + fc::microseconds( (uint64_t) 1000000 * (DECENT_RTP_VALIDITY / 2 ))); //let's send PoR every hour
    ilog("seeding plugin_impl: planning next send_ready_to_publish at ${t}",("t",next_wakeup ));
    service_thread->schedule([=](){ send_ready_to_publish();}, next_wakeup, "Seeding plugin RtP generate" );
@@ -676,7 +682,7 @@ void seeding_plugin::plugin_pre_startup( const seeding_plugin_startup_options& s
       dir_helper.set_packages_path( seeding_options.packages_path );
    else
       dir_helper.set_packages_path( dir_helper.get_decent_packages() / "seeding" );
-   
+
    ilog("starting service thread");
    my = unique_ptr<detail::seeding_plugin_impl>( new detail::seeding_plugin_impl( *this) );
    my->service_thread = std::make_shared<fc::thread>("seeding");
@@ -702,7 +708,6 @@ void seeding_plugin::plugin_pre_startup( const seeding_plugin_startup_options& s
          mso.privKey = seeding_options.seeder_private_key;
          mso.price = seeding_options.seeding_price;
          mso.region_code = seeding_options.region_code;
-
          mso.symbol = seeding_options.seeding_symbol;
       });
    }catch(...){}
@@ -733,13 +738,24 @@ void seeding_plugin::plugin_set_program_options(
 
 void detail::SeedingListener::package_download_error(const std::string & error) {
    elog("seeding plugin: package_download_error(): Failed downloading package ${s}, ${e}", ("s", _url)("e", error));
+   failed++;
    decent::package::package_handle_t pi;
    auto& pm = decent::package::PackageManager::instance();
 
    pi = _pi;
-   //we want to restart the download; however, this method is being called from pi->_download_task::Task method, so we can't restart directly.
-   // We will start asynchronously
-   fc::thread::current().schedule([pi](){ pi->download(true);}, fc::time_point::now() + fc::seconds(60) );
+
+   if(failed < 5) {
+      //we want to restart the download; however, this method is being called from pi->_download_task::Task method, so we can't restart directly.
+      // We will start asynchronously
+      fc::thread::current().schedule([ pi ]() { pi->download(true); }, fc::time_point::now() + fc::seconds(60));
+   }
+   else{
+      const auto& db = _my->database();
+      const auto &mso_idx = db.get_index_type<my_seeding_index>().indices().get<by_URI>();
+      const auto &mso_itr = mso_idx.find(_url);
+      const auto& mso = *mso_itr;
+      _my->release_package(mso, pi);
+   }
 };
 
 void detail::SeedingListener::package_download_complete() {
@@ -756,7 +772,7 @@ void detail::SeedingListener::package_download_complete() {
    if( size > mso_itr->space ) {
       ilog("seeding plugin: package_download_complete(): Fraud detected: real content size is greater than propagated in blockchain; deleting...");
       //changing DB outside the main thread does not work properly, let's delete it from there
-      _my->main_thread->async([ & ]() { _my->release_package(mso, pi); });
+      _my->main_thread->async([ this, &mso, pi ]() { _my->release_package(mso, pi); });
       _pi.reset();
       return;
    }
@@ -764,7 +780,7 @@ void detail::SeedingListener::package_download_complete() {
    //Don't block package manager thread for too long.
    seeding_plugin_impl *my = _my;
    _my->database().modify<my_seeding_object>(mso, [](my_seeding_object& so){so.downloaded = true;});
-   _my->service_thread->async([ & ]() { _my->generate_por_int(mso, pi); });
+   _my->service_thread->async([ this, &mso, pi ]() { _my->generate_por_int(mso, pi); });
 };
 
 

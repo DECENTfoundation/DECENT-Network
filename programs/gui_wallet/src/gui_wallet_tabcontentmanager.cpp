@@ -2,38 +2,59 @@
 #include "gui_wallet_global.hpp"
 #include "gui_wallet_tabcontentmanager.hpp"
 
+#include <QTimer>
+#include <QApplication>
+
 using std::string;
 
 namespace gui_wallet
 {
-TabContentManager::TabContentManager(QWidget* pParent/* = nullptr*/)
-: QWidget(pParent)
+TabContentManager::TabContentManager(QWidget* pParent/* = nullptr*/) : QWidget(pParent)
 , m_i_page_size(50)
 , m_last_result()
 , m_next_iterator()
+, m_pFilterWidget(nullptr)
+, m_pRefreshTimer(nullptr)
 {
 }
 
 void TabContentManager::tryToUpdate() {
    try {
+
+      QApplication::setOverrideCursor(Qt::WaitCursor);
+
       std::string command = getUpdateCommand();
       if (command.empty()) {
          timeToUpdate(std::string());
+
+         QApplication::restoreOverrideCursor();
          return;
       }
-      
-      std::string result;
+
+      std::string result, error;
       try {
          result = Globals::instance().runTask(command);
-      } catch (...) {
-         result.clear();
       }
+      catch (std::exception &ex) {
+         error = ex.what();
+      }
+      catch (fc::exception& ex) {
+         error = ex.what();
+      }
+
       if (result != m_last_result) {
          m_last_result = result;
          timeToUpdate(result);
       }
-   } catch (...) {
-      
+
+      QApplication::restoreOverrideCursor();
+
+   }
+   catch (const std::exception& ex) {
+      std::cout << "Exception:" << ex.what() << std::endl;
+   }
+   catch (const fc::exception& ex) {
+      std::cout << "Exception:" << ex.what() << std::endl;
    }
 }
 
@@ -92,5 +113,22 @@ std::string TabContentManager::next_iterator() const
 
    return str_iterator;
 }
+
+void TabContentManager::setFilterWidget(QWidget* pWidget)
+{
+   m_pFilterWidget = pWidget;
+}
+
+void TabContentManager::setRefreshTimer(int msec)
+{
+   if (m_pRefreshTimer == nullptr) {
+      m_pRefreshTimer = new QTimer(this);
+      m_pRefreshTimer->setInterval(msec);
+   }
+   else {
+      m_pRefreshTimer->setInterval(msec);
+   }
+}
+
 
 }  // namespace gui_wallet

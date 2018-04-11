@@ -66,7 +66,7 @@ namespace graphene { namespace chain {
     */
    struct content_submit_operation : public base_operation
    {
-      struct fee_parameters_type { uint64_t fee = 0; };
+      struct fee_parameters_type { uint64_t fee = GRAPHENE_BLOCKCHAIN_PRECISION / 100; };
 
       asset fee;
       account_id_type author; ///<author of the content. If co-authors is not filled, this account will receive full payout
@@ -89,6 +89,7 @@ namespace graphene { namespace chain {
 
       account_id_type fee_payer()const { return author; }
       void validate()const;
+      share_type      calculate_fee( const fee_parameters_type& k )const {if(seeders.size()) return 0; return k.fee; };
    };
 
    /**

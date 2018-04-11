@@ -49,7 +49,17 @@ namespace graphene { namespace chain {
       /// True to allow implicit conversion of this asset to/from core asset.
       bool is_exchangeable = true;
 
-      extensions_type extensions;
+      /// Extensions
+
+      /// False when issuer can change max_supply, otherwise false
+      struct fixed_max_supply_struct{
+         bool is_fixed_max_supply;
+         fixed_max_supply_struct(bool is_fixed=false) : is_fixed_max_supply{ is_fixed } {};
+      };
+
+      typedef static_variant<void_t, fixed_max_supply_struct>     asset_options_extensions;
+      typedef flat_set<asset_options_extensions> asset_options_extensions_type;
+      asset_options_extensions_type extensions;
 
       /// Perform internal consistency checks.
       /// @throws fc::exception if any check fails
@@ -78,6 +88,13 @@ namespace graphene { namespace chain {
       bool feed_is_expired(time_point_sec current_time)const
          { return feed_expiration_time() <= current_time; }
       void update_median_feeds(time_point_sec current_time);
+      bool feed_is_valid(time_point_sec current_time) const{
+         if(feed_is_expired(current_time))
+            return false;
+         if(current_feed.core_exchange_rate.is_null())
+            return false;
+         return true;
+      }
 
       void validate()const;
    };
@@ -111,7 +128,7 @@ namespace graphene { namespace chain {
 
       optional<monitored_asset_options> monitored_asset_opts;
 
-      /// True to allow implicit conversion of this asset to/from core asset.
+      /// WARNING! Duplicate variable. Do no use it. It does not have any effect.
       bool is_exchangeable = true;
 
       extensions_type extensions;
@@ -313,6 +330,8 @@ FC_REFLECT( graphene::chain::monitored_asset_options,
             (minimum_feeds)
 )
 
+FC_REFLECT( graphene::chain::asset_options::fixed_max_supply_struct, (is_fixed_max_supply) )
+FC_REFLECT_TYPENAME( graphene::chain::asset_options::asset_options_extensions )
 FC_REFLECT( graphene::chain::asset_options,
             (max_supply)
             (core_exchange_rate)

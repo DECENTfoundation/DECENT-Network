@@ -38,4 +38,13 @@ namespace graphene { namespace chain {
          void_result do_apply( const transfer_operation& o );
    };
 
+   class transfer2_evaluator : public evaluator<transfer2_evaluator>
+   {
+   public:
+      typedef transfer2_operation operation_type;
+
+      void_result do_evaluate( const transfer2_operation& o );
+      void_result do_apply( const transfer2_operation& o );
+   };
+
 } } // graphene::chain

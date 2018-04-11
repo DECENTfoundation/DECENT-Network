@@ -34,6 +34,7 @@ namespace gui_wallet
       void slot_Bought();
       void slot_SearchTermChanged(QString const& strSearchTerm);
       void slot_SortingChanged(int);
+      void slot_cellClicked(int row, int col);
       
    protected:
       DecentTable*   m_pTableWidget;

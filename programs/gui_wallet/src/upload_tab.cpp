@@ -60,12 +60,17 @@ Upload_tab::Upload_tab(QWidget* pParent,
    QObject::connect(m_pTableWidget, &DecentTable::signal_SortingChanged,
                     this, &Upload_tab::slot_SortingChanged);
 
+   QObject::connect(m_pTableWidget, &DecentTable::cellClicked,
+                    this, &Upload_tab::slot_cellClicked);
+
    QObject::connect(pFilterLineEdit, &QLineEdit::textChanged,
                     this, &Upload_tab::slot_SearchTermChanged);
+   setFilterWidget(pFilterLineEdit);
 
    QObject::connect(pUploadButton, &QPushButton::clicked,
                     this, &Upload_tab::slot_UploadPopup);
 
+   setRefreshTimer(5000);
 }
 
 // when class has forward declared members
@@ -99,7 +104,6 @@ void Upload_tab::timeToUpdate(const string& result)
       content.synopsis = json_content["synopsis"].get<string>();
       content.URI = json_content["URI"].get<string>();
       content.created = json_content["created"].get<string>();
-      content.created = content.created.substr(0, content.created.find("T"));
       content.expiration = json_content["expiration"].get<string>();
       content.size = json_content["size"].get<int>();
       content.status = json_content["status"].get<string>();
@@ -203,14 +207,18 @@ void Upload_tab::ShowDigitalContentsGUI()
       m_pTableWidget->setItem(iIndex, ePrice, new QTableWidgetItem(content.price.getString()));
 
       // Created
-      m_pTableWidget->setItem(iIndex, eCreated, new QTableWidgetItem(convertDateToLocale(content.created)));
+      std::string created_date;
+      if (content.created != "1970-01-01") {
+         created_date = content.created.substr(0, content.created.find("T"));
+      }
 
-      QDateTime time = QDateTime::fromString(QString::fromStdString(content.expiration), "yyyy-MM-ddTHH:mm:ss");
+      m_pTableWidget->setItem(iIndex, eCreated, new QTableWidgetItem(convertDateToLocale(created_date)));
 
-      std::string e_str = CalculateRemainingTime(QDateTime::currentDateTime(), time);
+      QDateTime time = convertStringToDateTime(content.expiration);
+      QString e_str = CalculateRemainingTime(QDateTime::currentDateTime(), time);
 
       // Remaining
-      m_pTableWidget->setItem(iIndex, eRemaining, new QTableWidgetItem(QString::fromStdString(e_str)));
+      m_pTableWidget->setItem(iIndex, eRemaining, new QTableWidgetItem(e_str));
 
       // Status
       m_pTableWidget->setItem(iIndex, eStatus, new QTableWidgetItem(QString::fromStdString(content.status)));
@@ -272,7 +280,7 @@ void Upload_tab::slot_ShowContentPopup(int iIndex)
    if (iIndex < 0 || iIndex >= _digital_contents.size())
       throw std::out_of_range("Content index is out of range");
 
-   ContentInfoWidget* pDetailsDialog = new ContentInfoWidget(nullptr, _digital_contents[iIndex]);
+   ContentInfoWidget* pDetailsDialog = new ContentInfoWidget(nullptr, _digital_contents[iIndex], true);
    Globals::instance().signal_stackWidgetPush(pDetailsDialog);
 
    QObject::connect(pDetailsDialog, &ContentInfoWidget::accepted,
@@ -295,6 +303,17 @@ void Upload_tab::slot_SearchTermChanged(QString const& strSearchTerm)
    m_strSearchTerm = strSearchTerm;
    reset(false);
 }
+
+void Upload_tab::slot_cellClicked(int row, int /*col*/)
+{
+   if (row < 0 || row >= _digital_contents.size()) {
+      throw std::out_of_range("Content index is out of range");
+   }
+
+   slot_ShowContentPopup(row);
+}
+
+
 
 }  // end namespace gui_wallet
 

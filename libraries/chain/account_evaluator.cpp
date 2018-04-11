@@ -150,10 +150,9 @@ void_result account_update_evaluator::do_evaluate( const account_update_operatio
 
    if( o.new_options.valid() ) {
       verify_account_votes(d, *o.new_options);
+      auto ao = d.get( o.new_options->price_per_subscribe.asset_id );
+      FC_ASSERT( o.new_options->price_per_subscribe.asset_id == asset_id_type(0) || ao.is_monitored_asset() );
    }
-
-   auto ao = d.get( o.new_options->price_per_subscribe.asset_id );
-   FC_ASSERT( o.new_options->price_per_subscribe.asset_id == asset_id_type(0) || ao.is_monitored_asset() );
 
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (o) ) }

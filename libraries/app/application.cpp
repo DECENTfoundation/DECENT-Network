@@ -341,8 +341,10 @@ namespace detail {
             {
                auto item = fc::json::from_string(cp).as<std::pair<uint32_t,block_id_type> >();
                loaded_checkpoints[item.first] = item.second;
+               ilog ( "loaded checkpoint ${s} at ${n}", ("s",loaded_checkpoints[item.first])("n", item.first));
             }
          }
+
          _chain_db->add_checkpoints( loaded_checkpoints );
 
          if( _options->count("replay-blockchain") )

@@ -91,13 +91,16 @@ void  asset_create_operation::validate()const
 {
    FC_ASSERT( fee.amount >= 0 );
    FC_ASSERT( is_valid_symbol(symbol) );
-   FC_ASSERT(precision <= 12);
+   FC_ASSERT( precision <= 12 );
    FC_ASSERT( description.length() <= 1000 );
 
-   if( monitored_asset_opts )
+   if( monitored_asset_opts.valid() ) {
       monitored_asset_opts->validate();
-   else
+      FC_ASSERT(options.max_supply == 0);
+   }
+   else {
       options.validate();
+   }
 }
 
 share_type asset_issue_operation::calculate_fee(const fee_parameters_type& k)const
