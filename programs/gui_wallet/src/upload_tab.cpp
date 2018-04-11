@@ -70,6 +70,7 @@ Upload_tab::Upload_tab(QWidget* pParent,
    QObject::connect(pUploadButton, &QPushButton::clicked,
                     this, &Upload_tab::slot_UploadPopup);
 
+   setRefreshTimer(5000);
 }
 
 // when class has forward declared members

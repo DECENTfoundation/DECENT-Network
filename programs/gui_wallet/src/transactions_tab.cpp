@@ -60,6 +60,8 @@ TransactionsTab::TransactionsTab(QWidget* pParent,
 
    QObject::connect(m_pTableWidget, &DecentTable::signal_SortingChanged,
                     this, &TransactionsTab::slot_SortingChanged);
+
+   setRefreshTimer(5000);
 }
 
 void TransactionsTab::timeToUpdate(const string& result)
