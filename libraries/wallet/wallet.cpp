@@ -3378,9 +3378,25 @@ signed_transaction content_cancellation(const string& author,
    string operation_printer::operator()(const transfer2_operation& op) const
    {
       const auto& from_account = wallet.get_account(op.from);
-      const auto& to_account = wallet.get_account(op.to);
+      account_object to_account;
+      string receiver;
+
+      if(  op.to.is<account_id_type>() )
+      {
+         to_account = wallet.get_account(op.to);
+         receiver = to_account.name;
+      }
+      else
+      {
+         content_id_type content_id = op.to.as<content_id_type>();
+         const content_object content_obj = wallet.get_object<content_object>(content_id);
+         to_account = wallet.get_account(content_obj.author);
+         receiver = std::string(op.to);
+      }
+
+
       out << "Transfer " << wallet.get_asset(op.amount.asset_id).amount_to_pretty_string(op.amount)
-          << " from " << from_account.name << " to " << to_account.name;
+          << " from " << from_account.name << " to " << receiver;
       std::string memo;
       if( op.memo )
       {

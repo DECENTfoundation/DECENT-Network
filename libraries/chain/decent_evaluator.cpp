@@ -531,6 +531,15 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
       if(delivered) {
          content_payout(d, paid_price_after_conversion, *content);
          d.modify<content_object>( *content, []( content_object& co ){ co.times_bought++; });
+
+         finish_buying_operation op;
+         op.author = content->author;
+         op.co_authors = content->co_authors;
+         op.payout = paid_price_after_conversion;
+         op.consumer = object.consumer;
+         op.buying = object.id;
+
+         db().push_applied_operation(op);
       }
       const auto& idx2 = d.get_index_type<seeding_statistics_index>().indices().get<by_seeder>();
       for( auto& element : content->key_parts )
