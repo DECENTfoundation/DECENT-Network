@@ -727,7 +727,9 @@ void Globals::stopDaemons()
 
    if (m_p_daemon_details->ipfs_process) {
       m_p_daemon_details->ipfs_process->terminate();
-      m_p_daemon_details->ipfs_process->waitForFinished();
+      if (!m_p_daemon_details->ipfs_process->waitForFinished(5000)) {
+         m_p_daemon_details->ipfs_process->kill();
+      }
 
       delete m_p_daemon_details->ipfs_process;
       m_p_daemon_details->ipfs_process = nullptr;
