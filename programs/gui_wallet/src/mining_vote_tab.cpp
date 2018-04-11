@@ -145,6 +145,9 @@ void MinerVotingTab::timeToUpdate(const std::string& result)
 
       m_pTableWidget->setRowCount(iSize);
 
+      Asset main_asset = Globals::instance().asset(0);
+      QUrl test_url;
+
       for (size_t iIndex = 0; iIndex < iSize; ++iIndex) {
          auto const &content = contents[iIndex];
 
@@ -168,12 +171,20 @@ void MinerVotingTab::timeToUpdate(const std::string& result)
          tabItem = new QTableWidgetItem(QString::fromStdString(url));
          tabItem->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
          tabItem->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
-         m_pTableWidget->setItem(iIndex, 1, tabItem);
-         if (!url.empty()) {
-            m_indexToUrl.insert(iIndex, QString::fromStdString(url));
-         }
 
-         tabItem = new QTableWidgetItem(getVotesText(total_votes));
+         if (!url.empty()) {
+            test_url.setUrl(QString::fromStdString(url));
+            if (test_url.isValid()) {
+               m_indexToUrl.insert(iIndex, QString::fromStdString(url));
+            }
+         }
+         m_pTableWidget->setItem(iIndex, 1, tabItem);
+
+         QString asset_text = QString::number((uint64_t) total_votes / main_asset.m_scale );
+         asset_text += ' ';
+         asset_text += QString::fromStdString(main_asset.m_str_symbol);
+
+         tabItem = new QTableWidgetItem(asset_text);
          tabItem->setToolTip(QString::number(total_votes));
          tabItem->setTextAlignment(Qt::AlignRight|Qt::AlignVCenter);
          tabItem->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
