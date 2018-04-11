@@ -43,12 +43,12 @@
 
 #include <graphene/utilities/dirhelper.hpp>
 #include <graphene/wallet/wallet.hpp>
-#endif
 
 #include <QCloseEvent>
 #include <QMessageBox>
 #include <QCheckBox>
 #include <QtGlobal>
+#endif
 
 #include "update_manager.hpp"
 
