@@ -182,5 +182,7 @@ bool wallet_api::verify_signature(const std::string& str_buffer,
    return (provided_key == pub_key);
 }
 
-
-
+transaction_id_type wallet_api::get_transaction_id( const signed_transaction& trx ) const
+{
+   return trx.id();
+}

@@ -225,4 +225,13 @@ signed_transaction wallet_api::transfer(const string& from, const string& to,
    return my->transfer(from, to, amount, asset_symbol, memo, broadcast);
 }
 
+pair<transaction_id_type,signed_transaction> wallet_api::transfer2(const string& from,
+                                                                   const string& to,
+                                                                   const string& amount,
+                                                                   const string& asset_symbol,
+                                                                   const string& memo)
+{
+   auto trx = transfer( from, to, amount, asset_symbol, memo, true );
+   return std::make_pair(trx.id(),trx);
+}
 

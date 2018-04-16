@@ -390,6 +390,7 @@ FC_API( graphene::wallet::wallet_api,
         (head_block_time)
         (network_add_nodes)
         (network_get_connected_peers)
+        (get_transaction_id)
 
         //Wallet file
         (list_my_accounts)
@@ -415,6 +416,7 @@ FC_API( graphene::wallet::wallet_api,
         (register_account)
         (create_account_with_brain_key)
         (transfer)
+        (transfer2)
         (generate_el_gamal_keys)
         (get_el_gammal_key)
         (generate_brain_key_el_gamal_key)

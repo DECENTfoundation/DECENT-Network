@@ -141,5 +141,13 @@ void network_add_nodes( const vector<string>& nodes );
  */
 vector< variant > network_get_connected_peers();
 
+/**
+ * @brief This method is used to convert a JSON transaction to its transaction ID.
+ * @param trx Signed transaction
+ * @return The transaction ID
+ * @ingroup WalletAPI_General
+ */
+transaction_id_type get_transaction_id( const signed_transaction& trx ) const;
+
 
 #endif //DECENT_WALLET_GENERAL_H
