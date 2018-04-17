@@ -138,7 +138,7 @@ namespace detail {
                "seed1.decentgo.com:40000",
                "seed2.decentgo.com:40000", 
                "seed3.decentgo.com:40000",
-               "52.10.121.79:40000",             // # liberosist (US) 
+               "45.76.205.241:40000",            // # liberosist (JP)
                "decent.agoric.systems:46023",    // # agoric.systems / robrigo (BR)
                "66.70.188.105:40000"             // # decentspace (CA)
             };
