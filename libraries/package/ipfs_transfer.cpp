@@ -81,7 +81,8 @@ namespace decent { namespace package {
             for( auto &link : links ) {
                 if((int) link.at("Type") == 1 ) //directory
                 {
-                    const auto dir_name = dest_path / link.at("Name");
+                    const std::string& link_name = link.at("Name");
+                    const auto dir_name = dest_path / link_name;
                     create_directories(dir_name);
                     ipfs_recursive_get(link.at("Hash"), dir_name);
                 }
