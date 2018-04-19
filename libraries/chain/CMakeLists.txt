@@ -88,10 +88,13 @@ add_library( graphene_chain
            )
 
 add_dependencies( graphene_chain build_hardfork_hpp )
+
+target_link_libraries( graphene_chain fc graphene_db decent_encrypt pbc )
+
 if( WIN32 )
-  target_link_libraries( graphene_chain fc graphene_db decent_encrypt pbc ${GMP_LIBRARIES} )
+  target_link_libraries( graphene_chain ${GMP_LIBRARIES})
 else()
-  target_link_libraries( graphene_chain fc graphene_db decent_encrypt pbc gmp )
+  target_link_libraries( graphene_chain gmp )
 endif()
 
 target_include_directories(graphene_chain
