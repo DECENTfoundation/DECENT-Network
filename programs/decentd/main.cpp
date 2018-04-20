@@ -29,6 +29,7 @@
 #include <graphene/account_history/account_history_plugin.hpp>
 #include <graphene/messaging/messaging.hpp>
 #include <graphene/utilities/dirhelper.hpp>
+#include <graphene/utilities/git_revision.hpp>
 
 #include <fc/exception/exception.hpp>
 #include <fc/thread/thread.hpp>
@@ -117,9 +118,9 @@ int main(int argc, char** argv) {
       bpo::options_description app_options("DECENT Daemon");
       bpo::options_description cfg_options("DECENT Daemon");
       app_options.add_options()
-            ("help,h", "Print this help message and exit.")
-       ("data-dir,d", bpo::value<boost::filesystem::path>()->default_value( utilities::decent_path_finder::instance().get_decent_data() / "decentd"), "Directory containing databases, configuration file, etc.")
-            ;
+         ("help,h", "Print this help message and exit.")
+         ("version,v", "Print version information")
+         ("data-dir,d", bpo::value<boost::filesystem::path>()->default_value( utilities::decent_path_finder::instance().get_decent_data() / "decentd"), "Directory containing databases, configuration file, etc.");
 
       bpo::variables_map options;
 
@@ -142,11 +143,26 @@ int main(int argc, char** argv) {
         return 1;
       }
 
+      if( options.count("version") )
+         {
+            std::string client_version( graphene::utilities::git_revision_description );
+            const size_t pos = client_version.find( '/' );
+            if( pos != std::string::npos && client_version.size() > pos )
+               client_version = client_version.substr( pos + 1 );
+
+            std::cout << "decentd version " << client_version << "\n";
+         }
+
       if( options.count("help") )
       {
+         if( options.count("version") )
+            std::cout << "\n";
+
          std::cout << app_options << "\n";
-         return 0;
       }
+
+      if( options.count("help") || options.count("version") )
+         return 0;
 
       fc::path data_dir;
       if( options.count("data-dir") )
