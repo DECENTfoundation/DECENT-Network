@@ -7,12 +7,17 @@ if( GPERFTOOLS_FOUND )
     #list( APPEND PLATFORM_SPECIFIC_LIBS tcmalloc )
 endif()
 
+target_link_libraries( cli_wallet
+        PRIVATE graphene_app graphene_net graphene_chain graphene_egenesis_decent graphene_utilities graphene_wallet package_manager decent_encrypt
+        pbc
+        fc
+        ${CMAKE_DL_LIBS} ${PLATFORM_SPECIFIC_LIBS}
+)
+
 if( WIN32 )
-  target_link_libraries( cli_wallet                                                                                                                                          
-                       PRIVATE graphene_app graphene_net graphene_chain graphene_egenesis_decent graphene_utilities graphene_wallet package_manager decent_encrypt pbc ${GMP_LIBRARIES} fc ${CMAKE_DL_LIBS} ${PLATFORM_SPECIFIC_LIBS} )
+  target_link_libraries( cli_wallet PRIVATE ${GMP_LIBRARIES} )
 else()                       
-  target_link_libraries( cli_wallet                                                                                                                                          
-                       PRIVATE graphene_app graphene_net graphene_chain graphene_egenesis_decent graphene_utilities graphene_wallet package_manager decent_encrypt pbc gmp fc ${CMAKE_DL_LIBS} ${PLATFORM_SPECIFIC_LIBS} )                       
+  target_link_libraries( cli_wallet PRIVATE gmp )
 endif()                       
 
 if(MSVC)
