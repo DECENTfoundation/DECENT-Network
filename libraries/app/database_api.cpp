@@ -145,10 +145,16 @@ namespace graphene { namespace app {
       map<string, miner_id_type> lookup_miner_accounts(const string& lower_bound_name, uint32_t limit)const;
       uint64_t get_miner_count()const;
       multimap< time_point_sec, price_feed> get_feeds_by_miner( const account_id_type account_id, uint32_t count)const;
-      
+
       // Votes
       vector<variant> lookup_vote_ids( const vector<vote_id_type>& votes )const;
-      
+      vector<miner_voting_info> search_miner_voting(const string& account_id,
+                                                    const string& term,
+                                                    bool only_my_votes,
+                                                    const string& order,
+                                                    const string& id,
+                                                    uint32_t count ) const;
+
       // Authority / validation
       std::string get_transaction_hex(const signed_transaction& trx)const;
       set<public_key_type> get_required_signatures( const signed_transaction& trx, const flat_set<public_key_type>& available_keys )const;
@@ -1198,6 +1204,111 @@ namespace graphene { namespace app {
       }
       return result;
    }
+
+   vector<miner_voting_info> database_api::search_miner_voting(const string& account_id,
+                                                               const string& term,
+                                                               bool only_my_votes,
+                                                               const string& order,
+                                                               const string& id,
+                                                               uint32_t count ) const
+   {
+      return my->search_miner_voting(account_id, term, only_my_votes, order, id, count);
+   }
+
+   vector<miner_voting_info> database_api_impl::search_miner_voting(const string& account_id,
+                                                      const string& filter,
+                                                      bool only_my_votes,
+                                                      const string& order,
+                                                      const string& id,
+                                                      uint32_t count ) const
+   {
+      optional<account_object> acc_obj = this->get_account_by_name(account_id);
+      if (!acc_obj) {
+         FC_THROW("unknown account or invalid account name");
+      }
+
+      const auto& acc_votes = acc_obj->options.votes;
+
+      map<string,miner_id_type> miners = this->lookup_miner_accounts("", 1000);
+
+      vector<miner_voting_info> miners_info;
+      miners_info.reserve(miners.size());
+      for(auto item : miners) {
+
+         miner_voting_info info;
+         info.id = item.second;
+         info.name = item.first;
+
+         if (!filter.empty() && item.first.find(filter) == std::string::npos ) {
+            continue;
+         }
+
+         auto ob = this->get_objects({ item.second }).front();
+         miner_object obj = ob.as<miner_object>();
+
+         info.url = obj.url;
+         info.total_votes = obj.total_votes;
+         info.voted = acc_votes.find(obj.vote_id) != acc_votes.end();
+
+         if (only_my_votes && !info.voted)
+            continue;
+
+         miners_info.push_back(info);
+      }
+
+      struct miner_sorter {
+         miner_sorter(const string& sort) : sort_(sort) {}
+
+         bool operator()(const miner_voting_info& lhs, const miner_voting_info& rhs) const {
+            if (sort_ == "+name")
+               return lhs.name.compare(rhs.name) < 0;
+            else if (sort_ == "-name")
+               return rhs.name.compare(lhs.name) < 0;
+            else if (sort_ == "+link")
+               return lhs.url.compare(rhs.url) < 0;
+            else if (sort_ == "-link")
+               return rhs.url.compare(lhs.url) < 0;
+            else if (sort_ == "+votes")
+               return lhs.total_votes < rhs.total_votes;
+            else if (sort_ == "-votes")
+               return rhs.total_votes < lhs.total_votes;
+
+            return false;
+         }
+
+         string sort_;
+      };
+
+      if (!order.empty()) {
+         std::sort(miners_info.begin(), miners_info.end(), miner_sorter(order));
+      }
+
+      struct miner_search {
+         miner_search(const string& search_id) : search_id_(search_id) {}
+
+         bool operator()(const miner_voting_info& info) const {
+            return info.id == search_id_;
+         }
+
+         object_id_type search_id_;
+      };
+
+      vector<miner_voting_info> result;
+      result.reserve(count);
+
+      auto it = miners_info.begin();
+      if (!id.empty()) {
+         it = std::find_if(miners_info.begin(), miners_info.end(), miner_search(id));
+      }
+
+      while(count && it != miners_info.end()) {
+         count--;
+         result.push_back(*it); ++it;
+      }
+
+      return result;
+   }
+
    
    //////////////////////////////////////////////////////////////////////
    //                                                                  //

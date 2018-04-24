@@ -123,6 +123,15 @@ namespace graphene { namespace app {
          double                     value;
       };
 
+      struct miner_voting_info
+      {
+         miner_id_type id;
+         string name;
+         string url;
+         uint64_t total_votes;
+         bool voted;
+      };
+
 /**
  * @brief The database_api class implements the RPC API for the chain database.
  *
@@ -846,6 +855,14 @@ namespace graphene { namespace app {
           */
          vector<database::votes_gained> get_actual_votes() const;
 
+
+         vector<miner_voting_info> search_miner_voting(const string& account_id,
+                                                       const string& term,
+                                                       bool only_my_votes,
+                                                       const string& order,
+                                                       const string& id,
+                                                       uint32_t count ) const;
+
       private:
          std::shared_ptr< database_api_impl > my;
       };
@@ -857,6 +874,7 @@ FC_REFLECT( graphene::app::order_book, (base)(quote)(bids)(asks) );
 FC_REFLECT( graphene::app::market_ticker, (base)(quote)(latest)(lowest_ask)(highest_bid)(percent_change)(base_volume)(quote_volume) );
 FC_REFLECT( graphene::app::market_volume, (base)(quote)(base_volume)(quote_volume) );
 FC_REFLECT( graphene::app::market_trade, (date)(price)(amount)(value) );
+FC_REFLECT( graphene::app::miner_voting_info, (id)(name)(url)(total_votes)(voted) );
 
 FC_API(graphene::app::database_api,
 // Objects
@@ -920,6 +938,7 @@ FC_API(graphene::app::database_api,
 
           // Votes
           (lookup_vote_ids)
+          (search_miner_voting)
 
           // Authority / validation
           (get_transaction_hex)
@@ -959,4 +978,5 @@ FC_API(graphene::app::database_api,
           (list_active_subscriptions_by_author)
           (list_subscriptions_by_author)
           (get_actual_votes)
+
 )
