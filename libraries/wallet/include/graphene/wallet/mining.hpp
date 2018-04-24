@@ -163,7 +163,7 @@ signed_transaction set_desired_miner_count(const string& account_to_modify,
  * @param account_id account name
  * @param term search term - miner name
  * @param only_my_votes when \c true it selects only votes given by account
- * @param order order field. Available options are 'name\link|votes'
+ * @param order order field. Available options are 'name,link,votes'
  * @param id the id of the miner to start searching from, or empty when start from beginning
  * @param count maximum number of miners info to fetch (must not exceed 1000)
  * @return the contents found
