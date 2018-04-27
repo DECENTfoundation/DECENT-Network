@@ -202,6 +202,7 @@ public:
 protected slots:
    void slot_action();
    void slot_textChanged(const QString& );
+   void slot_btnToggled(bool checked);
 
 private:
    eType m_enType;
