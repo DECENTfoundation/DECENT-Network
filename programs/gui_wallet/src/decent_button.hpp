@@ -19,7 +19,8 @@ public:
       DialogCancel,
       DialogTextButton,
       SplashAction,
-      TabChoice
+      TabChoice,
+      PasswordView
    };
 
    enum eName
