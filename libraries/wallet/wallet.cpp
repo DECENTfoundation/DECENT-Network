@@ -1753,87 +1753,21 @@ public:
                                                  const string& id,
                                                  uint32_t count ) const
    {
-      optional<account_object> acc_obj = _remote_db->get_account_by_name(account_id);
-      if (!acc_obj) {
-          FC_THROW("unknown account or invalid account name");
-      }
-
-      const auto& acc_votes = acc_obj->options.votes;
-
-      map<string,miner_id_type> miners = _remote_db->lookup_miner_accounts("", 1000);
-
-      vector<miner_voting_info> miners_info;
-      miners_info.reserve(miners.size());
-      for(auto item : miners) {
-
-         miner_voting_info info;
-         info.id = item.second;
-         info.name = item.first;
-
-         if (!filter.empty() && item.first.find(filter) == std::string::npos ) {
-             continue;
-         }
-
-         miner_object obj = this->get_object<miner_object>(item.second);
-
-         info.url = obj.url;
-         info.total_votes = obj.total_votes;
-         info.voted = acc_votes.find(obj.vote_id) != acc_votes.end();
-
-         if (only_my_votes && !info.voted)
-            continue;
-
-         miners_info.push_back(info);
-      }
-
-      struct miner_sorter {
-          miner_sorter(const string& sort) : sort_(sort) {}
-
-          bool operator()(const miner_voting_info& lhs, const miner_voting_info& rhs) const {
-             if (sort_ == "+name")
-                 return lhs.name.compare(rhs.name) < 0;
-             else if (sort_ == "-name")
-                return rhs.name.compare(lhs.name) < 0;
-             else if (sort_ == "+link")
-                return lhs.url.compare(rhs.url) < 0;
-             else if (sort_ == "-link")
-                return rhs.url.compare(lhs.url) < 0;
-             else if (sort_ == "+votes")
-                return lhs.total_votes < rhs.total_votes;
-             else if (sort_ == "-votes")
-                return rhs.total_votes < lhs.total_votes;
-
-             return false;
-          }
-
-          string sort_;
-      };
-
-      if (!order.empty()) {
-         std::sort(miners_info.begin(), miners_info.end(), miner_sorter(order));
-      }
-
-      struct miner_search {
-          miner_search(const string& search_id) : search_id_(search_id) {}
-
-          bool operator()(const miner_voting_info& info) const {
-              return info.id == search_id_;
-          }
-
-          object_id_type search_id_;
-      };
+      vector<graphene::app::miner_voting_info> tmp_result =
+            _remote_db->search_miner_voting(account_id, filter, only_my_votes, order, id, count);
 
       vector<miner_voting_info> result;
-      result.reserve(count);
+      result.reserve(tmp_result.size());
 
-      auto it = miners_info.begin();
-      if (!id.empty()) {
-         it = std::find_if(miners_info.begin(), miners_info.end(), miner_search(id));
-      }
+      for (const auto& item : tmp_result) {
+         miner_voting_info info;
+         info.id    = item.id;
+         info.name  = item.name;
+         info.url   = item.url;
+         info.total_votes = item.total_votes;
+         info.voted = item.voted;
 
-      while(count && it != miners_info.end()) {
-         count--;
-         result.push_back(*it); ++it;
+         result.push_back(info);
       }
 
       return result;

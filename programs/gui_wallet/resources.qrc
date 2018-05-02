@@ -22,6 +22,8 @@
         <file>images/resubmit_enabled.svg</file>
         <file>images/windows_decent_icon_16x16.png</file>
         <file>images/windows_decent_icon_32x32.png</file>
+        <file>images/password_view_on.svg</file>
+        <file>images/password_view_off.svg</file>
     </qresource>
     <qresource prefix="/translations">
         <file>languages/decent_en.qm</file>
