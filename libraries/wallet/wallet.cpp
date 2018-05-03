@@ -768,14 +768,13 @@ public:
 
    int get_wallet_file_version(const fc::variant& data)
    {
-      try {
-         variant_object vo;
-         fc::from_variant( data, vo );
-         return vo["version"].as<int>();
-      }
-      catch (const fc::exception& ex) {
+      variant_object vo;
+      fc::from_variant( data, vo );
+      if (vo.find("version") == vo.end()) {
          return 0;
       }
+
+      return vo["version"].as<int>();
    }
 
    bool load_old_wallet_file(const fc::variant& data, wallet_data& result)
@@ -786,6 +785,7 @@ public:
            ret = true;
        }
        catch (const fc::exception& ex) {
+           elog("Parsing wallet data error: ${ex}", ("ex", ex.what()) );
            ret = false;
        }
        return ret;
@@ -804,6 +804,7 @@ public:
          ret = true;
       }
       catch (const fc::exception& ex) {
+         elog("Parsing wallet data error: ${ex}", ("ex", ex.what()) );
          ret = false;
       }
       return ret;
@@ -812,27 +813,43 @@ public:
 
    bool load_wallet_file(string wallet_filename = string())
    {
+      dlog("load_wallet_file() begin");
+
       // TODO:  Merge imported wallet with existing wallet,
       //        instead of replacing it
       if( wallet_filename.empty() )
          wallet_filename = _wallet_filename;
 
-      if( ! fc::exists( wallet_filename ) )
+      if( ! fc::exists( wallet_filename ) ) {
+         dlog("load_wallet_file() end (file not found)");
          return false;
+      }
 
-      fc::variant v = fc::json::from_file(wallet_filename);
-      int version = get_wallet_file_version(v);
-
-      bool ret;
+      bool result = false;
       wallet_data load_data;
-      if (version == 0) {
-          ret = load_old_wallet_file(v, load_data);
+      try {
+
+         fc::variant v = fc::json::from_file(wallet_filename);
+         int version = get_wallet_file_version(v);
+
+         if (version == 0) {
+            result = load_old_wallet_file(v, load_data);
+         }
+         else {
+            result = load_new_wallet_file(v, load_data);
+         }
       }
-      else {
-          ret = load_new_wallet_file(v, load_data);
+      catch(const fc::exception& ex) {
+         elog("Error loading wallet file: ${ex}", ("ex",ex.what()) );
+         result = false;
+      }
+      catch(const std::exception& ex) {
+         elog("Error loading wallet file: ${ex}", ("ex",ex.what()) );
+         result = false;
       }
 
-      if (!ret) {
+      if (!result) {
+         dlog("load_wallet_file() end (failed)");
          return false;
       }
 
@@ -887,6 +904,7 @@ public:
          }
       }
 
+      dlog("load_wallet_file() end");
       return true;
    }
 
@@ -916,6 +934,8 @@ public:
 
    void save_wallet_file(string wallet_filename = string() )
    {
+      dlog("save_wallet_file() begin");
+
       //
       // Serialize in memory, then save to disk
       //
@@ -956,11 +976,20 @@ public:
          outfile.close();
          disable_umask_protection();
       }
-      catch(...)
-      {
+      catch(const fc::exception& ex) {
+         elog("Error save wallet file: ${ex}", ("ex", ex.what()));
+
          disable_umask_protection();
          throw;
       }
+      catch(const std::exception& ex) {
+         elog("Error save wallet file: ${ex}", ("ex", ex.what()));
+
+         disable_umask_protection();
+         throw;
+      }
+
+      dlog("save_wallet_file() end");
    }
 
    transaction_handle_type begin_builder_transaction()
