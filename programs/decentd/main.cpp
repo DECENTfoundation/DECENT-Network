@@ -39,10 +39,7 @@
 #include <fc/log/logger.hpp>
 #include <fc/log/logger_config.hpp>
 
-//#include <boost/filesystem.hpp>
-
-
-
+#include <decent/config/decent_log_config.hpp>
 
 
 #include <iostream>
@@ -180,7 +177,7 @@ int main(int argc, char** argv) {
          // try to get logging options from the config file.
          try
          {
-            fc::optional<fc::logging_config> logging_config = load_logging_config_from_ini_file(config_ini_path);
+            fc::optional<fc::logging_config> logging_config = decent::load_logging_config_from_ini_file(config_ini_path);
             if (logging_config)
                fc::configure_logging(*logging_config);
          }
@@ -217,10 +214,10 @@ int main(int argc, char** argv) {
             }
             out_cfg << "\n";
          }
-         fc::write_default_logging_config_to_stream(out_cfg);
+         decent::write_default_logging_config_to_stream(out_cfg);
          out_cfg.close(); 
          // read the default logging config we just wrote out to the file and start using it
-         fc::optional<fc::logging_config> logging_config = load_logging_config_from_ini_file(config_ini_path);
+         fc::optional<fc::logging_config> logging_config = decent::load_logging_config_from_ini_file(config_ini_path);
          if (logging_config)
             fc::configure_logging(*logging_config);
       }

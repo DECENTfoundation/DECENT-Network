@@ -964,6 +964,10 @@ PasswordWidget::PasswordWidget(QWidget* pParent, eType enType) : StackLayerWidge
    m_line1Edit->setMaxLength(g_maxPasswordLen);
    m_line1Edit->setToolTip(tr("The password is limited to a maximum of 50 characters "));
 
+   DecentButton* pPasswordBtn = new DecentButton(this, DecentButton::PasswordView);
+   pPasswordBtn->setCheckable(true);
+   pPasswordBtn->setIcon(QIcon(":/icon/images/password_view_on.svg"));
+
    m_line2Edit = new DecentLineEdit(this, DecentLineEdit::DialogLineEdit);
    m_line2Edit->setEchoMode(QLineEdit::Password);
    m_line2Edit->setAttribute(Qt::WA_MacShowFocusRect, 0);
@@ -975,7 +979,8 @@ PasswordWidget::PasswordWidget(QWidget* pParent, eType enType) : StackLayerWidge
    QGridLayout* pMainLayout = new QGridLayout;
    pMainLayout->addWidget(pLabel, iRowIndex++, 0, Qt::AlignCenter | Qt::AlignVCenter);
    pMainLayout->addWidget(m_pError, iRowIndex++, 0, Qt::AlignCenter | Qt::AlignVCenter);
-   pMainLayout->addWidget(m_line1Edit, iRowIndex++, 0, Qt::AlignCenter | Qt::AlignVCenter);
+   pMainLayout->addWidget(m_line1Edit, iRowIndex, 0, Qt::AlignCenter | Qt::AlignVCenter);
+   pMainLayout->addWidget(pPasswordBtn, iRowIndex++, 1, Qt::AlignCenter | Qt::AlignVCenter);
    if (enType == eSetPassword) {
       pMainLayout->addWidget(m_line2Edit, iRowIndex++, 0, Qt::AlignCenter | Qt::AlignVCenter);
       m_pButton->setEnabled(false);
@@ -1000,6 +1005,8 @@ PasswordWidget::PasswordWidget(QWidget* pParent, eType enType) : StackLayerWidge
                     this, &PasswordWidget::slot_textChanged);
    QObject::connect(m_line2Edit, &QLineEdit::textChanged,
                     this, &PasswordWidget::slot_textChanged);
+   QObject::connect(pPasswordBtn, &QPushButton::toggled,
+                    this, &PasswordWidget::slot_btnToggled);
 
    setLayout(pMainLayout);
 }
@@ -1070,5 +1077,19 @@ void PasswordWidget::slot_action()
    emit accepted();
 }
 
+void PasswordWidget::slot_btnToggled(bool checked)
+{
+   DecentButton* pButton = qobject_cast<DecentButton*>(sender());
+   Q_ASSERT(pButton);
+   if (checked) {
+      pButton->setIcon(QIcon(":/icon/images/password_view_off.svg"));
+   }
+   else {
+      pButton->setIcon(QIcon(":/icon/images/password_view_on.svg"));
+   }
+
+   m_line1Edit->setEchoMode(checked ? QLineEdit::Normal : QLineEdit::Password);
+   m_line2Edit->setEchoMode(checked ? QLineEdit::Normal : QLineEdit::Password);
+}
 
 }  // end namespace gui_wallet

@@ -39,6 +39,9 @@ DecentButton::DecentButton(QWidget* pParent, eType enType, eName enName) : QPush
    case TabChoice:
       setProperty("type", "tabchoice");
       break;
+   case PasswordView:
+      setProperty("type", "pass_view");
+      break;
    case Default:
    default:
       break;

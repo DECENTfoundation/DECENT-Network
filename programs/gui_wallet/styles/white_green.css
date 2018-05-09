@@ -324,6 +324,10 @@ QPushButton[type='splashaction']
    max-width: 5em;
    max-height: 1.5em;
 }
+QPushButton[type='pass_view']
+{
+   background-color: transparent;
+}
 QMessageBox QPushButton, QFileDialog QPushButton
 {
    border: 0px;
