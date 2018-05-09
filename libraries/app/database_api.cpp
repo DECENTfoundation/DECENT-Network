@@ -1222,12 +1222,16 @@ namespace graphene { namespace app {
                                                       const string& id,
                                                       uint32_t count ) const
    {
-      optional<account_object> acc_obj = this->get_account_by_name(account_id);
-      if (!acc_obj) {
-         FC_THROW("unknown account or invalid account name");
-      }
 
-      const auto& acc_votes = acc_obj->options.votes;
+      flat_set<vote_id_type> acc_votes;
+      if (!account_id.empty()) {
+         optional<account_object> acc_obj = this->get_account_by_name(account_id);
+         if (!acc_obj) {
+            FC_THROW("unknown account or invalid account name");
+         }
+
+         acc_votes = acc_obj->options.votes;
+      }
 
       map<string,miner_id_type> miners = this->lookup_miner_accounts("", 1000);
 
