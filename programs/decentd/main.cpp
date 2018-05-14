@@ -235,6 +235,9 @@ int main(int argc, char** argv) {
          }
 
          config_filename = data_dir / "config.ini";
+
+         //NOTE: make it work as till now...
+         logs_dir = fc::absolute(config_filename).parent_path();
       }
 
       if( options.count("version") )
