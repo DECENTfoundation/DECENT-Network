@@ -24,6 +24,7 @@ namespace graphene { namespace utilities {
       
    public:
       fc::path get_user_home()   const { return _user_home; }
+
       fc::path get_decent_home() const { return _decent_home; }
       fc::path get_decent_data() const { return _decent_data; }
       fc::path get_decent_packages() const {
@@ -36,7 +37,11 @@ namespace graphene { namespace utilities {
       fc::path get_decent_temp() const { return _decent_temp; }
       fc::path get_ipfs_bin() const { return _ipfs_bin; }
       fc::path get_ipfs_path() const { return _ipfs_path; }
-      void set_packages_path(fc::path packages_path){ _packages_path = packages_path; }
+
+      void set_decent_data_path(const fc::path& path) { _decent_data = path; }
+      void set_decent_logs_path(const fc::path& path) { _decent_logs = path; }
+      void set_decent_temp_path(const fc::path& path) { _decent_temp = path; }
+      void set_packages_path(const fc::path& packages_path) { _packages_path = packages_path; }
       
    private:
       fc::path _user_home;
