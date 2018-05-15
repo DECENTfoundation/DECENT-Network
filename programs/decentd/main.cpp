@@ -269,12 +269,21 @@ int main(int argc, char** argv) {
          try
          {
             fc::optional<fc::logging_config> logging_config = decent::load_logging_config_from_ini_file(config_filename, logs_dir);
-            if (logging_config)
-               fc::configure_logging(*logging_config);
+            if (logging_config) {
+               if (!fc::configure_logging(*logging_config)) {
+                  if (run_as_daemon) {
+                     std::cerr << "Error configure logging!\n";
+                  }
+                  else {
+                     wlog("Error configure logging!");
+                  }
+                  return 1;
+               }
+            }
          }
          catch (const fc::exception&)
          {
-            wlog("Error parsing logging config from config file ${config}, using default config", ("config", config_filename.preferred_string()));
+            wlog("Error parsing logging config from config file ${cfg}, using default config", ("cfg", config_filename.preferred_string()));
          }
       }
       else 
