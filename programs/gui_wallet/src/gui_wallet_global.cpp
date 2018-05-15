@@ -1402,7 +1402,7 @@ int runDecentD(gui_wallet::BlockChainStartType type, fc::promise<void>::ptr& exi
          // try to get logging options from the config file.
          try
          {
-            fc::optional<fc::logging_config> logging_config = decent::load_logging_config_from_ini_file(config_ini_path);
+            fc::optional<fc::logging_config> logging_config = decent::load_logging_config_from_ini_file(config_ini_path, data_dir);
             if (logging_config) {
                // Temporary Bugfix: if p2p log level is debug then correct it
                int  i = 0;
@@ -1450,10 +1450,10 @@ int runDecentD(gui_wallet::BlockChainStartType type, fc::promise<void>::ptr& exi
             }
             out_cfg << "\n";
          }
-         decent::write_default_logging_config_to_stream(out_cfg);
+         decent::write_default_logging_config_to_stream(out_cfg, false);
          out_cfg.close();
          // read the default logging config we just wrote out to the file and start using it
-         fc::optional<fc::logging_config> logging_config = decent::load_logging_config_from_ini_file(config_ini_path);
+         fc::optional<fc::logging_config> logging_config = decent::load_logging_config_from_ini_file(config_ini_path, data_dir);
          if (logging_config)
             fc::configure_logging(*logging_config);
       }

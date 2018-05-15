@@ -103,12 +103,64 @@ BOOL WINAPI HandlerRoutine(_In_ DWORD dwCtrlType) {
       return FALSE;
    }
 }
+#endif
+
+#if defined(__linux__) || defined(__APPLE__)
+
+int start_as_daemon()
+{
+   pid_t pid, sid;
+
+   /* Fork off the parent process */
+   pid = fork();
+   if (pid < 0) {
+       return -1;
+   }
+   /* If we got a good PID, then
+     we can exit the parent process. */
+   if (pid > 0) {
+       return 1;
+   }
+
+   /* Change the file mode mask */
+   umask(0);
+
+   /* Open any logs here */
+
+   /* Create a new SID for the child process */
+   sid = setsid();
+   if (sid < 0) {
+       return -1;
+   }
+
+   /* Change the current working directory */
+   if ((chdir("/")) < 0) {
+      return -1;
+   }
+
+   /* Close out the standard file descriptors */
+   close(STDIN_FILENO);
+   close(STDOUT_FILENO);
+   close(STDERR_FILENO);
+
+   return 0;
+}
+#else
+
+int start_as_daemon()
+{
+   //NOTE: this OS is not supported yet...
+   return -1;
+}
 
 #endif
+
+
 int main(int argc, char** argv) {
 #ifdef _MSC_VER
    SetConsoleCtrlHandler(HandlerRoutine, TRUE);
 #endif
+
    app::application* node = new app::application();
    fc::oexception unhandled_exception;
    try {
@@ -117,7 +169,8 @@ int main(int argc, char** argv) {
       app_options.add_options()
          ("help,h", "Print this help message and exit.")
          ("version,v", "Print version information")
-         ("data-dir,d", bpo::value<boost::filesystem::path>()->default_value( utilities::decent_path_finder::instance().get_decent_data() / "decentd"), "Directory containing databases, configuration file, etc.");
+         ("data-dir,d", bpo::value<boost::filesystem::path>()->default_value( utilities::decent_path_finder::instance().get_decent_data() / "decentd"), "Directory containing databases, configuration file, etc.")
+         ("daemon", "Run Decent as daemon");
 
       bpo::variables_map options;
 
@@ -138,6 +191,53 @@ int main(int argc, char** argv) {
       {
         std::cerr << "Error parsing command line: " << e.what() << "\n";
         return 1;
+      }
+
+      bool run_as_daemon = false;
+      fc::path logs_dir, data_dir, temp_dir, config_filename;
+
+      auto& path_finder = utilities::decent_path_finder::instance();
+
+      if (options.count("daemon")) {
+         int ret = start_as_daemon();
+         if (ret < 0) {
+            std::cerr << "Error running as daemon.\n";
+            return 1;
+         }
+         else if (ret == 1) {
+            return 0;
+         }
+
+         //continue as daemon...
+         run_as_daemon = true;
+
+         //default path settings for daemon
+         config_filename = "/etc/decentd";
+         logs_dir = "/var/log/decentd/";
+         data_dir = "/var/lib/decentd/";
+         temp_dir = "/var/tmp/decentd/";
+
+         path_finder.set_decent_logs_path(logs_dir);
+         path_finder.set_decent_data_path(data_dir);
+         path_finder.set_decent_temp_path(temp_dir);
+      }
+      else {
+
+         data_dir   = path_finder.get_decent_data();
+         logs_dir   = path_finder.get_decent_logs();
+         temp_dir   = path_finder.get_decent_temp();
+
+         if( options.count("data-dir") )
+         {
+            data_dir = options["data-dir"].as<boost::filesystem::path>();
+            if( data_dir.is_relative() )
+               data_dir = fc::current_path() / data_dir;
+         }
+
+         config_filename = data_dir / "config.ini";
+
+         //NOTE: make it work as till now...
+         logs_dir = fc::absolute(config_filename).parent_path();
       }
 
       if( options.count("version") )
@@ -161,38 +261,40 @@ int main(int argc, char** argv) {
       if( options.count("help") || options.count("version") )
          return 0;
 
-      fc::path data_dir;
-      if( options.count("data-dir") )
-      {
-         data_dir = options["data-dir"].as<boost::filesystem::path>();
-         if( data_dir.is_relative() )
-            data_dir = fc::current_path() / data_dir;
-      }
-
-      fc::path config_ini_path = data_dir / "config.ini";
-      if( fc::exists(config_ini_path) )
+      if( fc::exists(config_filename) )
       {
          // get the basic options
-         bpo::store(bpo::parse_config_file<char>(config_ini_path.preferred_string().c_str(), cfg_options, true), options);
+         bpo::store(bpo::parse_config_file<char>(config_filename.preferred_string().c_str(), cfg_options, true), options);
          // try to get logging options from the config file.
          try
          {
-            fc::optional<fc::logging_config> logging_config = decent::load_logging_config_from_ini_file(config_ini_path);
-            if (logging_config)
-               fc::configure_logging(*logging_config);
+            fc::optional<fc::logging_config> logging_config = decent::load_logging_config_from_ini_file(config_filename, logs_dir);
+            if (logging_config) {
+               if (!fc::configure_logging(*logging_config)) {
+                  if (run_as_daemon) {
+                     std::cerr << "Error configure logging!\n";
+                  }
+                  else {
+                     wlog("Error configure logging!");
+                  }
+                  return 1;
+               }
+            }
          }
          catch (const fc::exception&)
          {
-            wlog("Error parsing logging config from config file ${config}, using default config", ("config", config_ini_path.preferred_string()));
+            wlog("Error parsing logging config from config file ${cfg}, using default config", ("cfg", config_filename.preferred_string()));
          }
       }
       else 
       {
-         ilog("Writing new config file at ${path}", ("path", config_ini_path));
+         //NOTE: We should not write a config when we run as daemon, but for now we leave it as is.
+
+         ilog("Writing new config file at ${path}", ("path", config_filename));
          if( !fc::exists(data_dir) )
             fc::create_directories(data_dir);
 
-         std::ofstream out_cfg(config_ini_path.preferred_string());
+         std::ofstream out_cfg(config_filename.preferred_string());
          for( const boost::shared_ptr<bpo::option_description> od : cfg_options.options() )
          {
             if( !od->description().empty() )
@@ -214,10 +316,10 @@ int main(int argc, char** argv) {
             }
             out_cfg << "\n";
          }
-         decent::write_default_logging_config_to_stream(out_cfg);
+         decent::write_default_logging_config_to_stream(out_cfg, run_as_daemon);
          out_cfg.close(); 
          // read the default logging config we just wrote out to the file and start using it
-         fc::optional<fc::logging_config> logging_config = decent::load_logging_config_from_ini_file(config_ini_path);
+         fc::optional<fc::logging_config> logging_config = decent::load_logging_config_from_ini_file(config_filename, logs_dir);
          if (logging_config)
             fc::configure_logging(*logging_config);
       }

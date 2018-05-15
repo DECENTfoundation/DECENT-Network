@@ -31,7 +31,7 @@ namespace decent {
     // are all most users would want to change.  At a later time, options can
     // be added to control rotation intervals, compression, and other seldom-
     // used features
-    void write_default_logging_config_to_stream(std::ostream &out)
+    void write_default_logging_config_to_stream(std::ostream& out, bool is_daemon)
     {
        out << "# declare an appender named \"stderr\" that writes messages to the console\n"
               "[log.console_appender.stderr]\n"
@@ -57,9 +57,15 @@ namespace decent {
               "# route any messages logged to the default logger to the \"default\" logger we\n"
               "# declared above, if they are info level are higher\n"
               "[logger.default]\n"
-              "level=info\n"
-              "appenders=default\n\n"
-              "# route messages sent to the \"p2p\" logger to the p2p appender declared above\n"
+              "level=info\n";
+       if (is_daemon) {
+          out << "appenders=default\n\n";
+       }
+       else {
+          out << "appenders=stderr,default\n\n";
+       }
+
+       out << "# route messages sent to the \"p2p\" logger to the p2p appender declared above\n"
               "[logger.p2p]\n"
               "level=error\n"
               "appenders=p2p\n\n"
@@ -166,7 +172,7 @@ namespace decent {
        }
     }
 
-    fc::optional<fc::logging_config> load_logging_config_from_ini_file(const fc::path &config_ini_filename)
+    fc::optional<fc::logging_config> load_logging_config_from_ini_file(const fc::path& config_ini_filename, const fc::path& logs_dir)
     {
        try {
           fc::logging_config logging_config;
@@ -206,7 +212,7 @@ namespace decent {
                 std::string file_appender_name = section_name.substr(file_appender_section_prefix.length());
                 fc::path file_name = section_tree.get<std::string>("filename");
                 if (file_name.is_relative())
-                   file_name = fc::absolute(config_ini_filename).parent_path() / file_name;
+                   file_name = logs_dir / file_name;
 
                 std::string rotate = "true";   //default value
                 if (section_tree.find("rotate") != section_tree.not_found()) {
