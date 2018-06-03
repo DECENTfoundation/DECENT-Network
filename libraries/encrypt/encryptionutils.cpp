@@ -63,7 +63,7 @@ DInteger DInteger::from_string(std::string from)
 
 encryption_results AES_encrypt_file(const std::string &fileIn, const std::string &fileOut, const AesKey &key) {
     try {
-        byte iv[CryptoPP::AES::BLOCKSIZE];
+        CryptoPP::byte iv[CryptoPP::AES::BLOCKSIZE];
         memset(iv, 0, sizeof(iv));
         CryptoPP::CBC_Mode<CryptoPP::AES>::Encryption e;
         e.SetKeyWithIV(key.key_byte, CryptoPP::AES::MAX_KEYLENGTH, iv);
@@ -84,7 +84,7 @@ encryption_results AES_encrypt_file(const std::string &fileIn, const std::string
 
 encryption_results AES_decrypt_file(const std::string &fileIn, const std::string &fileOut, const AesKey &key) {
     try {
-       byte iv[CryptoPP::AES::BLOCKSIZE];
+       CryptoPP::byte iv[CryptoPP::AES::BLOCKSIZE];
        memset(iv, 0, sizeof(iv));
        CryptoPP::CBC_Mode<CryptoPP::AES>::Decryption d;
        d.SetKeyWithIV(key.key_byte, CryptoPP::AES::MAX_KEYLENGTH, iv);
@@ -116,7 +116,7 @@ DInteger generate_private_el_gamal_key()
 DInteger generate_private_el_gamal_key_from_secret(fc::sha256 secret)
 {
    fc::sha512 hash = fc::sha512::hash( (char*) secret._hash, 32 );
-   CryptoPP::Integer key( (byte*)hash._hash, 64 );
+   CryptoPP::Integer key( (CryptoPP::byte*)hash._hash, 64 );
    DInteger ret = key.Modulo( DECENT_EL_GAMAL_MODULUS_512 );
    return key;
 }
@@ -139,7 +139,7 @@ encryption_results el_gamal_encrypt(const point &message, const DInteger &public
     CryptoPP::Integer randomizer(rng, CryptoPP::Integer::One(), DECENT_EL_GAMAL_MODULUS_512 - 1);
 
     try{
-        byte buffer[DECENT_EL_GAMAL_GROUP_ELEMENT_SIZE];
+        CryptoPP::byte buffer[DECENT_EL_GAMAL_GROUP_ELEMENT_SIZE];
         message.first.Encode(buffer, DECENT_MESSAGE_SIZE );
         message.second.Encode( buffer+DECENT_MESSAGE_SIZE, DECENT_MESSAGE_SIZE );
         SecByteBlock messageBytes(buffer, DECENT_EL_GAMAL_GROUP_ELEMENT_SIZE);
@@ -173,7 +173,7 @@ encryption_results el_gamal_decrypt(const Ciphertext &input, const DInteger &pri
     //elog("el_gamal_decrypt called ${i} ${pk} ",("i", input)("pk", privateKey));
     try{
 
-        byte recovered[DECENT_EL_GAMAL_GROUP_ELEMENT_SIZE];
+        CryptoPP::byte recovered[DECENT_EL_GAMAL_GROUP_ELEMENT_SIZE];
         ElGamal::GroupParameters groupParams;
         groupParams.Initialize(DECENT_EL_GAMAL_MODULUS_512, DECENT_EL_GAMAL_GROUP_GENERATOR);
 
@@ -205,7 +205,7 @@ DInteger hash_elements(Ciphertext t1, Ciphertext t2, DInteger key1, DInteger key
    CryptoPP::Weak1::MD5 hashier;
    size_t hashSpace =9*(DECENT_EL_GAMAL_GROUP_ELEMENT_SIZE);
    hashier.CreateUpdateSpace(hashSpace);
-   byte tmp[DECENT_EL_GAMAL_GROUP_ELEMENT_SIZE];
+   CryptoPP::byte tmp[DECENT_EL_GAMAL_GROUP_ELEMENT_SIZE];
 
    t1.D1.Encode(tmp,DECENT_EL_GAMAL_GROUP_ELEMENT_SIZE);
    hashier.Update(tmp, DECENT_EL_GAMAL_GROUP_ELEMENT_SIZE);
@@ -234,7 +234,7 @@ DInteger hash_elements(Ciphertext t1, Ciphertext t2, DInteger key1, DInteger key
    G3.Encode(tmp,DECENT_EL_GAMAL_GROUP_ELEMENT_SIZE);
    hashier.Update(tmp, DECENT_EL_GAMAL_GROUP_ELEMENT_SIZE);
 
-   byte digest[16];
+   CryptoPP::byte digest[16];
    hashier.Final(digest);
    CryptoPP::Integer x(digest, 16);
 
@@ -301,7 +301,7 @@ encrypt_with_proof(const point &message, const DInteger &privateKey, const DInte
 
       CryptoPP::Integer randomizer(rng, CryptoPP::Integer::One(), DECENT_EL_GAMAL_MODULUS_512 - 1);
 
-      byte messageBytes[DECENT_EL_GAMAL_GROUP_ELEMENT_SIZE];
+      CryptoPP::byte messageBytes[DECENT_EL_GAMAL_GROUP_ELEMENT_SIZE];
       message.first.Encode(messageBytes, DECENT_MESSAGE_SIZE );
       message.second.Encode( messageBytes+DECENT_MESSAGE_SIZE, DECENT_MESSAGE_SIZE );
 

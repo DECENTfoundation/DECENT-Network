@@ -278,7 +278,7 @@ std::pair<string, decent::encrypt::CustodyData>  wallet_api::create_package(cons
 {
    FC_ASSERT(!is_locked());
    fc::sha256 key1;
-   aes_key.Encode((byte*)key1._hash, 32);
+   aes_key.Encode((CryptoPP::byte*)key1._hash, 32);
 
    uint32_t sectors;
    if(my->head_block_time()>HARDFORK_1_TIME)
@@ -294,7 +294,7 @@ void wallet_api::extract_package(const std::string& package_hash, const std::str
 {
    FC_ASSERT(!is_locked());
    fc::sha256 key1;
-   aes_key.Encode((byte*)key1._hash, 32);
+   aes_key.Encode((CryptoPP::byte*)key1._hash, 32);
 
    auto pack = PackageManager::instance().find_package(fc::ripemd160(package_hash));
    if (pack == nullptr) {
