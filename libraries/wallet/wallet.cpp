@@ -2554,7 +2554,11 @@ public:
          }
 
          fc::sha256 sha_key;
+#if CRYPTOPP_VERSION >= 600
+         secret.Encode((CryptoPP::byte*)sha_key._hash, 32);
+#else
          secret.Encode((byte*)sha_key._hash, 32);
+#endif
 
          uint32_t quorum = std::max((vector<account_id_type>::size_type)2, seeders.size()/3);
          ShamirSecret ss(quorum, seeders.size(), secret);

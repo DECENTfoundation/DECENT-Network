@@ -1778,7 +1778,12 @@ namespace
       ss.calculate_secret();
       
       fc::sha256 key;
+#if CRYPTOPP_VERSION >= 600
+      ss.secret.Encode((CryptoPP::byte*)key._hash, 32);
+#else
       ss.secret.Encode((byte*)key._hash, 32);
+#endif
+
       return key;
    }
    
@@ -1793,7 +1798,11 @@ namespace
             CryptoPP::Integer tmp(randomGenerator, 256);
             secret = tmp;
          }
+#if CRYPTOPP_VERSION >= 600
+         secret.Encode((CryptoPP::byte*)keys.key._hash, 32);
+#else
          secret.Encode((byte*)keys.key._hash, 32);
+#endif
 
          uint32_t quorum = std::max((vector<account_id_type>::size_type)1, seeders.size()/3); // TODO_DECENT - quorum >= 2 see also content_submit_operation::validate
 
