@@ -7,9 +7,6 @@
 
 #include <boost/filesystem/path.hpp>
 #include <boost/algorithm/string/trim.hpp>
-#include <boost/algorithm/string/split.hpp>
-#include <boost/algorithm/string/classification.hpp>
-#include <boost/lexical_cast.hpp>
 
 #include <vector>
 #include <regex>
@@ -18,28 +15,6 @@ namespace decent { namespace package {
 
 
     namespace detail {
-
-        bool check_ipfs_minimal_version(ipfs::Client& ipfs)
-        {
-            ipfs::Json version_info;
-            ipfs.Version(&version_info);
-            const std::string& ver_text = version_info["Version"];
-
-            std::vector<std::string> data_split;
-            boost::split( data_split, ver_text, boost::is_any_of("."), boost::token_compress_off);
-            if (data_split.size() != 3)
-                throw std::runtime_error("invalid IPFS version number");
-
-            unsigned int version = 0;
-            version |= (boost::lexical_cast<short>(data_split[0])) << 24;
-            version |= (boost::lexical_cast<short>(data_split[1])) << 16;
-            version |= (boost::lexical_cast<short>(data_split[2])) << 8;
-
-            if (version >= 0x00040c00)  //minimal version 0.4.12
-                return true;
-
-            return false;
-        }
 
         bool parse_ipfs_url(const std::string& url, std::string& obj_id) {
             const std::string ipfs = "ipfs:";
@@ -53,8 +28,6 @@ namespace decent { namespace package {
         }
 
     } // namespace detail
-
-
 
     IPFSDownloadPackageTask::IPFSDownloadPackageTask(PackageInfo& package)
         : detail::PackageTask(package)
