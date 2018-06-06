@@ -59,6 +59,7 @@
 
 #include <boost/range/adaptor/reversed.hpp>
 #include <decent/package/package_config.hpp>
+#include <decent/ipfs_check.hpp>
 
 namespace graphene { namespace app {
 using net::item_hash_t;
@@ -170,6 +171,18 @@ namespace detail {
             fc::string api_host = api.get_address();
             decent::package::PackageManagerConfigurator::instance().set_ipfs_endpoint(api_host, api.port());
          }
+
+         bool ipfs_check = true;
+         try {
+            ipfs_check = decent::check_ipfs_minimal_version(decent::package::PackageManagerConfigurator::instance().get_ipfs_host(),
+                                                                 decent::package::PackageManagerConfigurator::instance().get_ipfs_port());
+         }
+         catch(...) {
+            //ignore exceptions.
+         }
+
+         if (!ipfs_check)
+            FC_THROW("unsupported IPFS version is used.");
 
          if( _options->count("p2p-endpoint") )
             _p2p_network->listen_on_endpoint(fc::ip::endpoint::from_string(_options->at("p2p-endpoint").as<string>()), true);

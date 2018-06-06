@@ -16,7 +16,6 @@ namespace decent { namespace package {
 
     namespace detail {
 
-
         bool parse_ipfs_url(const std::string& url, std::string& obj_id) {
             const std::string ipfs = "ipfs:";
             if (url.substr(0, ipfs.size()) == ipfs) {
@@ -29,8 +28,6 @@ namespace decent { namespace package {
         }
 
     } // namespace detail
-
-
 
     IPFSDownloadPackageTask::IPFSDownloadPackageTask(PackageInfo& package)
         : detail::PackageTask(package)
