@@ -69,7 +69,6 @@ set( Boost_SELECT_VERSION 1.60)
 
 find_package(OpenSSL 1.1 EXACT)
 if (OpenSSL_FOUND)
-    message("hellooo")
     set( Boost_SELECT_VERSION 1.63 )
 endif()
 
