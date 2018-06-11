@@ -182,7 +182,7 @@ namespace detail {
          }
 
          if (!ipfs_check)
-            FC_THROW("unsupported IPFS version is used.");
+            FC_THROW("Unsupported IPFS version is used. Minimal version is 0.4.12");
 
          if( _options->count("p2p-endpoint") )
             _p2p_network->listen_on_endpoint(fc::ip::endpoint::from_string(_options->at("p2p-endpoint").as<string>()), true);
