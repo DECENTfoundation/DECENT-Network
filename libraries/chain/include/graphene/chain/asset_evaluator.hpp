@@ -68,6 +68,8 @@ namespace graphene { namespace chain {
       void_result do_apply( const update_user_issued_asset_operation& o );
 
       const asset_object* asset_to_update = nullptr;
+      bool set_fixed_max_supply = false;
+      bool asset_o_count_fixed_max_supply_ext = false;
    };
 
    class asset_fund_pools_evaluator : public evaluator<asset_fund_pools_evaluator>
