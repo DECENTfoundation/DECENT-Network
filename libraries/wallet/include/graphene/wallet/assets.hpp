@@ -152,6 +152,8 @@ signed_transaction issue_asset(const string& to_account,
  * @param max_supply the maximum supply of this asset which may exist at any given time
  * @param core_exchange_rate price used to convert non-core asset to core asset
  * @param is_exchangeable \c true to allow implicit conversion of this asset to/from core asset
+ * @param set_fixed_max_supply \c true to change non-fixed max supply to fixed max supply, \c false to leave the
+ * setting unchanged
  * @param broadcast \c true to broadcast the transaction on the network
  * @return the signed transaction updating the user-issued asset
  * @ingroup WalletAPI_Asset
@@ -162,6 +164,7 @@ signed_transaction update_user_issued_asset(const string& symbol,
                                             uint64_t max_supply,
                                             price core_exchange_rate,
                                             bool is_exchangeable,
+                                            bool set_fixed_max_supply,
                                             bool broadcast = false);
 
 /**

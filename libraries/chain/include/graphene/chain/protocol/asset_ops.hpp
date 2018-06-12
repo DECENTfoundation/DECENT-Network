@@ -192,7 +192,17 @@ namespace graphene { namespace chain {
       /// True to allow implicit conversion of this asset to/from core asset.
       bool is_exchangeable;
 
-      extensions_type             extensions;
+      /// Extensions
+
+      /// True to change non-fixed max supply to fixed max supply, false to leave the setting unchanged.
+      struct fixed_max_supply_struct{
+         bool set_fixed_max_supply;
+         fixed_max_supply_struct(bool change_to_fixed=false) : set_fixed_max_supply{ change_to_fixed } {};
+      };
+
+      typedef static_variant<void_t, fixed_max_supply_struct>     asset_options_extensions;
+      typedef flat_set<asset_options_extensions> asset_options_extensions_type;
+      asset_options_extensions_type extensions;
 
       account_id_type fee_payer()const { return issuer; }
       void            validate()const;
@@ -342,6 +352,9 @@ FC_REFLECT( graphene::chain::asset_options,
 FC_REFLECT( graphene::chain::asset_create_operation::fee_parameters_type, (basic_fee) )
 FC_REFLECT( graphene::chain::asset_issue_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::update_monitored_asset_operation::fee_parameters_type, (fee) )
+
+FC_REFLECT( graphene::chain::update_user_issued_asset_operation::fixed_max_supply_struct, (set_fixed_max_supply) )
+FC_REFLECT_TYPENAME( graphene::chain::update_user_issued_asset_operation::asset_options_extensions )
 FC_REFLECT( graphene::chain::update_user_issued_asset_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::asset_fund_pools_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::asset_reserve_operation::fee_parameters_type, (fee) )

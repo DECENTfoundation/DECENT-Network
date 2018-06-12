@@ -1353,6 +1353,7 @@ public:
                                                uint64_t max_supply,
                                                price core_exchange_rate,
                                                bool is_exchangeable,
+                                               bool set_fixed_max_supply,
                                                bool broadcast = false)
    { try {
          optional<asset_object> asset_to_update = find_asset(symbol);
@@ -1375,13 +1376,18 @@ public:
          }
          update_op.new_issuer = new_issuer_account_id;
 
+         if( head_block_time() > HARDFORK_3_TIME )
+            update_op.extensions.insert(update_user_issued_asset_operation::fixed_max_supply_struct( set_fixed_max_supply ));
+         else
+            FC_ASSERT( !set_fixed_max_supply );
+
          signed_transaction tx;
          tx.operations.push_back( update_op );
          set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
          tx.validate();
 
          return sign_transaction( tx, broadcast );
-      } FC_CAPTURE_AND_RETHROW( (symbol)(new_issuer)(description)(max_supply)(core_exchange_rate)(is_exchangeable)(broadcast) ) }
+      } FC_CAPTURE_AND_RETHROW( (symbol)(new_issuer)(description)(max_supply)(core_exchange_rate)(is_exchangeable)(set_fixed_max_supply)(broadcast) ) }
 
       signed_transaction fund_asset_pools(const string& from,
                                           const string& uia_amount,
