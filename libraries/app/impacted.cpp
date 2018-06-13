@@ -47,6 +47,8 @@ struct get_impacted_account_visitor
    {
       if( op.to.is<account_id_type>() )
          _impacted.insert( op.to.as<account_id_type>() );
+
+      //NOTE: transfer to content is handled in account_history_plugin
    }
 
    void operator()( const account_create_operation& op )
@@ -65,7 +67,7 @@ struct get_impacted_account_visitor
          add_authority_accounts( _impacted, *(op.active) );
    }
 
-   void operator()( const asset_create_operation& op ) {}
+   void operator()( const asset_create_operation& op ) {}  //uses fee_payer()
    void operator()( const update_monitored_asset_operation& op ) {}
    void operator()( const update_user_issued_asset_operation& op )
    {
@@ -77,7 +79,7 @@ struct get_impacted_account_visitor
    void operator()( const asset_reserve_operation& op ) { _impacted.insert( op.payer ); }
    void operator()( const asset_claim_fees_operation& op ) { _impacted.insert( op.issuer ); }
 
-   void operator()( const asset_publish_feed_operation& op ) {}
+   void operator()( const asset_publish_feed_operation& op ) {} //uses fee_payer()
    void operator()( const miner_create_operation& op )
    {
       _impacted.insert( op.miner_account );
@@ -126,11 +128,27 @@ struct get_impacted_account_visitor
    }
 
    void operator()( const vesting_balance_withdraw_operation& op ) {}
-   void operator()( const custom_operation& op ) {}
+   void operator()( const custom_operation& op ) {
+      _impacted.insert( op.payer );
+      for(auto& item : op.required_auths)
+         _impacted.insert( item );
+   }
    void operator()( const assert_operation& op ) {}
-   void operator()( const set_publishing_manager_operation& op ) { _impacted.insert( op.from ); }
-   void operator()( const set_publishing_right_operation& op ) { _impacted.insert( op.from ); }
-   void operator()( const content_submit_operation& op) { _impacted.insert(op.author); }
+   void operator()( const set_publishing_manager_operation& op ) {
+      _impacted.insert( op.from );
+      for(auto& item : op.to)
+         _impacted.insert( item );
+   }
+   void operator()( const set_publishing_right_operation& op ) {
+      _impacted.insert( op.from );
+      for(auto& item : op.to)
+         _impacted.insert( item );
+   }
+   void operator()( const content_submit_operation& op) {
+      _impacted.insert(op.author);
+      for(auto& item : op.co_authors)
+         _impacted.insert( item.first );
+   }
    void operator()( const content_cancellation_operation& op) { _impacted.insert(op.author); }
    void operator()( const request_to_buy_operation& op) { _impacted.insert(op.consumer); }
    void operator()( const leave_rating_and_comment_operation& op) { _impacted.insert(op.consumer);}
@@ -148,7 +166,11 @@ struct get_impacted_account_visitor
    void operator()( const return_escrow_buying_operation& op) {  _impacted.insert(op.consumer);}
    void operator()( const report_stats_operation& op) { _impacted.insert(op.consumer);}
    void operator()( const pay_seeder_operation& op) { _impacted.insert(op.author); _impacted.insert(op.seeder); };
-   void operator()( const finish_buying_operation& op) { _impacted.insert(op.author); };
+   void operator()( const finish_buying_operation& op) {
+      _impacted.insert(op.author);
+      for(auto& item : op.co_authors)
+         _impacted.insert( item.first );
+   };
 };
 
 void operation_get_impacted_accounts( const operation& op, flat_set<account_id_type>& result )
