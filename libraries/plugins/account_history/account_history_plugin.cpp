@@ -28,6 +28,7 @@
 
 #include <graphene/chain/account_evaluator.hpp>
 #include <graphene/chain/account_object.hpp>
+#include <graphene/chain/content_object.hpp>
 #include <graphene/chain/config.hpp>
 #include <graphene/chain/database.hpp>
 #include <graphene/chain/evaluator.hpp>
@@ -100,6 +101,21 @@ void account_history_plugin_impl::update_account_histories( const signed_block& 
 
       if( op.op.which() == operation::tag< account_create_operation >::value )
          impacted.insert( oho.result.get<object_id_type>() );
+      else if (op.op.which() == operation::tag< transfer2_operation >::value ) {
+
+         const transfer2_operation& tr2o = op.op.get<transfer2_operation>();
+         if( tr2o.to.is<account_id_type>() ) {
+            impacted.insert( tr2o.from );
+            impacted.insert( tr2o.to.as<graphene::chain::account_id_type>() );
+         }
+         else if ( tr2o.to.is<content_id_type>() ) {
+            auto& content_obj = db.get<content_object>( tr2o.to.as<content_id_type>() );
+
+            impacted.insert( content_obj.author);
+            for( auto& item : content_obj.co_authors )
+               impacted.insert( item.first );
+         }
+      }
       else
          graphene::app::operation_get_impacted_accounts( op.op, impacted );
 
@@ -108,7 +124,7 @@ void account_history_plugin_impl::update_account_histories( const signed_block& 
             impacted.insert( item.first );
 
       // for each operation this account applies to that is in the config link it into the history
-      if( _tracked_accounts.size() == 0 )
+      if( _tracked_accounts.empty() )
       {
          for( auto& account_id : impacted )
          {
