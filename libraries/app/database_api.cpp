@@ -2085,7 +2085,7 @@ namespace
          while(count && itr_begin != itr_end)
          {
             const auto account_itr = idx_account.find(itr_begin->author);
-            if ( false == user.empty() )
+            if ( !user.empty() )
             {
                if ( account_itr->name != user )
                {
@@ -2094,7 +2094,7 @@ namespace
                }
             }
 
-            if (false == itr_begin->price.Valid(region_code))
+            if (! itr_begin->price.Valid(region_code))
             {
                // this is going to be possible if a content object does not have
                // a price defined for this region
@@ -2104,7 +2104,7 @@ namespace
                continue;
             }
 
-            if ( user.empty() && false == itr_begin->recent_proof(60*60*24)  )
+            if ( user.empty() && ( !itr_begin->seeder_price.empty() && ! itr_begin->recent_proof(60*60*24) ) )
             {
                ++itr_begin;
                continue;
@@ -2121,7 +2121,7 @@ namespace
             {
                std::string term = search_term;
                std::string title = content.synopsis;
-               std::string desc = "";
+               std::string desc;
                std::string author = content.author;
                ContentObjectTypeValue content_type;
 
@@ -2138,7 +2138,7 @@ namespace
                boost::algorithm::to_lower(desc);
                boost::algorithm::to_lower(author);
 
-               if (false == term.empty() &&
+               if ( !term.empty() &&
                    author.find(term) == std::string::npos &&
                    title.find(term) == std::string::npos &&
                    desc.find(term) == std::string::npos)
@@ -2147,7 +2147,7 @@ namespace
                   continue;
                }
 
-               if (false == content_type.filter(filter_type))
+               if (!content_type.filter(filter_type))
                {
                   ++itr_begin;
                   continue;
