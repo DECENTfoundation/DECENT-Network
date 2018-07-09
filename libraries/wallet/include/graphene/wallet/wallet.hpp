@@ -192,7 +192,7 @@ namespace graphene { namespace wallet {
          string                   description;
          operation_history_object op;
       };
-   
+
       struct buying_object_ex : public buying_object, public content_download_status {
          buying_object_ex(const buying_object& obj, const content_download_status& status)
           : buying_object(obj), content_download_status(status)
@@ -252,6 +252,20 @@ namespace graphene { namespace wallet {
           string url;
           uint64_t total_votes;
           bool voted;
+      };
+
+      struct asset_array
+      {
+          asset a0;
+          asset a1;
+      };
+
+      struct balance_operation_detail
+      {
+          string                   memo;
+          string                   description;
+          operation_history_object hist_object;
+          asset_array balance;
       };
 
       namespace detail {
@@ -356,6 +370,10 @@ FC_REFLECT( graphene::wallet::content_download_status,
 
 FC_REFLECT( graphene::wallet::operation_detail, (memo)(description)(op) )
 
+FC_REFLECT( graphene::wallet::asset_array, (a0)(a1) )
+
+FC_REFLECT( graphene::wallet::balance_operation_detail, (memo)(description)(hist_object)(balance) )
+
 FC_REFLECT_DERIVED( graphene::wallet::buying_object_ex,
                     (graphene::chain::buying_object)
                     (graphene::wallet::content_download_status),
@@ -410,6 +428,7 @@ FC_API( graphene::wallet::wallet_api,
         (list_account_balances)
         (search_account_history)
         (get_account_history)
+        (get_account_history2)
         (get_relative_account_history)
         (get_account)
         (suggest_brain_key)

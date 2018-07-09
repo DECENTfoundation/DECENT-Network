@@ -96,6 +96,17 @@ vector<class transaction_detail_object> search_account_history(const string& acc
 vector<operation_detail>  get_account_history(const string& name, int limit) const;
 
 /**
+ * @brief Returns the most recent balance operations on the named account.
+ * This returns a list of operation history objects, which describe activity on the account.
+ * @note this API doesn't give a way to retrieve more than the most recent 100 transactions
+ * @param name the name or id of the account
+ * @param limit the number of entries to return (starting from the most recent)
+ * @return a list of balance operation history objects
+ * @ingroup WalletAPI_Account
+ */
+vector<balance_operation_detail>  get_account_history2(const string& name, int limit) const;
+
+/**
  * @brief Get operations relevant to the specified account referenced
  * by an event numbering specific to the account. The current number of operations
  * for the account can be found in the account statistics (or use 0 for start).
