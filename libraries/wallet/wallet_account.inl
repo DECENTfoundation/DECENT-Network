@@ -327,11 +327,16 @@ namespace detail {
     }
 }
 
-vector<balance_operation_detail> wallet_api::get_account_history2(const string& name, int limit) const
+vector<balance_operation_detail> wallet_api::search_account_balance_history(const string& name, const string& asset_name, const string& order, int limit) const
 {
    vector<balance_operation_detail> result;
    operation_history_id_type start;
    auto account_id = get_account(name).get_id();
+
+   asset_id_type asset_id;
+   if (!asset_name.empty()) {
+      asset_id = get_asset(asset_name).id;
+   }
 
    do {
 
@@ -346,9 +351,15 @@ vector<balance_operation_detail> wallet_api::get_account_history2(const string& 
          detail::get_balance_change(o.op, account_id, info.balance);
 
          if (info.balance.a0.amount != 0ll || info.balance.a1.amount != 0ll) {
-            std::stringstream ss;
-            info.memo = o.op.visit(detail::operation_printer(ss, *my, o.result));
-            result.push_back( info );
+
+            if (asset_name.empty() ||
+                ((info.balance.a0.amount != 0ll && asset_id == info.balance.a0.asset_id) ||
+                 (info.balance.a1.amount != 0ll && asset_id == info.balance.a1.asset_id)))
+            {
+               std::stringstream ss;
+               info.memo = o.op.visit(detail::operation_printer(ss, *my, o.result));
+               result.push_back( info );
+            }
 
             if (result.size() >= limit)
                break;
@@ -359,6 +370,8 @@ vector<balance_operation_detail> wallet_api::get_account_history2(const string& 
       start = start + (-1);
 
    } while(result.size() < limit);
+
+   //TODO: ordering...
 
 
    return result;

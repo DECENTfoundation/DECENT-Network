@@ -428,7 +428,7 @@ FC_API( graphene::wallet::wallet_api,
         (list_account_balances)
         (search_account_history)
         (get_account_history)
-        (get_account_history2)
+        (search_account_balance_history)
         (get_relative_account_history)
         (get_account)
         (suggest_brain_key)
