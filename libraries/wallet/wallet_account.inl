@@ -55,326 +55,65 @@ vector<operation_detail> wallet_api::get_account_history(const string& name, int
    return result;
 }
 
-namespace detail {
+vector<balance_operation_detail> wallet_api::search_account_balance_history(const string& account_name,
+                                                                            const flat_set<string>& assets_list,
+                                                                            optional<string> partner_account,
+                                                                            uint32_t from_block, uint32_t to_block,
+                                                                            const string& order,
+                                                                            int limit) const
+{
+    vector<balance_operation_detail> result;
+    auto account_id = get_account(account_name).get_id();
 
-    void split_payout_to_coauthors(asset paid_price, account_id_type author, const map<account_id_type, uint32_t>& co_authors, flat_map<account_id_type, asset>& result)
-    {
-       if( co_authors.empty() )
-          result.insert(make_pair(author, paid_price));
-       else
-       {
-          asset price = paid_price;
-          boost::multiprecision::int128_t price_for_co_author;
-          for( auto const &element : co_authors )
-          {
-             price_for_co_author = ( paid_price.amount.value * element.second ) / 10000ll ;
-             result.insert(make_pair(element.first, asset( static_cast<share_type>(price_for_co_author), price.asset_id)));
-             price.amount -= price_for_co_author;
-          }
-
-          if( price.amount != 0 ) {
-             FC_ASSERT( price.amount > 0 );
-             auto find = result.find(author);
-             if (find != result.end()) {
-                find->second += price;
-             }
-             else {
-                result.insert(make_pair(author, price));
-             }
-          }
-       }
-    };
-
-    void get_balance_change(const operation& op, account_id_type account, asset_array& result)
-    {
-       switch( op.which() )
-       {
-          case operation::tag<transfer_operation>::value:
-          {
-             const transfer_operation& top = op.get<transfer_operation>();
-             if (top.from == account) {
-                result.a0 = asset(-top.amount.amount, top.amount.asset_id);
-                result.a1 = asset();
-             }
-             else {
-                result.a0 = top.amount;
-                result.a1 = asset();
-             }
-             break;
-          }
-
-          case operation::tag<transfer2_operation>::value:
-          {
-             const transfer2_operation& top = op.get<transfer2_operation>();
-
-             if (top.from == account) {
-                result.a0 = asset(-top.amount.amount, top.amount.asset_id);
-                result.a1 = asset();
-             }
-
-             if( top.to.is<account_id_type>() && top.to.as<account_id_type>() == account) {
-                result.a0 = top.amount;
-                result.a1 = asset();
-             }
-             break;
-          }
-
-          case operation::tag<asset_issue_operation>::value:
-          {
-             const asset_issue_operation& asset_op = op.get<asset_issue_operation>();
-             if (asset_op.issuer == account) {
-                result.a0 = asset_op.asset_to_issue;
-                result.a1 = asset();
-             }
-             else {
-                result.a0 = result.a1 = asset();
-             }
-             break;
-          }
-
-          case operation::tag<asset_fund_pools_operation>::value:
-          {
-             const asset_fund_pools_operation& asset_op = op.get<asset_fund_pools_operation>();
-
-             if (asset_op.from_account != account) {
-                result.a0 = result.a1 = asset();
-                return;
-             }
-
-             if( asset_op.uia_asset.amount > 0) {
-                result.a0 = asset(-asset_op.uia_asset.amount, asset_op.uia_asset.asset_id);
-             }
-             if( asset_op.dct_asset.amount > 0) {
-                result.a1 = asset(-asset_op.dct_asset.amount, asset_op.dct_asset.asset_id);
-             }
-             break;
-          }
-
-          case operation::tag<asset_reserve_operation>::value:
-          {
-             const asset_reserve_operation& asset_op = op.get<asset_reserve_operation>();
-
-             if (asset_op.payer != account) {
-                result.a0 = result.a1 = asset();
-                return;
-             }
-
-             result.a0 = asset(-asset_op.amount_to_reserve.amount, asset_op.amount_to_reserve.asset_id);
-             result.a1 = asset();
-             break;
-          }
-
-          case operation::tag<asset_claim_fees_operation>::value:
-          {
-             const asset_claim_fees_operation& asset_op = op.get<asset_claim_fees_operation>();
-
-             if (asset_op.issuer != account) {
-                result.a0 = result.a1 = asset();
-                return;
-             }
-
-             if( asset_op.uia_asset.amount > 0) {
-                result.a0 = asset(asset_op.uia_asset.amount, asset_op.uia_asset.asset_id);
-             }
-             if( asset_op.dct_asset.amount > 0) {
-                result.a1 = asset(asset_op.dct_asset.amount, asset_op.dct_asset.asset_id);
-             }
-             break;
-          }
-
-          case operation::tag<vesting_balance_create_operation>::value:
-          {
-             const vesting_balance_create_operation& vop = op.get<vesting_balance_create_operation>();
-             if (vop.creator != account) {
-                result.a0 = result.a1 = asset();
-                return;
-             }
-
-             result.a0 = asset(-vop.amount.amount, vop.amount.asset_id);
-             result.a1 = asset();
-             break;
-          }
-
-          case operation::tag<vesting_balance_withdraw_operation>::value:
-          {
-             const vesting_balance_withdraw_operation& vop = op.get<vesting_balance_withdraw_operation>();
-             if (vop.owner != account) {
-                result.a0 = result.a1 = asset();
-                return;
-             }
-
-             result.a0 = vop.amount;
-             result.a1 = asset();
-             break;
-          }
-
-          case operation::tag<withdraw_permission_claim_operation>::value:
-          {
-             const withdraw_permission_claim_operation& vop = op.get<withdraw_permission_claim_operation>();
-
-             if (vop.withdraw_from_account == account) {
-                result.a0 = asset(-vop.amount_to_withdraw.amount, vop.amount_to_withdraw.asset_id);
-                result.a1 = asset();
-             }
-             else if (vop.withdraw_to_account == account) {
-                result.a0 = vop.amount_to_withdraw;
-                result.a1 = asset();
-             }
-             else {
-                result.a0 = result.a1 = asset();
-             }
-             break;
-          }
-
-          case operation::tag<request_to_buy_operation>::value:
-          {
-             const request_to_buy_operation &rbop = op.get<request_to_buy_operation>();
-             if (rbop.consumer == account) {
-                result.a0 = -rbop.price;
-                result.a1 = asset();
-             }
-             break;
-          }
-
-          case operation::tag<return_escrow_buying_operation>::value:
-          {
-             const return_escrow_buying_operation& eop = op.get<return_escrow_buying_operation>();
-             if (eop.consumer == account) {
-                result.a0 = eop.escrow;
-                result.a1 = asset();
-             }
-             break;
-          }
-
-          case operation::tag<return_escrow_submission_operation>::value:
-          {
-             const return_escrow_submission_operation& eop = op.get<return_escrow_submission_operation>();
-             if (eop.author == account) {
-                result.a0 = eop.escrow;
-                result.a1 = asset();
-             }
-             break;
-          }
-
-          case operation::tag<content_submit_operation>::value:
-          {
-             const content_submit_operation& cop = op.get<content_submit_operation>();
-             if (cop.author == account) {
-                result.a0 = -cop.publishing_fee;
-                result.a1 = asset();
-             }
-             break;
-          }
-
-          case operation::tag<subscribe_operation>::value:
-          {
-             const subscribe_operation& sop = op.get<subscribe_operation>();
-             if (sop.from == account) {
-                result.a0 = asset(-sop.price.amount, sop.price.asset_id);
-                result.a1 = asset();
-             }
-             else if (sop.to == account) {
-                result.a0 = sop.price;
-                result.a1 = asset();
-             }
-             break;
-          }
-
-          case operation::tag<finish_buying_operation>::value:
-          {
-             const finish_buying_operation& fop = op.get<finish_buying_operation>();
-             //NOTE: consumer balance is already changed in 'request_to_buy_operation'
-//             if (fop.consumer == account) {
-//                result.a0 = asset(-fop.payout.amount, fop.payout.asset_id);
-//                result.a1 = asset();
-//             }
-             if (fop.author == account && fop.co_authors.empty()) {
-                result.a0 = fop.payout;
-                result.a1 = asset();
-             }
-             else {
-                //calculate split to author and co-authors
-                flat_map<account_id_type, asset> co_authors_split;
-                split_payout_to_coauthors(fop.payout, fop.author, fop.co_authors, co_authors_split);
-
-                auto find = co_authors_split.find(account);
-                if (find != co_authors_split.end()) {
-                   result.a0 = find->second;
-                   result.a1 = asset();
-                }
-             }
-             break;
-          }
-
-          case operation::tag<pay_seeder_operation>::value:
-          {
-             const pay_seeder_operation &psop = op.get<pay_seeder_operation>();
-             //NOTE: author balance is changed in 'content_submit_operation'
-//             if (psop.author == account) {
-//                result.a0 = asset(-psop.payout.amount, psop.payout.asset_id);
-//                result.a1 = asset();
-//             }
-             if (psop.seeder == account) {
-                result.a0 = psop.payout;
-                result.a1 = asset();
-             }
-             break;
-          }
-
-          default:
-             result.a0 = result.a1 = asset();
-       }
+    flat_set<asset_id_type> asset_id_list;
+    if (!assets_list.empty()) {
+        for( const auto& item : assets_list) {
+           asset_id_list.insert( get_asset(item).get_id() );
+        }
     }
+
+   fc::optional<account_id_type> partner_id;
+    if (partner_account) {
+       partner_id = get_account(*partner_account).get_id();
+    }
+
+    vector<balance_change_result> current = my->_remote_hist->search_account_balance_history(account_id, asset_id_list, partner_id, from_block, to_block, order, 100);
+    result.reserve( current.size() );
+    for(const auto& item : current) {
+       balance_operation_detail info;
+       info.hist_object = item.hist_object;
+       info.balance     = item.balance;
+       info.fee         = item.fee;
+
+       std::stringstream ss;
+       info.memo = item.hist_object.op.visit(detail::operation_printer(ss, *my, item.hist_object.result));
+
+       result.push_back(info);
+    }
+
+    return result;
 }
 
-vector<balance_operation_detail> wallet_api::search_account_balance_history(const string& name, const string& asset_name, const string& order, int limit) const
+fc::optional<balance_operation_detail> wallet_api::get_account_balance_for_transaction(const string& account_name,
+                                                                                       operation_history_id_type transaction_id)
 {
-   vector<balance_operation_detail> result;
-   operation_history_id_type start;
-   auto account_id = get_account(name).get_id();
+   auto account_id = get_account(account_name).get_id();
 
-   asset_id_type asset_id;
-   if (!asset_name.empty()) {
-      asset_id = get_asset(asset_name).id;
+   fc::optional<balance_change_result> result;
+   result = my->_remote_hist->get_account_balance_for_transaction(account_id, transaction_id);
+   if (!result) {
+      return fc::optional<balance_operation_detail>();
    }
 
-   do {
+   balance_operation_detail info;
+   info.hist_object = result->hist_object;
+   info.balance     = result->balance;
+   info.fee         = result->fee;
 
-      vector<operation_history_object> current = my->_remote_hist->get_account_history(account_id, operation_history_id_type(), std::min(100,limit), start);
-      if (current.empty())
-         break;
+   std::stringstream ss;
+   info.memo = result->hist_object.op.visit(detail::operation_printer(ss, *my, result->hist_object.result));
 
-      for( auto& o : current ) {
-
-         balance_operation_detail info;
-         info.hist_object = o;
-         detail::get_balance_change(o.op, account_id, info.balance);
-
-         if (info.balance.a0.amount != 0ll || info.balance.a1.amount != 0ll) {
-
-            if (asset_name.empty() ||
-                ((info.balance.a0.amount != 0ll && asset_id == info.balance.a0.asset_id) ||
-                 (info.balance.a1.amount != 0ll && asset_id == info.balance.a1.asset_id)))
-            {
-               std::stringstream ss;
-               info.memo = o.op.visit(detail::operation_printer(ss, *my, o.result));
-               result.push_back( info );
-            }
-
-            if (result.size() >= limit)
-               break;
-         }
-      }
-
-      start = current.back().id;
-      start = start + (-1);
-
-   } while(result.size() < limit);
-
-   //TODO: ordering...
-
-
-   return result;
+   return info;
 }
 
 vector<operation_detail> wallet_api::get_relative_account_history(const string& name,

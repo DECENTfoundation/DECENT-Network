@@ -77,6 +77,19 @@ namespace graphene { namespace app {
       string                        message_out;
    };
 
+   struct asset_array
+   {
+      asset a0;
+      asset a1;
+   };
+
+    struct balance_change_result
+    {
+       operation_history_object hist_object;
+       asset_array balance;
+       asset fee;
+    };
+
    /**
     * @brief The history_api class implements the RPC API for account history
     *
@@ -117,6 +130,39 @@ namespace graphene { namespace app {
                                                                         uint32_t stop = 0,
                                                                         unsigned limit = 100,
                                                                         uint32_t start = 0) const;
+
+         /**
+           * @brief Returns the most recent balance operations on the named account.
+           * This returns a list of operation history objects, which describe activity on the account.
+           * @param account_id
+           * @param assets_list
+           * @param partner_account_id
+           * @param from_block
+           * @param to_block
+           * @param order
+           * @param offset
+           * @param limit the number of entries to return (starting from the most recent)
+           * @return a list of balance operation history objects
+           * @ingroup
+           */
+         vector<balance_change_result>  search_account_balance_history(account_id_type account_id,
+                                                                       const flat_set<asset_id_type>& assets_list,
+                                                                       fc::optional<account_id_type> partner_account_id,
+                                                                       uint32_t from_block, uint32_t to_block,
+                                                                       const string& order,
+                                                                       uint32 offset,
+                                                                       int limit) const;
+
+         /**
+           * @brief Returns the most recent balance operations on the named account.
+           * This returns a list of operation history objects, which describe activity on the account.
+           * @param account_id
+           * @param transaction_id
+           * @return a list of balance operation history objects
+           * @ingroup
+           */
+         fc::optional<balance_change_result> get_account_balance_for_transaction(account_id_type account_id,
+                                                                             operation_history_id_type transaction_id);
 
       private:
            application& _app;
@@ -466,10 +512,14 @@ FC_REFLECT( graphene::app::verify_range_proof_rewind_result,
         (success)(min_val)(max_val)(value_out)(blind_out)(message_out) )
 //FC_REFLECT_TYPENAME( fc::ecc::compact_signature );
 //FC_REFLECT_TYPENAME( fc::ecc::commitment_type );
+FC_REFLECT( graphene::app::asset_array, (a0)(a1) )
+FC_REFLECT( graphene::app::balance_change_result, (hist_object)(balance)(fee) )
 
 FC_API(graphene::app::history_api,
        (get_account_history)
        (get_relative_account_history)
+       (search_account_balance_history)
+       (get_account_balance_for_transaction)
      )
 FC_API(graphene::app::network_broadcast_api,
        (broadcast_transaction)

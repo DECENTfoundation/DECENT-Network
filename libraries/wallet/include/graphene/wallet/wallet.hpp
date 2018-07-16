@@ -254,11 +254,6 @@ namespace graphene { namespace wallet {
           bool voted;
       };
 
-      struct asset_array
-      {
-          asset a0;
-          asset a1;
-      };
 
       struct balance_operation_detail
       {
@@ -266,6 +261,7 @@ namespace graphene { namespace wallet {
           string                   description;
           operation_history_object hist_object;
           asset_array balance;
+          asset fee;
       };
 
       namespace detail {
@@ -369,8 +365,6 @@ FC_REFLECT( graphene::wallet::content_download_status,
           )
 
 FC_REFLECT( graphene::wallet::operation_detail, (memo)(description)(op) )
-
-FC_REFLECT( graphene::wallet::asset_array, (a0)(a1) )
 
 FC_REFLECT( graphene::wallet::balance_operation_detail, (memo)(description)(hist_object)(balance) )
 
