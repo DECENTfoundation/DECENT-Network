@@ -77,7 +77,7 @@ vector<balance_operation_detail> wallet_api::search_account_balance_history(cons
        partner_id = get_account(*partner_account).get_id();
     }
 
-    vector<balance_change_result> current = my->_remote_hist->search_account_balance_history(account_id, asset_id_list, partner_id, from_block, to_block, order, 100);
+    vector<balance_change_result> current = my->_remote_hist->search_account_balance_history(account_id, asset_id_list, partner_id, from_block, to_block, order, 0, 100);
     result.reserve( current.size() );
     for(const auto& item : current) {
        balance_operation_detail info;

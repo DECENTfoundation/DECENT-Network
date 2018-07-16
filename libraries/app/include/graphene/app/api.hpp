@@ -150,7 +150,7 @@ namespace graphene { namespace app {
                                                                        fc::optional<account_id_type> partner_account_id,
                                                                        uint32_t from_block, uint32_t to_block,
                                                                        const string& order,
-                                                                       uint32 offset,
+                                                                       uint32_t offset,
                                                                        int limit) const;
 
          /**
