@@ -474,19 +474,26 @@ namespace graphene { namespace app {
                                                                               fc::optional<account_id_type> partner_account_id,
                                                                               uint32_t from_block, uint32_t to_block,
                                                                               const string& order,
-                                                                              uint32_t offset,
+                                                                              uint32_t start_offset,
                                                                               int limit) const
     {
-        vector<balance_change_result> result;
+        vector<balance_change_result> tmp_result;
         operation_history_id_type start;
+
+        tmp_result.reserve(start_offset + limit);
 
         do {
 
-            vector<operation_history_object> current = this->get_account_history(account_id, operation_history_id_type(), std::min(100,limit), start);
+            vector<operation_history_object> current = this->get_account_history(account_id, operation_history_id_type(), 100, start);
             if (current.empty())
                 break;
 
             for( auto& o : current ) {
+
+                if (from_block != 0 && to_block != 0) {
+                    if (o.block_num < from_block || o.block_num > to_block)
+                        continue;
+                }
 
                 balance_change_result info;
                 info.hist_object = o;
@@ -505,27 +512,29 @@ namespace graphene { namespace app {
                             if (!top.is_partner_account_id(*partner_account_id))
                                 continue;
                         }
-                        if (o.op.which() == operation::tag<transfer2_operation>::value) {
+                        else if (o.op.which() == operation::tag<transfer2_operation>::value) {
                             const transfer2_operation& top = o.op.get<transfer2_operation>();
                             if (!top.is_partner_account_id(*partner_account_id))
                                 continue;
                         }
                     }
 
-                    result.push_back( info );
+                    tmp_result.push_back( info );
                 }
 
-                if (result.size() >= limit)
+                if (tmp_result.size() >= (start_offset + limit))
                    break;
             }
 
             start = current.back().id;
             start = start + (-1);
 
-        } while(result.size() < limit);
+        } while(tmp_result.size() < (start_offset + limit));
 
         //TODO: ordering...
 
+        vector<balance_change_result> result;
+        std::copy(tmp_result.begin() + start_offset, tmp_result.end(), std::back_inserter(result));
 
         return result;
     }

@@ -366,7 +366,7 @@ FC_REFLECT( graphene::wallet::content_download_status,
 
 FC_REFLECT( graphene::wallet::operation_detail, (memo)(description)(op) )
 
-FC_REFLECT( graphene::wallet::balance_operation_detail, (memo)(description)(hist_object)(balance) )
+FC_REFLECT( graphene::wallet::balance_operation_detail, (memo)(description)(hist_object)(balance)(fee) )
 
 FC_REFLECT_DERIVED( graphene::wallet::buying_object_ex,
                     (graphene::chain::buying_object)
@@ -423,6 +423,7 @@ FC_API( graphene::wallet::wallet_api,
         (search_account_history)
         (get_account_history)
         (search_account_balance_history)
+        (get_account_balance_for_transaction)
         (get_relative_account_history)
         (get_account)
         (suggest_brain_key)

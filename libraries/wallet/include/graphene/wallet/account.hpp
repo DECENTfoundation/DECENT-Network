@@ -123,15 +123,17 @@ vector<operation_detail>  get_relative_account_history(const string& name,
  * @param from_block
  * @param to_block
  * @param order
+ * @param start_offset
  * @param limit the number of entries to return (starting from the most recent)
  * @return a list of balance operation history objects
  * @ingroup WalletAPI_Account
  */
 vector<balance_operation_detail>  search_account_balance_history(const string& account_name,
                                                                  const flat_set<string>& assets_list,
-                                                                 optional<string> partner_account,
+                                                                 const string& partner_account,
                                                                  uint32_t from_block, uint32_t to_block,
                                                                  const string& order,
+                                                                 uint32_t start_offset,
                                                                  int limit) const;
 
 /**
