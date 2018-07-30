@@ -62,6 +62,8 @@ namespace graphene { namespace chain {
 
       account_id_type fee_payer()const { return from; }
       void            validate()const;
+
+      bool is_partner_account_id(account_id_type acc_id) const;
    };
 
    /**
@@ -100,6 +102,9 @@ namespace graphene { namespace chain {
 
       account_id_type fee_payer()const { return from; }
       void            validate()const;
+
+      bool is_partner_account_id(account_id_type acc_id) const;
+
    };
 
 }} // graphene::chain

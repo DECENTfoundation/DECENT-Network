@@ -113,6 +113,37 @@ vector<operation_detail>  get_relative_account_history(const string& name,
                                                        int limit,
                                                        uint32_t start) const;
 
+/**
+ * @brief Returns the most recent balance operations on the named account.
+ * This returns a list of operation history objects, which describe activity on the account.
+ * @param account_name the name or id of the account
+ * @param assets_list list of asset names to filter or empty for all assets
+ * @param partner_account partner account_id to filter transfers to speccific account or empty
+ * @param from_block filtering parameter, starting block number (can be determined by from time) or zero when not used
+ * @param to_block filtering parameter, ending block number or zero when not used
+ * @param order ordering parameter, not working yet
+ * @param start_offset starting offset from zero
+ * @param limit the number of entries to return (starting from the most recent)
+ * @return a list of balance operation history objects
+ * @ingroup WalletAPI_Account
+ */
+vector<balance_operation_detail>  search_account_balance_history(const string& account_name,
+                                                                 const flat_set<string>& assets_list,
+                                                                 const string& partner_account,
+                                                                 uint32_t from_block, uint32_t to_block,
+                                                                 const string& order,
+                                                                 uint32_t start_offset,
+                                                                 int limit) const;
+
+/**
+ * @brief Returns the most recent balance operations on the named account.
+ * @param account_name the name or id of the account
+ * @param transaction_id the transaction_id to search for
+ * @return returns balance_operation_detail or empty when not found
+ * @ingroup WalletAPI_Account
+ */
+fc::optional<balance_operation_detail> get_account_balance_for_transaction(const string& account_name,
+                                                                           operation_history_id_type transaction_id);
 
 /**
  * @brief Returns information about the given account.

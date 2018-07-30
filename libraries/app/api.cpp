@@ -36,12 +36,14 @@
 #include <graphene/chain/transaction_object.hpp>
 #include <graphene/chain/withdraw_permission_object.hpp>
 #include <graphene/seeding/seeding_utility.hpp>
+#include <graphene/app/balance.hpp>
 
 
 #include <fc/crypto/hex.hpp>
 #include <fc/smart_ref_impl.hpp>
 
 #include <boost/spirit/home/support/container.hpp>
+#include <boost/multiprecision/cpp_int.hpp>
 
 namespace decent { namespace seeding {
       fc::promise<decent::seeding::seeding_plugin_startup_options>::ptr seeding_promise;
@@ -466,6 +468,96 @@ namespace graphene { namespace app {
        
        return result;
     }
+
+    vector<balance_change_result> history_api::search_account_balance_history(account_id_type account_id,
+                                                                              const flat_set<asset_id_type>& assets_list,
+                                                                              fc::optional<account_id_type> partner_account_id,
+                                                                              uint32_t from_block, uint32_t to_block,
+                                                                              const string& order,
+                                                                              uint32_t start_offset,
+                                                                              int limit) const
+    {
+        vector<balance_change_result> tmp_result;
+        operation_history_id_type start;
+
+        tmp_result.reserve(start_offset + limit);
+
+        do {
+
+            vector<operation_history_object> current = this->get_account_history(account_id, operation_history_id_type(), 100, start);
+            if (current.empty())
+                break;
+
+            for( auto& o : current ) {
+
+                if (from_block != 0 && to_block != 0) {
+                    if (o.block_num < from_block || o.block_num > to_block)
+                        continue;
+                }
+
+                balance_change_result info;
+                info.hist_object = o;
+                graphene::app::operation_get_balance_history(o.op, account_id, info.balance, info.fee);
+
+                if (info.balance.a0.amount == 0ll && info.balance.a1.amount == 0ll && info.fee.amount == 0ll)
+                    continue;
+
+                if (assets_list.empty() ||
+                    ((info.balance.a0.amount != 0ll && assets_list.find(info.balance.a0.asset_id) != assets_list.end()) ||
+                     (info.balance.a1.amount != 0ll && assets_list.find(info.balance.a0.asset_id) != assets_list.end()) ))
+                {
+                    if (partner_account_id) {
+                        if (o.op.which() == operation::tag<transfer_operation>::value) {
+                            const transfer_operation& top = o.op.get<transfer_operation>();
+                            if (!top.is_partner_account_id(*partner_account_id))
+                                continue;
+                        }
+                        else if (o.op.which() == operation::tag<transfer2_operation>::value) {
+                            const transfer2_operation& top = o.op.get<transfer2_operation>();
+                            if (!top.is_partner_account_id(*partner_account_id))
+                                continue;
+                        }
+                    }
+
+                    tmp_result.push_back( info );
+                }
+
+                if (tmp_result.size() >= (start_offset + limit))
+                   break;
+            }
+
+            start = current.back().id;
+            start = start + (-1);
+
+        } while(tmp_result.size() < (start_offset + limit));
+
+        //TODO: ordering...
+
+        vector<balance_change_result> result;
+        std::copy(tmp_result.begin() + start_offset, tmp_result.end(), std::back_inserter(result));
+
+        return result;
+    }
+
+    fc::optional<balance_change_result> history_api::get_account_balance_for_transaction(account_id_type account_id,
+                                                                                     operation_history_id_type transaction_id)
+    {
+        vector<operation_history_object> operation_list = this->get_account_history(account_id,
+                                                                            operation_history_id_type(),
+                                                                            1,
+                                                                            transaction_id);
+        if (operation_list.empty())
+            return fc::optional<balance_change_result>();
+
+        balance_change_result result;
+        result.hist_object = operation_list.front();
+
+        graphene::app::operation_get_balance_history(result.hist_object.op, account_id, result.balance, result.fee);
+
+        return result;
+    }
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////
     
     crypto_api::crypto_api(){};
     

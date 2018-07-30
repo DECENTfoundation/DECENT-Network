@@ -96,6 +96,8 @@ namespace graphene { namespace chain {
       void get_required_owner_authorities( flat_set<account_id_type>& )const{}
       void validate()const{}
 
+      bool is_partner_account_id(account_id_type acc_id) const { return false; }
+
       static uint64_t calculate_data_fee( uint64_t bytes, uint64_t price_per_kbyte );
    };
 
