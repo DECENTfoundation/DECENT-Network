@@ -132,19 +132,19 @@ namespace graphene { namespace app {
                                                                         uint32_t start = 0) const;
 
          /**
-           * @brief Returns the most recent balance operations on the named account.
-           * This returns a list of operation history objects, which describe activity on the account.
-           * @param account_id
-           * @param assets_list
-           * @param partner_account_id
-           * @param from_block
-           * @param to_block
-           * @param order
-           * @param start_offset
-           * @param limit the number of entries to return (starting from the most recent)
-           * @return a list of balance operation history objects
-           * @ingroup
-           */
+          * @brief Returns the most recent balance operations on the named account.
+          * This returns a list of operation history objects, which describe activity on the account.
+          * @param account_id the account whose history should be queried
+          * @param assets_list list of asset_ids to filter assets or empty for all assets
+          * @param partner_account_id partner account_id to filter transfers to speccific account or empty
+          * @param from_block filtering parameter, starting block number (can be determined by from time) or zero when not used
+          * @param to_block filtering parameter, ending block number or zero when not used
+          * @param order ordering parameter, not working yet
+          * @param start_offset starting offset from zero
+          * @param limit the number of entries to return (starting from the most recent)
+          * @return a list of balance operation history objects
+          * @ingroup HistoryAPI
+          */
          vector<balance_change_result>  search_account_balance_history(account_id_type account_id,
                                                                        const flat_set<asset_id_type>& assets_list,
                                                                        fc::optional<account_id_type> partner_account_id,
@@ -154,13 +154,12 @@ namespace graphene { namespace app {
                                                                        int limit) const;
 
          /**
-           * @brief Returns the most recent balance operations on the named account.
-           * This returns a list of operation history objects, which describe activity on the account.
-           * @param account_id
-           * @param transaction_id
-           * @return a list of balance operation history objects
-           * @ingroup
-           */
+          * @brief Returns balance operation on the named account and transaction_id.
+          * @param account_id the account whose history should be queried
+          * @param transaction_id the transaction_id whose history should be queried
+          * @return balance operation history object or empty when not found
+          * @ingroup HistoryAPI
+          */
          fc::optional<balance_change_result> get_account_balance_for_transaction(account_id_type account_id,
                                                                              operation_history_id_type transaction_id);
 

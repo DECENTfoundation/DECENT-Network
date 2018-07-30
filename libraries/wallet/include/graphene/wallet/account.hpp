@@ -116,14 +116,13 @@ vector<operation_detail>  get_relative_account_history(const string& name,
 /**
  * @brief Returns the most recent balance operations on the named account.
  * This returns a list of operation history objects, which describe activity on the account.
- * @note this API doesn't give a way to retrieve more than the most recent 100 transactions
- * @param name the name or id of the account
- * @param assets_list
- * @param partner_account
- * @param from_block
- * @param to_block
- * @param order
- * @param start_offset
+ * @param account_name the name or id of the account
+ * @param assets_list list of asset names to filter or empty for all assets
+ * @param partner_account partner account_id to filter transfers to speccific account or empty
+ * @param from_block filtering parameter, starting block number (can be determined by from time) or zero when not used
+ * @param to_block filtering parameter, ending block number or zero when not used
+ * @param order ordering parameter, not working yet
+ * @param start_offset starting offset from zero
  * @param limit the number of entries to return (starting from the most recent)
  * @return a list of balance operation history objects
  * @ingroup WalletAPI_Account
@@ -138,9 +137,9 @@ vector<balance_operation_detail>  search_account_balance_history(const string& a
 
 /**
  * @brief Returns the most recent balance operations on the named account.
- * @param account_name
- * @param transaction_id
- * @return returns balance_operation_detail
+ * @param account_name the name or id of the account
+ * @param transaction_id the transaction_id to search for
+ * @return returns balance_operation_detail or empty when not found
  * @ingroup WalletAPI_Account
  */
 fc::optional<balance_operation_detail> get_account_balance_for_transaction(const string& account_name,
