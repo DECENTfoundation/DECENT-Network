@@ -764,6 +764,7 @@ namespace graphene { namespace net { namespace detail {
       void                       disable_peer_advertising();
       fc::variant_object         get_call_statistics() const;
       message                    get_message_for_item(const item_id& item) override;
+      message                    get_message_for_item_optimized(const item_id& item) override;
 
       fc::variant_object         network_get_info() const;
       fc::variant_object         network_get_usage_stats() const;
@@ -1123,6 +1124,8 @@ namespace graphene { namespace net { namespace detail {
     void node_impl::fetch_items_loop()
     {
       VERIFY_CORRECT_THREAD();
+      _retrigger_fetch_item_loop_promise = fc::promise<void>::ptr(new fc::promise<void>("graphene::net::retrigger_fetch_item_loop"));
+
       while (!_fetch_item_loop_done.canceled())
       {
         _items_to_fetch_updated = false;
@@ -1163,7 +1166,7 @@ namespace graphene { namespace net { namespace detail {
             // this item has probably already fallen out of our peers' caches, we'll just ignore it.
             // this can happen during flooding, and the _items_to_fetch could otherwise get clogged
             // with a bunch of items that we'll never be able to request from any peer
-            wlog("Unable to fetch item ${item} before its likely expiration time, removing it from our list of items to fetch", ("item", item_iter->item));
+            elog("Unable to fetch item ${item} before its likely expiration time, removing it from our list of items to fetch", ("item", item_iter->item));
             item_iter = _items_to_fetch.erase(item_iter);
           }
           else
@@ -1220,21 +1223,19 @@ namespace graphene { namespace net { namespace detail {
         items_by_peer.clear();
 
         if (!_items_to_fetch_updated)
-        {
-          _retrigger_fetch_item_loop_promise = fc::promise<void>::ptr(new fc::promise<void>("graphene::net::retrigger_fetch_item_loop"));
+        {          
           fc::microseconds time_until_retrigger = fc::microseconds::maximum();
           if (next_peer_unblocked_time != fc::time_point::maximum())
             time_until_retrigger = next_peer_unblocked_time - fc::time_point::now();
           try
           {
-            if (time_until_retrigger > fc::microseconds(0))
-              _retrigger_fetch_item_loop_promise->wait(time_until_retrigger);
+             if (time_until_retrigger > fc::microseconds(0)) 
+                _retrigger_fetch_item_loop_promise->wait_with_reset(time_until_retrigger);
           }
           catch (const fc::timeout_exception&)
           {
             dlog("Resuming fetch_items_loop due to timeout -- one of our peers should no longer be throttled");
           }
-          _retrigger_fetch_item_loop_promise.reset();
         }
       } // while (!canceled)
     }
@@ -1243,8 +1244,8 @@ namespace graphene { namespace net { namespace detail {
     {
       VERIFY_CORRECT_THREAD();
       _items_to_fetch_updated = true;
-      if( _retrigger_fetch_item_loop_promise )
-        _retrigger_fetch_item_loop_promise->set_value();
+      if (_retrigger_fetch_item_loop_promise) 
+         _retrigger_fetch_item_loop_promise->set_value_and_reset();
     }
 
     void node_impl::advertise_inventory_loop()
@@ -2735,6 +2736,23 @@ namespace graphene { namespace net { namespace detail {
       return item_not_available_message(item);
     }
 
+    message node_impl::get_message_for_item_optimized(const item_id& item)
+    {
+       message* msg_ptr = (message*)_message_cache.get_message_ptr(item.item_hash);
+       if (msg_ptr) {
+          return *msg_ptr;
+       }
+       
+       try
+       {
+         return _delegate->get_item(item);
+       }
+       catch (fc::key_not_found_exception&)
+       {
+       }
+       return item_not_available_message(item);
+    }
+
     void node_impl::on_fetch_items_message(peer_connection* originating_peer, const fetch_items_message& fetch_items_message_received)
     {
       VERIFY_CORRECT_THREAD();
@@ -2866,10 +2884,12 @@ namespace graphene { namespace net { namespace detail {
           // if the peer has flooded us with transactions, don't add these to the inventory to prevent our
           // inventory list from growing without bound.  We try to allow fetching blocks even when
           // we've stopped fetching transactions.
-          if ((item_ids_inventory_message_received.item_type == graphene::net::trx_message_type &&
-               originating_peer->is_inventory_advertised_to_us_list_full_for_transactions()) ||
-              originating_peer->is_inventory_advertised_to_us_list_full())
-            break;
+           if ((item_ids_inventory_message_received.item_type == graphene::net::trx_message_type &&
+              originating_peer->is_inventory_advertised_to_us_list_full_for_transactions()) ||
+              originating_peer->is_inventory_advertised_to_us_list_full()) {
+              elog("List of inventory advertised to us is full.");
+              break;
+           }
           originating_peer->inventory_peer_advertised_to_us.insert(peer_connection::timestamped_item_id(advertised_item_id, fc::time_point::now()));
           if (!we_requested_this_item_from_a_peer)
           {
@@ -5158,7 +5178,7 @@ namespace graphene { namespace net { namespace detail {
 
   void node::broadcast( const message& msg )
   {
-    ilog("broadcast started");
+    elog("broadcast started");
      edump((msg));
     INVOKE_IN_IMPL(broadcast, msg);
   }
