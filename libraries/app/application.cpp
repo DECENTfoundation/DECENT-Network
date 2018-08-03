@@ -114,6 +114,7 @@ namespace detail {
       fc::optional<fc::temp_file> _lock_file;
       bool _is_block_producer = false;
       bool _force_validate = false;
+      uint64_t _processed_transactions;
 
       void reset_p2p_node(const fc::path& data_dir)
       { try {
@@ -263,7 +264,8 @@ namespace detail {
 
       application_impl(application* self)
          : _self(self),
-           _chain_db(std::make_shared<chain::database>())
+           _chain_db(std::make_shared<chain::database>()),
+         _processed_transactions(0)
       {
       }
 
@@ -1053,6 +1055,11 @@ void application::set_api_access_info(const string& username, api_access_info&& 
 bool application::is_finished_syncing() const
 {
    return my->_is_finished_syncing;
+}
+
+uint64_t application::get_processed_transactions()
+{
+   return my->_processed_transactions;
 }
 
 void graphene::app::application::add_plugin(const string& name, std::shared_ptr<graphene::app::abstract_plugin> p)
