@@ -248,6 +248,11 @@ namespace graphene { namespace app {
          // Globals //
          /////////////
 
+         /**
+          * @brieg Get the name of the API.
+          * @return the name of the API
+          * @ingroup DatabaseAPI_Globals
+          */
          std::string info()const;
 
          /**

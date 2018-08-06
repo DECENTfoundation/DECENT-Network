@@ -100,6 +100,11 @@ namespace graphene { namespace app {
       public:
          history_api(application& app):_app(app){}
 
+         /**
+          * @brieg Get the name of the API.
+          * @return the name of the API
+          * @ingroup HistoryAPI
+          */
          string info() { return "history_api";}
 
          /**
@@ -187,7 +192,12 @@ namespace graphene { namespace app {
 
          typedef std::function<void(variant/*transaction_confirmation*/)> confirmation_callback;
 
-      string info() { return "network_broadcast_api";}
+         /**
+          * @brieg Get the name of the API.
+          * @return the name of the API
+          * @ingroup Network_broadcastAPI
+          */
+         string info() { return "network_broadcast_api";}
 
          /**
           * @brief Broadcast a transaction to the network.
@@ -247,7 +257,12 @@ namespace graphene { namespace app {
       public:
          network_node_api(application& a);
 
-      string info() { return "network_node_api";}
+         /**
+          * @brieg Get the name of the API.
+          * @return the name of the API
+          * @ingroup Network_NodeAPI
+          */
+         string info() { return "network_node_api";}
 
          /**
           * @brief Returns general network information, such as p2p port.
@@ -324,7 +339,12 @@ namespace graphene { namespace app {
       public:
          crypto_api();
 
-      string info() { return "crypto_api";}
+         /**
+          * @brieg Get the name of the API.
+          * @return the name of the API
+          * @ingroup CryptoAPI
+          */
+         string info() { return "crypto_api";}
 
          /**
           * @param key
@@ -420,6 +440,11 @@ namespace graphene { namespace app {
    public:
       messaging_api(application& a);
 
+      /**
+       * @brieg Get the name of the API.
+       * @return the name of the API
+       * @ingroup MessagingAPI
+       */
       string info() { return "messaging_api";}
 
       /**
@@ -446,6 +471,11 @@ namespace graphene { namespace app {
          login_api(application& a);
          ~login_api();
 
+         /**
+          * @brieg Get the name of the API.
+          * @return the name of the API
+          * @ingroup LoginAPI
+          */
          string info() { return "login_api";}
 
          /**
