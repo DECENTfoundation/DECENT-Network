@@ -248,6 +248,8 @@ namespace graphene { namespace app {
          // Globals //
          /////////////
 
+         std::string info()const;
+
          /**
           * @brief Retrieve the \c chain_property_object associated with the chain.
           * @return chain id and immutable chain parameters
@@ -887,8 +889,8 @@ FC_REFLECT( graphene::app::market_trade, (date)(price)(amount)(value) );
 FC_REFLECT( graphene::app::miner_voting_info, (id)(name)(url)(total_votes)(voted) );
 
 FC_API(graphene::app::database_api,
-// Objects
-       (get_objects)
+          // Objects
+          (get_objects)
 
           // Subscriptions
           (set_subscribe_callback)
@@ -908,6 +910,7 @@ FC_API(graphene::app::database_api,
           (get_time_to_maint_by_block_time)
 
           // Globals
+          (info)
           (get_chain_properties)
           (get_global_properties)
           (get_config)

@@ -103,6 +103,7 @@ namespace graphene { namespace app {
       miner_reward_input get_time_to_maint_by_block_time(fc::time_point_sec block_time) const;
       
       // Globals
+
       chain_property_object get_chain_properties()const;
       global_property_object get_global_properties()const;
       fc::variant_object get_config()const;
@@ -446,7 +447,12 @@ namespace graphene { namespace app {
    // Globals                                                          //
    //                                                                  //
    //////////////////////////////////////////////////////////////////////
-   
+
+   std::string database_api::info()const
+   {
+      return "database_api";
+   }
+
    chain_property_object database_api::get_chain_properties()const
    {
       return my->get_chain_properties();

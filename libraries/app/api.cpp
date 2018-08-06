@@ -38,7 +38,6 @@
 #include <graphene/seeding/seeding_utility.hpp>
 #include <graphene/app/balance.hpp>
 
-
 #include <fc/crypto/hex.hpp>
 #include <fc/smart_ref_impl.hpp>
 

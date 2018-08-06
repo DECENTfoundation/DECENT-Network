@@ -31,16 +31,32 @@
 
 namespace graphene { namespace app {
 
-struct api_access_info
+class api_access_info
 {
-   std::string password_hash_b64;
-   std::string password_salt_b64;
-   std::vector< std::string > allowed_apis;
+public:
+   api_access_info() {};
+   api_access_info( std::string pw_hash, std::string pw_salt, std::vector<std::string> apis)
+   : password_hash_b64( pw_hash), password_salt_b64( pw_salt), allowed_apis( apis){}
+
+   std::string password_hash_b64 = "*";
+   std::string password_salt_b64 = "*";
+   std::vector< std::string > allowed_apis = { "database_api",
+                                               "network_broadcast_api",
+                                               "history_api",
+                                               "crypto_api",
+                                               "messaging_api"};
 };
 
-struct api_access
+class api_access
 {
-   std::map< std::string, api_access_info > permission_map;
+public:
+   api_access() {};
+   api_access( std::string username, api_access_info access)
+   {
+      permission_map.insert( std::make_pair(username, access));
+   }
+
+   std::map< std::string, api_access_info > permission_map = {{"*", api_access_info()}};
 };
 
 } } // graphene::app

@@ -100,6 +100,8 @@ namespace graphene { namespace app {
       public:
          history_api(application& app):_app(app){}
 
+         string info() { return "history_api";}
+
          /**
           * @brief Get operations relevant to the specificed account.
           * @param account the account whose history should be queried
@@ -185,6 +187,8 @@ namespace graphene { namespace app {
 
          typedef std::function<void(variant/*transaction_confirmation*/)> confirmation_callback;
 
+      string info() { return "network_broadcast_api";}
+
          /**
           * @brief Broadcast a transaction to the network.
           * @param trx the transaction to broadcast
@@ -242,6 +246,8 @@ namespace graphene { namespace app {
    {
       public:
          network_node_api(application& a);
+
+      string info() { return "network_node_api";}
 
          /**
           * @brief Returns general network information, such as p2p port.
@@ -317,6 +323,8 @@ namespace graphene { namespace app {
    {
       public:
          crypto_api();
+
+      string info() { return "crypto_api";}
 
          /**
           * @param key
@@ -412,6 +420,8 @@ namespace graphene { namespace app {
    public:
       messaging_api(application& a);
 
+      string info() { return "messaging_api";}
+
       /**
        * @brief Receives message objects by sender and/or receiver.
        * @param sender name of message sender. If you dont want to filter by sender then let it empty
@@ -435,6 +445,8 @@ namespace graphene { namespace app {
       public:
          login_api(application& a);
          ~login_api();
+
+         string info() { return "login_api";}
 
          /**
           * @brief Authenticate to the RPC server.
@@ -515,17 +527,20 @@ FC_REFLECT( graphene::app::asset_array, (a0)(a1) )
 FC_REFLECT( graphene::app::balance_change_result, (hist_object)(balance)(fee) )
 
 FC_API(graphene::app::history_api,
+       (info)
        (get_account_history)
        (get_relative_account_history)
        (search_account_balance_history)
        (get_account_balance_for_transaction)
      )
 FC_API(graphene::app::network_broadcast_api,
+       (info)
        (broadcast_transaction)
        (broadcast_transaction_with_callback)
        (broadcast_block)
      )
 FC_API(graphene::app::network_node_api,
+       (info)
        (get_info)
        (add_node)
        (get_connected_peers)
@@ -535,6 +550,7 @@ FC_API(graphene::app::network_node_api,
        (seeding_startup)
      )
 FC_API(graphene::app::crypto_api,
+       (info)
        (blind_sign)
        (unblind_signature)
        (blind)
@@ -546,9 +562,11 @@ FC_API(graphene::app::crypto_api,
        (range_get_info)
      )
 FC_API(graphene::app::messaging_api,
-      (get_message_objects)
+       (info)
+       (get_message_objects)
      )
 FC_API(graphene::app::login_api,
+       (info)
        (login)
        (network_broadcast)
        (database)
