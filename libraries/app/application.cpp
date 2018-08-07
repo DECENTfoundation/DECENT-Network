@@ -224,6 +224,49 @@ namespace detail {
          FC_CAPTURE_AND_RETHROW((endpoint_string))
       }
 
+      void register_apis( std::shared_ptr<fc::rpc::websocket_api_connection>& wsc )
+      {
+         const auto& itr = _apiaccess.permission_map.find("*");
+         if( itr != _apiaccess.permission_map.end() )
+         {
+            const api_access_info& apis = itr->second;
+            for( const std::string& api_name : apis.allowed_apis )
+            {
+               if( api_name == "database_api" )
+               {
+                  continue; // this API is already enabled, TODO
+                  auto database_api = std::make_shared<graphene::app::database_api>( std::ref(*_self->chain_database() ) );
+                  wsc->register_api(fc::api<graphene::app::database_api>(database_api));
+               }
+               else if( api_name == "network_broadcast_api" )
+               {
+                  auto broadcast_api = std::make_shared<graphene::app::network_broadcast_api>( std::ref(*_self) );
+                  wsc->register_api(fc::api<graphene::app::network_broadcast_api>(broadcast_api));
+               }
+               else if( api_name == "history_api" )
+               {
+                  auto history_api = std::make_shared<graphene::app::history_api>(*_self);
+                  wsc->register_api(fc::api<graphene::app::history_api>(history_api));
+               }
+               else if( api_name == "network_node_api" )
+               {
+                  auto network_node_api = std::make_shared<graphene::app::network_node_api>( std::ref(*_self) );
+                  wsc->register_api(fc::api<graphene::app::network_node_api>(network_node_api));
+               }
+               else if( api_name == "crypto_api" )
+               {
+                  auto crypto_api = std::make_shared<graphene::app::crypto_api>();
+                  wsc->register_api(fc::api<graphene::app::crypto_api>(crypto_api));
+               }
+               else if( api_name == "messaging_api" )
+               {
+                  auto messaging_api = std::make_shared<graphene::app::messaging_api>( std::ref(*_self) );
+                  wsc->register_api(fc::api<graphene::app::messaging_api>(messaging_api));
+               }
+            }
+         }
+      }
+
       void reset_websocket_server()
       { try {
          if( !_options->count("rpc-endpoint") )
@@ -239,10 +282,12 @@ namespace detail {
 
          _websocket_server->on_connection([&]( const fc::http::websocket_connection_ptr& c ){
             auto wsc = std::make_shared<fc::rpc::websocket_api_connection>(*c);
-            auto login = std::make_shared<graphene::app::login_api>( std::ref(*_self) );
+
             auto db_api = std::make_shared<graphene::app::database_api>( std::ref(*_self->chain_database()) );
+            auto login = std::make_shared<graphene::app::login_api>( std::ref(*_self) );
             wsc->register_api(fc::api<graphene::app::database_api>(db_api));
             wsc->register_api(fc::api<graphene::app::login_api>(login));
+            register_apis( wsc );
             c->set_session_data( wsc );
          });
          ilog("Configured websocket rpc to listen on ${ip}", ("ip",_options->at("rpc-endpoint").as<string>()));
@@ -271,15 +316,18 @@ namespace detail {
 
          _websocket_tls_server->on_connection([&]( const fc::http::websocket_connection_ptr& c ){
             auto wsc = std::make_shared<fc::rpc::websocket_api_connection>(*c);
-            auto login = std::make_shared<graphene::app::login_api>( std::ref(*_self) );
+
             auto db_api = std::make_shared<graphene::app::database_api>( std::ref(*_self->chain_database()) );
+            auto login = std::make_shared<graphene::app::login_api>( std::ref(*_self) );
             wsc->register_api(fc::api<graphene::app::database_api>(db_api));
             wsc->register_api(fc::api<graphene::app::login_api>(login));
+            register_apis( wsc );
             c->set_session_data( wsc );
          });
          ilog("Configured websocket TLS rpc to listen on ${ip}", ("ip",_options->at("rpc-tls-endpoint").as<string>()));
          _websocket_tls_server->listen( fc::ip::endpoint::from_string(_options->at("rpc-tls-endpoint").as<string>()) );
          _websocket_tls_server->start_accept();
+
       } FC_CAPTURE_AND_RETHROW() }
 
       application_impl(application* self)
@@ -461,15 +509,6 @@ namespace detail {
             // TODO:  Remove this generous default access policy
             // when the UI logs in properly
             _apiaccess = api_access();
-            api_access_info wild_access;
-            wild_access.password_hash_b64 = "*";
-            wild_access.password_salt_b64 = "*";
-            wild_access.allowed_apis.push_back( "database_api" );
-            wild_access.allowed_apis.push_back( "network_broadcast_api" );
-            wild_access.allowed_apis.push_back( "history_api" );
-            wild_access.allowed_apis.push_back( "crypto_api" );
-            wild_access.allowed_apis.push_back( "messaging_api" );
-            _apiaccess.permission_map["*"] = wild_access;
          }
 
          reset_p2p_node(_data_dir);

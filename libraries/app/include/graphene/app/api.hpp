@@ -101,6 +101,13 @@ namespace graphene { namespace app {
          history_api(application& app):_app(app){}
 
          /**
+          * @brieg Get the name of the API.
+          * @return the name of the API
+          * @ingroup HistoryAPI
+          */
+         string info() { return "history_api";}
+
+         /**
           * @brief Get operations relevant to the specificed account.
           * @param account the account whose history should be queried
           * @param stop ID of the earliest operation to retrieve
@@ -186,6 +193,13 @@ namespace graphene { namespace app {
          typedef std::function<void(variant/*transaction_confirmation*/)> confirmation_callback;
 
          /**
+          * @brieg Get the name of the API.
+          * @return the name of the API
+          * @ingroup Network_broadcastAPI
+          */
+         string info() { return "network_broadcast_api";}
+
+         /**
           * @brief Broadcast a transaction to the network.
           * @param trx the transaction to broadcast
           * @note the transaction will be checked for validity in the local database prior to broadcasting. If it fails to
@@ -242,6 +256,13 @@ namespace graphene { namespace app {
    {
       public:
          network_node_api(application& a);
+
+         /**
+          * @brieg Get the name of the API.
+          * @return the name of the API
+          * @ingroup Network_NodeAPI
+          */
+         string info() { return "network_node_api";}
 
          /**
           * @brief Returns general network information, such as p2p port.
@@ -317,6 +338,13 @@ namespace graphene { namespace app {
    {
       public:
          crypto_api();
+
+         /**
+          * @brieg Get the name of the API.
+          * @return the name of the API
+          * @ingroup CryptoAPI
+          */
+         string info() { return "crypto_api";}
 
          /**
           * @param key
@@ -413,6 +441,13 @@ namespace graphene { namespace app {
       messaging_api(application& a);
 
       /**
+       * @brieg Get the name of the API.
+       * @return the name of the API
+       * @ingroup MessagingAPI
+       */
+      string info() { return "messaging_api";}
+
+      /**
        * @brief Receives message objects by sender and/or receiver.
        * @param sender name of message sender. If you dont want to filter by sender then let it empty
        * @param receiver name of message receiver. If you dont want to filter by receiver then let it empty
@@ -435,6 +470,13 @@ namespace graphene { namespace app {
       public:
          login_api(application& a);
          ~login_api();
+
+         /**
+          * @brieg Get the name of the API.
+          * @return the name of the API
+          * @ingroup LoginAPI
+          */
+         string info() { return "login_api";}
 
          /**
           * @brief Authenticate to the RPC server.
@@ -515,17 +557,20 @@ FC_REFLECT( graphene::app::asset_array, (a0)(a1) )
 FC_REFLECT( graphene::app::balance_change_result, (hist_object)(balance)(fee) )
 
 FC_API(graphene::app::history_api,
+       (info)
        (get_account_history)
        (get_relative_account_history)
        (search_account_balance_history)
        (get_account_balance_for_transaction)
      )
 FC_API(graphene::app::network_broadcast_api,
+       (info)
        (broadcast_transaction)
        (broadcast_transaction_with_callback)
        (broadcast_block)
      )
 FC_API(graphene::app::network_node_api,
+       (info)
        (get_info)
        (add_node)
        (get_connected_peers)
@@ -535,6 +580,7 @@ FC_API(graphene::app::network_node_api,
        (seeding_startup)
      )
 FC_API(graphene::app::crypto_api,
+       (info)
        (blind_sign)
        (unblind_signature)
        (blind)
@@ -546,9 +592,11 @@ FC_API(graphene::app::crypto_api,
        (range_get_info)
      )
 FC_API(graphene::app::messaging_api,
-      (get_message_objects)
+       (info)
+       (get_message_objects)
      )
 FC_API(graphene::app::login_api,
+       (info)
        (login)
        (network_broadcast)
        (database)
