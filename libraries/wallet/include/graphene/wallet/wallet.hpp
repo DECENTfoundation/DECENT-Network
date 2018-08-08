@@ -521,7 +521,7 @@ FC_API( graphene::wallet::wallet_api,
         (remove_package)
         (generate_content_keys)
 
-        //Subsctiption
+        //Subscription
         (subscribe_to_author)
         (subscribe_by_author)
         (set_subscription)
@@ -533,6 +533,7 @@ FC_API( graphene::wallet::wallet_api,
 
         //Messaging
         (send_message)
+        (send_unencrypted_message)
         (get_message_objects)
         (get_messages)
         (get_sent_messages)
