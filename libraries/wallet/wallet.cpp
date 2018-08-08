@@ -2970,6 +2970,13 @@ signed_transaction content_cancellation(const string& author,
             for (message_object_receivers_data& receivers_data_item : obj.receivers_data) {
 
                try {
+
+                  if( obj.sender_pubkey == public_key_type() || receivers_data_item.receiver_pubkey == public_key_type() )
+                  {
+                     message_payload::get_message( fc::ecc::private_key(), public_key_type(), receivers_data_item.data, obj.text, 0 );
+                     break;
+                  }
+
                   auto it = _keys.find(receivers_data_item.receiver_pubkey);
                   if (it != _keys.end()) {
                      fc::optional< fc::ecc::private_key > privkey = wif_to_key(it->second);
@@ -3067,48 +3074,91 @@ signed_transaction content_cancellation(const string& author,
       return messages;
    }
 
-   void send_message(const string& from, const std::vector<string>& to, const string& text)
+   signed_transaction send_message(const string& from,
+                                   const std::vector<string>& to,
+                                   const string& text,
+                                   bool broadcast = false)
    {
       try {
-      FC_ASSERT(!is_locked());
-      
-      account_object from_account = get_account(from);
-      std::vector<account_object> to_accounts;
-      account_id_type from_id = from_account.id;
-      
-      message_payload pl;
+         FC_ASSERT(!is_locked());
 
-      for (auto& receiver : to) {
-         account_object to_account = get_account(receiver);
-         message_payload_receivers_data receivers_data_item;
-         receivers_data_item.to = get_account(receiver).get_id();
+         account_object from_account = get_account(from);
+         account_id_type from_id = from_account.id;
+         message_payload pl;
 
-         if (text.size()) {
-            pl.set_message(get_private_key(from_account.options.memo_key),
-               to_account.options.memo_key, text, receivers_data_item);
+         for (auto& receiver : to) {
+            account_object to_account = get_account(receiver);
+            message_payload_receivers_data receivers_data_item;
+            receivers_data_item.to = get_account(receiver).get_id();
+
+            if (text.size()) {
+               pl.set_message(get_private_key(from_account.options.memo_key),
+                  to_account.options.memo_key, text, receivers_data_item);
+            }
+            pl.receivers_data.push_back(receivers_data_item);
          }
-         pl.receivers_data.push_back(receivers_data_item);
-      }
 
-      custom_operation cust_op;
-      
+         custom_operation cust_op;
 
-      cust_op.id = graphene::chain::custom_operation_subtype_messaging;
-      cust_op.payer = from_id;
+         cust_op.id = graphene::chain::custom_operation_subtype_messaging;
+         cust_op.payer = from_id;
 
-      pl.from = from_id;
-      pl.pub_from = from_account.options.memo_key;
-      cust_op.set_messaging_payload(pl);
+         pl.from = from_id;
+         pl.pub_from = from_account.options.memo_key;
+         cust_op.set_messaging_payload(pl);
 
-      signed_transaction tx;
-      tx.operations.push_back(cust_op);
+         signed_transaction tx;
+         tx.operations.push_back(cust_op);
 
-      set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees);
-      tx.validate();
+         set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees);
+         tx.validate();
 
-      sign_transaction(tx, true);
+         return sign_transaction(tx, broadcast);
 
-   } FC_CAPTURE_AND_RETHROW((from)(to)(text))
+      } FC_CAPTURE_AND_RETHROW((from)(to)(text)(broadcast))
+   }
+
+   signed_transaction send_unencrypted_message(const string& from,
+                                               const std::vector<string>& to,
+                                               const string& text,
+                                               bool broadcast = false)
+   {
+      try {
+         FC_ASSERT(!is_locked());
+
+         account_object from_account = get_account(from);
+         account_id_type from_id = from_account.id;
+         message_payload pl;
+
+         for (auto &receiver : to) {
+            account_object to_account = get_account(receiver);
+            message_payload_receivers_data receivers_data_item;
+            receivers_data_item.to = get_account(receiver).get_id();
+
+            if (text.size()) {
+               pl.set_message(fc::ecc::private_key(), public_key_type(), text, receivers_data_item);
+            }
+            pl.receivers_data.push_back(receivers_data_item);
+         }
+
+         custom_operation cust_op;
+
+         cust_op.id = graphene::chain::custom_operation_subtype_messaging;
+         cust_op.payer = from_id;
+
+         pl.from = from_id;
+         pl.pub_from = public_key_type();
+         cust_op.set_messaging_payload(pl);
+
+         signed_transaction tx;
+         tx.operations.push_back(cust_op);
+
+         set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees);
+         tx.validate();
+
+         return sign_transaction(tx, broadcast);
+
+      } FC_CAPTURE_AND_RETHROW((from)(to)(text)(broadcast))
    }
 
    void dbg_make_mia(const std::string& creator, const std::string& symbol)

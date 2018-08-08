@@ -41,11 +41,11 @@ namespace graphene { namespace chain {
 
       std::vector<message_payload_receivers_data> receivers_data;
       
-      void set_message(const fc::ecc::private_key& priv, const fc::ecc::public_key& pub,
+      void set_message(const fc::ecc::private_key& priv, const public_key_type& pub,
          const string& msg, message_payload_receivers_data& receivers_data);
 
       static void get_message(const fc::ecc::private_key& priv,
-         const fc::ecc::public_key& pub, const std::vector<char>& data, std::string& text, uint64_t nonce);
+         const public_key_type& pub, const std::vector<char>& data, std::string& text, uint64_t nonce);
    };
    enum custom_operation_subtype : int;
    /**

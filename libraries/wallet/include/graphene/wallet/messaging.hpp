@@ -27,13 +27,28 @@
 #define DECENT_WALLET_MESSAGING_H
 
 /**
- * @brief Sends a text message to one or many users.
+ * @brief Sends an encrypted text message to one or many users.
  * @param from account sending the message
  * @param to account or multiple accounts receiving the message
  * @param text the body of the message
  * @ingroup WalletAPI_Messaging
  */
-void send_message(const std::string& from, const std::vector<string>& to, const string& text);
+signed_transaction send_message(const std::string& from,
+                                const std::vector<string>& to,
+                                const string& text,
+                                bool broadcast = false);
+
+/**
+ * @brief Sends an unencrypted text message to one or many users.
+ * @param from account sending the message
+ * @param to account or multiple accounts receiving the message
+ * @param text the body of the message
+ * @ingroup WalletAPI_Messaging
+ */
+signed_transaction send_unencrypted_message(const std::string& from,
+                                            const std::vector<string>& to,
+                                            const string& text,
+                                            bool broadcast = false);
 
 /**
  * @brief Receives message objects by sender and/or receiver.
