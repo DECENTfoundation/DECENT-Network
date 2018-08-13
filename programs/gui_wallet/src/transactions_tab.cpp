@@ -87,8 +87,10 @@ void TransactionsTab::timeToUpdate(const string& result)
       string description = content["m_str_description"].get<string>();
       string timestamp = boost::replace_all_copy(content["m_timestamp"].get<string>(), "T", " ");
 
-      Asset transaction_amount_ast = Globals::instance().asset(json_to_int64(content["m_transaction_amount"]["amount"]));
-      Asset transaction_fee_ast = Globals::instance().asset(json_to_int64(content["m_transaction_fee"]["amount"]));
+      Asset transaction_amount_ast = Globals::instance().asset(json_to_int64(content["m_transaction_amount"]["amount"]),
+                                                               content["m_transaction_amount"]["asset_id"].get<string>() );
+      Asset transaction_fee_ast = Globals::instance().asset(json_to_int64(content["m_transaction_fee"]["amount"]),
+                                                            content["m_transaction_fee"]["asset_id"].get<string>() );
 
       QString str_operation_type;
       switch (en_operation_type)
