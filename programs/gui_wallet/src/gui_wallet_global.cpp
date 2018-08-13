@@ -819,7 +819,8 @@ std::vector<Publisher> Globals::getPublishers()
 
       publisher.m_str_name = publishers[iIndex]["seeder"].get<std::string>();
       uint64_t iPrice = json_to_int64(publishers[iIndex]["price"]["amount"]);
-      publisher.m_price = asset(iPrice);
+      string iSymbolId = publishers[iIndex]["price"]["asset_id"];
+      publisher.m_price = asset(iPrice, iSymbolId);
       publisher.m_storage_size = publishers[iIndex]["free_space"].get<int>();
    }
 
