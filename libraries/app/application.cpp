@@ -300,15 +300,20 @@ namespace detail {
       { try {
          if( !_options->count("rpc-tls-endpoint") )
             return;
-         if( !_options->count("server-pem") )
+         if( !_options->count("server-cert-file") || !_options->count("server-cert-key-file") )
          {
-            wlog( "Please specify a server-pem to use rpc-tls-endpoint" );
+            wlog( "Please specify a server-cert-file or server-cert-key-file to use rpc-tls-endpoint" );
             return;
          }
 
-         string password = _options->count("server-pem-password") ? _options->at("server-pem-password").as<string>() : "";
+         string password = _options->count("server-cert-password") ? _options->at("server-cert-password").as<string>() : string();
+         string cert_chain_file = _options->count("server-cert-chain-file") ? _options->at("server-cert-chain-file").as<string>() : string();
          bool enable_deflate_compression = _options->count("enable-permessage-deflate") != 0;
-         _websocket_tls_server = std::make_shared<fc::http::websocket_tls_server>( _options->at("server-pem").as<string>(), password, enable_deflate_compression );
+         _websocket_tls_server = std::make_shared<fc::http::websocket_tls_server>( _options->at("server-cert-file").as<string>(),
+                                                                                   _options->at("server-cert-key-file").as<string>(),
+                                                                                   cert_chain_file,
+                                                                                   password,
+                                                                                   enable_deflate_compression );
 
          if (_options->count("server-allowed-domains") != 0) {
             _websocket_tls_server->add_headers("Access-Control-Allow-Origin", _options->at("server-allowed-domains").as<fc::string>() );
@@ -1015,8 +1020,10 @@ void application::set_program_options(boost::program_options::options_descriptio
          ("enable-permessage-deflate", "Enable support for per-message deflate compression in the websocket servers "
                                        "(--rpc-endpoint and --rpc-tls-endpoint), disabled by default")
          ("server-allowed-domains", "List of allowed domains to comunicate with or asterix for all domains")
-         ("server-pem,p", bpo::value<string>()->implicit_value("server.pem"), "The TLS certificate file for this server")
-         ("server-pem-password,P", bpo::value<string>()->implicit_value(""), "Password for this certificate")
+         ("server-cert-file", bpo::value<string>(), "The TLS certificate file (public) for this server")
+         ("server-cert-key-file", bpo::value<string>(), "The TLS certificate file (private key) for this server")
+         ("server-cert-chain-file", bpo::value<string>(), "The TLS certificate chain file for this server")
+         ("server-cert-password,P", bpo::value<string>(), "Password for this certificate")
          ("genesis-json", bpo::value<boost::filesystem::path>(), "File to read Genesis State from")
          ("dbg-init-key", bpo::value<string>(), "Block signing key to use for init miners, overrides genesis file")
          ("api-access", bpo::value<boost::filesystem::path>(), "JSON file specifying API permissions")
