@@ -539,12 +539,12 @@ namespace graphene { namespace app {
     }
 
     fc::optional<balance_change_result> history_api::get_account_balance_for_transaction(account_id_type account_id,
-                                                                                     operation_history_id_type transaction_id)
+                                                                                         operation_history_id_type operation_history_id)
     {
         vector<operation_history_object> operation_list = this->get_account_history(account_id,
                                                                             operation_history_id_type(),
                                                                             1,
-                                                                            transaction_id);
+                                                                            operation_history_id);
         if (operation_list.empty())
             return fc::optional<balance_change_result>();
 

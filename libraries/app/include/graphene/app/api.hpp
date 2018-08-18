@@ -163,12 +163,12 @@ namespace graphene { namespace app {
          /**
           * @brief Returns balance operation on the named account and transaction_id.
           * @param account_id the account whose history should be queried
-          * @param transaction_id the transaction_id whose history should be queried
+          * @param operation_history_id the operation_history_id whose history should be queried
           * @return balance operation history object or empty when not found
           * @ingroup HistoryAPI
           */
          fc::optional<balance_change_result> get_account_balance_for_transaction(account_id_type account_id,
-                                                                             operation_history_id_type transaction_id);
+                                                                                 operation_history_id_type operation_history_id);
 
       private:
            application& _app;

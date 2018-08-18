@@ -138,12 +138,12 @@ vector<balance_operation_detail>  search_account_balance_history(const string& a
 /**
  * @brief Returns the most recent balance operations on the named account.
  * @param account_name the name or id of the account
- * @param transaction_id the transaction_id to search for
+ * @param operation_history_id the operation_history_id to search for
  * @return returns balance_operation_detail or empty when not found
  * @ingroup WalletAPI_Account
  */
 fc::optional<balance_operation_detail> get_account_balance_for_transaction(const string& account_name,
-                                                                           operation_history_id_type transaction_id);
+                                                                           operation_history_id_type operation_history_id);
 
 /**
  * @brief Returns information about the given account.
