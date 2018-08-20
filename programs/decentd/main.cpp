@@ -27,6 +27,7 @@
 #include <graphene/miner/miner.hpp>
 #include <graphene/seeding/seeding.hpp>
 #include <graphene/account_history/account_history_plugin.hpp>
+#include <graphene/transaction_history/transaction_history_plugin.hpp>
 #include <graphene/messaging/messaging.hpp>
 #include <graphene/utilities/dirhelper.hpp>
 #include <graphene/utilities/git_revision.hpp>
@@ -178,6 +179,7 @@ int main(int argc, char** argv) {
       auto history_plug = node->register_plugin<account_history::account_history_plugin>();
       auto seeding_plug = node->register_plugin<decent::seeding::seeding_plugin>();
       auto messaging_plug = node->register_plugin<decent::messaging::messaging_plugin>();
+      auto transaction_history_plug = node->register_plugin<transaction_history::transaction_history_plugin>();
 
       try
       {
