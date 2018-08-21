@@ -24,6 +24,7 @@
  */
 
 #include <graphene/chain/protocol/authority.hpp>
+#include <graphene/chain/custom_evaluator.hpp>
 #include <graphene/app/impacted.hpp>
 
 namespace graphene { namespace app {
@@ -132,6 +133,14 @@ struct get_impacted_account_visitor
       _impacted.insert( op.payer );
       for(auto& item : op.required_auths)
          _impacted.insert( item );
+
+      if (op.id == custom_operation_subtype_messaging) {
+         message_payload pl;
+         op.get_messaging_payload(pl);
+         for (auto& item : pl.receivers_data) {
+            _impacted.insert(item.to);
+         }
+      }
    }
    void operator()( const assert_operation& op ) {}
    void operator()( const set_publishing_manager_operation& op ) {
