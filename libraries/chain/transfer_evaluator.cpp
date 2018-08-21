@@ -83,6 +83,13 @@ void_result transfer2_evaluator::do_evaluate( const transfer2_operation& op )
       const account_object& from_account        = op.from(d);
       const asset_object&   asset_type          = op.amount.asset_id(d);
 
+      if( op.to.is<content_id_type>() )
+      {
+         auto& content_idx = d.get_index_type<content_index>().indices().get<by_id>();
+         const auto& content_itr = content_idx.find( op.to );
+         FC_ASSERT( content_itr != content_idx.end(), "Content does not exist." );
+      }
+
       try {
          bool insufficient_balance = d.get_balance( from_account, asset_type ).amount >= op.amount.amount;
          FC_ASSERT( insufficient_balance,
