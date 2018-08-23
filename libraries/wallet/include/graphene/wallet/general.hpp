@@ -149,5 +149,17 @@ vector< variant > network_get_connected_peers();
  */
 transaction_id_type get_transaction_id( const signed_transaction& trx ) const;
 
+/**
+ * @brief This method will return the transaction for the given ID (transaction hash) or
+ * it will return \c null if it is not known. Just because it is not known does not mean it wasn't
+ * included in the blockchain.
+ * @note By default these objects are not tracked, the transaction_history_plugin must
+ * be loaded for these objects to be maintained.
+ * @param id ID (transaction hash) of the transaction to retrieve
+ * @return The transaction
+ * @ingroup WalletAPI_General
+ */
+optional<signed_transaction> get_transaction_by_id( const transaction_id_type& id ) const;
+
 
 #endif //DECENT_WALLET_GENERAL_H

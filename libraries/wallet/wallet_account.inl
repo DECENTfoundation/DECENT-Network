@@ -96,12 +96,12 @@ vector<balance_operation_detail> wallet_api::search_account_balance_history(cons
 }
 
 fc::optional<balance_operation_detail> wallet_api::get_account_balance_for_transaction(const string& account_name,
-                                                                                       operation_history_id_type transaction_id)
+                                                                                       operation_history_id_type operation_history_id)
 {
    auto account_id = get_account(account_name).get_id();
 
    fc::optional<balance_change_result> result;
-   result = my->_remote_hist->get_account_balance_for_transaction(account_id, transaction_id);
+   result = my->_remote_hist->get_account_balance_for_transaction(account_id, operation_history_id);
    if (!result) {
       return fc::optional<balance_operation_detail>();
    }
