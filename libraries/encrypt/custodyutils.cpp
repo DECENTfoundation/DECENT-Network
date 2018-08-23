@@ -30,7 +30,7 @@ std::string bytes_to_string(unsigned char *data, int len) {
 void string_to_bytes(std::string &in, unsigned char data[], int len) {
 
    const char *s = in.c_str();
-   for( int i = 0; i < len && i * 2 < in.size(); ++i ) {
+   for( int i = 0; i < len && i * 2 < (int)in.size(); ++i ) {
       char ch1 = s[i * 2];
       char ch2 = s[i * 2 + 1];
       unsigned char res =
@@ -72,7 +72,7 @@ int CustodyUtils::get_u_from_seed(const mpz_t &seedU, element_t out[], uint32_t 
    unsigned char digest[32];
    memset(digest, 0, 32);
 
-   for( int i = 0; i < sectors; i++ ) {
+   for( uint32_t i = 0; i < sectors; i++ ) {
       mpz_add_ui(seed_tmp, seed, i);
       mpz_set(seed, seed_tmp);
       element_init_G1(out[i], pairing);
@@ -108,7 +108,7 @@ inline int CustodyUtils::get_data(std::fstream &file, uint32_t i, char buffer[],
    uint64_t realLen = file.tellg();
    file.seekg(std::min(position, realLen), file.beg);
 
-   if( realLen > ((long long) (file.tellg()) + DECENT_SIZE_OF_NUMBER_IN_THE_FIELD * sectors))
+   if( realLen > ((uint64_t) (file.tellg()) + DECENT_SIZE_OF_NUMBER_IN_THE_FIELD * sectors))
       file.read(buffer, DECENT_SIZE_OF_NUMBER_IN_THE_FIELD * sectors);
    else {
       if( file.eof())
@@ -160,7 +160,7 @@ int CustodyUtils::get_sigma(uint64_t idx, mpz_t mi[], element_pp_t u_pp[], eleme
       pow_pp++;
 #endif
    }
-   for( int j = 1; j < sectors; j++ ) {
+   for( uint32_t j = 1; j < sectors; j++ ) {
       element_pp_pow(temp, mi[j], u_pp[j]);
 #ifdef _CUSTODY_STATS
       pow_pp++;
@@ -178,7 +178,7 @@ int CustodyUtils::get_sigma(uint64_t idx, mpz_t mi[], element_pp_t u_pp[], eleme
 
    char index[16];
    memset(index, 0, 16);
-   sprintf(index, "%llu", idx);
+   sprintf(index, "%llu", (long long unsigned int)idx);
 
    unsigned char buf[32];
    memset(buf, 0, 32);
@@ -205,7 +205,7 @@ CustodyUtils::get_sigmas(std::fstream &file, const unsigned int n, element_t *u,
    fc::future<void> fut_pp[DECENT_CUSTODY_THREADS];
 
    element_pp_t *u_pp = new element_pp_t[sectors];
-   for( int k = 0; k < sectors; k++ ) {
+   for( uint32_t k = 0; k < sectors; k++ ) {
       int idx = k % DECENT_CUSTODY_THREADS;
       fut_pp[idx] = t[idx].async([=](){ element_pp_init(u_pp[k], u[k]); return; });
    }
@@ -227,7 +227,7 @@ CustodyUtils::get_sigmas(std::fstream &file, const unsigned int n, element_t *u,
          //and distribute the tasks
          fut[k] = t[k].async([=]() {
               mpz_t *m = new mpz_t[sectors];
-              for( int i = 0; i < sectors; ++i ) {
+              for( uint32_t i = 0; i < sectors; ++i ) {
                  mpz_init2(m[i], DECENT_SIZE_OF_NUMBER_IN_THE_FIELD * 8);
                  //mpz_import is too slow for our purposes - since we don't care about the exact parameters as much as about the uniqueness of the import, let's replace it with memcpy
                  memcpy((char *) m[i]->_mp_d, buffer + i * DECENT_SIZE_OF_NUMBER_IN_THE_FIELD,
@@ -248,7 +248,7 @@ CustodyUtils::get_sigmas(std::fstream &file, const unsigned int n, element_t *u,
       fut[k].wait();
 
    *sigmas = ret;
-   for( int k = 0; k < sectors; k++ )
+   for( uint32_t k = 0; k < sectors; k++ )
       element_pp_clear(u_pp[k]);
    delete[] u_pp;
    return 0;
@@ -257,9 +257,9 @@ CustodyUtils::get_sigmas(std::fstream &file, const unsigned int n, element_t *u,
 
 int CustodyUtils::compute_mu(std::fstream &file, unsigned int q, uint64_t indices[], element_t v[], element_t mu[], uint32_t sectors) {
 
-   for( int j = 0; j < sectors; j++ ) {
+   for( uint32_t j = 0; j < sectors; j++ ) {
       element_init_Zr(mu[j], pairing);
-      for( int i = 0; i < q; i++ ) {
+      for( unsigned int i = 0; i < q; i++ ) {
          element_t temp;
          mpz_t m;
          element_init_Zr(temp, pairing);
@@ -286,7 +286,7 @@ int CustodyUtils::compute_mu(std::fstream &file, unsigned int q, uint64_t indice
 int CustodyUtils::generate_query_from_seed(mpz_t seed, unsigned int q, unsigned int n, uint64_t indices[],
                                             element_t *v[]) {
    element_t *ret = new element_t[q];
-   for( int i = 0; i < q; i++ ) {
+   for( unsigned int i = 0; i < q; i++ ) {
       mpz_t seedForIteration;
       mpz_init(seedForIteration);
       mpz_add_ui(seedForIteration, seed, i);
@@ -330,12 +330,12 @@ int CustodyUtils::verify(element_t sigma, unsigned int q, uint64_t *indices, ele
 
    element_t hash;
    element_init_G1(hash, pairing);
-   for( int i = 0; i < q; i++ ) {
+   for( unsigned int i = 0; i < q; i++ ) {
       unsigned char buf[32];
       memset(buf, 0, 32);
       char index[16];
       memset(index, 0, 16);
-      sprintf(index, "%llu", indices[i]);
+      sprintf(index, "%llu", (long long unsigned int)indices[i]);
       fc::sha256 stemp = fc::sha256::hash(index, 16);
       memcpy(buf, stemp._hash, (4 * sizeof(uint64_t)));
       element_from_hash(hash, buf, 32);
@@ -355,7 +355,7 @@ int CustodyUtils::verify(element_t sigma, unsigned int q, uint64_t *indices, ele
    element_t multi2;
    element_init_G1(multi2, pairing);
 
-   for( int i = 0; i < sectors; i++ ) {
+   for( uint32_t i = 0; i < sectors; i++ ) {
       element_pow_zn(temp, u[i], mu[i]);
 #ifdef _CUSTODY_STATS
       pow++;
@@ -409,7 +409,7 @@ CustodyUtils::compute_sigma(element_t sigmas[], unsigned int q, uint64_t indices
    element_t temp;
    element_init_G1(temp, pairing);
 
-   for( int i = 0; i < q; i++ ) {
+   for( unsigned int i = 0; i < q; i++ ) {
       element_pow_zn(temp, sigmas[indices[i]], v[i]);
       element_mul(sigma, sigma, temp);
 #ifdef _CUSTODY_STATS
@@ -461,7 +461,7 @@ int CustodyUtils::verify_by_miner(const uint32_t &n, const char *u_seed, unsigne
    element_init_G1(_sigma, pairing);
    element_from_bytes_compressed(_sigma, sigma);
 
-   for( int i = 0; i < sectors; i++ ) {
+   for( uint32_t i = 0; i < sectors; i++ ) {
       element_init_Zr(mu[i], pairing);
       unsigned char buffer[DECENT_SIZE_OF_MU];
       string_to_bytes(mus[i], buffer, DECENT_SIZE_OF_MU);
@@ -542,7 +542,7 @@ int CustodyUtils::create_custody_data(path content, uint32_t &n, char u_seed[], 
 
    //Save the signatures file
    char buffer[DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED];
-   for( int i = 0; i < n; i++ ) {
+   for( uint32_t i = 0; i < n; i++ ) {
       element_to_bytes_compressed((unsigned char *) buffer, sigmas[i]);
       outfile.write(buffer, DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED);
    }
@@ -608,8 +608,9 @@ int CustodyUtils::create_proof_of_custody(path content, const uint32_t n, const 
    element_t* sigmas = new element_t[n];
    char buffer[DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED];
    try {
-   for( int i = 0; i < n; i++ ) {
+   for( uint32_t i = 0; i < n; i++ ) {
       uint64_t pos = cusfile.tellg();
+      (void)pos;
       cusfile.read(&buffer[0], DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED);
 //      if(cusfile.readsome(buffer, DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED) != DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED )
 //         return -9;
@@ -642,7 +643,7 @@ int CustodyUtils::create_proof_of_custody(path content, const uint32_t n, const 
    //TODO_DECENT change the following code to store in hexadecimal string
    unsigned char buffer_mu[DECENT_SIZE_OF_MU];
 
-   for( int i = 0; i < sectors; i++ ) {
+   for( uint32_t i = 0; i < sectors; i++ ) {
       memset(buffer_mu, 0, DECENT_SIZE_OF_MU);
       element_to_bytes(buffer_mu, mu[i]);
       std::string s = bytes_to_string(buffer_mu, DECENT_SIZE_OF_MU);

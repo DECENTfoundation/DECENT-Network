@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE( messaging )
    
    const auto& global_params = db.get_global_properties().parameters;
    trx.expiration = db.head_block_time() + global_params.maximum_time_until_expiration;
-   custom_operation& result_op = (trx.operations.back()).get<custom_operation>();
+   //custom_operation& result_op = (trx.operations.back()).get<custom_operation>();
    trx.validate();
 
    sign(trx, nathan_private_key);

@@ -117,7 +117,7 @@ vector<buying_object> wallet_api::get_buying_history_objects_by_consumer( const 
    account_id_type consumer = get_account( account_id_or_name ).id;
    vector<buying_object> result = my->_remote_db->get_buying_history_objects_by_consumer( consumer );
 
-   for (int i = 0; i < result.size(); ++i)
+   for (int i = 0; i < (int)result.size(); ++i)
    {
       buying_object& bobj = result[i];
 
