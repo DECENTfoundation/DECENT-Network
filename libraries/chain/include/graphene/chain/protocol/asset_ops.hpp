@@ -329,6 +329,25 @@ namespace graphene { namespace chain {
       void            validate()const;
    };
 
+   /**
+    * @brief Updates precision of a user issued asset. This operation can be valid only if the asset was never issued.
+    *
+    * @ingroup operations
+    */
+   struct update_user_issued_asset_precision_operation : public base_operation
+   {
+      struct fee_parameters_type { uint64_t fee = 1 * GRAPHENE_BLOCKCHAIN_PRECISION;  };
+
+      asset                  fee;
+      account_id_type        issuer;
+      asset_id_type          asset_to_update;
+      uint8_t                new_precision;
+      extensions_type        extensions;
+
+      account_id_type fee_payer()const { return issuer; }
+      void            validate()const;
+   };
+
 } } // graphene::chain
 
 
@@ -360,6 +379,7 @@ FC_REFLECT( graphene::chain::asset_fund_pools_operation::fee_parameters_type, (f
 FC_REFLECT( graphene::chain::asset_reserve_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::asset_publish_feed_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::asset_claim_fees_operation::fee_parameters_type, (fee) )
+FC_REFLECT( graphene::chain::update_user_issued_asset_precision_operation::fee_parameters_type, (fee) )
 
 FC_REFLECT( graphene::chain::asset_create_operation,
             (fee)
@@ -432,5 +452,13 @@ FC_REFLECT( graphene::chain::asset_publish_feed_operation,
             (publisher)
             (asset_id)
             (feed)
+            (extensions)
+          )
+
+FC_REFLECT( graphene::chain::update_user_issued_asset_precision_operation,
+            (fee)
+            (issuer)
+            (asset_to_update)
+            (new_precision)
             (extensions)
           )

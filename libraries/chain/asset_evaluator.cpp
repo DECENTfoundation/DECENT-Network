@@ -358,5 +358,32 @@ void_result asset_publish_feeds_evaluator::do_apply(const asset_publish_feed_ope
    return void_result();
 } FC_CAPTURE_AND_RETHROW((o)) }
 
+void_result update_user_issued_asset_precision_evaluator::do_evaluate(const update_user_issued_asset_precision_operation& o)
+{ try {
+   database& d = db();
+   asset_to_update = &o.asset_to_update(d);
+
+   FC_ASSERT( d.head_block_time() > HARDFORK_3_TIME );
+   FC_ASSERT( o.issuer == asset_to_update->issuer, "", ("o.issuer", o.issuer)("a.issuer", asset_to_update->issuer) );
+   FC_ASSERT( !asset_to_update->is_monitored_asset() && asset_to_update->id != asset_id_type() );
+   FC_ASSERT( o.new_precision != asset_to_update->precision );
+
+   // check that asset was never issued
+   auto& idx = d.get_index_type<account_balance_index>().indices().get<by_asset_balance>();
+   const auto& itr = idx.equal_range( o.asset_to_update );
+   FC_ASSERT( itr.first == itr.second );
+
+   return void_result();
+} FC_CAPTURE_AND_RETHROW((o)) }
+
+void_result update_user_issued_asset_precision_evaluator::do_apply(const update_user_issued_asset_precision_operation& o)
+{ try {
+   db().modify(*asset_to_update, [&](asset_object& a) {
+      a.precision = o.new_precision;
+   });
+
+   return void_result();
+} FC_CAPTURE_AND_RETHROW((o)) }
+
 
 } } // graphene::chain
