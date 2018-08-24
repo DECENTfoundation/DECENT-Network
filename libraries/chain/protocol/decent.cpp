@@ -40,7 +40,7 @@ void content_submit_operation::validate()const
    if(seeders.size() == 0){ //simplified content
       FC_ASSERT(quorum == 0);
    }else {
-      FC_ASSERT(quorum >= 2 && quorum < UINT32_MAX, "At least two seeders are needed to reconstruct the key");
+      FC_ASSERT(quorum >= 2 , "At least two seeders are needed to reconstruct the key");
       FC_ASSERT(seeders.size() >= quorum);
    }
    FC_ASSERT( expiration <= fc::time_point_sec::maximum() );
@@ -66,16 +66,14 @@ void leave_rating_and_comment_operation::validate()const
 void ready_to_publish_operation::validate()const
 {
    FC_ASSERT( fee.amount >= 0 );
-   FC_ASSERT( space > 0 && space <= UINT64_MAX );
-   FC_ASSERT( price_per_MByte >= 0 && price_per_MByte <= UINT32_MAX );
+   FC_ASSERT( space > 0 );
    FC_ASSERT( !ipfs_ID.empty() );
 }
 
 void ready_to_publish2_operation::validate()const
 {
    FC_ASSERT( fee.amount >= 0 );
-   FC_ASSERT( space > 0 && space <= UINT64_MAX );
-   FC_ASSERT( price_per_MByte >= 0 && price_per_MByte <= UINT32_MAX );
+   FC_ASSERT( space > 0 );
    FC_ASSERT( !ipfs_ID.empty() );
 }
 

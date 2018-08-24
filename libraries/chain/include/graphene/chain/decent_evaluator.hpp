@@ -56,7 +56,6 @@ namespace graphene { namespace chain {
       void_result do_apply( const request_to_buy_operation& o );
    private:
       bool is_subscriber = false;
-      bool skip_exchange = false;
       asset paid_price;
       asset paid_price_after_conversion;
       asset content_price;
