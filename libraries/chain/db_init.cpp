@@ -151,7 +151,7 @@ void database::initialize_evaluators()
    register_evaluator<report_stats_evaluator>();
    register_evaluator<set_publishing_manager_evaluator>();
    register_evaluator<set_publishing_right_evaluator>();
-   register_evaluator<update_user_issued_asset_precision_evaluator>();
+   register_evaluator<update_user_issued_asset_advanced_evaluator>();
 }
 
 void database::initialize_indexes()

@@ -68,8 +68,6 @@ namespace graphene { namespace chain {
       void_result do_apply( const update_user_issued_asset_operation& o );
 
       const asset_object* asset_to_update = nullptr;
-      bool set_fixed_max_supply = false;
-      bool asset_o_count_fixed_max_supply_ext = false;
    };
 
    class asset_fund_pools_evaluator : public evaluator<asset_fund_pools_evaluator>
@@ -114,15 +112,17 @@ namespace graphene { namespace chain {
       std::map<std::pair<asset_id_type,asset_id_type>,price_feed> median_feed_values;
    };
 
-   class update_user_issued_asset_precision_evaluator : public evaluator<update_user_issued_asset_precision_evaluator>
+   class update_user_issued_asset_advanced_evaluator : public evaluator<update_user_issued_asset_advanced_evaluator>
    {
    public:
-      typedef update_user_issued_asset_precision_operation operation_type;
+      typedef update_user_issued_asset_advanced_operation operation_type;
 
-      void_result do_evaluate( const update_user_issued_asset_precision_operation& o );
-      void_result do_apply( const update_user_issued_asset_precision_operation& o );
+      void_result do_evaluate( const update_user_issued_asset_advanced_operation& o );
+      void_result do_apply( const update_user_issued_asset_advanced_operation& o );
 
       const asset_object* asset_to_update = nullptr;
+      bool count_fixed_max_supply_ext = false;
+      bool set_precision = false;
    };
 
 } } // graphene::chain
