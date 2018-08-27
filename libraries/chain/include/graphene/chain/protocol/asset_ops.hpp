@@ -192,17 +192,7 @@ namespace graphene { namespace chain {
       /// True to allow implicit conversion of this asset to/from core asset.
       bool is_exchangeable;
 
-      /// Extensions
-
-      /// True to change non-fixed max supply to fixed max supply, false to leave the setting unchanged.
-      struct fixed_max_supply_struct{
-         bool set_fixed_max_supply;
-         fixed_max_supply_struct(bool change_to_fixed=false) : set_fixed_max_supply{ change_to_fixed } {};
-      };
-
-      typedef static_variant<void_t, fixed_max_supply_struct>     asset_options_extensions;
-      typedef flat_set<asset_options_extensions> asset_options_extensions_type;
-      asset_options_extensions_type extensions;
+      extensions_type extensions;
 
       account_id_type fee_payer()const { return issuer; }
       void            validate()const;
@@ -329,6 +319,29 @@ namespace graphene { namespace chain {
       void            validate()const;
    };
 
+   /**
+    * @brief Updates the precision and/or fixes the max supply of a user issued asset.
+    * The precision can be changed only when the asset was never issued. It is not allowed to set fixed max supply
+    * of a UIA which already has fixed max supply.
+    *
+    * @ingroup operations
+    */
+   struct update_user_issued_asset_advanced_operation : public base_operation
+   {
+      struct fee_parameters_type { uint64_t fee = 5 * GRAPHENE_BLOCKCHAIN_PRECISION / 1000;  };
+
+      asset                  fee;
+      account_id_type        issuer;
+      asset_id_type          asset_to_update;
+      uint8_t                new_precision = 8;
+      /// True to change non-fixed max supply to fixed max supply, false to leave the setting unchanged.
+      bool                   set_fixed_max_supply = false;
+      extensions_type        extensions;
+
+      account_id_type fee_payer()const { return issuer; }
+      void            validate()const;
+   };
+
 } } // graphene::chain
 
 
@@ -352,14 +365,12 @@ FC_REFLECT( graphene::chain::asset_options,
 FC_REFLECT( graphene::chain::asset_create_operation::fee_parameters_type, (basic_fee) )
 FC_REFLECT( graphene::chain::asset_issue_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::update_monitored_asset_operation::fee_parameters_type, (fee) )
-
-FC_REFLECT( graphene::chain::update_user_issued_asset_operation::fixed_max_supply_struct, (set_fixed_max_supply) )
-FC_REFLECT_TYPENAME( graphene::chain::update_user_issued_asset_operation::asset_options_extensions )
 FC_REFLECT( graphene::chain::update_user_issued_asset_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::asset_fund_pools_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::asset_reserve_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::asset_publish_feed_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::asset_claim_fees_operation::fee_parameters_type, (fee) )
+FC_REFLECT( graphene::chain::update_user_issued_asset_advanced_operation::fee_parameters_type, (fee) )
 
 FC_REFLECT( graphene::chain::asset_create_operation,
             (fee)
@@ -432,5 +443,14 @@ FC_REFLECT( graphene::chain::asset_publish_feed_operation,
             (publisher)
             (asset_id)
             (feed)
+            (extensions)
+          )
+
+FC_REFLECT( graphene::chain::update_user_issued_asset_advanced_operation,
+            (fee)
+            (issuer)
+            (asset_to_update)
+            (new_precision)
+            (set_fixed_max_supply)
             (extensions)
           )

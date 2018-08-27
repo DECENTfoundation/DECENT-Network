@@ -296,6 +296,7 @@ struct get_balance_history_visitor
    void operator()( const asset_create_operation& op ) {}
    void operator()( const update_monitored_asset_operation& op ) {}
    void operator()( const update_user_issued_asset_operation& op ) {}
+   void operator()( const update_user_issued_asset_advanced_operation& op ) {}
    void operator()( const asset_publish_feed_operation& op ) {}
    void operator()( const miner_create_operation& op ) {}
    void operator()( const miner_update_operation& op ) {}

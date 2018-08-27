@@ -67,10 +67,9 @@ signed_transaction wallet_api::update_user_issued_asset(const string& symbol,
                                                         uint64_t max_supply,
                                                         price core_exchange_rate,
                                                         bool is_exchangeable,
-                                                        bool set_fixed_max_supply,
                                                         bool broadcast /* = false */)
 {
-   return my->update_user_issued_asset(symbol, new_issuer, description, max_supply, core_exchange_rate, is_exchangeable, set_fixed_max_supply, broadcast);
+   return my->update_user_issued_asset(symbol, new_issuer, description, max_supply, core_exchange_rate, is_exchangeable, broadcast);
 }
 
 signed_transaction wallet_api::fund_asset_pools(const string& from,

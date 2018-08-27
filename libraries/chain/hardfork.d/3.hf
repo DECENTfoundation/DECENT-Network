@@ -1,5 +1,4 @@
-// #2 - an option to change non-fixed max supply of fixed (UIA);
+// #3 - UIA: the option to change the precision and to fix max supply;
 #ifndef HARDFORK_3_TIME
-#define HARDFORK_3_TIME (fc::time_point_sec( 1528722000 )) //2018-04-23 08:00:00
+#define HARDFORK_3_TIME (fc::time_point_sec( 1540645200 )) //2018-10-27 13:00:00
 #endif
-
