@@ -115,6 +115,8 @@
 #include <boost/interprocess/sync/interprocess_condition.hpp>
 #include <boost/interprocess/sync/scoped_lock.hpp>
 
+#include <decent/config/decent_log_config.hpp>
+
 #endif
 
 

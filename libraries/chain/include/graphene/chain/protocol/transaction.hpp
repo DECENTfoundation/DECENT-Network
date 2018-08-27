@@ -182,6 +182,12 @@ namespace graphene { namespace chain {
                           const flat_set<account_id_type>& active_aprovals = flat_set<account_id_type>(),
                           const flat_set<account_id_type>& owner_approvals = flat_set<account_id_type>());
 
+   // optimized version if there is used only one sign
+   void verify_authority1(const vector<operation>& ops, const public_key_type& sigs,
+      const std::function<const authority*(account_id_type)>& get_active,
+      const std::function<const authority*(account_id_type)>& get_owner,
+      uint32_t max_recursion = GRAPHENE_MAX_SIG_CHECK_DEPTH);
+
    /**
     *  @brief captures the result of evaluating the operations contained in the transaction
     *
