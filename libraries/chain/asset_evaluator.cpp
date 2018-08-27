@@ -348,7 +348,7 @@ void_result asset_publish_feeds_evaluator::do_apply(const asset_publish_feed_ope
    database& d = db();
 
    const asset_object& asset_to_update = o.asset_id(d);
-   auto old_feed =  asset_to_update.monitored_asset_opts->current_feed;
+   //auto old_feed =  asset_to_update.monitored_asset_opts->current_feed; DEBUG
    // Store medians for this asset
    d.modify(asset_to_update , [&o,&d](asset_object& a) {
       a.monitored_asset_opts->feeds[o.publisher] = make_pair(d.head_block_time(), o.feed);

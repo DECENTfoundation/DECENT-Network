@@ -751,12 +751,16 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
 
          });
       }
-   }FC_CAPTURE_AND_RETHROW( (o) ) }
+   }FC_CAPTURE_AND_RETHROW( (o) ) 
+   return void_result();
+   }
 
    void_result ready_to_publish2_evaluator::do_evaluate(const ready_to_publish2_operation& o )
    {try{
          FC_ASSERT(db().head_block_time() >= HARDFORK_1_TIME );
-   }FC_CAPTURE_AND_RETHROW( (o) ) }
+   }FC_CAPTURE_AND_RETHROW( (o) ) 
+   return void_result();
+   }
 
    void_result ready_to_publish2_evaluator::do_apply(const ready_to_publish2_operation& o )
    {try{

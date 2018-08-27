@@ -2221,9 +2221,9 @@ public:
             << "\n"
             << "|=====================================================================================\n";
 
-         for (int i = 0; i < bids.size() || i < asks.size() ; i++)
+         for (int i = 0; i < (int)bids.size() || i < (int)asks.size() ; i++)
          {
-            if ( i < bids.size() )
+            if ( i < (int)bids.size() )
             {
                 bid_sum += bids[i].base;
                 ss << ' ' << setw( spacing );
@@ -2243,7 +2243,7 @@ public:
 
             ss << '|';
 
-            if ( i < asks.size() )
+            if ( i < (int)asks.size() )
             {
                ask_sum += asks[i].base;
                ss << ' ' << setw( spacing );
@@ -2484,7 +2484,7 @@ public:
          ShamirSecret ss(quorum, seeders.size(), secret);
          ss.calculate_split();
          content_submit_operation submit_op;
-         for( int i =0; i<seeders.size(); i++ )
+         for( int i =0; i<(int)seeders.size(); i++ )
          {
             const auto& s = _remote_db->get_seeder( seeders[i] );
             Ciphertext cp;
@@ -2567,7 +2567,7 @@ public:
          
          content_submit_operation submit_op;
 
-         for( int i =0; i < seeders.size(); i++ )
+         for( int i =0; i < (int)seeders.size(); i++ )
          {
             const auto& s = _remote_db->get_seeder( seeders[i] );
             FC_ASSERT( s, "seeder not found" );
@@ -3503,7 +3503,7 @@ signed_transaction content_cancellation(const string& author,
          account_object to_account;
          std::string receivers;
 
-         for (int i = 0; i < pl.receivers_data.size(); i++) {
+         for (int i = 0; i < (int)pl.receivers_data.size(); i++) {
             const auto& to_account = wallet.get_account(pl.receivers_data[i].to);
             receivers += to_account.name;
             receivers += " ";
@@ -3815,7 +3815,7 @@ signed_transaction content_cancellation(const string& author,
       uint64_t size = std::max((uint64_t)1, ( _info->get_size() + (1024 * 1024) -1 ) / (1024 * 1024));
 
       asset total_price_per_day;
-      for( int i =0; i < _op.seeders.size(); i++ )
+      for( int i =0; i < (int)_op.seeders.size(); i++ )
       {
          const auto& s = _wallet._remote_db->get_seeder( _op.seeders[i] );
          total_price_per_day += s->price.amount * size;

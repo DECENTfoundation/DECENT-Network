@@ -740,7 +740,6 @@ void detail::SeedingListener::package_download_error(const std::string & error) 
    elog("seeding plugin: package_download_error(): Failed downloading package ${s}, ${e}", ("s", _url)("e", error));
    failed++;
    decent::package::package_handle_t pi;
-   auto& pm = decent::package::PackageManager::instance();
 
    pi = _pi;
 
@@ -760,7 +759,6 @@ void detail::SeedingListener::package_download_error(const std::string & error) 
 
 void detail::SeedingListener::package_download_complete() {
    ilog("seeding plugin: package_download_complete(): Finished downloading package${u}", ("u", _url));
-   auto &pm = decent::package::PackageManager::instance();
    const auto& db = _my->database();
    const auto &mso_idx = db.get_index_type<my_seeding_index>().indices().get<by_URI>();
    const auto &mso_itr = mso_idx.find(_url);
@@ -778,7 +776,6 @@ void detail::SeedingListener::package_download_complete() {
    }
    _pi->start_seeding();
    //Don't block package manager thread for too long.
-   seeding_plugin_impl *my = _my;
    _my->database().modify<my_seeding_object>(mso, [](my_seeding_object& so){so.downloaded = true;});
    _my->service_thread->async([ this, &mso, pi ]() { _my->generate_por_int(mso, pi); });
 };

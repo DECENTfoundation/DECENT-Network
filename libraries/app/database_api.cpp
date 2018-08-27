@@ -1835,7 +1835,7 @@ namespace
          ss.calculate_split();
          
 
-         for( int i =0; i < seeders.size(); i++ )
+         for( int i =0; i < (int)seeders.size(); i++ )
          {
             const auto& s = my->get_seeder( seeders[i] );
             FC_ASSERT( s, "seeder not found" );

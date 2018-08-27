@@ -277,142 +277,6 @@ namespace graphene { namespace app {
        return *_messaging_api;
     }
 
-    vector<account_id_type> get_relevant_accounts( const object* obj )
-    {
-       vector<account_id_type> result;
-       if( obj->id.space() == protocol_ids )
-       {
-          switch( (object_type)obj->id.type() )
-          {
-            case null_object_type:
-            case base_object_type:
-            case OBJECT_TYPE_COUNT:
-               return result;
-            case account_object_type:{
-               result.push_back( obj->id );
-               break;
-            } case asset_object_type:{
-               const auto& aobj = dynamic_cast<const asset_object*>(obj);
-               assert( aobj != nullptr );
-               result.push_back( aobj->issuer );
-               break;
-           } case miner_object_type:{
-               const auto& aobj = dynamic_cast<const miner_object*>(obj);
-               assert( aobj != nullptr );
-               result.push_back( aobj->miner_account );
-               break;
-            } case custom_object_type:{
-              break;
-            } case proposal_object_type:{
-               const auto& aobj = dynamic_cast<const proposal_object*>(obj);
-               assert( aobj != nullptr );
-               flat_set<account_id_type> impacted;
-               transaction_get_impacted_accounts( aobj->proposed_transaction, impacted );
-               result.reserve( impacted.size() );
-               for( auto& item : impacted ) result.emplace_back(item);
-               break;
-            } case operation_history_object_type:{
-               const auto& aobj = dynamic_cast<const operation_history_object*>(obj);
-               assert( aobj != nullptr );
-               flat_set<account_id_type> impacted;
-               operation_get_impacted_accounts( aobj->op, impacted );
-               result.reserve( impacted.size() );
-               for( auto& item : impacted ) result.emplace_back(item);
-               break;
-            } case withdraw_permission_object_type:{
-               const auto& aobj = dynamic_cast<const withdraw_permission_object*>(obj);
-               assert( aobj != nullptr );
-               result.push_back( aobj->withdraw_from_account );
-               result.push_back( aobj->authorized_account );
-               break;
-            } case vesting_balance_object_type:{
-               const auto& aobj = dynamic_cast<const vesting_balance_object*>(obj);
-               assert( aobj != nullptr );
-               result.push_back( aobj->owner );
-               break;
-            }
-          }
-       }
-       else if( obj->id.space() == implementation_ids )
-       {
-          switch( (impl_object_type)obj->id.type() )
-          {
-                 case impl_global_property_object_type:
-                  break;
-                 case impl_dynamic_global_property_object_type:
-                  break;
-                 case impl_reserved0_object_type:
-                  break;
-                 case impl_asset_dynamic_data_type:
-                  break;
-                 case impl_account_balance_object_type:{
-                  const auto& aobj = dynamic_cast<const account_balance_object*>(obj);
-                  assert( aobj != nullptr );
-                  result.push_back( aobj->owner );
-                  break;
-               } case impl_account_statistics_object_type:{
-                  const auto& aobj = dynamic_cast<const account_statistics_object*>(obj);
-                  assert( aobj != nullptr );
-                  result.push_back( aobj->owner );
-                  break;
-               } case impl_transaction_object_type:{
-                  const auto& aobj = dynamic_cast<const transaction_object*>(obj);
-                  assert( aobj != nullptr );
-                  flat_set<account_id_type> impacted;
-                  transaction_get_impacted_accounts( aobj->trx, impacted );
-                  result.reserve( impacted.size() );
-                  for( auto& item : impacted ) result.emplace_back(item);
-                  break;
-               } case impl_block_summary_object_type:
-                  break;
-                 case impl_account_transaction_history_object_type:
-                  break;
-                 case impl_chain_property_object_type:
-                  break;
-                 case impl_miner_schedule_object_type:
-                  break;
-                 case impl_budget_record_object_type:
-                  break;
-                 case impl_buying_object_type:{
-                  const auto& bobj = dynamic_cast<const buying_object*>(obj);
-                  assert( bobj != nullptr );
-                  result.push_back( bobj->consumer );
-                  break;
-                 }
-                 case impl_content_object_type:{
-                    const auto& cobj = dynamic_cast<const content_object*>(obj);
-                    assert( cobj != nullptr );
-                    result.push_back( cobj->author );
-                    break;
-                 }
-                 case impl_publisher_object_type:{
-                    const auto& sobj = dynamic_cast<const seeder_object*>(obj);
-                    assert( sobj != nullptr );
-                    result.push_back( sobj->seeder );
-                    break;
-                 }
-                case impl_subscription_object_type:{
-                   const auto& sobj = dynamic_cast<const subscription_object*>(obj);
-                   assert( sobj != nullptr );
-                   result.push_back( sobj->from );
-                   result.push_back( sobj->to );
-                   break;
-                }
-                case impl_seeding_statistics_object_type:{
-                   const auto& ssobj = dynamic_cast<const seeding_statistics_object*>(obj);
-                   assert( ssobj != nullptr );
-                   result.push_back( ssobj->seeder );
-                   break;
-                }
-                case impl_transaction_detail_object_type:
-                   break;
-          }
-       }
-       return result;
-    } // end get_relevant_accounts( obj )
-
-
-
     vector<operation_history_object> history_api::get_account_history( account_id_type account,
                                                                        operation_history_id_type stop,
                                                                        unsigned limit, 
@@ -648,8 +512,8 @@ namespace graphene { namespace app {
           if (itr != refs.message_to_receiver_memberships.end())
           {
              result.reserve(itr->second.size());
-             int count = itr->second.size();
-             int counter = 0;
+             uint32_t count = itr->second.size();
+             uint32_t counter = 0;
              if (sender) {
                 for (const object_id_type& item : itr->second) {
                    if (result.size() >= max_count)
@@ -686,7 +550,7 @@ namespace graphene { namespace app {
           auto itr = index_by_sender.lower_bound(*sender);
           itr = range.first;
 
-          int count = distance(range.first, range.second);
+          uint32_t count = distance(range.first, range.second);
           if (count) {
              result.reserve(count);
              int counter = 0;
