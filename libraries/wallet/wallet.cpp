@@ -1177,6 +1177,8 @@ public:
       }
    }
 
+//#define DECENTGO
+
    signed_transaction create_account_with_private_key(fc::ecc::private_key owner_privkey,
                                                       const string& account_name,
                                                       const string& registrar_account,
@@ -1205,9 +1207,13 @@ public:
          account_create_op.registrar = registrar_account_id;
          account_create_op.name = account_name;
          account_create_op.owner = authority(1, owner_pubkey, 1);
-
+#ifdef DECENTGO
+         account_create_op.active = authority(1, owner_pubkey, 1);
+         account_create_op.options.memo_key = owner_pubkey;
+#else
          account_create_op.active = authority(1, active_pubkey, 1);
          account_create_op.options.memo_key = memo_pubkey;
+#endif
 
          // current_fee_schedule()
          // find_account(pay_from_account)
