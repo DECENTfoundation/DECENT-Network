@@ -337,11 +337,15 @@ void_result update_user_issued_asset_advanced_evaluator::do_evaluate(const updat
    FC_ASSERT( o.issuer == asset_to_update->issuer, "", ("o.issuer", o.issuer)("a.issuer", asset_to_update->issuer) );
    FC_ASSERT( !asset_to_update->is_monitored_asset() && asset_to_update->id != asset_id_type() );
 
+   set_precision = o.new_precision != asset_to_update->precision;
    // verify that asset was never issued
-   auto& idx = d.get_index_type<account_balance_index>().indices().get<by_asset_balance>();
-   const auto& itr = idx.equal_range( o.asset_to_update );
-   FC_ASSERT( itr.first == itr.second, "The asset was already distributed." );
-
+   if( set_precision )
+   {
+      auto& idx = d.get_index_type<account_balance_index>().indices().get<by_asset_balance>();
+      const auto& itr = idx.equal_range( o.asset_to_update );
+      FC_ASSERT( itr.first == itr.second, "The asset was already distributed." );
+   }
+   
    const auto& itr2 = asset_to_update->options.extensions.find( asset_options::fixed_max_supply_struct() );
    bool is_fixed_max_supply = false;
    if( itr2 != asset_to_update->options.extensions.end() )
@@ -358,7 +362,6 @@ void_result update_user_issued_asset_advanced_evaluator::do_evaluate(const updat
    //        F      F     ok
    FC_ASSERT( !is_fixed_max_supply || !o.set_fixed_max_supply );
 
-   set_precision = o.new_precision != asset_to_update->precision;
    FC_ASSERT( set_precision || o.set_fixed_max_supply );
 
    return void_result();
