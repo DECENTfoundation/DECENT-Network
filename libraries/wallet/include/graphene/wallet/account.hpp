@@ -131,7 +131,6 @@ vector<balance_operation_detail>  search_account_balance_history(const string& a
                                                                  const flat_set<string>& assets_list,
                                                                  const string& partner_account,
                                                                  uint32_t from_block, uint32_t to_block,
-                                                                 const string& order,
                                                                  uint32_t start_offset,
                                                                  int limit) const;
 

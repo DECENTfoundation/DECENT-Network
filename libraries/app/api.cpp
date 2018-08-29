@@ -336,14 +336,15 @@ namespace graphene { namespace app {
                                                                               const flat_set<asset_id_type>& assets_list,
                                                                               fc::optional<account_id_type> partner_account_id,
                                                                               uint32_t from_block, uint32_t to_block,
-                                                                              const string& order,
                                                                               uint32_t start_offset,
                                                                               int limit) const
     {
+       FC_ASSERT(limit > 0);
         vector<balance_change_result> tmp_result;
         operation_history_id_type start;
+        int32_t offset_counter = -1;
 
-        tmp_result.reserve(start_offset + limit);
+        tmp_result.reserve(limit);
 
         do {
 
@@ -352,6 +353,8 @@ namespace graphene { namespace app {
                 break;
 
             for( auto& o : current ) {
+
+               offset_counter++;
 
                 if (from_block != 0 && to_block != 0) {
                     if (o.block_num < from_block || o.block_num > to_block)
@@ -362,12 +365,12 @@ namespace graphene { namespace app {
                 info.hist_object = o;
                 graphene::app::operation_get_balance_history(o.op, account_id, info.balance, info.fee);
 
-                if (info.balance.a0.amount == 0ll && info.balance.a1.amount == 0ll && info.fee.amount == 0ll)
+                if (info.balance.asset0.amount == 0ll && info.balance.asset1.amount == 0ll && info.fee.amount == 0ll)
                     continue;
 
                 if (assets_list.empty() ||
-                    ((info.balance.a0.amount != 0ll && assets_list.find(info.balance.a0.asset_id) != assets_list.end()) ||
-                     (info.balance.a1.amount != 0ll && assets_list.find(info.balance.a0.asset_id) != assets_list.end()) ))
+                    ((info.balance.asset0.amount != 0ll && assets_list.find(info.balance.asset0.asset_id) != assets_list.end()) ||
+                     (info.balance.asset1.amount != 0ll && assets_list.find(info.balance.asset0.asset_id) != assets_list.end()) ))
                 {
                     if (partner_account_id) {
                         if (o.op.which() == operation::tag<transfer_operation>::value) {
@@ -381,23 +384,23 @@ namespace graphene { namespace app {
                                 continue;
                         }
                     }
-
-                    tmp_result.push_back( info );
+                    if(offset_counter >= start_offset)
+                       tmp_result.push_back( info );
                 }
 
-                if (tmp_result.size() >= (start_offset + limit))
+                if (tmp_result.size() >= (limit))
                    break;
             }
 
             start = current.back().id;
             start = start + (-1);
+            if (start == operation_history_id_type())
+               break;
 
-        } while(tmp_result.size() < (start_offset + limit));
-
-        //TODO: ordering...
+        } while(tmp_result.size() < (limit));
 
         vector<balance_change_result> result;
-        std::copy(tmp_result.begin() + start_offset, tmp_result.end(), std::back_inserter(result));
+        std::copy(tmp_result.begin(), tmp_result.end(), std::back_inserter(result));
 
         return result;
     }

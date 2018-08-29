@@ -54,12 +54,12 @@ struct get_balance_history_visitor
    void operator()( const transfer_operation& op )
    {
        if (op.from == _account) {
-           _balance.a0 = asset(-op.amount.amount, op.amount.asset_id);
-           _balance.a1 = asset();
+           _balance.asset0 = asset(-op.amount.amount, op.amount.asset_id);
+           _balance.asset1 = asset();
        }
        else {
-           _balance.a0 = op.amount;
-           _balance.a1 = asset();
+           _balance.asset0 = op.amount;
+           _balance.asset1 = asset();
        }
        if (op.fee_payer() == _account)
            _fee = op.fee;
@@ -68,13 +68,13 @@ struct get_balance_history_visitor
    void operator()( const transfer2_operation& op )
    {
        if (op.from == _account) {
-           _balance.a0 = asset(-op.amount.amount, op.amount.asset_id);
-           _balance.a1 = asset();
+           _balance.asset0 = asset(-op.amount.amount, op.amount.asset_id);
+           _balance.asset1 = asset();
        }
 
        if( op.to.is<account_id_type>() && op.to.as<account_id_type>() == _account) {
-           _balance.a0 = op.amount;
-           _balance.a1 = asset();
+           _balance.asset0 = op.amount;
+           _balance.asset1 = asset();
        }
        if (op.fee_payer() == _account)
            _fee = op.fee;
@@ -83,11 +83,11 @@ struct get_balance_history_visitor
    void operator()( const asset_issue_operation& op )
    {
        if (op.issuer == _account) {
-           _balance.a0 = op.asset_to_issue;
-           _balance.a1 = asset();
+           _balance.asset0 = op.asset_to_issue;
+           _balance.asset1 = asset();
        }
        else {
-           _balance.a0 = _balance.a1 = asset();
+           _balance.asset0 = _balance.asset1 = asset();
        }
        if (op.fee_payer() == _account)
            _fee = op.fee;
@@ -96,15 +96,15 @@ struct get_balance_history_visitor
    void operator()( const asset_fund_pools_operation& op )
    {
        if (op.from_account != _account) {
-           _balance.a0 = _balance.a1 = asset();
+           _balance.asset0 = _balance.asset1 = asset();
            return;
        }
 
        if( op.uia_asset.amount > 0) {
-           _balance.a0 = asset(-op.uia_asset.amount, op.uia_asset.asset_id);
+           _balance.asset0 = asset(-op.uia_asset.amount, op.uia_asset.asset_id);
        }
        if( op.dct_asset.amount > 0) {
-           _balance.a1 = asset(-op.dct_asset.amount, op.dct_asset.asset_id);
+           _balance.asset1 = asset(-op.dct_asset.amount, op.dct_asset.asset_id);
        }
        if (op.fee_payer() == _account)
            _fee = op.fee;
@@ -116,12 +116,12 @@ struct get_balance_history_visitor
            _fee = op.fee;
 
        if (op.payer != _account) {
-           _balance.a0 = _balance.a1 = asset();
+           _balance.asset0 = _balance.asset1 = asset();
            return;
        }
 
-       _balance.a0 = asset(-op.amount_to_reserve.amount, op.amount_to_reserve.asset_id);
-       _balance.a1 = asset();
+       _balance.asset0 = asset(-op.amount_to_reserve.amount, op.amount_to_reserve.asset_id);
+       _balance.asset1 = asset();
    }
 
    void operator()( const asset_claim_fees_operation& op )
@@ -130,15 +130,15 @@ struct get_balance_history_visitor
            _fee = op.fee;
 
        if (op.issuer != _account) {
-           _balance.a0 = _balance.a1 = asset();
+           _balance.asset0 = _balance.asset1 = asset();
            return;
        }
 
        if( op.uia_asset.amount > 0) {
-           _balance.a0 = asset(op.uia_asset.amount, op.uia_asset.asset_id);
+           _balance.asset0 = asset(op.uia_asset.amount, op.uia_asset.asset_id);
        }
        if( op.dct_asset.amount > 0) {
-           _balance.a1 = asset(op.dct_asset.amount, op.dct_asset.asset_id);
+           _balance.asset1 = asset(op.dct_asset.amount, op.dct_asset.asset_id);
        }
    }
 
@@ -148,12 +148,12 @@ struct get_balance_history_visitor
            _fee = op.fee;
 
        if (op.creator != _account) {
-           _balance.a0 = _balance.a1 = asset();
+           _balance.asset0 = _balance.asset1 = asset();
            return;
        }
 
-       _balance.a0 = asset(-op.amount.amount, op.amount.asset_id);
-       _balance.a1 = asset();
+       _balance.asset0 = asset(-op.amount.amount, op.amount.asset_id);
+       _balance.asset1 = asset();
    }
 
    void operator()( const vesting_balance_withdraw_operation& op )
@@ -162,12 +162,12 @@ struct get_balance_history_visitor
            _fee = op.fee;
 
        if (op.owner != _account) {
-           _balance.a0 = _balance.a1 = asset();
+           _balance.asset0 = _balance.asset1 = asset();
            return;
        }
 
-       _balance.a0 = op.amount;
-       _balance.a1 = asset();
+       _balance.asset0 = op.amount;
+       _balance.asset1 = asset();
    }
 
    void operator()( const withdraw_permission_claim_operation& op )
@@ -176,15 +176,15 @@ struct get_balance_history_visitor
            _fee = op.fee;
 
        if (op.withdraw_from_account == _account) {
-           _balance.a0 = asset(-op.amount_to_withdraw.amount, op.amount_to_withdraw.asset_id);
-           _balance.a1 = asset();
+           _balance.asset0 = asset(-op.amount_to_withdraw.amount, op.amount_to_withdraw.asset_id);
+           _balance.asset1 = asset();
        }
        else if (op.withdraw_to_account == _account) {
-           _balance.a0 = op.amount_to_withdraw;
-           _balance.a1 = asset();
+           _balance.asset0 = op.amount_to_withdraw;
+           _balance.asset1 = asset();
        }
        else {
-           _balance.a0 = _balance.a1 = asset();
+           _balance.asset0 = _balance.asset1 = asset();
        }
    }
 
@@ -194,8 +194,8 @@ struct get_balance_history_visitor
            _fee = op.fee;
 
        if (op.consumer == _account) {
-           _balance.a0 = -op.price;
-           _balance.a1 = asset();
+           _balance.asset0 = -op.price;
+           _balance.asset1 = asset();
        }
    }
 
@@ -205,8 +205,8 @@ struct get_balance_history_visitor
            _fee = op.fee;
 
        if (op.consumer == _account) {
-           _balance.a0 = op.escrow;
-           _balance.a1 = asset();
+           _balance.asset0 = op.escrow;
+           _balance.asset1 = asset();
        }
    }
 
@@ -216,8 +216,8 @@ struct get_balance_history_visitor
            _fee = op.fee;
 
        if (op.author == _account) {
-           _balance.a0 = op.escrow;
-           _balance.a1 = asset();
+           _balance.asset0 = op.escrow;
+           _balance.asset1 = asset();
        }
    }
 
@@ -227,8 +227,8 @@ struct get_balance_history_visitor
            _fee = op.fee;
 
        if (op.author == _account) {
-           _balance.a0 = -op.publishing_fee;
-           _balance.a1 = asset();
+           _balance.asset0 = -op.publishing_fee;
+           _balance.asset1 = asset();
        }
    }
 
@@ -238,12 +238,12 @@ struct get_balance_history_visitor
            _fee = op.fee;
 
        if (op.from == _account) {
-           _balance.a0 = asset(-op.price.amount, op.price.asset_id);
-           _balance.a1 = asset();
+           _balance.asset0 = asset(-op.price.amount, op.price.asset_id);
+           _balance.asset1 = asset();
        }
        else if (op.to == _account) {
-           _balance.a0 = op.price;
-           _balance.a1 = asset();
+           _balance.asset0 = op.price;
+           _balance.asset1 = asset();
        }
    }
 
@@ -259,8 +259,8 @@ struct get_balance_history_visitor
            _fee = op.fee;
 
        if (op.author == _account && op.co_authors.empty()) {
-           _balance.a0 = op.payout;
-           _balance.a1 = asset();
+           _balance.asset0 = op.payout;
+           _balance.asset1 = asset();
        }
        else {
            //calculate split to author and co-authors
@@ -269,8 +269,8 @@ struct get_balance_history_visitor
 
            auto find = co_authors_split.find(_account);
            if (find != co_authors_split.end()) {
-               _balance.a0 = find->second;
-               _balance.a1 = asset();
+               _balance.asset0 = find->second;
+               _balance.asset1 = asset();
            }
        }
    }
@@ -286,8 +286,8 @@ struct get_balance_history_visitor
 //         result.a1 = asset();
 //     }
        if (op.seeder == _account) {
-           _balance.a0 = op.payout;
-           _balance.a1 = asset();
+           _balance.asset0 = op.payout;
+           _balance.asset1 = asset();
        }
    }
 

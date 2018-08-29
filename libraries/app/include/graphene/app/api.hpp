@@ -79,8 +79,8 @@ namespace graphene { namespace app {
 
    struct asset_array
    {
-      asset a0;
-      asset a1;
+      asset asset0;
+      asset asset1;
    };
 
     struct balance_change_result
@@ -156,7 +156,6 @@ namespace graphene { namespace app {
                                                                        const flat_set<asset_id_type>& assets_list,
                                                                        fc::optional<account_id_type> partner_account_id,
                                                                        uint32_t from_block, uint32_t to_block,
-                                                                       const string& order,
                                                                        uint32_t start_offset,
                                                                        int limit) const;
 
@@ -553,7 +552,7 @@ FC_REFLECT( graphene::app::verify_range_proof_rewind_result,
         (success)(min_val)(max_val)(value_out)(blind_out)(message_out) )
 //FC_REFLECT_TYPENAME( fc::ecc::compact_signature );
 //FC_REFLECT_TYPENAME( fc::ecc::commitment_type );
-FC_REFLECT( graphene::app::asset_array, (a0)(a1) )
+FC_REFLECT( graphene::app::asset_array, (asset0)(asset1) )
 FC_REFLECT( graphene::app::balance_change_result, (hist_object)(balance)(fee) )
 
 FC_API(graphene::app::history_api,
