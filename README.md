@@ -197,7 +197,7 @@ API 0 is accessible using regular JSON-RPC:
 Accessing restricted API's
 --------------------------
 
-You can restrict API's to particular users by specifying an `apiaccess` file in `config.ini`.  Here is an example `apiaccess` file which allows
+You can restrict API's to particular users by specifying an `api-access` file in `config.ini`.  Here is an example `apiaccess` file which allows
 user `decent` with password `pwd` to access four different API's, while allowing any other user to access the three public API's
 necessary to use the wallet:
 
