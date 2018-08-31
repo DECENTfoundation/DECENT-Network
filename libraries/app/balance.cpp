@@ -82,7 +82,7 @@ struct get_balance_history_visitor
 
    void operator()( const asset_issue_operation& op )
    {
-       if (op.issuer == _account) {
+       if (op.issue_to_account == _account) {
            _balance.asset0 = op.asset_to_issue;
            _balance.asset1 = asset();
        }
