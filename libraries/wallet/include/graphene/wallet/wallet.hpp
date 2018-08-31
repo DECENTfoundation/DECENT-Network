@@ -310,8 +310,6 @@ namespace graphene { namespace wallet {
 
 
          std::map<string,std::function<string(fc::variant,const fc::variants&)>> get_result_formatters() const;
-         void encrypt_keys();
-         void encrypt_keys2();
 
          fc::signal<void(bool)> lock_changed;
          std::shared_ptr<detail::wallet_api_impl> my;

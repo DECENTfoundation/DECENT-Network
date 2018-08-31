@@ -3789,11 +3789,6 @@ signed_transaction content_cancellation(const string& author,
       return my->get_result_formatters();
    }
 
-   void wallet_api::encrypt_keys()
-   {
-      my->encrypt_keys();
-   }
-
    signed_block_with_info::signed_block_with_info( const signed_block& block ) : signed_block( block )
    {
       block_id = id();
