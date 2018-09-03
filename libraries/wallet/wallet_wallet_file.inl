@@ -27,7 +27,7 @@ bool wallet_api::is_locked()const
 void wallet_api::lock()
 { try {
    FC_ASSERT( !is_locked() );
-   encrypt_keys();
+   my->encrypt_keys2();
    for( auto & key : my->_keys )
       key.second = key_to_wif(fc::ecc::private_key());
    my->_keys.clear();
