@@ -197,18 +197,18 @@ API 0 is accessible using regular JSON-RPC:
 Accessing restricted API's
 --------------------------
 
-You can restrict API's to particular users by specifying an `apiaccess` file in `config.ini`.  Here is an example `apiaccess` file which allows
-user `bytemaster` with password `supersecret` to access four different API's, while allowing any other user to access the three public API's
+You can restrict API's to particular users by specifying an `api-access` file in `config.ini`.  Here is an example `apiaccess` file which allows
+user `decent` with password `pwd` to access four different API's, while allowing any other user to access the three public API's
 necessary to use the wallet:
 
     {
        "permission_map" :
        [
           [
-             "aaa",
+             "decent",
              {
-                "password_hash_b64" : "9e9GF7ooXVb9k4BoSfNIPTelXeGOZ5DrgOYMj94elaY=",
-                "password_salt_b64" : "INDdM6iCi/8=",
+                "password_hash_b64" : "W/wGhp3F9QOPwyCCpAPSQTrRnoQJi7IrI98ttwCJwCE=",
+                "password_salt_b64" : "8Bd7FkJHI/8=",
                 "allowed_apis" : ["database_api", "network_broadcast_api", "history_api", "network_node_api"]
              }
           ],
