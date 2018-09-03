@@ -15,10 +15,12 @@ target_include_directories( package_manager
 # A test/sanbox dev-only executable.
 add_executable( package_manager_sandbox sandbox.cpp ${HEADERS} )
 
+target_link_libraries( package_manager_sandbox package_manager fc decent_encrypt nlohmann_json ipfs-api graphene_utilities)
+
 if( WIN32 )
-  target_link_libraries( package_manager_sandbox package_manager fc decent_encrypt nlohmann_json ipfs-api graphene_utilities ${GMP_LIBRARIES} )
+  target_link_libraries( package_manager_sandbox ${GMP_LIBRARIES} )
 else()
-  target_link_libraries( package_manager_sandbox package_manager fc decent_encrypt nlohmann_json ipfs-api graphene_utilities gmp )
+  target_link_libraries( package_manager_sandbox gmp )
 endif()
 
 #install( TARGETS

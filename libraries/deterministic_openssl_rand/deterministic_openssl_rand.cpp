@@ -60,9 +60,15 @@ static void _warn()
 
 // These don't need to do anything if you don't have anything for them to do.
 static void deterministic_rand_cleanup() { _warn(); }
-static void deterministic_rand_add(const void *buf, int num, double add_entropy) { _warn(); }
 static int  deterministic_rand_status() { _warn(); return 1; }
+
+#if OPENSSL_VERSION_NUMBER >= 0x10100000
+static int deterministic_rand_seed(const void *buf, int num) { _warn(); return 1; }
+static int deterministic_rand_add(const void *buf, int num, double add_entropy) { _warn(); return 1; }
+#else
 static void deterministic_rand_seed(const void *buf, int num) { _warn(); }
+static void deterministic_rand_add(const void *buf, int num, double add_entropy) { _warn(); }
+#endif
 
 static fc::sha512 seed;
 

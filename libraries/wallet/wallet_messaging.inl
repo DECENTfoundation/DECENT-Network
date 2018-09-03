@@ -1,7 +1,18 @@
 
-void wallet_api::send_message(const std::string& from, const std::vector<string>& to, const string& text)
+signed_transaction wallet_api::send_message(const std::string& from,
+                                            const std::vector<string>& to,
+                                            const string& text,
+                                            bool broadcast)
 {
-   return my->send_message(from, to, text);
+   return my->send_message(from, to, text, broadcast);
+}
+
+signed_transaction wallet_api::send_unencrypted_message(const std::string& from,
+                                                        const std::vector<string>& to,
+                                                        const string& text,
+                                                        bool broadcast)
+{
+   return my->send_unencrypted_message(from, to, text, broadcast);
 }
 
 vector<message_object> wallet_api::get_message_objects(const std::string& sender, const std::string& receiver, uint32_t max_count) const

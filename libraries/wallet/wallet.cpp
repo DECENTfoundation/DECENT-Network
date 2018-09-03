@@ -198,6 +198,7 @@ public:
    std::string operator()(const request_to_buy_operation& op)const;
    std::string operator()(const leave_rating_and_comment_operation& op)const;
    std::string operator()(const ready_to_publish_operation& op)const;
+   std::string operator()(const custom_operation& op)const;
 };
 
 
@@ -2220,9 +2221,9 @@ public:
             << "\n"
             << "|=====================================================================================\n";
 
-         for (int i = 0; i < bids.size() || i < asks.size() ; i++)
+         for (int i = 0; i < (int)bids.size() || i < (int)asks.size() ; i++)
          {
-            if ( i < bids.size() )
+            if ( i < (int)bids.size() )
             {
                 bid_sum += bids[i].base;
                 ss << ' ' << setw( spacing );
@@ -2242,7 +2243,7 @@ public:
 
             ss << '|';
 
-            if ( i < asks.size() )
+            if ( i < (int)asks.size() )
             {
                ask_sum += asks[i].base;
                ss << ' ' << setw( spacing );
@@ -2483,7 +2484,7 @@ public:
          ShamirSecret ss(quorum, seeders.size(), secret);
          ss.calculate_split();
          content_submit_operation submit_op;
-         for( int i =0; i<seeders.size(); i++ )
+         for( int i =0; i<(int)seeders.size(); i++ )
          {
             const auto& s = _remote_db->get_seeder( seeders[i] );
             Ciphertext cp;
@@ -2554,7 +2555,11 @@ public:
          }
 
          fc::sha256 sha_key;
+#if CRYPTOPP_VERSION >= 600
+         secret.Encode((CryptoPP::byte*)sha_key._hash, 32);
+#else
          secret.Encode((byte*)sha_key._hash, 32);
+#endif
 
          uint32_t quorum = std::max((vector<account_id_type>::size_type)2, seeders.size()/3);
          ShamirSecret ss(quorum, seeders.size(), secret);
@@ -2562,7 +2567,7 @@ public:
          
          content_submit_operation submit_op;
 
-         for( int i =0; i < seeders.size(); i++ )
+         for( int i =0; i < (int)seeders.size(); i++ )
          {
             const auto& s = _remote_db->get_seeder( seeders[i] );
             FC_ASSERT( s, "seeder not found" );
@@ -2960,6 +2965,13 @@ signed_transaction content_cancellation(const string& author,
             for (message_object_receivers_data& receivers_data_item : obj.receivers_data) {
 
                try {
+
+                  if( obj.sender_pubkey == public_key_type() || receivers_data_item.receiver_pubkey == public_key_type() )
+                  {
+                     message_payload::get_message( fc::ecc::private_key(), public_key_type(), receivers_data_item.data, obj.text, 0 );
+                     break;
+                  }
+
                   auto it = _keys.find(receivers_data_item.receiver_pubkey);
                   if (it != _keys.end()) {
                      fc::optional< fc::ecc::private_key > privkey = wif_to_key(it->second);
@@ -3057,48 +3069,91 @@ signed_transaction content_cancellation(const string& author,
       return messages;
    }
 
-   void send_message(const string& from, const std::vector<string>& to, const string& text)
+   signed_transaction send_message(const string& from,
+                                   const std::vector<string>& to,
+                                   const string& text,
+                                   bool broadcast = false)
    {
       try {
-      FC_ASSERT(!is_locked());
-      
-      account_object from_account = get_account(from);
-      std::vector<account_object> to_accounts;
-      account_id_type from_id = from_account.id;
-      
-      message_payload pl;
+         FC_ASSERT(!is_locked());
 
-      for (auto& receiver : to) {
-         account_object to_account = get_account(receiver);
-         message_payload_receivers_data receivers_data_item;
-         receivers_data_item.to = get_account(receiver).get_id();
+         account_object from_account = get_account(from);
+         account_id_type from_id = from_account.id;
+         message_payload pl;
 
-         if (text.size()) {
-            pl.set_message(get_private_key(from_account.options.memo_key),
-               to_account.options.memo_key, text, receivers_data_item);
+         for (auto& receiver : to) {
+            account_object to_account = get_account(receiver);
+            message_payload_receivers_data receivers_data_item;
+            receivers_data_item.to = get_account(receiver).get_id();
+
+            if (text.size()) {
+               pl.set_message(get_private_key(from_account.options.memo_key),
+                  to_account.options.memo_key, text, receivers_data_item);
+            }
+            pl.receivers_data.push_back(receivers_data_item);
          }
-         pl.receivers_data.push_back(receivers_data_item);
-      }
 
-      custom_operation cust_op;
-      
+         custom_operation cust_op;
 
-      cust_op.id = graphene::chain::custom_operation_subtype_messaging;
-      cust_op.payer = from_id;
+         cust_op.id = graphene::chain::custom_operation_subtype_messaging;
+         cust_op.payer = from_id;
 
-      pl.from = from_id;
-      pl.pub_from = from_account.options.memo_key;
-      cust_op.set_messaging_payload(pl);
+         pl.from = from_id;
+         pl.pub_from = from_account.options.memo_key;
+         cust_op.set_messaging_payload(pl);
 
-      signed_transaction tx;
-      tx.operations.push_back(cust_op);
+         signed_transaction tx;
+         tx.operations.push_back(cust_op);
 
-      set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees);
-      tx.validate();
+         set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees);
+         tx.validate();
 
-      sign_transaction(tx, true);
+         return sign_transaction(tx, broadcast);
 
-   } FC_CAPTURE_AND_RETHROW((from)(to)(text))
+      } FC_CAPTURE_AND_RETHROW((from)(to)(text)(broadcast))
+   }
+
+   signed_transaction send_unencrypted_message(const string& from,
+                                               const std::vector<string>& to,
+                                               const string& text,
+                                               bool broadcast = false)
+   {
+      try {
+         FC_ASSERT(!is_locked());
+
+         account_object from_account = get_account(from);
+         account_id_type from_id = from_account.id;
+         message_payload pl;
+
+         for (auto &receiver : to) {
+            account_object to_account = get_account(receiver);
+            message_payload_receivers_data receivers_data_item;
+            receivers_data_item.to = get_account(receiver).get_id();
+
+            if (text.size()) {
+               pl.set_message(fc::ecc::private_key(), public_key_type(), text, receivers_data_item);
+            }
+            pl.receivers_data.push_back(receivers_data_item);
+         }
+
+         custom_operation cust_op;
+
+         cust_op.id = graphene::chain::custom_operation_subtype_messaging;
+         cust_op.payer = from_id;
+
+         pl.from = from_id;
+         pl.pub_from = public_key_type();
+         cust_op.set_messaging_payload(pl);
+
+         signed_transaction tx;
+         tx.operations.push_back(cust_op);
+
+         set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees);
+         tx.validate();
+
+         return sign_transaction(tx, broadcast);
+
+      } FC_CAPTURE_AND_RETHROW((from)(to)(text)(broadcast))
    }
 
    void dbg_make_mia(const std::string& creator, const std::string& symbol)
@@ -3438,6 +3493,93 @@ signed_transaction content_cancellation(const string& author,
       return fee(op.fee);
    }
 
+   std::string operation_printer::operator()(const custom_operation& op) const
+   {
+      if (op.id == custom_operation_subtype_messaging) {
+         message_payload pl;
+         op.get_messaging_payload(pl);
+
+         const auto& from_account = wallet.get_account(pl.from);
+         account_object to_account;
+         std::string receivers;
+
+         for (int i = 0; i < (int)pl.receivers_data.size(); i++) {
+            const auto& to_account = wallet.get_account(pl.receivers_data[i].to);
+            receivers += to_account.name;
+            receivers += " ";
+         }
+         
+         out << "Send message from " << from_account.name << " to " << receivers;
+         
+         std::string memo;
+         if (wallet.is_locked())
+         {
+            out << " -- Unlock wallet to see memo.";
+         }
+         else
+         {
+            for (message_payload_receivers_data& receivers_data_item : pl.receivers_data) {
+               try
+               {
+                  try {
+
+                     if (pl.pub_from == public_key_type() || receivers_data_item.pub_to == public_key_type())
+                     {
+                        message_payload::get_message(fc::ecc::private_key(), public_key_type(), receivers_data_item.data, memo, 0);
+                        break;
+                     }
+
+                     auto it = wallet._keys.find(receivers_data_item.pub_to);
+                     if (it != wallet._keys.end()) {
+                        fc::optional< fc::ecc::private_key > privkey = wif_to_key(it->second);
+                        if (privkey)
+                           message_payload::get_message(*privkey, pl.pub_from, receivers_data_item.data, memo, receivers_data_item.nonce);
+                        else
+                           std::cout << "Cannot decrypt message." << std::endl;
+                     }
+                     else {
+                        it = wallet._keys.find(pl.pub_from);
+                        if (it != wallet._keys.end()) {
+                           fc::optional< fc::ecc::private_key > privkey = wif_to_key(it->second);
+                           if (privkey)
+                              message_payload::get_message(*privkey, receivers_data_item.pub_to, receivers_data_item.data, memo, receivers_data_item.nonce);
+                           else
+                              std::cout << "Cannot decrypt message." << std::endl;
+                        }
+                        else {
+                           std::cout << "Cannot decrypt message." << std::endl;
+                        }
+                     }
+
+                  }
+                  catch (fc::exception& e)
+                  {
+                     std::cout << "Cannot decrypt message." << std::endl;
+                     std::cout << "Error: " << e.what() << std::endl;
+                     throw;
+                  }
+                  catch (...) {
+                     std::cout << "Unknown exception in decrypting message" << std::endl;
+                     throw;
+                  }
+                  // memo = wallet.decrypt_memo(*op.memo, from_account, to_account);
+                  out << " -- Memo: " << memo;
+               }
+               catch (const fc::exception& e)
+               {
+                  out << " -- could not decrypt memo";
+                  elog("Error when decrypting memo: ${e}", ("e", e.to_detail_string()));
+               }
+            }
+         }
+         
+         fee(op.fee);
+         return memo;
+      }
+      else
+         return "";
+   }
+
    std::string operation_result_printer::operator()(const void_result& x) const
    {
       return std::string();
@@ -3647,11 +3789,6 @@ signed_transaction content_cancellation(const string& author,
       return my->get_result_formatters();
    }
 
-   void wallet_api::encrypt_keys()
-   {
-      my->encrypt_keys();
-   }
-
    signed_block_with_info::signed_block_with_info( const signed_block& block ) : signed_block( block )
    {
       block_id = id();
@@ -3673,7 +3810,7 @@ signed_transaction content_cancellation(const string& author,
       uint64_t size = std::max((uint64_t)1, ( _info->get_size() + (1024 * 1024) -1 ) / (1024 * 1024));
 
       asset total_price_per_day;
-      for( int i =0; i < _op.seeders.size(); i++ )
+      for( int i =0; i < (int)_op.seeders.size(); i++ )
       {
          const auto& s = _wallet._remote_db->get_seeder( _op.seeders[i] );
          total_price_per_day += s->price.amount * size;

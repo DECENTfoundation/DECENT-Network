@@ -61,7 +61,7 @@ namespace graphene { namespace net
     }
     message peer_connection::virtual_queued_message::get_message(peer_connection_delegate* node)
     {
-      return node->get_message_for_item(item_to_send);
+      return node->get_message_for_item_optimized(item_to_send);
     }
 
     size_t peer_connection::virtual_queued_message::get_size_in_queue()

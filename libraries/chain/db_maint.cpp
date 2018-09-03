@@ -295,9 +295,9 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
 
    auto next_maintenance_time = get<dynamic_global_property_object>(dynamic_global_property_id_type()).next_maintenance_time;
    auto maintenance_interval = gpo.parameters.maintenance_interval;
-   uint32_t maintenance_interval_in_blocks = 0;
-   if( gpo.parameters.block_interval )
-      maintenance_interval_in_blocks = maintenance_interval / gpo.parameters.block_interval;
+   //uint32_t maintenance_interval_in_blocks = 0; DEBUG
+   //if( gpo.parameters.block_interval )
+     // maintenance_interval_in_blocks = maintenance_interval / gpo.parameters.block_interval;
 
    if( next_maintenance_time <= next_block.timestamp )
    {

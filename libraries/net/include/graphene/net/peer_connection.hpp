@@ -69,6 +69,7 @@ namespace graphene { namespace net
                               const message& received_message) = 0;
       virtual void on_connection_closed(peer_connection* originating_peer) = 0;
       virtual message get_message_for_item(const item_id& item) = 0;
+      virtual message get_message_for_item_optimized(const item_id& item) = 0;
     };
 
     class peer_connection;

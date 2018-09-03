@@ -251,7 +251,7 @@ namespace decent { namespace package { namespace detail {
                 total_read += bytes_read;
             }
 
-            if (bytes_read < RIPEMD160_BUFFER_SIZE) {
+            if (bytes_read < (int)RIPEMD160_BUFFER_SIZE) {
                 break;
             }
         }

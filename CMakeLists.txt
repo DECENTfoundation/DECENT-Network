@@ -40,7 +40,9 @@ if( APPLE )
         endif()
 
         list( APPEND CMAKE_PREFIX_PATH
+              "${HOMEBREW_PREFIX}/opt/openssl@1.1"
               "${HOMEBREW_PREFIX}/opt/openssl"
+              "${HOMEBREW_PREFIX}/opt/boost"
               "${HOMEBREW_PREFIX}/opt/boost@1.60"
               "${HOMEBREW_PREFIX}/opt/pbc"
               "${HOMEBREW_PREFIX}/opt/gmp"
@@ -61,6 +63,15 @@ list( APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/libraries/contrib/fc
 include( GetGitRevisionDescription )
 get_git_head_revision( GIT_REFSPEC GIT_SHA2 )
 
+# check for OpenSSL version
+
+set( Boost_SELECT_VERSION 1.60)
+
+find_package(OpenSSL 1.1 EXACT)
+if (OpenSSL_FOUND)
+    set( Boost_SELECT_VERSION 1.63 )
+endif()
+
 if( WIN32 )
     set( BOOST_ROOT $ENV{BOOST_ROOT} )
     set( Boost_USE_MULTITHREADED ON )
@@ -69,7 +80,7 @@ endif()
 
 set( Boost_USE_STATIC_LIBS ON CACHE STRING "ON or OFF" )
 
-find_package( Boost 1.60 REQUIRED
+find_package( Boost ${Boost_SELECT_VERSION} REQUIRED
     COMPONENTS thread
                date_time
                system

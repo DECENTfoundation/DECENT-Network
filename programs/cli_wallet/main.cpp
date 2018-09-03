@@ -41,6 +41,7 @@
 #include <graphene/chain/protocol/protocol.hpp>
 #include <graphene/egenesis/egenesis.hpp>
 #include <graphene/utilities/key_conversion.hpp>
+#include <graphene/utilities/git_revision.hpp>
 #include <graphene/wallet/wallet.hpp>
 #include <decent/package/package.hpp>
 #include <graphene/utilities/dirhelper.hpp>
@@ -86,6 +87,7 @@ int main( int argc, char** argv )
       boost::program_options::options_description opts;
          opts.add_options()
          ("help,h", "Print this help message and exit.")
+         ("version,v", "Print version information")
          ("server-rpc-endpoint,s", bpo::value<string>()->implicit_value("ws://127.0.0.1:8090"), "Server websocket RPC endpoint")
          ("server-rpc-user,u", bpo::value<string>(), "Server Username")
          ("server-rpc-password,p", bpo::value<string>(), "Server Password")
@@ -101,11 +103,27 @@ int main( int argc, char** argv )
 
       bpo::store( bpo::parse_command_line(argc, argv, opts), options );
 
+      if( options.count("version") )
+      {
+         string client_version( graphene::utilities::git_revision_description );
+         const size_t pos = client_version.find( '/' );
+         if( pos != string::npos && client_version.size() > pos )
+            client_version = client_version.substr( pos + 1 );
+
+         std::cout << "CLI Wallet version " << client_version << "\n";
+      }
+
+
       if( options.count("help") )
       {
+         if( options.count("version") )
+            std::cout << "\n";
+
          std::cout << opts << "\n";
-         return 0;
       }
+
+      if( options.count("help") || options.count("version") )
+         return 0;
 
 
       fc::path data_dir;

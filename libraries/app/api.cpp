@@ -36,12 +36,13 @@
 #include <graphene/chain/transaction_object.hpp>
 #include <graphene/chain/withdraw_permission_object.hpp>
 #include <graphene/seeding/seeding_utility.hpp>
-
+#include <graphene/app/balance.hpp>
 
 #include <fc/crypto/hex.hpp>
 #include <fc/smart_ref_impl.hpp>
 
 #include <boost/spirit/home/support/container.hpp>
+#include <boost/multiprecision/cpp_int.hpp>
 
 namespace decent { namespace seeding {
       fc::promise<decent::seeding::seeding_plugin_startup_options>::ptr seeding_promise;
@@ -276,142 +277,6 @@ namespace graphene { namespace app {
        return *_messaging_api;
     }
 
-    vector<account_id_type> get_relevant_accounts( const object* obj )
-    {
-       vector<account_id_type> result;
-       if( obj->id.space() == protocol_ids )
-       {
-          switch( (object_type)obj->id.type() )
-          {
-            case null_object_type:
-            case base_object_type:
-            case OBJECT_TYPE_COUNT:
-               return result;
-            case account_object_type:{
-               result.push_back( obj->id );
-               break;
-            } case asset_object_type:{
-               const auto& aobj = dynamic_cast<const asset_object*>(obj);
-               assert( aobj != nullptr );
-               result.push_back( aobj->issuer );
-               break;
-           } case miner_object_type:{
-               const auto& aobj = dynamic_cast<const miner_object*>(obj);
-               assert( aobj != nullptr );
-               result.push_back( aobj->miner_account );
-               break;
-            } case custom_object_type:{
-              break;
-            } case proposal_object_type:{
-               const auto& aobj = dynamic_cast<const proposal_object*>(obj);
-               assert( aobj != nullptr );
-               flat_set<account_id_type> impacted;
-               transaction_get_impacted_accounts( aobj->proposed_transaction, impacted );
-               result.reserve( impacted.size() );
-               for( auto& item : impacted ) result.emplace_back(item);
-               break;
-            } case operation_history_object_type:{
-               const auto& aobj = dynamic_cast<const operation_history_object*>(obj);
-               assert( aobj != nullptr );
-               flat_set<account_id_type> impacted;
-               operation_get_impacted_accounts( aobj->op, impacted );
-               result.reserve( impacted.size() );
-               for( auto& item : impacted ) result.emplace_back(item);
-               break;
-            } case withdraw_permission_object_type:{
-               const auto& aobj = dynamic_cast<const withdraw_permission_object*>(obj);
-               assert( aobj != nullptr );
-               result.push_back( aobj->withdraw_from_account );
-               result.push_back( aobj->authorized_account );
-               break;
-            } case vesting_balance_object_type:{
-               const auto& aobj = dynamic_cast<const vesting_balance_object*>(obj);
-               assert( aobj != nullptr );
-               result.push_back( aobj->owner );
-               break;
-            }
-          }
-       }
-       else if( obj->id.space() == implementation_ids )
-       {
-          switch( (impl_object_type)obj->id.type() )
-          {
-                 case impl_global_property_object_type:
-                  break;
-                 case impl_dynamic_global_property_object_type:
-                  break;
-                 case impl_reserved0_object_type:
-                  break;
-                 case impl_asset_dynamic_data_type:
-                  break;
-                 case impl_account_balance_object_type:{
-                  const auto& aobj = dynamic_cast<const account_balance_object*>(obj);
-                  assert( aobj != nullptr );
-                  result.push_back( aobj->owner );
-                  break;
-               } case impl_account_statistics_object_type:{
-                  const auto& aobj = dynamic_cast<const account_statistics_object*>(obj);
-                  assert( aobj != nullptr );
-                  result.push_back( aobj->owner );
-                  break;
-               } case impl_transaction_object_type:{
-                  const auto& aobj = dynamic_cast<const transaction_object*>(obj);
-                  assert( aobj != nullptr );
-                  flat_set<account_id_type> impacted;
-                  transaction_get_impacted_accounts( aobj->trx, impacted );
-                  result.reserve( impacted.size() );
-                  for( auto& item : impacted ) result.emplace_back(item);
-                  break;
-               } case impl_block_summary_object_type:
-                  break;
-                 case impl_account_transaction_history_object_type:
-                  break;
-                 case impl_chain_property_object_type:
-                  break;
-                 case impl_miner_schedule_object_type:
-                  break;
-                 case impl_budget_record_object_type:
-                  break;
-                 case impl_buying_object_type:{
-                  const auto& bobj = dynamic_cast<const buying_object*>(obj);
-                  assert( bobj != nullptr );
-                  result.push_back( bobj->consumer );
-                  break;
-                 }
-                 case impl_content_object_type:{
-                    const auto& cobj = dynamic_cast<const content_object*>(obj);
-                    assert( cobj != nullptr );
-                    result.push_back( cobj->author );
-                    break;
-                 }
-                 case impl_publisher_object_type:{
-                    const auto& sobj = dynamic_cast<const seeder_object*>(obj);
-                    assert( sobj != nullptr );
-                    result.push_back( sobj->seeder );
-                    break;
-                 }
-                case impl_subscription_object_type:{
-                   const auto& sobj = dynamic_cast<const subscription_object*>(obj);
-                   assert( sobj != nullptr );
-                   result.push_back( sobj->from );
-                   result.push_back( sobj->to );
-                   break;
-                }
-                case impl_seeding_statistics_object_type:{
-                   const auto& ssobj = dynamic_cast<const seeding_statistics_object*>(obj);
-                   assert( ssobj != nullptr );
-                   result.push_back( ssobj->seeder );
-                   break;
-                }
-                case impl_transaction_detail_object_type:
-                   break;
-          }
-       }
-       return result;
-    } // end get_relevant_accounts( obj )
-
-
-
     vector<operation_history_object> history_api::get_account_history( account_id_type account,
                                                                        operation_history_id_type stop,
                                                                        unsigned limit, 
@@ -466,6 +331,99 @@ namespace graphene { namespace app {
        
        return result;
     }
+
+    vector<balance_change_result> history_api::search_account_balance_history(account_id_type account_id,
+                                                                              const flat_set<asset_id_type>& assets_list,
+                                                                              fc::optional<account_id_type> partner_account_id,
+                                                                              uint32_t from_block, uint32_t to_block,
+                                                                              uint32_t start_offset,
+                                                                              int limit) const
+    {
+       FC_ASSERT(limit > 0);
+        vector<balance_change_result> tmp_result;
+        operation_history_id_type start;
+        int32_t offset_counter = -1;
+
+        tmp_result.reserve(limit);
+
+        do {
+
+            vector<operation_history_object> current = this->get_account_history(account_id, operation_history_id_type(), 100, start);
+            if (current.empty())
+                break;
+
+            for( auto& o : current ) {
+
+               offset_counter++;
+
+                if (from_block != 0 && to_block != 0) {
+                    if (o.block_num < from_block || o.block_num > to_block)
+                        continue;
+                }
+
+                balance_change_result info;
+                info.hist_object = o;
+                graphene::app::operation_get_balance_history(o.op, account_id, info.balance, info.fee);
+
+                if (info.balance.asset0.amount == 0ll && info.balance.asset1.amount == 0ll && info.fee.amount == 0ll)
+                    continue;
+
+                if (assets_list.empty() ||
+                    ((info.balance.asset0.amount != 0ll && assets_list.find(info.balance.asset0.asset_id) != assets_list.end()) ||
+                     (info.balance.asset1.amount != 0ll && assets_list.find(info.balance.asset0.asset_id) != assets_list.end()) ))
+                {
+                    if (partner_account_id) {
+                        if (o.op.which() == operation::tag<transfer_operation>::value) {
+                            const transfer_operation& top = o.op.get<transfer_operation>();
+                            if (!top.is_partner_account_id(*partner_account_id))
+                                continue;
+                        }
+                        else if (o.op.which() == operation::tag<transfer2_operation>::value) {
+                            const transfer2_operation& top = o.op.get<transfer2_operation>();
+                            if (!top.is_partner_account_id(*partner_account_id))
+                                continue;
+                        }
+                    }
+                    if(offset_counter >= start_offset)
+                       tmp_result.push_back( info );
+                }
+
+                if (tmp_result.size() >= (limit))
+                   break;
+            }
+
+            start = current.back().id;
+            start = start + (-1);
+            if (start == operation_history_id_type())
+               break;
+
+        } while(tmp_result.size() < (limit));
+
+        vector<balance_change_result> result;
+        std::copy(tmp_result.begin(), tmp_result.end(), std::back_inserter(result));
+
+        return result;
+    }
+
+    fc::optional<balance_change_result> history_api::get_account_balance_for_transaction(account_id_type account_id,
+                                                                                         operation_history_id_type operation_history_id)
+    {
+        vector<operation_history_object> operation_list = this->get_account_history(account_id,
+                                                                            operation_history_id_type(),
+                                                                            1,
+                                                                            operation_history_id);
+        if (operation_list.empty())
+            return fc::optional<balance_change_result>();
+
+        balance_change_result result;
+        result.hist_object = operation_list.front();
+
+        graphene::app::operation_get_balance_history(result.hist_object.op, account_id, result.balance, result.fee);
+
+        return result;
+    }
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////
     
     crypto_api::crypto_api(){};
     
@@ -557,8 +515,8 @@ namespace graphene { namespace app {
           if (itr != refs.message_to_receiver_memberships.end())
           {
              result.reserve(itr->second.size());
-             int count = itr->second.size();
-             int counter = 0;
+             uint32_t count = itr->second.size();
+             uint32_t counter = 0;
              if (sender) {
                 for (const object_id_type& item : itr->second) {
                    if (result.size() >= max_count)
@@ -595,7 +553,7 @@ namespace graphene { namespace app {
           auto itr = index_by_sender.lower_bound(*sender);
           itr = range.first;
 
-          int count = distance(range.first, range.second);
+          uint32_t count = distance(range.first, range.second);
           if (count) {
              result.reserve(count);
              int counter = 0;

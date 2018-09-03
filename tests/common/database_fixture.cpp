@@ -78,7 +78,7 @@ database_fixture::database_fixture()
      genesis_state.initial_timestamp = time_point_sec( GRAPHENE_TESTING_GENESIS_TIMESTAMP );
 
      genesis_state.initial_active_miners = 10;
-     for( int i = 0; i < genesis_state.initial_active_miners; ++i )
+     for( int i = 0; i < (int)genesis_state.initial_active_miners; ++i )
      {
         auto name = "init"+fc::to_string(i);
         genesis_state.initial_accounts.emplace_back(name,
@@ -183,7 +183,7 @@ void database_fixture::verify_asset_supplies( const database& db )
   }
 
   BOOST_CHECK_EQUAL( core_in_orders.value , reported_core_in_orders.value );
-  int64_t v = total_balances[asset_id_type()].value;
+  //int64_t v = total_balances[asset_id_type()].value; DEBUG
   BOOST_CHECK_EQUAL( total_balances[asset_id_type()].value , core_asset_data.current_supply.value);
 //   wlog("***  End  asset supply verification ***");
 }

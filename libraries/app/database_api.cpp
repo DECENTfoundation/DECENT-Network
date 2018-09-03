@@ -101,8 +101,10 @@ namespace graphene { namespace app {
       processed_transaction get_transaction( uint32_t block_num, uint32_t trx_in_block )const;
       fc::time_point_sec head_block_time()const;
       miner_reward_input get_time_to_maint_by_block_time(fc::time_point_sec block_time) const;
+      optional<signed_transaction> get_transaction_by_id(const transaction_id_type& id) const;
       
       // Globals
+
       chain_property_object get_chain_properties()const;
       global_property_object get_global_properties()const;
       fc::variant_object get_config()const;
@@ -441,12 +443,35 @@ namespace graphene { namespace app {
       return _db.head_block_time();
    }
 
+   optional<signed_transaction> database_api::get_transaction_by_id( const transaction_id_type& id )const
+   {
+      return my->get_transaction_by_id( id );
+   }
+
+   optional<signed_transaction> database_api_impl::get_transaction_by_id( const transaction_id_type& id )const
+   {
+      const auto& idx = _db.get_index_type<transaction_history_index>().indices().get<by_tx_id>();
+      auto itr = idx.find(id);
+      if (itr != idx.end())
+      {
+         signed_transaction tx = get_transaction( itr->block_num, itr->trx_in_block );
+         return tx;
+      }
+
+      return optional<signed_transaction>();
+   }
+
    //////////////////////////////////////////////////////////////////////
    //                                                                  //
    // Globals                                                          //
    //                                                                  //
    //////////////////////////////////////////////////////////////////////
-   
+
+   std::string database_api::info()const
+   {
+      return "database_api";
+   }
+
    chain_property_object database_api::get_chain_properties()const
    {
       return my->get_chain_properties();
@@ -1778,7 +1803,12 @@ namespace
       ss.calculate_secret();
       
       fc::sha256 key;
+#if CRYPTOPP_VERSION >= 600
+      ss.secret.Encode((CryptoPP::byte*)key._hash, 32);
+#else
       ss.secret.Encode((byte*)key._hash, 32);
+#endif
+
       return key;
    }
    
@@ -1793,7 +1823,11 @@ namespace
             CryptoPP::Integer tmp(randomGenerator, 256);
             secret = tmp;
          }
+#if CRYPTOPP_VERSION >= 600
+         secret.Encode((CryptoPP::byte*)keys.key._hash, 32);
+#else
          secret.Encode((byte*)keys.key._hash, 32);
+#endif
 
          uint32_t quorum = std::max((vector<account_id_type>::size_type)1, seeders.size()/3); // TODO_DECENT - quorum >= 2 see also content_submit_operation::validate
 
@@ -1801,7 +1835,7 @@ namespace
          ss.calculate_split();
          
 
-         for( int i =0; i < seeders.size(); i++ )
+         for( int i =0; i < (int)seeders.size(); i++ )
          {
             const auto& s = my->get_seeder( seeders[i] );
             FC_ASSERT( s, "seeder not found" );
@@ -2076,7 +2110,7 @@ namespace
          while(count && itr_begin != itr_end)
          {
             const auto account_itr = idx_account.find(itr_begin->author);
-            if ( false == user.empty() )
+            if ( !user.empty() )
             {
                if ( account_itr->name != user )
                {
@@ -2085,7 +2119,7 @@ namespace
                }
             }
 
-            if (false == itr_begin->price.Valid(region_code))
+            if (! itr_begin->price.Valid(region_code))
             {
                // this is going to be possible if a content object does not have
                // a price defined for this region
@@ -2095,7 +2129,7 @@ namespace
                continue;
             }
 
-            if ( user.empty() && false == itr_begin->recent_proof(60*60*24)  )
+            if ( user.empty() && ( !itr_begin->seeder_price.empty() && ! itr_begin->recent_proof(60*60*24) ) )
             {
                ++itr_begin;
                continue;
@@ -2112,7 +2146,7 @@ namespace
             {
                std::string term = search_term;
                std::string title = content.synopsis;
-               std::string desc = "";
+               std::string desc;
                std::string author = content.author;
                ContentObjectTypeValue content_type;
 
@@ -2129,7 +2163,7 @@ namespace
                boost::algorithm::to_lower(desc);
                boost::algorithm::to_lower(author);
 
-               if (false == term.empty() &&
+               if ( !term.empty() &&
                    author.find(term) == std::string::npos &&
                    title.find(term) == std::string::npos &&
                    desc.find(term) == std::string::npos)
@@ -2138,7 +2172,7 @@ namespace
                   continue;
                }
 
-               if (false == content_type.filter(filter_type))
+               if (!content_type.filter(filter_type))
                {
                   ++itr_begin;
                   continue;

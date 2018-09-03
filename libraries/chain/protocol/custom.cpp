@@ -36,10 +36,10 @@ share_type custom_operation::calculate_fee(const fee_parameters_type& k)const
    return k.fee + calculate_data_fee( fc::raw::pack_size(*this), k.price_per_kbyte );
 }
 
-void message_payload::set_message(const fc::ecc::private_key& priv, const fc::ecc::public_key& pub,
+void message_payload::set_message(const fc::ecc::private_key& priv, const public_key_type& pub,
    const string& msg, message_payload_receivers_data& receivers_data)
 {
-   if (priv != fc::ecc::private_key() && public_key_type(pub) != public_key_type())
+   if (priv != fc::ecc::private_key() && pub != public_key_type())
    {
       receivers_data.pub_to = pub;
       
@@ -53,27 +53,35 @@ void message_payload::set_message(const fc::ecc::private_key& priv, const fc::ec
       string text = memo_message(digest_type::hash(msg)._hash[0], msg).serialize();
       receivers_data.data = fc::aes_encrypt(nonce_plus_secret, std::vector<char>(text.begin(), text.end()));
    }
+   else
+   {
+      string text = memo_message(0, msg).serialize();
+      receivers_data.data = vector<char>(text.begin(), text.end());
+   }
 }
 
 void message_payload::get_message(const fc::ecc::private_key& priv,
-   const fc::ecc::public_key& pub, const std::vector<char>& data, std::string& text, uint64_t nonce)
+   const public_key_type& pub, const std::vector<char>& data, std::string& text, uint64_t nonce)
 {
    
-   if ((public_key_type)pub != public_key_type())
+   if ( pub != public_key_type() && priv != fc::ecc::private_key() )
    {
       auto secret = priv.get_shared_secret(pub);
 
       auto nonce_plus_secret = fc::sha512::hash(fc::to_string(nonce) + secret.str());
       auto plain_text = fc::aes_decrypt(nonce_plus_secret, data);
-      
-      auto result = memo_message::deserialize(string(plain_text.begin(), plain_text.end()));
+
+      memo_message result = memo_message::deserialize(string(plain_text.begin(), plain_text.end()));
       FC_ASSERT(result.checksum == uint32_t(digest_type::hash(result.text)._hash[0]));
      
       text = result.text;
       return;
    }
-   
-   return;
+   else
+   {
+      text = memo_message::deserialize(string(data.begin(), data.end())).text;
+      return;
+   }
 }
 
 } }

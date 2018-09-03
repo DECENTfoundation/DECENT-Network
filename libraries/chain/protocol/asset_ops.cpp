@@ -188,5 +188,10 @@ void asset_publish_feed_operation::validate()const
    FC_ASSERT( feed.is_for( asset_id ) );
 }
 
+void update_user_issued_asset_advanced_operation::validate()const
+{
+   FC_ASSERT( fee.amount >= 0 );
+   FC_ASSERT( new_precision <= 12 );
+}
 
 } } // namespace graphene::chain

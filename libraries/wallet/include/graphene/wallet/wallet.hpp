@@ -192,7 +192,7 @@ namespace graphene { namespace wallet {
          string                   description;
          operation_history_object op;
       };
-   
+
       struct buying_object_ex : public buying_object, public content_download_status {
          buying_object_ex(const buying_object& obj, const content_download_status& status)
           : buying_object(obj), content_download_status(status)
@@ -254,6 +254,16 @@ namespace graphene { namespace wallet {
           bool voted;
       };
 
+
+      struct balance_operation_detail
+      {
+          string                   memo;
+          string                   description;
+          operation_history_object hist_object;
+          asset_array balance;
+          asset fee;
+      };
+
       namespace detail {
          class wallet_api_impl;
       }
@@ -300,8 +310,6 @@ namespace graphene { namespace wallet {
 
 
          std::map<string,std::function<string(fc::variant,const fc::variants&)>> get_result_formatters() const;
-         void encrypt_keys();
-         void encrypt_keys2();
 
          fc::signal<void(bool)> lock_changed;
          std::shared_ptr<detail::wallet_api_impl> my;
@@ -356,6 +364,8 @@ FC_REFLECT( graphene::wallet::content_download_status,
 
 FC_REFLECT( graphene::wallet::operation_detail, (memo)(description)(op) )
 
+FC_REFLECT( graphene::wallet::balance_operation_detail, (memo)(description)(hist_object)(balance)(fee) )
+
 FC_REFLECT_DERIVED( graphene::wallet::buying_object_ex,
                     (graphene::chain::buying_object)
                     (graphene::wallet::content_download_status),
@@ -391,6 +401,7 @@ FC_API( graphene::wallet::wallet_api,
         (network_add_nodes)
         (network_get_connected_peers)
         (get_transaction_id)
+        (get_transaction_by_id)
 
         //Wallet file
         (list_my_accounts)
@@ -410,6 +421,8 @@ FC_API( graphene::wallet::wallet_api,
         (list_account_balances)
         (search_account_history)
         (get_account_history)
+        (search_account_balance_history)
+        (get_account_balance_for_transaction)
         (get_relative_account_history)
         (get_account)
         (suggest_brain_key)
@@ -507,7 +520,7 @@ FC_API( graphene::wallet::wallet_api,
         (remove_package)
         (generate_content_keys)
 
-        //Subsctiption
+        //Subscription
         (subscribe_to_author)
         (subscribe_by_author)
         (set_subscription)
@@ -519,6 +532,7 @@ FC_API( graphene::wallet::wallet_api,
 
         //Messaging
         (send_message)
+        (send_unencrypted_message)
         (get_message_objects)
         (get_messages)
         (get_sent_messages)

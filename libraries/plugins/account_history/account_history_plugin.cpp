@@ -28,6 +28,7 @@
 
 #include <graphene/chain/account_evaluator.hpp>
 #include <graphene/chain/account_object.hpp>
+#include <graphene/chain/content_object.hpp>
 #include <graphene/chain/config.hpp>
 #include <graphene/chain/database.hpp>
 #include <graphene/chain/evaluator.hpp>
@@ -100,6 +101,21 @@ void account_history_plugin_impl::update_account_histories( const signed_block& 
 
       if( op.op.which() == operation::tag< account_create_operation >::value )
          impacted.insert( oho.result.get<object_id_type>() );
+      else if (op.op.which() == operation::tag< transfer2_operation >::value ) {
+
+         const transfer2_operation& tr2o = op.op.get<transfer2_operation>();
+         if( tr2o.to.is<account_id_type>() ) {
+            impacted.insert( tr2o.from );
+            impacted.insert( tr2o.to.as<graphene::chain::account_id_type>() );
+         }
+         else if ( tr2o.to.is<content_id_type>() ) {
+            auto& content_obj = db.get<content_object>( tr2o.to.as<content_id_type>() );
+
+            impacted.insert( content_obj.author);
+            for( auto& item : content_obj.co_authors )
+               impacted.insert( item.first );
+         }
+      }
       else
          graphene::app::operation_get_impacted_accounts( op.op, impacted );
 
@@ -108,7 +124,7 @@ void account_history_plugin_impl::update_account_histories( const signed_block& 
             impacted.insert( item.first );
 
       // for each operation this account applies to that is in the config link it into the history
-      if( _tracked_accounts.size() == 0 )
+      if( _tracked_accounts.empty() )
       {
          for( auto& account_id : impacted )
          {
@@ -138,11 +154,14 @@ void account_history_plugin_impl::update_account_histories( const signed_block& 
                // add history
                const auto& stats_obj = account_id(db).statistics(db);
                const auto& ath = db.create<account_transaction_history_object>( [&]( account_transaction_history_object& obj ){
-                   obj.operation_id = oho.id;
-                   obj.next = stats_obj.most_recent_op;
+                  obj.operation_id = oho.id;
+                  obj.account = account_id;
+                  obj.sequence = stats_obj.total_ops+1;
+                  obj.next = stats_obj.most_recent_op;
                });
                db.modify( stats_obj, [&]( account_statistics_object& obj ){
                    obj.most_recent_op = ath.id;
+                   obj.total_ops = ath.sequence;
                });
             }
          }
@@ -187,7 +206,7 @@ void account_history_plugin::plugin_initialize(const boost::program_options::var
    database().add_index< primary_index< simple_index< operation_history_object > > >();
    database().add_index< primary_index< account_transaction_history_index > >();
 
-   LOAD_VALUE_SET(options, "tracked-accounts", my->_tracked_accounts, graphene::chain::account_id_type);
+   LOAD_VALUE_SET(options, "track-account", my->_tracked_accounts, graphene::chain::account_id_type);
 }
 
 void account_history_plugin::plugin_startup()

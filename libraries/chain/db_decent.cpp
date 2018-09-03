@@ -82,7 +82,7 @@ void database::content_expire(const content_object& content)
       const auto& stats = idx.find( element.first );
       if( content.last_proof.count( element.first ) )
       {
-         modify<seeding_statistics_object>( *stats, [&element,&content]( seeding_statistics_object& so){
+         modify<seeding_statistics_object>( *stats, [&content]( seeding_statistics_object& so){
             so.total_content_seeded -= ( content.size * 1000 * 1000 ) / content.key_parts.size();
             so.num_of_content_seeded--;
          });

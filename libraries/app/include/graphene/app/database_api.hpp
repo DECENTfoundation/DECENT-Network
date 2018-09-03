@@ -43,6 +43,7 @@
 #include <graphene/chain/budget_record_object.hpp>
 #include <graphene/chain/subscription_object.hpp>
 #include <graphene/chain/transaction_detail_object.hpp>
+#include <graphene/chain/transaction_history_object.hpp>
 
 #include <fc/api.hpp>
 #include <fc/optional.hpp>
@@ -244,9 +245,27 @@ namespace graphene { namespace app {
           */
          optional<signed_transaction> get_recent_transaction_by_id( const transaction_id_type& id )const;
 
+         /**
+          * @brief This method will return the transaction for the given ID (transaction hash) or
+          * it will return \c null if it is not known. Just because it is not known does not mean it wasn't
+          * included in the blockchain.
+          * @note By default these objects are not tracked, the transaction_history_plugin must
+          * be loaded for these objects to be maintained.
+          * @param id ID of the transaction to retrieve
+          * @ingroup DatabaseAPI_BlockTx
+          */
+         optional<signed_transaction> get_transaction_by_id( const transaction_id_type& id )const;
+
          /////////////
          // Globals //
          /////////////
+
+         /**
+          * @brieg Get the name of the API.
+          * @return the name of the API
+          * @ingroup DatabaseAPI_Globals
+          */
+         std::string info()const;
 
          /**
           * @brief Retrieve the \c chain_property_object associated with the chain.
@@ -887,8 +906,8 @@ FC_REFLECT( graphene::app::market_trade, (date)(price)(amount)(value) );
 FC_REFLECT( graphene::app::miner_voting_info, (id)(name)(url)(total_votes)(voted) );
 
 FC_API(graphene::app::database_api,
-// Objects
-       (get_objects)
+          // Objects
+          (get_objects)
 
           // Subscriptions
           (set_subscribe_callback)
@@ -906,8 +925,10 @@ FC_API(graphene::app::database_api,
           (get_new_asset_per_block)
           (get_asset_per_block_by_block_num)
           (get_time_to_maint_by_block_time)
+          (get_transaction_by_id)
 
           // Globals
+          (info)
           (get_chain_properties)
           (get_global_properties)
           (get_config)

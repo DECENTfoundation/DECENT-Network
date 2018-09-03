@@ -73,7 +73,8 @@ namespace decent { namespace package {
                 std::snprintf(header.name, sizeof(header.name), "%s", file_name.c_str());
 
                 header.version = 1;
-                *(int*)header.size = file_size;
+                int* header_size_ptr = (int*)header.size;
+                *header_size_ptr = file_size;
 
                 _out.write((const char*)&header, sizeof(header));
 
@@ -141,8 +142,8 @@ namespace decent { namespace package {
                     if (!sink.is_open()) {
                         FC_THROW("Unable to open file ${file} for writing", ("file", file_path.string()) );
                     }
-
-                    const int bytes_to_read = *(int*)header.size;
+                    int* header_size_ptr = (int*)header.size;
+                    const int bytes_to_read = *header_size_ptr;
 
                     if (bytes_to_read < 0) {
                         FC_THROW("Unexpected size in header");

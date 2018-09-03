@@ -52,7 +52,7 @@ Rev_history_dlg::Rev_history_dlg(const QString& revHistory, QWidget* pParent) : 
    
    bool connected = QObject::connect(pOKButton, SIGNAL(pressed(void)), this, SLOT(slot_btn_ok(void)));
    connected = QObject::connect(pCancelButton, SIGNAL(pressed(void)), this, SLOT(slot_btn_cancel(void)));
-  
+   (void)connected;
 
   // QObject::connect(pOKButton, &QPushButton::clicked, this, &QDialog::close);
   // QObject::connect(pCancelButton, &QPushButton::clicked, this, &QDialog::close);

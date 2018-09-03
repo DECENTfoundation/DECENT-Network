@@ -117,7 +117,7 @@ vector<buying_object> wallet_api::get_buying_history_objects_by_consumer( const 
    account_id_type consumer = get_account( account_id_or_name ).id;
    vector<buying_object> result = my->_remote_db->get_buying_history_objects_by_consumer( consumer );
 
-   for (int i = 0; i < result.size(); ++i)
+   for (int i = 0; i < (int)result.size(); ++i)
    {
       buying_object& bobj = result[i];
 
@@ -278,7 +278,11 @@ std::pair<string, decent::encrypt::CustodyData>  wallet_api::create_package(cons
 {
    FC_ASSERT(!is_locked());
    fc::sha256 key1;
+#if CRYPTOPP_VERSION >= 600
+   aes_key.Encode((CryptoPP::byte*)key1._hash, 32);
+#else
    aes_key.Encode((byte*)key1._hash, 32);
+#endif
 
    uint32_t sectors;
    if(my->head_block_time()>HARDFORK_1_TIME)
@@ -294,7 +298,11 @@ void wallet_api::extract_package(const std::string& package_hash, const std::str
 {
    FC_ASSERT(!is_locked());
    fc::sha256 key1;
+#if CRYPTOPP_VERSION >= 600
+   aes_key.Encode((CryptoPP::byte*)key1._hash, 32);
+#else
    aes_key.Encode((byte*)key1._hash, 32);
+#endif
 
    auto pack = PackageManager::instance().find_package(fc::ripemd160(package_hash));
    if (pack == nullptr) {

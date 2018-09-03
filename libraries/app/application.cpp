@@ -59,6 +59,7 @@
 
 #include <boost/range/adaptor/reversed.hpp>
 #include <decent/package/package_config.hpp>
+#include <decent/ipfs_check.hpp>
 
 namespace graphene { namespace app {
 using net::item_hash_t;
@@ -114,6 +115,7 @@ namespace detail {
       fc::optional<fc::temp_file> _lock_file;
       bool _is_block_producer = false;
       bool _force_validate = false;
+      uint64_t _processed_transactions;
 
       void reset_p2p_node(const fc::path& data_dir)
       { try {
@@ -171,6 +173,18 @@ namespace detail {
             decent::package::PackageManagerConfigurator::instance().set_ipfs_endpoint(api_host, api.port());
          }
 
+         bool ipfs_check = true;
+         try {
+            ipfs_check = decent::check_ipfs_minimal_version(decent::package::PackageManagerConfigurator::instance().get_ipfs_host(),
+                                                                 decent::package::PackageManagerConfigurator::instance().get_ipfs_port());
+         }
+         catch(...) {
+            //ignore exceptions.
+         }
+
+         if (!ipfs_check)
+            FC_THROW("Unsupported IPFS version is used. Minimal version is 0.4.12");
+
          if( _options->count("p2p-endpoint") )
             _p2p_network->listen_on_endpoint(fc::ip::endpoint::from_string(_options->at("p2p-endpoint").as<string>()), true);
          else
@@ -211,6 +225,49 @@ namespace detail {
          FC_CAPTURE_AND_RETHROW((endpoint_string))
       }
 
+      void register_apis( std::shared_ptr<fc::rpc::websocket_api_connection>& wsc )
+      {
+         const auto& itr = _apiaccess.permission_map.find("*");
+         if( itr != _apiaccess.permission_map.end() )
+         {
+            const api_access_info& apis = itr->second;
+            for( const std::string& api_name : apis.allowed_apis )
+            {
+               if( api_name == "database_api" )
+               {
+                  continue; // this API is already enabled, TODO
+                  auto database_api = std::make_shared<graphene::app::database_api>( std::ref(*_self->chain_database() ) );
+                  wsc->register_api(fc::api<graphene::app::database_api>(database_api));
+               }
+               else if( api_name == "network_broadcast_api" )
+               {
+                  auto broadcast_api = std::make_shared<graphene::app::network_broadcast_api>( std::ref(*_self) );
+                  wsc->register_api(fc::api<graphene::app::network_broadcast_api>(broadcast_api));
+               }
+               else if( api_name == "history_api" )
+               {
+                  auto history_api = std::make_shared<graphene::app::history_api>(*_self);
+                  wsc->register_api(fc::api<graphene::app::history_api>(history_api));
+               }
+               else if( api_name == "network_node_api" )
+               {
+                  auto network_node_api = std::make_shared<graphene::app::network_node_api>( std::ref(*_self) );
+                  wsc->register_api(fc::api<graphene::app::network_node_api>(network_node_api));
+               }
+               else if( api_name == "crypto_api" )
+               {
+                  auto crypto_api = std::make_shared<graphene::app::crypto_api>();
+                  wsc->register_api(fc::api<graphene::app::crypto_api>(crypto_api));
+               }
+               else if( api_name == "messaging_api" )
+               {
+                  auto messaging_api = std::make_shared<graphene::app::messaging_api>( std::ref(*_self) );
+                  wsc->register_api(fc::api<graphene::app::messaging_api>(messaging_api));
+               }
+            }
+         }
+      }
+
       void reset_websocket_server()
       { try {
          if( !_options->count("rpc-endpoint") )
@@ -220,12 +277,18 @@ namespace detail {
 
          _websocket_server = std::make_shared<fc::http::websocket_server>(enable_deflate_compression);
 
+         if (_options->count("server-allowed-domains") != 0) {
+            _websocket_server->add_headers("Access-Control-Allow-Origin", _options->at("server-allowed-domains").as<fc::string>() );
+         }
+
          _websocket_server->on_connection([&]( const fc::http::websocket_connection_ptr& c ){
             auto wsc = std::make_shared<fc::rpc::websocket_api_connection>(*c);
-            auto login = std::make_shared<graphene::app::login_api>( std::ref(*_self) );
+
             auto db_api = std::make_shared<graphene::app::database_api>( std::ref(*_self->chain_database()) );
+            auto login = std::make_shared<graphene::app::login_api>( std::ref(*_self) );
             wsc->register_api(fc::api<graphene::app::database_api>(db_api));
             wsc->register_api(fc::api<graphene::app::login_api>(login));
+            register_apis( wsc );
             c->set_session_data( wsc );
          });
          ilog("Configured websocket rpc to listen on ${ip}", ("ip",_options->at("rpc-endpoint").as<string>()));
@@ -238,32 +301,45 @@ namespace detail {
       { try {
          if( !_options->count("rpc-tls-endpoint") )
             return;
-         if( !_options->count("server-pem") )
+         if( !_options->count("server-cert-file") || !_options->count("server-cert-key-file") )
          {
-            wlog( "Please specify a server-pem to use rpc-tls-endpoint" );
+            wlog( "Please specify a server-cert-file or server-cert-key-file to use rpc-tls-endpoint" );
             return;
          }
 
-         string password = _options->count("server-pem-password") ? _options->at("server-pem-password").as<string>() : "";
+         string password = _options->count("server-cert-password") ? _options->at("server-cert-password").as<string>() : string();
+         string cert_chain_file = _options->count("server-cert-chain-file") ? _options->at("server-cert-chain-file").as<string>() : string();
          bool enable_deflate_compression = _options->count("enable-permessage-deflate") != 0;
-         _websocket_tls_server = std::make_shared<fc::http::websocket_tls_server>( _options->at("server-pem").as<string>(), password, enable_deflate_compression );
+         _websocket_tls_server = std::make_shared<fc::http::websocket_tls_server>( _options->at("server-cert-file").as<string>(),
+                                                                                   _options->at("server-cert-key-file").as<string>(),
+                                                                                   cert_chain_file,
+                                                                                   password,
+                                                                                   enable_deflate_compression );
+
+         if (_options->count("server-allowed-domains") != 0) {
+            _websocket_tls_server->add_headers("Access-Control-Allow-Origin", _options->at("server-allowed-domains").as<fc::string>() );
+         }
 
          _websocket_tls_server->on_connection([&]( const fc::http::websocket_connection_ptr& c ){
             auto wsc = std::make_shared<fc::rpc::websocket_api_connection>(*c);
-            auto login = std::make_shared<graphene::app::login_api>( std::ref(*_self) );
+
             auto db_api = std::make_shared<graphene::app::database_api>( std::ref(*_self->chain_database()) );
+            auto login = std::make_shared<graphene::app::login_api>( std::ref(*_self) );
             wsc->register_api(fc::api<graphene::app::database_api>(db_api));
             wsc->register_api(fc::api<graphene::app::login_api>(login));
+            register_apis( wsc );
             c->set_session_data( wsc );
          });
          ilog("Configured websocket TLS rpc to listen on ${ip}", ("ip",_options->at("rpc-tls-endpoint").as<string>()));
          _websocket_tls_server->listen( fc::ip::endpoint::from_string(_options->at("rpc-tls-endpoint").as<string>()) );
          _websocket_tls_server->start_accept();
+
       } FC_CAPTURE_AND_RETHROW() }
 
       application_impl(application* self)
          : _self(self),
-           _chain_db(std::make_shared<chain::database>())
+           _chain_db(std::make_shared<chain::database>()),
+         _processed_transactions(0)
       {
       }
 
@@ -440,15 +516,6 @@ namespace detail {
             // TODO:  Remove this generous default access policy
             // when the UI logs in properly
             _apiaccess = api_access();
-            api_access_info wild_access;
-            wild_access.password_hash_b64 = "*";
-            wild_access.password_salt_b64 = "*";
-            wild_access.allowed_apis.push_back( "database_api" );
-            wild_access.allowed_apis.push_back( "network_broadcast_api" );
-            wild_access.allowed_apis.push_back( "history_api" );
-            wild_access.allowed_apis.push_back( "crypto_api" );
-            wild_access.allowed_apis.push_back( "messaging_api" );
-            _apiaccess.permission_map["*"] = wild_access;
          }
 
          reset_p2p_node(_data_dir);
@@ -954,8 +1021,11 @@ void application::set_program_options(boost::program_options::options_descriptio
          ("rpc-tls-endpoint", bpo::value<string>()->implicit_value("127.0.0.1:8089"), "Endpoint for TLS websocket RPC to listen on")
          ("enable-permessage-deflate", "Enable support for per-message deflate compression in the websocket servers "
                                        "(--rpc-endpoint and --rpc-tls-endpoint), disabled by default")
-         ("server-pem,p", bpo::value<string>()->implicit_value("server.pem"), "The TLS certificate file for this server")
-         ("server-pem-password,P", bpo::value<string>()->implicit_value(""), "Password for this certificate")
+         ("server-allowed-domains", "List of allowed domains to comunicate with or asterix for all domains")
+         ("server-cert-file", bpo::value<string>(), "The TLS certificate file (public) for this server")
+         ("server-cert-key-file", bpo::value<string>(), "The TLS certificate file (private key) for this server")
+         ("server-cert-chain-file", bpo::value<string>(), "The TLS certificate chain file for this server")
+         ("server-cert-password,P", bpo::value<string>(), "Password for this certificate")
          ("genesis-json", bpo::value<boost::filesystem::path>(), "File to read Genesis State from")
          ("dbg-init-key", bpo::value<string>(), "Block signing key to use for init miners, overrides genesis file")
          ("api-access", bpo::value<boost::filesystem::path>(), "JSON file specifying API permissions")
@@ -1053,6 +1123,11 @@ void application::set_api_access_info(const string& username, api_access_info&& 
 bool application::is_finished_syncing() const
 {
    return my->_is_finished_syncing;
+}
+
+uint64_t application::get_processed_transactions()
+{
+   return my->_processed_transactions;
 }
 
 void graphene::app::application::add_plugin(const string& name, std::shared_ptr<graphene::app::abstract_plugin> p)

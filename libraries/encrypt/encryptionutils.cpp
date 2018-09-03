@@ -63,7 +63,11 @@ DInteger DInteger::from_string(std::string from)
 
 encryption_results AES_encrypt_file(const std::string &fileIn, const std::string &fileOut, const AesKey &key) {
     try {
+#if CRYPTOPP_VERSION >= 600
+        CryptoPP::byte iv[CryptoPP::AES::BLOCKSIZE];
+#else
         byte iv[CryptoPP::AES::BLOCKSIZE];
+#endif
         memset(iv, 0, sizeof(iv));
         CryptoPP::CBC_Mode<CryptoPP::AES>::Encryption e;
         e.SetKeyWithIV(key.key_byte, CryptoPP::AES::MAX_KEYLENGTH, iv);
@@ -84,7 +88,11 @@ encryption_results AES_encrypt_file(const std::string &fileIn, const std::string
 
 encryption_results AES_decrypt_file(const std::string &fileIn, const std::string &fileOut, const AesKey &key) {
     try {
+#if CRYPTOPP_VERSION >= 600
+       CryptoPP::byte iv[CryptoPP::AES::BLOCKSIZE];
+#else
        byte iv[CryptoPP::AES::BLOCKSIZE];
+#endif
        memset(iv, 0, sizeof(iv));
        CryptoPP::CBC_Mode<CryptoPP::AES>::Decryption d;
        d.SetKeyWithIV(key.key_byte, CryptoPP::AES::MAX_KEYLENGTH, iv);
@@ -116,7 +124,11 @@ DInteger generate_private_el_gamal_key()
 DInteger generate_private_el_gamal_key_from_secret(fc::sha256 secret)
 {
    fc::sha512 hash = fc::sha512::hash( (char*) secret._hash, 32 );
+#if CRYPTOPP_VERSION >= 600
+   CryptoPP::Integer key( (CryptoPP::byte*)hash._hash, 64 );
+#else
    CryptoPP::Integer key( (byte*)hash._hash, 64 );
+#endif
    DInteger ret = key.Modulo( DECENT_EL_GAMAL_MODULUS_512 );
    return key;
 }
@@ -139,7 +151,11 @@ encryption_results el_gamal_encrypt(const point &message, const DInteger &public
     CryptoPP::Integer randomizer(rng, CryptoPP::Integer::One(), DECENT_EL_GAMAL_MODULUS_512 - 1);
 
     try{
+#if CRYPTOPP_VERSION >= 600
+        CryptoPP::byte buffer[DECENT_EL_GAMAL_GROUP_ELEMENT_SIZE];
+#else
         byte buffer[DECENT_EL_GAMAL_GROUP_ELEMENT_SIZE];
+#endif
         message.first.Encode(buffer, DECENT_MESSAGE_SIZE );
         message.second.Encode( buffer+DECENT_MESSAGE_SIZE, DECENT_MESSAGE_SIZE );
         SecByteBlock messageBytes(buffer, DECENT_EL_GAMAL_GROUP_ELEMENT_SIZE);
@@ -153,7 +169,8 @@ encryption_results el_gamal_encrypt(const point &message, const DInteger &public
 
         result.D1 = groupParams.ExponentiateBase(randomizer);
         result.C1 = mr.Multiply(m, mr.Exponentiate(publicKey, randomizer));
-    }catch(const CryptoPP::Exception &e) {
+    }
+    catch(const CryptoPP::Exception &e) {
         elog(e.GetWhat());
         switch (e.GetErrorType()) {
             case CryptoPP::Exception::IO_ERROR:
@@ -172,8 +189,11 @@ encryption_results el_gamal_decrypt(const Ciphertext &input, const DInteger &pri
     key.SetPrivateExponent(privateKey);
     //elog("el_gamal_decrypt called ${i} ${pk} ",("i", input)("pk", privateKey));
     try{
-
+#if CRYPTOPP_VERSION >= 600
+        CryptoPP::byte recovered[DECENT_EL_GAMAL_GROUP_ELEMENT_SIZE];
+#else
         byte recovered[DECENT_EL_GAMAL_GROUP_ELEMENT_SIZE];
+#endif
         ElGamal::GroupParameters groupParams;
         groupParams.Initialize(DECENT_EL_GAMAL_MODULUS_512, DECENT_EL_GAMAL_GROUP_GENERATOR);
 
@@ -205,7 +225,11 @@ DInteger hash_elements(Ciphertext t1, Ciphertext t2, DInteger key1, DInteger key
    CryptoPP::Weak1::MD5 hashier;
    size_t hashSpace =9*(DECENT_EL_GAMAL_GROUP_ELEMENT_SIZE);
    hashier.CreateUpdateSpace(hashSpace);
+#if CRYPTOPP_VERSION >= 600
+   CryptoPP::byte tmp[DECENT_EL_GAMAL_GROUP_ELEMENT_SIZE];
+#else
    byte tmp[DECENT_EL_GAMAL_GROUP_ELEMENT_SIZE];
+#endif
 
    t1.D1.Encode(tmp,DECENT_EL_GAMAL_GROUP_ELEMENT_SIZE);
    hashier.Update(tmp, DECENT_EL_GAMAL_GROUP_ELEMENT_SIZE);
@@ -234,7 +258,12 @@ DInteger hash_elements(Ciphertext t1, Ciphertext t2, DInteger key1, DInteger key
    G3.Encode(tmp,DECENT_EL_GAMAL_GROUP_ELEMENT_SIZE);
    hashier.Update(tmp, DECENT_EL_GAMAL_GROUP_ELEMENT_SIZE);
 
+#if CRYPTOPP_VERSION >= 600
+   CryptoPP::byte digest[16];
+#else
    byte digest[16];
+#endif
+
    hashier.Final(digest);
    CryptoPP::Integer x(digest, 16);
 
@@ -301,7 +330,11 @@ encrypt_with_proof(const point &message, const DInteger &privateKey, const DInte
 
       CryptoPP::Integer randomizer(rng, CryptoPP::Integer::One(), DECENT_EL_GAMAL_MODULUS_512 - 1);
 
+#if CRYPTOPP_VERSION >= 600
+      CryptoPP::byte messageBytes[DECENT_EL_GAMAL_GROUP_ELEMENT_SIZE];
+#else
       byte messageBytes[DECENT_EL_GAMAL_GROUP_ELEMENT_SIZE];
+#endif
       message.first.Encode(messageBytes, DECENT_MESSAGE_SIZE );
       message.second.Encode( messageBytes+DECENT_MESSAGE_SIZE, DECENT_MESSAGE_SIZE );
 

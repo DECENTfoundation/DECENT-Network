@@ -47,12 +47,73 @@ vector<operation_detail> wallet_api::get_account_history(const string& name, int
          auto memo = o.op.visit(detail::operation_printer(ss, *my, o.result));
          result.push_back( operation_detail{ memo, ss.str(), o } );
       }
-      if( current.size() < std::min(100,limit) )
+      if( (int)current.size() < std::min(100,limit) )
          break;
       limit -= current.size();
    }
 
    return result;
+}
+
+vector<balance_operation_detail> wallet_api::search_account_balance_history(const string& account_name,
+                                                                            const flat_set<string>& assets_list,
+                                                                            const string& partner_account,
+                                                                            uint32_t from_block, uint32_t to_block,
+                                                                            uint32_t start_offset,
+                                                                            int limit) const
+{
+    vector<balance_operation_detail> result;
+    auto account_id = get_account(account_name).get_id();
+
+    flat_set<asset_id_type> asset_id_list;
+    if (!assets_list.empty()) {
+        for( const auto& item : assets_list) {
+           asset_id_list.insert( get_asset(item).get_id() );
+        }
+    }
+
+   fc::optional<account_id_type> partner_id;
+    if (!partner_account.empty()) {
+       partner_id = get_account(partner_account).get_id();
+    }
+
+    vector<balance_change_result> current = my->_remote_hist->search_account_balance_history(account_id, asset_id_list, partner_id, from_block, to_block, start_offset, limit);
+    result.reserve( current.size() );
+    for(const auto& item : current) {
+       balance_operation_detail info;
+       info.hist_object = item.hist_object;
+       info.balance     = item.balance;
+       info.fee         = item.fee;
+
+       std::stringstream ss;
+       info.memo = item.hist_object.op.visit(detail::operation_printer(ss, *my, item.hist_object.result));
+
+       result.push_back(info);
+    }
+
+    return result;
+}
+
+fc::optional<balance_operation_detail> wallet_api::get_account_balance_for_transaction(const string& account_name,
+                                                                                       operation_history_id_type operation_history_id)
+{
+   auto account_id = get_account(account_name).get_id();
+
+   fc::optional<balance_change_result> result;
+   result = my->_remote_hist->get_account_balance_for_transaction(account_id, operation_history_id);
+   if (!result) {
+      return fc::optional<balance_operation_detail>();
+   }
+
+   balance_operation_detail info;
+   info.hist_object = result->hist_object;
+   info.balance     = result->balance;
+   info.fee         = result->fee;
+
+   std::stringstream ss;
+   info.memo = result->hist_object.op.visit(detail::operation_printer(ss, *my, result->hist_object.result));
+
+   return info;
 }
 
 vector<operation_detail> wallet_api::get_relative_account_history(const string& name,

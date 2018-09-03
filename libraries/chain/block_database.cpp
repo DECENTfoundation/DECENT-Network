@@ -99,7 +99,7 @@ void block_database::remove( const block_id_type& id )
    index_entry e;
    auto index_pos = sizeof(e)*block_header::num_from_id(id);
    _block_num_to_pos.seekg( 0, _block_num_to_pos.end );
-   if ( _block_num_to_pos.tellg() <= index_pos )
+   if ( _block_num_to_pos.tellg() <= (std::streampos)index_pos )
       FC_THROW_EXCEPTION(fc::key_not_found_exception, "Block ${id} not contained in block database", ("id", id));
 
    _block_num_to_pos.seekg( index_pos );
@@ -121,7 +121,7 @@ bool block_database::contains( const block_id_type& id )const
    index_entry e;
    auto index_pos = sizeof(e)*block_header::num_from_id(id);
    _block_num_to_pos.seekg( 0, _block_num_to_pos.end );
-   if ( _block_num_to_pos.tellg() <= index_pos )
+   if ( _block_num_to_pos.tellg() <= (std::streampos)index_pos )
       return false;
    _block_num_to_pos.seekg( index_pos );
    _block_num_to_pos.read( (char*)&e, sizeof(e) );
@@ -152,7 +152,7 @@ optional<signed_block> block_database::fetch_optional( const block_id_type& id )
       index_entry e;
       auto index_pos = sizeof(e)*block_header::num_from_id(id);
       _block_num_to_pos.seekg( 0, _block_num_to_pos.end );
-      if ( _block_num_to_pos.tellg() <= index_pos )
+      if ( _block_num_to_pos.tellg() <= (std::streampos)index_pos )
          return {};
 
       _block_num_to_pos.seekg( index_pos );
@@ -184,7 +184,7 @@ optional<signed_block> block_database::fetch_by_number( uint32_t block_num )cons
       index_entry e;
       auto index_pos = sizeof(e)*block_num;
       _block_num_to_pos.seekg( 0, _block_num_to_pos.end );
-      if ( _block_num_to_pos.tellg() <= index_pos )
+      if ( _block_num_to_pos.tellg() <= (std::streampos)index_pos )
          return {};
 
       _block_num_to_pos.seekg( index_pos, _block_num_to_pos.beg );
@@ -213,7 +213,7 @@ optional<signed_block> block_database::last()const
       index_entry e;
       _block_num_to_pos.seekg( 0, _block_num_to_pos.end );
 
-      if( _block_num_to_pos.tellp() < sizeof(index_entry) )
+      if( _block_num_to_pos.tellp() < (std::streampos)sizeof(index_entry) )
          return optional<signed_block>();
 
       _block_num_to_pos.seekg( -sizeof(index_entry), _block_num_to_pos.end );
@@ -251,7 +251,7 @@ optional<block_id_type> block_database::last_id()const
       index_entry e;
       _block_num_to_pos.seekg( 0, _block_num_to_pos.end );
 
-      if( _block_num_to_pos.tellp() < sizeof(index_entry) )
+      if( _block_num_to_pos.tellp() < (std::streampos)sizeof(index_entry) )
          return optional<block_id_type>();
 
       _block_num_to_pos.seekg( -sizeof(index_entry), _block_num_to_pos.end );
