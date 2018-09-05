@@ -48,8 +48,10 @@ void wallet_api::unlock(const string& password)
 
       // supporting backward compatibility of wallet json file
       try {
-         pk = fc::raw::unpack<plain_ec_and_el_gamal_keys>(decrypted);
-
+         string data;
+         data.reserve(decrypted.size());
+         std::copy(decrypted.begin(), decrypted.end(), back_inserter(data));
+         pk = fc::json::from_string(data).as<plain_ec_and_el_gamal_keys>();
          update_wallet_file = true;
       }
       catch(const fc::exception&)
