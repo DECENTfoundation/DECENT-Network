@@ -24,6 +24,7 @@ Rev_history_dlg::Rev_history_dlg(const QString& revHistory, QWidget* pParent) : 
    pRevHistory->setReadOnly(true);
    pRevHistory->setLineWrapMode(QPlainTextEdit::WidgetWidth);
    pRevHistory->setPlainText(revHistory);
+   pRevHistory->moveCursor(QTextCursor::MoveOperation::End);
    pRevHistory->resize(500, 600);
 
    DecentButton* pOKButton = new DecentButton(this, DecentButton::DialogAction);
