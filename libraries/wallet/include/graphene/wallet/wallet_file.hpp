@@ -151,5 +151,14 @@ bool import_key(const string& account_name_or_id, const string& wif_key);
  */
 variant dump_private_keys();
 
+/**
+ * @brief TODO
+ * @note TODO
+ * @return TODO
+ * @ingroup TODO
+ */
+vector<string> get_operations();
+
+
 
 #endif //DECENT_WALLET_WALLET_FILE_H

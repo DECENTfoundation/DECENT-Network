@@ -168,6 +168,7 @@ namespace graphene { namespace app {
       
       // Proposed transactions
       vector<proposal_object> get_proposed_transactions( account_id_type id )const;
+      vector<string> get_operations()const;
       
       // Blinded balances
       
@@ -1550,7 +1551,12 @@ namespace graphene { namespace app {
    {
       return my->get_proposed_transactions( id );
    }
-   
+
+   vector<string> database_api::get_operations( )const
+   {
+      return my->get_operations();
+   }
+
    /** TODO: add secondary index that will accelerate this process */
    vector<proposal_object> database_api_impl::get_proposed_transactions( account_id_type id )const
    {
@@ -1567,6 +1573,65 @@ namespace graphene { namespace app {
             result.push_back(p);
       });
       return result;
+   }
+
+   vector< fc::variant_object > g_op_types;
+
+   template< typename T >
+   uint64_t get_wire_size()
+   {
+      T data;
+      return fc::raw::pack( data ).size();
+   }
+
+   struct size_check_type_visitor
+   {
+      typedef void result_type;
+
+      int t = 0;
+      size_check_type_visitor(int _t ):t(_t){}
+
+      template<typename Type>
+      result_type operator()( const Type& op )const
+      {
+         fc::mutable_variant_object vo;
+         vo["name"] = fc::get_typename<Type>::name();
+         vo["mem_size"] = sizeof( Type );
+         vo["wire_size"] = get_wire_size<Type>();
+         g_op_types.push_back( vo );
+      }
+   };
+   vector<string> database_api_impl::get_operations( )const
+   {
+       vector<string> result;
+
+       try
+       {
+          graphene::chain::operation op;
+
+
+          vector<uint64_t> miners; miners.resize(50);
+          for( uint32_t i = 0; i < 60*60*24*30; ++i )
+          {
+             miners[ rand() % 50 ]++;
+          }
+
+          std::sort( miners.begin(), miners.end() );
+
+          for( int32_t i = 0; i < op.count(); ++i )
+          {
+             op.set_which(i);
+             op.visit( size_check_type_visitor(i) );
+          }
+
+          for( size_t i=0; i<g_op_types.size(); i++ )
+          {
+              result.push_back(fc::json::to_string( g_op_types[i] ));
+          }
+       }
+       catch ( const fc::exception& e ){ edump((e.to_detail_string())); }
+
+       return result;
    }
    
    //////////////////////////////////////////////////////////////////////

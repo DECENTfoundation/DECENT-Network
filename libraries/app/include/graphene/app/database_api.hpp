@@ -630,6 +630,14 @@ namespace graphene { namespace app {
           */
          vector<proposal_object> get_proposed_transactions( account_id_type id )const;
 
+         /**
+          * @brief Getting the number of operations.
+          * @param none
+          * @return the number of operations
+          * @ingroup DatabaseAPI_?
+          */
+         vector<string> get_operations( )const;
+
          ////////////
          // Decent //
          ////////////
@@ -982,6 +990,7 @@ FC_API(graphene::app::database_api,
 
           // Proposed transactions
           (get_proposed_transactions)
+          (get_operations)
 
           // Decent
           (list_publishing_managers)

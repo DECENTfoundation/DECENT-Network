@@ -2683,6 +2683,11 @@ signed_transaction content_cancellation(const string& author,
       return to_string(result.amount.value);
    }
 
+   vector<string> get_operations()
+   {
+       return _remote_db->get_operations();
+   }
+
    void download_content(string const& consumer, string const& URI, string const& str_region_code_from, bool broadcast)
    {
       try
