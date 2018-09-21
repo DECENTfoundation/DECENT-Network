@@ -166,6 +166,6 @@ optional<signed_transaction> get_transaction_by_id( const transaction_id_type& i
  * @return a vector of operations with ids, names and fees
  * @ingroup DatabaseAPI_Globals
  */
-vector<operation_info> get_operations();
+vector<operation_info> list_operations();
 
 #endif //DECENT_WALLET_GENERAL_H

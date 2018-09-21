@@ -317,7 +317,7 @@ namespace graphene { namespace app {
           * @return a vector of operations with ids, names and fees
           * @ingroup DatabaseAPI_Globals
           */
-         vector<operation_info> get_operations( )const;
+         vector<operation_info> list_operations( )const;
 
          //////////
          // Keys //
@@ -949,7 +949,7 @@ FC_API(graphene::app::database_api,
           (get_config)
           (get_chain_id)
           (get_dynamic_global_properties)
-          (get_operations)
+          (list_operations)
 
           // Keys
           (get_key_references)

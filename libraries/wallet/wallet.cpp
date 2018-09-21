@@ -2683,9 +2683,9 @@ signed_transaction content_cancellation(const string& author,
       return to_string(result.amount.value);
    }
 
-   vector<operation_info> get_operations()
+   vector<operation_info> list_operations()
    {
-       return _remote_db->get_operations();
+       return _remote_db->list_operations();
    }
 
    void download_content(string const& consumer, string const& URI, string const& str_region_code_from, bool broadcast)

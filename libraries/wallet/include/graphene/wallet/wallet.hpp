@@ -413,7 +413,7 @@ FC_API( graphene::wallet::wallet_api,
         (save_wallet_file)
         (import_key)
         (dump_private_keys)
-        (get_operations)
+        (list_operations)
 
         //Account
         (get_account_count)

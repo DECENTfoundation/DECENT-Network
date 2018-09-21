@@ -168,7 +168,7 @@ namespace graphene { namespace app {
       
       // Proposed transactions
       vector<proposal_object> get_proposed_transactions( account_id_type id )const;
-      vector<operation_info> get_operations()const;
+      vector<operation_info> list_operations()const;
       
       // Blinded balances
       
@@ -1552,9 +1552,9 @@ namespace graphene { namespace app {
       return my->get_proposed_transactions( id );
    }
 
-   vector<operation_info> database_api::get_operations( )const
+   vector<operation_info> database_api::list_operations( )const
    {
-      return my->get_operations();
+      return my->list_operations();
    }
 
    /** TODO: add secondary index that will accelerate this process */
@@ -1603,7 +1603,7 @@ namespace graphene { namespace app {
        operation_info result = {id, name, properties};
        return result;
    }
-   vector<operation_info> database_api_impl::get_operations( )const
+   vector<operation_info> database_api_impl::list_operations( )const
    {
        vector<operation_info> result;
        global_property_object properties;

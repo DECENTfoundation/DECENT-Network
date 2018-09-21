@@ -192,7 +192,7 @@ optional<signed_transaction> wallet_api::get_transaction_by_id( const transactio
    return my->_remote_db->get_transaction_by_id( id );
 }
 
-vector<operation_info> wallet_api::get_operations()
+vector<operation_info> wallet_api::list_operations()
 {
-   return my->get_operations();
+   return my->list_operations();
 }
