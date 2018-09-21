@@ -144,11 +144,6 @@ variant wallet_api::dump_private_keys()
    return result;
 }
 
-vector<operation_info> wallet_api::get_operations()
-{
-   return my->get_operations();
-}
-
 
 
 

@@ -1598,14 +1598,15 @@ namespace graphene { namespace app {
          g_op_types.push_back( vo );
       }
    };
-   operation_info make_operation_info(int32_t id, string name)
+   operation_info make_operation_info(int32_t id, string name, global_property_object properties)
    {
-       operation_info result = {id, name};
+       operation_info result = {id, name, properties};
        return result;
    }
    vector<operation_info> database_api_impl::get_operations( )const
    {
        vector<operation_info> result;
+       global_property_object properties;
 
        try
        {
@@ -1628,7 +1629,7 @@ namespace graphene { namespace app {
 
           for( size_t i=0; i<g_op_types.size(); i++ )
           {
-              result.push_back(make_operation_info(i, g_op_types[i]));
+              result.push_back(make_operation_info(i, g_op_types[i], properties));
           }
        }
        catch ( const fc::exception& e ){ edump((e.to_detail_string())); }

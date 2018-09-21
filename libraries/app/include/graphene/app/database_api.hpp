@@ -137,6 +137,7 @@ namespace graphene { namespace app {
       {
           int id;
           string name;
+          global_property_object properties;
       };
 
 /**
@@ -310,6 +311,13 @@ namespace graphene { namespace app {
           * @ingroup DatabaseAPI_Globals
           */
          dynamic_global_property_object get_dynamic_global_properties()const;
+
+         /**
+          * @brief Listing the operations available.
+          * @return a vector of operations with ids, names and fees
+          * @ingroup DatabaseAPI_Globals
+          */
+         vector<operation_info> get_operations( )const;
 
          //////////
          // Keys //
@@ -636,13 +644,6 @@ namespace graphene { namespace app {
           */
          vector<proposal_object> get_proposed_transactions( account_id_type id )const;
 
-         /**
-          * @brief Listing the operations available.
-          * @return a vector of operations with ids, names and fees
-          * @ingroup DatabaseAPI_?
-          */
-         vector<operation_info> get_operations( )const;
-
          ////////////
          // Decent //
          ////////////
@@ -917,7 +918,7 @@ FC_REFLECT( graphene::app::market_ticker, (base)(quote)(latest)(lowest_ask)(high
 FC_REFLECT( graphene::app::market_volume, (base)(quote)(base_volume)(quote_volume) );
 FC_REFLECT( graphene::app::market_trade, (date)(price)(amount)(value) );
 FC_REFLECT( graphene::app::miner_voting_info, (id)(name)(url)(total_votes)(voted) );
-FC_REFLECT( graphene::app::operation_info, (id)(name) );
+FC_REFLECT( graphene::app::operation_info, (id)(name)(properties) );
 
 FC_API(graphene::app::database_api,
           // Objects
@@ -948,6 +949,7 @@ FC_API(graphene::app::database_api,
           (get_config)
           (get_chain_id)
           (get_dynamic_global_properties)
+          (get_operations)
 
           // Keys
           (get_key_references)
@@ -996,7 +998,6 @@ FC_API(graphene::app::database_api,
 
           // Proposed transactions
           (get_proposed_transactions)
-          (get_operations)
 
           // Decent
           (list_publishing_managers)
