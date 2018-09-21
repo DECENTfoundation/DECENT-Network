@@ -168,7 +168,7 @@ namespace graphene { namespace app {
       
       // Proposed transactions
       vector<proposal_object> get_proposed_transactions( account_id_type id )const;
-      vector<string> get_operations()const;
+      vector<operation_info> get_operations()const;
       
       // Blinded balances
       
@@ -1552,7 +1552,7 @@ namespace graphene { namespace app {
       return my->get_proposed_transactions( id );
    }
 
-   vector<string> database_api::get_operations( )const
+   vector<operation_info> database_api::get_operations( )const
    {
       return my->get_operations();
    }
@@ -1575,7 +1575,7 @@ namespace graphene { namespace app {
       return result;
    }
 
-   vector< fc::variant_object > g_op_types;
+   vector< string > g_op_types;
 
    template< typename T >
    uint64_t get_wire_size()
@@ -1594,16 +1594,18 @@ namespace graphene { namespace app {
       template<typename Type>
       result_type operator()( const Type& op )const
       {
-         fc::mutable_variant_object vo;
-         vo["name"] = fc::get_typename<Type>::name();
-         vo["mem_size"] = sizeof( Type );
-         vo["wire_size"] = get_wire_size<Type>();
+         string vo = fc::get_typename<Type>::name();
          g_op_types.push_back( vo );
       }
    };
-   vector<string> database_api_impl::get_operations( )const
+   operation_info make_operation_info(int32_t id, string name)
    {
-       vector<string> result;
+       operation_info result = {id, name};
+       return result;
+   }
+   vector<operation_info> database_api_impl::get_operations( )const
+   {
+       vector<operation_info> result;
 
        try
        {
@@ -1626,7 +1628,7 @@ namespace graphene { namespace app {
 
           for( size_t i=0; i<g_op_types.size(); i++ )
           {
-              result.push_back(fc::json::to_string( g_op_types[i] ));
+              result.push_back(make_operation_info(i, g_op_types[i]));
           }
        }
        catch ( const fc::exception& e ){ edump((e.to_detail_string())); }

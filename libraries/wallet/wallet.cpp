@@ -2683,7 +2683,7 @@ signed_transaction content_cancellation(const string& author,
       return to_string(result.amount.value);
    }
 
-   vector<string> get_operations()
+   vector<operation_info> get_operations()
    {
        return _remote_db->get_operations();
    }

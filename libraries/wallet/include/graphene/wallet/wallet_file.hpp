@@ -157,7 +157,7 @@ variant dump_private_keys();
  * @return TODO
  * @ingroup TODO
  */
-vector<string> get_operations();
+vector<operation_info> get_operations();
 
 
 

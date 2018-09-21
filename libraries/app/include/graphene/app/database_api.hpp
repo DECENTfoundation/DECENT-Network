@@ -133,6 +133,12 @@ namespace graphene { namespace app {
          bool voted;
       };
 
+      struct operation_info
+      {
+          int id;
+          string name;
+      };
+
 /**
  * @brief The database_api class implements the RPC API for the chain database.
  *
@@ -631,12 +637,11 @@ namespace graphene { namespace app {
          vector<proposal_object> get_proposed_transactions( account_id_type id )const;
 
          /**
-          * @brief Getting the number of operations.
-          * @param none
-          * @return the number of operations
+          * @brief Listing the operations available.
+          * @return a vector of operations with ids, names and fees
           * @ingroup DatabaseAPI_?
           */
-         vector<string> get_operations( )const;
+         vector<operation_info> get_operations( )const;
 
          ////////////
          // Decent //
@@ -912,6 +917,7 @@ FC_REFLECT( graphene::app::market_ticker, (base)(quote)(latest)(lowest_ask)(high
 FC_REFLECT( graphene::app::market_volume, (base)(quote)(base_volume)(quote_volume) );
 FC_REFLECT( graphene::app::market_trade, (date)(price)(amount)(value) );
 FC_REFLECT( graphene::app::miner_voting_info, (id)(name)(url)(total_votes)(voted) );
+FC_REFLECT( graphene::app::operation_info, (id)(name) );
 
 FC_API(graphene::app::database_api,
           // Objects
