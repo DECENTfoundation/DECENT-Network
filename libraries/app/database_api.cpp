@@ -1598,20 +1598,21 @@ namespace graphene { namespace app {
          g_op_types.push_back( vo );
       }
    };
-   operation_info make_operation_info(int32_t id, string name, global_property_object properties)
+   operation_info make_operation_info(int32_t id, string name, fee_parameters current_fees)
    {
-       operation_info result = {id, name, properties};
+       operation_info result = {id, name, current_fees};
        return result;
    }
    vector<operation_info> database_api_impl::list_operations( )const
    {
        vector<operation_info> result;
-       global_property_object properties;
+       global_property_object properties = get_global_properties();
+       fee_schedule fees = properties.parameters.current_fees;
+       fee_parameters params;
 
        try
        {
           graphene::chain::operation op;
-
 
           vector<uint64_t> miners; miners.resize(50);
           for( uint32_t i = 0; i < 60*60*24*30; ++i )
@@ -1627,9 +1628,17 @@ namespace graphene { namespace app {
              op.visit( size_check_type_visitor(i) );
           }
 
-          for( size_t i=0; i<g_op_types.size(); i++ )
+          size_t i = 0;
+          for( fee_parameters& params : fees.parameters )
           {
-              result.push_back(make_operation_info(i, g_op_types[i], properties));
+              result.push_back(make_operation_info(i, g_op_types[i], params));
+              i++;
+          }
+
+          for( ; i<g_op_types.size(); i++ )
+          {
+              // ToDo: watch out for the empty fee_parameters struct
+              result.push_back(make_operation_info(i, g_op_types[i], {}));
           }
        }
        catch ( const fc::exception& e ){ edump((e.to_detail_string())); }

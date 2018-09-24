@@ -137,7 +137,7 @@ namespace graphene { namespace app {
       {
           int id;
           string name;
-          global_property_object properties;
+          fee_parameters current_fees;
       };
 
 /**
@@ -918,7 +918,7 @@ FC_REFLECT( graphene::app::market_ticker, (base)(quote)(latest)(lowest_ask)(high
 FC_REFLECT( graphene::app::market_volume, (base)(quote)(base_volume)(quote_volume) );
 FC_REFLECT( graphene::app::market_trade, (date)(price)(amount)(value) );
 FC_REFLECT( graphene::app::miner_voting_info, (id)(name)(url)(total_votes)(voted) );
-FC_REFLECT( graphene::app::operation_info, (id)(name)(properties) );
+FC_REFLECT( graphene::app::operation_info, (id)(name)(current_fees) );
 
 FC_API(graphene::app::database_api,
           // Objects
