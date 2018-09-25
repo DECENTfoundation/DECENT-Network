@@ -1575,27 +1575,19 @@ namespace graphene { namespace app {
       return result;
    }
 
-   vector< string > g_op_types;
-
-   template< typename T >
-   uint64_t get_wire_size()
-   {
-      T data;
-      return fc::raw::pack( data ).size();
-   }
-
-   struct size_check_type_visitor
+   vector< string > g_op_names;
+   struct operation_info_visitor
    {
       typedef void result_type;
 
       int t = 0;
-      size_check_type_visitor(int _t ):t(_t){}
+      operation_info_visitor(int _t ):t(_t){}
 
       template<typename Type>
       result_type operator()( const Type& op )const
       {
          string vo = fc::get_typename<Type>::name();
-         g_op_types.push_back( vo );
+         g_op_names.push_back( vo );
       }
    };
    operation_info make_operation_info(int32_t id, string name, fee_parameters current_fees)
@@ -1606,39 +1598,25 @@ namespace graphene { namespace app {
    vector<operation_info> database_api_impl::list_operations( )const
    {
        vector<operation_info> result;
-       global_property_object properties = get_global_properties();
-       fee_schedule fees = properties.parameters.current_fees;
-       fee_parameters params;
+
+       fee_schedule temp_fee_schedule;
+       temp_fee_schedule = temp_fee_schedule.get_default();
 
        try
        {
           graphene::chain::operation op;
 
-          vector<uint64_t> miners; miners.resize(50);
-          for( uint32_t i = 0; i < 60*60*24*30; ++i )
-          {
-             miners[ rand() % 50 ]++;
-          }
-
-          std::sort( miners.begin(), miners.end() );
-
           for( int32_t i = 0; i < op.count(); ++i )
           {
              op.set_which(i);
-             op.visit( size_check_type_visitor(i) );
+             op.visit( operation_info_visitor(i) );
           }
 
           size_t i = 0;
-          for( fee_parameters& params : fees.parameters )
+          for( fee_parameters& params : temp_fee_schedule.parameters )
           {
-              result.push_back(make_operation_info(i, g_op_types[i], params));
+              result.push_back(make_operation_info(i, g_op_names[i], params));
               i++;
-          }
-
-          for( ; i<g_op_types.size(); i++ )
-          {
-              // ToDo: watch out for the empty fee_parameters struct
-              result.push_back(make_operation_info(i, g_op_types[i], {}));
           }
        }
        catch ( const fc::exception& e ){ edump((e.to_detail_string())); }
