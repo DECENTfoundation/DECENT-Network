@@ -1602,6 +1602,9 @@ namespace graphene { namespace app {
        fee_schedule temp_fee_schedule;
        temp_fee_schedule = temp_fee_schedule.get_default();
 
+       fee_schedule global_fee_schedule;
+       global_fee_schedule = get_global_properties().parameters.current_fees;
+
        try
        {
           graphene::chain::operation op;
@@ -1613,9 +1616,20 @@ namespace graphene { namespace app {
           }
 
           size_t i = 0;
-          for( fee_parameters& params : temp_fee_schedule.parameters )
+          for( fee_parameters& params : global_fee_schedule.parameters )
           {
               result.push_back(make_operation_info(i, g_op_names[i], params));
+              i++;
+          }
+
+          size_t threshold = i;
+          i = 0;
+          for( fee_parameters& params : temp_fee_schedule.parameters )
+          {
+              if (i >= threshold)
+              {
+                  result.push_back(make_operation_info(i, g_op_names[i], params));
+              }
               i++;
           }
        }

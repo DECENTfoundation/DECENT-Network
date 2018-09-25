@@ -313,8 +313,10 @@ namespace graphene { namespace app {
          dynamic_global_property_object get_dynamic_global_properties()const;
 
          /**
-          * @brief Listing the operations available.
-          * @return a vector of operations with ids, names and fees
+          * @brief Listing all operations available.
+          * @note This function lists all operations available, including the fees. These fees are taken primarily
+          * from global properties and secondarily from default values.
+          * @return a vector of operation_info struct instances containing operation ids, names and fee parameters
           * @ingroup DatabaseAPI_Globals
           */
          vector<operation_info> list_operations( )const;
