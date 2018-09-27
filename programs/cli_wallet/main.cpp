@@ -96,7 +96,7 @@ int main( int argc, char** argv )
          ("rpc-tls-certificate,c", bpo::value<string>()->default_value("server.pem"), "PEM certificate for wallet websocket TLS RPC")
          ("rpc-http-endpoint,H", bpo::value<string>()->default_value("127.0.0.1:8093"), "Endpoint for wallet HTTP RPC to listen on")
          ("daemon,d", "Run the wallet in daemon mode" )
-         ("wallet-file,w", bpo::value<string>()->default_value("wallet.json"), "wallet to load")
+         ("wallet-file,w", bpo::value<string>(), "wallet to load")
          ("chain-id", bpo::value<string>(), "chain ID to connect to");
 
       bpo::variables_map options;
