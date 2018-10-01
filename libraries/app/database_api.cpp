@@ -1618,7 +1618,7 @@ namespace graphene { namespace app {
           size_t i = 0;
           for( fee_parameters& params : global_fee_schedule.parameters )
           {
-              result.push_back(make_operation_info(i, g_op_names[i], params));
+              result.push_back(make_operation_info(i, g_op_names[i].replace(0, string("graphene::chain::").length(), ""), params));
               i++;
           }
 
@@ -1628,7 +1628,7 @@ namespace graphene { namespace app {
           {
               if (i >= threshold)
               {
-                  result.push_back(make_operation_info(i, g_op_names[i], params));
+                  result.push_back(make_operation_info(i, g_op_names[i].replace(0, string("graphene::chain::").length(), ""), params));
               }
               i++;
           }
