@@ -60,23 +60,6 @@ namespace graphene { namespace app {
 
    class application;
 
-   struct verify_range_result
-   {
-      bool        success;
-      uint64_t    min_val;
-      uint64_t    max_val;
-   };
-   
-   struct verify_range_proof_rewind_result
-   {
-      bool                          success;
-      uint64_t                      min_val;
-      uint64_t                      max_val;
-      uint64_t                      value_out;
-      fc::ecc::blind_factor_type    blind_out;
-      string                        message_out;
-   };
-
    struct asset_array
    {
       asset asset0;
@@ -101,7 +84,7 @@ namespace graphene { namespace app {
          history_api(application& app):_app(app){}
 
          /**
-          * @brieg Get the name of the API.
+          * @brief Get the name of the API.
           * @return the name of the API
           * @ingroup HistoryAPI
           */
@@ -192,7 +175,7 @@ namespace graphene { namespace app {
          typedef std::function<void(variant/*transaction_confirmation*/)> confirmation_callback;
 
          /**
-          * @brieg Get the name of the API.
+          * @brief Get the name of the API.
           * @return the name of the API
           * @ingroup Network_broadcastAPI
           */
@@ -257,7 +240,7 @@ namespace graphene { namespace app {
          network_node_api(application& a);
 
          /**
-          * @brieg Get the name of the API.
+          * @brief Get the name of the API.
           * @return the name of the API
           * @ingroup Network_NodeAPI
           */
@@ -331,7 +314,7 @@ namespace graphene { namespace app {
    };
 
    /**
-    *
+    * @brief The crypto_api class
     */
    class crypto_api
    {
@@ -339,96 +322,11 @@ namespace graphene { namespace app {
          crypto_api();
 
          /**
-          * @brieg Get the name of the API.
+          * @brief Get the name of the API.
           * @return the name of the API
           * @ingroup CryptoAPI
           */
          string info() { return "crypto_api";}
-
-         /**
-          * @param key
-          * @param hash
-          * @param i
-          * @ingroup CryptoAPI
-          */
-         fc::ecc::blind_signature blind_sign( const extended_private_key_type& key, const fc::ecc::blinded_hash& hash, int i );
-
-         /**
-          * @param key
-          * @param bob
-          * @param sig
-          * @param hash
-          * @param i
-          * @ingroup CryptoAPI
-          */
-         signature_type unblind_signature( const extended_private_key_type& key,
-                                              const extended_public_key_type& bob,
-                                              const fc::ecc::blind_signature& sig,
-                                              const fc::sha256& hash,
-                                              int i );
-
-         /**
-          * @param blind
-          * @param value
-          * @ingroup CryptoAPI
-          */
-         fc::ecc::commitment_type blind( const fc::ecc::blind_factor_type& blind, uint64_t value );
-
-         /**
-          * @param blinds_in
-          * @param non_neg
-          * @param CryptoAPI
-          */
-         fc::ecc::blind_factor_type blind_sum( const std::vector<blind_factor_type>& blinds_in, uint32_t non_neg );
-
-         /**
-          * @param commits_in
-          * @param neg_commits_in
-          * @param excess
-          * @ingroup CryptoAPI
-          */
-         bool verify_sum( const std::vector<commitment_type>& commits_in, const std::vector<commitment_type>& neg_commits_in, int64_t excess );
-
-         /**
-          * @param commit
-          * @param proof
-          * @ingroup CryptoAPI
-          */
-         verify_range_result verify_range( const fc::ecc::commitment_type& commit, const std::vector<char>& proof );
-
-         /**
-          * @param min_value
-          * @param commit
-          * @param commit_blind
-          * @param nonce
-          * @param base10_exp
-          * @param min_bits
-          * @param actual_value
-          * @ingroup CryptoAPI
-          */
-         std::vector<char> range_proof_sign( uint64_t min_value, 
-                                             const commitment_type& commit, 
-                                             const blind_factor_type& commit_blind, 
-                                             const blind_factor_type& nonce,
-                                             int8_t base10_exp,
-                                             uint8_t min_bits,
-                                             uint64_t actual_value );
-                                       
-         /**
-          * @param nonce
-          * @param commit
-          * @param proof
-          * @ingroup CryptoAPI
-          */
-         verify_range_proof_rewind_result verify_range_proof_rewind( const blind_factor_type& nonce,
-                                                                     const fc::ecc::commitment_type& commit, 
-                                                                     const std::vector<char>& proof );
-         
-         /**
-          * @param proof
-          * @ingroup CryptoAPI
-          */
-         range_proof_info range_get_info( const std::vector<char>& proof );
    };
 
    /**
@@ -440,7 +338,7 @@ namespace graphene { namespace app {
       messaging_api(application& a);
 
       /**
-       * @brieg Get the name of the API.
+       * @brief Get the name of the API.
        * @return the name of the API
        * @ingroup MessagingAPI
        */
@@ -471,7 +369,7 @@ namespace graphene { namespace app {
          ~login_api();
 
          /**
-          * @brieg Get the name of the API.
+          * @brief Get the name of the API.
           * @return the name of the API
           * @ingroup LoginAPI
           */
@@ -546,10 +444,6 @@ namespace graphene { namespace app {
 
 FC_REFLECT( graphene::app::network_broadcast_api::transaction_confirmation,
         (id)(block_num)(trx_num)(trx) )
-FC_REFLECT( graphene::app::verify_range_result,
-        (success)(min_val)(max_val) )
-FC_REFLECT( graphene::app::verify_range_proof_rewind_result,
-        (success)(min_val)(max_val)(value_out)(blind_out)(message_out) )
 //FC_REFLECT_TYPENAME( fc::ecc::compact_signature );
 //FC_REFLECT_TYPENAME( fc::ecc::commitment_type );
 FC_REFLECT( graphene::app::asset_array, (asset0)(asset1) )
@@ -580,15 +474,6 @@ FC_API(graphene::app::network_node_api,
      )
 FC_API(graphene::app::crypto_api,
        (info)
-       (blind_sign)
-       (unblind_signature)
-       (blind)
-       (blind_sum)
-       (verify_sum)
-       (verify_range)
-       (range_proof_sign)
-       (verify_range_proof_rewind)
-       (range_get_info)
      )
 FC_API(graphene::app::messaging_api,
        (info)
