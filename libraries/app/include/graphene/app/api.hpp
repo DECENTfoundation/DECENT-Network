@@ -35,7 +35,6 @@
 
 #include <fc/api.hpp>
 #include <fc/optional.hpp>
-#include <fc/crypto/elliptic.hpp>
 #include <fc/network/ip.hpp>
 
 #include <boost/container/flat_set.hpp>
@@ -314,12 +313,12 @@ namespace graphene { namespace app {
    };
 
    /**
-    * @brief The crypto_api class
+    * @brief The crypto_api class implements cryptograhic operations
     */
    class crypto_api
    {
       public:
-         crypto_api();
+         crypto_api(application& a);
 
          /**
           * @brief Get the name of the API.
@@ -327,6 +326,26 @@ namespace graphene { namespace app {
           * @ingroup CryptoAPI
           */
          string info() { return "crypto_api";}
+
+         /**
+          * @brief Convert wif key to private key.
+          * @param wif the wif key to convert
+          * @return private key
+          * @ingroup CryptoAPI
+          */
+         fc::ecc::private_key wif_to_private_key(const string &wif);
+
+         /**
+          * @brief Sign transaction with given private key.
+          * @param trx the transaction to sign
+          * @param key the private key to sign the given transaction
+          * @return signed transaction
+          * @ingroup CryptoAPI
+          */
+         signed_transaction sign_transaction(signed_transaction trx, const fc::ecc::private_key &key);
+
+      private:
+         application& _app;
    };
 
    /**
@@ -474,6 +493,8 @@ FC_API(graphene::app::network_node_api,
      )
 FC_API(graphene::app::crypto_api,
        (info)
+       (wif_to_private_key)
+       (sign_transaction)
      )
 FC_API(graphene::app::messaging_api,
        (info)

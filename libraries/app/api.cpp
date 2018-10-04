@@ -101,7 +101,7 @@ namespace graphene { namespace app {
        }
        else if( api_name == "crypto_api" )
        {
-          _crypto_api = std::make_shared< crypto_api >();
+          _crypto_api = std::make_shared< crypto_api >( std::ref(_app) );
        }
        else if (api_name == "messaging_api")
        {
@@ -423,8 +423,21 @@ namespace graphene { namespace app {
         return result;
     }
 
-    crypto_api::crypto_api()
+    crypto_api::crypto_api(application& a) : _app(a)
     {
+    }
+
+    fc::ecc::private_key crypto_api::wif_to_private_key(const string &wif)
+    {
+        fc::optional<fc::ecc::private_key> key = graphene::utilities::wif_to_key(wif);
+        FC_ASSERT(key.valid(), "Malformed private key");
+        return *key;
+    }
+
+    signed_transaction crypto_api::sign_transaction(signed_transaction trx, const fc::ecc::private_key &key)
+    {
+        trx.sign(key, _app.chain_database()->get_chain_id());
+        return trx;
     }
 
     messaging_api::messaging_api(application& a) : _app(a)
