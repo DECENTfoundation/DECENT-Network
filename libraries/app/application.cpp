@@ -262,7 +262,7 @@ namespace detail {
                }
                else if( api_name == "crypto_api" )
                {
-                  auto crypto_api = std::make_shared<graphene::app::crypto_api>();
+                  auto crypto_api = std::make_shared<graphene::app::crypto_api>( std::ref(*_self) );
                   wsc->register_api(fc::api<graphene::app::crypto_api>(crypto_api));
                }
                else if( api_name == "messaging_api" )
