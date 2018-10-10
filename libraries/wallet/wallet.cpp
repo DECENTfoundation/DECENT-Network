@@ -696,6 +696,11 @@ public:
       return _wallet_filename;
    }
 
+   void set_wallet_filename(const string &wallet_filename)
+   {
+      _wallet_filename = wallet_filename;
+   }
+
    fc::ecc::private_key get_private_key(const public_key_type& id)const
    {
       auto it = _keys.find(id);
@@ -820,11 +825,6 @@ public:
       //        instead of replacing it
       if( wallet_filename.empty() )
          wallet_filename = _wallet_filename;
-
-      if( ! fc::exists( wallet_filename ) ) {
-         dlog("load_wallet_file() end (file not found)");
-         return false;
-      }
 
       bool result = false;
       wallet_data load_data;

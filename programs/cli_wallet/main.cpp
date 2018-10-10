@@ -232,8 +232,11 @@ int main( int argc, char** argv )
       FC_ASSERT( remote_api->login( wdata.ws_user, wdata.ws_password ) );
 
       auto wapiptr = std::make_shared<wallet_api>( wdata, remote_api );
-      wapiptr->set_wallet_filename( wallet_file.generic_string() );
-      wapiptr->load_wallet_file();
+      if( fc::exists(wallet_file) && !wapiptr->load_wallet_file(wallet_file.generic_string()) )
+      {
+         std::cerr << "Failed to load wallet file " << wallet_file.generic_string() << std::endl;
+         return 1;
+      }
 
       fc::api<wallet_api> wapi(wapiptr);
 
