@@ -590,7 +590,7 @@ public:
 // Globals
 //
 Globals::Globals() : QObject()
-, m_connected_state(ConnectionState::Connecting)
+, m_connected_state(ConnectionState::NoState)
 , m_p_wallet_operator(nullptr)
 , m_p_wallet_operator_thread(nullptr)
 , m_p_timer(new QTimer(this))
@@ -682,6 +682,8 @@ void Globals::startDaemons(BlockChainStartType type)
 #endif
 
    m_tp_started = std::chrono::steady_clock::now();
+
+   emit walletConnectionStatusChanged(Globals::ConnectionState::NoState, Globals::ConnectionState::NoState);
 
    if (bNeedNewConnection)
       emit signal_connect();
@@ -1001,7 +1003,7 @@ void Globals::slot_connected(std::string const& str_error)
 
 void Globals::slot_ConnectionStatusChange(ConnectionState from, ConnectionState to)
 {
-   if (ConnectionState::Connecting == from) {
+   if (ConnectionState::NoState == from) {
 
       m_p_timer->start(1000);
       QObject::connect(m_p_timer, &QTimer::timeout, this, &Globals::slot_timer);
@@ -1009,27 +1011,59 @@ void Globals::slot_ConnectionStatusChange(ConnectionState from, ConnectionState 
    else if (ConnectionState::SyncingUp == from && ConnectionState::Up == to) {
       m_p_timer->stop();
    }
-
-
-
 }
+
+static graphene::app::application* s_node = nullptr;
 
 void Globals::slot_timer()
 {
    auto duration = std::chrono::steady_clock::now() - m_tp_started;
-
    auto backup_state = m_connected_state;
 
+   if (m_exceptionMsgBoxParam1.size()) {
+      QMessageBox* msgBox = new QMessageBox();
+      msgBox->setWindowTitle(m_exceptionMsgBoxParam1.c_str());
+      msgBox->setText(QString::fromStdString(m_exceptionMsgBoxParam3.c_str()));
+      msgBox->exec();
+
+      m_p_timer->stop();
+      exit(1);
+      return;
+   }
+
+   double reindexing_percent = 0;
+   if (s_node && m_connected_state == ConnectionState::NoState) {
+      reindexing_percent = s_node->chain_database()->get_reindexing_percent();
+      if (reindexing_percent >= 0 && reindexing_percent < 100) {
+         m_connected_state = ConnectionState::Reindexing;
+         emit walletConnectionStatusChanged(ConnectionState::NoState, ConnectionState::Reindexing);
+      }
+      else
+      if (reindexing_percent == 100) {
+         m_connected_state = ConnectionState::Connecting;
+         emit walletConnectionStatusChanged(ConnectionState::NoState, ConnectionState::Connecting);
+      }
+   } else
+   if (s_node && ConnectionState::Reindexing == m_connected_state)
+   {
+      double reindexing_percent = s_node->chain_database()->get_reindexing_percent();
+      if (reindexing_percent != -1) {
+         if (reindexing_percent == 100) {
+            m_connected_state = ConnectionState::Connecting;
+            emit walletConnectionStatusChanged(ConnectionState::Reindexing, ConnectionState::Connecting);
+         }
+         else {
+            QString showMsg = QString::number((int)reindexing_percent);
+            emit progressCommonTextMessage("reindexing database...");
+            emit updateProgress((int)reindexing_percent, 100);
+         }
+      }
+   } else
    if (ConnectionState::Connecting == m_connected_state)
    {
-      if (duration > std::chrono::seconds(40))
-         emit connectingProgress(tr("still connecting"));
-      else if (duration > std::chrono::seconds(20))
-         emit connectingProgress(tr("verifying the local database"));
-      else
-         emit connectingProgress(tr("connecting"));
+      emit progressCommonTextMessage("connecting...");
    }
-   else
+   else 
    {
       auto currBlockTime = Globals::instance().getWallet().HeadBlockTime();
       uint64_t value = std::chrono::duration_cast<std::chrono::seconds>(currBlockTime - m_blockStart).count();
@@ -1046,7 +1080,7 @@ void Globals::slot_timer()
 
       QString str_result = CalculateRemainingTime_Behind(qdt, QDateTime::currentDateTime());
       if (!str_result.isEmpty()) {
-         emit statusShowMessage(str_result, 5000);
+         emit progressSyncMessage(str_result, 5000);
       }
 
       bool justbehind = false, farbehind = false;
@@ -1080,6 +1114,12 @@ void Globals::slot_timer()
    }
 }
 
+void Globals::display_error_and_stop_slot_timer(std::string param1, std::string param2, std::string param3)
+{
+   m_exceptionMsgBoxParam1 = param1;
+   m_exceptionMsgBoxParam2 = param2;
+   m_exceptionMsgBoxParam3 = param3;
+}
 
 //**
 // DecentTable and DecentColumn
@@ -1234,7 +1274,6 @@ void DecentTable::mouseMoveEvent(QMouseEvent * event)
 //
 using namespace graphene;
 namespace bpo = boost::program_options;
-
 
 
 bool check_for_ipfs(QObject* parent, const QString& program) {
@@ -1461,7 +1500,8 @@ int runDecentD(gui_wallet::BlockChainStartType type, fc::promise<void>::ptr& exi
       bpo::notify(options);
       node->initialize(data_dir, options);
       node->initialize_plugins( options );
-
+      
+      gui_wallet::s_node = node;
       node->startup();
       node->startup_plugins();
 
@@ -1493,6 +1533,7 @@ int runDecentD(gui_wallet::BlockChainStartType type, fc::promise<void>::ptr& exi
    if (unhandled_exception)
    {
       elog("Exiting with error:\n${e}", ("e", unhandled_exception->to_detail_string()));
+      gui_wallet::Globals::instance().display_error_and_stop_slot_timer("Error", "Unhandled exception", unhandled_exception->to_detail_string());
       node->shutdown();
       delete node;
       return 1;

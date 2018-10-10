@@ -51,7 +51,8 @@ protected slots:
    void slot_PublishToggled(bool toggled);
    void slot_UsersToggled(bool toggled);
    void slot_PurchasedToggled(bool toggled);
-   void slot_ConnectingUpdate(const QString& time_text, int);
+   void slot_SyncProgressUpdate(const QString& time_text, int);
+   void slot_CommonTextProgressUpdate(const QString& time_text);
    void slot_BlockchainUpdate(int value, int max);
    void slot_currentAccountChanged(int iIndex);
    void slot_MinerVotingToggled(bool toggled);

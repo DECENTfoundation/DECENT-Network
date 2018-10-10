@@ -421,7 +421,6 @@ void MainWindow::slot_setSplash()
    pPleaseWaitLabel->setText(tr("Please wait..."));
 
    m_pConnectingLabel = new DecentLabel(pSplashScreen, DecentLabel::SplashInfo);
-   m_pConnectingLabel->setText(tr("Connecting..."));
    m_pConnectingLabel->setFont(gui_wallet::ProgressInfoFont());
 
    StatusLabel* pSyncUpLabel = new StatusLabel(pSplashScreen, DecentLabel::SplashInfo);
@@ -445,8 +444,10 @@ void MainWindow::slot_setSplash()
    
    pSplashScreen->setLayout(pLayoutSplash);
    
-   QObject::connect(&Globals::instance(), &Globals::statusShowMessage,
-                    this, &MainWindow::slot_ConnectingUpdate);
+   QObject::connect(&Globals::instance(), &Globals::progressSyncMessage,
+                    this, &MainWindow::slot_SyncProgressUpdate);
+   QObject::connect(&Globals::instance(), &Globals::progressCommonTextMessage,
+      this, &MainWindow::slot_CommonTextProgressUpdate);
    QObject::connect(&Globals::instance(), &Globals::statusClearMessage,
                     pSyncUpLabel, &StatusLabel::clearMessage);
    QObject::connect(&Globals::instance(), &Globals::updateProgress,
@@ -475,7 +476,7 @@ void MainWindow::closeSplash(bool bGonnaCoverAgain)
    StackLayerWidget* pLayer = nullptr;
 
    emit signal_setSplashMainText(QString());
-   Globals::instance().statusShowMessage(QString());
+   Globals::instance().progressSyncMessage(QString());
 
    if (!bGonnaCoverAgain)
    {
@@ -556,10 +557,16 @@ void MainWindow::slot_connectionStatusChanged(Globals::ConnectionState from, Glo
    }
 }
 
-void MainWindow::slot_ConnectingUpdate(const QString& time_text, int)
+void MainWindow::slot_SyncProgressUpdate(const QString& time_text, int)
 {
    Q_ASSERT(m_pConnectingLabel);
    m_pConnectingLabel->setText(QString(tr("currently synchronized block is %1 old.")).arg(time_text));
+}
+
+void MainWindow::slot_CommonTextProgressUpdate(const QString& text)
+{
+   Q_ASSERT(m_pConnectingLabel);
+   m_pConnectingLabel->setText(text);
 }
 
 void MainWindow::slot_BlockchainUpdate(int value, int max)
