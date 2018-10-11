@@ -231,9 +231,9 @@ namespace gui_wallet
 
       std::map<std::string, std::string> m_map_user_id_cache;
 
-      std::string m_msgBoxParam1;
-      std::string m_msgBoxParam2;
-      std::string m_msgBoxParam3;
+      std::string m_exceptionMsgBoxParam1;
+      std::string m_exceptionMsgBoxParam2;
+      std::string m_exceptionMsgBoxParam3;
    };
 
    
