@@ -1412,11 +1412,20 @@ namespace graphene { namespace app {
    
    bool database_api_impl::verify_authority( const signed_transaction& trx )const
    {
-      trx.verify_authority( _db.get_chain_id(),
-                           [&]( account_id_type id ){ return &id(_db).active; },
-                           [&]( account_id_type id ){ return &id(_db).owner; },
-                           _db.get_global_properties().parameters.max_authority_depth );
-      return true;
+      try
+      {
+         trx.verify_authority( trx.get_signature_keys(_db.get_chain_id()),
+                              [&]( account_id_type id ){ return &id(_db).active; },
+                              [&]( account_id_type id ){ return &id(_db).owner; },
+                              _db.get_global_properties().parameters.max_authority_depth );
+         return true;
+      }
+      catch( const transaction_exception &e )
+      {
+         dlog(e.to_string(fc::log_level::debug));
+      }
+
+      return false;
    }
    
    bool database_api::verify_account_authority( const string& name_or_id, const flat_set<public_key_type>& signers )const
@@ -1438,15 +1447,26 @@ namespace graphene { namespace app {
             account = &*itr;
       }
       FC_ASSERT( account, "no such account" );
-      
-      
-      /// reuse trx.verify_authority by creating a dummy transfer
-      signed_transaction trx;
-      transfer_operation op;
-      op.from = account->id;
-      trx.operations.emplace_back(op);
-      
-      return verify_authority( trx );
+
+      try
+      {
+         /// reuse trx.verify_authority by creating a dummy transfer
+         signed_transaction trx;
+         transfer_operation op;
+         op.from = account->id;
+         trx.operations.emplace_back(op);
+         trx.verify_authority( keys,
+                               [&]( account_id_type id ){ return &id(_db).active; },
+                               [&]( account_id_type id ){ return &id(_db).owner; },
+                               _db.get_global_properties().parameters.max_authority_depth );
+         return true;
+      }
+      catch( const transaction_exception &e )
+      {
+         dlog(e.to_string(fc::log_level::debug));
+      }
+
+      return false;
    }
    
    processed_transaction database_api::validate_transaction( const signed_transaction& trx )const
