@@ -21,11 +21,6 @@
 
 // used for running daemons
 //
-#include <graphene/miner/miner.hpp>
-#include <graphene/seeding/seeding.hpp>
-#include <graphene/account_history/account_history_plugin.hpp>
-#include <graphene/utilities/dirhelper.hpp>
-#include <graphene/messaging/messaging.hpp>
 
 #include <fc/exception/exception.hpp>
 #include <fc/log/console_appender.hpp>
@@ -498,8 +493,8 @@ QString convertDateTimeToLocale2(const std::string& s)
 //
 // WalletOperator
 //
-WalletOperator::WalletOperator() : QObject()
-, m_wallet_api()
+WalletOperator::WalletOperator(const fc::path &wallet_file) : QObject()
+, m_wallet_api(wallet_file)
 , m_cancellation_token(false)
 {
 }
@@ -617,7 +612,21 @@ Globals& Globals::instance()
    return theOne;
 }
 
-void Globals::startDaemons(BlockChainStartType type)
+void Globals::setCommandLine(boost::program_options::options_description &app_options, boost::program_options::options_description &cfg_options)
+{
+   boost::program_options::options_description cli, cfg;
+   graphene::app::application::set_program_options(cli, cfg);
+   gui_wallet::Globals::Plugins::set_program_options(cli, cfg);
+   cli.add_options()
+      ("wallet-file,w", boost::program_options::value<std::string>()->default_value(
+          (graphene::utilities::decent_path_finder::instance().get_decent_home() / "wallet.json").generic_string()), "Wallet to load.")
+   ;
+
+   app_options.add(cli);
+   cfg_options.add(cfg);
+}
+
+void Globals::startDaemons(BlockChainStartType type, const std::string &wallet_file)
 {
    if (m_p_daemon_details)
       return;
@@ -633,7 +642,7 @@ void Globals::startDaemons(BlockChainStartType type)
 
 
       bNeedNewConnection = true;
-      m_p_wallet_operator = new WalletOperator();
+      m_p_wallet_operator = new WalletOperator(wallet_file);
       m_p_wallet_operator->moveToThread(m_p_wallet_operator_thread);
       QObject::connect(this, &Globals::signal_connect,
                        m_p_wallet_operator, &WalletOperator::slot_connect);
@@ -1366,64 +1375,39 @@ void RemoveDebugLevelFromIniFile(const std::string& path)
 
 int runDecentD(gui_wallet::BlockChainStartType type, fc::promise<void>::ptr& exit_promise)
 {
+   bpo::options_description app_options("DECENT Daemon");
+   bpo::options_description cfg_options("DECENT Daemon");
+   bpo::variables_map options;
+
+   try
+   {
+      gui_wallet::Globals::setCommandLine(app_options, cfg_options);
+
+      const QStringList app_args = QCoreApplication::arguments();
+      std::vector<std::string> args(std::vector<std::string>::size_type(app_args.count() - 1));
+      std::transform(app_args.begin() + 1, app_args.end(), args.begin(), [](const QString &s) { return s.toStdString(); });
+      if (type == gui_wallet::BlockChainStartType::Replay)
+      {
+         args.push_back("--replay-blockchain");
+      }
+      else if (type == gui_wallet::BlockChainStartType::Resync)
+      {
+         args.push_back("--resync-blockchain");
+      }
+
+      bpo::command_line_parser parser(args);
+      bpo::store(parser.options(app_options).style(0).extra_parser(bpo::ext_parser()).run(), options);
+   }
+   catch (const boost::program_options::error& e)
+   {
+      std::cerr << "Error parsing command line: " << e.what() << "\n";
+      return EXIT_FAILURE;
+   }
+
    app::application* node = new app::application();
    fc::oexception unhandled_exception;
    try {
-      bpo::options_description app_options("DECENT Daemon");
-      bpo::options_description cfg_options("DECENT Daemon");
-      app_options.add_options()
-      ("help,h", "Print this help message and exit.")
-      ("data-dir,d", bpo::value<boost::filesystem::path>()->default_value( utilities::decent_path_finder::instance().get_decent_data() / "decentd"), "Directory containing databases, configuration file, etc.");
-
-
-      bpo::variables_map options;
-
-      auto miner_plug = node->register_plugin<miner_plugin::miner_plugin>();
-      auto history_plug = node->register_plugin<account_history::account_history_plugin>();
-      auto seeding_plug = node->register_plugin<decent::seeding::seeding_plugin>();
-      auto messaging_plug = node->register_plugin<decent::messaging::messaging_plugin>();
-
-      try
-      {
-         bpo::options_description cli, cfg;
-         node->set_program_options(cli, cfg);
-         app_options.add(cli);
-         cfg_options.add(cfg);
-
-         int argc = 1;
-         char str_dummy[] = "dummy";
-         char str_replay[] = "--replay-blockchain";
-         char str_resync[] = "--resync-blockchain";
-
-         char* argvEmpty[] = {str_dummy};
-         char* argvReplay[] = {str_dummy, str_replay};
-         char* argvResync[] = {str_dummy, str_resync};
-         char** argv = argvEmpty;
-
-         if (type == gui_wallet::BlockChainStartType::Replay)
-         {
-            argc = 2;
-            argv = argvReplay;
-         }
-         else if (type == gui_wallet::BlockChainStartType::Resync)
-         {
-            argc = 2;
-            argv = argvResync;
-         }
-
-         bpo::store(bpo::parse_command_line(argc, argv, app_options), options);
-      }
-      catch (const boost::program_options::error& e)
-      {
-         std::cerr << "Error parsing command line: " << e.what() << "\n";
-         return 1;
-      }
-
-      if( options.count("help") )
-      {
-         std::cout << app_options << "\n";
-         return 0;
-      }
+      gui_wallet::Globals::Plugins::types plugins = gui_wallet::Globals::Plugins::create(*node);
 
       fc::path data_dir;
       if( options.count("data-dir") )
@@ -1508,6 +1492,7 @@ int runDecentD(gui_wallet::BlockChainStartType type, fc::promise<void>::ptr& exi
       ilog("Started miner node on a chain with ${h} blocks.", ("h", node->chain_database()->head_block_num()));
       ilog("Chain ID is ${id}", ("id", node->chain_database()->get_chain_id()) );
 
+      auto seeding_plug = std::get<2>(plugins);
       if( !seeding_plug->my )
       {
          decent::seeding::seeding_promise = new fc::promise<decent::seeding::seeding_plugin_startup_options>("Seeding Promise");

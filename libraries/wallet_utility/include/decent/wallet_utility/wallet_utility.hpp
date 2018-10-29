@@ -38,7 +38,7 @@ namespace wallet_utility
    class WalletAPI
    {
    public:
-      WalletAPI();
+      WalletAPI(const fc::path &wallet_file);
       ~WalletAPI();
 
       void Connent(std::atomic_bool& cancellation_token);
@@ -55,6 +55,7 @@ namespace wallet_utility
       string RunTask(string const& str_command);
 
    private:
+      fc::path m_wallet_file;
       // wallet_api does not like to be accessed from several threads
       // so all the access is encapsulated inside m_pthread :(
       std::unique_ptr<fc::thread> m_pthread;

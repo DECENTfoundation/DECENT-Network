@@ -26,8 +26,10 @@ class MainWindow : public QMainWindow
 {
    Q_OBJECT
 public:
-   MainWindow();
+   MainWindow(const std::string &wallet_file);
    virtual ~MainWindow();
+
+   const std::string& walletFile() const { return m_wallet_file; }
 
 protected slots:
    void slot_setSplash();
@@ -71,6 +73,7 @@ protected:
    void resizeEvent(QResizeEvent* event) override;
 
 protected:
+   std::string m_wallet_file;
    size_t m_iSplashWidgetIndex;
    QTimer* m_pTimerBalance;
    QTimer* m_pOneShotUpdateTimer;

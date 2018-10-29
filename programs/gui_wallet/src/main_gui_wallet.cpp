@@ -21,11 +21,42 @@
 
 #include <QTranslator>
 
+#include <graphene/utilities/dirhelper.hpp>
+#include <graphene/utilities/git_revision.hpp>
+
 using std::string;
 
 int main(int argc, char* argv[])
 {
    QApplication app(argc, argv);
+   QCoreApplication::setApplicationName("DECENT Wallet");
+   QCoreApplication::setApplicationVersion(QString::fromStdString(graphene::utilities::git_version()));
+
+   boost::program_options::options_description app_options("DECENT Wallet");
+   boost::program_options::options_description cfg_options("DECENT Wallet");
+   boost::program_options::variables_map options;
+
+   try
+   {
+      gui_wallet::Globals::setCommandLine(app_options, cfg_options);
+      boost::program_options::store(boost::program_options::parse_command_line(argc, argv, app_options), options);
+   }
+   catch (const boost::program_options::error& e)
+   {
+     std::cerr << "Error parsing command line: " << e.what() << "\n";
+     return EXIT_FAILURE;
+   }
+
+   if( options.count("help") )
+   {
+      std::cout << app_options << std::endl;
+      return EXIT_SUCCESS;
+   }
+   else if( options.count("version") )
+   {
+      std::cout << "DECENT Wallet " << graphene::utilities::git_version() << std::endl;
+      return EXIT_SUCCESS;
+   }
 
    QFile styleFile(":/css/styles/white_green.css");
    if(styleFile.open(QIODevice::ReadOnly))
@@ -43,11 +74,10 @@ int main(int argc, char* argv[])
    }
 
    app.setFont(gui_wallet::MainFont());
-   
-   gui_wallet::MainWindow aMainWindow;
+   gui_wallet::MainWindow aMainWindow(options["wallet-file"].as<std::string>());
 
    try {
-      gui_wallet::Globals::instance().startDaemons(gui_wallet::BlockChainStartType::Simple);
+      gui_wallet::Globals::instance().startDaemons(gui_wallet::BlockChainStartType::Simple, aMainWindow.walletFile());
    } catch (const std::exception& ex) {
       QMessageBox* msgBox = new QMessageBox();
       msgBox->setWindowTitle("Error");

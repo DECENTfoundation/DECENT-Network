@@ -58,8 +58,9 @@ using namespace std;
 using namespace graphene;
 using namespace utilities;
 
-MainWindow::MainWindow()
+MainWindow::MainWindow(const std::string &wallet_file)
 : QMainWindow()
+, m_wallet_file(wallet_file)
 , m_iSplashWidgetIndex(0)
 , m_pTimerBalance(new QTimer(this))
 , m_pOneShotUpdateTimer(new QTimer(this))
@@ -639,13 +640,13 @@ void MainWindow::slot_updateAccountBalance(Asset const& balance)
 void MainWindow::slot_replayBlockChain()
 {
    Globals::instance().stopDaemons();
-   Globals::instance().startDaemons(BlockChainStartType::Replay);
+   Globals::instance().startDaemons(BlockChainStartType::Replay, m_wallet_file);
 }
 
 void MainWindow::slot_resyncBlockChain()
 {
    Globals::instance().stopDaemons();
-   Globals::instance().startDaemons(BlockChainStartType::Resync);
+   Globals::instance().startDaemons(BlockChainStartType::Resync, m_wallet_file);
 }
 
 void MainWindow::slot_importKey()

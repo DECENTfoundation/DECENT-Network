@@ -41,8 +41,9 @@ namespace graphene { namespace app {
          application();
          ~application();
 
-         void set_program_options( boost::program_options::options_description& command_line_options,
-                                   boost::program_options::options_description& configuration_file_options )const;
+         static void set_program_options(boost::program_options::options_description& command_line_options,
+                                         boost::program_options::options_description& configuration_file_options);
+
          void initialize(const fc::path& data_dir, const boost::program_options::variables_map&options);
          void initialize_plugins( const boost::program_options::variables_map& options );
          void startup();
@@ -51,21 +52,13 @@ namespace graphene { namespace app {
          void shutdown_plugins();
 
          template<typename PluginType>
-         std::shared_ptr<PluginType> register_plugin()
+         std::shared_ptr<PluginType> create_plugin()
          {
-            auto plug = std::make_shared<PluginType>();
-            plug->plugin_set_app(this);
-
-            boost::program_options::options_description plugin_cli_options("Options for plugin " + plug->plugin_name()), plugin_cfg_options;
-            plug->plugin_set_program_options(plugin_cli_options, plugin_cfg_options);
-            if( !plugin_cli_options.options().empty() )
-               _cli_options.add(plugin_cli_options);
-            if( !plugin_cfg_options.options().empty() )
-               _cfg_options.add(plugin_cfg_options);
-
-            add_plugin( plug->plugin_name(), plug );
+            auto plug = std::make_shared<PluginType>(this);
+            add_plugin( PluginType::plugin_name(), plug );
             return plug;
          }
+
          std::shared_ptr<abstract_plugin> get_plugin( const string& name )const;
 
          template<typename PluginType>
@@ -93,9 +86,6 @@ namespace graphene { namespace app {
       private:
          void add_plugin( const string& name, std::shared_ptr<abstract_plugin> p );
          std::shared_ptr<detail::application_impl> my;
-
-         boost::program_options::options_description _cli_options;
-         boost::program_options::options_description _cfg_options;
    };
 
 } }

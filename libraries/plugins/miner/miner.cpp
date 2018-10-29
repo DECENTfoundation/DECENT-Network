@@ -62,6 +62,20 @@ void new_chain_banner( const graphene::chain::database& db )
    return;
 }
 
+miner_plugin::miner_plugin(graphene::app::application* app) : graphene::app::plugin(app) {}
+
+miner_plugin::~miner_plugin()
+{
+   try {
+      if( _block_production_task.valid() )
+         _block_production_task.cancel_and_wait(__FUNCTION__);
+   } catch(fc::canceled_exception&) {
+      //Expected exception. Move along.
+   } catch(fc::exception& e) {
+      edump((e.to_detail_string()));
+   }
+}
+
 void miner_plugin::plugin_set_program_options(
    boost::program_options::options_description& command_line_options,
    boost::program_options::options_description& config_file_options)
@@ -69,9 +83,9 @@ void miner_plugin::plugin_set_program_options(
    auto default_priv_key = fc::ecc::private_key::regenerate(fc::sha256::hash(std::string("nathan")));
    string miner_id_example = fc::json::to_string(chain::miner_id_type(5));
    command_line_options.add_options()
-         ("enable-stale-production", bpo::bool_switch()->notifier([this](bool e){_production_enabled = e;}), "Enable block production, even if the chain is stale.")
-         ("required-participation", bpo::bool_switch()->notifier([this](int e){_required_miner_participation = uint32_t(e*GRAPHENE_1_PERCENT);}), "Percent of miners (0-99) that must be participating in order to produce blocks")
-         ("miner-id,w", bpo::value<vector<string>>()->composing()->multitoken(),
+         ("enable-stale-production", bpo::bool_switch(), "Enable block production, even if the chain is stale.")
+         ("required-participation", bpo::bool_switch(), "Percent of miners (0-99) that must be participating in order to produce blocks")
+         ("miner-id,m", bpo::value<vector<string>>()->composing()->multitoken(),
           ("ID of miner controlled by this node (e.g. " + miner_id_example + ", quotes are required, may specify multiple times)").c_str())
          ("private-key", bpo::value<vector<string>>()->composing()->multitoken()->
           DEFAULT_VALUE_VECTOR(std::make_pair(chain::public_key_type(default_priv_key.get_public_key()), graphene::utilities::key_to_wif(default_priv_key))),
@@ -80,7 +94,7 @@ void miner_plugin::plugin_set_program_options(
    config_file_options.add(command_line_options);
 }
 
-std::string miner_plugin::plugin_name()const
+std::string miner_plugin::plugin_name()
 {
    return "miner";
 }
@@ -88,8 +102,18 @@ std::string miner_plugin::plugin_name()const
 void miner_plugin::plugin_initialize(const boost::program_options::variables_map& options)
 { try {
    ilog("miner plugin:  plugin_initialize() begin");
-   _options = &options;
    LOAD_VALUE_SET(options, "miner-id", _miners, chain::miner_id_type)
+
+   if( options.count("enable-stale-production") )
+   {
+      _production_enabled = options["enable-stale-production"].as<bool>();
+   }
+
+   if( options.count("required-participation") )
+   {
+      // TODO: fix arg value to int in options
+      _required_miner_participation = std::min(uint32_t(options["required-participation"].as<bool>()), 99u) * GRAPHENE_1_PERCENT;
+   }
 
    if( options.count("private-key") )
    {

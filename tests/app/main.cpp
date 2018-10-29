@@ -55,8 +55,12 @@ BOOST_AUTO_TEST_CASE( two_node_network )
 
       BOOST_TEST_MESSAGE( "Creating and initializing app1" );
 
+      using test_plugins = graphene::app::plugin_set<
+         account_history::account_history_plugin
+      >;
+
       graphene::app::application app1;
-      app1.register_plugin<graphene::account_history::account_history_plugin>();
+      test_plugins::create(app1);
       boost::program_options::variables_map cfg;
       cfg.emplace("p2p-endpoint", boost::program_options::variable_value(string("127.0.0.1:3939"), false));
       app1.initialize(app_dir.path(), cfg);
@@ -64,7 +68,7 @@ BOOST_AUTO_TEST_CASE( two_node_network )
       BOOST_TEST_MESSAGE( "Creating and initializing app2" );
 
       graphene::app::application app2;
-      app2.register_plugin<account_history::account_history_plugin>();
+      test_plugins::create(app2);
       auto cfg2 = cfg;
       cfg2.erase("p2p-endpoint");
       cfg2.emplace("p2p-endpoint", boost::program_options::variable_value(string("127.0.0.1:4040"), false));

@@ -38,6 +38,7 @@
 
 #include <graphene/time/time.hpp>
 
+#include <graphene/utilities/dirhelper.hpp>
 #include <graphene/utilities/key_conversion.hpp>
 
 
@@ -1021,9 +1022,13 @@ application::~application()
 }
 
 void application::set_program_options(boost::program_options::options_description& command_line_options,
-                                      boost::program_options::options_description& configuration_file_options) const
+                                      boost::program_options::options_description& configuration_file_options)
 {
-   vector<string> seed_nodes;
+   command_line_options.add_options()
+      ("help,h", "Print this help message and exit.")
+      ("version,v", "Print version information and exit.")
+      ;
+
    configuration_file_options.add_options()
          ("p2p-endpoint", bpo::value<string>(), "Endpoint for P2P node to listen on")
 
@@ -1044,8 +1049,11 @@ void application::set_program_options(boost::program_options::options_descriptio
          ("api-access", bpo::value<boost::filesystem::path>(), "JSON file specifying API permissions")
          ("ipfs-api", bpo::value<string>(), "IPFS control API")
          ;
-   command_line_options.add(configuration_file_options);
-   command_line_options.add_options()
+
+   bpo::options_description common_options("Common options");
+   common_options.add_options()
+         ("data-dir,d", bpo::value<boost::filesystem::path>()->default_value(utilities::decent_path_finder::instance().get_decent_data() / "decentd"),
+          "Directory containing databases, configuration file, etc.")
          ("create-genesis-json", bpo::value<boost::filesystem::path>(),
           "Path to create a Genesis State at. If a well-formed JSON file exists at the path, it will be parsed and any "
           "missing fields in a Genesis State will be added, and any unknown fields will be removed. If no file or an "
@@ -1055,8 +1063,8 @@ void application::set_program_options(boost::program_options::options_descriptio
          ("force-validate", "Force validation of all transactions")
          ("genesis-timestamp", bpo::value<uint32_t>(), "Replace timestamp from genesis.json with current time plus this many seconds (experts only!)")
          ;
-   command_line_options.add(_cli_options);
-   configuration_file_options.add(_cfg_options);
+   command_line_options.add(common_options);
+   command_line_options.add(configuration_file_options);
 }
 
 void application::initialize(const fc::path& data_dir, const boost::program_options::variables_map& options)

@@ -12,15 +12,15 @@ namespace decent {
 
       class messaging_plugin : public graphene::app::plugin, graphene::chain::custom_operation_interpreter {
       public:
-         virtual ~messaging_plugin() {
-         }
+         messaging_plugin(graphene::app::application* app) : graphene::app::plugin(app) {}
+         virtual ~messaging_plugin() {}
 
-         std::string plugin_name() const override;
+         static std::string plugin_name();
 
-         virtual void plugin_set_program_options(
+         static void plugin_set_program_options(
             boost::program_options::options_description &command_line_options,
             boost::program_options::options_description &config_file_options
-         ) override;
+         );
 
          virtual void plugin_initialize(const boost::program_options::variables_map& options) override;
          virtual void plugin_startup() override;

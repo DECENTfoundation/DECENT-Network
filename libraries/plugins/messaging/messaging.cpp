@@ -20,7 +20,7 @@ void messaging_plugin::plugin_set_program_options(
    config_file_options.add(command_line_options);
 }
 
-std::string messaging_plugin::plugin_name()const
+std::string messaging_plugin::plugin_name()
 {
    return "messaging";
 }
