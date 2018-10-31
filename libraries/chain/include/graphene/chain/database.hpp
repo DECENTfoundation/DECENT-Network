@@ -360,13 +360,6 @@ namespace graphene { namespace chain {
           */
          bool are_assets_exchangeable( const asset_object& payment, const asset_object& price );
 
-         //////////////////// db_debug.cpp ////////////////////
-
-         void debug_dump();
-         void apply_debug_updates();
-         void debug_update( const fc::variant_object& update );
-
-
          //////////////////// db_decent.cpp ////////////////////
 
          /**

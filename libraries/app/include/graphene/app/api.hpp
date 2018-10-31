@@ -26,7 +26,7 @@
 
 #include <graphene/app/database_api.hpp>
 #include <graphene/chain/protocol/types.hpp>
-#include <graphene/debug_miner/debug_api.hpp>
+
 #include <graphene/net/node.hpp>
 #include <graphene/chain/message_object.hpp>
 
@@ -542,11 +542,6 @@ namespace graphene { namespace app {
          * @ingroup LoginAPI
          */
          fc::api<monitoring_api> monitoring()const;
-         /**
-          * @brief Retrieve the debug API (if available).
-          * @ingroup LoginAPI
-          */
-         fc::api<graphene::debug_miner::debug_api> debug()const;
 
       private:
          /**
@@ -564,7 +559,6 @@ namespace graphene { namespace app {
          optional< fc::api<crypto_api> > _crypto_api;
          optional< fc::api<messaging_api> > _messaging_api;
          optional< fc::api<monitoring_api> > _monitoring_api;
-         optional< fc::api<graphene::debug_miner::debug_api> > _debug_api;
    };
 
 }}  // graphene::app
@@ -633,7 +627,6 @@ FC_API(graphene::app::login_api,
        (history)
        (network_node)
        (crypto)
-       (debug)
        (messaging)
        (monitoring)
      )
