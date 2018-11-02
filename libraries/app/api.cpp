@@ -425,17 +425,27 @@ namespace graphene { namespace app {
     {
     }
 
-    fc::ecc::private_key crypto_api::wif_to_private_key(const string &wif)
+    private_key_type crypto_api::wif_to_private_key(const string &wif)
     {
-        fc::optional<fc::ecc::private_key> key = graphene::utilities::wif_to_key(wif);
+        fc::optional<private_key_type> key = graphene::utilities::wif_to_key(wif);
         FC_ASSERT(key.valid(), "Malformed private key");
         return *key;
     }
 
-    signed_transaction crypto_api::sign_transaction(signed_transaction trx, const fc::ecc::private_key &key)
+    signed_transaction crypto_api::sign_transaction(signed_transaction trx, const private_key_type &key)
     {
         trx.sign(key, _app.chain_database()->get_chain_id());
         return trx;
+    }
+
+    memo_data crypto_api::encrypt_message(const std::string &message, const private_key_type &key, const public_key_type &pub, uint64_t nonce) const
+    {
+        return memo_data(message, key, pub, nonce);
+    }
+
+    std::string crypto_api::decrypt_message(const memo_data::message_type &message, const private_key_type &key, const public_key_type &pub, uint64_t nonce) const
+    {
+       return memo_data::decrypt_message(message, key, pub, nonce);
     }
 
     messaging_api::messaging_api(application& a) : _app(a)

@@ -333,7 +333,7 @@ namespace graphene { namespace app {
           * @return private key
           * @ingroup CryptoAPI
           */
-         fc::ecc::private_key wif_to_private_key(const string &wif);
+         private_key_type wif_to_private_key(const string &wif);
 
          /**
           * @brief Sign transaction with given private key.
@@ -342,7 +342,35 @@ namespace graphene { namespace app {
           * @return signed transaction
           * @ingroup CryptoAPI
           */
-         signed_transaction sign_transaction(signed_transaction trx, const fc::ecc::private_key &key);
+         signed_transaction sign_transaction(signed_transaction trx, const private_key_type &key);
+
+         /**
+          * @brief Encrypt message.
+          * @param message the message to encrypt
+          * @param key the private key of sender
+          * @param pub the public key of receiver
+          * @param nonce the salt number to use for message encryption (will be generated if zero)
+          * @return encrypted memo data
+          * @ingroup CryptoAPI
+          */
+         memo_data encrypt_message(const std::string &message,
+                                   const private_key_type &key,
+                                   const public_key_type &pub,
+                                   uint64_t nonce = 0) const;
+
+         /**
+          * @brief Decrypt message.
+          * @param message the message to decrypt
+          * @param key the private key of sender/receiver
+          * @param pub the public key of receiver/sender
+          * @param nonce the salt number used for message encryption
+          * @return decrypted message
+          * @ingroup CryptoAPI
+          */
+         std::string decrypt_message(const memo_data::message_type &message,
+                                     const private_key_type &key,
+                                     const public_key_type &pub,
+                                     uint64_t nonce) const;
 
       private:
          application& _app;
@@ -515,6 +543,8 @@ FC_API(graphene::app::crypto_api,
        (info)
        (wif_to_private_key)
        (sign_transaction)
+       (encrypt_message)
+       (decrypt_message)
      )
 FC_API(graphene::app::messaging_api,
        (info)

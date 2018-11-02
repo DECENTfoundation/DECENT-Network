@@ -1267,13 +1267,9 @@ public:
       issue_op.asset_to_issue   = asset_obj.amount_from_string(amount);
       issue_op.issue_to_account = to.id;
 
-      if( memo.size() )
+      if( !memo.empty() )
       {
-         issue_op.memo = memo_data();
-         issue_op.memo->from = issuer.options.memo_key;
-         issue_op.memo->to = to.options.memo_key;
-         issue_op.memo->set_message(get_private_key(issuer.options.memo_key),
-                                    to.options.memo_key, memo);
+         issue_op.memo = memo_data(memo, get_private_key(issuer.options.memo_key), to.options.memo_key);
       }
 
       signed_transaction tx;
@@ -1923,13 +1919,9 @@ public:
          xfer_op.to = to_obj_id;
          xfer_op.amount = asset_obj->amount_from_string(amount);
 
-         if( memo.size() )
+         if( !memo.empty() )
          {
-            xfer_op.memo = memo_data();
-            xfer_op.memo->from = from_account.options.memo_key;
-            xfer_op.memo->to = to_account.options.memo_key;
-            xfer_op.memo->set_message(get_private_key(from_account.options.memo_key),
-                                      to_account.options.memo_key, memo);
+            xfer_op.memo = memo_data(memo, get_private_key(from_account.options.memo_key), to_account.options.memo_key);
          }
 
          tx.operations.push_back(xfer_op);
@@ -1942,13 +1934,9 @@ public:
          xfer_op.to = to_obj_id;
          xfer_op.amount = asset_obj->amount_from_string(amount);
 
-         if( memo.size() )
+         if( !memo.empty() )
          {
-            xfer_op.memo = memo_data();
-            xfer_op.memo->from = from_account.options.memo_key;
-            xfer_op.memo->to = to_account.options.memo_key;
-            xfer_op.memo->set_message(get_private_key(from_account.options.memo_key),
-                                      to_account.options.memo_key, memo);
+            xfer_op.memo = memo_data(memo, get_private_key(from_account.options.memo_key), to_account.options.memo_key);
          }
 
          tx.operations.push_back(xfer_op);
@@ -1977,13 +1965,9 @@ public:
       fc::optional<asset_object> asset_obj = get_asset(asset_symbol);
       FC_ASSERT(asset_obj, "Could not find asset matching ${asset}", ("asset", asset_symbol));
       op.amount = asset_obj->amount_from_string(amount);
-      if( memo.size() )
+      if( !memo.empty() )
       {
-         op.memo = memo_data();
-         op.memo->from = from_account.options.memo_key;
-         op.memo->to = to_account.options.memo_key;
-         op.memo->set_message(get_private_key(from_account.options.memo_key),
-                                   to_account.options.memo_key, memo);
+         op.memo = memo_data(memo, get_private_key(from_account.options.memo_key), to_account.options.memo_key);
       }
 
       add_operation_to_builder_transaction(propose_num, op);
