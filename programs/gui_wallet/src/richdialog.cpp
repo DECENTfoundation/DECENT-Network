@@ -198,7 +198,7 @@ void TransferWidget::nameChanged(const QString & name)
 
 void TransferWidget::amountChanged(const QString & amount)
 {
-   m_amount = amount.toDouble();
+   m_amount = Globals::instance().locale().toDouble(amount);
 }
 
 void TransferWidget::memoChanged(const QString & memo)
