@@ -64,7 +64,6 @@ using namespace graphene::app;
 using namespace graphene::chain;
 using namespace graphene::utilities;
 using namespace graphene::wallet;
-using namespace std;
 namespace bpo = boost::program_options;
 
 int main( int argc, char** argv )
@@ -88,16 +87,16 @@ int main( int argc, char** argv )
          opts.add_options()
          ("help,h", "Print this help message and exit.")
          ("version,v", "Print version information")
-         ("server-rpc-endpoint,s", bpo::value<string>()->default_value("ws://127.0.0.1:8090"), "Server websocket RPC endpoint")
-         ("server-rpc-user,u", bpo::value<string>(), "Server Username")
-         ("server-rpc-password,p", bpo::value<string>(), "Server Password")
-         ("rpc-endpoint,r", bpo::value<string>()->default_value("127.0.0.1:8091"), "Endpoint for wallet websocket RPC to listen on")
-         ("rpc-tls-endpoint,t", bpo::value<string>()->default_value("127.0.0.1:8092"), "Endpoint for wallet websocket TLS RPC to listen on")
-         ("rpc-tls-certificate,c", bpo::value<string>()->default_value("server.pem"), "PEM certificate for wallet websocket TLS RPC")
-         ("rpc-http-endpoint,H", bpo::value<string>()->default_value("127.0.0.1:8093"), "Endpoint for wallet HTTP RPC to listen on")
+         ("server-rpc-endpoint,s", bpo::value<std::string>()->default_value("ws://127.0.0.1:8090"), "Server websocket RPC endpoint")
+         ("server-rpc-user,u", bpo::value<std::string>(), "Server Username")
+         ("server-rpc-password,p", bpo::value<std::string>(), "Server Password")
+         ("rpc-endpoint,r", bpo::value<std::string>()->default_value("127.0.0.1:8091"), "Endpoint for wallet websocket RPC to listen on")
+         ("rpc-tls-endpoint,t", bpo::value<std::string>()->default_value("127.0.0.1:8092"), "Endpoint for wallet websocket TLS RPC to listen on")
+         ("rpc-tls-certificate,c", bpo::value<std::string>()->default_value("server.pem"), "PEM certificate for wallet websocket TLS RPC")
+         ("rpc-http-endpoint,H", bpo::value<std::string>()->default_value("127.0.0.1:8093"), "Endpoint for wallet HTTP RPC to listen on")
          ("daemon,d", "Run the wallet in daemon mode" )
-         ("wallet-file,w", bpo::value<string>(), "wallet to load")
-         ("chain-id", bpo::value<string>(), "chain ID to connect to");
+         ("wallet-file,w", bpo::value<std::string>(), "wallet to load")
+         ("chain-id", bpo::value<std::string>(), "chain ID to connect to");
 
       bpo::variables_map options;
 
@@ -105,9 +104,9 @@ int main( int argc, char** argv )
 
       if( options.count("version") )
       {
-         string client_version( graphene::utilities::git_revision_description );
+         std::string client_version( graphene::utilities::git_revision_description );
          const size_t pos = client_version.find( '/' );
-         if( pos != string::npos && client_version.size() > pos )
+         if( pos != std::string::npos && client_version.size() > pos )
             client_version = client_version.substr( pos + 1 );
 
          std::cout << "CLI Wallet version " << client_version << "\n";
@@ -172,7 +171,7 @@ int main( int argc, char** argv )
 
       fc::configure_logging( cfg );
 
-      fc::ecc::private_key committee_private_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("null_key")));
+      fc::ecc::private_key committee_private_key = fc::ecc::private_key::regenerate(fc::sha256::hash(std::string("null_key")));
 
       idump( (key_to_wif( committee_private_key ) ) );
 
@@ -184,7 +183,7 @@ int main( int argc, char** argv )
       //
       wallet_data wdata;
 
-      fc::path wallet_file( options.count("wallet-file") ? options.at("wallet-file").as<string>() : decent_path_finder::instance().get_decent_home() / "wallet.json");
+      fc::path wallet_file( options.count("wallet-file") ? options.at("wallet-file").as<std::string>() : decent_path_finder::instance().get_decent_home() / "wallet.json");
        
       if( fc::exists( wallet_file ) )
       {
@@ -242,7 +241,7 @@ int main( int argc, char** argv )
          wallet_cli->format_result( name_formatter.first, name_formatter.second );
 
       boost::signals2::scoped_connection closed_connection(con->closed.connect([=]{
-         cerr << "Server has disconnected us.\n";
+         std::cerr << "Server has disconnected us.\n";
          wallet_cli->stop();
       }));
       (void)(closed_connection);
@@ -262,20 +261,18 @@ int main( int argc, char** argv )
       if( options.count("rpc-endpoint") )
       {
          _websocket_server->on_connection([&]( const fc::http::websocket_connection_ptr& c ){
-            std::cout << "here... \n";
-            wlog("." );
             auto wsc = std::make_shared<fc::rpc::websocket_api_connection>(*c);
             wsc->register_api(wapi);
             c->set_session_data( wsc );
          });
-         ilog( "Listening for incoming RPC requests on ${p}", ("p", options.at("rpc-endpoint").as<string>() ));
-         _websocket_server->listen( fc::ip::endpoint::from_string(options.at("rpc-endpoint").as<string>()) );
+         ilog( "Listening for incoming RPC requests on ${p}", ("p", options.at("rpc-endpoint").as<std::string>() ));
+         _websocket_server->listen( fc::ip::endpoint::from_string(options.at("rpc-endpoint").as<std::string>()) );
          _websocket_server->start_accept();
       }
 
-      string cert_pem = "server.pem";
+      std::string cert_pem = "server.pem";
       if( options.count( "rpc-tls-certificate" ) )
-         cert_pem = options.at("rpc-tls-certificate").as<string>();
+         cert_pem = options.at("rpc-tls-certificate").as<std::string>();
 
       auto _websocket_tls_server = std::make_shared<fc::http::websocket_tls_server>(cert_pem);
       if( options.count("rpc-tls-endpoint") )
@@ -285,16 +282,16 @@ int main( int argc, char** argv )
             wsc->register_api(wapi);
             c->set_session_data( wsc );
          });
-         ilog( "Listening for incoming TLS RPC requests on ${p}", ("p", options.at("rpc-tls-endpoint").as<string>() ));
-         _websocket_tls_server->listen( fc::ip::endpoint::from_string(options.at("rpc-tls-endpoint").as<string>()) );
+         ilog( "Listening for incoming TLS RPC requests on ${p}", ("p", options.at("rpc-tls-endpoint").as<std::string>() ));
+         _websocket_tls_server->listen( fc::ip::endpoint::from_string(options.at("rpc-tls-endpoint").as<std::string>()) );
          _websocket_tls_server->start_accept();
       }
 
       auto _http_server = std::make_shared<fc::http::server>();
       if( options.count("rpc-http-endpoint" ) )
       {
-         ilog( "Listening for incoming HTTP RPC requests on ${p}", ("p", options.at("rpc-http-endpoint").as<string>() ) );
-         _http_server->listen( fc::ip::endpoint::from_string( options.at( "rpc-http-endpoint" ).as<string>() ) );
+         ilog( "Listening for incoming HTTP RPC requests on ${p}", ("p", options.at("rpc-http-endpoint").as<std::string>() ) );
+         _http_server->listen( fc::ip::endpoint::from_string( options.at( "rpc-http-endpoint" ).as<std::string>() ) );
          //
          // due to implementation, on_request() must come AFTER listen()
          //
