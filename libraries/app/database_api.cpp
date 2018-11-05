@@ -45,6 +45,7 @@
 
 #include <cfenv>
 #include <iostream>
+#include <memory>
 #include "json.hpp"
 
 #define GET_REQUIRED_FEES_MAX_RECURSION 4
@@ -1575,35 +1576,37 @@ namespace graphene { namespace app {
       return result;
    }
 
-   vector< string > g_op_names;
    struct operation_info_visitor
    {
-      typedef void result_type;
+        typedef void result_type;
 
-      int t = 0;
-      operation_info_visitor(int _t ):t(_t){}
+        shared_ptr<vector<string>> op_names;
+        operation_info_visitor(shared_ptr<vector<string>> _op_names) : op_names(_op_names) { }
 
-      template<typename Type>
-      result_type operator()( const Type& op )const
-      {
-         string vo = fc::get_typename<Type>::name();
-         g_op_names.push_back( vo );
-      }
+        template<typename Type>
+        result_type operator()( const Type& op )const
+        {
+           string vo = fc::get_typename<Type>::name();
+           op_names->emplace_back( vo );
+        }
    };
-   operation_info make_operation_info(int32_t id, string name, fee_parameters current_fees)
-   {
-       operation_info result = {id, name, current_fees};
-       return result;
-   }
+
    vector<operation_info> database_api_impl::list_operations( )const
    {
+       shared_ptr<vector<string>> op_names_ptr = std::make_shared<vector<string>>();
+
        vector<operation_info> result;
+       map<int32_t, bool> op_processed;
 
        fee_schedule temp_fee_schedule;
        temp_fee_schedule = temp_fee_schedule.get_default();
 
        fee_schedule global_fee_schedule;
        global_fee_schedule = get_global_properties().parameters.current_fees;
+
+       op_names_ptr->clear();
+       result.clear();
+       op_processed.clear();
 
        try
        {
@@ -1612,25 +1615,21 @@ namespace graphene { namespace app {
           for( int32_t i = 0; i < op.count(); ++i )
           {
              op.set_which(i);
-             op.visit( operation_info_visitor(i) );
+             op.visit( operation_info_visitor(op_names_ptr) );
           }
 
-          size_t i = 0;
           for( fee_parameters& params : global_fee_schedule.parameters )
           {
-              result.push_back(make_operation_info(i, g_op_names[i].replace(0, string("graphene::chain::").length(), ""), params));
-              i++;
+              result.emplace_back(operation_info(params.which(), (*op_names_ptr)[params.which()].replace(0, string("graphene::chain::").length(), ""), params));
+              op_processed[params.which()] = true;
           }
 
-          size_t threshold = i;
-          i = 0;
           for( fee_parameters& params : temp_fee_schedule.parameters )
           {
-              if (i >= threshold)
+              if (0 == op_processed.count(params.which()) || ! op_processed[params.which()])
               {
-                  result.push_back(make_operation_info(i, g_op_names[i].replace(0, string("graphene::chain::").length(), ""), params));
+                  result.emplace_back(operation_info(params.which(), (*op_names_ptr)[params.which()].replace(0, string("graphene::chain::").length(), ""), params));
               }
-              i++;
           }
        }
        catch ( const fc::exception& e ){ edump((e.to_detail_string())); }

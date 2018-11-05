@@ -135,9 +135,11 @@ namespace graphene { namespace app {
 
       struct operation_info
       {
-          int id;
+          int id = 0;
           string name;
           fee_parameters current_fees;
+          operation_info() { }
+          operation_info(int32_t id, string name, fee_parameters current_fees) : id(id), name(name), current_fees(current_fees) { }
       };
 
 /**
