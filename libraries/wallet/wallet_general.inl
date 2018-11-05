@@ -118,9 +118,12 @@ string wallet_api::get_help(const string& method)const
    }
    else
    {
-      std::string doxygenHelpString = my->method_documentation.get_detailed_description(method);
+      std::string doxygenHelpString = my->method_documentation.get_brief_description(method).append(my->method_documentation.get_detailed_description(method));
       if (!doxygenHelpString.empty())
-         ss << doxygenHelpString;
+      {
+         auto i = doxygenHelpString.find_first_not_of(" \t\n");
+         ss << doxygenHelpString.substr(i == std::string::npos ? 0 : i);
+      }
       else
          ss << "No help defined for method " << method << "\n";
    }
