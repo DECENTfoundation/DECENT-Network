@@ -84,7 +84,7 @@ void miner_plugin::plugin_set_program_options(
    string miner_id_example = fc::json::to_string(chain::miner_id_type(5));
    command_line_options.add_options()
          ("enable-stale-production", bpo::bool_switch(), "Enable block production, even if the chain is stale.")
-         ("required-participation", bpo::bool_switch(), "Percent of miners (0-99) that must be participating in order to produce blocks")
+         ("required-miners-participation", bpo::value<uint32_t>()->default_value(33), "Percent of miners (0-99) that must be participating in order to produce blocks")
          ("miner-id,m", bpo::value<vector<string>>()->composing()->multitoken(),
           ("ID of miner controlled by this node (e.g. " + miner_id_example + ", quotes are required, may specify multiple times)").c_str())
          ("private-key", bpo::value<vector<string>>()->composing()->multitoken()->
@@ -109,10 +109,9 @@ void miner_plugin::plugin_initialize(const boost::program_options::variables_map
       _production_enabled = options["enable-stale-production"].as<bool>();
    }
 
-   if( options.count("required-participation") )
+   if( options.count("required-miners-participation") )
    {
-      // TODO: fix arg value to int in options
-      _required_miner_participation = std::min(uint32_t(options["required-participation"].as<bool>()), 99u) * GRAPHENE_1_PERCENT;
+      _required_miner_participation = std::min(options["required-miners-participation"].as<uint32_t>(), 99u) * GRAPHENE_1_PERCENT;
    }
 
    if( options.count("private-key") )
