@@ -152,20 +152,14 @@ vector<transaction_detail_object> wallet_api::search_account_history(string cons
          {
             item.m_str_description += " - ";
             auto it = my->_keys.find(memo->to);
-            if (it == my->_keys.end())
+            auto it2 = it == my->_keys.end() ? my->_keys.find(memo->from) : it;
+
+            if (it2 == my->_keys.end())
                // memo is encrypted for someone else
                item.m_str_description += "{encrypted}";
             else
-            {
-               // here the memo is encrypted for me
-               // so I can decrypt it
-               string mykey = it->second;
-               auto wtok = *wif_to_key(mykey);
-               string str_memo =
-                  memo->get_message(wtok, memo->from);
-
-               item.m_str_description += str_memo;
-            }
+               // here the memo is encrypted for/by me so I can decrypt it
+               item.m_str_description += memo->get_message(*wif_to_key(it2->second), it == it2 ? memo->from : memo->to);
          }
       }
    }
@@ -274,4 +268,3 @@ pair<transaction_id_type,signed_transaction> wallet_api::transfer2(const string&
    auto trx = transfer( from, to, amount, asset_symbol, memo, true );
    return std::make_pair(trx.id(),trx);
 }
-
