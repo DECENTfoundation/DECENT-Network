@@ -31,6 +31,7 @@
  * @param from account sending the message
  * @param to account or multiple accounts receiving the message
  * @param text the body of the message
+ * @param broadcast \c true to broadcast the transaction on the network
  * @ingroup WalletAPI_Messaging
  */
 signed_transaction send_message(const std::string& from,
@@ -43,6 +44,7 @@ signed_transaction send_message(const std::string& from,
  * @param from account sending the message
  * @param to account or multiple accounts receiving the message
  * @param text the body of the message
+ * @param broadcast \c true to broadcast the transaction on the network
  * @ingroup WalletAPI_Messaging
  */
 signed_transaction send_unencrypted_message(const std::string& from,
