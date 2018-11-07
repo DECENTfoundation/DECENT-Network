@@ -75,6 +75,8 @@ delete msgBox;                                      \
 class QEvent;
 class QTimer;
 
+namespace bpo = boost::program_options;
+
 namespace gui_wallet
 {
    const int g_max_number_of_decimal_places = 8;   //number of decimal places showed in asset price
@@ -173,8 +175,7 @@ namespace gui_wallet
          graphene::transaction_history::transaction_history_plugin
       >;
 
-      static void setCommandLine(boost::program_options::options_description &app_options,
-                                 boost::program_options::options_description &cfg_options);
+      static void setCommandLine(bpo::options_description &app_options, bpo::options_description &cfg_options);
 
       void startDaemons(BlockChainStartType type, const std::string &wallet_file);
       void stopDaemons();

@@ -612,13 +612,14 @@ Globals& Globals::instance()
    return theOne;
 }
 
-void Globals::setCommandLine(boost::program_options::options_description &app_options, boost::program_options::options_description &cfg_options)
+void Globals::setCommandLine(bpo::options_description &app_options, bpo::options_description &cfg_options)
 {
-   boost::program_options::options_description cli, cfg;
+   bpo::options_description cli, cfg;
    graphene::app::application::set_program_options(cli, cfg);
    gui_wallet::Globals::Plugins::set_program_options(cli, cfg);
    cli.add_options()
-      ("wallet-file,w", boost::program_options::value<std::string>()->default_value(
+      ("generate-keys,g", "Generate brain, wif private and public keys.")
+      ("wallet-file,w", bpo::value<std::string>()->default_value(
           (graphene::utilities::decent_path_finder::instance().get_decent_home() / "wallet.json").generic_string()), "Wallet to load.")
    ;
 
@@ -1282,8 +1283,6 @@ void DecentTable::mouseMoveEvent(QMouseEvent * event)
 // below is decent and ipfs daemon staff, that's executed in a parallel thread
 //
 using namespace graphene;
-namespace bpo = boost::program_options;
-
 
 bool check_for_ipfs(QObject* parent, const QString& program) {
 
@@ -1398,7 +1397,7 @@ int runDecentD(gui_wallet::BlockChainStartType type, fc::promise<void>::ptr& exi
       bpo::command_line_parser parser(args);
       bpo::store(parser.options(app_options).style(0).extra_parser(bpo::ext_parser()).run(), options);
    }
-   catch (const boost::program_options::error& e)
+   catch (const bpo::error& e)
    {
       std::cerr << "Error parsing command line: " << e.what() << "\n";
       return EXIT_FAILURE;

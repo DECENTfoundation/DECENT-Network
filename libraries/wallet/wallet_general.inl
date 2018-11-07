@@ -152,8 +152,8 @@ std::string wallet_api::sign_buffer(const std::string& str_buffer,
        str_brainkey.empty())
       throw std::runtime_error("You need buffer and brainkey to sign");
 
-   string normalized_brain_key = detail::normalize_brain_key( str_brainkey );
-   fc::ecc::private_key privkey = derive_private_key( normalized_brain_key, 0 );
+   string normalized_brain_key = graphene::utilities::normalize_brain_key( str_brainkey );
+   fc::ecc::private_key privkey = graphene::utilities::derive_private_key( normalized_brain_key );
 
    fc::sha256 digest(str_buffer);
 

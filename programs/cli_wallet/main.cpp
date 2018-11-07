@@ -45,6 +45,7 @@
 #include <graphene/chain/protocol/protocol.hpp>
 #include <graphene/egenesis/egenesis.hpp>
 #include <graphene/utilities/key_conversion.hpp>
+#include <graphene/utilities/keys_generator.hpp>
 #include <graphene/utilities/git_revision.hpp>
 #include <graphene/wallet/wallet.hpp>
 #include <decent/package/package.hpp>
@@ -87,10 +88,14 @@ int main( int argc, char** argv )
 
    try {
 
-      boost::program_options::options_description opts;
+      bpo::options_description opts;
          opts.add_options()
          ("help,h", "Print this help message and exit.")
-         ("version,v", "Print version information")
+         ("version,v", "Print version information and exit.")
+         ("generate-keys,g", "Generate brain, wif private and public keys.")
+         ("wallet-file,w", bpo::value<std::string>()->implicit_value("wallet.json"), "Wallet to load.")
+         ("daemon", "Run the wallet in daemon mode.")
+         ("chain-id", bpo::value<std::string>(), "Chain ID to connect to.")
          ("server-rpc-endpoint,s", bpo::value<string>()->default_value("ws://127.0.0.1:8090"), "Server websocket RPC endpoint")
          ("server-rpc-user,u", bpo::value<string>(), "Server Username")
          ("server-rpc-password,p", bpo::value<string>(), "Server Password")
@@ -98,36 +103,45 @@ int main( int argc, char** argv )
          ("rpc-tls-endpoint,t", bpo::value<string>(), "Endpoint for wallet websocket TLS RPC to listen on")
          ("rpc-tls-certificate,c", bpo::value<string>()->implicit_value("server.pem"), "PEM certificate for wallet websocket TLS RPC")
          ("rpc-http-endpoint,H", bpo::value<string>(), "Endpoint for wallet HTTP RPC to listen on")
-         ("daemon,d", "Run the wallet in daemon mode" )
-         ("wallet-file,w", bpo::value<string>()->implicit_value("wallet.json"), "wallet to load")
-         ("chain-id", bpo::value<string>(), "chain ID to connect to");
+      ;
 
       bpo::variables_map options;
-
       bpo::store( bpo::parse_command_line(argc, argv, opts), options );
-
-      if( options.count("version") )
-      {
-         std::string client_version( graphene::utilities::git_revision_description );
-         const size_t pos = client_version.find( '/' );
-         if( pos != std::string::npos && client_version.size() > pos )
-            client_version = client_version.substr( pos + 1 );
-
-         std::cout << "CLI Wallet version " << client_version << "\n";
-      }
-
 
       if( options.count("help") )
       {
-         if( options.count("version") )
-            std::cout << "\n";
-
          std::cout << opts << "\n";
+         return EXIT_SUCCESS;
       }
+      else if( options.count("version") )
+      {
+         std::cout << "CLI Wallet " << graphene::utilities::git_version() << std::endl;
+         return EXIT_SUCCESS;
+      }
+      else if( options.count("generate-keys") )
+      {
+         try
+         {
+            std::string brain_key = graphene::utilities::generate_brain_key();
+            fc::ecc::private_key priv_key = graphene::utilities::derive_private_key(brain_key);
+            graphene::chain::public_key_type pub_key(priv_key.get_public_key());
 
-      if( options.count("help") || options.count("version") )
-         return 0;
+            std::cout << "Brain key:    " << brain_key << std::endl;
+            std::cout << "Private key:  " << graphene::utilities::key_to_wif(priv_key) << std::endl;
+            std::cout << "Public key:   " << std::string(pub_key) << std::endl;
+            return EXIT_SUCCESS;
+         }
+         catch (const fc::exception& e)
+         {
+            std::cerr << e.to_detail_string() << std::endl;
+         }
+         catch (const std::exception& e)
+         {
+            std::cerr << e.what() << std::endl;
+         }
 
+         return EXIT_FAILURE;
+      }
 
       fc::path data_dir;
       fc::logging_config cfg;
