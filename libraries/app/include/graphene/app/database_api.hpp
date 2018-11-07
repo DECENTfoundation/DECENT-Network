@@ -609,14 +609,13 @@ namespace graphene { namespace app {
          processed_transaction validate_transaction( const signed_transaction& trx )const;
 
          /**
-          *  @brief For each operation calculate the required fee in the specified asset type. If the asset type does
-          *  not have a valid core_exchange_rate.
+          *  @brief For each operation calculates the required fee in the specified asset type.
           *  @param ops the set of operations
           *  @param id the asset ID
           *  @return the required fees
           *  @ingroup DatabaseAPI_AuthValidation
           */
-         vector< fc::variant > get_required_fees( const vector<operation>& ops, asset_id_type id )const;
+         fc::variants get_required_fees( const vector<operation>& ops, asset_id_type id )const;
 
          ///////////////////////////
          // Proposed transactions //

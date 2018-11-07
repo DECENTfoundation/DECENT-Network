@@ -164,7 +164,7 @@ namespace graphene { namespace app {
       bool verify_authority( const signed_transaction& trx )const;
       bool verify_account_authority( const string& name_or_id, const flat_set<public_key_type>& signers )const;
       processed_transaction validate_transaction( const signed_transaction& trx )const;
-      vector< fc::variant > get_required_fees( const vector<operation>& ops, asset_id_type id )const;
+      fc::variants get_required_fees( vector<operation> ops, asset_id_type id )const;
       
       // Proposed transactions
       vector<proposal_object> get_proposed_transactions( account_id_type id )const;
@@ -1459,7 +1459,7 @@ namespace graphene { namespace app {
       return _db.validate_transaction(trx);
    }
    
-   vector< fc::variant > database_api::get_required_fees( const vector<operation>& ops, asset_id_type id )const
+   fc::variants database_api::get_required_fees( const vector<operation>& ops, asset_id_type id )const
    {
       return my->get_required_fees( ops, id );
    }
@@ -1472,9 +1472,11 @@ namespace graphene { namespace app {
    {
       get_required_fees_helper(
                                const fee_schedule& _current_fee_schedule,
+                               const price& _core_exchange_rate,
                                uint32_t _max_recursion
                                )
       : current_fee_schedule(_current_fee_schedule),
+      core_exchange_rate(_core_exchange_rate),
       max_recursion(_max_recursion)
       {}
       
@@ -1486,7 +1488,6 @@ namespace graphene { namespace app {
          }
          else
          {
-            price core_exchange_rate( asset(1, asset_id_type()), asset(1, asset_id_type()));
             asset fee = current_fee_schedule.set_fee( op, core_exchange_rate );
             fc::variant result;
             fc::to_variant( fee, result );
@@ -1507,7 +1508,6 @@ namespace graphene { namespace app {
          }
          // we need to do this on the boxed version, which is why we use
          // two mutually recursive functions instead of a visitor
-         price core_exchange_rate( asset(1, asset_id_type()), asset(1, asset_id_type()));
          result.first = current_fee_schedule.set_fee( proposal_create_op, core_exchange_rate );
          fc::variant vresult;
          fc::to_variant( result, vresult );
@@ -1515,28 +1515,26 @@ namespace graphene { namespace app {
       }
       
       const fee_schedule& current_fee_schedule;
+      const price& core_exchange_rate;
       uint32_t max_recursion;
       uint32_t current_recursion = 0;
    };
-   
-   vector< fc::variant > database_api_impl::get_required_fees( const vector<operation>& ops, asset_id_type id )const
+
+   fc::variants database_api_impl::get_required_fees( vector<operation> ops, asset_id_type id )const
    {
-      vector< operation > _ops = ops;
       //
       // we copy the ops because we need to mutate an operation to reliably
       // determine its fee, see #435
       //
-      
-      vector< fc::variant > result;
-      result.reserve(ops.size());
-      id(_db);
+
+      const asset_object& a = id(_db);
       get_required_fees_helper helper(
                                       _db.current_fee_schedule(),
+                                      a.options.core_exchange_rate,
                                       GET_REQUIRED_FEES_MAX_RECURSION );
-      for( operation& op : _ops )
-      {
-         result.push_back( helper.set_op_fees( op ) );
-      }
+
+      fc::variants result(ops.size());
+      std::transform(ops.begin(), ops.end(), result.begin(), [&](operation &op) { return helper.set_op_fees( op ); } );
       return result;
    }
    
