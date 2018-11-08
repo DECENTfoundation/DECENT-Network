@@ -96,7 +96,8 @@ int main( int argc, char** argv )
          ("rpc-http-endpoint,H", bpo::value<std::string>()->default_value("127.0.0.1:8093"), "Endpoint for wallet HTTP RPC to listen on")
          ("daemon,d", "Run the wallet in daemon mode" )
          ("wallet-file,w", bpo::value<std::string>(), "wallet to load")
-         ("chain-id", bpo::value<std::string>(), "chain ID to connect to");
+         ("chain-id", bpo::value<std::string>(), "chain ID to connect to")
+         ("from-command-file,f", bpo::value<std::string>(), "Load commands from a command file");
 
       bpo::variables_map options;
 
@@ -308,6 +309,10 @@ int main( int argc, char** argv )
       if( !options.count( "daemon" ) )
       {
          wallet_cli->register_api( wapi );
+         if( options.count("from-command-file") )
+         {
+             wallet_cli->set_command_file(options.at( "from-command-file" ).as<std::string>());
+         }
          wallet_cli->start();
          wallet_cli->wait();
       }
