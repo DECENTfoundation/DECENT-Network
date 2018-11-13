@@ -41,6 +41,7 @@
 #include <fc/log/logger_config.hpp>
 
 #include <decent/config/decent_log_config.hpp>
+#include <decent/monitoring/monitoring_fc.hpp>
 
 
 #include <iostream>
@@ -197,9 +198,7 @@ int main(int argc, char** argv) {
 
       bool run_as_daemon = false;
       fc::path logs_dir, data_dir, temp_dir, config_filename;
-
       auto& path_finder = utilities::decent_path_finder::instance();
-
       if (options.count("daemon")) {
          int ret = start_as_daemon();
          if (ret < 0) {
@@ -224,7 +223,6 @@ int main(int argc, char** argv) {
          path_finder.set_decent_temp_path(temp_dir);
       }
       else {
-
          data_dir   = path_finder.get_decent_data();
          logs_dir   = path_finder.get_decent_logs();
          temp_dir   = path_finder.get_decent_temp();
@@ -262,7 +260,7 @@ int main(int argc, char** argv) {
 
       if( options.count("help") || options.count("version") )
          return 0;
-
+      
       if( fc::exists(config_filename) )
       {
          // get the basic options
@@ -325,6 +323,8 @@ int main(int argc, char** argv) {
          if (logging_config)
             fc::configure_logging(*logging_config);
       }
+      monitoring::set_data_dir(data_dir);
+      monitoring::monitoring_counters_base::start_monitoring_thread();
 
       bpo::notify(options);
       node->initialize(data_dir, options);
@@ -332,6 +332,8 @@ int main(int argc, char** argv) {
 
       node->startup();
       node->startup_plugins();
+
+      
 
       fc::promise<int>::ptr exit_promise = new fc::promise<int>("UNIX Signal Handler");
 #ifdef _MSC_VER
@@ -374,6 +376,7 @@ int main(int argc, char** argv) {
             seeding_plug->plugin_startup();
          }
       }
+      monitoring::monitoring_counters_base::stop_monitoring_thread();
 
       int signal = exit_promise->wait();
       ilog("Exiting from signal ${n}", ("n", signal));

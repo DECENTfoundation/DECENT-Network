@@ -1,5 +1,5 @@
 
-file(GLOB HEADERS "include/graphene/messagng/*.hpp")
+file(GLOB HEADERS "include/graphene/messaging/*.hpp")
 
 add_library( decent_messaging 
              messaging.cpp

@@ -307,6 +307,7 @@ namespace graphene { namespace wallet {
 #include "content.hpp"
 #include "subscription.hpp"
 #include "messaging.hpp"
+#include "monitoring.hpp"
 
 
          std::map<string,std::function<string(fc::variant,const fc::variants&)>> get_result_formatters() const;
@@ -316,6 +317,7 @@ namespace graphene { namespace wallet {
 
       };
    } }
+
 
 
 FC_REFLECT( graphene::wallet::wallet_data,
@@ -536,6 +538,10 @@ FC_API( graphene::wallet::wallet_api,
         (get_message_objects)
         (get_messages)
         (get_sent_messages)
+
+        //Monitoring
+        (reset_counters)
+        (get_counters)
    )
 
 #if 0

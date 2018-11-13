@@ -4,7 +4,7 @@ add_library( graphene_miner
              miner.cpp
            )
 
-target_link_libraries( graphene_miner graphene_chain graphene_app graphene_time )
+target_link_libraries( graphene_miner graphene_chain graphene_app graphene_time decent_monitoring )
 target_include_directories( graphene_miner
                             PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" )
 

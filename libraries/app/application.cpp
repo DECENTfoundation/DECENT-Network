@@ -40,6 +40,7 @@
 
 #include <graphene/utilities/key_conversion.hpp>
 
+
 #include <fc/smart_ref_impl.hpp>
 
 #include <fc/io/fstream.hpp>
@@ -264,6 +265,10 @@ namespace detail {
                   auto messaging_api = std::make_shared<graphene::app::messaging_api>( std::ref(*_self) );
                   wsc->register_api(fc::api<graphene::app::messaging_api>(messaging_api));
                }
+               else if( api_name == "monitoring_api" ) {
+                  auto monitoring_api = std::make_shared<graphene::app::monitoring_api>();
+                  wsc->register_api(fc::api<graphene::app::monitoring_api>(monitoring_api));
+               }
             }
          }
       }
@@ -360,6 +365,7 @@ namespace detail {
       void startup()
       { try {
          bool clean = !fc::exists(_data_dir / "blockchain/dblock");
+  
          fc::create_directories(_data_dir / "blockchain/dblock");
 
          auto initial_state = [&] {

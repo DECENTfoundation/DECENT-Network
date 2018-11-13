@@ -26,7 +26,10 @@
 #include <graphene/app/plugin.hpp>
 #include <graphene/chain/database.hpp>
 
+#include <decent/monitoring/monitoring.hpp>
+
 #include <fc/thread/future.hpp>
+
 
 namespace graphene { namespace miner_plugin {
 
@@ -46,7 +49,15 @@ namespace block_production_condition
    };
 }
 
-class miner_plugin : public graphene::app::plugin {
+MONITORING_COUNTERS_BEGIN(miner_plugin)
+MONITORING_DEFINE_COUNTER(transactions_in_generated_blocks)
+MONITORING_DEFINE_COUNTER(generated_blocks)
+MONITORING_COUNTERS_END()
+
+
+
+
+class miner_plugin : public graphene::app::plugin PUBLIC_DERIVATION_FROM_MONITORING_CLASS(miner_plugin) {
 public:
    ~miner_plugin() {
       try {
@@ -71,7 +82,6 @@ public:
    virtual void plugin_initialize( const boost::program_options::variables_map& options ) override;
    virtual void plugin_startup() override;
    virtual void plugin_shutdown() override;
-   uint64_t _transactions_in_generated_blocks;
 
 private:
    void schedule_production_loop();
