@@ -405,6 +405,7 @@ FC_API( graphene::wallet::wallet_api,
 
         //Wallet file
         (list_my_accounts)
+        (get_wallet_filename)
         (get_private_key)
         (is_new)
         (is_locked)
