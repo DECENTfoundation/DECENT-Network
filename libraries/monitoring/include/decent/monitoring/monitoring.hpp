@@ -26,8 +26,8 @@
 
 #include <vector>
 #include <set>
-#include <mutex>
-
+#include <thread>
+#include <condition_variable>
 
 namespace monitoring {
 
@@ -52,7 +52,7 @@ namespace monitoring {
 
    protected:
       static bool _end_thread;
-      static std::unique_ptr<std::thread> _monitoring_thread;
+      static std::shared_ptr<std::thread> _monitoring_thread;
       static std::mutex wait_mutex;
       static std::set<monitoring_counters_base*> registered_instances;
       static std::mutex registered_instances_mutex;
