@@ -1847,9 +1847,8 @@ namespace
          secret.Encode((byte*)keys.key._hash, 32);
 #endif
 
-         uint32_t quorum = std::max((vector<account_id_type>::size_type)1, seeders.size()/3); // TODO_DECENT - quorum >= 2 see also content_submit_operation::validate
-
-         ShamirSecret ss(quorum, seeders.size(), secret);
+         keys.quorum = std::max(2u, static_cast<uint32_t>(seeders.size()/3));
+         ShamirSecret ss(keys.quorum, seeders.size(), secret);
          ss.calculate_split();
          
 

@@ -732,7 +732,7 @@ namespace graphene { namespace app {
          /**
           * @brief Generate keys for new content submission.
           * @param seeders list of seeder account IDs
-          * @return generated key and key parts
+          * @return generated key, key parts and quorum
           * @ingroup DatabaseAPI_Decent
           */
          content_keys generate_content_keys(vector<account_id_type> const& seeders)const;
