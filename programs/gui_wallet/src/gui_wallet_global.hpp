@@ -156,7 +156,7 @@ namespace gui_wallet
       ~Globals();
       
    public:
-      enum class ConnectionState { Connecting, SyncingUp, Up };
+      enum class ConnectionState { NoState, Reindexing, Connecting, SyncingUp, Up };
       static Globals& instance();
 
       void startDaemons(BlockChainStartType type);
@@ -171,6 +171,7 @@ namespace gui_wallet
       QLocale& locale() { return *m_p_locale; }
       bool connected() const;
       QString getAssetName() const;
+      void display_error_and_stop_slot_timer(std::string param1, std::string param2, std::string param3);
 
       //functions
       std::string ImportAccount(const std::string& name, const std::string& key);
@@ -205,9 +206,10 @@ namespace gui_wallet
       void slot_ConnectionStatusChange(ConnectionState from, ConnectionState to);
 
    signals:
-      void connectingProgress(const QString& str_progress);
+      //void connectingProgress(const QString& str_progress);
       void currentUserChanged(const QString& user);
-      void statusShowMessage(const QString& str_message, int timeout = 0);
+      void progressSyncMessage(const QString& str_message, int timeout = 0);
+      void progressCommonTextMessage(const QString& str_message);
       void updateProgress(int value, int maxVal);
       void statusClearMessage();
       void walletUnlocked();
@@ -228,6 +230,10 @@ namespace gui_wallet
 
 
       std::map<std::string, std::string> m_map_user_id_cache;
+
+      std::string m_exceptionMsgBoxParam1;
+      std::string m_exceptionMsgBoxParam2;
+      std::string m_exceptionMsgBoxParam3;
    };
 
    

@@ -490,6 +490,8 @@ namespace detail {
             _chain_db->reindex(_data_dir / "blockchain", initial_state());
          }
 
+         _chain_db->set_no_need_reindexing();
+
          if (!_options->count("genesis-json") &&
              _chain_db->get_chain_id() != graphene::egenesis::get_egenesis_chain_id()) {
             elog("Detected old database. Nuking and starting over.");

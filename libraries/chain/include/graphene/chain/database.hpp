@@ -420,6 +420,9 @@ namespace graphene { namespace chain {
                return fhd->data.block_num();
             return 0;
          }
+         
+         double get_reindexing_percent() { return _reindexing_percent; } // helper for retrieving reindexing progress - gui can use it
+         void set_no_need_reindexing() { _reindexing_percent = 100; } // called from main when there is no need to reindex
          /**
           * @}
           */
@@ -512,6 +515,7 @@ namespace graphene { namespace chain {
          flat_map<uint32_t,block_id_type>  _checkpoints;
 
          node_property_object              _node_property_object;
+         double                            _reindexing_percent = 0;
    };
 
    namespace detail
