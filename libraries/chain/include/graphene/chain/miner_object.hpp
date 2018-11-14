@@ -29,8 +29,6 @@
 namespace graphene { namespace chain {
    using namespace graphene::db;
 
-   class miner_object;
-
    class miner_object : public abstract_object<miner_object>
    {
       public:
@@ -46,6 +44,7 @@ namespace graphene { namespace chain {
          string           url;
          int64_t          total_missed = 0;
          uint32_t         last_confirmed_block_num = 0;
+         uint32_t         vote_ranking = std::numeric_limits<uint32_t>::max();
 
          miner_object() : vote_id(vote_id_type::miner) {}
    };
@@ -77,7 +76,8 @@ FC_REFLECT_DERIVED( graphene::chain::miner_object, (graphene::db::object),
                     (pay_vb)
                     (vote_id)
                     (total_votes)
-                    (url) 
+                    (url)
                     (total_missed)
                     (last_confirmed_block_num)
+                    (vote_ranking)
                   )

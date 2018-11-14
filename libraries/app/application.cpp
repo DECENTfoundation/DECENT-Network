@@ -473,17 +473,12 @@ namespace detail {
 
                _chain_db->reindex(_data_dir / "blockchain", initial_state());
 
-               // doing this down here helps ensure that DB will be wiped
-               // if any of the above steps were interrupted on a previous run
-               if( !fc::exists( _data_dir / "db_version" ) )
-               {
-                  std::ofstream db_version(
-                     (_data_dir / "db_version").generic_string().c_str(),
-                     std::ios::out | std::ios::binary | std::ios::trunc );
-                  std::string version_string = GRAPHENE_CURRENT_DB_VERSION;
-                  db_version.write( version_string.c_str(), version_string.size() );
-                  db_version.close();
-               }
+               std::ofstream db_version(
+                  (_data_dir / "db_version").generic_string().c_str(),
+                  std::ios::out | std::ios::binary | std::ios::trunc );
+               std::string version_string = GRAPHENE_CURRENT_DB_VERSION;
+               db_version.write( version_string.c_str(), version_string.size() );
+               db_version.close();
             }
          } else {
             wlog("Detected unclean shutdown. Replaying blockchain...");
