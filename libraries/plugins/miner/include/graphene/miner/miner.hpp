@@ -51,7 +51,7 @@ namespace block_production_condition
 
 MONITORING_COUNTERS_BEGIN(miner_plugin)
 MONITORING_DEFINE_COUNTER(transactions_in_generated_blocks)
-MONITORING_DEFINE_COUNTER(generated_blocks)
+MONITORING_DEFINE_COUNTER(blocks_generated)
 MONITORING_COUNTERS_END()
 
 

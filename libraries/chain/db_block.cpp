@@ -563,6 +563,9 @@ void database::_apply_block( const signed_block& next_block )
    // notify observers that the block has been applied
    applied_block( next_block ); //emit
 
+   MONITORING_COUNTER_VALUE(blocks_applied)++;
+   MONITORING_COUNTER_VALUE(transactions_in_applied_blocks) += _current_trx_in_block;
+
    _applied_ops.clear();
 
    notify_changed_objects();
