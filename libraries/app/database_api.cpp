@@ -1597,6 +1597,7 @@ namespace graphene { namespace app {
 
        vector<operation_info> result;
        map<int32_t, bool> op_processed;
+       map<int32_t, operation_info> op_cached;
 
        fee_schedule temp_fee_schedule;
        temp_fee_schedule = temp_fee_schedule.get_default();
@@ -1620,16 +1621,23 @@ namespace graphene { namespace app {
 
           for( fee_parameters& params : global_fee_schedule.parameters )
           {
-              result.emplace_back(operation_info(params.which(), (*op_names_ptr)[params.which()].replace(0, string("graphene::chain::").length(), ""), params));
               op_processed[params.which()] = true;
+              op_cached[params.which()] = operation_info(params.which(), (*op_names_ptr)[params.which()].replace(0, string("graphene::chain::").length(), ""), params);
           }
 
           for( fee_parameters& params : temp_fee_schedule.parameters )
           {
               if (0 == op_processed.count(params.which()) || ! op_processed[params.which()])
               {
-                  result.emplace_back(operation_info(params.which(), (*op_names_ptr)[params.which()].replace(0, string("graphene::chain::").length(), ""), params));
+                  op_cached[params.which()] = operation_info(params.which(), (*op_names_ptr)[params.which()].replace(0, string("graphene::chain::").length(), ""), params);
               }
+          }
+
+          map<int32_t, operation_info>::iterator it;
+
+          for( it = op_cached.begin(); it != op_cached.end(); it++ )
+          {
+              result.emplace_back(it->second);
           }
        }
        catch ( const fc::exception& e ){ edump((e.to_detail_string())); }
