@@ -282,6 +282,7 @@ namespace graphene { namespace wallet {
  * @defgroup WalletAPI_Subscription Subscription
  * @defgroup WalletAPI_Content Content
  * @defgroup WalletAPI_Messaging Messaging
+ * @defgroup WalletAPI_Monitoring Monitoring
  * @defgroup WalletAPI_Seeding Seeding
  * @defgroup WalletAPI_Mining Mining
  * @defgroup WalletAPI_Proposals Proposals

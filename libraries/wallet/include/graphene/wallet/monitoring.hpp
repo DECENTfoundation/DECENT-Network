@@ -27,13 +27,17 @@
 #define DECENT_WALLET_MONITORING_H
 
 /**
- * @brief Sends an encrypted text message to one or many users.
- * @param from account sending the message
- * @param to account or multiple accounts receiving the message
- * @param text the body of the message
- * @ingroup WalletAPI_Messaging
+ * @brief Reset values of monitoring counters to zero.
+ * @param vector of names of counters to reset. Use empty vector to reset all counters
+ * @ingroup WalletAPI_Monitoring
  */
 void reset_counters(const std::vector<std::string>& names);
+/**
+* @brief Retrieves monitoring counters.
+* @param vector of names of counters to return. Use empty vector to return all counters
+* @return a vector of counter objects
+* @ingroup WalletAPI_Monitoring
+*/
 std::vector<monitoring::counter_item_cli> get_counters(const std::vector<std::string>& names);
 
 

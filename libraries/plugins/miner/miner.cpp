@@ -124,7 +124,6 @@ void miner_plugin::plugin_startup()
    chain::database& d = database();
    //Start NTP time client
    graphene::time::now();
-   MONITORING_COUNTER_VALUE(transactions_in_generated_blocks) = (uint64_t)0;
 
    if( !_miners.empty() )
    {
@@ -293,7 +292,7 @@ block_production_condition::block_production_condition_enum miner_plugin::maybe_
    //capture("n", block.block_num())("t", block.timestamp)("c", now);
    uint64_t trx_diff = (uint64_t)block.transactions.size();
    MONITORING_COUNTER_VALUE(transactions_in_generated_blocks) += trx_diff;
-   MONITORING_COUNTER_VALUE(generated_blocks)++;
+   MONITORING_COUNTER_VALUE(blocks_generated)++;
    capture("n", block.block_num())("t", block.timestamp)("c", now)("trx_diff", trx_diff)("trx_total", MONITORING_COUNTER_VALUE(transactions_in_generated_blocks));
    fc::async( [this,block](){ p2p_node().broadcast(net::block_message(block)); } );
 
