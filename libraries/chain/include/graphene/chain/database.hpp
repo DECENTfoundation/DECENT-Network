@@ -436,7 +436,7 @@ namespace graphene { namespace chain {
          vector< unique_ptr<op_evaluator> >     _operation_evaluators;
 
          template<class Index>
-         vector<std::reference_wrapper<const typename Index::object_type>> sort_votable_objects(size_t count)const;
+         vector<std::reference_wrapper<const typename Index::object_type>> sort_votable_objects()const;
 
          //////////////////// db_block.cpp ////////////////////
 
