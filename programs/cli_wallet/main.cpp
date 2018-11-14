@@ -148,7 +148,7 @@ int main( int argc, char** argv )
 
 //    cfg.appenders.push_back(fc::appender_config( "default", "console", fc::variant(ac_default)));
 //    cfg.appenders.push_back(fc::appender_config( "rpc", "file", fc::variant(ac_rpc)));
-      cfg.appenders.push_back(fc::appender_config( "transfer", "file", fc::variant(ac_transfer)));
+//    cfg.appenders.push_back(fc::appender_config( "transfer", "file", fc::variant(ac_transfer)));
 
       fc::logger_config lc_default("default");
       lc_default.level          = fc::log_level::info;
@@ -164,7 +164,7 @@ int main( int argc, char** argv )
 
 //    cfg.loggers.push_back(lc_default);
 //    cfg.loggers.push_back(lc_rpc);
-      cfg.loggers.push_back(lc_transfer);
+//    cfg.loggers.push_back(lc_transfer);
 
       std::clog << "Logging RPC to file: " << ac_rpc.filename.preferred_string() << std::endl;
       std::clog << "Logging transfers to file: " << ac_transfer.filename.preferred_string() << std::endl;
