@@ -82,6 +82,8 @@
 #include <graphene/chain/config.hpp>
 #include <graphene/chain/protocol/fee_schedule.hpp>
 
+#include <decent/monitoring/monitoring.hpp>
+
 #include <fc/git_revision.hpp>
 
 //#define ENABLE_DEBUG_ULOGS
@@ -416,8 +418,16 @@ namespace graphene { namespace net { namespace detail {
     };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
+    MONITORING_COUNTERS_BEGIN(node_impl)
+    MONITORING_DEFINE_COUNTER(connections_node_inbound_terminated)
+    MONITORING_DEFINE_COUNTER(connections_node_outbound_terminated)
+    MONITORING_DEFINE_COUNTER(connections_node_inbound_active)
+    MONITORING_DEFINE_COUNTER(connections_node_inbound_active_max)
+    MONITORING_DEFINE_COUNTER(connections_node_outbound_active)
+    MONITORING_DEFINE_COUNTER(connections_node_outbound_active_max)
+    MONITORING_COUNTERS_END()
 
-    class node_impl : public peer_connection_delegate
+    class node_impl : public peer_connection_delegate PUBLIC_DERIVATION_FROM_MONITORING_CLASS(node_impl)
     {
     public:
 #ifdef P2P_IN_DEDICATED_THREAD
@@ -1488,6 +1498,10 @@ namespace graphene { namespace net { namespace detail {
         {
           move_peer_to_terminating_list(peer);
           peer->close_connection();
+          if (peer->direction == peer_connection_direction::inbound)
+             MONITORING_COUNTER_VALUE(connections_node_inbound_terminated)++;
+          if (peer->direction == peer_connection_direction::outbound)
+             MONITORING_COUNTER_VALUE(connections_node_outbound_terminated)++;
         }
         peers_to_disconnect_forcibly.clear();
       } // end ASSERT_TASK_NOT_PREEMPTED()
@@ -2979,6 +2993,10 @@ namespace graphene { namespace net { namespace detail {
       if (_active_connections.find(originating_peer_ptr) != _active_connections.end())
       {
         _active_connections.erase(originating_peer_ptr);
+        if (originating_peer_ptr->direction == peer_connection_direction::inbound)
+           MONITORING_COUNTER_VALUE(connections_node_inbound_active)--;
+        if (originating_peer_ptr->direction == peer_connection_direction::outbound)
+           MONITORING_COUNTER_VALUE(connections_node_outbound_active)--;
 
         if (inbound_endpoint && originating_peer_ptr->get_remote_endpoint())
         {
@@ -4357,6 +4375,10 @@ namespace graphene { namespace net { namespace detail {
         _terminating_connections.erase(new_peer);
         assert(_active_connections.find(new_peer) == _active_connections.end());
         _active_connections.erase(new_peer);
+        if (new_peer->direction == peer_connection_direction::inbound)
+           MONITORING_COUNTER_VALUE(connections_node_inbound_active)--;
+        if (new_peer->direction == peer_connection_direction::outbound)
+           MONITORING_COUNTER_VALUE(connections_node_outbound_active)--;
         assert(_closing_connections.find(new_peer) == _closing_connections.end());
         _closing_connections.erase(new_peer);
 
@@ -4662,6 +4684,16 @@ namespace graphene { namespace net { namespace detail {
     void node_impl::move_peer_to_active_list(const peer_connection_ptr& peer)
     {
       VERIFY_CORRECT_THREAD();
+      if (peer->direction == peer_connection_direction::inbound) {
+         MONITORING_COUNTER_VALUE(connections_node_inbound_active)++;
+         if (MONITORING_COUNTER_VALUE(connections_node_inbound_active_max) < MONITORING_COUNTER_VALUE(connections_node_inbound_active))
+            MONITORING_COUNTER_VALUE(connections_node_inbound_active_max) = MONITORING_COUNTER_VALUE(connections_node_inbound_active);
+      }
+      if (peer->direction == peer_connection_direction::outbound) {
+         MONITORING_COUNTER_VALUE(connections_node_outbound_active)++;
+         if (MONITORING_COUNTER_VALUE(connections_node_outbound_active_max) < MONITORING_COUNTER_VALUE(connections_node_outbound_active))
+            MONITORING_COUNTER_VALUE(connections_node_outbound_active_max) = MONITORING_COUNTER_VALUE(connections_node_outbound_active);
+      }
       _active_connections.insert(peer);
       _handshaking_connections.erase(peer);
       _closing_connections.erase(peer);
@@ -4672,6 +4704,10 @@ namespace graphene { namespace net { namespace detail {
     {
       VERIFY_CORRECT_THREAD();
       _active_connections.erase(peer);
+      if (peer->direction == peer_connection_direction::inbound)
+         MONITORING_COUNTER_VALUE(connections_node_inbound_active)--;
+      if (peer->direction == peer_connection_direction::outbound)
+         MONITORING_COUNTER_VALUE(connections_node_outbound_active)--;
       _handshaking_connections.erase(peer);
       _closing_connections.insert(peer);
       _terminating_connections.erase(peer);
@@ -4681,6 +4717,10 @@ namespace graphene { namespace net { namespace detail {
     {
       VERIFY_CORRECT_THREAD();
       _active_connections.erase(peer);
+      if (peer->direction == peer_connection_direction::inbound)
+         MONITORING_COUNTER_VALUE(connections_node_inbound_active)--;
+      if (peer->direction == peer_connection_direction::outbound)
+         MONITORING_COUNTER_VALUE(connections_node_outbound_active)--;
       _handshaking_connections.erase(peer);
       _closing_connections.erase(peer);
       _terminating_connections.insert(peer);

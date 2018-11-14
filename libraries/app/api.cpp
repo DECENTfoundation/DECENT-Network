@@ -26,6 +26,7 @@
 #include <cctype>
 
 #include <graphene/app/api.hpp>
+#include <decent/monitoring/monitoring.hpp>
 #include <graphene/app/api_access.hpp>
 #include <graphene/app/application.hpp>
 #include <graphene/app/impacted.hpp>
@@ -47,7 +48,7 @@
 namespace decent { namespace seeding {
       fc::promise<decent::seeding::seeding_plugin_startup_options>::ptr seeding_promise;
 }}
-
+using namespace monitoring;
 namespace graphene { namespace app {
 
     login_api::login_api(application& a)
@@ -106,6 +107,10 @@ namespace graphene { namespace app {
        else if (api_name == "messaging_api")
        {
           _messaging_api = std::make_shared< messaging_api >( std::ref(_app) );
+       }
+       else if (api_name == "monitoring_api")
+       {
+          _monitoring_api = std::make_shared< monitoring_api >();
        }
        else if( api_name == "debug_api" )
        {
@@ -275,6 +280,12 @@ namespace graphene { namespace app {
     {
        FC_ASSERT(_messaging_api);
        return *_messaging_api;
+    }
+    
+    fc::api<monitoring_api> login_api::monitoring() const
+    {
+       FC_ASSERT(_monitoring_api);
+       return *_monitoring_api;
     }
 
     vector<operation_history_object> history_api::get_account_history( account_id_type account,
@@ -567,6 +578,27 @@ namespace graphene { namespace app {
           }
        }
        
+       return result;
+    }
+
+    monitoring_api::monitoring_api()
+    {
+    }
+
+    std::string monitoring_api::info() const
+    {
+       return "monitoring_api";
+    }
+
+    void monitoring_api::reset_counters(const std::vector<std::string>& names)
+    {
+       monitoring_counters_base::reset_counters(names);
+    }
+
+    std::vector<counter_item> monitoring_api::get_counters(const std::vector<std::string>& names) const
+    {
+       std::vector<counter_item> result;
+       monitoring_counters_base::get_counters(names, result);
        return result;
     }
 } } // graphene::app

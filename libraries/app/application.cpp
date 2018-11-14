@@ -40,6 +40,7 @@
 
 #include <graphene/utilities/key_conversion.hpp>
 
+
 #include <fc/smart_ref_impl.hpp>
 
 #include <fc/io/fstream.hpp>
@@ -60,6 +61,7 @@
 #include <boost/range/adaptor/reversed.hpp>
 #include <decent/package/package_config.hpp>
 #include <decent/ipfs_check.hpp>
+#include <decent/monitoring/monitoring.hpp>
 
 namespace graphene { namespace app {
 using net::item_hash_t;
@@ -108,8 +110,11 @@ namespace detail {
 
       return initial_state;
    }
+   MONITORING_COUNTERS_BEGIN(application_impl)
+   MONITORING_DEFINE_COUNTER(blocks_unhandled)
+   MONITORING_COUNTERS_END()
 
-   class application_impl : public net::node_delegate
+   class application_impl : public net::node_delegate PUBLIC_DERIVATION_FROM_MONITORING_CLASS(application_impl)
    {
    public:
       fc::optional<fc::temp_file> _lock_file;
@@ -264,6 +269,10 @@ namespace detail {
                   auto messaging_api = std::make_shared<graphene::app::messaging_api>( std::ref(*_self) );
                   wsc->register_api(fc::api<graphene::app::messaging_api>(messaging_api));
                }
+               else if( api_name == "monitoring_api" ) {
+                  auto monitoring_api = std::make_shared<graphene::app::monitoring_api>();
+                  wsc->register_api(fc::api<graphene::app::monitoring_api>(monitoring_api));
+               }
             }
          }
       }
@@ -360,6 +369,7 @@ namespace detail {
       void startup()
       { try {
          bool clean = !fc::exists(_data_dir / "blockchain/dblock");
+  
          fc::create_directories(_data_dir / "blockchain/dblock");
 
          auto initial_state = [&] {
@@ -612,6 +622,7 @@ namespace detail {
             return result;
          } catch ( const graphene::chain::unlinkable_block_exception& e ) {
             // translate to a graphene::net exception
+            MONITORING_COUNTER_VALUE(blocks_unhandled)++;
             elog("Error when pushing block:\n${e}", ("e", e.to_detail_string()));
             FC_THROW_EXCEPTION(graphene::net::unlinkable_block_exception, "Error when pushing block:\n${e}", ("e", e.to_detail_string()));
          } catch( const fc::exception& e ) {

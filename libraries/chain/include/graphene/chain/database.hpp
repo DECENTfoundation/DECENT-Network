@@ -40,6 +40,8 @@
 
 #include <graphene/chain/protocol/protocol.hpp>
 
+#include <decent/monitoring/monitoring.hpp>
+
 #include <fc/log/logger.hpp>
 
 #include <map>
@@ -53,11 +55,16 @@ namespace graphene { namespace chain {
    struct budget_record;
    struct real_supply;
 
+   MONITORING_COUNTERS_BEGIN(database)
+   MONITORING_DEFINE_COUNTER(blocks_applied)
+   MONITORING_DEFINE_COUNTER(transactions_in_applied_blocks)
+   MONITORING_COUNTERS_END()
+
    /**
     *   @class database
     *   @brief tracks the blockchain state in an extensible manner
     */
-   class database : public db::object_database
+   class database : public db::object_database PUBLIC_DERIVATION_FROM_MONITORING_CLASS(database)
    {
       public:
          //////////////////// db_management.cpp ////////////////////

@@ -37,7 +37,11 @@
 #include <fc/rpc/websocket_api.hpp>
 #include <fc/smart_ref_impl.hpp>
 
+
 #include <graphene/app/api.hpp>
+
+
+
 #include <graphene/chain/protocol/protocol.hpp>
 #include <graphene/egenesis/egenesis.hpp>
 #include <graphene/utilities/key_conversion.hpp>
@@ -87,16 +91,16 @@ int main( int argc, char** argv )
          opts.add_options()
          ("help,h", "Print this help message and exit.")
          ("version,v", "Print version information")
-         ("server-rpc-endpoint,s", bpo::value<std::string>()->default_value("ws://127.0.0.1:8090"), "Server websocket RPC endpoint")
-         ("server-rpc-user,u", bpo::value<std::string>(), "Server Username")
-         ("server-rpc-password,p", bpo::value<std::string>(), "Server Password")
-         ("rpc-endpoint,r", bpo::value<std::string>(), "Endpoint for wallet websocket RPC to listen on")
-         ("rpc-tls-endpoint,t", bpo::value<std::string>(), "Endpoint for wallet websocket TLS RPC to listen on")
-         ("rpc-tls-certificate,c", bpo::value<std::string>()->default_value("server.pem"), "PEM certificate for wallet websocket TLS RPC")
-         ("rpc-http-endpoint,H", bpo::value<std::string>(), "Endpoint for wallet HTTP RPC to listen on")
+         ("server-rpc-endpoint,s", bpo::value<string>()->default_value("ws://127.0.0.1:8090"), "Server websocket RPC endpoint")
+         ("server-rpc-user,u", bpo::value<string>(), "Server Username")
+         ("server-rpc-password,p", bpo::value<string>(), "Server Password")
+         ("rpc-endpoint,r", bpo::value<string>(), "Endpoint for wallet websocket RPC to listen on")
+         ("rpc-tls-endpoint,t", bpo::value<string>(), "Endpoint for wallet websocket TLS RPC to listen on")
+         ("rpc-tls-certificate,c", bpo::value<string>()->implicit_value("server.pem"), "PEM certificate for wallet websocket TLS RPC")
+         ("rpc-http-endpoint,H", bpo::value<string>(), "Endpoint for wallet HTTP RPC to listen on")
          ("daemon,d", "Run the wallet in daemon mode" )
-         ("wallet-file,w", bpo::value<std::string>(), "wallet to load")
-         ("chain-id", bpo::value<std::string>(), "chain ID to connect to");
+         ("wallet-file,w", bpo::value<string>()->implicit_value("wallet.json"), "wallet to load")
+         ("chain-id", bpo::value<string>(), "chain ID to connect to");
 
       bpo::variables_map options;
 

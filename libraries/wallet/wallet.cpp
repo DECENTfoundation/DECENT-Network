@@ -66,6 +66,7 @@
 #include <fc/thread/scoped_lock.hpp>
 
 #include <graphene/app/api.hpp>
+
 #include <graphene/chain/asset_object.hpp>
 #include <graphene/chain/protocol/fee_schedule.hpp>
 #include <graphene/utilities/git_revision.hpp>
@@ -79,6 +80,8 @@
 #include <graphene/chain/custom_evaluator.hpp>
 
 #include <decent/package/package.hpp>
+#include <decent/monitoring/monitoring.hpp>
+
 
 #include <fc/smart_ref_impl.hpp>
 #include "json.hpp"
@@ -3156,6 +3159,29 @@ signed_transaction content_cancellation(const string& author,
       } FC_CAPTURE_AND_RETHROW((from)(to)(text)(broadcast))
    }
 
+   void reset_counters(const std::vector<std::string>& names)
+   {
+      const auto& monapi = _remote_api->monitoring();
+      monapi->reset_counters(names);
+   }
+
+   std::vector<monitoring::counter_item_cli> get_counters(const std::vector<std::string>& names)
+   {
+      const auto& monapi = _remote_api->monitoring();
+      std::vector<monitoring::counter_item_cli> cli_result;  
+      std::vector<monitoring::counter_item> result;
+      result = monapi->get_counters(names);
+      std::for_each(result.begin(), result.end(), [&](monitoring::counter_item& item) {
+         monitoring::counter_item_cli item_cli;
+         item_cli.name = item.name;
+         item_cli.value = item.value;
+         item_cli.last_reset = fc::time_point_sec(item.last_reset);
+         cli_result.push_back(item_cli);
+      });
+      
+      return cli_result;
+   }
+
    void dbg_make_mia(const std::string& creator, const std::string& symbol)
    {
       create_monitored_asset(get_account(creator).name, symbol, 2, "abcd", 3600, 1, true);
@@ -3754,6 +3780,7 @@ signed_transaction content_cancellation(const string& author,
 #include "wallet_content.inl"
 #include "wallet_subscription.inl"
 #include "wallet_messaging.inl"
+#include "wallet_monitoring.inl"
 
 
 #if 0

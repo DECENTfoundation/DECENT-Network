@@ -25,13 +25,12 @@
 #pragma once
 
 #include <graphene/app/database_api.hpp>
-
 #include <graphene/chain/protocol/types.hpp>
-
 #include <graphene/debug_miner/debug_api.hpp>
-
 #include <graphene/net/node.hpp>
 #include <graphene/chain/message_object.hpp>
+
+#include <decent/monitoring/monitoring_fc.hpp>
 
 #include <fc/api.hpp>
 #include <fc/optional.hpp>
@@ -57,6 +56,7 @@ namespace graphene { namespace app {
    using namespace graphene::chain;
    using namespace fc::ecc;
    using namespace std;
+   
 
    class application;
 
@@ -459,6 +459,25 @@ namespace graphene { namespace app {
       application& _app;
    };
 
+   class monitoring_api
+   {
+   public:
+      monitoring_api();
+      /**
+      * @brieg Get the name of the API.
+      * @return the name of the API
+      * @ingroup MessagingAPI
+      */
+      std::string info() const;
+      void reset_counters(const std::vector<std::string>& names);
+      std::vector<monitoring::counter_item> get_counters(const std::vector<std::string>& names) const;
+   };
+
+
+
+
+
+
    /**
     * @brief The login_api class implements the bottom layer of the RPC API
     *
@@ -519,6 +538,11 @@ namespace graphene { namespace app {
          */
          fc::api<messaging_api> messaging()const;
          /**
+         * @brief Retrieve the monitoring API.
+         * @ingroup LoginAPI
+         */
+         fc::api<monitoring_api> monitoring()const;
+         /**
           * @brief Retrieve the debug API (if available).
           * @ingroup LoginAPI
           */
@@ -539,6 +563,7 @@ namespace graphene { namespace app {
          optional< fc::api<history_api> >  _history_api;
          optional< fc::api<crypto_api> > _crypto_api;
          optional< fc::api<messaging_api> > _messaging_api;
+         optional< fc::api<monitoring_api> > _monitoring_api;
          optional< fc::api<graphene::debug_miner::debug_api> > _debug_api;
    };
 
@@ -554,6 +579,7 @@ FC_REFLECT( graphene::app::verify_range_proof_rewind_result,
 //FC_REFLECT_TYPENAME( fc::ecc::commitment_type );
 FC_REFLECT( graphene::app::asset_array, (asset0)(asset1) )
 FC_REFLECT( graphene::app::balance_change_result, (hist_object)(balance)(fee) )
+
 
 FC_API(graphene::app::history_api,
        (info)
@@ -594,6 +620,11 @@ FC_API(graphene::app::messaging_api,
        (info)
        (get_message_objects)
      )
+FC_API(graphene::app::monitoring_api,
+   (info)
+      (reset_counters)
+      (get_counters)
+   )
 FC_API(graphene::app::login_api,
        (info)
        (login)
@@ -604,4 +635,5 @@ FC_API(graphene::app::login_api,
        (crypto)
        (debug)
        (messaging)
+       (monitoring)
      )
