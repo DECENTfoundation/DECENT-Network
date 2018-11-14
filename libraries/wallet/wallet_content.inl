@@ -20,7 +20,7 @@ signed_transaction wallet_api::submit_content(const string& author,
                              synopsis, secret, cd, broadcast);
 }
 
-void wallet_api::submit_content_async(const string& author,
+content_keys wallet_api::submit_content_async(const string& author,
                                       const vector< pair< string, uint32_t>>& co_authors,
                                       const string& content_dir,
                                       const string& samples_dir,
@@ -31,7 +31,6 @@ void wallet_api::submit_content_async(const string& author,
                                       const string& synopsis)
 {
    return my->submit_content_async(author, co_authors, content_dir, samples_dir, protocol, price_amounts, seeders, expiration, synopsis);
-
 }
 
 signed_transaction wallet_api::content_cancellation(const string& author,

@@ -2515,7 +2515,7 @@ public:
       } FC_CAPTURE_AND_RETHROW( (author)(URI)(price_amounts)(hash)(seeders)(quorum)(expiration)(publishing_fee_symbol_name)(publishing_fee_amount)(synopsis)(secret)(broadcast) )
    }
 
-   void submit_content_async( string const& author,
+   content_keys submit_content_async( string const& author,
                                        vector< pair< string, uint32_t>> co_authors,
                                        string const& content_dir,
                                        string const& samples_dir,
@@ -2554,18 +2554,16 @@ public:
             secret = tmp;
          }
 
-         fc::sha256 sha_key;
+         content_keys keys;
 #if CRYPTOPP_VERSION >= 600
-         secret.Encode((CryptoPP::byte*)sha_key._hash, 32);
+         secret.Encode((CryptoPP::byte*)keys.key._hash, 32);
 #else
-         secret.Encode((byte*)sha_key._hash, 32);
+         secret.Encode((byte*)keys.key._hash, 32);
 #endif
 
-         uint32_t quorum = std::max((vector<account_id_type>::size_type)2, seeders.size()/3);
-         ShamirSecret ss(quorum, seeders.size(), secret);
+         keys.quorum = std::max(2u, static_cast<uint32_t>(seeders.size()/3));
+         ShamirSecret ss(keys.quorum, seeders.size(), secret);
          ss.calculate_split();
-         
-         content_submit_operation submit_op;
 
          for( int i =0; i < (int)seeders.size(); i++ )
          {
@@ -2580,16 +2578,17 @@ public:
             elog("Split ${i} = ${a} / ${b}",("i",i)("a",a)("b",b));
 
             decent::encrypt::el_gamal_encrypt( p, s->pubKey ,cp );
-            submit_op.key_parts.push_back(cp);
-
+            keys.parts.push_back(cp);
          }
 
+         content_submit_operation submit_op;
+         submit_op.key_parts = keys.parts;
          submit_op.author = author_account.id;
          submit_op.co_authors = co_authors_id_to_split;
          submit_content_utility(submit_op, price_amounts);
 
          submit_op.seeders = seeders;
-         submit_op.quorum = quorum;
+         submit_op.quorum = keys.quorum;
          submit_op.expiration = expiration;
          submit_op.synopsis = synopsis;
 
@@ -2598,7 +2597,7 @@ public:
             sectors = DECENT_SECTORS;
          else
             sectors = DECENT_SECTORS_BIG;
-         auto package_handle = package_manager.get_package(content_dir, samples_dir, sha_key, sectors);
+         auto package_handle = package_manager.get_package(content_dir, samples_dir, keys.key, sectors);
          shared_ptr<submit_transfer_listener> listener_ptr = std::make_shared<submit_transfer_listener>(*this, package_handle, submit_op, protocol);
          _package_manager_listeners.push_back(listener_ptr);
          
@@ -2606,7 +2605,7 @@ public:
          package_handle->create(false);
 
          //We end up here and return the  to the upper layer. The create method will continue in the background, and once finished, it will call the respective callback of submit_transfer_listener class
-         return ;
+         return keys;
       }
       FC_CAPTURE_AND_RETHROW( (author)(content_dir)(samples_dir)(protocol)(price_amounts)(seeders)(expiration)(synopsis) )
    }
