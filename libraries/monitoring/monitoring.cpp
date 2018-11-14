@@ -28,16 +28,15 @@
 #include <fc/variant.hpp>
 #include <fc/io/json.hpp>
 
-#include <condition_variable>
 #include <algorithm>
-#include <thread>
+
 
 
 namespace monitoring {
 
    std::set<monitoring_counters_base*> monitoring_counters_base::registered_instances;
    std::mutex monitoring_counters_base::registered_instances_mutex;
-   std::unique_ptr<std::thread> monitoring_counters_base::_monitoring_thread(nullptr);
+   std::shared_ptr<std::thread> monitoring_counters_base::_monitoring_thread(nullptr);
    bool monitoring_counters_base::_end_thread = false;
    std::condition_variable monitoring_counters_base::cv;
    std::mutex  monitoring_counters_base::wait_mutex;
@@ -52,7 +51,7 @@ namespace monitoring {
       try {
          std::vector<counter_item> result;
          std::for_each(registered_instances.begin(), registered_instances.end(), [&](const monitoring_counters_base* this_ptr) {
-            const const std::vector<std::string> names;
+            const std::vector<std::string> names;
 
             this_ptr->get_local_counters(names, result);
          });
@@ -108,7 +107,7 @@ namespace monitoring {
 
    std::thread& monitoring_counters_base::start_monitoring_thread()
    {
-      _monitoring_thread = std::make_unique<std::thread>(monitoring_thread_function);
+      _monitoring_thread = std::make_shared<std::thread>(monitoring_thread_function);
       _thread_is_running = true;
       return *_monitoring_thread;
    }
