@@ -28,17 +28,16 @@
 
 /**
  * @brief Reset values of monitoring counters to zero.
- * @param vector of names of counters to reset. Use empty vector to reset all counters
+ * @param names vector of names of counters to reset. Use empty vector to reset all counters
  * @ingroup WalletAPI_Monitoring
  */
 void reset_counters(const std::vector<std::string>& names);
 /**
 * @brief Retrieves monitoring counters.
-* @param vector of names of counters to return. Use empty vector to return all counters
+* @param names vector of names of counters to return. Use empty vector to return all counters
 * @return a vector of counter objects
 * @ingroup WalletAPI_Monitoring
 */
 std::vector<monitoring::counter_item_cli> get_counters(const std::vector<std::string>& names);
-
 
 #endif //DECENT_WALLET_MONITORING_H
