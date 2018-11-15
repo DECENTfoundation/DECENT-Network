@@ -1,8 +1,8 @@
-
 file(GLOB HEADERS "include/graphene/messaging/*.hpp")
 
 add_library( decent_messaging 
              messaging.cpp
+             ${HEADERS}
            )
 
 target_link_libraries( decent_messaging graphene_chain graphene_app graphene_time decent_encrypt package_manager fc )

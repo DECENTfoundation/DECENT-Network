@@ -2,6 +2,7 @@ file(GLOB HEADERS "include/graphene/transaction_history/*.hpp")
 
 add_library( graphene_transaction_history
         transaction_history_plugin.cpp
+        ${HEADERS}
         )
 
 target_link_libraries( graphene_transaction_history graphene_chain graphene_app )

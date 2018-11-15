@@ -2,6 +2,7 @@ file(GLOB HEADERS "include/graphene/time/*.hpp")
 
 add_library( graphene_time
              time.cpp
+             ${HEADERS}
            )
 
 target_link_libraries( graphene_time fc )

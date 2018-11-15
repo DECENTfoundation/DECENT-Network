@@ -2,6 +2,7 @@ file(GLOB HEADERS "include/graphene/miner/*.hpp")
 
 add_library( graphene_miner 
              miner.cpp
+             ${HEADERS}
            )
 
 target_link_libraries( graphene_miner graphene_chain graphene_app graphene_time decent_monitoring )
