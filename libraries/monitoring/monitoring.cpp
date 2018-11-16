@@ -133,7 +133,7 @@ namespace monitoring {
 
    void monitoring_counters_base::unregister_instance()
    {
-      std::lock_guard<std::mutex> lock(monitoring_counters_base::registered_instances_mutex);
+      //std::lock_guard<std::mutex> lock(monitoring_counters_base::registered_instances_mutex); moved to destructor
       std::set<monitoring_counters_base*>::iterator it = registered_instances.find(this);
       if (it != registered_instances.end())
          registered_instances.erase(it);
