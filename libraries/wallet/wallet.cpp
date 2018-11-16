@@ -64,6 +64,7 @@
 #include <fc/crypto/hex.hpp>
 #include <fc/thread/mutex.hpp>
 #include <fc/thread/scoped_lock.hpp>
+#include <fc/rpc/api_connection.hpp>
 
 #include <graphene/app/api.hpp>
 
@@ -81,7 +82,7 @@
 
 #include <decent/package/package.hpp>
 #include <decent/monitoring/monitoring.hpp>
-
+#include <decent/wallet_utility/wallet_utility.hpp>
 
 #include <fc/smart_ref_impl.hpp>
 #include "json.hpp"
@@ -2684,6 +2685,36 @@ signed_transaction content_cancellation(const string& author,
       asset price = price_o.amount_from_string(amount);
       asset result = _remote_db->price_to_dct(price);
       return to_string(result.amount.value);
+   }
+
+   void from_command_file( std::string command_file_name )
+   {
+       std::ifstream cf_in(command_file_name);
+       std::string current_line;
+       std::map<string,std::function<string(variant,const fc::variants&)> > _result_formatters;
+       std::atomic_bool cancelToken;
+       decent::wallet_utility::WalletAPI myApi;
+
+       if (! cf_in.good())
+       {
+           std::cout << "File not found or an I/O error.\n";
+           return;
+       }
+
+       myApi.Connent(cancelToken);
+
+       while (std::getline(cf_in, current_line))
+       {
+           if (current_line.size() > 0)
+           {
+               fc::variants args = fc::json::variants_from_string(current_line + char(EOF));
+               if( args.size() == 0 )
+                  continue;
+
+               std::cout << myApi.RunTask(current_line) << "\n";
+
+           }
+       }
    }
 
    void download_content(string const& consumer, string const& URI, string const& str_region_code_from, bool broadcast)

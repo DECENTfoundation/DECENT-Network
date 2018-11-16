@@ -405,6 +405,7 @@ FC_API( graphene::wallet::wallet_api,
         (network_get_connected_peers)
         (get_transaction_id)
         (get_transaction_by_id)
+        (from_command_file)
 
         //Wallet file
         (list_my_accounts)
