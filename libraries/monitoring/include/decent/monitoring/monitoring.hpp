@@ -119,11 +119,11 @@ void save_local_counters() override \
 { \
    monitoring_counters_base::save_local_counters_internal((monitoring::counter_item*)&_counters, sizeof(_counters)/sizeof(monitoring::counter_item)); \
 } \
-monitoring::counter_item* get_first_counter() const  \
+monitoring::counter_item* get_first_counter() const override \
 { \
    return (monitoring::counter_item*)&_counters; \
 } \
-int get_counters_size() const \
+int get_counters_size() const override \
 { \
    return sizeof(_counters) / sizeof(monitoring::counter_item); \
 } \
