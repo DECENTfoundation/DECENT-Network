@@ -57,11 +57,11 @@ struct operation_get_required_auth
      vector<authority>&  oth ):active(a),owner(own),other(oth){}
 
    template<typename T>
-   void operator()( const T& v )const 
-   { 
-      active.insert( v.fee_payer() );
-      v.get_required_active_authorities( active ); 
-      v.get_required_owner_authorities( owner ); 
+   void operator()( const T& v )const
+   {
+      //active.insert( v.fee_payer() );
+      v.get_required_active_authorities( active );
+      v.get_required_owner_authorities( owner );
       v.get_required_authorities( other );
    }
 };
@@ -71,7 +71,7 @@ void operation_validate( const operation& op )
    op.visit( operation_validator() );
 }
 
-void operation_get_required_authorities( const operation& op, 
+void operation_get_required_authorities( const operation& op,
                                          flat_set<account_id_type>& active,
                                          flat_set<account_id_type>& owner,
                                          vector<authority>&  other )
@@ -79,4 +79,20 @@ void operation_get_required_authorities( const operation& op,
    op.visit( operation_get_required_auth( active, owner, other ) );
 }
 
-} } // namespace graphene::chain
+        struct operation_guarantee_idor
+        {
+            typedef optional<guarantee_object_id_type> result_type;
+            template<typename T>
+            optional<guarantee_object_id_type> operator()(const T& v)const { return v.get_guarantee_id(); }
+        };
+
+
+        optional<guarantee_object_id_type> operation_gurantee_id(const operation& op)
+        {
+           return op.visit(operation_guarantee_idor());
+        }
+
+
+
+
+    } } // namespace graphene::chain

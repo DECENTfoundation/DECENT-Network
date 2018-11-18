@@ -120,6 +120,19 @@ namespace graphene { namespace chain {
       operation_history_object_type,
       withdraw_permission_object_type,
       vesting_balance_object_type,
+       balance_object_type,
+       guard_member_object_type,
+       contract_storage_diff_type,
+       contract_storage_type,
+       contract_object_type,
+       contract_balance_object_type,
+       contract_storage_object_type,
+       contract_event_notify_object_type,
+       contract_invoke_result_object_type,
+       contract_storage_change_object_type,
+       contract_history_object_type,
+       multisig_transfer_object_type,
+       referendum_object_type,
       OBJECT_TYPE_COUNT ///< Sentry value which contains the number of different object types
    };
 
@@ -144,7 +157,13 @@ namespace graphene { namespace chain {
       impl_seeding_statistics_object_type,
       impl_transaction_detail_object_type,
       impl_messaging_object_type,
-      impl_transaction_history_object_type
+      impl_transaction_history_object_type,
+      impl_multisig_account_binding_object_type,
+      impl_guarantee_obj_type,
+      impl_multisig_address_object_type,
+       impl_history_transaction_object_type,
+       impl_trx_object_type,
+       impl_blocked_address_obj_type
    };
 
    //typedef fc::unsigned_int            object_id_type;
@@ -158,6 +177,7 @@ namespace graphene { namespace chain {
    class operation_history_object;
    class withdraw_permission_object;
    class vesting_balance_object;
+   class guarantee_object;
 
    typedef object_id< protocol_ids, account_object_type,            account_object>               account_id_type;
    typedef object_id< protocol_ids, asset_object_type,              asset_object>                 asset_id_type;
@@ -187,6 +207,17 @@ namespace graphene { namespace chain {
    class seeding_statistics_object;
    class transaction_detail_object;
    class transaction_history_object;
+   class contract_object;
+   class contract_storage_object;
+   class transaction_contract_storage_diff_object;
+   class contract_event_notify_object;
+   class contract_invoke_result_object;
+   class contract_history_object;
+   class guard_member_object;
+   class multisig_account_pair_object;
+   class trx_object;
+   class balance_object;
+   class referendum_object;
 
    typedef object_id< implementation_ids, impl_global_property_object_type,  global_property_object>                    global_property_id_type;
    typedef object_id< implementation_ids, impl_dynamic_global_property_object_type,  dynamic_global_property_object>    dynamic_global_property_id_type;
@@ -209,6 +240,20 @@ namespace graphene { namespace chain {
    typedef object_id< implementation_ids, impl_seeding_statistics_object_type, seeding_statistics_object >              seeding_statistics_id_type;
    typedef object_id< implementation_ids, impl_transaction_detail_object_type, transaction_detail_object >              transaction_detail_id_type;
    typedef object_id< implementation_ids, impl_transaction_history_object_type, transaction_history_object >            transaction_history_id_type;
+        typedef object_id< implementation_ids, impl_guarantee_obj_type, guarantee_object >     guarantee_object_id_type;
+
+        typedef object_id<protocol_ids, contract_object_type, contract_object> contract_id_type;
+        typedef object_id<protocol_ids, contract_storage_object_type, contract_storage_object> contract_storage_id_type;
+        typedef object_id<protocol_ids, contract_storage_diff_type, transaction_contract_storage_diff_object> transaction_contract_storage_diff_object_id_type;
+        typedef object_id<protocol_ids, contract_event_notify_object_type, contract_event_notify_object> contract_event_notify_object_id_type;
+        typedef object_id<protocol_ids, contract_invoke_result_object_type, contract_invoke_result_object> contract_invoke_result_object_id_type;
+
+        typedef object_id<protocol_ids, contract_history_object_type, contract_history_object> contract_history_object_id_type;
+        typedef object_id< protocol_ids, guard_member_object_type,           guard_member_object>              guard_member_id_type;
+        typedef object_id< implementation_ids, impl_multisig_account_binding_object_type, multisig_account_pair_object >     multisig_account_pair_id_type;
+        typedef object_id<implementation_ids, impl_trx_object_type,               trx_object>                                trx_obj_id_type;
+        typedef object_id< protocol_ids, balance_object_type,            balance_object>               balance_id_type;
+        typedef object_id<protocol_ids,  referendum_object_type,         referendum_object>            referendum_id_type;
 
    typedef fc::array<char, GRAPHENE_MAX_ASSET_SYMBOL_LENGTH>    symbol_type;
    typedef fc::ripemd160                                        block_id_type;
@@ -329,6 +374,17 @@ FC_REFLECT_ENUM( graphene::chain::object_type,
                  (operation_history_object_type)
                  (withdraw_permission_object_type)
                  (vesting_balance_object_type)
+                         (contract_object_type)
+                         (contract_storage_object_type)
+                         (contract_storage_diff_type)
+                         (contract_event_notify_object_type)
+                         (contract_invoke_result_object_type)
+                         (multisig_transfer_object_type)
+                         (guard_member_object_type)
+                         (contract_balance_object_type)
+                         (contract_storage_change_object_type)
+                         (contract_history_object_type)
+                         (referendum_object_type)
                  (OBJECT_TYPE_COUNT)
                )
 FC_REFLECT_ENUM( graphene::chain::impl_object_type,
@@ -352,6 +408,12 @@ FC_REFLECT_ENUM( graphene::chain::impl_object_type,
                  (impl_transaction_detail_object_type)
                  (impl_messaging_object_type)
                  (impl_transaction_history_object_type)
+                         (impl_guarantee_obj_type)
+                         (impl_history_transaction_object_type)
+                         (impl_multisig_address_object_type)
+                         (impl_trx_object_type)
+                         (impl_blocked_address_obj_type)
+                         (impl_multisig_account_binding_object_type)
                )
 
 FC_REFLECT_TYPENAME( graphene::chain::share_type )
@@ -361,6 +423,7 @@ FC_REFLECT_TYPENAME( graphene::chain::asset_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::miner_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::custom_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::proposal_id_type )
+
 FC_REFLECT_TYPENAME( graphene::chain::operation_history_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::withdraw_permission_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::vesting_balance_id_type )
@@ -380,5 +443,12 @@ FC_REFLECT_TYPENAME( graphene::chain::subscription_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::seeding_statistics_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::transaction_detail_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::transaction_history_id_type )
+
+FC_REFLECT_TYPENAME( graphene::chain::guard_member_id_type )
+FC_REFLECT_TYPENAME(graphene::chain::contract_id_type)
+FC_REFLECT_TYPENAME(graphene::chain::contract_storage_id_type)
+FC_REFLECT_TYPENAME(graphene::chain::transaction_contract_storage_diff_object_id_type)
+FC_REFLECT_TYPENAME(graphene::chain::contract_event_notify_object_id_type)
+FC_REFLECT_TYPENAME(graphene::chain::contract_history_object_id_type)
 
 FC_REFLECT_EMPTY( graphene::chain::void_t )

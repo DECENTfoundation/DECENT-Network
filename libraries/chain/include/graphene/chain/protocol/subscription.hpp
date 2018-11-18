@@ -25,6 +25,9 @@ namespace graphene { namespace chain {
 
       account_id_type fee_payer()const { return from; }
       void            validate()const;
+
+       optional<guarantee_object_id_type> guarantee_id;
+       optional<guarantee_object_id_type> get_guarantee_id()const { return guarantee_id; }
    };
 
    /**
@@ -42,6 +45,9 @@ namespace graphene { namespace chain {
 
       account_id_type fee_payer()const { return from; }
       void            validate()const;
+
+       optional<guarantee_object_id_type> guarantee_id;
+       optional<guarantee_object_id_type> get_guarantee_id()const { return guarantee_id; }
    };
 
    /**
@@ -60,6 +66,9 @@ namespace graphene { namespace chain {
 
          account_id_type fee_payer()const { return consumer; }
          void            validate()const {};
+
+       optional<guarantee_object_id_type> guarantee_id;
+       optional<guarantee_object_id_type> get_guarantee_id()const { return guarantee_id; }
       };
 
    /**
@@ -77,6 +86,9 @@ namespace graphene { namespace chain {
 
       account_id_type fee_payer()const { return consumer; }
       void            validate()const { FC_ASSERT( !"virtual operation" ); }
+
+       optional<guarantee_object_id_type> guarantee_id;
+       optional<guarantee_object_id_type> get_guarantee_id()const { return guarantee_id; }
    };
 
    /**
@@ -93,6 +105,9 @@ namespace graphene { namespace chain {
 
       account_id_type fee_payer()const { return consumer; }
       void            validate()const { FC_ASSERT( !"virtual operation" ); }
+
+       optional<guarantee_object_id_type> guarantee_id;
+       optional<guarantee_object_id_type> get_guarantee_id()const { return guarantee_id; }
    };
 
 } } // graphene::chain

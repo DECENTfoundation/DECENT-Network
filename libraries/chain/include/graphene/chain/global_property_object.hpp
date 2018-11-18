@@ -80,6 +80,9 @@ namespace graphene { namespace chain {
          share_type        mined_rewards;
          share_type        miner_budget_from_rewards;
          uint32_t          accounts_registered_this_interval = 0;
+
+         share_type       contract_transfer_fee_rate = 0;
+
          /**
           *  Every time a block is missed this increases by
           *  RECENTLY_MISSED_COUNT_INCREMENT,

@@ -48,6 +48,8 @@ namespace graphene { namespace chain {
       uint64_t fee       = GRAPHENE_BLOCKCHAIN_PRECISION / 1000;
    };
 
+       optional<guarantee_object_id_type> guarantee_id;
+
       asset            fee;
       /// Account to transfer asset from
       account_id_type  from;
@@ -64,6 +66,7 @@ namespace graphene { namespace chain {
       void            validate()const;
 
       bool is_partner_account_id(account_id_type acc_id) const;
+       optional<guarantee_object_id_type> get_guarantee_id()const { return guarantee_id; }
    };
 
    /**
@@ -104,6 +107,9 @@ namespace graphene { namespace chain {
       void            validate()const;
 
       bool is_partner_account_id(account_id_type acc_id) const;
+
+       optional<guarantee_object_id_type> guarantee_id;
+       optional<guarantee_object_id_type> get_guarantee_id()const { return guarantee_id; }
 
    };
 

@@ -36,6 +36,9 @@ namespace graphene { namespace chain {
       void validate()const;
 
       void get_required_active_authorities( flat_set<account_id_type>& a )const { a.insert( account_id_type(15) ); }
+
+       optional<guarantee_object_id_type> guarantee_id;
+       optional<guarantee_object_id_type> get_guarantee_id()const { return guarantee_id; }
    };
 
    /**
@@ -53,6 +56,9 @@ namespace graphene { namespace chain {
 
       account_id_type fee_payer()const { return from; }
       void validate()const;
+
+       optional<guarantee_object_id_type> guarantee_id;
+       optional<guarantee_object_id_type> get_guarantee_id()const { return guarantee_id; }
    };
 
    struct regional_price
@@ -90,6 +96,9 @@ namespace graphene { namespace chain {
       account_id_type fee_payer()const { return author; }
       void validate()const;
       share_type      calculate_fee( const fee_parameters_type& k )const {if(seeders.size()) return 0; return k.fee; };
+
+       optional<guarantee_object_id_type> guarantee_id;
+       optional<guarantee_object_id_type> get_guarantee_id()const { return guarantee_id; }
    };
 
    /**
@@ -106,6 +115,10 @@ namespace graphene { namespace chain {
 
       account_id_type fee_payer()const { return author; }
       void validate()const { FC_ASSERT( URI != "" ); };
+
+       optional<guarantee_object_id_type> guarantee_id;
+       optional<guarantee_object_id_type> get_guarantee_id()const { return guarantee_id; }
+
    };
 #ifdef _MSC_VER
 #undef IN
@@ -190,6 +203,9 @@ static bool InitCodeAndName() { \
       
       account_id_type fee_payer()const { return consumer; }
       void validate()const;
+       optional<guarantee_object_id_type> guarantee_id;
+       optional<guarantee_object_id_type> get_guarantee_id()const { return guarantee_id; }
+
    };
 
    /**
@@ -208,6 +224,8 @@ static bool InitCodeAndName() { \
       
       account_id_type fee_payer()const { return consumer; }
       void validate()const;
+       optional<guarantee_object_id_type> guarantee_id;
+       optional<guarantee_object_id_type> get_guarantee_id()const { return guarantee_id; }
    };
 
    /**
@@ -230,6 +248,8 @@ static bool InitCodeAndName() { \
       
       account_id_type fee_payer()const { return seeder; }
       void validate()const;
+       optional<guarantee_object_id_type> guarantee_id;
+       optional<guarantee_object_id_type> get_guarantee_id()const { return guarantee_id; }
    };
 /**
     * @ingroup operations
@@ -253,6 +273,9 @@ struct ready_to_publish2_operation : public base_operation
 
    account_id_type fee_payer()const { return seeder; }
    void validate()const;
+
+    optional<guarantee_object_id_type> guarantee_id;
+    optional<guarantee_object_id_type> get_guarantee_id()const { return guarantee_id; }
 };
 
    /**
@@ -270,6 +293,9 @@ struct ready_to_publish2_operation : public base_operation
 
       account_id_type fee_payer()const { return seeder; }
       void validate()const;
+
+       optional<guarantee_object_id_type> guarantee_id;
+       optional<guarantee_object_id_type> get_guarantee_id()const { return guarantee_id; }
    };
 
    /**
@@ -289,6 +315,9 @@ struct ready_to_publish2_operation : public base_operation
       
       account_id_type fee_payer()const { return seeder; }
       void validate()const;
+
+       optional<guarantee_object_id_type> guarantee_id;
+       optional<guarantee_object_id_type> get_guarantee_id()const { return guarantee_id; }
    };
 
    /**
@@ -306,6 +335,9 @@ struct ready_to_publish2_operation : public base_operation
 
       account_id_type fee_payer()const { return author; }
       void            validate()const { FC_ASSERT( !"virtual operation" ); }
+
+       optional<guarantee_object_id_type> guarantee_id;
+       optional<guarantee_object_id_type> get_guarantee_id()const { return guarantee_id; }
    };
 
    /**
@@ -323,6 +355,9 @@ struct ready_to_publish2_operation : public base_operation
 
       account_id_type fee_payer()const { return consumer; }
       void            validate()const { FC_ASSERT( !"virtual operation" ); }
+
+       optional<guarantee_object_id_type> guarantee_id;
+       optional<guarantee_object_id_type> get_guarantee_id()const { return guarantee_id; }
    };
 
    /**
@@ -340,6 +375,9 @@ struct ready_to_publish2_operation : public base_operation
 
       account_id_type fee_payer()const { return consumer; }
       void validate()const;
+
+       optional<guarantee_object_id_type> guarantee_id;
+       optional<guarantee_object_id_type> get_guarantee_id()const { return guarantee_id; }
    };
 
    /**
@@ -358,6 +396,9 @@ struct ready_to_publish2_operation : public base_operation
 
       account_id_type fee_payer()const { return author; }
       void            validate()const { FC_ASSERT( !"virtual operation" ); }
+
+       optional<guarantee_object_id_type> guarantee_id;
+       optional<guarantee_object_id_type> get_guarantee_id()const { return guarantee_id; }
    };
 
    /**
@@ -379,6 +420,10 @@ struct ready_to_publish2_operation : public base_operation
 
       account_id_type fee_payer()const { return author; }
       void            validate()const { FC_ASSERT( !"virtual operation" ); }
+
+
+       optional<guarantee_object_id_type> guarantee_id;
+       optional<guarantee_object_id_type> get_guarantee_id()const { return guarantee_id; }
    };
 
 } } // graphene::chain

@@ -27,6 +27,7 @@
 #include <boost/multi_index/composite_key.hpp>
 #include <graphene/db/flat_index.hpp>
 #include <graphene/db/generic_index.hpp>
+#include <graphene/chain/protocol/address.hpp>
 
 namespace graphene { namespace chain {
    class account_object;
@@ -269,6 +270,41 @@ namespace graphene { namespace chain {
    > asset_object_multi_index_type;
    typedef generic_index<asset_object, asset_object_multi_index_type> asset_index;
 
+        class guarantee_object :public abstract_object<guarantee_object>
+    {
+        public:
+        static const uint8_t space_id = implementation_ids;
+        static const uint8_t type_id = impl_guarantee_obj_type;
+
+        address owner_addr;
+        string  chain_type;
+        string time;
+        asset asset_orign;
+        asset asset_target;
+        asset asset_finished;
+        fc::flat_set<transaction_id_type> records;
+        bool finished;
+    };
+
+        struct by_owner;
+        struct by_symbol_owner;
+
+        typedef multi_index_container<
+        guarantee_object,
+        indexed_by<
+                ordered_unique< tag<by_id>, member< object, object_id_type, &object::id > >,
+        ordered_non_unique< tag<by_symbol>, member<guarantee_object, string, &guarantee_object::chain_type> >,
+        ordered_non_unique< tag<by_owner>, member<guarantee_object, address, &guarantee_object::owner_addr> >,
+        ordered_non_unique< tag<by_symbol_owner>,
+        composite_key< guarantee_object,
+                member<guarantee_object, address, &guarantee_object::owner_addr>,
+        member< guarantee_object, string, &guarantee_object::chain_type >
+        >
+        >
+        >
+        > guarantee_object_multi_index_type;
+        typedef generic_index<guarantee_object, guarantee_object_multi_index_type> guarantee_index;
+
 } } // graphene::chain
 
 FC_REFLECT_DERIVED( graphene::chain::asset_dynamic_data_object, (graphene::db::object),
@@ -283,3 +319,16 @@ FC_REFLECT_DERIVED( graphene::chain::asset_object, (graphene::db::object),
                     (options)
                     (dynamic_asset_data_id)
                   )
+
+
+FC_REFLECT_DERIVED(graphene::chain::guarantee_object, (graphene::db::object),
+                   (owner_addr)
+                           (chain_type)
+                           (time)
+                           (asset_orign)
+                           (asset_target)
+                           (asset_finished)
+                           (records)
+                           (finished)
+)
+

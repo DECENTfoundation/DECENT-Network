@@ -35,6 +35,9 @@
 #include <graphene/chain/protocol/miner.hpp>
 #include <graphene/chain/protocol/decent.hpp>
 #include <graphene/chain/protocol/subscription.hpp>
+#include <graphene/chain/contract.hpp>
+#include <graphene/chain/native_contract.hpp>
+#include <graphene/chain/protocol/referendum.hpp>
 
 namespace graphene { namespace chain {
 
@@ -90,7 +93,20 @@ namespace graphene { namespace chain {
             return_escrow_buying_operation,                        // VIRTUAL
             pay_seeder_operation,                                  // VIRTUAL
             finish_buying_operation,                               // VIRTUAL   //45
-            renewal_of_subscription_operation                      // VIRTUAL
+            renewal_of_subscription_operation ,                     // VIRTUAL
+           contract_register_operation,
+           contract_upgrade_operation,
+           native_contract_register_operation,
+           contract_invoke_operation,
+           storage_operation,
+           transfer_contract_operation,
+           contract_transfer_fee_proposal_operation,
+           gurantee_create_operation,
+           gurantee_cancel_operation,
+           referendum_create_operation,
+           citizen_referendum_senator_operation,
+           referendum_update_operation,
+           referendum_accelerate_pledge_operation
          > operation;
 
    /// @} // operations group
@@ -107,6 +123,8 @@ namespace graphene { namespace chain {
                                             vector<authority>&  other );
 
    void operation_validate( const operation& op );
+
+        optional<guarantee_object_id_type> operation_gurantee_id(const operation& op);
 
    /**
     *  @brief necessary to support nested operations inside the proposal_create_operation

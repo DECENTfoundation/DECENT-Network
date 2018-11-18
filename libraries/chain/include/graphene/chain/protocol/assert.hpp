@@ -102,6 +102,8 @@ namespace graphene { namespace chain {
       account_id_type fee_payer()const { return fee_paying_account; }
       void            validate()const;
       share_type      calculate_fee(const fee_parameters_type& k)const;
+       optional<guarantee_object_id_type> guarantee_id;
+       optional<guarantee_object_id_type> get_guarantee_id()const { return guarantee_id; }
    };
 
 } } // graphene::chain

@@ -1,3 +1,4 @@
+file(GLOB HEADERS  "../uvm/include/uvm/*.hpp" "../jsondiff/jsondiff-cpp/include/jsondiff/*.h"  )
 
 add_custom_target( build_hardfork_hpp
                    COMMAND cat-parts "${CMAKE_CURRENT_SOURCE_DIR}/hardfork.d" "${CMAKE_CURRENT_BINARY_DIR}/include/graphene/chain/hardfork.hpp" )
@@ -33,7 +34,7 @@ add_library( graphene_chain
              # As database takes the longest to compile, start it first
              ${GRAPHENE_DB_FILES}
              fork_database.cpp
-
+             protocol/address.cpp
              protocol/types.cpp
              protocol/authority.cpp
              protocol/asset.cpp
@@ -83,24 +84,38 @@ add_library( graphene_chain
 
              block_database.cpp
 
+        contract.cpp
+        content_object.cpp
+        contract_engine.cpp
+        contract_engine_builder.cpp
+        contract_entry.cpp
+        contract_evaluate.cpp
+        referendum_evaluator.cpp
+        referendum_object.cpp
+        balance_evaluator.cpp
+        protocol/referendum.cpp
+
+        db_contract_trx.cpp
+
              ${HEADERS}
              "${CMAKE_CURRENT_BINARY_DIR}/include/graphene/chain/hardfork.hpp"
            )
 
 add_dependencies( graphene_chain build_hardfork_hpp )
 
-target_link_libraries( graphene_chain fc graphene_db decent_encrypt pbc )
+target_link_libraries( graphene_chain fc graphene_db decent_encrypt pbc uvm jsondiff )
 
 if( WIN32 )
   target_link_libraries( graphene_chain ${GMP_LIBRARIES})
 else()
-  target_link_libraries( graphene_chain gmp )
+  target_link_libraries( graphene_chain gmp uvm jsondiff )
 endif()
 
 target_include_directories(graphene_chain
                            PUBLIC
                            "${CMAKE_CURRENT_SOURCE_DIR}/include"
-                           "${CMAKE_CURRENT_BINARY_DIR}/include")
+                           "${CMAKE_CURRENT_BINARY_DIR}/include"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../jsondiff/jsondiff-cpp/include")
 
 if(MSVC)
   set_source_files_properties( db_init.cpp db_block.cpp database.cpp block_database.cpp PROPERTIES COMPILE_FLAGS "/bigobj" )

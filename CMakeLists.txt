@@ -80,7 +80,7 @@ endif()
 
 set( Boost_USE_STATIC_LIBS ON CACHE STRING "ON or OFF" )
 
-find_package( Boost ${Boost_SELECT_VERSION} REQUIRED
+find_package( Boost  REQUIRED
     COMPONENTS thread
                date_time
                system

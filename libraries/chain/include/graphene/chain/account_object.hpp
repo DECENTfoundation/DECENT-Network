@@ -26,9 +26,54 @@
 #include <graphene/chain/protocol/operations.hpp>
 #include <graphene/db/generic_index.hpp>
 #include <boost/multi_index/composite_key.hpp>
+#include <graphene/chain/protocol/address.hpp>
 
 namespace graphene { namespace chain {
    class database;
+
+
+
+        /**
+        * @brief Tracks the bindings of tunnel account / link account pair
+        * @ingroup object
+        *
+        * This object is indexed on link account and asset_type so that black swan
+        * events in asset_type can be processed quickly.
+        */
+        class multisig_account_pair_object : public abstract_object<multisig_account_pair_object>
+        {
+        public:
+            static const uint8_t space_id = implementation_ids;
+            static const uint8_t type_id = impl_multisig_account_binding_object_type;
+
+            std::string		 chain_type;
+            std::string       bind_account_hot;
+            std::string       redeemScript_hot;
+            std::string       bind_account_cold;
+            std::string       redeemScript_cold;
+            uint32_t			 effective_block_num = 0;
+            uint32_t          end_block = -1;
+
+            //std::string get_tunnel_account()const { return bind_account; }
+        };
+
+        class multisig_address_object : public abstract_object<multisig_address_object>
+        {
+        public:
+            static const uint8_t space_id = implementation_ids;
+            static const uint8_t type_id = impl_multisig_address_object_type;
+
+            account_id_type	 guard_account;
+            std::string		 chain_type;
+            std::string       new_address_hot;
+            std::string       new_pubkey_hot;
+            std::string       new_address_cold;
+            std::string       new_pubkey_cold;
+            multisig_account_pair_id_type    multisig_account_pair_object_id= multisig_account_pair_id_type();
+            signature_type	 signature;
+
+            //std::string get_tunnel_account()const { return bind_account; }
+        };
 
    /**
     * @class account_statistics_object
@@ -272,7 +317,27 @@ namespace graphene { namespace chain {
    /**
     * @ingroup object_index
     */
+
+   struct by_address {};
+
+   class blocked_address_object : public abstract_object<blocked_address_object>
+   {
+   public:
+       static const uint8_t space_id = implementation_ids;
+       static const uint8_t type_id =  impl_blocked_address_obj_type;
+       address blocked_address;
+   };
+
    typedef generic_index<account_object, account_multi_index_type> account_index;
+
+        typedef multi_index_container<
+                blocked_address_object,
+                indexed_by<
+                        ordered_unique<tag<by_id>, member<object, object_id_type, & object::id>>,
+                ordered_unique<tag<by_address> ,member<blocked_address_object,address, &blocked_address_object::blocked_address>>
+        >
+        > blocked_address_object_multi_index_type;
+        typedef generic_index<blocked_address_object, blocked_address_object_multi_index_type> blocked_index;
 
 }}
 
@@ -296,4 +361,7 @@ FC_REFLECT_DERIVED( graphene::chain::account_statistics_object,
                     (pending_fees)
                     (pending_vested_fees)
                   )
+
+FC_REFLECT_DERIVED(graphene::chain::blocked_address_object, (graphene::db::object),(blocked_address))
+
 

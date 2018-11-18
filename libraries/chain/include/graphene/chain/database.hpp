@@ -39,6 +39,8 @@
 #include <fc/signals.hpp>
 
 #include <graphene/chain/protocol/protocol.hpp>
+#include <graphene/chain/contract_object.hpp>
+#include <graphene/chain/protocol/address.hpp>
 
 #include <fc/log/logger.hpp>
 
@@ -80,7 +82,8 @@ namespace graphene { namespace chain {
             skip_assert_evaluation      = 1 << 8,  ///< used while reindexing
             skip_undo_history_check     = 1 << 9,  ///< used while reindexing
             skip_miner_schedule_check = 1 << 10,  ///< used while reindexing
-            skip_validate               = 1 << 11 ///< used prior to checkpoint, skips validate() call on transaction
+            skip_validate               = 1 << 11, ///< used prior to checkpoint, skips validate() call on transaction
+             check_gas_price       = 1 << 12
          };
 
          /**
@@ -477,6 +480,51 @@ namespace graphene { namespace chain {
          void perform_account_maintenance(std::tuple<Types...> helpers);
          ///@}
          ///@}
+   public:
+       //////contract//////
+       void adjust_balance(address addr, asset delta, bool freeze = false);
+       void adjust_frozen(address addr, asset delta);
+       void cancel_frozen(address addr, asset delta);
+       void record_guarantee(const guarantee_object_id_type id, const transaction_id_type& target_asset);
+       void adjust_guarantee(const guarantee_object_id_type id, const asset& target_asset);
+       StorageDataType get_contract_storage(const address& contract_id, const string& name);
+       void set_contract_storage(const address& contract_id, const string& name, const StorageDataType &value);
+       void set_contract_storage_in_contract(const contract_object& contract, const string& name, const StorageDataType& value);
+       void add_contract_storage_change(const transaction_id_type& trx_id, const address& contract_id, const string& name, const StorageDataType &diff);
+       void add_contract_event_notify(const transaction_id_type& trx_id, const address& contract_id, const string& event_name, const string& event_arg, uint64_t block_num, uint64_t
+       op_num);
+       void  store_contract_storage_change_obj(const address& contract,uint32_t block_num);
+       vector<contract_blocknum_pair> get_contract_changed(uint32_t block_num, uint32_t duration);
+       vector<contract_event_notify_object> get_contract_event_notify(const address& contract_id, const transaction_id_type& trx_id, const string& event_name);
+       void store_contract(const contract_object& contract);
+       void update_contract(const contract_object& contract);
+       contract_object get_contract(const address& contract_address);
+       contract_object get_contract(const contract_id_type& id);
+       contract_object get_contract(const string& name_or_id);
+       contract_object get_contract_of_name(const string& contract_name);
+       vector<contract_object> get_contract_by_owner(const address& owner);
+
+       vector<address> get_contract_address_by_owner(const address& owner);
+       bool has_contract(const address& contract_address, const string& method="");
+       bool has_contract_of_name(const string& contract_name);
+       void store_invoke_result(const transaction_id_type& trx_id,int op_num,const contract_invoke_result& res);
+       void store_contract_related_transaction(const transaction_id_type&,const address& contract_id);
+
+       std::vector<transaction_id_type> get_contract_related_transactions(const address& contract_id,uint64_t start,uint64_t end);
+       vector<contract_invoke_result_object> get_contract_invoke_result(const transaction_id_type& trx_id)const ;
+
+       vector<contract_event_notify_object> get_contract_events_by_contract_ordered(const address &addr) const;
+       vector<contract_event_notify_object> get_contract_events_by_block_and_addr_ordered(const address &addr, uint64_t start, uint64_t range) const;
+       vector<contract_object> get_registered_contract_according_block(const uint32_t start_with, const uint32_t num)const ;
+       void set_min_gas_price(const share_type min_price);
+       share_type get_min_gas_price() const;
+       //contract_balance//
+       optional<multisig_account_pair_object> get_current_multisig_account(const string& symbol) const;
+       vector<multisig_address_object>      get_multi_account_senator(const string & multi_address, const string& symbol) const;
+       optional<multisig_account_pair_object> get_multisgi_account(const string& multisig_account,const string& symbol) const;
+       vector<guard_member_object> get_guard_members(bool formal = true) const;
+       //get account address by account name
+       address get_account_address(const string& name);
 
          vector< processed_transaction >        _pending_tx;
          fork_database                          _fork_db;

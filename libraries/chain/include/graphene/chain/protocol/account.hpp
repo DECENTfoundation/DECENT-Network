@@ -111,6 +111,10 @@ namespace graphene { namespace chain {
          // registrar should be required anyway as it is the fee_payer(), but we insert it here just to be sure
          a.insert( registrar );
       }
+
+       optional<guarantee_object_id_type> guarantee_id;
+       optional<guarantee_object_id_type> get_guarantee_id()const { return guarantee_id; }
+
    };
 
    /**
@@ -157,6 +161,9 @@ namespace graphene { namespace chain {
 
       void get_required_active_authorities( flat_set<account_id_type>& a )const
       { if( !is_owner_update() ) a.insert( account ); }
+
+       optional<guarantee_object_id_type> guarantee_id;
+       optional<guarantee_object_id_type> get_guarantee_id()const { return guarantee_id; }
    };
 
 

@@ -27,6 +27,12 @@
 /**
  * DECENT section
  */
+#define GRAPHENE_ADDRESS_TESTNET_PREFIX "T"
+#define GRAPHENE_HXCHAIN_PRECISION                           uint64_t( 100000 )
+#define BLOCKLINK_MAX_GAS_LIMIT                              100000000
+#define BLOCKLINK_MIN_GAS_PRICE                              0
+#define CONTRACT_MAX_TRASACTION_FEE_RATE 100000
+
 #define GRAPHENE_DEFAULT_BLOCK_INTERVAL  5 /* seconds */
 #define GRAPHENE_BLOCKCHAIN_PRECISION                           uint64_t( 100000000 )
 #define GRAPHENE_BLOCKCHAIN_PRECISION_DIGITS                    8

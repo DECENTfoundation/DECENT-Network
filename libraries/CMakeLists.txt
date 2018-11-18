@@ -18,3 +18,6 @@ if(UPDATE_MANAGER)
   add_subdirectory( update )
 endif()
 
+add_subdirectory( jsondiff )
+add_subdirectory( uvm )
+

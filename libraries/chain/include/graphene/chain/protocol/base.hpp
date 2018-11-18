@@ -27,6 +27,7 @@
 #include <graphene/chain/protocol/types.hpp>
 #include <graphene/chain/protocol/asset.hpp>
 #include <graphene/chain/protocol/authority.hpp>
+#include <fc/io/json.hpp>
 
 namespace graphene { namespace chain {
 
@@ -82,7 +83,6 @@ namespace graphene { namespace chain {
     */
 
    struct void_result{};
-   typedef fc::static_variant<void_result,object_id_type,asset> operation_result;
 
    struct base_operation
    {
@@ -118,10 +118,34 @@ namespace graphene { namespace chain {
     */
    typedef flat_set<future_extensions> extensions_type;
 
-   ///@}
+        struct contract_operation_result_info
+        {
+            std::string digest_str;
+            std::string api_result;
+            share_type gas_count=0;
+            contract_operation_result_info()
+            {}
+            contract_operation_result_info(const contract_operation_result_info& info)
+            {
+               digest_str = info.digest_str;
+               gas_count = info.gas_count;
+               api_result = info.api_result;
+            }
+            contract_operation_result_info(const std::string& digest_str,const share_type& gas_count,const std::string& api_result):digest_str(digest_str),api_result(api_result),gas_count(gas_count){}
+            operator string() const{ return fc::json::to_string(*this); }
+        };
+        typedef fc::static_variant<void_result,object_id_type,asset, std::string,contract_operation_result_info> operation_result;
+
+
+        ///@}
 
 } } // graphene::chain
 
 FC_REFLECT_TYPENAME( graphene::chain::operation_result )
 FC_REFLECT_TYPENAME( graphene::chain::future_extensions )
 FC_REFLECT_EMPTY( graphene::chain::void_result )
+FC_REFLECT(graphene::chain::contract_operation_result_info,
+           (digest_str)
+                   (api_result)
+                   (gas_count)
+)

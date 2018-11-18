@@ -42,6 +42,8 @@ namespace graphene { namespace chain {
       virtual int get_type()const = 0;
       virtual operation_result start_evaluate(transaction_evaluation_state& eval_state, const operation& op, bool apply);
 
+       const transaction_evaluation_state * get_trx_eval_state() const;
+
       /**
        * @note derived classes should ASSUME that the default validation that is
        * indepenent of chain state should be performed by op.validate() and should
@@ -100,7 +102,16 @@ namespace graphene { namespace chain {
       // cause a circular dependency
       share_type calculate_fee_for_operation(const operation& op) const;
       void db_adjust_balance(const account_id_type& fee_payer, asset fee_from_account);
+       void db_adjust_balance(const address& fee_payer, asset fee_from_account);
+       void db_adjust_frozen(const address& fee_payer, asset fee_from_account);
+       void prepare_fee(address addr, asset fee);
+       void db_adjust_guarantee(const guarantee_object_id_type id, asset fee_from_account);
 
+       void db_record_guarantee(const guarantee_object_id_type id, transaction_id_type trx_id);
+
+       guarantee_object db_get_guarantee(const guarantee_object_id_type id);
+
+      asset  core_fees_paid;
       asset                            fee_from_account;
       share_type                       core_fee_paid;
       const account_object*            fee_paying_account = nullptr;
@@ -108,6 +119,8 @@ namespace graphene { namespace chain {
       const asset_object*              fee_asset          = nullptr;
       const asset_dynamic_data_object* fee_asset_dyn_data = nullptr;
       transaction_evaluation_state*    trx_state;
+       share_type                       gas_count=0;
+       address                   fee_paying_address = address();
    };
 
    class op_evaluator

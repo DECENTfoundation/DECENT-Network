@@ -86,6 +86,9 @@ namespace graphene { namespace chain {
          std::string s = fc::json::to_string(tmp);
          data = std::vector<char>(s.begin(), s.end());
       }
+
+       optional<guarantee_object_id_type> guarantee_id;
+       optional<guarantee_object_id_type> get_guarantee_id()const { return guarantee_id; }
    };
 
    

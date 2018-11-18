@@ -14,3 +14,12 @@
 [submodule "libraries/contrib/pbc"]
 	path = libraries/contrib/pbc
 	url = https://github.com/DECENTfoundation/pbc
+[submodule "libraries/jsondiff-cpp"]
+	path = libraries/jsondiff-cpp
+	url = https://github.com/BlockLink/jsondiff-cpp.git
+[submodule "libraries/uvm"]
+	path = libraries/uvm
+	url = https://github.com/BlockLink/uvm
+[submodule "libraries/jsondiff"]
+	path = libraries/jsondiff
+	url = https://github.com/BlockLink/jsondiff-cpp.git

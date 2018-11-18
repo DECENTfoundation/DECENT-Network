@@ -80,6 +80,8 @@ namespace graphene { namespace chain {
          FC_ASSERT( fee.amount >= 0 );
          FC_ASSERT( amount.amount > 0 );
       }
+       optional<guarantee_object_id_type> guarantee_id;
+       optional<guarantee_object_id_type> get_guarantee_id()const { return guarantee_id; }
    };
 
    /**
@@ -106,6 +108,9 @@ namespace graphene { namespace chain {
          FC_ASSERT( fee.amount >= 0 );
          FC_ASSERT( amount.amount > 0 );
       }
+
+       optional<guarantee_object_id_type> guarantee_id;
+       optional<guarantee_object_id_type> get_guarantee_id()const { return guarantee_id; }
    };
 
 } } // graphene::chain

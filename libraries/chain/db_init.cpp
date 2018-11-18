@@ -62,6 +62,12 @@
 
 #include <boost/algorithm/string.hpp>
 
+#include <graphene/chain/contract_evaluate.hpp>
+#include <graphene/chain/contract.hpp>
+#include <graphene/chain/contract_object.hpp>
+#include <graphene/chain/native_contract.hpp>
+#include <graphene/chain/referendum_object.hpp>
+
 namespace graphene { namespace chain {
 
 // C++ requires that static class variables declared and initialized
@@ -102,6 +108,19 @@ const uint8_t withdraw_permission_object::type_id;
 
 const uint8_t miner_object::space_id;
 const uint8_t miner_object::type_id;
+
+        const uint8_t contract_object::space_id;
+        const uint8_t contract_object::type_id;
+        const uint8_t contract_storage_object::space_id;
+        const uint8_t contract_storage_object::type_id;
+        const uint8_t transaction_contract_storage_diff_object::space_id;
+        const uint8_t transaction_contract_storage_diff_object::type_id;
+
+        const uint8_t contract_event_notify_object::space_id;
+        const uint8_t contract_event_notify_object::type_id;
+
+        const uint8_t contract_invoke_result_object::space_id;
+        const uint8_t contract_invoke_result_object::type_id;
 
 
 void database::initialize_evaluators()
@@ -152,6 +171,14 @@ void database::initialize_evaluators()
    register_evaluator<set_publishing_manager_evaluator>();
    register_evaluator<set_publishing_right_evaluator>();
    register_evaluator<update_user_issued_asset_advanced_evaluator>();
+
+
+   register_evaluator<contract_register_evaluate>();
+   register_evaluator<native_contract_register_evaluate>();
+   register_evaluator<contract_invoke_evaluate>();
+   register_evaluator<contract_upgrade_evaluate>();
+   register_evaluator<contract_transfer_evaluate>();
+   register_evaluator<contract_transfer_fee_evaluate>();
 }
 
 void database::initialize_indexes()
@@ -190,6 +217,18 @@ void database::initialize_indexes()
    add_index< primary_index< transaction_detail_index                     > >();
    add_index< primary_index< seeding_statistics_index                     > >();
    add_index< primary_index< budget_record_index                          > >();
+
+   // contract
+   add_index< primary_index<transaction_contract_storage_diff_index       > >();
+   add_index<primary_index<contract_object_index>>();
+   add_index<primary_index<contract_storage_object_index>>();
+   add_index<primary_index<contract_event_notify_index>>();
+   add_index<primary_index<contract_invoke_result_index>>();
+   add_index<primary_index<contract_storage_change_index>>();
+   add_index <primary_index<guarantee_index                               > >();
+   add_index <primary_index<contract_history_object_index                               > >();
+   add_index<primary_index<referendum_index>>();
+   add_index<primary_index<blocked_index>>  ();
 }
 
 void database::init_genesis(const genesis_state_type& genesis_state)

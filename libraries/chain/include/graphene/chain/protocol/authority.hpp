@@ -24,6 +24,7 @@
  */
 #pragma once
 #include <graphene/chain/protocol/types.hpp>
+#include <graphene/chain/protocol/address.hpp>
 
 namespace graphene { namespace chain {
 
@@ -54,6 +55,11 @@ namespace graphene { namespace chain {
       {
          key_auths[k] = w;
       }
+
+       void add_authority( const address& k, weight_type w )
+       {
+           address_auths[k] = w;
+       }
 
       void add_authority( account_id_type k, weight_type w )
       {
@@ -107,6 +113,7 @@ namespace graphene { namespace chain {
       flat_map<account_id_type,weight_type> account_auths;
       flat_map<public_key_type,weight_type> key_auths;
       /** needed for backward compatibility only */
+      flat_map<address,weight_type>         address_auths;
    };
 
 /**
@@ -119,6 +126,6 @@ void add_authority_accounts(
 
 } } // namespace graphene::chain
 
-FC_REFLECT( graphene::chain::authority, (weight_threshold)(account_auths)(key_auths) )
+FC_REFLECT( graphene::chain::authority, (weight_threshold)(account_auths)(key_auths)(address_auths) )
 FC_REFLECT_TYPENAME( graphene::chain::authority::classification )
 FC_REFLECT_ENUM( graphene::chain::authority::classification, (owner)(active)(key) )

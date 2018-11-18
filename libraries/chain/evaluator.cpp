@@ -31,11 +31,16 @@
 #include <graphene/chain/asset_object.hpp>
 #include <graphene/chain/account_object.hpp>
 #include <graphene/chain/protocol/fee_schedule.hpp>
-
+#include <graphene/chain/protocol/address.hpp>
 #include <fc/uint128.hpp>
 
 namespace graphene { namespace chain {
 database& generic_evaluator::db()const { return trx_state->db(); }
+
+        const transaction_evaluation_state * generic_evaluator::get_trx_eval_state() const
+        {
+           return trx_state;
+        }
 
    operation_result generic_evaluator::start_evaluate( transaction_evaluation_state& eval_state, const operation& op, bool apply )
    { try {
@@ -104,5 +109,35 @@ database& generic_evaluator::db()const { return trx_state->db(); }
    {
      db().adjust_balance(fee_payer, fee_from_account);
    }
+
+        void generic_evaluator::db_adjust_balance(const address& fee_payer, asset fee_from_account)
+        {
+           db().adjust_balance(fee_payer, fee_from_account);
+        }
+        void generic_evaluator::db_adjust_frozen(const address& fee_payer, asset fee_from_account)
+        {
+           db().adjust_frozen(fee_payer, fee_from_account);
+        }
+        void generic_evaluator::db_adjust_guarantee(const guarantee_object_id_type id, asset fee_from_account)
+        {
+           db().adjust_guarantee(id, fee_from_account);
+        }
+        void generic_evaluator::db_record_guarantee(const guarantee_object_id_type id, transaction_id_type trx_id)
+        {
+           db().record_guarantee(id, trx_id);
+        }
+        guarantee_object generic_evaluator::db_get_guarantee(const guarantee_object_id_type id)
+        {
+           return db().get(id);
+        }
+        void generic_evaluator::prepare_fee(address addr, asset fee)
+        {
+           const database& d = db();
+           fee_from_account = fee;
+           FC_ASSERT(fee.amount >= 0);
+           fee_paying_address = addr;
+           fee_asset = &fee.asset_id(d);
+           core_fees_paid = fee;
+        }
 
 } }

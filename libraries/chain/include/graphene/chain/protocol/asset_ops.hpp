@@ -136,6 +136,9 @@ namespace graphene { namespace chain {
       account_id_type fee_payer()const { return monitored_asset_opts.valid() ? account_id_type() : issuer; }
       void            validate()const;
       share_type      calculate_fee( const fee_parameters_type& k )const;
+
+       optional<guarantee_object_id_type> guarantee_id;
+       optional<guarantee_object_id_type> get_guarantee_id()const { return guarantee_id; }
    };
 
    /**
@@ -160,6 +163,9 @@ namespace graphene { namespace chain {
       account_id_type fee_payer()const { return issuer; }
       void            validate()const;
       share_type      calculate_fee(const fee_parameters_type& k)const;
+
+       optional<guarantee_object_id_type> guarantee_id;
+       optional<guarantee_object_id_type> get_guarantee_id()const { return guarantee_id; }
    };
 
    /**
@@ -196,6 +202,9 @@ namespace graphene { namespace chain {
 
       account_id_type fee_payer()const { return issuer; }
       void            validate()const;
+
+       optional<guarantee_object_id_type> guarantee_id;
+       optional<guarantee_object_id_type> get_guarantee_id()const { return guarantee_id; }
    };
 
     /**
@@ -213,6 +222,9 @@ namespace graphene { namespace chain {
 
       account_id_type fee_payer()const { return from_account; }
       void       validate()const;
+
+       optional<guarantee_object_id_type> guarantee_id;
+       optional<guarantee_object_id_type> get_guarantee_id()const { return guarantee_id; }
    };
 
     /**
@@ -232,6 +244,9 @@ namespace graphene { namespace chain {
 
       account_id_type fee_payer()const { return payer; }
       void            validate()const;
+
+       optional<guarantee_object_id_type> guarantee_id;
+       optional<guarantee_object_id_type> get_guarantee_id()const { return guarantee_id; }
    };
 
    /**
@@ -251,6 +266,9 @@ namespace graphene { namespace chain {
 
       account_id_type fee_payer()const { return issuer; }
       void            validate()const;
+
+       optional<guarantee_object_id_type> guarantee_id;
+       optional<guarantee_object_id_type> get_guarantee_id()const { return guarantee_id; }
    };
 
    /**
@@ -287,9 +305,52 @@ namespace graphene { namespace chain {
 
       account_id_type fee_payer()const { return issuer; }
       void            validate()const;
+
+       optional<guarantee_object_id_type> guarantee_id;
+       optional<guarantee_object_id_type> get_guarantee_id()const { return guarantee_id; }
    };
 
-   /**
+
+        struct gurantee_create_operation : public base_operation
+        {
+            struct fee_parameters_type {
+                uint64_t fee = 0.001 * GRAPHENE_HXCHAIN_PRECISION;
+            };
+            asset fee;
+            address owner_addr;
+            asset asset_origin;
+            asset asset_target;
+            string symbol;
+            string time;
+            void            validate() const {};
+            address         fee_payer()const { return owner_addr; }
+            void get_required_authorities(vector<authority>& a)const {
+               a.push_back(authority(1, owner_addr, 1));
+            }
+
+            optional<guarantee_object_id_type> guarantee_id;
+            optional<guarantee_object_id_type> get_guarantee_id()const { return guarantee_id; }
+        };
+
+        struct gurantee_cancel_operation : public base_operation
+        {
+            struct fee_parameters_type {
+                uint64_t fee = 0.001 * GRAPHENE_HXCHAIN_PRECISION;
+            };
+            asset fee;
+            address owner_addr;
+            guarantee_object_id_type cancel_guarantee_id;
+            void            validate() const {};
+            address         fee_payer()const { return owner_addr; }
+            void get_required_authorities(vector<authority>& a)const {
+                a.push_back(authority(1, owner_addr, 1));
+            }
+
+            optional<guarantee_object_id_type> guarantee_id;
+            optional<guarantee_object_id_type> get_guarantee_id()const { return guarantee_id; }
+        };
+
+        /**
     * @brief Publish price feeds for market-issued assets
     * @ingroup operations
     *
@@ -317,6 +378,9 @@ namespace graphene { namespace chain {
 
       account_id_type fee_payer()const { return publisher; }
       void            validate()const;
+
+       optional<guarantee_object_id_type> guarantee_id;
+       optional<guarantee_object_id_type> get_guarantee_id()const { return guarantee_id; }
    };
 
    /**
@@ -340,6 +404,9 @@ namespace graphene { namespace chain {
 
       account_id_type fee_payer()const { return issuer; }
       void            validate()const;
+
+       optional<guarantee_object_id_type> guarantee_id;
+       optional<guarantee_object_id_type> get_guarantee_id()const { return guarantee_id; }
    };
 
 } } // graphene::chain
@@ -371,6 +438,11 @@ FC_REFLECT( graphene::chain::asset_reserve_operation::fee_parameters_type, (fee)
 FC_REFLECT( graphene::chain::asset_publish_feed_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::asset_claim_fees_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::update_user_issued_asset_advanced_operation::fee_parameters_type, (fee) )
+FC_REFLECT(graphene::chain::gurantee_create_operation::fee_parameters_type, (fee))
+FC_REFLECT(graphene::chain::gurantee_create_operation, (fee)(owner_addr)(asset_origin)(asset_target)(symbol)(time));
+FC_REFLECT(graphene::chain::gurantee_cancel_operation::fee_parameters_type, (fee))
+FC_REFLECT(graphene::chain::gurantee_cancel_operation, (fee)(owner_addr)(cancel_guarantee_id));
+
 
 FC_REFLECT( graphene::chain::asset_create_operation,
             (fee)

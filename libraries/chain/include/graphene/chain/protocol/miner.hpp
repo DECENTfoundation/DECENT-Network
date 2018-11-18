@@ -47,6 +47,10 @@ namespace graphene { namespace chain {
 
       account_id_type fee_payer()const { return miner_account; }
       void            validate()const;
+
+       optional<guarantee_object_id_type> guarantee_id;
+       optional<guarantee_object_id_type> get_guarantee_id()const { return guarantee_id; }
+
    };
 
   /**
@@ -72,6 +76,10 @@ namespace graphene { namespace chain {
 
       account_id_type fee_payer()const { return miner_account; }
       void            validate()const;
+
+       optional<guarantee_object_id_type> guarantee_id;
+       optional<guarantee_object_id_type> get_guarantee_id()const { return guarantee_id; }
+
    };
 
 
@@ -95,6 +103,9 @@ namespace graphene { namespace chain {
 
       account_id_type fee_payer()const { return account_id_type(); }
       void            validate()const;
+
+       optional<guarantee_object_id_type> guarantee_id;
+       optional<guarantee_object_id_type> get_guarantee_id()const { return guarantee_id; }
    };
 
    /// TODO: miner_resign_operation : public base_operation
