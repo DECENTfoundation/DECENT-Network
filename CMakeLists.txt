@@ -49,7 +49,6 @@ if( APPLE )
               "${HOMEBREW_PREFIX}/opt/pbc"
               "${HOMEBREW_PREFIX}/opt/gmp"
               "${HOMEBREW_PREFIX}/opt/cryptopp"
-              "${HOMEBREW_PREFIX}/opt/berkeley-db"
               "${HOMEBREW_PREFIX}/opt/qt5"
             )
     endif()
@@ -71,8 +70,6 @@ find_package( PBC REQUIRED )
 if( WIN32 )
 
     message( STATUS "Configuring Decent on WIN32" )
-    set( DB_VERSION 60 )
-    set( BDB_STATIC_LIBS 1 )
 
     set( ZLIB_LIBRARIES "" )
     set( DEFAULT_EXECUTABLE_INSTALL_DIR "bin/" )
@@ -86,21 +83,6 @@ if( WIN32 )
     # Probably cmake has a bug and vcxproj generated for executable in Debug conf. has disabled debug info
     set( CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} /DEBUG" )
 
-    # On windows tcl should be installed to the directory pointed by setenv.bat script
-    set( TCL_INCLUDE_PATH "$ENV{TCL_ROOT}/include" )
-    message( STATUS "tcl INCLUDE PATH: ${TCL_INCLUDE_PATH}" )
-
-    find_package( TCL )
-    message( STATUS "tcl_library: ${TCL_LIBRARY}" )
-
-    set( TCL_LIBS "optimized;${TCL_LIBRARY};debug;" )
-    get_filename_component( TCL_LIB_PATH "${TCL_LIBRARY}" PATH )
-    get_filename_component( TCL_LIB_NAME "${TCL_LIBRARY}" NAME_WE )
-    get_filename_component( TCL_LIB_EXT "${TCL_LIBRARY}" EXT )
-
-    set( TCL_LIBS "${TCL_LIBS}${TCL_LIB_PATH}/${TCL_LIB_NAME}g${TCL_LIB_EXT}" )
-    set( TCL_LIBRARY ${TCL_LIBS} )
-    
     add_definitions(-D_WIN32_WINNT=0x0601)
     add_definitions(-DCRYPTOPP_IMPORTS)
 
@@ -150,8 +132,6 @@ else() # Apple and Linux
 #    set( CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -gdwarf-2 -g3" )
 
 endif()
-
-find_package( BerkeleyDB )
 
 set( ENABLE_COVERAGE_TESTING FALSE CACHE BOOL "Build Decent for code coverage analysis" )
 
