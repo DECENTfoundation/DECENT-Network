@@ -100,7 +100,6 @@ namespace graphene { namespace wallet {
          string                    ws_user;
          string                    ws_password;
          string                    packages_path = "./packages/";
-         string                    libtorrent_config_path;
          string                    update_time;
       };
 

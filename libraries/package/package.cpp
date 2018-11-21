@@ -1,6 +1,5 @@
 /* (c) 2016, 2017 DECENT Services. For details refers to LICENSE.txt */
 #include <cstddef>
-//#include "torrent_transfer.hpp"
 #include "ipfs_transfer.hpp"
 #include "local.hpp"
 
@@ -921,11 +920,8 @@ namespace decent { namespace package {
             }
         }
 
-//      _proto_transfer_engines["magnet"] = std::make_shared<TorrentTransferEngine>();
         _proto_transfer_engines["ipfs"] = std::make_shared<IPFSTransferEngine>();
         _proto_transfer_engines["local"] = std::make_shared<LocalTransferEngine>();
-
-        //set_libtorrent_config(graphene::utilities::decent_path_finder::instance().get_decent_home() / "libtorrent.json");
 
         // TODO: restore anything?
     }
@@ -1087,23 +1083,6 @@ namespace decent { namespace package {
         std::lock_guard<std::recursive_mutex> guard(_mutex);
         return _packages_path;
     }
-
-    /*void PackageManager::set_libtorrent_config(const boost::filesystem::path& libtorrent_config_file) {
-        std::lock_guard<std::recursive_mutex> guard(_mutex);
-
-        for(auto& proto_transfer_engine : _proto_transfer_engines) {
-            TorrentTransferEngine* torrent_engine = dynamic_cast<TorrentTransferEngine*>(proto_transfer_engine.second.get());
-            if (torrent_engine) {
-                if (libtorrent_config_file.empty() || boost::filesystem::exists(libtorrent_config_file)) {
-                    torrent_engine->reconfigure(libtorrent_config_file);
-                }
-                else {
-                    torrent_engine->dump_config(libtorrent_config_file);
-                    break; // dump the config of first one found only
-                }
-            }
-        }
-    }*/
 
     TransferEngineInterface& PackageManager::get_proto_transfer_engine(const std::string& proto) const {
         std::lock_guard<std::recursive_mutex> guard(_mutex);
