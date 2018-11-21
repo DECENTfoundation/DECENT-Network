@@ -2689,32 +2689,35 @@ signed_transaction content_cancellation(const string& author,
 
    void from_command_file( std::string command_file_name )
    {
-       std::ifstream cf_in(command_file_name);
-       std::string current_line;
-       std::map<string,std::function<string(variant,const fc::variants&)> > _result_formatters;
        std::atomic_bool cancelToken;
        decent::wallet_utility::WalletAPI myApi;
 
-       if (! cf_in.good())
+       try
        {
-           std::cout << "File not found or an I/O error.\n";
-           return;
-       }
+           std::ifstream cf_in(command_file_name);
+           std::string current_line;
 
-       myApi.Connent(cancelToken);
-
-       while (std::getline(cf_in, current_line))
-       {
-           if (current_line.size() > 0)
+           if (! cf_in.good())
            {
-               fc::variants args = fc::json::variants_from_string(current_line + char(EOF));
-               if( args.size() == 0 )
-                  continue;
-
-               std::cout << myApi.RunTask(current_line) << "\n";
-
+               FC_THROW("File not found or an I/O error");
            }
-       }
+
+           myApi.Connent(cancelToken);
+
+           while (std::getline(cf_in, current_line))
+           {
+               if (current_line.size() > 0)
+               {
+                   fc::variants args = fc::json::variants_from_string(current_line + char(EOF));
+                   if( args.size() == 0 )
+                      continue;
+
+                   std::cout << myApi.RunTask(current_line) << "\n";
+               }
+           }
+       } FC_CAPTURE_AND_RETHROW( (command_file_name) )
+
+       cancelToken = true;
    }
 
    void download_content(string const& consumer, string const& URI, string const& str_region_code_from, bool broadcast)
