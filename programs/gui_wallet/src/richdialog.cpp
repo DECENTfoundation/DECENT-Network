@@ -1041,7 +1041,7 @@ void PasswordWidget::slot_action()
    {
       try
       {
-         Globals::instance().runTask("set_password \"" + pass1.toStdString() + "\"");
+         Globals::instance().getWallet().SetPassword(pass1.toStdString());
       }
       catch(const std::exception& ex) {
          error = ex.what();
@@ -1059,7 +1059,7 @@ void PasswordWidget::slot_action()
 
    try
    {
-      Globals::instance().runTask("unlock \"" + pass1.toStdString() + "\"");
+      Globals::instance().getWallet().Unlock(pass1.toStdString());
    }
    catch(const std::exception& ex) {
       error = ex.what();
