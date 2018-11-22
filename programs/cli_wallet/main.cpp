@@ -103,6 +103,7 @@ int main( int argc, char** argv )
          ("rpc-tls-endpoint,t", bpo::value<string>(), "Endpoint for wallet websocket TLS RPC to listen on")
          ("rpc-tls-certificate,c", bpo::value<string>()->implicit_value("server.pem"), "PEM certificate for wallet websocket TLS RPC")
          ("rpc-http-endpoint,H", bpo::value<string>(), "Endpoint for wallet HTTP RPC to listen on")
+         ("from-command-file,f", bpo::value<std::string>(), "Load commands from a command file")
       ;
 
       bpo::variables_map options;
@@ -329,6 +330,10 @@ int main( int argc, char** argv )
       if( !options.count( "daemon" ) )
       {
          wallet_cli->register_api( wapi );
+         if( options.count("from-command-file") )
+         {
+             wallet_cli->set_command_file(options.at( "from-command-file" ).as<std::string>());
+         }
          wallet_cli->start();
          wallet_cli->wait();
       }
