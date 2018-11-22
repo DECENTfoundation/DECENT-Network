@@ -2517,7 +2517,7 @@ signed_transaction content_cancellation(const string& author,
    void from_command_file( std::string command_file_name )
    {
        std::atomic_bool cancelToken;
-       decent::wallet_utility::WalletAPI myApi;
+       decent::wallet_utility::WalletAPI myApi(get_wallet_filename());
 
        try
        {
