@@ -290,7 +290,8 @@ namespace detail {
             _websocket_server->add_headers("Access-Control-Allow-Origin", _options->at("server-allowed-domains").as<fc::string>() );
          }
 
-         _websocket_server->on_connection([&]( const fc::http::websocket_connection_ptr& c ){
+         _websocket_server->on_connection([&]( const fc::http::websocket_connection_ptr& c, bool& is_tls){
+            is_tls = false;
             auto wsc = std::make_shared<fc::rpc::websocket_api_connection>(*c);
 
             auto db_api = std::make_shared<graphene::app::database_api>( std::ref(*_self->chain_database()) );
@@ -329,7 +330,8 @@ namespace detail {
             _websocket_tls_server->add_headers("Access-Control-Allow-Origin", _options->at("server-allowed-domains").as<fc::string>() );
          }
 
-         _websocket_tls_server->on_connection([&]( const fc::http::websocket_connection_ptr& c ){
+         _websocket_tls_server->on_connection([&]( const fc::http::websocket_connection_ptr& c, bool& is_tls){
+            is_tls = true;
             auto wsc = std::make_shared<fc::rpc::websocket_api_connection>(*c);
 
             auto db_api = std::make_shared<graphene::app::database_api>( std::ref(*_self->chain_database()) );

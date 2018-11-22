@@ -421,9 +421,9 @@ namespace graphene { namespace net { namespace detail {
     MONITORING_COUNTERS_BEGIN(node_impl)
     MONITORING_DEFINE_COUNTER(connections_node_inbound_terminated)
     MONITORING_DEFINE_COUNTER(connections_node_outbound_terminated)
-    MONITORING_DEFINE_COUNTER(connections_node_inbound_active)
+    MONITORING_DEFINE_TRANSIENT_COUNTER(connections_node_inbound_active)
     MONITORING_DEFINE_COUNTER(connections_node_inbound_active_max)
-    MONITORING_DEFINE_COUNTER(connections_node_outbound_active)
+    MONITORING_DEFINE_TRANSIENT_COUNTER(connections_node_outbound_active)
     MONITORING_DEFINE_COUNTER(connections_node_outbound_active_max)
     MONITORING_COUNTERS_END()
 
@@ -2992,10 +2992,10 @@ namespace graphene { namespace net { namespace detail {
       _terminating_connections.erase(originating_peer_ptr);
       if (_active_connections.find(originating_peer_ptr) != _active_connections.end())
       {
-        _active_connections.erase(originating_peer_ptr);
-        if (originating_peer_ptr->direction == peer_connection_direction::inbound)
+        size_t s = _active_connections.erase(originating_peer_ptr);
+        if (s == 1 && originating_peer_ptr->direction == peer_connection_direction::inbound)
            MONITORING_COUNTER_VALUE(connections_node_inbound_active)--;
-        if (originating_peer_ptr->direction == peer_connection_direction::outbound)
+        if (s == 1 && originating_peer_ptr->direction == peer_connection_direction::outbound)
            MONITORING_COUNTER_VALUE(connections_node_outbound_active)--;
 
         if (inbound_endpoint && originating_peer_ptr->get_remote_endpoint())
@@ -4374,10 +4374,10 @@ namespace graphene { namespace net { namespace detail {
         _handshaking_connections.erase(new_peer);
         _terminating_connections.erase(new_peer);
         assert(_active_connections.find(new_peer) == _active_connections.end());
-        _active_connections.erase(new_peer);
-        if (new_peer->direction == peer_connection_direction::inbound)
+        size_t s = _active_connections.erase(new_peer);
+        if (s == 1 && new_peer->direction == peer_connection_direction::inbound)
            MONITORING_COUNTER_VALUE(connections_node_inbound_active)--;
-        if (new_peer->direction == peer_connection_direction::outbound)
+        if (s == 1 && new_peer->direction == peer_connection_direction::outbound)
            MONITORING_COUNTER_VALUE(connections_node_outbound_active)--;
         assert(_closing_connections.find(new_peer) == _closing_connections.end());
         _closing_connections.erase(new_peer);
@@ -4703,10 +4703,10 @@ namespace graphene { namespace net { namespace detail {
     void node_impl::move_peer_to_closing_list(const peer_connection_ptr& peer)
     {
       VERIFY_CORRECT_THREAD();
-      _active_connections.erase(peer);
-      if (peer->direction == peer_connection_direction::inbound)
+      size_t s = _active_connections.erase(peer);
+      if (s == 1 && peer->direction == peer_connection_direction::inbound)
          MONITORING_COUNTER_VALUE(connections_node_inbound_active)--;
-      if (peer->direction == peer_connection_direction::outbound)
+      if (s == 1 && peer->direction == peer_connection_direction::outbound)
          MONITORING_COUNTER_VALUE(connections_node_outbound_active)--;
       _handshaking_connections.erase(peer);
       _closing_connections.insert(peer);
@@ -4716,10 +4716,10 @@ namespace graphene { namespace net { namespace detail {
     void node_impl::move_peer_to_terminating_list(const peer_connection_ptr& peer)
     {
       VERIFY_CORRECT_THREAD();
-      _active_connections.erase(peer);
-      if (peer->direction == peer_connection_direction::inbound)
+      size_t s = _active_connections.erase(peer);
+      if (s == 1 && peer->direction == peer_connection_direction::inbound)
          MONITORING_COUNTER_VALUE(connections_node_inbound_active)--;
-      if (peer->direction == peer_connection_direction::outbound)
+      if (s == 1 && peer->direction == peer_connection_direction::outbound)
          MONITORING_COUNTER_VALUE(connections_node_outbound_active)--;
       _handshaking_connections.erase(peer);
       _closing_connections.erase(peer);

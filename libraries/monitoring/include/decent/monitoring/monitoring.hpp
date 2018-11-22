@@ -37,6 +37,7 @@ namespace monitoring {
       std::string name;
       int64_t value;
       uint32_t last_reset;
+      bool persistent;
    };
 
    class monitoring_counters_base
@@ -67,12 +68,12 @@ namespace monitoring {
       void unregister_instance();
 
       void reset_local_counters_internal(uint32_t seconds, counter_item* first_counter, int size, const std::vector<std::string>& names);
-      void get_local_counters_internal(const counter_item* first_counter, int size, const std::vector<std::string>& names, std::vector<monitoring::counter_item>& result) const;
+      void get_local_counters_internal(const counter_item* first_counter, int size, const std::vector<std::string>& names, bool only_persistent, std::vector<monitoring::counter_item>& result) const;
       bool load_local_counters_internal(counter_item* first_counter, int size);
       void save_local_counters_internal(counter_item* first_counter, int size);
 
       virtual void reset_local_counters(uint32_t seconds, const std::vector<std::string>& names) = 0;
-      virtual void get_local_counters(const std::vector<std::string>& names, std::vector<monitoring::counter_item>& result) const = 0;
+      virtual void get_local_counters(const std::vector<std::string>& names, std::vector<monitoring::counter_item>& result, bool only_persistent) const = 0;
       virtual void load_local_counters() = 0;
       virtual void save_local_counters() = 0;
       virtual counter_item* get_first_counter() const = 0;
@@ -108,8 +109,8 @@ protected: \
 void reset_local_counters(uint32_t seconds, const std::vector<std::string>& names) override { \
    monitoring_counters_base::reset_local_counters_internal(seconds, (monitoring::counter_item*)&_counters, sizeof(_counters)/sizeof(monitoring::counter_item), names); \
 } \
-void get_local_counters(const std::vector<std::string>& names, std::vector<monitoring::counter_item>& result) const override { \
-   monitoring_counters_base::get_local_counters_internal((const monitoring::counter_item*)&_counters, sizeof(_counters)/sizeof(monitoring::counter_item), names, result); \
+void get_local_counters(const std::vector<std::string>& names, std::vector<monitoring::counter_item>& result, bool only_persistent) const override { \
+   monitoring_counters_base::get_local_counters_internal((const monitoring::counter_item*)&_counters, sizeof(_counters)/sizeof(monitoring::counter_item), names, only_persistent, result); \
 } \
 void load_local_counters() override \
 { \
@@ -130,7 +131,8 @@ int get_counters_size() const override \
 }; 
 
 #define COUNTER_NAME_STR(name) #name
-#define MONITORING_DEFINE_COUNTER(name) monitoring::counter_item name = {COUNTER_NAME_STR(name), 0LL, 0LL};
+#define MONITORING_DEFINE_COUNTER(name) monitoring::counter_item name = {COUNTER_NAME_STR(name), 0LL, 0LL, true};
+#define MONITORING_DEFINE_TRANSIENT_COUNTER(name) monitoring::counter_item name = {COUNTER_NAME_STR(name), 0LL, 0LL, false};
 #define MONITORING_COUNTER_VALUE(name) _counters.name.value
 
 

@@ -3176,8 +3176,12 @@ signed_transaction content_cancellation(const string& author,
          item_cli.name = item.name;
          item_cli.value = item.value;
          item_cli.last_reset = fc::time_point_sec(item.last_reset);
+         item_cli.persistent = item.persistent;
+         
          cli_result.push_back(item_cli);
       });
+
+      std::sort(cli_result.begin(), cli_result.end(), [&](monitoring::counter_item_cli& item1, monitoring::counter_item_cli& item2) {return item1.name < item2.name; });
       
       return cli_result;
    }
