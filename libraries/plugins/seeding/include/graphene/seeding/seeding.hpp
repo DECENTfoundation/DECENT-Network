@@ -232,18 +232,19 @@ public:
 class seeding_plugin : public graphene::app::plugin
 {
    public:
-      seeding_plugin();
+      seeding_plugin(graphene::app::application* app);
       ~seeding_plugin(){};
 
-      virtual std::string plugin_name()const override;
+      static std::string plugin_name();
+
       /**
        * Extend program options with our option list
        * @param cli CLI parameters
        * @param cfg Config file parameters
        */
-      virtual void plugin_set_program_options(
+      static void plugin_set_program_options(
               boost::program_options::options_description& cli,
-              boost::program_options::options_description& cfg) override;
+              boost::program_options::options_description& cfg);
 
       /**
        * Initialize plugin based on config parameters

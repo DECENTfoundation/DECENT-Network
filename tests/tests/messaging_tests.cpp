@@ -54,9 +54,11 @@ BOOST_FIXTURE_TEST_SUITE( messaging_tests, database_fixture )
 BOOST_AUTO_TEST_CASE( messaging )
 { try {
 
-   
-   auto messaging_plug = app.register_plugin<decent::messaging::messaging_plugin>();
-   messaging_plug->plugin_set_app(&app);
+   using test_plugins = graphene::app::plugin_set<
+      decent::messaging::messaging_plugin
+   >;
+
+   auto messaging_plug = std::get<0>(test_plugins::create(app));
    boost::program_options::variables_map omap;
    messaging_plug->plugin_initialize(omap);
    messaging_plug->plugin_startup();

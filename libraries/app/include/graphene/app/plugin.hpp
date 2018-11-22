@@ -33,8 +33,7 @@ namespace graphene { namespace app {
 class abstract_plugin
 {
    public:
-      virtual ~abstract_plugin(){}
-      virtual std::string plugin_name()const = 0;
+      virtual ~abstract_plugin() = default;
 
       /**
        * @brief Perform early startup routines and register plugin indexes, callbacks, etc.
@@ -66,11 +65,11 @@ class abstract_plugin
       virtual void plugin_shutdown() = 0;
 
       /**
-       * @brief Register the application instance with the plugin.
+       * @brief Get the plugin name.
        *
-       * This is called by the framework to set the application.
+       * @return plugin name
        */
-      virtual void plugin_set_app( application* a ) = 0;
+      static std::string plugin_name();
 
       /**
        * @brief Fill in command line parameters used by the plugin.
@@ -78,15 +77,11 @@ class abstract_plugin
        * @param command_line_options All options this plugin supports taking on the command-line
        * @param config_file_options All options this plugin supports storing in a configuration file
        *
-       * This method populates its arguments with any
-       * command-line and configuration file options the plugin supports.
-       * If a plugin does not need these options, it
-       * may simply provide an empty implementation of this method.
+       * This method populates its arguments with any command-line and configuration file options the plugin supports.
        */
-      virtual void plugin_set_program_options(
+      static void plugin_set_program_options(
          boost::program_options::options_description& command_line_options,
-         boost::program_options::options_description& config_file_options
-         ) = 0;
+         boost::program_options::options_description& config_file_options);
 };
 
 /**
@@ -96,18 +91,12 @@ class abstract_plugin
 class plugin : public abstract_plugin
 {
    public:
-      plugin();
+      plugin(application* app);
       virtual ~plugin() override;
 
-      virtual std::string plugin_name()const override;
-      virtual void plugin_initialize( const boost::program_options::variables_map& options ) override;
-      virtual void plugin_startup() override;
-      virtual void plugin_shutdown() override;
-      virtual void plugin_set_app( application* app ) override;
-      virtual void plugin_set_program_options(
-         boost::program_options::options_description& command_line_options,
-         boost::program_options::options_description& config_file_options
-         ) override;
+      virtual void plugin_initialize( const boost::program_options::variables_map& options ) override {}
+      virtual void plugin_startup() override {}
+      virtual void plugin_shutdown() override {}
 
       chain::database& database() { return *app().chain_database(); }
       application& app()const { assert(_app); return *_app; }
@@ -116,6 +105,54 @@ class plugin : public abstract_plugin
 
    private:
       application* _app = nullptr;
+};
+
+template<typename Plugin>
+static void set_plugin_program_options(boost::program_options::options_description& command_line_options,
+                                       boost::program_options::options_description& configuration_file_options)
+{
+   boost::program_options::options_description plugin_cli_options("Options for plugin " + Plugin::plugin_name()), plugin_cfg_options;
+   Plugin::plugin_set_program_options(plugin_cli_options, plugin_cfg_options);
+   if( !plugin_cli_options.options().empty() )
+      command_line_options.add(plugin_cli_options);
+   if( !plugin_cfg_options.options().empty() )
+      configuration_file_options.add(plugin_cfg_options);
+}
+
+template<typename ...Plugins>
+struct plugin_set
+{
+   using types = std::tuple<std::shared_ptr<Plugins>...>;
+   template<std::size_t N>
+   using type = typename std::tuple_element<N, types>::type::element_type;
+
+   static void set_program_options(boost::program_options::options_description& command_line_options,
+                                   boost::program_options::options_description& configuration_file_options)
+   {
+      set_plugins_program_options(command_line_options, configuration_file_options,
+                                  graphene::chain::detail::gen_seq<std::tuple_size<types>::value>());
+   }
+
+   static types create(application &app)
+   {
+      return create_plugins(app, graphene::chain::detail::gen_seq<std::tuple_size<types>::value>());
+   }
+
+private:
+   template<int ...Idx>
+   static void set_plugins_program_options(boost::program_options::options_description& command_line_options,
+                                           boost::program_options::options_description& configuration_file_options,
+                                           graphene::chain::detail::seq<Idx...>)
+   {
+      auto x = {(set_plugin_program_options<type<Idx>>(command_line_options, configuration_file_options), 0)...};
+      (void)x;
+   }
+
+   template<int ...Idx>
+   static types create_plugins(application &app, graphene::chain::detail::seq<Idx...>)
+   {
+      return std::make_tuple((app.create_plugin<type<Idx>>())...);
+   }
 };
 
 /// @group Some useful tools for boost::program_options arguments using vectors of JSON strings

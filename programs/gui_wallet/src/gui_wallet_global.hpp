@@ -13,6 +13,12 @@
 #include <atomic>
 
 #include <decent/wallet_utility/wallet_utility.hpp>
+#include <graphene/miner/miner.hpp>
+#include <graphene/seeding/seeding.hpp>
+#include <graphene/account_history/account_history_plugin.hpp>
+#include <graphene/transaction_history/transaction_history_plugin.hpp>
+#include <graphene/utilities/dirhelper.hpp>
+#include <graphene/messaging/messaging.hpp>
 
 #include "json.hpp"
 
@@ -99,7 +105,7 @@ namespace gui_wallet
    {
       Q_OBJECT
    public:
-      WalletOperator();
+      WalletOperator(const fc::path &wallet_file);
       ~WalletOperator() override;
 
       void cancel();
@@ -159,7 +165,18 @@ namespace gui_wallet
       enum class ConnectionState { NoState, Reindexing, Connecting, SyncingUp, Up };
       static Globals& instance();
 
-      void startDaemons(BlockChainStartType type);
+      using Plugins = graphene::app::plugin_set<
+         graphene::miner_plugin::miner_plugin,
+         graphene::account_history::account_history_plugin,
+         decent::seeding::seeding_plugin,
+         decent::messaging::messaging_plugin,
+         graphene::transaction_history::transaction_history_plugin
+      >;
+
+      static void setCommandLine(boost::program_options::options_description &app_options,
+                                 boost::program_options::options_description &cfg_options);
+
+      void startDaemons(BlockChainStartType type, const std::string &wallet_file);
       void stopDaemons();
       std::string getCurrentUser() const;
       WalletAPI& getWallet() const;

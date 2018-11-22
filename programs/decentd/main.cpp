@@ -163,38 +163,52 @@ int main(int argc, char** argv) {
    SetConsoleCtrlHandler(HandlerRoutine, TRUE);
 #endif
 
+   bpo::options_description app_options("DECENT Daemon");
+   bpo::options_description cfg_options("DECENT Daemon");
+   bpo::variables_map options;
+
+   using decent_plugins = graphene::app::plugin_set<
+      miner_plugin::miner_plugin,
+      account_history::account_history_plugin,
+      decent::seeding::seeding_plugin,
+      decent::messaging::messaging_plugin,
+      transaction_history::transaction_history_plugin
+   >;
+
+   try
+   {
+      bpo::options_description cli, cfg;
+      app::application::set_program_options(cli, cfg);
+      decent_plugins::set_program_options(cli, cfg);
+      cli.add_options()
+         ("daemon", "Run DECENT as daemon.")
+      ;
+
+      app_options.add(cli);
+      cfg_options.add(cfg);
+      bpo::store(bpo::parse_command_line(argc, argv, app_options), options);
+   }
+   catch (const boost::program_options::error& e)
+   {
+     std::cerr << "Error parsing command line: " << e.what() << "\n";
+     return EXIT_FAILURE;
+   }
+
+   if( options.count("help") )
+   {
+      std::cout << app_options << std::endl;
+      return EXIT_SUCCESS;
+   }
+   else if( options.count("version") )
+   {
+      std::cout << "DECENT Daemon " << graphene::utilities::git_version() << std::endl;
+      return EXIT_SUCCESS;
+   }
+
    app::application* node = new app::application();
    fc::oexception unhandled_exception;
    try {
-      bpo::options_description app_options("DECENT Daemon");
-      bpo::options_description cfg_options("DECENT Daemon");
-      app_options.add_options()
-         ("help,h", "Print this help message and exit.")
-         ("version,v", "Print version information")
-         ("data-dir,d", bpo::value<boost::filesystem::path>()->default_value( utilities::decent_path_finder::instance().get_decent_data() / "decentd"), "Directory containing databases, configuration file, etc.")
-         ("daemon", "Run Decent as daemon");
-
-      bpo::variables_map options;
-
-      auto miner_plug = node->register_plugin<miner_plugin::miner_plugin>();
-      auto history_plug = node->register_plugin<account_history::account_history_plugin>();
-      auto seeding_plug = node->register_plugin<decent::seeding::seeding_plugin>();
-      auto messaging_plug = node->register_plugin<decent::messaging::messaging_plugin>();
-      auto transaction_history_plug = node->register_plugin<transaction_history::transaction_history_plugin>();
-
-      try
-      {
-         bpo::options_description cli, cfg;
-         node->set_program_options(cli, cfg);
-         app_options.add(cli);
-         cfg_options.add(cfg);
-         bpo::store(bpo::parse_command_line(argc, argv, app_options), options);
-      }
-      catch (const boost::program_options::error& e)
-      {
-        std::cerr << "Error parsing command line: " << e.what() << "\n";
-        return 1;
-      }
+      decent_plugins::types plugins = decent_plugins::create(*node);
 
       bool run_as_daemon = false;
       fc::path logs_dir, data_dir, temp_dir, config_filename;
@@ -240,27 +254,6 @@ int main(int argc, char** argv) {
          logs_dir = fc::absolute(config_filename).parent_path();
       }
 
-      if( options.count("version") )
-         {
-            std::string client_version( graphene::utilities::git_revision_description );
-            const size_t pos = client_version.find( '/' );
-            if( pos != std::string::npos && client_version.size() > pos )
-               client_version = client_version.substr( pos + 1 );
-
-            std::cout << "decentd version " << client_version << "\n";
-         }
-
-      if( options.count("help") )
-      {
-         if( options.count("version") )
-            std::cout << "\n";
-
-         std::cout << app_options << "\n";
-      }
-
-      if( options.count("help") || options.count("version") )
-         return 0;
-      
       if( fc::exists(config_filename) )
       {
          // get the basic options
@@ -363,6 +356,7 @@ int main(int argc, char** argv) {
       ilog("Started miner node on a chain with ${h} blocks.", ("h", node->chain_database()->head_block_num()));
       ilog("Chain ID is ${id}", ("id", node->chain_database()->get_chain_id()) );
 
+      auto seeding_plug = std::get<2>(plugins);
       if( !seeding_plug->my )
       {
          decent::seeding::seeding_promise = new fc::promise<decent::seeding::seeding_plugin_startup_options>("Seeding Promise");

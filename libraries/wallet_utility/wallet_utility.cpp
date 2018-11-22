@@ -62,13 +62,12 @@ namespace wallet_utility
       class WalletAPIHelper
       {
       public:
-         WalletAPIHelper()
+         WalletAPIHelper(const fc::path &wallet_file)
          : m_asset_precision(0)
          ,m_ptr_wallet_api(nullptr)
          , m_ptr_fc_api_connection(nullptr)
          {
             wallet_data wdata;
-            fc::path wallet_file(decent_path_finder::instance().get_decent_home() / "wallet.json");
             if (fc::exists(wallet_file))
                wdata = fc::json::from_file(wallet_file).as<wallet_data>();
             else
@@ -136,8 +135,9 @@ namespace wallet_utility
    //
    //  WalletAPI
    //
-   WalletAPI::WalletAPI()
-   : m_pthread(nullptr)
+   WalletAPI::WalletAPI(const fc::path &wallet_file)
+   : m_wallet_file(wallet_file)
+   , m_pthread(nullptr)
    , m_pimpl(nullptr)
    , m_mutex()
    {
@@ -156,16 +156,15 @@ namespace wallet_utility
 
       m_pthread.reset(new fc::thread("wallet_api_service"));
 
-      auto& pimpl = m_pimpl;
       fc::future<string> future_connect =
-      m_pthread->async([&pimpl, &cancellation_token] () -> string
+      m_pthread->async([this, &cancellation_token] () -> string
                        {
                           std::string error;
                           while (! cancellation_token)
                           {
                              try
                              {
-                                pimpl.reset(new detail::WalletAPIHelper());
+                                m_pimpl.reset(new detail::WalletAPIHelper(m_wallet_file));
                                 break;
                              }
                              catch(wallet_exception const& ex)
@@ -324,8 +323,7 @@ namespace wallet_utility
       if (!Connected())
          throw wallet_exception("not yet connected");
 
-      fc::path wallet_file(decent_path_finder::instance().get_decent_home() / "wallet.json");
-      string str_file = wallet_file.to_native_ansi_path();
+      string str_file = m_wallet_file.to_native_ansi_path();
 
       std::lock_guard<std::mutex> lock(m_mutex);
 
