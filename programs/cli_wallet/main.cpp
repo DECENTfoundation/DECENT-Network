@@ -265,8 +265,9 @@ int main( int argc, char** argv )
       auto _websocket_server = std::make_shared<fc::http::websocket_server>();
       if( options.count("rpc-endpoint") )
       {
-         _websocket_server->on_connection([&]( const fc::http::websocket_connection_ptr& c ){
+         _websocket_server->on_connection([&]( const fc::http::websocket_connection_ptr& c, bool& is_tls ){
             std::cout << "here... \n";
+            is_tls = false;
             wlog("." );
             auto wsc = std::make_shared<fc::rpc::websocket_api_connection>(*c);
             wsc->register_api(wapi);
@@ -284,7 +285,8 @@ int main( int argc, char** argv )
       auto _websocket_tls_server = std::make_shared<fc::http::websocket_tls_server>(cert_pem);
       if( options.count("rpc-tls-endpoint") )
       {
-         _websocket_tls_server->on_connection([&]( const fc::http::websocket_connection_ptr& c ){
+         _websocket_tls_server->on_connection([&]( const fc::http::websocket_connection_ptr& c, bool& is_tls ){
+            is_tls = true;
             auto wsc = std::make_shared<fc::rpc::websocket_api_connection>(*c);
             wsc->register_api(wapi);
             c->set_session_data( wsc );
