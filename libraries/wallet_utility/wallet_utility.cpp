@@ -68,10 +68,9 @@ namespace wallet_utility
          , m_ptr_fc_api_connection(nullptr)
          {
             wallet_data wdata;
-            if (fc::exists(wallet_file))
+            bool has_wallet_file = fc::exists(wallet_file);
+            if (has_wallet_file)
                wdata = fc::json::from_file(wallet_file).as<wallet_data>();
-            else
-               wdata.chain_id = chain_id_type("0000000000000000000000000000000000000000000000000000000000000000");
 
             //  most probably this needs to get out to somewhere else
             //graphene::package::package_manager::instance().set_libtorrent_config(wdata.libtorrent_config_path);
@@ -95,6 +94,9 @@ namespace wallet_utility
             if (false == (*ptr_remote_api)->login(wdata.ws_user, wdata.ws_password))
                throw wallet_exception("fc::api<graphene::app::login_api>::login");
 
+            if (!has_wallet_file)
+               wdata.chain_id = (*ptr_remote_api)->database()->get_chain_id();
+
             //  capture ptr_api_connection and ptr_remote_api too. encapsulate all inside wallet_api
             m_ptr_wallet_api.reset(new wallet_api(wdata, *ptr_remote_api),
                                    [ptr_api_connection, ptr_remote_api](wallet_api* &p_wallet_api) mutable
@@ -105,7 +107,7 @@ namespace wallet_utility
                                       ptr_remote_api.reset();
                                    });
 
-            if (fc::exists(wallet_file))
+            if (has_wallet_file)
                m_ptr_wallet_api->load_wallet_file(wallet_file.generic_string());
 
             fc_api_ptr ptr_fc_api = fc_api_ptr(new fc_api(m_ptr_wallet_api.get()));
