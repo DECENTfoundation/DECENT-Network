@@ -76,7 +76,6 @@
 #include <graphene/wallet/wallet.hpp>
 #include <graphene/wallet/api_documentation.hpp>
 #include <graphene/wallet/reflect_util.hpp>
-#include <graphene/debug_miner/debug_api.hpp>
 #include <graphene/chain/custom_evaluator.hpp>
 
 #include <decent/package/package.hpp>
@@ -3077,39 +3076,6 @@ signed_transaction content_cancellation(const string& author,
       return cli_result;
    }
 
-   void dbg_make_mia(const std::string& creator, const std::string& symbol)
-   {
-      create_monitored_asset(get_account(creator).name, symbol, 2, "abcd", 3600, 1, true);
-   }
-
-   void dbg_push_blocks( const std::string& src_filename, uint32_t count )
-   {
-      use_debug_api();
-      (*_remote_debug)->debug_push_blocks( src_filename, count );
-      (*_remote_debug)->debug_stream_json_objects_flush();
-   }
-
-   void dbg_generate_blocks( const std::string& debug_wif_key, uint32_t count )
-   {
-      use_debug_api();
-      (*_remote_debug)->debug_generate_blocks( debug_wif_key, count );
-      (*_remote_debug)->debug_stream_json_objects_flush();
-   }
-
-   void dbg_stream_json_objects( const std::string& filename )
-   {
-      use_debug_api();
-      (*_remote_debug)->debug_stream_json_objects( filename );
-      (*_remote_debug)->debug_stream_json_objects_flush();
-   }
-
-   void dbg_update_object( const fc::variant_object& update )
-   {
-      use_debug_api();
-      (*_remote_debug)->debug_update_object( update );
-      (*_remote_debug)->debug_stream_json_objects_flush();
-   }
-
    void use_network_node_api()
    {
       if( _remote_net_node )
@@ -3125,26 +3091,6 @@ signed_transaction content_cancellation(const string& author,
          "connecting to.  Please follow the instructions in README.md to set up an apiaccess file.\n"
          "\n";
          throw(e);
-      }
-   }
-
-   void use_debug_api()
-   {
-      if( _remote_debug )
-         return;
-      try
-      {
-        _remote_debug = _remote_api->debug();
-      }
-      catch( const fc::exception& e )
-      {
-         std::cerr << "\nCouldn't get debug node API.  You probably are not configured\n"
-         "to access the debug API on the node you are connecting to.\n"
-         "\n"
-         "To fix this problem:\n"
-         "- Please ensure you are running debug_node, not decentd.\n"
-         "- Please follow the instructions in README.md to set up an apiaccess file.\n"
-         "\n";
       }
    }
 
@@ -3240,7 +3186,6 @@ signed_transaction content_cancellation(const string& author,
    fc::api<network_broadcast_api>   _remote_net_broadcast;
    fc::api<history_api>    _remote_hist;
    optional< fc::api<network_node_api> > _remote_net_node;
-   optional< fc::api<graphene::debug_miner::debug_api> > _remote_debug;
 
    flat_map<string, operation> _prototype_ops;
 
@@ -3676,35 +3621,6 @@ signed_transaction content_cancellation(const string& author,
 #include "wallet_subscription.inl"
 #include "wallet_messaging.inl"
 #include "wallet_monitoring.inl"
-
-
-#if 0
-   void wallet_api::dbg_make_mia(string creator, string symbol)
-   {
-      FC_ASSERT(!is_locked());
-      my->dbg_make_mia(creator, symbol);
-   }
-
-   void wallet_api::dbg_push_blocks( std::string src_filename, uint32_t count )
-   {
-      my->dbg_push_blocks( src_filename, count );
-   }
-
-   void wallet_api::dbg_generate_blocks( std::string debug_wif_key, uint32_t count )
-   {
-      my->dbg_generate_blocks( debug_wif_key, count );
-   }
-
-   void wallet_api::dbg_stream_json_objects( const std::string& filename )
-   {
-      my->dbg_stream_json_objects( filename );
-   }
-
-   void wallet_api::dbg_update_object( fc::variant_object update )
-   {
-      my->dbg_update_object( update );
-   }
-#endif
 
    std::map<string,std::function<string(fc::variant,const fc::variants&)> > wallet_api::get_result_formatters() const
    {

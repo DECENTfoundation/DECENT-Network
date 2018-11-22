@@ -112,13 +112,6 @@ namespace graphene { namespace app {
        {
           _monitoring_api = std::make_shared< monitoring_api >();
        }
-       else if( api_name == "debug_api" )
-       {
-          // can only enable this API if the plugin was loaded
-          if( _app.get_plugin( "debug_miner" ) )
-             _debug_api = std::make_shared< graphene::debug_miner::debug_api >( std::ref(_app) );
-       }
-       return;
     }
 
     network_broadcast_api::network_broadcast_api(application& a):_app(a)
@@ -268,12 +261,6 @@ namespace graphene { namespace app {
     {
        FC_ASSERT(_crypto_api);
        return *_crypto_api;
-    }
-
-    fc::api<graphene::debug_miner::debug_api> login_api::debug() const
-    {
-       FC_ASSERT(_debug_api);
-       return *_debug_api;
     }
 
     fc::api<graphene::app::messaging_api> login_api::messaging() const

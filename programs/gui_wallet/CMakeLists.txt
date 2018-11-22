@@ -70,11 +70,11 @@ endif()
 if( WIN32 )
   if( UPDATE_MANAGER )
     target_link_libraries(  DECENT PUBLIC
-                        Qt5::Core Qt5::Widgets Qt5::Svg graphene_app graphene_net graphene_chain graphene_utilities graphene_wallet wallet_utility decent_messaging decent_monitoring package_manager decent_encrypt decent_config pbc ${GMP_LIBRARIES} graphene_account_history decent_seeding graphene_miner graphene_debug_miner graphene_egenesis_decent fc msi update ${CMAKE_DL_LIBS} ${PLATFORM_SPECIFIC_LIBS}
+                        Qt5::Core Qt5::Widgets Qt5::Svg graphene_app graphene_net graphene_chain graphene_utilities graphene_wallet wallet_utility decent_messaging decent_monitoring package_manager decent_encrypt decent_config pbc ${GMP_LIBRARIES} graphene_account_history decent_seeding graphene_miner graphene_egenesis_decent fc msi update ${CMAKE_DL_LIBS} ${PLATFORM_SPECIFIC_LIBS}
                      )
   else()
     target_link_libraries(  DECENT PUBLIC
-                        Qt5::Core Qt5::Widgets Qt5::Svg graphene_app graphene_net graphene_chain graphene_utilities graphene_wallet wallet_utility decent_messaging decent_monitoring package_manager decent_encrypt decent_config pbc ${GMP_LIBRARIES} graphene_account_history decent_seeding graphene_miner graphene_debug_miner graphene_egenesis_decent fc msi ${CMAKE_DL_LIBS} ${PLATFORM_SPECIFIC_LIBS}
+                        Qt5::Core Qt5::Widgets Qt5::Svg graphene_app graphene_net graphene_chain graphene_utilities graphene_wallet wallet_utility decent_messaging decent_monitoring package_manager decent_encrypt decent_config pbc ${GMP_LIBRARIES} graphene_account_history decent_seeding graphene_miner graphene_egenesis_decent fc msi ${CMAKE_DL_LIBS} ${PLATFORM_SPECIFIC_LIBS}
                      )
   endif()
   target_sources(DECENT PUBLIC
@@ -92,11 +92,11 @@ if( WIN32 )
 else()   
   if( UPDATE_MANAGER )
     target_link_libraries(  DECENT PUBLIC
-                        Qt5::Core Qt5::Widgets Qt5::Svg graphene_app graphene_net graphene_chain graphene_utilities graphene_wallet wallet_utility decent_messaging decent_monitoring package_manager decent_encrypt decent_config pbc gmp graphene_account_history decent_seeding graphene_miner graphene_debug_miner graphene_egenesis_decent fc update ${CMAKE_DL_LIBS} ${PLATFORM_SPECIFIC_LIBS}
+                        Qt5::Core Qt5::Widgets Qt5::Svg graphene_app graphene_net graphene_chain graphene_utilities graphene_wallet wallet_utility decent_messaging decent_monitoring package_manager decent_encrypt decent_config pbc gmp graphene_account_history decent_seeding graphene_miner graphene_egenesis_decent fc update ${CMAKE_DL_LIBS} ${PLATFORM_SPECIFIC_LIBS}
                      )
   else()                  
     target_link_libraries(  DECENT PUBLIC
-                        Qt5::Core Qt5::Widgets Qt5::Svg graphene_app graphene_net graphene_chain graphene_utilities graphene_wallet wallet_utility decent_messaging decent_monitoring package_manager decent_encrypt decent_config pbc gmp graphene_account_history decent_seeding graphene_miner graphene_debug_miner graphene_egenesis_decent fc ${CMAKE_DL_LIBS} ${PLATFORM_SPECIFIC_LIBS}
+                        Qt5::Core Qt5::Widgets Qt5::Svg graphene_app graphene_net graphene_chain graphene_utilities graphene_wallet wallet_utility decent_messaging decent_monitoring package_manager decent_encrypt decent_config pbc gmp graphene_account_history decent_seeding graphene_miner graphene_egenesis_decent fc ${CMAKE_DL_LIBS} ${PLATFORM_SPECIFIC_LIBS}
                      )
   endif()  
   target_sources(DECENT PUBLIC

@@ -512,8 +512,6 @@ void database::init_genesis(const genesis_state_type& genesis_state)
    });
 
 
-   debug_dump();
-
    _undo_db.enable();
 } FC_CAPTURE_AND_RETHROW() }
 

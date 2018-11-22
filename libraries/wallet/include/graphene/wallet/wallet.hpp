@@ -547,18 +547,6 @@ FC_API( graphene::wallet::wallet_api,
    )
 
 #if 0
-        //Debug
-        (dbg_make_mia)
-        (dbg_push_blocks)
-        (dbg_generate_blocks)
-        (dbg_stream_json_objects)
-        (dbg_update_object)
-        (set_transfer_logs)
-        (sign_buffer)
-        (verify_signature)
-
         //Network
         (flood_network)
 #endif
-
-

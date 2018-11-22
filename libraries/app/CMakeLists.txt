@@ -12,8 +12,8 @@ add_library( graphene_app
              ${EGENESIS_HEADERS}
            )
 
-# need to link graphene_debug_miner because plugins aren't sufficiently isolated #246
-target_link_libraries( graphene_app graphene_account_history graphene_chain fc graphene_db graphene_net graphene_time graphene_utilities graphene_debug_miner decent_seeding nlohmann_json package_manager decent_monitoring)
+# need to link decent_seeding because it isn't sufficiently isolated
+target_link_libraries( graphene_app graphene_chain fc graphene_db graphene_net graphene_time graphene_utilities decent_monitoring decent_seeding nlohmann_json package_manager )
 target_include_directories( graphene_app
                             PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include"
                             "${CMAKE_CURRENT_SOURCE_DIR}/../egenesis/include"
