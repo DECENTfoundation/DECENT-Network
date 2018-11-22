@@ -391,7 +391,7 @@ public:
         _seeders_tracker(*this)
    {
       chain_id_type remote_chain_id = _remote_db->get_chain_id();
-      if( remote_chain_id != _chain_id && _chain_id != chain_id_type ("0000000000000000000000000000000000000000000000000000000000000000") )
+      if( remote_chain_id != _chain_id )
       {
          FC_THROW( "Remote server gave us an unexpected chain_id",
             ("remote_chain_id", remote_chain_id)

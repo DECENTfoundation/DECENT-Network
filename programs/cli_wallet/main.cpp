@@ -201,34 +201,11 @@ int main( int argc, char** argv )
       //    designed.
       //
       wallet_data wdata;
-
       fc::path wallet_file( options.count("wallet-file") ? options.at("wallet-file").as<std::string>() : decent_path_finder::instance().get_decent_home() / "wallet.json");
-       
-      if( fc::exists( wallet_file ) )
+      bool has_wallet_file = fc::exists( wallet_file );
+      if( has_wallet_file )
       {
          wdata = fc::json::from_file( wallet_file ).as<wallet_data>();
-         if( options.count("chain-id") )
-         {
-            // the --chain-id on the CLI must match the chain ID embedded in the wallet file
-            if( chain_id_type(options.at("chain-id").as<std::string>()) != wdata.chain_id )
-            {
-               std::cout << "Chain ID in wallet file does not match specified chain ID\n";
-               return 1;
-            }
-         }
-      }
-      else
-      {
-         if( options.count("chain-id") )
-         {
-            wdata.chain_id = chain_id_type(options.at("chain-id").as<std::string>());
-            std::cout << "Starting a new wallet with chain ID " << wdata.chain_id.str() << " (from CLI)\n";
-         }
-         else
-         {
-            wdata.chain_id = chain_id_type ("0000000000000000000000000000000000000000000000000000000000000000"); //graphene::egenesis::get_egenesis_chain_id();
-            std::cout << "Starting a new wallet with chain ID " << wdata.chain_id.str() << " (empty one)\n";
-         }
       }
 
       // but allow CLI to override
@@ -249,8 +226,43 @@ int main( int argc, char** argv )
       // TODO:  Error message here
       FC_ASSERT( remote_api->login( wdata.ws_user, wdata.ws_password ) );
 
+      if( !has_wallet_file )
+      {
+         if( options.count("chain-id") )
+         {
+            wdata.chain_id = chain_id_type(options.at("chain-id").as<std::string>());
+            // the --chain-id on the CLI must match the chain ID of database we connect to
+            if( remote_api->database()->get_chain_id() != wdata.chain_id )
+            {
+               std::cerr << "Chain ID from CLI does not match database chain ID\n";
+               return 1;
+            }
+
+            std::cout << "Starting a new wallet with chain ID " << wdata.chain_id.str() << " (from CLI)\n";
+         }
+         else
+         {
+            wdata.chain_id = remote_api->database()->get_chain_id();
+            std::cout << "Starting a new wallet with chain ID " << wdata.chain_id.str() << " (empty one)\n";
+         }
+      }
+      else if( options.count("chain-id") )
+      {
+         // the --chain-id on the CLI must match the chain ID embedded in the wallet file
+         if( chain_id_type(options.at("chain-id").as<std::string>()) != wdata.chain_id )
+         {
+            std::cerr << "Chain ID in wallet file " << wallet_file.generic_string() << " does not match specified chain ID\n";
+            return 1;
+         }
+      }
+      else if( remote_api->database()->get_chain_id() != wdata.chain_id )
+      {
+         std::cerr << "Chain ID in wallet file " << wallet_file.generic_string() << " does not match database chain ID\n";
+         return 1;
+      }
+
       auto wapiptr = std::make_shared<wallet_api>( wdata, remote_api );
-      if( fc::exists(wallet_file) && !wapiptr->load_wallet_file(wallet_file.generic_string()) )
+      if( has_wallet_file && !wapiptr->load_wallet_file(wallet_file.generic_string()) )
       {
          std::cerr << "Failed to load wallet file " << wallet_file.generic_string() << std::endl;
          return 1;
