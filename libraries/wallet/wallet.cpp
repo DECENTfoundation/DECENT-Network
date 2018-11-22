@@ -71,6 +71,7 @@
 #include <graphene/chain/protocol/fee_schedule.hpp>
 #include <graphene/utilities/git_revision.hpp>
 #include <graphene/utilities/key_conversion.hpp>
+#include <graphene/utilities/keys_generator.hpp>
 #include <graphene/utilities/string_escape.hpp>
 #include <graphene/utilities/words.hpp>
 #include <graphene/wallet/wallet.hpp>
@@ -92,8 +93,6 @@
 # include <sys/types.h>
 # include <sys/stat.h>
 #endif
-
-#define BRAIN_KEY_WORD_COUNT 16
 
 CryptoPP::AutoSeededRandomPool randomGenerator;
 
@@ -218,72 +217,6 @@ optional<T> maybe_id( const string& name_or_id )
       }
    }
    return optional<T>();
-}
-
-fc::ecc::private_key derive_private_key( const std::string& prefix_string,
-                                         int sequence_number )
-{
-   std::string sequence_string = std::to_string(sequence_number);
-   fc::sha512 h = fc::sha512::hash(prefix_string + " " + sequence_string);
-   fc::ecc::private_key derived_key = fc::ecc::private_key::regenerate(fc::sha256::hash(h));
-   return derived_key;
-}
-
-string normalize_brain_key(const string& s )
-{
-   size_t i = 0, n = s.length();
-   std::string result;
-   char c;
-   result.reserve( n );
-
-   bool preceded_by_whitespace = false;
-   bool non_empty = false;
-   while( i < n )
-   {
-      c = s[i++];
-      switch( c )
-      {
-      case ' ':  case '\t': case '\r': case '\n': case '\v': case '\f':
-         preceded_by_whitespace = true;
-         continue;
-
-      case 'a': c = 'A'; break;
-      case 'b': c = 'B'; break;
-      case 'c': c = 'C'; break;
-      case 'd': c = 'D'; break;
-      case 'e': c = 'E'; break;
-      case 'f': c = 'F'; break;
-      case 'g': c = 'G'; break;
-      case 'h': c = 'H'; break;
-      case 'i': c = 'I'; break;
-      case 'j': c = 'J'; break;
-      case 'k': c = 'K'; break;
-      case 'l': c = 'L'; break;
-      case 'm': c = 'M'; break;
-      case 'n': c = 'N'; break;
-      case 'o': c = 'O'; break;
-      case 'p': c = 'P'; break;
-      case 'q': c = 'Q'; break;
-      case 'r': c = 'R'; break;
-      case 's': c = 'S'; break;
-      case 't': c = 'T'; break;
-      case 'u': c = 'U'; break;
-      case 'v': c = 'V'; break;
-      case 'w': c = 'W'; break;
-      case 'x': c = 'X'; break;
-      case 'y': c = 'Y'; break;
-      case 'z': c = 'Z'; break;
-
-      default:
-         break;
-      }
-      if( preceded_by_whitespace && non_empty )
-         result.push_back(' ');
-      result.push_back(c);
-      preceded_by_whitespace = false;
-      non_empty = true;
-   }
-   return result;
 }
 
 struct op_prototype_visitor
@@ -1269,9 +1202,9 @@ public:
    { try {
 
       FC_ASSERT( !self.is_locked() );
-      string normalized_brain_key = detail::normalize_brain_key( brain_key );
+      string normalized_brain_key = graphene::utilities::normalize_brain_key( brain_key );
       // TODO:  scan blockchain for accounts that exist with same brain key
-      fc::ecc::private_key owner_privkey = derive_private_key( normalized_brain_key, 0 );
+      fc::ecc::private_key owner_privkey = graphene::utilities::derive_private_key( normalized_brain_key );
       return create_account_with_private_key(owner_privkey, account_name, registrar_account, import, broadcast, save_wallet);
    } FC_CAPTURE_AND_RETHROW( (account_name)(registrar_account) ) }
 

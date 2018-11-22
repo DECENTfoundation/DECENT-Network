@@ -23,6 +23,8 @@
 
 #include <graphene/utilities/dirhelper.hpp>
 #include <graphene/utilities/git_revision.hpp>
+#include <graphene/utilities/key_conversion.hpp>
+#include <graphene/utilities/keys_generator.hpp>
 
 using std::string;
 
@@ -32,16 +34,16 @@ int main(int argc, char* argv[])
    QCoreApplication::setApplicationName("DECENT Wallet");
    QCoreApplication::setApplicationVersion(QString::fromStdString(graphene::utilities::git_version()));
 
-   boost::program_options::options_description app_options("DECENT Wallet");
-   boost::program_options::options_description cfg_options("DECENT Wallet");
-   boost::program_options::variables_map options;
+   bpo::options_description app_options("DECENT Wallet");
+   bpo::options_description cfg_options("DECENT Wallet");
+   bpo::variables_map options;
 
    try
    {
       gui_wallet::Globals::setCommandLine(app_options, cfg_options);
-      boost::program_options::store(boost::program_options::parse_command_line(argc, argv, app_options), options);
+      bpo::store(bpo::parse_command_line(argc, argv, app_options), options);
    }
-   catch (const boost::program_options::error& e)
+   catch (const bpo::error& e)
    {
      std::cerr << "Error parsing command line: " << e.what() << "\n";
      return EXIT_FAILURE;
@@ -56,6 +58,30 @@ int main(int argc, char* argv[])
    {
       std::cout << "DECENT Wallet " << graphene::utilities::git_version() << std::endl;
       return EXIT_SUCCESS;
+   }
+   else if( options.count("generate-keys") )
+   {
+      try
+      {
+         std::string brain_key = graphene::utilities::generate_brain_key();
+         fc::ecc::private_key priv_key = graphene::utilities::derive_private_key(brain_key);
+         graphene::chain::public_key_type pub_key(priv_key.get_public_key());
+
+         std::cout << "Brain key:    " << brain_key << std::endl;
+         std::cout << "Private key:  " << graphene::utilities::key_to_wif(priv_key) << std::endl;
+         std::cout << "Public key:   " << std::string(pub_key) << std::endl;
+         return EXIT_SUCCESS;
+      }
+      catch ( const fc::exception& e )
+      {
+         std::cerr << e.to_detail_string() << std::endl;
+      }
+      catch (const std::exception& e)
+      {
+         std::cerr << e.what() << std::endl;
+      }
+
+      return EXIT_FAILURE;
    }
 
    QFile styleFile(":/css/styles/white_green.css");
