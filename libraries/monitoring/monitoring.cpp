@@ -53,7 +53,7 @@ namespace monitoring {
          std::for_each(registered_instances.begin(), registered_instances.end(), [&](const monitoring_counters_base* this_ptr) {
             const std::vector<std::string> names;
 
-            this_ptr->get_local_counters(names, result);
+            this_ptr->get_local_counters(names, result, true);
          });
 
          if (_pending_save.size()) {
@@ -68,21 +68,33 @@ namespace monitoring {
       }
    }
 
+   // We know path to data_dir after command line parameters are processed but some class instances can exists at that moment
+   // so we need explicitly to initialize them
    void monitoring_counters_base::initialize_existing_instances()
    {
       std::set<monitoring_counters_base*>::iterator existing_iter;
       std::lock_guard<std::mutex> lock(monitoring_counters_base::registered_instances_mutex);
+      std::chrono::system_clock::time_point tp = std::chrono::system_clock::now();
+
       for (existing_iter = registered_instances.begin(); existing_iter != registered_instances.end(); ++existing_iter)
       {
          if ((*existing_iter)->_counters_initialized == false) {
             monitoring::counter_item* it = (*existing_iter)->get_first_counter();
 
             for (int i = 0; i < (*existing_iter)->get_counters_size(); i++) {
-               std::for_each(_initializing_cache.begin(), _initializing_cache.end(), [&](monitoring::counter_item& item) {
-                  if (it->name == item.name) {
-                     (*it) = item;
+               if (it->persistent) {
+                  std::vector<monitoring::counter_item>::iterator iter;
+                  for (iter = _initializing_cache.begin(); iter != _initializing_cache.end(); ++iter) {
+                     if ((*iter).name == it->name) {
+                        (*it) = (*iter);
+                        break;
+                     }
                   }
-               });
+               }
+               else {
+                  it->last_reset = std::chrono::duration_cast<std::chrono::seconds>(tp.time_since_epoch()).count();
+               }
+               
                it++;
             }
             (*existing_iter)->_counters_initialized = true;
@@ -158,8 +170,10 @@ namespace monitoring {
       if (names.size() == 0) {
 
          for (int i = 0; i < size; i++) {
-            it->last_reset = seconds;
-            it->value = 0LL;
+            if (it->persistent) {
+               it->last_reset = seconds;
+               it->value = 0LL;
+            }
             it++;
          }
       }
@@ -170,9 +184,10 @@ namespace monitoring {
             std::string val(it->name);
             std::vector<std::string>::const_iterator iter = std::find(names.begin(), names.end(), val);
             if (iter != names.end()) {
-
-               it->last_reset = seconds;
-               it->value = 0LL;
+               if (it->persistent) {
+                  it->last_reset = seconds;
+                  it->value = 0LL;
+               }
             }
             it++;
          }
@@ -185,16 +200,17 @@ namespace monitoring {
       std::set<monitoring_counters_base*>::iterator it;
       for (it = registered_instances.begin(); it != registered_instances.end(); ++it)
       {
-         (*it)->get_local_counters(names, result);
+         (*it)->get_local_counters(names, result, false);
       }
    }
 
-   void monitoring_counters_base::get_local_counters_internal(const counter_item* first_counter, int size, const std::vector<std::string>& names, std::vector<monitoring::counter_item>& result) const
+   void monitoring_counters_base::get_local_counters_internal(const counter_item* first_counter, int size, const std::vector<std::string>& names, bool only_persistent, std::vector<monitoring::counter_item>& result) const
    {
       const monitoring::counter_item* it = (monitoring::counter_item*)first_counter;
       if (names.size() == 0) {
          for (int i = 0; i < size; i++) {
-            result.push_back(*it);
+            if(!only_persistent || (only_persistent && it->persistent == true))
+               result.push_back(*it);
             it++;
          }
       }
@@ -203,7 +219,8 @@ namespace monitoring {
             std::string val(it->name);
             std::vector<std::string>::const_iterator iter = std::find(names.begin(), names.end(), val);
             if (iter != names.end()) {
-               result.push_back(*it);
+               if (!only_persistent || (only_persistent && it->persistent == true))
+                  result.push_back(*it);
             }
             it++;
          }
@@ -213,16 +230,24 @@ namespace monitoring {
    bool monitoring_counters_base::load_local_counters_internal(counter_item* first_counter, int size)
    {
       monitoring::counter_item* it = (monitoring::counter_item*)first_counter;
+      std::chrono::system_clock::time_point tp = std::chrono::system_clock::now();
 
       if (_cache_is_loaded == false)
          return false;
 
       for (int i = 0; i < size; i++) {
-         std::for_each(_initializing_cache.begin(), _initializing_cache.end(), [&](monitoring::counter_item& item) {
-            if (it->name == item.name) {
-               (*it) = item;
+         if (it->persistent) {
+            std::vector<monitoring::counter_item>::iterator iter;
+            for (iter = _initializing_cache.begin(); iter != _initializing_cache.end(); ++iter) {
+               if ((*iter).name == it->name) {
+                  (*it) = (*iter);
+                  break;
+               }
             }
-         });
+         }
+         else {
+            it->last_reset = std::chrono::duration_cast<std::chrono::seconds>(tp.time_since_epoch()).count();
+         }
          it++;
       }
       return true;
@@ -233,7 +258,8 @@ namespace monitoring {
       monitoring::counter_item* it = (monitoring::counter_item*)first_counter;
 
       for (int i = 0; i < size; i++) {
-         _pending_save.push_back(*it);
+         if (it->persistent) 
+            _pending_save.push_back(*it);
          it++;
       }
    }

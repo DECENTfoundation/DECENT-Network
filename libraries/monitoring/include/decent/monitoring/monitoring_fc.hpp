@@ -36,11 +36,12 @@ namespace monitoring {
       std::string name;
       int64_t value;
       fc::time_point_sec last_reset;
+      bool persistent;
    };
 }
 
-FC_REFLECT(monitoring::counter_item, (name)(value)(last_reset))
-FC_REFLECT(monitoring::counter_item_cli, (name)(value)(last_reset))
+FC_REFLECT(monitoring::counter_item, (name)(value)(last_reset)(persistent))
+FC_REFLECT(monitoring::counter_item_cli, (name)(value)(last_reset)(persistent))
 
 
 
