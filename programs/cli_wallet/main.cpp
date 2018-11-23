@@ -99,13 +99,13 @@ int main( int argc, char** argv )
          ("wallet-file,w", bpo::value<std::string>()->implicit_value("wallet.json"), "Wallet to load.")
          ("daemon", "Run the wallet in daemon mode.")
          ("chain-id", bpo::value<std::string>(), "Chain ID to connect to.")
-         ("server-rpc-endpoint,s", bpo::value<string>()->default_value("ws://127.0.0.1:8090"), "Server websocket RPC endpoint")
-         ("server-rpc-user,u", bpo::value<string>(), "Server Username")
-         ("server-rpc-password,p", bpo::value<string>(), "Server Password")
-         ("rpc-endpoint,r", bpo::value<string>(), "Endpoint for wallet websocket RPC to listen on")
-         ("rpc-tls-endpoint,t", bpo::value<string>(), "Endpoint for wallet websocket TLS RPC to listen on")
-         ("rpc-tls-certificate,c", bpo::value<string>()->implicit_value("server.pem"), "PEM certificate for wallet websocket TLS RPC")
-         ("rpc-http-endpoint,H", bpo::value<string>(), "Endpoint for wallet HTTP RPC to listen on")
+         ("server-rpc-endpoint,s", bpo::value<std::string>()->default_value("ws://127.0.0.1:8090"), "Server websocket RPC endpoint")
+         ("server-rpc-user,u", bpo::value<std::string>(), "Server Username")
+         ("server-rpc-password,p", bpo::value<std::string>(), "Server Password")
+         ("rpc-endpoint,r", bpo::value<std::string>()->implicit_value("127.0.0.1:8091"), "Endpoint for wallet websocket RPC to listen on")
+         ("rpc-tls-endpoint,t", bpo::value<std::string>()->implicit_value("127.0.0.1:8092"), "Endpoint for wallet websocket TLS RPC to listen on")
+         ("rpc-tls-certificate,c", bpo::value<std::string>()->default_value("server.pem"), "PEM certificate for wallet websocket TLS RPC")
+         ("rpc-http-endpoint,H", bpo::value<std::string>()->implicit_value("127.0.0.1:8093"), "Endpoint for wallet HTTP RPC to listen on")
          ("from-command-file,f", bpo::value<std::string>(), "Load commands from a command file")
       ;
 
@@ -153,55 +153,25 @@ int main( int argc, char** argv )
          return EXIT_FAILURE;
       }
 
-      fc::path data_dir;
-      fc::logging_config cfg;
       const fc::path log_dir = decent_path_finder::instance().get_decent_logs();
 
       fc::file_appender::config ac_default;
-
-      fc::file_appender::config ac_rpc;
-      ac_rpc.filename             = log_dir / "rpc" / "rpc.log";
-      ac_rpc.flush                = true;
-      ac_rpc.rotate               = true;
-      ac_rpc.rotation_interval    = fc::hours( 1 );
-      ac_rpc.rotation_limit       = fc::days( 1 );
-
-      fc::file_appender::config ac_transfer;
-      ac_transfer.format               = "${timestamp} ${thread_name} ${context} ${level}]  ${message}";
-      ac_transfer.filename             = log_dir / "transfer.log";
-      ac_transfer.flush                = true;
-      ac_transfer.rotate               = true;
-      ac_transfer.rotation_interval    = fc::hours( 1 );
-      ac_transfer.rotation_limit       = fc::days( 1 );
-
-//    cfg.appenders.push_back(fc::appender_config( "default", "console", fc::variant(ac_default)));
-//    cfg.appenders.push_back(fc::appender_config( "rpc", "file", fc::variant(ac_rpc)));
-//    cfg.appenders.push_back(fc::appender_config( "transfer", "file", fc::variant(ac_transfer)));
+      ac_default.filename             = log_dir / "cli_wallet.log";
+      ac_default.flush                = true;
+      ac_default.rotate               = true;
+      ac_default.rotation_interval    = fc::hours( 1 );
+      ac_default.rotation_limit       = fc::days( 1 );
 
       fc::logger_config lc_default("default");
       lc_default.level          = fc::log_level::info;
       lc_default.appenders      = {"default"};
 
-      fc::logger_config lc_rpc("rpc");
-      lc_rpc.level              = fc::log_level::debug;
-      lc_rpc.appenders          = {"rpc"};
-
-      fc::logger_config lc_transfer("transfer");
-      lc_transfer.level         = fc::log_level::debug;
-      lc_transfer.appenders     = {"transfer"};
-
-//    cfg.loggers.push_back(lc_default);
-//    cfg.loggers.push_back(lc_rpc);
-//    cfg.loggers.push_back(lc_transfer);
-
-      std::clog << "Logging RPC to file: " << ac_rpc.filename.preferred_string() << std::endl;
-      std::clog << "Logging transfers to file: " << ac_transfer.filename.preferred_string() << std::endl;
+      fc::logging_config cfg;
+      cfg.appenders.push_back(fc::appender_config( "default", "file", fc::variant(ac_default)));
+      cfg.loggers.push_back(lc_default);
+      std::clog << "Logging to file: " << ac_default.filename.preferred_string() << std::endl;
 
       fc::configure_logging( cfg );
-
-      fc::ecc::private_key committee_private_key = fc::ecc::private_key::regenerate(fc::sha256::hash(std::string("null_key")));
-
-      idump( (key_to_wif( committee_private_key ) ) );
 
       //
       // TODO:  We read wallet_data twice, once in main() to grab the
@@ -226,12 +196,11 @@ int main( int argc, char** argv )
          wdata.ws_password = options.at("server-rpc-password").as<std::string>();
 
       fc::http::websocket_client client;
-      idump((wdata.ws_server));
+      ilog( "Connecting to server at ${s}", ("s", wdata.ws_server) );
       auto con  = client.connect( wdata.ws_server );
       auto apic = std::make_shared<fc::rpc::websocket_api_connection>(*con);
 
       auto remote_api = apic->get_remote_api< login_api >(1);
-      edump((wdata.ws_user)(wdata.ws_password) );
       // TODO:  Error message here
       FC_ASSERT( remote_api->login( wdata.ws_user, wdata.ws_password ) );
 
@@ -300,8 +269,11 @@ int main( int argc, char** argv )
          wallet_cli->set_prompt(  locked ? "locked >>> " : "unlocked >>> " );
       }));
 
-      auto _websocket_server = std::make_shared<fc::http::websocket_server>();
-      if( options.count("rpc-endpoint") )
+      auto _websocket_server = options.count("rpc-endpoint") ?
+               std::make_shared<fc::http::websocket_server>() :
+               std::shared_ptr<fc::http::websocket_server>();
+
+      if( _websocket_server )
       {
          _websocket_server->on_connection([&]( const fc::http::websocket_connection_ptr& c, bool& is_tls ){
             is_tls = false;
@@ -315,12 +287,11 @@ int main( int argc, char** argv )
          _websocket_server->start_accept();
       }
 
-      std::string cert_pem = "server.pem";
-      if( options.count( "rpc-tls-certificate" ) )
-         cert_pem = options.at("rpc-tls-certificate").as<std::string>();
+      auto _websocket_tls_server = options.count("rpc-tls-endpoint") ?
+               std::make_shared<fc::http::websocket_tls_server>(options.at("rpc-tls-certificate").as<std::string>()) :
+               std::shared_ptr<fc::http::websocket_tls_server>();
 
-      auto _websocket_tls_server = std::make_shared<fc::http::websocket_tls_server>(cert_pem);
-      if( options.count("rpc-tls-endpoint") )
+      if( _websocket_tls_server )
       {
          _websocket_tls_server->on_connection([&]( const fc::http::websocket_connection_ptr& c, bool& is_tls ){
             is_tls = true;
@@ -328,13 +299,17 @@ int main( int argc, char** argv )
             wsc->register_api(wapi);
             c->set_session_data( wsc );
          });
-         ilog( "Listening for incoming TLS RPC requests on ${p}", ("p", options.at("rpc-tls-endpoint").as<std::string>() ));
+         ilog( "Listening for incoming TLS RPC requests on ${p}, certificate file ${c}",
+               ("p", options.at("rpc-tls-endpoint").as<std::string>() )("c", options.at("rpc-tls-certificate").as<std::string>() ));
          _websocket_tls_server->listen( fc::ip::endpoint::from_string(options.at("rpc-tls-endpoint").as<std::string>()) );
          _websocket_tls_server->start_accept();
       }
 
-      auto _http_server = std::make_shared<fc::http::server>();
-      if( options.count("rpc-http-endpoint" ) )
+      auto _http_server = options.count("rpc-http-endpoint" ) ?
+               std::make_shared<fc::http::server>() :
+               std::shared_ptr<fc::http::server>();
+
+      if( _http_server )
       {
          ilog( "Listening for incoming HTTP RPC requests on ${p}", ("p", options.at("rpc-http-endpoint").as<std::string>() ) );
          _http_server->listen( fc::ip::endpoint::from_string( options.at( "rpc-http-endpoint" ).as<std::string>() ) );
