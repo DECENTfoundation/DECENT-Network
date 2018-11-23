@@ -867,6 +867,14 @@ namespace graphene { namespace app {
          miner_reward_input get_time_to_maint_by_block_time(fc::time_point_sec block_time) const;
 
          /**
+          * @brief Get miner pay from accumulated fees from given time.
+          * @param block_time reference time
+          * @return miner pay from accumulated fees
+          * @ingroup DatabaseAPI_Globals
+          */
+         share_type get_miner_pay_from_fees_by_block_time(fc::time_point_sec block_time) const;
+
+         /**
           * @brief Get the number of votes each miner actually has.
           * @return a list mapping account names to the number of votes
           * @ingroup DatabaseAPI_Mining
@@ -965,6 +973,7 @@ FC_API(graphene::app::database_api,
           (lookup_miner_accounts)
           (get_miner_count)
           (get_feeds_by_miner)
+          (get_miner_pay_from_fees_by_block_time)
 
           // Votes
           (lookup_vote_ids)
