@@ -34,6 +34,14 @@ namespace graphene {
    class message_object_receivers_data
    {
    public:
+      /**
+       * @brief Decrypt message
+       * @param priv the private key of sender/receiver
+       * @param pub the public key of receiver/sender
+       * @return decrypted message
+       */
+      std::string get_message(const private_key_type& priv, const public_key_type& pub) const;
+
       account_id_type receiver;
       public_key_type receiver_pubkey;
       uint64_t nonce = 0;

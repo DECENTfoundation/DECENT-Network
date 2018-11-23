@@ -2810,13 +2810,13 @@ signed_transaction content_cancellation(const string& author,
          
          for (message_object& obj : objects) {
 
-            for (message_object_receivers_data& receivers_data_item : obj.receivers_data) {
+            for (const auto& receivers_data_item : obj.receivers_data) {
 
                try {
 
                   if( obj.sender_pubkey == public_key_type() || receivers_data_item.receiver_pubkey == public_key_type() )
                   {
-                     message_payload::get_message( fc::ecc::private_key(), public_key_type(), receivers_data_item.data, obj.text, 0 );
+                     obj.text = receivers_data_item.get_message(private_key_type(), public_key_type());
                      break;
                   }
 
@@ -2824,7 +2824,7 @@ signed_transaction content_cancellation(const string& author,
                   if (it != _keys.end()) {
                      fc::optional< fc::ecc::private_key > privkey = wif_to_key(it->second);
                      if (privkey)
-                        message_payload::get_message(*privkey, obj.sender_pubkey, receivers_data_item.data, obj.text, receivers_data_item.nonce);
+                        obj.text = receivers_data_item.get_message(*privkey, obj.sender_pubkey );
                      else
                         std::cout << "Cannot decrypt message." << std::endl;
                   }
@@ -2833,7 +2833,7 @@ signed_transaction content_cancellation(const string& author,
                      if (it != _keys.end()) {
                         fc::optional< fc::ecc::private_key > privkey = wif_to_key(it->second);
                         if (privkey)
-                           message_payload::get_message(*privkey, receivers_data_item.receiver_pubkey, receivers_data_item.data, obj.text, receivers_data_item.nonce);
+                           obj.text = receivers_data_item.get_message(*privkey, receivers_data_item.receiver_pubkey);
                         else
                            std::cout << "Cannot decrypt message." << std::endl;
                      }
@@ -2927,27 +2927,19 @@ signed_transaction content_cancellation(const string& author,
 
          account_object from_account = get_account(from);
          account_id_type from_id = from_account.id;
+
          message_payload pl;
+         pl.from = from_id;
+         pl.pub_from = from_account.options.memo_key;
 
-         for (auto& receiver : to) {
+         for (const auto& receiver : to) {
             account_object to_account = get_account(receiver);
-            message_payload_receivers_data receivers_data_item;
-            receivers_data_item.to = get_account(receiver).get_id();
-
-            if (text.size()) {
-               pl.set_message(get_private_key(from_account.options.memo_key),
-                  to_account.options.memo_key, text, receivers_data_item);
-            }
-            pl.receivers_data.push_back(receivers_data_item);
+            pl.receivers_data.emplace_back(text, get_private_key(from_account.options.memo_key), to_account.options.memo_key, to_account.get_id());
          }
 
          custom_operation cust_op;
-
          cust_op.id = graphene::chain::custom_operation_subtype_messaging;
          cust_op.payer = from_id;
-
-         pl.from = from_id;
-         pl.pub_from = from_account.options.memo_key;
          cust_op.set_messaging_payload(pl);
 
          signed_transaction tx;
@@ -2972,25 +2964,17 @@ signed_transaction content_cancellation(const string& author,
          account_object from_account = get_account(from);
          account_id_type from_id = from_account.id;
          message_payload pl;
+         pl.from = from_id;
+         pl.pub_from = public_key_type();
 
-         for (auto &receiver : to) {
+         for (const auto &receiver : to) {
             account_object to_account = get_account(receiver);
-            message_payload_receivers_data receivers_data_item;
-            receivers_data_item.to = get_account(receiver).get_id();
-
-            if (text.size()) {
-               pl.set_message(fc::ecc::private_key(), public_key_type(), text, receivers_data_item);
-            }
-            pl.receivers_data.push_back(receivers_data_item);
+            pl.receivers_data.emplace_back(text, private_key_type(), public_key_type(), to_account.get_id());
          }
 
          custom_operation cust_op;
-
          cust_op.id = graphene::chain::custom_operation_subtype_messaging;
          cust_op.payer = from_id;
-
-         pl.from = from_id;
-         pl.pub_from = public_key_type();
          cust_op.set_messaging_payload(pl);
 
          signed_transaction tx;
@@ -3339,14 +3323,14 @@ signed_transaction content_cancellation(const string& author,
          }
          else
          {
-            for (message_payload_receivers_data& receivers_data_item : pl.receivers_data) {
+            for (const auto& receivers_data_item : pl.receivers_data) {
                try
                {
                   try {
 
                      if (pl.pub_from == public_key_type() || receivers_data_item.pub_to == public_key_type())
                      {
-                        message_payload::get_message(fc::ecc::private_key(), public_key_type(), receivers_data_item.data, memo, 0);
+                        memo = receivers_data_item.get_message(private_key_type(), public_key_type());
                         break;
                      }
 
@@ -3354,7 +3338,7 @@ signed_transaction content_cancellation(const string& author,
                      if (it != wallet._keys.end()) {
                         fc::optional< fc::ecc::private_key > privkey = wif_to_key(it->second);
                         if (privkey)
-                           message_payload::get_message(*privkey, pl.pub_from, receivers_data_item.data, memo, receivers_data_item.nonce);
+                           memo = receivers_data_item.get_message(*privkey, pl.pub_from);
                         else
                            std::cout << "Cannot decrypt message." << std::endl;
                      }
@@ -3363,7 +3347,7 @@ signed_transaction content_cancellation(const string& author,
                         if (it != wallet._keys.end()) {
                            fc::optional< fc::ecc::private_key > privkey = wif_to_key(it->second);
                            if (privkey)
-                              message_payload::get_message(*privkey, receivers_data_item.pub_to, receivers_data_item.data, memo, receivers_data_item.nonce);
+                              memo = receivers_data_item.get_message(*privkey, receivers_data_item.pub_to);
                            else
                               std::cout << "Cannot decrypt message." << std::endl;
                         }
