@@ -207,6 +207,7 @@ namespace gui_wallet
       void signal_showTransactionsTab(std::string const&);
       void signal_updateAccountBalance(Asset const&);
       void signal_keyImported();
+      void signal_daemonFinished(int ret);
 
    public:
       void setWalletUnlocked();

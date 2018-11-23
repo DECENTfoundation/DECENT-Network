@@ -31,6 +31,9 @@ public:
 
    const std::string& walletFile() const { return m_wallet_file; }
 
+public slots:
+   void slot_daemonFinished(int ret);
+
 protected slots:
    void slot_setSplash();
    void slot_closeSplash();
