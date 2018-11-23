@@ -11,18 +11,8 @@ optional<signed_block_with_info> wallet_api::get_block(uint32_t num)
    if( !result )
       return optional<signed_block_with_info>();
 
-   share_type miner_pay_from_reward = 0;
-   share_type miner_pay_from_fees = 0;
-
-   //int64_t time_to_maint = my->_remote_db->get_time_to_maint_by_block_time(result->timestamp);//(dpo.next_maintenance_time - dpo.last_budget_time).to_seconds();
-   miner_reward_input mri = my->_remote_db->get_time_to_maint_by_block_time(result->timestamp);
-   int64_t time_to_maint = mri.time_to_maint;
-   uint32_t blocks_in_interval = (uint64_t(time_to_maint) + mri.block_interval - 1) / mri.block_interval;
-
-   if (blocks_in_interval > 0) {
-      miner_pay_from_fees = mri.from_accumulated_fees / blocks_in_interval;
-   }
-   miner_pay_from_reward = my->_remote_db->get_asset_per_block_by_block_num(num);
+   share_type miner_pay_from_fees = my->_remote_db->get_miner_pay_from_fees_by_block_time(result->timestamp);
+   share_type miner_pay_from_reward = my->_remote_db->get_asset_per_block_by_block_num(num);
 
    //this should never happen, but better check.
    if (miner_pay_from_fees < share_type(0))
@@ -193,9 +183,4 @@ transaction_id_type wallet_api::get_transaction_id( const signed_transaction& tr
 optional<signed_transaction> wallet_api::get_transaction_by_id( const transaction_id_type& id ) const
 {
    return my->_remote_db->get_transaction_by_id( id );
-}
-
-void wallet_api::from_command_file( std::string command_file_name )
-{
-   my->from_command_file(command_file_name);
 }

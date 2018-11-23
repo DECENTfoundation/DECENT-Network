@@ -101,6 +101,7 @@ namespace graphene { namespace app {
       processed_transaction get_transaction( uint32_t block_num, uint32_t trx_in_block )const;
       fc::time_point_sec head_block_time()const;
       miner_reward_input get_time_to_maint_by_block_time(fc::time_point_sec block_time) const;
+      share_type get_miner_pay_from_fees_by_block_time(fc::time_point_sec block_time) const;
       optional<signed_transaction> get_transaction_by_id(const transaction_id_type& id) const;
       
       // Globals
@@ -2376,7 +2377,50 @@ namespace
       miner_reward_input.time_to_maint = (next_time - block_time).to_seconds();
       return miner_reward_input;
    }
-   
+
+   share_type database_api_impl::get_miner_pay_from_fees_by_block_time(fc::time_point_sec block_time) const
+   {
+      const auto& idx = _db.get_index_type<budget_record_index>().indices().get<by_time>();
+      FC_ASSERT(idx.crbegin()->record.next_maintenance_time > block_time);
+      graphene::chain::miner_reward_input miner_reward_input;
+      memset(&miner_reward_input, 0, sizeof(miner_reward_input));
+
+      fc::time_point_sec next_time = (fc::time_point_sec)0;
+      fc::time_point_sec prev_time = (fc::time_point_sec)0;
+
+      auto itr = idx.cbegin();
+      for (auto itr_stop = idx.cend(); itr != itr_stop && (next_time == (fc::time_point_sec)0); ++itr)
+      {
+         if (itr->record.next_maintenance_time > block_time)
+         {
+            next_time = itr->record.next_maintenance_time;
+            miner_reward_input.from_accumulated_fees = itr->record.from_accumulated_fees;
+            miner_reward_input.block_interval = itr->record.block_interval;
+         }
+      }
+
+      FC_ASSERT(next_time != (fc::time_point_sec)0);
+
+      itr--;
+
+      if (itr == idx.begin())
+      {
+         fc::optional<signed_block> first_block = get_block(1);
+         prev_time = first_block->timestamp;
+         miner_reward_input.time_to_maint = (next_time - prev_time).to_seconds();
+      }
+      else
+      {
+         itr--;
+
+         prev_time = (*itr).record.next_maintenance_time;
+         miner_reward_input.time_to_maint = (next_time - prev_time).to_seconds();
+      }
+
+      uint32_t blocks_in_interval = (uint64_t(miner_reward_input.time_to_maint) + miner_reward_input.block_interval - 1) / miner_reward_input.block_interval;
+      return blocks_in_interval > 0 ? miner_reward_input.from_accumulated_fees / blocks_in_interval : 0;
+   }
+
    //////////////////////////////////////////////////////////////////////
    //                                                                  //
    // Private methods                                                  //
@@ -2497,6 +2541,11 @@ namespace
    miner_reward_input database_api::get_time_to_maint_by_block_time(fc::time_point_sec block_time) const
    {
       return my->get_time_to_maint_by_block_time(block_time);
+   }
+
+   share_type database_api::get_miner_pay_from_fees_by_block_time(fc::time_point_sec block_time) const
+   {
+      return my->get_miner_pay_from_fees_by_block_time(block_time);
    }
 
    vector<database::votes_gained> database_api::get_actual_votes() const{
