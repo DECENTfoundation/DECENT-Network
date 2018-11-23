@@ -118,10 +118,9 @@ namespace detail {
    class application_impl : public net::node_delegate PUBLIC_DERIVATION_FROM_MONITORING_CLASS(application_impl)
    {
    public:
-      fc::optional<fc::temp_file> _lock_file;
       bool _is_block_producer = false;
       bool _force_validate = false;
-      uint64_t _processed_transactions;
+      uint64_t _processed_transactions = 0;
 
       void reset_p2p_node(const fc::path& data_dir)
       { try {
@@ -350,14 +349,12 @@ namespace detail {
 
       application_impl(application* self)
          : _self(self),
-           _chain_db(std::make_shared<chain::database>()),
-         _processed_transactions(0)
+           _chain_db(std::make_shared<chain::database>())
       {
       }
 
       ~application_impl()
       {
-         fc::remove_all(_data_dir / "blockchain/dblock");
       }
 
       void set_dbg_init_key( genesis_state_type& genesis, const std::string& init_key )
@@ -366,7 +363,6 @@ namespace detail {
          public_key_type init_pubkey( init_key );
          for( uint64_t i=0; i<genesis.initial_active_miners; i++ )
             genesis.initial_miner_candidates[i].block_signing_key = init_pubkey;
-         return;
       }
 
       void startup()
@@ -374,6 +370,13 @@ namespace detail {
          bool clean = !fc::exists(_data_dir / "blockchain/dblock");
   
          fc::create_directories(_data_dir / "blockchain/dblock");
+         FC_ASSERT(!_db_lock, "Database is already opened");
+         _db_lock.reset(new fc::simple_lock_file(_data_dir / "blockchain/dblock/decentd"));
+         if( !_db_lock->try_lock() )
+         {
+            _db_lock.reset();
+            FC_THROW_EXCEPTION(fc::invalid_operation_exception, "Database is already used by another process");
+         }
 
          auto initial_state = [&] {
             ilog("Initializing database...");
@@ -531,6 +534,21 @@ namespace detail {
          reset_p2p_node(_data_dir);
          reset_websocket_server();
          reset_websocket_tls_server();
+      } FC_LOG_AND_RETHROW() }
+
+      void shutdown()
+      { try {
+         if( _p2p_network )
+            _p2p_network->close();
+         if( _chain_db )
+            _chain_db->close();
+
+         if( _db_lock )
+         {
+            _db_lock->unlock();
+            _db_lock.reset();
+            fc::remove_all(_data_dir / "blockchain/dblock");
+         }
       } FC_LOG_AND_RETHROW() }
 
       optional< api_access_info > get_api_access_info(const string& username)const
@@ -989,6 +1007,7 @@ namespace detail {
       const bpo::variables_map* _options = nullptr;
       api_access _apiaccess;
 
+      std::unique_ptr<fc::simple_lock_file> _db_lock;
       std::shared_ptr<graphene::chain::database>            _chain_db;
       std::shared_ptr<graphene::net::node>                  _p2p_network;
       std::shared_ptr<fc::http::websocket_server>      _websocket_server;
@@ -1007,15 +1026,8 @@ application::application()
 
 application::~application()
 {
-   if( my->_p2p_network )
-   {
-      my->_p2p_network->close();
-      my->_p2p_network.reset();
-   }
-   if( my->_chain_db )
-   {
-      my->_chain_db->close();
-   }
+   my->_p2p_network.reset();
+   my->_chain_db.reset();
 }
 
 void application::set_program_options(boost::program_options::options_description& command_line_options,
@@ -1097,15 +1109,7 @@ void application::initialize(const fc::path& data_dir, const boost::program_opti
 
 void application::startup()
 {
-   try {
    my->startup();
-   } catch ( const fc::exception& e ) {
-      elog( "${e}", ("e",e.to_detail_string()) );
-      throw;
-   } catch ( ... ) {
-      elog( "unexpected exception" );
-      throw;
-   }
 }
 
 std::shared_ptr<abstract_plugin> application::get_plugin(const string& name) const
@@ -1159,12 +1163,10 @@ void application::shutdown_plugins()
       entry.second->plugin_shutdown();
    return;
 }
+
 void application::shutdown()
 {
-   if( my->_p2p_network )
-      my->_p2p_network->close();
-   if( my->_chain_db )
-      my->_chain_db->close();
+   my->shutdown();
 }
 
 void application::initialize_plugins( const boost::program_options::variables_map& options )
