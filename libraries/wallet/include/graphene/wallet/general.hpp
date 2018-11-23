@@ -164,7 +164,7 @@ optional<signed_transaction> get_transaction_by_id( const transaction_id_type& i
 /**
  * @brief Listing the operations available.
  * @return a vector of operations with ids, names and fees
- * @ingroup DatabaseAPI_Globals
+ * @ingroup WalletAPI_General
  */
 vector<operation_info> list_operations();
 
