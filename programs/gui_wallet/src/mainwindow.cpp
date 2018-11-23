@@ -407,6 +407,15 @@ MainWindow::~MainWindow()
 #endif
 }
 
+void MainWindow::slot_daemonFinished(int ret)
+{
+   if(ret != 0)
+      QMessageBox::critical(this, tr("DECENT Daemon"),
+                         tr("The background processing thread finished unexpectedly. Application will terminate.\nError code: %1").arg(ret),
+                         QMessageBox::Close);
+   close();
+}
+
 void MainWindow::slot_setSplash()
 {
    Q_ASSERT(0 == m_iSplashWidgetIndex);

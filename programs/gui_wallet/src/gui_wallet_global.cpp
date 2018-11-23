@@ -689,6 +689,7 @@ void Globals::startDaemons(BlockChainStartType type, const std::string &wallet_f
                                                             {
                                                                return ::runDecentD(type, exit_promise);
                                                             });
+   m_p_daemon_details->future_decentd.on_complete([this](int ret, const fc::exception_ptr& e) { emit signal_daemonFinished(e ? -1 : ret); });
 #endif
 
    m_tp_started = std::chrono::steady_clock::now();
