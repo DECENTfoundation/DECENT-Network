@@ -125,7 +125,7 @@ int main( int argc, char** argv )
          string openssl_version_text = string(OPENSSL_VERSION_TEXT);
          openssl_version_text = openssl_version_text.substr(0, openssl_version_text.length() - 11);
 
-         std::cout << "CLI Wallet " << graphene::utilities::git_version() << ", built with Boost " << boost_version_text << ", " << openssl_version_text << std::endl;
+         std::cout << "CLI Wallet " << graphene::utilities::git_version() << "\nBoost " << boost_version_text << "\n" << openssl_version_text << std::endl;
          return EXIT_SUCCESS;
       }
       else if( options.count("generate-keys") )
