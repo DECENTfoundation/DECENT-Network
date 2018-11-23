@@ -2357,17 +2357,13 @@ namespace
    miner_reward_input database_api_impl::get_time_to_maint_by_block_time(fc::time_point_sec block_time) const
    {
       const auto& idx = _db.get_index_type<budget_record_index>().indices().get<by_time>();
+      FC_ASSERT(idx.crbegin()->record.next_maintenance_time > block_time);
       graphene::chain::miner_reward_input miner_reward_input;
       memset(&miner_reward_input, 0, sizeof(miner_reward_input));
 
-      auto itr = idx.begin();
-  
       fc::time_point_sec next_time = (fc::time_point_sec)0;
-      fc::time_point_sec prev_time = (fc::time_point_sec)0;
-
-      for (itr = itr; (itr != idx.end()) && (next_time == (fc::time_point_sec)0); ++itr)
+      for (auto itr = idx.cbegin(), itr_stop = idx.cend(); itr != itr_stop && (next_time == (fc::time_point_sec)0); ++itr )
       {
-         budget_record_object bro = (*itr);
          if (itr->record.next_maintenance_time > block_time)
          {
             next_time = itr->record.next_maintenance_time;
@@ -2377,23 +2373,7 @@ namespace
       }
 
       FC_ASSERT(next_time != (fc::time_point_sec)0);
-      
-      itr--;
-      
-      if (itr == idx.begin())
-      {
-         fc::optional<signed_block> first_block = get_block(1);
-         prev_time = first_block->timestamp;
-         miner_reward_input.time_to_maint = (next_time - prev_time).to_seconds();
-
-         return miner_reward_input;
-      }
-
-      itr--;
-      
-      prev_time = (*itr).record.next_maintenance_time;
-      miner_reward_input.time_to_maint = (next_time - prev_time).to_seconds();
-      
+      miner_reward_input.time_to_maint = (next_time - block_time).to_seconds();
       return miner_reward_input;
    }
    
