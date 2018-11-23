@@ -95,7 +95,7 @@ After all the prerequisites are installed, execute the following commands in con
     # Build and install Decent.
      mkdir -p ~/dev/DECENTfoundation/DECENT-Network-build
      cd ~/dev/DECENTfoundation/DECENT-Network-build
-     cmake -G "Unix Makefiles" -D CMAKE_BUILD_TYPE=Debug ~/dev/DECENTfoundation/DECENT-Network
+     cmake -G "Unix Makefiles" -D CMAKE_BUILD_TYPE=Release ~/dev/DECENTfoundation/DECENT-Network
      cmake --build . --target all -- -j -l 3.0
      cmake --build . --target install
 
