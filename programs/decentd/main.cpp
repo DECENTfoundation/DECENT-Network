@@ -40,9 +40,12 @@
 #include <fc/log/logger.hpp>
 #include <fc/log/logger_config.hpp>
 
+#include <boost/version.hpp>
+
+#include <openssl/opensslv.h>
+
 #include <decent/config/decent_log_config.hpp>
 #include <decent/monitoring/monitoring_fc.hpp>
-
 
 #include <iostream>
 #include <fstream>
@@ -201,7 +204,13 @@ int main(int argc, char** argv) {
    }
    else if( options.count("version") )
    {
-      std::cout << "DECENT Daemon " << graphene::utilities::git_version() << std::endl;
+      unsigned int boost_major_version = BOOST_VERSION / 100000;
+      unsigned int boost_minor_version = BOOST_VERSION / 100 - boost_major_version * 1000;
+      std::string boost_version_text = std::to_string(boost_major_version) + "." + std::to_string(boost_minor_version) + "." + std::to_string(BOOST_VERSION % 100);
+      std::string openssl_version_text = std::string(OPENSSL_VERSION_TEXT);
+      openssl_version_text = openssl_version_text.substr(0, openssl_version_text.length() - 11);
+
+      std::cout << "DECENT Daemon " << graphene::utilities::git_version() << ", built with Boost " << boost_version_text << ", " << openssl_version_text << std::endl;
       return EXIT_SUCCESS;
    }
 
