@@ -67,6 +67,7 @@ MainWindow::MainWindow(const std::string &wallet_file)
 , m_pStackedWidget(new QStackedWidget(this))
 , m_pAccountList(nullptr)
 , m_pBalance(nullptr)
+, m_pAssetSymbol(nullptr)
 , m_pPreviousPage(nullptr)
 , m_pResetPage(nullptr)
 , m_pNextPage(nullptr)
@@ -109,8 +110,12 @@ MainWindow::MainWindow(const std::string &wallet_file)
    m_pAccountList->setStyle(QStyleFactory::create("fusion"));
    m_pAccountList->setMinimumContentsLength(40);
    m_pBalance = new DecentLabel(pMainWidget, DecentLabel::Balance);
+   m_pAssetSymbol = new DecentButton(pMainWidget, DecentButton::Asset);
+   QMenu *pAssetMenu = new QMenu(m_pAssetSymbol);
+   connect(pAssetMenu, &QMenu::triggered, this, &MainWindow::slot_updateAccountBalance);
+   m_pAssetSymbol->setMenu(pAssetMenu);
    DecentButton* pTransferButton = new DecentButton(pMainWidget, DecentButton::Send);
-   pTransferButton->setToolTip("Transfer DCT to account");
+   pTransferButton->setToolTip(tr("Transfer to account"));
 
    //
    // 2nd row controls
@@ -208,18 +213,19 @@ MainWindow::MainWindow(const std::string &wallet_file)
    // 1st row layout
    //
    QHBoxLayout* pSpacerLayout = new QHBoxLayout;
-   pSpacerLayout->addWidget(m_pAccountList, Qt::AlignLeft);
+   pSpacerLayout->addWidget(m_pAccountList);
    pSpacerLayout->addStretch();
    pRow1Spacer->setLayout(pSpacerLayout);
    pSpacerLayout->setSpacing(0);
    pSpacerLayout->setContentsMargins(0, 0, 0, 0);
 
    QHBoxLayout* pRow1Layout = new QHBoxLayout;
-   pRow1Layout->addWidget(pDecentLogo, Qt::AlignLeft);
-   pRow1Layout->addWidget(pAccount, Qt::AlignLeft);
-   pRow1Layout->addWidget(pRow1Spacer, Qt::AlignLeft);
-   pRow1Layout->addWidget(m_pBalance, Qt::AlignRight);
-   pRow1Layout->addWidget(pTransferButton, Qt::AlignRight);
+   pRow1Layout->addWidget(pDecentLogo, 1);
+   pRow1Layout->addWidget(pAccount);
+   pRow1Layout->addWidget(pRow1Spacer);
+   pRow1Layout->addWidget(m_pBalance, 1);
+   pRow1Layout->addWidget(m_pAssetSymbol);
+   pRow1Layout->addWidget(pTransferButton);
    //
    // 2nd row layout
    //
@@ -374,8 +380,8 @@ MainWindow::MainWindow(const std::string &wallet_file)
    QObject::connect(&Globals::instance(), &Globals::signal_showTransactionsTab,
                     this, &MainWindow::slot_showTransactionsTab);
 
-   QObject::connect(&Globals::instance(), &Globals::signal_updateAccountBalance,
-                    this, &MainWindow::slot_updateAccountBalance);
+   QObject::connect(&Globals::instance(), &Globals::signal_updateAccountAssets,
+                    this, &MainWindow::slot_updateAccountAssets);
    
    QObject::connect(&Globals::instance(), &Globals::signal_keyImported,
                     this, &MainWindow::DisplayWalletContentGUI);
@@ -635,15 +641,42 @@ void MainWindow::slot_stackWidgetPop()
    }
 }
 
-void MainWindow::slot_updateAccountBalance(Asset const& balance)
+void MainWindow::slot_updateAccountAssets(const QList<Asset>& assets)
 {
-   QString blalanceText = balance.getStringBalance();
+   QMenu *pAssetMenu = m_pAssetSymbol->menu();
+   pAssetMenu->clear();
 
+   std::string symbolText = m_pAssetSymbol->text().toStdString();
+   for (const Asset &a : assets)
+   {
+      pAssetMenu->addAction(QString::fromStdString(a.m_str_symbol))->setData(a.getBalance());
+      if (a.m_str_symbol == symbolText)
+      {
+         updateBalance(a.getBalance());
+         m_pAssetSymbol->setText(QString::fromStdString(a.m_str_symbol));
+      }
+   }
+
+   if (symbolText.empty() && !assets.empty())
+   {
+      updateBalance(assets.front().getBalance());
+      m_pAssetSymbol->setText(QString::fromStdString(assets.front().m_str_symbol));
+   }
+}
+
+void MainWindow::slot_updateAccountBalance(QAction *pAsset)
+{
+   m_pAssetSymbol->setText(pAsset->text());
+   updateBalance(pAsset->data().toString());
+}
+
+void MainWindow::updateBalance(const QString& balance)
+{
    QFontMetrics fm(m_pBalance->font());
-   int pxWidth = fm.width(blalanceText);
+   int pxWidth = fm.width(balance);
 
    m_pBalance->setMinimumWidth(pxWidth + 10);  //10 is border..
-   m_pBalance->setText(blalanceText);
+   m_pBalance->setText(balance);
 }
 
 void MainWindow::slot_replayBlockChain()

@@ -131,11 +131,13 @@ namespace gui_wallet
       bool hasDecimals() const;
 
       QString getString() const;
-      QString getStringBalance() const;
+      QString getBalance() const;
 
       uint64_t m_amount = 0;
       uint64_t m_scale = 1;
       std::string m_str_symbol;
+
+      static const std::string dct_id;
    };
 
    //
@@ -182,13 +184,13 @@ namespace gui_wallet
       std::string getCurrentUser() const;
       WalletAPI& getWallet() const;
       void clear();
-      Asset asset(uint64_t amount, const std::string& symbol = std::string());
+      Asset asset(uint64_t amount, const std::string& assetId = Asset::dct_id);
       std::string runTask(std::string const& str_command);
       nlohmann::json runTaskParse(std::string const& str_command);
       std::vector<Publisher> getPublishers();
       QLocale& locale() { return *m_p_locale; }
       bool connected() const;
-      QString getAssetName() const;
+      QString getAssetName(const std::string& assetId = Asset::dct_id) const;
       void display_error_and_stop_slot_timer(std::string param1, std::string param2, std::string param3);
 
       //functions
@@ -205,7 +207,7 @@ namespace gui_wallet
       void signal_stackWidgetPush(gui_wallet::StackLayerWidget*);
       void signal_showPurchasedTab();
       void signal_showTransactionsTab(std::string const&);
-      void signal_updateAccountBalance(Asset const&);
+      void signal_updateAccountAssets(const QList<Asset>& assets);
       void signal_keyImported();
       void signal_daemonFinished(int ret);
 

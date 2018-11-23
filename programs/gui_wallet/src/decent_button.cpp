@@ -42,6 +42,9 @@ DecentButton::DecentButton(QWidget* pParent, eType enType, eName enName) : QPush
    case PasswordView:
       setProperty("type", "pass_view");
       break;
+   case Asset:
+      setProperty("type", "asset");
+      break;
    case Default:
    default:
       break;
@@ -63,6 +66,9 @@ DecentButton::DecentButton(QWidget* pParent, eType enType, eName enName) : QPush
          break;
       case Resubmit:
          setProperty("name", "resubmit");
+         break;
+      case Amount:
+         setProperty("name", "amount");
          break;
       case None:
       default:
