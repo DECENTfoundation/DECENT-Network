@@ -539,7 +539,10 @@ namespace detail {
       void shutdown()
       { try {
          if( _p2p_network )
+         {
             _p2p_network->close();
+             _p2p_network.reset();
+         }
          if( _chain_db )
             _chain_db->close();
 
@@ -1026,8 +1029,6 @@ application::application()
 
 application::~application()
 {
-   my->_p2p_network.reset();
-   my->_chain_db.reset();
 }
 
 void application::set_program_options(boost::program_options::options_description& command_line_options,
