@@ -27,6 +27,17 @@
 namespace graphene{
 namespace chain {
 
+std::string message_object_receivers_data::get_message(const private_key_type& priv, const public_key_type& pub) const
+{
+   if ( priv != private_key_type() && pub != public_key_type() )
+   {
+      return memo_data::decrypt_message(data, priv, pub, nonce);
+   }
+   else
+   {
+      return memo_message::deserialize(std::string(data.begin(), data.end())).text;
+   }
+}
 
 void message_receiver_index::object_inserted(const object &obj) {
    assert(dynamic_cast<const message_object *>(&obj)); // for debug only
