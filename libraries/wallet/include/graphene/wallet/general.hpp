@@ -161,13 +161,12 @@ transaction_id_type get_transaction_id( const signed_transaction& trx ) const;
  */
 optional<signed_transaction> get_transaction_by_id( const transaction_id_type& id ) const;
 
-
 /**
  * @brief This method encapsulates the functionality of running a sequence of calls
  * loaded from a text file.
  * @param command_file_name The name of the command file to load
  * @ingroup WalletAPI_General
  */
-void from_command_file( std::string command_file_name );
+void from_command_file( const std::string& command_file_name ) const;
 
 #endif //DECENT_WALLET_GENERAL_H
