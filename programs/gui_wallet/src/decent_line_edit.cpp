@@ -31,6 +31,10 @@ namespace gui_wallet
       {
          case DlgImport:
             setProperty("name", "import_dlg");
+            break;
+         case Amount:
+            setProperty("name", "amount");
+            break;
          case None:
          default:
             break;

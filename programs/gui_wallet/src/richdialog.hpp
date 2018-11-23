@@ -60,18 +60,21 @@ class TransferWidget : public StackLayerWidget
 {
    Q_OBJECT
 public:
-   TransferWidget(QWidget* parent, const QString & userName = QString());
-   
+   TransferWidget(QWidget* parent, const QList<QPair<QString, QString>>& assets, const QString & userName = QString());
+
 public slots:
+   void Transfer();
+private slots:
    void nameChanged(const QString &);
    void amountChanged(const QString &);
    void memoChanged(const QString &);
-   void Transfer();
+   void assetChanged(QAction* pAsset);
 private:
    QString  m_toUserName;
    double   m_amount;
    QString  m_memo;
-   QString  m_fromUserName;
+   QString  m_assetId;
+   QPushButton* m_pAssetSymbol;
 };
 //
 // ImportKeyWidget

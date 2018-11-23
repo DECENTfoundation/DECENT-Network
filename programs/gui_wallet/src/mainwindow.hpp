@@ -41,7 +41,8 @@ protected slots:
    void slot_showTransactionsTab(std::string const&);
    void slot_stackWidgetPush(StackLayerWidget* pWidget);
    void slot_stackWidgetPop();
-   void slot_updateAccountBalance(Asset const&);
+   void slot_updateAccountAssets(const QList<Asset>& assets);
+   void slot_updateAccountBalance(QAction *pAsset);
    void slot_connectionStatusChanged(Globals::ConnectionState from, Globals::ConnectionState to);
    void slot_replayBlockChain();
    void slot_resyncBlockChain();
@@ -75,7 +76,9 @@ protected:
 
    void resizeEvent(QResizeEvent* event) override;
 
-protected:
+private:
+   void updateBalance(const QString& balance);
+
    std::string m_wallet_file;
    size_t m_iSplashWidgetIndex;
    QTimer* m_pTimerBalance;
@@ -84,6 +87,7 @@ protected:
    QStackedWidget* m_pStackedWidget;
    QComboBox* m_pAccountList;
    DecentLabel* m_pBalance;
+   DecentButton* m_pAssetSymbol;
 
    DecentButton* m_pButtonBrowse;
    DecentButton* m_pButtonTransactions;

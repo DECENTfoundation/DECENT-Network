@@ -552,11 +552,14 @@ QString Asset::getString() const
    }
 }
 
-QString Asset::getStringBalance() const
+QString Asset::getBalance() const
 {
    QLocale& locale = Globals::instance().locale();
-   return locale.toString(to_value(), 'g' , g_max_number_of_decimal_places) + " " + QString::fromStdString(m_str_symbol);
+   return locale.toString(to_value(), 'g' , g_max_number_of_decimal_places);
 }
+
+const std::string Asset::dct_id("1.3.0");
+
 //
 // DaemonDetails
 //
@@ -789,17 +792,13 @@ void Globals::clear()
    }
 }
 
-Asset Globals::asset(uint64_t amount, const string& symbol_id/* = string()*/)
+Asset Globals::asset(uint64_t amount, const std::string& assetId)
 {
-   string str_symbol_id = symbol_id;
-   if (str_symbol_id.empty())
-      str_symbol_id = "1.3.0";
-
    Asset ast_amount;
    uint8_t precision = 0;
 
    graphene::chain::asset_id_type asset_id;
-   fc::from_variant( str_symbol_id, asset_id );
+   fc::from_variant(assetId, asset_id);
 
    getWallet().LoadAssetInfo(ast_amount.m_str_symbol, precision, asset_id);
    ast_amount.m_scale = pow(10, precision);
@@ -845,13 +844,13 @@ bool Globals::connected() const
    return m_connected_state != ConnectionState::Connecting;
 }
 
-QString Globals::getAssetName() const
+QString Globals::getAssetName(const std::string& assetId) const
 {
    uint8_t precision = 0;
    std::string assetName;
 
    graphene::chain::asset_id_type asset_id;
-   fc::from_variant("1.3.0", asset_id );
+   fc::from_variant(assetId, asset_id );
    getWallet().LoadAssetInfo(assetName, precision, asset_id);
 
    return QString::fromStdString(assetName);
@@ -908,21 +907,25 @@ void Globals::slot_updateAccountBalance()
    {
       nlohmann::json allBalances = runTaskParse("list_account_balances " + m_str_currentUser);
 
-      if (allBalances.empty())
-         emit signal_updateAccountBalance(asset(0));
-      else
+      QList<Asset> assets;
+      if (!allBalances.empty())
       {
-         Asset ast_balance = asset(0);
-         for ( auto balance : allBalances ) {
-            if(balance["asset_id"].get<string>() == "1.3.0") {
-               if( balance[ "amount" ].is_number())
-                  ast_balance.m_amount = balance[ "amount" ].get<uint64_t>();
-               else
-                  ast_balance.m_amount = std::stoll(balance[ "amount" ].get<string>());
-            }
+         for ( const auto &balance : allBalances )
+         {
+            const std::string& assetId = balance["asset_id"].get<std::string>();
+            uint64_t amount =  balance[ "amount" ].is_number() ?
+               balance[ "amount" ].get<uint64_t>() :
+               static_cast<uint64_t>(std::stoll(balance[ "amount" ].get<std::string>()));
+
+            Asset a = asset(amount, assetId);
+            if(assetId == Asset::dct_id)
+               assets.prepend(a);
+            else
+               assets.append(a);
          }
-         emit signal_updateAccountBalance(ast_balance);
       }
+
+      emit signal_updateAccountAssets(assets);
    }
 }
 
@@ -984,20 +987,32 @@ std::string Globals::TransferFunds(const std::string& from, const std::string to
 
 void Globals::slot_showTransferDialog(const QString& user)
 {
-   if(getCurrentUser().empty())
+   if(m_str_currentUser.empty())
       return;
 
-   TransferWidget* pTransferDialog = new TransferWidget(nullptr, user);
+   nlohmann::json allBalances = runTaskParse("list_account_balances " + m_str_currentUser);
+
+   QList<QPair<QString, QString>> assets;
+   if (!allBalances.empty())
+   {
+      for ( const auto &balance : allBalances )
+      {
+         const std::string& assetId = balance["asset_id"].get<std::string>();
+         auto a = qMakePair(getAssetName(assetId), QString::fromStdString(assetId));
+         if(assetId == Asset::dct_id)
+            assets.prepend(a);
+         else
+            assets.append(a);
+      }
+   }
+
+   TransferWidget* pTransferDialog = new TransferWidget(nullptr, assets, user);
    signal_stackWidgetPush(pTransferDialog);
 }
 
 void Globals::slot_showTransferDialog()
 {
-   if(getCurrentUser().empty())
-      return;
-
-   TransferWidget* pTransferDialog = new TransferWidget(nullptr);
-   signal_stackWidgetPush(pTransferDialog);
+   slot_showTransferDialog(QString());
 }
 
 void Globals::slot_connected(std::string const& str_error)
@@ -1028,7 +1043,6 @@ static graphene::app::application* s_node = nullptr;
 
 void Globals::slot_timer()
 {
-   auto duration = std::chrono::steady_clock::now() - m_tp_started;
    auto backup_state = m_connected_state;
 
    if (m_exceptionMsgBoxParam1.size()) {

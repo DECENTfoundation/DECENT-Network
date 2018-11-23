@@ -26,6 +26,7 @@
 #include <QLocale>
 #include <QInputMethod>
 #include <QApplication>
+#include <QMenu>
 #include <vector>
 #include <string>
 #endif
@@ -118,11 +119,12 @@ StackLayerWidget::StackLayerWidget(QWidget* pParent) : QWidget(pParent)
 //
 // TransferWidget
 //
-TransferWidget::TransferWidget(QWidget* parent, const QString & userName) : StackLayerWidget(parent)
+TransferWidget::TransferWidget(QWidget* parent, const QList<QPair<QString, QString>>& assets, const QString & userName)
+   : StackLayerWidget(parent)
    , m_toUserName(userName)
 {
    QVBoxLayout* mainLayout       = new QVBoxLayout();
-   QVBoxLayout* lineEditsLayout  = new QVBoxLayout();
+   QHBoxLayout* assetLayout      = new QHBoxLayout();
    QHBoxLayout* buttonsLayout    = new QHBoxLayout();
    
    DecentButton* ok = new DecentButton(this, DecentButton::DialogAction);
@@ -138,16 +140,24 @@ TransferWidget::TransferWidget(QWidget* parent, const QString & userName) : Stac
    pLabel->setText(tr("Transfer of funds"));
 
    DecentLineEdit* name = new DecentLineEdit(this, DecentLineEdit::DialogLineEdit);
-   DecentLineEdit* amount = new DecentLineEdit(this, DecentLineEdit::DialogLineEdit);
+   DecentLineEdit* amount = new DecentLineEdit(this, DecentLineEdit::DialogLineEdit, DecentLineEdit::Amount);
    DecentLineEdit* memo = new DecentLineEdit(this, DecentLineEdit::DialogLineEdit);
-   
-   name->setPlaceholderText(tr("Reciever account name"));
+
+   m_pAssetSymbol = new DecentButton(this, DecentButton::Asset, DecentButton::Amount);
+   QMenu *pAssetMenu = new QMenu(m_pAssetSymbol);
+   std::for_each(assets.begin(), assets.end(), [&](const QPair<QString, QString>& a) { pAssetMenu->addAction(a.first)->setData(a.second); });
+   connect(pAssetMenu, &QMenu::triggered, this, &TransferWidget::assetChanged);
+   m_pAssetSymbol->setMenu(pAssetMenu);
+   m_pAssetSymbol->setText(assets.front().first);
+   m_assetId = assets.front().second;
+
+   name->setPlaceholderText(tr("Receiver account name"));
    name->setAttribute(Qt::WA_MacShowFocusRect, 0);
    name->setText(m_toUserName);
    QObject::connect(name, &QLineEdit::textChanged,
                     this, &TransferWidget::nameChanged);
-   
-   amount->setPlaceholderText(QString(tr("Amount of %1")).arg(Globals::instance().getAssetName())  );
+
+   amount->setPlaceholderText(tr("Amount"));
    amount->setAttribute(Qt::WA_MacShowFocusRect, 0);
 
    Asset min_price_asset = Globals::instance().asset(1);
@@ -167,17 +177,18 @@ TransferWidget::TransferWidget(QWidget* parent, const QString & userName) : Stac
    QObject::connect(memo, &QLineEdit::textChanged,
                     this, &TransferWidget::memoChanged);
 
-   lineEditsLayout->addWidget(pLabel);
-   lineEditsLayout->addWidget(name);
-   lineEditsLayout->addWidget(amount);
-   lineEditsLayout->addWidget(memo);
+   assetLayout->addWidget(amount);
+   assetLayout->addWidget(m_pAssetSymbol);
+   assetLayout->setSpacing(0);
 
    buttonsLayout->addWidget(ok);
    buttonsLayout->addWidget(cancel);
-   
-   
+
    mainLayout->setContentsMargins(40, 10, 40, 10);
-   mainLayout->addLayout(lineEditsLayout);
+   mainLayout->addWidget(pLabel);
+   mainLayout->addWidget(name);
+   mainLayout->addLayout(assetLayout);
+   mainLayout->addWidget(memo);
    mainLayout->addLayout(buttonsLayout);
    
    setLayout(mainLayout);
@@ -206,16 +217,17 @@ void TransferWidget::memoChanged(const QString & memo)
    m_memo = memo;
 }
 
+void TransferWidget::assetChanged(QAction* pAsset)
+{
+   m_pAssetSymbol->setText(pAsset->text());
+   m_assetId = pAsset->data().toString();
+}
+
 void TransferWidget::Transfer()
 {
-   if (m_fromUserName.isEmpty())
-       m_fromUserName = Globals::instance().getCurrentUser().c_str();
-
-   std::string strAssetSymbol = Globals::instance().asset(0).m_str_symbol;
-
-   auto result = Globals::instance().TransferFunds(m_fromUserName.toStdString(),
+   auto result = Globals::instance().TransferFunds(Globals::instance().getCurrentUser(),
                                                    m_toUserName.toStdString(),
-                                                   m_amount, strAssetSymbol,
+                                                   m_amount, m_assetId.toStdString(),
                                                    m_memo.toStdString());
 
    if (result.empty())

@@ -20,7 +20,8 @@ public:
       DialogTextButton,
       SplashAction,
       TabChoice,
-      PasswordView
+      PasswordView,
+      Asset
    };
 
    enum eName
@@ -30,7 +31,8 @@ public:
       Detail,
       Transfer,
       Export,
-      Resubmit
+      Resubmit,
+      Amount
    };
    DecentButton(QWidget* pParent, eType enType = Default, eName = None);
 
