@@ -918,11 +918,16 @@ void Globals::slot_updateAccountBalance()
                static_cast<uint64_t>(std::stoll(balance[ "amount" ].get<std::string>()));
 
             Asset a = asset(amount, assetId);
-            if(assetId == Asset::dct_id)
+            if (assetId == Asset::dct_id)
                assets.prepend(a);
             else
                assets.append(a);
          }
+      }
+
+      if (assets.empty())
+      {
+         assets << asset(0);
       }
 
       emit signal_updateAccountAssets(assets);
@@ -999,11 +1004,16 @@ void Globals::slot_showTransferDialog(const QString& user)
       {
          const std::string& assetId = balance["asset_id"].get<std::string>();
          auto a = qMakePair(getAssetName(assetId), QString::fromStdString(assetId));
-         if(assetId == Asset::dct_id)
+         if (assetId == Asset::dct_id)
             assets.prepend(a);
          else
             assets.append(a);
       }
+   }
+
+   if (assets.empty())
+   {
+      assets << qMakePair(QString::fromStdString(asset(0).m_str_symbol), QString::fromStdString(Asset::dct_id));
    }
 
    TransferWidget* pTransferDialog = new TransferWidget(nullptr, assets, user);

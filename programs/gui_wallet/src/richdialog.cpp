@@ -144,12 +144,17 @@ TransferWidget::TransferWidget(QWidget* parent, const QList<QPair<QString, QStri
    DecentLineEdit* memo = new DecentLineEdit(this, DecentLineEdit::DialogLineEdit);
 
    m_pAssetSymbol = new DecentButton(this, DecentButton::Asset, DecentButton::Amount);
-   QMenu *pAssetMenu = new QMenu(m_pAssetSymbol);
-   std::for_each(assets.begin(), assets.end(), [&](const QPair<QString, QString>& a) { pAssetMenu->addAction(a.first)->setData(a.second); });
-   connect(pAssetMenu, &QMenu::triggered, this, &TransferWidget::assetChanged);
-   m_pAssetSymbol->setMenu(pAssetMenu);
-   m_pAssetSymbol->setText(assets.front().first);
-   m_assetId = assets.front().second;
+   if (assets.size() > 1)
+   {
+      QMenu *pAssetMenu = new QMenu(m_pAssetSymbol);
+      std::for_each(assets.begin(), assets.end(), [&](const QPair<QString, QString>& a) { pAssetMenu->addAction(a.first)->setData(a.second); });
+      connect(pAssetMenu, &QMenu::triggered, this, &TransferWidget::assetChanged);
+      m_pAssetSymbol->setMenu(pAssetMenu);
+   }
+
+   m_pAssetSymbol->setText(assets.empty() ?
+      QString::fromStdString(Globals::instance().asset(0).m_str_symbol) : assets.front().first);
+   m_assetId = assets.empty() ? QString::fromStdString(Asset::dct_id) : assets.front().second;
 
    name->setPlaceholderText(tr("Receiver account name"));
    name->setAttribute(Qt::WA_MacShowFocusRect, 0);
