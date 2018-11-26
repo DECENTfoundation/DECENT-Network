@@ -623,7 +623,6 @@ void Globals::startDaemons(BlockChainStartType type, const std::string &wallet_f
       QObject::connect(m_p_wallet_operator, &WalletOperator::signal_connected,
                        this, &Globals::slot_connected);
 
-      connect(m_p_wallet_operator_thread, SIGNAL(finished()), m_p_wallet_operator_thread, SLOT(deleteLater()));
       m_p_wallet_operator_thread->start();
    }
 
@@ -682,6 +681,14 @@ void Globals::stopDaemons()
    if (backup_state != m_connected_state)
       emit walletConnectionStatusChanged(backup_state, m_connected_state);
 
+   if (m_p_wallet_operator_thread)
+   {
+      m_p_wallet_operator_thread->quit();
+      m_p_wallet_operator_thread->wait();
+      delete m_p_wallet_operator_thread;
+      m_p_wallet_operator_thread = nullptr;
+   }
+
    if (m_p_wallet_operator)
    {
       if (bConnected) {
@@ -689,7 +696,6 @@ void Globals::stopDaemons()
       }
       else {
          m_p_wallet_operator->cancel();
-         m_p_wallet_operator_thread->quit();
       }
 
       delete m_p_wallet_operator;

@@ -82,6 +82,7 @@ protected:
 private:
    void updateBalance(const QString& balance);
 
+   int m_daemon_restart = 0;
    std::string m_wallet_file;
    size_t m_iSplashWidgetIndex;
    QTimer* m_pTimerBalance;

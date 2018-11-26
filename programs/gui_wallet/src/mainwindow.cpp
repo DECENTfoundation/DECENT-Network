@@ -378,6 +378,9 @@ MainWindow::~MainWindow()
 
 void MainWindow::slot_daemonFinished(int ret)
 {
+   if(--m_daemon_restart >= 0)
+      return;
+
    if(ret != 0)
       QMessageBox::critical(this, tr("DECENT Daemon"),
                          tr("The background processing thread finished unexpectedly. Application will terminate.\nError code: %1").arg(ret),
@@ -644,12 +647,14 @@ void MainWindow::updateBalance(const QString& balance)
 
 void MainWindow::slot_replayBlockChain()
 {
+   ++m_daemon_restart;
    Globals::instance().stopDaemons();
    Globals::instance().startDaemons(BlockChainStartType::Replay, m_wallet_file);
 }
 
 void MainWindow::slot_resyncBlockChain()
 {
+   ++m_daemon_restart;
    Globals::instance().stopDaemons();
    Globals::instance().startDaemons(BlockChainStartType::Resync, m_wallet_file);
 }
