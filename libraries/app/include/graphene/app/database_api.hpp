@@ -115,6 +115,15 @@ namespace graphene { namespace app {
          bool voted;
       };
 
+      struct operation_info
+      {
+          int id = 0;
+          string name;
+          fee_parameters current_fees;
+          operation_info() { }
+          operation_info(int32_t id, string name, fee_parameters current_fees) : id(id), name(name), current_fees(current_fees) { }
+      };
+
 /**
  * @brief The database_api class implements the RPC API for the chain database.
  *
@@ -286,6 +295,15 @@ namespace graphene { namespace app {
           * @ingroup DatabaseAPI_Globals
           */
          dynamic_global_property_object get_dynamic_global_properties()const;
+
+         /**
+          * @brief Listing all operations available.
+          * @note This function lists all operations available, including the fees. These fees are taken primarily
+          * from global properties and secondarily from default values.
+          * @return a vector of operation_info struct instances containing operation ids, names and fee parameters
+          * @ingroup DatabaseAPI_Globals
+          */
+         vector<operation_info> list_operations( )const;
 
          //////////
          // Keys //
@@ -893,6 +911,7 @@ FC_REFLECT( graphene::app::market_ticker, (base)(quote)(latest)(lowest_ask)(high
 FC_REFLECT( graphene::app::market_volume, (base)(quote)(base_volume)(quote_volume) );
 FC_REFLECT( graphene::app::market_trade, (date)(price)(amount)(value) );
 FC_REFLECT( graphene::app::miner_voting_info, (id)(name)(url)(total_votes)(voted) );
+FC_REFLECT( graphene::app::operation_info, (id)(name)(current_fees) );
 
 FC_API(graphene::app::database_api,
           // Objects
@@ -923,6 +942,7 @@ FC_API(graphene::app::database_api,
           (get_config)
           (get_chain_id)
           (get_dynamic_global_properties)
+          (list_operations)
 
           // Keys
           (get_key_references)

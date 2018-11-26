@@ -27,6 +27,11 @@
 #include "stdafx.h"
 #endif
 
+#include <cfenv>
+#include <iostream>
+#include <memory>
+#include "json.hpp"
+
 #include <graphene/app/database_api.hpp>
 
 #define GET_REQUIRED_FEES_MAX_RECURSION 4
@@ -151,6 +156,7 @@ namespace graphene { namespace app {
       
       // Proposed transactions
       vector<proposal_object> get_proposed_transactions( account_id_type id )const;
+      vector<operation_info> list_operations()const;
       
       // Blinded balances
       
@@ -1551,7 +1557,12 @@ namespace graphene { namespace app {
    {
       return my->get_proposed_transactions( id );
    }
-   
+
+   vector<operation_info> database_api::list_operations( )const
+   {
+      return my->list_operations();
+   }
+
    /** TODO: add secondary index that will accelerate this process */
    vector<proposal_object> database_api_impl::get_proposed_transactions( account_id_type id )const
    {
@@ -1568,6 +1579,75 @@ namespace graphene { namespace app {
             result.push_back(p);
       });
       return result;
+   }
+
+   struct operation_info_visitor
+   {
+        typedef void result_type;
+
+        shared_ptr<vector<string>> op_names;
+        operation_info_visitor(shared_ptr<vector<string>> _op_names) : op_names(_op_names) { }
+
+        template<typename Type>
+        result_type operator()( const Type& op )const
+        {
+           string vo = fc::get_typename<Type>::name();
+           op_names->emplace_back( vo );
+        }
+   };
+
+   vector<operation_info> database_api_impl::list_operations( )const
+   {
+       shared_ptr<vector<string>> op_names_ptr = std::make_shared<vector<string>>();
+
+       vector<operation_info> result;
+       map<int32_t, bool> op_processed;
+       map<int32_t, operation_info> op_cached;
+
+       fee_schedule temp_fee_schedule;
+       temp_fee_schedule = temp_fee_schedule.get_default();
+
+       fee_schedule global_fee_schedule;
+       global_fee_schedule = get_global_properties().parameters.current_fees;
+
+       op_names_ptr->clear();
+       result.clear();
+       op_processed.clear();
+
+       try
+       {
+          graphene::chain::operation op;
+
+          for( int32_t i = 0; i < op.count(); ++i )
+          {
+             op.set_which(i);
+             op.visit( operation_info_visitor(op_names_ptr) );
+          }
+
+          for( fee_parameters& params : global_fee_schedule.parameters )
+          {
+              op_processed[params.which()] = true;
+              op_cached[params.which()] = operation_info(params.which(), (*op_names_ptr)[params.which()].replace(0, string("graphene::chain::").length(), ""), params);
+          }
+
+          for( fee_parameters& params : temp_fee_schedule.parameters )
+          {
+              if (0 == op_processed.count(params.which()) || ! op_processed[params.which()])
+              {
+                  op_cached[params.which()] = operation_info(params.which(), (*op_names_ptr)[params.which()].replace(0, string("graphene::chain::").length(), ""), params);
+              }
+          }
+
+          map<int32_t, operation_info>::iterator it;
+
+          for( it = op_cached.begin(); it != op_cached.end(); it++ )
+          {
+              result.emplace_back(it->second);
+          }
+       }
+       catch ( const fc::exception& e ){ edump((e.to_detail_string())); }
+
+       return result;
    }
    
    //////////////////////////////////////////////////////////////////////

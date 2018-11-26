@@ -162,6 +162,13 @@ transaction_id_type get_transaction_id( const signed_transaction& trx ) const;
 optional<signed_transaction> get_transaction_by_id( const transaction_id_type& id ) const;
 
 /**
+ * @brief Listing the operations available.
+ * @return a vector of operations with ids, names and fees
+ * @ingroup WalletAPI_General
+ */
+vector<operation_info> list_operations();
+
+/**
  * @brief This method encapsulates the functionality of running a sequence of calls
  * loaded from a text file.
  * @param command_file_name The name of the command file to load

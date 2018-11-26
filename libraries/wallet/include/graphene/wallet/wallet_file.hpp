@@ -137,5 +137,4 @@ bool import_key(const string& account_name_or_id, const string& wif_key);
  */
 variant dump_private_keys();
 
-
 #endif //DECENT_WALLET_WALLET_FILE_H

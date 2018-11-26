@@ -2497,6 +2497,11 @@ signed_transaction content_cancellation(const string& author,
       return to_string(result.amount.value);
    }
 
+   vector<operation_info> list_operations()
+   {
+       return _remote_db->list_operations();
+   }
+
    void from_command_file( const std::string& command_file_name ) const
    {
        std::atomic_bool cancelToken;
